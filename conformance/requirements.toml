@@ -133,8 +133,9 @@ id = "REQ-FMT-006"
 area = "formats"
 level = "L1"
 statement = "Fuzzed readers never panic, never allocate beyond their caps, and always terminate."
+rationale = "Every reader parses bytes from the internet; fuzzing runs nightly, its bodies on every PR (conformance.md, Fuzzing)."
 milestone = "M2"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-FMT-007"

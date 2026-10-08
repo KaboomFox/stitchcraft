@@ -699,8 +699,10 @@ dependencies = [
  "proptest",
  "stitchcraft-core",
  "stitchcraft-engine",
+ "stitchcraft-formats",
  "stitchcraft-params",
  "stitchcraft-plan",
+ "stitchcraft-render",
 ]
 
 [[package]]

@@ -124,7 +124,8 @@ that points nowhere) become warnings in the result.
 | DST | the header's label and every record | A run of 2–8 consecutive jumps that returns to where it started is a **trim** (it moves the frame nowhere, so it can only mean that). Colours: none — each block gets a placeholder thread, and a stop reads as a colour change. |
 
 Every reader survives every truncation and single-byte change of the golden files (a deterministic test
-that runs on every PR); coverage-guided fuzzing runs nightly from M2.5 (`REQ-FMT-006`).
+that runs on every PR), and an hour of coverage-guided fuzzing every night (`REQ-FMT-006`;
+[fuzzing](conformance.md#fuzzing)).
 
 **Round trips.** A file cannot say everything a plan says (a trim is a flag in PEC and three jumps in DST;
 long moves become several records), so a plan read back is not the same plan — it makes the machine do

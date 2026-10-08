@@ -1,6 +1,6 @@
-# Nightly checks that are too slow or too noisy for every pull request.
-# Fuzzing, mutation testing, coverage and the Ink/Stitch differential run are added with their roadmap
-# steps (M2.5, M2.8, M8).
+# Nightly checks that are too slow or too noisy for every pull request: the newest Rust, property tests
+# with fresh seeds, an hour of coverage-guided fuzzing, external links. Mutation testing, coverage and the
+# Ink/Stitch differential run are added with their roadmap steps (M2.8, M8).
 name: nightly
 
 on:
@@ -45,6 +45,60 @@ jobs:
           seed=$(od -An -N8 -tu8 /dev/urandom | tr -d ' ')
           echo "PROPTEST_RNG_SEED=$seed"
           PROPTEST_RNG_SEED=$seed PROPTEST_CASES=10000 cargo test --locked -p stitchcraft-formats --test round_trip
+      - name: Previews match PES read-backs, and fuzz bodies survive random bytes, with fresh seeds
+        run: |
+          seed=$(od -An -N8 -tu8 /dev/urandom | tr -d ' ')
+          echo "PROPTEST_RNG_SEED=$seed"
+          PROPTEST_RNG_SEED=$seed PROPTEST_CASES=5000 cargo test --locked -p stitchcraft-render --test preview
+          PROPTEST_RNG_SEED=$seed PROPTEST_CASES=20000 cargo test --locked -p stitchcraft-testkit fuzz
+
+  fuzz:
+    # REQ-FMT-006: an hour of coverage-guided fuzzing every night, 20 minutes per target. The bodies are in
+    # stitchcraft-testkit::fuzz; the corpus starts from the golden machine files and grows from night to
+    # night in the Actions cache. A crash fails the job and keeps the input as an artifact: reproduce it
+    # with `cargo +nightly fuzz run <target> <file>`, then add it as a regression test.
+    name: fuzz ${{ matrix.target }} (20 minutes)
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [read_pes, read_dst, read_write_preview]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install nightly --profile minimal
+      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: cargo-fuzz
+      - name: Restore the corpus
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: fuzz/corpus/${{ matrix.target }}
+          key: fuzz-corpus-${{ matrix.target }}-${{ github.run_id }}
+          restore-keys: fuzz-corpus-${{ matrix.target }}-
+      - name: Seed it with the golden machine files
+        run: |
+          mkdir -p "fuzz/corpus/${{ matrix.target }}"
+          cp conformance/golden/formats/* conformance/golden/testsheets/* "fuzz/corpus/${{ matrix.target }}/"
+      - name: Fuzz for 20 minutes (10 s and 2 GB at most per input)
+        run: >
+          cargo +nightly fuzz run ${{ matrix.target }} --
+          -max_total_time=1200 -timeout=10 -rss_limit_mb=2048 -max_len=65536 -print_final_stats=1
+      - name: Keep the smallest corpus that covers the same code
+        if: success()
+        run: cargo +nightly fuzz cmin ${{ matrix.target }}
+      - name: Save the corpus
+        if: always()
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: fuzz/corpus/${{ matrix.target }}
+          key: fuzz-corpus-${{ matrix.target }}-${{ github.run_id }}
+      - name: Keep the input that failed
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-${{ matrix.target }}
+          path: fuzz/artifacts/${{ matrix.target }}/
+          if-no-files-found: ignore
 
   external-links:
     name: external links
