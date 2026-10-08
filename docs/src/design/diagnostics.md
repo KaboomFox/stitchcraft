@@ -37,9 +37,11 @@ Codes are never reused. A retired code keeps its page with "retired in vX".
 
 ## The registry
 
-All codes live in one table in `stitchcraft-core` (`diag::CODES`): code, severity, title, a long
-explanation (Markdown: what it means, why it matters for the sew-out, how to fix it, an example) and
-the conformance case that triggers it. From that table:
+All codes live in one table in `stitchcraft-core`: the `registry!` block in `src/diag.rs`, which
+defines the `Code` enum. Each entry is one line — variant, id, severity, title — and its doc comment is
+the long explanation (Markdown: what it means, why it matters for the sew-out, how to fix it), so the
+text users read is also the code's rustdoc. Tests reject an entry whose id is malformed or duplicated,
+whose letter disagrees with its severity, or whose explanation is missing. From that table:
 
 - `cargo xtask docs` generates the **diagnostics index** (one page per code, like `rustc`'s error index);
 - `stitch explain SC-W0702` prints the explanation in the terminal;
@@ -70,7 +72,7 @@ Codes referenced by the design docs; each is registered in the milestone that im
 
 | Code | Severity | Title | Milestone |
 |---|---|---|---|
-| `SC-E0004` | Error | Work budget exhausted for this element | M3 |
+| `SC-E0004` | Error | Budget exhausted (work for one element, or stitches for the design) | M1 |
 | `SC-E0009` | Error | Internal check failed (a StitchCraft bug; a bug-report bundle is written) | M1 |
 | `SC-E0010` | Error | Nothing to stitch (no embroiderable elements) | M3 |
 | `SC-E0101` | Error | Parameter has the wrong type or an unknown choice | M3 |
@@ -91,6 +93,7 @@ Codes referenced by the design docs; each is registered in the milestone that im
 | `SC-W0402` | Warning | Stitch length below the profile minimum; raised to the minimum | M3 |
 | `SC-W0501` | Warning | Travel could not stay inside the region; used tie-off, trim and tie-in | M5 |
 | `SC-E0601` | Error | Too many colour changes for the format | M1 |
+| `SC-E0602` | Error | Design too large for the file format (coordinates or data exceed its fields) | M1 |
 | `SC-E0701` | Error | Design does not fit the hoop | M1 |
 | `SC-W0702` | Warning | Design is larger than the profile's comfort zone | M1 |
 | `SC-E0801` | Error | SVG could not be read (with the parser's position) | M3 |

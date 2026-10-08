@@ -37,6 +37,12 @@ impl Mm {
         if value.is_finite() { Ok(Mm(value)) } else { Err(UnitError::NotFinite(value)) }
     }
 
+    /// A length given in tenths of a millimetre, the resolution of machine files. Integers are always
+    /// finite, so this constructor cannot fail and works in constants (machine profiles use it).
+    pub const fn from_tenths(tenths: i32) -> Self {
+        Mm(tenths as f64 / 10.0)
+    }
+
     /// A length given in PostScript points (VectorCraft's unit).
     pub fn from_points(points: f64) -> Result<Self, UnitError> {
         Self::new(points * MM_PER_POINT)
@@ -58,6 +64,32 @@ impl Mm {
     }
 }
 
+/// A width and a height in millimetres: a hoop, a comfort zone, the extent of a design.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Size {
+    /// Extent along x.
+    pub width: Mm,
+    /// Extent along y.
+    pub height: Mm,
+}
+
+impl Size {
+    /// A `width` × `height` size.
+    pub const fn new(width: Mm, height: Mm) -> Self {
+        Size { width, height }
+    }
+
+    /// The same size turned 90 degrees.
+    pub const fn rotated(self) -> Self {
+        Size { width: self.height, height: self.width }
+    }
+
+    /// Whether something `width` × `height` millimetres fits inside this size without turning it.
+    pub fn holds(self, width: f64, height: f64) -> bool {
+        width <= self.width.0 && height <= self.height.0
+    }
+}
+
 /// A point in millimetres, with y pointing down (the SVG and VectorCraft convention). Always finite.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Point {
@@ -76,6 +108,12 @@ impl Point {
             (false, _) => Err(UnitError::NotFinite(x)),
             (_, false) => Err(UnitError::NotFinite(y)),
         }
+    }
+
+    /// A point from coordinates the caller has already proven finite (for example, the minimum of two
+    /// finite values). Crate-internal so that untrusted numbers always go through [`Point::new`].
+    pub(crate) const fn from_finite(x: f64, y: f64) -> Self {
+        Point { x, y }
     }
 
     /// The x coordinate in millimetres.
@@ -119,6 +157,21 @@ mod tests {
         assert!(Mm::from_svg_px(f64::NAN).is_err());
         // Converting to millimetres shrinks values, so the largest finite input stays finite.
         assert!(Mm::from_points(f64::MAX).is_ok_and(|mm| mm.get().is_finite()));
+    }
+
+    #[test]
+    fn tenths_are_exact_machine_units() {
+        assert_eq!(Mm::from_tenths(120).get(), 12.0);
+        assert_eq!(Mm::from_tenths(3).get(), 0.3);
+        assert_eq!(Mm::from_tenths(-2000).get(), -200.0);
+    }
+
+    #[test]
+    fn sizes_hold_smaller_extents_and_rotate() {
+        let hoop = Size::new(Mm::from_tenths(2000), Mm::from_tenths(1500));
+        assert!(hoop.holds(200.0, 150.0));
+        assert!(!hoop.holds(150.0, 200.0));
+        assert!(hoop.rotated().holds(150.0, 200.0));
     }
 
     #[test]

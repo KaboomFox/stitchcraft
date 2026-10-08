@@ -37,6 +37,21 @@ pub fn hypot(x: f64, y: f64) -> f64 {
     libm::hypot(x, y)
 }
 
+/// `e` raised to the power `x`.
+pub fn exp(x: f64) -> f64 {
+    libm::exp(x)
+}
+
+/// `x` raised to the power `y`.
+pub fn pow(x: f64, y: f64) -> f64 {
+    libm::pow(x, y)
+}
+
+/// Cube root of `x`.
+pub fn cbrt(x: f64) -> f64 {
+    libm::cbrt(x)
+}
+
 /// Converts degrees to radians.
 pub fn to_radians(degrees: f64) -> f64 {
     degrees * (core::f64::consts::PI / 180.0)
@@ -55,12 +70,15 @@ mod tests {
     /// file and golden image could change: this test makes that a deliberate, reviewed decision.
     #[test]
     fn results_are_frozen_bit_for_bit() {
-        let cases: [(&str, f64, u64); 5] = [
+        let cases: [(&str, f64, u64); 8] = [
             ("sin(1)", sin(1.0), 0x3FEA_ED54_8F09_0CEE),
             ("cos(1)", cos(1.0), 0x3FE1_4A28_0FB5_068C),
             ("tan(0.5)", tan(0.5), 0x3FE1_7B4F_5BF3_474A),
             ("atan2(1,2)", atan2(1.0, 2.0), 0x3FDD_AC67_0561_BB4F),
             ("hypot(3,4)", hypot(3.0, 4.0), 0x4014_0000_0000_0000),
+            ("exp(1)", exp(1.0), 0x4005_BF0A_8B14_576A),
+            ("pow(0.5,2.4)", pow(0.5, 2.4), 0x3FC8_4060_03B2_AE5D),
+            ("cbrt(2)", cbrt(2.0), 0x3FF4_28A2_F98D_728B),
         ];
         for (name, value, bits) in cases {
             assert_eq!(value.to_bits(), bits, "{name} = {value:e} changed: {:#018X}", value.to_bits());
