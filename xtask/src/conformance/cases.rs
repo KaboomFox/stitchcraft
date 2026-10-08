@@ -62,6 +62,8 @@ struct CaseFile {
     profile: Option<String>,
     #[serde(default)]
     expect: Option<SheetExpect>,
+    #[serde(default)]
+    files: Option<Vec<String>>,
 }
 
 /// What a test-sheet case expects.
@@ -91,6 +93,9 @@ pub struct DataCase {
 pub enum Spec {
     /// Draw a test sheet, check it, encode it and compare with golden files.
     Testsheet { sheet: String, profile: String, expect: SheetExpect },
+    /// Read machine files with an independent reader (pinned pyembroidery) and with ours, and compare what
+    /// the machine would do. `files` are relative to `conformance/`.
+    Oracle { files: Vec<String> },
 }
 
 /// The data cases; problems with a file are recorded in `findings` and the file is skipped.
@@ -106,14 +111,19 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
                 continue;
             }
         };
-        let spec = match (case.kind.as_str(), case.sheet, case.profile, case.expect) {
-            ("testsheet", Some(sheet), Some(profile), Some(expect)) => Spec::Testsheet { sheet, profile, expect },
+        let spec = match (case.kind.as_str(), case.sheet, case.profile, case.expect, case.files) {
+            ("testsheet", Some(sheet), Some(profile), Some(expect), None) => Spec::Testsheet { sheet, profile, expect },
+            ("oracle", None, None, None, Some(files)) if !files.is_empty() => Spec::Oracle { files },
             ("testsheet", ..) => {
-                findings.error(format!("{file}: a testsheet case needs `sheet`, `profile` and `[expect]`"));
+                findings.error(format!("{file}: a testsheet case needs `sheet`, `profile` and `[expect]`, and no `files`"));
+                continue;
+            }
+            ("oracle", ..) => {
+                findings.error(format!("{file}: an oracle case needs a non-empty `files` list and nothing else"));
                 continue;
             }
             (other, ..) => {
-                findings.error(format!("{file}: unknown case kind `{other}` (known: testsheet)"));
+                findings.error(format!("{file}: unknown case kind `{other}` (known: testsheet, oracle)"));
                 continue;
             }
         };

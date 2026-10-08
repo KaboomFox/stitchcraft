@@ -9,6 +9,7 @@ use stitchcraft_engine::testsheets;
 use stitchcraft_plan::{FormatId, invariants, profiles};
 
 use super::cases::{DataCase, RustCase, SheetExpect, Spec};
+use super::oracle;
 use crate::util;
 
 /// How one case went.
@@ -26,12 +27,19 @@ pub struct Outcome {
     pub failures: Vec<String>,
     /// Outputs it produced, with their SHA-256 (for the cross-platform determinism check).
     pub outputs: Vec<(String, String)>,
+    /// Why the case could not run here (a tool is missing), if it did not.
+    pub skipped: Option<String>,
 }
 
 impl Outcome {
-    /// Whether the case passed.
+    /// Whether the case ran and passed.
     pub fn passed(&self) -> bool {
-        self.failures.is_empty()
+        self.failures.is_empty() && self.skipped.is_none()
+    }
+
+    /// Whether the case ran and failed.
+    pub fn failed(&self) -> bool {
+        !self.failures.is_empty()
     }
 }
 
@@ -44,9 +52,11 @@ pub fn run_data_case(root: &Path, case: &DataCase, bless: bool) -> Outcome {
         requirements: case.requirements.clone(),
         failures: Vec::new(),
         outputs: Vec::new(),
+        skipped: None,
     };
     match &case.spec {
         Spec::Testsheet { sheet, profile, expect } => testsheet(root, sheet, profile, expect, bless, &mut outcome),
+        Spec::Oracle { files } => oracle::run(root, files, &mut outcome),
     }
     outcome
 }
@@ -150,6 +160,7 @@ pub fn run_rust_cases(root: &Path, cases: &[RustCase]) -> Result<Vec<Outcome>, S
                 requirements: vec![case.requirement.clone()],
                 failures,
                 outputs: Vec::new(),
+                skipped: None,
             }
         })
         .collect())

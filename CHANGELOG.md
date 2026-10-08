@@ -5,6 +5,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M2.4: an independent reader, pinned pyembroidery, reads every golden machine file the way
+  StitchCraft's reader does (conformance case `pyembroidery-oracle`, run in CI).
 - M2.3: round-trip property tests for every writer/reader pair, judged by machine-visible behaviour
   (`stitchcraft-testkit::equivalence`), with fixed seeds per PR and fresh seeds nightly.
 - M2.1–M2.2: PES/PEC and DST readers (any PES version's PEC block; trims inferred from DST jump runs)

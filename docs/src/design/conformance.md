@@ -71,6 +71,20 @@ golden = ["golden/testsheets/TS-10B.pes"]        # byte for byte; the format com
 The plan invariants run on the sheet's plan before anything else. The golden files are the very bytes
 sewn at the machine checkpoint, so a change to how a sheet sews cannot slip through unnoticed.
 
+The `oracle` kind reads machine files with an independent reader — a pinned pyembroidery, through
+`conformance/oracle/decode.py` — and with StitchCraft's, and requires the machine to do the same thing
+either way (`REQ-FMT-005`):
+
+```toml
+id = "pyembroidery-oracle"
+requirements = ["REQ-FMT-005"]
+kind = "oracle"
+files = ["golden/formats/every-command.pes", "golden/testsheets/TS-01.dst"]   # …
+```
+
+It needs Python with pyembroidery (`STITCHCRAFT_PYTHON`, see `conformance/oracle/requirements.txt`):
+without it the case is skipped locally (⏭ in the report) and fails in CI, like every optional tool.
+
 From M3, `design` cases take an SVG or JSON design and parameters, and check generator properties:
 
 ```toml

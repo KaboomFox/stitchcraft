@@ -20,6 +20,7 @@ stitchcraft-core = { workspace = true }
 stitchcraft-engine = { workspace = true }
 stitchcraft-formats = { workspace = true }
 stitchcraft-plan = { workspace = true }
+stitchcraft-testkit = { workspace = true }
 sha2 = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

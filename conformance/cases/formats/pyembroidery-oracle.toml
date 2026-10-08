@@ -1,0 +1,17 @@
+# REQ-FMT-005: an independent reader — pinned pyembroidery (conformance/oracle/) — reads every golden
+# machine file to the same needle-downs, cuts and pauses as StitchCraft's own reader.
+id = "pyembroidery-oracle"
+requirements = ["REQ-FMT-005"]
+kind = "oracle"
+files = [
+    "golden/formats/every-command.pes",
+    "golden/formats/every-command.dst",
+    "golden/formats/one-stitch.pes",
+    "golden/formats/one-stitch.dst",
+    "golden/testsheets/TS-01.pes",
+    "golden/testsheets/TS-01.dst",
+    "golden/testsheets/TS-02.pes",
+    "golden/testsheets/TS-10A.pes",
+    "golden/testsheets/TS-10B.pes",
+    "golden/testsheets/TS-10C.pes",
+]

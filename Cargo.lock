@@ -802,6 +802,7 @@ dependencies = [
  "stitchcraft-engine",
  "stitchcraft-formats",
  "stitchcraft-plan",
+ "stitchcraft-testkit",
  "toml",
 ]
 

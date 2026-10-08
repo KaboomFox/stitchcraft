@@ -158,5 +158,9 @@ made of jumps of at most 1 mm.
 | `REQ-FMT-006` | Fuzzed readers never panic, never allocate beyond caps, always terminate |
 | `REQ-FMT-007` | Long moves are split within the format's per-record limit |
 
-The pyembroidery oracle runs in a separate CI job with a pinned version and only compares decoded
-stitch lists; no pyembroidery code is vendored.
+The pyembroidery oracle is a conformance case (`conformance/cases/formats/pyembroidery-oracle.toml`): a
+pinned pyembroidery, installed by hash in CI, reads every golden machine file through
+`conformance/oracle/decode.py`, and its reading must make the machine do what our reader's does. Only its
+output is compared; no pyembroidery code is vendored. pyembroidery places a PES design's top-left corner at
+its origin where StitchCraft keeps the machine origin, so both readings are compared from their first
+needle-down.
