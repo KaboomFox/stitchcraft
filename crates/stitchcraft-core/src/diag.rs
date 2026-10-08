@@ -121,6 +121,14 @@ registry! {
     /// Check the design's size and remove stray objects.
     TooLargeForFormat = "SC-E0602", Error, "Design too large for the file format";
 
+    /// The machine file could not be read: it is not in the format its name or first bytes suggest, it
+    /// ends early, or a record in it makes no sense. StitchCraft reads every file as if it could be
+    /// damaged or hostile, so a bad file is reported, never half-read in silence.
+    ///
+    /// The message says where reading stopped. If the machine sews the file, it may be a format variant
+    /// StitchCraft does not know yet: please report it with the file.
+    UnreadableFile = "SC-E0603", Error, "Machine file could not be read";
+
     /// The design is wider or taller than the machine's hoop, so the machine cannot sew it in one
     /// hooping (most machines refuse the file).
     ///

@@ -15,7 +15,8 @@
 //!
 //! "While sewing" means the previous movement was a `Normal` stitch with no trim since: the stitch then
 //! lays thread between two needle holes, and its length is what the machine and the fabric feel. The first
-//! stitch after a jump, a trim or a thread change starts a new run and has no such length.
+//! stitch after a jump, a trim or a thread change starts a new run and has no such length. The definition
+//! lives in one place, [`StitchPlan::sewn_stitches`](crate::plan::StitchPlan::sewn_stitches).
 //!
 //! The checker is linear in the plan's length and allocates only its report. Plans are bounded by the
 //! stitch budget that produced them (or a reader's cap), so it needs no meter of its own; it reports at
@@ -92,8 +93,6 @@ pub fn check(plan: &StitchPlan, profile: &MachineProfile) -> Vec<Violation> {
         if !block.stitches.iter().any(|s| s.kind == StitchKind::Normal) {
             report.add(req::STRUCTURE, b, None, "the colour block sews no stitches".to_string());
         }
-        // A thread change ends the run: the first stitch of a block starts a new one.
-        let mut sewing = false;
         for (i, stitch) in block.stitches.iter().enumerate() {
             let at = stitch.at;
             if at.x().abs() > half_width || at.y().abs() > half_height {
@@ -107,26 +106,7 @@ pub fn check(plan: &StitchPlan, profile: &MachineProfile) -> Vec<Violation> {
                 report.add(req::INSIDE_HOOP, b, Some(i), message);
             }
             match stitch.kind {
-                StitchKind::Normal => {
-                    if sewing {
-                        let length = needle.distance(at);
-                        let min = if stitch.origin.role == Role::Lock { LOCK_MIN_STITCH } else { profile.min_stitch };
-                        if length == 0.0 {
-                            report.add(req::NO_STITCH_IN_PLACE, b, Some(i), "the stitch lands where the needle already is".to_string());
-                        } else if length + LENGTH_SLACK < min.get() {
-                            report.add(req::STITCH_LENGTH, b, Some(i), format!("the stitch is {length:.3} mm, shorter than {} mm", min.get()));
-                        } else if length - LENGTH_SLACK > profile.max_stitch.get() {
-                            let max = profile.max_stitch.get();
-                            report.add(req::STITCH_LENGTH, b, Some(i), format!("the stitch is {length:.3} mm, longer than {max} mm"));
-                        }
-                    }
-                    sewing = true;
-                    needle = at;
-                }
-                StitchKind::Jump => {
-                    sewing = false;
-                    needle = at;
-                }
+                StitchKind::Normal | StitchKind::Jump => needle = at,
                 StitchKind::Trim | StitchKind::Stop => {
                     if at != needle {
                         let what = if stitch.kind == StitchKind::Trim { "trim" } else { "stop" };
@@ -139,11 +119,20 @@ pub fn check(plan: &StitchPlan, profile: &MachineProfile) -> Vec<Violation> {
                         );
                         report.add(req::STRUCTURE, b, Some(i), message);
                     }
-                    if stitch.kind == StitchKind::Trim {
-                        sewing = false;
-                    }
                 }
             }
+        }
+    }
+
+    for sewn in plan.sewn_stitches() {
+        let (length, b, i) = (sewn.length(), sewn.block, Some(sewn.index));
+        let min = if sewn.role == Role::Lock { LOCK_MIN_STITCH } else { profile.min_stitch };
+        if length == 0.0 {
+            report.add(req::NO_STITCH_IN_PLACE, b, i, "the stitch lands where the needle already is".to_string());
+        } else if length + LENGTH_SLACK < min.get() {
+            report.add(req::STITCH_LENGTH, b, i, format!("the stitch is {length:.3} mm, shorter than {} mm", min.get()));
+        } else if length - LENGTH_SLACK > profile.max_stitch.get() {
+            report.add(req::STITCH_LENGTH, b, i, format!("the stitch is {length:.3} mm, longer than {} mm", profile.max_stitch.get()));
         }
     }
 

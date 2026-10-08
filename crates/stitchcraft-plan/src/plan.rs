@@ -136,6 +136,31 @@ pub struct ColorEntry<'a> {
     pub stop: bool,
 }
 
+/// A stitch that lays thread between two needle holes: a `Normal` stitch whose previous movement was a
+/// `Normal` stitch in the same block, with no trim since (a stop keeps the run going; a jump, a trim or a
+/// thread change starts a new one). Its length is what the machine and the fabric feel, so stitch-length
+/// rules, statistics and previews all use this one definition.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SewnStitch {
+    /// The colour block.
+    pub block: usize,
+    /// The entry within the block.
+    pub index: usize,
+    /// Where the thread comes from (the previous needle hole).
+    pub from: Point,
+    /// Where the needle goes down.
+    pub to: Point,
+    /// The stitch's role.
+    pub role: Role,
+}
+
+impl SewnStitch {
+    /// The stitch's length in millimetres.
+    pub fn length(&self) -> f64 {
+        self.from.distance(self.to)
+    }
+}
+
 /// Counts that describe a plan.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PlanStats {
@@ -184,6 +209,33 @@ impl StitchPlan {
             entries.extend(core::iter::repeat_n(ColorEntry { thread: &block.thread, stop: true }, stops));
         }
         entries
+    }
+
+    /// Every stitch that lays thread between two needle holes, in sewing order (see [`SewnStitch`]).
+    pub fn sewn_stitches(&self) -> Vec<SewnStitch> {
+        let mut sewn = Vec::new();
+        let mut needle = Point::ORIGIN;
+        for (block, b) in self.blocks.iter().enumerate() {
+            let mut sewing = false;
+            for (index, stitch) in b.stitches.iter().enumerate() {
+                match stitch.kind {
+                    StitchKind::Normal => {
+                        if sewing {
+                            sewn.push(SewnStitch { block, index, from: needle, to: stitch.at, role: stitch.origin.role });
+                        }
+                        sewing = true;
+                        needle = stitch.at;
+                    }
+                    StitchKind::Jump => {
+                        sewing = false;
+                        needle = stitch.at;
+                    }
+                    StitchKind::Trim => sewing = false,
+                    StitchKind::Stop => {}
+                }
+            }
+        }
+        sewn
     }
 
     /// Counts of stitches, jumps, commands and thread changes.

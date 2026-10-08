@@ -15,11 +15,11 @@ pub struct Cli {
 }
 
 const AFTER_HELP: &str = "\
-Exit status: 0 done (warnings allowed) · 1 the design has errors, nothing written · 2 usage error ·
-3 a file could not be read or written.
+Exit status: 0 done (warnings allowed) · 1 the design or file has errors (nothing written) · 2 usage
+error · 3 a file could not be read or written.
 
 Coming with the roadmap (docs/src/plan/roadmap.md):
-  stitch inspect FILE                                       (M2)
+  stitch preview design.pes -o design.png                   (M2)
   stitch plan design.svg -o design.pes                      (M3)
   stitch export design.vectorcraft -o design.pes            (M6)";
 
@@ -28,6 +28,8 @@ Coming with the roadmap (docs/src/plan/roadmap.md):
 pub enum Command {
     /// Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md).
     Testsheet(TestsheetArgs),
+    /// Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths.
+    Inspect(InspectArgs),
     /// List the built-in machine profiles.
     Profiles,
     /// Explain a diagnostic code, such as SC-W0702.
@@ -55,6 +57,16 @@ pub struct TestsheetArgs {
     /// The file format; by default the output file's extension decides.
     #[arg(long, value_enum)]
     pub format: Option<Format>,
+}
+
+/// `stitch inspect`.
+#[derive(Debug, Args)]
+pub struct InspectArgs {
+    /// The machine file.
+    pub file: PathBuf,
+    /// Also check the design against a machine profile, such as brother-200x200 (see `stitch profiles`).
+    #[arg(long, short)]
+    pub profile: Option<String>,
 }
 
 /// File formats on the command line.

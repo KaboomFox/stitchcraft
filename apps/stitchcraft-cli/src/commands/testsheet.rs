@@ -14,7 +14,7 @@ use stitchcraft_plan::invariants;
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 
-use super::{Outcome, Status, render_diagnostics};
+use super::{Outcome, Status, describe_plan, describe_threads, render_diagnostics};
 use crate::cli::TestsheetArgs;
 use crate::files;
 
@@ -71,34 +71,12 @@ fn refuse(diagnostics: &[Diagnostic]) -> Outcome {
 /// What was written, what the machine will ask for, and what to check.
 fn report(sheet: &TestSheet, profile: &MachineProfile, format: FormatId, output: &Path, plan: &StitchPlan, bytes: &[u8]) -> String {
     let mut out = String::new();
-    let stats = plan.stats();
     let _ = writeln!(out, "{} · {}", sheet.id, sheet.title);
     let _ = writeln!(out, "  file      {} ({}, {} bytes)", output.display(), format.name(), bytes.len());
     let _ = writeln!(out, "  sha256    {}", hex(&Sha256::digest(bytes)));
     let _ = writeln!(out, "  profile   {} ({})", profile.id, profile.name);
-    if let Some(b) = plan.bounds() {
-        let _ = writeln!(out, "  size      {:.1} × {:.1} mm", b.width(), b.height());
-    }
-    let counts = [(stats.stitches, "stitch", "stitches"), (stats.jumps, "jump", "jumps"), (stats.trims, "trim", "trims")]
-        .into_iter()
-        .chain([(stats.color_changes, "colour change", "colour changes"), (stats.stops, "stop", "stops")])
-        .map(|(n, one, many)| format!("{n} {}", if n == 1 { one } else { many }))
-        .collect::<Vec<_>>()
-        .join(", ");
-    let _ = writeln!(out, "  stitches  {counts}");
-    let palette = format.palette().map(|id| id.palette());
-    for (i, entry) in plan.color_entries().iter().enumerate() {
-        let thread = entry.thread;
-        let name = thread.name.as_deref().unwrap_or("unnamed");
-        let mut line = format!("{}. {name} ({})", i + 1, thread.color);
-        if let Some(matched) = palette.and_then(|p| p.nearest(thread.color)) {
-            let _ = write!(line, ", shown as {} {} \"{}\"", palette.map_or("", |p| p.name), matched.index, matched.name);
-        }
-        if entry.stop {
-            line.push_str(" — a stop: keep the same thread");
-        }
-        let _ = writeln!(out, "  {:<10}{line}", if i == 0 { "threads" } else { "" });
-    }
+    describe_plan(&mut out, plan);
+    describe_threads(&mut out, plan, format.palette().map(|id| id.palette()));
     let _ = writeln!(out, "after sewing, check:");
     for check in sheet.checks {
         let _ = writeln!(out, "  - {check}");
@@ -106,7 +84,7 @@ fn report(sheet: &TestSheet, profile: &MachineProfile, format: FormatId, output:
     out
 }
 
-fn hex(bytes: &[u8]) -> String {
+pub(crate) fn hex(bytes: &[u8]) -> String {
     bytes.iter().fold(String::with_capacity(bytes.len() * 2), |mut s, b| {
         let _ = write!(s, "{b:02x}");
         s

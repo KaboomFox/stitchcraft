@@ -48,6 +48,66 @@ pub enum EncodeError {
     },
 }
 
+/// Why a machine file could not be read. Readers treat every file as possibly damaged or hostile: they
+/// check every length and offset before using it and stop with one of these instead of guessing.
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+#[non_exhaustive]
+pub enum DecodeError {
+    /// The file is not in a format StitchCraft reads.
+    #[error("this is not a PES, PEC or DST file")]
+    UnknownFormat,
+    /// The file ends before a part it must contain.
+    #[error("the file ends early, in its {part}")]
+    Truncated {
+        /// Which part.
+        part: &'static str,
+    },
+    /// An offset in the file points outside it.
+    #[error("the {what} points outside the file")]
+    BadOffset {
+        /// Which offset.
+        what: &'static str,
+    },
+    /// A byte that cannot start a record.
+    #[error("byte {at} holds {byte:#04x}, which starts no {format} record")]
+    BadRecord {
+        /// The format.
+        format: &'static str,
+        /// Byte offset in the file.
+        at: usize,
+        /// The byte.
+        byte: u8,
+    },
+    /// More records than any real design has; reading stops instead of exhausting memory.
+    #[error("the design has more than {max} records")]
+    TooLong {
+        /// The limit.
+        max: usize,
+    },
+    /// Positions run beyond ±10 m.
+    #[error("the stitches run more than 10 metres from the start")]
+    OutOfRange,
+    /// The stitch data stops without an end record.
+    #[error("the stitch data has no end record")]
+    MissingEnd,
+}
+
+impl DecodeError {
+    /// The diagnostic hosts show (`SC-E0603`).
+    pub fn diagnostic(&self) -> Diagnostic {
+        Diagnostic::new(Code::UnreadableFile, capitalized(&self.to_string()))
+    }
+}
+
+/// `sentence` with a capital first letter and a full stop.
+fn capitalized(sentence: &str) -> String {
+    let mut chars = sentence.chars();
+    match chars.next() {
+        Some(first) => format!("{}{}.", first.to_uppercase(), chars.as_str()),
+        None => String::new(),
+    }
+}
+
 impl EncodeError {
     /// The registered code hosts report this as.
     pub fn code(&self) -> Code {
@@ -61,11 +121,7 @@ impl EncodeError {
 
     /// The diagnostic hosts show.
     pub fn diagnostic(&self) -> Diagnostic {
-        let mut sentence = self.to_string();
-        if let Some(first) = sentence.get(..1) {
-            sentence = format!("{}{}.", first.to_uppercase(), sentence.get(1..).unwrap_or_default());
-        }
-        Diagnostic::new(self.code(), sentence)
+        Diagnostic::new(self.code(), capitalized(&self.to_string()))
     }
 }
 
@@ -81,5 +137,13 @@ mod tests {
         assert_eq!(d.code.id(), "SC-E0601");
         assert_eq!(d.message, "The design has 300 colour changes and stops; PES v1 records at most 255.");
         assert_eq!(EncodeError::TooLarge { format: "DST", what: "x".into() }.code().id(), "SC-E0602");
+    }
+
+    #[test]
+    fn decode_errors_are_unreadable_file_diagnostics() {
+        let d = DecodeError::Truncated { part: "PEC header" }.diagnostic();
+        assert_eq!((d.code.id(), d.message.as_str()), ("SC-E0603", "The file ends early, in its PEC header."));
+        let d = DecodeError::BadRecord { format: "PEC", at: 600, byte: 0xFE }.diagnostic();
+        assert_eq!(d.message, "Byte 600 holds 0xfe, which starts no PEC record.");
     }
 }

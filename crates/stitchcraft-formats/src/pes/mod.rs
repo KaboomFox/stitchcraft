@@ -16,7 +16,10 @@
 //! v6 writer with explicit hoop dimensions follows only if it does not.
 
 mod pec;
+mod read;
 mod thumbnail;
+
+pub use read::decode;
 
 use stitchcraft_plan::{FormatId, StitchPlan};
 

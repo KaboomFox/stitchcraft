@@ -13,6 +13,7 @@ Usage: stitch <COMMAND>
 
 Commands:
   testsheet  Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
+  inspect    Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
   profiles   List the built-in machine profiles
   explain    Explain a diagnostic code, such as SC-W0702
   help       Print this message or the help of the given subcommand(s)
@@ -24,11 +25,11 @@ Options:
   -V, --version
           Print version
 
-Exit status: 0 done (warnings allowed) · 1 the design has errors, nothing written · 2 usage error ·
-3 a file could not be read or written.
+Exit status: 0 done (warnings allowed) · 1 the design or file has errors (nothing written) · 2 usage
+error · 3 a file could not be read or written.
 
 Coming with the roadmap (docs/src/plan/roadmap.md):
-  stitch inspect FILE                                       (M2)
+  stitch preview design.pes -o design.png                   (M2)
   stitch plan design.svg -o design.pes                      (M3)
   stitch export design.vectorcraft -o design.pes            (M6)
 ```
@@ -63,6 +64,25 @@ Options:
 
   -h, --help
           Print help (see a summary with '-h')
+```
+
+## stitch inspect
+
+```text
+Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
+
+Usage: stitch inspect [OPTIONS] <FILE>
+
+Arguments:
+  <FILE>
+          The machine file
+
+Options:
+  -p, --profile <PROFILE>
+          Also check the design against a machine profile, such as brother-200x200 (see `stitch profiles`)
+
+  -h, --help
+          Print help
 ```
 
 ## stitch profiles

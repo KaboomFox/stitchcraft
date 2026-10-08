@@ -8,6 +8,19 @@
 use std::io;
 use std::path::Path;
 
+/// The largest file `stitch` reads: far beyond any embroidery file (a 2,000,000-stitch design is under
+/// 10 MB), small enough that a wrong path cannot make it read a disk image.
+pub const MAX_READ: u64 = 64 * 1024 * 1024;
+
+/// Reads `path`, refusing files larger than [`MAX_READ`].
+pub fn read_capped(path: &Path) -> io::Result<Vec<u8>> {
+    let size = std::fs::metadata(path)?.len();
+    if size > MAX_READ {
+        return Err(io::Error::new(io::ErrorKind::InvalidData, format!("the file is {size} bytes; stitch reads at most {MAX_READ}")));
+    }
+    std::fs::read(path)
+}
+
 /// Writes `bytes` to `path`, replacing it in one step.
 pub fn write_atomically(path: &Path, bytes: &[u8]) -> io::Result<()> {
     let mut temporary = path.as_os_str().to_owned();

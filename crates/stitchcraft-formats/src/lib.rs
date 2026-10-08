@@ -6,11 +6,13 @@
 //! limits by splitting long moves evenly. Writers refuse rather than produce a file a machine could
 //! misread: every failure is an [`EncodeError`] with a registered diagnostic code.
 //!
-//! Readers (hostile-input parsers that never panic) arrive in roadmap milestone M2. Design:
-//! `docs/src/design/formats.md`.
+//! Reading goes the other way: [`decode`] recognises PES, PEC and DST by their first bytes, and each reader
+//! treats the file as possibly damaged or hostile — every offset and length checked, records capped,
+//! failures typed ([`DecodeError`]), never a panic. Design: `docs/src/design/formats.md`.
 #![forbid(unsafe_code)]
 #![deny(clippy::indexing_slicing)]
 
+pub mod decode;
 pub mod dst;
 pub mod error;
 pub mod label;
@@ -19,8 +21,20 @@ pub mod quantize;
 
 mod lower;
 
-pub use error::EncodeError;
+pub use decode::Decoded;
+pub use error::{DecodeError, EncodeError};
 use stitchcraft_plan::{FormatId, StitchPlan};
+
+/// Reads a machine file, recognising PES, PEC and DST by their first bytes.
+pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
+    if bytes.starts_with(b"#PES") || bytes.starts_with(b"#PEC") {
+        pes::decode(bytes)
+    } else if bytes.starts_with(b"LA:") {
+        dst::decode(bytes)
+    } else {
+        Err(DecodeError::UnknownFormat)
+    }
+}
 
 /// `plan` in `format`, with `name` as the design name machines show.
 pub fn encode(plan: &StitchPlan, format: FormatId, name: &str) -> Result<Vec<u8>, EncodeError> {

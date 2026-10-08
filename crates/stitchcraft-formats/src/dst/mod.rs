@@ -19,6 +19,9 @@
 //! extents from the start in DST axes, `AX AY` the end position, `MX MY` zero, `PD ******`) are
 //! fixed-width ASCII terminated by carriage returns, then `0x1A`, padded with spaces to 512 bytes.
 
+mod read;
+
+pub use read::decode;
 use stitchcraft_plan::{FormatId, StitchPlan};
 
 use crate::error::EncodeError;
@@ -28,11 +31,11 @@ use crate::lower::{Op, lower, split};
 /// The largest move one record makes along an axis.
 pub const RECORD_LIMIT: i32 = 121;
 /// The header's size.
-const HEADER_LEN: usize = 512;
+pub(crate) const HEADER_LEN: usize = 512;
 /// A trim: three jumps that cancel out (DST axes, y up).
-const TRIM_JUMPS: [(i32, i32); 3] = [(2, -2), (-4, 4), (2, -2)];
+pub(crate) const TRIM_JUMPS: [(i32, i32); 3] = [(2, -2), (-4, 4), (2, -2)];
 /// Record kinds (third byte, before the 81-digits are added).
-const SEW: u8 = 0x03;
+pub(crate) const SEW: u8 = 0x03;
 const JUMP: u8 = 0x83;
 const COLOR_CHANGE: [u8; 3] = [0x00, 0x00, 0xC3];
 const END: [u8; 3] = [0x00, 0x00, 0xF3];
@@ -103,11 +106,16 @@ impl Records {
     }
 }
 
+/// Where each balanced-ternary digit (1, 3, 9, 27, 81) of x lives: (byte, bit for +1, bit for −1). The
+/// writer and the reader both use these tables, so they cannot disagree.
+const X: [(usize, u8, u8); 5] = [(0, 0x01, 0x02), (1, 0x01, 0x02), (0, 0x04, 0x08), (1, 0x04, 0x08), (2, 0x04, 0x08)];
+/// The same for y (DST axes, up).
+const Y: [(usize, u8, u8); 5] = [(0, 0x80, 0x40), (1, 0x80, 0x40), (0, 0x20, 0x10), (1, 0x20, 0x10), (2, 0x20, 0x10)];
+/// Digit weights.
+const WEIGHTS: [i32; 5] = [1, 3, 9, 27, 81];
+
 /// One record: (`dx`, `dy`) in DST axes as balanced-ternary bits, plus `kind` in the third byte.
 fn record(dx: i32, dy: i32, kind: u8) -> [u8; 3] {
-    // Bits for the digits 1, 3, 9, 27, 81: (byte, bit for +1, bit for −1).
-    const X: [(usize, u8, u8); 5] = [(0, 0x01, 0x02), (1, 0x01, 0x02), (0, 0x04, 0x08), (1, 0x04, 0x08), (2, 0x04, 0x08)];
-    const Y: [(usize, u8, u8); 5] = [(0, 0x80, 0x40), (1, 0x80, 0x40), (0, 0x20, 0x10), (1, 0x20, 0x10), (2, 0x20, 0x10)];
     let mut bytes = [0, 0, kind];
     for (value, bits) in [(dx, X), (dy, Y)] {
         for (digit, (byte, plus, minus)) in balanced_ternary(value).into_iter().zip(bits) {
@@ -121,6 +129,17 @@ fn record(dx: i32, dy: i32, kind: u8) -> [u8; 3] {
         }
     }
     bytes
+}
+
+/// The displacement a record encodes, in DST axes (y up).
+pub(crate) fn displacement(bytes: [u8; 3]) -> (i32, i32) {
+    let axis = |table: [(usize, u8, u8); 5]| {
+        table.iter().zip(WEIGHTS).fold(0, |sum, (&(byte, plus, minus), weight)| {
+            let b = bytes.get(byte).copied().unwrap_or(0);
+            sum + if b & plus != 0 { weight } else { 0 } - if b & minus != 0 { weight } else { 0 }
+        })
+    };
+    (axis(X), axis(Y))
 }
 
 /// The balanced-ternary digits of `value` (−121…121) for 1, 3, 9, 27 and 81.
@@ -174,6 +193,15 @@ fn header(name: &str, records: &Records) -> Result<Vec<u8>, EncodeError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn every_record_reads_back_as_written() {
+        for dx in -121..=121 {
+            for dy in [-121, -40, -1, 0, 1, 39, 121] {
+                assert_eq!(displacement(record(dx, dy, SEW)), (dx, dy));
+            }
+        }
+    }
 
     fn hex(bytes: &[u8]) -> String {
         bytes.iter().map(|b| format!("{b:02X}")).collect::<Vec<_>>().join(" ")

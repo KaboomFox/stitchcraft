@@ -11,6 +11,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0010`](#sc-e0010) | Error | Nothing to stitch |
 | [`SC-E0601`](#sc-e0601) | Error | Too many colour changes for the file format |
 | [`SC-E0602`](#sc-e0602) | Error | Design too large for the file format |
+| [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
 | [`SC-E0701`](#sc-e0701) | Error | Design does not fit the hoop |
 | [`SC-W0702`](#sc-w0702) | Warning | Design is larger than the comfort zone |
 
@@ -62,6 +63,17 @@ was not written. Within a real hoop this does not happen; it points at a design 
 larger than any hoop, or at stray objects far from the rest of the design.
 
 Check the design's size and remove stray objects.
+
+## SC-E0603
+
+**Error** — Machine file could not be read
+
+The machine file could not be read: it is not in the format its name or first bytes suggest, it
+ends early, or a record in it makes no sense. StitchCraft reads every file as if it could be
+damaged or hostile, so a bad file is reported, never half-read in silence.
+
+The message says where reading stopped. If the machine sews the file, it may be a format variant
+StitchCraft does not know yet: please report it with the file.
 
 ## SC-E0701
 

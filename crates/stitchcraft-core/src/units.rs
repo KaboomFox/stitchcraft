@@ -110,6 +110,12 @@ impl Point {
         }
     }
 
+    /// A point given in tenths of a millimetre (machine-file units). Integers are always finite, so this
+    /// cannot fail; readers use it for every decoded position.
+    pub fn from_tenths(x: i32, y: i32) -> Self {
+        Point { x: f64::from(x) / 10.0, y: f64::from(y) / 10.0 }
+    }
+
     /// A point from coordinates the caller has already proven finite (for example, the minimum of two
     /// finite values). Crate-internal so that untrusted numbers always go through [`Point::new`].
     pub(crate) const fn from_finite(x: f64, y: f64) -> Self {
@@ -164,6 +170,13 @@ mod tests {
         assert_eq!(Mm::from_tenths(120).get(), 12.0);
         assert_eq!(Mm::from_tenths(3).get(), 0.3);
         assert_eq!(Mm::from_tenths(-2000).get(), -200.0);
+    }
+
+    #[test]
+    fn points_from_machine_units_are_exact_tenths() {
+        let p = Point::from_tenths(-25, 1234);
+        assert_eq!((p.x(), p.y()), (-2.5, 123.4));
+        assert_eq!(Point::from_tenths(i32::MIN, i32::MAX).x(), -214_748_364.8);
     }
 
     #[test]
