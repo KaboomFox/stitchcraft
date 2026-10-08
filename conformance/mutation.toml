@@ -1,0 +1,5 @@
+# Mutants no test notices, per crate (`cargo xtask mutants`, docs/src/design/guardrails.md). The weekly
+# mutants.yml run fails when a crate has more. `cargo xtask mutants --record …` lowers the counts to
+# today's and never raises one: raise a count only by hand, in a pull request that says why.
+
+[missed]

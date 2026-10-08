@@ -1,0 +1,111 @@
+# The public API of stitchcraft-formats, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
+# Generated: do not edit. A change here is a change other code can see; say why in the pull request.
+pub mod stitchcraft_formats
+pub mod stitchcraft_formats::decode
+pub struct stitchcraft_formats::decode::Decoded
+pub stitchcraft_formats::decode::Decoded::format: alloc::string::String
+pub stitchcraft_formats::decode::Decoded::name: alloc::string::String
+pub stitchcraft_formats::decode::Decoded::palette: core::option::Option<stitchcraft_plan::profile::PaletteId>
+pub stitchcraft_formats::decode::Decoded::plan: stitchcraft_plan::plan::StitchPlan
+pub stitchcraft_formats::decode::Decoded::warnings: alloc::vec::Vec<alloc::string::String>
+pub const stitchcraft_formats::decode::MAX_RECORDS: usize
+pub mod stitchcraft_formats::dst
+pub const stitchcraft_formats::dst::RECORD_LIMIT: i32
+pub fn stitchcraft_formats::dst::decode(&[u8]) -> core::result::Result<stitchcraft_formats::decode::Decoded, stitchcraft_formats::error::DecodeError>
+pub fn stitchcraft_formats::dst::encode(&stitchcraft_plan::plan::StitchPlan, &str) -> core::result::Result<alloc::vec::Vec<u8>, stitchcraft_formats::error::EncodeError>
+pub mod stitchcraft_formats::error
+#[non_exhaustive] pub enum stitchcraft_formats::error::DecodeError
+pub stitchcraft_formats::error::DecodeError::BadOffset
+pub stitchcraft_formats::error::DecodeError::BadOffset::what: &'static str
+pub stitchcraft_formats::error::DecodeError::BadRecord
+pub stitchcraft_formats::error::DecodeError::BadRecord::at: usize
+pub stitchcraft_formats::error::DecodeError::BadRecord::byte: u8
+pub stitchcraft_formats::error::DecodeError::BadRecord::format: &'static str
+pub stitchcraft_formats::error::DecodeError::MissingEnd
+pub stitchcraft_formats::error::DecodeError::OutOfRange
+pub stitchcraft_formats::error::DecodeError::TooLong
+pub stitchcraft_formats::error::DecodeError::TooLong::max: usize
+pub stitchcraft_formats::error::DecodeError::Truncated
+pub stitchcraft_formats::error::DecodeError::Truncated::part: &'static str
+pub stitchcraft_formats::error::DecodeError::UnknownFormat
+impl stitchcraft_formats::error::DecodeError
+pub fn stitchcraft_formats::error::DecodeError::diagnostic(&self) -> stitchcraft_core::diag::Diagnostic
+#[non_exhaustive] pub enum stitchcraft_formats::error::EncodeError
+pub stitchcraft_formats::error::EncodeError::CommandAwayFromNeedle
+pub stitchcraft_formats::error::EncodeError::CommandAwayFromNeedle::block: usize
+pub stitchcraft_formats::error::EncodeError::CommandAwayFromNeedle::index: usize
+pub stitchcraft_formats::error::EncodeError::CommandAwayFromNeedle::kind: &'static str
+pub stitchcraft_formats::error::EncodeError::Empty
+pub stitchcraft_formats::error::EncodeError::NoPaletteMatch
+pub stitchcraft_formats::error::EncodeError::NoPaletteMatch::palette: &'static str
+pub stitchcraft_formats::error::EncodeError::TooLarge
+pub stitchcraft_formats::error::EncodeError::TooLarge::format: &'static str
+pub stitchcraft_formats::error::EncodeError::TooLarge::what: alloc::string::String
+pub stitchcraft_formats::error::EncodeError::TooManyColorChanges
+pub stitchcraft_formats::error::EncodeError::TooManyColorChanges::changes: usize
+pub stitchcraft_formats::error::EncodeError::TooManyColorChanges::format: &'static str
+pub stitchcraft_formats::error::EncodeError::TooManyColorChanges::max: usize
+impl stitchcraft_formats::error::EncodeError
+pub fn stitchcraft_formats::error::EncodeError::code(&self) -> stitchcraft_core::diag::Code
+pub fn stitchcraft_formats::error::EncodeError::diagnostic(&self) -> stitchcraft_core::diag::Diagnostic
+pub mod stitchcraft_formats::label
+pub const stitchcraft_formats::label::LABEL_LEN: usize
+pub fn stitchcraft_formats::label::label(&str) -> [u8; 16]
+pub mod stitchcraft_formats::pes
+pub fn stitchcraft_formats::pes::decode(&[u8]) -> core::result::Result<stitchcraft_formats::decode::Decoded, stitchcraft_formats::error::DecodeError>
+pub fn stitchcraft_formats::pes::encode(&stitchcraft_plan::plan::StitchPlan, &str) -> core::result::Result<alloc::vec::Vec<u8>, stitchcraft_formats::error::EncodeError>
+pub mod stitchcraft_formats::quantize
+pub struct stitchcraft_formats::quantize::Delta
+pub stitchcraft_formats::quantize::Delta::dx: i32
+pub stitchcraft_formats::quantize::Delta::dy: i32
+impl stitchcraft_formats::quantize::Delta
+pub const stitchcraft_formats::quantize::Delta::ZERO: stitchcraft_formats::quantize::Delta
+pub struct stitchcraft_formats::quantize::Units
+pub stitchcraft_formats::quantize::Units::x: i32
+pub stitchcraft_formats::quantize::Units::y: i32
+impl core::ops::arith::Sub for stitchcraft_formats::quantize::Units
+pub type stitchcraft_formats::quantize::Units::Output = stitchcraft_formats::quantize::Delta
+pub fn stitchcraft_formats::quantize::Units::sub(self, stitchcraft_formats::quantize::Units) -> stitchcraft_formats::quantize::Delta
+pub fn stitchcraft_formats::quantize::quantize_point(stitchcraft_core::units::Point) -> core::option::Option<stitchcraft_formats::quantize::Units>
+#[non_exhaustive] pub enum stitchcraft_formats::DecodeError
+pub stitchcraft_formats::DecodeError::BadOffset
+pub stitchcraft_formats::DecodeError::BadOffset::what: &'static str
+pub stitchcraft_formats::DecodeError::BadRecord
+pub stitchcraft_formats::DecodeError::BadRecord::at: usize
+pub stitchcraft_formats::DecodeError::BadRecord::byte: u8
+pub stitchcraft_formats::DecodeError::BadRecord::format: &'static str
+pub stitchcraft_formats::DecodeError::MissingEnd
+pub stitchcraft_formats::DecodeError::OutOfRange
+pub stitchcraft_formats::DecodeError::TooLong
+pub stitchcraft_formats::DecodeError::TooLong::max: usize
+pub stitchcraft_formats::DecodeError::Truncated
+pub stitchcraft_formats::DecodeError::Truncated::part: &'static str
+pub stitchcraft_formats::DecodeError::UnknownFormat
+impl stitchcraft_formats::error::DecodeError
+pub fn stitchcraft_formats::error::DecodeError::diagnostic(&self) -> stitchcraft_core::diag::Diagnostic
+#[non_exhaustive] pub enum stitchcraft_formats::EncodeError
+pub stitchcraft_formats::EncodeError::CommandAwayFromNeedle
+pub stitchcraft_formats::EncodeError::CommandAwayFromNeedle::block: usize
+pub stitchcraft_formats::EncodeError::CommandAwayFromNeedle::index: usize
+pub stitchcraft_formats::EncodeError::CommandAwayFromNeedle::kind: &'static str
+pub stitchcraft_formats::EncodeError::Empty
+pub stitchcraft_formats::EncodeError::NoPaletteMatch
+pub stitchcraft_formats::EncodeError::NoPaletteMatch::palette: &'static str
+pub stitchcraft_formats::EncodeError::TooLarge
+pub stitchcraft_formats::EncodeError::TooLarge::format: &'static str
+pub stitchcraft_formats::EncodeError::TooLarge::what: alloc::string::String
+pub stitchcraft_formats::EncodeError::TooManyColorChanges
+pub stitchcraft_formats::EncodeError::TooManyColorChanges::changes: usize
+pub stitchcraft_formats::EncodeError::TooManyColorChanges::format: &'static str
+pub stitchcraft_formats::EncodeError::TooManyColorChanges::max: usize
+impl stitchcraft_formats::error::EncodeError
+pub fn stitchcraft_formats::error::EncodeError::code(&self) -> stitchcraft_core::diag::Code
+pub fn stitchcraft_formats::error::EncodeError::diagnostic(&self) -> stitchcraft_core::diag::Diagnostic
+pub struct stitchcraft_formats::Decoded
+pub stitchcraft_formats::Decoded::format: alloc::string::String
+pub stitchcraft_formats::Decoded::name: alloc::string::String
+pub stitchcraft_formats::Decoded::palette: core::option::Option<stitchcraft_plan::profile::PaletteId>
+pub stitchcraft_formats::Decoded::plan: stitchcraft_plan::plan::StitchPlan
+pub stitchcraft_formats::Decoded::warnings: alloc::vec::Vec<alloc::string::String>
+pub fn stitchcraft_formats::decode(&[u8]) -> core::result::Result<stitchcraft_formats::decode::Decoded, stitchcraft_formats::error::DecodeError>
+pub fn stitchcraft_formats::encode(&stitchcraft_plan::plan::StitchPlan, stitchcraft_plan::profile::FormatId, &str) -> core::result::Result<alloc::vec::Vec<u8>, stitchcraft_formats::error::EncodeError>

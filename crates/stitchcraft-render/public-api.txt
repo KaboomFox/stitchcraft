@@ -1,0 +1,122 @@
+# The public API of stitchcraft-render, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
+# Generated: do not edit. A change here is a change other code can see; say why in the pull request.
+pub mod stitchcraft_render
+pub mod stitchcraft_render::error
+#[non_exhaustive] pub enum stitchcraft_render::error::RenderError
+pub stitchcraft_render::error::RenderError::Budget(stitchcraft_core::budget::Exhausted)
+pub stitchcraft_render::error::RenderError::Empty
+pub stitchcraft_render::error::RenderError::Internal(alloc::string::String)
+pub stitchcraft_render::error::RenderError::OutOfRange
+pub stitchcraft_render::error::RenderError::TooLarge
+pub stitchcraft_render::error::RenderError::TooLarge::height: u64
+pub stitchcraft_render::error::RenderError::TooLarge::largest_scale: f32
+pub stitchcraft_render::error::RenderError::TooLarge::max: u32
+pub stitchcraft_render::error::RenderError::TooLarge::width: u64
+impl stitchcraft_render::error::RenderError
+pub fn stitchcraft_render::error::RenderError::diagnostic(&self) -> stitchcraft_core::diag::Diagnostic
+pub mod stitchcraft_render::raster
+pub enum stitchcraft_render::raster::Style
+pub stitchcraft_render::raster::Style::Realistic
+pub stitchcraft_render::raster::Style::Simple
+impl stitchcraft_render::raster::Style
+pub const stitchcraft_render::raster::Style::ALL: &'static [stitchcraft_render::raster::Style]
+pub fn stitchcraft_render::raster::Style::from_name(&str) -> core::option::Option<stitchcraft_render::raster::Style>
+pub const fn stitchcraft_render::raster::Style::name(self) -> &'static str
+pub struct stitchcraft_render::raster::Image
+pub stitchcraft_render::raster::Image::height: u32
+pub stitchcraft_render::raster::Image::png: alloc::vec::Vec<u8>
+pub stitchcraft_render::raster::Image::width: u32
+pub struct stitchcraft_render::raster::Settings
+impl stitchcraft_render::raster::Settings
+pub const stitchcraft_render::raster::Settings::DEFAULT_SCALE: f32
+pub const stitchcraft_render::raster::Settings::MAX_SCALE: f32
+pub const stitchcraft_render::raster::Settings::MIN_SCALE: f32
+pub fn stitchcraft_render::raster::Settings::new(stitchcraft_render::raster::Style, f32) -> core::option::Option<stitchcraft_render::raster::Settings>
+pub const fn stitchcraft_render::raster::Settings::scale(self) -> f32
+pub const fn stitchcraft_render::raster::Settings::style(self) -> stitchcraft_render::raster::Style
+pub const stitchcraft_render::raster::MARGIN_MM: f32
+pub const stitchcraft_render::raster::MAX_SIDE: u32
+pub mod stitchcraft_render::scene
+pub enum stitchcraft_render::scene::Arrival
+pub stitchcraft_render::scene::Arrival::Cut
+pub stitchcraft_render::scene::Arrival::Loose
+pub stitchcraft_render::scene::Arrival::Sewn
+pub enum stitchcraft_render::scene::Mark
+pub stitchcraft_render::scene::Mark::Stop(stitchcraft_render::scene::GridPoint)
+pub stitchcraft_render::scene::Mark::Trim(stitchcraft_render::scene::GridPoint)
+impl stitchcraft_render::scene::Mark
+pub const fn stitchcraft_render::scene::Mark::at(self) -> stitchcraft_render::scene::GridPoint
+pub struct stitchcraft_render::scene::GridPoint
+pub stitchcraft_render::scene::GridPoint::x: i32
+pub stitchcraft_render::scene::GridPoint::y: i32
+pub struct stitchcraft_render::scene::Hole
+pub stitchcraft_render::scene::Hole::arrival: stitchcraft_render::scene::Arrival
+pub stitchcraft_render::scene::Hole::at: stitchcraft_render::scene::GridPoint
+pub stitchcraft_render::scene::Hole::color: stitchcraft_plan::thread::Rgb
+pub stitchcraft_render::scene::Hole::lock: bool
+pub struct stitchcraft_render::scene::Scene
+pub stitchcraft_render::scene::Scene::holes: alloc::vec::Vec<stitchcraft_render::scene::Hole>
+pub stitchcraft_render::scene::Scene::marks: alloc::collections::btree::set::BTreeSet<stitchcraft_render::scene::Mark>
+impl stitchcraft_render::scene::Scene
+pub fn stitchcraft_render::scene::Scene::bounds(&self) -> core::option::Option<(stitchcraft_render::scene::GridPoint, stitchcraft_render::scene::GridPoint)>
+pub fn stitchcraft_render::scene::Scene::of(&stitchcraft_plan::plan::StitchPlan, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_render::scene::Scene, stitchcraft_render::error::RenderError>
+impl stitchcraft_render::scene::Scene
+pub fn stitchcraft_render::scene::Scene::render(&self, stitchcraft_render::raster::Settings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_render::raster::Image, stitchcraft_render::error::RenderError>
+pub enum stitchcraft_render::Arrival
+pub stitchcraft_render::Arrival::Cut
+pub stitchcraft_render::Arrival::Loose
+pub stitchcraft_render::Arrival::Sewn
+pub enum stitchcraft_render::Mark
+pub stitchcraft_render::Mark::Stop(stitchcraft_render::scene::GridPoint)
+pub stitchcraft_render::Mark::Trim(stitchcraft_render::scene::GridPoint)
+impl stitchcraft_render::scene::Mark
+pub const fn stitchcraft_render::scene::Mark::at(self) -> stitchcraft_render::scene::GridPoint
+#[non_exhaustive] pub enum stitchcraft_render::RenderError
+pub stitchcraft_render::RenderError::Budget(stitchcraft_core::budget::Exhausted)
+pub stitchcraft_render::RenderError::Empty
+pub stitchcraft_render::RenderError::Internal(alloc::string::String)
+pub stitchcraft_render::RenderError::OutOfRange
+pub stitchcraft_render::RenderError::TooLarge
+pub stitchcraft_render::RenderError::TooLarge::height: u64
+pub stitchcraft_render::RenderError::TooLarge::largest_scale: f32
+pub stitchcraft_render::RenderError::TooLarge::max: u32
+pub stitchcraft_render::RenderError::TooLarge::width: u64
+impl stitchcraft_render::error::RenderError
+pub fn stitchcraft_render::error::RenderError::diagnostic(&self) -> stitchcraft_core::diag::Diagnostic
+pub enum stitchcraft_render::Style
+pub stitchcraft_render::Style::Realistic
+pub stitchcraft_render::Style::Simple
+impl stitchcraft_render::raster::Style
+pub const stitchcraft_render::raster::Style::ALL: &'static [stitchcraft_render::raster::Style]
+pub fn stitchcraft_render::raster::Style::from_name(&str) -> core::option::Option<stitchcraft_render::raster::Style>
+pub const fn stitchcraft_render::raster::Style::name(self) -> &'static str
+pub struct stitchcraft_render::GridPoint
+pub stitchcraft_render::GridPoint::x: i32
+pub stitchcraft_render::GridPoint::y: i32
+pub struct stitchcraft_render::Hole
+pub stitchcraft_render::Hole::arrival: stitchcraft_render::scene::Arrival
+pub stitchcraft_render::Hole::at: stitchcraft_render::scene::GridPoint
+pub stitchcraft_render::Hole::color: stitchcraft_plan::thread::Rgb
+pub stitchcraft_render::Hole::lock: bool
+pub struct stitchcraft_render::Image
+pub stitchcraft_render::Image::height: u32
+pub stitchcraft_render::Image::png: alloc::vec::Vec<u8>
+pub stitchcraft_render::Image::width: u32
+pub struct stitchcraft_render::Scene
+pub stitchcraft_render::Scene::holes: alloc::vec::Vec<stitchcraft_render::scene::Hole>
+pub stitchcraft_render::Scene::marks: alloc::collections::btree::set::BTreeSet<stitchcraft_render::scene::Mark>
+impl stitchcraft_render::scene::Scene
+pub fn stitchcraft_render::scene::Scene::bounds(&self) -> core::option::Option<(stitchcraft_render::scene::GridPoint, stitchcraft_render::scene::GridPoint)>
+pub fn stitchcraft_render::scene::Scene::of(&stitchcraft_plan::plan::StitchPlan, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_render::scene::Scene, stitchcraft_render::error::RenderError>
+impl stitchcraft_render::scene::Scene
+pub fn stitchcraft_render::scene::Scene::render(&self, stitchcraft_render::raster::Settings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_render::raster::Image, stitchcraft_render::error::RenderError>
+pub struct stitchcraft_render::Settings
+impl stitchcraft_render::raster::Settings
+pub const stitchcraft_render::raster::Settings::DEFAULT_SCALE: f32
+pub const stitchcraft_render::raster::Settings::MAX_SCALE: f32
+pub const stitchcraft_render::raster::Settings::MIN_SCALE: f32
+pub fn stitchcraft_render::raster::Settings::new(stitchcraft_render::raster::Style, f32) -> core::option::Option<stitchcraft_render::raster::Settings>
+pub const fn stitchcraft_render::raster::Settings::scale(self) -> f32
+pub const fn stitchcraft_render::raster::Settings::style(self) -> stitchcraft_render::raster::Style
+pub const stitchcraft_render::MAX_SIDE: u32
+pub fn stitchcraft_render::preview(&stitchcraft_plan::plan::StitchPlan, stitchcraft_render::raster::Settings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_render::raster::Image, stitchcraft_render::error::RenderError>

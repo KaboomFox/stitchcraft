@@ -35,7 +35,8 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
         with:
-          tool: cargo-deny,typos,mdbook
+          # cargo-public-api's version is the one the API snapshots are made with (xtask/src/api.rs).
+          tool: cargo-deny,typos,mdbook,cargo-public-api@0.52.0
       - name: The independent reader for REQ-FMT-005 (pyembroidery, pinned by hash)
         uses: ./.github/actions/oracle
       - run: cargo xtask ci
@@ -49,6 +50,23 @@ jobs:
             target/conformance/diffs/
             target/shots/
           if-no-files-found: ignore
+
+  coverage:
+    # The ratchet: no crate's line coverage below its floor in conformance/coverage.toml. The table goes
+    # to the job summary.
+    name: coverage (no crate below its floor)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Pinned toolchain with the LLVM tools
+        run: |
+          rustup toolchain install --profile minimal
+          rustup component add llvm-tools
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: cargo-llvm-cov@0.9.1
+      - run: cargo xtask coverage
 
   tests:
     name: tests (${{ matrix.os }})

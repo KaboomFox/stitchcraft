@@ -6,7 +6,7 @@
 //! | 8 | 4 | offset of the PEC block (little-endian): 22 |
 //! | 12 | 2 | hoop indicator: 0 = 100 × 100 mm, 1 = 130 × 180 mm |
 //! | 14 | 8 | zero: no design-editor objects |
-//! | 22 | … | the PEC block ([`pec`]) |
+//! | 22 | … | the PEC block (the `pec` module) |
 //!
 //! Machines sew from the PEC block and find it through the offset at byte 8. The PES section between is
 //! for design software (PE-Design); StitchCraft writes it without design-editor objects, a form other

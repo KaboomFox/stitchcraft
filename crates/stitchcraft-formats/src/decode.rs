@@ -1,6 +1,6 @@
 //! Reading machine files back into stitch plans.
 //!
-//! Every reader feeds the same [`Recorder`], which turns machine events — a sewn move, a jump, a trim, a
+//! Every reader feeds the same `Recorder`, which turns machine events — a sewn move, a jump, a trim, a
 //! stop, a thread change — into a [`StitchPlan`]. The recorder owns the limits every reader needs: at
 //! most [`MAX_RECORDS`] records (the stitch budget's limit, so a hostile file cannot exhaust memory) and
 //! positions within ±10 m. Readers are literal: each record becomes one plan entry, so `stitch inspect`

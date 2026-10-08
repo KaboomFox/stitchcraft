@@ -214,8 +214,9 @@ will let users validate a machine profile with the same cases.
 
 | When | What must pass |
 |---|---|
-| Every PR | L0, L1 (no fuzzing), L2 with fixed seeds, `--check` rules, cross-platform hashes |
-| Nightly | L1 fuzzing, L2 fresh seeds, L3 differential, mutation testing on changed crates |
+| Every PR | L0, L1 (no fuzzing), L2 with fixed seeds, `--check` rules, cross-platform hashes, coverage floors |
+| Nightly | L1 fuzzing, L2 fresh seeds, L3 differential |
+| Weekly | Mutation testing of every shipped crate, against the recorded counts |
 | Milestone close | All requirements of the milestone `active` and green; its machine checkpoint signed off |
 | Release | Everything above, plus the compatibility gate green on VectorCraft `stable` |
 
@@ -224,4 +225,11 @@ will let users validate a machine profile with the same cases.
 Conformance cases describe behaviour users see. Unit tests (in modules), snapshot tests (`insta`, for
 intermediate structures such as cell decompositions) and CLI examples in the docs (`trycmd`) still cover
 internals and documentation; mutation testing (`cargo-mutants`) and a coverage ratchet (`cargo-llvm-cov`)
-measure how well all of them together bite.
+measure how well all of them together bite ([guardrails](guardrails.md)).
+
+Both are ratchets. `conformance/coverage.toml` holds a line-coverage floor per crate, which a pull
+request may not fall below and `cargo xtask coverage --record` only raises. `conformance/mutation.toml`
+holds, per crate, how many mutants no test notices: the weekly run fails when a crate has more, and
+`cargo xtask mutants --record` only lowers the counts. The weekly job summary lists every missed mutant,
+which is the to-do list for better tests. Each mutant is judged by its own crate's tests
+(`.cargo/mutants.toml`), so each crate answers for its own code.

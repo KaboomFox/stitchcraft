@@ -6,7 +6,7 @@
 //! first stitch at its end, optionally preceded by a trim. That is all M1's sheets need; real stitch
 //! types arrive with the engine in M3.
 
-use stitchcraft_core::{ElementId, ElementIdError, Point, UnitError};
+use stitchcraft_core::{Budget, ElementId, ElementIdError, Exhausted, Meter, Point, UnitError};
 use stitchcraft_plan::{ElementRef, PlanBuilder, PlanError, Provenance, Role, StitchPlan, Thread};
 
 /// The longest running stitch on a test sheet: a common running-stitch length, well inside every profile.
@@ -27,6 +27,9 @@ pub enum SheetError {
     /// A Brother PEC palette index that does not exist.
     #[error("no Brother PEC thread has index {0}")]
     UnknownThread(u8),
+    /// The sheet needs more stitches than one design may have: its geometry is wrong.
+    #[error(transparent)]
+    Budget(#[from] Exhausted),
 }
 
 /// Draws a test sheet into a plan.
@@ -34,12 +37,15 @@ pub(crate) struct Sketch {
     builder: PlanBuilder,
     element: Option<ElementRef>,
     sheet: &'static str,
+    /// Every stitch is charged, so wrong geometry fails fast instead of exhausting memory (mutation
+    /// testing found that a sign error made lines grow without bound).
+    meter: Meter,
 }
 
 impl Sketch {
     /// A sheet whose element ids start with `sheet` (`ts01:cross`), sewn first with `thread`.
     pub fn new(sheet: &'static str, thread: Thread) -> Self {
-        Sketch { builder: PlanBuilder::new(thread), element: None, sheet }
+        Sketch { builder: PlanBuilder::new(thread), element: None, sheet, meter: Budget::DEFAULT.meter() }
     }
 
     /// Starts the part named `name`; stitches until the next part belong to it.
@@ -52,6 +58,7 @@ impl Sketch {
     /// Moves to `at` without sewing — after a trim when `trim` — and puts the needle down there.
     pub fn move_to(&mut self, at: (f64, f64), trim: bool) -> Result<(), SheetError> {
         let at = point(at)?;
+        self.meter.charge_stitches(1)?;
         if trim {
             self.builder.trim(self.element);
         }
@@ -70,9 +77,10 @@ impl Sketch {
             return Ok(());
         }
         let steps = (length / STITCH_LEN).ceil().max(1.0);
-        // `steps` is a small whole number (sheet lines are at most a few hundred millimetres).
+        // A whole number of at least 1; `as` saturates, and the budget refuses anything large.
         #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
         let count = steps as u32;
+        self.meter.charge_stitches(count)?;
         for i in 1..=count {
             let t = f64::from(i) / steps;
             self.builder.stitch(point((from.x() + dx * t, from.y() + dy * t))?, self.provenance(Role::Top));
@@ -123,4 +131,35 @@ pub(crate) fn letter_f(sketch: &mut Sketch, base: (f64, f64), height: f64, trim:
     let (top, middle) = (y - height, y - height * 0.5);
     sketch.move_to(base, trim)?;
     sketch.polyline(&[(x, top), (x + height * 0.6, top), (x, top), (x, middle), (x + height * 0.4, middle), (x, middle)])
+}
+
+#[cfg(test)]
+mod tests {
+    use stitchcraft_plan::{Rgb, StitchKind};
+
+    use super::*;
+
+    fn sketch() -> Sketch {
+        Sketch::new("test", Thread::new(Rgb::new(0, 0, 0)))
+    }
+
+    #[test]
+    fn lines_are_sewn_in_equal_stitches_of_at_most_stitch_len() {
+        let mut s = sketch();
+        s.move_to((0.0, 0.0), false).unwrap();
+        s.line_to((10.0, 0.0)).unwrap();
+        s.line_to((10.0, 0.0)).unwrap();
+        let sewn: Vec<f64> = s.finish().stitches().filter(|st| st.kind == StitchKind::Normal).map(|st| st.at.x()).collect();
+        assert_eq!(sewn, [0.0, 2.5, 5.0, 7.5, 10.0], "a line to where the needle is sews nothing");
+    }
+
+    #[test]
+    fn runaway_geometry_fails_fast_instead_of_exhausting_memory() {
+        let mut s = sketch();
+        s.move_to((0.0, 0.0), false).unwrap();
+        // 6 km of line would be 2.4 million stitches, more than one design may have: refused before
+        // a single one is made.
+        assert!(matches!(s.line_to((6_000_000.0, 0.0)), Err(SheetError::Budget(Exhausted::Stitches))));
+        assert_eq!(s.finish().stats().stitches, 1);
+    }
 }
