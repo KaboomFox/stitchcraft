@@ -1,0 +1,76 @@
+name: Sew-out report
+description: Results of sewing a StitchCraft test sheet or design on a real machine
+title: "Sew-out: TS-__ (MC-__)"
+labels: ["sewout"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for sewing! Protocol: docs/src/plan/machine-testing.md. Keep the standard setup unless
+        noted, and include a ruler in every photo.
+  - type: input
+    id: sheet
+    attributes:
+      label: Test sheet and checkpoint
+      placeholder: "TS-01, MC-1"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: StitchCraft version or commit, and the file's SHA-256
+      placeholder: "0.1.0 (abc1234), sha256 …"
+    validations:
+      required: true
+  - type: input
+    id: machine
+    attributes:
+      label: Machine model, firmware and hoop
+      placeholder: "Brother …, 200 × 200 mm hoop"
+    validations:
+      required: true
+  - type: dropdown
+    id: format
+    attributes:
+      label: File format sewn
+      options: ["PES", "DST", "other (say which below)"]
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup
+      description: Fabric, stabilizer, needle, top thread, bobbin, machine speed, trim/jump settings. Say "standard" if unchanged.
+      value: standard
+  - type: checkboxes
+    id: outcome
+    attributes:
+      label: What happened
+      options:
+        - label: The machine read the file and showed the design at the expected size
+        - label: Sewed to the end without stopping unexpectedly
+        - label: Colour changes and stops happened where expected
+        - label: Trims happened where expected
+        - label: No thread breaks, loops or bird's nests
+  - type: textarea
+    id: measurements
+    attributes:
+      label: Measurements and ratings
+      description: One row per check from the expected-result sheet. Ratings 1–5 (5 = indistinguishable from expected).
+      value: |
+        | Check | Expected | Measured / observed | Rating 1–5 |
+        |---|---|---|---|
+        |  |  |  |  |
+    validations:
+      required: true
+  - type: textarea
+    id: photos
+    attributes:
+      label: Photos (front, back, close-ups; ruler visible)
+      description: Drag images here.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else

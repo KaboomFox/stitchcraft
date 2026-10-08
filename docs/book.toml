@@ -1,0 +1,22 @@
+[book]
+title = "StitchCraft"
+authors = ["StitchCraft contributors"]
+language = "en"
+src = "src"
+
+[build]
+build-dir = "book"
+# A link in SUMMARY.md to a missing file is an error, never a silently created empty page.
+create-missing = false
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+smart-punctuation = true
+
+[output.html.search]
+enable = true
+
+[output.html.print]
+# print.html is the printable manual.
+enable = true

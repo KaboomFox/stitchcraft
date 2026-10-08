@@ -1,0 +1,15 @@
+[package]
+name = "stitchcraft-plan"
+description = "StitchCraft stitch plans, machine profiles, thread palettes and plan invariants"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+stitchcraft-core = { workspace = true }

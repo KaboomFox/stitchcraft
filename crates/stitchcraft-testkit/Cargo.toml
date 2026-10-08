@@ -1,0 +1,18 @@
+[package]
+name = "stitchcraft-testkit"
+description = "StitchCraft test support: fixtures, property-test strategies, metrics and invariant checks"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+stitchcraft-core = { workspace = true }
+stitchcraft-params = { workspace = true }
+stitchcraft-plan = { workspace = true }
+stitchcraft-engine = { workspace = true }

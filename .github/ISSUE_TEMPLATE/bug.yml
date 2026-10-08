@@ -1,0 +1,33 @@
+name: Bug report
+description: Something StitchCraft did wrong
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The fastest way to a fix is a reproducible bundle: `stitch bug-report` (from M3) writes the design,
+        parameters, profile and version into one file — attach it. We reproduce every bug with a failing
+        test before fixing it.
+  - type: input
+    id: version
+    attributes:
+      label: StitchCraft version or commit (and VectorCraft version, if relevant)
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: input
+    id: code
+    attributes:
+      label: Diagnostic code shown, if any
+      placeholder: "SC-W0305"
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps or bundle to reproduce
+    validations:
+      required: true

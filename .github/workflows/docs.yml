@@ -1,0 +1,82 @@
+# Documentation correctness on every pull request, and publishing (docs/src/design/docs-pipeline.md).
+#
+# `cargo xtask shots --check` regenerates every image declared in docs/shots.toml and compares it with
+# the committed file. The generators arrive with the roadmap — stitch renders in M2.7, VectorCraft renders
+# and UI screenshots (Xvfb + Mesa, perceptual compare) in M6.7 — together with `docs-refresh.yml`, which
+# regenerates images when a maintainer adds the `docs:refresh-shots` label to a pull request.
+name: docs
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  check:
+    name: check (generated pages, links, anchors, ids, images, book)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install --profile minimal
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: mdbook,typos
+      - name: Generated pages are fresh; links, anchors, ids and images are valid
+        run: cargo xtask docs --check
+      - name: Requirements and cases are consistent
+        run: cargo xtask conformance --check
+      - name: Documentation images are declared, reproducible and current
+        run: cargo xtask shots --check
+      - name: Build the book
+        run: mdbook build docs
+      - name: Rust snippets in rustdoc compile
+        run: cargo test --doc --workspace --locked
+      - name: Spelling
+        run: typos
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: book
+          path: docs/book
+          retention-days: 7
+
+  publish:
+    name: publish (main → /dev/, tags → /vX.Y/)
+    if: github.event_name == 'push'
+    needs: check
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: mdbook
+      - run: mdbook build docs
+      - name: Choose the destination directory
+        id: dest
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF#refs/tags/v}"
+            echo "dir=v${version%.*}" >> "$GITHUB_OUTPUT"
+          else
+            echo "dir=dev" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/book
+          destination_dir: ${{ steps.dest.outputs.dir }}
+          keep_files: true

@@ -1,0 +1,19 @@
+[package]
+name = "stitchcraft-vc-plugin"
+description = "StitchCraft plug-ins for VectorCraft (WebAssembly plug-in ABI v1)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lib]
+# `cdylib` is the .wasm VectorCraft installs; `rlib` lets native tests exercise the same code.
+crate-type = ["cdylib", "rlib"]
+
+[lints]
+workspace = true
+
+[dependencies]
+serde_json = { workspace = true }

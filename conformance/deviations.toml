@@ -1,0 +1,12 @@
+# Intended differences from Ink/Stitch's behaviour, each with a reason and the requirement that
+# motivates it. Conformance level L3 (Ink/Stitch differential, from M8) reads this file so that a
+# documented deviation is reported as such instead of as a failure.
+#
+# [[deviation]]
+# id = "DEV-FILL-001"
+# area = "fill/tatami"
+# summary = "Pull compensation extends rows at their ends instead of buffering the whole shape."
+# reason = "Preserves holes and gaps (Ink/Stitch #3395)."
+# requirements = ["REQ-FILL-TAT-006"]
+
+deviation = []

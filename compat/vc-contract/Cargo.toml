@@ -1,0 +1,16 @@
+[package]
+name = "stitchcraft-vc-contract"
+description = "ABI contract tests: StitchCraft plug-ins inside VectorCraft's real plug-in host"
+version = "0.0.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+publish = false
+
+# Its own workspace: `cargo xtask compat contract` copies this crate and points the VectorCraft
+# dependencies at the ref under test (a tag for releases, a commit for branch tracks).
+[workspace]
+
+[dependencies]
+vectorcraft-plugins = { git = "https://github.com/storytold/vectorcraft", tag = "v0.6.0" }
+vectorcraft-geom = { git = "https://github.com/storytold/vectorcraft", tag = "v0.6.0" }
+serde_json = "1"

@@ -1,0 +1,20 @@
+name: Feature request
+description: A stitch type, parameter, format or workflow you need
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What are you trying to sew or do?
+      description: Describe the result you want on fabric; pictures help.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How you imagine it working
+  - type: input
+    id: roadmap
+    attributes:
+      label: Related roadmap milestone, if you know it
+      placeholder: "M7"

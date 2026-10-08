@@ -1,0 +1,499 @@
+# StitchCraft conformance requirements.
+#
+# Each requirement is a testable statement with a stable id (never reused). `cargo xtask conformance
+# --check` enforces: unique ids; `active` requirements have at least one passing case; ids mentioned in
+# the docs exist here. See docs/src/design/conformance.md.
+#
+# status: planned | active | retired      level: L0 invariants · L1 formats · L2 generators ·
+#                                                L3 Ink/Stitch differential · L4 physical
+
+# ── Plan invariants (L0) ───────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-PLAN-001"
+area = "plan"
+level = "L0"
+statement = "All stitch coordinates are finite and inside the profile's hoop."
+milestone = "M1"
+status = "planned"
+
+[[req]]
+id = "REQ-PLAN-002"
+area = "plan"
+level = "L0"
+statement = "Every Normal stitch is no longer than the profile maximum and no shorter than the minimum stitch length, except lock stitches, which are at least 0.2 mm."
+milestone = "M1"
+status = "planned"
+
+[[req]]
+id = "REQ-PLAN-003"
+area = "plan"
+level = "L0"
+statement = "Colour blocks are non-empty, separated by colour changes, and the plan ends with exactly one End."
+milestone = "M1"
+status = "planned"
+
+[[req]]
+id = "REQ-PLAN-004"
+area = "plan"
+level = "L0"
+statement = "A Trim is preceded by a tie-off and followed by a tie-in before the next Normal stitch when lock settings request them."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-PLAN-005"
+area = "plan"
+level = "L0"
+statement = "No two consecutive Normal stitches share a position."
+milestone = "M1"
+status = "planned"
+
+[[req]]
+id = "REQ-PLAN-006"
+area = "plan"
+level = "L0"
+statement = "The number of colour changes does not exceed the target format's maximum."
+milestone = "M1"
+status = "planned"
+
+[[req]]
+id = "REQ-PLAN-007"
+area = "plan"
+level = "L0"
+statement = "Every non-command stitch names the element it came from."
+milestone = "M3"
+status = "planned"
+
+# ── Machine profiles ───────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-PRF-001"
+area = "profile"
+level = "L2"
+statement = "Built-in profiles validate (positive hoop, comfort zone inside hoop, min stitch < max stitch) and are listed by `stitch profiles`."
+milestone = "M1"
+status = "planned"
+
+[[req]]
+id = "REQ-PRF-002"
+area = "profile"
+level = "L2"
+statement = "A design larger than the hoop is an error (SC-E0701); larger than the comfort zone, a warning (SC-W0702) with a rotate-to-fit hint when rotating 90 degrees would fit."
+rationale = "Ink/Stitch #2702 (hoop size awareness)."
+milestone = "M1"
+status = "planned"
+
+# ── Formats (L1) ───────────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-FMT-001"
+area = "formats"
+level = "L1"
+statement = "Canonical plans encode to the committed golden files byte for byte, for every writer."
+milestone = "M1"
+status = "planned"
+
+[[req]]
+id = "REQ-FMT-002"
+area = "formats"
+level = "L1"
+statement = "decode(encode(plan)) equals quantize(plan) for every writer/reader pair, on random plans; quantization uses absolute positions and round-half-even."
+milestone = "M2"
+status = "planned"
+
+[[req]]
+id = "REQ-FMT-003"
+area = "formats"
+level = "L1"
+statement = "Every command kind (jump, trim, stop, colour change, end) survives every writer/reader pair."
+rationale = "Ink/Stitch #689 (PES trims ignored), #3544 (DST stops missing)."
+milestone = "M2"
+status = "planned"
+
+[[req]]
+id = "REQ-FMT-004"
+area = "formats"
+level = "L1"
+statement = "Readers accept empty and zero-stitch files without failing; writers refuse to write an empty plan (SC-E0010)."
+rationale = "Ink/Stitch #3041, #4039."
+milestone = "M2"
+status = "planned"
+
+[[req]]
+id = "REQ-FMT-005"
+area = "formats"
+level = "L1"
+statement = "A pinned pyembroidery decodes our files to the same stitches as our own reader."
+milestone = "M2"
+status = "planned"
+
+[[req]]
+id = "REQ-FMT-006"
+area = "formats"
+level = "L1"
+statement = "Fuzzed readers never panic, never allocate beyond their caps, and always terminate."
+milestone = "M2"
+status = "planned"
+
+[[req]]
+id = "REQ-FMT-007"
+area = "formats"
+level = "L1"
+statement = "Moves longer than a format's per-record limit are split into several records within the limit."
+milestone = "M1"
+status = "planned"
+
+[[req]]
+id = "REQ-THREAD-001"
+area = "threads"
+level = "L1"
+statement = "Palette tables match their published source at spot-checked entries; nearest-colour matching is deterministic (CIEDE2000 via libm)."
+rationale = "Ink/Stitch #2668, #3137, #3274, #3257."
+milestone = "M1"
+status = "planned"
+
+# ── Rendering ──────────────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-RND-001"
+area = "render"
+level = "L2"
+statement = "Previews render the plan after quantization, so what is shown is what sews."
+rationale = "Ink/Stitch #2066."
+milestone = "M2"
+status = "planned"
+
+# ── Parameters ─────────────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-PRM-001"
+area = "params"
+level = "L2"
+statement = "Every registered parameter has a label, help text, kind, default, range or options, group and applicability."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-PRM-002"
+area = "params"
+level = "L2"
+statement = "Invalid parameter values produce SC-E0101 or SC-W0102 with the key, the value and the accepted range; they never fall back silently to defaults."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-PRM-003"
+area = "params"
+level = "L2"
+statement = "Parameters round-trip unchanged through every adapter (SVG attributes, VectorCraft effect records)."
+rationale = "Ink/Stitch #3723 (settings reverted after save)."
+milestone = "M3"
+status = "planned"
+
+# ── SVG adapter ────────────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-SVG-001"
+area = "svg"
+level = "L2"
+statement = "Paths, groups, transforms, viewBox units, colours and visibility map to the Design exactly (positions within 1 micrometre)."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-SVG-002"
+area = "svg"
+level = "L2"
+statement = "Any SVG path data, including degenerate arcs, is handled per the SVG specification without failing the adapter; fuzzed."
+rationale = "Ink/Stitch #3342 (ZeroDivisionError converting an arc)."
+milestone = "M3"
+status = "planned"
+
+# ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-GEN-001"
+area = "generators"
+level = "L2"
+statement = "Every generator honours start and end hints: the first and last stitch lie within 0.1 mm of the shape point nearest each hint."
+rationale = "Ink/Stitch #4153, #2576, #3084, #1903."
+milestone = "M3"
+status = "planned"
+
+# ── Running stitch family ──────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-RUN-001"
+area = "strokes/running"
+level = "L2"
+statement = "Top stitches are at most the stitch length times (1 + jitter) and at least the minimum stitch length unless the path is shorter."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-RUN-002"
+area = "strokes/running"
+level = "L2"
+statement = "The stitched polyline deviates from the source curve by at most running_stitch_tolerance_mm."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-RUN-003"
+area = "strokes/running"
+level = "L2"
+statement = "Corners (turning angle above 30 degrees) are needle penetrations."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-RUN-004"
+area = "strokes/running"
+level = "L2"
+statement = "Bean stitch produces exactly n x (2b + 1) stitches for a span of n stitches."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-RUN-005"
+area = "strokes/running"
+level = "L2"
+statement = "Repeats alternate direction; an odd count ends at the far end, an even count at the start."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-RUN-006"
+area = "strokes/manual"
+level = "L2"
+statement = "Manual stitch outputs the path's nodes in order plus only the documented splits."
+milestone = "M3"
+status = "planned"
+
+# ── Lock stitches and assembly ─────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-LCK-001"
+area = "plan/locks"
+level = "L2"
+statement = "Lock stitches appear where `ties` says (both, before, after, neither) and only there."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-LCK-002"
+area = "plan/locks"
+level = "L2"
+statement = "Every lock id is accepted; lock shapes scale by the mm or percent parameter as documented."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-LCK-003"
+area = "plan/locks"
+level = "L4"
+statement = "Default locks hold when the tail is pulled (machine test TS-04)."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-ASM-001"
+area = "plan/assembly"
+level = "L2"
+statement = "Elements are stitched in document order; a thread change starts a new colour block."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-ASM-002"
+area = "plan/assembly"
+level = "L2"
+statement = "Same-colour moves no longer than the collapse length are sewn; longer ones tie off, jump and tie in."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-ASM-003"
+area = "plan/assembly"
+level = "L2"
+statement = "trim_after and stop_after produce a trim or stop with locks around it."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-ASM-004"
+area = "plan/assembly"
+level = "L2"
+statement = "Ignored elements are dropped and listed in the report."
+milestone = "M3"
+status = "planned"
+
+[[req]]
+id = "REQ-ASM-005"
+area = "plan/assembly"
+level = "L2"
+statement = "The origin command (or the bounds centre) becomes the machine origin; a stop position adds a jump before each stop."
+milestone = "M3"
+status = "planned"
+
+# ── Satin ──────────────────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-SAT-001"
+area = "satin"
+level = "L2"
+statement = "Every top stitch end lies on its rail offset outward by exactly the compensation (within 0.01 mm)."
+milestone = "M4"
+status = "planned"
+
+[[req]]
+id = "REQ-SAT-002"
+area = "satin"
+level = "L2"
+statement = "Measured zigzag spacing on the centre line equals the parameter within 5 percent outside short-stitch zones."
+milestone = "M4"
+status = "planned"
+
+[[req]]
+id = "REQ-SAT-003"
+area = "satin"
+level = "L2"
+statement = "No top stitch exceeds max_stitch_length_mm after splitting; split seams follow the chosen method."
+milestone = "M4"
+status = "planned"
+
+[[req]]
+id = "REQ-SAT-004"
+area = "satin"
+level = "L2"
+statement = "Underlays lie inside their inset band and precede the top stitches."
+milestone = "M4"
+status = "planned"
+
+[[req]]
+id = "REQ-SAT-005"
+area = "satin"
+level = "L2"
+statement = "Invalid satin structures produce SC-E0201 or SC-E0204 and no stitches; dangling rungs produce SC-W0203."
+rationale = "Ink/Stitch #4552 (TypeError when a rung misses the rails), commit dbef888e (tiny satin crash)."
+milestone = "M4"
+status = "planned"
+
+[[req]]
+id = "REQ-SAT-006"
+area = "satin"
+level = "L2"
+statement = "Asymmetric (per-side) parameters affect only their side."
+milestone = "M4"
+status = "planned"
+
+[[req]]
+id = "REQ-SAT-007"
+area = "satin"
+level = "L2"
+statement = "Randomized satin parameters are reproducible from the seed."
+milestone = "M4"
+status = "planned"
+
+# ── Tatami fill ────────────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-FILL-TAT-001"
+area = "fill/tatami"
+level = "L2"
+statement = "Every row segment is covered exactly once by top stitches."
+milestone = "M5"
+status = "planned"
+
+[[req]]
+id = "REQ-FILL-TAT-002"
+area = "fill/tatami"
+level = "L2"
+statement = "Measured row spacing equals the parameter within 2 percent, or follows the start-to-end gradient."
+milestone = "M5"
+status = "planned"
+
+[[req]]
+id = "REQ-FILL-TAT-003"
+area = "fill/tatami"
+level = "L2"
+statement = "Needle points follow the stagger grid; no furrow of aligned points spans more than `staggers` rows."
+milestone = "M5"
+status = "planned"
+
+[[req]]
+id = "REQ-FILL-TAT-004"
+area = "fill/tatami"
+level = "L2"
+statement = "Rasterized at 0.05 mm with a 0.4 mm thread, at least 98 percent of the region is covered at spacing up to 0.4 mm."
+milestone = "M5"
+status = "planned"
+
+[[req]]
+id = "REQ-FILL-TAT-005"
+area = "fill/tatami"
+level = "L2"
+statement = "Travel stitches lie inside the region (within 0.05 mm)."
+milestone = "M5"
+status = "planned"
+
+[[req]]
+id = "REQ-FILL-TAT-006"
+area = "fill/tatami"
+level = "L2"
+statement = "Pull compensation preserves the number of holes and connected components of the region."
+rationale = "Ink/Stitch #3395 (compensation closed deliberate gaps)."
+milestone = "M5"
+status = "planned"
+
+[[req]]
+id = "REQ-FILL-TAT-007"
+area = "fill/tatami"
+level = "L2"
+statement = "All rows, including gap-fill rows, lie inside the region within tolerance plus compensation."
+rationale = "Ink/Stitch #3278 (gap fill stitched outside the shape)."
+milestone = "M5"
+status = "planned"
+
+[[req]]
+id = "REQ-FILL-TAT-008"
+area = "fill/tatami"
+level = "L2"
+statement = "Disconnected regions are joined with trims and SC-W0307, never with long straight stitches across empty fabric."
+milestone = "M5"
+status = "planned"
+
+[[req]]
+id = "REQ-FILL-TAT-009"
+area = "fill/tatami"
+level = "L2"
+statement = "A 150 x 150 mm square at 0.4 mm spacing plans within the NFR-PERF-1 budget."
+milestone = "M5"
+status = "planned"
+
+# ── VectorCraft ────────────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-VC-001"
+area = "vectorcraft"
+level = "L2"
+statement = "The .vectorcraft adapter reads layers, groups, paths, compound paths, paints, visibility and our effect records from every VectorCraft version the compatibility gate lists as supported; untrusted input is capped and fuzzed."
+milestone = "M6"
+status = "planned"
+
+[[req]]
+id = "REQ-VC-002"
+area = "vectorcraft"
+level = "L2"
+statement = "Every plug-in manifest is accepted by VectorCraft's host: id charset, kind, at most 64 parameters, 64 KiB."
+milestone = "M6"
+status = "planned"
+
+[[req]]
+id = "REQ-VC-003"
+area = "vectorcraft"
+level = "L2"
+statement = "Each live-effect preview level completes within VectorCraft's v1 budget (5 s, fuel limit) for the largest fixture of that level."
+milestone = "M6"
+status = "planned"

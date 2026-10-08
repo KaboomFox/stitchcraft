@@ -1,0 +1,17 @@
+StitchCraft
+Copyright (c) 2026 The StitchCraft contributors
+
+Licensed under the MIT License or the Apache License, Version 2.0, at your option
+(LICENSE-MIT, LICENSE-APACHE).
+
+Interoperability
+----------------
+StitchCraft reads and writes the embroidery parameters used by Ink/Stitch (https://inkstitch.org) as
+SVG attributes. Parameter names, meanings and defaults are used for file compatibility only. StitchCraft
+contains no Ink/Stitch source code, documentation text, images, fonts or data files; Ink/Stitch is
+licensed under the GNU GPL v3.
+
+Third-party data
+----------------
+Entries are added here when a data table is derived from a third-party source (for example machine
+format constants or thread palettes taken from MIT-licensed pyembroidery/pystitch). None yet.

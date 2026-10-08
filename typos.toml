@@ -1,0 +1,13 @@
+# https://github.com/crate-ci/typos — run in CI.
+[files]
+extend-exclude = ["conformance/golden/", "conformance/fixtures/", "*.svg", "*.pes", "*.dst"]
+
+[default.extend-words]
+# Embroidery and format vocabulary.
+PEC = "PEC"
+JEF = "JEF"
+DSB = "DSB"
+DSZ = "DSZ"
+Ellageo = "Ellageo"
+# German words in cited paper titles (Hilbert, Hierholzer).
+ein = "ein"

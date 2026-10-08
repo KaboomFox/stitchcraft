@@ -1,0 +1,8 @@
+/target
+/docs/book
+/corpus
+/compat/vc-contract/target
+# The contract crate resolves VectorCraft fresh for each ref under test (cargo xtask compat contract).
+/compat/vc-contract/Cargo.lock
+*~
+.DS_Store

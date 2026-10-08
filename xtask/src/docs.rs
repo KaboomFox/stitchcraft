@@ -1,0 +1,290 @@
+//! `cargo xtask docs [--check]`: generated pages, and the checks that keep the documentation true.
+//!
+//! Without `--check` it regenerates the generated pages. With `--check` it writes nothing and fails when:
+//! a generated page is stale; a page is missing from `SUMMARY.md`; a relative link or `#anchor` is broken;
+//! a document mentions a `cargo xtask` subcommand that does not exist; a `REQ-…` id or `SC-…` code is not
+//! registered; the ADR index disagrees with the ADR files; an image has no alt text or no declaration in
+//! `docs/shots.toml` (`docs/src/design/docs-pipeline.md`).
+
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
+
+use crate::markdown::{self, Link};
+use crate::util::{self, Findings};
+use crate::{SUBCOMMANDS, conformance, contract_page};
+
+const DOCS_SRC: &str = "docs/src";
+const DIAGNOSTICS_PAGE: &str = "docs/src/design/diagnostics.md";
+const ADR_DIR: &str = "docs/src/design/adr";
+
+/// `cargo xtask docs`.
+pub fn run(check_only: bool) -> Result<(), String> {
+    let root = util::root();
+    let mut findings = Findings::default();
+    generated_pages(&root, check_only, &mut findings)?;
+    if !check_only {
+        return findings.finish("docs", "generated pages up to date");
+    }
+    let pages: Vec<(PathBuf, String)> =
+        util::files(&root, &["md"]).into_iter().map(|p| util::read(&p).map(|text| (p, text))).collect::<Result<_, _>>()?;
+    summary(&root, &mut findings)?;
+    for (path, text) in &pages {
+        check_links(&root, path, text, &mut findings);
+    }
+    xtask_mentions(&root, &pages, &mut findings)?;
+    ids(&pages, &mut findings)?;
+    adr_index(&root, &mut findings)?;
+    images(&root, &pages, &mut findings)?;
+    findings.finish("docs", &format!("{} Markdown files checked", pages.len()))
+}
+
+/// Regenerates (or, with `check_only`, compares) every generated page.
+fn generated_pages(root: &Path, check_only: bool, findings: &mut Findings) -> Result<(), String> {
+    let data = util::read(&root.join(contract_page::DATA))?;
+    let fresh = contract_page::render(&data)?;
+    let path = root.join(contract_page::PAGE);
+    let current = std::fs::read_to_string(&path).unwrap_or_default();
+    if current != fresh {
+        if check_only {
+            findings.error(format!("{} is stale: run `cargo xtask docs`", contract_page::PAGE));
+        } else {
+            std::fs::write(&path, fresh).map_err(|e| format!("{}: {e}", contract_page::PAGE))?;
+            println!("updated {}", contract_page::PAGE);
+        }
+    }
+    Ok(())
+}
+
+/// Every page under `docs/src` is linked from `SUMMARY.md`, and every link there exists.
+fn summary(root: &Path, findings: &mut Findings) -> Result<(), String> {
+    let src = root.join(DOCS_SRC);
+    let summary = util::read(&src.join("SUMMARY.md"))?;
+    let listed: BTreeSet<PathBuf> = markdown::links(&summary).into_iter().map(|l| src.join(l.target)).collect();
+    for path in &listed {
+        if !path.is_file() {
+            findings.error(format!("SUMMARY.md links to a missing page: {}", util::rel(path)));
+        }
+    }
+    for page in util::files(&src, &["md"]) {
+        if page.file_name().is_some_and(|n| n == "SUMMARY.md") {
+            continue;
+        }
+        if !listed.contains(&page) {
+            findings.error(format!("{} is not in docs/src/SUMMARY.md", util::rel(&page)));
+        }
+    }
+    Ok(())
+}
+
+/// Relative links and anchors resolve; pages inside `docs/src` link only inside it.
+fn check_links(root: &Path, path: &Path, text: &str, findings: &mut Findings) {
+    let src = root.join(DOCS_SRC);
+    let in_book = path.starts_with(&src);
+    let dir = path.parent().unwrap_or(root);
+    for Link { line, target, .. } in markdown::links(text) {
+        let here = format!("{}:{line}", util::rel(path));
+        if target.is_empty() || target.contains("://") || target.starts_with("mailto:") {
+            continue;
+        }
+        let (file_part, anchor) = match target.split_once('#') {
+            Some((f, a)) => (f, Some(a)),
+            None => (target.as_str(), None),
+        };
+        let resolved = if file_part.is_empty() { path.to_path_buf() } else { dir.join(file_part) };
+        if !resolved.exists() {
+            findings.error(format!("{here}: broken link `{target}`"));
+            continue;
+        }
+        if in_book && !normalized(&resolved).starts_with(normalized(&src)) {
+            findings.error(format!("{here}: `{target}` leaves docs/src; the published book cannot follow it"));
+        }
+        if let Some(anchor) = anchor
+            && resolved.extension().is_some_and(|e| e == "md")
+        {
+            let target_text = if resolved == path { text.to_string() } else { std::fs::read_to_string(&resolved).unwrap_or_default() };
+            if !markdown::heading_ids(&target_text).contains(anchor) {
+                findings.error(format!("{here}: no heading for anchor `#{anchor}` in {}", util::rel(&resolved)));
+            }
+        }
+    }
+}
+
+/// `path` with `.` and `..` components resolved lexically (the file is known to exist).
+fn normalized(path: &Path) -> PathBuf {
+    let mut out = PathBuf::new();
+    for part in path.components() {
+        match part {
+            std::path::Component::ParentDir => {
+                out.pop();
+            }
+            std::path::Component::CurDir => {}
+            other => out.push(other),
+        }
+    }
+    out
+}
+
+/// Every `cargo xtask <name>` in docs and workflows names a real subcommand.
+fn xtask_mentions(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) -> Result<(), String> {
+    let mut texts: Vec<(PathBuf, String)> = pages.to_vec();
+    for path in util::files(&root.join(".github"), &["yml", "yaml"]) {
+        let text = util::read(&path)?;
+        texts.push((path, text));
+    }
+    for (path, text) in &texts {
+        for (number, line) in text.lines().enumerate() {
+            let mut rest = line;
+            while let Some(pos) = rest.find("cargo xtask ") {
+                let after = rest.get(pos + "cargo xtask ".len()..).unwrap_or("");
+                let name: String = after.chars().take_while(|c| c.is_ascii_lowercase() || *c == '-').collect();
+                if !name.is_empty() && !SUBCOMMANDS.iter().any(|(n, _, _)| *n == name) {
+                    findings.error(format!("{}:{}: `cargo xtask {name}` is not a subcommand", util::rel(path), number + 1));
+                }
+                rest = after;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Requirement ids and diagnostic codes mentioned in Markdown are registered.
+fn ids(pages: &[(PathBuf, String)], findings: &mut Findings) -> Result<(), String> {
+    let requirements = conformance::requirement_ids()?;
+    let codes = diagnostic_codes()?;
+    for (path, text) in pages {
+        for (number, line) in text.lines().enumerate() {
+            let here = format!("{}:{}", util::rel(path), number + 1);
+            for id in find_requirement_ids(line) {
+                if !requirements.contains(&id) {
+                    findings.error(format!("{here}: {id} is not in conformance/requirements.toml"));
+                }
+            }
+            for code in find_codes(line) {
+                if !codes.contains(&code) {
+                    findings.error(format!("{here}: {code} is not registered in {DIAGNOSTICS_PAGE}"));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// `REQ-AREA[-SUB…]-NNN` ids in `line`.
+fn find_requirement_ids(line: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut rest = line;
+    while let Some(pos) = rest.find("REQ-") {
+        let tail = rest.get(pos..).unwrap_or("");
+        let token: String = tail.chars().take_while(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || *c == '-').collect();
+        let token = token.trim_end_matches('-');
+        let digits = token.rsplit('-').next().unwrap_or("");
+        if digits.len() == 3 && digits.chars().all(|c| c.is_ascii_digit()) && token.matches('-').count() >= 2 {
+            out.push(token.to_string());
+        }
+        rest = tail.get(4..).unwrap_or("");
+    }
+    out
+}
+
+/// `SC-[EWI]NNNN` codes in `line`.
+fn find_codes(line: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut rest = line;
+    while let Some(pos) = rest.find("SC-") {
+        let tail = rest.get(pos..).unwrap_or("");
+        let code: String = tail.chars().take(8).collect();
+        let mut chars = code.chars().skip(3);
+        let severity_ok = chars.next().is_some_and(|c| matches!(c, 'E' | 'W' | 'I'));
+        let digits_ok = code.chars().count() == 8 && chars.all(|c| c.is_ascii_digit());
+        let boundary_ok = !tail.chars().nth(8).is_some_and(|c| c.is_ascii_alphanumeric());
+        if severity_ok && digits_ok && boundary_ok {
+            out.push(code);
+        }
+        rest = tail.get(3..).unwrap_or("");
+    }
+    out
+}
+
+/// The diagnostic codes registered in the diagnostics page's table (the registry until M3 moves it into
+/// `stitchcraft-core`).
+fn diagnostic_codes() -> Result<BTreeSet<String>, String> {
+    let text = util::read(&util::root().join(DIAGNOSTICS_PAGE))?;
+    Ok(text.lines().filter(|l| l.starts_with("| `SC-")).flat_map(find_codes).collect())
+}
+
+/// The ADR index lists every ADR with the status its file declares.
+fn adr_index(root: &Path, findings: &mut Findings) -> Result<(), String> {
+    let dir = root.join(ADR_DIR);
+    let index = util::read(&dir.join("README.md"))?;
+    for path in util::files(&dir, &["md"]) {
+        let Some(name) = path.file_name().and_then(|n| n.to_str()) else { continue };
+        if !name.chars().next().is_some_and(|c| c.is_ascii_digit()) {
+            continue;
+        }
+        let Some(row) = index.lines().find(|l| l.contains(&format!("({name})"))) else {
+            findings.error(format!("{ADR_DIR}/README.md does not list {name}"));
+            continue;
+        };
+        let text = util::read(&path)?;
+        let declared = text.lines().find_map(|l| l.strip_prefix("**Status:**")).and_then(|s| s.split_whitespace().next()).unwrap_or("");
+        let listed = row.trim_end_matches('|').rsplit('|').next().and_then(|s| s.split_whitespace().next()).unwrap_or("");
+        if declared.is_empty() || declared != listed {
+            findings.error(format!("{name}: status `{declared}` in the file but `{listed}` in the ADR index"));
+        }
+    }
+    Ok(())
+}
+
+#[derive(serde::Deserialize, Default)]
+struct Shots {
+    #[serde(default)]
+    shot: Vec<Shot>,
+}
+
+#[derive(serde::Deserialize)]
+struct Shot {
+    id: String,
+    #[serde(default)]
+    alt: String,
+}
+
+/// Images have alt text; local images in the book are declared in `docs/shots.toml`.
+fn images(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) -> Result<(), String> {
+    let shots: Shots = toml::from_str(&util::read(&root.join("docs/shots.toml"))?).map_err(|e| format!("docs/shots.toml: {e}"))?;
+    for shot in shots.shot.iter().filter(|s| s.alt.trim().is_empty()) {
+        findings.error(format!("docs/shots.toml: shot `{}` has no alt text", shot.id));
+    }
+    let src = root.join(DOCS_SRC);
+    for (path, text) in pages {
+        for link in markdown::links(text).into_iter().filter(|l| l.image) {
+            let here = format!("{}:{}", util::rel(path), link.line);
+            if link.text.trim().is_empty() {
+                findings.error(format!("{here}: image `{}` has no alt text", link.target));
+            }
+            if path.starts_with(&src) && !link.target.contains("://") {
+                let stem = Path::new(&link.target).file_stem().and_then(|s| s.to_str()).unwrap_or("");
+                if !shots.shot.iter().any(|s| s.id == stem) {
+                    findings.error(format!("{here}: image `{}` is not declared in docs/shots.toml", link.target));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn finds_requirement_ids_but_not_placeholders() {
+        assert_eq!(find_requirement_ids("see REQ-FILL-TAT-006 and REQ-RUN-001..003"), vec!["REQ-FILL-TAT-006", "REQ-RUN-001"]);
+        assert!(find_requirement_ids("REQ-… and REQ-PLAN-* and `REQ-`").is_empty());
+    }
+
+    #[test]
+    fn finds_diagnostic_codes_but_not_ranges() {
+        assert_eq!(find_codes("`SC-E0201`, SC-W0702."), vec!["SC-E0201", "SC-W0702"]);
+        assert!(find_codes("SC-E02xx SC-X0001 SC-W07021").is_empty());
+    }
+}

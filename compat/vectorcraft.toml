@@ -1,0 +1,17 @@
+# VectorCraft versions the compatibility gate currently pins, per track
+# (docs/src/design/compatibility-gate.md). Changed only by reviewed PRs — usually the gate's bot PR.
+
+repository = "https://github.com/storytold/vectorcraft"
+
+[tracks.stable]
+tag = "v0.6.0"
+
+[tracks.prerelease]
+# None published yet (VectorCraft's release workflow supports SemVer pre-releases such as 0.7.0-rc.1).
+tag = ""
+
+[tracks.release-branch]
+branch = "release"
+
+[tracks.main]
+branch = "main"

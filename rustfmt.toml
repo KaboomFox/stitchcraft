@@ -1,0 +1,3 @@
+# Same style as VectorCraft, so code moves between the projects without reformatting.
+max_width = 150
+use_small_heuristics = "Max"

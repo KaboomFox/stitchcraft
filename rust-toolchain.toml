@@ -1,0 +1,6 @@
+# Pinned so lints and formatting are identical for everyone and in CI. Bump in its own PR.
+# CI adds the wasm32-unknown-unknown target explicitly (`rustup target add`).
+[toolchain]
+channel = "1.97.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

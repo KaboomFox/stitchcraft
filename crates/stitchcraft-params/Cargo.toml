@@ -1,0 +1,15 @@
+[package]
+name = "stitchcraft-params"
+description = "StitchCraft parameter registry: the single source of truth for every embroidery parameter"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+stitchcraft-core = { workspace = true }

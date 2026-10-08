@@ -1,0 +1,75 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "apps/*", "xtask"]
+default-members = ["crates/*", "apps/*", "xtask"]
+# The VectorCraft contract tests build against whichever VectorCraft ref is under test, in their own
+# workspace (`cargo xtask compat contract`; docs/src/design/compatibility-gate.md).
+exclude = ["compat/vc-contract"]
+
+[workspace.package]
+version = "0.0.1"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+# Same floor as VectorCraft, so the engine can be embedded there (docs/src/design/adr/0009-*.md).
+rust-version = "1.95"
+repository = "https://github.com/OWNER/stitchcraft"
+publish = false
+
+[workspace.dependencies]
+# internal (layering enforced by `cargo xtask layers`, table in xtask/src/layers.rs)
+stitchcraft-core = { path = "crates/stitchcraft-core" }
+stitchcraft-params = { path = "crates/stitchcraft-params" }
+stitchcraft-plan = { path = "crates/stitchcraft-plan" }
+stitchcraft-engine = { path = "crates/stitchcraft-engine" }
+stitchcraft-formats = { path = "crates/stitchcraft-formats" }
+stitchcraft-render = { path = "crates/stitchcraft-render" }
+stitchcraft-svg = { path = "crates/stitchcraft-svg" }
+stitchcraft-vectorcraft = { path = "crates/stitchcraft-vectorcraft" }
+stitchcraft-testkit = { path = "crates/stitchcraft-testkit" }
+
+# foundation
+# Pure-Rust transcendental functions: identical results on every platform, including wasm32
+# (platform libm implementations differ in the last bits; docs/src/design/determinism.md).
+libm = "0.2"
+thiserror = "2"
+
+# tooling (xtask only)
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.9"
+
+[workspace.lints.rust]
+# `deny` (not `forbid`) so the one audited exception — the VectorCraft ABI shim — can opt in with
+# `#[allow(unsafe_code)]`; every other crate root carries `#![forbid(unsafe_code)]`, and
+# `cargo xtask unsafe-audit` checks both rules.
+unsafe_code = "deny"
+missing_docs = "deny"
+
+[workspace.lints.clippy]
+# StitchCraft never crashes: shipped code returns `Result` or a coded diagnostic instead of panicking
+# (AGENTS.md › Non-negotiables). Tests may unwrap (clippy.toml).
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+unreachable = "deny"
+dbg_macro = "deny"
+# Libraries never print or end the process (Ink/Stitch's library code calls sys.exit; we don't).
+# Binaries opt out at their crate root.
+print_stdout = "deny"
+print_stderr = "deny"
+exit = "deny"
+# Readability and correctness extras.
+semicolon_if_nothing_returned = "warn"
+uninlined_format_args = "warn"
+redundant_clone = "warn"
+needless_pass_by_value = "warn"
+cast_possible_truncation = "warn"
+
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

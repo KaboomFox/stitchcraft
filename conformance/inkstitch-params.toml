@@ -1,0 +1,1557 @@
+# Ink/Stitch parameters (facts only) — snapshot of inkstitch/inkstitch@d59c9ab.
+# Source of docs/src/design/inkstitch-compat-contract.md (`cargo xtask docs`).
+# Do not add descriptions: they are GPL text. StitchCraft's help text lives in its registry.
+
+lock_ids = ["half_stitch", "arrow", "back_forth", "bowtie", "cross", "star", "simple", "triangle", "zigzag", "custom"]
+
+[[param]]
+element = "common"
+name = "min_stitch_length_mm"
+type = "float"
+unit = "mm"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "common"
+name = "min_jump_stitch_length_mm"
+type = "float"
+unit = "mm"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "common"
+name = "ties"
+type = "dropdown"
+unit = "—"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "common"
+name = "force_lock_stitches"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "common"
+name = "lock_start"
+type = "combo"
+unit = "—"
+default = "half_stitch"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "common"
+name = "lock_custom_start"
+type = "string"
+unit = "—"
+default = "—"
+applies_to = ["custom"]
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "common"
+name = "lock_start_scale_mm"
+type = "float"
+unit = "mm"
+default = "0.7"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "common"
+name = "lock_start_scale_percent"
+type = "float"
+unit = "%"
+default = "100"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "common"
+name = "lock_end"
+type = "combo"
+unit = "—"
+default = "half_stitch"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "common"
+name = "lock_custom_end"
+type = "string"
+unit = "—"
+default = "—"
+applies_to = ["custom"]
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "common"
+name = "lock_end_scale_mm"
+type = "float"
+unit = "mm"
+default = "0.7"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "common"
+name = "lock_end_scale_percent"
+type = "float"
+unit = "%"
+default = "100"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "common"
+name = "trim_after"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "common"
+name = "stop_after"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "stroke"
+name = "satin_column"
+type = "toggle"
+unit = "—"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "stroke"
+name = "stroke_method"
+type = "combo"
+unit = "—"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "stroke"
+name = "repeats"
+type = "int"
+unit = "—"
+default = "1"
+applies_to = ["running_stitch", "ripple_stitch", "zigzag_stitch"]
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "stroke"
+name = "bean_stitch_repeats"
+type = "str"
+unit = "—"
+default = "0"
+applies_to = ["running_stitch", "ripple_stitch", "manual_stitch", "zigzag_stitch"]
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "stroke"
+name = "manual_pattern_placement"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "running_stitch_length_mm"
+type = "string"
+unit = "mm"
+default = "2.5"
+applies_to = ["running_stitch", "ripple_stitch"]
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "stroke"
+name = "running_stitch_tolerance_mm"
+type = "float"
+unit = "mm"
+default = "0.2"
+applies_to = ["running_stitch", "ripple_stitch"]
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "stroke"
+name = "enable_random_stitch_length"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["running_stitch", "ripple_stitch"]
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "stroke"
+name = "random_stitch_length_jitter_percent"
+type = "float"
+unit = "± %"
+default = "10"
+applies_to = ["running_stitch", "ripple_stitch"]
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "stroke"
+name = "max_stitch_length_mm"
+type = "float"
+unit = "mm"
+default = "—"
+applies_to = ["manual_stitch"]
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "stroke"
+name = "zigzag_spacing_mm"
+type = "string"
+unit = "mm"
+default = "0.4"
+applies_to = ["zigzag_stitch"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "stroke"
+name = "stroke_pull_compensation_mm"
+type = "float"
+unit = "mm (each side)"
+default = "0"
+applies_to = ["zigzag_stitch"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "stroke"
+name = "zigzag_angle"
+type = "float"
+unit = "°"
+default = "0"
+applies_to = ["zigzag_stitch"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "stroke"
+name = "line_count"
+type = "int"
+unit = "—"
+default = "10"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "min_line_dist_mm"
+type = "float"
+unit = "mm"
+default = "—"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "satin_guide_pattern_position"
+type = "combo"
+unit = "—"
+default = "default"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "staggers"
+type = "int"
+unit = "—"
+default = "0"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "skip_start"
+type = "int"
+unit = "—"
+default = "0"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "skip_end"
+type = "int"
+unit = "—"
+default = "0"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "flip_copies"
+type = "boolean"
+unit = "—"
+default = "true"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "exponent"
+type = "float"
+unit = "—"
+default = "1"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "flip_exponent"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "reverse"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "reverse_rails"
+type = "combo"
+unit = "—"
+default = "automatic"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "swap_satin_rails"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "grid_size_mm"
+type = "float"
+unit = "mm"
+default = "0"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "grid_first"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "scale_axis"
+type = "dropdown"
+unit = "—"
+default = "0"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "scale_start"
+type = "float"
+unit = "%"
+default = "100"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "scale_end"
+type = "float"
+unit = "%"
+default = "0.0"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "rotate_ripples"
+type = "boolean"
+unit = "—"
+default = "true"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "join_style"
+type = "dropdown"
+unit = "—"
+default = "0"
+applies_to = ["ripple_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "stroke"
+name = "random_seed"
+type = "random_seed"
+unit = "—"
+default = "—"
+applies_to = ["running_stitch", "ripple_stitch"]
+phase = "P1"
+milestone = "M3"
+
+[[param]]
+element = "satin"
+name = "satin_column"
+type = "toggle"
+unit = "—"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "satin_method"
+type = "combo"
+unit = "—"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "random_width_decrease_percent"
+type = "float"
+unit = "% (each side)"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "random_width_increase_percent"
+type = "float"
+unit = "% (each side)"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "random_zigzag_spacing_percent"
+type = "float"
+unit = "± %"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "split_method"
+type = "combo"
+unit = "—"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "max_stitch_length_mm"
+type = "float"
+unit = "mm"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "random_split_jitter_percent"
+type = "float"
+unit = "± %"
+default = "0"
+applies_to = ["default"]
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "random_split_phase"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["default"]
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "min_random_split_length_mm"
+type = "float"
+unit = "mm"
+default = "—"
+applies_to = ["default"]
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "split_staggers"
+type = "float"
+unit = "—"
+default = "4"
+applies_to = ["staggered"]
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "short_stitch_inset"
+type = "float"
+unit = "%"
+default = "15"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "short_stitch_distance_mm"
+type = "float"
+unit = "mm"
+default = "0.25"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "zigzag_spacing_mm"
+type = "float"
+unit = "mm/cycle"
+default = "0.4"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "pull_compensation_percent"
+type = "float"
+unit = "% (each side)"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "pull_compensation_mm"
+type = "float"
+unit = "mm (each side)"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "push_compensation_mm"
+type = "float"
+unit = "mm (each side)"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "reverse_rails"
+type = "combo"
+unit = "—"
+default = "automatic"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "swap_satin_rails"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "running_stitch_length_mm"
+type = "float"
+unit = "mm"
+default = "2.5"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "running_stitch_tolerance_mm"
+type = "float"
+unit = "mm"
+default = "0.1"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "running_stitch_position"
+type = "float"
+unit = "%"
+default = "50"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "start_at_nearest_point"
+type = "boolean"
+unit = "—"
+default = "true"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "end_at_nearest_point"
+type = "boolean"
+unit = "—"
+default = "true"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "contour_underlay"
+type = "toggle"
+unit = "—"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "contour_underlay_stitch_length_mm"
+type = "float"
+unit = "mm"
+default = "3"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "contour_underlay_stitch_tolerance_mm"
+type = "float"
+unit = "mm"
+default = "0.2"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "contour_underlay_inset_mm"
+type = "float"
+unit = "mm (each side)"
+default = "0.4"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "contour_underlay_inset_percent"
+type = "float"
+unit = "% (each side)"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "center_walk_underlay"
+type = "toggle"
+unit = "—"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "center_walk_underlay_stitch_length_mm"
+type = "float"
+unit = "mm"
+default = "3"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "center_walk_underlay_stitch_tolerance_mm"
+type = "float"
+unit = "mm"
+default = "0.2"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "center_walk_underlay_repeats"
+type = "int"
+unit = "—"
+default = "2"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "center_walk_underlay_position"
+type = "float"
+unit = "%"
+default = "50"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "zigzag_underlay"
+type = "toggle"
+unit = "—"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "zigzag_underlay_spacing_mm"
+type = "float"
+unit = "mm"
+default = "3"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "zigzag_underlay_inset_mm"
+type = "float"
+unit = "mm (each side)"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "zigzag_underlay_inset_percent"
+type = "float"
+unit = "% (each side)"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "zigzag_underlay_max_stitch_length_mm"
+type = "float"
+unit = "mm"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "satin"
+name = "random_seed"
+type = "random_seed"
+unit = "—"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M4"
+
+[[param]]
+element = "fill"
+name = "fill"
+type = "toggle"
+unit = "—"
+default = "true"
+applies_to = []
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "fill_method"
+type = "combo"
+unit = "—"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "guided_fill_strategy"
+type = "dropdown"
+unit = "—"
+default = "0"
+applies_to = ["guided_fill"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "contour_strategy"
+type = "dropdown"
+unit = "—"
+default = "0"
+applies_to = ["contour_fill"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "fill"
+name = "join_style"
+type = "dropdown"
+unit = "—"
+default = "0"
+applies_to = ["contour_fill"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "fill"
+name = "avoid_self_crossing"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["contour_fill"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "fill"
+name = "clockwise"
+type = "boolean"
+unit = "—"
+default = "true"
+applies_to = ["contour_fill"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "fill"
+name = "meander_pattern"
+type = "combo"
+unit = "—"
+default = "0"
+applies_to = ["meander_fill"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "fill"
+name = "meander_angle"
+type = "float"
+unit = "degrees"
+default = "0"
+applies_to = ["meander_fill"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "fill"
+name = "meander_scale_percent"
+type = "float"
+unit = "%"
+default = "100"
+applies_to = ["meander_fill"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "fill"
+name = "clip"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["meander_fill"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "fill"
+name = "smoothness_mm"
+type = "float"
+unit = "mm"
+default = "0"
+applies_to = ["contour_fill", "guided_fill", "meander_fill"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "fill"
+name = "expand_mm"
+type = "float"
+unit = "mm"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "gap_fill_rows"
+type = "int"
+unit = "rows"
+default = "0"
+applies_to = ["tatami_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "angle"
+type = "float"
+unit = "deg"
+default = "0"
+applies_to = ["tatami_fill", "legacy_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "guided_fill_angle"
+type = "float"
+unit = "deg"
+default = "—"
+applies_to = ["guided_fill"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "tartan_angle"
+type = "float"
+unit = "deg"
+default = "-45"
+applies_to = ["tartan_fill"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "max_stitch_length_mm"
+type = "float"
+unit = "mm"
+default = "4.0"
+applies_to = ["tatami_fill", "contour_fill", "guided_fill", "linear_gradient_fill", "tartan_fill", "legacy_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "row_spacing_mm"
+type = "float"
+unit = "mm"
+default = "0.25"
+applies_to = ["tatami_fill", "contour_fill", "guided_fill", "circular_fill", "linear_gradient_fill", "tartan_fill", "legacy_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "end_row_spacing_mm"
+type = "float"
+unit = "mm"
+default = "—"
+applies_to = ["tatami_fill", "circular_fill", "legacy_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "stitch_position_method"
+type = "combo"
+unit = "—"
+default = "0"
+applies_to = ["guided_fill"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "staggers"
+type = "int"
+unit = "—"
+default = "4"
+applies_to = ["tatami_fill", "guided_fill", "linear_gradient_fill", "tartan_fill", "legacy_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "skip_last"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["tatami_fill", "guided_fill", "linear_gradient_fill", "legacy_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "flip"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["legacy_fill"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "reverse"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["legacy_fill"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "stop_at_ending_point"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["linear_gradient_fill", "tartan_fill"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "underpath"
+type = "boolean"
+unit = "—"
+default = "true"
+applies_to = ["tatami_fill", "guided_fill", "circular_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "running_stitch_length_mm"
+type = "float"
+unit = "mm"
+default = "2.5"
+applies_to = ["tatami_fill", "guided_fill", "meander_fill", "circular_fill", "linear_gradient_fill", "tartan_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "running_stitch_tolerance_mm"
+type = "float"
+unit = "mm"
+default = "0.1"
+applies_to = ["tatami_fill", "contour_fill", "guided_fill", "meander_fill", "circular_fill", "linear_gradient_fill", "tartan_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "enable_random_stitch_length"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = ["tatami_fill", "contour_fill", "guided_fill", "circular_fill", "linear_gradient_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "random_stitch_length_jitter_percent"
+type = "float"
+unit = "± %"
+default = "10"
+applies_to = ["tatami_fill", "contour_fill", "guided_fill", "circular_fill", "linear_gradient_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "repeats"
+type = "int"
+unit = "—"
+default = "1"
+applies_to = ["meander_fill", "contour_fill", "circular_fill"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "fill"
+name = "bean_stitch_repeats"
+type = "str"
+unit = "—"
+default = "0"
+applies_to = ["meander_fill", "circular_fill", "contour_fill", "guided_fill", "tartan_fill"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "fill"
+name = "zigzag_spacing_mm"
+type = "float"
+unit = "mm"
+default = "0"
+applies_to = ["meander_fill"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "fill"
+name = "zigzag_width_mm"
+type = "float"
+unit = "mm"
+default = "3"
+applies_to = ["meander_fill"]
+phase = "P2"
+milestone = "M7"
+
+[[param]]
+element = "fill"
+name = "rows_per_thread"
+type = "int"
+unit = "—"
+default = "2"
+applies_to = ["tartan_fill"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "herringbone_width_mm"
+type = "int"
+unit = "mm"
+default = "0"
+applies_to = ["tartan_fill"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "pull_compensation_mm"
+type = "float"
+unit = "mm (each side)"
+default = "0"
+applies_to = ["tatami_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "pull_compensation_percent"
+type = "float"
+unit = "% (each side)"
+default = "0"
+applies_to = ["tatami_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "fill_underlay"
+type = "toggle"
+unit = "—"
+default = "true"
+applies_to = []
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "fill_underlay_angle"
+type = "float"
+unit = "deg"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "fill_underlay_row_spacing_mm"
+type = "float"
+unit = "mm"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "fill_underlay_max_stitch_length_mm"
+type = "float"
+unit = "mm"
+default = "—"
+applies_to = []
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "fill_underlay_inset_mm"
+type = "float"
+unit = "mm"
+default = "0"
+applies_to = []
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "fill_underlay_skip_last"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = []
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "underlay_underpath"
+type = "boolean"
+unit = "—"
+default = "true"
+applies_to = []
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "random_seed"
+type = "random_seed"
+unit = "—"
+default = "—"
+applies_to = ["tatami_fill", "contour_fill", "guided_fill", "circular_fill", "meander_fill", "linear_gradient_fill"]
+phase = "P1"
+milestone = "M5"
+
+[[param]]
+element = "fill"
+name = "cross_stitch_method"
+type = "combo"
+unit = "—"
+default = "0"
+applies_to = ["cross_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "cross_thread_count"
+type = "int"
+unit = "—"
+default = "4"
+applies_to = ["cross_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "pattern_size_mm"
+type = "float"
+unit = "mm (x y)"
+default = "3"
+applies_to = ["cross_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "canvas_grid_origin"
+type = "boolean"
+unit = "—"
+default = "true"
+applies_to = ["cross_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "cross_offset_mm"
+type = "float"
+unit = "mm (x y)"
+default = "0"
+applies_to = ["cross_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "cross_rotation"
+type = "float"
+unit = "deg"
+default = "0"
+applies_to = ["cross_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "fill_coverage"
+type = "int"
+unit = "%"
+default = "50"
+applies_to = ["cross_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "fill"
+name = "max_cross_stitch_length_mm"
+type = "float"
+unit = "mm"
+default = "11.0"
+applies_to = ["cross_stitch"]
+phase = "P3"
+milestone = "M10"
+
+[[param]]
+element = "clone"
+name = "clone"
+type = "toggle"
+unit = "—"
+default = "true"
+applies_to = []
+phase = "P2"
+milestone = "M8"
+
+[[param]]
+element = "clone"
+name = "angle"
+type = "float"
+unit = "deg"
+default = "—"
+applies_to = []
+phase = "P2"
+milestone = "M8"
+
+[[param]]
+element = "clone"
+name = "flip_angle"
+type = "boolean"
+unit = "—"
+default = "false"
+applies_to = []
+phase = "P2"
+milestone = "M8"
+
+[[method]]
+param = "stroke_method"
+value = "running_stitch"
+phase = "P1"
+milestone = "M3"
+
+[[method]]
+param = "stroke_method"
+value = "ripple_stitch"
+phase = "P3"
+milestone = "M10"
+
+[[method]]
+param = "stroke_method"
+value = "zigzag_stitch"
+phase = "P2"
+milestone = "M7"
+
+[[method]]
+param = "stroke_method"
+value = "manual_stitch"
+phase = "P1"
+milestone = "M3"
+
+[[method]]
+param = "satin_method"
+value = "satin_column"
+phase = "P1"
+milestone = "M4"
+
+[[method]]
+param = "satin_method"
+value = "e_stitch"
+phase = "P2"
+milestone = "M7"
+
+[[method]]
+param = "satin_method"
+value = "s_stitch"
+phase = "P2"
+milestone = "M7"
+
+[[method]]
+param = "satin_method"
+value = "zigzag"
+phase = "P2"
+milestone = "M7"
+
+[[method]]
+param = "fill_method"
+value = "tatami_fill"
+phase = "P1"
+milestone = "M5"
+
+[[method]]
+param = "fill_method"
+value = "circular_fill"
+phase = "P2"
+milestone = "M7"
+
+[[method]]
+param = "fill_method"
+value = "contour_fill"
+phase = "P2"
+milestone = "M7"
+
+[[method]]
+param = "fill_method"
+value = "cross_stitch"
+phase = "P3"
+milestone = "M10"
+
+[[method]]
+param = "fill_method"
+value = "guided_fill"
+phase = "P3"
+milestone = "M10"
+
+[[method]]
+param = "fill_method"
+value = "linear_gradient_fill"
+phase = "P3"
+milestone = "M10"
+
+[[method]]
+param = "fill_method"
+value = "meander_fill"
+phase = "P2"
+milestone = "M7"
+
+[[method]]
+param = "fill_method"
+value = "tartan_fill"
+phase = "P3"
+milestone = "M10"
+
+[[method]]
+param = "fill_method"
+value = "legacy_fill"
+phase = "P3"
+milestone = "M10"

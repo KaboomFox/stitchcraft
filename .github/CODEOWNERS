@@ -1,0 +1,5 @@
+# Replace @OWNER with the maintainer's GitHub handle when the repository is published (roadmap M0.5).
+*                         @OWNER
+/xtask/                   @OWNER
+/conformance/             @OWNER
+/apps/stitchcraft-vc-plugin/src/abi.rs  @OWNER

@@ -1,0 +1,32 @@
+# Tests may unwrap, expect, panic, index and print: a failing assertion is the point of a test. Shipped
+# code may not (workspace lints in Cargo.toml; AGENTS.md › Non-negotiables).
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-indexing-slicing-in-tests = true
+allow-print-in-tests = true
+allow-dbg-in-tests = true
+
+# Determinism by construction (docs/src/design/determinism.md). Binaries that legitimately need one of
+# these (timing a benchmark, say) allow the lint at the use site with a comment.
+disallowed-types = [
+    { path = "std::collections::HashMap", reason = "iteration order is not deterministic; use BTreeMap (docs/src/design/determinism.md)" },
+    { path = "std::collections::HashSet", reason = "iteration order is not deterministic; use BTreeSet (docs/src/design/determinism.md)" },
+    { path = "std::time::SystemTime", reason = "library output must not depend on time" },
+    { path = "std::time::Instant", reason = "budgets count work units, not time (docs/src/design/data-model.md#budgets)" },
+]
+disallowed-methods = [
+    { path = "f64::sin", reason = "platform libm differs across OSes; use stitchcraft_core::math::sin" },
+    { path = "f64::cos", reason = "platform libm differs across OSes; use stitchcraft_core::math::cos" },
+    { path = "f64::tan", reason = "platform libm differs across OSes; use stitchcraft_core::math::tan" },
+    { path = "f64::sin_cos", reason = "platform libm differs across OSes; use stitchcraft_core::math::sin_cos" },
+    { path = "f64::asin", reason = "platform libm differs across OSes; use stitchcraft_core::math" },
+    { path = "f64::acos", reason = "platform libm differs across OSes; use stitchcraft_core::math" },
+    { path = "f64::atan", reason = "platform libm differs across OSes; use stitchcraft_core::math" },
+    { path = "f64::atan2", reason = "platform libm differs across OSes; use stitchcraft_core::math::atan2" },
+    { path = "f64::exp", reason = "platform libm differs across OSes; use stitchcraft_core::math" },
+    { path = "f64::ln", reason = "platform libm differs across OSes; use stitchcraft_core::math" },
+    { path = "f64::powf", reason = "platform libm differs across OSes; use stitchcraft_core::math" },
+    { path = "f64::hypot", reason = "platform libm differs across OSes; use stitchcraft_core::math::hypot" },
+    { path = "f64::mul_add", reason = "fused results differ from separate operations; keep formulas explicit" },
+]
