@@ -66,14 +66,16 @@ pub fn run(record: bool) -> Result<(), String> {
     let mut numbers = Vec::new();
     for (crate_name, lines) in &measured {
         let percent = lines.percent();
+        // Shown rounded down, like the floors, so 95.96 % reads 95.9 %, not a floor-passing 96.0 %.
+        let shown_percent = (percent * 10.0).floor() / 10.0;
         let floor = floors.floor.get(crate_name).copied();
         let shown = floor.map_or_else(|| "none".to_string(), |f| format!("{f} %"));
-        let _ = writeln!(table, "| `{crate_name}` | {} | {} | {percent:.1} % | {shown} |", lines.count, lines.covered);
-        numbers.push(format!("{crate_name} {percent:.1}"));
+        let _ = writeln!(table, "| `{crate_name}` | {} | {} | {shown_percent:.1} % | {shown} |", lines.count, lines.covered);
+        numbers.push(format!("{crate_name} {shown_percent:.1}"));
         match floor {
             None if !record => findings.error(format!("{crate_name} has no floor in {FLOORS}: run `cargo xtask coverage --record`")),
             Some(f) if !record && percent < f64::from(f) => findings.error(format!(
-                "{crate_name}: line coverage {percent:.1} % is below its floor of {f} %; add tests for the new code \
+                "{crate_name}: line coverage {shown_percent:.1} % is below its floor of {f} %; add tests for the new code \
                  (or lower the floor in {FLOORS}, saying why in the pull request)"
             )),
             _ => {}
