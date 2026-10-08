@@ -5,6 +5,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M2.6: preview renderer (`stitchcraft-render`) in a realistic and a simple style, drawn from the
+  positions a machine file makes (`REQ-RND-001`) and byte-identical on every platform (`REQ-RND-002`);
+  diagnostic `SC-E0801` for previews larger than 4,096 pixels on a side. Writers and previews share one
+  rounding function, `Point::to_tenths` in `stitchcraft-core`.
 - M2.4: an independent reader, pinned pyembroidery, reads every golden machine file the way
   StitchCraft's reader does (conformance case `pyembroidery-oracle`, run in CI).
 - M2.3: round-trip property tests for every writer/reader pair, judged by machine-visible behaviour
@@ -25,6 +29,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   zero-length jumps.
 
 ### Golden files
+- Added `conformance/golden/render/`: previews of a sampler design (simple and realistic) and of TS-01
+  (realistic). They pin how previews look; a change to them is a change users will see.
 - Added `conformance/golden/formats/` (canonical plans `every-command` and `one-stitch`, PES and DST)
   and `conformance/golden/testsheets/` (the exact MC-1 files: TS-01 PES and DST, TS-02, TS-10A/B/C PES).
 - M0 bootstrap: design documents, roadmap and machine-testing protocol; layered workspace with

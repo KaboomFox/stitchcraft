@@ -173,7 +173,9 @@ test`, then writes `target/conformance/`:
   away; in GitHub Actions it is appended to the job summary, so every pull request shows it;
 - `report.json` — machine-readable results, for the docs (requirement pages will show their status);
 - `hashes.json` — one SHA-256 per output, for the [cross-platform determinism](determinism.md#cross-platform-check) job;
-- from M2.6, `diffs/` — for failing golden cases, before/after stitch renders and a side-by-side PNG.
+- `diffs/` — for a machine-file golden that differs, previews (simple style) of the golden file and of
+  the new output, so a reviewer sees what sews differently; CI keeps them as a workflow artifact when a
+  run fails.
 
 It fails when a case fails or an active requirement has no passing case. `--filter <text>` runs only the
 cases whose id, test name or requirements contain the text (and skips the "every active requirement"
@@ -182,7 +184,8 @@ rule, since the run is partial). `cargo xtask ci` runs the whole suite; the docs
 `cargo xtask conformance --bless <case>` rewrites a data case's golden files. CI refuses a pull request
 that changes files under `conformance/golden/` unless it carries the `golden-change` label and a line in
 `CHANGELOG.md`. For the canonical-plan goldens of the format tests, bless with
-`STITCHCRAFT_BLESS=1 cargo test -p stitchcraft-formats --test golden`. Later, `stitch conformance run`
+`STITCHCRAFT_BLESS=1 cargo test -p stitchcraft-formats --test golden`; for the preview goldens
+(`REQ-RND-002`), with `STITCHCRAFT_BLESS=1 cargo test -p stitchcraft-render --test preview`. Later, `stitch conformance run`
 will let users validate a machine profile with the same cases.
 
 ## Gates

@@ -143,6 +143,13 @@ registry! {
     /// The file was written. Rotate the design if the message says that brings it inside the comfort
     /// zone, use a firmer stabilizer, or scale the design down.
     OutsideComfortZone = "SC-W0702", Warning, "Design is larger than the comfort zone";
+
+    /// Preview images have a size limit, so that drawing one never runs out of memory. At the scale
+    /// asked for, this design's preview would be larger, so no image was written.
+    ///
+    /// Use a smaller scale: the message says the largest that fits. A design that runs more than 10
+    /// metres from the hoop centre cannot be previewed at any scale.
+    PreviewTooLarge = "SC-E0801", Error, "Preview too large";
 }
 
 impl Code {

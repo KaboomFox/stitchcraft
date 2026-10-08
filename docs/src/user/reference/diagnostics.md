@@ -14,6 +14,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
 | [`SC-E0701`](#sc-e0701) | Error | Design does not fit the hoop |
 | [`SC-W0702`](#sc-w0702) | Warning | Design is larger than the comfort zone |
+| [`SC-E0801`](#sc-e0801) | Error | Preview too large |
 
 ## SC-E0004
 
@@ -95,3 +96,13 @@ designs pucker and shift more.
 
 The file was written. Rotate the design if the message says that brings it inside the comfort
 zone, use a firmer stabilizer, or scale the design down.
+
+## SC-E0801
+
+**Error** — Preview too large
+
+Preview images have a size limit, so that drawing one never runs out of memory. At the scale
+asked for, this design's preview would be larger, so no image was written.
+
+Use a smaller scale: the message says the largest that fits. A design that runs more than 10
+metres from the hoop centre cannot be previewed at any scale.

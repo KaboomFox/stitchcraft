@@ -5,8 +5,10 @@ use std::fmt::Write as _;
 use std::path::Path;
 
 use sha2::{Digest, Sha256};
+use stitchcraft_core::Budget;
 use stitchcraft_engine::testsheets;
 use stitchcraft_plan::{FormatId, invariants, profiles};
+use stitchcraft_render::{Settings, Style};
 
 use super::cases::{DataCase, RustCase, SheetExpect, Spec};
 use super::oracle;
@@ -110,14 +112,38 @@ fn testsheet(root: &Path, sheet_id: &str, profile_id: &str, expect: &SheetExpect
             Ok(committed) if committed == bytes => {}
             Ok(committed) => {
                 let first = committed.iter().zip(&bytes).position(|(a, b)| a != b).unwrap_or(committed.len().min(bytes.len()));
+                let previews = draw_difference(root, &outcome.case, golden, &committed, &bytes);
                 fail(
                     outcome,
-                    format!("{golden}: differs from the golden file at byte {first} (golden {} bytes, now {})", committed.len(), bytes.len()),
+                    format!(
+                        "{golden}: differs from the golden file at byte {first} (golden {} bytes, now {}){previews}",
+                        committed.len(),
+                        bytes.len()
+                    ),
                 );
             }
             Err(e) => fail(outcome, format!("{golden}: {e} (bless it with `cargo xtask conformance --bless {}`)", outcome.case)),
         }
     }
+}
+
+/// Previews of a changed machine file, golden and new, in `target/conformance/diffs/` (CI keeps them when
+/// a run fails), so a reviewer sees what sews differently. Returns a note for the failure message, empty
+/// when nothing could be drawn (a golden file that no longer reads, say).
+fn draw_difference(root: &Path, case: &str, golden: &str, before: &[u8], after: &[u8]) -> String {
+    let dir = root.join("target/conformance/diffs");
+    let stem = golden.trim_start_matches("golden/").replace(['/', '.'], "-");
+    let Some(settings) = Settings::new(Style::Simple, Settings::DEFAULT_SCALE) else { return String::new() };
+    let mut written = Vec::new();
+    for (label, bytes) in [("golden", before), ("now", after)] {
+        let Ok(decoded) = stitchcraft_formats::decode(bytes) else { continue };
+        let Ok(image) = stitchcraft_render::preview(&decoded.plan, settings, &mut Budget::DEFAULT.meter()) else { continue };
+        let path = dir.join(format!("{case}--{stem}--{label}.png"));
+        if std::fs::create_dir_all(&dir).and_then(|()| std::fs::write(&path, &image.png)).is_ok() {
+            written.push(util::rel(&path));
+        }
+    }
+    if written.is_empty() { String::new() } else { format!("; previews: {}", written.join(", ")) }
 }
 
 /// Runs every Rust-test case with one `cargo test` and reads the results from its output.

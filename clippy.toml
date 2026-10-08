@@ -29,4 +29,15 @@ disallowed-methods = [
     { path = "f64::powf", reason = "platform libm differs across OSes; use stitchcraft_core::math" },
     { path = "f64::hypot", reason = "platform libm differs across OSes; use stitchcraft_core::math::hypot" },
     { path = "f64::mul_add", reason = "fused results differ from separate operations; keep formulas explicit" },
+    # The renderer works in f32 (tiny-skia's type); the same rules apply.
+    { path = "f32::sin", reason = "platform libm differs across OSes; previews must be byte-identical everywhere" },
+    { path = "f32::cos", reason = "platform libm differs across OSes; previews must be byte-identical everywhere" },
+    { path = "f32::tan", reason = "platform libm differs across OSes; previews must be byte-identical everywhere" },
+    { path = "f32::sin_cos", reason = "platform libm differs across OSes; previews must be byte-identical everywhere" },
+    { path = "f32::atan2", reason = "platform libm differs across OSes; previews must be byte-identical everywhere" },
+    { path = "f32::exp", reason = "platform libm differs across OSes; previews must be byte-identical everywhere" },
+    { path = "f32::ln", reason = "platform libm differs across OSes; previews must be byte-identical everywhere" },
+    { path = "f32::powf", reason = "platform libm differs across OSes; previews must be byte-identical everywhere" },
+    { path = "f32::hypot", reason = "platform libm differs across OSes; previews must be byte-identical everywhere" },
+    { path = "f32::mul_add", reason = "fused results differ from separate operations; keep formulas explicit" },
 ]
