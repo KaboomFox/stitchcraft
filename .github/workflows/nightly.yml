@@ -65,6 +65,9 @@ jobs:
     env:
       # Every cargo and rustc that cargo-fuzz starts must be nightly, whatever rust-toolchain.toml says.
       RUSTUP_TOOLCHAIN: nightly
+      # cargo-fuzz builds for the target it was itself built for unless told otherwise, and the installed
+      # binary is a static musl build: name the runner's own target.
+      TARGET: x86_64-unknown-linux-gnu
     strategy:
       fail-fast: false
       matrix:
@@ -88,11 +91,11 @@ jobs:
       - name: Fuzz for 20 minutes (10 s and 2 GB at most per input)
         run: >
           .github/scripts/annotated.sh "fuzz ${{ matrix.target }}"
-          cargo fuzz run ${{ matrix.target }} --
+          cargo fuzz run --target "$TARGET" ${{ matrix.target }} --
           -max_total_time=1200 -timeout=10 -rss_limit_mb=2048 -max_len=65536 -print_final_stats=1
       - name: Keep the smallest corpus that covers the same code
         if: success()
-        run: .github/scripts/annotated.sh "fuzz cmin ${{ matrix.target }}" cargo fuzz cmin ${{ matrix.target }}
+        run: .github/scripts/annotated.sh "fuzz cmin ${{ matrix.target }}" cargo fuzz cmin --target "$TARGET" ${{ matrix.target }}
       - name: Save the corpus
         if: always()
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
