@@ -147,6 +147,8 @@ version = "0.0.1"
 dependencies = [
  "stitchcraft-core",
  "stitchcraft-plan",
+ "stitchcraft-testkit",
+ "thiserror",
 ]
 
 [[package]]

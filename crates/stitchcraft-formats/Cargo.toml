@@ -14,3 +14,7 @@ workspace = true
 [dependencies]
 stitchcraft-core = { workspace = true }
 stitchcraft-plan = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+stitchcraft-testkit = { workspace = true }

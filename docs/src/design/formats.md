@@ -32,19 +32,35 @@ data) followed by a **PEC block**, which is what the machine actually sews from.
 | Part | Content |
 |---|---|
 | Signature | `#PES0001` |
-| PEC offset | 32-bit little-endian offset of the PEC block |
-| PES section | Minimal v1 design section (hoop indicator, a single block object with the stitch extents) |
-| PEC header | `LA:` + label (padded) + carriage return; colour count − 1; one palette index per colour block (PEC palette of Brother threads); padding |
-| PEC graphics header | Stitch-data length, design width/height, thumbnail size |
+| PEC offset | 32-bit little-endian offset of the PEC block: 22 |
+| PES section | A hoop indicator (0 = 100 × 100 mm, 1 = 130 × 180 mm; we write 1 for designs larger than 100 × 100 mm) and no design-editor objects. Machines sew from the PEC block; the section is for PE-Design. |
+| PEC header | `LA:` + label (16 characters, padded) + carriage return; thumbnail size; colour entries − 1; one Brother palette index per colour entry (each block, and each stop); padding to 512 bytes |
+| PEC graphics header | Bytes to the thumbnails; design width and height in 0.1 mm; the origin as seen from the design's top-left corner |
 | PEC stitches | Relative moves in 0.1 mm (see below) |
-| Thumbnails | 48 × 38 one-bit images: the whole design, then one per colour |
+| Thumbnails | 48 × 38 one-bit pictures with a rounded frame: the whole design, then one per colour entry, at one scale so they line up |
 
-**Stitch encoding.** A move is encoded per axis: a short form (one byte, 7-bit two's complement) for
-small displacements, and a long form (two bytes, 12-bit two's complement with flags) for larger ones up
-to ±2047 units (204.7 mm). Long-form flags mark the move as a **jump (`0x10`)** or a **trim (`0x20`)**.
-A colour change is `0xFE 0xB0` followed by a byte that alternates between `0x02` and `0x01`; the end is
-`0xFF`. PEC has no separate trim or stop command: a trim is a trim-flagged jump, and a stop is encoded as a
-colour change to the same thread.
+The byte-level layout is documented in the writer modules (`crates/stitchcraft-formats/src/pes/`), next
+to the code that writes it, with the spec vectors that test it.
+
+**Stitch encoding.** A move is encoded per axis: a short form (one byte, 7-bit two's complement) for small
+displacements, and a long form (two bytes, 12-bit two's complement with flags) for larger ones up to ±2047
+units (204.7 mm). Each axis is short or long on its own; we use the short form for −63…62. Long-form flags
+mark the move as a **jump (`0x10`)** or a **trim (`0x20`)**. A colour change is `0xFE 0xB0` followed by a
+byte that alternates between `0x02` and `0x01`, starting with `0x02`; the end is `0xFF`. PEC has no separate
+stop command: a stop is a colour change to the same thread, which readers recognise as a stop.
+
+**Trims ride on the next move.** PEC cannot cut in place, so a trim flags the next jump; a sewn move after a
+trim becomes a trim-flagged jump to its target and a zero-length stitch there, so the needle still goes
+down where the plan says. A trim right before the end needs no record.
+
+**Where we differ from pystitch on purpose.** pystitch (Ink/Stitch's writer) flags *every* jump after the
+first as a trim. StitchCraft flags only the jumps that follow a `Trim` in the plan and writes the others as
+plain jumps, so the plan decides — and test sheet TS-02 can tell the two encodings apart on a machine.
+
+**Checked against a reference.** For the canonical plans, every PEC header byte — palette indices,
+extents, the origin fields, the graphics offset arithmetic — equals pystitch's output for the same stitches,
+and pystitch decodes our files to exactly the plan's stitches and commands (REQ-FMT-005, run as a pinned CI
+job from M2.4).
 
 **Colours.** The PEC header stores palette *indices*, not RGB, so every thread is mapped to the
 nearest Brother PEC colour (CIEDE2000). Catalogue numbers from other brands cannot survive PES v1; a
@@ -83,10 +99,15 @@ machines accept, and covered by a golden file.
 
 The third byte always has bits 0 and 1 set; bit 7 marks a jump (`0x83` with no other bits); `0xC3`
 is a colour change (and, by common convention, a stop); `0xF3` with zero displacement ends the design.
-DST has no trim command: trims are expressed as a short sequence of jumps that the machine interprets
-as a trim; the sequence length is a profile setting validated on a machine.
+DST has no trim command: a trim is three small jumps that cancel out — (+2, −2), (−4, +4), (+2, −2) units
+— which machines read as a trim; the same sequence pystitch writes, and readers (pystitch's included)
+decode it as a trim. If a machine needs a different sequence, it becomes a profile setting validated on
+that machine.
 
-Moves longer than 12.1 mm are split into several jump records by the encoder.
+Moves longer than 12.1 mm are split evenly into several records by the encoder: all jumps for a jump, and
+jumps then the final stitch for a sewn move (the thread lies the same way: the needle only goes down at the
+end). Header extents are measured in DST axes (y up) over every position the frame visits; `ST` counts the
+records before the end record.
 
 ## Later formats
 
