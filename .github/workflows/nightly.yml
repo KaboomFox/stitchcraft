@@ -29,6 +29,8 @@ jobs:
       - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
         with:
           tool: cargo-deny,typos,mdbook
+      - name: The independent reader for REQ-FMT-005 (pyembroidery, pinned by hash)
+        uses: ./.github/actions/oracle
       - run: cargo xtask ci
 
   fresh-seeds:
@@ -55,10 +57,14 @@ jobs:
   fuzz:
     # REQ-FMT-006: an hour of coverage-guided fuzzing every night, 20 minutes per target. The bodies are in
     # stitchcraft-testkit::fuzz; the corpus starts from the golden machine files and grows from night to
-    # night in the Actions cache. A crash fails the job and keeps the input as an artifact: reproduce it
-    # with `cargo +nightly fuzz run <target> <file>`, then add it as a regression test.
+    # night in the Actions cache. A crash fails the job, puts the end of the output in an annotation and
+    # keeps the input as an artifact: reproduce it with `cargo +nightly fuzz run <target> <file>`, then
+    # add it as a regression test.
     name: fuzz ${{ matrix.target }} (20 minutes)
     runs-on: ubuntu-24.04
+    env:
+      # Every cargo and rustc that cargo-fuzz starts must be nightly, whatever rust-toolchain.toml says.
+      RUSTUP_TOOLCHAIN: nightly
     strategy:
       fail-fast: false
       matrix:
@@ -81,11 +87,12 @@ jobs:
           cp conformance/golden/formats/* conformance/golden/testsheets/* "fuzz/corpus/${{ matrix.target }}/"
       - name: Fuzz for 20 minutes (10 s and 2 GB at most per input)
         run: >
-          cargo +nightly fuzz run ${{ matrix.target }} --
+          .github/scripts/annotated.sh "fuzz ${{ matrix.target }}"
+          cargo fuzz run ${{ matrix.target }} --
           -max_total_time=1200 -timeout=10 -rss_limit_mb=2048 -max_len=65536 -print_final_stats=1
       - name: Keep the smallest corpus that covers the same code
         if: success()
-        run: cargo +nightly fuzz cmin ${{ matrix.target }}
+        run: .github/scripts/annotated.sh "fuzz cmin ${{ matrix.target }}" cargo fuzz cmin ${{ matrix.target }}
       - name: Save the corpus
         if: always()
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
