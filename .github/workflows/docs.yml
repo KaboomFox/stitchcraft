@@ -80,3 +80,10 @@ jobs:
           publish_dir: docs/book
           destination_dir: ${{ steps.dest.outputs.dir }}
           keep_files: true
+      - name: Site root (a page that sends visitors to the docs)
+        if: steps.dest.outputs.dir == 'dev'
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/site-root
+          keep_files: true
