@@ -8,6 +8,10 @@ rust-version.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[lib]
+name = "stitchcraft_cli"
+path = "src/lib.rs"
+
 [[bin]]
 name = "stitch"
 path = "src/main.rs"

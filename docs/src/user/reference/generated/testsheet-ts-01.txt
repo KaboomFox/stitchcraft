@@ -1,0 +1,13 @@
+$ stitch testsheet TS-01 --profile brother-200x200 -o TS-01.pes
+TS-01 · Orientation and scale
+  file      TS-01.pes (PES v1, 1587 bytes)
+  sha256    854cde9f533e3b6567afb570a0eb3d4547e7813f5649da97d27be104f8cd18c6
+  profile   brother-200x200 (Brother, 200 × 200 mm hoop)
+  size      120.0 × 120.0 mm
+  stitches  274 stitches, 7 jumps, 7 trims, 0 colour changes, 0 stops
+  threads   1. Black (#000000), shown as Brother PEC 20 "Black"
+after sewing, check:
+  - The F reads normally: not mirrored, not upside down, not turned.
+  - Each arm of the cross measures 100.0 ± 0.5 mm end to end, horizontally and vertically.
+  - The corner squares measure 10.0 mm on every side.
+  - Ticks are 10 mm apart; the long ticks mark the ends and the centre.

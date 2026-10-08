@@ -97,7 +97,7 @@ fn report(sheet: &TestSheet, profile: &MachineProfile, format: FormatId, output:
         if entry.stop {
             line.push_str(" — a stop: keep the same thread");
         }
-        let _ = writeln!(out, "  {}  {line}", if i == 0 { "threads" } else { "       " });
+        let _ = writeln!(out, "  {:<10}{line}", if i == 0 { "threads" } else { "" });
     }
     let _ = writeln!(out, "after sewing, check:");
     for check in sheet.checks {
@@ -142,7 +142,7 @@ mod tests {
         assert!(out.stdout.contains(&format!("sha256    {}", hex(&Sha256::digest(&bytes)))));
         assert!(out.stdout.contains("size      120.0 × 120.0 mm"));
         assert!(out.stdout.contains("stitches  274 stitches, 7 jumps, 7 trims, 0 colour changes, 0 stops"));
-        assert!(out.stdout.contains("threads  1. Black (#000000), shown as Brother PEC 20 \"Black\""));
+        assert!(out.stdout.contains("  threads   1. Black (#000000), shown as Brother PEC 20 \"Black\"\n"));
         assert!(out.stdout.contains("after sewing, check:\n  - The F reads normally"));
     }
 

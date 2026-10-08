@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 
 use crate::markdown::{self, Link};
 use crate::util::{self, Findings};
-use crate::{SUBCOMMANDS, conformance, contract_page};
+use crate::{SUBCOMMANDS, conformance, contract_page, reference_pages};
 
 const DOCS_SRC: &str = "docs/src";
 const DIAGNOSTICS_PAGE: &str = "docs/src/design/diagnostics.md";
@@ -41,15 +41,22 @@ pub fn run(check_only: bool) -> Result<(), String> {
 /// Regenerates (or, with `check_only`, compares) every generated page.
 fn generated_pages(root: &Path, check_only: bool, findings: &mut Findings) -> Result<(), String> {
     let data = util::read(&root.join(contract_page::DATA))?;
-    let fresh = contract_page::render(&data)?;
-    let path = root.join(contract_page::PAGE);
-    let current = std::fs::read_to_string(&path).unwrap_or_default();
-    if current != fresh {
+    let mut pages = vec![(contract_page::PAGE.to_string(), contract_page::render(&data)?)];
+    pages.extend(reference_pages::pages()?);
+    for (page, fresh) in pages {
+        let path = root.join(&page);
+        let current = std::fs::read_to_string(&path).unwrap_or_default();
+        if current == fresh {
+            continue;
+        }
         if check_only {
-            findings.error(format!("{} is stale: run `cargo xtask docs`", contract_page::PAGE));
+            findings.error(format!("{page} is stale: run `cargo xtask docs`"));
         } else {
-            std::fs::write(&path, fresh).map_err(|e| format!("{}: {e}", contract_page::PAGE))?;
-            println!("updated {}", contract_page::PAGE);
+            if let Some(dir) = path.parent() {
+                std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+            }
+            std::fs::write(&path, fresh).map_err(|e| format!("{page}: {e}"))?;
+            println!("updated {page}");
         }
     }
     Ok(())

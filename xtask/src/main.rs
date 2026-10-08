@@ -16,6 +16,7 @@ mod docs;
 mod filesize;
 mod layers;
 mod markdown;
+mod reference_pages;
 mod shots;
 mod unsafe_audit;
 mod util;

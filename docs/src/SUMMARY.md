@@ -9,6 +9,11 @@
   - [How-to guides](user/how-to/README.md)
   - [Embroidery basics](user/explanation/embroidery-basics.md)
   - [Reference](user/reference/README.md)
+    - [Command line](user/reference/cli.md)
+    - [Machine profiles](user/reference/profiles.md)
+    - [File formats](user/reference/formats.md)
+    - [Test sheets](user/reference/test-sheets.md)
+    - [Diagnostic codes](user/reference/diagnostics.md)
     - [Glossary](user/reference/glossary.md)
     - [VectorCraft compatibility](user/reference/compatibility.md)
 

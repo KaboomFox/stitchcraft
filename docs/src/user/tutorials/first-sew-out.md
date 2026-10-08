@@ -1,43 +1,45 @@
 # Your first sew-out on a Brother
 
-> **Status: planned for M1.** This tutorial is written ahead of the code so the first milestone has a
-> clear finish line. Commands below will work once `stitch testsheet` ships (roadmap step M1.8).
-
-You will sew StitchCraft's orientation and scale sheet (TS-01) on a Brother machine with a 200 × 200 mm
-hoop and check that size and direction are exactly right.
+You will sew StitchCraft's orientation and scale sheet, TS-01, on a Brother machine with a 200 × 200 mm
+hoop, and check that its size and direction are exactly right. It takes about twenty minutes.
 
 ## You need
 
 - A Brother embroidery machine that reads PES files from a USB stick, and its 200 × 200 mm hoop.
 - Medium-weight woven cotton, medium tear-away stabilizer, a 75/11 embroidery needle, 40 wt polyester
-  thread, white bobbin thread.
-- A ruler with millimetres.
+  thread (black shows the lines best), white bobbin thread.
+- A ruler or calipers with millimetres.
 
-## 1. Generate the file
+## 1. Write the file
 
 ```console
-$ stitch testsheet TS-01 --profile brother-200x200 -o TS-01.pes
+{{#include ../reference/generated/testsheet-ts-01.txt}}
 ```
 
-StitchCraft prints the file's checksum, stitch count, colours and the expected sewing time, and writes
-`TS-01-expected.png` showing what you should get.
+That is real output: this page is regenerated from StitchCraft itself, so the checksum is the one your
+file will have. The checksum is how a sew-out report names exactly the bytes that were sewn. Every test
+sheet is in the [test sheets reference](../reference/test-sheets.md); `stitch testsheet --list` lists
+them too.
 
 ## 2. Load it on the machine
 
-Copy `TS-01.pes` to a USB stick, plug it into the machine and select the design. Check the machine shows
-it at about 100 × 100 mm and the "F" reads correctly on the screen.
+Copy `TS-01.pes` to a USB stick, plug it into the machine and select the design. The machine should show
+it at 120 × 120 mm, with an upright "F" in the top-left quarter. If it does not list the file at all,
+stop here and report that — it is the most important thing this sheet tests.
 
 ## 3. Hoop and sew
 
-Hoop the fabric and stabilizer drum-tight, attach the hoop, and sew.
+Hoop the fabric and stabilizer drum-tight, centre the design, attach the hoop, and sew. The machine sews
+the cross first, then the "F", then the four corner squares, trimming between parts if it can.
 
 ## 4. Check
 
-- The "F" is not mirrored or rotated.
-- The long lines measure 100.0 ± 0.5 mm in both directions.
-- The corner squares are square.
+- The "F" reads normally: not mirrored, not upside down, not turned.
+- Each arm of the cross measures 100.0 ± 0.5 mm end to end, horizontally and vertically.
+- The corner squares measure 10.0 mm on every side.
+- Ticks are 10 mm apart; the long ticks mark the ends and the centre.
 
 ## 5. Tell us
 
-File a **Sew-out report** on GitHub with front and back photos, a ruler in view, and your measurements
-([machine testing](../../plan/machine-testing.md)).
+File a **Sew-out report** on GitHub with photos of the front and back (a ruler in view), your measurements,
+and anything odd ([machine testing](../../plan/machine-testing.md)).

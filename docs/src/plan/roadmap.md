@@ -41,7 +41,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M1.7 ✅ | DST writer (header, ternary records, jump splitting, commands) | golden files; `REQ-FMT-007` |
 | M1.8 ✅ | `stitch testsheet <TS-xx> --profile … -o file` (and `--list`), `stitch profiles`, `stitch explain`; the CLI moves to `clap` (`stitch inspect` needs the readers: M2.1) | `trycmd` examples in the docs |
 | M1.9 ✅ | Conformance runner v1: requirements × cases matrix, L0 + L1 goldens, job summary | report visible on PRs |
-| M1.10 | Docs: profile and format reference generated; tutorial "Sew your first test sheet" | docs check green |
+| M1.10 ✅ | Docs: profile, format, test-sheet, diagnostics and command-line reference generated; tutorial "Your first sew-out" with real output | docs check green |
 | MC-1 🧵 | Sew **TS-01** (orientation, scale), **TS-02** (colour changes, stops, both trim encodings, jumps), **TS-10A/B/C** (150 and 190 mm frames) from PES v1; same TS-01 from DST if the machine reads DST | Sew-out report filed; profile values confirmed or changed; PES v6 decision made |
 
 ## M2 — Readers, preview renderer, fuzzing

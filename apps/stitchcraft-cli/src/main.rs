@@ -6,17 +6,12 @@
 //! (by `clap`) instead of panicking, and a closed stdout (`stitch … | head`) ends the program quietly.
 #![forbid(unsafe_code)]
 
-mod cli;
-mod commands;
-mod files;
-
 use std::io::{ErrorKind, Write};
 use std::process::ExitCode;
 
 use clap::Parser;
-
-use cli::{Cli, Command};
-use commands::{Outcome, Status};
+use stitchcraft_cli::cli::{Cli, Command};
+use stitchcraft_cli::commands::{self, Outcome, Status};
 
 fn run(cli: &Cli) -> Outcome {
     match &cli.command {
