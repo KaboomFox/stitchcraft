@@ -58,7 +58,7 @@ that cuts long jumps by itself would remove some of them; previews do not model 
 
 The scale is in pixels per millimetre (default 8, about 200 dpi; 0.1 to 50), so a design looks the same
 at every scale, only sharper. The image is the design's extent plus a 2 mm margin on each side. Images
-are at most 4,096 pixels on a side (64 MiB of pixels); a larger request is refused with `SC-E0801`, whose
+are at most 4,096 pixels on a side (64 MiB of pixels); a larger request is refused with `SC-E0005`, whose
 message gives the largest scale that fits. Drawing charges the caller's work budget: one unit per element
 plus one per pixel of its length, so `SC-E0004` stops a pathological request instead of a long wait.
 

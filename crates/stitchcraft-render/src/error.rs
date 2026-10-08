@@ -58,7 +58,7 @@ mod tests {
     #[test]
     fn errors_become_registered_diagnostics() {
         let d = RenderError::TooLarge { width: 9000, height: 100, max: 4096, largest_scale: 3.6 }.diagnostic();
-        assert_eq!(d.to_string(), "error SC-E0801: The preview would be 9000 × 100 pixels; previews are at most 4096 pixels on a side.");
+        assert_eq!(d.to_string(), "error SC-E0005: The preview would be 9000 × 100 pixels; previews are at most 4096 pixels on a side.");
         assert_eq!(d.fix.map(|f| f.describe()).as_deref(), Some("Use a scale of at most 3.6 pixels per millimetre."));
         assert_eq!(RenderError::Empty.diagnostic().code, Code::NothingToStitch);
         assert_eq!(RenderError::Budget(Exhausted::Work).diagnostic().code, Code::BudgetExhausted);

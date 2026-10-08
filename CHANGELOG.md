@@ -7,7 +7,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ### Added
 - M2.6: preview renderer (`stitchcraft-render`) in a realistic and a simple style, drawn from the
   positions a machine file makes (`REQ-RND-001`) and byte-identical on every platform (`REQ-RND-002`);
-  diagnostic `SC-E0801` for previews larger than 4,096 pixels on a side. Writers and previews share one
+  diagnostic `SC-E0005` for previews larger than 4,096 pixels on a side. Writers and previews share one
   rounding function, `Point::to_tenths` in `stitchcraft-core`.
 - M2.4: an independent reader, pinned pyembroidery, reads every golden machine file the way
   StitchCraft's reader does (conformance case `pyembroidery-oracle`, run in CI).

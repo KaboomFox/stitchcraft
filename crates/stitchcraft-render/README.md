@@ -11,7 +11,7 @@ the documentation images and the conformance suite. Design: `docs/src/design/ren
   same scene.
 - **Deterministic** (`REQ-RND-002`): the same plan and settings give the same PNG bytes on every
   platform; golden files in `conformance/golden/render/` check it on Linux, macOS and Windows.
-- Never crashes: every failure is a `RenderError` with a registered diagnostic code (`SC-E0801` for an
+- Never crashes: every failure is a `RenderError` with a registered diagnostic code (`SC-E0005` for an
   image larger than 4,096 pixels on a side); drawing charges the caller's work budget.
 
 ## Structure
