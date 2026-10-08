@@ -4,10 +4,10 @@
 repository = "https://github.com/storytold/vectorcraft"
 
 [tracks.stable]
-tag = "v0.6.0"
+tag = "v0.7.0"
 
 [tracks.prerelease]
-# None published yet (VectorCraft's release workflow supports SemVer pre-releases such as 0.7.0-rc.1).
+# None newer than stable (VectorCraft's release workflow supports SemVer pre-releases such as 0.8.0-rc.1).
 tag = ""
 
 [tracks.release-branch]

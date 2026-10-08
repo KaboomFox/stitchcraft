@@ -18,7 +18,7 @@ below are to that commit; the [compatibility gate](compatibility-gate.md) keeps 
 | Commands | Declarative `cmd!` registry: id, label, menu path, shortcut, params doc, `enabled`, `run`; reachable from UI, JSON control channel and MCP | `crates/engine/src/cmd/*` |
 | Headless CLI | `vectorcraft-cli run [--in FILE] [--cmd ID [--params JSON]]... [--export FILE]...`, `convert`, `info`, `commands`, `mcp` | `apps/vectorcraft-cli/src/main.rs` |
 | Control channel | JSON lines; `engine.execute`, `ui.menu.invoke`, `ui.dialog.set`, `ui.click`, `ui.screenshot {path?}` (needs a presented frame), `ui.render {path?, scale?}` (headless artboard render) | `crates/ui-egui/src/control.rs` |
-| Releases | Tags `v0.1.0` … `v0.6.0`; pushing the `release` branch drafts a GitHub Release; SemVer pre-releases (`-rc.1`) are flagged as pre-releases | `.github/workflows/release.yml` |
+| Releases | Tags `v0.1.0` … `v0.7.0`; pushing the `release` branch drafts a GitHub Release; SemVer pre-releases (`-rc.1`) are flagged as pre-releases | `.github/workflows/release.yml` |
 
 ## 2. Extension points that exist today
 

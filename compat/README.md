@@ -10,7 +10,7 @@
 ```sh
 cargo xtask compat discover                          # latest stable, pre-release and branch heads
 cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown
-cargo xtask compat contract --ref v0.6.0 \
+cargo xtask compat contract --ref v0.7.0 \
   --wasm target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm
 ```
 

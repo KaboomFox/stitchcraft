@@ -22,7 +22,7 @@ Goal: a repository where the rules are enforced before the first line of engine 
 | M0.3 ✅ | Workflows: `ci.yml`, `docs.yml`, `compat.yml` (discovery), `nightly.yml`; templates; Dependabot | First PR runs green on GitHub |
 | M0.4 ✅ | mdBook site, design docs, ADRs, this roadmap, machine-testing protocol | `mdbook build` and the docs check pass |
 | M0.5 👤 (partly ✅) | Create the GitHub repository, push, enable Pages (from the `gh-pages` branch) and branch protection with required checks `ci` and `docs`; replace `OWNER` in `CODEOWNERS` and `Cargo.toml` and add a contact to `CODE_OF_CONDUCT.md`; create the labels `golden-change`, `docs:refresh-shots`, `upstream-canary`, `upstream-prerelease`, `sewout`, `sewout:pass`, `sewout:tune`, `sewout:bug`, `good first issue` | A test PR cannot merge while a check is red |
-| M0.6 🧪 | VectorCraft "hello" plug-in: identity live effect built in CI for `wasm32-unknown-unknown`; Level A contract test against `vectorcraft-plugins` v0.6.0; measure fuel per output byte | Contract test green in `compat.yml`; budget numbers recorded in the integration doc |
+| M0.6 🧪 | VectorCraft "hello" plug-in: identity live effect built in CI for `wasm32-unknown-unknown`; Level A contract test against the pinned stable `vectorcraft-plugins` (v0.6.0, now v0.7.0), `release` and `main`; measure fuel per output byte | Contract test green in `compat.yml` (done: green on every track, 2026-10-08); budget numbers recorded in the integration doc (open) |
 | M0.7 🧪 | Geometry spike ([ADR-0005](../design/adr/0005-geometry-stack.md) criteria) | ADR-0005 accepted or revised |
 | M0.8 🧪 | Headless VectorCraft window in CI (Xvfb + Mesa) taking `ui.screenshot` twice with identical pixels | Decision recorded in the docs pipeline page |
 

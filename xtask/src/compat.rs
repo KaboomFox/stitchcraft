@@ -135,8 +135,8 @@ fn discover(as_json: bool) -> Result<(), String> {
         return Err(format!("git ls-remote {REPOSITORY} failed: {}", String::from_utf8_lossy(&output.stderr)));
     }
     let remote = parse_ls_remote(&String::from_utf8_lossy(&output.stdout));
-    let pins: toml::Table = toml::from_str(&util::read(&util::root().join(PINS))?).map_err(|e| format!("{PINS}: {e}"))?;
-    let pinned = |track: &str| pins.get("tracks").and_then(|t| t.get(track)).and_then(|t| t.get("tag")).and_then(toml::Value::as_str).unwrap_or("");
+    let pins = load_pins()?;
+    let pinned = |track: &str| pinned_tag(&pins, track);
     let stable = remote.latest(false).map(|(t, _)| t.clone());
     let pre = remote.latest(true).map(|(t, _)| t.clone());
     // A pre-release older than the latest stable is not news.
@@ -163,6 +163,16 @@ fn discover(as_json: bool) -> Result<(), String> {
     Ok(())
 }
 
+/// The pins file.
+fn load_pins() -> Result<toml::Table, String> {
+    toml::from_str(&util::read(&util::root().join(PINS))?).map_err(|e| format!("{PINS}: {e}"))
+}
+
+/// The tag pinned for `track` (empty when the track pins none).
+fn pinned_tag<'a>(pins: &'a toml::Table, track: &str) -> &'a str {
+    pins.get("tracks").and_then(|t| t.get(track)).and_then(|t| t.get("tag")).and_then(toml::Value::as_str).unwrap_or("")
+}
+
 /// A copy of the contract crate whose VectorCraft dependencies point at `reference`.
 fn prepare_contract(reference: &str) -> Result<PathBuf, String> {
     let safe: String = reference.chars().map(|c| if c.is_ascii_alphanumeric() || c == '.' || c == '-' { c } else { '_' }).collect();
@@ -176,11 +186,12 @@ fn prepare_contract(reference: &str) -> Result<PathBuf, String> {
     }
     let manifest = util::read(&root.join(CONTRACT).join("Cargo.toml"))?;
     let selector = if Version::parse(reference).is_some() { format!("tag = \"{reference}\"") } else { format!("rev = \"{reference}\"") };
-    let pinned = "tag = \"v0.6.0\"";
-    if !manifest.contains(pinned) {
-        return Err(format!("{CONTRACT}/Cargo.toml no longer pins `{pinned}`; update xtask/src/compat.rs"));
+    // The contract crate pins the same stable tag as compat/vectorcraft.toml (one pin, checked here).
+    let pinned = format!("tag = \"{}\"", pinned_tag(&load_pins()?, "stable"));
+    if !manifest.contains(&pinned) {
+        return Err(format!("{CONTRACT}/Cargo.toml must pin the stable tag of {PINS} (`{pinned}`)"));
     }
-    std::fs::write(dest.join("Cargo.toml"), manifest.replace(pinned, &selector)).map_err(|e| format!("write manifest: {e}"))?;
+    std::fs::write(dest.join("Cargo.toml"), manifest.replace(&pinned, &selector)).map_err(|e| format!("write manifest: {e}"))?;
     Ok(dest)
 }
 
@@ -201,6 +212,15 @@ fn contract(reference: &str, wasm: &Path) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_contract_crate_pins_the_stable_tag_of_the_pins_file() {
+        let pins = load_pins().unwrap();
+        let tag = pinned_tag(&pins, "stable");
+        assert!(Version::parse(tag).is_some(), "stable pin `{tag}`");
+        let manifest = util::read(&util::root().join(CONTRACT).join("Cargo.toml")).unwrap();
+        assert!(manifest.contains(&format!("tag = \"{tag}\"")), "{CONTRACT}/Cargo.toml must pin {tag}");
+    }
 
     #[test]
     fn semver_orders_pre_releases_before_releases() {
