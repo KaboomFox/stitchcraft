@@ -13,3 +13,4 @@ workspace = true
 
 [dependencies]
 stitchcraft-core = { workspace = true }
+thiserror = { workspace = true }

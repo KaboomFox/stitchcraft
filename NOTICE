@@ -13,5 +13,14 @@ licensed under the GNU GPL v3.
 
 Third-party data
 ----------------
-Entries are added here when a data table is derived from a third-party source (for example machine
-format constants or thread palettes taken from MIT-licensed pyembroidery/pystitch). None yet.
+Entries are added here when a data table is derived from a third-party source.
+
+- Brother PEC thread palette (crates/stitchcraft-plan/src/palette/brother_pec.rs): index, name and RGB
+  of the 64 PEC colours as published in pyembroidery (https://github.com/EmbroidePy/pyembroidery, MIT
+  License; author Tatarize) and carried by its fork pystitch (https://github.com/inkstitch/pystitch, MIT
+  License). The values were read through the library's public API; no pyembroidery or pystitch code
+  is included.
+- PES/PEC and DST encoding conventions (crates/stitchcraft-formats): where public format descriptions
+  leave a detail open (trim flags, header fields, thumbnail bit order, DST trim sequences), StitchCraft
+  matches the output of pystitch (MIT), observed as a black box: we ran the library and compared bytes.
+  Each such detail is noted in the module that writes it.

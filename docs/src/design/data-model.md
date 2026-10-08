@@ -97,8 +97,8 @@ How rails and rungs are recognised from a host path is part of the [satin design
 
 ```rust,ignore
 pub struct StitchPlan {
-    pub blocks: Vec<ColorBlock>,
-    pub profile_id: ProfileId,
+    pub blocks: Vec<ColorBlock>,       // sewing order; a thread change between blocks, the end after the last
+    pub elements: Vec<ElementId>,      // what `ElementRef`s point at
 }
 
 pub struct ColorBlock {
@@ -107,74 +107,92 @@ pub struct ColorBlock {
 }
 
 pub struct Stitch {
-    pub at: Point,
+    pub at: Point,                     // where the needle is after this entry (mm, y down, hoop centre = 0,0)
     pub kind: StitchKind,
     pub origin: Provenance,
 }
 
-pub enum StitchKind { Normal, Jump, Trim, Stop, ColorChange, End }
+pub enum StitchKind { Normal, Jump, Trim, Stop }
 
 pub struct Provenance {
-    pub element: Option<ElementId>,  // None for plan-level stitches (e.g. final End)
-    pub role: Role,                  // Underlay, Top, Travel, Lock, Command
+    pub element: Option<ElementRef>,   // index into `elements`; None for plan-level entries
+    pub role: Role,                    // Top, Underlay, Travel, Lock, Command
 }
 ```
 
-`Trim`, `Stop`, `ColorChange` and `End` are *commands at a position*; encoders decide how a format
-expresses them (PEC has trim-flagged jumps; DST expresses trims as jump sequences).
+- **Colour changes and the end are structure, not entries.** The machine changes thread between two
+  blocks and ends after the last one, so a plan cannot misplace either; encoders write exactly one
+  colour change between blocks and one end.
+- **`Trim` and `Stop` happen where the needle is;** their `at` repeats the needle position so every entry
+  has one (bounds, previews and reports never special-case commands), and the invariant checker verifies
+  it. Encoders decide how a format expresses them (PEC: trim-flagged jumps, and a stop as a change to the
+  same thread; DST: trims as a jump sequence) — see [formats](formats.md).
+- **The origin is the centre of the hoop**, where the needle starts, above the fabric. The first
+  `Normal` stitch is the first time it goes down.
+- `PlanBuilder` appends entries with the needle tracked; `PlanStats` counts stitches, jumps, trims, stops
+  and thread changes for reports.
+- A plan does not name a profile: it is checked against one, `invariants::check(&plan, &profile)`.
 
 ### Plan invariants
 
-Conformance level L0 checks these on every plan the suite produces (requirements `REQ-PLAN-001` to
-`REQ-PLAN-007`, in this order).
+Conformance level L0 checks these on every plan the suite produces. A violation is a bug in whatever
+built the plan: the command line reports it as `SC-E0009` and writes nothing. "While sewing" means the
+previous movement was a `Normal` stitch with no trim since — the stitch lays thread between two holes,
+and its length is what the machine and fabric feel; the first stitch after a jump, a trim or a thread
+change starts a new run.
 
-1. All coordinates finite and inside the profile's hoop.
-2. Every `Normal` stitch is ≤ `profile.max_stitch` and ≥ `settings.min_stitch_len`, except lock
-   stitches, which are ≥ 0.2 mm.
-3. Colour blocks are non-empty; a `ColorChange` separates every pair of blocks; the plan ends with
-   exactly one `End`.
-4. A `Trim` is preceded by a tie-off and followed (before the next `Normal`) by a tie-in, when the
-   element's lock settings ask for them.
-5. No two consecutive identical positions among `Normal` stitches.
-6. Colour count ≤ the format's maximum (PEC: 255 colour changes).
-7. Provenance: every non-command stitch names its element.
+| Requirement | Rule | Since |
+|---|---|---|
+| `REQ-PLAN-001` | Every position is finite and inside the profile's hoop, centred on the origin. | M1 |
+| `REQ-PLAN-002` | While sewing, every stitch is between the profile's `min_stitch` (locks: 0.2 mm) and `max_stitch`. | M1 |
+| `REQ-PLAN-003` | Every block sews at least one stitch; trims and stops happen where the needle is. | M1 |
+| `REQ-PLAN-004` | A `Trim` is preceded by a tie-off and followed by a tie-in, when the element's lock settings ask for them. | M3 |
+| `REQ-PLAN-005` | While sewing, no stitch lands where the needle already is. | M1 |
+| `REQ-PLAN-006` | Thread changes plus stops fit the format (PES: 255; DST: 999). | M1 |
+| `REQ-PLAN-007` | Every `Normal` and `Jump` entry names its element. | M3 |
 
 ## Threads and palettes
 
 ```rust,ignore
 pub struct Thread {
-    pub color: Rgb8,
-    pub name: Option<String>,
-    pub catalog: Option<CatalogRef>,  // e.g. Brother 001 "White"
+    pub color: Rgb,                  // what the user chose
+    pub name: Option<String>,        // shown to the operator
 }
 ```
 
-Palettes are static tables (Brother PEC palette first). Nearest-colour matching uses CIEDE2000 in
-CIELAB with a fixed white point, implemented with `libm` so it is deterministic. Tables carry their
-source in a comment and a row in `NOTICE` where they derive from a third-party list (for example the
-PEC palette as published in MIT-licensed pyembroidery).
+Palettes are static tables (the Brother PEC palette first) of `PaletteEntry { index, name, color,
+matchable }`. Nearest-colour matching uses CIEDE2000 in CIELAB (D65), through `stitchcraft_core::math`
+so it is deterministic, with ties going to the lower index; it is tested against the 34 reference pairs
+of Sharma, Wu & Dalal (2005). Entries that are not threads — Brother's applique steps 62–64 — are never
+matched. Tables carry their source in the module docs and a row in `NOTICE` (the PEC palette as published
+in MIT-licensed pyembroidery). Thread catalogues (brand and number) arrive with M11.
 
 ## Machine profiles
 
 ```rust,ignore
 pub struct MachineProfile {
-    pub id: ProfileId,               // "brother-200x200"
-    pub name: String,                // "Brother, 200 × 200 mm hoop"
-    pub hoop: Hoop,                  // { width: 200 mm, height: 200 mm }
-    pub comfort: Option<Hoop>,       // { 150 mm, 150 mm } — warning only
-    pub format: FormatId,            // Pes { version: 1 }
+    pub id: &'static str,            // "brother-200x200"
+    pub name: &'static str,          // "Brother, 200 × 200 mm hoop"
+    pub hoop: Size,                  // 200 × 200 mm
+    pub comfort: Option<Size>,       // 150 × 150 mm — a warning beyond it, not an error
+    pub format: FormatId,            // PesV1 | Dst
     pub max_stitch: Mm,              // 12.0
     pub min_stitch: Mm,              // 0.3
-    pub max_jump: Option<Mm>,        // None: the encoder splits long jumps per format limits
-    pub trims: TrimSupport,          // Command | JumpThreshold(Mm) | Unsupported
+    pub trims: TrimSupport,          // Command | LongJumps(Mm) | None
     pub palette: PaletteId,          // BrotherPec
-    pub max_colors: u16,
+    pub evidence: &'static str,      // where the values come from
 }
 ```
 
 Profiles are data in `stitchcraft-plan/src/profiles/`, listed by `stitch profiles` and documented by
 generated reference pages. A profile's values are *machine facts*: changing one requires a
-machine-testing record that justifies it ([machine testing](../plan/machine-testing.md)).
+machine-testing record that justifies it ([machine testing](../plan/machine-testing.md)), and `evidence`
+says where each value comes from. Format limits that are not machine facts (the most colour changes a
+format records) live on `FormatId`, so the invariant checker and the encoders read the same number.
+
+`check_fit(bounds)` turns the design's size into `SC-E0701` (larger than the hoop) or `SC-W0702` (larger
+than the comfort zone), with "rotate 90°" as a one-click fix when turning the design would fit
+(`REQ-PRF-002`).
 
 ## Budgets
 
