@@ -110,6 +110,9 @@ fn main() -> ExitCode {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
             eprintln!("xtask: {e}");
+            if std::env::var_os("GITHUB_ACTIONS").is_some() {
+                println!("{}", util::annotation("error", &format!("cargo xtask {command}"), &e));
+            }
             ExitCode::FAILURE
         }
     }

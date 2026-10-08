@@ -1,4 +1,5 @@
-# Mutation testing, weekly (docs/src/design/guardrails.md › Mutation testing). cargo-mutants changes the
+# Mutation testing, weekly, and on pull requests that change its setup (docs/src/design/guardrails.md ›
+# Mutation testing). cargo-mutants changes the
 # shipped code in small ways and runs the changed crate's tests on each change (.cargo/mutants.toml); a
 # change no test notices is a behaviour nobody checks. The mutants run in four shards; `cargo xtask
 # mutants` then adds them up per crate and fails when a crate has more missed mutants than
@@ -9,6 +10,13 @@ on:
   schedule:
     - cron: "23 4 * * 0"
   workflow_dispatch:
+  # A pull request that changes how mutation testing runs, or what it compares with, runs it too.
+  pull_request:
+    paths:
+      - .cargo/mutants.toml
+      - conformance/mutation.toml
+      - xtask/src/mutants.rs
+      - .github/workflows/mutants.yml
 
 permissions:
   contents: read
