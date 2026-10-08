@@ -4,3 +4,10 @@
 # pull request that says why.
 
 [floor]
+stitchcraft-cli = 91
+stitchcraft-core = 96
+stitchcraft-engine = 100
+stitchcraft-formats = 96
+stitchcraft-plan = 98
+stitchcraft-render = 96
+stitchcraft-vc-plugin = 72

@@ -12,7 +12,8 @@ status=${PIPESTATUS[0]}
 if [ "$status" -ne 0 ]; then
   # Colour codes are dropped; workflow commands encode %, CR and LF in the message (docs.github.com,
   # "Workflow commands").
-  message=$(tail -n 30 "$log" | sed -e 's/\x1b\[[0-9;]*m//g' -e 's/%/%25/g' -e 's/\r/%0D/g' | awk 'BEGIN { ORS = "%0A" } { print }')
+  # Lines that are workflow commands already became annotations of their own.
+  message=$(grep -v '^::' "$log" | tail -n 30 | sed -e 's/\x1b\[[0-9;]*m//g' -e 's/%/%25/g' -e 's/\r/%0D/g' | awk 'BEGIN { ORS = "%0A" } { print }')
   echo "::error title=${title}::${message}"
 fi
 rm -f "$log"
