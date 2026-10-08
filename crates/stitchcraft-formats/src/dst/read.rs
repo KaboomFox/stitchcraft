@@ -3,9 +3,11 @@
 //! DST stores moves and three commands — jump, colour change, end — and nothing else: no colours, no
 //! trims, no stops. So the reader adds what the format can only imply:
 //!
-//! - **Trims.** A run of 2 to 8 consecutive jumps that ends where it started moves the frame nowhere, so
-//!   it can only mean "trim here" (StitchCraft writes three; other writers write two to four). Such a run
-//!   becomes a `Trim`; any other jump stays a jump.
+//! - **Trims.** A run of 2 to 8 consecutive *small* jumps (at most 1 mm along each axis) that ends where
+//!   it started moves the frame nowhere, so it can only mean "trim here" (StitchCraft writes three; other
+//!   writers write two to four). Such a run becomes a `Trim`; any other jump stays a jump. The size limit
+//!   matters: a long jump and the long move after it are both split into pieces of about 12 mm, and two
+//!   such pieces can cancel exactly — the round-trip property test found that case.
 //! - **Threads.** Each block gets a placeholder thread named "thread 1", "thread 2", …; a colour change and
 //!   a stop look the same in DST, so both start a new block.
 //!
@@ -21,6 +23,8 @@ use crate::quantize::Delta;
 const FORMAT: &str = "DST";
 /// The longest jump run read as a trim.
 const LONGEST_TRIM: usize = 8;
+/// The largest move (0.1 mm units, per axis) of a jump in a trim run.
+const TRIM_JUMP_MAX: i32 = 10;
 
 /// Reads a DST file.
 pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
@@ -74,13 +78,17 @@ pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
     Ok(Decoded { format: FORMAT.to_string(), name, plan: recorder.finish(), warnings: Vec::new() })
 }
 
-/// Records the pending jumps: each run of 2–[`LONGEST_TRIM`] jumps that returns to its start is a trim.
+/// Records the pending jumps: each run of 2–[`LONGEST_TRIM`] small jumps that returns to its start is a
+/// trim.
 fn flush(jumps: &mut Vec<Delta>, recorder: &mut Recorder) -> Result<(), DecodeError> {
     let mut k = 0;
     while let Some(rest) = jumps.get(k..).filter(|r| !r.is_empty()) {
         let mut sum = (0_i64, 0_i64);
         let mut trim = None;
         for (n, d) in rest.iter().take(LONGEST_TRIM).enumerate() {
+            if d.dx.abs() > TRIM_JUMP_MAX || d.dy.abs() > TRIM_JUMP_MAX {
+                break;
+            }
             sum = (sum.0 + i64::from(d.dx), sum.1 + i64::from(d.dy));
             if n >= 1 && sum == (0, 0) {
                 trim = Some(n + 1);
@@ -114,6 +122,7 @@ mod tests {
     use stitchcraft_plan::StitchKind;
 
     use super::*;
+    use crate::decode::Recorder;
 
     fn golden(name: &str) -> Vec<u8> {
         std::fs::read(format!("{}/../../conformance/golden/{name}", env!("CARGO_MANIFEST_DIR"))).unwrap()
@@ -129,6 +138,17 @@ mod tests {
         assert_eq!(d.plan.blocks.len(), 3);
         let first_stitch = d.plan.stitches().find(|s| s.kind == StitchKind::Normal).map(|s| (s.at.x(), s.at.y()));
         assert_eq!(first_stitch, Some((-20.0, -10.0)), "y is flipped back to point down");
+    }
+
+    #[test]
+    fn cancelling_pieces_of_long_moves_are_not_trims() {
+        // Found by the round-trip property test: a long jump, then a long sewn move back. Both are split
+        // into ~12 mm jumps, and the last piece of one cancels the first piece of the other exactly.
+        let mut jumps = vec![Delta { dx: -118, dy: 39 }, Delta { dx: 118, dy: -39 }];
+        let mut recorder = Recorder::new(placeholder(1));
+        flush(&mut jumps, &mut recorder).unwrap();
+        let plan = recorder.finish();
+        assert_eq!((plan.stats().trims, plan.stats().jumps), (0, 2));
     }
 
     #[test]

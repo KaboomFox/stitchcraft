@@ -27,6 +27,7 @@ use stitchcraft_plan::{FormatId, StitchPlan};
 use crate::error::EncodeError;
 use crate::label::label;
 use crate::lower::{Op, lower, split};
+use crate::quantize::Delta;
 
 /// The largest move one record makes along an axis.
 pub const RECORD_LIMIT: i32 = 121;
@@ -58,6 +59,9 @@ pub fn encode(plan: &StitchPlan, name: &str) -> Result<Vec<u8>, EncodeError> {
                     records.moving(piece.dx, -piece.dy, if i < last { JUMP } else { SEW });
                 }
             }
+            // A jump that goes nowhere is a no-op: DST writes no record for it, because readers take a run
+            // of jumps that returns to its start for a trim.
+            Op::Jump(delta) if delta == Delta::ZERO => {}
             Op::Jump(delta) => {
                 for piece in split(delta, RECORD_LIMIT) {
                     records.moving(piece.dx, -piece.dy, JUMP);
