@@ -17,6 +17,8 @@ fn run(cli: &Cli) -> Outcome {
     match &cli.command {
         Command::Testsheet(args) => commands::testsheet::run(args),
         Command::Inspect(args) => commands::inspect::run(args),
+        Command::Preview(args) => commands::preview::run(args),
+        Command::Convert(args) => commands::convert::run(args),
         Command::Profiles => commands::profiles::run(),
         Command::Explain { code } => commands::explain::run(code),
     }

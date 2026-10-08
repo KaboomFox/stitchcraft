@@ -14,6 +14,8 @@ Usage: stitch <COMMAND>
 Commands:
   testsheet  Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
   inspect    Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
+  preview    Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
+  convert    Write a machine file (PES, PEC or DST) in another format
   profiles   List the built-in machine profiles
   explain    Explain a diagnostic code, such as SC-W0702
   help       Print this message or the help of the given subcommand(s)
@@ -29,7 +31,6 @@ Exit status: 0 done (warnings allowed) · 1 the design or file has errors (nothi
 error · 3 a file could not be read or written.
 
 Coming with the roadmap (docs/src/plan/roadmap.md):
-  stitch preview design.pes -o design.png                   (M2)
   stitch plan design.svg -o design.pes                      (M3)
   stitch export design.vectorcraft -o design.pes            (M6)
 ```
@@ -83,6 +84,65 @@ Options:
 
   -h, --help
           Print help
+```
+
+## stitch preview
+
+```text
+Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
+
+Usage: stitch preview [OPTIONS] --output <OUTPUT> <FILE>
+
+Arguments:
+  <FILE>
+          The machine file
+
+Options:
+  -o, --output <OUTPUT>
+          The picture to write (PNG)
+
+      --style <STYLE>
+          How the picture looks
+
+          Possible values:
+          - realistic: The finished embroidery on fabric, with the jump threads the machine leaves for you to cut
+          - simple:    Every stitch, needle hole, move, trim and stop, for checking a design
+          
+          [default: realistic]
+
+      --scale <SCALE>
+          Pixels per millimetre
+          
+          [default: 8]
+
+  -h, --help
+          Print help (see a summary with '-h')
+```
+
+## stitch convert
+
+```text
+Write a machine file (PES, PEC or DST) in another format
+
+Usage: stitch convert [OPTIONS] --output <OUTPUT> <FILE>
+
+Arguments:
+  <FILE>
+          The machine file to read
+
+Options:
+  -o, --output <OUTPUT>
+          The file to write
+
+      --format <FORMAT>
+          The file format; by default the output file's extension decides
+
+          Possible values:
+          - pes: Brother PES, version 1
+          - dst: Tajima DST
+
+  -h, --help
+          Print help (see a summary with '-h')
 ```
 
 ## stitch profiles

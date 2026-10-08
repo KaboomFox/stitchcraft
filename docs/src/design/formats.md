@@ -134,6 +134,12 @@ seed) and 10,000 more each night (fresh seed). Fresh seeds paid off before this 
 design whose split jump pieces cancelled exactly and read back as a trim, which is why trim runs must be
 made of jumps of at most 1 mm.
 
+**Converting.** `stitch convert` is a read followed by a write, so the converted file makes the machine do
+the same thing as the original: the round-trip guarantee above. Records carry over literally (a DST
+file's 12 mm jump pieces stay separate jumps in a PES file), and what the new format cannot say is
+reported instead of guessed: a PES file made from a DST file names a placeholder black for every thread,
+because DST stores no colours (`SC-W0604`).
+
 ## Later formats
 
 | Format | Machines | Milestone | Notes |

@@ -99,6 +99,7 @@ another.
 | `SC-E0601` | Error | Too many colour changes for the file format | M1 |
 | `SC-E0602` | Error | Design too large for the file format (coordinates or data exceed its fields) | M1 |
 | `SC-E0603` | Error | Machine file could not be read (wrong format, truncated, or a record that makes no sense) | M2 |
+| `SC-W0604` | Warning | Thread colours unknown (the file stores none, as DST never does; threads are placeholders) | M2 |
 | `SC-E0701` | Error | Design does not fit the hoop | M1 |
 | `SC-W0702` | Warning | Design is larger than the comfort zone (the profile's most accurate area) | M1 |
 | `SC-E0801` | Error | SVG could not be read (with the parser's position) | M3 |

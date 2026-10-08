@@ -621,6 +621,7 @@ dependencies = [
  "stitchcraft-plan",
  "stitchcraft-render",
  "stitchcraft-svg",
+ "stitchcraft-testkit",
  "stitchcraft-vectorcraft",
 ]
 
