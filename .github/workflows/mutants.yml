@@ -1,7 +1,7 @@
 # Mutation testing, weekly, and on pull requests that change its setup (docs/src/design/guardrails.md ›
 # Mutation testing). cargo-mutants changes the
 # shipped code in small ways and runs the changed crate's tests on each change (.cargo/mutants.toml); a
-# change no test notices is a behaviour nobody checks. The mutants run in four shards; `cargo xtask
+# change no test notices is a behaviour nobody checks. The mutants run in four parts; `cargo xtask
 # mutants` then adds them up per crate and fails when a crate has more missed mutants than
 # conformance/mutation.toml records. The job summary lists every missed mutant.
 name: mutants
@@ -21,19 +21,23 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: mutants-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: never
   CARGO_INCREMENTAL: "0"
 
 jobs:
   shard:
-    name: mutants, shard ${{ matrix.shard }} of 4
+    name: mutants, part ${{ matrix.part }} of 4
     runs-on: ubuntu-24.04
     timeout-minutes: 150
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3]
+        part: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: rustup toolchain install --profile minimal
@@ -44,16 +48,17 @@ jobs:
       - name: Run this shard's mutants
         # cargo-mutants exits non-zero when it finds missed mutants; the comparison job decides. A mutant
         # that makes a test run away is stopped by cargo-mutants' timeout, which counts apart.
+        # cargo-mutants numbers its shards from 0.
         run: |
-          cargo mutants --workspace --shard ${{ matrix.shard }}/4 --output "shard-${{ matrix.shard }}" || status=$?
+          cargo mutants --workspace --shard $(( ${{ matrix.part }} - 1 ))/4 --output "part-${{ matrix.part }}" || status=$?
           echo "cargo mutants exited with ${status:-0}"
-          test -f "shard-${{ matrix.shard }}/mutants.out/outcomes.json"
+          test -f "part-${{ matrix.part }}/mutants.out/outcomes.json"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: mutants-shard-${{ matrix.shard }}
+          name: mutants-part-${{ matrix.part }}
           path: |
-            shard-${{ matrix.shard }}/mutants.out/*.txt
-            shard-${{ matrix.shard }}/mutants.out/outcomes.json
+            part-${{ matrix.part }}/mutants.out/*.txt
+            part-${{ matrix.part }}/mutants.out/outcomes.json
 
   compare:
     name: no crate with more missed mutants than recorded
@@ -65,13 +70,13 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          pattern: mutants-shard-*
-          path: shards
-      - name: Add up the shards and compare
+          pattern: mutants-part-*
+          path: parts
+      - name: Add up the parts and compare
         run: |
           dirs=()
-          for shard in shards/mutants-shard-*; do
-            mkdir -p "$shard/mutants.out" && mv "$shard"/*.txt "$shard"/*.json "$shard/mutants.out/"
-            dirs+=("$shard")
+          for part in parts/mutants-part-*; do
+            mkdir -p "$part/mutants.out" && mv "$part"/*.txt "$part"/*.json "$part/mutants.out/"
+            dirs+=("$part")
           done
           cargo xtask mutants "${dirs[@]}"

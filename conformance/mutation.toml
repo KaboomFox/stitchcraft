@@ -3,3 +3,10 @@
 # today's and never raises one: raise a count only by hand, in a pull request that says why.
 
 [missed]
+stitchcraft-cli = 23
+stitchcraft-core = 13
+stitchcraft-engine = 39
+stitchcraft-formats = 46
+stitchcraft-plan = 48
+stitchcraft-render = 26
+stitchcraft-vc-plugin = 22
