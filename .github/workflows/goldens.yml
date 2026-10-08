@@ -30,9 +30,14 @@ jobs:
         run: |
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
             # Dispatched for a branch: take the base and the labels from its open pull request.
-            pr=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$GITHUB_REF_NAME" --state open --json baseRefName,labels --jq '.[0]')
-            BASE="origin/$(echo "$pr" | jq -r .baseRefName)"
-            LABELS=$(echo "$pr" | jq -c '[.labels[].name]')
+            pr=$(gh api "repos/$GITHUB_REPOSITORY/pulls?head=$GITHUB_REPOSITORY_OWNER:$GITHUB_REF_NAME&state=open" \
+              --jq '.[0] // empty | {base: .base.ref, labels: [.labels[].name]}')
+            if [ -z "$pr" ]; then
+              echo "::error::$GITHUB_REF_NAME has no open pull request to check."
+              exit 1
+            fi
+            BASE="origin/$(echo "$pr" | jq -r .base)"
+            LABELS=$(echo "$pr" | jq -c .labels)
           fi
           changed=$(git diff --name-only "$BASE"...HEAD -- conformance/golden)
           if [ -z "$changed" ]; then
