@@ -12,7 +12,7 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 # Same floor as VectorCraft, so the engine can be embedded there (docs/src/design/adr/0009-*.md).
 rust-version = "1.95"
-repository = "https://github.com/OWNER/stitchcraft"
+repository = "https://github.com/KaboomFox/inkcraft"
 publish = false
 
 [workspace.dependencies]

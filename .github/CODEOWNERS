@@ -1,5 +1,5 @@
-# Replace @OWNER with the maintainer's GitHub handle when the repository is published (roadmap M0.5).
-*                         @OWNER
-/xtask/                   @OWNER
-/conformance/             @OWNER
-/apps/stitchcraft-vc-plugin/src/abi.rs  @OWNER
+# The maintainer reviews everything; the paths below are the ones that must never merge unreviewed.
+*                         @KaboomFox
+/xtask/                   @KaboomFox
+/conformance/             @KaboomFox
+/apps/stitchcraft-vc-plugin/src/abi.rs  @KaboomFox
