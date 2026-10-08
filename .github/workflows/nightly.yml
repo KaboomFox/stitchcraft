@@ -1,6 +1,6 @@
 # Nightly checks that are too slow or too noisy for every pull request.
-# Fuzzing, fresh-seed property tests, mutation testing, coverage and the Ink/Stitch differential run are
-# added with their roadmap steps (M2.5, M2.8, M8).
+# Fuzzing, mutation testing, coverage and the Ink/Stitch differential run are added with their roadmap
+# steps (M2.5, M2.8, M8).
 name: nightly
 
 on:
@@ -30,6 +30,21 @@ jobs:
         with:
           tool: cargo-deny,typos,mdbook
       - run: cargo xtask ci
+
+  fresh-seeds:
+    name: property tests with fresh seeds
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install --profile minimal
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - name: Round trips through every format, 20,000 random plans
+        # PR runs use a fixed seed (stitchcraft-testkit::strategies); here every night explores new plans.
+        # A failure prints the seed and the shrunk plan: add it as a regression case.
+        run: |
+          seed=$(od -An -N8 -tu8 /dev/urandom | tr -d ' ')
+          echo "PROPTEST_RNG_SEED=$seed"
+          PROPTEST_RNG_SEED=$seed PROPTEST_CASES=10000 cargo test --locked -p stitchcraft-formats --test round_trip
 
   external-links:
     name: external links

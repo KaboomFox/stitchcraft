@@ -16,3 +16,4 @@ stitchcraft-core = { workspace = true }
 stitchcraft-params = { workspace = true }
 stitchcraft-plan = { workspace = true }
 stitchcraft-engine = { workspace = true }
+proptest = { workspace = true }

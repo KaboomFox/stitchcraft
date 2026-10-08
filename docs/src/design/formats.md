@@ -126,6 +126,14 @@ that points nowhere) become warnings in the result.
 Every reader survives every truncation and single-byte change of the golden files (a deterministic test
 that runs on every PR); coverage-guided fuzzing runs nightly from M2.5 (`REQ-FMT-006`).
 
+**Round trips.** A file cannot say everything a plan says (a trim is a flag in PEC and three jumps in DST;
+long moves become several records), so a plan read back is not the same plan — it makes the machine do
+the same thing. `stitchcraft-testkit::equivalence` defines that: where the needle goes down, where the
+thread is cut, where the machine pauses. Every writer/reader pair keeps it on 256 random plans per PR (fixed
+seed) and 10,000 more each night (fresh seed). Fresh seeds paid off before this was even merged: they found a DST
+design whose split jump pieces cancelled exactly and read back as a trim, which is why trim runs must be
+made of jumps of at most 1 mm.
+
 ## Later formats
 
 | Format | Machines | Milestone | Notes |
@@ -143,7 +151,7 @@ that runs on every PR); coverage-guided fuzzing runs nightly from M2.5 (`REQ-FMT
 | Requirement | What it checks |
 |---|---|
 | `REQ-FMT-001` | Golden bytes: canonical plans encode to committed files byte for byte |
-| `REQ-FMT-002` | Round trip: `decode(encode(plan)) == quantize(plan)` for every writer/reader pair, on random plans |
+| `REQ-FMT-002` | Round trip: `decode(encode(plan))` makes the machine do what the plan does — needle-downs, cuts and pauses at the same 0.1 mm positions — for every writer/reader pair, on random plans |
 | `REQ-FMT-003` | Every command kind survives every writer/reader pair (and is sewn in TS-02) |
 | `REQ-FMT-004` | Empty and zero-stitch files read cleanly; empty plans are never written |
 | `REQ-FMT-005` | Independent oracle: pyembroidery reads our files to the same stitches (CI job with a pinned version) |
