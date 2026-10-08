@@ -131,7 +131,7 @@ mod tests {
 
     /// The 34 reference pairs of Sharma, Wu & Dalal (2005), Table 1, with ΔE00 to four decimals.
     #[test]
-    fn matches_the_sharma_reference_data() {
+    fn req_thread_001_ciede2000_matches_the_sharma_reference_data() {
         #[rustfmt::skip]
         let pairs: [([f64; 3], [f64; 3], f64); 34] = [
             ([50.0, 2.6772, -79.7751], [50.0, 0.0, -82.7485], 2.0425),

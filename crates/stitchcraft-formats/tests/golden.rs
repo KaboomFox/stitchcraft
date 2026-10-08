@@ -15,7 +15,7 @@ fn golden_dir() -> PathBuf {
 }
 
 #[test]
-fn canonical_plans_match_their_golden_files() {
+fn req_fmt_001_canonical_plans_match_their_golden_files() {
     let bless = std::env::var_os("STITCHCRAFT_BLESS").is_some();
     for (name, plan) in plans::canonical() {
         for format in FormatId::ALL {

@@ -1,0 +1,12 @@
+# Hoop size: portrait, beyond the comfort zone (warning).
+# The invariants (REQ-PLAN-…) run on the sheet's plan; the golden files are the bytes MC-1 sews.
+id = "ts-10c"
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PRF-002", "REQ-FMT-001"]
+kind = "testsheet"
+sheet = "TS-10C"
+profile = "brother-200x200"
+
+[expect]
+size_mm = [150.0, 190.0]
+diagnostics = ["SC-W0702"]
+golden = ["golden/testsheets/TS-10C.pes"]

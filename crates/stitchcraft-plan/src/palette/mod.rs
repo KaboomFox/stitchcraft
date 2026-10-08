@@ -64,9 +64,9 @@ impl Palette {
 mod tests {
     use super::*;
 
-    /// REQ-THREAD-001: spot checks against the published table (pyembroidery's PEC thread set).
+    /// Spot checks against the published table (pyembroidery's PEC thread set).
     #[test]
-    fn brother_pec_matches_its_source_at_spot_checks() {
+    fn req_thread_001_brother_pec_matches_its_source_at_spot_checks() {
         let p = &BROTHER_PEC;
         assert_eq!(p.entries.len(), 64);
         for (index, name, rgb) in [
@@ -87,7 +87,7 @@ mod tests {
     }
 
     #[test]
-    fn every_thread_colour_matches_itself() {
+    fn req_thread_001_every_thread_colour_matches_itself() {
         for entry in BROTHER_PEC.entries.iter().filter(|e| e.matchable) {
             assert_eq!(BROTHER_PEC.nearest(entry.color).map(|e| e.index), Some(entry.index), "{}", entry.name);
         }
@@ -100,7 +100,7 @@ mod tests {
     }
 
     #[test]
-    fn matching_is_perceptual_not_rgb_distance() {
+    fn req_thread_001_matching_is_perceptual_not_rgb_distance() {
         let name = |rgb| BROTHER_PEC.nearest(Rgb::from_hex(rgb)).map(|e| e.name);
         // Distance in RGB would pick "Red" (#ED171F) for pure red and "Deep Gold" for CSS orange. People
         // see Vermilion (ΔE00 3.4, against 5.0 for Red) and Pumpkin (4.4) as closer, and so does CIEDE2000.

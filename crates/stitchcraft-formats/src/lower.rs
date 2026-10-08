@@ -149,7 +149,7 @@ mod tests {
     }
 
     #[test]
-    fn splits_are_even_exact_and_within_the_limit() {
+    fn req_fmt_007_splits_are_even_exact_and_within_the_limit() {
         for (delta, limit, count) in [(d(171, 0), 121, 2), (d(-540, 195), 121, 5), (d(3000, 0), 2047, 2), (d(0, 0), 121, 1), (d(121, -121), 121, 1)] {
             let pieces: Vec<Delta> = split(delta, limit).collect();
             assert_eq!(pieces.len(), count, "{delta:?}");
@@ -198,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_plans_and_misplaced_commands_are_refused() {
+    fn req_fmt_004_writers_refuse_empty_plans_and_misplaced_commands() {
         let mut b = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
         b.jump(Point::new(1.0, 0.0).unwrap(), Provenance::plan(Role::Travel));
         assert_eq!(lower(&b.clone().finish(), "test"), Err(EncodeError::Empty));

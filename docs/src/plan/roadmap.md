@@ -21,7 +21,7 @@ Goal: a repository where the rules are enforced before the first line of engine 
 | M0.2 ✅ | `cargo xtask` gates: `ci`, `layers`, `docs --check`, `shots --check`, `cleanroom`, `unsafe-audit`, `filesize`, `wasm`, `conformance --check`, `compat discover`/`contract` | `cargo xtask ci` passes locally |
 | M0.3 ✅ | Workflows: `ci.yml`, `docs.yml`, `compat.yml` (discovery), `nightly.yml`; templates; Dependabot | First PR runs green on GitHub |
 | M0.4 ✅ | mdBook site, design docs, ADRs, this roadmap, machine-testing protocol | `mdbook build` and the docs check pass |
-| M0.5 👤 | Create the GitHub repository, push, enable Pages (from the `gh-pages` branch) and branch protection with required checks `ci` and `docs`; replace `OWNER` in `CODEOWNERS` and `Cargo.toml` and add a contact to `CODE_OF_CONDUCT.md`; create the labels `golden-change`, `docs:refresh-shots`, `upstream-canary`, `upstream-prerelease`, `sewout`, `sewout:pass`, `sewout:tune`, `sewout:bug`, `good first issue` | A test PR cannot merge while a check is red |
+| M0.5 👤 (partly ✅) | Create the GitHub repository, push, enable Pages (from the `gh-pages` branch) and branch protection with required checks `ci` and `docs`; replace `OWNER` in `CODEOWNERS` and `Cargo.toml` and add a contact to `CODE_OF_CONDUCT.md`; create the labels `golden-change`, `docs:refresh-shots`, `upstream-canary`, `upstream-prerelease`, `sewout`, `sewout:pass`, `sewout:tune`, `sewout:bug`, `good first issue` | A test PR cannot merge while a check is red |
 | M0.6 🧪 | VectorCraft "hello" plug-in: identity live effect built in CI for `wasm32-unknown-unknown`; Level A contract test against `vectorcraft-plugins` v0.6.0; measure fuel per output byte | Contract test green in `compat.yml`; budget numbers recorded in the integration doc |
 | M0.7 🧪 | Geometry spike ([ADR-0005](../design/adr/0005-geometry-stack.md) criteria) | ADR-0005 accepted or revised |
 | M0.8 🧪 | Headless VectorCraft window in CI (Xvfb + Mesa) taking `ui.screenshot` twice with identical pixels | Decision recorded in the docs pipeline page |
@@ -32,15 +32,15 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 
 | Step | Deliverable | Done when |
 |---|---|---|
-| M1.1 | `stitchcraft-core`: `Budget` and the diagnostics model (`Mm`, `Point`, `math` and `SplitMix64` with frozen reference values are already in the bootstrap) | unit tests; budget exhaustion is a diagnostic |
-| M1.2 | `stitchcraft-plan`: `Stitch`, `StitchKind`, `ColorBlock`, `StitchPlan`; invariant checker (`REQ-PLAN-001..007`) | each invariant has a violating and a passing case |
-| M1.3 | Machine profiles + `brother-200x200`; hoop and comfort diagnostics `SC-E0701`/`SC-W0702` with rotate hint | `REQ-PRF-001`, `REQ-PRF-002` active |
-| M1.4 | Quantization (absolute, round-half-even); PEC stitch encoder with spec vectors | `REQ-FMT-002` partial; encoder unit tests |
-| M1.5 | PES v1 writer: header, PEC header, palette indices, thumbnails | golden files (`REQ-FMT-001`) |
-| M1.6 | Brother PEC palette table + CIEDE2000 nearest colour | `REQ-THREAD-001` spot checks |
-| M1.7 | DST writer (header, ternary records, jump splitting, commands) | golden files; `REQ-FMT-007` |
-| M1.8 | `stitch testsheet <TS-xx> --profile … -o file` (and `--list`), `stitch profiles`, `stitch explain`; the CLI moves to `clap` (`stitch inspect` needs the readers: M2.1) | `trycmd` examples in the docs |
-| M1.9 | Conformance runner v1: requirements × cases matrix, L0 + L1 goldens, job summary | report visible on PRs |
+| M1.1 ✅ | `stitchcraft-core`: `Budget` and the diagnostics model (`Mm`, `Point`, `math` and `SplitMix64` with frozen reference values are already in the bootstrap) | unit tests; budget exhaustion is a diagnostic |
+| M1.2 ✅ | `stitchcraft-plan`: `Stitch`, `StitchKind`, `ColorBlock`, `StitchPlan`; invariant checker (`REQ-PLAN-001..007`) | each invariant has a violating and a passing case |
+| M1.3 ✅ | Machine profiles + `brother-200x200`; hoop and comfort diagnostics `SC-E0701`/`SC-W0702` with rotate hint | `REQ-PRF-001`, `REQ-PRF-002` active |
+| M1.4 ✅ | Quantization (absolute, round-half-even); PEC stitch encoder with spec vectors | `REQ-FMT-002` partial; encoder unit tests |
+| M1.5 ✅ | PES v1 writer: header, PEC header, palette indices, thumbnails | golden files (`REQ-FMT-001`) |
+| M1.6 ✅ | Brother PEC palette table + CIEDE2000 nearest colour | `REQ-THREAD-001` spot checks |
+| M1.7 ✅ | DST writer (header, ternary records, jump splitting, commands) | golden files; `REQ-FMT-007` |
+| M1.8 ✅ | `stitch testsheet <TS-xx> --profile … -o file` (and `--list`), `stitch profiles`, `stitch explain`; the CLI moves to `clap` (`stitch inspect` needs the readers: M2.1) | `trycmd` examples in the docs |
+| M1.9 ✅ | Conformance runner v1: requirements × cases matrix, L0 + L1 goldens, job summary | report visible on PRs |
 | M1.10 | Docs: profile and format reference generated; tutorial "Sew your first test sheet" | docs check green |
 | MC-1 🧵 | Sew **TS-01** (orientation, scale), **TS-02** (colour changes, stops, both trim encodings, jumps), **TS-10A/B/C** (150 and 190 mm frames) from PES v1; same TS-01 from DST if the machine reads DST | Sew-out report filed; profile values confirmed or changed; PES v6 decision made |
 

@@ -15,7 +15,7 @@ area = "plan"
 level = "L0"
 statement = "All stitch coordinates are finite and inside the profile's hoop."
 milestone = "M1"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-PLAN-002"
@@ -23,7 +23,7 @@ area = "plan"
 level = "L0"
 statement = "While sewing (the previous movement was a Normal stitch, with no trim since), every stitch is no longer than the profile maximum and no shorter than the profile minimum, except lock stitches, which are at least 0.2 mm."
 milestone = "M1"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-PLAN-003"
@@ -31,7 +31,7 @@ area = "plan"
 level = "L0"
 statement = "Every colour block sews at least one stitch, and trims and stops happen where the needle is. Colour changes and the end are implied by the block structure; encoders write exactly one colour change between blocks and exactly one end."
 milestone = "M1"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-PLAN-004"
@@ -47,7 +47,7 @@ area = "plan"
 level = "L0"
 statement = "While sewing (the previous movement was a Normal stitch, with no trim since), no stitch lands where the needle already is."
 milestone = "M1"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-PLAN-006"
@@ -55,7 +55,7 @@ area = "plan"
 level = "L0"
 statement = "The number of colour changes does not exceed the target format's maximum."
 milestone = "M1"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-PLAN-007"
@@ -73,7 +73,7 @@ area = "profile"
 level = "L2"
 statement = "Built-in profiles validate (positive hoop, comfort zone inside hoop, min stitch < max stitch) and are listed by `stitch profiles`."
 milestone = "M1"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-PRF-002"
@@ -82,7 +82,7 @@ level = "L2"
 statement = "A design larger than the hoop is an error (SC-E0701); larger than the comfort zone, a warning (SC-W0702) with a rotate-to-fit hint when rotating 90 degrees would fit."
 rationale = "Ink/Stitch #2702 (hoop size awareness)."
 milestone = "M1"
-status = "planned"
+status = "active"
 
 # ── Formats (L1) ───────────────────────────────────────────────────────────────────────────────────
 
@@ -92,7 +92,7 @@ area = "formats"
 level = "L1"
 statement = "Canonical plans encode to the committed golden files byte for byte, for every writer."
 milestone = "M1"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-FMT-002"
@@ -142,7 +142,7 @@ area = "formats"
 level = "L1"
 statement = "Moves longer than a format's per-record limit are split into several records within the limit."
 milestone = "M1"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-THREAD-001"
@@ -151,7 +151,7 @@ level = "L1"
 statement = "Palette tables match their published source at spot-checked entries; nearest-colour matching is deterministic (CIEDE2000 via libm)."
 rationale = "Ink/Stitch #2668, #3137, #3274, #3257."
 milestone = "M1"
-status = "planned"
+status = "active"
 
 # ── Rendering ──────────────────────────────────────────────────────────────────────────────────────
 

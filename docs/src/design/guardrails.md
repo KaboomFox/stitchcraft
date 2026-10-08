@@ -20,7 +20,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | **Clean room** | No GPL/AGPL licence text or Ink/Stitch source paths in code, fixtures or tests | `xtask/src/cleanroom.rs` | `cargo xtask cleanroom` · CI |
 | Docs | Generated pages fresh, links and anchors valid, mentioned `cargo xtask` commands exist, ids exist | `xtask/src/docs.rs` | `cargo xtask docs --check` · CI |
 | Docs images | Every image declared in `docs/shots.toml`, with alt text, and regenerating to the committed file | `xtask/src/shots.rs` | `cargo xtask shots --check` · CI |
-| Conformance | Requirement/case consistency; all cases pass | `xtask/src/conformance.rs` | `cargo xtask conformance` · CI |
+| Conformance | Requirement/case consistency; all cases pass; changed goldens need the `golden-change` label and a changelog line | `xtask/src/conformance/`, `ci.yml`, `goldens.yml` | `cargo xtask conformance` · CI |
 | Dependencies | Licence allow-list (GPL family denied), advisories, duplicates, sources | `deny.toml` | CI (`cargo-deny`) |
 | Spelling | Typos in code, docs, commit-facing text | `typos.toml` | CI |
 | MSRV | Builds on the declared `rust-version` | workspace `Cargo.toml` | CI |

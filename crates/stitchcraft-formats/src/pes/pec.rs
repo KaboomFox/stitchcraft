@@ -217,9 +217,9 @@ mod tests {
         assert_eq!(hex(&stitch_data(&[Op::Trim, Op::Jump(d(3000, 0))])), "A5 DC A0 00 95 DC 90 00");
     }
 
-    /// REQ-FMT-007: moves beyond ±2047 split within the limit; a long sewn move is jumps, then the stitch.
+    /// Moves beyond ±2047 split within the limit; a long sewn move is jumps, then the stitch.
     #[test]
-    fn long_moves_are_split() {
+    fn req_fmt_007_long_moves_are_split() {
         assert_eq!(hex(&stitch_data(&[Op::Jump(d(3000, 0))])), "95 DC 90 00 95 DC 90 00");
         assert_eq!(hex(&stitch_data(&[Op::Stitch(d(-3000, 10))])), "9A 24 90 05 8A 24 05");
     }

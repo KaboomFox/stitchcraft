@@ -32,16 +32,46 @@ milestone = "M5"
 status = "planned"        # planned | active | retired
 ```
 
-Rules, enforced by `cargo xtask conformance --check` in CI:
+Rules, enforced in CI:
 
-- ids are unique and never reused; retired requirements stay in the file;
-- an `active` requirement must have at least one passing case;
-- a milestone cannot be closed while one of its requirements is `planned`;
+- ids are unique and never reused; retired requirements stay in the file (`--check`);
+- every case names existing requirements, and an `active` requirement has at least one case (`--check`)
+  that passes (the run);
+- a milestone cannot be closed while one of its requirements is `planned` (review);
 - docs that mention a `REQ-…` id must refer to an existing one (part of `cargo xtask docs --check`).
 
 ## Cases
 
-`conformance/cases/<area>/<name>.toml`:
+Cases come in two forms, and the report treats them alike.
+
+**Rust tests named after a requirement.** A test function named `req_<area>_<nnn>_<what>` is a case for
+`REQ-<AREA>-<NNN>`: `req_plan_002_stitch_lengths` proves `REQ-PLAN-002`, `req_fill_tat_006_gap_preserved`
+would prove `REQ-FILL-TAT-006`. The name is the link, so there is no list to keep in sync; `--check` finds
+them by scanning the source and rejects a name that points at no requirement. Use them for rules best
+shown with small hand-built inputs — an invariant's violating and passing examples, a palette's spot
+checks.
+
+**Data cases**, `conformance/cases/<area>/<name>.toml`: an input, a profile and expectations, run by the
+suite in-process. Unknown fields are errors, so a typo cannot silently switch a check off. M1 has the
+`testsheet` kind:
+
+```toml
+id = "ts-10b"
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PRF-002", "REQ-FMT-001"]
+kind = "testsheet"
+sheet = "TS-10B"
+profile = "brother-200x200"
+
+[expect]
+size_mm = [190.0, 150.0]
+diagnostics = ["SC-W0702"]                       # exactly these codes, no others
+golden = ["golden/testsheets/TS-10B.pes"]        # byte for byte; the format comes from the extension
+```
+
+The plan invariants run on the sheet's plan before anything else. The golden files are the very bytes
+sewn at the machine checkpoint, so a change to how a sheet sews cannot slip through unnoticed.
+
+From M3, `design` cases take an SVG or JSON design and parameters, and check generator properties:
 
 ```toml
 id = "fill-tatami-gap-preserved"
@@ -122,16 +152,24 @@ with such a record.
 
 ## The runner and its report
 
-`cargo xtask conformance` (also `stitch conformance run` for users who want to validate a machine
-profile) runs all cases and writes `target/conformance/`:
+`cargo xtask conformance` runs every data case in-process and every Rust-test case through one `cargo
+test`, then writes `target/conformance/`:
 
-- `report.md` — the requirement × case matrix, failures first; posted to the PR as the job summary;
-- `report.json` — machine-readable results, consumed by the docs (requirement pages show their status);
-- `hashes.json` — output hashes for the [cross-platform determinism](determinism.md#cross-platform-check) job;
-- `diffs/` — for failing golden cases, before/after stitch renders and a side-by-side PNG.
+- `report.md` — the requirement × case matrix, failures first, requirements nobody tests yet folded
+  away; in GitHub Actions it is appended to the job summary, so every pull request shows it;
+- `report.json` — machine-readable results, for the docs (requirement pages will show their status);
+- `hashes.json` — one SHA-256 per output, for the [cross-platform determinism](determinism.md#cross-platform-check) job;
+- from M2.6, `diffs/` — for failing golden cases, before/after stitch renders and a side-by-side PNG.
 
-`cargo xtask conformance --bless <case>` rewrites a golden file; CI refuses changed goldens unless the
-PR also carries the `golden-change` label and a line in `CHANGELOG.md`.
+It fails when a case fails or an active requirement has no passing case. `--filter <text>` runs only the
+cases whose id, test name or requirements contain the text (and skips the "every active requirement"
+rule, since the run is partial). `cargo xtask ci` runs the whole suite; the docs workflow runs `--check`.
+
+`cargo xtask conformance --bless <case>` rewrites a data case's golden files. CI refuses a pull request
+that changes files under `conformance/golden/` unless it carries the `golden-change` label and a line in
+`CHANGELOG.md`. For the canonical-plan goldens of the format tests, bless with
+`STITCHCRAFT_BLESS=1 cargo test -p stitchcraft-formats --test golden`. Later, `stitch conformance run`
+will let users validate a machine profile with the same cases.
 
 ## Gates
 

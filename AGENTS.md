@@ -11,7 +11,8 @@ changes the code — people and AI agents alike. `CLAUDE.md` points here; there 
 2. Read the design pages that step touches, starting from `docs/src/design/README.md`. The technical
    design (`docs/src/design/tdd.md`) is the overview.
 3. Work conformance-first: add requirements and failing cases, then the code that makes them pass, then
-   the docs. Finish with `cargo xtask ci`.
+   the docs. A Rust test named `req_<area>_<nnn>_<what>` is a case for `REQ-<AREA>-<NNN>`. Finish with
+   `cargo xtask ci`.
 
 ## Non-negotiables
 
@@ -43,13 +44,15 @@ changes the code — people and AI agents alike. `CLAUDE.md` points here; there 
 
 ```sh
 cargo xtask ci                     # every gate: fmt, clippy, tests, layers, filesize, cleanroom,
-                                   # unsafe-audit, docs --check, shots --check, conformance --check,
-                                   # wasm, deny, typos, book
+                                   # unsafe-audit, docs --check, shots --check, conformance (the whole
+                                   # suite, with its report), wasm, deny, typos, book
 cargo xtask layers                 # crate dependency rules
 cargo xtask docs --check           # docs fresh, links and anchors valid, ids exist
 cargo xtask docs                   # regenerate generated docs pages
 cargo xtask shots --check          # docs images declared, reproducible and current
-cargo xtask conformance --check    # requirements and cases consistent
+cargo xtask conformance            # run the suite; report in target/conformance/report.md
+cargo xtask conformance --check    # requirements and cases consistent (no run)
+cargo xtask conformance --bless ID # rewrite one data case's golden files, on purpose
 cargo xtask cleanroom              # no GPL text or Ink/Stitch source paths in code and fixtures
 cargo xtask unsafe-audit           # unsafe only in the ABI shim, always with SAFETY comments
 cargo xtask filesize               # warn above 800 lines, fail above 1,500

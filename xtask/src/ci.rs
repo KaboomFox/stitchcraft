@@ -64,7 +64,7 @@ pub fn run() -> Result<(), String> {
         ("unsafe-audit", Box::new(|| outcome(unsafe_audit::run()))),
         ("docs", Box::new(|| outcome(docs::run(true)))),
         ("shots", Box::new(|| outcome(shots::run(true)))),
-        ("conformance", Box::new(|| outcome(conformance::run(true)))),
+        ("conformance", Box::new(|| outcome(conformance::run(&[])))),
         ("wasm", optional(wasm::target_installed, "rustup target add wasm32-unknown-unknown", Box::new(|| outcome(wasm::run())))),
         ("deny", optional(|| util::tool_available("cargo-deny", &["--version"]), "cargo install cargo-deny", tool_step("cargo-deny", &["check"]))),
         ("typos", optional(|| util::tool_available("typos", &["--version"]), "cargo install typos-cli", tool_step("typos", &[]))),

@@ -1,0 +1,42 @@
+# Golden files are machine files: the exact bytes sewn at machine checkpoints and the canonical format
+# outputs (docs/src/design/conformance.md). A pull request that changes one must say so — the
+# `golden-change` label — and record it in CHANGELOG.md. Runs on label changes too, so adding the label
+# re-checks without a new push.
+name: goldens
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  goldens:
+    name: changed golden files have a reason
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Check the label and the changelog
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          changed=$(git diff --name-only "$BASE"...HEAD -- conformance/golden)
+          if [ -z "$changed" ]; then
+            echo "No golden files changed."
+            exit 0
+          fi
+          echo "Golden files changed:"
+          echo "$changed"
+          case "$LABELS" in
+            *'"golden-change"'*) ;;
+            *) echo "::error::Golden files changed. Add the golden-change label and explain in the PR why the machine files must change."; exit 1 ;;
+          esac
+          if ! git diff --name-only "$BASE"...HEAD | grep -qx CHANGELOG.md; then
+            echo "::error::Golden files changed. Add a line to CHANGELOG.md saying what sews differently."
+            exit 1
+          fi
+          echo "Labelled and recorded in CHANGELOG.md."

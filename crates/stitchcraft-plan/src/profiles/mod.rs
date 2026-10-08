@@ -27,9 +27,8 @@ mod tests {
         Rect::around([Point::new(-width / 2.0, -height / 2.0).unwrap(), Point::new(width / 2.0, height / 2.0).unwrap()]).unwrap()
     }
 
-    /// REQ-PRF-001: built-in profiles validate and ids are unique.
     #[test]
-    fn builtin_profiles_are_valid_and_unique() {
+    fn req_prf_001_builtin_profiles_are_valid_and_unique() {
         let mut ids = std::collections::BTreeSet::new();
         for profile in BUILTIN {
             assert_eq!(profile.problems(), Vec::<String>::new());
@@ -48,7 +47,7 @@ mod tests {
     }
 
     #[test]
-    fn invalid_profiles_are_reported() {
+    fn req_prf_001_invalid_profiles_are_reported() {
         let mut p = BROTHER_200X200.clone();
         p.min_stitch = p.max_stitch;
         p.id = "Brother 200";
@@ -56,9 +55,8 @@ mod tests {
         assert_eq!(p.problems().len(), 3);
     }
 
-    /// REQ-PRF-002: hoop error, comfort warning, rotate hints.
     #[test]
-    fn designs_are_checked_against_hoop_and_comfort_zone() {
+    fn req_prf_002_designs_are_checked_against_hoop_and_comfort_zone() {
         let p = &BROTHER_200X200;
         assert_eq!(p.check_fit(bounds(150.0, 150.0)), None, "the comfort zone itself is fine");
         let warning = p.check_fit(bounds(190.0, 150.0)).unwrap();
@@ -71,7 +69,7 @@ mod tests {
     }
 
     #[test]
-    fn rotation_is_offered_when_it_fits() {
+    fn req_prf_002_rotation_is_offered_when_it_fits() {
         let mut p = BROTHER_200X200.clone();
         p.hoop = stitchcraft_core::Size::new(stitchcraft_core::Mm::from_tenths(1300), stitchcraft_core::Mm::from_tenths(1800));
         p.comfort = None;
