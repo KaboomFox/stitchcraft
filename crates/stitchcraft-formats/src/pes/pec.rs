@@ -35,7 +35,7 @@
 //! still goes down where the plan says. A trim with no move after it (before the end) needs no record:
 //! the machine stops there.
 
-use stitchcraft_plan::palette::BROTHER_PEC;
+use stitchcraft_plan::FormatId;
 
 use crate::error::EncodeError;
 use crate::label::label;
@@ -70,8 +70,9 @@ pub(crate) fn block(lowered: &Lowered, name: &str) -> Result<Vec<u8>, EncodeErro
     out.extend_from_slice(&[b' '; 12]);
     let last_entry = u8::try_from(lowered.changes()).map_err(|_| too_many(lowered.changes()))?;
     out.push(last_entry);
+    let palette = FormatId::PesV1.palette().map(|id| id.palette()).ok_or(EncodeError::NoPaletteMatch { palette: "PES" })?;
     for color in &lowered.entries {
-        let entry = BROTHER_PEC.nearest(*color).ok_or(EncodeError::NoPaletteMatch { palette: BROTHER_PEC.name })?;
+        let entry = palette.nearest(*color).ok_or(EncodeError::NoPaletteMatch { palette: palette.name })?;
         out.push(entry.index);
     }
     out.resize(HEADER_LEN, b' ');
@@ -95,7 +96,7 @@ pub(crate) fn block(lowered: &Lowered, name: &str) -> Result<Vec<u8>, EncodeErro
 }
 
 fn too_many(changes: usize) -> EncodeError {
-    EncodeError::TooManyColorChanges { format: FORMAT, changes, max: stitchcraft_plan::FormatId::PesV1.max_color_changes() }
+    EncodeError::TooManyColorChanges { format: FORMAT, changes, max: FormatId::PesV1.max_color_changes() }
 }
 
 fn too_large(what: &str) -> EncodeError {

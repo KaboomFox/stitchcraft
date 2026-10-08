@@ -107,6 +107,8 @@ mod tests {
         assert_eq!((trim.kind, trim.at, trim.origin.role), (StitchKind::Trim, p(3.0, 2.0), Role::Command));
         assert_eq!(plan.blocks[1].stitches[0].at, p(3.0, 2.0), "a thread change does not move the needle");
         assert_eq!(plan.element(e).map(ElementId::as_str), Some("ts:line"));
+        let entries: Vec<(Rgb, bool)> = plan.color_entries().iter().map(|e| (e.thread.color, e.stop)).collect();
+        assert_eq!(entries, vec![(Rgb::new(0, 0, 0), false), (Rgb::new(255, 0, 0), false), (Rgb::new(255, 0, 0), true)]);
     }
 
     #[test]

@@ -22,6 +22,6 @@ pub mod thread;
 
 pub use builder::{PlanBuilder, PlanError};
 pub use invariants::Violation;
-pub use plan::{ColorBlock, ElementRef, PlanStats, Provenance, Role, Stitch, StitchKind, StitchPlan};
+pub use plan::{ColorBlock, ColorEntry, ElementRef, PlanStats, Provenance, Role, Stitch, StitchKind, StitchPlan};
 pub use profile::{FormatId, MachineProfile, PaletteId, TrimSupport};
 pub use thread::{Rgb, Thread};

@@ -53,7 +53,7 @@ pub(crate) fn lower(plan: &StitchPlan, format: &'static str) -> Result<Lowered, 
         return Err(EncodeError::Empty);
     }
     let mut ops = Vec::with_capacity(plan.stitches().count() + plan.blocks.len() + 1);
-    let mut entries = Vec::new();
+    let entries = plan.color_entries().iter().map(|entry| entry.thread.color).collect();
     let mut needle = Units::default();
     let mut bounds: Option<(Units, Units)> = None;
 
@@ -61,7 +61,6 @@ pub(crate) fn lower(plan: &StitchPlan, format: &'static str) -> Result<Lowered, 
         if b > 0 {
             ops.push(Op::ColorChange);
         }
-        entries.push(block.thread.color);
         for (index, stitch) in block.stitches.iter().enumerate() {
             let at = quantize_point(stitch.at)
                 .ok_or_else(|| EncodeError::TooLarge { format, what: format!("the position ({:.1}, {:.1}) mm", stitch.at.x(), stitch.at.y()) })?;
@@ -73,12 +72,7 @@ pub(crate) fn lower(plan: &StitchPlan, format: &'static str) -> Result<Lowered, 
                         let kind = if stitch.kind == StitchKind::Trim { "trim" } else { "stop" };
                         return Err(EncodeError::CommandAwayFromNeedle { kind, block: b, index });
                     }
-                    if stitch.kind == StitchKind::Trim {
-                        ops.push(Op::Trim);
-                    } else {
-                        ops.push(Op::Stop);
-                        entries.push(block.thread.color);
-                    }
+                    ops.push(if stitch.kind == StitchKind::Trim { Op::Trim } else { Op::Stop });
                 }
             }
             needle = at;

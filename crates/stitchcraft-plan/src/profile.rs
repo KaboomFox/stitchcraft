@@ -43,6 +43,14 @@ impl FormatId {
         FormatId::ALL.iter().copied().find(|f| f.extension().eq_ignore_ascii_case(extension))
     }
 
+    /// The palette whose indices the format stores instead of colours, if any.
+    pub const fn palette(self) -> Option<PaletteId> {
+        match self {
+            FormatId::PesV1 => Some(PaletteId::BrotherPec),
+            FormatId::Dst => None,
+        }
+    }
+
     /// The most colour changes (stops included) the format can record. PES stores the number of colour
     /// entries minus one in a single byte (255); DST's header has a three-digit `CO:` field (999).
     pub const fn max_color_changes(self) -> usize {

@@ -1,0 +1,186 @@
+//! `stitch testsheet`: writes a machine-checkpoint test sheet and says what to check after sewing it.
+//!
+//! The sheet is checked like any design before anything is written: plan invariants (a violation is a
+//! StitchCraft bug, `SC-E0009`), then the profile's hoop and comfort zone (`SC-E0701`, `SC-W0702`). The
+//! report prints the file's SHA-256, so a sew-out report names exactly the bytes that were sewn.
+
+use std::fmt::Write as _;
+use std::path::Path;
+
+use sha2::{Digest, Sha256};
+use stitchcraft_core::{Diagnostic, Severity};
+use stitchcraft_engine::testsheets::{self, SHEETS, TestSheet};
+use stitchcraft_plan::invariants;
+use stitchcraft_plan::profiles;
+use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
+
+use super::{Outcome, Status, render_diagnostics};
+use crate::cli::TestsheetArgs;
+use crate::files;
+
+/// Runs `stitch testsheet`.
+pub fn run(args: &TestsheetArgs) -> Outcome {
+    if args.list {
+        return Outcome::done(SHEETS.iter().map(|s| format!("{:<7} {}\n", s.id, s.title)).collect());
+    }
+    let (Some(id), Some(profile_id), Some(output)) = (&args.sheet, &args.profile, &args.output) else {
+        return Outcome::usage("name a sheet, a profile (--profile) and a file (-o), or use --list");
+    };
+    let Some(sheet) = testsheets::find(id) else {
+        return Outcome::usage(format!("there is no test sheet `{id}`; `stitch testsheet --list` shows them"));
+    };
+    let Some(profile) = profiles::find(profile_id) else {
+        return Outcome::usage(format!("there is no profile `{profile_id}`; `stitch profiles` shows them"));
+    };
+    let extension = output.extension().and_then(|e| e.to_str()).and_then(FormatId::from_extension);
+    let Some(format) = args.format.map(FormatId::from).or(extension) else {
+        return Outcome::usage(format!("cannot tell the format of `{}`: name it .pes or .dst, or use --format", output.display()));
+    };
+
+    let plan = match sheet.plan() {
+        Ok(plan) => plan,
+        Err(e) => {
+            return refuse(&[Diagnostic::new(
+                stitchcraft_core::Code::InternalCheckFailed,
+                format!("Test sheet {} could not be drawn: {e}.", sheet.id),
+            )]);
+        }
+    };
+    let mut diagnostics: Vec<Diagnostic> = invariants::check(&plan, profile).iter().map(invariants::Violation::diagnostic).collect();
+    diagnostics.extend(plan.bounds().and_then(|bounds| profile.check_fit(bounds)));
+    if diagnostics.iter().any(|d| d.severity() == Severity::Error) {
+        return refuse(&diagnostics);
+    }
+    let bytes = match stitchcraft_formats::encode(&plan, format, sheet.id) {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            diagnostics.push(e.diagnostic());
+            return refuse(&diagnostics);
+        }
+    };
+    if let Err(e) = files::write_atomically(output, &bytes) {
+        return Outcome { stdout: String::new(), stderr: format!("stitch: cannot write {}: {e}\n", output.display()), status: Status::Io };
+    }
+    Outcome { stdout: report(sheet, profile, format, output, &plan, &bytes), stderr: render_diagnostics(&diagnostics), status: Status::Done }
+}
+
+fn refuse(diagnostics: &[Diagnostic]) -> Outcome {
+    Outcome { stdout: String::new(), stderr: render_diagnostics(diagnostics) + "nothing was written\n", status: Status::DesignErrors }
+}
+
+/// What was written, what the machine will ask for, and what to check.
+fn report(sheet: &TestSheet, profile: &MachineProfile, format: FormatId, output: &Path, plan: &StitchPlan, bytes: &[u8]) -> String {
+    let mut out = String::new();
+    let stats = plan.stats();
+    let _ = writeln!(out, "{} · {}", sheet.id, sheet.title);
+    let _ = writeln!(out, "  file      {} ({}, {} bytes)", output.display(), format.name(), bytes.len());
+    let _ = writeln!(out, "  sha256    {}", hex(&Sha256::digest(bytes)));
+    let _ = writeln!(out, "  profile   {} ({})", profile.id, profile.name);
+    if let Some(b) = plan.bounds() {
+        let _ = writeln!(out, "  size      {:.1} × {:.1} mm", b.width(), b.height());
+    }
+    let counts = [(stats.stitches, "stitch", "stitches"), (stats.jumps, "jump", "jumps"), (stats.trims, "trim", "trims")]
+        .into_iter()
+        .chain([(stats.color_changes, "colour change", "colour changes"), (stats.stops, "stop", "stops")])
+        .map(|(n, one, many)| format!("{n} {}", if n == 1 { one } else { many }))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let _ = writeln!(out, "  stitches  {counts}");
+    let palette = format.palette().map(|id| id.palette());
+    for (i, entry) in plan.color_entries().iter().enumerate() {
+        let thread = entry.thread;
+        let name = thread.name.as_deref().unwrap_or("unnamed");
+        let mut line = format!("{}. {name} ({})", i + 1, thread.color);
+        if let Some(matched) = palette.and_then(|p| p.nearest(thread.color)) {
+            let _ = write!(line, ", shown as {} {} \"{}\"", palette.map_or("", |p| p.name), matched.index, matched.name);
+        }
+        if entry.stop {
+            line.push_str(" — a stop: keep the same thread");
+        }
+        let _ = writeln!(out, "  {}  {line}", if i == 0 { "threads" } else { "       " });
+    }
+    let _ = writeln!(out, "after sewing, check:");
+    for check in sheet.checks {
+        let _ = writeln!(out, "  - {check}");
+    }
+    out
+}
+
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().fold(String::with_capacity(bytes.len() * 2), |mut s, b| {
+        let _ = write!(s, "{b:02x}");
+        s
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use super::*;
+    use crate::cli::Format;
+
+    fn args(sheet: &str, output: PathBuf, format: Option<Format>) -> TestsheetArgs {
+        TestsheetArgs { sheet: Some(sheet.into()), list: false, profile: Some("brother-200x200".into()), output: Some(output), format }
+    }
+
+    fn temp(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("stitchcraft-cli-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        dir.join(name)
+    }
+
+    #[test]
+    fn writes_a_sheet_and_reports_what_to_check() {
+        let path = temp("TS-01.pes");
+        let out = run(&args("ts-01", path.clone(), None));
+        assert_eq!(out.status, Status::Done, "{}", out.stderr);
+        assert!(out.stderr.is_empty());
+        let bytes = std::fs::read(&path).unwrap();
+        assert!(bytes.starts_with(b"#PES0001"));
+        assert!(out.stdout.starts_with("TS-01 · Orientation and scale\n"));
+        assert!(out.stdout.contains(&format!("sha256    {}", hex(&Sha256::digest(&bytes)))));
+        assert!(out.stdout.contains("size      120.0 × 120.0 mm"));
+        assert!(out.stdout.contains("stitches  274 stitches, 7 jumps, 7 trims, 0 colour changes, 0 stops"));
+        assert!(out.stdout.contains("threads  1. Black (#000000), shown as Brother PEC 20 \"Black\""));
+        assert!(out.stdout.contains("after sewing, check:\n  - The F reads normally"));
+    }
+
+    #[test]
+    fn large_sheets_warn_but_are_written() {
+        let out = run(&args("TS-10B", temp("TS-10B.pes"), None));
+        assert_eq!(out.status, Status::Done);
+        assert!(out.stderr.starts_with("warning SC-W0702: The design is 190.0 × 150.0 mm"), "{}", out.stderr);
+    }
+
+    #[test]
+    fn the_format_comes_from_the_flag_or_the_extension() {
+        let out = run(&args("TS-01", temp("ts01-as-dst.bin"), Some(Format::Dst)));
+        assert_eq!(out.status, Status::Done);
+        assert!(std::fs::read(temp("ts01-as-dst.bin")).unwrap().starts_with(b"LA:TS-01"));
+        let out = run(&args("TS-01", temp("ts01.unknown"), None));
+        assert_eq!(out.status, Status::Usage);
+        assert!(out.stderr.contains("cannot tell the format"));
+    }
+
+    #[test]
+    fn unknown_names_are_usage_errors() {
+        assert_eq!(run(&args("TS-99", temp("x.pes"), None)).status, Status::Usage);
+        let mut bad_profile = args("TS-01", temp("x.pes"), None);
+        bad_profile.profile = Some("singer".into());
+        assert_eq!(run(&bad_profile).status, Status::Usage);
+    }
+
+    #[test]
+    fn stops_are_listed_as_threads_the_machine_asks_for() {
+        let out = run(&args("TS-02", temp("TS-02.pes"), None));
+        assert!(out.stdout.contains("4. Emerald Green (#00673e), shown as Brother PEC 54 \"Emerald Green\" — a stop: keep the same thread"));
+        assert!(out.stdout.contains("2 colour changes, 1 stop\n"));
+    }
+
+    #[test]
+    fn lists_the_sheets() {
+        let out = run(&TestsheetArgs { sheet: None, list: true, profile: None, output: None, format: None });
+        assert!(out.stdout.starts_with("TS-01   Orientation and scale\nTS-02   "));
+    }
+}

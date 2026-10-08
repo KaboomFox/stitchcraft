@@ -126,6 +126,16 @@ pub struct StitchPlan {
     pub elements: Vec<ElementId>,
 }
 
+/// One thread the machine asks for: each block's thread, and the same thread again after each stop
+/// (formats without a stop command record a stop as a change to the same thread).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ColorEntry<'a> {
+    /// The thread.
+    pub thread: &'a Thread,
+    /// Whether this entry is a stop rather than a new block.
+    pub stop: bool,
+}
+
 /// Counts that describe a plan.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PlanStats {
@@ -163,6 +173,17 @@ impl StitchPlan {
     /// The element `element` refers to.
     pub fn element(&self, element: ElementRef) -> Option<&ElementId> {
         self.elements.get(element.index())
+    }
+
+    /// The threads the machine asks for, in order: each block's, and again after each stop.
+    pub fn color_entries(&self) -> Vec<ColorEntry<'_>> {
+        let mut entries = Vec::new();
+        for block in &self.blocks {
+            entries.push(ColorEntry { thread: &block.thread, stop: false });
+            let stops = block.stitches.iter().filter(|s| s.kind == StitchKind::Stop).count();
+            entries.extend(core::iter::repeat_n(ColorEntry { thread: &block.thread, stop: true }, stops));
+        }
+        entries
     }
 
     /// Counts of stitches, jumps, commands and thread changes.
