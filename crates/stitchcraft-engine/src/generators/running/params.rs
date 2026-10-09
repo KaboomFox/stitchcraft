@@ -17,5 +17,17 @@ params! {
         /// How far a stitch may stray from a curve. A smaller tolerance follows curves more closely, with
         /// more and shorter stitches.
         running_stitch_tolerance_mm: Length = "0.2", label "Curve tolerance", range (0.01, 5.0);
+
+        /// Vary the stitch lengths at random instead of spreading them evenly. Lines sewn close together
+        /// then do not line their needle holes up, which avoids moiré patterns.
+        enable_random_stitch_length: Toggle = "false", label "Random stitch length";
+
+        /// How much each stitch may be longer or shorter than the stitch length, in percent of it.
+        random_stitch_length_jitter_percent: Percent = "10", label "Length variation", range (0.0, 100.0),
+            when enable_random_stitch_length == "true";
+
+        /// Where the random stitch lengths start: the same seed gives the same stitches, another seed others.
+        /// Empty, each element gets its own.
+        random_seed: Seed = "", label "Random seed";
     }
 }

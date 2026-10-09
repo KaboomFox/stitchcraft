@@ -46,13 +46,13 @@ its keys so files move between the tools unchanged ([ADR-0001](adr/0001-license-
 |---|---|---|---|---|---|---|
 | `satin_column` | toggle | — | — | all | P1 (M3) | planned |
 | `stroke_method` | combo | — | 0 | all | P1 (M3) | planned |
-| `repeats` | int | — | 1 | `running_stitch`, `ripple_stitch`, `zigzag_stitch` | P1 (M3) | planned |
-| `bean_stitch_repeats` | str | — | 0 | `running_stitch`, `ripple_stitch`, `manual_stitch`, `zigzag_stitch` | P1 (M3) | planned |
+| `repeats` | int | — | 1 | `running_stitch`, `ripple_stitch`, `zigzag_stitch` | P1 (M3) | [registered](../user/reference/params/repeat.md#repeats) |
+| `bean_stitch_repeats` | str | — | 0 | `running_stitch`, `ripple_stitch`, `manual_stitch`, `zigzag_stitch` | P1 (M3) | [registered](../user/reference/params/repeat.md#bean_stitch_repeats) |
 | `manual_pattern_placement` | boolean | — | false | `ripple_stitch` | P3 (M10) | planned |
 | `running_stitch_length_mm` | string | mm | 2.5 | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#running_stitch_length_mm) |
 | `running_stitch_tolerance_mm` | float | mm | 0.2 | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#running_stitch_tolerance_mm) |
-| `enable_random_stitch_length` | boolean | — | false | `running_stitch`, `ripple_stitch` | P1 (M3) | planned |
-| `random_stitch_length_jitter_percent` | float | ± % | 10 | `running_stitch`, `ripple_stitch` | P1 (M3) | planned |
+| `enable_random_stitch_length` | boolean | — | false | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#enable_random_stitch_length) |
+| `random_stitch_length_jitter_percent` | float | ± % | 10 | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#random_stitch_length_jitter_percent) |
 | `max_stitch_length_mm` | float | mm | — | `manual_stitch` | P1 (M3) | planned |
 | `zigzag_spacing_mm` | string | mm | 0.4 | `zigzag_stitch` | P2 (M7) | planned |
 | `stroke_pull_compensation_mm` | float | mm (each side) | 0 | `zigzag_stitch` | P2 (M7) | planned |
@@ -76,7 +76,7 @@ its keys so files move between the tools unchanged ([ADR-0001](adr/0001-license-
 | `scale_end` | float | % | 0.0 | `ripple_stitch` | P3 (M10) | planned |
 | `rotate_ripples` | boolean | — | true | `ripple_stitch` | P3 (M10) | planned |
 | `join_style` | dropdown | — | 0 | `ripple_stitch` | P3 (M10) | planned |
-| `random_seed` | random_seed | — | — | `running_stitch`, `ripple_stitch` | P1 (M3) | planned |
+| `random_seed` | random_seed | — | — | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#random_seed) |
 
 ## Satin columns
 
@@ -218,4 +218,4 @@ The values the method parameters take (`stroke_method`, `satin_method`, `fill_me
 Lock stitch identifiers (`lock_start`, `lock_end`): `half_stitch`, `arrow`, `back_forth`, `bowtie`, `cross`, `star`, `simple`, `triangle`, `zigzag`, `custom`. StitchCraft accepts every identifier; the shapes are its own
 designs with the same intent, a deviation recorded in the deviations ledger (`conformance/deviations.toml`).
 
-_145 parameter declarations, 16 registered in StitchCraft._
+_145 parameter declarations, 21 registered in StitchCraft._
