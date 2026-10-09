@@ -225,7 +225,7 @@ status = "planned"
 id = "REQ-SVG-001"
 area = "svg"
 level = "L2"
-statement = "Paths, groups, transforms, viewBox units, colours and visibility map to the Design exactly (positions within 1 micrometre)."
+statement = "Paths, groups, transforms, viewBox units, colours and visibility map to the Design exactly (positions within 1 micrometre), each shape's fill before its stroke, as Ink/Stitch sews them."
 milestone = "M3"
 status = "active"
 
