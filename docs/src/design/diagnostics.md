@@ -80,6 +80,7 @@ another.
 | `SC-E0009` | Error | Internal check failed (a StitchCraft bug; a bug-report bundle is written) | M1 |
 | `SC-E0010` | Error | Nothing to stitch (no embroiderable elements) | M1 |
 | `SC-W0011` | Warning | Stitch type not sewn yet; element skipped | M3 |
+| `SC-E0012` | Error | Bug-report bundle could not be replayed (not a bundle, too new, or names what this version lacks) | M3 |
 | `SC-E0101` | Error | Parameter has the wrong type or an unknown choice | M3 |
 | `SC-W0102` | Warning | Parameter clamped to its allowed range | M3 |
 | `SC-W0105` | Warning | Unknown parameter preserved but ignored | M3 |

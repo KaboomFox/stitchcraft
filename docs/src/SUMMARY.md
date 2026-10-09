@@ -7,6 +7,7 @@
 - [User guide](user/README.md)
   - [Your first sew-out on a Brother](user/tutorials/first-sew-out.md)
   - [How-to guides](user/how-to/README.md)
+    - [Report a bug](user/how-to/report-a-bug.md)
   - [Embroidery basics](user/explanation/embroidery-basics.md)
   - [Reference](user/reference/README.md)
     - [Command line](user/reference/cli.md)

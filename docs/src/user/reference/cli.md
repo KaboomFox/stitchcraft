@@ -12,14 +12,15 @@ stitch: the StitchCraft command-line tool
 Usage: stitch <COMMAND>
 
 Commands:
-  plan       Plan a design (SVG) for a machine and write the machine file, with a picture and a report if asked
-  testsheet  Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
-  inspect    Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
-  preview    Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
-  convert    Write a machine file (PES, PEC or DST) in another format
-  profiles   List the built-in machine profiles
-  explain    Explain a diagnostic code, such as SC-W0702
-  help       Print this message or the help of the given subcommand(s)
+  plan        Plan a design (SVG) for a machine and write the machine file, with a picture and a report if asked
+  testsheet   Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
+  inspect     Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
+  preview     Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
+  convert     Write a machine file (PES, PEC or DST) in another format
+  profiles    List the built-in machine profiles
+  explain     Explain a diagnostic code, such as SC-W0702
+  bug-report  Write a bug-report bundle that reproduces what StitchCraft does with a design, or replay one
+  help        Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help
@@ -29,7 +30,8 @@ Options:
           Print version
 
 Exit status: 0 done (warnings allowed) · 1 the design or file has errors (nothing written) · 2 usage
-error · 3 a file could not be read or written.
+error · 3 a file could not be read or written · 4 a bug in StitchCraft (a bug-report bundle is written
+where it can be: see `stitch bug-report`).
 
 Coming with the roadmap (docs/src/plan/roadmap.md):
   stitch export design.vectorcraft -o design.pes            (M6)
@@ -208,6 +210,45 @@ Arguments:
 Options:
   -h, --help
           Print help
+```
+
+## stitch bug-report
+
+```text
+Write a bug-report bundle that reproduces what StitchCraft does with a design, or replay one.
+
+The bundle is one file to attach to an issue, and it holds the design. With --replay, plan a bundle's design again and compare; the exit status is 1 when it does not reproduce.
+
+Usage: stitch bug-report [OPTIONS] [DESIGN]
+
+Arguments:
+  [DESIGN]
+          The design (SVG) StitchCraft gets wrong
+
+Options:
+      --replay <REPLAY>
+          Replay this bundle instead: plan its design again and say whether everything comes out the same
+
+  -o, --output <OUTPUT>
+          The bundle to write; by default next to the design, as DESIGN.bug-report.json
+
+  -p, --profile <PROFILE>
+          The machine profile (see `stitch profiles`)
+          
+          [default: brother-200x200]
+
+      --format <FORMAT>
+          The file format; by default the profile's
+
+          Possible values:
+          - pes: Brother PES, version 1
+          - dst: Tajima DST
+
+      --says <SAYS>
+          What goes wrong, in your words; it goes into the bundle
+
+  -h, --help
+          Print help (see a summary with '-h')
 ```
 
 ## stitch help

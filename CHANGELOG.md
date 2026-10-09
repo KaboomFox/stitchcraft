@@ -5,6 +5,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M3.10: bug-report bundles.
+  - **`stitch bug-report design.svg --says "…"`** writes one JSON file that reproduces what StitchCraft
+    does with a design: the design file itself, the profile, the format and the version, and what came
+    of them — a SHA-256 of every entry of the plan, bit for bit, the machine file's size and SHA-256,
+    every diagnostic and a panic's message. It says that the bundle holds the design.
+  - **`stitch bug-report --replay BUNDLE`** plans the design again through the same code as
+    `stitch plan` and compares each of them; with the version that wrote it, the bundle reproduces
+    (`REQ-CLI-001`). What differs is listed, then and now, and the exit status is 1. A file it cannot
+    replay is `SC-E0012`.
+  - **When StitchCraft finds a bug in itself** — a failed plan check (`SC-E0009`), or a panic, which
+    `main` now catches — `stitch plan` writes no machine file but a bundle next to it, says where, and
+    ends with the new exit status 4 (`REQ-CLI-002`). Other commands say how to report a panic.
+  - **Docs.** The user guide's first how-to, [Report a bug](docs/src/user/how-to/report-a-bug.md).
 - M3.9: finalize, and `stitch plan`.
   - **`stitch plan design.svg -o design.pes`** plans an SVG design for a machine
     (`--profile`, `brother-200x200` by default) and writes the machine file. `--preview` adds a picture

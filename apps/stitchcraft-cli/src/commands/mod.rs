@@ -1,6 +1,7 @@
 //! The subcommands. Each returns an [`Outcome`] — what to print and how to exit — instead of printing,
 //! so the commands are tested without capturing the terminal.
 
+pub mod bug_report;
 pub mod convert;
 pub mod explain;
 pub mod inspect;
@@ -43,6 +44,8 @@ pub enum Status {
     Usage = 2,
     /// A file could not be read or written.
     Io = 3,
+    /// StitchCraft found a bug in itself; a bug-report bundle was written where it could be.
+    Bug = 4,
 }
 
 impl From<Status> for ExitCode {
@@ -67,9 +70,13 @@ impl Outcome {
         Outcome { stdout: String::new(), stderr: format!("stitch: cannot {verb} {}: {error}\n", path.display()), status: Status::Io }
     }
 
-    /// Errors in the design: `stderr` (warnings found so far) and the diagnostics, and nothing written.
+    /// Errors in the design: `stderr` (warnings found so far) and the diagnostics, and nothing written. A
+    /// failed internal check (`SC-E0009`) is a bug in StitchCraft, not in the design, and ends with
+    /// [`Status::Bug`].
     pub fn refuse(stderr: String, diagnostics: &[Diagnostic]) -> Self {
-        Outcome { stdout: String::new(), stderr: stderr + &render_diagnostics(diagnostics) + "nothing was written\n", status: Status::DesignErrors }
+        let bug = diagnostics.iter().any(|d| d.code == Code::InternalCheckFailed);
+        let status = if bug { Status::Bug } else { Status::DesignErrors };
+        Outcome { stdout: String::new(), stderr: stderr + &render_diagnostics(diagnostics) + "nothing was written\n", status }
     }
 }
 
@@ -159,14 +166,20 @@ pub fn describe_threads(out: &mut String, plan: &StitchPlan, palette: Option<&Pa
     }
 }
 
+/// A diagnostic's first line: `warning SC-W0011 (svg:patch:fill): …`, the element named when there is one.
+pub fn headline(d: &Diagnostic) -> String {
+    match &d.element {
+        Some(element) => format!("{} {} ({element}): {}", d.severity().label(), d.code, d.message),
+        None => d.to_string(),
+    }
+}
+
 /// Diagnostics as people read them: one line each, then the fix indented.
 pub fn render_diagnostics(diagnostics: &[Diagnostic]) -> String {
     let mut out = String::new();
     for d in diagnostics {
-        match &d.element {
-            Some(element) => out.push_str(&format!("{} {} ({element}): {}\n", d.severity().label(), d.code, d.message)),
-            None => out.push_str(&format!("{d}\n")),
-        }
+        out.push_str(&headline(d));
+        out.push('\n');
         if let Some(fix) = &d.fix {
             let label = if matches!(fix, Fix::Apply(_)) { "fix" } else { "hint" };
             out.push_str(&format!("  {label}: {}\n", fix.describe()));

@@ -1,6 +1,10 @@
 # How-to guides
 
-Task-focused guides, each written when its feature lands. Planned:
+Task-focused guides, each written when its feature lands:
+
+- [Report a bug](report-a-bug.md) with a bundle that reproduces it (`stitch bug-report`)
+
+Planned:
 
 | Guide | Milestone |
 |---|---|
@@ -11,5 +15,4 @@ Task-focused guides, each written when its feature lands. Planned:
 | Make lettering-style satin borders | M4 |
 | Stop a fill from puckering (density, underlay, compensation) | M5 |
 | Embroider a VectorCraft design | M6 |
-| Report a bug with a reproducible bundle (`stitch bug-report`) | M3 |
 | Bring an Ink/Stitch design into VectorCraft | M8 |

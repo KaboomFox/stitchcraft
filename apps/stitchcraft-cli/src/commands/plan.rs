@@ -6,21 +6,74 @@
 //! the design — element by element, and what the file format adds, such as DST's cuts before long jumps
 //! (`SC-I0605`) — and writes the files. Nothing is written when the design has errors, except the report,
 //! which says why.
+//!
+//! [`sew`] is the part a bug-report bundle records and replays (`super::bug_report`), so a bundle
+//! reproduces exactly what this command does. When it finds a bug in StitchCraft (`SC-E0009`), this
+//! command writes a bundle next to the machine file it was asked for (`REQ-CLI-002`).
 
 use std::fmt::Write as _;
 use std::path::Path;
 
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use stitchcraft_core::{Budget, Diagnostic};
+use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_formats::Encoded;
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 use stitchcraft_render::{Settings, Style};
 
+use super::bug_report::{self, Run};
 use super::{Outcome, Status, describe_file, describe_plan, describe_threads, hex, output_format, render_diagnostics, write_file};
 use crate::cli::PlanArgs;
 use crate::files;
+
+/// A design planned for a machine and written in a format: what `stitch plan` writes, and what a
+/// bug-report bundle records and replays.
+#[derive(Debug)]
+pub struct Sewn {
+    /// Everything said: the SVG reader's warnings, then the engine's diagnostics, then the format's
+    /// notes.
+    pub diagnostics: Vec<Diagnostic>,
+    /// The plan, when the engine returned one.
+    pub plan: Option<StitchPlan>,
+    /// The machine file, when the plan could be written in the format.
+    pub file: Option<Vec<u8>>,
+}
+
+impl Sewn {
+    /// Whether StitchCraft found a bug in itself: a failed plan check (`SC-E0009`).
+    pub fn found_a_bug(&self) -> bool {
+        self.diagnostics.iter().any(|d| d.code == Code::InternalCheckFailed)
+    }
+}
+
+/// The SVG file `design` planned for `profile` and written in `format`, with `name` as the design name
+/// machines show.
+pub fn sew(design: &[u8], profile: &MachineProfile, format: FormatId, name: &str) -> Sewn {
+    let svg = match stitchcraft_svg::read(design, &Budget::DEFAULT) {
+        Ok(svg) => svg,
+        Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None },
+    };
+    let outcome = stitchcraft_engine::plan(&svg.design, profile, &Budget::DEFAULT);
+    let mut diagnostics = svg.warnings;
+    diagnostics.extend(outcome.diagnostics);
+    let Some(plan) = outcome.plan else { return Sewn { diagnostics, plan: None, file: None } };
+    match stitchcraft_formats::encode(&plan, format, name) {
+        Ok(Encoded { bytes, notes }) => {
+            diagnostics.extend(notes);
+            Sewn { diagnostics, plan: Some(plan), file: Some(bytes) }
+        }
+        Err(e) => {
+            diagnostics.push(e.diagnostic());
+            Sewn { diagnostics, plan: Some(plan), file: None }
+        }
+    }
+}
+
+/// The design name machines show for the design at `path`: its file name without the extension.
+pub fn design_name(path: &Path) -> &str {
+    path.file_stem().and_then(|s| s.to_str()).unwrap_or("design")
+}
 
 /// Runs `stitch plan`.
 pub fn run(args: &PlanArgs) -> Outcome {
@@ -37,23 +90,12 @@ pub fn run(args: &PlanArgs) -> Outcome {
             return Outcome { stdout: String::new(), stderr: format!("stitch: cannot read {}: {e}\n", args.design.display()), status: Status::Io };
         }
     };
-    let svg = match stitchcraft_svg::read(&bytes, &Budget::DEFAULT) {
-        Ok(svg) => svg,
-        Err(unreadable) => return refuse(args, profile, &[unreadable]),
-    };
-    let outcome = stitchcraft_engine::plan(&svg.design, profile, &Budget::DEFAULT);
-    let mut diagnostics = svg.warnings;
-    diagnostics.extend(outcome.diagnostics);
-    let Some(plan) = outcome.plan else { return refuse(args, profile, &diagnostics) };
-    let name = args.design.file_stem().and_then(|s| s.to_str()).unwrap_or("design");
-    let Encoded { bytes: machine_file, notes } = match stitchcraft_formats::encode(&plan, format, name) {
-        Ok(encoded) => encoded,
-        Err(e) => {
-            diagnostics.push(e.diagnostic());
-            return refuse(args, profile, &diagnostics);
-        }
-    };
-    diagnostics.extend(notes);
+    let sewn = sew(&bytes, profile, format, design_name(&args.design));
+    if sewn.found_a_bug() {
+        let refused = refuse(args, profile, &sewn.diagnostics);
+        return bug_report::beside(&args.output, &Run { design_path: &args.design, design: &bytes, profile, format, says: None }, Ok(&sewn), refused);
+    }
+    let Sewn { mut diagnostics, plan: Some(plan), file: Some(machine_file) } = sewn else { return refuse(args, profile, &sewn.diagnostics) };
     if let Err(outcome) = write_file(&args.output, &machine_file) {
         return outcome;
     }

@@ -3,7 +3,8 @@
 //! The only part of StitchCraft that touches files and the terminal. Subcommands arrive with their roadmap
 //! milestones (`docs/src/plan/roadmap.md`). Every subcommand returns an outcome instead of printing, so
 //! `main` is the one place that writes to the terminal: arguments that are not valid Unicode are reported
-//! (by `clap`) instead of panicking, and a closed stdout (`stitch … | head`) ends the program quietly.
+//! (by `clap`) instead of panicking, a closed stdout (`stitch … | head`) ends the program quietly, and a
+//! panic — a bug in StitchCraft — is reported with exit status 4 (`commands::bug_report::guarded`).
 #![forbid(unsafe_code)]
 
 use std::io::{ErrorKind, Write};
@@ -22,6 +23,7 @@ fn run(cli: &Cli) -> Outcome {
         Command::Convert(args) => commands::convert::run(args),
         Command::Profiles => commands::profiles::run(),
         Command::Explain { code } => commands::explain::run(code),
+        Command::BugReport(args) => commands::bug_report::run(args),
     }
 }
 
@@ -36,7 +38,8 @@ fn main() -> ExitCode {
             return write_or_quit(stream, &text, status.into());
         }
     };
-    let outcome = run(&cli);
+    // A panic is a bug in StitchCraft (the libraries deny them): reported, with a bundle for `plan`.
+    let outcome = commands::bug_report::guarded(&cli.command, || run(&cli));
     let code = write_or_quit(&mut std::io::stdout(), &outcome.stdout, outcome.status.into());
     write_or_quit(&mut std::io::stderr(), &outcome.stderr, code)
 }
