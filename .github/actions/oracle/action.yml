@@ -1,0 +1,13 @@
+# The independent reader for REQ-FMT-005: pyembroidery in a virtual environment, pinned by hash
+# (conformance/oracle/requirements.txt). `cargo xtask conformance` finds it through STITCHCRAFT_PYTHON; in
+# CI a missing oracle fails the suite, so every job that runs `cargo xtask ci` uses this action.
+name: pyembroidery oracle
+description: Install the pinned pyembroidery reader and point STITCHCRAFT_PYTHON at it.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        python3 -m venv "$RUNNER_TEMP/oracle-venv"
+        "$RUNNER_TEMP/oracle-venv/bin/pip" install --require-hashes -r conformance/oracle/requirements.txt
+        echo "STITCHCRAFT_PYTHON=$RUNNER_TEMP/oracle-venv/bin/python" >> "$GITHUB_ENV"

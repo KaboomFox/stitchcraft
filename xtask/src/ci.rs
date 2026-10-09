@@ -85,6 +85,9 @@ pub fn run() -> Result<(), String> {
             Outcome::Failed(e) => {
                 failed += 1;
                 println!("  FAIL  {name}: {e}");
+                if std::env::var_os("GITHUB_ACTIONS").is_some() {
+                    println!("{}", util::annotation("error", "cargo xtask ci", &format!("{name} failed: {e}")));
+                }
             }
         }
     }

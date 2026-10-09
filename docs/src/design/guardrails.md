@@ -28,9 +28,13 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | Public API review (M2+) | Changes to library crates' public API are visible in the PR diff | `cargo public-api` snapshots | CI |
 | Coverage ratchet (M1+) | Line coverage of engine, formats and plan crates never drops | `cargo-llvm-cov`, `coverage.toml` | CI |
 | Mutation testing (M2+) | Tests actually detect changed behaviour | `cargo-mutants` | nightly |
+| **Fuzzing** | Readers never panic, respect their caps and terminate; anything read round-trips and previews | `fuzz/`, `stitchcraft-testkit::fuzz` ([conformance](conformance.md#fuzzing)) | bodies every PR · an hour nightly |
 
 `cargo xtask ci` runs everything that does not need extra tools; tools that are not installed locally
-are reported as skipped, while CI installs them and treats them as required.
+are reported as skipped, while CI installs them and treats them as required. In GitHub Actions every
+problem a check finds is also an annotation, on the right line of the pull request's diff when it names
+one, and a failed fuzz run puts the end of its output in one: the reason is visible without opening a
+log.
 
 ## Design rules (reviewed, partly linted)
 

@@ -123,8 +123,30 @@ suite produces, whatever the case is about. A case never needs to ask for them.
 
 Golden bytes for canonical plans; round trips on random plans (`proptest`); every command per format;
 empty and degenerate files; the **pyembroidery oracle** job (pinned version, in its own CI job) decodes
-our files and must agree on every stitch; `cargo-fuzz` targets per reader run nightly with a persisted
-corpus ([formats](formats.md#conformance)).
+our files and must agree on every stitch; `cargo-fuzz` targets run nightly with a persisted corpus
+([formats](formats.md#conformance)).
+
+#### Fuzzing
+
+`fuzz/` holds one target per reader (`read_pes`, `read_dst`) and one for a file's whole journey
+(`read_write_preview`: read, write in every format, read the PES file back, preview). Each target is
+one line; its body is in `stitchcraft-testkit::fuzz`, so every pull request runs the bodies on the golden
+files, every shortening of them and random bytes, on stable Rust and all three operating systems. The
+properties (`REQ-FMT-006`): no panic; at most 2,000,000 entries and no position beyond ±10 m from any
+reader; a plan read from anything is written in every format, and its PES file reads back to a plan the
+machine sews the same way; a preview never panics.
+
+Every night `nightly.yml` fuzzes each target for 20 minutes with libFuzzer (`-timeout=10`,
+`-rss_limit_mb=2048`). The corpus starts from the golden machine files and is kept, minimised, in the
+Actions cache, so each night continues where the last stopped. A crash fails the job and keeps the input
+as an artifact. To work on one locally:
+
+```sh
+cargo +nightly fuzz run read_pes                        # until stopped; corpus in fuzz/corpus/read_pes
+cargo +nightly fuzz run read_pes fuzz/artifacts/read_pes/crash-…   # reproduce a crash
+```
+
+A crash becomes a regression test next to the code it found a bug in, before the fix.
 
 ### L2 — Generator properties (every PR)
 

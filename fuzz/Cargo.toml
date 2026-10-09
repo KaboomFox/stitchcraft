@@ -1,0 +1,43 @@
+# Coverage-guided fuzzing of the readers (REQ-FMT-006): `cargo +nightly fuzz run <target>` from the
+# repository root. The nightly workflow runs every target with a corpus that grows from night to night
+# (docs/src/design/conformance.md › Fuzzing).
+#
+# Each target is one line: the bodies live in `stitchcraft-testkit::fuzz`, where every pull request runs
+# them on stable Rust. This package needs nightly Rust and libFuzzer, so it is its own workspace and not a
+# member of StitchCraft's.
+[package]
+name = "stitchcraft-fuzz"
+version = "0.0.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+stitchcraft-testkit = { path = "../crates/stitchcraft-testkit" }
+
+[workspace]
+
+[[bin]]
+name = "read_pes"
+path = "fuzz_targets/read_pes.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "read_dst"
+path = "fuzz_targets/read_dst.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "read_write_preview"
+path = "fuzz_targets/read_write_preview.rs"
+test = false
+doc = false
+bench = false

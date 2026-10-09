@@ -69,6 +69,21 @@ pub fn tool_available(program: &str, args: &[&str]) -> bool {
     Command::new(program).args(args).output().is_ok_and(|o| o.status.success())
 }
 
+/// A GitHub Actions workflow command showing `message` as a `level` annotation titled `title`, placed on
+/// a file and line when the message starts with `path:line: `.
+pub fn annotation(level: &str, title: &str, message: &str) -> String {
+    // Encodings from GitHub's "Workflow commands" documentation: data escapes %, CR and LF; property
+    // values also escape `:` and `,`.
+    let data = |s: &str| s.replace('%', "%25").replace('\r', "%0D").replace('\n', "%0A");
+    let property = |s: &str| data(s).replace(':', "%3A").replace(',', "%2C");
+    let located = message.split_once(": ").and_then(|(place, rest)| {
+        let (file, line) = place.rsplit_once(':')?;
+        (line.parse::<u32>().is_ok() && !file.contains(' ')).then(|| (format!(",file={},line={line}", property(file)), rest))
+    });
+    let (location, text) = located.unwrap_or((String::new(), message));
+    format!("::{level} title={}{location}::{}", property(title), data(text))
+}
+
 /// Problems found by a check: errors fail it, warnings are printed.
 #[derive(Debug, Default)]
 pub struct Findings {
@@ -89,13 +104,22 @@ impl Findings {
         self.warnings.push(message.into());
     }
 
-    /// Prints the findings under `title` and turns errors into the check's result.
+    /// Prints the findings under `title` and turns errors into the check's result. In GitHub Actions each
+    /// finding is also an annotation, so it shows on the run's page, through the checks API and, when it
+    /// starts with `path:line:`, on that line of the pull request's diff.
     pub fn finish(self, title: &str, summary_ok: &str) -> Result<(), String> {
+        let annotate = std::env::var_os("GITHUB_ACTIONS").is_some();
         for w in &self.warnings {
             eprintln!("warning: {w}");
+            if annotate {
+                println!("{}", annotation("warning", title, w));
+            }
         }
         for e in &self.errors {
             eprintln!("error: {e}");
+            if annotate {
+                println!("{}", annotation("error", title, e));
+            }
         }
         if self.errors.is_empty() {
             println!("{title}: {summary_ok}");
@@ -103,5 +127,20 @@ impl Findings {
         } else {
             Err(format!("{title}: {} problem(s)", self.errors.len()))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn findings_become_annotations_on_their_line() {
+        assert_eq!(
+            annotation("error", "docs", "docs/src/a.md:12: SC-W9999 is not registered"),
+            "::error title=docs,file=docs/src/a.md,line=12::SC-W9999 is not registered"
+        );
+        assert_eq!(annotation("warning", "shots", "50% done\nnext: x"), "::warning title=shots::50%25 done%0Anext: x");
+        assert_eq!(annotation("error", "a:b", "REQ-FMT-005 is active: no case"), "::error title=a%3Ab::REQ-FMT-005 is active: no case");
     }
 }

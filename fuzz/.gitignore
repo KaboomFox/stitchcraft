@@ -1,0 +1,5 @@
+# Made by cargo-fuzz; the nightly job keeps the corpus in the Actions cache and crashes as artifacts.
+target/
+corpus/
+artifacts/
+coverage/

@@ -37,10 +37,7 @@ jobs:
         with:
           tool: cargo-deny,typos,mdbook
       - name: The independent reader for REQ-FMT-005 (pyembroidery, pinned by hash)
-        run: |
-          python3 -m venv "$RUNNER_TEMP/oracle-venv"
-          "$RUNNER_TEMP/oracle-venv/bin/pip" install --require-hashes -r conformance/oracle/requirements.txt
-          echo "STITCHCRAFT_PYTHON=$RUNNER_TEMP/oracle-venv/bin/python" >> "$GITHUB_ENV"
+        uses: ./.github/actions/oracle
       - run: cargo xtask ci
       - name: Keep new previews and conformance diffs when something differs
         if: failure()
