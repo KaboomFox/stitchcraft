@@ -108,17 +108,12 @@ fn flush(jumps: &mut Vec<Delta>, sewn: &mut bool, recorder: &mut Recorder) -> Re
 /// How many of the first `jumps` spell a trim: 2 to [`LONGEST_TRIM`] small jumps that end where they
 /// started, or none.
 fn spelled_trim(jumps: &[Delta]) -> usize {
-    let mut sum = (0_i64, 0_i64);
-    for (n, d) in jumps.iter().take(LONGEST_TRIM).enumerate() {
-        if d.dx.abs() > TRIM_JUMP_MAX || d.dy.abs() > TRIM_JUMP_MAX {
-            return 0;
-        }
-        sum = (sum.0 + i64::from(d.dx), sum.1 + i64::from(d.dy));
-        if n >= 1 && sum == (0, 0) {
-            return n + 1;
-        }
-    }
-    0
+    let small = jumps.iter().take(LONGEST_TRIM).take_while(|d| d.dx.abs() <= TRIM_JUMP_MAX && d.dy.abs() <= TRIM_JUMP_MAX).count();
+    let back = |n: usize| {
+        let first = jumps.iter().take(n);
+        first.clone().map(|d| i64::from(d.dx)).sum::<i64>() == 0 && first.map(|d| i64::from(d.dy)).sum::<i64>() == 0
+    };
+    (2..=small).find(|&n| back(n)).unwrap_or(0)
 }
 
 /// The placeholder thread of block `n` (DST stores no colours).
@@ -187,6 +182,16 @@ mod tests {
         assert_eq!(read(&between(&[&trim[..], &[(100, 0, jump); 2]].concat())), "S S T J J S S");
         // Two small jumps back to the start are no trim: machines count three.
         assert_eq!(read(&between(&[(2, -2, jump), (-2, 2, jump)])), "S S J J S S");
+        // A trim's spelling is small jumps, up to 1 mm along each axis, that end where they started; other
+        // jumps are moves, kept even where they cancel.
+        for axis in [|v: i32| (v, 0), |v: i32| (0, v)] {
+            let run = |moves: [i32; 3]| moves.map(|v| (axis(v).0, axis(v).1, jump));
+            assert_eq!(read(&between(&run([10, -10, 5]))), "S S T J S S");
+            assert_eq!(read(&between(&run([11, -11, 5]))), "S S T J J J S S");
+            assert_eq!(read(&between(&run([100, -100, 50]))), "S S T J J J S S");
+        }
+        assert_eq!(read(&between(&[(2, 1, jump), (-2, 1, jump), (0, -2, jump)])), "S S T S S");
+        assert_eq!(read(&between(&[(1, 2, jump), (1, -2, jump), (-2, 0, jump)])), "S S T S S");
         // Where nothing was sewn since the thread was cut or changed, there is nothing to cut.
         assert_eq!(read(&[&[(100, 0, jump); 3][..], &stitches[..]].concat()), "J J J S S");
         assert_eq!(read(&[&stitches[..], &[(0, 0, change)], &[(100, 0, jump); 3], &stitches[..]].concat()), "S S | J J J S S");

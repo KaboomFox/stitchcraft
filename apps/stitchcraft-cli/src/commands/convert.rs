@@ -89,7 +89,7 @@ mod tests {
         assert!(out.stdout.starts_with(&format!("{} · PES (#PES0001) → DST\n", source.display())), "{}", out.stdout);
         assert_eq!(
             out.stderr,
-            "info SC-I0605: 3 jumps longer than 24.2 mm take 3 or more DST jump records each, which machines read as a trim, so the thread will be cut before them.\n"
+            "info SC-I0605: The thread will be cut at 3 places the plan does not trim: DST machines cut it before 3 or more jump records in a row, and a jump longer than 24.2 mm takes that many.\n"
         );
         let (before, after) = (read(&source), read(&output));
         assert_eq!(after.name, "TS-02");

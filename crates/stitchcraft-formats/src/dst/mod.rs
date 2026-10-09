@@ -162,15 +162,14 @@ impl Records {
         // The longest jump that is not cut: one record fewer than a trim, in mm.
         let records = i32::try_from(JUMPS_FOR_TRIM).unwrap_or(i32::MAX).saturating_sub(1);
         let longest = f64::from(RECORD_LIMIT.saturating_mul(records)) / 10.0;
-        let message = match self.unplanned_cuts {
+        let places = match self.unplanned_cuts {
             0 => return Vec::new(),
-            1 => format!(
-                "A jump longer than {longest} mm takes {JUMPS_FOR_TRIM} or more DST jump records, which machines read as a trim, so the thread will be cut before it."
-            ),
-            n => format!(
-                "{n} jumps longer than {longest} mm take {JUMPS_FOR_TRIM} or more DST jump records each, which machines read as a trim, so the thread will be cut before them."
-            ),
+            1 => "1 place".to_string(),
+            n => format!("{n} places"),
         };
+        let message = format!(
+            "The thread will be cut at {places} the plan does not trim: DST machines cut it before {JUMPS_FOR_TRIM} or more jump records in a row, and a jump longer than {longest} mm takes that many."
+        );
         vec![Diagnostic::new(Code::JumpsCutInDst, message)]
     }
 }

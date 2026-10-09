@@ -5,8 +5,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
-- `SC-I0605`: writing DST says how many jumps its machines will cut the thread before although the plan
-  does not trim there. `stitchcraft_formats::encode` returns the file as `Encoded`, its bytes with notes on
+- `SC-I0605`: writing DST says at how many places its machines will cut the thread where the plan does
+  not trim. `stitchcraft_formats::encode` returns the file as `Encoded`, its bytes with notes on
   what the format makes the machine do that the plan does not say; `stitch convert` and
   `stitch testsheet` print them.
 - M3.4: the running stitch (`stitchcraft_engine::generators::running`).
