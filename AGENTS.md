@@ -11,7 +11,8 @@ changes the code — people and AI agents alike. `CLAUDE.md` points here; there 
 2. Read the design pages that step touches, starting from `docs/src/design/README.md`. The technical
    design (`docs/src/design/tdd.md`) is the overview.
 3. Work conformance-first: add requirements and failing cases, then the code that makes them pass, then
-   the docs. A Rust test named `req_<area>_<nnn>_<what>` is a case for `REQ-<AREA>-<NNN>`. Finish with
+   the docs. A Rust test named `req_<area>_<nnn>_<what>` is a case for `REQ-<AREA>-<NNN>`, and one named
+   `diag_sc_<e|w|i><nnnn>_<what>` is the case that produces diagnostic `SC-<E|W|I><NNNN>`. Finish with
    `cargo xtask ci`.
 
 ## Non-negotiables

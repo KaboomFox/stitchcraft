@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn dst_to_pes_sews_the_same_and_says_the_colours_are_placeholders() {
+    fn diag_sc_w0604_converting_dst_says_its_colours_are_placeholders() {
         let (source, output) = (golden("testsheets/TS-01.dst"), temp("TS-01-from-dst.bin"));
         let out = convert(source.clone(), output.clone(), Some(Format::Pes));
         assert_eq!(out.status, Status::Done, "{}", out.stderr);

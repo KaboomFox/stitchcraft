@@ -5,6 +5,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M3.2: every registered diagnostic code has a case. A test named `diag_sc_<code>_<what>` produces the
+  code from real input and checks the exact text a user reads; `cargo xtask conformance` fails for a code
+  without one and lists every code with its cases in the report. All 13 codes have one.
 - M3.1: the parameter registry. Parameters are declared once, beside the code that uses them, with
   `params!`; the typed struct, validation (`SC-E0101` for a value that cannot be used, `SC-W0102` for one
   clamped into range, `SC-W0105` for a key StitchCraft does not know, which is kept), the reference pages

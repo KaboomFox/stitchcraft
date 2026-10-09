@@ -46,8 +46,9 @@ whose letter disagrees with its severity, or whose explanation is missing. From 
 - `cargo xtask docs` generates the **diagnostics index** (one page per code, like `rustc`'s error index);
 - `stitch explain SC-W0702` prints the explanation in the terminal;
 - the VectorCraft plug-in links each message to its page;
-- a test fails when a code has no explanation, no triggering conformance case, or a case triggers a
-  code that is not registered.
+- `cargo xtask conformance` fails when a code has no `diag_sc_<code>_<what>` test that produces it from
+  real input and checks the text a user reads, or when such a test names a code that is not registered
+  ([conformance](conformance.md#cases)); the registry's own tests fail when a code has no explanation.
 
 That last rule is what keeps error paths alive: a message that no test ever renders can ship with a
 typo in its formatting and nobody sees it until a user does.

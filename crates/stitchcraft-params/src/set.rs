@@ -132,11 +132,12 @@ mod tests {
     }
 
     #[test]
-    fn a_default_that_needs_clamping_or_does_not_parse_is_a_registry_bug() {
+    fn diag_sc_e0009_a_default_that_needs_clamping_or_does_not_parse_is_a_registry_bug() {
         for default in ["99", "wide"] {
             let mut problems = Vec::new();
             assert_eq!(read_param::<Length>(&ParamSet::new(), Some(&spec(default)), &mut problems), None);
-            assert_eq!(codes(&problems), [Code::InternalCheckFailed], "{default}");
+            let shown: Vec<String> = problems.iter().map(ToString::to_string).collect();
+            assert_eq!(shown, ["error SC-E0009: The default of `row_spacing_mm` is not a valid value."], "{default}");
         }
     }
 

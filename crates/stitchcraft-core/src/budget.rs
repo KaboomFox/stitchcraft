@@ -145,14 +145,18 @@ mod tests {
     }
 
     #[test]
-    fn exhaustion_is_a_coded_diagnostic() {
+    fn diag_sc_e0004_running_out_names_the_limit_and_suggests_a_fix() {
+        let budget = Budget::DEFAULT;
         let id = ElementId::new("svg:path7").unwrap();
-        let d = Exhausted::Work.diagnostic(&Budget::DEFAULT, Some(id.clone()));
-        assert_eq!(d.code.id(), "SC-E0004");
-        assert_eq!(d.element, Some(id));
-        assert!(d.message.contains("500000000"));
-        let d = Exhausted::Stitches.diagnostic(&Budget::DEFAULT, None);
-        assert!(d.message.contains("2000000 stitches"));
-        assert!(d.fix.is_some());
+        let work = budget.meter().charge(budget.max_work + 1).unwrap_err().diagnostic(&budget, Some(id.clone()));
+        assert_eq!(work.to_string(), "error SC-E0004: Planning this element needed more than the work budget of 500000000 units, so it was skipped.");
+        assert_eq!(work.element, Some(id));
+        assert_eq!(
+            work.fix.map(|f| f.describe()).as_deref(),
+            Some("Simplify the element (fewer nodes, wider spacing) or split it into smaller elements.")
+        );
+        let stitches = budget.meter().charge_stitches(budget.max_stitches + 1).unwrap_err().diagnostic(&budget, None);
+        assert_eq!(stitches.to_string(), "error SC-E0004: The design needs more than 2000000 stitches, the limit for one design.");
+        assert_eq!(stitches.fix.map(|f| f.describe()).as_deref(), Some("Split the design into several files, or use wider spacing on large fills."));
     }
 }
