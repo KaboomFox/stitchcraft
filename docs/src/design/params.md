@@ -1,5 +1,7 @@
 # Parameter registry
 
+<!-- implements: crates/stitchcraft-params/src/**, crates/stitchcraft-engine/src/registry.rs, crates/stitchcraft-engine/src/common.rs -->
+
 Every embroidery parameter is declared **once**, next to the generator that uses it. Everything
 else that needs to know about parameters is generated from that declaration:
 
@@ -97,7 +99,7 @@ version and a registry schema version arrive with the first release, together wi
 | Kind | Generators get | Validation | Ink/Stitch equivalent |
 |---|---|---|---|
 | `Length` | `Mm` | finite, within `range`; units accepted on input: mm, in, pt | `float`, unit `mm` |
-| `OptionalLength` | `Option<Mm>` | as `Length`, or empty (the setting then comes from the document or the machine) | `float`, unit `mm`, no default |
+| `OptionalLength` | `Option<Mm>` | as `Length`, or empty: the setting then comes from the document or the machine, or there is none. 0 or less counts as empty, as Ink/Stitch reads it | `float`, unit `mm`, no default |
 | `Angle` | degrees, `f64` | finite; normalized to (−180, 180] | `float`, unit `deg` |
 | `Percent` | `f64` | finite, within range | `float`, unit `%` |
 | `Count` | `u32` | whole, within range | `int` |
@@ -167,9 +169,9 @@ groups and conditions are emitted as well.
 
 ## Presets
 
-A preset is a named partial `ParamSet` (`"denim"`, `"knit, light"`) stored as TOML in
-`crates/stitchcraft-params/presets/`, validated by the same code as user input, and documented by a
-generated page. In VectorCraft, users can also save appearance (including embroidery live effects) as
+A preset is a named partial `ParamSet` (`"denim"`, `"knit, light"`) stored as a TOML file in a
+`presets` directory of the parameters crate. The same code as user input validates it, and a generated
+page documents it. In VectorCraft, users can also save appearance (including embroidery live effects) as
 Graphic Styles.
 
 ## Versioning and migration

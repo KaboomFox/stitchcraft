@@ -1,5 +1,7 @@
 # Determinism
 
+<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/rng.rs -->
+
 **Same input, same version ⇒ byte-identical machine file and preview, on Linux, macOS, Windows and
 wasm32.** This makes golden-file conformance possible, makes bug reports reproducible, makes caches
 safe, and means the docs images regenerated in CI match the ones on a contributor's laptop.
@@ -37,13 +39,17 @@ disagree, and prints the first differing case.
 ## Bug reports
 
 Because the same design, profile, format and version give the same plan everywhere, those four are all a
-bug report needs. `stitch bug-report` writes them into one JSON file — the design file itself, not a path
-to it — with what came of them: a SHA-256 of every entry of the plan (each coordinate's bits, its kind,
-role and element, and each block's thread), the machine file's size and SHA-256, every diagnostic's first
-line, and a panic's message if there was one. `stitch bug-report --replay` plans the design again through
-the same code as `stitch plan` and compares each of them (`REQ-CLI-001`); `stitch plan` writes a bundle by
-itself when it finds a bug in StitchCraft (`REQ-CLI-002`). The user guide's
-[Report a bug](../user/how-to/report-a-bug.md) shows both.
+bug report needs. `stitch bug-report` writes them into one JSON file, with the design file itself in place
+of a path to it. The file also records what came of them:
+
+- a SHA-256 of each entry of the plan, from each coordinate's bits, its kind, role and element, and each
+  block's thread
+- the machine file's size and SHA-256
+- the first line of each diagnostic, and a panic's message if there was one
+
+`stitch bug-report --replay` plans the design again through the same code as `stitch plan` and compares
+each record (`REQ-CLI-001`). `stitch plan` writes a bundle by itself when it finds a bug in StitchCraft
+(`REQ-CLI-002`). The user guide's [Report a bug](../user/how-to/report-a-bug.md) shows both.
 
 The plan's digest is written out entry by entry rather than from the plan's `Debug` text, so that a
 compiler that prints numbers differently cannot change it.

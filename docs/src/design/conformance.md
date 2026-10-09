@@ -1,5 +1,7 @@
 # Conformance testing
 
+<!-- implements: crates/stitchcraft-testkit/src/** -->
+
 When behaviour is specified only by its implementation, fixes for one input break another and nobody
 can say what "correct" means. StitchCraft specifies behaviour as **requirements**, proves each with **cases**, and reports the result
 as a **matrix** on every pull request. Code is written to make cases pass, not the other way round
@@ -118,6 +120,10 @@ Inline designs are allowed for small cases; fixtures are SVG or JSON designs und
 `conformance/fixtures/` (small, hand-written or generated, with a row in the fixtures index stating their
 origin and licence). Large real-world corpora live in a separate repository pinned by commit and
 SHA-256, downloaded by `cargo xtask corpus` — the same policy VectorCraft follows for its corpora.
+
+The engine's cases build their small designs with `stitchcraft_testkit::designs`. It also reads a plan's
+shape at a glance: `J L4 S5 L4` is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
+stitches.
 
 ## Levels
 

@@ -1,5 +1,7 @@
 # Diagnostics
 
+<!-- implements: crates/stitchcraft-core/src/diag.rs, crates/stitchcraft-core/src/text.rs, apps/stitchcraft-cli/src/commands/explain.rs -->
+
 A diagnostic is a problem with the user's design or input, explained in the user's terms, with a
 stable code. Diagnostics are values: the engine collects them and keeps planning whatever it can.
 Errors in the Rust sense (`Result`) are reserved for failures to do the work at all
@@ -80,7 +82,7 @@ another.
 | `SC-E0009` | Error | Internal check failed (a StitchCraft bug; a bug-report bundle is written) | M1 |
 | `SC-E0010` | Error | Nothing to stitch (no embroiderable elements) | M1 |
 | `SC-W0011` | Warning | Stitch type not sewn yet; element skipped | M3 |
-| `SC-E0012` | Error | Bug-report bundle could not be replayed (not a bundle, too new, or names what this version lacks) | M3 |
+| `SC-E0012` | Error | Bug-report bundle could not be replayed | M3 |
 | `SC-E0101` | Error | Parameter has the wrong type or an unknown choice | M3 |
 | `SC-W0102` | Warning | Parameter clamped to its allowed range | M3 |
 | `SC-W0105` | Warning | Unknown parameter preserved but ignored | M3 |
@@ -102,6 +104,7 @@ another.
 | `SC-W0502` | Warning | Lock stitch shorter than 0.2 mm; lengthened | M3 |
 | `SC-W0503` | Warning | Custom lock cannot be sewn as written | M3 |
 | `SC-I0504` | Info | Stitches shorter than the shortest stitch merged | M3 |
+| `SC-W0505` | Warning | Trim or stop after an element that sews nothing; left out | M3 |
 | `SC-E0601` | Error | Too many colour changes for the file format | M1 |
 | `SC-E0602` | Error | Design too large for the file format (coordinates or data exceed its fields) | M1 |
 | `SC-E0603` | Error | Machine file could not be read (wrong format, truncated, or a record that makes no sense) | M2 |
@@ -114,3 +117,4 @@ another.
 | `SC-W0802` | Warning | SVG feature ignored (e.g. raster image, text not converted to paths) | M3 |
 | `SC-W0803` | Warning | `.vectorcraft` file from a newer VectorCraft format version; read best-effort | M6 |
 | `SC-W0804` | Warning | Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m); the usable part is stitched | M3 |
+| `SC-I0805` | Info | Object left out, as the file asks (Ink/Stitch's ignore commands and `ignore_object` setting) | M3 |

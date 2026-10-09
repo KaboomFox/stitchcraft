@@ -1,6 +1,6 @@
 # How-to guides
 
-Task-focused guides, each written when its feature lands:
+Task-focused guides, each written in the release that brings its feature:
 
 - [Report a bug](report-a-bug.md) with a bundle that reproduces it (`stitch bug-report`)
 

@@ -12,9 +12,16 @@
 [[deviation]]
 id = "DEV-LCK-001"
 area = "plan/locks"
-summary = "Every Ink/Stitch lock id is accepted, but the shapes behind the ids are StitchCraft's own designs with the same intent: the half stitch goes forth and back twice over half the first stitch and back_forth twice over one step, where Ink/Stitch's go out two steps and back; the drawn shapes are new; and a custom lock drawn as an SVG path sews the half stitch, with SC-W0503, until M8."
-reason = "Clean room: the shapes come from StitchCraft's design (docs/src/design/algorithms/locks.md), never from Ink/Stitch's lock data (ADR-0001). Each lies on the stitching it secures and keeps every lock stitch from 0.2 mm; machine checkpoint MC-2 (TS-04) checks that they hold."
+summary = "Each Ink/Stitch lock id is accepted, with StitchCraft's own shapes behind the ids and the same intent. The half stitch goes forth and back twice over half the first stitch, and back_forth twice over one step, where Ink/Stitch's go out two steps and back. The drawn shapes are new. A custom lock drawn as an SVG path sews the half stitch, with SC-W0503, until M8."
+reason = "Clean room: the shapes come from StitchCraft's design (docs/src/design/algorithms/locks.md), never from Ink/Stitch's lock data (ADR-0001). Each shape lies on the stitching it secures, and its stitches are at least 0.2 mm long. Machine checkpoint MC-2 (TS-04) checks that they hold."
 requirements = ["REQ-LCK-002"]
+
+[[deviation]]
+id = "DEV-LCK-002"
+area = "plan/locks"
+summary = "Locks of steps follow the stitching round its corners, as Ink/Stitch's custom steps do. They differ in 2 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn."
+reason = "No lock stitch is shorter than 0.2 mm (REQ-LCK-002), so the needle never goes back into the hole it just left. Ink/Stitch's behaviour was read at d59c9ab (lib/stitch_plan/lock_stitch.py), docs/src/design/algorithms/locks.md."
+requirements = ["REQ-LCK-004"]
 
 [[deviation]]
 id = "DEV-RUN-001"
@@ -47,6 +54,6 @@ requirements = ["REQ-RUN-001"]
 [[deviation]]
 id = "DEV-FIN-001"
 area = "plan/finalize"
-summary = "StitchCraft fits every stitch to the machine: it leaves out needle points less than the machine's shortest stitch (0.3 mm on the Brother) from the one before, keeping the ends of each run of stitches, and splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than 0.1 mm (or the element's own shortest stitch) and splits nothing."
+summary = "StitchCraft fits every stitch to the machine: it leaves out needle points less than their element's shortest stitch from the one before, never less than the machine's (0.3 mm on the Brother), keeping the ends of each run of stitches, and splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else 0.1 mm, and splits nothing."
 reason = "The machine profile says what the machine sews well; a stitch outside it hammers one hole, snags, or is refused (docs/src/design/engine-pipeline.md › Finalize)."
 requirements = ["REQ-FIN-001"]

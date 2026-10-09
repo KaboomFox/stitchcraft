@@ -229,6 +229,15 @@ rationale = "Degenerate arcs are valid SVG; dividing by their zero radius must n
 milestone = "M3"
 status = "active"
 
+[[req]]
+id = "REQ-SVG-003"
+area = "svg"
+level = "L2"
+statement = "Ink/Stitch's own objects are not stitched: command symbols and the connectors that tie them to objects, lines drawn with Inkscape's connector tool, and paths that Ink/Stitch's guide-line, anchor-line or pattern start marker makes helpers. Its trim and stop commands set the shape's trim_after and stop_after, and a command that is not applied is noted."
+rationale = "Read as plain SVG, every command would add a stray line and a colour change to the sew-out, and every guide line would be stitched."
+milestone = "M3"
+status = "active"
+
 # ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -303,7 +312,7 @@ status = "active"
 id = "REQ-RUN-006"
 area = "strokes/manual"
 level = "L2"
-statement = "Manual stitch puts a needle point on every node of the path, in order (a curve gives only its end node, a node where the needle already is counts once), plus only the documented splits: a stitch longer than max_stitch_length_mm is split into the fewest equal parts no longer than it, none shorter than the shortest stitch."
+statement = "Manual stitch puts a needle point on every node of the path, in order (a curve gives only its end node, a node where the needle already is counts once), plus only the documented splits: a stitch longer than max_stitch_length_mm, when it is above 0, is split into the fewest equal parts no longer than it, none shorter than the shortest stitch."
 milestone = "M3"
 status = "active"
 
@@ -337,7 +346,7 @@ status = "active"
 id = "REQ-LCK-004"
 area = "plan/locks"
 level = "L2"
-statement = "A custom lock written as numbers sews them as steps along the path, in sizes of `lock_*_scale_mm`, positive into the stitching: a tie-in's steps end where the stitching starts and a tie-off's begin where it ends, as Ink/Stitch reads them."
+statement = "A custom lock written as numbers sews them as steps along the stitching, round its corners, in sizes of `lock_*_scale_mm`, positive into the stitching: a tie-in's steps end where the stitching starts and a tie-off's begin where it ends, as Ink/Stitch reads them."
 milestone = "M3"
 status = "active"
 
@@ -353,7 +362,7 @@ status = "planned"
 id = "REQ-ASM-001"
 area = "plan/assembly"
 level = "L2"
-statement = "Elements are stitched in document order; a thread change starts a new colour block."
+statement = "Elements are stitched in document order; a change of thread colour starts a new colour block, and threads are compared by colour alone, as in Ink/Stitch."
 milestone = "M3"
 status = "active"
 
@@ -378,9 +387,9 @@ id = "REQ-ASM-004"
 area = "plan/assembly"
 level = "L2"
 statement = "Ignored elements are dropped and listed in the report."
-rationale = "Ink/Stitch's ignore commands are symbols the SVG adapter reads (M8); it drops the element and says so, as for anything else it leaves out."
-milestone = "M8"
-status = "planned"
+rationale = "Ink/Stitch's ignore commands and its ignore_object setting keep templates and placement lines in a drawing but out of the sew-out; the SVG adapter leaves them out and lists each (SC-I0805)."
+milestone = "M3"
+status = "active"
 
 [[req]]
 id = "REQ-ASM-005"
@@ -396,7 +405,7 @@ status = "active"
 id = "REQ-FIN-001"
 area = "plan/finalize"
 level = "L2"
-statement = "Finalizing fits every stitch to the machine: one longer than its longest is split into the fewest equal parts no longer than it (SC-I0703), and a needle point less than the shortest stitch from the one before is left out (SC-I0504), the ends of each run of stitches and lock points kept."
+statement = "Finalizing fits every stitch to the machine: one longer than its longest is split into the fewest equal parts no longer than it (SC-I0703), and a needle point less than its element's shortest stitch (the one its generator used) from the one before is left out (SC-I0504), the ends of each run of stitches and lock points kept."
 milestone = "M3"
 status = "active"
 
@@ -404,7 +413,7 @@ status = "active"
 id = "REQ-FIN-002"
 area = "plan/finalize"
 level = "L2"
-statement = "A design the machine cannot take — larger than the hoop or reaching past its edge from the origin (SC-E0701), or with more colour changes and stops than its format records (SC-E0601) — gives no plan; one larger than the comfort zone is planned, with SC-W0702."
+statement = "A design the machine cannot take — larger than the hoop, reaching past its edge from the origin, or with its stop position past the edge (SC-E0701), or with more colour changes and stops than its format records (SC-E0601) — gives no plan; one larger than the comfort zone is planned, with SC-W0702."
 milestone = "M3"
 status = "active"
 

@@ -268,12 +268,19 @@ fn reading_is_bounded_by_the_budget() {
     assert_eq!(d.code, Code::BudgetExhausted);
     assert_eq!(d.to_string(), "error SC-E0004: Reading the SVG file needed more than the work budget of 50 units.");
     assert!(stitchcraft_svg::read(file.as_bytes(), &Budget { max_stitches: 1, max_work: 500 }).is_ok());
-    // Exactly: one unit per XML node, and one more per 8 bytes of a point list (here 15 bytes: 2).
+    // Exactly: two units per XML node (one to find ids and Ink/Stitch's commands, the root included, and
+    // one to read it), and one more per 8 bytes of a point list (here 15 bytes: 2).
     let exact = |file: &str, units: u64| {
         let budget = |max_work| Budget { max_stitches: 1, max_work };
         assert!(stitchcraft_svg::read(file.as_bytes(), &budget(units)).is_ok(), "{units} units are enough for {file}");
         assert!(stitchcraft_svg::read(file.as_bytes(), &budget(units - 1)).is_err(), "{} units are not enough for {file}", units - 1);
     };
-    exact(r#"<svg xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1"/><rect width="1" height="1"/></svg>"#, 2);
-    exact(r#"<svg xmlns="http://www.w3.org/2000/svg"><polyline points="0,0 1,1 2,2 3,3" stroke="red" fill="none"/></svg>"#, 3);
+    exact(r#"<svg xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1"/><rect width="1" height="1"/></svg>"#, 3 + 2);
+    exact(r#"<svg xmlns="http://www.w3.org/2000/svg"><polyline points="0,0 1,1 2,2 3,3" stroke="red" fill="none"/></svg>"#, 2 + 1 + 2);
+    // An `ignore_layer` command costs one more unit per step up from it: here the group, the `<svg>`
+    // element and the document. The root is not read, so 4 to find, 3 to look for layers, 3 to read.
+    exact(
+        r##"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><symbol id="inkstitch_ignore_layer"/><g><use xlink:href="#inkstitch_ignore_layer"/></g></svg>"##,
+        4 + 3 + 3,
+    );
 }

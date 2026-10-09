@@ -53,6 +53,8 @@ pub struct Generated {
     pub stitch_type: StitchType,
     /// Its groups: the needle points of each part a jump may separate from the next, in sewing order.
     pub groups: Vec<Vec<Point>>,
+    /// The shortest stitch it was sewn with, which finalize holds its stitches to as well.
+    pub min_stitch: Mm,
 }
 
 /// What generating one element gives.
@@ -75,7 +77,23 @@ pub fn generate(element: &Element, settings: &DesignSettings, profile: &MachineP
             None
         }
     };
+    if !generated.as_ref().is_some_and(|g| g.groups.iter().any(|group| !group.is_empty())) {
+        diagnostics.extend(left_out(element));
+    }
     Generation { generated, diagnostics: diagnostics.into_iter().map(|d| d.with_element(element.id.clone())).collect() }
+}
+
+/// `SC-W0505` for the trim and stop that `element`, which sews nothing, sets after it: assembly has no
+/// place for them. Its settings were read once already; a setting that cannot be read was reported then.
+fn left_out(element: &Element) -> Option<Diagnostic> {
+    let common = CommonParams::from_set(&element.params).ok()?.params;
+    let what = match (common.trim_after, common.stop_after) {
+        (true, true) => "the trim and the stop after it are",
+        (true, false) => "the trim after it is",
+        (false, true) => "the stop after it is",
+        (false, false) => return None,
+    };
+    Some(Diagnostic::new(Code::TrimOrStopLeftOut, format!("This element sews no stitch, so {what} left out.")))
 }
 
 /// The element's stitch groups, or `None` when it is skipped; what it says about it goes to `diagnostics`.
@@ -97,7 +115,7 @@ fn sew(
     };
     let stroke = kept(StrokeParams::from_set(set), diagnostics);
     let (Some(common), Some(stroke)) = (common, stroke) else { return Ok(None) };
-    let min_stitch = shortest_stitch(&common, settings, profile);
+    let min_stitch = shortest_stitch(common.min_stitch_length_mm, settings, profile);
     let passes = kept(RepeatParams::from_set(set), diagnostics);
     let (stitch_type, stitched): (StitchType, Stitched) = match StitchType::from_id(Family::Stroke, stroke.stroke_method) {
         Some(StitchType::RunningStitch) => {
@@ -116,15 +134,14 @@ fn sew(
         }
     };
     diagnostics.extend(stitched.warnings);
-    Ok(Some(Generated { common, stitch_type, groups: stitched.runs }))
+    Ok(Some(Generated { common, stitch_type, groups: stitched.runs, min_stitch }))
 }
 
-/// The shortest stitch for an element: the machine's, or the element's own if it is longer, or else the
-/// design's if that is.
-fn shortest_stitch(common: &CommonParams, settings: &DesignSettings, profile: &MachineProfile) -> Mm {
+/// The shortest stitch for an element whose own is `own`: the machine's, or the element's own if it is
+/// longer, or else the design's if that is. With no element (`None`), the design's or the machine's.
+pub(crate) fn shortest_stitch(own: Option<Mm>, settings: &DesignSettings, profile: &MachineProfile) -> Mm {
     let machine = profile.min_stitch;
-    let own = common.min_stitch_length_mm.or(settings.min_stitch_len);
-    own.and_then(|own| Mm::new(own.get().max(machine.get())).ok()).unwrap_or(machine)
+    own.or(settings.min_stitch_len).and_then(|own| Mm::new(own.get().max(machine.get())).ok()).unwrap_or(machine)
 }
 
 /// The parameters `read` gives, keeping their warnings; `None`, keeping their errors, when they cannot be

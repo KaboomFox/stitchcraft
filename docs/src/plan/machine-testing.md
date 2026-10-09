@@ -1,5 +1,7 @@
 # Machine testing protocol
 
+<!-- implements: crates/stitchcraft-engine/src/testsheets/**, apps/stitchcraft-cli/src/commands/testsheet.rs -->
+
 Automated tests prove the files are what we intend. Only a machine proves they sew well. This page is
 the protocol for **machine checkpoints** (MC-1 … MC-7) on the reference machine: a Brother home
 embroidery machine with a 200 × 200 mm (8 × 8 in) hoop, designs normally kept to about 150 mm (6 in).
@@ -46,9 +48,9 @@ Record anything that differs in the report.
 |---|---|---|---|
 | **TS-01** Orientation & scale | An asymmetric "F", a 100 mm cross with 10 mm ticks, 10 mm squares in the corners (120 × 120 mm) | F not mirrored or rotated; 100 mm line = 100.0 ± 0.5 mm in X and Y; squares square | MC-1 |
 | **TS-02** Commands | Three colour blocks; a stop; rows of two dashes separated by jumps of 2, 5, 15, 40 mm; trims encoded as trim-flagged jumps on the left half (red) and as plain jumps only on the right (blue) (140 × 70 mm) | The machine stops for colours and the stop; which jumps were trimmed on each half; any loose loops | MC-1, MC-2 |
-| **TS-02B** Commands, from elements | TS-02 drawn as a design and planned by the engine: every red dash but the last asks for a trim after it (`trim_after`), the blue ones ask for none (the 2 mm gap is sewn across: it is within the 3 mm collapse length), the green line stops halfway (`stop_after`); the stitching has a lock wherever it starts or ends (140 × 70 mm) | The same as TS-02, and whether each dash holds where the thread was cut | MC-2 |
-| **TS-03** Running stitch | Lines at 1.5, 2.0, 2.5, 3.0, 4.0 mm stitch length; bean 1×, 2×; circles at tolerances of 0.1, 0.2 and 0.5 mm; 20 stitches placed by hand at 0.3, 0.4, 0.5, 0.7 and 1.0 mm (60 × 78 mm) | Even stitches; curves smooth; bean lines solid; the shortest hand-placed stitch that sews cleanly | MC-2 |
-| **TS-04** Lock stitches | Lines about 30 mm long with every lock shape but custom at both ends, trimmed after: the half stitch on first stitches of 1.5, 2.5 and 4 mm, back-and-forth at 0.5, 0.7 and 1.0 mm, drawn shapes at 70, 100 and 150 % (110 × 65 mm) | Pull each tail gently: holds or unravels? Lock visible from the front? | MC-2 |
+| **TS-02B** Commands, from elements | TS-02 drawn as a design and planned by the engine. Each red dash but the last asks for a trim after it (`trim_after`). The blue ones ask for none, and the 2 mm gap between them is sewn across, because it is within the 3 mm collapse length. The green line stops halfway (`stop_after`). The stitching has a lock wherever it starts or ends (140 × 70 mm) | The same as TS-02, and whether each dash stays secure where the thread was cut | MC-2 |
+| **TS-03** Running stitch | Lines at 1.5, 2.0, 2.5, 3.0 and 4.0 mm stitch length, bean 1× and 2×, circles at tolerances of 0.1, 0.2 and 0.5 mm, and 20 stitches placed by hand at 0.3, 0.4, 0.5, 0.7 and 1.0 mm (60 × 78 mm) | Even stitches, smooth curves, solid bean lines, and the shortest hand-placed stitch that sews cleanly | MC-2 |
+| **TS-04** Lock stitches | Lines about 30 mm long with every lock shape but custom at both ends, trimmed after: the half stitch on first stitches of 1.5, 2.5 and 4 mm, back-and-forth at 0.5, 0.7 and 1.0 mm, drawn shapes at 70, 100 and 150 % (110 × 65 mm) | Pull each tail gently: does the lock stay, or does the thread pull out? Is the lock visible from the front? | MC-2 |
 | **TS-05** Satin width ladder | Columns 1–10 mm wide at three spacings (0.3, 0.4, 0.5 mm) | Coverage, fabric showing between stitches, edges straight, long stitches loose | MC-3 |
 | **TS-06** Satin underlays | The same 6 mm column with no underlay, centre walk, contour, zigzag, contour+zigzag | Edge sharpness, loft, puckering | MC-3 |
 | **TS-07** Registration | A 60 mm tatami circle with a running-stitch outline; at three pull-compensation values | Gap or overlap between fill and outline at 12 points around the circle | MC-4 |

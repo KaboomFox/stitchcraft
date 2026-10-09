@@ -19,11 +19,13 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | WebAssembly | L0–L3 crates and the plug-in build for `wasm32-unknown-unknown` | `xtask/src/wasm.rs` | `cargo xtask wasm` · CI |
 | **Movable into VectorCraft** | Every package is `stitchcraft-*`; crates inherit only workspace keys VectorCraft defines; tooling works from its own folder on StitchCraft's packages ([ADR-0011](adr/0011-movable-into-vectorcraft.md)) | `xtask/src/layers.rs`, `xtask/src/util.rs`, `xtask/src/join.rs` | `move` job in `compat.yml` · daily and on PRs touching manifests or tooling |
 | **No GPL code** | No GPL/AGPL licence text and no pasted Python source anywhere in the repository, documents included ([ADR-0012](adr/0012-read-dont-copy.md)) | `xtask/src/cleanroom.rs` | `cargo xtask cleanroom` · CI |
-| Docs | Generated pages fresh, links and anchors valid, mentioned `cargo xtask` commands exist, ids exist | `xtask/src/docs.rs` | `cargo xtask docs --check` · CI |
+| Docs | Generated pages fresh, links and anchors valid, mentioned `cargo xtask` commands exist, ids exist, no long sentence on two pages, every repository path named exists | `xtask/src/docs.rs`, `xtask/src/docs_audit.rs` | `cargo xtask docs --check` · CI |
+| **Design pages follow the code** | Every source file of a crate or app is on a page's `implements` comment, and a branch that changes those files changes the page too or records a `Design-reviewed:` line | `xtask/src/design_map.rs`, `.claude/settings.json` (names the pages after each edit) | `cargo xtask docs --check` · CI |
 | Docs images | Every image declared in `docs/shots.toml`, with alt text, and regenerating to the committed file | `xtask/src/shots.rs` | `cargo xtask shots --check` · CI |
 | Conformance | Requirement/case consistency; all cases pass; changed goldens need the `golden-change` label and a changelog line | `xtask/src/conformance/`, `ci.yml`, `goldens.yml` | `cargo xtask conformance` · CI |
 | Dependencies | Licence allow-list (GPL family denied), advisories, duplicates, sources | `deny.toml` | CI (`cargo-deny`) |
 | Spelling | Typos in code, docs, commit-facing text | `typos.toml` | CI |
+| **Prose** | New Markdown lines follow the [writing style](../contributing/writing-style.md): the house rules and ai-tells, a style for phrasing that machine-written text overuses | `.vale.ini`, `.vale/styles/`, `xtask/src/prose.rs` (Vale) | `cargo xtask prose` · CI |
 | MSRV | Builds on the declared `rust-version` | workspace `Cargo.toml` | CI |
 | Cross-platform | Tests on Linux, macOS, Windows; identical conformance hashes | `ci.yml` | CI |
 | API docs | Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links | `cargo xtask ci` (`RUSTDOCFLAGS=-D warnings`) | `cargo xtask ci` · CI |

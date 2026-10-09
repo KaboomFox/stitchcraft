@@ -20,6 +20,7 @@ CI checks the mechanical rules. Reviewers check what machines cannot:
 
 **Docs and UX**
 - [ ] User-facing docs updated in this PR; help text in the registry reads well for an embroiderer.
+- [ ] New prose follows the [writing style](writing-style.md), and `cargo xtask prose` passes.
 - [ ] Shots refreshed if pictures should change; alt text is meaningful.
 - [ ] Messages are specific, actionable and free of internal jargon.
 
