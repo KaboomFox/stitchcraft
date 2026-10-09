@@ -24,7 +24,7 @@ Goal: a repository where the rules are enforced before the first line of engine 
 | M0.5 👤 (partly ✅) | Create the GitHub repository, push, enable Pages (from the `gh-pages` branch) and branch protection with required checks `ci` and `docs`; replace `OWNER` in `CODEOWNERS` and `Cargo.toml` and add a contact to `CODE_OF_CONDUCT.md`; create the labels `golden-change`, `docs:refresh-shots`, `upstream-canary`, `upstream-prerelease`, `sewout`, `sewout:pass`, `sewout:tune`, `sewout:bug`, `good first issue` | A test PR cannot merge while a check is red |
 | M0.6 🧪 | VectorCraft "hello" plug-in: identity live effect built in CI for `wasm32-unknown-unknown`; Level A contract test against the pinned stable `vectorcraft-plugins` (v0.6.0, now v0.7.0), `release` and `main`; measure fuel per output byte | Contract test green in `compat.yml` (done: green on every track, 2026-10-08); budget numbers recorded in the integration doc (open) |
 | M0.7 🧪 | Geometry spike ([ADR-0005](../design/adr/0005-geometry-stack.md) criteria) | ADR-0005 accepted or revised |
-| M0.8 🧪 | Headless VectorCraft window in CI (Xvfb + Mesa) taking `ui.screenshot` twice with identical pixels | Decision recorded in the docs pipeline page |
+| M0.8 🧪 | Headless VectorCraft window in CI (Xvfb + Mesa) taking `ui.screenshot` twice with identical pixels; one [xa11y](https://xa11y.dev/) test that drives the same window through its accessibility tree (AT-SPI on Linux) | Decision recorded in the docs pipeline page, for both |
 | M0.9 ✅ | Movable into VectorCraft ([ADR-0011](../design/adr/0011-movable-into-vectorcraft.md)): packages prefixed, manifests inheriting only what VectorCraft defines, tooling scoped to its folder and packages, `cargo xtask compat join [--nested]`, and a daily `move` job | `move` green against VectorCraft's latest release and `main` |
 | M0.10 ✅ | Clean room, tightened: no document describes Ink/Stitch's code; Ink/Stitch is named only for file compatibility and in the independence notices; `cargo xtask cleanroom` scans documents too | `cleanroom` green over the whole repository |
 
@@ -113,7 +113,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M6.4 | Tools filter: make satin, add rung, bake preview, test sheet; Graphic Styles as presets verified | cases per tool |
 | M6.5 | `stitch export design.vectorcraft`; marker conventions (`stitch:start`, `stitch:end`, `stitch:ignore`) | end-to-end cases |
 | M6.6 | Compatibility gate complete: Level A + B, all four tracks, bot PR and issues, generated table | first scheduled run green |
-| M6.7 | UI screenshots pipeline (from M0.8), tutorial "A patch in VectorCraft" | `shots-ui` job green |
+| M6.7 | UI screenshots pipeline (from M0.8), tutorial "A patch in VectorCraft"; if the M0.8 trial held, xa11y drives VectorCraft to each screen and checks the plug-in's controls | `shots-ui` job green |
 | MC-5 🧵 | **TS-12** (a design authored in VectorCraft) and **TS-10** again through the full workflow | report filed |
 
 ## M7 — More stitch types I
@@ -126,7 +126,10 @@ fill with generated tiles; circular fill. One step per type with its requirement
 
 SVG adapter v2: every `inkstitch:*` attribute in the [compatibility contract](../design/inkstitch-compat-contract.md),
 command symbols, clones (`<use>`), ignore layers; `stitch import-inkstitch file.svg -o file.vectorcraft`;
-L3 differential conformance against a pinned Ink/Stitch with the deviations ledger.
+L3 differential conformance against a pinned Ink/Stitch with the deviations ledger. Ink/Stitch's font
+library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin, downloaded at a pinned
+commit by `cargo xtask corpus` and never committed, using only fonts whose licence allows it (OFL, CC0,
+CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).
 
 ## M9 — VectorCraft ABI v2 (upstream)
 
@@ -136,7 +139,7 @@ parameter dialogs, document-level machine profile.
 
 ## M10 — More stitch types II
 
-Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch; auto-run and auto-satin
+Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch, legacy fill; auto-run and auto-satin
 routing tools; per-layer ordering (underlay now, top later).
 
 ## M11 — Formats II
@@ -152,6 +155,8 @@ checksums); 24 h fuzz soak; **MC-7 🧵** full regression set on the machine.
 
 ## After 1.0
 
-Lettering with fonts from a separate font repository (VectorCraft keeps fonts out of its tree too),
-appliqué workflow, design splitting for small hoops, colour-change reordering, print worksheets, an
+Lettering with fonts from a separate font repository (VectorCraft keeps fonts out of its tree too): our
+own, Ink/Stitch's fonts whose licence allows it (OFL, CC0, CC-BY, CC-BY-SA, each with its licence file and
+an `ASSETS.md` row, never NC, GPL or unclear terms; ADR-0001 is amended in that step), and fonts a user has
+installed with Ink/Stitch, read in their own format; appliqué workflow, design splitting for small hoops, colour-change reordering, print worksheets, an
 in-tree VectorCraft crate if wanted.
