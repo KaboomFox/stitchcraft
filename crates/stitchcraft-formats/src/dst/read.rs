@@ -3,11 +3,15 @@
 //! DST stores moves and three commands — jump, colour change, end — and nothing else: no colours, no
 //! trims, no stops. So the reader adds what the format can only imply:
 //!
-//! - **Trims.** A run of 2 to 8 consecutive *small* jumps (at most 1 mm along each axis) that ends where
-//!   it started moves the frame nowhere, so it can only mean "trim here" (StitchCraft writes three; other
-//!   writers write two to four). Such a run becomes a `Trim`; any other jump stays a jump. The size limit
-//!   matters: a long jump and the long move after it are both split into pieces of about 12 mm, and two
-//!   such pieces can cancel exactly — the round-trip property test found that case.
+//! - **Trims.** DST has no trim command: machines cut the thread before [`JUMPS_FOR_TRIM`] or more jump
+//!   records in a row — the common setting, and pyembroidery's reading — if something was sewn since it
+//!   was last cut or changed (REQ-FMT-008; `super` explains). The reader does what they do: such a run
+//!   reads as a `Trim` and then its jumps; a shorter run, or one with nothing sewn before it, as jumps.
+//!   A trim's own spelling at the start of a long enough run — 2 to 8 *small* jumps (at most 1 mm along
+//!   each axis) that end where they started, as StitchCraft (three) and other writers spell it — moves the
+//!   frame nowhere, so it is not kept as jumps. Only small ones: a long jump and the long move after it are
+//!   both split into pieces of about 12 mm, and two such pieces can cancel exactly — the round-trip
+//!   property test found that case — but they are real moves.
 //! - **Threads.** Each block gets a placeholder thread named "thread 1", "thread 2", …; a colour change and
 //!   a stop look the same in DST, so both start a new block.
 //!
@@ -15,15 +19,15 @@
 
 use stitchcraft_plan::{Rgb, Thread};
 
-use super::{HEADER_LEN, displacement};
+use super::{HEADER_LEN, JUMPS_FOR_TRIM, displacement};
 use crate::decode::{Decoded, MAX_RECORDS, Recorder, label_text};
 use crate::error::DecodeError;
 use crate::quantize::Delta;
 
 const FORMAT: &str = "DST";
-/// The longest jump run read as a trim.
+/// The longest spelling of a trim recognised at the start of a run of jumps.
 const LONGEST_TRIM: usize = 8;
-/// The largest move (0.1 mm units, per axis) of a jump in a trim run.
+/// The largest move (0.1 mm units, per axis) of a jump in a trim's spelling.
 const TRIM_JUMP_MAX: i32 = 10;
 
 /// Reads a DST file.
@@ -37,6 +41,8 @@ pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
     let mut blocks = 1;
     let mut recorder = Recorder::new(placeholder(blocks));
     let mut jumps: Vec<Delta> = Vec::new();
+    // Whether a stitch was sewn since the thread was last cut or changed.
+    let mut sewn = false;
     let mut i = 0;
     let mut ended = false;
     while let Some(record) = records.get(i..i + 3).and_then(|r| <[u8; 3]>::try_from(r).ok()) {
@@ -51,12 +57,13 @@ pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
         let delta = Delta { dx, dy: -dy_up };
         match kind & 0xC0 {
             0xC0 => {
-                flush(&mut jumps, &mut recorder)?;
+                flush(&mut jumps, &mut sewn, &mut recorder)?;
                 if delta != Delta::ZERO {
                     recorder.jump(delta)?;
                 }
                 blocks += 1;
                 recorder.change_thread(placeholder(blocks))?;
+                sewn = false;
             }
             0x80 => {
                 if jumps.len() >= MAX_RECORDS {
@@ -65,8 +72,9 @@ pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
                 jumps.push(delta);
             }
             0x00 => {
-                flush(&mut jumps, &mut recorder)?;
+                flush(&mut jumps, &mut sewn, &mut recorder)?;
                 recorder.stitch(delta)?;
+                sewn = true;
             }
             _ => return Err(DecodeError::BadRecord { format: FORMAT, at: at + 2, byte: kind }),
         }
@@ -74,42 +82,43 @@ pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
     if !ended {
         return Err(if records.len() % 3 == 0 { DecodeError::MissingEnd } else { DecodeError::Truncated { part: "DST records" } });
     }
-    flush(&mut jumps, &mut recorder)?;
+    flush(&mut jumps, &mut sewn, &mut recorder)?;
     Ok(Decoded { format: FORMAT.to_string(), palette: None, name, plan: recorder.finish(), warnings: Vec::new() })
 }
 
-/// Records the pending jumps: each run of 2–[`LONGEST_TRIM`] small jumps that returns to its start is a
-/// trim.
-fn flush(jumps: &mut Vec<Delta>, recorder: &mut Recorder) -> Result<(), DecodeError> {
-    let mut k = 0;
-    while let Some(rest) = jumps.get(k..).filter(|r| !r.is_empty()) {
-        let mut sum = (0_i64, 0_i64);
-        let mut trim = None;
-        for (n, d) in rest.iter().take(LONGEST_TRIM).enumerate() {
-            if d.dx.abs() > TRIM_JUMP_MAX || d.dy.abs() > TRIM_JUMP_MAX {
-                break;
-            }
-            sum = (sum.0 + i64::from(d.dx), sum.1 + i64::from(d.dy));
-            if n >= 1 && sum == (0, 0) {
-                trim = Some(n + 1);
-                break;
-            }
+/// Records the run of `jumps` that just ended: a trim first when it is [`JUMPS_FOR_TRIM`] or more long
+/// and something was `sewn` since the thread was last cut or changed, then its jumps but a trim's
+/// spelling at its start.
+fn flush(jumps: &mut Vec<Delta>, sewn: &mut bool, recorder: &mut Recorder) -> Result<(), DecodeError> {
+    let mut rest = jumps.as_slice();
+    if jumps.len() >= JUMPS_FOR_TRIM {
+        if *sewn {
+            recorder.trim()?;
+            *sewn = false;
         }
-        match trim {
-            Some(length) => {
-                recorder.trim()?;
-                k += length;
-            }
-            None => {
-                if let Some(&d) = rest.first() {
-                    recorder.jump(d)?;
-                }
-                k += 1;
-            }
-        }
+        rest = rest.get(spelled_trim(rest)..).unwrap_or_default();
+    }
+    for &d in rest {
+        recorder.jump(d)?;
     }
     jumps.clear();
     Ok(())
+}
+
+/// How many of the first `jumps` spell a trim: 2 to [`LONGEST_TRIM`] small jumps that end where they
+/// started, or none.
+fn spelled_trim(jumps: &[Delta]) -> usize {
+    let mut sum = (0_i64, 0_i64);
+    for (n, d) in jumps.iter().take(LONGEST_TRIM).enumerate() {
+        if d.dx.abs() > TRIM_JUMP_MAX || d.dy.abs() > TRIM_JUMP_MAX {
+            return 0;
+        }
+        sum = (sum.0 + i64::from(d.dx), sum.1 + i64::from(d.dy));
+        if n >= 1 && sum == (0, 0) {
+            return n + 1;
+        }
+    }
+    0
 }
 
 /// The placeholder thread of block `n` (DST stores no colours).
@@ -121,6 +130,7 @@ fn placeholder(n: usize) -> Thread {
 mod tests {
     use stitchcraft_plan::StitchKind;
 
+    use super::super::{JUMP, SEW, TRIM_JUMPS, record};
     use super::*;
     use crate::decode::Recorder;
 
@@ -140,19 +150,66 @@ mod tests {
         assert_eq!(first_stitch, Some((-20.0, -10.0)), "y is flipped back to point down");
     }
 
-    #[test]
-    fn cancelling_pieces_of_long_moves_are_not_trims() {
-        // Found by the round-trip property test: a long jump, then a long sewn move back. Both are split
-        // into ~12 mm jumps, and the last piece of one cancels the first piece of the other exactly.
-        let mut jumps = vec![Delta { dx: -118, dy: 39 }, Delta { dx: 118, dy: -39 }];
-        let mut recorder = Recorder::new(placeholder(1));
-        flush(&mut jumps, &mut recorder).unwrap();
-        let plan = recorder.finish();
-        assert_eq!((plan.stats().trims, plan.stats().jumps), (0, 2));
+    /// A DST file of `records` (DST axes, y up), as the plan entries read from it: `S` a stitch, `J` a
+    /// jump, `T` a trim, `|` a thread change.
+    fn read(records: &[(i32, i32, u8)]) -> String {
+        let mut bytes = b"LA:records".to_vec();
+        bytes.resize(HEADER_LEN, b' ');
+        for &(dx, dy, kind) in records {
+            bytes.extend_from_slice(&if kind == 0xC3 { [0x00, 0x00, 0xC3] } else { record(dx, dy, kind) });
+        }
+        bytes.extend_from_slice(&[0x00, 0x00, 0xF3]);
+        let plan = decode(&bytes).unwrap().plan;
+        let blocks = plan.blocks.iter().map(|block| {
+            let letter = |kind| match kind {
+                StitchKind::Normal => "S",
+                StitchKind::Jump => "J",
+                StitchKind::Trim => "T",
+                StitchKind::Stop => "P",
+            };
+            block.stitches.iter().map(|s| letter(s.kind)).collect::<Vec<_>>().join(" ")
+        });
+        blocks.collect::<Vec<_>>().join(" | ")
     }
 
     #[test]
-    fn long_jumps_are_not_mistaken_for_trims() {
+    fn req_fmt_008_three_jumps_in_a_row_cut_the_thread_before_them() {
+        let (sew, jump, change) = (SEW, JUMP, 0xC3);
+        let stitches = [(0, 0, sew), (30, 0, sew)];
+        let between = |jumps: &[(i32, i32, u8)]| [&stitches[..], jumps, &stitches[..]].concat();
+        // Three or more jumps after stitches: cut before them. Two: no cut.
+        assert_eq!(read(&between(&[(100, 0, jump); 3])), "S S T J J J S S");
+        assert_eq!(read(&between(&[(100, 0, jump); 5])), "S S T J J J J J S S");
+        assert_eq!(read(&between(&[(121, 0, jump); 2])), "S S J J S S");
+        // A trim as StitchCraft spells it: three small jumps back to where they started, which go nowhere.
+        let trim = TRIM_JUMPS.map(|(dx, dy)| (dx, dy, jump));
+        assert_eq!(read(&between(&trim)), "S S T S S");
+        assert_eq!(read(&between(&[&trim[..], &[(100, 0, jump); 2]].concat())), "S S T J J S S");
+        // Two small jumps back to the start are no trim: machines count three.
+        assert_eq!(read(&between(&[(2, -2, jump), (-2, 2, jump)])), "S S J J S S");
+        // Where nothing was sewn since the thread was cut or changed, there is nothing to cut.
+        assert_eq!(read(&[&[(100, 0, jump); 3][..], &stitches[..]].concat()), "J J J S S");
+        assert_eq!(read(&[&stitches[..], &[(0, 0, change)], &[(100, 0, jump); 3], &stitches[..]].concat()), "S S | J J J S S");
+        assert_eq!(read(&between(&[&trim[..], &[(0, 0, change)], &trim[..]].concat())), "S S T | S S");
+    }
+
+    #[test]
+    fn cancelling_pieces_of_long_moves_are_kept() {
+        // Found by the round-trip property test: a long jump, then a long sewn move back. Both are split
+        // into ~12 mm jumps, and the last piece of one cancels the first piece of the other exactly; they
+        // are real moves, not a trim's spelling.
+        for sewn in [true, false] {
+            let mut jumps = vec![Delta { dx: -118, dy: 39 }, Delta { dx: 118, dy: -39 }, Delta { dx: 50, dy: 0 }];
+            let (mut recorder, mut after) = (Recorder::new(placeholder(1)), sewn);
+            flush(&mut jumps, &mut after, &mut recorder).unwrap();
+            let plan = recorder.finish();
+            assert_eq!((plan.stats().trims, plan.stats().jumps), (usize::from(sewn), 3));
+        }
+    }
+
+    #[test]
+    fn ts_01_reads_back_with_its_seven_trims() {
+        // Each of its long jumps follows a trim, so they add none.
         let d = decode(&golden("testsheets/TS-01.dst")).unwrap();
         assert_eq!(d.plan.stats().trims, 7);
         let b = d.plan.bounds().unwrap();

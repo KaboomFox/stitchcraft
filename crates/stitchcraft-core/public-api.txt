@@ -25,6 +25,7 @@ pub mod stitchcraft_core::diag
 #[non_exhaustive] pub enum stitchcraft_core::diag::Code
 pub stitchcraft_core::diag::Code::BudgetExhausted
 pub stitchcraft_core::diag::Code::InternalCheckFailed
+pub stitchcraft_core::diag::Code::JumpsCutInDst
 pub stitchcraft_core::diag::Code::NothingToStitch
 pub stitchcraft_core::diag::Code::OutsideComfortZone
 pub stitchcraft_core::diag::Code::OutsideHoop
@@ -163,6 +164,7 @@ pub fn stitchcraft_core::units::to_tenths(f64) -> core::option::Option<i32>
 #[non_exhaustive] pub enum stitchcraft_core::Code
 pub stitchcraft_core::Code::BudgetExhausted
 pub stitchcraft_core::Code::InternalCheckFailed
+pub stitchcraft_core::Code::JumpsCutInDst
 pub stitchcraft_core::Code::NothingToStitch
 pub stitchcraft_core::Code::OutsideComfortZone
 pub stitchcraft_core::Code::OutsideHoop

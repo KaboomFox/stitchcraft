@@ -94,7 +94,7 @@ fn testsheet(root: &Path, sheet_id: &str, profile_id: &str, expect: &SheetExpect
             continue;
         };
         let bytes = match stitchcraft_formats::encode(&plan, format, sheet.id) {
-            Ok(bytes) => bytes,
+            Ok(encoded) => encoded.bytes,
             Err(e) => {
                 fail(outcome, format!("{}: {e}", format.name()));
                 continue;

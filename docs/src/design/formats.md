@@ -98,10 +98,21 @@ machines accept, and covered by a golden file.
 
 The third byte always has bits 0 and 1 set; bit 7 marks a jump (`0x83` with no other bits); `0xC3`
 is a colour change (and, by common convention, a stop); `0xF3` with zero displacement ends the design.
-DST has no trim command: a trim is three small jumps that cancel out — (+2, −2), (−4, +4), (+2, −2) units
-— which machines read as a trim; the same sequence pystitch writes, and readers (pystitch's included)
-decode it as a trim. If a machine needs a different sequence, it becomes a profile setting validated on
-that machine.
+
+**DST has no trim command.** Machines count jump records in a row, and when there are as many as their
+setting, they cut the thread before the jumps — if something was sewn since it was last cut or changed
+(`REQ-FMT-008`). The setting is commonly three (it can be as high as five; Brother's PR machines take 1 to
+8, matched by PE-DESIGN's "number of jumps for trim"), and three is how pyembroidery reads DST too. So:
+
+- a **trim** is three small jumps that cancel out — (+2, −2), (−4, +4), (+2, −2) units, the sequence
+  pystitch writes — so the frame goes nowhere while the machine counts three;
+- a **jump longer than 24.2 mm** takes three or more records, so it is a trim too, whether the plan asks
+  for one or not. The writer says where: `SC-I0605` counts the jumps its machines will cut before and the
+  plan does not trim. With a tie-off before the jump the cut is usually welcome — there is no jump thread
+  to clip; without one (an element whose `ties` are off), the stitching may unravel.
+
+A machine set to another count cuts before other jumps, and does not cut at a three-jump trim if set
+higher. A machine profile that writes DST records its count, validated on that machine.
 
 Moves longer than 12.1 mm are split evenly into several records by the encoder: all jumps for a jump, and
 jumps then the final stitch for a sewn move (the thread lies the same way: the needle only goes down at the
@@ -120,7 +131,7 @@ that points nowhere) become warnings in the result.
 | Reader | Reads | What it has to infer |
 |---|---|---|
 | PES / PEC | the PEC block of any PES version (`#PES0001` … `#PES0060`), and bare `#PEC0001` files; the block must start with `LA:` | A colour change to the same palette entry is a **stop** — the way PEC writes stops. Two blocks whose threads map to the same Brother colour read back as one block with a stop: PES v1 cannot tell them apart. |
-| DST | the header's label and every record | A run of 2–8 consecutive jumps that returns to where it started is a **trim** (it moves the frame nowhere, so it can only mean that). Colours: none — each block gets a placeholder thread, and a stop reads as a colour change. |
+| DST | the header's label and every record | Three or more jumps in a row are a **trim** before them where something was sewn since the thread was last cut or changed, as DST machines read them (`REQ-FMT-008`); a trim's own spelling at the start of the run — up to 8 jumps of at most 1 mm that end where they started — moves the frame nowhere and is not kept as jumps. Colours: none — each block gets a placeholder thread, and a stop reads as a colour change. |
 
 Every reader survives every truncation and single-byte change of the golden files (a deterministic test
 that runs on every PR), and an hour of coverage-guided fuzzing every night (`REQ-FMT-006`;
@@ -130,15 +141,17 @@ that runs on every PR), and an hour of coverage-guided fuzzing every night (`REQ
 long moves become several records), so a plan read back is not the same plan — it makes the machine do
 the same thing. `stitchcraft-testkit::equivalence` defines that: where the needle goes down, where the
 thread is cut, where the machine pauses. Every writer/reader pair keeps it on 256 random plans per PR (fixed
-seed) and 10,000 more each night (fresh seed). Fresh seeds paid off before this was even merged: they found a DST
-design whose split jump pieces cancelled exactly and read back as a trim, which is why trim runs must be
-made of jumps of at most 1 mm.
+seed) and 10,000 more each night (fresh seed). DST is held to what its machines do with the plan
+(`equivalence::dst_events`): they cut the thread before long jumps the plan does not trim. Fresh seeds
+paid off before this was even merged: they found a DST design whose split jump pieces cancelled exactly,
+which is why only jumps of at most 1 mm make up a trim's spelling.
 
 **Converting.** `stitch convert` is a read followed by a write, so the converted file makes the machine do
-the same thing as the original: the round-trip guarantee above. Records carry over literally (a DST
-file's 12 mm jump pieces stay separate jumps in a PES file), and what the new format cannot say is
-reported instead of guessed: a PES file made from a DST file names a placeholder black for every thread,
-because DST stores no colours (`SC-W0604`).
+the same thing as the original: the round-trip guarantee above — except that a DST file cuts the thread
+before long jumps where a PES machine leaves a jump thread, which `SC-I0605` reports. Records carry over
+literally (a DST file's 12 mm jump pieces stay separate jumps in a PES file), and what the new format
+cannot say is reported instead of guessed: a PES file made from a DST file names a placeholder black for
+every thread, because DST stores no colours (`SC-W0604`).
 
 ## Later formats
 
@@ -163,6 +176,7 @@ because DST stores no colours (`SC-W0604`).
 | `REQ-FMT-005` | Independent oracle: pyembroidery reads our files to the same stitches (CI job with a pinned version) |
 | `REQ-FMT-006` | Fuzzed readers never panic, never allocate beyond caps, always terminate |
 | `REQ-FMT-007` | Long moves are split within the format's per-record limit |
+| `REQ-FMT-008` | DST is read as its machines sew it (three or more jumps in a row after sewing cut the thread), and writing DST reports where they will cut and the plan does not (`SC-I0605`) |
 
 The pyembroidery oracle is a conformance case (`conformance/cases/formats/pyembroidery-oracle.toml`): a
 pinned pyembroidery, installed by hash in CI, reads every golden machine file through

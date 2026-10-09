@@ -19,7 +19,7 @@ fn req_fmt_001_canonical_plans_match_their_golden_files() {
     let bless = std::env::var_os("STITCHCRAFT_BLESS").is_some();
     for (name, plan) in plans::canonical() {
         for format in FormatId::ALL {
-            let bytes = encode(&plan, *format, name).unwrap();
+            let bytes = encode(&plan, *format, name).unwrap().bytes;
             let path = golden_dir().join(format!("{name}.{}", format.extension()));
             if bless {
                 std::fs::write(&path, &bytes).unwrap();
