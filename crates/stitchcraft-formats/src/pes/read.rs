@@ -95,11 +95,9 @@ fn read_pec(block: &[u8], base: usize) -> Result<Decoded, DecodeError> {
     let mut recorder = Recorder::new(thread(current, &mut warnings));
 
     let mut i = 0;
-    loop {
-        let (record, next) = record(data, i, base + start + i)?;
+    while let Some((record, next)) = record(data, i, base + start + i)? {
         i = next;
         match record {
-            Record::End => break,
             Record::Change => {
                 entry += 1;
                 let next = match indices.get(entry) {
@@ -141,25 +139,26 @@ type Corners = ((i64, i64), (i64, i64));
 
 /// Where the stitch data of `block` starts: after the origin field when the 4 bytes at [`DATA_AT`] are
 /// shaped like one and the design read after them fits the header's box of `size` (width and height in
-/// 0.1 mm), else at the first record. When neither reading parses, the field is assumed, so the error
-/// is the one a file with the field would give.
+/// 0.1 mm), else at the first record.
+///
+/// Bytes shaped like the field also read as one record, a long jump, so the data after them parses
+/// exactly when the data from [`DATA_AT`] does. Data that does not parse is read after the field, so
+/// the error is the one a file with the field gives.
 fn data_start(block: &[u8], end: usize, size: (i64, i64)) -> usize {
     let after_field = DATA_AT + ORIGIN_FIELD;
-    let Some(corner) = block.get(DATA_AT..after_field).and_then(origin_field) else { return DATA_AT };
-    let reads = |from: usize| block.get(from..end).map(extent);
-    match reads(after_field) {
-        Some(Ok(extent)) if fits(corner, size, extent) => after_field,
-        _ if matches!(reads(DATA_AT), Some(Ok(_))) => DATA_AT,
+    let Some(field) = block.get(DATA_AT..after_field).and_then(origin_field) else { return DATA_AT };
+    match block.get(after_field..end).map(extent) {
+        Some(Ok(extent)) if !fits(field, size, extent) => DATA_AT,
         _ => after_field,
     }
 }
 
 /// The offset the origin field holds, if `bytes` are shaped like one: a long-form record on both axes
-/// with the jump flag alone.
+/// with the jump flag alone. Only the long form has flags, so the flags say the form too.
 fn origin_field(bytes: &[u8]) -> Option<(i64, i64)> {
     let (x, flags_x, after_x) = axis(bytes, 0).ok()?;
-    let (y, flags_y, after_y) = axis(bytes, after_x).ok()?;
-    (after_x == 2 && after_y == 4 && flags_x == 0x10 && flags_y == 0x10).then_some((i64::from(x), i64::from(y)))
+    let (y, flags_y, _) = axis(bytes, after_x).ok()?;
+    (flags_x == 0x10 && flags_y == 0x10).then_some((i64::from(x), i64::from(y)))
 }
 
 /// Whether a design with `extent` (the corners of every position it reaches, if any) fits the box of
@@ -174,37 +173,31 @@ fn fits(field: (i64, i64), size: (i64, i64), extent: Option<Corners>) -> bool {
 fn extent(data: &[u8]) -> Result<Option<Corners>, DecodeError> {
     let (mut i, mut x, mut y) = (0, 0_i64, 0_i64);
     let mut corners: Option<Corners> = None;
-    loop {
-        let (record, next) = record(data, i, 0)?;
+    while let Some((record, next)) = record(data, i, 0)? {
         i = next;
-        match record {
-            Record::End => return Ok(corners),
-            Record::Change => {}
-            Record::Move { delta, .. } => {
-                (x, y) = (x + i64::from(delta.dx), y + i64::from(delta.dy));
-                let ((lo_x, lo_y), (hi_x, hi_y)) = corners.unwrap_or(((x, y), (x, y)));
-                corners = Some(((lo_x.min(x), lo_y.min(y)), (hi_x.max(x), hi_y.max(y))));
-            }
+        if let Record::Move { delta, .. } = record {
+            (x, y) = (x + i64::from(delta.dx), y + i64::from(delta.dy));
+            let ((lo_x, lo_y), (hi_x, hi_y)) = corners.unwrap_or(((x, y), (x, y)));
+            corners = Some(((lo_x.min(x), lo_y.min(y)), (hi_x.max(x), hi_y.max(y))));
         }
     }
+    Ok(corners)
 }
 
-/// One record of PEC stitch data.
+/// One record of PEC stitch data before its end mark.
 enum Record {
-    /// A move: sewn, or a jump (flag `0x10`) or trim (flag `0x20`) in long form.
+    /// A move: sewn, or a jump (flag `0x10`) or trim (flag `0x20`) in long form, on either axis.
     Move { delta: Delta, flags: u8 },
     /// A colour change, or a stop: `FE B0` and a byte.
     Change,
-    /// `FF`.
-    End,
 }
 
-/// The record at `i` of `data` and where the next one starts. `at` is its position in the file, for
-/// errors.
-fn record(data: &[u8], i: usize, at: usize) -> Result<(Record, usize), DecodeError> {
+/// The record at `i` of `data` and where the next one starts, or `None` at the end mark (`FF`). `at` is
+/// its position in the file, for errors.
+fn record(data: &[u8], i: usize, at: usize) -> Result<Option<(Record, usize)>, DecodeError> {
     let Some(&first) = data.get(i) else { return Err(DecodeError::MissingEnd) };
     match first {
-        0xFF => Ok((Record::End, i + 1)),
+        0xFF => Ok(None),
         0xFE => {
             match data.get(i + 1) {
                 Some(0xB0) => {}
@@ -212,12 +205,12 @@ fn record(data: &[u8], i: usize, at: usize) -> Result<(Record, usize), DecodeErr
                 None => return Err(DecodeError::Truncated { part: "stitch data" }),
             }
             data.get(i + 2).ok_or(DecodeError::Truncated { part: "stitch data" })?;
-            Ok((Record::Change, i + 3))
+            Ok(Some((Record::Change, i + 3)))
         }
         _ => {
             let (dx, flags_x, after_x) = axis(data, i)?;
             let (dy, flags_y, after_y) = axis(data, after_x)?;
-            Ok((Record::Move { delta: Delta { dx, dy }, flags: flags_x | flags_y }, after_y))
+            Ok(Some((Record::Move { delta: Delta { dx, dy }, flags: flags_x | flags_y }, after_y)))
         }
     }
 }
@@ -311,11 +304,32 @@ mod tests {
         let mut no_end = good.clone();
         no_end[22 + 514] -= 1;
         assert_eq!(decode(&no_end), Err(DecodeError::MissingEnd));
-        // A colour-change marker must be followed by 0xB0.
+        // A colour-change marker must be followed by 0xB0. The error gives the marker's place in the file.
         let mut bad_marker = good;
         let marker = bad_marker.windows(2).position(|w| w == [0xFE, 0xB0]).unwrap();
         bad_marker[marker + 1] = 0x00;
-        assert!(matches!(decode(&bad_marker), Err(DecodeError::BadRecord { byte: 0xFE, .. })));
+        assert_eq!(decode(&bad_marker), Err(DecodeError::BadRecord { format: "PEC", at: marker, byte: 0xFE }));
+        // A colour change needs the byte after its marker.
+        let mut cut_change = golden("formats/one-stitch.pes");
+        let stitches = 22 + DATA_AT + ORIGIN_FIELD;
+        cut_change.splice(stitches..stitches + 3, [0xFE, 0xB0]);
+        cut_change[22 + 514] -= 1;
+        assert_eq!(decode(&cut_change), Err(DecodeError::Truncated { part: "stitch data" }));
+    }
+
+    #[test]
+    fn a_jump_or_trim_flag_on_either_axis_marks_the_record() {
+        use StitchKind::{Jump, Normal, Trim};
+        // A jump flagged on x alone (x long, y short), a trim flagged on y alone, a stitch, the end; in a
+        // box that fits them.
+        let mut bytes = golden("formats/one-stitch.pes");
+        let (pec, stitches) = (22, 22 + DATA_AT + ORIGIN_FIELD);
+        bytes.splice(stitches..stitches + 3, [0x90, 0x10, 0x05, 0x03, 0xA0, 0x07, 0x00, 0x00, 0xFF]);
+        bytes[pec + 514] += 6;
+        bytes[pec + 520..pec + 524].copy_from_slice(&[19, 0, 12, 0]);
+        let d = decode(&bytes).unwrap();
+        assert!(d.warnings.is_empty(), "{:?}", d.warnings);
+        assert_eq!(kinds(&d), [(Jump, 1.6, 0.5), (Trim, 1.6, 0.5), (Jump, 1.9, 1.2), (Normal, 1.9, 1.2)]);
     }
 
     fn fixture(name: &str) -> Vec<u8> {
@@ -353,6 +367,28 @@ mod tests {
         let d = decode(&bytes).unwrap();
         assert_eq!(kinds(&d), [(StitchKind::Jump, 49.9, 49.9), (StitchKind::Normal, 49.9, 49.9)]);
         assert_eq!(d.warnings, [NO_ORIGIN_FIELD]);
+    }
+
+    #[test]
+    fn req_fmt_009_the_origin_field_is_a_long_jump_on_both_axes() {
+        assert_eq!(origin_field(&[0x91, 0xF3, 0x91, 0xF3]), Some((499, 499)));
+        assert_eq!(origin_field(&[0x9F, 0xFF, 0x90, 0x01]), Some((-1, 1)));
+        // A trim flag on either axis, or a short axis, is a record of the stitch data.
+        for bytes in [[0xB0, 0x00, 0x90, 0x00], [0x90, 0x00, 0xA0, 0x00], [0x90, 0x00, 0x05, 0x00], [0x05, 0x90, 0x00, 0x00]] {
+            assert_eq!(origin_field(&bytes), None, "{bytes:02X?}");
+        }
+        assert_eq!(origin_field(&[0x90, 0x00, 0x90]), None);
+    }
+
+    #[test]
+    fn req_fmt_009_the_design_may_stray_one_unit_outside_the_box() {
+        // The field puts the box's corner at (-10, -20), and the box is 100 by 200.
+        let (field, size) = ((10, 20), (100, 200));
+        assert!(fits(field, size, None));
+        assert!(fits(field, size, Some(((-11, -21), (91, 181)))));
+        for extent in [((-12, -20), (90, 180)), ((-10, -22), (90, 180)), ((-10, -20), (92, 180)), ((-10, -20), (90, 182))] {
+            assert!(!fits(field, size, Some(extent)), "{extent:?}");
+        }
     }
 
     /// REQ-FMT-006 (deterministic part; fuzzing runs nightly from M2.5): no prefix and no single-byte
