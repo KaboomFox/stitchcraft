@@ -22,8 +22,15 @@ pub const MACHINE_LIMIT: i32 = 100_000;
 
 /// Lengths closer than this, in millimetres, count as equal: far below the 0.1 mm resolution of machine
 /// files, so floating-point rounding in a length that is exactly at a limit does not cross it. Generators
-/// place stitches with it and the plan checker checks them with it, so the two always agree.
+/// place stitches with it and the plan checker checks them with it (both through [`at_least`]), so the
+/// two always agree.
 pub const LENGTH_SLACK: f64 = 1e-9;
+
+/// Whether `length` is at least `limit`, both in millimetres, counting lengths within [`LENGTH_SLACK`]
+/// of each other as equal. "At most" is the same test turned round: `at_least(limit, length)`.
+pub fn at_least(length: f64, limit: f64) -> bool {
+    length >= limit - LENGTH_SLACK
+}
 
 /// `mm` in machine units (0.1 mm), rounded half to even; `None` beyond ±[`MACHINE_LIMIT`].
 ///
@@ -174,18 +181,11 @@ impl Point {
     }
 
     /// The point a fraction `t` of the way from this point to `other`. `t` is clamped to 0..=1, and a
-    /// NaN `t` counts as 0, so the result lies between the two points and is finite like them; should
-    /// rounding at the very edge of the `f64` range overflow, the nearer end is returned.
+    /// NaN `t` counts as 0, so the result lies between the two points and is finite like them. (Even at
+    /// the edge of the `f64` range the sum does not overflow; if it ever did, this point is returned.)
     pub fn lerp(self, other: Point, t: f64) -> Point {
         let t = if t.is_nan() { 0.0 } else { t.clamp(0.0, 1.0) };
-        let (x, y) = (self.x * (1.0 - t) + other.x * t, self.y * (1.0 - t) + other.y * t);
-        if x.is_finite() && y.is_finite() {
-            Point::from_finite(x, y)
-        } else if t < 0.5 {
-            self
-        } else {
-            other
-        }
+        Point::new(self.x * (1.0 - t) + other.x * t, self.y * (1.0 - t) + other.y * t).unwrap_or(self)
     }
 }
 
@@ -232,6 +232,13 @@ mod tests {
         // At the edge of the range: still finite.
         let (low, high) = (Point::new(-f64::MAX, f64::MAX).unwrap(), Point::new(f64::MAX, f64::MAX).unwrap());
         assert!(low.lerp(high, 0.5).x().is_finite() && high.lerp(high, 0.3).y().is_finite());
+    }
+
+    #[test]
+    fn lengths_within_the_slack_count_as_equal() {
+        assert!(at_least(1.0, 1.0) && at_least(2.0, 1.0) && !at_least(0.9, 1.0));
+        assert!(at_least(1.0 - LENGTH_SLACK / 2.0, 1.0), "short by less than the slack: equal");
+        assert!(!at_least(1.0 - 2.0 * LENGTH_SLACK, 1.0), "short by more: shorter");
     }
 
     #[test]

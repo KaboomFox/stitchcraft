@@ -31,7 +31,7 @@
 mod params;
 
 pub use params::RunningParams;
-use stitchcraft_core::units::LENGTH_SLACK;
+use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Mm, Point};
 
 use crate::design::Path;
@@ -62,7 +62,7 @@ pub fn running_stitch(path: &Path, params: &RunningParams, min_stitch: Mm, meter
     for piece in &stroke.pieces {
         let along = Along::new(piece, meter)?;
         let length = along.length();
-        let skipped = if length < min {
+        let skipped = if !at_least(length, min) {
             format!("A part of the stroke is {} mm long, shorter than the shortest stitch ({} mm), so it is not stitched.", mm(length), mm(min))
         } else if let Some(run) = stitch_piece(&along, &piece.corners, &pattern, min, tolerance * (1.0 - FLATTEN_SHARE), meter)? {
             runs.push(run);
@@ -83,7 +83,7 @@ pub fn running_stitch(path: &Path, params: &RunningParams, min_stitch: Mm, meter
 /// the ones that were.
 fn pattern(lengths: &[Mm], min: f64, warnings: &mut Vec<Diagnostic>) -> Vec<f64> {
     let floor = 2.0 * min;
-    let short: Vec<String> = lengths.iter().map(|l| l.get()).filter(|l| *l < floor).map(mm).collect();
+    let short: Vec<String> = lengths.iter().map(|l| l.get()).filter(|l| !at_least(*l, floor)).map(mm).collect();
     let pattern: Vec<f64> = lengths.iter().map(|l| l.get().max(floor)).collect();
     let message = match short.as_slice() {
         [] if !pattern.is_empty() => None,
@@ -143,19 +143,18 @@ impl<'a> Along<'a> {
 
     /// The needle `at` along the piece.
     fn needle(&self, at: f64) -> Needle {
-        // The segment the distance falls in: from the last point at or before it to the next one.
+        // The side the distance falls on: from the last point at or before it to the next one. A piece
+        // repeats no point, so every side has a length; were one empty, the NaN fraction would put the
+        // needle on the side's first point.
         let end = self.at.partition_point(|a| *a <= at).clamp(1, self.points.len().saturating_sub(1).max(1));
-        let point = match (self.points.get(end - 1), self.points.get(end), self.at.get(end - 1), self.at.get(end)) {
-            (Some(a), Some(b), Some(from), Some(to)) if to > from => a.lerp(*b, (at - from) / (to - from)),
-            (Some(a), ..) => *a,
-            _ => Point::ORIGIN,
-        };
-        Needle { at, point, corner: false }
+        let (from, to) = (self.vertex(end - 1), self.vertex(end));
+        Needle { at, point: from.point.lerp(to.point, (at - from.at) / (to.at - from.at)), corner: false }
     }
 
-    /// The indices of the piece's points strictly between two needles.
+    /// The indices of the piece's points between two needles: after `from` and before `to`, a point
+    /// within the length slack of either counting as on it.
     fn between(&self, from: &Needle, to: &Needle) -> std::ops::Range<usize> {
-        self.at.partition_point(|a| *a <= from.at)..self.at.partition_point(|a| *a < to.at)
+        self.at.partition_point(|a| at_least(from.at, *a))..self.at.partition_point(|a| !at_least(*a, to.at))
     }
 
     /// The first point of the piece after `from`, and no later than `to`, that is `radius` from it in a
@@ -237,7 +236,7 @@ fn stitch_piece(
     for corner in corners {
         meter.charge(1)?;
         let cut = Needle { corner: true, ..along.vertex(*corner) };
-        if cuts.last().is_some_and(|previous| cut.at - previous.at >= min) && total - cut.at >= min {
+        if cuts.last().is_some_and(|previous| at_least(cut.at - previous.at, min)) && at_least(total - cut.at, min) {
             cuts.push(cut);
         }
     }
@@ -270,7 +269,7 @@ fn fit(length: f64, pattern: &[f64], next: &mut usize, min: f64, meter: &mut Met
     }
     let mut lengths = Vec::new();
     let mut sum = 0.0;
-    while lengths.is_empty() || sum < length - LENGTH_SLACK {
+    while lengths.is_empty() || !at_least(sum, length) {
         meter.charge(1)?;
         let stitch = pattern.get(*next % pattern.len()).copied().unwrap_or(length);
         lengths.push(stitch);
@@ -284,7 +283,7 @@ fn fit(length: f64, pattern: &[f64], next: &mut usize, min: f64, meter: &mut Met
     while lengths.len() > 1 {
         meter.charge(1)?;
         let Some((i, shortest)) = lengths.iter().copied().enumerate().min_by(|a, b| a.1.total_cmp(&b.1)) else { break };
-        if shortest >= min - LENGTH_SLACK {
+        if at_least(shortest, min) {
             break;
         }
         // Join it to its shorter neighbour (the earlier one on a tie).
@@ -329,7 +328,7 @@ fn fit(length: f64, pattern: &[f64], next: &mut usize, min: f64, meter: &mut Met
 /// A drop makes the stitch over the dropped needle longer; [`reach`] splits it if it is longer than
 /// `longest`.
 fn space(needles: Vec<Needle>, along: &Along, min: f64, longest: f64, meter: &mut Meter) -> Result<Option<Vec<Needle>>, Exhausted> {
-    let too_close = |a: &Needle, b: &Needle| a.point.distance(b.point) < min - LENGTH_SLACK;
+    let too_close = |a: &Needle, b: &Needle| !at_least(a.point.distance(b.point), min);
     let mut needles = needles.into_iter();
     let (Some(start), Some(end)) = (needles.next(), needles.next_back()) else { return Ok(None) };
     let mut kept = vec![start];
@@ -348,7 +347,7 @@ fn space(needles: Vec<Needle>, along: &Along, min: f64, longest: f64, meter: &mu
     }
     if kept.len() == 1 && too_close(&start, &end) {
         match along.farthest(start.point, end.point, meter)? {
-            Some((distance, far)) if distance >= min - LENGTH_SLACK => reach(&mut kept, far, along, longest, meter)?,
+            Some((distance, far)) if at_least(distance, min) => reach(&mut kept, far, along, longest, meter)?,
             _ => return Ok(None),
         }
     }
@@ -364,7 +363,7 @@ fn reach(kept: &mut Vec<Needle>, to: Needle, along: &Along, longest: f64, meter:
     while let Some(from) = kept.last().copied() {
         meter.charge(1)?;
         let gap = from.point.distance(to.point);
-        if gap <= longest + LENGTH_SLACK {
+        if at_least(longest, gap) {
             break;
         }
         // Always found: `to` itself is farther than that from `from`.
@@ -376,10 +375,13 @@ fn reach(kept: &mut Vec<Needle>, to: Needle, along: &Along, longest: f64, meter:
 }
 
 /// `needles` with more added wherever a stitch strays from the piece by more than `budget`: each split
-/// is at the piece's point farthest from the stitch among those that leave both halves from `min` to
-/// `longest` long, measured straight.
+/// is at the piece's point farthest from the stitch (the first, on a tie) among those that leave both
+/// halves from `min` to `longest` long, measured straight.
 fn follow(needles: Vec<Needle>, along: &Along, budget: f64, min: f64, longest: f64, meter: &mut Meter) -> Result<Vec<Needle>, Exhausted> {
-    let fits = |a: Point, b: Point| (min - LENGTH_SLACK..=longest + LENGTH_SLACK).contains(&a.distance(b));
+    let fits = |a: Point, b: Point| {
+        let length = a.distance(b);
+        at_least(length, min) && at_least(longest, length)
+    };
     let mut done: Vec<Needle> = Vec::with_capacity(needles.len());
     let mut pending: Vec<Needle> = Vec::new();
     for needle in needles {

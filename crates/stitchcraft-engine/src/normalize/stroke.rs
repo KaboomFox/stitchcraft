@@ -118,11 +118,12 @@ fn towards(from: Point, points: &[Point]) -> (f64, f64) {
     points.iter().find(|p| **p != from).map_or((0.0, 0.0), |p| (p.x() - from.x(), p.y() - from.y()))
 }
 
-/// Whether going on in direction `next` after direction `previous` turns by more than 30°.
+/// Whether going on in direction `next` after direction `previous` turns by more than 30°. A direction
+/// of no length turns nowhere: the dot product and the lengths are then both 0.
 fn turns(previous: (f64, f64), next: (f64, f64)) -> bool {
     let dot = previous.0 * next.0 + previous.1 * next.1;
     let lengths = (previous.0 * previous.0 + previous.1 * previous.1).sqrt() * (next.0 * next.0 + next.1 * next.1).sqrt();
-    lengths > 0.0 && dot < CORNER_COS * lengths
+    dot < CORNER_COS * lengths
 }
 
 fn piece(subpath: &Subpath, tolerance: f64, meter: &mut Meter) -> Result<Option<Piece>, Exhausted> {
@@ -147,7 +148,7 @@ fn piece(subpath: &Subpath, tolerance: f64, meter: &mut Meter) -> Result<Option<
         }
         match seg {
             Seg::Line(_, end) => push(&mut points, end),
-            Seg::Cubic(a, b, c, d) => cubic([a, b, c, d], tolerance, &mut points, meter)?,
+            Seg::Cubic(a, b, c, d) => cubic([a, b, c, d], tolerance, MAX_DEPTH, &mut points, meter)?,
         }
         previous = Some(seg);
     }
@@ -164,12 +165,13 @@ fn push(points: &mut Vec<Point>, p: Point) {
     }
 }
 
-/// Appends the points of a flattened cubic, its start excluded.
-fn cubic(curve: [Point; 4], tolerance: f64, points: &mut Vec<Point>, meter: &mut Meter) -> Result<(), Exhausted> {
+/// Appends the points of a flattened cubic, its start excluded, halving it at most `max_depth` times
+/// (into at most 2^`max_depth` pieces) however tight the tolerance.
+fn cubic(curve: [Point; 4], tolerance: f64, max_depth: u32, points: &mut Vec<Point>, meter: &mut Meter) -> Result<(), Exhausted> {
     let mut stack = vec![(curve, 0)];
     while let Some(([a, b, c, d], depth)) = stack.pop() {
         meter.charge(1)?;
-        if depth >= MAX_DEPTH || (distance_to_segment(b, a, d) <= tolerance && distance_to_segment(c, a, d) <= tolerance) {
+        if depth >= max_depth || (distance_to_segment(b, a, d) <= tolerance && distance_to_segment(c, a, d) <= tolerance) {
             push(points, d);
             continue;
         }
@@ -217,6 +219,10 @@ mod tests {
             flat(&bent, 0.1).pieces[0].corners.len()
         };
         assert_eq!((turn(29.0), turn(31.0), turn(90.0), turn(179.0)), (0, 1, 1, 1));
+        // Exactly 30° is not more than 30°: (cos 30°, ½ + an ulp) is exactly one long.
+        let (cos, sin) = (CORNER_COS, 0.5 + f64::EPSILON / 2.0);
+        assert_eq!((cos * cos + sin * sin).sqrt(), 1.0);
+        assert!(!turns((1.0, 0.0), (cos, sin)));
     }
 
     #[test]
@@ -258,9 +264,56 @@ mod tests {
         assert_eq!((piece.points.len(), piece.corners.len()), (3, 0));
         let still = path(p(1.0, 1.0), vec![Segment::Line(p(1.0, 1.0)), Segment::Cubic(p(1.0, 1.0), p(1.0, 1.0), p(1.0, 1.0))], true);
         assert!(flat(&still, 0.1).pieces.is_empty());
-        // A curve with a coincident control point still has a direction at each end.
+        // A curve with a coincident control point still has a direction at each end, and is kept.
         let curl = path(p(0.0, 0.0), vec![Segment::Line(p(10.0, 0.0)), Segment::Cubic(p(10.0, 0.0), p(20.0, 0.0), p(20.0, 10.0))], false);
-        assert!(flat(&curl, 0.1).pieces[0].corners.is_empty(), "the curve starts straight on");
+        let piece = &flat(&curl, 0.1).pieces[0];
+        assert!(piece.corners.is_empty(), "the curve starts straight on");
+        assert_eq!(piece.points.last(), Some(&p(20.0, 10.0)));
+        let both = path(p(0.0, 0.0), vec![Segment::Line(p(10.0, 0.0)), Segment::Cubic(p(10.0, 0.0), p(20.0, 10.0), p(20.0, 10.0))], false);
+        assert_eq!(flat(&both, 0.1).pieces[0].points.last(), Some(&p(20.0, 10.0)), "coincident at both ends, and still a curve");
+        // Dropped segments do not hide a corner: the turn is measured across them.
+        for still in [Segment::Line(p(10.0, 0.0)), Segment::Cubic(p(10.0, 0.0), p(10.0, 0.0), p(10.0, 0.0))] {
+            let elbow = path(p(0.0, 0.0), vec![Segment::Line(p(10.0, 0.0)), still, Segment::Line(p(10.0, 10.0))], false);
+            assert_eq!(flat(&elbow, 0.1).pieces[0].corners, [1], "{still:?}");
+        }
+    }
+
+    #[test]
+    fn the_ends_are_never_corners() {
+        // A loop smaller than the tolerance flattens to nothing. At the start, the turn after it would
+        // land on the first point; at the end, on the last.
+        let first = path(p(0.0, 0.0), vec![Segment::Cubic(p(0.01, 0.01), p(0.02, 0.0), p(0.0, 0.0)), Segment::Line(p(10.0, 0.0))], false);
+        let last = path(p(0.0, 0.0), vec![Segment::Line(p(10.0, 0.0)), Segment::Cubic(p(10.0, 0.01), p(10.01, 0.01), p(10.0, 0.0))], false);
+        for looped in [first, last] {
+            let piece = &flat(&looped, 1.0).pieces[0];
+            assert_eq!((piece.points.as_slice(), piece.corners.as_slice()), ([p(0.0, 0.0), p(10.0, 0.0)].as_slice(), [].as_slice()));
+        }
+    }
+
+    #[test]
+    fn lopsided_curves_stay_within_the_tolerance() {
+        // One control point on the chord, the other far off it: halving goes on until both are close.
+        let (a, b, c, d) = (p(0.0, 0.0), p(5.0, 0.0), p(5.0, 10.0), p(10.0, 0.0));
+        let piece = &flat(&path(a, vec![Segment::Cubic(b, c, d)], false), 0.05).pieces[0];
+        for i in 0..=400 {
+            let t = f64::from(i) / 400.0;
+            let u = 1.0 - t;
+            let w = [u * u * u, 3.0 * u * u * t, 3.0 * u * t * t, t * t * t];
+            let q = p(w[0] * a.x() + w[1] * b.x() + w[2] * c.x() + w[3] * d.x(), w[0] * a.y() + w[1] * b.y() + w[2] * c.y() + w[3] * d.y());
+            let off = piece.points.windows(2).map(|s| distance_to_segment(q, s[0], s[1])).fold(f64::MAX, f64::min);
+            assert!(off <= 0.05 + 1e-9, "t = {t}: {off}");
+        }
+    }
+
+    #[test]
+    fn the_depth_limit_caps_the_pieces() {
+        // A tolerance no halving meets (none, or NaN) stops at 2^depth pieces, not at the budget.
+        for tolerance in [0.0, f64::NAN] {
+            let mut points = vec![p(0.0, 0.0)];
+            let mut meter = Budget { max_stitches: 1, max_work: 1000 }.meter();
+            cubic([p(0.0, 0.0), p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0)], tolerance, 2, &mut points, &mut meter).unwrap();
+            assert_eq!(points.len(), 1 + 4, "{tolerance}");
+        }
     }
 
     #[test]

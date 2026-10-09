@@ -184,6 +184,9 @@ fn diag_sc_w0401_a_part_shorter_than_the_shortest_stitch_is_named_and_skipped() 
         stitched.warnings.iter().map(ToString::to_string).collect::<Vec<_>>(),
         ["warning SC-W0401: A part of the stroke is 0.2 mm long, shorter than the shortest stitch (0.3 mm), so it is not stitched."]
     );
+    // Exactly the shortest stitch is long enough: one stitch.
+    let exact = stitch(&polyline(&[(0.0, 0.0), (0.3, 0.0)], false), &params("2.5", "0.2"), 0.3);
+    assert_eq!((exact.runs, exact.warnings), (vec![vec![p(0.0, 0.0), p(0.3, 0.0)]], vec![]));
     // Long enough, but too small: a closed square 0.15 mm a side is 0.6 mm round, yet its far corner is
     // only 0.21 mm from where it starts and ends.
     let square = polyline(&[(0.0, 0.0), (0.15, 0.0), (0.15, 0.15), (0.0, 0.15)], true);

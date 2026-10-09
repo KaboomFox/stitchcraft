@@ -24,7 +24,7 @@
 
 use core::fmt;
 
-use stitchcraft_core::units::LENGTH_SLACK;
+use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Code, Diagnostic, Mm, Point};
 
 use crate::plan::{Role, StitchKind, StitchPlan};
@@ -126,9 +126,9 @@ pub fn check(plan: &StitchPlan, profile: &MachineProfile) -> Vec<Violation> {
         let min = if sewn.role == Role::Lock { LOCK_MIN_STITCH } else { profile.min_stitch };
         if length == 0.0 {
             report.add(req::NO_STITCH_IN_PLACE, b, i, "the stitch lands where the needle already is".to_string());
-        } else if length + LENGTH_SLACK < min.get() {
+        } else if !at_least(length, min.get()) {
             report.add(req::STITCH_LENGTH, b, i, format!("the stitch is {length:.3} mm, shorter than {} mm", min.get()));
-        } else if length - LENGTH_SLACK > profile.max_stitch.get() {
+        } else if !at_least(profile.max_stitch.get(), length) {
             report.add(req::STITCH_LENGTH, b, i, format!("the stitch is {length:.3} mm, longer than {} mm", profile.max_stitch.get()));
         }
     }
