@@ -293,7 +293,8 @@ mod tests {
 
     #[test]
     fn the_recorded_file_is_in_the_form_record_writes() {
-        let text = util::read(&util::root().join(BASELINE)).unwrap();
+        // Git on Windows checks text files out with CRLF line endings; `--record` writes LF.
+        let text = util::read(&util::root().join(BASELINE)).unwrap().replace("\r\n", "\n");
         let baseline: BaselineFile = toml::from_str(&text).unwrap();
         assert_eq!(render(&baseline), text, "{BASELINE} is written by `cargo xtask mutants --record`: keep its form");
     }
