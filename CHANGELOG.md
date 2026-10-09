@@ -5,17 +5,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
-- The MC-2 kit: three test sheets drawn as designs and planned by the engine, so sewing them tests its
-  stitches, locks and plan assembly, where the MC-1 sheets, drawn stitch by stitch, test the machine and
-  the formats.
+- The MC-2 kit, with 3 test sheets drawn as designs and planned by the engine. Sewing them tests the
+  engine's stitches, locks and plan assembly. The MC-1 sheets, drawn stitch by stitch, test the machine
+  and the formats.
   - **TS-02B** is TS-02 with the trims, stop and locks elements ask for (`trim_after`, `stop_after`):
     does the machine trim where an element asks, and do the dashes hold?
   - **TS-03** sews running stitch at 1.5 to 4 mm, bean stitch three and five times, circles at three
     tolerances, and 20 stitches placed by hand at each of 0.3, 0.4, 0.5, 0.7 and 1.0 mm: the shortest that
-    sews cleanly is the machine's shortest stitch, which the profile guesses at 0.3 mm.
+    sews cleanly is the machine's shortest stitch, which the profile sets to 0.3 mm until then.
   - **TS-04** sews every lock shape but custom at three sizes, at both ends of lines trimmed after, to
     pull at: which hold, and which show?
-  - A sheet the engine has anything to say about fails to draw, so each sews what its checks describe.
+  - A sheet fails to draw if the engine reports anything about it. Each sheet sews what its checks
+    describe.
 - M3.10: bug-report bundles.
   - **`stitch bug-report design.svg --says "…"`** writes one JSON file that reproduces what StitchCraft
     does with a design. The file contains the design file itself, the profile, the format and the
