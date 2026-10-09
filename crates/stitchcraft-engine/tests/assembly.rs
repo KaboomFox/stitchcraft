@@ -117,12 +117,21 @@ fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plan
     let fill = Element { shape: Shape::Fill { path: square, rule: FillRule::NonZero }, ..line("fill", (0.0, 0.0), 1.0, &RED, &[]) };
     let ripple = line("ripple", (0.0, 5.0), 10.0, &RED, &[("stroke_method", "ripple_stitch")]);
     let wrong = line("wrong", (0.0, 10.0), 10.0, &RED, &[("running_stitch_length_mm", "long")]);
+    let unknown = line("unknown", (0.0, 12.0), 10.0, &RED, &[("stroke_method", "sparkle_stitch")]);
     let fine = line("fine", (0.0, 15.0), 10.0, &RED, &[]);
-    let outcome = sewn(vec![fill, ripple, wrong, fine]);
+    let outcome = sewn(vec![fill, ripple, wrong, unknown, fine]);
     assert_eq!(shape_of(&outcome), "J L4 S5 L4");
     assert_eq!(outcome.plan.unwrap().elements.iter().map(ElementId::as_str).collect::<Vec<_>>(), ["fine"]);
     let codes: Vec<(Code, Option<&str>)> = outcome.diagnostics.iter().map(|d| (d.code, d.element.as_ref().map(ElementId::as_str))).collect();
-    assert_eq!(codes, [(Code::StitchTypeNotYet, Some("fill")), (Code::StitchTypeNotYet, Some("ripple")), (Code::ParamInvalid, Some("wrong"))]);
+    assert_eq!(
+        codes,
+        [
+            (Code::StitchTypeNotYet, Some("fill")),
+            (Code::StitchTypeNotYet, Some("ripple")),
+            (Code::ParamInvalid, Some("wrong")),
+            (Code::ParamInvalid, Some("unknown"))
+        ]
+    );
     // Each element has the work budget to itself: a long one runs out, a short one does not.
     let budget = Budget { max_stitches: 1000, max_work: 60 };
     let design =
