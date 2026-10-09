@@ -5,9 +5,17 @@
 # User guide
 
 - [User guide](user/README.md)
+  - [Install](user/install.md)
   - [Your first sew-out on a Brother](user/tutorials/first-sew-out.md)
+  - [Turn an SVG into a PES file](user/tutorials/svg-to-pes.md)
   - [How-to guides](user/how-to/README.md)
+    - [Check a machine file](user/how-to/check-a-file.md)
+    - [Convert between formats](user/how-to/convert-formats.md)
+    - [Fit a design to the hoop](user/how-to/fit-the-hoop.md)
     - [Report a bug](user/how-to/report-a-bug.md)
+  - [Stitch types](user/stitches/README.md)
+    - [Running stitch](user/stitches/running.md)
+    - [Lock stitches, trims and stops](user/stitches/locks.md)
   - [Embroidery basics](user/explanation/embroidery-basics.md)
   - [Reference](user/reference/README.md)
     - [Command line](user/reference/cli.md)

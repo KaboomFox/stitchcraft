@@ -5,6 +5,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- **User guide.** An install page, a tutorial that turns an SVG into a PES file, and how-to guides to
+  check a machine file, convert it and fit a design to the hoop. A section for each stitch type shows
+  running stitch and lock stitches, with pictures of what their parameters change.
+  - **Pictures and output made by the code.** Command-line examples are declared in
+    `docs/examples.toml`, and `cargo xtask docs` runs them with the `stitch` binary. A picture of a
+    design is declared in `docs/shots.toml`, with a panel for each set of parameters, and the engine
+    plans it. CI fails when either is stale.
+  - The README and the book's front page say what StitchCraft does today.
 - The MC-2 kit, with 3 test sheets drawn as designs and planned by the engine. Sewing them tests the
   engine's stitches, locks and plan assembly. The MC-1 sheets, drawn stitch by stitch, test the machine
   and the formats.

@@ -1,17 +1,16 @@
 # How-to guides
 
-Task-focused guides, each written in the release that brings its feature:
+Each guide solves one problem:
 
+- [Check a machine file before sewing](check-a-file.md) with `stitch inspect` and `stitch preview`
+- [Convert between machine formats](convert-formats.md) with `stitch convert`
+- [Fit a design to the hoop](fit-the-hoop.md) when it is larger than the hoop or the comfort zone
 - [Report a bug](report-a-bug.md) with a bundle that reproduces it (`stitch bug-report`)
 
-Planned:
+Planned, each with the milestone that brings its feature:
 
 | Guide | Milestone |
 |---|---|
-| Check a machine file before sewing (`stitch inspect`, `stitch preview`) | M2 |
-| Convert between machine formats | M2 |
-| Fix "design larger than the comfort zone" | M1 |
-| Turn an SVG into a PES file | M3 |
 | Make lettering-style satin borders | M4 |
 | Stop a fill from puckering (density, underlay, compensation) | M5 |
 | Embroider a VectorCraft design | M6 |

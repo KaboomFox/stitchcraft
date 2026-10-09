@@ -1,0 +1,13 @@
+$ stitch inspect TS-02.pes --profile brother-200x200
+TS-02.pes · PES (#PES0001) · "TS-02"
+  sha256    b69bba9dcf60bfbc9765c92991010f249f0d3c2d2946b945d1eecfc70b77abc3
+  size      140.0 × 70.0 mm
+  stitches  93 stitches, 17 jumps, 7 trims, 2 colour changes, 1 stop
+  extent    x -70.0 to 70.0 mm, y -35.0 to 35.0 mm from where the machine starts
+  lengths   stitches from 2.5 to 2.5 mm
+  threads   1. Red (#ed171f), shown as Brother PEC 5 "Red"
+            2. Blue (#0a55a3), shown as Brother PEC 2 "Blue"
+            3. Emerald Green (#00673e), shown as Brother PEC 54 "Emerald Green"
+            4. Emerald Green (#00673e), shown as Brother PEC 54 "Emerald Green" — a stop: keep the same thread
+  profile   brother-200x200 (Brother, 200 × 200 mm hoop)
+            0 stitches longer than 12 mm, 0 shorter than 0.3 mm

@@ -1,13 +1,17 @@
 # User guide
 
-The user guide grows with each milestone. It follows the [Diátaxis](https://diataxis.fr/) structure:
+StitchCraft writes machine embroidery files from SVG designs. It also reads, draws and converts the
+files of other embroidery software. The guide follows the [Diátaxis](https://diataxis.fr/) structure,
+with a section for each stitch type.
 
-| Section | Use it to | Available now |
+| Section | Use it to | Pages |
 |---|---|---|
-| Tutorials | Learn by doing, start to finish | [Your first sew-out on a Brother](tutorials/first-sew-out.md) (planned for M1) |
-| How-to guides | Solve one specific problem | [planned list](how-to/README.md) |
-| Reference | Look up parameters, diagnostics, commands, profiles | [reference index](reference/README.md) |
+| [Install](install.md) | Build the `stitch` command | |
+| Tutorials | Learn by doing, start to finish | [Your first sew-out on a Brother](tutorials/first-sew-out.md), [Turn an SVG into a PES file](tutorials/svg-to-pes.md) |
+| [How-to guides](how-to/README.md) | Solve one problem | Check a file, convert it, fit the hoop, report a bug |
+| [Stitch types](stitches/README.md) | See what each stitch does and what its parameters change | Running stitch, lock stitches |
+| [Reference](reference/README.md) | Look up commands, parameters, messages and machines | |
 | Explanation | Understand why embroidery behaves as it does | [Embroidery basics](explanation/embroidery-basics.md) |
 
-Reference pages for parameters, diagnostics, the CLI and machine profiles are **generated from the code**
-and appear as the features land; they cannot fall out of date.
+StitchCraft makes the pictures and the command output in this guide when the docs are built. The
+reference pages are generated from its code, and CI fails when any of them is out of date.

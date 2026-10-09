@@ -1,0 +1,2 @@
+$ stitch --version
+stitch 0.0.1

@@ -14,3 +14,45 @@ run = ["stitch testsheet TS-01 --profile brother-200x200 -o TS-01.pes"]
 id = "preview-ts-01"
 setup = ["stitch testsheet TS-01 --profile brother-200x200 -o TS-01.pes"]
 run = ["stitch preview TS-01.pes -o TS-01.png"]
+
+[[example]]
+id = "inspect-ts-02"
+setup = ["stitch testsheet TS-02 --profile brother-200x200 -o TS-02.pes"]
+run = ["stitch inspect TS-02.pes --profile brother-200x200"]
+
+[[example]]
+id = "preview-ts-02"
+setup = ["stitch testsheet TS-02 --profile brother-200x200 -o TS-02.pes"]
+run = ["stitch preview TS-02.pes -o TS-02.png --style simple"]
+
+[[example]]
+id = "convert-ts-02-dst"
+setup = ["stitch testsheet TS-02 --profile brother-200x200 -o TS-02.pes"]
+run = ["stitch convert TS-02.pes -o TS-02.dst", "stitch inspect TS-02.dst"]
+
+[[example]]
+id = "testsheet-ts-10b"
+run = ["stitch testsheet TS-10B --profile brother-200x200 -o TS-10B.pes"]
+
+[[example]]
+id = "explain-sc-w0702"
+run = ["stitch explain SC-W0702"]
+
+[[example]]
+id = "plan-too-wide"
+files = ["docs/fixtures/wide.svg"]
+run = ["stitch plan wide.svg -o wide.pes"]
+
+[[example]]
+id = "plan-strokes"
+files = ["conformance/fixtures/svg/strokes.svg"]
+run = ["stitch plan strokes.svg -o strokes.pes --preview strokes.png --report strokes.json"]
+
+[[example]]
+id = "plan-badge"
+files = ["docs/fixtures/badge.svg"]
+run = ["stitch plan badge.svg -o badge.pes --preview badge.png"]
+
+[[example]]
+id = "version"
+run = ["stitch --version"]

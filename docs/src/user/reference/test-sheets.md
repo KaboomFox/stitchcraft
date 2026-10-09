@@ -25,7 +25,7 @@ After sewing, check:
 
 ![TS-02 as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose dashes and rows are joined by loose threads, and a green line underneath.](../../images/generated/testsheet-ts-02.png)
 
-![TS-02 in the simple style: a red cross marks the trim after the first dash of each red row, grey dashes show moves after a cut, blue dashes show jump threads left in place, and a blue square marks the stop in the middle of the green line.](../../images/generated/testsheet-ts-02-simple.png)
+![TS-02 in the simple style. A red cross marks the trim after the first dash of each red row, and a blue square marks the stop in the middle of the green line. Grey dashes show moves after a cut, and blue dashes show jump threads left in place.](../../images/generated/testsheet-ts-02-simple.png)
 
 Threads: Red, Blue, Emerald Green, Emerald Green (stop).
 
