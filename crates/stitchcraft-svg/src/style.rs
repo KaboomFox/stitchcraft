@@ -8,7 +8,8 @@
 //! sees what an SVG viewer shows.
 //!
 //! Read here: `fill`, `stroke`, `color` (for `currentColor`), `fill-rule`, `opacity`, `fill-opacity`,
-//! `stroke-opacity`, `visibility`, `display`, `paint-order` and the marker properties. Style sheets
+//! `stroke-opacity`, `visibility`, `display`, `paint-order` and the marker properties, each of the three
+//! markers on its own. Style sheets
 //! (`<style>` elements) are not read; the document reader warns when a file has one.
 
 use std::str::FromStr;
@@ -38,10 +39,45 @@ impl<'a, 'input> Declared<'a, 'input> {
         declared.or_else(|| self.node.attribute(property)).map(str::trim)
     }
 
-    /// Whether `property` is set to something other than `none`: a clip path, mask, filter or marker.
+    /// Whether `property` is set to something other than `none`: a clip path, mask or filter.
     pub fn uses(&self, property: &str) -> bool {
-        self.get(property).is_some_and(|value| !value.is_empty() && !value.eq_ignore_ascii_case("none"))
+        self.get(property).is_some_and(names_something)
     }
+
+    /// Every value the `style` attribute itself gives `property`, in order; presentation attributes are
+    /// not looked at.
+    pub fn in_style<'s>(&'s self, property: &'s str) -> impl Iterator<Item = &'a str> + 's {
+        self.style.iter().filter(move |(name, _)| name.eq_ignore_ascii_case(property)).map(|(_, value)| *value)
+    }
+
+    /// The values `node` gives `marker-start`, `marker-mid` and `marker-end`. In the `style` attribute the
+    /// `marker` shorthand sets all three where it stands in the list, and a later declaration wins; a
+    /// marker the `style` attribute does not set comes from its presentation attribute, or else from a
+    /// `marker` attribute.
+    pub fn markers(&self) -> [Option<&'a str>; 3] {
+        let mut found = [None; 3];
+        for (name, value) in &self.style {
+            if name.eq_ignore_ascii_case("marker") {
+                found = [Some(*value); 3];
+            } else if let Some(slot) = MARKERS.iter().position(|m| name.eq_ignore_ascii_case(m)).and_then(|i| found.get_mut(i)) {
+                *slot = Some(*value);
+            }
+        }
+        for (slot, property) in found.iter_mut().zip(MARKERS) {
+            if slot.is_none() {
+                *slot = self.node.attribute(property).or_else(|| self.node.attribute("marker")).map(str::trim);
+            }
+        }
+        found
+    }
+}
+
+/// The marker properties, one per place on a path.
+const MARKERS: [&str; 3] = ["marker-start", "marker-mid", "marker-end"];
+
+/// Whether a clip path, mask, filter or marker value names one: it is set to something other than `none`.
+fn names_something(value: &str) -> bool {
+    !value.is_empty() && !value.eq_ignore_ascii_case("none")
 }
 
 /// The `name: value` declarations of a `style` attribute, in order. It splits on `;` outside quotes and
@@ -166,8 +202,9 @@ pub struct Style<'a> {
     pub transparent: bool,
     /// `paint-order` puts the stroke before the fill.
     pub stroke_first: bool,
-    /// A marker property names a marker: arrowheads and the like, drawn on top of the outline.
-    pub markers: bool,
+    /// Which of `marker-start`, `marker-mid` and `marker-end` name a marker: arrowheads and the like,
+    /// drawn on top of the outline. Each inherits on its own.
+    pub markers: [bool; 3],
 }
 
 impl Default for Style<'_> {
@@ -183,7 +220,7 @@ impl Default for Style<'_> {
             visible: true,
             transparent: false,
             stroke_first: false,
-            markers: false,
+            markers: [false; 3],
         }
     }
 }
@@ -228,9 +265,9 @@ impl<'a> Style<'a> {
             let first = order.order.iter().find(|k| matches!(k, PaintOrderKind::Fill | PaintOrderKind::Stroke));
             style.stroke_first = first == Some(&PaintOrderKind::Stroke);
         }
-        for property in ["marker", "marker-start", "marker-mid", "marker-end"] {
-            if let Some(value) = get(property) {
-                style.markers = !value.is_empty() && !value.eq_ignore_ascii_case("none");
+        for (marked, value) in style.markers.iter_mut().zip(declared.markers()) {
+            if let Some(value) = value.filter(|v| !v.eq_ignore_ascii_case("inherit")) {
+                *marked = names_something(value);
             }
         }
         Some(style)
@@ -239,6 +276,11 @@ impl<'a> Style<'a> {
     /// Whether anything this element paints can be seen.
     pub fn shown(&self) -> bool {
         self.visible && !self.transparent
+    }
+
+    /// Whether any marker property names a marker.
+    pub fn has_markers(&self) -> bool {
+        self.markers.contains(&true)
     }
 }
 
@@ -333,11 +375,18 @@ mod tests {
             let s = s.unwrap();
             assert_eq!(s.fill, Paint::Server { id: "g", fallback: Some(Plain::Color(Rgb::new(0, 128, 0))) });
             assert_eq!(s.stroke, Paint::Server { id: "h", fallback: None });
-            assert!(s.stroke_first && s.markers);
+            assert!(s.stroke_first && s.has_markers());
+            assert_eq!(s.markers, [false, false, true]);
         });
         with_style(r#"<svg paint-order="markers"><g marker-end="url(#m)"><path id="p" marker-end="none"/></g></svg>"#, "p", |s| {
             let s = s.unwrap();
-            assert!(!s.stroke_first && !s.markers);
+            assert!(!s.stroke_first && !s.has_markers());
         });
+        // The shorthand sets all three where it stands; `inherit` keeps the parent's; presentation
+        // attributes fill in what the style attribute leaves.
+        let svg = r#"<svg><g marker-start="url(#a)"><path id="p" style="marker-end:url(#b);marker:none;marker-mid:url(#c)" marker-end="url(#d)"/>
+            <path id="q" marker-start="inherit" marker="url(#e)"/></g></svg>"#;
+        with_style(svg, "p", |s| assert_eq!(s.unwrap().markers, [false, true, false]));
+        with_style(svg, "q", |s| assert_eq!(s.unwrap().markers, [true, true, true]));
     }
 }

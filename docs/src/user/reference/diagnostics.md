@@ -24,6 +24,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0702`](#sc-w0702) | Warning | Design is larger than the comfort zone |
 | [`SC-E0801`](#sc-e0801) | Error | SVG could not be read |
 | [`SC-W0802`](#sc-w0802) | Warning | SVG feature ignored |
+| [`SC-I0805`](#sc-i0805) | Info | Object left out, as the file asks |
 | [`SC-W0804`](#sc-w0804) | Warning | Element geometry invalid or out of range |
 
 ## SC-E0004
@@ -219,6 +220,18 @@ elements, style sheets, or a gradient or pattern used as a colour.
 
 The message names the element and what was done. Convert text and clones to paths in the editor
 (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
+
+## SC-I0805
+
+**Info** — Object left out, as the file asks
+
+An object or a layer is left out because the file asks for it: an Ink/Stitch "ignore object" or
+"ignore layer" command, or the object's Ink/Stitch setting `ignore_object`. Designs keep
+templates, placement lines and notes this way, in the drawing but out of the sew-out, and
+Ink/Stitch leaves them out too.
+
+The message names what was left out and why. To stitch it, delete the command's symbol, or turn the
+setting off in Ink/Stitch's parameters.
 
 ## SC-W0804
 

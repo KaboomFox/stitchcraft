@@ -1559,3 +1559,143 @@ param = "fill_method"
 value = "legacy_fill"
 phase = "P3"
 milestone = "M10"
+
+# Ink/Stitch's commands (`lib/commands.py`): a <use> of the symbol `inkstitch_<name>`. `tied_to` is where
+# one applies: the object a connector ties it to, every layer it is in, or the whole document. What
+# StitchCraft does with each comes from its SVG adapter (`stitchcraft_svg::inkstitch::COMMANDS`).
+
+[[command]]
+name = "starting_point"
+tied_to = "object"
+
+[[command]]
+name = "ending_point"
+tied_to = "object"
+
+[[command]]
+name = "target_point"
+tied_to = "object"
+
+[[command]]
+name = "autoroute_start"
+tied_to = "object"
+
+[[command]]
+name = "autoroute_end"
+tied_to = "object"
+
+[[command]]
+name = "stop"
+tied_to = "object"
+
+[[command]]
+name = "trim"
+tied_to = "object"
+
+[[command]]
+name = "ignore_object"
+tied_to = "object"
+
+[[command]]
+name = "satin_cut_point"
+tied_to = "object"
+
+[[command]]
+name = "ignore_layer"
+tied_to = "layer"
+
+[[command]]
+name = "origin"
+tied_to = "document"
+
+[[command]]
+name = "stop_position"
+tied_to = "document"
+
+# The other `inkstitch:*` attributes Ink/Stitch reads (`lib/svg/tags.py`), which declare no parameter:
+# settings of an element, of patterns, of the stitch plan or of the sew stack, and legacy names that
+# Ink/Stitch's updater rewrites in older files. `—` for the phase: not planned.
+
+[[attribute]]
+name = "ignore_object"
+kind = "element"
+phase = "P1"
+milestone = "M3"
+
+[[attribute]]
+name = "stroke_first"
+kind = "element"
+phase = "P1"
+milestone = "M5"
+
+[[attribute]]
+name = "cutwork_needle"
+kind = "element"
+phase = "—"
+milestone = "—"
+
+[[attribute]]
+name = "pattern_interval"
+kind = "pattern"
+phase = "—"
+milestone = "—"
+
+[[attribute]]
+name = "pattern_offset"
+kind = "pattern"
+phase = "—"
+milestone = "—"
+
+[[attribute]]
+name = "invisible_layers"
+kind = "stitch_plan"
+phase = "—"
+milestone = "—"
+
+[[attribute]]
+name = "layer_visibility"
+kind = "stitch_plan"
+phase = "—"
+milestone = "—"
+
+[[attribute]]
+name = "sew_stack"
+kind = "sew_stack"
+phase = "—"
+milestone = "—"
+
+[[attribute]]
+name = "sew_stack_only"
+kind = "sew_stack"
+phase = "—"
+milestone = "—"
+
+[[attribute]]
+name = "polyline"
+kind = "legacy"
+phase = "P2"
+milestone = "M8"
+
+[[attribute]]
+name = "auto_fill"
+kind = "legacy"
+phase = "P2"
+milestone = "M8"
+
+[[attribute]]
+name = "e_stitch"
+kind = "legacy"
+phase = "P2"
+milestone = "M8"
+
+[[attribute]]
+name = "manual_stitch"
+kind = "legacy"
+phase = "P2"
+milestone = "M8"
+
+[[attribute]]
+name = "grid_size"
+kind = "legacy"
+phase = "P2"
+milestone = "M8"
