@@ -9,6 +9,7 @@ use std::path::Path;
 
 use stitchcraft_core::{Diagnostic, Severity};
 use stitchcraft_engine::testsheets::{self, SHEETS, TestSheet};
+use stitchcraft_formats::Encoded;
 use stitchcraft_plan::invariants;
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
@@ -47,13 +48,14 @@ pub fn run(args: &TestsheetArgs) -> Outcome {
     if diagnostics.iter().any(|d| d.severity() == Severity::Error) {
         return Outcome::refuse(String::new(), &diagnostics);
     }
-    let bytes = match stitchcraft_formats::encode(&plan, format, sheet.id) {
-        Ok(bytes) => bytes,
+    let Encoded { bytes, notes } = match stitchcraft_formats::encode(&plan, format, sheet.id) {
+        Ok(encoded) => encoded,
         Err(e) => {
             diagnostics.push(e.diagnostic());
             return Outcome::refuse(String::new(), &diagnostics);
         }
     };
+    diagnostics.extend(notes);
     if let Err(outcome) = write_file(output, &bytes) {
         return outcome;
     }

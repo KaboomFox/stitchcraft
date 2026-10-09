@@ -4,10 +4,13 @@
 //! `stitch testsheet`, so the needle goes down at exactly the same 0.1 mm positions (both formats use
 //! that unit, so nothing is rounded twice). What the new format cannot say is reported, never guessed:
 //! a DST file stores no thread colours, so a PES file made from one names a placeholder colour for every
-//! thread (`SC-W0604`). The other way round nothing the machine does is lost: DST records a stop as a
-//! pause for the next thread, which is what a stop is.
+//! thread (`SC-W0604`). The other way round, DST records a stop as a pause for the next thread, which is
+//! what a stop is, but its machines cut the thread before every jump longer than 24.2 mm, where a PES
+//! machine leaves a jump thread: `SC-I0605` says how many.
 
 use std::fmt::Write as _;
+
+use stitchcraft_formats::Encoded;
 
 use super::{Outcome, Status, describe_file, describe_plan, describe_threads, output_format, read_machine_file, reader_warnings};
 use super::{render_diagnostics, unknown_colors, write_file};
@@ -31,13 +34,14 @@ pub fn run(args: &ConvertArgs) -> Outcome {
     // The design's name goes into the file's label; a file without one is named after the output.
     let stem = args.output.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
     let name = if decoded.name.is_empty() { stem } else { decoded.name.clone() };
-    let bytes = match stitchcraft_formats::encode(&decoded.plan, format, &name) {
-        Ok(bytes) => bytes,
+    let Encoded { bytes, notes } = match stitchcraft_formats::encode(&decoded.plan, format, &name) {
+        Ok(encoded) => encoded,
         Err(e) => {
             diagnostics.push(e.diagnostic());
             return Outcome::refuse(warnings, &diagnostics);
         }
     };
+    diagnostics.extend(notes);
     if let Err(outcome) = write_file(&args.output, &bytes) {
         return outcome;
     }
@@ -53,7 +57,7 @@ pub fn run(args: &ConvertArgs) -> Outcome {
 mod tests {
     use std::path::PathBuf;
 
-    use stitchcraft_testkit::equivalence::events;
+    use stitchcraft_testkit::equivalence::{dst_events, events};
 
     use super::*;
     use crate::cli::Format;
@@ -77,15 +81,20 @@ mod tests {
     }
 
     #[test]
-    fn pes_to_dst_sews_the_same() {
+    fn diag_sc_i0605_pes_to_dst_sews_as_dst_machines_do() {
+        // TS-02's right half has no trims, and DST machines cut the thread before its long jumps.
         let (source, output) = (golden("testsheets/TS-02.pes"), temp("TS-02.dst"));
         let out = convert(source.clone(), output.clone(), None);
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(out.stdout.starts_with(&format!("{} · PES (#PES0001) → DST\n", source.display())), "{}", out.stdout);
-        assert!(out.stderr.is_empty(), "{}", out.stderr);
+        assert_eq!(
+            out.stderr,
+            "info SC-I0605: The thread will be cut at 3 places the plan does not trim: DST machines cut it before 3 or more jump records in a row, and a jump longer than 24.2 mm takes that many.\n"
+        );
         let (before, after) = (read(&source), read(&output));
         assert_eq!(after.name, "TS-02");
-        assert_eq!(events(&after.plan), events(&before.plan));
+        assert_eq!(events(&after.plan), dst_events(&before.plan));
+        assert_eq!(after.plan.stats().trims, before.plan.stats().trims + 3);
     }
 
     #[test]

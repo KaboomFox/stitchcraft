@@ -136,14 +136,15 @@ our files and must agree on every stitch; `cargo-fuzz` targets run nightly with 
 #### Fuzzing
 
 `fuzz/` holds one target per reader (`read_pes`, `read_dst`, `read_svg`) and one for a file's whole
-journey (`read_write_preview`: read, write in every format, read the PES file back, preview). Each target
+journey (`read_write_preview`: read, write in every format, read the files back, preview). Each target
 is one line; its body is in `stitchcraft-testkit::fuzz`, so every pull request runs the bodies on the
 seed files, every shortening of them and random or damaged bytes, on stable Rust and all three operating
 systems. The properties:
 
 - **machine files** (`REQ-FMT-006`): no panic; at most 2,000,000 entries and no position beyond ±10 m
-  from any reader; a plan read from anything is written in every format, and its PES file reads back to a
-  plan the machine sews the same way; a preview never panics;
+  from any reader; a plan read from anything is written in every format, and each file reads back to a
+  plan the machine sews the same way (for DST, the way DST machines sew the plan: `REQ-FMT-008`); a
+  preview never panics;
 - **SVG** (`REQ-SVG-002`): no panic; the reader refuses only with its own codes (`SC-E0801`,
   `SC-E0004`); what it reads is a valid design, with no point beyond ±10 m, and everything it says about
   the file is a warning.

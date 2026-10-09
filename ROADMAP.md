@@ -15,7 +15,7 @@ Ink/Stitch-contract status are generated from that declaration; every diagnostic
 StitchCraft reads SVG files into its design model, reporting whatever it leaves out; and the engine
 stitches running stitches: even spacing between corners, patterns of lengths, curves followed within the
 tolerance, no stitch shorter than the shortest stitch, measured straight, repeats, bean stitch and random
-length, and manual stitches placed by hand. The conformance report shows all 29 active requirements
+length, and manual stitches placed by hand. The conformance report shows all 30 active requirements
 green. Next: the MC-1 sew-out report, which closes M1, and the rest of M3 (locks, plan assembly). The repository is
 [KaboomFox/stitchcraft](https://github.com/KaboomFox/stitchcraft), with the docs published at
 [kaboomfox.github.io/stitchcraft](https://kaboomfox.github.io/stitchcraft/) and `main` protected; the
