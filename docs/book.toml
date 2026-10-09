@@ -12,9 +12,9 @@ create-missing = false
 [output.html]
 default-theme = "light"
 preferred-dark-theme = "navy"
-git-repository-url = "https://github.com/KaboomFox/inkcraft"
+git-repository-url = "https://github.com/KaboomFox/stitchcraft"
 # Every page gets a "suggest an edit" link straight to its source.
-edit-url-template = "https://github.com/KaboomFox/inkcraft/edit/main/docs/src/{path}"
+edit-url-template = "https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/{path}"
 smart-punctuation = true
 
 [output.html.search]
