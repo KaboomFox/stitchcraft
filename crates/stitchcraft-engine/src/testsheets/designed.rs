@@ -76,3 +76,21 @@ impl Drawing {
 fn point((x, y): (f64, f64)) -> Result<Point, UnitError> {
     Point::new(x, y)
 }
+
+#[cfg(test)]
+mod tests {
+    use stitchcraft_plan::{Rgb, Thread};
+
+    use super::*;
+
+    #[test]
+    fn a_sheet_the_engine_says_anything_about_does_not_draw() {
+        let thread = Thread::new(Rgb::new(0, 0, 0));
+        let mut d = Drawing::new("test");
+        d.polyline("fine", &[(0.0, 0.0), (10.0, 0.0)], &thread, &[]).unwrap();
+        d.polyline("unreadable", &[(0.0, 5.0), (10.0, 5.0)], &thread, &[("running_stitch_length_mm", "long")]).unwrap();
+        let Err(SheetError::Said(said)) = d.plan() else { panic!("drawn despite what the engine said") };
+        assert!(said.starts_with("error SC-E0101: "), "{said}");
+        assert!(Drawing::new("empty").plan().is_err(), "nothing to stitch");
+    }
+}

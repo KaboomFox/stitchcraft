@@ -205,6 +205,30 @@ mod tests {
     }
 
     #[test]
+    fn ts02_and_ts02b_sew_their_rows_top_to_bottom_and_stop_halfway_along_the_green_line() {
+        for sheet in ["TS-02", "TS-02B"] {
+            let plan = find(sheet).unwrap().plan().unwrap();
+            // Each half's rows start 15 mm apart, top to bottom, in the order of their gaps.
+            for block in &plan.blocks[..2] {
+                let starts: Vec<f64> = block.stitches.windows(2).filter(|w| w[0].kind == StitchKind::Jump).map(|w| w[1].at.y()).collect();
+                let rows: Vec<f64> = starts.iter().copied().fold(Vec::new(), |mut rows, y| {
+                    if rows.last() != Some(&y) {
+                        rows.push(y);
+                    }
+                    rows
+                });
+                assert_eq!(rows, ts02::ROWS, "{sheet}");
+            }
+            // The green line runs left to right (its locks aside) and stops in its middle.
+            let line = |s: &&stitchcraft_plan::Stitch| s.kind == StitchKind::Normal && s.origin.role != Role::Lock;
+            let green: Vec<_> = plan.blocks[2].stitches.iter().filter(line).map(|s| s.at.x()).collect();
+            assert!(green.windows(2).all(|w| w[0] <= w[1]), "{sheet}: {green:?}");
+            let stop = plan.blocks[2].stitches.windows(2).find(|w| w[1].kind == StitchKind::Stop).map(|w| w[0].at.x());
+            assert_eq!(stop, Some(0.0), "{sheet}");
+        }
+    }
+
+    #[test]
     fn ts02b_trims_where_its_elements_ask_and_sews_short_gaps_across() {
         // Left (red): every dash locked at both ends and trimmed after, but the last.
         let left = format!("Jllll{}sssssllll", "sssssllllTJllll".repeat(7));
@@ -222,8 +246,26 @@ mod tests {
             let points = sewn("TS-03", &format!("running-{length}"));
             assert!(points.windows(2).all(|p| (p[0].distance(p[1]) - length).abs() < 1e-9), "{length}: {points:?}");
         }
-        // The larger the tolerance, the fewer the stitches round the circle.
-        let counts: Vec<usize> = ts03::TOLERANCES.iter().map(|t| sewn("TS-03", &format!("circle-{t}")).len()).collect();
+        // Top to bottom: the running lines, the bean lines, the circles, the short stitches.
+        let names = ts03::LENGTHS.iter().map(|l| format!("running-{l}")).chain(ts03::BEANS.iter().map(|b| format!("bean-{b}")));
+        let names = names.chain(["circle-0.1".to_string()]).chain(ts03::SHORT.iter().map(|l| format!("short-{l}")));
+        let tops: Vec<f64> = names.map(|name| sewn("TS-03", &name)[0].y()).collect();
+        assert!(tops.windows(2).all(|w| w[0] < w[1]), "{tops:?}");
+        // The circles, left to right, are round, and the larger the tolerance, the fewer their stitches.
+        let mut centres = Vec::new();
+        let mut counts = Vec::new();
+        for tolerance in ts03::TOLERANCES {
+            // Round the circle and back to where it started: the last point is the first.
+            let mut points = sewn("TS-03", &format!("circle-{tolerance}"));
+            assert_eq!(points.pop(), points.first().copied(), "{tolerance}");
+            let n = points.len() as f64;
+            let centre = (points.iter().map(|p| p.x()).sum::<f64>() / n, points.iter().map(|p| p.y()).sum::<f64>() / n);
+            let off = |p: &stitchcraft_core::Point| ((p.x() - centre.0).powi(2) + (p.y() - centre.1).powi(2)).sqrt() - 3.0;
+            assert!(points.iter().all(|p| off(p).abs() < 0.05), "{tolerance}: {points:?}");
+            centres.push(centre.0);
+            counts.push(points.len());
+        }
+        assert!(centres.windows(2).all(|w| w[0] < w[1]), "{centres:?}");
         assert!(counts[0] >= counts[1] && counts[1] > counts[2], "{counts:?}");
         // Hand-placed stitches of exactly their length, 20 of them.
         for length in ts03::SHORT {
@@ -243,6 +285,16 @@ mod tests {
         assert!(first.starts_with(&format!("Rows, top to bottom: {}.", labels.join(", "))), "{first}");
         // A line per shape and size, each trimmed after, so each lock alone holds each end.
         assert_eq!((labels.len(), shape("TS-04")[0].matches('T').count()), (9, 27));
+        // Rows top to bottom in the table's order, columns left to right, each line sewn left to right.
+        let mut previous = f64::NEG_INFINITY;
+        for lock in ts04::rows() {
+            let lines: Vec<_> = (0..3).map(|column| sewn("TS-04", &format!("{lock}-{column}"))).collect();
+            let starts: Vec<f64> = lines.iter().map(|points| points[0].x()).collect();
+            assert!(starts.windows(2).all(|w| w[1] - w[0] > 30.0), "{lock}: {starts:?}");
+            assert!(lines.iter().all(|points| points.windows(2).all(|w| w[0].x() < w[1].x())), "{lock}");
+            assert!(lines[0][0].y() > previous, "{lock}");
+            previous = lines[0][0].y();
+        }
         // The half stitch's lines have first stitches of 1.5, 2.5 and 4 mm.
         for (column, (first, _)) in ts04::FIRST_STITCHES.iter().enumerate() {
             let points = sewn("TS-04", &format!("half_stitch-{column}"));
