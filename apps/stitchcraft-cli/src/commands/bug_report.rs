@@ -402,6 +402,9 @@ mod tests {
         dir.join(name)
     }
 
+    /// A change to a bundle's JSON.
+    type Change = fn(&mut Value);
+
     fn args(design: Option<PathBuf>) -> BugReportArgs {
         BugReportArgs { design, replay: None, output: None, profile: "brother-200x200".to_string(), format: None, says: None }
     }
@@ -466,6 +469,46 @@ mod tests {
     }
 
     #[test]
+    fn req_cli_001_each_difference_is_named_and_any_one_fails_the_replay() {
+        let bundle = temp("each.bug-report.json");
+        assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(conformance("fixtures/svg/strokes.svg"))) }).status, Status::Done);
+        // The underline moved up 1 mm sews the same counts: only the plan's digest tells.
+        let shifted = changed(&bundle, "shifted.json", |value| {
+            let svg = value["design"]["svg"].as_str().unwrap().replace("M 10,50 H 40", "M 10,49 H 40");
+            value["design"]["svg"] = Value::from(svg);
+        });
+        let out = replayed(&shifted);
+        assert!(
+            out.stdout.contains(
+                "  plan          differs
+    then:       118 stitches, 4 jumps, 0 trims, 2 colour changes, 0 stops (sha256 "
+            ),
+            "{}",
+            out.stdout
+        );
+        assert!(out.stdout.contains("    now:        118 stitches, 4 jumps, 0 trims, 2 colour changes, 0 stops (sha256 "), "{}", out.stdout);
+        // One recorded result changed at a time.
+        let cases: [(&str, Change, &str); 3] = [
+            ("plan.json", |v| v["result"]["plan"]["sha256"] = Value::from("0"), "  plan          differs\n"),
+            ("file.json", |v| v["result"]["file"]["sha256"] = Value::from("0"), "  machine file  differs\n"),
+            ("panic.json", |v| v["result"]["panic"] = Value::from("boom"), "  panic         differs\n"),
+        ];
+        for (name, change, line) in cases {
+            let out = replayed(&changed(&bundle, name, change));
+            assert_eq!(out.status, Status::DesignErrors, "{name}");
+            assert!(out.stdout.contains(line) && out.stdout.ends_with("not reproduced\n"), "{name}: {}", out.stdout);
+        }
+        // A diagnostic left out, and the same ones in another order.
+        let fewer = changed(&bundle, "fewer.json", |v| v["result"]["diagnostics"].as_array_mut().unwrap().truncate(1));
+        let out = replayed(&fewer);
+        let merged = "info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out.";
+        assert!(out.stdout.contains(&format!("  diagnostics   differs\n    now only:   {merged}\n")), "{}", out.stdout);
+        assert!(!out.stdout.contains("another order"), "{}", out.stdout);
+        let swapped = changed(&bundle, "swapped.json", |v| v["result"]["diagnostics"].as_array_mut().unwrap().reverse());
+        assert!(replayed(&swapped).stdout.contains("  diagnostics   differs\n    the same ones, in another order or number\n"));
+    }
+
+    #[test]
     fn req_cli_001_a_design_stitchcraft_refuses_replays_too() {
         // Not UTF-8: kept in hexadecimal, and refused the same way when replayed. By default the bundle
         // goes next to the design.
@@ -489,6 +532,8 @@ mod tests {
         let run = Run { design_path: Path::new("strokes.svg"), design: &design, profile, format: FormatId::PesV1, says: None };
         let check = Diagnostic::new(Code::InternalCheckFailed, "A stitch of 0.1 mm.");
         let sewn = Sewn { diagnostics: vec![check.clone()], plan: None, file: None };
+        assert!(sewn.found_a_bug());
+        assert!(!Sewn { diagnostics: vec![Diagnostic::new(Code::StitchesMerged, "Merged.")], plan: None, file: None }.found_a_bug());
         let out = beside(&temp("checked.pes"), &run, Ok(&sewn), Outcome::refuse(String::new(), &[check]));
         assert_eq!(out.status, Status::Bug);
         let bundle = temp("checked.bug-report.json");
@@ -537,7 +582,6 @@ mod tests {
         // Bundles this version cannot replay say why.
         let bundle = temp("whole.bug-report.json");
         assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(conformance("fixtures/svg/strokes.svg"))) }).status, Status::Done);
-        type Change = fn(&mut Value);
         let cases: [(&str, Change, &str); 5] = [
             ("newer.json", |v| v["stitchcraft_bug_report"] = Value::from(2), "is a bundle of format 2, and this StitchCraft replays format 1."),
             ("export.json", |v| v["command"] = Value::from("export"), "records `stitch export`, which this StitchCraft does not replay."),
