@@ -1,12 +1,20 @@
-//! `cargo xtask mutants [--record] DIR…`: the mutation-testing ratchet (`docs/src/design/guardrails.md`).
+//! `cargo xtask mutants [--record] DIR…` and `cargo xtask mutants --changed DIR`: mutation testing
+//! (`docs/src/design/guardrails.md`).
 //!
 //! cargo-mutants changes the code in small ways — `<` for `<=`, a function that returns its default —
 //! and runs the crate's tests on each change. A mutant no test notices is *missed*: a behaviour nobody
-//! checks. Running every mutant takes a while, so `mutants.yml` runs them weekly in shards; this command
-//! adds up the shards' results (each DIR holds a `mutants.out/`) per crate and compares the missed counts
-//! with `conformance/mutation.toml`. More missed mutants than recorded fails; `--record` lowers the
-//! recorded counts to today's and never raises one (raising is a hand edit, in a pull request that says
-//! why). Mutants that time out are counted apart: an endless loop is noticed, just slowly.
+//! checks. Mutation testing runs at two scales:
+//!
+//! - **Every pull request** runs only the mutants in the lines it changes (`cargo mutants --in-diff`),
+//!   which takes minutes. `--changed DIR` then fails for any of them that no test notices, unless it is a
+//!   listed *equivalent*: a mutant that changes nothing a test could observe, recorded in
+//!   `conformance/mutation.toml` with the source line it changes and why. New code answers for itself.
+//! - **Every week** `mutants.yml` runs every mutant, in shards; this command adds up the shards' results
+//!   (each DIR holds a `mutants.out/`) per crate and compares the missed counts with
+//!   `conformance/mutation.toml`. More missed mutants than recorded fails; `--record` lowers the recorded
+//!   counts to today's and never raises one (raising is a hand edit, in a pull request that says why).
+//!
+//! Mutants that time out are counted apart: an endless loop is noticed, just slowly.
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
@@ -44,12 +52,55 @@ struct Tally {
 struct BaselineFile {
     #[serde(default)]
     missed: BTreeMap<String, u32>,
+    #[serde(default)]
+    equivalent: Vec<Equivalent>,
+}
+
+/// A mutant no test can notice because it changes nothing observable. It is named by what stays stable
+/// while the code around it moves: its file, cargo-mutants' description, and the text of the line.
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
+struct Equivalent {
+    /// The file, from the repository root.
+    file: String,
+    /// The mutant as cargo-mutants describes it, without the place: `replace < with <= in arc`.
+    mutant: String,
+    /// The source line it changes, without its indentation.
+    line: String,
+    /// Why no test can tell the mutant from the original.
+    why: String,
+}
+
+/// A missed mutant from cargo-mutants' lists: `path:line:column: description`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct Missed<'a> {
+    file: &'a str,
+    line: usize,
+    mutant: &'a str,
+}
+
+impl<'a> Missed<'a> {
+    fn parse(name: &'a str) -> Option<Missed<'a>> {
+        let mut parts = name.splitn(4, ':');
+        let (file, line, _column, mutant) = (parts.next()?, parts.next()?, parts.next()?, parts.next()?);
+        Some(Missed { file, line: line.trim().parse().ok()?, mutant: mutant.trim() })
+    }
+
+    /// The listed equivalent this is, given the text of the line it changes.
+    fn equivalent<'e>(&self, source_line: &str, listed: &'e [Equivalent]) -> Option<&'e Equivalent> {
+        listed.iter().find(|e| e.file == self.file && e.mutant == self.mutant && e.line.trim() == source_line.trim())
+    }
 }
 
 /// `cargo xtask mutants`.
 pub fn run(args: &[String]) -> Result<(), String> {
     let record = args.iter().any(|a| a == "--record");
     let dirs: Vec<&String> = args.iter().filter(|a| !a.starts_with("--")).collect();
+    if args.iter().any(|a| a == "--changed") {
+        let [dir] = dirs.as_slice() else {
+            return Err("name the one cargo-mutants output directory of the changed-lines run".to_string());
+        };
+        return changed(Path::new(dir.as_str()));
+    }
     if dirs.is_empty() {
         return Err("name the cargo-mutants output directories to add up (each holds a mutants.out/)".to_string());
     }
@@ -100,10 +151,57 @@ pub fn run(args: &[String]) -> Result<(), String> {
         }
     }
     if record {
-        std::fs::write(&path, render(&baseline.missed)).map_err(|e| format!("{BASELINE}: {e}"))?;
+        std::fs::write(&path, render(&baseline)).map_err(|e| format!("{BASELINE}: {e}"))?;
         println!("recorded the missed counts in {BASELINE}");
     }
     findings.finish("mutants", &format!("{} crates at or below their recorded missed mutants", tallies.len()))
+}
+
+/// `--changed DIR`: every mutant in the changed lines is noticed by a test, or is a listed equivalent.
+fn changed(dir: &Path) -> Result<(), String> {
+    let out = dir.join("mutants.out");
+    if !out.exists() {
+        println!("mutants: the changed lines hold no code to mutate");
+        return Ok(());
+    }
+    let read = |file: &str| std::fs::read_to_string(out.join(file)).unwrap_or_default();
+    let count = |file: &str| read(file).lines().filter(|l| !l.trim().is_empty()).count();
+    let root = util::root();
+    let baseline: BaselineFile = toml::from_str(&util::read(&root.join(BASELINE))?).map_err(|e| format!("{BASELINE}: {e}"))?;
+    let mut findings = Findings::default();
+    let (mut equivalents, mut summary) = (0, String::new());
+    for name in read("missed.txt").lines().filter(|l| !l.trim().is_empty()) {
+        let Some(missed) = Missed::parse(name) else {
+            findings.error(format!("cargo-mutants listed `{name}`, which is not `path:line:column: description`"));
+            continue;
+        };
+        let source = util::read(&root.join(missed.file)).unwrap_or_default();
+        let line = source.lines().nth(missed.line.saturating_sub(1)).unwrap_or_default();
+        if let Some(equivalent) = missed.equivalent(line, &baseline.equivalent) {
+            equivalents += 1;
+            let _ = writeln!(summary, "- `{name}`: equivalent, {}", equivalent.why);
+        } else {
+            let _ = writeln!(summary, "- `{name}`: **no test notices it**");
+            findings.error(format!(
+                "`{name}`: no test notices this change. Test the behaviour it changes; if nothing observable changes, list it under [[equivalent]] in {BASELINE}"
+            ));
+        }
+    }
+    let line = format!(
+        "{} mutants in the changed lines: {} caught, {} missed ({equivalents} listed equivalents), {} timed out, {} unviable",
+        count("caught.txt") + count("missed.txt") + count("timeout.txt") + count("unviable.txt"),
+        count("caught.txt"),
+        count("missed.txt"),
+        count("timeout.txt"),
+        count("unviable.txt"),
+    );
+    println!("{line}");
+    if let Some(path) = std::env::var_os("GITHUB_STEP_SUMMARY") {
+        let mut text = std::fs::read_to_string(&path).unwrap_or_default();
+        let _ = write!(text, "## Mutants in the changed lines\n\n{line}\n\n{summary}");
+        let _ = std::fs::write(&path, text);
+    }
+    findings.finish("mutants", &line)
 }
 
 /// Adds the outcomes listed in `text` (one mutant per line, `path:line:col: description`).
@@ -124,14 +222,31 @@ fn add(tallies: &mut BTreeMap<String, Tally>, text: &str, kind: Kind) {
     }
 }
 
-fn render(missed: &BTreeMap<String, u32>) -> String {
+fn render(baseline: &BaselineFile) -> String {
     let mut out = String::from(
         "# Mutants no test notices, per crate (`cargo xtask mutants`, docs/src/design/guardrails.md). The weekly\n\
          # mutants.yml run fails when a crate has more. `cargo xtask mutants --record …` lowers the counts to\n\
          # today's and never raises one: raise a count only by hand, in a pull request that says why.\n\n[missed]\n",
     );
-    for (name, count) in missed {
+    for (name, count) in &baseline.missed {
         let _ = writeln!(out, "{name} = {count}");
+    }
+    if !baseline.equivalent.is_empty() {
+        out.push_str(
+            "\n# Mutants that change nothing a test could observe. A pull request may leave these in the lines it\n\
+             # changes (`cargo xtask mutants --changed`); any other mutant there that no test notices fails it.\n",
+        );
+    }
+    let quoted = |text: &str| toml::Value::String(text.to_string()).to_string();
+    for e in &baseline.equivalent {
+        let _ = write!(
+            out,
+            "\n[[equivalent]]\nfile = {}\nmutant = {}\nline = {}\nwhy = {}\n",
+            quoted(&e.file),
+            quoted(&e.mutant),
+            quoted(&e.line),
+            quoted(&e.why)
+        );
     }
     out
 }
@@ -156,11 +271,46 @@ mod tests {
         );
     }
 
+    fn equivalent() -> Equivalent {
+        Equivalent {
+            file: "crates/stitchcraft-svg/src/path.rs".to_string(),
+            mutant: "replace < with <= in arc".to_string(),
+            line: "if large_arc && turn < FRAC_PI_2 {".to_string(),
+            why: "a \"quoted\" reason".to_string(),
+        }
+    }
+
     #[test]
     fn the_baseline_renders_and_parses_back() {
         let missed = BTreeMap::from([("stitchcraft-plan".to_string(), 4), ("stitchcraft-core".to_string(), 2)]);
-        let text = render(&missed);
+        let text = render(&BaselineFile { missed: missed.clone(), equivalent: Vec::new() });
         assert!(text.ends_with("[missed]\nstitchcraft-core = 2\nstitchcraft-plan = 4\n"));
         assert_eq!(toml::from_str::<BaselineFile>(&text).unwrap().missed, missed);
+        // Equivalents survive a `--record`.
+        let text = render(&BaselineFile { missed, equivalent: vec![equivalent()] });
+        assert_eq!(toml::from_str::<BaselineFile>(&text).unwrap().equivalent, [equivalent()]);
+    }
+
+    #[test]
+    fn the_recorded_file_is_in_the_form_record_writes() {
+        // Git on Windows checks text files out with CRLF line endings; `--record` writes LF.
+        let text = util::read(&util::root().join(BASELINE)).unwrap().replace("\r\n", "\n");
+        let baseline: BaselineFile = toml::from_str(&text).unwrap();
+        assert_eq!(render(&baseline), text, "{BASELINE} is written by `cargo xtask mutants --record`: keep its form");
+    }
+
+    #[test]
+    fn a_missed_mutant_is_an_equivalent_only_where_its_line_still_says_the_same() {
+        let missed = Missed::parse("crates/stitchcraft-svg/src/path.rs:208:26: replace < with <= in arc").unwrap();
+        assert_eq!((missed.file, missed.line, missed.mutant), ("crates/stitchcraft-svg/src/path.rs", 208, "replace < with <= in arc"));
+        let listed = [equivalent()];
+        assert!(missed.equivalent("    if large_arc && turn < FRAC_PI_2 {", &listed).is_some(), "indentation does not matter");
+        assert!(missed.equivalent("    if large_arc && turn < PI {", &listed).is_none(), "a changed line is a new mutant");
+        let elsewhere = Missed::parse("crates/stitchcraft-svg/src/path.rs:9:1: replace < with <= in rect").unwrap();
+        assert!(elsewhere.equivalent("if large_arc && turn < FRAC_PI_2 {", &listed).is_none());
+        // Descriptions may hold colons of their own.
+        let method = Missed::parse("crates/a/src/b.rs:3:9: replace Reader<'b>::charge -> Result<(), D> with Ok(())").unwrap();
+        assert_eq!((method.line, method.mutant), (3, "replace Reader<'b>::charge -> Result<(), D> with Ok(())"));
+        assert_eq!(Missed::parse("not a mutant"), None);
     }
 }

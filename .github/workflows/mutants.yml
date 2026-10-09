@@ -1,22 +1,24 @@
-# Mutation testing, weekly, and on pull requests that change its setup (docs/src/design/guardrails.md ›
-# Mutation testing). cargo-mutants changes the
-# shipped code in small ways and runs the changed crate's tests on each change (.cargo/mutants.toml); a
-# change no test notices is a behaviour nobody checks. The mutants run in four parts, dealt round-robin
-# so every part gets a fair share of each crate; `cargo xtask mutants` then adds them up per crate and
-# fails when a crate has more missed mutants than conformance/mutation.toml records. The job summary
-# lists every missed mutant.
+# Mutation testing (docs/src/design/guardrails.md › Mutation testing). cargo-mutants changes the shipped
+# code in small ways and runs the changed crate's tests on each change (.cargo/mutants.toml); a change no
+# test notices is a behaviour nobody checks.
+#
+# Every pull request that touches Rust runs only the mutants in the lines it changes, which takes minutes:
+# each one must be noticed by a test or be a listed equivalent (conformance/mutation.toml). Every week, and
+# on demand, every mutant runs, in four parts dealt round-robin so that each gets a fair share of each
+# crate; `cargo xtask mutants` then adds them up per crate and fails when a crate has more missed mutants
+# than conformance/mutation.toml records. Each job summary lists the mutants no test notices.
 name: mutants
 
 on:
   schedule:
     - cron: "23 4 * * 0"
   workflow_dispatch:
-  # A pull request that changes how mutation testing runs, or what it compares with, runs it too.
   pull_request:
     paths:
+      - "**/*.rs"
+      - "**/Cargo.toml"
       - .cargo/mutants.toml
       - conformance/mutation.toml
-      - xtask/src/mutants.rs
       - .github/workflows/mutants.yml
 
 permissions:
@@ -31,8 +33,37 @@ env:
   CARGO_INCREMENTAL: "0"
 
 jobs:
+  changed:
+    name: no mutant in a changed line goes unnoticed
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The base branch's history, to diff against.
+          fetch-depth: 0
+      - run: rustup toolchain install --profile minimal
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+        with:
+          tool: cargo-mutants@27.1.0
+      - name: Run the mutants in the lines this pull request changes
+        # cargo-mutants exits 2 when it finds missed mutants and 3 for timeouts; the next step decides.
+        # Anything else (a failing baseline, say) is a failure here.
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          git diff "origin/$BASE...HEAD" > pr.diff
+          cargo mutants --workspace --in-diff pr.diff --jobs 2 --output changed || status=$?
+          echo "cargo mutants exited with ${status:-0}"
+          case "${status:-0}" in 0|2|3) ;; *) exit "$status" ;; esac
+      - name: Every one is noticed by a test, or a listed equivalent
+        run: cargo xtask mutants --changed changed
+
   shard:
     name: mutants, part ${{ matrix.part }} of 4
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 150
     strategy:

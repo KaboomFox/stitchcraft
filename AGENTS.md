@@ -68,6 +68,7 @@ cargo xtask wasm                   # library crates build for wasm32-unknown-unk
 cargo xtask api                    # rewrite the public API snapshots (crates/*/public-api.txt)
 cargo xtask coverage               # line coverage per crate against conformance/coverage.toml (CI job)
 cargo xtask mutants DIR…           # cargo-mutants results against conformance/mutation.toml (weekly)
+cargo xtask mutants --changed DIR  # a pull request's changed-line mutants: noticed, or listed equivalents
 ```
 
 Tools that are not installed locally (the wasm target, `cargo-public-api`, `cargo-deny`, `typos`, `mdbook`,

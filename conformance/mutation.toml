@@ -10,7 +10,14 @@ stitchcraft-formats = 46
 stitchcraft-params = 0
 stitchcraft-plan = 48
 stitchcraft-render = 26
-# The one survivor in stitchcraft-svg turns `turn < FRAC_PI_2` into `<=` in path::arc: no arc turns exactly π/2
-# there, so nothing can tell them apart.
 stitchcraft-svg = 1
 stitchcraft-vc-plugin = 22
+
+# Mutants that change nothing a test could observe. A pull request may leave these in the lines it
+# changes (`cargo xtask mutants --changed`); any other mutant there that no test notices fails it.
+
+[[equivalent]]
+file = "crates/stitchcraft-svg/src/path.rs"
+mutant = "replace < with <= in arc"
+line = "if large_arc && turn < FRAC_PI_2 {"
+why = "a large arc turns at least half way round, so no turn reaching this test is exactly π/2"
