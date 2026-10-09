@@ -5,6 +5,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M3.4: the running stitch (`stitchcraft_engine::generators::running`).
+  - **Placement.** Curves are flattened to within a tenth of `running_stitch_tolerance_mm`. Corners
+    (turns of more than 30° between segments) always get a needle point. Stitches are spread evenly between
+    corners, so none is longer than its length and none is a short leftover. A pattern of lengths (`"3 1"`)
+    repeats along the path. A stitch that strays from the curve by more than the tolerance is split.
+  - **Measured straight.** Stitch lengths are the straight line between needle points. Where a path bends
+    back within less than the shortest stitch (a cusp, a tight loop, a small closed shape), needle points
+    are dropped rather than sewing a stitch that short. When the rules disagree, the shortest stitch wins,
+    then corners, then the tolerance.
+  - **Diagnostics.** `SC-W0401` reports a part of a path too small to stitch. `SC-W0402` reports a stitch
+    length below twice the shortest stitch, which is raised to it.
+  - **Shared code.** Strokes are flattened by the engine itself, not with `kurbo`, whose flattening uses
+    the platform's maths library. Lengths are compared with one shared slack,
+    `stitchcraft_core::units::LENGTH_SLACK`, which the plan checker uses too.
+  - **Conformance.** `REQ-RUN-001` to `REQ-RUN-003` are active.
 - M3.3: the engine's input model and the SVG reader. A `Design` holds elements in stitching order, each a
   stroke or a fill with exact lines and curves in millimetres, a thread and its parameters; `Design::new`
   checks that ids are unique and every point lies within 10 m. `stitchcraft_svg::read` turns an SVG file
@@ -88,6 +103,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The Ink/Stitch contract page matches a registered parameter with the rows for the stitch types it
+  applies to, not every row with its key. Ink/Stitch gives some keys to several elements with different
+  defaults: registering the running stitch's `running_stitch_tolerance_mm` (0.2 mm) had marked the
+  satin's and the fill's (0.1 mm) registered too. A declaration for a stitch type Ink/Stitch does not give
+  the key is now reported.
 - Mutation testing deals the mutants to its four parts round-robin. Cut into consecutive slices, one part
   held every mutant of the formats crate, whose tests are the slowest, and took 23 minutes while the
   others took 4 to 7.

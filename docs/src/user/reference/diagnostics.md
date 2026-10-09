@@ -13,6 +13,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0101`](#sc-e0101) | Error | Parameter has the wrong type or an unknown choice |
 | [`SC-W0102`](#sc-w0102) | Warning | Parameter clamped to its allowed range |
 | [`SC-W0105`](#sc-w0105) | Warning | Unknown parameter preserved but ignored |
+| [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
+| [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-E0601`](#sc-e0601) | Error | Too many colour changes for the file format |
 | [`SC-E0602`](#sc-e0602) | Error | Design too large for the file format |
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
@@ -96,6 +98,30 @@ or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was
 the design does not lose it, but it does not change the stitches.
 
 The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.
+
+## SC-W0401
+
+**Warning** — Path too small for the shortest stitch; skipped
+
+A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
+one stitch that short would hammer one spot of the fabric and could break the thread. The part is
+a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that
+all of it lies within the shortest stitch of its ends: a tiny closed loop, say.
+
+The message gives the part's length and the shortest stitch. Enlarge the part, join it to its
+neighbour, or delete it if it is a stray.
+
+## SC-W0402
+
+**Warning** — Stitch length below twice the shortest stitch; raised
+
+The running stitch length is shorter than twice the shortest stitch, so it was lengthened to
+twice the shortest stitch. Stitches are spread evenly between corners; at half the length or
+more, every stitch then stays at or above the shortest stitch, whatever the distance between
+corners.
+
+The message gives both lengths. Use a longer stitch length, or a shorter minimum if your machine
+sews shorter stitches well.
 
 ## SC-E0601
 

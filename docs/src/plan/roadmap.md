@@ -66,8 +66,8 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M3.1 ✅ | Parameter registry (`params!`, `ParamSet`, validation, generated reference + JSON Schema) | `REQ-PRM-001`, `REQ-PRM-002`; `docs --check` covers params |
 | M3.2 ✅ | Diagnostics registry, `stitch explain`, generated diagnostics index | every registered code has a page and a case |
 | M3.3 ✅ | `Design` model; SVG adapter v1: paths, groups, transforms, viewBox units, colours, visibility (no `inkstitch:*` yet) | `REQ-SVG-001`, `REQ-SVG-002` (fuzzed path data) |
-| M3.4 | Running stitch: corners, even spacing, tolerance | `REQ-RUN-001..003` |
-| M3.5 | Patterns, repeats, bean stitch, random length | `REQ-RUN-004`, `REQ-RUN-005` |
+| M3.4 ✅ | Running stitch: corners, even spacing, patterns, tolerance; stitch lengths measured straight | `REQ-RUN-001..003` |
+| M3.5 | Repeats, bean stitch, random length | `REQ-RUN-004`, `REQ-RUN-005` |
 | M3.6 | Manual stitch | `REQ-RUN-006` |
 | M3.7 | Lock stitches: types, scale, placement | `REQ-LCK-001..003` |
 | M3.8 | Plan assembly: order, collapse, travel, tie-off/jump/trim/tie-in, stops, colour changes, commands | `REQ-ASM-001..005` |

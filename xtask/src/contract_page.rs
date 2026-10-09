@@ -6,11 +6,15 @@
 //! the registry declares with an Ink/Stitch origin must exist in the data file with a compatible kind and
 //! the same default, because defaults are part of the contract (`docs/src/design/params.md` › Naming
 //! rules); one with StitchCraft's own origin must not; the lock and method identifiers must match.
+//!
+//! Ink/Stitch gives some keys to several elements, with different defaults (`running_stitch_tolerance_mm`
+//! is 0.2 mm on strokes and 0.1 mm on satins), so a declaration is matched with the rows for the stitch
+//! types it applies to, never by its key alone.
 
 use std::collections::BTreeSet;
 
 use serde::Deserialize;
-use stitchcraft_params::{Family, Kind, Origin, ParamGroup, StitchType, find};
+use stitchcraft_params::{Family, Kind, Origin, ParamGroup, ParamSpec, StitchType, find};
 
 use crate::param_pages;
 
@@ -40,6 +44,31 @@ struct Param {
     applies_to: Vec<String>,
     phase: String,
     milestone: String,
+}
+
+impl Param {
+    /// The stitch types the row covers: the ones it lists, or every type of its element when it lists
+    /// none (all of them for the common settings, none for clones). Some rows list a condition instead,
+    /// such as `custom` for the custom lock shapes; a condition does not narrow the stitch types.
+    fn scope(&self) -> BTreeSet<StitchType> {
+        let listed: BTreeSet<StitchType> = StitchType::ALL.iter().copied().filter(|t| self.applies_to.iter().any(|a| a == t.id())).collect();
+        if !listed.is_empty() {
+            return listed;
+        }
+        let family = match self.element.as_str() {
+            "stroke" => Some(Family::Stroke),
+            "satin" => Some(Family::Satin),
+            "fill" => Some(Family::Fill),
+            _ => None,
+        };
+        StitchType::ALL.iter().copied().filter(|t| self.element == "common" || family == Some(t.family())).collect()
+    }
+
+    /// Whether the row covers any of `types`.
+    fn covers(&self, types: &[StitchType]) -> bool {
+        let scope = self.scope();
+        types.iter().any(|t| scope.contains(t))
+    }
 }
 
 #[derive(Deserialize)]
@@ -110,7 +139,7 @@ impl Contract {
                     p.default,
                     p.phase,
                     p.milestone,
-                    status(registry, &p.name)
+                    status(registry, p)
                 ));
             }
         }
@@ -126,7 +155,7 @@ impl Contract {
             "\nLock stitch identifiers (`lock_start`, `lock_end`): {locks}. StitchCraft accepts every identifier; the shapes are its own\n\
              designs with the same intent, a deviation recorded in the deviations ledger (`conformance/deviations.toml`).\n"
         ));
-        let registered = self.param.iter().filter(|p| find(registry, &p.name).is_some()).count();
+        let registered = self.param.iter().filter(|p| declaration(registry, p).is_some()).count();
         md.push_str(&format!("\n_{} parameter declarations, {registered} registered in StitchCraft._\n", self.param.len()));
         md
     }
@@ -136,30 +165,26 @@ impl Contract {
         let mut problems = Vec::new();
         for spec in registry.iter().flat_map(|g| g.specs) {
             let key = spec.key;
-            let theirs = self.param.iter().find(|p| p.name == key);
-            match (spec.origin, theirs) {
-                (Origin::StitchCraft, None) => {}
-                (Origin::StitchCraft, Some(_)) => {
+            let named = self.param.iter().any(|p| p.name == key);
+            match (spec.origin, named) {
+                (Origin::StitchCraft, false) => {}
+                (Origin::StitchCraft, true) => {
                     problems.push(format!("`{key}` is an Ink/Stitch parameter ({DATA}): declare it with an Ink/Stitch origin"));
                 }
-                (_, None) => problems.push(format!("`{key}` is declared with an Ink/Stitch origin, but {DATA} has no such parameter")),
-                (origin, Some(p)) => {
-                    if !compatible(spec.kind, &p.kind, &p.unit) {
-                        problems.push(format!("`{key}` is {} here, but Ink/Stitch's is a {} in {}", spec.kind.describe(), p.kind, p.unit));
+                (_, false) => problems.push(format!("`{key}` is declared with an Ink/Stitch origin, but {DATA} has no such parameter")),
+                (origin, true) => {
+                    let rows: Vec<&Param> = self.param.iter().filter(|p| p.name == key && p.covers(spec.applies_to)).collect();
+                    let uncovered: Vec<String> =
+                        spec.applies_to.iter().filter(|t| !rows.iter().any(|p| p.covers(&[**t]))).map(|t| format!("`{}`", t.id())).collect();
+                    if !uncovered.is_empty() {
+                        problems.push(format!("`{key}` applies to {} here, but Ink/Stitch does not give it that stitch type", uncovered.join(", ")));
                     }
-                    let their_default = if p.default == "—" { "" } else { p.default.as_str() };
-                    let same = match (spec.read(spec.default), spec.read(their_default)) {
-                        (Ok((ours, _)), Ok((theirs, None))) => ours == theirs,
-                        _ => false,
-                    };
-                    if origin == Origin::InkStitch && !same {
-                        problems.push(format!(
-                            "`{key}` defaults to \"{}\" here and \"{their_default}\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)",
-                            spec.default
-                        ));
-                    }
-                    if p.element == "common" && spec.applies_to != StitchType::ALL {
-                        problems.push(format!("`{key}` applies to every stitch type in Ink/Stitch, but not here"));
+                    for p in rows {
+                        for problem in disagreements(spec, origin, p) {
+                            if !problems.contains(&problem) {
+                                problems.push(problem);
+                            }
+                        }
                     }
                 }
             }
@@ -183,11 +208,41 @@ impl Contract {
     }
 }
 
-/// The StitchCraft column: planned, or a link to the parameter's reference entry.
-fn status(registry: &[&ParamGroup], name: &str) -> String {
-    let (Some(spec), Some(entry)) = (find(registry, name), param_pages::entry(registry, name)) else { return "planned".to_string() };
+/// Where a declaration and the Ink/Stitch row it matches disagree on the kind or the default, or on
+/// applying to every stitch type.
+fn disagreements(spec: &ParamSpec, origin: Origin, p: &Param) -> Vec<String> {
+    let key = spec.key;
+    let mut problems = Vec::new();
+    if !compatible(spec.kind, &p.kind, &p.unit) {
+        problems.push(format!("`{key}` is {} here, but Ink/Stitch's is a {} in {}", spec.kind.describe(), p.kind, p.unit));
+    }
+    let their_default = if p.default == "—" { "" } else { p.default.as_str() };
+    let same = match (spec.read(spec.default), spec.read(their_default)) {
+        (Ok((ours, _)), Ok((theirs, None))) => ours == theirs,
+        _ => false,
+    };
+    if origin == Origin::InkStitch && !same {
+        problems.push(format!(
+            "`{key}` defaults to \"{}\" here and \"{their_default}\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)",
+            spec.default
+        ));
+    }
+    if p.element == "common" && spec.applies_to != StitchType::ALL {
+        problems.push(format!("`{key}` applies to every stitch type in Ink/Stitch, but not here"));
+    }
+    problems
+}
+
+/// The registry's declaration of `row`'s key for the stitch types the row covers, with its group.
+fn declaration<'r>(registry: &[&'r ParamGroup], row: &Param) -> Option<(&'r ParamGroup, &'static ParamSpec)> {
+    registry.iter().find_map(|group| group.specs.iter().find(|s| s.key == row.name && row.covers(s.applies_to)).map(|spec| (*group, spec)))
+}
+
+/// The StitchCraft column: planned, or a link to the declaration's reference entry.
+fn status(registry: &[&ParamGroup], row: &Param) -> String {
+    let Some((group, spec)) = declaration(registry, row) else { return "planned".to_string() };
     let word = if matches!(spec.origin, Origin::InkStitchDeviates { .. }) { "deviates" } else { "registered" };
-    format!("[{word}](../user/reference/{entry})")
+    format!("[{word}](../user/reference/{})", param_pages::anchor(group, &row.name))
 }
 
 /// Whether a StitchCraft kind can hold the values of an Ink/Stitch type and unit. Kinds and units with no
@@ -257,6 +312,55 @@ mod tests {
         const DEVIATES: &[ParamSpec] = &[ParamSpec { origin: Origin::InkStitchDeviates { deviation: "DEV-FILL-001" }, ..ROW_SPACING }];
         let group = registry(DEVIATES);
         assert!(contract.render(&[&group]).contains("| [deviates](../user/reference/params/tatami-fill.md#row_spacing_mm) |"));
+    }
+
+    /// A key Ink/Stitch uses on two elements with different defaults (satin's row first), and our
+    /// declaration of it for running and ripple stitches.
+    fn shared(default: &'static str) -> (String, ParamGroup) {
+        let row = |element: &str, default: &str, applies_to: &str, milestone: &str| {
+            format!(
+                "[[param]]\nelement = \"{element}\"\nname = \"running_stitch_tolerance_mm\"\ntype = \"float\"\nunit = \"mm\"\n\
+                 default = \"{default}\"\napplies_to = [{applies_to}]\nphase = \"P1\"\nmilestone = \"{milestone}\"\n"
+            )
+        };
+        let rows = row("satin", "0.1", "", "M4") + &row("stroke", "0.2", "\"running_stitch\", \"ripple_stitch\"", "M3");
+        let data = data("0.25").replacen("[[param]]", &format!("{rows}[[param]]"), 1);
+        let spec = ParamSpec {
+            key: "running_stitch_tolerance_mm",
+            default,
+            applies_to: &[StitchType::RunningStitch, StitchType::RippleStitch],
+            ..ROW_SPACING
+        };
+        let specs: &'static [ParamSpec] = Box::leak(Box::new([spec]));
+        (data, ParamGroup { name: "RunningParams", help: " Running.\n", applies_to: &[StitchType::RunningStitch], specs })
+    }
+
+    #[test]
+    fn keys_shared_by_elements_match_by_stitch_type() {
+        let (data, group) = shared("0.2");
+        let contract = Contract::parse(&data).unwrap();
+        let page = contract.render(&[&group]);
+        assert!(page.contains("| `running_stitch_tolerance_mm` | float | mm | 0.1 | all | P1 (M4) | planned |"), "satin's is not ours");
+        assert!(page.contains("| P1 (M3) | [registered](../user/reference/params/running.md#running_stitch_tolerance_mm) |"));
+        assert!(page.contains("_3 parameter declarations, 1 registered in StitchCraft._"));
+        assert_eq!(contract.check(&[&group]), Vec::<String>::new(), "compared with the stroke's default, not the satin's");
+        let (data, group) = shared("0.1");
+        assert_eq!(
+            Contract::parse(&data).unwrap().check(&[&group]),
+            [
+                "`running_stitch_tolerance_mm` defaults to \"0.1\" here and \"0.2\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)"
+            ]
+        );
+    }
+
+    #[test]
+    fn a_declaration_for_stitch_types_ink_stitch_does_not_give_the_key_is_reported() {
+        const WIDER: &[ParamSpec] = &[ParamSpec { applies_to: &[StitchType::TatamiFill, StitchType::ContourFill], ..ROW_SPACING }];
+        let group = registry(WIDER);
+        assert_eq!(
+            Contract::parse(&data("0.25")).unwrap().check(&[&group]),
+            ["`row_spacing_mm` applies to `contour_fill` here, but Ink/Stitch does not give it that stitch type"]
+        );
     }
 
     #[test]

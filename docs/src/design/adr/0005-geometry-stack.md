@@ -18,6 +18,10 @@ permissively licensed and robust on degenerate input.
 | Graphs | `petgraph` 0.8 + our own Hierholzer walk | Deterministic tie-breaking under our control; MIT/Apache |
 | Math | `libm` 0.2 | Deterministic transcendental functions; MIT |
 
+**Revised in M3.4:** strokes are not flattened with `kurbo`. Its `flatten` in 0.13 calls `powf` and
+`hypot` from the platform's maths library, so the engine halves curves itself with arithmetic and square
+roots ([engine pipeline › Normalize](../engine-pipeline.md#1-normalize)).
+
 ## Spike M0.7 acceptance criteria
 
 1. Booleans and offsets of 10,000 random polygons with holes, plus the degenerate corpus: no panic, no

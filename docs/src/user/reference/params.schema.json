@@ -184,6 +184,49 @@
         "unit": "mm"
       }
     },
+    "running_stitch_length_mm": {
+      "default": [
+        2.5
+      ],
+      "description": "How long each stitch is. Between corners the stitches are spread evenly, so each one is at most this long. Several lengths separated by spaces sew as a repeating pattern: \"2.5 1\" sews long, short, long, short.",
+      "items": {
+        "maximum": 25.0,
+        "minimum": 0.1,
+        "type": "number"
+      },
+      "maxItems": 16,
+      "minItems": 1,
+      "title": "Stitch length",
+      "type": "array",
+      "x-stitchcraft": {
+        "applies_to": [
+          "running_stitch",
+          "ripple_stitch"
+        ],
+        "group": "Running stitch",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
+    "running_stitch_tolerance_mm": {
+      "default": 0.2,
+      "description": "How far a stitch may stray from a curve. A smaller tolerance follows curves more closely, with more and shorter stitches.",
+      "maximum": 5.0,
+      "minimum": 0.01,
+      "title": "Curve tolerance",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "running_stitch",
+          "ripple_stitch"
+        ],
+        "group": "Running stitch",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
     "stop_after": {
       "default": false,
       "description": "Pause the machine after this element: to add an appliqué fabric, or to check the work.",
@@ -247,6 +290,14 @@
         ],
         "name": "CommonParams",
         "title": "Common parameters"
+      },
+      {
+        "keys": [
+          "running_stitch_length_mm",
+          "running_stitch_tolerance_mm"
+        ],
+        "name": "RunningParams",
+        "title": "Running parameters"
       }
     ]
   }
