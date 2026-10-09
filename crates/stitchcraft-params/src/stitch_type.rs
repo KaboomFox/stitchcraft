@@ -166,6 +166,13 @@ mod tests {
     }
 
     #[test]
+    fn families_hold_four_strokes_four_satins_and_nine_fills() {
+        let count = |family: Family| StitchType::ALL.iter().filter(|t| t.family() == family).count();
+        assert_eq!((count(Family::Stroke), count(Family::Satin), count(Family::Fill)), (4, 4, 9));
+        assert_eq!(StitchType::RunningStitch.family(), Family::Stroke);
+    }
+
+    #[test]
     fn names_are_distinct() {
         let names: std::collections::BTreeSet<&str> = StitchType::ALL.iter().map(|t| t.name()).collect();
         assert_eq!(names.len(), StitchType::ALL.len());

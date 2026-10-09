@@ -212,12 +212,16 @@ mod tests {
         assert_eq!(LENGTH.parse("0.1in"), Some((Value::Length(Some(mm(0.1 * 25.4))), false)));
         assert_eq!(LENGTH.parse("18pt"), Some((Value::Length(Some(mm(18.0 * 25.4 / 72.0))), false)));
         assert_eq!(LENGTH.parse("25"), Some((Value::Length(Some(mm(10.0))), true)));
+        // The limits themselves are inside the range.
+        assert_eq!(LENGTH.parse("0.1"), Some((Value::Length(Some(mm(0.1))), false)));
+        assert_eq!(LENGTH.parse("10"), Some((Value::Length(Some(mm(10.0))), false)));
         assert_eq!(LENGTH.parse("-1"), Some((Value::Length(Some(mm(0.1))), true)));
         for bad in ["", "big", "NaN", "inf", "1e999", "2.5 cm"] {
             assert_eq!(LENGTH.parse(bad), None, "{bad}");
         }
         let optional = Kind::Length { min: 0.0, max: 5.0, optional: true };
         assert_eq!(optional.parse(" "), Some((Value::Length(None), false)));
+        assert_eq!(optional.parse("2"), Some((Value::Length(Some(mm(2.0))), false)));
     }
 
     #[test]
@@ -255,6 +259,7 @@ mod tests {
         assert_eq!(lengths.parse(&"1 ".repeat(17)), None);
         let counts = Kind::CountList { min: 0, max: 9 };
         assert_eq!(counts.parse("0 1 2"), Some((Value::Counts(vec![0, 1, 2]), false)));
+        assert_eq!(counts.parse("0 99"), Some((Value::Counts(vec![0, 9]), true)));
         assert_eq!(counts.parse("1 x"), None);
         let text = Kind::Text { max_bytes: MAX_TEXT };
         assert_eq!(text.parse(" kept as is "), Some((Value::Text(" kept as is ".to_string()), false)));
