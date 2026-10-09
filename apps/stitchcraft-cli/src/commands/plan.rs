@@ -233,4 +233,22 @@ mod tests {
         assert_eq!(missing.status, Status::Io);
         assert!(missing.stderr.starts_with("stitch: cannot read "));
     }
+
+    #[test]
+    fn a_file_that_cannot_be_written_stops_the_command() {
+        // A folder that does not exist: the machine file, the picture, the report, and the report of a
+        // design that was refused.
+        let nowhere = temp("no-such-folder").join("x");
+        let machine_file = run(&args(fixture("strokes.svg"), nowhere.join("strokes.pes")));
+        let output = temp("written.pes");
+        let picture = run(&PlanArgs { preview: Some(nowhere.join("strokes.png")), ..args(fixture("strokes.svg"), output.clone()) });
+        let report = run(&PlanArgs { report: Some(nowhere.join("strokes.json")), ..args(fixture("strokes.svg"), output) });
+        let not_svg = temp("not-an-svg.svg");
+        std::fs::write(&not_svg, b"stitches, please").unwrap();
+        let refused = run(&PlanArgs { report: Some(nowhere.join("refused.json")), ..args(not_svg, temp("refused.pes")) });
+        for out in [machine_file, picture, report, refused] {
+            assert_eq!(out.status, Status::Io, "{}", out.stderr);
+            assert!(out.stderr.starts_with("stitch: cannot write "), "{}", out.stderr);
+        }
+    }
 }
