@@ -149,6 +149,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- **PEC files without the origin field.** pyembroidery 1.4.32 to 1.5.1 write PEC stitch data without the
+  4 bytes that Brother's software writes before the first record. The PES/PEC reader skipped those bytes
+  in every file. A file from those versions lost its first record or failed to read. The reader now
+  takes the bytes as the field only if the design after them fits the header's box, and otherwise warns
+  that Brother machines expect the field (`REQ-FMT-009`). Found by reviewing pystitch's fixes.
+- **Palette credits.** `NOTICE` credits pystitch for palette entries 62 and 63, the appliqué functions.
 - The SVG reader no longer stitches Ink/Stitch's own objects (`REQ-SVG-003`), which a review against
   Ink/Stitch found.
   - **Commands and connectors.** Command symbols (`<use>` of an `inkstitch_*` symbol) were reported as
