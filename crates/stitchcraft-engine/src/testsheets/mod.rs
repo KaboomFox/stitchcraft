@@ -217,7 +217,8 @@ mod tests {
                     }
                     rows
                 });
-                assert_eq!(rows, ts02::ROWS, "{sheet}");
+                assert_eq!((rows.len(), rows.first()), (4, Some(&-35.0)), "{sheet}: {rows:?}");
+                assert!(rows.windows(2).all(|w| w[1] - w[0] == 15.0), "{sheet}: {rows:?}");
             }
             // The green line runs left to right (its locks aside) and stops in its middle.
             let line = |s: &&stitchcraft_plan::Stitch| s.kind == StitchKind::Normal && s.origin.role != Role::Lock;
