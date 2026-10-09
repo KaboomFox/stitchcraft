@@ -38,8 +38,9 @@ pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, m
         Assembly { builder: PlanBuilder::new(first.thread.clone()), thread: first.thread.clone(), open: None, settings, warnings: Vec::new() };
     for (element, generated) in parts {
         // Each element registered has a stitch, so the stitch budget runs out long before element
-        // references do.
-        let reference = assembly.builder.element(element.id.clone()).map_err(|_| Exhausted::Stitches)?;
+        // references do. `ok_or` takes a value: a closure here would never run, and coverage counts a
+        // closure that never runs as an untested line.
+        let reference = assembly.builder.element(element.id.clone()).ok().ok_or(Exhausted::Stitches)?;
         let groups: Vec<&[Point]> = generated.groups.iter().filter(|g| !g.is_empty()).map(Vec::as_slice).collect();
         for stitches in &groups {
             assembly.join(Group { element, generated, stitches, reference }, meter)?;
