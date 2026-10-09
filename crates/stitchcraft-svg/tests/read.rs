@@ -224,6 +224,7 @@ fn req_svg_001_radii_follow_the_specification() {
           <rect id="square" width="10" height="10" rx="0" ry="2"/>
           <rect id="negative" width="10" height="10" rx="-2" ry="1"/>
           <ellipse id="zero" cx="5" cy="5" rx="0" ry="5"/>
+          <ellipse id="flat" cx="5" cy="5" rx="5" ry="0"/>
           <circle id="dot" cx="5" cy="5" r="0"/>
         </svg>"#);
     // A radius of zero means square corners; a negative one is as if missing, so the other one is used.
@@ -235,6 +236,7 @@ fn req_svg_001_radii_follow_the_specification() {
         warnings(&svg),
         [
             "warning SC-W0804: `zero` draws nothing: its size or its data is empty. It is left out.",
+            "warning SC-W0804: `flat` draws nothing: its size or its data is empty. It is left out.",
             "warning SC-W0804: `dot` draws nothing: its size or its data is empty. It is left out.",
         ]
     );

@@ -10,7 +10,7 @@
 //! Points stay in user units until [`to_mm`] maps a whole outline through the element's transform, so
 //! an outline is accepted or rejected as a unit.
 
-use std::f64::consts::PI;
+use std::f64::consts::{FRAC_PI_2, PI, TAU};
 
 use stitchcraft_core::budget::{Exhausted, Meter};
 use stitchcraft_core::{Point, math};
@@ -191,7 +191,7 @@ pub fn arc(from: V, rx: f64, ry: f64, rotation: f64, large_arc: bool, sweep: boo
     }
     // Radii too small for the end points grow until the chord is a diameter (F.6.6).
     let grow = h.max(1.0);
-    let (rx, ry, h) = (rx * grow, ry * grow, h / grow);
+    let (rx, ry, h) = (rx * grow, ry * grow, h.min(1.0));
     // The half chord's direction there, without dividing by the radii: (dx/rx, dy/ry) scaled by rx·ry.
     let norm = math::hypot(dx * ry, dy * rx);
     let (ex, ey) = (dx * ry / norm, dy * rx / norm);
@@ -202,16 +202,14 @@ pub fn arc(from: V, rx: f64, ry: f64, rotation: f64, large_arc: bool, sweep: boo
     let centre = (cos * ox * rx - sin * oy * ry + (from.0 + to.0) / 2.0, sin * ox * rx + cos * oy * ry + (from.1 + to.1) / 2.0);
     let start = math::atan2(v - oy, u - ox);
     let end = math::atan2(-v - oy, -u - ox);
-    let mut sweep_angle = end - start;
-    if sweep && sweep_angle < 0.0 {
-        sweep_angle += 2.0 * PI;
-    } else if !sweep && sweep_angle > 0.0 {
-        sweep_angle -= 2.0 * PI;
-    }
-    if large_arc && sweep_angle.abs() < PI / 2.0 {
+    // How far from `start` to `end` the way the flag turns: positive (clockwise on screen) or negative.
+    let positive = (end - start).rem_euclid(TAU);
+    let mut turn = if sweep { positive } else { TAU - positive };
+    if large_arc && turn < FRAC_PI_2 {
         // The end points sit at the same angle as far as numbers go: the large arc goes all the way round.
-        sweep_angle += if sweep { 2.0 * PI } else { -2.0 * PI };
+        turn += TAU;
     }
+    let sweep_angle = if sweep { turn } else { -turn };
     let pieces = (1..=12_u32).find(|n| f64::from(*n) * PI / 6.0 >= sweep_angle.abs() - 1e-12).unwrap_or(12);
     let step = sweep_angle / f64::from(pieces);
     // Each piece's control points lie along the tangents, `bulge` of the way (the standard cubic arc).
@@ -428,6 +426,31 @@ mod tests {
     }
 
     #[test]
+    fn rotated_arcs_lie_on_their_ellipse() {
+        // An ellipse with radii 20 and 10, turned 30°, centred on (50, 50); its point at parameter `t`°.
+        let (sin, cos) = math::sin_cos(math::to_radians(30.0));
+        let on = |t: f64| {
+            let (s, c) = math::sin_cos(math::to_radians(t));
+            (50.0 + 20.0 * c * cos - 10.0 * s * sin, 50.0 + 20.0 * c * sin + 10.0 * s * cos)
+        };
+        let close = |a: V, b: V| (a.0 - b.0).abs() < 1e-9 && (a.1 - b.1).abs() < 1e-9;
+        // From 10° to 110°: the small arc turning positive is 100° of this ellipse, in four pieces…
+        let small = arc(on(10.0), 20.0, 10.0, 30.0, false, true, on(110.0));
+        assert_eq!(small.len(), 4);
+        for (i, k) in (1..=4_u32).enumerate() {
+            assert!(close(end_of(&small, i), on(10.0 + 25.0 * f64::from(k))), "piece {k}");
+        }
+        // …and the large arc turning negative is the other 260°, in nine.
+        let large = arc(on(10.0), 20.0, 10.0, 30.0, true, false, on(110.0));
+        assert_eq!(large.len(), 9);
+        for (i, k) in (1..=9_u32).enumerate() {
+            assert!(close(end_of(&large, i), on(10.0 - 260.0 / 9.0 * f64::from(k))), "piece {k}");
+        }
+        // A half chord of exactly 1e-9 of the radius still bends: the straight-line shortcut is below it.
+        assert!(matches!(arc((0.0, 0.0), 1.0, 1.0, 0.0, false, true, (2e-9, 0.0))[..], [Seg::Cubic(..)]));
+    }
+
+    #[test]
     fn radii_too_small_grow_on_any_chord() {
         // rx 1, ry 2 on a diagonal chord: both grow by the same factor until the chord is a diameter,
         // and the half ellipse passes (7.5, −5), a quarter of the way round.
@@ -447,6 +470,13 @@ mod tests {
         assert_eq!(full.len(), 12);
         let far = end_of(&full, 5);
         assert!(far.0.abs() < 1e-3 && (far.1 + 2e10).abs() < 1e-3, "{far:?}");
+        let quarter = end_of(&full, 2);
+        assert!((quarter.0 + 1e10).abs() < 1e-3 && (quarter.1 + 1e10).abs() < 1e-3, "{quarter:?}");
+        // Turning the other way, the circle is below the points.
+        let other = arc((0.0, 0.0), 1e10, 1e10, 0.0, true, false, (1e-300, 0.0));
+        assert_eq!(other.len(), 12);
+        let quarter = end_of(&other, 2);
+        assert!((quarter.0 + 1e10).abs() < 1e-3 && (quarter.1 - 1e10).abs() < 1e-3, "{quarter:?}");
         // End points too close to tell apart once halved.
         assert_eq!(arc((0.0, 0.0), 1.0, 1.0, 0.0, true, true, (5e-324, 0.0)), [Seg::Line((5e-324, 0.0))]);
     }
@@ -483,6 +513,14 @@ mod tests {
         let expected = [(9.0, 2.0), (11.0, 3.0), (11.0, 7.0), (9.0, 8.0), (3.0, 8.0), (1.0, 7.0), (1.0, 3.0), (3.0, 2.0)];
         let picked: Vec<V> = [0, 3, 4, 7, 8, 11, 12, 15].iter().map(|i| points[*i]).collect();
         assert!(picked.iter().zip(expected).all(|(a, b)| near(*a, b)), "{picked:?}");
+        // The corners are quarter ellipses round their own centres: the points at 30° and 60° of each.
+        let quarter_points = [(1, (10.0, 2.133_974_6)), (2, (10.732_050_8, 2.5)), (5, (10.732_050_8, 7.5)), (6, (10.0, 7.866_025_4))];
+        let more = [(9, (2.0, 7.866_025_4)), (10, (1.267_949_2, 7.5)), (13, (1.267_949_2, 2.5)), (14, (2.0, 2.133_974_6))];
+        for (i, p) in quarter_points.into_iter().chain(more) {
+            assert!((points[i].0 - p.0).abs() < 1e-6 && (points[i].1 - p.1).abs() < 1e-6, "point {i}: {:?}", points[i]);
+        }
+        // A radius taller than half the rectangle is clamped to half of it: the first corner ends 3 down.
+        assert!(near(ends(&rect(0.0, 0.0, 10.0, 6.0, 2.0, 20.0)[0])[3], (10.0, 3.0)));
         // A radius wider than half the rectangle is clamped to half of it; one radius of zero is square.
         assert!(near(ends(&rect(0.0, 0.0, 10.0, 6.0, 8.0, 1.0)[0])[0], (5.0, 0.0)));
         assert_eq!(rect(0.0, 0.0, 10.0, 6.0, 0.0, 2.0)[0].segs.len(), 3);

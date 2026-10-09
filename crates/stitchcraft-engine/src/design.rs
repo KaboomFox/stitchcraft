@@ -211,5 +211,7 @@ mod tests {
         assert_eq!((problem.code, problem.element.map(|e| e.to_string())), (Code::InternalCheckFailed, Some("far".to_string())));
         let edge = vec![element("edge", line(p(-WORKING_LIMIT_MM, 0.0), p(WORKING_LIMIT_MM, 0.0)))];
         assert!(Design::new(edge, DesignSettings::default()).is_ok());
+        // The limit is the reach of machine files: 10 m either way.
+        assert_eq!(WORKING_LIMIT_MM, 10_000.0);
     }
 }

@@ -218,12 +218,17 @@ mod tests {
         assert!(close(root_to_mm(None, None, view_box("0 0 96 96"), aspect("xMidYMid")).unwrap().apply(96.0, 96.0), (25.4, 25.4)));
         let flat = Some(ViewBox::new(0.0, 0.0, 0.0, 10.0));
         assert_eq!(root_to_mm(length("10mm"), length("10mm"), flat, aspect("xMidYMid")), Err("its viewBox has no area".to_string()));
+        let low = Some(ViewBox::new(0.0, 0.0, 10.0, 0.0));
+        assert_eq!(root_to_mm(length("10mm"), length("10mm"), low, aspect("xMidYMid")), Err("its viewBox has no area".to_string()));
         // A viewBox with an origin and a scale other than 1, under each kind of alignment.
         let origin = |align: &str| root_to_mm(length("100mm"), length("100mm"), view_box("10 20 200 100"), aspect(align)).unwrap();
         assert!(close(origin("xMidYMid").apply(10.0, 20.0), (0.0, 25.0)));
         assert!(close(origin("xMidYMid").apply(210.0, 120.0), (100.0, 75.0)));
         assert!(close(origin("none").apply(10.0, 20.0), (0.0, 0.0)));
         assert!(close(origin("none").apply(210.0, 120.0), (100.0, 100.0)));
+        let tall = root_to_mm(length("100mm"), length("200mm"), view_box("10 20 200 100"), aspect("none")).unwrap();
+        assert!(close(tall.apply(10.0, 20.0), (0.0, 0.0)));
+        assert!(close(tall.apply(210.0, 120.0), (100.0, 200.0)));
         assert_eq!(root_to_mm(length("0"), None, None, aspect("xMidYMid")), Err("its width is zero or negative".to_string()));
         assert!(root_to_mm(None, length("-1mm"), view_box("0 0 10 10"), aspect("xMidYMid")).is_err());
         // A relative size is the viewBox's own, in pixels.

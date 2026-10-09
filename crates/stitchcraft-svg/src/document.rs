@@ -462,10 +462,10 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         };
         match (error, subs.is_empty()) {
             (Some(error), true) => {
-                self.unusable(label, format!("The path data of `{label}` has an error before it draws anything ({error}). It is left out."))
+                self.unusable(label, format!("The path data of `{label}` has an error before it draws anything ({error}). It is left out."));
             }
             (Some(error), false) => {
-                self.unusable(label, format!("The path data of `{label}` has an error ({error}); it is stitched up to the error."))
+                self.unusable(label, format!("The path data of `{label}` has an error ({error}); it is stitched up to the error."));
             }
             (None, true) => self.unusable(label, format!("`{label}` draws nothing: its size or its data is empty. It is left out.")),
             (None, false) => {}
