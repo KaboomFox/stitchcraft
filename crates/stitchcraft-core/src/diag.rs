@@ -4,8 +4,8 @@
 //! it can, and every host shows them the same way. Each carries a [`Code`] from the registry in this
 //! module, the single source of truth for ids, severities, titles and explanations. `stitch explain`,
 //! the generated diagnostics index and the VectorCraft plug-in's messages are all built from it, and
-//! tests check every entry, so an error message cannot ship without ever having been rendered (Ink/Stitch
-//! once shipped "There are d color changes"; `docs/src/design/diagnostics.md`).
+//! tests check every entry, so an error message cannot ship without ever having been rendered
+//! (`docs/src/design/diagnostics.md`).
 //!
 //! Codes are never reused. A retired code stays registered, with "(retired)" in its title.
 

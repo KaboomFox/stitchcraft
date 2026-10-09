@@ -14,8 +14,7 @@ behaviour and published algorithms in our own words ([ADR-0001](adr/0001-license
    and the [compatibility gate](compatibility-gate.md).
 7. Quality: [conformance](conformance.md), [determinism](determinism.md), [guardrails](guardrails.md),
    [docs pipeline](docs-pipeline.md).
-8. Evidence: [Ink/Stitch analysis](inkstitch-analysis.md), [Ink/Stitch issues review](inkstitch-issues-review.md),
-   [compatibility contract](inkstitch-compat-contract.md).
+8. File compatibility: the [Ink/Stitch compatibility contract](inkstitch-compat-contract.md).
 9. Decisions: [ADRs](adr/README.md).
 
 ## Keeping these pages true

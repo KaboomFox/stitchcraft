@@ -29,8 +29,8 @@ so they never line up into visible furrows. Most fills in most designs are tatam
 5. **Pull compensation extends each segment at both ends** by `pull_compensation_mm +
    pull_compensation_percent × segment length` (one value or two values for start/end side), clipped so
    it never reaches into a neighbouring segment of the same row. Holes, gaps and separate components
-   keep their topology — the shape is never buffered as a whole
-   ([issues review L4](../inkstitch-issues-review.md#l4--algorithms-that-break-the-shape), `REQ-FILL-TAT-006`).
+   keep their topology — the shape is never buffered as a whole, which would close gaps the designer
+   left on purpose (`REQ-FILL-TAT-006`).
 
 ### 2. Needle points along a row
 
@@ -59,8 +59,7 @@ decomposition instead of a general solver:
    stitch with `running_stitch_length_mm`.
 4. **Disconnected parts.** If no inside path exists (the region has separate components), the parts are
    planned as separate sub-groups joined by tie-off → jump/trim → tie-in, with `SC-W0307` — never a
-   straight stitch across empty fabric (`SC-W0501`,
-   [finding F5](../inkstitch-analysis.md#f5--silent-degradation)).
+   straight stitch across empty fabric (`SC-W0501`), and never a silent change to what is sewn.
 5. **Exit.** The last cell is chosen, when possible, to end near the exit hint.
 
 ### 4. Gap-fill rows
@@ -109,7 +108,7 @@ Rows that follow the region's outline inward, like growth rings (P2). Strategies
   outside to centre; double: in and back out), following the Connected Fermat Spirals construction (Zhao
   et al., SIGGRAPH 2016). Before spiralling, **necks** (where the inset ring tree branches) split the region
   into parts that each spiral cleanly; a part that still cannot be connected falls back to inner-to-outer
-  with `SC-W0311` ([issues review L4](../inkstitch-issues-review.md#l4--algorithms-that-break-the-shape)).
+  with `SC-W0311`.
 - `clockwise` and `avoid_self_crossing` control direction and how ring connections are placed;
   `smoothness_mm` simplifies rings before stitching.
 

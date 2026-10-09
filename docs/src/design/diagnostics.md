@@ -49,9 +49,8 @@ whose letter disagrees with its severity, or whose explanation is missing. From 
 - a test fails when a code has no explanation, no triggering conformance case, or a case triggers a
   code that is not registered.
 
-That last rule is what keeps error paths alive: Ink/Stitch shipped an error message reading "There
-are d color changes" because the message was never rendered by a test
-([finding F4](inkstitch-analysis.md#f4--a-verified-bug-in-an-error-path)).
+That last rule is what keeps error paths alive: a message that no test ever renders can ship with a
+typo in its formatting and nobody sees it until a user does.
 
 ## Writing good messages
 

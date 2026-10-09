@@ -1,8 +1,7 @@
 # Conformance testing
 
-Ink/Stitch shows what happens when behaviour is specified only by its implementation: fixes for one
-input break another, and nobody can say what "correct" means ([finding F1](inkstitch-analysis.md#f1--tests-cover-almost-nothing-of-the-stitch-engine)).
-StitchCraft specifies behaviour as **requirements**, proves each with **cases**, and reports the result
+When behaviour is specified only by its implementation, fixes for one input break another and nobody
+can say what "correct" means. StitchCraft specifies behaviour as **requirements**, proves each with **cases**, and reports the result
 as a **matrix** on every pull request. Code is written to make cases pass, not the other way round
 ([ADR-0008](adr/0008-conformance-first.md)).
 
@@ -27,7 +26,7 @@ id = "REQ-FILL-TAT-006"
 area = "fill/tatami"
 level = "L2"
 statement = "Pull compensation preserves the number of holes and connected components of the region."
-rationale = "Ink/Stitch #3395: compensation by buffering closed deliberate gaps."
+rationale = "Compensating by growing the whole shape closes gaps the designer left on purpose."
 milestone = "M5"
 status = "planned"        # planned | active | retired
 ```
@@ -176,8 +175,8 @@ CC0), in a container, producing stitch files. We compare **metrics, not stitches
 (±10 %), bounds (±0.5 mm), colour sequence (exact), trims and jumps (±1), coverage IoU (≥ 0.9). Running
 Ink/Stitch as an oracle uses it, it does not copy it; implementers see metric reports, not Ink/Stitch
 code. Differences we intend are recorded in the **deviations ledger** (`conformance/deviations.toml`),
-each with a reason and a link to the requirement that motivates it (for example row-end compensation,
-L4 of the issues review). Starts in M8.
+each with a reason and a link to the requirement that motivates it (for example `DEV-LCK-001`: the
+lock shapes are StitchCraft's own). Starts in M8.
 
 ### L4 — Physical (milestone gates)
 

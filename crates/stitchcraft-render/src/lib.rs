@@ -2,7 +2,7 @@
 //!
 //! A preview shows what the machine will sew, not what the plan meant. Every position is rounded to the
 //! 0.1 mm grid with the writers' own rounding before anything is drawn, so a stitch never "moves"
-//! between the preview and the sew-out (REQ-RND-001; Ink/Stitch #2066 is that bug). Drawing is two
+//! between the preview and the sew-out (REQ-RND-001). Drawing is two
 //! steps, each tested on its own:
 //!
 //! 1. [`Scene::of`] walks the plan once and lists what the fabric will show — needle holes, how the

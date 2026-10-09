@@ -56,8 +56,8 @@ Rules every generator follows:
 - **Pure:** output depends only on (normalized shape, typed params, hints, seed, budget).
 - **Entry and exit hints, not neighbours' stitches.** The previous element's *geometry* suggests where
   this one should start (nearest point to its exit hint); the generator never waits for another
-  element's stitches. This makes generation independent, cacheable and parallel
-  ([issues review L6](inkstitch-issues-review.md#l6--large-designs-are-slow)), and honours explicit
+  element's stitches. This makes generation independent, cacheable and parallel, so large designs
+  stay fast, and honours explicit
   start/end commands (`REQ-GEN-001`).
 - **Seeded randomness:** seed = `random_seed` parameter if set, else a hash of the element id; the PRNG
   is SplitMix64 from `stitchcraft-core` ([determinism](determinism.md)).

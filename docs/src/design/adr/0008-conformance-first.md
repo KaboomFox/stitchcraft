@@ -4,8 +4,9 @@
 
 ## Context
 
-The main complaint about Ink/Stitch's quality is testing: 52 test functions for 45k lines; issue #245
-"automated testing" open since 2018; 62 error-related commits since 2024, none of which touched the tests.
+When behaviour is specified only by its implementation, nobody can say what "correct" means: a fix for
+one input silently breaks another, and a regression looks like any other change. Stitch generators are
+especially prone to this, because their output is thousands of coordinates no reviewer reads.
 
 ## Decision
 

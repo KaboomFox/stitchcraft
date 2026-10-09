@@ -3,10 +3,10 @@
 `stitchcraft-render` draws a stitch plan as a PNG image: for `stitch preview`, for the images in these
 docs, and for conformance diffs. Two promises shape it:
 
-- **What is shown is what sews** (`REQ-RND-001`). Ink/Stitch's simulator draws the positions the plan
-  meant, but files store positions rounded to 0.1 mm, so stitches "move" after saving
-  ([Ink/Stitch #2066](https://github.com/inkstitch/inkstitch/issues/2066)). StitchCraft rounds every
-  position with the writers' own function (`Point::to_tenths`) before drawing anything.
+- **What is shown is what sews** (`REQ-RND-001`). Machine files store positions rounded to 0.1 mm, so
+  a preview drawn from the unrounded plan shows stitches that "move" once the file is saved.
+  StitchCraft rounds every position with the writers' own function (`Point::to_tenths`) before drawing
+  anything.
 - **The same bytes everywhere** (`REQ-RND-002`). A preview is a pure function of the plan and the
   settings, so documentation images can be compared byte for byte on every pull request.
 

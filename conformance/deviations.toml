@@ -6,7 +6,7 @@
 # id = "DEV-FILL-001"
 # area = "fill/tatami"
 # summary = "Pull compensation extends rows at their ends instead of buffering the whole shape."
-# reason = "Preserves holes and gaps (Ink/Stitch #3395)."
+# reason = "Preserves holes and gaps the designer left on purpose."
 # requirements = ["REQ-FILL-TAT-006"]
 
 [[deviation]]

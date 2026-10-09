@@ -5,7 +5,7 @@
 //! accepted, clamped into range with `SC-W0102`, or rejected with `SC-E0101`; it never falls back to the
 //! default in silence (REQ-PRM-002). Lengths accept a unit (`mm`, `in`, `pt`; millimetres without one),
 //! angles are normalized to (−180, 180], and a seed may be any text: a number is used as it is, other
-//! text is hashed (FNV-1a), so every Ink/Stitch seed works.
+//! text is hashed (FNV-1a), so any seed a file stores works.
 
 use stitchcraft_core::units::{MM_PER_INCH, MM_PER_POINT};
 use stitchcraft_core::{Code, Diagnostic, Mm};

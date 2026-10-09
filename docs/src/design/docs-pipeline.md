@@ -1,9 +1,8 @@
 # Documentation pipeline
 
-The bar: **documentation that cannot silently drift from the code.** Ink/Stitch's docs are generous
-but hand-made — 1,341 committed images, a parameter dataset maintained separately from the code, no
-docs CI, one unversioned site ([finding F7](inkstitch-analysis.md#f7--documentation-is-hand-made-and-unversioned)).
-Ours are generated where they can be, tested where they cannot, and regenerated on every pull request.
+The bar: **documentation that cannot silently drift from the code.** Hand-made screenshots, parameter
+lists kept apart from the code and an unversioned site all go stale without anyone noticing. Ours are
+generated where they can be, tested where they cannot, and regenerated on every pull request.
 
 ## Structure
 

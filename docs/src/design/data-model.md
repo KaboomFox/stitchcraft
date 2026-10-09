@@ -17,8 +17,7 @@ pub struct Point { pub x: f64, pub y: f64 }
 - **Internal unit: millimetres.** Embroidery parameters are specified in mm and machine files use
   0.1 mm, so mm keeps the numbers people read and the numbers we compute the same.
 - **Host units are converted at the adapter:** VectorCraft points ×25.4/72; SVG user units through
-  the root `viewBox`/`width`/`height` (Ink/Stitch documents assume 96 px per inch, `PIXELS_PER_MM =
-  96 / 25.4`).
+  the root `viewBox`/`width`/`height`, with CSS pixels at 96 per inch.
 - **Quantization happens once, in the encoder**, on absolute positions: `round_half_even(x * 10)`.
   Deltas are differences of quantized absolutes, so rounding never accumulates.
 - **Axis conventions per format** are the encoder's job (DST is y-up). Test sheet TS-01 (an

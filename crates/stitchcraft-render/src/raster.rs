@@ -6,8 +6,7 @@
 //!   lies loose on top until it is cut by hand, so it is drawn too, thinner; cut travel leaves nothing.
 //! - **Simple** is for checking a design. Each stitch is a thin line and each needle hole a dot; moves
 //!   without sewing are dashed, in the thread's colour when the thread is carried loose and grey when it
-//!   was cut. Lock stitches get a ring, trims a red cross and stops a blue square (the simulator
-//!   requests in Ink/Stitch #3853 and #4468).
+//!   was cut. Lock stitches get a ring, trims a red cross and stops a blue square.
 //!
 //! Every size is in millimetres times the scale, so a design looks the same at every scale, only
 //! sharper. A margin of [`MARGIN_MM`] keeps threads and marks at the edge inside the image.

@@ -5,9 +5,9 @@
 ## Context
 
 The first physical test machine is a Brother with a 200 × 200 mm (8 × 8 in) hoop; designs are kept to
-about 150 mm (6 in). Brother machines load PES. Field reports show PES pitfalls: trims ignored on some
-Brother models (Ink/Stitch #689) and an older Brother-family machine hiding PES v1 designs larger than
-about 130 × 180 mm (#1853).
+about 150 mm (6 in). Brother machines load PES. Embroiderers report PES pitfalls with other software:
+trims ignored by some Brother models, and an older Brother-family machine that hides PES v1 designs
+larger than about 130 × 180 mm.
 
 ## Decision
 

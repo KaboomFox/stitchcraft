@@ -1,10 +1,10 @@
 # StitchCraft
 
 **Machine embroidery for VectorCraft, in Rust.** StitchCraft turns vector art into machine embroidery
-files — PES for Brother machines first, then DST and more — with the stitch types embroiderers know from
-Ink/Stitch: running and bean stitch, satin columns, tatami, contour and meander fills, and more.
+files — PES for Brother machines first, then DST and more — with running and bean stitch, satin columns,
+tatami, contour and meander fills, and more.
 
-It is built to a different standard:
+How it is built:
 
 - **It never crashes.** Every input is untrusted, every loop is bounded, every problem is a coded,
   explained diagnostic.

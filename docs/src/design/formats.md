@@ -53,7 +53,7 @@ stop command: a stop is a colour change to the same thread, which readers recogn
 trim becomes a trim-flagged jump to its target and a zero-length stitch there, so the needle still goes
 down where the plan says. A trim right before the end needs no record.
 
-**Where we differ from pystitch on purpose.** pystitch (Ink/Stitch's writer) flags *every* jump after the
+**Where we differ from pystitch on purpose.** pystitch flags *every* jump after the
 first as a trim. StitchCraft flags only the jumps that follow a `Trim` in the plan and writes the others as
 plain jumps, so the plan decides — and test sheet TS-02 can tell the two encodings apart on a machine.
 
@@ -68,18 +68,17 @@ PES v6 writer (below) can carry a thread list with RGB and codes.
 
 ### Risks found in the field, and how we test them
 
-From the [issues review](inkstitch-issues-review.md#l2--machines-disagree-about-files):
+Embroiderers report these with files from other software:
 
-1. **Trims ignored** on some Brother machines (Ink/Stitch #689). Test sheet TS-02 sews both encodings:
+1. **Trims ignored** on some Brother machines. Test sheet TS-02 sews both encodings:
    trim-flagged jumps, and a long-jump-only variant for machines that trim on jump length. The profile
    records which one the machine honours.
 2. **Large designs hidden** by an older Brother-family machine for PES v1 files beyond about 130 ×
-   180 mm (#1853, root cause never found). The PES v1 section carries a hoop indication, and
-   Ink/Stitch's writer (pystitch) sets it to the 130 × 180 mm class — our unconfirmed hypothesis for
-   that report. For our 200 × 200 mm hoop, MC-1 sews TS-10 at **150 mm and 190 mm** widths from a PES v1
+   180 mm (root cause unknown). The PES v1 section carries a hoop indication, and pystitch sets it to
+   the 130 × 180 mm class — our unconfirmed hypothesis for that report. For our 200 × 200 mm hoop, MC-1 sews TS-10 at **150 mm and 190 mm** widths from a PES v1
    file. If the machine refuses either, M1 adds a PES v6 writer with explicit hoop dimensions and repeats
    the test.
-3. **Colour expectations** (#2668): documented behaviour — what you see on the machine is the PEC
+3. **Colour expectations:** documented behaviour — what you see on the machine is the PEC
    palette colour; the thread chart in the report lists the source colour and the PEC match.
 
 ### Later versions
@@ -146,7 +145,7 @@ because DST stores no colours (`SC-W0604`).
 | Format | Machines | Milestone | Notes |
 |---|---|---|---|
 | EXP | Melco, Bernina | M11 | 2-byte records, `0x80` escape codes for commands |
-| JEF | Janome | M11 | Janome thread table indices; per-palette mapping (Ink/Stitch #3137) |
+| JEF | Janome | M11 | Janome thread table indices; per-palette mapping |
 | VP3 | Husqvarna Viking, Pfaff | M11 | Nested length-prefixed sections; thread descriptions as strings |
 | XXX | Singer | M11 | |
 | U01 | Barudan | M11 | |
