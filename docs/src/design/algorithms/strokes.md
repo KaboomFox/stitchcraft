@@ -105,11 +105,20 @@ twice the shortest stitch (raised).
 ## Manual stitch
 
 Every node of the path is a needle penetration, in order — for hand-placed stitches and imported stitch
-files. A curve gives only its end node: its control points are not stitched and it is not flattened.
-Segments longer than `max_stitch_length_mm` (if set) are split into the fewest equal parts no longer than
-it. Bean stitch applies; repeats do not. Lock stitches are added only when `force_lock_stitches` is set,
-as in Ink/Stitch (read at `d59c9ab`). Property: output nodes equal input nodes plus only the documented
-splits (`REQ-RUN-006`).
+files. A curve gives only its end node: its control points are not stitched and it is not flattened. A
+node where the needle already is counts once, and a closed path comes back to its start. Segments longer
+than `max_stitch_length_mm` (if set) are split into the fewest equal parts no longer than it, but never
+into parts shorter than the shortest stitch. A value of 0 or less means "not set", as in Ink/Stitch, so
+every stitch is then sewn as drawn. Bean stitch applies; repeats do not. Lock stitches are added
+only when `force_lock_stitches` is set, as in Ink/Stitch (read at `d59c9ab`).
+
+The shortest stitch holds here too: a node closer than it to the needle point before it is left out, so
+the stitch before runs on to the next node, and `SC-W0403` says how many. A part's last node is always
+kept, leaving out the one before it instead. Ink/Stitch drops such points later, over the whole plan,
+without a word. A part that is a single point, or too small for one stitch, is not stitched (`SC-W0401`).
+
+Properties: needle points are the nodes in order plus only the documented splits (`REQ-RUN-006`); no
+stitch is shorter than the shortest stitch (`REQ-RUN-008`).
 
 ## Zigzag stroke (P2, M7)
 

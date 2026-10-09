@@ -40,20 +40,11 @@ use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Mm, Point};
 
 use crate::design::Path;
 use crate::generators::passes::{self, RepeatParams};
+use crate::generators::{Stitched, TooSmall, mm, too_small};
 use crate::normalize::stroke::{self, Piece, distance_to_segment};
 
 /// The share of the curve tolerance that flattening may use; the stitches have the rest.
 const FLATTEN_SHARE: f64 = 0.1;
-
-/// The stitches of one running-stitch stroke.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Stitched {
-    /// The needle points of each piece of the stroke that is stitched, in drawing order, its repeats and
-    /// bean stitch included. Each run starts where its piece starts, and ends where its last pass does.
-    pub runs: Vec<Vec<Point>>,
-    /// What was changed or left out (`SC-W0402`, `SC-W0401`). They name no element: the caller adds it.
-    pub warnings: Vec<Diagnostic>,
-}
 
 /// The running stitch along `path`, sewn as `passes` say, with no stitch shorter than `min_stitch` (the
 /// element's shortest stitch, or the machine's). `rng` is the element's generator
@@ -79,20 +70,16 @@ pub fn running_stitch(
         let along = Along::new(piece, meter)?;
         let length = along.length();
         let skipped = if piece.points.len() < 2 {
-            "A part of the stroke is a single point, so it is not stitched.".to_string()
+            TooSmall::Point
         } else if !at_least(length, min) {
-            format!("A part of the stroke is {} mm long, shorter than the shortest stitch ({} mm), so it is not stitched.", mm(length), mm(min))
+            TooSmall::Short(length)
         } else if let Some(run) = stitch_piece(&along, &piece.corners, &mut lengths, min, tolerance * (1.0 - FLATTEN_SHARE), meter)? {
             runs.push(passes::sew(&run, passes.repeats, &passes.bean_stitch_repeats, meter)?);
             continue;
         } else {
-            format!(
-                "A part of the stroke is {} mm long, but all of it lies within the shortest stitch ({} mm) of its ends, so it is not stitched.",
-                mm(length),
-                mm(min)
-            )
+            TooSmall::Curled(length)
         };
-        warnings.push(Diagnostic::new(Code::StrokeTooSmall, skipped));
+        warnings.push(too_small(skipped, min));
     }
     Ok(Stitched { runs, warnings })
 }
@@ -449,12 +436,6 @@ fn follow(needles: Vec<Needle>, along: &Along, budget: f64, min: f64, longest: f
         }
     }
     Ok(done)
-}
-
-/// `value` millimetres for a message: at most two decimals, without trailing zeros.
-fn mm(value: f64) -> String {
-    let text = format!("{value:.2}");
-    text.trim_end_matches('0').trim_end_matches('.').to_string()
 }
 
 #[cfg(test)]

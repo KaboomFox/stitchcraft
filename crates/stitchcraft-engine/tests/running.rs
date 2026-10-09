@@ -10,8 +10,9 @@ use proptest::prelude::*;
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Code, Mm, Point, math};
 use stitchcraft_engine::design::{Path, Segment, Subpath};
+use stitchcraft_engine::generators::Stitched;
 use stitchcraft_engine::generators::passes::RepeatParams;
-use stitchcraft_engine::generators::running::{RunningParams, Stitched, running_stitch};
+use stitchcraft_engine::generators::running::{RunningParams, running_stitch};
 use stitchcraft_engine::normalize::stroke::distance_to_segment;
 use stitchcraft_params::ParamSet;
 

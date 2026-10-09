@@ -33,6 +33,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Common parameters](params/common.md) | 14 | every stitch type |
 | [Running parameters](params/running.md) | 5 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
+| [Manual parameters](params/manual.md) | 1 | Manual stitch |
 
 ## Every parameter
 
@@ -49,6 +50,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`lock_start`](params/common.md#lock_start) | Start lock | Common parameters |
 | [`lock_start_scale_mm`](params/common.md#lock_start_scale_mm) | Start lock size | Common parameters |
 | [`lock_start_scale_percent`](params/common.md#lock_start_scale_percent) | Start lock scale | Common parameters |
+| [`max_stitch_length_mm`](params/manual.md#max_stitch_length_mm) | Longest stitch | Manual parameters |
 | [`min_jump_stitch_length_mm`](params/common.md#min_jump_stitch_length_mm) | Shortest jump | Common parameters |
 | [`min_stitch_length_mm`](params/common.md#min_stitch_length_mm) | Shortest stitch | Common parameters |
 | [`random_seed`](params/running.md#random_seed) | Random seed | Running parameters |
