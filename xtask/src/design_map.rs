@@ -267,7 +267,7 @@ mod tests {
         let problems = drift(&pages, &changed, "Fix\n\nDesign-reviewed: docs/src/r.md\n");
         assert_eq!(problems.len(), 1, "{problems:?}");
         assert!(problems[0].starts_with("docs/src/f.md: the branch changes crates/f/src/a.rs and 1 more, which this page describes"), "{problems:?}");
-        let mut with_page = changed.clone();
+        let mut with_page = changed;
         with_page.insert("docs/src/f.md".to_string());
         assert!(drift(&pages, &with_page, "Design-reviewed: docs/src/r.md").is_empty());
     }
