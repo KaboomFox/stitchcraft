@@ -1,5 +1,7 @@
 # Stroke generators
 
+<!-- implements: crates/stitchcraft-engine/src/generators/**, crates/stitchcraft-engine/src/normalize/stroke.rs -->
+
 Strokes follow a path. Shape: `StrokePath` (an ordered list of polylines, corners marked, from the
 normalizer). Phase P1 (M3) unless noted.
 

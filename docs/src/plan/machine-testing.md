@@ -1,5 +1,7 @@
 # Machine testing protocol
 
+<!-- implements: crates/stitchcraft-engine/src/testsheets/**, apps/stitchcraft-cli/src/commands/testsheet.rs -->
+
 Automated tests prove the files are what we intend. Only a machine proves they sew well. This page is
 the protocol for **machine checkpoints** (MC-1 … MC-7) on the reference machine: a Brother home
 embroidery machine with a 200 × 200 mm (8 × 8 in) hoop, designs normally kept to about 150 mm (6 in).

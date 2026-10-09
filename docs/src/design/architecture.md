@@ -1,5 +1,7 @@
 # Architecture
 
+<!-- implements: crates/stitchcraft-engine/src/lib.rs, apps/stitchcraft-cli/src/*.rs, apps/stitchcraft-cli/src/commands/mod.rs, apps/stitchcraft-cli/src/commands/profiles.rs -->
+
 This page is the map of the code: which crate owns what, which way dependencies point, and where a
 new piece of code belongs. If you are about to add a file and are not sure where, the
 [decision table](#where-does-my-code-go) at the end answers it.

@@ -14,14 +14,17 @@ mod compat;
 mod conformance;
 mod contract_page;
 mod coverage;
+mod design_map;
 mod deviations;
 mod docs;
+mod docs_audit;
 mod filesize;
 mod join;
 mod layers;
 mod markdown;
 mod mutants;
 mod param_pages;
+mod prose;
 mod reference_pages;
 mod shots;
 mod unsafe_audit;
@@ -44,7 +47,8 @@ pub enum Status {
 pub const SUBCOMMANDS: &[(&str, Status, &str)] = &[
     ("ci", Status::Ready, "run every gate and print a summary"),
     ("layers", Status::Ready, "check that crates depend only on lower layers"),
-    ("docs", Status::Ready, "regenerate generated pages; --check verifies docs without writing"),
+    ("docs", Status::Ready, "regenerate generated pages; --check verifies docs without writing; `for PATH…` names the pages that describe a file"),
+    ("prose", Status::Ready, "lint the Markdown lines a branch adds with Vale (house style and ai-tells); --base REF"),
     ("conformance", Status::Ready, "run the conformance suite and write the report; --check, --filter TEXT, --bless CASE"),
     ("cleanroom", Status::Ready, "no GPL licence text or pasted Python source anywhere in the repository"),
     ("unsafe-audit", Status::Ready, "unsafe only in the plug-in ABI shim, always with SAFETY comments"),
@@ -89,7 +93,9 @@ fn main() -> ExitCode {
     let result = match command.as_str() {
         "ci" => ci::run(),
         "layers" => layers::run(),
+        "docs" if rest.first().is_some_and(|a| a == "for") => design_map::run_for(rest.get(1..).unwrap_or_default()),
         "docs" => docs::run(flag("--check")),
+        "prose" => prose::run(rest),
         "conformance" => conformance::run(rest),
         "cleanroom" => cleanroom::run(),
         "unsafe-audit" => unsafe_audit::run(),

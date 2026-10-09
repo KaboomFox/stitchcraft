@@ -1,0 +1,7 @@
+# Software does not know, want or decide: say what it does.
+extends: existence
+message: "'%s' gives software a mind. Say what it does: it reads, writes, sews, skips, reports."
+level: error
+ignorecase: true
+tokens:
+  - '\b(?:StitchCraft|the (?:engine|reader|writer|encoder|decoder|adapter|plan|planner|generator|renderer|machine|plug-in|parser|registry|gate))\s+(?:knows|wants|believes|thinks|feels|decides|cares|remembers|refuses|hopes|tries|insists|prefers|likes|hates)\b'
