@@ -45,8 +45,10 @@ checks straight. "The shortest stitch" is the one [Finalize](../engine-pipeline.
    deviation, among those that leave both parts within the lengths above, and repeat. This bounds the
    visual error by `running_stitch_tolerance_mm` on any curve whose details are larger than the shortest
    stitch.
-6. **Random length** (M3.5). With `enable_random_stitch_length`, each stitch length is drawn uniformly
-   from `s × (1 ± jitter)`, then the span is rescaled to end on its corner. The seed makes it repeatable.
+6. **Random length.** With `enable_random_stitch_length`, each stitch length is drawn uniformly from
+   `s × (1 ± jitter)`, the first of each span a random fraction of that (a random phase, below), then the
+   span is rescaled to end on its corner. The element's own generator draws them, seeded with
+   `random_seed`, so the same element and seed always give the same stitches.
 
 **When the rules disagree,** the shortest stitch wins (a shorter stitch hammers one spot and can break the
 thread), then corners, then the tolerance. A part of the path that is a single point, shorter than the
@@ -59,9 +61,25 @@ documented ways, `DEV-RUN-001` to `DEV-RUN-004` in the deviations ledger (`confo
 ### Repeats and bean stitch
 
 - `repeats = k` sews the path k times, alternating direction; odd k ends at the far end, even k returns
-  to the start (useful for travel that must come back).
+  to the start (useful for travel that must come back). Each pass starts where the last one ended, so a
+  turnaround is not a stitch in place.
 - `bean_stitch_repeats = b` replaces every stitch A→B with A→B→A→B… (2b+1 passes), producing the thick
   "triple stitch" line at b = 1. A list (`"1 0"`) alternates bean and plain stitches.
+- **Order, as in Ink/Stitch** (read at `d59c9ab`): bean stitch applies after repeats, to every stitch of
+  every pass, with the list running on from pass to pass. Ink/Stitch repeats the turnaround point, so
+  the turnaround takes one step of the list; StitchCraft counts that step too, without sewing it, so a
+  file sews the same in both. With a two-value list, each stretch of the path then gets the same
+  treatment on every pass.
+- Repeats apply to running, ripple and zigzag strokes; bean stitch to those and to manual stitch (the
+  [compatibility contract](../inkstitch-compat-contract.md) lists each parameter's stitch types).
+
+### Random length (M3.5)
+
+Ink/Stitch draws each stitch from `s × (1 ± jitter)` and starts each stretch between corners at a random
+phase, its first stitch a random fraction of a drawn length, so rows sewn side by side with the same
+settings do not line their holes up. It does not rescale, so the last stitch before a corner is whatever
+is left. StitchCraft rescales each span to end on its corner (placement, step 6: no short leftover) and
+keeps the random phase, for the same reason.
 
 ### Properties (conformance)
 
@@ -70,8 +88,12 @@ documented ways, `DEV-RUN-001` to `DEV-RUN-004` in the deviations ledger (`confo
   for that is reported (`REQ-RUN-001`).
 - Deviation from the source path ≤ tolerance, both ways, measured densely (`REQ-RUN-002`).
 - Corners are penetration points unless that would make a stitch too short (`REQ-RUN-003`).
-- Bean stitch: stitch count is exactly `n × (2b + 1)` for a span of n stitches (`REQ-RUN-004`).
-- Repeats parity decides the exit point (`REQ-RUN-005`).
+- Bean stitch sews each stitch `2b + 1` times, so a run of n stitches with b throughout has exactly
+  `n × (2b + 1)`; the list runs on across repeats, each turnaround taking a step (`REQ-RUN-004`).
+- Repeats alternate direction with no stitch in place; their parity decides the exit point
+  (`REQ-RUN-005`).
+- Random length: the same element and seed give the same stitches, another seed others, and the lengths
+  vary (`REQ-RUN-007`).
 
 ### Diagnostics
 
@@ -81,8 +103,11 @@ twice the shortest stitch (raised).
 ## Manual stitch
 
 Every node of the path is a needle penetration, in order — for hand-placed stitches and imported stitch
-files. Segments longer than `max_stitch_length_mm` (if set) are split evenly. Bean stitch applies.
-Property: output nodes equal input nodes plus only the documented splits (`REQ-RUN-006`).
+files. A curve gives only its end node: its control points are not stitched and it is not flattened.
+Segments longer than `max_stitch_length_mm` (if set) are split into the fewest equal parts no longer than
+it. Bean stitch applies; repeats do not. Lock stitches are added only when `force_lock_stitches` is set,
+as in Ink/Stitch (read at `d59c9ab`). Property: output nodes equal input nodes plus only the documented
+splits (`REQ-RUN-006`).
 
 ## Zigzag stroke (P2, M7)
 
