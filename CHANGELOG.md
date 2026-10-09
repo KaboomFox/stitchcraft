@@ -5,6 +5,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M3.1: the parameter registry. Parameters are declared once, beside the code that uses them, with
+  `params!`; the typed struct, validation (`SC-E0101` for a value that cannot be used, `SC-W0102` for one
+  clamped into range, `SC-W0105` for a key StitchCraft does not know, which is kept), the reference pages
+  (`docs/src/user/reference/params.md`), a JSON Schema and the Ink/Stitch contract's StitchCraft column
+  are generated from the declaration. The first declaration holds the 14 settings every stitch type shares
+  (locks, trims, stops, shortest stitch and jump) with Ink/Stitch's keys and defaults; they change the
+  stitches from M3.7. `cargo xtask docs --check` cross-checks the registry with the Ink/Stitch contract and
+  the deviations ledger, whose first entry (`DEV-LCK-001`) records that the lock shapes are StitchCraft's
+  own. `REQ-PRM-001` and `REQ-PRM-002` are active.
 - M2.8: quality baselines. Each library crate's public API is a committed snapshot
   (`crates/*/public-api.txt`, `cargo xtask api`), so an API change shows in the pull request's diff.
   Rustdoc builds without warnings. Line coverage per crate may not drop below its floor

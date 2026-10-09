@@ -1,17 +1,27 @@
-//! Generates the Ink/Stitch compatibility contract page from `conformance/inkstitch-params.toml`.
+//! Generates the Ink/Stitch compatibility contract page from `conformance/inkstitch-params.toml` and the
+//! parameter registry, and checks that the two agree.
 //!
 //! The data file holds facts only (names, types, units, defaults, applicability, phases); Ink/Stitch's
-//! descriptions are GPL text and are never copied. From M3 the registry adds a status column.
+//! descriptions are GPL text and are never copied. The registry adds the StitchCraft column. A parameter
+//! the registry declares with an Ink/Stitch origin must exist in the data file with a compatible kind and
+//! the same default, because defaults are part of the contract (`docs/src/design/params.md` › Naming
+//! rules); one with StitchCraft's own origin must not; the lock and method identifiers must match.
+
+use std::collections::BTreeSet;
 
 use serde::Deserialize;
+use stitchcraft_params::{Family, Kind, Origin, ParamGroup, StitchType, find};
+
+use crate::param_pages;
 
 /// Where the page is written, relative to the repository root.
 pub const PAGE: &str = "docs/src/design/inkstitch-compat-contract.md";
 /// The data file, relative to the repository root.
 pub const DATA: &str = "conformance/inkstitch-params.toml";
 
+/// The data file's contents.
 #[derive(Deserialize)]
-struct Contract {
+pub struct Contract {
     #[serde(default)]
     lock_ids: Vec<String>,
     param: Vec<Param>,
@@ -60,84 +70,250 @@ its keys so files move between the tools unchanged ([ADR-0001](adr/0001-license-
 - **Source:** Ink/Stitch `main` at `d59c9ab` (2026-09-17), 145 `@param` declarations.
 - **Facts only:** names, types, units, defaults and applicability. Ink/Stitch's descriptions are GPL text
   and are not copied; StitchCraft's own help text lives in the [parameter registry](params.md).
-- **Machine-readable source:** `conformance/inkstitch-params.toml`; this page is generated from it by
-  `cargo xtask docs`, and `cargo xtask docs --check` fails if the two disagree. From M3 the page gains a
-  *Status* column (planned / supported / deviates) from the registry, and a milestone cannot close with
-  its rows still planned.
+- **Machine-readable source:** `conformance/inkstitch-params.toml`; this page is generated from it and
+  from the parameter registry by `cargo xtask docs`, and `cargo xtask docs --check` fails if they disagree:
+  a parameter declared with an Ink/Stitch origin must be listed here with a compatible type and the same
+  default.
+- **StitchCraft** says whether the [parameter registry](../user/reference/params.md) declares the
+  parameter. *planned*: not yet; a design that sets it keeps it unchanged and gets `SC-W0105`.
+  *registered*: StitchCraft reads and checks it under the same key, meaning and default; it changes the
+  stitches once its stitch type or feature lands (see *Phase* and the parameter's reference entry).
+  *deviates*: registered, with a meaning that differs as its reference entry describes.
 - **Phase** is when the parameter's stitch type lands ([roadmap](../plan/roadmap.md)). `—` means no default
   (the value is derived from another parameter or the shape); `computed` means the default is an expression.
 ";
 
-/// Renders the page from the data file's text.
-pub fn render(data: &str) -> Result<String, String> {
-    let contract: Contract = toml::from_str(data).map_err(|e| format!("{DATA}: {e}"))?;
-    let mut md = String::from(INTRO);
-    for (key, title) in SECTIONS {
-        md.push_str(&format!("\n## {title}\n\n| Attribute | Type | Unit | Default | Applies to | Phase |\n|---|---|---|---|---|---|\n"));
-        for p in contract.param.iter().filter(|p| p.element == *key) {
-            let applies = if p.applies_to.is_empty() {
-                "all".to_string()
-            } else {
-                p.applies_to.iter().map(|a| format!("`{a}`")).collect::<Vec<_>>().join(", ")
-            };
+impl Contract {
+    /// Reads the data file's text.
+    pub fn parse(data: &str) -> Result<Contract, String> {
+        toml::from_str(data).map_err(|e| format!("{DATA}: {e}"))
+    }
+
+    /// Renders the page, with the StitchCraft column from `registry`.
+    pub fn render(&self, registry: &[&ParamGroup]) -> String {
+        let mut md = String::from(INTRO);
+        for (key, title) in SECTIONS {
             md.push_str(&format!(
-                "| `{}` | {} | {} | {} | {applies} | {} ({}) |\n",
-                p.name,
-                p.kind,
-                p.unit.replace('|', "\\|"),
-                p.default,
-                p.phase,
-                p.milestone
+                "\n## {title}\n\n| Attribute | Type | Unit | Default | Applies to | Phase | StitchCraft |\n|---|---|---|---|---|---|---|\n"
             ));
+            for p in self.param.iter().filter(|p| p.element == *key) {
+                let applies = if p.applies_to.is_empty() {
+                    "all".to_string()
+                } else {
+                    p.applies_to.iter().map(|a| format!("`{a}`")).collect::<Vec<_>>().join(", ")
+                };
+                md.push_str(&format!(
+                    "| `{}` | {} | {} | {} | {applies} | {} ({}) | {} |\n",
+                    p.name,
+                    p.kind,
+                    p.unit.replace('|', "\\|"),
+                    p.default,
+                    p.phase,
+                    p.milestone,
+                    status(registry, &p.name)
+                ));
+            }
         }
+        md.push_str(
+            "\n## Method identifiers\n\nThe values the method parameters take (`stroke_method`, `satin_method`, `fill_method`), with phases:\n\n",
+        );
+        md.push_str("| Parameter | Value | Phase |\n|---|---|---|\n");
+        for m in &self.method {
+            md.push_str(&format!("| `{}` | `{}` | {} ({}) |\n", m.param, m.value, m.phase, m.milestone));
+        }
+        let locks = self.lock_ids.iter().map(|l| format!("`{l}`")).collect::<Vec<_>>().join(", ");
+        md.push_str(&format!(
+            "\nLock stitch identifiers (`lock_start`, `lock_end`): {locks}. StitchCraft accepts every identifier; the shapes are its own\n\
+             designs with the same intent, a deviation recorded in the deviations ledger (`conformance/deviations.toml`).\n"
+        ));
+        let registered = self.param.iter().filter(|p| find(registry, &p.name).is_some()).count();
+        md.push_str(&format!("\n_{} parameter declarations, {registered} registered in StitchCraft._\n", self.param.len()));
+        md
     }
-    md.push_str(
-        "\n## Method identifiers\n\nThe values the method parameters take (`stroke_method`, `satin_method`, `fill_method`), with phases:\n\n",
-    );
-    md.push_str("| Parameter | Value | Phase |\n|---|---|---|\n");
-    for m in &contract.method {
-        md.push_str(&format!("| `{}` | `{}` | {} ({}) |\n", m.param, m.value, m.phase, m.milestone));
+
+    /// Where `registry` and the data file disagree, one line each.
+    pub fn check(&self, registry: &[&ParamGroup]) -> Vec<String> {
+        let mut problems = Vec::new();
+        for spec in registry.iter().flat_map(|g| g.specs) {
+            let key = spec.key;
+            let theirs = self.param.iter().find(|p| p.name == key);
+            match (spec.origin, theirs) {
+                (Origin::StitchCraft, None) => {}
+                (Origin::StitchCraft, Some(_)) => {
+                    problems.push(format!("`{key}` is an Ink/Stitch parameter ({DATA}): declare it with an Ink/Stitch origin"));
+                }
+                (_, None) => problems.push(format!("`{key}` is declared with an Ink/Stitch origin, but {DATA} has no such parameter")),
+                (origin, Some(p)) => {
+                    if !compatible(spec.kind, &p.kind, &p.unit) {
+                        problems.push(format!("`{key}` is {} here, but Ink/Stitch's is a {} in {}", spec.kind.describe(), p.kind, p.unit));
+                    }
+                    let their_default = if p.default == "—" { "" } else { p.default.as_str() };
+                    let same = match (spec.read(spec.default), spec.read(their_default)) {
+                        (Ok((ours, _)), Ok((theirs, None))) => ours == theirs,
+                        _ => false,
+                    };
+                    if origin == Origin::InkStitch && !same {
+                        problems.push(format!(
+                            "`{key}` defaults to \"{}\" here and \"{their_default}\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)",
+                            spec.default
+                        ));
+                    }
+                    if p.element == "common" && spec.applies_to != StitchType::ALL {
+                        problems.push(format!("`{key}` applies to every stitch type in Ink/Stitch, but not here"));
+                    }
+                }
+            }
+        }
+        for key in ["lock_start", "lock_end"] {
+            if let Some(Kind::Choice { options }) = find(registry, key).map(|spec| spec.kind) {
+                let ids: Vec<&str> = options.iter().map(|o| o.id).collect();
+                if ids != self.lock_ids {
+                    problems.push(format!("`{key}` offers {ids:?}, but the lock identifiers in {DATA} are {:?}", self.lock_ids));
+                }
+            }
+        }
+        for family in [Family::Stroke, Family::Satin, Family::Fill] {
+            let ours: BTreeSet<&str> = StitchType::ALL.iter().filter(|t| t.family() == family).map(|t| t.id()).collect();
+            let theirs: BTreeSet<&str> = self.method.iter().filter(|m| m.param == family.method_param()).map(|m| m.value.as_str()).collect();
+            if ours != theirs {
+                problems.push(format!("`{}`: StitchType has {ours:?}, but {DATA} lists {theirs:?}", family.method_param()));
+            }
+        }
+        problems
     }
-    let locks = contract.lock_ids.iter().map(|l| format!("`{l}`")).collect::<Vec<_>>().join(", ");
-    md.push_str(&format!(
-        "\nLock stitch identifiers (`lock_start`, `lock_end`): {locks}. StitchCraft accepts every identifier; the shapes are its own\n\
-         designs with the same intent, recorded as a deviation in the [conformance](conformance.md) deviations ledger.\n"
-    ));
-    md.push_str(&format!("\n_{} parameter declarations._\n", contract.param.len()));
-    Ok(md)
+}
+
+/// The StitchCraft column: planned, or a link to the parameter's reference entry.
+fn status(registry: &[&ParamGroup], name: &str) -> String {
+    let (Some(spec), Some(entry)) = (find(registry, name), param_pages::entry(registry, name)) else { return "planned".to_string() };
+    let word = if matches!(spec.origin, Origin::InkStitchDeviates { .. }) { "deviates" } else { "registered" };
+    format!("[{word}](../user/reference/{entry})")
+}
+
+/// Whether a StitchCraft kind can hold the values of an Ink/Stitch type and unit. Kinds and units with no
+/// counterpart yet (per-side percentages, unitless floats) match nothing until a parameter needs them.
+fn compatible(kind: Kind, their_type: &str, unit: &str) -> bool {
+    match kind {
+        Kind::Length { .. } => their_type == "float" && matches!(unit, "mm" | "mm/cycle"),
+        Kind::LengthList { .. } => matches!(their_type, "float" | "string" | "str") && unit.starts_with("mm"),
+        Kind::Angle => their_type == "float" && matches!(unit, "deg" | "degrees" | "°"),
+        Kind::Percent { .. } => their_type == "float" && matches!(unit, "%" | "± %"),
+        Kind::Count { .. } => their_type == "int",
+        Kind::CountList { .. } => matches!(their_type, "int" | "string" | "str"),
+        Kind::Toggle => matches!(their_type, "boolean" | "toggle"),
+        Kind::Choice { .. } => matches!(their_type, "combo" | "dropdown"),
+        Kind::Seed => their_type == "random_seed",
+        Kind::Text { .. } => matches!(their_type, "string" | "str"),
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_params::{ChoiceOption, ParamSpec, Stability};
+
     use super::*;
 
+    /// A data file with one fill parameter, one lock id and every method id (so only what a test
+    /// changes disagrees).
+    fn data(default: &str) -> String {
+        let mut data = format!(
+            "lock_ids = [\"half_stitch\"]\n[[param]]\nelement = \"fill\"\nname = \"row_spacing_mm\"\ntype = \"float\"\nunit = \"mm\"\n\
+             default = \"{default}\"\napplies_to = [\"tatami_fill\"]\nphase = \"P1\"\nmilestone = \"M5\"\n"
+        );
+        for t in StitchType::ALL {
+            let param = t.family().method_param();
+            data.push_str(&format!("[[method]]\nparam = \"{param}\"\nvalue = \"{}\"\nphase = \"P1\"\nmilestone = \"M5\"\n", t.id()));
+        }
+        data
+    }
+
+    const ROW_SPACING: ParamSpec = ParamSpec {
+        key: "row_spacing_mm",
+        label: "Row spacing",
+        help: " Distance between rows.\n",
+        kind: Kind::Length { min: 0.1, max: 10.0, optional: false },
+        default: "0.25",
+        group: "Fill",
+        applies_to: &[StitchType::TatamiFill],
+        visible_when: None,
+        stability: Stability::Stable,
+        origin: Origin::InkStitch,
+    };
+
+    fn registry(specs: &'static [ParamSpec]) -> ParamGroup {
+        ParamGroup { name: "TatamiFillParams", help: " Tatami.\n", applies_to: &[StitchType::TatamiFill], specs }
+    }
+
     #[test]
-    fn renders_sections_methods_and_counts() {
-        let data = r#"
-lock_ids = ["half_stitch"]
-[[param]]
-element = "fill"
-name = "row_spacing_mm"
-type = "float"
-unit = "mm"
-default = "0.25"
-applies_to = ["tatami_fill"]
-phase = "P1"
-milestone = "M5"
-[[method]]
-param = "fill_method"
-value = "tatami_fill"
-phase = "P1"
-milestone = "M5"
-"#;
-        let page = render(data).unwrap();
-        assert!(page.contains("| `row_spacing_mm` | float | mm | 0.25 | `tatami_fill` | P1 (M5) |"));
-        assert!(page.contains("| `fill_method` | `tatami_fill` | P1 (M5) |"));
-        assert!(page.contains("_1 parameter declarations._"));
+    fn renders_sections_methods_counts_and_status() {
+        let contract = Contract::parse(&data("0.25")).unwrap();
+        let planned = contract.render(&[]);
+        assert!(planned.contains("| `row_spacing_mm` | float | mm | 0.25 | `tatami_fill` | P1 (M5) | planned |"));
+        assert!(planned.contains("| `fill_method` | `tatami_fill` | P1 (M5) |"));
+        assert!(planned.contains("_1 parameter declarations, 0 registered in StitchCraft._"));
+        let group = registry(&[ROW_SPACING]);
+        let registered = contract.render(&[&group]);
+        assert!(registered.contains("| P1 (M5) | [registered](../user/reference/params/tatami-fill.md#row_spacing_mm) |"));
+        const DEVIATES: &[ParamSpec] = &[ParamSpec { origin: Origin::InkStitchDeviates { deviation: "DEV-FILL-001" }, ..ROW_SPACING }];
+        let group = registry(DEVIATES);
+        assert!(contract.render(&[&group]).contains("| [deviates](../user/reference/params/tatami-fill.md#row_spacing_mm) |"));
+    }
+
+    #[test]
+    fn agreeing_registries_have_no_problems_and_numbers_compare_as_numbers() {
+        let group = registry(&[ROW_SPACING]);
+        assert_eq!(Contract::parse(&data("0.25")).unwrap().check(&[&group]), Vec::<String>::new());
+        assert_eq!(Contract::parse(&data("0.250")).unwrap().check(&[&group]), Vec::<String>::new());
+    }
+
+    #[test]
+    fn every_disagreement_is_reported() {
+        const SPECS: &[ParamSpec] = &[
+            ParamSpec { kind: Kind::Count { min: 1, max: 9 }, default: "1", ..ROW_SPACING },
+            ParamSpec { key: "sparkle_mm", ..ROW_SPACING },
+            ParamSpec {
+                key: "lock_start",
+                kind: Kind::Choice { options: &[ChoiceOption { id: "bowtie", label: "Bowtie" }] },
+                default: "bowtie",
+                origin: Origin::StitchCraft,
+                ..ROW_SPACING
+            },
+        ];
+        let group = registry(SPECS);
+        let mut data = data("0.25");
+        data = data.replace("value = \"legacy_fill\"", "value = \"old_fill\"");
+        let problems = Contract::parse(&data).unwrap().check(&[&group]);
+        assert_eq!(
+            problems,
+            [
+                "`row_spacing_mm` is a whole number from 1 to 9 here, but Ink/Stitch's is a float in mm",
+                "`row_spacing_mm` defaults to \"1\" here and \"0.25\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)",
+                "`sparkle_mm` is declared with an Ink/Stitch origin, but conformance/inkstitch-params.toml has no such parameter",
+                "`lock_start` offers [\"bowtie\"], but the lock identifiers in conformance/inkstitch-params.toml are [\"half_stitch\"]",
+                "`fill_method`: StitchType has {\"circular_fill\", \"contour_fill\", \"cross_stitch\", \"guided_fill\", \"legacy_fill\", \"linear_gradient_fill\", \"meander_fill\", \"tartan_fill\", \"tatami_fill\"}, but conformance/inkstitch-params.toml lists {\"circular_fill\", \"contour_fill\", \"cross_stitch\", \"guided_fill\", \"linear_gradient_fill\", \"meander_fill\", \"old_fill\", \"tartan_fill\", \"tatami_fill\"}",
+            ]
+        );
+    }
+
+    #[test]
+    fn stitchcraft_parameters_may_not_take_ink_stitch_keys() {
+        const OURS: &[ParamSpec] = &[ParamSpec { origin: Origin::StitchCraft, ..ROW_SPACING }];
+        let group = registry(OURS);
+        assert_eq!(
+            Contract::parse(&data("0.25")).unwrap().check(&[&group]),
+            ["`row_spacing_mm` is an Ink/Stitch parameter (conformance/inkstitch-params.toml): declare it with an Ink/Stitch origin"]
+        );
+    }
+
+    #[test]
+    fn the_engine_registry_agrees_with_the_committed_contract() {
+        let data = crate::util::read(&crate::util::root().join(DATA)).unwrap();
+        let registry = stitchcraft_engine::registry::PARAMETERS;
+        assert_eq!(Contract::parse(&data).unwrap().check(registry), Vec::<String>::new());
     }
 
     #[test]
     fn bad_data_is_an_error() {
-        assert!(render("param = 3").is_err());
+        assert!(Contract::parse("param = 3").is_err());
     }
 }

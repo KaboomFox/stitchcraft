@@ -182,7 +182,7 @@ area = "params"
 level = "L2"
 statement = "Every registered parameter has a label, help text, kind, default, range or options, group and applicability."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-PRM-002"
@@ -190,7 +190,7 @@ area = "params"
 level = "L2"
 statement = "Invalid parameter values produce SC-E0101 or SC-W0102 with the key, the value and the accepted range; they never fall back silently to defaults."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-PRM-003"

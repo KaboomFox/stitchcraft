@@ -10,6 +10,9 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0005`](#sc-e0005) | Error | Preview too large |
 | [`SC-E0009`](#sc-e0009) | Error | Internal check failed |
 | [`SC-E0010`](#sc-e0010) | Error | Nothing to stitch |
+| [`SC-E0101`](#sc-e0101) | Error | Parameter has the wrong type or an unknown choice |
+| [`SC-W0102`](#sc-w0102) | Warning | Parameter clamped to its allowed range |
+| [`SC-W0105`](#sc-w0105) | Warning | Unknown parameter preserved but ignored |
 | [`SC-E0601`](#sc-e0601) | Error | Too many colour changes for the file format |
 | [`SC-E0602`](#sc-e0602) | Error | Design too large for the file format |
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
@@ -56,6 +59,38 @@ The design has no stitches: it is empty, or every element was skipped (see the o
 StitchCraft never writes an empty machine file, because some machines refuse or mishandle them.
 
 Add an element with an embroidery stitch type, or fix the errors reported for the elements.
+
+## SC-E0101
+
+**Error** — Parameter has the wrong type or an unknown choice
+
+A parameter's value could not be understood: a number where a word was expected, a choice that
+is not one of the parameter's options, or a list with the wrong number of values. The element was
+not stitched: guessing could sew something you did not ask for.
+
+The message names the parameter, the value and what the parameter accepts. The parameter
+reference lists every parameter with its accepted values.
+
+## SC-W0102
+
+**Warning** — Parameter clamped to its allowed range
+
+A parameter's value is outside the range StitchCraft accepts, so the nearest allowed value was
+used, and the element was stitched with it. Values outside the range are impossible (a negative
+length) or beyond what machines sew reliably.
+
+The message names the parameter, your value and the range. Change the value to remove the
+warning.
+
+## SC-W0105
+
+**Warning** — Unknown parameter preserved but ignored
+
+The design carries a parameter StitchCraft does not know: one from a newer version of StitchCraft
+or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was kept, so saving
+the design does not lose it, but it does not change the stitches.
+
+The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.
 
 ## SC-E0601
 
