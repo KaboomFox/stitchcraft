@@ -19,6 +19,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0602`](#sc-e0602) | Error | Design too large for the file format |
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
 | [`SC-W0604`](#sc-w0604) | Warning | Thread colours unknown |
+| [`SC-I0605`](#sc-i0605) | Info | Long jumps cut in DST |
 | [`SC-E0701`](#sc-e0701) | Error | Design does not fit the hoop |
 | [`SC-W0702`](#sc-w0702) | Warning | Design is larger than the comfort zone |
 | [`SC-E0801`](#sc-e0801) | Error | SVG could not be read |
@@ -163,6 +164,19 @@ from this one, where the machine shows that colour at each thread change.
 
 The stitches are not affected. Load the threads the design needs, in the order the design's
 author gives; StitchCraft cannot know them.
+
+## SC-I0605
+
+**Info** — Long jumps cut in DST
+
+DST has no trim command: machines cut the thread when they meet three or more jump records in a
+row (a machine setting; three is the common one), and a jump longer than 24.2 mm takes three or
+more records. So the thread will be cut before such a jump, although the plan does not trim there.
+With a tie-off before the jump the cut is usually welcome: there is no jump thread to clip by hand.
+
+Nothing to do. Where an element's ties are off, turn them on so its stitching holds when it is
+cut, or sew a PES file, where only trims cut. A machine set to another number of jump records cuts
+before other jumps: see its DST setting.
 
 ## SC-E0701
 

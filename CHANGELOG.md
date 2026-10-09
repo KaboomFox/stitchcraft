@@ -5,6 +5,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- `SC-I0605`: writing DST says at how many places its machines will cut the thread where the plan does
+  not trim. `stitchcraft_formats::encode` returns the file as `Encoded`, its bytes with notes on
+  what the format makes the machine do that the plan does not say; `stitch convert` and
+  `stitch testsheet` print them.
 - M3.5: repeats, bean stitch and random length for the running stitch.
   - **Repeats.** `repeats` sews a run several times, every other pass backwards. Each pass starts where
     the last one ended, so a turnaround is never a stitch in place.
@@ -123,6 +127,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- DST is read as DST machines sew it (`REQ-FMT-008`). Machines count jump records in a row and cut the
+  thread before three or more — a machine setting; three is the common one, and pyembroidery's reading —
+  where something was sewn since the thread was last cut or changed, so a jump longer than 24.2 mm is a
+  trim too. StitchCraft recognised only its own spelling of a trim (three small jumps back to where they
+  started), so a DST file with a long untrimmed jump read back without the cut its machines make, and
+  pyembroidery read such a file differently. Found by the pyembroidery oracle on M3.9's plan golden;
+  reproduced on `main` with the new canonical plan `long-jumps`. Round trips through DST are compared
+  with what DST machines do (`stitchcraft_testkit::equivalence::dst_events`), and the fuzz body now
+  checks DST read-backs as well as PES.
 - The compatibility contract check took the lock shape `zigzag`, listed for `lock_*_scale_percent`, for
   the satin method of the same name, and so thought those parameters applied to zigzag satins only. A
   stitch type is now named only by an id of the row's own family; the common settings have none. It
@@ -145,6 +158,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   zero-length jumps.
 
 ### Golden files
+- Added `conformance/golden/formats/long-jumps.pes` and `.dst`: untrimmed jumps of two and three DST
+  records, from the start, between stitches and after a thread change. DST machines cut before the one
+  between stitches only; the pyembroidery oracle reads both files.
 - Added `conformance/golden/render/`: previews of a sampler design (simple and realistic) and of TS-01
   (realistic). They pin how previews look; a change to them is a change users will see.
 - Added `conformance/golden/formats/` (canonical plans `every-command` and `one-stitch`, PES and DST)

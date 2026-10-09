@@ -187,6 +187,16 @@ registry! {
     /// author gives; StitchCraft cannot know them.
     ThreadColorsUnknown = "SC-W0604", Warning, "Thread colours unknown";
 
+    /// DST has no trim command: machines cut the thread when they meet three or more jump records in a
+    /// row (a machine setting; three is the common one), and a jump longer than 24.2 mm takes three or
+    /// more records. So the thread will be cut before such a jump, although the plan does not trim there.
+    /// With a tie-off before the jump the cut is usually welcome: there is no jump thread to clip by hand.
+    ///
+    /// Nothing to do. Where an element's ties are off, turn them on so its stitching holds when it is
+    /// cut, or sew a PES file, where only trims cut. A machine set to another number of jump records cuts
+    /// before other jumps: see its DST setting.
+    JumpsCutInDst = "SC-I0605", Info, "Long jumps cut in DST";
+
     /// The design is wider or taller than the machine's hoop, so the machine cannot sew it in one
     /// hooping (most machines refuse the file).
     ///
