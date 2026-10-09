@@ -8,6 +8,8 @@ files = [
     "golden/formats/every-command.dst",
     "golden/formats/one-stitch.pes",
     "golden/formats/one-stitch.dst",
+    "golden/formats/long-jumps.pes",
+    "golden/formats/long-jumps.dst",
     "golden/testsheets/TS-01.pes",
     "golden/testsheets/TS-01.dst",
     "golden/testsheets/TS-02.pes",

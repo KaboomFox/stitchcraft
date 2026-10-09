@@ -137,7 +137,7 @@ fn goldens(root: &Path, plan: &StitchPlan, name: &str, golden_files: &[String], 
             continue;
         };
         let bytes = match stitchcraft_formats::encode(plan, format, name) {
-            Ok(bytes) => bytes,
+            Ok(encoded) => encoded.bytes,
             Err(e) => {
                 fail(outcome, format!("{}: {e}", format.name()));
                 continue;

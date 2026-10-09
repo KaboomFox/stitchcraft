@@ -27,6 +27,7 @@ pub stitchcraft_core::diag::Code::BudgetExhausted
 pub stitchcraft_core::diag::Code::CustomLockUnusable
 pub stitchcraft_core::diag::Code::HandStitchTooShort
 pub stitchcraft_core::diag::Code::InternalCheckFailed
+pub stitchcraft_core::diag::Code::JumpsCutInDst
 pub stitchcraft_core::diag::Code::LockStitchLengthened
 pub stitchcraft_core::diag::Code::NothingToStitch
 pub stitchcraft_core::diag::Code::OutsideComfortZone
@@ -171,6 +172,7 @@ pub stitchcraft_core::Code::BudgetExhausted
 pub stitchcraft_core::Code::CustomLockUnusable
 pub stitchcraft_core::Code::HandStitchTooShort
 pub stitchcraft_core::Code::InternalCheckFailed
+pub stitchcraft_core::Code::JumpsCutInDst
 pub stitchcraft_core::Code::LockStitchLengthened
 pub stitchcraft_core::Code::NothingToStitch
 pub stitchcraft_core::Code::OutsideComfortZone

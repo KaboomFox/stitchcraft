@@ -105,6 +105,7 @@ another.
 | `SC-E0602` | Error | Design too large for the file format (coordinates or data exceed its fields) | M1 |
 | `SC-E0603` | Error | Machine file could not be read (wrong format, truncated, or a record that makes no sense) | M2 |
 | `SC-W0604` | Warning | Thread colours unknown (the file stores none, as DST never does; threads are placeholders) | M2 |
+| `SC-I0605` | Info | Long jumps cut in DST (machines cut the thread before three or more jump records in a row) | M3 |
 | `SC-E0701` | Error | Design does not fit the hoop | M1 |
 | `SC-W0702` | Warning | Design is larger than the comfort zone (the profile's most accurate area) | M1 |
 | `SC-I0703` | Info | Stitches longer than the machine's longest stitch; split | M3 |

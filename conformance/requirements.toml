@@ -98,7 +98,7 @@ status = "active"
 id = "REQ-FMT-002"
 area = "formats"
 level = "L1"
-statement = "For every writer/reader pair, decode(encode(plan)) makes the machine do what the plan does: the needle goes down at the same positions (absolute positions quantized to 0.1 mm, round half to even), and the thread is cut and the machine pauses at the same places (stitchcraft-testkit::equivalence), on random plans with fixed seeds per PR and fresh seeds nightly."
+statement = "For every writer/reader pair, decode(encode(plan)) makes the machine do what the plan does: the needle goes down at the same positions (absolute positions quantized to 0.1 mm, round half to even), and the thread is cut and the machine pauses at the same places (stitchcraft-testkit::equivalence), on random plans with fixed seeds per PR and fresh seeds nightly. A DST file cuts the thread wherever DST machines do (REQ-FMT-008), which can be more places than the plan's trims."
 milestone = "M2"
 status = "active"
 
@@ -143,6 +143,15 @@ area = "formats"
 level = "L1"
 statement = "Moves longer than a format's per-record limit are split into several records within the limit."
 milestone = "M1"
+status = "active"
+
+[[req]]
+id = "REQ-FMT-008"
+area = "formats"
+level = "L1"
+statement = "DST files are read as DST machines sew them: three or more jump records in a row cut the thread before them where something was sewn since it was last cut or changed, and nothing else is a cut; writing a DST file reports (SC-I0605) every place where its machines will cut the thread and the plan does not."
+rationale = "DST has no trim command. Machines count jump records in a row — a machine setting (1 to 8 on Brother's PR machines), commonly 3, which is also pyembroidery's default — so a jump longer than two records (24.2 mm) is a trim too (formats.md, DST)."
+milestone = "M3"
 status = "active"
 
 [[req]]

@@ -3,8 +3,9 @@
 //!
 //! The engine does the planning (`stitchcraft_engine::plan`): it fits the plan to the machine and checks
 //! it, so what comes back is written as it is. This command reads the SVG file, prints what was said about
-//! the design — element by element — and writes the files. Nothing is written when the design has errors,
-//! except the report, which says why.
+//! the design — element by element, and what the file format adds, such as DST's cuts before long jumps
+//! (`SC-I0605`) — and writes the files. Nothing is written when the design has errors, except the report,
+//! which says why.
 
 use std::fmt::Write as _;
 use std::path::Path;
@@ -12,6 +13,7 @@ use std::path::Path;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use stitchcraft_core::{Budget, Diagnostic};
+use stitchcraft_formats::Encoded;
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 use stitchcraft_render::{Settings, Style};
@@ -44,13 +46,14 @@ pub fn run(args: &PlanArgs) -> Outcome {
     diagnostics.extend(outcome.diagnostics);
     let Some(plan) = outcome.plan else { return refuse(args, profile, &diagnostics) };
     let name = args.design.file_stem().and_then(|s| s.to_str()).unwrap_or("design");
-    let machine_file = match stitchcraft_formats::encode(&plan, format, name) {
-        Ok(machine_file) => machine_file,
+    let Encoded { bytes: machine_file, notes } = match stitchcraft_formats::encode(&plan, format, name) {
+        Ok(encoded) => encoded,
         Err(e) => {
             diagnostics.push(e.diagnostic());
             return refuse(args, profile, &diagnostics);
         }
     };
+    diagnostics.extend(notes);
     if let Err(outcome) = write_file(&args.output, &machine_file) {
         return outcome;
     }
@@ -221,6 +224,8 @@ mod tests {
         let out = run(&PlanArgs { format: Some(Format::Dst), ..args(fixture("strokes.svg"), dst.clone()) });
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(std::fs::read(&dst).unwrap().starts_with(b"LA:strokes"));
+        // What the format adds is said with the rest: DST machines cut before the 47 mm jump.
+        assert!(out.stderr.ends_with("info SC-I0605: The thread will be cut at 1 place the plan does not trim: DST machines cut it before 3 or more jump records in a row, and a jump longer than 24.2 mm takes that many.\n"), "{}", out.stderr);
         assert_eq!(run(&args(fixture("strokes.svg"), temp("x.unknown"))).status, Status::Usage);
         assert_eq!(run(&PlanArgs { profile: "singer".to_string(), ..args(fixture("strokes.svg"), temp("x.pes")) }).status, Status::Usage);
         let missing = run(&args(fixture("missing.svg"), temp("x.pes")));
