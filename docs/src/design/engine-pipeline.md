@@ -95,6 +95,11 @@ With `d` the distance from the previous group's exit to the next group's entry:
 | Colour change | Tie-off → `ColorChange` → tie-in |
 | `stop_after` | Tie-off → `Stop` → tie-in when sewing resumes |
 
+Ink/Stitch (read at `d59c9ab`) joins same-colour groups within the collapse length with one direct
+stitch, and trims only when told to (`trim_after`, a trim command). StitchCraft splits that stitch to the
+machine's longest stitch and also trims at the profile's threshold: both differences come from the
+machine profile, and go into the deviations ledger with M3.8.
+
 ### Lock stitches (ties)
 
 - `ties` selects where locks go: both, before (tie-in), after (tie-off) or neither.
@@ -105,7 +110,15 @@ With `d` the distance from the previous group's exit to the next group's entry:
   steps are scaled by `lock_*_scale_mm` (an absolute size), shapes drawn as paths by
   `lock_*_scale_percent` (relative to their own size); the half stitch is sized from the first stitch.
   A custom lock (`lock_custom_start`, `lock_custom_end`) is either kind.
-- `force_lock_stitches` adds locks even when the next group is close enough to collapse.
+- `force_lock_stitches` adds locks even when the next group is close enough to collapse. In Ink/Stitch
+  (read at `d59c9ab`) it also adds the tie-off when `ties` asks for none after, but never a tie-in.
+- A group of fewer than two stitches gets no locks. Manual stitch gets none unless `force_lock_stitches`
+  is set.
+- Ink/Stitch's half stitch goes back and forth towards the first needle point at least 0.5 mm away, by
+  fractions of that distance capped at 1.5 mm, and ignores both scale parameters; its tie-off leaves out
+  its first point, which is the group's last stitch. Its settings window shows `lock_*_scale_mm` only for
+  back-and-forth and custom locks and `lock_*_scale_percent` only for drawn shapes and custom locks;
+  StitchCraft's parameter registry should show them the same way (M3.7).
 - Lock stitches must be ≥ 0.2 mm long so the needle does not hit the same hole; shorter computed locks
   are scaled up, never dropped silently.
 
@@ -135,6 +148,12 @@ Against the machine profile:
 
 Splitting jumps longer than a format can encode in one record is *not* done here: it is the encoder's
 job, because the limit is a property of the file format, not of the machine.
+
+Ink/Stitch (read at `d59c9ab`) removes short stitches once, over the whole plan: a stitch no longer than
+the shortest stitch (the element's `min_stitch_length_mm`, else its global 0.1 mm) from the last one kept
+is dropped, except lock stitches and the first stitch after a jump, stop, trim or colour change; nothing
+is split. StitchCraft's floor is the machine's (0.3 mm on the Brother), short stitches merge into their
+neighbour, and the running stitch already keeps the floor while it places stitches.
 
 ## 6. Check
 
