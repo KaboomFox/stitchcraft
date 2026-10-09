@@ -1,9 +1,10 @@
 # Documentation correctness on every pull request, and publishing (docs/src/design/docs-pipeline.md).
 #
 # `cargo xtask shots --check` regenerates every image declared in docs/shots.toml and compares it with
-# the committed file. The generators arrive with the roadmap — stitch renders in M2.7, VectorCraft renders
-# and UI screenshots (Xvfb + Mesa, perceptual compare) in M6.7 — together with `docs-refresh.yml`, which
-# regenerates images when a maintainer adds the `docs:refresh-shots` label to a pull request.
+# the committed file; a stale image's new version is kept as a run artifact. Stitch renders are generated
+# today; VectorCraft renders and UI screenshots (Xvfb + Mesa, perceptual compare) arrive in M6.7.
+# `docs-refresh.yml` regenerates everything when a maintainer adds the `docs:refresh-shots` label to a
+# pull request.
 name: docs
 
 on:
@@ -11,6 +12,8 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+  # docs-refresh.yml dispatches this for the commit it pushes to a pull request.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -40,6 +43,13 @@ jobs:
         run: cargo xtask conformance --check
       - name: Documentation images are declared, reproducible and current
         run: cargo xtask shots --check
+      - name: Keep the new version of stale images
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: stale-images
+          path: target/shots/
+          if-no-files-found: ignore
       - name: Build the book
         run: mdbook build docs
       - name: Rust snippets in rustdoc compile

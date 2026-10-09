@@ -7,6 +7,8 @@ on:
   push:
     branches: [main]
   merge_group:
+  # docs-refresh.yml dispatches this for the commit it pushes to a pull request.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -48,6 +50,7 @@ jobs:
           path: |
             target/tmp/*.png
             target/conformance/diffs/
+            target/shots/
           if-no-files-found: ignore
 
   tests:

@@ -78,19 +78,26 @@ dialogs' contents.
 | `book` | `mdbook build` fails, or any page is missing from `SUMMARY.md` |
 | `check` | generated pages are stale; a relative link or `#anchor` is broken; a doc mentions a `cargo xtask` subcommand that does not exist (the drift we found in VectorCraft's own `AGENTS.md`); a `REQ-…` or `SC-…` id does not exist; an image lacks a declaration or alt text |
 | `examples` | a CLI example in the docs (`trycmd`, from M1.8) prints something different from what the page shows; a Rust snippet does not compile (`cargo test --doc`) |
-| `shots` | `cargo xtask shots --check`: a declared image is missing, has no alt text, or regenerates differently from the committed file — byte-exact for `stitch` shots (generator in M2.7), within tolerance for `vectorcraft-ui` and `vectorcraft-render` shots (generators in M6.7; a separate job with Xvfb and Mesa) |
+| `shots` | `cargo xtask shots --check`: a declared image is missing, has no alt text, or regenerates differently from the committed file — byte-exact for `stitch` shots, within tolerance for `vectorcraft-ui` and `vectorcraft-render` shots (generators in M6.7; a separate job with Xvfb and Mesa) |
 | `spelling` | `typos` finds a misspelling (allow-list in `typos.toml`) |
 | `links` | an internal link is broken (`lychee --offline`); external links are checked nightly, not per PR |
 
-When a shot differs, the job uploads an artifact with the new image, the old one and a diff image, and
-writes a summary table to the PR's job summary.
+When a shot differs, `--check` writes the new image to `target/shots/` and the job keeps it as the
+`stale-images` artifact, next to the committed one in the PR's diff. An image under
+`docs/src/images/generated/` that no shot declares is an error too, so renamed shots leave nothing
+behind.
 
 ### Refreshing images
 
 Changing a stitch algorithm *should* change its pictures. The PR author runs `cargo xtask shots` locally,
 or a maintainer adds the label **`docs:refresh-shots`**: `docs-refresh.yml` regenerates every shot and
-pushes a commit to the PR branch (same-repository PRs; for forks the artifact contains the files and the
-PR summary explains how to apply them). The refreshed images go through review like any other change.
+every generated page, pushes a commit to the PR branch and removes the label (same-repository PRs; for
+forks the run keeps the files as an artifact and its summary explains how to apply them). GitHub starts
+no workflows for a push made with a workflow's token, so the refresh then dispatches `ci`, `docs` and
+`goldens` for the new commit. The refreshed images go through review like any other change.
+
+Pages show a shot with the shot's own alt text: the test-sheets reference is generated with one picture
+per `stitch` shot of each sheet, so a new sheet gets its picture by declaring a shot.
 
 ## Publishing
 

@@ -8,7 +8,7 @@
 
 use stitchcraft_core::units::MACHINE_LIMIT;
 use stitchcraft_core::{Budget, Point};
-use stitchcraft_plan::{PlanBuilder, Provenance, Role, StitchPlan, Thread};
+use stitchcraft_plan::{PaletteId, PlanBuilder, Provenance, Role, StitchPlan, Thread};
 
 use crate::error::DecodeError;
 use crate::quantize::{Delta, Units};
@@ -21,6 +21,9 @@ pub const MAX_RECORDS: usize = Budget::DEFAULT.max_stitches as usize;
 pub struct Decoded {
     /// The format and version, as people say it: `PES (#PES0001)`, `PEC`, `DST`.
     pub format: String,
+    /// The palette the file's thread colours are indices into; `None` when the format stores no colours
+    /// (DST), so the plan's threads are placeholders.
+    pub palette: Option<PaletteId>,
     /// The design name stored in the file.
     pub name: String,
     /// The stitches, one plan entry per record.

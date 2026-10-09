@@ -1,0 +1,4 @@
+$ stitch preview TS-01.pes -o TS-01.png
+TS-01.png · 992 × 992 pixels
+  from      TS-01.pes · PES (#PES0001) · "TS-01"
+  style     realistic, 8 pixels per millimetre

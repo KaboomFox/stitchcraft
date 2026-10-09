@@ -10,8 +10,8 @@
 //! writes stops (StitchCraft's writer included). Two colour blocks whose threads map to the same Brother
 //! colour therefore read back as one block with a stop — PES v1 cannot tell them apart.
 
-use stitchcraft_plan::Thread;
 use stitchcraft_plan::palette::BROTHER_PEC;
+use stitchcraft_plan::{PaletteId, Thread};
 
 use crate::decode::{Decoded, Recorder, label_text};
 use crate::error::DecodeError;
@@ -123,7 +123,7 @@ fn read_pec(block: &[u8], base: usize) -> Result<Decoded, DecodeError> {
             }
         }
     }
-    Ok(Decoded { format: String::new(), name, plan: recorder.finish(), warnings })
+    Ok(Decoded { format: String::new(), palette: Some(PaletteId::BrotherPec), name, plan: recorder.finish(), warnings })
 }
 
 /// One axis at `i`: the value, its flags (long form only) and where the next axis starts.

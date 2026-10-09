@@ -13,6 +13,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0601`](#sc-e0601) | Error | Too many colour changes for the file format |
 | [`SC-E0602`](#sc-e0602) | Error | Design too large for the file format |
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
+| [`SC-W0604`](#sc-w0604) | Warning | Thread colours unknown |
 | [`SC-E0701`](#sc-e0701) | Error | Design does not fit the hoop |
 | [`SC-W0702`](#sc-w0702) | Warning | Design is larger than the comfort zone |
 
@@ -85,6 +86,17 @@ damaged or hostile, so a bad file is reported, never half-read in silence.
 
 The message says where reading stopped. If the machine sews the file, it may be a format variant
 StitchCraft does not know yet: please report it with the file.
+
+## SC-W0604
+
+**Warning** — Thread colours unknown
+
+The file stores no thread colours (DST files never do: they only say where the machine pauses for
+the next thread), so every thread has a placeholder colour — in previews, and in files converted
+from this one, where the machine shows that colour at each thread change.
+
+The stitches are not affected. Load the threads the design needs, in the order the design's
+author gives; StitchCraft cannot know them.
 
 ## SC-E0701
 

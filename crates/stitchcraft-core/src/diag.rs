@@ -136,6 +136,14 @@ registry! {
     /// StitchCraft does not know yet: please report it with the file.
     UnreadableFile = "SC-E0603", Error, "Machine file could not be read";
 
+    /// The file stores no thread colours (DST files never do: they only say where the machine pauses for
+    /// the next thread), so every thread has a placeholder colour — in previews, and in files converted
+    /// from this one, where the machine shows that colour at each thread change.
+    ///
+    /// The stitches are not affected. Load the threads the design needs, in the order the design's
+    /// author gives; StitchCraft cannot know them.
+    ThreadColorsUnknown = "SC-W0604", Warning, "Thread colours unknown";
+
     /// The design is wider or taller than the machine's hoop, so the machine cannot sew it in one
     /// hooping (most machines refuse the file).
     ///

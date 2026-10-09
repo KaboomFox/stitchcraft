@@ -7,16 +7,14 @@
 use std::fmt::Write as _;
 use std::path::Path;
 
-use sha2::{Digest, Sha256};
 use stitchcraft_core::{Diagnostic, Severity};
 use stitchcraft_engine::testsheets::{self, SHEETS, TestSheet};
 use stitchcraft_plan::invariants;
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 
-use super::{Outcome, Status, describe_plan, describe_threads, render_diagnostics};
+use super::{Outcome, Status, describe_file, describe_plan, describe_threads, output_format, render_diagnostics, write_file};
 use crate::cli::TestsheetArgs;
-use crate::files;
 
 /// Runs `stitch testsheet`.
 pub fn run(args: &TestsheetArgs) -> Outcome {
@@ -32,48 +30,41 @@ pub fn run(args: &TestsheetArgs) -> Outcome {
     let Some(profile) = profiles::find(profile_id) else {
         return Outcome::usage(format!("there is no profile `{profile_id}`; `stitch profiles` shows them"));
     };
-    let extension = output.extension().and_then(|e| e.to_str()).and_then(FormatId::from_extension);
-    let Some(format) = args.format.map(FormatId::from).or(extension) else {
-        return Outcome::usage(format!("cannot tell the format of `{}`: name it .pes or .dst, or use --format", output.display()));
+    let format = match output_format(args.format, output) {
+        Ok(format) => format,
+        Err(outcome) => return outcome,
     };
 
     let plan = match sheet.plan() {
         Ok(plan) => plan,
         Err(e) => {
-            return refuse(&[Diagnostic::new(
-                stitchcraft_core::Code::InternalCheckFailed,
-                format!("Test sheet {} could not be drawn: {e}.", sheet.id),
-            )]);
+            let bug = Diagnostic::new(stitchcraft_core::Code::InternalCheckFailed, format!("Test sheet {} could not be drawn: {e}.", sheet.id));
+            return Outcome::refuse(String::new(), &[bug]);
         }
     };
     let mut diagnostics: Vec<Diagnostic> = invariants::check(&plan, profile).iter().map(invariants::Violation::diagnostic).collect();
     diagnostics.extend(plan.bounds().and_then(|bounds| profile.check_fit(bounds)));
     if diagnostics.iter().any(|d| d.severity() == Severity::Error) {
-        return refuse(&diagnostics);
+        return Outcome::refuse(String::new(), &diagnostics);
     }
     let bytes = match stitchcraft_formats::encode(&plan, format, sheet.id) {
         Ok(bytes) => bytes,
         Err(e) => {
             diagnostics.push(e.diagnostic());
-            return refuse(&diagnostics);
+            return Outcome::refuse(String::new(), &diagnostics);
         }
     };
-    if let Err(e) = files::write_atomically(output, &bytes) {
-        return Outcome { stdout: String::new(), stderr: format!("stitch: cannot write {}: {e}\n", output.display()), status: Status::Io };
+    if let Err(outcome) = write_file(output, &bytes) {
+        return outcome;
     }
     Outcome { stdout: report(sheet, profile, format, output, &plan, &bytes), stderr: render_diagnostics(&diagnostics), status: Status::Done }
-}
-
-fn refuse(diagnostics: &[Diagnostic]) -> Outcome {
-    Outcome { stdout: String::new(), stderr: render_diagnostics(diagnostics) + "nothing was written\n", status: Status::DesignErrors }
 }
 
 /// What was written, what the machine will ask for, and what to check.
 fn report(sheet: &TestSheet, profile: &MachineProfile, format: FormatId, output: &Path, plan: &StitchPlan, bytes: &[u8]) -> String {
     let mut out = String::new();
     let _ = writeln!(out, "{} · {}", sheet.id, sheet.title);
-    let _ = writeln!(out, "  file      {} ({}, {} bytes)", output.display(), format.name(), bytes.len());
-    let _ = writeln!(out, "  sha256    {}", hex(&Sha256::digest(bytes)));
+    describe_file(&mut out, output, format, bytes);
     let _ = writeln!(out, "  profile   {} ({})", profile.id, profile.name);
     describe_plan(&mut out, plan);
     describe_threads(&mut out, plan, format.palette().map(|id| id.palette()));
@@ -84,19 +75,15 @@ fn report(sheet: &TestSheet, profile: &MachineProfile, format: FormatId, output:
     out
 }
 
-pub(crate) fn hex(bytes: &[u8]) -> String {
-    bytes.iter().fold(String::with_capacity(bytes.len() * 2), |mut s, b| {
-        let _ = write!(s, "{b:02x}");
-        s
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
 
+    use sha2::{Digest, Sha256};
+
     use super::*;
     use crate::cli::Format;
+    use crate::commands::hex;
 
     fn args(sheet: &str, output: PathBuf, format: Option<Format>) -> TestsheetArgs {
         TestsheetArgs { sheet: Some(sheet.into()), list: false, profile: Some("brother-200x200".into()), output: Some(output), format }

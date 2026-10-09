@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 
 use crate::markdown::{self, Link};
 use crate::util::{self, Findings};
-use crate::{SUBCOMMANDS, conformance, contract_page, reference_pages};
+use crate::{SUBCOMMANDS, conformance, contract_page, reference_pages, shots};
 
 const DOCS_SRC: &str = "docs/src";
 const DIAGNOSTICS_PAGE: &str = "docs/src/design/diagnostics.md";
@@ -270,25 +270,10 @@ fn adr_index(root: &Path, findings: &mut Findings) -> Result<(), String> {
     Ok(())
 }
 
-#[derive(serde::Deserialize, Default)]
-struct Shots {
-    #[serde(default)]
-    shot: Vec<Shot>,
-}
-
-#[derive(serde::Deserialize)]
-struct Shot {
-    id: String,
-    #[serde(default)]
-    alt: String,
-}
-
-/// Images have alt text; local images in the book are declared in `docs/shots.toml`.
+/// Images have alt text; local images in the book are declared in `docs/shots.toml` (whose own alt
+/// texts `cargo xtask shots` checks).
 fn images(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) -> Result<(), String> {
-    let shots: Shots = toml::from_str(&util::read(&root.join("docs/shots.toml"))?).map_err(|e| format!("docs/shots.toml: {e}"))?;
-    for shot in shots.shot.iter().filter(|s| s.alt.trim().is_empty()) {
-        findings.error(format!("docs/shots.toml: shot `{}` has no alt text", shot.id));
-    }
+    let shots = shots::load(root)?;
     let src = root.join(DOCS_SRC);
     for (path, text) in pages {
         for link in markdown::links(text).into_iter().filter(|l| l.image) {
@@ -298,7 +283,7 @@ fn images(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) -> 
             }
             if path.starts_with(&src) && !link.target.contains("://") {
                 let stem = Path::new(&link.target).file_stem().and_then(|s| s.to_str()).unwrap_or("");
-                if !shots.shot.iter().any(|s| s.id == stem) {
+                if !shots.iter().any(|s| s.id == stem) {
                     findings.error(format!("{here}: image `{}` is not declared in docs/shots.toml", link.target));
                 }
             }
