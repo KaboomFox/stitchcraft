@@ -57,13 +57,14 @@
     },
     "lock_custom_end": {
       "default": "",
-      "description": "The steps a custom end lock takes along the stitching after it ends, as numbers separated by spaces, each a number of `lock_end_scale_mm`: positive steps go back into the stitching, and the first one starts where the stitching ends, so `1 -1 1 -1` goes back and forth twice. Ink/Stitch also takes an SVG path that draws the lock; StitchCraft does not sew those yet, and sews the half stitch instead (`SC-W0503`).",
+      "description": "The steps a custom end lock takes along the stitching after it ends, as numbers separated by spaces, each a number of `lock_end_scale_mm`. Positive steps go back into the stitching. The first step starts where the stitching ends, and `1 -1 1 -1` goes back and forth twice. Ink/Stitch also takes an SVG path that draws the lock. StitchCraft does not sew those yet, and sews the half stitch in its place (`SC-W0503`).",
       "maxLength": 4096,
       "title": "Custom end lock",
       "type": "string",
       "x-stitchcraft": {
+        "deviation": "DEV-LCK-002",
         "group": "Lock stitches",
-        "origin": "inkstitch",
+        "origin": "inkstitch-deviates",
         "stability": "stable",
         "visible_when": {
           "any_of": [
@@ -75,13 +76,14 @@
     },
     "lock_custom_start": {
       "default": "",
-      "description": "The steps a custom start lock takes along the stitching before it starts, as numbers separated by spaces, each a number of `lock_start_scale_mm`: positive steps go into the stitching, and the last one ends where the stitching starts, so `1 -1 1 -1` goes forth and back twice. Ink/Stitch also takes an SVG path that draws the lock; StitchCraft does not sew those yet, and sews the half stitch instead (`SC-W0503`).",
+      "description": "The steps a custom start lock takes along the stitching before it starts, as numbers separated by spaces, each a number of `lock_start_scale_mm`. Positive steps go into the stitching. The last step ends where the stitching starts, and `1 -1 1 -1` goes forth and back twice. Ink/Stitch also takes an SVG path that draws the lock. StitchCraft does not sew those yet, and sews the half stitch in its place (`SC-W0503`).",
       "maxLength": 4096,
       "title": "Custom start lock",
       "type": "string",
       "x-stitchcraft": {
+        "deviation": "DEV-LCK-002",
         "group": "Lock stitches",
-        "origin": "inkstitch",
+        "origin": "inkstitch-deviates",
         "stability": "stable",
         "visible_when": {
           "any_of": [
@@ -93,7 +95,7 @@
     },
     "lock_end": {
       "default": "half_stitch",
-      "description": "The shape of the lock stitches at the end. The half stitch, back and forth over the last half of the last stitch, hides under it; the others are larger and grip more.",
+      "description": "The shape of the lock stitches at the end. The half stitch goes back and forth over the last half of the last stitch, which hides it. The other shapes are larger and grip more.",
       "enum": [
         "half_stitch",
         "arrow",
@@ -165,7 +167,7 @@
     },
     "lock_start": {
       "default": "half_stitch",
-      "description": "The shape of the lock stitches at the start. The half stitch, back and forth over the first half of the first stitch, hides under it; the others are larger and grip more.",
+      "description": "The shape of the lock stitches at the start. The half stitch goes back and forth over the first half of the first stitch, which hides it. The other shapes are larger and grip more.",
       "enum": [
         "half_stitch",
         "arrow",

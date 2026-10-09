@@ -7,8 +7,10 @@
 //!
 //! What it reads (roadmap step M3.3): paths and the basic shapes, groups and `<switch>`, transforms, the
 //! root's size and viewBox (so lengths come out in millimetres), fill and stroke colours with
-//! `currentColor` and paint order, and everything that hides an element. Ink/Stitch's `inkstitch:*`
-//! settings, commands and clones follow in milestone M8.
+//! `currentColor` and paint order, and everything that hides an element. Of Ink/Stitch's own objects it
+//! knows enough not to stitch them: command symbols and their connectors, connector-tool lines and helper
+//! paths are left out; trim and stop commands, and the ignore commands and setting, are applied. The other
+//! `inkstitch:*` settings, commands and clones follow in milestone M8.
 //!
 //! Its invariants:
 //!
@@ -22,6 +24,7 @@
 #![forbid(unsafe_code)]
 
 mod document;
+pub mod inkstitch;
 mod path;
 mod style;
 mod transform;

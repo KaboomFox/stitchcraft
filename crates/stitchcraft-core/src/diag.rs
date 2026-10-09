@@ -185,21 +185,23 @@ registry! {
     /// ones.
     HandStitchTooShort = "SC-W0403", Warning, "Hand-placed stitch shorter than the shortest stitch; point left out";
 
-    /// A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have: the needle
+    /// A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have. The needle
     /// would go back into the hole it just left, which can cut the thread and does not lock it. Each such
     /// step of a lock made of steps (back and forth, or a custom lock written as numbers) was lengthened
-    /// to 0.2 mm; a drawn lock was enlarged until its shortest stitch is 0.2 mm.
+    /// to 0.2 mm, and a drawn lock was enlarged until its shortest stitch is 0.2 mm long. A lock of steps
+    /// follows the stitching. Where a sharp turn would fold it onto itself, it was sewn straight along the
+    /// first (or last) stitch.
     ///
     /// The message says which lock, and by how much. Set a larger lock size (`lock_start_scale_mm`,
     /// `lock_end_scale_mm`) or scale (`lock_start_scale_percent`, `lock_end_scale_percent`), or write
     /// longer custom steps.
     LockStitchLengthened = "SC-W0502", Warning, "Lock stitch shorter than 0.2 mm; lengthened";
 
-    /// The lock is set to custom, but its shape cannot be sewn as written. A custom lock is either numbers
-    /// separated by spaces — the steps the needle takes along the path, in sizes of `lock_*_scale_mm` —
-    /// or an SVG path that draws it. StitchCraft sews the numbers, but not yet a drawn custom lock: it
-    /// sews the half stitch instead. Parts that are not numbers, or steps longer than 10 m, are left out;
-    /// if no step is left, the half stitch is sewn instead.
+    /// The lock is set to custom, but its shape cannot be sewn as written. A custom lock is numbers
+    /// separated by spaces, the steps the needle takes along the stitching in sizes of
+    /// `lock_*_scale_mm`, or an SVG path that draws it. StitchCraft sews the numbers. It does not sew a
+    /// drawn custom lock yet, and sews the half stitch in its place. Parts that are not numbers, and steps
+    /// longer than 10 m, are left out. If no step is left, the half stitch is sewn instead.
     ///
     /// The message says what was wrong. Write the lock as numbers, such as `1 -1 1 -1`, or choose
     /// another lock shape.
@@ -212,6 +214,12 @@ registry! {
     ///
     /// Nothing to do. If the count is large, check for elements drawn on top of each other.
     StitchesMerged = "SC-I0504", Info, "Stitches shorter than the shortest stitch merged";
+    /// The element is set to trim or stop after it (`trim_after`, `stop_after`, or Ink/Stitch's trim and
+    /// stop commands), but it sews no stitch, so there is no place for the trim or the stop: it is left
+    /// out, as Ink/Stitch leaves it out. Another message says why the element sews nothing.
+    ///
+    /// Make the element sew, or set the trim or stop on the element before it.
+    TrimOrStopLeftOut = "SC-W0505", Warning, "Trim or stop after an element that sews nothing; left out";
 
     /// The file format can record only a limited number of colour changes and stops (PES: 255). This
     /// design has more, so the file was not written.
@@ -289,6 +297,15 @@ registry! {
     /// The message names the element and what was done. Convert text and clones to paths in the editor
     /// (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
     SvgFeatureIgnored = "SC-W0802", Warning, "SVG feature ignored";
+
+    /// An object or a layer is left out because the file asks for it: an Ink/Stitch "ignore object" or
+    /// "ignore layer" command, or the object's Ink/Stitch setting `ignore_object`. Designs keep
+    /// templates, placement lines and notes this way, in the drawing but out of the sew-out, and
+    /// Ink/Stitch leaves them out too.
+    ///
+    /// The message names what was left out and why. To stitch it, delete the command's symbol, or turn the
+    /// setting off in Ink/Stitch's parameters.
+    SvgObjectIgnored = "SC-I0805", Info, "Object left out, as the file asks";
 
     /// An element's geometry cannot be used: its path data has an error (the path is stitched up to the
     /// error, as SVG viewers draw it), its transform is not valid (it is skipped with everything inside

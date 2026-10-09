@@ -1,7 +1,7 @@
 //! `cargo xtask ci`: every gate, in one command, with a summary.
 //!
 //! Runs all steps even when one fails, so a contributor sees every problem at once. Steps that need an
-//! optional tool (the wasm target, cargo-public-api, `cargo-deny`, `typos`, `mdbook`) are skipped locally
+//! optional tool (the wasm target, cargo-public-api, `cargo-deny`, `typos`, Vale, `mdbook`) are skipped locally
 //! when the tool is missing and required in CI (`CI` set), where the workflow installs them. Coverage is
 //! not a step here: it runs the whole suite again, instrumented, so CI gives it a job of its own.
 //!
@@ -11,7 +11,7 @@
 //! optional: the move rehearsal checks that the code moves, while StitchCraft's own CI runs every tool.
 
 use crate::util;
-use crate::{api, cleanroom, conformance, docs, filesize, layers, shots, unsafe_audit, wasm};
+use crate::{api, cleanroom, conformance, docs, filesize, layers, prose, shots, unsafe_audit, wasm};
 
 /// How one step ended.
 enum Outcome {
@@ -94,6 +94,7 @@ pub fn run() -> Result<(), String> {
         ("api", optional(api::available, api::INSTALL, guest, Box::new(|| outcome(api::run(true))))),
         ("deny", deny),
         ("typos", optional(|| util::tool_available("typos", &["--version"]), "cargo install typos-cli", guest, tool_step("typos", &[]))),
+        ("prose", optional(prose::available, prose::INSTALL, guest, Box::new(|| outcome(prose::run(&[]))))),
         ("book", optional(|| util::tool_available("mdbook", &["--version"]), "cargo install mdbook", guest, tool_step("mdbook", &["build", "docs"]))),
     ];
     let mut summary = Vec::new();

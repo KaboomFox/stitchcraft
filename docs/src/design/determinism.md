@@ -1,5 +1,7 @@
 # Determinism
 
+<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/rng.rs -->
+
 **Same input, same version ⇒ byte-identical machine file and preview, on Linux, macOS, Windows and
 wasm32.** This makes golden-file conformance possible, makes bug reports reproducible, makes caches
 safe, and means the docs images regenerated in CI match the ones on a contributor's laptop.

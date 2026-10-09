@@ -4,6 +4,7 @@ pub mod stitchcraft_engine
 pub mod stitchcraft_engine::assemble
 pub struct stitchcraft_engine::assemble::Assembled
 pub stitchcraft_engine::assemble::Assembled::plan: stitchcraft_plan::plan::StitchPlan
+pub stitchcraft_engine::assemble::Assembled::shortest: alloc::vec::Vec<stitchcraft_core::units::Mm>
 pub stitchcraft_engine::assemble::Assembled::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_engine::assemble::assemble(&[(&stitchcraft_engine::design::Element, stitchcraft_engine::generate::Generated)], &stitchcraft_engine::design::DesignSettings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_engine::assemble::Assembled>, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::common
@@ -78,11 +79,12 @@ pub mod stitchcraft_engine::finalize
 pub struct stitchcraft_engine::finalize::Finalized
 pub stitchcraft_engine::finalize::Finalized::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub stitchcraft_engine::finalize::Finalized::plan: core::option::Option<stitchcraft_plan::plan::StitchPlan>
-pub fn stitchcraft_engine::finalize::finalize(stitchcraft_plan::plan::StitchPlan, &stitchcraft_plan::profile::MachineProfile, &stitchcraft_engine::design::DesignSettings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::finalize::Finalized, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::finalize::finalize(stitchcraft_plan::plan::StitchPlan, &stitchcraft_plan::profile::MachineProfile, &stitchcraft_engine::design::DesignSettings, &[stitchcraft_core::units::Mm], &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::finalize::Finalized, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generate
 pub struct stitchcraft_engine::generate::Generated
 pub stitchcraft_engine::generate::Generated::common: stitchcraft_engine::common::CommonParams
 pub stitchcraft_engine::generate::Generated::groups: alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>
+pub stitchcraft_engine::generate::Generated::min_stitch: stitchcraft_core::units::Mm
 pub stitchcraft_engine::generate::Generated::stitch_type: stitchcraft_params::stitch_type::StitchType
 pub struct stitchcraft_engine::generate::Generation
 pub stitchcraft_engine::generate::Generation::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>

@@ -1,5 +1,7 @@
 # Rendering previews
 
+<!-- implements: crates/stitchcraft-render/src/**, apps/stitchcraft-cli/src/commands/preview.rs -->
+
 `stitchcraft-render` draws a stitch plan as a PNG image: for `stitch preview`, for the images in these
 docs, and for conformance diffs. Two promises shape it:
 

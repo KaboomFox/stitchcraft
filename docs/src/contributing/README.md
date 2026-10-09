@@ -21,6 +21,7 @@ changes follow playbooks, and every behaviour has a requirement and a test.
 | Add a machine format | [New format](playbook-new-format.md) |
 | Add a diagnostic | [New diagnostic](playbook-new-diagnostic.md) |
 | Review a PR | [Review checklist](review-checklist.md) |
+| Write docs, messages or help text | [Writing style](writing-style.md) |
 
 ## Ground rules
 

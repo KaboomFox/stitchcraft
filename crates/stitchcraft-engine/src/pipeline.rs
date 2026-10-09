@@ -36,9 +36,9 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
     }
     let mut meter = budget.meter();
     let finished = assemble(&generated, &design.settings, &mut meter).and_then(|assembled| match assembled {
-        Some(Assembled { plan, warnings }) => {
+        Some(Assembled { plan, warnings, shortest }) => {
             diagnostics.extend(warnings);
-            finalize(plan, profile, &design.settings, &mut meter).map(Some)
+            finalize(plan, profile, &design.settings, &shortest, &mut meter).map(Some)
         }
         None => Ok(None),
     });
