@@ -10,7 +10,8 @@ use crate::stitch_type::StitchType;
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Kind {
     /// A length in millimetres within `min..=max`. An `optional` length may be left empty; then the
-    /// setting comes from elsewhere (a document setting or the machine profile).
+    /// setting comes from elsewhere (a document setting or the machine profile), or there is none. A
+    /// value of 0 or less counts as empty, because Ink/Stitch reads it as "not set".
     Length {
         /// Smallest accepted value, in millimetres.
         min: f64,
@@ -186,7 +187,7 @@ impl Kind {
     pub fn describe(self) -> String {
         match self {
             Kind::Length { min, max, optional } => {
-                let empty = if optional { ", or empty" } else { "" };
+                let empty = if optional { ", or empty (0 or less counts as empty)" } else { "" };
                 format!("a length from {min} to {max} mm{empty}")
             }
             Kind::Angle => "an angle in degrees".to_string(),

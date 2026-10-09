@@ -9,7 +9,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - **Needle points.** A needle point goes on every node of the path, in order. A curve gives only its
     end node.
   - **Longest stitch.** Stitches longer than `max_stitch_length_mm` are split into equal parts, never
-    shorter than the shortest stitch.
+    shorter than the shortest stitch. As in Ink/Stitch, 0 or less means no maximum: an optional length
+    of 0 or less now counts as empty, where it used to be clamped up with `SC-W0102`.
   - **Bean stitch** applies; repeats don't.
   - **Shortest stitch.** No hand-placed stitch is shorter than the shortest stitch. A point too close to
     the one before is left out, the last point is kept, and the new `SC-W0403` says how many. Ink/Stitch

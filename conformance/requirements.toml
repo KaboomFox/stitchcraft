@@ -294,7 +294,7 @@ status = "active"
 id = "REQ-RUN-006"
 area = "strokes/manual"
 level = "L2"
-statement = "Manual stitch puts a needle point on every node of the path, in order (a curve gives only its end node, a node where the needle already is counts once), plus only the documented splits: a stitch longer than max_stitch_length_mm is split into the fewest equal parts no longer than it, none shorter than the shortest stitch."
+statement = "Manual stitch puts a needle point on every node of the path, in order (a curve gives only its end node, a node where the needle already is counts once), plus only the documented splits: a stitch longer than max_stitch_length_mm, when it is above 0, is split into the fewest equal parts no longer than it, none shorter than the shortest stitch."
 milestone = "M3"
 status = "active"
 
