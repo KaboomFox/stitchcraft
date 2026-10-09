@@ -5,8 +5,10 @@
 //!   in-process by the runner. Unknown fields are errors, so a typo in a case cannot silently disable a
 //!   check.
 //! - **Rust-test cases**: a test function named `req_<area>_<nnn>_<what>` is a case for
-//!   `REQ-<AREA>-<NNN>`. The name is the link, so there is nothing to keep in sync; they are found by
-//!   scanning the source (fast enough for `--check`) and run with `cargo test`.
+//!   `REQ-<AREA>-<NNN>`, and one named `diag_sc_<e|w|i><nnnn>_<what>` is a case for the diagnostic code
+//!   `SC-<E|W|I><NNNN>`: it produces the code from real input and checks the text a user reads. The name
+//!   is the link, so there is nothing to keep in sync; they are found by scanning the source (fast enough
+//!   for `--check`) and run with `cargo test`.
 
 use std::path::Path;
 
@@ -137,25 +139,26 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
 pub struct RustCase {
     /// The test function's name.
     pub name: String,
-    /// The requirement its name refers to.
-    pub requirement: String,
+    /// What its name says it is a case for: a requirement (`REQ-…`) or a diagnostic code (`SC-…`).
+    pub covers: String,
     /// Where it is defined.
     pub file: String,
 }
 
-/// Every `fn req_…` in the workspace's crates and apps, in file order.
+/// Every `fn req_…` and `fn diag_…` in the workspace's crates and apps, in file order.
 pub fn discover_rust_cases(root: &Path, findings: &mut Findings) -> Vec<RustCase> {
     let mut cases = Vec::new();
     for dir in SOURCE_DIRS {
         for path in util::files(&root.join(dir), &["rs"]) {
             let Ok(text) = util::read(&path) else { continue };
             for name in text.lines().filter_map(test_name) {
-                match requirement_of_test(name) {
-                    Some(requirement) => cases.push(RustCase { name: name.to_string(), requirement, file: util::rel(&path) }),
-                    None => {
-                        let file = util::rel(&path);
+                let file = util::rel(&path);
+                match requirement_of_test(name).or_else(|| code_of_test(name)) {
+                    Some(covers) => cases.push(RustCase { name: name.to_string(), covers, file }),
+                    None if name.starts_with("req_") => {
                         findings.error(format!("{file}: `{name}` starts with req_ but names no requirement (req_<area>_<nnn>_<what>)"));
                     }
+                    None => findings.error(format!("{file}: `{name}` starts with diag_ but names no code (diag_sc_<e|w|i><nnnn>_<what>)")),
                 }
             }
         }
@@ -163,12 +166,21 @@ pub fn discover_rust_cases(root: &Path, findings: &mut Findings) -> Vec<RustCase
     cases
 }
 
-/// The function name if `line` defines `fn req_…`.
+/// The function name if `line` defines `fn req_…` or `fn diag_…`.
 fn test_name(line: &str) -> Option<&str> {
     let rest = line.trim_start().strip_prefix("fn ")?;
     let end = rest.find(|c: char| !(c.is_ascii_alphanumeric() || c == '_')).unwrap_or(rest.len());
     let name = rest.get(..end)?;
-    name.starts_with("req_").then_some(name)
+    (name.starts_with("req_") || name.starts_with("diag_")).then_some(name)
+}
+
+/// `diag_sc_e0701_too_wide` → `SC-E0701`.
+pub fn code_of_test(name: &str) -> Option<String> {
+    let mut parts = name.strip_prefix("diag_sc_")?.split('_');
+    let code = parts.next()?;
+    let (severity, digits) = (code.get(..1)?, code.get(1..)?);
+    let well_formed = matches!(severity, "e" | "w" | "i") && digits.len() == 4 && digits.bytes().all(|b| b.is_ascii_digit());
+    well_formed.then(|| format!("SC-{}{digits}", severity.to_ascii_uppercase()))
 }
 
 /// `req_fill_tat_006_gap_preserved` → `REQ-FILL-TAT-006`.
@@ -197,8 +209,19 @@ mod tests {
     }
 
     #[test]
-    fn only_req_functions_are_cases() {
+    fn test_names_map_to_diagnostic_codes() {
+        assert_eq!(code_of_test("diag_sc_e0701_too_wide").as_deref(), Some("SC-E0701"));
+        assert_eq!(code_of_test("diag_sc_w0102_clamped").as_deref(), Some("SC-W0102"));
+        assert_eq!(code_of_test("diag_sc_i0001").as_deref(), Some("SC-I0001"));
+        for bad in ["diag_sc_x0701_x", "diag_sc_e701_x", "diag_e0701_x", "diag_sc_e07010_x", "req_sc_e0701"] {
+            assert_eq!(code_of_test(bad), None, "{bad}");
+        }
+    }
+
+    #[test]
+    fn only_req_and_diag_functions_are_cases() {
         assert_eq!(test_name("    fn req_plan_001_x() {"), Some("req_plan_001_x"));
+        assert_eq!(test_name("fn diag_sc_e0010_empty() {"), Some("diag_sc_e0010_empty"));
         assert_eq!(test_name("fn helper() {"), None);
         assert_eq!(test_name("// fn req_plan_001_commented"), None);
     }
@@ -208,8 +231,8 @@ mod tests {
         let mut findings = Findings::default();
         let cases = discover_rust_cases(&util::root(), &mut findings);
         assert!(findings.errors.is_empty(), "{:?}", findings.errors);
-        for id in ["REQ-PLAN-002", "REQ-PRF-001", "REQ-THREAD-001", "REQ-FMT-007"] {
-            assert!(cases.iter().any(|c| c.requirement == id), "{id}");
+        for id in ["REQ-PLAN-002", "REQ-PRF-001", "REQ-THREAD-001", "REQ-FMT-007", "SC-E0701"] {
+            assert!(cases.iter().any(|c| c.covers == id), "{id}");
         }
     }
 }

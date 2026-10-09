@@ -23,6 +23,8 @@ use std::collections::BTreeSet;
 
 pub use cases::requirement_ids;
 
+use stitchcraft_core::Code;
+
 use crate::util::{self, Findings};
 
 const INKSTITCH: &str = "conformance/inkstitch-params.toml";
@@ -57,20 +59,35 @@ pub fn run(args: &[String]) -> Result<(), String> {
             findings.error(format!("{}: unknown requirement {r}", case.file));
         }
     }
-    for case in rust.iter().filter(|c| !known.contains(c.requirement.as_str())) {
-        findings.error(format!("{}: `{}` names {}, which is not in {}", case.file, case.name, case.requirement, cases::REQUIREMENTS));
+    let codes: BTreeSet<&str> = Code::ALL.iter().map(|c| c.id()).collect();
+    for case in rust.iter().filter(|c| !known.contains(c.covers.as_str()) && !codes.contains(c.covers.as_str())) {
+        let registry = if case.covers.starts_with("SC-") { "the diagnostics registry" } else { cases::REQUIREMENTS };
+        findings.error(format!("{}: `{}` names {}, which is not in {registry}", case.file, case.name, case.covers));
     }
     let covered: BTreeSet<&str> =
-        data.iter().flat_map(|c| c.requirements.iter().map(String::as_str)).chain(rust.iter().map(|c| c.requirement.as_str())).collect();
+        data.iter().flat_map(|c| c.requirements.iter().map(String::as_str)).chain(rust.iter().map(|c| c.covers.as_str())).collect();
     for r in requirements.iter().filter(|r| r.status == "active" && !covered.contains(r.id.as_str())) {
         findings.error(format!("{} is active but no case covers it", r.id));
+    }
+    // Every registered code is reachable and renders: a `diag_` case produces it from real input.
+    for code in codes.iter().filter(|c| !covered.contains(*c)) {
+        findings.error(format!(
+            "{code} is registered but no diag_ case produces it (name a test diag_{}_<what>)",
+            code.to_ascii_lowercase().replace('-', "_")
+        ));
     }
     let facts: toml::Table = toml::from_str(&util::read(&root.join(INKSTITCH))?).map_err(|e| format!("{INKSTITCH}: {e}"))?;
     if facts.get("param").and_then(toml::Value::as_array).is_none_or(Vec::is_empty) {
         findings.error(format!("{INKSTITCH}: no [[param]] entries"));
     }
     let active = requirements.iter().filter(|r| r.status == "active").count();
-    let summary = format!("{} requirements ({active} active), {} data cases, {} Rust-test cases", requirements.len(), data.len(), rust.len());
+    let summary = format!(
+        "{} requirements ({active} active), {} diagnostic codes, {} data cases, {} Rust-test cases",
+        requirements.len(),
+        codes.len(),
+        data.len(),
+        rust.len()
+    );
     if check_only || !findings.errors.is_empty() {
         return findings.finish("conformance", &summary);
     }
@@ -91,7 +108,7 @@ pub fn run(args: &[String]) -> Result<(), String> {
         filter.as_deref().is_none_or(|f| id.to_ascii_lowercase().contains(f) || requirements.iter().any(|r| r.to_ascii_lowercase().contains(f)))
     };
     let data: Vec<_> = data.into_iter().filter(|c| selected(&c.id, &c.requirements)).collect();
-    let rust: Vec<_> = rust.into_iter().filter(|c| selected(&c.name, std::slice::from_ref(&c.requirement))).collect();
+    let rust: Vec<_> = rust.into_iter().filter(|c| selected(&c.name, std::slice::from_ref(&c.covers))).collect();
     let mut outcomes: Vec<runner::Outcome> = data.iter().map(|c| runner::run_data_case(&root, c, false)).collect();
     outcomes.extend(runner::run_rust_cases(&root, &rust)?);
     let markdown = report::write(&root.join("target/conformance"), &requirements, &outcomes, &commit())?;
@@ -111,10 +128,15 @@ pub fn run(args: &[String]) -> Result<(), String> {
             if util::in_ci() { findings.error(format!("required in CI: {message}")) } else { findings.warn(message) }
         }
     }
-    // A filtered run is partial: requirements outside the filter are not expected to have run.
+    // A filtered run is partial: requirements and codes outside the filter are not expected to have run.
     for (r, verdict) in report::verdicts(&requirements, &outcomes).into_iter().filter(|_| filter.is_none()) {
         if r.status == "active" && verdict != report::Verdict::Pass {
             findings.error(format!("{} is active but has no passing case", r.id));
+        }
+    }
+    for (code, verdict) in report::code_verdicts(&outcomes).into_iter().filter(|_| filter.is_none()) {
+        if verdict != report::Verdict::Pass {
+            findings.error(format!("{} has no passing diag_ case", code.id()));
         }
     }
     let failed = outcomes.iter().filter(|o| o.failed()).count();

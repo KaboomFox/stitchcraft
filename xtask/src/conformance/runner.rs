@@ -151,7 +151,7 @@ pub fn run_rust_cases(root: &Path, cases: &[RustCase]) -> Result<Vec<Outcome>, S
     let output = util::cargo()
         .arg("test")
         .args(util::packages()?.args())
-        .args(["--locked", "--no-fail-fast", "--", "req_"])
+        .args(["--locked", "--no-fail-fast", "--", "req_", "diag_"])
         .current_dir(root)
         .output()
         .map_err(|e| format!("cargo test: {e}"))?;
@@ -185,7 +185,7 @@ pub fn run_rust_cases(root: &Path, cases: &[RustCase]) -> Result<Vec<Outcome>, S
                 case: case.name.clone(),
                 kind: "rust",
                 file: case.file.clone(),
-                requirements: vec![case.requirement.clone()],
+                requirements: vec![case.covers.clone()],
                 failures,
                 outputs: Vec::new(),
                 skipped: None,

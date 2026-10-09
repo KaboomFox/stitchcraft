@@ -64,7 +64,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | Step | Deliverable | Done when |
 |---|---|---|
 | M3.1 ✅ | Parameter registry (`params!`, `ParamSet`, validation, generated reference + JSON Schema) | `REQ-PRM-001`, `REQ-PRM-002`; `docs --check` covers params |
-| M3.2 | Diagnostics registry, `stitch explain`, generated diagnostics index | every registered code has a page and a case |
+| M3.2 ✅ | Diagnostics registry, `stitch explain`, generated diagnostics index | every registered code has a page and a case |
 | M3.3 | `Design` model; SVG adapter v1: paths, groups, transforms, viewBox units, colours, visibility (no `inkstitch:*` yet) | `REQ-SVG-001`, `REQ-SVG-002` (fuzzed path data) |
 | M3.4 | Running stitch: corners, even spacing, tolerance | `REQ-RUN-001..003` |
 | M3.5 | Patterns, repeats, bean stitch, random length | `REQ-RUN-004`, `REQ-RUN-005` |

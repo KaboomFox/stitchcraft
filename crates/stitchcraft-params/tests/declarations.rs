@@ -99,12 +99,29 @@ fn req_prm_002_out_of_range_values_are_clamped_with_a_warning() {
 }
 
 #[test]
-fn unknown_keys_are_kept_and_reported() {
+fn diag_sc_e0101_a_value_of_the_wrong_kind_says_what_is_accepted() {
+    let problems = Everything::from_set(&set(&[("a_choice", "three")])).unwrap_err();
+    let shown: Vec<String> = problems.iter().map(ToString::to_string).collect();
+    assert_eq!(shown, ["error SC-E0101: `a_choice` is \"three\", but it must be one of one, two."]);
+}
+
+#[test]
+fn diag_sc_w0102_a_value_out_of_range_is_clamped_and_says_so() {
+    let read = Everything::from_set(&set(&[("a_length_mm", "25")])).unwrap();
+    let shown: Vec<String> = read.warnings.iter().map(ToString::to_string).collect();
+    assert_eq!(shown, ["warning SC-W0102: `a_length_mm` is 25, outside 0.1 to 10 mm; 10 mm is used."]);
+}
+
+#[test]
+fn diag_sc_w0105_unknown_keys_are_kept_and_reported() {
     let design = set(&[("a_length_mm", "3"), ("sparkle_mm", "1")]);
     let warnings = unknown_keys(&design, &[&Everything::GROUP]);
     assert_eq!(warnings.len(), 1);
     assert_eq!(warnings[0].code, Code::ParamUnknown);
-    assert!(warnings[0].message.starts_with("`sparkle_mm` is not a StitchCraft parameter"));
+    assert_eq!(
+        warnings[0].to_string(),
+        "warning SC-W0105: `sparkle_mm` is not a StitchCraft parameter; it was kept but does not change the stitches."
+    );
     // Reading the known ones is unaffected, and the set still holds the unknown one for writing back.
     assert_eq!(Everything::from_set(&design).unwrap().params.a_length_mm.get(), 3.0);
     assert_eq!(design.get("sparkle_mm"), Some("1"));

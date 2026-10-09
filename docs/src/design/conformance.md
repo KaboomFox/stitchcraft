@@ -50,6 +50,14 @@ them by scanning the source and rejects a name that points at no requirement. Us
 shown with small hand-built inputs — an invariant's violating and passing examples, a palette's spot
 checks.
 
+**Rust tests named after a diagnostic code.** A test function named `diag_sc_<e|w|i><nnnn>_<what>` is a
+case for the code `SC-<E|W|I><NNNN>`: it produces the code from real input through the public API and
+checks the full text a user reads, message and fix (`diag_sc_e0701_a_design_larger_than_the_hoop_names_both_sizes`).
+Every registered code needs one: `--check` fails for a code without a `diag_` case and for a `diag_` name
+that points at no registered code, and the run fails when a code's cases do not pass. The report lists
+the codes in a table of their own. This is what keeps error paths alive
+([diagnostics](diagnostics.md#the-registry)).
+
 **Data cases**, `conformance/cases/<area>/<name>.toml`: an input, a profile and expectations, run by the
 suite in-process. Unknown fields are errors, so a typo cannot silently switch a check off. M1 has the
 `testsheet` kind:
