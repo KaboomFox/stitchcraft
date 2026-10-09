@@ -92,11 +92,11 @@ here (details and file references in [VectorCraft integration](vectorcraft-integ
 ### 3.3 Licence and clean room
 
 Ink/Stitch is GPL-3.0; VectorCraft forbids GPL code in its tree. StitchCraft is **MIT OR
-Apache-2.0** and is written **clean-room**: the design docs in this folder describe *behaviour*
-(inputs, outputs, parameters, published algorithms); implementers work from these docs and public
-references and never read or transliterate Ink/Stitch source. Parameter names are kept identical to
-Ink/Stitch's SVG attributes because that is the interoperability contract. See
-[ADR-0001](adr/0001-license-and-clean-room.md).
+Apache-2.0** and never copies GPL code: the design docs in this folder describe *behaviour* (inputs,
+outputs, parameters, algorithms) in our own words, and implementers work from these docs. Ink/Stitch's
+source may be read to understand its behaviour, never copied or transliterated. Parameter names are kept
+identical to Ink/Stitch's SVG attributes because that is the interoperability contract. See
+[ADR-0001](adr/0001-license-and-clean-room.md) and [ADR-0012](adr/0012-read-dont-copy.md).
 
 ## 4. Requirements
 
@@ -180,6 +180,8 @@ Details, dependency rules and the reasoning are in [architecture](architecture.m
 | [0008](adr/0008-conformance-first.md) | Conformance-first development: requirement IDs and cases before code |
 | [0009](adr/0009-adopt-vectorcraft-conventions.md) | Adopt VectorCraft's proven conventions; improve the ones that drift |
 | [0010](adr/0010-diagnostics-with-codes.md) | Every user-facing problem is a coded diagnostic with an explanation page |
+| [0011](adr/0011-movable-into-vectorcraft.md) | StitchCraft can move into VectorCraft's repository as a folder |
+| [0012](adr/0012-read-dont-copy.md) | Ink/Stitch's source may be read, never copied |
 
 ## 7. Data model (summary)
 
@@ -317,7 +319,7 @@ milestone signed off.
 | R2 | ABI v1 budgets too small for full previews | Budget-aware coarse previews; full fidelity in CLI; ABI v2 overlay proposal |
 | R3 | ArtCraft declines ABI v2 | Plug-in still works on v1; optional in-tree integration in a fork |
 | R4 | Polygon offset/boolean robustness | Spike M0.7; input sanitizing; fuzzing; fallback to diagnostics, never panics |
-| R5 | Clean-room discipline slips | Process in ADR-0001; `cargo xtask cleanroom`; review checklist |
+| R5 | Copied GPL code slips in | Design docs first, in our own words (ADR-0012); `cargo xtask cleanroom`; review checklist |
 | R6 | Cross-platform float differences | `libm`, no FMA-sensitive formulas in quantization, cross-platform hash CI |
 | R7 | Scope: the compatibility contract is large | Phases; compatibility contract tracks coverage; post-1.0 items explicit |
 | R8 | Brother trim behaviour varies by model | Profile flag; MC-1 tests both encodings |
