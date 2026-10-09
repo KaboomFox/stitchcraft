@@ -95,6 +95,7 @@ another.
 | `SC-W0311` | Warning | Spiral could not be connected in a narrow part; that part uses inner-to-outer contours | M7 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |
+| `SC-W0403` | Warning | Hand-placed stitch shorter than the shortest stitch; point left out | M3 |
 | `SC-W0501` | Warning | Travel could not stay inside the region; used tie-off, trim and tie-in | M5 |
 | `SC-E0601` | Error | Too many colour changes for the file format | M1 |
 | `SC-E0602` | Error | Design too large for the file format (coordinates or data exceed its fields) | M1 |
@@ -107,3 +108,4 @@ another.
 | `SC-W0802` | Warning | SVG feature ignored (e.g. raster image, text not converted to paths) | M3 |
 | `SC-W0803` | Warning | `.vectorcraft` file from a newer VectorCraft format version; read best-effort | M6 |
 | `SC-W0804` | Warning | Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m); the usable part is stitched | M3 |
+| `SC-I0805` | Info | Object left out, as the file asks (Ink/Stitch's ignore commands and `ignore_object` setting) | M3 |

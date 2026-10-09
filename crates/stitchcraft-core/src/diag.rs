@@ -158,6 +158,14 @@ registry! {
     /// sews shorter stitches well.
     StitchLengthRaised = "SC-W0402", Warning, "Stitch length below twice the shortest stitch; raised";
 
+    /// Hand-placed stitches (manual stitch) shorter than the shortest stitch the machine sews well: the
+    /// needle point that made each one too short was left out, so the stitch before it runs on to the
+    /// next point. A part's last point is always kept; the one before it goes instead.
+    ///
+    /// The message gives how many and the shortest of them. Move the nodes apart, or delete the extra
+    /// ones.
+    HandStitchTooShort = "SC-W0403", Warning, "Hand-placed stitch shorter than the shortest stitch; point left out";
+
     /// The file format can record only a limited number of colour changes and stops (PES: 255). This
     /// design has more, so the file was not written.
     ///
@@ -226,6 +234,15 @@ registry! {
     /// The message names the element and what was done. Convert text and clones to paths in the editor
     /// (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
     SvgFeatureIgnored = "SC-W0802", Warning, "SVG feature ignored";
+
+    /// An object or a layer is left out because the file asks for it: an Ink/Stitch "ignore object" or
+    /// "ignore layer" command, or the object's Ink/Stitch setting `ignore_object`. Designs keep
+    /// templates, placement lines and notes this way, in the drawing but out of the sew-out, and
+    /// Ink/Stitch leaves them out too.
+    ///
+    /// The message names what was left out and why. To stitch it, delete the command's symbol, or turn the
+    /// setting off in Ink/Stitch's parameters.
+    SvgObjectIgnored = "SC-I0805", Info, "Object left out, as the file asks";
 
     /// An element's geometry cannot be used: its path data has an error (the path is stitched up to the
     /// error, as SVG viewers draw it), its transform is not valid (it is skipped with everything inside

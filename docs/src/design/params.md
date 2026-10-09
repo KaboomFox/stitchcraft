@@ -95,7 +95,7 @@ version and a registry schema version arrive with the first release, together wi
 | Kind | Generators get | Validation | Ink/Stitch equivalent |
 |---|---|---|---|
 | `Length` | `Mm` | finite, within `range`; units accepted on input: mm, in, pt | `float`, unit `mm` |
-| `OptionalLength` | `Option<Mm>` | as `Length`, or empty (the setting then comes from the document or the machine) | `float`, unit `mm`, no default |
+| `OptionalLength` | `Option<Mm>` | as `Length`, or empty: the setting then comes from the document or the machine, or there is none. 0 or less counts as empty, as Ink/Stitch reads it | `float`, unit `mm`, no default |
 | `Angle` | degrees, `f64` | finite; normalized to (−180, 180] | `float`, unit `deg` |
 | `Percent` | `f64` | finite, within range | `float`, unit `%` |
 | `Count` | `u32` | whole, within range | `int` |

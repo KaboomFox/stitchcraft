@@ -68,7 +68,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M3.3 ✅ | `Design` model; SVG adapter v1: paths, groups, transforms, viewBox units, colours, visibility (no `inkstitch:*` yet) | `REQ-SVG-001`, `REQ-SVG-002` (fuzzed path data) |
 | M3.4 ✅ | Running stitch: corners, even spacing, patterns, tolerance; stitch lengths measured straight | `REQ-RUN-001..003` |
 | M3.5 ✅ | Repeats, bean stitch, random length | `REQ-RUN-004`, `REQ-RUN-005`, `REQ-RUN-007` |
-| M3.6 | Manual stitch | `REQ-RUN-006` |
+| M3.6 ✅ | Manual stitch | `REQ-RUN-006`, `REQ-RUN-008` |
 | M3.7 | Lock stitches: types, scale, placement | `REQ-LCK-001..003` |
 | M3.8 | Plan assembly: order, collapse, travel, tie-off/jump/trim/tie-in, stops, colour changes, commands | `REQ-ASM-001..005` |
 | M3.9 | Finalize: split, merge, hoop, colour limits; `stitch plan in.svg -o out.pes --preview out.png --report out.json` | end-to-end cases |
@@ -125,7 +125,8 @@ fill with generated tiles; circular fill. One step per type with its requirement
 ## M8 — Ink/Stitch interoperability
 
 SVG adapter v2: every `inkstitch:*` attribute in the [compatibility contract](../design/inkstitch-compat-contract.md),
-command symbols, clones (`<use>`), ignore layers; `stitch import-inkstitch file.svg -o file.vectorcraft`;
+the command symbols not read yet (since M3 the adapter applies trim, stop and the ignore commands, and
+never stitches commands, connectors or helper paths: `REQ-SVG-003`), clones (`<use>`); `stitch import-inkstitch file.svg -o file.vectorcraft`;
 L3 differential conformance against a pinned Ink/Stitch with the deviations ledger. Ink/Stitch's font
 library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin, downloaded at a pinned
 commit by `cargo xtask corpus` and never committed, using only fonts whose licence allows it (OFL, CC0,

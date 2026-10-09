@@ -74,8 +74,9 @@ pub fn read_svg(data: &[u8]) {
     let budget = Budget { max_stitches: 100_000, max_work: 2_000_000 };
     match stitchcraft_svg::read(data, &budget) {
         Ok(svg) => {
-            for warning in &svg.warnings {
-                assert_eq!(warning.severity(), Severity::Warning, "{warning}");
+            // What the reader says about a file it reads is a warning or a note, never an error.
+            for said in &svg.warnings {
+                assert_ne!(said.severity(), Severity::Error, "{said}");
             }
             let limit = f64::from(MACHINE_LIMIT) / 10.0;
             for point in svg.design.elements().iter().flat_map(|e| e.shape.path().points()) {
