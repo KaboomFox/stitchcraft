@@ -50,7 +50,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 |---|---|---|
 | M2.1 ✅ | PES/PEC reader (bounded, typed errors); `stitch inspect file` (counts, bounds, colours, stitch lengths, profile check) | empty files `REQ-FMT-004`; every truncation and byte flip handled |
 | M2.2 ✅ | DST reader (trims inferred from cancelling jump runs) | same |
-| M2.3 | Command round trip for every writer/reader pair | `REQ-FMT-003` active |
+| M2.3 ✅ | Command round trip for every writer/reader pair; machine-equivalence oracle; fresh-seed nightly | `REQ-FMT-002`, `REQ-FMT-003` active |
 | M2.4 | pyembroidery oracle job (pinned) | `REQ-FMT-005` active |
 | M2.5 | `cargo-fuzz` targets for both readers; nightly job with persisted corpus | `REQ-FMT-006`; 1 h fuzzing clean |
 | M2.6 | `stitchcraft-render`: realistic and simple styles from the quantized plan | `REQ-RND-001`; golden PNG files |

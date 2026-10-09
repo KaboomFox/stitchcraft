@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 3d04cc3af48790d04af544c2d4d4056638b5faa9ea2dda597713c269763fc43d # shrinks to plan = StitchPlan { blocks: [ColorBlock { thread: Thread { color: Rgb { r: 0, g: 0, b: 0 }, name: None }, stitches: [Stitch { at: Point { x: 0.0, y: 0.0 }, kind: Normal, origin: Provenance { element: None, role: Top } }, Stitch { at: Point { x: 64.49, y: -54.5 }, kind: Normal, origin: Provenance { element: None, role: Top } }, Stitch { at: Point { x: -99.34, y: 0.0 }, kind: Jump, origin: Provenance { element: None, role: Travel } }, Stitch { at: Point { x: 77.5, y: -58.85 }, kind: Normal, origin: Provenance { element: None, role: Top } }] }], elements: [] }

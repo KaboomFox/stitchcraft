@@ -98,9 +98,9 @@ status = "active"
 id = "REQ-FMT-002"
 area = "formats"
 level = "L1"
-statement = "decode(encode(plan)) equals quantize(plan) for every writer/reader pair, on random plans; quantization uses absolute positions and round-half-even."
+statement = "For every writer/reader pair, decode(encode(plan)) makes the machine do what the plan does: the needle goes down at the same positions (absolute positions quantized to 0.1 mm, round half to even), and the thread is cut and the machine pauses at the same places (stitchcraft-testkit::equivalence), on random plans with fixed seeds per PR and fresh seeds nightly."
 milestone = "M2"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-FMT-003"
@@ -109,7 +109,7 @@ level = "L1"
 statement = "Every command kind (jump, trim, stop, colour change, end) survives every writer/reader pair."
 rationale = "Ink/Stitch #689 (PES trims ignored), #3544 (DST stops missing)."
 milestone = "M2"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-FMT-004"

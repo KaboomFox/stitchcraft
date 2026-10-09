@@ -17,4 +17,5 @@ stitchcraft-plan = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
+proptest = { workspace = true }
 stitchcraft-testkit = { workspace = true }
