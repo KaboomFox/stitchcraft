@@ -11,7 +11,8 @@
 //! direction one segment ends in to the direction the next one starts in. A curve's own bend is never a
 //! corner, however tight; the running stitch follows it within its tolerance instead. Segments that do
 //! not move (a zero-length line, a curve whose points all coincide) are dropped first, so every corner
-//! is measured between two segments that have a direction.
+//! is measured between two segments that have a direction. A subpath with nothing else is kept as a
+//! piece of a single point, so that a generator reports it instead of losing it without a word.
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
@@ -27,28 +28,27 @@ const MAX_DEPTH: u32 = 40;
 /// A stroke ready for stitching: its subpaths as polylines, in drawing order.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct StrokePath {
-    /// The pieces, one per subpath that moves.
+    /// The pieces, one per subpath, in drawing order.
     pub pieces: Vec<Piece>,
 }
 
 /// One subpath as a polyline.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Piece {
-    /// At least two points, in order, no two in a row the same. A closed subpath ends where it starts.
+    /// The points, in order, no two in a row the same: at least two, or one for a subpath that does not
+    /// move. A closed subpath ends where it starts.
     pub points: Vec<Point>,
     /// The corners, as indices into `points`, in increasing order. The first and last points are never
     /// listed: they always get a stitch.
     pub corners: Vec<usize>,
 }
 
-/// `path` as polylines within `tolerance` millimetres of it, with their corners. A subpath that does not
-/// move is left out. Each segment and each halving of a curve costs one unit of `meter`.
+/// `path` as polylines within `tolerance` millimetres of it, with their corners: one piece per subpath.
+/// Each segment and each halving of a curve costs one unit of `meter`.
 pub fn flatten(path: &Path, tolerance: f64, meter: &mut Meter) -> Result<StrokePath, Exhausted> {
     let mut pieces = Vec::with_capacity(path.subpaths.len());
     for subpath in &path.subpaths {
-        if let Some(piece) = piece(subpath, tolerance, meter)? {
-            pieces.push(piece);
-        }
+        pieces.push(piece(subpath, tolerance, meter)?);
     }
     Ok(StrokePath { pieces })
 }
@@ -78,12 +78,6 @@ impl Seg {
             // The same curve as a cubic: each inner control point two thirds of the way to the quadratic's.
             Segment::Quad(control, end) => Seg::Cubic(start, start.lerp(control, 2.0 / 3.0), end.lerp(control, 2.0 / 3.0), end),
             Segment::Cubic(first, second, end) => Seg::Cubic(start, first, second, end),
-        }
-    }
-
-    const fn start(self) -> Point {
-        match self {
-            Seg::Line(a, _) | Seg::Cubic(a, ..) => a,
         }
     }
 
@@ -126,7 +120,7 @@ fn turns(previous: (f64, f64), next: (f64, f64)) -> bool {
     dot < CORNER_COS * lengths
 }
 
-fn piece(subpath: &Subpath, tolerance: f64, meter: &mut Meter) -> Result<Option<Piece>, Exhausted> {
+fn piece(subpath: &Subpath, tolerance: f64, meter: &mut Meter) -> Result<Piece, Exhausted> {
     let mut segs = Vec::with_capacity(subpath.segments.len() + 1);
     let mut at = subpath.start;
     for segment in &subpath.segments {
@@ -138,8 +132,8 @@ fn piece(subpath: &Subpath, tolerance: f64, meter: &mut Meter) -> Result<Option<
         segs.push(Seg::Line(at, subpath.start));
     }
     segs.retain(|s| !s.is_point());
-    let Some(first) = segs.first() else { return Ok(None) };
-    let mut points = vec![first.start()];
+    // The dropped segments do not move, so what is left starts where the subpath does.
+    let mut points = vec![subpath.start];
     let mut corners = Vec::new();
     let mut previous: Option<Seg> = None;
     for seg in segs {
@@ -155,7 +149,7 @@ fn piece(subpath: &Subpath, tolerance: f64, meter: &mut Meter) -> Result<Option<
     let last = points.len() - 1;
     corners.retain(|c| *c > 0 && *c < last);
     corners.dedup();
-    Ok((points.len() >= 2).then_some(Piece { points, corners }))
+    Ok(Piece { points, corners })
 }
 
 /// Appends `p` unless it is where the polyline already is.
@@ -263,7 +257,7 @@ mod tests {
         let piece = &flat(&stuttering, 0.1).pieces[0];
         assert_eq!((piece.points.len(), piece.corners.len()), (3, 0));
         let still = path(p(1.0, 1.0), vec![Segment::Line(p(1.0, 1.0)), Segment::Cubic(p(1.0, 1.0), p(1.0, 1.0), p(1.0, 1.0))], true);
-        assert!(flat(&still, 0.1).pieces.is_empty());
+        assert_eq!(flat(&still, 0.1).pieces, [Piece { points: vec![p(1.0, 1.0)], corners: vec![] }], "a point, kept to be reported");
         // A curve with a coincident control point still has a direction at each end, and is kept.
         let curl = path(p(0.0, 0.0), vec![Segment::Line(p(10.0, 0.0)), Segment::Cubic(p(10.0, 0.0), p(20.0, 0.0), p(20.0, 10.0))], false);
         let piece = &flat(&curl, 0.1).pieces[0];

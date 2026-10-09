@@ -49,9 +49,12 @@ checks straight. "The shortest stitch" is the one [Finalize](../engine-pipeline.
    from `s × (1 ± jitter)`, then the span is rescaled to end on its corner. The seed makes it repeatable.
 
 **When the rules disagree,** the shortest stitch wins (a shorter stitch hammers one spot and can break the
-thread), then corners, then the tolerance. A part of the path shorter than the shortest stitch, or lying
-all within it of its ends, is not stitched (`SC-W0401`). Only arithmetic and square roots are used, so
+thread), then corners, then the tolerance. A part of the path that is a single point, shorter than the
+shortest stitch, or lying all within it of its ends, is not stitched (`SC-W0401`). Only arithmetic and square roots are used, so
 every platform places the same stitches.
+
+**Compared with Ink/Stitch:** the same parameters, meanings and defaults; the placement differs in four
+documented ways, `DEV-RUN-001` to `DEV-RUN-004` in the deviations ledger (`conformance/deviations.toml`).
 
 ### Repeats and bean stitch
 

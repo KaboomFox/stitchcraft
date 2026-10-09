@@ -24,8 +24,8 @@
 //!    needed, unless the split would leave a stitch outside those lengths.
 //!
 //! When the rules disagree, the shortest stitch wins (a shorter stitch hammers one spot and can break
-//! the thread), then corners, then the tolerance. A piece of the path that is shorter than the shortest
-//! stitch, or lies all within it of its ends, is not stitched (`SC-W0401`). Only arithmetic and square
+//! the thread), then corners, then the tolerance. A piece of the path that is a single point, shorter
+//! than the shortest stitch, or all within it of its ends, is not stitched (`SC-W0401`). Only arithmetic and square
 //! roots are used: every platform places the same stitches.
 
 mod params;
@@ -62,7 +62,9 @@ pub fn running_stitch(path: &Path, params: &RunningParams, min_stitch: Mm, meter
     for piece in &stroke.pieces {
         let along = Along::new(piece, meter)?;
         let length = along.length();
-        let skipped = if !at_least(length, min) {
+        let skipped = if piece.points.len() < 2 {
+            "A part of the stroke is a single point, so it is not stitched.".to_string()
+        } else if !at_least(length, min) {
             format!("A part of the stroke is {} mm long, shorter than the shortest stitch ({} mm), so it is not stitched.", mm(length), mm(min))
         } else if let Some(run) = stitch_piece(&along, &piece.corners, &pattern, min, tolerance * (1.0 - FLATTEN_SHARE), meter)? {
             runs.push(run);
@@ -180,22 +182,23 @@ impl<'a> Along<'a> {
         let (ux, uy) = (end.x() - start.x(), end.y() - start.y());
         let middle = start.lerp(end, 0.5);
         let mut best: Option<(f64, Needle)> = None;
-        for index in 0..self.points.len() {
+        let mut previous: Option<Needle> = None;
+        for q in (0..self.points.len()).map(|index| self.vertex(index)) {
             meter.charge(1)?;
-            let p = self.vertex(index);
-            let crossing = self.points.get(index + 1).and_then(|_| {
-                let q = self.vertex(index + 1);
+            // Where the side from the previous point crosses the line, if it does. A side parallel to
+            // the line (or no line: `start` is `end`) gives an infinite or NaN `t`.
+            let crossing = previous.and_then(|p| {
                 let across = (q.point.x() - p.point.x()) * ux + (q.point.y() - p.point.y()) * uy;
                 let t = ((middle.x() - p.point.x()) * ux + (middle.y() - p.point.y()) * uy) / across;
-                // A side parallel to the line (or no line: `start` is `end`) gives an infinite or NaN `t`.
                 (0.0..=1.0).contains(&t).then(|| Needle { at: p.at + t * (q.at - p.at), point: p.point.lerp(q.point, t), corner: false })
             });
-            for candidate in std::iter::once(p).chain(crossing) {
+            for candidate in crossing.into_iter().chain(std::iter::once(q)) {
                 let distance = candidate.point.distance(start).min(candidate.point.distance(end));
                 if best.is_none_or(|(b, _)| distance > b) {
                     best = Some((distance, candidate));
                 }
             }
+            previous = Some(q);
         }
         Ok(best)
     }
@@ -280,28 +283,9 @@ fn fit(length: f64, pattern: &[f64], next: &mut usize, min: f64, meter: &mut Met
     for stitch in &mut lengths {
         *stitch *= scale;
     }
-    while lengths.len() > 1 {
+    while let Some((short, neighbour)) = joinable(&lengths, min) {
         meter.charge(1)?;
-        let Some((i, shortest)) = lengths.iter().copied().enumerate().min_by(|a, b| a.1.total_cmp(&b.1)) else { break };
-        if at_least(shortest, min) {
-            break;
-        }
-        // Join it to its shorter neighbour (the earlier one on a tie).
-        let before = i.checked_sub(1).and_then(|j| lengths.get(j).map(|l| (j, *l)));
-        let after = lengths.get(i + 1).map(|l| (i + 1, *l));
-        let (j, _) = match (before, after) {
-            (Some(b), Some(a)) => {
-                if b.1 <= a.1 {
-                    b
-                } else {
-                    a
-                }
-            }
-            (Some(b), None) => b,
-            (None, Some(a)) => a,
-            (None, None) => break,
-        };
-        let (keep, gone) = (i.min(j), i.max(j));
+        let (keep, gone) = (short.min(neighbour), short.max(neighbour));
         let joined = lengths.get(keep).copied().unwrap_or(0.0) + lengths.get(gone).copied().unwrap_or(0.0);
         if let Some(slot) = lengths.get_mut(keep) {
             *slot = joined;
@@ -309,6 +293,19 @@ fn fit(length: f64, pattern: &[f64], next: &mut usize, min: f64, meter: &mut Met
         lengths.remove(gone);
     }
     Ok(lengths)
+}
+
+/// The shortest of `lengths`, if it is shorter than `min` and has a neighbour, with the neighbour it
+/// joins: the shorter one, the earlier on a tie.
+fn joinable(lengths: &[f64], min: f64) -> Option<(usize, usize)> {
+    let (short, length) = lengths.iter().copied().enumerate().min_by(|a, b| a.1.total_cmp(&b.1))?;
+    if at_least(length, min) {
+        return None;
+    }
+    let before = short.checked_sub(1).and_then(|i| lengths.get(i).map(|l| (i, *l)));
+    let after = lengths.get(short + 1).map(|l| (short + 1, *l));
+    let (neighbour, _) = before.into_iter().chain(after).min_by(|a, b| a.1.total_cmp(&b.1))?;
+    Some((short, neighbour))
 }
 
 /// `needles` with every stitch, measured straight, from `min` to `longest` long, or `None` when the

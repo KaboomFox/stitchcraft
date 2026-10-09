@@ -104,9 +104,9 @@ The Ink/Stitch compatibility page says when each Ink/Stitch parameter is support
 **Warning** — Path too small for the shortest stitch; skipped
 
 A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
-one stitch that short would hammer one spot of the fabric and could break the thread. Either the
-part is shorter than the shortest stitch, or it is longer but curls up so that all of it lies
-within the shortest stitch of its ends: a tiny closed loop, say.
+one stitch that short would hammer one spot of the fabric and could break the thread. The part is
+a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that
+all of it lies within the shortest stitch of its ends: a tiny closed loop, say.
 
 The message gives the part's length and the shortest stitch. Enlarge the part, join it to its
 neighbour, or delete it if it is a stray.
