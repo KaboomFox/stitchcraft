@@ -64,6 +64,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Mutation testing deals the mutants to its four parts round-robin. Cut into consecutive slices, one part
+  held every mutant of the formats crate, whose tests are the slowest, and took 23 minutes while the
+  others took 4 to 7.
 - Test-sheet drawing charges the stitch budget. Mutation testing found that a sign error in the drawing
   code would make lines grow without bound and use up memory before any check ran.
 - Broken and ambiguous links in the formats crate's API documentation.
