@@ -5,7 +5,7 @@ gates catch anything you miss.
 
 1. **Design page first.** Add or extend the section in `docs/src/design/algorithms/` with: purpose,
    parameters (registry keys; Ink/Stitch names where they exist), the algorithm in your own words,
-   properties, diagnostics, references. Clean room: public sources only.
+   properties, diagnostics, references. Never copy code ([ADR-0012](../design/adr/0012-read-dont-copy.md)).
 2. **Requirements.** Add `REQ-…` entries to `conformance/requirements.toml` with `status = "planned"` and
    the milestone.
 3. **Cases.** Add cases under `conformance/cases/<area>/`: typical shapes, the degenerate corpus entries

@@ -15,7 +15,7 @@ CI checks the mechanical rules. Reviewers check what machines cannot:
 - [ ] Modules have one job; names say what things are in embroidery terms.
 
 **Provenance**
-- [ ] Clean room: the author confirms no Ink/Stitch source was consulted; algorithms cite public sources.
+- [ ] Nothing was copied, pasted or transliterated from Ink/Stitch or other GPL/AGPL code; behaviour is in the design docs in our own words.
 - [ ] New data tables (palettes, format constants) cite their source.
 
 **Docs and UX**

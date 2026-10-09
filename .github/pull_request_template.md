@@ -11,10 +11,10 @@
 ## Checklist
 
 CI checks the mechanical rules (format, lints, no panics, no `unsafe`, determinism, layering, file size,
-clean room, docs freshness, links, ids). Please confirm the rest:
+no GPL code, docs freshness, links, ids). Please confirm the rest:
 
 - [ ] Requirements and failing cases came first; they pass now.
-- [ ] No Ink/Stitch source code was consulted (clean room); algorithms cite public sources.
+- [ ] Nothing was copied from Ink/Stitch or other GPL/AGPL code; behaviour is in the design docs in our own words.
 - [ ] User-facing docs updated in this PR; registry help text reads well for an embroiderer.
 - [ ] Golden files changed? Then the `golden-change` label is set and `CHANGELOG.md` says why.
 - [ ] Pictures should change? Shots refreshed (`docs:refresh-shots` label or `cargo xtask shots`).

@@ -6,7 +6,7 @@ supersedes the old one.
 
 | ADR | Title | Status |
 |---|---|---|
-| [0001](0001-license-and-clean-room.md) | MIT OR Apache-2.0, clean-room from Ink/Stitch | Accepted |
+| [0001](0001-license-and-clean-room.md) | MIT OR Apache-2.0, clean-room from Ink/Stitch | Accepted (decision 2 replaced by 0012) |
 | [0002](0002-host-agnostic-engine-plugin-first.md) | Host-agnostic engine; VectorCraft ABI v1 plug-in first | Accepted |
 | [0003](0003-parameter-registry.md) | One parameter registry generates everything | Accepted |
 | [0004](0004-determinism.md) | Determinism by construction | Accepted |
@@ -17,6 +17,7 @@ supersedes the old one.
 | [0009](0009-adopt-vectorcraft-conventions.md) | Adopt VectorCraft's conventions; improve the ones that drift | Accepted |
 | [0010](0010-diagnostics-with-codes.md) | Coded diagnostics with explanation pages | Accepted |
 | [0011](0011-movable-into-vectorcraft.md) | StitchCraft can move into VectorCraft's repository | Accepted |
+| [0012](0012-read-dont-copy.md) | Read Ink/Stitch's source, never copy it | Accepted |
 
 `cargo xtask docs --check` fails if an ADR file is missing from this table or its status here differs
 from the file's status line.

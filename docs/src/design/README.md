@@ -1,7 +1,7 @@
 # Design documents
 
-These pages are the specification StitchCraft is built from. They are written clean-room: they describe
-behaviour and published algorithms in our own words ([ADR-0001](adr/0001-license-and-clean-room.md)).
+These pages are the specification StitchCraft is built from. They describe behaviour and algorithms in
+our own words and never carry Ink/Stitch's code ([ADR-0012](adr/0012-read-dont-copy.md)).
 
 ## Reading order
 

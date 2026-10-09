@@ -1,6 +1,6 @@
 # ADR-0001: MIT OR Apache-2.0, clean-room from Ink/Stitch
 
-**Status:** Accepted · 2026-10-08
+**Status:** Accepted · 2026-10-08 · decision 2 replaced by [ADR-0012](0012-read-dont-copy.md)
 
 ## Context
 
@@ -16,7 +16,8 @@ around it is permissively licensed.
 2. It is a **clean-room** implementation. The design documents in `docs/src/design/` describe behaviour
    — inputs, outputs, parameters, published algorithms — in our own words. Implementers work from these
    documents, public embroidery knowledge, published papers and Ink/Stitch's public user documentation,
-   and **never open, copy or transliterate Ink/Stitch source code**.
+   and **never open, copy or transliterate Ink/Stitch source code**. *Replaced by
+   [ADR-0012](0012-read-dont-copy.md): the source may be read, never copied.*
 3. **Interoperability is preserved:** parameter names, their meanings and defaults, method identifiers
    and command names match Ink/Stitch's SVG attributes, because reading and writing the same files is the
    point ([compatibility contract](../inkstitch-compat-contract.md)).
@@ -33,9 +34,10 @@ around it is permissively licensed.
 - We cannot take shortcuts by translating Ink/Stitch's algorithms; we design them, which the quality goals
   require anyway.
 - Our documents describe Ink/Stitch only by its public behaviour, documentation and file format, never
-  by its code.
+  by its code. *(ADR-0012: they may describe behaviour its source shows, in our own words.)*
 - `cargo xtask cleanroom` fails on GPL licence text and on Ink/Stitch source paths anywhere in the
-  repository, documents included; the review checklist asks about provenance.
+  repository, documents included; the review checklist asks about provenance. *(ADR-0012: source paths
+  are allowed, so documents can link what they read.)*
 
 ## Alternatives considered
 
