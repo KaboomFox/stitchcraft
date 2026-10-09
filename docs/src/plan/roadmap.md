@@ -53,7 +53,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M2.3 ✅ | Command round trip for every writer/reader pair; machine-equivalence oracle; fresh-seed nightly | `REQ-FMT-002`, `REQ-FMT-003` active |
 | M2.4 ✅ | pyembroidery oracle (pinned by hash) as a conformance case in the gates job | `REQ-FMT-005` active |
 | M2.5 | `cargo-fuzz` targets for both readers; nightly job with persisted corpus | `REQ-FMT-006`; 1 h fuzzing clean |
-| M2.6 | `stitchcraft-render`: realistic and simple styles from the quantized plan | `REQ-RND-001`; golden PNG files |
+| M2.6 ✅ | `stitchcraft-render`: realistic and simple styles from the quantized plan | `REQ-RND-001`; golden PNG files |
 | M2.7 | `stitch preview`, `stitch convert`; the `stitch` shot generator behind `cargo xtask shots`; the `docs-refresh.yml` label workflow | first generated docs images, byte-compared on every PR |
 | M2.8 | Coverage ratchet and mutation-testing baseline; public-API snapshots | thresholds recorded |
 

@@ -45,7 +45,7 @@ reference `images/generated/<id>.png`. An image without a declaration fails the 
 
 | Kind | Made by | Compared by | Notes |
 |---|---|---|---|
-| `stitch` | `stitchcraft-render` from a conformance fixture + parameters | **exact bytes** (rendering is deterministic) | Stitch-type illustrations, parameter "before/after" pairs, diagnostics examples |
+| `stitch` | `stitchcraft-render` ([rendering](rendering.md)) from a conformance fixture + parameters | **exact bytes** (rendering is deterministic) | Stitch-type illustrations, parameter "before/after" pairs, diagnostics examples |
 | `vectorcraft-render` | `vectorcraft-cli run --in fixture --cmd plugin.install … --cmd effect.apply … --export x.png` | exact bytes, or tight tolerance if VectorCraft's renderer changes | How a preview looks in VectorCraft's canvas, headless |
 | `vectorcraft-ui` | VectorCraft (pinned stable) driven over its control channel: open fixture, install plug-ins, select, open the dialog, set fields, `ui.screenshot`, crop | perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 per channel) | Dialogs, menus, the workflow; runs under Xvfb with Mesa software rendering in a pinned container |
 | `photo` | a person, of a real sew-out | presence + metadata record (machine, fabric, commit, checkpoint) | Never regenerated; listed with their sew-out report |

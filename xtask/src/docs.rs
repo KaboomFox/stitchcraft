@@ -33,6 +33,7 @@ pub fn run(check_only: bool) -> Result<(), String> {
     }
     xtask_mentions(&root, &pages, &mut findings)?;
     ids(&pages, &mut findings)?;
+    allocations(&root, &mut findings)?;
     adr_index(&root, &mut findings)?;
     images(&root, &pages, &mut findings)?;
     findings.finish("docs", &format!("{} Markdown files checked", pages.len()))
@@ -171,6 +172,33 @@ fn ids(pages: &[(PathBuf, String)], findings: &mut Findings) -> Result<(), Strin
                     findings.error(format!("{here}: {code} is not registered in {DIAGNOSTICS_PAGE}"));
                 }
             }
+        }
+    }
+    Ok(())
+}
+
+/// Every registered code has its row in the design's code table, with the same severity and a title that
+/// starts with the registry's: a code allocated for one thing cannot quietly be registered for another.
+fn allocations(root: &Path, findings: &mut Findings) -> Result<(), String> {
+    let page = util::read(&root.join(DIAGNOSTICS_PAGE))?;
+    for code in stitchcraft_core::Code::ALL {
+        let id = code.id();
+        let row = page.lines().find(|l| l.starts_with(&format!("| `{id}` |")));
+        let cells: Vec<&str> = row.map(|r| r.split('|').map(str::trim).collect()).unwrap_or_default();
+        let (Some(severity), Some(title)) = (cells.get(2), cells.get(3)) else {
+            findings.error(format!("{id} is registered but has no row in {DIAGNOSTICS_PAGE}: allocate it there"));
+            continue;
+        };
+        let registered = match code.severity() {
+            stitchcraft_core::Severity::Error => "Error",
+            stitchcraft_core::Severity::Warning => "Warning",
+            stitchcraft_core::Severity::Info => "Info",
+        };
+        if *severity != registered || !title.starts_with(code.title()) {
+            findings.error(format!(
+                "{id} is registered as {registered} \"{}\" but {DIAGNOSTICS_PAGE} allocates it as {severity} \"{title}\"",
+                code.title()
+            ));
         }
     }
     Ok(())

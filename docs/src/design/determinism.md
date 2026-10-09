@@ -14,7 +14,8 @@ safe, and means the docs images regenerated in CI match the ones on a contributo
 | Floating-point contraction (FMA) | Rust does not contract `a * b + c` implicitly; we never call `mul_add` in quantization or comparisons | `clippy::disallowed_methods` on `f64::mul_add` in formats |
 | Parallelism | Results joined in document order; no reductions whose order depends on scheduling | engine design; CI compares sequential vs parallel output |
 | Sorting ties | Every sort uses a total order with an explicit tie-breaker (`f64::total_cmp`, then index) | review checklist; property tests shuffle inputs |
-| Quantization drift | Quantize absolute positions once, at encode time, with round-half-even; deltas are differences of quantized values | format conformance (`REQ-FMT-002`) |
+| Quantization drift | Quantize absolute positions once, at encode time, with round-half-even (`Point::to_tenths`, shared by the writers and the previews); deltas are differences of quantized values | format conformance (`REQ-FMT-002`, `REQ-RND-001`) |
+| Rasterization (SIMD code paths, platform trigonometry in curve flattening) | tiny-skia without its `simd` feature; previews draw only lines and circles; grid positions convert to `f32` exactly; pure-Rust PNG encoding without timestamps ([rendering](rendering.md)) | golden PNG files compared on all three operating systems (`REQ-RND-002`); `f32` transcendental methods are disallowed like the `f64` ones |
 | Dependency upgrades | `Cargo.lock` committed; golden files re-blessed only in a PR that explains why | CI + review |
 
 ## The seeded PRNG

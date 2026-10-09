@@ -9,7 +9,7 @@ behaviour and published algorithms in our own words ([ADR-0001](adr/0001-license
 2. [Architecture](architecture.md) — crates, layers, where code goes.
 3. [Data model](data-model.md), [parameter registry](params.md), [diagnostics](diagnostics.md).
 4. [Engine pipeline](engine-pipeline.md) and the [stitch generators](algorithms/README.md).
-5. [Machine formats](formats.md).
+5. [Machine formats](formats.md) and [rendering previews](rendering.md).
 6. [VectorCraft integration](vectorcraft-integration.md), the [ABI v2 RFC](rfc-vectorcraft-abi-v2.md)
    and the [compatibility gate](compatibility-gate.md).
 7. Quality: [conformance](conformance.md), [determinism](determinism.md), [guardrails](guardrails.md),

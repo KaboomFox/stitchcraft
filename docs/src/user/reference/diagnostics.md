@@ -7,6 +7,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | Code | Severity | Title |
 |---|---|---|
 | [`SC-E0004`](#sc-e0004) | Error | Budget exhausted |
+| [`SC-E0005`](#sc-e0005) | Error | Preview too large |
 | [`SC-E0009`](#sc-e0009) | Error | Internal check failed |
 | [`SC-E0010`](#sc-e0010) | Error | Nothing to stitch |
 | [`SC-E0601`](#sc-e0601) | Error | Too many colour changes for the file format |
@@ -25,6 +26,16 @@ command line or inside VectorCraft's live preview.
 
 The element named in the message was skipped; the rest of the design was planned. Simplify the
 element (fewer nodes, wider spacing, a smaller area) or split it into several elements.
+
+## SC-E0005
+
+**Error** — Preview too large
+
+Preview images have a size limit, so that drawing one never runs out of memory. At the scale
+asked for, this design's preview would be larger, so no image was written.
+
+Use a smaller scale: the message says the largest that fits. A design that runs more than 10
+metres from the hoop centre cannot be previewed at any scale.
 
 ## SC-E0009
 

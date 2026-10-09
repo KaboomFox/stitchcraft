@@ -31,6 +31,7 @@
     - [Satin](design/algorithms/satin.md)
     - [Fills](design/algorithms/fills.md)
   - [Machine formats](design/formats.md)
+  - [Rendering previews](design/rendering.md)
   - [VectorCraft integration](design/vectorcraft-integration.md)
   - [RFC: VectorCraft plug-in ABI v2](design/rfc-vectorcraft-abi-v2.md)
   - [VectorCraft compatibility gate](design/compatibility-gate.md)

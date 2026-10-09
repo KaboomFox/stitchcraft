@@ -12,14 +12,15 @@ publish = false
 workspace = true
 
 [dependencies]
-# The conformance runner draws test sheets and encodes them in-process, and the docs generator renders
-# reference pages from the registries (xtask is exempt from layering).
+# The conformance runner draws test sheets, encodes them and previews changed machine files in-process,
+# and the docs generator renders reference pages from the registries (xtask is exempt from layering).
 clap = { workspace = true }
 stitchcraft-cli = { path = "../apps/stitchcraft-cli" }
 stitchcraft-core = { workspace = true }
 stitchcraft-engine = { workspace = true }
 stitchcraft-formats = { workspace = true }
 stitchcraft-plan = { workspace = true }
+stitchcraft-render = { workspace = true }
 stitchcraft-testkit = { workspace = true }
 sha2 = { workspace = true }
 serde = { workspace = true }

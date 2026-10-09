@@ -162,7 +162,16 @@ level = "L2"
 statement = "Previews render the plan after quantization, so what is shown is what sews."
 rationale = "Ink/Stitch #2066."
 milestone = "M2"
-status = "planned"
+status = "active"
+
+[[req]]
+id = "REQ-RND-002"
+area = "render"
+level = "L2"
+statement = "The same plan and settings give the same preview PNG, byte for byte, on every platform."
+rationale = "Documentation images are compared byte for byte on every pull request (docs-pipeline.md)."
+milestone = "M2"
+status = "active"
 
 # ── Parameters ─────────────────────────────────────────────────────────────────────────────────────
 

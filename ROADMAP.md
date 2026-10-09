@@ -5,8 +5,11 @@ This file is the status board: update it in the same PR that completes a step.
 
 **Where we are (2026-10-08):** M1's code and docs are done: StitchCraft writes PES and DST files, the
 reference pages are generated from the code, and the MC-1 test sheets (TS-01, TS-02, TS-10A/B/C) are out
-for sewing on the reference machine. The conformance report shows all 10 active requirements green.
-Next: the MC-1 sew-out report (it closes M1), then M2. The repository is
+for sewing on the reference machine. M2 is under way: StitchCraft reads PES, PEC and DST files back
+(`stitch inspect`), every writer/reader pair round-trips, pinned pyembroidery cross-checks every golden
+file, and previews render exactly what will sew. The conformance report shows all 16 active
+requirements green. Next: `stitch preview` and generated docs images (M2.7), and the MC-1 sew-out
+report, which closes M1. The repository is
 [KaboomFox/inkcraft](https://github.com/KaboomFox/inkcraft) (the project inside keeps the name
 StitchCraft); open owner actions from M0.5: GitHub Pages, branch protection and the code-of-conduct
 contact.
@@ -15,7 +18,7 @@ contact.
 |---|---|---|---|
 | M0 | Foundations and guardrails | 🟡 M0.1–M0.4 done; M0.5 partly (repository, owner, labels; Pages and branch protection open); M0.6–M0.8 open | — |
 | M1 | Stitch plan, Brother profile, PES/DST writers, test sheets | 🟡 M1.1–M1.10 done; closes with MC-1 | MC-1 🟡 kit out for sewing |
-| M2 | Readers, preview renderer, fuzzing | ⚪ | — |
+| M2 | Readers, preview renderer, fuzzing | 🟡 M2.1–M2.4 and M2.6 done | — |
 | M3 | Running stitch family, plan assembly, SVG input | ⚪ | MC-2 ⚪ |
 | M4 | Satin column | ⚪ | MC-3 ⚪ |
 | M5 | Tatami fill | ⚪ | MC-4 ⚪ |
