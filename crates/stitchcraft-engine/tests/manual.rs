@@ -57,6 +57,20 @@ fn req_run_006_manual_stitch_puts_a_needle_on_every_node() {
 }
 
 #[test]
+fn req_run_006_a_longest_stitch_of_zero_or_less_sews_every_stitch_as_drawn() {
+    // Ink/Stitch reads 0 and below as "no maximum", so a file that says so is not cut into short stitches.
+    let path = lines(&[(0.0, 0.0), (10.0, 0.0), (10.0, 5.0)]);
+    for raw in ["0", "-1", ""] {
+        let sewn = sew(&path, &[("max_stitch_length_mm", raw)], 0.3);
+        assert_eq!(sewn.runs, [vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 5.0)]], "{raw:?}");
+        assert!(sewn.warnings.is_empty(), "{raw:?}");
+    }
+    let set: ParamSet = [("max_stitch_length_mm", "0")].into_iter().collect();
+    let read = ManualParams::from_set(&set).unwrap();
+    assert_eq!((read.params.max_stitch_length_mm, read.warnings.len()), (None, 0));
+}
+
+#[test]
 fn req_run_008_no_hand_placed_stitch_is_shorter_than_the_shortest_stitch() {
     let sewn = sew(&lines(&[(0.0, 0.0), (0.1, 0.0), (5.0, 0.0), (5.2, 0.0)]), &[], 0.3);
     // (0.1, 0) is too close to the start; (5, 0) too close to the last point, which stays.

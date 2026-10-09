@@ -95,7 +95,8 @@ struct Assembly<'a> {
 impl<'a> Assembly<'a> {
     /// Sews `group`: straight on from the open group if nothing separates them, else after a jump.
     fn join(&mut self, group: Group<'a>, meter: &mut Meter) -> Result<(), Exhausted> {
-        if group.element.thread != self.thread {
+        // Threads are compared by colour, as Ink/Stitch compares them: a name alone changes nothing.
+        if group.element.thread.color != self.thread.color {
             self.tie_off(meter)?;
             self.thread = group.element.thread.clone();
             self.builder.change_thread(self.thread.clone());

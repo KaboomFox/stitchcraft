@@ -29,19 +29,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     `SC-W0011` until their milestones, as is an element whose parameters cannot be read (`SC-E0101`) or
     whose work budget runs out (`SC-E0004`); the rest of the design still plans, and with nothing left,
     `SC-E0010` says so. Each element sews with the larger of the machine's shortest stitch and its own.
-  - **Assemble.** Elements are sewn in document order, a new thread starting a new colour block. The needle
+  - **Assemble.** Elements are sewn in document order, a new thread colour starting a new colour block:
+    threads are compared by colour, as Ink/Stitch compares them, so two names for one colour are one
+    block. The needle
     sews straight on to the next group when it is the same thread within the collapse length (3 mm, or
     the element's `min_jump_stitch_length_mm`); otherwise the group ends with its tie-off and the next
     starts with a jump and its tie-in. `trim_after` and `stop_after` add a trim or a stop after the
     element, locks around them. Locks go only there, as `ties` says; `force_lock_stitches` adds the
-    tie-off, and manual stitch has none unless forced. This is Ink/Stitch's way of joining.
+    tie-off, and manual stitch has none unless forced. This is Ink/Stitch's way of joining. An element
+    that sews nothing has no place for its trim or stop: it is left out, as Ink/Stitch leaves it out, and
+    the new `SC-W0505` says so.
   - **Origin.** The plan is in hoop coordinates: the design's origin, or the centre of its stitches, at the
     hoop's centre. A stop position adds a jump to it before each stop.
   - **Design settings** (`DesignSettings`): collapse length, shortest stitch, origin and stop position,
     with Ink/Stitch's defaults; the SVG adapter reads them from M8.
   - **Conformance.** `REQ-ASM-001`, `-002`, `-003`, `-005`, `REQ-LCK-001` and the new `REQ-GEN-002` are
-    active. Ignored elements (`REQ-ASM-004`) and start and end hints (`REQ-GEN-001`) come with the SVG
-    adapter's command symbols, M8.
+    active. Start and end hints (`REQ-GEN-001`) come with the SVG adapter's command symbols, M8.
 - M3.7: lock stitches (`stitchcraft_engine::locks`): the tie-in and tie-off at either end of a group's
   stitches, for plan assembly (M3.8) to sew where `ties` says.
   - **Shapes.** Every Ink/Stitch lock id is accepted. The shapes behind them are StitchCraft's own
@@ -49,11 +52,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     the same over one step of `lock_*_scale_mm`, and seven drawn shapes are sized by
     `lock_*_scale_percent`. Each lies on the stitching it secures.
   - **Custom locks.** Numbers in `lock_custom_start` and `lock_custom_end` are steps along the stitching,
-    read as Ink/Stitch reads them. A lock drawn as an SVG path is not sewn yet: the half stitch is sewn
+    read as Ink/Stitch reads them. Locks of steps follow the stitching round its corners, as Ink/Stitch's
+    custom steps do (`DEV-LCK-002` for the two places they differ). A lock drawn as an SVG path is not sewn yet: the half stitch is sewn
     instead, and the new `SC-W0503` says so, as it does for an empty custom lock or pieces that are not
     numbers.
   - **Shortest lock stitch.** No lock stitch is shorter than 0.2 mm: a shorter step is lengthened, a
-    drawn lock enlarged, and the new `SC-W0502` says by how much.
+    drawn lock enlarged, a lock of steps that a sharp turn would fold onto itself sewn straight, and the
+    new `SC-W0502` says so.
   - **Settings windows** show `lock_*_scale_mm` only for the locks it sizes, and `lock_*_scale_percent`
     likewise: a parameter can now be shown for several values of another (`when key in VALUES`).
   - **Conformance.** `REQ-LCK-002` and the new `REQ-LCK-004` are active; `REQ-LCK-001` (where locks go)
@@ -62,12 +67,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - **Needle points.** A needle point goes on every node of the path, in order. A curve gives only its
     end node.
   - **Longest stitch.** Stitches longer than `max_stitch_length_mm` are split into equal parts, never
-    shorter than the shortest stitch.
+    shorter than the shortest stitch. As in Ink/Stitch, 0 or less means no maximum: an optional length
+    of 0 or less now counts as empty, where it used to be clamped up with `SC-W0102`.
   - **Bean stitch** applies; repeats don't.
   - **Shortest stitch.** No hand-placed stitch is shorter than the shortest stitch. A point too close to
     the one before is left out, the last point is kept, and the new `SC-W0403` says how many. Ink/Stitch
     drops such points silently.
   - **Conformance.** `REQ-RUN-006` and the new `REQ-RUN-008` are active.
+- `SC-I0605`: writing DST says at how many places its machines will cut the thread where the plan does
+  not trim. `stitchcraft_formats::encode` returns the file as `Encoded`, its bytes with notes on
+  what the format makes the machine do that the plan does not say; `stitch convert` and
+  `stitch testsheet` print them.
 - M3.5: repeats, bean stitch and random length for the running stitch.
   - **Repeats.** `repeats` sews a run several times, every other pass backwards. Each pass starts where
     the last one ended, so a turnaround is never a stitch in place.
@@ -81,10 +91,6 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - **Where it lives.** Repeats and bean stitch are in `generators::passes`, shared with manual stitch
     from M3.6.
   - **Conformance.** `REQ-RUN-004`, `REQ-RUN-005` and the new `REQ-RUN-007` are active.
-- `SC-I0605`: writing DST says at how many places its machines will cut the thread where the plan does
-  not trim. `stitchcraft_formats::encode` returns the file as `Encoded`, its bytes with notes on
-  what the format makes the machine do that the plan does not say; `stitch convert` and
-  `stitch testsheet` print them.
 - M3.4: the running stitch (`stitchcraft_engine::generators::running`).
   - **Placement.** Curves are flattened to within a tenth of `running_stitch_tolerance_mm`. Corners
     (turns of more than 30° between segments) always get a needle point. Stitches are spread evenly between
@@ -193,6 +199,23 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The SVG reader no longer stitches Ink/Stitch's own objects (`REQ-SVG-003`), which a review against
+  Ink/Stitch found.
+  - **Commands and connectors.** Command symbols (`<use>` of an `inkstitch_*` symbol) were reported as
+    clones, and the connector from each symbol to its object was sewn as a line in its own colour. Lines
+    drawn with Inkscape's connector tool were sewn too. None is stitched now. A connector that ties no
+    command is noted.
+  - **Commands applied.** `trim` and `stop` commands set the shape's `trim_after` and `stop_after`.
+  - **Leaving out.** The `ignore_object` and `ignore_layer` commands, and the `inkstitch:ignore_object`
+    setting, leave out what they name, and the new `SC-I0805` lists each (`REQ-ASM-004`, now active).
+  - **Not applied yet.** `origin` and `stop_position` are noted as not applied yet. A trim or stop on
+    something that is not a stitched shape is noted, as is an `ignore_layer` outside every layer.
+  - **Helper paths.** Paths that carry Ink/Stitch's guide-line, anchor-line or pattern start marker are
+    helpers for other shapes. They are no longer stitched; each is noted, since StitchCraft does not
+    apply them yet.
+  - **Markers.** A marker property set to `none` no longer hides another one that names a marker, and
+    each of the three inherits on its own.
+  - **Work.** Reading charges two units of work per XML node: one to find ids and commands, one to read.
 - DST is read as DST machines sew it (`REQ-FMT-008`). Machines count jump records in a row and cut the
   thread before three or more — a machine setting; three is the common one, and pyembroidery's reading —
   where something was sewn since the thread was last cut or changed, so a jump longer than 24.2 mm is a

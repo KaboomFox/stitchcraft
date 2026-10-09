@@ -36,7 +36,7 @@ params! {
         /// last one ends where the stitching starts, so `1 -1 1 -1` goes forth and back twice. Ink/Stitch
         /// also takes an SVG path that draws the lock; StitchCraft does not sew those yet, and sews the
         /// half stitch instead (`SC-W0503`).
-        lock_custom_start: Text = "", label "Custom start lock", when lock_start == "custom";
+        lock_custom_start: Text = "", label "Custom start lock", when lock_start == "custom", origin Origin::InkStitchDeviates { deviation: "DEV-LCK-002" };
 
         /// How long each step of a start lock made of steps (back and forth, or custom) is.
         lock_start_scale_mm: Length = "0.7", label "Start lock size", range (0.1, 10.0), when lock_start in SIZED_IN_MM;
@@ -54,7 +54,7 @@ params! {
         /// the first one starts where the stitching ends, so `1 -1 1 -1` goes back and forth twice.
         /// Ink/Stitch also takes an SVG path that draws the lock; StitchCraft does not sew those yet, and
         /// sews the half stitch instead (`SC-W0503`).
-        lock_custom_end: Text = "", label "Custom end lock", when lock_end == "custom";
+        lock_custom_end: Text = "", label "Custom end lock", when lock_end == "custom", origin Origin::InkStitchDeviates { deviation: "DEV-LCK-002" };
 
         /// How long each step of an end lock made of steps (back and forth, or custom) is.
         lock_end_scale_mm: Length = "0.7", label "End lock size", range (0.1, 10.0), when lock_end in SIZED_IN_MM;

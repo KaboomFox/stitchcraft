@@ -145,6 +145,68 @@ fn req_lck_004_custom_numbers_are_steps_into_the_stitching() {
     assert!(start.warnings.is_empty() && end.warnings.is_empty());
 }
 
+/// `got` is `want`, point by point, to within a nanometre.
+fn near(got: &[Point], want: &[Point]) {
+    assert_eq!(got.len(), want.len(), "{got:?}");
+    assert!(got.iter().zip(want).all(|(a, b)| a.distance(*b) < 1e-9), "{got:?}");
+}
+
+#[test]
+fn req_lck_004_steps_follow_the_stitching_round_its_corners() {
+    // Back and forth twice by 0.7 mm, and a first stitch of 0.5 mm: the steps go on round the corner.
+    let pairs = [("lock_custom_start", "1 1 -1 -1"), ("lock_start_scale_mm", "0.7")];
+    let corner = [p(0.0, 0.0), p(0.5, 0.0), p(0.5, 5.0)];
+    let round = [p(0.0, 0.0), p(0.5, 0.2), p(0.5, 0.9), p(0.5, 0.2)];
+    let (start, end) = locks(&corner, "custom", &pairs);
+    near(&start.points, &round);
+    // The tie-off's last stitch is long enough to hold it.
+    near(&end.points, &[p(0.5, 4.3), p(0.5, 3.6), p(0.5, 4.3), p(0.5, 5.0)]);
+    // Sewn the other way, the tie-off goes round the corner.
+    let back: Vec<Point> = corner.iter().rev().copied().collect();
+    let (_, end) = locks(&back, "custom", &pairs);
+    near(&end.points, &[round[1], round[2], round[3], round[0]]);
+    // Stitching that ends before the lock does: past its end, the lock goes straight on from the last stitch.
+    let (start, _) = locks(&[p(0.0, 0.0), p(0.5, 0.0), p(0.5, 0.5)], "custom", &pairs);
+    near(&start.points, &round);
+    assert!(start.warnings.is_empty() && end.warnings.is_empty());
+}
+
+#[test]
+fn diag_sc_w0502_a_lock_that_would_fold_on_a_sharp_turn_is_sewn_straight() {
+    // The stitching turns back 0.35 mm in: 0.7 mm along it is 0.01 mm from where it starts.
+    let hairpin = [p(0.0, 0.0), p(0.35, 0.0), p(0.0, 0.01), p(-3.0, 0.01)];
+    let (start, _) = locks(&hairpin, "custom", &[("lock_custom_start", "1 1 -1 -1"), ("lock_start_scale_mm", "0.7")]);
+    near(&start.points, &[p(0.0, 0.0), p(0.7, 0.0), p(1.4, 0.0), p(0.7, 0.0)]);
+    assert_eq!(
+        messages(&start),
+        [
+            "warning SC-W0502: The start lock would sew a stitch of 0.01 mm where it follows a turn of the stitching, shorter than 0.2 mm, so it is sewn straight along the first stitch."
+        ]
+    );
+    // The same turn at the end of the stitching.
+    let back: Vec<Point> = hairpin.iter().rev().copied().collect();
+    let (_, end) = locks(&back, "custom", &[("lock_custom_start", "1 1 -1 -1"), ("lock_start_scale_mm", "0.7")]);
+    near(&end.points, &[p(0.7, 0.0), p(1.4, 0.0), p(0.7, 0.0), p(0.0, 0.0)]);
+    assert_eq!(
+        messages(&end),
+        [
+            "warning SC-W0502: The end lock would sew a stitch of 0.01 mm where it follows a turn of the stitching, shorter than 0.2 mm, so it is sewn straight along the last stitch."
+        ]
+    );
+}
+
+#[test]
+fn a_lock_reads_the_stitching_only_as_far_as_it_reaches() {
+    // 1 mm in steps of 0.1 mm, a corner, and 1 m more: the lock reaches 1.4 mm, round the corner. It
+    // reads only the needle points it reaches, so 40 units of work are enough for a group of 10,011.
+    let mut group: Vec<Point> = (0..=10).map(|i| p(0.1 * f64::from(i), 0.0)).collect();
+    group.extend((1..=10_000).map(|j| p(1.0, 0.1 * f64::from(j))));
+    let params = settings(&[("lock_start", "custom"), ("lock_custom_start", "1 1 -1 -1"), ("lock_start_scale_mm", "0.7")]);
+    let mut meter = Budget { max_stitches: 1, max_work: 40 }.meter();
+    let lock = tie_in(&group, &params, &mut meter).unwrap();
+    near(&lock.points, &[p(0.0, 0.0), p(0.7, 0.0), p(1.0, 0.4), p(0.7, 0.0)]);
+}
+
 #[test]
 fn a_group_without_a_stitch_gets_no_lock() {
     let params = settings(&[]);

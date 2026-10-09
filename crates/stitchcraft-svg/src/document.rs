@@ -10,6 +10,11 @@
 //! `~2`, `~3`, … so that ids stay unique. The reader's own diagnostics name the SVG element:
 //! `svg:<label>`.
 //!
+//! **Ink/Stitch's own objects are not the design** ([`crate::inkstitch`]): its command symbols and their
+//! connectors, connector-tool lines and its helper paths are never stitched. Its trim and stop commands
+//! become the shape's `trim_after` and `stop_after`, and what its ignore commands and setting leave out is
+//! listed (`SC-I0805`).
+//!
 //! **Nothing is dropped silently.** `SC-W0802` reports SVG features that StitchCraft does not stitch:
 //! text, images, clones, nested `<svg>`, style sheets, clipping, masks, filters, markers, gradients,
 //! patterns and Ink/Stitch's settings. `SC-W0804` reports geometry that cannot be used, and `SC-E0801` a
@@ -18,8 +23,8 @@
 //!
 //! **Limits keep any file cheap.** A file may be at most [`MAX_BYTES`] long with a million XML nodes,
 //! and may not declare entities, whose expansion could need far more memory than the file. Work is
-//! charged to the budget: one unit per XML node, per path segment, and per 8 bytes of a transform or
-//! point list.
+//! charged to the budget: two units per XML node (one to find its id and Ink/Stitch's commands, one to
+//! read it), one per path segment, and one per 8 bytes of a transform or point list.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
@@ -31,6 +36,9 @@ use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
 use svgtypes::{AspectRatio, Color, Length, LengthUnit, ViewBox};
 
+use crate::inkstitch::{
+    self, Does, Helper, IGNORE_OBJECT, INKSCAPE_NS, INKSTITCH_NS, Objects, Place, READ_ATTRIBUTES, STOP_AFTER, TRIM_AFTER, Unapplied, place,
+};
 use crate::path::{self, Seg, Sub};
 use crate::style::{Declared, Paint, Style, rgb};
 use crate::transform::{self, Affine, user_units};
@@ -50,9 +58,6 @@ const BYTES_PER_UNIT: usize = 8;
 const MAX_HOPS: u32 = 16;
 
 const SVG_NS: &str = "http://www.w3.org/2000/svg";
-const INKSCAPE_NS: &str = "http://www.inkscape.org/namespaces/inkscape";
-const XLINK_NS: &str = "http://www.w3.org/1999/xlink";
-const INKSTITCH_NS: &str = "http://inkstitch.org/namespace";
 
 /// What an SVG file holds for StitchCraft.
 #[derive(Clone, Debug, PartialEq)]
@@ -175,8 +180,6 @@ enum Axis {
 struct Reader<'b, 'a, 'input> {
     budget: &'b Budget,
     meter: Meter,
-    /// The root element, once reading has started.
-    root: Option<Node<'a, 'input>>,
     /// The root element's namespace: SVG's, or none in a file that declares none.
     ns: Option<&'a str>,
     /// The root viewport in user units: what percentages are of.
@@ -186,8 +189,15 @@ struct Reader<'b, 'a, 'input> {
     /// Labels given out, and the next suffix to try for each repeated one.
     taken: BTreeSet<String>,
     suffixes: BTreeMap<String, u32>,
-    /// Elements by id, the first of each, for paint servers; built when first needed.
-    ids: Option<BTreeMap<&'a str, Node<'a, 'input>>>,
+    /// Elements by id, the first of each, for paint servers and Ink/Stitch's commands.
+    ids: BTreeMap<&'a str, Node<'a, 'input>>,
+    /// Ink/Stitch's commands.
+    objects: Objects,
+    /// What the notes about commands call the objects and symbols they name.
+    labels: BTreeMap<Place, String>,
+    /// Objects with a trim or stop command that a viewer shows, and those of them that are stitched.
+    shown_targets: BTreeSet<Place>,
+    stitched_targets: BTreeSet<Place>,
     /// Whether the file-wide notes (a style sheet, Ink/Stitch settings) have been given.
     noted_style_sheet: bool,
     noted_inkstitch: bool,
@@ -198,14 +208,17 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         Reader {
             budget,
             meter: budget.meter(),
-            root: None,
             ns: None,
             viewport: (0.0, 0.0),
             elements: Vec::new(),
             warnings: Vec::new(),
             taken: BTreeSet::new(),
             suffixes: BTreeMap::new(),
-            ids: None,
+            ids: BTreeMap::new(),
+            objects: Objects::default(),
+            labels: BTreeMap::new(),
+            shown_targets: BTreeSet::new(),
+            stitched_targets: BTreeSet::new(),
             noted_style_sheet: false,
             noted_inkstitch: false,
         }
@@ -220,7 +233,9 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         if let Some(other) = ns.filter(|ns| *ns != SVG_NS) {
             return Err(unreadable(format!("The file's <svg> element is in the namespace {other}, not SVG's.")));
         }
-        (self.root, self.ns) = (Some(root), ns);
+        self.ns = ns;
+        let found = inkstitch::find(root, ns, &mut self.meter).map_err(|_| self.exhausted())?;
+        (self.ids, self.objects) = (found.ids, found.objects);
         let map = self.root_map(root)?;
         if root.has_attribute("transform") {
             self.note(None, "The root `<svg>` element's transform is not applied.".to_string(), None);
@@ -253,6 +268,9 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             } else {
                 0
             };
+            if self.objects.shown_by(node).is_some() {
+                self.labels.insert(place(node), label(node, tag, n));
+            }
             let own = match context {
                 Context::Hidden => Context::Hidden,
                 Context::Switch { chosen, .. } if chosen != Some(node.id()) => Context::Hidden,
@@ -262,8 +280,37 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 stack.push((node.id(), own));
             }
         }
+        self.command_notes();
         let design = Design::new(self.elements, DesignSettings::default())?;
         Ok(Svg { design, warnings: self.warnings })
+    }
+
+    /// Notes on the commands that are not applied, in document order: commands that StitchCraft does
+    /// not apply yet or that are not where they apply, and trims and stops on objects a viewer shows
+    /// that are not stitched shapes (Ink/Stitch applies them only to those).
+    fn command_notes(&mut self) {
+        let mut notes = Vec::new();
+        for (target, command) in self.objects.trims_and_stops() {
+            if self.shown_targets.contains(&target) && !self.stitched_targets.contains(&target) {
+                let label = self.labels.get(&target).cloned().unwrap_or_default();
+                let message = format!(
+                    "`{label}` has an Ink/Stitch `{}` command, which is not applied: `{label}` is not a shape that is stitched.",
+                    command.name
+                );
+                notes.push((target, self.diagnostic(Code::SvgFeatureIgnored, Some(&label), message, None)));
+            }
+        }
+        for &(symbol, command, why) in self.objects.unapplied() {
+            let label = self.labels.get(&symbol).cloned().unwrap_or_default();
+            let message = match why {
+                Unapplied::NotYet => format!("`{label}` is Ink/Stitch's `{}` command, which StitchCraft does not apply yet.", command.name),
+                Unapplied::NoLayer => format!("`{label}` is Ink/Stitch's `{}` command, which is not applied: it is not in a layer.", command.name),
+            };
+            notes.push((symbol, self.diagnostic(Code::SvgFeatureIgnored, Some(&label), message, None)));
+        }
+        // Stable: two notes on one object keep the order above.
+        notes.sort_by_key(|(node, _)| *node);
+        self.warnings.extend(notes.into_iter().map(|(_, note)| note));
     }
 
     /// The map from the root's user units to millimetres, from its size, viewBox and aspect ratio.
@@ -305,7 +352,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 Some(hint),
             );
         }
-        if !self.noted_inkstitch && node.attributes().any(|a| a.namespace() == Some(INKSTITCH_NS)) {
+        if !self.noted_inkstitch && node.attributes().any(|a| a.namespace() == Some(INKSTITCH_NS) && !READ_ATTRIBUTES.contains(&a.name())) {
             self.noted_inkstitch = true;
             self.note(
                 None,
@@ -323,6 +370,13 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         let declared = Declared::of(node);
         let Some(style) = inherited.child(&declared) else { return Ok(Context::Hidden) };
         let label = label(node, tag, n);
+        if self.own_object(node, kind, &label, &declared, &style) {
+            return Ok(Context::Hidden);
+        }
+        if style.shown() && !self.objects.on(node).is_empty() {
+            self.shown_targets.insert(place(node));
+            self.labels.insert(place(node), label.clone());
+        }
         let map = match node.attribute("transform") {
             None => map,
             Some(text) => {
@@ -375,6 +429,46 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         }
     }
 
+    /// Whether `node` is one of Ink/Stitch's own objects, or is left out as the file asks
+    /// ([`crate::inkstitch`]); it is then not drawn, nor is anything inside it. Says so where that is not
+    /// obvious: a connector that ties no command, an ignored object or layer, a helper path.
+    fn own_object(&mut self, node: Node<'a, 'input>, kind: Kind, label: &str, declared: &Declared<'a, 'input>, style: &Style<'a>) -> bool {
+        if inkstitch::is_connector(node) {
+            if !self.objects.ties_a_command(node) && style.shown() {
+                let message =
+                    format!("`{label}` is a connector (drawn with Inkscape's connector tool), which Ink/Stitch does not stitch; it is left out.");
+                self.note(Some(label), message, None);
+            }
+            return true;
+        }
+        let why = if self.objects.on(node).iter().any(|c| c.does == Does::IgnoreObject) {
+            Some(format!("an Ink/Stitch `{IGNORE_OBJECT}` command is attached to it"))
+        } else if node.attribute((INKSTITCH_NS, IGNORE_OBJECT)).is_some_and(inkstitch::yes) {
+            Some(format!("its Ink/Stitch setting `{IGNORE_OBJECT}` is on"))
+        } else if inkstitch::is_layer(node) && self.objects.layer_ignored(node) {
+            Some("an Ink/Stitch `ignore_layer` command is in it".to_string())
+        } else {
+            None
+        };
+        if let Some(why) = why {
+            let inside = if matches!(kind, Kind::Group | Kind::Switch) { ", with everything in it" } else { "" };
+            let message = format!("`{label}` is left out{inside}: {why}.");
+            let note = self.diagnostic(Code::SvgObjectIgnored, Some(label), message, None);
+            self.warnings.push(note);
+            return true;
+        }
+        // A command's symbol: what it does is applied, or noted after reading (`command_notes`).
+        if self.objects.shown_by(node).is_some() {
+            return true;
+        }
+        if let (Kind::Shape(_), Some(helper)) = (kind, Helper::of(declared)) {
+            let (what, helpers) = helper.what();
+            self.note(Some(label), format!("`{label}` is {what}, so it is not stitched; StitchCraft does not apply {helpers} yet."), None);
+            return true;
+        }
+        false
+    }
+
     /// The child a `<switch>` draws: the first SVG element whose conditions hold. StitchCraft implements
     /// no extensions, so `requiredExtensions` fails; it has no user language, so `systemLanguage` passes,
     /// and `requiredFeatures`, dropped in SVG 2, passes as in today's viewers.
@@ -391,7 +485,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         if fill.is_none() && stroke.is_none() {
             return Ok(());
         }
-        if style.markers && matches!(geometry, Geometry::Path | Geometry::Line | Geometry::Polyline | Geometry::Polygon) {
+        if style.has_markers() && matches!(geometry, Geometry::Path | Geometry::Line | Geometry::Polyline | Geometry::Polygon) {
             self.note(Some(&label), format!("`{label}` has markers (arrowheads and the like), which are not stitched."), None);
         }
         let Some(subs) = self.outline(node, geometry, &label)? else { return Ok(()) };
@@ -409,13 +503,24 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             return Ok(());
         }
         let name = node.attribute((INKSCAPE_NS, "label")).map(str::trim).filter(|s| !s.is_empty()).map(str::to_string);
+        // Ink/Stitch's trim and stop commands turn on the same settings as the shape's own would, for
+        // each of its parts (`lib/elements/element.py`).
+        let mut params = ParamSet::new();
+        for command in self.objects.on(node) {
+            match command.does {
+                Does::Trim => params.set(TRIM_AFTER, "true"),
+                Does::Stop => params.set(STOP_AFTER, "true"),
+                _ => None,
+            };
+        }
         let paints = if style.stroke_first { [("stroke", stroke), ("fill", fill)] } else { [("fill", fill), ("stroke", stroke)] };
         for (part, colour) in paints {
             let Some(colour) = colour else { continue };
             let id = ElementId::new(format!("svg:{label}:{part}"))
                 .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The SVG reader made an element id that cannot be used: {e}.")))?;
             let shape = if part == "fill" { Shape::Fill { path: path.clone(), rule: style.fill_rule } } else { Shape::Stroke(path.clone()) };
-            self.elements.push(Element { id, name: name.clone(), shape, thread: Thread::new(colour), params: ParamSet::new() });
+            self.elements.push(Element { id, name: name.clone(), shape, thread: Thread::new(colour), params: params.clone() });
+            self.stitched_targets.insert(place(node));
         }
         Ok(())
     }
@@ -493,7 +598,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             Paint::Server { id, fallback } => (id, fallback.and_then(|f| f.colour(current))),
         };
         // A reference to nothing paints the fallback, or nothing, as in a viewer.
-        let Some(server) = self.by_id(id)? else { return Ok(fallback) };
+        let Some(server) = self.by_id(id) else { return Ok(fallback) };
         let kind = server.tag_name().name();
         if kind == "linearGradient" || kind == "radialGradient" {
             let colour = self.first_stop(server)?;
@@ -527,9 +632,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                     return self.stop_colour(child).map(Some);
                 }
             }
-            let href = current.attribute((XLINK_NS, "href")).or_else(|| current.attribute("href"));
-            let Some(next) = href.and_then(|h| h.trim().strip_prefix('#')) else { return Ok(None) };
-            match self.by_id(next)? {
+            let Some(next) = inkstitch::href(current).and_then(|h| h.trim().strip_prefix('#')) else { return Ok(None) };
+            match self.by_id(next) {
                 Some(next) if matches!(next.tag_name().name(), "linearGradient" | "radialGradient") => current = next,
                 _ => return Ok(None),
             }
@@ -555,20 +659,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
     }
 
     /// The first element with `id`, as `getElementById` finds it.
-    fn by_id(&mut self, id: &str) -> Result<Option<Node<'a, 'input>>, Diagnostic> {
-        if self.ids.is_none() {
-            let mut ids = BTreeMap::new();
-            if let Some(root) = self.root {
-                for node in root.descendants() {
-                    self.charge(1)?;
-                    if let Some(id) = node.attribute("id") {
-                        ids.entry(id).or_insert(node);
-                    }
-                }
-            }
-            self.ids = Some(ids);
-        }
-        Ok(self.ids.as_ref().and_then(|ids| ids.get(id).copied()))
+    fn by_id(&self, id: &str) -> Option<Node<'a, 'input>> {
+        self.ids.get(id).copied()
     }
 
     /// A unique label for a shape's design elements: `label`, or `label~2`, `label~3`, … when it is taken.
@@ -609,14 +701,20 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
     }
 
     fn warn(&mut self, code: Code, label: Option<&str>, message: String, hint: Option<&str>) {
-        let mut warning = Diagnostic::new(code, message);
+        let warning = self.diagnostic(code, label, message, hint);
+        self.warnings.push(warning);
+    }
+
+    /// A diagnostic with `code` and `message`, about the SVG element `label` if there is one, with `hint`.
+    fn diagnostic(&self, code: Code, label: Option<&str>, message: String, hint: Option<&str>) -> Diagnostic {
+        let mut diagnostic = Diagnostic::new(code, message);
         if let Some(id) = label.and_then(|l| ElementId::new(format!("svg:{l}")).ok()) {
-            warning = warning.with_element(id);
+            diagnostic = diagnostic.with_element(id);
         }
         if let Some(hint) = hint {
-            warning = warning.with_fix(Fix::Hint(hint.to_string()));
+            diagnostic = diagnostic.with_fix(Fix::Hint(hint.to_string()));
         }
-        self.warnings.push(warning);
+        diagnostic
     }
 
     fn charge(&mut self, units: u64) -> Result<(), Diagnostic> {

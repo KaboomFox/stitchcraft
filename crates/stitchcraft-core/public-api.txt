@@ -43,6 +43,7 @@ pub stitchcraft_core::diag::Code::StitchesSplit
 pub stitchcraft_core::diag::Code::StrokeTooSmall
 pub stitchcraft_core::diag::Code::SvgFeatureIgnored
 pub stitchcraft_core::diag::Code::SvgGeometryUnusable
+pub stitchcraft_core::diag::Code::SvgObjectIgnored
 pub stitchcraft_core::diag::Code::SvgUnreadable
 pub stitchcraft_core::diag::Code::ThreadColorsUnknown
 pub stitchcraft_core::diag::Code::TooLargeForFormat
@@ -188,6 +189,7 @@ pub stitchcraft_core::Code::StitchesSplit
 pub stitchcraft_core::Code::StrokeTooSmall
 pub stitchcraft_core::Code::SvgFeatureIgnored
 pub stitchcraft_core::Code::SvgGeometryUnusable
+pub stitchcraft_core::Code::SvgObjectIgnored
 pub stitchcraft_core::Code::SvgUnreadable
 pub stitchcraft_core::Code::ThreadColorsUnknown
 pub stitchcraft_core::Code::TooLargeForFormat
