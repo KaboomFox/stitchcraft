@@ -93,8 +93,8 @@ another.
 | `SC-W0305` | Warning | Region too small for fill rows; outlined with running stitch instead | M5 |
 | `SC-W0307` | Warning | Region split into parts that are not connected; parts joined with trims | M5 |
 | `SC-W0311` | Warning | Spiral could not be connected in a narrow part; that part uses inner-to-outer contours | M7 |
-| `SC-W0401` | Warning | Path shorter than the minimum stitch length; skipped | M3 |
-| `SC-W0402` | Warning | Stitch length below the profile minimum; raised to the minimum | M3 |
+| `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
+| `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |
 | `SC-W0501` | Warning | Travel could not stay inside the region; used tie-off, trim and tie-in | M5 |
 | `SC-E0601` | Error | Too many colour changes for the file format | M1 |
 | `SC-E0602` | Error | Design too large for the file format (coordinates or data exceed its fields) | M1 |

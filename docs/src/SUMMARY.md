@@ -16,6 +16,7 @@
     - [Diagnostic codes](user/reference/diagnostics.md)
     - [Parameters](user/reference/params.md)
       - [Common parameters](user/reference/params/common.md)
+      - [Running stitch](user/reference/params/running.md)
     - [Glossary](user/reference/glossary.md)
     - [VectorCraft compatibility](user/reference/compatibility.md)
 

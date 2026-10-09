@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 1fd2ea3b9e72c2dea40530ca7ea2c7a7c8d043be9afd28ae6342b7cb1fc1b942 # shrinks to path = Path { subpaths: [Subpath { start: Point { x: 0.0, y: 0.0 }, segments: [Line(Point { x: -2.0402340073366525, y: 28.48531666665162 }), Cubic(Point { x: 27.414621923449204, y: -41.269805098913416 }, Point { x: 24.923642368159438, y: 46.81683435622685 }, Point { x: -44.78211561383575, y: -43.54014824863251 })], closed: false }] }, pattern = "7.55", min = 0.7026312131396276, tolerance = 0.05

@@ -693,9 +693,11 @@ dependencies = [
 name = "stitchcraft-engine"
 version = "0.0.1"
 dependencies = [
+ "proptest",
  "stitchcraft-core",
  "stitchcraft-params",
  "stitchcraft-plan",
+ "stitchcraft-testkit",
  "thiserror",
 ]
 

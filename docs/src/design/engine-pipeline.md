@@ -13,9 +13,14 @@ Design ──▶ 1 normalize ──▶ 2 validate ──▶ 3 generate (per elem
 
 Per element, independent of the others:
 
-- **Flatten curves** with the element's tolerance (default 0.1 mm for fills, `running_stitch_tolerance_mm`
-  for strokes) using `kurbo`'s adaptive flattening. Corners (turning angle above 30°) are marked so
-  running stitches land exactly on them.
+- **Flatten curves** with the element's tolerance (default 0.1 mm for fills, a tenth of
+  `running_stitch_tolerance_mm` for strokes). Strokes are halved (de Casteljau) until each piece's
+  control points lie within the tolerance of its chord (`stitchcraft_engine::normalize::stroke`), using
+  only arithmetic and square roots so that every platform gets the same points. `kurbo`'s adaptive
+  flattening is not used for this: in 0.13 it calls `powf` (`CubicBez::to_quads`) and `hypot`
+  (`QuadBez::estimate_subdiv`) from the platform's maths library, whose last bits differ between
+  systems ([determinism](determinism.md)). Corners, joins between segments that turn by more than 30°,
+  are marked so running stitches land exactly on them; a curve's own bend is never a corner.
 - **Regions:** resolve the fill rule into valid polygons with holes (`i_overlay`), snap to a 1 µm grid
   first so near-coincident vertices become coincident, drop rings under the minimum area (`SC-W0303`),
   orient rings explicitly.

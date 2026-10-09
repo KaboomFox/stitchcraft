@@ -24,6 +24,7 @@
 
 use core::fmt;
 
+use stitchcraft_core::units::LENGTH_SLACK;
 use stitchcraft_core::{Code, Diagnostic, Mm, Point};
 
 use crate::plan::{Role, StitchKind, StitchPlan};
@@ -48,10 +49,6 @@ pub const LOCK_MIN_STITCH: Mm = Mm::from_tenths(2);
 
 /// The most violations one check reports.
 pub const MAX_REPORTED: usize = 50;
-
-/// Lengths are compared with this slack (mm), far below the 0.1 mm resolution of machine files, so that
-/// floating-point rounding in a length that is exactly at a limit is not reported.
-const LENGTH_SLACK: f64 = 1e-9;
 
 /// A broken plan invariant.
 #[derive(Clone, Debug, PartialEq)]

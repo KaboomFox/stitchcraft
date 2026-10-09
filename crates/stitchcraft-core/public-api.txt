@@ -32,6 +32,8 @@ pub stitchcraft_core::diag::Code::ParamClamped
 pub stitchcraft_core::diag::Code::ParamInvalid
 pub stitchcraft_core::diag::Code::ParamUnknown
 pub stitchcraft_core::diag::Code::PreviewTooLarge
+pub stitchcraft_core::diag::Code::StitchLengthRaised
+pub stitchcraft_core::diag::Code::StrokeTooSmall
 pub stitchcraft_core::diag::Code::SvgFeatureIgnored
 pub stitchcraft_core::diag::Code::SvgGeometryUnusable
 pub stitchcraft_core::diag::Code::SvgUnreadable
@@ -139,6 +141,7 @@ impl stitchcraft_core::units::Point
 pub const stitchcraft_core::units::Point::ORIGIN: stitchcraft_core::units::Point
 pub fn stitchcraft_core::units::Point::distance(self, stitchcraft_core::units::Point) -> f64
 pub fn stitchcraft_core::units::Point::from_tenths(i32, i32) -> Self
+pub fn stitchcraft_core::units::Point::lerp(self, stitchcraft_core::units::Point, f64) -> stitchcraft_core::units::Point
 pub fn stitchcraft_core::units::Point::new(f64, f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>
 pub fn stitchcraft_core::units::Point::to_tenths(self) -> core::option::Option<(i32, i32)>
 pub const fn stitchcraft_core::units::Point::x(self) -> f64
@@ -150,6 +153,7 @@ impl stitchcraft_core::units::Size
 pub fn stitchcraft_core::units::Size::holds(self, f64, f64) -> bool
 pub const fn stitchcraft_core::units::Size::new(stitchcraft_core::units::Mm, stitchcraft_core::units::Mm) -> Self
 pub const fn stitchcraft_core::units::Size::rotated(self) -> Self
+pub const stitchcraft_core::units::LENGTH_SLACK: f64
 pub const stitchcraft_core::units::MACHINE_LIMIT: i32
 pub const stitchcraft_core::units::MM_PER_INCH: f64
 pub const stitchcraft_core::units::MM_PER_POINT: f64
@@ -165,6 +169,8 @@ pub stitchcraft_core::Code::ParamClamped
 pub stitchcraft_core::Code::ParamInvalid
 pub stitchcraft_core::Code::ParamUnknown
 pub stitchcraft_core::Code::PreviewTooLarge
+pub stitchcraft_core::Code::StitchLengthRaised
+pub stitchcraft_core::Code::StrokeTooSmall
 pub stitchcraft_core::Code::SvgFeatureIgnored
 pub stitchcraft_core::Code::SvgGeometryUnusable
 pub stitchcraft_core::Code::SvgUnreadable
@@ -256,6 +262,7 @@ impl stitchcraft_core::units::Point
 pub const stitchcraft_core::units::Point::ORIGIN: stitchcraft_core::units::Point
 pub fn stitchcraft_core::units::Point::distance(self, stitchcraft_core::units::Point) -> f64
 pub fn stitchcraft_core::units::Point::from_tenths(i32, i32) -> Self
+pub fn stitchcraft_core::units::Point::lerp(self, stitchcraft_core::units::Point, f64) -> stitchcraft_core::units::Point
 pub fn stitchcraft_core::units::Point::new(f64, f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>
 pub fn stitchcraft_core::units::Point::to_tenths(self) -> core::option::Option<(i32, i32)>
 pub const fn stitchcraft_core::units::Point::x(self) -> f64

@@ -13,18 +13,45 @@ The workhorse: outlines, details, travel, underlay.
 
 ### Placement
 
-1. **Split at corners.** Corners marked by the normalizer (turning angle > 30°) always receive a needle
-   penetration, so sharp shapes stay sharp.
-2. **Even spacing per span.** For a span of arc length `L` between corners and target length `s`,
-   place `n = ceil(L / s − ε)` stitches spaced `L / n` apart along the arc. Every stitch is at most `s`
-   and the last one is never a short leftover — the classic even-division rule digitizers use.
-3. **Respect the curve.** If the chord between two consecutive needle points strays from the curve by
-   more than the tolerance, split that stitch at the point of maximum deviation and repeat. This bounds
-   the visual error by `running_stitch_tolerance_mm` on any curve.
-4. **Patterns.** With several lengths (`"2.5 1.0"`) the lengths repeat along the path; each span still
-   ends exactly on its corner by scaling its stitches proportionally.
-5. **Random length.** With `enable_random_stitch_length`, each stitch length is drawn uniformly from
-   `s × (1 ± jitter)`, then the span is rescaled to end on its corner. The seed makes it repeatable.
+A stitch is the straight line between two needle points, so placement measures along the path but
+checks straight. "The shortest stitch" is the one [Finalize](../engine-pipeline.md#5-finalize) enforces
+(settings or profile, whichever is larger).
+
+1. **Flatten.** The normalizer turns the path into polylines within a tenth of the tolerance (the other
+   nine tenths are left for the stitches) and marks its corners: joins between segments where the path
+   turns by more than 30°. A curve's own bend is never a corner, however tight.
+2. **Split at corners.** Every corner gets a needle penetration, so sharp shapes stay sharp, unless it is
+   closer than the shortest stitch, along the path, to the previous penetration or to the end: then the
+   spans on either side of it are joined.
+3. **Even spacing per span.** For a span of length `L` between corners and target length `s`, place
+   `n = ceil(L / s − ε)` stitches spaced `L / n` apart along the path. Every stitch is at most `s` and the
+   last one is never a short leftover — the classic even-division rule digitizers use. With several
+   lengths (`"2.5 1.0"`) the lengths repeat along the path, carrying on from span to span; each span takes
+   as many as it needs and scales them by one factor to end exactly on its corner. Lengths below twice
+   the shortest stitch are raised to it (`SC-W0402`), so a span longer than the longest length scales its
+   stitches by more than a half and keeps each at or above the shortest stitch; in a shorter span, a
+   stitch scaled below it joins its shorter neighbour.
+4. **Measure straight.** Where the path bends back on itself within less than the shortest stitch (a
+   cusp, a tight loop, a curl at an end), two points far apart along it can be close in a straight line.
+   Going along the needle points: one closer than the shortest stitch to the last one kept is dropped; a
+   corner drops the points kept since the previous corner instead, and is dropped itself if that is not
+   enough; the end drops whatever it takes, corners too. A drop lengthens the stitch over it, and one
+   longer than the longest length is split where the path is half its length from its start (at most
+   the longest length), as often as needed. When only the start is left and the end is too close to it
+   (a small closed loop), the stitch goes by way of the point of the path farthest from both ends; if
+   even that is closer than the shortest stitch, the part is not stitched (`SC-W0401`).
+5. **Respect the curve.** If the chord between two consecutive needle points strays from the path by
+   more than the tolerance left after flattening, split that stitch at the path's point of greatest
+   deviation, among those that leave both parts within the lengths above, and repeat. This bounds the
+   visual error by `running_stitch_tolerance_mm` on any curve whose details are larger than the shortest
+   stitch.
+6. **Random length** (M3.5). With `enable_random_stitch_length`, each stitch length is drawn uniformly
+   from `s × (1 ± jitter)`, then the span is rescaled to end on its corner. The seed makes it repeatable.
+
+**When the rules disagree,** the shortest stitch wins (a shorter stitch hammers one spot and can break the
+thread), then corners, then the tolerance. A part of the path shorter than the shortest stitch, or lying
+all within it of its ends, is not stitched (`SC-W0401`). Only arithmetic and square roots are used, so
+every platform places the same stitches.
 
 ### Repeats and bean stitch
 
@@ -35,17 +62,18 @@ The workhorse: outlines, details, travel, underlay.
 
 ### Properties (conformance)
 
-- Every top stitch ≤ `s × (1 + jitter)` + 1 µm, and ≥ the minimum stitch length unless the path is
-  shorter than it (`REQ-RUN-001`).
-- Maximum deviation from the source curve ≤ tolerance (measured densely) (`REQ-RUN-002`).
-- Corners are penetration points (`REQ-RUN-003`).
+- Stitches are spread evenly between corners; every stitch, measured straight, is at most
+  `s × (1 + jitter)` + 1 µm for the longest length `s` and at least the shortest stitch; a part too small
+  for that is reported (`REQ-RUN-001`).
+- Deviation from the source path ≤ tolerance, both ways, measured densely (`REQ-RUN-002`).
+- Corners are penetration points unless that would make a stitch too short (`REQ-RUN-003`).
 - Bean stitch: stitch count is exactly `n × (2b + 1)` for a span of n stitches (`REQ-RUN-004`).
 - Repeats parity decides the exit point (`REQ-RUN-005`).
 
 ### Diagnostics
 
-`SC-W0401` path shorter than the minimum stitch length (skipped); `SC-W0402` stitch length below the
-profile minimum (clamped).
+`SC-W0401` part of the path too small for the shortest stitch (skipped); `SC-W0402` stitch length below
+twice the shortest stitch (raised).
 
 ## Manual stitch
 

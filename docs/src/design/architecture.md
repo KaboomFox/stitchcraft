@@ -72,7 +72,7 @@ GPL/AGPL/LGPL.
 
 | Need | Crate | Licence | Where |
 |---|---|---|---|
-| Curves, flattening, affine | `kurbo` 0.13 | MIT/Apache | core, engine, adapters |
+| Curves, affine (strokes are flattened by the engine, for determinism) | `kurbo` 0.13 | MIT/Apache | core, engine, adapters |
 | Polygon booleans, offsets | `i_overlay` 9 | MIT/Apache | engine |
 | Spatial index | `rstar` 0.13 | MIT/Apache | engine |
 | Graphs | `petgraph` 0.8 | MIT/Apache | engine |

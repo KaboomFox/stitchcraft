@@ -31,6 +31,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | Group | Parameters | Applies to |
 |---|---|---|
 | [Common parameters](params/common.md) | 14 | every stitch type |
+| [Running parameters](params/running.md) | 2 | Running stitch, Ripple stitch |
 
 ## Every parameter
 
@@ -47,6 +48,8 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`lock_start_scale_percent`](params/common.md#lock_start_scale_percent) | Start lock scale | Common parameters |
 | [`min_jump_stitch_length_mm`](params/common.md#min_jump_stitch_length_mm) | Shortest jump | Common parameters |
 | [`min_stitch_length_mm`](params/common.md#min_stitch_length_mm) | Shortest stitch | Common parameters |
+| [`running_stitch_length_mm`](params/running.md#running_stitch_length_mm) | Stitch length | Running parameters |
+| [`running_stitch_tolerance_mm`](params/running.md#running_stitch_tolerance_mm) | Curve tolerance | Running parameters |
 | [`stop_after`](params/common.md#stop_after) | Stop after | Common parameters |
 | [`ties`](params/common.md#ties) | Lock stitches | Common parameters |
 | [`trim_after`](params/common.md#trim_after) | Trim after | Common parameters |

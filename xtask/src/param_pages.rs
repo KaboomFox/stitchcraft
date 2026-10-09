@@ -54,9 +54,9 @@ pub fn pages(ledger: &[Deviation]) -> Result<Vec<(String, String)>, String> {
     Ok(pages)
 }
 
-/// Where `registry` describes a parameter, relative to the reference directory: `params/common.md#ties`.
-pub fn entry(registry: &[&ParamGroup], key: &str) -> Option<String> {
-    registry.iter().find(|g| g.specs.iter().any(|s| s.key == key)).map(|g| format!("params/{}.md#{key}", slug(g)))
+/// Where `group`'s page describes `key`, relative to the reference directory: `params/common.md#ties`.
+pub fn anchor(group: &ParamGroup, key: &str) -> String {
+    format!("params/{}.md#{key}", slug(group))
 }
 
 /// `CommonParams` → `common`; `TatamiFillParams` → `tatami-fill`.
@@ -297,9 +297,10 @@ mod tests {
     }
 
     #[test]
-    fn every_registered_key_has_an_entry_and_others_none() {
-        assert_eq!(entry(PARAMETERS, "ties").as_deref(), Some("params/common.md#ties"));
-        assert_eq!(entry(PARAMETERS, "sparkle_mm"), None);
+    fn every_group_page_has_an_entry_per_key() {
+        let anchors: Vec<String> = PARAMETERS.iter().map(|g| anchor(g, "ties")).collect();
+        assert_eq!(anchors.first().map(String::as_str), Some("params/common.md#ties"));
+        assert!(anchors.contains(&"params/running.md#ties".to_string()), "{anchors:?}");
     }
 
     #[test]

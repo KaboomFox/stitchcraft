@@ -3,8 +3,9 @@
 Layer **L2**. Turns a `Design` (host-independent elements with shapes, parameters and threads) into a
 checked `StitchPlan`: normalize → validate → generate per element → assemble → finalize → check.
 
-**Status:** the input model, `design::Design`, since M3.3 (`docs/src/design/data-model.md`); the
-generators and the pipeline from M3.4. Design: `docs/src/design/engine-pipeline.md` and
+**Status:** the input model, `design::Design`, since M3.3 (`docs/src/design/data-model.md`); stroke
+normalization (`normalize::stroke`) and the running stitch (`generators::running`) since M3.4; the other
+generators and the pipeline arrive through M3.9. Design: `docs/src/design/engine-pipeline.md` and
 `docs/src/design/algorithms/`.
 
 ## Invariants
@@ -14,3 +15,9 @@ generators and the pipeline from M3.4. Design: `docs/src/design/engine-pipeline.
 - Never panics; every loop over data charges the budget; every fallback emits a coded diagnostic.
 - Elements are generated independently from geometry-based hints, so results can be cached and planned in
   parallel without changing the output.
+
+## Dependencies
+
+`stitchcraft-core`, `stitchcraft-params`, `stitchcraft-plan`; `thiserror`. Tests also use `proptest` and
+`stitchcraft-testkit`. Curves are flattened here, not with `kurbo`, so every platform gets the same
+points (`docs/src/design/engine-pipeline.md` › Normalize).

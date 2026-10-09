@@ -237,25 +237,25 @@ status = "planned"
 id = "REQ-RUN-001"
 area = "strokes/running"
 level = "L2"
-statement = "Top stitches are at most the stitch length times (1 + jitter) and at least the minimum stitch length unless the path is shorter."
+statement = "Stitches are spread evenly between corners. Every stitch, measured straight, is at most the longest running_stitch_length_mm (raised to twice the shortest stitch) times (1 + jitter) and at least the shortest stitch; a part of the path too small for that (shorter than the shortest stitch, or all within it of its ends) is not stitched and is reported (SC-W0401)."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-RUN-002"
 area = "strokes/running"
 level = "L2"
-statement = "The stitched polyline deviates from the source curve by at most running_stitch_tolerance_mm."
+statement = "The stitches deviate from the source path by at most running_stitch_tolerance_mm, both ways (every point of the path is that close to a stitch, and every stitch that close to the path), except where that would take a stitch outside the lengths of REQ-RUN-001."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-RUN-003"
 area = "strokes/running"
 level = "L2"
-statement = "Corners (turning angle above 30 degrees) are needle penetrations."
+statement = "Corners (where the path turns by more than 30 degrees from one segment to the next) are needle penetrations, except where a penetration there would make a stitch shorter than the shortest stitch."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-RUN-004"

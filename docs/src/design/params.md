@@ -135,6 +135,12 @@ the lock and method identifiers must equal Ink/Stitch's.
    equals Ink/Stitch's default, so an SVG that omits the attribute stitches the same way in both
    tools. Better starting values for new objects come from [presets](#presets) and machine profiles,
    never from changing a default.
+6. **A key belongs to its stitch types.** Ink/Stitch gives some keys to several elements with their own
+   defaults: `running_stitch_tolerance_mm` is 0.2 mm on a stroke and 0.1 mm on a satin or a fill. The
+   contract is per key and stitch type, so the contract page matches a declaration with the rows for the
+   stitch types it applies to, and a declaration for a stitch type Ink/Stitch does not give the key is
+   reported. Declaring a key again for other stitch types (satins in M4, fills in M5) also needs lookups
+   by key and stitch type: `find` by key alone returns the first declaration.
 
 ## Generated outputs
 

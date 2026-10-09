@@ -20,6 +20,11 @@ pub const MM_PER_SVG_PX: f64 = MM_PER_INCH / 96.0;
 /// the data model's limit for any coordinate.
 pub const MACHINE_LIMIT: i32 = 100_000;
 
+/// Lengths closer than this, in millimetres, count as equal: far below the 0.1 mm resolution of machine
+/// files, so floating-point rounding in a length that is exactly at a limit does not cross it. Generators
+/// place stitches with it and the plan checker checks them with it, so the two always agree.
+pub const LENGTH_SLACK: f64 = 1e-9;
+
 /// `mm` in machine units (0.1 mm), rounded half to even; `None` beyond ±[`MACHINE_LIMIT`].
 ///
 /// This is the one rounding StitchCraft applies to positions. Writers use it for every position they
@@ -167,6 +172,21 @@ impl Point {
     pub fn distance(self, other: Point) -> f64 {
         math::hypot(other.x - self.x, other.y - self.y)
     }
+
+    /// The point a fraction `t` of the way from this point to `other`. `t` is clamped to 0..=1, and a
+    /// NaN `t` counts as 0, so the result lies between the two points and is finite like them; should
+    /// rounding at the very edge of the `f64` range overflow, the nearer end is returned.
+    pub fn lerp(self, other: Point, t: f64) -> Point {
+        let t = if t.is_nan() { 0.0 } else { t.clamp(0.0, 1.0) };
+        let (x, y) = (self.x * (1.0 - t) + other.x * t, self.y * (1.0 - t) + other.y * t);
+        if x.is_finite() && y.is_finite() {
+            Point::from_finite(x, y)
+        } else if t < 0.5 {
+            self
+        } else {
+            other
+        }
+    }
 }
 
 #[cfg(test)]
@@ -201,6 +221,17 @@ mod tests {
         assert_eq!(Mm::from_tenths(120).get(), 12.0);
         assert_eq!(Mm::from_tenths(3).get(), 0.3);
         assert_eq!(Mm::from_tenths(-2000).get(), -200.0);
+    }
+
+    #[test]
+    fn points_between_points() {
+        let (a, b) = (Point::new(1.0, 2.0).unwrap(), Point::new(3.0, -2.0).unwrap());
+        assert_eq!(a.lerp(b, 0.5), Point::new(2.0, 0.0).unwrap());
+        assert_eq!((a.lerp(b, 0.0), a.lerp(b, 1.0)), (a, b));
+        assert_eq!((a.lerp(b, -1.0), a.lerp(b, 7.0), a.lerp(b, f64::NAN)), (a, b, a));
+        // At the edge of the range: still finite.
+        let (low, high) = (Point::new(-f64::MAX, f64::MAX).unwrap(), Point::new(f64::MAX, f64::MAX).unwrap());
+        assert!(low.lerp(high, 0.5).x().is_finite() && high.lerp(high, 0.3).y().is_finite());
     }
 
     #[test]
