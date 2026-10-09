@@ -1,6 +1,6 @@
 # Engine pipeline
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/pipeline.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
 
 From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraft-engine` with its
 own tests; stages communicate only through the types in the [data model](data-model.md).
@@ -152,32 +152,51 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 
 ## 5. Finalize
 
-Against the machine profile:
+Finalize fits the plan to the machine profile (`stitchcraft_engine::finalize`), and a plan that `plan`
+returns can be written as it is. Generators already sew within the machine's limits. What is left to fit
+comes from joining groups and from settings the machine cannot follow.
 
-1. **Split** `Normal` stitches longer than `profile.max_stitch` into equal parts.
-2. **Merge** `Normal` stitches shorter than `min_stitch_len` (settings or profile, whichever is larger)
-   into their neighbour, except lock stitches.
-3. **Remove** consecutive duplicate positions.
-4. **Hoop:** if the plan's bounds after translation to the origin exceed the hoop → `SC-E0701` (with a
-   rotate-to-fit hint when rotating 90° would fit); if they exceed the comfort zone → `SC-W0702`.
-5. **Colour limits:** colour changes above the format maximum → `SC-E0601`.
-6. Append `End`.
+1. **The shortest stitch** of each needle point is its element's: the one its generator used, so finalize
+   never thins what the generator spaced. That is the element's `min_stitch_length_mm`, else the design's
+   `min_stitch_len`, and never shorter than the machine's (`profile.min_stitch`). Where one element's
+   stitching runs straight on into the next, the stitch between them can be anything up to the collapse
+   length, 0 included. Within each run of stitches, from where the needle lands to the next jump, trim or
+   stop, a needle point less than its shortest stitch from the one before is left out. The stitch then
+   runs on to the next point. The run's first and last points and lock points always stay, and the points
+   before them are left out instead. A point where the needle already is would sew in place, and it is
+   left out too. A stitch into or out of a lock point is a lock stitch, whose shortest is 0.2 mm
+   (`REQ-PLAN-002`). `SC-I0504` says how many points were left out (`REQ-FIN-001`).
+2. **The longest stitch.** A stitch longer than `profile.max_stitch` is split into the fewest equal parts
+   no longer than it (`SC-I0703`, `REQ-FIN-001`). Such a stitch comes from a stitch placed by hand, from
+   a custom lock's long step, or from a move sewn on under a `min_jump_stitch_length_mm` longer than the
+   machine's longest stitch. Each part counts against the design's stitch budget.
+3. **Colour limits:** colour changes and stops above what the profile's format records → `SC-E0601`.
+4. **Hoop:** a design larger than the hoop → `SC-E0701`, with a rotate-to-fit fix when rotating 90° would
+   fit. When a design's origin is far from its middle, a design smaller than the hoop can cross the
+   hoop's edge. That is `SC-E0701` as well. So is a stop position past the edge, which the message names. The size is
+   the stitches' own. For a design that cannot be sewn, `SC-E0701` is the only message about its size.
+   Otherwise, larger than the comfort zone → `SC-W0702` (`REQ-FIN-002`).
+5. The end is the plan's structure: the machine ends after the last block.
+
+After an error at any step, `plan` returns no plan, and the error's diagnostic says why.
 
 Splitting jumps longer than a format can encode in one record is *not* done here: it is the encoder's
 job, because the limit is a property of the file format, not of the machine.
 
-Ink/Stitch (read at `d59c9ab`) removes short stitches once, over the whole plan: a stitch no longer than
-the shortest stitch (the element's `min_stitch_length_mm`, else its global 0.1 mm) from the last one kept
-is dropped, except lock stitches and the first stitch after a jump, stop, trim or colour change; nothing
-is split. StitchCraft's floor is the machine's (0.3 mm on the Brother), short stitches merge into their
-neighbour, and the running stitch already keeps the floor while it places stitches.
+Ink/Stitch (read at `d59c9ab`) removes short stitches once, over the whole plan: an entry no farther than
+its shortest stitch (the element's `min_stitch_length_mm`, else a global 0.1 mm) from the last one kept
+is dropped. It keeps lock stitches, the stitch right after a jump, and stop, trim and colour-change
+entries. A jump itself can be dropped. Nothing is split. StitchCraft uses the same shortest stitch for
+each element as Ink/Stitch, but never one below the machine's (0.3 mm on the Brother). It keeps the ends
+of each run and splits stitches the machine cannot sew: a deviation (`DEV-FIN-001`), because a file can
+sew differently in the two tools.
 
 ## 6. Check
 
 The plan invariant checker (`stitchcraft-plan::invariants`, the same code conformance level L0 runs)
-validates the result. A violation is a bug in StitchCraft: the CLI refuses to write the file, reports
-`SC-E0009 internal check failed` with a bug-report bundle, and the conformance suite has a case for every
-invariant.
+validates the result. A violation is a bug in StitchCraft: `plan` returns no plan and reports
+`SC-E0009 internal check failed` (`REQ-FIN-003`). The command line then does not write a machine file,
+and from M3.10 it writes a bug-report bundle. The conformance suite has a case for every invariant.
 
 ## 7. Incremental and parallel planning
 

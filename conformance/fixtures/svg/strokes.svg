@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Strokes for `stitch plan`, end to end: two threads and back, two lines that nearly touch, and a fill,
+     which this version skips. Hand-written for StitchCraft's conformance suite. -->
+<svg
+   width="80mm"
+   height="60mm"
+   viewBox="0 0 80 60"
+   version="1.1"
+   id="svg1"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns="http://www.w3.org/2000/svg">
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="zigzag"
+       style="fill:none;stroke:#c00000;stroke-width:0.5"
+       d="M 10,10 20,25 30,10 40,25 50,10" />
+    <path
+       id="left"
+       style="fill:none;stroke:#c00000;stroke-width:0.5"
+       d="M 10,35 H 25" />
+    <path
+       id="right"
+       style="fill:none;stroke:#c00000;stroke-width:0.5"
+       d="M 25.1,35 H 40" />
+    <circle
+       id="ring"
+       style="fill:none;stroke:#0040c0;stroke-width:0.5"
+       cx="60"
+       cy="40"
+       r="10" />
+    <path
+       id="underline"
+       style="fill:none;stroke:#c00000;stroke-width:0.5"
+       d="M 10,50 H 40" />
+    <rect
+       id="patch"
+       style="fill:#00a000;stroke:none"
+       x="45"
+       y="5"
+       width="20"
+       height="12" />
+  </g>
+</svg>

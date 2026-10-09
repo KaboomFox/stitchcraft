@@ -5,78 +5,12 @@
 #![allow(clippy::unwrap_used)]
 
 use proptest::prelude::*;
-use stitchcraft_core::{Budget, Code, ElementId, Mm, Point, Rect};
+use stitchcraft_core::{Budget, Code, ElementId, Mm, Rect};
 use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath};
-use stitchcraft_engine::{PlanOutcome, plan};
-use stitchcraft_params::ParamSet;
+use stitchcraft_engine::plan;
 use stitchcraft_plan::profiles::BROTHER_200X200;
-use stitchcraft_plan::{Rgb, Role, StitchKind, StitchPlan, Thread};
-
-const RED: Thread = Thread::new(Rgb::new(200, 0, 0));
-const BLUE: Thread = Thread::new(Rgb::new(0, 0, 200));
-
-fn p(x: f64, y: f64) -> Point {
-    Point::new(x, y).unwrap()
-}
-
-/// A straight stroke from `from` along x for `length` mm.
-fn line(id: &str, from: (f64, f64), length: f64, thread: &Thread, params: &[(&str, &str)]) -> Element {
-    let path =
-        Path { subpaths: vec![Subpath { start: p(from.0, from.1), segments: vec![Segment::Line(p(from.0 + length, from.1))], closed: false }] };
-    Element {
-        id: ElementId::new(id).unwrap(),
-        name: None,
-        shape: Shape::Stroke(path),
-        thread: thread.clone(),
-        params: params.iter().copied().collect::<ParamSet>(),
-    }
-}
-
-/// The design of `elements`, its origin where the coordinates are, so positions read as drawn.
-fn sewn(elements: Vec<Element>) -> PlanOutcome {
-    sewn_with(elements, DesignSettings { origin: Some(p(0.0, 0.0)), ..DesignSettings::default() })
-}
-
-fn sewn_with(elements: Vec<Element>, settings: DesignSettings) -> PlanOutcome {
-    plan(&Design::new(elements, settings).unwrap(), &BROTHER_200X200, &Budget::DEFAULT)
-}
-
-/// The plan in words: `J` a jump, `S` a stitch, `L` a lock stitch, `T` a trim, `P` a stop and `|` a thread
-/// change, each run with its length (`S5`: five stitches).
-fn shape(plan: &StitchPlan) -> String {
-    let mut symbols = Vec::new();
-    for (i, block) in plan.blocks.iter().enumerate() {
-        if i > 0 {
-            symbols.push('|');
-        }
-        symbols.extend(block.stitches.iter().map(|s| match (s.kind, s.origin.role) {
-            (StitchKind::Jump, _) => 'J',
-            (StitchKind::Normal, Role::Lock) => 'L',
-            (StitchKind::Normal, _) => 'S',
-            (StitchKind::Trim, _) => 'T',
-            (StitchKind::Stop, _) => 'P',
-        }));
-    }
-    let mut words: Vec<String> = Vec::new();
-    for symbol in symbols {
-        match words.last_mut() {
-            Some(word) if word.starts_with(symbol) && "SL".contains(symbol) => {
-                let count: u32 = word[1..].parse().unwrap();
-                *word = format!("{symbol}{}", count + 1);
-            }
-            _ => words.push(if "SL".contains(symbol) { format!("{symbol}1") } else { symbol.to_string() }),
-        }
-    }
-    words.join(" ")
-}
-
-fn shape_of(outcome: &PlanOutcome) -> String {
-    shape(outcome.plan.as_ref().unwrap())
-}
-
-fn messages(outcome: &PlanOutcome) -> Vec<String> {
-    outcome.diagnostics.iter().map(ToString::to_string).collect()
-}
+use stitchcraft_plan::{Rgb, Role, StitchKind, Thread};
+use stitchcraft_testkit::designs::{BLUE, RED, line, messages, p, planned as sewn, planned_with as sewn_with, shape, shape_of, stroke};
 
 #[test]
 fn req_asm_001_elements_are_sewn_in_document_order_a_new_thread_a_new_block() {
@@ -115,10 +49,7 @@ fn req_asm_002_close_groups_are_sewn_on_far_ones_tie_off_jump_and_tie_in() {
     let short = DesignSettings { collapse_len: Mm::new(1.0).unwrap(), ..default };
     assert_eq!(pair(2.0, &[], short), "J L4 S5 L4 J L4 S5 L4", "the design's collapse length");
     // The parts of one element are groups too: two subpaths 5 mm apart.
-    let path = Path {
-        subpaths: [0.0, 15.0].iter().map(|x| Subpath { start: p(*x, 0.0), segments: vec![Segment::Line(p(x + 10.0, 0.0))], closed: false }).collect(),
-    };
-    let parts = Element { shape: Shape::Stroke(path), ..line("a", (0.0, 0.0), 1.0, &RED, &[]) };
+    let parts = stroke("a", &[((0.0, 0.0), 10.0), ((15.0, 0.0), 10.0)], &RED, &[]);
     assert_eq!(shape_of(&sewn(vec![parts])), "J L4 S5 L4 J L4 S5 L4");
 }
 
@@ -139,10 +70,7 @@ fn req_asm_003_trims_and_stops_come_after_the_element_with_locks_around_them() {
     let stop = plan.blocks[0].stitches.iter().position(|s| s.kind == StitchKind::Stop).unwrap();
     assert_eq!((plan.blocks[0].stitches[stop - 1].at, plan.blocks[0].stitches[stop].at), (p(50.0, 60.0), p(50.0, 60.0)));
     // Only the element's last group is followed by its trim.
-    let path = Path {
-        subpaths: [0.0, 15.0].iter().map(|x| Subpath { start: p(*x, 0.0), segments: vec![Segment::Line(p(x + 10.0, 0.0))], closed: false }).collect(),
-    };
-    let parts = Element { shape: Shape::Stroke(path), ..line("a", (0.0, 0.0), 1.0, &RED, &[("trim_after", "true")]) };
+    let parts = stroke("a", &[((0.0, 0.0), 10.0), ((15.0, 0.0), 10.0)], &RED, &[("trim_after", "true")]);
     assert_eq!(shape_of(&sewn(vec![parts])), "J L4 S5 L4 J L4 S5 L4 T");
 }
 

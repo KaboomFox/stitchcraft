@@ -7,7 +7,7 @@ use std::path::Path;
 use sha2::{Digest, Sha256};
 use stitchcraft_core::Budget;
 use stitchcraft_engine::testsheets;
-use stitchcraft_plan::{FormatId, invariants, profiles};
+use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, invariants, profiles};
 use stitchcraft_render::{Settings, Style};
 
 use super::cases::{DataCase, RustCase, SheetExpect, Spec};
@@ -58,42 +58,85 @@ pub fn run_data_case(root: &Path, case: &DataCase, bless: bool) -> Outcome {
     };
     match &case.spec {
         Spec::Testsheet { sheet, profile, expect } => testsheet(root, sheet, profile, expect, bless, &mut outcome),
+        Spec::Plan { svg, profile, expect } => planned(root, svg, profile, expect, bless, &mut outcome),
         Spec::Oracle { files } => oracle::run(root, files, &mut outcome),
     }
     outcome
 }
 
 fn testsheet(root: &Path, sheet_id: &str, profile_id: &str, expect: &SheetExpect, bless: bool, outcome: &mut Outcome) {
-    let fail = |outcome: &mut Outcome, message: String| outcome.failures.push(message);
     let (Some(sheet), Some(profile)) = (testsheets::find(sheet_id), profiles::find(profile_id)) else {
-        return fail(outcome, format!("unknown test sheet `{sheet_id}` or profile `{profile_id}`"));
+        return outcome.failures.push(format!("unknown test sheet `{sheet_id}` or profile `{profile_id}`"));
     };
-    let plan = match sheet.plan() {
-        Ok(plan) => plan,
-        Err(e) => return fail(outcome, format!("the sheet could not be drawn: {e}")),
+    match sheet.plan() {
+        Ok(plan) => {
+            let codes: Vec<String> =
+                plan.bounds().and_then(|bounds| profile.check_fit(bounds)).map(|d| d.code.id().to_string()).into_iter().collect();
+            checked(root, &plan, profile, &codes, sheet.id, expect, bless, outcome);
+        }
+        Err(e) => outcome.failures.push(format!("the sheet could not be drawn: {e}")),
+    }
+}
+
+/// A plan case: the SVG design read and planned as `stitch plan` does, then checked like a test sheet.
+fn planned(root: &Path, svg: &str, profile_id: &str, expect: &SheetExpect, bless: bool, outcome: &mut Outcome) {
+    let Some(profile) = profiles::find(profile_id) else {
+        return outcome.failures.push(format!("unknown profile `{profile_id}`"));
     };
-    // L0: the plan invariants run on every plan the suite produces.
-    for violation in invariants::check(&plan, profile) {
-        fail(outcome, violation.to_string());
+    let read = std::fs::read(root.join("conformance").join(svg)).map_err(|e| e.to_string());
+    let design = match read.and_then(|bytes| stitchcraft_svg::read(&bytes, &Budget::DEFAULT).map_err(|e| e.to_string())) {
+        Ok(design) => design,
+        Err(e) => return outcome.failures.push(format!("{svg}: {e}")),
+    };
+    let planned = stitchcraft_engine::plan(&design.design, profile, &Budget::DEFAULT);
+    let codes: Vec<String> = design.warnings.iter().chain(&planned.diagnostics).map(|d| d.code.id().to_string()).collect();
+    let name = Path::new(svg).file_stem().and_then(|s| s.to_str()).unwrap_or("design");
+    match planned.plan {
+        Some(plan) => checked(root, &plan, profile, &codes, name, expect, bless, outcome),
+        None => outcome.failures.push(format!("no plan; diagnostics {codes:?}")),
+    }
+}
+
+/// What every case that makes a plan checks: the plan invariants (L0, on every plan the suite produces),
+/// the diagnostic `codes`, the size and the golden files (labelled `name`).
+#[allow(clippy::too_many_arguments)] // Each is one thing a case names; a struct would only rename them.
+fn checked(
+    root: &Path,
+    plan: &StitchPlan,
+    profile: &MachineProfile,
+    codes: &[String],
+    name: &str,
+    expect: &SheetExpect,
+    bless: bool,
+    outcome: &mut Outcome,
+) {
+    for violation in invariants::check(plan, profile) {
+        outcome.failures.push(violation.to_string());
+    }
+    if codes != expect.diagnostics {
+        outcome.failures.push(format!("diagnostics {codes:?}, expected {:?}", expect.diagnostics));
     }
     let Some(bounds) = plan.bounds() else {
-        return fail(outcome, "the plan is empty".to_string());
+        return outcome.failures.push("the plan is empty".to_string());
     };
-    let codes: Vec<String> = profile.check_fit(bounds).map(|d| d.code.id().to_string()).into_iter().collect();
-    if codes != expect.diagnostics {
-        fail(outcome, format!("diagnostics {codes:?}, expected {:?}", expect.diagnostics));
-    }
     let size = [bounds.width(), bounds.height()];
     if size.iter().zip(expect.size_mm).any(|(got, want)| (got - want).abs() > 1e-6) {
-        fail(outcome, format!("size {:.3} × {:.3} mm, expected {} × {} mm", size[0], size[1], expect.size_mm[0], expect.size_mm[1]));
+        outcome.failures.push(format!("size {:.3} × {:.3} mm, expected {} × {} mm", size[0], size[1], expect.size_mm[0], expect.size_mm[1]));
     }
-    for golden in &expect.golden {
+    goldens(root, plan, name, &expect.golden, bless, outcome);
+}
+
+/// `plan` encoded as each golden file's format, with the label `name`, and compared with it — or, with
+/// `bless`, written to it.
+fn goldens(root: &Path, plan: &StitchPlan, name: &str, golden_files: &[String], bless: bool, outcome: &mut Outcome) {
+    let fail = |outcome: &mut Outcome, message: String| outcome.failures.push(message);
+    for golden in golden_files {
         let path = root.join("conformance").join(golden);
         let Some(format) = path.extension().and_then(|e| e.to_str()).and_then(FormatId::from_extension) else {
             fail(outcome, format!("{golden}: the extension names no format"));
             continue;
         };
-        let bytes = match stitchcraft_formats::encode(&plan, format, sheet.id) {
+        let bytes = match stitchcraft_formats::encode(plan, format, name) {
             Ok(encoded) => encoded.bytes,
             Err(e) => {
                 fail(outcome, format!("{}: {e}", format.name()));

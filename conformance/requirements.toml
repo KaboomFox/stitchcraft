@@ -21,7 +21,7 @@ status = "active"
 id = "REQ-PLAN-002"
 area = "plan"
 level = "L0"
-statement = "While sewing (the previous movement was a Normal stitch, with no trim since), every stitch is no longer than the profile maximum and no shorter than the profile minimum, except lock stitches, which are at least 0.2 mm."
+statement = "While sewing (the previous movement was a Normal stitch, with no trim since), every stitch is no longer than the profile maximum and no shorter than the profile minimum, except lock stitches — into or out of a lock point — which are at least 0.2 mm."
 milestone = "M1"
 status = "active"
 
@@ -405,6 +405,32 @@ id = "REQ-ASM-005"
 area = "plan/assembly"
 level = "L2"
 statement = "The design's origin, or without one the centre of the box around its stitches, becomes the hoop's centre; a stop position adds a jump to it before each stop."
+milestone = "M3"
+status = "active"
+
+# ── Finalize and check ─────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-FIN-001"
+area = "plan/finalize"
+level = "L2"
+statement = "Finalizing fits every stitch to the machine: one longer than its longest is split into the fewest equal parts no longer than it (SC-I0703), and a needle point less than its element's shortest stitch (the one its generator used) from the one before is left out (SC-I0504), the ends of each run of stitches and lock points kept."
+milestone = "M3"
+status = "active"
+
+[[req]]
+id = "REQ-FIN-002"
+area = "plan/finalize"
+level = "L2"
+statement = "A design the machine cannot take — larger than the hoop, reaching past its edge from the origin, or with its stop position past the edge (SC-E0701), or with more colour changes and stops than its format records (SC-E0601) — gives no plan; one larger than the comfort zone is planned, with SC-W0702."
+milestone = "M3"
+status = "active"
+
+[[req]]
+id = "REQ-FIN-003"
+area = "plan/finalize"
+level = "L2"
+statement = "Every plan the engine returns passes the plan invariants for its machine profile; one that would not is a StitchCraft bug, reported as SC-E0009 instead of returned."
 milestone = "M3"
 status = "active"
 

@@ -19,6 +19,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
 | [`SC-W0502`](#sc-w0502) | Warning | Lock stitch shorter than 0.2 mm; lengthened |
 | [`SC-W0503`](#sc-w0503) | Warning | Custom lock cannot be sewn as written |
+| [`SC-I0504`](#sc-i0504) | Info | Stitches shorter than the shortest stitch merged |
 | [`SC-W0505`](#sc-w0505) | Warning | Trim or stop after an element that sews nothing; left out |
 | [`SC-E0601`](#sc-e0601) | Error | Too many colour changes for the file format |
 | [`SC-E0602`](#sc-e0602) | Error | Design too large for the file format |
@@ -27,6 +28,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0605`](#sc-i0605) | Info | Long jumps cut in DST |
 | [`SC-E0701`](#sc-e0701) | Error | Design does not fit the hoop |
 | [`SC-W0702`](#sc-w0702) | Warning | Design is larger than the comfort zone |
+| [`SC-I0703`](#sc-i0703) | Info | Stitches longer than the machine's longest stitch; split |
 | [`SC-E0801`](#sc-e0801) | Error | SVG could not be read |
 | [`SC-W0802`](#sc-w0802) | Warning | SVG feature ignored |
 | [`SC-I0805`](#sc-i0805) | Info | Object left out, as the file asks |
@@ -181,6 +183,17 @@ longer than 10 m, are left out. If no step is left, the half stitch is sewn inst
 The message says what was wrong. Write the lock as numbers, such as `1 -1 1 -1`, or choose
 another lock shape.
 
+## SC-I0504
+
+**Info** — Stitches shorter than the shortest stitch merged
+
+Needle points less than the shortest stitch from the one before were left out, so the stitch before
+each runs on to the next and none is shorter than the machine sews well. This happens where one
+element's stitching runs straight on into the next and they nearly touch: the stitch between them is
+whatever is left of the gap. Nothing visible changes.
+
+Nothing to do. If the count is large, check for elements drawn on top of each other.
+
 ## SC-W0505
 
 **Warning** — Trim or stop after an element that sews nothing; left out
@@ -265,6 +278,17 @@ designs pucker and shift more.
 
 The file was written. Rotate the design if the message says that brings it inside the comfort
 zone, use a firmer stabilizer, or scale the design down.
+
+## SC-I0703
+
+**Info** — Stitches longer than the machine's longest stitch; split
+
+Stitches longer than the machine's longest stitch were split into equal parts, each no longer than
+it: a long stitch placed by hand, say, or a custom lock's long step. A long loose stitch snags and
+sags; the machine may refuse it.
+
+To choose where the needle goes down instead, add nodes (manual stitch) or set
+`max_stitch_length_mm`.
 
 ## SC-E0801
 

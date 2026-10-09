@@ -61,6 +61,8 @@ struct CaseFile {
     #[serde(default)]
     sheet: Option<String>,
     #[serde(default)]
+    svg: Option<String>,
+    #[serde(default)]
     profile: Option<String>,
     #[serde(default)]
     expect: Option<SheetExpect>,
@@ -68,7 +70,7 @@ struct CaseFile {
     files: Option<Vec<String>>,
 }
 
-/// What a test-sheet case expects.
+/// What a test-sheet or plan case expects.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SheetExpect {
@@ -95,6 +97,9 @@ pub struct DataCase {
 pub enum Spec {
     /// Draw a test sheet, check it, encode it and compare with golden files.
     Testsheet { sheet: String, profile: String, expect: SheetExpect },
+    /// Read an SVG design (relative to `conformance/`), plan it with the engine as `stitch plan` does,
+    /// check it, encode it and compare with golden files: the whole way from a design to a machine file.
+    Plan { svg: String, profile: String, expect: SheetExpect },
     /// Read machine files with an independent reader (pinned pyembroidery) and with ours, and compare what
     /// the machine would do. `files` are relative to `conformance/`.
     Oracle { files: Vec<String> },
@@ -113,11 +118,16 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
                 continue;
             }
         };
-        let spec = match (case.kind.as_str(), case.sheet, case.profile, case.expect, case.files) {
-            ("testsheet", Some(sheet), Some(profile), Some(expect), None) => Spec::Testsheet { sheet, profile, expect },
-            ("oracle", None, None, None, Some(files)) if !files.is_empty() => Spec::Oracle { files },
+        let spec = match (case.kind.as_str(), case.sheet, case.svg, case.profile, case.expect, case.files) {
+            ("testsheet", Some(sheet), None, Some(profile), Some(expect), None) => Spec::Testsheet { sheet, profile, expect },
+            ("plan", None, Some(svg), Some(profile), Some(expect), None) => Spec::Plan { svg, profile, expect },
+            ("oracle", None, None, None, None, Some(files)) if !files.is_empty() => Spec::Oracle { files },
             ("testsheet", ..) => {
-                findings.error(format!("{file}: a testsheet case needs `sheet`, `profile` and `[expect]`, and no `files`"));
+                findings.error(format!("{file}: a testsheet case needs `sheet`, `profile` and `[expect]`, and nothing else"));
+                continue;
+            }
+            ("plan", ..) => {
+                findings.error(format!("{file}: a plan case needs `svg`, `profile` and `[expect]`, and nothing else"));
                 continue;
             }
             ("oracle", ..) => {
@@ -125,7 +135,7 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
                 continue;
             }
             (other, ..) => {
-                findings.error(format!("{file}: unknown case kind `{other}` (known: testsheet, oracle)"));
+                findings.error(format!("{file}: unknown case kind `{other}` (known: testsheet, plan, oracle)"));
                 continue;
             }
         };

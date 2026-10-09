@@ -121,6 +121,10 @@ Inline designs are allowed for small cases; fixtures are SVG or JSON designs und
 origin and licence). Large real-world corpora live in a separate repository pinned by commit and
 SHA-256, downloaded by `cargo xtask corpus` — the same policy VectorCraft follows for its corpora.
 
+The engine's cases build their small designs with `stitchcraft_testkit::designs`. It also reads a plan's
+shape at a glance: `J L4 S5 L4` is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
+stitches.
+
 ## Levels
 
 ### L0 — Plan invariants (every PR)

@@ -12,6 +12,7 @@ stitch: the StitchCraft command-line tool
 Usage: stitch <COMMAND>
 
 Commands:
+  plan       Plan a design (SVG) for a machine and write the machine file, with a picture and a report if asked
   testsheet  Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
   inspect    Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
   preview    Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
@@ -31,8 +32,44 @@ Exit status: 0 done (warnings allowed) · 1 the design or file has errors (nothi
 error · 3 a file could not be read or written.
 
 Coming with the roadmap (docs/src/plan/roadmap.md):
-  stitch plan design.svg -o design.pes                      (M3)
   stitch export design.vectorcraft -o design.pes            (M6)
+```
+
+## stitch plan
+
+```text
+Plan a design (SVG) for a machine and write the machine file, with a picture and a report if asked
+
+Usage: stitch plan [OPTIONS] --output <OUTPUT> <DESIGN>
+
+Arguments:
+  <DESIGN>
+          The design (SVG)
+
+Options:
+  -o, --output <OUTPUT>
+          The machine file to write
+
+  -p, --profile <PROFILE>
+          The machine profile (see `stitch profiles`)
+          
+          [default: brother-200x200]
+
+      --format <FORMAT>
+          The file format; by default the output file's extension decides
+
+          Possible values:
+          - pes: Brother PES, version 1
+          - dst: Tajima DST
+
+      --preview <PREVIEW>
+          Also draw a picture of what the file will sew (PNG)
+
+      --report <REPORT>
+          Also write a report of the plan and what was said about it (JSON), even when nothing else is written
+
+  -h, --help
+          Print help (see a summary with '-h')
 ```
 
 ## stitch testsheet

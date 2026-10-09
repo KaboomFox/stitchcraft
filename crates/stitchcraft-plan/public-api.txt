@@ -97,10 +97,12 @@ pub const fn stitchcraft_plan::plan::Provenance::plan(stitchcraft_plan::plan::Ro
 pub struct stitchcraft_plan::plan::SewnStitch
 pub stitchcraft_plan::plan::SewnStitch::block: usize
 pub stitchcraft_plan::plan::SewnStitch::from: stitchcraft_core::units::Point
+pub stitchcraft_plan::plan::SewnStitch::from_role: stitchcraft_plan::plan::Role
 pub stitchcraft_plan::plan::SewnStitch::index: usize
 pub stitchcraft_plan::plan::SewnStitch::role: stitchcraft_plan::plan::Role
 pub stitchcraft_plan::plan::SewnStitch::to: stitchcraft_core::units::Point
 impl stitchcraft_plan::plan::SewnStitch
+pub fn stitchcraft_plan::plan::SewnStitch::is_lock(&self) -> bool
 pub fn stitchcraft_plan::plan::SewnStitch::length(&self) -> f64
 pub struct stitchcraft_plan::plan::Stitch
 pub stitchcraft_plan::plan::Stitch::at: stitchcraft_core::units::Point
@@ -263,10 +265,12 @@ pub fn stitchcraft_plan::thread::Rgb::fmt(&self, &mut core::fmt::Formatter<'_>) 
 pub struct stitchcraft_plan::SewnStitch
 pub stitchcraft_plan::SewnStitch::block: usize
 pub stitchcraft_plan::SewnStitch::from: stitchcraft_core::units::Point
+pub stitchcraft_plan::SewnStitch::from_role: stitchcraft_plan::plan::Role
 pub stitchcraft_plan::SewnStitch::index: usize
 pub stitchcraft_plan::SewnStitch::role: stitchcraft_plan::plan::Role
 pub stitchcraft_plan::SewnStitch::to: stitchcraft_core::units::Point
 impl stitchcraft_plan::plan::SewnStitch
+pub fn stitchcraft_plan::plan::SewnStitch::is_lock(&self) -> bool
 pub fn stitchcraft_plan::plan::SewnStitch::length(&self) -> f64
 pub struct stitchcraft_plan::Stitch
 pub stitchcraft_plan::Stitch::at: stitchcraft_core::units::Point

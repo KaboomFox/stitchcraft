@@ -102,6 +102,7 @@ another.
 | `SC-W0501` | Warning | Travel could not stay inside the region; used tie-off, trim and tie-in | M5 |
 | `SC-W0502` | Warning | Lock stitch shorter than 0.2 mm; lengthened | M3 |
 | `SC-W0503` | Warning | Custom lock cannot be sewn as written | M3 |
+| `SC-I0504` | Info | Stitches shorter than the shortest stitch merged | M3 |
 | `SC-W0505` | Warning | Trim or stop after an element that sews nothing; left out | M3 |
 | `SC-E0601` | Error | Too many colour changes for the file format | M1 |
 | `SC-E0602` | Error | Design too large for the file format (coordinates or data exceed its fields) | M1 |
@@ -110,6 +111,7 @@ another.
 | `SC-I0605` | Info | Long jumps cut in DST (machines cut the thread before three or more jump records in a row) | M3 |
 | `SC-E0701` | Error | Design does not fit the hoop | M1 |
 | `SC-W0702` | Warning | Design is larger than the comfort zone (the profile's most accurate area) | M1 |
+| `SC-I0703` | Info | Stitches longer than the machine's longest stitch; split | M3 |
 | `SC-E0801` | Error | SVG could not be read (with the parser's position) | M3 |
 | `SC-W0802` | Warning | SVG feature ignored (e.g. raster image, text not converted to paths) | M3 |
 | `SC-W0803` | Warning | `.vectorcraft` file from a newer VectorCraft format version; read best-effort | M6 |

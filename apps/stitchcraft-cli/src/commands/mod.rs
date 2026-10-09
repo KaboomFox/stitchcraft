@@ -4,6 +4,7 @@
 pub mod convert;
 pub mod explain;
 pub mod inspect;
+pub mod plan;
 pub mod preview;
 pub mod profiles;
 pub mod testsheet;
@@ -162,7 +163,10 @@ pub fn describe_threads(out: &mut String, plan: &StitchPlan, palette: Option<&Pa
 pub fn render_diagnostics(diagnostics: &[Diagnostic]) -> String {
     let mut out = String::new();
     for d in diagnostics {
-        out.push_str(&format!("{d}\n"));
+        match &d.element {
+            Some(element) => out.push_str(&format!("{} {} ({element}): {}\n", d.severity().label(), d.code, d.message)),
+            None => out.push_str(&format!("{d}\n")),
+        }
         if let Some(fix) = &d.fix {
             let label = if matches!(fix, Fix::Apply(_)) { "fix" } else { "hint" };
             out.push_str(&format!("  {label}: {}\n", fix.describe()));

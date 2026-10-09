@@ -41,7 +41,7 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 | `stitchcraft-core` | L0 | `Mm`, `Point`, `Vec2`, tolerances, deterministic math (`libm` wrappers), `SplitMix64` RNG, `Budget`, `Diagnostic`/`Code`/`Severity` | depend on any workspace crate |
 | `stitchcraft-params` | L0 | `params!`, `ParamSpec`, `ParamSet`, value parsing and validation, the registry audit (the list of declarations is `stitchcraft_engine::registry`) | know any stitch algorithm |
 | `stitchcraft-plan` | L1 | `Stitch`, `StitchKind`, `ColorBlock`, `StitchPlan`, `Thread`, palettes, `MachineProfile`, plan invariants | generate stitches; read/write files |
-| `stitchcraft-engine` | L2 | `Design`/`Element`/`Shape`, normalization, generators, plan assembly | depend on formats, render or any adapter |
+| `stitchcraft-engine` | L2 | `Design`/`Element`/`Shape`, normalization, generators, plan assembly, finalizing for the machine | depend on formats, render or any adapter |
 | `stitchcraft-formats` | L2 | readers/writers (PES/PEC, DST, …), quantization, format limits | depend on engine (it encodes *plans*) |
 | `stitchcraft-render` | L2 | CPU preview images of plans (thread look, simple look, overlays) | depend on engine |
 | `stitchcraft-svg` | L3 | SVG → `Design` (geometry, styles, `inkstitch:*` attributes, commands), plan → SVG | contain stitch logic |

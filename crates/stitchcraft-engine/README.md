@@ -8,7 +8,8 @@ normalization (`normalize::stroke`) and the running stitch (`generators::running
 repeats, bean stitch (`generators::passes`) and random length since M3.5; manual stitch
 (`generators::manual`) since M3.6. Lock stitches (`locks`) of each shape, at either end of a group, are
 here since M3.7. Since M3.8 the entry point, `plan`, sends each element to its generator (`generate`) and
-joins the groups into one plan (`assemble`). Finalizing and the plan check arrive in M3.9. Design:
+joins the groups into one plan (`assemble`). Since M3.9 it fits the plan to the machine and checks it
+(`finalize`), and a plan that `plan` returns can be written as it is. Design:
 `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 
 ## Invariants

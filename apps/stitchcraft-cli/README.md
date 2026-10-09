@@ -5,6 +5,7 @@ The command-line tool: the only StitchCraft component that touches the file syst
 
 | Command | Since | What it does |
 |---|---|---|
+| `stitch plan design.svg -o design.pes --preview design.png --report design.json` | M3.9 | Plans an SVG design for a machine (`--profile`, `brother-200x200` by default; `--format pes\|dst` overrides the extension) and writes the machine file, a picture of what it will sew and a JSON report; prints what was said about the design, element by element |
 | `stitch testsheet TS-01 --profile brother-200x200 -o TS-01.pes` | M1.8 | Writes a machine-checkpoint test sheet (`--list` lists them; `--format pes\|dst` overrides the extension) and prints its SHA-256, size, counts, the threads the machine will ask for, and what to check after sewing |
 | `stitch inspect design.pes --profile brother-200x200` | M2.1 | Reads any PES, PEC or DST file and describes it: size, counts, extent, stitch lengths, threads; with `--profile`, the hoop check and stitches outside the machine's limits |
 | `stitch preview design.pes -o design.png` | M2.7 | Draws any PES, PEC or DST file as it will sew (`--style realistic\|simple`, `--scale` in pixels per millimetre) |
@@ -12,7 +13,7 @@ The command-line tool: the only StitchCraft component that touches the file syst
 | `stitch profiles` | M1.8 | The built-in machine profiles and the evidence behind their values |
 | `stitch explain SC-W0702` | M1.8 | A diagnostic's explanation, from the registry |
 
-Coming with their milestones: `plan`, `bug-report` (M3), `export` (M6.5), `import-inkstitch` (M8),
+Coming with their milestones: `bug-report` (M3), `export` (M6.5), `import-inkstitch` (M8),
 `conformance run`.
 
 **Exit status:** 0 done (warnings allowed) · 1 the design or file has errors (nothing written) · 2 usage
@@ -30,12 +31,13 @@ error · 3 a file could not be read or written.
 ## Invariants
 
 - Contains no engine logic: it reads files, calls the engine, formats and renderer, and writes files.
-- Checks every plan it makes (invariants, then hoop and comfort zone) before writing it; errors write
-  nothing.
+- Writes only plans that have been checked (invariants, hoop and comfort zone). The command line checks
+  its test sheets itself, and the engine's `plan` checks designs. When a check fails, the machine file is
+  not written, and `stitch plan` still writes its report to say why.
 - Never panics on bad arguments (arguments that are not valid Unicode included); exit codes are documented.
 - A closed stdout (`stitch … | head`) ends the program quietly instead of panicking.
 
 ## Dependencies
 
-`clap` (restricted to this crate and `xtask` by `cargo xtask layers`), `sha2`, and the StitchCraft
+`clap` (restricted to this crate and `xtask` by `cargo xtask layers`), `sha2`, `serde_json` (the plan report), and the StitchCraft
 libraries.

@@ -2,20 +2,22 @@
 //!
 //! Design: `docs/src/design/engine-pipeline.md`. Every host calls [`plan`] — the command line with an SVG
 //! file's design, the VectorCraft plug-in with a document's — so every host gets the same stitches for the
-//! same design (`docs/src/design/architecture.md` › Hosts). Today it generates each element (M3.4–M3.6)
-//! and assembles them (M3.8); finalizing against the machine and the plan check arrive in M3.9.
+//! same design (`docs/src/design/architecture.md` › Hosts). It generates each element, assembles them,
+//! fits the plan to the machine and checks it: a plan that comes back can be written as it is.
 
 use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_plan::{MachineProfile, StitchPlan};
 
 use crate::assemble::{Assembled, assemble};
 use crate::design::Design;
+use crate::finalize::{Finalized, finalize};
 use crate::generate::{Generation, generate};
 
 /// What planning a design gives.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PlanOutcome {
-    /// The plan; `None` when nothing could be sewn, as the diagnostics say.
+    /// The plan, fitted to the machine and checked; `None` when it cannot be sewn, as the diagnostics
+    /// say.
     pub plan: Option<StitchPlan>,
     /// What was changed, left out or wrong, element by element, each naming its element when it has
     /// one.
@@ -23,7 +25,7 @@ pub struct PlanOutcome {
 }
 
 /// The stitch plan for `design`, sewn on the machine `profile` describes. Each element has `budget`'s
-/// work to itself; assembly has it once more, and the design `budget`'s stitches.
+/// work to itself; assembling and finalizing have it once more, and the design `budget`'s stitches.
 pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome {
     let mut diagnostics = Vec::new();
     let mut generated = Vec::new();
@@ -32,10 +34,18 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
         diagnostics.extend(said);
         generated.extend(sewn.map(|sewn| (element, sewn)));
     }
-    let plan = match assemble(&generated, &design.settings, &mut budget.meter()) {
-        Ok(Some(Assembled { plan, warnings })) => {
+    let mut meter = budget.meter();
+    let finished = assemble(&generated, &design.settings, &mut meter).and_then(|assembled| match assembled {
+        Some(Assembled { plan, warnings, shortest }) => {
             diagnostics.extend(warnings);
-            Some(plan)
+            finalize(plan, profile, &design.settings, &shortest, &mut meter).map(Some)
+        }
+        None => Ok(None),
+    });
+    let plan = match finished {
+        Ok(Some(Finalized { plan, diagnostics: said })) => {
+            diagnostics.extend(said);
+            plan
         }
         Ok(None) => {
             let message = "The design has nothing to stitch: it has no elements, or every one was skipped.";

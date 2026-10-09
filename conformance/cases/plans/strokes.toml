@@ -1,0 +1,12 @@
+# The whole way from a design to a machine file: an SVG of strokes in two threads and back, two lines
+# that nearly touch and a fill, planned as `stitch plan` plans it. The golden files are what that writes.
+id = "strokes"
+requirements = ["REQ-ASM-001", "REQ-ASM-002", "REQ-LCK-001", "REQ-GEN-002", "REQ-FIN-001", "REQ-FIN-003"]
+kind = "plan"
+svg = "fixtures/svg/strokes.svg"
+profile = "brother-200x200"
+
+[expect]
+size_mm = [60.0, 40.0]
+diagnostics = ["SC-W0011", "SC-I0504"]
+golden = ["golden/plans/strokes.pes", "golden/plans/strokes.dst"]

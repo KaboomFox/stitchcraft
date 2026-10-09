@@ -8,7 +8,7 @@
 //! | Requirement | Rule |
 //! |---|---|
 //! | REQ-PLAN-001 | Every position is inside the profile's hoop, centred on the machine origin. |
-//! | REQ-PLAN-002 | While sewing, every stitch is between the profile's minimum (locks: 0.2 mm) and maximum length. |
+//! | REQ-PLAN-002 | While sewing, every stitch is between the profile's minimum (locks, into or out of a lock point: 0.2 mm) and maximum length. |
 //! | REQ-PLAN-003 | Every block sews at least one stitch; trims and stops happen where the needle is. |
 //! | REQ-PLAN-005 | While sewing, a stitch never lands where the needle already is. |
 //! | REQ-PLAN-006 | Colour changes plus stops fit the profile's format. |
@@ -27,7 +27,7 @@ use core::fmt;
 use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Code, Diagnostic, Mm, Point};
 
-use crate::plan::{Role, StitchKind, StitchPlan};
+use crate::plan::{StitchKind, StitchPlan};
 use crate::profile::MachineProfile;
 
 /// Requirement ids, as in `conformance/requirements.toml` (a test checks they exist there).
@@ -123,7 +123,7 @@ pub fn check(plan: &StitchPlan, profile: &MachineProfile) -> Vec<Violation> {
 
     for sewn in plan.sewn_stitches() {
         let (length, b, i) = (sewn.length(), sewn.block, Some(sewn.index));
-        let min = if sewn.role == Role::Lock { LOCK_MIN_STITCH } else { profile.min_stitch };
+        let min = if sewn.is_lock() { LOCK_MIN_STITCH } else { profile.min_stitch };
         if length == 0.0 {
             report.add(req::NO_STITCH_IN_PLACE, b, i, "the stitch lands where the needle already is".to_string());
         } else if !at_least(length, min.get()) {
@@ -159,7 +159,7 @@ impl Report {
 mod tests {
     use super::*;
     use crate::builder::PlanBuilder;
-    use crate::plan::{Provenance, Stitch};
+    use crate::plan::{Provenance, Role, Stitch};
     use crate::profiles::BROTHER_200X200;
     use crate::thread::{Rgb, Thread};
 
@@ -224,6 +224,13 @@ mod tests {
         let mut lock = valid();
         lock.stitch(p(14.2, 10.0), Provenance::plan(Role::Lock));
         assert_eq!(requirements(&lock.finish()), Vec::<&str>::new(), "locks may be 0.2 mm");
+
+        // A tie-in's last stitch, out of a lock point into the stitching's first one, belongs to the lock.
+        let mut join = valid();
+        join.stitch(p(14.2, 10.0), Provenance::plan(Role::Lock));
+        join.stitch(p(14.4, 10.0), top());
+        join.stitch(p(14.6, 10.0), top());
+        assert_eq!(requirements(&join.finish()), vec![req::STITCH_LENGTH], "out of a lock point, 0.2 mm is fine; on from there it is not");
 
         let mut exact = valid();
         exact.stitch(p(26.0, 10.0), top());

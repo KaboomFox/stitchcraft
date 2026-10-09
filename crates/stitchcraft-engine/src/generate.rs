@@ -53,6 +53,8 @@ pub struct Generated {
     pub stitch_type: StitchType,
     /// Its groups: the needle points of each part a jump may separate from the next, in sewing order.
     pub groups: Vec<Vec<Point>>,
+    /// The shortest stitch it was sewn with, which finalize holds its stitches to as well.
+    pub min_stitch: Mm,
 }
 
 /// What generating one element gives.
@@ -113,7 +115,7 @@ fn sew(
     };
     let stroke = kept(StrokeParams::from_set(set), diagnostics);
     let (Some(common), Some(stroke)) = (common, stroke) else { return Ok(None) };
-    let min_stitch = shortest_stitch(&common, settings, profile);
+    let min_stitch = shortest_stitch(common.min_stitch_length_mm, settings, profile);
     let passes = kept(RepeatParams::from_set(set), diagnostics);
     let (stitch_type, stitched): (StitchType, Stitched) = match StitchType::from_id(Family::Stroke, stroke.stroke_method) {
         Some(StitchType::RunningStitch) => {
@@ -132,15 +134,14 @@ fn sew(
         }
     };
     diagnostics.extend(stitched.warnings);
-    Ok(Some(Generated { common, stitch_type, groups: stitched.runs }))
+    Ok(Some(Generated { common, stitch_type, groups: stitched.runs, min_stitch }))
 }
 
-/// The shortest stitch for an element: the machine's, or the element's own if it is longer, or else the
-/// design's if that is.
-fn shortest_stitch(common: &CommonParams, settings: &DesignSettings, profile: &MachineProfile) -> Mm {
+/// The shortest stitch for an element whose own is `own`: the machine's, or the element's own if it is
+/// longer, or else the design's if that is. With no element (`None`), the design's or the machine's.
+pub(crate) fn shortest_stitch(own: Option<Mm>, settings: &DesignSettings, profile: &MachineProfile) -> Mm {
     let machine = profile.min_stitch;
-    let own = common.min_stitch_length_mm.or(settings.min_stitch_len);
-    own.and_then(|own| Mm::new(own.get().max(machine.get())).ok()).unwrap_or(machine)
+    own.or(settings.min_stitch_len).and_then(|own| Mm::new(own.get().max(machine.get())).ok()).unwrap_or(machine)
 }
 
 /// The parameters `read` gives, keeping their warnings; `None`, keeping their errors, when they cannot be
