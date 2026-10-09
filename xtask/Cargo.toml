@@ -19,6 +19,7 @@ stitchcraft-cli = { path = "../apps/stitchcraft-cli" }
 stitchcraft-core = { workspace = true }
 stitchcraft-engine = { workspace = true }
 stitchcraft-formats = { workspace = true }
+stitchcraft-params = { workspace = true }
 stitchcraft-plan = { workspace = true }
 stitchcraft-render = { workspace = true }
 stitchcraft-testkit = { workspace = true }

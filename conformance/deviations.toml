@@ -9,4 +9,9 @@
 # reason = "Preserves holes and gaps (Ink/Stitch #3395)."
 # requirements = ["REQ-FILL-TAT-006"]
 
-deviation = []
+[[deviation]]
+id = "DEV-LCK-001"
+area = "plan/locks"
+summary = "Every Ink/Stitch lock id is accepted, but the shapes behind the ids are StitchCraft's own designs with the same intent, so lock stitches differ in detail."
+reason = "Clean room: the shapes come from StitchCraft's design (docs/src/design/engine-pipeline.md), not from Ink/Stitch's code (ADR-0001)."
+requirements = ["REQ-LCK-002"]

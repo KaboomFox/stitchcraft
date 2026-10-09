@@ -14,6 +14,8 @@
     - [File formats](user/reference/formats.md)
     - [Test sheets](user/reference/test-sheets.md)
     - [Diagnostic codes](user/reference/diagnostics.md)
+    - [Parameters](user/reference/params.md)
+      - [Common parameters](user/reference/params/common.md)
     - [Glossary](user/reference/glossary.md)
     - [VectorCraft compatibility](user/reference/compatibility.md)
 

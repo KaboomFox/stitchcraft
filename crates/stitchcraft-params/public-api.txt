@@ -1,3 +1,382 @@
 # The public API of stitchcraft-params, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
 # Generated: do not edit. A change here is a change other code can see; say why in the pull request.
 pub mod stitchcraft_params
+pub use stitchcraft_params::Diagnostic
+pub mod stitchcraft_params::audit
+pub fn stitchcraft_params::audit::audit(&[&stitchcraft_params::spec::ParamGroup]) -> alloc::vec::Vec<alloc::string::String>
+pub mod stitchcraft_params::kinds
+pub struct stitchcraft_params::kinds::Angle
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Angle
+pub type stitchcraft_params::kinds::Angle::Value = f64
+pub fn stitchcraft_params::kinds::Angle::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+pub struct stitchcraft_params::kinds::Choice
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Choice
+pub type stitchcraft_params::kinds::Choice::Value = &'static str
+pub fn stitchcraft_params::kinds::Choice::take(stitchcraft_params::value::Value) -> core::option::Option<&'static str>
+pub struct stitchcraft_params::kinds::Count
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Count
+pub type stitchcraft_params::kinds::Count::Value = u32
+pub fn stitchcraft_params::kinds::Count::take(stitchcraft_params::value::Value) -> core::option::Option<u32>
+pub struct stitchcraft_params::kinds::CountList
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::CountList
+pub type stitchcraft_params::kinds::CountList::Value = alloc::vec::Vec<u32>
+pub fn stitchcraft_params::kinds::CountList::take(stitchcraft_params::value::Value) -> core::option::Option<alloc::vec::Vec<u32>>
+pub struct stitchcraft_params::kinds::Length
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Length
+pub type stitchcraft_params::kinds::Length::Value = stitchcraft_core::units::Mm
+pub fn stitchcraft_params::kinds::Length::take(stitchcraft_params::value::Value) -> core::option::Option<stitchcraft_core::units::Mm>
+pub struct stitchcraft_params::kinds::LengthList
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::LengthList
+pub type stitchcraft_params::kinds::LengthList::Value = alloc::vec::Vec<stitchcraft_core::units::Mm>
+pub fn stitchcraft_params::kinds::LengthList::take(stitchcraft_params::value::Value) -> core::option::Option<alloc::vec::Vec<stitchcraft_core::units::Mm>>
+pub struct stitchcraft_params::kinds::OptionalLength
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::OptionalLength
+pub type stitchcraft_params::kinds::OptionalLength::Value = core::option::Option<stitchcraft_core::units::Mm>
+pub fn stitchcraft_params::kinds::OptionalLength::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<stitchcraft_core::units::Mm>>
+pub struct stitchcraft_params::kinds::Percent
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Percent
+pub type stitchcraft_params::kinds::Percent::Value = f64
+pub fn stitchcraft_params::kinds::Percent::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+pub struct stitchcraft_params::kinds::Seed
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Seed
+pub type stitchcraft_params::kinds::Seed::Value = core::option::Option<u64>
+pub fn stitchcraft_params::kinds::Seed::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<u64>>
+pub struct stitchcraft_params::kinds::Text
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Text
+pub type stitchcraft_params::kinds::Text::Value = alloc::string::String
+pub fn stitchcraft_params::kinds::Text::take(stitchcraft_params::value::Value) -> core::option::Option<alloc::string::String>
+pub struct stitchcraft_params::kinds::Toggle
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Toggle
+pub type stitchcraft_params::kinds::Toggle::Value = bool
+pub fn stitchcraft_params::kinds::Toggle::take(stitchcraft_params::value::Value) -> core::option::Option<bool>
+pub trait stitchcraft_params::kinds::ParamKind
+pub type stitchcraft_params::kinds::ParamKind::Value
+pub fn stitchcraft_params::kinds::ParamKind::take(stitchcraft_params::value::Value) -> core::option::Option<Self::Value>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Angle
+pub type stitchcraft_params::kinds::Angle::Value = f64
+pub fn stitchcraft_params::kinds::Angle::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Choice
+pub type stitchcraft_params::kinds::Choice::Value = &'static str
+pub fn stitchcraft_params::kinds::Choice::take(stitchcraft_params::value::Value) -> core::option::Option<&'static str>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Count
+pub type stitchcraft_params::kinds::Count::Value = u32
+pub fn stitchcraft_params::kinds::Count::take(stitchcraft_params::value::Value) -> core::option::Option<u32>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::CountList
+pub type stitchcraft_params::kinds::CountList::Value = alloc::vec::Vec<u32>
+pub fn stitchcraft_params::kinds::CountList::take(stitchcraft_params::value::Value) -> core::option::Option<alloc::vec::Vec<u32>>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Length
+pub type stitchcraft_params::kinds::Length::Value = stitchcraft_core::units::Mm
+pub fn stitchcraft_params::kinds::Length::take(stitchcraft_params::value::Value) -> core::option::Option<stitchcraft_core::units::Mm>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::LengthList
+pub type stitchcraft_params::kinds::LengthList::Value = alloc::vec::Vec<stitchcraft_core::units::Mm>
+pub fn stitchcraft_params::kinds::LengthList::take(stitchcraft_params::value::Value) -> core::option::Option<alloc::vec::Vec<stitchcraft_core::units::Mm>>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::OptionalLength
+pub type stitchcraft_params::kinds::OptionalLength::Value = core::option::Option<stitchcraft_core::units::Mm>
+pub fn stitchcraft_params::kinds::OptionalLength::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<stitchcraft_core::units::Mm>>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Percent
+pub type stitchcraft_params::kinds::Percent::Value = f64
+pub fn stitchcraft_params::kinds::Percent::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Seed
+pub type stitchcraft_params::kinds::Seed::Value = core::option::Option<u64>
+pub fn stitchcraft_params::kinds::Seed::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<u64>>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Text
+pub type stitchcraft_params::kinds::Text::Value = alloc::string::String
+pub fn stitchcraft_params::kinds::Text::take(stitchcraft_params::value::Value) -> core::option::Option<alloc::string::String>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Toggle
+pub type stitchcraft_params::kinds::Toggle::Value = bool
+pub fn stitchcraft_params::kinds::Toggle::take(stitchcraft_params::value::Value) -> core::option::Option<bool>
+pub mod stitchcraft_params::macros
+pub mod stitchcraft_params::set
+pub struct stitchcraft_params::set::ParamSet
+impl stitchcraft_params::set::ParamSet
+pub fn stitchcraft_params::set::ParamSet::get(&self, &str) -> core::option::Option<&str>
+pub fn stitchcraft_params::set::ParamSet::iter(&self) -> impl core::iter::traits::iterator::Iterator<Item = (&str, &str)>
+pub fn stitchcraft_params::set::ParamSet::new() -> Self
+pub fn stitchcraft_params::set::ParamSet::set(&mut self, impl core::convert::Into<alloc::string::String>, impl core::convert::Into<alloc::string::String>) -> core::option::Option<alloc::string::String>
+impl<K: core::convert::Into<alloc::string::String>, V: core::convert::Into<alloc::string::String>> core::iter::traits::collect::FromIterator<(K, V)> for stitchcraft_params::set::ParamSet
+pub fn stitchcraft_params::set::ParamSet::from_iter<I: core::iter::traits::collect::IntoIterator<Item = (K, V)>>(I) -> Self
+pub struct stitchcraft_params::set::Validated<T>
+pub stitchcraft_params::set::Validated::params: T
+pub stitchcraft_params::set::Validated::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_params::set::find(&[&stitchcraft_params::spec::ParamGroup], &str) -> core::option::Option<&'static stitchcraft_params::spec::ParamSpec>
+pub fn stitchcraft_params::set::read_param<K: stitchcraft_params::kinds::ParamKind>(&stitchcraft_params::set::ParamSet, core::option::Option<&stitchcraft_params::spec::ParamSpec>, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>) -> core::option::Option<<K as stitchcraft_params::kinds::ParamKind>::Value>
+pub fn stitchcraft_params::set::unknown_keys(&stitchcraft_params::set::ParamSet, &[&stitchcraft_params::spec::ParamGroup]) -> alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub mod stitchcraft_params::spec
+pub enum stitchcraft_params::spec::Kind
+pub stitchcraft_params::spec::Kind::Angle
+pub stitchcraft_params::spec::Kind::Choice
+pub stitchcraft_params::spec::Kind::Choice::options: &'static [stitchcraft_params::spec::ChoiceOption]
+pub stitchcraft_params::spec::Kind::Count
+pub stitchcraft_params::spec::Kind::Count::max: u32
+pub stitchcraft_params::spec::Kind::Count::min: u32
+pub stitchcraft_params::spec::Kind::CountList
+pub stitchcraft_params::spec::Kind::CountList::max: u32
+pub stitchcraft_params::spec::Kind::CountList::min: u32
+pub stitchcraft_params::spec::Kind::Length
+pub stitchcraft_params::spec::Kind::Length::max: f64
+pub stitchcraft_params::spec::Kind::Length::min: f64
+pub stitchcraft_params::spec::Kind::Length::optional: bool
+pub stitchcraft_params::spec::Kind::LengthList
+pub stitchcraft_params::spec::Kind::LengthList::max: f64
+pub stitchcraft_params::spec::Kind::LengthList::min: f64
+pub stitchcraft_params::spec::Kind::Percent
+pub stitchcraft_params::spec::Kind::Percent::max: f64
+pub stitchcraft_params::spec::Kind::Percent::min: f64
+pub stitchcraft_params::spec::Kind::Seed
+pub stitchcraft_params::spec::Kind::Text
+pub stitchcraft_params::spec::Kind::Text::max_bytes: usize
+pub stitchcraft_params::spec::Kind::Toggle
+impl stitchcraft_params::spec::Kind
+pub fn stitchcraft_params::spec::Kind::describe(self) -> alloc::string::String
+pub const fn stitchcraft_params::spec::Kind::unit(self) -> &'static str
+impl stitchcraft_params::spec::Kind
+pub fn stitchcraft_params::spec::Kind::parse(self, &str) -> core::option::Option<(stitchcraft_params::value::Value, bool)>
+pub enum stitchcraft_params::spec::Origin
+pub stitchcraft_params::spec::Origin::InkStitch
+pub stitchcraft_params::spec::Origin::InkStitchDeviates
+pub stitchcraft_params::spec::Origin::InkStitchDeviates::deviation: &'static str
+pub stitchcraft_params::spec::Origin::StitchCraft
+pub enum stitchcraft_params::spec::Stability
+pub stitchcraft_params::spec::Stability::Deprecated
+pub stitchcraft_params::spec::Stability::Deprecated::use_instead: core::option::Option<&'static str>
+pub stitchcraft_params::spec::Stability::Experimental
+pub stitchcraft_params::spec::Stability::Stable
+pub struct stitchcraft_params::spec::ChoiceOption
+pub stitchcraft_params::spec::ChoiceOption::id: &'static str
+pub stitchcraft_params::spec::ChoiceOption::label: &'static str
+pub struct stitchcraft_params::spec::Condition
+pub stitchcraft_params::spec::Condition::equals: &'static str
+pub stitchcraft_params::spec::Condition::key: &'static str
+pub struct stitchcraft_params::spec::ParamGroup
+pub stitchcraft_params::spec::ParamGroup::applies_to: &'static [stitchcraft_params::stitch_type::StitchType]
+pub stitchcraft_params::spec::ParamGroup::help: &'static str
+pub stitchcraft_params::spec::ParamGroup::name: &'static str
+pub stitchcraft_params::spec::ParamGroup::specs: &'static [stitchcraft_params::spec::ParamSpec]
+impl stitchcraft_params::spec::ParamGroup
+pub fn stitchcraft_params::spec::ParamGroup::help(&self) -> alloc::string::String
+pub struct stitchcraft_params::spec::ParamSpec
+pub stitchcraft_params::spec::ParamSpec::applies_to: &'static [stitchcraft_params::stitch_type::StitchType]
+pub stitchcraft_params::spec::ParamSpec::default: &'static str
+pub stitchcraft_params::spec::ParamSpec::group: &'static str
+pub stitchcraft_params::spec::ParamSpec::help: &'static str
+pub stitchcraft_params::spec::ParamSpec::key: &'static str
+pub stitchcraft_params::spec::ParamSpec::kind: stitchcraft_params::spec::Kind
+pub stitchcraft_params::spec::ParamSpec::label: &'static str
+pub stitchcraft_params::spec::ParamSpec::origin: stitchcraft_params::spec::Origin
+pub stitchcraft_params::spec::ParamSpec::stability: stitchcraft_params::spec::Stability
+pub stitchcraft_params::spec::ParamSpec::visible_when: core::option::Option<stitchcraft_params::spec::Condition>
+impl stitchcraft_params::spec::ParamSpec
+pub fn stitchcraft_params::spec::ParamSpec::help(&self) -> alloc::string::String
+impl stitchcraft_params::spec::ParamSpec
+pub fn stitchcraft_params::spec::ParamSpec::read(&self, &str) -> core::result::Result<(stitchcraft_params::value::Value, core::option::Option<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
+pub const stitchcraft_params::spec::MAX_LIST: usize
+pub const stitchcraft_params::spec::MAX_TEXT: usize
+pub mod stitchcraft_params::stitch_type
+pub enum stitchcraft_params::stitch_type::Family
+pub stitchcraft_params::stitch_type::Family::Fill
+pub stitchcraft_params::stitch_type::Family::Satin
+pub stitchcraft_params::stitch_type::Family::Stroke
+impl stitchcraft_params::stitch_type::Family
+pub const fn stitchcraft_params::stitch_type::Family::method_param(self) -> &'static str
+pub enum stitchcraft_params::stitch_type::StitchType
+pub stitchcraft_params::stitch_type::StitchType::CircularFill
+pub stitchcraft_params::stitch_type::StitchType::ContourFill
+pub stitchcraft_params::stitch_type::StitchType::CrossStitch
+pub stitchcraft_params::stitch_type::StitchType::EStitch
+pub stitchcraft_params::stitch_type::StitchType::GuidedFill
+pub stitchcraft_params::stitch_type::StitchType::LegacyFill
+pub stitchcraft_params::stitch_type::StitchType::LinearGradientFill
+pub stitchcraft_params::stitch_type::StitchType::ManualStitch
+pub stitchcraft_params::stitch_type::StitchType::MeanderFill
+pub stitchcraft_params::stitch_type::StitchType::RippleStitch
+pub stitchcraft_params::stitch_type::StitchType::RunningStitch
+pub stitchcraft_params::stitch_type::StitchType::SStitch
+pub stitchcraft_params::stitch_type::StitchType::SatinColumn
+pub stitchcraft_params::stitch_type::StitchType::SatinZigzag
+pub stitchcraft_params::stitch_type::StitchType::TartanFill
+pub stitchcraft_params::stitch_type::StitchType::TatamiFill
+pub stitchcraft_params::stitch_type::StitchType::ZigzagStitch
+impl stitchcraft_params::stitch_type::StitchType
+pub const stitchcraft_params::stitch_type::StitchType::ALL: &'static [stitchcraft_params::stitch_type::StitchType]
+pub const fn stitchcraft_params::stitch_type::StitchType::family(self) -> stitchcraft_params::stitch_type::Family
+pub fn stitchcraft_params::stitch_type::StitchType::from_id(stitchcraft_params::stitch_type::Family, &str) -> core::option::Option<stitchcraft_params::stitch_type::StitchType>
+pub const fn stitchcraft_params::stitch_type::StitchType::id(self) -> &'static str
+pub const fn stitchcraft_params::stitch_type::StitchType::name(self) -> &'static str
+pub mod stitchcraft_params::value
+pub enum stitchcraft_params::value::Value
+pub stitchcraft_params::value::Value::Angle(f64)
+pub stitchcraft_params::value::Value::Choice(&'static str)
+pub stitchcraft_params::value::Value::Count(u32)
+pub stitchcraft_params::value::Value::Counts(alloc::vec::Vec<u32>)
+pub stitchcraft_params::value::Value::Length(core::option::Option<stitchcraft_core::units::Mm>)
+pub stitchcraft_params::value::Value::Lengths(alloc::vec::Vec<stitchcraft_core::units::Mm>)
+pub stitchcraft_params::value::Value::Percent(f64)
+pub stitchcraft_params::value::Value::Seed(core::option::Option<u64>)
+pub stitchcraft_params::value::Value::Text(alloc::string::String)
+pub stitchcraft_params::value::Value::Toggle(bool)
+impl stitchcraft_params::value::Value
+pub fn stitchcraft_params::value::Value::to_raw(&self) -> alloc::string::String
+pub macro stitchcraft_params::params!
+pub enum stitchcraft_params::Family
+pub stitchcraft_params::Family::Fill
+pub stitchcraft_params::Family::Satin
+pub stitchcraft_params::Family::Stroke
+impl stitchcraft_params::stitch_type::Family
+pub const fn stitchcraft_params::stitch_type::Family::method_param(self) -> &'static str
+pub enum stitchcraft_params::Kind
+pub stitchcraft_params::Kind::Angle
+pub stitchcraft_params::Kind::Choice
+pub stitchcraft_params::Kind::Choice::options: &'static [stitchcraft_params::spec::ChoiceOption]
+pub stitchcraft_params::Kind::Count
+pub stitchcraft_params::Kind::Count::max: u32
+pub stitchcraft_params::Kind::Count::min: u32
+pub stitchcraft_params::Kind::CountList
+pub stitchcraft_params::Kind::CountList::max: u32
+pub stitchcraft_params::Kind::CountList::min: u32
+pub stitchcraft_params::Kind::Length
+pub stitchcraft_params::Kind::Length::max: f64
+pub stitchcraft_params::Kind::Length::min: f64
+pub stitchcraft_params::Kind::Length::optional: bool
+pub stitchcraft_params::Kind::LengthList
+pub stitchcraft_params::Kind::LengthList::max: f64
+pub stitchcraft_params::Kind::LengthList::min: f64
+pub stitchcraft_params::Kind::Percent
+pub stitchcraft_params::Kind::Percent::max: f64
+pub stitchcraft_params::Kind::Percent::min: f64
+pub stitchcraft_params::Kind::Seed
+pub stitchcraft_params::Kind::Text
+pub stitchcraft_params::Kind::Text::max_bytes: usize
+pub stitchcraft_params::Kind::Toggle
+impl stitchcraft_params::spec::Kind
+pub fn stitchcraft_params::spec::Kind::describe(self) -> alloc::string::String
+pub const fn stitchcraft_params::spec::Kind::unit(self) -> &'static str
+impl stitchcraft_params::spec::Kind
+pub fn stitchcraft_params::spec::Kind::parse(self, &str) -> core::option::Option<(stitchcraft_params::value::Value, bool)>
+pub enum stitchcraft_params::Origin
+pub stitchcraft_params::Origin::InkStitch
+pub stitchcraft_params::Origin::InkStitchDeviates
+pub stitchcraft_params::Origin::InkStitchDeviates::deviation: &'static str
+pub stitchcraft_params::Origin::StitchCraft
+pub enum stitchcraft_params::Stability
+pub stitchcraft_params::Stability::Deprecated
+pub stitchcraft_params::Stability::Deprecated::use_instead: core::option::Option<&'static str>
+pub stitchcraft_params::Stability::Experimental
+pub stitchcraft_params::Stability::Stable
+pub enum stitchcraft_params::StitchType
+pub stitchcraft_params::StitchType::CircularFill
+pub stitchcraft_params::StitchType::ContourFill
+pub stitchcraft_params::StitchType::CrossStitch
+pub stitchcraft_params::StitchType::EStitch
+pub stitchcraft_params::StitchType::GuidedFill
+pub stitchcraft_params::StitchType::LegacyFill
+pub stitchcraft_params::StitchType::LinearGradientFill
+pub stitchcraft_params::StitchType::ManualStitch
+pub stitchcraft_params::StitchType::MeanderFill
+pub stitchcraft_params::StitchType::RippleStitch
+pub stitchcraft_params::StitchType::RunningStitch
+pub stitchcraft_params::StitchType::SStitch
+pub stitchcraft_params::StitchType::SatinColumn
+pub stitchcraft_params::StitchType::SatinZigzag
+pub stitchcraft_params::StitchType::TartanFill
+pub stitchcraft_params::StitchType::TatamiFill
+pub stitchcraft_params::StitchType::ZigzagStitch
+impl stitchcraft_params::stitch_type::StitchType
+pub const stitchcraft_params::stitch_type::StitchType::ALL: &'static [stitchcraft_params::stitch_type::StitchType]
+pub const fn stitchcraft_params::stitch_type::StitchType::family(self) -> stitchcraft_params::stitch_type::Family
+pub fn stitchcraft_params::stitch_type::StitchType::from_id(stitchcraft_params::stitch_type::Family, &str) -> core::option::Option<stitchcraft_params::stitch_type::StitchType>
+pub const fn stitchcraft_params::stitch_type::StitchType::id(self) -> &'static str
+pub const fn stitchcraft_params::stitch_type::StitchType::name(self) -> &'static str
+pub enum stitchcraft_params::Value
+pub stitchcraft_params::Value::Angle(f64)
+pub stitchcraft_params::Value::Choice(&'static str)
+pub stitchcraft_params::Value::Count(u32)
+pub stitchcraft_params::Value::Counts(alloc::vec::Vec<u32>)
+pub stitchcraft_params::Value::Length(core::option::Option<stitchcraft_core::units::Mm>)
+pub stitchcraft_params::Value::Lengths(alloc::vec::Vec<stitchcraft_core::units::Mm>)
+pub stitchcraft_params::Value::Percent(f64)
+pub stitchcraft_params::Value::Seed(core::option::Option<u64>)
+pub stitchcraft_params::Value::Text(alloc::string::String)
+pub stitchcraft_params::Value::Toggle(bool)
+impl stitchcraft_params::value::Value
+pub fn stitchcraft_params::value::Value::to_raw(&self) -> alloc::string::String
+pub struct stitchcraft_params::ChoiceOption
+pub stitchcraft_params::ChoiceOption::id: &'static str
+pub stitchcraft_params::ChoiceOption::label: &'static str
+pub struct stitchcraft_params::Condition
+pub stitchcraft_params::Condition::equals: &'static str
+pub stitchcraft_params::Condition::key: &'static str
+pub struct stitchcraft_params::ParamGroup
+pub stitchcraft_params::ParamGroup::applies_to: &'static [stitchcraft_params::stitch_type::StitchType]
+pub stitchcraft_params::ParamGroup::help: &'static str
+pub stitchcraft_params::ParamGroup::name: &'static str
+pub stitchcraft_params::ParamGroup::specs: &'static [stitchcraft_params::spec::ParamSpec]
+impl stitchcraft_params::spec::ParamGroup
+pub fn stitchcraft_params::spec::ParamGroup::help(&self) -> alloc::string::String
+pub struct stitchcraft_params::ParamSet
+impl stitchcraft_params::set::ParamSet
+pub fn stitchcraft_params::set::ParamSet::get(&self, &str) -> core::option::Option<&str>
+pub fn stitchcraft_params::set::ParamSet::iter(&self) -> impl core::iter::traits::iterator::Iterator<Item = (&str, &str)>
+pub fn stitchcraft_params::set::ParamSet::new() -> Self
+pub fn stitchcraft_params::set::ParamSet::set(&mut self, impl core::convert::Into<alloc::string::String>, impl core::convert::Into<alloc::string::String>) -> core::option::Option<alloc::string::String>
+impl<K: core::convert::Into<alloc::string::String>, V: core::convert::Into<alloc::string::String>> core::iter::traits::collect::FromIterator<(K, V)> for stitchcraft_params::set::ParamSet
+pub fn stitchcraft_params::set::ParamSet::from_iter<I: core::iter::traits::collect::IntoIterator<Item = (K, V)>>(I) -> Self
+pub struct stitchcraft_params::ParamSpec
+pub stitchcraft_params::ParamSpec::applies_to: &'static [stitchcraft_params::stitch_type::StitchType]
+pub stitchcraft_params::ParamSpec::default: &'static str
+pub stitchcraft_params::ParamSpec::group: &'static str
+pub stitchcraft_params::ParamSpec::help: &'static str
+pub stitchcraft_params::ParamSpec::key: &'static str
+pub stitchcraft_params::ParamSpec::kind: stitchcraft_params::spec::Kind
+pub stitchcraft_params::ParamSpec::label: &'static str
+pub stitchcraft_params::ParamSpec::origin: stitchcraft_params::spec::Origin
+pub stitchcraft_params::ParamSpec::stability: stitchcraft_params::spec::Stability
+pub stitchcraft_params::ParamSpec::visible_when: core::option::Option<stitchcraft_params::spec::Condition>
+impl stitchcraft_params::spec::ParamSpec
+pub fn stitchcraft_params::spec::ParamSpec::help(&self) -> alloc::string::String
+impl stitchcraft_params::spec::ParamSpec
+pub fn stitchcraft_params::spec::ParamSpec::read(&self, &str) -> core::result::Result<(stitchcraft_params::value::Value, core::option::Option<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
+pub struct stitchcraft_params::Validated<T>
+pub stitchcraft_params::Validated::params: T
+pub stitchcraft_params::Validated::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub const stitchcraft_params::MAX_LIST: usize
+pub const stitchcraft_params::MAX_TEXT: usize
+pub trait stitchcraft_params::ParamKind
+pub type stitchcraft_params::ParamKind::Value
+pub fn stitchcraft_params::ParamKind::take(stitchcraft_params::value::Value) -> core::option::Option<Self::Value>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Angle
+pub type stitchcraft_params::kinds::Angle::Value = f64
+pub fn stitchcraft_params::kinds::Angle::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Choice
+pub type stitchcraft_params::kinds::Choice::Value = &'static str
+pub fn stitchcraft_params::kinds::Choice::take(stitchcraft_params::value::Value) -> core::option::Option<&'static str>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Count
+pub type stitchcraft_params::kinds::Count::Value = u32
+pub fn stitchcraft_params::kinds::Count::take(stitchcraft_params::value::Value) -> core::option::Option<u32>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::CountList
+pub type stitchcraft_params::kinds::CountList::Value = alloc::vec::Vec<u32>
+pub fn stitchcraft_params::kinds::CountList::take(stitchcraft_params::value::Value) -> core::option::Option<alloc::vec::Vec<u32>>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Length
+pub type stitchcraft_params::kinds::Length::Value = stitchcraft_core::units::Mm
+pub fn stitchcraft_params::kinds::Length::take(stitchcraft_params::value::Value) -> core::option::Option<stitchcraft_core::units::Mm>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::LengthList
+pub type stitchcraft_params::kinds::LengthList::Value = alloc::vec::Vec<stitchcraft_core::units::Mm>
+pub fn stitchcraft_params::kinds::LengthList::take(stitchcraft_params::value::Value) -> core::option::Option<alloc::vec::Vec<stitchcraft_core::units::Mm>>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::OptionalLength
+pub type stitchcraft_params::kinds::OptionalLength::Value = core::option::Option<stitchcraft_core::units::Mm>
+pub fn stitchcraft_params::kinds::OptionalLength::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<stitchcraft_core::units::Mm>>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Percent
+pub type stitchcraft_params::kinds::Percent::Value = f64
+pub fn stitchcraft_params::kinds::Percent::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Seed
+pub type stitchcraft_params::kinds::Seed::Value = core::option::Option<u64>
+pub fn stitchcraft_params::kinds::Seed::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<u64>>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Text
+pub type stitchcraft_params::kinds::Text::Value = alloc::string::String
+pub fn stitchcraft_params::kinds::Text::take(stitchcraft_params::value::Value) -> core::option::Option<alloc::string::String>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Toggle
+pub type stitchcraft_params::kinds::Toggle::Value = bool
+pub fn stitchcraft_params::kinds::Toggle::take(stitchcraft_params::value::Value) -> core::option::Option<bool>
+pub fn stitchcraft_params::audit(&[&stitchcraft_params::spec::ParamGroup]) -> alloc::vec::Vec<alloc::string::String>
+pub fn stitchcraft_params::find(&[&stitchcraft_params::spec::ParamGroup], &str) -> core::option::Option<&'static stitchcraft_params::spec::ParamSpec>
+pub fn stitchcraft_params::read_param<K: stitchcraft_params::kinds::ParamKind>(&stitchcraft_params::set::ParamSet, core::option::Option<&stitchcraft_params::spec::ParamSpec>, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>) -> core::option::Option<<K as stitchcraft_params::kinds::ParamKind>::Value>
+pub fn stitchcraft_params::unknown_keys(&stitchcraft_params::set::ParamSet, &[&stitchcraft_params::spec::ParamGroup]) -> alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>

@@ -939,6 +939,7 @@ dependencies = [
  "stitchcraft-core",
  "stitchcraft-engine",
  "stitchcraft-formats",
+ "stitchcraft-params",
  "stitchcraft-plan",
  "stitchcraft-render",
  "stitchcraft-testkit",
