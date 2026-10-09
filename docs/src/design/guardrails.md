@@ -30,7 +30,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | Cross-platform | Tests on Linux, macOS, Windows; identical conformance hashes | `ci.yml` | CI |
 | API docs | Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links | `cargo xtask ci` (`RUSTDOCFLAGS=-D warnings`) | `cargo xtask ci` · CI |
 | **Public API review** | Changes to a library crate's public API show in the PR diff, as a change to its `public-api.txt` | `xtask/src/api.rs` (cargo-public-api, pinned) | `cargo xtask api --check` · CI |
-| **Coverage ratchet** | No crate's line coverage drops below its floor; floors only go up | `conformance/coverage.toml`, `xtask/src/coverage.rs` (cargo-llvm-cov) | `cargo xtask coverage` · CI job |
+| **Coverage ratchet** | No crate's line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request | `conformance/coverage.toml`, `xtask/src/coverage.rs` (cargo-llvm-cov) | `cargo xtask coverage` · CI job |
 | **Mutation testing** | Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down | `.cargo/mutants.toml`, `conformance/mutation.toml`, `xtask/src/mutants.rs` | `mutants.yml` · changed lines every PR · everything weekly |
 | **Fuzzing** | Readers never panic, respect their caps and terminate; anything read round-trips and previews | `fuzz/`, `stitchcraft-testkit::fuzz` ([conformance](conformance.md#fuzzing)) | bodies every PR · an hour nightly |
 
