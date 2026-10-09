@@ -107,10 +107,10 @@ machine profile, and go into the deviations ledger with M3.8.
 - `ties` selects where locks go: both, before (tie-in), after (tie-off) or neither.
 - `force_lock_stitches` adds locks even when the next group is close enough to collapse. In Ink/Stitch
   (read at `d59c9ab`) it also adds the tie-off when `ties` asks for none after, but never a tie-in.
-- A group with fewer than two needle points gets no locks. Manual stitch gets none unless
-  `force_lock_stitches` is set.
-- The lock itself — its shape (`lock_start`, `lock_end`), its size and the 0.2 mm shortest lock stitch —
-  is specified in [Lock stitches](algorithms/locks.md).
+- A group with fewer than two needle points is sewn without locks. Manual stitch is sewn without them
+  unless `force_lock_stitches` is set.
+- [Lock stitches](algorithms/locks.md) specifies the lock itself: its shape (`lock_start`, `lock_end`),
+  its size and the 0.2 mm shortest lock stitch.
 
 ### Commands
 

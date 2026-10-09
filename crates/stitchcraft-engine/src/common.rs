@@ -27,15 +27,15 @@ params! {
         /// go straight on to it without one.
         force_lock_stitches: Toggle = "false", label "Always lock";
 
-        /// The shape of the lock stitches at the start. The half stitch, back and forth over the first
-        /// half of the first stitch, hides under it; the others are larger and grip more.
+        /// The shape of the lock stitches at the start. The half stitch goes back and forth over the first
+        /// half of the first stitch, which hides it. The other shapes are larger and grip more.
         lock_start: Choice = "half_stitch", label "Start lock", choices LOCKS, origin Origin::InkStitchDeviates { deviation: "DEV-LCK-001" };
 
         /// The steps a custom start lock takes along the stitching before it starts, as numbers separated
-        /// by spaces, each a number of `lock_start_scale_mm`: positive steps go into the stitching, and the
-        /// last one ends where the stitching starts, so `1 -1 1 -1` goes forth and back twice. Ink/Stitch
-        /// also takes an SVG path that draws the lock; StitchCraft does not sew those yet, and sews the
-        /// half stitch instead (`SC-W0503`).
+        /// by spaces, each a number of `lock_start_scale_mm`. Positive steps go into the stitching. The
+        /// last step ends where the stitching starts, and `1 -1 1 -1` goes forth and back twice. Ink/Stitch
+        /// also takes an SVG path that draws the lock. StitchCraft does not sew those yet, and sews the
+        /// half stitch in its place (`SC-W0503`).
         lock_custom_start: Text = "", label "Custom start lock", when lock_start == "custom", origin Origin::InkStitchDeviates { deviation: "DEV-LCK-002" };
 
         /// How long each step of a start lock made of steps (back and forth, or custom) is.
@@ -45,15 +45,15 @@ params! {
         /// 1.4 mm along the stitching.
         lock_start_scale_percent: Percent = "100", label "Start lock scale", range (10.0, 500.0), when lock_start in SIZED_IN_PERCENT;
 
-        /// The shape of the lock stitches at the end. The half stitch, back and forth over the last
-        /// half of the last stitch, hides under it; the others are larger and grip more.
+        /// The shape of the lock stitches at the end. The half stitch goes back and forth over the last
+        /// half of the last stitch, which hides it. The other shapes are larger and grip more.
         lock_end: Choice = "half_stitch", label "End lock", choices LOCKS, origin Origin::InkStitchDeviates { deviation: "DEV-LCK-001" };
 
         /// The steps a custom end lock takes along the stitching after it ends, as numbers separated by
-        /// spaces, each a number of `lock_end_scale_mm`: positive steps go back into the stitching, and
-        /// the first one starts where the stitching ends, so `1 -1 1 -1` goes back and forth twice.
-        /// Ink/Stitch also takes an SVG path that draws the lock; StitchCraft does not sew those yet, and
-        /// sews the half stitch instead (`SC-W0503`).
+        /// spaces, each a number of `lock_end_scale_mm`. Positive steps go back into the stitching. The
+        /// first step starts where the stitching ends, and `1 -1 1 -1` goes back and forth twice.
+        /// Ink/Stitch also takes an SVG path that draws the lock. StitchCraft does not sew those yet, and
+        /// sews the half stitch in its place (`SC-W0503`).
         lock_custom_end: Text = "", label "Custom end lock", when lock_end == "custom", origin Origin::InkStitchDeviates { deviation: "DEV-LCK-002" };
 
         /// How long each step of an end lock made of steps (back and forth, or custom) is.
