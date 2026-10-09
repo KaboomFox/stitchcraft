@@ -1,3 +1,8 @@
 # The public API of stitchcraft-svg, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
 # Generated: do not edit. A change here is a change other code can see; say why in the pull request.
 pub mod stitchcraft_svg
+pub struct stitchcraft_svg::Svg
+pub stitchcraft_svg::Svg::design: stitchcraft_engine::design::Design
+pub stitchcraft_svg::Svg::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub const stitchcraft_svg::MAX_BYTES: usize
+pub fn stitchcraft_svg::read(&[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_svg::Svg, stitchcraft_core::diag::Diagnostic>

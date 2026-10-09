@@ -1,5 +1,5 @@
-//! What must hold for *any* bytes given to a reader (REQ-FMT-006): the bodies of the fuzz targets in
-//! `fuzz/`.
+//! What must hold for *any* bytes given to a reader (REQ-FMT-006, REQ-SVG-002): the bodies of the fuzz
+//! targets in `fuzz/`.
 //!
 //! They live here rather than in the fuzz crate so that every pull request runs them on stable Rust and
 //! all three operating systems (on the golden files, every shortening of them and random bytes), while
@@ -17,8 +17,11 @@
 //!   jump runs, so small jumps next to a trim in a hostile file can legitimately read back differently.
 //! - **Previews never panic** on anything read, in either style; refusals such as a spent budget are
 //!   fine.
+//! - **The SVG reader never panics** and refuses only with its own codes: `SC-E0801` for a file that is
+//!   not SVG, `SC-E0004` for a spent budget. What it reads is a valid design (`SC-E0009` would be a bug in
+//!   the reader), and everything it says about the file is a warning.
 
-use stitchcraft_core::{Budget, units::MACHINE_LIMIT};
+use stitchcraft_core::{Budget, Code, Severity, units::MACHINE_LIMIT};
 use stitchcraft_formats::decode::MAX_RECORDS;
 use stitchcraft_formats::{decode, dst, encode, pes};
 use stitchcraft_plan::{FormatId, StitchPlan};
@@ -67,6 +70,23 @@ pub fn read_write_preview(data: &[u8]) {
     }
 }
 
+/// The SVG reader on `data`, with a budget small enough to keep each input fast.
+pub fn read_svg(data: &[u8]) {
+    let budget = Budget { max_stitches: 100_000, max_work: 2_000_000 };
+    match stitchcraft_svg::read(data, &budget) {
+        Ok(svg) => {
+            for warning in &svg.warnings {
+                assert_eq!(warning.severity(), Severity::Warning, "{warning}");
+            }
+            let limit = f64::from(MACHINE_LIMIT) / 10.0;
+            for point in svg.design.elements().iter().flat_map(|e| e.shape.path().points()) {
+                assert!(point.x().abs() <= limit && point.y().abs() <= limit, "a point beyond ±10 m: {point:?}");
+            }
+        }
+        Err(refusal) => assert!(matches!(refusal.code, Code::SvgUnreadable | Code::BudgetExhausted), "{refusal}"),
+    }
+}
+
 /// A plan a reader returned respects the readers' caps.
 fn within_caps(plan: &StitchPlan) {
     let entries = plan.stitches().count();
@@ -111,8 +131,44 @@ mod tests {
         }
     }
 
+    fn svg_fixtures() -> Vec<Vec<u8>> {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance/fixtures/svg");
+        let mut paths: Vec<_> = std::fs::read_dir(root).unwrap().map(|e| e.unwrap().path()).collect();
+        paths.sort();
+        let files: Vec<_> = paths.iter().map(|p| std::fs::read(p).unwrap()).collect();
+        assert!(files.len() >= 4, "the SVG fixtures are the seed corpus of `read_svg`");
+        files
+    }
+
+    /// The SVG seed corpus, and every shortening of it, pass the SVG fuzz body.
+    #[test]
+    fn req_svg_002_the_svg_seed_corpus_and_its_shortenings_pass_the_fuzz_body() {
+        for bytes in svg_fixtures() {
+            let step = (bytes.len() / 300).max(1);
+            for len in (0..=bytes.len()).step_by(step) {
+                read_svg(&bytes[..len]);
+            }
+            read_svg(&bytes);
+        }
+    }
+
     proptest! {
         #![proptest_config(strategies::config(256))]
+
+        /// The SVG fixtures with random bytes overwritten, so the reader gets deep into real files.
+        #[test]
+        fn req_svg_002_damaged_svg_files_pass_the_fuzz_body(
+            which in any::<prop::sample::Index>(),
+            edits in proptest::collection::vec((any::<prop::sample::Index>(), any::<u8>()), 1..16),
+        ) {
+            let fixtures = svg_fixtures();
+            let mut data = which.get(&fixtures).clone();
+            for (at, byte) in edits {
+                let i = at.index(data.len());
+                data[i] = byte;
+            }
+            read_svg(&data);
+        }
 
         /// Random bytes behind each format's magic, so the readers get past their first check.
         #[test]

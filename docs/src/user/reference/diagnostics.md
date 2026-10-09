@@ -19,6 +19,9 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0604`](#sc-w0604) | Warning | Thread colours unknown |
 | [`SC-E0701`](#sc-e0701) | Error | Design does not fit the hoop |
 | [`SC-W0702`](#sc-w0702) | Warning | Design is larger than the comfort zone |
+| [`SC-E0801`](#sc-e0801) | Error | SVG could not be read |
+| [`SC-W0802`](#sc-w0802) | Warning | SVG feature ignored |
+| [`SC-W0804`](#sc-w0804) | Warning | Element geometry invalid or out of range |
 
 ## SC-E0004
 
@@ -28,8 +31,10 @@ A budget limits how much work StitchCraft may spend on one element, and how many
 design may have, so that no input can make it run for hours or run out of memory — on the
 command line or inside VectorCraft's live preview.
 
-The element named in the message was skipped; the rest of the design was planned. Simplify the
-element (fewer nodes, wider spacing, a smaller area) or split it into several elements.
+When planning, the element named in the message was skipped and the rest of the design was
+planned: simplify the element (fewer nodes, wider spacing, a smaller area) or split it into
+several elements. When reading a file or drawing a preview, nothing was produced: simplify the
+drawing, or split it into several files.
 
 ## SC-E0005
 
@@ -153,3 +158,36 @@ designs pucker and shift more.
 
 The file was written. Rotate the design if the message says that brings it inside the comfort
 zone, use a firmer stabilizer, or scale the design down.
+
+## SC-E0801
+
+**Error** — SVG could not be read
+
+The SVG file could not be read: it is not well-formed XML, its root is not an `<svg>` element,
+its size or viewBox makes no sense, or it is larger than StitchCraft reads. Nothing was stitched.
+
+The message says what is wrong and, for XML errors, where. Open the file in a vector editor and
+save it again as plain SVG.
+
+## SC-W0802
+
+**Warning** — SVG feature ignored
+
+Part of the SVG uses a feature that StitchCraft does not stitch, so that part is left out or
+simplified: text that is not converted to paths, raster images, clones (`<use>`), nested `<svg>`
+elements, style sheets, or a gradient or pattern used as a colour.
+
+The message names the element and what was done. Convert text and clones to paths in the editor
+(in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
+
+## SC-W0804
+
+**Warning** — Element geometry invalid or out of range
+
+An element's geometry cannot be used: its path data has an error (the path is stitched up to the
+error, as SVG viewers draw it), its transform is not valid (it is skipped with everything inside
+it), it draws nothing, or it lies more than 10 metres from the document's origin, beyond what
+machine files can record (it is skipped).
+
+The message names the element. Check its path data and transform, or remove stray objects far from
+the design.
