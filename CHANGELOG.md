@@ -23,6 +23,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     likewise: a parameter can now be shown for several values of another (`when key in VALUES`).
   - **Conformance.** `REQ-LCK-002` and the new `REQ-LCK-004` are active; `REQ-LCK-001` (where locks go)
     moves to plan assembly, M3.8.
+- **Prose lint.** `cargo xtask prose` runs Vale on the Markdown lines that a branch adds. It checks the
+  project's own style and ai-tells, a published style for phrasing that machine-written text overuses. The
+  rules are in the new [writing style](docs/src/contributing/writing-style.md) page, with a glossary. CI
+  builds Vale and runs the check, and locally it runs when Vale is installed.
+- **Docs audit.** `cargo xtask docs --check` reports a sentence of 12 or more words that is on two pages,
+  and a path of the repository in inline code that does not exist.
+- **Design pages follow the code.** Each docs page that describes code names its source files in an
+  `implements` comment. Every source file of a crate or app is on such a page. `cargo xtask docs for PATH`
+  lists the pages for a file, and a Claude Code hook lists them after each edit. A branch that changes a
+  page's files changes the page too, or a commit message records that it still holds.
+- **SVG input page.** A new design page describes what the SVG adapter reads and what it reports.
 - M3.6: manual stitch (`stitchcraft_engine::generators::manual`).
   - **Needle points.** A needle point goes on every node of the path, in order. A curve gives only its
     end node.

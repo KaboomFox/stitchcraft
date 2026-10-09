@@ -1,5 +1,7 @@
 # VectorCraft integration
 
+<!-- implements: apps/stitchcraft-vc-plugin/src/**, crates/stitchcraft-vectorcraft/src/** -->
+
 How StitchCraft lives inside [VectorCraft](https://github.com/storytold/vectorcraft): what VectorCraft
 offers today, how we use it without changing VectorCraft (phase 1), what we propose upstream
 (phase 2), and how an in-tree integration would look (phase 3).

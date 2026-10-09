@@ -119,6 +119,16 @@ pub fn run(mut cmd: Command, what: &str) -> Result<(), String> {
     if status.success() { Ok(()) } else { Err(format!("`{what}` failed ({status})")) }
 }
 
+/// `git args…` run in `dir`, its standard output; an error with Git's message when it fails.
+pub fn git(dir: &Path, args: &[&str]) -> Result<String, String> {
+    let output = Command::new("git").args(args).current_dir(dir).output().map_err(|e| format!("git: {e}"))?;
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).into_owned())
+    } else {
+        Err(format!("git {}: {}", args.join(" "), String::from_utf8_lossy(&output.stderr).trim()))
+    }
+}
+
 /// Whether we run in CI, where optional tools are required.
 pub fn in_ci() -> bool {
     std::env::var("CI").is_ok_and(|v| !v.is_empty() && v != "false")

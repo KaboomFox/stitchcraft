@@ -1,5 +1,7 @@
 # Engine pipeline
 
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs -->
+
 From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraft-engine` with its
 own tests; stages communicate only through the types in the [data model](data-model.md).
 
