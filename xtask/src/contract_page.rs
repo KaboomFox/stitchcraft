@@ -1,11 +1,12 @@
-//! Generates the Ink/Stitch compatibility contract page from `conformance/inkstitch-params.toml` and the
-//! parameter registry, and checks that the two agree.
+//! Generates the Ink/Stitch compatibility contract page from `conformance/inkstitch-params.toml`, the
+//! parameter registry and the SVG adapter, and checks that they agree.
 //!
 //! The data file holds facts only (names, types, units, defaults, applicability, phases); Ink/Stitch's
 //! descriptions are GPL text and are never copied. The registry adds the StitchCraft column. A parameter
 //! the registry declares with an Ink/Stitch origin must exist in the data file with a compatible kind and
 //! the same default, because defaults are part of the contract (`docs/src/design/params.md` › Naming
-//! rules); one with StitchCraft's own origin must not; the lock and method identifiers must match.
+//! rules); one with StitchCraft's own origin must not; the lock and method identifiers must match. The
+//! SVG adapter's commands must be Ink/Stitch's, and the attributes it reads must be listed.
 //!
 //! Ink/Stitch gives some keys to several elements, with different defaults (`running_stitch_tolerance_mm`
 //! is 0.2 mm on strokes and 0.1 mm on satins), so a declaration is matched with the rows for the stitch
@@ -15,6 +16,7 @@ use std::collections::BTreeSet;
 
 use serde::Deserialize;
 use stitchcraft_params::{Family, Kind, Origin, ParamGroup, ParamSpec, StitchType, find};
+use stitchcraft_svg::inkstitch::{COMMANDS, READ_ATTRIBUTES};
 
 use crate::param_pages;
 
@@ -31,6 +33,27 @@ pub struct Contract {
     param: Vec<Param>,
     #[serde(default)]
     method: Vec<Method>,
+    #[serde(default)]
+    command: Vec<CommandRow>,
+    #[serde(default)]
+    attribute: Vec<Attribute>,
+}
+
+/// One of Ink/Stitch's commands, and where it applies: `object`, `layer` or `document`.
+#[derive(Deserialize)]
+struct CommandRow {
+    name: String,
+    tied_to: String,
+}
+
+/// An `inkstitch:*` attribute that declares no parameter, its kind (`element`, `pattern`,
+/// `stitch_plan`, `sew_stack` or `legacy`) and when StitchCraft plans to read it.
+#[derive(Deserialize)]
+struct Attribute {
+    name: String,
+    kind: String,
+    phase: String,
+    milestone: String,
 }
 
 #[derive(Deserialize)]
@@ -99,9 +122,10 @@ const INTRO: &str = "\
 
 # Ink/Stitch compatibility contract
 
-The parameters an Ink/Stitch SVG can carry, as `inkstitch:<name>` attributes, and when StitchCraft
-supports each one. This is the interoperability contract: StitchCraft's registry uses these names as
-its keys so files move between the tools unchanged ([ADR-0001](adr/0001-license-and-clean-room.md)).
+The parameters an Ink/Stitch SVG can carry, as `inkstitch:<name>` attributes, its other attributes and
+its commands, and when StitchCraft supports each one. This is the interoperability contract: StitchCraft's
+registry uses these names as its keys so files move between the tools unchanged
+([ADR-0001](adr/0001-license-and-clean-room.md)).
 
 - **Checked against:** Ink/Stitch `main` at `d59c9ab` (2026-09-17), 145 parameters.
 - **Facts only:** names, types, units, defaults and applicability. Ink/Stitch's descriptions are GPL text
@@ -162,6 +186,33 @@ impl Contract {
             "\nLock stitch identifiers (`lock_start`, `lock_end`): {locks}. StitchCraft accepts every identifier; the shapes are its own\n\
              designs with the same intent, a deviation recorded in the deviations ledger (`conformance/deviations.toml`).\n"
         ));
+        md.push_str(
+            "\n## Commands\n\nInk/Stitch's command symbols (a `<use>` of the symbol `inkstitch_<name>`), where each applies, and what\n\
+             StitchCraft's SVG adapter does with it (`stitchcraft_svg::inkstitch`). Their connectors are never stitched.\n\n\
+             | Command | Applies to | StitchCraft |\n|---|---|---|\n",
+        );
+        for c in &self.command {
+            let does = COMMANDS.iter().find(|ours| ours.name == c.name).map_or("planned", |ours| ours.does.describe());
+            let applies = match c.tied_to.as_str() {
+                "object" => "the object a connector ties it to",
+                "layer" => "every layer it is in",
+                _ => "the document",
+            };
+            md.push_str(&format!("| `{}` | {applies} | {does} |\n", c.name));
+        }
+        md.push_str(
+            "\n## Other attributes\n\nThe `inkstitch:*` attributes that declare no parameter: settings of an element, of Ink/Stitch's\n\
+             patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrites in older files.\n\n\
+             | Attribute | Kind | Phase | StitchCraft |\n|---|---|---|---|\n",
+        );
+        for a in &self.attribute {
+            let (phase, ours) = match (READ_ATTRIBUTES.contains(&a.name.as_str()), a.milestone.as_str()) {
+                (true, _) => (format!("{} ({})", a.phase, a.milestone), "read"),
+                (false, "—") => ("—".to_string(), "not planned"),
+                (false, _) => (format!("{} ({})", a.phase, a.milestone), "planned"),
+            };
+            md.push_str(&format!("| `{}` | {} | {phase} | {ours} |\n", a.name, a.kind.replace('_', " ")));
+        }
         let registered = self.param.iter().filter(|p| declaration(registry, p).is_some()).count();
         md.push_str(&format!("\n_{} parameter declarations, {registered} registered in StitchCraft._\n", self.param.len()));
         md
@@ -209,6 +260,16 @@ impl Contract {
             let theirs: BTreeSet<&str> = self.method.iter().filter(|m| m.param == family.method_param()).map(|m| m.value.as_str()).collect();
             if ours != theirs {
                 problems.push(format!("`{}`: StitchType has {ours:?}, but {DATA} lists {theirs:?}", family.method_param()));
+            }
+        }
+        let ours: BTreeSet<&str> = COMMANDS.iter().map(|c| c.name).collect();
+        let theirs: BTreeSet<&str> = self.command.iter().map(|c| c.name.as_str()).collect();
+        if ours != theirs {
+            problems.push(format!("the SVG adapter knows the commands {ours:?}, but {DATA} lists {theirs:?}"));
+        }
+        for name in READ_ATTRIBUTES {
+            if !self.attribute.iter().any(|a| a.name == *name) {
+                problems.push(format!("the SVG adapter reads `{name}`, which {DATA} does not list as an attribute"));
             }
         }
         problems
@@ -286,6 +347,12 @@ mod tests {
             let param = t.family().method_param();
             data.push_str(&format!("[[method]]\nparam = \"{param}\"\nvalue = \"{}\"\nphase = \"P1\"\nmilestone = \"M5\"\n", t.id()));
         }
+        for c in COMMANDS {
+            data.push_str(&format!("[[command]]\nname = \"{}\"\ntied_to = \"object\"\n", c.name));
+        }
+        for a in READ_ATTRIBUTES {
+            data.push_str(&format!("[[attribute]]\nname = \"{a}\"\nkind = \"element\"\nphase = \"P1\"\nmilestone = \"M3\"\n"));
+        }
         data
     }
 
@@ -313,6 +380,8 @@ mod tests {
         assert!(planned.contains("| `row_spacing_mm` | float | mm | 0.25 | `tatami_fill` | P1 (M5) | planned |"));
         assert!(planned.contains("| `fill_method` | `tatami_fill` | P1 (M5) |"));
         assert!(planned.contains("_1 parameter declarations, 0 registered in StitchCraft._"));
+        assert!(planned.contains("| `trim` | the object a connector ties it to | applied: turns on `trim_after` |"));
+        assert!(planned.contains("| `ignore_object` | element | P1 (M3) | read |"));
         let group = registry(&[ROW_SPACING]);
         let registered = contract.render(&[&group]);
         assert!(registered.contains("| P1 (M5) | [registered](../user/reference/params/tatami-fill.md#row_spacing_mm) |"));
@@ -441,6 +510,25 @@ mod tests {
         let data = crate::util::read(&crate::util::root().join(DATA)).unwrap();
         let registry = stitchcraft_engine::registry::PARAMETERS;
         assert_eq!(Contract::parse(&data).unwrap().check(registry), Vec::<String>::new());
+    }
+
+    #[test]
+    fn the_svg_adapter_s_commands_and_attributes_must_be_listed() {
+        let data = data("0.25");
+        let missing =
+            data.replace("name = \"trim\"\ntied_to", "name = \"cut\"\ntied_to").replace("name = \"ignore_object\"\nkind", "name = \"x\"\nkind");
+        let problems = Contract::parse(&missing).unwrap().check(&[]);
+        assert_eq!(problems.len(), 2, "{problems:?}");
+        assert!(problems[0].starts_with("the SVG adapter knows the commands {"), "{problems:?}");
+        assert_eq!(problems[1], "the SVG adapter reads `ignore_object`, which conformance/inkstitch-params.toml does not list as an attribute");
+        // Attributes not read: planned, or not planned at all.
+        let more = format!(
+            "{data}[[attribute]]\nname = \"stroke_first\"\nkind = \"element\"\nphase = \"P1\"\nmilestone = \"M5\"\n\
+                            [[attribute]]\nname = \"sew_stack\"\nkind = \"sew_stack\"\nphase = \"—\"\nmilestone = \"—\"\n"
+        );
+        let page = Contract::parse(&more).unwrap().render(&[]);
+        assert!(page.contains("| `stroke_first` | element | P1 (M5) | planned |"), "{page}");
+        assert!(page.contains("| `sew_stack` | sew stack | — | not planned |"), "{page}");
     }
 
     #[test]

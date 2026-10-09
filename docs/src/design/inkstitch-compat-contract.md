@@ -2,9 +2,10 @@
 
 # Ink/Stitch compatibility contract
 
-The parameters an Ink/Stitch SVG can carry, as `inkstitch:<name>` attributes, and when StitchCraft
-supports each one. This is the interoperability contract: StitchCraft's registry uses these names as
-its keys so files move between the tools unchanged ([ADR-0001](adr/0001-license-and-clean-room.md)).
+The parameters an Ink/Stitch SVG can carry, as `inkstitch:<name>` attributes, its other attributes and
+its commands, and when StitchCraft supports each one. This is the interoperability contract: StitchCraft's
+registry uses these names as its keys so files move between the tools unchanged
+([ADR-0001](adr/0001-license-and-clean-room.md)).
 
 - **Checked against:** Ink/Stitch `main` at `d59c9ab` (2026-09-17), 145 parameters.
 - **Facts only:** names, types, units, defaults and applicability. Ink/Stitch's descriptions are GPL text
@@ -217,5 +218,47 @@ The values the method parameters take (`stroke_method`, `satin_method`, `fill_me
 
 Lock stitch identifiers (`lock_start`, `lock_end`): `half_stitch`, `arrow`, `back_forth`, `bowtie`, `cross`, `star`, `simple`, `triangle`, `zigzag`, `custom`. StitchCraft accepts every identifier; the shapes are its own
 designs with the same intent, a deviation recorded in the deviations ledger (`conformance/deviations.toml`).
+
+## Commands
+
+Ink/Stitch's command symbols (a `<use>` of the symbol `inkstitch_<name>`), where each applies, and what
+StitchCraft's SVG adapter does with it (`stitchcraft_svg::inkstitch`). Their connectors are never stitched.
+
+| Command | Applies to | StitchCraft |
+|---|---|---|
+| `starting_point` | the object a connector ties it to | read with the stitch types it positions |
+| `ending_point` | the object a connector ties it to | read with the stitch types it positions |
+| `target_point` | the object a connector ties it to | read with the stitch types it positions |
+| `autoroute_start` | the object a connector ties it to | nothing to sew: input to Ink/Stitch's tools |
+| `autoroute_end` | the object a connector ties it to | nothing to sew: input to Ink/Stitch's tools |
+| `stop` | the object a connector ties it to | applied: turns on `stop_after` |
+| `trim` | the object a connector ties it to | applied: turns on `trim_after` |
+| `ignore_object` | the object a connector ties it to | applied: the object is left out and listed (`SC-I0805`) |
+| `satin_cut_point` | the object a connector ties it to | nothing to sew: input to Ink/Stitch's tools |
+| `ignore_layer` | every layer it is in | applied: every layer it is in is left out and listed (`SC-I0805`) |
+| `origin` | the document | planned: noted as not applied (`SC-W0802`) |
+| `stop_position` | the document | planned: noted as not applied (`SC-W0802`) |
+
+## Other attributes
+
+The `inkstitch:*` attributes that declare no parameter: settings of an element, of Ink/Stitch's
+patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrites in older files.
+
+| Attribute | Kind | Phase | StitchCraft |
+|---|---|---|---|
+| `ignore_object` | element | P1 (M3) | read |
+| `stroke_first` | element | P1 (M5) | planned |
+| `cutwork_needle` | element | — | not planned |
+| `pattern_interval` | pattern | — | not planned |
+| `pattern_offset` | pattern | — | not planned |
+| `invisible_layers` | stitch plan | — | not planned |
+| `layer_visibility` | stitch plan | — | not planned |
+| `sew_stack` | sew stack | — | not planned |
+| `sew_stack_only` | sew stack | — | not planned |
+| `polyline` | legacy | P2 (M8) | planned |
+| `auto_fill` | legacy | P2 (M8) | planned |
+| `e_stitch` | legacy | P2 (M8) | planned |
+| `manual_stitch` | legacy | P2 (M8) | planned |
+| `grid_size` | legacy | P2 (M8) | planned |
 
 _145 parameter declarations, 22 registered in StitchCraft._

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Ink/Stitch's own objects, laid out as its extensions write them: command symbols (a <use> of an
+     `inkstitch_<command>` symbol, tied to its object by a connector path), helper paths marked by their
+     start marker, and the ignore setting. Written for StitchCraft's tests; the symbols' drawings are
+     placeholders. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <defs>
+    <symbol id="inkstitch_trim"><circle r="2" fill="#808080"/></symbol>
+    <symbol id="inkstitch_stop-2"><rect width="3" height="3" fill="#808080"/></symbol>
+    <symbol id="inkstitch_ignore_object"><circle r="2" fill="#c00000"/></symbol>
+    <symbol id="inkstitch_ignore_layer"><circle r="2" fill="#c00000"/></symbol>
+    <symbol id="inkstitch_origin"><circle r="1" fill="#000000"/></symbol>
+    <marker id="inkstitch-guide-line-marker" orient="auto"><circle r="1"/></marker>
+    <marker id="inkstitch-pattern-marker-3" orient="auto"><circle r="1"/></marker>
+  </defs>
+  <g id="layer1" inkscape:groupmode="layer" inkscape:label="Design">
+    <path id="outline" d="M 10 10 L 40 10" style="fill:none;stroke:#ff0000"/>
+    <g id="command_group1">
+      <path id="command_connector1" d="M 45,20 40,10" style="fill:none;stroke:#000000;stroke-opacity:0.5"
+            inkscape:connection-start="#use1" inkscape:connection-end="#outline" inkscape:connector-type="polyline"/>
+      <use id="use1" xlink:href="#inkstitch_trim" x="45" y="20"/>
+    </g>
+    <rect id="badge" x="10" y="30" width="20" height="10" style="fill:#0000ff;stroke:#00ff00"/>
+    <g id="command_group2">
+      <use id="use2" xlink:href="#inkstitch_stop-2" x="35" y="45"/>
+      <path id="command_connector2" d="M 35,45 30,40" style="fill:none;stroke:#000000;stroke-opacity:0.5"
+            inkscape:connection-start="#badge" inkscape:connection-end="#use2"/>
+    </g>
+    <path id="template" d="M 10 60 L 40 60" style="fill:none;stroke:#999999"/>
+    <g id="command_group3">
+      <path id="command_connector3" d="M 45,65 40,60" style="fill:none;stroke:#000000;stroke-opacity:0.5"
+            inkscape:connection-start="#use3" inkscape:connection-end="#template" inkscape:connector-type="polyline"/>
+      <use id="use3" xlink:href="#inkstitch_ignore_object" x="45" y="65"/>
+    </g>
+    <g id="notes" inkstitch:ignore_object="True">
+      <path id="note" d="M 60 10 L 90 10" style="fill:none;stroke:#999999"/>
+    </g>
+    <path id="guide" d="M 60 30 L 90 40" style="fill:none;stroke:#00ffff;marker-start:url(#inkstitch-guide-line-marker)"/>
+    <path id="sample" d="M 60 50 L 90 50" style="fill:none;stroke:#ff00ff;marker-start:url(#inkstitch-pattern-marker-3)"/>
+    <path id="flow" d="M 10 80 L 40 80" style="fill:none;stroke:#000000" inkscape:connector-type="orthogonal"
+          inkscape:connection-start="#badge" inkscape:connection-end="#template"/>
+    <use id="use5" xlink:href="#inkstitch_origin" x="50" y="50"/>
+  </g>
+  <g id="layer2" inkscape:groupmode="layer" inkscape:label="Placement">
+    <rect id="hoop-guide" x="0" y="0" width="100" height="100" style="fill:none;stroke:#cccccc"/>
+    <use id="use4" xlink:href="#inkstitch_ignore_layer" x="5" y="5"/>
+  </g>
+</svg>
