@@ -180,7 +180,7 @@ pub fn run_for(args: &[String]) -> Result<(), String> {
         return Err("usage: cargo xtask docs for PATH… (or --hook)".to_string());
     }
     for arg in args {
-        let file = relative(&root, arg);
+        let file = relative(&root, arg).unwrap_or_else(|| arg.clone());
         let found = governing(&pages, &file);
         if found.is_empty() {
             println!("{file}: no page describes it");
@@ -192,11 +192,11 @@ pub fn run_for(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-/// `path` relative to the repository root, with `/` separators.
-fn relative(root: &Path, path: &str) -> String {
+/// `path` relative to the repository root, with `/` separators; `None` for a path outside it.
+fn relative(root: &Path, path: &str) -> Option<String> {
     let path = Path::new(path);
-    let absolute = if path.is_absolute() { path.to_path_buf() } else { std::env::current_dir().unwrap_or_default().join(path) };
-    absolute.strip_prefix(root).unwrap_or(path).to_string_lossy().replace('\\', "/")
+    let absolute = if path.is_absolute() { path.to_path_buf() } else { std::env::current_dir().ok()?.join(path) };
+    Some(absolute.strip_prefix(root).ok()?.to_string_lossy().replace('\\', "/"))
 }
 
 /// What to tell the agent after it edits a file: the pages that describe it. `None` for input that names
@@ -204,10 +204,7 @@ fn relative(root: &Path, path: &str) -> String {
 fn hook_context(root: &Path, pages: &[Page], input: &str) -> Option<String> {
     let value: serde_json::Value = serde_json::from_str(input).ok()?;
     let edited = value.get("tool_input")?.get("file_path")?.as_str()?;
-    let file = relative(root, edited);
-    if file.starts_with('/') || file.starts_with("..") {
-        return None;
-    }
+    let file = relative(root, edited)?;
     let found = governing(pages, &file);
     if found.is_empty() {
         let source = SOURCES.iter().any(|s| matches(s, &file)) && file.ends_with(".rs");
@@ -276,11 +273,15 @@ mod tests {
     fn the_hook_names_the_pages_of_the_edited_file() {
         let root = util::root();
         let pages = [page("docs/src/f.md", &["crates/f/src/**"])];
-        let input = |path: &str| format!(r#"{{"tool_name": "Edit", "tool_input": {{"file_path": "{path}"}}}}"#);
+        // Built as JSON, as Claude Code sends it: a Windows path's backslashes are escaped.
+        let input = |path: &str| serde_json::json!({ "tool_name": "Edit", "tool_input": { "file_path": path } }).to_string();
         let said = hook_context(&root, &pages, &input(&root.join("crates/f/src/a.rs").to_string_lossy())).unwrap();
         assert!(said.starts_with("crates/f/src/a.rs is described by docs/src/f.md (T)."), "{said}");
         let lonely = hook_context(&root, &pages, &input(&root.join("crates/g/src/b.rs").to_string_lossy())).unwrap();
         assert!(lonely.contains("is in no docs page's implements comment"), "{lonely}");
+        // A backslash, which is the separator on Windows and a character of the name elsewhere.
+        let windows = hook_context(&root, &pages, &input(&root.join("crates/f/src/a\\q.rs").to_string_lossy())).unwrap();
+        assert!(windows.starts_with("crates/f/src/a/q.rs is described by docs/src/f.md (T)."), "{windows}");
         assert_eq!(hook_context(&root, &pages, &input(&root.join("docs/src/x.md").to_string_lossy())), None);
         assert_eq!(hook_context(&root, &pages, &input("/elsewhere/a.rs")), None);
         assert_eq!(hook_context(&root, &pages, "not json"), None);

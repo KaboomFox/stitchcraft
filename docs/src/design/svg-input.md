@@ -39,6 +39,23 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   out, as a viewer leaves it out. The insides of `<defs>`, `<symbol>`, `<marker>`, `<pattern>`,
   `<clipPath>` and `<mask>` are never drawn.
 
+## Ink/Stitch objects
+
+An Ink/Stitch SVG has 3 kinds of object that Ink/Stitch reads and does not sew. The adapter sews none of
+them (`REQ-SVG-003`).
+
+- **Commands.** The `trim` and `stop` commands turn on the object's `trim_after` and `stop_after`. The
+  `ignore_object` and `ignore_layer` commands leave out an object or a layer, as the
+  `inkstitch:ignore_object` setting does, and `SC-I0805` lists each object left out. The
+  [command table](inkstitch-compat-contract.md#commands) gives what the adapter does with each of the
+  12 commands.
+- **Connectors** tie a command to its object.
+- **Helper paths** have one of Ink/Stitch's start markers. They steer the stitches of other objects.
+
+`SC-W0802` reports a connector that ties no command, a helper path, and a command that the adapter does
+not apply yet. The module docs of `crates/stitchcraft-svg/src/inkstitch.rs` describe how the adapter
+finds these objects, with the Ink/Stitch files they were read from.
+
 ## Reports
 
 - `SC-W0802` reports a feature that is not stitched. Text, images, clones, nested `<svg>` elements and
