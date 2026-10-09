@@ -62,6 +62,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- Mutation testing on pull requests runs only the mutants in the lines a pull request changes, which
+  takes minutes, and fails for any that no test notices unless it is a listed equivalent
+  (`[[equivalent]]` in `conformance/mutation.toml`). The full run, with the per-crate comparison, is
+  weekly and on demand; with the SVG reader it had grown to about 2,350 mutants, a quarter of an hour
+  per part on every pull request that touched the baseline.
 - M0.9: StitchCraft can move into VectorCraft's repository (ADR-0011). `cargo xtask compat join DIR`
   makes this folder, copied into a VectorCraft checkout, part of VectorCraft's workspace (or, with
   `--nested`, a workspace of its own that VectorCraft's crates can depend on). It edits VectorCraft's

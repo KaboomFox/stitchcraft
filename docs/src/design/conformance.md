@@ -227,7 +227,7 @@ will let users validate a machine profile with the same cases.
 
 | When | What must pass |
 |---|---|
-| Every PR | L0, L1 (no fuzzing), L2 with fixed seeds, `--check` rules, cross-platform hashes, coverage floors |
+| Every PR | L0, L1 (no fuzzing), L2 with fixed seeds, `--check` rules, cross-platform hashes, coverage floors, mutants in the changed lines |
 | Nightly | L1 fuzzing, L2 fresh seeds, L3 differential |
 | Weekly | Mutation testing of every shipped crate, against the recorded counts |
 | Milestone close | All requirements of the milestone `active` and green; its machine checkpoint signed off |
@@ -246,3 +246,10 @@ holds, per crate, how many mutants no test notices: the weekly run fails when a 
 `cargo xtask mutants --record` only lowers the counts. The weekly job summary lists every missed mutant,
 which is the to-do list for better tests. Each mutant is judged by its own crate's tests
 (`.cargo/mutants.toml`), so each crate answers for its own code.
+
+New code answers for itself at once: every pull request runs the mutants in the lines it changes
+(`cargo mutants --in-diff`, minutes rather than the full run's quarter of an hour per part), and
+`cargo xtask mutants --changed` fails for any that no test notices. The exception is an *equivalent*
+mutant, which changes nothing a test could observe; it is listed under `[[equivalent]]` in
+`conformance/mutation.toml` with its file, its description, the source line it changes and why, so a
+listed equivalent stops counting as one as soon as its line changes.
