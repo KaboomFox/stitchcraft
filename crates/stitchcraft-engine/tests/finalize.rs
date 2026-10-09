@@ -100,7 +100,8 @@ fn diag_sc_i0703_split_stitches_are_counted() {
 fn req_fin_002_designs_the_machine_cannot_take_give_no_plan() {
     // Wider than the hoop.
     let wide = planned_with(vec![line("a", (0.0, 0.0), 210.0, &RED, &[])], DesignSettings::default());
-    assert_eq!((wide.plan.is_none(), wide.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>()), (true, vec![Code::OutsideHoop]));
+    assert_eq!(wide.plan, None);
+    assert_eq!(messages(&wide), ["error SC-E0701: The design is 210.0 × 0.0 mm; the hoop of Brother, 200 × 200 mm hoop is 200 × 200 mm."], "the size, not the reach");
     // Small enough, but reaching past the edge from where its origin puts it.
     let aside =
         planned_with(vec![line("a", (0.0, 0.0), 120.0, &RED, &[])], DesignSettings { origin: Some(p(0.0, 0.0)), ..DesignSettings::default() });
@@ -125,6 +126,7 @@ fn req_fin_002_designs_the_machine_cannot_take_give_no_plan() {
     for (wide, settings) in [
         (160.0, DesignSettings { stop_position: Some(p(80.0, 120.0)), ..DesignSettings::default() }),
         (10.0, DesignSettings { stop_position: Some(p(0.0, 150.0)), ..DesignSettings::default() }),
+        (10.0, DesignSettings { stop_position: Some(p(150.0, 0.0)), ..DesignSettings::default() }),
     ] {
         let outcome = planned_with(vec![line("a", (0.0, 0.0), wide, &RED, &stop), line("b", (0.0, 5.0), 10.0, &RED, &[])], settings);
         assert_eq!(outcome.plan, None);
