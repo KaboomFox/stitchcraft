@@ -153,7 +153,7 @@ pub fn run(check_only: bool) -> Result<(), String> {
     findings.finish("shots", &format!("{} shots declared, all {verb}", shots.len()))
 }
 
-/// The PNGs of a `stitch` shot, one per image it makes ([`Shot::images`]).
+/// The PNG files of a `stitch` shot, one per image it makes ([`Shot::images`]).
 pub fn stitch(root: &Path, shot: &Shot) -> Result<Vec<Vec<u8>>, String> {
     let name = shot.style.as_deref().unwrap_or(Style::Realistic.name());
     let style = Style::from_name(name).ok_or_else(|| format!("unknown style `{name}` (known: realistic, simple)"))?;
