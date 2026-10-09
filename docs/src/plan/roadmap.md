@@ -127,9 +127,9 @@ fill with generated tiles; circular fill. One step per type with its requirement
 SVG adapter v2:
 
 - every `inkstitch:*` attribute in the [compatibility contract](../design/inkstitch-compat-contract.md)
-- the command symbols not read yet: start and end points (`REQ-GEN-001`), and the origin and stop
-  position, into the design settings. Since M3 the adapter applies trim, stop and the ignore commands,
-  and it never stitches commands, connectors or helper paths (`REQ-SVG-003`).
+- the command symbols not read yet, such as start and end points (`REQ-GEN-001`). The origin and stop
+  position commands go into the design settings. Since M3 the adapter applies trim, stop and the ignore
+  commands, and it never stitches commands, connectors or helper paths (`REQ-SVG-003`).
 - clones (`<use>`)
 - custom locks drawn as SVG paths, which the adapter reads for the engine. Until then they sew the half
   stitch, with `SC-W0503`.
