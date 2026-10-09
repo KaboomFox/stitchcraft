@@ -1,0 +1,7 @@
+# The independent reader for REQ-FMT-005, pinned by version and hash (MIT licence; a test tool, never
+# shipped). Install it into a virtual environment under target/ (ignored by git and by the repo checks)
+# and point STITCHCRAFT_PYTHON at its interpreter:
+#   python3 -m venv target/oracle-venv
+#   target/oracle-venv/bin/pip install --require-hashes -r conformance/oracle/requirements.txt
+#   STITCHCRAFT_PYTHON=target/oracle-venv/bin/python cargo xtask conformance
+pyembroidery==1.5.1 --hash=sha256:bdc63706986d42fd80efb3541e0995e452eb071f36bccd9ecb4d07bf33307c79

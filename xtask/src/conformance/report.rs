@@ -36,10 +36,10 @@ pub fn verdicts<'a>(requirements: &'a [Requirement], outcomes: &[Outcome]) -> Ve
     requirements
         .iter()
         .map(|r| {
-            let covering: Vec<&Outcome> = outcomes.iter().filter(|o| o.requirements.contains(&r.id)).collect();
-            let verdict = if covering.is_empty() {
+            let ran: Vec<&Outcome> = outcomes.iter().filter(|o| o.requirements.contains(&r.id) && o.skipped.is_none()).collect();
+            let verdict = if ran.is_empty() {
                 Verdict::Untested
-            } else if covering.iter().all(|o| o.passed()) {
+            } else if ran.iter().all(|o| o.passed()) {
                 Verdict::Pass
             } else {
                 Verdict::Fail
@@ -62,7 +62,7 @@ pub fn write(dir: &Path, requirements: &[Requirement], outcomes: &[Outcome], com
         })).collect::<Vec<_>>(),
         "cases": outcomes.iter().map(|o| json!({
             "case": o.case, "kind": o.kind, "file": o.file, "requirements": o.requirements,
-            "passed": o.passed(), "failures": o.failures,
+            "passed": o.passed(), "failures": o.failures, "skipped": o.skipped,
         })).collect::<Vec<_>>(),
     });
     let hashes: BTreeMap<String, String> =
@@ -78,7 +78,7 @@ pub fn write(dir: &Path, requirements: &[Requirement], outcomes: &[Outcome], com
 fn markdown(verdicts: &[(&Requirement, Verdict)], outcomes: &[Outcome], commit: &str) -> String {
     let count = |want: Verdict, active_only: bool| verdicts.iter().filter(|(r, v)| *v == want && (!active_only || r.status == "active")).count();
     let active = verdicts.iter().filter(|(r, _)| r.status == "active").count();
-    let failed: Vec<&Outcome> = outcomes.iter().filter(|o| !o.passed()).collect();
+    let failed: Vec<&Outcome> = outcomes.iter().filter(|o| o.failed()).collect();
     let mut out = String::new();
     let _ = writeln!(out, "# Conformance report\n");
     let _ = writeln!(
@@ -110,7 +110,19 @@ fn markdown(verdicts: &[(&Requirement, Verdict)], outcomes: &[Outcome], commit: 
         let cases: Vec<String> = outcomes
             .iter()
             .filter(|o| o.requirements.contains(&r.id))
-            .map(|o| format!("{} `{}`", if o.passed() { "✅" } else { "❌" }, o.case))
+            .map(|o| {
+                format!(
+                    "{} `{}`",
+                    if o.skipped.is_some() {
+                        "⏭"
+                    } else if o.passed() {
+                        "✅"
+                    } else {
+                        "❌"
+                    },
+                    o.case
+                )
+            })
             .collect();
         let status = if r.status == "planned" { format!("planned ({})", r.milestone) } else { r.status.clone() };
         let _ = writeln!(
@@ -156,6 +168,7 @@ mod tests {
             requirements: requirements.iter().map(|s| (*s).to_string()).collect(),
             failures: failures.iter().map(|s| (*s).to_string()).collect(),
             outputs: Vec::new(),
+            skipped: None,
         }
     }
 

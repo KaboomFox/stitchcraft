@@ -59,8 +59,9 @@ cargo xtask filesize               # warn above 800 lines, fail above 1,500
 cargo xtask wasm                   # library crates build for wasm32-unknown-unknown
 ```
 
-Tools that are not installed locally (the wasm target, `cargo-deny`, `typos`, `mdbook`) are reported as
-skipped by `cargo xtask ci`; CI installs them and requires them.
+Tools that are not installed locally (the wasm target, `cargo-deny`, `typos`, `mdbook`, and pyembroidery
+for the reader oracle — `conformance/oracle/requirements.txt`) are reported as skipped by `cargo xtask ci`;
+CI installs them and requires them.
 
 ## Where code goes
 

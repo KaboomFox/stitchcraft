@@ -124,9 +124,9 @@ status = "active"
 id = "REQ-FMT-005"
 area = "formats"
 level = "L1"
-statement = "A pinned pyembroidery decodes our files to the same stitches as our own reader."
+statement = "A pinned pyembroidery reads every golden machine file to the same needle-downs, cuts and pauses as StitchCraft's own reader (compared from the first needle-down, since readers differ in where a design starts)."
 milestone = "M2"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-FMT-006"

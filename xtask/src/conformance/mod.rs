@@ -15,6 +15,7 @@
 //!   golden file is a changed machine file: bless only on purpose, in a PR that says why.
 
 mod cases;
+mod oracle;
 mod report;
 mod runner;
 
@@ -79,7 +80,7 @@ pub fn run(args: &[String]) -> Result<(), String> {
             return Err(format!("there is no data case `{id}`"));
         };
         let outcome = runner::run_data_case(&root, case, true);
-        if !outcome.passed() {
+        if outcome.failed() {
             return Err(format!("{id}: {}", outcome.failures.join("; ")));
         }
         println!("conformance: blessed {} golden file(s) of {id}; review the diff and say why in the PR", outcome.outputs.len());
@@ -101,8 +102,14 @@ pub fn run(args: &[String]) -> Result<(), String> {
             findings.warn(format!("could not write the job summary: {e}"));
         }
     }
-    for o in outcomes.iter().filter(|o| !o.passed()) {
+    for o in outcomes.iter().filter(|o| o.failed()) {
         findings.error(format!("{} ({}): {}", o.case, o.file, o.failures.join("; ")));
+    }
+    for o in &outcomes {
+        if let Some(why) = &o.skipped {
+            let message = format!("{} did not run: {why}", o.case);
+            if util::in_ci() { findings.error(format!("required in CI: {message}")) } else { findings.warn(message) }
+        }
     }
     // A filtered run is partial: requirements outside the filter are not expected to have run.
     for (r, verdict) in report::verdicts(&requirements, &outcomes).into_iter().filter(|_| filter.is_none()) {
@@ -110,7 +117,7 @@ pub fn run(args: &[String]) -> Result<(), String> {
             findings.error(format!("{} is active but has no passing case", r.id));
         }
     }
-    let failed = outcomes.iter().filter(|o| !o.passed()).count();
+    let failed = outcomes.iter().filter(|o| o.failed()).count();
     findings.finish("conformance", &format!("{summary}; {} cases run, {failed} failed; report in target/conformance/report.md", outcomes.len()))
 }
 
