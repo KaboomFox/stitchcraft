@@ -105,3 +105,4 @@ another.
 | `SC-E0801` | Error | SVG could not be read (with the parser's position) | M3 |
 | `SC-W0802` | Warning | SVG feature ignored (e.g. raster image, text not converted to paths) | M3 |
 | `SC-W0803` | Warning | `.vectorcraft` file from a newer VectorCraft format version; read best-effort | M6 |
+| `SC-W0804` | Warning | Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m); the usable part is stitched | M3 |

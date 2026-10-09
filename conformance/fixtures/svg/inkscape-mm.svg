@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- An Inkscape-style document in millimetres: a layer moved by a transform, the basic shapes, curves,
+     an arc, a gradient and a hidden layer. Hand-written for StitchCraft's conformance suite. -->
+<svg
+   width="100mm"
+   height="80mm"
+   viewBox="0 0 100 80"
+   version="1.1"
+   id="svg1"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     inkscape:document-units="mm" />
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient1">
+      <stop
+         style="stop-color:#00aa00;stop-opacity:1;"
+         offset="0"
+         id="stop1" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1;"
+         offset="1"
+         id="stop2" />
+    </linearGradient>
+    <linearGradient
+       xlink:href="#linearGradient1"
+       id="linearGradient2"
+       x1="60"
+       y1="50"
+       x2="80"
+       y2="50"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(10,5)">
+    <rect
+       style="fill:#ff0000;stroke:#0000ff;stroke-width:0.5"
+       id="rect1"
+       width="30"
+       height="20"
+       x="0"
+       y="0"
+       inkscape:label="Red box" />
+    <circle
+       style="fill:#00ff00;stroke:none"
+       id="circle1"
+       cx="50"
+       cy="10"
+       r="8" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.3"
+       d="M 0,30 C 10,25 20,35 30,30 A 10 5 30 0 1 50,40 Z"
+       id="path1" />
+    <ellipse
+       style="fill:url(#linearGradient2)"
+       id="ellipse1"
+       cx="70"
+       cy="50"
+       rx="10"
+       ry="5" />
+  </g>
+  <g
+     inkscape:label="Hidden layer"
+     inkscape:groupmode="layer"
+     id="layer2"
+     style="display:none">
+    <rect
+       id="rect2"
+       width="5"
+       height="5"
+       x="0"
+       y="0"
+       style="fill:#000000" />
+  </g>
+</svg>

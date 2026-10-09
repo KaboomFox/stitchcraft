@@ -1,0 +1,17 @@
+<!-- SVG features StitchCraft does not stitch: each is reported (SC-W0802) and the rest is read.
+     Hand-written for StitchCraft's conformance suite. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100" width="100mm" height="100mm">
+  <style>.a { fill: red; }</style>
+  <defs>
+    <pattern id="dots" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1"/></pattern>
+    <clipPath id="clip"><rect width="10" height="10"/></clipPath>
+    <path id="shape" d="M 0 0 H 10 V 10 Z"/>
+  </defs>
+  <text id="title" x="10" y="20">Hello</text>
+  <image id="photo" x="0" y="0" width="10" height="10" href="data:image/png;base64,AAAA"/>
+  <use id="clone" xlink:href="#shape" x="20"/>
+  <rect id="patterned" width="10" height="10" fill="url(#dots) navy"/>
+  <rect id="clipped" x="20" width="10" height="10" clip-path="url(#clip)"/>
+  <rect id="styled" class="a" x="40" width="10" height="10"/>
+  <svg id="inner" x="50" y="50" width="10" height="10"><rect width="10" height="10"/></svg>
+</svg>

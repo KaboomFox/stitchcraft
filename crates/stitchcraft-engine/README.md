@@ -3,7 +3,9 @@
 Layer **L2**. Turns a `Design` (host-independent elements with shapes, parameters and threads) into a
 checked `StitchPlan`: normalize → validate → generate per element → assemble → finalize → check.
 
-**Status:** planned from M3. Design: `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
+**Status:** the input model, `design::Design`, since M3.3 (`docs/src/design/data-model.md`); the
+generators and the pipeline from M3.4. Design: `docs/src/design/engine-pipeline.md` and
+`docs/src/design/algorithms/`.
 
 ## Invariants
 

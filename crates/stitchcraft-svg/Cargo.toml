@@ -14,4 +14,11 @@ workspace = true
 [dependencies]
 stitchcraft-core = { workspace = true }
 stitchcraft-params = { workspace = true }
+stitchcraft-plan = { workspace = true }
 stitchcraft-engine = { workspace = true }
+roxmltree = { workspace = true }
+svgtypes = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+stitchcraft-testkit = { workspace = true }

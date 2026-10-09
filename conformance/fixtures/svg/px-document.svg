@@ -1,0 +1,9 @@
+<!-- A document in CSS pixels, without a viewBox: nested transforms, a line, a polygon and a polyline.
+     Hand-written for StitchCraft's conformance suite. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
+  <g transform="rotate(90) translate(96 0)">
+    <line id="line" x1="0" y1="0" x2="96" y2="0" stroke="purple" fill="red"/>
+  </g>
+  <polygon id="triangle" points="0,0 96,0 96,96" fill="#ff8800"/>
+  <polyline id="zigzag" points="0,0 48,48 96,0" fill="none" stroke="currentColor" color="teal"/>
+</svg>

@@ -209,7 +209,7 @@ area = "svg"
 level = "L2"
 statement = "Paths, groups, transforms, viewBox units, colours and visibility map to the Design exactly (positions within 1 micrometre)."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-SVG-002"
@@ -218,7 +218,7 @@ level = "L2"
 statement = "Any SVG path data, including degenerate arcs, is handled per the SVG specification without failing the adapter; fuzzed."
 rationale = "Degenerate arcs are valid SVG; dividing by their zero radius must not fail the import."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 # ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
 

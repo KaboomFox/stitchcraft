@@ -10,10 +10,11 @@ for sewing on the reference machine. M2 is under way: StitchCraft reads PES, PEC
 file, `stitch preview` draws exactly what will sew, `stitch convert` moves designs between PES and DST,
 the docs show generated pictures of every test sheet, and the readers are fuzzed for an hour every night.
 Public APIs, line coverage and mutation testing now have recorded baselines that only move one way. M2
-is complete. M3 has begun: every parameter is declared once and its reference page, JSON Schema and
-Ink/Stitch-contract status are generated from that declaration. The conformance report shows all 19
-active requirements green. Next: the MC-1 sew-out report, which closes M1, and the rest of M3 (running
-stitch, plan assembly, SVG input). The repository is
+is complete. M3 is under way: every parameter is declared once and its reference page, JSON Schema and
+Ink/Stitch-contract status are generated from that declaration; every diagnostic code has a case; and
+StitchCraft reads SVG files into its design model, reporting whatever it leaves out. The conformance
+report shows all 21 active requirements green. Next: the MC-1 sew-out report, which closes M1, and the
+rest of M3 (running stitch, plan assembly). The repository is
 [KaboomFox/stitchcraft](https://github.com/KaboomFox/stitchcraft), with the docs published at
 [kaboomfox.github.io/stitchcraft](https://kaboomfox.github.io/stitchcraft/) and `main` protected; the
 open owner action from M0.5 is the code-of-conduct contact.
@@ -23,7 +24,7 @@ open owner action from M0.5 is the code-of-conduct contact.
 | M0 | Foundations and guardrails | 🟡 M0.1–M0.4, M0.9 and M0.10 done; M0.5 partly (repository, owner, labels, Pages, branch protection; code-of-conduct contact open); M0.6–M0.8 open | — |
 | M1 | Stitch plan, Brother profile, PES/DST writers, test sheets | 🟡 M1.1–M1.10 done; closes with MC-1 | MC-1 🟡 kit out for sewing |
 | M2 | Readers, preview renderer, fuzzing | 🟢 M2.1–M2.8 done, in pull requests #2–#8 waiting to be merged | — |
-| M3 | Running stitch family, plan assembly, SVG input | 🟡 M3.1–M3.2 done (parameter registry, a case for every diagnostic code) | MC-2 ⚪ |
+| M3 | Running stitch family, plan assembly, SVG input | 🟡 M3.1–M3.3 done (parameter registry, a case for every diagnostic code, SVG input) | MC-2 ⚪ |
 | M4 | Satin column | ⚪ | MC-3 ⚪ |
 | M5 | Tatami fill | ⚪ | MC-4 ⚪ |
 | M6 | VectorCraft plug-in (ABI v1), export from `.vectorcraft`, compatibility gate | ⚪ | MC-5 ⚪ |

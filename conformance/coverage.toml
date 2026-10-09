@@ -5,10 +5,11 @@
 
 [floor]
 stitchcraft-cli = 91
-stitchcraft-core = 95
+stitchcraft-core = 96
 stitchcraft-engine = 100
-stitchcraft-formats = 96
-stitchcraft-params = 94
+stitchcraft-formats = 97
+stitchcraft-params = 96
 stitchcraft-plan = 98
 stitchcraft-render = 96
+stitchcraft-svg = 97
 stitchcraft-vc-plugin = 72

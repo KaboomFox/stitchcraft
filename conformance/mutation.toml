@@ -10,4 +10,7 @@ stitchcraft-formats = 46
 stitchcraft-params = 0
 stitchcraft-plan = 48
 stitchcraft-render = 26
+# The one survivor in stitchcraft-svg turns `turn < FRAC_PI_2` into `<=` in path::arc: no arc turns exactly π/2
+# there, so nothing can tell them apart.
+stitchcraft-svg = 1
 stitchcraft-vc-plugin = 22

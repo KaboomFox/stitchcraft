@@ -1,6 +1,6 @@
-# Coverage-guided fuzzing of the readers (REQ-FMT-006): `cargo +nightly fuzz run <target>` from the
-# repository root. The nightly workflow runs every target with a corpus that grows from night to night
-# (docs/src/design/conformance.md › Fuzzing).
+# Coverage-guided fuzzing of the readers (REQ-FMT-006, REQ-SVG-002): `cargo +nightly fuzz run <target>`
+# from the repository root. The nightly workflow runs every target with a corpus that grows from night to
+# night (docs/src/design/conformance.md › Fuzzing).
 #
 # Each target is one line: the bodies live in `stitchcraft-testkit::fuzz`, where every pull request runs
 # them on stable Rust. This package needs nightly Rust and libFuzzer, so it is its own workspace and not a
@@ -38,6 +38,13 @@ bench = false
 [[bin]]
 name = "read_write_preview"
 path = "fuzz_targets/read_write_preview.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "read_svg"
+path = "fuzz_targets/read_svg.rs"
 test = false
 doc = false
 bench = false

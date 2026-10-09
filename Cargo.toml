@@ -36,6 +36,12 @@ thiserror = "2"
 # scalar pipeline gives the same pixels on every CPU (docs/src/design/determinism.md).
 tiny-skia = { version = "0.11", default-features = false, features = ["std", "png-format"] }
 
+# SVG input (stitchcraft-svg only; `cargo xtask layers` restricts both): an XML tree and SVG's
+# micro-syntaxes (path data, transforms, lengths, colours). Pure Rust, and the versions VectorCraft's
+# lockfile already carries. Matrices and arcs are computed with our own deterministic maths.
+roxmltree = "0.21"
+svgtypes = "0.16"
+
 # command line (stitchcraft-cli only; `cargo xtask layers` restricts clap)
 clap = { version = "4.5", features = ["derive"] }
 sha2 = "0.11"

@@ -25,48 +25,44 @@ pub struct Point { pub x: f64, pub y: f64 }
 
 ## Engine input: `Design` (`stitchcraft-engine`)
 
+Hosts translate their documents into a `Design` (`stitchcraft_engine::design`), so the engine never sees a
+host document and every host gets the same stitches for the same design. Since M3.3:
+
 ```rust,ignore
-pub struct Design {
-    pub elements: Vec<Element>,       // stitching order (host paint order, bottom first)
-    pub settings: DesignSettings,
-    pub profile: MachineProfile,
-}
+pub struct Design { elements: Vec<Element>, pub settings: DesignSettings }   // checked by Design::new
 
 pub struct Element {
-    pub id: ElementId,               // stable host id: "svg:path123", "vc:42"
-    pub name: Option<String>,
+    pub id: ElementId,               // stable host id: "svg:path123:fill", "vc:42"
+    pub name: Option<String>,        // the name the user gave it (Inkscape's label)
     pub shape: Shape,
     pub thread: Thread,
-    pub params: ParamSet,            // validated against the registry for `shape`'s stitch types
-    pub commands: Commands,
+    pub params: ParamSet,            // as the host stores them; validated against the registry when planned
 }
 
 pub enum Shape {
-    Region(Region),                  // fills: one or more polygons with holes, fill rule resolved
-    Path(StrokePath),                // running/bean/manual/zigzag/ripple
-    Satin(SatinShape),               // two rails + rungs, or a centre line + width
+    Stroke(Path),                         // an outline: running stitch and the other stroke methods
+    Fill { path: Path, rule: FillRule },  // an area: its boundary, and which parts are inside
 }
 
-pub struct Commands {
-    pub start: Option<Point>,         // "starting point" command
-    pub end: Option<Point>,           // "ending point" command
-    pub target: Option<Point>,        // ripple/circular target
-    pub trim_after: bool,
-    pub stop_after: bool,
-    pub ignore: bool,
-}
-
-pub struct DesignSettings {
-    pub collapse_len: Mm,             // jumps shorter than this become stitches (default 3.0 mm)
-    pub min_stitch_len: Mm,           // shorter stitches are merged (default 0.1 mm; profile may raise it)
-    pub origin: Option<Point>,        // machine origin; default: centre of the design's bounds
-    pub stop_position: Option<Point>,
-}
+pub struct Path { pub subpaths: Vec<Subpath> }   // in millimetres, y down
+pub struct Subpath { pub start: Point, pub segments: Vec<Segment>, pub closed: bool }
+pub enum Segment { Line(Point), Quad(Point, Point), Cubic(Point, Point, Point) }
 ```
 
-Invariants: element ids are unique; regions are valid (no self-intersections, rings closed,
-orientation normalized: outer counter-clockwise in y-down screen space is *not* assumed — the
-normalizer orients explicitly); every coordinate is finite and within ±10,000 mm.
+Elements are in stitching order: the host's paint order, bottom first. Geometry stays exact, curves with
+their control points, and the generators flatten it with the tolerance their parameters give.
+
+Invariants, checked by `Design::new`: element ids are unique, and every point is finite and within
+±10,000 mm, the reach of machine-file coordinates. Adapters drop what they cannot represent with a
+diagnostic of their own, so a failed check is a bug in the adapter (`SC-E0009`).
+
+Still to come, each with the step that needs it:
+
+- **satin shapes**, two rails and rungs or a centre line and a width (M4, [below](#satinshape));
+- **regions**, fills normalized into polygons with holes (M5.1, [below](#region));
+- **commands**, start and end points, targets, trims and stops (M3.8, and M8 for Ink/Stitch's command
+  symbols);
+- **design settings**, the jump collapse length, the shortest stitch and the machine origin (M3.8).
 
 ### Region
 

@@ -55,9 +55,9 @@ jobs:
           PROPTEST_RNG_SEED=$seed PROPTEST_CASES=20000 cargo test --locked -p stitchcraft-testkit fuzz
 
   fuzz:
-    # REQ-FMT-006: an hour of coverage-guided fuzzing every night, 20 minutes per target. The bodies are in
-    # stitchcraft-testkit::fuzz; the corpus starts from the golden machine files and grows from night to
-    # night in the Actions cache. A crash fails the job, puts the end of the output in an annotation and
+    # REQ-FMT-006 and REQ-SVG-002: coverage-guided fuzzing every night, 20 minutes per target. The bodies
+    # are in stitchcraft-testkit::fuzz; each corpus starts from its seeds (the golden machine files, or the
+    # SVG fixtures) and grows from night to night in the Actions cache. A crash fails the job, puts the end of the output in an annotation and
     # keeps the input as an artifact: reproduce it with `cargo +nightly fuzz run <target> <file>`, then
     # add it as a regression test.
     name: fuzz ${{ matrix.target }} (20 minutes)
@@ -71,7 +71,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [read_pes, read_dst, read_write_preview]
+        # The machine-file readers start from the golden files; the SVG reader from the SVG fixtures, with
+        # a dictionary of SVG's keywords so that mutations stay near valid SVG.
+        include:
+          - { target: read_pes, seeds: "conformance/golden/formats/* conformance/golden/testsheets/*", options: "" }
+          - { target: read_dst, seeds: "conformance/golden/formats/* conformance/golden/testsheets/*", options: "" }
+          - { target: read_write_preview, seeds: "conformance/golden/formats/* conformance/golden/testsheets/*", options: "" }
+          - { target: read_svg, seeds: "conformance/fixtures/svg/*", options: "-dict=fuzz/svg.dict" }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: rustup toolchain install nightly --profile minimal
@@ -84,15 +90,15 @@ jobs:
           path: fuzz/corpus/${{ matrix.target }}
           key: fuzz-corpus-${{ matrix.target }}-${{ github.run_id }}
           restore-keys: fuzz-corpus-${{ matrix.target }}-
-      - name: Seed it with the golden machine files
+      - name: Seed it
         run: |
           mkdir -p "fuzz/corpus/${{ matrix.target }}"
-          cp conformance/golden/formats/* conformance/golden/testsheets/* "fuzz/corpus/${{ matrix.target }}/"
+          cp ${{ matrix.seeds }} "fuzz/corpus/${{ matrix.target }}/"
       - name: Fuzz for 20 minutes (10 s and 2 GB at most per input)
         run: >
           .github/scripts/annotated.sh "fuzz ${{ matrix.target }}"
           cargo fuzz run --target "$TARGET" ${{ matrix.target }} --
-          -max_total_time=1200 -timeout=10 -rss_limit_mb=2048 -max_len=65536 -print_final_stats=1
+          -max_total_time=1200 -timeout=10 -rss_limit_mb=2048 -max_len=65536 -print_final_stats=1 ${{ matrix.options }}
       - name: Keep the smallest corpus that covers the same code
         if: success()
         run: .github/scripts/annotated.sh "fuzz cmin ${{ matrix.target }}" cargo fuzz cmin --target "$TARGET" ${{ matrix.target }}

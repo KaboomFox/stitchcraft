@@ -1,0 +1,12 @@
+<!-- Geometry at the edges of the SVG specification: degenerate arcs, a path data error, shapes that draw
+     nothing and a shape 20 km away. Hand-written for StitchCraft's conformance suite. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100mm" height="100mm">
+  <path id="zero-radius" d="M 10 10 A 0 5 0 0 1 20 10" stroke="black" fill="none"/>
+  <path id="same-ends" d="M 10 20 A 5 5 0 0 1 10 20 L 20 20" stroke="black" fill="none"/>
+  <path id="tiny-radii" d="M 10 30 A 1 1 0 0 1 30 30" stroke="black" fill="none"/>
+  <path id="broken" d="M 10 40 L 20 40 L 30 x" stroke="black" fill="none"/>
+  <path id="empty" d="" stroke="black"/>
+  <rect id="flat" width="0" height="10"/>
+  <circle id="far" cx="20000000" cy="0" r="1"/>
+  <line id="dot" x1="5" y1="5" x2="5" y2="5" stroke="black"/>
+</svg>

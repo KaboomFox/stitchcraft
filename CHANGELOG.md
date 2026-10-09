@@ -5,6 +5,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M3.3: the engine's input model and the SVG reader. A `Design` holds elements in stitching order, each a
+  stroke or a fill with exact lines and curves in millimetres, a thread and its parameters; `Design::new`
+  checks that ids are unique and every point lies within 10 m. `stitchcraft_svg::read` turns an SVG file
+  into one: paths and the basic shapes, groups and `<switch>`, transforms, the root's size and viewBox,
+  fill and stroke colours (`currentColor`, `paint-order`, gradients by their first colour) and everything
+  that hides an element. Arcs become cubic curves within a micrometre, and all of it computes the same on
+  every platform. What it leaves out or simplifies is reported: `SC-W0802` for SVG features it does not
+  stitch (text, images, clones, style sheets, clipping, masks, filters, markers, patterns, Ink/Stitch's
+  settings, which arrive in M8), `SC-W0804` for geometry it cannot use; `SC-E0801` refuses what is not
+  SVG. `REQ-SVG-001` and `REQ-SVG-002` are active, and `read_svg` joins the nightly fuzzing.
 - M3.2: every registered diagnostic code has a case. A test named `diag_sc_<code>_<what>` produces the
   code from real input and checks the exact text a user reads; `cargo xtask conformance` fails for a code
   without one and lists every code with its cases in the report. All 13 codes have one.
