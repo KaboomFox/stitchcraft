@@ -132,7 +132,7 @@ that points nowhere) become warnings in the result.
 
 | Reader | Reads | What it has to infer |
 |---|---|---|
-| PES / PEC | the PEC block of any PES version (`#PES0001` … `#PES0060`), and bare `#PEC0001` files; the block must start with `LA:` | A colour change to the same palette entry is a **stop** — the way PEC writes stops. Two blocks whose threads map to the same Brother colour read back as one block with a stop: PES v1 cannot tell them apart. Whether the stitch data starts with the **origin field** (below). |
+| PES / PEC | the PEC block of any PES version (`#PES0001` … `#PES0060`), and bare `#PEC0001` files; the block must start with `LA:` | A colour change to the same palette entry is a **stop**, as PEC writes stops. Blocks whose threads map to one Brother colour read back as one block with a stop, because PES v1 cannot tell them apart. Whether the stitch data starts with the **origin field** (below). |
 | DST | the header's label and every record | Three or more jumps in a row are a **trim** before them where something was sewn since the thread was last cut or changed, as DST machines read them (`REQ-FMT-008`); a trim's own spelling at the start of the run — up to 8 jumps of at most 1 mm that end where they started — moves the frame nowhere and is not kept as jumps. Colours: none — each block gets a placeholder thread, and a stop reads as a colour change. |
 
 **The PEC origin field** (`REQ-FMT-009`). Brother's software, pystitch and StitchCraft write 4 bytes
