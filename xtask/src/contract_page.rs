@@ -47,21 +47,32 @@ struct Param {
 }
 
 impl Param {
-    /// The stitch types the row covers: the ones it lists, or every type of its element when it lists
-    /// none (all of them for the common settings, none for clones). Some rows list a condition instead,
-    /// such as `custom` for the custom lock shapes; a condition does not narrow the stitch types.
-    fn scope(&self) -> BTreeSet<StitchType> {
-        let listed: BTreeSet<StitchType> = StitchType::ALL.iter().copied().filter(|t| self.applies_to.iter().any(|a| a == t.id())).collect();
-        if !listed.is_empty() {
-            return listed;
-        }
-        let family = match self.element.as_str() {
+    /// The family of stitch types of the row's element: none for the common settings and clones.
+    fn family(&self) -> Option<Family> {
+        match self.element.as_str() {
             "stroke" => Some(Family::Stroke),
             "satin" => Some(Family::Satin),
             "fill" => Some(Family::Fill),
             _ => None,
-        };
-        StitchType::ALL.iter().copied().filter(|t| self.element == "common" || family == Some(t.family())).collect()
+        }
+    }
+
+    /// The stitch types the row covers: the ones it lists, or every type of its element when it lists
+    /// none (all of them for the common settings, none for clones). Some rows list another parameter's
+    /// values instead, such as `custom` for the custom lock shapes; those do not narrow the stitch types.
+    /// Only an id of the row's own family names a stitch type, because ids are unique only within a
+    /// family: `zigzag` is a lock shape as well as a satin method.
+    fn scope(&self) -> BTreeSet<StitchType> {
+        let listed: BTreeSet<StitchType> = self.applies_to.iter().filter_map(|a| self.stitch_type(a)).collect();
+        if !listed.is_empty() {
+            return listed;
+        }
+        StitchType::ALL.iter().copied().filter(|t| self.element == "common" || self.family() == Some(t.family())).collect()
+    }
+
+    /// The stitch type an `applies_to` entry names: an id of the row's own family, or none.
+    fn stitch_type(&self, value: &str) -> Option<StitchType> {
+        self.family().and_then(|family| StitchType::from_id(family, value))
     }
 
     /// Whether the row covers any of `types`.
@@ -246,7 +257,7 @@ fn disagreements(spec: &ParamSpec, origin: Origin, p: &Param) -> Vec<String> {
     }
     // Values in `applies_to` that are not stitch types are another parameter's values Ink/Stitch shows
     // this one for (a lock's size, say, only for the shapes it sizes); the registry must say the same.
-    let theirs: BTreeSet<&str> = p.applies_to.iter().map(String::as_str).filter(|a| StitchType::ALL.iter().all(|t| t.id() != *a)).collect();
+    let theirs: BTreeSet<&str> = p.applies_to.iter().map(String::as_str).filter(|a| p.stitch_type(a).is_none()).collect();
     let ours: BTreeSet<&str> = spec.visible_when.map(|c| c.any_of.iter().copied().collect()).unwrap_or_default();
     if !theirs.is_empty() && theirs != ours {
         let here = if ours.is_empty() { "always".to_string() } else { format!("only for {ours:?}") };
@@ -449,6 +460,34 @@ mod tests {
             contract.check(&[&size(Some(&["custom"]))]),
             ["`lock_start_scale_mm` is shown only for {\"back_forth\", \"custom\"} in Ink/Stitch, but only for {\"custom\"} here"]
         );
+        // `zigzag` is a lock shape here, though a satin method has the same id.
+        let zigzag = self::data("0.25").replacen(
+            "[[param]]",
+            "[[param]]\nelement = \"common\"\nname = \"lock_start_scale_mm\"\ntype = \"float\"\nunit = \"mm\"\ndefault = \"0.7\"\n\
+             applies_to = [\"zigzag\", \"custom\"]\nphase = \"P1\"\nmilestone = \"M3\"\n[[param]]",
+            1,
+        );
+        assert_eq!(Contract::parse(&zigzag).unwrap().check(&[&size(Some(&["custom", "zigzag"]))]), Vec::<String>::new());
+    }
+
+    #[test]
+    fn a_lock_shape_named_like_a_satin_method_is_not_a_stitch_type() {
+        // The lock sizes are shown for some lock shapes, `zigzag` among them, which is also a satin
+        // method's id: in a common row it is a lock shape, in a satin row the satin method.
+        let row = |element: &str| Param {
+            element: element.to_string(),
+            name: "lock_start_scale_percent".to_string(),
+            kind: "float".to_string(),
+            unit: "%".to_string(),
+            default: "100".to_string(),
+            applies_to: vec!["arrow".to_string(), "zigzag".to_string()],
+            phase: "P1".to_string(),
+            milestone: "M3".to_string(),
+        };
+        assert_eq!(row("common").scope().len(), StitchType::ALL.len());
+        assert_eq!(row("satin").scope().into_iter().collect::<Vec<_>>(), [StitchType::SatinZigzag]);
+        let strokes = row("stroke").scope();
+        assert!(strokes.len() == 4 && strokes.iter().all(|t| t.family() == Family::Stroke), "no stroke method listed: every stroke type");
     }
 
     #[test]
