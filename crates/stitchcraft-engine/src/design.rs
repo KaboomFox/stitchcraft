@@ -12,7 +12,7 @@
 use std::collections::BTreeSet;
 
 use stitchcraft_core::units::MACHINE_LIMIT;
-use stitchcraft_core::{Code, Diagnostic, ElementId, Point, Rect};
+use stitchcraft_core::{Code, Diagnostic, ElementId, Mm, Point, Rect};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::Thread;
 
@@ -125,9 +125,33 @@ pub struct Element {
     pub params: ParamSet,
 }
 
-/// Settings for the whole design.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct DesignSettings {}
+/// Settings for the whole design. Ink/Stitch keeps them in the document; the SVG adapter reads them from
+/// roadmap M8, and until then a design has the defaults.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct DesignSettings {
+    /// Moves between groups of the same thread no longer than this are sewn on rather than jumped, for
+    /// elements that set no `min_jump_stitch_length_mm` (Ink/Stitch's `collapse_len_mm`).
+    pub collapse_len: Mm,
+    /// The design's shortest stitch, for elements that set no `min_stitch_length_mm` (Ink/Stitch's
+    /// `min_stitch_len_mm`); the machine's is used when it is longer.
+    pub min_stitch_len: Option<Mm>,
+    /// The point that goes to the hoop's centre (Ink/Stitch's origin command); without one, the centre of
+    /// the box around the stitches.
+    pub origin: Option<Point>,
+    /// Where the frame moves before each stop (Ink/Stitch's stop position command); without one, it stays.
+    pub stop_position: Option<Point>,
+}
+
+impl DesignSettings {
+    /// The collapse length a design has unless it says otherwise: 3 mm, as in Ink/Stitch.
+    pub const COLLAPSE_LEN: Mm = Mm::from_tenths(30);
+}
+
+impl Default for DesignSettings {
+    fn default() -> Self {
+        DesignSettings { collapse_len: DesignSettings::COLLAPSE_LEN, min_stitch_len: None, origin: None, stop_position: None }
+    }
+}
 
 /// A design: elements in stitching order (the host's paint order, bottom first).
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -138,19 +162,27 @@ pub struct Design {
 }
 
 impl Design {
-    /// A design of `elements`, checked: every id is unique and every point lies within
-    /// [`WORKING_LIMIT_MM`] of the origin. A failure is a bug in the host adapter that built it, so it is
-    /// `SC-E0009`; adapters drop what they cannot represent, with a diagnostic of their own.
+    /// A design of `elements`, checked: every id is unique, every point (the settings' too) lies within
+    /// [`WORKING_LIMIT_MM`] of the origin, and the settings' lengths are not negative. A failure is a bug
+    /// in the host adapter that built it, so it is `SC-E0009`; adapters drop or correct what they cannot
+    /// represent, with a diagnostic of their own.
     pub fn new(elements: Vec<Element>, settings: DesignSettings) -> Result<Design, Diagnostic> {
+        let far = |p: Point| p.x().abs() > WORKING_LIMIT_MM || p.y().abs() > WORKING_LIMIT_MM;
         let mut ids = BTreeSet::new();
         for element in &elements {
             if !ids.insert(&element.id) {
                 return Err(Diagnostic::new(Code::InternalCheckFailed, format!("Two elements of the design have the id `{}`.", element.id)));
             }
-            if element.shape.path().points().any(|p| p.x().abs() > WORKING_LIMIT_MM || p.y().abs() > WORKING_LIMIT_MM) {
+            if element.shape.path().points().any(far) {
                 return Err(Diagnostic::new(Code::InternalCheckFailed, format!("Element `{}` lies more than 10 m from the origin.", element.id))
                     .with_element(element.id.clone()));
             }
+        }
+        if settings.origin.into_iter().chain(settings.stop_position).any(far) {
+            return Err(Diagnostic::new(Code::InternalCheckFailed, "The design's origin or stop position lies more than 10 m from the origin."));
+        }
+        if settings.collapse_len.get() < 0.0 || settings.min_stitch_len.is_some_and(|m| m.get() < 0.0) {
+            return Err(Diagnostic::new(Code::InternalCheckFailed, "The design's collapse length or shortest stitch is negative."));
         }
         Ok(Design { elements, settings })
     }
@@ -213,5 +245,24 @@ mod tests {
         assert!(Design::new(edge, DesignSettings::default()).is_ok());
         // The limit is the reach of machine files: 10 m either way.
         assert_eq!(WORKING_LIMIT_MM, 10_000.0);
+    }
+
+    #[test]
+    fn settings_default_to_ink_stitch_s_and_are_checked_too() {
+        let settings = DesignSettings::default();
+        assert_eq!((settings.collapse_len.get(), settings.min_stitch_len, settings.origin, settings.stop_position), (3.0, None, None, None));
+        let one = || vec![element("a", line(p(0.0, 0.0), p(1.0, 0.0)))];
+        let at = |x: f64| Some(p(x, 0.0));
+        let bad = [
+            DesignSettings { origin: at(WORKING_LIMIT_MM + 1.0), ..settings },
+            DesignSettings { stop_position: at(-WORKING_LIMIT_MM - 1.0), ..settings },
+            DesignSettings { collapse_len: Mm::new(-1.0).unwrap(), ..settings },
+            DesignSettings { min_stitch_len: Some(Mm::new(-0.1).unwrap()), ..settings },
+        ];
+        for settings in bad {
+            assert_eq!(Design::new(one(), settings).unwrap_err().code, Code::InternalCheckFailed, "{settings:?}");
+        }
+        let edge = DesignSettings { origin: at(WORKING_LIMIT_MM), stop_position: at(0.0), collapse_len: Mm::ZERO, min_stitch_len: Some(Mm::ZERO) };
+        assert!(Design::new(one(), edge).is_ok());
     }
 }

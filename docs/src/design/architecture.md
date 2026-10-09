@@ -92,14 +92,17 @@ truth. The geometry choices are validated by spike M0.7 ([ADR-0005](adr/0005-geo
 The engine exposes one entry point and one input type:
 
 ```rust,ignore
-pub fn plan(design: &Design, budget: &Budget) -> PlanOutcome;
+pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome;   // since M3.8
 
 pub struct PlanOutcome {
-    pub plan: Option<StitchPlan>,   // None when an error diagnostic stopped planning
-    pub groups: Vec<StitchGroup>,   // per-element results, for previews and reports
+    pub plan: Option<StitchPlan>,   // None when nothing could be sewn
     pub diagnostics: Vec<Diagnostic>,
+    // per-element groups, for previews and reports, arrive with the VectorCraft plug-in (M6)
 }
 ```
+
+The machine profile is an input because the shortest stitch a generator may sew is the machine's, and
+finalizing (M3.9) fits the plan to the machine's longest stitch and hoop.
 
 and a per-element entry point used by live previews:
 

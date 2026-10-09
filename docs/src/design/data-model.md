@@ -39,6 +39,13 @@ pub struct Element {
     pub params: ParamSet,            // as the host stores them; validated against the registry when planned
 }
 
+pub struct DesignSettings {          // since M3.8; Ink/Stitch keeps them in the document, read from M8
+    pub collapse_len: Mm,            // 3 mm: same-thread moves no longer than this are sewn on, not jumped
+    pub min_stitch_len: Option<Mm>,  // the design's shortest stitch, for elements that set none
+    pub origin: Option<Point>,       // where the hoop's centre goes; None: the centre of the stitches
+    pub stop_position: Option<Point>,// where the frame moves before each stop; None: it stays
+}
+
 pub enum Shape {
     Stroke(Path),                         // an outline: running stitch and the other stroke methods
     Fill { path: Path, rule: FillRule },  // an area: its boundary, and which parts are inside
@@ -60,9 +67,9 @@ Still to come, each with the step that needs it:
 
 - **satin shapes**, two rails and rungs or a centre line and a width (M4, [below](#satinshape));
 - **regions**, fills normalized into polygons with holes (M5.1, [below](#region));
-- **commands**, start and end points, targets, trims and stops (M3.8, and M8 for Ink/Stitch's command
-  symbols);
-- **design settings**, the jump collapse length, the shortest stitch and the machine origin (M3.8).
+- **commands** attached to elements, start and end points and targets (M8, for Ink/Stitch's command
+  symbols); trims and stops are the element parameters `trim_after` and `stop_after`, and the origin and
+  stop position are design settings (M3.8).
 
 ### Region
 

@@ -10,6 +10,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0005`](#sc-e0005) | Error | Preview too large |
 | [`SC-E0009`](#sc-e0009) | Error | Internal check failed |
 | [`SC-E0010`](#sc-e0010) | Error | Nothing to stitch |
+| [`SC-W0011`](#sc-w0011) | Warning | Stitch type not sewn yet; element skipped |
 | [`SC-E0101`](#sc-e0101) | Error | Parameter has the wrong type or an unknown choice |
 | [`SC-W0102`](#sc-w0102) | Warning | Parameter clamped to its allowed range |
 | [`SC-W0105`](#sc-w0105) | Warning | Unknown parameter preserved but ignored |
@@ -69,6 +70,18 @@ The design has no stitches: it is empty, or every element was skipped (see the o
 StitchCraft never writes an empty machine file, because some machines refuse or mishandle them.
 
 Add an element with an embroidery stitch type, or fix the errors reported for the elements.
+
+## SC-W0011
+
+**Warning** — Stitch type not sewn yet; element skipped
+
+The element's stitch type is one this version of StitchCraft does not sew yet, so the element was
+skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
+satin columns from M4 and tatami fills from M5; the other stitch types follow
+(`docs/src/plan/roadmap.md`).
+
+The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
+tool for now.
 
 ## SC-E0101
 

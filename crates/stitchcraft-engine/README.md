@@ -7,7 +7,8 @@ checked `StitchPlan`: normalize → validate → generate per element → assemb
 normalization (`normalize::stroke`) and the running stitch (`generators::running`) since M3.4, with its
 repeats, bean stitch (`generators::passes`) and random length since M3.5; manual stitch
 (`generators::manual`) since M3.6; lock stitches (`locks`: every shape, at either end of a group) since
-M3.7, sewn by plan assembly from M3.8; the pipeline arrives through M3.9. Design:
+M3.7; and since M3.8 the entry point, `plan`, which sends each element to its generator (`generate`) and
+joins the groups into one plan (`assemble`). Finalizing and the plan check arrive in M3.9. Design:
 `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 
 ## Invariants

@@ -117,6 +117,15 @@ registry! {
     /// Add an element with an embroidery stitch type, or fix the errors reported for the elements.
     NothingToStitch = "SC-E0010", Error, "Nothing to stitch";
 
+    /// The element's stitch type is one this version of StitchCraft does not sew yet, so the element was
+    /// skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
+    /// satin columns from M4 and tatami fills from M5; the other stitch types follow
+    /// (`docs/src/plan/roadmap.md`).
+    ///
+    /// The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
+    /// tool for now.
+    StitchTypeNotYet = "SC-W0011", Warning, "Stitch type not sewn yet; element skipped";
+
     /// A parameter's value could not be understood: a number where a word was expected, a choice that
     /// is not one of the parameter's options, or a list with the wrong number of values. The element was
     /// not stitched: guessing could sew something you did not ask for.

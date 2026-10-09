@@ -1,6 +1,11 @@
 # The public API of stitchcraft-engine, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
 # Generated: do not edit. A change here is a change other code can see; say why in the pull request.
 pub mod stitchcraft_engine
+pub mod stitchcraft_engine::assemble
+pub struct stitchcraft_engine::assemble::Assembled
+pub stitchcraft_engine::assemble::Assembled::plan: stitchcraft_plan::plan::StitchPlan
+pub stitchcraft_engine::assemble::Assembled::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_engine::assemble::assemble(&[(&stitchcraft_engine::design::Element, stitchcraft_engine::generate::Generated)], &stitchcraft_engine::design::DesignSettings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_engine::assemble::Assembled>, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::common
 pub struct stitchcraft_engine::common::CommonParams
 pub stitchcraft_engine::common::CommonParams::force_lock_stitches: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
@@ -46,6 +51,14 @@ pub fn stitchcraft_engine::design::Design::bounds(&self) -> core::option::Option
 pub fn stitchcraft_engine::design::Design::elements(&self) -> &[stitchcraft_engine::design::Element]
 pub fn stitchcraft_engine::design::Design::new(alloc::vec::Vec<stitchcraft_engine::design::Element>, stitchcraft_engine::design::DesignSettings) -> core::result::Result<stitchcraft_engine::design::Design, stitchcraft_core::diag::Diagnostic>
 pub struct stitchcraft_engine::design::DesignSettings
+pub stitchcraft_engine::design::DesignSettings::collapse_len: stitchcraft_core::units::Mm
+pub stitchcraft_engine::design::DesignSettings::min_stitch_len: core::option::Option<stitchcraft_core::units::Mm>
+pub stitchcraft_engine::design::DesignSettings::origin: core::option::Option<stitchcraft_core::units::Point>
+pub stitchcraft_engine::design::DesignSettings::stop_position: core::option::Option<stitchcraft_core::units::Point>
+impl stitchcraft_engine::design::DesignSettings
+pub const stitchcraft_engine::design::DesignSettings::COLLAPSE_LEN: stitchcraft_core::units::Mm
+impl core::default::Default for stitchcraft_engine::design::DesignSettings
+pub fn stitchcraft_engine::design::DesignSettings::default() -> Self
 pub struct stitchcraft_engine::design::Element
 pub stitchcraft_engine::design::Element::id: stitchcraft_core::element::ElementId
 pub stitchcraft_engine::design::Element::name: core::option::Option<alloc::string::String>
@@ -61,6 +74,22 @@ pub stitchcraft_engine::design::Subpath::closed: bool
 pub stitchcraft_engine::design::Subpath::segments: alloc::vec::Vec<stitchcraft_engine::design::Segment>
 pub stitchcraft_engine::design::Subpath::start: stitchcraft_core::units::Point
 pub const stitchcraft_engine::design::WORKING_LIMIT_MM: f64
+pub mod stitchcraft_engine::generate
+pub struct stitchcraft_engine::generate::Generated
+pub stitchcraft_engine::generate::Generated::common: stitchcraft_engine::common::CommonParams
+pub stitchcraft_engine::generate::Generated::groups: alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>
+pub stitchcraft_engine::generate::Generated::stitch_type: stitchcraft_params::stitch_type::StitchType
+pub struct stitchcraft_engine::generate::Generation
+pub stitchcraft_engine::generate::Generation::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub stitchcraft_engine::generate::Generation::generated: core::option::Option<stitchcraft_engine::generate::Generated>
+pub struct stitchcraft_engine::generate::StrokeParams
+pub stitchcraft_engine::generate::StrokeParams::stroke_method: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
+impl stitchcraft_engine::generate::StrokeParams
+pub const stitchcraft_engine::generate::StrokeParams::GROUP: stitchcraft_params::spec::ParamGroup
+pub const stitchcraft_engine::generate::StrokeParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
+pub fn stitchcraft_engine::generate::StrokeParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
+pub const stitchcraft_engine::generate::STROKE_METHODS: &[stitchcraft_params::spec::ChoiceOption]
+pub fn stitchcraft_engine::generate::generate(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile, &stitchcraft_core::budget::Budget) -> stitchcraft_engine::generate::Generation
 pub mod stitchcraft_engine::generators
 pub mod stitchcraft_engine::generators::manual
 pub struct stitchcraft_engine::generators::manual::ManualParams
@@ -131,3 +160,7 @@ pub fn stitchcraft_engine::testsheets::TestSheet::plan(&self) -> core::result::R
 pub const stitchcraft_engine::testsheets::STITCH_LEN: f64
 pub static stitchcraft_engine::testsheets::SHEETS: &[stitchcraft_engine::testsheets::TestSheet]
 pub fn stitchcraft_engine::testsheets::find(&str) -> core::option::Option<&'static stitchcraft_engine::testsheets::TestSheet>
+pub struct stitchcraft_engine::PlanOutcome
+pub stitchcraft_engine::PlanOutcome::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub stitchcraft_engine::PlanOutcome::plan: core::option::Option<stitchcraft_plan::plan::StitchPlan>
+pub fn stitchcraft_engine::plan(&stitchcraft_engine::design::Design, &stitchcraft_plan::profile::MachineProfile, &stitchcraft_core::budget::Budget) -> stitchcraft_engine::PlanOutcome

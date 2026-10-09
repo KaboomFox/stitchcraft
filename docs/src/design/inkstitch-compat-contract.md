@@ -45,7 +45,7 @@ its keys so files move between the tools unchanged ([ADR-0001](adr/0001-license-
 | Attribute | Type | Unit | Default | Applies to | Phase | StitchCraft |
 |---|---|---|---|---|---|---|
 | `satin_column` | toggle | — | — | all | P1 (M3) | planned |
-| `stroke_method` | combo | — | 0 | all | P1 (M3) | planned |
+| `stroke_method` | combo | — | 0 | all | P1 (M3) | [registered](../user/reference/params/stroke.md#stroke_method) |
 | `repeats` | int | — | 1 | `running_stitch`, `ripple_stitch`, `zigzag_stitch` | P1 (M3) | [registered](../user/reference/params/repeat.md#repeats) |
 | `bean_stitch_repeats` | str | — | 0 | `running_stitch`, `ripple_stitch`, `manual_stitch`, `zigzag_stitch` | P1 (M3) | [registered](../user/reference/params/repeat.md#bean_stitch_repeats) |
 | `manual_pattern_placement` | boolean | — | false | `ripple_stitch` | P3 (M10) | planned |
@@ -218,4 +218,4 @@ The values the method parameters take (`stroke_method`, `satin_method`, `fill_me
 Lock stitch identifiers (`lock_start`, `lock_end`): `half_stitch`, `arrow`, `back_forth`, `bowtie`, `cross`, `star`, `simple`, `triangle`, `zigzag`, `custom`. StitchCraft accepts every identifier; the shapes are its own
 designs with the same intent, a deviation recorded in the deviations ledger (`conformance/deviations.toml`).
 
-_145 parameter declarations, 22 registered in StitchCraft._
+_145 parameter declarations, 23 registered in StitchCraft._

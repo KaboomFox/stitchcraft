@@ -16,6 +16,7 @@
     - [Diagnostic codes](user/reference/diagnostics.md)
     - [Parameters](user/reference/params.md)
       - [Common parameters](user/reference/params/common.md)
+      - [Stroke](user/reference/params/stroke.md)
       - [Running stitch](user/reference/params/running.md)
       - [Repeats and bean stitch](user/reference/params/repeat.md)
       - [Manual stitch](user/reference/params/manual.md)
