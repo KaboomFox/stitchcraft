@@ -75,7 +75,23 @@ pub fn generate(element: &Element, settings: &DesignSettings, profile: &MachineP
             None
         }
     };
+    if !generated.as_ref().is_some_and(|g| g.groups.iter().any(|group| !group.is_empty())) {
+        diagnostics.extend(left_out(element));
+    }
     Generation { generated, diagnostics: diagnostics.into_iter().map(|d| d.with_element(element.id.clone())).collect() }
+}
+
+/// `SC-W0505` for the trim and stop that `element`, which sews nothing, sets after it: assembly has no
+/// place for them. Its settings were read once already; a setting that cannot be read was reported then.
+fn left_out(element: &Element) -> Option<Diagnostic> {
+    let common = CommonParams::from_set(&element.params).ok()?.params;
+    let what = match (common.trim_after, common.stop_after) {
+        (true, true) => "the trim and the stop after it are",
+        (true, false) => "the trim after it is",
+        (false, true) => "the stop after it is",
+        (false, false) => return None,
+    };
+    Some(Diagnostic::new(Code::TrimOrStopLeftOut, format!("This element sews no stitch, so {what} left out.")))
 }
 
 /// The element's stitch groups, or `None` when it is skipped; what it says about it goes to `diagnostics`.

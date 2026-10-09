@@ -91,6 +91,11 @@ fn req_asm_001_elements_are_sewn_in_document_order_a_new_thread_a_new_block() {
     assert_eq!(plan.elements.iter().map(ElementId::as_str).collect::<Vec<_>>(), ["a", "b", "c"]);
     let first = plan.blocks[0].stitches.iter().find(|s| s.origin.role == Role::Top).unwrap();
     assert_eq!((first.at, plan.element(first.origin.element.unwrap()).unwrap().as_str()), (p(0.0, 0.0), "a"));
+    // A thread change is a change of colour: two names for one colour are one block, as in Ink/Stitch.
+    let scarlet = Thread::named(RED.color, "Scarlet");
+    let renamed = sewn(vec![line("a", (0.0, 0.0), 10.0, &RED, &[]), line("b", (0.0, 5.0), 10.0, &scarlet, &[])]).plan.unwrap();
+    assert_eq!(shape(&renamed), "J L4 S5 L4 J L4 S5 L4");
+    assert_eq!(renamed.blocks[0].thread, RED, "the block keeps its first thread");
 }
 
 #[test]
@@ -232,6 +237,34 @@ fn diag_sc_w0011_a_stitch_type_not_sewn_yet_is_named() {
         ["warning SC-W0011: This element is a fill, and this version of StitchCraft does not sew fills yet, so it is skipped."]
     );
     assert_eq!(outcome.diagnostics[0].element.as_ref().map(ElementId::as_str), Some("f"));
+}
+
+#[test]
+fn diag_sc_w0505_a_trim_or_stop_after_an_element_that_sews_nothing_is_named() {
+    // Too small for a stitch, a stitch type not sewn yet, and a stop alone: none of them sews, so their
+    // trims and stops have nothing to come after.
+    let tiny = line("tiny", (0.0, 0.0), 0.1, &RED, &[("trim_after", "true")]);
+    let ripple = line("ripple", (0.0, 5.0), 10.0, &RED, &[("stroke_method", "ripple_stitch"), ("trim_after", "true"), ("stop_after", "true")]);
+    let stop = line("stop", (0.0, 10.0), 0.1, &RED, &[("stop_after", "true")]);
+    let outcome = sewn(vec![tiny, ripple, stop, line("ok", (0.0, 15.0), 10.0, &RED, &[])]);
+    assert_eq!(shape_of(&outcome), "J L4 S5 L4");
+    let left_out: Vec<(String, Option<&str>)> = outcome
+        .diagnostics
+        .iter()
+        .filter(|d| d.code == Code::TrimOrStopLeftOut)
+        .map(|d| (d.to_string(), d.element.as_ref().map(ElementId::as_str)))
+        .collect();
+    assert_eq!(
+        left_out,
+        [
+            ("warning SC-W0505: This element sews no stitch, so the trim after it is left out.".to_string(), Some("tiny")),
+            ("warning SC-W0505: This element sews no stitch, so the trim and the stop after it are left out.".to_string(), Some("ripple")),
+            ("warning SC-W0505: This element sews no stitch, so the stop after it is left out.".to_string(), Some("stop")),
+        ]
+    );
+    // An element that sews nothing and sets neither says nothing more.
+    let quiet = sewn(vec![line("tiny", (0.0, 0.0), 0.1, &RED, &[]), line("ok", (0.0, 15.0), 10.0, &RED, &[])]);
+    assert!(quiet.diagnostics.iter().all(|d| d.code != Code::TrimOrStopLeftOut));
 }
 
 #[test]

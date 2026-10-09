@@ -82,7 +82,8 @@ Groups are joined into colour blocks in document order (host paint order, bottom
 
 - Document order is kept: embroidery stacking follows the art's stacking. Reordering for fewer colour
   changes is an explicit, separate tool (P3) because it changes what covers what.
-- A thread change starts a new colour block (`REQ-ASM-001`).
+- A thread change starts a new colour block (`REQ-ASM-001`). Threads are compared by colour, as
+  Ink/Stitch compares them: two names for one colour are one thread, and the block keeps the first.
 
 ### Connecting consecutive groups
 
@@ -98,6 +99,9 @@ distance from where the needle is to the next group's first needle point:
 | Thread change | Tie-off → a new colour block → `Jump` → tie-in |
 | Before the design's first group | `Jump` → tie-in |
 | After the design's last group | Tie-off |
+
+An element that sews nothing, because it is skipped or too small for a stitch, has no place for its trim
+or stop. Both are left out, as Ink/Stitch leaves them out, and `SC-W0505` says so.
 
 A jump lands where sewing resumes, on the tie-in's first point or on the group's first point when it has
 no tie-in, and the needle goes down there before the first stitch. The jump's own thread is the
@@ -138,8 +142,8 @@ way for an appliqué or a check, and sewing resumes with a jump back.
 |---|---|---|
 | Start / end point | Entry/exit hints for the generator (`REQ-GEN-001`) | M8 |
 | Target point | Centre for circular fills and ripple targets | M7, M10 |
-| Trim after, stop after | `trim_after` and `stop_after` on the element's last group (see the connection table) | M3.8 |
-| Ignore object / ignore layer | The adapter drops the element and says so in the report (`REQ-ASM-004`) | M8 |
+| Trim after, stop after | `trim_after` and `stop_after` on the element's last group (see the connection table); the SVG adapter reads Ink/Stitch's trim and stop commands as these settings | M3.8 (engine), M3 (adapter) |
+| Ignore object / ignore layer | The adapter drops the element and says so in the report (`REQ-ASM-004`) | M3 |
 | Origin | The design setting `origin` | M3.8 (engine), M8 (adapter) |
 | Stop position | The design setting `stop_position` | M3.8 (engine), M8 (adapter) |
 

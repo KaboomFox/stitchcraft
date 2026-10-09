@@ -11,19 +11,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     `SC-W0011` until their milestones, as is an element whose parameters cannot be read (`SC-E0101`) or
     whose work budget runs out (`SC-E0004`); the rest of the design still plans, and with nothing left,
     `SC-E0010` says so. Each element sews with the larger of the machine's shortest stitch and its own.
-  - **Assemble.** Elements are sewn in document order, a new thread starting a new colour block. The needle
+  - **Assemble.** Elements are sewn in document order, a new thread colour starting a new colour block:
+    threads are compared by colour, as Ink/Stitch compares them, so two names for one colour are one
+    block. The needle
     sews straight on to the next group when it is the same thread within the collapse length (3 mm, or
     the element's `min_jump_stitch_length_mm`); otherwise the group ends with its tie-off and the next
     starts with a jump and its tie-in. `trim_after` and `stop_after` add a trim or a stop after the
     element, locks around them. Locks go only there, as `ties` says; `force_lock_stitches` adds the
-    tie-off, and manual stitch has none unless forced. This is Ink/Stitch's way of joining.
+    tie-off, and manual stitch has none unless forced. This is Ink/Stitch's way of joining. An element
+    that sews nothing has no place for its trim or stop: it is left out, as Ink/Stitch leaves it out, and
+    the new `SC-W0505` says so.
   - **Origin.** The plan is in hoop coordinates: the design's origin, or the centre of its stitches, at the
     hoop's centre. A stop position adds a jump to it before each stop.
   - **Design settings** (`DesignSettings`): collapse length, shortest stitch, origin and stop position,
     with Ink/Stitch's defaults; the SVG adapter reads them from M8.
   - **Conformance.** `REQ-ASM-001`, `-002`, `-003`, `-005`, `REQ-LCK-001` and the new `REQ-GEN-002` are
-    active. Ignored elements (`REQ-ASM-004`) and start and end hints (`REQ-GEN-001`) come with the SVG
-    adapter's command symbols, M8.
+    active. Start and end hints (`REQ-GEN-001`) come with the SVG adapter's command symbols, M8.
 - M3.7: lock stitches (`stitchcraft_engine::locks`): the tie-in and tie-off at either end of a group's
   stitches, for plan assembly (M3.8) to sew where `ties` says.
   - **Shapes.** Every Ink/Stitch lock id is accepted. The shapes behind them are StitchCraft's own

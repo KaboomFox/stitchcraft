@@ -362,7 +362,7 @@ status = "planned"
 id = "REQ-ASM-001"
 area = "plan/assembly"
 level = "L2"
-statement = "Elements are stitched in document order; a thread change starts a new colour block."
+statement = "Elements are stitched in document order; a change of thread colour starts a new colour block, and threads are compared by colour alone, as in Ink/Stitch."
 milestone = "M3"
 status = "active"
 

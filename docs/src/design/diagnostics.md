@@ -100,6 +100,7 @@ another.
 | `SC-W0501` | Warning | Travel could not stay inside the region; used tie-off, trim and tie-in | M5 |
 | `SC-W0502` | Warning | Lock stitch shorter than 0.2 mm; lengthened | M3 |
 | `SC-W0503` | Warning | Custom lock cannot be sewn as written | M3 |
+| `SC-W0505` | Warning | Trim or stop after an element that sews nothing; left out | M3 |
 | `SC-E0601` | Error | Too many colour changes for the file format | M1 |
 | `SC-E0602` | Error | Design too large for the file format (coordinates or data exceed its fields) | M1 |
 | `SC-E0603` | Error | Machine file could not be read (wrong format, truncated, or a record that makes no sense) | M2 |

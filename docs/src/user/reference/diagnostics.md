@@ -19,6 +19,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
 | [`SC-W0502`](#sc-w0502) | Warning | Lock stitch shorter than 0.2 mm; lengthened |
 | [`SC-W0503`](#sc-w0503) | Warning | Custom lock cannot be sewn as written |
+| [`SC-W0505`](#sc-w0505) | Warning | Trim or stop after an element that sews nothing; left out |
 | [`SC-E0601`](#sc-e0601) | Error | Too many colour changes for the file format |
 | [`SC-E0602`](#sc-e0602) | Error | Design too large for the file format |
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
@@ -179,6 +180,16 @@ if no step is left, the half stitch is sewn instead.
 
 The message says what was wrong. Write the lock as numbers, such as `1 -1 1 -1`, or choose
 another lock shape.
+
+## SC-W0505
+
+**Warning** — Trim or stop after an element that sews nothing; left out
+
+The element is set to trim or stop after it (`trim_after`, `stop_after`, or Ink/Stitch's trim and
+stop commands), but it sews no stitch, so there is no place for the trim or the stop: it is left
+out, as Ink/Stitch leaves it out. Another message says why the element sews nothing.
+
+Make the element sew, or set the trim or stop on the element before it.
 
 ## SC-E0601
 

@@ -197,6 +197,13 @@ registry! {
     /// another lock shape.
     CustomLockUnusable = "SC-W0503", Warning, "Custom lock cannot be sewn as written";
 
+    /// The element is set to trim or stop after it (`trim_after`, `stop_after`, or Ink/Stitch's trim and
+    /// stop commands), but it sews no stitch, so there is no place for the trim or the stop: it is left
+    /// out, as Ink/Stitch leaves it out. Another message says why the element sews nothing.
+    ///
+    /// Make the element sew, or set the trim or stop on the element before it.
+    TrimOrStopLeftOut = "SC-W0505", Warning, "Trim or stop after an element that sews nothing; left out";
+
     /// The file format can record only a limited number of colour changes and stops (PES: 255). This
     /// design has more, so the file was not written.
     ///
