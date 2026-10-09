@@ -9,10 +9,12 @@ Vector art in, machine files out — PES for Brother first, then DST and more.</
   <img alt="License: MIT OR Apache-2.0" src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-555555">
 </p>
 
-StitchCraft brings the stitch types embroiderers know from [Ink/Stitch](https://inkstitch.org) —
-running and bean stitch, satin columns with underlay, tatami, contour and meander fills, and more — to
-VectorCraft, ArtCraft's open-source Illustrator, as sandboxed WebAssembly plug-ins plus a command-line
-tool. It reads Ink/Stitch's SVG parameters, and it is built to a different standard:
+StitchCraft brings machine embroidery — running and bean stitch, satin columns with underlay, tatami,
+contour and meander fills, and more — to VectorCraft, ArtCraft's open-source Illustrator, as sandboxed
+WebAssembly plug-ins plus a command-line tool. It reads the embroidery parameters Ink/Stitch stores in
+SVG files, so designs move between the tools.
+
+How it is built:
 
 - **Never crashes.** Every file and parameter is untrusted input; no panics, no `unsafe`, bounded work,
   and every problem is a coded diagnostic with an explanation page.
@@ -40,7 +42,6 @@ machine. See [ROADMAP.md](ROADMAP.md).
 | Small steps to the final project | [Roadmap](docs/src/plan/roadmap.md) |
 | How we prove it works | [Conformance](docs/src/design/conformance.md) · [Machine testing](docs/src/plan/machine-testing.md) |
 | How it fits VectorCraft | [Integration](docs/src/design/vectorcraft-integration.md) · [Compatibility gate](docs/src/design/compatibility-gate.md) |
-| What we learned from Ink/Stitch | [Analysis](docs/src/design/inkstitch-analysis.md) · [Issues review](docs/src/design/inkstitch-issues-review.md) |
 | Contributing | [AGENTS.md](AGENTS.md) · [CONTRIBUTING.md](CONTRIBUTING.md) |
 
 ## Quick start (developers)

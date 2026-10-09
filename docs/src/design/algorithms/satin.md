@@ -29,8 +29,8 @@ From a host path with several subpaths:
 4. A rung that crosses only one rail is dangling (`SC-W0203`, ignored); a rung crossing a rail twice is
    ignored with `SC-W0207`; rails that cross each other are `SC-E0204`.
 
-Validation runs before any stitch is computed; the generator never sees an invalid satin
-([issues review L1](../inkstitch-issues-review.md#l1--edge-case-geometry-and-inputs-raise-exceptions)).
+Validation runs before any stitch is computed; the generator never sees an invalid satin, so odd
+geometry is a diagnostic that points at the rung, never a crash.
 
 ## Orientation
 

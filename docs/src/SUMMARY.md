@@ -41,8 +41,6 @@
   - [Determinism](design/determinism.md)
   - [Guardrails](design/guardrails.md)
   - [Documentation pipeline](design/docs-pipeline.md)
-  - [Ink/Stitch analysis](design/inkstitch-analysis.md)
-  - [Ink/Stitch issues review](design/inkstitch-issues-review.md)
   - [Ink/Stitch compatibility contract](design/inkstitch-compat-contract.md)
   - [Decision records](design/adr/README.md)
     - [0001 Licence and clean room](design/adr/0001-license-and-clean-room.md)

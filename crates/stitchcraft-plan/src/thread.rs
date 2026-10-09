@@ -3,7 +3,7 @@
 //! A thread is what the operator puts on the machine for one colour block. Its colour is plain sRGB:
 //! formats that store palette indices (PES) map it to the nearest palette entry when writing
 //! ([`crate::palette`]), and the thread chart in reports lists both, so users see the colour they chose
-//! next to the colour their machine will show (Ink/Stitch #2668).
+//! next to the colour their machine will show.
 
 use core::fmt;
 

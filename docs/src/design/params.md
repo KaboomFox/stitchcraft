@@ -13,8 +13,8 @@ params! { … }  ─────────┼──▶ VectorCraft plug-in man
                         └──▶ proptest strategies for conformance and fuzzing
 ```
 
-This is the answer to Ink/Stitch's drift between code labels and a hand-maintained docs dataset
-([finding F6](inkstitch-analysis.md#f6--parameters-described-twice-by-hand)).
+Nothing about a parameter is written twice, so its label, help, range and default cannot drift apart
+between the code, the docs and the user interfaces.
 
 ## Declaring parameters
 

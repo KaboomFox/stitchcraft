@@ -1,8 +1,7 @@
 //! Generates the parameter reference from the engine's registry: one page per `params!` declaration, an
 //! index of every key, and a JSON Schema for programs (`docs/src/design/params.md` › Generated
 //! outputs). The help text, labels, ranges and defaults all come from the declarations, so the
-//! reference cannot drift from the code — the problem Ink/Stitch has with its hand-kept parameter
-//! descriptions (`docs/src/design/inkstitch-analysis.md`, finding F6).
+//! reference cannot drift from the code.
 
 use std::fmt::Write as _;
 

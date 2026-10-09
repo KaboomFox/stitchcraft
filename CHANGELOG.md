@@ -48,6 +48,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   reference pages generated from the code (command line, profiles, formats, test sheets, diagnostic
   codes) and the first-sew-out tutorial with real output.
 
+### Changed
+- M0.10: the clean room is tighter. The two pages that reviewed Ink/Stitch are gone: one described
+  Ink/Stitch's source code, which the clean room forbids even second-hand, and their lessons already live
+  in StitchCraft's own requirements and decisions, which now give their own reasons. Ink/Stitch is named
+  only where file compatibility needs it (its SVG attribute names, the compatibility contract, the
+  deviations ledger) and in the notices saying StitchCraft is independent. `cargo xtask cleanroom` now
+  scans every text file, documents included.
+
 ### Fixed
 - Test-sheet drawing charges the stitch budget. Mutation testing found that a sign error in the drawing
   code would make lines grow without bound and use up memory before any check ran.

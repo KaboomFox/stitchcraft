@@ -1,17 +1,15 @@
-//! `cargo xtask cleanroom`: keeps code, tests and fixtures free of GPL material
+//! `cargo xtask cleanroom`: keeps the repository free of GPL material
 //! (`docs/src/design/adr/0001-license-and-clean-room.md`).
 //!
-//! Scans everything that ships or tests — `crates/`, `apps/`, `xtask/`, `compat/` and the conformance
-//! cases, fixtures and goldens — for GPL-family licence text and for traces of Ink/Stitch's Python source
-//! (its module paths and its imports). The design documents are not scanned: they cite Ink/Stitch files as
-//! evidence for reviewers. A heuristic, not a proof: the review checklist still asks about provenance.
+//! Scans every text file in the repository — code, tests, fixtures, workflows and documents — for
+//! GPL-family licence text and for traces of Ink/Stitch's Python source (its module paths and its
+//! imports). Documents are scanned too: they describe Ink/Stitch only by its public behaviour and file
+//! format, so a design note cannot carry its code to implementers second-hand. A heuristic, not a
+//! proof: the review checklist still asks about provenance.
 
 use std::path::Path;
 
 use crate::util::{self, Findings};
-
-/// Directories scanned, relative to the repository root.
-const SCANNED: &[&str] = &["crates", "apps", "xtask", "compat", "conformance/cases", "conformance/fixtures", "conformance/golden"];
 
 /// File types scanned.
 const EXTENSIONS: &[&str] = &["rs", "toml", "md", "svg", "json", "csv", "txt", "py", "yml", "yaml"];
@@ -56,14 +54,12 @@ pub fn run() -> Result<(), String> {
     let patterns = patterns();
     let mut findings = Findings::default();
     let mut scanned = 0usize;
-    for dir in SCANNED {
-        for path in util::files(&root.join(dir), EXTENSIONS) {
-            if util::rel(&path) == SELF {
-                continue;
-            }
-            scanned += 1;
-            scan_file(&path, &patterns, &mut findings)?;
+    for path in util::files(&root, EXTENSIONS) {
+        if util::rel(&path) == SELF {
+            continue;
         }
+        scanned += 1;
+        scan_file(&path, &patterns, &mut findings)?;
     }
     findings.finish("cleanroom", &format!("{scanned} files free of GPL text and Ink/Stitch source traces"))
 }
@@ -79,6 +75,13 @@ fn scan_file(path: &Path, patterns: &[(String, &str)], findings: &mut Findings) 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn documents_are_scanned_too() {
+        let files: Vec<String> = util::files(&util::root(), EXTENSIONS).iter().map(|p| util::rel(p)).collect();
+        assert!(files.iter().any(|f| f == "docs/src/design/tdd.md"), "the design documents are scanned");
+        assert!(files.iter().any(|f| f == "AGENTS.md"));
+    }
 
     #[test]
     fn flags_gpl_text_and_source_paths() {

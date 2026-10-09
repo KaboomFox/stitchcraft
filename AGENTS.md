@@ -54,7 +54,7 @@ cargo xtask shots --check          # docs images declared, reproducible and curr
 cargo xtask conformance            # run the suite; report in target/conformance/report.md
 cargo xtask conformance --check    # requirements and cases consistent (no run)
 cargo xtask conformance --bless ID # rewrite one data case's golden files, on purpose
-cargo xtask cleanroom              # no GPL text or Ink/Stitch source paths in code and fixtures
+cargo xtask cleanroom              # no GPL text or Ink/Stitch source paths anywhere, docs included
 cargo xtask unsafe-audit           # unsafe only in the ABI shim, always with SAFETY comments
 cargo xtask filesize               # warn above 800 lines, fail above 1,500
 cargo xtask wasm                   # library crates build for wasm32-unknown-unknown

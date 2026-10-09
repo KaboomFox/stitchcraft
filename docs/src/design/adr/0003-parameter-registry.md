@@ -5,8 +5,8 @@
 ## Context
 
 Parameters appear in at least seven places: generators, validation, VectorCraft manifests, the CLI,
-SVG attributes, documentation and property tests. Ink/Stitch declares them in code and documents them
-again by hand; six code parameters have no docs entry ([F6](../inkstitch-analysis.md#f6--parameters-described-twice-by-hand)).
+SVG attributes, documentation and property tests. When each place restates them by hand they drift
+apart: a parameter is added in code and never documented, or its documented default goes stale.
 
 ## Decision
 

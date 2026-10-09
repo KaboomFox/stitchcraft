@@ -13,7 +13,7 @@ use crate::math;
 pub const MM_PER_INCH: f64 = 25.4;
 /// Millimetres per PostScript point (VectorCraft's document unit: 72 points per inch).
 pub const MM_PER_POINT: f64 = MM_PER_INCH / 72.0;
-/// Millimetres per SVG user unit at 96 units per inch (the CSS pixel, and Ink/Stitch's assumption).
+/// Millimetres per SVG user unit at 96 units per inch (the CSS pixel).
 pub const MM_PER_SVG_PX: f64 = MM_PER_INCH / 96.0;
 
 /// The largest coordinate StitchCraft rounds to machine units, in machine units (0.1 mm): ±10,000 mm,
