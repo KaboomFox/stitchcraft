@@ -10,6 +10,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0005`](#sc-e0005) | Error | Preview too large |
 | [`SC-E0009`](#sc-e0009) | Error | Internal check failed |
 | [`SC-E0010`](#sc-e0010) | Error | Nothing to stitch |
+| [`SC-W0011`](#sc-w0011) | Warning | Stitch type not sewn yet; element skipped |
 | [`SC-E0101`](#sc-e0101) | Error | Parameter has the wrong type or an unknown choice |
 | [`SC-W0102`](#sc-w0102) | Warning | Parameter clamped to its allowed range |
 | [`SC-W0105`](#sc-w0105) | Warning | Unknown parameter preserved but ignored |
@@ -18,6 +19,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
 | [`SC-W0502`](#sc-w0502) | Warning | Lock stitch shorter than 0.2 mm; lengthened |
 | [`SC-W0503`](#sc-w0503) | Warning | Custom lock cannot be sewn as written |
+| [`SC-W0505`](#sc-w0505) | Warning | Trim or stop after an element that sews nothing; left out |
 | [`SC-E0601`](#sc-e0601) | Error | Too many colour changes for the file format |
 | [`SC-E0602`](#sc-e0602) | Error | Design too large for the file format |
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
@@ -71,6 +73,18 @@ The design has no stitches: it is empty, or every element was skipped (see the o
 StitchCraft never writes an empty machine file, because some machines refuse or mishandle them.
 
 Add an element with an embroidery stitch type, or fix the errors reported for the elements.
+
+## SC-W0011
+
+**Warning** — Stitch type not sewn yet; element skipped
+
+The element's stitch type is one this version of StitchCraft does not sew yet, so the element was
+skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
+satin columns from M4 and tatami fills from M5; the other stitch types follow
+(`docs/src/plan/roadmap.md`).
+
+The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
+tool for now.
 
 ## SC-E0101
 
@@ -166,6 +180,16 @@ longer than 10 m, are left out. If no step is left, the half stitch is sewn inst
 
 The message says what was wrong. Write the lock as numbers, such as `1 -1 1 -1`, or choose
 another lock shape.
+
+## SC-W0505
+
+**Warning** — Trim or stop after an element that sews nothing; left out
+
+The element is set to trim or stop after it (`trim_after`, `stop_after`, or Ink/Stitch's trim and
+stop commands), but it sews no stitch, so there is no place for the trim or the stop: it is left
+out, as Ink/Stitch leaves it out. Another message says why the element sews nothing.
+
+Make the element sew, or set the trim or stop on the element before it.
 
 ## SC-E0601
 

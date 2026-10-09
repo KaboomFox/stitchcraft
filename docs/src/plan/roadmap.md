@@ -70,7 +70,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M3.5 ✅ | Repeats, bean stitch, random length | `REQ-RUN-004`, `REQ-RUN-005`, `REQ-RUN-007` |
 | M3.6 ✅ | Manual stitch | `REQ-RUN-006`, `REQ-RUN-008` |
 | M3.7 ✅ | Lock stitches: every shape, its size and its place at either end of the stitching | `REQ-LCK-002`, `REQ-LCK-004` |
-| M3.8 | Plan assembly: order, collapse, travel, tie-off/jump/trim/tie-in (where `ties` says), stops, colour changes, commands | `REQ-ASM-001..005`, `REQ-LCK-001` |
+| M3.8 ✅ | Plan assembly: order, collapse, tie-off/jump/trim/tie-in (where `ties` says), stops, colour changes, the origin and stop position; `stitchcraft_engine::plan` sends each element to its generator | `REQ-ASM-001..003`, `REQ-ASM-005`, `REQ-LCK-001`, `REQ-GEN-002` |
 | M3.9 | Finalize: split, merge, hoop, colour limits; `stitch plan in.svg -o out.pes --preview out.png --report out.json` | end-to-end cases |
 | M3.10 | `stitch bug-report` bundle | a bundle reproduces its plan byte for byte |
 | MC-2 🧵 | **TS-03** (running/bean lengths), **TS-04** (lock holding test), **TS-02** again with element-driven trims | report filed; min-stitch and lock defaults confirmed (`REQ-LCK-003`) |
@@ -127,8 +127,9 @@ fill with generated tiles; circular fill. One step per type with its requirement
 SVG adapter v2:
 
 - every `inkstitch:*` attribute in the [compatibility contract](../design/inkstitch-compat-contract.md)
-- the command symbols not read yet. Since M3 the adapter applies trim, stop and the ignore commands, and
-  it never stitches commands, connectors or helper paths (`REQ-SVG-003`).
+- the command symbols not read yet, such as start and end points (`REQ-GEN-001`). The origin and stop
+  position commands go into the design settings. Since M3 the adapter applies trim, stop and the ignore
+  commands, and it never stitches commands, connectors or helper paths (`REQ-SVG-003`).
 - clones (`<use>`)
 - custom locks drawn as SVG paths, which the adapter reads for the engine. Until then they sew the half
   stitch, with `SC-W0503`.

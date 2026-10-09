@@ -255,8 +255,17 @@ area = "generators"
 level = "L2"
 statement = "Every generator honours start and end hints: the first and last stitch lie within 0.1 mm of the shape point nearest each hint."
 rationale = "Where stitching starts and ends decides the jumps and trims between elements."
-milestone = "M3"
+milestone = "M8"
 status = "planned"
+
+[[req]]
+id = "REQ-GEN-002"
+area = "generators"
+level = "L2"
+statement = "An element that cannot be sewn — a stitch type StitchCraft does not sew yet (SC-W0011), parameters it cannot read (SC-E0101), or its work budget spent (SC-E0004) — is skipped with its diagnostic, and the rest of the design still plans; with nothing left to sew, planning stops with SC-E0010."
+rationale = "One bad element must not cost the user the whole design."
+milestone = "M3"
+status = "active"
 
 # ── Running stitch family ──────────────────────────────────────────────────────────────────────────
 
@@ -330,9 +339,9 @@ status = "active"
 id = "REQ-LCK-001"
 area = "plan/locks"
 level = "L2"
-statement = "Lock stitches appear where `ties` says (both, before, after, neither) and only there."
+statement = "Lock stitches appear where `ties` says (both, before, after, neither) and only there: a tie-in where the needle jumps to a group, a tie-off where a jump, trim, stop, thread change or the end follows one, none between groups sewn on from one to the next. `force_lock_stitches` adds the tie-off; manual stitch has none unless forced."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-LCK-002"
@@ -362,25 +371,25 @@ status = "planned"
 id = "REQ-ASM-001"
 area = "plan/assembly"
 level = "L2"
-statement = "Elements are stitched in document order; a thread change starts a new colour block."
+statement = "Elements are stitched in document order; a change of thread colour starts a new colour block, and threads are compared by colour alone, as in Ink/Stitch."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-ASM-002"
 area = "plan/assembly"
 level = "L2"
-statement = "Same-colour moves no longer than the collapse length are sewn; longer ones tie off, jump and tie in."
+statement = "Between groups of the same thread, a move no longer than the earlier element's `min_jump_stitch_length_mm`, or the design's collapse length when it sets none, is sewn on without locks; a longer one, or any after an element that forces locks, ties off, jumps and ties in."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-ASM-003"
 area = "plan/assembly"
 level = "L2"
-statement = "trim_after and stop_after produce a trim or stop with locks around it."
+statement = "`trim_after` and `stop_after` put a trim or a stop after the element's last group, its tie-off before and the next group's tie-in after, as their `ties` allow."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-ASM-004"
@@ -395,9 +404,9 @@ status = "active"
 id = "REQ-ASM-005"
 area = "plan/assembly"
 level = "L2"
-statement = "The origin command (or the bounds centre) becomes the machine origin; a stop position adds a jump before each stop."
+statement = "The design's origin, or without one the centre of the box around its stitches, becomes the hoop's centre; a stop position adds a jump to it before each stop."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 # ── Satin ──────────────────────────────────────────────────────────────────────────────────────────
 

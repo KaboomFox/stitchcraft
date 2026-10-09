@@ -46,7 +46,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | Attribute | Type | Unit | Default | Applies to | Phase | StitchCraft |
 |---|---|---|---|---|---|---|
 | `satin_column` | toggle | — | — | all | P1 (M3) | planned |
-| `stroke_method` | combo | — | 0 | all | P1 (M3) | planned |
+| `stroke_method` | combo | — | 0 | all | P1 (M3) | [registered](../user/reference/params/stroke.md#stroke_method) |
 | `repeats` | int | — | 1 | `running_stitch`, `ripple_stitch`, `zigzag_stitch` | P1 (M3) | [registered](../user/reference/params/repeat.md#repeats) |
 | `bean_stitch_repeats` | str | — | 0 | `running_stitch`, `ripple_stitch`, `manual_stitch`, `zigzag_stitch` | P1 (M3) | [registered](../user/reference/params/repeat.md#bean_stitch_repeats) |
 | `manual_pattern_placement` | boolean | — | false | `ripple_stitch` | P3 (M10) | planned |
@@ -261,4 +261,4 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
 
-_145 parameter declarations, 22 registered in StitchCraft._
+_145 parameter declarations, 23 registered in StitchCraft._

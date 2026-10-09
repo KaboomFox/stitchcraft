@@ -1,6 +1,6 @@
 # Engine pipeline
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/pipeline.rs -->
 
 From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraft-engine` with its
 own tests; stages communicate only through the types in the [data model](data-model.md).
@@ -43,20 +43,19 @@ Adapters have already applied transforms and converted units, so normalization n
 
 ## 3. Generate
 
-Each element is turned into a `StitchGroup`:
+Each element becomes stitch groups (`stitchcraft_engine::generate`): the needle points of each part of it
+that a jump may separate from the next, in sewing order. A stroke gives one group per subpath, and a part
+too small for a stitch gives none (`SC-W0401`). The element's own settings stay with the element, and
+assembly reads them there: its thread, locks, trim and stop.
 
-```rust,ignore
-pub struct StitchGroup {
-    pub element: ElementId,
-    pub thread: Thread,
-    pub stitches: Vec<(Point, Role)>,   // normal stitches only; no jumps or commands yet
-    pub entry: Point,
-    pub exit: Point,
-    pub locks: LockSettings,
-    pub trim_after: bool,
-    pub stop_after: bool,
-}
-```
+The stitch type picks the generator. For a stroke it is `stroke_method`: `running_stitch` (the default)
+and `manual_stitch` are sewn from M3; the other stroke methods, satins and fills are skipped with
+`SC-W0011` until their milestones. An element whose parameters are wrong (`SC-E0101`) is skipped too, and
+the rest of the design still plans.
+
+Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
+`min_stitch`) and the element's `min_stitch_length_mm`, or the design's shortest stitch when the element
+sets none.
 
 Rules every generator follows:
 
@@ -68,8 +67,9 @@ Rules every generator follows:
   start/end commands (`REQ-GEN-001`).
 - **Seeded randomness:** seed = `random_seed` parameter if set, else a hash of the element id; the PRNG
   is SplitMix64 from `stitchcraft-core` ([determinism](determinism.md)).
-- **Budgeted:** every inner loop charges work units; exhaustion returns `SC-E0004` and no stitches for
-  this element.
+- **Budgeted:** every inner loop charges work units. Each element has the budget's work to itself. One
+  that runs out (`SC-E0004`) is skipped, and the others still plan. The stitch limit is for the whole
+  design.
 - **Roles:** every stitch is tagged underlay, top, travel or lock, which previews colour-code and which
   later enables per-layer ordering.
 
@@ -77,51 +77,78 @@ Generators are listed in [algorithms](algorithms/README.md).
 
 ## 4. Plan assembly
 
-Groups are joined into colour blocks in document order (host paint order, bottom first).
+Groups are joined into colour blocks in document order (host paint order, bottom first), by
+`stitchcraft_engine::assemble`.
 
 ### Ordering
 
 - Document order is kept: embroidery stacking follows the art's stacking. Reordering for fewer colour
   changes is an explicit, separate tool (P3) because it changes what covers what.
-- A thread change starts a new colour block with a `ColorChange`.
+- A thread change starts a new colour block (`REQ-ASM-001`). Threads are compared by colour, as
+  Ink/Stitch compares them: two names for one colour are one thread, and the block keeps the first.
 
 ### Connecting consecutive groups
 
-With `d` the distance from the previous group's exit to the next group's entry:
+The needle sews straight on from one group to the next only when nothing separates them. With `d` the
+distance from where the needle is to the next group's first needle point:
 
-| Condition | Connection |
+| Between two groups | Connection |
 |---|---|
-| Same colour, `d ≤ min_jump_stitch_length` (if set) or `d ≤ collapse_len` (default 3.0 mm), no `force_lock_stitches` | Sewn directly (the jump "collapses" into stitches, split to the maximum stitch length) |
-| Same colour, travel path inside the next region exists and the next element hides it | Travel stitches along that path (role `travel`) |
-| Otherwise | Tie-off on the previous group → `Jump` → (`Trim` when `d` exceeds the profile's trim threshold or the element says `trim_after`) → tie-in on the next group |
-| Colour change | Tie-off → `ColorChange` → tie-in |
-| `stop_after` | Tie-off → `Stop` → tie-in when sewing resumes |
+| Same thread, `d` no more than the earlier element's `min_jump_stitch_length_mm` if it sets one, else the design's collapse length (3 mm), and the earlier element does not force locks | **Sewn on:** the next group's first stitch starts where the needle is; finalize splits it if it is longer than the machine's longest stitch |
+| Same thread, otherwise | Tie-off → `Jump` → tie-in (`REQ-ASM-002`) |
+| After an element's last group, when it says `trim_after` | Tie-off → `Trim` → `Jump` → tie-in (`REQ-ASM-003`) |
+| After an element's last group, when it says `stop_after` | Tie-off → `Jump` to the stop position, if the design has one → `Stop` → `Jump` → tie-in (`REQ-ASM-003`, `REQ-ASM-005`) |
+| Thread change | Tie-off → a new colour block → `Jump` → tie-in |
+| Before the design's first group | `Jump` → tie-in |
+| After the design's last group | Tie-off |
 
-Ink/Stitch (read at `d59c9ab`) joins same-colour groups within the collapse length with one direct
-stitch, and trims only when told to (`trim_after`, a trim command). StitchCraft splits that stitch to the
-machine's longest stitch and also trims at the profile's threshold: both differences come from the
-machine profile, and go into the deviations ledger with M3.8.
+An element that sews nothing, because it is skipped or too small for a stitch, has no place for its trim
+or stop. Both are left out, as Ink/Stitch leaves them out, and `SC-W0505` says so.
+
+A jump lands where sewing resumes, on the tie-in's first point or on the group's first point when it has
+no tie-in, and the needle goes down there before the first stitch. The jump's own thread is the
+machine's business: StitchCraft trims where an element's `trim_after` is set, as Ink/Stitch does.
+Whether the reference machine also needs a trim on long jumps is test sheet TS-02's question at MC-1. Its
+answer becomes a profile value.
+
+Ink/Stitch (read at `d59c9ab`) joins groups the same way: one stitch from one group to the next within
+the collapse length, locks and a jump beyond it. It sews that stitch as it is; StitchCraft's finalize
+splits it if it is longer than the machine's longest stitch, which only a `min_jump_stitch_length_mm`
+beyond that length can cause.
 
 ### Lock stitches (ties)
 
-- `ties` selects where locks go: both, before (tie-in), after (tie-off) or neither.
-- `force_lock_stitches` adds locks even when the next group is close enough to collapse. In Ink/Stitch
-  (read at `d59c9ab`) it also adds the tie-off when `ties` asks for none after, but never a tie-in.
-- A group with fewer than two needle points is sewn without locks. Manual stitch is sewn without them
-  unless `force_lock_stitches` is set.
+- A tie-in goes only at the start of a group that the needle jumps to, the design's first included. A
+  tie-off goes only at the end of a group that a jump, trim, stop or thread change follows, or that ends
+  the design. Groups sewn on from one to the next are sewn without locks between them (`REQ-LCK-001`).
+- `ties` says which of those an element's groups get: both, the tie-in (before), the tie-off (after) or
+  neither. `force_lock_stitches` adds the tie-off whatever `ties` says, never a tie-in. It also makes each
+  group of the element end with a jump, and the tie-off is sewn there. That is Ink/Stitch's rule (read at
+  `d59c9ab`).
+- Manual stitch is sewn without locks unless `force_lock_stitches` is set, because its points are placed
+  by hand.
+- A group with fewer than two needle points is sewn without locks: it has no stitch to lock.
 - [Lock stitches](algorithms/locks.md) specifies the lock itself: its shape (`lock_start`, `lock_end`),
   its size and its shortest stitch (0.2 mm).
 
+### Origin and stop position
+
+The plan is in hoop coordinates: the design's origin goes to the hoop's centre, (0, 0), where the needle
+starts. The origin is the design's own (Ink/Stitch's origin command, read from M8) or else the centre of
+the box around every point where the needle goes down (`REQ-ASM-005`). A design's stop position
+(Ink/Stitch's stop position command) adds a jump to it before each `Stop`. At the stop position the frame
+is clear of the needle for an appliqué or a check, and sewing resumes with a jump back.
+
 ### Commands
 
-| Command | Effect |
-|---|---|
-| Start / end point | Entry/exit hints for the generator |
-| Target point | Centre for circular fills and ripple targets |
-| Trim after, stop after | Flags on the group (see the connection table) |
-| Ignore object / ignore layer | The adapter drops the element (and says so in the report) |
-| Origin | The machine origin (encoders translate to it); default: centre of the design's bounding box |
-| Stop position | A jump to this point before each `Stop`, so the frame moves out of the way |
+| Command | Effect | From |
+|---|---|---|
+| Start / end point | Entry/exit hints for the generator (`REQ-GEN-001`) | M8 |
+| Target point | Centre for circular fills and ripple targets | M7, M10 |
+| Trim after, stop after | `trim_after` and `stop_after` on the element's last group (see the connection table). The SVG adapter reads Ink/Stitch's trim and stop commands as these settings. | M3.8 (engine), M3 (adapter) |
+| Ignore object / ignore layer | The adapter drops the element and says so in the report (`REQ-ASM-004`) | M3 |
+| Origin | The design setting `origin` | M3.8 (engine), M8 (adapter) |
+| Stop position | The design setting `stop_position` | M3.8 (engine), M8 (adapter) |
 
 ## 5. Finalize
 

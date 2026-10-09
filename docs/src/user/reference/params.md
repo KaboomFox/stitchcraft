@@ -31,6 +31,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | Group | Parameters | Applies to |
 |---|---|---|
 | [Common parameters](params/common.md) | 14 | every stitch type |
+| [Stroke parameters](params/stroke.md) | 1 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Running parameters](params/running.md) | 5 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Manual parameters](params/manual.md) | 1 | Manual stitch |
@@ -59,5 +60,6 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`running_stitch_length_mm`](params/running.md#running_stitch_length_mm) | Stitch length | Running parameters |
 | [`running_stitch_tolerance_mm`](params/running.md#running_stitch_tolerance_mm) | Curve tolerance | Running parameters |
 | [`stop_after`](params/common.md#stop_after) | Stop after | Common parameters |
+| [`stroke_method`](params/stroke.md#stroke_method) | Method | Stroke parameters |
 | [`ties`](params/common.md#ties) | Lock stitches | Common parameters |
 | [`trim_after`](params/common.md#trim_after) | Trim after | Common parameters |

@@ -407,6 +407,29 @@
         "stability": "stable"
       }
     },
+    "stroke_method": {
+      "default": "running_stitch",
+      "description": "The stitch the path is sewn with: a running stitch along it, or a needle point on each of its nodes (manual stitch). Ripple and zigzag stitches arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
+      "enum": [
+        "running_stitch",
+        "ripple_stitch",
+        "zigzag_stitch",
+        "manual_stitch"
+      ],
+      "title": "Method",
+      "type": "string",
+      "x-stitchcraft": {
+        "applies_to": [
+          "running_stitch",
+          "ripple_stitch",
+          "zigzag_stitch",
+          "manual_stitch"
+        ],
+        "group": "Stroke",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "ties": {
       "default": "0",
       "description": "Where the element gets lock stitches: a few tiny stitches that stop the thread from unravelling where its stitching starts and ends.",
@@ -459,6 +482,13 @@
         ],
         "name": "CommonParams",
         "title": "Common parameters"
+      },
+      {
+        "keys": [
+          "stroke_method"
+        ],
+        "name": "StrokeParams",
+        "title": "Stroke parameters"
       },
       {
         "keys": [

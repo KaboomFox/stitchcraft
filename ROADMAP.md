@@ -16,8 +16,10 @@ StitchCraft reads SVG files into its design model, reporting whatever it leaves 
 stitches running stitches: even spacing between corners, patterns of lengths, curves followed within the
 tolerance, no stitch shorter than the shortest stitch, measured straight, repeats, bean stitch and random
 length, manual stitches placed by hand, and lock stitches of every shape at either end of the
-stitching. The conformance report shows every active requirement green. Next is the MC-1 sew-out report,
-which closes M1, then plan assembly, finalizing and `stitch plan` for the rest of M3. The repository is
+stitching. It assembles a design's elements into one plan, with jumps, trims, stops, thread changes and
+locks where `ties` says. The conformance report shows every active requirement green. Next is the MC-1
+sew-out report, which closes M1, then finalizing, `stitch plan` and the bug-report bundle for the rest of
+M3. The repository is
 [KaboomFox/stitchcraft](https://github.com/KaboomFox/stitchcraft), with the docs published at
 [kaboomfox.github.io/stitchcraft](https://kaboomfox.github.io/stitchcraft/) and `main` protected; the
 open owner action from M0.5 is the code-of-conduct contact.
@@ -27,7 +29,7 @@ open owner action from M0.5 is the code-of-conduct contact.
 | M0 | Foundations and guardrails | 🟡 M0.1–M0.4, M0.9 and M0.10 done; M0.5 partly (repository, owner, labels, Pages, branch protection; code-of-conduct contact open); M0.6–M0.8 open | — |
 | M1 | Stitch plan, Brother profile, PES/DST writers, test sheets | 🟡 M1.1–M1.10 done; closes with MC-1 | MC-1 🟡 kit out for sewing |
 | M2 | Readers, preview renderer, fuzzing | 🟢 M2.1–M2.8 done | — |
-| M3 | Running stitch family, plan assembly, SVG input | 🟡 M3.1 to M3.7 done (parameter registry, a case for every diagnostic code, SVG input, running stitch, repeats and bean stitch, manual stitch, lock stitches) | MC-2 ⚪ |
+| M3 | Running stitch family, plan assembly, SVG input | 🟡 M3.1 to M3.8 done (parameter registry, a case for every diagnostic code, SVG input, running stitch, repeats and bean stitch, manual stitch, lock stitches, plan assembly) | MC-2 ⚪ |
 | M4 | Satin column | ⚪ | MC-3 ⚪ |
 | M5 | Tatami fill | ⚪ | MC-4 ⚪ |
 | M6 | VectorCraft plug-in (ABI v1), export from `.vectorcraft`, compatibility gate | ⚪ | MC-5 ⚪ |

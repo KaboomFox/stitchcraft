@@ -261,9 +261,17 @@ impl Contract {
         }
         for family in [Family::Stroke, Family::Satin, Family::Fill] {
             let ours: BTreeSet<&str> = StitchType::ALL.iter().filter(|t| t.family() == family).map(|t| t.id()).collect();
-            let theirs: BTreeSet<&str> = self.method.iter().filter(|m| m.param == family.method_param()).map(|m| m.value.as_str()).collect();
+            let listed: Vec<&str> = self.method.iter().filter(|m| m.param == family.method_param()).map(|m| m.value.as_str()).collect();
+            let theirs: BTreeSet<&str> = listed.iter().copied().collect();
             if ours != theirs {
                 problems.push(format!("`{}`: StitchType has {ours:?}, but {DATA} lists {theirs:?}", family.method_param()));
+            }
+            // A registered method parameter offers them in Ink/Stitch's order, which its defaults count on.
+            if let Some(Kind::Choice { options }) = find(registry, family.method_param()).map(|spec| spec.kind) {
+                let offered: Vec<&str> = options.iter().map(|o| o.id).collect();
+                if offered != listed {
+                    problems.push(format!("`{}` offers {offered:?}, but Ink/Stitch's order is {listed:?}", family.method_param()));
+                }
             }
         }
         let ours: BTreeSet<&str> = COMMANDS.iter().map(|c| c.name).collect();
@@ -289,6 +297,12 @@ fn disagreements(spec: &ParamSpec, origin: Origin, p: &Param) -> Vec<String> {
         problems.push(format!("`{key}` is {} here, but Ink/Stitch's is a {} in {}", spec.kind.describe(), p.kind, p.unit));
     }
     let their_default = if p.default == "—" { "" } else { p.default.as_str() };
+    // Ink/Stitch gives some combo boxes their default as a place in the options, which the registry lists
+    // in Ink/Stitch's order (`check` makes sure of it for the method parameters).
+    let their_default = match (spec.kind, p.kind.as_str(), their_default.parse::<usize>()) {
+        (Kind::Choice { options }, "combo", Ok(place)) => options.get(place).map_or(their_default, |o| o.id),
+        _ => their_default,
+    };
     let same = match (spec.read(spec.default), spec.read(their_default)) {
         (Ok((ours, _)), Ok((theirs, None))) => ours == theirs,
         _ => false,
@@ -543,6 +557,44 @@ mod tests {
         assert_eq!(row("satin").scope().into_iter().collect::<Vec<_>>(), [StitchType::SatinZigzag]);
         let strokes = row("stroke").scope();
         assert!(strokes.len() == 4 && strokes.iter().all(|t| t.family() == Family::Stroke), "no stroke method listed: every stroke type");
+    }
+
+    #[test]
+    fn a_method_parameter_offers_ink_stitch_s_methods_in_its_order_from_its_place_default() {
+        let data = data("0.25").replacen(
+            "[[param]]",
+            "[[param]]\nelement = \"fill\"\nname = \"fill_method\"\ntype = \"combo\"\nunit = \"—\"\ndefault = \"0\"\n\
+             applies_to = []\nphase = \"P1\"\nmilestone = \"M5\"\n[[param]]",
+            1,
+        );
+        let contract = Contract::parse(&data).unwrap();
+        let fills = |order: &[StitchType], default: &'static str| -> ParamGroup {
+            let options: Vec<ChoiceOption> = order.iter().map(|t| ChoiceOption { id: t.id(), label: t.name() }).collect();
+            let fills: Vec<StitchType> = StitchType::ALL.iter().copied().filter(|t| t.family() == Family::Fill).collect();
+            let spec = ParamSpec {
+                key: "fill_method",
+                kind: Kind::Choice { options: Box::leak(options.into_boxed_slice()) },
+                default,
+                applies_to: Box::leak(fills.into_boxed_slice()),
+                ..ROW_SPACING
+            };
+            ParamGroup { name: "FillParams", help: " Fill.\n", applies_to: &[StitchType::TatamiFill], specs: Box::leak(Box::new([spec])) }
+        };
+        let order: Vec<StitchType> =
+            contract.method.iter().filter(|m| m.param == "fill_method").map(|m| StitchType::from_id(Family::Fill, &m.value).unwrap()).collect();
+        assert_eq!(contract.check(&[&fills(&order, "tatami_fill")]), Vec::<String>::new(), "Ink/Stitch's 0 is the first method");
+        assert_eq!(
+            contract.check(&[&fills(&order, "contour_fill")]),
+            [
+                "`fill_method` defaults to \"contour_fill\" here and \"tatami_fill\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)"
+            ]
+        );
+        let mut reordered = order;
+        reordered.swap(0, 1);
+        let problems = contract.check(&[&fills(&reordered, reordered[0].id())]);
+        assert_eq!(problems.len(), 1, "{problems:?}");
+        let expected = format!("`fill_method` offers [\"{}\", \"{}\"", reordered[0].id(), reordered[1].id());
+        assert!(problems[0].starts_with(&expected), "{problems:?}");
     }
 
     #[test]

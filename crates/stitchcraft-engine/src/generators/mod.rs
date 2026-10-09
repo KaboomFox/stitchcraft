@@ -3,9 +3,8 @@
 //!
 //! Every generator is pure: its stitches depend only on the shape, its parameters, its hints, its seed
 //! and its budget. It charges the budget in every loop, and it reports what it changed or left out with a
-//! coded diagnostic (`docs/src/design/engine-pipeline.md` › Generate). Until plan assembly arrives (M3.8)
-//! with the `Generator` trait and the table that sends each element to its generator, each generator is
-//! a function.
+//! coded diagnostic (`docs/src/design/engine-pipeline.md` › Generate). Each generator is a function, and
+//! [`crate::generate`] sends each element to its own.
 
 pub mod manual;
 pub mod passes;
