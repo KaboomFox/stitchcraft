@@ -10,9 +10,11 @@
 //! Coverage runs the suite a second time, instrumented, so it has its own CI job instead of being a step
 //! of `cargo xtask ci`.
 //!
-//! A crate below its floor gets its untested lines listed, a warning per file on the first of them, from
-//! the same run's lcov report. The warnings show on the pull request's page, so the lines to test are
-//! known without the job's log.
+//! A crate below its floor gets what no test runs listed as warnings, which show on the pull request's page
+//! without the job's log: its untested lines, a warning per file on the first of them, from the run's lcov
+//! report, and the functions and closures no test calls, from its JSON export. Line coverage adds up
+//! function by function, so a closure that never runs is an untested line even where the line around it
+//! runs, and only the second list shows it.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
