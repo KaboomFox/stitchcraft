@@ -104,3 +104,59 @@ pub fn unknown_keys(set: &ParamSet, registry: &[&ParamGroup]) -> Vec<Diagnostic>
 pub fn find(registry: &[&ParamGroup], key: &str) -> Option<&'static ParamSpec> {
     registry.iter().flat_map(|group| group.specs.iter()).find(|spec| spec.key == key)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::kinds::{Length, Toggle};
+    use crate::spec::{Kind, Origin, Stability};
+    use crate::stitch_type::StitchType;
+
+    const fn spec(default: &'static str) -> ParamSpec {
+        ParamSpec {
+            key: "row_spacing_mm",
+            label: "Row spacing",
+            help: " Distance between rows.\n",
+            kind: Kind::Length { min: 0.1, max: 10.0, optional: false },
+            default,
+            group: "Fill",
+            applies_to: StitchType::ALL,
+            visible_when: None,
+            stability: Stability::Stable,
+            origin: Origin::InkStitch,
+        }
+    }
+
+    fn codes(problems: &[Diagnostic]) -> Vec<Code> {
+        problems.iter().map(|d| d.code).collect()
+    }
+
+    #[test]
+    fn a_default_that_needs_clamping_or_does_not_parse_is_a_registry_bug() {
+        for default in ["99", "wide"] {
+            let mut problems = Vec::new();
+            assert_eq!(read_param::<Length>(&ParamSet::new(), Some(&spec(default)), &mut problems), None);
+            assert_eq!(codes(&problems), [Code::InternalCheckFailed], "{default}");
+        }
+    }
+
+    #[test]
+    fn the_same_values_from_a_design_are_the_designs_problem() {
+        let mut problems = Vec::new();
+        let design: ParamSet = [("row_spacing_mm", "99")].into_iter().collect();
+        assert_eq!(read_param::<Length>(&design, Some(&spec("0.25")), &mut problems).map(|mm| mm.get()), Some(10.0));
+        assert_eq!(codes(&problems), [Code::ParamClamped]);
+        let mut problems = Vec::new();
+        let design: ParamSet = [("row_spacing_mm", "wide")].into_iter().collect();
+        assert_eq!(read_param::<Length>(&design, Some(&spec("0.25")), &mut problems), None);
+        assert_eq!(codes(&problems), [Code::ParamInvalid]);
+    }
+
+    #[test]
+    fn a_missing_spec_or_a_kind_mismatch_is_a_registry_bug() {
+        let mut problems = Vec::new();
+        assert_eq!(read_param::<Length>(&ParamSet::new(), None, &mut problems), None);
+        assert_eq!(read_param::<Toggle>(&ParamSet::new(), Some(&spec("0.25")), &mut problems), None);
+        assert_eq!(codes(&problems), [Code::InternalCheckFailed, Code::InternalCheckFailed]);
+    }
+}

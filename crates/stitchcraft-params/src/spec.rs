@@ -204,3 +204,21 @@ impl Kind {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn units_name_what_values_are_in() {
+        let kinds = [
+            Kind::Length { min: 0.0, max: 1.0, optional: false },
+            Kind::LengthList { min: 0.0, max: 1.0 },
+            Kind::Percent { min: 0.0, max: 1.0 },
+            Kind::Angle,
+            Kind::Count { min: 0, max: 1 },
+            Kind::Toggle,
+        ];
+        assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "%", "°", "", ""]);
+    }
+}

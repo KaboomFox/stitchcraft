@@ -63,7 +63,7 @@ fn check(spec: &ParamSpec, registry: &[&ParamGroup]) -> Vec<&'static str> {
         require(possible, "it is shown only when another parameter has a value that parameter cannot have");
     }
     if let Stability::Deprecated { use_instead: Some(other) } = spec.stability {
-        require(other != spec.key && find(registry, other).is_some(), "it is deprecated in favour of a parameter that does not exist");
+        require(other != spec.key && find(registry, other).is_some(), "it is deprecated in favour of itself or of a parameter that does not exist");
     }
     problems
 }
@@ -103,7 +103,32 @@ mod tests {
 
     #[test]
     fn a_complete_registry_has_no_problems() {
-        assert_eq!(audit(&[&group(&[GOOD])]), Vec::<String>::new());
+        const SPECS: &[ParamSpec] = &[
+            GOOD,
+            ParamSpec { key: "rows", label: "Rows", kind: Kind::Count { min: 1, max: 20 }, default: "4", ..GOOD },
+            ParamSpec {
+                key: "method",
+                label: "Method",
+                kind: Kind::Choice { options: &[ChoiceOption { id: "a", label: "A" }, ChoiceOption { id: "b", label: "B" }] },
+                default: "a",
+                ..GOOD
+            },
+            ParamSpec {
+                key: "note",
+                label: "Note",
+                kind: Kind::Text { max_bytes: 10 },
+                default: "",
+                visible_when: Some(Condition { key: "method", equals: "b" }),
+                ..GOOD
+            },
+            ParamSpec {
+                key: "old_spacing_mm",
+                label: "Old spacing",
+                stability: Stability::Deprecated { use_instead: Some("row_spacing_mm") },
+                ..GOOD
+            },
+        ];
+        assert_eq!(audit(&[&group(SPECS)]), Vec::<String>::new());
     }
 
     #[test]
@@ -122,6 +147,9 @@ mod tests {
             ParamSpec { key: "d", label: "D", visible_when: Some(Condition { key: "c", equals: "z" }), ..GOOD },
             ParamSpec { key: "e", label: "E", visible_when: Some(Condition { key: "e", equals: "0.25" }), ..GOOD },
             ParamSpec { key: "f", label: "F", stability: Stability::Deprecated { use_instead: Some("gone") }, ..GOOD },
+            ParamSpec { key: "g", label: "G", kind: Kind::Length { min: 1.0, max: 1.0, optional: false }, default: "1", ..GOOD },
+            ParamSpec { key: "h", label: "H", kind: Kind::Text { max_bytes: 0 }, default: "", ..GOOD },
+            ParamSpec { key: "i", label: "I", stability: Stability::Deprecated { use_instead: Some("i") }, ..GOOD },
             ParamSpec { key: "a", label: "A2", ..GOOD },
         ];
         let problems = audit(&[&group(BROKEN)]);
@@ -140,7 +168,10 @@ mod tests {
                 "`c`: its default is not a value it accepts without a warning",
                 "`d`: it is shown only when another parameter has a value that parameter cannot have",
                 "`e`: it is shown only when another parameter has a value that parameter cannot have",
-                "`f`: it is deprecated in favour of a parameter that does not exist",
+                "`f`: it is deprecated in favour of itself or of a parameter that does not exist",
+                "`g`: its range is empty or not finite",
+                "`h`: its range is empty or not finite",
+                "`i`: it is deprecated in favour of itself or of a parameter that does not exist",
                 "`a`: declared twice",
             ]
         );
