@@ -77,6 +77,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- Reading Ink/Stitch's source is allowed; copying it is not (ADR-0012, replacing decision 2 of ADR-0001).
+  Behaviour still goes into the design docs in our own words and code is written from them, so the
+  details its documentation leaves out (parameter edge cases, how lists repeat, the font files) can be
+  checked against what Ink/Stitch does instead of guessed. This is VectorCraft's own line: its `AGENTS.md`
+  forbids copying GPL code, not reading it. `cargo xtask cleanroom` still fails on GPL licence text and
+  pasted Python source, and no longer on Ink/Stitch file paths, so a design doc can link what it read.
 - Mutation testing on pull requests runs only the mutants in the lines a pull request changes, which
   takes minutes, and fails for any that no test notices unless it is a listed equivalent
   (`[[equivalent]]` in `conformance/mutation.toml`). The full run, with the per-crate comparison, is

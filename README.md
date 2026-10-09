@@ -60,8 +60,8 @@ and `apps/{stitchcraft-cli, stitchcraft-vc-plugin}`, layered and enforced by `ca
 
 ## License
 
-Dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option. StitchCraft is a
-clean-room implementation and contains no Ink/Stitch code; it uses Ink/Stitch's parameter names for file
+Dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option. StitchCraft is an
+independent implementation and contains no Ink/Stitch code; it uses Ink/Stitch's parameter names for file
 interoperability ([NOTICE](NOTICE)).
 
 <sub>StitchCraft is an independent project, not affiliated with Ink/Stitch, ArtCraft or Brother.

@@ -24,8 +24,9 @@ changes follow playbooks, and every behaviour has a requirement and a test.
 
 ## Ground rules
 
-- **Clean room:** never read or copy Ink/Stitch source code (GPL-3.0). Work from the design docs,
-  public documentation and papers ([ADR-0001](../design/adr/0001-license-and-clean-room.md)).
+- **Never copy GPL code:** Ink/Stitch's source (GPL-3.0) may be read to understand its behaviour, but
+  nothing from it is copied or transliterated. Write the behaviour into the design docs in your own
+  words and code from them ([ADR-0012](../design/adr/0012-read-dont-copy.md)).
 - **No panics, no `unsafe`, deterministic output** — the lints will tell you
   ([guardrails](../design/guardrails.md)).
 - **One roadmap step per PR**, its id in the title; requirements and cases first.

@@ -46,7 +46,7 @@ pub const SUBCOMMANDS: &[(&str, Status, &str)] = &[
     ("layers", Status::Ready, "check that crates depend only on lower layers"),
     ("docs", Status::Ready, "regenerate generated pages; --check verifies docs without writing"),
     ("conformance", Status::Ready, "run the conformance suite and write the report; --check, --filter TEXT, --bless CASE"),
-    ("cleanroom", Status::Ready, "no GPL licence text or Ink/Stitch source paths anywhere in the repository"),
+    ("cleanroom", Status::Ready, "no GPL licence text or pasted Python source anywhere in the repository"),
     ("unsafe-audit", Status::Ready, "unsafe only in the plug-in ABI shim, always with SAFETY comments"),
     ("filesize", Status::Ready, "Rust files warn above 800 lines and fail above 1,500"),
     ("wasm", Status::Ready, "library crates and the plug-in build for wasm32-unknown-unknown"),

@@ -1,11 +1,11 @@
 //! `cargo xtask cleanroom`: keeps the repository free of GPL material
-//! (`docs/src/design/adr/0001-license-and-clean-room.md`).
+//! (`docs/src/design/adr/0012-read-dont-copy.md`).
 //!
-//! Scans every text file in the repository — code, tests, fixtures, workflows and documents — for
-//! GPL-family licence text and for traces of Ink/Stitch's Python source (its module paths and its
-//! imports). Documents are scanned too: they describe Ink/Stitch only by its public behaviour and file
-//! format, so a design note cannot carry its code to implementers second-hand. A heuristic, not a
-//! proof: the review checklist still asks about provenance.
+//! Ink/Stitch's source may be read but never copied. This scans every text file in the repository —
+//! code, tests, fixtures, workflows and documents — for GPL-family licence text (a GPL file came in) and
+//! for the imports of Ink/Stitch's Python (its code was pasted). Documents are scanned too, so a design
+//! note cannot carry the code to implementers second-hand; a link to the source a note read is fine. A
+//! heuristic, not a proof: the review checklist still asks that nothing was copied.
 
 use std::path::Path;
 
@@ -28,9 +28,6 @@ fn patterns() -> Vec<(String, &'static str)> {
         (format!("{spdx}GPL"), "GPL licence identifier"),
         (format!("{spdx}AGPL"), "AGPL licence identifier"),
         (format!("{spdx}LGPL"), "LGPL licence identifier"),
-        (format!("lib/{}/", "stitches"), "an Ink/Stitch source path"),
-        (format!("lib/{}/", "elements"), "an Ink/Stitch source path"),
-        (format!("lib/{}/", "stitch_plan"), "an Ink/Stitch source path"),
         (format!("import {}", "inkex"), "Ink/Stitch's Inkscape dependency (Python source)"),
         (format!("from {} import", "shapely"), "Python source"),
         (format!("import {}", "networkx"), "Python source"),
@@ -61,7 +58,7 @@ pub fn run() -> Result<(), String> {
         scanned += 1;
         scan_file(&path, &patterns, &mut findings)?;
     }
-    findings.finish("cleanroom", &format!("{scanned} files free of GPL text and Ink/Stitch source traces"))
+    findings.finish("cleanroom", &format!("{scanned} files free of GPL text and pasted Python source"))
 }
 
 fn scan_file(path: &Path, patterns: &[(String, &str)], findings: &mut Findings) -> Result<(), String> {
@@ -84,10 +81,17 @@ mod tests {
     }
 
     #[test]
-    fn flags_gpl_text_and_source_paths() {
+    fn flags_gpl_text_and_pasted_python() {
         let patterns = patterns();
-        let bad = format!("// This program is free software under the GNU {}\nsee lib/{}/fill.py", "General Public License", "stitches");
+        let bad = format!("// This program is free software under the GNU {}\n{} inkex\n", "General Public License", "import");
         assert_eq!(scan(&bad, &patterns).len(), 2);
         assert!(scan("MIT OR Apache-2.0; tatami rows are staggered", &patterns).is_empty());
+    }
+
+    #[test]
+    fn links_to_the_source_a_document_read_are_allowed() {
+        // ADR-0012: reading Ink/Stitch's source is allowed and a design doc may link what it read.
+        let link = format!("[running stitch](https://github.com/inkstitch/inkstitch/blob/0123abc/lib/{}/running_stitch.py)", "stitches");
+        assert!(scan(&link, &patterns()).is_empty());
     }
 }

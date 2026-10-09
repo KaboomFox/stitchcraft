@@ -1,6 +1,6 @@
 # StitchCraft — instructions for contributors and agents
 
-StitchCraft is a clean-room, MIT OR Apache-2.0 machine-embroidery engine in Rust, with plug-ins for
+StitchCraft is an independent, MIT OR Apache-2.0 machine-embroidery engine in Rust, with plug-ins for
 [VectorCraft](https://github.com/storytold/vectorcraft). This file is the contract for everyone who
 changes the code — people and AI agents alike. `CLAUDE.md` points here; there is only one copy.
 
@@ -17,10 +17,11 @@ changes the code — people and AI agents alike. `CLAUDE.md` points here; there 
 
 ## Non-negotiables
 
-- **Clean room.** Never open, copy or transliterate Ink/Stitch source code (GPL-3.0) or any GPL/AGPL
-  code. Behaviour comes from our design docs, public documentation, published papers and format
-  specifications. Ink/Stitch's parameter *names*, defaults and method ids are the interoperability
-  contract and are used as-is (`docs/src/design/adr/0001-license-and-clean-room.md`).
+- **Never copy GPL code.** Ink/Stitch's source (GPL-3.0), like any GPL/AGPL code, may be read to
+  understand its behaviour, but nothing from it is copied, pasted, transliterated or closely paraphrased:
+  behaviour goes into our design docs in our own words, and code is written from them. Ink/Stitch's
+  parameter *names*, defaults and method ids are the interoperability contract and are used as-is
+  (`docs/src/design/adr/0012-read-dont-copy.md`).
 - **Never crash.** No `unwrap`, `expect`, `panic!`, `unreachable!`, `todo!`, `unimplemented!` or
   `dbg!` outside tests; no unchecked indexing on data; return `Result` or a coded diagnostic. Every loop
   over input charges a `Budget`. Tests may unwrap.
@@ -39,7 +40,7 @@ changes the code — people and AI agents alike. `CLAUDE.md` points here; there 
   docs or duplicate a constant — import it.
 - **Verify bugs before fixing them.** Reproduce with a failing test or conformance case first; a fix
   without a reproducing case is not done. When citing a bug in another project, cite evidence you
-  checked (issue page, commit, code you ran).
+  checked (issue page, commit, code you ran or read).
 - **No silent fallbacks.** A degraded result always emits a coded diagnostic.
 - **Docs extend context.** Every crate has a `README.md` stating its purpose, invariants and
   dependencies; every module starts with `//!` docs explaining *why*. Update docs in the same PR as the
@@ -60,7 +61,7 @@ cargo xtask shots --check          # docs images declared, reproducible and curr
 cargo xtask conformance            # run the suite; report in target/conformance/report.md
 cargo xtask conformance --check    # requirements and cases consistent (no run)
 cargo xtask conformance --bless ID # rewrite one data case's golden files, on purpose
-cargo xtask cleanroom              # no GPL text or Ink/Stitch source paths anywhere, docs included
+cargo xtask cleanroom              # no GPL licence text or pasted Python source anywhere, docs included
 cargo xtask compat join [--nested] DIR  # make this folder, copied into a VectorCraft checkout, part of its build
 cargo xtask unsafe-audit           # unsafe only in the ABI shim, always with SAFETY comments
 cargo xtask filesize               # warn above 800 lines, fail above 1,500

@@ -53,8 +53,10 @@ automatically by `stitchcraft-testkit` for every generator registered:
 6. **Monotonicity where meaningful:** denser spacing never yields fewer stitches; larger shapes never
    yield fewer stitches.
 
-## Clean-room sources
+## Sources
 
-Each page cites only public material: embroidery practice (the terms every digitizer uses), published
-algorithms and papers, and the behaviour documented on Ink/Stitch's public website. No Ink/Stitch
-source code is used ([ADR-0001](../adr/0001-license-and-clean-room.md)).
+Each page rests on embroidery practice (the terms every digitizer uses), published algorithms and papers,
+Ink/Stitch's documentation and, where the documentation is silent, Ink/Stitch's behaviour as its source
+shows it. Pages describe all of it in our own words and never copy code; a link to the source a statement
+rests on is welcome when it helps the next reader check it again
+([ADR-0012](../adr/0012-read-dont-copy.md)).
