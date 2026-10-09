@@ -1,5 +1,7 @@
 # Engine pipeline
 
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs -->
+
 From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraft-engine` with its
 own tests; stages communicate only through the types in the [data model](data-model.md).
 
@@ -116,17 +118,18 @@ beyond that length can cause.
 
 ### Lock stitches (ties)
 
-- A tie-in goes only at the start of a group that the needle jumps to, the design's first included; a
-  tie-off only at the end of a group that a jump, trim, stop or thread change follows, or that ends the
-  design. Groups sewn on from one to the next get none between them (`REQ-LCK-001`).
+- A tie-in goes only at the start of a group that the needle jumps to, the design's first included. A
+  tie-off goes only at the end of a group that a jump, trim, stop or thread change follows, or that ends
+  the design. Groups sewn on from one to the next are sewn without locks between them (`REQ-LCK-001`).
 - `ties` says which of those an element's groups get: both, the tie-in (before), the tie-off (after) or
-  neither. `force_lock_stitches` adds the tie-off whatever `ties` says, never a tie-in, and makes every
-  group of the element end with a jump, so the tie-off is sewn. That is Ink/Stitch's rule (read at
+  neither. `force_lock_stitches` adds the tie-off whatever `ties` says, never a tie-in. It also makes each
+  group of the element end with a jump, and the tie-off is sewn there. That is Ink/Stitch's rule (read at
   `d59c9ab`).
-- Manual stitch gets no locks unless `force_lock_stitches` is set: its points are placed by hand.
-- A group with fewer than two needle points gets no locks: there is no stitch to lock.
-- The lock itself — its shape (`lock_start`, `lock_end`), its size and the 0.2 mm shortest lock stitch —
-  is specified in [Lock stitches](algorithms/locks.md).
+- Manual stitch is sewn without locks unless `force_lock_stitches` is set, because its points are placed
+  by hand.
+- A group with fewer than two needle points is sewn without locks: it has no stitch to lock.
+- [Lock stitches](algorithms/locks.md) specifies the lock itself: its shape (`lock_start`, `lock_end`),
+  its size and its shortest stitch (0.2 mm).
 
 ### Origin and stop position
 

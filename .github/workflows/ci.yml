@@ -28,6 +28,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # `cargo xtask prose` lints the lines added since the merge base with origin/main.
+          fetch-depth: 0
       - name: Pinned toolchain (rust-toolchain.toml) and the wasm target
         run: |
           rustup toolchain install --profile minimal
@@ -39,6 +42,12 @@ jobs:
           tool: cargo-deny,typos,mdbook,cargo-public-api@0.52.0
       - name: The independent reader for REQ-FMT-005 (pyembroidery, pinned by hash)
         uses: ./.github/actions/oracle
+      - name: Vale for `cargo xtask prose`, built from its tagged source (Go's checksum database checks it)
+        env:
+          GOTOOLCHAIN: auto
+        run: |
+          go install github.com/vale-cli/vale/v3/cmd/vale@v3.23.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - run: cargo xtask ci
       - name: Keep new previews and conformance diffs when something differs
         if: failure()

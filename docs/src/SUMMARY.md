@@ -31,6 +31,7 @@
   - [Data model](design/data-model.md)
   - [Parameter registry](design/params.md)
   - [Diagnostics](design/diagnostics.md)
+  - [SVG input](design/svg-input.md)
   - [Engine pipeline](design/engine-pipeline.md)
   - [Stitch generators](design/algorithms/README.md)
     - [Strokes](design/algorithms/strokes.md)
@@ -74,3 +75,4 @@
   - [New format](contributing/playbook-new-format.md)
   - [New diagnostic](contributing/playbook-new-diagnostic.md)
   - [Review checklist](contributing/review-checklist.md)
+  - [Writing style](contributing/writing-style.md)
