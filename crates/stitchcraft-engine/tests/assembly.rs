@@ -262,9 +262,9 @@ fn diag_sc_w0505_a_trim_or_stop_after_an_element_that_sews_nothing_is_named() {
             ("warning SC-W0505: This element sews no stitch, so the stop after it is left out.".to_string(), Some("stop")),
         ]
     );
-    // An element that sews nothing and sets neither says nothing more.
-    let quiet = sewn(vec![line("tiny", (0.0, 0.0), 0.1, &RED, &[]), line("ok", (0.0, 15.0), 10.0, &RED, &[])]);
-    assert!(quiet.diagnostics.iter().all(|d| d.code != Code::TrimOrStopLeftOut));
+    // An element that sews nothing and sets neither, or one that sews, says nothing more.
+    let quiet = sewn(vec![line("tiny", (0.0, 0.0), 0.1, &RED, &[]), line("ok", (0.0, 15.0), 10.0, &RED, &[("trim_after", "true")])]);
+    assert!(quiet.diagnostics.iter().all(|d| d.code != Code::TrimOrStopLeftOut), "{:?}", messages(&quiet));
 }
 
 #[test]
