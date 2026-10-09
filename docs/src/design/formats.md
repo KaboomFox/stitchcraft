@@ -132,8 +132,16 @@ that points nowhere) become warnings in the result.
 
 | Reader | Reads | What it has to infer |
 |---|---|---|
-| PES / PEC | the PEC block of any PES version (`#PES0001` … `#PES0060`), and bare `#PEC0001` files; the block must start with `LA:` | A colour change to the same palette entry is a **stop** — the way PEC writes stops. Two blocks whose threads map to the same Brother colour read back as one block with a stop: PES v1 cannot tell them apart. |
+| PES / PEC | the PEC block of any PES version (`#PES0001` … `#PES0060`), and bare `#PEC0001` files; the block must start with `LA:` | A colour change to the same palette entry is a **stop**, as PEC writes stops. Blocks whose threads map to one Brother colour read back as one block with a stop, because PES v1 cannot tell them apart. Whether the stitch data starts with the **origin field** (below). |
 | DST | the header's label and every record | Three or more jumps in a row are a **trim** before them where something was sewn since the thread was last cut or changed, as DST machines read them (`REQ-FMT-008`); a trim's own spelling at the start of the run — up to 8 jumps of at most 1 mm that end where they started — moves the frame nowhere and is not kept as jumps. Colours: none — each block gets a placeholder thread, and a stop reads as a colour change. |
+
+**The PEC origin field** (`REQ-FMT-009`). Brother's software, pystitch and StitchCraft write 4 bytes
+before the first record, shaped like a long jump on both axes. They hold the offset from the corner of
+the box that the header's width and height give to the start of the design. pyembroidery 1.4.32 to
+1.5.1 leave the field out, and their first record is often a long jump that looks the same. The reader
+takes the 4 bytes as the field only if the design read after them fits that box, and otherwise reads them
+as the first record, with a warning that Brother machines expect the field. Files from pyembroidery
+1.5.1 itself test both cases (`conformance/oracle/write_pes.py`).
 
 Every reader survives every truncation and single-byte change of the golden files (a deterministic test
 that runs on every PR), and an hour of coverage-guided fuzzing every night (`REQ-FMT-006`;
