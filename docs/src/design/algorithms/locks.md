@@ -10,17 +10,25 @@ phase P1 (M3.7).
 `lock_start_scale_mm`, `lock_end_scale_mm`, `lock_start_scale_percent`, `lock_end_scale_percent`
 ([reference](../../user/reference/params/common.md#lock-stitches)).
 
-## The frame
+## Placement
 
-The anchor is the group's first needle point for a tie-in and its last for a tie-off. The lock is drawn in
-a frame at the anchor: x along the stitch from the anchor to the next needle point that is not the anchor
-itself, pointing into the stitching, and y a quarter turn from it. The lock is straight in that frame, so
-one that reaches no further than that stitch lies on it, and the stitching covers it. A group with no such
-second point has no stitch to lock and gets no lock.
+The anchor is the group's first needle point for a tie-in and its last for a tie-off. A group with no
+needle point other than the anchor has no stitch to lock and gets no lock.
+
+- **Steps** are distances along the stitching from the anchor, positive into it. A lock of steps follows
+  the stitching round its corners, so it lies on the stitches that come after it, and they cover it. A
+  negative distance goes straight back along the first stitch, before the anchor. Past the end of
+  stitching shorter than the lock, the lock goes straight on from the last stitch.
+- **A drawn lock** lies in a frame at the anchor: x along the stitch from the anchor to the next needle
+  point that is not the anchor itself, pointing into the stitching, and y a quarter turn from it.
+
+A sharp turn can bring two needle points of a lock of steps closer together than the steps between them.
+When following the stitching would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the
+first stitch, in the frame, and `SC-W0502` says so.
 
 ## The two ends
 
-A lock is sewn in the same order at both ends; only the frame turns round with the stitching.
+A lock is sewn in the same order at both ends. At a tie-off, into the stitching is back along it.
 
 - A **tie-in** leads into the anchor: the needle arrives at the lock's first point, sews the lock, and the
   group's first needle point follows.
@@ -63,7 +71,7 @@ secures:
 
 ## Steps
 
-Steps are distances along x, in sewing order, positive into the stitching. A tie-in's needle positions are
+Steps are distances along the stitching, in sewing order, positive into it. A tie-in's needle positions are
 the anchor less the steps still to come, so its last step lands on the anchor; a tie-off's are the anchor
 plus the steps sewn so far. With steps of `2 -1` in sizes of 0.5 mm, a tie-in starts 0.5 mm behind the
 start of the stitching, goes 1 mm forth and 0.5 mm back onto it; a tie-off goes 1 mm back over the last
@@ -93,7 +101,8 @@ No lock stitch is shorter than 0.2 mm (`LOCK_MIN_STITCH`, which the plan checker
 `REQ-PLAN-002`), so the needle never goes back into the hole it just left. Joins count: a tie-in's last
 stitch into the anchor and a tie-off's first stitch out of it. A step shorter than that is lengthened to
 it, keeping its direction; a drawn lock whose shortest stitch would be shorter is enlarged as a whole until
-it is that long, keeping its shape. Both say by how much (`SC-W0502`). The half stitch never needs it.
+it is that long, keeping its shape. Both say by how much (`SC-W0502`). The half stitch never needs it. A
+lock of steps that a sharp turn would fold onto itself is sewn straight ([placement](#placement)).
 
 ## Compared with Ink/Stitch
 
@@ -107,6 +116,13 @@ and which size parameter applies to which lock are the same; the shapes differ (
   one step, twice, like its half stitch.
 - The drawn shapes are StitchCraft's own designs.
 - Ink/Stitch draws custom SVG paths; StitchCraft sews the half stitch with `SC-W0503` until M8.
+
+Both follow the stitching with custom steps. Where they differ (`DEV-LCK-002`):
+
+- Ink/Stitch puts the needle points past the end of stitching shorter than the lock on its last needle
+  point. StitchCraft goes straight on from the last stitch, so no two needle points coincide.
+- Ink/Stitch follows a turn however sharp. StitchCraft sews straight a lock that a turn would fold onto
+  itself.
 
 ## Properties
 

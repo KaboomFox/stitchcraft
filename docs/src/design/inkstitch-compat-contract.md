@@ -31,11 +31,11 @@ registry uses these names as its keys so files move between the tools unchanged
 | `ties` | dropdown | — | 0 | all | P1 (M3) | [registered](../user/reference/params/common.md#ties) |
 | `force_lock_stitches` | boolean | — | false | all | P1 (M3) | [registered](../user/reference/params/common.md#force_lock_stitches) |
 | `lock_start` | combo | — | half_stitch | all | P1 (M3) | [deviates](../user/reference/params/common.md#lock_start) |
-| `lock_custom_start` | string | — | — | `custom` | P1 (M3) | [registered](../user/reference/params/common.md#lock_custom_start) |
+| `lock_custom_start` | string | — | — | `custom` | P1 (M3) | [deviates](../user/reference/params/common.md#lock_custom_start) |
 | `lock_start_scale_mm` | float | mm | 0.7 | `back_forth`, `custom` | P1 (M3) | [registered](../user/reference/params/common.md#lock_start_scale_mm) |
 | `lock_start_scale_percent` | float | % | 100 | `arrow`, `bowtie`, `cross`, `star`, `simple`, `triangle`, `zigzag`, `custom` | P1 (M3) | [registered](../user/reference/params/common.md#lock_start_scale_percent) |
 | `lock_end` | combo | — | half_stitch | all | P1 (M3) | [deviates](../user/reference/params/common.md#lock_end) |
-| `lock_custom_end` | string | — | — | `custom` | P1 (M3) | [registered](../user/reference/params/common.md#lock_custom_end) |
+| `lock_custom_end` | string | — | — | `custom` | P1 (M3) | [deviates](../user/reference/params/common.md#lock_custom_end) |
 | `lock_end_scale_mm` | float | mm | 0.7 | `back_forth`, `custom` | P1 (M3) | [registered](../user/reference/params/common.md#lock_end_scale_mm) |
 | `lock_end_scale_percent` | float | % | 100 | `arrow`, `bowtie`, `cross`, `star`, `simple`, `triangle`, `zigzag`, `custom` | P1 (M3) | [registered](../user/reference/params/common.md#lock_end_scale_percent) |
 | `trim_after` | boolean | — | false | all | P1 (M3) | [registered](../user/reference/params/common.md#trim_after) |

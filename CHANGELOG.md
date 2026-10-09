@@ -12,11 +12,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     the same over one step of `lock_*_scale_mm`, and seven drawn shapes are sized by
     `lock_*_scale_percent`. Each lies on the stitching it secures.
   - **Custom locks.** Numbers in `lock_custom_start` and `lock_custom_end` are steps along the stitching,
-    read as Ink/Stitch reads them. A lock drawn as an SVG path is not sewn yet: the half stitch is sewn
+    read as Ink/Stitch reads them. Locks of steps follow the stitching round its corners, as Ink/Stitch's
+    custom steps do (`DEV-LCK-002` for the two places they differ). A lock drawn as an SVG path is not sewn yet: the half stitch is sewn
     instead, and the new `SC-W0503` says so, as it does for an empty custom lock or pieces that are not
     numbers.
   - **Shortest lock stitch.** No lock stitch is shorter than 0.2 mm: a shorter step is lengthened, a
-    drawn lock enlarged, and the new `SC-W0502` says by how much.
+    drawn lock enlarged, a lock of steps that a sharp turn would fold onto itself sewn straight, and the
+    new `SC-W0502` says so.
   - **Settings windows** show `lock_*_scale_mm` only for the locks it sizes, and `lock_*_scale_percent`
     likewise: a parameter can now be shown for several values of another (`when key in VALUES`).
   - **Conformance.** `REQ-LCK-002` and the new `REQ-LCK-004` are active; `REQ-LCK-001` (where locks go)

@@ -50,7 +50,7 @@ half stitch instead (`SC-W0503`).
 - **Accepts:** text of at most 4096 bytes
 - **Default:** empty
 - **Shown when** [`lock_start`](#lock_start) is `custom`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key; StitchCraft differs (DEV-LCK-002): Locks of steps follow the stitching round its corners, as Ink/Stitch's custom steps do, with two differences: past the end of stitching shorter than the lock they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point; and a lock that following a sharp turn would give a stitch shorter than 0.2 mm is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn.
 
 ### `lock_start_scale_mm`
 
@@ -91,7 +91,7 @@ sews the half stitch instead (`SC-W0503`).
 - **Accepts:** text of at most 4096 bytes
 - **Default:** empty
 - **Shown when** [`lock_end`](#lock_end) is `custom`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key; StitchCraft differs (DEV-LCK-002): Locks of steps follow the stitching round its corners, as Ink/Stitch's custom steps do, with two differences: past the end of stitching shorter than the lock they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point; and a lock that following a sharp turn would give a stitch shorter than 0.2 mm is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn.
 
 ### `lock_end_scale_mm`
 

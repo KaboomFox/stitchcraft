@@ -5,14 +5,16 @@
 //! groups get a lock (`ties`, `force_lock_stitches`, jumps and trims); this module sews one lock at one
 //! end of a group's needle points:
 //!
-//! 1. **The frame.** The lock is drawn at the point where the stitching starts or ends, the anchor, with x
-//!    along the stitch there, pointing into the stitching, and y across it. It is straight in that frame,
-//!    so it lies on the first (or last) stitch, which covers it.
+//! 1. **Where it lies.** The anchor is the point where the stitching starts or ends. Steps are distances
+//!    along the stitching from the anchor, positive into it, so a lock of steps follows the stitching round
+//!    its corners and the stitching covers it. A drawn lock lies in a frame at the anchor: x along the
+//!    stitch there, pointing into the stitching, and y across it.
 //! 2. **The shape** ([`LOCKS`]): the half stitch, sized from that stitch; steps, sized by
 //!    `lock_*_scale_mm`; a drawn loop, sized by `lock_*_scale_percent`; or the element's custom steps.
 //! 3. **No lock stitch shorter than 0.2 mm** ([`LOCK_MIN_STITCH`]), so the needle never goes back into the
-//!    hole it just left: a shorter step is lengthened to it, and a drawn lock enlarged until its shortest
-//!    stitch is that long (`SC-W0502`).
+//!    hole it just left: a shorter step is lengthened to it, a drawn lock enlarged until its shortest
+//!    stitch is that long, and a lock of steps that a sharp turn would fold onto itself sewn straight
+//!    along the first (or last) stitch (`SC-W0502`).
 //! 4. **The ends.** A lock is sewn in the same order at both ends. A tie-in leads into the anchor: its
 //!    steps end there, its loop starts there. A tie-off leaves from it: its steps start there, its loop
 //!    comes back to it, where the thread is trimmed. That is how Ink/Stitch reads custom steps, so a file
@@ -103,11 +105,19 @@ impl<'p> Settings<'p> {
     }
 }
 
+/// A lock before it is placed on the stitching.
+enum Planned {
+    /// Distances along the stitching from the anchor, positive into it: the half stitch and steps.
+    Along(Vec<f64>),
+    /// Points in the frame: the drawn locks.
+    Drawn(Vec<(f64, f64)>),
+}
+
 /// The lock at the start of `track`: the group's needle points from the end being locked on.
 fn sew(mut track: impl Iterator<Item = Point>, end: End, params: &CommonParams, meter: &mut Meter) -> Result<Lock, Exhausted> {
     let Some(anchor) = track.next() else { return Ok(Lock::default()) };
     let mut toward = None;
-    for point in track {
+    for point in track.by_ref() {
         meter.charge(1)?;
         if point != anchor {
             toward = Some(point);
@@ -117,11 +127,11 @@ fn sew(mut track: impl Iterator<Item = Point>, end: End, params: &CommonParams, 
     let Some(toward) = toward else { return Ok(Lock::default()) };
     let settings = Settings::of(params, end);
     let mut warnings = Vec::new();
-    let fallback = || along(&half_stitch(anchor.distance(toward)), end);
+    let fallback = || Planned::Along(along(&half_stitch(anchor.distance(toward)), end));
     let planned = match shapes::shape(settings.id) {
         Shape::HalfStitch => fallback(),
-        Shape::Steps(units) => along(&lengthened(units.iter().map(|u| u * settings.scale_mm).collect(), end, &mut warnings), end),
-        Shape::Drawn(points) => drawn(points, settings.scale_percent, end, &mut warnings),
+        Shape::Steps(units) => Planned::Along(along(&lengthened(units.iter().map(|u| u * settings.scale_mm).collect(), end, &mut warnings), end)),
+        Shape::Drawn(points) => Planned::Drawn(drawn(points, settings.scale_percent, end, &mut warnings)),
         Shape::Custom => match custom::read(settings.custom, settings.scale_mm, meter)? {
             custom::Read::Steps { steps, skipped } => {
                 if !skipped.is_empty() {
@@ -131,7 +141,7 @@ fn sew(mut track: impl Iterator<Item = Point>, end: End, params: &CommonParams, 
                     warnings.push(unusable(end, "has no steps to sew"));
                     fallback()
                 } else {
-                    along(&lengthened(steps, end, &mut warnings), end)
+                    Planned::Along(along(&lengthened(steps, end, &mut warnings), end))
                 }
             }
             custom::Read::Drawn => {
@@ -141,12 +151,106 @@ fn sew(mut track: impl Iterator<Item = Point>, end: End, params: &CommonParams, 
         },
     };
     let frame = Frame::new(anchor, toward);
-    let mut points = Vec::with_capacity(planned.len());
-    for at in planned {
-        meter.charge(1)?;
-        points.push(frame.at(at));
-    }
+    let points = match planned {
+        Planned::Drawn(planned) => {
+            let mut points = Vec::with_capacity(planned.len());
+            for at in planned {
+                meter.charge(1)?;
+                points.push(frame.at(at));
+            }
+            points
+        }
+        Planned::Along(planned) => {
+            let reach = planned.iter().copied().fold(0.0, f64::max);
+            let stitching = Stitching::follow(anchor, toward, track, reach, meter)?;
+            let mut points = Vec::with_capacity(planned.len());
+            for &x in &planned {
+                meter.charge(1)?;
+                points.push(stitching.at(x));
+            }
+            let short = shortest(&points, anchor, end);
+            if at_least(short, LOCK_MIN_STITCH.get()) {
+                points
+            } else {
+                warnings.push(straightened(end, short));
+                planned.iter().map(|&x| frame.at((x, 0.0))).collect()
+            }
+        }
+    };
     Ok(Lock { points, warnings: warnings.into_iter().map(|w| w.located(anchor)).collect() })
+}
+
+/// The stitching a lock of steps follows: the group's needle points from the anchor, without repeats, as
+/// far as the lock reaches into it.
+struct Stitching {
+    points: Vec<Point>,
+    /// How far along the stitching each point is from the anchor, in millimetres: rising, from 0.
+    distances: Vec<f64>,
+    /// How far the last point is.
+    length: f64,
+    /// The frame at the last point, along the last stitch back into the stitching: a lock that reaches
+    /// past the end goes straight on.
+    past_end: Frame,
+}
+
+impl Stitching {
+    /// The needle points `anchor`, `toward` (another point) and those of `rest` that the lock needs to
+    /// reach `reach` mm into the stitching. Every point taken from `rest` costs a unit of `meter`.
+    fn follow(anchor: Point, toward: Point, mut rest: impl Iterator<Item = Point>, reach: f64, meter: &mut Meter) -> Result<Stitching, Exhausted> {
+        let (mut before, mut last) = (anchor, toward);
+        let (mut points, mut distances) = (vec![anchor, toward], vec![0.0, anchor.distance(toward)]);
+        let mut length = anchor.distance(toward);
+        while length < reach {
+            let Some(point) = rest.next() else { break };
+            meter.charge(1)?;
+            if point != last {
+                length += last.distance(point);
+                points.push(point);
+                distances.push(length);
+                (before, last) = (last, point);
+            }
+        }
+        Ok(Stitching { points, distances, length, past_end: Frame::new(last, before) })
+    }
+
+    /// The point `distance` mm along the stitching from the anchor. Before the anchor (a negative
+    /// distance) it is straight back along the first stitch, and past the end straight on from the last.
+    fn at(&self, distance: f64) -> Point {
+        // The stitch the distance falls on: the last one that starts at or before it, or the first.
+        let next = self.distances.partition_point(|&d| d <= distance).max(1);
+        match (self.points.get(next - 1), self.points.get(next), self.distances.get(next - 1)) {
+            (Some(&from), Some(&to), Some(&start)) => Frame::new(from, to).at((distance - start, 0.0)),
+            _ => self.past_end.at((self.length - distance, 0.0)),
+        }
+    }
+}
+
+/// The shortest stitch that the lock `points` at `end` sews, joins included: a tie-in's last stitch into
+/// the anchor, a tie-off's first stitch out of it.
+fn shortest(points: &[Point], anchor: Point, end: End) -> f64 {
+    let sewn: Vec<Point> = match end {
+        End::Start => points.iter().copied().chain([anchor]).collect(),
+        End::End => [anchor].into_iter().chain(points.iter().copied()).collect(),
+    };
+    sewn.windows(2).map(|pair| if let [a, b] = pair { a.distance(*b) } else { f64::INFINITY }).fold(f64::INFINITY, f64::min)
+}
+
+/// `SC-W0502` for a lock of steps that would sew a stitch `short` mm long where it follows a turn of the
+/// stitching, and is sewn straight instead.
+fn straightened(end: End, short: f64) -> Diagnostic {
+    let stitch = match end {
+        End::Start => "first",
+        End::End => "last",
+    };
+    Diagnostic::new(
+        Code::LockStitchLengthened,
+        format!(
+            "The {} lock would sew a stitch of {} mm where it follows a turn of the stitching, shorter than {} mm, so it is sewn straight along the {stitch} stitch.",
+            end.name(),
+            mm(short),
+            mm(LOCK_MIN_STITCH.get())
+        ),
+    )
 }
 
 /// The half stitch's steps for a first stitch `first` mm long: forth and back over half of it, twice,
@@ -156,29 +260,30 @@ fn half_stitch(first: f64) -> [f64; 4] {
     [half, -half, half, -half]
 }
 
-/// The needle positions in the frame of `steps` (millimetres, in sewing order, positive into the
-/// stitching): for a tie-in, those leading into the anchor; for a tie-off, those leaving it.
-fn along(steps: &[f64], end: End) -> Vec<(f64, f64)> {
+/// The needle positions of `steps` (millimetres, in sewing order, positive into the stitching), as
+/// distances along the stitching from the anchor: for a tie-in, those leading into the anchor; for a
+/// tie-off, those leaving it.
+fn along(steps: &[f64], end: End) -> Vec<f64> {
     let mut at = 0.0;
     match end {
         End::Start => {
             // Back from the anchor: each position is the anchor less the steps still to come.
-            let mut points: Vec<(f64, f64)> = steps
+            let mut positions: Vec<f64> = steps
                 .iter()
                 .rev()
                 .map(|step| {
                     at -= step;
-                    (at, 0.0)
+                    at
                 })
                 .collect();
-            points.reverse();
-            points
+            positions.reverse();
+            positions
         }
         End::End => steps
             .iter()
             .map(|step| {
                 at += step;
-                (at, 0.0)
+                at
             })
             .collect(),
     }
@@ -290,12 +395,11 @@ mod tests {
 
     #[test]
     fn steps_lead_into_the_anchor_or_leave_it() {
-        let xs = |points: Vec<(f64, f64)>| points.into_iter().map(|(x, _)| x).collect::<Vec<_>>();
-        assert_eq!(xs(along(&[1.0, -1.0, 1.0, -1.0], End::Start)), [0.0, 1.0, 0.0, 1.0]);
-        assert_eq!(xs(along(&[1.0, -1.0, 1.0, -1.0], End::End)), [1.0, 0.0, 1.0, 0.0]);
+        assert_eq!(along(&[1.0, -1.0, 1.0, -1.0], End::Start), [0.0, 1.0, 0.0, 1.0]);
+        assert_eq!(along(&[1.0, -1.0, 1.0, -1.0], End::End), [1.0, 0.0, 1.0, 0.0]);
         // Steps that do not come back: a tie-in starts behind the anchor, a tie-off ends ahead of it.
-        assert_eq!(xs(along(&[2.0, -1.0], End::Start)), [-1.0, 1.0]);
-        assert_eq!(xs(along(&[2.0, -1.0], End::End)), [2.0, 1.0]);
+        assert_eq!(along(&[2.0, -1.0], End::Start), [-1.0, 1.0]);
+        assert_eq!(along(&[2.0, -1.0], End::End), [2.0, 1.0]);
     }
 
     #[test]

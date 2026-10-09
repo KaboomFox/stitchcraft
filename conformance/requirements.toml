@@ -337,7 +337,7 @@ status = "active"
 id = "REQ-LCK-004"
 area = "plan/locks"
 level = "L2"
-statement = "A custom lock written as numbers sews them as steps along the path, in sizes of `lock_*_scale_mm`, positive into the stitching: a tie-in's steps end where the stitching starts and a tie-off's begin where it ends, as Ink/Stitch reads them."
+statement = "A custom lock written as numbers sews them as steps along the stitching, round its corners, in sizes of `lock_*_scale_mm`, positive into the stitching: a tie-in's steps end where the stitching starts and a tie-off's begin where it ends, as Ink/Stitch reads them."
 milestone = "M3"
 status = "active"
 

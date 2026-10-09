@@ -169,7 +169,9 @@ registry! {
     /// A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have: the needle
     /// would go back into the hole it just left, which can cut the thread and does not lock it. Each such
     /// step of a lock made of steps (back and forth, or a custom lock written as numbers) was lengthened
-    /// to 0.2 mm; a drawn lock was enlarged until its shortest stitch is 0.2 mm.
+    /// to 0.2 mm; a drawn lock was enlarged until its shortest stitch is 0.2 mm. A lock of steps follows
+    /// the stitching, and where a sharp turn would fold it onto itself, it was sewn straight along the
+    /// first (or last) stitch.
     ///
     /// The message says which lock, and by how much. Set a larger lock size (`lock_start_scale_mm`,
     /// `lock_end_scale_mm`) or scale (`lock_start_scale_percent`, `lock_end_scale_percent`), or write

@@ -62,8 +62,9 @@
       "title": "Custom end lock",
       "type": "string",
       "x-stitchcraft": {
+        "deviation": "DEV-LCK-002",
         "group": "Lock stitches",
-        "origin": "inkstitch",
+        "origin": "inkstitch-deviates",
         "stability": "stable",
         "visible_when": {
           "any_of": [
@@ -80,8 +81,9 @@
       "title": "Custom start lock",
       "type": "string",
       "x-stitchcraft": {
+        "deviation": "DEV-LCK-002",
         "group": "Lock stitches",
-        "origin": "inkstitch",
+        "origin": "inkstitch-deviates",
         "stability": "stable",
         "visible_when": {
           "any_of": [

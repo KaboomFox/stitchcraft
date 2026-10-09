@@ -17,6 +17,13 @@ reason = "Clean room: the shapes come from StitchCraft's design (docs/src/design
 requirements = ["REQ-LCK-002"]
 
 [[deviation]]
+id = "DEV-LCK-002"
+area = "plan/locks"
+summary = "Locks of steps follow the stitching round its corners, as Ink/Stitch's custom steps do, with two differences: past the end of stitching shorter than the lock they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point; and a lock that following a sharp turn would give a stitch shorter than 0.2 mm is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn."
+reason = "No lock stitch is shorter than 0.2 mm (REQ-LCK-002), so the needle never goes back into the hole it just left. Ink/Stitch's behaviour was read at d59c9ab (lib/stitch_plan/lock_stitch.py), docs/src/design/algorithms/locks.md."
+requirements = ["REQ-LCK-004"]
+
+[[deviation]]
 id = "DEV-RUN-001"
 area = "strokes/running"
 summary = "Corners are joins between segments that turn by more than 30°. Ink/Stitch takes turns of 45° or more at any point of the flattened path, curves included, and skips one closer than twice the tolerance to the previous."
