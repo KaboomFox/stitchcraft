@@ -86,7 +86,7 @@ pub static SHEETS: &[TestSheet] = &[
             "The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop).",
             "Left half (red; every dash but the last asks for a trim after it): for each row (gaps of 2, 5, 15, 40 mm, top to bottom), was the thread between the two dashes cut?",
             "Right half (blue; no trims): the 2 mm gap is sewn across. For the other rows, and between rows, was the jump thread cut?",
-            "Each dash starts and ends with a small lock: where the thread was cut, pull the tail gently. Does the dash hold?",
+            "Where the thread was cut, the stitching ends and starts again with a small lock: pull each tail gently. Does the dash hold?",
             "Any loose loops, knots or bird's nests on the back, and where.",
         ],
         build: ts02b::build,

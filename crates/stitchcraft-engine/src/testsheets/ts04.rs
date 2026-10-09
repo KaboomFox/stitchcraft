@@ -1,11 +1,11 @@
 //! TS-04 — lock stitches: does each lock hold when its tail is pulled, and can it be seen?
 //!
 //! Drawn as a design (`designed`): a row for each lock shape, in the order of the lock table (custom locks
-//! aside, which have no shape of their own), each of three 30 mm lines with that lock at both ends and a
-//! trim after it, so the lock is all that holds each end. The sizes grow to the right: the half stitch is
-//! sized from the first stitch, so its lines have first stitches of 1.5, 2.5 and 4 mm; locks made of
-//! steps are sized by `lock_*_scale_mm` (0.5, 0.7, 1.0 mm), drawn ones by `lock_*_scale_percent` (70, 100,
-//! 150 %).
+//! aside, which have no shape of their own), each of three lines of about 30 mm with that lock at both
+//! ends and a trim after it, so the lock is all that holds each end. The sizes grow to the right: the half
+//! stitch is sized from the first stitch, so its lines have first stitches of 1.5, 2.5 and 4 mm; locks
+//! made of steps are sized by `lock_*_scale_mm` (0.5, 0.7, 1.0 mm), drawn ones by
+//! `lock_*_scale_percent` (70, 100, 150 %).
 
 use stitchcraft_plan::StitchPlan;
 
