@@ -63,8 +63,20 @@ pub stitchcraft_engine::design::Subpath::segments: alloc::vec::Vec<stitchcraft_e
 pub stitchcraft_engine::design::Subpath::start: stitchcraft_core::units::Point
 pub const stitchcraft_engine::design::WORKING_LIMIT_MM: f64
 pub mod stitchcraft_engine::generators
+pub mod stitchcraft_engine::generators::passes
+pub struct stitchcraft_engine::generators::passes::RepeatParams
+pub stitchcraft_engine::generators::passes::RepeatParams::bean_stitch_repeats: <stitchcraft_params::kinds::CountList as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::passes::RepeatParams::repeats: <stitchcraft_params::kinds::Count as stitchcraft_params::kinds::ParamKind>::Value
+impl stitchcraft_engine::generators::passes::RepeatParams
+pub const stitchcraft_engine::generators::passes::RepeatParams::GROUP: stitchcraft_params::spec::ParamGroup
+pub const stitchcraft_engine::generators::passes::RepeatParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
+pub fn stitchcraft_engine::generators::passes::RepeatParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
+pub fn stitchcraft_engine::generators::passes::sew(&[stitchcraft_core::units::Point], u32, &[u32], &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_core::units::Point>, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::running
 pub struct stitchcraft_engine::generators::running::RunningParams
+pub stitchcraft_engine::generators::running::RunningParams::enable_random_stitch_length: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::running::RunningParams::random_seed: <stitchcraft_params::kinds::Seed as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::running::RunningParams::random_stitch_length_jitter_percent: <stitchcraft_params::kinds::Percent as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::running::RunningParams::running_stitch_length_mm: <stitchcraft_params::kinds::LengthList as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::running::RunningParams::running_stitch_tolerance_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 impl stitchcraft_engine::generators::running::RunningParams
@@ -74,7 +86,7 @@ pub fn stitchcraft_engine::generators::running::RunningParams::from_set(&stitchc
 pub struct stitchcraft_engine::generators::running::Stitched
 pub stitchcraft_engine::generators::running::Stitched::runs: alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>
 pub stitchcraft_engine::generators::running::Stitched::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
-pub fn stitchcraft_engine::generators::running::running_stitch(&stitchcraft_engine::design::Path, &stitchcraft_engine::generators::running::RunningParams, stitchcraft_core::units::Mm, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::running::Stitched, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::generators::running::running_stitch(&stitchcraft_engine::design::Path, &stitchcraft_engine::generators::running::RunningParams, &stitchcraft_engine::generators::passes::RepeatParams, stitchcraft_core::units::Mm, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::running::Stitched, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::normalize
 pub mod stitchcraft_engine::normalize::stroke
 pub struct stitchcraft_engine::normalize::stroke::Piece

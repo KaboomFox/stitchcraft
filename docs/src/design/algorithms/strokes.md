@@ -45,8 +45,10 @@ checks straight. "The shortest stitch" is the one [Finalize](../engine-pipeline.
    deviation, among those that leave both parts within the lengths above, and repeat. This bounds the
    visual error by `running_stitch_tolerance_mm` on any curve whose details are larger than the shortest
    stitch.
-6. **Random length** (M3.5). With `enable_random_stitch_length`, each stitch length is drawn uniformly
-   from `s × (1 ± jitter)`, then the span is rescaled to end on its corner. The seed makes it repeatable.
+6. **Random length.** With `enable_random_stitch_length`, each stitch length is drawn uniformly from
+   `s × (1 ± jitter)`, the first of each span a random fraction of that (a random phase, below), then the
+   span is rescaled to end on its corner. The element's own generator draws them, seeded with
+   `random_seed`, so the same element and seed always give the same stitches.
 
 **When the rules disagree,** the shortest stitch wins (a shorter stitch hammers one spot and can break the
 thread), then corners, then the tolerance. A part of the path that is a single point, shorter than the
@@ -71,7 +73,7 @@ documented ways, `DEV-RUN-001` to `DEV-RUN-004` in the deviations ledger (`confo
 - Repeats apply to running, ripple and zigzag strokes; bean stitch to those and to manual stitch (the
   [compatibility contract](../inkstitch-compat-contract.md) lists each parameter's stitch types).
 
-### Random length (M3.5)
+### Random length
 
 Ink/Stitch draws each stitch from `s × (1 ± jitter)` and starts each stretch between corners at a random
 phase, its first stitch a random fraction of a drawn length, so rows sewn side by side with the same
@@ -86,8 +88,12 @@ keeps the random phase, for the same reason.
   for that is reported (`REQ-RUN-001`).
 - Deviation from the source path ≤ tolerance, both ways, measured densely (`REQ-RUN-002`).
 - Corners are penetration points unless that would make a stitch too short (`REQ-RUN-003`).
-- Bean stitch: stitch count is exactly `n × (2b + 1)` for a span of n stitches (`REQ-RUN-004`).
-- Repeats parity decides the exit point (`REQ-RUN-005`).
+- Bean stitch sews each stitch `2b + 1` times, so a run of n stitches with b throughout has exactly
+  `n × (2b + 1)`; the list runs on across repeats, each turnaround taking a step (`REQ-RUN-004`).
+- Repeats alternate direction with no stitch in place; their parity decides the exit point
+  (`REQ-RUN-005`).
+- Random length: the same element and seed give the same stitches, another seed others, and the lengths
+  vary (`REQ-RUN-007`).
 
 ### Diagnostics
 

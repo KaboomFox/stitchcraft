@@ -31,12 +31,15 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | Group | Parameters | Applies to |
 |---|---|---|
 | [Common parameters](params/common.md) | 14 | every stitch type |
-| [Running parameters](params/running.md) | 2 | Running stitch, Ripple stitch |
+| [Running parameters](params/running.md) | 5 | Running stitch, Ripple stitch |
+| [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 
 ## Every parameter
 
 | Key | Label | Group |
 |---|---|---|
+| [`bean_stitch_repeats`](params/repeat.md#bean_stitch_repeats) | Bean stitch | Repeat parameters |
+| [`enable_random_stitch_length`](params/running.md#enable_random_stitch_length) | Random stitch length | Running parameters |
 | [`force_lock_stitches`](params/common.md#force_lock_stitches) | Always lock | Common parameters |
 | [`lock_custom_end`](params/common.md#lock_custom_end) | Custom end lock | Common parameters |
 | [`lock_custom_start`](params/common.md#lock_custom_start) | Custom start lock | Common parameters |
@@ -48,6 +51,9 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`lock_start_scale_percent`](params/common.md#lock_start_scale_percent) | Start lock scale | Common parameters |
 | [`min_jump_stitch_length_mm`](params/common.md#min_jump_stitch_length_mm) | Shortest jump | Common parameters |
 | [`min_stitch_length_mm`](params/common.md#min_stitch_length_mm) | Shortest stitch | Common parameters |
+| [`random_seed`](params/running.md#random_seed) | Random seed | Running parameters |
+| [`random_stitch_length_jitter_percent`](params/running.md#random_stitch_length_jitter_percent) | Length variation | Running parameters |
+| [`repeats`](params/repeat.md#repeats) | Repeats | Repeat parameters |
 | [`running_stitch_length_mm`](params/running.md#running_stitch_length_mm) | Stitch length | Running parameters |
 | [`running_stitch_tolerance_mm`](params/running.md#running_stitch_tolerance_mm) | Curve tolerance | Running parameters |
 | [`stop_after`](params/common.md#stop_after) | Stop after | Common parameters |

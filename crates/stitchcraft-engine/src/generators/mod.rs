@@ -7,4 +7,5 @@
 //! with the `Generator` trait and the table that sends each element to its generator, each generator is
 //! a function.
 
+pub mod passes;
 pub mod running;

@@ -26,3 +26,30 @@ more and shorter stitches.
 - **Accepts:** a length from 0.01 to 5 mm
 - **Default:** `0.2`
 - **Ink/Stitch:** same key, meaning and default
+
+### `enable_random_stitch_length`
+
+**Random stitch length.** Vary the stitch lengths at random instead of spreading them evenly. Lines sewn close together
+then do not line their needle holes up, which avoids moiré patterns.
+
+- **Accepts:** true or false
+- **Default:** `false`
+- **Ink/Stitch:** same key, meaning and default
+
+### `random_stitch_length_jitter_percent`
+
+**Length variation.** How much each stitch may be longer or shorter than the stitch length, in percent of it.
+
+- **Accepts:** a percentage from 0 to 100
+- **Default:** `10`
+- **Shown when** [`enable_random_stitch_length`](#enable_random_stitch_length) is `true`
+- **Ink/Stitch:** same key, meaning and default
+
+### `random_seed`
+
+**Random seed.** Where the random stitch lengths start: the same seed gives the same stitches, another seed others.
+Empty, each element gets its own.
+
+- **Accepts:** a number or any text, or empty to derive it from the element
+- **Default:** empty
+- **Ink/Stitch:** same key, meaning and default
