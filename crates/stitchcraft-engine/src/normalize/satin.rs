@@ -214,15 +214,19 @@ fn meeting(a: &Line, b: &Line, meter: &mut Meter) -> Result<Vec<Point>, Exhauste
         for q in b.points.windows(2) {
             meter.charge(1)?;
             if let ([p1, p2], [q1, q2]) = (p, q) {
-                for point in shared(*p1, *p2, *q1, *q2) {
-                    if !found.iter().any(|f| f.distance(point) < SAME_POINT) {
-                        found.push(point);
-                    }
-                }
+                shared(*p1, *p2, *q1, *q2).into_iter().for_each(|point| add_once(&mut found, point));
             }
         }
     }
     Ok(found)
+}
+
+/// Adds `point` to `found` unless one there is the same point: where segments meet end to end, both find
+/// the point they share.
+fn add_once(found: &mut Vec<Point>, point: Point) {
+    if !found.iter().any(|f| f.distance(point) < SAME_POINT) {
+        found.push(point);
+    }
 }
 
 /// The point of `rail` nearest `rung`, which it does not meet.
@@ -302,6 +306,22 @@ mod tests {
         assert_eq!(shared(p(0.0, 0.0), p(2.0, 0.0), p(3.0, 0.0), p(1.5, 0.0)), [p(1.5, 0.0), p(2.0, 0.0)], "overlapping backwards");
         assert_eq!(shared(p(0.0, 0.0), p(2.0, 0.0), p(3.0, 0.0), p(4.0, 0.0)), Vec::<Point>::new(), "on one line, apart");
         assert_eq!(shared(p(0.0, 0.0), p(2.0, 0.0), p(2.0, 0.0), p(4.0, 0.0)), [p(2.0, 0.0), p(2.0, 0.0)], "on one line, end to end");
+    }
+
+    #[test]
+    fn segments_on_one_slanted_line_share_the_part_they_overlap() {
+        // Along (3, 4) from (1, 1): the second segment starts halfway along the first and goes on past it.
+        assert_eq!(shared(p(1.0, 1.0), p(4.0, 5.0), p(2.5, 3.0), p(7.0, 9.0)), [p(2.5, 3.0), p(4.0, 5.0)]);
+        assert_eq!(shared(p(1.0, 1.0), p(4.0, 5.0), p(-2.0, -3.0), p(2.5, 3.0)), [p(1.0, 1.0), p(2.5, 3.0)]);
+    }
+
+    #[test]
+    fn points_closer_than_a_millionth_of_a_millimetre_are_one() {
+        let mut found = vec![p(0.0, 0.0)];
+        add_once(&mut found, p(0.5e-6, 0.0));
+        assert_eq!(found.len(), 1);
+        add_once(&mut found, p(SAME_POINT, 0.0));
+        assert_eq!(found, [p(0.0, 0.0), p(SAME_POINT, 0.0)], "exactly that far apart is two points");
     }
 
     #[test]

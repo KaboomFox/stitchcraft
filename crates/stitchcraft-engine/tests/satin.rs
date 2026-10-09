@@ -10,7 +10,7 @@
 
 use proptest::prelude::*;
 use stitchcraft_core::{Budget, Code, ElementId, Point};
-use stitchcraft_engine::normalize::satin::{Recognition, Satin, Shape, recognize};
+use stitchcraft_engine::normalize::satin::{MIN_RAIL, Recognition, Satin, Shape, recognize};
 use stitchcraft_engine::normalize::stroke::distance_to_segment;
 use stitchcraft_testkit::designs::{RED, along, line, messages, p, planned as sewn, polylines, shape_of};
 
@@ -49,6 +49,15 @@ fn req_sat_005_the_rails_are_the_two_subpaths_that_meet_the_most_others() {
     let (satin, warnings) = ladder(&[&[(5.0, -1.0), (5.0, 5.0)], LOWER, &[(10.0, 5.0), (10.0, -1.0)], UPPER, &[(15.0, -1.0), (15.0, 5.0)]]);
     assert_eq!(satin.rails, [points(LOWER), points(UPPER)], "in the order they are drawn");
     assert_rungs(&satin.rungs, &[[(5.0, 0.0), (5.0, 4.0)], [(10.0, 0.0), (10.0, 4.0)], [(15.0, 0.0), (15.0, 4.0)]]);
+    assert!(warnings.is_empty(), "{warnings:?}");
+}
+
+#[test]
+fn req_sat_005_a_rung_through_a_rail_s_node_crosses_it_once() {
+    // Both of the rail's segments find the node they share, and it counts once.
+    let jointed = &[(0.0, 0.0), (10.0, 0.0), (20.0, 0.0)][..];
+    let (satin, warnings) = ladder(&[jointed, UPPER, &[(10.0, -1.0), (10.0, 5.0)], &[(5.0, -1.0), (5.0, 5.0)], &[(15.0, -1.0), (15.0, 5.0)]]);
+    assert_rungs(&satin.rungs, &[[(10.0, 0.0), (10.0, 4.0)], [(5.0, 0.0), (5.0, 4.0)], [(15.0, 0.0), (15.0, 4.0)]]);
     assert!(warnings.is_empty(), "{warnings:?}");
 }
 
@@ -133,6 +142,11 @@ fn diag_sc_w0203_a_rung_that_misses_a_rail_joins_the_point_of_it_nearest_the_run
              rails nearest the rung are used.",
         ]
     );
+    // A rung along the rails, between them, is nearest them all along: the points nearest its start are
+    // used.
+    let (satin, _) =
+        ladder(&[LOWER, UPPER, &[(2.0, -1.0), (2.0, 5.0)], &[(6.0, 2.0), (8.0, 2.0)], &[(10.0, -1.0), (10.0, 5.0)], &[(18.0, -1.0), (18.0, 5.0)]]);
+    assert_rungs(&satin.rungs[1..2], &[[(6.0, 0.0), (6.0, 4.0)]]);
     // The nearest point may be a rail's end, and the rung's middle may be nearest it.
     let (satin, _) =
         ladder(&[LOWER, UPPER, &[(1.0, -1.0), (1.0, 5.0)], &[(2.0, -1.0), (2.0, 5.0)], &[(21.0, 1.0), (23.0, 3.0)], &[(-1.0, 3.0), (-1.0, 5.0)]]);
@@ -239,11 +253,26 @@ fn diag_sc_w0011_a_satin_column_is_recognized_then_skipped_until_satin_stitches_
 
 #[test]
 fn req_sat_005_recognition_is_charged_to_the_budget() {
+    // A unit for each of the 5 segments flattened, one for each of the 5 pairs of segments whose boxes
+    // overlap (the rails' do not, nor the rungs'), and one for the pair looked at for the dangling rung's
+    // nearest point.
     let path = polylines(&[LOWER, UPPER, &[(5.0, -1.0), (5.0, 5.0)], &[(10.0, -1.0), (10.0, 3.0)], &[(15.0, -1.0), (15.0, 5.0)]]);
-    let tight = Budget { max_stitches: 10, max_work: 5 };
-    assert!(recognize(&path, &mut tight.meter()).is_err());
-    let roomy = Budget { max_stitches: 10, max_work: 10_000 };
-    assert!(recognize(&path, &mut roomy.meter()).is_ok());
+    let mut meter = Budget::DEFAULT.meter();
+    recognize(&path, &mut meter).unwrap();
+    assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 11);
+    assert!(recognize(&path, &mut Budget { max_stitches: 10, max_work: 11 }.meter()).is_ok());
+    assert!(recognize(&path, &mut Budget { max_stitches: 10, max_work: 10 }.meter()).is_err());
+}
+
+#[test]
+fn req_sat_005_a_rail_is_longer_than_a_tenth_of_a_css_pixel() {
+    // One rung across a long rail and a short one: the short one is a rail when it is longer than
+    // 0.0265 mm, and too short to count otherwise, which leaves the rails to length.
+    let column = |short: f64| recognized(&[&[(-10.0, 0.0), (10.0, 0.0)], &[(0.0, -1.0), (0.0, 5.0)], &[(0.0, 4.0), (short, 4.0)]]);
+    let rails_by_length = |r: &Recognition| r.warnings.iter().any(|w| w.code == Code::SatinRailsByLength);
+    assert!(!rails_by_length(&column(0.03)));
+    assert!(rails_by_length(&column(0.02)));
+    assert!(rails_by_length(&column(MIN_RAIL)), "exactly that long is not longer");
 }
 
 /// The distance from `point` to the polyline `line`.
