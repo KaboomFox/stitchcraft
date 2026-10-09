@@ -42,9 +42,9 @@ tie-off ends where the stitching ended, which is where the thread is trimmed.
 ## Shapes
 
 The ids are Ink/Stitch's, and a file that names a bowtie gets one. The shapes behind them are
-StitchCraft's own designs (deviation `DEV-LCK-001`). They are defined once, in
-`crates/stitchcraft-engine/src/locks/shapes.rs`, and the lists of locks that each size parameter applies to
-are computed from that table.
+StitchCraft's own designs (deviation `DEV-LCK-001`). One table in
+`crates/stitchcraft-engine/src/locks/shapes.rs` defines them. The lists of locks that each size parameter
+applies to come from that table.
 
 | Lock | Kind | Size | What the needle sews |
 |---|---|---|---|
@@ -137,8 +137,8 @@ The conformance suite checks, through the engine's public API (`crates/stitchcra
 1. **Each id** sews a lock that joins the stitching where it starts or ends (`REQ-LCK-002`).
 2. **The shortest lock stitch** is 0.2 mm, joins included, for any group, lock and size. The same input
    sews the same lock (`REQ-LCK-002`, property test).
-3. **Sizes:** drawn locks scale with `lock_*_scale_percent` alone, locks made of steps with
-   `lock_*_scale_mm` alone, and the half stitch with neither (`REQ-LCK-002`).
+3. **Sizes:** the drawn locks scale with `lock_*_scale_percent` alone, and the locks made of steps with
+   `lock_*_scale_mm` alone. The half stitch scales with neither (`REQ-LCK-002`).
 4. **Custom steps** sew as Ink/Stitch reads them, round the stitching's corners (`REQ-LCK-004`).
 
 Plan assembly (M3.8) checks where locks go (`ties`, `REQ-LCK-001`). Machine checkpoint MC-2 checks with test
