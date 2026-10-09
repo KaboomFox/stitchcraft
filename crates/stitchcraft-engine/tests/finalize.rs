@@ -42,7 +42,7 @@ fn req_fin_001_an_element_keeps_its_own_shortest_stitch() {
     let settings = DesignSettings { origin: Some(p(0.0, 0.0)), min_stitch_len: Some(Mm::new(1.0).unwrap()), ..DesignSettings::default() };
     // A 0.8 mm line sewn there and back: the turn stays, so the stitching does not end where it started.
     let back = [("min_stitch_length_mm", "0.3"), ("repeats", "2"), ("ties", "3")];
-    let outcome = planned_with(vec![line("a", (0.0, 0.0), 0.8, &RED, &back), line("b", (0.0, 10.0), 10.0, &RED, &[])], settings.clone());
+    let outcome = planned_with(vec![line("a", (0.0, 0.0), 0.8, &RED, &back), line("b", (0.0, 10.0), 10.0, &RED, &[])], settings);
     assert_eq!(shape_of(&outcome), "J S3 J L4 S5 L4");
     assert!(outcome.diagnostics.is_empty(), "{:?}", messages(&outcome));
     // A 5 mm line of 0.5 mm stitches, raised to twice the element's shortest stitch: nine of 0.56 mm.
