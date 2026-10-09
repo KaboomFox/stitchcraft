@@ -396,6 +396,27 @@
         "unit": "mm"
       }
     },
+    "satin_column": {
+      "default": false,
+      "description": "Sew the path as a satin column. Two of its subpaths are the rails, the column's edges, and the others are rungs across both, which say which point of one rail goes with which of the other. A path of 1 subpath is the column's centre line. Off, the path is sewn as a stroke, by its `stroke_method`. This version reads a satin column's rails and rungs and reports what it finds, then skips the element (`SC-W0011`). Satin stitches arrive in a later version.",
+      "title": "Satin column",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "running_stitch",
+          "manual_stitch",
+          "zigzag_stitch",
+          "ripple_stitch",
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Satin column",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "stop_after": {
       "default": false,
       "description": "Pause the machine after this element: to add an appliqué fabric, or to check the work.",
@@ -515,6 +536,13 @@
         ],
         "name": "ManualParams",
         "title": "Manual parameters"
+      },
+      {
+        "keys": [
+          "satin_column"
+        ],
+        "name": "SatinParams",
+        "title": "Satin parameters"
       }
     ]
   }

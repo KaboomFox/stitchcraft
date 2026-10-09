@@ -22,6 +22,7 @@ SVG of strokes to a machine file, with a preview and a report. `stitch bug-repor
 reproduces a problem, and `stitch plan` writes one by itself when StitchCraft finds a bug in itself. The
 conformance report shows every active requirement green. Next are the sew-out reports for MC-1, which
 closes M1, and for MC-2, which closes M3. The MC-2 sheets are drawn as designs and planned by the engine.
+M4 has begun: a satin column's path is read as its rails and rungs, as Ink/Stitch reads it.
 The repository is
 [KaboomFox/stitchcraft](https://github.com/KaboomFox/stitchcraft), with the docs published at
 [kaboomfox.github.io/stitchcraft](https://kaboomfox.github.io/stitchcraft/) and `main` protected; the
@@ -33,7 +34,7 @@ open owner action from M0.5 is the code-of-conduct contact.
 | M1 | Stitch plan, Brother profile, PES/DST writers, test sheets | 🟡 M1.1–M1.10 done; closes with MC-1 | MC-1 🟡 kit out for sewing |
 | M2 | Readers, preview renderer, fuzzing | 🟢 M2.1–M2.8 done | — |
 | M3 | Running stitch family, plan assembly, SVG input | 🟡 M3.1 to M3.10 done (parameter registry, a case for every diagnostic code, SVG input, running stitch, repeats and bean stitch, manual stitch, lock stitches, plan assembly, finalize and `stitch plan`, bug-report bundles). M3 closes with MC-2. | MC-2 🟡 kit ready for sewing (TS-02B, TS-03, TS-04) |
-| M4 | Satin column | ⚪ | MC-3 ⚪ |
+| M4 | Satin column | 🟡 M4.1 done (rails and rungs told apart as Ink/Stitch tells them). Satin columns are skipped with `SC-W0011` until M4.2 sews them | MC-3 ⚪ |
 | M5 | Tatami fill | ⚪ | MC-4 ⚪ |
 | M6 | VectorCraft plug-in (ABI v1), export from `.vectorcraft`, compatibility gate | ⚪ | MC-5 ⚪ |
 | M7 | Zigzag/E/S stitches, contour, meander, circular fills | ⚪ | MC-6 ⚪ |

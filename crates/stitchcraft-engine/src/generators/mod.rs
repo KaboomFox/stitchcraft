@@ -9,6 +9,7 @@
 pub mod manual;
 pub mod passes;
 pub mod running;
+pub mod satin;
 
 use stitchcraft_core::{Code, Diagnostic, Point};
 

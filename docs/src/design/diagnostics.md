@@ -86,11 +86,12 @@ another.
 | `SC-E0101` | Error | Parameter has the wrong type or an unknown choice | M3 |
 | `SC-W0102` | Warning | Parameter clamped to its allowed range | M3 |
 | `SC-W0105` | Warning | Unknown parameter preserved but ignored | M3 |
-| `SC-E0201` | Error | Satin needs exactly two rails | M4 |
-| `SC-W0203` | Warning | Rung does not cross both rails (dangling rung) | M4 |
-| `SC-E0204` | Error | Rails cross each other | M4 |
+| `SC-E0201` | Error | Satin column has no rails (no subpath longer than a point) | M4 |
+| `SC-W0202` | Warning | Satin rails taken as the two longest subpaths (where the subpaths meet does not say) | M4 |
+| `SC-W0203` | Warning | Satin rung does not cross both rails (dangling rung); the rail's nearest point is used | M4 |
+| `SC-W0205` | Warning | Satin subpath is one point; left out | M4 |
 | `SC-W0206` | Warning | Satin narrower than the minimum width; underlay skipped | M4 |
-| `SC-W0207` | Warning | Rung crosses a rail more than once; ignored | M4 |
+| `SC-W0207` | Warning | Satin rung crosses a rail more than once; left out | M4 |
 | `SC-W0208` | Warning | Satin stitches skew more than 45° from the column; add a rung here | M4 |
 | `SC-W0209` | Warning | Satin wider than 12 mm; long stitches may snag | M4 |
 | `SC-W0303` | Warning | Tiny ring dropped from fill region | M5 |

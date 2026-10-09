@@ -472,10 +472,10 @@ status = "planned"
 id = "REQ-SAT-005"
 area = "satin"
 level = "L2"
-statement = "Invalid satin structures produce SC-E0201 or SC-E0204 and no stitches; dangling rungs produce SC-W0203."
-rationale = "Odd satin geometry, such as a rung that misses a rail or a tiny satin, must be a diagnostic, never a crash."
+statement = "A satin column's rails and rungs are told apart as Ink/Stitch tells them, whatever order they are drawn in: by which subpaths meet, else the two longest (SC-W0202). A path with no subpath longer than a point produces SC-E0201 and no stitches. A rung that misses a rail joins the rail's nearest point (SC-W0203)."
+rationale = "A file must sew the same in both programs, and odd satin geometry, such as a rung that misses a rail or a stray node, must be a diagnostic, never a crash."
 milestone = "M4"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-SAT-006"

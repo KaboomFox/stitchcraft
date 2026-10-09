@@ -6,4 +6,5 @@
 //! time, so elements stay independent and can be planned in any order
 //! (`docs/src/design/engine-pipeline.md` › Normalize).
 
+pub mod satin;
 pub mod stroke;

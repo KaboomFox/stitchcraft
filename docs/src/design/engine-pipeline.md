@@ -36,8 +36,9 @@ Adapters have already applied transforms and converted units, so normalization n
 
 - Parameters are checked by the registry: type, range, applicability, visibility conditions; the
   generator receives a typed struct or nothing.
-- Shapes are checked against the stitch type: a satin needs two non-crossing rails; a fill needs a
-  non-empty region; a running stitch needs a path longer than the minimum stitch length.
+- Shapes are checked against the stitch type. A satin needs a subpath longer than a point (`SC-E0201`),
+  a fill needs a non-empty region, and a running stitch needs a path longer than the minimum stitch
+  length.
 - An element with an error diagnostic is skipped; the rest of the design still plans. A design whose
   every element was skipped yields `SC-E0010`.
 
@@ -48,10 +49,13 @@ that a jump may separate from the next, in sewing order. A stroke gives one grou
 too small for a stitch gives none (`SC-W0401`). The element's own settings stay with the element, and
 assembly reads them there: its thread, locks, trim and stop.
 
-The stitch type picks the generator. For a stroke it is `stroke_method`: `running_stitch` (the default)
-and `manual_stitch` are sewn from M3; the other stroke methods, satins and fills are skipped with
-`SC-W0011` until their milestones. An element whose parameters are wrong (`SC-E0101`) is skipped too, and
-the rest of the design still plans.
+The stitch type picks the generator. A stroke whose `satin_column` setting is on is a satin column,
+whatever its `stroke_method` says, as in Ink/Stitch. Its rails and rungs are recognized and what
+recognition finds is reported, and then it is skipped with `SC-W0011` until M4.2 sews satins. For any
+other stroke the generator is its `stroke_method`. `running_stitch` (the default) and `manual_stitch`
+are sewn from M3. The other stroke methods and fills are skipped with `SC-W0011` until their
+milestones. An element whose parameters are wrong (`SC-E0101`) is skipped too, and the rest of the
+design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
 `min_stitch`) and the element's `min_stitch_length_mm`, or the design's shortest stitch when the element

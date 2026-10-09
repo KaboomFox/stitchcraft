@@ -5,6 +5,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M4.1: satin columns are recognized. A stroke whose `satin_column` setting is on is a satin column, and
+  its path is read as its rails and rungs, as Ink/Stitch reads it (`REQ-SAT-005`). Satin columns are
+  skipped with `SC-W0011` until M4.2 sews them, and what recognition finds is reported now.
+  - **Rails** are told from rungs by which subpaths meet, by Ink/Stitch's rule, which the satin design
+    page describes. When the rule does not single out 2 rails, the 2 longest subpaths are taken, with
+    `SC-W0202`, as in the `#` of 2 rails and exactly 2 rungs. Rails may meet, as at a pointed column's
+    tips.
+  - **Rungs** join the points where they cross the rails. A rung that misses a rail joins its nearest
+    point (`SC-W0203`), and one that crosses a rail more than once is left out (`SC-W0207`, `DEV-SAT-001`).
+  - A subpath that is one point is left out (`SC-W0205`), and a path with no subpath longer than a point
+    is `SC-E0201`. A path of 1 subpath is a satin's centre line, sewn from M4.8 on.
+  - The `satin_column` setting has its reference page.
 - **User guide.** An install page, a tutorial that turns an SVG into a PES file, and how-to guides to
   check a machine file, convert it and fit a design to the hoop. A section for each stitch type shows
   running stitch and lock stitches, with pictures of what their parameters change.

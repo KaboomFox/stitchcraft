@@ -5,10 +5,14 @@
 //! which its generator needs. The stitch type picks the generator in one place, [`generate`]'s table, so a
 //! new stitch type is its own module and one line here.
 //!
+//! A stroke whose `satin_column` setting is on is a satin column, whatever its `stroke_method` says, as in
+//! Ink/Stitch.
+//!
 //! An element that cannot be sewn is skipped, with a diagnostic that says why, and the rest of the design
 //! still plans (`REQ-GEN-002`): a stitch type StitchCraft does not sew yet (`SC-W0011`), parameters it
-//! cannot read (`SC-E0101`), or its work budget spent (`SC-E0004`). Each element has the budget's work to
-//! itself, so one that runs out costs nothing but itself.
+//! cannot read (`SC-E0101`), a satin column with no rails (`SC-E0201`), or its work budget spent
+//! (`SC-E0004`). Each element has the budget's work to itself, so one that runs out costs nothing but
+//! itself.
 
 use stitchcraft_core::{Budget, Code, Diagnostic, Exhausted, Meter, Mm, Point, SplitMix64};
 use stitchcraft_params::{ChoiceOption, Family, StitchType, Validated, params, unknown_keys};
@@ -20,6 +24,8 @@ use crate::generators::Stitched;
 use crate::generators::manual::{ManualParams, manual_stitch};
 use crate::generators::passes::RepeatParams;
 use crate::generators::running::{RunningParams, running_stitch};
+use crate::generators::satin::{self, SatinParams};
+use crate::normalize::satin::Shape as SatinShape;
 use crate::registry::PARAMETERS;
 
 /// The stroke methods `stroke_method` offers, in Ink/Stitch's order, which its files count on: Ink/Stitch
@@ -113,6 +119,18 @@ fn sew(
             return Ok(None);
         }
     };
+    let Some(satin_params) = kept(SatinParams::from_set(set), diagnostics) else { return Ok(None) };
+    if satin_params.satin_column {
+        let why = match satin::shape(path, diagnostics, meter)? {
+            None => return Ok(None),
+            Some(SatinShape::CentreLine) => {
+                "This element is a satin column drawn as its centre line, which this version of StitchCraft does not sew yet"
+            }
+            Some(SatinShape::Rails(_)) => "This element is a satin column, and this version of StitchCraft does not sew satin columns yet",
+        };
+        diagnostics.push(not_yet(why));
+        return Ok(None);
+    }
     let stroke = kept(StrokeParams::from_set(set), diagnostics);
     let (Some(common), Some(stroke)) = (common, stroke) else { return Ok(None) };
     let min_stitch = shortest_stitch(common.min_stitch_length_mm, settings, profile);
