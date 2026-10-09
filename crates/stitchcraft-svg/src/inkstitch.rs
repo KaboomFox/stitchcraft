@@ -27,7 +27,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use roxmltree::Node;
+use roxmltree::{ExpandedName, Node};
 use stitchcraft_core::{Exhausted, Meter};
 
 use crate::style::Declared;
@@ -158,6 +158,14 @@ pub(crate) fn is_connector(node: Node<'_, '_>) -> bool {
     ["connection-start", "connection-end", "connector-type"].iter().any(|name| node.has_attribute((INKSCAPE_NS, *name)))
 }
 
+/// The name of the SVG element `name` in a document whose SVG elements are in namespace `ns`.
+fn svg_tag<'a>(ns: Option<&'a str>, name: &'static str) -> ExpandedName<'a, 'static> {
+    match ns {
+        Some(ns) => ExpandedName::from((ns, name)),
+        None => ExpandedName::from(name),
+    }
+}
+
 /// Where `node` points with its link: `xlink:href`, or SVG 2's plain `href`.
 pub(crate) fn href<'a>(node: Node<'a, '_>) -> Option<&'a str> {
     node.attribute((XLINK_NS, "href")).or_else(|| node.attribute("href"))
@@ -250,17 +258,19 @@ pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: 
         if let Some(id) = node.attribute("id") {
             ids.entry(id).or_insert(node);
         }
-        if node.has_attribute((INKSCAPE_NS, "connection-start")) || node.has_attribute((INKSCAPE_NS, "connection-end")) {
-            connectors.push(node);
+        // A connector ties two objects; one that names only one end ties nothing.
+        if let (Some(start), Some(end)) = (node.attribute((INKSCAPE_NS, "connection-start")), node.attribute((INKSCAPE_NS, "connection-end"))) {
+            connectors.push((node, start, end));
         }
-        if node.tag_name().namespace() == ns && node.tag_name().name() == "use" && href(node).is_some_and(|h| h.starts_with("#inkstitch_")) {
+        if node.tag_name() == svg_tag(ns, "use") {
             uses.push(node);
         }
     }
-    let by_url = |url: Option<&str>| url.and_then(|u| u.trim().strip_prefix('#')).and_then(|id| ids.get(id).copied());
+    // A link is `#` and an id, exactly: Ink/Stitch does not trim it either.
+    let by_url = |url: Option<&str>| url.and_then(|u| u.strip_prefix('#')).and_then(|id| ids.get(id).copied());
     let mut objects = Objects::default();
     for node in uses {
-        let symbol = by_url(href(node)).filter(|s| s.tag_name().namespace() == ns && s.tag_name().name() == "symbol");
+        let symbol = by_url(href(node)).filter(|s| s.tag_name() == svg_tag(ns, "symbol"));
         let Some(command) = symbol.and_then(|s| s.attribute("id")).and_then(command) else { continue };
         objects.uses.insert(place(node), command);
         match command.does {
@@ -281,10 +291,8 @@ pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: 
             _ => {}
         }
     }
-    for connector in connectors {
-        let start = by_url(connector.attribute((INKSCAPE_NS, "connection-start")));
-        let end = by_url(connector.attribute((INKSCAPE_NS, "connection-end")));
-        let (Some(start), Some(end)) = (start, end) else { continue };
+    for (connector, start, end) in connectors {
+        let (Some(start), Some(end)) = (by_url(Some(start)), by_url(Some(end))) else { continue };
         let tied = [(start, end), (end, start)].into_iter().find_map(|(symbol, target)| Some((objects.shown_by(symbol)?, target)));
         if let Some((command, target)) = tied {
             objects.command_connectors.insert(place(connector));
@@ -308,6 +316,17 @@ mod tests {
         }
         // Ink/Stitch's own setting for leaving an object out is not a parameter of a stitch.
         assert_eq!(find(PARAMETERS, IGNORE_OBJECT), None);
+    }
+
+    #[test]
+    fn what_each_command_does_is_described_once() {
+        assert_eq!(Does::Trim.describe(), "applied: turns on `trim_after`");
+        let all = [Does::Trim, Does::Stop, Does::IgnoreObject, Does::IgnoreLayer, Does::NotYet, Does::Positions, Does::ToolInput];
+        let texts: BTreeSet<&str> = all.iter().map(|d| d.describe()).collect();
+        assert_eq!(texts.len(), all.len(), "{texts:?}");
+        // Every command is described, and every description is used.
+        let used: BTreeSet<&str> = COMMANDS.iter().map(|c| c.does.describe()).collect();
+        assert_eq!(used, texts);
     }
 
     #[test]

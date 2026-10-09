@@ -60,6 +60,9 @@ fn req_svg_003_a_command_on_something_not_stitched_says_so() {
             <g id="group1"><path id="inner" d="M 0 0 L 10 0" stroke="red" fill="none"/></g>
             <text id="words">hello</text>
             <path id="hidden" d="M 0 5 L 10 5" stroke="red" display="none"/>
+            <path id="invisible" d="M 0 6 L 10 6" stroke="red" visibility="hidden"/>
+            <path id="c4" d="M 0 0 1 1" stroke="black" inkscape:connection-start="#t3" inkscape:connection-end="#invisible"/>
+            <use id="t3" xlink:href="#inkstitch_trim"/>
             <path id="c1" d="M 0 0 1 1" stroke="black" inkscape:connection-start="#t1" inkscape:connection-end="#group1"/>
             <use id="t1" xlink:href="#inkstitch_trim"/>
             <path id="c2" d="M 0 0 1 1" stroke="black" inkscape:connection-start="#s1" inkscape:connection-end="#words"/>
@@ -69,7 +72,7 @@ fn req_svg_003_a_command_on_something_not_stitched_says_so() {
     ));
     assert_eq!(ids(&svg), ["svg:inner:stroke"]);
     assert_eq!(setting(&svg, "trim_after"), [("svg:inner:stroke", None)]);
-    // A hidden object is left out quietly, and so is its command.
+    // A hidden or invisible object is left out quietly, and so is its command.
     assert_eq!(
         warnings(&svg),
         [
@@ -84,21 +87,29 @@ fn req_svg_003_a_command_on_something_not_stitched_says_so() {
 fn req_svg_003_only_ink_stitch_symbols_are_commands() {
     let svg = svg(drawing(
         r##"<defs><symbol id="inkstitch_sparkle"><circle r="1"/></symbol><symbol id="logo"><circle r="1"/></symbol>
-              <symbol id="inkstitch_satin_cut_point"><circle r="1"/></symbol></defs>
+              <symbol id="inkstitch_satin_cut_point"><circle r="1"/></symbol><symbol id="inkstitch_trim"><circle r="1"/></symbol></defs>
+            <g id="inkstitch_stop"><circle r="1"/></g>
             <path id="p" d="M 0 0 L 10 0" stroke="red" fill="none"/>
             <use id="unknown" xlink:href="#inkstitch_sparkle"/>
             <use id="clone" href="#logo"/>
+            <use id="not-a-symbol" xlink:href="#inkstitch_stop"/>
+            <use id="spaced" xlink:href=" #inkstitch_trim"/>
+            <image id="picture" xlink:href="#inkstitch_trim" width="1" height="1"/>
             <path id="c" d="M 0 0 1 1" stroke="black" inkscape:connection-start="#cut" inkscape:connection-end="#p"/>
             <use id="cut" xlink:href="#inkstitch_satin_cut_point"/>"##,
     ));
-    // A symbol whose name is not one of Ink/Stitch's commands is a clone like any other. A command that
-    // only Ink/Stitch's tools use (cutting a satin, routing) changes nothing that is sewn.
-    assert_eq!(ids(&svg), ["svg:p:stroke"]);
+    // A command is a `<use>` of a `<symbol>` named for one of Ink/Stitch's commands, linked exactly as
+    // `#` and its id; anything else is what it would be without Ink/Stitch. A command that only
+    // Ink/Stitch's tools use (cutting a satin, routing) changes nothing that is sewn.
+    assert_eq!(ids(&svg), ["svg:circle@5:fill", "svg:p:stroke"], "the group named like a command's symbol is drawn");
     assert_eq!(
         warnings(&svg),
         [
             "warning SC-W0802: `unknown` is a clone (`<use>`), which is not stitched yet; it is left out.",
             "warning SC-W0802: `clone` is a clone (`<use>`), which is not stitched yet; it is left out.",
+            "warning SC-W0802: `not-a-symbol` is a clone (`<use>`), which is not stitched yet; it is left out.",
+            "warning SC-W0802: `spaced` is a clone (`<use>`), which is not stitched yet; it is left out.",
+            "warning SC-W0802: `picture` is a raster image, which is not stitched; it is left out.",
         ]
     );
 }

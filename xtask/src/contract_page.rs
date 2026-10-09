@@ -515,14 +515,17 @@ mod tests {
     #[test]
     fn the_svg_adapter_s_commands_and_attributes_must_be_listed() {
         let data = data("0.25");
-        let missing = data.replace("name = \"trim\"\ntied_to", "name = \"cut\"\ntied_to").replace("name = \"ignore_object\"\nkind", "name = \"x\"\nkind");
+        let missing =
+            data.replace("name = \"trim\"\ntied_to", "name = \"cut\"\ntied_to").replace("name = \"ignore_object\"\nkind", "name = \"x\"\nkind");
         let problems = Contract::parse(&missing).unwrap().check(&[]);
         assert_eq!(problems.len(), 2, "{problems:?}");
         assert!(problems[0].starts_with("the SVG adapter knows the commands {"), "{problems:?}");
         assert_eq!(problems[1], "the SVG adapter reads `ignore_object`, which conformance/inkstitch-params.toml does not list as an attribute");
         // Attributes not read: planned, or not planned at all.
-        let more = format!("{data}[[attribute]]\nname = \"stroke_first\"\nkind = \"element\"\nphase = \"P1\"\nmilestone = \"M5\"\n\
-                            [[attribute]]\nname = \"sew_stack\"\nkind = \"sew_stack\"\nphase = \"—\"\nmilestone = \"—\"\n");
+        let more = format!(
+            "{data}[[attribute]]\nname = \"stroke_first\"\nkind = \"element\"\nphase = \"P1\"\nmilestone = \"M5\"\n\
+                            [[attribute]]\nname = \"sew_stack\"\nkind = \"sew_stack\"\nphase = \"—\"\nmilestone = \"—\"\n"
+        );
         let page = Contract::parse(&more).unwrap().render(&[]);
         assert!(page.contains("| `stroke_first` | element | P1 (M5) | planned |"), "{page}");
         assert!(page.contains("| `sew_stack` | sew stack | — | not planned |"), "{page}");
