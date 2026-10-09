@@ -12,7 +12,7 @@
 //! or too short for it, a design too large for the hoop — is finalize's to fix or report (M3.9).
 
 use stitchcraft_core::units::at_least;
-use stitchcraft_core::{Diagnostic, Exhausted, Meter, Point, Rect};
+use stitchcraft_core::{Diagnostic, Exhausted, Meter, Mm, Point, Rect};
 use stitchcraft_params::StitchType;
 use stitchcraft_plan::{ElementRef, PlanBuilder, Provenance, Role, StitchKind, StitchPlan, Thread};
 
@@ -27,6 +27,9 @@ pub struct Assembled {
     pub plan: StitchPlan,
     /// What the locks changed or could not sew as set, each naming its element.
     pub warnings: Vec<Diagnostic>,
+    /// Each element's shortest stitch, by its place in the plan's element table: the one its generator
+    /// used, for finalize to hold its stitches to.
+    pub shortest: Vec<Mm>,
 }
 
 /// The plan for the generated `elements`, in document order, in a design with `settings`; `None` when no
@@ -36,10 +39,12 @@ pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, m
     let Some((first, _)) = parts.first() else { return Ok(None) };
     let mut assembly =
         Assembly { builder: PlanBuilder::new(first.thread.clone()), thread: first.thread.clone(), open: None, settings, warnings: Vec::new() };
+    let mut shortest = Vec::with_capacity(parts.len());
     for (element, generated) in parts {
         // Each element registered has a stitch, so the stitch budget runs out long before element
         // references do.
         let reference = assembly.builder.element(element.id.clone()).map_err(|_| Exhausted::Stitches)?;
+        shortest.push(generated.min_stitch);
         let groups: Vec<&[Point]> = generated.groups.iter().filter(|g| !g.is_empty()).map(Vec::as_slice).collect();
         for stitches in &groups {
             assembly.join(Group { element, generated, stitches, reference }, meter)?;
@@ -48,7 +53,7 @@ pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, m
     }
     assembly.tie_off(meter)?;
     let Assembly { builder, warnings, .. } = assembly;
-    Ok(Some(Assembled { plan: centred(builder.finish(), settings.origin), warnings }))
+    Ok(Some(Assembled { plan: centred(builder.finish(), settings.origin), warnings, shortest }))
 }
 
 /// One group, with its element.

@@ -9,7 +9,7 @@ use stitchcraft_core::{Budget, Code, ElementId, Mm, Rect};
 use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::plan;
 use stitchcraft_plan::profiles::BROTHER_200X200;
-use stitchcraft_plan::{Rgb, Role, StitchKind};
+use stitchcraft_plan::{Rgb, Role, StitchKind, Thread};
 use stitchcraft_testkit::designs::{BLUE, RED, line, messages, p, planned as sewn, planned_with as sewn_with, shape, shape_of, stroke};
 
 #[test]

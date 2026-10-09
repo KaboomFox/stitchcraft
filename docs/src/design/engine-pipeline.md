@@ -153,21 +153,26 @@ Against the machine profile (`stitchcraft_engine::finalize`), so that a plan `pl
 as it is. Generators keep their own stitches within the machine's limits; what is left comes from joining
 things up and from settings the machine cannot follow.
 
-1. **The shortest stitch** is the machine's (`profile.min_stitch`), or the design's `min_stitch_len` when
-   that is longer. Where one element's stitching runs straight on into the next, the stitch between them
-   can be anything up to the collapse length, 0 included. Within each run of stitches — from where the
-   needle lands to the next jump, trim or stop — a needle point less than the shortest stitch from the one
-   before is left out, so the stitch runs on to the next. The run's first and last points and lock points
-   always stay, and leave out the points before them instead. A stitch into or out of a lock point is a
-   lock stitch, whose shortest is 0.2 mm (`REQ-PLAN-002`). `SC-I0504` says how many points were left out
-   (`REQ-FIN-001`).
+1. **The shortest stitch** of each needle point is its element's: the one its generator used, so finalize
+   never thins what the generator spaced. That is the element's `min_stitch_length_mm`, else the design's
+   `min_stitch_len`, and never shorter than the machine's (`profile.min_stitch`). Where one element's
+   stitching runs straight on into the next, the stitch between them can be anything up to the collapse
+   length, 0 included. Within each run of stitches, from where the needle lands to the next jump, trim or
+   stop, a needle point less than its shortest stitch from the one before is left out, so the stitch runs
+   on to the next. The run's first and last points and lock points always stay, and leave out the points
+   before them instead. A point where the needle already is adds nothing and is left out too. A stitch
+   into or out of a lock point is a lock stitch, whose shortest is 0.2 mm (`REQ-PLAN-002`). `SC-I0504`
+   says how many points were left out (`REQ-FIN-001`).
 2. **The longest stitch.** A stitch longer than `profile.max_stitch` is split into the fewest equal parts
    no longer than it (`SC-I0703`): a stitch placed by hand, a custom lock's long step, or a move sewn on
-   under a `min_jump_stitch_length_mm` longer than the machine's longest stitch (`REQ-FIN-001`).
+   under a `min_jump_stitch_length_mm` longer than the machine's longest stitch (`REQ-FIN-001`). Each
+   part counts against the design's stitch budget.
 3. **Colour limits:** colour changes and stops above what the profile's format records → `SC-E0601`.
 4. **Hoop:** a design larger than the hoop → `SC-E0701` (with a rotate-to-fit fix when rotating 90° would
-   fit), and so is one that would fit but reaches past the hoop's edge because its origin is far from its
-   middle; larger than the comfort zone → `SC-W0702` (`REQ-FIN-002`).
+   fit). So is one that would fit but reaches past the hoop's edge because its origin is far from its
+   middle, and one whose stop position is past the edge, which the message names. The size is the
+   stitches' own. A design that cannot be sewn gets no other message about its size. Otherwise, larger
+   than the comfort zone → `SC-W0702` (`REQ-FIN-002`).
 5. The end is the plan's structure: the machine ends after the last block.
 
 An error at any step leaves no plan, and its diagnostic says why.
@@ -175,12 +180,13 @@ An error at any step leaves no plan, and its diagnostic says why.
 Splitting jumps longer than a format can encode in one record is *not* done here: it is the encoder's
 job, because the limit is a property of the file format, not of the machine.
 
-Ink/Stitch (read at `d59c9ab`) removes short stitches once, over the whole plan: a stitch no longer than
-the shortest stitch (the element's `min_stitch_length_mm`, else its global 0.1 mm) from the last one kept
-is dropped, except lock stitches and the first stitch after a jump, stop, trim or colour change; nothing
-is split. StitchCraft's floor is the machine's (0.3 mm on the Brother), it keeps the ends of each run, and
-it splits stitches the machine cannot sew: a deviation (`DEV-FIN-001`), because a file can sew differently
-in the two tools.
+Ink/Stitch (read at `d59c9ab`) removes short stitches once, over the whole plan: an entry no farther than
+its shortest stitch (the element's `min_stitch_length_mm`, else a global 0.1 mm) from the last one kept
+is dropped. It keeps lock stitches, the stitch right after a jump, and stop, trim and colour-change
+entries; a jump itself can be dropped. Nothing is split. StitchCraft holds each element to the same
+shortest stitch as Ink/Stitch, but never below the machine's (0.3 mm on the Brother). It keeps the ends of
+each run and splits stitches the machine cannot sew: a deviation (`DEV-FIN-001`), because a file can sew
+differently in the two tools.
 
 ## 6. Check
 
