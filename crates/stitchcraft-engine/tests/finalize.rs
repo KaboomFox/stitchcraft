@@ -101,7 +101,11 @@ fn req_fin_002_designs_the_machine_cannot_take_give_no_plan() {
     // Wider than the hoop.
     let wide = planned_with(vec![line("a", (0.0, 0.0), 210.0, &RED, &[])], DesignSettings::default());
     assert_eq!(wide.plan, None);
-    assert_eq!(messages(&wide), ["error SC-E0701: The design is 210.0 × 0.0 mm; the hoop of Brother, 200 × 200 mm hoop is 200 × 200 mm."], "the size, not the reach");
+    assert_eq!(
+        messages(&wide),
+        ["error SC-E0701: The design is 210.0 × 0.0 mm; the hoop of Brother, 200 × 200 mm hoop is 200 × 200 mm."],
+        "the size, not the reach"
+    );
     // Small enough, but reaching past the edge from where its origin puts it.
     let aside =
         planned_with(vec![line("a", (0.0, 0.0), 120.0, &RED, &[])], DesignSettings { origin: Some(p(0.0, 0.0)), ..DesignSettings::default() });
