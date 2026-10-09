@@ -1,6 +1,10 @@
 # Ink/Stitch parameters (facts only) — snapshot of inkstitch/inkstitch@d59c9ab.
 # Source of docs/src/design/inkstitch-compat-contract.md (`cargo xtask docs`).
 # Do not add descriptions: they are GPL text. StitchCraft's help text lives in its registry.
+# `applies_to` lists stitch types, or the values of the setting that shows the parameter (a lock shape,
+# a split method). Checked field by field against that commit's declarations with
+# `python3 -I conformance/inkstitch/check_params.py PATH/TO/INKSTITCH`; run it again when moving to a
+# newer commit.
 
 lock_ids = ["half_stitch", "arrow", "back_forth", "bowtie", "cross", "star", "simple", "triangle", "zigzag", "custom"]
 
@@ -70,7 +74,7 @@ name = "lock_start_scale_mm"
 type = "float"
 unit = "mm"
 default = "0.7"
-applies_to = []
+applies_to = ["back_forth", "custom"]
 phase = "P1"
 milestone = "M3"
 
@@ -80,7 +84,7 @@ name = "lock_start_scale_percent"
 type = "float"
 unit = "%"
 default = "100"
-applies_to = []
+applies_to = ["arrow", "bowtie", "cross", "star", "simple", "triangle", "zigzag", "custom"]
 phase = "P1"
 milestone = "M3"
 
@@ -110,7 +114,7 @@ name = "lock_end_scale_mm"
 type = "float"
 unit = "mm"
 default = "0.7"
-applies_to = []
+applies_to = ["back_forth", "custom"]
 phase = "P1"
 milestone = "M3"
 
@@ -120,7 +124,7 @@ name = "lock_end_scale_percent"
 type = "float"
 unit = "%"
 default = "100"
-applies_to = []
+applies_to = ["arrow", "bowtie", "cross", "star", "simple", "triangle", "zigzag", "custom"]
 phase = "P1"
 milestone = "M3"
 

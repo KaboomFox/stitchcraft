@@ -110,6 +110,11 @@ the collapse length, locks and a jump beyond it. It sews that stitch as it is; S
 splits it if it is longer than the machine's longest stitch, which only a `min_jump_stitch_length_mm`
 beyond that length can cause.
 
+Ink/Stitch (read at `d59c9ab`) joins same-colour groups within the collapse length with one direct
+stitch, and trims only when told to (`trim_after`, a trim command). StitchCraft splits that stitch to the
+machine's longest stitch and also trims at the profile's threshold: both differences come from the
+machine profile, and go into the deviations ledger with M3.8.
+
 ### Lock stitches (ties)
 
 - A tie-in goes only at the start of a group that the needle jumps to, the design's first included; a
@@ -158,6 +163,12 @@ Against the machine profile:
 
 Splitting jumps longer than a format can encode in one record is *not* done here: it is the encoder's
 job, because the limit is a property of the file format, not of the machine.
+
+Ink/Stitch (read at `d59c9ab`) removes short stitches once, over the whole plan: a stitch no longer than
+the shortest stitch (the element's `min_stitch_length_mm`, else its global 0.1 mm) from the last one kept
+is dropped, except lock stitches and the first stitch after a jump, stop, trim or colour change; nothing
+is split. StitchCraft's floor is the machine's (0.3 mm on the Brother), short stitches merge into their
+neighbour, and the running stitch already keeps the floor while it places stitches.
 
 ## 6. Check
 
