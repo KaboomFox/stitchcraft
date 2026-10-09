@@ -171,6 +171,30 @@ mod tests {
         assert_eq!(shape("spiral"), Shape::HalfStitch);
     }
 
+    /// The drawn shapes are frozen: test sheet TS-04 sews them at machine checkpoint MC-2, so a change is
+    /// deliberate and comes with the sew-out report that asks for it. Each number sums n·x + n²·y over
+    /// the loop's points, n counting from 1, so any change to a coordinate moves it.
+    #[test]
+    fn drawn_shapes_are_frozen() {
+        let fingerprint = |points: &[(f64, f64)]| -> f64 {
+            points
+                .iter()
+                .zip(1_u32..)
+                .map(|(&(x, y), n)| {
+                    let n = f64::from(n);
+                    n * x + n * n * y
+                })
+                .sum()
+        };
+        let drawn: Vec<(&str, f64)> =
+            TABLE.iter().filter_map(|d| if let Shape::Drawn(points) = d.shape { Some((d.option.id, fingerprint(points))) } else { None }).collect();
+        let frozen = [("arrow", 13.3), ("bowtie", 3.5), ("cross", 7.6), ("star", 13.9125), ("simple", 2.4), ("triangle", 3.5), ("zigzag", 15.85)];
+        assert_eq!(drawn.len(), frozen.len());
+        for ((id, got), (want_id, want)) in drawn.into_iter().zip(frozen) {
+            assert!(id == want_id && (got - want).abs() < 1e-9, "{id}: {got}");
+        }
+    }
+
     #[test]
     fn drawn_shapes_keep_the_design_rules() {
         for design in TABLE {
