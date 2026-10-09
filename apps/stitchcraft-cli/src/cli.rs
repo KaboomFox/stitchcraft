@@ -20,12 +20,14 @@ Exit status: 0 done (warnings allowed) · 1 the design or file has errors (nothi
 error · 3 a file could not be read or written.
 
 Coming with the roadmap (docs/src/plan/roadmap.md):
-  stitch plan design.svg -o design.pes                      (M3)
   stitch export design.vectorcraft -o design.pes            (M6)";
 
 /// The subcommands.
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    /// Plan a design (SVG) for a machine and write the machine file, with a picture and a report if
+    /// asked.
+    Plan(PlanArgs),
     /// Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md).
     Testsheet(TestsheetArgs),
     /// Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths.
@@ -41,6 +43,29 @@ pub enum Command {
         /// The code.
         code: String,
     },
+}
+
+/// `stitch plan`.
+#[derive(Debug, Args)]
+pub struct PlanArgs {
+    /// The design (SVG).
+    pub design: PathBuf,
+    /// The machine file to write.
+    #[arg(long, short)]
+    pub output: PathBuf,
+    /// The machine profile (see `stitch profiles`).
+    #[arg(long, short, default_value = "brother-200x200")]
+    pub profile: String,
+    /// The file format; by default the output file's extension decides.
+    #[arg(long, value_enum)]
+    pub format: Option<Format>,
+    /// Also draw a picture of what the file will sew (PNG).
+    #[arg(long)]
+    pub preview: Option<PathBuf>,
+    /// Also write a report of the plan and what was said about it (JSON), even when nothing else is
+    /// written.
+    #[arg(long)]
+    pub report: Option<PathBuf>,
 }
 
 /// `stitch testsheet`.

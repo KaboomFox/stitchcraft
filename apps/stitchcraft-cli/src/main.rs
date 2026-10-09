@@ -15,6 +15,7 @@ use stitchcraft_cli::commands::{self, Outcome, Status};
 
 fn run(cli: &Cli) -> Outcome {
     match &cli.command {
+        Command::Plan(args) => commands::plan::run(args),
         Command::Testsheet(args) => commands::testsheet::run(args),
         Command::Inspect(args) => commands::inspect::run(args),
         Command::Preview(args) => commands::preview::run(args),
