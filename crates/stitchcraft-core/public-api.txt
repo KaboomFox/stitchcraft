@@ -158,6 +158,7 @@ pub const stitchcraft_core::units::MACHINE_LIMIT: i32
 pub const stitchcraft_core::units::MM_PER_INCH: f64
 pub const stitchcraft_core::units::MM_PER_POINT: f64
 pub const stitchcraft_core::units::MM_PER_SVG_PX: f64
+pub fn stitchcraft_core::units::at_least(f64, f64) -> bool
 pub fn stitchcraft_core::units::to_tenths(f64) -> core::option::Option<i32>
 #[non_exhaustive] pub enum stitchcraft_core::Code
 pub stitchcraft_core::Code::BudgetExhausted
