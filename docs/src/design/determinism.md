@@ -1,6 +1,6 @@
 # Determinism
 
-<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/rng.rs -->
+<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/rng.rs, apps/stitchcraft-cli/src/commands/bug_report.rs -->
 
 **Same input, same version ⇒ byte-identical machine file and preview, on Linux, macOS, Windows and
 wasm32.** This makes golden-file conformance possible, makes bug reports reproducible, makes caches
