@@ -28,6 +28,7 @@ pub stitchcraft_core::diag::Code::CustomLockUnusable
 pub stitchcraft_core::diag::Code::HandStitchTooShort
 pub stitchcraft_core::diag::Code::InternalCheckFailed
 pub stitchcraft_core::diag::Code::LockStitchLengthened
+pub stitchcraft_core::diag::Code::JumpsCutInDst
 pub stitchcraft_core::diag::Code::NothingToStitch
 pub stitchcraft_core::diag::Code::OutsideComfortZone
 pub stitchcraft_core::diag::Code::OutsideHoop
@@ -39,6 +40,7 @@ pub stitchcraft_core::diag::Code::StitchLengthRaised
 pub stitchcraft_core::diag::Code::StrokeTooSmall
 pub stitchcraft_core::diag::Code::SvgFeatureIgnored
 pub stitchcraft_core::diag::Code::SvgGeometryUnusable
+pub stitchcraft_core::diag::Code::SvgObjectIgnored
 pub stitchcraft_core::diag::Code::SvgUnreadable
 pub stitchcraft_core::diag::Code::ThreadColorsUnknown
 pub stitchcraft_core::diag::Code::TooLargeForFormat
@@ -169,6 +171,7 @@ pub stitchcraft_core::Code::CustomLockUnusable
 pub stitchcraft_core::Code::HandStitchTooShort
 pub stitchcraft_core::Code::InternalCheckFailed
 pub stitchcraft_core::Code::LockStitchLengthened
+pub stitchcraft_core::Code::JumpsCutInDst
 pub stitchcraft_core::Code::NothingToStitch
 pub stitchcraft_core::Code::OutsideComfortZone
 pub stitchcraft_core::Code::OutsideHoop
@@ -180,6 +183,7 @@ pub stitchcraft_core::Code::StitchLengthRaised
 pub stitchcraft_core::Code::StrokeTooSmall
 pub stitchcraft_core::Code::SvgFeatureIgnored
 pub stitchcraft_core::Code::SvgGeometryUnusable
+pub stitchcraft_core::Code::SvgObjectIgnored
 pub stitchcraft_core::Code::SvgUnreadable
 pub stitchcraft_core::Code::ThreadColorsUnknown
 pub stitchcraft_core::Code::TooLargeForFormat

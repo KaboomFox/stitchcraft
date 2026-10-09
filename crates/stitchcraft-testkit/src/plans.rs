@@ -7,7 +7,7 @@ use stitchcraft_plan::{PlanBuilder, Provenance, Rgb, Role, StitchPlan, Thread};
 
 /// Every canonical plan with its name (the golden files are `<name>.<extension>`).
 pub fn canonical() -> Vec<(&'static str, StitchPlan)> {
-    vec![("every-command", every_command()), ("one-stitch", one_stitch())]
+    vec![("every-command", every_command()), ("one-stitch", one_stitch()), ("long-jumps", long_jumps())]
 }
 
 fn p(x: f64, y: f64) -> Point {
@@ -37,6 +37,29 @@ pub fn every_command() -> StitchPlan {
     b.stitch(p(5.0, 12.5), top);
     b.stitch(p(7.5, 12.5), top);
     b.trim(None);
+    b.finish()
+}
+
+/// Untrimmed jumps of two and three DST records (24.2 and 30 mm): from the start, between stitches and
+/// after a thread change. DST machines cut the thread before three or more jump records in a row, but
+/// only where something was sewn since it was last cut or changed — so of these, only the 30 mm jump
+/// between stitches is cut (REQ-FMT-008).
+pub fn long_jumps() -> StitchPlan {
+    let (top, travel) = (Provenance::plan(Role::Top), Provenance::plan(Role::Travel));
+    let mut b = PlanBuilder::new(Thread::named(Rgb::from_hex(0xED171F), "Red"));
+    b.jump(p(-30.0, 0.0), travel);
+    b.stitch(p(-30.0, 0.0), top);
+    b.stitch(p(-27.0, 0.0), top);
+    b.jump(p(-2.8, 0.0), travel);
+    b.stitch(p(-2.8, 0.0), top);
+    b.stitch(p(0.0, 0.0), top);
+    b.jump(p(30.0, 0.0), travel);
+    b.stitch(p(30.0, 0.0), top);
+    b.stitch(p(33.0, 0.0), top);
+    b.change_thread(Thread::named(Rgb::from_hex(0x0A55A3), "Blue"));
+    b.jump(p(0.0, 30.0), travel);
+    b.stitch(p(0.0, 30.0), top);
+    b.stitch(p(3.0, 30.0), top);
     b.finish()
 }
 

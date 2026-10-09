@@ -23,4 +23,7 @@ Entries are added here when a data table is derived from a third-party source.
 - PES/PEC and DST encoding conventions (crates/stitchcraft-formats): where public format descriptions
   leave a detail open (trim flags, header fields, thumbnail bit order, DST trim sequences), StitchCraft
   matches the output of pystitch (MIT), observed as a black box: we ran the library and compared bytes.
-  Each such detail is noted in the module that writes it.
+  Each such detail is noted in the module that writes it. How machines read DST jumps — three or more
+  in a row cut the thread — comes from public descriptions (Brother's support pages, Wilcom's
+  documentation, the EduTech Wiki's DST page) and agrees with pyembroidery's reader (MIT), observed the
+  same way.

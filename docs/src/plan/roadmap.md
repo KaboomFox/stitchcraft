@@ -125,8 +125,10 @@ fill with generated tiles; circular fill. One step per type with its requirement
 ## M8 — Ink/Stitch interoperability
 
 SVG adapter v2: every `inkstitch:*` attribute in the [compatibility contract](../design/inkstitch-compat-contract.md),
-command symbols, clones (`<use>`), ignore layers, custom locks drawn as SVG paths (the adapter reads the
-path for the engine; until then they sew the half stitch, with `SC-W0503`); `stitch import-inkstitch file.svg -o file.vectorcraft`;
+the command symbols not read yet (since M3 the adapter applies trim, stop and the ignore commands, and
+never stitches commands, connectors or helper paths: `REQ-SVG-003`), clones (`<use>`), custom locks drawn
+as SVG paths (the adapter reads the path for the engine; until then they sew the half stitch, with
+`SC-W0503`); `stitch import-inkstitch file.svg -o file.vectorcraft`;
 L3 differential conformance against a pinned Ink/Stitch with the deviations ledger. Ink/Stitch's font
 library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin, downloaded at a pinned
 commit by `cargo xtask corpus` and never committed, using only fonts whose licence allows it (OFL, CC0,

@@ -12,6 +12,6 @@ Applies to Manual stitch.
 
 **Longest stitch.** Split stitches longer than this into equal parts. Empty, every stitch is sewn as drawn.
 
-- **Accepts:** a length from 0.1 to 25 mm, or empty
+- **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
 - **Default:** empty
 - **Ink/Stitch:** same key, meaning and default

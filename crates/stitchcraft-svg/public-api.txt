@@ -1,6 +1,22 @@
 # The public API of stitchcraft-svg, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
 # Generated: do not edit. A change here is a change other code can see; say why in the pull request.
 pub mod stitchcraft_svg
+pub mod stitchcraft_svg::inkstitch
+pub enum stitchcraft_svg::inkstitch::Does
+pub stitchcraft_svg::inkstitch::Does::IgnoreLayer
+pub stitchcraft_svg::inkstitch::Does::IgnoreObject
+pub stitchcraft_svg::inkstitch::Does::NotYet
+pub stitchcraft_svg::inkstitch::Does::Positions
+pub stitchcraft_svg::inkstitch::Does::Stop
+pub stitchcraft_svg::inkstitch::Does::ToolInput
+pub stitchcraft_svg::inkstitch::Does::Trim
+impl stitchcraft_svg::inkstitch::Does
+pub const fn stitchcraft_svg::inkstitch::Does::describe(self) -> &'static str
+pub struct stitchcraft_svg::inkstitch::Command
+pub stitchcraft_svg::inkstitch::Command::does: stitchcraft_svg::inkstitch::Does
+pub stitchcraft_svg::inkstitch::Command::name: &'static str
+pub const stitchcraft_svg::inkstitch::COMMANDS: [stitchcraft_svg::inkstitch::Command; 12]
+pub const stitchcraft_svg::inkstitch::READ_ATTRIBUTES: &[&str]
 pub struct stitchcraft_svg::Svg
 pub stitchcraft_svg::Svg::design: stitchcraft_engine::design::Design
 pub stitchcraft_svg::Svg::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>

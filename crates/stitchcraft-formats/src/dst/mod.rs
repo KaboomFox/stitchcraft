@@ -10,10 +10,16 @@
 //! | 3 | jump | colour change | y+81 | y−81 | x−81 | x+81 | 1 | 1 |
 //!
 //! **y is up** in DST, so the plan's downward y is negated. A colour change — and a stop, which DST
-//! cannot tell apart — is `00 00 C3`; the end is `00 00 F3`. DST has no trim command: a trim is three
-//! small jumps that cancel out, (+2, −2), (−4, +4), (+2, −2), which machines read as a trim (the sequence
-//! matches the output of pystitch (MIT), observed as a black box; `NOTICE`). Moves longer than one record
-//! are split evenly into jumps, with a sewn move's last piece sewn (REQ-FMT-007).
+//! cannot tell apart — is `00 00 C3`; the end is `00 00 F3`. Moves longer than one record are split
+//! evenly into jumps, with a sewn move's last piece sewn (REQ-FMT-007).
+//!
+//! **DST has no trim command.** Machines count jump records in a row, and when there are as many as their
+//! setting — [`JUMPS_FOR_TRIM`], the common one; Brother's PR machines take 1 to 8 — they cut the thread
+//! before the jumps, if something was sewn since it was last cut or changed (REQ-FMT-008). So a trim is
+//! three small jumps that cancel out, (+2, −2), (−4, +4), (+2, −2) (the sequence matches the output of
+//! pystitch (MIT), observed as a black box; `NOTICE`), and **a jump of three or more records — longer
+//! than 24.2 mm — is a trim too**, whether the plan asks for one or not. [`encode`] reports the places
+//! where the machine cuts and the plan does not trim (`SC-I0605`).
 //!
 //! **Header fields** (`LA` label, `ST` records before the end record, `CO` colour changes, `+X -X +Y -Y`
 //! extents from the start in DST axes, `AX AY` the end position, `MX MY` zero, `PD ******`) are
@@ -22,8 +28,10 @@
 mod read;
 
 pub use read::decode;
+use stitchcraft_core::{Code, Diagnostic};
 use stitchcraft_plan::{FormatId, StitchPlan};
 
+use crate::Encoded;
 use crate::error::EncodeError;
 use crate::label::label;
 use crate::lower::{Op, lower, split};
@@ -31,18 +39,22 @@ use crate::quantize::Delta;
 
 /// The largest move one record makes along an axis.
 pub const RECORD_LIMIT: i32 = 121;
+/// Machines cut the thread before this many jump records in a row, or more: the number most are set to,
+/// and pyembroidery's reading too (module docs).
+pub const JUMPS_FOR_TRIM: usize = 3;
 /// The header's size.
 pub(crate) const HEADER_LEN: usize = 512;
-/// A trim: three jumps that cancel out (DST axes, y up).
-pub(crate) const TRIM_JUMPS: [(i32, i32); 3] = [(2, -2), (-4, 4), (2, -2)];
+/// A trim: [`JUMPS_FOR_TRIM`] small jumps that cancel out (DST axes, y up).
+pub(crate) const TRIM_JUMPS: [(i32, i32); JUMPS_FOR_TRIM] = [(2, -2), (-4, 4), (2, -2)];
 /// Record kinds (third byte, before the 81-digits are added).
 pub(crate) const SEW: u8 = 0x03;
 const JUMP: u8 = 0x83;
 const COLOR_CHANGE: [u8; 3] = [0x00, 0x00, 0xC3];
 const END: [u8; 3] = [0x00, 0x00, 0xF3];
 
-/// `plan` as a DST file whose design name is `name`.
-pub fn encode(plan: &StitchPlan, name: &str) -> Result<Vec<u8>, EncodeError> {
+/// `plan` as a DST file whose design name is `name`, with `SC-I0605` when its machines will cut the
+/// thread where the plan does not.
+pub fn encode(plan: &StitchPlan, name: &str) -> Result<Encoded, EncodeError> {
     let format = FormatId::Dst;
     let lowered = lower(plan, format.name())?;
     if lowered.changes() > format.max_color_changes() {
@@ -59,8 +71,7 @@ pub fn encode(plan: &StitchPlan, name: &str) -> Result<Vec<u8>, EncodeError> {
                     records.moving(piece.dx, -piece.dy, if i < last { JUMP } else { SEW });
                 }
             }
-            // A jump that goes nowhere is a no-op: DST writes no record for it, because readers take a run
-            // of jumps that returns to its start for a trim.
+            // A jump that goes nowhere is a no-op: DST writes no record for it.
             Op::Jump(delta) if delta == Delta::ZERO => {}
             Op::Jump(delta) => {
                 for piece in split(delta, RECORD_LIMIT) {
@@ -68,25 +79,26 @@ pub fn encode(plan: &StitchPlan, name: &str) -> Result<Vec<u8>, EncodeError> {
                 }
             }
             Op::Trim => {
+                records.trimming();
                 for (dx, dy) in TRIM_JUMPS {
                     records.moving(dx, dy, JUMP);
                 }
             }
             Op::Stop | Op::ColorChange => {
-                records.bytes.extend_from_slice(&COLOR_CHANGE);
+                records.command(&COLOR_CHANGE);
                 records.count += 1;
                 records.color_changes += 1;
             }
-            Op::End => records.bytes.extend_from_slice(&END),
+            Op::End => records.command(&END),
         }
     }
 
-    let mut out = header(name, &records)?;
-    out.extend_from_slice(&records.bytes);
-    Ok(out)
+    let mut bytes = header(name, &records)?;
+    bytes.extend_from_slice(&records.bytes);
+    Ok(Encoded { bytes, notes: records.notes() })
 }
 
-/// The records written so far, and what the header reports about them.
+/// The records written so far, what the header reports about them, and where a machine will cut.
 #[derive(Default)]
 struct Records {
     bytes: Vec<u8>,
@@ -97,16 +109,68 @@ struct Records {
     at: (i32, i32),
     min: (i32, i32),
     max: (i32, i32),
+    /// Jump records in a row so far, and whether the plan's trim starts them.
+    run: usize,
+    run_trims: bool,
+    /// Whether a stitch was sewn since the thread was last cut or changed.
+    sewn: bool,
+    /// Runs the machine cuts the thread before where the plan does not trim.
+    unplanned_cuts: usize,
 }
 
 impl Records {
     /// A record moving by (`dx`, `dy`) in DST axes; both within ±[`RECORD_LIMIT`].
     fn moving(&mut self, dx: i32, dy: i32, kind: u8) {
+        if kind == JUMP {
+            self.run += 1;
+        } else {
+            self.end_run();
+            self.sewn = true;
+        }
         self.bytes.extend_from_slice(&record(dx, dy, kind));
         self.count += 1;
         self.at = (self.at.0 + dx, self.at.1 + dy);
         self.min = (self.min.0.min(self.at.0), self.min.1.min(self.at.1));
         self.max = (self.max.0.max(self.at.0), self.max.1.max(self.at.1));
+    }
+
+    /// The plan trims here: its jumps start a run, unless they follow other jumps.
+    fn trimming(&mut self) {
+        if self.run == 0 {
+            self.run_trims = true;
+        }
+    }
+
+    /// A colour change or the end: no movement, and the thread is cut or done.
+    fn command(&mut self, bytes: &[u8; 3]) {
+        self.end_run();
+        self.sewn = false;
+        self.bytes.extend_from_slice(bytes);
+    }
+
+    /// A record that is not a jump: a long enough run before it, after sewing, cut the thread.
+    fn end_run(&mut self) {
+        if self.run >= JUMPS_FOR_TRIM && self.sewn {
+            self.unplanned_cuts += usize::from(!self.run_trims);
+            self.sewn = false;
+        }
+        (self.run, self.run_trims) = (0, false);
+    }
+
+    /// `SC-I0605` when the machine cuts the thread where the plan does not.
+    fn notes(&self) -> Vec<Diagnostic> {
+        // The longest jump that is not cut: one record fewer than a trim, in mm.
+        let records = i32::try_from(JUMPS_FOR_TRIM).unwrap_or(i32::MAX).saturating_sub(1);
+        let longest = f64::from(RECORD_LIMIT.saturating_mul(records)) / 10.0;
+        let places = match self.unplanned_cuts {
+            0 => return Vec::new(),
+            1 => "1 place".to_string(),
+            n => format!("{n} places"),
+        };
+        let message = format!(
+            "The thread will be cut at {places} the plan does not trim: DST machines cut it before {JUMPS_FOR_TRIM} or more jump records in a row, and a jump longer than {longest} mm takes that many."
+        );
+        vec![Diagnostic::new(Code::JumpsCutInDst, message)]
     }
 }
 

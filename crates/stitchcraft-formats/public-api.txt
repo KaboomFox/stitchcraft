@@ -10,9 +10,10 @@ pub stitchcraft_formats::decode::Decoded::plan: stitchcraft_plan::plan::StitchPl
 pub stitchcraft_formats::decode::Decoded::warnings: alloc::vec::Vec<alloc::string::String>
 pub const stitchcraft_formats::decode::MAX_RECORDS: usize
 pub mod stitchcraft_formats::dst
+pub const stitchcraft_formats::dst::JUMPS_FOR_TRIM: usize
 pub const stitchcraft_formats::dst::RECORD_LIMIT: i32
 pub fn stitchcraft_formats::dst::decode(&[u8]) -> core::result::Result<stitchcraft_formats::decode::Decoded, stitchcraft_formats::error::DecodeError>
-pub fn stitchcraft_formats::dst::encode(&stitchcraft_plan::plan::StitchPlan, &str) -> core::result::Result<alloc::vec::Vec<u8>, stitchcraft_formats::error::EncodeError>
+pub fn stitchcraft_formats::dst::encode(&stitchcraft_plan::plan::StitchPlan, &str) -> core::result::Result<stitchcraft_formats::Encoded, stitchcraft_formats::error::EncodeError>
 pub mod stitchcraft_formats::error
 #[non_exhaustive] pub enum stitchcraft_formats::error::DecodeError
 pub stitchcraft_formats::error::DecodeError::BadOffset
@@ -107,5 +108,8 @@ pub stitchcraft_formats::Decoded::name: alloc::string::String
 pub stitchcraft_formats::Decoded::palette: core::option::Option<stitchcraft_plan::profile::PaletteId>
 pub stitchcraft_formats::Decoded::plan: stitchcraft_plan::plan::StitchPlan
 pub stitchcraft_formats::Decoded::warnings: alloc::vec::Vec<alloc::string::String>
+pub struct stitchcraft_formats::Encoded
+pub stitchcraft_formats::Encoded::bytes: alloc::vec::Vec<u8>
+pub stitchcraft_formats::Encoded::notes: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_formats::decode(&[u8]) -> core::result::Result<stitchcraft_formats::decode::Decoded, stitchcraft_formats::error::DecodeError>
-pub fn stitchcraft_formats::encode(&stitchcraft_plan::plan::StitchPlan, stitchcraft_plan::profile::FormatId, &str) -> core::result::Result<alloc::vec::Vec<u8>, stitchcraft_formats::error::EncodeError>
+pub fn stitchcraft_formats::encode(&stitchcraft_plan::plan::StitchPlan, stitchcraft_plan::profile::FormatId, &str) -> core::result::Result<stitchcraft_formats::Encoded, stitchcraft_formats::error::EncodeError>

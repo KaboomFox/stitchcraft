@@ -16,7 +16,7 @@ StitchCraft reads SVG files into its design model, reporting whatever it leaves 
 stitches running stitches: even spacing between corners, patterns of lengths, curves followed within the
 tolerance, no stitch shorter than the shortest stitch, measured straight, repeats, bean stitch and random
 length, manual stitches placed by hand, and lock stitches of every shape at either end of the
-stitching. The conformance report shows all 31 active requirements green. Next: the MC-1 sew-out
+stitching. The conformance report shows all 34 active requirements green. Next: the MC-1 sew-out
 report, which closes M1, and the rest of M3 (plan assembly, finalizing, `stitch plan`). The repository is
 [KaboomFox/stitchcraft](https://github.com/KaboomFox/stitchcraft), with the docs published at
 [kaboomfox.github.io/stitchcraft](https://kaboomfox.github.io/stitchcraft/) and `main` protected; the

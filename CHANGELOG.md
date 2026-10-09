@@ -25,12 +25,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - **Needle points.** A needle point goes on every node of the path, in order. A curve gives only its
     end node.
   - **Longest stitch.** Stitches longer than `max_stitch_length_mm` are split into equal parts, never
-    shorter than the shortest stitch.
+    shorter than the shortest stitch. As in Ink/Stitch, 0 or less means no maximum: an optional length
+    of 0 or less now counts as empty, where it used to be clamped up with `SC-W0102`.
   - **Bean stitch** applies; repeats don't.
   - **Shortest stitch.** No hand-placed stitch is shorter than the shortest stitch. A point too close to
     the one before is left out, the last point is kept, and the new `SC-W0403` says how many. Ink/Stitch
     drops such points silently.
   - **Conformance.** `REQ-RUN-006` and the new `REQ-RUN-008` are active.
+- `SC-I0605`: writing DST says at how many places its machines will cut the thread where the plan does
+  not trim. `stitchcraft_formats::encode` returns the file as `Encoded`, its bytes with notes on
+  what the format makes the machine do that the plan does not say; `stitch convert` and
+  `stitch testsheet` print them.
 - M3.5: repeats, bean stitch and random length for the running stitch.
   - **Repeats.** `repeats` sews a run several times, every other pass backwards. Each pass starts where
     the last one ended, so a turnaround is never a stitch in place.
@@ -152,6 +157,32 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The SVG reader no longer stitches Ink/Stitch's own objects (`REQ-SVG-003`), which a review against
+  Ink/Stitch found.
+  - **Commands and connectors.** Command symbols (`<use>` of an `inkstitch_*` symbol) were reported as
+    clones, and the connector from each symbol to its object was sewn as a line in its own colour. Lines
+    drawn with Inkscape's connector tool were sewn too. None is stitched now. A connector that ties no
+    command is noted.
+  - **Commands applied.** `trim` and `stop` commands set the shape's `trim_after` and `stop_after`.
+  - **Leaving out.** The `ignore_object` and `ignore_layer` commands, and the `inkstitch:ignore_object`
+    setting, leave out what they name, and the new `SC-I0805` lists each (`REQ-ASM-004`, now active).
+  - **Not applied yet.** `origin` and `stop_position` are noted as not applied yet. A trim or stop on
+    something that is not a stitched shape is noted, as is an `ignore_layer` outside every layer.
+  - **Helper paths.** Paths that carry Ink/Stitch's guide-line, anchor-line or pattern start marker are
+    helpers for other shapes. They are no longer stitched; each is noted, since StitchCraft does not
+    apply them yet.
+  - **Markers.** A marker property set to `none` no longer hides another one that names a marker, and
+    each of the three inherits on its own.
+  - **Work.** Reading charges two units of work per XML node: one to find ids and commands, one to read.
+- DST is read as DST machines sew it (`REQ-FMT-008`). Machines count jump records in a row and cut the
+  thread before three or more — a machine setting; three is the common one, and pyembroidery's reading —
+  where something was sewn since the thread was last cut or changed, so a jump longer than 24.2 mm is a
+  trim too. StitchCraft recognised only its own spelling of a trim (three small jumps back to where they
+  started), so a DST file with a long untrimmed jump read back without the cut its machines make, and
+  pyembroidery read such a file differently. Found by the pyembroidery oracle on M3.9's plan golden;
+  reproduced on `main` with the new canonical plan `long-jumps`. Round trips through DST are compared
+  with what DST machines do (`stitchcraft_testkit::equivalence::dst_events`), and the fuzz body now
+  checks DST read-backs as well as PES.
 - The compatibility contract check took the lock shape `zigzag`, listed for `lock_*_scale_percent`, for
   the satin method of the same name, and so thought those parameters applied to zigzag satins only. A
   stitch type is now named only by an id of the row's own family; the common settings have none. It
@@ -174,6 +205,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   zero-length jumps.
 
 ### Golden files
+- Added `conformance/golden/formats/long-jumps.pes` and `.dst`: untrimmed jumps of two and three DST
+  records, from the start, between stitches and after a thread change. DST machines cut before the one
+  between stitches only; the pyembroidery oracle reads both files.
 - Added `conformance/golden/render/`: previews of a sampler design (simple and realistic) and of TS-01
   (realistic). They pin how previews look; a change to them is a change users will see.
 - Added `conformance/golden/formats/` (canonical plans `every-command` and `one-stitch`, PES and DST)
