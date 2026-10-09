@@ -18,6 +18,8 @@ mod design_map;
 mod deviations;
 mod docs;
 mod docs_audit;
+mod examples;
+mod figures;
 mod filesize;
 mod join;
 mod layers;

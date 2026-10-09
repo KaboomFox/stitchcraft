@@ -44,7 +44,7 @@ reference `images/generated/<id>.png`. An image without a declaration fails the 
 
 | Kind | Made by | Compared by | Notes |
 |---|---|---|---|
-| `stitch` | `stitchcraft-render` ([rendering](rendering.md)) from a conformance fixture + parameters | **exact bytes** (rendering is deterministic) | Stitch-type illustrations, parameter "before/after" pairs, diagnostics examples |
+| `stitch` | `stitchcraft-render` ([rendering](rendering.md)) from a test sheet, or from an SVG design the engine plans | **exact bytes** (rendering is deterministic) | Stitch-type illustrations, parameter comparisons, diagnostics examples |
 | `vectorcraft-render` | `vectorcraft-cli run --in fixture --cmd plugin.install … --cmd effect.apply … --export x.png` | exact bytes, or tight tolerance if VectorCraft's renderer changes | How a preview looks in VectorCraft's canvas, headless |
 | `vectorcraft-ui` | VectorCraft (pinned stable) driven over its control channel: open fixture, install plug-ins, select, open the dialog, set fields, `ui.screenshot`, crop | perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 per channel) | Dialogs, menus, the workflow; runs under Xvfb with Mesa software rendering in a pinned container |
 | `photo` | a person, of a real sew-out | presence + metadata record (machine, fabric, commit, checkpoint) | Never regenerated; listed with their sew-out report |
@@ -53,15 +53,37 @@ A shot declaration:
 
 ```toml
 [[shot]]
-id = "tatami-staggers-1-vs-4"
+id = "running-length"
 kind = "stitch"
-fixture = "conformance/fixtures/fill/square-40mm.svg"
-params = [{ staggers = 1 }, { staggers = 4 }]   # two panels side by side
-render = { style = "realistic", width = 960, background = "#f4efe6" }
-alt = "Two 40 mm tatami squares: with one stagger the needle points form straight furrows; with four they disappear."
+fixture = "docs/fixtures/wave.svg"   # planned by the engine for the reference machine, as `stitch plan` plans it
+style = "simple"
+scale = 8.0                          # pixels per millimetre
+alt = "A wave in running stitch"
+panels = [
+  { caption = "1.5 mm", params = { running_stitch_length_mm = "1.5" } },
+  { caption = "4 mm", params = { running_stitch_length_mm = "4" } },
+]
 ```
 
-The `alt` text is mandatory (accessibility), and the docs check fails on images without it.
+Each panel sets its parameters on every element of the design and becomes one image, `running-length-1.png`
+and so on. The plan may report only the codes the shot lists in `allow`, and a shot fails on any other:
+a picture never shows a design that the engine changed without the page saying so. The `alt` text is
+mandatory (accessibility), and the docs check fails on images without it.
+
+A page shows a shot between the lines `<!-- shot: running-length -->` and `<!-- /shot -->`. `cargo xtask
+docs` writes the figure there. Without panels the figure is one image. With panels it is a table with a
+column per panel, its caption on top and its image below it. Each image's alternative text is the shot's,
+followed by the panel's caption. The page
+cannot show an image under any other text, and a stale figure fails `--check` like a stale page.
+
+## Command-line examples
+
+Pages show what a command prints by including it from `docs/src/user/reference/generated/`. The commands
+are declared in `docs/examples.toml`, and `cargo xtask docs` runs each one with the `stitch` binary in an
+empty directory. A declaration can copy files of the repository into that directory and run commands
+that are not shown first. The output is the binary's own, standard output then standard error, with the
+exit status when it is not 0. When a command prints something new, `--check` fails until the output is
+written again. Pages show what the command prints today.
 
 The `vectorcraft-ui` kind depends on running VectorCraft's window in CI; spike **M0.8** proves it
 (Xvfb + Mesa llvmpipe through wgpu's GL backend). Until it lands, UI images are limited to
@@ -76,7 +98,7 @@ dialogs' contents.
 |---|---|
 | `book` | `mdbook build` fails, or any page is missing from `SUMMARY.md` |
 | `check` | generated pages are stale; a relative link or `#anchor` is broken; a doc mentions a `cargo xtask` subcommand that does not exist (the drift we found in VectorCraft's own `AGENTS.md`); a `REQ-…` or `SC-…` id does not exist; an image lacks a declaration or alt text |
-| `examples` | a CLI example in the docs (`trycmd`, from M1.8) prints something different from what the page shows; a Rust snippet does not compile (`cargo test --doc`) |
+| `examples` | a Rust snippet does not compile (`cargo test --doc`). Command-line examples are generated pages, which `check` covers |
 | `shots` | `cargo xtask shots --check`: a declared image is missing, has no alt text, or regenerates differently from the committed file — byte-exact for `stitch` shots, within tolerance for `vectorcraft-ui` and `vectorcraft-render` shots (generators in M6.7; a separate job with Xvfb and Mesa) |
 | `spelling` | `typos` finds a misspelling (allow-list in `typos.toml`) |
 | `links` | an internal link is broken (`lychee --offline`); external links are checked nightly, not per PR |

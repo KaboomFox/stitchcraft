@@ -7,11 +7,15 @@
 # "vectorcraft-ui" (VectorCraft window via its control channel, perceptual tolerance),
 # "photo" (a real sew-out; never regenerated, needs a sew-out report link).
 #
-# A "stitch" shot names a test sheet, a style ("realistic" or "simple") and a scale in pixels per
-# millimetre; it becomes docs/src/images/generated/<id>.png. Fixtures with parameters, as in
-#   fixture = "conformance/fixtures/fill/square-40mm.svg"
-#   params = [{ staggers = 1 }, { staggers = 4 }]
-# arrive with the first stitch types (M3).
+# A "stitch" shot names a style ("realistic" or "simple"), a scale in pixels per millimetre, and what to
+# draw: a test sheet (`sheet = "TS-01"`), or an SVG design (`fixture = "docs/fixtures/wave.svg"`) that the
+# engine plans for the reference machine as `stitch plan` does. It becomes
+# docs/src/images/generated/<id>.png. A design can have panels, each with a caption and parameters set on
+# every element:
+#   panels = [{ caption = "1.5 mm", params = { running_stitch_length_mm = "1.5" } }, …]
+# and then makes <id>-1.png, <id>-2.png and so on. A page shows them side by side between the lines
+# `<!-- shot: <id> -->` and `<!-- /shot -->`, which `cargo xtask docs` fills in. The plan of a design may
+# report only the diagnostic codes its shot lists in `allow = ["SC-W0402"]`.
 
 # ── Test sheets (shown on the test-sheets reference page, in this order) ────────────────────────────
 

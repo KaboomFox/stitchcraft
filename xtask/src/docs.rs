@@ -1,7 +1,7 @@
 //! `cargo xtask docs [--check]`: generated pages, and the checks that keep the documentation true.
 //!
 //! Without `--check` it regenerates the generated pages. With `--check` it writes nothing and fails when:
-//! a generated page is stale; a page is missing from `SUMMARY.md`; a relative link or `#anchor` is broken;
+//! a generated page or a page's figure ([`crate::figures`]) is stale; a page is missing from `SUMMARY.md`; a relative link or `#anchor` is broken;
 //! a document mentions a `cargo xtask` subcommand that does not exist; a `REQ-…` id or `SC-…` code is not
 //! registered; the ADR index disagrees with the ADR files; an image has no alt text or no declaration in
 //! `docs/shots.toml` (`docs/src/design/docs-pipeline.md`); a long sentence is on two pages, or a path of
@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 
 use crate::markdown::{self, Link};
 use crate::util::{self, Findings};
-use crate::{SUBCOMMANDS, conformance, contract_page, design_map, deviations, docs_audit, param_pages, reference_pages, shots};
+use crate::{SUBCOMMANDS, conformance, contract_page, design_map, deviations, docs_audit, figures, param_pages, reference_pages, shots};
 
 const DOCS_SRC: &str = "docs/src";
 const DIAGNOSTICS_PAGE: &str = "docs/src/design/diagnostics.md";
@@ -70,6 +70,16 @@ fn generated_pages(root: &Path, check_only: bool, findings: &mut Findings) -> Re
         } else {
             std::fs::remove_file(&orphan).map_err(|e| format!("{page}: {e}"))?;
             println!("deleted {page}");
+        }
+    }
+    // Hand-written pages with figures: the figures are written from their shots.
+    let shots = shots::load(root)?;
+    for path in util::files(&root.join(DOCS_SRC), &["md"]) {
+        let page = util::rel(&path);
+        let text = util::read(&path)?;
+        if figures::has_figures(&text) && !pages.iter().any(|(generated, _)| *generated == page) {
+            let fresh = figures::refresh(&page, &text, &shots)?;
+            pages.push((page, fresh));
         }
     }
     for (page, fresh) in pages {
@@ -311,7 +321,7 @@ fn images(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) -> 
             }
             if path.starts_with(&src) && !link.target.contains("://") {
                 let stem = Path::new(&link.target).file_stem().and_then(|s| s.to_str()).unwrap_or("");
-                if !shots.iter().any(|s| s.id == stem) {
+                if !shots.iter().any(|s| s.images().iter().any(|image| image == stem)) {
                     findings.error(format!("{here}: image `{}` is not declared in docs/shots.toml", link.target));
                 }
             }
