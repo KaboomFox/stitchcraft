@@ -18,7 +18,7 @@ tolerance, no stitch shorter than the shortest stitch, measured straight, repeat
 length, manual stitches placed by hand, and lock stitches of every shape at either end of the
 stitching; it assembles a design's elements into one plan, with jumps, trims, stops, thread changes and
 locks where `ties` says, and fits it to the machine. `stitch plan design.svg -o design.pes` takes an SVG
-of strokes to a machine file, with a preview and a report. The conformance report shows all 40 active
+of strokes to a machine file, with a preview and a report. The conformance report shows all 41 active
 requirements green. Next: the MC-1 sew-out report, which closes M1, and the rest of M3 (the bug-report
 bundle, then the MC-2 kit). The repository is
 [KaboomFox/stitchcraft](https://github.com/KaboomFox/stitchcraft), with the docs published at
