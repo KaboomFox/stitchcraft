@@ -5,6 +5,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M3.5: repeats, bean stitch and random length for the running stitch.
+  - **Repeats.** `repeats` sews a run several times, every other pass backwards. Each pass starts where
+    the last one ended, so a turnaround is never a stitch in place.
+  - **Bean stitch.** `bean_stitch_repeats` sews each stitch 2b + 1 times. A list such as `"1 0"` is taken
+    in turn along the stitches and runs on across repeats, each turnaround taking one step, as in
+    Ink/Stitch. With a two-value list, each stretch is sewn the same way on every pass.
+  - **Random length.** `enable_random_stitch_length` draws each stitch from its length ±
+    `random_stitch_length_jitter_percent` and starts each span at a random phase, still ending exactly on
+    the corners. The element's own generator draws the lengths, seeded with `random_seed`, so the same
+    element and seed always give the same stitches.
+  - **Where it lives.** Repeats and bean stitch are in `generators::passes`, shared with manual stitch
+    from M3.6.
+  - **Conformance.** `REQ-RUN-004`, `REQ-RUN-005` and the new `REQ-RUN-007` are active.
 - M3.4: the running stitch (`stitchcraft_engine::generators::running`).
   - **Placement.** Curves are flattened to within a tenth of `running_stitch_tolerance_mm`. Corners
     (turns of more than 30° between segments) always get a needle point. Stitches are spread evenly between

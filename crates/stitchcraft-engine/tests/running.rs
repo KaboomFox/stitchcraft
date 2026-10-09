@@ -7,8 +7,10 @@
 use std::f64::consts::PI;
 
 use proptest::prelude::*;
+use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Code, Mm, Point, math};
 use stitchcraft_engine::design::{Path, Segment, Subpath};
+use stitchcraft_engine::generators::passes::RepeatParams;
 use stitchcraft_engine::generators::running::{RunningParams, Stitched, running_stitch};
 use stitchcraft_engine::normalize::stroke::distance_to_segment;
 use stitchcraft_params::ParamSet;
@@ -22,8 +24,10 @@ fn params(length: &str, tolerance: &str) -> RunningParams {
     RunningParams::from_set(&set).unwrap().params
 }
 
+/// Sewn once, without bean stitch or random length.
 fn stitch(path: &Path, params: &RunningParams, min: f64) -> Stitched {
-    running_stitch(path, params, Mm::new(min).unwrap(), &mut Budget::DEFAULT.meter()).unwrap()
+    let once = RepeatParams::from_set(&ParamSet::default()).unwrap().params;
+    running_stitch(path, params, &once, Mm::new(min).unwrap(), &mut SplitMix64::new(0), &mut Budget::DEFAULT.meter()).unwrap()
 }
 
 /// A path through `points`, closed or not.

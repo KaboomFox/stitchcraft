@@ -261,17 +261,25 @@ status = "active"
 id = "REQ-RUN-004"
 area = "strokes/running"
 level = "L2"
-statement = "Bean stitch produces exactly n x (2b + 1) stitches for a span of n stitches."
+statement = "Bean stitch sews each stitch from A to B as A to B, then b times back to A and on to B (2b + 1 times over it). b comes from bean_stitch_repeats, a list taken in turn along the stitches and running on across repeats, each turnaround taking one step; so a run of n stitches with b throughout has exactly n x (2b + 1) stitches."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-RUN-005"
 area = "strokes/running"
 level = "L2"
-statement = "Repeats alternate direction; an odd count ends at the far end, an even count at the start."
+statement = "Repeats sew a run k times, alternating direction, each pass starting where the last one ended (no stitch in place): an odd count ends at the far end, an even count at the start."
 milestone = "M3"
-status = "planned"
+status = "active"
+
+[[req]]
+id = "REQ-RUN-007"
+area = "strokes/running"
+level = "L2"
+statement = "With random stitch length, the stitches between corners differ in length; the same element and seed give the same stitches on every platform, and another seed gives other stitches."
+milestone = "M3"
+status = "active"
 
 [[req]]
 id = "REQ-RUN-006"

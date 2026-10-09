@@ -4,8 +4,13 @@ use stitchcraft_core::Budget;
 
 use super::*;
 
+/// Evenly spaced lengths from `pattern`, without random length.
+fn even(pattern: &[f64]) -> Lengths<'static> {
+    Lengths { pattern: pattern.to_vec(), next: 0, random: None }
+}
+
 fn fitted(length: f64, pattern: &[f64], min: f64) -> Vec<f64> {
-    fit(length, pattern, &mut 0, min, &mut Budget::DEFAULT.meter()).unwrap()
+    fit(length, &mut even(pattern), min, &mut Budget::DEFAULT.meter()).unwrap()
 }
 
 fn close(a: &[f64], b: &[f64]) -> bool {
@@ -26,14 +31,14 @@ fn spans_are_divided_evenly() {
 
 #[test]
 fn patterns_carry_on_from_span_to_span() {
-    let mut next = 0;
+    let mut lengths = even(&[3.0, 1.0]);
     let mut meter = Budget::DEFAULT.meter();
-    let first = fit(8.0, &[3.0, 1.0], &mut next, 0.3, &mut meter).unwrap();
+    let first = fit(8.0, &mut lengths, 0.3, &mut meter).unwrap();
     assert!(close(&first, &[3.0, 1.0, 3.0, 1.0]));
     // The next span starts where the pattern left off, and shrinks the stitches to end on its corner.
-    let second = fit(3.6, &[3.0, 1.0], &mut next, 0.3, &mut meter).unwrap();
+    let second = fit(3.6, &mut lengths, 0.3, &mut meter).unwrap();
     assert!(close(&second, &[2.7, 0.9]));
-    assert_eq!(next, 6);
+    assert_eq!(lengths.next, 6);
 }
 
 #[test]
@@ -77,7 +82,7 @@ fn millimetres_read_well() {
 #[test]
 fn the_budget_bounds_the_work() {
     let mut meter = Budget { max_stitches: 1, max_work: 3 }.meter();
-    assert_eq!(fit(100.0, &[1.0], &mut 0, 0.3, &mut meter), Err(Exhausted::Work));
+    assert_eq!(fit(100.0, &mut even(&[1.0]), 0.3, &mut meter), Err(Exhausted::Work));
 }
 
 fn point(x: f64, y: f64) -> Point {
@@ -183,7 +188,7 @@ fn stitched(points: &[(f64, f64)], corners: &[usize], length: f64) -> Vec<(f64, 
     let mut meter = Budget::DEFAULT.meter();
     let piece = Piece { corners: corners.to_vec(), ..piece(points) };
     let along = Along::new(&piece, &mut meter).unwrap();
-    let run = stitch_piece(&along, &piece.corners, &[length], 0.3, 0.18, &mut meter).unwrap().unwrap();
+    let run = stitch_piece(&along, &piece.corners, &mut even(&[length]), 0.3, 0.18, &mut meter).unwrap().unwrap();
     run.iter().map(|q| ((q.x() * 1e6).round() / 1e6, (q.y() * 1e6).round() / 1e6)).collect()
 }
 

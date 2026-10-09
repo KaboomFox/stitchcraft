@@ -10,10 +10,11 @@
 use stitchcraft_params::ParamGroup;
 
 use crate::common::CommonParams;
+use crate::generators::passes::RepeatParams;
 use crate::generators::running::RunningParams;
 
 /// Every parameter group, in the order the reference pages list them.
-pub const PARAMETERS: &[&ParamGroup] = &[&CommonParams::GROUP, &RunningParams::GROUP];
+pub const PARAMETERS: &[&ParamGroup] = &[&CommonParams::GROUP, &RunningParams::GROUP, &RepeatParams::GROUP];
 
 #[cfg(test)]
 mod tests {
