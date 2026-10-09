@@ -1,9 +1,10 @@
 //! The Brother PEC palette: the 64 thread colours a PES file's PEC block refers to by index.
 //!
-//! Source: the PEC thread table as published in pyembroidery (MIT licence; its fork pystitch carries
-//! the same table), read through the library's public API, not copied from its source. `NOTICE` records
-//! the origin. A machine shows its own rendering of the named thread for an index; these RGB values are
-//! what matching measures against. Index 0 is unused by the format.
+//! Source: the PEC thread table as published in pyembroidery (MIT licence), read through the library's
+//! public API, not copied from its source. Entries 62 and 63 follow its fork pystitch instead (MIT,
+//! `main` at `b72b557`, pull request 140), where pyembroidery 1.5.1 lists two thread colours. `NOTICE`
+//! records the origin. A machine shows its own rendering of the named thread for an index; these RGB
+//! values are what matching measures against. Index 0 is unused by the format.
 //!
 //! Entries 62–64 are not threads: Brother machines treat them as applique steps ("Applique Material",
 //! "Applique Position", "Applique"), so automatic colour matching never picks them.
