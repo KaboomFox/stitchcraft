@@ -537,7 +537,8 @@ mod tests {
         // Bundles this version cannot replay say why.
         let bundle = temp("whole.bug-report.json");
         assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(conformance("fixtures/svg/strokes.svg"))) }).status, Status::Done);
-        let cases: [(&str, fn(&mut Value), &str); 5] = [
+        type Change = fn(&mut Value);
+        let cases: [(&str, Change, &str); 5] = [
             ("newer.json", |v| v["stitchcraft_bug_report"] = Value::from(2), "is a bundle of format 2, and this StitchCraft replays format 1."),
             ("export.json", |v| v["command"] = Value::from("export"), "records `stitch export`, which this StitchCraft does not replay."),
             ("singer.json", |v| v["profile"] = Value::from("singer"), "names the profile `singer`, which this StitchCraft does not have."),
