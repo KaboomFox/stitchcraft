@@ -31,7 +31,7 @@ L0  stitchcraft-core ◀── stitchcraft-params
 
 apps:  stitchcraft-cli (bin `stitch`)   stitchcraft-vc-plugin (wasm32 cdylib)
 test:  stitchcraft-testkit (dev-dependency only)
-tools: xtask
+tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 ```
 
 | Crate | Layer | Owns | Must not |
@@ -47,7 +47,7 @@ tools: xtask
 | `stitchcraft-testkit` | test | fixtures, `proptest` strategies (from the registry), invariant assertions | be a normal dependency |
 | `stitchcraft-cli` | app | the `stitch` command; all filesystem access | contain engine logic |
 | `stitchcraft-vc-plugin` | app | VectorCraft ABI v1 shim + plug-in manifests | contain engine logic; `unsafe` outside `abi.rs` |
-| `xtask` | tools | gates (`ci`, `layers`, `docs`, `cleanroom`, …), generators, compatibility runs | ship to users |
+| `stitchcraft-xtask` | tools | gates (`ci`, `layers`, `docs`, `cleanroom`, …), generators, compatibility runs; works from its own folder, on StitchCraft's packages only ([ADR-0011](adr/0011-movable-into-vectorcraft.md)) | ship to users |
 
 Intra-layer edges are allowed only where listed (`stitchcraft-params → stitchcraft-core`). The table
 lives in `xtask/src/layers.rs` and is append-only, like VectorCraft's.

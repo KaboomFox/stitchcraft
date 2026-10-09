@@ -5,6 +5,8 @@
 //!   with the pins in `compat/vectorcraft.toml`.
 //! - `contract --ref <tag|sha> --wasm <file>`: Level A — loads our built plug-in into VectorCraft's real
 //!   plug-in host at that ref and runs `compat/vc-contract`'s tests.
+//! - `join [--nested] <vectorcraft checkout>`: makes this repository, copied into a VectorCraft checkout
+//!   as a folder, part of VectorCraft's build (`join.rs`; ADR-0011).
 //! - `report`: the generated supported-versions page (roadmap step M6.6).
 
 use std::cmp::Ordering;
@@ -12,7 +14,7 @@ use std::path::{Path, PathBuf};
 
 use serde_json::json;
 
-use crate::util;
+use crate::{join, util};
 
 const REPOSITORY: &str = "https://github.com/storytold/vectorcraft";
 const PINS: &str = "compat/vectorcraft.toml";
@@ -28,8 +30,12 @@ pub fn run(args: &[String]) -> Result<(), String> {
             let wasm = value("--wasm").ok_or("contract needs --wasm <file>")?;
             contract(&reference, Path::new(&wasm))
         }
+        Some("join") => join::run(args.get(1..).unwrap_or_default()),
         Some("report") => Err("`compat report` arrives with roadmap step M6.6".into()),
-        _ => Err("usage: cargo xtask compat discover [--json] | contract --ref <tag|sha> --wasm <file>".into()),
+        _ => {
+            Err("usage: cargo xtask compat discover [--json] | contract --ref <tag|sha> --wasm <file> | join [--nested] <vectorcraft checkout>"
+                .into())
+        }
     }
 }
 

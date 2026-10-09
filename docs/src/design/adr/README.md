@@ -16,6 +16,7 @@ supersedes the old one.
 | [0008](0008-conformance-first.md) | Conformance-first development | Accepted |
 | [0009](0009-adopt-vectorcraft-conventions.md) | Adopt VectorCraft's conventions; improve the ones that drift | Accepted |
 | [0010](0010-diagnostics-with-codes.md) | Coded diagnostics with explanation pages | Accepted |
+| [0011](0011-movable-into-vectorcraft.md) | StitchCraft can move into VectorCraft's repository | Accepted |
 
 `cargo xtask docs --check` fails if an ADR file is missing from this table or its status here differs
 from the file's status line.

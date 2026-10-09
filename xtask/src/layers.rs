@@ -1,8 +1,12 @@
 //! Crate layering rules (`docs/src/design/architecture.md`).
 //!
 //! The rule engine works on a small model so it can be unit-tested; [`model_from_metadata`] builds that
-//! model from `cargo metadata`. The table is append-only: a new crate gets a row, existing rows never
-//! move down a layer. (Same design as VectorCraft's `xtask/src/layers.rs`.)
+//! model from `cargo metadata`, keeping this repository's packages only, so the check means the same
+//! inside VectorCraft's workspace (ADR-0011). The table is append-only: a new crate gets a row, existing
+//! rows never move down a layer. Every name starts with `stitchcraft-`, so no package can clash with one
+//! of VectorCraft's. (Same design as VectorCraft's `xtask/src/layers.rs`.)
+
+use std::collections::BTreeMap;
 
 use serde_json::Value;
 
@@ -34,7 +38,7 @@ pub const TABLE: &[(&str, Class)] = &[
     ("stitchcraft-testkit", Class::Testkit),
     ("stitchcraft-cli", Class::App),
     ("stitchcraft-vc-plugin", Class::App),
-    ("xtask", Class::Tool),
+    ("stitchcraft-xtask", Class::Tool),
 ];
 
 /// Allowed edges inside one layer: (from, to).
@@ -42,7 +46,7 @@ pub const SAME_LAYER: &[(&str, &str)] = &[("stitchcraft-params", "stitchcraft-co
 
 /// External crates allowed only in the listed packages (normal dependencies).
 pub const RESTRICTED: &[(&str, &[&str])] = &[
-    ("clap", &["stitchcraft-cli", "xtask"]),
+    ("clap", &["stitchcraft-cli", "stitchcraft-xtask"]),
     ("rayon", &["stitchcraft-cli"]),
     ("tiny-skia", &["stitchcraft-render"]),
     ("roxmltree", &["stitchcraft-svg"]),
@@ -114,13 +118,18 @@ fn edge_problem(from_name: &str, from: Class, to_name: &str, to: Class, kind: Ki
     }
 }
 
-/// Builds the model from `cargo metadata --no-deps` output.
-pub fn model_from_metadata(metadata: &Value) -> Vec<Package> {
+/// Builds the model of the packages named in `ours` from `cargo metadata --no-deps` output. Other
+/// members of the workspace (VectorCraft's, when this repository has joined it) are outside the model;
+/// a dependency on one is checked like any external crate.
+pub fn model_from_metadata(metadata: &Value, ours: &[String]) -> Vec<Package> {
     let Some(packages) = metadata.get("packages").and_then(Value::as_array) else { return Vec::new() };
     packages
         .iter()
         .filter_map(|p| {
             let name = p.get("name")?.as_str()?.to_string();
+            if !ours.contains(&name) {
+                return None;
+            }
             let deps = p
                 .get("dependencies")
                 .and_then(Value::as_array)
@@ -143,18 +152,36 @@ pub fn model_from_metadata(metadata: &Value) -> Vec<Package> {
         .collect()
 }
 
+/// This repository's packages, from `cargo metadata`.
+pub fn model() -> Result<Vec<Package>, String> {
+    let metadata = util::metadata()?;
+    Ok(model_from_metadata(&metadata, &util::packages_in(&metadata, &util::root()).names))
+}
+
+/// Each library's depth among this repository's crates: 0 with no library dependency, otherwise one
+/// more than its deepest normal dependency. Every library depends only on lower numbers, which is
+/// VectorCraft's layering rule; `cargo xtask compat join` prints them as rows for VectorCraft's table.
+pub fn ranks(packages: &[Package]) -> BTreeMap<String, u8> {
+    let class_of = |name: &str| TABLE.iter().find(|(n, _)| *n == name).map(|(_, c)| *c);
+    let libraries: Vec<&Package> = packages.iter().filter(|p| matches!(class_of(&p.name), Some(Class::Layer(_)))).collect();
+    let mut ranks: BTreeMap<String, u8> = libraries.iter().map(|p| (p.name.clone(), 0)).collect();
+    // A longest path has fewer edges than there are libraries; more rounds change nothing.
+    for _ in 0..libraries.len() {
+        for package in &libraries {
+            let deepest = package.deps.iter().filter(|(_, kind)| *kind == Kind::Normal).filter_map(|(dep, _)| ranks.get(dep).copied()).max();
+            if let Some(rank) = deepest.map(|d| d.saturating_add(1))
+                && let Some(entry) = ranks.get_mut(&package.name)
+            {
+                *entry = rank;
+            }
+        }
+    }
+    ranks
+}
+
 /// `cargo xtask layers`.
 pub fn run() -> Result<(), String> {
-    let output = util::cargo()
-        .args(["metadata", "--format-version", "1", "--no-deps"])
-        .current_dir(util::root())
-        .output()
-        .map_err(|e| format!("cargo metadata: {e}"))?;
-    if !output.status.success() {
-        return Err(format!("cargo metadata failed: {}", String::from_utf8_lossy(&output.stderr)));
-    }
-    let metadata: Value = serde_json::from_slice(&output.stdout).map_err(|e| format!("cargo metadata output: {e}"))?;
-    let packages = model_from_metadata(&metadata);
+    let packages = model()?;
     let mut findings = Findings::default();
     for e in check(&packages) {
         findings.error(e);
@@ -218,10 +245,39 @@ mod tests {
     }
 
     #[test]
-    fn table_names_are_unique() {
+    fn table_names_are_unique_and_prefixed() {
         let mut names: Vec<&str> = TABLE.iter().map(|(n, _)| *n).collect();
+        assert!(names.iter().all(|n| n.starts_with("stitchcraft-")), "{names:?}");
         names.sort_unstable();
         names.dedup();
         assert_eq!(names.len(), TABLE.len());
+    }
+
+    #[test]
+    fn other_workspace_members_are_outside_the_model() {
+        let metadata = serde_json::json!({"packages": [
+            {"name": "vectorcraft-geom", "dependencies": []},
+            {"name": "stitchcraft-core", "dependencies": [{"name": "vectorcraft-geom", "kind": null}]},
+        ]});
+        let model = model_from_metadata(&metadata, &["stitchcraft-core".to_string()]);
+        assert_eq!(model.len(), 1);
+        // A dependency on a crate outside the model is external: not a layering error.
+        assert_eq!(check(&model), Vec::<String>::new());
+    }
+
+    #[test]
+    fn ranks_put_every_library_above_its_dependencies() {
+        let ws = [
+            pkg("stitchcraft-core", &[("libm", Kind::Normal)]),
+            pkg("stitchcraft-params", &[("stitchcraft-core", Kind::Normal)]),
+            pkg("stitchcraft-plan", &[("stitchcraft-core", Kind::Normal), ("stitchcraft-params", Kind::Normal)]),
+            pkg("stitchcraft-engine", &[("stitchcraft-plan", Kind::Normal), ("stitchcraft-testkit", Kind::Dev)]),
+            pkg("stitchcraft-testkit", &[("stitchcraft-engine", Kind::Normal)]),
+        ];
+        let ranks = ranks(&ws);
+        let expected: BTreeMap<String, u8> = [("stitchcraft-core", 0), ("stitchcraft-params", 1), ("stitchcraft-plan", 2), ("stitchcraft-engine", 3)]
+            .map(|(n, r)| (n.to_string(), r))
+            .into();
+        assert_eq!(ranks, expected);
     }
 }

@@ -17,6 +17,7 @@ mod coverage;
 mod deviations;
 mod docs;
 mod filesize;
+mod join;
 mod layers;
 mod markdown;
 mod mutants;
@@ -49,7 +50,7 @@ pub const SUBCOMMANDS: &[(&str, Status, &str)] = &[
     ("unsafe-audit", Status::Ready, "unsafe only in the plug-in ABI shim, always with SAFETY comments"),
     ("filesize", Status::Ready, "Rust files warn above 800 lines and fail above 1,500"),
     ("wasm", Status::Ready, "library crates and the plug-in build for wasm32-unknown-unknown"),
-    ("compat", Status::Ready, "VectorCraft compatibility: `discover`, `contract --ref R --wasm FILE` (report: M6.6)"),
+    ("compat", Status::Ready, "VectorCraft compatibility: `discover`, `contract --ref R --wasm FILE`, `join [--nested] DIR` (report: M6.6)"),
     ("shots", Status::Ready, "regenerate the documentation images; --check compares them with the committed ones"),
     ("api", Status::Ready, "write the library crates' public API snapshots; --check compares them"),
     ("coverage", Status::Ready, "line coverage per crate against the floors in conformance/coverage.toml; --record raises floors"),

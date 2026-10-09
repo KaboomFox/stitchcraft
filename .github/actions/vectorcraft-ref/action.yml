@@ -1,0 +1,36 @@
+# The VectorCraft tag or commit a compatibility track tests (docs/src/design/compatibility-gate.md), from
+# the report of `cargo xtask compat discover --json`. One definition for every job that checks StitchCraft
+# against VectorCraft: pull requests test the pinned stable release, scheduled runs the latest of each track.
+name: VectorCraft ref for a track
+description: Resolve the VectorCraft tag or commit that a compatibility track tests.
+inputs:
+  report:
+    description: The JSON report of `cargo xtask compat discover --json`.
+    required: true
+  track:
+    description: stable, prerelease, release-branch or main.
+    required: true
+outputs:
+  ref:
+    description: The tag or commit; empty when VectorCraft has nothing on this track right now.
+    value: ${{ steps.ref.outputs.ref }}
+runs:
+  using: composite
+  steps:
+    - id: ref
+      shell: bash
+      env:
+        REPORT: ${{ inputs.report }}
+        TRACK: ${{ inputs.track }}
+        EVENT: ${{ github.event_name }}
+      run: |
+        case "$TRACK" in
+          stable)
+            if [ "$EVENT" = pull_request ]; then ref=$(jq -r '.stable.pinned' <<<"$REPORT");
+            else ref=$(jq -r '.stable.latest // empty' <<<"$REPORT"); fi ;;
+          prerelease)     ref=$(jq -r '.prerelease.latest // empty' <<<"$REPORT") ;;
+          release-branch) ref=$(jq -r '."release-branch".sha // empty' <<<"$REPORT") ;;
+          main)           ref=$(jq -r '.main.sha // empty' <<<"$REPORT") ;;
+          *) echo "unknown track: $TRACK" >&2; exit 1 ;;
+        esac
+        echo "ref=$ref" >> "$GITHUB_OUTPUT"

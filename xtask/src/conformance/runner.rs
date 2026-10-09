@@ -149,7 +149,9 @@ fn draw_difference(root: &Path, case: &str, golden: &str, before: &[u8], after: 
 /// Runs every Rust-test case with one `cargo test` and reads the results from its output.
 pub fn run_rust_cases(root: &Path, cases: &[RustCase]) -> Result<Vec<Outcome>, String> {
     let output = util::cargo()
-        .args(["test", "--workspace", "--locked", "--no-fail-fast", "--", "req_"])
+        .arg("test")
+        .args(util::packages()?.args())
+        .args(["--locked", "--no-fail-fast", "--", "req_"])
         .current_dir(root)
         .output()
         .map_err(|e| format!("cargo test: {e}"))?;

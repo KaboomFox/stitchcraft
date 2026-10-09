@@ -20,7 +20,7 @@ open owner action from M0.5 is the code-of-conduct contact.
 
 | Milestone | Scope | Status | Machine checkpoint |
 |---|---|---|---|
-| M0 | Foundations and guardrails | 🟡 M0.1–M0.4 and M0.10 done; M0.5 partly (repository, owner, labels, Pages, branch protection; code-of-conduct contact open); M0.6–M0.8 open | — |
+| M0 | Foundations and guardrails | 🟡 M0.1–M0.4, M0.9 and M0.10 done; M0.5 partly (repository, owner, labels, Pages, branch protection; code-of-conduct contact open); M0.6–M0.8 open | — |
 | M1 | Stitch plan, Brother profile, PES/DST writers, test sheets | 🟡 M1.1–M1.10 done; closes with MC-1 | MC-1 🟡 kit out for sewing |
 | M2 | Readers, preview renderer, fuzzing | 🟢 M2.1–M2.8 done, in pull requests #2–#8 waiting to be merged | — |
 | M3 | Running stitch family, plan assembly, SVG input | 🟡 M3.1 done (parameter registry) | MC-2 ⚪ |

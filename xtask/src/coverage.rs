@@ -54,7 +54,7 @@ pub fn run(record: bool) -> Result<(), String> {
     let report_dir = root.join(REPORT).parent().map(Path::to_path_buf).unwrap_or_else(|| root.clone());
     std::fs::create_dir_all(&report_dir).map_err(|e| format!("{}: {e}", report_dir.display()))?;
     let mut measure = util::cargo();
-    measure.args(["llvm-cov", "--workspace", "--locked", "--json", "--summary-only", "--output-path", REPORT]);
+    measure.arg("llvm-cov").args(util::packages()?.args()).args(["--locked", "--json", "--summary-only", "--output-path", REPORT]);
     measure.args(["--ignore-filename-regex", IGNORED]);
     util::run(measure, "cargo llvm-cov (is cargo-llvm-cov installed, with `rustup component add llvm-tools`?)")?;
     let measured = per_crate(&util::read(&root.join(REPORT))?)?;

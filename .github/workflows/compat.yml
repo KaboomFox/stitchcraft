@@ -3,6 +3,9 @@
 # Daily: find VectorCraft's latest stable release, latest pre-release (alpha/beta/rc), and the heads of its
 # `release` and `main` branches; load our freshly built plug-in into VectorCraft's real plug-in host at each
 # of them (Level A contract tests). Pull requests that touch the plug-in test the pinned stable version.
+# The move rehearsal puts this repository into VectorCraft's latest release and `main` as a folder, both
+# ways ADR-0011 describes, and runs StitchCraft's gates there; pull requests that touch manifests or
+# tooling rehearse against the pinned stable version.
 # A failing scheduled run opens or updates one issue labelled `upstream-canary`.
 # Level B (end-to-end with vectorcraft-cli), the bot PR for new versions and the generated support table
 # arrive with roadmap step M6.6.
@@ -16,7 +19,11 @@ on:
     paths:
       - "apps/stitchcraft-vc-plugin/**"
       - "compat/**"
-      - "xtask/src/compat.rs"
+      - "xtask/**"
+      - "**/Cargo.toml"
+      - ".cargo/**"
+      - "rust-toolchain.toml"
+      - ".github/actions/**"
       - ".github/workflows/compat.yml"
 
 permissions:
@@ -58,20 +65,10 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - name: Resolve the VectorCraft ref for this track
         id: ref
-        env:
-          REPORT: ${{ needs.discover.outputs.report }}
-          TRACK: ${{ matrix.track }}
-          EVENT: ${{ github.event_name }}
-        run: |
-          case "$TRACK" in
-            stable)
-              if [ "$EVENT" = pull_request ]; then ref=$(jq -r '.stable.pinned' <<<"$REPORT");
-              else ref=$(jq -r '.stable.latest // empty' <<<"$REPORT"); fi ;;
-            prerelease)     ref=$(jq -r '.prerelease.latest // empty' <<<"$REPORT") ;;
-            release-branch) ref=$(jq -r '."release-branch".sha // empty' <<<"$REPORT") ;;
-            main)           ref=$(jq -r '.main.sha // empty' <<<"$REPORT") ;;
-          esac
-          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+        uses: ./.github/actions/vectorcraft-ref
+        with:
+          report: ${{ needs.discover.outputs.report }}
+          track: ${{ matrix.track }}
       - name: Build the plug-in for wasm32
         if: steps.ref.outputs.ref != ''
         run: cargo build -p stitchcraft-vc-plugin --release --locked --target wasm32-unknown-unknown
@@ -84,9 +81,77 @@ jobs:
         if: steps.ref.outputs.ref == ''
         run: echo "VectorCraft has no ${{ matrix.track }} build right now." >> "$GITHUB_STEP_SUMMARY"
 
+  move:
+    name: moves into VectorCraft (${{ matrix.track }})
+    needs: discover
+    strategy:
+      fail-fast: false
+      matrix:
+        track: ${{ github.event_name == 'pull_request' && fromJSON('["stable"]') || fromJSON('["stable","main"]') }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Resolve the VectorCraft ref for this track
+        id: ref
+        uses: ./.github/actions/vectorcraft-ref
+        with:
+          report: ${{ needs.discover.outputs.report }}
+          track: ${{ matrix.track }}
+      - name: Check out VectorCraft ${{ steps.ref.outputs.ref }}
+        if: steps.ref.outputs.ref != ''
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: storytold/vectorcraft
+          ref: ${{ steps.ref.outputs.ref }}
+          path: vectorcraft
+          persist-credentials: false
+      - name: Put StitchCraft into VectorCraft as the folder stitchcraft/
+        if: steps.ref.outputs.ref != ''
+        run: |
+          mkdir vectorcraft/stitchcraft
+          git archive HEAD | tar -x -C vectorcraft/stitchcraft
+      - name: Install StitchCraft's pinned toolchain
+        if: steps.ref.outputs.ref != ''
+        working-directory: vectorcraft/stitchcraft
+        run: rustup toolchain install --profile minimal
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        if: steps.ref.outputs.ref != ''
+        with:
+          workspaces: |
+            vectorcraft -> target
+            vectorcraft/stitchcraft -> target
+      - uses: ./.github/actions/oracle
+        if: steps.ref.outputs.ref != ''
+        with:
+          directory: vectorcraft/stitchcraft
+      - name: "Nested: a VectorCraft crate depends on StitchCraft's engine by path"
+        if: steps.ref.outputs.ref != ''
+        working-directory: vectorcraft
+        run: |
+          (cd stitchcraft && cargo xtask compat join --nested ..)
+          mkdir -p apps/stitchcraft-probe/src
+          printf '%s\n' '[package]' 'name = "stitchcraft-probe"' 'version.workspace = true' 'edition.workspace = true' \
+            'license.workspace = true' 'publish = false' '' '[dependencies]' \
+            'stitchcraft-engine = { path = "../../stitchcraft/crates/stitchcraft-engine" }' > apps/stitchcraft-probe/Cargo.toml
+          printf '%s\n' '//! VectorCraft depending on StitchCraft by path (ADR-0011, nested).' 'fn main() {' \
+            '    println!("{} parameter groups", stitchcraft_engine::registry::PARAMETERS.len());' '}' > apps/stitchcraft-probe/src/main.rs
+          cargo run --quiet -p stitchcraft-probe
+          rm -r apps/stitchcraft-probe
+      - name: "Joined: StitchCraft's crates join VectorCraft's workspace"
+        if: steps.ref.outputs.ref != ''
+        working-directory: vectorcraft/stitchcraft
+        run: cargo xtask compat join ..
+      - name: StitchCraft's gates, inside VectorCraft's workspace
+        if: steps.ref.outputs.ref != ''
+        working-directory: vectorcraft/stitchcraft
+        run: cargo xtask ci
+      - name: Nothing to rehearse on this track
+        if: steps.ref.outputs.ref == ''
+        run: echo "VectorCraft has no ${{ matrix.track }} build right now." >> "$GITHUB_STEP_SUMMARY"
+
   report:
-    needs: [discover, contract]
-    if: always() && github.event_name == 'schedule' && needs.contract.result == 'failure'
+    needs: [discover, contract, move]
+    if: always() && github.event_name == 'schedule' && (needs.contract.result == 'failure' || needs.move.result == 'failure')
     runs-on: ubuntu-24.04
     permissions:
       issues: write
