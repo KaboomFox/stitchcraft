@@ -87,6 +87,20 @@ fn diag_sc_w0403_hand_placed_stitches_shorter_than_the_shortest_stitch_are_named
     );
     let point = sew(&lines(&[(4.0, 4.0), (4.0, 4.0)]), &[], 0.3);
     assert_eq!(messages(&point), ["warning SC-W0401: A part of the stroke is a single point, so it is not stitched."]);
+    // Long enough, but curled up: a closed square 0.2 mm across.
+    let square = Path {
+        subpaths: vec![Subpath {
+            start: p(0.0, 0.0),
+            segments: vec![Segment::Line(p(0.2, 0.0)), Segment::Line(p(0.2, 0.2)), Segment::Line(p(0.0, 0.2))],
+            closed: true,
+        }],
+    };
+    assert_eq!(
+        messages(&sew(&square, &[], 0.3)),
+        [
+            "warning SC-W0401: A part of the stroke is 0.8 mm long, but all of it lies within the shortest stitch (0.3 mm) of its ends, so it is not stitched."
+        ]
+    );
 }
 
 proptest! {
