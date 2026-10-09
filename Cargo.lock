@@ -800,6 +800,7 @@ dependencies = [
  "stitchcraft-params",
  "stitchcraft-plan",
  "stitchcraft-render",
+ "stitchcraft-svg",
  "stitchcraft-testkit",
  "toml",
  "toml_edit",

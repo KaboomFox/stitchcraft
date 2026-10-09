@@ -138,6 +138,23 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The SVG reader no longer stitches Ink/Stitch's own objects (`REQ-SVG-003`), which a review against
+  Ink/Stitch found.
+  - **Commands and connectors.** Command symbols (`<use>` of an `inkstitch_*` symbol) were reported as
+    clones, and the connector from each symbol to its object was sewn as a line in its own colour. Lines
+    drawn with Inkscape's connector tool were sewn too. None is stitched now. A connector that ties no
+    command is noted.
+  - **Commands applied.** `trim` and `stop` commands set the shape's `trim_after` and `stop_after`.
+  - **Leaving out.** The `ignore_object` and `ignore_layer` commands, and the `inkstitch:ignore_object`
+    setting, leave out what they name, and the new `SC-I0805` lists each (`REQ-ASM-004`, now active).
+  - **Not applied yet.** `origin` and `stop_position` are noted as not applied yet. A trim or stop on
+    something that is not a stitched shape is noted, as is an `ignore_layer` outside every layer.
+  - **Helper paths.** Paths that carry Ink/Stitch's guide-line, anchor-line or pattern start marker are
+    helpers for other shapes. They are no longer stitched; each is noted, since StitchCraft does not
+    apply them yet.
+  - **Markers.** A marker property set to `none` no longer hides another one that names a marker, and
+    each of the three inherits on its own.
+  - **Work.** Reading charges two units of work per XML node: one to find ids and commands, one to read.
 - DST is read as DST machines sew it (`REQ-FMT-008`). Machines count jump records in a row and cut the
   thread before three or more — a machine setting; three is the common one, and pyembroidery's reading —
   where something was sewn since the thread was last cut or changed, so a jump longer than 24.2 mm is a

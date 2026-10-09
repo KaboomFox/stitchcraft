@@ -229,6 +229,15 @@ rationale = "Degenerate arcs are valid SVG; dividing by their zero radius must n
 milestone = "M3"
 status = "active"
 
+[[req]]
+id = "REQ-SVG-003"
+area = "svg"
+level = "L2"
+statement = "Ink/Stitch's own objects are not stitched: command symbols and the connectors that tie them to objects, lines drawn with Inkscape's connector tool, and paths that Ink/Stitch's guide-line, anchor-line or pattern start marker makes helpers. Its trim and stop commands set the shape's trim_after and stop_after, and a command that is not applied is noted."
+rationale = "Read as plain SVG, every command would add a stray line and a colour change to the sew-out, and every guide line would be stitched."
+milestone = "M3"
+status = "active"
+
 # ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -361,8 +370,9 @@ id = "REQ-ASM-004"
 area = "plan/assembly"
 level = "L2"
 statement = "Ignored elements are dropped and listed in the report."
+rationale = "Ink/Stitch's ignore commands and its ignore_object setting keep templates and placement lines in a drawing but out of the sew-out; the SVG adapter leaves them out and lists each (SC-I0805)."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-ASM-005"

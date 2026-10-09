@@ -235,6 +235,15 @@ registry! {
     /// (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
     SvgFeatureIgnored = "SC-W0802", Warning, "SVG feature ignored";
 
+    /// An object or a layer is left out because the file asks for it: an Ink/Stitch "ignore object" or
+    /// "ignore layer" command, or the object's Ink/Stitch setting `ignore_object`. Designs keep
+    /// templates, placement lines and notes this way, in the drawing but out of the sew-out, and
+    /// Ink/Stitch leaves them out too.
+    ///
+    /// The message names what was left out and why. To stitch it, delete the command's symbol, or turn the
+    /// setting off in Ink/Stitch's parameters.
+    SvgObjectIgnored = "SC-I0805", Info, "Object left out, as the file asks";
+
     /// An element's geometry cannot be used: its path data has an error (the path is stitched up to the
     /// error, as SVG viewers draw it), its transform is not valid (it is skipped with everything inside
     /// it), it draws nothing, or it lies more than 10 metres from the document's origin, beyond what
