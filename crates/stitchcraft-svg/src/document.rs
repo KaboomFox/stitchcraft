@@ -2,8 +2,10 @@
 //!
 //! The reader walks the document once, in order. Document order is SVG's paint order (bottom first) and
 //! so the stitching order. Each element gets its transform and inherited [`Style`] from its parent. Every
-//! shape that paints becomes one design element per paint, in the element's `paint-order`: its fill (an
-//! area) and its stroke (an outline), each sewn in its paint's colour.
+//! shape that paints becomes one design element per paint: its fill (an area), then its stroke (an
+//! outline), each sewn in its paint's colour. Ink/Stitch sews them in that order whatever the shape's
+//! `paint-order` says, and so does StitchCraft: in embroidery the outline covers the edge of the fill.
+//! Ink/Stitch's `stroke_first` setting, which turns them round, is read with the other settings (M8).
 //!
 //! **Ids.** A design element is `svg:<label>:fill` or `svg:<label>:stroke`. The label is the SVG
 //! element's `id`, or `<tag>@<n>` (the n-th `<tag>` in the file) when it has none. A repeated id gets
@@ -21,10 +23,10 @@
 //! file that cannot be read at all. What a viewer would not show either is left out without a word:
 //! `display: none`, hidden or fully transparent elements, and the insides of `<defs>`.
 //!
-//! **Limits keep any file cheap.** A file may be at most [`MAX_BYTES`] long with a million XML nodes,
-//! and may not declare entities, whose expansion could need far more memory than the file. Work is
-//! charged to the budget: two units per XML node (one to find its id and Ink/Stitch's commands, one to
-//! read it), one per path segment, and one per 8 bytes of a transform or point list.
+//! **Limits keep any file cheap.** A file may be at most [`MAX_BYTES`] long with a million XML nodes, and
+//! its entities may expand it to no more than that ([`crate::text`] says which files are text it reads).
+//! Work is charged to the budget: two units per XML node (one to find its id and Ink/Stitch's commands,
+//! one to read it), one per path segment, and one per 8 bytes of a transform or point list.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
@@ -40,13 +42,9 @@ use crate::inkstitch::{
     self, Does, Helper, IGNORE_OBJECT, INKSCAPE_NS, INKSTITCH_NS, Objects, Place, READ_ATTRIBUTES, STOP_AFTER, TRIM_AFTER, Unapplied, place,
 };
 use crate::path::{self, Seg, Sub};
-use crate::style::{Declared, Paint, Style, rgb};
+use crate::style::{Declaration, Declared, Paint, Style, rgb, without_icc};
+use crate::text::{self, unreadable};
 use crate::transform::{self, Affine, user_units};
-
-/// The largest SVG file StitchCraft reads, in bytes (64 MiB). The largest file in Ink/Stitch's font
-/// library is 14.5 MB; a file much larger than that usually carries embedded images, which are not
-/// stitched anyway. Memory stays bounded by this and by the XML node limit.
-pub const MAX_BYTES: usize = 64 << 20;
 
 /// The most XML nodes a file may have.
 const MAX_NODES: u32 = 1_000_000;
@@ -71,39 +69,16 @@ pub struct Svg {
 /// The design in the SVG file `bytes`, read within `budget`. Fails with `SC-E0801` when the file cannot
 /// be read at all, and with `SC-E0004` when reading it needs more work than the budget allows.
 pub fn read(bytes: &[u8], budget: &Budget) -> Result<Svg, Diagnostic> {
-    let text = text(bytes)?;
-    if text.contains("<!ENTITY") {
-        return Err(unreadable("The file declares XML entities, which StitchCraft does not read."));
-    }
-    // A DTD without entities (`<!DOCTYPE svg PUBLIC …>`, common in older files) adds nothing, so it is
-    // allowed; roxmltree never fetches external DTDs.
+    let text = text::decode(bytes)?;
+    text::check_entities(&text)?;
+    // A DTD (`<!DOCTYPE svg PUBLIC …>`, common in older files) is allowed, with the entities
+    // `check_entities` lets through; roxmltree never fetches external DTDs.
     let options = ParsingOptions { allow_dtd: true, nodes_limit: MAX_NODES, ..ParsingOptions::default() };
-    let doc = Document::parse_with_options(text, options).map_err(|e| match e {
+    let doc = Document::parse_with_options(&text, options).map_err(|e| match e {
         roxmltree::Error::NodesLimitReached => unreadable(format!("The file has more than {MAX_NODES} XML nodes, more than StitchCraft reads.")),
         e => unreadable(format!("The file is not well-formed XML: {e}.")),
     })?;
     Reader::new(budget).read(&doc)
-}
-
-/// The file's text, or why it is not text StitchCraft can read.
-fn text(bytes: &[u8]) -> Result<&str, Diagnostic> {
-    if bytes.len() > MAX_BYTES {
-        let size = bytes.len().div_ceil(1 << 20);
-        return Err(unreadable(format!("The file is {size} MB; StitchCraft reads SVG files of up to {} MB.", MAX_BYTES >> 20)));
-    }
-    if bytes.starts_with(&[0x1f, 0x8b]) {
-        return Err(unreadable("The file is compressed SVG (.svgz); StitchCraft reads plain SVG."));
-    }
-    if bytes.starts_with(&[0xff, 0xfe]) || bytes.starts_with(&[0xfe, 0xff]) {
-        return Err(unreadable("The file is UTF-16 text; StitchCraft reads UTF-8."));
-    }
-    let bytes = bytes.strip_prefix(b"\xef\xbb\xbf").unwrap_or(bytes);
-    std::str::from_utf8(bytes).map_err(|e| unreadable(format!("The file is not UTF-8 text: byte {} starts no character.", e.valid_up_to())))
-}
-
-/// `SC-E0801` with `message`.
-fn unreadable(message: impl Into<String>) -> Diagnostic {
-    Diagnostic::new(Code::SvgUnreadable, message).with_fix(Fix::Hint("Open the file in a vector editor and save it again as plain SVG.".to_string()))
 }
 
 /// What an element's children are drawn with.
@@ -348,7 +323,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             let hint = "Save the file with inline styles or presentation attributes instead of a style sheet.";
             self.note(
                 None,
-                "The file has a style sheet (`<style>`), which StitchCraft does not read: colours it sets are not used.".to_string(),
+                "The file has a style sheet (`<style>`), which StitchCraft does not read: the colours, fills, outlines and hidden elements it sets are not used."
+                    .to_string(),
                 Some(hint),
             );
         }
@@ -372,6 +348,15 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         let label = label(node, tag, n);
         if self.own_object(node, kind, &label, &declared, &style) {
             return Ok(Context::Hidden);
+        }
+        for part in ["fill", "stroke"] {
+            if style.shown()
+                && let Declaration::Unreadable(value) = declared.paint(part)
+            {
+                let message =
+                    format!("The {part} of `{label}`, \"{value}\", is not a colour StitchCraft reads; it is ignored, as a viewer ignores it.");
+                self.note(Some(&label), message, None);
+            }
         }
         if style.shown() && !self.objects.on(node).is_empty() {
             self.shown_targets.insert(place(node));
@@ -513,8 +498,11 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 _ => None,
             };
         }
-        let paints = if style.stroke_first { [("stroke", stroke), ("fill", fill)] } else { [("fill", fill), ("stroke", stroke)] };
-        for (part, colour) in paints {
+        if style.stroke_first && fill.is_some() && stroke.is_some() {
+            let message = format!("`{label}` paints its stroke first (`paint-order`); its fill is sewn first, as Ink/Stitch sews them.");
+            self.note(Some(&label), message, None);
+        }
+        for (part, colour) in [("fill", fill), ("stroke", stroke)] {
             let Some(colour) = colour else { continue };
             let id = ElementId::new(format!("svg:{label}:{part}"))
                 .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The SVG reader made an element id that cannot be used: {e}.")))?;
@@ -527,7 +515,15 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
 
     /// The outline of a shape element in user units; `None`, with a warning, when it draws nothing.
     fn outline(&mut self, node: Node<'a, 'input>, geometry: Geometry, label: &str) -> Result<Option<Vec<Sub>>, Diagnostic> {
-        let length = |name, axis| self.length(node, name, axis);
+        // A length that does not read is left unset, as a viewer leaves it, and named after the match.
+        let mut unread = Vec::new();
+        let mut length = |name, axis| match self.length(node, name, axis) {
+            Ok(value) => value,
+            Err(text) => {
+                unread.push((name, text));
+                None
+            }
+        };
         let mut error = None;
         let subs = match geometry {
             Geometry::Path => {
@@ -575,19 +571,27 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             (None, true) => self.unusable(label, format!("`{label}` draws nothing: its size or its data is empty. It is left out.")),
             (None, false) => {}
         }
+        for (name, text) in unread {
+            self.unusable(label, format!("The {name} of `{label}`, \"{text}\", is not a length; 0 is used, as a viewer uses it."));
+        }
         Ok((!subs.is_empty()).then_some(subs))
     }
 
-    /// The length attribute `name` in user units; `None` when it is missing or not a length.
-    fn length(&self, node: Node<'a, 'input>, name: &str, axis: Axis) -> Option<f64> {
-        let length = Length::from_str(node.attribute(name)?).ok()?;
+    /// The length attribute `name` in user units, spaces around it allowed: `None` when it is missing or
+    /// `auto` (which a radius may be), and the text when it is not a length.
+    fn length(&self, node: Node<'a, 'input>, name: &str, axis: Axis) -> Result<Option<f64>, &'a str> {
+        let Some(text) = node.attribute(name) else { return Ok(None) };
+        if text.trim().eq_ignore_ascii_case("auto") {
+            return Ok(None);
+        }
+        let length = Length::from_str(text.trim()).map_err(|_| text)?;
         let (w, h) = self.viewport;
         let reference = match axis {
             Axis::X => w,
             Axis::Y => h,
             Axis::Other => ((w * w + h * h) / 2.0).sqrt(),
         };
-        Some(user_units(length, reference))
+        Ok(Some(user_units(length, reference)))
     }
 
     /// The colour `label`'s `part` is sewn in, if it paints. A paint server is replaced by a colour, with
@@ -601,8 +605,9 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         let Some(server) = self.by_id(id) else { return Ok(fallback) };
         let kind = server.tag_name().name();
         if kind == "linearGradient" || kind == "radialGradient" {
-            let colour = self.first_stop(server)?;
-            if let Some(colour) = colour {
+            let stops = self.stops(server)?;
+            // A gradient of one colour, such as an Inkscape swatch, is that colour, as in a viewer.
+            if let Some((colour, false)) = stops {
                 self.note(
                     Some(label),
                     format!("The {part} of `{label}` is a gradient; it is stitched in the gradient's first colour, {colour}."),
@@ -610,7 +615,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 );
             }
             // A gradient without stops paints nothing, in a viewer too.
-            return Ok(colour);
+            return Ok(stops.map(|(colour, _)| colour));
         }
         let message = match fallback {
             Some(colour) => {
@@ -622,15 +627,21 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         Ok(fallback)
     }
 
-    /// The colour of a gradient's first stop, following `href`s to the gradient that has the stops.
-    fn first_stop(&mut self, gradient: Node<'a, 'input>) -> Result<Option<Rgb>, Diagnostic> {
+    /// The colour of a gradient's first stop, and whether every stop has that colour, read as it is
+    /// written, following `href`s to the gradient that has the stops.
+    fn stops(&mut self, gradient: Node<'a, 'input>) -> Result<Option<(Rgb, bool)>, Diagnostic> {
         let mut current = gradient;
         for _ in 0..MAX_HOPS {
+            let mut found: Option<(Rgb, bool)> = None;
             for child in current.children() {
                 self.charge(1)?;
                 if self.is_svg(child) && child.tag_name().name() == "stop" {
-                    return self.stop_colour(child).map(Some);
+                    let (colour, read) = self.stop_colour(child)?;
+                    found = Some(found.map_or((colour, read), |(first, same)| (first, same && read && colour == first)));
                 }
+            }
+            if found.is_some() {
+                return Ok(found);
             }
             let Some(next) = inkstitch::href(current).and_then(|h| h.trim().strip_prefix('#')) else { return Ok(None) };
             match self.by_id(next) {
@@ -641,21 +652,22 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         Ok(None)
     }
 
-    /// A stop's `stop-color`: black when it says nothing usable, its `color` for `currentColor`.
-    fn stop_colour(&mut self, stop: Node<'a, 'input>) -> Result<Rgb, Diagnostic> {
+    /// A stop's `stop-color`, its `color` for `currentColor`, and whether it reads: black when it says
+    /// nothing usable, as in a viewer.
+    fn stop_colour(&mut self, stop: Node<'a, 'input>) -> Result<(Rgb, bool), Diagnostic> {
         let black = Rgb::new(0, 0, 0);
-        let value = Declared::of(stop).get("stop-color").unwrap_or("black");
+        let value = Declared::of(stop).get("stop-color").map(without_icc).unwrap_or("black");
         if !value.eq_ignore_ascii_case("currentColor") {
-            return Ok(Color::from_str(value).map_or(black, rgb));
+            return Ok(Color::from_str(value).map_or((black, false), |color| (rgb(color), true)));
         }
         // `color` inherits: the nearest element from the stop up that sets it.
         for node in stop.ancestors() {
             self.charge(1)?;
-            if let Some(color) = Declared::of(node).get("color").and_then(|v| Color::from_str(v).ok()) {
-                return Ok(rgb(color));
+            if let Some(color) = Declared::of(node).get("color").and_then(|v| Color::from_str(without_icc(v)).ok()) {
+                return Ok((rgb(color), true));
             }
         }
-        Ok(black)
+        Ok((black, true))
     }
 
     /// The first element with `id`, as `getElementById` finds it.
