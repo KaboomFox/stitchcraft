@@ -110,11 +110,6 @@ the collapse length, locks and a jump beyond it. It sews that stitch as it is; S
 splits it if it is longer than the machine's longest stitch, which only a `min_jump_stitch_length_mm`
 beyond that length can cause.
 
-Ink/Stitch (read at `d59c9ab`) joins same-colour groups within the collapse length with one direct
-stitch, and trims only when told to (`trim_after`, a trim command). StitchCraft splits that stitch to the
-machine's longest stitch and also trims at the profile's threshold: both differences come from the
-machine profile, and go into the deviations ledger with M3.8.
-
 ### Lock stitches (ties)
 
 - A tie-in goes only at the start of a group that the needle jumps to, the design's first included; a
