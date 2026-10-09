@@ -162,3 +162,16 @@ fn kept<T>(read: Result<Validated<T>, Vec<Diagnostic>>, diagnostics: &mut Vec<Di
 fn not_yet(why: &str) -> Diagnostic {
     Diagnostic::new(Code::StitchTypeNotYet, format!("{why}, so it is skipped."))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn each_stroke_method_leads_back_to_its_stitch_type() {
+        // `method` builds the list at compile time; here it runs, and each option is its type's id and name.
+        for option in STROKE_METHODS {
+            assert_eq!(StitchType::from_id(Family::Stroke, option.id).map(method), Some(*option), "{option:?}");
+        }
+    }
+}
