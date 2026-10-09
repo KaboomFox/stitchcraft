@@ -14,7 +14,7 @@ use super::{BLUE, EMERALD_GREEN, RED, thread};
 /// The jump lengths, one per row, top to bottom (mm).
 pub const JUMPS: [f64; 4] = [2.0, 5.0, 15.0, 40.0];
 /// The rows' heights (mm).
-const ROWS: [f64; 4] = [-35.0, -20.0, -5.0, 10.0];
+pub(super) const ROWS: [f64; 4] = [-35.0, -20.0, -5.0, 10.0];
 
 /// Draws TS-02.
 pub(super) fn build() -> Result<StitchPlan, SheetError> {

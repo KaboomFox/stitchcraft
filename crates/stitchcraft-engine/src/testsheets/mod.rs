@@ -1,17 +1,23 @@
 //! Test sheets: designs drawn in code for machine checkpoints (`docs/src/plan/machine-testing.md`).
 //!
 //! Each sheet answers specific questions about a machine — orientation, scale, which trim encoding it
-//! obeys, which hoop sizes it accepts — and lists what to look at after sewing it. The command line
-//! writes them (`stitch testsheet TS-01 --profile brother-200x200 -o TS-01.pes`); the tests below check
-//! that every sheet is a valid plan for every built-in profile, so a sheet can never ask a machine to
-//! do something StitchCraft's own rules forbid.
+//! obeys, which hoop sizes it accepts, which stitch lengths and locks hold — and lists what to look at
+//! after sewing it. The command line writes them (`stitch testsheet TS-01 --profile brother-200x200 -o
+//! TS-01.pes`); the tests below check that every sheet is a valid plan for every built-in profile, so a
+//! sheet can never ask a machine to do something StitchCraft's own rules forbid.
 //!
+//! The MC-1 sheets are drawn stitch by stitch (`sketch`), to test the machine and the file formats; from
+//! MC-2 they are drawn as designs and planned by the engine (`designed`), to test its stitches too.
 //! Sheets use exact Brother PEC thread colours, so a Brother machine shows the thread names the
 //! expected-result sheet lists.
 
+mod designed;
 mod sketch;
 mod ts01;
 mod ts02;
+mod ts02b;
+mod ts03;
+mod ts04;
 mod ts10;
 
 pub use sketch::{STITCH_LEN, SheetError};
@@ -74,6 +80,40 @@ pub static SHEETS: &[TestSheet] = &[
         build: ts02::build,
     },
     TestSheet {
+        id: "TS-02B",
+        title: "TS-02 drawn as a design: trims elements ask for",
+        checks: &[
+            "The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop).",
+            "Left half (red; every dash but the last asks for a trim after it): for each row (gaps of 2, 5, 15, 40 mm, top to bottom), was the thread between the two dashes cut?",
+            "Right half (blue; no trims): the 2 mm gap is sewn across. For the other rows, and between rows, was the jump thread cut?",
+            "Each dash starts and ends with a small lock: where the thread was cut, pull the tail gently. Does the dash hold?",
+            "Any loose loops, knots or bird's nests on the back, and where.",
+        ],
+        build: ts02b::build,
+    },
+    TestSheet {
+        id: "TS-03",
+        title: "Running stitch: lengths, bean stitch, curves, the shortest stitch",
+        checks: &[
+            "Running stitch lines (top five; 1.5, 2.0, 2.5, 3.0 and 4.0 mm): the stitches of each line are even; ten stitches measure 15, 20, 25, 30 and 40 mm.",
+            "Bean stitch lines (next two; each stitch sewn three and five times): solid and raised, with no gaps.",
+            "Circles (6 mm across; tolerance 0.1, 0.2 and 0.5 mm, left to right): round, with fewer and straighter stitches to the right.",
+            "Short stitches placed by hand (bottom five; 0.3, 0.4, 0.5, 0.7 and 1.0 mm): which lines sew cleanly, with no thread breaks, knots or bunching on the back? The shortest clean one is the machine's shortest stitch.",
+        ],
+        build: ts03::build,
+    },
+    TestSheet {
+        id: "TS-04",
+        title: "Lock stitches: do they hold, and do they show?",
+        checks: &[
+            "Rows, top to bottom: half stitch, arrow, back and forth, bowtie, cross, star, simple, triangle, zigzag. Each line has its lock at both ends and was trimmed after: pull each tail gently. Does the lock hold, or does the line come undone?",
+            "Columns, left to right, are small, medium and large: the half stitch on first stitches of 1.5, 2.5 and 4 mm, back and forth at 0.5, 0.7 and 1.0 mm, the others at 70, 100 and 150 %.",
+            "Which locks show from the front, and how much (1 hidden to 5 obvious)?",
+            "Any thread breaks or knots at the locks, and where.",
+        ],
+        build: ts04::build,
+    },
+    TestSheet {
         id: "TS-10A",
         title: "Hoop size: 150 × 150 mm frame",
         checks: &["The machine accepts the file and shows the design.", "The frame measures 150.0 × 150.0 mm (± 0.5 mm)."],
@@ -134,6 +174,80 @@ mod tests {
         assert_eq!(size("TS-10B"), (190.0, 150.0, 0.0, 0.0));
         assert_eq!(size("TS-10C"), (150.0, 190.0, 0.0, 0.0));
         assert_eq!(size("TS-02"), (140.0, 70.0, 0.0, 0.0));
+        assert_eq!(size("TS-02B"), (140.0, 70.0, 0.0, 0.0));
+        assert_eq!(size("TS-03"), (60.0, 78.0, 0.0, 0.0));
+        assert_eq!(size("TS-04"), (110.0, 64.525, 0.0, 0.0), "the zigzags at 150 % reach 0.525 mm across their line");
+    }
+
+    /// Each block of `sheet`'s plan in words: `J` a jump, `T` a trim, `P` a stop, `l` a lock stitch and `s`
+    /// any other stitch.
+    fn shape(sheet: &str) -> Vec<String> {
+        let plan = find(sheet).unwrap().plan().unwrap();
+        let letter = |s: &stitchcraft_plan::Stitch| match (s.kind, s.origin.role) {
+            (StitchKind::Jump, _) => 'J',
+            (StitchKind::Trim, _) => 'T',
+            (StitchKind::Stop, _) => 'P',
+            (StitchKind::Normal, Role::Lock) => 'l',
+            (StitchKind::Normal, _) => 's',
+        };
+        plan.blocks.iter().map(|block| block.stitches.iter().map(letter).collect()).collect()
+    }
+
+    /// The needle points `sheet` sews for its element named `name`.
+    fn sewn(sheet: &str, name: &str) -> Vec<stitchcraft_core::Point> {
+        let plan = find(sheet).unwrap().plan().unwrap();
+        let id = format!("{}:{name}", sheet.to_ascii_lowercase().replace('-', ""));
+        let element = plan.elements.iter().position(|e| e.as_str() == id).unwrap();
+        let mine = |s: &&stitchcraft_plan::Stitch| {
+            s.kind == StitchKind::Normal && s.origin.role != Role::Lock && s.origin.element.map(|e| e.index()) == Some(element)
+        };
+        plan.stitches().filter(mine).map(|s| s.at).collect()
+    }
+
+    #[test]
+    fn ts02b_trims_where_its_elements_ask_and_sews_short_gaps_across() {
+        // Left (red): every dash locked at both ends and trimmed after, but the last.
+        let left = format!("Jllll{}sssssllll", "sssssllllTJllll".repeat(7));
+        // Right (blue): no trims; the 2 mm gap within the collapse length is sewn across.
+        let right = format!("Jllllssssssssssllll{}", "Jllllsssssllll".repeat(6));
+        // Green: a stop halfway, with locks round it, and the last trim.
+        let green = "JllllsssssssllllPJllllsssssssllllT".to_string();
+        assert_eq!(shape("TS-02B"), [left, right, green]);
+    }
+
+    #[test]
+    fn ts03_sews_what_its_checks_name() {
+        // Running lines at their length, exactly: 60 mm is a whole number of each.
+        for length in ts03::LENGTHS {
+            let points = sewn("TS-03", &format!("running-{length}"));
+            assert!(points.windows(2).all(|p| (p[0].distance(p[1]) - length).abs() < 1e-9), "{length}: {points:?}");
+        }
+        // The larger the tolerance, the fewer the stitches round the circle.
+        let counts: Vec<usize> = ts03::TOLERANCES.iter().map(|t| sewn("TS-03", &format!("circle-{t}")).len()).collect();
+        assert!(counts[0] >= counts[1] && counts[1] > counts[2], "{counts:?}");
+        // Hand-placed stitches of exactly their length, 20 of them.
+        for length in ts03::SHORT {
+            let points = sewn("TS-03", &format!("short-{length}"));
+            assert_eq!(points.len(), 21, "{length}");
+            assert!(points.windows(2).all(|p| (p[0].distance(p[1]) - length).abs() < 1e-9), "{length}: {points:?}");
+        }
+        assert!(shape("TS-03")[0].matches('T').count() == 15);
+    }
+
+    #[test]
+    fn ts04_has_every_lock_shape_at_three_sizes_in_the_order_its_checks_name() {
+        // The checks name the rows as the lock table orders them.
+        let labels: Vec<String> =
+            ts04::rows().map(|id| crate::locks::LOCKS.iter().find(|l| l.id == id).unwrap().label.to_ascii_lowercase()).collect();
+        let first = find("TS-04").unwrap().checks[0];
+        assert!(first.starts_with(&format!("Rows, top to bottom: {}.", labels.join(", "))), "{first}");
+        // A line per shape and size, each trimmed after, so each lock alone holds each end.
+        assert_eq!((labels.len(), shape("TS-04")[0].matches('T').count()), (9, 27));
+        // The half stitch's lines have first stitches of 1.5, 2.5 and 4 mm.
+        for (column, (first, _)) in ts04::FIRST_STITCHES.iter().enumerate() {
+            let points = sewn("TS-04", &format!("half_stitch-{column}"));
+            assert!((points[0].distance(points[1]) - first).abs() < 1e-9, "{column}");
+        }
     }
 
     #[test]

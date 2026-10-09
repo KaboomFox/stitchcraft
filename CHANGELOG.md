@@ -5,6 +5,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- The MC-2 kit: three test sheets drawn as designs and planned by the engine, so sewing them tests its
+  stitches, locks and plan assembly, where the MC-1 sheets, drawn stitch by stitch, test the machine and
+  the formats.
+  - **TS-02B** is TS-02 with the trims, stop and locks elements ask for (`trim_after`, `stop_after`):
+    does the machine trim where an element asks, and do the dashes hold?
+  - **TS-03** sews running stitch at 1.5 to 4 mm, bean stitch three and five times, circles at three
+    tolerances, and 20 stitches placed by hand at each of 0.3, 0.4, 0.5, 0.7 and 1.0 mm: the shortest that
+    sews cleanly is the machine's shortest stitch, which the profile guesses at 0.3 mm.
+  - **TS-04** sews every lock shape but custom at three sizes, at both ends of lines trimmed after, to
+    pull at: which hold, and which show?
+  - A sheet the engine has anything to say about fails to draw, so each sews what its checks describe.
 - M3.10: bug-report bundles.
   - **`stitch bug-report design.svg --says "…"`** writes one JSON file that reproduces what StitchCraft
     does with a design: the design file itself, the profile, the format and the version, and what came
@@ -237,6 +248,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   zero-length jumps.
 
 ### Golden files
+- Added `conformance/golden/testsheets/TS-02B.pes`, `TS-03.pes` and `TS-04.pes`: the exact files MC-2
+  sews. The pyembroidery oracle reads them.
 - Added `conformance/golden/plans/strokes.pes` and `.dst`: the `strokes` fixture planned for the
   Brother, the first golden files from an SVG design rather than from a plan drawn in code.
 - Added `conformance/golden/formats/long-jumps.pes` and `.dst`: untrimmed jumps of two and three DST

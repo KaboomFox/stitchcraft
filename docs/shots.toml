@@ -40,6 +40,38 @@ scale = 4.0
 alt = "TS-02 in the simple style: a red cross marks the trim after the first dash of each red row, grey dashes show moves after a cut, blue dashes show jump threads left in place, and a blue square marks the stop in the middle of the green line."
 
 [[shot]]
+id = "testsheet-ts-02b"
+kind = "stitch"
+sheet = "TS-02B"
+style = "realistic"
+scale = 4.0
+alt = "TS-02B as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose top row is one line and whose other dashes and rows are joined by loose threads, and a green line underneath."
+
+[[shot]]
+id = "testsheet-ts-02b-simple"
+kind = "stitch"
+sheet = "TS-02B"
+style = "simple"
+scale = 4.0
+alt = "TS-02B in the simple style: a red cross marks the trim after every red dash but the last, grey dashes show moves after a cut, blue dashes show jump threads left in place, and a blue square marks the stop in the middle of the green line."
+
+[[shot]]
+id = "testsheet-ts-03"
+kind = "stitch"
+sheet = "TS-03"
+style = "realistic"
+scale = 6.0
+alt = "TS-03 as it will sew, in blue: five long lines with stitches from 1.5 to 4 mm, two bolder bean-stitch lines, three small circles, the right-hand one visibly many-sided, and five short lines of tiny stitches growing longer towards the bottom."
+
+[[shot]]
+id = "testsheet-ts-04"
+kind = "stitch"
+sheet = "TS-04"
+style = "realistic"
+scale = 6.0
+alt = "TS-04 as it will sew, in red: nine rows of three lines, each line ending in a small lock at both ends, the locks' shapes differing from row to row and growing from left to right."
+
+[[shot]]
 id = "testsheet-ts-10a"
 kind = "stitch"
 sheet = "TS-10A"

@@ -36,6 +36,54 @@ After sewing, check:
 - Right half (blue, plain jumps): the same question for each row, and for the jumps between rows.
 - Any loose loops, knots or bird's nests on the back, and where.
 
+## TS-02B — TS-02 drawn as a design: trims elements ask for
+
+140.0 × 70.0 mm · 230 stitches, 17 jumps, 8 trims, 2 colour changes, 1 stop
+
+![TS-02B as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose top row is one line and whose other dashes and rows are joined by loose threads, and a green line underneath.](../../images/generated/testsheet-ts-02b.png)
+
+![TS-02B in the simple style: a red cross marks the trim after every red dash but the last, grey dashes show moves after a cut, blue dashes show jump threads left in place, and a blue square marks the stop in the middle of the green line.](../../images/generated/testsheet-ts-02b-simple.png)
+
+Threads: Red, Blue, Emerald Green, Emerald Green (stop).
+
+After sewing, check:
+
+- The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop).
+- Left half (red; every dash but the last asks for a trim after it): for each row (gaps of 2, 5, 15, 40 mm, top to bottom), was the thread between the two dashes cut?
+- Right half (blue; no trims): the 2 mm gap is sewn across. For the other rows, and between rows, was the jump thread cut?
+- Each dash starts and ends with a small lock: where the thread was cut, pull the tail gently. Does the dash hold?
+- Any loose loops, knots or bird's nests on the back, and where.
+
+## TS-03 — Running stitch: lengths, bean stitch, curves, the shortest stitch
+
+60.0 × 78.0 mm · 596 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops
+
+![TS-03 as it will sew, in blue: five long lines with stitches from 1.5 to 4 mm, two bolder bean-stitch lines, three small circles, the right-hand one visibly many-sided, and five short lines of tiny stitches growing longer towards the bottom.](../../images/generated/testsheet-ts-03.png)
+
+Threads: Blue.
+
+After sewing, check:
+
+- Running stitch lines (top five; 1.5, 2.0, 2.5, 3.0 and 4.0 mm): the stitches of each line are even; ten stitches measure 15, 20, 25, 30 and 40 mm.
+- Bean stitch lines (next two; each stitch sewn three and five times): solid and raised, with no gaps.
+- Circles (6 mm across; tolerance 0.1, 0.2 and 0.5 mm, left to right): round, with fewer and straighter stitches to the right.
+- Short stitches placed by hand (bottom five; 0.3, 0.4, 0.5, 0.7 and 1.0 mm): which lines sew cleanly, with no thread breaks, knots or bunching on the back? The shortest clean one is the machine's shortest stitch.
+
+## TS-04 — Lock stitches: do they hold, and do they show?
+
+110.0 × 64.5 mm · 600 stitches, 27 jumps, 27 trims, 0 colour changes, 0 stops
+
+![TS-04 as it will sew, in red: nine rows of three lines, each line ending in a small lock at both ends, the locks' shapes differing from row to row and growing from left to right.](../../images/generated/testsheet-ts-04.png)
+
+Threads: Red.
+
+After sewing, check:
+
+- Rows, top to bottom: half stitch, arrow, back and forth, bowtie, cross, star, simple, triangle, zigzag. Each line has its lock at both ends and was trimmed after: pull each tail gently. Does the lock hold, or does the line come undone?
+- Columns, left to right, are small, medium and large: the half stitch on first stitches of 1.5, 2.5 and 4 mm, back and forth at 0.5, 0.7 and 1.0 mm, the others at 70, 100 and 150 %.
+- Which locks show from the front, and how much (1 hidden to 5 obvious)?
+- Any thread breaks or knots at the locks, and where.
+
 ## TS-10A — Hoop size: 150 × 150 mm frame
 
 150.0 × 150.0 mm · 275 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops

@@ -10,7 +10,9 @@ embroidery machine with a 200 × 200 mm (8 × 8 in) hoop, designs normally kept 
   brother-200x200 -o TS-xx.pes` prints the file's SHA-256, its size and counts, the threads the machine
   will ask for (with the Brother palette name it will show) and what to check after sewing. From M2.7 it
   also writes a picture of the expected result; until then, previews are drawn by the conformance tooling.
-  `stitch testsheet --list` lists the sheets.
+  `stitch testsheet --list` lists the sheets. The MC-1 sheets are drawn stitch by stitch, to test the
+  machine and the file formats; from MC-2, sheets are drawn as designs and planned by the engine, so
+  sewing them tests its stitches, locks and plan assembly too.
 - **The tester sews** it with the standard setup below, photographs it, measures it, and files a
   **Sew-out report** issue (the form asks for everything on this page).
 - **A maintainer turns the report into changes**: profile values, parameter defaults, new conformance
@@ -44,8 +46,9 @@ Record anything that differs in the report.
 |---|---|---|---|
 | **TS-01** Orientation & scale | An asymmetric "F", a 100 mm cross with 10 mm ticks, 10 mm squares in the corners (120 × 120 mm) | F not mirrored or rotated; 100 mm line = 100.0 ± 0.5 mm in X and Y; squares square | MC-1 |
 | **TS-02** Commands | Three colour blocks; a stop; rows of two dashes separated by jumps of 2, 5, 15, 40 mm; trims encoded as trim-flagged jumps on the left half (red) and as plain jumps only on the right (blue) (140 × 70 mm) | The machine stops for colours and the stop; which jumps were trimmed on each half; any loose loops | MC-1, MC-2 |
-| **TS-03** Running stitch | Lines at 1.5, 2.0, 2.5, 3.0, 4.0 mm stitch length; bean 1×, 2×; curves at three tolerances | Even stitches; curves smooth; bean lines solid | MC-2 |
-| **TS-04** Lock stitches | Short lines with every lock shape at both ends, trimmed after: the half stitch on first stitches of 1.5, 2.5 and 4 mm, back-and-forth at 0.5, 0.7 and 1.0 mm, drawn shapes at 70, 100 and 150 % | Pull each tail gently: holds or unravels? Lock visible from the front? | MC-2 |
+| **TS-02B** Commands, from elements | TS-02 drawn as a design and planned by the engine: every red dash but the last asks for a trim after it (`trim_after`), the blue ones ask for none (the 2 mm gap is sewn across: it is within the 3 mm collapse length), the green line stops halfway (`stop_after`); every dash has a lock at each end (140 × 70 mm) | The same as TS-02, and whether each dash holds where the thread was cut | MC-2 |
+| **TS-03** Running stitch | Lines at 1.5, 2.0, 2.5, 3.0, 4.0 mm stitch length; bean 1×, 2×; circles at tolerances of 0.1, 0.2 and 0.5 mm; 20 stitches placed by hand at 0.3, 0.4, 0.5, 0.7 and 1.0 mm (60 × 78 mm) | Even stitches; curves smooth; bean lines solid; the shortest hand-placed stitch that sews cleanly | MC-2 |
+| **TS-04** Lock stitches | 30 mm lines with every lock shape but custom at both ends, trimmed after: the half stitch on first stitches of 1.5, 2.5 and 4 mm, back-and-forth at 0.5, 0.7 and 1.0 mm, drawn shapes at 70, 100 and 150 % (110 × 65 mm) | Pull each tail gently: holds or unravels? Lock visible from the front? | MC-2 |
 | **TS-05** Satin width ladder | Columns 1–10 mm wide at three spacings (0.3, 0.4, 0.5 mm) | Coverage, fabric showing between stitches, edges straight, long stitches loose | MC-3 |
 | **TS-06** Satin underlays | The same 6 mm column with no underlay, centre walk, contour, zigzag, contour+zigzag | Edge sharpness, loft, puckering | MC-3 |
 | **TS-07** Registration | A 60 mm tatami circle with a running-stitch outline; at three pull-compensation values | Gap or overlap between fill and outline at 12 points around the circle | MC-4 |
@@ -60,7 +63,7 @@ Record anything that differs in the report.
 | Checkpoint | After | Sheets | Questions it must answer |
 |---|---|---|---|
 | MC-1 | M1 | TS-01, TS-02, TS-10A/B/C | Does the machine read our PES? Right size and orientation? Which trim encoding works? Are 150 and 190 mm designs accepted from PES v1? |
-| MC-2 | M3 | TS-03, TS-04, TS-02 | Minimum stitch length and lock defaults? |
+| MC-2 | M3 | TS-03, TS-04, TS-02B | Minimum stitch length and lock defaults? Does the machine trim where an element asks? |
 | MC-3 | M4 | TS-05, TS-06 | Satin spacing, width limits, underlay defaults, pull compensation |
 | MC-4 | M5 | TS-07, TS-08, TS-09 | Fill spacing, compensation, underlay and travel defaults |
 | MC-5 | M6 | TS-12, TS-10 | Is the VectorCraft workflow complete and correct? |
