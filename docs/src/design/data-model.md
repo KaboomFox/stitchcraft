@@ -1,5 +1,7 @@
 # Data model
 
+<!-- implements: crates/stitchcraft-core/src/lib.rs, crates/stitchcraft-core/src/units.rs, crates/stitchcraft-core/src/element.rs, crates/stitchcraft-core/src/rect.rs, crates/stitchcraft-core/src/budget.rs, crates/stitchcraft-plan/src/*.rs, crates/stitchcraft-plan/src/palette/**, crates/stitchcraft-plan/src/profiles/**, crates/stitchcraft-engine/src/design.rs -->
+
 The types every crate shares. Code sketches are illustrative (`ignore`); the crates' rustdoc is the
 API reference once the types exist. Invariants listed here are checked in code (constructors return
 `Result`) and by conformance level L0.

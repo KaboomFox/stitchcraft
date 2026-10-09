@@ -9,7 +9,8 @@ changes the code — people and AI agents alike. `CLAUDE.md` points here; there 
 1. Read `ROADMAP.md` (status) and pick the next step from `docs/src/plan/roadmap.md`, unless you were
    given a task.
 2. Read the design pages that step touches, starting from `docs/src/design/README.md`. The technical
-   design (`docs/src/design/tdd.md`) is the overview.
+   design (`docs/src/design/tdd.md`) is the overview. `cargo xtask docs for PATH` names the pages that
+   describe a file. In Claude Code, a hook in `.claude/settings.json` names them after each edit.
 3. Work conformance-first: add requirements and failing cases, then the code that makes them pass, then
    the docs. A Rust test named `req_<area>_<nnn>_<what>` is a case for `REQ-<AREA>-<NNN>`, and one named
    `diag_sc_<e|w|i><nnnn>_<what>` is the case that produces diagnostic `SC-<E|W|I><NNNN>`. Finish with
@@ -44,7 +45,8 @@ changes the code — people and AI agents alike. `CLAUDE.md` points here; there 
 - **No silent fallbacks.** A degraded result always emits a coded diagnostic.
 - **Docs extend context.** Every crate has a `README.md` stating its purpose, invariants and
   dependencies; every module starts with `//!` docs explaining *why*. Update docs in the same PR as the
-  behaviour.
+  behaviour. Write them plainly, as `docs/src/contributing/writing-style.md` says: `cargo xtask prose`
+  checks the lines a branch adds.
 - **One roadmap step per PR,** titled with its id (`M3.4: running stitch even spacing`).
 
 ## Commands
@@ -53,9 +55,10 @@ changes the code — people and AI agents alike. `CLAUDE.md` points here; there 
 cargo xtask ci                     # every gate: fmt, clippy, tests, rustdoc, layers, filesize,
                                    # cleanroom, unsafe-audit, docs --check, shots --check, conformance
                                    # (the whole suite, with its report), wasm, api --check, deny, typos,
-                                   # book
+                                   # prose, book
 cargo xtask layers                 # crate dependency rules
-cargo xtask docs --check           # docs fresh, links and anchors valid, ids exist
+cargo xtask docs --check           # docs fresh, links, anchors, ids and paths valid, no fact on two pages
+cargo xtask prose                  # Vale on the Markdown lines this branch adds (writing style)
 cargo xtask docs                   # regenerate generated docs pages
 cargo xtask shots --check          # docs images declared, reproducible and current
 cargo xtask conformance            # run the suite; report in target/conformance/report.md
@@ -72,11 +75,11 @@ cargo xtask mutants DIR…           # cargo-mutants results against conformance
 cargo xtask mutants --changed DIR  # a pull request's changed-line mutants: noticed, or listed equivalents
 ```
 
-Tools that are not installed locally (the wasm target, `cargo-public-api`, `cargo-deny`, `typos`, `mdbook`,
-and pyembroidery for the reader oracle — `conformance/oracle/requirements.txt`) are reported as skipped by
-`cargo xtask ci`; CI installs them and requires them. Coverage (`cargo-llvm-cov`) and mutation testing
-(`cargo-mutants`) have CI jobs of their own. A change to a library's public API shows in its
-`public-api.txt`: say why in the pull request.
+`cargo xtask ci` skips a step whose tool is not installed locally, and CI installs and requires each of
+them. They are the wasm target, `cargo-public-api`, `cargo-deny`, `typos`, Vale, `mdbook`, and
+pyembroidery for the reader oracle (`conformance/oracle/requirements.txt`). Coverage
+(`cargo-llvm-cov`) and mutation testing (`cargo-mutants`) have CI jobs of their own. A change to a
+library's public API shows in its `public-api.txt`: say why in the pull request.
 
 ## Where code goes
 

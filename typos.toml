@@ -1,6 +1,10 @@
 # https://github.com/crate-ci/typos — run in CI.
 [files]
-extend-exclude = ["conformance/golden/", "conformance/fixtures/", "*.svg", "*.pes", "*.dst"]
+extend-exclude = [
+  "conformance/golden/", "conformance/fixtures/", "*.svg", "*.pes", "*.dst",
+  # Third-party prose-lint rules, kept as their authors wrote them (vale-ai-tells, MIT).
+  ".vale/styles/ai-tells/",
+]
 
 [default.extend-words]
 # Embroidery and format vocabulary.

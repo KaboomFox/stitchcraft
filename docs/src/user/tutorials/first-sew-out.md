@@ -46,10 +46,8 @@ the cross first, then the "F", then the four corner squares, trimming between pa
 
 ## 5. Check
 
-- The "F" reads normally: not mirrored, not upside down, not turned.
-- Each arm of the cross measures 100.0 ± 0.5 mm end to end, horizontally and vertically.
-- The corner squares measure 10.0 mm on every side.
-- Ticks are 10 mm apart; the long ticks mark the ends and the centre.
+Measure the sew-out against the [TS-01 checks](../reference/test-sheets.md#ts-01--orientation-and-scale).
+`stitch testsheet` printed the same list when it wrote the file.
 
 ## 6. Tell us
 

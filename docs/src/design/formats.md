@@ -1,5 +1,7 @@
 # Machine formats
 
+<!-- implements: crates/stitchcraft-formats/src/**, apps/stitchcraft-cli/src/commands/convert.rs, apps/stitchcraft-cli/src/commands/inspect.rs -->
+
 `stitchcraft-formats` encodes a `StitchPlan` into machine files and decodes machine files into plans.
 PES (Brother) and DST (Tajima) come first because the first target machine is a Brother and DST is the
 lingua franca every machine and digitizer reads.

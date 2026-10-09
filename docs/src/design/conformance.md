@@ -1,5 +1,7 @@
 # Conformance testing
 
+<!-- implements: crates/stitchcraft-testkit/src/** -->
+
 When behaviour is specified only by its implementation, fixes for one input break another and nobody
 can say what "correct" means. StitchCraft specifies behaviour as **requirements**, proves each with **cases**, and reports the result
 as a **matrix** on every pull request. Code is written to make cases pass, not the other way round

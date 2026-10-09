@@ -27,3 +27,9 @@ Entries are added here when a data table is derived from a third-party source.
   in a row cut the thread — comes from public descriptions (Brother's support pages, Wilcom's
   documentation, the EduTech Wiki's DST page) and agrees with pyembroidery's reader (MIT), observed the
   same way.
+
+Third-party files
+-----------------
+- Prose-lint rules (.vale/styles/ai-tells/): vale-ai-tells v1.37.0 by Tony Burns
+  (https://github.com/tbhb/vale-ai-tells, MIT License, copied unchanged with its LICENSE file). Used by
+  `cargo xtask prose` and not part of any built crate.
