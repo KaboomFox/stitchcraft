@@ -11,15 +11,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     of what it will sew, and `--report` a JSON report: counts, size, threads and every diagnostic with
     its element. The report is written even when nothing else is, to say why. Diagnostics on the
     terminal name their element.
-  - **Finalize.** `stitchcraft_engine::plan` now fits the plan to the machine and checks it, so a plan
-    it returns can be written as it is. Needle points less than their element's shortest stitch from the
-    one before are left out (`SC-I0504`): where one element runs straight on into the next and they nearly
-    touch. That is the shortest stitch the element's generator used, so finalize never thins what it
-    spaced. Stitches longer than the machine's longest are split into equal parts (`SC-I0703`), each part
-    counting against the stitch budget. Too many colour changes (`SC-E0601`), a design larger than the
-    hoop, reaching past its edge from its origin or with its stop position past the edge (`SC-E0701`),
-    and a broken plan invariant (`SC-E0009`) give no plan; Ink/Stitch only drops stitches no longer than
-    the element's shortest stitch, else 0.1 mm (`DEV-FIN-001`).
+  - **Finalize.** `stitchcraft_engine::plan` now fits the plan to the machine and checks it, and a plan
+    it returns can be written as it is. Where one element runs straight on into the next and they nearly
+    touch, a needle point less than its element's shortest stitch from the one before is left out
+    (`SC-I0504`). That is the shortest stitch the element's generator used, and finalize never thins what
+    the generator spaced. Stitches longer than the machine's longest are split into equal parts
+    (`SC-I0703`), each part counting against the stitch budget. `plan` returns no plan for too many
+    colour changes (`SC-E0601`), for a design larger than the hoop, reaching past its edge from its origin
+    or with its stop position past the edge (`SC-E0701`), and for a broken plan invariant (`SC-E0009`).
+    Ink/Stitch only drops stitches no longer than the element's shortest stitch, else 0.1 mm
+    (`DEV-FIN-001`).
   - **Lock stitches** are stitches into or out of a lock point (`SewnStitch::is_lock`), so a tie-in's
     last stitch, into the stitching's first point, may be 0.2 mm like the rest of the lock
     (`REQ-PLAN-002`).

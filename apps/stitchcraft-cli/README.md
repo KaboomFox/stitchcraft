@@ -31,8 +31,9 @@ error · 3 a file could not be read or written.
 ## Invariants
 
 - Contains no engine logic: it reads files, calls the engine, formats and renderer, and writes files.
-- Writes only plans that have been checked (invariants, hoop and comfort zone): test sheets here, designs
-  by the engine's `plan`; errors write nothing (`stitch plan` still writes its report, to say why).
+- Writes only plans that have been checked (invariants, hoop and comfort zone). The command line checks
+  its test sheets itself, and the engine's `plan` checks designs. When a check fails, the machine file is
+  not written, and `stitch plan` still writes its report to say why.
 - Never panics on bad arguments (arguments that are not valid Unicode included); exit codes are documented.
 - A closed stdout (`stitch … | head`) ends the program quietly instead of panicking.
 
