@@ -84,12 +84,13 @@ fn req_fin_002_designs_the_machine_cannot_take_give_no_plan() {
     // Larger than the comfort zone: planned, with a warning.
     let big = planned_with(vec![line("a", (0.0, 0.0), 160.0, &RED, &[])], DesignSettings::default());
     assert_eq!((big.plan.is_some(), big.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>()), (true, vec![Code::OutsideComfortZone]));
-    // More colour changes than PES records (255).
+    // More colour changes than PES records (255); as many is fine.
     let threads = [RED, BLUE];
-    let elements: Vec<_> = (0..257_u32).map(|i| line(&format!("e{i}"), (0.0, f64::from(i % 50)), 5.0, &threads[(i % 2) as usize], &[])).collect();
-    let many = planned_with(elements, DesignSettings::default());
+    let alternating = |n: u32| (0..n).map(|i| line(&format!("e{i}"), (0.0, f64::from(i % 50)), 5.0, &threads[(i % 2) as usize], &[])).collect();
+    let many = planned_with(alternating(257), DesignSettings::default());
     assert_eq!(many.plan, None);
     assert_eq!(messages(&many), ["error SC-E0601: The design has 256 colour changes and stops, but PES v1 records at most 255."]);
+    assert!(planned_with(alternating(256), DesignSettings::default()).plan.is_some());
 }
 
 #[test]

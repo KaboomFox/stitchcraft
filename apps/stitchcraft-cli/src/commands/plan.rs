@@ -192,6 +192,7 @@ mod tests {
         assert_eq!(report["size_mm"], json!([60.0, 40.0]));
         assert_eq!(report["diagnostics"][0]["element"], "svg:patch:fill");
         assert_eq!(report["file"]["sha256"], hex(&Sha256::digest(std::fs::read(&output).unwrap())));
+        assert_eq!((report["design"].as_str(), report["file"]["path"].as_str()), (fixture("strokes.svg").to_str(), output.to_str()));
     }
 
     #[test]
