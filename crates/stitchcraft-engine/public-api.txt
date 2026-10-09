@@ -1,0 +1,42 @@
+# The public API of stitchcraft-engine, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
+# Generated: do not edit. A change here is a change other code can see; say why in the pull request.
+pub mod stitchcraft_engine
+pub mod stitchcraft_engine::common
+pub struct stitchcraft_engine::common::CommonParams
+pub stitchcraft_engine::common::CommonParams::force_lock_stitches: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::lock_custom_end: <stitchcraft_params::kinds::Text as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::lock_custom_start: <stitchcraft_params::kinds::Text as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::lock_end: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::lock_end_scale_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::lock_end_scale_percent: <stitchcraft_params::kinds::Percent as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::lock_start: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::lock_start_scale_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::lock_start_scale_percent: <stitchcraft_params::kinds::Percent as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::min_jump_stitch_length_mm: <stitchcraft_params::kinds::OptionalLength as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::min_stitch_length_mm: <stitchcraft_params::kinds::OptionalLength as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::stop_after: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::ties: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::trim_after: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
+impl stitchcraft_engine::common::CommonParams
+pub const stitchcraft_engine::common::CommonParams::GROUP: stitchcraft_params::spec::ParamGroup
+pub const stitchcraft_engine::common::CommonParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
+pub fn stitchcraft_engine::common::CommonParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
+pub const stitchcraft_engine::common::LOCKS: &[stitchcraft_params::spec::ChoiceOption]
+pub mod stitchcraft_engine::registry
+pub const stitchcraft_engine::registry::PARAMETERS: &[&stitchcraft_params::spec::ParamGroup]
+pub mod stitchcraft_engine::testsheets
+pub enum stitchcraft_engine::testsheets::SheetError
+pub stitchcraft_engine::testsheets::SheetError::Budget(stitchcraft_core::budget::Exhausted)
+pub stitchcraft_engine::testsheets::SheetError::ElementId(stitchcraft_core::element::ElementIdError)
+pub stitchcraft_engine::testsheets::SheetError::Plan(stitchcraft_plan::builder::PlanError)
+pub stitchcraft_engine::testsheets::SheetError::Unit(stitchcraft_core::units::UnitError)
+pub stitchcraft_engine::testsheets::SheetError::UnknownThread(u8)
+pub struct stitchcraft_engine::testsheets::TestSheet
+pub stitchcraft_engine::testsheets::TestSheet::checks: &'static [&'static str]
+pub stitchcraft_engine::testsheets::TestSheet::id: &'static str
+pub stitchcraft_engine::testsheets::TestSheet::title: &'static str
+impl stitchcraft_engine::testsheets::TestSheet
+pub fn stitchcraft_engine::testsheets::TestSheet::plan(&self) -> core::result::Result<stitchcraft_plan::plan::StitchPlan, stitchcraft_engine::testsheets::SheetError>
+pub const stitchcraft_engine::testsheets::STITCH_LEN: f64
+pub static stitchcraft_engine::testsheets::SHEETS: &[stitchcraft_engine::testsheets::TestSheet]
+pub fn stitchcraft_engine::testsheets::find(&str) -> core::option::Option<&'static stitchcraft_engine::testsheets::TestSheet>

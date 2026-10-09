@@ -1,8 +1,7 @@
 # Conformance testing
 
-Ink/Stitch shows what happens when behaviour is specified only by its implementation: fixes for one
-input break another, and nobody can say what "correct" means ([finding F1](inkstitch-analysis.md#f1--tests-cover-almost-nothing-of-the-stitch-engine)).
-StitchCraft specifies behaviour as **requirements**, proves each with **cases**, and reports the result
+When behaviour is specified only by its implementation, fixes for one input break another and nobody
+can say what "correct" means. StitchCraft specifies behaviour as **requirements**, proves each with **cases**, and reports the result
 as a **matrix** on every pull request. Code is written to make cases pass, not the other way round
 ([ADR-0008](adr/0008-conformance-first.md)).
 
@@ -27,7 +26,7 @@ id = "REQ-FILL-TAT-006"
 area = "fill/tatami"
 level = "L2"
 statement = "Pull compensation preserves the number of holes and connected components of the region."
-rationale = "Ink/Stitch #3395: compensation by buffering closed deliberate gaps."
+rationale = "Compensating by growing the whole shape closes gaps the designer left on purpose."
 milestone = "M5"
 status = "planned"        # planned | active | retired
 ```
@@ -123,8 +122,30 @@ suite produces, whatever the case is about. A case never needs to ask for them.
 
 Golden bytes for canonical plans; round trips on random plans (`proptest`); every command per format;
 empty and degenerate files; the **pyembroidery oracle** job (pinned version, in its own CI job) decodes
-our files and must agree on every stitch; `cargo-fuzz` targets per reader run nightly with a persisted
-corpus ([formats](formats.md#conformance)).
+our files and must agree on every stitch; `cargo-fuzz` targets run nightly with a persisted corpus
+([formats](formats.md#conformance)).
+
+#### Fuzzing
+
+`fuzz/` holds one target per reader (`read_pes`, `read_dst`) and one for a file's whole journey
+(`read_write_preview`: read, write in every format, read the PES file back, preview). Each target is
+one line; its body is in `stitchcraft-testkit::fuzz`, so every pull request runs the bodies on the golden
+files, every shortening of them and random bytes, on stable Rust and all three operating systems. The
+properties (`REQ-FMT-006`): no panic; at most 2,000,000 entries and no position beyond ±10 m from any
+reader; a plan read from anything is written in every format, and its PES file reads back to a plan the
+machine sews the same way; a preview never panics.
+
+Every night `nightly.yml` fuzzes each target for 20 minutes with libFuzzer (`-timeout=10`,
+`-rss_limit_mb=2048`). The corpus starts from the golden machine files and is kept, minimised, in the
+Actions cache, so each night continues where the last stopped. A crash fails the job and keeps the input
+as an artifact. To work on one locally:
+
+```sh
+cargo +nightly fuzz run read_pes                        # until stopped; corpus in fuzz/corpus/read_pes
+cargo +nightly fuzz run read_pes fuzz/artifacts/read_pes/crash-…   # reproduce a crash
+```
+
+A crash becomes a regression test next to the code it found a bug in, before the fix.
 
 ### L2 — Generator properties (every PR)
 
@@ -154,8 +175,8 @@ CC0), in a container, producing stitch files. We compare **metrics, not stitches
 (±10 %), bounds (±0.5 mm), colour sequence (exact), trims and jumps (±1), coverage IoU (≥ 0.9). Running
 Ink/Stitch as an oracle uses it, it does not copy it; implementers see metric reports, not Ink/Stitch
 code. Differences we intend are recorded in the **deviations ledger** (`conformance/deviations.toml`),
-each with a reason and a link to the requirement that motivates it (for example row-end compensation,
-L4 of the issues review). Starts in M8.
+each with a reason and a link to the requirement that motivates it (for example `DEV-LCK-001`: the
+lock shapes are StitchCraft's own). Starts in M8.
 
 ### L4 — Physical (milestone gates)
 
@@ -173,7 +194,9 @@ test`, then writes `target/conformance/`:
   away; in GitHub Actions it is appended to the job summary, so every pull request shows it;
 - `report.json` — machine-readable results, for the docs (requirement pages will show their status);
 - `hashes.json` — one SHA-256 per output, for the [cross-platform determinism](determinism.md#cross-platform-check) job;
-- from M2.6, `diffs/` — for failing golden cases, before/after stitch renders and a side-by-side PNG.
+- `diffs/` — for a machine-file golden that differs, previews (simple style) of the golden file and of
+  the new output, so a reviewer sees what sews differently; CI keeps them as a workflow artifact when a
+  run fails.
 
 It fails when a case fails or an active requirement has no passing case. `--filter <text>` runs only the
 cases whose id, test name or requirements contain the text (and skips the "every active requirement"
@@ -182,15 +205,17 @@ rule, since the run is partial). `cargo xtask ci` runs the whole suite; the docs
 `cargo xtask conformance --bless <case>` rewrites a data case's golden files. CI refuses a pull request
 that changes files under `conformance/golden/` unless it carries the `golden-change` label and a line in
 `CHANGELOG.md`. For the canonical-plan goldens of the format tests, bless with
-`STITCHCRAFT_BLESS=1 cargo test -p stitchcraft-formats --test golden`. Later, `stitch conformance run`
+`STITCHCRAFT_BLESS=1 cargo test -p stitchcraft-formats --test golden`; for the preview goldens
+(`REQ-RND-002`), with `STITCHCRAFT_BLESS=1 cargo test -p stitchcraft-render --test preview`. Later, `stitch conformance run`
 will let users validate a machine profile with the same cases.
 
 ## Gates
 
 | When | What must pass |
 |---|---|
-| Every PR | L0, L1 (no fuzzing), L2 with fixed seeds, `--check` rules, cross-platform hashes |
-| Nightly | L1 fuzzing, L2 fresh seeds, L3 differential, mutation testing on changed crates |
+| Every PR | L0, L1 (no fuzzing), L2 with fixed seeds, `--check` rules, cross-platform hashes, coverage floors |
+| Nightly | L1 fuzzing, L2 fresh seeds, L3 differential |
+| Weekly | Mutation testing of every shipped crate, against the recorded counts |
 | Milestone close | All requirements of the milestone `active` and green; its machine checkpoint signed off |
 | Release | Everything above, plus the compatibility gate green on VectorCraft `stable` |
 
@@ -199,4 +224,11 @@ will let users validate a machine profile with the same cases.
 Conformance cases describe behaviour users see. Unit tests (in modules), snapshot tests (`insta`, for
 intermediate structures such as cell decompositions) and CLI examples in the docs (`trycmd`) still cover
 internals and documentation; mutation testing (`cargo-mutants`) and a coverage ratchet (`cargo-llvm-cov`)
-measure how well all of them together bite.
+measure how well all of them together bite ([guardrails](guardrails.md)).
+
+Both are ratchets. `conformance/coverage.toml` holds a line-coverage floor per crate, which a pull
+request may not fall below and `cargo xtask coverage --record` only raises. `conformance/mutation.toml`
+holds, per crate, how many mutants no test notices: the weekly run fails when a crate has more, and
+`cargo xtask mutants --record` only lowers the counts. The weekly job summary lists every missed mutant,
+which is the to-do list for better tests. Each mutant is judged by its own crate's tests
+(`.cargo/mutants.toml`), so each crate answers for its own code.

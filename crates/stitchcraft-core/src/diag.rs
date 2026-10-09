@@ -4,8 +4,8 @@
 //! it can, and every host shows them the same way. Each carries a [`Code`] from the registry in this
 //! module, the single source of truth for ids, severities, titles and explanations. `stitch explain`,
 //! the generated diagnostics index and the VectorCraft plug-in's messages are all built from it, and
-//! tests check every entry, so an error message cannot ship without ever having been rendered (Ink/Stitch
-//! once shipped "There are d color changes"; `docs/src/design/diagnostics.md`).
+//! tests check every entry, so an error message cannot ship without ever having been rendered
+//! (`docs/src/design/diagnostics.md`).
 //!
 //! Codes are never reused. A retired code stays registered, with "(retired)" in its title.
 
@@ -95,6 +95,13 @@ registry! {
     /// element (fewer nodes, wider spacing, a smaller area) or split it into several elements.
     BudgetExhausted = "SC-E0004", Error, "Budget exhausted";
 
+    /// Preview images have a size limit, so that drawing one never runs out of memory. At the scale
+    /// asked for, this design's preview would be larger, so no image was written.
+    ///
+    /// Use a smaller scale: the message says the largest that fits. A design that runs more than 10
+    /// metres from the hoop centre cannot be previewed at any scale.
+    PreviewTooLarge = "SC-E0005", Error, "Preview too large";
+
     /// StitchCraft checks every stitch plan against its own rules before writing a machine file. One of
     /// those checks failed, which means StitchCraft has a bug: the file was not written, so nothing
     /// wrong reaches your machine.
@@ -107,6 +114,29 @@ registry! {
     ///
     /// Add an element with an embroidery stitch type, or fix the errors reported for the elements.
     NothingToStitch = "SC-E0010", Error, "Nothing to stitch";
+
+    /// A parameter's value could not be understood: a number where a word was expected, a choice that
+    /// is not one of the parameter's options, or a list with the wrong number of values. The element was
+    /// not stitched: guessing could sew something you did not ask for.
+    ///
+    /// The message names the parameter, the value and what the parameter accepts. The parameter
+    /// reference lists every parameter with its accepted values.
+    ParamInvalid = "SC-E0101", Error, "Parameter has the wrong type or an unknown choice";
+
+    /// A parameter's value is outside the range StitchCraft accepts, so the nearest allowed value was
+    /// used, and the element was stitched with it. Values outside the range are impossible (a negative
+    /// length) or beyond what machines sew reliably.
+    ///
+    /// The message names the parameter, your value and the range. Change the value to remove the
+    /// warning.
+    ParamClamped = "SC-W0102", Warning, "Parameter clamped to its allowed range";
+
+    /// The design carries a parameter StitchCraft does not know: one from a newer version of StitchCraft
+    /// or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was kept, so saving
+    /// the design does not lose it, but it does not change the stitches.
+    ///
+    /// The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.
+    ParamUnknown = "SC-W0105", Warning, "Unknown parameter preserved but ignored";
 
     /// The file format can record only a limited number of colour changes and stops (PES: 255). This
     /// design has more, so the file was not written.
@@ -129,6 +159,14 @@ registry! {
     /// StitchCraft does not know yet: please report it with the file.
     UnreadableFile = "SC-E0603", Error, "Machine file could not be read";
 
+    /// The file stores no thread colours (DST files never do: they only say where the machine pauses for
+    /// the next thread), so every thread has a placeholder colour — in previews, and in files converted
+    /// from this one, where the machine shows that colour at each thread change.
+    ///
+    /// The stitches are not affected. Load the threads the design needs, in the order the design's
+    /// author gives; StitchCraft cannot know them.
+    ThreadColorsUnknown = "SC-W0604", Warning, "Thread colours unknown";
+
     /// The design is wider or taller than the machine's hoop, so the machine cannot sew it in one
     /// hooping (most machines refuse the file).
     ///
@@ -148,8 +186,7 @@ registry! {
 impl Code {
     /// The explanation as Markdown paragraphs, for `stitch explain` and the diagnostics index.
     pub fn explanation(self) -> String {
-        let lines: Vec<&str> = self.raw_explanation().lines().map(|line| line.strip_prefix(' ').unwrap_or(line)).collect();
-        lines.join("\n").trim_end().to_string()
+        crate::text::doc_comment(self.raw_explanation())
     }
 }
 

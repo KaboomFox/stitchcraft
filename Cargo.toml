@@ -33,6 +33,10 @@ stitchcraft-testkit = { path = "crates/stitchcraft-testkit" }
 libm = "0.2"
 thiserror = "2"
 
+# rendering (stitchcraft-render only; `cargo xtask layers` restricts tiny-skia). No SIMD: the portable
+# scalar pipeline gives the same pixels on every CPU (docs/src/design/determinism.md).
+tiny-skia = { version = "0.11", default-features = false, features = ["std", "png-format"] }
+
 # command line (stitchcraft-cli only; `cargo xtask layers` restricts clap)
 clap = { version = "4.5", features = ["derive"] }
 sha2 = "0.11"
@@ -62,7 +66,7 @@ todo = "deny"
 unimplemented = "deny"
 unreachable = "deny"
 dbg_macro = "deny"
-# Libraries never print or end the process (Ink/Stitch's library code calls sys.exit; we don't).
+# Libraries never print or end the process: a host embedding the engine must stay in control.
 # Binaries opt out at their crate root.
 print_stdout = "deny"
 print_stderr = "deny"

@@ -9,7 +9,10 @@
 4. **Module:** `crates/stitchcraft-formats/src/<format>/` with `write.rs`, `read.rs`, `consts.rs`,
    `tests.rs`. Readers: check every length and offset before use, cap counts, return typed errors;
    `indexing_slicing` is denied here.
-5. **Fuzz target** in `fuzz/fuzz_targets/read_<format>.rs`; run it for 10 minutes locally.
+5. **Fuzz target:** a body `read_<format>` in `stitchcraft-testkit::fuzz` (its tests run it on the
+   new golden files), a one-line target in `fuzz/fuzz_targets/read_<format>.rs`, its name in the
+   `fuzz` matrix of `nightly.yml`; run it for 10 minutes locally (`cargo +nightly fuzz run
+   read_<format>`). The format's golden files join the seed corpus by themselves.
 6. **Oracle:** add the format to the pyembroidery oracle job if pyembroidery supports it.
 7. **Profiles:** if a machine uses it, add or update a profile — and schedule a machine test before
    calling it supported.

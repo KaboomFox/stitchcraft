@@ -1,16 +1,17 @@
 //! Reading machine files back into stitch plans.
 //!
-//! Every reader feeds the same [`Recorder`], which turns machine events — a sewn move, a jump, a trim, a
+//! Every reader feeds the same `Recorder`, which turns machine events — a sewn move, a jump, a trim, a
 //! stop, a thread change — into a [`StitchPlan`]. The recorder owns the limits every reader needs: at
 //! most [`MAX_RECORDS`] records (the stitch budget's limit, so a hostile file cannot exhaust memory) and
 //! positions within ±10 m. Readers are literal: each record becomes one plan entry, so `stitch inspect`
 //! shows what is in the file, not a cleaned-up version of it.
 
+use stitchcraft_core::units::MACHINE_LIMIT;
 use stitchcraft_core::{Budget, Point};
-use stitchcraft_plan::{PlanBuilder, Provenance, Role, StitchPlan, Thread};
+use stitchcraft_plan::{PaletteId, PlanBuilder, Provenance, Role, StitchPlan, Thread};
 
 use crate::error::DecodeError;
-use crate::quantize::{Delta, LIMIT, Units};
+use crate::quantize::{Delta, Units};
 
 /// The most records a reader accepts: the stitch budget of one design.
 pub const MAX_RECORDS: usize = Budget::DEFAULT.max_stitches as usize;
@@ -20,6 +21,9 @@ pub const MAX_RECORDS: usize = Budget::DEFAULT.max_stitches as usize;
 pub struct Decoded {
     /// The format and version, as people say it: `PES (#PES0001)`, `PEC`, `DST`.
     pub format: String,
+    /// The palette the file's thread colours are indices into; `None` when the format stores no colours
+    /// (DST), so the plan's threads are placeholders.
+    pub palette: Option<PaletteId>,
     /// The design name stored in the file.
     pub name: String,
     /// The stitches, one plan entry per record.
@@ -91,11 +95,11 @@ impl Recorder {
         self.count()?;
         let x = i64::from(self.at.x) + i64::from(delta.dx);
         let y = i64::from(self.at.y) + i64::from(delta.dy);
-        let within = |v: i64| v.abs() <= i64::from(LIMIT);
+        let within = |v: i64| v.abs() <= i64::from(MACHINE_LIMIT);
         if !(within(x) && within(y)) {
             return Err(DecodeError::OutOfRange);
         }
-        // Within ±LIMIT, so both fit an i32.
+        // Within ±MACHINE_LIMIT, so both fit an i32.
         self.at = Units { x: i32::try_from(x).map_err(|_| DecodeError::OutOfRange)?, y: i32::try_from(y).map_err(|_| DecodeError::OutOfRange)? };
         Ok(Point::from_tenths(self.at.x, self.at.y))
     }

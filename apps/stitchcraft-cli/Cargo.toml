@@ -29,3 +29,6 @@ stitchcraft-plan = { workspace = true }
 stitchcraft-render = { workspace = true }
 stitchcraft-svg = { workspace = true }
 stitchcraft-vectorcraft = { workspace = true }
+
+[dev-dependencies]
+stitchcraft-testkit = { workspace = true }

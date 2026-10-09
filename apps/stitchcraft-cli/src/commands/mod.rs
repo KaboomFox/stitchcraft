@@ -1,17 +1,24 @@
 //! The subcommands. Each returns an [`Outcome`] — what to print and how to exit — instead of printing,
 //! so the commands are tested without capturing the terminal.
 
+pub mod convert;
 pub mod explain;
 pub mod inspect;
+pub mod preview;
 pub mod profiles;
 pub mod testsheet;
 
 use std::fmt::Write as _;
+use std::path::Path;
 use std::process::ExitCode;
 
-use stitchcraft_core::{Diagnostic, Fix, Severity};
-use stitchcraft_plan::StitchPlan;
+use sha2::{Digest, Sha256};
+use stitchcraft_core::{Code, Diagnostic, Fix, Severity};
+use stitchcraft_formats::Decoded;
 use stitchcraft_plan::palette::Palette;
+use stitchcraft_plan::{FormatId, StitchPlan};
+
+use crate::files;
 
 /// What a command wants to say, and how the program ends.
 #[derive(Debug)]
@@ -53,21 +60,85 @@ impl Outcome {
     pub fn usage(message: impl AsRef<str>) -> Self {
         Outcome { stdout: String::new(), stderr: format!("stitch: {}\n", message.as_ref()), status: Status::Usage }
     }
+
+    /// A file could not be read or written.
+    fn io(verb: &str, path: &Path, error: &std::io::Error) -> Self {
+        Outcome { stdout: String::new(), stderr: format!("stitch: cannot {verb} {}: {error}\n", path.display()), status: Status::Io }
+    }
+
+    /// Errors in the design: `stderr` (warnings found so far) and the diagnostics, and nothing written.
+    pub fn refuse(stderr: String, diagnostics: &[Diagnostic]) -> Self {
+        Outcome { stdout: String::new(), stderr: stderr + &render_diagnostics(diagnostics) + "nothing was written\n", status: Status::DesignErrors }
+    }
+}
+
+/// The bytes of the machine file at `path` and what they say, or the outcome that reports why they
+/// cannot be read (`SC-E0603` for a file that is not a machine file StitchCraft reads).
+pub fn read_machine_file(path: &Path) -> Result<(Vec<u8>, Decoded), Outcome> {
+    let bytes = files::read_capped(path).map_err(|e| Outcome::io("read", path, &e))?;
+    match stitchcraft_formats::decode(&bytes) {
+        Ok(decoded) => Ok((bytes, decoded)),
+        Err(e) => Err(Outcome { stdout: String::new(), stderr: render_diagnostics(&[e.diagnostic()]), status: Status::DesignErrors }),
+    }
+}
+
+/// The readers' warnings about `decoded`, one `warning:` line each.
+pub fn reader_warnings(decoded: &Decoded) -> String {
+    decoded.warnings.iter().map(|w| format!("warning: {w}\n")).collect()
+}
+
+/// `SC-W0604` when `decoded` stores no thread colours, so its threads are placeholders.
+pub fn unknown_colors(decoded: &Decoded) -> Option<Diagnostic> {
+    decoded.palette.is_none().then(|| {
+        Diagnostic::new(Code::ThreadColorsUnknown, format!("{} stores no thread colours; every thread is a black placeholder.", decoded.format))
+    })
+}
+
+/// Writes `bytes` to `path` in one step ([`files::write_atomically`]).
+pub fn write_file(path: &Path, bytes: &[u8]) -> Result<(), Outcome> {
+    files::write_atomically(path, bytes).map_err(|e| Outcome::io("write", path, &e))
+}
+
+/// The format `--format` names, or else the one `output`'s extension names.
+pub fn output_format(flag: Option<crate::cli::Format>, output: &Path) -> Result<FormatId, Outcome> {
+    let extension = output.extension().and_then(|e| e.to_str()).and_then(FormatId::from_extension);
+    flag.map(FormatId::from)
+        .or(extension)
+        .ok_or_else(|| Outcome::usage(format!("cannot tell the format of `{}`: name it .pes or .dst, or use --format", output.display())))
+}
+
+/// A written machine file, as report lines (`  file      …`, `  sha256    …`): the checksum is how a
+/// sew-out report names exactly the bytes that were sewn.
+pub fn describe_file(out: &mut String, output: &Path, format: FormatId, bytes: &[u8]) {
+    let _ = writeln!(out, "  file      {} ({}, {} bytes)", output.display(), format.name(), bytes.len());
+    let _ = writeln!(out, "  sha256    {}", hex(&Sha256::digest(bytes)));
+}
+
+/// `bytes` in lower-case hexadecimal.
+pub fn hex(bytes: &[u8]) -> String {
+    bytes.iter().fold(String::with_capacity(bytes.len() * 2), |mut s, b| {
+        let _ = write!(s, "{b:02x}");
+        s
+    })
 }
 
 /// The plan's size and counts, as report lines (`  size      …`, `  stitches  …`).
 pub fn describe_plan(out: &mut String, plan: &StitchPlan) {
-    let stats = plan.stats();
     if let Some(b) = plan.bounds() {
         let _ = writeln!(out, "  size      {:.1} × {:.1} mm", b.width(), b.height());
     }
-    let counts = [(stats.stitches, "stitch", "stitches"), (stats.jumps, "jump", "jumps"), (stats.trims, "trim", "trims")]
+    let _ = writeln!(out, "  stitches  {}", counts(plan));
+}
+
+/// "274 stitches, 7 jumps, 7 trims, 0 colour changes, 1 stop": the plan's counts, as people say them.
+pub fn counts(plan: &StitchPlan) -> String {
+    let stats = plan.stats();
+    [(stats.stitches, "stitch", "stitches"), (stats.jumps, "jump", "jumps"), (stats.trims, "trim", "trims")]
         .into_iter()
         .chain([(stats.color_changes, "colour change", "colour changes"), (stats.stops, "stop", "stops")])
         .map(|(n, one, many)| format!("{n} {}", if n == 1 { one } else { many }))
         .collect::<Vec<_>>()
-        .join(", ");
-    let _ = writeln!(out, "  stitches  {counts}");
+        .join(", ")
 }
 
 /// The threads the machine asks for, one line each, with the palette entry a machine shows for each

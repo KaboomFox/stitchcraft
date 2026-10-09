@@ -15,11 +15,10 @@ StitchCraft turns vector art into machine embroidery. It is two things that ship
    [VectorCraft](https://github.com/storytold/vectorcraft), ArtCraft's open-source, clean-room
    Illustrator written in Rust, so embroidery is designed where the art is drawn.
 
-It covers the stitch types embroiderers know from [Ink/Stitch](https://inkstitch.org) (running,
-bean, satin, tatami fill, contour, meander, ripple, …) and reads Ink/Stitch's SVG parameters, but it
-is a new implementation with a different quality bar: **it never crashes, it produces the same file
-on every platform, and every behaviour is pinned by a conformance suite and by sew-outs on a real
-machine.**
+It covers the common machine-embroidery stitch types (running, bean, satin, tatami fill, contour,
+meander, ripple, …) and reads the embroidery parameters Ink/Stitch stores in SVG files, so designs move
+between the tools. Its quality bar: **it never crashes, it produces the same file on every platform,
+and every behaviour is pinned by a conformance suite and by sew-outs on a real machine.**
 
 ---
 
@@ -27,18 +26,18 @@ machine.**
 
 | ID | Goal | How we know |
 |---|---|---|
-| G1 | Cover Ink/Stitch's stitch types and parameters, in phases | [Compatibility contract](inkstitch-compat-contract.md) coverage column reaches 100 % for phase P1–P3 rows |
+| G1 | Read and write every parameter in the Ink/Stitch compatibility contract, in phases | [Compatibility contract](inkstitch-compat-contract.md) coverage column reaches 100 % for phase P1–P3 rows |
 | G2 | Never crash on any input | No-panic lints, fuzzing, bounded work budgets ([guardrails](guardrails.md), [robustness](#11-robustness)) |
 | G3 | Correctness proven, not assumed | Every requirement has a passing conformance case; machine checkpoints signed off ([conformance](conformance.md), [machine testing](../plan/machine-testing.md)) |
 | G4 | Determinism | Byte-identical files on Linux, macOS, Windows and wasm32 ([determinism](determinism.md)) |
 | G5 | Host-agnostic engine | VectorCraft plug-in, CLI and (later) an in-tree VectorCraft crate share one engine ([architecture](architecture.md)) |
-| G6 | Documentation that beats Ink/Stitch's | Reference generated from code, images regenerated in CI on every PR ([docs pipeline](docs-pipeline.md)) |
+| G6 | Documentation that cannot drift from the code | Reference generated from code, images regenerated in CI on every PR ([docs pipeline](docs-pipeline.md)) |
 | G7 | Code we are proud to show | Enforced layering, small modules, playbooks for contributors ([guardrails](guardrails.md)) |
 | G8 | Survive VectorCraft releases | Plug-in tested against VectorCraft stable, pre-releases, `release` and `main` ([compatibility gate](compatibility-gate.md)) |
 
 ### Non-goals for 1.0
 
-- An Inkscape extension (Ink/Stitch already is one).
+- An Inkscape extension.
 - Lettering with a bundled embroidery-font library (post-1.0; see [roadmap](../plan/roadmap.md)).
 - Automatic digitizing of photos or bitmaps.
 - Sending files to machines over USB/Wi-Fi; the output is a file you copy to the machine.
@@ -65,22 +64,14 @@ the engine.
 
 ## 3. Background
 
-### 3.1 Ink/Stitch, the reference behaviour
+### 3.1 File compatibility with Ink/Stitch
 
-Ink/Stitch is a GPL-3.0 Python extension for Inkscape: ~45,000 lines in `lib/`, 145 embroidery
-parameter declarations, more than a dozen stitch types, and 51 file readers and 24 writers through
-`pystitch` (an MIT fork of pyembroidery). It is the best open-source digitizer available and its users are
-passionate. Its weaknesses are the reason this project exists, and they are measured in
-[the Ink/Stitch analysis](inkstitch-analysis.md):
-
-- **52 test functions (1,142 lines) for 45,344 lines of library code**; no tests for satin, running
-  stitch or any fill algorithm. Since 2024, 62 commits addressed errors, crashes or invalid/empty
-  inputs, and none of them touched the tests.
-- Library code ends the process (`sys.exit`) instead of returning errors, and algorithms degrade
-  silently (a fill too small for its rows becomes an outline; an impossible travel becomes a straight
-  line across the shape) without telling the user.
-- Docs are hand-written and partly drift from code (parameters missing, no docs CI, 1,341 hand-made
-  images, one unversioned site).
+Ink/Stitch, a GPL-3.0 extension for Inkscape, stores its embroidery settings in SVG files as
+`inkstitch:<name>` attributes. StitchCraft reads and writes the same attribute names, values and
+defaults, so a design moves between the tools unchanged. Those names, types and defaults are facts
+listed in the [compatibility contract](inkstitch-compat-contract.md); where StitchCraft's behaviour
+differs on purpose, the deviations ledger (`conformance/deviations.toml`) says how and why. StitchCraft
+is an independent project and contains no Ink/Stitch code, documentation text or data files ([ADR-0001](adr/0001-license-and-clean-room.md)).
 
 ### 3.2 VectorCraft, the host
 
@@ -328,7 +319,7 @@ milestone signed off.
 | R4 | Polygon offset/boolean robustness | Spike M0.7; input sanitizing; fuzzing; fallback to diagnostics, never panics |
 | R5 | Clean-room discipline slips | Process in ADR-0001; `cargo xtask cleanroom`; review checklist |
 | R6 | Cross-platform float differences | `libm`, no FMA-sensitive formulas in quantization, cross-platform hash CI |
-| R7 | Scope: Ink/Stitch is large | Phases; compatibility contract tracks coverage; post-1.0 items explicit |
+| R7 | Scope: the compatibility contract is large | Phases; compatibility contract tracks coverage; post-1.0 items explicit |
 | R8 | Brother trim behaviour varies by model | Profile flag; MC-1 tests both encodings |
 | R9 | VectorCraft breaking changes | Compatibility gate on stable, pre-release, `release` and `main` |
 | R10 | Headless UI screenshots need a GPU | Spike M0.8 (Xvfb + Mesa); fallback: CLI-rendered art + semantic panel tests |

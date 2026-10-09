@@ -13,8 +13,33 @@ use crate::math;
 pub const MM_PER_INCH: f64 = 25.4;
 /// Millimetres per PostScript point (VectorCraft's document unit: 72 points per inch).
 pub const MM_PER_POINT: f64 = MM_PER_INCH / 72.0;
-/// Millimetres per SVG user unit at 96 units per inch (the CSS pixel, and Ink/Stitch's assumption).
+/// Millimetres per SVG user unit at 96 units per inch (the CSS pixel).
 pub const MM_PER_SVG_PX: f64 = MM_PER_INCH / 96.0;
+
+/// The largest coordinate StitchCraft rounds to machine units, in machine units (0.1 mm): ±10,000 mm,
+/// the data model's limit for any coordinate.
+pub const MACHINE_LIMIT: i32 = 100_000;
+
+/// `mm` in machine units (0.1 mm), rounded half to even; `None` beyond ±[`MACHINE_LIMIT`].
+///
+/// This is the one rounding StitchCraft applies to positions. Writers use it for every position they
+/// encode and previews for every position they draw, so a preview shows exactly the needle holes a
+/// machine file makes (REQ-RND-001). Machine files store relative moves, but rounding each *move* would
+/// let errors accumulate along a design (a thousand 2.54 mm stitches drift by a whole millimetre), so
+/// each *absolute position* is rounded once and moves are differences of rounded positions: every hole
+/// lands within 0.05 mm of the plan, however long the design. Ties round to even, so there is no
+/// systematic drift either. Multiplying and rounding are correctly rounded IEEE-754 operations, so the
+/// result is the same on every platform (`docs/src/design/determinism.md`, REQ-FMT-002).
+pub fn to_tenths(mm: f64) -> Option<i32> {
+    let units = (mm * 10.0).round_ties_even();
+    if units.abs() <= f64::from(MACHINE_LIMIT) {
+        // In range and integral, so the conversion is exact.
+        #[allow(clippy::cast_possible_truncation)]
+        Some(units as i32)
+    } else {
+        None
+    }
+}
 
 /// Why a number could not become a length or a point.
 #[derive(Clone, Copy, Debug, PartialEq, thiserror::Error)]
@@ -116,6 +141,12 @@ impl Point {
         Point { x: f64::from(x) / 10.0, y: f64::from(y) / 10.0 }
     }
 
+    /// The point in machine units (0.1 mm), each coordinate rounded with [`to_tenths`]: where a machine
+    /// file puts the needle. `None` when a coordinate is beyond ±10 m.
+    pub fn to_tenths(self) -> Option<(i32, i32)> {
+        Some((to_tenths(self.x)?, to_tenths(self.y)?))
+    }
+
     /// A point from coordinates the caller has already proven finite (for example, the minimum of two
     /// finite values). Crate-internal so that untrusted numbers always go through [`Point::new`].
     pub(crate) const fn from_finite(x: f64, y: f64) -> Self {
@@ -177,6 +208,24 @@ mod tests {
         let p = Point::from_tenths(-25, 1234);
         assert_eq!((p.x(), p.y()), (-2.5, 123.4));
         assert_eq!(Point::from_tenths(i32::MIN, i32::MAX).x(), -214_748_364.8);
+    }
+
+    #[test]
+    fn machine_units_round_half_to_even() {
+        // Values whose tenfold is exactly representable, so the tie is real.
+        for (mm, tenths) in [(0.25, 2), (0.75, 8), (1.25, 12), (-0.25, -2), (-0.75, -8), (2.54, 25), (0.0, 0)] {
+            assert_eq!(to_tenths(mm), Some(tenths), "{mm}");
+        }
+        assert_eq!(Point::new(1.04, -0.05).unwrap().to_tenths(), Some((10, 0)));
+    }
+
+    #[test]
+    fn machine_units_refuse_coordinates_beyond_the_limit() {
+        assert_eq!(to_tenths(10_000.0), Some(MACHINE_LIMIT));
+        assert_eq!(to_tenths(-10_000.0), Some(-MACHINE_LIMIT));
+        assert_eq!(to_tenths(10_000.1), None);
+        assert_eq!(to_tenths(f64::MAX), None);
+        assert_eq!(Point::new(0.0, 20_000.0).unwrap().to_tenths(), None);
     }
 
     #[test]

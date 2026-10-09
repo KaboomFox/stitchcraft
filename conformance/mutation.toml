@@ -1,0 +1,13 @@
+# Mutants no test notices, per crate (`cargo xtask mutants`, docs/src/design/guardrails.md). The weekly
+# mutants.yml run fails when a crate has more. `cargo xtask mutants --record …` lowers the counts to
+# today's and never raises one: raise a count only by hand, in a pull request that says why.
+
+[missed]
+stitchcraft-cli = 23
+stitchcraft-core = 13
+stitchcraft-engine = 39
+stitchcraft-formats = 46
+stitchcraft-params = 0
+stitchcraft-plan = 48
+stitchcraft-render = 26
+stitchcraft-vc-plugin = 22

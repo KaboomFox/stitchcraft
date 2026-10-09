@@ -56,8 +56,8 @@ Rules every generator follows:
 - **Pure:** output depends only on (normalized shape, typed params, hints, seed, budget).
 - **Entry and exit hints, not neighbours' stitches.** The previous element's *geometry* suggests where
   this one should start (nearest point to its exit hint); the generator never waits for another
-  element's stitches. This makes generation independent, cacheable and parallel
-  ([issues review L6](inkstitch-issues-review.md#l6--large-designs-are-slow)), and honours explicit
+  element's stitches. This makes generation independent, cacheable and parallel, so large designs
+  stay fast, and honours explicit
   start/end commands (`REQ-GEN-001`).
 - **Seeded randomness:** seed = `random_seed` parameter if set, else a hash of the element id; the PRNG
   is SplitMix64 from `stitchcraft-core` ([determinism](determinism.md)).
@@ -96,8 +96,10 @@ With `d` the distance from the previous group's exit to the next group's entry:
 - `lock_start` / `lock_end` choose a lock shape by id; `half_stitch` (stitch back and forth along the
   path by a fraction of the first stitch) is the default; other ids map to StitchCraft's own shape
   definitions with the same intent ([compatibility contract](inkstitch-compat-contract.md#method-identifiers)).
-- Shapes are defined in a unit frame aligned with the path direction and scaled by
-  `lock_*_scale_mm` (absolute shapes) or `lock_*_scale_percent` (relative to the first stitch).
+- Shapes are defined in a unit frame aligned with the path direction. Shapes made of back-and-forth
+  steps are scaled by `lock_*_scale_mm` (an absolute size), shapes drawn as paths by
+  `lock_*_scale_percent` (relative to their own size); the half stitch is sized from the first stitch.
+  A custom lock (`lock_custom_start`, `lock_custom_end`) is either kind.
 - `force_lock_stitches` adds locks even when the next group is close enough to collapse.
 - Lock stitches must be ≥ 0.2 mm long so the needle does not hit the same hole; shorter computed locks
   are scaled up, never dropped silently.

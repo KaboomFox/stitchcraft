@@ -7,7 +7,9 @@ containment, row spacing, furrows, topology) and invariant assertions.
 **Now:** `plans` — the canonical stitch plans whose encodings are the format golden files
 (`conformance/golden/formats/`); `equivalence` — what a machine does with a plan (needle-downs, cuts, pauses),
 the oracle of the round-trip tests; `strategies` — random plans, with a fixed seed on every PR and
-`PROPTEST_RNG_SEED` for fresh ones.
+`PROPTEST_RNG_SEED` for fresh ones; `fuzz` — the bodies of the fuzz targets in `fuzz/` (readers never
+panic and respect their caps; anything read is written, read back from PES unchanged in what the machine
+does, and previewed without a panic), run here on every PR and with coverage-guided inputs every night.
 
 **Status:** grows with M1–M5. Design: `docs/src/design/conformance.md`.
 

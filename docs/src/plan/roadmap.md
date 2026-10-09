@@ -25,6 +25,7 @@ Goal: a repository where the rules are enforced before the first line of engine 
 | M0.6 🧪 | VectorCraft "hello" plug-in: identity live effect built in CI for `wasm32-unknown-unknown`; Level A contract test against the pinned stable `vectorcraft-plugins` (v0.6.0, now v0.7.0), `release` and `main`; measure fuel per output byte | Contract test green in `compat.yml` (done: green on every track, 2026-10-08); budget numbers recorded in the integration doc (open) |
 | M0.7 🧪 | Geometry spike ([ADR-0005](../design/adr/0005-geometry-stack.md) criteria) | ADR-0005 accepted or revised |
 | M0.8 🧪 | Headless VectorCraft window in CI (Xvfb + Mesa) taking `ui.screenshot` twice with identical pixels | Decision recorded in the docs pipeline page |
+| M0.10 ✅ | Clean room, tightened: no document describes Ink/Stitch's code; Ink/Stitch is named only for file compatibility and in the independence notices; `cargo xtask cleanroom` scans documents too | `cleanroom` green over the whole repository |
 
 ## M1 — Stitch plan, PES/DST writers, first sew-out
 
@@ -52,16 +53,16 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M2.2 ✅ | DST reader (trims inferred from cancelling jump runs) | same |
 | M2.3 ✅ | Command round trip for every writer/reader pair; machine-equivalence oracle; fresh-seed nightly | `REQ-FMT-002`, `REQ-FMT-003` active |
 | M2.4 ✅ | pyembroidery oracle (pinned by hash) as a conformance case in the gates job | `REQ-FMT-005` active |
-| M2.5 | `cargo-fuzz` targets for both readers; nightly job with persisted corpus | `REQ-FMT-006`; 1 h fuzzing clean |
-| M2.6 | `stitchcraft-render`: realistic and simple styles from the quantized plan | `REQ-RND-001`; golden PNG files |
-| M2.7 | `stitch preview`, `stitch convert`; the `stitch` shot generator behind `cargo xtask shots`; the `docs-refresh.yml` label workflow | first generated docs images, byte-compared on every PR |
-| M2.8 | Coverage ratchet and mutation-testing baseline; public-API snapshots | thresholds recorded |
+| M2.5 ✅ | `cargo-fuzz` targets for both readers; nightly job with persisted corpus | `REQ-FMT-006`; 1 h fuzzing clean |
+| M2.6 ✅ | `stitchcraft-render`: realistic and simple styles from the quantized plan | `REQ-RND-001`; golden PNG files |
+| M2.7 ✅ | `stitch preview`, `stitch convert`; the `stitch` shot generator behind `cargo xtask shots`; the `docs-refresh.yml` label workflow | first generated docs images, byte-compared on every PR |
+| M2.8 ✅ | Coverage ratchet and mutation-testing baseline; public-API snapshots | thresholds recorded |
 
 ## M3 — Running stitch family and plan assembly
 
 | Step | Deliverable | Done when |
 |---|---|---|
-| M3.1 | Parameter registry (`params!`, `ParamSet`, validation, generated reference + JSON Schema) | `REQ-PRM-001`, `REQ-PRM-002`; `docs --check` covers params |
+| M3.1 ✅ | Parameter registry (`params!`, `ParamSet`, validation, generated reference + JSON Schema) | `REQ-PRM-001`, `REQ-PRM-002`; `docs --check` covers params |
 | M3.2 | Diagnostics registry, `stitch explain`, generated diagnostics index | every registered code has a page and a case |
 | M3.3 | `Design` model; SVG adapter v1: paths, groups, transforms, viewBox units, colours, visibility (no `inkstitch:*` yet) | `REQ-SVG-001`, `REQ-SVG-002` (fuzzed path data) |
 | M3.4 | Running stitch: corners, even spacing, tolerance | `REQ-RUN-001..003` |

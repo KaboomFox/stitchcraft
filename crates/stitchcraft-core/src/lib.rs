@@ -7,6 +7,7 @@
 //! - [`budget`]: work limits that guarantee every call finishes.
 //! - [`diag`]: the diagnostics model and the registry of every diagnostic code.
 //! - [`element`]: stable ids of the user's design elements.
+//! - [`text`]: user-facing text taken from doc comments.
 //!
 //! This crate sits at layer L0 and depends on no other StitchCraft crate
 //! (see `docs/src/design/architecture.md`).
@@ -18,6 +19,7 @@ pub mod element;
 pub mod math;
 pub mod rect;
 pub mod rng;
+pub mod text;
 pub mod units;
 
 pub use budget::{Budget, Exhausted, Meter};

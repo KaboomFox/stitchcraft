@@ -21,25 +21,37 @@ file will have. The checksum is how a sew-out report names exactly the bytes tha
 sheet is in the [test sheets reference](../reference/test-sheets.md); `stitch testsheet --list` lists
 them too.
 
-## 2. Load it on the machine
+## 2. Look at it first
+
+```console
+{{#include ../reference/generated/preview-ts-01.txt}}
+```
+
+![TS-01 as it will sew: a cross with ticks, an upright F at the top left and four corner squares, in black thread.](../../images/generated/testsheet-ts-01.png)
+
+The picture is drawn from the file itself, at the exact positions the machine will use, so this is what
+you should see in the hoop. Add `--style simple` to see every stitch, needle hole, trim and jump instead:
+the way to check a design before you sew it.
+
+## 3. Load it on the machine
 
 Copy `TS-01.pes` to a USB stick, plug it into the machine and select the design. The machine should show
 it at 120 × 120 mm, with an upright "F" in the top-left quarter. If it does not list the file at all,
 stop here and report that — it is the most important thing this sheet tests.
 
-## 3. Hoop and sew
+## 4. Hoop and sew
 
 Hoop the fabric and stabilizer drum-tight, centre the design, attach the hoop, and sew. The machine sews
 the cross first, then the "F", then the four corner squares, trimming between parts if it can.
 
-## 4. Check
+## 5. Check
 
 - The "F" reads normally: not mirrored, not upside down, not turned.
 - Each arm of the cross measures 100.0 ± 0.5 mm end to end, horizontally and vertically.
 - The corner squares measure 10.0 mm on every side.
 - Ticks are 10 mm apart; the long ticks mark the ends and the centre.
 
-## 5. Tell us
+## 6. Tell us
 
 File a **Sew-out report** on GitHub with photos of the front and back (a ruler in view), your measurements,
 and anything odd ([machine testing](../../plan/machine-testing.md)).

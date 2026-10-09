@@ -1,0 +1,81 @@
+# Regenerates the documentation images and generated pages when a maintainer adds the
+# `docs:refresh-shots` label to a pull request (docs/src/design/docs-pipeline.md › Refreshing images).
+# For a branch of this repository the result is committed to the pull request; for a fork it is attached
+# to the run as an artifact, with instructions in the run summary. The label is removed afterwards, so
+# adding it again refreshes again.
+#
+# GitHub starts no workflow for a push made with a workflow's own token, except dispatched ones, so after
+# committing this workflow dispatches the checks (ci, docs, goldens) for the new commit.
+name: docs-refresh
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: docs-refresh-${{ github.event.pull_request.number }}
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  refresh:
+    name: refresh documentation images
+    if: github.event.label.name == 'docs:refresh-shots'
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.pull_request.number }}
+      BRANCH: ${{ github.event.pull_request.head.ref }}
+      SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: rustup toolchain install --profile minimal
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - name: Regenerate images and generated pages
+        run: |
+          cargo xtask shots
+          cargo xtask docs
+      - name: Commit to the pull request and start its checks
+        if: env.SAME_REPO == 'true'
+        run: |
+          if [ -z "$(git status --porcelain -- docs)" ]; then
+            echo "Images and generated pages were already current." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A docs
+          git commit -m "Refresh documentation images and generated pages" -m "Requested with the docs:refresh-shots label on #$PR."
+          # Refused if the branch moved since the label was added: then add the label again.
+          git push origin "HEAD:refs/heads/$BRANCH"
+          for workflow in ci.yml docs.yml goldens.yml; do
+            gh workflow run "$workflow" --ref "$BRANCH"
+          done
+          echo "Committed $(git rev-parse --short HEAD) to \`$BRANCH\` and started its checks." >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the refreshed files (pull requests from forks)
+        if: env.SAME_REPO != 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: refreshed-docs
+          path: |
+            docs/src/images/generated/
+            docs/src/user/reference/
+      - name: Explain (pull requests from forks)
+        if: env.SAME_REPO != 'true'
+        run: |
+          echo "This pull request comes from a fork, so this workflow cannot push to it. The refreshed files are" >> "$GITHUB_STEP_SUMMARY"
+          echo "attached to this run as \`refreshed-docs\`: copy them into your branch, or run" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`cargo xtask shots && cargo xtask docs\` and push." >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove the label, so adding it again refreshes again
+        if: always()
+        continue-on-error: true
+        run: gh pr edit "$PR" --repo "$GITHUB_REPOSITORY" --remove-label "docs:refresh-shots"

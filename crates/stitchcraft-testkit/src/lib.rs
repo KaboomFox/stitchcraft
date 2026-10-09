@@ -4,6 +4,8 @@
 //! - [`plans`]: canonical stitch plans behind the format golden files.
 //! - [`equivalence`]: when two plans make a machine do the same thing (round-trip tests).
 //! - [`strategies`]: random plans for property tests, with fixed seeds on every PR.
+//! - [`fuzz`]: what must hold for any bytes given to a reader — the bodies of the fuzz targets in `fuzz/`,
+//!   run on every PR here and with coverage-guided inputs every night.
 //!
 //! Status: grows with roadmap milestones M1–M5. Design: `docs/src/design/conformance.md`.
 #![forbid(unsafe_code)]
@@ -11,5 +13,6 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 pub mod equivalence;
+pub mod fuzz;
 pub mod plans;
 pub mod strategies;

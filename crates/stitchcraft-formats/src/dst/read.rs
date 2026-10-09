@@ -75,7 +75,7 @@ pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
         return Err(if records.len() % 3 == 0 { DecodeError::MissingEnd } else { DecodeError::Truncated { part: "DST records" } });
     }
     flush(&mut jumps, &mut recorder)?;
-    Ok(Decoded { format: FORMAT.to_string(), name, plan: recorder.finish(), warnings: Vec::new() })
+    Ok(Decoded { format: FORMAT.to_string(), palette: None, name, plan: recorder.finish(), warnings: Vec::new() })
 }
 
 /// Records the pending jumps: each run of 2–[`LONGEST_TRIM`] small jumps that returns to its start is a

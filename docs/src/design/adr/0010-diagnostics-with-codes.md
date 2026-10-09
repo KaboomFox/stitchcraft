@@ -5,8 +5,8 @@
 ## Context
 
 Users need to understand why a design will not sew well, and maintainers need to know which message a
-user saw. Ink/Stitch's validation messages are helpful but uncoded, and an untested error path shipped a
-broken message ([F4](../inkstitch-analysis.md#f4--a-verified-bug-in-an-error-path)).
+user saw. A message without a code cannot be looked up, searched for in bug reports or tested on its
+own, and an error path that no test ever renders can ship a broken message.
 
 ## Decision
 

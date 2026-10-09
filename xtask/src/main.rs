@@ -7,15 +7,20 @@
 // A command-line tool reports on the terminal.
 #![allow(clippy::print_stdout, clippy::print_stderr)]
 
+mod api;
 mod ci;
 mod cleanroom;
 mod compat;
 mod conformance;
 mod contract_page;
+mod coverage;
+mod deviations;
 mod docs;
 mod filesize;
 mod layers;
 mod markdown;
+mod mutants;
+mod param_pages;
 mod reference_pages;
 mod shots;
 mod unsafe_audit;
@@ -40,13 +45,16 @@ pub const SUBCOMMANDS: &[(&str, Status, &str)] = &[
     ("layers", Status::Ready, "check that crates depend only on lower layers"),
     ("docs", Status::Ready, "regenerate generated pages; --check verifies docs without writing"),
     ("conformance", Status::Ready, "run the conformance suite and write the report; --check, --filter TEXT, --bless CASE"),
-    ("cleanroom", Status::Ready, "no GPL licence text or Ink/Stitch source paths in code, tests and fixtures"),
+    ("cleanroom", Status::Ready, "no GPL licence text or Ink/Stitch source paths anywhere in the repository"),
     ("unsafe-audit", Status::Ready, "unsafe only in the plug-in ABI shim, always with SAFETY comments"),
     ("filesize", Status::Ready, "Rust files warn above 800 lines and fail above 1,500"),
     ("wasm", Status::Ready, "library crates and the plug-in build for wasm32-unknown-unknown"),
     ("compat", Status::Ready, "VectorCraft compatibility: `discover`, `contract --ref R --wasm FILE` (report: M6.6)"),
     ("shots", Status::Ready, "regenerate the documentation images; --check compares them with the committed ones"),
-    ("corpus", Status::Planned("M2.4"), "download the pinned test corpora"),
+    ("api", Status::Ready, "write the library crates' public API snapshots; --check compares them"),
+    ("coverage", Status::Ready, "line coverage per crate against the floors in conformance/coverage.toml; --record raises floors"),
+    ("mutants", Status::Ready, "add up cargo-mutants results (DIR…) against conformance/mutation.toml; --record lowers counts"),
+    ("corpus", Status::Planned("M8"), "download the pinned real-world corpora (Ink/Stitch differential testing)"),
 ];
 
 fn usage() -> String {
@@ -88,6 +96,9 @@ fn main() -> ExitCode {
         "wasm" => wasm::run(),
         "compat" => compat::run(rest),
         "shots" => shots::run(flag("--check")),
+        "api" => api::run(flag("--check")),
+        "coverage" => coverage::run(flag("--record")),
+        "mutants" => mutants::run(rest),
         "-h" | "--help" | "help" => {
             print!("{}", usage());
             Ok(())
@@ -101,6 +112,9 @@ fn main() -> ExitCode {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
             eprintln!("xtask: {e}");
+            if std::env::var_os("GITHUB_ACTIONS").is_some() {
+                println!("{}", util::annotation("error", &format!("cargo xtask {command}"), &e));
+            }
             ExitCode::FAILURE
         }
     }

@@ -7,11 +7,16 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | Code | Severity | Title |
 |---|---|---|
 | [`SC-E0004`](#sc-e0004) | Error | Budget exhausted |
+| [`SC-E0005`](#sc-e0005) | Error | Preview too large |
 | [`SC-E0009`](#sc-e0009) | Error | Internal check failed |
 | [`SC-E0010`](#sc-e0010) | Error | Nothing to stitch |
+| [`SC-E0101`](#sc-e0101) | Error | Parameter has the wrong type or an unknown choice |
+| [`SC-W0102`](#sc-w0102) | Warning | Parameter clamped to its allowed range |
+| [`SC-W0105`](#sc-w0105) | Warning | Unknown parameter preserved but ignored |
 | [`SC-E0601`](#sc-e0601) | Error | Too many colour changes for the file format |
 | [`SC-E0602`](#sc-e0602) | Error | Design too large for the file format |
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
+| [`SC-W0604`](#sc-w0604) | Warning | Thread colours unknown |
 | [`SC-E0701`](#sc-e0701) | Error | Design does not fit the hoop |
 | [`SC-W0702`](#sc-w0702) | Warning | Design is larger than the comfort zone |
 
@@ -25,6 +30,16 @@ command line or inside VectorCraft's live preview.
 
 The element named in the message was skipped; the rest of the design was planned. Simplify the
 element (fewer nodes, wider spacing, a smaller area) or split it into several elements.
+
+## SC-E0005
+
+**Error** — Preview too large
+
+Preview images have a size limit, so that drawing one never runs out of memory. At the scale
+asked for, this design's preview would be larger, so no image was written.
+
+Use a smaller scale: the message says the largest that fits. A design that runs more than 10
+metres from the hoop centre cannot be previewed at any scale.
 
 ## SC-E0009
 
@@ -44,6 +59,38 @@ The design has no stitches: it is empty, or every element was skipped (see the o
 StitchCraft never writes an empty machine file, because some machines refuse or mishandle them.
 
 Add an element with an embroidery stitch type, or fix the errors reported for the elements.
+
+## SC-E0101
+
+**Error** — Parameter has the wrong type or an unknown choice
+
+A parameter's value could not be understood: a number where a word was expected, a choice that
+is not one of the parameter's options, or a list with the wrong number of values. The element was
+not stitched: guessing could sew something you did not ask for.
+
+The message names the parameter, the value and what the parameter accepts. The parameter
+reference lists every parameter with its accepted values.
+
+## SC-W0102
+
+**Warning** — Parameter clamped to its allowed range
+
+A parameter's value is outside the range StitchCraft accepts, so the nearest allowed value was
+used, and the element was stitched with it. Values outside the range are impossible (a negative
+length) or beyond what machines sew reliably.
+
+The message names the parameter, your value and the range. Change the value to remove the
+warning.
+
+## SC-W0105
+
+**Warning** — Unknown parameter preserved but ignored
+
+The design carries a parameter StitchCraft does not know: one from a newer version of StitchCraft
+or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was kept, so saving
+the design does not lose it, but it does not change the stitches.
+
+The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.
 
 ## SC-E0601
 
@@ -74,6 +121,17 @@ damaged or hostile, so a bad file is reported, never half-read in silence.
 
 The message says where reading stopped. If the machine sews the file, it may be a format variant
 StitchCraft does not know yet: please report it with the file.
+
+## SC-W0604
+
+**Warning** — Thread colours unknown
+
+The file stores no thread colours (DST files never do: they only say where the machine pauses for
+the next thread), so every thread has a placeholder colour — in previews, and in files converted
+from this one, where the machine shows that colour at each thread change.
+
+The stitches are not affected. Load the threads the design needs, in the order the design's
+author gives; StitchCraft cannot know them.
 
 ## SC-E0701
 

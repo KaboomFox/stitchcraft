@@ -14,3 +14,11 @@ workspace = true
 [dependencies]
 stitchcraft-core = { workspace = true }
 stitchcraft-plan = { workspace = true }
+thiserror = { workspace = true }
+tiny-skia = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+stitchcraft-engine = { workspace = true }
+stitchcraft-formats = { workspace = true }
+stitchcraft-testkit = { workspace = true }

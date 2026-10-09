@@ -1,0 +1,3 @@
+# The public API of stitchcraft-vectorcraft, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
+# Generated: do not edit. A change here is a change other code can see; say why in the pull request.
+pub mod stitchcraft_vectorcraft

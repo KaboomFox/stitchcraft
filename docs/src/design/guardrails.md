@@ -17,7 +17,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | **Layering** | Crates depend only on lower layers ([architecture](architecture.md)); dependencies like `clap` or `tiny-skia` only where allowed | `xtask/src/layers.rs` (append-only table) | `cargo xtask layers` · CI |
 | **Module size** | Rust files warn above 800 lines, fail above 1,500 (generated files exempt) | `xtask/src/filesize.rs` | `cargo xtask filesize` · CI |
 | WebAssembly | L0–L3 crates and the plug-in build for `wasm32-unknown-unknown` | `xtask/src/wasm.rs` | `cargo xtask wasm` · CI |
-| **Clean room** | No GPL/AGPL licence text or Ink/Stitch source paths in code, fixtures or tests | `xtask/src/cleanroom.rs` | `cargo xtask cleanroom` · CI |
+| **Clean room** | No GPL/AGPL licence text or Ink/Stitch source paths anywhere in the repository, documents included | `xtask/src/cleanroom.rs` | `cargo xtask cleanroom` · CI |
 | Docs | Generated pages fresh, links and anchors valid, mentioned `cargo xtask` commands exist, ids exist | `xtask/src/docs.rs` | `cargo xtask docs --check` · CI |
 | Docs images | Every image declared in `docs/shots.toml`, with alt text, and regenerating to the committed file | `xtask/src/shots.rs` | `cargo xtask shots --check` · CI |
 | Conformance | Requirement/case consistency; all cases pass; changed goldens need the `golden-change` label and a changelog line | `xtask/src/conformance/`, `ci.yml`, `goldens.yml` | `cargo xtask conformance` · CI |
@@ -25,12 +25,17 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | Spelling | Typos in code, docs, commit-facing text | `typos.toml` | CI |
 | MSRV | Builds on the declared `rust-version` | workspace `Cargo.toml` | CI |
 | Cross-platform | Tests on Linux, macOS, Windows; identical conformance hashes | `ci.yml` | CI |
-| Public API review (M2+) | Changes to library crates' public API are visible in the PR diff | `cargo public-api` snapshots | CI |
-| Coverage ratchet (M1+) | Line coverage of engine, formats and plan crates never drops | `cargo-llvm-cov`, `coverage.toml` | CI |
-| Mutation testing (M2+) | Tests actually detect changed behaviour | `cargo-mutants` | nightly |
+| API docs | Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links | `cargo xtask ci` (`RUSTDOCFLAGS=-D warnings`) | `cargo xtask ci` · CI |
+| **Public API review** | Changes to a library crate's public API show in the PR diff, as a change to its `public-api.txt` | `xtask/src/api.rs` (cargo-public-api, pinned) | `cargo xtask api --check` · CI |
+| **Coverage ratchet** | No crate's line coverage drops below its floor; floors only go up | `conformance/coverage.toml`, `xtask/src/coverage.rs` (cargo-llvm-cov) | `cargo xtask coverage` · CI job |
+| **Mutation testing** | Tests notice changed behaviour: no crate gets more mutants no test notices than recorded; records only go down | `.cargo/mutants.toml`, `conformance/mutation.toml`, `xtask/src/mutants.rs` | `mutants.yml` · weekly |
+| **Fuzzing** | Readers never panic, respect their caps and terminate; anything read round-trips and previews | `fuzz/`, `stitchcraft-testkit::fuzz` ([conformance](conformance.md#fuzzing)) | bodies every PR · an hour nightly |
 
 `cargo xtask ci` runs everything that does not need extra tools; tools that are not installed locally
-are reported as skipped, while CI installs them and treats them as required.
+are reported as skipped, while CI installs them and treats them as required. In GitHub Actions every
+problem a check finds is also an annotation, on the right line of the pull request's diff when it names
+one, and a failed fuzz run puts the end of its output in one: the reason is visible without opening a
+log.
 
 ## Design rules (reviewed, partly linted)
 

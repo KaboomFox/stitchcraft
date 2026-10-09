@@ -49,9 +49,8 @@ whose letter disagrees with its severity, or whose explanation is missing. From 
 - a test fails when a code has no explanation, no triggering conformance case, or a case triggers a
   code that is not registered.
 
-That last rule is what keeps error paths alive: Ink/Stitch shipped an error message reading "There
-are d color changes" because the message was never rendered by a test
-([finding F4](inkstitch-analysis.md#f4--a-verified-bug-in-an-error-path)).
+That last rule is what keeps error paths alive: a message that no test ever renders can ship with a
+typo in its formatting and nobody sees it until a user does.
 
 ## Writing good messages
 
@@ -68,13 +67,17 @@ dangling rung" for `SC-W0203`). Applied fixes go through the host's command syst
 
 ## Initial codes
 
-Codes referenced by the design docs; each is registered in the milestone that implements it.
+Codes referenced by the design docs; each is registered in the milestone that implements it. A
+registered code must keep its row here, with the same severity and a title that starts with the
+registry's (`cargo xtask docs --check`), so a code allocated for one thing cannot be registered for
+another.
 
 | Code | Severity | Title | Milestone |
 |---|---|---|---|
 | `SC-E0004` | Error | Budget exhausted (work for one element, or stitches for the design) | M1 |
+| `SC-E0005` | Error | Preview too large (over 4,096 pixels on a side at the requested scale) | M2 |
 | `SC-E0009` | Error | Internal check failed (a StitchCraft bug; a bug-report bundle is written) | M1 |
-| `SC-E0010` | Error | Nothing to stitch (no embroiderable elements) | M3 |
+| `SC-E0010` | Error | Nothing to stitch (no embroiderable elements) | M1 |
 | `SC-E0101` | Error | Parameter has the wrong type or an unknown choice | M3 |
 | `SC-W0102` | Warning | Parameter clamped to its allowed range | M3 |
 | `SC-W0105` | Warning | Unknown parameter preserved but ignored | M3 |
@@ -92,11 +95,12 @@ Codes referenced by the design docs; each is registered in the milestone that im
 | `SC-W0401` | Warning | Path shorter than the minimum stitch length; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below the profile minimum; raised to the minimum | M3 |
 | `SC-W0501` | Warning | Travel could not stay inside the region; used tie-off, trim and tie-in | M5 |
-| `SC-E0601` | Error | Too many colour changes for the format | M1 |
+| `SC-E0601` | Error | Too many colour changes for the file format | M1 |
 | `SC-E0602` | Error | Design too large for the file format (coordinates or data exceed its fields) | M1 |
 | `SC-E0603` | Error | Machine file could not be read (wrong format, truncated, or a record that makes no sense) | M2 |
+| `SC-W0604` | Warning | Thread colours unknown (the file stores none, as DST never does; threads are placeholders) | M2 |
 | `SC-E0701` | Error | Design does not fit the hoop | M1 |
-| `SC-W0702` | Warning | Design is larger than the profile's comfort zone | M1 |
+| `SC-W0702` | Warning | Design is larger than the comfort zone (the profile's most accurate area) | M1 |
 | `SC-E0801` | Error | SVG could not be read (with the parser's position) | M3 |
 | `SC-W0802` | Warning | SVG feature ignored (e.g. raster image, text not converted to paths) | M3 |
 | `SC-W0803` | Warning | `.vectorcraft` file from a newer VectorCraft format version; read best-effort | M6 |

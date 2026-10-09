@@ -8,13 +8,10 @@ use std::fmt::Write as _;
 
 use sha2::{Digest, Sha256};
 use stitchcraft_core::Severity;
-use stitchcraft_plan::palette::BROTHER_PEC;
-use stitchcraft_plan::profiles;
+use stitchcraft_plan::{PaletteId, profiles};
 
-use super::testsheet::hex;
-use super::{Outcome, Status, describe_plan, describe_threads, render_diagnostics};
+use super::{Outcome, Status, describe_plan, describe_threads, hex, read_machine_file, reader_warnings, render_diagnostics};
 use crate::cli::InspectArgs;
-use crate::files;
 
 /// Runs `stitch inspect`.
 pub fn run(args: &InspectArgs) -> Outcome {
@@ -23,15 +20,9 @@ pub fn run(args: &InspectArgs) -> Outcome {
         Some(Ok(profile)) => Some(profile),
         None => None,
     };
-    let bytes = match files::read_capped(&args.file) {
-        Ok(bytes) => bytes,
-        Err(e) => {
-            return Outcome { stdout: String::new(), stderr: format!("stitch: cannot read {}: {e}\n", args.file.display()), status: Status::Io };
-        }
-    };
-    let decoded = match stitchcraft_formats::decode(&bytes) {
-        Ok(decoded) => decoded,
-        Err(e) => return Outcome { stdout: String::new(), stderr: render_diagnostics(&[e.diagnostic()]), status: Status::DesignErrors },
+    let (bytes, decoded) = match read_machine_file(&args.file) {
+        Ok(read) => read,
+        Err(outcome) => return outcome,
     };
     let plan = &decoded.plan;
 
@@ -49,11 +40,9 @@ pub fn run(args: &InspectArgs) -> Outcome {
     if let (Some(shortest), Some(longest)) = (lengths.iter().copied().reduce(f64::min), lengths.iter().copied().reduce(f64::max)) {
         let _ = writeln!(out, "  lengths   stitches from {shortest:.1} to {longest:.1} mm");
     }
-    // PES and PEC store Brother palette indices; DST stores no colours at all.
-    let palette = decoded.format.starts_with("PE").then_some(&BROTHER_PEC);
-    describe_threads(&mut out, plan, palette);
-    if decoded.format == "DST" {
-        let _ = writeln!(out, "            (DST stores no colours: each block is a pause for the next thread)");
+    describe_threads(&mut out, plan, decoded.palette.map(PaletteId::palette));
+    if decoded.palette.is_none() {
+        let _ = writeln!(out, "            ({} stores no colours: each block is a pause for the next thread)", decoded.format);
     }
 
     let mut diagnostics = Vec::new();
@@ -65,7 +54,7 @@ pub fn run(args: &InspectArgs) -> Outcome {
         let short = lengths.iter().filter(|l| **l < min - 1e-9 && **l > 0.0).count();
         let _ = writeln!(out, "            {long} stitches longer than {max} mm, {short} shorter than {min} mm");
     }
-    let mut stderr: String = decoded.warnings.iter().map(|w| format!("warning: {w}\n")).collect();
+    let mut stderr = reader_warnings(&decoded);
     stderr.push_str(&render_diagnostics(&diagnostics));
     let status = if diagnostics.iter().any(|d| d.severity() == Severity::Error) { Status::DesignErrors } else { Status::Done };
     Outcome { stdout: out, stderr, status }

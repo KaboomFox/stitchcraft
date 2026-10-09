@@ -1,0 +1,279 @@
+# The public API of stitchcraft-core, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
+# Generated: do not edit. A change here is a change other code can see; say why in the pull request.
+pub mod stitchcraft_core
+pub mod stitchcraft_core::budget
+pub enum stitchcraft_core::budget::Exhausted
+pub stitchcraft_core::budget::Exhausted::Stitches
+pub stitchcraft_core::budget::Exhausted::Work
+impl stitchcraft_core::budget::Exhausted
+pub fn stitchcraft_core::budget::Exhausted::diagnostic(self, &stitchcraft_core::budget::Budget, core::option::Option<stitchcraft_core::element::ElementId>) -> stitchcraft_core::diag::Diagnostic
+pub struct stitchcraft_core::budget::Budget
+pub stitchcraft_core::budget::Budget::max_stitches: u32
+pub stitchcraft_core::budget::Budget::max_work: u64
+impl stitchcraft_core::budget::Budget
+pub const stitchcraft_core::budget::Budget::DEFAULT: stitchcraft_core::budget::Budget
+pub const fn stitchcraft_core::budget::Budget::meter(self) -> stitchcraft_core::budget::Meter
+impl core::default::Default for stitchcraft_core::budget::Budget
+pub fn stitchcraft_core::budget::Budget::default() -> Self
+pub struct stitchcraft_core::budget::Meter
+impl stitchcraft_core::budget::Meter
+pub fn stitchcraft_core::budget::Meter::charge(&mut self, u64) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_core::budget::Meter::charge_stitches(&mut self, u32) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
+pub const fn stitchcraft_core::budget::Meter::stitches_left(&self) -> u32
+pub const fn stitchcraft_core::budget::Meter::work_left(&self) -> u64
+pub mod stitchcraft_core::diag
+#[non_exhaustive] pub enum stitchcraft_core::diag::Code
+pub stitchcraft_core::diag::Code::BudgetExhausted
+pub stitchcraft_core::diag::Code::InternalCheckFailed
+pub stitchcraft_core::diag::Code::NothingToStitch
+pub stitchcraft_core::diag::Code::OutsideComfortZone
+pub stitchcraft_core::diag::Code::OutsideHoop
+pub stitchcraft_core::diag::Code::ParamClamped
+pub stitchcraft_core::diag::Code::ParamInvalid
+pub stitchcraft_core::diag::Code::ParamUnknown
+pub stitchcraft_core::diag::Code::PreviewTooLarge
+pub stitchcraft_core::diag::Code::ThreadColorsUnknown
+pub stitchcraft_core::diag::Code::TooLargeForFormat
+pub stitchcraft_core::diag::Code::TooManyColorChanges
+pub stitchcraft_core::diag::Code::UnreadableFile
+impl stitchcraft_core::diag::Code
+pub const stitchcraft_core::diag::Code::ALL: &'static [stitchcraft_core::diag::Code]
+pub const fn stitchcraft_core::diag::Code::id(self) -> &'static str
+pub const fn stitchcraft_core::diag::Code::severity(self) -> stitchcraft_core::diag::Severity
+pub const fn stitchcraft_core::diag::Code::title(self) -> &'static str
+impl stitchcraft_core::diag::Code
+pub fn stitchcraft_core::diag::Code::explanation(self) -> alloc::string::String
+impl core::fmt::Display for stitchcraft_core::diag::Code
+pub fn stitchcraft_core::diag::Code::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+#[non_exhaustive] pub enum stitchcraft_core::diag::Edit
+pub stitchcraft_core::diag::Edit::RotateDesign90
+pub enum stitchcraft_core::diag::Fix
+pub stitchcraft_core::diag::Fix::Apply(stitchcraft_core::diag::Edit)
+pub stitchcraft_core::diag::Fix::Hint(alloc::string::String)
+impl stitchcraft_core::diag::Fix
+pub fn stitchcraft_core::diag::Fix::describe(&self) -> alloc::string::String
+pub enum stitchcraft_core::diag::Severity
+pub stitchcraft_core::diag::Severity::Error
+pub stitchcraft_core::diag::Severity::Info
+pub stitchcraft_core::diag::Severity::Warning
+impl stitchcraft_core::diag::Severity
+pub const fn stitchcraft_core::diag::Severity::label(self) -> &'static str
+pub const fn stitchcraft_core::diag::Severity::letter(self) -> char
+pub struct stitchcraft_core::diag::Diagnostic
+pub stitchcraft_core::diag::Diagnostic::at: core::option::Option<stitchcraft_core::units::Point>
+pub stitchcraft_core::diag::Diagnostic::code: stitchcraft_core::diag::Code
+pub stitchcraft_core::diag::Diagnostic::element: core::option::Option<stitchcraft_core::element::ElementId>
+pub stitchcraft_core::diag::Diagnostic::fix: core::option::Option<stitchcraft_core::diag::Fix>
+pub stitchcraft_core::diag::Diagnostic::message: alloc::string::String
+impl stitchcraft_core::diag::Diagnostic
+pub fn stitchcraft_core::diag::Diagnostic::located(self, stitchcraft_core::units::Point) -> Self
+pub fn stitchcraft_core::diag::Diagnostic::new(stitchcraft_core::diag::Code, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn stitchcraft_core::diag::Diagnostic::severity(&self) -> stitchcraft_core::diag::Severity
+pub fn stitchcraft_core::diag::Diagnostic::with_element(self, stitchcraft_core::element::ElementId) -> Self
+pub fn stitchcraft_core::diag::Diagnostic::with_fix(self, stitchcraft_core::diag::Fix) -> Self
+impl core::fmt::Display for stitchcraft_core::diag::Diagnostic
+pub fn stitchcraft_core::diag::Diagnostic::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub mod stitchcraft_core::element
+pub enum stitchcraft_core::element::ElementIdError
+pub stitchcraft_core::element::ElementIdError::ControlCharacter
+pub stitchcraft_core::element::ElementIdError::Empty
+pub stitchcraft_core::element::ElementIdError::TooLong
+pub stitchcraft_core::element::ElementIdError::TooLong::len: usize
+pub struct stitchcraft_core::element::ElementId(_)
+impl stitchcraft_core::element::ElementId
+pub const stitchcraft_core::element::ElementId::MAX_LEN: usize
+pub fn stitchcraft_core::element::ElementId::as_str(&self) -> &str
+pub fn stitchcraft_core::element::ElementId::new(impl core::convert::Into<alloc::string::String>) -> core::result::Result<Self, stitchcraft_core::element::ElementIdError>
+impl core::fmt::Display for stitchcraft_core::element::ElementId
+pub fn stitchcraft_core::element::ElementId::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub mod stitchcraft_core::math
+pub fn stitchcraft_core::math::atan2(f64, f64) -> f64
+pub fn stitchcraft_core::math::cbrt(f64) -> f64
+pub fn stitchcraft_core::math::cos(f64) -> f64
+pub fn stitchcraft_core::math::exp(f64) -> f64
+pub fn stitchcraft_core::math::hypot(f64, f64) -> f64
+pub fn stitchcraft_core::math::pow(f64, f64) -> f64
+pub fn stitchcraft_core::math::sin(f64) -> f64
+pub fn stitchcraft_core::math::sin_cos(f64) -> (f64, f64)
+pub fn stitchcraft_core::math::tan(f64) -> f64
+pub fn stitchcraft_core::math::to_degrees(f64) -> f64
+pub fn stitchcraft_core::math::to_radians(f64) -> f64
+pub mod stitchcraft_core::rect
+pub struct stitchcraft_core::rect::Rect
+impl stitchcraft_core::rect::Rect
+pub fn stitchcraft_core::rect::Rect::around(impl core::iter::traits::collect::IntoIterator<Item = stitchcraft_core::units::Point>) -> core::option::Option<stitchcraft_core::rect::Rect>
+pub fn stitchcraft_core::rect::Rect::center(self) -> stitchcraft_core::units::Point
+pub fn stitchcraft_core::rect::Rect::height(self) -> f64
+pub fn stitchcraft_core::rect::Rect::include(self, stitchcraft_core::units::Point) -> stitchcraft_core::rect::Rect
+pub const fn stitchcraft_core::rect::Rect::max(self) -> stitchcraft_core::units::Point
+pub const fn stitchcraft_core::rect::Rect::min(self) -> stitchcraft_core::units::Point
+pub fn stitchcraft_core::rect::Rect::width(self) -> f64
+pub mod stitchcraft_core::rng
+pub struct stitchcraft_core::rng::SplitMix64
+impl stitchcraft_core::rng::SplitMix64
+pub fn stitchcraft_core::rng::SplitMix64::for_element(&str, u64) -> Self
+pub const fn stitchcraft_core::rng::SplitMix64::new(u64) -> Self
+pub fn stitchcraft_core::rng::SplitMix64::next_f64(&mut self) -> f64
+pub fn stitchcraft_core::rng::SplitMix64::next_in(&mut self, f64, f64) -> f64
+pub fn stitchcraft_core::rng::SplitMix64::next_u64(&mut self) -> u64
+pub fn stitchcraft_core::rng::fnv1a64(&[u8]) -> u64
+pub mod stitchcraft_core::text
+pub fn stitchcraft_core::text::doc_comment(&str) -> alloc::string::String
+pub mod stitchcraft_core::units
+pub enum stitchcraft_core::units::UnitError
+pub stitchcraft_core::units::UnitError::NotFinite(f64)
+pub struct stitchcraft_core::units::Mm(_)
+impl stitchcraft_core::units::Mm
+pub const stitchcraft_core::units::Mm::ZERO: stitchcraft_core::units::Mm
+pub fn stitchcraft_core::units::Mm::from_points(f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>
+pub fn stitchcraft_core::units::Mm::from_svg_px(f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>
+pub const fn stitchcraft_core::units::Mm::from_tenths(i32) -> Self
+pub const fn stitchcraft_core::units::Mm::get(self) -> f64
+pub fn stitchcraft_core::units::Mm::new(f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>
+pub fn stitchcraft_core::units::Mm::to_points(self) -> f64
+pub struct stitchcraft_core::units::Point
+impl stitchcraft_core::units::Point
+pub const stitchcraft_core::units::Point::ORIGIN: stitchcraft_core::units::Point
+pub fn stitchcraft_core::units::Point::distance(self, stitchcraft_core::units::Point) -> f64
+pub fn stitchcraft_core::units::Point::from_tenths(i32, i32) -> Self
+pub fn stitchcraft_core::units::Point::new(f64, f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>
+pub fn stitchcraft_core::units::Point::to_tenths(self) -> core::option::Option<(i32, i32)>
+pub const fn stitchcraft_core::units::Point::x(self) -> f64
+pub const fn stitchcraft_core::units::Point::y(self) -> f64
+pub struct stitchcraft_core::units::Size
+pub stitchcraft_core::units::Size::height: stitchcraft_core::units::Mm
+pub stitchcraft_core::units::Size::width: stitchcraft_core::units::Mm
+impl stitchcraft_core::units::Size
+pub fn stitchcraft_core::units::Size::holds(self, f64, f64) -> bool
+pub const fn stitchcraft_core::units::Size::new(stitchcraft_core::units::Mm, stitchcraft_core::units::Mm) -> Self
+pub const fn stitchcraft_core::units::Size::rotated(self) -> Self
+pub const stitchcraft_core::units::MACHINE_LIMIT: i32
+pub const stitchcraft_core::units::MM_PER_INCH: f64
+pub const stitchcraft_core::units::MM_PER_POINT: f64
+pub const stitchcraft_core::units::MM_PER_SVG_PX: f64
+pub fn stitchcraft_core::units::to_tenths(f64) -> core::option::Option<i32>
+#[non_exhaustive] pub enum stitchcraft_core::Code
+pub stitchcraft_core::Code::BudgetExhausted
+pub stitchcraft_core::Code::InternalCheckFailed
+pub stitchcraft_core::Code::NothingToStitch
+pub stitchcraft_core::Code::OutsideComfortZone
+pub stitchcraft_core::Code::OutsideHoop
+pub stitchcraft_core::Code::ParamClamped
+pub stitchcraft_core::Code::ParamInvalid
+pub stitchcraft_core::Code::ParamUnknown
+pub stitchcraft_core::Code::PreviewTooLarge
+pub stitchcraft_core::Code::ThreadColorsUnknown
+pub stitchcraft_core::Code::TooLargeForFormat
+pub stitchcraft_core::Code::TooManyColorChanges
+pub stitchcraft_core::Code::UnreadableFile
+impl stitchcraft_core::diag::Code
+pub const stitchcraft_core::diag::Code::ALL: &'static [stitchcraft_core::diag::Code]
+pub const fn stitchcraft_core::diag::Code::id(self) -> &'static str
+pub const fn stitchcraft_core::diag::Code::severity(self) -> stitchcraft_core::diag::Severity
+pub const fn stitchcraft_core::diag::Code::title(self) -> &'static str
+impl stitchcraft_core::diag::Code
+pub fn stitchcraft_core::diag::Code::explanation(self) -> alloc::string::String
+impl core::fmt::Display for stitchcraft_core::diag::Code
+pub fn stitchcraft_core::diag::Code::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+#[non_exhaustive] pub enum stitchcraft_core::Edit
+pub stitchcraft_core::Edit::RotateDesign90
+pub enum stitchcraft_core::ElementIdError
+pub stitchcraft_core::ElementIdError::ControlCharacter
+pub stitchcraft_core::ElementIdError::Empty
+pub stitchcraft_core::ElementIdError::TooLong
+pub stitchcraft_core::ElementIdError::TooLong::len: usize
+pub enum stitchcraft_core::Exhausted
+pub stitchcraft_core::Exhausted::Stitches
+pub stitchcraft_core::Exhausted::Work
+impl stitchcraft_core::budget::Exhausted
+pub fn stitchcraft_core::budget::Exhausted::diagnostic(self, &stitchcraft_core::budget::Budget, core::option::Option<stitchcraft_core::element::ElementId>) -> stitchcraft_core::diag::Diagnostic
+pub enum stitchcraft_core::Fix
+pub stitchcraft_core::Fix::Apply(stitchcraft_core::diag::Edit)
+pub stitchcraft_core::Fix::Hint(alloc::string::String)
+impl stitchcraft_core::diag::Fix
+pub fn stitchcraft_core::diag::Fix::describe(&self) -> alloc::string::String
+pub enum stitchcraft_core::Severity
+pub stitchcraft_core::Severity::Error
+pub stitchcraft_core::Severity::Info
+pub stitchcraft_core::Severity::Warning
+impl stitchcraft_core::diag::Severity
+pub const fn stitchcraft_core::diag::Severity::label(self) -> &'static str
+pub const fn stitchcraft_core::diag::Severity::letter(self) -> char
+pub enum stitchcraft_core::UnitError
+pub stitchcraft_core::UnitError::NotFinite(f64)
+pub struct stitchcraft_core::Budget
+pub stitchcraft_core::Budget::max_stitches: u32
+pub stitchcraft_core::Budget::max_work: u64
+impl stitchcraft_core::budget::Budget
+pub const stitchcraft_core::budget::Budget::DEFAULT: stitchcraft_core::budget::Budget
+pub const fn stitchcraft_core::budget::Budget::meter(self) -> stitchcraft_core::budget::Meter
+impl core::default::Default for stitchcraft_core::budget::Budget
+pub fn stitchcraft_core::budget::Budget::default() -> Self
+pub struct stitchcraft_core::Diagnostic
+pub stitchcraft_core::Diagnostic::at: core::option::Option<stitchcraft_core::units::Point>
+pub stitchcraft_core::Diagnostic::code: stitchcraft_core::diag::Code
+pub stitchcraft_core::Diagnostic::element: core::option::Option<stitchcraft_core::element::ElementId>
+pub stitchcraft_core::Diagnostic::fix: core::option::Option<stitchcraft_core::diag::Fix>
+pub stitchcraft_core::Diagnostic::message: alloc::string::String
+impl stitchcraft_core::diag::Diagnostic
+pub fn stitchcraft_core::diag::Diagnostic::located(self, stitchcraft_core::units::Point) -> Self
+pub fn stitchcraft_core::diag::Diagnostic::new(stitchcraft_core::diag::Code, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn stitchcraft_core::diag::Diagnostic::severity(&self) -> stitchcraft_core::diag::Severity
+pub fn stitchcraft_core::diag::Diagnostic::with_element(self, stitchcraft_core::element::ElementId) -> Self
+pub fn stitchcraft_core::diag::Diagnostic::with_fix(self, stitchcraft_core::diag::Fix) -> Self
+impl core::fmt::Display for stitchcraft_core::diag::Diagnostic
+pub fn stitchcraft_core::diag::Diagnostic::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub struct stitchcraft_core::ElementId(_)
+impl stitchcraft_core::element::ElementId
+pub const stitchcraft_core::element::ElementId::MAX_LEN: usize
+pub fn stitchcraft_core::element::ElementId::as_str(&self) -> &str
+pub fn stitchcraft_core::element::ElementId::new(impl core::convert::Into<alloc::string::String>) -> core::result::Result<Self, stitchcraft_core::element::ElementIdError>
+impl core::fmt::Display for stitchcraft_core::element::ElementId
+pub fn stitchcraft_core::element::ElementId::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub struct stitchcraft_core::Meter
+impl stitchcraft_core::budget::Meter
+pub fn stitchcraft_core::budget::Meter::charge(&mut self, u64) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_core::budget::Meter::charge_stitches(&mut self, u32) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
+pub const fn stitchcraft_core::budget::Meter::stitches_left(&self) -> u32
+pub const fn stitchcraft_core::budget::Meter::work_left(&self) -> u64
+pub struct stitchcraft_core::Mm(_)
+impl stitchcraft_core::units::Mm
+pub const stitchcraft_core::units::Mm::ZERO: stitchcraft_core::units::Mm
+pub fn stitchcraft_core::units::Mm::from_points(f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>
+pub fn stitchcraft_core::units::Mm::from_svg_px(f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>
+pub const fn stitchcraft_core::units::Mm::from_tenths(i32) -> Self
+pub const fn stitchcraft_core::units::Mm::get(self) -> f64
+pub fn stitchcraft_core::units::Mm::new(f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>
+pub fn stitchcraft_core::units::Mm::to_points(self) -> f64
+pub struct stitchcraft_core::Point
+impl stitchcraft_core::units::Point
+pub const stitchcraft_core::units::Point::ORIGIN: stitchcraft_core::units::Point
+pub fn stitchcraft_core::units::Point::distance(self, stitchcraft_core::units::Point) -> f64
+pub fn stitchcraft_core::units::Point::from_tenths(i32, i32) -> Self
+pub fn stitchcraft_core::units::Point::new(f64, f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>
+pub fn stitchcraft_core::units::Point::to_tenths(self) -> core::option::Option<(i32, i32)>
+pub const fn stitchcraft_core::units::Point::x(self) -> f64
+pub const fn stitchcraft_core::units::Point::y(self) -> f64
+pub struct stitchcraft_core::Rect
+impl stitchcraft_core::rect::Rect
+pub fn stitchcraft_core::rect::Rect::around(impl core::iter::traits::collect::IntoIterator<Item = stitchcraft_core::units::Point>) -> core::option::Option<stitchcraft_core::rect::Rect>
+pub fn stitchcraft_core::rect::Rect::center(self) -> stitchcraft_core::units::Point
+pub fn stitchcraft_core::rect::Rect::height(self) -> f64
+pub fn stitchcraft_core::rect::Rect::include(self, stitchcraft_core::units::Point) -> stitchcraft_core::rect::Rect
+pub const fn stitchcraft_core::rect::Rect::max(self) -> stitchcraft_core::units::Point
+pub const fn stitchcraft_core::rect::Rect::min(self) -> stitchcraft_core::units::Point
+pub fn stitchcraft_core::rect::Rect::width(self) -> f64
+pub struct stitchcraft_core::Size
+pub stitchcraft_core::Size::height: stitchcraft_core::units::Mm
+pub stitchcraft_core::Size::width: stitchcraft_core::units::Mm
+impl stitchcraft_core::units::Size
+pub fn stitchcraft_core::units::Size::holds(self, f64, f64) -> bool
+pub const fn stitchcraft_core::units::Size::new(stitchcraft_core::units::Mm, stitchcraft_core::units::Mm) -> Self
+pub const fn stitchcraft_core::units::Size::rotated(self) -> Self
+pub struct stitchcraft_core::SplitMix64
+impl stitchcraft_core::rng::SplitMix64
+pub fn stitchcraft_core::rng::SplitMix64::for_element(&str, u64) -> Self
+pub const fn stitchcraft_core::rng::SplitMix64::new(u64) -> Self
+pub fn stitchcraft_core::rng::SplitMix64::next_f64(&mut self) -> f64
+pub fn stitchcraft_core::rng::SplitMix64::next_in(&mut self, f64, f64) -> f64
+pub fn stitchcraft_core::rng::SplitMix64::next_u64(&mut self) -> u64

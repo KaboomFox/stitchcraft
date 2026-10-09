@@ -32,10 +32,10 @@ around it is permissively licensed.
 - Upstreaming to VectorCraft and embedding the engine anywhere stays possible.
 - We cannot take shortcuts by translating Ink/Stitch's algorithms; we design them, which the quality goals
   require anyway.
-- The analysis pages cite Ink/Stitch files as evidence; those citations are for reviewers, not a reading
-  list for implementers.
-- `cargo xtask cleanroom` fails on GPL licence text and Ink/Stitch source paths in code, tests and
-  fixtures; the review checklist asks about provenance.
+- Our documents describe Ink/Stitch only by its public behaviour, documentation and file format, never
+  by its code.
+- `cargo xtask cleanroom` fails on GPL licence text and on Ink/Stitch source paths anywhere in the
+  repository, documents included; the review checklist asks about provenance.
 
 ## Alternatives considered
 

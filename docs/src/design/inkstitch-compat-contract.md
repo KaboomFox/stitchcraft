@@ -6,185 +6,190 @@ The parameters an Ink/Stitch SVG can carry, as `inkstitch:<name>` attributes, an
 supports each one. This is the interoperability contract: StitchCraft's registry uses these names as
 its keys so files move between the tools unchanged ([ADR-0001](adr/0001-license-and-clean-room.md)).
 
-- **Source:** Ink/Stitch `main` at `d59c9ab` (2026-09-17), 145 `@param` declarations.
+- **Checked against:** Ink/Stitch `main` at `d59c9ab` (2026-09-17), 145 parameters.
 - **Facts only:** names, types, units, defaults and applicability. Ink/Stitch's descriptions are GPL text
   and are not copied; StitchCraft's own help text lives in the [parameter registry](params.md).
-- **Machine-readable source:** `conformance/inkstitch-params.toml`; this page is generated from it by
-  `cargo xtask docs`, and `cargo xtask docs --check` fails if the two disagree. From M3 the page gains a
-  *Status* column (planned / supported / deviates) from the registry, and a milestone cannot close with
-  its rows still planned.
+- **Machine-readable source:** `conformance/inkstitch-params.toml`; this page is generated from it and
+  from the parameter registry by `cargo xtask docs`, and `cargo xtask docs --check` fails if they disagree:
+  a parameter declared with an Ink/Stitch origin must be listed here with a compatible type and the same
+  default.
+- **StitchCraft** says whether the [parameter registry](../user/reference/params.md) declares the
+  parameter. *planned*: not yet; a design that sets it keeps it unchanged and gets `SC-W0105`.
+  *registered*: StitchCraft reads and checks it under the same key, meaning and default; it changes the
+  stitches once its stitch type or feature lands (see *Phase* and the parameter's reference entry).
+  *deviates*: registered, with a meaning that differs as its reference entry describes.
 - **Phase** is when the parameter's stitch type lands ([roadmap](../plan/roadmap.md)). `—` means no default
   (the value is derived from another parameter or the shape); `computed` means the default is an expression.
 
 ## All stitch types (ties, locks, trims, stops)
 
-| Attribute | Type | Unit | Default | Applies to | Phase |
-|---|---|---|---|---|---|
-| `min_stitch_length_mm` | float | mm | — | all | P1 (M3) |
-| `min_jump_stitch_length_mm` | float | mm | — | all | P1 (M3) |
-| `ties` | dropdown | — | 0 | all | P1 (M3) |
-| `force_lock_stitches` | boolean | — | false | all | P1 (M3) |
-| `lock_start` | combo | — | half_stitch | all | P1 (M3) |
-| `lock_custom_start` | string | — | — | `custom` | P1 (M3) |
-| `lock_start_scale_mm` | float | mm | 0.7 | all | P1 (M3) |
-| `lock_start_scale_percent` | float | % | 100 | all | P1 (M3) |
-| `lock_end` | combo | — | half_stitch | all | P1 (M3) |
-| `lock_custom_end` | string | — | — | `custom` | P1 (M3) |
-| `lock_end_scale_mm` | float | mm | 0.7 | all | P1 (M3) |
-| `lock_end_scale_percent` | float | % | 100 | all | P1 (M3) |
-| `trim_after` | boolean | — | false | all | P1 (M3) |
-| `stop_after` | boolean | — | false | all | P1 (M3) |
+| Attribute | Type | Unit | Default | Applies to | Phase | StitchCraft |
+|---|---|---|---|---|---|---|
+| `min_stitch_length_mm` | float | mm | — | all | P1 (M3) | [registered](../user/reference/params/common.md#min_stitch_length_mm) |
+| `min_jump_stitch_length_mm` | float | mm | — | all | P1 (M3) | [registered](../user/reference/params/common.md#min_jump_stitch_length_mm) |
+| `ties` | dropdown | — | 0 | all | P1 (M3) | [registered](../user/reference/params/common.md#ties) |
+| `force_lock_stitches` | boolean | — | false | all | P1 (M3) | [registered](../user/reference/params/common.md#force_lock_stitches) |
+| `lock_start` | combo | — | half_stitch | all | P1 (M3) | [deviates](../user/reference/params/common.md#lock_start) |
+| `lock_custom_start` | string | — | — | `custom` | P1 (M3) | [registered](../user/reference/params/common.md#lock_custom_start) |
+| `lock_start_scale_mm` | float | mm | 0.7 | all | P1 (M3) | [registered](../user/reference/params/common.md#lock_start_scale_mm) |
+| `lock_start_scale_percent` | float | % | 100 | all | P1 (M3) | [registered](../user/reference/params/common.md#lock_start_scale_percent) |
+| `lock_end` | combo | — | half_stitch | all | P1 (M3) | [deviates](../user/reference/params/common.md#lock_end) |
+| `lock_custom_end` | string | — | — | `custom` | P1 (M3) | [registered](../user/reference/params/common.md#lock_custom_end) |
+| `lock_end_scale_mm` | float | mm | 0.7 | all | P1 (M3) | [registered](../user/reference/params/common.md#lock_end_scale_mm) |
+| `lock_end_scale_percent` | float | % | 100 | all | P1 (M3) | [registered](../user/reference/params/common.md#lock_end_scale_percent) |
+| `trim_after` | boolean | — | false | all | P1 (M3) | [registered](../user/reference/params/common.md#trim_after) |
+| `stop_after` | boolean | — | false | all | P1 (M3) | [registered](../user/reference/params/common.md#stop_after) |
 
 ## Strokes: running, ripple, zigzag, manual
 
-| Attribute | Type | Unit | Default | Applies to | Phase |
-|---|---|---|---|---|---|
-| `satin_column` | toggle | — | — | all | P1 (M3) |
-| `stroke_method` | combo | — | 0 | all | P1 (M3) |
-| `repeats` | int | — | 1 | `running_stitch`, `ripple_stitch`, `zigzag_stitch` | P1 (M3) |
-| `bean_stitch_repeats` | str | — | 0 | `running_stitch`, `ripple_stitch`, `manual_stitch`, `zigzag_stitch` | P1 (M3) |
-| `manual_pattern_placement` | boolean | — | false | `ripple_stitch` | P3 (M10) |
-| `running_stitch_length_mm` | string | mm | 2.5 | `running_stitch`, `ripple_stitch` | P1 (M3) |
-| `running_stitch_tolerance_mm` | float | mm | 0.2 | `running_stitch`, `ripple_stitch` | P1 (M3) |
-| `enable_random_stitch_length` | boolean | — | false | `running_stitch`, `ripple_stitch` | P1 (M3) |
-| `random_stitch_length_jitter_percent` | float | ± % | 10 | `running_stitch`, `ripple_stitch` | P1 (M3) |
-| `max_stitch_length_mm` | float | mm | — | `manual_stitch` | P1 (M3) |
-| `zigzag_spacing_mm` | string | mm | 0.4 | `zigzag_stitch` | P2 (M7) |
-| `stroke_pull_compensation_mm` | float | mm (each side) | 0 | `zigzag_stitch` | P2 (M7) |
-| `zigzag_angle` | float | ° | 0 | `zigzag_stitch` | P2 (M7) |
-| `line_count` | int | — | 10 | `ripple_stitch` | P3 (M10) |
-| `min_line_dist_mm` | float | mm | — | `ripple_stitch` | P3 (M10) |
-| `satin_guide_pattern_position` | combo | — | default | `ripple_stitch` | P3 (M10) |
-| `staggers` | int | — | 0 | `ripple_stitch` | P3 (M10) |
-| `skip_start` | int | — | 0 | `ripple_stitch` | P3 (M10) |
-| `skip_end` | int | — | 0 | `ripple_stitch` | P3 (M10) |
-| `flip_copies` | boolean | — | true | `ripple_stitch` | P3 (M10) |
-| `exponent` | float | — | 1 | `ripple_stitch` | P3 (M10) |
-| `flip_exponent` | boolean | — | false | `ripple_stitch` | P3 (M10) |
-| `reverse` | boolean | — | false | `ripple_stitch` | P3 (M10) |
-| `reverse_rails` | combo | — | automatic | `ripple_stitch` | P3 (M10) |
-| `swap_satin_rails` | boolean | — | false | `ripple_stitch` | P3 (M10) |
-| `grid_size_mm` | float | mm | 0 | `ripple_stitch` | P3 (M10) |
-| `grid_first` | boolean | — | false | `ripple_stitch` | P3 (M10) |
-| `scale_axis` | dropdown | — | 0 | `ripple_stitch` | P3 (M10) |
-| `scale_start` | float | % | 100 | `ripple_stitch` | P3 (M10) |
-| `scale_end` | float | % | 0.0 | `ripple_stitch` | P3 (M10) |
-| `rotate_ripples` | boolean | — | true | `ripple_stitch` | P3 (M10) |
-| `join_style` | dropdown | — | 0 | `ripple_stitch` | P3 (M10) |
-| `random_seed` | random_seed | — | — | `running_stitch`, `ripple_stitch` | P1 (M3) |
+| Attribute | Type | Unit | Default | Applies to | Phase | StitchCraft |
+|---|---|---|---|---|---|---|
+| `satin_column` | toggle | — | — | all | P1 (M3) | planned |
+| `stroke_method` | combo | — | 0 | all | P1 (M3) | planned |
+| `repeats` | int | — | 1 | `running_stitch`, `ripple_stitch`, `zigzag_stitch` | P1 (M3) | planned |
+| `bean_stitch_repeats` | str | — | 0 | `running_stitch`, `ripple_stitch`, `manual_stitch`, `zigzag_stitch` | P1 (M3) | planned |
+| `manual_pattern_placement` | boolean | — | false | `ripple_stitch` | P3 (M10) | planned |
+| `running_stitch_length_mm` | string | mm | 2.5 | `running_stitch`, `ripple_stitch` | P1 (M3) | planned |
+| `running_stitch_tolerance_mm` | float | mm | 0.2 | `running_stitch`, `ripple_stitch` | P1 (M3) | planned |
+| `enable_random_stitch_length` | boolean | — | false | `running_stitch`, `ripple_stitch` | P1 (M3) | planned |
+| `random_stitch_length_jitter_percent` | float | ± % | 10 | `running_stitch`, `ripple_stitch` | P1 (M3) | planned |
+| `max_stitch_length_mm` | float | mm | — | `manual_stitch` | P1 (M3) | planned |
+| `zigzag_spacing_mm` | string | mm | 0.4 | `zigzag_stitch` | P2 (M7) | planned |
+| `stroke_pull_compensation_mm` | float | mm (each side) | 0 | `zigzag_stitch` | P2 (M7) | planned |
+| `zigzag_angle` | float | ° | 0 | `zigzag_stitch` | P2 (M7) | planned |
+| `line_count` | int | — | 10 | `ripple_stitch` | P3 (M10) | planned |
+| `min_line_dist_mm` | float | mm | — | `ripple_stitch` | P3 (M10) | planned |
+| `satin_guide_pattern_position` | combo | — | default | `ripple_stitch` | P3 (M10) | planned |
+| `staggers` | int | — | 0 | `ripple_stitch` | P3 (M10) | planned |
+| `skip_start` | int | — | 0 | `ripple_stitch` | P3 (M10) | planned |
+| `skip_end` | int | — | 0 | `ripple_stitch` | P3 (M10) | planned |
+| `flip_copies` | boolean | — | true | `ripple_stitch` | P3 (M10) | planned |
+| `exponent` | float | — | 1 | `ripple_stitch` | P3 (M10) | planned |
+| `flip_exponent` | boolean | — | false | `ripple_stitch` | P3 (M10) | planned |
+| `reverse` | boolean | — | false | `ripple_stitch` | P3 (M10) | planned |
+| `reverse_rails` | combo | — | automatic | `ripple_stitch` | P3 (M10) | planned |
+| `swap_satin_rails` | boolean | — | false | `ripple_stitch` | P3 (M10) | planned |
+| `grid_size_mm` | float | mm | 0 | `ripple_stitch` | P3 (M10) | planned |
+| `grid_first` | boolean | — | false | `ripple_stitch` | P3 (M10) | planned |
+| `scale_axis` | dropdown | — | 0 | `ripple_stitch` | P3 (M10) | planned |
+| `scale_start` | float | % | 100 | `ripple_stitch` | P3 (M10) | planned |
+| `scale_end` | float | % | 0.0 | `ripple_stitch` | P3 (M10) | planned |
+| `rotate_ripples` | boolean | — | true | `ripple_stitch` | P3 (M10) | planned |
+| `join_style` | dropdown | — | 0 | `ripple_stitch` | P3 (M10) | planned |
+| `random_seed` | random_seed | — | — | `running_stitch`, `ripple_stitch` | P1 (M3) | planned |
 
 ## Satin columns
 
-| Attribute | Type | Unit | Default | Applies to | Phase |
-|---|---|---|---|---|---|
-| `satin_column` | toggle | — | — | all | P1 (M4) |
-| `satin_method` | combo | — | 0 | all | P1 (M4) |
-| `random_width_decrease_percent` | float | % (each side) | 0 | all | P1 (M4) |
-| `random_width_increase_percent` | float | % (each side) | 0 | all | P1 (M4) |
-| `random_zigzag_spacing_percent` | float | ± % | 0 | all | P1 (M4) |
-| `split_method` | combo | — | 0 | all | P1 (M4) |
-| `max_stitch_length_mm` | float | mm | — | all | P1 (M4) |
-| `random_split_jitter_percent` | float | ± % | 0 | `default` | P1 (M4) |
-| `random_split_phase` | boolean | — | false | `default` | P1 (M4) |
-| `min_random_split_length_mm` | float | mm | — | `default` | P1 (M4) |
-| `split_staggers` | float | — | 4 | `staggered` | P1 (M4) |
-| `short_stitch_inset` | float | % | 15 | all | P1 (M4) |
-| `short_stitch_distance_mm` | float | mm | 0.25 | all | P1 (M4) |
-| `zigzag_spacing_mm` | float | mm/cycle | 0.4 | all | P1 (M4) |
-| `pull_compensation_percent` | float | % (each side) | 0 | all | P1 (M4) |
-| `pull_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) |
-| `push_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) |
-| `reverse_rails` | combo | — | automatic | all | P1 (M4) |
-| `swap_satin_rails` | boolean | — | false | all | P1 (M4) |
-| `running_stitch_length_mm` | float | mm | 2.5 | all | P1 (M4) |
-| `running_stitch_tolerance_mm` | float | mm | 0.1 | all | P1 (M4) |
-| `running_stitch_position` | float | % | 50 | all | P1 (M4) |
-| `start_at_nearest_point` | boolean | — | true | all | P1 (M4) |
-| `end_at_nearest_point` | boolean | — | true | all | P1 (M4) |
-| `contour_underlay` | toggle | — | — | all | P1 (M4) |
-| `contour_underlay_stitch_length_mm` | float | mm | 3 | all | P1 (M4) |
-| `contour_underlay_stitch_tolerance_mm` | float | mm | 0.2 | all | P1 (M4) |
-| `contour_underlay_inset_mm` | float | mm (each side) | 0.4 | all | P1 (M4) |
-| `contour_underlay_inset_percent` | float | % (each side) | 0 | all | P1 (M4) |
-| `center_walk_underlay` | toggle | — | — | all | P1 (M4) |
-| `center_walk_underlay_stitch_length_mm` | float | mm | 3 | all | P1 (M4) |
-| `center_walk_underlay_stitch_tolerance_mm` | float | mm | 0.2 | all | P1 (M4) |
-| `center_walk_underlay_repeats` | int | — | 2 | all | P1 (M4) |
-| `center_walk_underlay_position` | float | % | 50 | all | P1 (M4) |
-| `zigzag_underlay` | toggle | — | — | all | P1 (M4) |
-| `zigzag_underlay_spacing_mm` | float | mm | 3 | all | P1 (M4) |
-| `zigzag_underlay_inset_mm` | float | mm (each side) | — | all | P1 (M4) |
-| `zigzag_underlay_inset_percent` | float | % (each side) | — | all | P1 (M4) |
-| `zigzag_underlay_max_stitch_length_mm` | float | mm | — | all | P1 (M4) |
-| `random_seed` | random_seed | — | — | all | P1 (M4) |
+| Attribute | Type | Unit | Default | Applies to | Phase | StitchCraft |
+|---|---|---|---|---|---|---|
+| `satin_column` | toggle | — | — | all | P1 (M4) | planned |
+| `satin_method` | combo | — | 0 | all | P1 (M4) | planned |
+| `random_width_decrease_percent` | float | % (each side) | 0 | all | P1 (M4) | planned |
+| `random_width_increase_percent` | float | % (each side) | 0 | all | P1 (M4) | planned |
+| `random_zigzag_spacing_percent` | float | ± % | 0 | all | P1 (M4) | planned |
+| `split_method` | combo | — | 0 | all | P1 (M4) | planned |
+| `max_stitch_length_mm` | float | mm | — | all | P1 (M4) | planned |
+| `random_split_jitter_percent` | float | ± % | 0 | `default` | P1 (M4) | planned |
+| `random_split_phase` | boolean | — | false | `default` | P1 (M4) | planned |
+| `min_random_split_length_mm` | float | mm | — | `default` | P1 (M4) | planned |
+| `split_staggers` | float | — | 4 | `staggered` | P1 (M4) | planned |
+| `short_stitch_inset` | float | % | 15 | all | P1 (M4) | planned |
+| `short_stitch_distance_mm` | float | mm | 0.25 | all | P1 (M4) | planned |
+| `zigzag_spacing_mm` | float | mm/cycle | 0.4 | all | P1 (M4) | planned |
+| `pull_compensation_percent` | float | % (each side) | 0 | all | P1 (M4) | planned |
+| `pull_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) | planned |
+| `push_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) | planned |
+| `reverse_rails` | combo | — | automatic | all | P1 (M4) | planned |
+| `swap_satin_rails` | boolean | — | false | all | P1 (M4) | planned |
+| `running_stitch_length_mm` | float | mm | 2.5 | all | P1 (M4) | planned |
+| `running_stitch_tolerance_mm` | float | mm | 0.1 | all | P1 (M4) | planned |
+| `running_stitch_position` | float | % | 50 | all | P1 (M4) | planned |
+| `start_at_nearest_point` | boolean | — | true | all | P1 (M4) | planned |
+| `end_at_nearest_point` | boolean | — | true | all | P1 (M4) | planned |
+| `contour_underlay` | toggle | — | — | all | P1 (M4) | planned |
+| `contour_underlay_stitch_length_mm` | float | mm | 3 | all | P1 (M4) | planned |
+| `contour_underlay_stitch_tolerance_mm` | float | mm | 0.2 | all | P1 (M4) | planned |
+| `contour_underlay_inset_mm` | float | mm (each side) | 0.4 | all | P1 (M4) | planned |
+| `contour_underlay_inset_percent` | float | % (each side) | 0 | all | P1 (M4) | planned |
+| `center_walk_underlay` | toggle | — | — | all | P1 (M4) | planned |
+| `center_walk_underlay_stitch_length_mm` | float | mm | 3 | all | P1 (M4) | planned |
+| `center_walk_underlay_stitch_tolerance_mm` | float | mm | 0.2 | all | P1 (M4) | planned |
+| `center_walk_underlay_repeats` | int | — | 2 | all | P1 (M4) | planned |
+| `center_walk_underlay_position` | float | % | 50 | all | P1 (M4) | planned |
+| `zigzag_underlay` | toggle | — | — | all | P1 (M4) | planned |
+| `zigzag_underlay_spacing_mm` | float | mm | 3 | all | P1 (M4) | planned |
+| `zigzag_underlay_inset_mm` | float | mm (each side) | — | all | P1 (M4) | planned |
+| `zigzag_underlay_inset_percent` | float | % (each side) | — | all | P1 (M4) | planned |
+| `zigzag_underlay_max_stitch_length_mm` | float | mm | — | all | P1 (M4) | planned |
+| `random_seed` | random_seed | — | — | all | P1 (M4) | planned |
 
 ## Fills
 
-| Attribute | Type | Unit | Default | Applies to | Phase |
-|---|---|---|---|---|---|
-| `fill` | toggle | — | true | all | P1 (M5) |
-| `fill_method` | combo | — | 0 | all | P1 (M5) |
-| `guided_fill_strategy` | dropdown | — | 0 | `guided_fill` | P3 (M10) |
-| `contour_strategy` | dropdown | — | 0 | `contour_fill` | P2 (M7) |
-| `join_style` | dropdown | — | 0 | `contour_fill` | P2 (M7) |
-| `avoid_self_crossing` | boolean | — | false | `contour_fill` | P2 (M7) |
-| `clockwise` | boolean | — | true | `contour_fill` | P2 (M7) |
-| `meander_pattern` | combo | — | 0 | `meander_fill` | P2 (M7) |
-| `meander_angle` | float | degrees | 0 | `meander_fill` | P2 (M7) |
-| `meander_scale_percent` | float | % | 100 | `meander_fill` | P2 (M7) |
-| `clip` | boolean | — | false | `meander_fill` | P2 (M7) |
-| `smoothness_mm` | float | mm | 0 | `contour_fill`, `guided_fill`, `meander_fill` | P2 (M7) |
-| `expand_mm` | float | mm | 0 | all | P1 (M5) |
-| `gap_fill_rows` | int | rows | 0 | `tatami_fill` | P1 (M5) |
-| `angle` | float | deg | 0 | `tatami_fill`, `legacy_fill` | P1 (M5) |
-| `guided_fill_angle` | float | deg | — | `guided_fill` | P3 (M10) |
-| `tartan_angle` | float | deg | -45 | `tartan_fill` | P3 (M10) |
-| `max_stitch_length_mm` | float | mm | 4.0 | `tatami_fill`, `contour_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) |
-| `row_spacing_mm` | float | mm | 0.25 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) |
-| `end_row_spacing_mm` | float | mm | — | `tatami_fill`, `circular_fill`, `legacy_fill` | P1 (M5) |
-| `stitch_position_method` | combo | — | 0 | `guided_fill` | P3 (M10) |
-| `staggers` | int | — | 4 | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) |
-| `skip_last` | boolean | — | false | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `legacy_fill` | P1 (M5) |
-| `flip` | boolean | — | false | `legacy_fill` | P3 (M10) |
-| `reverse` | boolean | — | false | `legacy_fill` | P3 (M10) |
-| `stop_at_ending_point` | boolean | — | false | `linear_gradient_fill`, `tartan_fill` | P3 (M10) |
-| `underpath` | boolean | — | true | `tatami_fill`, `guided_fill`, `circular_fill` | P1 (M5) |
-| `running_stitch_length_mm` | float | mm | 2.5 | `tatami_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill` | P1 (M5) |
-| `running_stitch_tolerance_mm` | float | mm | 0.1 | `tatami_fill`, `contour_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill` | P1 (M5) |
-| `enable_random_stitch_length` | boolean | — | false | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) |
-| `random_stitch_length_jitter_percent` | float | ± % | 10 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) |
-| `repeats` | int | — | 1 | `meander_fill`, `contour_fill`, `circular_fill` | P2 (M7) |
-| `bean_stitch_repeats` | str | — | 0 | `meander_fill`, `circular_fill`, `contour_fill`, `guided_fill`, `tartan_fill` | P2 (M7) |
-| `zigzag_spacing_mm` | float | mm | 0 | `meander_fill` | P2 (M7) |
-| `zigzag_width_mm` | float | mm | 3 | `meander_fill` | P2 (M7) |
-| `rows_per_thread` | int | — | 2 | `tartan_fill` | P3 (M10) |
-| `herringbone_width_mm` | int | mm | 0 | `tartan_fill` | P3 (M10) |
-| `pull_compensation_mm` | float | mm (each side) | 0 | `tatami_fill` | P1 (M5) |
-| `pull_compensation_percent` | float | % (each side) | 0 | `tatami_fill` | P1 (M5) |
-| `fill_underlay` | toggle | — | true | all | P1 (M5) |
-| `fill_underlay_angle` | float | deg | — | all | P1 (M5) |
-| `fill_underlay_row_spacing_mm` | float | mm | — | all | P1 (M5) |
-| `fill_underlay_max_stitch_length_mm` | float | mm | — | all | P1 (M5) |
-| `fill_underlay_inset_mm` | float | mm | 0 | all | P1 (M5) |
-| `fill_underlay_skip_last` | boolean | — | false | all | P1 (M5) |
-| `underlay_underpath` | boolean | — | true | all | P1 (M5) |
-| `random_seed` | random_seed | — | — | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `meander_fill`, `linear_gradient_fill` | P1 (M5) |
-| `cross_stitch_method` | combo | — | 0 | `cross_stitch` | P3 (M10) |
-| `cross_thread_count` | int | — | 4 | `cross_stitch` | P3 (M10) |
-| `pattern_size_mm` | float | mm (x y) | 3 | `cross_stitch` | P3 (M10) |
-| `canvas_grid_origin` | boolean | — | true | `cross_stitch` | P3 (M10) |
-| `cross_offset_mm` | float | mm (x y) | 0 | `cross_stitch` | P3 (M10) |
-| `cross_rotation` | float | deg | 0 | `cross_stitch` | P3 (M10) |
-| `fill_coverage` | int | % | 50 | `cross_stitch` | P3 (M10) |
-| `max_cross_stitch_length_mm` | float | mm | 11.0 | `cross_stitch` | P3 (M10) |
+| Attribute | Type | Unit | Default | Applies to | Phase | StitchCraft |
+|---|---|---|---|---|---|---|
+| `fill` | toggle | — | true | all | P1 (M5) | planned |
+| `fill_method` | combo | — | 0 | all | P1 (M5) | planned |
+| `guided_fill_strategy` | dropdown | — | 0 | `guided_fill` | P3 (M10) | planned |
+| `contour_strategy` | dropdown | — | 0 | `contour_fill` | P2 (M7) | planned |
+| `join_style` | dropdown | — | 0 | `contour_fill` | P2 (M7) | planned |
+| `avoid_self_crossing` | boolean | — | false | `contour_fill` | P2 (M7) | planned |
+| `clockwise` | boolean | — | true | `contour_fill` | P2 (M7) | planned |
+| `meander_pattern` | combo | — | 0 | `meander_fill` | P2 (M7) | planned |
+| `meander_angle` | float | degrees | 0 | `meander_fill` | P2 (M7) | planned |
+| `meander_scale_percent` | float | % | 100 | `meander_fill` | P2 (M7) | planned |
+| `clip` | boolean | — | false | `meander_fill` | P2 (M7) | planned |
+| `smoothness_mm` | float | mm | 0 | `contour_fill`, `guided_fill`, `meander_fill` | P2 (M7) | planned |
+| `expand_mm` | float | mm | 0 | all | P1 (M5) | planned |
+| `gap_fill_rows` | int | rows | 0 | `tatami_fill` | P1 (M5) | planned |
+| `angle` | float | deg | 0 | `tatami_fill`, `legacy_fill` | P1 (M5) | planned |
+| `guided_fill_angle` | float | deg | — | `guided_fill` | P3 (M10) | planned |
+| `tartan_angle` | float | deg | -45 | `tartan_fill` | P3 (M10) | planned |
+| `max_stitch_length_mm` | float | mm | 4.0 | `tatami_fill`, `contour_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | planned |
+| `row_spacing_mm` | float | mm | 0.25 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | planned |
+| `end_row_spacing_mm` | float | mm | — | `tatami_fill`, `circular_fill`, `legacy_fill` | P1 (M5) | planned |
+| `stitch_position_method` | combo | — | 0 | `guided_fill` | P3 (M10) | planned |
+| `staggers` | int | — | 4 | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | planned |
+| `skip_last` | boolean | — | false | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `legacy_fill` | P1 (M5) | planned |
+| `flip` | boolean | — | false | `legacy_fill` | P3 (M10) | planned |
+| `reverse` | boolean | — | false | `legacy_fill` | P3 (M10) | planned |
+| `stop_at_ending_point` | boolean | — | false | `linear_gradient_fill`, `tartan_fill` | P3 (M10) | planned |
+| `underpath` | boolean | — | true | `tatami_fill`, `guided_fill`, `circular_fill` | P1 (M5) | planned |
+| `running_stitch_length_mm` | float | mm | 2.5 | `tatami_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill` | P1 (M5) | planned |
+| `running_stitch_tolerance_mm` | float | mm | 0.1 | `tatami_fill`, `contour_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill` | P1 (M5) | planned |
+| `enable_random_stitch_length` | boolean | — | false | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | planned |
+| `random_stitch_length_jitter_percent` | float | ± % | 10 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | planned |
+| `repeats` | int | — | 1 | `meander_fill`, `contour_fill`, `circular_fill` | P2 (M7) | planned |
+| `bean_stitch_repeats` | str | — | 0 | `meander_fill`, `circular_fill`, `contour_fill`, `guided_fill`, `tartan_fill` | P2 (M7) | planned |
+| `zigzag_spacing_mm` | float | mm | 0 | `meander_fill` | P2 (M7) | planned |
+| `zigzag_width_mm` | float | mm | 3 | `meander_fill` | P2 (M7) | planned |
+| `rows_per_thread` | int | — | 2 | `tartan_fill` | P3 (M10) | planned |
+| `herringbone_width_mm` | int | mm | 0 | `tartan_fill` | P3 (M10) | planned |
+| `pull_compensation_mm` | float | mm (each side) | 0 | `tatami_fill` | P1 (M5) | planned |
+| `pull_compensation_percent` | float | % (each side) | 0 | `tatami_fill` | P1 (M5) | planned |
+| `fill_underlay` | toggle | — | true | all | P1 (M5) | planned |
+| `fill_underlay_angle` | float | deg | — | all | P1 (M5) | planned |
+| `fill_underlay_row_spacing_mm` | float | mm | — | all | P1 (M5) | planned |
+| `fill_underlay_max_stitch_length_mm` | float | mm | — | all | P1 (M5) | planned |
+| `fill_underlay_inset_mm` | float | mm | 0 | all | P1 (M5) | planned |
+| `fill_underlay_skip_last` | boolean | — | false | all | P1 (M5) | planned |
+| `underlay_underpath` | boolean | — | true | all | P1 (M5) | planned |
+| `random_seed` | random_seed | — | — | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `meander_fill`, `linear_gradient_fill` | P1 (M5) | planned |
+| `cross_stitch_method` | combo | — | 0 | `cross_stitch` | P3 (M10) | planned |
+| `cross_thread_count` | int | — | 4 | `cross_stitch` | P3 (M10) | planned |
+| `pattern_size_mm` | float | mm (x y) | 3 | `cross_stitch` | P3 (M10) | planned |
+| `canvas_grid_origin` | boolean | — | true | `cross_stitch` | P3 (M10) | planned |
+| `cross_offset_mm` | float | mm (x y) | 0 | `cross_stitch` | P3 (M10) | planned |
+| `cross_rotation` | float | deg | 0 | `cross_stitch` | P3 (M10) | planned |
+| `fill_coverage` | int | % | 50 | `cross_stitch` | P3 (M10) | planned |
+| `max_cross_stitch_length_mm` | float | mm | 11.0 | `cross_stitch` | P3 (M10) | planned |
 
 ## Clones (`<use>`)
 
-| Attribute | Type | Unit | Default | Applies to | Phase |
-|---|---|---|---|---|---|
-| `clone` | toggle | — | true | all | P2 (M8) |
-| `angle` | float | deg | — | all | P2 (M8) |
-| `flip_angle` | boolean | — | false | all | P2 (M8) |
+| Attribute | Type | Unit | Default | Applies to | Phase | StitchCraft |
+|---|---|---|---|---|---|---|
+| `clone` | toggle | — | true | all | P2 (M8) | planned |
+| `angle` | float | deg | — | all | P2 (M8) | planned |
+| `flip_angle` | boolean | — | false | all | P2 (M8) | planned |
 
 ## Method identifiers
 
@@ -211,6 +216,6 @@ The values the method parameters take (`stroke_method`, `satin_method`, `fill_me
 | `fill_method` | `legacy_fill` | P3 (M10) |
 
 Lock stitch identifiers (`lock_start`, `lock_end`): `half_stitch`, `arrow`, `back_forth`, `bowtie`, `cross`, `star`, `simple`, `triangle`, `zigzag`, `custom`. StitchCraft accepts every identifier; the shapes are its own
-designs with the same intent, recorded as a deviation in the [conformance](conformance.md) deviations ledger.
+designs with the same intent, a deviation recorded in the deviations ledger (`conformance/deviations.toml`).
 
-_145 parameter declarations._
+_145 parameter declarations, 14 registered in StitchCraft._

@@ -4,7 +4,8 @@
 
 ## Context
 
-The docs must beat Ink/Stitch's and stay correct on every PR, including screenshots.
+The docs must stay correct on every PR, including screenshots. Documentation written once by hand
+drifts from the code it describes, and nobody notices until a reader is misled.
 
 ## Decision
 
@@ -24,5 +25,5 @@ Details: [docs pipeline](../docs-pipeline.md).
 
 ## Alternatives considered
 
-- **Jekyll on GitHub Pages** (Ink/Stitch's choice): no checks, Ruby toolchain. Rejected.
+- **Jekyll on GitHub Pages:** no checks, Ruby toolchain. Rejected.
 - **Docusaurus / MkDocs:** capable, but bring Node or Python into a Rust-only repository.
