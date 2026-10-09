@@ -100,6 +100,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The Ink/Stitch contract is checked against Ink/Stitch's source. `conformance/inkstitch/check_params.py`
+  compares every row of `inkstitch-params.toml` with the parameter declarations in an Ink/Stitch
+  checkout, along with the method and lock identifiers. Ink/Stitch is parsed as text; nothing from it
+  is imported or copied. At `d59c9ab`, all 145 parameters agree in name, type, unit and default. The one
+  gap was four conditions: the lock scales apply only to some lock shapes (`*_scale_mm` to
+  back-and-forth and custom locks, `*_scale_percent` to the drawn shapes and custom, neither to the half
+  stitch), and the data now says so.
 - Reading Ink/Stitch's source is allowed; copying it is not (ADR-0012, replacing decision 2 of ADR-0001).
   Behaviour still goes into the design docs in our own words and code is written from them, so the
   details its documentation leaves out (parameter edge cases, how lists repeat, the font files) can be
