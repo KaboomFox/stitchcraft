@@ -197,8 +197,8 @@ fn diag_sc_w0502_a_lock_that_would_fold_on_a_sharp_turn_is_sewn_straight() {
 
 #[test]
 fn a_lock_reads_the_stitching_only_as_far_as_it_reaches() {
-    // 1 mm in steps of 0.1 mm, a corner, and 1 m more: the lock reaches 1.4 mm, round the corner, and
-    // reads 14 needle points of the 10,011, so a small budget is enough.
+    // 1 mm in steps of 0.1 mm, a corner, and 1 m more: the lock reaches 1.4 mm, round the corner. It
+    // reads only the needle points it reaches, so 40 units of work are enough for a group of 10,011.
     let mut group: Vec<Point> = (0..=10).map(|i| p(0.1 * f64::from(i), 0.0)).collect();
     group.extend((1..=10_000).map(|j| p(1.0, 0.1 * f64::from(j))));
     let params = settings(&[("lock_start", "custom"), ("lock_custom_start", "1 1 -1 -1"), ("lock_start_scale_mm", "0.7")]);
