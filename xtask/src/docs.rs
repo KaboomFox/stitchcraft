@@ -4,14 +4,17 @@
 //! a generated page is stale; a page is missing from `SUMMARY.md`; a relative link or `#anchor` is broken;
 //! a document mentions a `cargo xtask` subcommand that does not exist; a `REQ-…` id or `SC-…` code is not
 //! registered; the ADR index disagrees with the ADR files; an image has no alt text or no declaration in
-//! `docs/shots.toml` (`docs/src/design/docs-pipeline.md`).
+//! `docs/shots.toml` (`docs/src/design/docs-pipeline.md`); a long sentence is on two pages, or a path of
+//! the repository named in inline code does not exist ([`crate::docs_audit`]); a page's implements
+//! comment matches no file, or the branch changes a page's files but neither the page nor a
+//! `Design-reviewed:` line covers it ([`crate::design_map`]).
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use crate::markdown::{self, Link};
 use crate::util::{self, Findings};
-use crate::{SUBCOMMANDS, conformance, contract_page, deviations, param_pages, reference_pages, shots};
+use crate::{SUBCOMMANDS, conformance, contract_page, design_map, deviations, docs_audit, param_pages, reference_pages, shots};
 
 const DOCS_SRC: &str = "docs/src";
 const DIAGNOSTICS_PAGE: &str = "docs/src/design/diagnostics.md";
@@ -36,6 +39,8 @@ pub fn run(check_only: bool) -> Result<(), String> {
     allocations(&root, &mut findings)?;
     adr_index(&root, &mut findings)?;
     images(&root, &pages, &mut findings)?;
+    docs_audit::check(&root, &pages, &mut findings);
+    design_map::check(&root, &pages, &mut findings);
     findings.finish("docs", &format!("{} Markdown files checked", pages.len()))
 }
 
