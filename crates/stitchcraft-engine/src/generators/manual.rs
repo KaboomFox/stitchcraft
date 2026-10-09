@@ -119,13 +119,12 @@ fn split(run: &[Point], longest: Option<f64>, min: f64, meter: &mut Meter) -> Re
     for pair in run.windows(2) {
         let [from, to] = pair else { continue };
         let length = from.distance(*to);
+        // One part more while the parts are too long and one more would leave none too short. Each part
+        // is paid for here, so the points below need no charge; a count past `u32` is past any budget.
         let mut parts = 1_u32;
-        while !at_least(longest, length / f64::from(parts)) {
+        while !at_least(longest, length / f64::from(parts)) && at_least(length / (f64::from(parts) + 1.0), min) {
             meter.charge(1)?;
-            parts += 1;
-        }
-        while parts > 1 && !at_least(length / f64::from(parts), min) {
-            parts -= 1;
+            parts = parts.checked_add(1).ok_or(Exhausted::Work)?;
         }
         for part in 1..parts {
             out.push(from.lerp(*to, f64::from(part) / f64::from(parts)));
