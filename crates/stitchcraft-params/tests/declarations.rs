@@ -81,8 +81,9 @@ fn req_prm_002_invalid_values_are_errors_that_say_what_is_accepted() {
 
 #[test]
 fn req_prm_002_out_of_range_values_are_clamped_with_a_warning() {
-    let read = Everything::from_set(&set(&[("a_length_mm", "25"), ("a_count", "0"), ("some_lengths_mm", "2.5 0.1")])).unwrap();
+    let read = Everything::from_set(&set(&[("a_length_mm", "25"), ("a_percent", "250"), ("a_count", "0"), ("some_lengths_mm", "2.5 0.1")])).unwrap();
     assert_eq!(read.params.a_length_mm.get(), 10.0);
+    assert_eq!(read.params.a_percent, 200.0);
     assert_eq!(read.params.a_count, 1);
     assert_eq!(read.params.some_lengths_mm.iter().map(|mm| mm.get()).collect::<Vec<_>>(), [2.5, 0.3]);
     let messages: Vec<String> = read.warnings.iter().map(|d| format!("{}: {}", d.code, d.message)).collect();
@@ -90,6 +91,7 @@ fn req_prm_002_out_of_range_values_are_clamped_with_a_warning() {
         messages,
         [
             "SC-W0102: `a_length_mm` is 25, outside 0.1 to 10 mm; 10 mm is used.",
+            "SC-W0102: `a_percent` is 250, outside 0 to 200%; 200% is used.",
             "SC-W0102: `a_count` is 0, outside 1 to 20; 1 is used.",
             "SC-W0102: `some_lengths_mm` is 2.5 0.1, outside 0.3 to 12 mm; 2.5 0.3 mm is used.",
         ]
