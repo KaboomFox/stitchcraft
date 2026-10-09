@@ -5,6 +5,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M3.6: manual stitch (`stitchcraft_engine::generators::manual`).
+  - **Needle points.** A needle point goes on every node of the path, in order. A curve gives only its
+    end node.
+  - **Longest stitch.** Stitches longer than `max_stitch_length_mm` are split into equal parts, never
+    shorter than the shortest stitch. As in Ink/Stitch, 0 or less means no maximum: an optional length
+    of 0 or less now counts as empty, where it used to be clamped up with `SC-W0102`.
+  - **Bean stitch** applies; repeats don't.
+  - **Shortest stitch.** No hand-placed stitch is shorter than the shortest stitch. A point too close to
+    the one before is left out, the last point is kept, and the new `SC-W0403` says how many. Ink/Stitch
+    drops such points silently.
+  - **Conformance.** `REQ-RUN-006` and the new `REQ-RUN-008` are active.
 - `SC-I0605`: writing DST says at how many places its machines will cut the thread where the plan does
   not trim. `stitchcraft_formats::encode` returns the file as `Encoded`, its bytes with notes on
   what the format makes the machine do that the plan does not say; `stitch convert` and

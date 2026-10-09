@@ -15,6 +15,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0105`](#sc-w0105) | Warning | Unknown parameter preserved but ignored |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
+| [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
 | [`SC-E0601`](#sc-e0601) | Error | Too many colour changes for the file format |
 | [`SC-E0602`](#sc-e0602) | Error | Design too large for the file format |
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
@@ -123,6 +124,17 @@ corners.
 
 The message gives both lengths. Use a longer stitch length, or a shorter minimum if your machine
 sews shorter stitches well.
+
+## SC-W0403
+
+**Warning** — Hand-placed stitch shorter than the shortest stitch; point left out
+
+Hand-placed stitches (manual stitch) shorter than the shortest stitch the machine sews well: the
+needle point that made each one too short was left out, so the stitch before it runs on to the
+next point. A part's last point is always kept; the one before it goes instead.
+
+The message gives how many and the shortest of them. Move the nodes apart, or delete the extra
+ones.
 
 ## SC-E0601
 

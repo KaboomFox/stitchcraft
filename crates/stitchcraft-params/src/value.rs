@@ -3,7 +3,8 @@
 //! Every host stores parameters as text — an SVG attribute, a command-line `key=value`, a value in a
 //! VectorCraft effect record — so parsing happens once, here, the same way for all of them. A value is
 //! accepted, clamped into range with `SC-W0102`, or rejected with `SC-E0101`; it never falls back to the
-//! default in silence (REQ-PRM-002). Lengths accept a unit (`mm`, `in`, `pt`; millimetres without one),
+//! default in silence (REQ-PRM-002). Lengths accept a unit (`mm`, `in`, `pt`; millimetres without one);
+//! an optional length of 0 or less counts as empty, because Ink/Stitch reads it as "not set".
 //! angles are normalized to (−180, 180], and a seed may be any text: a number is used as it is, other
 //! text is hashed (FNV-1a), so any seed a file stores works.
 
@@ -63,8 +64,12 @@ impl Kind {
         let text = raw.trim();
         match self {
             Kind::Length { optional: true, .. } if text.is_empty() => Some((Value::Length(None), false)),
-            Kind::Length { min, max, .. } => {
-                let (mm, clamped) = clamp(length(text)?, min, max);
+            Kind::Length { min, max, optional } => {
+                let given = length(text)?;
+                if optional && given <= 0.0 {
+                    return Some((Value::Length(None), false));
+                }
+                let (mm, clamped) = clamp(given, min, max);
                 Some((Value::Length(Some(Mm::new(mm).ok()?)), clamped))
             }
             Kind::Angle => {
@@ -222,6 +227,21 @@ mod tests {
         let optional = Kind::Length { min: 0.0, max: 5.0, optional: true };
         assert_eq!(optional.parse(" "), Some((Value::Length(None), false)));
         assert_eq!(optional.parse("2"), Some((Value::Length(Some(mm(2.0))), false)));
+        assert_eq!(optional.parse("9"), Some((Value::Length(Some(mm(5.0))), true)));
+        assert_eq!(optional.parse("big"), None);
+    }
+
+    #[test]
+    fn an_optional_length_of_zero_or_less_is_empty() {
+        // As in Ink/Stitch, where 0 and below mean "not set": no maximum for manual stitch's longest
+        // stitch, the document's setting for the shortest stitch and jump. Not clamped, so no warning.
+        let optional = Kind::Length { min: 0.1, max: 25.0, optional: true };
+        for raw in ["0", "-1", " 0mm ", "-0.5in", "0.0"] {
+            assert_eq!(optional.parse(raw), Some((Value::Length(None), false)), "{raw}");
+        }
+        assert_eq!(optional.parse("0.05"), Some((Value::Length(Some(mm(0.1))), true)));
+        // A required length is clamped as before.
+        assert_eq!(LENGTH.parse("0"), Some((Value::Length(Some(mm(0.1))), true)));
     }
 
     #[test]

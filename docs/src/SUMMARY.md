@@ -18,6 +18,7 @@
       - [Common parameters](user/reference/params/common.md)
       - [Running stitch](user/reference/params/running.md)
       - [Repeats and bean stitch](user/reference/params/repeat.md)
+      - [Manual stitch](user/reference/params/manual.md)
     - [Glossary](user/reference/glossary.md)
     - [VectorCraft compatibility](user/reference/compatibility.md)
 

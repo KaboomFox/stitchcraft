@@ -294,9 +294,17 @@ status = "active"
 id = "REQ-RUN-006"
 area = "strokes/manual"
 level = "L2"
-statement = "Manual stitch outputs the path's nodes in order plus only the documented splits."
+statement = "Manual stitch puts a needle point on every node of the path, in order (a curve gives only its end node, a node where the needle already is counts once), plus only the documented splits: a stitch longer than max_stitch_length_mm, when it is above 0, is split into the fewest equal parts no longer than it, none shorter than the shortest stitch."
 milestone = "M3"
-status = "planned"
+status = "active"
+
+[[req]]
+id = "REQ-RUN-008"
+area = "strokes/manual"
+level = "L2"
+statement = "No hand-placed stitch is shorter than the shortest stitch: a node closer than that to the needle point before it is left out (a part's last node is kept, the one before it left out instead), and SC-W0403 reports it."
+milestone = "M3"
+status = "active"
 
 # ── Lock stitches and assembly ─────────────────────────────────────────────────────────────────────
 
