@@ -163,6 +163,14 @@ mod tests {
     }
 
     #[test]
+    fn the_lists_are_computed_from_the_table() {
+        // The `const` functions run as the crate compiles; running them here tests them as code too.
+        assert_eq!((count(true), count(false)), (SIZED_IN_MM.len(), SIZED_IN_PERCENT.len()));
+        assert_eq!(sized::<2>(true), ["back_forth", "custom"]);
+        assert_eq!(options::<10>().as_slice(), LOCKS);
+    }
+
+    #[test]
     fn every_id_has_its_shape() {
         assert_eq!(shape("half_stitch"), Shape::HalfStitch);
         assert_eq!(shape("back_forth"), Shape::Steps(&[1.0, -1.0, 1.0, -1.0]));
