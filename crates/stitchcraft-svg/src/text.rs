@@ -147,6 +147,18 @@ mod tests {
     }
 
     #[test]
+    fn a_file_may_expand_to_the_limit_and_no_further() {
+        // 62 references to a 1 MiB value, and plain text after them to bring the expanded file to exactly
+        // `MAX_BYTES`, then one byte past it.
+        let (value, references) = ("x".repeat(1 << 20), 62);
+        let file = |padding: usize| format!("<!DOCTYPE svg [<!ENTITY e '{value}'>]><svg>{}{}</svg>", "&e;".repeat(references), "y".repeat(padding));
+        let expanded_without_padding = file(0).len() + references * (value.len() - "&e;".len());
+        let fits = MAX_BYTES - expanded_without_padding;
+        assert!(check_entities(&file(fits)).is_ok());
+        assert!(check_entities(&file(fits + 1)).is_err());
+    }
+
+    #[test]
     fn references_add_their_values_length() {
         let file = |count: usize| format!("<!DOCTYPE svg [<!ENTITY e '{}'>]><svg>{}</svg>", "x".repeat(1 << 20), "&e;".repeat(count));
         assert!(check_entities(&file(62)).is_ok());
