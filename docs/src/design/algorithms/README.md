@@ -9,8 +9,9 @@ conformance suite checks.
 | [Strokes](strokes.md) | running, bean, manual, random-length, zigzag stroke, ripple |
 | [Satin](satin.md) | satin column, E-stitch, S-stitch, zigzag satin, underlays |
 | [Fills](fills.md) | tatami, contour, meander, circular, guided, linear gradient, tartan, cross stitch |
+| [Lock stitches](locks.md) | the tie-in and tie-off at the ends of an element's stitching |
 
-Lock stitches, travel and the joining of elements are part of
+Travel and the joining of elements, and which ends get a lock, are part of
 [plan assembly](../engine-pipeline.md#4-plan-assembly).
 
 ## The generator contract

@@ -24,8 +24,10 @@ pub const fn stitchcraft_core::budget::Meter::work_left(&self) -> u64
 pub mod stitchcraft_core::diag
 #[non_exhaustive] pub enum stitchcraft_core::diag::Code
 pub stitchcraft_core::diag::Code::BudgetExhausted
+pub stitchcraft_core::diag::Code::CustomLockUnusable
 pub stitchcraft_core::diag::Code::HandStitchTooShort
 pub stitchcraft_core::diag::Code::InternalCheckFailed
+pub stitchcraft_core::diag::Code::LockStitchLengthened
 pub stitchcraft_core::diag::Code::NothingToStitch
 pub stitchcraft_core::diag::Code::OutsideComfortZone
 pub stitchcraft_core::diag::Code::OutsideHoop
@@ -163,8 +165,10 @@ pub fn stitchcraft_core::units::at_least(f64, f64) -> bool
 pub fn stitchcraft_core::units::to_tenths(f64) -> core::option::Option<i32>
 #[non_exhaustive] pub enum stitchcraft_core::Code
 pub stitchcraft_core::Code::BudgetExhausted
+pub stitchcraft_core::Code::CustomLockUnusable
 pub stitchcraft_core::Code::HandStitchTooShort
 pub stitchcraft_core::Code::InternalCheckFailed
+pub stitchcraft_core::Code::LockStitchLengthened
 pub stitchcraft_core::Code::NothingToStitch
 pub stitchcraft_core::Code::OutsideComfortZone
 pub stitchcraft_core::Code::OutsideHoop

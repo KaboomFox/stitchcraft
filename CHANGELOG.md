@@ -5,6 +5,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M3.7: lock stitches (`stitchcraft_engine::locks`): the tie-in and tie-off at either end of a group's
+  stitches, for plan assembly (M3.8) to sew where `ties` says.
+  - **Shapes.** Every Ink/Stitch lock id is accepted. The shapes behind them are StitchCraft's own
+    (`DEV-LCK-001`): the half stitch goes forth and back twice over half the first stitch, `back_forth`
+    the same over one step of `lock_*_scale_mm`, and seven drawn shapes are sized by
+    `lock_*_scale_percent`. Each lies on the stitching it secures.
+  - **Custom locks.** Numbers in `lock_custom_start` and `lock_custom_end` are steps along the stitching,
+    read as Ink/Stitch reads them. A lock drawn as an SVG path is not sewn yet: the half stitch is sewn
+    instead, and the new `SC-W0503` says so, as it does for an empty custom lock or pieces that are not
+    numbers.
+  - **Shortest lock stitch.** No lock stitch is shorter than 0.2 mm: a shorter step is lengthened, a
+    drawn lock enlarged, and the new `SC-W0502` says by how much.
+  - **Settings windows** show `lock_*_scale_mm` only for the locks it sizes, and `lock_*_scale_percent`
+    likewise: a parameter can now be shown for several values of another (`when key in VALUES`).
+  - **Conformance.** `REQ-LCK-002` and the new `REQ-LCK-004` are active; `REQ-LCK-001` (where locks go)
+    moves to plan assembly, M3.8.
 - M3.6: manual stitch (`stitchcraft_engine::generators::manual`).
   - **Needle points.** A needle point goes on every node of the path, in order. A curve gives only its
     end node.
@@ -100,6 +116,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M3.7: in the parameters' JSON Schema, `x-stitchcraft.visible_when` lists the values a parameter is shown
+  for (`any_of`) instead of one (`equals`), and `stitchcraft_params::Condition` likewise. The lock shapes
+  list (`LOCKS`) moved from `common` to `locks`, next to the shapes it names.
 - Reading Ink/Stitch's source is allowed; copying it is not (ADR-0012, replacing decision 2 of ADR-0001).
   Behaviour still goes into the design docs in our own words and code is written from them, so the
   details its documentation leaves out (parameter edge cases, how lists repeat, the font files) can be

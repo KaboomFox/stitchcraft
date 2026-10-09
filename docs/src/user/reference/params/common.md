@@ -32,17 +32,20 @@ go straight on to it without one.
 
 ### `lock_start`
 
-**Start lock.** The shape of the lock stitches at the start. A half stitch (back and forth along the first
-stitch) is the least visible.
+**Start lock.** The shape of the lock stitches at the start. The half stitch, back and forth over the first
+half of the first stitch, hides under it; the others are larger and grip more.
 
 - **Accepts:** one of `half_stitch` (Half stitch), `arrow` (Arrow), `back_forth` (Back and forth), `bowtie` (Bowtie), `cross` (Cross), `star` (Star), `simple` (Simple), `triangle` (Triangle), `zigzag` (Zigzag), `custom` (Custom)
 - **Default:** `half_stitch`
-- **Ink/Stitch:** same key; StitchCraft differs (DEV-LCK-001): Every Ink/Stitch lock id is accepted, but the shapes behind the ids are StitchCraft's own designs with the same intent, so lock stitches differ in detail.
+- **Ink/Stitch:** same key; StitchCraft differs (DEV-LCK-001): Every Ink/Stitch lock id is accepted, but the shapes behind the ids are StitchCraft's own designs with the same intent: the half stitch goes forth and back twice over half the first stitch and back_forth twice over one step, where Ink/Stitch's go out two steps and back; the drawn shapes are new; and a custom lock drawn as an SVG path sews the half stitch, with SC-W0503, until M8.
 
 ### `lock_custom_start`
 
-**Custom start lock.** The shape of a custom start lock: an SVG path, or back-and-forth steps written as numbers
-separated by spaces.
+**Custom start lock.** The steps a custom start lock takes along the stitching before it starts, as numbers separated
+by spaces, each a number of `lock_start_scale_mm`: positive steps go into the stitching, and the
+last one ends where the stitching starts, so `1 -1 1 -1` goes forth and back twice. Ink/Stitch
+also takes an SVG path that draws the lock; StitchCraft does not sew those yet, and sews the
+half stitch instead (`SC-W0503`).
 
 - **Accepts:** text of at most 4096 bytes
 - **Default:** empty
@@ -51,32 +54,39 @@ separated by spaces.
 
 ### `lock_start_scale_mm`
 
-**Start lock size.** How large a start lock made of back-and-forth steps is, in millimetres.
+**Start lock size.** How long each step of a start lock made of steps (back and forth, or custom) is.
 
 - **Accepts:** a length from 0.1 to 10 mm
 - **Default:** `0.7`
+- **Shown when** [`lock_start`](#lock_start) is `back_forth` or `custom`
 - **Ink/Stitch:** same key, meaning and default
 
 ### `lock_start_scale_percent`
 
-**Start lock scale.** How large a start lock drawn as a path is, in percent of the shape's own size.
+**Start lock scale.** How large a drawn start lock is, in percent of its own size: at 100 % it reaches about
+1.4 mm along the stitching.
 
 - **Accepts:** a percentage from 10 to 500
 - **Default:** `100`
+- **Shown when** [`lock_start`](#lock_start) is `arrow`, `bowtie`, `cross`, `star`, `simple`, `triangle`, `zigzag` or `custom`
 - **Ink/Stitch:** same key, meaning and default
 
 ### `lock_end`
 
-**End lock.** The shape of the lock stitches at the end.
+**End lock.** The shape of the lock stitches at the end. The half stitch, back and forth over the last
+half of the last stitch, hides under it; the others are larger and grip more.
 
 - **Accepts:** one of `half_stitch` (Half stitch), `arrow` (Arrow), `back_forth` (Back and forth), `bowtie` (Bowtie), `cross` (Cross), `star` (Star), `simple` (Simple), `triangle` (Triangle), `zigzag` (Zigzag), `custom` (Custom)
 - **Default:** `half_stitch`
-- **Ink/Stitch:** same key; StitchCraft differs (DEV-LCK-001): Every Ink/Stitch lock id is accepted, but the shapes behind the ids are StitchCraft's own designs with the same intent, so lock stitches differ in detail.
+- **Ink/Stitch:** same key; StitchCraft differs (DEV-LCK-001): Every Ink/Stitch lock id is accepted, but the shapes behind the ids are StitchCraft's own designs with the same intent: the half stitch goes forth and back twice over half the first stitch and back_forth twice over one step, where Ink/Stitch's go out two steps and back; the drawn shapes are new; and a custom lock drawn as an SVG path sews the half stitch, with SC-W0503, until M8.
 
 ### `lock_custom_end`
 
-**Custom end lock.** The shape of a custom end lock: an SVG path, or back-and-forth steps written as numbers
-separated by spaces.
+**Custom end lock.** The steps a custom end lock takes along the stitching after it ends, as numbers separated by
+spaces, each a number of `lock_end_scale_mm`: positive steps go back into the stitching, and
+the first one starts where the stitching ends, so `1 -1 1 -1` goes back and forth twice.
+Ink/Stitch also takes an SVG path that draws the lock; StitchCraft does not sew those yet, and
+sews the half stitch instead (`SC-W0503`).
 
 - **Accepts:** text of at most 4096 bytes
 - **Default:** empty
@@ -85,18 +95,21 @@ separated by spaces.
 
 ### `lock_end_scale_mm`
 
-**End lock size.** How large an end lock made of back-and-forth steps is, in millimetres.
+**End lock size.** How long each step of an end lock made of steps (back and forth, or custom) is.
 
 - **Accepts:** a length from 0.1 to 10 mm
 - **Default:** `0.7`
+- **Shown when** [`lock_end`](#lock_end) is `back_forth` or `custom`
 - **Ink/Stitch:** same key, meaning and default
 
 ### `lock_end_scale_percent`
 
-**End lock scale.** How large an end lock drawn as a path is, in percent of the shape's own size.
+**End lock scale.** How large a drawn end lock is, in percent of its own size: at 100 % it reaches about 1.4 mm
+along the stitching.
 
 - **Accepts:** a percentage from 10 to 500
 - **Default:** `100`
+- **Shown when** [`lock_end`](#lock_end) is `arrow`, `bowtie`, `cross`, `star`, `simple`, `triangle`, `zigzag` or `custom`
 - **Ink/Stitch:** same key, meaning and default
 
 ## Trims and stops

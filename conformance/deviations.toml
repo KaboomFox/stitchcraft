@@ -12,8 +12,8 @@
 [[deviation]]
 id = "DEV-LCK-001"
 area = "plan/locks"
-summary = "Every Ink/Stitch lock id is accepted, but the shapes behind the ids are StitchCraft's own designs with the same intent, so lock stitches differ in detail."
-reason = "Clean room: the shapes come from StitchCraft's design (docs/src/design/engine-pipeline.md), not from Ink/Stitch's code (ADR-0001)."
+summary = "Every Ink/Stitch lock id is accepted, but the shapes behind the ids are StitchCraft's own designs with the same intent: the half stitch goes forth and back twice over half the first stitch and back_forth twice over one step, where Ink/Stitch's go out two steps and back; the drawn shapes are new; and a custom lock drawn as an SVG path sews the half stitch, with SC-W0503, until M8."
+reason = "Clean room: the shapes come from StitchCraft's design (docs/src/design/algorithms/locks.md), never from Ink/Stitch's lock data (ADR-0001). Each lies on the stitching it secures and keeps every lock stitch from 0.2 mm; machine checkpoint MC-2 (TS-04) checks that they hold."
 requirements = ["REQ-LCK-002"]
 
 [[deviation]]

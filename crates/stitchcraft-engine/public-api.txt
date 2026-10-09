@@ -21,7 +21,6 @@ impl stitchcraft_engine::common::CommonParams
 pub const stitchcraft_engine::common::CommonParams::GROUP: stitchcraft_params::spec::ParamGroup
 pub const stitchcraft_engine::common::CommonParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
 pub fn stitchcraft_engine::common::CommonParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
-pub const stitchcraft_engine::common::LOCKS: &[stitchcraft_params::spec::ChoiceOption]
 pub mod stitchcraft_engine::design
 pub enum stitchcraft_engine::design::FillRule
 pub stitchcraft_engine::design::FillRule::EvenOdd
@@ -95,6 +94,16 @@ pub fn stitchcraft_engine::generators::running::running_stitch(&stitchcraft_engi
 pub struct stitchcraft_engine::generators::Stitched
 pub stitchcraft_engine::generators::Stitched::runs: alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>
 pub stitchcraft_engine::generators::Stitched::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub mod stitchcraft_engine::locks
+pub struct stitchcraft_engine::locks::Lock
+pub stitchcraft_engine::locks::Lock::points: alloc::vec::Vec<stitchcraft_core::units::Point>
+pub stitchcraft_engine::locks::Lock::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub const stitchcraft_engine::locks::HALF_STITCH_LONGEST: f64
+pub const stitchcraft_engine::locks::LOCKS: &[stitchcraft_params::spec::ChoiceOption]
+pub const stitchcraft_engine::locks::SIZED_IN_MM: &[&str]
+pub const stitchcraft_engine::locks::SIZED_IN_PERCENT: &[&str]
+pub fn stitchcraft_engine::locks::tie_in(&[stitchcraft_core::units::Point], &stitchcraft_engine::common::CommonParams, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::locks::Lock, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::locks::tie_off(&[stitchcraft_core::units::Point], &stitchcraft_engine::common::CommonParams, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::locks::Lock, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::normalize
 pub mod stitchcraft_engine::normalize::stroke
 pub struct stitchcraft_engine::normalize::stroke::Piece

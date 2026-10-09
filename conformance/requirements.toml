@@ -311,9 +311,17 @@ status = "planned"
 id = "REQ-LCK-002"
 area = "plan/locks"
 level = "L2"
-statement = "Every lock id is accepted; lock shapes scale by the mm or percent parameter as documented."
+statement = "Every lock id is accepted and sews a lock that joins the stitching where it starts or ends, with no stitch shorter than 0.2 mm; drawn locks scale with `lock_*_scale_percent`, locks made of steps with `lock_*_scale_mm`, and the half stitch with the first stitch."
 milestone = "M3"
-status = "planned"
+status = "active"
+
+[[req]]
+id = "REQ-LCK-004"
+area = "plan/locks"
+level = "L2"
+statement = "A custom lock written as numbers sews them as steps along the path, in sizes of `lock_*_scale_mm`, positive into the stitching: a tie-in's steps end where the stitching starts and a tie-off's begin where it ends, as Ink/Stitch reads them."
+milestone = "M3"
+status = "active"
 
 [[req]]
 id = "REQ-LCK-003"
