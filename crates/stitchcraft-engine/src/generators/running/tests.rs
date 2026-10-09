@@ -19,8 +19,9 @@ fn spans_are_divided_evenly() {
     assert!(close(&fitted(0.1 + 0.2 + 0.7, &[0.5], 0.0), &[0.5; 2]), "0.1 + 0.2 + 0.7 is not exactly 1");
     // A little more: one more stitch, all of them shorter.
     assert!(close(&fitted(10.1, &[2.5], 0.3), &[2.02; 5]));
-    // Shorter than one stitch: one stitch.
+    // Shorter than one stitch: one stitch. No pattern at all: one stitch too.
     assert!(close(&fitted(1.0, &[2.5], 0.3), &[1.0]));
+    assert!(close(&fitted(4.0, &[], 0.3), &[4.0]));
 }
 
 #[test]
@@ -128,6 +129,10 @@ fn the_farthest_point_from_both_ends() {
     let along = Along::new(&turned, &mut meter).unwrap();
     let (distance, far) = along.farthest(point(s.0, s.1), point(e.0, e.1), &mut meter).unwrap().unwrap();
     assert!((distance - 1.0625_f64.sqrt()).abs() < 1e-12 && far.point.distance(point(0.35, 2.8)) < 1e-12 && (far.at - 1.25).abs() < 1e-12);
+    // Nothing is that far: no crossing.
+    let line = piece(&[(0.0, 0.0), (1.0, 0.0), (2.0, 0.0)]);
+    let along = Along::new(&line, &mut meter).unwrap();
+    assert!(along.crossing(&along.vertex(0), 5.0, &along.vertex(2), &mut meter).unwrap().is_none());
     // Two points equally far: the first.
     let triangle = piece(&[(0.0, 0.0), (1.0, 1.0), (1.0, -1.0), (0.0, 0.0)]);
     let along = Along::new(&triangle, &mut meter).unwrap();

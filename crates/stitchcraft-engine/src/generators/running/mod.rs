@@ -265,16 +265,13 @@ fn stitch_piece(
 
 /// The stitch lengths for a span `length` long: the pattern's next lengths, as many as it takes to reach
 /// `length`, all shortened by one factor to end exactly there; then each one shorter than `min` joined to
-/// its shorter neighbour.
+/// its shorter neighbour. With no pattern, the span is one stitch.
 fn fit(length: f64, pattern: &[f64], next: &mut usize, min: f64, meter: &mut Meter) -> Result<Vec<f64>, Exhausted> {
-    if pattern.is_empty() {
-        return Ok(vec![length]);
-    }
     let mut lengths = Vec::new();
     let mut sum = 0.0;
     while lengths.is_empty() || !at_least(sum, length) {
         meter.charge(1)?;
-        let stitch = pattern.get(*next % pattern.len()).copied().unwrap_or(length);
+        let stitch = next.checked_rem(pattern.len()).and_then(|i| pattern.get(i)).copied().unwrap_or(length);
         lengths.push(stitch);
         sum += stitch;
         *next += 1;
