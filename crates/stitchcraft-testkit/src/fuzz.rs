@@ -12,9 +12,9 @@
 //! - **Readers never panic** and what they return respects their caps: at most
 //!   [`MAX_RECORDS`] entries, every position within ±10 m.
 //! - **StitchCraft reads back what it writes from anything it read.** A plan read from any file is
-//!   written in every format without a panic. Written as PES, it reads back to a plan that makes the
-//!   machine do the same thing ([`events`]). DST is only checked for not panicking: it spells trims as
-//!   jump runs, so small jumps next to a trim in a hostile file can legitimately read back differently.
+//!   written in every format without a panic, and reads back to a plan that makes the machine do the same
+//!   thing: what the plan does as PES ([`events`]), and what DST machines do with it as DST
+//!   ([`dst_events`]: they also cut the thread before long runs of jumps).
 //! - **Previews never panic** on anything read, in either style; refusals such as a spent budget are
 //!   fine.
 //! - **The SVG reader never panics** and refuses only with its own codes: `SC-E0801` for a file that is
@@ -28,7 +28,7 @@ use stitchcraft_plan::{FormatId, StitchPlan};
 use stitchcraft_render::raster::MARGIN_MM;
 use stitchcraft_render::{Scene, Settings, Style};
 
-use crate::equivalence::events;
+use crate::equivalence::{dst_events, events};
 
 /// The PES/PEC reader on `data`.
 pub fn read_pes(data: &[u8]) {
@@ -49,11 +49,10 @@ pub fn read_write_preview(data: &[u8]) {
     let Ok(decoded) = decode(data) else { return };
     within_caps(&decoded.plan);
     for format in FormatId::ALL {
-        let Ok(bytes) = encode(&decoded.plan, *format, &decoded.name) else { continue };
-        if *format == FormatId::PesV1 {
-            let back = decode(&bytes).unwrap_or_else(|e| panic!("StitchCraft cannot read the PES file it wrote: {e}"));
-            assert_eq!(events(&back.plan), events(&decoded.plan), "the PES file makes the machine do something else");
-        }
+        let Ok(encoded) = encode(&decoded.plan, *format, &decoded.name) else { continue };
+        let back = decode(&encoded.bytes).unwrap_or_else(|e| panic!("StitchCraft cannot read the {} file it wrote: {e}", format.name()));
+        let expected = if *format == FormatId::Dst { dst_events(&decoded.plan) } else { events(&decoded.plan) };
+        assert_eq!(events(&back.plan), expected, "the {} file makes the machine do something else", format.name());
     }
     // Both styles, at a scale that keeps the image near 96 pixels so each input stays fast: filling and
     // encoding cost one step per pixel, whatever the stitches. Refusing (budget spent) is fine.
@@ -75,8 +74,9 @@ pub fn read_svg(data: &[u8]) {
     let budget = Budget { max_stitches: 100_000, max_work: 2_000_000 };
     match stitchcraft_svg::read(data, &budget) {
         Ok(svg) => {
-            for warning in &svg.warnings {
-                assert_eq!(warning.severity(), Severity::Warning, "{warning}");
+            // What the reader says about a file it reads is a warning or a note, never an error.
+            for said in &svg.warnings {
+                assert_ne!(said.severity(), Severity::Error, "{said}");
             }
             let limit = f64::from(MACHINE_LIMIT) / 10.0;
             for point in svg.design.elements().iter().flat_map(|e| e.shape.path().points()) {

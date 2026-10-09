@@ -17,7 +17,7 @@ stitches running stitches: even spacing between corners, patterns of lengths, cu
 tolerance, no stitch shorter than the shortest stitch, measured straight, repeats, bean stitch and random
 length, manual stitches placed by hand, and lock stitches of every shape at either end of the
 stitching; and it assembles a design's elements into one plan, with jumps, trims, stops, thread changes and
-locks where `ties` says. The conformance report shows all 37 active requirements green. Next: the MC-1
+locks where `ties` says. The conformance report shows all 40 active requirements green. Next: the MC-1
 sew-out report, which closes M1, and the rest of M3 (finalizing, `stitch plan`, the bug-report bundle). The repository is
 [KaboomFox/stitchcraft](https://github.com/KaboomFox/stitchcraft), with the docs published at
 [kaboomfox.github.io/stitchcraft](https://kaboomfox.github.io/stitchcraft/) and `main` protected; the

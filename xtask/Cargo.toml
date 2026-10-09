@@ -22,6 +22,7 @@ stitchcraft-formats = { workspace = true }
 stitchcraft-params = { workspace = true }
 stitchcraft-plan = { workspace = true }
 stitchcraft-render = { workspace = true }
+stitchcraft-svg = { workspace = true }
 stitchcraft-testkit = { workspace = true }
 sha2 = { workspace = true }
 serde = { workspace = true }

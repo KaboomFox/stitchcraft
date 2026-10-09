@@ -76,7 +76,7 @@ fn scene(plan: &StitchPlan) -> Scene {
 
 /// `plan` written as a PES file and read back.
 fn through_pes(plan: &StitchPlan) -> StitchPlan {
-    decode(&encode(plan, FormatId::PesV1, "preview").unwrap()).unwrap().plan
+    decode(&encode(plan, FormatId::PesV1, "preview").unwrap().bytes).unwrap().plan
 }
 
 /// What a PES file can say of `scene`: colours become Brother palette colours and roles are gone.
