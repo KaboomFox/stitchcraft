@@ -124,7 +124,7 @@ separated by spaces.
 **Shortest stitch.** Stitches shorter than this are merged into their neighbours, so the needle does not
 hammer one hole. Empty: the larger of the document's setting and the machine's minimum.
 
-- **Accepts:** a length from 0 to 10 mm, or empty
+- **Accepts:** a length from 0 to 10 mm, or empty (0 or less counts as empty)
 - **Default:** empty
 - **Ink/Stitch:** same key, meaning and default
 
@@ -133,6 +133,6 @@ hammer one hole. Empty: the larger of the document's setting and the machine's m
 **Shortest jump.** A move to the next element shorter than this is sewn straight on, without lock stitches or a
 jump. Empty: the document's setting.
 
-- **Accepts:** a length from 0 to 20 mm, or empty
+- **Accepts:** a length from 0 to 20 mm, or empty (0 or less counts as empty)
 - **Default:** empty
 - **Ink/Stitch:** same key, meaning and default

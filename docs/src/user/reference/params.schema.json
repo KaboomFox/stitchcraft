@@ -191,6 +191,26 @@
         "unit": "%"
       }
     },
+    "max_stitch_length_mm": {
+      "default": null,
+      "description": "Split stitches longer than this into equal parts. Empty, every stitch is sewn as drawn.",
+      "maximum": 25.0,
+      "minimum": 0.1,
+      "title": "Longest stitch",
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-stitchcraft": {
+        "applies_to": [
+          "manual_stitch"
+        ],
+        "group": "Manual stitch",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
     "min_jump_stitch_length_mm": {
       "default": null,
       "description": "A move to the next element shorter than this is sewn straight on, without lock stitches or a jump. Empty: the document's setting.",
@@ -410,6 +430,13 @@
         ],
         "name": "RepeatParams",
         "title": "Repeat parameters"
+      },
+      {
+        "keys": [
+          "max_stitch_length_mm"
+        ],
+        "name": "ManualParams",
+        "title": "Manual parameters"
       }
     ]
   }
