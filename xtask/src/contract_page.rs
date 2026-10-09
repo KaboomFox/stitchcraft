@@ -208,8 +208,8 @@ impl Contract {
     }
 }
 
-/// Where a declaration and the Ink/Stitch row it matches disagree on the kind or the default, or on
-/// applying to every stitch type.
+/// Where a declaration and the Ink/Stitch row it matches disagree on the kind or the default, on
+/// applying to every stitch type, or on when a settings window shows it.
 fn disagreements(spec: &ParamSpec, origin: Origin, p: &Param) -> Vec<String> {
     let key = spec.key;
     let mut problems = Vec::new();
@@ -229,6 +229,14 @@ fn disagreements(spec: &ParamSpec, origin: Origin, p: &Param) -> Vec<String> {
     }
     if p.element == "common" && spec.applies_to != StitchType::ALL {
         problems.push(format!("`{key}` applies to every stitch type in Ink/Stitch, but not here"));
+    }
+    // Values in `applies_to` that are not stitch types are another parameter's values Ink/Stitch shows
+    // this one for (a lock's size, say, only for the shapes it sizes); the registry must say the same.
+    let theirs: BTreeSet<&str> = p.applies_to.iter().map(String::as_str).filter(|a| StitchType::ALL.iter().all(|t| t.id() != *a)).collect();
+    let ours: BTreeSet<&str> = spec.visible_when.map(|c| c.any_of.iter().copied().collect()).unwrap_or_default();
+    if !theirs.is_empty() && theirs != ours {
+        let here = if ours.is_empty() { "always".to_string() } else { format!("only for {ours:?}") };
+        problems.push(format!("`{key}` is shown only for {theirs:?} in Ink/Stitch, but {here} here"));
     }
     problems
 }
@@ -264,7 +272,7 @@ fn compatible(kind: Kind, their_type: &str, unit: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use stitchcraft_params::{ChoiceOption, ParamSpec, Stability};
+    use stitchcraft_params::{ChoiceOption, Condition, ParamSpec, Stability};
 
     use super::*;
 
@@ -396,6 +404,36 @@ mod tests {
                 "`lock_start` offers [\"bowtie\"], but the lock identifiers in conformance/inkstitch-params.toml are [\"half_stitch\"]",
                 "`fill_method`: StitchType has {\"circular_fill\", \"contour_fill\", \"cross_stitch\", \"guided_fill\", \"legacy_fill\", \"linear_gradient_fill\", \"meander_fill\", \"tartan_fill\", \"tatami_fill\"}, but conformance/inkstitch-params.toml lists {\"circular_fill\", \"contour_fill\", \"cross_stitch\", \"guided_fill\", \"linear_gradient_fill\", \"meander_fill\", \"old_fill\", \"tartan_fill\", \"tatami_fill\"}",
             ]
+        );
+    }
+
+    #[test]
+    fn a_parameter_ink_stitch_shows_only_for_some_values_is_shown_for_the_same() {
+        let data = data("0.25").replacen(
+            "[[param]]",
+            "[[param]]\nelement = \"common\"\nname = \"lock_start_scale_mm\"\ntype = \"float\"\nunit = \"mm\"\ndefault = \"0.7\"\n\
+             applies_to = [\"back_forth\", \"custom\"]\nphase = \"P1\"\nmilestone = \"M3\"\n[[param]]",
+            1,
+        );
+        let contract = Contract::parse(&data).unwrap();
+        let size = |any_of: Option<&'static [&'static str]>| -> ParamGroup {
+            let spec = ParamSpec {
+                key: "lock_start_scale_mm",
+                default: "0.7",
+                applies_to: StitchType::ALL,
+                visible_when: any_of.map(|any_of| Condition { key: "lock_start", any_of }),
+                ..ROW_SPACING
+            };
+            ParamGroup { name: "CommonParams", help: " Common.\n", applies_to: StitchType::ALL, specs: Box::leak(Box::new([spec])) }
+        };
+        assert_eq!(contract.check(&[&size(Some(&["custom", "back_forth"]))]), Vec::<String>::new(), "in any order");
+        assert_eq!(
+            contract.check(&[&size(None)]),
+            ["`lock_start_scale_mm` is shown only for {\"back_forth\", \"custom\"} in Ink/Stitch, but always here"]
+        );
+        assert_eq!(
+            contract.check(&[&size(Some(&["custom"]))]),
+            ["`lock_start_scale_mm` is shown only for {\"back_forth\", \"custom\"} in Ink/Stitch, but only for {\"custom\"} here"]
         );
     }
 

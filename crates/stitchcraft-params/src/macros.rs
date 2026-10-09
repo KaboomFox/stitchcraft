@@ -35,14 +35,15 @@
 //! ```text
 //! /// help text
 //! key: Kind = "default", label "Label" [, range (min, max)] [, options ["id" => "Label", …]]
-//!     [, choices CONST] [, applies STITCH_TYPES] [, when other_key == "value"] [, origin ORIGIN]
-//!     [, stability STABILITY];
+//!     [, choices CONST] [, applies STITCH_TYPES] [, when other_key == "value" | when other_key in VALUES]
+//!     [, origin ORIGIN] [, stability STABILITY];
 //! ```
 //!
 //! `Kind` is one of the types in [`kinds`](crate::kinds). Numbers and lists need a `range`; choices need
 //! `options`, or `choices` naming a `&[ChoiceOption]` constant that several parameters share. Other
 //! combinations do not compile. `applies` overrides the struct's stitch types for
-//! one parameter; `origin` defaults to [`Origin::InkStitch`](crate::Origin) and `stability` to
+//! one parameter. `when` shows the parameter only while another has a value, or one of the values in
+//! `VALUES` (a `&[&str]`). `origin` defaults to [`Origin::InkStitch`](crate::Origin) and `stability` to
 //! [`Stability::Stable`](crate::Stability).
 
 /// Declares a group of parameters; see the [module documentation](crate::macros).
@@ -60,7 +61,7 @@ macro_rules! params {
                     $(, options [$($id:literal => $option:literal),+ $(,)?])?
                     $(, choices $choices:path)?
                     $(, applies $field_applies:expr)?
-                    $(, when $when_key:ident == $when_value:literal)?
+                    $(, when $when_key:ident $when_test:tt $when_value:expr)?
                     $(, origin $origin:expr)?
                     $(, stability $stability:expr)?
                     ;
@@ -89,7 +90,7 @@ macro_rules! params {
                         default: $default,
                         group: $group,
                         applies_to: $crate::__param_or!([$($field_applies)?] [$applies]),
-                        visible_when: $crate::__param_when!($($when_key == $when_value)?),
+                        visible_when: $crate::__param_when!($($when_key $when_test $when_value)?),
                         stability: $crate::__param_or!([$($stability)?] [$crate::Stability::Stable]),
                         origin: $crate::__param_or!([$($origin)?] [$crate::Origin::InkStitch]),
                     },
@@ -172,14 +173,17 @@ macro_rules! __param_or {
     };
 }
 
-/// A visibility condition, or none.
+/// A visibility condition, or none: `key == "value"` or `key in VALUES`. Any other test does not compile.
 #[doc(hidden)]
 #[macro_export]
 macro_rules! __param_when {
     () => {
         None
     };
-    ($key:ident == $value:literal) => {
-        Some($crate::Condition { key: stringify!($key), equals: $value })
+    ($key:ident == $value:expr) => {
+        Some($crate::Condition { key: stringify!($key), any_of: &[$value] })
+    };
+    ($key:ident in $values:expr) => {
+        Some($crate::Condition { key: stringify!($key), any_of: $values })
     };
 }

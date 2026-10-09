@@ -58,8 +58,10 @@ fn check(spec: &ParamSpec, registry: &[&ParamGroup]) -> Vec<&'static str> {
     }
     require(matches!(spec.read(spec.default), Ok((_, None))), "its default is not a value it accepts without a warning");
     if let Some(condition) = spec.visible_when {
-        let possible =
-            find(registry, condition.key).is_some_and(|other| other.key != spec.key && matches!(other.read(condition.equals), Ok((_, None))));
+        // Shown for some value, and only for values the other parameter takes as they are.
+        let possible = !condition.any_of.is_empty()
+            && find(registry, condition.key)
+                .is_some_and(|other| other.key != spec.key && condition.any_of.iter().all(|value| matches!(other.read(value), Ok((_, None)))));
         require(possible, "it is shown only when another parameter has a value that parameter cannot have");
     }
     if let Stability::Deprecated { use_instead: Some(other) } = spec.stability {
@@ -118,7 +120,7 @@ mod tests {
                 label: "Note",
                 kind: Kind::Text { max_bytes: 10 },
                 default: "",
-                visible_when: Some(Condition { key: "method", equals: "b" }),
+                visible_when: Some(Condition { key: "method", any_of: &["a", "b"] }),
                 ..GOOD
             },
             ParamSpec {
@@ -144,13 +146,14 @@ mod tests {
                 default: "y",
                 ..GOOD
             },
-            ParamSpec { key: "d", label: "D", visible_when: Some(Condition { key: "c", equals: "z" }), ..GOOD },
-            ParamSpec { key: "e", label: "E", visible_when: Some(Condition { key: "e", equals: "0.25" }), ..GOOD },
+            ParamSpec { key: "d", label: "D", visible_when: Some(Condition { key: "c", any_of: &["x", "z"] }), ..GOOD },
+            ParamSpec { key: "e", label: "E", visible_when: Some(Condition { key: "e", any_of: &["0.25"] }), ..GOOD },
             ParamSpec { key: "f", label: "F", stability: Stability::Deprecated { use_instead: Some("gone") }, ..GOOD },
             ParamSpec { key: "g", label: "G", kind: Kind::Length { min: 1.0, max: 1.0, optional: false }, default: "1", ..GOOD },
             ParamSpec { key: "h", label: "H", kind: Kind::Text { max_bytes: 0 }, default: "", ..GOOD },
             ParamSpec { key: "i", label: "I", stability: Stability::Deprecated { use_instead: Some("i") }, ..GOOD },
             ParamSpec { key: "a", label: "A2", ..GOOD },
+            ParamSpec { key: "j", label: "J", visible_when: Some(Condition { key: "c", any_of: &[] }), ..GOOD },
         ];
         let problems = audit(&[&group(BROKEN)]);
         assert_eq!(
@@ -173,6 +176,7 @@ mod tests {
                 "`h`: its range is empty or not finite",
                 "`i`: it is deprecated in favour of itself or of a parameter that does not exist",
                 "`a`: declared twice",
+                "`j`: it is shown only when another parameter has a value that parameter cannot have",
             ]
         );
     }

@@ -120,7 +120,7 @@ fn page(group: &ParamGroup, ledger: &[Deviation]) -> Result<String, String> {
         let _ = writeln!(out, "- **Accepts:** {}", accepts(spec.kind));
         let _ = writeln!(out, "- **Default:** {}", default(spec)?);
         if let Some(condition) = spec.visible_when {
-            let _ = writeln!(out, "- **Shown when** [`{0}`](#{0}) is `{1}`", condition.key, condition.equals);
+            let _ = writeln!(out, "- **Shown when** [`{0}`](#{0}) is {1}", condition.key, either(condition.any_of));
         }
         if spec.applies_to != group.applies_to {
             let _ = writeln!(out, "- **Applies to:** {}", applies_to(spec.applies_to));
@@ -163,6 +163,15 @@ fn default(spec: &ParamSpec) -> Result<String, String> {
     // The registry test guarantees defaults parse; this keeps a broken one from reaching the docs.
     spec.read(spec.default).map_err(|d| format!("`{}`: {}", spec.key, d.message))?;
     Ok(if spec.default.is_empty() { "empty".to_string() } else { format!("`{}`", spec.default) })
+}
+
+/// `values` as code, joined the way a sentence lists alternatives: "`a`", "`a` or `b`", "`a`, `b` or `c`".
+fn either(values: &[&str]) -> String {
+    let code: Vec<String> = values.iter().map(|v| format!("`{v}`")).collect();
+    match code.split_last() {
+        Some((last, rest)) if !rest.is_empty() => format!("{} or {last}", rest.join(", ")),
+        _ => code.concat(),
+    }
 }
 
 fn applies_to(types: &[StitchType]) -> String {
@@ -217,7 +226,7 @@ fn property(spec: &ParamSpec) -> Result<Json, String> {
         extra["applies_to"] = json!(spec.applies_to.iter().map(|t| t.id()).collect::<Vec<_>>());
     }
     if let Some(condition) = spec.visible_when {
-        extra["visible_when"] = json!({"key": condition.key, "equals": condition.equals});
+        extra["visible_when"] = json!({"key": condition.key, "any_of": condition.any_of});
     }
     if let Origin::InkStitchDeviates { deviation } = spec.origin {
         extra["deviation"] = json!(deviation);
@@ -283,6 +292,14 @@ mod tests {
     use super::*;
 
     const GROUP: ParamGroup = ParamGroup { name: "TatamiFillParams", help: "", applies_to: &[], specs: &[] };
+
+    #[test]
+    fn alternatives_read_as_a_sentence() {
+        assert_eq!(either(&["custom"]), "`custom`");
+        assert_eq!(either(&["back_forth", "custom"]), "`back_forth` or `custom`");
+        assert_eq!(either(&["arrow", "star", "custom"]), "`arrow`, `star` or `custom`");
+        assert_eq!(either(&[]), "");
+    }
 
     #[test]
     fn names_become_slugs_and_titles() {
