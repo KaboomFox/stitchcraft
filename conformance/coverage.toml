@@ -8,6 +8,7 @@ stitchcraft-cli = 91
 stitchcraft-core = 95
 stitchcraft-engine = 100
 stitchcraft-formats = 96
+stitchcraft-params = 94
 stitchcraft-plan = 98
 stitchcraft-render = 96
 stitchcraft-vc-plugin = 72
