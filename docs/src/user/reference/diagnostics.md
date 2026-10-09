@@ -159,11 +159,11 @@ ones.
 
 **Warning** — Lock stitch shorter than 0.2 mm; lengthened
 
-A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have: the needle
+A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have. The needle
 would go back into the hole it just left, which can cut the thread and does not lock it. Each such
 step of a lock made of steps (back and forth, or a custom lock written as numbers) was lengthened
-to 0.2 mm; a drawn lock was enlarged until its shortest stitch is 0.2 mm. A lock of steps follows
-the stitching, and where a sharp turn would fold it onto itself, it was sewn straight along the
+to 0.2 mm, and a drawn lock was enlarged until its shortest stitch is 0.2 mm long. A lock of steps
+follows the stitching. Where a sharp turn would fold it onto itself, it was sewn straight along the
 first (or last) stitch.
 
 The message says which lock, and by how much. Set a larger lock size (`lock_start_scale_mm`,
@@ -174,11 +174,11 @@ longer custom steps.
 
 **Warning** — Custom lock cannot be sewn as written
 
-The lock is set to custom, but its shape cannot be sewn as written. A custom lock is either numbers
-separated by spaces — the steps the needle takes along the path, in sizes of `lock_*_scale_mm` —
-or an SVG path that draws it. StitchCraft sews the numbers, but not yet a drawn custom lock: it
-sews the half stitch instead. Parts that are not numbers, or steps longer than 10 m, are left out;
-if no step is left, the half stitch is sewn instead.
+The lock is set to custom, but its shape cannot be sewn as written. A custom lock is numbers
+separated by spaces, the steps the needle takes along the stitching in sizes of
+`lock_*_scale_mm`, or an SVG path that draws it. StitchCraft sews the numbers. It does not sew a
+drawn custom lock yet, and sews the half stitch in its place. Parts that are not numbers, and steps
+longer than 10 m, are left out. If no step is left, the half stitch is sewn instead.
 
 The message says what was wrong. Write the lock as numbers, such as `1 -1 1 -1`, or choose
 another lock shape.

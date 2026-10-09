@@ -26,45 +26,56 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - **Conformance.** `REQ-FIN-001..003` are active. The new `plan` data case kind takes an SVG through
     the engine to golden machine files, as `stitch plan` does.
 - M3.8: plan assembly, and the engine's entry point, `stitchcraft_engine::plan(design, profile, budget)`.
-  - **Generate.** Each element goes to its stitch type's generator: `stroke_method` picks running stitch
-    (the default) or manual stitch. Other stroke methods, satins and fills are skipped with the new
-    `SC-W0011` until their milestones, as is an element whose parameters cannot be read (`SC-E0101`) or
-    whose work budget runs out (`SC-E0004`); the rest of the design still plans, and with nothing left,
+  - **Generate.** Each element goes to its stitch type's generator. `stroke_method` picks running stitch,
+    the default, or manual stitch. Other stroke methods, satins and fills are skipped with the new
+    `SC-W0011` until their milestones. So is an element whose parameters cannot be read (`SC-E0101`) or
+    whose work budget runs out (`SC-E0004`). The rest of the design still plans, and with nothing left,
     `SC-E0010` says so. Each element sews with the larger of the machine's shortest stitch and its own.
-  - **Assemble.** Elements are sewn in document order, a new thread colour starting a new colour block:
-    threads are compared by colour, as Ink/Stitch compares them, so two names for one colour are one
-    block. The needle
-    sews straight on to the next group when it is the same thread within the collapse length (3 mm, or
-    the element's `min_jump_stitch_length_mm`); otherwise the group ends with its tie-off and the next
-    starts with a jump and its tie-in. `trim_after` and `stop_after` add a trim or a stop after the
-    element, locks around them. Locks go only there, as `ties` says; `force_lock_stitches` adds the
-    tie-off, and manual stitch has none unless forced. This is Ink/Stitch's way of joining. An element
-    that sews nothing has no place for its trim or stop: it is left out, as Ink/Stitch leaves it out, and
-    the new `SC-W0505` says so.
-  - **Origin.** The plan is in hoop coordinates: the design's origin, or the centre of its stitches, at the
-    hoop's centre. A stop position adds a jump to it before each stop.
-  - **Design settings** (`DesignSettings`): collapse length, shortest stitch, origin and stop position,
-    with Ink/Stitch's defaults; the SVG adapter reads them from M8.
+  - **Assemble.** Elements are sewn in document order, and a new thread colour starts a new colour block.
+    Threads are compared by colour, as Ink/Stitch compares them, and two names for one colour are one
+    block. The needle sews straight on to the next group in the same thread within the collapse length
+    (3 mm, or the element's `min_jump_stitch_length_mm`). Otherwise the group ends with its tie-off, and
+    the next starts with a jump and its tie-in. `trim_after` and `stop_after` add a trim or a stop after
+    the element, with locks around them. Locks go only there, as `ties` says. `force_lock_stitches` adds
+    the tie-off, and manual stitch is sewn without locks unless they are forced. Ink/Stitch joins groups
+    the same way. An element that sews nothing has no place for its trim or stop. Both are left out, as
+    Ink/Stitch leaves them out, and the new `SC-W0505` says so.
+  - **Origin.** The plan is in hoop coordinates, with the design's origin, or the centre of its stitches,
+    at the hoop's centre. A stop position adds a jump to it before each stop.
+  - **Design settings** (`DesignSettings`) hold the collapse length, the shortest stitch, the origin and
+    the stop position, with Ink/Stitch's defaults. The SVG adapter reads them from M8.
   - **Conformance.** `REQ-ASM-001`, `-002`, `-003`, `-005`, `REQ-LCK-001` and the new `REQ-GEN-002` are
     active. Start and end hints (`REQ-GEN-001`) come with the SVG adapter's command symbols, M8.
-- M3.7: lock stitches (`stitchcraft_engine::locks`): the tie-in and tie-off at either end of a group's
-  stitches, for plan assembly (M3.8) to sew where `ties` says.
-  - **Shapes.** Every Ink/Stitch lock id is accepted. The shapes behind them are StitchCraft's own
-    (`DEV-LCK-001`): the half stitch goes forth and back twice over half the first stitch, `back_forth`
-    the same over one step of `lock_*_scale_mm`, and seven drawn shapes are sized by
-    `lock_*_scale_percent`. Each lies on the stitching it secures.
-  - **Custom locks.** Numbers in `lock_custom_start` and `lock_custom_end` are steps along the stitching,
+- M3.7: lock stitches (`stitchcraft_engine::locks`), the tie-in and tie-off at either end of a group's
+  stitches. Plan assembly (M3.8) sews them where `ties` says.
+  - **Shapes.** Each Ink/Stitch lock id is accepted, with StitchCraft's own shapes behind the ids
+    (`DEV-LCK-001`). The half stitch goes forth and back twice over half the first stitch. `back_forth`
+    does the same over one step of `lock_*_scale_mm`. The drawn shapes, 7 of them, are sized by
+    `lock_*_scale_percent`. Each shape lies on the stitching it secures.
+  - **Custom steps.** Numbers in `lock_custom_start` and `lock_custom_end` are steps along the stitching,
     read as Ink/Stitch reads them. Locks of steps follow the stitching round its corners, as Ink/Stitch's
-    custom steps do (`DEV-LCK-002` for the two places they differ). A lock drawn as an SVG path is not sewn yet: the half stitch is sewn
-    instead, and the new `SC-W0503` says so, as it does for an empty custom lock or pieces that are not
-    numbers.
-  - **Shortest lock stitch.** No lock stitch is shorter than 0.2 mm: a shorter step is lengthened, a
-    drawn lock enlarged, a lock of steps that a sharp turn would fold onto itself sewn straight, and the
-    new `SC-W0502` says so.
+    custom steps do, and `DEV-LCK-002` records the 2 places where they differ. A lock drawn as an SVG
+    path is not sewn yet. The half stitch is sewn in its place, and the new `SC-W0503` says so. It also
+    names an empty custom lock and pieces that are not numbers.
+  - **Shortest lock stitch.** A lock stitch is at least 0.2 mm long. Shorter steps are lengthened, and a
+    drawn lock is enlarged. Where a sharp turn would fold a lock of steps onto itself, it is sewn straight.
+    The new `SC-W0502` reports each change.
   - **Settings windows** show `lock_*_scale_mm` only for the locks it sizes, and `lock_*_scale_percent`
-    likewise: a parameter can now be shown for several values of another (`when key in VALUES`).
-  - **Conformance.** `REQ-LCK-002` and the new `REQ-LCK-004` are active; `REQ-LCK-001` (where locks go)
+    only for the locks it scales. A parameter can now be shown for several values of another
+    (`when key in VALUES`).
+  - **Conformance.** `REQ-LCK-002` and the new `REQ-LCK-004` are active. `REQ-LCK-001` (where locks go)
     moves to plan assembly, M3.8.
+- **Prose lint.** `cargo xtask prose` runs Vale on the Markdown lines that a branch adds. It checks the
+  project's own style and ai-tells, a published style for phrasing that machine-written text overuses. The
+  rules are in the new [writing style](docs/src/contributing/writing-style.md) page, with a glossary. CI
+  builds Vale and runs the check, and locally it runs when Vale is installed.
+- **Docs audit.** `cargo xtask docs --check` reports a sentence of 12 or more words that is on two pages,
+  and a path of the repository in inline code that does not exist.
+- **Design pages follow the code.** Each docs page that describes code names its source files in an
+  `implements` comment. Every source file of a crate or app is on such a page. `cargo xtask docs for PATH`
+  lists the pages for a file, and a Claude Code hook lists them after each edit. A branch that changes a
+  page's files changes the page too, or a commit message records that it still holds.
+- **SVG input page.** A new design page describes what the SVG adapter reads and what it reports.
 - M3.6: manual stitch (`stitchcraft_engine::generators::manual`).
   - **Needle points.** A needle point goes on every node of the path, in order. A curve gives only its
     end node.
@@ -166,7 +177,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### Changed
 - M3.7: in the parameters' JSON Schema, `x-stitchcraft.visible_when` lists the values a parameter is shown
-  for (`any_of`) instead of one (`equals`), and `stitchcraft_params::Condition` likewise. The lock shapes
+  for (`any_of`) in place of one (`equals`), and so does `stitchcraft_params::Condition`. The lock shapes
   list (`LOCKS`) moved from `common` to `locks`, next to the shapes it names.
 - The Ink/Stitch contract is checked against Ink/Stitch's source. `conformance/inkstitch/check_params.py`
   compares every row of `inkstitch-params.toml` with the parameter declarations in an Ink/Stitch

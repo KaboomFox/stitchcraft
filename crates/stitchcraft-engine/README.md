@@ -6,10 +6,10 @@ checked `StitchPlan`: normalize → validate → generate per element → assemb
 **Status:** the input model, `design::Design`, since M3.3 (`docs/src/design/data-model.md`); stroke
 normalization (`normalize::stroke`) and the running stitch (`generators::running`) since M3.4, with its
 repeats, bean stitch (`generators::passes`) and random length since M3.5; manual stitch
-(`generators::manual`) since M3.6; lock stitches (`locks`: every shape, at either end of a group) since
-M3.7; since M3.8 the entry point, `plan`, which sends each element to its generator (`generate`) and
-joins the groups into one plan (`assemble`); and since M3.9 the plan fitted to the machine and checked
-(`finalize`), so a plan `plan` returns can be written as it is. Design:
+(`generators::manual`) since M3.6. Lock stitches (`locks`) of each shape, at either end of a group, are
+here since M3.7. Since M3.8 the entry point, `plan`, sends each element to its generator (`generate`) and
+joins the groups into one plan (`assemble`). Since M3.9 it fits the plan to the machine and checks it
+(`finalize`), and a plan that `plan` returns can be written as it is. Design:
 `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 
 ## Invariants

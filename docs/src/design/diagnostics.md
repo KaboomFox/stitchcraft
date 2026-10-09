@@ -1,5 +1,7 @@
 # Diagnostics
 
+<!-- implements: crates/stitchcraft-core/src/diag.rs, crates/stitchcraft-core/src/text.rs, apps/stitchcraft-cli/src/commands/explain.rs -->
+
 A diagnostic is a problem with the user's design or input, explained in the user's terms, with a
 stable code. Diagnostics are values: the engine collects them and keeps planning whatever it can.
 Errors in the Rust sense (`Result`) are reserved for failures to do the work at all

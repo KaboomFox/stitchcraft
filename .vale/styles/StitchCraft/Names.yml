@@ -1,0 +1,10 @@
+# The projects' names, spelled as they spell them.
+extends: substitution
+message: "Write '%s', not '%s'."
+level: error
+ignorecase: false
+swap:
+  '\b(?:Inkstitch|InkStitch|Ink Stitch|Ink-Stitch)\b': Ink/Stitch
+  '\b(?:Stitchcraft|Stitch Craft|STITCHCRAFT)\b': StitchCraft
+  '\b(?:Vectorcraft|Vector Craft)\b': VectorCraft
+  '\b(?:PyEmbroidery|Pyembroidery)\b': pyembroidery
