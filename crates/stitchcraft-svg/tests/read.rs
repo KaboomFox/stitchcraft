@@ -1,6 +1,6 @@
 //! `REQ-SVG-001`: what an SVG file draws becomes the design exactly. Every element a viewer shows is
-//! there, in paint order and in its colours, at its position to within a micrometre; what a viewer hides
-//! is not.
+//! there, in document order (a shape's fill before its stroke) and in its colours, at its position to
+//! within a micrometre; what a viewer hides is not.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used)]
@@ -95,9 +95,12 @@ fn req_svg_001_colours_and_paint_order() {
             <rect id="c" width="1" height="1" style="fill:darkorange;stroke:none" fill="blue"/>
           </g>
         </svg>"##);
-    assert_eq!(ids(&svg), ["svg:a:fill", "svg:a:stroke", "svg:b:stroke", "svg:b:fill", "svg:c:fill"]);
+    // The fill is sewn before the stroke, as Ink/Stitch sews them, even where `paint-order` paints the
+    // stroke first.
+    assert_eq!(ids(&svg), ["svg:a:fill", "svg:a:stroke", "svg:b:fill", "svg:b:stroke", "svg:c:fill"]);
     let colours: Vec<_> = svg.design.elements().iter().map(|e| e.thread.color.to_string()).collect();
-    assert_eq!(colours, ["#ff0000", "#123456", "#00ff00", "#0080ff", "#ff8c00"]);
+    assert_eq!(colours, ["#ff0000", "#123456", "#0080ff", "#00ff00", "#ff8c00"]);
+    assert_eq!(warnings(&svg), ["warning SC-W0802: `b` paints its stroke first (`paint-order`); its fill is sewn first, as Ink/Stitch sews them."]);
 }
 
 #[test]
@@ -309,11 +312,11 @@ fn req_svg_001_lengths_with_spaces_around_them() {
 
 #[test]
 fn req_svg_001_files_that_say_they_are_latin_1() {
-    let mut file = br#"<?xml version="1.0" encoding="ISO-8859-1"?><svg xmlns="http://www.w3.org/2000/svg"><rect id="caf"#.to_vec();
-    file.push(0xe9);
-    file.extend_from_slice(br#"" width="1" height="1"/></svg>"#);
+    let mut file = br#"<?xml version="1.0" encoding="ISO-8859-1"?><svg xmlns="http://www.w3.org/2000/svg"><rect id="Z"#.to_vec();
+    file.push(0xfc);
+    file.extend_from_slice(br#"rich" width="1" height="1"/></svg>"#);
     let svg = svg(file);
-    assert_eq!(ids(&svg), ["svg:caf\u{e9}:fill"]);
+    assert_eq!(ids(&svg), ["svg:Z\u{fc}rich:fill"]);
 }
 
 #[test]

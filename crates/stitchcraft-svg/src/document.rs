@@ -2,8 +2,10 @@
 //!
 //! The reader walks the document once, in order. Document order is SVG's paint order (bottom first) and
 //! so the stitching order. Each element gets its transform and inherited [`Style`] from its parent. Every
-//! shape that paints becomes one design element per paint, in the element's `paint-order`: its fill (an
-//! area) and its stroke (an outline), each sewn in its paint's colour.
+//! shape that paints becomes one design element per paint: its fill (an area), then its stroke (an
+//! outline), each sewn in its paint's colour. Ink/Stitch sews them in that order whatever the shape's
+//! `paint-order` says, and so does StitchCraft: in embroidery the outline covers the edge of the fill.
+//! Ink/Stitch's `stroke_first` setting, which turns them round, is read with the other settings (M8).
 //!
 //! **Ids.** A design element is `svg:<label>:fill` or `svg:<label>:stroke`. The label is the SVG
 //! element's `id`, or `<tag>@<n>` (the n-th `<tag>` in the file) when it has none. A repeated id gets
@@ -496,8 +498,11 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 _ => None,
             };
         }
-        let paints = if style.stroke_first { [("stroke", stroke), ("fill", fill)] } else { [("fill", fill), ("stroke", stroke)] };
-        for (part, colour) in paints {
+        if style.stroke_first && fill.is_some() && stroke.is_some() {
+            let message = format!("`{label}` paints its stroke first (`paint-order`); its fill is sewn first, as Ink/Stitch sews them.");
+            self.note(Some(&label), message, None);
+        }
+        for (part, colour) in [("fill", fill), ("stroke", stroke)] {
             let Some(colour) = colour else { continue };
             let id = ElementId::new(format!("svg:{label}:{part}"))
                 .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The SVG reader made an element id that cannot be used: {e}.")))?;

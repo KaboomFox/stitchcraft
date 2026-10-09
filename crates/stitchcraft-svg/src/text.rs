@@ -135,11 +135,14 @@ mod tests {
 
     #[test]
     fn latin_1_becomes_utf_8_and_ascii_reads_in_any_encoding() {
-        assert_eq!(decode(b"<?xml version=\"1.0\" encoding=\"latin1\"?>caf\xe9").unwrap(), "<?xml version=\"1.0\" encoding=\"latin1\"?>caf\u{e9}");
+        assert_eq!(
+            decode(b"<?xml version=\"1.0\" encoding=\"latin1\"?>Z\xfcrich").unwrap(),
+            "<?xml version=\"1.0\" encoding=\"latin1\"?>Z\u{fc}rich"
+        );
         assert!(matches!(decode(b"<?xml version=\"1.0\" encoding=\"Shift_JIS\"?><svg/>").unwrap(), Cow::Borrowed(_)));
         assert_eq!(
-            decode("<?xml version=\"1.0\" encoding=\"UTF-8\"?>caf\u{e9}".as_bytes()).unwrap(),
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>caf\u{e9}"
+            decode("<?xml version=\"1.0\" encoding=\"UTF-8\"?>Z\u{fc}rich".as_bytes()).unwrap(),
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>Z\u{fc}rich"
         );
     }
 

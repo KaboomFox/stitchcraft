@@ -264,7 +264,8 @@ pub struct Style<'a> {
     pub visible: bool,
     /// This element or an ancestor has `opacity: 0`, which no descendant can undo.
     pub transparent: bool,
-    /// `paint-order` puts the stroke before the fill.
+    /// `paint-order` puts the stroke before the fill, which a viewer shows and the reader notes: it sews
+    /// the fill first.
     pub stroke_first: bool,
     /// Which of `marker-start`, `marker-mid` and `marker-end` name a marker: arrowheads and the like,
     /// drawn on top of the outline. Each inherits on its own.

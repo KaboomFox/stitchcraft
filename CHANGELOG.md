@@ -188,6 +188,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     ASCII. It is turned into UTF-8 now.
   - The note about style sheets says that the fills, outlines and hidden elements they set are lost too,
     not only their colours.
+- **A shape's fill is sewn before its stroke,** as Ink/Stitch sews them, where the SVG reader followed
+  `paint-order`. Inkscape writes `paint-order` when a user puts the stroke under the fill for looks, and a
+  stroke sewn first is covered by the fill. `SC-W0802` notes a shape whose `paint-order` paints the stroke
+  first. Ink/Stitch's `stroke_first` setting, which turns the order round, is read with the other settings
+  in M8.
 - **PEC files without the origin field.** pyembroidery 1.4.32 to 1.5.1 write PEC stitch data without the
   4 bytes that Brother's software writes before the first record. The PES/PEC reader skipped those bytes
   in every file. A file from those versions lost its first record or failed to read. The reader now

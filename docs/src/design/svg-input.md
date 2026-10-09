@@ -12,7 +12,8 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   that paints becomes one element per paint. A fill becomes an area and a stroke becomes an outline.
   A `<line>` has no fill.
 - **Order.** Elements follow document order, which is SVG's paint order and the sewing order. A
-  shape's two paints follow its `paint-order`.
+  shape's fill is sewn before its stroke, as Ink/Stitch sews them, and the outline covers the fill's edge.
+  When `paint-order` paints the stroke first, `SC-W0802` says the fill is sewn first.
 - **Groups.** `<g>`, `<a>` and the child a `<switch>` chooses pass their transform and style to their
   children.
 - **Ids.** An element's id is `svg:<label>:fill` or `svg:<label>:stroke`. The label is the SVG
