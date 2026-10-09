@@ -73,7 +73,7 @@ documented ways, `DEV-RUN-001` to `DEV-RUN-004` in the deviations ledger (`confo
 - Repeats apply to running, ripple and zigzag strokes; bean stitch to those and to manual stitch (the
   [compatibility contract](../inkstitch-compat-contract.md) lists each parameter's stitch types).
 
-### Random length (M3.5)
+### Random length
 
 Ink/Stitch draws each stitch from `s × (1 ± jitter)` and starts each stretch between corners at a random
 phase, its first stitch a random fraction of a drawn length, so rows sewn side by side with the same
