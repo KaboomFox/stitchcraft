@@ -136,6 +136,9 @@ fn read_pec(block: &[u8], base: usize) -> Result<Decoded, DecodeError> {
     Ok(Decoded { format: String::new(), palette: Some(PaletteId::BrotherPec), name, plan: recorder.finish(), warnings })
 }
 
+/// The lowest and highest corners of the positions a design reaches, in 0.1 mm.
+type Corners = ((i64, i64), (i64, i64));
+
 /// Where the stitch data of `block` starts: after the origin field when the 4 bytes at [`DATA_AT`] are
 /// shaped like one and the design read after them fits the header's box of `size` (width and height in
 /// 0.1 mm), else at the first record. When neither reading parses, the field is assumed, so the error
@@ -161,16 +164,16 @@ fn origin_field(bytes: &[u8]) -> Option<(i64, i64)> {
 
 /// Whether a design with `extent` (the corners of every position it reaches, if any) fits the box of
 /// `size` whose corner is at minus `field`, give or take [`SLACK`].
-fn fits(field: (i64, i64), size: (i64, i64), extent: Option<((i64, i64), (i64, i64))>) -> bool {
+fn fits(field: (i64, i64), size: (i64, i64), extent: Option<Corners>) -> bool {
     let Some(((min_x, min_y), (max_x, max_y))) = extent else { return true };
     let inside = |field: i64, size: i64, min: i64, max: i64| -field <= min + SLACK && max <= size - field + SLACK;
     inside(field.0, size.0, min_x, max_x) && inside(field.1, size.1, min_y, max_y)
 }
 
 /// The corners of every position the stitch data `data` reaches from the origin, `None` without a move.
-fn extent(data: &[u8]) -> Result<Option<((i64, i64), (i64, i64))>, DecodeError> {
+fn extent(data: &[u8]) -> Result<Option<Corners>, DecodeError> {
     let (mut i, mut x, mut y) = (0, 0_i64, 0_i64);
-    let mut corners: Option<((i64, i64), (i64, i64))> = None;
+    let mut corners: Option<Corners> = None;
     loop {
         let (record, next) = record(data, i, 0)?;
         i = next;
