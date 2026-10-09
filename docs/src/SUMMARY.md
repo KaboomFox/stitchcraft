@@ -36,6 +36,7 @@
     - [Strokes](design/algorithms/strokes.md)
     - [Satin](design/algorithms/satin.md)
     - [Fills](design/algorithms/fills.md)
+    - [Lock stitches](design/algorithms/locks.md)
   - [Machine formats](design/formats.md)
   - [Rendering previews](design/rendering.md)
   - [VectorCraft integration](design/vectorcraft-integration.md)

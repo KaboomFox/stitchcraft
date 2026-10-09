@@ -39,8 +39,8 @@ params! {
         /// Detail for the second choice.
         a_detail: Text = "", label "Detail", when a_choice == "two";
 
-        /// A seed.
-        a_seed: Seed = "", label "Seed", origin Origin::StitchCraft;
+        /// A seed, shown for either choice.
+        a_seed: Seed = "", label "Seed", when a_choice in &["one", "two"], origin Origin::StitchCraft;
 
         /// Lengths, for running stitch only.
         some_lengths_mm: LengthList = "2.5", label "Lengths", range (0.3, 12.0), applies &[StitchType::RunningStitch];
@@ -141,6 +141,7 @@ fn declarations_record_what_the_registry_needs() {
     assert_eq!(length.origin, Origin::InkStitch);
     let lengths = find(&[&g], "some_lengths_mm").unwrap();
     assert_eq!(lengths.applies_to, [StitchType::RunningStitch]);
-    assert_eq!(find(&[&g], "a_detail").unwrap().visible_when, Some(Condition { key: "a_choice", equals: "two" }));
-    assert_eq!(find(&[&g], "a_seed").unwrap().origin, Origin::StitchCraft);
+    assert_eq!(find(&[&g], "a_detail").unwrap().visible_when, Some(Condition { key: "a_choice", any_of: &["two"] }));
+    let seed = find(&[&g], "a_seed").unwrap();
+    assert_eq!((seed.visible_when, seed.origin), (Some(Condition { key: "a_choice", any_of: &["one", "two"] }), Origin::StitchCraft));
 }

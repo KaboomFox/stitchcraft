@@ -105,24 +105,12 @@ machine profile, and go into the deviations ledger with M3.8.
 ### Lock stitches (ties)
 
 - `ties` selects where locks go: both, before (tie-in), after (tie-off) or neither.
-- `lock_start` / `lock_end` choose a lock shape by id; `half_stitch` (stitch back and forth along the
-  path by a fraction of the first stitch) is the default; other ids map to StitchCraft's own shape
-  definitions with the same intent ([compatibility contract](inkstitch-compat-contract.md#method-identifiers)).
-- Shapes are defined in a unit frame aligned with the path direction. Shapes made of back-and-forth
-  steps are scaled by `lock_*_scale_mm` (an absolute size), shapes drawn as paths by
-  `lock_*_scale_percent` (relative to their own size); the half stitch is sized from the first stitch.
-  A custom lock (`lock_custom_start`, `lock_custom_end`) is either kind.
 - `force_lock_stitches` adds locks even when the next group is close enough to collapse. In Ink/Stitch
   (read at `d59c9ab`) it also adds the tie-off when `ties` asks for none after, but never a tie-in.
-- A group of fewer than two stitches gets no locks. Manual stitch gets none unless `force_lock_stitches`
-  is set.
-- Ink/Stitch's half stitch goes back and forth towards the first needle point at least 0.5 mm away, by
-  fractions of that distance capped at 1.5 mm, and ignores both scale parameters; its tie-off leaves out
-  its first point, which is the group's last stitch. Its settings window shows `lock_*_scale_mm` only for
-  back-and-forth and custom locks and `lock_*_scale_percent` only for drawn shapes and custom locks;
-  StitchCraft's parameter registry should show them the same way (M3.7).
-- Lock stitches must be ≥ 0.2 mm long so the needle does not hit the same hole; shorter computed locks
-  are scaled up, never dropped silently.
+- A group with fewer than two needle points is sewn without locks. Manual stitch is sewn without them
+  unless `force_lock_stitches` is set.
+- [Lock stitches](algorithms/locks.md) specifies the lock itself: its shape (`lock_start`, `lock_end`),
+  its size and its shortest stitch (0.2 mm).
 
 ### Commands
 

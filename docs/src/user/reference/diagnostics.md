@@ -16,6 +16,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
+| [`SC-W0502`](#sc-w0502) | Warning | Lock stitch shorter than 0.2 mm; lengthened |
+| [`SC-W0503`](#sc-w0503) | Warning | Custom lock cannot be sewn as written |
 | [`SC-E0601`](#sc-e0601) | Error | Too many colour changes for the file format |
 | [`SC-E0602`](#sc-e0602) | Error | Design too large for the file format |
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
@@ -136,6 +138,34 @@ next point. A part's last point is always kept; the one before it goes instead.
 
 The message gives how many and the shortest of them. Move the nodes apart, or delete the extra
 ones.
+
+## SC-W0502
+
+**Warning** — Lock stitch shorter than 0.2 mm; lengthened
+
+A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have. The needle
+would go back into the hole it just left, which can cut the thread and does not lock it. Each such
+step of a lock made of steps (back and forth, or a custom lock written as numbers) was lengthened
+to 0.2 mm, and a drawn lock was enlarged until its shortest stitch is 0.2 mm long. A lock of steps
+follows the stitching. Where a sharp turn would fold it onto itself, it was sewn straight along the
+first (or last) stitch.
+
+The message says which lock, and by how much. Set a larger lock size (`lock_start_scale_mm`,
+`lock_end_scale_mm`) or scale (`lock_start_scale_percent`, `lock_end_scale_percent`), or write
+longer custom steps.
+
+## SC-W0503
+
+**Warning** — Custom lock cannot be sewn as written
+
+The lock is set to custom, but its shape cannot be sewn as written. A custom lock is numbers
+separated by spaces, the steps the needle takes along the stitching in sizes of
+`lock_*_scale_mm`, or an SVG path that draws it. StitchCraft sews the numbers. It does not sew a
+drawn custom lock yet, and sews the half stitch in its place. Parts that are not numbers, and steps
+longer than 10 m, are left out. If no step is left, the half stitch is sewn instead.
+
+The message says what was wrong. Write the lock as numbers, such as `1 -1 1 -1`, or choose
+another lock shape.
 
 ## SC-E0601
 

@@ -60,7 +60,7 @@ pub fn check(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) 
 }
 
 /// Whether a page is generated from the code (its first line says so).
-fn generated(text: &str) -> bool {
+pub fn generated(text: &str) -> bool {
     text.lines().next().is_some_and(|first| first.trim_start().to_ascii_lowercase().starts_with("<!-- generated"))
 }
 

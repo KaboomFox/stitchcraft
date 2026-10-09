@@ -145,7 +145,7 @@ pub struct stitchcraft_params::spec::ChoiceOption
 pub stitchcraft_params::spec::ChoiceOption::id: &'static str
 pub stitchcraft_params::spec::ChoiceOption::label: &'static str
 pub struct stitchcraft_params::spec::Condition
-pub stitchcraft_params::spec::Condition::equals: &'static str
+pub stitchcraft_params::spec::Condition::any_of: &'static [&'static str]
 pub stitchcraft_params::spec::Condition::key: &'static str
 pub struct stitchcraft_params::spec::ParamGroup
 pub stitchcraft_params::spec::ParamGroup::applies_to: &'static [stitchcraft_params::stitch_type::StitchType]
@@ -303,7 +303,7 @@ pub struct stitchcraft_params::ChoiceOption
 pub stitchcraft_params::ChoiceOption::id: &'static str
 pub stitchcraft_params::ChoiceOption::label: &'static str
 pub struct stitchcraft_params::Condition
-pub stitchcraft_params::Condition::equals: &'static str
+pub stitchcraft_params::Condition::any_of: &'static [&'static str]
 pub stitchcraft_params::Condition::key: &'static str
 pub struct stitchcraft_params::ParamGroup
 pub stitchcraft_params::ParamGroup::applies_to: &'static [stitchcraft_params::stitch_type::StitchType]

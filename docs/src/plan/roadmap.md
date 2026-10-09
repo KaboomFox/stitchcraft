@@ -69,11 +69,11 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M3.4 ✅ | Running stitch: corners, even spacing, patterns, tolerance; stitch lengths measured straight | `REQ-RUN-001..003` |
 | M3.5 ✅ | Repeats, bean stitch, random length | `REQ-RUN-004`, `REQ-RUN-005`, `REQ-RUN-007` |
 | M3.6 ✅ | Manual stitch | `REQ-RUN-006`, `REQ-RUN-008` |
-| M3.7 | Lock stitches: types, scale, placement | `REQ-LCK-001..003` |
-| M3.8 | Plan assembly: order, collapse, travel, tie-off/jump/trim/tie-in, stops, colour changes, commands | `REQ-ASM-001..005` |
+| M3.7 ✅ | Lock stitches: every shape, its size and its place at either end of the stitching | `REQ-LCK-002`, `REQ-LCK-004` |
+| M3.8 | Plan assembly: order, collapse, travel, tie-off/jump/trim/tie-in (where `ties` says), stops, colour changes, commands | `REQ-ASM-001..005`, `REQ-LCK-001` |
 | M3.9 | Finalize: split, merge, hoop, colour limits; `stitch plan in.svg -o out.pes --preview out.png --report out.json` | end-to-end cases |
 | M3.10 | `stitch bug-report` bundle | a bundle reproduces its plan byte for byte |
-| MC-2 🧵 | **TS-03** (running/bean lengths), **TS-04** (lock holding test), **TS-02** again with element-driven trims | report filed; min-stitch and lock defaults confirmed |
+| MC-2 🧵 | **TS-03** (running/bean lengths), **TS-04** (lock holding test), **TS-02** again with element-driven trims | report filed; min-stitch and lock defaults confirmed (`REQ-LCK-003`) |
 
 ## M4 — Satin column
 
@@ -124,10 +124,18 @@ fill with generated tiles; circular fill. One step per type with its requirement
 
 ## M8 — Ink/Stitch interoperability
 
-SVG adapter v2: every `inkstitch:*` attribute in the [compatibility contract](../design/inkstitch-compat-contract.md),
-the command symbols not read yet (since M3 the adapter applies trim, stop and the ignore commands, and
-never stitches commands, connectors or helper paths: `REQ-SVG-003`), clones (`<use>`); `stitch import-inkstitch file.svg -o file.vectorcraft`;
-L3 differential conformance against a pinned Ink/Stitch with the deviations ledger. Ink/Stitch's font
+SVG adapter v2:
+
+- every `inkstitch:*` attribute in the [compatibility contract](../design/inkstitch-compat-contract.md)
+- the command symbols not read yet. Since M3 the adapter applies trim, stop and the ignore commands, and
+  it never stitches commands, connectors or helper paths (`REQ-SVG-003`).
+- clones (`<use>`)
+- custom locks drawn as SVG paths, which the adapter reads for the engine. Until then they sew the half
+  stitch, with `SC-W0503`.
+- `stitch import-inkstitch file.svg -o file.vectorcraft`
+- L3 differential conformance against a pinned Ink/Stitch with the deviations ledger
+
+Ink/Stitch's font
 library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin, downloaded at a pinned
 commit by `cargo xtask corpus` and never committed, using only fonts whose licence allows it (OFL, CC0,
 CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).

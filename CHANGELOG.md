@@ -5,6 +5,25 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M3.7: lock stitches (`stitchcraft_engine::locks`), the tie-in and tie-off at either end of a group's
+  stitches. Plan assembly (M3.8) sews them where `ties` says.
+  - **Shapes.** Each Ink/Stitch lock id is accepted, with StitchCraft's own shapes behind the ids
+    (`DEV-LCK-001`). The half stitch goes forth and back twice over half the first stitch. `back_forth`
+    does the same over one step of `lock_*_scale_mm`. The drawn shapes, 7 of them, are sized by
+    `lock_*_scale_percent`. Each shape lies on the stitching it secures.
+  - **Custom steps.** Numbers in `lock_custom_start` and `lock_custom_end` are steps along the stitching,
+    read as Ink/Stitch reads them. Locks of steps follow the stitching round its corners, as Ink/Stitch's
+    custom steps do, and `DEV-LCK-002` records the 2 places where they differ. A lock drawn as an SVG
+    path is not sewn yet. The half stitch is sewn in its place, and the new `SC-W0503` says so. It also
+    names an empty custom lock and pieces that are not numbers.
+  - **Shortest lock stitch.** A lock stitch is at least 0.2 mm long. Shorter steps are lengthened, and a
+    drawn lock is enlarged. Where a sharp turn would fold a lock of steps onto itself, it is sewn straight.
+    The new `SC-W0502` reports each change.
+  - **Settings windows** show `lock_*_scale_mm` only for the locks it sizes, and `lock_*_scale_percent`
+    only for the locks it scales. A parameter can now be shown for several values of another
+    (`when key in VALUES`).
+  - **Conformance.** `REQ-LCK-002` and the new `REQ-LCK-004` are active. `REQ-LCK-001` (where locks go)
+    moves to plan assembly, M3.8.
 - **Prose lint.** `cargo xtask prose` runs Vale on the Markdown lines that a branch adds. It checks the
   project's own style and ai-tells, a published style for phrasing that machine-written text overuses. The
   rules are in the new [writing style](docs/src/contributing/writing-style.md) page, with a glossary. CI
@@ -116,6 +135,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M3.7: in the parameters' JSON Schema, `x-stitchcraft.visible_when` lists the values a parameter is shown
+  for (`any_of`) in place of one (`equals`), and so does `stitchcraft_params::Condition`. The lock shapes
+  list (`LOCKS`) moved from `common` to `locks`, next to the shapes it names.
 - The Ink/Stitch contract is checked against Ink/Stitch's source. `conformance/inkstitch/check_params.py`
   compares every row of `inkstitch-params.toml` with the parameter declarations in an Ink/Stitch
   checkout, along with the method and lock identifiers. Ink/Stitch is parsed as text; nothing from it

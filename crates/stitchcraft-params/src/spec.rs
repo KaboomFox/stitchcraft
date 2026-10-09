@@ -81,13 +81,14 @@ pub struct ChoiceOption {
     pub label: &'static str,
 }
 
-/// When a user interface shows a parameter: only while another parameter has a given value.
+/// When a user interface shows a parameter: only while another parameter has one of the given values. A
+/// lock's size, say, matters only for the lock shapes it sizes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Condition {
     /// The other parameter.
     pub key: &'static str,
-    /// The value it must have.
-    pub equals: &'static str,
+    /// The values it may have, written as a design stores them.
+    pub any_of: &'static [&'static str],
 }
 
 /// How settled a parameter is.

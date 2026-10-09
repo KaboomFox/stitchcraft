@@ -14,7 +14,9 @@ with two styles from `.vale/styles`:
   their authors wrote them.
 
 Lines that a branch does not touch are not checked. Older pages follow the rules when they are
-rewritten.
+rewritten. Pages generated from the registries are not checked either: their tables, labels and
+deviation notes have a format of their own. Their prose is the registries' help text, which follows these
+rules all the same.
 
 ## Rules
 

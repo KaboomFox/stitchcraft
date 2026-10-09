@@ -21,3 +21,9 @@ file = "crates/stitchcraft-svg/src/path.rs"
 mutant = "replace < with <= in arc"
 line = "if large_arc && turn < FRAC_PI_2 {"
 why = "a large arc turns at least half way round, so no turn reaching this test is exactly π/2"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/locks/mod.rs"
+mutant = "replace < with <= in Stitching::follow"
+line = "while length < reach {"
+why = "when the stitching read so far is exactly as long as the lock reaches, one more needle point read changes no position: the farthest one is the last point read either way"

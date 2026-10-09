@@ -43,8 +43,9 @@ params! {
         /// The shape of a custom start lock: …
         lock_custom_start: Text = "", label "Custom start lock", when lock_start == "custom";
 
-        /// The size of start-lock shapes that are measured in millimetres.
-        lock_start_scale_mm: Length = "0.7", label "Start lock size", range (0.1, 10.0);
+        /// How long each step of a start lock made of steps (back and forth, or custom) is.
+        lock_start_scale_mm: Length = "0.7", label "Start lock size", range (0.1, 10.0),
+            when lock_start in SIZED_IN_MM;
         …
     }
 }
@@ -52,8 +53,9 @@ params! {
 
 Each parameter is `key: Kind = "default", label "Label"`, followed by what its kind needs and what is
 not the usual: `range (min, max)` for numbers and lists, `options [...]` or `choices CONST` for choices,
-`applies` when it covers fewer stitch types than its struct, `when other == "value"` when a user interface
-shows it only then, `origin` (default `Origin::InkStitch`) and `stability` (default `Stability::Stable`).
+`applies` when it covers fewer stitch types than its struct, `when other == "value"` (or
+`when other in VALUES`, a list of them) when a user interface shows it only then, `origin` (default
+`Origin::InkStitch`) and `stability` (default `Stability::Stable`).
 A combination a kind does not take does not compile. Defaults are written as a design stores them, so
 they are checked by the same code as a design's values. The grammar is in the `macros` module's
 documentation.
@@ -81,7 +83,7 @@ pub struct ParamSpec {
     pub default: &'static str,      // as a design stores it; "" for an empty optional value
     pub group: &'static str,        // UI and docs section
     pub applies_to: &'static [StitchType],
-    pub visible_when: Option<Condition>,   // e.g. lock_custom_start only when lock_start == custom
+    pub visible_when: Option<Condition>,   // another key and the values it shows this for: lock_custom_start only for lock_start custom
     pub stability: Stability,       // Stable | Experimental | Deprecated { use_instead }
     pub origin: Origin,             // InkStitch | InkStitchDeviates { deviation } | StitchCraft
 }
