@@ -229,3 +229,15 @@ fn curves_are_split_at_their_farthest_point_while_they_stray_too_far() {
     // Straying exactly the budget is not too far.
     assert_eq!(followed(&[(0.0, 0.0), (2.0, 1.0), (4.0, 0.0)], 1.0), [point(0.0, 0.0), point(4.0, 0.0)]);
 }
+
+#[test]
+fn random_lengths_are_frozen() {
+    // Seed 42, lengths 2.5 and 1 in turn, ±40 %: the first is a random fraction of its draw (the span's
+    // phase), the others lie within 40 % of their length. Frozen, so a saved design keeps its stitches from
+    // one version to the next; the values agree with an independent implementation of SplitMix64 and of
+    // the formula.
+    let mut rng = SplitMix64::new(42);
+    let mut lengths = Lengths { pattern: vec![2.5, 1.0], next: 0, random: Some((0.4, &mut rng)) };
+    let draws: Vec<f64> = (0..5).map(|i| lengths.draw(i == 0, 9.0)).collect();
+    assert_eq!(draws, [0.4770334515316359, 0.822880904204111, 2.188381433047275, 0.630424134832197, 3.236456153093065]);
+}
