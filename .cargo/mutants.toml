@@ -1,0 +1,11 @@
+# cargo-mutants: change the code in small ways and check that some test notices
+# (docs/src/design/guardrails.md › Mutation testing). The weekly `mutants.yml` run compares the mutants
+# no test catches with the counts in `mutants.toml`; `cargo xtask mutants` does the comparison.
+
+# What is measured: shipped code. Test support, the fuzz targets, tooling and the compatibility probe
+# are the measuring stick.
+exclude_globs = ["xtask/**", "fuzz/**", "crates/stitchcraft-testkit/**", "compat/**"]
+
+# A mutant counts as caught only by its own crate's tests, so each crate answers for its own code (and
+# each mutant builds and tests one package, which keeps the run short).
+test_workspace = false

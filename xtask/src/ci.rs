@@ -1,11 +1,12 @@
 //! `cargo xtask ci`: every gate, in one command, with a summary.
 //!
 //! Runs all steps even when one fails, so a contributor sees every problem at once. Steps that need an
-//! optional tool (the wasm target, `cargo-deny`, `typos`, `mdbook`) are skipped locally when the tool is
-//! missing and required in CI (`CI` set), where the workflow installs them.
+//! optional tool (the wasm target, cargo-public-api, `cargo-deny`, `typos`, `mdbook`) are skipped locally
+//! when the tool is missing and required in CI (`CI` set), where the workflow installs them. Coverage is
+//! not a step here: it runs the whole suite again, instrumented, so CI gives it a job of its own.
 
 use crate::util;
-use crate::{cleanroom, conformance, docs, filesize, layers, shots, unsafe_audit, wasm};
+use crate::{api, cleanroom, conformance, docs, filesize, layers, shots, unsafe_audit, wasm};
 
 /// How one step ended.
 enum Outcome {
@@ -58,6 +59,15 @@ pub fn run() -> Result<(), String> {
         ("fmt", cargo_step(&["fmt", "--all", "--", "--check"])),
         ("clippy", cargo_step(&["clippy", "--workspace", "--all-targets", "--locked", "--", "-D", "warnings"])),
         ("test", cargo_step(&["test", "--workspace", "--locked"])),
+        (
+            "rustdoc",
+            Box::new(|| {
+                // Broken, ambiguous or private intra-doc links are documentation bugs.
+                let mut cmd = util::cargo();
+                cmd.args(["doc", "--workspace", "--no-deps", "--locked"]).env("RUSTDOCFLAGS", "-D warnings");
+                outcome(util::run(cmd, "cargo doc --workspace (warnings denied)"))
+            }),
+        ),
         ("layers", Box::new(|| outcome(layers::run()))),
         ("filesize", Box::new(|| outcome(filesize::run()))),
         ("cleanroom", Box::new(|| outcome(cleanroom::run()))),
@@ -66,6 +76,7 @@ pub fn run() -> Result<(), String> {
         ("shots", Box::new(|| outcome(shots::run(true)))),
         ("conformance", Box::new(|| outcome(conformance::run(&[])))),
         ("wasm", optional(wasm::target_installed, "rustup target add wasm32-unknown-unknown", Box::new(|| outcome(wasm::run())))),
+        ("api", optional(api::available, api::INSTALL, Box::new(|| outcome(api::run(true))))),
         ("deny", optional(|| util::tool_available("cargo-deny", &["--version"]), "cargo install cargo-deny", tool_step("cargo-deny", &["check"]))),
         ("typos", optional(|| util::tool_available("typos", &["--version"]), "cargo install typos-cli", tool_step("typos", &[]))),
         ("book", optional(|| util::tool_available("mdbook", &["--version"]), "cargo install mdbook", tool_step("mdbook", &["build", "docs"]))),

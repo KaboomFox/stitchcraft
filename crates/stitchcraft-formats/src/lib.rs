@@ -1,12 +1,12 @@
 //! Machine embroidery formats (layer L2): PES (PEC) for Brother and DST for everything else.
 //!
-//! Writing a plan has two halves. [`lower`](crate::lower) does what every format needs — quantize each
+//! Writing a plan has two halves. Lowering (the `lower` module) does what every format needs — quantize each
 //! position once, turn positions into moves, spell out colour changes and the end, check commands —
 //! and each format module only decides how to *spell* those operations, respecting its own per-record
 //! limits by splitting long moves evenly. Writers refuse rather than produce a file a machine could
 //! misread: every failure is an [`EncodeError`] with a registered diagnostic code.
 //!
-//! Reading goes the other way: [`decode`] recognises PES, PEC and DST by their first bytes, and each reader
+//! Reading goes the other way: [`decode()`] recognises PES, PEC and DST by their first bytes, and each reader
 //! treats the file as possibly damaged or hostile — every offset and length checked, records capped,
 //! failures typed ([`DecodeError`]), never a panic. Design: `docs/src/design/formats.md`.
 #![forbid(unsafe_code)]

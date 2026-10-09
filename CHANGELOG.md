@@ -5,6 +5,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M2.8: quality baselines. Each library crate's public API is a committed snapshot
+  (`crates/*/public-api.txt`, `cargo xtask api`), so an API change shows in the pull request's diff.
+  Rustdoc builds without warnings. Line coverage per crate may not drop below its floor
+  (`conformance/coverage.toml`, a CI job). Mutation testing runs weekly against recorded counts of
+  mutants no test notices (`conformance/mutation.toml`). In GitHub Actions every `cargo xtask` finding
+  is an annotation.
 - M2.5: coverage-guided fuzzing of the readers (`fuzz/`: `read_pes`, `read_dst` and
   `read_write_preview`, which also writes, reads back and previews whatever it read), an hour every
   night with a corpus that grows from night to night; the target bodies run on every pull request
@@ -34,6 +40,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Fixed
+- Test-sheet drawing charges the stitch budget. Mutation testing found that a sign error in the drawing
+  code would make lines grow without bound and use up memory before any check ran.
+- Broken and ambiguous links in the formats crate's API documentation.
 - The test-sheets reference said "1 stops"; counts are now worded the way `stitch` prints them.
 - DST reading: a long jump followed by a long move back could be read as a trim (their split pieces
   cancelled exactly); trims are now runs of jumps of at most 1 mm, and the writer no longer writes

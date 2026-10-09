@@ -1,0 +1,299 @@
+# The public API of stitchcraft-plan, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
+# Generated: do not edit. A change here is a change other code can see; say why in the pull request.
+pub mod stitchcraft_plan
+pub mod stitchcraft_plan::builder
+pub enum stitchcraft_plan::builder::PlanError
+pub stitchcraft_plan::builder::PlanError::TooManyElements
+pub struct stitchcraft_plan::builder::PlanBuilder
+impl stitchcraft_plan::builder::PlanBuilder
+pub fn stitchcraft_plan::builder::PlanBuilder::change_thread(&mut self, stitchcraft_plan::thread::Thread)
+pub fn stitchcraft_plan::builder::PlanBuilder::element(&mut self, stitchcraft_core::element::ElementId) -> core::result::Result<stitchcraft_plan::plan::ElementRef, stitchcraft_plan::builder::PlanError>
+pub fn stitchcraft_plan::builder::PlanBuilder::finish(self) -> stitchcraft_plan::plan::StitchPlan
+pub fn stitchcraft_plan::builder::PlanBuilder::jump(&mut self, stitchcraft_core::units::Point, stitchcraft_plan::plan::Provenance)
+pub const fn stitchcraft_plan::builder::PlanBuilder::needle(&self) -> stitchcraft_core::units::Point
+pub fn stitchcraft_plan::builder::PlanBuilder::new(stitchcraft_plan::thread::Thread) -> Self
+pub fn stitchcraft_plan::builder::PlanBuilder::stitch(&mut self, stitchcraft_core::units::Point, stitchcraft_plan::plan::Provenance)
+pub fn stitchcraft_plan::builder::PlanBuilder::stop(&mut self, core::option::Option<stitchcraft_plan::plan::ElementRef>)
+pub fn stitchcraft_plan::builder::PlanBuilder::trim(&mut self, core::option::Option<stitchcraft_plan::plan::ElementRef>)
+pub mod stitchcraft_plan::invariants
+pub mod stitchcraft_plan::invariants::req
+pub const stitchcraft_plan::invariants::req::COLOR_CHANGES: &str
+pub const stitchcraft_plan::invariants::req::INSIDE_HOOP: &str
+pub const stitchcraft_plan::invariants::req::NO_STITCH_IN_PLACE: &str
+pub const stitchcraft_plan::invariants::req::STITCH_LENGTH: &str
+pub const stitchcraft_plan::invariants::req::STRUCTURE: &str
+pub struct stitchcraft_plan::invariants::Violation
+pub stitchcraft_plan::invariants::Violation::block: usize
+pub stitchcraft_plan::invariants::Violation::message: alloc::string::String
+pub stitchcraft_plan::invariants::Violation::requirement: &'static str
+pub stitchcraft_plan::invariants::Violation::stitch: core::option::Option<usize>
+impl stitchcraft_plan::invariants::Violation
+pub fn stitchcraft_plan::invariants::Violation::diagnostic(&self) -> stitchcraft_core::diag::Diagnostic
+impl core::fmt::Display for stitchcraft_plan::invariants::Violation
+pub fn stitchcraft_plan::invariants::Violation::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub const stitchcraft_plan::invariants::LOCK_MIN_STITCH: stitchcraft_core::units::Mm
+pub const stitchcraft_plan::invariants::MAX_REPORTED: usize
+pub fn stitchcraft_plan::invariants::check(&stitchcraft_plan::plan::StitchPlan, &stitchcraft_plan::profile::MachineProfile) -> alloc::vec::Vec<stitchcraft_plan::invariants::Violation>
+pub mod stitchcraft_plan::palette
+pub mod stitchcraft_plan::palette::color
+pub struct stitchcraft_plan::palette::color::Lab
+pub stitchcraft_plan::palette::color::Lab::a: f64
+pub stitchcraft_plan::palette::color::Lab::b: f64
+pub stitchcraft_plan::palette::color::Lab::l: f64
+impl stitchcraft_plan::palette::color::Lab
+pub fn stitchcraft_plan::palette::color::Lab::from_rgb(stitchcraft_plan::thread::Rgb) -> stitchcraft_plan::palette::color::Lab
+pub fn stitchcraft_plan::palette::color::ciede2000(stitchcraft_plan::palette::color::Lab, stitchcraft_plan::palette::color::Lab) -> f64
+pub struct stitchcraft_plan::palette::Palette
+pub stitchcraft_plan::palette::Palette::entries: &'static [stitchcraft_plan::palette::PaletteEntry]
+pub stitchcraft_plan::palette::Palette::id: stitchcraft_plan::profile::PaletteId
+pub stitchcraft_plan::palette::Palette::name: &'static str
+impl stitchcraft_plan::palette::Palette
+pub fn stitchcraft_plan::palette::Palette::entry(&self, u8) -> core::option::Option<&'static stitchcraft_plan::palette::PaletteEntry>
+pub fn stitchcraft_plan::palette::Palette::nearest(&self, stitchcraft_plan::thread::Rgb) -> core::option::Option<&'static stitchcraft_plan::palette::PaletteEntry>
+pub struct stitchcraft_plan::palette::PaletteEntry
+pub stitchcraft_plan::palette::PaletteEntry::color: stitchcraft_plan::thread::Rgb
+pub stitchcraft_plan::palette::PaletteEntry::index: u8
+pub stitchcraft_plan::palette::PaletteEntry::matchable: bool
+pub stitchcraft_plan::palette::PaletteEntry::name: &'static str
+pub static stitchcraft_plan::palette::BROTHER_PEC: stitchcraft_plan::palette::Palette
+pub mod stitchcraft_plan::plan
+pub enum stitchcraft_plan::plan::Role
+pub stitchcraft_plan::plan::Role::Command
+pub stitchcraft_plan::plan::Role::Lock
+pub stitchcraft_plan::plan::Role::Top
+pub stitchcraft_plan::plan::Role::Travel
+pub stitchcraft_plan::plan::Role::Underlay
+pub enum stitchcraft_plan::plan::StitchKind
+pub stitchcraft_plan::plan::StitchKind::Jump
+pub stitchcraft_plan::plan::StitchKind::Normal
+pub stitchcraft_plan::plan::StitchKind::Stop
+pub stitchcraft_plan::plan::StitchKind::Trim
+impl stitchcraft_plan::plan::StitchKind
+pub const fn stitchcraft_plan::plan::StitchKind::is_command(self) -> bool
+pub struct stitchcraft_plan::plan::ColorBlock
+pub stitchcraft_plan::plan::ColorBlock::stitches: alloc::vec::Vec<stitchcraft_plan::plan::Stitch>
+pub stitchcraft_plan::plan::ColorBlock::thread: stitchcraft_plan::thread::Thread
+pub struct stitchcraft_plan::plan::ColorEntry<'a>
+pub stitchcraft_plan::plan::ColorEntry::stop: bool
+pub stitchcraft_plan::plan::ColorEntry::thread: &'a stitchcraft_plan::thread::Thread
+pub struct stitchcraft_plan::plan::ElementRef(_)
+impl stitchcraft_plan::plan::ElementRef
+pub fn stitchcraft_plan::plan::ElementRef::from_index(usize) -> core::option::Option<Self>
+pub const fn stitchcraft_plan::plan::ElementRef::index(self) -> usize
+pub struct stitchcraft_plan::plan::PlanStats
+pub stitchcraft_plan::plan::PlanStats::color_changes: usize
+pub stitchcraft_plan::plan::PlanStats::jumps: usize
+pub stitchcraft_plan::plan::PlanStats::stitches: usize
+pub stitchcraft_plan::plan::PlanStats::stops: usize
+pub stitchcraft_plan::plan::PlanStats::trims: usize
+impl stitchcraft_plan::plan::PlanStats
+pub const fn stitchcraft_plan::plan::PlanStats::changes_including_stops(&self) -> usize
+pub struct stitchcraft_plan::plan::Provenance
+pub stitchcraft_plan::plan::Provenance::element: core::option::Option<stitchcraft_plan::plan::ElementRef>
+pub stitchcraft_plan::plan::Provenance::role: stitchcraft_plan::plan::Role
+impl stitchcraft_plan::plan::Provenance
+pub const fn stitchcraft_plan::plan::Provenance::new(stitchcraft_plan::plan::ElementRef, stitchcraft_plan::plan::Role) -> Self
+pub const fn stitchcraft_plan::plan::Provenance::plan(stitchcraft_plan::plan::Role) -> Self
+pub struct stitchcraft_plan::plan::SewnStitch
+pub stitchcraft_plan::plan::SewnStitch::block: usize
+pub stitchcraft_plan::plan::SewnStitch::from: stitchcraft_core::units::Point
+pub stitchcraft_plan::plan::SewnStitch::index: usize
+pub stitchcraft_plan::plan::SewnStitch::role: stitchcraft_plan::plan::Role
+pub stitchcraft_plan::plan::SewnStitch::to: stitchcraft_core::units::Point
+impl stitchcraft_plan::plan::SewnStitch
+pub fn stitchcraft_plan::plan::SewnStitch::length(&self) -> f64
+pub struct stitchcraft_plan::plan::Stitch
+pub stitchcraft_plan::plan::Stitch::at: stitchcraft_core::units::Point
+pub stitchcraft_plan::plan::Stitch::kind: stitchcraft_plan::plan::StitchKind
+pub stitchcraft_plan::plan::Stitch::origin: stitchcraft_plan::plan::Provenance
+pub struct stitchcraft_plan::plan::StitchPlan
+pub stitchcraft_plan::plan::StitchPlan::blocks: alloc::vec::Vec<stitchcraft_plan::plan::ColorBlock>
+pub stitchcraft_plan::plan::StitchPlan::elements: alloc::vec::Vec<stitchcraft_core::element::ElementId>
+impl stitchcraft_plan::plan::StitchPlan
+pub fn stitchcraft_plan::plan::StitchPlan::bounds(&self) -> core::option::Option<stitchcraft_core::rect::Rect>
+pub fn stitchcraft_plan::plan::StitchPlan::color_entries(&self) -> alloc::vec::Vec<stitchcraft_plan::plan::ColorEntry<'_>>
+pub fn stitchcraft_plan::plan::StitchPlan::element(&self, stitchcraft_plan::plan::ElementRef) -> core::option::Option<&stitchcraft_core::element::ElementId>
+pub fn stitchcraft_plan::plan::StitchPlan::sewn_stitches(&self) -> alloc::vec::Vec<stitchcraft_plan::plan::SewnStitch>
+pub fn stitchcraft_plan::plan::StitchPlan::stats(&self) -> stitchcraft_plan::plan::PlanStats
+pub fn stitchcraft_plan::plan::StitchPlan::stitches(&self) -> impl core::iter::traits::iterator::Iterator<Item = &stitchcraft_plan::plan::Stitch>
+pub mod stitchcraft_plan::profile
+pub enum stitchcraft_plan::profile::FormatId
+pub stitchcraft_plan::profile::FormatId::Dst
+pub stitchcraft_plan::profile::FormatId::PesV1
+impl stitchcraft_plan::profile::FormatId
+pub const stitchcraft_plan::profile::FormatId::ALL: &'static [stitchcraft_plan::profile::FormatId]
+pub const fn stitchcraft_plan::profile::FormatId::extension(self) -> &'static str
+pub fn stitchcraft_plan::profile::FormatId::from_extension(&str) -> core::option::Option<stitchcraft_plan::profile::FormatId>
+pub const fn stitchcraft_plan::profile::FormatId::max_color_changes(self) -> usize
+pub const fn stitchcraft_plan::profile::FormatId::name(self) -> &'static str
+pub const fn stitchcraft_plan::profile::FormatId::palette(self) -> core::option::Option<stitchcraft_plan::profile::PaletteId>
+pub enum stitchcraft_plan::profile::PaletteId
+pub stitchcraft_plan::profile::PaletteId::BrotherPec
+impl stitchcraft_plan::profile::PaletteId
+pub const fn stitchcraft_plan::profile::PaletteId::palette(self) -> &'static stitchcraft_plan::palette::Palette
+pub enum stitchcraft_plan::profile::TrimSupport
+pub stitchcraft_plan::profile::TrimSupport::Command
+pub stitchcraft_plan::profile::TrimSupport::LongJumps(stitchcraft_core::units::Mm)
+pub stitchcraft_plan::profile::TrimSupport::None
+pub struct stitchcraft_plan::profile::MachineProfile
+pub stitchcraft_plan::profile::MachineProfile::comfort: core::option::Option<stitchcraft_core::units::Size>
+pub stitchcraft_plan::profile::MachineProfile::evidence: &'static str
+pub stitchcraft_plan::profile::MachineProfile::format: stitchcraft_plan::profile::FormatId
+pub stitchcraft_plan::profile::MachineProfile::hoop: stitchcraft_core::units::Size
+pub stitchcraft_plan::profile::MachineProfile::id: &'static str
+pub stitchcraft_plan::profile::MachineProfile::max_stitch: stitchcraft_core::units::Mm
+pub stitchcraft_plan::profile::MachineProfile::min_stitch: stitchcraft_core::units::Mm
+pub stitchcraft_plan::profile::MachineProfile::name: &'static str
+pub stitchcraft_plan::profile::MachineProfile::palette: stitchcraft_plan::profile::PaletteId
+pub stitchcraft_plan::profile::MachineProfile::trims: stitchcraft_plan::profile::TrimSupport
+impl stitchcraft_plan::profile::MachineProfile
+pub fn stitchcraft_plan::profile::MachineProfile::check_fit(&self, stitchcraft_core::rect::Rect) -> core::option::Option<stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_plan::profile::MachineProfile::problems(&self) -> alloc::vec::Vec<alloc::string::String>
+pub mod stitchcraft_plan::profiles
+pub static stitchcraft_plan::profiles::BROTHER_200X200: stitchcraft_plan::profile::MachineProfile
+pub static stitchcraft_plan::profiles::BUILTIN: &[&stitchcraft_plan::profile::MachineProfile]
+pub fn stitchcraft_plan::profiles::find(&str) -> core::option::Option<&'static stitchcraft_plan::profile::MachineProfile>
+pub mod stitchcraft_plan::thread
+pub struct stitchcraft_plan::thread::Rgb
+pub stitchcraft_plan::thread::Rgb::b: u8
+pub stitchcraft_plan::thread::Rgb::g: u8
+pub stitchcraft_plan::thread::Rgb::r: u8
+impl stitchcraft_plan::thread::Rgb
+pub const fn stitchcraft_plan::thread::Rgb::from_hex(u32) -> Self
+pub const fn stitchcraft_plan::thread::Rgb::new(u8, u8, u8) -> Self
+impl core::fmt::Display for stitchcraft_plan::thread::Rgb
+pub fn stitchcraft_plan::thread::Rgb::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub struct stitchcraft_plan::thread::Thread
+pub stitchcraft_plan::thread::Thread::color: stitchcraft_plan::thread::Rgb
+pub stitchcraft_plan::thread::Thread::name: core::option::Option<alloc::string::String>
+impl stitchcraft_plan::thread::Thread
+pub fn stitchcraft_plan::thread::Thread::named(stitchcraft_plan::thread::Rgb, impl core::convert::Into<alloc::string::String>) -> Self
+pub const fn stitchcraft_plan::thread::Thread::new(stitchcraft_plan::thread::Rgb) -> Self
+pub enum stitchcraft_plan::FormatId
+pub stitchcraft_plan::FormatId::Dst
+pub stitchcraft_plan::FormatId::PesV1
+impl stitchcraft_plan::profile::FormatId
+pub const stitchcraft_plan::profile::FormatId::ALL: &'static [stitchcraft_plan::profile::FormatId]
+pub const fn stitchcraft_plan::profile::FormatId::extension(self) -> &'static str
+pub fn stitchcraft_plan::profile::FormatId::from_extension(&str) -> core::option::Option<stitchcraft_plan::profile::FormatId>
+pub const fn stitchcraft_plan::profile::FormatId::max_color_changes(self) -> usize
+pub const fn stitchcraft_plan::profile::FormatId::name(self) -> &'static str
+pub const fn stitchcraft_plan::profile::FormatId::palette(self) -> core::option::Option<stitchcraft_plan::profile::PaletteId>
+pub enum stitchcraft_plan::PaletteId
+pub stitchcraft_plan::PaletteId::BrotherPec
+impl stitchcraft_plan::profile::PaletteId
+pub const fn stitchcraft_plan::profile::PaletteId::palette(self) -> &'static stitchcraft_plan::palette::Palette
+pub enum stitchcraft_plan::PlanError
+pub stitchcraft_plan::PlanError::TooManyElements
+pub enum stitchcraft_plan::Role
+pub stitchcraft_plan::Role::Command
+pub stitchcraft_plan::Role::Lock
+pub stitchcraft_plan::Role::Top
+pub stitchcraft_plan::Role::Travel
+pub stitchcraft_plan::Role::Underlay
+pub enum stitchcraft_plan::StitchKind
+pub stitchcraft_plan::StitchKind::Jump
+pub stitchcraft_plan::StitchKind::Normal
+pub stitchcraft_plan::StitchKind::Stop
+pub stitchcraft_plan::StitchKind::Trim
+impl stitchcraft_plan::plan::StitchKind
+pub const fn stitchcraft_plan::plan::StitchKind::is_command(self) -> bool
+pub enum stitchcraft_plan::TrimSupport
+pub stitchcraft_plan::TrimSupport::Command
+pub stitchcraft_plan::TrimSupport::LongJumps(stitchcraft_core::units::Mm)
+pub stitchcraft_plan::TrimSupport::None
+pub struct stitchcraft_plan::ColorBlock
+pub stitchcraft_plan::ColorBlock::stitches: alloc::vec::Vec<stitchcraft_plan::plan::Stitch>
+pub stitchcraft_plan::ColorBlock::thread: stitchcraft_plan::thread::Thread
+pub struct stitchcraft_plan::ColorEntry<'a>
+pub stitchcraft_plan::ColorEntry::stop: bool
+pub stitchcraft_plan::ColorEntry::thread: &'a stitchcraft_plan::thread::Thread
+pub struct stitchcraft_plan::ElementRef(_)
+impl stitchcraft_plan::plan::ElementRef
+pub fn stitchcraft_plan::plan::ElementRef::from_index(usize) -> core::option::Option<Self>
+pub const fn stitchcraft_plan::plan::ElementRef::index(self) -> usize
+pub struct stitchcraft_plan::MachineProfile
+pub stitchcraft_plan::MachineProfile::comfort: core::option::Option<stitchcraft_core::units::Size>
+pub stitchcraft_plan::MachineProfile::evidence: &'static str
+pub stitchcraft_plan::MachineProfile::format: stitchcraft_plan::profile::FormatId
+pub stitchcraft_plan::MachineProfile::hoop: stitchcraft_core::units::Size
+pub stitchcraft_plan::MachineProfile::id: &'static str
+pub stitchcraft_plan::MachineProfile::max_stitch: stitchcraft_core::units::Mm
+pub stitchcraft_plan::MachineProfile::min_stitch: stitchcraft_core::units::Mm
+pub stitchcraft_plan::MachineProfile::name: &'static str
+pub stitchcraft_plan::MachineProfile::palette: stitchcraft_plan::profile::PaletteId
+pub stitchcraft_plan::MachineProfile::trims: stitchcraft_plan::profile::TrimSupport
+impl stitchcraft_plan::profile::MachineProfile
+pub fn stitchcraft_plan::profile::MachineProfile::check_fit(&self, stitchcraft_core::rect::Rect) -> core::option::Option<stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_plan::profile::MachineProfile::problems(&self) -> alloc::vec::Vec<alloc::string::String>
+pub struct stitchcraft_plan::PlanBuilder
+impl stitchcraft_plan::builder::PlanBuilder
+pub fn stitchcraft_plan::builder::PlanBuilder::change_thread(&mut self, stitchcraft_plan::thread::Thread)
+pub fn stitchcraft_plan::builder::PlanBuilder::element(&mut self, stitchcraft_core::element::ElementId) -> core::result::Result<stitchcraft_plan::plan::ElementRef, stitchcraft_plan::builder::PlanError>
+pub fn stitchcraft_plan::builder::PlanBuilder::finish(self) -> stitchcraft_plan::plan::StitchPlan
+pub fn stitchcraft_plan::builder::PlanBuilder::jump(&mut self, stitchcraft_core::units::Point, stitchcraft_plan::plan::Provenance)
+pub const fn stitchcraft_plan::builder::PlanBuilder::needle(&self) -> stitchcraft_core::units::Point
+pub fn stitchcraft_plan::builder::PlanBuilder::new(stitchcraft_plan::thread::Thread) -> Self
+pub fn stitchcraft_plan::builder::PlanBuilder::stitch(&mut self, stitchcraft_core::units::Point, stitchcraft_plan::plan::Provenance)
+pub fn stitchcraft_plan::builder::PlanBuilder::stop(&mut self, core::option::Option<stitchcraft_plan::plan::ElementRef>)
+pub fn stitchcraft_plan::builder::PlanBuilder::trim(&mut self, core::option::Option<stitchcraft_plan::plan::ElementRef>)
+pub struct stitchcraft_plan::PlanStats
+pub stitchcraft_plan::PlanStats::color_changes: usize
+pub stitchcraft_plan::PlanStats::jumps: usize
+pub stitchcraft_plan::PlanStats::stitches: usize
+pub stitchcraft_plan::PlanStats::stops: usize
+pub stitchcraft_plan::PlanStats::trims: usize
+impl stitchcraft_plan::plan::PlanStats
+pub const fn stitchcraft_plan::plan::PlanStats::changes_including_stops(&self) -> usize
+pub struct stitchcraft_plan::Provenance
+pub stitchcraft_plan::Provenance::element: core::option::Option<stitchcraft_plan::plan::ElementRef>
+pub stitchcraft_plan::Provenance::role: stitchcraft_plan::plan::Role
+impl stitchcraft_plan::plan::Provenance
+pub const fn stitchcraft_plan::plan::Provenance::new(stitchcraft_plan::plan::ElementRef, stitchcraft_plan::plan::Role) -> Self
+pub const fn stitchcraft_plan::plan::Provenance::plan(stitchcraft_plan::plan::Role) -> Self
+pub struct stitchcraft_plan::Rgb
+pub stitchcraft_plan::Rgb::b: u8
+pub stitchcraft_plan::Rgb::g: u8
+pub stitchcraft_plan::Rgb::r: u8
+impl stitchcraft_plan::thread::Rgb
+pub const fn stitchcraft_plan::thread::Rgb::from_hex(u32) -> Self
+pub const fn stitchcraft_plan::thread::Rgb::new(u8, u8, u8) -> Self
+impl core::fmt::Display for stitchcraft_plan::thread::Rgb
+pub fn stitchcraft_plan::thread::Rgb::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub struct stitchcraft_plan::SewnStitch
+pub stitchcraft_plan::SewnStitch::block: usize
+pub stitchcraft_plan::SewnStitch::from: stitchcraft_core::units::Point
+pub stitchcraft_plan::SewnStitch::index: usize
+pub stitchcraft_plan::SewnStitch::role: stitchcraft_plan::plan::Role
+pub stitchcraft_plan::SewnStitch::to: stitchcraft_core::units::Point
+impl stitchcraft_plan::plan::SewnStitch
+pub fn stitchcraft_plan::plan::SewnStitch::length(&self) -> f64
+pub struct stitchcraft_plan::Stitch
+pub stitchcraft_plan::Stitch::at: stitchcraft_core::units::Point
+pub stitchcraft_plan::Stitch::kind: stitchcraft_plan::plan::StitchKind
+pub stitchcraft_plan::Stitch::origin: stitchcraft_plan::plan::Provenance
+pub struct stitchcraft_plan::StitchPlan
+pub stitchcraft_plan::StitchPlan::blocks: alloc::vec::Vec<stitchcraft_plan::plan::ColorBlock>
+pub stitchcraft_plan::StitchPlan::elements: alloc::vec::Vec<stitchcraft_core::element::ElementId>
+impl stitchcraft_plan::plan::StitchPlan
+pub fn stitchcraft_plan::plan::StitchPlan::bounds(&self) -> core::option::Option<stitchcraft_core::rect::Rect>
+pub fn stitchcraft_plan::plan::StitchPlan::color_entries(&self) -> alloc::vec::Vec<stitchcraft_plan::plan::ColorEntry<'_>>
+pub fn stitchcraft_plan::plan::StitchPlan::element(&self, stitchcraft_plan::plan::ElementRef) -> core::option::Option<&stitchcraft_core::element::ElementId>
+pub fn stitchcraft_plan::plan::StitchPlan::sewn_stitches(&self) -> alloc::vec::Vec<stitchcraft_plan::plan::SewnStitch>
+pub fn stitchcraft_plan::plan::StitchPlan::stats(&self) -> stitchcraft_plan::plan::PlanStats
+pub fn stitchcraft_plan::plan::StitchPlan::stitches(&self) -> impl core::iter::traits::iterator::Iterator<Item = &stitchcraft_plan::plan::Stitch>
+pub struct stitchcraft_plan::Thread
+pub stitchcraft_plan::Thread::color: stitchcraft_plan::thread::Rgb
+pub stitchcraft_plan::Thread::name: core::option::Option<alloc::string::String>
+impl stitchcraft_plan::thread::Thread
+pub fn stitchcraft_plan::thread::Thread::named(stitchcraft_plan::thread::Rgb, impl core::convert::Into<alloc::string::String>) -> Self
+pub const fn stitchcraft_plan::thread::Thread::new(stitchcraft_plan::thread::Rgb) -> Self
+pub struct stitchcraft_plan::Violation
+pub stitchcraft_plan::Violation::block: usize
+pub stitchcraft_plan::Violation::message: alloc::string::String
+pub stitchcraft_plan::Violation::requirement: &'static str
+pub stitchcraft_plan::Violation::stitch: core::option::Option<usize>
+impl stitchcraft_plan::invariants::Violation
+pub fn stitchcraft_plan::invariants::Violation::diagnostic(&self) -> stitchcraft_core::diag::Diagnostic
+impl core::fmt::Display for stitchcraft_plan::invariants::Violation
+pub fn stitchcraft_plan::invariants::Violation::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result

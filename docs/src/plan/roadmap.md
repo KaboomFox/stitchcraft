@@ -55,7 +55,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M2.5 ✅ | `cargo-fuzz` targets for both readers; nightly job with persisted corpus | `REQ-FMT-006`; 1 h fuzzing clean |
 | M2.6 ✅ | `stitchcraft-render`: realistic and simple styles from the quantized plan | `REQ-RND-001`; golden PNG files |
 | M2.7 ✅ | `stitch preview`, `stitch convert`; the `stitch` shot generator behind `cargo xtask shots`; the `docs-refresh.yml` label workflow | first generated docs images, byte-compared on every PR |
-| M2.8 | Coverage ratchet and mutation-testing baseline; public-API snapshots | thresholds recorded |
+| M2.8 ✅ | Coverage ratchet and mutation-testing baseline; public-API snapshots | thresholds recorded |
 
 ## M3 — Running stitch family and plan assembly
 

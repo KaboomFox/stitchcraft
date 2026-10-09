@@ -43,9 +43,10 @@ changes the code — people and AI agents alike. `CLAUDE.md` points here; there 
 ## Commands
 
 ```sh
-cargo xtask ci                     # every gate: fmt, clippy, tests, layers, filesize, cleanroom,
-                                   # unsafe-audit, docs --check, shots --check, conformance (the whole
-                                   # suite, with its report), wasm, deny, typos, book
+cargo xtask ci                     # every gate: fmt, clippy, tests, rustdoc, layers, filesize,
+                                   # cleanroom, unsafe-audit, docs --check, shots --check, conformance
+                                   # (the whole suite, with its report), wasm, api --check, deny, typos,
+                                   # book
 cargo xtask layers                 # crate dependency rules
 cargo xtask docs --check           # docs fresh, links and anchors valid, ids exist
 cargo xtask docs                   # regenerate generated docs pages
@@ -57,11 +58,16 @@ cargo xtask cleanroom              # no GPL text or Ink/Stitch source paths in c
 cargo xtask unsafe-audit           # unsafe only in the ABI shim, always with SAFETY comments
 cargo xtask filesize               # warn above 800 lines, fail above 1,500
 cargo xtask wasm                   # library crates build for wasm32-unknown-unknown
+cargo xtask api                    # rewrite the public API snapshots (crates/*/public-api.txt)
+cargo xtask coverage               # line coverage per crate against conformance/coverage.toml (CI job)
+cargo xtask mutants DIR…           # cargo-mutants results against conformance/mutation.toml (weekly)
 ```
 
-Tools that are not installed locally (the wasm target, `cargo-deny`, `typos`, `mdbook`, and pyembroidery
-for the reader oracle — `conformance/oracle/requirements.txt`) are reported as skipped by `cargo xtask ci`;
-CI installs them and requires them.
+Tools that are not installed locally (the wasm target, `cargo-public-api`, `cargo-deny`, `typos`, `mdbook`,
+and pyembroidery for the reader oracle — `conformance/oracle/requirements.txt`) are reported as skipped by
+`cargo xtask ci`; CI installs them and requires them. Coverage (`cargo-llvm-cov`) and mutation testing
+(`cargo-mutants`) have CI jobs of their own. A change to a library's public API shows in its
+`public-api.txt`: say why in the pull request.
 
 ## Where code goes
 

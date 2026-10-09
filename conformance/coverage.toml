@@ -1,0 +1,13 @@
+# Line-coverage floors per crate, in percent (`cargo xtask coverage`, docs/src/design/guardrails.md).
+# CI fails when a crate's coverage drops below its floor. `cargo xtask coverage --record` raises the
+# floors to today's coverage, rounded down, and never lowers one: lower a floor only by hand, in a
+# pull request that says why.
+
+[floor]
+stitchcraft-cli = 91
+stitchcraft-core = 95
+stitchcraft-engine = 100
+stitchcraft-formats = 96
+stitchcraft-plan = 98
+stitchcraft-render = 96
+stitchcraft-vc-plugin = 72
