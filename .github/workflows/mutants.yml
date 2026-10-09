@@ -1,9 +1,10 @@
 # Mutation testing, weekly, and on pull requests that change its setup (docs/src/design/guardrails.md ›
 # Mutation testing). cargo-mutants changes the
 # shipped code in small ways and runs the changed crate's tests on each change (.cargo/mutants.toml); a
-# change no test notices is a behaviour nobody checks. The mutants run in four parts; `cargo xtask
-# mutants` then adds them up per crate and fails when a crate has more missed mutants than
-# conformance/mutation.toml records. The job summary lists every missed mutant.
+# change no test notices is a behaviour nobody checks. The mutants run in four parts, dealt round-robin
+# so every part gets a fair share of each crate; `cargo xtask mutants` then adds them up per crate and
+# fails when a crate has more missed mutants than conformance/mutation.toml records. The job summary
+# lists every missed mutant.
 name: mutants
 
 on:
@@ -48,9 +49,11 @@ jobs:
       - name: Run this shard's mutants
         # cargo-mutants exits non-zero when it finds missed mutants; the comparison job decides. A mutant
         # that makes a test run away is stopped by cargo-mutants' timeout, which counts apart.
-        # cargo-mutants numbers its shards from 0.
+        # cargo-mutants numbers its shards from 0. Its default sharding cuts the list, which is in source
+        # order, into consecutive slices: one part got all of stitchcraft-formats' mutants, whose tests are
+        # the slowest, and took 23 minutes while the others took 4 to 7. Round-robin deals them out evenly.
         run: |
-          cargo mutants --workspace --shard $(( ${{ matrix.part }} - 1 ))/4 --output "part-${{ matrix.part }}" || status=$?
+          cargo mutants --workspace --shard $(( ${{ matrix.part }} - 1 ))/4 --sharding round-robin --output "part-${{ matrix.part }}" || status=$?
           echo "cargo mutants exited with ${status:-0}"
           test -f "part-${{ matrix.part }}/mutants.out/outcomes.json"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
