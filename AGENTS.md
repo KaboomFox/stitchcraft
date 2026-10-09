@@ -28,6 +28,11 @@ changes the code — people and AI agents alike. `CLAUDE.md` points here; there 
 - **Deterministic.** No `HashMap`/`HashSet`, platform transcendental math, OS randomness or clocks in
   library crates; use `stitchcraft_core::{math, rng}` and ordered collections.
 - **Layered.** A crate depends only on lower layers (`cargo xtask layers`; table in `xtask/src/layers.rs`).
+- **Movable into VectorCraft.** VectorCraft's maintainers can take this repository in as a folder
+  (`docs/src/design/adr/0011-movable-into-vectorcraft.md`). Every package is named `stitchcraft-*`; crates
+  inherit only `version`, `edition`, `license`, `rust-version`, `repository` and lints from the workspace;
+  tooling finds files from its own folder and runs Cargo on StitchCraft's packages (`util::packages`),
+  never with `--workspace`. The `move` job in `compat.yml` checks it.
 - **One source of truth (DRY).** Parameters, diagnostics, profiles and formats live in their registries;
   docs, UI schemas, CLI help and test strategies are generated from them. Never hand-write a parameter's
   docs or duplicate a constant — import it.
@@ -55,6 +60,7 @@ cargo xtask conformance            # run the suite; report in target/conformance
 cargo xtask conformance --check    # requirements and cases consistent (no run)
 cargo xtask conformance --bless ID # rewrite one data case's golden files, on purpose
 cargo xtask cleanroom              # no GPL text or Ink/Stitch source paths anywhere, docs included
+cargo xtask compat join [--nested] DIR  # make this folder, copied into a VectorCraft checkout, part of its build
 cargo xtask unsafe-audit           # unsafe only in the ABI shim, always with SAFETY comments
 cargo xtask filesize               # warn above 800 lines, fail above 1,500
 cargo xtask wasm                   # library crates build for wasm32-unknown-unknown

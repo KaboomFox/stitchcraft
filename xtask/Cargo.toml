@@ -1,5 +1,5 @@
 [package]
-name = "xtask"
+name = "stitchcraft-xtask"
 description = "StitchCraft repository automation: every gate, generator and check (cargo xtask ...)"
 version.workspace = true
 edition.workspace = true
@@ -27,3 +27,4 @@ sha2 = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 toml = { workspace = true }
+toml_edit = { workspace = true }

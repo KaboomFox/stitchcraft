@@ -1,2 +1,4 @@
 [alias]
-xtask = "run --quiet --package xtask --"
+# The tooling's package is `stitchcraft-xtask`, not `xtask`, so it cannot clash with VectorCraft's own if
+# this repository joins VectorCraft's workspace (docs/src/design/adr/0011-movable-into-vectorcraft.md).
+xtask = "run --quiet --package stitchcraft-xtask --"

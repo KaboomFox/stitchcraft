@@ -25,6 +25,7 @@ Goal: a repository where the rules are enforced before the first line of engine 
 | M0.6 🧪 | VectorCraft "hello" plug-in: identity live effect built in CI for `wasm32-unknown-unknown`; Level A contract test against the pinned stable `vectorcraft-plugins` (v0.6.0, now v0.7.0), `release` and `main`; measure fuel per output byte | Contract test green in `compat.yml` (done: green on every track, 2026-10-08); budget numbers recorded in the integration doc (open) |
 | M0.7 🧪 | Geometry spike ([ADR-0005](../design/adr/0005-geometry-stack.md) criteria) | ADR-0005 accepted or revised |
 | M0.8 🧪 | Headless VectorCraft window in CI (Xvfb + Mesa) taking `ui.screenshot` twice with identical pixels | Decision recorded in the docs pipeline page |
+| M0.9 ✅ | Movable into VectorCraft ([ADR-0011](../design/adr/0011-movable-into-vectorcraft.md)): packages prefixed, manifests inheriting only what VectorCraft defines, tooling scoped to its folder and packages, `cargo xtask compat join [--nested]`, and a daily `move` job | `move` green against VectorCraft's latest release and `main` |
 | M0.10 ✅ | Clean room, tightened: no document describes Ink/Stitch's code; Ink/Stitch is named only for file compatibility and in the independence notices; `cargo xtask cleanroom` scans documents too | `cleanroom` green over the whole repository |
 
 ## M1 — Stitch plan, PES/DST writers, first sew-out

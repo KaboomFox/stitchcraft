@@ -13,7 +13,6 @@ license = "MIT OR Apache-2.0"
 # Same floor as VectorCraft, so the engine can be embedded there (docs/src/design/adr/0009-*.md).
 rust-version = "1.95"
 repository = "https://github.com/KaboomFox/stitchcraft"
-publish = false
 
 [workspace.dependencies]
 # internal (layering enforced by `cargo xtask layers`, table in xtask/src/layers.rs)
@@ -48,6 +47,8 @@ proptest = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 toml = "1.1"
+# Format-preserving edits of another workspace's Cargo.toml (`cargo xtask compat join`).
+toml_edit = "0.25"
 
 [workspace.lints.rust]
 # `deny` (not `forbid`) so the one audited exception — the VectorCraft ABI shim — can opt in with

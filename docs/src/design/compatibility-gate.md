@@ -73,6 +73,21 @@ schedule (daily) ──▶ discover tracks ──▶ for each track: build plug-
 - The workflow uses the default `GITHUB_TOKEN` with `contents: write`, `pull-requests: write`,
   `issues: write` only on the scheduled job.
 
+## Moving into VectorCraft
+
+StitchCraft must stay movable into VectorCraft's own repository ([ADR-0011](adr/0011-movable-into-vectorcraft.md)).
+The `move` job rehearses it against the latest stable release and `main` (pull requests that touch
+manifests or tooling: the pinned stable release):
+
+1. Check out VectorCraft and put this repository into it as the folder `stitchcraft/`.
+2. **Nested:** `cargo xtask compat join --nested ..`, then build a throwaway VectorCraft crate that depends
+   on `stitchcraft-engine` by path.
+3. **Joined:** `cargo xtask compat join ..`, then run `cargo xtask ci` from the folder: StitchCraft's
+   gates, inside VectorCraft's workspace, with its lockfile and lints.
+
+A failure means a change here, or one in VectorCraft, has made the move harder; the scheduled run reports
+it in the same `upstream-canary` issue as the contract tests.
+
 ## The supported-versions table
 
 Generated, never hand-edited:

@@ -1,13 +1,73 @@
-//! Helpers shared by the xtask subcommands: the repository root, file walking, running commands and
-//! collecting findings.
+//! Helpers shared by the xtask subcommands: the repository root, this repository's packages, file
+//! walking, running commands and collecting findings.
+//!
+//! The tooling works the same whether this repository is its own Cargo workspace or a folder inside
+//! VectorCraft's (`docs/src/design/adr/0011-movable-into-vectorcraft.md`): files are found from the
+//! folder [`root`] returns, never from the Git root or the current directory, and Cargo commands name
+//! this repository's [`packages`] instead of saying `--workspace`.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// The repository root (the parent of `xtask/`).
+use serde_json::Value;
+
+/// The repository root: the folder that holds `xtask/`, wherever that folder is.
 pub fn root() -> PathBuf {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     dir.parent().map(Path::to_path_buf).unwrap_or(dir)
+}
+
+/// This repository's packages, as Cargo sees them from [`root`].
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Packages {
+    /// Their names, in Cargo's order.
+    pub names: Vec<String>,
+    /// Whether the repository is a folder in a larger workspace (VectorCraft's, after
+    /// `cargo xtask compat join`): the other members are not ours to build, lint or judge.
+    pub guest: bool,
+}
+
+impl Packages {
+    /// `-p <name>` for each package: what a Cargo command gets instead of `--workspace`.
+    pub fn args(&self) -> Vec<String> {
+        self.names.iter().flat_map(|name| ["-p".to_string(), name.clone()]).collect()
+    }
+}
+
+/// `cargo metadata --no-deps` for the workspace [`root`] belongs to.
+pub fn metadata() -> Result<Value, String> {
+    let output =
+        cargo().args(["metadata", "--format-version", "1", "--no-deps"]).current_dir(root()).output().map_err(|e| format!("cargo metadata: {e}"))?;
+    if !output.status.success() {
+        return Err(format!("cargo metadata failed: {}", String::from_utf8_lossy(&output.stderr).trim()));
+    }
+    serde_json::from_slice(&output.stdout).map_err(|e| format!("cargo metadata output: {e}"))
+}
+
+/// This repository's packages.
+pub fn packages() -> Result<Packages, String> {
+    Ok(packages_in(&metadata()?, &root()))
+}
+
+/// The packages in `metadata` whose manifests are inside `folder`, and whether the workspace is larger
+/// than `folder`.
+pub fn packages_in(metadata: &Value, folder: &Path) -> Packages {
+    let folder = canonical(folder);
+    let names = metadata
+        .get("packages")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter(|p| p.get("manifest_path").and_then(Value::as_str).is_some_and(|m| canonical(Path::new(m)).starts_with(&folder)))
+        .filter_map(|p| p.get("name").and_then(Value::as_str).map(str::to_string))
+        .collect();
+    let guest = metadata.get("workspace_root").and_then(Value::as_str).is_some_and(|w| canonical(Path::new(w)) != folder);
+    Packages { names, guest }
+}
+
+/// `path` with links resolved when it exists, as given otherwise.
+fn canonical(path: &Path) -> PathBuf {
+    std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
 }
 
 /// Directory names never scanned.
@@ -132,7 +192,30 @@ impl Findings {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+
     use super::*;
+
+    #[test]
+    fn packages_are_the_ones_in_this_folder() {
+        let alone = json!({
+            "workspace_root": "/r",
+            "packages": [{"name": "stitchcraft-core", "manifest_path": "/r/crates/stitchcraft-core/Cargo.toml"}],
+        });
+        let ours = packages_in(&alone, Path::new("/r"));
+        assert_eq!(ours, Packages { names: vec!["stitchcraft-core".into()], guest: false });
+        assert_eq!(ours.args(), ["-p", "stitchcraft-core"]);
+        let joined = json!({
+            "workspace_root": "/vc",
+            "packages": [
+                {"name": "vectorcraft-geom", "manifest_path": "/vc/crates/geom/Cargo.toml"},
+                {"name": "stitchcraft-core", "manifest_path": "/vc/stitchcraft/crates/stitchcraft-core/Cargo.toml"},
+                {"name": "stitchcraft-xtask", "manifest_path": "/vc/stitchcraft/xtask/Cargo.toml"},
+            ],
+        });
+        let ours = packages_in(&joined, Path::new("/vc/stitchcraft"));
+        assert_eq!(ours, Packages { names: vec!["stitchcraft-core".into(), "stitchcraft-xtask".into()], guest: true });
+    }
 
     #[test]
     fn findings_become_annotations_on_their_line() {

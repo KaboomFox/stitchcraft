@@ -727,6 +727,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "stitchcraft-xtask"
+version = "0.0.1"
+dependencies = [
+ "clap",
+ "serde",
+ "serde_json",
+ "sha2",
+ "stitchcraft-cli",
+ "stitchcraft-core",
+ "stitchcraft-engine",
+ "stitchcraft-formats",
+ "stitchcraft-params",
+ "stitchcraft-plan",
+ "stitchcraft-render",
+ "stitchcraft-testkit",
+ "toml",
+ "toml_edit",
+]
+
+[[package]]
 name = "strict-num"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -844,6 +864,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "toml_edit"
+version = "0.25.16+spec-1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88f38f3af8bf71841c67a990f4e2b52143b2d0a1a994c72513ff4c14977fc722"
+dependencies = [
+ "indexmap",
+ "toml_datetime",
+ "toml_parser",
+ "toml_writer",
+ "winnow",
+]
+
+[[package]]
 name = "toml_parser"
 version = "1.1.4+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -920,31 +953,15 @@ name = "winnow"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23b97319f7b8343df12cc98938e5c3eb436064524c8d2b4e30a1d3a36eecdf81"
+dependencies = [
+ "memchr",
+]
 
 [[package]]
 name = "wit-bindgen"
 version = "0.57.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
-
-[[package]]
-name = "xtask"
-version = "0.0.1"
-dependencies = [
- "clap",
- "serde",
- "serde_json",
- "sha2",
- "stitchcraft-cli",
- "stitchcraft-core",
- "stitchcraft-engine",
- "stitchcraft-formats",
- "stitchcraft-params",
- "stitchcraft-plan",
- "stitchcraft-render",
- "stitchcraft-testkit",
- "toml",
-]
 
 [[package]]
 name = "zerocopy"

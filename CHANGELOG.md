@@ -49,6 +49,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- M0.9: StitchCraft can move into VectorCraft's repository (ADR-0011). `cargo xtask compat join DIR`
+  makes this folder, copied into a VectorCraft checkout, part of VectorCraft's workspace (or, with
+  `--nested`, a workspace of its own that VectorCraft's crates can depend on). It edits VectorCraft's
+  `Cargo.toml` in place and refuses when the two cannot merge. The tooling package is now
+  `stitchcraft-xtask` (still `cargo xtask`); crates set `publish = false` themselves; every `cargo xtask`
+  step works on StitchCraft's packages only, so it means the same inside VectorCraft's workspace. The
+  daily `move` job in `compat.yml` rehearses both forms against VectorCraft's latest release and `main`.
 - M0.10: the clean room is tighter. The two pages that reviewed Ink/Stitch are gone: one described
   Ink/Stitch's source code, which the clean room forbids even second-hand, and their lessons already live
   in StitchCraft's own requirements and decisions, which now give their own reasons. Ink/Stitch is named

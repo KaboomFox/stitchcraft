@@ -3,10 +3,15 @@
 # CI a missing oracle fails the suite, so every job that runs `cargo xtask ci` uses this action.
 name: pyembroidery oracle
 description: Install the pinned pyembroidery reader and point STITCHCRAFT_PYTHON at it.
+inputs:
+  directory:
+    description: Where StitchCraft is checked out (a folder inside VectorCraft in the move rehearsal).
+    default: "."
 runs:
   using: composite
   steps:
     - shell: bash
+      working-directory: ${{ inputs.directory }}
       run: |
         python3 -m venv "$RUNNER_TEMP/oracle-venv"
         "$RUNNER_TEMP/oracle-venv/bin/pip" install --require-hashes -r conformance/oracle/requirements.txt
