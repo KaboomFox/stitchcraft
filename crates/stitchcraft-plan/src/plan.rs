@@ -150,11 +150,20 @@ pub struct SewnStitch {
     pub from: Point,
     /// Where the needle goes down.
     pub to: Point,
-    /// The stitch's role.
+    /// The stitch's role: the role of the entry where the needle goes down.
     pub role: Role,
+    /// The role of the entry the thread comes from (the previous needle hole).
+    pub from_role: Role,
 }
 
 impl SewnStitch {
+    /// Whether it is a lock stitch: one into or out of a lock stitch's needle hole. A tie-in's last stitch
+    /// lands on the stitching's first point and a tie-off's first leaves its last point, and both belong to
+    /// the lock, whose stitches may be as short as 0.2 mm.
+    pub fn is_lock(&self) -> bool {
+        self.role == Role::Lock || self.from_role == Role::Lock
+    }
+
     /// The stitch's length in millimetres.
     pub fn length(&self) -> f64 {
         self.from.distance(self.to)
@@ -214,17 +223,17 @@ impl StitchPlan {
     /// Every stitch that lays thread between two needle holes, in sewing order (see [`SewnStitch`]).
     pub fn sewn_stitches(&self) -> Vec<SewnStitch> {
         let mut sewn = Vec::new();
-        let mut needle = Point::ORIGIN;
+        let (mut needle, mut needle_role) = (Point::ORIGIN, Role::Travel);
         for (block, b) in self.blocks.iter().enumerate() {
             let mut sewing = false;
             for (index, stitch) in b.stitches.iter().enumerate() {
                 match stitch.kind {
                     StitchKind::Normal => {
                         if sewing {
-                            sewn.push(SewnStitch { block, index, from: needle, to: stitch.at, role: stitch.origin.role });
+                            sewn.push(SewnStitch { block, index, from: needle, to: stitch.at, role: stitch.origin.role, from_role: needle_role });
                         }
                         sewing = true;
-                        needle = stitch.at;
+                        (needle, needle_role) = (stitch.at, stitch.origin.role);
                     }
                     StitchKind::Jump => {
                         sewing = false;

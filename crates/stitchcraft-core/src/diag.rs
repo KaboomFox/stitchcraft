@@ -195,6 +195,14 @@ registry! {
     /// another lock shape.
     CustomLockUnusable = "SC-W0503", Warning, "Custom lock cannot be sewn as written";
 
+    /// Needle points less than the shortest stitch from the one before were left out, so the stitch before
+    /// each runs on to the next and none is shorter than the machine sews well. This happens where one
+    /// element's stitching runs straight on into the next and they nearly touch: the stitch between them is
+    /// whatever is left of the gap. Nothing visible changes.
+    ///
+    /// Nothing to do. If the count is large, check for elements drawn on top of each other.
+    StitchesMerged = "SC-I0504", Info, "Stitches shorter than the shortest stitch merged";
+
     /// The file format can record only a limited number of colour changes and stops (PES: 255). This
     /// design has more, so the file was not written.
     ///
@@ -238,6 +246,14 @@ registry! {
     /// The file was written. Rotate the design if the message says that brings it inside the comfort
     /// zone, use a firmer stabilizer, or scale the design down.
     OutsideComfortZone = "SC-W0702", Warning, "Design is larger than the comfort zone";
+
+    /// Stitches longer than the machine's longest stitch were split into equal parts, each no longer than
+    /// it: a long stitch placed by hand, say, or a custom lock's long step. A long loose stitch snags and
+    /// sags; the machine may refuse it.
+    ///
+    /// To choose where the needle goes down instead, add nodes (manual stitch) or set
+    /// `max_stitch_length_mm`.
+    StitchesSplit = "SC-I0703", Info, "Stitches longer than the machine's longest stitch; split";
 
     /// The SVG file could not be read: it is not well-formed XML, its root is not an `<svg>` element,
     /// its size or viewBox makes no sense, or it is larger than StitchCraft reads. Nothing was stitched.

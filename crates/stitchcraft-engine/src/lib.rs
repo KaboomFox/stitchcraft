@@ -14,6 +14,7 @@
 pub mod assemble;
 pub mod common;
 pub mod design;
+pub mod finalize;
 pub mod generate;
 pub mod generators;
 pub mod locks;
