@@ -127,6 +127,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- **PEC files without the origin field.** pyembroidery 1.4.32 to 1.5.1 write PEC stitch data without the
+  4 bytes that Brother's software writes before the first record. The PES/PEC reader skipped those bytes
+  in every file. A file from those versions lost its first record or failed to read. The reader now
+  takes the bytes as the field only if the design after them fits the header's box, and otherwise warns
+  that Brother machines expect the field (`REQ-FMT-009`). Found by reviewing pystitch's fixes.
+- **Palette credits.** `NOTICE` credits pystitch for palette entries 62 and 63, the appliqué functions.
 - DST is read as DST machines sew it (`REQ-FMT-008`). Machines count jump records in a row and cut the
   thread before three or more — a machine setting; three is the common one, and pyembroidery's reading —
   where something was sewn since the thread was last cut or changed, so a jump longer than 24.2 mm is a
