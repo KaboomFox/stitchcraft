@@ -167,7 +167,8 @@ fn req_svg_001_paint_servers_become_colours() {
         </svg>"##);
     // A gradient's first colour (currentColor there is the gradient's own `color`); a gradient without
     // stops, an `href` to something else or a loop paints nothing, as in a viewer; so does a reference
-    // to nothing, unless it has a fallback; the first element with an id is the one used.
+    // to nothing, unless it has a fallback; the first element with an id is the one used. A gradient of
+    // one colour is that colour without a note, unless the colour does not read and black is used.
     assert_eq!(ids(&svg), ["svg:a:fill", "svg:e:fill", "svg:f:fill", "svg:i:stroke", "svg:j:fill"]);
     let colours: Vec<_> = svg.design.elements().iter().map(|e| e.thread.color.to_string()).collect();
     assert_eq!(colours, ["#00ff00", "#000000", "#008000", "#00ff00", "#ff0000"]);
@@ -178,7 +179,6 @@ fn req_svg_001_paint_servers_become_colours() {
             "warning SC-W0802: The fill of `e` is a gradient; it is stitched in the gradient's first colour, #000000.",
             "warning SC-W0802: The fill of `h` is a `<pattern>`, which is not stitched; the fill is left out.",
             "warning SC-W0802: The stroke of `i` is a gradient; it is stitched in the gradient's first colour, #00ff00.",
-            "warning SC-W0802: The fill of `j` is a gradient; it is stitched in the gradient's first colour, #ff0000.",
         ]
     );
 }
@@ -256,6 +256,79 @@ fn req_svg_001_only_svg_elements_draw_and_gradient_stops_are_stops() {
     // gradients.
     assert_eq!(ids(&svg), ["svg:a:fill"]);
     assert_eq!(svg.design.elements()[0].thread.color, Rgb::new(0, 0, 255));
+}
+
+#[test]
+fn req_svg_001_paints_as_editors_write_them() {
+    let svg = svg(r##"<svg xmlns="http://www.w3.org/2000/svg" color="#123456">
+          <defs>
+            <linearGradient id="swatch"><stop offset="0" stop-color="#2a7a3a"/></linearGradient>
+            <linearGradient id="current"><stop offset="0" stop-color="CurrentColor"/><stop offset="1" stop-color="red"/></linearGradient>
+          </defs>
+          <rect id="icc" width="1" height="1" fill="#cd853f icc-color(sRGB-IEC61966-2.1, 0.8, 0.52, 0.25)" stroke="#ff0000 icc-color(p, 1, 0, 0)"/>
+          <rect id="lower" width="1" height="1" fill="none" stroke="currentcolor"/>
+          <rect id="upper" width="1" height="1" style="fill:none;stroke:CURRENTCOLOR"/>
+          <rect id="fallback" width="1" height="1" fill="url(#missing) currentcolor"/>
+          <rect id="attribute" width="1" height="1" style="fill:bogus" fill="#00ff00"/>
+          <rect id="last-valid" width="1" height="1" style="fill:#0000ff;fill:bogus"/>
+          <rect id="solid" width="1" height="1" fill="url(#swatch)"/>
+          <rect id="stop" width="1" height="1" fill="url(#current)"/>
+        </svg>"##);
+    // Inkscape's colour-managed colours are sewn in their sRGB colour, keywords ignore case, an invalid
+    // declaration gives way to the next valid one, as in CSS, and a gradient of one colour (an Inkscape
+    // swatch) is that colour.
+    assert_eq!(
+        ids(&svg),
+        [
+            "svg:icc:fill",
+            "svg:icc:stroke",
+            "svg:lower:stroke",
+            "svg:upper:stroke",
+            "svg:fallback:fill",
+            "svg:attribute:fill",
+            "svg:last-valid:fill",
+            "svg:solid:fill",
+            "svg:stop:fill"
+        ]
+    );
+    let colours: Vec<_> = svg.design.elements().iter().map(|e| e.thread.color.to_string()).collect();
+    assert_eq!(colours, ["#cd853f", "#ff0000", "#123456", "#123456", "#123456", "#00ff00", "#0000ff", "#2a7a3a", "#123456"]);
+    assert_eq!(warnings(&svg), ["warning SC-W0802: The fill of `stop` is a gradient; it is stitched in the gradient's first colour, #123456."]);
+}
+
+#[test]
+fn req_svg_001_lengths_with_spaces_around_them() {
+    let svg = svg(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100">
+          <line id="line" x1="0" y1=" 80 " x2="10 " y2="0" stroke="red"/>
+          <rect id="rect" x=" 5" y="5" width="10 " height="	10"/>
+        </svg>"#);
+    all_at(&ends(&svg.design.elements()[0])[0], &[(0.0, 80.0), (10.0, 0.0)]);
+    all_at(&ends(&svg.design.elements()[1])[0], &[(5.0, 5.0), (15.0, 5.0), (15.0, 15.0), (5.0, 15.0)]);
+    assert_eq!(warnings(&svg), Vec::<String>::new());
+}
+
+#[test]
+fn req_svg_001_files_that_say_they_are_latin_1() {
+    let mut file = br#"<?xml version="1.0" encoding="ISO-8859-1"?><svg xmlns="http://www.w3.org/2000/svg"><rect id="caf"#.to_vec();
+    file.push(0xe9);
+    file.extend_from_slice(br#"" width="1" height="1"/></svg>"#);
+    let svg = svg(file);
+    assert_eq!(ids(&svg), ["svg:caf\u{e9}:fill"]);
+}
+
+#[test]
+fn req_svg_001_illustrator_s_entities() {
+    // Illustrator's "Preserve Illustrator Editing Capabilities" declares its namespaces as entities.
+    let svg = svg(r#"<?xml version="1.0" encoding="utf-8"?>
+        <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+            <!ENTITY ns_extend "http://ns.adobe.com/Extensibility/1.0/">
+            <!ENTITY ns_ai "http://ns.adobe.com/AdobeIllustrator/10.0/">
+        ]>
+        <svg xmlns:x="&ns_extend;" xmlns:i="&ns_ai;" xmlns="http://www.w3.org/2000/svg" width="10mm" height="10mm" viewBox="0 0 10 10">
+          <rect id="square" x="1" y="1" width="2" height="2" i:knockout="Off"/>
+        </svg>"#);
+    assert_eq!(ids(&svg), ["svg:square:fill"]);
+    assert_eq!(warnings(&svg), Vec::<String>::new());
 }
 
 /// Millimetres per CSS pixel.

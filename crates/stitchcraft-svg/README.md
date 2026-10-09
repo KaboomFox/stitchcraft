@@ -30,8 +30,9 @@ Design: `docs/src/design/data-model.md` (the `Design`), `docs/src/design/archite
   left out without a word; a command that is not applied is noted.
 - Positions are exact to within a micrometre (`REQ-SVG-001`) and the same on every platform: transforms
   and arcs use `stitchcraft_core::math`, never the platform's trigonometry.
-- Work is bounded: 64 MiB per file, a million XML nodes, no entity declarations, and the budget (two
-  units per XML node: one to find ids and Ink/Stitch's commands, one to read it).
+- Work is bounded. A file is at most 64 MiB with its entities expanded (`src/text.rs`) and a million XML
+  nodes, and reading charges the budget two units per XML node: one to find ids and Ink/Stitch's
+  commands, one to read it.
 - Parameters will round-trip unchanged (`REQ-PRM-003`, M8).
 
 ## Dependencies

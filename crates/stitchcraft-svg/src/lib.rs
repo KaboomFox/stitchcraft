@@ -27,6 +27,8 @@ mod document;
 pub mod inkstitch;
 mod path;
 mod style;
+mod text;
 mod transform;
 
-pub use document::{MAX_BYTES, Svg, read};
+pub use document::{Svg, read};
+pub use text::MAX_BYTES;

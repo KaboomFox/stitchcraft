@@ -4,8 +4,13 @@
 //! SVG elements take their colours and visibility from properties, written as presentation attributes
 //! (`fill="red"`) or in the `style` attribute (`style="fill:red"`), which wins. Most properties inherit,
 //! so the reader hands a [`Style`] from each element to its children, and each element changes what it
-//! sets. A value that does not parse is ignored, as CSS ignores an invalid declaration, so StitchCraft
-//! sees what an SVG viewer shows.
+//! sets. A value that does not parse is ignored, as CSS ignores an invalid declaration: the last valid
+//! declaration in `style` wins, then a valid presentation attribute, so StitchCraft sees what an SVG
+//! viewer shows. The reader names a paint the element sets that never parses ([`Declared::paint`]).
+//!
+//! Colours are read as editors write them: keywords in any case (`currentcolor`), and an ICC colour
+//! after the sRGB one (`#cd853f icc-color(…)`, from Inkscape's colour-managed picker) is left for the
+//! sRGB one, as viewers without colour management do.
 //!
 //! Read here: `fill`, `stroke`, `color` (for `currentColor`), `fill-rule`, `opacity`, `fill-opacity`,
 //! `stroke-opacity`, `visibility`, `display`, `paint-order` and the marker properties, each of the three
@@ -17,7 +22,7 @@ use std::str::FromStr;
 use roxmltree::Node;
 use stitchcraft_engine::design::FillRule;
 use stitchcraft_plan::Rgb;
-use svgtypes::{Color, Length, LengthUnit, PaintFallback, PaintOrder, PaintOrderKind};
+use svgtypes::{Color, Length, LengthUnit, PaintOrder, PaintOrderKind};
 
 /// The properties one element sets itself: its `style` attribute's declarations, then its presentation
 /// attributes.
@@ -42,6 +47,30 @@ impl<'a, 'input> Declared<'a, 'input> {
     /// Whether `property` is set to something other than `none`: a clip path, mask or filter.
     pub fn uses(&self, property: &str) -> bool {
         self.get(property).is_some_and(names_something)
+    }
+
+    /// What the element declares for the paint `property` (`fill` or `stroke`).
+    pub fn paint(&self, property: &str) -> Declaration<'a, Paint<'a>> {
+        self.value(property, Paint::parse)
+    }
+
+    /// What the element declares for `property`, read with `parse`: the last declaration in `style` that
+    /// reads, else the presentation attribute if it reads. `inherit` keeps the inherited value.
+    fn value<T>(&self, property: &str, parse: impl Fn(&'a str) -> Option<T>) -> Declaration<'a, T> {
+        let in_style = self.style.iter().rev().filter(|(name, _)| name.eq_ignore_ascii_case(property)).map(|(_, value)| *value);
+        let mut unread = None;
+        for value in in_style.chain(self.node.attribute(property)).map(str::trim) {
+            if value.eq_ignore_ascii_case("inherit") {
+                return Declaration::Inherited;
+            }
+            match parse(value) {
+                Some(parsed) => return Declaration::Set(parsed),
+                None => {
+                    unread.get_or_insert(value);
+                }
+            }
+        }
+        unread.map_or(Declaration::Inherited, Declaration::Unreadable)
     }
 
     /// Every value the `style` attribute itself gives `property`, in order; presentation attributes are
@@ -70,6 +99,18 @@ impl<'a, 'input> Declared<'a, 'input> {
         }
         found
     }
+}
+
+/// What an element declares for a property.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Declaration<'a, T> {
+    /// Nothing, or `inherit`: the inherited value stays.
+    Inherited,
+    /// A value that reads.
+    Set(T),
+    /// Values none of which reads, the one that would win first: the inherited value stays, as in a
+    /// viewer.
+    Unreadable(&'a str),
 }
 
 /// The marker properties, one per place on a path.
@@ -151,23 +192,46 @@ impl Plain {
 }
 
 impl<'a> Paint<'a> {
-    /// The paint `value` declares, or `None` when it does not parse (the declaration is then ignored) or
-    /// says `inherit` (the inherited paint stays).
+    /// The paint `value` declares (not `inherit`, which the caller handles), or `None` when it does not
+    /// parse: a paint server reference with the plain paint after it, or a plain paint.
     fn parse(value: &'a str) -> Option<Paint<'a>> {
-        Some(match svgtypes::Paint::from_str(value).ok()? {
-            svgtypes::Paint::None | svgtypes::Paint::ContextFill | svgtypes::Paint::ContextStroke => Paint::Plain(Plain::None),
-            svgtypes::Paint::Inherit => return None,
-            svgtypes::Paint::CurrentColor => Paint::Plain(Plain::CurrentColor),
-            svgtypes::Paint::Color(color) => Paint::Plain(colour(color)),
-            svgtypes::Paint::FuncIRI(id, fallback) => Paint::Server {
-                id,
-                fallback: fallback.map(|f| match f {
-                    PaintFallback::None => Plain::None,
-                    PaintFallback::CurrentColor => Plain::CurrentColor,
-                    PaintFallback::Color(color) => colour(color),
-                }),
-            },
-        })
+        let value = value.trim();
+        let is_reference = value.get(..4).is_some_and(|start| start.eq_ignore_ascii_case("url("));
+        if !is_reference {
+            return plain(value).map(Paint::Plain);
+        }
+        // `url(#id)`, the function name in any case, the reference quoted or not.
+        let end = value.find(')')?;
+        let inside = value.get(4..end)?.trim();
+        let unquoted = ['"', '\''].iter().find_map(|&q| inside.strip_prefix(q)?.strip_suffix(q)).unwrap_or(inside);
+        let id = unquoted.trim().strip_prefix('#').filter(|id| !id.is_empty())?;
+        let rest = value.get(end + 1..)?.trim();
+        let fallback = if rest.is_empty() { None } else { Some(plain(rest)?) };
+        Some(Paint::Server { id, fallback })
+    }
+}
+
+/// A paint that is not a server, in any case: `none` (or `context-fill` and `context-stroke`, which
+/// nothing here provides), `currentColor` or a colour.
+fn plain(value: &str) -> Option<Plain> {
+    let value = without_icc(value);
+    let is = |keyword: &str| value.eq_ignore_ascii_case(keyword);
+    if is("none") || is("context-fill") || is("context-stroke") {
+        Some(Plain::None)
+    } else if is("currentcolor") {
+        Some(Plain::CurrentColor)
+    } else {
+        Color::from_str(value).ok().map(colour)
+    }
+}
+
+/// `value` without an ICC colour after the sRGB colour (`#cd853f icc-color(…)`); a value that is only an
+/// ICC colour stays as it is, and does not parse.
+pub fn without_icc(value: &str) -> &str {
+    let at = value.as_bytes().windows(10).position(|w| w.eq_ignore_ascii_case(b"icc-color("));
+    match at.and_then(|i| value.get(..i)).map(str::trim_end) {
+        Some(srgb) if !srgb.is_empty() => srgb,
+        _ => value,
     }
 }
 
@@ -234,13 +298,13 @@ impl<'a> Style<'a> {
             return None;
         }
         let mut style = *self;
-        if let Some(paint) = get("fill").and_then(Paint::parse) {
+        if let Declaration::Set(paint) = declared.paint("fill") {
             style.fill = paint;
         }
-        if let Some(paint) = get("stroke").and_then(Paint::parse) {
+        if let Declaration::Set(paint) = declared.paint("stroke") {
             style.stroke = paint;
         }
-        if let Some(color) = get("color").and_then(|v| Color::from_str(v).ok()) {
+        if let Declaration::Set(color) = declared.value("color", |v| Color::from_str(without_icc(v)).ok()) {
             style.color = rgb(color);
         }
         match get("fill-rule") {
@@ -306,6 +370,35 @@ mod tests {
         let mut chain: Vec<_> = node.ancestors().filter(roxmltree::Node::is_element).collect();
         chain.reverse();
         check(chain.iter().try_fold(Style::default(), |style, n| style.child(&Declared::of(*n))));
+    }
+
+    #[test]
+    fn colours_are_read_as_editors_write_them() {
+        assert_eq!(without_icc("#cd853f icc-color(sRGB-IEC61966-2.1, 0.8, 0.52, 0.25)"), "#cd853f");
+        assert_eq!(without_icc("#cd853f ICC-COLOR(x, 1)"), "#cd853f");
+        assert_eq!(without_icc("icc-color(x, 1)"), "icc-color(x, 1)", "an ICC colour alone stays, and does not parse");
+        assert_eq!((plain("CurrentColor"), plain("NONE"), plain("Context-Fill")), (Some(Plain::CurrentColor), Some(Plain::None), Some(Plain::None)));
+        assert_eq!(plain("#00000000"), Some(Plain::None), "a fully transparent colour paints nothing");
+        let server = |id, fallback| Some(Paint::Server { id, fallback });
+        assert_eq!(Paint::parse("url(#g) CURRENTCOLOR"), server("g", Some(Plain::CurrentColor)));
+        assert_eq!(Paint::parse("URL( '#g' )"), server("g", None));
+        assert_eq!(Paint::parse(r##"url("#g") none"##), server("g", Some(Plain::None)));
+        for unreadable in ["url(#g) bogus", "url(#g", "url(g)", "url(#)", "url(\"#g')", "bogus"] {
+            assert_eq!(Paint::parse(unreadable), None, "{unreadable}");
+        }
+    }
+
+    #[test]
+    fn a_declaration_that_does_not_read_gives_way_to_the_next() {
+        let doc = Document::parse(
+            r##"<svg><path id="a" style="fill:#00f;fill:bogus" fill="red"/><path id="b" style="fill:bogus" fill="worse"/>
+               <path id="c" style="fill:inherit" fill="red"/><path id="d" style="fill:bogus" fill="inherit"/><path id="e"/></svg>"##,
+        )
+        .unwrap();
+        let paint = |id| Declared::of(doc.descendants().find(|n| n.attribute("id") == Some(id)).unwrap()).paint("fill");
+        assert_eq!(paint("a"), Declaration::Set(BLUE));
+        assert_eq!(paint("b"), Declaration::Unreadable("bogus"), "the value that would win is named");
+        assert_eq!((paint("c"), paint("d"), paint("e")), (Declaration::Inherited, Declaration::Inherited, Declaration::Inherited));
     }
 
     #[test]

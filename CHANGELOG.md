@@ -171,6 +171,23 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The SVG reader reads files as Inkscape and Illustrator write them (`REQ-SVG-001`), which a review against
+  Ink/Stitch found.
+  - **Colours.** An ICC colour after the sRGB one (`#cd853f icc-color(…)`, from Inkscape's colour-managed
+    picker) lost the outline it painted, and turned a fill black. Keywords such as `currentcolor` were read
+    in one case only. A `style` declaration that did not read hid a valid presentation attribute, where CSS
+    falls back to it. Each is read as a viewer reads it now, and a paint that still does not read is named
+    (`SC-W0802`). A gradient of one colour, such as an Inkscape swatch, is that colour without a note.
+  - **Lengths.** A shape's length with a space after it, such as `y1="80 "`, read as 0, and nothing said
+    so. Spaces are allowed now, and a length that does not read is named (`SC-W0804`).
+  - **Illustrator's entities.** "Preserve Illustrator Editing Capabilities" declares its namespaces as XML
+    entities, and every such file was refused. Entities of plain text are read now. A file is still
+    refused when an entity's value holds markup or other entities, or when its references would expand
+    it past 64 MiB.
+  - **Latin-1 files.** A file whose XML declaration says ISO-8859-1 was refused at its first byte outside
+    ASCII. It is turned into UTF-8 now.
+  - The note about style sheets says that the fills, outlines and hidden elements they set are lost too,
+    not only their colours.
 - **PEC files without the origin field.** pyembroidery 1.4.32 to 1.5.1 write PEC stitch data without the
   4 bytes that Brother's software writes before the first record. The PES/PEC reader skipped those bytes
   in every file. A file from those versions lost its first record or failed to read. The reader now
