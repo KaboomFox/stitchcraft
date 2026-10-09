@@ -171,6 +171,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The compatibility contract check took the lock shape `zigzag`, listed for `lock_*_scale_percent`, for
+  the satin method of the same name, and so thought those parameters applied to zigzag satins only. A
+  stitch type is now named only by an id of the row's own family; the common settings have none. It
+  showed once the contract check (which records the lock shapes each size is shown for) and the running
+  stitch's matching by stitch type were both on `main`, and failed its CI.
 - The Ink/Stitch contract page matches a registered parameter with the rows for the stitch types it
   applies to, not every row with its key. Ink/Stitch gives some keys to several elements with different
   defaults: registering the running stitch's `running_stitch_tolerance_mm` (0.2 mm) had marked the
