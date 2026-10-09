@@ -51,6 +51,22 @@ fn req_fin_001_stitches_longer_than_the_machine_sews_are_split() {
 }
 
 #[test]
+fn diag_sc_i0504_points_left_out_are_counted() {
+    let three = vec![line("a", (0.0, 0.0), 10.0, &RED, &[]), line("b", (10.1, 0.0), 10.0, &RED, &[]), line("c", (20.2, 0.0), 10.0, &RED, &[])];
+    assert_eq!(
+        messages(&planned(three)),
+        ["info SC-I0504: 2 needle points less than the shortest stitch (0.3 mm) from the one before were left out."]
+    );
+}
+
+#[test]
+fn diag_sc_i0703_split_stitches_are_counted() {
+    let by_hand = [("stroke_method", "manual_stitch")];
+    let two = vec![line("a", (0.0, 0.0), 30.0, &RED, &by_hand), line("b", (0.0, 10.0), 20.0, &RED, &by_hand)];
+    assert_eq!(messages(&planned(two)), ["info SC-I0703: 2 stitches longer than the machine's longest stitch (12 mm) were split into equal parts."]);
+}
+
+#[test]
 fn req_fin_002_designs_the_machine_cannot_take_give_no_plan() {
     // Wider than the hoop.
     let wide = planned_with(vec![line("a", (0.0, 0.0), 210.0, &RED, &[])], DesignSettings::default());

@@ -71,7 +71,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M3.6 ✅ | Manual stitch | `REQ-RUN-006`, `REQ-RUN-008` |
 | M3.7 ✅ | Lock stitches: every shape, its size and its place at either end of the stitching | `REQ-LCK-002`, `REQ-LCK-004` |
 | M3.8 ✅ | Plan assembly: order, collapse, tie-off/jump/trim/tie-in (where `ties` says), stops, colour changes, the origin and stop position; `stitchcraft_engine::plan` sends each element to its generator | `REQ-ASM-001..003`, `REQ-ASM-005`, `REQ-LCK-001`, `REQ-GEN-002` |
-| M3.9 | Finalize: split, merge, hoop, colour limits; `stitch plan in.svg -o out.pes --preview out.png --report out.json` | end-to-end cases |
+| M3.9 ✅ | Finalize: split, merge, hoop, colour limits, the plan check; `stitch plan in.svg -o out.pes --preview out.png --report out.json` | `REQ-FIN-001..003`; the `strokes` plan case, SVG to machine file |
 | M3.10 | `stitch bug-report` bundle | a bundle reproduces its plan byte for byte |
 | MC-2 🧵 | **TS-03** (running/bean lengths), **TS-04** (lock holding test), **TS-02** again with element-driven trims | report filed; min-stitch and lock defaults confirmed (`REQ-LCK-003`) |
 

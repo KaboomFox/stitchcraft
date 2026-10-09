@@ -43,3 +43,10 @@ area = "strokes/running"
 summary = "A part of a path that is a single point, or too small for the shortest stitch, is not stitched and is reported (SC-W0401). Ink/Stitch stitches a single-point path as a short line."
 reason = "No stitches the design does not draw, and nothing left out without a word."
 requirements = ["REQ-RUN-001"]
+
+[[deviation]]
+id = "DEV-FIN-001"
+area = "plan/finalize"
+summary = "StitchCraft fits every stitch to the machine: it leaves out needle points less than the machine's shortest stitch (0.3 mm on the Brother) from the one before, keeping the ends of each run of stitches, and splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than 0.1 mm (or the element's own shortest stitch) and splits nothing."
+reason = "The machine profile says what the machine sews well; a stitch outside it hammers one hole, snags, or is refused (docs/src/design/engine-pipeline.md › Finalize)."
+requirements = ["REQ-FIN-001"]

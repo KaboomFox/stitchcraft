@@ -146,7 +146,7 @@ change starts a new run.
 | Requirement | Rule | Since |
 |---|---|---|
 | `REQ-PLAN-001` | Every position is finite and inside the profile's hoop, centred on the origin. | M1 |
-| `REQ-PLAN-002` | While sewing, every stitch is between the profile's `min_stitch` (locks: 0.2 mm) and `max_stitch`. | M1 |
+| `REQ-PLAN-002` | While sewing, every stitch is between the profile's `min_stitch` (lock stitches, into or out of a lock point: 0.2 mm) and `max_stitch`. | M1 |
 | `REQ-PLAN-003` | Every block sews at least one stitch; trims and stops happen where the needle is. | M1 |
 | `REQ-PLAN-004` | A `Trim` is preceded by a tie-off and followed by a tie-in, when the element's lock settings ask for them. | M3 |
 | `REQ-PLAN-005` | While sewing, no stitch lands where the needle already is. | M1 |

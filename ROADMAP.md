@@ -16,9 +16,11 @@ StitchCraft reads SVG files into its design model, reporting whatever it leaves 
 stitches running stitches: even spacing between corners, patterns of lengths, curves followed within the
 tolerance, no stitch shorter than the shortest stitch, measured straight, repeats, bean stitch and random
 length, manual stitches placed by hand, and lock stitches of every shape at either end of the
-stitching; and it assembles a design's elements into one plan, with jumps, trims, stops, thread changes and
-locks where `ties` says. The conformance report shows all 37 active requirements green. Next: the MC-1
-sew-out report, which closes M1, and the rest of M3 (finalizing, `stitch plan`, the bug-report bundle). The repository is
+stitching; it assembles a design's elements into one plan, with jumps, trims, stops, thread changes and
+locks where `ties` says, and fits it to the machine. `stitch plan design.svg -o design.pes` takes an SVG
+of strokes to a machine file, with a preview and a report. The conformance report shows all 40 active
+requirements green. Next: the MC-1 sew-out report, which closes M1, and the rest of M3 (the bug-report
+bundle, then the MC-2 kit). The repository is
 [KaboomFox/stitchcraft](https://github.com/KaboomFox/stitchcraft), with the docs published at
 [kaboomfox.github.io/stitchcraft](https://kaboomfox.github.io/stitchcraft/) and `main` protected; the
 open owner action from M0.5 is the code-of-conduct contact.
@@ -28,7 +30,7 @@ open owner action from M0.5 is the code-of-conduct contact.
 | M0 | Foundations and guardrails | 🟡 M0.1–M0.4, M0.9 and M0.10 done; M0.5 partly (repository, owner, labels, Pages, branch protection; code-of-conduct contact open); M0.6–M0.8 open | — |
 | M1 | Stitch plan, Brother profile, PES/DST writers, test sheets | 🟡 M1.1–M1.10 done; closes with MC-1 | MC-1 🟡 kit out for sewing |
 | M2 | Readers, preview renderer, fuzzing | 🟢 M2.1–M2.8 done | — |
-| M3 | Running stitch family, plan assembly, SVG input | 🟡 M3.1–M3.8 done (parameter registry, a case for every diagnostic code, SVG input, running stitch, repeats and bean stitch, manual stitch, lock stitches, plan assembly) | MC-2 ⚪ |
+| M3 | Running stitch family, plan assembly, SVG input | 🟡 M3.1–M3.9 done (parameter registry, a case for every diagnostic code, SVG input, running stitch, repeats and bean stitch, manual stitch, lock stitches, plan assembly, finalize and `stitch plan`) | MC-2 ⚪ |
 | M4 | Satin column | ⚪ | MC-3 ⚪ |
 | M5 | Tatami fill | ⚪ | MC-4 ⚪ |
 | M6 | VectorCraft plug-in (ABI v1), export from `.vectorcraft`, compatibility gate | ⚪ | MC-5 ⚪ |
