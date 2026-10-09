@@ -158,6 +158,14 @@ registry! {
     /// sews shorter stitches well.
     StitchLengthRaised = "SC-W0402", Warning, "Stitch length below twice the shortest stitch; raised";
 
+    /// Hand-placed stitches (manual stitch) shorter than the shortest stitch the machine sews well: the
+    /// needle point that made each one too short was left out, so the stitch before it runs on to the
+    /// next point. A part's last point is always kept; the one before it goes instead.
+    ///
+    /// The message gives how many and the shortest of them. Move the nodes apart, or delete the extra
+    /// ones.
+    HandStitchTooShort = "SC-W0403", Warning, "Hand-placed stitch shorter than the shortest stitch; point left out";
+
     /// The file format can record only a limited number of colour changes and stops (PES: 255). This
     /// design has more, so the file was not written.
     ///

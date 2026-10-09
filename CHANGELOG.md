@@ -5,6 +5,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M3.6: manual stitch (`stitchcraft_engine::generators::manual`).
+  - **Needle points.** A needle point goes on every node of the path, in order. A curve gives only its
+    end node.
+  - **Longest stitch.** Stitches longer than `max_stitch_length_mm` are split into equal parts, never
+    shorter than the shortest stitch.
+  - **Bean stitch** applies; repeats don't.
+  - **Shortest stitch.** No hand-placed stitch is shorter than the shortest stitch. A point too close to
+    the one before is left out, the last point is kept, and the new `SC-W0403` says how many. Ink/Stitch
+    drops such points silently.
+  - **Conformance.** `REQ-RUN-006` and the new `REQ-RUN-008` are active.
 - M3.5: repeats, bean stitch and random length for the running stitch.
   - **Repeats.** `repeats` sews a run several times, every other pass backwards. Each pass starts where
     the last one ended, so a turnaround is never a stitch in place.
