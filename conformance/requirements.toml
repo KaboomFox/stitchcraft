@@ -115,10 +115,10 @@ status = "planned"
 id = "REQ-FMT-004"
 area = "formats"
 level = "L1"
-statement = "Readers accept empty and zero-stitch files without failing; writers refuse to write an empty plan (SC-E0010)."
+statement = "Readers decode a valid file without stitches to an empty plan, and report empty or truncated files as a typed error (SC-E0603), never a crash; writers refuse to write an empty plan (SC-E0010)."
 rationale = "Ink/Stitch #3041, #4039."
 milestone = "M2"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-FMT-005"

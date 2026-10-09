@@ -109,6 +109,23 @@ jumps then the final stitch for a sewn move (the thread lies the same way: the n
 end). Header extents are measured in DST axes (y up) over every position the frame visits; `ST` counts the
 records before the end record.
 
+## Reading
+
+`stitch inspect` and the round-trip tests read machine files back. Readers treat every file as possibly
+damaged or hostile: every offset and length is checked before use, the record count is capped at the stitch
+budget (2,000,000), positions must stay within ±10 m, and a problem is a typed error (`SC-E0603`) — never a
+panic and never a silent guess. Readers are literal: each record becomes one plan entry, so `inspect` shows
+what is in the file. Unusual but readable things (a thread index outside the palette, a thumbnail offset
+that points nowhere) become warnings in the result.
+
+| Reader | Reads | What it has to infer |
+|---|---|---|
+| PES / PEC | the PEC block of any PES version (`#PES0001` … `#PES0060`), and bare `#PEC0001` files; the block must start with `LA:` | A colour change to the same palette entry is a **stop** — the way PEC writes stops. Two blocks whose threads map to the same Brother colour read back as one block with a stop: PES v1 cannot tell them apart. |
+| DST | the header's label and every record | A run of 2–8 consecutive jumps that returns to where it started is a **trim** (it moves the frame nowhere, so it can only mean that). Colours: none — each block gets a placeholder thread, and a stop reads as a colour change. |
+
+Every reader survives every truncation and single-byte change of the golden files (a deterministic test
+that runs on every PR); coverage-guided fuzzing runs nightly from M2.5 (`REQ-FMT-006`).
+
 ## Later formats
 
 | Format | Machines | Milestone | Notes |

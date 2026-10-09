@@ -2,12 +2,16 @@
 //! so the commands are tested without capturing the terminal.
 
 pub mod explain;
+pub mod inspect;
 pub mod profiles;
 pub mod testsheet;
 
+use std::fmt::Write as _;
 use std::process::ExitCode;
 
 use stitchcraft_core::{Diagnostic, Fix, Severity};
+use stitchcraft_plan::StitchPlan;
+use stitchcraft_plan::palette::Palette;
 
 /// What a command wants to say, and how the program ends.
 #[derive(Debug)]
@@ -25,7 +29,7 @@ pub struct Outcome {
 pub enum Status {
     /// Done; warnings may have been printed.
     Done = 0,
-    /// The design has errors; nothing was written.
+    /// The design or file has errors; nothing was written.
     DesignErrors = 1,
     /// The command line was wrong.
     Usage = 2,
@@ -48,6 +52,38 @@ impl Outcome {
     /// A usage error.
     pub fn usage(message: impl AsRef<str>) -> Self {
         Outcome { stdout: String::new(), stderr: format!("stitch: {}\n", message.as_ref()), status: Status::Usage }
+    }
+}
+
+/// The plan's size and counts, as report lines (`  size      …`, `  stitches  …`).
+pub fn describe_plan(out: &mut String, plan: &StitchPlan) {
+    let stats = plan.stats();
+    if let Some(b) = plan.bounds() {
+        let _ = writeln!(out, "  size      {:.1} × {:.1} mm", b.width(), b.height());
+    }
+    let counts = [(stats.stitches, "stitch", "stitches"), (stats.jumps, "jump", "jumps"), (stats.trims, "trim", "trims")]
+        .into_iter()
+        .chain([(stats.color_changes, "colour change", "colour changes"), (stats.stops, "stop", "stops")])
+        .map(|(n, one, many)| format!("{n} {}", if n == 1 { one } else { many }))
+        .collect::<Vec<_>>()
+        .join(", ");
+    let _ = writeln!(out, "  stitches  {counts}");
+}
+
+/// The threads the machine asks for, one line each, with the palette entry a machine shows for each
+/// colour when the format stores palette indices.
+pub fn describe_threads(out: &mut String, plan: &StitchPlan, palette: Option<&Palette>) {
+    for (i, entry) in plan.color_entries().iter().enumerate() {
+        let thread = entry.thread;
+        let name = thread.name.as_deref().unwrap_or("unnamed");
+        let mut line = format!("{}. {name} ({})", i + 1, thread.color);
+        if let (Some(palette), Some(matched)) = (palette, palette.and_then(|p| p.nearest(thread.color))) {
+            let _ = write!(line, ", shown as {} {} \"{}\"", palette.name, matched.index, matched.name);
+        }
+        if entry.stop {
+            line.push_str(" — a stop: keep the same thread");
+        }
+        let _ = writeln!(out, "  {:<10}{line}", if i == 0 { "threads" } else { "" });
     }
 }
 

@@ -6,14 +6,15 @@ The command-line tool: the only StitchCraft component that touches the file syst
 | Command | Since | What it does |
 |---|---|---|
 | `stitch testsheet TS-01 --profile brother-200x200 -o TS-01.pes` | M1.8 | Writes a machine-checkpoint test sheet (`--list` lists them; `--format pes\|dst` overrides the extension) and prints its SHA-256, size, counts, the threads the machine will ask for, and what to check after sewing |
+| `stitch inspect design.pes --profile brother-200x200` | M2.1 | Reads any PES, PEC or DST file and describes it: size, counts, extent, stitch lengths, threads; with `--profile`, the hoop check and stitches outside the machine's limits |
 | `stitch profiles` | M1.8 | The built-in machine profiles and the evidence behind their values |
 | `stitch explain SC-W0702` | M1.8 | A diagnostic's explanation, from the registry |
 
-Coming with their milestones: `inspect` (M2.1), `preview`, `convert` (M2.7), `plan`, `bug-report` (M3),
+Coming with their milestones: `preview`, `convert` (M2.7), `plan`, `bug-report` (M3),
 `export` (M6.5), `import-inkstitch` (M8), `conformance run`.
 
-**Exit status:** 0 done (warnings allowed) · 1 the design has errors, nothing written · 2 usage error ·
-3 a file could not be read or written.
+**Exit status:** 0 done (warnings allowed) · 1 the design or file has errors (nothing written) · 2 usage
+error · 3 a file could not be read or written.
 
 ## Layout
 

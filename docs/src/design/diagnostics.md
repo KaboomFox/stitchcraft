@@ -94,6 +94,7 @@ Codes referenced by the design docs; each is registered in the milestone that im
 | `SC-W0501` | Warning | Travel could not stay inside the region; used tie-off, trim and tie-in | M5 |
 | `SC-E0601` | Error | Too many colour changes for the format | M1 |
 | `SC-E0602` | Error | Design too large for the file format (coordinates or data exceed its fields) | M1 |
+| `SC-E0603` | Error | Machine file could not be read (wrong format, truncated, or a record that makes no sense) | M2 |
 | `SC-E0701` | Error | Design does not fit the hoop | M1 |
 | `SC-W0702` | Warning | Design is larger than the profile's comfort zone | M1 |
 | `SC-E0801` | Error | SVG could not be read (with the parser's position) | M3 |

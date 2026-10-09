@@ -5,6 +5,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M2.1–M2.2: PES/PEC and DST readers (any PES version's PEC block; trims inferred from DST jump runs)
+  and `stitch inspect` for any machine file, with an optional profile check; diagnostic `SC-E0603`.
 - M1 (machine checkpoint MC-1 pending): budgets and the diagnostics registry (`stitch explain`); the
   stitch plan, its invariant checker and the `brother-200x200` profile with hoop and comfort-zone
   diagnostics; the Brother PEC palette with CIEDE2000 matching; PES v1 and DST writers; test sheets
