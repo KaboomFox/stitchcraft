@@ -107,8 +107,8 @@ setting, they cut the thread before the jumps — if something was sewn since it
 - a **trim** is three small jumps that cancel out — (+2, −2), (−4, +4), (+2, −2) units, the sequence
   pystitch writes — so the frame goes nowhere while the machine counts three;
 - a **jump longer than 24.2 mm** takes three or more records, so it is a trim too, whether the plan asks
-  for one or not. The writer says where: `SC-I0605` counts the jumps its machines will cut before and the
-  plan does not trim. With a tie-off before the jump the cut is usually welcome — there is no jump thread
+  for one or not. The writer says so: `SC-I0605` counts the places where its machines will cut the
+  thread and the plan does not trim. With a tie-off before the jump the cut is usually welcome — there is no jump thread
   to clip; without one (an element whose `ties` are off), the stitching may unravel.
 
 A machine set to another count cuts before other jumps, and does not cut at a three-jump trim if set

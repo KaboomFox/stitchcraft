@@ -18,8 +18,8 @@
 //! before the jumps, if something was sewn since it was last cut or changed (REQ-FMT-008). So a trim is
 //! three small jumps that cancel out, (+2, −2), (−4, +4), (+2, −2) (the sequence matches the output of
 //! pystitch (MIT), observed as a black box; `NOTICE`), and **a jump of three or more records — longer
-//! than 24.2 mm — is a trim too**, whether the plan asks for one or not. [`encode`] reports each cut the
-//! plan does not make (`SC-I0605`).
+//! than 24.2 mm — is a trim too**, whether the plan asks for one or not. [`encode`] reports the places
+//! where the machine cuts and the plan does not trim (`SC-I0605`).
 //!
 //! **Header fields** (`LA` label, `ST` records before the end record, `CO` colour changes, `+X -X +Y -Y`
 //! extents from the start in DST axes, `AX AY` the end position, `MX MY` zero, `PD ******`) are
