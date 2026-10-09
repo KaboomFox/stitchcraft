@@ -9,8 +9,12 @@
 //!
 //! Coverage runs the suite a second time, instrumented, so it has its own CI job instead of being a step
 //! of `cargo xtask ci`.
+//!
+//! A crate below its floor gets its untested lines listed, a warning per file on the first of them, from
+//! the same run's lcov report. The warnings show on the pull request's page, so the lines to test are
+//! known without the job's log.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::path::Path;
 
@@ -20,6 +24,8 @@ use crate::util::{self, Findings};
 
 const FLOORS: &str = "conformance/coverage.toml";
 const REPORT: &str = "target/coverage/summary.json";
+/// The same run's line-by-line report, written when a crate is below its floor.
+const LCOV: &str = "target/coverage/lcov.info";
 /// Files that are not measured.
 const IGNORED: &str = "(^|/)(xtask|fuzz|crates/stitchcraft-testkit)/";
 
@@ -64,6 +70,7 @@ pub fn run(record: bool) -> Result<(), String> {
     let mut findings = Findings::default();
     let mut table = String::from("| Crate | Lines | Covered | Coverage | Floor |\n|---|---:|---:|---:|---:|\n");
     let mut numbers = Vec::new();
+    let mut below = BTreeSet::new();
     for (crate_name, lines) in &measured {
         let percent = lines.percent();
         // Shown rounded down, like the floors, so 95.96 % reads 95.9 %, not a floor-passing 96.0 %.
@@ -74,10 +81,13 @@ pub fn run(record: bool) -> Result<(), String> {
         numbers.push(format!("{crate_name} {shown_percent:.1}"));
         match floor {
             None if !record => findings.error(format!("{crate_name} has no floor in {FLOORS}: run `cargo xtask coverage --record`")),
-            Some(f) if !record && percent < f64::from(f) => findings.error(format!(
-                "{crate_name}: line coverage {shown_percent:.1} % is below its floor of {f} %; add tests for the new code \
-                 (or lower the floor in {FLOORS}, saying why in the pull request)"
-            )),
+            Some(f) if !record && percent < f64::from(f) => {
+                below.insert(crate_name.clone());
+                findings.error(format!(
+                    "{crate_name}: line coverage {shown_percent:.1} % is below its floor of {f} %; add tests for the new code \
+                     (or lower the floor in {FLOORS}, saying why in the pull request)"
+                ));
+            }
             _ => {}
         }
         if record {
@@ -86,6 +96,17 @@ pub fn run(record: bool) -> Result<(), String> {
             let today = percent.floor() as u32;
             let entry = floors.floor.entry(crate_name.clone()).or_insert(today);
             *entry = (*entry).max(today);
+        }
+    }
+    if !below.is_empty() {
+        match uncovered(&root, &below) {
+            Ok(files) => {
+                for (path, lines) in files {
+                    let first = lines.first().copied().unwrap_or(1);
+                    findings.warn(format!("{path}:{first}: untested lines {}", spans(&lines)));
+                }
+            }
+            Err(e) => findings.warn(format!("the untested lines could not be listed: {e}")),
         }
     }
     for crate_name in floors.floor.keys().filter(|name| !measured.contains_key(*name)) {
@@ -122,6 +143,50 @@ fn per_crate(json: &str) -> Result<BTreeMap<String, Lines>, String> {
         entry.count += field("count");
     }
     Ok(out)
+}
+
+/// The untested lines in the files of `crates`, from the last run's lcov report: each file's path from
+/// `root`, with its lines in order.
+fn uncovered(root: &Path, crates: &BTreeSet<String>) -> Result<Vec<(String, Vec<u64>)>, String> {
+    let mut report = util::cargo();
+    report.args(["llvm-cov", "report", "--lcov", "--output-path", LCOV, "--ignore-filename-regex", IGNORED]);
+    util::run(report, "cargo llvm-cov report")?;
+    Ok(missed(&util::read(&root.join(LCOV))?, root, crates))
+}
+
+/// The lines lcov `text` counts as run 0 times, in the files of `crates`.
+fn missed(text: &str, root: &Path, crates: &BTreeSet<String>) -> Vec<(String, Vec<u64>)> {
+    let mut out = Vec::new();
+    let mut file: Option<(String, Vec<u64>)> = None;
+    for line in text.lines() {
+        if let Some(path) = line.strip_prefix("SF:") {
+            let path = Path::new(path);
+            let shown = path.strip_prefix(root).unwrap_or(path).to_string_lossy().replace('\\', "/");
+            file = crate_of(path).filter(|name| crates.contains(name)).map(|_| (shown, Vec::new()));
+        } else if let (Some((_, lines)), Some(data)) = (file.as_mut(), line.strip_prefix("DA:")) {
+            let mut fields = data.split(',').map(str::parse::<u64>);
+            if let (Some(Ok(number)), Some(Ok(0))) = (fields.next(), fields.next()) {
+                lines.push(number);
+            }
+        } else if line == "end_of_record"
+            && let Some(done) = file.take().filter(|(_, lines)| !lines.is_empty())
+        {
+            out.push(done);
+        }
+    }
+    out
+}
+
+/// Line numbers in order as runs: `31-33, 40`.
+fn spans(lines: &[u64]) -> String {
+    let mut runs: Vec<(u64, u64)> = Vec::new();
+    for &line in lines {
+        match runs.last_mut() {
+            Some((_, end)) if *end + 1 == line => *end = line,
+            _ => runs.push((line, line)),
+        }
+    }
+    runs.iter().map(|&(start, end)| if start == end { start.to_string() } else { format!("{start}-{end}") }).collect::<Vec<_>>().join(", ")
 }
 
 /// The crate a source file belongs to: the directory after `crates/` or `apps/`.
@@ -161,6 +226,18 @@ mod tests {
         assert_eq!(measured["stitchcraft-core"].percent(), 75.0);
         assert_eq!(measured["stitchcraft-cli"].percent(), 0.0);
         assert_eq!(Lines::default().percent(), 100.0);
+    }
+
+    #[test]
+    fn untested_lines_are_listed_for_the_crates_asked() {
+        let lcov = "SF:/w/crates/stitchcraft-engine/src/a.rs\nDA:3,1\nDA:4,0\nDA:5,0\nDA:6,0\nDA:9,0\nDA:10,2\nend_of_record\n\
+                    SF:/w/crates/stitchcraft-engine/src/b.rs\nDA:1,5\nend_of_record\n\
+                    SF:/w/crates/stitchcraft-core/src/c.rs\nDA:7,0\nend_of_record\n";
+        let engine = BTreeSet::from(["stitchcraft-engine".to_string()]);
+        let missed = missed(lcov, Path::new("/w"), &engine);
+        assert_eq!(missed, [("crates/stitchcraft-engine/src/a.rs".to_string(), vec![4, 5, 6, 9])]);
+        assert_eq!(spans(&missed[0].1), "4-6, 9");
+        assert_eq!(spans(&[]), "");
     }
 
     #[test]
