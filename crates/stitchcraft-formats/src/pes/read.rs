@@ -259,7 +259,7 @@ mod tests {
 
     #[test]
     fn reads_the_mc1_sheets_at_their_size() {
-        for (name, w, h) in [("TS-01", 120.0, 120.0), ("TS-02", 140.0, 70.0), ("TS-10B", 190.0, 150.0)] {
+        for (name, w, h) in [("TS-01", 120.0, 120.0), ("TS-02", 120.0, 70.0), ("TS-10B", 130.0, 180.0)] {
             let d = decode(&golden(&format!("testsheets/{name}.pes"))).unwrap();
             let b = d.plan.bounds().unwrap();
             assert_eq!((b.width(), b.height()), (w, h), "{name}");

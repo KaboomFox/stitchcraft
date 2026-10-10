@@ -66,8 +66,8 @@ mod tests {
         let output = temp("TS-02.png");
         let out = preview(golden("testsheets/TS-02.pes"), output.clone(), PreviewStyle::Simple, 4.0);
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
-        // 140 × 70 mm plus 2 mm margins, at 4 pixels per millimetre.
-        assert!(out.stdout.starts_with(&format!("{} · 576 × 296 pixels\n", output.display())), "{}", out.stdout);
+        // 120 × 70 mm plus 2 mm margins, at 4 pixels per millimetre.
+        assert!(out.stdout.starts_with(&format!("{} · 496 × 296 pixels\n", output.display())), "{}", out.stdout);
         assert!(out.stdout.contains("  style     simple, 4 pixels per millimetre\n"));
         assert!(out.stderr.is_empty(), "{}", out.stderr);
         assert!(std::fs::read(&output).unwrap().starts_with(b"\x89PNG"));
@@ -86,12 +86,12 @@ mod tests {
         assert_eq!(out.status, Status::Usage);
         assert!(out.stderr.contains("from 0.1 to 50 pixels per millimetre"), "{}", out.stderr);
         assert_eq!(preview(temp("missing.pes"), temp("x.png"), PreviewStyle::Simple, 8.0).status, Status::Io);
-        // 194 × 154 mm at 50 pixels per millimetre is 9700 pixels wide: too large, and nothing written.
+        // 134 × 184 mm at 50 pixels per millimetre is 9200 pixels tall: too large, and nothing written.
         let output = temp("TS-10B.png");
         let out = preview(golden("testsheets/TS-10B.pes"), output.clone(), PreviewStyle::Simple, 50.0);
         assert_eq!(out.status, Status::DesignErrors);
-        assert!(out.stderr.starts_with("error SC-E0005: The preview would be 9700 × 7700 pixels"), "{}", out.stderr);
-        assert!(out.stderr.contains("hint: Use a scale of at most 21.1 pixels per millimetre."), "{}", out.stderr);
+        assert!(out.stderr.starts_with("error SC-E0005: The preview would be 6700 × 9200 pixels"), "{}", out.stderr);
+        assert!(out.stderr.contains("hint: Use a scale of at most 22.2 pixels per millimetre."), "{}", out.stderr);
         assert!(!output.exists());
     }
 }

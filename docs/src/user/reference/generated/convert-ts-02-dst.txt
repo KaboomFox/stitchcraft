@@ -1,8 +1,8 @@
 $ stitch convert TS-02.pes -o TS-02.dst
 TS-02.pes · PES (#PES0001) → DST
-  file      TS-02.dst (DST, 1016 bytes)
-  sha256    76071ad993041267b36785250d0930f4fdd6453561ec44b60b6ec4b2f6b13517
-  size      140.0 × 70.0 mm
+  file      TS-02.dst (DST, 1004 bytes)
+  sha256    c0b87bc2239989d29f8f107d1a61e861234e92be3782854b6133472eb9f965d7
+  size      120.0 × 70.0 mm
   stitches  93 stitches, 17 jumps, 7 trims, 2 colour changes, 1 stop
   threads   1. Red (#ed171f)
             2. Blue (#0a55a3)
@@ -11,10 +11,10 @@ TS-02.pes · PES (#PES0001) → DST
 info SC-I0605: The thread will be cut at 3 places the plan does not trim: DST machines cut it before 3 or more jump records in a row, and a jump longer than 24.2 mm takes that many.
 $ stitch inspect TS-02.dst
 TS-02.dst · DST · "TS-02"
-  sha256    76071ad993041267b36785250d0930f4fdd6453561ec44b60b6ec4b2f6b13517
-  size      140.0 × 70.0 mm
-  stitches  93 stitches, 50 jumps, 10 trims, 3 colour changes, 0 stops
-  extent    x -70.0 to 70.0 mm, y -35.0 to 35.0 mm from where the machine starts
+  sha256    c0b87bc2239989d29f8f107d1a61e861234e92be3782854b6133472eb9f965d7
+  size      120.0 × 70.0 mm
+  stitches  93 stitches, 46 jumps, 10 trims, 3 colour changes, 0 stops
+  extent    x -60.0 to 60.0 mm, y -35.0 to 35.0 mm from where the machine starts
   lengths   stitches from 2.5 to 2.5 mm
   threads   1. thread 1 (#000000)
             2. thread 2 (#000000)

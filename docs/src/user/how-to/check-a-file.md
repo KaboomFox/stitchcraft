@@ -2,7 +2,7 @@
 
 StitchCraft reads PES, PEC and DST files from any software. It can describe a file and draw what the
 machine will sew, before you spend thread on it. The examples use test sheet TS-02, written with
-`stitch testsheet TS-02 --profile brother-200x200 -o TS-02.pes`.
+`stitch testsheet TS-02 -o TS-02.pes`.
 
 ## Describe the file
 

@@ -616,7 +616,7 @@ status = "planned"
 id = "REQ-FILL-TAT-009"
 area = "fill/tatami"
 level = "L2"
-statement = "A 150 x 150 mm square at 0.4 mm spacing plans within the NFR-PERF-1 budget."
+statement = "A 130 x 180 mm rectangle at 0.4 mm spacing, the reference hoop's whole field, plans within the NFR-PERF-1 budget."
 milestone = "M5"
 status = "planned"
 

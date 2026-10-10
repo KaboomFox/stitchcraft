@@ -23,7 +23,8 @@ reproduces a problem, and `stitch plan` writes one by itself when StitchCraft fi
 conformance report shows every active requirement green. Next are the sew-out reports for MC-1, which
 closes M1, and for MC-2, which closes M3. The MC-2 sheets are drawn as designs and planned by the engine.
 M4 has begun. A satin column's path is read as its rails and rungs, and its top stitches are placed as
-Ink/Stitch places them.
+Ink/Stitch places them. The reference machine is a Brother PE800 (ADR 0013), with a profile for each of
+its 3 hoops, and TS-02, TS-02B and TS-10 are redrawn to fit them.
 The repository is
 [KaboomFox/stitchcraft](https://github.com/KaboomFox/stitchcraft), with the docs published at
 [kaboomfox.github.io/stitchcraft](https://kaboomfox.github.io/stitchcraft/) and `main` protected; the
@@ -32,7 +33,7 @@ open owner action from M0.5 is the code-of-conduct contact.
 | Milestone | Scope | Status | Machine checkpoint |
 |---|---|---|---|
 | M0 | Foundations and guardrails | 🟡 M0.1–M0.4, M0.9 and M0.10 done; M0.5 partly (repository, owner, labels, Pages, branch protection; code-of-conduct contact open); M0.6–M0.8 open | — |
-| M1 | Stitch plan, Brother profile, PES/DST writers, test sheets | 🟡 M1.1–M1.10 done; closes with MC-1 | MC-1 🟡 kit out for sewing |
+| M1 | Stitch plan, Brother profile, PES/DST writers, test sheets | 🟡 M1.1 to M1.10 done, and M1 closes with MC-1 | MC-1 🟡 kit out for sewing (TS-02 and TS-10 redrawn for the PE800) |
 | M2 | Readers, preview renderer, fuzzing | 🟢 M2.1–M2.8 done | — |
 | M3 | Running stitch family, plan assembly, SVG input | 🟡 M3.1 to M3.10 done (parameter registry, a case for every diagnostic code, SVG input, running stitch, repeats and bean stitch, manual stitch, lock stitches, plan assembly, finalize and `stitch plan`, bug-report bundles). M3 closes with MC-2. | MC-2 🟡 kit ready for sewing (TS-02B, TS-03, TS-04) |
 | M4 | Satin column | 🟡 M4.1 to M4.6 done. Satin columns are sewn with their underlays, and their top stitches placed, compensated, inset on curves and split, as in Ink/Stitch. Where a column starts and ends is next | MC-3 ⚪ |

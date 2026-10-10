@@ -76,10 +76,10 @@ mod tests {
 
     #[test]
     fn describes_a_pes_file() {
-        let out = inspect(golden("testsheets/TS-02.pes"), Some("brother-200x200"));
+        let out = inspect(golden("testsheets/TS-02.pes"), Some("brother-pe800-5x7"));
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(out.stdout.contains("TS-02.pes · PES (#PES0001) · \"TS-02\"\n"), "{}", out.stdout);
-        assert!(out.stdout.contains("  size      140.0 × 70.0 mm\n"));
+        assert!(out.stdout.contains("  size      120.0 × 70.0 mm\n"));
         assert!(out.stdout.contains("2 colour changes, 1 stop"));
         assert!(out.stdout.contains("  lengths   stitches from 2.5 to 2.5 mm\n"));
         assert!(out.stdout.contains("  threads   1. Red (#ed171f), shown as Brother PEC 5 \"Red\"\n"));
@@ -98,9 +98,14 @@ mod tests {
 
     #[test]
     fn large_designs_get_the_profile_diagnostics() {
-        let out = inspect(golden("testsheets/TS-10C.pes"), Some("brother-200x200"));
-        assert_eq!(out.status, Status::Done);
-        assert!(out.stderr.starts_with("warning SC-W0702"));
+        let out = inspect(golden("testsheets/TS-10B.pes"), Some("brother-pe800-4x4"));
+        assert_eq!(out.status, Status::DesignErrors);
+        assert!(
+            out.stderr.starts_with("error SC-E0701: The design is 130.0 × 180.0 mm, but the Brother PE800 with its 4 × 4 in hoop"),
+            "{}",
+            out.stderr
+        );
+        assert_eq!(inspect(golden("testsheets/TS-10B.pes"), Some("brother-pe800-5x7")).stderr, "");
     }
 
     #[test]

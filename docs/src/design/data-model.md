@@ -176,10 +176,10 @@ catalogues (brand and number) arrive with M11.
 
 ```rust,ignore
 pub struct MachineProfile {
-    pub id: &'static str,            // "brother-200x200"
-    pub name: &'static str,          // "Brother, 200 × 200 mm hoop"
-    pub hoop: Size,                  // 200 × 200 mm
-    pub comfort: Option<Size>,       // 150 × 150 mm — a warning beyond it, not an error
+    pub id: &'static str,            // "brother-pe800-5x7"
+    pub name: &'static str,          // "Brother PE800 with its 5 × 7 in hoop"
+    pub hoop: Size,                  // 130 × 180 mm
+    pub comfort: Option<Size>,       // None — a warning beyond it, not an error
     pub format: FormatId,            // PesV1 | Dst
     pub max_stitch: Mm,              // 12.0
     pub min_stitch: Mm,              // 0.3
@@ -194,6 +194,12 @@ generated reference pages. A profile's values are *machine facts*: changing one 
 machine-testing record that justifies it ([machine testing](../plan/machine-testing.md)), and `evidence`
 says where each value comes from. Format limits that are not machine facts (the most colour changes a
 format records) live on `FormatId`, so the invariant checker and the encoders read the same number.
+
+A profile is a machine with one hoop, so a machine with 3 hoops has 3 profiles. `profiles::REFERENCE` is
+the reference machine's, the Brother PE800 with its 5 × 7 in hoop
+([ADR 0013](adr/0013-brother-pe800-reference-machine.md)). Code that means the machine the checkpoints
+run on imports it rather than naming a hoop: the command line plans for it unless told otherwise. Each
+test sheet names the profile of the hoop it is sewn in.
 
 `check_fit(bounds)` turns the design's size into `SC-E0701` (larger than the hoop) or `SC-W0702` (larger
 than the comfort zone), with "rotate 90°" as a one-click fix when turning the design would fit
