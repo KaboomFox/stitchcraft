@@ -17,11 +17,9 @@ use crate::generators::satin::compensation::offset;
 use crate::generators::satin::pairs::Pair;
 
 /// `pairs` with their crowded needle points inset: those closer than `distance` millimetres to the last
-/// point left in place on their rail, by `insets` of their stitch's width, taking turns.
+/// point left in place on their rail, by `insets` of their stitch's width, taking turns. No point is
+/// closer than 0, and without insets a crowded point moves by none.
 pub(crate) fn inset(pairs: Vec<Pair>, distance: f64, insets: &[f64]) -> Vec<Pair> {
-    if distance <= 0.0 || insets.is_empty() {
-        return pairs;
-    }
     let (mut first, mut second) = (Rail::default(), Rail::default());
     pairs
         .into_iter()
@@ -98,6 +96,13 @@ mod tests {
         // Straight stitches 4 mm across: the first rail's points move up by 0.4 or 1.2 mm.
         let up: Vec<f64> = sewn.iter().map(|[a, _]| (a.y() * 1e9).round() / 1e9).collect();
         assert_eq!(up, [0.0, 0.4, 1.2, 0.4, 1.2, 0.0]);
+    }
+
+    #[test]
+    fn a_point_exactly_the_distance_from_the_last_left_in_place_stays() {
+        // As in Ink/Stitch: only a point closer than the distance moves.
+        let even = pairs(&[0.0, 0.25, 0.5], &[0.0, 0.25, 0.5]);
+        assert_eq!(inset(even.clone(), 0.25, &[0.15]), even);
     }
 
     #[test]
