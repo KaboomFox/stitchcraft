@@ -53,15 +53,24 @@ pub fn flatten(path: &Path, tolerance: f64, meter: &mut Meter) -> Result<StrokeP
     Ok(StrokePath { pieces })
 }
 
+/// The line segments of the polyline `points`, each from a point to the next.
+pub(crate) fn segments(points: &[Point]) -> impl Iterator<Item = (Point, Point)> + '_ {
+    points.iter().copied().zip(points.iter().copied().skip(1))
+}
+
 /// How far `p` is from the line segment from `a` to `b`, in millimetres.
 pub fn distance_to_segment(p: Point, a: Point, b: Point) -> f64 {
+    p.distance(nearest_on_segment(p, a, b))
+}
+
+/// The point of the line segment from `a` to `b` nearest `p`.
+pub fn nearest_on_segment(p: Point, a: Point, b: Point) -> Point {
     let (dx, dy) = (b.x() - a.x(), b.y() - a.y());
     let length2 = dx * dx + dy * dy;
     if length2 == 0.0 {
-        return p.distance(a);
+        return a;
     }
-    let t = ((p.x() - a.x()) * dx + (p.y() - a.y()) * dy) / length2;
-    p.distance(a.lerp(b, t))
+    a.lerp(b, ((p.x() - a.x()) * dx + (p.y() - a.y()) * dy) / length2)
 }
 
 /// One segment with its start: a line, or a cubic Bézier curve (quadratics are raised to cubics).
@@ -315,6 +324,9 @@ mod tests {
         assert_eq!(distance_to_segment(p(5.0, 3.0), p(0.0, 0.0), p(10.0, 0.0)), 3.0);
         assert_eq!(distance_to_segment(p(13.0, 4.0), p(0.0, 0.0), p(10.0, 0.0)), 5.0, "beyond the end");
         assert_eq!(distance_to_segment(p(3.0, 4.0), p(0.0, 0.0), p(0.0, 0.0)), 5.0, "to a point");
+        assert_eq!(nearest_on_segment(p(5.0, 3.0), p(0.0, 0.0), p(10.0, 0.0)), p(5.0, 0.0));
+        assert_eq!(nearest_on_segment(p(-2.0, 1.0), p(0.0, 0.0), p(10.0, 0.0)), p(0.0, 0.0), "before the start");
+        assert_eq!(nearest_on_segment(p(3.0, 4.0), p(1.0, 1.0), p(1.0, 1.0)), p(1.0, 1.0), "a segment that is a point");
     }
 
     #[test]

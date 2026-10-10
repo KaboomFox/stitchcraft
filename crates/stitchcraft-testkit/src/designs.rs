@@ -30,13 +30,31 @@ pub fn line(id: &str, from: (f64, f64), length: f64, thread: &Thread, params: &[
 pub fn stroke(id: &str, parts: &[((f64, f64), f64)], thread: &Thread, params: &[(&str, &str)]) -> Element {
     let subpaths =
         parts.iter().map(|&((x, y), length)| Subpath { start: p(x, y), segments: vec![Segment::Line(p(x + length, y))], closed: false }).collect();
+    along(id, Path { subpaths }, thread, params)
+}
+
+/// A stroke `id` along `path`, sewn with `thread` and the parameters `params`.
+pub fn along(id: &str, path: Path, thread: &Thread, params: &[(&str, &str)]) -> Element {
     Element {
         id: ElementId::new(id).unwrap(),
         name: None,
-        shape: Shape::Stroke(Path { subpaths }),
+        shape: Shape::Stroke(path),
         thread: thread.clone(),
         params: params.iter().copied().collect::<ParamSet>(),
     }
+}
+
+/// A path of open polylines, one subpath through each list of points. A list of one point is a subpath
+/// that does not move.
+pub fn polylines(parts: &[&[(f64, f64)]]) -> Path {
+    let subpaths = parts
+        .iter()
+        .filter_map(|points| {
+            let (&(x, y), rest) = points.split_first()?;
+            Some(Subpath { start: p(x, y), segments: rest.iter().map(|&(x, y)| Segment::Line(p(x, y))).collect(), closed: false })
+        })
+        .collect();
+    Path { subpaths }
 }
 
 /// `elements` planned for the reference machine, the design's origin where the coordinates are, so

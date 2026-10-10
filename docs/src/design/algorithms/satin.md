@@ -1,5 +1,7 @@
 # Satin generators
 
+<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/generators/satin/** -->
+
 A satin column is a band of closely spaced stitches that swing from one edge to the other. It is the
 signature look of lettering and borders, and the stitch type where pull compensation and underlay
 matter most. Phase P1 (M4); the E, S and zigzag variants are P2 (M7).
@@ -20,31 +22,58 @@ matter most. Phase P1 (M4); the E, S and zigzag variants are P2 (M7).
 
 ## Recognizing rails and rungs
 
-From a host path with several subpaths:
+An element is a satin column when its `satin_column` setting is on, whatever its `stroke_method` says.
+Its path's subpaths are flattened, and the reader finds where each pair of subpaths meets, crossing or
+touching. A point the two share counts once, and a rung that ends exactly on a rail meets it.
 
-1. Two subpaths and no others → they are the rails.
-2. Otherwise, a subpath that crosses exactly two other subpaths once each is a rung; the remaining two
-   subpaths, which must not cross each other, are the rails.
-3. Anything else is ambiguous: `SC-E0201` (needs exactly two rails), highlighting the subpaths.
-4. A rung that crosses only one rail is dangling (`SC-W0203`, ignored); a rung crossing a rail twice is
-   ignored with `SC-W0207`; rails that cross each other are `SC-E0204`.
+StitchCraft tells rails from rungs as Ink/Stitch does, and a file sews the same in both.
 
-Validation runs before any stitch is computed; the generator never sees an invalid satin, so odd
-geometry is a diagnostic that points at the rung, never a crash.
+1. A subpath that is one point is left out, with `SC-W0205`.
+2. With 1 subpath left, the path is the column's centre line, sewn from M4.8 on. With 2, they are the
+   rails, and their nodes pair up in place of rungs (see Correspondence). With none, the element gets
+   `SC-E0201` and no stitches.
+3. With 3 subpaths, the rails are the 2 that meet exactly 1 other subpath. With 4 or more, the rails are
+   the 2 that meet more than 2 others. This step takes only subpaths longer than a tenth of a CSS pixel.
+4. When step 3 does not find exactly 2 rails, the 2 longest subpaths are taken as the rails, and
+   `SC-W0202` names them. Of equally long subpaths, the first drawn comes first. Rails apart from each
+   other, with exactly 2 rungs between them, are always taken by length, because each of the 4
+   subpaths meets 2 others, as the strokes of a `#` do. The longer pair is usually the rails, and with
+   a third rung step 3 finds them.
+5. Rails may meet each other, as the two sides of a pointed column do at its tips. That meeting counts
+   in step 3.
+6. Every other subpath is a rung. A rung joins the point where it crosses the first rail to the point
+   where it crosses the second. Where it misses a rail, the point of that rail nearest the rung is used,
+   with `SC-W0203`. A rung that crosses a rail more than once does not say which crossing it means. It
+   is left out, with `SC-W0207`, and the satin is sewn without it.
+
+Recognition runs before any stitch is computed. The generator only ever gets rails, and odd geometry is
+a diagnostic that names the subpath, never a crash. Subpaths are numbered from 1 in the order the path
+draws them, and the rails keep that order.
+
+StitchCraft differs from Ink/Stitch in 2 places, `DEV-SAT-001` in the deviations ledger
+(`conformance/deviations.toml`). Ink/Stitch still uses a rung that crosses one rail twice and misses
+the other, or that runs along a rail for a while, at one of its crossings. StitchCraft leaves it out.
+Ink/Stitch also counts a line of zero length among the subpaths in step 3, where StitchCraft leaves it
+out as a point.
 
 ## Orientation
 
-- `reverse_rails = automatic` orients rail B so that `|A₀B₀| + |A₁B₁|` is smaller than the crossed
-  pairing; `none`, `first`, `second`, `both` force it.
+- `reverse_rails = automatic` reverses rail B when that brings the rails' points closer together, as in
+  Ink/Stitch. Points at every tenth of each rail's length, from its start to 90 %, are paired twice, with
+  rail B forwards and with it backwards. The pairing whose distances add up to less wins. `none`,
+  `first`, `second` and `both` force it.
 - `swap_satin_rails` swaps which rail is "first", which matters for asymmetric values (one value per
   side) and for which side the E-stitch spine runs on.
 
 ## Correspondence
 
 Rails are cut at rung crossings into paired sections. Within a section, the point at normalized arc
-length `t` on rail A corresponds to `t` on rail B. Without rungs the whole column is one section. When
-the resulting stitch directions deviate from the local column normal by more than 45° somewhere, the
-element gets `SC-W0208` ("add a rung here") with the location.
+length `t` on rail A corresponds to `t` on rail B. A column of 2 subpaths has no rungs, and its rails'
+nodes are paired instead, as in Ink/Stitch. The 2nd node of one rail goes with the 2nd node of the other,
+and on in order, after any reversal, with each rail's 2 ends left out. Rails with different numbers of
+nodes pair as many nodes as the shorter list has, with a warning. Rails of 2 nodes each are one
+section. When the resulting stitch directions deviate from the local column normal by more than 45°
+somewhere, the element gets `SC-W0208` ("add a rung here") with the location.
 
 ## Top stitches (method `satin_column`)
 
@@ -106,7 +135,7 @@ override both (`REQ-GEN-001`). Travel between underlay passes uses `running_stit
 | `REQ-SAT-002` | Measured zigzag spacing on the centre line equals the parameter (± 5 %) away from short-stitch zones |
 | `REQ-SAT-003` | No top stitch exceeds `max_stitch_length_mm` after splitting; split seams follow the chosen method |
 | `REQ-SAT-004` | Underlays lie inside the inset band and precede the top stitches |
-| `REQ-SAT-005` | Invalid structures produce `SC-E0201`/`SC-E0204` and no stitches; dangling rungs `SC-W0203` |
+| `REQ-SAT-005` | Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces `SC-E0201` and no stitches, and a rung that misses a rail joins the rail's nearest point (`SC-W0203`) |
 | `REQ-SAT-006` | Asymmetric parameters affect only their side |
 | `REQ-SAT-007` | Random parameters are reproducible from the seed |
 
@@ -115,5 +144,5 @@ Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparis
 
 ## Diagnostics
 
-`SC-E0201`, `SC-W0203`, `SC-E0204`, `SC-W0206`, `SC-W0207`, `SC-W0208`, and `SC-W0209` (a satin wider
-than 12 mm risks snagging: consider split stitches or a fill).
+`SC-E0201`, `SC-W0202`, `SC-W0203`, `SC-W0205`, `SC-W0206`, `SC-W0207`, `SC-W0208`, and `SC-W0209` (a satin
+wider than 12 mm risks snagging: consider split stitches or a fill).

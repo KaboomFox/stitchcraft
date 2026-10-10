@@ -15,6 +15,11 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0101`](#sc-e0101) | Error | Parameter has the wrong type or an unknown choice |
 | [`SC-W0102`](#sc-w0102) | Warning | Parameter clamped to its allowed range |
 | [`SC-W0105`](#sc-w0105) | Warning | Unknown parameter preserved but ignored |
+| [`SC-E0201`](#sc-e0201) | Error | Satin column has no rails |
+| [`SC-W0202`](#sc-w0202) | Warning | Satin rails taken as the two longest subpaths |
+| [`SC-W0203`](#sc-w0203) | Warning | Satin rung does not cross both rails |
+| [`SC-W0205`](#sc-w0205) | Warning | Satin subpath is one point; left out |
+| [`SC-W0207`](#sc-w0207) | Warning | Satin rung crosses a rail more than once; left out |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -133,6 +138,58 @@ or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was
 the design does not lose it, but it does not change the stitches.
 
 The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.
+
+## SC-E0201
+
+**Error** — Satin column has no rails
+
+A satin column's path has no subpath longer than a point, so it has no rails to sew between. The
+element was not stitched.
+
+Draw the column as two rails, its edges, with rungs across both.
+
+## SC-W0202
+
+**Warning** — Satin rails taken as the two longest subpaths
+
+Where the subpaths of a satin column meet does not say which two are its rails, so the two
+longest were taken as the rails. The rule is Ink/Stitch's: with one rung, the rails are the two
+subpaths that meet only one other, and with more rungs, the two that meet more than two others.
+With exactly two rungs across two rails, each of the four meets two others, as the strokes of a
+`#` do, and the rule cannot tell rails from rungs.
+
+The message names the two subpaths taken, numbered from 1 in the order the path draws them. If
+they are not the rails, use three rungs or more, each crossing both rails once.
+
+## SC-W0203
+
+**Warning** — Satin rung does not cross both rails
+
+A rung of a satin column misses one of the rails, or both. It still says which points go together:
+where it misses a rail, the point of that rail nearest the rung is used, as in Ink/Stitch.
+
+The message names the rung, numbered from 1 in the order the path draws it. Extend it across both
+rails, so that where it joins them is what you drew.
+
+## SC-W0205
+
+**Warning** — Satin subpath is one point; left out
+
+A subpath of a satin column is one point, a stray node, so it is neither a rail nor a rung. It was
+left out.
+
+The message names the subpath, numbered from 1 in the order the path draws it. Delete the node, or
+if it was meant as a rung, draw the rung across both rails.
+
+## SC-W0207
+
+**Warning** — Satin rung crosses a rail more than once; left out
+
+A rung of a satin column crosses a rail more than once, so it does not say which point of one rail
+goes with which point of the other, and it was left out. The column is sewn without it.
+
+The message names the subpath, numbered from 1 in the order the path draws it. Redraw the rung as a
+straight line across both rails.
 
 ## SC-W0401
 

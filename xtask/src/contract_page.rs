@@ -298,9 +298,11 @@ fn disagreements(spec: &ParamSpec, origin: Origin, p: &Param) -> Vec<String> {
     }
     let their_default = if p.default == "—" { "" } else { p.default.as_str() };
     // Ink/Stitch gives some combo boxes their default as a place in the options, which the registry lists
-    // in Ink/Stitch's order (`check` makes sure of it for the method parameters).
+    // in Ink/Stitch's order (`check` makes sure of it for the method parameters). It reads a toggle that
+    // declares no default, such as `satin_column`, as off when the attribute is missing.
     let their_default = match (spec.kind, p.kind.as_str(), their_default.parse::<usize>()) {
         (Kind::Choice { options }, "combo", Ok(place)) => options.get(place).map_or(their_default, |o| o.id),
+        (Kind::Toggle, _, _) if their_default.is_empty() => "false",
         _ => their_default,
     };
     let same = match (spec.read(spec.default), spec.read(their_default)) {
@@ -470,6 +472,26 @@ mod tests {
         let group = registry(&[ROW_SPACING]);
         assert_eq!(Contract::parse(&data("0.25")).unwrap().check(&[&group]), Vec::<String>::new());
         assert_eq!(Contract::parse(&data("0.250")).unwrap().check(&[&group]), Vec::<String>::new());
+    }
+
+    #[test]
+    fn a_toggle_ink_stitch_gives_no_default_is_off() {
+        let data = data("0.25").replacen(
+            "[[param]]",
+            "[[param]]\nelement = \"fill\"\nname = \"fill_underlay\"\ntype = \"toggle\"\nunit = \"—\"\ndefault = \"—\"\n\
+             applies_to = [\"tatami_fill\"]\nphase = \"P1\"\nmilestone = \"M5\"\n[[param]]",
+            1,
+        );
+        let contract = Contract::parse(&data).unwrap();
+        const OFF: &[ParamSpec] = &[ROW_SPACING, ParamSpec { key: "fill_underlay", kind: Kind::Toggle, default: "false", ..ROW_SPACING }];
+        const ON: &[ParamSpec] = &[ROW_SPACING, ParamSpec { key: "fill_underlay", kind: Kind::Toggle, default: "true", ..ROW_SPACING }];
+        assert_eq!(contract.check(&[&registry(OFF)]), Vec::<String>::new());
+        assert_eq!(
+            contract.check(&[&registry(ON)]),
+            [
+                "`fill_underlay` defaults to \"true\" here and \"false\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)"
+            ]
+        );
     }
 
     #[test]

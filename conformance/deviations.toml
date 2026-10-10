@@ -57,3 +57,10 @@ area = "plan/finalize"
 summary = "StitchCraft fits every stitch to the machine: it leaves out needle points less than their element's shortest stitch from the one before, never less than the machine's (0.3 mm on the Brother), keeping the ends of each run of stitches, and splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else 0.1 mm, and splits nothing."
 reason = "The machine profile says what the machine sews well; a stitch outside it hammers one hole, snags, or is refused (docs/src/design/engine-pipeline.md › Finalize)."
 requirements = ["REQ-FIN-001"]
+
+[[deviation]]
+id = "DEV-SAT-001"
+area = "satin"
+summary = "A rung that crosses a rail more than once, or runs along a rail for a while, is left out (SC-W0207). Ink/Stitch leaves a rung out only when it meets the two rails at more than 2 points in all, and uses one that crosses one rail twice and misses the other, or runs along a rail, at one of its crossings. A subpath that does not move is left out as a point before rails are told from rungs (SC-W0205), where Ink/Stitch counts a line of zero length among the subpaths."
+reason = "Which of its crossings such a rung means is not clear, so StitchCraft does not guess, and the warning names the rung. A line of zero length is neither a rail nor a rung. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_column.py)."
+requirements = ["REQ-SAT-005"]
