@@ -1,12 +1,13 @@
 # Your first sew-out on a Brother
 
-You will sew StitchCraft's orientation and scale sheet, TS-01, on a Brother machine with a 200 × 200 mm
-hoop, and check that its size and direction are exactly right. It takes about twenty minutes.
+You will sew StitchCraft's orientation and scale sheet, TS-01, on a Brother machine such as the PE800,
+and check that its size and direction are exactly right. It takes about twenty minutes.
 
 ## You need
 
 - StitchCraft, [installed](../install.md).
-- A Brother embroidery machine that reads PES files from a USB stick, and its 200 × 200 mm hoop.
+- A Brother embroidery machine that reads PES files from a USB stick, and a hoop that sews at least
+  120 × 120 mm, such as the PE800's 5 × 7 in hoop.
 - Medium-weight woven cotton, medium tear-away stabilizer, a 75/11 embroidery needle, 40 wt polyester
   thread (black shows the lines best), white bobbin thread.
 - A ruler or calipers with millimetres.

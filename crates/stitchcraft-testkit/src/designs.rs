@@ -7,7 +7,7 @@ use stitchcraft_core::{Budget, ElementId, Point};
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::{PlanOutcome, plan};
 use stitchcraft_params::ParamSet;
-use stitchcraft_plan::profiles::BROTHER_200X200;
+use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Rgb, Role, StitchKind, StitchPlan, Thread};
 
 /// A red thread.
@@ -65,7 +65,7 @@ pub fn planned(elements: Vec<Element>) -> PlanOutcome {
 
 /// `elements` planned for the reference machine with `settings`.
 pub fn planned_with(elements: Vec<Element>, settings: DesignSettings) -> PlanOutcome {
-    plan(&Design::new(elements, settings).unwrap(), &BROTHER_200X200, &Budget::DEFAULT)
+    plan(&Design::new(elements, settings).unwrap(), REFERENCE, &Budget::DEFAULT)
 }
 
 /// The plan in words: `J` a jump, `S` a stitch, `L` a lock stitch, `T` a trim, `P` a stop and `|` a thread

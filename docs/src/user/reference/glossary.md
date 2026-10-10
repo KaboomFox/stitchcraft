@@ -6,7 +6,7 @@
 | **Bird's nest** | A tangle of thread under the fabric, usually from bobbin or tension problems |
 | **Collapse length** | Moves shorter than this are sewn instead of jumped (default 3 mm) |
 | **Colour block** | A run of stitches in one thread colour; blocks are separated by colour changes |
-| **Comfort zone** | The design size a machine profile recommends (150 × 150 mm for `brother-200x200`); larger designs get a warning |
+| **Comfort zone** | The part of the hoop a machine profile may recommend keeping designs inside, with a warning for larger ones. No built-in profile has one yet |
 | **Contour fill** | A fill whose rows follow the shape's outline inward |
 | **Density** | How close rows or zigzags are (row spacing / zigzag spacing) |
 | **Hoop** | The frame that holds fabric; its sewable field is a machine profile's hard limit |

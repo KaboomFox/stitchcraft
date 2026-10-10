@@ -81,7 +81,7 @@ kind = "stitch"
 sheet = "TS-10A"
 style = "realistic"
 scale = 3.0
-alt = "TS-10A as it will sew: a blue square frame 150 mm on each side, with an F at the top left and a small cross in the centre."
+alt = "TS-10A as it will sew: a blue square frame 100 mm on each side, the 4 × 4 in hoop's field, with an F at the top left and a small cross in the centre."
 
 [[shot]]
 id = "testsheet-ts-10b"
@@ -89,15 +89,15 @@ kind = "stitch"
 sheet = "TS-10B"
 style = "realistic"
 scale = 3.0
-alt = "TS-10B as it will sew: a blue frame 190 mm wide and 150 mm high, with an F at the top left and a small cross in the centre."
+alt = "TS-10B as it will sew: a blue frame 130 mm wide and 180 mm high, the 5 × 7 in hoop's field, with an F at the top left and a small cross in the centre."
 
 [[shot]]
 id = "testsheet-ts-10c"
 kind = "stitch"
 sheet = "TS-10C"
 style = "realistic"
-scale = 3.0
-alt = "TS-10C as it will sew: a blue frame 150 mm wide and 190 mm high, with an F at the top left and a small cross in the centre."
+scale = 8.0
+alt = "TS-10C as it will sew: a blue frame 20 mm wide and 60 mm high, the small hoop's field, with a small F at the top left and a small cross in the middle."
 
 # ── Stitch types (designs from docs/fixtures/, planned by the engine; one image per panel) ──────────
 

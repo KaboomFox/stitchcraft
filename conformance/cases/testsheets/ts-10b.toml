@@ -1,12 +1,12 @@
-# Hoop size: beyond the comfort zone (warning), inside the hoop.
+# Hoop size: a frame filling the 5 × 7 in hoop's field, the reference machine's largest.
 # The invariants (REQ-PLAN-…) run on the sheet's plan; the golden files are the bytes MC-1 sews.
 id = "ts-10b"
 requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PRF-002", "REQ-FMT-001"]
 kind = "testsheet"
 sheet = "TS-10B"
-profile = "brother-200x200"
+profile = "brother-pe800-5x7"
 
 [expect]
-size_mm = [190.0, 150.0]
-diagnostics = ["SC-W0702"]
+size_mm = [130.0, 180.0]
+diagnostics = []
 golden = ["golden/testsheets/TS-10B.pes"]

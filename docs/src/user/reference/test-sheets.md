@@ -2,11 +2,13 @@
 
 # Test sheets
 
-Designs drawn in code for the [machine checkpoints](../../plan/machine-testing.md). Write one with `stitch testsheet <id> --profile brother-200x200 -o <id>.pes`; the command also prints what to check after sewing it, as listed here. The pictures are previews: they show what the machine will sew, including jump threads it leaves for you to cut.
+Designs drawn in code for the [machine checkpoints](../../plan/machine-testing.md), each for one hoop of the reference machine. Write one with `stitch testsheet <id> -o <id>.pes`. The command checks it against the profile of that hoop, or the one `--profile` names, and prints what to check after sewing it, as listed here. The pictures are previews: they show what the machine will sew, including jump threads it leaves for you to cut.
 
 ## TS-01 — Orientation and scale
 
 120.0 × 120.0 mm · 274 stitches, 7 jumps, 7 trims, 0 colour changes, 0 stops
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
 ![TS-01 as it will sew, in black: a cross with arms 100 mm long and a tick every 10 mm, an upright F in the top-left quarter, and a 10 mm square in each corner.](../../images/generated/testsheet-ts-01.png)
 
@@ -21,7 +23,9 @@ After sewing, check:
 
 ## TS-02 — Colour changes, a stop, jumps and trims
 
-140.0 × 70.0 mm · 93 stitches, 17 jumps, 8 trims, 2 colour changes, 1 stop
+120.0 × 70.0 mm · 93 stitches, 17 jumps, 8 trims, 2 colour changes, 1 stop
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
 ![TS-02 as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose dashes and rows are joined by loose threads, and a green line underneath.](../../images/generated/testsheet-ts-02.png)
 
@@ -32,13 +36,15 @@ Threads: Red, Blue, Emerald Green, Emerald Green (stop).
 After sewing, check:
 
 - The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop).
-- Left half (red, trim-flagged jumps): for each row (gaps of 2, 5, 15, 40 mm, top to bottom), was the thread between the two dashes cut?
+- Left half (red, trim-flagged jumps): for each row (gaps of 2, 5, 15, 30 mm, top to bottom), was the thread between the two dashes cut?
 - Right half (blue, plain jumps): the same question for each row, and for the jumps between rows.
 - Any loose loops, knots or bird's nests on the back, and where.
 
 ## TS-02B — TS-02 drawn as a design: trims elements ask for
 
-140.0 × 70.0 mm · 230 stitches, 17 jumps, 8 trims, 2 colour changes, 1 stop
+120.0 × 70.0 mm · 230 stitches, 17 jumps, 8 trims, 2 colour changes, 1 stop
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
 ![TS-02B as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose top row is one line and whose other dashes and rows are joined by loose threads, and a green line underneath.](../../images/generated/testsheet-ts-02b.png)
 
@@ -49,7 +55,7 @@ Threads: Red, Blue, Emerald Green, Emerald Green (stop).
 After sewing, check:
 
 - The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop).
-- Left half (red; every dash but the last asks for a trim after it): for each row (gaps of 2, 5, 15, 40 mm, top to bottom), was the thread between the two dashes cut?
+- Left half (red; every dash but the last asks for a trim after it): for each row (gaps of 2, 5, 15, 30 mm, top to bottom), was the thread between the two dashes cut?
 - Right half (blue; no trims): the 2 mm gap is sewn across. For the other rows, and between rows, was the jump thread cut?
 - Where the thread was cut, the stitching ends and starts again with a small lock: pull each tail gently. Does the dash hold?
 - Any loose loops, knots or bird's nests on the back, and where.
@@ -57,6 +63,8 @@ After sewing, check:
 ## TS-03 — Running stitch: lengths, bean stitch, curves, the shortest stitch
 
 60.0 × 78.0 mm · 596 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
 ![TS-03 as it will sew, in blue: five long lines with stitches from 1.5 to 4 mm, two bolder bean-stitch lines, three small circles, the right-hand one visibly many-sided, and five short lines of tiny stitches growing longer towards the bottom.](../../images/generated/testsheet-ts-03.png)
 
@@ -73,6 +81,8 @@ After sewing, check:
 
 110.0 × 64.5 mm · 600 stitches, 27 jumps, 27 trims, 0 colour changes, 0 stops
 
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
 ![TS-04 as it will sew, in red: nine rows of three lines, each line ending in a small lock at both ends, the locks' shapes differing from row to row and growing from left to right.](../../images/generated/testsheet-ts-04.png)
 
 Threads: Red.
@@ -84,41 +94,48 @@ After sewing, check:
 - Which locks show from the front, and how much (1 hidden to 5 obvious)?
 - Any thread breaks or knots at the locks, and where.
 
-## TS-10A — Hoop size: 150 × 150 mm frame
+## TS-10A — Hoop size: the 4 × 4 in hoop, a 100 × 100 mm frame
 
-150.0 × 150.0 mm · 275 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops
+100.0 × 100.0 mm · 195 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops
 
-![TS-10A as it will sew: a blue square frame 150 mm on each side, with an F at the top left and a small cross in the centre.](../../images/generated/testsheet-ts-10a.png)
+Hoop: the Brother PE800 with its 4 × 4 in hoop, profile [`brother-pe800-4x4`](profiles.md#brother-pe800-4x4).
 
-Threads: Blue.
-
-After sewing, check:
-
-- The machine accepts the file and shows the design.
-- The frame measures 150.0 × 150.0 mm (± 0.5 mm).
-
-## TS-10B — Hoop size: 190 × 150 mm frame
-
-190.0 × 150.0 mm · 307 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops
-
-![TS-10B as it will sew: a blue frame 190 mm wide and 150 mm high, with an F at the top left and a small cross in the centre.](../../images/generated/testsheet-ts-10b.png)
+![TS-10A as it will sew: a blue square frame 100 mm on each side, the 4 × 4 in hoop's field, with an F at the top left and a small cross in the centre.](../../images/generated/testsheet-ts-10a.png)
 
 Threads: Blue.
 
 After sewing, check:
 
-- The machine accepts the file and shows the design (StitchCraft warns that it is larger than the comfort zone — expected).
-- The frame measures 190.0 × 150.0 mm (± 0.5 mm), wide side left to right, the F at the top left.
+- With the 4 × 4 in hoop on the machine: does the machine take the file and sew it, without asking for a larger hoop?
+- The frame measures 100.0 × 100.0 mm (± 0.5 mm), the F at the top left.
 
-## TS-10C — Hoop size: 150 × 190 mm frame
+## TS-10B — Hoop size: the 5 × 7 in hoop, a 130 × 180 mm frame
 
-150.0 × 190.0 mm · 307 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops
+130.0 × 180.0 mm · 283 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops
 
-![TS-10C as it will sew: a blue frame 150 mm wide and 190 mm high, with an F at the top left and a small cross in the centre.](../../images/generated/testsheet-ts-10c.png)
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+![TS-10B as it will sew: a blue frame 130 mm wide and 180 mm high, the 5 × 7 in hoop's field, with an F at the top left and a small cross in the centre.](../../images/generated/testsheet-ts-10b.png)
 
 Threads: Blue.
 
 After sewing, check:
 
-- The machine accepts the file and shows the design (StitchCraft warns that it is larger than the comfort zone — expected).
-- The frame measures 150.0 × 190.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.
+- With the 5 × 7 in hoop on the machine: does the machine take the file and sew it?
+- The frame measures 130.0 × 180.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.
+
+## TS-10C — Hoop size: the small hoop, a 20 × 60 mm frame
+
+20.0 × 60.0 mm · 92 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops
+
+Hoop: the Brother PE800 with its small hoop, profile [`brother-pe800-small`](profiles.md#brother-pe800-small).
+
+![TS-10C as it will sew: a blue frame 20 mm wide and 60 mm high, the small hoop's field, with a small F at the top left and a small cross in the middle.](../../images/generated/testsheet-ts-10c.png)
+
+Threads: Blue.
+
+After sewing, check:
+
+- With the small hoop on the machine: does the machine take the file and sew it, without asking for a larger hoop?
+- If it asks for a larger hoop, turn the design a quarter turn on the machine's screen. Does it take it then?
+- The frame measures 20.0 × 60.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.

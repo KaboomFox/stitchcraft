@@ -211,7 +211,7 @@ mod tests {
     }
 
     fn args(design: PathBuf, output: PathBuf) -> PlanArgs {
-        PlanArgs { design, output, profile: "brother-200x200".to_string(), format: None, preview: None, report: None }
+        PlanArgs { design, output, profile: profiles::REFERENCE.id.to_string(), format: None, preview: None, report: None }
     }
 
     #[test]

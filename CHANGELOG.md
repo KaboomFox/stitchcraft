@@ -255,6 +255,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The reference machine is a Brother PE800, as its owner says, not a Brother with an 8 × 8 in hoop
+  ([ADR 0013](docs/src/design/adr/0013-brother-pe800-reference-machine.md)). Its profiles replace
+  `brother-200x200`, one for each of its hoops: `brother-pe800-5x7` (130 × 180 mm, the reference and the
+  default), `brother-pe800-4x4` (100 × 100 mm) and `brother-pe800-small` (20 × 60 mm). No profile has a
+  comfort zone, so `SC-W0702` waits for a sew-out report that finds one.
+  - **Test sheets** fit the reference hoop. TS-02 and TS-02B are 120 mm wide, their longest jump 30 mm.
+    The TS-10 sheets fill each hoop's field: 100 × 100 mm (TS-10A), 130 × 180 mm (TS-10B) and 20 × 60 mm
+    (TS-10C). Each sheet names the profile of the hoop it is sewn in.
+  - **`stitch testsheet`** checks a sheet against its own hoop's profile unless `--profile` names another,
+    and refuses a sheet larger than that hoop with `SC-E0701`. Before, its plan check would have called
+    that a bug in StitchCraft (`SC-E0009`).
+  - The hoop messages name the machine once: "The design is 210.0 × 0.0 mm, but the Brother PE800 with its
+    5 × 7 in hoop sews at most 130 × 180 mm."
 - M3.7: in the parameters' JSON Schema, `x-stitchcraft.visible_when` lists the values a parameter is shown
   for (`any_of`) in place of one (`equals`), and so does `stitchcraft_params::Condition`. The lock shapes
   list (`LOCKS`) moved from `common` to `locks`, next to the shapes it names.
@@ -367,6 +380,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   zero-length jumps.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-02.pes`, `TS-02B.pes`, `TS-10A.pes`, `TS-10B.pes` and
+  `TS-10C.pes`: the sheets redrawn for the PE800's hoops (ADR 0013).
 - Added `conformance/golden/testsheets/TS-02B.pes`, `TS-03.pes` and `TS-04.pes`: the exact files MC-2
   sews. The pyembroidery oracle reads them.
 - Added `conformance/golden/plans/strokes.pes` and `.dst`: the `strokes` fixture planned for the

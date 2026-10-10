@@ -1,4 +1,4 @@
 $ stitch preview TS-02.pes -o TS-02.png --style simple
-TS-02.png · 1152 × 592 pixels
+TS-02.png · 992 × 592 pixels
   from      TS-02.pes · PES (#PES0001) · "TS-02"
   style     simple, 8 pixels per millimetre
