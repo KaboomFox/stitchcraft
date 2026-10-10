@@ -52,7 +52,3 @@ run = ["stitch plan strokes.svg -o strokes.pes --preview strokes.png --report st
 id = "plan-badge"
 files = ["docs/fixtures/badge.svg"]
 run = ["stitch plan badge.svg -o badge.pes --preview badge.png"]
-
-[[example]]
-id = "version"
-run = ["stitch --version"]

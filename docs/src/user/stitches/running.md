@@ -87,6 +87,9 @@ says so.
 
 ## Parameters
 
-The reference lists each parameter with its range and default: [running stitch](../reference/params/running.md),
-[repeats and bean stitch](../reference/params/repeat.md), [manual stitch](../reference/params/manual.md)
-and the [stroke method](../reference/params/stroke.md).
+The reference lists each parameter with its range and default, on a page for each group:
+
+- [running stitch](../reference/params/running.md)
+- [repeats and bean stitch](../reference/params/repeat.md)
+- [manual stitch](../reference/params/manual.md)
+- [the stroke method](../reference/params/stroke.md)
