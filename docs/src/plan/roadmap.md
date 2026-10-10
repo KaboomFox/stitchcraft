@@ -87,7 +87,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M4.6 ✅ | Underlays: centre walk, contour, zigzag | `REQ-SAT-004`, `REQ-SAT-010` to `REQ-SAT-012` |
 | M4.7 | Start/end nearest point; hints | `REQ-GEN-001` for satin |
 | M4.8 | Single-path satin (centre line + width) | cases |
-| MC-3 🧵 | **TS-05** (width ladder 1–10 mm × three densities), **TS-06** (underlay comparison) | report filed; satin defaults tuned |
+| MC-3 🧵 | **TS-05** (width ladder 1 to 10 mm × 3 densities), **TS-06** (underlay comparison); kit: `stitch testsheet` for each, sewable from M4.6 | report filed; satin defaults tuned |
 
 ## M5 — Tatami fill
 

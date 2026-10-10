@@ -76,6 +76,22 @@ scale = 6.0
 alt = "TS-04 as it will sew, in red: nine rows of three lines, each line ending in a small lock at both ends, the locks' shapes differing from row to row and growing from left to right."
 
 [[shot]]
+id = "testsheet-ts-05"
+kind = "stitch"
+sheet = "TS-05"
+style = "realistic"
+scale = 6.0
+alt = "TS-05 as it will sew, in blue: three rows of ten solid satin columns, each row's columns growing from 1 to 10 mm wide left to right, the top row densest and the bottom row the most open."
+
+[[shot]]
+id = "testsheet-ts-06"
+kind = "stitch"
+sheet = "TS-06"
+style = "realistic"
+scale = 8.0
+alt = "TS-06 as it will sew, in red: five satin columns 6 mm wide side by side, which look alike from above because their underlays lie beneath the top stitches."
+
+[[shot]]
 id = "testsheet-ts-10a"
 kind = "stitch"
 sheet = "TS-10A"

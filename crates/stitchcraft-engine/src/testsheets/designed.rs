@@ -2,10 +2,10 @@
 //! generators, locks and plan assembly as any design's, so sewing them tests those — where the M1 sheets,
 //! drawn stitch by stitch (`sketch`), test the machine and the file formats.
 //!
-//! A sheet is a list of elements — polylines and circles, each with Ink/Stitch parameters — planned like
-//! any design: for the reference machine's profile, the machine the checkpoints run on, with the design's
-//! origin at the middle of its stitches. A sheet the engine has anything to say about is not the sheet
-//! its checks describe, so drawing one fails on any diagnostic.
+//! A sheet is a list of elements — polylines, circles and satin columns, each with Ink/Stitch parameters —
+//! planned like any design: for the reference machine's profile, the machine the checkpoints run on, with
+//! the design's origin at the middle of its stitches. A sheet the engine has anything to say about is not
+//! the sheet its checks describe, so drawing one fails on any diagnostic.
 
 use std::f64::consts::SQRT_2;
 
@@ -32,8 +32,15 @@ impl Drawing {
     /// A stroke through `points`, named `name`, sewn with `thread` and the Ink/Stitch `params`.
     pub fn polyline(&mut self, name: &str, points: &[(f64, f64)], thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
         let Some((&first, rest)) = points.split_first() else { return Ok(()) };
-        let segments = rest.iter().map(|&p| point(p).map(Segment::Line)).collect::<Result<_, _>>()?;
-        self.stroke(name, Subpath { start: point(first)?, segments, closed: false }, thread, params)
+        self.stroke(name, vec![line(first, rest)?], thread, params)
+    }
+
+    /// A satin column named `name` between 2 straight rails, each from its first point to its second, sewn
+    /// with `thread` and the Ink/Stitch `params`.
+    pub fn satin(&mut self, name: &str, rails: [[(f64, f64); 2]; 2], thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
+        let [[a, b], [c, d]] = rails;
+        let params = [params, &[("satin_column", "true")]].concat();
+        self.stroke(name, vec![line(a, &[b])?, line(c, &[d])?], thread, &params)
     }
 
     /// A circle of `radius` round `centre`: four cubic curves from its right-hand point, back to it.
@@ -47,14 +54,14 @@ impl Drawing {
             quarter((x - r, y - k), (x - k, y - r), (x, y - r))?,
             quarter((x + k, y - r), (x + r, y - k), (x + r, y))?,
         ];
-        self.stroke(name, Subpath { start: point((x + r, y))?, segments, closed: true }, thread, params)
+        self.stroke(name, vec![Subpath { start: point((x + r, y))?, segments, closed: true }], thread, params)
     }
 
-    fn stroke(&mut self, name: &str, subpath: Subpath, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
+    fn stroke(&mut self, name: &str, subpaths: Vec<Subpath>, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
         self.elements.push(Element {
             id: ElementId::new(format!("{}:{name}", self.sheet))?,
             name: None,
-            shape: Shape::Stroke(Path { subpaths: vec![subpath] }),
+            shape: Shape::Stroke(Path { subpaths }),
             thread: thread.clone(),
             params: params.iter().copied().collect::<ParamSet>(),
         });
@@ -75,6 +82,12 @@ impl Drawing {
 /// A point from literal coordinates.
 fn point((x, y): (f64, f64)) -> Result<Point, UnitError> {
     Point::new(x, y)
+}
+
+/// The open polyline from `first` through `rest`.
+fn line(first: (f64, f64), rest: &[(f64, f64)]) -> Result<Subpath, UnitError> {
+    let segments = rest.iter().map(|&p| point(p).map(Segment::Line)).collect::<Result<_, _>>()?;
+    Ok(Subpath { start: point(first)?, segments, closed: false })
 }
 
 #[cfg(test)]

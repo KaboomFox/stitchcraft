@@ -16,6 +16,8 @@ files = [
     "golden/testsheets/TS-02B.pes",
     "golden/testsheets/TS-03.pes",
     "golden/testsheets/TS-04.pes",
+    "golden/testsheets/TS-05.pes",
+    "golden/testsheets/TS-06.pes",
     "golden/testsheets/TS-10A.pes",
     "golden/testsheets/TS-10B.pes",
     "golden/testsheets/TS-10C.pes",

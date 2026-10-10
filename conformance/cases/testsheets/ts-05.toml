@@ -1,0 +1,12 @@
+# Satin columns 1 to 10 mm wide at zigzag spacings of 0.3, 0.4 and 0.5 mm.
+# The invariants (REQ-PLAN-…) run on the sheet's plan; the golden file is the bytes MC-3 sews.
+id = "ts-05"
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PRF-002", "REQ-FMT-001"]
+kind = "testsheet"
+sheet = "TS-05"
+profile = "brother-pe800-5x7"
+
+[expect]
+size_mm = [91.0, 76.0]
+diagnostics = []
+golden = ["golden/testsheets/TS-05.pes"]
