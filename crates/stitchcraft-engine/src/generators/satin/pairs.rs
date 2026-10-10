@@ -82,13 +82,17 @@ pub(crate) fn pairs(sections: &[Section], spacing: f64, processor: &mut Processo
         }
         last = Some(previous);
     }
-    if let (Some(previous), Some([first, second])) = (last, sections.last()) {
-        let end = [first.last().copied().unwrap_or(Point::ORIGIN), second.last().copied().unwrap_or(Point::ORIGIN)];
-        if gap(end, previous) > END {
-            pairs.push(processor.widened(end));
-        }
+    if let (Some(previous), Some(end)) = (last, sections.last().map(end_of))
+        && gap(end, previous) > END
+    {
+        pairs.push(processor.widened(end));
     }
     Ok(pairs)
+}
+
+/// The pair at the end of `section`: its rails' last points.
+fn end_of([first, second]: &Section) -> Pair {
+    [first.last().copied().unwrap_or(Point::ORIGIN), second.last().copied().unwrap_or(Point::ORIGIN)]
 }
 
 /// How far `pair` lies from `previous` across the column: at a right angle to `previous`, at whichever end
