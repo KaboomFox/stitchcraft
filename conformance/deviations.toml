@@ -28,21 +28,21 @@ id = "DEV-RUN-001"
 area = "strokes/running"
 summary = "Corners are joins between segments that turn by more than 30°. Ink/Stitch takes turns of 45° or more at any point of the flattened path, curves included, and skips one closer than twice the tolerance to the previous."
 reason = "A needle on every sharper join keeps drawn shapes crisp, and a curve's own bend is followed within the tolerance instead (docs/src/design/algorithms/strokes.md)."
-requirements = ["REQ-RUN-003"]
+requirements = ["REQ-RUN-003", "REQ-SAT-010", "REQ-SAT-011"]
 
 [[deviation]]
 id = "DEV-RUN-002"
 area = "strokes/running"
 summary = "Stitches are spread evenly along the path between corners, then split where they stray beyond the tolerance. Ink/Stitch makes each stitch as long as the tolerance allows, measured straight, and divides what is left evenly again after each one."
 reason = "Equal stitches between corners with no short leftover, and the tolerance met exactly where the path needs it."
-requirements = ["REQ-RUN-001", "REQ-RUN-002"]
+requirements = ["REQ-RUN-001", "REQ-RUN-002", "REQ-SAT-010", "REQ-SAT-011"]
 
 [[deviation]]
 id = "DEV-RUN-003"
 area = "strokes/running"
 summary = "No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). Ink/Stitch's running stitch has no shortest stitch; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before."
 reason = "The machine's shortest stitch is a limit: honoured where the stitches are placed, it never costs a corner or leaves an over-long stitch."
-requirements = ["REQ-RUN-001", "REQ-RUN-003"]
+requirements = ["REQ-RUN-001", "REQ-RUN-003", "REQ-SAT-010", "REQ-SAT-011"]
 
 [[deviation]]
 id = "DEV-RUN-004"
@@ -78,3 +78,17 @@ area = "satin"
 summary = "With a random split phase, a split within the element's shortest stitch of a stitch's end is left out, and the element's shortest stitch is never shorter than the machine's (0.3 mm on the Brother). Ink/Stitch uses the element's own shortest stitch or the document's."
 reason = "The machine's shortest stitch is a limit (DEV-FIN-001). A split nearer an end would sew a stitch the machine does not sew well, which finalizing would leave out anyway. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/split_points.py)."
 requirements = ["REQ-SAT-003"]
+
+[[deviation]]
+id = "DEV-SAT-004"
+area = "satin"
+summary = "The centre walk underlay keeps within center_walk_underlay_stitch_tolerance_mm of its line, and follows points that far apart. Ink/Stitch declares that parameter but uses running_stitch_tolerance_mm in its place, the tolerance of the satin's travel to its start and end. Both are 0.2 mm unless a file sets them."
+reason = "A setting does what its name says, and a file that sets neither sews the same in both programs. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_column.py)."
+requirements = ["REQ-SAT-010"]
+
+[[deviation]]
+id = "DEV-SAT-005"
+area = "satin"
+summary = "A satin column's travel takes the first of the lengths running_stitch_length_mm gives. Ink/Stitch reads a satin's value as one number, and sews a value of several with 2.5 mm, the default."
+reason = "The key is declared once, as the running stitch's list of lengths, and a stroke turned into a satin column keeps its value. Its first length is the one the stroke started with. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_column.py)."
+requirements = ["REQ-SAT-004"]

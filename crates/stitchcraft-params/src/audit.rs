@@ -76,8 +76,8 @@ fn range_is_usable(kind: Kind) -> bool {
         Kind::Length { min, max, .. }
         | Kind::Percent { min, max }
         | Kind::LengthList { min, max }
-        | Kind::LengthPair { min, max }
-        | Kind::PercentPair { min, max }
+        | Kind::LengthPair { min, max, .. }
+        | Kind::PercentPair { min, max, .. }
         | Kind::PercentList { min, max }
         | Kind::Number { min, max } => min.is_finite() && max.is_finite() && min < max,
         Kind::Count { min, max } | Kind::CountList { min, max } => min < max,

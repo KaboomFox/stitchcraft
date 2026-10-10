@@ -58,19 +58,19 @@ fn stitches_shrunk_below_the_shortest_stitch_join_a_neighbour() {
 fn short_lengths_are_raised_to_twice_the_shortest_stitch() {
     let mm = |v: f64| Mm::new(v).unwrap();
     let mut warnings = Vec::new();
-    assert_eq!(pattern(&[mm(2.5)], 0.3, &mut warnings), [2.5]);
-    assert_eq!(pattern(&[mm(0.6)], 0.3, &mut warnings), [0.6], "exactly twice is enough");
+    assert_eq!(pattern("running_stitch_length_mm", &[mm(2.5)], 0.3, &mut warnings), [2.5]);
+    assert_eq!(pattern("running_stitch_length_mm", &[mm(0.6)], 0.3, &mut warnings), [0.6], "exactly twice is enough");
     assert!(warnings.is_empty());
-    assert_eq!(pattern(&[mm(0.5)], 0.3, &mut warnings), [0.6]);
-    assert_eq!(pattern(&[mm(0.2), mm(3.0), mm(0.4)], 0.3, &mut warnings), [0.6, 3.0, 0.6]);
-    assert_eq!(pattern(&[], 0.3, &mut warnings), [0.6]);
+    assert_eq!(pattern("running_stitch_length_mm", &[mm(0.5)], 0.3, &mut warnings), [0.6]);
+    assert_eq!(pattern("running_stitch_length_mm", &[mm(0.2), mm(3.0), mm(0.4)], 0.3, &mut warnings), [0.6, 3.0, 0.6]);
+    assert_eq!(pattern("running_stitch_length_mm", &[], 0.3, &mut warnings), [0.6]);
     let messages: Vec<String> = warnings.iter().map(ToString::to_string).collect();
     assert_eq!(
         messages,
         [
-            "warning SC-W0402: The stitch length 0.5 mm is shorter than twice the shortest stitch (0.3 mm), so 0.6 mm is used.",
-            "warning SC-W0402: The stitch lengths 0.2, 0.4 mm are shorter than twice the shortest stitch (0.3 mm), so 0.6 mm is used for each.",
-            "warning SC-W0402: No stitch length is given, so 0.6 mm, twice the shortest stitch, is used.",
+            "warning SC-W0402: The stitch length 0.5 mm (`running_stitch_length_mm`) is shorter than twice the shortest stitch (0.3 mm), so 0.6 mm is used.",
+            "warning SC-W0402: The stitch lengths 0.2, 0.4 mm (`running_stitch_length_mm`) are shorter than twice the shortest stitch (0.3 mm), so 0.6 mm is used for each.",
+            "warning SC-W0402: No stitch length is given (`running_stitch_length_mm`), so 0.6 mm, twice the shortest stitch, is used.",
         ]
     );
 }

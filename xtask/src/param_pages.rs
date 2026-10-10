@@ -213,8 +213,9 @@ fn property(spec: &ParamSpec) -> Result<Json, String> {
         Kind::LengthList { min, max } | Kind::PercentList { min, max } => {
             json!({"type": "array", "minItems": 1, "maxItems": MAX_LIST, "items": {"type": "number", "minimum": min, "maximum": max}})
         }
-        Kind::LengthPair { min, max } | Kind::PercentPair { min, max } => {
-            json!({"type": "array", "minItems": 1, "maxItems": 2, "items": {"type": "number", "minimum": min, "maximum": max}})
+        Kind::LengthPair { min, max, optional } | Kind::PercentPair { min, max, optional } => {
+            let kinds = if optional { json!(["array", "null"]) } else { json!("array") };
+            json!({"type": kinds, "minItems": 1, "maxItems": 2, "items": {"type": "number", "minimum": min, "maximum": max}})
         }
         Kind::CountList { min, max } => {
             json!({"type": "array", "minItems": 1, "maxItems": MAX_LIST, "items": {"type": "integer", "minimum": min, "maximum": max}})
@@ -262,17 +263,17 @@ fn unwrapped(markdown: &str) -> String {
 fn json_value(value: &Value) -> Json {
     match value {
         Value::Length(Some(mm)) => json!(mm.get()),
-        Value::Length(None) | Value::Seed(None) => Json::Null,
+        Value::Length(None) | Value::Seed(None) | Value::LengthPair(None) | Value::PercentPair(None) => Json::Null,
         Value::Angle(v) | Value::Percent(v) | Value::Number(v) => json!(v),
         Value::Count(n) => json!(n),
         Value::Toggle(on) => json!(on),
         Value::Choice(id) => json!(id),
         Value::Seed(Some(seed)) => json!(seed),
         Value::Lengths(lengths) => json!(lengths.iter().map(|mm| mm.get()).collect::<Vec<_>>()),
-        Value::LengthPair([a, b]) if a == b => json!([a.get()]),
-        Value::LengthPair(pair) => json!(pair.map(|mm| mm.get())),
-        Value::PercentPair([a, b]) if a == b => json!([a]),
-        Value::PercentPair(pair) => json!(pair),
+        Value::LengthPair(Some([a, b])) if a == b => json!([a.get()]),
+        Value::LengthPair(Some(pair)) => json!(pair.map(|mm| mm.get())),
+        Value::PercentPair(Some([a, b])) if a == b => json!([a]),
+        Value::PercentPair(Some(pair)) => json!(pair),
         Value::Percents(percents) => json!(percents),
         Value::Counts(counts) => json!(counts),
         Value::Text(text) => json!(text),

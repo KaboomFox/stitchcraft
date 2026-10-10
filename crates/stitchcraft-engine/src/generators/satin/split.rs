@@ -200,6 +200,19 @@ fn staggered(
     Ok(at)
 }
 
+/// The points that split the line from `a` to `b` into the fewest equal parts no longer than `longest`, in
+/// order along it: none for a line no longer than that. A unit of `meter`'s work per point. The needle's
+/// travel between a satin column's underlays is split so, and a zigzag underlay's long stitches.
+pub(crate) fn evenly(a: Point, b: Point, longest: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    let parts = fewest_parts(a.distance(b), longest);
+    let mut points = Vec::new();
+    for k in 1..parts {
+        meter.charge(1)?;
+        points.push(a.lerp(b, f64::from(k) / f64::from(parts)));
+    }
+    Ok(points)
+}
+
 /// The fewest parts no longer than `length` that `distance` divides into, at least 1, as Ink/Stitch
 /// counts them: the distance over the length, rounded up.
 fn fewest_parts(distance: f64, length: f64) -> u32 {
@@ -247,6 +260,16 @@ mod tests {
     fn a_stitch_divides_into_the_fewest_parts_no_longer_than_the_longest_stitch() {
         assert_eq!([fewest_parts(7.0, 3.0), fewest_parts(6.0, 3.0), fewest_parts(0.5, 3.0), fewest_parts(0.0, 3.0)], [3, 2, 1, 1]);
         assert_eq!(fewest_parts(1e300, 1e-3), u32::MAX, "as many as the budget refuses");
+    }
+
+    #[test]
+    fn a_line_splits_evenly_into_the_fewest_parts_no_longer_than_the_longest() {
+        let meter = &mut Budget::DEFAULT.meter();
+        let (a, b) = (p(0.0, 0.0), p(0.0, 6.0));
+        assert_eq!(ys(&evenly(a, b, 2.5, meter).unwrap()), [2.0, 4.0]);
+        assert_eq!(ys(&evenly(a, b, 3.0, meter).unwrap()), [3.0], "exactly 2 parts");
+        assert!(evenly(a, b, 6.0, meter).unwrap().is_empty() && evenly(a, a, 1.0, meter).unwrap().is_empty());
+        assert_eq!(evenly(a, b, 1e-9, &mut Budget { max_stitches: 1, max_work: 10 }.meter()), Err(Exhausted::Work));
     }
 
     #[test]

@@ -52,7 +52,9 @@ assembly reads them there: its thread, locks, trim and stop.
 The stitch type picks the generator. A stroke whose `satin_column` setting is on is a satin column,
 whatever its `stroke_method` says, as in Ink/Stitch. Its rails and rungs are recognized, what
 recognition finds is reported, and its `satin_method` picks the generator: the satin stitch, sewn from
-M4.2. For any other stroke the generator is its `stroke_method`. `running_stitch` (the default) and
+M4.2. A satin column also reads the running stitch's length (`running_stitch_length_mm`): the stitches
+that join its underlays are no longer than the first value. For any other stroke the generator is its
+`stroke_method`. `running_stitch` (the default) and
 `manual_stitch` are sewn from M3. The other stroke and satin methods, satin columns drawn as their centre
 line, and fills are skipped with `SC-W0011` until their milestones. An element whose parameters are
 wrong (`SC-E0101`) is skipped too, and the rest of the design still plans.

@@ -169,7 +169,9 @@ fn an_element_sews_with_the_longer_of_the_machine_s_shortest_stitch_and_its_own(
     assert_eq!(said(&[length], DesignSettings::default()), Vec::<String>::new());
     // An element's own shortest stitch of 1 mm raises them to 2 mm, and so does the design's, for an
     // element that sets none.
-    let raised = ["warning SC-W0402: The stitch length 1.5 mm is shorter than twice the shortest stitch (1 mm), so 2 mm is used."];
+    let raised = [
+        "warning SC-W0402: The stitch length 1.5 mm (`running_stitch_length_mm`) is shorter than twice the shortest stitch (1 mm), so 2 mm is used.",
+    ];
     assert_eq!(said(&[length, ("min_stitch_length_mm", "1")], DesignSettings::default()), raised);
     let design = DesignSettings { min_stitch_len: Some(Mm::new(1.0).unwrap()), ..DesignSettings::default() };
     assert_eq!(said(&[length], design), raised);

@@ -30,6 +30,9 @@
 //! the thread), then corners, then the tolerance. A piece of the path that is a single point, shorter
 //! than the shortest stitch, or all within it of its ends, is not stitched (`SC-W0401`). Only arithmetic and square
 //! roots are used: every platform places the same stitches.
+//!
+//! A satin column's underlays walk lines the satin generator builds point by point, and `along_line`
+//! sews them with the same steps 2 to 5, as Ink/Stitch sews its underlays with its running stitch.
 
 mod params;
 
@@ -61,7 +64,7 @@ pub fn running_stitch(
 ) -> Result<Stitched, Exhausted> {
     let min = min_stitch.get();
     let mut warnings = Vec::new();
-    let pattern = pattern(&params.running_stitch_length_mm, min, &mut warnings);
+    let pattern = pattern("running_stitch_length_mm", &params.running_stitch_length_mm, min, &mut warnings);
     let jitter = params.random_stitch_length_jitter_percent / 100.0;
     let mut lengths = Lengths { pattern, next: 0, random: params.enable_random_stitch_length.then_some((jitter, rng)) };
     let tolerance = params.running_stitch_tolerance_mm.get();
@@ -85,19 +88,23 @@ pub fn running_stitch(
     Ok(Stitched { runs, warnings })
 }
 
-/// The pattern of stitch lengths, each raised to at least twice the shortest stitch, with `SC-W0402` for
-/// the ones that were.
-fn pattern(lengths: &[Mm], min: f64, warnings: &mut Vec<Diagnostic>) -> Vec<f64> {
+/// The pattern of stitch lengths the parameter `key` gives, each raised to at least twice the shortest
+/// stitch, with `SC-W0402` for the ones that were.
+fn pattern(key: &str, lengths: &[Mm], min: f64, warnings: &mut Vec<Diagnostic>) -> Vec<f64> {
     let floor = 2.0 * min;
     let short: Vec<String> = lengths.iter().map(|l| l.get()).filter(|l| !at_least(*l, floor)).map(mm).collect();
     let pattern: Vec<f64> = lengths.iter().map(|l| l.get().max(floor)).collect();
     let message = match short.as_slice() {
         [] if !pattern.is_empty() => None,
         // The registry never gives an empty list; a direct caller that does gets the shortest safe length.
-        [] => Some(format!("No stitch length is given, so {} mm, twice the shortest stitch, is used.", mm(floor))),
-        [one] => Some(format!("The stitch length {one} mm is shorter than twice the shortest stitch ({} mm), so {} mm is used.", mm(min), mm(floor))),
+        [] => Some(format!("No stitch length is given (`{key}`), so {} mm, twice the shortest stitch, is used.", mm(floor))),
+        [one] => Some(format!(
+            "The stitch length {one} mm (`{key}`) is shorter than twice the shortest stitch ({} mm), so {} mm is used.",
+            mm(min),
+            mm(floor)
+        )),
         many => Some(format!(
-            "The stitch lengths {} mm are shorter than twice the shortest stitch ({} mm), so {} mm is used for each.",
+            "The stitch lengths {} mm (`{key}`) are shorter than twice the shortest stitch ({} mm), so {} mm is used for each.",
             many.join(", "),
             mm(min),
             mm(floor)
@@ -107,6 +114,32 @@ fn pattern(lengths: &[Mm], min: f64, warnings: &mut Vec<Diagnostic>) -> Vec<f64>
         warnings.push(Diagnostic::new(Code::StitchLengthRaised, message));
     }
     if pattern.is_empty() { vec![floor] } else { pattern }
+}
+
+/// The running stitch along the polyline `points`, for the walks of a satin column's underlays: placed as a
+/// stroke's is between its corners, in stitches of `length` (the parameter `key`'s, raised to twice
+/// `min_stitch` with `SC-W0402` where shorter) within `tolerance` of the line. A line too small for a
+/// stitch of `min_stitch` is sewn as its ends, as Ink/Stitch sews it, and finalizing merges what is too
+/// short (`SC-I0504`). Every point costs work from `meter`.
+pub(crate) fn along_line(
+    points: &[Point],
+    key: &str,
+    length: Mm,
+    tolerance: f64,
+    min_stitch: f64,
+    warnings: &mut Vec<Diagnostic>,
+    meter: &mut Meter,
+) -> Result<Vec<Point>, Exhausted> {
+    let piece = stroke::polyline(points);
+    let mut lengths = Lengths { pattern: pattern(key, &[length], min_stitch, warnings), next: 0, random: None };
+    let along = Along::new(&piece.points, meter)?;
+    if piece.points.len() > 1
+        && at_least(along.length(), min_stitch)
+        && let Some(run) = stitch_piece(&along, &piece.corners, &mut lengths, min_stitch, tolerance, meter)?
+    {
+        return Ok(run);
+    }
+    Ok(piece.points.first().zip(piece.points.last()).map(|(first, last)| vec![*first, *last]).unwrap_or_default())
 }
 
 /// A needle penetration: how far along the piece it is, where it is, and whether it is on a corner.

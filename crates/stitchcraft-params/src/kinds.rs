@@ -55,9 +55,13 @@ kinds! {
     /// Lengths in millimetres.
     LengthList => Vec<Mm>, |v| if let Value::Lengths(lengths) = v { Some(lengths) } else { None };
     /// A length in millimetres for each of 2 sides.
-    LengthPair => [Mm; 2], |v| if let Value::LengthPair(pair) = v { Some(pair) } else { None };
+    LengthPair => [Mm; 2], |v| if let Value::LengthPair(Some(pair)) = v { Some(pair) } else { None };
+    /// A length in millimetres for each of 2 sides that may be left empty (`None`).
+    OptionalLengthPair => Option<[Mm; 2]>, |v| if let Value::LengthPair(pair) = v { Some(pair) } else { None };
     /// A percentage for each of 2 sides.
-    PercentPair => [f64; 2], |v| if let Value::PercentPair(pair) = v { Some(pair) } else { None };
+    PercentPair => [f64; 2], |v| if let Value::PercentPair(Some(pair)) = v { Some(pair) } else { None };
+    /// A percentage for each of 2 sides that may be left empty (`None`).
+    OptionalPercentPair => Option<[f64; 2]>, |v| if let Value::PercentPair(pair) = v { Some(pair) } else { None };
     /// Percentages.
     PercentList => Vec<f64>, |v| if let Value::Percents(percents) = v { Some(percents) } else { None };
     /// Whole numbers.
