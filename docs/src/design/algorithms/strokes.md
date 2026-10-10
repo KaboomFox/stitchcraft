@@ -61,6 +61,12 @@ every platform places the same stitches.
 **Compared with Ink/Stitch:** the same parameters, meanings and defaults; the placement differs in four
 documented ways, `DEV-RUN-001` to `DEV-RUN-004` in the deviations ledger (`conformance/deviations.toml`).
 
+**Satin underlays** walk lines made point by point by the satin generator
+([satin](satin.md#underlays)), and steps 2 to 5 place their stitches, with each walk's own length and
+tolerance. Such a line is a polyline already, and each join that turns by more than 30° is a corner. A
+line too small for a stitch of the shortest length is sewn as its 2 ends, as Ink/Stitch sews it, and
+finalizing merges what is too short.
+
 ### Repeats and bean stitch
 
 - `repeats = k` sews the path k times, alternating direction; odd k ends at the far end, even k returns
@@ -101,7 +107,7 @@ keeps the random phase, for the same reason.
 ### Diagnostics
 
 `SC-W0401` part of the path too small for the shortest stitch (skipped); `SC-W0402` stitch length below
-twice the shortest stitch (raised).
+twice the shortest stitch (raised), a stroke's or a satin underlay's, which the message names.
 
 ## Manual stitch
 

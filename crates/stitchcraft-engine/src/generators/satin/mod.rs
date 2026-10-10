@@ -10,20 +10,24 @@
 //! each pair widened by pull compensation (`compensation`). Needle points that crowd together on a rail
 //! are inset (`short`), and the pairs are sewn rail to rail, with long stitches split (`split`).
 //!
-//! These are the top stitches as Ink/Stitch places them, and the next step of M4 adds underlays (M4.6).
-//! A path of 1 subpath, sewn along its centre line, follows in M4.8.
+//! These are the top stitches as Ink/Stitch places them. Before them come the underlays the element turns
+//! on, sewn along the same sections (`underlay`): a centre walk, a contour and a zigzag, in that order,
+//! with the needle travelling straight from each to the next, all in one run. A path of 1 subpath, sewn
+//! along its centre line, follows in M4.8.
 
 mod column;
 mod compensation;
 mod pairs;
 mod short;
 mod split;
+mod underlay;
 
 use stitchcraft_core::rng::SplitMix64;
-use stitchcraft_core::{Diagnostic, Exhausted, Meter, Mm};
-use stitchcraft_params::{ChoiceOption, StitchType, params};
+use stitchcraft_core::{Diagnostic, Exhausted, Meter, Mm, Point};
+use stitchcraft_params::{ChoiceOption, Origin, StitchType, params};
 
 use crate::design::Path;
+use crate::generators::satin::column::Section;
 use crate::generators::satin::compensation::Processor;
 use crate::generators::satin::split::Splitter;
 use crate::generators::{Stitched, method};
@@ -153,6 +157,73 @@ params! {
         /// diagonals that show less than whole numbers do.
         split_staggers: Number = "4", label "Staggers", range (0.01, 100.0), when split_method == "staggered";
     }
+
+    "Centre walk underlay" {
+        /// Sew a running stitch along the middle of the column first, there and back. It holds the fabric
+        /// still along the column, and suits narrow columns. The other underlays and the top stitches
+        /// follow it.
+        center_walk_underlay: Toggle = "false", label "Centre walk underlay";
+
+        /// How long each stitch of the centre walk is. Between corners its stitches are spread evenly, so
+        /// each one is at most this long.
+        center_walk_underlay_stitch_length_mm: Length = "3", label "Centre walk stitch length", range (0.1, 25.0);
+
+        /// How far a centre walk stitch may stray from the middle of the column on a curve. A smaller
+        /// tolerance follows curves more closely, with more and shorter stitches.
+        center_walk_underlay_stitch_tolerance_mm: Length = "0.2", label "Centre walk tolerance", range (0.01, 5.0),
+            origin Origin::InkStitchDeviates { deviation: "DEV-SAT-004" };
+
+        /// How many times the centre walk is sewn: 2 goes there and back, 3 there, back and there again.
+        /// An odd number ends at the column's end, and the rest of the column is then sewn from its end.
+        center_walk_underlay_repeats: Count = "2", label "Centre walk repeats", range (1, 100);
+
+        /// Where the centre walk runs, in percent of the way from the first rail to the second: 50 is the
+        /// middle.
+        center_walk_underlay_position: Percent = "50", label "Centre walk position", range (0.0, 100.0);
+    }
+
+    "Contour underlay" {
+        /// Sew a running stitch along each edge of the column, a little inside it, after any centre walk.
+        /// It holds the edges still and keeps them crisp.
+        contour_underlay: Toggle = "false", label "Contour underlay";
+
+        /// How long each stitch of the contour is. Between corners its stitches are spread evenly, so each
+        /// one is at most this long.
+        contour_underlay_stitch_length_mm: Length = "3", label "Contour stitch length", range (0.1, 25.0);
+
+        /// How far a contour stitch may stray from its line on a curve. A smaller tolerance follows curves
+        /// more closely, with more and shorter stitches.
+        contour_underlay_stitch_tolerance_mm: Length = "0.2", label "Contour tolerance", range (0.01, 5.0);
+
+        /// How far inside each rail the contour runs, so that it does not show past the top stitches. It
+        /// also stops short of the column's start by the first rail's value and of its end by the
+        /// second's. 2 values set the first rail's side, then the second's.
+        contour_underlay_inset_mm: LengthPair = "0.4", label "Contour inset", range (-10.0, 10.0);
+
+        /// More inset, in percent of the column's width at each point, added to the length above. 2 values
+        /// set the first rail's side, then the second's.
+        contour_underlay_inset_percent: PercentPair = "0", label "Contour inset (% of width)", range (-100.0, 100.0);
+    }
+
+    "Zigzag underlay" {
+        /// Sew a sparse zigzag across the column, to its end and back, before the top stitches. It lifts
+        /// them off the fabric and makes a wide column look fuller.
+        zigzag_underlay: Toggle = "false", label "Zigzag underlay";
+
+        /// How far apart the zigzag's points on each rail are, each way.
+        zigzag_underlay_spacing_mm: Length = "3", label "Zigzag underlay spacing", range (0.01, 10.0);
+
+        /// How far inside each rail the zigzag's points are. Empty: half the contour's inset, which puts
+        /// them between the contour and the edge. 2 values set the first rail's side, then the second's.
+        zigzag_underlay_inset_mm: OptionalLengthPair = "", label "Zigzag underlay inset", range (-10.0, 10.0);
+
+        /// More inset, in percent of the column's width at each point, added to the length above. Empty:
+        /// half the contour's. 2 values set the first rail's side, then the second's.
+        zigzag_underlay_inset_percent: OptionalPercentPair = "", label "Zigzag underlay inset (% of width)", range (-100.0, 100.0);
+
+        /// Split zigzag stitches longer than this into equal parts. Empty: none is split.
+        zigzag_underlay_max_stitch_length_mm: OptionalLength = "", label "Zigzag underlay longest stitch", range (0.1, 25.0);
+    }
 }
 
 /// What a satin column's `path` is, with what recognition took by length, stood in for or left out
@@ -169,25 +240,55 @@ pub fn shape(path: &Path, diagnostics: &mut Vec<Diagnostic>, meter: &mut Meter) 
     })
 }
 
-/// The satin column `satin` sewn as `params` say, for an element whose shortest stitch is `min_stitch` and
-/// longest `max_stitch`, if it sets one, with its random variation drawn from the element's `rng`: one run
-/// of needle points, a pair across the column at a time, from the rails' starts to their ends.
+/// The lengths a satin column's stitches keep to that come from settings other than its own.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SatinLengths {
+    /// The element's shortest stitch: the machine's, or the element's or the design's when longer.
+    pub min_stitch: Mm,
+    /// The element's longest stitch, when it sets one: longer top stitches are split.
+    pub max_stitch: Option<Mm>,
+    /// The longest stitch of the needle's travel between the underlays and on to the top stitches: the
+    /// first of the running stitch's lengths (`running_stitch_length_mm`).
+    pub travel: Mm,
+}
+
+/// The satin column `satin` sewn as `params` say, with an element's stitch `lengths`, and its random
+/// variation drawn from the element's `rng`: one run of needle points, its underlays first, then its top
+/// stitches a pair across the column at a time, from the rails' starts to their ends, or from their ends
+/// after an odd centre walk.
 pub fn satin_stitch(
     satin: &Satin,
     params: &SatinParams,
-    min_stitch: Mm,
-    max_stitch: Option<Mm>,
+    lengths: SatinLengths,
     rng: &mut SplitMix64,
     meter: &mut Meter,
 ) -> Result<Stitched, Exhausted> {
     let mut warnings = Vec::new();
     let sections = column::sections(satin, params, &mut warnings, meter)?;
-    let placed = pairs::pairs(&sections, params.zigzag_spacing_mm.get(), &mut Processor::new(params, rng), meter)?;
-    let mut splitter = Splitter::new(params, max_stitch.map(Mm::get), min_stitch.get(), rng);
+    let mut top = top_stitches(&sections, params, lengths, rng, meter)?;
+    if underlay::ends_at_end(params) {
+        top.reverse();
+    }
+    let mut parts = underlay::underlays(&sections, params, lengths.min_stitch.get(), &mut warnings, meter)?;
+    parts.push(top);
+    let run = underlay::join(parts, lengths.travel.get(), meter)?;
+    Ok(Stitched { runs: vec![run], warnings })
+}
+
+/// The top stitches along `sections`, from the rails' starts to their ends: placed, compensated and varied
+/// at random by the element's `rng`, inset where they crowd, and split where they are long.
+fn top_stitches(
+    sections: &[Section],
+    params: &SatinParams,
+    lengths: SatinLengths,
+    rng: &mut SplitMix64,
+    meter: &mut Meter,
+) -> Result<Vec<Point>, Exhausted> {
+    let placed = pairs::pairs(sections, params.zigzag_spacing_mm.get(), &mut Processor::new(params, rng), meter)?;
+    let mut splitter = Splitter::new(params, lengths.max_stitch.map(Mm::get), lengths.min_stitch.get(), rng);
     let insets: Vec<f64> = params.short_stitch_inset.iter().map(|percent| percent / 100.0).collect();
     let short = short::inset(&placed, params.short_stitch_distance_mm.get(), &insets, splitter.inset_limit());
-    let run = splitter.sew(&placed, &short, meter)?;
-    Ok(Stitched { runs: vec![run], warnings })
+    splitter.sew(&placed, &short, meter)
 }
 
 #[cfg(test)]

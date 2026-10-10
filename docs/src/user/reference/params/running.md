@@ -12,10 +12,12 @@ Applies to Running stitch, Ripple stitch.
 
 **Stitch length.** How long each stitch is. Between corners the stitches are spread evenly, so each one is at most
 this long. Several lengths separated by spaces sew as a repeating pattern: "2.5 1" sews long,
-short, long, short.
+short, long, short. The stitches that join a satin column's underlays are no longer than the
+first length.
 
 - **Accepts:** 1 to 16 lengths from 0.1 to 25 mm, separated by spaces
 - **Default:** `2.5`
+- **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin
 - **Ink/Stitch:** same key, meaning and default
 
 ### `running_stitch_tolerance_mm`

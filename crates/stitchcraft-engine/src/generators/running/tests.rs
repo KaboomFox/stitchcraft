@@ -58,19 +58,19 @@ fn stitches_shrunk_below_the_shortest_stitch_join_a_neighbour() {
 fn short_lengths_are_raised_to_twice_the_shortest_stitch() {
     let mm = |v: f64| Mm::new(v).unwrap();
     let mut warnings = Vec::new();
-    assert_eq!(pattern(&[mm(2.5)], 0.3, &mut warnings), [2.5]);
-    assert_eq!(pattern(&[mm(0.6)], 0.3, &mut warnings), [0.6], "exactly twice is enough");
+    assert_eq!(pattern("running_stitch_length_mm", &[mm(2.5)], 0.3, &mut warnings), [2.5]);
+    assert_eq!(pattern("running_stitch_length_mm", &[mm(0.6)], 0.3, &mut warnings), [0.6], "exactly twice is enough");
     assert!(warnings.is_empty());
-    assert_eq!(pattern(&[mm(0.5)], 0.3, &mut warnings), [0.6]);
-    assert_eq!(pattern(&[mm(0.2), mm(3.0), mm(0.4)], 0.3, &mut warnings), [0.6, 3.0, 0.6]);
-    assert_eq!(pattern(&[], 0.3, &mut warnings), [0.6]);
+    assert_eq!(pattern("running_stitch_length_mm", &[mm(0.5)], 0.3, &mut warnings), [0.6]);
+    assert_eq!(pattern("running_stitch_length_mm", &[mm(0.2), mm(3.0), mm(0.4)], 0.3, &mut warnings), [0.6, 3.0, 0.6]);
+    assert_eq!(pattern("running_stitch_length_mm", &[], 0.3, &mut warnings), [0.6]);
     let messages: Vec<String> = warnings.iter().map(ToString::to_string).collect();
     assert_eq!(
         messages,
         [
-            "warning SC-W0402: The stitch length 0.5 mm is shorter than twice the shortest stitch (0.3 mm), so 0.6 mm is used.",
-            "warning SC-W0402: The stitch lengths 0.2, 0.4 mm are shorter than twice the shortest stitch (0.3 mm), so 0.6 mm is used for each.",
-            "warning SC-W0402: No stitch length is given, so 0.6 mm, twice the shortest stitch, is used.",
+            "warning SC-W0402: The stitch length 0.5 mm (`running_stitch_length_mm`) is shorter than twice the shortest stitch (0.3 mm), so 0.6 mm is used.",
+            "warning SC-W0402: The stitch lengths 0.2, 0.4 mm (`running_stitch_length_mm`) are shorter than twice the shortest stitch (0.3 mm), so 0.6 mm is used for each.",
+            "warning SC-W0402: No stitch length is given (`running_stitch_length_mm`), so 0.6 mm, twice the shortest stitch, is used.",
         ]
     );
 }
@@ -241,4 +241,14 @@ fn random_lengths_are_frozen() {
     let mut lengths = Lengths { pattern: vec![2.5, 1.0], next: 0, random: Some((0.4, &mut rng)) };
     let draws: Vec<f64> = (0..5).map(|i| lengths.draw(i == 0, 9.0)).collect();
     assert_eq!(draws, [0.4770334515316359, 0.822880904204111, 2.188381433047275, 0.630424134832197, 3.236456153093065]);
+}
+
+#[test]
+fn an_underlay_walk_too_small_for_a_stitch_is_sewn_as_its_ends() {
+    // 0.1 mm long, with stitches no shorter than 0.3 mm: no stitch fits, and the walk is its 2 ends, as
+    // Ink/Stitch sews it.
+    let walk: Vec<Point> = [(0.0, 0.0), (0.05, 0.01), (0.1, 0.0)].iter().map(|&(x, y)| Point::new(x, y).unwrap()).collect();
+    let sewn = along_line(&walk, 2.5, 0.2, 0.3, &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(sewn, [walk[0], walk[2]]);
+    assert!(along_line(&[], 2.5, 0.2, 0.3, &mut Budget::DEFAULT.meter()).unwrap().is_empty(), "no walk at all");
 }

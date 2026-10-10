@@ -19,6 +19,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0202`](#sc-w0202) | Warning | Satin rails taken as the two longest subpaths |
 | [`SC-W0203`](#sc-w0203) | Warning | Satin rung does not cross both rails |
 | [`SC-W0205`](#sc-w0205) | Warning | Satin subpath is one point; left out |
+| [`SC-W0206`](#sc-w0206) | Warning | Satin contour underlay too short for its insets; it keeps its length |
 | [`SC-W0207`](#sc-w0207) | Warning | Satin rung crosses a rail more than once; left out |
 | [`SC-W0210`](#sc-w0210) | Warning | Satin rails without rungs have different numbers of nodes |
 | [`SC-W0211`](#sc-w0211) | Warning | Satin push compensation too long for a rail; that rail keeps its length |
@@ -183,6 +184,17 @@ left out.
 The message names the subpath, numbered from 1 in the order the path draws it. Delete the node, or
 if it was meant as a rung, draw the rung across both rails.
 
+## SC-W0206
+
+**Warning** — Satin contour underlay too short for its insets; it keeps its length
+
+A satin column's contour underlay stops short of the column's start and end by its inset, but a side
+of it is so short that this would leave less than half a CSS pixel (0.13 mm), so that side runs to
+the column's ends, as in Ink/Stitch.
+
+The message gives the insets at each end. Lower `contour_underlay_inset_mm`, or turn the contour
+underlay off for so short a column.
+
 ## SC-W0207
 
 **Warning** — Satin rung crosses a rail more than once; left out
@@ -232,13 +244,13 @@ neighbour, or delete it if it is a stray.
 
 **Warning** — Stitch length below twice the shortest stitch; raised
 
-The running stitch length is shorter than twice the shortest stitch, so it was lengthened to
-twice the shortest stitch. Stitches are spread evenly between corners; at half the length or
-more, every stitch then stays at or above the shortest stitch, whatever the distance between
-corners.
+A running stitch's length, a stroke's or that of one of a satin column's underlays, is shorter than
+twice the shortest stitch, so it was lengthened to twice the shortest stitch. Stitches are spread
+evenly between corners; at half the length or more, every stitch then stays at or above the
+shortest stitch, whatever the distance between corners.
 
-The message gives both lengths. Use a longer stitch length, or a shorter minimum if your machine
-sews shorter stitches well.
+The message names the parameter and gives both lengths. Use a longer stitch length, or a shorter
+minimum if your machine sews shorter stitches well.
 
 ## SC-W0403
 

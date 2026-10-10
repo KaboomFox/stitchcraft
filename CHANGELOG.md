@@ -5,6 +5,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M4.6: underlays as Ink/Stitch sews them (`REQ-SAT-004`, `REQ-SAT-010` to `REQ-SAT-012`). Before its top
+  stitches, a satin column sews the underlays it turns on, all off by default. Straight stitches no
+  longer than the running stitch's length (`running_stitch_length_mm`) join them.
+  - The **centre walk** runs along the column at `center_walk_underlay_position`, there and back. An odd
+    number of repeats ends at the column's end, and the rest of the column is sewn from there.
+  - The **contour** runs along each rail, inset by `contour_underlay_inset_mm` and its percentage, and
+    stops short of the column's ends by the inset.
+  - The **zigzag** goes to the column's end and back, its insets half the contour's unless set: a new
+    kind of parameter, a pair that may be left empty.
+  - The centre walk keeps to its own tolerance (`DEV-SAT-004`). Ink/Stitch declares that setting but
+    reads the satin's running stitch tolerance in its place.
+  - Where the running stitch has several lengths, the stitches that join a satin's underlays take the
+    first (`DEV-SAT-005`).
+  - `SC-W0206` is a contour underlay too short for its insets, which keeps its length. `SC-W0402` names
+    the parameter whose length it raised.
 - M4.5: split stitches, as Ink/Stitch splits them (`REQ-SAT-003`). Where an element sets a longest stitch
   (`max_stitch_length_mm`), a longer satin stitch is split as `split_method` says.
   - **Default** splits it into the fewest equal parts no longer than the longest stitch, each split moved

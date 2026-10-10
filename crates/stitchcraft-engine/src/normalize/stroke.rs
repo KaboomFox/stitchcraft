@@ -13,6 +13,9 @@
 //! not move (a zero-length line, a curve whose points all coincide) are dropped first, so every corner
 //! is measured between two segments that have a direction. A subpath with nothing else is kept as a
 //! piece of a single point, so that a generator reports it instead of losing it without a word.
+//!
+//! A line a generator builds point by point, such as a satin column's underlay, is a polyline already:
+//! every join between its segments may be a corner, by the same 30°.
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
@@ -51,6 +54,22 @@ pub fn flatten(path: &Path, tolerance: f64, meter: &mut Meter) -> Result<StrokeP
         pieces.push(piece(subpath, tolerance, meter)?);
     }
     Ok(StrokePath { pieces })
+}
+
+/// The polyline `points` as a piece: without points that repeat the one before, and with a corner at each
+/// join that turns by more than 30°.
+pub(crate) fn polyline(points: &[Point]) -> Piece {
+    let mut kept = Vec::with_capacity(points.len());
+    for point in points {
+        push(&mut kept, *point);
+    }
+    let corners = kept
+        .windows(3)
+        .enumerate()
+        .filter(|(_, w)| matches!(w, [a, b, c] if turns(towards(*a, &[*b]), towards(*b, &[*c]))))
+        .map(|(i, _)| i + 1)
+        .collect();
+    Piece { points: kept, corners }
 }
 
 /// The line segments of the polyline `points`, each from a point to the next.
@@ -317,6 +336,19 @@ mod tests {
             cubic([p(0.0, 0.0), p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0)], tolerance, 2, &mut points, &mut meter).unwrap();
             assert_eq!(points.len(), 1 + 4, "{tolerance}");
         }
+    }
+
+    #[test]
+    fn a_polyline_drops_repeated_points_and_has_corners_where_it_turns_sharply() {
+        let points = [p(0.0, 0.0), p(5.0, 0.0), p(5.0, 0.0), p(10.0, 1.0), p(10.0, 6.0), p(10.0, 10.0)];
+        let piece = polyline(&points);
+        assert_eq!(piece.points, [p(0.0, 0.0), p(5.0, 0.0), p(10.0, 1.0), p(10.0, 6.0), p(10.0, 10.0)]);
+        // A turn of 11° at (5, 0), of 79° at (10, 1), and none at (10, 6).
+        assert_eq!(piece.corners, [2]);
+        // Straight on across the y axis, and a right angle away from the origin.
+        assert!(polyline(&[p(1.0, 0.0), p(-1.0, 0.0), p(-3.0, 0.0)]).corners.is_empty());
+        assert_eq!(polyline(&[p(10.0, 10.0), p(5.0, 10.0), p(5.0, 15.0)]).corners, [1]);
+        assert_eq!(polyline(&[p(1.0, 1.0), p(1.0, 1.0)]), Piece { points: vec![p(1.0, 1.0)], corners: vec![] });
     }
 
     #[test]

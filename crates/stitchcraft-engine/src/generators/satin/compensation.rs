@@ -17,6 +17,10 @@
 //! and plus `random_zigzag_spacing_percent` of it, and never below a hundredth of it. As in Ink/Stitch, the
 //! spacing is drawn at each section's start and after each stitch, and the widths with each stitch, so
 //! turning one kind of variation on leaves the other's draws as they were.
+//!
+//! **Underlays** place their pairs the same way, moved in by their insets as by negative pull
+//! compensation, and draw nothing at random, as in Ink/Stitch. Turning an underlay on leaves the top
+//! stitches' draws as they were.
 
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Exhausted, Meter, Point};
@@ -38,7 +42,8 @@ const SHORTEST_STEP: f64 = 0.01;
 
 /// What happens to each pair of needle points as it is placed, and to the steps between them, as a satin
 /// column's parameters say: the pairs widened by pull compensation, with a share drawn at random, and the
-/// steps drawn at random around the zigzag spacing.
+/// steps drawn at random around the zigzag spacing. An underlay's pairs are moved in by its insets, with
+/// nothing drawn.
 pub(crate) struct Processor<'r> {
     /// Pull compensation on each side, in millimetres.
     pull: [f64; 2],
@@ -49,8 +54,8 @@ pub(crate) struct Processor<'r> {
     range: [f64; 2],
     /// How far a step may be from the zigzag spacing at random, either way, as a fraction of it.
     jitter: f64,
-    /// The element's generator.
-    rng: &'r mut SplitMix64,
+    /// The element's generator; `None` for an underlay, which draws nothing.
+    rng: Option<&'r mut SplitMix64>,
 }
 
 impl<'r> Processor<'r> {
@@ -67,21 +72,34 @@ impl<'r> Processor<'r> {
             least: [pull_a - decrease_a, pull_b - decrease_b],
             range: [decrease_a + increase_a, decrease_b + increase_b],
             jitter: params.random_zigzag_spacing_percent / 100.0,
-            rng,
+            rng: Some(rng),
         }
+    }
+
+    /// The processor of an underlay inset by `mm` millimetres plus `share` of the width on each side, which
+    /// draws nothing: each step is the spacing, and each pair is moved in as negative pull compensation
+    /// moves it.
+    pub(crate) fn inset(mm: [f64; 2], share: [f64; 2]) -> Processor<'static> {
+        Processor { pull: mm.map(|mm| -mm), least: share.map(|share| -share), range: [0.0; 2], jitter: 0.0, rng: None }
     }
 
     /// The next step to a stitch, as a multiple of the zigzag spacing.
     pub(crate) fn step(&mut self) -> f64 {
-        (1.0 + (self.rng.next_f64() - 0.5) * 2.0 * self.jitter).max(SHORTEST_STEP)
+        let Some(rng) = self.rng.as_deref_mut() else { return 1.0 };
+        (1.0 + (rng.next_f64() - 0.5) * 2.0 * self.jitter).max(SHORTEST_STEP)
     }
 
     /// `pair` widened by pull compensation, with each side's random share drawn.
     pub(crate) fn widened(&mut self, pair: Pair) -> Pair {
         let ([least_a, least_b], [range_a, range_b]) = (self.least, self.range);
-        let share_a = least_a + self.rng.next_f64() * range_a;
-        let share_b = least_b + self.rng.next_f64() * range_b;
-        offset(pair, self.pull, [share_a, share_b])
+        let shares = match self.rng.as_deref_mut() {
+            Some(rng) => {
+                let share_a = least_a + rng.next_f64() * range_a;
+                [share_a, least_b + rng.next_f64() * range_b]
+            }
+            None => self.least,
+        };
+        offset(pair, self.pull, shares)
     }
 }
 
@@ -237,7 +255,7 @@ mod tests {
     #[test]
     fn random_steps_and_shares_fill_their_ranges() {
         let mut rng = SplitMix64::new(7);
-        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, -0.2], range: [0.2, 0.0], jitter: 0.25, rng: &mut rng };
+        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, -0.2], range: [0.2, 0.0], jitter: 0.25, rng: Some(&mut rng) };
         let (mut steps, mut sides) = (Vec::new(), Vec::new());
         for _ in 0..1000 {
             steps.push(processor.step());
@@ -253,9 +271,18 @@ mod tests {
         assert!((-3.0..-2.98).contains(&outmost) && (-1.02..=-1.0).contains(&inmost), "{outmost} {inmost}");
         // A step never gets shorter than a hundredth of the spacing.
         let mut rng = SplitMix64::new(7);
-        let mut wild = Processor { pull: [0.0, 0.0], least: [0.0, 0.0], range: [0.0, 0.0], jitter: 5.0, rng: &mut rng };
+        let mut wild = Processor { pull: [0.0, 0.0], least: [0.0, 0.0], range: [0.0, 0.0], jitter: 5.0, rng: Some(&mut rng) };
         let steps: Vec<f64> = (0..100).map(|_| wild.step()).collect();
         assert!(steps.iter().all(|step| *step >= SHORTEST_STEP) && steps.contains(&SHORTEST_STEP), "{steps:?}");
+    }
+
+    #[test]
+    fn an_underlay_s_pairs_move_in_by_its_insets_and_its_steps_are_the_spacing() {
+        let mut inset = Processor::inset([0.5, 1.0], [0.1, 0.0]);
+        assert_eq!((inset.step(), inset.step()), (1.0, 1.0));
+        // 0.5 mm plus a tenth of the 10 mm width in from the first end, and 1 mm from the second.
+        let [a, b] = inset.widened([p(0.0, 0.0), p(0.0, 10.0)]);
+        assert!(near(a, p(0.0, 1.5)) && near(b, p(0.0, 9.0)), "{a:?} {b:?}");
     }
 
     #[test]
@@ -264,7 +291,7 @@ mod tests {
         let mut rolls = SplitMix64::new(3);
         let (step_roll, roll_a, roll_b) = (rolls.next_f64(), rolls.next_f64(), rolls.next_f64());
         let mut rng = SplitMix64::new(3);
-        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, 0.2], range: [0.3, 0.4], jitter: 0.25, rng: &mut rng };
+        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, 0.2], range: [0.3, 0.4], jitter: 0.25, rng: Some(&mut rng) };
         assert_eq!(processor.step(), 1.0 + (step_roll - 0.5) * 2.0 * 0.25);
         let [a, b] = processor.widened([p(0.0, 0.0), p(0.0, 10.0)]);
         assert!((a.y() + 10.0 * (0.1 + roll_a * 0.3)).abs() < 1e-12, "{a:?}");

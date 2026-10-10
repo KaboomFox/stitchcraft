@@ -23,6 +23,6 @@ How it is built:
 
 > **Status:** StitchCraft sews the strokes of an SVG design and writes PES and DST files. A stroke is
 > sewn in running stitch or manual stitch, with bean stitch where it is set. Milestone M4 is under way:
-> the engine places and compensates a satin column's top stitches, and `stitch plan` sews the satins of
+> the engine sews a satin column's underlays and top stitches, and `stitch plan` sews the satins of
 > an SVG from M8, when it reads Ink/Stitch's settings. Fills come in M5. The
 > [roadmap](plan/roadmap.md) has every step.
