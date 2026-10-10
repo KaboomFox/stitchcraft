@@ -376,6 +376,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
+  found (`REQ-SAT-002`, `REQ-SAT-005`).
+  - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails
+    swapped, other nodes paired, and the stitches slanted to the wrong node. Each rail's nodes are turned
+    as the rail drawn in that place now, so a swap only changes which rail sews first.
+  - **Flattening.** A satin's curves were flattened within 0.01 mm, where Ink/Stitch flattens them within
+    a tenth of a CSS pixel (0.026 mm) by the same halving. The rails have Ink/Stitch's points now: on most
+    curves the points differ, by up to 0.02 mm, and a column drawn as one path gets its rungs at the same
+    points as there.
+  - **Rails of 2 nodes.** The rung added across a column of 2 curved rails without rungs cut each rail
+    where the point near its start lies along it. Now the rung is a tenth longer than the line between its
+    points, and each rail is cut where the rung comes nearest it, as in Ink/Stitch. The first stitches of
+    such a column move by up to about 0.25 mm, less and less along it.
 - The SVG reader reads files as Inkscape and Illustrator write them (`REQ-SVG-001`), which a review against
   Ink/Stitch found.
   - **Colours.** An ICC colour after the sRGB one (`#cd853f icc-color(…)`, from Inkscape's colour-managed
