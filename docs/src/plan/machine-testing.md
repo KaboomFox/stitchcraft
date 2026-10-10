@@ -3,14 +3,16 @@
 <!-- implements: crates/stitchcraft-engine/src/testsheets/**, apps/stitchcraft-cli/src/commands/testsheet.rs -->
 
 Automated tests prove the files are what we intend. Only a machine proves they sew well. This page is
-the protocol for **machine checkpoints** (MC-1 … MC-7) on the reference machine: a Brother home
-embroidery machine with a 200 × 200 mm (8 × 8 in) hoop, designs normally kept to about 150 mm (6 in).
+the protocol for **machine checkpoints** (MC-1 … MC-7) on the reference machine: a Brother PE800, whose
+5 × 7 in hoop sews at most 130 × 180 mm. Its 4 × 4 in and small hoops have profiles too, and the TS-10
+sheets test them ([ADR 0013](../design/adr/0013-brother-pe800-reference-machine.md)).
 
 ## Roles
 
-- **StitchCraft generates** each test sheet deterministically: `stitch testsheet TS-xx --profile
-  brother-200x200 -o TS-xx.pes` prints the file's SHA-256, its size and counts, the threads the machine
-  will ask for (with the Brother palette name it will show) and what to check after sewing. From M2.7 it
+- **StitchCraft generates** each test sheet deterministically: `stitch testsheet TS-xx -o TS-xx.pes`
+  checks it against the profile of the hoop it is for. It prints that profile, the file's SHA-256, its
+  size and counts, the threads in the order they are sewn (with the Brother palette name the machine
+  shows for each) and what to check after sewing. From M2.7 it
   also writes a picture of the expected result; until then, previews are drawn by the conformance tooling.
   `stitch testsheet --list` lists the sheets. The MC-1 sheets are drawn stitch by stitch, to test the
   machine and the file formats; from MC-2, sheets are drawn as designs and planned by the engine, so
@@ -31,7 +33,7 @@ Record anything that differs in the report.
 | Needle | 75/11 embroidery needle, fresh at each checkpoint |
 | Top thread | 40 wt polyester embroidery thread; colours as listed on the expected-result sheet (any brand) |
 | Bobbin | 60 wt (90 wt) bobbin thread, white |
-| Hoop | The 200 × 200 mm hoop, fabric drum-tight, design centred |
+| Hoop | The 5 × 7 in hoop, unless the sheet names another; fabric drum-tight, design centred |
 | Machine settings | Note the machine's speed and its own trim/jump settings (some Brother models trim automatically on long jumps) |
 
 ## Photographing and measuring
@@ -47,8 +49,8 @@ Record anything that differs in the report.
 | Sheet | What it checks | Measure / observe | First used |
 |---|---|---|---|
 | **TS-01** Orientation & scale | An asymmetric "F", a 100 mm cross with 10 mm ticks, 10 mm squares in the corners (120 × 120 mm) | F not mirrored or rotated; 100 mm line = 100.0 ± 0.5 mm in X and Y; squares square | MC-1 |
-| **TS-02** Commands | Three colour blocks; a stop; rows of two dashes separated by jumps of 2, 5, 15, 40 mm; trims encoded as trim-flagged jumps on the left half (red) and as plain jumps only on the right (blue) (140 × 70 mm) | The machine stops for colours and the stop; which jumps were trimmed on each half; any loose loops | MC-1, MC-2 |
-| **TS-02B** Commands, from elements | TS-02 drawn as a design and planned by the engine. Each red dash but the last sets a trim after it (`trim_after`). The blue ones set none, and the 2 mm gap between them is sewn across, because it is within the 3 mm collapse length. The green line stops halfway (`stop_after`). The stitching has a lock wherever it starts or ends (140 × 70 mm) | The same as TS-02, and whether the thread of each dash pulls out where it was cut | MC-2 |
+| **TS-02** Commands | 3 colour blocks, a stop, and rows of 2 dashes separated by jumps of 2, 5, 15 and 30 mm. Trims are encoded as trim-flagged jumps on the left half (red), and the right half (blue) has plain jumps only (120 × 70 mm) | The machine stops for colours and the stop; which jumps were trimmed on each half; any loose loops | MC-1, MC-2 |
+| **TS-02B** Commands, from elements | TS-02 drawn as a design and planned by the engine. Each red dash but the last sets a trim after it (`trim_after`). The blue ones set none, and the 2 mm gap between them is sewn across, because it is within the 3 mm collapse length. The green line stops halfway (`stop_after`). The stitching has a lock wherever it starts or ends (120 × 70 mm) | The same as TS-02, and whether the thread of each dash pulls out where it was cut | MC-2 |
 | **TS-03** Running stitch | Lines at 1.5, 2.0, 2.5, 3.0 and 4.0 mm stitch length, bean 1× and 2×, circles at tolerances of 0.1, 0.2 and 0.5 mm, and 20 stitches placed by hand at 0.3, 0.4, 0.5, 0.7 and 1.0 mm (60 × 78 mm) | Even stitches, smooth curves, solid bean lines, and the shortest hand-placed stitch that sews cleanly | MC-2 |
 | **TS-04** Lock stitches | Lines about 30 mm long with every lock shape but custom at both ends, trimmed after: the half stitch on first stitches of 1.5, 2.5 and 4 mm, back-and-forth at 0.5, 0.7 and 1.0 mm, drawn shapes at 70, 100 and 150 % (110 × 65 mm) | Pull each tail gently: does the lock stay, or does the thread pull out? Is the lock visible from the front? | MC-2 |
 | **TS-05** Satin width ladder | 3 rows at zigzag spacings of 0.3, 0.4 and 0.5 mm, each of 10 columns 20 mm tall and 1 to 10 mm wide, with no underlay (91 × 76 mm) | Coverage, fabric showing between stitches, edges straight, long stitches loose, how much narrower than drawn | MC-3 |
@@ -56,15 +58,15 @@ Record anything that differs in the report.
 | **TS-07** Registration | A 60 mm tatami circle with a running-stitch outline; at three pull-compensation values | Gap or overlap between fill and outline at 12 points around the circle | MC-4 |
 | **TS-08** Fill density & angle | 30 mm squares at spacing 0.25–0.6 mm and angles 0°, 45°, 90° | Coverage, stiffness, puckering, visible furrows | MC-4 |
 | **TS-09** Fill underlay & travel | A shape with holes and a separated part; with and without underlay | Travel hidden? Trims between parts? Holes clean? | MC-4 |
-| **TS-10A/B/C** Hoop size | Frames of 150 × 150 mm (A), 190 × 150 mm (B) and 150 × 190 mm (C), each with a centre cross and an "F" in the top-left corner | The machine accepts and shows each design; sews to size; landscape and portrait the right way round | MC-1, MC-5 |
+| **TS-10A/B/C** Hoop size | Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop's field, with a centre cross and an "F" in the top-left corner | The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop's field is the right way round | MC-1, MC-5 |
 | **TS-11** New stitch types | Samples of the milestone's new types | Per type, as listed on its expected-result sheet | MC-6 |
-| **TS-12** Real design | A 140 mm design authored in VectorCraft with fill, satin, running stitch and three colours | Overall quality; registration between colours; time vs. estimate | MC-5, MC-7 |
+| **TS-12** Real design | A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours | Overall quality, registration between colours, and time against the estimate | MC-5, MC-7 |
 
 ## Checkpoint calendar
 
 | Checkpoint | After | Sheets | Questions it must answer |
 |---|---|---|---|
-| MC-1 | M1 | TS-01, TS-02, TS-10A/B/C | Does the machine read our PES? Right size and orientation? Which trim encoding works? Are 150 and 190 mm designs accepted from PES v1? |
+| MC-1 | M1 | TS-01, TS-02, TS-10A/B/C | Does the machine read our PES? Right size and orientation? Which trim encoding works? Does each hoop take a design as large as its profile allows, from PES v1? |
 | MC-2 | M3 | TS-03, TS-04, TS-02B | Minimum stitch length and lock defaults? Does the machine trim where an element asks? |
 | MC-3 | M4 | TS-05, TS-06 | Satin spacing, width limits, underlay defaults, pull compensation |
 | MC-4 | M5 | TS-07, TS-08, TS-09 | Fill spacing, compensation, underlay and travel defaults |

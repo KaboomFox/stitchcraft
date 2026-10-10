@@ -70,6 +70,7 @@
     - [0010 Coded diagnostics](design/adr/0010-diagnostics-with-codes.md)
     - [0011 Movable into VectorCraft](design/adr/0011-movable-into-vectorcraft.md)
     - [0012 Read, never copy](design/adr/0012-read-dont-copy.md)
+    - [0013 Brother PE800](design/adr/0013-brother-pe800-reference-machine.md)
 
 # Plan
 

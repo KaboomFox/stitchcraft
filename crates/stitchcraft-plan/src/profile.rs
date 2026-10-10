@@ -91,9 +91,9 @@ impl PaletteId {
 /// The facts about one machine and hoop.
 #[derive(Clone, Debug, PartialEq)]
 pub struct MachineProfile {
-    /// Stable id used on the command line, such as `brother-200x200`.
+    /// Stable id used on the command line, such as `brother-pe800-5x7`.
     pub id: &'static str,
-    /// Human name, such as "Brother, 200 × 200 mm hoop".
+    /// Human name, such as "Brother PE800 with its 5 × 7 in hoop", which messages put after "the".
     pub name: &'static str,
     /// The sewing field of the hoop.
     pub hoop: Size,
@@ -154,7 +154,7 @@ impl MachineProfile {
         let (width, height) = (bounds.width(), bounds.height());
         let design = format!("The design is {width:.1} × {height:.1} mm");
         if !self.hoop.holds(width, height) {
-            let message = format!("{design}; the hoop of {} is {}.", self.name, describe(self.hoop));
+            let message = format!("{design}, but the {} sews at most {}.", self.name, describe(self.hoop));
             let fix = if self.hoop.rotated().holds(width, height) {
                 Fix::Apply(Edit::RotateDesign90)
             } else {
@@ -166,7 +166,7 @@ impl MachineProfile {
         if comfort.holds(width, height) {
             return None;
         }
-        let message = format!("{design}, larger than the {} comfort zone of {}.", describe(comfort), self.name);
+        let message = format!("{design}, larger than the {} comfort zone of the {}.", describe(comfort), self.name);
         let fix = if comfort.rotated().holds(width, height) {
             Fix::Apply(Edit::RotateDesign90)
         } else {
@@ -176,7 +176,7 @@ impl MachineProfile {
     }
 }
 
-/// `200 × 200 mm`.
+/// `130 × 180 mm`.
 fn describe(size: Size) -> String {
     format!("{} × {} mm", size.width.get(), size.height.get())
 }

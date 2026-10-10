@@ -4,9 +4,9 @@ id = "ts-02b"
 requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PRF-002", "REQ-FMT-001"]
 kind = "testsheet"
 sheet = "TS-02B"
-profile = "brother-200x200"
+profile = "brother-pe800-5x7"
 
 [expect]
-size_mm = [140.0, 70.0]
+size_mm = [120.0, 70.0]
 diagnostics = []
 golden = ["golden/testsheets/TS-02B.pes"]

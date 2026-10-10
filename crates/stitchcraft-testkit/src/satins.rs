@@ -10,7 +10,7 @@ use stitchcraft_engine::generators::running::RunningParams;
 use stitchcraft_engine::generators::satin::{SatinLengths, SatinParams, satin_stitch};
 use stitchcraft_engine::normalize::satin::{Shape, recognize};
 use stitchcraft_params::ParamSet;
-use stitchcraft_plan::profiles::BROTHER_200X200;
+use stitchcraft_plan::profiles::REFERENCE;
 
 use crate::designs::{p, polylines};
 
@@ -39,7 +39,7 @@ pub fn sewn_satin(path: &Path, params: &[(&str, &str)]) -> (Vec<Point>, Vec<Stri
 pub fn satin_lengths(set: &ParamSet) -> SatinLengths {
     let max_stitch = CommonParams::from_set(set).unwrap().params.max_stitch_length_mm;
     let travel = RunningParams::from_set(set).unwrap().params.running_stitch_length_mm[0];
-    SatinLengths { min_stitch: BROTHER_200X200.min_stitch, max_stitch, travel }
+    SatinLengths { min_stitch: REFERENCE.min_stitch, max_stitch, travel }
 }
 
 /// The needle points in pairs across the column: the first rail's, then the second's.

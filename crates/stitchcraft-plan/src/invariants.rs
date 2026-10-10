@@ -160,7 +160,7 @@ mod tests {
     use super::*;
     use crate::builder::PlanBuilder;
     use crate::plan::{Provenance, Role, Stitch};
-    use crate::profiles::BROTHER_200X200;
+    use crate::profiles::BROTHER_PE800_5X7 as PROFILE;
     use crate::thread::{Rgb, Thread};
 
     fn p(x: f64, y: f64) -> Point {
@@ -189,23 +189,24 @@ mod tests {
     }
 
     fn requirements(plan: &StitchPlan) -> Vec<&'static str> {
-        check(plan, &BROTHER_200X200).iter().map(|v| v.requirement).collect()
+        check(plan, &PROFILE).iter().map(|v| v.requirement).collect()
     }
 
     #[test]
     fn a_valid_plan_passes() {
-        assert_eq!(check(&valid().finish(), &BROTHER_200X200), Vec::new());
+        assert_eq!(check(&valid().finish(), &PROFILE), Vec::new());
     }
 
     #[test]
     fn req_plan_001_positions_outside_the_hoop() {
+        let (x, y) = (PROFILE.hoop.width.get() / 2.0, PROFILE.hoop.height.get() / 2.0);
         let mut b = valid();
-        b.jump(p(100.5, 0.0), top());
-        b.stitch(p(100.5, 1.0), top());
+        b.jump(p(x + 0.5, 0.0), top());
+        b.stitch(p(x + 0.5, 1.0), top());
         assert_eq!(requirements(&b.finish()), vec![req::INSIDE_HOOP, req::INSIDE_HOOP]);
         let mut edge = valid();
-        edge.jump(p(100.0, -100.0), top());
-        edge.stitch(p(100.0, -99.0), top());
+        edge.jump(p(x, -y), top());
+        edge.stitch(p(x, 1.0 - y), top());
         assert_eq!(requirements(&edge.finish()), Vec::<&str>::new(), "the hoop's edge is inside");
     }
 
@@ -213,7 +214,7 @@ mod tests {
     fn req_plan_002_stitch_lengths() {
         let mut long = valid();
         long.stitch(p(26.1, 10.0), top());
-        let report = check(&long.finish(), &BROTHER_200X200);
+        let report = check(&long.finish(), &PROFILE);
         assert_eq!(report.len(), 1);
         assert_eq!(report[0].to_string(), "REQ-PLAN-002 at block 1, entry 5: the stitch is 12.100 mm, longer than 12 mm");
 
@@ -241,10 +242,10 @@ mod tests {
     #[test]
     fn runs_restart_after_jumps_trims_and_thread_changes_but_not_stops() {
         let mut b = valid();
-        b.jump(p(60.0, 10.0), top());
-        b.stitch(p(70.0, 10.0), top()); // first stitch after a jump: no length rule
+        b.jump(p(20.0, 10.0), top());
+        b.stitch(p(35.0, 10.0), top()); // first stitch after a jump: no length rule
         b.trim(None);
-        b.stitch(p(90.0, 10.0), top()); // first stitch after a trim: no length rule
+        b.stitch(p(55.0, 10.0), top()); // first stitch after a trim: no length rule
         assert_eq!(requirements(&b.finish()), Vec::<&str>::new());
 
         let mut stop = valid();
@@ -258,7 +259,7 @@ mod tests {
         let mut b = valid();
         b.change_thread(Thread::new(Rgb::new(0, 0, 255)));
         b.jump(p(0.0, 0.0), top());
-        let report = check(&b.finish(), &BROTHER_200X200);
+        let report = check(&b.finish(), &PROFILE);
         assert_eq!(report.len(), 1);
         assert_eq!(report[0].to_string(), "REQ-PLAN-003 at block 2: the colour block sews no stitches");
 
@@ -299,14 +300,14 @@ mod tests {
         for i in 0..200 {
             b.stitch(p(150.0 + f64::from(i), 0.0), top());
         }
-        assert_eq!(check(&b.finish(), &BROTHER_200X200).len(), MAX_REPORTED);
+        assert_eq!(check(&b.finish(), &PROFILE).len(), MAX_REPORTED);
     }
 
     #[test]
     fn violations_become_internal_check_diagnostics() {
         let mut b = valid();
         b.stitch(p(14.0, 10.0), top());
-        let d = check(&b.finish(), &BROTHER_200X200)[0].diagnostic();
+        let d = check(&b.finish(), &PROFILE)[0].diagnostic();
         assert_eq!(d.code, Code::InternalCheckFailed);
         assert!(d.message.starts_with("The stitch plan breaks REQ-PLAN-005 at block 1, entry 5"));
     }

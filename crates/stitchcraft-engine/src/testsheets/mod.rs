@@ -2,9 +2,11 @@
 //!
 //! Each sheet answers specific questions about a machine — orientation, scale, which trim encoding it
 //! obeys, which hoop sizes it accepts, which stitch lengths and locks hold — and lists what to look at
-//! after sewing it. The command line writes them (`stitch testsheet TS-01 --profile brother-200x200 -o
-//! TS-01.pes`); the tests below check that every sheet is a valid plan for every built-in profile, so a
-//! sheet can never ask a machine to do something StitchCraft's own rules forbid.
+//! after sewing it. Each is for one hoop of the reference machine, its profile: the 5 × 7 in for most, and
+//! the others for the TS-10 sheets that test them. The command line writes them (`stitch testsheet TS-01
+//! -o TS-01.pes`, checked against the sheet's profile unless `--profile` names another). The tests below
+//! check that every sheet is a valid plan for its profile and fits its hoop, so a sheet can never ask a
+//! machine to do something StitchCraft's own rules forbid.
 //!
 //! The MC-1 sheets are drawn stitch by stitch (`sketch`), to test the machine and the file formats; from
 //! MC-2 they are drawn as designs and planned by the engine (`designed`), to test its stitches too. The MC-3
@@ -25,7 +27,8 @@ mod ts10;
 
 pub use sketch::{STITCH_LEN, SheetError};
 use stitchcraft_plan::palette::BROTHER_PEC;
-use stitchcraft_plan::{StitchPlan, Thread};
+use stitchcraft_plan::profiles::{BROTHER_PE800_4X4, BROTHER_PE800_SMALL, REFERENCE};
+use stitchcraft_plan::{MachineProfile, StitchPlan, Thread};
 
 /// Brother PEC indices of the threads the sheets use.
 const RED: u8 = 5;
@@ -48,6 +51,8 @@ pub struct TestSheet {
     pub title: &'static str,
     /// What to look at and measure after sewing it.
     pub checks: &'static [&'static str],
+    /// The profile of the hoop to sew it in.
+    pub profile: &'static MachineProfile,
     build: fn() -> Result<StitchPlan, SheetError>,
 }
 
@@ -69,6 +74,7 @@ pub static SHEETS: &[TestSheet] = &[
             "The corner squares measure 10.0 mm on every side.",
             "Ticks are 10 mm apart; the long ticks mark the ends and the centre.",
         ],
+        profile: REFERENCE,
         build: ts01::build,
     },
     TestSheet {
@@ -76,10 +82,11 @@ pub static SHEETS: &[TestSheet] = &[
         title: "Colour changes, a stop, jumps and trims",
         checks: &[
             "The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop).",
-            "Left half (red, trim-flagged jumps): for each row (gaps of 2, 5, 15, 40 mm, top to bottom), was the thread between the two dashes cut?",
+            "Left half (red, trim-flagged jumps): for each row (gaps of 2, 5, 15, 30 mm, top to bottom), was the thread between the two dashes cut?",
             "Right half (blue, plain jumps): the same question for each row, and for the jumps between rows.",
             "Any loose loops, knots or bird's nests on the back, and where.",
         ],
+        profile: REFERENCE,
         build: ts02::build,
     },
     TestSheet {
@@ -87,11 +94,12 @@ pub static SHEETS: &[TestSheet] = &[
         title: "TS-02 drawn as a design: trims elements ask for",
         checks: &[
             "The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop).",
-            "Left half (red; every dash but the last asks for a trim after it): for each row (gaps of 2, 5, 15, 40 mm, top to bottom), was the thread between the two dashes cut?",
+            "Left half (red; every dash but the last asks for a trim after it): for each row (gaps of 2, 5, 15, 30 mm, top to bottom), was the thread between the two dashes cut?",
             "Right half (blue; no trims): the 2 mm gap is sewn across. For the other rows, and between rows, was the jump thread cut?",
             "Where the thread was cut, the stitching ends and starts again with a small lock: pull each tail gently. Does the dash hold?",
             "Any loose loops, knots or bird's nests on the back, and where.",
         ],
+        profile: REFERENCE,
         build: ts02b::build,
     },
     TestSheet {
@@ -103,6 +111,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Circles (6 mm across; tolerance 0.1, 0.2 and 0.5 mm, left to right): round, with fewer and straighter stitches to the right.",
             "Short stitches placed by hand (bottom five; 0.3, 0.4, 0.5, 0.7 and 1.0 mm): which lines sew cleanly, with no thread breaks, knots or bunching on the back? The shortest clean one is the machine's shortest stitch.",
         ],
+        profile: REFERENCE,
         build: ts03::build,
     },
     TestSheet {
@@ -114,6 +123,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Which locks show from the front, and how much (1 hidden to 5 obvious)?",
             "Any thread breaks or knots at the locks, and where.",
         ],
+        profile: REFERENCE,
         build: ts04::build,
     },
     TestSheet {
@@ -126,6 +136,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Edges: straight and crisp, or wavy? From which width on do the long stitches lie loose or catch?",
             "Any puckering round the columns, thread breaks, or loops on the back, and where.",
         ],
+        profile: REFERENCE,
         build: ts05::build,
     },
     TestSheet {
@@ -138,31 +149,39 @@ pub static SHEETS: &[TestSheet] = &[
             "Does any underlay show past the top stitches, at the edges or at the ends?",
             "Measure each column across, halfway down, and note any puckering round it.",
         ],
+        profile: REFERENCE,
         build: ts06::build,
     },
     TestSheet {
         id: "TS-10A",
-        title: "Hoop size: 150 × 150 mm frame",
-        checks: &["The machine accepts the file and shows the design.", "The frame measures 150.0 × 150.0 mm (± 0.5 mm)."],
-        build: || ts10::build("ts10a", 150.0, 150.0),
+        title: "Hoop size: the 4 × 4 in hoop, a 100 × 100 mm frame",
+        checks: &[
+            "With the 4 × 4 in hoop on the machine: does the machine take the file and sew it, without asking for a larger hoop?",
+            "The frame measures 100.0 × 100.0 mm (± 0.5 mm), the F at the top left.",
+        ],
+        profile: &BROTHER_PE800_4X4,
+        build: || ts10::build("ts10a", &BROTHER_PE800_4X4),
     },
     TestSheet {
         id: "TS-10B",
-        title: "Hoop size: 190 × 150 mm frame",
+        title: "Hoop size: the 5 × 7 in hoop, a 130 × 180 mm frame",
         checks: &[
-            "The machine accepts the file and shows the design (StitchCraft warns that it is larger than the comfort zone — expected).",
-            "The frame measures 190.0 × 150.0 mm (± 0.5 mm), wide side left to right, the F at the top left.",
+            "With the 5 × 7 in hoop on the machine: does the machine take the file and sew it?",
+            "The frame measures 130.0 × 180.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.",
         ],
-        build: || ts10::build("ts10b", 190.0, 150.0),
+        profile: REFERENCE,
+        build: || ts10::build("ts10b", REFERENCE),
     },
     TestSheet {
         id: "TS-10C",
-        title: "Hoop size: 150 × 190 mm frame",
+        title: "Hoop size: the small hoop, a 20 × 60 mm frame",
         checks: &[
-            "The machine accepts the file and shows the design (StitchCraft warns that it is larger than the comfort zone — expected).",
-            "The frame measures 150.0 × 190.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.",
+            "With the small hoop on the machine: does the machine take the file and sew it, without asking for a larger hoop?",
+            "If it asks for a larger hoop, turn the design a quarter turn on the machine's screen. Does it take it then?",
+            "The frame measures 20.0 × 60.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.",
         ],
-        build: || ts10::build("ts10c", 150.0, 190.0),
+        profile: &BROTHER_PE800_SMALL,
+        build: || ts10::build("ts10c", &BROTHER_PE800_SMALL),
     },
 ];
 
@@ -174,18 +193,16 @@ pub fn find(id: &str) -> Option<&'static TestSheet> {
 #[cfg(test)]
 mod tests {
     use stitchcraft_plan::invariants::check;
-    use stitchcraft_plan::profiles::BUILTIN;
     use stitchcraft_plan::{Role, StitchKind};
 
     use super::*;
 
     #[test]
-    fn every_sheet_is_a_valid_plan_for_every_profile() {
+    fn every_sheet_is_a_valid_plan_for_its_profile_and_fits_its_hoop() {
         for sheet in SHEETS {
             let plan = sheet.plan().unwrap();
-            for profile in BUILTIN {
-                assert_eq!(check(&plan, profile), Vec::new(), "{} on {}", sheet.id, profile.id);
-            }
+            assert_eq!(check(&plan, sheet.profile), Vec::new(), "{} on {}", sheet.id, sheet.profile.id);
+            assert_eq!(plan.bounds().and_then(|b| sheet.profile.check_fit(b)), None, "{} on {}", sheet.id, sheet.profile.id);
             assert!(!sheet.checks.is_empty() && !sheet.title.is_empty());
         }
     }
@@ -197,11 +214,8 @@ mod tests {
             (b.width(), b.height(), b.center().x(), b.center().y())
         };
         assert_eq!(size("TS-01"), (120.0, 120.0, 0.0, 0.0));
-        assert_eq!(size("ts-10a"), (150.0, 150.0, 0.0, 0.0));
-        assert_eq!(size("TS-10B"), (190.0, 150.0, 0.0, 0.0));
-        assert_eq!(size("TS-10C"), (150.0, 190.0, 0.0, 0.0));
-        assert_eq!(size("TS-02"), (140.0, 70.0, 0.0, 0.0));
-        assert_eq!(size("TS-02B"), (140.0, 70.0, 0.0, 0.0));
+        assert_eq!(size("TS-02"), (120.0, 70.0, 0.0, 0.0));
+        assert_eq!(size("TS-02B"), (120.0, 70.0, 0.0, 0.0));
         assert_eq!(size("TS-03"), (60.0, 78.0, 0.0, 0.0));
         assert_eq!(size("TS-04"), (110.0, 64.525, 0.0, 0.0), "the zigzags at 150 % reach 0.525 mm across their line");
         // A satin's needle points lie on its rails to within rounding.
@@ -211,6 +225,18 @@ mod tests {
         };
         assert_eq!(about("TS-05"), [91.0, 76.0, 0.0, 0.0]);
         assert_eq!(about("TS-06"), [62.0, 30.0, 0.0, 0.0]);
+        // Each TS-10 frame is its hoop's whole field, as its title and checks say, and fits no smaller hoop.
+        let hoops = [("ts-10a", "4 × 4 in", &BROTHER_PE800_4X4), ("TS-10B", "5 × 7 in", REFERENCE), ("TS-10C", "small", &BROTHER_PE800_SMALL)];
+        for (id, hoop, profile) in hoops {
+            let (width, height) = (profile.hoop.width.get(), profile.hoop.height.get());
+            assert_eq!(size(id), (width, height, 0.0, 0.0), "{id}");
+            let sheet = find(id).unwrap();
+            assert_eq!(sheet.profile.id, profile.id, "{id}");
+            assert!(sheet.title.contains(&format!("the {hoop} hoop, a {width} × {height} mm frame")), "{id}: {}", sheet.title);
+            assert!(sheet.checks.iter().any(|c| c.contains(&format!("{width:.1} × {height:.1} mm"))), "{id}");
+        }
+        assert!(BROTHER_PE800_4X4.check_fit(find("TS-10B").unwrap().plan().unwrap().bounds().unwrap()).is_some());
+        assert!(BROTHER_PE800_SMALL.check_fit(find("TS-10A").unwrap().plan().unwrap().bounds().unwrap()).is_some());
     }
 
     /// Each block of `sheet`'s plan in words: `J` a jump, `T` a trim, `P` a stop, `l` a lock stitch and `s`
@@ -260,6 +286,15 @@ mod tests {
             assert!(green.windows(2).all(|w| w[0] <= w[1]), "{sheet}: {green:?}");
             let stop = plan.blocks[2].stitches.windows(2).find(|w| w[1].kind == StitchKind::Stop).map(|w| w[0].at.x());
             assert_eq!(stop, Some(0.0), "{sheet}");
+        }
+    }
+
+    #[test]
+    fn ts02_and_ts02b_checks_name_the_gaps_they_sew() {
+        let gaps = ts02::JUMPS.iter().map(ToString::to_string).collect::<Vec<_>>().join(", ");
+        for sheet in ["TS-02", "TS-02B"] {
+            let checks = find(sheet).unwrap().checks;
+            assert!(checks.iter().any(|c| c.contains(&format!("(gaps of {gaps} mm, top to bottom)"))), "{sheet}: {checks:?}");
         }
     }
 

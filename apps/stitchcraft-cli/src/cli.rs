@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use stitchcraft_plan::FormatId;
+use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_render::{Settings, Style};
 
 /// stitch — StitchCraft machine embroidery.
@@ -60,7 +61,7 @@ pub struct PlanArgs {
     #[arg(long, short)]
     pub output: PathBuf,
     /// The machine profile (see `stitch profiles`).
-    #[arg(long, short, default_value = "brother-200x200")]
+    #[arg(long, short, default_value = REFERENCE.id)]
     pub profile: String,
     /// The file format; by default the output file's extension decides.
     #[arg(long, value_enum)]
@@ -87,7 +88,7 @@ pub struct BugReportArgs {
     #[arg(long, short)]
     pub output: Option<PathBuf>,
     /// The machine profile (see `stitch profiles`).
-    #[arg(long, short, default_value = "brother-200x200")]
+    #[arg(long, short, default_value = REFERENCE.id)]
     pub profile: String,
     /// The file format; by default the profile's.
     #[arg(long, value_enum)]
@@ -106,8 +107,9 @@ pub struct TestsheetArgs {
     /// List the test sheets and exit.
     #[arg(long)]
     pub list: bool,
-    /// The machine profile, such as brother-200x200 (see `stitch profiles`).
-    #[arg(long, short, required_unless_present = "list")]
+    /// The machine profile to check the sheet against (see `stitch profiles`); by default the one for
+    /// the hoop the sheet is sewn in.
+    #[arg(long, short)]
     pub profile: Option<String>,
     /// The file to write.
     #[arg(long, short, required_unless_present = "list")]
@@ -122,7 +124,7 @@ pub struct TestsheetArgs {
 pub struct InspectArgs {
     /// The machine file.
     pub file: PathBuf,
-    /// Also check the design against a machine profile, such as brother-200x200 (see `stitch profiles`).
+    /// Also check the design against a machine profile (see `stitch profiles`).
     #[arg(long, short)]
     pub profile: Option<String>,
 }

@@ -236,7 +236,7 @@ fn off_centre(bounds: Rect, profile: &MachineProfile) -> Option<Diagnostic> {
         return None;
     }
     let message = format!(
-        "From its origin, which goes to the hoop's centre, the design reaches {sideways:.1} mm sideways and {upwards:.1} mm up or down; the hoop of {} reaches {} mm and {} mm.",
+        "From its origin, which goes to the hoop's centre, the design reaches {sideways:.1} mm sideways and {upwards:.1} mm up or down, but the {} reaches {} mm and {} mm.",
         profile.name,
         mm(half_width),
         mm(half_height)
@@ -259,7 +259,7 @@ fn stop_outside(plan: &StitchPlan, profile: &MachineProfile, meter: &mut Meter) 
     }
     Ok(outside.map(|at| {
         let message = format!(
-            "The stop position, where the frame goes before each stop, is {:.1} mm sideways and {:.1} mm up or down from the hoop's centre; the hoop of {} reaches {} mm and {} mm.",
+            "The stop position, where the frame goes before each stop, is {:.1} mm sideways and {:.1} mm up or down from the hoop's centre, but the {} reaches {} mm and {} mm.",
             at.x().abs(),
             at.y().abs(),
             profile.name,

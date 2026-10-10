@@ -10,10 +10,11 @@
 //!
 //! Machines sew from the PEC block and find it through the offset at byte 8. The PES section between is
 //! for design software (PE-Design); StitchCraft writes it without design-editor objects, a form other
-//! writers use too. Version 1 can only say "100 × 100" or "130 × 180" about the hoop; StitchCraft writes
-//! 1 for any design larger than 100 × 100 mm. Whether a Brother machine accepts larger designs from such a
-//! file is what test sheet TS-10 checks at machine checkpoint MC-1 (`docs/src/design/formats.md`); a PES
-//! v6 writer with explicit hoop dimensions follows only if it does not.
+//! writers use too. Version 1 can only say "100 × 100" or "130 × 180" about the hoop, the fields of the
+//! reference PE800's 4 × 4 in and 5 × 7 in hoops. StitchCraft writes 1 for any design larger than
+//! 100 × 100 mm. Test sheet TS-10 checks at machine checkpoint MC-1 that the machine takes a design filling
+//! each hoop from such a file (`docs/src/design/formats.md`). A PES v6 writer with explicit hoop dimensions
+//! follows only if it does not.
 
 mod pec;
 mod read;
