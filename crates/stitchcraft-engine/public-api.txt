@@ -209,6 +209,22 @@ pub const stitchcraft_engine::locks::SIZED_IN_PERCENT: &[&str]
 pub fn stitchcraft_engine::locks::tie_in(&[stitchcraft_core::units::Point], &stitchcraft_engine::common::CommonParams, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::locks::Lock, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::locks::tie_off(&[stitchcraft_core::units::Point], &stitchcraft_engine::common::CommonParams, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::locks::Lock, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::normalize
+pub mod stitchcraft_engine::normalize::region
+pub struct stitchcraft_engine::normalize::region::Built
+pub stitchcraft_engine::normalize::region::Built::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub stitchcraft_engine::normalize::region::Built::region: stitchcraft_engine::normalize::region::Region
+pub struct stitchcraft_engine::normalize::region::Polygon
+pub stitchcraft_engine::normalize::region::Polygon::holes: alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>
+pub stitchcraft_engine::normalize::region::Polygon::outline: alloc::vec::Vec<stitchcraft_core::units::Point>
+impl stitchcraft_engine::normalize::region::Polygon
+pub fn stitchcraft_engine::normalize::region::Polygon::area(&self) -> f64
+pub struct stitchcraft_engine::normalize::region::Region
+pub stitchcraft_engine::normalize::region::Region::parts: alloc::vec::Vec<stitchcraft_engine::normalize::region::Polygon>
+impl stitchcraft_engine::normalize::region::Region
+pub fn stitchcraft_engine::normalize::region::Region::area(&self) -> f64
+pub const stitchcraft_engine::normalize::region::SMALL_FILL: f64
+pub const stitchcraft_engine::normalize::region::TINY_PART: f64
+pub fn stitchcraft_engine::normalize::region::build(&stitchcraft_engine::design::Path, stitchcraft_engine::design::FillRule, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::normalize::region::Built, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::normalize::satin
 pub enum stitchcraft_engine::normalize::satin::Pairing
 pub stitchcraft_engine::normalize::satin::Pairing::Nodes([alloc::vec::Vec<stitchcraft_core::units::Point>; 2])

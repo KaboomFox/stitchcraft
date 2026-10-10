@@ -15,17 +15,18 @@ Design ──▶ 1 normalize ──▶ 2 validate ──▶ 3 generate (per elem
 
 Per element, independent of the others:
 
-- **Flatten curves** with the element's tolerance (default 0.1 mm for fills, a tenth of
-  `running_stitch_tolerance_mm` for strokes). Strokes are halved (de Casteljau) until each piece's
+- **Flatten curves** with the element's tolerance (a tenth of a CSS pixel for fills, as Ink/Stitch
+  flattens them, and a tenth of `running_stitch_tolerance_mm` for strokes). Strokes are halved (de Casteljau) until each piece's
   control points lie within the tolerance of its chord (`stitchcraft_engine::normalize::stroke`), using
   only arithmetic and square roots so that every platform gets the same points. `kurbo`'s adaptive
   flattening is not used for this: in 0.13 it calls `powf` (`CubicBez::to_quads`) and `hypot`
   (`QuadBez::estimate_subdiv`) from the platform's maths library, whose last bits differ between
   systems ([determinism](determinism.md)). Corners, joins between segments that turn by more than 30°,
   are marked so running stitches land exactly on them; a curve's own bend is never a corner.
-- **Regions:** resolve the fill rule into valid polygons with holes (`i_overlay`), snap to a 1 µm grid
-  first so near-coincident vertices become coincident, drop rings under the minimum area (`SC-W0303`),
-  orient rings explicitly.
+- **Regions:** a fill's subpaths are cut wherever they meet, and its fill rule says which faces between
+  them are filled. The edges between filled and empty faces become outlines and holes, each turned one
+  way, and parts too small to sew are left out with `SC-W0303`
+  ([fills › Region](algorithms/fills.md#region), `stitchcraft_engine::normalize::region`).
 - **Satins:** classify subpaths into rails and rungs ([satin](algorithms/satin.md#recognizing-rails-and-rungs)), or make
   them from a column's centre line ([single-path satin](algorithms/satin.md#single-path-satin)).
 - **Strokes:** each subpath becomes its own path piece, in document order.
@@ -59,8 +60,10 @@ that join its underlays are no longer than the first value. For any other stroke
 `manual_stitch` are sewn from M3. A satin column drawn as one path no wider than the design's
 `min_satin_stroke_width` is sewn as a stroke, with `SC-W0212`, as in Ink/Stitch (`REQ-SAT-015`). A wider
 one is sewn between rails made from its line from M4.9 (`REQ-SAT-016`). The other stroke and satin
-methods, and fills, are skipped with `SC-W0011` until their milestones. An element whose parameters are
-wrong (`SC-E0101`) is skipped too, and the rest of the design still plans.
+methods, and fills, are skipped with `SC-W0011` until their milestones. A fill's region is built
+already, so what it leaves out and how it will be sewn are said (`SC-W0303`, `SC-W0304`, `SC-I0306`,
+`SC-W0307`). An element whose parameters are wrong (`SC-E0101`) is skipped too, and the rest of the
+design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
 `min_stitch`) and the element's `min_stitch_length_mm`, or the design's shortest stitch when the element

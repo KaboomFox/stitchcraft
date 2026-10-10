@@ -3,7 +3,7 @@
 # documented deviation is reported as such instead of as a failure.
 #
 # [[deviation]]
-# id = "DEV-FILL-001"
+# id = "DEV-FILL-TAT-001"
 # area = "fill/tatami"
 # summary = "Pull compensation extends rows at their ends instead of buffering the whole shape."
 # reason = "Preserves holes and gaps the designer left on purpose."
@@ -106,6 +106,20 @@ area = "satin"
 summary = "A satin column drawn as one path keeps the 2 rails made from its line as its rails, and each rung made pairs the points where it crosses them. Where 2 parts of the line join, the rung pairs the first points of the second part's rails. Ink/Stitch hands the rails and rungs back to its satin column as subpaths, which tells rails from rungs again by where they meet and how long they are, and adds a rung across the gap where parts join, 1.2 times as long, pairing where it crosses the rails. With 2 rungs or more on a column shorter than its rungs, it takes 2 rungs as the rails, and a line that crosses itself can make a rung meet more lines than a rail does. Ink/Stitch also keeps the first part of a line cut in half when its offset vanishes to one side, with the rail it has, where StitchCraft leaves that part out with SC-W0213, as it leaves out later ones."
 reason = "The rails made are known, so they need no guessing, and a column is never sewn between a rail and a rung. Where 2 parts meet on a straight stretch, the gap rung crosses the rails at those first points, and both sew alike. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_column.py, lib/elements/utils/stroke_to_satin.py). The case req_sat_017_the_rails_made_stay_the_rails (crates/stitchcraft-engine/tests/satin_centre_line.rs) draws the lines Ink/Stitch would make for a dash 3.3 mm long and 5 mm wide, and its rule for drawn columns takes the 2 rungs as the rails."
 requirements = ["REQ-SAT-016", "REQ-SAT-017"]
+
+[[deviation]]
+id = "DEV-FILL-001"
+area = "fill"
+summary = "A fill's region follows its fill rule. Ink/Stitch takes the subpath of the largest area as the outline and every other subpath as a hole, whatever the fill rule, and repairs a shape that is not valid by the even-odd rule. Where the nonzero rule fills a part that the subpaths wind round twice the same way, such as a ring drawn inside another the same way round, or the overlap of 2 shapes drawn the same way round, StitchCraft fills it (SC-I0306) and Ink/Stitch leaves it empty."
+reason = "A fill sews the area the drawing shows, as an SVG renderer paints it (REQ-FILL-001). The information names each fill that differs, and its fill rule set to even-odd makes it sew alike in both. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/fill_stitch.py)."
+requirements = ["REQ-FILL-001"]
+
+[[deviation]]
+id = "DEV-FILL-002"
+area = "fill"
+summary = "A subpath of fewer than 3 distinct points bounds nothing and is left out of the fill's region. Ink/Stitch makes a subpath of fewer than 3 points, as it flattens them, a triangle with 2 sides of 1 CSS pixel at its first point, which cuts a hole that small where it lies inside the fill."
+reason = "A fill sews the area the drawing shows (REQ-FILL-001), and an SVG renderer paints nothing for such a subpath. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/fill_stitch.py)."
+requirements = ["REQ-FILL-001"]
 
 [[deviation]]
 id = "DEV-SVG-001"
