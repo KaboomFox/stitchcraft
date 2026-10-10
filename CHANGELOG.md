@@ -16,6 +16,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - **Pairs** of needle points go across the column, `zigzag_spacing_mm` apart (0.4 mm by default),
     measured across the column at its outside edge.
   - `satin_method` picks the satin stitch. E, S and zigzag stitches are skipped with `SC-W0011` until M7.
+  - An SVG's satin columns are sewn once `stitch plan` reads Ink/Stitch's settings, in M8. Until then, a
+    satin is sewn where a caller of the engine sets `satin_column`.
 - M4.1: satin columns are recognized. A stroke whose `satin_column` setting is on is a satin column, and
   its path is read as its rails and rungs, as Ink/Stitch reads it (`REQ-SAT-005`). Satin columns are
   skipped with `SC-W0011` until M4.2 sews them, and what recognition finds is reported now.
