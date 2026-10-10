@@ -10,7 +10,7 @@
 #![allow(clippy::unwrap_used, clippy::panic)]
 
 use stitchcraft_core::Point;
-use stitchcraft_testkit::designs::{RED, along, messages, p, planned, shape_of};
+use stitchcraft_testkit::designs::{RED, along, messages, p, planned, polylines, shape_of};
 use stitchcraft_testkit::satins::{ladder, quarter_ring, sewn_satin};
 
 /// The column 10 mm long and 6 mm wide, sewn with `params`, and its warnings.
@@ -186,6 +186,25 @@ fn req_sat_010_on_a_curve_the_centre_walk_keeps_within_its_tolerance() {
 }
 
 #[test]
+fn req_sat_010_a_walk_s_length_below_twice_the_shortest_stitch_is_raised_once() {
+    let short = [
+        ("center_walk_underlay", "true"),
+        ("center_walk_underlay_stitch_length_mm", "0.5"),
+        ("contour_underlay", "true"),
+        ("contour_underlay_stitch_length_mm", "0.4"),
+    ];
+    let (sewn, warnings) = column(&short);
+    let raised = |key: &str, length: &str| {
+        format!("warning SC-W0402: The stitch length {length} mm (`{key}`) is shorter than twice the shortest stitch (0.3 mm), so 0.6 mm is used.")
+    };
+    let want = [raised("center_walk_underlay_stitch_length_mm", "0.5"), raised("contour_underlay_stitch_length_mm", "0.4")];
+    assert_eq!(warnings, want, "once for each walk, though the contour has 2 sides");
+    // 10 mm in 17 stitches of 0.59 mm, the fewest no longer than 0.6 mm, there and back.
+    let walk: Vec<Point> = sewn.iter().copied().take_while(|q| (q.y() - 3.0).abs() < 1e-9).collect();
+    assert_eq!(walk.len(), 2 * 17 + 1, "{walk:?}");
+}
+
+#[test]
 fn req_sat_011_the_contour_runs_along_each_rail_inset_and_stops_short_of_the_column_s_ends() {
     let under = underlays(&[("contour_underlay", "true")], false);
     assert!(same(&under, &[contour(), travel((0.4, 5.6), (0.0, 0.0), 3)].concat()), "{under:?}");
@@ -225,6 +244,10 @@ fn diag_sc_w0206_a_contour_side_too_short_to_stop_short_of_both_ends_keeps_its_l
     // 0.3 mm leaves 0.32 mm.
     let (sewn, warnings) = short("0.3");
     assert!(same(&sewn[..2], &[(0.3, 0.3), (0.62, 0.3)]) && warnings.is_empty(), "{sewn:?} {warnings:?}");
+    // One side too short is enough: here the first rail is 0.7 mm long and the second 3 mm.
+    let lopsided = polylines(&[&[(0.0, 0.0), (0.7, 0.0)], &[(0.0, 6.0), (3.0, 6.0)]]);
+    let (_, warnings) = sewn_satin(&lopsided, &[("contour_underlay", "true")]);
+    assert_eq!(warnings.len(), 1, "{warnings:?}");
 }
 
 #[test]

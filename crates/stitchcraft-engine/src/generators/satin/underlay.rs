@@ -17,9 +17,9 @@
 //!   short for that keeps its length (`SC-W0206`). The first rail's side goes towards the end, and the
 //!   second's back.
 //! - The **zigzag** places pairs every half `zigzag_underlay_spacing_mm`, inset by its own insets, which are
-//!   half the contour's when left empty. It zigzags to the column's end through one end of each pair, on
-//!   either rail in turn, and back through the other ends, so each rail's points are the spacing apart
-//!   each way. A stitch longer than `zigzag_underlay_max_stitch_length_mm` is split into equal parts.
+//!   half the contour's when left empty. It zigzags to the column's end through one end of each pair, the
+//!   rails taking turns, and back through the other ends. Each way, a rail's points lie the spacing apart.
+//!   A stitch longer than `zigzag_underlay_max_stitch_length_mm` is split into equal parts.
 //!
 //! A centre walk with an odd number of repeats ends at the column's end, and the contour, the zigzag and
 //! the top stitches then run from the end to the start. The needle goes straight from each part to the
@@ -29,7 +29,7 @@ use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point};
 
 use crate::generators::mm;
 use crate::generators::passes;
-use crate::generators::running::along_line;
+use crate::generators::running::{along_line, raised};
 use crate::generators::satin::SatinParams;
 use crate::generators::satin::column::Section;
 use crate::generators::satin::compensation::{Processor, pushed};
@@ -89,8 +89,8 @@ fn centre_walk(
     let (position, tolerance) = (params.center_walk_underlay_position / 100.0, params.center_walk_underlay_stitch_tolerance_mm.get());
     let placed = pairs(sections, tolerance, &mut Processor::inset([0.0; 2], [position, 1.0 - position]), meter)?;
     let line: Vec<Point> = placed.iter().map(|[a, _]| *a).collect();
-    let length = params.center_walk_underlay_stitch_length_mm;
-    let walk = along_line(&line, "center_walk_underlay_stitch_length_mm", length, tolerance, min_stitch, warnings, meter)?;
+    let length = raised("center_walk_underlay_stitch_length_mm", params.center_walk_underlay_stitch_length_mm, min_stitch, warnings);
+    let walk = along_line(&line, length, tolerance, min_stitch, meter)?;
     passes::sew(&walk, params.center_walk_underlay_repeats, &[], meter)
 }
 
@@ -106,11 +106,10 @@ fn contour(
     let share = params.contour_underlay_inset_percent.map(|percent| percent / 100.0);
     let tolerance = params.contour_underlay_stitch_tolerance_mm.get();
     let placed = pairs(sections, tolerance, &mut Processor::inset(inset, share), meter)?;
+    let length = raised("contour_underlay_stitch_length_mm", params.contour_underlay_stitch_length_mm, min_stitch, warnings);
     let mut side = |pick: fn(&Pair) -> Point| -> Result<(Vec<Point>, bool), Exhausted> {
         let line: Vec<Point> = placed.iter().map(pick).collect();
-        let length = params.contour_underlay_stitch_length_mm;
-        let run = along_line(&line, "contour_underlay_stitch_length_mm", length, tolerance, min_stitch, warnings, meter)?;
-        pushed(&run, inset, meter)
+        pushed(&along_line(&line, length, tolerance, min_stitch, meter)?, inset, meter)
     };
     let ((mut first, kept_first), (mut second, kept_second)) = (side(|[a, _]| *a)?, side(|[_, b]| *b)?);
     if kept_first || kept_second {
@@ -135,7 +134,7 @@ fn too_short([start, end]: [f64; 2]) -> Diagnostic {
     Diagnostic::new(Code::SatinContourTooShort, message).with_fix(Fix::Hint("Lower `contour_underlay_inset_mm`.".to_string()))
 }
 
-/// The zigzag's 2 ways: through one end of each pair, on either rail in turn, and back through the others.
+/// The zigzag's 2 ways: through one end of each pair, the rails taking turns, and back through the others.
 fn zigzag(sections: &[Section], params: &SatinParams, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
     let inset = params.zigzag_underlay_inset_mm.map_or(params.contour_underlay_inset_mm.map(|mm| mm.get() / 2.0), |pair| pair.map(Mm::get));
     let percent = params.zigzag_underlay_inset_percent.unwrap_or(params.contour_underlay_inset_percent.map(|percent| percent / 2.0));

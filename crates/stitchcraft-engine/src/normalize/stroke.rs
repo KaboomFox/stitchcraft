@@ -63,11 +63,10 @@ pub(crate) fn polyline(points: &[Point]) -> Piece {
     for point in points {
         push(&mut kept, *point);
     }
-    let direction = |a: Point, b: Point| (b.x() - a.x(), b.y() - a.y());
     let corners = kept
         .windows(3)
         .enumerate()
-        .filter(|(_, w)| matches!(w, [a, b, c] if turns(direction(*a, *b), direction(*b, *c))))
+        .filter(|(_, w)| matches!(w, [a, b, c] if turns(towards(*a, &[*b]), towards(*b, &[*c]))))
         .map(|(i, _)| i + 1)
         .collect();
     Piece { points: kept, corners }
@@ -346,6 +345,9 @@ mod tests {
         assert_eq!(piece.points, [p(0.0, 0.0), p(5.0, 0.0), p(10.0, 1.0), p(10.0, 6.0), p(10.0, 10.0)]);
         // A turn of 11° at (5, 0), of 79° at (10, 1), and none at (10, 6).
         assert_eq!(piece.corners, [2]);
+        // Straight on across the y axis, and a right angle away from the origin.
+        assert!(polyline(&[p(1.0, 0.0), p(-1.0, 0.0), p(-3.0, 0.0)]).corners.is_empty());
+        assert_eq!(polyline(&[p(10.0, 10.0), p(5.0, 10.0), p(5.0, 15.0)]).corners, [1]);
         assert_eq!(polyline(&[p(1.0, 1.0), p(1.0, 1.0)]), Piece { points: vec![p(1.0, 1.0)], corners: vec![] });
     }
 
