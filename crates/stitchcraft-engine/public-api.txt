@@ -201,6 +201,7 @@ pub stitchcraft_engine::testsheets::SheetError::UnknownThread(u8)
 pub struct stitchcraft_engine::testsheets::TestSheet
 pub stitchcraft_engine::testsheets::TestSheet::checks: &'static [&'static str]
 pub stitchcraft_engine::testsheets::TestSheet::id: &'static str
+pub stitchcraft_engine::testsheets::TestSheet::profile: &'static stitchcraft_plan::profile::MachineProfile
 pub stitchcraft_engine::testsheets::TestSheet::title: &'static str
 impl stitchcraft_engine::testsheets::TestSheet
 pub fn stitchcraft_engine::testsheets::TestSheet::plan(&self) -> core::result::Result<stitchcraft_plan::plan::StitchPlan, stitchcraft_engine::testsheets::SheetError>

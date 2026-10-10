@@ -22,7 +22,7 @@ use stitchcraft_core::Budget;
 use stitchcraft_engine::design::{Design, Element};
 use stitchcraft_engine::testsheets;
 use stitchcraft_plan::StitchPlan;
-use stitchcraft_plan::profiles::BROTHER_200X200;
+use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_render::{Settings, Style};
 
 use crate::util::{self, Findings};
@@ -196,7 +196,7 @@ fn designs(root: &Path, fixture: &str, shot: &Shot) -> Result<Vec<StitchPlan>, S
                 })
                 .collect();
             let design = Design::new(elements, svg.design.settings).map_err(|d| format!("{fixture}: {d}"))?;
-            let outcome = stitchcraft_engine::plan(&design, &BROTHER_200X200, &Budget::DEFAULT);
+            let outcome = stitchcraft_engine::plan(&design, REFERENCE, &Budget::DEFAULT);
             let said: Vec<String> = svg
                 .warnings
                 .iter()

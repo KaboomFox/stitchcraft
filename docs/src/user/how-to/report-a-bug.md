@@ -12,7 +12,7 @@ bundle**. Write one when:
 Run `stitch bug-report` with the design, and the profile and format you sew with:
 
 ```sh
-stitch bug-report design.svg --profile brother-200x200 --says "the zigzag's corners are rounded"
+stitch bug-report design.svg --profile brother-pe800-4x4 --says "the zigzag's corners are rounded"
 ```
 
 It plans the design exactly as `stitch plan` does and writes `design.bug-report.json` next to it (`-o`

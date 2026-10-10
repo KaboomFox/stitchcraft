@@ -91,7 +91,7 @@ running stitch and emits `SC-W0305` — the user decides whether that is accepta
 | `REQ-FILL-TAT-006` | Pull compensation preserves the number of holes and components |
 | `REQ-FILL-TAT-007` | All rows, including gap-fill rows, lie inside the region (± tolerance + compensation) |
 | `REQ-FILL-TAT-008` | Disconnected regions yield trims and `SC-W0307`, never long straight stitches |
-| `REQ-FILL-TAT-009` | A 150 × 150 mm square at 0.4 mm plans within the NFR-PERF-1 budget |
+| `REQ-FILL-TAT-009` | A 130 × 180 mm rectangle at 0.4 mm, the reference hoop's whole field, plans within the NFR-PERF-1 budget |
 
 Machine checkpoint MC-4 sews a density ladder, an angle set and a fill-with-outline registration test
 to tune pull compensation ([machine testing](../../plan/machine-testing.md)).

@@ -12,12 +12,13 @@ supersedes the old one.
 | [0004](0004-determinism.md) | Determinism by construction | Accepted |
 | [0005](0005-geometry-stack.md) | Geometry stack | Proposed (spike M0.7) |
 | [0006](0006-docs-mdbook-diataxis.md) | mdBook, Diátaxis, generated reference, CI-regenerated images | Accepted |
-| [0007](0007-pes-first-brother-profile.md) | PES v1 first, for the Brother 200 × 200 mm machine | Accepted |
+| [0007](0007-pes-first-brother-profile.md) | PES v1 first, for the Brother 200 × 200 mm machine | Accepted (decisions 2 and 3 replaced by 0013) |
 | [0008](0008-conformance-first.md) | Conformance-first development | Accepted |
 | [0009](0009-adopt-vectorcraft-conventions.md) | Adopt VectorCraft's conventions; improve the ones that drift | Accepted |
 | [0010](0010-diagnostics-with-codes.md) | Coded diagnostics with explanation pages | Accepted |
 | [0011](0011-movable-into-vectorcraft.md) | StitchCraft can move into VectorCraft's repository | Accepted |
 | [0012](0012-read-dont-copy.md) | Read Ink/Stitch's source, never copy it | Accepted |
+| [0013](0013-brother-pe800-reference-machine.md) | The reference machine is a Brother PE800, with a profile for each of its hoops | Accepted |
 
 `cargo xtask docs --check` fails if an ADR file is missing from this table or its status here differs
 from the file's status line.

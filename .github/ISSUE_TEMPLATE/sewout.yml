@@ -26,7 +26,7 @@ body:
     id: machine
     attributes:
       label: Machine model, firmware and hoop
-      placeholder: "Brother …, 200 × 200 mm hoop"
+      placeholder: "Brother PE800, firmware …, 5 × 7 in hoop"
     validations:
       required: true
   - type: dropdown

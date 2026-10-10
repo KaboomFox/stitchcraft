@@ -11,13 +11,13 @@
 #![allow(clippy::unwrap_used)]
 
 use proptest::prelude::*;
-use stitchcraft_core::{Budget, Code, Mm, Point};
+use stitchcraft_core::{Budget, Code, Mm, Point, Size};
 use stitchcraft_engine::design::{Design, DesignSettings};
 use stitchcraft_engine::finalize::finalize;
 use stitchcraft_engine::plan;
 use stitchcraft_plan::invariants;
-use stitchcraft_plan::profiles::BROTHER_200X200;
-use stitchcraft_plan::{PlanBuilder, Provenance, Rgb, Role, StitchKind, Thread};
+use stitchcraft_plan::profiles::REFERENCE;
+use stitchcraft_plan::{MachineProfile, PlanBuilder, Provenance, Rgb, Role, StitchKind, Thread};
 use stitchcraft_testkit::designs::{BLUE, RED, line, messages, p, planned, planned_with, shape_of};
 
 /// Two 10 mm lines in one thread, the second starting `gap` mm after the first ends.
@@ -56,7 +56,7 @@ fn fitted(points: &[(f64, Role)]) -> (Option<Vec<(f64, Role)>>, Vec<String>) {
     for &(x, role) in points {
         b.stitch(at(x), Provenance::plan(role));
     }
-    let out = finalize(b.finish(), &BROTHER_200X200, &DesignSettings::default(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+    let out = finalize(b.finish(), REFERENCE, &DesignSettings::default(), &[], &mut Budget::DEFAULT.meter()).unwrap();
     let kept = out.plan.map(|plan| plan.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| (s.at.x(), s.origin.role)).collect());
     (kept, out.diagnostics.iter().map(ToString::to_string).collect())
 }
@@ -159,39 +159,30 @@ fn diag_sc_i0703_split_stitches_are_counted() {
 
 #[test]
 fn req_fin_002_designs_the_machine_cannot_take_give_no_plan() {
-    // Wider than the hoop.
-    let wide = planned_with(vec![line("a", (0.0, 0.0), 210.0, &RED, &[])], DesignSettings::default());
+    // Wider than the hoop, either way round.
+    let wide = planned_with(vec![line("a", (0.0, 0.0), 190.0, &RED, &[])], DesignSettings::default());
     assert_eq!(wide.plan, None);
     assert_eq!(
         messages(&wide),
-        ["error SC-E0701: The design is 210.0 × 0.0 mm; the hoop of Brother, 200 × 200 mm hoop is 200 × 200 mm."],
+        ["error SC-E0701: The design is 190.0 × 0.0 mm, but the Brother PE800 with its 5 × 7 in hoop sews at most 130 × 180 mm."],
         "the size, not the reach"
     );
     // Small enough, but reaching past the edge from where its origin puts it.
     let aside =
-        planned_with(vec![line("a", (0.0, 0.0), 120.0, &RED, &[])], DesignSettings { origin: Some(p(0.0, 0.0)), ..DesignSettings::default() });
+        planned_with(vec![line("a", (0.0, 0.0), 100.0, &RED, &[])], DesignSettings { origin: Some(p(0.0, 0.0)), ..DesignSettings::default() });
     assert_eq!(aside.plan, None);
     assert_eq!(
         messages(&aside),
         [
-            "error SC-E0701: From its origin, which goes to the hoop's centre, the design reaches 120.0 mm sideways and 0.0 mm up or down; the hoop of Brother, 200 × 200 mm hoop reaches 100 mm and 100 mm."
-        ]
-    );
-    // Larger than the comfort zone and reaching past the edge from its origin: the reach is what stops it.
-    let both = planned_with(vec![line("a", (0.0, 0.0), 160.0, &RED, &[])], DesignSettings { origin: Some(p(0.0, 0.0)), ..DesignSettings::default() });
-    assert_eq!(both.plan, None);
-    assert_eq!(
-        messages(&both),
-        [
-            "error SC-E0701: From its origin, which goes to the hoop's centre, the design reaches 160.0 mm sideways and 0.0 mm up or down; the hoop of Brother, 200 × 200 mm hoop reaches 100 mm and 100 mm."
+            "error SC-E0701: From its origin, which goes to the hoop's centre, the design reaches 100.0 mm sideways and 0.0 mm up or down, but the Brother PE800 with its 5 × 7 in hoop reaches 65 mm and 90 mm."
         ]
     );
     // A stop position past the edge: named as such, with the design inside the hoop.
     let stop = [("stop_after", "true")];
     for (wide, settings) in [
-        (160.0, DesignSettings { stop_position: Some(p(80.0, 120.0)), ..DesignSettings::default() }),
-        (10.0, DesignSettings { stop_position: Some(p(0.0, 150.0)), ..DesignSettings::default() }),
-        (10.0, DesignSettings { stop_position: Some(p(150.0, 0.0)), ..DesignSettings::default() }),
+        (120.0, DesignSettings { stop_position: Some(p(60.0, 100.0)), ..DesignSettings::default() }),
+        (10.0, DesignSettings { stop_position: Some(p(0.0, 100.0)), ..DesignSettings::default() }),
+        (10.0, DesignSettings { stop_position: Some(p(80.0, 0.0)), ..DesignSettings::default() }),
     ] {
         let outcome = planned_with(vec![line("a", (0.0, 0.0), wide, &RED, &stop), line("b", (0.0, 5.0), 10.0, &RED, &[])], settings);
         assert_eq!(outcome.plan, None);
@@ -202,9 +193,6 @@ fn req_fin_002_designs_the_machine_cannot_take_give_no_plan() {
             messages(&outcome)
         );
     }
-    // Larger than the comfort zone: planned, with a warning.
-    let big = planned_with(vec![line("a", (0.0, 0.0), 160.0, &RED, &[])], DesignSettings::default());
-    assert_eq!((big.plan.is_some(), big.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>()), (true, vec![Code::OutsideComfortZone]));
     // More colour changes than PES records (255); as many is fine.
     let threads = [RED, BLUE];
     let alternating = |n: u32| (0..n).map(|i| line(&format!("e{i}"), (0.0, f64::from(i % 50)), 5.0, &threads[(i % 2) as usize], &[])).collect();
@@ -215,11 +203,26 @@ fn req_fin_002_designs_the_machine_cannot_take_give_no_plan() {
 }
 
 #[test]
+fn req_fin_002_a_design_beyond_the_comfort_zone_is_planned_with_a_warning() {
+    // No built-in profile has a comfort zone yet: the reference machine with one of 100 × 100 mm.
+    let square = Size::new(Mm::from_tenths(1000), Mm::from_tenths(1000));
+    let comfort = MachineProfile { comfort: Some(square), ..REFERENCE.clone() };
+    let codes = |length: f64, origin: Option<Point>| {
+        let design = Design::new(vec![line("a", (0.0, 0.0), length, &RED, &[])], DesignSettings { origin, ..DesignSettings::default() }).unwrap();
+        let outcome = plan(&design, &comfort, &Budget::DEFAULT);
+        (outcome.plan.is_some(), outcome.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>())
+    };
+    assert_eq!(codes(120.0, None), (true, vec![Code::OutsideComfortZone]));
+    // Reaching past the edge from its origin as well: the reach is what stops it.
+    assert_eq!(codes(120.0, Some(p(0.0, 0.0))), (false, vec![Code::OutsideHoop]));
+}
+
+#[test]
 fn the_stitches_finalize_adds_count_against_the_budget() {
     // A 100 mm stitch placed by hand, split into nine, within a budget of 2 stitches: no plan.
     let budget = Budget { max_stitches: 2, max_work: 1_000_000 };
     let design = Design::new(vec![line("a", (-50.0, 0.0), 100.0, &RED, &[("stroke_method", "manual_stitch")])], DesignSettings::default()).unwrap();
-    let outcome = plan(&design, &BROTHER_200X200, &budget);
+    let outcome = plan(&design, REFERENCE, &budget);
     assert_eq!((outcome.plan, outcome.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>()), (None, vec![Code::BudgetExhausted]));
 }
 
@@ -246,13 +249,13 @@ proptest! {
             let method = if *manual { "manual_stitch" } else { "running_stitch" };
             let (ties, force, trim, stop) = (ties.to_string(), force.to_string(), trim.to_string(), stop.to_string());
             let params = [("stroke_method", method), ("ties", ties.as_str()), ("force_lock_stitches", force.as_str()), ("trim_after", trim.as_str()), ("stop_after", stop.as_str())];
-            // Rows 10 mm apart, so the design stays within the comfort zone.
-            elements.push(line(&format!("e{i}"), (x % 120.0 + gap, 10.0 * f64::from(u8::try_from(i).unwrap())), *length, thread, &params));
+            // Rows 10 mm apart, starting within 84 mm of the left: the design fits the 130 mm hoop.
+            elements.push(line(&format!("e{i}"), (x % 80.0 + gap, 10.0 * f64::from(u8::try_from(i).unwrap())), *length, thread, &params));
             x += gap + length;
         }
         let outcome = planned_with(elements, DesignSettings::default());
         prop_assert!(outcome.diagnostics.iter().all(|d| d.code != Code::InternalCheckFailed), "{:?}", messages(&outcome));
         let plan = outcome.plan.unwrap();
-        prop_assert_eq!(invariants::check(&plan, &BROTHER_200X200), Vec::new());
+        prop_assert_eq!(invariants::check(&plan, REFERENCE), Vec::new());
     }
 }

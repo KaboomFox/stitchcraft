@@ -45,14 +45,15 @@ and every behaviour is pinned by a conformance suite and by sew-outs on a real m
 
 ## 2. Target machine and the first user
 
-The first production target is a **Brother home embroidery machine with a 200 × 200 mm (8 × 8 in)
-hoop**, loading **PES** files. Designs are normally kept to **about 150 mm (6 in)**. This becomes the
-built-in profile `brother-200x200`:
+The first production target is a **Brother PE800**, a home embroidery machine whose largest hoop,
+5 × 7 in, sews at most **130 × 180 mm**, loading **PES** files ([ADR 0013](adr/0013-brother-pe800-reference-machine.md)).
+It becomes the built-in profile `brother-pe800-5x7`, the reference profile, with one profile for each of
+its other hoops: `brother-pe800-4x4` (100 × 100 mm) and `brother-pe800-small` (20 × 60 mm).
 
 | Profile field | Value | Behaviour |
 |---|---|---|
-| Hoop (hard limit) | 200 × 200 mm | Error `SC-E0701` if the plan does not fit |
-| Comfort zone | 150 × 150 mm | Warning `SC-W0702` if the design is larger |
+| Hoop (hard limit) | 130 × 180 mm | Error `SC-E0701` if the plan does not fit |
+| Comfort zone | none | A profile may have one: warning `SC-W0702` if the design is larger |
 | File format | PES v1 with PEC block | Changed only after a machine checkpoint proves another works |
 | Max stitch length | 12.0 mm (split above) | Refined at MC-1 |
 | Min stitch length | 0.3 mm (merged below) | Refined at MC-2 |
@@ -126,8 +127,8 @@ The full milestone and step list is in [the roadmap](../plan/roadmap.md).
 | NFR-ROB-1 | No panics in shipped code; no `unsafe` outside the one audited plug-in ABI module |
 | NFR-ROB-2 | All work is bounded by explicit budgets (stitches, iterations, input sizes); exceeding one is a diagnostic, never a hang |
 | NFR-DET-1 | Same input and version ⇒ byte-identical output on every supported platform, including wasm32 |
-| NFR-PERF-1 | A 150 × 150 mm tatami fill at 0.4 mm spacing plans in ≤ 50 ms natively (baseline set at M5, then guarded) |
-| NFR-PERF-2 | Live-effect previews fit VectorCraft's v1 budget (≤ 50 M instructions, ≤ 5 s) for a 150 mm design |
+| NFR-PERF-1 | A 130 × 180 mm tatami fill at 0.4 mm spacing, the reference hoop's whole field, plans in ≤ 50 ms natively (baseline set at M5, then guarded) |
+| NFR-PERF-2 | Live-effect previews fit VectorCraft's v1 budget (≤ 50 M instructions, ≤ 5 s) for a 130 × 180 mm design |
 | NFR-PORT-1 | Engine crates build for `wasm32-unknown-unknown` without WASI |
 | NFR-DOC-1 | 100 % of parameters, diagnostics, CLI commands and formats have generated reference pages |
 | NFR-TEST-1 | Every requirement in `conformance/requirements.toml` has ≥ 1 passing case before its milestone closes |
@@ -176,12 +177,13 @@ Details, dependency rules and the reasoning are in [architecture](architecture.m
 | [0004](adr/0004-determinism.md) | Determinism by construction: ordered collections, `libm`, seeded RNG, absolute quantization |
 | [0005](adr/0005-geometry-stack.md) | `kurbo` for curves, `i_overlay` for polygon booleans/offsets, `petgraph` + own Eulerian walk, `rstar` |
 | [0006](adr/0006-docs-mdbook-diataxis.md) | mdBook, Diátaxis structure, generated reference, CI-regenerated images |
-| [0007](adr/0007-pes-first-brother-profile.md) | PES v1 first for the Brother 200 × 200 mm machine; DST second |
+| [0007](adr/0007-pes-first-brother-profile.md) | PES v1 first for the Brother machine; DST second |
 | [0008](adr/0008-conformance-first.md) | Conformance-first development: requirement IDs and cases before code |
 | [0009](adr/0009-adopt-vectorcraft-conventions.md) | Adopt VectorCraft's proven conventions; improve the ones that drift |
 | [0010](adr/0010-diagnostics-with-codes.md) | Every user-facing problem is a coded diagnostic with an explanation page |
 | [0011](adr/0011-movable-into-vectorcraft.md) | StitchCraft can move into VectorCraft's repository as a folder |
 | [0012](adr/0012-read-dont-copy.md) | Ink/Stitch's source may be read, never copied |
+| [0013](adr/0013-brother-pe800-reference-machine.md) | A Brother PE800 is the reference machine, with a profile for each of its 3 hoops |
 
 ## 7. Data model (summary)
 

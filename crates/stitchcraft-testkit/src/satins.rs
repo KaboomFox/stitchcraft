@@ -9,7 +9,7 @@ use stitchcraft_engine::design::{Path, Segment, Subpath};
 use stitchcraft_engine::generators::satin::{SatinParams, satin_stitch};
 use stitchcraft_engine::normalize::satin::{Shape, recognize};
 use stitchcraft_params::ParamSet;
-use stitchcraft_plan::profiles::BROTHER_200X200;
+use stitchcraft_plan::profiles::REFERENCE;
 
 use crate::designs::{p, polylines};
 
@@ -28,7 +28,7 @@ pub fn sewn_satin(path: &Path, params: &[(&str, &str)]) -> (Vec<Point>, Vec<Stri
     let set: ParamSet = params.iter().copied().collect();
     let common = CommonParams::from_set(&set).unwrap().params;
     let mut rng = SplitMix64::for_element(SATIN_ID, common.random_seed.unwrap_or(0));
-    let (min, max) = (BROTHER_200X200.min_stitch, common.max_stitch_length_mm);
+    let (min, max) = (REFERENCE.min_stitch, common.max_stitch_length_mm);
     let stitched = satin_stitch(&satin, &SatinParams::from_set(&set).unwrap().params, min, max, &mut rng, &mut meter).unwrap();
     assert_eq!(stitched.runs.len(), 1);
     (stitched.runs.into_iter().flatten().collect(), stitched.warnings.iter().map(ToString::to_string).collect())

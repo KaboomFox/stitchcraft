@@ -406,7 +406,7 @@ mod tests {
     type Change = fn(&mut Value);
 
     fn args(design: Option<PathBuf>) -> BugReportArgs {
-        BugReportArgs { design, replay: None, output: None, profile: "brother-200x200".to_string(), format: None, says: None }
+        BugReportArgs { design, replay: None, output: None, profile: profiles::REFERENCE.id.to_string(), format: None, says: None }
     }
 
     fn json(path: &Path) -> Value {
@@ -439,7 +439,7 @@ mod tests {
         assert_eq!(written["design"]["svg"].as_str().map(str::as_bytes), Some(std::fs::read(&design).unwrap().as_slice()));
         assert_eq!(
             (written["profile"].as_str(), written["format"].as_str(), written["says"].as_str()),
-            (Some("brother-200x200"), Some("pes"), Some("the zigzag looks wrong"))
+            (Some(profiles::REFERENCE.id), Some("pes"), Some("the zigzag looks wrong"))
         );
         let golden = std::fs::read(conformance("golden/plans/strokes.pes")).unwrap();
         assert_eq!(written["result"]["file"]["sha256"].as_str(), Some(hex(&Sha256::digest(&golden)).as_str()));
@@ -528,7 +528,7 @@ mod tests {
     fn req_cli_002_a_bug_found_while_planning_writes_a_bundle() {
         // A failed plan check: a bundle next to the machine file asked for, and exit status 4.
         let design = std::fs::read(conformance("fixtures/svg/strokes.svg")).unwrap();
-        let profile = profiles::find("brother-200x200").unwrap();
+        let profile = profiles::REFERENCE;
         let run = Run { design_path: Path::new("strokes.svg"), design: &design, profile, format: FormatId::PesV1, says: None };
         let check = Diagnostic::new(Code::InternalCheckFailed, "A stitch of 0.1 mm.");
         let sewn = Sewn { diagnostics: vec![check.clone()], plan: None, file: None };
@@ -543,7 +543,7 @@ mod tests {
         let plan = PlanArgs {
             design: conformance("fixtures/svg/strokes.svg"),
             output: temp("panicked.pes"),
-            profile: "brother-200x200".to_string(),
+            profile: profiles::REFERENCE.id.to_string(),
             format: None,
             preview: None,
             report: None,
