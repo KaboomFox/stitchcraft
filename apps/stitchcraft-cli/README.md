@@ -16,9 +16,13 @@ The command-line tool: the only StitchCraft component that touches the file syst
 
 Coming with their milestones: `export` (M6.5), `import-inkstitch` (M8), `conformance run`.
 
-**Exit status:** 0 done (warnings allowed) · 1 the design or file has errors (nothing written), or a
-replayed bundle does not reproduce · 2 usage error · 3 a file could not be read or written · 4 a bug in
-StitchCraft: a failed plan check or a panic, with a bug-report bundle where one can be written.
+| Exit status | Meaning |
+|---|---|
+| 0 | Done, perhaps with warnings |
+| 1 | The design or file has errors and nothing was written, or a replayed bundle does not reproduce |
+| 2 | Usage error |
+| 3 | A file could not be read or written |
+| 4 | A bug in StitchCraft, a failed plan check or a panic. A bug-report bundle is written where one can be |
 
 ## Layout
 

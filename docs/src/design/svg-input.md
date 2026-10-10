@@ -12,7 +12,8 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   that paints becomes one element per paint. A fill becomes an area and a stroke becomes an outline.
   A `<line>` has no fill.
 - **Order.** Elements follow document order, which is SVG's paint order and the sewing order. A
-  shape's two paints follow its `paint-order`.
+  shape's fill is sewn before its stroke, as Ink/Stitch sews them, and the outline covers the fill's edge.
+  When `paint-order` paints the stroke first, `SC-W0802` says the fill is sewn first.
 - **Groups.** `<g>`, `<a>` and the child a `<switch>` chooses pass their transform and style to their
   children.
 - **Ids.** An element's id is `svg:<label>:fill` or `svg:<label>:stroke`. The label is the SVG
@@ -30,11 +31,19 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   An error in the data ends the path at the error.
 - Positions are exact to within a micrometre (`REQ-SVG-001`). Any path data reads without failing the
   adapter, and fuzzing checks it (`REQ-SVG-002`).
+- A length may have spaces around it. One that does not read is 0, as in a viewer, and `SC-W0804` names
+  it.
 
 ## Colour and visibility
 
 - `fill`, `stroke`, `color` and `currentColor` give the thread colour. A gradient gives its first colour
-  and a pattern its fallback colour, each with a warning.
+  and a pattern its fallback colour, each with a warning. A gradient of one colour, such as an Inkscape
+  swatch, gives that colour without one.
+- Colours read as editors write them. Keywords such as `currentcolor` may be in any case. An ICC colour
+  after the sRGB one, which Inkscape's colour-managed picker writes, is left for the sRGB colour.
+- A declaration that does not read gives way to the next one, as in CSS: the last valid one in `style`,
+  else a valid presentation attribute. When none of an element's paints reads, the inherited paint
+  stays, and `SC-W0802` names the value.
 - `display: none` hides an element and everything in it. A hidden or fully transparent paint is left
   out, as a viewer leaves it out. The insides of `<defs>`, `<symbol>`, `<marker>`, `<pattern>`,
   `<clipPath>` and `<mask>` are never drawn.
@@ -68,8 +77,13 @@ finds these objects, with the Ink/Stitch files they were read from.
   - a point more than 10 m from the origin
 - `SC-E0801` refuses a file that is not SVG, or that is larger than the adapter reads.
 
-## Limits
+## Text and limits
 
-A file is at most 64 MiB with a million XML nodes, and it does not declare XML entities. Reading charges the
-budget for each XML node, path segment and 8 bytes of a transform or point list
-([budgets](data-model.md#budgets)).
+A file is UTF-8 text, or ISO-8859-1 when its XML declaration says so, which the adapter turns into UTF-8.
+A file in any other encoding is refused when it has a byte outside ASCII.
+
+A file is at most 64 MiB with a million XML nodes. Illustrator declares its namespaces as XML entities,
+and an entity whose value is plain text is read. A file is refused when an entity's value holds markup or
+other entities, or when its references would expand the file past 64 MiB. Without both rules a small
+file could need a large amount of memory. Reading charges the budget for each XML node, path segment and
+8 bytes of a transform or point list ([budgets](data-model.md#budgets)).
