@@ -92,5 +92,11 @@ mod tests {
         let Err(SheetError::Said(said)) = d.plan() else { panic!("drawn despite what the engine said") };
         assert!(said.starts_with("error SC-E0101: "), "{said}");
         assert!(Drawing::new("empty").plan().is_err(), "nothing to stitch");
+        // Two elements with one id: the design itself is refused.
+        let mut twice = Drawing::new("twice");
+        twice.polyline("a", &[(0.0, 0.0), (10.0, 0.0)], &thread, &[]).unwrap();
+        twice.polyline("a", &[(0.0, 5.0), (10.0, 5.0)], &thread, &[]).unwrap();
+        let Err(SheetError::Said(said)) = twice.plan() else { panic!("drawn with one id twice") };
+        assert!(said.contains("Two elements of the design have the id `twice:a`."), "{said}");
     }
 }
