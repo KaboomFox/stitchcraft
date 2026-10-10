@@ -69,11 +69,11 @@ id = "ts-10b"
 requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PRF-002", "REQ-FMT-001"]
 kind = "testsheet"
 sheet = "TS-10B"
-profile = "brother-200x200"
+profile = "brother-pe800-5x7"
 
 [expect]
-size_mm = [190.0, 150.0]
-diagnostics = ["SC-W0702"]                       # exactly these codes, no others
+size_mm = [130.0, 180.0]
+diagnostics = []                                 # exactly these codes, here none
 golden = ["golden/testsheets/TS-10B.pes"]        # byte for byte; the format comes from the extension
 ```
 
@@ -100,7 +100,7 @@ From M3, `design` cases take an SVG or JSON design and parameters, and check gen
 id = "fill-tatami-gap-preserved"
 requirements = ["REQ-FILL-TAT-006", "REQ-FILL-TAT-007"]
 input = "fixtures/fill/c-shape-gap-1mm.svg"     # or an inline design
-profile = "brother-200x200"
+profile = "brother-pe800-5x7"
 
 [params]
 fill_method = "tatami_fill"

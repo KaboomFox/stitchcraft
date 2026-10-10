@@ -1,5 +1,5 @@
 $ stitch plan wide.svg -o wide.pes
-error SC-E0701: The design is 210.0 × 0.0 mm; the hoop of Brother, 200 × 200 mm hoop is 200 × 200 mm.
+error SC-E0701: The design is 210.0 × 0.0 mm, but the Brother PE800 with its 5 × 7 in hoop sews at most 130 × 180 mm.
   hint: Scale the design down, or split it into parts sewn in separate hoopings.
   more: stitch explain SC-E0701
 nothing was written

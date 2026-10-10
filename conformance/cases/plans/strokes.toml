@@ -4,7 +4,7 @@ id = "strokes"
 requirements = ["REQ-ASM-001", "REQ-ASM-002", "REQ-LCK-001", "REQ-GEN-002", "REQ-FIN-001", "REQ-FIN-003"]
 kind = "plan"
 svg = "fixtures/svg/strokes.svg"
-profile = "brother-200x200"
+profile = "brother-pe800-5x7"
 
 [expect]
 size_mm = [60.0, 40.0]

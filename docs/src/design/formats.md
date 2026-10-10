@@ -77,9 +77,10 @@ Embroiderers report these with files from other software:
    records which one the machine honours.
 2. **Large designs hidden** by an older Brother-family machine for PES v1 files beyond about 130 ×
    180 mm (root cause unknown). The PES v1 section carries a hoop indication, and pystitch sets it to
-   the 130 × 180 mm class — our unconfirmed hypothesis for that report. For our 200 × 200 mm hoop, MC-1 sews TS-10 at **150 mm and 190 mm** widths from a PES v1
-   file. If the machine refuses either, M1 adds a PES v6 writer with explicit hoop dimensions and repeats
-   the test.
+   the 130 × 180 mm class, which is our unconfirmed hypothesis for that report. The reference PE800's
+   largest field is that class, 130 × 180 mm. MC-1 sews TS-10 at the whole field of each of its hoops from
+   a PES v1 file. If one of them does not load, a PES v6 writer with explicit hoop dimensions follows, and
+   the test is repeated.
 3. **Colour expectations:** documented behaviour — what you see on the machine is the PEC
    palette colour; the thread chart in the report lists the source colour and the PEC match.
 

@@ -2,7 +2,7 @@ $ stitch plan badge.svg -o badge.pes --preview badge.png
 badge.svg
   file      badge.pes (PES v1, 1498 bytes)
   sha256    d9906494fa2d27dcfc71fe26e2eb89c9805078e5a24d896bef51bc98a707b4ef
-  profile   brother-200x200 (Brother, 200 × 200 mm hoop)
+  profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      44.0 × 44.0 mm
   stitches  124 stitches, 2 jumps, 0 trims, 1 colour change, 0 stops
   threads   1. unnamed (#c8102e), shown as Brother PEC 5 "Red"

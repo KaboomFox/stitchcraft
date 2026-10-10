@@ -94,7 +94,7 @@ an invalid manifest never reaches a user.
    the generated dialog. The parameters are now stored on the object (undoable, saved in the
    `.vectorcraft` file) and the object shows a stitch preview.
 3. Save the document.
-4. `stitch export design.vectorcraft --profile brother-200x200 -o design.pes` writes the machine file and
+4. `stitch export design.vectorcraft --profile brother-pe800-5x7 -o design.pes` writes the machine file and
    a report; `--preview design.png` renders what will sew.
 
 Stitching order is paint order (bottom first). Hidden objects are skipped (and listed in the report);
