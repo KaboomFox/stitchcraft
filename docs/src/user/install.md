@@ -18,9 +18,11 @@ cargo puts `stitch` in its `bin` folder, which rustup adds to your `PATH`.
 
 ## Check it
 
-```console
-{{#include reference/generated/version.txt}}
+```sh
+stitch --version
 ```
+
+It prints `stitch` and its version number.
 
 To update StitchCraft, run `git pull` in the `stitchcraft` folder and the `cargo install` line again.
 
