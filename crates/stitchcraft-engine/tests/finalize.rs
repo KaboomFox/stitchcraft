@@ -1,15 +1,23 @@
 //! Finalizing's conformance cases (`REQ-FIN-001..003`, and `REQ-PLAN-002`'s lock stitches) and
-//! `SC-I0504`, `SC-I0703`, through the engine's entry point.
+//! `SC-I0504`, `SC-I0703`, through the engine's entry point, and through `finalize` itself for runs of
+//! stitches no generator makes.
+//!
+//! The cases that call `finalize` directly could be unit tests in `finalize.rs`. They are here because
+//! line coverage measures the unit tests' build of a function apart from the build these tests link, and
+//! takes the better of the two: a function whose lines only both kinds of test together run counts as
+//! partly untested.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used)]
 
 use proptest::prelude::*;
-use stitchcraft_core::{Budget, Code, Mm};
+use stitchcraft_core::{Budget, Code, Mm, Point};
 use stitchcraft_engine::design::{Design, DesignSettings};
+use stitchcraft_engine::finalize::finalize;
 use stitchcraft_engine::plan;
 use stitchcraft_plan::invariants;
 use stitchcraft_plan::profiles::BROTHER_200X200;
+use stitchcraft_plan::{PlanBuilder, Provenance, Rgb, Role, StitchKind, Thread};
 use stitchcraft_testkit::designs::{BLUE, RED, line, messages, p, planned, planned_with, shape_of};
 
 /// Two 10 mm lines in one thread, the second starting `gap` mm after the first ends.
@@ -34,6 +42,59 @@ fn req_fin_001_needle_points_too_close_where_elements_join_are_left_out() {
     // Far enough apart, nothing changes.
     let apart = planned(joined(0.3));
     assert_eq!((shape_of(&apart), messages(&apart)), ("J L4 S10 L4".to_string(), Vec::<String>::new()));
+}
+
+const TOP: Role = Role::Top;
+const LOCK: Role = Role::Lock;
+
+/// One run of stitches along x, with their roles, after a jump to the first, finalized with no element's
+/// shortest stitch: what finalizing keeps (`None` when the plan check refuses it) and what it says.
+fn fitted(points: &[(f64, Role)]) -> (Option<Vec<(f64, Role)>>, Vec<String>) {
+    let mut b = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+    let at = |x: f64| Point::new(x, 0.0).unwrap();
+    b.jump(at(points[0].0), Provenance::plan(Role::Travel));
+    for &(x, role) in points {
+        b.stitch(at(x), Provenance::plan(role));
+    }
+    let out = finalize(b.finish(), &BROTHER_200X200, &DesignSettings::default(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+    let kept = out.plan.map(|plan| plan.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| (s.at.x(), s.origin.role)).collect());
+    (kept, out.diagnostics.iter().map(ToString::to_string).collect())
+}
+
+#[test]
+fn req_fin_001_a_run_s_last_point_stays_and_the_one_before_it_goes() {
+    let (kept, said) = fitted(&[(0.0, TOP), (5.0, TOP), (5.1, TOP)]);
+    assert_eq!(kept, Some(vec![(0.0, TOP), (5.1, TOP)]));
+    assert_eq!(said, ["info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out."]);
+}
+
+#[test]
+fn req_fin_001_a_lock_point_stays_and_the_points_too_close_before_it_go() {
+    // The stitch into a lock point is a lock stitch, at least 0.2 mm: the point 0.1 mm before goes,
+    // the one before that, 2.1 mm away, stays.
+    let (kept, _) = fitted(&[(0.0, TOP), (3.0, TOP), (5.0, TOP), (5.1, LOCK), (7.0, LOCK)]);
+    assert_eq!(kept, Some(vec![(0.0, TOP), (3.0, TOP), (5.1, LOCK), (7.0, LOCK)]));
+    // Two points 0.3 mm apart, both within 0.2 mm of the lock point: both go.
+    let (kept, said) = fitted(&[(0.0, TOP), (4.85, TOP), (5.15, TOP), (5.0, LOCK), (7.0, LOCK)]);
+    assert_eq!(kept, Some(vec![(0.0, TOP), (5.0, LOCK), (7.0, LOCK)]));
+    assert_eq!(said, ["info SC-I0504: 2 needle points less than the shortest stitch (0.3 mm) from the one before were left out."]);
+}
+
+#[test]
+fn req_fin_001_a_point_where_the_needle_already_is_is_left_out() {
+    // The run comes back to where it landed, and everything between is too close: no stitch in place.
+    let (kept, said) = fitted(&[(0.0, TOP), (0.2, TOP), (0.0, TOP)]);
+    assert_eq!(kept, Some(vec![(0.0, TOP)]));
+    assert_eq!(said, ["info SC-I0504: 2 needle points less than the shortest stitch (0.3 mm) from the one before were left out."]);
+}
+
+#[test]
+fn req_fin_003_a_run_s_first_point_always_stays() {
+    // Where the needle lands is never moved: a run of two points too close is the plan check's to
+    // report (a generator's bug), not finalize's to hide.
+    let (kept, said) = fitted(&[(0.0, TOP), (0.1, TOP)]);
+    assert_eq!(kept, None);
+    assert!(said.iter().any(|s| s.starts_with("error SC-E0009")), "{said:?}");
 }
 
 #[test]

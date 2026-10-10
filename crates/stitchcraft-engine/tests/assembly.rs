@@ -160,6 +160,24 @@ fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plan
 }
 
 #[test]
+fn an_element_sews_with_the_longer_of_the_machine_s_shortest_stitch_and_its_own() {
+    let said = |params: &[(&str, &str)], settings: DesignSettings| {
+        messages(&sewn_with(vec![line("a", (0.0, 0.0), 12.0, &RED, params)], DesignSettings { origin: Some(p(0.0, 0.0)), ..settings }))
+    };
+    let length = ("running_stitch_length_mm", "1.5");
+    // 1.5 mm stitches are long enough for the machine's shortest stitch, 0.3 mm.
+    assert_eq!(said(&[length], DesignSettings::default()), Vec::<String>::new());
+    // An element's own shortest stitch of 1 mm raises them to 2 mm, and so does the design's, for an
+    // element that sets none.
+    let raised = ["warning SC-W0402: The stitch length 1.5 mm is shorter than twice the shortest stitch (1 mm), so 2 mm is used."];
+    assert_eq!(said(&[length, ("min_stitch_length_mm", "1")], DesignSettings::default()), raised);
+    let design = DesignSettings { min_stitch_len: Some(Mm::new(1.0).unwrap()), ..DesignSettings::default() };
+    assert_eq!(said(&[length], design), raised);
+    // One shorter than the machine's changes nothing.
+    assert_eq!(said(&[length, ("min_stitch_length_mm", "0.1")], DesignSettings::default()), Vec::<String>::new());
+}
+
+#[test]
 fn diag_sc_w0011_a_stitch_type_not_sewn_yet_is_named() {
     let ripple = sewn(vec![line("r", (0.0, 0.0), 10.0, &RED, &[("stroke_method", "zigzag_stitch")]), line("ok", (0.0, 5.0), 10.0, &RED, &[])]);
     assert_eq!(

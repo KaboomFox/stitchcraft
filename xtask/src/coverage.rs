@@ -9,8 +9,20 @@
 //!
 //! Coverage runs the suite a second time, instrumented, so it has its own CI job instead of being a step
 //! of `cargo xtask ci`.
+//!
+//! A crate below its floor gets what no test runs listed as warnings, which show on the pull request's page
+//! without the job's log: its untested lines, a warning per file on the first of them, from the run's lcov
+//! report, and from its JSON export the functions and closures no test calls, and the functions no one
+//! build of which runs all the code the tests run.
+//!
+//! The last two lists are there because line coverage adds up function by function, and the lcov report
+//! merges them line by line. A closure that never runs is an untested line even where the line around it
+//! runs. And a function has a build for each test binary kind, the unit tests' and the one the
+//! integration tests link, as well as one per type a generic function is used with: llvm-cov counts the
+//! lines of the build that runs the most. A function whose lines only the unit tests and the integration
+//! tests together run is partly untested by that count, though every line runs.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::path::Path;
 
@@ -20,6 +32,9 @@ use crate::util::{self, Findings};
 
 const FLOORS: &str = "conformance/coverage.toml";
 const REPORT: &str = "target/coverage/summary.json";
+/// The same run's reports, line by line and function by function, written when a crate is below its floor.
+const LCOV: &str = "target/coverage/lcov.info";
+const FUNCTIONS: &str = "target/coverage/functions.json";
 /// Files that are not measured.
 const IGNORED: &str = "(^|/)(xtask|fuzz|crates/stitchcraft-testkit)/";
 
@@ -64,6 +79,7 @@ pub fn run(record: bool) -> Result<(), String> {
     let mut findings = Findings::default();
     let mut table = String::from("| Crate | Lines | Covered | Coverage | Floor |\n|---|---:|---:|---:|---:|\n");
     let mut numbers = Vec::new();
+    let mut below = BTreeSet::new();
     for (crate_name, lines) in &measured {
         let percent = lines.percent();
         // Shown rounded down, like the floors, so 95.96 % reads 95.9 %, not a floor-passing 96.0 %.
@@ -74,10 +90,13 @@ pub fn run(record: bool) -> Result<(), String> {
         numbers.push(format!("{crate_name} {shown_percent:.1}"));
         match floor {
             None if !record => findings.error(format!("{crate_name} has no floor in {FLOORS}: run `cargo xtask coverage --record`")),
-            Some(f) if !record && percent < f64::from(f) => findings.error(format!(
-                "{crate_name}: line coverage {shown_percent:.1} % is below its floor of {f} %; add tests for the new code \
-                 (or lower the floor in {FLOORS}, saying why in the pull request)"
-            )),
+            Some(f) if !record && percent < f64::from(f) => {
+                below.insert(crate_name.clone());
+                findings.error(format!(
+                    "{crate_name}: line coverage {shown_percent:.1} % is below its floor of {f} %; add tests for the new code \
+                     (or lower the floor in {FLOORS}, saying why in the pull request)"
+                ));
+            }
             _ => {}
         }
         if record {
@@ -86,6 +105,13 @@ pub fn run(record: bool) -> Result<(), String> {
             let today = percent.floor() as u32;
             let entry = floors.floor.entry(crate_name.clone()).or_insert(today);
             *entry = (*entry).max(today);
+        }
+    }
+    if !below.is_empty() {
+        match untested(&root, &below) {
+            Ok(found) if found.is_empty() => findings.warn("the reports list nothing untested in the crates below their floors"),
+            Ok(found) => found.into_iter().for_each(|warning| findings.warn(warning)),
+            Err(e) => findings.warn(format!("the untested lines could not be listed: {e}")),
         }
     }
     for crate_name in floors.floor.keys().filter(|name| !measured.contains_key(*name)) {
@@ -122,6 +148,115 @@ fn per_crate(json: &str) -> Result<BTreeMap<String, Lines>, String> {
         entry.count += field("count");
     }
     Ok(out)
+}
+
+/// What no test runs in the files of `crates`, as warnings on the lines in question, from the last run's
+/// reports: the lines the lcov report merges to untested, then what only the function by function counts
+/// miss (see the module's documentation).
+fn untested(root: &Path, crates: &BTreeSet<String>) -> Result<Vec<String>, String> {
+    let mut warnings = Vec::new();
+    for (path, lines) in missed(&report(root, "--lcov", LCOV)?, root, crates) {
+        let first = lines.first().copied().unwrap_or(1);
+        warnings.push(format!("{path}:{first}: untested lines {}", spans(&lines)));
+    }
+    let Builds { never_called, split } = builds(&report(root, "--json", FUNCTIONS)?, root, crates)?;
+    for (path, line) in never_called {
+        warnings.push(format!("{path}:{line}: no test calls the function or closure that starts here"));
+    }
+    for (path, line) in split {
+        warnings.push(format!(
+            "{path}:{line}: no one build of the function that starts here runs all the code its tests run, and coverage \
+             counts the build that runs the most: move the tests that run its other lines to the kind of test, unit or \
+             integration, that runs most of it"
+        ));
+    }
+    Ok(warnings)
+}
+
+/// The last run's report in `format`, written to `output` and read back.
+fn report(root: &Path, format: &str, output: &str) -> Result<String, String> {
+    let mut report = util::cargo();
+    report.args(["llvm-cov", "report", format, "--output-path", output, "--ignore-filename-regex", IGNORED]);
+    util::run(report, "cargo llvm-cov report")?;
+    util::read(&root.join(output))
+}
+
+/// Functions and closures by their builds, each as its file's path from `root` and its first line.
+#[derive(Debug, Default, PartialEq)]
+struct Builds {
+    /// No build calls them.
+    never_called: BTreeSet<(String, u64)>,
+    /// Called, but no one build runs every region that some build runs.
+    split: BTreeSet<(String, u64)>,
+}
+
+/// The functions and closures in the files of `crates` that the JSON export `json` counts as no build
+/// calling, or as split between builds. The export lists each build of a function apart (the unit tests'
+/// and the integration tests', and each instantiation of a generic function): the builds of one function
+/// start at the same place, and list the same regions in the same order.
+fn builds(json: &str, root: &Path, crates: &BTreeSet<String>) -> Result<Builds, String> {
+    let report: serde_json::Value = serde_json::from_str(json).map_err(|e| format!("{FUNCTIONS}: {e}"))?;
+    let functions = report.pointer("/data/0/functions").and_then(serde_json::Value::as_array).ok_or(format!("{FUNCTIONS}: no functions"))?;
+    // (path, first line, first column) -> each build's regions, as whether each ran.
+    let mut grouped: BTreeMap<(String, u64, u64), Vec<Vec<bool>>> = BTreeMap::new();
+    for function in functions {
+        let Some(path) = function.pointer("/filenames/0").and_then(serde_json::Value::as_str).map(Path::new) else { continue };
+        let Some(regions) = function.get("regions").and_then(serde_json::Value::as_array) else { continue };
+        let field = |region: &serde_json::Value, i: usize| region.get(i).and_then(serde_json::Value::as_u64);
+        let Some((line, column)) = regions.first().and_then(|first| Some((field(first, 0)?, field(first, 1)?))) else { continue };
+        if crate_of(path).is_none_or(|name| !crates.contains(&name)) {
+            continue;
+        }
+        let shown = path.strip_prefix(root).unwrap_or(path).to_string_lossy().replace('\\', "/");
+        let ran = regions.iter().map(|region| field(region, 4).is_some_and(|count| count > 0)).collect();
+        grouped.entry((shown, line, column)).or_default().push(ran);
+    }
+    let mut builds = Builds::default();
+    for ((path, line, _), ran) in grouped {
+        let longest = ran.iter().map(Vec::len).max().unwrap_or(0);
+        let any: Vec<bool> = (0..longest).map(|i| ran.iter().any(|build| build.get(i) == Some(&true))).collect();
+        if !any.contains(&true) {
+            builds.never_called.insert((path, line));
+        } else if !ran.iter().any(|build| any.iter().enumerate().all(|(i, ran)| !ran || build.get(i) == Some(&true))) {
+            builds.split.insert((path, line));
+        }
+    }
+    Ok(builds)
+}
+
+/// The lines lcov `text` counts as run 0 times, in the files of `crates`.
+fn missed(text: &str, root: &Path, crates: &BTreeSet<String>) -> Vec<(String, Vec<u64>)> {
+    let mut out = Vec::new();
+    let mut file: Option<(String, Vec<u64>)> = None;
+    for line in text.lines() {
+        if let Some(path) = line.strip_prefix("SF:") {
+            let path = Path::new(path);
+            let shown = path.strip_prefix(root).unwrap_or(path).to_string_lossy().replace('\\', "/");
+            file = crate_of(path).filter(|name| crates.contains(name)).map(|_| (shown, Vec::new()));
+        } else if let (Some((_, lines)), Some(data)) = (file.as_mut(), line.strip_prefix("DA:")) {
+            let mut fields = data.split(',').map(str::parse::<u64>);
+            if let (Some(Ok(number)), Some(Ok(0))) = (fields.next(), fields.next()) {
+                lines.push(number);
+            }
+        } else if line == "end_of_record"
+            && let Some(done) = file.take().filter(|(_, lines)| !lines.is_empty())
+        {
+            out.push(done);
+        }
+    }
+    out
+}
+
+/// Line numbers in order as runs: `31-33, 40`.
+fn spans(lines: &[u64]) -> String {
+    let mut runs: Vec<(u64, u64)> = Vec::new();
+    for &line in lines {
+        match runs.last_mut() {
+            Some((_, end)) if *end + 1 == line => *end = line,
+            _ => runs.push((line, line)),
+        }
+    }
+    runs.iter().map(|&(start, end)| if start == end { start.to_string() } else { format!("{start}-{end}") }).collect::<Vec<_>>().join(", ")
 }
 
 /// The crate a source file belongs to: the directory after `crates/` or `apps/`.
@@ -161,6 +296,43 @@ mod tests {
         assert_eq!(measured["stitchcraft-core"].percent(), 75.0);
         assert_eq!(measured["stitchcraft-cli"].percent(), 0.0);
         assert_eq!(Lines::default().percent(), 100.0);
+    }
+
+    #[test]
+    fn functions_no_build_calls_and_functions_split_between_builds_are_listed() {
+        let json = r#"{"data":[{"functions":[
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[42,70,42,91,0,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[42,20,42,40,1,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[30,1,40,2,3,0,0,0],[33,5,34,6,0,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[30,1,40,2,1,0,0,0],[33,5,34,6,1,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[50,1,60,2,2,0,0,0],[52,5,53,6,1,0,0,0],[55,5,56,6,0,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[50,1,60,2,4,0,0,0],[52,5,53,6,0,0,0,0],[55,5,56,6,4,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[70,1,72,2,0,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[70,1,72,2,2,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[80,1,82,2,5,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[]},
+            {"filenames":["/w/crates/stitchcraft-core/src/b.rs"],"regions":[[7,1,9,2,0,0,0,0]]}
+        ]}]}"#;
+        let engine = BTreeSet::from(["stitchcraft-engine".to_string()]);
+        let found = builds(json, Path::new("/w"), &engine).unwrap();
+        let a = |line: u64| ("crates/stitchcraft-engine/src/a.rs".to_string(), line);
+        // Line 42: a closure no build calls, beside one that runs. Line 30: one build runs all the other
+        // does. Line 50: each build runs a region the other does not. Line 70: one build of two runs. Line
+        // 80: a function with one build, which runs.
+        assert_eq!(found, Builds { never_called: BTreeSet::from([a(42)]), split: BTreeSet::from([a(50)]) });
+        assert!(builds("{}", Path::new("/w"), &engine).is_err());
+    }
+
+    #[test]
+    fn untested_lines_are_listed_for_the_crates_asked() {
+        let lcov = "SF:/w/crates/stitchcraft-engine/src/a.rs\nDA:3,1\nDA:4,0\nDA:5,0\nDA:6,0\nDA:9,0\nDA:10,2\nend_of_record\n\
+                    SF:/w/crates/stitchcraft-engine/src/b.rs\nDA:1,5\nend_of_record\n\
+                    SF:/w/crates/stitchcraft-core/src/c.rs\nDA:7,0\nend_of_record\n";
+        let engine = BTreeSet::from(["stitchcraft-engine".to_string()]);
+        let missed = missed(lcov, Path::new("/w"), &engine);
+        assert_eq!(missed, [("crates/stitchcraft-engine/src/a.rs".to_string(), vec![4, 5, 6, 9])]);
+        assert_eq!(spans(&missed[0].1), "4-6, 9");
+        assert_eq!(spans(&[]), "");
     }
 
     #[test]
