@@ -191,11 +191,14 @@ mod tests {
     fn a_pair_of_one_point_stays_as_it_is() {
         let point = [p(3.0, 3.0), p(3.0, 3.0)];
         assert_eq!(offset(point, [1.0, 1.0], [0.5, 0.5]), point);
-        // A ten-thousandth of a CSS pixel apart is still one point, and a little more is a stitch.
-        let close = [p(0.0, 0.0), p(0.0, SAME_POINT * 0.99)];
+        // Closer than a ten-thousandth of a CSS pixel (0.0000265 mm) is one point, and that far apart or
+        // more is a stitch.
+        let close = [p(0.0, 0.0), p(0.0, 0.000_026)];
         assert_eq!(offset(close, [1.0, 1.0], [0.0, 0.0]), close);
-        let [a, _] = offset([p(0.0, 0.0), p(0.0, SAME_POINT)], [1.0, 1.0], [0.0, 0.0]);
-        assert!((a.y() + 1.0).abs() < 1e-9, "{a:?}");
+        for apart in [SAME_POINT, 0.000_027] {
+            let [a, _] = offset([p(0.0, 0.0), p(0.0, apart)], [1.0, 1.0], [0.0, 0.0]);
+            assert!((a.y() + 1.0).abs() < 1e-9, "{apart}: {a:?}");
+        }
     }
 
     #[test]
@@ -232,20 +235,39 @@ mod tests {
     }
 
     #[test]
-    fn random_steps_and_shares_stay_within_their_ranges() {
+    fn random_steps_and_shares_fill_their_ranges() {
         let mut rng = SplitMix64::new(7);
         let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, -0.2], range: [0.2, 0.0], jitter: 0.25, rng: &mut rng };
+        let (mut steps, mut sides) = (Vec::new(), Vec::new());
         for _ in 0..1000 {
-            let step = processor.step();
-            assert!((0.75..=1.25).contains(&step), "{step}");
+            steps.push(processor.step());
             let [a, b] = processor.widened([p(0.0, 0.0), p(0.0, 10.0)]);
-            assert!((-3.0..=-1.0).contains(&a.y()), "{a:?}");
             assert!(near(b, p(0.0, 8.0)), "{b:?}");
+            sides.push(a.y());
         }
+        // Steps from 0.75 to 1.25 of the spacing, and the first side 1 to 3 mm out, each range reached
+        // to within 1 % at both ends.
+        let range = |values: &[f64]| values.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), v| (lo.min(*v), hi.max(*v)));
+        let ((least, most), (outmost, inmost)) = (range(&steps), range(&sides));
+        assert!((0.75..0.755).contains(&least) && (1.245..=1.25).contains(&most), "{least} {most}");
+        assert!((-3.0..-2.98).contains(&outmost) && (-1.02..=-1.0).contains(&inmost), "{outmost} {inmost}");
         // A step never gets shorter than a hundredth of the spacing.
         let mut rng = SplitMix64::new(7);
         let mut wild = Processor { pull: [0.0, 0.0], least: [0.0, 0.0], range: [0.0, 0.0], jitter: 5.0, rng: &mut rng };
         let steps: Vec<f64> = (0..100).map(|_| wild.step()).collect();
         assert!(steps.iter().all(|step| *step >= SHORTEST_STEP) && steps.contains(&SHORTEST_STEP), "{steps:?}");
+    }
+
+    #[test]
+    fn a_roll_maps_to_a_step_and_to_shares_as_in_ink_stitch() {
+        // The rolls the processor takes, in order: one for a step, then one for each side of a pair.
+        let mut rolls = SplitMix64::new(3);
+        let (step_roll, roll_a, roll_b) = (rolls.next_f64(), rolls.next_f64(), rolls.next_f64());
+        let mut rng = SplitMix64::new(3);
+        let mut processor = Processor { pull: [0.0, 0.0], least: [0.1, 0.2], range: [0.3, 0.4], jitter: 0.25, rng: &mut rng };
+        assert_eq!(processor.step(), 1.0 + (step_roll - 0.5) * 2.0 * 0.25);
+        let [a, b] = processor.widened([p(0.0, 0.0), p(0.0, 10.0)]);
+        assert!((a.y() + 10.0 * (0.1 + roll_a * 0.3)).abs() < 1e-12, "{a:?}");
+        assert!((b.y() - 10.0 - 10.0 * (0.2 + roll_b * 0.4)).abs() < 1e-12, "{b:?}");
     }
 }

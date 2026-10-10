@@ -12,12 +12,11 @@ use std::f64::consts::FRAC_PI_2;
 use proptest::prelude::*;
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Point};
-use stitchcraft_engine::design::{Path, Segment, Subpath};
 use stitchcraft_engine::generators::satin::{SatinParams, satin_stitch};
 use stitchcraft_engine::normalize::satin::{Shape, recognize};
 use stitchcraft_params::ParamSet;
 use stitchcraft_testkit::designs::{RED, along, messages, p, planned as sewn, polylines, shape_of};
-use stitchcraft_testkit::satins::{across, gaps, ladder, sewn_satin};
+use stitchcraft_testkit::satins::{across, gaps, ladder, quarter_ring, sewn_satin};
 
 #[test]
 fn req_sat_002_a_straight_column_is_sewn_rail_to_rail_at_the_spacing() {
@@ -48,12 +47,8 @@ fn req_sat_002_rungs_cut_the_column_and_the_spacing_runs_on_across_them() {
 
 #[test]
 fn req_sat_002_on_a_curve_the_outer_edge_is_sewn_at_the_spacing() {
-    // A quarter ring, 4 mm wide: the outer rail of radius 20, the inner of 16, each one cubic curve.
-    let arc = |radius: f64| {
-        let k = radius * 0.552_284_749_830_793_4;
-        Subpath { start: p(radius, 0.0), segments: vec![Segment::Cubic(p(radius, k), p(k, radius), p(0.0, radius))], closed: false }
-    };
-    let (points, warnings) = sewn_satin(&Path { subpaths: vec![arc(20.0), arc(16.0)] }, &[]);
+    // A quarter ring, 4 mm wide: the outer rail of radius 20, the inner of 16.
+    let (points, warnings) = sewn_satin(&quarter_ring(20.0, 16.0), &[]);
     assert!(warnings.is_empty(), "{warnings:?}");
     let pairs = across(&points);
     let gaps = gaps(&pairs);

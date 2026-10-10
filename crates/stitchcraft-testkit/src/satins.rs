@@ -5,12 +5,12 @@
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Point};
 use stitchcraft_engine::common::CommonParams;
-use stitchcraft_engine::design::Path;
+use stitchcraft_engine::design::{Path, Segment, Subpath};
 use stitchcraft_engine::generators::satin::{SatinParams, satin_stitch};
 use stitchcraft_engine::normalize::satin::{Shape, recognize};
 use stitchcraft_params::ParamSet;
 
-use crate::designs::polylines;
+use crate::designs::{p, polylines};
 
 /// The id the columns are sewn as, which seeds their random variation as an element's id does.
 pub const SATIN_ID: &str = "satin";
@@ -44,6 +44,18 @@ pub fn gaps(pairs: &[[Point; 2]]) -> Vec<f64> {
             across(a, c).max(across(b, d))
         })
         .collect()
+}
+
+/// A quarter ring about the origin, from the x axis to the y axis: rails of radius `outer` and `inner`,
+/// each one cubic curve.
+pub fn quarter_ring(outer: f64, inner: f64) -> Path {
+    let arc = |radius: f64| {
+        // 4(√2 − 1)/3 of the radius, the usual distance to the control points of a cubic that draws a
+        // quarter circle.
+        let k = radius * 0.552_284_749_830_793_4;
+        Subpath { start: p(radius, 0.0), segments: vec![Segment::Cubic(p(radius, k), p(k, radius), p(0.0, radius))], closed: false }
+    };
+    Path { subpaths: vec![arc(outer), arc(inner)] }
 }
 
 /// Two straight rails along x, `length` long and `width` apart, with rungs across them at `rungs`.

@@ -27,3 +27,9 @@ file = "crates/stitchcraft-engine/src/locks/mod.rs"
 mutant = "replace < with <= in Stitching::follow"
 line = "while length < reach {"
 why = "when the stitching read so far is exactly as long as the lock reaches, one more needle point read changes no position: the farthest one is the last point read either way"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/satin/compensation.rs"
+mutant = "replace < with <= in offset"
+line = "if by_a + by_b < -width {"
+why = "when the two moves add up to exactly minus the width, the scale is the width over itself, exactly 1, and multiplying by it changes neither move"

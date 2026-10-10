@@ -11,7 +11,7 @@
 use proptest::prelude::*;
 use stitchcraft_core::Point;
 use stitchcraft_testkit::designs::{RED, along, p, planned, polylines};
-use stitchcraft_testkit::satins::{across, gaps, ladder, sewn_satin};
+use stitchcraft_testkit::satins::{across, gaps, ladder, quarter_ring, sewn_satin};
 
 /// The pairs of a straight column 10 mm long and 4 mm wide, sewn with `params`, and its warnings.
 fn column(params: &[(&str, &str)]) -> (Vec<[Point; 2]>, Vec<String>) {
@@ -155,6 +155,27 @@ fn req_sat_007_random_widths_and_spacing_are_the_seed_s_and_stay_in_range() {
     assert_ne!(seeded("1"), seeded("2"));
     assert_eq!(seeded("1"), seeded("1"));
     assert_ne!(seeded("1"), pairs, "an empty seed is the element's own");
+}
+
+#[test]
+fn req_sat_007_a_seed_sews_these_stitches_from_one_version_to_the_next() {
+    // Frozen: the first pairs of a quarter ring, 20 mm out and 4 mm wide, with random widths and spacing
+    // and seed 11. The random values, the order they are drawn in, and where each one puts a pair along a
+    // curve, all show here.
+    let random = [("random_width_increase_percent", "20"), ("random_zigzag_spacing_percent", "30"), ("random_seed", "11")];
+    let (points, _) = sewn_satin(&quarter_ring(20.0, 16.0), &random);
+    let first: Vec<[f64; 4]> = across(&points).iter().take(6).map(|[a, b]| [a.x(), a.y(), b.x(), b.y()]).collect();
+    let frozen: [[f64; 4]; 6] = [
+        [20.763_353_428_002_787, 0.0, 15.351_246_534_429_215, 0.0],
+        [20.702_713_118_685_992, 0.390_949_675_720_848_54, 15.512_034_014_057_761, 0.302_441_367_188_131_86],
+        [20.621_730_774_503_03, 0.737_008_115_642_476_4, 15.714_769_172_092_245, 0.570_569_954_929_682],
+        [20.358_975_451_617_606, 1.037_074_483_389_215, 15.392_524_731_537_705, 0.793_158_111_234_444_1],
+        [20.352_093_913_904_91, 1.396_162_478_843_034_5, 15.853_608_745_790_1, 1.095_699_279_742_254_5],
+        [20.199_975_283_348_582, 1.759_833_103_309_480_3, 15.414_070_063_376_624, 1.351_507_462_018_067],
+    ];
+    for (pair, want) in first.iter().zip(frozen) {
+        assert!(pair.iter().zip(want).all(|(got, want)| (got - want).abs() < 1e-9), "{first:?}");
+    }
 }
 
 #[test]
