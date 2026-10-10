@@ -650,9 +650,10 @@ status = "planned"
 id = "REQ-FILL-TAT-002"
 area = "fill/tatami"
 level = "L2"
-statement = "Measured row spacing equals the parameter within 2 percent, or follows the start-to-end gradient."
+statement = "Rows run at the fill's angle, counter-clockwise from horizontal on screen. Measured across them from the design's origin, a part's first row lies the largest whole number of row spacings from the origin that does not pass the part, and the rows follow it row_spacing_mm apart while they lie before the part's far side. With end_row_spacing_mm, each step is the row spacing plus the difference to the end spacing times the distance from the first row over the part's height, and the end spacing once that distance passes the height."
+rationale = "Rows a whole number of spacings from the origin line up across fills side by side, as Ink/Stitch lays them, and a fading fill changes its density steadily."
 milestone = "M5"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-FILL-TAT-003"
@@ -703,6 +704,15 @@ level = "L2"
 statement = "A region in parts sews each part on its own, in order of its distance from the needle, each ending nearest the next part. Parts are joined by jumps, with ties and trims where the element's settings say, never by stitches across empty fabric, and SC-W0307 says so."
 milestone = "M5"
 status = "planned"
+
+[[req]]
+id = "REQ-FILL-TAT-010"
+area = "fill/tatami"
+level = "L2"
+statement = "A row's segments are the stretches of it in the part, the outline included, split at every point where the row meets the outline: where it crosses the outline, where the outline touches it from inside, and at both ends of a stretch along the outline. A row that only touches the part at a point has no segment. The segments are the pieces GEOS finds when it cuts the row with the part."
+rationale = "Where rows start and end decides every needle point at the edge of a fill, and Ink/Stitch takes them from GEOS, so a file sews alike in both."
+milestone = "M5"
+status = "active"
 
 [[req]]
 id = "REQ-FILL-TAT-009"

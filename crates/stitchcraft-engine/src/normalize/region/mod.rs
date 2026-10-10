@@ -35,6 +35,10 @@ use crate::normalize::stroke;
 /// Ink/Stitch flattens a fill's outline.
 const FLATNESS: f64 = 0.1 * MM_PER_SVG_PX;
 
+/// Points this near each other, in millimetres, are one point: a crossing found this near a point already
+/// found is that point, and a row's stretch this short is no segment.
+pub(crate) const SAME: f64 = 1e-9;
+
 /// A part this small or smaller, in square millimetres, is left out: 3 square CSS pixels, a speck about
 /// half a millimetre across, too small for a row of stitches (Ink/Stitch's limit).
 pub const TINY_PART: f64 = 3.0 * MM_PER_SVG_PX * MM_PER_SVG_PX;

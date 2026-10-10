@@ -1,6 +1,6 @@
 # Fill generators
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/region/** -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/generators/tatami/** -->
 
 A fill covers the area its path bounds, its [region](#region), with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).
@@ -64,11 +64,28 @@ build them in this order.
 
 ### 1. Rows
 
-Rows run across the region at `angle`, `row_spacing_mm` apart, on lines a whole number of spacings from
-the design's origin. Fills side by side at the same angle and spacing then share their rows. With
-`end_row_spacing_mm` the spacing changes steadily from the first row to the last. Where a row crosses
-the region more than once, each stretch inside is a *segment*. A row that only touches the region at a
-point has none.
+Rows are laid across each part of the region on its own (`stitchcraft_engine::generators::tatami::rows`,
+since M5.2). They run at `angle`, counter-clockwise from horizontal on screen: at 0° left to right, at
+90° up the screen. Measured across them from the design's origin, the first row of a part lies the
+largest whole number of `row_spacing_mm` from the origin that does not pass the part, and the rows follow
+it `row_spacing_mm` apart until they pass the part's far side (`REQ-FILL-TAT-002`). Fills side by side
+at the same angle and spacing then share their rows. Angles of whole right angles are exact, so rows at
+0° or 90° run exactly along the drawing's axes.
+
+With `end_row_spacing_mm`, each step to the next row is the row spacing plus the difference to the end
+spacing times the distance from the first row over the part's height. The spacing then reaches the end
+spacing a part's height from the first row. Ink/Stitch carries the change on beyond that. Over a part
+only a few rows tall, a shrinking spacing then turns so small that the rows pile up short of the far side
+without end. StitchCraft keeps the end spacing from there on (`DEV-FILL-003`).
+
+A row's *segments* are the stretches of it in the part, its outline included, split at every point where
+the row meets the outline (`REQ-FILL-TAT-010`). Those are the points where it crosses the outline or the
+outline touches it from inside, and both ends of a stretch where it runs along the outline. A row along
+an edge is then a segment of its own, and a row that only touches the part at a point has none. This is how GEOS, the library behind
+Ink/Stitch's shapes, cuts a line with a polygon. Its answers for 612 rows across random polygons of grid
+squares and half squares are recorded and checked (`conformance/fixtures/geometry/shapely-rows.txt`).
+Which stretches lie inside is decided by counting the edges that cross the row, each over its height
+from its lower end up to but not including its upper end.
 
 ### 2. Needle points along a row
 
