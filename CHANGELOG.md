@@ -28,7 +28,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     parts a few rows tall (`DEV-FILL-003`).
   - Each row is cut where it meets the outline, as GEOS cuts it for Ink/Stitch (`REQ-FILL-TAT-010`). A row
     along an edge is a segment, and a row the outline touches from inside is split there. Shapely's pieces
-    of 612 rows across random polygons are recorded and checked
+    of 2,511 rows across 406 random polygons, 98 of them with holes, are recorded and checked
     (`conformance/fixtures/geometry/shapely-rows.txt`).
   - The roadmap's M5 now has 9 steps: needle points get one of their own (M5.3).
 - M5.1: a fill's region, the area its path shows under its fill rule (`REQ-FILL-001`). Fills are not sewn
