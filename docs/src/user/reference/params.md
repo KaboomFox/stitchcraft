@@ -30,18 +30,27 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 
 | Group | Parameters | Applies to |
 |---|---|---|
-| [Common parameters](params/common.md) | 15 | every stitch type |
+| [Common parameters](params/common.md) | 16 | every stitch type |
 | [Stroke parameters](params/stroke.md) | 1 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Running parameters](params/running.md) | 4 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
-| [Manual parameters](params/manual.md) | 1 | Manual stitch |
-| [Satin parameters](params/satin.md) | 13 | Satin column, E-stitch, S-stitch, Zigzag satin |
+| [Satin parameters](params/satin.md) | 33 | Satin column, E-stitch, S-stitch, Zigzag satin |
 
 ## Every parameter
 
 | Key | Label | Group |
 |---|---|---|
 | [`bean_stitch_repeats`](params/repeat.md#bean_stitch_repeats) | Bean stitch | Repeat parameters |
+| [`center_walk_underlay`](params/satin.md#center_walk_underlay) | Centre walk underlay | Satin parameters |
+| [`center_walk_underlay_position`](params/satin.md#center_walk_underlay_position) | Centre walk position | Satin parameters |
+| [`center_walk_underlay_repeats`](params/satin.md#center_walk_underlay_repeats) | Centre walk repeats | Satin parameters |
+| [`center_walk_underlay_stitch_length_mm`](params/satin.md#center_walk_underlay_stitch_length_mm) | Centre walk stitch length | Satin parameters |
+| [`center_walk_underlay_stitch_tolerance_mm`](params/satin.md#center_walk_underlay_stitch_tolerance_mm) | Centre walk tolerance | Satin parameters |
+| [`contour_underlay`](params/satin.md#contour_underlay) | Contour underlay | Satin parameters |
+| [`contour_underlay_inset_mm`](params/satin.md#contour_underlay_inset_mm) | Contour inset | Satin parameters |
+| [`contour_underlay_inset_percent`](params/satin.md#contour_underlay_inset_percent) | Contour inset (% of width) | Satin parameters |
+| [`contour_underlay_stitch_length_mm`](params/satin.md#contour_underlay_stitch_length_mm) | Contour stitch length | Satin parameters |
+| [`contour_underlay_stitch_tolerance_mm`](params/satin.md#contour_underlay_stitch_tolerance_mm) | Contour tolerance | Satin parameters |
 | [`enable_random_stitch_length`](params/running.md#enable_random_stitch_length) | Random stitch length | Running parameters |
 | [`force_lock_stitches`](params/common.md#force_lock_stitches) | Always lock | Common parameters |
 | [`lock_custom_end`](params/common.md#lock_custom_end) | Custom end lock | Common parameters |
@@ -52,13 +61,16 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`lock_start`](params/common.md#lock_start) | Start lock | Common parameters |
 | [`lock_start_scale_mm`](params/common.md#lock_start_scale_mm) | Start lock size | Common parameters |
 | [`lock_start_scale_percent`](params/common.md#lock_start_scale_percent) | Start lock scale | Common parameters |
-| [`max_stitch_length_mm`](params/manual.md#max_stitch_length_mm) | Longest stitch | Manual parameters |
+| [`max_stitch_length_mm`](params/common.md#max_stitch_length_mm) | Longest stitch | Common parameters |
 | [`min_jump_stitch_length_mm`](params/common.md#min_jump_stitch_length_mm) | Shortest jump | Common parameters |
+| [`min_random_split_length_mm`](params/satin.md#min_random_split_length_mm) | Shortest split stitch | Satin parameters |
 | [`min_stitch_length_mm`](params/common.md#min_stitch_length_mm) | Shortest stitch | Common parameters |
 | [`pull_compensation_mm`](params/satin.md#pull_compensation_mm) | Pull compensation | Satin parameters |
 | [`pull_compensation_percent`](params/satin.md#pull_compensation_percent) | Pull compensation (% of width) | Satin parameters |
 | [`push_compensation_mm`](params/satin.md#push_compensation_mm) | Push compensation | Satin parameters |
 | [`random_seed`](params/common.md#random_seed) | Random seed | Common parameters |
+| [`random_split_jitter_percent`](params/satin.md#random_split_jitter_percent) | Split jitter | Satin parameters |
+| [`random_split_phase`](params/satin.md#random_split_phase) | Random split phase | Satin parameters |
 | [`random_stitch_length_jitter_percent`](params/running.md#random_stitch_length_jitter_percent) | Length variation | Running parameters |
 | [`random_width_decrease_percent`](params/satin.md#random_width_decrease_percent) | Random width decrease | Satin parameters |
 | [`random_width_increase_percent`](params/satin.md#random_width_increase_percent) | Random width increase | Satin parameters |
@@ -71,9 +83,16 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`satin_method`](params/satin.md#satin_method) | Method | Satin parameters |
 | [`short_stitch_distance_mm`](params/satin.md#short_stitch_distance_mm) | Short stitch distance | Satin parameters |
 | [`short_stitch_inset`](params/satin.md#short_stitch_inset) | Short stitch inset | Satin parameters |
+| [`split_method`](params/satin.md#split_method) | Split method | Satin parameters |
+| [`split_staggers`](params/satin.md#split_staggers) | Staggers | Satin parameters |
 | [`stop_after`](params/common.md#stop_after) | Stop after | Common parameters |
 | [`stroke_method`](params/stroke.md#stroke_method) | Method | Stroke parameters |
 | [`swap_satin_rails`](params/satin.md#swap_satin_rails) | Swap rails | Satin parameters |
 | [`ties`](params/common.md#ties) | Lock stitches | Common parameters |
 | [`trim_after`](params/common.md#trim_after) | Trim after | Common parameters |
 | [`zigzag_spacing_mm`](params/satin.md#zigzag_spacing_mm) | Zigzag spacing | Satin parameters |
+| [`zigzag_underlay`](params/satin.md#zigzag_underlay) | Zigzag underlay | Satin parameters |
+| [`zigzag_underlay_inset_mm`](params/satin.md#zigzag_underlay_inset_mm) | Zigzag underlay inset | Satin parameters |
+| [`zigzag_underlay_inset_percent`](params/satin.md#zigzag_underlay_inset_percent) | Zigzag underlay inset (% of width) | Satin parameters |
+| [`zigzag_underlay_max_stitch_length_mm`](params/satin.md#zigzag_underlay_max_stitch_length_mm) | Zigzag underlay longest stitch | Satin parameters |
+| [`zigzag_underlay_spacing_mm`](params/satin.md#zigzag_underlay_spacing_mm) | Zigzag underlay spacing | Satin parameters |

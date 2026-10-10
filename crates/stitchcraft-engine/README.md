@@ -12,7 +12,9 @@ joins the groups into one plan (`assemble`). Since M3.9 it fits the plan to the 
 (`finalize`), and a plan that `plan` returns can be written as it is. Since M4.1 a satin column's path
 is read as its rails and rungs (`normalize::satin`), as Ink/Stitch reads it. Since M4.2 its top stitches
 are placed as Ink/Stitch places them (`generators::satin`), since M4.3 compensated and varied at random
-as Ink/Stitch does, and since M4.4 inset where they crowd on curves. Design: `docs/src/design/engine-pipeline.md` and
+as Ink/Stitch does, since M4.4 inset where they crowd on curves, and since M4.5 split where they are
+long. Since M4.6 its underlays come first, as Ink/Stitch sews them. Design:
+`docs/src/design/engine-pipeline.md` and
 `docs/src/design/algorithms/`.
 
 ## Invariants

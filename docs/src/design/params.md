@@ -102,6 +102,7 @@ version and a registry schema version arrive with the first release, together wi
 | `OptionalLength` | `Option<Mm>` | as `Length`, or empty: the setting then comes from the document or the machine, or there is none. 0 or less counts as empty, as Ink/Stitch reads it | `float`, unit `mm`, no default |
 | `Angle` | degrees, `f64` | finite; normalized to (−180, 180] | `float`, unit `deg` |
 | `Percent` | `f64` | finite, within range | `float`, unit `%` |
+| `Number` | `f64` | finite, within range, without a unit | `float`, no unit |
 | `Count` | `u32` | whole, within range | `int` |
 | `Toggle` | `bool` | `true`/`false` (also `yes`/`no`, `on`/`off`, `1`/`0`) | `boolean`, `toggle` |
 | `Choice` | `&'static str` (the id) | one of the declared ids; unknown ids are a diagnostic, not a default | `combo`, `dropdown` |
@@ -109,6 +110,7 @@ version and a registry schema version arrive with the first release, together wi
 | `LengthList` | `Vec<Mm>` | 1 to 16 values, each in range (patterns like `"2.5 1.0"`) | `string`/`float` lists |
 | `LengthPair` | `[Mm; 2]` | 1 value for both sides, or 2 for the first side and the second (a satin's rails, or its start and end). Each is in range, with units as for `Length` | `float`, unit `mm (each side)` |
 | `PercentPair` | `[f64; 2]` | as `LengthPair`, in percent | `float`, unit `% (each side)` |
+| `OptionalLengthPair`, `OptionalPercentPair` | `Option<[Mm; 2]>`, `Option<[f64; 2]>` | as `LengthPair` and `PercentPair`, or empty: the setting then comes from another one, as a zigzag underlay's inset comes from the contour's. 0 is a value, as Ink/Stitch reads it | `float`, unit `mm (each side)` or `% (each side)`, no default |
 | `PercentList` | `Vec<f64>` | 1 to 16 percentages, each in range (levels like `"15 30"`) | `float`, unit `%`, read as a list |
 | `CountList` | `Vec<u32>` | 1–16 whole numbers, each in range | `string`/`int` lists |
 | `Text` | `String` | ≤ 4,096 bytes; kind-specific grammar (e.g. a custom lock path) is checked by its user | `string` |

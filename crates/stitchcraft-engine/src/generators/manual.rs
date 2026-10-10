@@ -17,25 +17,15 @@
 
 use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Mm, Point};
-use stitchcraft_params::{StitchType, params};
 
 use crate::design::{Path, Subpath};
 use crate::generators::passes::{self, RepeatParams};
 use crate::generators::{Stitched, TooSmall, mm, too_small};
 
-params! {
-    /// Manual stitch: a needle point on every node of the path, for stitches placed by hand.
-    pub struct ManualParams for &[StitchType::ManualStitch];
-
-    "Manual stitch" {
-        /// Split stitches longer than this into equal parts. Empty, every stitch is sewn as drawn.
-        max_stitch_length_mm: OptionalLength = "", label "Longest stitch", range (0.1, 25.0);
-    }
-}
-
 /// The manual stitch along `path`, bean-stitched as `passes` say (its repeats do not apply), with no
-/// stitch shorter than `min_stitch`. Every node and every split costs work from `meter`.
-pub fn manual_stitch(path: &Path, params: &ManualParams, passes: &RepeatParams, min_stitch: Mm, meter: &mut Meter) -> Result<Stitched, Exhausted> {
+/// stitch shorter than `min_stitch`, and none longer than `max_stitch` where it is set (the element's
+/// `max_stitch_length_mm`). Every node and every split costs work from `meter`.
+pub fn manual_stitch(path: &Path, max_stitch: Option<Mm>, passes: &RepeatParams, min_stitch: Mm, meter: &mut Meter) -> Result<Stitched, Exhausted> {
     let min = min_stitch.get();
     let mut runs = Vec::with_capacity(path.subpaths.len());
     let mut warnings = Vec::new();
@@ -56,7 +46,7 @@ pub fn manual_stitch(path: &Path, params: &ManualParams, passes: &RepeatParams, 
         if let Some(warning) = left_out(&short, min) {
             warnings.push(warning);
         }
-        let run = split(&kept, params.max_stitch_length_mm.map(Mm::get), min, meter)?;
+        let run = split(&kept, max_stitch.map(Mm::get), min, meter)?;
         runs.push(passes::sew(&run, 1, &passes.bean_stitch_repeats, meter)?);
     }
     Ok(Stitched { runs, warnings })

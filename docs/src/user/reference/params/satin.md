@@ -144,3 +144,198 @@ in. 0 moves none.
 - **Accepts:** a length from 0 to 5 mm
 - **Default:** `0.25`
 - **Ink/Stitch:** same key, meaning and default
+
+## Split stitches
+
+### `split_method`
+
+**Split method.** How stitches longer than the longest stitch (`max_stitch_length_mm`) are split. Default splits
+each into the fewest equal parts no longer than it. Simple splits at whole multiples of it from
+the stitch's start. Staggered moves those splits along from one stitch to the next, so the needle
+holes of neighbouring stitches do not line up in a row.
+
+- **Accepts:** one of `default` (Default), `simple` (Simple), `staggered` (Staggered)
+- **Default:** `default`
+- **Ink/Stitch:** same key, meaning and default
+
+### `random_split_jitter_percent`
+
+**Split jitter.** How far each split may move at random, in percent of a part, either way. With a random split
+phase, how much each part's length may vary instead.
+
+- **Accepts:** a percentage from 0 to 100
+- **Default:** `0`
+- **Shown when** [`split_method`](#split_method) is `default`
+- **Ink/Stitch:** same key, meaning and default
+
+### `random_split_phase`
+
+**Random split phase.** Start each stitch's splits at a random distance from its start, and space them by the longest
+stitch, instead of dividing the stitch evenly. The needle holes of neighbouring stitches then
+fall apart, at the cost of a few more stitches.
+
+- **Accepts:** true or false
+- **Default:** `false`
+- **Shown when** [`split_method`](#split_method) is `default`
+- **Ink/Stitch:** same key, meaning and default
+
+### `min_random_split_length_mm`
+
+**Shortest split stitch.** With a random split phase, also split stitches longer than this but no longer than the longest
+stitch. Empty: the longest stitch.
+
+- **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
+- **Default:** empty
+- **Shown when** [`split_method`](#split_method) is `default`
+- **Ink/Stitch:** same key, meaning and default
+
+### `split_staggers`
+
+**Staggers.** How many stitches the staggered splits take to come back to where they started. A fraction draws
+diagonals that show less than whole numbers do.
+
+- **Accepts:** a number from 0.01 to 100
+- **Default:** `4`
+- **Shown when** [`split_method`](#split_method) is `staggered`
+- **Ink/Stitch:** same key, meaning and default
+
+## Centre walk underlay
+
+### `center_walk_underlay`
+
+**Centre walk underlay.** Sew a running stitch along the middle of the column first, there and back. It holds the fabric
+still along the column, and suits narrow columns. The other underlays and the top stitches
+follow it.
+
+- **Accepts:** true or false
+- **Default:** `false`
+- **Ink/Stitch:** same key, meaning and default
+
+### `center_walk_underlay_stitch_length_mm`
+
+**Centre walk stitch length.** How long each stitch of the centre walk is. Between corners its stitches are spread evenly, so
+each one is at most this long.
+
+- **Accepts:** a length from 0.1 to 25 mm
+- **Default:** `3`
+- **Ink/Stitch:** same key, meaning and default
+
+### `center_walk_underlay_stitch_tolerance_mm`
+
+**Centre walk tolerance.** How far a centre walk stitch may stray from the middle of the column on a curve. A smaller
+tolerance follows curves more closely, with more and shorter stitches.
+
+- **Accepts:** a length from 0.01 to 5 mm
+- **Default:** `0.2`
+- **Ink/Stitch:** same key; StitchCraft differs (DEV-SAT-004): The centre walk underlay keeps within center_walk_underlay_stitch_tolerance_mm of its line, and follows points that far apart. Ink/Stitch declares that parameter but uses running_stitch_tolerance_mm in its place, the tolerance of the satin's travel to its start and end. Both are 0.2 mm unless a file sets them.
+
+### `center_walk_underlay_repeats`
+
+**Centre walk repeats.** How many times the centre walk is sewn: 2 goes there and back, 3 there, back and there again.
+An odd number ends at the column's end, and the rest of the column is then sewn from its end.
+
+- **Accepts:** a whole number from 1 to 100
+- **Default:** `2`
+- **Ink/Stitch:** same key, meaning and default
+
+### `center_walk_underlay_position`
+
+**Centre walk position.** Where the centre walk runs, in percent of the way from the first rail to the second: 50 is the
+middle.
+
+- **Accepts:** a percentage from 0 to 100
+- **Default:** `50`
+- **Ink/Stitch:** same key, meaning and default
+
+## Contour underlay
+
+### `contour_underlay`
+
+**Contour underlay.** Sew a running stitch along each edge of the column, a little inside it, after any centre walk.
+It holds the edges still and keeps them crisp.
+
+- **Accepts:** true or false
+- **Default:** `false`
+- **Ink/Stitch:** same key, meaning and default
+
+### `contour_underlay_stitch_length_mm`
+
+**Contour stitch length.** How long each stitch of the contour is. Between corners its stitches are spread evenly, so each
+one is at most this long.
+
+- **Accepts:** a length from 0.1 to 25 mm
+- **Default:** `3`
+- **Ink/Stitch:** same key, meaning and default
+
+### `contour_underlay_stitch_tolerance_mm`
+
+**Contour tolerance.** How far a contour stitch may stray from its line on a curve. A smaller tolerance follows curves
+more closely, with more and shorter stitches.
+
+- **Accepts:** a length from 0.01 to 5 mm
+- **Default:** `0.2`
+- **Ink/Stitch:** same key, meaning and default
+
+### `contour_underlay_inset_mm`
+
+**Contour inset.** How far inside each rail the contour runs, so that it does not show past the top stitches. It
+also stops short of the column's start by the first rail's value and of its end by the
+second's. 2 values set the first rail's side, then the second's.
+
+- **Accepts:** a length from -10 to 10 mm, or 2 separated by a space
+- **Default:** `0.4`
+- **Ink/Stitch:** same key, meaning and default
+
+### `contour_underlay_inset_percent`
+
+**Contour inset (% of width).** More inset, in percent of the column's width at each point, added to the length above. 2 values
+set the first rail's side, then the second's.
+
+- **Accepts:** a percentage from -100 to 100, or 2 separated by a space
+- **Default:** `0`
+- **Ink/Stitch:** same key, meaning and default
+
+## Zigzag underlay
+
+### `zigzag_underlay`
+
+**Zigzag underlay.** Sew a sparse zigzag across the column, to its end and back, before the top stitches. It lifts
+them off the fabric and makes a wide column look fuller.
+
+- **Accepts:** true or false
+- **Default:** `false`
+- **Ink/Stitch:** same key, meaning and default
+
+### `zigzag_underlay_spacing_mm`
+
+**Zigzag underlay spacing.** How far apart the zigzag's points on each rail are, each way.
+
+- **Accepts:** a length from 0.01 to 10 mm
+- **Default:** `3`
+- **Ink/Stitch:** same key, meaning and default
+
+### `zigzag_underlay_inset_mm`
+
+**Zigzag underlay inset.** How far inside each rail the zigzag's points are. Empty: half the contour's inset, which puts
+them between the contour and the edge. 2 values set the first rail's side, then the second's.
+
+- **Accepts:** a length from -10 to 10 mm, or 2 separated by a space, or empty
+- **Default:** empty
+- **Ink/Stitch:** same key, meaning and default
+
+### `zigzag_underlay_inset_percent`
+
+**Zigzag underlay inset (% of width).** More inset, in percent of the column's width at each point, added to the length above. Empty:
+half the contour's. 2 values set the first rail's side, then the second's.
+
+- **Accepts:** a percentage from -100 to 100, or 2 separated by a space, or empty
+- **Default:** empty
+- **Ink/Stitch:** same key, meaning and default
+
+### `zigzag_underlay_max_stitch_length_mm`
+
+**Zigzag underlay longest stitch.** Split zigzag stitches longer than this into equal parts. Empty: none is split.
+
+- **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
+- **Default:** empty
+- **Ink/Stitch:** same key, meaning and default

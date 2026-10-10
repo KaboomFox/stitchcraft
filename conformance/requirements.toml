@@ -458,17 +458,19 @@ status = "active"
 id = "REQ-SAT-003"
 area = "satin"
 level = "L2"
-statement = "No top stitch exceeds max_stitch_length_mm after splitting; split seams follow the chosen method."
+statement = "Where max_stitch_length_mm is set, a top stitch longer than it is split as split_method says, as Ink/Stitch splits it. The default method splits it into the fewest equal parts no longer than it, each split moved by up to random_split_jitter_percent of a part, and the stitch back after it into as many parts as the stitch across before. With random_split_phase the splits start at a random share of the length and follow at the length. Simple splits at whole multiples of the length from the stitch's start, and staggered from a start that moves along by a split_staggers-th of it from one stitch to the next. Splits lie strictly between the stitch's insets."
+rationale = "Long satin stitches snag and lie loose. Splitting them as Ink/Stitch does sews a file the same in both."
 milestone = "M4"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-SAT-004"
 area = "satin"
 level = "L2"
-statement = "Underlays lie inside their inset band and precede the top stitches."
+statement = "A satin column's underlays are sewn before its top stitches, in one run with them, as Ink/Stitch sews them. The centre walk comes first, then the contour and the zigzag, each one that is on. From where one ends to where the next starts, the needle goes straight, in equal stitches no longer than running_stitch_length_mm. A centre walk with an odd number of repeats ends at the column's end, and the contour, the zigzag and the top stitches then go from the end to the start. Underlays change no top stitch."
+rationale = "Underlay holds the fabric still and lifts the top stitches off it. Sewn in Ink/Stitch's order and directions, a file sews the same in both programs."
 milestone = "M4"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-SAT-005"
@@ -512,6 +514,33 @@ area = "satin"
 level = "L2"
 statement = "On each rail, a top stitch end closer than short_stitch_distance_mm to the last end left in place there moves in along its stitch by the next of the short_stitch_inset percentages of the stitch's width, taking turns with them. Any other end stays, and the next ends are measured from it."
 rationale = "On the inside of a tight curve, needle points crowd together and the thread piles up there. Ink/Stitch insets them this way, by default, so a file sews the same in both."
+milestone = "M4"
+status = "active"
+
+[[req]]
+id = "REQ-SAT-010"
+area = "satin"
+level = "L2"
+statement = "A centre walk underlay runs along the line center_walk_underlay_position percent of the way from the first rail to the second, as a running stitch of center_walk_underlay_stitch_length_mm that keeps within center_walk_underlay_stitch_tolerance_mm of the line. It is sewn center_walk_underlay_repeats times, there and back."
+rationale = "A centre walk anchors the middle of a column. Ink/Stitch walks it along the same line, so a file sews the same in both."
+milestone = "M4"
+status = "active"
+
+[[req]]
+id = "REQ-SAT-011"
+area = "satin"
+level = "L2"
+statement = "A contour underlay runs along each rail, inset by contour_underlay_inset_mm plus contour_underlay_inset_percent of the column's width on that rail's side, as a running stitch of contour_underlay_stitch_length_mm within contour_underlay_stitch_tolerance_mm. Each side stops short of the column's start by the first rail's inset in millimetres, and of its end by the second's. The first rail's side is sewn towards the column's end, and the second's back. A side too short to stop short of both keeps its length, with SC-W0206."
+rationale = "A contour holds the column's edges still under the top stitches, inside them, where it does not show. Ink/Stitch sews it this way, so a file sews the same in both."
+milestone = "M4"
+status = "active"
+
+[[req]]
+id = "REQ-SAT-012"
+area = "satin"
+level = "L2"
+statement = "A zigzag underlay places pairs of points across the column every half zigzag_underlay_spacing_mm, each end inset by zigzag_underlay_inset_mm and zigzag_underlay_inset_percent, which are half the contour's insets when empty. It zigzags to the column's end through one end of each pair, on either rail in turn, and back through the other ends. A stitch longer than zigzag_underlay_max_stitch_length_mm is split into equal parts no longer than it."
+rationale = "A sparse zigzag lifts the top stitches and makes a wide column look fuller. Ink/Stitch sews it this way, so a file sews the same in both."
 milestone = "M4"
 status = "active"
 

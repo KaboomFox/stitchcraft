@@ -54,7 +54,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `running_stitch_tolerance_mm` | float | mm | 0.2 | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#running_stitch_tolerance_mm) |
 | `enable_random_stitch_length` | boolean | — | false | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#enable_random_stitch_length) |
 | `random_stitch_length_jitter_percent` | float | ± % | 10 | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#random_stitch_length_jitter_percent) |
-| `max_stitch_length_mm` | float | mm | — | `manual_stitch` | P1 (M3) | [registered](../user/reference/params/manual.md#max_stitch_length_mm) |
+| `max_stitch_length_mm` | float | mm | — | `manual_stitch` | P1 (M3) | [registered](../user/reference/params/common.md#max_stitch_length_mm) |
 | `zigzag_spacing_mm` | string | mm | 0.4 | `zigzag_stitch` | P2 (M7) | planned |
 | `stroke_pull_compensation_mm` | float | mm (each side) | 0 | `zigzag_stitch` | P2 (M7) | planned |
 | `zigzag_angle` | float | ° | 0 | `zigzag_stitch` | P2 (M7) | planned |
@@ -88,12 +88,12 @@ registry uses these names as its keys so files move between the tools unchanged
 | `random_width_decrease_percent` | float | % (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#random_width_decrease_percent) |
 | `random_width_increase_percent` | float | % (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#random_width_increase_percent) |
 | `random_zigzag_spacing_percent` | float | ± % | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#random_zigzag_spacing_percent) |
-| `split_method` | combo | — | 0 | all | P1 (M4) | planned |
-| `max_stitch_length_mm` | float | mm | — | all | P1 (M4) | planned |
-| `random_split_jitter_percent` | float | ± % | 0 | `default` | P1 (M4) | planned |
-| `random_split_phase` | boolean | — | false | `default` | P1 (M4) | planned |
-| `min_random_split_length_mm` | float | mm | — | `default` | P1 (M4) | planned |
-| `split_staggers` | float | — | 4 | `staggered` | P1 (M4) | planned |
+| `split_method` | combo | — | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#split_method) |
+| `max_stitch_length_mm` | float | mm | — | all | P1 (M4) | [registered](../user/reference/params/common.md#max_stitch_length_mm) |
+| `random_split_jitter_percent` | float | ± % | 0 | `default` | P1 (M4) | [registered](../user/reference/params/satin.md#random_split_jitter_percent) |
+| `random_split_phase` | boolean | — | false | `default` | P1 (M4) | [registered](../user/reference/params/satin.md#random_split_phase) |
+| `min_random_split_length_mm` | float | mm | — | `default` | P1 (M4) | [registered](../user/reference/params/satin.md#min_random_split_length_mm) |
+| `split_staggers` | float | — | 4 | `staggered` | P1 (M4) | [registered](../user/reference/params/satin.md#split_staggers) |
 | `short_stitch_inset` | float | % | 15 | all | P1 (M4) | [registered](../user/reference/params/satin.md#short_stitch_inset) |
 | `short_stitch_distance_mm` | float | mm | 0.25 | all | P1 (M4) | [registered](../user/reference/params/satin.md#short_stitch_distance_mm) |
 | `zigzag_spacing_mm` | float | mm/cycle | 0.4 | all | P1 (M4) | [registered](../user/reference/params/satin.md#zigzag_spacing_mm) |
@@ -102,26 +102,26 @@ registry uses these names as its keys so files move between the tools unchanged
 | `push_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#push_compensation_mm) |
 | `reverse_rails` | combo | — | automatic | all | P1 (M4) | [registered](../user/reference/params/satin.md#reverse_rails) |
 | `swap_satin_rails` | boolean | — | false | all | P1 (M4) | [registered](../user/reference/params/satin.md#swap_satin_rails) |
-| `running_stitch_length_mm` | float | mm | 2.5 | all | P1 (M4) | planned |
+| `running_stitch_length_mm` | float | mm | 2.5 | all | P1 (M4) | [registered](../user/reference/params/running.md#running_stitch_length_mm) |
 | `running_stitch_tolerance_mm` | float | mm | 0.1 | all | P1 (M4) | planned |
 | `running_stitch_position` | float | % | 50 | all | P1 (M4) | planned |
 | `start_at_nearest_point` | boolean | — | true | all | P1 (M4) | planned |
 | `end_at_nearest_point` | boolean | — | true | all | P1 (M4) | planned |
-| `contour_underlay` | toggle | — | — | all | P1 (M4) | planned |
-| `contour_underlay_stitch_length_mm` | float | mm | 3 | all | P1 (M4) | planned |
-| `contour_underlay_stitch_tolerance_mm` | float | mm | 0.2 | all | P1 (M4) | planned |
-| `contour_underlay_inset_mm` | float | mm (each side) | 0.4 | all | P1 (M4) | planned |
-| `contour_underlay_inset_percent` | float | % (each side) | 0 | all | P1 (M4) | planned |
-| `center_walk_underlay` | toggle | — | — | all | P1 (M4) | planned |
-| `center_walk_underlay_stitch_length_mm` | float | mm | 3 | all | P1 (M4) | planned |
-| `center_walk_underlay_stitch_tolerance_mm` | float | mm | 0.2 | all | P1 (M4) | planned |
-| `center_walk_underlay_repeats` | int | — | 2 | all | P1 (M4) | planned |
-| `center_walk_underlay_position` | float | % | 50 | all | P1 (M4) | planned |
-| `zigzag_underlay` | toggle | — | — | all | P1 (M4) | planned |
-| `zigzag_underlay_spacing_mm` | float | mm | 3 | all | P1 (M4) | planned |
-| `zigzag_underlay_inset_mm` | float | mm (each side) | — | all | P1 (M4) | planned |
-| `zigzag_underlay_inset_percent` | float | % (each side) | — | all | P1 (M4) | planned |
-| `zigzag_underlay_max_stitch_length_mm` | float | mm | — | all | P1 (M4) | planned |
+| `contour_underlay` | toggle | — | — | all | P1 (M4) | [registered](../user/reference/params/satin.md#contour_underlay) |
+| `contour_underlay_stitch_length_mm` | float | mm | 3 | all | P1 (M4) | [registered](../user/reference/params/satin.md#contour_underlay_stitch_length_mm) |
+| `contour_underlay_stitch_tolerance_mm` | float | mm | 0.2 | all | P1 (M4) | [registered](../user/reference/params/satin.md#contour_underlay_stitch_tolerance_mm) |
+| `contour_underlay_inset_mm` | float | mm (each side) | 0.4 | all | P1 (M4) | [registered](../user/reference/params/satin.md#contour_underlay_inset_mm) |
+| `contour_underlay_inset_percent` | float | % (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#contour_underlay_inset_percent) |
+| `center_walk_underlay` | toggle | — | — | all | P1 (M4) | [registered](../user/reference/params/satin.md#center_walk_underlay) |
+| `center_walk_underlay_stitch_length_mm` | float | mm | 3 | all | P1 (M4) | [registered](../user/reference/params/satin.md#center_walk_underlay_stitch_length_mm) |
+| `center_walk_underlay_stitch_tolerance_mm` | float | mm | 0.2 | all | P1 (M4) | [deviates](../user/reference/params/satin.md#center_walk_underlay_stitch_tolerance_mm) |
+| `center_walk_underlay_repeats` | int | — | 2 | all | P1 (M4) | [registered](../user/reference/params/satin.md#center_walk_underlay_repeats) |
+| `center_walk_underlay_position` | float | % | 50 | all | P1 (M4) | [registered](../user/reference/params/satin.md#center_walk_underlay_position) |
+| `zigzag_underlay` | toggle | — | — | all | P1 (M4) | [registered](../user/reference/params/satin.md#zigzag_underlay) |
+| `zigzag_underlay_spacing_mm` | float | mm | 3 | all | P1 (M4) | [registered](../user/reference/params/satin.md#zigzag_underlay_spacing_mm) |
+| `zigzag_underlay_inset_mm` | float | mm (each side) | — | all | P1 (M4) | [registered](../user/reference/params/satin.md#zigzag_underlay_inset_mm) |
+| `zigzag_underlay_inset_percent` | float | % (each side) | — | all | P1 (M4) | [registered](../user/reference/params/satin.md#zigzag_underlay_inset_percent) |
+| `zigzag_underlay_max_stitch_length_mm` | float | mm | — | all | P1 (M4) | [registered](../user/reference/params/satin.md#zigzag_underlay_max_stitch_length_mm) |
 | `random_seed` | random_seed | — | — | all | P1 (M4) | [registered](../user/reference/params/common.md#random_seed) |
 
 ## Fills
@@ -261,4 +261,4 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
 
-_145 parameter declarations, 38 registered in StitchCraft._
+_145 parameter declarations, 60 registered in StitchCraft._

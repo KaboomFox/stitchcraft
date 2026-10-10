@@ -16,7 +16,7 @@ use stitchcraft_engine::generators::satin::{SatinParams, satin_stitch};
 use stitchcraft_engine::normalize::satin::{Shape, recognize};
 use stitchcraft_params::ParamSet;
 use stitchcraft_testkit::designs::{RED, along, messages, p, planned as sewn, polylines, shape_of};
-use stitchcraft_testkit::satins::{NO_SHORT_STITCHES, across, gaps, ladder, quarter_ring, sewn_satin};
+use stitchcraft_testkit::satins::{NO_SHORT_STITCHES, across, gaps, ladder, quarter_ring, satin_lengths, sewn_satin};
 
 #[test]
 fn req_sat_002_a_straight_column_is_sewn_rail_to_rail_at_the_spacing() {
@@ -143,7 +143,8 @@ fn req_sat_002_where_the_rails_converge_a_pair_moves_to_lie_at_the_spacing() {
     let Ok(Shape::Rails(satin)) = recognize(&v, &mut meter).unwrap().shape else { panic!() };
     let params = SatinParams::from_set(&ParamSet::default()).unwrap().params;
     let mut meter = Budget::DEFAULT.meter();
-    let pairs = across(&satin_stitch(&satin, &params, &mut SplitMix64::new(0), &mut meter).unwrap().runs[0]);
+    let lengths = satin_lengths(&ParamSet::default());
+    let pairs = across(&satin_stitch(&satin, &params, lengths, &mut SplitMix64::new(0), &mut meter).unwrap().runs[0]);
     let gaps = gaps(&pairs);
     let inside = &gaps[..gaps.len() - 1];
     assert!(inside.iter().all(|gap| (gap - 0.4).abs() <= 0.02), "within 5 %: {gaps:?}");
@@ -194,9 +195,9 @@ fn req_sat_002_satin_stitches_are_charged_to_the_budget() {
     let path = ladder(10.0, 4.0, &[5.0]);
     let mut meter = Budget::DEFAULT.meter();
     let Ok(Shape::Rails(satin)) = recognize(&path, &mut meter).unwrap().shape else { panic!() };
-    let params = SatinParams::from_set(&ParamSet::default()).unwrap().params;
-    assert!(satin_stitch(&satin, &params, &mut SplitMix64::new(0), &mut Budget { max_stitches: 10, max_work: 20 }.meter()).is_err());
-    assert!(satin_stitch(&satin, &params, &mut SplitMix64::new(0), &mut Budget::DEFAULT.meter()).is_ok());
+    let (params, lengths) = (SatinParams::from_set(&ParamSet::default()).unwrap().params, satin_lengths(&ParamSet::default()));
+    assert!(satin_stitch(&satin, &params, lengths, &mut SplitMix64::new(0), &mut Budget { max_stitches: 10, max_work: 20 }.meter()).is_err());
+    assert!(satin_stitch(&satin, &params, lengths, &mut SplitMix64::new(0), &mut Budget::DEFAULT.meter()).is_ok());
 }
 
 proptest! {

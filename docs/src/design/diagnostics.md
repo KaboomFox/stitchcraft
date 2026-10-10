@@ -90,7 +90,7 @@ another.
 | `SC-W0202` | Warning | Satin rails taken as the two longest subpaths (where the subpaths meet does not say) | M4 |
 | `SC-W0203` | Warning | Satin rung does not cross both rails (dangling rung); the rail's nearest point is used | M4 |
 | `SC-W0205` | Warning | Satin subpath is one point; left out | M4 |
-| `SC-W0206` | Warning | Satin narrower than the minimum width; underlay skipped | M4 |
+| `SC-W0206` | Warning | Satin contour underlay too short for its insets; it keeps its length | M4 |
 | `SC-W0207` | Warning | Satin rung crosses a rail more than once; left out | M4 |
 | `SC-W0208` | Warning | Satin stitches skew more than 45° from the column; add a rung here | M4 |
 | `SC-W0209` | Warning | Satin wider than 12 mm; long stitches may snag | M4 |

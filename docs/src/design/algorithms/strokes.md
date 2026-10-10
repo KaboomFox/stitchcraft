@@ -61,6 +61,12 @@ every platform places the same stitches.
 **Compared with Ink/Stitch:** the same parameters, meanings and defaults; the placement differs in four
 documented ways, `DEV-RUN-001` to `DEV-RUN-004` in the deviations ledger (`conformance/deviations.toml`).
 
+**Satin underlays** walk lines made point by point by the satin generator
+([satin](satin.md#underlays)), and steps 2 to 5 place their stitches, with each walk's own length and
+tolerance. Such a line is a polyline already, and each join that turns by more than 30° is a corner. A
+line too small for a stitch of the shortest length is sewn as its 2 ends, as Ink/Stitch sews it, and
+finalizing merges what is too short.
+
 ### Repeats and bean stitch
 
 - `repeats = k` sews the path k times, alternating direction; odd k ends at the far end, even k returns
@@ -101,15 +107,15 @@ keeps the random phase, for the same reason.
 ### Diagnostics
 
 `SC-W0401` part of the path too small for the shortest stitch (skipped); `SC-W0402` stitch length below
-twice the shortest stitch (raised).
+twice the shortest stitch (raised), a stroke's or a satin underlay's, which the message names.
 
 ## Manual stitch
 
 Every node of the path is a needle penetration, in order — for hand-placed stitches and imported stitch
 files. A curve gives only its end node: its control points are not stitched and it is not flattened. A
 node where the needle already is counts once, and a closed path comes back to its start. Segments longer
-than `max_stitch_length_mm` (if set) are split into the fewest equal parts no longer than it, but never
-into parts shorter than the shortest stitch. A value of 0 or less means "not set", as in Ink/Stitch, so
+than `max_stitch_length_mm` (if set, a setting manual stitch shares with satin columns) are split into the
+fewest equal parts no longer than it, but never into parts shorter than the shortest stitch. A value of 0 or less means "not set", as in Ink/Stitch, so
 every stitch is then sewn as drawn. Bean stitch applies; repeats do not. Lock stitches are added
 only when `force_lock_stitches` is set, as in Ink/Stitch (read at `d59c9ab`).
 

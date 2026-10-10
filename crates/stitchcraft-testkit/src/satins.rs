@@ -6,9 +6,11 @@ use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Point};
 use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::design::{Path, Segment, Subpath};
-use stitchcraft_engine::generators::satin::{SatinParams, satin_stitch};
+use stitchcraft_engine::generators::running::RunningParams;
+use stitchcraft_engine::generators::satin::{SatinLengths, SatinParams, satin_stitch};
 use stitchcraft_engine::normalize::satin::{Shape, recognize};
 use stitchcraft_params::ParamSet;
+use stitchcraft_plan::profiles::REFERENCE;
 
 use crate::designs::{p, polylines};
 
@@ -20,15 +22,24 @@ pub const SATIN_ID: &str = "satin";
 pub const NO_SHORT_STITCHES: (&str, &str) = ("short_stitch_distance_mm", "0");
 
 /// The needle points of the satin column `path`, sewn with the parameters `params` (Ink/Stitch keys and
-/// values) as the element [`SATIN_ID`] is, and its warnings.
+/// values) as the element [`SATIN_ID`] is, on the reference machine, and its warnings.
 pub fn sewn_satin(path: &Path, params: &[(&str, &str)]) -> (Vec<Point>, Vec<String>) {
     let mut meter = Budget::DEFAULT.meter();
     let Ok(Shape::Rails(satin)) = recognize(path, &mut meter).unwrap().shape else { panic!("not rails: {path:?}") };
     let set: ParamSet = params.iter().copied().collect();
-    let mut rng = SplitMix64::for_element(SATIN_ID, CommonParams::from_set(&set).unwrap().params.random_seed.unwrap_or(0));
-    let stitched = satin_stitch(&satin, &SatinParams::from_set(&set).unwrap().params, &mut rng, &mut meter).unwrap();
+    let seed = CommonParams::from_set(&set).unwrap().params.random_seed;
+    let mut rng = SplitMix64::for_element(SATIN_ID, seed.unwrap_or(0));
+    let stitched = satin_stitch(&satin, &SatinParams::from_set(&set).unwrap().params, satin_lengths(&set), &mut rng, &mut meter).unwrap();
     assert_eq!(stitched.runs.len(), 1);
     (stitched.runs.into_iter().flatten().collect(), stitched.warnings.iter().map(ToString::to_string).collect())
+}
+
+/// The stitch lengths of a satin column whose element sets `set`, as the engine gives them on the reference
+/// machine: its shortest stitch, its longest, and the first of the running stitch's lengths for its travel.
+pub fn satin_lengths(set: &ParamSet) -> SatinLengths {
+    let max_stitch = CommonParams::from_set(set).unwrap().params.max_stitch_length_mm;
+    let travel = RunningParams::from_set(set).unwrap().params.running_stitch_length_mm[0];
+    SatinLengths { min_stitch: REFERENCE.min_stitch, max_stitch, travel }
 }
 
 /// The needle points in pairs across the column: the first rail's, then the second's.

@@ -135,6 +135,9 @@ macro_rules! __param_kind {
     (Percent; $min:expr, $max:expr; ;) => {
         $crate::Kind::Percent { min: $min, max: $max }
     };
+    (Number; $min:expr, $max:expr; ;) => {
+        $crate::Kind::Number { min: $min, max: $max }
+    };
     (Count; $min:expr, $max:expr; ;) => {
         $crate::Kind::Count { min: $min, max: $max }
     };
@@ -154,10 +157,16 @@ macro_rules! __param_kind {
         $crate::Kind::LengthList { min: $min, max: $max }
     };
     (LengthPair; $min:expr, $max:expr; ;) => {
-        $crate::Kind::LengthPair { min: $min, max: $max }
+        $crate::Kind::LengthPair { min: $min, max: $max, optional: false }
+    };
+    (OptionalLengthPair; $min:expr, $max:expr; ;) => {
+        $crate::Kind::LengthPair { min: $min, max: $max, optional: true }
     };
     (PercentPair; $min:expr, $max:expr; ;) => {
-        $crate::Kind::PercentPair { min: $min, max: $max }
+        $crate::Kind::PercentPair { min: $min, max: $max, optional: false }
+    };
+    (OptionalPercentPair; $min:expr, $max:expr; ;) => {
+        $crate::Kind::PercentPair { min: $min, max: $max, optional: true }
     };
     (PercentList; $min:expr, $max:expr; ;) => {
         $crate::Kind::PercentList { min: $min, max: $max }

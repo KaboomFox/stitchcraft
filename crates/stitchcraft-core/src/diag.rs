@@ -189,6 +189,14 @@ registry! {
     /// if it was meant as a rung, draw the rung across both rails.
     SatinSubpathPoint = "SC-W0205", Warning, "Satin subpath is one point; left out";
 
+    /// A satin column's contour underlay stops short of the column's start and end by its inset, but a side
+    /// of it is so short that this would leave less than half a CSS pixel (0.13 mm), so that side runs to
+    /// the column's ends, as in Ink/Stitch.
+    ///
+    /// The message gives the insets at each end. Lower `contour_underlay_inset_mm`, or turn the contour
+    /// underlay off for so short a column.
+    SatinContourTooShort = "SC-W0206", Warning, "Satin contour underlay too short for its insets; it keeps its length";
+
     /// A rung of a satin column crosses a rail more than once, so it does not say which point of one rail
     /// goes with which point of the other, and it was left out. The column is sewn without it.
     ///
@@ -222,13 +230,13 @@ registry! {
     /// neighbour, or delete it if it is a stray.
     StrokeTooSmall = "SC-W0401", Warning, "Path too small for the shortest stitch; skipped";
 
-    /// The running stitch length is shorter than twice the shortest stitch, so it was lengthened to
-    /// twice the shortest stitch. Stitches are spread evenly between corners; at half the length or
-    /// more, every stitch then stays at or above the shortest stitch, whatever the distance between
-    /// corners.
+    /// A running stitch's length, a stroke's or that of one of a satin column's underlays, is shorter than
+    /// twice the shortest stitch, so it was lengthened to twice the shortest stitch. Stitches are spread
+    /// evenly between corners; at half the length or more, every stitch then stays at or above the
+    /// shortest stitch, whatever the distance between corners.
     ///
-    /// The message gives both lengths. Use a longer stitch length, or a shorter minimum if your machine
-    /// sews shorter stitches well.
+    /// The message names the parameter and gives both lengths. Use a longer stitch length, or a shorter
+    /// minimum if your machine sews shorter stitches well.
     StitchLengthRaised = "SC-W0402", Warning, "Stitch length below twice the shortest stitch; raised";
 
     /// Hand-placed stitches (manual stitch) shorter than the shortest stitch the machine sews well: the

@@ -214,7 +214,9 @@ fn diag_sc_w0402_a_stitch_length_below_twice_the_shortest_stitch_is_raised() {
     let stitched = stitch(&polyline(&[(0.0, 0.0), (6.0, 0.0)], false), &params("0.4", "0.2"), 0.3);
     assert_eq!(
         stitched.warnings.iter().map(ToString::to_string).collect::<Vec<_>>(),
-        ["warning SC-W0402: The stitch length 0.4 mm is shorter than twice the shortest stitch (0.3 mm), so 0.6 mm is used."]
+        [
+            "warning SC-W0402: The stitch length 0.4 mm (`running_stitch_length_mm`) is shorter than twice the shortest stitch (0.3 mm), so 0.6 mm is used."
+        ]
     );
     assert!(lengths(&stitched.runs[0]).iter().all(|l| (l - 0.6).abs() < 1e-9));
 }
