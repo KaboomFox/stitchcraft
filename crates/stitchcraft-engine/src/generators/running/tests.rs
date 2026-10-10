@@ -242,3 +242,13 @@ fn random_lengths_are_frozen() {
     let draws: Vec<f64> = (0..5).map(|i| lengths.draw(i == 0, 9.0)).collect();
     assert_eq!(draws, [0.4770334515316359, 0.822880904204111, 2.188381433047275, 0.630424134832197, 3.236456153093065]);
 }
+
+#[test]
+fn an_underlay_walk_too_small_for_a_stitch_is_sewn_as_its_ends() {
+    // 0.1 mm long, with stitches no shorter than 0.3 mm: no stitch fits, and the walk is its 2 ends, as
+    // Ink/Stitch sews it.
+    let walk: Vec<Point> = [(0.0, 0.0), (0.05, 0.01), (0.1, 0.0)].iter().map(|&(x, y)| Point::new(x, y).unwrap()).collect();
+    let sewn = along_line(&walk, 2.5, 0.2, 0.3, &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(sewn, [walk[0], walk[2]]);
+    assert!(along_line(&[], 2.5, 0.2, 0.3, &mut Budget::DEFAULT.meter()).unwrap().is_empty(), "no walk at all");
+}
