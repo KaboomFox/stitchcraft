@@ -81,9 +81,10 @@ without end. StitchCraft keeps the end spacing from there on (`DEV-FILL-003`).
 A row's *segments* are the stretches of it in the part, its outline included, split at every point where
 the row meets the outline (`REQ-FILL-TAT-010`). Those are the points where it crosses the outline or the
 outline touches it from inside, and both ends of a stretch where it runs along the outline. A row along
-an edge is then a segment of its own, and a row that only touches the part at a point has none. This is how GEOS, the library behind
-Ink/Stitch's shapes, cuts a line with a polygon. Its answers for 612 rows across random polygons of grid
-squares and half squares are recorded and checked (`conformance/fixtures/geometry/shapely-rows.txt`).
+an edge is then a segment of its own, and a row that only touches the part at a point has none. This is
+how GEOS, the library behind Ink/Stitch's shapes, cuts a line with a polygon. Its answers for 2,511 rows
+across 406 random polygons of grid squares and half squares, 98 of them with holes, are recorded and
+checked (`conformance/fixtures/geometry/shapely-rows.txt`).
 Which stretches lie inside is decided by counting the edges that cross the row, each over its height
 from its lower end up to but not including its upper end.
 

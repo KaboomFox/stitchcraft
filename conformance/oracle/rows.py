@@ -4,9 +4,10 @@ Ink/Stitch lays a fill's rows as lines across its shape and keeps the pieces of 
 library, shapely, finds in the shape. Those pieces decide where rows start and end: a row along the
 outline is a piece, a row the outline touches from inside is cut there, and a row that only touches the
 shape at a point has none. This script draws random polygons from grid squares and half squares, where
-rows often run along edges and through corners, cuts horizontal rows with them, and prints shapely's
-pieces; the tests of `crates/stitchcraft-engine/src/generators/tatami/rows.rs` check that the engine
-finds the same. shapely runs as a black box: only its public API is used and only its answers are kept.
+rows often run along edges and through corners, and blocks of the grid with such cells taken out of their
+inside, which leaves holes. It cuts horizontal rows with them and prints shapely's pieces; the tests of
+`crates/stitchcraft-engine/src/generators/tatami/rows.rs` check that the engine finds the same. shapely
+runs as a black box: only its public API is used and only its answers are kept.
 
 Regenerate the fixture (shapely 2.2.0's wheels bundle GEOS 3.14.1):
 
@@ -34,12 +35,14 @@ import shapely.ops
 SEED = 20261011
 # (grid size, cells drawn, cases).
 GRIDS = [(5, 6, 150), (7, 12, 150)]
+# (block size, cells taken out of its inside, cases), drawn after GRIDS so that their cases stay as they were.
+HOLED = [(6, 4, 100)]
 SPACINGS = [0.5, 1.0]
 
 
-def cell(rng, grid):
-    """A random grid square, or one of its 4 halves cut along a diagonal."""
-    x, y = rng.randrange(grid), rng.randrange(grid)
+def cell(rng, grid, low=0):
+    """A random grid square from `low` to `grid` on each axis, or one of its 4 halves cut along a diagonal."""
+    x, y = rng.randrange(low, grid), rng.randrange(low, grid)
     corners = [(x, y), (x + 1, y), (x + 1, y + 1), (x, y + 1)]
     kind = rng.randrange(5)
     if kind == 4:
@@ -47,10 +50,21 @@ def cell(rng, grid):
     return shapely.Polygon([corners[(kind + k) % 4] for k in range(3)])
 
 
+def parts(shape):
+    """The polygons `shape` falls into."""
+    return [g for g in getattr(shape, "geoms", [shape]) if g.geom_type == "Polygon" and g.area > 0]
+
+
 def polygons(rng, grid, cells):
     """The polygons the union of random cells falls into."""
-    union = shapely.ops.unary_union([cell(rng, grid) for _ in range(cells)])
-    return [g for g in getattr(union, "geoms", [union]) if g.geom_type == "Polygon" and g.area > 0]
+    return parts(shapely.ops.unary_union([cell(rng, grid) for _ in range(cells)]))
+
+
+def holed(rng, block, cells):
+    """The polygons a block of the grid falls into with random cells taken out of its inside, away from its
+    edge: the cells left out are holes, or split the block where they meet."""
+    taken = shapely.ops.unary_union([cell(rng, block - 1, low=1) for _ in range(cells)])
+    return parts(shapely.box(0, 0, block, block).difference(taken))
 
 
 def number(value):
@@ -96,13 +110,14 @@ def main():
     rng = random.Random(SEED)
     print(f"# Rows cut by shapely {shapely.__version__} (GEOS {shapely.geos_version_string}); "
           "conformance/oracle/rows.py, seed {SEED}.".replace("{SEED}", str(SEED)))
-    for grid, cells, count in GRIDS:
-        made = 0
-        while made < count:
-            for polygon in polygons(rng, grid, cells):
-                for spacing in SPACINGS:
-                    print(case(polygon, spacing))
-                made += 1
+    for draw, sizes in [(polygons, GRIDS), (holed, HOLED)]:
+        for size, cells, count in sizes:
+            made = 0
+            while made < count:
+                for polygon in draw(rng, size, cells):
+                    for spacing in SPACINGS:
+                        print(case(polygon, spacing))
+                    made += 1
 
 
 if __name__ == "__main__":
