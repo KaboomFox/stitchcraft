@@ -30,7 +30,8 @@ StitchCraft tells rails from rungs as Ink/Stitch does, and a file sews the same 
 
 1. A subpath that is one point is left out, with `SC-W0205`.
 2. With 1 subpath left, the path is the column's centre line, sewn from M4.8 on. With 2, they are the
-   rails, and the column has no rungs. With none, the element gets `SC-E0201` and no stitches.
+   rails, and their nodes pair up in place of rungs (see Correspondence). With none, the element gets
+   `SC-E0201` and no stitches.
 3. With 3 subpaths, the rails are the 2 that meet exactly 1 other subpath. With 4 or more, the rails are
    the 2 that meet more than 2 others. This step takes only subpaths longer than a tenth of a CSS pixel.
 4. When step 3 does not find exactly 2 rails, the 2 longest subpaths are taken as the rails, and

@@ -15,8 +15,8 @@
 //!   two rules.
 //!
 //! Rails may meet each other, as the two sides of a pointed column do at its tips. A path of two subpaths
-//! is two rails without rungs, and a path of one is the column's centre line (Ink/Stitch's simple satin,
-//! whose width is the stroke's).
+//! is two rails without rungs, whose nodes pair up instead, and a path of one is the column's centre line
+//! (Ink/Stitch's simple satin, whose width is the stroke's).
 //!
 //! Each rung gives a pair of points, one on each rail, where it crosses them. Where a rung misses a rail,
 //! the point of that rail nearest the rung stands in (`SC-W0203`), as in Ink/Stitch. A rung that crosses
@@ -31,7 +31,7 @@ use std::collections::BTreeMap;
 
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
 
-use crate::design::Path;
+use crate::design::{Path, Subpath};
 use crate::normalize::stroke::{self, nearest_on_segment};
 
 /// How closely the polylines follow the subpaths, in millimetres: far finer than a stitch, so subpaths
@@ -50,15 +50,25 @@ const SAME_POINT: f64 = 1e-6;
 /// computed meeting a hair beyond the end of either.
 const ON_SEGMENT: f64 = 1e-9;
 
-/// A satin column's rails and rungs.
+/// A satin column's rails, and what pairs their points.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Satin {
     /// The two rails as polylines, in the order the path draws them.
     pub rails: [Vec<Point>; 2],
+    /// What says which point of one rail goes with which point of the other.
+    pub pairing: Pairing,
+}
+
+/// What pairs the points of a satin column's rails.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Pairing {
     /// The rungs, in the order the path draws them: the point on the first rail and the point on the
     /// second rail that each says go together. Where a rung misses a rail, it is the point of the rail
-    /// nearest the rung.
-    pub rungs: Vec<[Point; 2]>,
+    /// nearest the rung. Empty when every rung drawn was left out.
+    Rungs(Vec<[Point; 2]>),
+    /// The path draws no rungs, and the rails' nodes pair up instead, as in Ink/Stitch: each rail's start,
+    /// the end of each of its segments and, when it is closed, its start again.
+    Nodes([Vec<Point>; 2]),
 }
 
 /// What a satin column's path is.
@@ -85,6 +95,8 @@ struct Line {
     /// Its number in the path, from 1.
     number: usize,
     points: Vec<Point>,
+    /// Its nodes, as `Pairing::Nodes` has them.
+    nodes: Vec<Point>,
     length: f64,
     /// Its bounding box: the least and the greatest x and y.
     bounds: [f64; 4],
@@ -95,7 +107,7 @@ pub fn recognize(path: &Path, meter: &mut Meter) -> Result<Recognition, Exhauste
     let flat = stroke::flatten(path, TOLERANCE, meter)?;
     let mut warnings = Vec::new();
     let mut lines = Vec::new();
-    for (index, piece) in flat.pieces.into_iter().enumerate() {
+    for (index, (subpath, piece)) in path.subpaths.iter().zip(flat.pieces).enumerate() {
         let number = index + 1;
         if piece.points.len() < 2 {
             let message = format!("Subpath {number} of this satin column is one point, so it is left out.");
@@ -103,13 +115,15 @@ pub fn recognize(path: &Path, meter: &mut Meter) -> Result<Recognition, Exhauste
             continue;
         }
         let length = piece.points.windows(2).map(|pair| pair[0].distance(pair[1])).sum();
-        lines.push(Line { number, bounds: bounds(&piece.points), points: piece.points, length });
+        lines.push(Line { number, bounds: bounds(&piece.points), points: piece.points, nodes: nodes(subpath), length });
     }
     let shape = match lines.as_slice() {
         [] => Err(Diagnostic::new(Code::SatinWithoutRails, "This satin column has no subpath longer than a point, so it has no rails.")
             .with_fix(Fix::Hint("Draw the column as two rails, its edges, with rungs across both.".to_string()))),
         [_] => Ok(Shape::CentreLine),
-        [a, b] => Ok(Shape::Rails(Satin { rails: [a.points.clone(), b.points.clone()], rungs: Vec::new() })),
+        [a, b] => {
+            Ok(Shape::Rails(Satin { rails: [a.points.clone(), b.points.clone()], pairing: Pairing::Nodes([a.nodes.clone(), b.nodes.clone()]) }))
+        }
         _ => Ok(Shape::Rails(rails_and_rungs(&lines, &mut warnings, meter)?)),
     };
     Ok(Recognition { shape, warnings })
@@ -180,7 +194,7 @@ fn rails_and_rungs(lines: &[Line], warnings: &mut Vec<Diagnostic>, meter: &mut M
             }
         }
     }
-    Ok(Satin { rails: [rail_a.points.clone(), rail_b.points.clone()], rungs })
+    Ok(Satin { rails: [rail_a.points.clone(), rail_b.points.clone()], pairing: Pairing::Rungs(rungs) })
 }
 
 /// `SC-W0203`'s message for the rung `rung`, which misses the rail `rail` (both subpath numbers).
@@ -202,7 +216,13 @@ fn line(lines: &[Line], i: usize) -> &Line {
 }
 
 /// A subpath with no points, for a position that is not in the list.
-static EMPTY: Line = Line { number: 0, points: Vec::new(), length: 0.0, bounds: [0.0; 4] };
+static EMPTY: Line = Line { number: 0, points: Vec::new(), nodes: Vec::new(), length: 0.0, bounds: [0.0; 4] };
+
+/// The nodes of `subpath`, as `Pairing::Nodes` has them.
+fn nodes(subpath: &Subpath) -> Vec<Point> {
+    let ends = subpath.segments.iter().map(|segment| segment.end());
+    std::iter::once(subpath.start).chain(ends).chain(subpath.closed.then_some(subpath.start)).collect()
+}
 
 /// The points where `a` and `b` meet, each once.
 fn meeting(a: &Line, b: &Line, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
@@ -365,6 +385,16 @@ mod tests {
     }
 
     #[test]
+    fn a_subpath_s_nodes_are_its_start_and_its_segments_ends() {
+        use crate::design::Segment;
+        let open = Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(10.0, 0.0)), Segment::Line(p(10.0, 0.0))], closed: false };
+        assert_eq!(nodes(&open), [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 0.0)], "as drawn, a segment that does not move too");
+        let curve = Segment::Cubic(p(12.0, 2.0), p(12.0, 8.0), p(10.0, 10.0));
+        let closed = Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(10.0, 0.0)), curve], closed: true };
+        assert_eq!(nodes(&closed), [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 0.0)], "closed: back to the start");
+    }
+
+    #[test]
     fn a_position_out_of_the_list_is_an_empty_subpath() {
         assert!(line(&[], 3).points.is_empty());
         assert_eq!(length(&[], 3), 0.0);
@@ -372,7 +402,8 @@ mod tests {
 
     #[test]
     fn the_nearest_point_of_a_rail_with_no_segments_is_the_origin() {
-        let rung = Line { number: 1, points: vec![p(1.0, 1.0), p(2.0, 2.0)], length: 2.0_f64.sqrt(), bounds: [1.0, 1.0, 2.0, 2.0] };
+        let rung =
+            Line { number: 1, points: vec![p(1.0, 1.0), p(2.0, 2.0)], nodes: Vec::new(), length: 2.0_f64.sqrt(), bounds: [1.0, 1.0, 2.0, 2.0] };
         assert_eq!(nearest(&EMPTY, &rung, &mut stitchcraft_core::Budget::DEFAULT.meter()).unwrap(), Point::ORIGIN);
     }
 }

@@ -150,6 +150,9 @@ pub fn stitchcraft_engine::locks::tie_in(&[stitchcraft_core::units::Point], &sti
 pub fn stitchcraft_engine::locks::tie_off(&[stitchcraft_core::units::Point], &stitchcraft_engine::common::CommonParams, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::locks::Lock, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::normalize
 pub mod stitchcraft_engine::normalize::satin
+pub enum stitchcraft_engine::normalize::satin::Pairing
+pub stitchcraft_engine::normalize::satin::Pairing::Nodes([alloc::vec::Vec<stitchcraft_core::units::Point>; 2])
+pub stitchcraft_engine::normalize::satin::Pairing::Rungs(alloc::vec::Vec<[stitchcraft_core::units::Point; 2]>)
 pub enum stitchcraft_engine::normalize::satin::Shape
 pub stitchcraft_engine::normalize::satin::Shape::CentreLine
 pub stitchcraft_engine::normalize::satin::Shape::Rails(stitchcraft_engine::normalize::satin::Satin)
@@ -157,8 +160,8 @@ pub struct stitchcraft_engine::normalize::satin::Recognition
 pub stitchcraft_engine::normalize::satin::Recognition::shape: core::result::Result<stitchcraft_engine::normalize::satin::Shape, stitchcraft_core::diag::Diagnostic>
 pub stitchcraft_engine::normalize::satin::Recognition::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub struct stitchcraft_engine::normalize::satin::Satin
+pub stitchcraft_engine::normalize::satin::Satin::pairing: stitchcraft_engine::normalize::satin::Pairing
 pub stitchcraft_engine::normalize::satin::Satin::rails: [alloc::vec::Vec<stitchcraft_core::units::Point>; 2]
-pub stitchcraft_engine::normalize::satin::Satin::rungs: alloc::vec::Vec<[stitchcraft_core::units::Point; 2]>
 pub const stitchcraft_engine::normalize::satin::MIN_RAIL: f64
 pub const stitchcraft_engine::normalize::satin::TOLERANCE: f64
 pub fn stitchcraft_engine::normalize::satin::recognize(&stitchcraft_engine::design::Path, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::normalize::satin::Recognition, stitchcraft_core::budget::Exhausted>

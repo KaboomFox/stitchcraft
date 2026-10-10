@@ -10,7 +10,7 @@
 
 use proptest::prelude::*;
 use stitchcraft_core::{Budget, Code, ElementId, Point};
-use stitchcraft_engine::normalize::satin::{MIN_RAIL, Recognition, Satin, Shape, recognize};
+use stitchcraft_engine::normalize::satin::{MIN_RAIL, Pairing, Recognition, Satin, Shape, recognize};
 use stitchcraft_engine::normalize::stroke::distance_to_segment;
 use stitchcraft_testkit::designs::{RED, along, line, messages, p, planned as sewn, polylines, shape_of};
 
@@ -20,10 +20,16 @@ fn recognized(parts: &[&[(f64, f64)]]) -> Recognition {
 }
 
 /// The rails and rungs `parts` are recognized as, and the warnings, as people read them.
-fn ladder(parts: &[&[(f64, f64)]]) -> (Satin, Vec<String>) {
+fn ladder(parts: &[&[(f64, f64)]]) -> (Ladder, Vec<String>) {
     let Recognition { shape, warnings } = recognized(parts);
-    let Ok(Shape::Rails(satin)) = shape else { panic!("not rails: {shape:?}") };
-    (satin, warnings.iter().map(ToString::to_string).collect())
+    let Ok(Shape::Rails(Satin { rails, pairing: Pairing::Rungs(rungs) })) = shape else { panic!("not rails and rungs: {shape:?}") };
+    (Ladder { rails, rungs }, warnings.iter().map(ToString::to_string).collect())
+}
+
+/// A satin column's rails and the rungs between them.
+struct Ladder {
+    rails: [Vec<Point>; 2],
+    rungs: Vec<[Point; 2]>,
 }
 
 fn points(list: &[(f64, f64)]) -> Vec<Point> {
@@ -157,7 +163,8 @@ fn diag_sc_w0203_a_rung_that_misses_a_rail_joins_the_point_of_it_nearest_the_run
 fn diag_sc_w0205_a_subpath_of_one_point_is_left_out() {
     // A stray node, and a line that does not move, drawn between the rails.
     let Recognition { shape, warnings } = recognized(&[LOWER, &[(7.0, 2.0)], &[(9.0, 2.0), (9.0, 2.0)], UPPER]);
-    assert_eq!(shape, Ok(Shape::Rails(Satin { rails: [points(LOWER), points(UPPER)], rungs: Vec::new() })));
+    let rails = [points(LOWER), points(UPPER)];
+    assert_eq!(shape, Ok(Shape::Rails(Satin { pairing: Pairing::Nodes(rails.clone()), rails })), "2 rails, whose nodes pair up");
     let shown: Vec<String> = warnings.iter().map(ToString::to_string).collect();
     assert_eq!(
         shown,
@@ -324,12 +331,20 @@ proptest! {
         match shape {
             Err(error) => prop_assert_eq!((error.code, usable), (Code::SatinWithoutRails, 0)),
             Ok(Shape::CentreLine) => prop_assert_eq!(usable, 1),
-            Ok(Shape::Rails(satin)) => {
+            Ok(Shape::Rails(Satin { rails, pairing })) => {
                 prop_assert!(usable >= 2);
                 let lines: Vec<Vec<Point>> = parts.iter().map(|part| points(part)).collect();
-                prop_assert!(satin.rails.iter().all(|rail| lines.contains(rail)), "each rail is a subpath as drawn");
-                prop_assert_eq!(satin.rungs.len() + count(Code::SatinRungAmbiguous), usable - 2, "every other subpath is a rung or left out");
+                prop_assert!(rails.iter().all(|rail| lines.contains(rail)), "each rail is a subpath as drawn");
+                let rungs = match pairing {
+                    Pairing::Rungs(rungs) => rungs,
+                    Pairing::Nodes(nodes) => {
+                        prop_assert_eq!((usable, &nodes), (2, &rails), "the nodes of straight rails are their points");
+                        Vec::new()
+                    }
+                };
+                prop_assert_eq!(rungs.len() + count(Code::SatinRungAmbiguous), usable - 2, "every other subpath is a rung or left out");
                 // On the rail, but for rounding: a crossing is computed along the rung or the rail.
+                let satin = Ladder { rails, rungs };
                 for [on_first, on_second] in &satin.rungs {
                     prop_assert!(distance(*on_first, &satin.rails[0]) < 1e-6, "{:?} {:?}", on_first, satin.rails[0]);
                     prop_assert!(distance(*on_second, &satin.rails[1]) < 1e-6, "{:?} {:?}", on_second, satin.rails[1]);
