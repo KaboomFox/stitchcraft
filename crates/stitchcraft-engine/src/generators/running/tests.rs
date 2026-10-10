@@ -3,6 +3,7 @@
 use stitchcraft_core::Budget;
 
 use super::*;
+use crate::normalize::stroke::Piece;
 
 /// Evenly spaced lengths from `pattern`, without random length.
 fn even(pattern: &[f64]) -> Lengths<'static> {
@@ -120,27 +121,27 @@ fn the_farthest_point_from_both_ends() {
     let mut meter = Budget::DEFAULT.meter();
     // A closed square: the far corner.
     let square = piece(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0), (0.0, 0.0)]);
-    let along = Along::new(&square, &mut meter).unwrap();
+    let along = Along::new(&square.points, &mut meter).unwrap();
     let (distance, far) = along.farthest(point(0.0, 0.0), point(0.0, 0.0), &mut meter).unwrap().unwrap();
     assert_eq!((distance, far.point, far.at), (2.0_f64.sqrt(), point(1.0, 1.0), 2.0));
     // A U whose ends are 0.5 apart: halfway along the bottom, not at either corner.
     let u = piece(&[(0.0, 0.0), (0.0, 1.0), (0.5, 1.0), (0.5, 0.0)]);
-    let along = Along::new(&u, &mut meter).unwrap();
+    let along = Along::new(&u.points, &mut meter).unwrap();
     let (distance, far) = along.farthest(point(0.0, 0.0), point(0.5, 0.0), &mut meter).unwrap().unwrap();
     assert_eq!((distance, far.point, far.at), (1.0625_f64.sqrt(), point(0.25, 1.0), 1.25));
     // The same U turned and moved away from the origin: every coordinate matters.
     let (s, e) = ((1.0, 2.0), (1.3, 2.4));
     let turned = piece(&[s, (0.2, 2.6), (0.5, 3.0), e]);
-    let along = Along::new(&turned, &mut meter).unwrap();
+    let along = Along::new(&turned.points, &mut meter).unwrap();
     let (distance, far) = along.farthest(point(s.0, s.1), point(e.0, e.1), &mut meter).unwrap().unwrap();
     assert!((distance - 1.0625_f64.sqrt()).abs() < 1e-12 && far.point.distance(point(0.35, 2.8)) < 1e-12 && (far.at - 1.25).abs() < 1e-12);
     // Nothing is that far: no crossing.
     let line = piece(&[(0.0, 0.0), (1.0, 0.0), (2.0, 0.0)]);
-    let along = Along::new(&line, &mut meter).unwrap();
+    let along = Along::new(&line.points, &mut meter).unwrap();
     assert!(along.crossing(&along.vertex(0), 5.0, &along.vertex(2), &mut meter).unwrap().is_none());
     // Two points equally far: the first.
     let triangle = piece(&[(0.0, 0.0), (1.0, 1.0), (1.0, -1.0), (0.0, 0.0)]);
-    let along = Along::new(&triangle, &mut meter).unwrap();
+    let along = Along::new(&triangle.points, &mut meter).unwrap();
     let (_, far) = along.farthest(point(0.0, 0.0), point(0.0, 0.0), &mut meter).unwrap().unwrap();
     assert_eq!(far.point, point(1.0, 1.0));
 }
@@ -149,7 +150,7 @@ fn the_farthest_point_from_both_ends() {
 /// 0.3 and a longest length of 2.5: the positions of the needles it keeps or adds.
 fn spaced(piece: &Piece, ats: &[f64], corners: &[f64]) -> Option<Vec<f64>> {
     let mut meter = Budget::DEFAULT.meter();
-    let along = Along::new(piece, &mut meter).unwrap();
+    let along = Along::new(&piece.points, &mut meter).unwrap();
     let needles = ats.iter().map(|at| Needle { corner: corners.contains(at), ..along.needle(*at) }).collect();
     let kept = space(needles, &along, 0.3, 2.5, &mut meter).unwrap()?;
     assert!(kept.iter().all(|n| n.point.distance(along.needle(n.at).point) < 1e-12), "points match their distances along");
@@ -187,7 +188,7 @@ fn a_closed_piece_goes_by_way_of_its_farthest_point() {
 fn stitched(points: &[(f64, f64)], corners: &[usize], length: f64) -> Vec<(f64, f64)> {
     let mut meter = Budget::DEFAULT.meter();
     let piece = Piece { corners: corners.to_vec(), ..piece(points) };
-    let along = Along::new(&piece, &mut meter).unwrap();
+    let along = Along::new(&piece.points, &mut meter).unwrap();
     let run = stitch_piece(&along, &piece.corners, &mut even(&[length]), 0.3, 0.18, &mut meter).unwrap().unwrap();
     run.iter().map(|q| ((q.x() * 1e6).round() / 1e6, (q.y() * 1e6).round() / 1e6)).collect()
 }
@@ -216,7 +217,7 @@ fn a_corner_keeps_its_needle_over_the_points_before_it() {
 fn followed(points: &[(f64, f64)], budget: f64) -> Vec<Point> {
     let mut meter = Budget::DEFAULT.meter();
     let piece = piece(points);
-    let along = Along::new(&piece, &mut meter).unwrap();
+    let along = Along::new(&piece.points, &mut meter).unwrap();
     let needles = vec![along.vertex(0), along.vertex(points.len() - 1)];
     follow(needles, &along, budget, 0.3, 100.0, &mut meter).unwrap().iter().map(|n| n.point).collect()
 }

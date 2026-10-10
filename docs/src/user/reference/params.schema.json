@@ -353,6 +353,30 @@
         "stability": "stable"
       }
     },
+    "reverse_rails": {
+      "default": "automatic",
+      "description": "Which rails are sewn against the way they are drawn, so that both run the same way. Automatic reverses the second rail when it runs against the first.",
+      "enum": [
+        "automatic",
+        "none",
+        "first",
+        "second",
+        "both"
+      ],
+      "title": "Reverse rails",
+      "type": "string",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Rails",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "running_stitch_length_mm": {
       "default": [
         2.5
@@ -398,7 +422,7 @@
     },
     "satin_column": {
       "default": false,
-      "description": "Sew the path as a satin column. Two of its subpaths are the rails, the column's edges, and the others are rungs across both, which say which point of one rail goes with which of the other. A path of 1 subpath is the column's centre line. Off, the path is sewn as a stroke, by its `stroke_method`. This version reads a satin column's rails and rungs and reports what it finds, then skips the element (`SC-W0011`). Satin stitches arrive in a later version.",
+      "description": "Sew the path as a satin column. Two of its subpaths are the rails, the column's edges, and the others are rungs across both, which say which point of one rail goes with which of the other. Without rungs, the rails' nodes pair up instead. A path of 1 subpath is the column's centre line, which a later version sews. Off, the path is sewn as a stroke, by its `stroke_method`.",
       "title": "Satin column",
       "type": "boolean",
       "x-stitchcraft": {
@@ -407,6 +431,29 @@
           "manual_stitch",
           "zigzag_stitch",
           "ripple_stitch",
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Satin column",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
+    "satin_method": {
+      "default": "satin_column",
+      "description": "How the column is sewn. A satin column sews stitches straight across it, from one rail to the other and back. E, S and zigzag stitches arrive in later versions, and until then an element set to one is skipped (`SC-W0011`).",
+      "enum": [
+        "satin_column",
+        "e_stitch",
+        "s_stitch",
+        "zigzag"
+      ],
+      "title": "Method",
+      "type": "string",
+      "x-stitchcraft": {
+        "applies_to": [
           "satin_column",
           "e_stitch",
           "s_stitch",
@@ -451,6 +498,23 @@
         "stability": "stable"
       }
     },
+    "swap_satin_rails": {
+      "default": false,
+      "description": "Make the second rail the first. The column starts on its first rail, and each stitch across it goes from the first rail to the second.",
+      "title": "Swap rails",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Rails",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "ties": {
       "default": "0",
       "description": "Where the element gets lock stitches: a few tiny stitches that stop the thread from unravelling where its stitching starts and ends.",
@@ -477,6 +541,26 @@
         "group": "Trims and stops",
         "origin": "inkstitch",
         "stability": "stable"
+      }
+    },
+    "zigzag_spacing_mm": {
+      "default": 0.4,
+      "description": "The distance from one stitch across the column to the next that goes the same way: from one rail to the other and back again is one spacing. It is measured across the column at its outside edge, and on a curve the stitches fan out from the inside edge.",
+      "maximum": 10.0,
+      "minimum": 0.01,
+      "title": "Zigzag spacing",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Satin column",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
       }
     }
   },
@@ -539,7 +623,11 @@
       },
       {
         "keys": [
-          "satin_column"
+          "satin_column",
+          "satin_method",
+          "zigzag_spacing_mm",
+          "reverse_rails",
+          "swap_satin_rails"
         ],
         "name": "SatinParams",
         "title": "Satin parameters"

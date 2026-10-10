@@ -12,6 +12,7 @@ pub mod running;
 pub mod satin;
 
 use stitchcraft_core::{Code, Diagnostic, Point};
+use stitchcraft_params::{ChoiceOption, StitchType};
 
 /// The stitches of one stroke.
 #[derive(Clone, Debug, PartialEq)]
@@ -50,8 +51,30 @@ pub(crate) fn too_small(why: TooSmall, min: f64) -> Diagnostic {
     Diagnostic::new(Code::StrokeTooSmall, message)
 }
 
+/// A stitch type as a method a settings window offers: its id and its name.
+pub(crate) const fn method(stitch_type: StitchType) -> ChoiceOption {
+    ChoiceOption { id: stitch_type.id(), label: stitch_type.name() }
+}
+
 /// `value` millimetres for a message: at most two decimals, without trailing zeros.
 pub(crate) fn mm(value: f64) -> String {
     let text = format!("{value:.2}");
     text.trim_end_matches('0').trim_end_matches('.').to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use stitchcraft_params::Family;
+
+    use super::*;
+
+    #[test]
+    fn each_method_leads_back_to_its_stitch_type() {
+        // `method` builds the lists at compile time; here it runs, and each option is its type's id and name.
+        for (family, methods) in [(Family::Stroke, crate::generate::STROKE_METHODS), (Family::Satin, satin::SATIN_METHODS)] {
+            for option in methods {
+                assert_eq!(StitchType::from_id(family, option.id).map(method), Some(*option), "{option:?}");
+            }
+        }
+    }
 }

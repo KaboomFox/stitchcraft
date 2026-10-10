@@ -84,7 +84,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | Attribute | Type | Unit | Default | Applies to | Phase | StitchCraft |
 |---|---|---|---|---|---|---|
 | `satin_column` | toggle | — | — | all | P1 (M4) | [registered](../user/reference/params/satin.md#satin_column) |
-| `satin_method` | combo | — | 0 | all | P1 (M4) | planned |
+| `satin_method` | combo | — | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#satin_method) |
 | `random_width_decrease_percent` | float | % (each side) | 0 | all | P1 (M4) | planned |
 | `random_width_increase_percent` | float | % (each side) | 0 | all | P1 (M4) | planned |
 | `random_zigzag_spacing_percent` | float | ± % | 0 | all | P1 (M4) | planned |
@@ -96,12 +96,12 @@ registry uses these names as its keys so files move between the tools unchanged
 | `split_staggers` | float | — | 4 | `staggered` | P1 (M4) | planned |
 | `short_stitch_inset` | float | % | 15 | all | P1 (M4) | planned |
 | `short_stitch_distance_mm` | float | mm | 0.25 | all | P1 (M4) | planned |
-| `zigzag_spacing_mm` | float | mm/cycle | 0.4 | all | P1 (M4) | planned |
+| `zigzag_spacing_mm` | float | mm/cycle | 0.4 | all | P1 (M4) | [registered](../user/reference/params/satin.md#zigzag_spacing_mm) |
 | `pull_compensation_percent` | float | % (each side) | 0 | all | P1 (M4) | planned |
 | `pull_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) | planned |
 | `push_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) | planned |
-| `reverse_rails` | combo | — | automatic | all | P1 (M4) | planned |
-| `swap_satin_rails` | boolean | — | false | all | P1 (M4) | planned |
+| `reverse_rails` | combo | — | automatic | all | P1 (M4) | [registered](../user/reference/params/satin.md#reverse_rails) |
+| `swap_satin_rails` | boolean | — | false | all | P1 (M4) | [registered](../user/reference/params/satin.md#swap_satin_rails) |
 | `running_stitch_length_mm` | float | mm | 2.5 | all | P1 (M4) | planned |
 | `running_stitch_tolerance_mm` | float | mm | 0.1 | all | P1 (M4) | planned |
 | `running_stitch_position` | float | % | 50 | all | P1 (M4) | planned |
@@ -261,4 +261,4 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
 
-_145 parameter declarations, 25 registered in StitchCraft._
+_145 parameter declarations, 29 registered in StitchCraft._

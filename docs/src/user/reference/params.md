@@ -35,7 +35,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Running parameters](params/running.md) | 5 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Manual parameters](params/manual.md) | 1 | Manual stitch |
-| [Satin parameters](params/satin.md) | 1 | Satin column |
+| [Satin parameters](params/satin.md) | 5 | Satin column, E-stitch, S-stitch, Zigzag satin |
 
 ## Every parameter
 
@@ -58,10 +58,14 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`random_seed`](params/running.md#random_seed) | Random seed | Running parameters |
 | [`random_stitch_length_jitter_percent`](params/running.md#random_stitch_length_jitter_percent) | Length variation | Running parameters |
 | [`repeats`](params/repeat.md#repeats) | Repeats | Repeat parameters |
+| [`reverse_rails`](params/satin.md#reverse_rails) | Reverse rails | Satin parameters |
 | [`running_stitch_length_mm`](params/running.md#running_stitch_length_mm) | Stitch length | Running parameters |
 | [`running_stitch_tolerance_mm`](params/running.md#running_stitch_tolerance_mm) | Curve tolerance | Running parameters |
 | [`satin_column`](params/satin.md#satin_column) | Satin column | Satin parameters |
+| [`satin_method`](params/satin.md#satin_method) | Method | Satin parameters |
 | [`stop_after`](params/common.md#stop_after) | Stop after | Common parameters |
 | [`stroke_method`](params/stroke.md#stroke_method) | Method | Stroke parameters |
+| [`swap_satin_rails`](params/satin.md#swap_satin_rails) | Swap rails | Satin parameters |
 | [`ties`](params/common.md#ties) | Lock stitches | Common parameters |
 | [`trim_after`](params/common.md#trim_after) | Trim after | Common parameters |
+| [`zigzag_spacing_mm`](params/satin.md#zigzag_spacing_mm) | Zigzag spacing | Satin parameters |

@@ -37,6 +37,7 @@ pub stitchcraft_core::diag::Code::ParamClamped
 pub stitchcraft_core::diag::Code::ParamInvalid
 pub stitchcraft_core::diag::Code::ParamUnknown
 pub stitchcraft_core::diag::Code::PreviewTooLarge
+pub stitchcraft_core::diag::Code::SatinNodesUnequal
 pub stitchcraft_core::diag::Code::SatinRailsByLength
 pub stitchcraft_core::diag::Code::SatinRungAmbiguous
 pub stitchcraft_core::diag::Code::SatinRungDangling
@@ -190,6 +191,7 @@ pub stitchcraft_core::Code::ParamClamped
 pub stitchcraft_core::Code::ParamInvalid
 pub stitchcraft_core::Code::ParamUnknown
 pub stitchcraft_core::Code::PreviewTooLarge
+pub stitchcraft_core::Code::SatinNodesUnequal
 pub stitchcraft_core::Code::SatinRailsByLength
 pub stitchcraft_core::Code::SatinRungAmbiguous
 pub stitchcraft_core::Code::SatinRungDangling
