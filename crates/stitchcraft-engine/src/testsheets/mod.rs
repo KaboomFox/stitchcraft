@@ -7,7 +7,8 @@
 //! sheet can never ask a machine to do something StitchCraft's own rules forbid.
 //!
 //! The MC-1 sheets are drawn stitch by stitch (`sketch`), to test the machine and the file formats; from
-//! MC-2 they are drawn as designs and planned by the engine (`designed`), to test its stitches too.
+//! MC-2 they are drawn as designs and planned by the engine (`designed`), to test its stitches too. The MC-3
+//! sheets sew satin columns: a ladder of widths and spacings, and the underlays side by side.
 //! Sheets use exact Brother PEC thread colours, so a Brother machine shows the thread names the
 //! expected-result sheet lists.
 
@@ -18,6 +19,8 @@ mod ts02;
 mod ts02b;
 mod ts03;
 mod ts04;
+mod ts05;
+mod ts06;
 mod ts10;
 
 pub use sketch::{STITCH_LEN, SheetError};
@@ -114,6 +117,30 @@ pub static SHEETS: &[TestSheet] = &[
         build: ts04::build,
     },
     TestSheet {
+        id: "TS-05",
+        title: "Satin width ladder: spacing, width and pull",
+        checks: &[
+            "Rows, top to bottom, are at zigzag spacings of 0.3, 0.4 and 0.5 mm, and the columns of each row are 1 to 10 mm wide, left to right.",
+            "Coverage: in which columns does the fabric show between the stitches? Rate each row 1 (bare) to 5 (solid).",
+            "Width: measure the 2, 6 and 10 mm columns of each row across, halfway down. How much narrower than drawn are they?",
+            "Edges: straight and crisp, or wavy? From which width on do the long stitches lie loose or catch?",
+            "Any puckering round the columns, thread breaks, or loops on the back, and where.",
+        ],
+        build: ts05::build,
+    },
+    TestSheet {
+        id: "TS-06",
+        title: "Satin underlays side by side",
+        checks: &[
+            "Columns, left to right: no underlay, a centre walk, a contour, a zigzag, and a contour with a zigzag, each 6 mm wide.",
+            "Edges: rate each column 1 (ragged) to 5 (crisp).",
+            "Loft: rate each column 1 (flat) to 5 (full and raised).",
+            "Does any underlay show past the top stitches, at the edges or at the ends?",
+            "Measure each column across, halfway down, and note any puckering round it.",
+        ],
+        build: ts06::build,
+    },
+    TestSheet {
         id: "TS-10A",
         title: "Hoop size: 150 × 150 mm frame",
         checks: &["The machine accepts the file and shows the design.", "The frame measures 150.0 × 150.0 mm (± 0.5 mm)."],
@@ -177,6 +204,13 @@ mod tests {
         assert_eq!(size("TS-02B"), (140.0, 70.0, 0.0, 0.0));
         assert_eq!(size("TS-03"), (60.0, 78.0, 0.0, 0.0));
         assert_eq!(size("TS-04"), (110.0, 64.525, 0.0, 0.0), "the zigzags at 150 % reach 0.525 mm across their line");
+        // A satin's needle points lie on its rails to within rounding.
+        let about = |id: &str| {
+            let (w, h, x, y) = size(id);
+            [w, h, x, y].map(|v| (v * 1e9).round() / 1e9)
+        };
+        assert_eq!(about("TS-05"), [91.0, 76.0, 0.0, 0.0]);
+        assert_eq!(about("TS-06"), [62.0, 30.0, 0.0, 0.0]);
     }
 
     /// Each block of `sheet`'s plan in words: `J` a jump, `T` a trim, `P` a stop, `l` a lock stitch and `s`
@@ -300,6 +334,50 @@ mod tests {
         for (column, (first, _)) in ts04::FIRST_STITCHES.iter().enumerate() {
             let points = sewn("TS-04", &format!("half_stitch-{column}"));
             assert!((points[0].distance(points[1]) - first).abs() < 1e-9, "{column}");
+        }
+    }
+
+    /// The left and right edges of `points`.
+    fn across(points: &[stitchcraft_core::Point]) -> (f64, f64) {
+        points.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(left, right), p| (left.min(p.x()), right.max(p.x())))
+    }
+
+    #[test]
+    fn ts05_sews_its_rows_and_columns_as_its_checks_name() {
+        let mut rows = Vec::new();
+        for spacing in ts05::SPACINGS {
+            let mut lefts = Vec::new();
+            for width in ts05::WIDTHS {
+                let points = sewn("TS-05", &format!("{spacing}-{width}"));
+                let (left, right) = across(&points);
+                assert!((right - left - width).abs() < 1e-9, "{spacing}-{width}: as wide as drawn");
+                // Every other needle point is on the left rail, the spacing below the one before, but for the
+                // last, which is at the column's end.
+                let down: Vec<f64> = points.iter().filter(|p| (p.x() - left).abs() < 1e-9).map(|p| p.y()).collect();
+                let gaps: Vec<f64> = down.windows(2).map(|w| w[1] - w[0]).collect();
+                assert!(gaps[..gaps.len() - 1].iter().all(|gap| (gap - spacing).abs() < 1e-6), "{spacing}-{width}: {gaps:?}");
+                lefts.push(left);
+            }
+            assert!(lefts.windows(2).all(|w| w[0] < w[1]), "{spacing}: left to right by width");
+            rows.push(sewn("TS-05", &format!("{spacing}-1"))[0].y());
+        }
+        assert!(rows.windows(2).all(|w| w[0] < w[1]), "top to bottom by spacing: {rows:?}");
+    }
+
+    #[test]
+    fn ts06_sews_its_underlays_before_the_same_top_stitches_left_to_right() {
+        let plain = sewn("TS-06", "none");
+        let plain_left = across(&plain).0;
+        let mut previous = f64::NEG_INFINITY;
+        for (name, _) in ts06::UNDERLAYS {
+            let points = sewn("TS-06", name);
+            let (left, right) = across(&points);
+            assert!((right - left - ts06::WIDTH).abs() < 1e-9 && left > previous, "{name}: as wide as drawn, right of the last");
+            previous = left;
+            // The top stitches come last, as the column without underlay sews them, moved across.
+            let top = &points[points.len() - plain.len()..];
+            let same = top.iter().zip(&plain).all(|(a, b)| (a.x() - b.x() - (left - plain_left)).abs() < 1e-9 && (a.y() - b.y()).abs() < 1e-9);
+            assert!(same && (name == "none") == (points.len() == plain.len()), "{name}");
         }
     }
 

@@ -5,6 +5,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- MC-3 kit: TS-05 and TS-06, the satin test sheets, drawn as designs and sewn by the engine.
+  - **TS-05** sews columns 1 to 10 mm wide at zigzag spacings of 0.3, 0.4 and 0.5 mm, for the spacing
+    that covers the fabric, the widest column that sews well, and how much the thread pulls a column in.
+  - **TS-06** sews the same 6 mm column with no underlay, a centre walk, a contour, a zigzag, and a
+    contour with a zigzag, for the underlay defaults.
 - M4.6: underlays as Ink/Stitch sews them (`REQ-SAT-004`, `REQ-SAT-010` to `REQ-SAT-012`). Before its top
   stitches, a satin column sews the underlays it turns on, all off by default. Straight stitches no
   longer than the running stitch's length (`running_stitch_length_mm`) join them.

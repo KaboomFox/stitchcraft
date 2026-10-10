@@ -1,0 +1,12 @@
+# The same 6 mm satin column with no underlay, a centre walk, a contour, a zigzag, and a contour with a zigzag.
+# The invariants (REQ-PLAN-…) run on the sheet's plan; the golden file is the bytes MC-3 sews.
+id = "ts-06"
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PRF-002", "REQ-FMT-001"]
+kind = "testsheet"
+sheet = "TS-06"
+profile = "brother-200x200"
+
+[expect]
+size_mm = [62.0, 30.0]
+diagnostics = []
+golden = ["golden/testsheets/TS-06.pes"]

@@ -84,6 +84,38 @@ After sewing, check:
 - Which locks show from the front, and how much (1 hidden to 5 obvious)?
 - Any thread breaks or knots at the locks, and where.
 
+## TS-05 — Satin width ladder: spacing, width and pull
+
+91.0 × 76.0 mm · 3440 stitches, 30 jumps, 30 trims, 0 colour changes, 0 stops
+
+![TS-05 as it will sew, in blue: three rows of ten solid satin columns, each row's columns growing from 1 to 10 mm wide left to right, the top row densest and the bottom row the most open.](../../images/generated/testsheet-ts-05.png)
+
+Threads: Blue.
+
+After sewing, check:
+
+- Rows, top to bottom, are at zigzag spacings of 0.3, 0.4 and 0.5 mm, and the columns of each row are 1 to 10 mm wide, left to right.
+- Coverage: in which columns does the fabric show between the stitches? Rate each row 1 (bare) to 5 (solid).
+- Width: measure the 2, 6 and 10 mm columns of each row across, halfway down. How much narrower than drawn are they?
+- Edges: straight and crisp, or wavy? From which width on do the long stitches lie loose or catch?
+- Any puckering round the columns, thread breaks, or loops on the back, and where.
+
+## TS-06 — Satin underlays side by side
+
+62.0 × 30.0 mm · 966 stitches, 5 jumps, 5 trims, 0 colour changes, 0 stops
+
+![TS-06 as it will sew, in red: five satin columns 6 mm wide side by side, which look alike from above because their underlays lie beneath the top stitches.](../../images/generated/testsheet-ts-06.png)
+
+Threads: Red.
+
+After sewing, check:
+
+- Columns, left to right: no underlay, a centre walk, a contour, a zigzag, and a contour with a zigzag, each 6 mm wide.
+- Edges: rate each column 1 (ragged) to 5 (crisp).
+- Loft: rate each column 1 (flat) to 5 (full and raised).
+- Does any underlay show past the top stitches, at the edges or at the ends?
+- Measure each column across, halfway down, and note any puckering round it.
+
 ## TS-10A — Hoop size: 150 × 150 mm frame
 
 150.0 × 150.0 mm · 275 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops
