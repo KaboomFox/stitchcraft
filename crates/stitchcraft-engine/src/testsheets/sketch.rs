@@ -30,6 +30,10 @@ pub enum SheetError {
     /// The sheet needs more stitches than one design may have: its geometry is wrong.
     #[error(transparent)]
     Budget(#[from] Exhausted),
+    /// The engine had something to say about a sheet drawn as a design, so it is not the sheet its checks
+    /// describe (`designed`); the diagnostics, as people read them.
+    #[error("the engine says: {0}")]
+    Said(String),
 }
 
 /// Draws a test sheet into a plan.

@@ -156,6 +156,7 @@ pub enum stitchcraft_engine::testsheets::SheetError
 pub stitchcraft_engine::testsheets::SheetError::Budget(stitchcraft_core::budget::Exhausted)
 pub stitchcraft_engine::testsheets::SheetError::ElementId(stitchcraft_core::element::ElementIdError)
 pub stitchcraft_engine::testsheets::SheetError::Plan(stitchcraft_plan::builder::PlanError)
+pub stitchcraft_engine::testsheets::SheetError::Said(alloc::string::String)
 pub stitchcraft_engine::testsheets::SheetError::Unit(stitchcraft_core::units::UnitError)
 pub stitchcraft_engine::testsheets::SheetError::UnknownThread(u8)
 pub struct stitchcraft_engine::testsheets::TestSheet

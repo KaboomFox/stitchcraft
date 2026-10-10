@@ -1,0 +1,12 @@
+# The running stitch: lengths, bean stitch, curves at three tolerances, short stitches placed by hand.
+# The invariants (REQ-PLAN-…) run on the sheet's plan; the golden file is the bytes MC-2 sews.
+id = "ts-03"
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PRF-002", "REQ-FMT-001"]
+kind = "testsheet"
+sheet = "TS-03"
+profile = "brother-200x200"
+
+[expect]
+size_mm = [60.0, 78.0]
+diagnostics = []
+golden = ["golden/testsheets/TS-03.pes"]
