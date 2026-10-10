@@ -12,9 +12,15 @@
 //!
 //! A crate below its floor gets what no test runs listed as warnings, which show on the pull request's page
 //! without the job's log: its untested lines, a warning per file on the first of them, from the run's lcov
-//! report, and the functions and closures no test calls, from its JSON export. Line coverage adds up
-//! function by function, so a closure that never runs is an untested line even where the line around it
-//! runs, and only the second list shows it.
+//! report, and from its JSON export the functions and closures no test calls, and the functions no one
+//! build of which runs all the code the tests run.
+//!
+//! The last two lists are there because line coverage adds up function by function, and the lcov report
+//! merges them line by line. A closure that never runs is an untested line even where the line around it
+//! runs. And a function has a build for each test binary kind, the unit tests' and the one the
+//! integration tests link, as well as one per type a generic function is used with: llvm-cov counts the
+//! lines of the build that runs the most. A function whose lines only the unit tests and the integration
+//! tests together run is partly untested by that count, though every line runs.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
@@ -145,17 +151,24 @@ fn per_crate(json: &str) -> Result<BTreeMap<String, Lines>, String> {
 }
 
 /// What no test runs in the files of `crates`, as warnings on the lines in question, from the last run's
-/// reports. The line counts add up function by function, so a closure no test calls is an untested line
-/// even when the line around it runs: the lcov report merges the two and misses it, and the functions
-/// no test calls are listed besides.
+/// reports: the lines the lcov report merges to untested, then what only the function by function counts
+/// miss (see the module's documentation).
 fn untested(root: &Path, crates: &BTreeSet<String>) -> Result<Vec<String>, String> {
     let mut warnings = Vec::new();
     for (path, lines) in missed(&report(root, "--lcov", LCOV)?, root, crates) {
         let first = lines.first().copied().unwrap_or(1);
         warnings.push(format!("{path}:{first}: untested lines {}", spans(&lines)));
     }
-    for (path, line) in never_called(&report(root, "--json", FUNCTIONS)?, root, crates)? {
+    let Builds { never_called, split } = builds(&report(root, "--json", FUNCTIONS)?, root, crates)?;
+    for (path, line) in never_called {
         warnings.push(format!("{path}:{line}: no test calls the function or closure that starts here"));
+    }
+    for (path, line) in split {
+        warnings.push(format!(
+            "{path}:{line}: no one build of the function that starts here runs all the code its tests run, and coverage \
+             counts the build that runs the most: move the tests that run its other lines to the kind of test, unit or \
+             integration, that runs most of it"
+        ));
     }
     Ok(warnings)
 }
@@ -168,24 +181,47 @@ fn report(root: &Path, format: &str, output: &str) -> Result<String, String> {
     util::read(&root.join(output))
 }
 
-/// The functions and closures in the files of `crates` that the JSON export `json` counts as called 0
-/// times in every instantiation, each as its file's path from `root` and its first line.
-fn never_called(json: &str, root: &Path, crates: &BTreeSet<String>) -> Result<BTreeSet<(String, u64)>, String> {
+/// Functions and closures by their builds, each as its file's path from `root` and its first line.
+#[derive(Debug, Default, PartialEq)]
+struct Builds {
+    /// No build calls them.
+    never_called: BTreeSet<(String, u64)>,
+    /// Called, but no one build runs every region that some build runs.
+    split: BTreeSet<(String, u64)>,
+}
+
+/// The functions and closures in the files of `crates` that the JSON export `json` counts as no build
+/// calling, or as split between builds. The export lists each build of a function apart (the unit tests'
+/// and the integration tests', and each instantiation of a generic function): the builds of one function
+/// start at the same place, and list the same regions in the same order.
+fn builds(json: &str, root: &Path, crates: &BTreeSet<String>) -> Result<Builds, String> {
     let report: serde_json::Value = serde_json::from_str(json).map_err(|e| format!("{FUNCTIONS}: {e}"))?;
     let functions = report.pointer("/data/0/functions").and_then(serde_json::Value::as_array).ok_or(format!("{FUNCTIONS}: no functions"))?;
-    // Each instantiation of a generic function is a function of its own: (path, first line) -> called.
-    let mut called: BTreeMap<(String, u64), bool> = BTreeMap::new();
+    // (path, first line, first column) -> each build's regions, as whether each ran.
+    let mut grouped: BTreeMap<(String, u64, u64), Vec<Vec<bool>>> = BTreeMap::new();
     for function in functions {
         let Some(path) = function.pointer("/filenames/0").and_then(serde_json::Value::as_str).map(Path::new) else { continue };
-        let Some(line) = function.pointer("/regions/0/0").and_then(serde_json::Value::as_u64) else { continue };
+        let Some(regions) = function.get("regions").and_then(serde_json::Value::as_array) else { continue };
+        let field = |region: &serde_json::Value, i: usize| region.get(i).and_then(serde_json::Value::as_u64);
+        let Some((line, column)) = regions.first().and_then(|first| Some((field(first, 0)?, field(first, 1)?))) else { continue };
         if crate_of(path).is_none_or(|name| !crates.contains(&name)) {
             continue;
         }
         let shown = path.strip_prefix(root).unwrap_or(path).to_string_lossy().replace('\\', "/");
-        let count = function.get("count").and_then(serde_json::Value::as_u64).unwrap_or(0);
-        *called.entry((shown, line)).or_default() |= count > 0;
+        let ran = regions.iter().map(|region| field(region, 4).is_some_and(|count| count > 0)).collect();
+        grouped.entry((shown, line, column)).or_default().push(ran);
     }
-    Ok(called.into_iter().filter(|(_, called)| !called).map(|(at, _)| at).collect())
+    let mut builds = Builds::default();
+    for ((path, line, _), ran) in grouped {
+        let longest = ran.iter().map(Vec::len).max().unwrap_or(0);
+        let any: Vec<bool> = (0..longest).map(|i| ran.iter().any(|build| build.get(i) == Some(&true))).collect();
+        if !any.contains(&true) {
+            builds.never_called.insert((path, line));
+        } else if !ran.iter().any(|build| any.iter().enumerate().all(|(i, ran)| !ran || build.get(i) == Some(&true))) {
+            builds.split.insert((path, line));
+        }
+    }
+    Ok(builds)
 }
 
 /// The lines lcov `text` counts as run 0 times, in the files of `crates`.
@@ -263,18 +299,28 @@ mod tests {
     }
 
     #[test]
-    fn functions_no_instantiation_calls_are_listed() {
+    fn functions_no_build_calls_and_functions_split_between_builds_are_listed() {
         let json = r#"{"data":[{"functions":[
-            {"count":0,"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[42,70,42,91,0,0,0,0]]},
-            {"count":3,"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[30,1,40,2,3,0,0,0]]},
-            {"count":0,"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[50,1,52,2,0,0,0,0]]},
-            {"count":2,"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[50,1,52,2,2,0,0,0]]},
-            {"count":0,"filenames":["/w/crates/stitchcraft-core/src/b.rs"],"regions":[[7,1,9,2,0,0,0,0]]}
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[42,70,42,91,0,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[42,20,42,40,1,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[30,1,40,2,3,0,0,0],[33,5,34,6,0,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[30,1,40,2,1,0,0,0],[33,5,34,6,1,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[50,1,60,2,2,0,0,0],[52,5,53,6,1,0,0,0],[55,5,56,6,0,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[50,1,60,2,4,0,0,0],[52,5,53,6,0,0,0,0],[55,5,56,6,4,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[70,1,72,2,0,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[70,1,72,2,2,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[80,1,82,2,5,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[]},
+            {"filenames":["/w/crates/stitchcraft-core/src/b.rs"],"regions":[[7,1,9,2,0,0,0,0]]}
         ]}]}"#;
         let engine = BTreeSet::from(["stitchcraft-engine".to_string()]);
-        let found = never_called(json, Path::new("/w"), &engine).unwrap();
-        assert_eq!(found, BTreeSet::from([("crates/stitchcraft-engine/src/a.rs".to_string(), 42)]), "a generic one called once is called");
-        assert!(never_called("{}", Path::new("/w"), &engine).is_err());
+        let found = builds(json, Path::new("/w"), &engine).unwrap();
+        let a = |line: u64| ("crates/stitchcraft-engine/src/a.rs".to_string(), line);
+        // Line 42: a closure no build calls, beside one that runs. Line 30: one build runs all the other
+        // does. Line 50: each build runs a region the other does not. Line 70: one build of two runs. Line
+        // 80: a function with one build, which runs.
+        assert_eq!(found, Builds { never_called: BTreeSet::from([a(42)]), split: BTreeSet::from([a(50)]) });
+        assert!(builds("{}", Path::new("/w"), &engine).is_err());
     }
 
     #[test]
