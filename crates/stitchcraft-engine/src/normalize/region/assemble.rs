@@ -59,32 +59,18 @@ pub(crate) fn parts(arrangement: &Arrangement, kept: &[bool], meter: &mut Meter)
 }
 
 /// Step 1: for each kept half arriving at a point, the kept half that leaves next, turning
-/// counter-clockwise from the way back. Every kept half, in order, links the arriving half just
-/// counter-clockwise of it to the next kept half leaving after that. Round a point of the boundary the
-/// halves arriving and leaving alternate, as filled and empty faces do, so every arriving half is linked.
-/// One that is not stops the rings in step 2.
+/// counter-clockwise from the way back. Round a point of the boundary the halves arriving and leaving
+/// alternate, as filled and empty faces do: just counter-clockwise of each half leaving comes the way back
+/// of a half arriving, and then the next half leaving, which the arriving half is linked to. Where they do
+/// not alternate (never, from an arrangement), the arriving half is left unlinked, and its ring does not
+/// close in step 2.
 fn link_maximal(halves: usize, kept: &impl Fn(usize) -> bool, ccw: &impl Fn(usize) -> usize) -> Vec<Option<usize>> {
     let mut next: Vec<Option<usize>> = vec![None; halves];
     for leaving in (0..halves).filter(|&h| kept(h)) {
-        let end = ccw(leaving);
-        let mut out = end;
-        let mut arriving: Option<usize> = None;
-        loop {
-            if let Some(a) = arriving {
-                if kept(out) {
-                    if let Some(slot) = next.get_mut(a) {
-                        *slot = Some(out);
-                    }
-                    break;
-                }
-            } else if kept(out ^ 1) {
-                arriving = Some(out ^ 1);
-            }
-            out = ccw(out);
-            if out == end {
-                break;
-            }
-        }
+        let back = ccw(leaving);
+        let after = ccw(back);
+        let link = (kept(back ^ 1) && kept(after)).then_some(after);
+        next.get_mut(back ^ 1).into_iter().for_each(|slot| *slot = link);
     }
     next
 }
@@ -337,6 +323,20 @@ mod tests {
         let arrangement = cut(&rings, &mut Budget::DEFAULT.meter()).unwrap();
         let found = join(vec![vec![vec![3, 2, 1, 0], vec![7, 6, 5, 4], vec![8, 9, 10, 11]]], &arrangement);
         assert_eq!(found, [Part { outline: vec![0, 3, 2, 1], holes: vec![vec![8, 9, 10, 11]] }, Part { outline: vec![4, 7, 6, 5], holes: vec![] }]);
+    }
+
+    #[test]
+    fn halves_that_do_not_alternate_are_left_unlinked() {
+        // Never from an arrangement: round a point, a half leaving followed by 2 halves arriving, and a half
+        // arriving round a point with nothing else. Neither arriving half is linked.
+        let kept = |h: usize| h == 0 || h == 3;
+        let ccw = |h: usize| match h {
+            0 => 2,
+            2 => 1,
+            1 => 0,
+            other => other,
+        };
+        assert_eq!(link_maximal(4, &kept, &ccw), [None; 4]);
     }
 
     #[test]

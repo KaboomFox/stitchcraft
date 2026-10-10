@@ -105,9 +105,8 @@ pub(crate) fn cut(rings: &[Vec<Point>], meter: &mut Meter) -> Result<Arrangement
                 count.push(0);
                 edges.len() - 1
             });
-            if let (Some(&(from, _)), Some(c)) = (edges.get(edge), count.get_mut(edge)) {
-                *c += if from == u { 1 } else { -1 };
-            }
+            let step = if edges.get(edge).is_some_and(|&(from, _)| from == u) { 1 } else { -1 };
+            count.get_mut(edge).into_iter().for_each(|c| *c += step);
         }
     }
     Ok(Arrangement { points: points.list, edges, count })
