@@ -659,9 +659,10 @@ status = "active"
 id = "REQ-FILL-TAT-003"
 area = "fill/tatami"
 level = "L2"
-statement = "Needle points follow the stagger grid; no furrow of aligned points spans more than `staggers` rows."
+statement = "A row segment's needle points are its start, every point of the stagger grid past the start and before its end, and its end unless skip_last is on or the last point lies within 0.1 mm of it. The grid's points lie the longest stitch apart, measured along the rows from the design's origin at whole numbers of stitches plus the row's offset: the row's number (its distance across the rows from the origin over the row spacing, rounded, halves to even) over staggers, less its whole part, times the longest stitch. With random stitch lengths, the first point lies a random share of a stitch past the start and each next one a stitch on, longer or shorter by up to the jitter."
+rationale = "Each row's points lie a staggers-th of a stitch along from the row before's, so neighbouring rows never line them up into furrows, and fills side by side share the grid, as Ink/Stitch places them."
 milestone = "M5"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-FILL-TAT-004"

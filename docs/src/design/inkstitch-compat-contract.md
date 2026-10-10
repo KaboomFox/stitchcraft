@@ -145,20 +145,20 @@ registry uses these names as its keys so files move between the tools unchanged
 | `angle` | float | deg | 0 | `tatami_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#angle) |
 | `guided_fill_angle` | float | deg | — | `guided_fill` | P3 (M10) | planned |
 | `tartan_angle` | float | deg | -45 | `tartan_fill` | P3 (M10) | planned |
-| `max_stitch_length_mm` | float | mm | 4.0 | `tatami_fill`, `contour_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | planned |
+| `max_stitch_length_mm` | float | mm | 4.0 | `tatami_fill`, `contour_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/common.md#max_stitch_length_mm) |
 | `row_spacing_mm` | float | mm | 0.25 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#row_spacing_mm) |
 | `end_row_spacing_mm` | float | mm | — | `tatami_fill`, `circular_fill`, `legacy_fill` | P1 (M5) | [deviates](../user/reference/params/tatami.md#end_row_spacing_mm) |
 | `stitch_position_method` | combo | — | 0 | `guided_fill` | P3 (M10) | planned |
-| `staggers` | int | — | 4 | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | planned |
-| `skip_last` | boolean | — | false | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `legacy_fill` | P1 (M5) | planned |
+| `staggers` | int | — | 4 | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#staggers) |
+| `skip_last` | boolean | — | false | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#skip_last) |
 | `flip` | boolean | — | false | `legacy_fill` | P3 (M10) | planned |
 | `reverse` | boolean | — | false | `legacy_fill` | P3 (M10) | planned |
 | `stop_at_ending_point` | boolean | — | false | `linear_gradient_fill`, `tartan_fill` | P3 (M10) | planned |
 | `underpath` | boolean | — | true | `tatami_fill`, `guided_fill`, `circular_fill` | P1 (M5) | planned |
 | `running_stitch_length_mm` | float | mm | 2.5 | `tatami_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill` | P1 (M5) | planned |
 | `running_stitch_tolerance_mm` | float | mm | 0.1 | `tatami_fill`, `contour_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill` | P1 (M5) | planned |
-| `enable_random_stitch_length` | boolean | — | false | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | planned |
-| `random_stitch_length_jitter_percent` | float | ± % | 10 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | planned |
+| `enable_random_stitch_length` | boolean | — | false | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/running.md#enable_random_stitch_length) |
+| `random_stitch_length_jitter_percent` | float | ± % | 10 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/running.md#random_stitch_length_jitter_percent) |
 | `repeats` | int | — | 1 | `meander_fill`, `contour_fill`, `circular_fill` | P2 (M7) | planned |
 | `bean_stitch_repeats` | str | — | 0 | `meander_fill`, `circular_fill`, `contour_fill`, `guided_fill`, `tartan_fill` | P2 (M7) | planned |
 | `zigzag_spacing_mm` | float | mm | 0 | `meander_fill` | P2 (M7) | planned |
@@ -174,7 +174,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `fill_underlay_inset_mm` | float | mm | 0 | all | P1 (M5) | planned |
 | `fill_underlay_skip_last` | boolean | — | false | all | P1 (M5) | planned |
 | `underlay_underpath` | boolean | — | true | all | P1 (M5) | planned |
-| `random_seed` | random_seed | — | — | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `meander_fill`, `linear_gradient_fill` | P1 (M5) | planned |
+| `random_seed` | random_seed | — | — | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `meander_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/common.md#random_seed) |
 | `cross_stitch_method` | combo | — | 0 | `cross_stitch` | P3 (M10) | planned |
 | `cross_thread_count` | int | — | 4 | `cross_stitch` | P3 (M10) | planned |
 | `pattern_size_mm` | float | mm (x y) | 3 | `cross_stitch` | P3 (M10) | planned |
@@ -261,4 +261,4 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
 
-_145 parameter declarations, 67 registered in StitchCraft._
+_145 parameter declarations, 73 registered in StitchCraft._

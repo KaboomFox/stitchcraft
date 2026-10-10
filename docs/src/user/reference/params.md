@@ -35,7 +35,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Running parameters](params/running.md) | 4 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Satin parameters](params/satin.md) | 36 | Satin column, E-stitch, S-stitch, Zigzag satin |
-| [Tatami parameters](params/tatami.md) | 3 | Tatami fill |
+| [Tatami parameters](params/tatami.md) | 5 | Tatami fill |
 
 ## Every parameter
 
@@ -89,8 +89,10 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`satin_method`](params/satin.md#satin_method) | Method | Satin parameters |
 | [`short_stitch_distance_mm`](params/satin.md#short_stitch_distance_mm) | Short stitch distance | Satin parameters |
 | [`short_stitch_inset`](params/satin.md#short_stitch_inset) | Short stitch inset | Satin parameters |
+| [`skip_last`](params/tatami.md#skip_last) | Skip last stitch | Tatami parameters |
 | [`split_method`](params/satin.md#split_method) | Split method | Satin parameters |
 | [`split_staggers`](params/satin.md#split_staggers) | Staggers | Satin parameters |
+| [`staggers`](params/tatami.md#staggers) | Staggers | Tatami parameters |
 | [`start_at_nearest_point`](params/satin.md#start_at_nearest_point) | Start at nearest point | Satin parameters |
 | [`stop_after`](params/common.md#stop_after) | Stop after | Common parameters |
 | [`stroke_method`](params/stroke.md#stroke_method) | Method | Stroke parameters |

@@ -18,6 +18,10 @@ const RUNS: &[StitchType] = &[
     StitchType::SatinZigzag,
 ];
 
+/// The stitch types whose stitches may vary in length at random: running and ripple stitch along their
+/// lines, and a tatami fill along its rows.
+const RANDOM_LENGTHS: &[StitchType] = &[StitchType::RunningStitch, StitchType::RippleStitch, StitchType::TatamiFill];
+
 params! {
     /// Running stitch: single stitches along the path, for outlines, details and travel.
     pub struct RunningParams for &[StitchType::RunningStitch, StitchType::RippleStitch];
@@ -34,13 +38,15 @@ params! {
         running_stitch_tolerance_mm: Length = "0.2", label "Curve tolerance", range (0.01, 5.0), applies RUNS,
             origin Origin::InkStitchDeviates { deviation: "DEV-SAT-006" };
 
-        /// Vary the stitch lengths at random instead of spreading them evenly. Lines sewn close together
-        /// then do not line their needle holes up, which avoids moiré patterns.
-        enable_random_stitch_length: Toggle = "false", label "Random stitch length";
+        /// Vary the stitch lengths at random instead of spreading them evenly, or in a tatami fill, instead
+        /// of placing the needle points on the stagger grid. Lines and rows sewn close together then do not
+        /// line their needle holes up, which avoids moiré patterns.
+        enable_random_stitch_length: Toggle = "false", label "Random stitch length", applies RANDOM_LENGTHS;
 
-        /// How much each stitch may be longer or shorter than the stitch length, in percent of it. Where the
-        /// random lengths start is the element's `random_seed`.
-        random_stitch_length_jitter_percent: Percent = "10", label "Length variation", range (0.0, 100.0),
+        /// How much each stitch may be longer or shorter than the stitch length, in percent of it. A tatami
+        /// fill's stitch length is its longest stitch. Where the random lengths start is the element's
+        /// `random_seed`.
+        random_stitch_length_jitter_percent: Percent = "10", label "Length variation", range (0.0, 100.0), applies RANDOM_LENGTHS,
             when enable_random_stitch_length == "true";
     }
 }

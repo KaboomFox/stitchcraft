@@ -129,6 +129,13 @@ reason = "Every fill's rows end, and a fading fill keeps the density it fades to
 requirements = ["REQ-FILL-TAT-002"]
 
 [[deviation]]
+id = "DEV-FILL-004"
+area = "fill/tatami"
+summary = "A tatami fill's random stitch lengths are drawn from StitchCraft's generator (SplitMix64, seeded from the element's id and random_seed), in the order its row segments are sewn, so the values differ from Ink/Stitch's for the same seed. The ranges are Ink/Stitch's: the first point a share of the longest stitch from the segment's start, and each next one a stitch on, longer or shorter by up to the jitter."
+reason = "Ink/Stitch draws from a generator of each segment's own, keyed by the segment's place in the sewing order (lib/stitches/tatami_fill.py, lib/stitches/running_stitch.py at d59c9ab). StitchCraft's generator is its own, for every platform alike (docs/src/design/determinism.md), as for satin columns (DEV-SAT-002)."
+requirements = ["REQ-FILL-TAT-003"]
+
+[[deviation]]
 id = "DEV-SVG-001"
 area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."

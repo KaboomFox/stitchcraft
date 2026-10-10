@@ -5,6 +5,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M5.3: a tatami fill's needle points are placed along its rows as Ink/Stitch places them
+  (`REQ-FILL-TAT-003`). Fills are still skipped (`SC-W0011`) until M5.4 routes their rows.
+  - The points lie on a grid the longest stitch apart, anchored at the design's origin, each row's a
+    `staggers`-th of a stitch along from the row before's, so neighbouring rows never line them up. A
+    segment takes its start, the grid's points between, and its end, unless `skip_last` is on or the last
+    point lies within 0.1 mm of it. With random stitch lengths the points start a random share of a stitch
+    in and vary by the jitter, drawn from StitchCraft's generator (`DEV-FILL-004`).
+  - `staggers` and `skip_last` are registered for tatami fills, and `max_stitch_length_mm`,
+    `enable_random_stitch_length`, `random_stitch_length_jitter_percent` and `random_seed` now apply to
+    them too.
+  - A parameter can have a default for each family of stitch types, as Ink/Stitch gives some keys
+    another default on another kind of element. `max_stitch_length_mm` is 4 mm for fills and empty for
+    manual stitch and satin columns. The engine reads an element's settings with its family's defaults.
+    The reference pages and the JSON Schema list them, and the contract compares each Ink/Stitch row with
+    its family's default.
 - M5.2: a tatami fill's rows are laid as Ink/Stitch lays them. Its row settings `angle`, `row_spacing_mm`
   and `end_row_spacing_mm` are read and checked. Fills are still skipped (`SC-W0011`).
   - Rows run at the angle, a whole number of row spacings from the design's origin, so fills side by side

@@ -53,9 +53,10 @@ params! {
 
 Each parameter is `key: Kind = "default", label "Label"`, followed by what its kind needs and what is
 not the usual: `range (min, max)` for numbers and lists, `options [...]` or `choices CONST` for choices,
-`applies` when it covers fewer stitch types than its struct, `when other == "value"` (or
-`when other in VALUES`, a list of them) when a user interface shows it only then, `origin` (default
-`Origin::InkStitch`) and `stability` (default `Stability::Stable`).
+`applies` when it covers fewer stitch types than its struct, `defaults [Family::Fill => "4"]` when a
+family of stitch types has a default of its own, `when other == "value"` (or `when other in VALUES`, a
+list of them) when a user interface shows it only then, `origin` (default `Origin::InkStitch`) and
+`stability` (default `Stability::Stable`).
 A combination a kind does not take does not compile. Defaults are written as a design stores them, so
 they are checked by the same code as a design's values. The grammar is in the `macros` module's
 documentation.
@@ -66,7 +67,9 @@ The macro expands to:
   each field's type given by its kind (`kinds` module), so a field and its validation cannot disagree;
 - `CommonParams::SPECS` (a `const` slice of `ParamSpec`) and `CommonParams::GROUP`;
 - `CommonParams::from_set(&ParamSet) -> Result<Validated<CommonParams>, Vec<Diagnostic>>`: every
-  parameter read from its text or its default, with the clamping warnings beside the values.
+  parameter read from its text or its default, with the clamping warnings beside the values;
+- `CommonParams::from_set_for(&ParamSet, Family)`: the same with the family's own defaults, which the
+  engine reads an element's settings with.
 
 The registry itself is `stitchcraft_engine::registry::PARAMETERS`, a plain `const` list of every
 declaration's `GROUP` in the engine, next to the generators (no life-before-main tricks; adding a
@@ -81,6 +84,7 @@ pub struct ParamSpec {
     pub help: &'static str,         // the doc comment; `help()` gives the Markdown
     pub kind: Kind,                 // with its limits: range, options, maximum length
     pub default: &'static str,      // as a design stores it; "" for an empty optional value
+    pub family_defaults: &'static [(Family, &'static str)], // a family's own default: `default_for`
     pub group: &'static str,        // UI and docs section
     pub applies_to: &'static [StitchType],
     pub visible_when: Option<Condition>,   // another key and the values it shows this for: lock_custom_start only for lock_start custom
@@ -148,8 +152,11 @@ the lock and method identifiers must equal Ink/Stitch's.
    defaults: `running_stitch_tolerance_mm` is 0.2 mm on a stroke and 0.1 mm on a satin or a fill. The
    contract is per key and stitch type, so the contract page matches a declaration with the rows for the
    stitch types it applies to, and a declaration for a stitch type Ink/Stitch does not give the key is
-   reported. Declaring a key again for other stitch types (satins in M4, fills in M5) also needs lookups
-   by key and stitch type: `find` by key alone returns the first declaration.
+   reported. A key is declared once, and a family whose default differs gets its own with `defaults`:
+   `max_stitch_length_mm` is empty on manual stitch and satin columns and 4 mm on fills. The engine reads
+   an element's settings with its family's defaults (`from_set_for`). The contract page compares each row
+   with the default of the row's family. The reference page lists each family's default, and the JSON
+   Schema gives them under `x-stitchcraft.family_defaults`.
 
 ## Generated outputs
 

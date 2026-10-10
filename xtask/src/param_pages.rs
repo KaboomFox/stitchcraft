@@ -158,11 +158,19 @@ fn accepts(kind: Kind) -> String {
     }
 }
 
-/// The default as a design stores it; an empty default is explained by the help text.
+/// The default as a design stores it, with each family's own; an empty default is explained by the help
+/// text.
 fn default(spec: &ParamSpec) -> Result<String, String> {
-    // The registry test guarantees defaults parse; this keeps a broken one from reaching the docs.
-    spec.read(spec.default).map_err(|d| format!("`{}`: {}", spec.key, d.message))?;
-    Ok(if spec.default.is_empty() { "empty".to_string() } else { format!("`{}`", spec.default) })
+    let shown = |value: &str| -> Result<String, String> {
+        // The registry test guarantees defaults parse; this keeps a broken one from reaching the docs.
+        spec.read(value).map_err(|d| format!("`{}`: {}", spec.key, d.message))?;
+        Ok(if value.is_empty() { "empty".to_string() } else { format!("`{value}`") })
+    };
+    let mut text = shown(spec.default)?;
+    for &(family, value) in spec.family_defaults {
+        let _ = write!(text, ", and {} for {}", shown(value)?, family.plural());
+    }
+    Ok(text)
 }
 
 /// `values` as code, joined the way a sentence lists alternatives: "`a`", "`a` or `b`", "`a`, `b` or `c`".
@@ -231,6 +239,14 @@ fn property(spec: &ParamSpec) -> Result<Json, String> {
     }
     if let Some(condition) = spec.visible_when {
         extra["visible_when"] = json!({"key": condition.key, "any_of": condition.any_of});
+    }
+    if !spec.family_defaults.is_empty() {
+        let mut families = serde_json::Map::new();
+        for &(family, text) in spec.family_defaults {
+            let (value, _) = spec.read(text).map_err(|d| format!("`{}`: {}", spec.key, d.message))?;
+            families.insert(family.id().to_string(), json_value(&value));
+        }
+        extra["family_defaults"] = Json::Object(families);
     }
     if let Origin::InkStitchDeviates { deviation } = spec.origin {
         extra["deviation"] = json!(deviation);
