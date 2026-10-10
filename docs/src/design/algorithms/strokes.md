@@ -1,6 +1,6 @@
 # Stroke generators
 
-<!-- implements: crates/stitchcraft-engine/src/generators/mod.rs, crates/stitchcraft-engine/src/generators/running/**, crates/stitchcraft-engine/src/generators/manual.rs, crates/stitchcraft-engine/src/generators/passes.rs, crates/stitchcraft-engine/src/normalize/stroke.rs -->
+<!-- implements: crates/stitchcraft-engine/src/generators/mod.rs, crates/stitchcraft-engine/src/generators/running/**, crates/stitchcraft-engine/src/generators/manual.rs, crates/stitchcraft-engine/src/generators/passes.rs, crates/stitchcraft-engine/src/normalize/stroke.rs, crates/stitchcraft-engine/src/normalize/along.rs -->
 
 Strokes follow a path. Shape: `StrokePath` (an ordered list of polylines, corners marked, from the
 normalizer). Phase P1 (M3) unless noted.

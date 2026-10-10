@@ -58,29 +58,47 @@ out as a point.
 
 ## Orientation
 
-- `reverse_rails = automatic` reverses rail B when that brings the rails' points closer together, as in
-  Ink/Stitch. Points at every tenth of each rail's length, from its start to 90 %, are paired twice, with
-  rail B forwards and with it backwards. The pairing whose distances add up to less wins. `none`,
-  `first`, `second` and `both` force it.
-- `swap_satin_rails` swaps which rail is "first", which matters for asymmetric values (one value per
-  side) and for which side the E-stitch spine runs on.
+- `swap_satin_rails` makes the second rail the first, before any reversal. The first rail sews first in
+  each pair, and the column starts on it. Asymmetric values (one value per side) name it first, and the
+  E-stitch spine runs on it.
+- `reverse_rails = automatic` reverses rail B, the second, when that brings the rails' points closer
+  together, as in Ink/Stitch. Points at every tenth of each rail's length, from its start to 90 %, are
+  paired twice, with rail B forwards and with it backwards. The pairing whose distances add up to less
+  wins. `none`, `first`, `second` and `both` force it.
 
 ## Correspondence
 
-Rails are cut at rung crossings into paired sections. Within a section, the point at normalized arc
-length `t` on rail A corresponds to `t` on rail B. A column of 2 subpaths has no rungs, and its rails'
-nodes are paired instead, as in Ink/Stitch. The 2nd node of one rail goes with the 2nd node of the other,
-and on in order, after any reversal, with each rail's 2 ends left out. Rails with different numbers of
-nodes pair as many nodes as the shorter list has, with a warning. Rails of 2 nodes each are one
-section. When the resulting stitch directions deviate from the local column normal by more than 45°
-somewhere, the element gets `SC-W0208` ("add a rung here") with the location.
+Every rung cuts each rail at the distance along it of the rung's point on it, after any reversal. Each
+rail is cut at its own distances, in order, and the n-th part of one rail goes with the n-th part of the
+other: a section. A part of no length leaves its section out, as where two rungs meet a rail at one
+point or one meets it at an end. Within a section, the point at a fraction of rail A's part goes with the
+point at the same fraction of rail B's.
+
+A column of 2 subpaths has no rungs, and its rails' nodes cut the rails instead, as in Ink/Stitch. The
+2nd node of one rail goes with the 2nd node of the other, and on in order, after any reversal, without
+each rail's 2 ends. Rails with different numbers of nodes pair as many as the one with fewer has
+(`SC-W0210`). Ink/Stitch's own warning for this counts the rails' points after flattening, not their
+nodes, and can warn where the nodes pair as drawn. Rails of 2 nodes each are cut once, 0.2 CSS pixels
+from their starts, and sew as one section.
+
+When the resulting stitch directions deviate from the local column normal by more than 45° somewhere,
+the element gets `SC-W0208` ("add a rung here") with the location.
 
 ## Top stitches (method `satin_column`)
 
-1. **Sample along the centre.** Walk the section so that consecutive stitch pairs are
-   `zigzag_spacing_mm / 2` apart measured on the centre line (midpoints of corresponding points): one
-   zigzag cycle (A → B → A) spans `zigzag_spacing_mm`. `random_zigzag_spacing_percent` jitters each
-   step (seeded).
+1. **Place pairs along the sections,** as Ink/Stitch places them. A pair of needle points goes across
+   the column, one on each rail at the same fraction of its section. Each pair is meant to lie
+   `zigzag_spacing_mm` from the one before, measured across the column. The measure is taken at a right
+   angle to the previous pair, at whichever of its ends is farther (the outside of a curve). Where the
+   previous pair has no length, it is the distance from that pair's point.
+   - Within a section, a pair is placed the spacing's share of the section's longer part past the one
+     before. A pair that lands more than 5 % off the spacing moves by its step scaled by how far off it
+     is. It moves at most twice, and the first move stops at the section's end.
+   - The first pair of a section after the first goes as far past the section's start as the previous
+     pair is short of the spacing.
+   - The column starts with a pair at its start and ends with one at its end, unless the last pair is
+     within 0.1 mm of it.
+   - `random_zigzag_spacing_percent` jitters each step (seeded, M4.3).
 2. **Compensate width.** For each pair, move both ends outward along the A–B line by
    `pull_compensation_mm + pull_compensation_percent × width` per side; one value applies to both sides,
    two values (`"0.2 0.4"`) apply per rail. `random_width_increase_percent` and
@@ -96,7 +114,9 @@ somewhere, the element gets `SC-W0208` ("add a rung here") with the location.
    tatami rows) or `default` (random phase with `random_split_jitter_percent`, `random_split_phase`,
    and pieces no shorter than `min_random_split_length_mm`). Split points never line up into a visible
    seam on more than `split_staggers` consecutive stitches.
-5. **Alternate.** Emit A, B, A, B… The exit end is chosen by assembly (see *Start and end*).
+5. **Alternate.** Each pair is sewn rail A first, then rail B, and the needle goes A, B, A, B and on.
+   The stitch from A to B goes straight across, and the one from B to the next A slants. One zigzag cycle
+   (A → B → A) spans `zigzag_spacing_mm`. The exit end is chosen by assembly (see *Start and end*).
 
 ## Underlays
 
@@ -132,7 +152,7 @@ override both (`REQ-GEN-001`). Travel between underlay passes uses `running_stit
 | Requirement | Property |
 |---|---|
 | `REQ-SAT-001` | Every top stitch end lies on its rail, offset outward by exactly the compensation (± 0.01 mm) |
-| `REQ-SAT-002` | Measured zigzag spacing on the centre line equals the parameter (± 5 %) away from short-stitch zones |
+| `REQ-SAT-002` | Consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails and within 5 % on curves. The last pair is at most a spacing on |
 | `REQ-SAT-003` | No top stitch exceeds `max_stitch_length_mm` after splitting; split seams follow the chosen method |
 | `REQ-SAT-004` | Underlays lie inside the inset band and precede the top stitches |
 | `REQ-SAT-005` | Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces `SC-E0201` and no stitches, and a rung that misses a rail joins the rail's nearest point (`SC-W0203`) |

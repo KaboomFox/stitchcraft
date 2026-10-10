@@ -220,7 +220,7 @@ fn diag_sc_e0201_a_satin_column_with_no_subpath_longer_than_a_point_is_not_sewn(
 }
 
 #[test]
-fn diag_sc_w0011_a_satin_column_is_recognized_then_skipped_until_satin_stitches_are_sewn() {
+fn diag_sc_w0011_satin_columns_not_sewn_yet_are_named() {
     let path = polylines(&[
         LOWER,
         UPPER,
@@ -231,18 +231,24 @@ fn diag_sc_w0011_a_satin_column_is_recognized_then_skipped_until_satin_stitches_
     ]);
     // On, the path is a satin column whatever its stroke method says, and what recognition finds is named.
     let satin = along("satin", path.clone(), &RED, &[("satin_column", "true"), ("stroke_method", "manual_stitch")]);
-    let outcome = sewn(vec![satin, line("ok", (0.0, 8.0), 10.0, &RED, &[])]);
+    let outcome = sewn(vec![satin]);
     assert_eq!(
         messages(&outcome),
+        ["warning SC-W0203: Subpath 4 of this satin column, a rung, does not reach the rail that is subpath 2, so the point of that \
+          rail nearest the rung is used."]
+    );
+    assert!(shape_of(&outcome).starts_with("J L4 S"), "sewn: {}", shape_of(&outcome));
+    // The other satin methods, and a path of one subpath, the column's centre line, are not sewn yet.
+    let e_stitch = along("e", path.clone(), &RED, &[("satin_column", "true"), ("satin_method", "e_stitch")]);
+    assert_eq!(
+        messages(&sewn(vec![e_stitch, line("ok", (0.0, 8.0), 10.0, &RED, &[])])),
         [
             "warning SC-W0203: Subpath 4 of this satin column, a rung, does not reach the rail that is subpath 2, so the point of \
              that rail nearest the rung is used.",
-            "warning SC-W0011: This element is a satin column, and this version of StitchCraft does not sew satin columns yet, so it \
-             is skipped."
+            "warning SC-W0011: This element's satin method, `e_stitch`, is not sewn by this version of StitchCraft yet, so it is \
+             skipped."
         ]
     );
-    assert_eq!(shape_of(&outcome), "J L4 S5 L4");
-    // A path of one subpath is the column's centre line.
     let centre = along("centre", polylines(&[LOWER]), &RED, &[("satin_column", "true")]);
     assert_eq!(
         messages(&sewn(vec![centre, line("ok", (0.0, 8.0), 10.0, &RED, &[])])),

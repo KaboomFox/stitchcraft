@@ -196,6 +196,15 @@ registry! {
     /// straight line across both rails.
     SatinRungAmbiguous = "SC-W0207", Warning, "Satin rung crosses a rail more than once; left out";
 
+    /// A satin column's path draws no rungs, so its rails' nodes pair up instead, as in Ink/Stitch: the
+    /// 2nd node of one rail with the 2nd of the other, and on in order. Its rails have different numbers
+    /// of nodes, so the rail with more has nodes that pair with none, and between them the stitches
+    /// follow the rails' lengths alone.
+    ///
+    /// The message gives both counts. Add rungs across the column, or give both rails the same number of
+    /// nodes.
+    SatinNodesUnequal = "SC-W0210", Warning, "Satin rails without rungs have different numbers of nodes";
+
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
     /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that

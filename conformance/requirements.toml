@@ -448,9 +448,10 @@ status = "planned"
 id = "REQ-SAT-002"
 area = "satin"
 level = "L2"
-statement = "Measured zigzag spacing on the centre line equals the parameter within 5 percent outside short-stitch zones."
+statement = "A satin column's needle points pair across it, one on each rail at the same fraction of their section, and consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails and within 5 percent on curves. The last pair is at most one spacing on."
+rationale = "Ink/Stitch places satin stitches this way, so a file sews the same in both, and an even spacing is what makes a satin column look smooth."
 milestone = "M4"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-SAT-003"

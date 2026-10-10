@@ -20,6 +20,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0203`](#sc-w0203) | Warning | Satin rung does not cross both rails |
 | [`SC-W0205`](#sc-w0205) | Warning | Satin subpath is one point; left out |
 | [`SC-W0207`](#sc-w0207) | Warning | Satin rung crosses a rail more than once; left out |
+| [`SC-W0210`](#sc-w0210) | Warning | Satin rails without rungs have different numbers of nodes |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -190,6 +191,18 @@ goes with which point of the other, and it was left out. The column is sewn with
 
 The message names the subpath, numbered from 1 in the order the path draws it. Redraw the rung as a
 straight line across both rails.
+
+## SC-W0210
+
+**Warning** — Satin rails without rungs have different numbers of nodes
+
+A satin column's path draws no rungs, so its rails' nodes pair up instead, as in Ink/Stitch: the
+2nd node of one rail with the 2nd of the other, and on in order. Its rails have different numbers
+of nodes, so the rail with more has nodes that pair with none, and between them the stitches
+follow the rails' lengths alone.
+
+The message gives both counts. Add rungs across the column, or give both rails the same number of
+nodes.
 
 ## SC-W0401
 

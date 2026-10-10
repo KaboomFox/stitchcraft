@@ -4,19 +4,58 @@
 
 Satin column: a band of stitches between two rails.
 
-Applies to Satin column.
+Applies to Satin column, E-stitch, S-stitch, Zigzag satin.
 
 ## Satin column
 
 ### `satin_column`
 
 **Satin column.** Sew the path as a satin column. Two of its subpaths are the rails, the column's edges, and the
-others are rungs across both, which say which point of one rail goes with which of the other. A
-path of 1 subpath is the column's centre line. Off, the path is sewn as a stroke, by its
-`stroke_method`. This version reads a satin column's rails and rungs and reports what it finds,
-then skips the element (`SC-W0011`). Satin stitches arrive in a later version.
+others are rungs across both, which say which point of one rail goes with which of the other.
+Without rungs, the rails' nodes pair up instead. A path of 1 subpath is the column's centre
+line, which a later version sews. Off, the path is sewn as a stroke, by its `stroke_method`.
 
 - **Accepts:** true or false
 - **Default:** `false`
 - **Applies to:** Running stitch, Manual stitch, Zigzag stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin
+- **Ink/Stitch:** same key, meaning and default
+
+### `satin_method`
+
+**Method.** How the column is sewn. A satin column sews stitches straight across it, from one rail to the
+other and back. E, S and zigzag stitches arrive in later versions, and until then an element
+set to one is skipped (`SC-W0011`).
+
+- **Accepts:** one of `satin_column` (Satin column), `e_stitch` (E-stitch), `s_stitch` (S-stitch), `zigzag` (Zigzag satin)
+- **Default:** `satin_column`
+- **Ink/Stitch:** same key, meaning and default
+
+### `zigzag_spacing_mm`
+
+**Zigzag spacing.** The distance from one stitch across the column to the next that goes the same way: from one
+rail to the other and back again is one spacing. It is measured across the column at its
+outside edge, and on a curve the stitches fan out from the inside edge.
+
+- **Accepts:** a length from 0.01 to 10 mm
+- **Default:** `0.4`
+- **Ink/Stitch:** same key, meaning and default
+
+## Rails
+
+### `reverse_rails`
+
+**Reverse rails.** Which rails are sewn against the way they are drawn, so that both run the same way. Automatic
+reverses the second rail when it runs against the first.
+
+- **Accepts:** one of `automatic` (Automatic), `none` (Neither), `first` (The first), `second` (The second), `both` (Both)
+- **Default:** `automatic`
+- **Ink/Stitch:** same key, meaning and default
+
+### `swap_satin_rails`
+
+**Swap rails.** Make the second rail the first. The column starts on its first rail, and each stitch across it
+goes from the first rail to the second.
+
+- **Accepts:** true or false
+- **Default:** `false`
 - **Ink/Stitch:** same key, meaning and default

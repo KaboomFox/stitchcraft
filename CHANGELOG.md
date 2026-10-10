@@ -5,6 +5,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M4.2: satin columns are sewn. Their top stitches go rail to rail, placed as Ink/Stitch places them
+  (`REQ-SAT-002`). Pull compensation, short stitches on curves, split stitches and underlays follow in
+  M4.3 to M4.6, and until then satins differ from Ink/Stitch's where those apply. Ink/Stitch's short
+  stitches are on by default.
+  - **Rails** run the same way: `reverse_rails` (`automatic` by default) turns the second rail when it
+    runs against the first, and `swap_satin_rails` makes the second rail the first.
+  - **Sections.** The rungs cut both rails into sections. Without rungs, the rails' nodes pair up in
+    order, as in Ink/Stitch. Rails with different numbers of nodes are named (`SC-W0210`).
+  - **Pairs** of needle points go across the column, `zigzag_spacing_mm` apart (0.4 mm by default),
+    measured across the column at its outside edge.
+  - `satin_method` picks the satin stitch. E, S and zigzag stitches are skipped with `SC-W0011` until M7.
 - M4.1: satin columns are recognized. A stroke whose `satin_column` setting is on is a satin column, and
   its path is read as its rails and rungs, as Ink/Stitch reads it (`REQ-SAT-005`). Satin columns are
   skipped with `SC-W0011` until M4.2 sews them, and what recognition finds is reported now.

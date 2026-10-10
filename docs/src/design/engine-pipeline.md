@@ -50,12 +50,12 @@ too small for a stitch gives none (`SC-W0401`). The element's own settings stay 
 assembly reads them there: its thread, locks, trim and stop.
 
 The stitch type picks the generator. A stroke whose `satin_column` setting is on is a satin column,
-whatever its `stroke_method` says, as in Ink/Stitch. Its rails and rungs are recognized and what
-recognition finds is reported, and then it is skipped with `SC-W0011` until M4.2 sews satins. For any
-other stroke the generator is its `stroke_method`. `running_stitch` (the default) and `manual_stitch`
-are sewn from M3. The other stroke methods and fills are skipped with `SC-W0011` until their
-milestones. An element whose parameters are wrong (`SC-E0101`) is skipped too, and the rest of the
-design still plans.
+whatever its `stroke_method` says, as in Ink/Stitch. Its rails and rungs are recognized, what
+recognition finds is reported, and its `satin_method` picks the generator: the satin stitch, sewn from
+M4.2. For any other stroke the generator is its `stroke_method`. `running_stitch` (the default) and
+`manual_stitch` are sewn from M3. The other stroke and satin methods, satin columns drawn as their centre
+line, and fills are skipped with `SC-W0011` until their milestones. An element whose parameters are
+wrong (`SC-E0101`) is skipped too, and the rest of the design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
 `min_stitch`) and the element's `min_stitch_length_mm`, or the design's shortest stitch when the element

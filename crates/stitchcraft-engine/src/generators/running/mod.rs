@@ -41,7 +41,8 @@ use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Mm, Point};
 use crate::design::Path;
 use crate::generators::passes::{self, RepeatParams};
 use crate::generators::{Stitched, TooSmall, mm, too_small};
-use crate::normalize::stroke::{self, Piece, distance_to_segment};
+use crate::normalize::along::Along;
+use crate::normalize::stroke::{self, distance_to_segment};
 
 /// The share of the curve tolerance that flattening may use; the stitches have the rest.
 const FLATTEN_SHARE: f64 = 0.1;
@@ -67,7 +68,7 @@ pub fn running_stitch(
     let stroke = stroke::flatten(path, tolerance * FLATTEN_SHARE, meter)?;
     let mut runs = Vec::with_capacity(stroke.pieces.len());
     for piece in &stroke.pieces {
-        let along = Along::new(piece, meter)?;
+        let along = Along::new(&piece.points, meter)?;
         let length = along.length();
         let skipped = if piece.points.len() < 2 {
             TooSmall::Point
@@ -116,30 +117,8 @@ struct Needle {
     corner: bool,
 }
 
-/// Distances along a piece: where each of its points lies, measured along it from its start.
-struct Along<'a> {
-    points: &'a [Point],
-    at: Vec<f64>,
-}
-
-impl<'a> Along<'a> {
-    fn new(piece: &'a Piece, meter: &mut Meter) -> Result<Along<'a>, Exhausted> {
-        let mut at = Vec::with_capacity(piece.points.len());
-        let mut total = 0.0;
-        let mut previous = None;
-        for point in &piece.points {
-            meter.charge(1)?;
-            total += previous.map_or(0.0, |p: Point| p.distance(*point));
-            at.push(total);
-            previous = Some(*point);
-        }
-        Ok(Along { points: &piece.points, at })
-    }
-
-    fn length(&self) -> f64 {
-        self.at.last().copied().unwrap_or(0.0)
-    }
-
+// Needles along a piece: the running stitch's own uses of the distances `Along` measures.
+impl Along<'_> {
     /// The needle on the piece's point `index`, exactly.
     fn vertex(&self, index: usize) -> Needle {
         let at = self.at.get(index).copied().unwrap_or(0.0);
@@ -148,12 +127,7 @@ impl<'a> Along<'a> {
 
     /// The needle `at` along the piece.
     fn needle(&self, at: f64) -> Needle {
-        // The side the distance falls on: from the last point at or before it to the next one. A piece
-        // repeats no point, so every side has a length; were one empty, the NaN fraction would put the
-        // needle on the side's first point.
-        let end = self.at.partition_point(|a| *a <= at).clamp(1, self.points.len().saturating_sub(1).max(1));
-        let (from, to) = (self.vertex(end - 1), self.vertex(end));
-        Needle { at, point: from.point.lerp(to.point, (at - from.at) / (to.at - from.at)), corner: false }
+        Needle { at, point: self.point(at), corner: false }
     }
 
     /// The indices of the piece's points between two needles: after `from` and before `to`, a point

@@ -6,7 +6,7 @@
 //! new stitch type is its own module and one line here.
 //!
 //! A stroke whose `satin_column` setting is on is a satin column, whatever its `stroke_method` says, as in
-//! Ink/Stitch.
+//! Ink/Stitch, and its `satin_method` picks the generator.
 //!
 //! An element that cannot be sewn is skipped, with a diagnostic that says why, and the rest of the design
 //! still plans (`REQ-GEN-002`): a stitch type StitchCraft does not sew yet (`SC-W0011`), parameters it
@@ -19,12 +19,12 @@ use stitchcraft_params::{ChoiceOption, Family, StitchType, Validated, params, un
 use stitchcraft_plan::MachineProfile;
 
 use crate::common::CommonParams;
-use crate::design::{DesignSettings, Element, Shape};
-use crate::generators::Stitched;
+use crate::design::{DesignSettings, Element, Path, Shape};
 use crate::generators::manual::{ManualParams, manual_stitch};
 use crate::generators::passes::RepeatParams;
 use crate::generators::running::{RunningParams, running_stitch};
-use crate::generators::satin::{self, SatinParams};
+use crate::generators::satin::{self, SatinParams, satin_stitch};
+use crate::generators::{Stitched, method};
 use crate::normalize::satin::Shape as SatinShape;
 use crate::registry::PARAMETERS;
 
@@ -32,11 +32,6 @@ use crate::registry::PARAMETERS;
 /// gives the parameter's default as the first one's place in this list.
 pub const STROKE_METHODS: &[ChoiceOption] =
     &[method(StitchType::RunningStitch), method(StitchType::RippleStitch), method(StitchType::ZigzagStitch), method(StitchType::ManualStitch)];
-
-/// A stitch type as a method a settings window offers.
-const fn method(stitch_type: StitchType) -> ChoiceOption {
-    ChoiceOption { id: stitch_type.id(), label: stitch_type.name() }
-}
 
 params! {
     /// How a stroke is sewn.
@@ -120,39 +115,71 @@ fn sew(
         }
     };
     let Some(satin_params) = kept(SatinParams::from_set(set), diagnostics) else { return Ok(None) };
-    if satin_params.satin_column {
-        let why = match satin::shape(path, diagnostics, meter)? {
-            None => return Ok(None),
-            Some(SatinShape::CentreLine) => {
-                "This element is a satin column drawn as its centre line, which this version of StitchCraft does not sew yet"
-            }
-            Some(SatinShape::Rails(_)) => "This element is a satin column, and this version of StitchCraft does not sew satin columns yet",
-        };
-        diagnostics.push(not_yet(why));
-        return Ok(None);
+    let min_stitch = common.as_ref().map(|common| shortest_stitch(common.min_stitch_length_mm, settings, profile));
+    let sewn = if satin_params.satin_column {
+        satin_column(path, &satin_params, diagnostics, meter)?
+    } else {
+        stroke(element, path, min_stitch, diagnostics, meter)?
+    };
+    let (Some(common), Some(min_stitch), Some((stitch_type, stitched))) = (common, min_stitch, sewn) else { return Ok(None) };
+    diagnostics.extend(stitched.warnings);
+    Ok(Some(Generated { common, stitch_type, groups: stitched.runs, min_stitch }))
+}
+
+/// A satin column's stitches by its `satin_method`, or `None` when it is skipped.
+fn satin_column(
+    path: &Path,
+    params: &SatinParams,
+    diagnostics: &mut Vec<Diagnostic>,
+    meter: &mut Meter,
+) -> Result<Option<(StitchType, Stitched)>, Exhausted> {
+    let rails = match satin::shape(path, diagnostics, meter)? {
+        None => return Ok(None),
+        Some(SatinShape::CentreLine) => {
+            diagnostics.push(not_yet("This element is a satin column drawn as its centre line, which this version of StitchCraft does not sew yet"));
+            return Ok(None);
+        }
+        Some(SatinShape::Rails(rails)) => rails,
+    };
+    match StitchType::from_id(Family::Satin, params.satin_method) {
+        Some(StitchType::SatinColumn) => Ok(Some((StitchType::SatinColumn, satin_stitch(&rails, params, meter)?))),
+        _ => {
+            let method = params.satin_method;
+            diagnostics.push(not_yet(&format!("This element's satin method, `{method}`, is not sewn by this version of StitchCraft yet")));
+            Ok(None)
+        }
     }
+}
+
+/// A stroke's stitches by its `stroke_method`, with no stitch shorter than `min_stitch`, or `None` when it
+/// is skipped (`min_stitch` is `None` when the settings every stitch type shares cannot be read).
+fn stroke(
+    element: &Element,
+    path: &Path,
+    min_stitch: Option<Mm>,
+    diagnostics: &mut Vec<Diagnostic>,
+    meter: &mut Meter,
+) -> Result<Option<(StitchType, Stitched)>, Exhausted> {
+    let set = &element.params;
     let stroke = kept(StrokeParams::from_set(set), diagnostics);
-    let (Some(common), Some(stroke)) = (common, stroke) else { return Ok(None) };
-    let min_stitch = shortest_stitch(common.min_stitch_length_mm, settings, profile);
+    let (Some(stroke), Some(min_stitch)) = (stroke, min_stitch) else { return Ok(None) };
     let passes = kept(RepeatParams::from_set(set), diagnostics);
-    let (stitch_type, stitched): (StitchType, Stitched) = match StitchType::from_id(Family::Stroke, stroke.stroke_method) {
+    match StitchType::from_id(Family::Stroke, stroke.stroke_method) {
         Some(StitchType::RunningStitch) => {
             let (Some(running), Some(passes)) = (kept(RunningParams::from_set(set), diagnostics), passes) else { return Ok(None) };
             let mut rng = SplitMix64::for_element(element.id.as_str(), running.random_seed.unwrap_or(0));
-            (StitchType::RunningStitch, running_stitch(path, &running, &passes, min_stitch, &mut rng, meter)?)
+            Ok(Some((StitchType::RunningStitch, running_stitch(path, &running, &passes, min_stitch, &mut rng, meter)?)))
         }
         Some(StitchType::ManualStitch) => {
             let (Some(manual), Some(passes)) = (kept(ManualParams::from_set(set), diagnostics), passes) else { return Ok(None) };
-            (StitchType::ManualStitch, manual_stitch(path, &manual, &passes, min_stitch, meter)?)
+            Ok(Some((StitchType::ManualStitch, manual_stitch(path, &manual, &passes, min_stitch, meter)?)))
         }
         _ => {
             let method = stroke.stroke_method;
             diagnostics.push(not_yet(&format!("This element's stroke method, `{method}`, is not sewn by this version of StitchCraft yet")));
-            return Ok(None);
+            Ok(None)
         }
-    };
-    diagnostics.extend(stitched.warnings);
-    Ok(Some(Generated { common, stitch_type, groups: stitched.runs, min_stitch }))
+    }
 }
 
 /// The shortest stitch for an element whose own is `own`: the machine's, or the element's own if it is
@@ -180,17 +207,4 @@ fn kept<T>(read: Result<Validated<T>, Vec<Diagnostic>>, diagnostics: &mut Vec<Di
 /// `SC-W0011`: `why` the element is not sewn.
 fn not_yet(why: &str) -> Diagnostic {
     Diagnostic::new(Code::StitchTypeNotYet, format!("{why}, so it is skipped."))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn each_stroke_method_leads_back_to_its_stitch_type() {
-        // `method` builds the list at compile time; here it runs, and each option is its type's id and name.
-        for option in STROKE_METHODS {
-            assert_eq!(StitchType::from_id(Family::Stroke, option.id).map(method), Some(*option), "{option:?}");
-        }
-    }
 }
