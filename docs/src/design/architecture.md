@@ -132,6 +132,9 @@ A future in-tree VectorCraft crate would be a fifth adapter calling the same two
   exhausted, an I/O failure). Each crate has one `thiserror` enum; apps turn errors into diagnostics
   or exit codes.
 - Nothing below the apps prints, exits or panics.
+- **A bug in StitchCraft** is neither. It shows as a failed plan check (`SC-E0009`) or as a panic despite
+  the lints. The command line catches it and ends with exit status 4. For `stitch plan` it also writes a
+  bug-report bundle that reproduces the bug ([determinism](determinism.md#bug-reports)).
 
 ## Feature flags
 

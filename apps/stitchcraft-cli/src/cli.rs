@@ -17,7 +17,8 @@ pub struct Cli {
 
 const AFTER_HELP: &str = "\
 Exit status: 0 done (warnings allowed) · 1 the design or file has errors (nothing written) · 2 usage
-error · 3 a file could not be read or written.
+error · 3 a file could not be read or written · 4 a bug in StitchCraft (a bug-report bundle is written
+where it can be: see `stitch bug-report`).
 
 Coming with the roadmap (docs/src/plan/roadmap.md):
   stitch export design.vectorcraft -o design.pes            (M6)";
@@ -43,6 +44,11 @@ pub enum Command {
         /// The code.
         code: String,
     },
+    /// Write a bug-report bundle that reproduces what StitchCraft does with a design, or replay one.
+    ///
+    /// The bundle is one file to attach to an issue, and it holds the design. With --replay, plan a
+    /// bundle's design again and compare; the exit status is 1 when it does not reproduce.
+    BugReport(BugReportArgs),
 }
 
 /// `stitch plan`.
@@ -66,6 +72,29 @@ pub struct PlanArgs {
     /// written.
     #[arg(long)]
     pub report: Option<PathBuf>,
+}
+
+/// `stitch bug-report`.
+#[derive(Debug, Args)]
+pub struct BugReportArgs {
+    /// The design (SVG) StitchCraft gets wrong.
+    #[arg(required_unless_present = "replay")]
+    pub design: Option<PathBuf>,
+    /// Replay this bundle instead: plan its design again and say whether everything comes out the same.
+    #[arg(long, conflicts_with_all = ["design", "output", "format", "says"])]
+    pub replay: Option<PathBuf>,
+    /// The bundle to write; by default next to the design, as DESIGN.bug-report.json.
+    #[arg(long, short)]
+    pub output: Option<PathBuf>,
+    /// The machine profile (see `stitch profiles`).
+    #[arg(long, short, default_value = "brother-200x200")]
+    pub profile: String,
+    /// The file format; by default the profile's.
+    #[arg(long, value_enum)]
+    pub format: Option<Format>,
+    /// What goes wrong, in your words; it goes into the bundle.
+    #[arg(long)]
+    pub says: Option<String>,
 }
 
 /// `stitch testsheet`.

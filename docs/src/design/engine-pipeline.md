@@ -195,8 +195,8 @@ sew differently in the two tools.
 
 The plan invariant checker (`stitchcraft-plan::invariants`, the same code conformance level L0 runs)
 validates the result. A violation is a bug in StitchCraft: `plan` returns no plan and reports
-`SC-E0009 internal check failed` (`REQ-FIN-003`). The command line then does not write a machine file,
-and from M3.10 it writes a bug-report bundle. The conformance suite has a case for every invariant.
+`SC-E0009 internal check failed` (`REQ-FIN-003`). The command line then does not write a machine file.
+It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The conformance suite has a case for every invariant.
 
 ## 7. Incremental and parallel planning
 

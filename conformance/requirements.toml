@@ -594,3 +594,23 @@ level = "L2"
 statement = "Each live-effect preview level completes within VectorCraft's v1 budget (5 s, fuel limit) for the largest fixture of that level."
 milestone = "M6"
 status = "planned"
+
+# ── Command line ───────────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-CLI-001"
+area = "cli"
+level = "L1"
+statement = "A bug-report bundle reproduces its plan byte for byte: `stitch bug-report --replay` plans the bundled design again with the bundled profile and format and, with the same version of StitchCraft, gets every entry of the plan bit for bit, the same machine file and the same diagnostics; a bundle whose design or results were changed does not reproduce, and says what differs."
+rationale = "A bug that cannot be reproduced cannot be fixed. StitchCraft is deterministic (determinism.md), so the design, the profile, the format and the version are all it takes."
+milestone = "M3"
+status = "active"
+
+[[req]]
+id = "REQ-CLI-002"
+area = "cli"
+level = "L1"
+statement = "When `stitch plan` finds a bug in StitchCraft — a failed plan check (SC-E0009) or a panic — it writes no machine file, writes a bug-report bundle next to the file it was asked for, says where, and ends with exit status 4."
+rationale = "The person who meets a bug should not have to know how to report it: the bundle is the report."
+milestone = "M3"
+status = "active"

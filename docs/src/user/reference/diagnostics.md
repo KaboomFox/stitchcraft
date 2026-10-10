@@ -11,6 +11,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0009`](#sc-e0009) | Error | Internal check failed |
 | [`SC-E0010`](#sc-e0010) | Error | Nothing to stitch |
 | [`SC-W0011`](#sc-w0011) | Warning | Stitch type not sewn yet; element skipped |
+| [`SC-E0012`](#sc-e0012) | Error | Bug-report bundle could not be replayed |
 | [`SC-E0101`](#sc-e0101) | Error | Parameter has the wrong type or an unknown choice |
 | [`SC-W0102`](#sc-w0102) | Warning | Parameter clamped to its allowed range |
 | [`SC-W0105`](#sc-w0105) | Warning | Unknown parameter preserved but ignored |
@@ -63,9 +64,11 @@ metres from the hoop centre cannot be previewed at any scale.
 
 StitchCraft checks every stitch plan against its own rules before writing a machine file. One of
 those checks failed, which means StitchCraft has a bug: the file was not written, so nothing
-wrong reaches your machine.
+wrong reaches your machine. `stitch plan` writes a bug-report bundle instead, next to the file it
+was asked for.
 
-Please report it with the design that triggered it; the message names the rule that failed.
+Please attach the bundle to an issue; the message names the rule that failed. The bundle holds
+your design, so that the bug can be reproduced.
 
 ## SC-E0010
 
@@ -87,6 +90,17 @@ satin columns from M4 and tatami fills from M5; the other stitch types follow
 
 The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
 tool for now.
+
+## SC-E0012
+
+**Error** — Bug-report bundle could not be replayed
+
+`stitch bug-report --replay` was given a file that is not a bug-report bundle it can replay: not
+JSON, not a bundle, a bundle format newer than this StitchCraft, or one that names a profile or a
+format this StitchCraft does not have. Nothing was replayed.
+
+The message says what is wrong. A bundle written by a newer StitchCraft needs that version or a
+later one; a bundle changed by hand, or by an email program, needs the original file.
 
 ## SC-E0101
 

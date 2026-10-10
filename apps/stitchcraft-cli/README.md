@@ -12,12 +12,17 @@ The command-line tool: the only StitchCraft component that touches the file syst
 | `stitch convert design.dst -o design.pes` | M2.7 | Rewrites a machine file in another format (`--format pes\|dst` overrides the extension); says what the new format cannot store |
 | `stitch profiles` | M1.8 | The built-in machine profiles and the evidence behind their values |
 | `stitch explain SC-W0702` | M1.8 | A diagnostic's explanation, from the registry |
+| `stitch bug-report design.svg --says "…"` | M3.10 | Writes a bug-report bundle: the design, profile, format and version, and digests of what came of them (`--replay BUNDLE` plans it again and compares) |
 
-Coming with their milestones: `bug-report` (M3), `export` (M6.5), `import-inkstitch` (M8),
-`conformance run`.
+Coming with their milestones: `export` (M6.5), `import-inkstitch` (M8), `conformance run`.
 
-**Exit status:** 0 done (warnings allowed) · 1 the design or file has errors (nothing written) · 2 usage
-error · 3 a file could not be read or written.
+| Exit status | Meaning |
+|---|---|
+| 0 | Done, perhaps with warnings |
+| 1 | The design or file has errors and nothing was written, or a replayed bundle does not reproduce |
+| 2 | Usage error |
+| 3 | A file could not be read or written |
+| 4 | A bug in StitchCraft, a failed plan check or a panic. A bug-report bundle is written where one can be |
 
 ## Layout
 
@@ -35,9 +40,11 @@ error · 3 a file could not be read or written.
   its test sheets itself, and the engine's `plan` checks designs. When a check fails, the machine file is
   not written, and `stitch plan` still writes its report to say why.
 - Never panics on bad arguments (arguments that are not valid Unicode included); exit codes are documented.
+- A panic anyway is a bug: `main` catches it (`commands::bug_report::guarded`), says so, and for
+  `stitch plan` writes a bug-report bundle.
 - A closed stdout (`stitch … | head`) ends the program quietly instead of panicking.
 
 ## Dependencies
 
-`clap` (restricted to this crate and `xtask` by `cargo xtask layers`), `sha2`, `serde_json` (the plan report), and the StitchCraft
-libraries.
+`clap` (restricted to this crate and `xtask` by `cargo xtask layers`), `sha2`, `serde` and `serde_json`
+(the plan report and bug-report bundles), and the StitchCraft libraries.

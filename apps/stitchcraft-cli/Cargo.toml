@@ -21,6 +21,8 @@ workspace = true
 
 [dependencies]
 clap = { workspace = true }
+# Bug-report bundles are JSON (`commands::bug_report`).
+serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
 stitchcraft-core = { workspace = true }

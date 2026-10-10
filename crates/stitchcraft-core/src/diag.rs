@@ -106,9 +106,11 @@ registry! {
 
     /// StitchCraft checks every stitch plan against its own rules before writing a machine file. One of
     /// those checks failed, which means StitchCraft has a bug: the file was not written, so nothing
-    /// wrong reaches your machine.
+    /// wrong reaches your machine. `stitch plan` writes a bug-report bundle instead, next to the file it
+    /// was asked for.
     ///
-    /// Please report it with the design that triggered it; the message names the rule that failed.
+    /// Please attach the bundle to an issue; the message names the rule that failed. The bundle holds
+    /// your design, so that the bug can be reproduced.
     InternalCheckFailed = "SC-E0009", Error, "Internal check failed";
 
     /// The design has no stitches: it is empty, or every element was skipped (see the other messages).
@@ -125,6 +127,14 @@ registry! {
     /// The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
     /// tool for now.
     StitchTypeNotYet = "SC-W0011", Warning, "Stitch type not sewn yet; element skipped";
+
+    /// `stitch bug-report --replay` was given a file that is not a bug-report bundle it can replay: not
+    /// JSON, not a bundle, a bundle format newer than this StitchCraft, or one that names a profile or a
+    /// format this StitchCraft does not have. Nothing was replayed.
+    ///
+    /// The message says what is wrong. A bundle written by a newer StitchCraft needs that version or a
+    /// later one; a bundle changed by hand, or by an email program, needs the original file.
+    BundleUnreadable = "SC-E0012", Error, "Bug-report bundle could not be replayed";
 
     /// A parameter's value could not be understood: a number where a word was expected, a choice that
     /// is not one of the parameter's options, or a list with the wrong number of values. The element was
