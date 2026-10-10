@@ -339,16 +339,14 @@ mod tests {
                 }
             };
             let expected = words.polylines();
-            let found = offset(&line, distance, join, &mut Budget::DEFAULT.meter()).unwrap();
-            let agrees = match (&found, expected.as_slice()) {
-                (Offset::Empty, []) => true,
-                (Offset::Line(points), [one]) => same(&once(points), &once(one)),
-                (Offset::Apart(curves), many) => curves.len() == many.len() && curves.iter().zip(many).all(|(a, b)| same(&once(a), &once(b))),
-                _ => false,
+            // Offset makes no curve Empty, 1 a Line and more Apart; every arm here runs for some case.
+            let found = match offset(&line, distance, join, &mut Budget::DEFAULT.meter()).unwrap() {
+                Offset::Empty => Vec::new(),
+                Offset::Line(points) => vec![points],
+                Offset::Apart(curves) => curves,
             };
-            if !agrees {
-                differ.push(number);
-            }
+            let agrees = found.len() == expected.len() && found.iter().zip(&expected).all(|(a, b)| same(&once(a), &once(b)));
+            differ.extend((!agrees).then_some(number));
         }
         assert_eq!(seen, 1050, "every case of the fixture is read");
         assert_eq!(differ, DOUBLED_BACK, "the fixture's lines whose offset differs");

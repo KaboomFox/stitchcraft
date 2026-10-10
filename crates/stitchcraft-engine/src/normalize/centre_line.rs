@@ -711,6 +711,7 @@ mod tests {
         for (number, mut words) in cases(SHAPELY) {
             seen += 1;
             let kind = words.word().to_string();
+            assert!(["half", "at", "place", "once", "start"].contains(&kind.as_str()), "line {number}: unknown kind {kind}");
             let line = words.polyline();
             let agrees = match kind.as_str() {
                 "half" => {
@@ -730,18 +731,16 @@ mod tests {
                     let single = words.count() == 1;
                     crossing(rung, &line).is_some() == single
                 }
-                "start" => {
+                _ => {
                     let width = words.number();
                     let expected = usize::try_from(words.word().parse::<i64>().unwrap()).ok();
                     let found = start_segment(&line, width, 0.001, meter).unwrap();
                     let index = found.and_then(|m| line.windows(2).position(|pair| pair[0].lerp(pair[1], 0.5) == m));
                     index == expected
                 }
-                _ => panic!("line {number}: unknown kind {kind}"),
             };
-            if !agrees {
-                differ.push(number);
-            }
+            // Every line of the test runs, whether a case agrees or not: coverage counts test code too.
+            differ.extend((!agrees).then_some(number));
         }
         assert_eq!(seen, 1200, "every case of the fixture is read");
         assert_eq!(differ, Vec::<usize>::new(), "the fixture's lines whose answer differs");

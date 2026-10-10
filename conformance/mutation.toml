@@ -60,7 +60,7 @@ why = "the bound only decides when the exact sum is worked out: a bound of at le
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/normalize/offset/mod.rs"
-mutant = "delete match arm [] | [_] in offset"
+mutant = "delete match arm [] |[_] in offset"
 line = "[] | [_] => Offset::Empty,"
 why = "a shortcut GEOS takes too: a line of fewer than 2 distinct points has no raw curve, so the 3 steps find no section either (the_shortcuts_give_the_curves_of_the_3_steps)"
 
