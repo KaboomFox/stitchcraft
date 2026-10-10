@@ -68,6 +68,13 @@ requirements = ["REQ-SAT-005"]
 [[deviation]]
 id = "DEV-SAT-002"
 area = "satin"
-summary = "Random satin widths and spacing are drawn from StitchCraft's generator (SplitMix64, seeded from the element's id and random_seed), so the values differ from Ink/Stitch's for the same seed. The ranges, and when each value is drawn, are Ink/Stitch's."
+summary = "Random satin widths, spacing and splits are drawn from StitchCraft's generator (SplitMix64, seeded from the element's id and random_seed), so the values differ from Ink/Stitch's for the same seed. The ranges are Ink/Stitch's, and so is when a width or a spacing is drawn. Ink/Stitch draws each stitch's splits from a generator of the stitch's own, where StitchCraft draws them from the element's, in the order the stitches are sewn."
 reason = "Every random value in StitchCraft comes from one fully specified generator, the same on every platform and never changed by a dependency (docs/src/design/determinism.md). Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_processor.py)."
 requirements = ["REQ-SAT-007"]
+
+[[deviation]]
+id = "DEV-SAT-003"
+area = "satin"
+summary = "With a random split phase, a split within the element's shortest stitch of a stitch's end is left out, and the element's shortest stitch is never shorter than the machine's (0.3 mm on the Brother). Ink/Stitch uses the element's own shortest stitch or the document's."
+reason = "The machine's shortest stitch is a limit (DEV-FIN-001). A split nearer an end would sew a stitch the machine does not sew well, which finalizing would leave out anyway. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/split_points.py)."
+requirements = ["REQ-SAT-003"]

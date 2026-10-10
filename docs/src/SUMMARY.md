@@ -28,7 +28,6 @@
       - [Stroke](user/reference/params/stroke.md)
       - [Running stitch](user/reference/params/running.md)
       - [Repeats and bean stitch](user/reference/params/repeat.md)
-      - [Manual stitch](user/reference/params/manual.md)
       - [Satin column](user/reference/params/satin.md)
     - [Glossary](user/reference/glossary.md)
     - [VectorCraft compatibility](user/reference/compatibility.md)

@@ -341,8 +341,7 @@ fn status(registry: &[&ParamGroup], row: &Param) -> String {
     format!("[{word}](../user/reference/{})", param_pages::anchor(group, &row.name))
 }
 
-/// Whether a StitchCraft kind can hold the values of an Ink/Stitch type and unit. Units with no counterpart
-/// yet (unitless floats) match nothing until a parameter needs them.
+/// Whether a StitchCraft kind can hold the values of an Ink/Stitch type and unit.
 fn compatible(kind: Kind, their_type: &str, unit: &str) -> bool {
     match kind {
         Kind::Length { .. } => their_type == "float" && matches!(unit, "mm" | "mm/cycle"),
@@ -352,6 +351,7 @@ fn compatible(kind: Kind, their_type: &str, unit: &str) -> bool {
         Kind::PercentList { .. } => their_type == "float" && unit == "%",
         Kind::Angle => their_type == "float" && matches!(unit, "deg" | "degrees" | "°"),
         Kind::Percent { .. } => their_type == "float" && matches!(unit, "%" | "± %"),
+        Kind::Number { .. } => their_type == "float" && unit == "—",
         Kind::Count { .. } => their_type == "int",
         Kind::CountList { .. } => matches!(their_type, "int" | "string" | "str"),
         Kind::Toggle => matches!(their_type, "boolean" | "toggle"),

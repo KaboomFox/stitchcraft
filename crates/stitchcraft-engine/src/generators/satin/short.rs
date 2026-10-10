@@ -17,14 +17,15 @@ use crate::generators::satin::compensation::offset;
 use crate::generators::satin::pairs::Pair;
 
 /// `pairs` with their crowded needle points inset: those closer than `distance` millimetres to the last
-/// point left in place on their rail, by `insets` of their stitch's width, taking turns. No point is
-/// closer than 0, and without insets a crowded point moves by none.
-pub(crate) fn inset(pairs: Vec<Pair>, distance: f64, insets: &[f64]) -> Vec<Pair> {
+/// point left in place on their rail, by `insets` of their stitch's width, taking turns, and by no more
+/// than `limit` millimetres where there is one. No point is closer than 0, and without insets a crowded
+/// point moves by none.
+pub(crate) fn inset(pairs: &[Pair], distance: f64, insets: &[f64], limit: Option<f64>) -> Vec<Pair> {
     let (mut first, mut second) = (Rail::default(), Rail::default());
     pairs
-        .into_iter()
-        .map(|[a, b]| {
-            let by = [first.inset(a, b, distance, insets), second.inset(b, a, distance, insets)];
+        .iter()
+        .map(|&[a, b]| {
+            let by = [first.inset(a, b, distance, insets, limit), second.inset(b, a, distance, insets, limit)];
             offset([a, b], by, [0.0, 0.0])
         })
         .collect()
@@ -40,17 +41,17 @@ struct Rail {
 }
 
 impl Rail {
-    /// How far `point`, at one end of the stitch to `other`, moves out along it: by minus its inset when
-    /// it is closer than `distance` to the last point left in place, else not at all.
-    fn inset(&mut self, point: Point, other: Point, distance: f64, insets: &[f64]) -> f64 {
+    /// How far `point`, at one end of the stitch to `other`, moves out along it: by minus its inset, held
+    /// to `limit`, when it is closer than `distance` to the last point left in place, else not at all.
+    fn inset(&mut self, point: Point, other: Point, distance: f64, insets: &[f64], limit: Option<f64>) -> f64 {
         if self.next >= insets.len() {
             self.next = 0;
         }
         match self.last {
             Some(last) if point.distance(last) < distance => {
-                let share = insets.get(self.next).copied().unwrap_or(0.0);
+                let by = insets.get(self.next).copied().unwrap_or(0.0) * point.distance(other);
                 self.next += 1;
-                -share * point.distance(other)
+                -limit.map_or(by, |limit| by.min(limit))
             }
             _ => {
                 self.last = Some(point);
@@ -80,7 +81,7 @@ mod tests {
         // 0.25 mm of the last one left in place moves in by 10 % of its 4 mm stitch, along it.
         let first = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
         let second = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
-        let sewn = inset(pairs(&first, &second), 0.25, &[0.1]);
+        let sewn = inset(&pairs(&first, &second), 0.25, &[0.1], None);
         let moved: Vec<bool> = sewn.iter().zip(pairs(&first, &second)).map(|([a, _], [was, _])| *a != was).collect();
         assert_eq!(moved, [false, true, true, false, true, true], "0.3 is 0.3 mm on from 0, and 0.4, 0.5 are within 0.25 of 0.3");
         // The second pair's stitch runs from (0.1, 0) to (1, 4), 4.1 mm: its first end moves 0.41 mm along it.
@@ -92,24 +93,32 @@ mod tests {
     #[test]
     fn crowded_points_take_the_insets_in_turn() {
         let first = [0.0, 0.05, 0.1, 0.15, 0.2, 0.3];
-        let sewn = inset(pairs(&first, &first), 0.25, &[0.1, 0.3]);
+        let sewn = inset(&pairs(&first, &first), 0.25, &[0.1, 0.3], None);
         // Straight stitches 4 mm across: the first rail's points move up by 0.4 or 1.2 mm.
         let up: Vec<f64> = sewn.iter().map(|[a, _]| (a.y() * 1e9).round() / 1e9).collect();
         assert_eq!(up, [0.0, 0.4, 1.2, 0.4, 1.2, 0.0]);
     }
 
     #[test]
+    fn an_inset_is_held_to_its_limit() {
+        // 30 % of a 4 mm stitch is 1.2 mm, held to 0.5 mm, as a third of a 1.5 mm longest stitch holds it.
+        let first = [0.0, 0.1];
+        let sewn = inset(&pairs(&first, &first), 0.25, &[0.3], Some(0.5));
+        assert_eq!(sewn[1], [p(0.1, 0.5), p(0.1, 3.5)]);
+    }
+
+    #[test]
     fn a_point_exactly_the_distance_from_the_last_left_in_place_stays() {
         // As in Ink/Stitch: only a point closer than the distance moves.
         let even = pairs(&[0.0, 0.25, 0.5], &[0.0, 0.25, 0.5]);
-        assert_eq!(inset(even.clone(), 0.25, &[0.15]), even);
+        assert_eq!(inset(&even, 0.25, &[0.15], None), even);
     }
 
     #[test]
     fn a_distance_of_0_or_no_insets_leaves_every_point() {
         let crowded = pairs(&[0.0, 0.01, 0.02], &[0.0, 0.01, 0.02]);
-        assert_eq!(inset(crowded.clone(), 0.0, &[0.15]), crowded);
-        assert_eq!(inset(crowded.clone(), 0.25, &[]), crowded);
-        assert_ne!(inset(crowded.clone(), 0.25, &[0.15]), crowded);
+        assert_eq!(inset(&crowded, 0.0, &[0.15], None), crowded);
+        assert_eq!(inset(&crowded, 0.25, &[], None), crowded);
+        assert_ne!(inset(&crowded, 0.25, &[0.15], None), crowded);
     }
 }

@@ -23,6 +23,8 @@ pub enum Value {
     Angle(f64),
     /// A percentage.
     Percent(f64),
+    /// A number without a unit.
+    Number(f64),
     /// A whole number.
     Count(u32),
     /// On or off.
@@ -52,7 +54,7 @@ impl Value {
         match self {
             Value::Length(Some(mm)) => mm.get().to_string(),
             Value::Length(None) | Value::Seed(None) => String::new(),
-            Value::Angle(v) | Value::Percent(v) => v.to_string(),
+            Value::Angle(v) | Value::Percent(v) | Value::Number(v) => v.to_string(),
             Value::Count(n) => n.to_string(),
             Value::Toggle(on) => on.to_string(),
             Value::Choice(id) => (*id).to_string(),
@@ -89,6 +91,10 @@ impl Kind {
             Kind::Percent { min, max } => {
                 let (percent, clamped) = clamp(percent(text)?, min, max);
                 Some((Value::Percent(percent), clamped))
+            }
+            Kind::Number { min, max } => {
+                let (n, clamped) = clamp(number(text)?, min, max);
+                Some((Value::Number(n), clamped))
             }
             Kind::Count { min, max } => {
                 let (count, clamped) = count(text, min, max)?;
@@ -157,7 +163,8 @@ impl Kind {
             | Kind::LengthList { min, max }
             | Kind::LengthPair { min, max }
             | Kind::PercentPair { min, max }
-            | Kind::PercentList { min, max } => format!("{min} to {max}{unit}"),
+            | Kind::PercentList { min, max }
+            | Kind::Number { min, max } => format!("{min} to {max}{unit}"),
             Kind::Count { min, max } | Kind::CountList { min, max } => format!("{min} to {max}"),
             _ => String::new(),
         }
@@ -304,6 +311,18 @@ mod tests {
         for (raw, degrees) in [("0", 0.0), ("180", 180.0), ("-180", 180.0), ("190", -170.0), ("450", 90.0), ("-90deg", -90.0), ("45°", 45.0)] {
             assert_eq!(Kind::Angle.parse(raw), Some((Value::Angle(degrees), false)), "{raw}");
         }
+    }
+
+    #[test]
+    fn numbers_are_any_finite_value_in_range() {
+        let staggers = Kind::Number { min: 0.01, max: 100.0 };
+        assert_eq!(staggers.parse("4"), Some((Value::Number(4.0), false)));
+        assert_eq!(staggers.parse(" 2.5 "), Some((Value::Number(2.5), false)));
+        assert_eq!(staggers.parse("0"), Some((Value::Number(0.01), true)));
+        for bad in ["", "four", "inf", "4 mm"] {
+            assert_eq!(staggers.parse(bad), None, "{bad}");
+        }
+        assert_eq!(Value::Number(2.5).to_raw(), "2.5");
     }
 
     #[test]
