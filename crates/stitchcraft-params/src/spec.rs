@@ -4,7 +4,7 @@
 //! declaration next to the generator that uses it. Everything about a parameter that people or programs
 //! read — the docs, the JSON Schema, a plug-in's manifest, a validation message — comes from here.
 
-use crate::stitch_type::StitchType;
+use crate::stitch_type::{Family, StitchType};
 
 /// What kind of value a parameter takes, with its limits.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -169,6 +169,10 @@ pub struct ParamSpec {
     /// The value when a design does not set it, written as a design would store it; empty for an
     /// optional length, a seed or a text that is empty by default.
     pub default: &'static str,
+    /// The default of each family whose default differs from `default`. Ink/Stitch declares such a
+    /// parameter once for each kind of element, each with its own default: a fill's longest stitch is
+    /// 4 mm, where a satin column has none.
+    pub family_defaults: &'static [(Family, &'static str)],
     /// The section of a user interface or a reference page it belongs to.
     pub group: &'static str,
     /// The stitch types it applies to.
@@ -185,6 +189,12 @@ impl ParamSpec {
     /// The help text as Markdown.
     pub fn help(&self) -> String {
         stitchcraft_core::text::doc_comment(self.help)
+    }
+
+    /// The value when a design does not set it, for a stitch type of `family`: the family's own default,
+    /// or [`ParamSpec::default`].
+    pub fn default_for(&self, family: Family) -> &'static str {
+        self.family_defaults.iter().find(|(f, _)| *f == family).map_or(self.default, |&(_, value)| value)
     }
 }
 

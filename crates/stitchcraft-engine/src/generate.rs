@@ -95,7 +95,7 @@ pub fn generate(element: &Element, settings: &DesignSettings, profile: &MachineP
 /// `SC-W0505` for the trim and stop that `element`, which sews nothing, sets after it: assembly has no
 /// place for them. Its settings were read once already; a setting that cannot be read was reported then.
 fn left_out(element: &Element) -> Option<Diagnostic> {
-    let common = CommonParams::from_set(&element.params).ok()?.params;
+    let common = CommonParams::from_set_for(&element.params, family(element)).ok()?.params;
     let what = match (common.trim_after, common.stop_after) {
         (true, true) => "the trim and the stop after it are",
         (true, false) => "the trim after it is",
@@ -103,6 +103,16 @@ fn left_out(element: &Element) -> Option<Diagnostic> {
         (false, false) => return None,
     };
     Some(Diagnostic::new(Code::TrimOrStopLeftOut, format!("This element sews no stitch, so {what} left out.")))
+}
+
+/// The family whose defaults an element's settings take: a fill's, a satin column's when its
+/// `satin_column` setting is on, or a stroke's. A setting that cannot be read is said where it is read.
+fn family(element: &Element) -> Family {
+    match element.shape {
+        Shape::Fill { .. } => Family::Fill,
+        Shape::Stroke { .. } if SatinParams::from_set(&element.params).is_ok_and(|read| read.params.satin_column) => Family::Satin,
+        Shape::Stroke { .. } => Family::Stroke,
+    }
 }
 
 /// The element's stitch groups, or `None` when it is skipped; what it says about it goes to `diagnostics`.
@@ -115,7 +125,7 @@ fn sew(
     meter: &mut Meter,
 ) -> Result<Option<Generated>, Exhausted> {
     let set = &element.params;
-    let common = kept(CommonParams::from_set(set), diagnostics);
+    let common = kept(CommonParams::from_set_for(set, family(element)), diagnostics);
     let (path, width, join) = match &element.shape {
         Shape::Stroke { path, width, join } => (path, *width, *join),
         Shape::Fill { path, rule } => {
@@ -123,6 +133,7 @@ fn sew(
             // and settings that cannot be used, are said now.
             diagnostics.extend(region::build(path, *rule, meter)?.diagnostics);
             kept(TatamiParams::from_set(set), diagnostics);
+            kept(RunningParams::from_set_for(set, Family::Fill), diagnostics);
             diagnostics.push(not_yet("This element is a fill, and this version of StitchCraft does not sew fills yet"));
             return Ok(None);
         }

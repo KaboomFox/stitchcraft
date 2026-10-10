@@ -17,6 +17,27 @@ pub enum Family {
 }
 
 impl Family {
+    /// Every family, in a fixed order.
+    pub const ALL: &'static [Family] = &[Family::Stroke, Family::Satin, Family::Fill];
+
+    /// Its id, as Ink/Stitch names the kind of element: `stroke`, `satin` or `fill`.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Family::Stroke => "stroke",
+            Family::Satin => "satin",
+            Family::Fill => "fill",
+        }
+    }
+
+    /// Its name for people, in the plural: strokes, satin columns or fills.
+    pub const fn plural(self) -> &'static str {
+        match self {
+            Family::Stroke => "strokes",
+            Family::Satin => "satin columns",
+            Family::Fill => "fills",
+        }
+    }
+
     /// The parameter that chooses the stitch type within the family: `stroke_method`, `satin_method` or
     /// `fill_method`.
     pub const fn method_param(self) -> &'static str {

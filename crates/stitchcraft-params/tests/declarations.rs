@@ -6,7 +6,7 @@
 #![allow(clippy::unwrap_used)]
 
 use stitchcraft_core::{Code, Severity};
-use stitchcraft_params::{Condition, Kind, Origin, ParamSet, StitchType, find, params, unknown_keys};
+use stitchcraft_params::{Condition, Family, Kind, Origin, ParamSet, StitchType, find, params, unknown_keys};
 
 params! {
     /// One parameter of every kind.
@@ -18,6 +18,9 @@ params! {
 
         /// A length that may be empty.
         an_optional_mm: OptionalLength = "", label "Optional length", range (0.0, 5.0);
+
+        /// A length that is empty unless the stitch type is a fill's.
+        a_fill_length_mm: OptionalLength = "", label "Fill length", range (0.1, 25.0), defaults [Family::Fill => "4.0"];
 
         /// An angle.
         an_angle: Angle = "0", label "Angle";
@@ -62,6 +65,20 @@ fn defaults_apply_when_the_design_says_nothing() {
     assert_eq!((p.a_length_mm.get(), p.an_optional_mm, p.an_angle, p.a_percent, p.a_count), (2.5, None, 0.0, 100.0, 4));
     assert_eq!((p.a_toggle, p.a_choice, p.a_detail.as_str(), p.a_seed), (false, "one", "", None));
     assert_eq!((p.some_lengths_mm.len(), p.some_counts.as_slice()), (1, [0].as_slice()));
+}
+
+#[test]
+fn a_family_reads_its_own_default_and_the_others_the_plain_one() {
+    let spec = find(&[&Everything::GROUP], "a_fill_length_mm").unwrap();
+    assert_eq!((spec.default, spec.family_defaults), ("", &[(Family::Fill, "4.0")][..]));
+    assert_eq!(Family::ALL.iter().map(|family| spec.default_for(*family)).collect::<Vec<_>>(), ["", "", "4.0"]);
+    let fill = Everything::from_set_for(&ParamSet::new(), Family::Fill).unwrap().params;
+    assert_eq!(fill.a_fill_length_mm.map(|mm| mm.get()), Some(4.0));
+    assert_eq!(Everything::from_set_for(&ParamSet::new(), Family::Satin).unwrap().params.a_fill_length_mm, None);
+    assert_eq!(Everything::from_set(&ParamSet::new()).unwrap().params.a_fill_length_mm, None);
+    // A design's value stands for every family, empty ones too.
+    let empty = Everything::from_set_for(&set(&[("a_fill_length_mm", "")]), Family::Fill).unwrap().params;
+    assert_eq!(empty.a_fill_length_mm, None);
 }
 
 #[test]
@@ -133,9 +150,10 @@ fn declarations_record_what_the_registry_needs() {
     assert_eq!(g.name, "Everything");
     assert_eq!(g.help(), "One parameter of every kind.");
     assert_eq!(g.applies_to, StitchType::ALL);
-    assert_eq!(g.specs.len(), 11);
+    assert_eq!(g.specs.len(), 12);
     let length = find(&[&g], "a_length_mm").unwrap();
     assert_eq!((length.label, length.help().as_str(), length.group, length.default), ("Length", "A length.", "Numbers", "2.5"));
+    assert!(length.family_defaults.is_empty(), "the same default for every family unless it says");
     assert_eq!(length.kind, Kind::Length { min: 0.1, max: 10.0, optional: false });
     assert_eq!(length.applies_to, StitchType::ALL);
     assert_eq!(length.origin, Origin::InkStitch);
