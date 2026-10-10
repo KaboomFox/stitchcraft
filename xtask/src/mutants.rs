@@ -1,14 +1,15 @@
-//! `cargo xtask mutants [--record] DIR…` and `cargo xtask mutants --changed DIR`: mutation testing
+//! `cargo xtask mutants [--record] DIR…` and `cargo xtask mutants --changed DIR…`: mutation testing
 //! (`docs/src/design/guardrails.md`).
 //!
 //! cargo-mutants changes the code in small ways — `<` for `<=`, a function that returns its default —
 //! and runs the crate's tests on each change. A mutant no test notices is *missed*: a behaviour nobody
 //! checks. Mutation testing runs at two scales:
 //!
-//! - **Every pull request** runs only the mutants in the lines it changes (`cargo mutants --in-diff`),
-//!   which takes minutes. `--changed DIR` then fails for any of them that no test notices, unless it is a
-//!   listed *equivalent*: a mutant that changes nothing a test could observe, recorded in
-//!   `conformance/mutation.toml` with the source line it changes and why. New code answers for itself.
+//! - **Every pull request** runs only the mutants in the lines it changes (`cargo mutants --in-diff`), in
+//!   4 parts dealt round-robin, so that a large change still fits the jobs' time. `--changed DIR…` adds
+//!   the parts up and fails for any mutant no test notices, unless it is a listed *equivalent*: a mutant
+//!   that changes nothing a test could observe, recorded in `conformance/mutation.toml` with the source
+//!   line it changes and why. New code answers for itself.
 //! - **Every week** `mutants.yml` runs every mutant, in shards; this command adds up the shards' results
 //!   (each DIR holds a `mutants.out/`) per crate and compares the missed counts with
 //!   `conformance/mutation.toml`. More missed mutants than recorded fails; `--record` lowers the recorded
@@ -96,10 +97,10 @@ pub fn run(args: &[String]) -> Result<(), String> {
     let record = args.iter().any(|a| a == "--record");
     let dirs: Vec<&String> = args.iter().filter(|a| !a.starts_with("--")).collect();
     if args.iter().any(|a| a == "--changed") {
-        let [dir] = dirs.as_slice() else {
-            return Err("name the one cargo-mutants output directory of the changed-lines run".to_string());
-        };
-        return changed(Path::new(dir.as_str()));
+        if dirs.is_empty() {
+            return Err("name the cargo-mutants output directories of the changed-lines run".to_string());
+        }
+        return changed(&dirs.iter().map(|dir| Path::new(dir.as_str())).collect::<Vec<_>>());
     }
     if dirs.is_empty() {
         return Err("name the cargo-mutants output directories to add up (each holds a mutants.out/)".to_string());
@@ -157,14 +158,14 @@ pub fn run(args: &[String]) -> Result<(), String> {
     findings.finish("mutants", &format!("{} crates at or below their recorded missed mutants", tallies.len()))
 }
 
-/// `--changed DIR`: every mutant in the changed lines is noticed by a test, or is a listed equivalent.
-fn changed(dir: &Path) -> Result<(), String> {
-    let out = dir.join("mutants.out");
-    if !out.exists() {
+/// `--changed DIR…`: every mutant in the changed lines is noticed by a test, or is a listed equivalent.
+/// Each DIR has one part's `mutants.out/`.
+fn changed(dirs: &[&Path]) -> Result<(), String> {
+    let Some(outcomes) = parts(dirs) else {
         println!("mutants: the changed lines hold no code to mutate");
         return Ok(());
-    }
-    let read = |file: &str| std::fs::read_to_string(out.join(file)).unwrap_or_default();
+    };
+    let read = |file: &str| outcomes.get(file).cloned().unwrap_or_default();
     let count = |file: &str| read(file).lines().filter(|l| !l.trim().is_empty()).count();
     let root = util::root();
     let baseline: BaselineFile = toml::from_str(&util::read(&root.join(BASELINE))?).map_err(|e| format!("{BASELINE}: {e}"))?;
@@ -202,6 +203,17 @@ fn changed(dir: &Path) -> Result<(), String> {
         let _ = std::fs::write(&path, text);
     }
     findings.finish("mutants", &line)
+}
+
+/// The outcome files of the parts of a run in `dirs`, each file's lists joined. `None` when no part found
+/// a mutant to try, since cargo-mutants then leaves out `mutants.out/`.
+fn parts(dirs: &[&Path]) -> Option<BTreeMap<&'static str, String>> {
+    let outs: Vec<_> = dirs.iter().map(|dir| dir.join("mutants.out")).filter(|out| out.exists()).collect();
+    if outs.is_empty() {
+        return None;
+    }
+    let joined = |file: &str| outs.iter().map(|out| std::fs::read_to_string(out.join(file)).unwrap_or_default()).collect::<Vec<_>>().join("\n");
+    Some(OUTCOMES.iter().map(|&(file, _)| (file, joined(file))).collect())
 }
 
 /// Adds the outcomes listed in `text` (one mutant per line, `path:line:col: description`).
@@ -278,6 +290,23 @@ mod tests {
             line: "if large_arc && turn < FRAC_PI_2 {".to_string(),
             why: "a \"quoted\" reason".to_string(),
         }
+    }
+
+    #[test]
+    fn the_parts_of_a_run_add_up() {
+        let base = std::env::temp_dir().join(format!("stitchcraft-mutants-{}", std::process::id()));
+        let (one, two, none) = (base.join("one"), base.join("two"), base.join("none"));
+        for (dir, caught) in [(&one, "a.rs:1:1: x\n"), (&two, "b.rs:2:2: y\n")] {
+            std::fs::create_dir_all(dir.join("mutants.out")).unwrap();
+            std::fs::write(dir.join("mutants.out").join("caught.txt"), caught).unwrap();
+        }
+        std::fs::write(two.join("mutants.out").join("missed.txt"), "c.rs:3:3: z\n").unwrap();
+        let found = parts(&[one.as_path(), two.as_path(), none.as_path()]).unwrap();
+        assert_eq!(found["caught.txt"].lines().filter(|l| !l.is_empty()).collect::<Vec<_>>(), ["a.rs:1:1: x", "b.rs:2:2: y"]);
+        assert_eq!(found["missed.txt"].trim(), "c.rs:3:3: z");
+        assert_eq!(found["timeout.txt"].trim(), "", "a list no part wrote is empty");
+        assert!(parts(&[none.as_path()]).is_none(), "no part found a mutant");
+        std::fs::remove_dir_all(&base).unwrap();
     }
 
     #[test]
