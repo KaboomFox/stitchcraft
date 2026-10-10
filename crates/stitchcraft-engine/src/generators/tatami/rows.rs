@@ -304,8 +304,9 @@ mod tests {
         assert!(rows.iter().zip(expected).all(|(row, v)| (row.across - v).abs() < 1e-12), "{:?}", across(&rows));
     }
 
-    /// Shapely's pieces of rows cut with random polygons of grid squares and half squares
-    /// (`conformance/fixtures/geometry/shapely-rows.txt`, written by `conformance/oracle/rows.py`).
+    /// Shapely's pieces of rows cut with random polygons of grid squares and half squares, and blocks with
+    /// such cells taken out of their inside, which leaves holes (`conformance/fixtures/geometry/shapely-rows.txt`,
+    /// written by `conformance/oracle/rows.py`).
     const SHAPELY: &str = include_str!("../../../../../conformance/fixtures/geometry/shapely-rows.txt");
 
     /// Each row's place across and its pieces, as (smaller x, larger x) in order of x.
@@ -337,7 +338,7 @@ mod tests {
             assert_cut_as(&leaned, spacing / 2.0, &moved, line);
             checked += 1;
         }
-        assert_eq!(checked, 612);
+        assert_eq!(checked, 812);
     }
 
     /// Asserts that the rows of `part`, `spacing` apart, have the pieces `expected` (the fixture's `line`).
