@@ -1,6 +1,6 @@
 # Satin generators
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/generators/satin/** -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/normalize/near.rs, crates/stitchcraft-engine/src/generators/satin/** -->
 
 A satin column is a band of closely spaced stitches that swing from one edge to the other. It is the
 signature look of lettering and borders, and the stitch type where pull compensation and underlay
@@ -193,12 +193,74 @@ several values gives the travel its first, where Ink/Stitch falls back to 2.5 mm
 
 ## Start and end
 
-With `start_at_nearest_point`, the column begins at whichever end is nearest the previous element's
-exit; with `end_at_nearest_point`, the top stitching finishes at the end nearest the next element's
-entry, which may mean the underlay runs one way and the top the other. Explicit start/end commands
-override both (`REQ-GEN-001`). The stitches that join the underlays are no longer than
-`running_stitch_length_mm` (see *Underlays*). The way to the start and from the end follows the line at
-`running_stitch_position` between the rails, within `running_stitch_tolerance_mm`.
+A column starts near where the elements before it left the needle, and ends near where the next element
+starts, as in Ink/Stitch, which does both by default. The engine gives each element 2 neighbours
+([ADR 0014](../adr/0014-generators-see-their-neighbours.md)). The first is the last needle point of the
+elements before it, whatever their thread. The second is what the next element offers to end near. Strokes
+offer their first point. Satin columns that start at their own nearest point offer their rails, and
+others the start of their first rail. Either way the rails are as they are sewn, after any swap and
+reversal. Fills offer nothing until they are sewn (M5).
+
+**The line.** The way to the start and the way to the end follow a line between the rails,
+`running_stitch_position` percent of the way from the first rail to the second (50 is the middle). It is
+built as the centre walk's is. Pairs are placed every `running_stitch_tolerance_mm` and moved in until
+their ends meet the line. A running stitch of the first of the running stitch's lengths
+(`running_stitch_length_mm`) goes through them within the same tolerance.
+
+**Cuts.** A place on the column is found by its cut, one of the pairs placed at the zigzag spacing with
+no compensation and nothing random. The cut is the pair with the point nearest the place. Where the
+needle enters the line for a place is the line's point nearest that cut. A part of the column is cut in 2
+at its own point nearest the cut. When the cut's 2 points coincide, where the rails meet, a part is not
+cut: it is all first, or all second when its start is within 0.1 CSS pixels of the place.
+
+**Starting at the nearest point** (`start_at_nearest_point`). With a needle point before it, the column
+starts at the point of the line nearest that needle point. When that point is farther from the needle
+than the jump length, and the compensated outline is nearer than the jump length, it starts at the
+outline's point nearest the needle instead. The jump length is the element's `min_jump_stitch_length_mm`,
+or the design's collapse length when the element sets none or 0. The compensated outline is the 2
+polylines through the ends of the top stitches' pairs, after pull compensation and random width, before
+short stitches. From its start, the needle enters the line where the start's cut says and follows it to
+where the first stitch's cut says, and the column goes on from its first stitch as before.
+
+**Ending at the nearest point** (`end_at_nearest_point`). With an element after it, the column ends at
+the point of its compensated outline nearest the next stitch. The next stitch is the point of the
+column's rails nearest the next element's first point, or nearest its rails when it offers them. The
+column's rails are measured as they are sewn. The column ignores an end less than 5 CSS pixels (1.32 mm)
+from the line's end, and ends as if it were the last element. Otherwise every part of the column is cut
+in 2 at the end's cut. The centre walk is cut before its repeats, and the zigzag's ways before their long
+stitches are split. The contour's sides and the top stitches are cut too. The column sews every part's
+first half in order. Then the needle follows the line from the end's cut to the line's end, and the
+column sews every part's second half in order and stitches the end last.
+
+The halves follow each part's direction. The centre walk's second half is turned to run from the
+column's end, and each half is sewn its repeats. The contour's first pass is its first side up to the cut
+and its second side from the cut back to the start, and its second pass the rest of the second side, then
+the rest of the first. The zigzag's first pass goes to the cut and back, and its second goes from the end
+to the cut and back to the end. The top stitches' second half is turned to run from the column's end to
+the cut.
+
+**After an odd centre walk,** which brings the needle to the column's end, the column's start and end
+trade places in the halves above. The first pass works from the column's end towards the cut, and the
+second from its start. The centre walk's halves are its part from the cut to the end and its part from
+the cut to the start, each sewn its repeats. The first pass begins at the cut. Between the passes the
+needle goes to the line at the cut, where the second pass begins.
+
+**Equally near points.** Shapes are often equally near at several points, as rails side by side are. The
+column takes the point Ink/Stitch takes, found in the order its geometry library, shapely, finds them.
+Shapes are measured from one to the other, polyline by polyline and side by side. Sides that cross or
+touch meet exactly where they do, and distances are measured as that library measures them, so equal
+distances compare as equal. A cut is measured from the part it cuts, and the line is entered measuring
+from the cut. The engine's tests check its answers against shapely's for 1,600 random cases on coarse
+grids, where ties are common (`conformance/fixtures/geometry/shapely-nearest.txt`, written by
+`conformance/oracle/nearest.py`). Shapely computes a crossing point in extended precision, so where that
+point also lies on another side, the 2 can differ in which side they find it on.
+
+Straight stitches join each piece to the next as between underlays, no longer than the travel length. A
+point of the line within the shortest stitch of the needle only routes it, and is left out. An end within
+the shortest stitch of the column's last needle point moves that point to the end. The column's last
+stitch, often a top stitch, then goes to the end in one stitch. Ink/Stitch sews the end as a stitch of
+its own, which its stitch plan drops when it is no longer than its shortest stitch. An explicit start or
+end command, read from M8, would replace the needle point or the next stitch.
 
 ## Variants (P2, M7)
 
@@ -224,6 +286,8 @@ override both (`REQ-GEN-001`). The stitches that join the underlays are no longe
 | `REQ-SAT-010` | The centre walk follows the line at its position between the rails within its tolerance, in stitches no longer than its length, there and back its repeats |
 | `REQ-SAT-011` | The contour runs along each rail at its insets, towards the end on the first rail's side and back on the second's. It stops short of the column's start and end by the rails' insets in millimetres |
 | `REQ-SAT-012` | The zigzag goes through one end of each pair, the rails taking turns, and back through the others. Its insets are half the contour's when left empty, and its long stitches split into equal parts |
+| `REQ-SAT-013` | Starting at its nearest point, a column begins on the line between its rails nearest the needle, or on its outline when only that is within the jump length, and follows the line to its first stitch |
+| `REQ-SAT-014` | Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there. The column sews the first halves, then the second halves from the line's end, and stitches the end last |
 
 Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparison to tune defaults
 ([machine testing](../../plan/machine-testing.md)).

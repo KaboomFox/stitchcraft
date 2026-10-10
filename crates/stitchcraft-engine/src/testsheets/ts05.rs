@@ -3,12 +3,12 @@
 //!
 //! Drawn as a design (`designed`), so the engine's satin column sews it, with Ink/Stitch's other defaults:
 //! no underlay and no pull compensation. 3 rows, top to bottom, at zigzag spacings of 0.3, 0.4 and 0.5 mm.
-//! Each row has 10 columns 20 mm tall, 1 to 10 mm wide from left to right. Each column is sewn from its
-//! top and trimmed after, so the columns stand apart.
+//! Each row has 10 columns 20 mm tall, 1 to 10 mm wide from left to right. Each column is sewn as drawn,
+//! from its top, not from its nearest point, and trimmed after, so the columns stand apart.
 
 use stitchcraft_plan::StitchPlan;
 
-use super::designed::Drawing;
+use super::designed::{AS_DRAWN, Drawing};
 use super::sketch::SheetError;
 use super::{BLUE, thread};
 
@@ -33,7 +33,7 @@ pub(super) fn build() -> Result<StitchPlan, SheetError> {
         let mut x = 0.0;
         for width in WIDTHS {
             let rails = [[(x, top), (x, top + TALL)], [(x + width, top), (x + width, top + TALL)]];
-            d.satin(&format!("{spacing}-{width}"), rails, &blue, &[("zigzag_spacing_mm", &spacing_text), ("trim_after", "true")])?;
+            d.satin(&format!("{spacing}-{width}"), rails, &blue, &[&[("zigzag_spacing_mm", spacing_text.as_str())], &AS_DRAWN[..]].concat())?;
             x += width + GAP;
         }
         top += ROW;

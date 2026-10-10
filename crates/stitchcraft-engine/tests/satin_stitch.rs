@@ -12,6 +12,7 @@ use std::f64::consts::FRAC_PI_2;
 use proptest::prelude::*;
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Point};
+use stitchcraft_engine::generators::Neighbours;
 use stitchcraft_engine::generators::satin::{SatinParams, satin_stitch};
 use stitchcraft_engine::normalize::satin::{Shape, recognize};
 use stitchcraft_params::ParamSet;
@@ -144,7 +145,7 @@ fn req_sat_002_where_the_rails_converge_a_pair_moves_to_lie_at_the_spacing() {
     let params = SatinParams::from_set(&ParamSet::default()).unwrap().params;
     let mut meter = Budget::DEFAULT.meter();
     let lengths = satin_lengths(&ParamSet::default());
-    let pairs = across(&satin_stitch(&satin, &params, lengths, &mut SplitMix64::new(0), &mut meter).unwrap().runs[0]);
+    let pairs = across(&satin_stitch(&satin, &params, lengths, &Neighbours::default(), &mut SplitMix64::new(0), &mut meter).unwrap().runs[0]);
     let gaps = gaps(&pairs);
     let inside = &gaps[..gaps.len() - 1];
     assert!(inside.iter().all(|gap| (gap - 0.4).abs() <= 0.02), "within 5 %: {gaps:?}");
@@ -196,8 +197,18 @@ fn req_sat_002_satin_stitches_are_charged_to_the_budget() {
     let mut meter = Budget::DEFAULT.meter();
     let Ok(Shape::Rails(satin)) = recognize(&path, &mut meter).unwrap().shape else { panic!() };
     let (params, lengths) = (SatinParams::from_set(&ParamSet::default()).unwrap().params, satin_lengths(&ParamSet::default()));
-    assert!(satin_stitch(&satin, &params, lengths, &mut SplitMix64::new(0), &mut Budget { max_stitches: 10, max_work: 20 }.meter()).is_err());
-    assert!(satin_stitch(&satin, &params, lengths, &mut SplitMix64::new(0), &mut Budget::DEFAULT.meter()).is_ok());
+    assert!(
+        satin_stitch(
+            &satin,
+            &params,
+            lengths,
+            &Neighbours::default(),
+            &mut SplitMix64::new(0),
+            &mut Budget { max_stitches: 10, max_work: 20 }.meter()
+        )
+        .is_err()
+    );
+    assert!(satin_stitch(&satin, &params, lengths, &Neighbours::default(), &mut SplitMix64::new(0), &mut Budget::DEFAULT.meter()).is_ok());
 }
 
 proptest! {

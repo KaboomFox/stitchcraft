@@ -43,6 +43,39 @@ pub(crate) type Section = [Vec<Point>; 2];
 /// `warnings`. Measuring the rails costs `meter` a unit of work per point, and projecting a cut onto a
 /// rail one per side of it.
 pub(crate) fn sections(satin: &Satin, params: &SatinParams, warnings: &mut Vec<Diagnostic>, meter: &mut Meter) -> Result<Vec<Section>, Exhausted> {
+    let (rails, pairing) = oriented(satin, params, meter)?;
+    let [first, second] = &rails;
+    let push = params.push_compensation_mm.map(|mm| mm.get());
+    let ((first, kept_a), (second, kept_b)) = (pushed(first, push, meter)?, pushed(second, push, meter)?);
+    if kept_a || kept_b {
+        warnings.push(too_long(push));
+    }
+    let [rail_a, rail_b] = [Along::new(&first, meter)?, Along::new(&second, meter)?];
+    let (mut cuts_a, mut cuts_b) = (Vec::new(), Vec::new());
+    for [a, b] in pairs(&pairing, warnings) {
+        cuts_a.push(rail_a.project(a, meter)?);
+        cuts_b.push(rail_b.project(b, meter)?);
+    }
+    let (parts_a, parts_b) = (parts(&rail_a, &mut cuts_a), parts(&rail_b, &mut cuts_b));
+    Ok(parts_a.into_iter().zip(parts_b).filter_map(|(a, b)| Some([a?, b?])).collect())
+}
+
+/// Where the column's first stitch is as its rails are drawn: the start of its first rail, after the swap
+/// and the reversal `params` say (Ink/Stitch's first stitch of a column that does not start at its nearest
+/// point). `None` when the rail has no point.
+pub(crate) fn first_point(satin: &Satin, params: &SatinParams, meter: &mut Meter) -> Result<Option<Point>, Exhausted> {
+    let [first, _] = sewn_rails(satin, params, meter)?;
+    Ok(first.first().copied())
+}
+
+/// `satin`'s rails as they are sewn, swapped and turned as `params` say: the lines its neighbours measure
+/// against, in the order they measure them.
+pub(crate) fn sewn_rails(satin: &Satin, params: &SatinParams, meter: &mut Meter) -> Result<[Vec<Point>; 2], Exhausted> {
+    Ok(oriented(satin, params, meter)?.0)
+}
+
+/// `satin`'s rails and what pairs their points, with the rails swapped and turned as `params` say.
+fn oriented(satin: &Satin, params: &SatinParams, meter: &mut Meter) -> Result<([Vec<Point>; 2], Pairing), Exhausted> {
     let mut rails = satin.rails.clone();
     let mut pairing = satin.pairing.clone();
     if params.swap_satin_rails {
@@ -71,20 +104,7 @@ pub(crate) fn sections(satin: &Satin, params: &SatinParams, warnings: &mut Vec<D
             }
         }
     }
-    let [first, second] = &rails;
-    let push = params.push_compensation_mm.map(|mm| mm.get());
-    let ((first, kept_a), (second, kept_b)) = (pushed(first, push, meter)?, pushed(second, push, meter)?);
-    if kept_a || kept_b {
-        warnings.push(too_long(push));
-    }
-    let [rail_a, rail_b] = [Along::new(&first, meter)?, Along::new(&second, meter)?];
-    let (mut cuts_a, mut cuts_b) = (Vec::new(), Vec::new());
-    for [a, b] in pairs(&pairing, warnings) {
-        cuts_a.push(rail_a.project(a, meter)?);
-        cuts_b.push(rail_b.project(b, meter)?);
-    }
-    let (parts_a, parts_b) = (parts(&rail_a, &mut cuts_a), parts(&rail_b, &mut cuts_b));
-    Ok(parts_a.into_iter().zip(parts_b).filter_map(|(a, b)| Some([a?, b?])).collect())
+    Ok((rails, pairing))
 }
 
 /// `SC-W0211`, for a push compensation of `start` and `end` millimetres that would leave too little of a

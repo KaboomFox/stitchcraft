@@ -184,6 +184,7 @@ Details, dependency rules and the reasoning are in [architecture](architecture.m
 | [0011](adr/0011-movable-into-vectorcraft.md) | StitchCraft can move into VectorCraft's repository as a folder |
 | [0012](adr/0012-read-dont-copy.md) | Ink/Stitch's source may be read, never copied |
 | [0013](adr/0013-brother-pe800-reference-machine.md) | A Brother PE800 is the reference machine, with a profile for each of its 3 hoops |
+| [0014](adr/0014-generators-see-their-neighbours.md) | Elements are generated in order, each seeing the needle before it and the next element |
 
 ## 7. Data model (summary)
 

@@ -17,6 +17,10 @@ use stitchcraft_plan::{StitchPlan, Thread};
 use super::sketch::SheetError;
 use crate::design::{Design, DesignSettings, Element, Path, Segment, Shape, Subpath};
 
+/// The settings that sew a sheet's satin column as drawn, from its start to its end whatever is around it,
+/// and trim after it, so the columns stand apart.
+pub(super) const AS_DRAWN: [(&str, &str); 3] = [("start_at_nearest_point", "false"), ("end_at_nearest_point", "false"), ("trim_after", "true")];
+
 /// A test sheet as a design: its elements, in sewing order.
 pub(super) struct Drawing {
     sheet: &'static str,

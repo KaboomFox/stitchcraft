@@ -125,7 +125,8 @@ The engine's cases build their small designs with `stitchcraft_testkit::designs`
 shape at a glance: `J L4 S5 L4` is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
 stitches. The satin cases sew their columns with `stitchcraft_testkit::satins`, as an element is sewn on
 the reference machine, with the stitch lengths the engine gives it there (`satin_lengths`), and read the
-needle points back in pairs across the column.
+needle points back in pairs across the column. A column is sewn alone (`sewn_satin`) or between the
+neighbours a case gives it (`sewn_between`).
 
 ## Levels
 

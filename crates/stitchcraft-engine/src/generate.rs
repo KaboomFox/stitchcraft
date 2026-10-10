@@ -9,6 +9,10 @@
 //! A stroke whose `satin_column` setting is on is a satin column, whatever its `stroke_method` says, as in
 //! Ink/Stitch, and its `satin_method` picks the generator.
 //!
+//! Elements are generated in sewing order, each with its neighbours (`REQ-GEN-003`): where the elements
+//! before it left the needle, and what the next one offers to end near, which [`approach`] reads from the
+//! next element's shape and settings alone.
+//!
 //! An element that cannot be sewn is skipped, with a diagnostic that says why, and the rest of the design
 //! still plans (`REQ-GEN-002`): a stitch type StitchCraft does not sew yet (`SC-W0011`), parameters it
 //! cannot read (`SC-E0101`), a satin column with no rails (`SC-E0201`), or its work budget spent
@@ -25,7 +29,7 @@ use crate::generators::manual::manual_stitch;
 use crate::generators::passes::RepeatParams;
 use crate::generators::running::{RunningParams, running_stitch};
 use crate::generators::satin::{self, SatinLengths, SatinParams, satin_stitch};
-use crate::generators::{Stitched, method};
+use crate::generators::{Approach, Neighbours, Stitched, method};
 use crate::normalize::satin::Shape as SatinShape;
 use crate::registry::PARAMETERS;
 
@@ -68,11 +72,11 @@ pub struct Generation {
     pub diagnostics: Vec<Diagnostic>,
 }
 
-/// `element` generated for a design with `settings`, sewn on the machine `profile` describes, with the
-/// budget's work to itself.
-pub fn generate(element: &Element, settings: &DesignSettings, profile: &MachineProfile, budget: &Budget) -> Generation {
+/// `element` generated for a design with `settings`, sewn on the machine `profile` describes, between its
+/// `neighbours`, with the budget's work to itself.
+pub fn generate(element: &Element, settings: &DesignSettings, profile: &MachineProfile, neighbours: &Neighbours, budget: &Budget) -> Generation {
     let mut diagnostics = unknown_keys(&element.params, PARAMETERS);
-    let generated = match sew(element, settings, profile, &mut diagnostics, &mut budget.meter()) {
+    let generated = match sew(element, settings, profile, neighbours, &mut diagnostics, &mut budget.meter()) {
         Ok(generated) => generated,
         Err(exhausted) => {
             diagnostics.push(exhausted.diagnostic(budget, None));
@@ -103,6 +107,7 @@ fn sew(
     element: &Element,
     settings: &DesignSettings,
     profile: &MachineProfile,
+    neighbours: &Neighbours,
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<Option<Generated>, Exhausted> {
@@ -119,10 +124,11 @@ fn sew(
     let lengths = common.as_ref().map(|common| Lengths {
         min_stitch: shortest_stitch(common.min_stitch_length_mm, settings, profile),
         max_stitch: common.max_stitch_length_mm,
+        jump: common.jump_length(settings.collapse_len),
     });
     let mut rng = SplitMix64::for_element(element.id.as_str(), common.as_ref().and_then(|common| common.random_seed).unwrap_or(0));
     let sewn = if satin_params.satin_column {
-        satin_column(element, path, &satin_params, lengths, &mut rng, diagnostics, meter)?
+        satin_column(element, path, &satin_params, lengths, neighbours, &mut rng, diagnostics, meter)?
     } else {
         stroke(element, path, lengths, &mut rng, diagnostics, meter)?
     };
@@ -138,16 +144,22 @@ struct Lengths {
     min_stitch: Mm,
     /// Its longest stitch, when it sets one.
     max_stitch: Option<Mm>,
+    /// Its jump length: its `min_jump_stitch_length_mm`, or the design's collapse length when it sets none
+    /// or 0, as Ink/Stitch's satin reads it.
+    jump: Mm,
 }
 
-/// A satin column's stitches by its `satin_method`, with the element's stitch `lengths`, varied at random
-/// by its `rng`, or `None` when it is skipped (`lengths` is `None` when the settings every stitch type
-/// shares cannot be read). Its travel between underlays takes the first of the running stitch's lengths.
+/// A satin column's stitches by its `satin_method`, with the element's stitch `lengths`, between its
+/// `neighbours`, varied at random by its `rng`, or `None` when it is skipped (`lengths` is `None` when the
+/// settings every stitch type shares cannot be read). Its travel between underlays, and its way to its
+/// start and end, take the first of the running stitch's lengths and its tolerance.
+#[allow(clippy::too_many_arguments)]
 fn satin_column(
     element: &Element,
     path: &Path,
     params: &SatinParams,
     lengths: Option<Lengths>,
+    neighbours: &Neighbours,
     rng: &mut SplitMix64,
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
@@ -161,12 +173,12 @@ fn satin_column(
         Some(SatinShape::Rails(rails)) => rails,
     };
     let running = kept(RunningParams::from_set(&element.params), diagnostics);
-    let (Some(Lengths { min_stitch, max_stitch }), Some(running)) = (lengths, running) else { return Ok(None) };
+    let (Some(Lengths { min_stitch, max_stitch, jump }), Some(running)) = (lengths, running) else { return Ok(None) };
     // The registry reads a list of 1 length or more.
     let Some(&travel) = running.running_stitch_length_mm.first() else { return Ok(None) };
-    let lengths = SatinLengths { min_stitch, max_stitch, travel };
+    let lengths = SatinLengths { min_stitch, max_stitch, travel, tolerance: running.running_stitch_tolerance_mm, jump };
     match StitchType::from_id(Family::Satin, params.satin_method) {
-        Some(StitchType::SatinColumn) => Ok(Some((StitchType::SatinColumn, satin_stitch(&rails, params, lengths, rng, meter)?))),
+        Some(StitchType::SatinColumn) => Ok(Some((StitchType::SatinColumn, satin_stitch(&rails, params, lengths, neighbours, rng, meter)?))),
         _ => {
             let method = params.satin_method;
             diagnostics.push(not_yet(&format!("This element's satin method, `{method}`, is not sewn by this version of StitchCraft yet")));
@@ -188,7 +200,7 @@ fn stroke(
 ) -> Result<Option<(StitchType, Stitched)>, Exhausted> {
     let set = &element.params;
     let stroke = kept(StrokeParams::from_set(set), diagnostics);
-    let (Some(stroke), Some(Lengths { min_stitch, max_stitch })) = (stroke, lengths) else { return Ok(None) };
+    let (Some(stroke), Some(Lengths { min_stitch, max_stitch, .. })) = (stroke, lengths) else { return Ok(None) };
     let passes = kept(RepeatParams::from_set(set), diagnostics);
     match StitchType::from_id(Family::Stroke, stroke.stroke_method) {
         Some(StitchType::RunningStitch) => {
@@ -205,6 +217,24 @@ fn stroke(
             Ok(None)
         }
     }
+}
+
+/// What `element` offers the element before it to end near, read from its shape and settings alone, with
+/// the budget's work to itself (`REQ-GEN-003`): a stroke its first point, a satin column its rails as they
+/// are sewn when it starts at its nearest point and otherwise its first rail's start. A fill offers nothing
+/// until fills are sewn, and neither does an element whose shape or settings cannot be read.
+pub fn approach(element: &Element, budget: &Budget) -> Option<Approach> {
+    let Shape::Stroke(path) = &element.shape else { return None };
+    let params = SatinParams::from_set(&element.params).ok()?.params;
+    if !params.satin_column {
+        return path.subpaths.first().map(|subpath| Approach::Point(subpath.start));
+    }
+    let meter = &mut budget.meter();
+    let SatinShape::Rails(rails) = satin::shape(path, &mut Vec::new(), meter).ok()?? else { return None };
+    if params.start_at_nearest_point {
+        return Some(Approach::Shape(satin::sewn_rails(&rails, &params, meter).ok()?.into()));
+    }
+    satin::first_point(&rails, &params, meter).ok()?.map(Approach::Point)
 }
 
 /// The shortest stitch for an element whose own is `own`: the machine's, or the element's own if it is

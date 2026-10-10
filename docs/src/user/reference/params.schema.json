@@ -252,6 +252,23 @@
         "stability": "stable"
       }
     },
+    "end_at_nearest_point": {
+      "default": true,
+      "description": "End near where the next element starts: the column is sewn up to the end point, along the line under it to its end, and back, and ends on its edge nearest the next element.",
+      "title": "End at nearest point",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Start and end",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "force_lock_stitches": {
       "default": false,
       "description": "Sew the end lock even when the next element starts so close that the needle would otherwise go straight on to it without one.",
@@ -855,9 +872,29 @@
         "unit": "mm"
       }
     },
+    "running_stitch_position": {
+      "default": 50.0,
+      "description": "Where the line the needle follows to the start and to the end runs, in percent of the way from the first rail to the second: 50 is the middle.",
+      "maximum": 100.0,
+      "minimum": 0.0,
+      "title": "Running stitch position",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Start and end",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "%"
+      }
+    },
     "running_stitch_tolerance_mm": {
       "default": 0.2,
-      "description": "How far a stitch may stray from a curve. A smaller tolerance follows curves more closely, with more and shorter stitches.",
+      "description": "How far a stitch may stray from a curve. A smaller tolerance follows curves more closely, with more and shorter stitches. A satin column's way to its start and from its end keeps to it too.",
       "maximum": 5.0,
       "minimum": 0.01,
       "title": "Curve tolerance",
@@ -865,10 +902,15 @@
       "x-stitchcraft": {
         "applies_to": [
           "running_stitch",
-          "ripple_stitch"
+          "ripple_stitch",
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
         ],
+        "deviation": "DEV-SAT-006",
         "group": "Running stitch",
-        "origin": "inkstitch",
+        "origin": "inkstitch-deviates",
         "stability": "stable",
         "unit": "mm"
       }
@@ -1009,6 +1051,23 @@
           ],
           "key": "split_method"
         }
+      }
+    },
+    "start_at_nearest_point": {
+      "default": true,
+      "description": "Start near where the elements before left the needle: on the line between the rails, or on the column's edge when only that is close, then along the line under the column to its start. It saves a jump and a trim.",
+      "title": "Start at nearest point",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Start and end",
+        "origin": "inkstitch",
+        "stability": "stable"
       }
     },
     "stop_after": {
@@ -1285,6 +1344,9 @@
           "zigzag_spacing_mm",
           "reverse_rails",
           "swap_satin_rails",
+          "start_at_nearest_point",
+          "end_at_nearest_point",
+          "running_stitch_position",
           "pull_compensation_mm",
           "pull_compensation_percent",
           "push_compensation_mm",

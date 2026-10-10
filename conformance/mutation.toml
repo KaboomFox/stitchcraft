@@ -33,3 +33,21 @@ file = "crates/stitchcraft-engine/src/generators/satin/compensation.rs"
 mutant = "replace < with <= in offset"
 line = "if by_a + by_b < -width {"
 why = "when the two moves add up to exactly minus the width, the scale is the width over itself, exactly 1, and multiplying by it changes neither move"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/near.rs"
+mutant = "replace boxes_meet -> bool with true"
+line = "a.x().min(b.x()).max(c.x().min(d.x())) <= a.x().max(b.x()).min(c.x().max(d.x()))"
+why = "the box test only saves work: sides that cross, touch or overlap have boxes that overlap, so without it the side and crossing tests give the same answers"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/near.rs"
+mutant = "replace && with || in boxes_meet"
+line = "&& a.y().min(b.y()).max(c.y().min(d.y())) <= a.y().max(b.y()).min(c.y().max(d.y()))"
+why = "the box test only saves work: letting more sides past it changes no answer, since the side and crossing tests after it find no meeting where the boxes are apart"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/near.rs"
+mutant = "replace && with || in meeting"
+line = "(d_on && (a_on || b_on)).then_some(d)"
+why = "overlapping sides along one line: when neither end of the second lies on the first, an end of the first on the second would have to stick out past one of the second's ends, which would then lie on the first, so the changed test only adds cases that cannot occur"

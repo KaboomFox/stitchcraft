@@ -51,7 +51,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `bean_stitch_repeats` | str | — | 0 | `running_stitch`, `ripple_stitch`, `manual_stitch`, `zigzag_stitch` | P1 (M3) | [registered](../user/reference/params/repeat.md#bean_stitch_repeats) |
 | `manual_pattern_placement` | boolean | — | false | `ripple_stitch` | P3 (M10) | planned |
 | `running_stitch_length_mm` | string | mm | 2.5 | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#running_stitch_length_mm) |
-| `running_stitch_tolerance_mm` | float | mm | 0.2 | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#running_stitch_tolerance_mm) |
+| `running_stitch_tolerance_mm` | float | mm | 0.2 | `running_stitch`, `ripple_stitch` | P1 (M3) | [deviates](../user/reference/params/running.md#running_stitch_tolerance_mm) |
 | `enable_random_stitch_length` | boolean | — | false | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#enable_random_stitch_length) |
 | `random_stitch_length_jitter_percent` | float | ± % | 10 | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#random_stitch_length_jitter_percent) |
 | `max_stitch_length_mm` | float | mm | — | `manual_stitch` | P1 (M3) | [registered](../user/reference/params/common.md#max_stitch_length_mm) |
@@ -103,10 +103,10 @@ registry uses these names as its keys so files move between the tools unchanged
 | `reverse_rails` | combo | — | automatic | all | P1 (M4) | [registered](../user/reference/params/satin.md#reverse_rails) |
 | `swap_satin_rails` | boolean | — | false | all | P1 (M4) | [registered](../user/reference/params/satin.md#swap_satin_rails) |
 | `running_stitch_length_mm` | float | mm | 2.5 | all | P1 (M4) | [registered](../user/reference/params/running.md#running_stitch_length_mm) |
-| `running_stitch_tolerance_mm` | float | mm | 0.1 | all | P1 (M4) | planned |
-| `running_stitch_position` | float | % | 50 | all | P1 (M4) | planned |
-| `start_at_nearest_point` | boolean | — | true | all | P1 (M4) | planned |
-| `end_at_nearest_point` | boolean | — | true | all | P1 (M4) | planned |
+| `running_stitch_tolerance_mm` | float | mm | 0.1 | all | P1 (M4) | [deviates](../user/reference/params/running.md#running_stitch_tolerance_mm) |
+| `running_stitch_position` | float | % | 50 | all | P1 (M4) | [registered](../user/reference/params/satin.md#running_stitch_position) |
+| `start_at_nearest_point` | boolean | — | true | all | P1 (M4) | [registered](../user/reference/params/satin.md#start_at_nearest_point) |
+| `end_at_nearest_point` | boolean | — | true | all | P1 (M4) | [registered](../user/reference/params/satin.md#end_at_nearest_point) |
 | `contour_underlay` | toggle | — | — | all | P1 (M4) | [registered](../user/reference/params/satin.md#contour_underlay) |
 | `contour_underlay_stitch_length_mm` | float | mm | 3 | all | P1 (M4) | [registered](../user/reference/params/satin.md#contour_underlay_stitch_length_mm) |
 | `contour_underlay_stitch_tolerance_mm` | float | mm | 0.2 | all | P1 (M4) | [registered](../user/reference/params/satin.md#contour_underlay_stitch_tolerance_mm) |
@@ -261,4 +261,4 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
 
-_145 parameter declarations, 60 registered in StitchCraft._
+_145 parameter declarations, 64 registered in StitchCraft._
