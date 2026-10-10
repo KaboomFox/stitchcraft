@@ -141,7 +141,7 @@ pub struct stitchcraft_params::set::Validated<T>
 pub stitchcraft_params::set::Validated::params: T
 pub stitchcraft_params::set::Validated::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_params::set::find(&[&stitchcraft_params::spec::ParamGroup], &str) -> core::option::Option<&'static stitchcraft_params::spec::ParamSpec>
-pub fn stitchcraft_params::set::read_param<K: stitchcraft_params::kinds::ParamKind>(&stitchcraft_params::set::ParamSet, core::option::Option<&stitchcraft_params::spec::ParamSpec>, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>) -> core::option::Option<<K as stitchcraft_params::kinds::ParamKind>::Value>
+pub fn stitchcraft_params::set::read_param<K: stitchcraft_params::kinds::ParamKind>(&stitchcraft_params::set::ParamSet, core::option::Option<&stitchcraft_params::spec::ParamSpec>, core::option::Option<stitchcraft_params::stitch_type::Family>, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>) -> core::option::Option<<K as stitchcraft_params::kinds::ParamKind>::Value>
 pub fn stitchcraft_params::set::unknown_keys(&stitchcraft_params::set::ParamSet, &[&stitchcraft_params::spec::ParamGroup]) -> alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub mod stitchcraft_params::spec
 pub enum stitchcraft_params::spec::Kind
@@ -213,6 +213,7 @@ pub fn stitchcraft_params::spec::ParamGroup::help(&self) -> alloc::string::Strin
 pub struct stitchcraft_params::spec::ParamSpec
 pub stitchcraft_params::spec::ParamSpec::applies_to: &'static [stitchcraft_params::stitch_type::StitchType]
 pub stitchcraft_params::spec::ParamSpec::default: &'static str
+pub stitchcraft_params::spec::ParamSpec::family_defaults: &'static [(stitchcraft_params::stitch_type::Family, &'static str)]
 pub stitchcraft_params::spec::ParamSpec::group: &'static str
 pub stitchcraft_params::spec::ParamSpec::help: &'static str
 pub stitchcraft_params::spec::ParamSpec::key: &'static str
@@ -222,6 +223,7 @@ pub stitchcraft_params::spec::ParamSpec::origin: stitchcraft_params::spec::Origi
 pub stitchcraft_params::spec::ParamSpec::stability: stitchcraft_params::spec::Stability
 pub stitchcraft_params::spec::ParamSpec::visible_when: core::option::Option<stitchcraft_params::spec::Condition>
 impl stitchcraft_params::spec::ParamSpec
+pub fn stitchcraft_params::spec::ParamSpec::default_for(&self, stitchcraft_params::stitch_type::Family) -> &'static str
 pub fn stitchcraft_params::spec::ParamSpec::help(&self) -> alloc::string::String
 impl stitchcraft_params::spec::ParamSpec
 pub fn stitchcraft_params::spec::ParamSpec::read(&self, &str) -> core::result::Result<(stitchcraft_params::value::Value, core::option::Option<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
@@ -233,7 +235,10 @@ pub stitchcraft_params::stitch_type::Family::Fill
 pub stitchcraft_params::stitch_type::Family::Satin
 pub stitchcraft_params::stitch_type::Family::Stroke
 impl stitchcraft_params::stitch_type::Family
+pub const stitchcraft_params::stitch_type::Family::ALL: &'static [stitchcraft_params::stitch_type::Family]
+pub const fn stitchcraft_params::stitch_type::Family::id(self) -> &'static str
 pub const fn stitchcraft_params::stitch_type::Family::method_param(self) -> &'static str
+pub const fn stitchcraft_params::stitch_type::Family::plural(self) -> &'static str
 pub enum stitchcraft_params::stitch_type::StitchType
 pub stitchcraft_params::stitch_type::StitchType::CircularFill
 pub stitchcraft_params::stitch_type::StitchType::ContourFill
@@ -282,7 +287,10 @@ pub stitchcraft_params::Family::Fill
 pub stitchcraft_params::Family::Satin
 pub stitchcraft_params::Family::Stroke
 impl stitchcraft_params::stitch_type::Family
+pub const stitchcraft_params::stitch_type::Family::ALL: &'static [stitchcraft_params::stitch_type::Family]
+pub const fn stitchcraft_params::stitch_type::Family::id(self) -> &'static str
 pub const fn stitchcraft_params::stitch_type::Family::method_param(self) -> &'static str
+pub const fn stitchcraft_params::stitch_type::Family::plural(self) -> &'static str
 pub enum stitchcraft_params::Kind
 pub stitchcraft_params::Kind::Angle
 pub stitchcraft_params::Kind::Choice
@@ -401,6 +409,7 @@ pub fn stitchcraft_params::set::ParamSet::from_iter<I: core::iter::traits::colle
 pub struct stitchcraft_params::ParamSpec
 pub stitchcraft_params::ParamSpec::applies_to: &'static [stitchcraft_params::stitch_type::StitchType]
 pub stitchcraft_params::ParamSpec::default: &'static str
+pub stitchcraft_params::ParamSpec::family_defaults: &'static [(stitchcraft_params::stitch_type::Family, &'static str)]
 pub stitchcraft_params::ParamSpec::group: &'static str
 pub stitchcraft_params::ParamSpec::help: &'static str
 pub stitchcraft_params::ParamSpec::key: &'static str
@@ -410,6 +419,7 @@ pub stitchcraft_params::ParamSpec::origin: stitchcraft_params::spec::Origin
 pub stitchcraft_params::ParamSpec::stability: stitchcraft_params::spec::Stability
 pub stitchcraft_params::ParamSpec::visible_when: core::option::Option<stitchcraft_params::spec::Condition>
 impl stitchcraft_params::spec::ParamSpec
+pub fn stitchcraft_params::spec::ParamSpec::default_for(&self, stitchcraft_params::stitch_type::Family) -> &'static str
 pub fn stitchcraft_params::spec::ParamSpec::help(&self) -> alloc::string::String
 impl stitchcraft_params::spec::ParamSpec
 pub fn stitchcraft_params::spec::ParamSpec::read(&self, &str) -> core::result::Result<(stitchcraft_params::value::Value, core::option::Option<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
@@ -474,5 +484,5 @@ pub type stitchcraft_params::kinds::Toggle::Value = bool
 pub fn stitchcraft_params::kinds::Toggle::take(stitchcraft_params::value::Value) -> core::option::Option<bool>
 pub fn stitchcraft_params::audit(&[&stitchcraft_params::spec::ParamGroup]) -> alloc::vec::Vec<alloc::string::String>
 pub fn stitchcraft_params::find(&[&stitchcraft_params::spec::ParamGroup], &str) -> core::option::Option<&'static stitchcraft_params::spec::ParamSpec>
-pub fn stitchcraft_params::read_param<K: stitchcraft_params::kinds::ParamKind>(&stitchcraft_params::set::ParamSet, core::option::Option<&stitchcraft_params::spec::ParamSpec>, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>) -> core::option::Option<<K as stitchcraft_params::kinds::ParamKind>::Value>
+pub fn stitchcraft_params::read_param<K: stitchcraft_params::kinds::ParamKind>(&stitchcraft_params::set::ParamSet, core::option::Option<&stitchcraft_params::spec::ParamSpec>, core::option::Option<stitchcraft_params::stitch_type::Family>, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>) -> core::option::Option<<K as stitchcraft_params::kinds::ParamKind>::Value>
 pub fn stitchcraft_params::unknown_keys(&stitchcraft_params::set::ParamSet, &[&stitchcraft_params::spec::ParamGroup]) -> alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
