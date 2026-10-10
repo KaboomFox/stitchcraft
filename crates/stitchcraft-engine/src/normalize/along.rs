@@ -8,7 +8,7 @@
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
-use crate::normalize::stroke::nearest_on_segment;
+use crate::normalize::stroke::{nearest_on_segment, segments};
 
 /// A polyline, with the distance along it to each of its points.
 pub(crate) struct Along<'a> {
@@ -54,14 +54,12 @@ impl<'a> Along<'a> {
     /// `meter`'s work per side.
     pub(crate) fn project(&self, p: Point, meter: &mut Meter) -> Result<f64, Exhausted> {
         let mut best: Option<(f64, f64)> = None;
-        for (side, start) in self.points.windows(2).zip(&self.at) {
+        for ((a, b), start) in segments(self.points).zip(&self.at) {
             meter.charge(1)?;
-            if let [a, b] = side {
-                let on = nearest_on_segment(p, *a, *b);
-                let distance = p.distance(on);
-                if best.is_none_or(|(d, _)| distance < d) {
-                    best = Some((distance, start + a.distance(on)));
-                }
+            let on = nearest_on_segment(p, a, b);
+            let distance = p.distance(on);
+            if best.is_none_or(|(d, _)| distance < d) {
+                best = Some((distance, start + a.distance(on)));
             }
         }
         Ok(best.map_or(0.0, |(_, at)| at))
