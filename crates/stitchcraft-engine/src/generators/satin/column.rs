@@ -15,15 +15,17 @@
 //! meets it at an end, leaves its section out. A column whose path draws no rungs cuts its rails at their
 //! nodes instead, as Ink/Stitch does: the 2nd node of one rail with the 2nd of the other, and on in order,
 //! without the rails' ends. Rails with different numbers of nodes pair as many as the one with fewer has
-//! (`SC-W0210`), and rails of 2 nodes each are cut once, 0.2 CSS pixels from their starts, which sews them
-//! as one section.
+//! (`SC-W0210`). Rails of 2 nodes each are cut once near their starts, which sews them as one section:
+//! where the point 0.2 CSS pixels along the straight line from each rail's first node to its last lies
+//! along the rail, as Ink/Stitch places the rung it adds there.
 
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
 
 use crate::normalize::along::Along;
 use crate::normalize::satin::{Pairing, Satin};
 
-/// Where rails of 2 nodes each are cut, in millimetres from their starts: 0.2 CSS pixels, Ink/Stitch's.
+/// How far along the line between a rail's 2 nodes the point is that says where to cut it, in
+/// millimetres: 0.2 CSS pixels, Ink/Stitch's.
 const NEAR_START: f64 = 0.2 * 25.4 / 96.0;
 
 /// A section: the parts of the first and of the second rail between two neighbouring cuts.
@@ -68,10 +70,9 @@ pub(crate) fn sections(
         }
     }
     let [first, second] = &rails;
-    let along = [Along::new(first, meter)?, Along::new(second, meter)?];
-    let [rail_a, rail_b] = &along;
+    let [rail_a, rail_b] = &[Along::new(first, meter)?, Along::new(second, meter)?];
     let (mut cuts_a, mut cuts_b) = (Vec::new(), Vec::new());
-    for [a, b] in pairs(&pairing, &along, warnings) {
+    for [a, b] in pairs(&pairing, warnings) {
         cuts_a.push(rail_a.project(a, meter)?);
         cuts_b.push(rail_b.project(b, meter)?);
     }
@@ -94,9 +95,9 @@ fn backwards(rails: &[Vec<Point>; 2], meter: &mut Meter) -> Result<bool, Exhaust
     Ok(forwards > back)
 }
 
-/// The points that `pairing` says go together, on the rails `along`: each rung's, or the rails' nodes
-/// inside their ends, with `SC-W0210` when there are more nodes on one rail than on the other.
-fn pairs(pairing: &Pairing, along: &[Along; 2], warnings: &mut Vec<Diagnostic>) -> Vec<[Point; 2]> {
+/// The points that `pairing` says go together: each rung's, or the rails' nodes inside their ends, with
+/// `SC-W0210` when there are more nodes on one rail than on the other.
+fn pairs(pairing: &Pairing, warnings: &mut Vec<Diagnostic>) -> Vec<[Point; 2]> {
     let nodes = match pairing {
         Pairing::Rungs(rungs) => return rungs.clone(),
         Pairing::Nodes(nodes) => nodes,
@@ -110,11 +111,17 @@ fn pairs(pairing: &Pairing, along: &[Along; 2], warnings: &mut Vec<Diagnostic>) 
         );
         warnings.push(Diagnostic::new(Code::SatinNodesUnequal, message).with_fix(Fix::Hint("Add rungs across the column.".to_string())));
     } else if first.len() <= 2 {
-        let [a, b] = along;
-        return vec![[a.point(NEAR_START), b.point(NEAR_START)]];
+        return near_start(first).zip(near_start(second)).map(|(a, b)| vec![[a, b]]).unwrap_or_default();
     }
     let inside = |nodes: &[Point]| nodes.get(1..nodes.len().saturating_sub(1)).unwrap_or_default().to_vec();
     inside(first).into_iter().zip(inside(second)).map(|(a, b)| [a, b]).collect()
+}
+
+/// The point [`NEAR_START`] along the straight line from the first of a rail's `nodes` to its last, held
+/// to the last; `None` without nodes.
+fn near_start(nodes: &[Point]) -> Option<Point> {
+    let (first, last) = (*nodes.first()?, *nodes.last()?);
+    Some(first.lerp(last, NEAR_START / first.distance(last)))
 }
 
 /// The parts of the rail `along` between its `cuts`, in order along it; a part of no length is `None`.
@@ -147,6 +154,19 @@ mod tests {
         // Cuts at an end, and two at one point, leave parts of no length.
         let mut cuts = vec![0.0, 5.0, 5.0, 10.0];
         assert_eq!(parts(&along, &mut cuts), [None, Some(vec![p(0.0, 0.0), p(5.0, 0.0)]), None, Some(vec![p(5.0, 0.0), p(10.0, 0.0)]), None]);
+    }
+
+    #[test]
+    fn rails_of_2_nodes_pair_near_their_starts_on_the_lines_between_their_nodes() {
+        let nodes = |a: [(f64, f64); 2], b: [(f64, f64); 2]| Pairing::Nodes([a.map(|(x, y)| p(x, y)).to_vec(), b.map(|(x, y)| p(x, y)).to_vec()]);
+        let mut warnings = Vec::new();
+        let [[a, b]] = pairs(&nodes([(0.0, 0.0), (3.0, 4.0)], [(0.0, 10.0), (-6.0, 18.0)]), &mut warnings)[..] else { panic!() };
+        assert!(a.distance(p(0.6 * NEAR_START, 0.8 * NEAR_START)) < 1e-15 && b.distance(p(-0.6 * NEAR_START, 10.0 + 0.8 * NEAR_START)) < 1e-15);
+        // Nodes closer together than that: the last one. Nodes at one point: that point.
+        let [[a, b]] = pairs(&nodes([(0.0, 0.0), (0.01, 0.0)], [(5.0, 5.0), (5.0, 5.0)]), &mut warnings)[..] else { panic!() };
+        assert_eq!((a, b), (p(0.01, 0.0), p(5.0, 5.0)));
+        assert!(warnings.is_empty());
+        assert_eq!(near_start(&[]), None);
     }
 
     #[test]

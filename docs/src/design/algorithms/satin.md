@@ -78,8 +78,9 @@ A column of 2 subpaths has no rungs, and its rails' nodes cut the rails instead,
 2nd node of one rail goes with the 2nd node of the other, and on in order, after any reversal, without
 each rail's 2 ends. Rails with different numbers of nodes pair as many as the one with fewer has
 (`SC-W0210`). Ink/Stitch's own warning for this counts the rails' points after flattening, not their
-nodes, and can warn where the nodes pair as drawn. Rails of 2 nodes each are cut once, 0.2 CSS pixels
-from their starts, and sew as one section.
+nodes, and can warn where the nodes pair as drawn. Rails of 2 nodes each are cut once near their
+starts, and sew as one section. The cut on each rail is where the point 0.2 CSS pixels along the straight
+line from its first node to its last lies along it, as Ink/Stitch places the rung it adds there.
 
 When the resulting stitch directions deviate from the local column normal by more than 45° somewhere,
 the element gets `SC-W0208` ("add a rung here") with the location.
