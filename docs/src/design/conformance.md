@@ -123,8 +123,9 @@ SHA-256, downloaded by `cargo xtask corpus` — the same policy VectorCraft foll
 
 The engine's cases build their small designs with `stitchcraft_testkit::designs`. It also reads a plan's
 shape at a glance: `J L4 S5 L4` is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
-stitches. The satin cases sew their columns with `stitchcraft_testkit::satins`, as an element is sewn, and
-read the needle points back in pairs across the column.
+stitches. The satin cases sew their columns with `stitchcraft_testkit::satins`, as an element is sewn on
+the reference machine, with stitches no shorter than the machine's shortest and no longer than the
+element's longest, and read the needle points back in pairs across the column.
 
 ## Levels
 
