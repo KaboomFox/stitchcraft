@@ -78,13 +78,16 @@ fn req_sat_003_jitter_moves_each_split_at_random_within_its_share() {
     let jittered = [("max_stitch_length_mm", "3"), ("random_split_jitter_percent", "25")];
     let sewn = column(&jittered);
     assert_eq!(sewn, column(&jittered));
-    let mut moved = 0;
+    let (mut back, mut on) = (0, 0);
     for stitch in stitches(&sewn) {
         let (parts, third) = (splits(&stitch), length(&stitch) / 3.0);
         assert!(near(&parts, &[third, 2.0 * third], 0.25 * third + 1e-9), "{parts:?}");
-        moved += parts.iter().zip([third, 2.0 * third]).filter(|(at, even)| (*at - even).abs() > 1e-6).count();
+        for (at, even) in parts.iter().zip([third, 2.0 * third]) {
+            back += usize::from(at - even < -1e-6);
+            on += usize::from(at - even > 1e-6);
+        }
     }
-    assert!(moved > 50, "the splits move: {moved}");
+    assert!(back > 20 && on > 20, "the splits move both ways: {back} back, {on} on");
     assert_ne!(sewn, column(&[jittered[0], jittered[1], ("random_seed", "2")]), "another seed, other splits");
 }
 
@@ -105,6 +108,20 @@ fn req_sat_003_a_random_phase_starts_the_splits_at_random_and_spaces_them_by_the
         starts.push(parts[0]);
     }
     assert!(starts.windows(2).any(|w| (w[0] - w[1]).abs() > 0.1), "the phase varies: {starts:?}");
+}
+
+#[test]
+fn req_sat_003_a_random_phase_splits_only_stitches_longer_than_the_shortest_to_split() {
+    // A column 2 mm wide: its stitches are shorter than the 3 mm longest stitch, and not split, unless the
+    // shortest stitch to split is under 2 mm.
+    let narrow = |params: &[(&str, &str)]| {
+        let mut params = params.to_vec();
+        params.extend([("max_stitch_length_mm", "3"), ("random_split_phase", "true"), NO_SHORT_STITCHES]);
+        sewn_satin(&ladder(10.0, 2.0, &[]), &params).0
+    };
+    assert_eq!(narrow(&[]), sewn_satin(&ladder(10.0, 2.0, &[]), &[NO_SHORT_STITCHES]).0);
+    let split = narrow(&[("min_random_split_length_mm", "1.5")]);
+    assert!(split.iter().any(|p| p.y() > 1e-9 && p.y() < 2.0 - 1e-9), "some split");
 }
 
 /// The splits a staggered stitch has, from its start: whole multiples of `every` from `offset`, measured

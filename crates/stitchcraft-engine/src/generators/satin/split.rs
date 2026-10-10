@@ -187,9 +187,9 @@ fn staggered(
     let (after, before) = (along(a, b, from), along(a, b, to));
     let mut at = Vec::new();
     let mut progress = (f64::from(row) / staggers).rem_euclid(1.0) * length;
-    while progress < distance {
+    while progress < before {
         meter.charge(1)?;
-        if after < progress && progress < before {
+        if after < progress {
             at.push(a.lerp(b, progress / distance));
         }
         progress += length;
@@ -262,14 +262,97 @@ mod tests {
         // A stitch from (0, 0) to (0, 10), sewn from 1 mm in to 9.5 mm, split every 3 mm from its start: at
         // 3, 6 and 9.
         let meter = &mut Budget::DEFAULT.meter();
-        let ys = |splits: Vec<Point>| -> Vec<f64> { splits.iter().map(|p| (p.y() * 1e9).round() / 1e9).collect() };
         let (ends, inset) = ([p(0.0, 0.0), p(0.0, 10.0)], [p(0.0, 1.0), p(0.0, 9.5)]);
-        assert_eq!(ys(staggered(ends, inset, 3.0, 1.0, 0, false, meter).unwrap()), [3.0, 6.0, 9.0]);
+        assert_eq!(ys(&staggered(ends, inset, 3.0, 1.0, 0, false, meter).unwrap()), [3.0, 6.0, 9.0]);
         // Back, every 3 mm from its end: 3 and 6 mm from it lie between the insets, and 9 does not, sewn in
         // the stitch's order.
-        assert_eq!(ys(staggered(ends, inset, 3.0, 1.0, 0, true, meter).unwrap()), [4.0, 7.0]);
+        assert_eq!(ys(&staggered(ends, inset, 3.0, 1.0, 0, true, meter).unwrap()), [4.0, 7.0]);
+        // Sewn from 3 mm in to 9 mm, the splits at 3 and 9 fall exactly on the insets and are not made.
+        assert_eq!(ys(&staggered(ends, [p(0.0, 3.0), p(0.0, 9.0)], 3.0, 1.0, 0, false, meter).unwrap()), [6.0]);
         // No longer than the length: none.
         assert!(staggered([p(0.0, 0.0), p(0.0, 2.0)], [p(0.0, 0.0), p(0.0, 2.0)], 2.0, 1.0, 0, false, meter).unwrap().is_empty());
+    }
+
+    /// A splitter with the default method, `length` and `jitter`, a random phase or not, and the shortest
+    /// stitch `min`, drawing from `rng`.
+    fn splitter(rng: &mut SplitMix64, length: f64, jitter: f64, random_phase: bool, min: f64) -> Splitter<'_> {
+        Splitter { method: Method::Default, length: Some(length), jitter, random_phase, shortest_split: length, staggers: 4.0, min_stitch: min, rng }
+    }
+
+    /// The heights of `points`, to within rounding.
+    fn ys(points: &[Point]) -> Vec<f64> {
+        points.iter().map(|p| (p.y() * 1e9).round() / 1e9).collect()
+    }
+
+    /// `values` to within rounding.
+    fn rounded(values: &[f64]) -> Vec<f64> {
+        values.iter().map(|v| (v * 1e9).round() / 1e9).collect()
+    }
+
+    #[test]
+    fn even_splits_move_by_their_rolls_as_in_ink_stitch() {
+        // 4 parts of a 10 mm stitch, each split moved by (2 × roll − 1) × jitter of a part, then sorted.
+        let mut rolls = SplitMix64::new(5);
+        let mut want: Vec<f64> = (1..4).map(|k| (f64::from(k) + (rolls.next_f64() * 2.0 - 1.0) * 0.5) * 2.5).collect();
+        want.sort_by(f64::total_cmp);
+        let mut rng = SplitMix64::new(5);
+        let got = splitter(&mut rng, 3.0, 0.5, false, 0.3).even(p(0.0, 0.0), p(0.0, 10.0), 4, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(ys(&got), rounded(&want));
+    }
+
+    /// Where a random phase puts its splits on a stitch `distance` long: the first at `length` × roll, and
+    /// each next `length` × (1 + `jitter` × (2 × roll − 1)) on, while they lie before the end.
+    fn phased(seed: u64, length: f64, jitter: f64, distance: f64) -> Vec<f64> {
+        let mut rolls = SplitMix64::new(seed);
+        let mut at = Vec::new();
+        let mut progress = length * rolls.next_f64();
+        while progress < distance {
+            at.push(progress);
+            progress += length * (1.0 + jitter * (rolls.next_f64() - 0.5) * 2.0);
+        }
+        at
+    }
+
+    #[test]
+    fn a_random_phase_starts_at_its_roll_and_steps_by_the_length_varied_by_the_jitter() {
+        let meter = &mut Budget::DEFAULT.meter();
+        let stitch = [p(0.0, 0.0), p(0.0, 10.0)];
+        let want = phased(9, 2.0, 0.5, 10.0);
+        assert!(want.len() >= 4, "{want:?}");
+        let got = splitter(&mut SplitMix64::new(9), 2.0, 0.5, true, 0.0).random_phase(stitch, stitch, 2.0, meter).unwrap();
+        assert_eq!(ys(&got), rounded(&want));
+        // A split exactly at the inset end is not made: the stitch is sewn to where the third would be, and
+        // ends a millimetre on.
+        let third = *want.get(2).unwrap();
+        let (ends, inset) = ([p(0.0, 0.0), p(0.0, third + 1.0)], [p(0.0, 0.0), p(0.0, third)]);
+        let got = splitter(&mut SplitMix64::new(9), 2.0, 0.5, true, 0.0).random_phase(ends, inset, 2.0, meter).unwrap();
+        assert_eq!(ys(&got), rounded(&want[..2]));
+    }
+
+    #[test]
+    fn of_2_or_more_random_splits_one_within_the_shortest_stitch_of_an_end_is_left_out() {
+        let meter = &mut Budget::DEFAULT.meter();
+        let stitch = [p(0.0, 0.0), p(0.0, 10.0)];
+        // Seed 3 starts the splits 0.23 mm in, every 2 mm, so a shortest stitch just past that leaves the
+        // first out.
+        let want = phased(3, 2.0, 0.0, 10.0);
+        let first = *want.first().unwrap();
+        let got = splitter(&mut SplitMix64::new(3), 2.0, 0.0, true, first + 0.001).random_phase(stitch, stitch, 2.0, meter).unwrap();
+        assert_eq!(ys(&got), rounded(&want[1..]));
+        // Alone, it stays: the stitch ends before the second.
+        let one = [p(0.0, 0.0), p(0.0, first + 1.0)];
+        let got = splitter(&mut SplitMix64::new(3), 2.0, 0.0, true, first + 0.001).random_phase(one, one, 2.0, meter).unwrap();
+        assert_eq!(ys(&got), rounded(&want[..1]));
+        // Seed 6 starts them 1.48 mm in, so the last, 9.48 mm in, is 0.52 mm from the end, and a shortest
+        // stitch just past that leaves it out, but not the first.
+        let want = phased(6, 2.0, 0.0, 10.0);
+        let last = 10.0 - want.last().unwrap();
+        let got = splitter(&mut SplitMix64::new(6), 2.0, 0.0, true, last + 0.001).random_phase(stitch, stitch, 2.0, meter).unwrap();
+        assert_eq!(ys(&got), rounded(&want[..want.len() - 1]));
+        // Alone, it stays.
+        let one = [p(0.0, 0.0), p(0.0, want[0] + 0.1)];
+        let got = splitter(&mut SplitMix64::new(6), 2.0, 0.0, true, 0.2).random_phase(one, one, 2.0, meter).unwrap();
+        assert_eq!(ys(&got), rounded(&want[..1]));
     }
 
     #[test]
