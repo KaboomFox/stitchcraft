@@ -363,8 +363,12 @@ mod tests {
 
     #[test]
     fn the_budget_bounds_the_work() {
+        // Run out while flattening a curve, and while reading a path's segments.
         let curve = path(p(0.0, 0.0), vec![Segment::Cubic(p(0.0, 100.0), p(100.0, 100.0), p(100.0, 0.0))], false);
         let mut meter = Budget { max_stitches: 1, max_work: 20 }.meter();
         assert_eq!(flatten(&curve, 0.0001, &mut meter), Err(Exhausted::Work));
+        let lines = path(p(0.0, 0.0), vec![Segment::Line(p(1.0, 0.0)), Segment::Line(p(2.0, 0.0))], false);
+        let mut meter = Budget { max_stitches: 1, max_work: 0 }.meter();
+        assert_eq!(flatten(&lines, 0.0001, &mut meter), Err(Exhausted::Work));
     }
 }

@@ -471,6 +471,7 @@ mod tests {
             let mut words = case.split_whitespace();
             let kind = words.next().unwrap();
             let mut n = Numbers(words);
+            assert!(["pt", "ll", "ap", "as"].contains(&kind), "line {}: unknown kind {kind}", number + 1);
             let same = match kind {
                 "pt" => {
                     let (lines, from) = (n.polylines(), n.point());
@@ -480,16 +481,14 @@ mod tests {
                     let (lines, other) = (n.polylines(), n.polylines());
                     nearest_to_lines(&slices(&lines), &slices(&other), meter).unwrap().unwrap().distance(n.point()) < CLOSE
                 }
-                "ap" | "as" => {
+                _ => {
                     let (line, cut) = (n.polyline(), (n.point(), n.point()));
                     let look = if kind == "ap" { Look::FromPolyline } else { Look::FromSegment };
                     (along_to_segment(&line, cut, look, meter).unwrap() - n.number()).abs() < CLOSE
                 }
-                _ => panic!("line {}: unknown kind {kind}", number + 1),
             };
-            if !same {
-                differ.push(number + 1);
-            }
+            // Every line of the test runs, a line that differs or not.
+            differ.extend((!same).then_some(number + 1));
         }
         assert_eq!(differ, Vec::<usize>::new(), "the fixture's lines whose answer differs");
     }
