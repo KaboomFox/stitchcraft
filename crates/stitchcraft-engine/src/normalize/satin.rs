@@ -32,7 +32,7 @@ use std::collections::BTreeMap;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
 
 use crate::design::{Path, Subpath};
-use crate::normalize::stroke::{self, nearest_on_segment};
+use crate::normalize::stroke::{self, nearest_on_segment, segments};
 
 /// How closely the polylines follow the subpaths, in millimetres: far finer than a stitch, so subpaths
 /// meet where the drawing shows them meeting.
@@ -230,12 +230,10 @@ fn meeting(a: &Line, b: &Line, meter: &mut Meter) -> Result<Vec<Point>, Exhauste
     if !overlap(a.bounds, b.bounds) {
         return Ok(found);
     }
-    for p in a.points.windows(2) {
-        for q in b.points.windows(2) {
+    for (p1, p2) in segments(&a.points) {
+        for (q1, q2) in segments(&b.points) {
             meter.charge(1)?;
-            if let ([p1, p2], [q1, q2]) = (p, q) {
-                shared(*p1, *p2, *q1, *q2).into_iter().for_each(|point| add_once(&mut found, point));
-            }
+            shared(p1, p2, q1, q2).into_iter().for_each(|point| add_once(&mut found, point));
         }
     }
     Ok(found)
@@ -252,18 +250,16 @@ fn add_once(found: &mut Vec<Point>, point: Point) {
 /// The point of `rail` nearest `rung`, which it does not meet.
 fn nearest(rail: &Line, rung: &Line, meter: &mut Meter) -> Result<Point, Exhausted> {
     let mut best: Option<(f64, Point)> = None;
-    for p in rung.points.windows(2) {
-        for q in rail.points.windows(2) {
+    for (p1, p2) in segments(&rung.points) {
+        for (q1, q2) in segments(&rail.points) {
             meter.charge(1)?;
-            if let ([p1, p2], [q1, q2]) = (p, q) {
-                // Segments that do not meet are nearest at an end of one of them.
-                let ends = [(*p1, nearest_on_segment(*p1, *q1, *q2)), (*p2, nearest_on_segment(*p2, *q1, *q2))];
-                let others = [(nearest_on_segment(*q1, *p1, *p2), *q1), (nearest_on_segment(*q2, *p1, *p2), *q2)];
-                for (from, on) in ends.into_iter().chain(others) {
-                    let distance = from.distance(on);
-                    if best.is_none_or(|(d, _)| distance < d) {
-                        best = Some((distance, on));
-                    }
+            // Segments that do not meet are nearest at an end of one of them.
+            let ends = [(p1, nearest_on_segment(p1, q1, q2)), (p2, nearest_on_segment(p2, q1, q2))];
+            let others = [(nearest_on_segment(q1, p1, p2), q1), (nearest_on_segment(q2, p1, p2), q2)];
+            for (from, on) in ends.into_iter().chain(others) {
+                let distance = from.distance(on);
+                if best.is_none_or(|(d, _)| distance < d) {
+                    best = Some((distance, on));
                 }
             }
         }

@@ -35,8 +35,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - M4.1: satin columns are recognized. A stroke whose `satin_column` setting is on is a satin column, and
   its path is read as its rails and rungs, as Ink/Stitch reads it (`REQ-SAT-005`). Satin columns are
   skipped with `SC-W0011` until M4.2 sews them, and what recognition finds is reported now.
-  - **Rails** are told from rungs by which subpaths meet, by Ink/Stitch's rule, which the satin design
-    page describes. Where the rule names other than 2 rails, the 2 longest subpaths are taken, with
+  - **Rails** are told from rungs by which subpaths meet, by Ink/Stitch's rule, as the design page for
+    satins describes. Where the rule names other than 2 rails, the 2 longest subpaths are taken, with
     `SC-W0202`, as in the `#` of 2 rails and exactly 2 rungs. Rails may meet, as at a pointed column's
     tips.
   - **Rungs** join the points where they cross the rails. A rung that misses a rail joins its nearest
