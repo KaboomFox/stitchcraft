@@ -53,6 +53,11 @@ pub fn flatten(path: &Path, tolerance: f64, meter: &mut Meter) -> Result<StrokeP
     Ok(StrokePath { pieces })
 }
 
+/// The line segments of the polyline `points`, each from a point to the next.
+pub(crate) fn segments(points: &[Point]) -> impl Iterator<Item = (Point, Point)> + '_ {
+    points.iter().copied().zip(points.iter().copied().skip(1))
+}
+
 /// How far `p` is from the line segment from `a` to `b`, in millimetres.
 pub fn distance_to_segment(p: Point, a: Point, b: Point) -> f64 {
     p.distance(nearest_on_segment(p, a, b))
