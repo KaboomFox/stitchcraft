@@ -8,7 +8,7 @@ use proptest::prelude::*;
 use stitchcraft_core::{Budget, Code, ElementId, Mm, Rect};
 use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::plan;
-use stitchcraft_plan::profiles::BROTHER_200X200;
+use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Rgb, Role, StitchKind, Thread};
 use stitchcraft_testkit::designs::{BLUE, RED, line, messages, p, planned as sewn, planned_with as sewn_with, shape, shape_of, stroke};
 
@@ -136,7 +136,7 @@ fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plan
     let budget = Budget { max_stitches: 1000, max_work: 60 };
     let design =
         Design::new(vec![line("long", (0.0, 0.0), 150.0, &RED, &[]), line("short", (0.0, 5.0), 5.0, &RED, &[])], DesignSettings::default()).unwrap();
-    let outcome = plan(&design, &BROTHER_200X200, &budget);
+    let outcome = plan(&design, REFERENCE, &budget);
     assert_eq!(outcome.plan.unwrap().elements.iter().map(ElementId::as_str).collect::<Vec<_>>(), ["short"]);
     assert_eq!(
         outcome.diagnostics.iter().map(|d| (d.code, d.element.as_ref().map(ElementId::as_str))).collect::<Vec<_>>(),
@@ -155,7 +155,7 @@ fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plan
     // The design's stitch limit holds for the whole plan.
     let few = Budget { max_stitches: 10, max_work: 1_000_000 };
     let design = Design::new(vec![line("a", (0.0, 0.0), 30.0, &RED, &[])], DesignSettings::default()).unwrap();
-    let outcome = plan(&design, &BROTHER_200X200, &few);
+    let outcome = plan(&design, REFERENCE, &few);
     assert_eq!((outcome.plan, outcome.diagnostics[0].code), (None, Code::BudgetExhausted));
 }
 

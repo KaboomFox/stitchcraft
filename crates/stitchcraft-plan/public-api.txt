@@ -152,8 +152,11 @@ impl stitchcraft_plan::profile::MachineProfile
 pub fn stitchcraft_plan::profile::MachineProfile::check_fit(&self, stitchcraft_core::rect::Rect) -> core::option::Option<stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_plan::profile::MachineProfile::problems(&self) -> alloc::vec::Vec<alloc::string::String>
 pub mod stitchcraft_plan::profiles
-pub static stitchcraft_plan::profiles::BROTHER_200X200: stitchcraft_plan::profile::MachineProfile
+pub static stitchcraft_plan::profiles::BROTHER_PE800_4X4: stitchcraft_plan::profile::MachineProfile
+pub static stitchcraft_plan::profiles::BROTHER_PE800_5X7: stitchcraft_plan::profile::MachineProfile
+pub static stitchcraft_plan::profiles::BROTHER_PE800_SMALL: stitchcraft_plan::profile::MachineProfile
 pub static stitchcraft_plan::profiles::BUILTIN: &[&stitchcraft_plan::profile::MachineProfile]
+pub static stitchcraft_plan::profiles::REFERENCE: &stitchcraft_plan::profile::MachineProfile
 pub fn stitchcraft_plan::profiles::find(&str) -> core::option::Option<&'static stitchcraft_plan::profile::MachineProfile>
 pub mod stitchcraft_plan::thread
 pub struct stitchcraft_plan::thread::Rgb

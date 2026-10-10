@@ -36,13 +36,26 @@ fn describe(out: &mut String, p: &MachineProfile) {
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_core::{Mm, Size};
+    use stitchcraft_plan::profiles::REFERENCE;
+
     use super::*;
 
     #[test]
     fn lists_every_profile_with_its_facts() {
         let out = run().stdout;
-        assert!(out.starts_with("brother-200x200 — Brother, 200 × 200 mm hoop\n  hoop          200 × 200 mm\n"));
-        assert!(out.contains("comfort zone  150 × 150 mm"));
+        assert!(out.starts_with("brother-pe800-5x7 — Brother PE800 with its 5 × 7 in hoop\n  hoop          130 × 180 mm\n  format "), "{out}");
+        assert!(out.contains("\nbrother-pe800-4x4 — Brother PE800 with its 4 × 4 in hoop\n  hoop          100 × 100 mm\n"), "{out}");
+        assert!(out.contains("\nbrother-pe800-small — Brother PE800 with its small hoop\n  hoop          20 × 60 mm\n"), "{out}");
         assert!(out.contains("stitches      0.3 to 12 mm"));
+        assert!(!out.contains("comfort zone"), "no built-in profile has one");
+    }
+
+    #[test]
+    fn a_comfort_zone_is_listed_after_the_hoop() {
+        let mut out = String::new();
+        let square = Size::new(Mm::from_tenths(1000), Mm::from_tenths(1000));
+        describe(&mut out, &MachineProfile { comfort: Some(square), ..REFERENCE.clone() });
+        assert!(out.contains("  hoop          130 × 180 mm\n  comfort zone  100 × 100 mm (larger designs get warning SC-W0702)\n"), "{out}");
     }
 }

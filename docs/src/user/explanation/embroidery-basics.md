@@ -54,8 +54,10 @@ Moving from one place to another without sewing is a **jump**; cutting the threa
 trim or colour change the thread is secured with a **lock stitch** (tie-off), and after it with a tie-in, so
 nothing unravels. Short moves are cheaper sewn as **travel** stitches hidden under later stitching.
 
-## Why designs stay around 150 mm on an 8 × 8 hoop
+## Hoops and their fields
 
-A 200 × 200 mm hoop can sew nearly 200 mm, but the fabric is most stable near the centre, large dense
-designs pull more, and a margin leaves room for hooping error. Keeping designs to about 150 mm gives
-cleaner results; StitchCraft warns beyond the profile's comfort zone and refuses beyond the hoop.
+A hoop keeps the fabric drum-tight, and the machine sews only inside the hoop's field, which is smaller
+than its frame. The reference Brother PE800's 5 × 7 in hoop sews at most 130 × 180 mm, and its 4 × 4 in
+hoop 100 × 100 mm. The fabric is most stable near the centre, and large dense designs pull more. A design
+sews best in the smallest hoop it fits. StitchCraft stops with an error at a design larger than the hoop
+it plans for, and warns beyond a profile's comfort zone where the profile has one.

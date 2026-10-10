@@ -55,7 +55,7 @@ Options:
   -p, --profile <PROFILE>
           The machine profile (see `stitch profiles`)
           
-          [default: brother-200x200]
+          [default: brother-pe800-5x7]
 
       --format <FORMAT>
           The file format; by default the output file's extension decides
@@ -90,7 +90,7 @@ Options:
           List the test sheets and exit
 
   -p, --profile <PROFILE>
-          The machine profile, such as brother-200x200 (see `stitch profiles`)
+          The machine profile to check the sheet against (see `stitch profiles`); by default the one for the hoop the sheet is sewn in
 
   -o, --output <OUTPUT>
           The file to write
@@ -119,7 +119,7 @@ Arguments:
 
 Options:
   -p, --profile <PROFILE>
-          Also check the design against a machine profile, such as brother-200x200 (see `stitch profiles`)
+          Also check the design against a machine profile (see `stitch profiles`)
 
   -h, --help
           Print help
@@ -235,7 +235,7 @@ Options:
   -p, --profile <PROFILE>
           The machine profile (see `stitch profiles`)
           
-          [default: brother-200x200]
+          [default: brother-pe800-5x7]
 
       --format <FORMAT>
           The file format; by default the profile's

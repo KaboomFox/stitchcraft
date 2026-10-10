@@ -1,6 +1,6 @@
 # ADR-0007: PES v1 first, for the Brother 200 × 200 mm machine
 
-**Status:** Accepted · 2026-10-08
+**Status:** Accepted · 2026-10-08 · decisions 2 and 3 replaced by [ADR-0013](0013-brother-pe800-reference-machine.md)
 
 ## Context
 

@@ -11,7 +11,7 @@ use std::f64::consts::SQRT_2;
 
 use stitchcraft_core::{Budget, ElementId, Point, UnitError};
 use stitchcraft_params::ParamSet;
-use stitchcraft_plan::profiles::BROTHER_200X200;
+use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{StitchPlan, Thread};
 
 use super::sketch::SheetError;
@@ -64,7 +64,7 @@ impl Drawing {
     /// The sheet planned for the reference machine, or what the engine said about it.
     pub fn plan(self) -> Result<StitchPlan, SheetError> {
         let design = Design::new(self.elements, DesignSettings::default()).map_err(|d| SheetError::Said(d.to_string()))?;
-        let outcome = crate::plan(&design, &BROTHER_200X200, &Budget::DEFAULT);
+        let outcome = crate::plan(&design, REFERENCE, &Budget::DEFAULT);
         match outcome.plan {
             Some(plan) if outcome.diagnostics.is_empty() => Ok(plan),
             _ => Err(SheetError::Said(outcome.diagnostics.iter().map(ToString::to_string).collect::<Vec<_>>().join(" "))),
