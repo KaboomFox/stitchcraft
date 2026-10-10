@@ -142,12 +142,12 @@ registry uses these names as its keys so files move between the tools unchanged
 | `smoothness_mm` | float | mm | 0 | `contour_fill`, `guided_fill`, `meander_fill` | P2 (M7) | planned |
 | `expand_mm` | float | mm | 0 | all | P1 (M5) | planned |
 | `gap_fill_rows` | int | rows | 0 | `tatami_fill` | P1 (M5) | planned |
-| `angle` | float | deg | 0 | `tatami_fill`, `legacy_fill` | P1 (M5) | planned |
+| `angle` | float | deg | 0 | `tatami_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#angle) |
 | `guided_fill_angle` | float | deg | — | `guided_fill` | P3 (M10) | planned |
 | `tartan_angle` | float | deg | -45 | `tartan_fill` | P3 (M10) | planned |
 | `max_stitch_length_mm` | float | mm | 4.0 | `tatami_fill`, `contour_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | planned |
-| `row_spacing_mm` | float | mm | 0.25 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | planned |
-| `end_row_spacing_mm` | float | mm | — | `tatami_fill`, `circular_fill`, `legacy_fill` | P1 (M5) | planned |
+| `row_spacing_mm` | float | mm | 0.25 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#row_spacing_mm) |
+| `end_row_spacing_mm` | float | mm | — | `tatami_fill`, `circular_fill`, `legacy_fill` | P1 (M5) | [deviates](../user/reference/params/tatami.md#end_row_spacing_mm) |
 | `stitch_position_method` | combo | — | 0 | `guided_fill` | P3 (M10) | planned |
 | `staggers` | int | — | 4 | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | planned |
 | `skip_last` | boolean | — | false | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `legacy_fill` | P1 (M5) | planned |
@@ -261,4 +261,4 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
 
-_145 parameter declarations, 64 registered in StitchCraft._
+_145 parameter declarations, 67 registered in StitchCraft._

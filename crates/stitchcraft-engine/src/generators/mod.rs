@@ -15,6 +15,7 @@ pub mod manual;
 pub mod passes;
 pub mod running;
 pub mod satin;
+pub mod tatami;
 
 use stitchcraft_core::{Code, Diagnostic, Point};
 use stitchcraft_params::{ChoiceOption, StitchType};
