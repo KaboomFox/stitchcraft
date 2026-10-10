@@ -97,6 +97,8 @@ another.
 | `SC-W0210` | Warning | Satin rails without rungs have different numbers of nodes (some pair with none) | M4 |
 | `SC-W0211` | Warning | Satin push compensation too long for a rail; that rail keeps its length | M4 |
 | `SC-W0212` | Warning | Satin column drawn as one path too narrow; sewn as a stroke | M4 |
+| `SC-W0213` | Warning | Parts of a satin column drawn as one path left out (still crossing after 20 cuts in half, or turning too tightly for its width) | M4 |
+| `SC-E0214` | Error | Satin column drawn as one path could not be made into rails (too short, or too tight for its width) | M4 |
 | `SC-W0303` | Warning | Tiny ring dropped from fill region | M5 |
 | `SC-W0305` | Warning | Region too small for fill rows; outlined with running stitch instead | M5 |
 | `SC-W0307` | Warning | Region split into parts that are not connected; parts joined with trims | M5 |

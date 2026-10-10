@@ -95,11 +95,13 @@ A satin column's path is recognized, since M4.1, as one of 2 shapes (`stitchcraf
 ```rust,ignore
 pub enum Shape {
     Rails(Satin),   // 2 rails as polylines, and what pairs their points: rungs, or the rails' nodes
-    CentreLine,     // one subpath: the stroke's width and join make its rails (M4.9)
+    CentreLine { line: Vec<Point>, closed: bool },  // one subpath, flattened; closed when the path ends with Z
 }
 ```
 
-How rails and rungs are recognised from a host path is part of the [satin design](algorithms/satin.md).
+A centre line is made into a `Satin` of its own, its rails offset from the line by the stroke's width and
+join (`stitchcraft_engine::normalize::centre_line`, since M4.9). How rails and rungs are recognised from
+a host path, and made from a centre line, is part of the [satin design](algorithms/satin.md).
 
 ## Parameters
 

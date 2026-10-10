@@ -1,6 +1,6 @@
 # Satin generators
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/normalize/near.rs, crates/stitchcraft-engine/src/generators/satin/** -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/normalize/near.rs, crates/stitchcraft-engine/src/normalize/centre_line.rs, crates/stitchcraft-engine/src/generators/satin/** -->
 
 A satin column is a band of closely spaced stitches that swing from one edge to the other. It is the
 signature look of lettering and borders, and the stitch type where pull compensation and underlay
@@ -72,8 +72,74 @@ The rule counts the subpaths drawn, as Ink/Stitch counts them. A path of 2 subpa
 is never sewn as a stroke for its width. Recognition leaves the point out and reads the other subpath as a
 centre line.
 
-A wider column becomes 2 rails along its centre line from M4.9 on. Until then it is skipped, and
-`SC-W0011` says so.
+A wider column is sewn between 2 rails made from its centre line. Ink/Stitch makes the rails and places
+the rungs this way. It measures in CSS pixels, and its limits below are converted to millimetres.
+
+### Rails
+
+The rails are the centre line offset by half the stroke's width to each side, with the stroke's join at
+their corners (`REQ-SAT-016`). In y-up axes the first lies to the right of the line as it runs and the
+second to its left. The offsets are shapely's `offset_curve`, which Ink/Stitch calls, point for point
+([offset curves](offset.md)). Inside a bend the offsets meet, and outside it they turn as the join
+says.
+
+### Rungs
+
+Rungs cross the column where its line runs straight beside a sharp corner, and at its nodes
+(`REQ-SAT-017`):
+
+1. Each corner of the line scores the square of its turn in degrees, in the hundredth of the line's
+   length where it lies. Each score is spread over 4 hundredths to either side, weighted 1, 2, 4, 8, 16,
+   8, 4, 2, 1. A rung goes where the spread scores stop falling or start rising: before and after each
+   sharp corner, where the stitches can fan round it.
+2. A rung goes at each node of the line as well, never at its very start or end. A straight line of 2
+   nodes gets one rung in its middle.
+3. Going along the line, a rung less than 1 mm from the last one placed is left out.
+4. Each rung is perpendicular to the line, 1.2 times the column's width long, and is kept only when it
+   crosses each rail exactly once. It pairs the 2 points where it crosses them.
+
+A column whose rungs are all left out pairs its rails' points in order, as a column drawn with 2 rails
+and no rungs does (see Correspondence).
+
+### Lines that cross themselves
+
+Where the line crosses itself or comes back near itself, its offsets split into several curves. A line
+whose offsets split, or whose ends lie within a CSS pixel of each other, is cut in half by length, and
+each half is made on its own, the halves of a half again, at most 20 times deep. The halves' rails are
+joined end to end, and a rung pairs the first points of the second half's rails, where the halves meet.
+
+A part whose offsets still split after 20 cuts is left out, and so is a part whose offset vanishes to
+one side, where the line turns more tightly than the column is wide. `SC-W0213` counts the stretches of the line left
+out, and the rest of the column is sewn. A stretch shorter than a CSS pixel is left out at once, since
+every half of it would be too. A column with no part left has no rails, and gets `SC-E0214` and no
+stitches.
+
+### Closed lines
+
+A path closed with `Z` is a closed line, as Ink/Stitch reads it. Before its rails are made, it is rolled
+to start in the middle of its first segment whose rung, a thousandth of a CSS pixel longer than the
+column is wide, crosses the edge of the stroke exactly twice: away from where the line crosses itself
+or folds tight. An end of the rung that lies on the edge counts as a crossing, as shapely counts it. A
+line that ends where it starts, closed or drawn back to its start, then starts and
+ends in the middle of its first segment. Its points are rounded to a ten-thousandth of a CSS pixel as
+Ink/Stitch rounds them. Points that then repeat are left out.
+
+### Which lines are the rails
+
+The rails made from the line are the column's rails, and every rung pairs the points where it crosses
+them. Ink/Stitch hands the lines it makes back to its satin column as subpaths, which tells rails from
+rungs again by the rules of [Recognizing rails and rungs](#recognizing-rails-and-rungs). When a column
+is short beside its width, its rungs are longer than its rails, and with 2 rungs or more Ink/Stitch
+takes the 2 longest lines, rungs, as the rails. A line that crosses itself can make a rung meet more
+lines than a rail does. StitchCraft keeps the rails it made in both cases, `DEV-SAT-007` in the
+deviations ledger. Where 2 parts join, Ink/Stitch adds a rung across the gap and uses the points where
+it crosses the rails. Those are the first points of the second part's rails wherever the parts meet on a
+straight stretch, and StitchCraft pairs those first points. Ink/Stitch also keeps a first part whose
+offset vanishes to one side, with its other rail, where StitchCraft leaves it out with the rest.
+
+Making the rails costs work in proportion to the square of the line's number of points. A line of 1,000
+points takes up to about 35 million units of the default budget of 500 million. A plan makes a column's
+rails twice: once to sew it, and once for the element before it to end near it.
 
 ## Orientation
 

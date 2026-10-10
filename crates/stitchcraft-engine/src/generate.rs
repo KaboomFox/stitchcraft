@@ -24,13 +24,12 @@ use stitchcraft_params::{ChoiceOption, Family, StitchType, Validated, params, un
 use stitchcraft_plan::MachineProfile;
 
 use crate::common::CommonParams;
-use crate::design::{DesignSettings, Element, Path, Shape};
+use crate::design::{DesignSettings, Element, Join, Path, Shape};
 use crate::generators::manual::manual_stitch;
 use crate::generators::passes::RepeatParams;
 use crate::generators::running::{RunningParams, running_stitch};
 use crate::generators::satin::{self, SatinLengths, SatinParams, satin_stitch};
 use crate::generators::{Approach, Neighbours, Stitched, method, mm};
-use crate::normalize::satin::Shape as SatinShape;
 use crate::registry::PARAMETERS;
 
 /// The stroke methods `stroke_method` offers, in Ink/Stitch's order, which its files count on: Ink/Stitch
@@ -113,8 +112,8 @@ fn sew(
 ) -> Result<Option<Generated>, Exhausted> {
     let set = &element.params;
     let common = kept(CommonParams::from_set(set), diagnostics);
-    let (path, width) = match &element.shape {
-        Shape::Stroke { path, width, .. } => (path, *width),
+    let (path, width, join) = match &element.shape {
+        Shape::Stroke { path, width, join } => (path, *width, *join),
         Shape::Fill { .. } => {
             diagnostics.push(not_yet("This element is a fill, and this version of StitchCraft does not sew fills yet"));
             return Ok(None);
@@ -137,7 +136,7 @@ fn sew(
         diagnostics.push(Diagnostic::new(Code::SatinTooNarrow, message));
     }
     let sewn = if satin_params.satin_column && !narrow {
-        satin_column(element, path, &satin_params, lengths, neighbours, &mut rng, diagnostics, meter)?
+        satin_column(element, (path, width, join), &satin_params, lengths, neighbours, &mut rng, diagnostics, meter)?
     } else {
         stroke(element, path, lengths, &mut rng, diagnostics, meter)?
     };
@@ -171,7 +170,7 @@ fn too_narrow(path: &Path, width: Mm, settings: &DesignSettings) -> bool {
 #[allow(clippy::too_many_arguments)]
 fn satin_column(
     element: &Element,
-    path: &Path,
+    (path, width, join): (&Path, Mm, Join),
     params: &SatinParams,
     lengths: Option<Lengths>,
     neighbours: &Neighbours,
@@ -179,14 +178,7 @@ fn satin_column(
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<Option<(StitchType, Stitched)>, Exhausted> {
-    let rails = match satin::shape(path, diagnostics, meter)? {
-        None => return Ok(None),
-        Some(SatinShape::CentreLine) => {
-            diagnostics.push(not_yet("This element is a satin column drawn as its centre line, which this version of StitchCraft does not sew yet"));
-            return Ok(None);
-        }
-        Some(SatinShape::Rails(rails)) => rails,
-    };
+    let Some(rails) = satin::rails(path, width, join, diagnostics, meter)? else { return Ok(None) };
     let running = kept(RunningParams::from_set(&element.params), diagnostics);
     let (Some(Lengths { min_stitch, max_stitch, jump }), Some(running)) = (lengths, running) else { return Ok(None) };
     // The registry reads a list of 1 length or more.
@@ -240,13 +232,13 @@ fn stroke(
 /// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A fill offers
 /// nothing until fills are sewn, and neither does an element whose shape or settings cannot be read.
 pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -> Option<Approach> {
-    let Shape::Stroke { path, width, .. } = &element.shape else { return None };
+    let Shape::Stroke { path, width, join } = &element.shape else { return None };
     let params = SatinParams::from_set(&element.params).ok()?.params;
     if !params.satin_column || too_narrow(path, *width, settings) {
         return path.subpaths.first().map(|subpath| Approach::Point(subpath.start));
     }
     let meter = &mut budget.meter();
-    let SatinShape::Rails(rails) = satin::shape(path, &mut Vec::new(), meter).ok()?? else { return None };
+    let rails = satin::rails(path, *width, *join, &mut Vec::new(), meter).ok()??;
     if params.start_at_nearest_point {
         return Some(Approach::Shape(satin::sewn_rails(&rails, &params, meter).ok()?.into()));
     }

@@ -239,7 +239,7 @@ fn diag_sc_w0011_satin_columns_not_sewn_yet_are_named() {
           rail nearest the rung is used."]
     );
     assert!(shape_of(&outcome).starts_with("J L4 S"), "sewn: {}", shape_of(&outcome));
-    // The other satin methods, and a path of one subpath, the column's centre line, are not sewn yet.
+    // The other satin methods are not sewn yet.
     let e_stitch = along("e", path.clone(), &RED, &[("satin_column", "true"), ("satin_method", "e_stitch")]);
     assert_eq!(
         messages(&sewn(vec![e_stitch, line("ok", (0.0, 8.0), 10.0, &RED, &[])])),
@@ -250,12 +250,10 @@ fn diag_sc_w0011_satin_columns_not_sewn_yet_are_named() {
              skipped."
         ]
     );
-    let centre = widened(along("centre", polylines(&[LOWER]), &RED, &[("satin_column", "true")]), 3.0);
-    assert_eq!(
-        messages(&sewn(vec![centre, line("ok", (0.0, 8.0), 10.0, &RED, &[])])),
-        ["warning SC-W0011: This element is a satin column drawn as its centre line, which this version of StitchCraft does not sew \
-          yet, so it is skipped."]
-    );
+    // A path of one subpath is the column's centre line, and is sewn between rails made from it
+    // (`REQ-SAT-016`, tests/satin_centre_line.rs).
+    let centre = sewn(vec![widened(along("centre", polylines(&[LOWER]), &RED, &[("satin_column", "true")]), 3.0)]);
+    assert!(centre.diagnostics.is_empty() && shape_of(&centre).starts_with("J L4 S"), "{:?} {}", messages(&centre), shape_of(&centre));
     // Off, the same path is a stroke, sewn subpath by subpath.
     let stroke = sewn(vec![along("stroke", path, &RED, &[("satin_column", "false")])]);
     assert!(stroke.diagnostics.is_empty(), "{:?}", messages(&stroke));
@@ -337,7 +335,7 @@ proptest! {
         prop_assert_eq!(count(Code::SatinSubpathPoint), parts.len() - usable);
         match shape {
             Err(error) => prop_assert_eq!((error.code, usable), (Code::SatinWithoutRails, 0)),
-            Ok(Shape::CentreLine) => prop_assert_eq!(usable, 1),
+            Ok(Shape::CentreLine { .. }) => prop_assert_eq!(usable, 1),
             Ok(Shape::Rails(Satin { rails, pairing })) => {
                 prop_assert!(usable >= 2);
                 let lines: Vec<Vec<Point>> = parts.iter().map(|part| points(part)).collect();

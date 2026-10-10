@@ -14,7 +14,8 @@
 //! on, sewn along the same sections (`underlay`): a centre walk, a contour and a zigzag, in that order,
 //! with the needle travelling straight from each to the next, all in one run. The column starts near
 //! where the elements before it left the needle, and ends near where the next element starts (`ends`).
-//! A path of 1 subpath, sewn along its centre line, follows in M4.8.
+//! A path of 1 subpath is the column's centre line, and its rails and rungs are made from it as Ink/Stitch
+//! makes them ([`crate::normalize::centre_line`]), then recognized like any others.
 
 mod column;
 mod compensation;
@@ -25,10 +26,10 @@ mod split;
 mod underlay;
 
 use stitchcraft_core::rng::SplitMix64;
-use stitchcraft_core::{Diagnostic, Exhausted, Meter, Mm, Point};
+use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point};
 use stitchcraft_params::{ChoiceOption, Origin, StitchType, params};
 
-use crate::design::Path;
+use crate::design::{Join, Path};
 use crate::generators::satin::column::Section;
 pub(crate) use crate::generators::satin::column::{first_point, sewn_rails};
 use crate::generators::satin::compensation::Processor;
@@ -36,7 +37,8 @@ use crate::generators::satin::ends::Guides;
 use crate::generators::satin::pairs::Pair;
 use crate::generators::satin::split::Splitter;
 use crate::generators::{Neighbours, Stitched, method};
-use crate::normalize::satin::{Recognition, Satin, Shape, recognize};
+use crate::normalize::centre_line::{Made, rails_and_rungs};
+use crate::normalize::satin::{Pairing, Recognition, Satin, Shape, recognize};
 
 /// The satin methods `satin_method` offers, in Ink/Stitch's order, which its files count on: Ink/Stitch
 /// gives the parameter's default as the first one's place in this list.
@@ -67,7 +69,8 @@ params! {
         /// Sew the path as a satin column. Two of its subpaths are the rails, the column's edges, and the
         /// others are rungs across both, which say which point of one rail goes with which of the other.
         /// Without rungs, the rails' nodes pair up instead. A path of 1 subpath is the column's centre
-        /// line, which a later version sews. Off, the path is sewn as a stroke, by its `stroke_method`.
+        /// line: the column is as wide as the stroke, and turns its corners as the stroke's join does.
+        /// Off, the path is sewn as a stroke, by its `stroke_method`.
         satin_column: Toggle = "false", label "Satin column", applies STROKES_AND_SATINS;
 
         /// How the column is sewn. A satin column sews stitches straight across it, from one rail to the
@@ -246,18 +249,61 @@ params! {
     }
 }
 
-/// What a satin column's `path` is, with what recognition took by length, stood in for or left out
-/// added to `diagnostics`; `None`, with the reason added, when the path cannot be a satin column.
-pub fn shape(path: &Path, diagnostics: &mut Vec<Diagnostic>, meter: &mut Meter) -> Result<Option<Shape>, Exhausted> {
+/// A satin column's rails and what pairs them: as its `path` draws them, or made from its centre line,
+/// `width` wide with `join` at its corners (`REQ-SAT-016`). What recognition took by length, stood in for
+/// or left out is added to `diagnostics`; `None`, with the reason added, when the column has no rails.
+pub fn rails(path: &Path, width: Mm, join: Join, diagnostics: &mut Vec<Diagnostic>, meter: &mut Meter) -> Result<Option<Satin>, Exhausted> {
     let Recognition { shape, warnings } = recognize(path, meter)?;
     diagnostics.extend(warnings);
-    Ok(match shape {
-        Ok(shape) => Some(shape),
+    match shape {
+        Ok(Shape::Rails(satin)) => Ok(Some(satin)),
+        Ok(Shape::CentreLine { line, closed }) => from_centre_line(&line, closed, width, join, diagnostics, meter),
         Err(error) => {
             diagnostics.push(error);
-            None
+            Ok(None)
         }
-    })
+    }
+}
+
+/// The rails and rungs made from the centre line `line`, with `SC-W0213` for the stretches left out;
+/// `None`, with `SC-E0214`, when no part of it can be made. A column with no rungs pairs its rails' points
+/// in order, as one drawn with 2 rails does.
+fn from_centre_line(
+    line: &[Point],
+    closed: bool,
+    width: Mm,
+    join: Join,
+    diagnostics: &mut Vec<Diagnostic>,
+    meter: &mut Meter,
+) -> Result<Option<Satin>, Exhausted> {
+    let Some(Made { rails, rungs, left_out }) = rails_and_rungs(line, closed, width.get(), join, meter)? else {
+        diagnostics.push(
+            Diagnostic::new(
+                Code::SatinCentreLineFailed,
+                "This satin column is drawn as one path, and its rails cannot be made from it: the line is too short or turns too \
+                 tightly for the stroke's width.",
+            )
+            .with_fix(Fix::Hint("Draw the column with 2 rails, or make the stroke narrower.".to_string())),
+        );
+        return Ok(None);
+    };
+    if left_out > 0 {
+        let message = if left_out == 1 {
+            "1 part of this satin column drawn as one path crosses itself or turns more tightly than the column is wide, so it is left \
+             out."
+                .to_string()
+        } else {
+            format!(
+                "{left_out} parts of this satin column drawn as one path cross themselves or turn more tightly than the column is wide, \
+                 so they are left out."
+            )
+        };
+        diagnostics.push(Diagnostic::new(Code::SatinCentreLinePartsLeftOut, message).with_fix(Fix::Hint(
+            "Draw the column with 2 rails where its line crosses itself or turns more tightly than the column is wide.".to_string(),
+        )));
+    }
+    let pairing = if rungs.is_empty() { Pairing::Nodes(rails.clone()) } else { Pairing::Rungs(rungs) };
+    Ok(Some(Satin { rails, pairing }))
 }
 
 /// The lengths a satin column's stitches keep to that come from settings other than its own.

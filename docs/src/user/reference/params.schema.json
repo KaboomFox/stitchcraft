@@ -917,7 +917,7 @@
     },
     "satin_column": {
       "default": false,
-      "description": "Sew the path as a satin column. Two of its subpaths are the rails, the column's edges, and the others are rungs across both, which say which point of one rail goes with which of the other. Without rungs, the rails' nodes pair up instead. A path of 1 subpath is the column's centre line, which a later version sews. Off, the path is sewn as a stroke, by its `stroke_method`.",
+      "description": "Sew the path as a satin column. Two of its subpaths are the rails, the column's edges, and the others are rungs across both, which say which point of one rail goes with which of the other. Without rungs, the rails' nodes pair up instead. A path of 1 subpath is the column's centre line: the column is as wide as the stroke, and turns its corners as the stroke's join does. Off, the path is sewn as a stroke, by its `stroke_method`.",
       "title": "Satin column",
       "type": "boolean",
       "x-stitchcraft": {

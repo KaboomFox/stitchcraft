@@ -1,6 +1,6 @@
 # Conformance testing
 
-<!-- implements: crates/stitchcraft-testkit/src/** -->
+<!-- implements: crates/stitchcraft-testkit/src/**, crates/stitchcraft-engine/src/normalize/fixture.rs -->
 
 When behaviour is specified only by its implementation, fixes for one input break another and nobody
 can say what "correct" means. StitchCraft specifies behaviour as **requirements**, proves each with **cases**, and reports the result
@@ -93,6 +93,14 @@ files = ["golden/formats/every-command.pes", "golden/testsheets/TS-01.dst"]   # 
 
 It needs Python with pyembroidery (`STITCHCRAFT_PYTHON`, see `conformance/oracle/requirements.txt`):
 without it the case is skipped locally (⏭ in the report) and fails in CI, like every optional tool.
+
+Geometry that Ink/Stitch leaves to shapely is checked against shapely's own answers. Scripts in
+`conformance/oracle/` ask a pinned shapely, through its public API alone, about random lines: the
+nearest points of rails (`nearest.py`), offset curves (`offset.py`) and the measures that make a satin
+column's rails from its centre line (`centre_line.py`). Their answers are fixtures under
+`conformance/fixtures/geometry/`, one question to a line of text, and the engine's unit tests read them
+with a shared reader (`normalize::fixture`) and answer every question the same way. Regenerating a
+fixture needs shapely, and checking it does not.
 
 From M3, `design` cases take an SVG or JSON design and parameters, and check generator properties:
 

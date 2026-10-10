@@ -5,6 +5,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M4.9: satin columns drawn as one path are sewn between rails made from their centre line.
+  - The rails are the line offset by half the stroke's width to each side, with the stroke's join, point
+    for point as shapely offsets it for Ink/Stitch (`REQ-SAT-016`). Shapely's answers for 1,050 random
+    lines are recorded and checked (`conformance/fixtures/geometry/shapely-offset.txt`).
+  - Rungs go beside sharp corners and at nodes, 1 mm apart or more, and each is kept when it crosses
+    each rail once (`REQ-SAT-017`). A line whose offsets split is cut in half, up to 20 times.
+    `SC-W0213` counts the parts left out, and `SC-E0214` says when no rails can be made. A line closed
+    with `Z` first starts where a rung crosses the stroke's edge twice.
+  - The rails made stay the rails, where Ink/Stitch tells rails from rungs again and can take rungs for
+    rails (`DEV-SAT-007`).
+  - `SC-W0011` no longer names single-path satins: they are all sewn.
 - M4.8: a stroke's width and join, and single-path satins too narrow to stitch across.
   - The SVG adapter reads each stroke's width and join as Ink/Stitch reads them (`REQ-SVG-004`). The
     width is the inherited `stroke-width`, scaled by the average of how far the transforms stretch the 2
