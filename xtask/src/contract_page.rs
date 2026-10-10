@@ -349,6 +349,7 @@ fn compatible(kind: Kind, their_type: &str, unit: &str) -> bool {
         Kind::LengthList { .. } => matches!(their_type, "float" | "string" | "str") && unit.starts_with("mm"),
         Kind::LengthPair { .. } => their_type == "float" && unit == "mm (each side)",
         Kind::PercentPair { .. } => their_type == "float" && unit == "% (each side)",
+        Kind::PercentList { .. } => their_type == "float" && unit == "%",
         Kind::Angle => their_type == "float" && matches!(unit, "deg" | "degrees" | "°"),
         Kind::Percent { .. } => their_type == "float" && matches!(unit, "%" | "± %"),
         Kind::Count { .. } => their_type == "int",

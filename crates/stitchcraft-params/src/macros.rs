@@ -159,6 +159,9 @@ macro_rules! __param_kind {
     (PercentPair; $min:expr, $max:expr; ;) => {
         $crate::Kind::PercentPair { min: $min, max: $max }
     };
+    (PercentList; $min:expr, $max:expr; ;) => {
+        $crate::Kind::PercentList { min: $min, max: $max }
+    };
     (CountList; $min:expr, $max:expr; ;) => {
         $crate::Kind::CountList { min: $min, max: $max }
     };

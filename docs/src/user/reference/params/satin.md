@@ -122,3 +122,25 @@ percent of the spacing, longer or shorter.
 - **Accepts:** a percentage from 0 to 100
 - **Default:** `0`
 - **Ink/Stitch:** same key, meaning and default
+
+## Short stitches
+
+### `short_stitch_inset`
+
+**Short stitch inset.** How far a crowded needle point is moved in along its stitch, in percent of the stitch's width.
+On the inside of a tight curve the needle points of a rail crowd together, and the thread piles
+up there. Moving some of them in spreads them out. Points that crowd one after another take
+turns with several values separated by spaces.
+
+- **Accepts:** 1 to 16 percentages from 0 to 50, separated by spaces
+- **Default:** `15`
+- **Ink/Stitch:** same key, meaning and default
+
+### `short_stitch_distance_mm`
+
+**Short stitch distance.** How close a needle point may come to the last one left in place on its rail before it is moved
+in. 0 moves none.
+
+- **Accepts:** a length from 0 to 5 mm
+- **Default:** `0.25`
+- **Ink/Stitch:** same key, meaning and default

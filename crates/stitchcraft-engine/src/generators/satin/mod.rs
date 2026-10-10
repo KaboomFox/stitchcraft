@@ -7,15 +7,17 @@
 //! what recognition took by length, stood in for or left out is named. Then the rails are turned the way
 //! they are sewn, shortened or lengthened by push compensation and cut into sections at the rungs (the
 //! `column` module), and needle points are placed in pairs across the column along the sections (`pairs`),
-//! each pair widened by pull compensation (`compensation`), and sewn rail to rail.
+//! each pair widened by pull compensation (`compensation`). Needle points that crowd together on a rail
+//! are inset (`short`), and the pairs are sewn rail to rail.
 //!
-//! These are the top stitches as Ink/Stitch places them, and the later steps of M4 add the rest: short
-//! stitches on curves (M4.4), split stitches (M4.5) and underlays (M4.6). A path of 1 subpath, sewn along
-//! its centre line, follows in M4.8.
+//! These are the top stitches as Ink/Stitch places them, and the later steps of M4 add the rest: split
+//! stitches (M4.5) and underlays (M4.6). A path of 1 subpath, sewn along its centre line, follows in
+//! M4.8.
 
 mod column;
 mod compensation;
 mod pairs;
+mod short;
 
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Diagnostic, Exhausted, Meter};
@@ -112,6 +114,18 @@ params! {
         /// percent of the spacing, longer or shorter.
         random_zigzag_spacing_percent: Percent = "0", label "Random zigzag spacing", range (0.0, 100.0);
     }
+
+    "Short stitches" {
+        /// How far a crowded needle point is moved in along its stitch, in percent of the stitch's width.
+        /// On the inside of a tight curve the needle points of a rail crowd together, and the thread piles
+        /// up there. Moving some of them in spreads them out. Points that crowd one after another take
+        /// turns with several values separated by spaces.
+        short_stitch_inset: PercentList = "15", label "Short stitch inset", range (0.0, 50.0);
+
+        /// How close a needle point may come to the last one left in place on its rail before it is moved
+        /// in. 0 moves none.
+        short_stitch_distance_mm: Length = "0.25", label "Short stitch distance", range (0.0, 5.0);
+    }
 }
 
 /// What a satin column's `path` is, with what recognition took by length, stood in for or left out
@@ -134,7 +148,9 @@ pub fn satin_stitch(satin: &Satin, params: &SatinParams, rng: &mut SplitMix64, m
     let mut warnings = Vec::new();
     let sections = column::sections(satin, params, &mut warnings, meter)?;
     let mut processor = Processor::new(params, rng);
-    let run = pairs::pairs(&sections, params.zigzag_spacing_mm.get(), &mut processor, meter)?.into_iter().flatten().collect();
+    let placed = pairs::pairs(&sections, params.zigzag_spacing_mm.get(), &mut processor, meter)?;
+    let insets: Vec<f64> = params.short_stitch_inset.iter().map(|percent| percent / 100.0).collect();
+    let run = short::inset(placed, params.short_stitch_distance_mm.get(), &insets).into_iter().flatten().collect();
     Ok(Stitched { runs: vec![run], warnings })
 }
 

@@ -94,8 +94,8 @@ registry uses these names as its keys so files move between the tools unchanged
 | `random_split_phase` | boolean | — | false | `default` | P1 (M4) | planned |
 | `min_random_split_length_mm` | float | mm | — | `default` | P1 (M4) | planned |
 | `split_staggers` | float | — | 4 | `staggered` | P1 (M4) | planned |
-| `short_stitch_inset` | float | % | 15 | all | P1 (M4) | planned |
-| `short_stitch_distance_mm` | float | mm | 0.25 | all | P1 (M4) | planned |
+| `short_stitch_inset` | float | % | 15 | all | P1 (M4) | [registered](../user/reference/params/satin.md#short_stitch_inset) |
+| `short_stitch_distance_mm` | float | mm | 0.25 | all | P1 (M4) | [registered](../user/reference/params/satin.md#short_stitch_distance_mm) |
 | `zigzag_spacing_mm` | float | mm/cycle | 0.4 | all | P1 (M4) | [registered](../user/reference/params/satin.md#zigzag_spacing_mm) |
 | `pull_compensation_percent` | float | % (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#pull_compensation_percent) |
 | `pull_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#pull_compensation_mm) |
@@ -261,4 +261,4 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
 
-_145 parameter declarations, 36 registered in StitchCraft._
+_145 parameter declarations, 38 registered in StitchCraft._

@@ -506,6 +506,15 @@ rationale = "Satin stitches push the fabric out at a column's ends, so a column 
 milestone = "M4"
 status = "active"
 
+[[req]]
+id = "REQ-SAT-009"
+area = "satin"
+level = "L2"
+statement = "On each rail, a top stitch end closer than short_stitch_distance_mm to the last end left in place there moves in along its stitch by the next of the short_stitch_inset percentages of the stitch's width, taking turns with them. Any other end stays, and the next ends are measured from it."
+rationale = "On the inside of a tight curve, needle points crowd together and the thread piles up there. Ink/Stitch insets them this way, by default, so a file sews the same in both."
+milestone = "M4"
+status = "active"
+
 # ── Tatami fill ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

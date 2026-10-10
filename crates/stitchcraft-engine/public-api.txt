@@ -138,6 +138,8 @@ pub stitchcraft_engine::generators::satin::SatinParams::random_zigzag_spacing_pe
 pub stitchcraft_engine::generators::satin::SatinParams::reverse_rails: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::satin_column: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::satin_method: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::satin::SatinParams::short_stitch_distance_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::satin::SatinParams::short_stitch_inset: <stitchcraft_params::kinds::PercentList as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::swap_satin_rails: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::zigzag_spacing_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 impl stitchcraft_engine::generators::satin::SatinParams

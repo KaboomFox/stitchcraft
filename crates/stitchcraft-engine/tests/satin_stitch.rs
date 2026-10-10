@@ -16,7 +16,7 @@ use stitchcraft_engine::generators::satin::{SatinParams, satin_stitch};
 use stitchcraft_engine::normalize::satin::{Shape, recognize};
 use stitchcraft_params::ParamSet;
 use stitchcraft_testkit::designs::{RED, along, messages, p, planned as sewn, polylines, shape_of};
-use stitchcraft_testkit::satins::{across, gaps, ladder, quarter_ring, sewn_satin};
+use stitchcraft_testkit::satins::{NO_SHORT_STITCHES, across, gaps, ladder, quarter_ring, sewn_satin};
 
 #[test]
 fn req_sat_002_a_straight_column_is_sewn_rail_to_rail_at_the_spacing() {
@@ -111,7 +111,7 @@ fn req_sat_002_a_column_without_rungs_pairs_its_rails_nodes() {
     // The lower rail's node at 5 mm goes with the upper rail's at 15 mm: the stitches slant to it, and
     // straighten after it.
     let slanted = polylines(&[&[(0.0, 0.0), (5.0, 0.0), (20.0, 0.0)], &[(0.0, 4.0), (15.0, 4.0), (20.0, 4.0)]]);
-    let (points, warnings) = sewn_satin(&slanted, &[]);
+    let (points, warnings) = sewn_satin(&slanted, &[NO_SHORT_STITCHES]);
     assert!(warnings.is_empty(), "{warnings:?}");
     let pairs = across(&points);
     let before: Vec<&[Point; 2]> = pairs.iter().filter(|[a, _]| a.x() < 5.0 - 1e-9).collect();
@@ -125,7 +125,7 @@ fn req_sat_002_rails_of_2_nodes_are_cut_a_fifth_of_a_css_pixel_from_their_starts
     // A trapezoid: rails 10 mm and 6 mm long. Each is cut 0.2 px (0.053 mm) from its start, and past the
     // cut the pairs are at equal fractions of what is left of each rail.
     let cut = 0.2 * 25.4 / 96.0;
-    let (points, _) = sewn_satin(&polylines(&[&[(0.0, 0.0), (10.0, 0.0)], &[(2.0, 4.0), (8.0, 4.0)]]), &[]);
+    let (points, _) = sewn_satin(&polylines(&[&[(0.0, 0.0), (10.0, 0.0)], &[(2.0, 4.0), (8.0, 4.0)]]), &[NO_SHORT_STITCHES]);
     let pairs = across(&points);
     assert!(pairs.len() > 10);
     for [a, b] in &pairs[1..] {
@@ -212,7 +212,7 @@ proptest! {
         rungs in prop::collection::btree_set(1..100_u32, 0..5).prop_filter("2 rungs are a #", |rungs| rungs.len() != 2),
     ) {
         let rungs: Vec<f64> = rungs.iter().map(|&r| f64::from(r) / 100.0 * length).collect();
-        let (points, warnings) = sewn_satin(&ladder(length, width, &rungs), &[("zigzag_spacing_mm", &spacing.to_string())]);
+        let (points, warnings) = sewn_satin(&ladder(length, width, &rungs), &[("zigzag_spacing_mm", &spacing.to_string()), NO_SHORT_STITCHES]);
         prop_assert!(warnings.is_empty(), "{:?}", warnings);
         let pairs = across(&points);
         prop_assert!(

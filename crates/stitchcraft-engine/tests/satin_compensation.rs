@@ -11,7 +11,7 @@
 use proptest::prelude::*;
 use stitchcraft_core::Point;
 use stitchcraft_testkit::designs::{RED, along, p, planned, polylines};
-use stitchcraft_testkit::satins::{across, gaps, ladder, quarter_ring, sewn_satin};
+use stitchcraft_testkit::satins::{NO_SHORT_STITCHES, across, gaps, ladder, quarter_ring, sewn_satin};
 
 /// The pairs of a straight column 10 mm long and 4 mm wide, sewn with `params`, and its warnings.
 fn column(params: &[(&str, &str)]) -> (Vec<[Point; 2]>, Vec<String>) {
@@ -48,8 +48,8 @@ fn req_sat_001_pull_compensation_moves_each_end_out_along_its_stitch() {
 fn req_sat_001_on_a_slanted_column_each_end_moves_along_its_own_stitch() {
     // A trapezoid: rails 10 mm and 6 mm long, so the stitches slant, each its own way and width.
     let trapezoid = polylines(&[&[(0.0, 0.0), (10.0, 0.0)], &[(2.0, 4.0), (8.0, 4.0)]]);
-    let plain = across(&sewn_satin(&trapezoid, &[]).0);
-    let (points, _) = sewn_satin(&trapezoid, &[("pull_compensation_mm", "0.3"), ("pull_compensation_percent", "10")]);
+    let plain = across(&sewn_satin(&trapezoid, &[NO_SHORT_STITCHES]).0);
+    let (points, _) = sewn_satin(&trapezoid, &[("pull_compensation_mm", "0.3"), ("pull_compensation_percent", "10"), NO_SHORT_STITCHES]);
     let pulled = across(&points);
     assert_eq!(pulled.len(), plain.len());
     for (pair, before) in pulled.iter().zip(&plain) {
@@ -162,7 +162,7 @@ fn req_sat_007_a_seed_sews_these_stitches_from_one_version_to_the_next() {
     // Frozen: the first pairs of a quarter ring, 20 mm out and 4 mm wide, with random widths and spacing
     // and seed 11. The random values, the order they are drawn in, and where each one puts a pair along a
     // curve, all show here.
-    let random = [("random_width_increase_percent", "20"), ("random_zigzag_spacing_percent", "30"), ("random_seed", "11")];
+    let random = [("random_width_increase_percent", "20"), ("random_zigzag_spacing_percent", "30"), ("random_seed", "11"), NO_SHORT_STITCHES];
     let (points, _) = sewn_satin(&quarter_ring(20.0, 16.0), &random);
     let first: Vec<[f64; 4]> = across(&points).iter().take(6).map(|[a, b]| [a.x(), a.y(), b.x(), b.y()]).collect();
     let frozen: [[f64; 4]; 6] = [
@@ -212,6 +212,7 @@ proptest! {
             ("random_width_increase_percent", text(increase)),
             ("random_zigzag_spacing_percent", text(jitter)),
             ("random_seed", seed.to_string()),
+            (NO_SHORT_STITCHES.0, NO_SHORT_STITCHES.1.to_string()),
         ];
         let params: Vec<(&str, &str)> = params.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let (pairs, warnings) = column(&params);
