@@ -12,7 +12,7 @@ use proptest::prelude::*;
 use stitchcraft_core::{Budget, Code, ElementId, Point};
 use stitchcraft_engine::normalize::satin::{MIN_RAIL, Pairing, Recognition, Satin, Shape, recognize};
 use stitchcraft_engine::normalize::stroke::distance_to_segment;
-use stitchcraft_testkit::designs::{RED, along, line, messages, p, planned as sewn, polylines, shape_of};
+use stitchcraft_testkit::designs::{RED, along, line, messages, p, planned as sewn, polylines, shape_of, widened};
 
 /// `parts` recognized as a satin column, with the default budget.
 fn recognized(parts: &[&[(f64, f64)]]) -> Recognition {
@@ -205,8 +205,9 @@ fn diag_sc_e0201_a_satin_column_with_no_subpath_longer_than_a_point_is_not_sewn(
     assert_eq!(shape.unwrap_err().to_string(), "error SC-E0201: This satin column has no subpath longer than a point, so it has no rails.");
     assert_eq!(warnings.len(), 1, "the point is named too");
     assert_eq!(recognized(&[]).shape.unwrap_err().code, Code::SatinWithoutRails, "a path of no subpaths");
-    // Through the engine: the element is named, and the rest of the design is sewn.
-    let dot = along("dot", polylines(&[&[(3.0, 3.0)]]), &RED, &[("satin_column", "true")]);
+    // Through the engine: the element is named, and the rest of the design is sewn. Its stroke is wide, or
+    // a path of one subpath would be sewn as a stroke (`REQ-SAT-015`).
+    let dot = widened(along("dot", polylines(&[&[(3.0, 3.0)]]), &RED, &[("satin_column", "true")]), 3.0);
     let outcome = sewn(vec![dot, line("ok", (0.0, 5.0), 10.0, &RED, &[])]);
     assert_eq!(
         messages(&outcome),
@@ -249,7 +250,7 @@ fn diag_sc_w0011_satin_columns_not_sewn_yet_are_named() {
              skipped."
         ]
     );
-    let centre = along("centre", polylines(&[LOWER]), &RED, &[("satin_column", "true")]);
+    let centre = widened(along("centre", polylines(&[LOWER]), &RED, &[("satin_column", "true")]), 3.0);
     assert_eq!(
         messages(&sewn(vec![centre, line("ok", (0.0, 8.0), 10.0, &RED, &[])])),
         ["warning SC-W0011: This element is a satin column drawn as its centre line, which this version of StitchCraft does not sew \

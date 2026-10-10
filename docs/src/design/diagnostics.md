@@ -96,6 +96,7 @@ another.
 | `SC-W0209` | Warning | Satin wider than 12 mm; long stitches may snag | M4 |
 | `SC-W0210` | Warning | Satin rails without rungs have different numbers of nodes (some pair with none) | M4 |
 | `SC-W0211` | Warning | Satin push compensation too long for a rail; that rail keeps its length | M4 |
+| `SC-W0212` | Warning | Satin column drawn as one path too narrow; sewn as a stroke | M4 |
 | `SC-W0303` | Warning | Tiny ring dropped from fill region | M5 |
 | `SC-W0305` | Warning | Region too small for fill rows; outlined with running stitch instead | M5 |
 | `SC-W0307` | Warning | Region split into parts that are not connected; parts joined with trims | M5 |
@@ -119,5 +120,5 @@ another.
 | `SC-E0801` | Error | SVG could not be read (with the parser's position) | M3 |
 | `SC-W0802` | Warning | SVG feature ignored (e.g. raster image, text not converted to paths) | M3 |
 | `SC-W0803` | Warning | `.vectorcraft` file from a newer VectorCraft format version; read best-effort | M6 |
-| `SC-W0804` | Warning | Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m); the usable part is stitched | M3 |
+| `SC-W0804` | Warning | Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke's width, join or miter limit that does not read); the usable part is stitched | M3 |
 | `SC-I0805` | Info | Object left out, as the file asks (Ink/Stitch's ignore commands and `ignore_object` setting) | M3 |

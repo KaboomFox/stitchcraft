@@ -11,6 +11,7 @@ use std::f64::consts::FRAC_PI_2;
 
 use proptest::prelude::*;
 use stitchcraft_core::rng::SplitMix64;
+use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Budget, Point};
 use stitchcraft_engine::generators::Neighbours;
 use stitchcraft_engine::generators::satin::{SatinParams, satin_stitch};
@@ -125,7 +126,7 @@ fn req_sat_002_a_column_without_rungs_pairs_its_rails_nodes() {
 fn req_sat_002_rails_of_2_nodes_are_cut_a_fifth_of_a_css_pixel_from_their_starts() {
     // A trapezoid: rails 10 mm and 6 mm long. Each is cut 0.2 px (0.053 mm) from its start, and past the
     // cut the pairs are at equal fractions of what is left of each rail.
-    let cut = 0.2 * 25.4 / 96.0;
+    let cut = 0.2 * MM_PER_SVG_PX;
     let (points, _) = sewn_satin(&polylines(&[&[(0.0, 0.0), (10.0, 0.0)], &[(2.0, 4.0), (8.0, 4.0)]]), &[NO_SHORT_STITCHES]);
     let pairs = across(&points);
     assert!(pairs.len() > 10);

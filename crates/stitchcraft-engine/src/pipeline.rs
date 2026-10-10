@@ -37,7 +37,7 @@ pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanO
     let elements = design.elements();
     let mut needle = None;
     for (i, element) in elements.iter().enumerate() {
-        let neighbours = Neighbours { needle, next: elements.get(i + 1).and_then(|next| approach(next, budget)) };
+        let neighbours = Neighbours { needle, next: elements.get(i + 1).and_then(|next| approach(next, &design.settings, budget)) };
         let Generation { generated: sewn, diagnostics: said } = generate(element, &design.settings, profile, &neighbours, budget);
         diagnostics.extend(said);
         needle = sewn.as_ref().and_then(|sewn| sewn.groups.iter().rev().find_map(|group| group.last().copied())).or(needle);

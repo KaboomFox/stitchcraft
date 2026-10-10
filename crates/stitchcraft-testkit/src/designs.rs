@@ -3,7 +3,7 @@
 //! Plan assembly and finalizing are tested through the engine's entry point, `stitchcraft_engine::plan`,
 //! on designs of a few straight strokes. The helpers are shared so every case builds them the same way.
 
-use stitchcraft_core::{Budget, ElementId, Point};
+use stitchcraft_core::{Budget, ElementId, Mm, Point};
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::{PlanOutcome, plan};
 use stitchcraft_params::ParamSet;
@@ -38,10 +38,16 @@ pub fn along(id: &str, path: Path, thread: &Thread, params: &[(&str, &str)]) -> 
     Element {
         id: ElementId::new(id).unwrap(),
         name: None,
-        shape: Shape::Stroke(path),
+        shape: Shape::stroke(path),
         thread: thread.clone(),
         params: params.iter().copied().collect::<ParamSet>(),
     }
+}
+
+/// `element`, a stroke, drawn `width` millimetres wide: how wide a satin column drawn as one path is.
+pub fn widened(element: Element, width: f64) -> Element {
+    let Shape::Stroke { path, join, .. } = element.shape else { panic!("`{}` is not a stroke", element.id) };
+    Element { shape: Shape::Stroke { path, width: Mm::new(width).unwrap(), join }, ..element }
 }
 
 /// A path of open polylines, one subpath through each list of points. A list of one point is a subpath

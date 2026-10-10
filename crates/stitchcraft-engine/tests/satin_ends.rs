@@ -9,13 +9,14 @@
 // Test code may unwrap, panic and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic)]
 
+use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Budget, Point};
 use stitchcraft_engine::PlanOutcome;
-use stitchcraft_engine::design::{Element, Shape};
+use stitchcraft_engine::design::{DesignSettings, Element, Shape};
 use stitchcraft_engine::generate::approach;
 use stitchcraft_engine::generators::{Approach, Neighbours};
 use stitchcraft_plan::{Role, Stitch, StitchKind, Thread};
-use stitchcraft_testkit::designs::{BLUE, RED, along, messages, p, planned, polylines};
+use stitchcraft_testkit::designs::{BLUE, RED, along, messages, p, planned, polylines, widened};
 use stitchcraft_testkit::satins::{ladder, sewn_between, sewn_satin};
 
 /// The column 10 mm long and 6 mm wide, sewn with `params` between `neighbours`, and its warnings.
@@ -147,7 +148,7 @@ fn req_sat_014_an_end_near_the_line_s_end_changes_nothing() {
     assert!(same(&sewn, &want), "{:?}", &sewn[sewn.len() - 6..]);
     // Exactly 5 CSS pixels from the line's end is not nearer than that: a column twice as wide ends at its
     // edge.
-    let five_px = 5.0 * (25.4 / 96.0);
+    let five_px = 5.0 * MM_PER_SVG_PX;
     let (sewn, _) = sewn_between(&ladder(10.0, 2.0 * five_px, &[]), &[], &before((12.0, -1.0)));
     assert!(sewn.last().unwrap().distance(p(10.0, 0.0)) < 1e-9, "{:?}", &sewn[sewn.len() - 3..]);
 }
@@ -280,26 +281,36 @@ fn req_gen_003_elements_see_the_needle_before_and_the_next_element() {
 #[test]
 fn req_gen_003_what_an_element_offers_comes_from_its_shape_and_settings() {
     let stroke = along("s", polylines(&[&[(2.0, 3.0), (8.0, 3.0)]]), &RED, &[]);
-    assert_eq!(approach(&stroke, &Budget::DEFAULT), Some(Approach::Point(p(2.0, 3.0))));
+    assert_eq!(approach(&stroke, &DesignSettings::default(), &Budget::DEFAULT), Some(Approach::Point(p(2.0, 3.0))));
     let rails = vec![vec![p(0.0, 0.0), p(10.0, 0.0)], vec![p(0.0, 6.0), p(10.0, 6.0)]];
-    assert_eq!(approach(&satin("c", 0.0, &RED, &[]), &Budget::DEFAULT), Some(Approach::Shape(rails)));
+    assert_eq!(approach(&satin("c", 0.0, &RED, &[]), &DesignSettings::default(), &Budget::DEFAULT), Some(Approach::Shape(rails)));
     // Its rails as they are sewn: swapped, or turned.
     let swapped = vec![vec![p(0.0, 6.0), p(10.0, 6.0)], vec![p(0.0, 0.0), p(10.0, 0.0)]];
-    assert_eq!(approach(&satin("c", 0.0, &RED, &[("swap_satin_rails", "true")]), &Budget::DEFAULT), Some(Approach::Shape(swapped)));
+    assert_eq!(
+        approach(&satin("c", 0.0, &RED, &[("swap_satin_rails", "true")]), &DesignSettings::default(), &Budget::DEFAULT),
+        Some(Approach::Shape(swapped))
+    );
     let turned = vec![vec![p(10.0, 0.0), p(0.0, 0.0)], vec![p(0.0, 6.0), p(10.0, 6.0)]];
-    assert_eq!(approach(&satin("c", 0.0, &RED, &[("reverse_rails", "first")]), &Budget::DEFAULT), Some(Approach::Shape(turned)));
+    assert_eq!(
+        approach(&satin("c", 0.0, &RED, &[("reverse_rails", "first")]), &DesignSettings::default(), &Budget::DEFAULT),
+        Some(Approach::Shape(turned))
+    );
     // Not starting at its nearest point, a column offers its first rail's start, after the swap and the
     // reversal.
-    let first =
-        |params: &[(&str, &str)]| approach(&satin("c", 0.0, &RED, &[&[("start_at_nearest_point", "false")], params].concat()), &Budget::DEFAULT);
+    let first = |params: &[(&str, &str)]| {
+        approach(&satin("c", 0.0, &RED, &[&[("start_at_nearest_point", "false")], params].concat()), &DesignSettings::default(), &Budget::DEFAULT)
+    };
     assert_eq!(first(&[]), Some(Approach::Point(p(0.0, 0.0))));
     assert_eq!(first(&[("swap_satin_rails", "true")]), Some(Approach::Point(p(0.0, 6.0))));
     assert_eq!(first(&[("reverse_rails", "first")]), Some(Approach::Point(p(10.0, 0.0))));
     // A fill, a path that is no satin, unreadable settings and a spent budget offer nothing.
-    assert_eq!(approach(&as_fill(stroke), &Budget::DEFAULT), None);
+    assert_eq!(approach(&as_fill(stroke), &DesignSettings::default(), &Budget::DEFAULT), None);
+    // A column of one point, as narrow as a stroke that sets no width, is a stroke and offers that point
+    // (`REQ-SAT-015`). 3 mm wide it is a column with no rails.
     let no_rails = along("n", polylines(&[&[(0.0, 0.0)]]), &RED, &[("satin_column", "true")]);
-    assert_eq!(approach(&no_rails, &Budget::DEFAULT), None);
+    assert_eq!(approach(&no_rails, &DesignSettings::default(), &Budget::DEFAULT), Some(Approach::Point(p(0.0, 0.0))));
+    assert_eq!(approach(&widened(no_rails, 3.0), &DesignSettings::default(), &Budget::DEFAULT), None);
     let unreadable = along("u", polylines(&[&[(0.0, 0.0), (1.0, 0.0)]]), &RED, &[("satin_column", "maybe")]);
-    assert_eq!(approach(&unreadable, &Budget::DEFAULT), None);
-    assert_eq!(approach(&satin("c", 0.0, &RED, &[]), &Budget { max_stitches: 1, max_work: 1 }), None);
+    assert_eq!(approach(&unreadable, &DesignSettings::default(), &Budget::DEFAULT), None);
+    assert_eq!(approach(&satin("c", 0.0, &RED, &[]), &DesignSettings::default(), &Budget { max_stitches: 1, max_work: 1 }), None);
 }

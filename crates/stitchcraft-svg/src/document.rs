@@ -12,6 +12,10 @@
 //! `~2`, `~3`, … so that ids stay unique. The reader's own diagnostics name the SVG element:
 //! `svg:<label>`.
 //!
+//! **Strokes and settings.** A stroke's width and join come from its style ([`crate::style`]), scaled as
+//! its transforms stretch it ([`Affine::stretch`]); they shape a satin column drawn as one path. Ink/Stitch's
+//! design settings, in the file's first `<metadata>`, become the design's ([`crate::settings`]).
+//!
 //! **Ink/Stitch's own objects are not the design** ([`crate::inkstitch`]): its command symbols and their
 //! connectors, connector-tool lines and its helper paths are never stitched. Its trim and stop commands
 //! become the shape's `trim_after` and `stop_after`, and what its ignore commands and setting leave out is
@@ -32,8 +36,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 
 use roxmltree::{Document, Node, NodeId, ParsingOptions};
-use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Meter};
-use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Meter, Mm};
+use stitchcraft_engine::design::{Design, Element, Shape};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
 use svgtypes::{AspectRatio, Color, Length, LengthUnit, ViewBox};
@@ -42,7 +46,8 @@ use crate::inkstitch::{
     self, Does, Helper, IGNORE_OBJECT, INKSCAPE_NS, INKSTITCH_NS, Objects, Place, READ_ATTRIBUTES, STOP_AFTER, TRIM_AFTER, Unapplied, place,
 };
 use crate::path::{self, Seg, Sub};
-use crate::style::{Declaration, Declared, Paint, Style, rgb, without_icc};
+use crate::settings;
+use crate::style::{Declared, Paint, Style, rgb, without_icc};
 use crate::text::{self, unreadable};
 use crate::transform::{self, Affine, user_units};
 
@@ -148,7 +153,7 @@ impl Kind {
 enum Axis {
     X,
     Y,
-    /// Radii: percentages of the viewport's diagonal over √2.
+    /// Radii and stroke widths: percentages of the viewport's diagonal over √2.
     Other,
 }
 
@@ -176,6 +181,8 @@ struct Reader<'b, 'a, 'input> {
     /// Whether the file-wide notes (a style sheet, Ink/Stitch settings) have been given.
     noted_style_sheet: bool,
     noted_inkstitch: bool,
+    /// Ink/Stitch's design settings.
+    settings: settings::Found,
 }
 
 impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
@@ -196,6 +203,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             stitched_targets: BTreeSet::new(),
             noted_style_sheet: false,
             noted_inkstitch: false,
+            settings: settings::Found::default(),
         }
     }
 
@@ -256,7 +264,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             }
         }
         self.command_notes();
-        let design = Design::new(self.elements, DesignSettings::default())?;
+        let design = Design::new(self.elements, self.settings.settings)?;
         Ok(Svg { design, warnings: self.warnings })
     }
 
@@ -312,8 +320,12 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         transform::root_to_mm(width, height, view_box, aspect).map_err(|reason| unreadable(format!("The drawing's size cannot be used: {reason}.")))
     }
 
-    /// File-wide notes: a style sheet, and Ink/Stitch settings, wherever they are.
+    /// File-wide notes: a style sheet, and Ink/Stitch settings, wherever they are. Ink/Stitch's design
+    /// settings are read here too, from the first `<metadata>` element's children ([`crate::settings`]).
     fn notice(&mut self, node: Node<'a, 'input>) {
+        if let Some(message) = self.settings.visit(node, self.is_svg(node)) {
+            self.note(None, message, None);
+        }
         if !self.noted_style_sheet
             && self.is_svg(node)
             && node.tag_name().name() == "style"
@@ -349,14 +361,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         if self.own_object(node, kind, &label, &declared, &style) {
             return Ok(Context::Hidden);
         }
-        for part in ["fill", "stroke"] {
-            if style.shown()
-                && let Declaration::Unreadable(value) = declared.paint(part)
-            {
-                let message =
-                    format!("The {part} of `{label}`, \"{value}\", is not a colour StitchCraft reads; it is ignored, as a viewer ignores it.");
-                self.note(Some(&label), message, None);
-            }
+        if style.shown() {
+            self.unreadable(&label, &declared);
         }
         if style.shown() && !self.objects.on(node).is_empty() {
             self.shown_targets.insert(place(node));
@@ -411,6 +417,21 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 }
                 Ok(Context::Hidden)
             }
+        }
+    }
+
+    /// Names what an element that is shown declares and a viewer ignores because it does not read: a paint
+    /// as a feature not stitched, and the stroke's width, join and miter limit as geometry.
+    fn unreadable(&mut self, label: &str, declared: &Declared<'a, 'input>) {
+        for part in ["fill", "stroke"] {
+            if let Some(value) = declared.paint(part).unreadable() {
+                let message =
+                    format!("The {part} of `{label}`, \"{value}\", is not a colour StitchCraft reads; it is ignored, as a viewer ignores it.");
+                self.note(Some(label), message, None);
+            }
+        }
+        for (property, value, what) in declared.unreadable_stroke() {
+            self.unusable(label, format!("The {property} of `{label}`, \"{value}\", is not {what}; it is ignored, as a viewer ignores it."));
         }
     }
 
@@ -504,9 +525,17 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         }
         for (part, colour) in [("fill", fill), ("stroke", stroke)] {
             let Some(colour) = colour else { continue };
+            let shape = if part == "fill" {
+                Shape::Fill { path: path.clone(), rule: style.fill_rule }
+            } else {
+                let Some(width) = self.stroke_width(style, map) else {
+                    self.unusable(&label, format!("The stroke of `{label}` cannot be stitched: it is too wide to measure. It is left out."));
+                    continue;
+                };
+                Shape::Stroke { path: path.clone(), width, join: style.join() }
+            };
             let id = ElementId::new(format!("svg:{label}:{part}"))
                 .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The SVG reader made an element id that cannot be used: {e}.")))?;
-            let shape = if part == "fill" { Shape::Fill { path: path.clone(), rule: style.fill_rule } } else { Shape::Stroke(path.clone()) };
             self.elements.push(Element { id, name: name.clone(), shape, thread: Thread::new(colour), params: params.clone() });
             self.stitched_targets.insert(place(node));
         }
@@ -585,13 +614,24 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             return Ok(None);
         }
         let length = Length::from_str(text.trim()).map_err(|_| text)?;
+        Ok(Some(user_units(length, self.reference(axis))))
+    }
+
+    /// What a percentage along `axis` is of, in user units (SVG 1.1 § 7.10).
+    fn reference(&self, axis: Axis) -> f64 {
         let (w, h) = self.viewport;
-        let reference = match axis {
+        match axis {
             Axis::X => w,
             Axis::Y => h,
             Axis::Other => ((w * w + h * h) / 2.0).sqrt(),
-        };
-        Ok(Some(user_units(length, reference)))
+        }
+    }
+
+    /// How wide a stroke drawn with `style` under `map` is, in millimetres: its `stroke-width` in the
+    /// shape's user units, stretched as `map` stretches strokes ([`Affine::stretch`]). `None` when that is
+    /// too large to be a number.
+    fn stroke_width(&self, style: &Style<'a>, map: Affine) -> Option<Mm> {
+        Mm::new(user_units(style.stroke_width, self.reference(Axis::Other)) * map.stretch()).ok()
     }
 
     /// The colour `label`'s `part` is sewn in, if it paints. A paint server is replaced by a colour, with

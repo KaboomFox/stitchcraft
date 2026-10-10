@@ -68,6 +68,13 @@ impl Affine {
         (self.a * x + self.c * y + self.e, self.b * x + self.d * y + self.f)
     }
 
+    /// The average of how far the map stretches the x and y axes: how much wider it draws a stroke, as
+    /// Ink/Stitch measures it. Exact when the map scales both axes alike; under an uneven scale or a skew
+    /// the stroke is drawn wider one way than the other, and this is the middle way.
+    pub fn stretch(self) -> f64 {
+        (math::hypot(self.a, self.b) + math::hypot(self.c, self.d)) / 2.0
+    }
+
     /// Whether every coefficient is a finite number.
     pub fn is_finite(self) -> bool {
         [self.a, self.b, self.c, self.d, self.e, self.f].iter().all(|v| v.is_finite())
@@ -183,6 +190,18 @@ mod tests {
         assert_eq!(parse("").unwrap(), Affine::IDENTITY);
         assert!(parse("rotate(").is_err());
         assert!(parse("scale(1e308) scale(1e308)").is_err());
+    }
+
+    #[test]
+    fn a_map_stretches_strokes_by_its_average_axis() {
+        let stretch = |text: &str| parse(text).unwrap().stretch();
+        assert!((stretch("translate(7 9)") - 1.0).abs() < 1e-12, "a move stretches nothing");
+        assert!((stretch("scale(2 4)") - 3.0).abs() < 1e-12);
+        assert!((stretch("scale(-2)") - 2.0).abs() < 1e-12, "a mirror is as wide");
+        assert!((stretch("rotate(30) scale(2)") - 2.0).abs() < 1e-12);
+        // The y axis skewed to (1, 1) is √2 long; the x axis is not stretched.
+        assert!((stretch("skewX(45)") - (1.0 + 2.0_f64.sqrt()) / 2.0).abs() < 1e-12);
+        assert!((stretch("matrix(3 4 0 1 5 6)") - 3.0).abs() < 1e-12);
     }
 
     #[test]

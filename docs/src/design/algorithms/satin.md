@@ -18,7 +18,7 @@ matter most. Phase P1 (M4); the E, S and zigzag variants are P2 (M7).
 - **Rails** are the two edges. They run in the same general direction.
 - **Rungs** are short segments crossing both rails; they pin which point on rail A corresponds to which
   point on rail B, controlling the stitch angle through curves.
-- **Single-path satin**: a centre line with a width (the stroke width, or a parameter), for quick borders.
+- **Single-path satin**: a centre line whose stroke gives the width ([below](#single-path-satin)). It makes quick borders.
 
 ## Recognizing rails and rungs
 
@@ -29,8 +29,8 @@ touching. A point the two share counts once, and a rung that ends exactly on a r
 StitchCraft tells rails from rungs as Ink/Stitch does, and a file sews the same in both.
 
 1. A subpath that is one point is left out, with `SC-W0205`.
-2. With 1 subpath left, the path is the column's centre line, sewn from M4.8 on. With 2, they are the
-   rails, and their nodes pair up in place of rungs (see Correspondence). With none, the element gets
+2. With 1 subpath left, the path is the column's centre line ([below](#single-path-satin)). With 2, they
+   are the rails, and their nodes pair up in place of rungs (see Correspondence). With none, the element gets
    `SC-E0201` and no stitches.
 3. With 3 subpaths, the rails are the 2 that meet exactly 1 other subpath. With 4 or more, the rails are
    the 2 that meet more than 2 others. This step takes only subpaths longer than a tenth of a CSS pixel.
@@ -55,6 +55,25 @@ StitchCraft differs from Ink/Stitch in 2 places, `DEV-SAT-001` in the deviations
 the other, or that runs along a rail for a while, at one of its crossings. StitchCraft leaves it out.
 Ink/Stitch also counts a line of zero length among the subpaths in step 3, where StitchCraft leaves it
 out as a point.
+
+## Single-path satin
+
+A satin column drawn as one subpath is its centre line. Its stroke gives the column its width and its
+corners: the stroke's width as the transforms scale it, and its join
+([SVG input](../svg-input.md#stroke-width-and-join)).
+
+A column no wider than the design's narrowest satin stroke is too narrow to stitch across
+(`REQ-SAT-015`). That limit is `DesignSettings::min_satin_stroke_width`, Ink/Stitch's
+`min_satin_stroke_width_mm`, and it is 1 mm unless the design sets it. Such a column is sewn as the
+element's stroke settings sew a stroke, by default in running stitch. `SC-W0212` gives its width and the
+limit. As a stroke, it offers the element before it its first point.
+
+The rule counts the subpaths drawn, as Ink/Stitch counts them. A path of 2 subpaths, one of them a point,
+is never sewn as a stroke for its width. Recognition leaves the point out and reads the other subpath as a
+centre line.
+
+A wider column becomes 2 rails along its centre line from M4.9 on. Until then it is skipped, and
+`SC-W0011` says so.
 
 ## Orientation
 
@@ -288,6 +307,7 @@ end command, read from M8, would replace the needle point or the next stitch.
 | `REQ-SAT-012` | The zigzag goes through one end of each pair, the rails taking turns, and back through the others. Its insets are half the contour's when left empty, and its long stitches split into equal parts |
 | `REQ-SAT-013` | Starting at its nearest point, a column begins on the line between its rails nearest the needle, or on its outline when only that is within the jump length, and follows the line to its first stitch |
 | `REQ-SAT-014` | Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there. The column sews the first halves, then the second halves from the line's end, and stitches the end last |
+| `REQ-SAT-015` | A column drawn as one subpath whose stroke is no wider than the design's narrowest satin stroke sews as a stroke would, with `SC-W0212`. It offers its first point, as a stroke does |
 
 Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparison to tune defaults
 ([machine testing](../../plan/machine-testing.md)).
@@ -296,4 +316,4 @@ Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparis
 
 `SC-E0201`, `SC-W0202`, `SC-W0203`, `SC-W0205`, `SC-W0206` (a contour underlay too short for its insets
 keeps its length), `SC-W0207`, `SC-W0208`, `SC-W0209` (a satin wider than 12 mm risks snagging: consider
-split stitches or a fill), `SC-W0210` and `SC-W0211`.
+split stitches or a fill), `SC-W0210`, `SC-W0211` and `SC-W0212`.

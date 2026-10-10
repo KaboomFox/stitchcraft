@@ -41,17 +41,20 @@ pub struct Element {
     pub params: ParamSet,            // as the host stores them; validated against the registry when planned
 }
 
-pub struct DesignSettings {          // since M3.8; Ink/Stitch keeps them in the document, read from M8
+pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file since M4.8, its commands from M8
     pub collapse_len: Mm,            // 3 mm: same-thread moves no longer than this are sewn on, not jumped
     pub min_stitch_len: Option<Mm>,  // the design's shortest stitch, for elements that set none
     pub origin: Option<Point>,       // where the hoop's centre goes; None: the centre of the stitches
     pub stop_position: Option<Point>,// where the frame moves before each stop; None: it stays
+    pub min_satin_stroke_width: Mm,  // 1 mm: a satin column drawn as one path no wider is sewn as a stroke (M4.8)
 }
 
 pub enum Shape {
-    Stroke(Path),                         // an outline: running stitch and the other stroke methods
-    Fill { path: Path, rule: FillRule },  // an area: its boundary, and which parts are inside
+    Stroke { path: Path, width: Mm, join: Join },  // an outline: running stitch and the other stroke methods
+    Fill { path: Path, rule: FillRule },           // an area: its boundary, and which parts are inside
 }
+
+pub enum Join { Miter { limit: f64 }, Round, Bevel }   // a stroke's corners; Join::UNSET is a miter limited at 5
 
 pub struct Path { pub subpaths: Vec<Subpath> }   // in millimetres, y down
 pub struct Subpath { pub start: Point, pub segments: Vec<Segment>, pub closed: bool }
@@ -61,13 +64,18 @@ pub enum Segment { Line(Point), Quad(Point, Point), Cubic(Point, Point, Point) }
 Elements are in stitching order: the host's paint order, bottom first. Geometry stays exact, curves with
 their control points, and the generators flatten it with the tolerance their parameters give.
 
+A stroke's width and join, since M4.8, are as the host draws them: in SVG, `stroke-width` scaled by the
+transforms, and `stroke-linejoin` with `stroke-miterlimit` ([SVG input](svg-input.md#stroke-width-and-join)).
+Only a satin column drawn as one path uses them, as its width and its corners. `Shape::stroke(path)`
+makes a stroke that says nothing of either: 1 CSS pixel wide, with `Join::UNSET`.
+
 Invariants, checked by `Design::new`: element ids are unique, and every point is finite and within
-±10,000 mm, the reach of machine-file coordinates. Adapters drop what they cannot represent with a
-diagnostic of their own, so a failed check is a bug in the adapter (`SC-E0009`).
+±10,000 mm, as far as machine-file coordinates go. No stroke is narrower than 0, a miter limit is a
+finite number of at least 1, and the settings' lengths are not negative. Adapters drop what they cannot
+represent with a diagnostic of their own, so a failed check is a bug in the adapter (`SC-E0009`).
 
 Still to come, each with the step that needs it:
 
-- **satin shapes**, two rails and rungs or a centre line and a width (M4, [below](#satinshape));
 - **regions**, fills normalized into polygons with holes (M5.1, [below](#region));
 - **commands** attached to elements, start and end points and targets (M8, for Ink/Stitch's command
   symbols); trims and stops are the element parameters `trim_after` and `stop_after`, and the origin and
@@ -82,10 +90,12 @@ tolerance before booleans. Rings with area below `min_region_area` (default 0.01
 
 ### SatinShape
 
+A satin column's path is recognized, since M4.1, as one of 2 shapes (`stitchcraft_engine::normalize::satin`):
+
 ```rust,ignore
-pub enum SatinShape {
-    Rails { a: Polyline, b: Polyline, rungs: Vec<Segment> },
-    Centerline { path: Polyline, width: Mm },   // single-path satin
+pub enum Shape {
+    Rails(Satin),   // 2 rails as polylines, and what pairs their points: rungs, or the rails' nodes
+    CentreLine,     // one subpath: the stroke's width and join make its rails (M4.9)
 }
 ```
 

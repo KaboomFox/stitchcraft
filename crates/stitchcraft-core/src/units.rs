@@ -68,6 +68,9 @@ pub struct Mm(f64);
 impl Mm {
     /// Zero millimetres.
     pub const ZERO: Mm = Mm(0.0);
+    /// One SVG user unit at 96 per inch, the CSS pixel: SVG's initial stroke width, and the unit
+    /// Ink/Stitch measures its limits in.
+    pub const SVG_PX: Mm = Mm(MM_PER_SVG_PX);
 
     /// A length of `value` millimetres, or an error if `value` is not finite.
     pub fn new(value: f64) -> Result<Self, UnitError> {

@@ -24,6 +24,7 @@
 //! to cut come from the rails as drawn, and each cut is where its point lies along the compensated rail:
 //! a cut in a part taken off falls on the rail's end, and leaves its section out.
 
+use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
 
 use crate::generators::satin::SatinParams;
@@ -33,7 +34,7 @@ use crate::normalize::satin::{Pairing, Satin};
 
 /// How far along the line between a rail's 2 nodes the point is that says where to cut it, in
 /// millimetres: 0.2 CSS pixels, Ink/Stitch's.
-const NEAR_START: f64 = 0.2 * 25.4 / 96.0;
+const NEAR_START: f64 = 0.2 * MM_PER_SVG_PX;
 
 /// A section: the parts of the first and of the second rail between two neighbouring cuts.
 pub(crate) type Section = [Vec<Point>; 2];

@@ -5,6 +5,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M4.8: a stroke's width and join, and single-path satins too narrow to stitch across.
+  - The SVG adapter reads each stroke's width and join as Ink/Stitch reads them (`REQ-SVG-004`). The
+    width is the inherited `stroke-width`, scaled by the average of how far the transforms stretch the 2
+    axes. The join is `stroke-linejoin`, with `stroke-miterlimit` for a miter. A width in `%`, `em` or
+    `ex`, and a join in capitals, are read as a viewer reads them (`DEV-SVG-001`).
+  - It reads Ink/Stitch's design settings from the file's metadata: `collapse_len_mm`,
+    `min_stitch_len_mm` and `min_satin_stroke_width_mm` (`REQ-SVG-005`). Before, a file that changed
+    them was sewn with the defaults, and nothing said so.
+  - Satin columns drawn as one path and no wider than the design's `min_satin_stroke_width_mm`, 1 mm by
+    default, are sewn as strokes, as in Ink/Stitch, and `SC-W0212` says so (`REQ-SAT-015`). Wider ones
+    are still skipped with `SC-W0011` until M4.9.
 - M4.7: satin columns start and end at their nearest points, as Ink/Stitch sews them by default
   (`REQ-SAT-013`, `REQ-SAT-014`, ADR 0014).
   - Elements are generated in sewing order, each with its neighbours (`REQ-GEN-003`). It is given where

@@ -20,6 +20,7 @@
 //! drew. An end within the shortest stitch of the needle moves the needle's last point there instead of
 //! adding a stitch too short to sew, so the column's last stitch, often a top stitch, is never split.
 
+use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Diagnostic, Exhausted, Meter, Point};
 
 use crate::generators::Approach;
@@ -34,15 +35,15 @@ use crate::generators::satin::{SatinLengths, SatinParams};
 use crate::normalize::along::Along;
 use crate::normalize::near::{Look, along_to_segment, length, nearest_to_lines, nearest_to_point};
 
-/// Millimetres per CSS pixel, the unit Ink/Stitch measures these limits in.
-const MM_PER_PX: f64 = 25.4 / 96.0;
+// Ink/Stitch measures these limits in CSS pixels.
+
 /// An end nearer than this to the line's end changes nothing: 5 CSS pixels.
-const END_NEAR: f64 = 5.0 * MM_PER_PX;
+const END_NEAR: f64 = 5.0 * MM_PER_SVG_PX;
 /// Where a cut's 2 points coincide, a part whose start is nearer than this to the place is all second half:
 /// 0.1 CSS pixels.
-const START_NEAR: f64 = 0.1 * MM_PER_PX;
+const START_NEAR: f64 = 0.1 * MM_PER_SVG_PX;
 /// A cut whose 2 points are nearer than this is a point: Ink/Stitch's precision grid, 1e-5 CSS pixels.
-const SAME: f64 = 1e-5 * MM_PER_PX;
+const SAME: f64 = 1e-5 * MM_PER_SVG_PX;
 
 /// A piece of a column's run, in the order it is sewn.
 #[derive(Clone, Debug, PartialEq)]

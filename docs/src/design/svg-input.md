@@ -48,6 +48,28 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   out, as a viewer leaves it out. The insides of `<defs>`, `<symbol>`, `<marker>`, `<pattern>`,
   `<clipPath>` and `<mask>` are never drawn.
 
+## Stroke width and join
+
+A stroke's width and join give a satin column drawn as one path its width and its corners
+([single-path satin](algorithms/satin.md#single-path-satin)). Other strokes are sewn along their paths,
+however wide they are drawn. Both are read as Ink/Stitch reads them (`REQ-SVG-004`).
+
+- **Width.** The width is `stroke-width`, inherited, 1 user unit when nothing sets it. It is a length in
+  the shape's own user units, as in a viewer, and a percentage is of the viewport's diagonal over √2.
+  The transforms down to the shape scale it by the average of how far they stretch the x and y axes.
+  That is exact when they scale both axes alike. Under an uneven scale or a skew, a viewer draws the
+  stroke wider one way than the other, and the average is the middle way. The transforms scale a stroke
+  with `vector-effect: non-scaling-stroke` too, as Ink/Stitch scales it, though a viewer does not.
+- **Join.** `round` and `bevel` are read as they are named. A `miter` join is limited by
+  `stroke-miterlimit`, 4 when nothing sets it, as SVG says. Any other join, or none, is a miter limited
+  at 5, as in Ink/Stitch. SVG 2's `miter-clip` and `arcs` count as other joins.
+- **Values that do not read.** A width, join or limit that does not read is ignored, as a viewer
+  ignores it, and `SC-W0804` names it. A negative width and a limit below 1 do not read. A stroke too
+  wide to measure, such as `1e308in`, is left out with `SC-W0804`. Its fill is still sewn.
+
+Ink/Stitch reads a width in `%`, `em` or `ex` as 0, and a join written in capitals as no join at all. The
+adapter reads them as a viewer draws them (`DEV-SVG-001`).
+
 ## Ink/Stitch objects
 
 An Ink/Stitch SVG has 3 kinds of object that Ink/Stitch reads and does not sew. The adapter sews none of
@@ -65,6 +87,15 @@ them (`REQ-SVG-003`).
 not apply yet. The module docs of `crates/stitchcraft-svg/src/inkstitch.rs` describe how the adapter
 finds these objects, with the Ink/Stitch files they were read from.
 
+## Design settings
+
+Ink/Stitch keeps 3 settings for the whole design in the file's first `<metadata>` element:
+`collapse_len_mm`, `min_stitch_len_mm` and `min_satin_stroke_width_mm`. Each is an element of
+Ink/Stitch's namespace whose text is the value in millimetres, and the first of each name counts. They
+become the design's collapse length, shortest stitch and narrowest satin stroke (`REQ-SVG-005`).
+`SC-W0802` names a value that is not a number of 0 or more, and the design keeps its default. The
+defaults are in the [data model](data-model.md#engine-input-design-stitchcraft-engine).
+
 ## Reports
 
 - `SC-W0802` reports a feature that is not stitched. Text, images, clones, nested `<svg>` elements and
@@ -75,6 +106,7 @@ finds these objects, with the Ink/Stitch files they were read from.
   - a transform that does not parse, left out with its contents
   - an element that draws nothing
   - a point more than 10 m from the origin
+  - a stroke width, join or miter limit that does not read, and a stroke too wide to measure
 - `SC-E0801` refuses a file that is not SVG, or that is larger than the adapter reads.
 
 ## Text and limits
