@@ -29,6 +29,8 @@ impl stitchcraft_engine::common::CommonParams
 pub const stitchcraft_engine::common::CommonParams::GROUP: stitchcraft_params::spec::ParamGroup
 pub const stitchcraft_engine::common::CommonParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
 pub fn stitchcraft_engine::common::CommonParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
+impl stitchcraft_engine::common::CommonParams
+pub fn stitchcraft_engine::common::CommonParams::jump_length(&self, stitchcraft_core::units::Mm) -> stitchcraft_core::units::Mm
 pub mod stitchcraft_engine::design
 pub enum stitchcraft_engine::design::FillRule
 pub stitchcraft_engine::design::FillRule::EvenOdd
@@ -98,7 +100,8 @@ pub const stitchcraft_engine::generate::StrokeParams::GROUP: stitchcraft_params:
 pub const stitchcraft_engine::generate::StrokeParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
 pub fn stitchcraft_engine::generate::StrokeParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 pub const stitchcraft_engine::generate::STROKE_METHODS: &[stitchcraft_params::spec::ChoiceOption]
-pub fn stitchcraft_engine::generate::generate(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile, &stitchcraft_core::budget::Budget) -> stitchcraft_engine::generate::Generation
+pub fn stitchcraft_engine::generate::approach(&stitchcraft_engine::design::Element, &stitchcraft_core::budget::Budget) -> core::option::Option<stitchcraft_engine::generators::Approach>
+pub fn stitchcraft_engine::generate::generate(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile, &stitchcraft_engine::generators::Neighbours, &stitchcraft_core::budget::Budget) -> stitchcraft_engine::generate::Generation
 pub mod stitchcraft_engine::generators
 pub mod stitchcraft_engine::generators::manual
 pub fn stitchcraft_engine::generators::manual::manual_stitch(&stitchcraft_engine::design::Path, core::option::Option<stitchcraft_core::units::Mm>, &stitchcraft_engine::generators::passes::RepeatParams, stitchcraft_core::units::Mm, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
@@ -124,8 +127,10 @@ pub fn stitchcraft_engine::generators::running::RunningParams::from_set(&stitchc
 pub fn stitchcraft_engine::generators::running::running_stitch(&stitchcraft_engine::design::Path, &stitchcraft_engine::generators::running::RunningParams, &stitchcraft_engine::generators::passes::RepeatParams, stitchcraft_core::units::Mm, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::satin
 pub struct stitchcraft_engine::generators::satin::SatinLengths
+pub stitchcraft_engine::generators::satin::SatinLengths::jump: stitchcraft_core::units::Mm
 pub stitchcraft_engine::generators::satin::SatinLengths::max_stitch: core::option::Option<stitchcraft_core::units::Mm>
 pub stitchcraft_engine::generators::satin::SatinLengths::min_stitch: stitchcraft_core::units::Mm
+pub stitchcraft_engine::generators::satin::SatinLengths::tolerance: stitchcraft_core::units::Mm
 pub stitchcraft_engine::generators::satin::SatinLengths::travel: stitchcraft_core::units::Mm
 pub struct stitchcraft_engine::generators::satin::SatinParams
 pub stitchcraft_engine::generators::satin::SatinParams::center_walk_underlay: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
@@ -138,6 +143,7 @@ pub stitchcraft_engine::generators::satin::SatinParams::contour_underlay_inset_m
 pub stitchcraft_engine::generators::satin::SatinParams::contour_underlay_inset_percent: <stitchcraft_params::kinds::PercentPair as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::contour_underlay_stitch_length_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::contour_underlay_stitch_tolerance_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::satin::SatinParams::end_at_nearest_point: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::min_random_split_length_mm: <stitchcraft_params::kinds::OptionalLength as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::pull_compensation_mm: <stitchcraft_params::kinds::LengthPair as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::pull_compensation_percent: <stitchcraft_params::kinds::PercentPair as stitchcraft_params::kinds::ParamKind>::Value
@@ -148,12 +154,14 @@ pub stitchcraft_engine::generators::satin::SatinParams::random_width_decrease_pe
 pub stitchcraft_engine::generators::satin::SatinParams::random_width_increase_percent: <stitchcraft_params::kinds::PercentPair as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::random_zigzag_spacing_percent: <stitchcraft_params::kinds::Percent as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::reverse_rails: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::satin::SatinParams::running_stitch_position: <stitchcraft_params::kinds::Percent as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::satin_column: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::satin_method: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::short_stitch_distance_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::short_stitch_inset: <stitchcraft_params::kinds::PercentList as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::split_method: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::split_staggers: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::satin::SatinParams::start_at_nearest_point: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::swap_satin_rails: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::zigzag_spacing_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::zigzag_underlay: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
@@ -166,8 +174,14 @@ pub const stitchcraft_engine::generators::satin::SatinParams::GROUP: stitchcraft
 pub const stitchcraft_engine::generators::satin::SatinParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
 pub fn stitchcraft_engine::generators::satin::SatinParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 pub const stitchcraft_engine::generators::satin::SATIN_METHODS: &[stitchcraft_params::spec::ChoiceOption]
-pub fn stitchcraft_engine::generators::satin::satin_stitch(&stitchcraft_engine::normalize::satin::Satin, &stitchcraft_engine::generators::satin::SatinParams, stitchcraft_engine::generators::satin::SatinLengths, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::generators::satin::satin_stitch(&stitchcraft_engine::normalize::satin::Satin, &stitchcraft_engine::generators::satin::SatinParams, stitchcraft_engine::generators::satin::SatinLengths, &stitchcraft_engine::generators::Neighbours, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::generators::satin::shape(&stitchcraft_engine::design::Path, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_engine::normalize::satin::Shape>, stitchcraft_core::budget::Exhausted>
+pub enum stitchcraft_engine::generators::Approach
+pub stitchcraft_engine::generators::Approach::Point(stitchcraft_core::units::Point)
+pub stitchcraft_engine::generators::Approach::Shape(alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>)
+pub struct stitchcraft_engine::generators::Neighbours
+pub stitchcraft_engine::generators::Neighbours::needle: core::option::Option<stitchcraft_core::units::Point>
+pub stitchcraft_engine::generators::Neighbours::next: core::option::Option<stitchcraft_engine::generators::Approach>
 pub struct stitchcraft_engine::generators::Stitched
 pub stitchcraft_engine::generators::Stitched::runs: alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>
 pub stitchcraft_engine::generators::Stitched::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>

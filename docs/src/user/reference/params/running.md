@@ -23,11 +23,12 @@ first length.
 ### `running_stitch_tolerance_mm`
 
 **Curve tolerance.** How far a stitch may stray from a curve. A smaller tolerance follows curves more closely, with
-more and shorter stitches.
+more and shorter stitches. A satin column's way to its start and from its end keeps to it too.
 
 - **Accepts:** a length from 0.01 to 5 mm
 - **Default:** `0.2`
-- **Ink/Stitch:** same key, meaning and default
+- **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin
+- **Ink/Stitch:** same key; StitchCraft differs (DEV-SAT-006): A satin column's running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch's settings window shows 0.1 mm.
 
 ### `enable_random_stitch_length`
 

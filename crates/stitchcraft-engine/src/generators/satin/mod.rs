@@ -12,11 +12,13 @@
 //!
 //! These are the top stitches as Ink/Stitch places them. Before them come the underlays the element turns
 //! on, sewn along the same sections (`underlay`): a centre walk, a contour and a zigzag, in that order,
-//! with the needle travelling straight from each to the next, all in one run. A path of 1 subpath, sewn
-//! along its centre line, follows in M4.8.
+//! with the needle travelling straight from each to the next, all in one run. The column starts near
+//! where the elements before it left the needle, and ends near where the next element starts (`ends`).
+//! A path of 1 subpath, sewn along its centre line, follows in M4.8.
 
 mod column;
 mod compensation;
+mod ends;
 mod pairs;
 mod short;
 mod split;
@@ -28,9 +30,12 @@ use stitchcraft_params::{ChoiceOption, Origin, StitchType, params};
 
 use crate::design::Path;
 use crate::generators::satin::column::Section;
+pub(crate) use crate::generators::satin::column::{first_point, sewn_rails};
 use crate::generators::satin::compensation::Processor;
+use crate::generators::satin::ends::Guides;
+use crate::generators::satin::pairs::Pair;
 use crate::generators::satin::split::Splitter;
-use crate::generators::{Stitched, method};
+use crate::generators::{Neighbours, Stitched, method};
 use crate::normalize::satin::{Recognition, Satin, Shape, recognize};
 
 /// The satin methods `satin_method` offers, in Ink/Stitch's order, which its files count on: Ink/Stitch
@@ -85,6 +90,21 @@ params! {
         /// Make the second rail the first. The column starts on its first rail, and each stitch across it
         /// goes from the first rail to the second.
         swap_satin_rails: Toggle = "false", label "Swap rails";
+    }
+
+    "Start and end" {
+        /// Start near where the elements before left the needle: on the line between the rails, or on the
+        /// column's edge when only that is close, then along the line under the column to its start. It
+        /// saves a jump and a trim.
+        start_at_nearest_point: Toggle = "true", label "Start at nearest point";
+
+        /// End near where the next element starts: the column is sewn up to the end point, along the line
+        /// under it to its end, and back, and ends on its edge nearest the next element.
+        end_at_nearest_point: Toggle = "true", label "End at nearest point";
+
+        /// Where the line the needle follows to the start and to the end runs, in percent of the way from
+        /// the first rail to the second: 50 is the middle.
+        running_stitch_position: Percent = "50", label "Running stitch position", range (0.0, 100.0);
     }
 
     "Compensation" {
@@ -247,48 +267,81 @@ pub struct SatinLengths {
     pub min_stitch: Mm,
     /// The element's longest stitch, when it sets one: longer top stitches are split.
     pub max_stitch: Option<Mm>,
-    /// The longest stitch of the needle's travel between the underlays and on to the top stitches: the
-    /// first of the running stitch's lengths (`running_stitch_length_mm`).
+    /// The longest stitch of the needle's travel between the underlays and on to the top stitches, and
+    /// of the line it follows to the start and to the end: the first of the running stitch's lengths
+    /// (`running_stitch_length_mm`).
     pub travel: Mm,
+    /// How far the line to the start and to the end may stray from its pairs: the running stitch's
+    /// tolerance (`running_stitch_tolerance_mm`).
+    pub tolerance: Mm,
+    /// The element's jump length: its `min_jump_stitch_length_mm`, or the design's collapse length when it
+    /// sets none or 0. A column starts on its outline only when that is nearer the needle than this.
+    pub jump: Mm,
 }
 
 /// The satin column `satin` sewn as `params` say, with an element's stitch `lengths`, and its random
 /// variation drawn from the element's `rng`: one run of needle points, its underlays first, then its top
 /// stitches a pair across the column at a time, from the rails' starts to their ends, or from their ends
-/// after an odd centre walk.
+/// after an odd centre walk. With its `neighbours`, it starts near where the needle was left and ends near
+/// the next element, as its settings say (the `ends` module).
 pub fn satin_stitch(
     satin: &Satin,
     params: &SatinParams,
     lengths: SatinLengths,
+    neighbours: &Neighbours,
     rng: &mut SplitMix64,
     meter: &mut Meter,
 ) -> Result<Stitched, Exhausted> {
     let mut warnings = Vec::new();
     let sections = column::sections(satin, params, &mut warnings, meter)?;
-    let mut top = top_stitches(&sections, params, lengths, rng, meter)?;
-    if underlay::ends_at_end(params) {
+    let (placed, mut top) = top_stitches(&sections, params, lengths, rng, meter)?;
+    let odd = underlay::ends_at_end(params);
+    if odd {
         top.reverse();
     }
-    let mut parts = underlay::underlays(&sections, params, lengths.min_stitch.get(), &mut warnings, meter)?;
-    parts.push(top);
-    let run = underlay::join(parts, lengths.travel.get(), meter)?;
+    let layers = underlay::underlays(&sections, params, lengths.min_stitch.get(), &mut warnings, meter)?;
+    let needle = neighbours.needle.filter(|_| params.start_at_nearest_point);
+    let next = neighbours.next.as_ref().filter(|_| params.end_at_nearest_point);
+    let pieces = if needle.is_none() && next.is_none() {
+        ends::sewn(layers, top, meter)?
+    } else {
+        let guides = Guides::new(&sections, params, lengths, &mut warnings, meter)?;
+        let edges: [Vec<Point>; 2] = [placed.iter().map(|[a, _]| *a).collect(), placed.iter().map(|[_, b]| *b).collect()];
+        let outline = [edges[0].as_slice(), edges[1].as_slice()];
+        let start = match needle {
+            Some(needle) => guides.start(needle, outline, lengths.jump.get(), meter)?,
+            None => None,
+        };
+        let end = match next {
+            Some(next) => {
+                let [first, second] = column::sewn_rails(satin, params, meter)?;
+                guides.end(next, [&first, &second], outline, meter)?
+            }
+            None => None,
+        };
+        guides.pieces(layers, top, start, end, odd, meter)?
+    };
+    let run = ends::join(pieces, lengths.travel.get(), lengths.min_stitch.get(), meter)?;
     Ok(Stitched { runs: vec![run], warnings })
 }
 
 /// The top stitches along `sections`, from the rails' starts to their ends: placed, compensated and varied
-/// at random by the element's `rng`, inset where they crowd, and split where they are long.
+/// at random by the element's `rng`, inset where they crowd, and split where they are long. With them,
+/// the pairs as placed and compensated, before any inset: the ends of each pair lie on the column's
+/// compensated outline.
 fn top_stitches(
     sections: &[Section],
     params: &SatinParams,
     lengths: SatinLengths,
     rng: &mut SplitMix64,
     meter: &mut Meter,
-) -> Result<Vec<Point>, Exhausted> {
+) -> Result<(Vec<Pair>, Vec<Point>), Exhausted> {
     let placed = pairs::pairs(sections, params.zigzag_spacing_mm.get(), &mut Processor::new(params, rng), meter)?;
     let mut splitter = Splitter::new(params, lengths.max_stitch.map(Mm::get), lengths.min_stitch.get(), rng);
     let insets: Vec<f64> = params.short_stitch_inset.iter().map(|percent| percent / 100.0).collect();
     let short = short::inset(&placed, params.short_stitch_distance_mm.get(), &insets, splitter.inset_limit());
-    splitter.sew(&placed, &short, meter)
+    let stitches = splitter.sew(&placed, &short, meter)?;
+    Ok((placed, stitches))
 }
 
 #[cfg(test)]

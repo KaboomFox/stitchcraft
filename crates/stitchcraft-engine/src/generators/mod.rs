@@ -1,10 +1,15 @@
 //! Generators (pipeline stage 3): one module per stitch type, each turning a normalized shape and its
 //! typed parameters into stitches.
 //!
-//! Every generator is pure: its stitches depend only on the shape, its parameters, its hints, its seed
-//! and its budget. It charges the budget in every loop, and it reports what it changed or left out with a
-//! coded diagnostic (`docs/src/design/engine-pipeline.md` › Generate). Each generator is a function, and
-//! [`crate::generate`] sends each element to its own.
+//! Every generator is pure: its stitches depend only on the shape, its parameters, its neighbours, its
+//! seed and its budget. It charges the budget in every loop, and it reports what it changed or left out
+//! with a coded diagnostic (`docs/src/design/engine-pipeline.md` › Generate). Each generator is a
+//! function, and [`crate::generate`] sends each element to its own.
+//!
+//! Elements are generated in sewing order, and each sees its [`Neighbours`]: where the elements before it
+//! left the needle, and what the next element offers to end near, its [`Approach`]
+//! (`docs/src/design/adr/0014-generators-see-their-neighbours.md`). A satin column starts and ends by
+//! them; the other stitch types do not yet.
 
 pub mod manual;
 pub mod passes;
@@ -13,6 +18,26 @@ pub mod satin;
 
 use stitchcraft_core::{Code, Diagnostic, Point};
 use stitchcraft_params::{ChoiceOption, StitchType};
+
+/// What the next element offers the one before it to end near (Ink/Stitch's "next stitch").
+#[derive(Clone, Debug, PartialEq)]
+pub enum Approach {
+    /// It starts at this point: a stroke's first point, or a satin column's first rail's start when it
+    /// does not start at its nearest point.
+    Point(Point),
+    /// It starts at the point of these polylines nearest the needle: a satin column's rails as they are
+    /// sewn, swapped and turned, in the order the element before measures them.
+    Shape(Vec<Vec<Point>>),
+}
+
+/// An element's neighbours in sewing order (`REQ-GEN-003`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Neighbours {
+    /// The last needle point of the elements before it that sew any, whatever their thread.
+    pub needle: Option<Point>,
+    /// What the next element in the design offers to end near.
+    pub next: Option<Approach>,
+}
 
 /// The stitches of one stroke.
 #[derive(Clone, Debug, PartialEq)]

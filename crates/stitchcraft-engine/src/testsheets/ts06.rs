@@ -3,12 +3,12 @@
 //!
 //! Drawn as a design (`designed`), so the engine's satin column and its underlays sew it, with
 //! Ink/Stitch's defaults for everything else. 5 columns 6 mm wide and 30 mm tall, left to right: no
-//! underlay, a centre walk, a contour, a zigzag, and a contour with a zigzag. Each column is sewn from its
-//! top and trimmed after, so the columns stand apart.
+//! underlay, a centre walk, a contour, a zigzag, and a contour with a zigzag. Each column is sewn as drawn,
+//! from its top, not from its nearest point, and trimmed after, so the columns stand apart.
 
 use stitchcraft_plan::StitchPlan;
 
-use super::designed::Drawing;
+use super::designed::{AS_DRAWN, Drawing};
 use super::sketch::SheetError;
 use super::{RED, thread};
 
@@ -34,7 +34,7 @@ pub(super) fn build() -> Result<StitchPlan, SheetError> {
     let mut x = 0.0;
     for (name, underlays) in UNDERLAYS {
         let rails = [[(x, 0.0), (x, TALL)], [(x + WIDTH, 0.0), (x + WIDTH, TALL)]];
-        d.satin(name, rails, &red, &[underlays, &[("trim_after", "true")]].concat())?;
+        d.satin(name, rails, &red, &[underlays, &AS_DRAWN[..]].concat())?;
         x += WIDTH + GAP;
     }
     d.plan()

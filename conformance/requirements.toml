@@ -267,6 +267,15 @@ rationale = "One bad element must not cost the user the whole design."
 milestone = "M3"
 status = "active"
 
+[[req]]
+id = "REQ-GEN-003"
+area = "generators"
+level = "L2"
+statement = "Elements are generated in sewing order. Each is given the last needle point of the elements before it that sew any, whatever their thread, and what the next element offers to end near: its first point, or its shape when it starts at its own nearest point. The offer depends on the next element's shape and settings only."
+rationale = "Ink/Stitch starts and ends elements by their neighbours, so a file sews alike in both only when the engine sees them too (ADR 0014)."
+milestone = "M4"
+status = "active"
+
 # ── Running stitch family ──────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -541,6 +550,24 @@ area = "satin"
 level = "L2"
 statement = "A zigzag underlay places pairs of points across the column every half zigzag_underlay_spacing_mm, each end inset by zigzag_underlay_inset_mm and zigzag_underlay_inset_percent, which are half the contour's insets when empty. It zigzags to the column's end through one end of each pair, on either rail in turn, and back through the other ends. A stitch longer than zigzag_underlay_max_stitch_length_mm is split into equal parts no longer than it."
 rationale = "A sparse zigzag lifts the top stitches and makes a wide column look fuller. Ink/Stitch sews it this way, so a file sews the same in both."
+milestone = "M4"
+status = "active"
+
+[[req]]
+id = "REQ-SAT-013"
+area = "satin"
+level = "L2"
+statement = "With start_at_nearest_point and a needle point before it, a satin column starts at the point of the line running_stitch_position percent of the way between its rails nearest the needle, or at its compensated outline's nearest point when the line is farther than the jump length and the outline is not. From there it follows the line to its first stitch, and is sewn as before."
+rationale = "Starting where the needle is saves a jump and a trim, and the way to the first stitch is hidden under the column. Ink/Stitch starts a column this way by default, so a file sews alike in both."
+milestone = "M4"
+status = "active"
+
+[[req]]
+id = "REQ-SAT-014"
+area = "satin"
+level = "L2"
+statement = "With end_at_nearest_point and an element after it, a satin column ends at its compensated outline's point nearest the next stitch, unless that is within 5 CSS pixels of the line's end. Every part is cut where the end's cut crosses it: the column sews the first halves, follows the line to its end, sews the second halves and stitches the end last. After an odd centre walk the passes run from the column's end and from its start."
+rationale = "Ending near the next element saves a jump and a trim. Ink/Stitch ends a column this way by default, so a file sews alike in both."
 milestone = "M4"
 status = "active"
 

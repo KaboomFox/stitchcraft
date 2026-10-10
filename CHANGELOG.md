@@ -5,6 +5,23 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M4.7: satin columns start and end at their nearest points, as Ink/Stitch sews them by default
+  (`REQ-SAT-013`, `REQ-SAT-014`, ADR 0014).
+  - Elements are generated in sewing order, each with its neighbours (`REQ-GEN-003`). It is given where
+    the elements before it left the needle, whatever their thread, and what the next element offers to
+    end near.
+  - **Start** (`start_at_nearest_point`, on by default). A column starts on the line between its rails
+    at `running_stitch_position`, nearest the needle. When only its compensated outline is within the jump
+    length, it starts there. The needle then follows the line under the column to its first stitch.
+  - **End** (`end_at_nearest_point`, on by default). A column ends on its outline nearest where the next
+    element starts. Every part of it is cut in 2 there. The column sews the first halves and follows the
+    line to its end. Then it sews the second halves back towards the cut and stitches the end last.
+  - Of equally near points, a column takes the one Ink/Stitch's geometry library, shapely, takes. Its
+    answers for 1,600 random cases are recorded and checked
+    (`conformance/fixtures/geometry/shapely-nearest.txt`).
+  - A satin's `running_stitch_tolerance_mm` defaults to 0.2 mm, which Ink/Stitch sews when a file sets
+    none. Its settings window shows 0.1 mm (`DEV-SAT-006`).
+  - TS-05 and TS-06 sew each column as drawn, from its top, and their goldens are unchanged.
 - MC-3 kit: TS-05 and TS-06, the satin test sheets, drawn as designs and sewn by the engine.
   - **TS-05** sews columns 1 to 10 mm wide at zigzag spacings of 0.3, 0.4 and 0.5 mm, for the spacing
     that covers the fabric, the widest column that sews well, and how much the thread pulls a column in.

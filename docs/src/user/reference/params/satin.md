@@ -60,6 +60,36 @@ goes from the first rail to the second.
 - **Default:** `false`
 - **Ink/Stitch:** same key, meaning and default
 
+## Start and end
+
+### `start_at_nearest_point`
+
+**Start at nearest point.** Start near where the elements before left the needle: on the line between the rails, or on the
+column's edge when only that is close, then along the line under the column to its start. It
+saves a jump and a trim.
+
+- **Accepts:** true or false
+- **Default:** `true`
+- **Ink/Stitch:** same key, meaning and default
+
+### `end_at_nearest_point`
+
+**End at nearest point.** End near where the next element starts: the column is sewn up to the end point, along the line
+under it to its end, and back, and ends on its edge nearest the next element.
+
+- **Accepts:** true or false
+- **Default:** `true`
+- **Ink/Stitch:** same key, meaning and default
+
+### `running_stitch_position`
+
+**Running stitch position.** Where the line the needle follows to the start and to the end runs, in percent of the way from
+the first rail to the second: 50 is the middle.
+
+- **Accepts:** a percentage from 0 to 100
+- **Default:** `50`
+- **Ink/Stitch:** same key, meaning and default
+
 ## Compensation
 
 ### `pull_compensation_mm`

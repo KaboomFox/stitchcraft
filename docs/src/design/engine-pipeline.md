@@ -66,12 +66,14 @@ which its split stitches keep to.
 
 Rules every generator follows:
 
-- **Pure:** output depends only on (normalized shape, typed params, hints, seed, budget).
-- **Entry and exit hints, not neighbours' stitches.** The previous element's *geometry* suggests where
-  this one should start (nearest point to its exit hint); the generator never waits for another
-  element's stitches. This makes generation independent, cacheable and parallel, so large designs
-  stay fast, and honours explicit
-  start/end commands (`REQ-GEN-001`).
+- **Pure:** output depends only on (normalized shape, typed params, neighbours, seed, budget).
+- **The needle before, the next element after.** Elements are generated in sewing order
+  ([ADR 0014](adr/0014-generators-see-their-neighbours.md), `REQ-GEN-003`). Each is given the last
+  needle point of the elements before it, whatever their thread, and what the next element offers to
+  end near: its first point, or its shape when it starts at its own nearest point. The offer comes from
+  the next element's shape and settings, never its stitches, so nothing waits for a later element. A
+  satin column starts and ends by them ([satin](algorithms/satin.md#start-and-end)), and explicit
+  start and end commands will override them (`REQ-GEN-001`).
 - **Seeded randomness:** each element's generator is seeded from a hash of its id mixed with its
   `random_seed`, one of the settings every stitch type shares. The PRNG is SplitMix64 from
   `stitchcraft-core` ([determinism](determinism.md)).
@@ -208,11 +210,13 @@ It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The c
 
 ## 7. Incremental and parallel planning
 
-- **Cache:** a group is keyed by (element shape hash, params hash, hints, seed, engine version). The
+- **Cache:** a group is keyed by (element shape hash, params hash, neighbours, seed, engine version). The
   VectorCraft live effects already cache per object; the CLI and future panels reuse the same key.
-- **Parallelism (native only):** generation fans out over elements with `rayon` behind the CLI's
-  `parallel` feature; results are joined in document order, so output is identical to a sequential run.
-  The wasm plug-in stays single-threaded.
+- **Parallelism (native only):** elements are generated in sewing order, each seeing its neighbours
+  ([ADR 0014](adr/0014-generators-see-their-neighbours.md)). Reading parameters and recognizing shapes
+  depend on the element alone. That work may run in parallel with `rayon` behind the CLI's `parallel`
+  feature. Its results are joined in document order, and the output is then identical to a sequential run. The wasm
+  plug-in stays single-threaded.
 
 ## 8. Outputs
 

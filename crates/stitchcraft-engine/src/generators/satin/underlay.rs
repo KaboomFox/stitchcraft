@@ -42,27 +42,66 @@ pub(crate) fn ends_at_end(params: &SatinParams) -> bool {
     params.center_walk_underlay && params.center_walk_underlay_repeats % 2 == 1
 }
 
-/// The parts of the underlays `params` turn on, for the column cut into `sections`, in the order they are
-/// sewn: the centre walk, the contour's 2 sides and the zigzag's 2 ways, each a run of needle points. The
-/// walks keep to the element's shortest stitch, `min_stitch`, and what was changed goes to `warnings`.
+/// One underlay, as it is before an end point cuts it in 2 (the `ends` module).
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) enum Layer {
+    /// The centre walk: one way along its line, sewn `repeats` times there and back.
+    Walk { way: Vec<Point>, repeats: u32 },
+    /// The contour's 2 sides, in the order they are sewn.
+    Contour([Vec<Point>; 2]),
+    /// The zigzag's 2 ways, in the order they are sewn, with the longest stitch, when it sets one: longer
+    /// stitches are split into equal parts.
+    Zigzag { ways: [Vec<Point>; 2], longest: Option<f64> },
+}
+
+impl Layer {
+    /// Its parts, each a run of needle points, as they are sewn when nothing cuts the column.
+    pub(crate) fn parts(self, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
+        Ok(match self {
+            Layer::Walk { way, repeats } => vec![passes::sew(&way, repeats, &[], meter)?],
+            Layer::Contour(sides) => sides.into(),
+            Layer::Zigzag { ways: [there, back], longest } => vec![split_long(there, longest, meter)?, split_long(back, longest, meter)?],
+        })
+    }
+}
+
+/// The underlays `params` turn on, for the column cut into `sections`, in the order they are sewn: the
+/// centre walk, the contour and the zigzag. The walks keep to the element's shortest stitch, `min_stitch`,
+/// and what was changed goes to `warnings`.
 pub(crate) fn underlays(
     sections: &[Section],
     params: &SatinParams,
     min_stitch: f64,
     warnings: &mut Vec<Diagnostic>,
     meter: &mut Meter,
-) -> Result<Vec<Vec<Point>>, Exhausted> {
-    let mut parts = Vec::new();
+) -> Result<Vec<Layer>, Exhausted> {
+    let mut layers = Vec::new();
     if params.center_walk_underlay {
-        parts.push(centre_walk(sections, params, min_stitch, warnings, meter)?);
+        layers.push(centre_walk(sections, params, min_stitch, warnings, meter)?);
     }
     if params.contour_underlay {
-        parts.extend(contour(sections, params, min_stitch, warnings, meter)?);
+        layers.push(Layer::Contour(contour(sections, params, min_stitch, warnings, meter)?));
     }
     if params.zigzag_underlay {
-        parts.extend(zigzag(sections, params, meter)?);
+        layers.push(zigzag(sections, params, meter)?);
     }
-    Ok(parts)
+    Ok(layers)
+}
+
+/// A running stitch of `length` along the line `position` of the way from the first rail to the second
+/// (0.5 is the middle), through pairs every `tolerance` moved in until their ends meet there, within
+/// `tolerance` of the line: the centre walk's way, and the line a column follows to its start and end.
+pub(crate) fn walk_line(
+    sections: &[Section],
+    position: f64,
+    tolerance: f64,
+    length: f64,
+    min_stitch: f64,
+    meter: &mut Meter,
+) -> Result<Vec<Point>, Exhausted> {
+    let placed = pairs(sections, tolerance, &mut Processor::inset([0.0; 2], [position, 1.0 - position]), meter)?;
+    let line: Vec<Point> = placed.iter().map(|[a, _]| *a).collect();
+    along_line(&line, length, tolerance, min_stitch, meter)
 }
 
 /// `parts` sewn one after the other, the needle going straight from where each ends to where the next
@@ -85,13 +124,11 @@ fn centre_walk(
     min_stitch: f64,
     warnings: &mut Vec<Diagnostic>,
     meter: &mut Meter,
-) -> Result<Vec<Point>, Exhausted> {
+) -> Result<Layer, Exhausted> {
     let (position, tolerance) = (params.center_walk_underlay_position / 100.0, params.center_walk_underlay_stitch_tolerance_mm.get());
-    let placed = pairs(sections, tolerance, &mut Processor::inset([0.0; 2], [position, 1.0 - position]), meter)?;
-    let line: Vec<Point> = placed.iter().map(|[a, _]| *a).collect();
     let length = raised("center_walk_underlay_stitch_length_mm", params.center_walk_underlay_stitch_length_mm, min_stitch, warnings);
-    let walk = along_line(&line, length, tolerance, min_stitch, meter)?;
-    passes::sew(&walk, params.center_walk_underlay_repeats, &[], meter)
+    let way = walk_line(sections, position, tolerance, length, min_stitch, meter)?;
+    Ok(Layer::Walk { way, repeats: params.center_walk_underlay_repeats })
 }
 
 /// The contour's 2 sides, in the order they are sewn, each stopping short of the column's ends.
@@ -101,7 +138,7 @@ fn contour(
     min_stitch: f64,
     warnings: &mut Vec<Diagnostic>,
     meter: &mut Meter,
-) -> Result<Vec<Vec<Point>>, Exhausted> {
+) -> Result<[Vec<Point>; 2], Exhausted> {
     let inset = params.contour_underlay_inset_mm.map(Mm::get);
     let share = params.contour_underlay_inset_percent.map(|percent| percent / 100.0);
     let tolerance = params.contour_underlay_stitch_tolerance_mm.get();
@@ -120,7 +157,7 @@ fn contour(
     } else {
         second.reverse();
     }
-    Ok(vec![first, second])
+    Ok([first, second])
 }
 
 /// `SC-W0206`, for a contour underlay too short to stop `start` millimetres short of the column's start
@@ -135,7 +172,7 @@ fn too_short([start, end]: [f64; 2]) -> Diagnostic {
 }
 
 /// The zigzag's 2 ways: through one end of each pair, the rails taking turns, and back through the others.
-fn zigzag(sections: &[Section], params: &SatinParams, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
+fn zigzag(sections: &[Section], params: &SatinParams, meter: &mut Meter) -> Result<Layer, Exhausted> {
     let inset = params.zigzag_underlay_inset_mm.map_or(params.contour_underlay_inset_mm.map(|mm| mm.get() / 2.0), |pair| pair.map(Mm::get));
     let percent = params.zigzag_underlay_inset_percent.unwrap_or(params.contour_underlay_inset_percent.map(|percent| percent / 2.0));
     let spacing = params.zigzag_underlay_spacing_mm.get() / 2.0;
@@ -145,9 +182,13 @@ fn zigzag(sections: &[Section], params: &SatinParams, meter: &mut Meter) -> Resu
     }
     let there: Vec<Point> = placed.iter().enumerate().map(|(i, &[a, b])| if i % 2 == 0 { a } else { b }).collect();
     let back: Vec<Point> = placed.iter().enumerate().rev().map(|(i, &[a, b])| if i % 2 == 0 { b } else { a }).collect();
-    let Some(longest) = params.zigzag_underlay_max_stitch_length_mm else { return Ok(vec![there, back]) };
-    let split = |points: Vec<Point>, meter: &mut Meter| join(points.into_iter().map(|point| vec![point]).collect(), longest.get(), meter);
-    Ok(vec![split(there, meter)?, split(back, meter)?])
+    Ok(Layer::Zigzag { ways: [there, back], longest: params.zigzag_underlay_max_stitch_length_mm.map(Mm::get) })
+}
+
+/// `points` with each stitch longer than `longest`, when there is one, split into equal parts.
+pub(crate) fn split_long(points: Vec<Point>, longest: Option<f64>, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    let Some(longest) = longest else { return Ok(points) };
+    join(points.into_iter().map(|point| vec![point]).collect(), longest, meter)
 }
 
 #[cfg(test)]

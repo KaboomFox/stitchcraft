@@ -6,6 +6,7 @@
 //! Ink/Stitch's names and defaults, which are the interoperability contract
 //! (`conformance/inkstitch-params.toml`; `cargo xtask docs --check` compares the two).
 
+use stitchcraft_core::Mm;
 use stitchcraft_params::{Origin, StitchType, params};
 
 use crate::locks::{LOCKS, SIZED_IN_MM, SIZED_IN_PERCENT};
@@ -110,6 +111,16 @@ params! {
         /// widths and spacing. The same seed gives the same stitches, another seed others. Empty, each
         /// element gets its own.
         random_seed: Seed = "", label "Random seed", applies RANDOMIZED;
+    }
+}
+
+impl CommonParams {
+    /// The element's jump length: its `min_jump_stitch_length_mm`, or `collapse_len`, the design's, when it
+    /// sets none. A setting of 0 or less is none, as in Ink/Stitch: `stitchcraft_params` reads an optional
+    /// length that way. Assembly sews on across moves no longer than this, and a satin column chooses where
+    /// it starts by it.
+    pub fn jump_length(&self, collapse_len: Mm) -> Mm {
+        self.min_jump_stitch_length_mm.unwrap_or(collapse_len)
     }
 }
 

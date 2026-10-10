@@ -5,6 +5,10 @@
 Strokes follow a path. Shape: `StrokePath` (an ordered list of polylines, corners marked, from the
 normalizer). Phase P1 (M3) unless noted.
 
+A stroke starts where it is drawn and ends where it is drawn, as in Ink/Stitch. Its generator is given its
+neighbours, as every generator is ([ADR 0014](../adr/0014-generators-see-their-neighbours.md)), and a
+stroke sews the same whatever they are. The column before a stroke ends near the stroke's first point.
+
 ## Running stitch
 
 The workhorse: outlines, details, travel, underlay.

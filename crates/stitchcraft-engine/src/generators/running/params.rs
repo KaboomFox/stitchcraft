@@ -1,13 +1,14 @@
 //! The running stitch's parameters, declared once with Ink/Stitch's keys and defaults, which are the
 //! interoperability contract (`conformance/inkstitch-params.toml`; `cargo xtask docs --check` compares the
 //! two). Ripple stitch (M10) sews each of its lines with the same settings. The stitches that join a satin
-//! column's underlays are no longer than the running stitch's length, which Ink/Stitch stores under the
-//! same key.
+//! column's underlays are no longer than the running stitch's length, and its way to its start and from
+//! its end keeps to the running stitch's length and tolerance, which Ink/Stitch stores under the same keys.
 
-use stitchcraft_params::{StitchType, params};
+use stitchcraft_params::{Origin, StitchType, params};
 
-/// The stitch types that sew stitches of the running stitch's length: running and ripple stitch along
-/// their lines, and satin columns, whatever their method, between their underlays.
+/// The stitch types that sew stitches of the running stitch's length and tolerance: running and ripple
+/// stitch along their lines, and satin columns, whatever their method, between their underlays and on
+/// their way to their start and from their end.
 const RUNS: &[StitchType] = &[
     StitchType::RunningStitch,
     StitchType::RippleStitch,
@@ -29,8 +30,9 @@ params! {
         running_stitch_length_mm: LengthList = "2.5", label "Stitch length", range (0.1, 25.0), applies RUNS;
 
         /// How far a stitch may stray from a curve. A smaller tolerance follows curves more closely, with
-        /// more and shorter stitches.
-        running_stitch_tolerance_mm: Length = "0.2", label "Curve tolerance", range (0.01, 5.0);
+        /// more and shorter stitches. A satin column's way to its start and from its end keeps to it too.
+        running_stitch_tolerance_mm: Length = "0.2", label "Curve tolerance", range (0.01, 5.0), applies RUNS,
+            origin Origin::InkStitchDeviates { deviation: "DEV-SAT-006" };
 
         /// Vary the stitch lengths at random instead of spreading them evenly. Lines sewn close together
         /// then do not line their needle holes up, which avoids moiré patterns.

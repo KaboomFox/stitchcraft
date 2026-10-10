@@ -78,12 +78,10 @@ impl Group<'_> {
     }
 
     /// Whether the needle may sew straight on from this group to a point `distance` away: no forced
-    /// locks, and no farther than the element's `min_jump_stitch_length_mm` or else the design's collapse
-    /// length. A setting of 0 or less is read as not set, as in Ink/Stitch (`stitchcraft_params` reads
-    /// an optional length that way).
+    /// locks, and no farther than the element's jump length ([`jump_length`](crate::common::CommonParams::jump_length)).
     fn sews_on(&self, distance: f64, settings: &DesignSettings) -> bool {
         let common = &self.generated.common;
-        let limit = common.min_jump_stitch_length_mm.unwrap_or(settings.collapse_len);
+        let limit = common.jump_length(settings.collapse_len);
         !common.force_lock_stitches && at_least(limit.get(), distance)
     }
 }
