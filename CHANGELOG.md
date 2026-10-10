@@ -5,6 +5,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M4.4: short stitches on curves as Ink/Stitch sews them, which has them on by default (`REQ-SAT-009`).
+  On each rail of a satin column, a needle point closer than `short_stitch_distance_mm` (0.25 mm) to the
+  last one left in place moves in along its stitch by `short_stitch_inset` (15 %) of the stitch. Points
+  that crowd one after another take turns with several insets, such as `15 30`.
 - M4.3: satin compensation and random variation, as in Ink/Stitch (`REQ-SAT-001`, `REQ-SAT-006` to
   `REQ-SAT-008`).
   - **Pull compensation** moves both ends of every stitch outward along it, by `pull_compensation_mm`

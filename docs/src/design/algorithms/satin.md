@@ -131,9 +131,16 @@ along the column as it was.
      a pair moves to lie that spacing from the one before.
 2. **Compensate width.** Each pair is widened by pull compensation as it is placed, with its random
    share (*Compensation*).
-3. **Short stitches on curves.** Where consecutive points on the inner rail are closer than
-   `short_stitch_distance_mm`, every other stitch ends `short_stitch_inset` percent of the width short of
-   that rail, so the inner edge does not pile up.
+3. **Short stitches on curves,** as in Ink/Stitch, where they are on by default. On the inside of a
+   tight curve, a rail's needle points crowd together and the thread piles up. On each rail, a point
+   closer than `short_stitch_distance_mm` to the last point left in place there moves in along its
+   stitch, by a `short_stitch_inset` percentage of the stitch's width. Points that crowd one after
+   another take turns with the percentages and start over at the first, so `15 30` insets them by 15 %,
+   30 %, 15 % and on. A point at least that far from the last one left in place stays, and the next
+   points are measured from it. A distance of 0 insets none. The points are the compensated ones, and an
+   inset moves its point toward the other end of the stitch as negative pull compensation does. Where
+   split stitches (step 4) are on, as Ink/Stitch's default split method places them, an inset is at most
+   a third of the longest stitch (M4.5).
 4. **Split long stitches.** A stitch longer than `max_stitch_length_mm` (if set) is split into equal
    pieces. `split_method` decides where the split points fall from one stitch to the next:
    `simple` (same fractions every time), `staggered` (offsets cycle every `split_staggers` stitches, like
@@ -185,6 +192,7 @@ override both (`REQ-GEN-001`). Travel between underlay passes uses `running_stit
 | `REQ-SAT-006` | A parameter with a value for each side changes only its own side: a rail's stitch ends, or the column's start or end |
 | `REQ-SAT-007` | Random widths and spacing are reproducible from the element and its seed, and stay within their ranges |
 | `REQ-SAT-008` | Push compensation shortens the rails at the column's start and end before they are cut, or lengthens them where negative. A rail it would leave shorter than half a CSS pixel keeps its length (`SC-W0211`) |
+| `REQ-SAT-009` | On each rail, a top stitch end closer than `short_stitch_distance_mm` to the last end left in place moves in along its stitch by the next `short_stitch_inset` percentage. Ends far enough from it stay |
 
 Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparison to tune defaults
 ([machine testing](../../plan/machine-testing.md)).

@@ -210,7 +210,7 @@ fn property(spec: &ParamSpec) -> Result<Json, String> {
         Kind::Toggle => json!({"type": "boolean"}),
         Kind::Choice { options } => json!({"type": "string", "enum": options.iter().map(|o| o.id).collect::<Vec<_>>()}),
         Kind::Seed => json!({"type": ["integer", "string", "null"], "minimum": 0}),
-        Kind::LengthList { min, max } => {
+        Kind::LengthList { min, max } | Kind::PercentList { min, max } => {
             json!({"type": "array", "minItems": 1, "maxItems": MAX_LIST, "items": {"type": "number", "minimum": min, "maximum": max}})
         }
         Kind::LengthPair { min, max } | Kind::PercentPair { min, max } => {
@@ -273,6 +273,7 @@ fn json_value(value: &Value) -> Json {
         Value::LengthPair(pair) => json!(pair.map(|mm| mm.get())),
         Value::PercentPair([a, b]) if a == b => json!([a]),
         Value::PercentPair(pair) => json!(pair),
+        Value::Percents(percents) => json!(percents),
         Value::Counts(counts) => json!(counts),
         Value::Text(text) => json!(text),
     }

@@ -82,7 +82,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M4.1 ✅ | Satin shape: rails and rungs told apart as Ink/Stitch tells them, diagnostics `SC-E0201`, `SC-W0202`, `SC-W0203`, `SC-W0205`, `SC-W0207` | `REQ-SAT-005` |
 | M4.2 ✅ | Correspondence and stitch placement as in Ink/Stitch (rails turned, sections at the rungs or the nodes), `SC-W0210`. Satin columns are sewn | `REQ-SAT-002` |
 | M4.3 ✅ | Pull and push compensation (symmetric/asymmetric), random width and spacing, `SC-W0211` | `REQ-SAT-001`, `REQ-SAT-006` to `REQ-SAT-008` |
-| M4.4 | Short stitches on curves | case set on tight curves |
+| M4.4 ✅ | Short stitches on curves | `REQ-SAT-009`, a case set on tight curves |
 | M4.5 | Split stitches (simple, staggered, random) | `REQ-SAT-003` |
 | M4.6 | Underlays: centre walk, contour, zigzag | `REQ-SAT-004` |
 | M4.7 | Start/end nearest point; hints | `REQ-GEN-001` for satin |

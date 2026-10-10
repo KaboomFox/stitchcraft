@@ -67,6 +67,13 @@ pub enum Kind {
         /// Largest accepted value.
         max: f64,
     },
+    /// 1 to [`MAX_LIST`] percentages, each within `min..=max`.
+    PercentList {
+        /// Smallest accepted value.
+        min: f64,
+        /// Largest accepted value.
+        max: f64,
+    },
     /// 1 to [`MAX_LIST`] whole numbers, each within `min..=max`.
     CountList {
         /// Smallest accepted value.
@@ -193,7 +200,7 @@ impl Kind {
     pub const fn unit(self) -> &'static str {
         match self {
             Kind::Length { .. } | Kind::LengthList { .. } | Kind::LengthPair { .. } => "mm",
-            Kind::Percent { .. } | Kind::PercentPair { .. } => "%",
+            Kind::Percent { .. } | Kind::PercentPair { .. } | Kind::PercentList { .. } => "%",
             Kind::Angle => "°",
             _ => "",
         }
@@ -218,6 +225,7 @@ impl Kind {
             Kind::LengthList { min, max } => format!("1 to {MAX_LIST} lengths from {min} to {max} mm, separated by spaces"),
             Kind::LengthPair { min, max } => format!("a length from {min} to {max} mm, or 2 separated by a space"),
             Kind::PercentPair { min, max } => format!("a percentage from {min} to {max}, or 2 separated by a space"),
+            Kind::PercentList { min, max } => format!("1 to {MAX_LIST} percentages from {min} to {max}, separated by spaces"),
             Kind::CountList { min, max } => format!("1 to {MAX_LIST} whole numbers from {min} to {max}, separated by spaces"),
             Kind::Text { max_bytes } => format!("text of at most {max_bytes} bytes"),
         }
@@ -236,10 +244,11 @@ mod tests {
             Kind::LengthPair { min: 0.0, max: 1.0 },
             Kind::Percent { min: 0.0, max: 1.0 },
             Kind::PercentPair { min: 0.0, max: 1.0 },
+            Kind::PercentList { min: 0.0, max: 1.0 },
             Kind::Angle,
             Kind::Count { min: 0, max: 1 },
             Kind::Toggle,
         ];
-        assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "mm", "%", "%", "°", "", ""]);
+        assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "mm", "%", "%", "%", "°", "", ""]);
     }
 }

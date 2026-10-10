@@ -37,6 +37,8 @@ pub enum Value {
     LengthPair([Mm; 2]),
     /// A percentage for each of 2 sides.
     PercentPair([f64; 2]),
+    /// Percentages.
+    Percents(Vec<f64>),
     /// Whole numbers.
     Counts(Vec<u32>),
     /// Text.
@@ -58,6 +60,7 @@ impl Value {
             Value::Lengths(lengths) => join(lengths.iter().map(|mm| mm.get().to_string()).collect()),
             Value::LengthPair(pair) => pair_text(pair.map(Mm::get)),
             Value::PercentPair(pair) => pair_text(*pair),
+            Value::Percents(percents) => join(percents.iter().map(f64::to_string).collect()),
             Value::Counts(counts) => join(counts.iter().map(u32::to_string).collect()),
             Value::Text(text) => text.clone(),
         }
@@ -117,6 +120,16 @@ impl Kind {
                 let (sides, clamped) = pair(text, percent, min, max)?;
                 Some((Value::PercentPair(sides), clamped))
             }
+            Kind::PercentList { min, max } => {
+                let mut clamped = false;
+                let mut percents = Vec::new();
+                for item in list(text)? {
+                    let (value, c) = clamp(percent(item)?, min, max);
+                    clamped |= c;
+                    percents.push(value);
+                }
+                Some((Value::Percents(percents), clamped))
+            }
             Kind::CountList { min, max } => {
                 let mut clamped = false;
                 let mut counts = Vec::new();
@@ -143,7 +156,8 @@ impl Kind {
             | Kind::Percent { min, max }
             | Kind::LengthList { min, max }
             | Kind::LengthPair { min, max }
-            | Kind::PercentPair { min, max } => format!("{min} to {max}{unit}"),
+            | Kind::PercentPair { min, max }
+            | Kind::PercentList { min, max } => format!("{min} to {max}{unit}"),
             Kind::Count { min, max } | Kind::CountList { min, max } => format!("{min} to {max}"),
             _ => String::new(),
         }
@@ -318,6 +332,10 @@ mod tests {
         assert_eq!(lengths.parse("2.5, 1 0.1"), Some((Value::Lengths(vec![mm(2.5), mm(1.0), mm(0.3)]), true)));
         assert_eq!(lengths.parse(""), None);
         assert_eq!(lengths.parse(&"1 ".repeat(17)), None);
+        let percents = Kind::PercentList { min: 0.0, max: 50.0 };
+        assert_eq!(percents.parse("15"), Some((Value::Percents(vec![15.0]), false)));
+        assert_eq!(percents.parse("10% 60, -5"), Some((Value::Percents(vec![10.0, 50.0, 0.0]), true)));
+        assert_eq!(percents.parse("10 x"), None);
         let counts = Kind::CountList { min: 0, max: 9 };
         assert_eq!(counts.parse("0 1 2"), Some((Value::Counts(vec![0, 1, 2]), false)));
         assert_eq!(counts.parse("0 99"), Some((Value::Counts(vec![0, 9]), true)));
@@ -346,7 +364,7 @@ mod tests {
 
     #[test]
     fn values_write_back_as_a_design_stores_them() {
-        for raw in ["2.5", "true", "0 1 2", "", "kept", "-0.5", "0 0.5", "10 20"] {
+        for raw in ["2.5", "true", "0 1 2", "", "kept", "-0.5", "0 0.5", "10 20", "15 7.5"] {
             let kind = match raw {
                 "2.5" => LENGTH,
                 "true" => Kind::Toggle,
@@ -354,6 +372,7 @@ mod tests {
                 "" => Kind::Seed,
                 "-0.5" | "0 0.5" => Kind::LengthPair { min: -1.0, max: 1.0 },
                 "10 20" => Kind::PercentPair { min: 0.0, max: 100.0 },
+                "15 7.5" => Kind::PercentList { min: 0.0, max: 50.0 },
                 _ => Kind::Text { max_bytes: MAX_TEXT },
             };
             assert_eq!(kind.parse(raw).unwrap().0.to_raw(), raw);

@@ -15,6 +15,10 @@ use crate::designs::{p, polylines};
 /// The id the columns are sewn as, which seeds their random variation as an element's id does.
 pub const SATIN_ID: &str = "satin";
 
+/// Short stitches off: for cases about where pairs go and how they are widened, whose needle points may
+/// crowd on a rail. Short stitches have cases of their own.
+pub const NO_SHORT_STITCHES: (&str, &str) = ("short_stitch_distance_mm", "0");
+
 /// The needle points of the satin column `path`, sewn with the parameters `params` (Ink/Stitch keys and
 /// values) as the element [`SATIN_ID`] is, and its warnings.
 pub fn sewn_satin(path: &Path, params: &[(&str, &str)]) -> (Vec<Point>, Vec<String>) {

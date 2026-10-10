@@ -35,7 +35,7 @@ open owner action from M0.5 is the code-of-conduct contact.
 | M1 | Stitch plan, Brother profile, PES/DST writers, test sheets | 🟡 M1.1–M1.10 done; closes with MC-1 | MC-1 🟡 kit out for sewing |
 | M2 | Readers, preview renderer, fuzzing | 🟢 M2.1–M2.8 done | — |
 | M3 | Running stitch family, plan assembly, SVG input | 🟡 M3.1 to M3.10 done (parameter registry, a case for every diagnostic code, SVG input, running stitch, repeats and bean stitch, manual stitch, lock stitches, plan assembly, finalize and `stitch plan`, bug-report bundles). M3 closes with MC-2. | MC-2 🟡 kit ready for sewing (TS-02B, TS-03, TS-04) |
-| M4 | Satin column | 🟡 M4.1 to M4.3 done. Satin columns are sewn, their top stitches placed and compensated as in Ink/Stitch. Short stitches, split stitches and underlays are next | MC-3 ⚪ |
+| M4 | Satin column | 🟡 M4.1 to M4.4 done. Satin columns are sewn, their top stitches placed, compensated and inset on curves as in Ink/Stitch. Split stitches and underlays are next | MC-3 ⚪ |
 | M5 | Tatami fill | ⚪ | MC-4 ⚪ |
 | M6 | VectorCraft plug-in (ABI v1), export from `.vectorcraft`, compatibility gate | ⚪ | MC-5 ⚪ |
 | M7 | Zigzag/E/S stitches, contour, meander, circular fills | ⚪ | MC-6 ⚪ |

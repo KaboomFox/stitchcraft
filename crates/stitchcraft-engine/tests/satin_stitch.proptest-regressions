@@ -6,3 +6,4 @@
 # everyone who runs the test benefits from these saved cases.
 cc 14df2ddde4a87e83e9df0cdb57d961cf85116349f1e7d9c34655ae2f57e25abd # shrinks to length = 32.06258171918267, width = 4.654645294826089, spacing = 0.2, rungs = []
 cc 086b93efcf0bd322c3dce6b4af39741e0051f5e5a7829c5f8cced8c5cadba96e # shrinks to length = 1.0, width = 0.5, spacing = 0.2, rungs = [0.0, 0.0]
+cc 8bd4a6f41e36505a9fc2a5475f7a29ca7449e920560d7e9fea8334901c3d777c # shrinks to length = 1.0, width = 0.5, spacing = 0.2, rungs = {1, 2, 3}

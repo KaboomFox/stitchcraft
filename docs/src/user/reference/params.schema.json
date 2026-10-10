@@ -623,6 +623,53 @@
         "stability": "stable"
       }
     },
+    "short_stitch_distance_mm": {
+      "default": 0.25,
+      "description": "How close a needle point may come to the last one left in place on its rail before it is moved in. 0 moves none.",
+      "maximum": 5.0,
+      "minimum": 0.0,
+      "title": "Short stitch distance",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Short stitches",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
+    "short_stitch_inset": {
+      "default": [
+        15.0
+      ],
+      "description": "How far a crowded needle point is moved in along its stitch, in percent of the stitch's width. On the inside of a tight curve the needle points of a rail crowd together, and the thread piles up there. Moving some of them in spreads them out. Points that crowd one after another take turns with several values separated by spaces.",
+      "items": {
+        "maximum": 50.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "maxItems": 16,
+      "minItems": 1,
+      "title": "Short stitch inset",
+      "type": "array",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Short stitches",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "%"
+      }
+    },
     "stop_after": {
       "default": false,
       "description": "Pause the machine after this element: to add an appliqué fabric, or to check the work.",
@@ -792,7 +839,9 @@
           "push_compensation_mm",
           "random_width_decrease_percent",
           "random_width_increase_percent",
-          "random_zigzag_spacing_percent"
+          "random_zigzag_spacing_percent",
+          "short_stitch_inset",
+          "short_stitch_distance_mm"
         ],
         "name": "SatinParams",
         "title": "Satin parameters"
