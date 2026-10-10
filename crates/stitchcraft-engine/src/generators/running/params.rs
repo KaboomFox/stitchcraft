@@ -22,12 +22,9 @@ params! {
         /// then do not line their needle holes up, which avoids moiré patterns.
         enable_random_stitch_length: Toggle = "false", label "Random stitch length";
 
-        /// How much each stitch may be longer or shorter than the stitch length, in percent of it.
+        /// How much each stitch may be longer or shorter than the stitch length, in percent of it. Where the
+        /// random lengths start is the element's `random_seed`.
         random_stitch_length_jitter_percent: Percent = "10", label "Length variation", range (0.0, 100.0),
             when enable_random_stitch_length == "true";
-
-        /// Where the random stitch lengths start: the same seed gives the same stitches, another seed others.
-        /// Empty, each element gets its own.
-        random_seed: Seed = "", label "Random seed";
     }
 }

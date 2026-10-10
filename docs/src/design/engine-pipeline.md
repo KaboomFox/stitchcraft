@@ -69,8 +69,9 @@ Rules every generator follows:
   element's stitches. This makes generation independent, cacheable and parallel, so large designs
   stay fast, and honours explicit
   start/end commands (`REQ-GEN-001`).
-- **Seeded randomness:** seed = `random_seed` parameter if set, else a hash of the element id; the PRNG
-  is SplitMix64 from `stitchcraft-core` ([determinism](determinism.md)).
+- **Seeded randomness:** each element's generator is seeded from a hash of its id mixed with its
+  `random_seed`, one of the settings every stitch type shares. The PRNG is SplitMix64 from
+  `stitchcraft-core` ([determinism](determinism.md)).
 - **Budgeted:** every inner loop charges work units. Each element has the budget's work to itself. One
   that runs out (`SC-E0004`) is skipped, and the others still plan. The stitch limit is for the whole
   design.

@@ -153,6 +153,12 @@ macro_rules! __param_kind {
     (LengthList; $min:expr, $max:expr; ;) => {
         $crate::Kind::LengthList { min: $min, max: $max }
     };
+    (LengthPair; $min:expr, $max:expr; ;) => {
+        $crate::Kind::LengthPair { min: $min, max: $max }
+    };
+    (PercentPair; $min:expr, $max:expr; ;) => {
+        $crate::Kind::PercentPair { min: $min, max: $max }
+    };
     (CountList; $min:expr, $max:expr; ;) => {
         $crate::Kind::CountList { min: $min, max: $max }
     };

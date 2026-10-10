@@ -6,7 +6,8 @@
 //! default in silence (REQ-PRM-002). Lengths accept a unit (`mm`, `in`, `pt`; millimetres without one);
 //! an optional length of 0 or less counts as empty, because Ink/Stitch reads it as "not set".
 //! angles are normalized to (−180, 180], and a seed may be any text: a number is used as it is, other
-//! text is hashed (FNV-1a), so any seed a file stores works.
+//! text is hashed (FNV-1a), so any seed a file stores works. A value for each of 2 sides is 1 value, for
+//! both, or 2 separated by a space, as Ink/Stitch writes them.
 
 use stitchcraft_core::units::{MM_PER_INCH, MM_PER_POINT};
 use stitchcraft_core::{Code, Diagnostic, Mm};
@@ -32,6 +33,10 @@ pub enum Value {
     Seed(Option<u64>),
     /// Lengths.
     Lengths(Vec<Mm>),
+    /// A length for each of 2 sides.
+    LengthPair([Mm; 2]),
+    /// A percentage for each of 2 sides.
+    PercentPair([f64; 2]),
     /// Whole numbers.
     Counts(Vec<u32>),
     /// Text.
@@ -51,6 +56,8 @@ impl Value {
             Value::Choice(id) => (*id).to_string(),
             Value::Seed(Some(seed)) => seed.to_string(),
             Value::Lengths(lengths) => join(lengths.iter().map(|mm| mm.get().to_string()).collect()),
+            Value::LengthPair(pair) => pair_text(pair.map(Mm::get)),
+            Value::PercentPair(pair) => pair_text(*pair),
             Value::Counts(counts) => join(counts.iter().map(u32::to_string).collect()),
             Value::Text(text) => text.clone(),
         }
@@ -77,7 +84,7 @@ impl Kind {
                 Some((Value::Angle(if degrees > 180.0 { degrees - 360.0 } else { degrees }), false))
             }
             Kind::Percent { min, max } => {
-                let (percent, clamped) = clamp(number(text.strip_suffix('%').unwrap_or(text))?, min, max);
+                let (percent, clamped) = clamp(percent(text)?, min, max);
                 Some((Value::Percent(percent), clamped))
             }
             Kind::Count { min, max } => {
@@ -102,6 +109,14 @@ impl Kind {
                 }
                 Some((Value::Lengths(lengths), clamped))
             }
+            Kind::LengthPair { min, max } => {
+                let ([a, b], clamped) = pair(text, length, min, max)?;
+                Some((Value::LengthPair([Mm::new(a).ok()?, Mm::new(b).ok()?]), clamped))
+            }
+            Kind::PercentPair { min, max } => {
+                let (sides, clamped) = pair(text, percent, min, max)?;
+                Some((Value::PercentPair(sides), clamped))
+            }
             Kind::CountList { min, max } => {
                 let mut clamped = false;
                 let mut counts = Vec::new();
@@ -124,7 +139,11 @@ impl Kind {
             unit => format!(" {unit}"),
         };
         match self {
-            Kind::Length { min, max, .. } | Kind::Percent { min, max } | Kind::LengthList { min, max } => format!("{min} to {max}{unit}"),
+            Kind::Length { min, max, .. }
+            | Kind::Percent { min, max }
+            | Kind::LengthList { min, max }
+            | Kind::LengthPair { min, max }
+            | Kind::PercentPair { min, max } => format!("{min} to {max}{unit}"),
             Kind::Count { min, max } | Kind::CountList { min, max } => format!("{min} to {max}"),
             _ => String::new(),
         }
@@ -158,6 +177,11 @@ fn number(text: &str) -> Option<f64> {
     value.is_finite().then_some(value)
 }
 
+/// A percentage, from a number with an optional `%`.
+fn percent(text: &str) -> Option<f64> {
+    number(text.strip_suffix('%').unwrap_or(text))
+}
+
 /// A length in millimetres, from a number with an optional unit.
 fn length(text: &str) -> Option<f64> {
     let lower = text.trim().to_ascii_lowercase();
@@ -186,6 +210,23 @@ fn clamp(value: f64, min: f64, max: f64) -> (f64, bool) {
     } else {
         (value, false)
     }
+}
+
+/// The values of a pair, each read by `read` and clamped into `min..=max`, and whether either was clamped:
+/// 1 value, for both, or 2, separated by a space or a comma.
+fn pair(text: &str, read: fn(&str) -> Option<f64>, min: f64, max: f64) -> Option<([f64; 2], bool)> {
+    let [a, b] = match list(text)?.as_slice() {
+        [both] => [*both, *both],
+        [a, b] => [*a, *b],
+        _ => return None,
+    };
+    let ((a, clamped_a), (b, clamped_b)) = (clamp(read(a)?, min, max), clamp(read(b)?, min, max));
+    Some(([a, b], clamped_a || clamped_b))
+}
+
+/// A pair as a design stores it: 1 value when the two are the same, else both.
+fn pair_text([a, b]: [f64; 2]) -> String {
+    if a == b { a.to_string() } else { format!("{a} {b}") }
 }
 
 /// The items of a list: 1 to [`MAX_LIST`] of them, separated by spaces or commas.
@@ -287,13 +328,32 @@ mod tests {
     }
 
     #[test]
+    fn pairs_are_one_value_for_both_sides_or_one_for_each() {
+        let lengths = Kind::LengthPair { min: -10.0, max: 10.0 };
+        assert_eq!(lengths.parse("0.2"), Some((Value::LengthPair([mm(0.2), mm(0.2)]), false)));
+        assert_eq!(lengths.parse(" -0.2  0.4mm "), Some((Value::LengthPair([mm(-0.2), mm(0.4)]), false)));
+        assert_eq!(lengths.parse("0.1in,12"), Some((Value::LengthPair([mm(0.1 * 25.4), mm(10.0)]), true)));
+        assert_eq!(lengths.parse("-11 0"), Some((Value::LengthPair([mm(-10.0), mm(0.0)]), true)));
+        for bad in ["", "0.2 0.4 0.6", "0.2 x", "NaN"] {
+            assert_eq!(lengths.parse(bad), None, "{bad}");
+        }
+        let percents = Kind::PercentPair { min: -100.0, max: 100.0 };
+        assert_eq!(percents.parse("10"), Some((Value::PercentPair([10.0, 10.0]), false)));
+        assert_eq!(percents.parse("0 25%"), Some((Value::PercentPair([0.0, 25.0]), false)));
+        assert_eq!(percents.parse("150 -150"), Some((Value::PercentPair([100.0, -100.0]), true)));
+        assert_eq!(percents.parse("1 2 3"), None);
+    }
+
+    #[test]
     fn values_write_back_as_a_design_stores_them() {
-        for raw in ["2.5", "true", "0 1 2", "", "kept"] {
+        for raw in ["2.5", "true", "0 1 2", "", "kept", "-0.5", "0 0.5", "10 20"] {
             let kind = match raw {
                 "2.5" => LENGTH,
                 "true" => Kind::Toggle,
                 "0 1 2" => Kind::CountList { min: 0, max: 9 },
                 "" => Kind::Seed,
+                "-0.5" | "0 0.5" => Kind::LengthPair { min: -1.0, max: 1.0 },
+                "10 20" => Kind::PercentPair { min: 0.0, max: 100.0 },
                 _ => Kind::Text { max_bytes: MAX_TEXT },
             };
             assert_eq!(kind.parse(raw).unwrap().0.to_raw(), raw);

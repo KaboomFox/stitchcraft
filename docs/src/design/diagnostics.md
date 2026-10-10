@@ -95,6 +95,7 @@ another.
 | `SC-W0208` | Warning | Satin stitches skew more than 45° from the column; add a rung here | M4 |
 | `SC-W0209` | Warning | Satin wider than 12 mm; long stitches may snag | M4 |
 | `SC-W0210` | Warning | Satin rails without rungs have different numbers of nodes (some pair with none) | M4 |
+| `SC-W0211` | Warning | Satin push compensation too long for a rail; that rail keeps its length | M4 |
 | `SC-W0303` | Warning | Tiny ring dropped from fill region | M5 |
 | `SC-W0305` | Warning | Region too small for fill rows; outlined with running stitch instead | M5 |
 | `SC-W0307` | Warning | Region split into parts that are not connected; parts joined with trims | M5 |

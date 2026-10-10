@@ -29,6 +29,10 @@ pub struct stitchcraft_params::kinds::LengthList
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::LengthList
 pub type stitchcraft_params::kinds::LengthList::Value = alloc::vec::Vec<stitchcraft_core::units::Mm>
 pub fn stitchcraft_params::kinds::LengthList::take(stitchcraft_params::value::Value) -> core::option::Option<alloc::vec::Vec<stitchcraft_core::units::Mm>>
+pub struct stitchcraft_params::kinds::LengthPair
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::LengthPair
+pub type stitchcraft_params::kinds::LengthPair::Value = [stitchcraft_core::units::Mm; 2]
+pub fn stitchcraft_params::kinds::LengthPair::take(stitchcraft_params::value::Value) -> core::option::Option<[stitchcraft_core::units::Mm; 2]>
 pub struct stitchcraft_params::kinds::OptionalLength
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::OptionalLength
 pub type stitchcraft_params::kinds::OptionalLength::Value = core::option::Option<stitchcraft_core::units::Mm>
@@ -37,6 +41,10 @@ pub struct stitchcraft_params::kinds::Percent
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Percent
 pub type stitchcraft_params::kinds::Percent::Value = f64
 pub fn stitchcraft_params::kinds::Percent::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+pub struct stitchcraft_params::kinds::PercentPair
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::PercentPair
+pub type stitchcraft_params::kinds::PercentPair::Value = [f64; 2]
+pub fn stitchcraft_params::kinds::PercentPair::take(stitchcraft_params::value::Value) -> core::option::Option<[f64; 2]>
 pub struct stitchcraft_params::kinds::Seed
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Seed
 pub type stitchcraft_params::kinds::Seed::Value = core::option::Option<u64>
@@ -70,12 +78,18 @@ pub fn stitchcraft_params::kinds::Length::take(stitchcraft_params::value::Value)
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::LengthList
 pub type stitchcraft_params::kinds::LengthList::Value = alloc::vec::Vec<stitchcraft_core::units::Mm>
 pub fn stitchcraft_params::kinds::LengthList::take(stitchcraft_params::value::Value) -> core::option::Option<alloc::vec::Vec<stitchcraft_core::units::Mm>>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::LengthPair
+pub type stitchcraft_params::kinds::LengthPair::Value = [stitchcraft_core::units::Mm; 2]
+pub fn stitchcraft_params::kinds::LengthPair::take(stitchcraft_params::value::Value) -> core::option::Option<[stitchcraft_core::units::Mm; 2]>
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::OptionalLength
 pub type stitchcraft_params::kinds::OptionalLength::Value = core::option::Option<stitchcraft_core::units::Mm>
 pub fn stitchcraft_params::kinds::OptionalLength::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<stitchcraft_core::units::Mm>>
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Percent
 pub type stitchcraft_params::kinds::Percent::Value = f64
 pub fn stitchcraft_params::kinds::Percent::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::PercentPair
+pub type stitchcraft_params::kinds::PercentPair::Value = [f64; 2]
+pub fn stitchcraft_params::kinds::PercentPair::take(stitchcraft_params::value::Value) -> core::option::Option<[f64; 2]>
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Seed
 pub type stitchcraft_params::kinds::Seed::Value = core::option::Option<u64>
 pub fn stitchcraft_params::kinds::Seed::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<u64>>
@@ -119,9 +133,15 @@ pub stitchcraft_params::spec::Kind::Length::optional: bool
 pub stitchcraft_params::spec::Kind::LengthList
 pub stitchcraft_params::spec::Kind::LengthList::max: f64
 pub stitchcraft_params::spec::Kind::LengthList::min: f64
+pub stitchcraft_params::spec::Kind::LengthPair
+pub stitchcraft_params::spec::Kind::LengthPair::max: f64
+pub stitchcraft_params::spec::Kind::LengthPair::min: f64
 pub stitchcraft_params::spec::Kind::Percent
 pub stitchcraft_params::spec::Kind::Percent::max: f64
 pub stitchcraft_params::spec::Kind::Percent::min: f64
+pub stitchcraft_params::spec::Kind::PercentPair
+pub stitchcraft_params::spec::Kind::PercentPair::max: f64
+pub stitchcraft_params::spec::Kind::PercentPair::min: f64
 pub stitchcraft_params::spec::Kind::Seed
 pub stitchcraft_params::spec::Kind::Text
 pub stitchcraft_params::spec::Kind::Text::max_bytes: usize
@@ -209,8 +229,10 @@ pub stitchcraft_params::value::Value::Choice(&'static str)
 pub stitchcraft_params::value::Value::Count(u32)
 pub stitchcraft_params::value::Value::Counts(alloc::vec::Vec<u32>)
 pub stitchcraft_params::value::Value::Length(core::option::Option<stitchcraft_core::units::Mm>)
+pub stitchcraft_params::value::Value::LengthPair([stitchcraft_core::units::Mm; 2])
 pub stitchcraft_params::value::Value::Lengths(alloc::vec::Vec<stitchcraft_core::units::Mm>)
 pub stitchcraft_params::value::Value::Percent(f64)
+pub stitchcraft_params::value::Value::PercentPair([f64; 2])
 pub stitchcraft_params::value::Value::Seed(core::option::Option<u64>)
 pub stitchcraft_params::value::Value::Text(alloc::string::String)
 pub stitchcraft_params::value::Value::Toggle(bool)
@@ -240,9 +262,15 @@ pub stitchcraft_params::Kind::Length::optional: bool
 pub stitchcraft_params::Kind::LengthList
 pub stitchcraft_params::Kind::LengthList::max: f64
 pub stitchcraft_params::Kind::LengthList::min: f64
+pub stitchcraft_params::Kind::LengthPair
+pub stitchcraft_params::Kind::LengthPair::max: f64
+pub stitchcraft_params::Kind::LengthPair::min: f64
 pub stitchcraft_params::Kind::Percent
 pub stitchcraft_params::Kind::Percent::max: f64
 pub stitchcraft_params::Kind::Percent::min: f64
+pub stitchcraft_params::Kind::PercentPair
+pub stitchcraft_params::Kind::PercentPair::max: f64
+pub stitchcraft_params::Kind::PercentPair::min: f64
 pub stitchcraft_params::Kind::Seed
 pub stitchcraft_params::Kind::Text
 pub stitchcraft_params::Kind::Text::max_bytes: usize
@@ -292,8 +320,10 @@ pub stitchcraft_params::Value::Choice(&'static str)
 pub stitchcraft_params::Value::Count(u32)
 pub stitchcraft_params::Value::Counts(alloc::vec::Vec<u32>)
 pub stitchcraft_params::Value::Length(core::option::Option<stitchcraft_core::units::Mm>)
+pub stitchcraft_params::Value::LengthPair([stitchcraft_core::units::Mm; 2])
 pub stitchcraft_params::Value::Lengths(alloc::vec::Vec<stitchcraft_core::units::Mm>)
 pub stitchcraft_params::Value::Percent(f64)
+pub stitchcraft_params::Value::PercentPair([f64; 2])
 pub stitchcraft_params::Value::Seed(core::option::Option<u64>)
 pub stitchcraft_params::Value::Text(alloc::string::String)
 pub stitchcraft_params::Value::Toggle(bool)
@@ -361,12 +391,18 @@ pub fn stitchcraft_params::kinds::Length::take(stitchcraft_params::value::Value)
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::LengthList
 pub type stitchcraft_params::kinds::LengthList::Value = alloc::vec::Vec<stitchcraft_core::units::Mm>
 pub fn stitchcraft_params::kinds::LengthList::take(stitchcraft_params::value::Value) -> core::option::Option<alloc::vec::Vec<stitchcraft_core::units::Mm>>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::LengthPair
+pub type stitchcraft_params::kinds::LengthPair::Value = [stitchcraft_core::units::Mm; 2]
+pub fn stitchcraft_params::kinds::LengthPair::take(stitchcraft_params::value::Value) -> core::option::Option<[stitchcraft_core::units::Mm; 2]>
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::OptionalLength
 pub type stitchcraft_params::kinds::OptionalLength::Value = core::option::Option<stitchcraft_core::units::Mm>
 pub fn stitchcraft_params::kinds::OptionalLength::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<stitchcraft_core::units::Mm>>
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Percent
 pub type stitchcraft_params::kinds::Percent::Value = f64
 pub fn stitchcraft_params::kinds::Percent::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::PercentPair
+pub type stitchcraft_params::kinds::PercentPair::Value = [f64; 2]
+pub fn stitchcraft_params::kinds::PercentPair::take(stitchcraft_params::value::Value) -> core::option::Option<[f64; 2]>
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Seed
 pub type stitchcraft_params::kinds::Seed::Value = core::option::Option<u64>
 pub fn stitchcraft_params::kinds::Seed::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<u64>>

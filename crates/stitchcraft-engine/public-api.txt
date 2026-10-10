@@ -20,6 +20,7 @@ pub stitchcraft_engine::common::CommonParams::lock_start_scale_mm: <stitchcraft_
 pub stitchcraft_engine::common::CommonParams::lock_start_scale_percent: <stitchcraft_params::kinds::Percent as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::common::CommonParams::min_jump_stitch_length_mm: <stitchcraft_params::kinds::OptionalLength as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::common::CommonParams::min_stitch_length_mm: <stitchcraft_params::kinds::OptionalLength as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::random_seed: <stitchcraft_params::kinds::Seed as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::common::CommonParams::stop_after: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::common::CommonParams::ties: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::common::CommonParams::trim_after: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
@@ -118,7 +119,6 @@ pub fn stitchcraft_engine::generators::passes::sew(&[stitchcraft_core::units::Po
 pub mod stitchcraft_engine::generators::running
 pub struct stitchcraft_engine::generators::running::RunningParams
 pub stitchcraft_engine::generators::running::RunningParams::enable_random_stitch_length: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
-pub stitchcraft_engine::generators::running::RunningParams::random_seed: <stitchcraft_params::kinds::Seed as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::running::RunningParams::random_stitch_length_jitter_percent: <stitchcraft_params::kinds::Percent as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::running::RunningParams::running_stitch_length_mm: <stitchcraft_params::kinds::LengthList as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::running::RunningParams::running_stitch_tolerance_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
@@ -129,6 +129,12 @@ pub fn stitchcraft_engine::generators::running::RunningParams::from_set(&stitchc
 pub fn stitchcraft_engine::generators::running::running_stitch(&stitchcraft_engine::design::Path, &stitchcraft_engine::generators::running::RunningParams, &stitchcraft_engine::generators::passes::RepeatParams, stitchcraft_core::units::Mm, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::satin
 pub struct stitchcraft_engine::generators::satin::SatinParams
+pub stitchcraft_engine::generators::satin::SatinParams::pull_compensation_mm: <stitchcraft_params::kinds::LengthPair as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::satin::SatinParams::pull_compensation_percent: <stitchcraft_params::kinds::PercentPair as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::satin::SatinParams::push_compensation_mm: <stitchcraft_params::kinds::LengthPair as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::satin::SatinParams::random_width_decrease_percent: <stitchcraft_params::kinds::PercentPair as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::satin::SatinParams::random_width_increase_percent: <stitchcraft_params::kinds::PercentPair as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::satin::SatinParams::random_zigzag_spacing_percent: <stitchcraft_params::kinds::Percent as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::reverse_rails: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::satin_column: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::satin::SatinParams::satin_method: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
@@ -139,7 +145,7 @@ pub const stitchcraft_engine::generators::satin::SatinParams::GROUP: stitchcraft
 pub const stitchcraft_engine::generators::satin::SatinParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
 pub fn stitchcraft_engine::generators::satin::SatinParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 pub const stitchcraft_engine::generators::satin::SATIN_METHODS: &[stitchcraft_params::spec::ChoiceOption]
-pub fn stitchcraft_engine::generators::satin::satin_stitch(&stitchcraft_engine::normalize::satin::Satin, &stitchcraft_engine::generators::satin::SatinParams, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::generators::satin::satin_stitch(&stitchcraft_engine::normalize::satin::Satin, &stitchcraft_engine::generators::satin::SatinParams, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::generators::satin::shape(&stitchcraft_engine::design::Path, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_engine::normalize::satin::Shape>, stitchcraft_core::budget::Exhausted>
 pub struct stitchcraft_engine::generators::Stitched
 pub stitchcraft_engine::generators::Stitched::runs: alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>

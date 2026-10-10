@@ -13,10 +13,16 @@
 //! first is placed as far past the section's start as the previous pair is short of the spacing from it.
 //! The column starts with a pair at its start, and ends with one at its end unless the last pair is within
 //! 0.1 mm of it.
+//!
+//! With random spacing, each step's spacing is drawn at random, at each section's start and after each
+//! pair, and a pair moves to lie that spacing from the one before. Pairs are measured from each other as
+//! the rails place them, and each is widened by pull compensation only as it goes into the column
+//! (the `compensation` module).
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use crate::generators::satin::column::Section;
+use crate::generators::satin::compensation::Processor;
 use crate::normalize::along::Along;
 use crate::normalize::stroke::distance_to_segment;
 
@@ -35,9 +41,9 @@ const MOVES: u32 = 2;
 /// The column ends with a pair at its end unless its last pair is closer to it than this, in millimetres.
 const END: f64 = 0.1;
 
-/// The pairs of needle points along `sections`, `spacing` millimetres apart, at a unit of `meter`'s work
-/// per point measured and per place a pair is tried at.
-pub(crate) fn pairs(sections: &[Section], spacing: f64, meter: &mut Meter) -> Result<Vec<Pair>, Exhausted> {
+/// The pairs of needle points along `sections`, `spacing` millimetres apart, each step and each pair as
+/// `processor` makes them, at a unit of `meter`'s work per point measured and per place a pair is tried at.
+pub(crate) fn pairs(sections: &[Section], spacing: f64, processor: &mut Processor, meter: &mut Meter) -> Result<Vec<Pair>, Exhausted> {
     let mut pairs: Vec<Pair> = Vec::new();
     let mut last: Option<Pair> = None;
     for [first, second] in sections {
@@ -47,37 +53,39 @@ pub(crate) fn pairs(sections: &[Section], spacing: f64, meter: &mut Meter) -> Re
         let mut previous = match last {
             Some(pair) => pair,
             None => {
-                pairs.push(start);
+                pairs.push(processor.widened(start));
                 start
             }
         };
         let step = spacing / a.length().max(b.length()).max(NO_LENGTH);
-        let mut ahead = (1.0 - (gap(start, previous) / spacing).min(1.0)) * step;
+        let mut times = processor.step();
+        let mut ahead = (1.0 - (gap(start, previous) / spacing).min(1.0)) * step * times;
         let (mut done, mut tries) = (0.0, 0);
         while done + ahead <= 1.0 {
             meter.charge(1)?;
             tries += 1;
             let pair = at(done + ahead);
-            let apart = gap(pair, previous);
-            if tries <= MOVES && apart > NO_LENGTH && ((spacing - apart) / spacing).abs() > OFF {
-                ahead *= spacing / apart;
+            let (apart, wanted) = (gap(pair, previous), spacing * times);
+            if tries <= MOVES && apart > NO_LENGTH && ((wanted - apart) / wanted).abs() > OFF {
+                ahead *= wanted / apart;
                 if tries == 1 {
                     ahead = ahead.min(1.0 - done);
                 }
                 continue;
             }
             done += ahead;
-            ahead = step;
+            times = processor.step();
+            ahead = step * times;
             tries = 0;
             previous = pair;
-            pairs.push(pair);
+            pairs.push(processor.widened(pair));
         }
         last = Some(previous);
     }
     if let (Some(previous), Some([first, second])) = (last, sections.last()) {
         let end = [first.last().copied().unwrap_or(Point::ORIGIN), second.last().copied().unwrap_or(Point::ORIGIN)];
         if gap(end, previous) > END {
-            pairs.push(end);
+            pairs.push(processor.widened(end));
         }
     }
     Ok(pairs)
@@ -98,11 +106,21 @@ fn gap([a, b]: Pair, [c, d]: Pair) -> f64 {
 #[cfg(test)]
 mod tests {
     use stitchcraft_core::Budget;
+    use stitchcraft_core::rng::SplitMix64;
+    use stitchcraft_params::ParamSet;
 
     use super::*;
+    use crate::generators::satin::SatinParams;
 
     fn p(x: f64, y: f64) -> Point {
         Point::new(x, y).unwrap()
+    }
+
+    /// The pairs along `sections`, `spacing` apart, with no compensation and no random variation.
+    fn placed(sections: &[Section], spacing: f64) -> Vec<Pair> {
+        let params = SatinParams::from_set(&ParamSet::new()).unwrap().params;
+        let mut rng = SplitMix64::new(0);
+        pairs(sections, spacing, &mut Processor::new(&params, &mut rng), &mut Budget::DEFAULT.meter()).unwrap()
     }
 
     #[test]
@@ -129,8 +147,8 @@ mod tests {
         // start pair's line and the second runs exactly a hundredth of a CSS pixel across it, too near
         // to scale the step by.
         let section = [vec![p(0.0, 0.0), p(0.0, -10.0)], vec![p(0.0, 4.0), p(NO_LENGTH, 4.0)]];
-        let placed = pairs(&[section], 10.0, &mut Budget::DEFAULT.meter()).unwrap();
-        assert_eq!(placed, [[p(0.0, 0.0), p(0.0, 4.0)], [p(0.0, -10.0), p(NO_LENGTH, 4.0)]]);
+        let sewn = placed(&[section], 10.0);
+        assert_eq!(sewn, [[p(0.0, 0.0), p(0.0, 4.0)], [p(0.0, -10.0), p(NO_LENGTH, 4.0)]]);
     }
 
     #[test]
@@ -138,33 +156,33 @@ mod tests {
         // Halfway, the first rail has run 20 mm along the start pair's line and the second 19 mm across
         // it: 5 % short of the 20 mm spacing.
         let section = [vec![p(0.0, 0.0), p(0.0, -20.0), p(0.0, -40.0)], vec![p(0.0, 4.0), p(19.0, 4.0), p(38.0, 4.0)]];
-        let placed = pairs(&[section], 20.0, &mut Budget::DEFAULT.meter()).unwrap();
-        assert_eq!(placed.get(1), Some(&[p(0.0, -20.0), p(19.0, 4.0)]), "{placed:?}");
+        let sewn = placed(&[section], 20.0);
+        assert_eq!(sewn.get(1), Some(&[p(0.0, -20.0), p(19.0, 4.0)]), "{sewn:?}");
     }
 
     #[test]
     fn a_column_ending_exactly_0_1_mm_past_its_last_pair_gets_no_end_pair() {
         let section = [vec![p(0.0, 0.0), p(0.1, 0.0)], vec![p(0.0, 4.0), p(0.1, 4.0)]];
-        let placed = pairs(&[section], 0.4, &mut Budget::DEFAULT.meter()).unwrap();
-        assert_eq!(placed, [[p(0.0, 0.0), p(0.0, 4.0)]], "the start pair, with the end exactly 0.1 mm on");
+        let sewn = placed(&[section], 0.4);
+        assert_eq!(sewn, [[p(0.0, 0.0), p(0.0, 4.0)]], "the start pair, with the end exactly 0.1 mm on");
     }
 
     #[test]
     fn a_straight_column_is_sewn_at_the_spacing_and_ends_at_its_end() {
         let section = [vec![p(0.0, 0.0), p(1.0, 0.0)], vec![p(0.0, 4.0), p(1.0, 4.0)]];
-        let placed = pairs(&[section], 0.4, &mut Budget::DEFAULT.meter()).unwrap();
-        let x: Vec<f64> = placed.iter().map(|[a, _]| a.x()).collect();
+        let sewn = placed(&[section], 0.4);
+        let x: Vec<f64> = sewn.iter().map(|[a, _]| a.x()).collect();
         assert_eq!(x.len(), 4, "{x:?}");
         assert!((x[1] - 0.4).abs() < 1e-12 && (x[2] - 0.8).abs() < 1e-12, "{x:?}");
         assert_eq!((x[0], x[3]), (0.0, 1.0), "the start, and the end 0.2 mm on");
-        assert!(placed.iter().all(|[a, b]| a.x() == b.x()), "straight across");
+        assert!(sewn.iter().all(|[a, b]| a.x() == b.x()), "straight across");
     }
 
     #[test]
     fn a_column_ending_within_0_1_mm_of_its_last_pair_gets_no_end_pair() {
         let section = [vec![p(0.0, 0.0), p(0.85, 0.0)], vec![p(0.0, 4.0), p(0.85, 4.0)]];
-        let placed = pairs(&[section], 0.4, &mut Budget::DEFAULT.meter()).unwrap();
-        assert_eq!(placed.len(), 3, "0, 0.4 and 0.8, and the end 0.05 mm past the last: {placed:?}");
-        assert!(pairs(&[], 0.4, &mut Budget::DEFAULT.meter()).unwrap().is_empty());
+        let sewn = placed(&[section], 0.4);
+        assert_eq!(sewn.len(), 3, "0, 0.4 and 0.8, and the end 0.05 mm past the last: {sewn:?}");
+        assert!(placed(&[], 0.4).is_empty());
     }
 }

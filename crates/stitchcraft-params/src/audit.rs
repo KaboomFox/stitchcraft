@@ -73,7 +73,11 @@ fn check(spec: &ParamSpec, registry: &[&ParamGroup]) -> Vec<&'static str> {
 /// Whether a kind's limits leave values to choose from.
 fn range_is_usable(kind: Kind) -> bool {
     match kind {
-        Kind::Length { min, max, .. } | Kind::Percent { min, max } | Kind::LengthList { min, max } => min.is_finite() && max.is_finite() && min < max,
+        Kind::Length { min, max, .. }
+        | Kind::Percent { min, max }
+        | Kind::LengthList { min, max }
+        | Kind::LengthPair { min, max }
+        | Kind::PercentPair { min, max } => min.is_finite() && max.is_finite() && min < max,
         Kind::Count { min, max } | Kind::CountList { min, max } => min < max,
         Kind::Text { max_bytes } => max_bytes > 0,
         Kind::Angle | Kind::Toggle | Kind::Choice { .. } | Kind::Seed => true,

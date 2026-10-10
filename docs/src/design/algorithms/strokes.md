@@ -49,8 +49,9 @@ checks straight. "The shortest stitch" is the one [Finalize](../engine-pipeline.
    stitch.
 6. **Random length.** With `enable_random_stitch_length`, each stitch length is drawn uniformly from
    `s × (1 ± jitter)`, the first of each span a random fraction of that (a random phase, below), then the
-   span is rescaled to end on its corner. The element's own generator draws them, seeded with
-   `random_seed`, so the same element and seed always give the same stitches.
+   span is rescaled to end on its corner. The element's own generator draws them, seeded with its
+   `random_seed` (a setting every stitch type that varies at random shares), and the same element and
+   seed always give the same stitches.
 
 **When the rules disagree,** the shortest stitch wins (a shorter stitch hammers one spot and can break the
 thread), then corners, then the tolerance. A part of the path that is a single point, shorter than the

@@ -440,9 +440,10 @@ status = "active"
 id = "REQ-SAT-001"
 area = "satin"
 level = "L2"
-statement = "Every top stitch end lies on its rail offset outward by exactly the compensation (within 0.01 mm)."
+statement = "Pull compensation moves both ends of every top stitch outward along the stitch, each by pull_compensation_mm plus pull_compensation_percent of the stitch's width (within 0.01 mm). Negative values move them inward, and ends that would cross meet instead, where their moves divide the stitch."
+rationale = "Thread pulls the fabric in across a satin column, so a column sews narrower than drawn. Ink/Stitch compensates this way, so a file sews the same in both."
 milestone = "M4"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-SAT-002"
@@ -482,17 +483,28 @@ status = "active"
 id = "REQ-SAT-006"
 area = "satin"
 level = "L2"
-statement = "Asymmetric (per-side) parameters affect only their side."
+statement = "A parameter given 2 values, one for each side, changes only its own side: the first or the second rail's stitch ends, or the column's start or end."
+rationale = "Fabric pulls more one way than the other, and a column can sit against another element on one side only."
 milestone = "M4"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-SAT-007"
 area = "satin"
 level = "L2"
-statement = "Randomized satin parameters are reproducible from the seed."
+statement = "Random satin widths and spacing are reproducible: the same element and seed sew the same stitches and another seed others, and each width and step stays within the range its parameters give."
+rationale = "The same design must give the same file every time (docs/src/design/determinism.md)."
 milestone = "M4"
-status = "planned"
+status = "active"
+
+[[req]]
+id = "REQ-SAT-008"
+area = "satin"
+level = "L2"
+statement = "Push compensation shortens a satin column's rails by push_compensation_mm at its start and its end before they are cut into sections, or lengthens them along their end segments where negative. A rail it would leave shorter than half a CSS pixel keeps its length, with SC-W0211."
+rationale = "Satin stitches push the fabric out at a column's ends, so a column sews longer than drawn. Ink/Stitch compensates this way, so a file sews the same in both."
+milestone = "M4"
+status = "active"
 
 # ── Tatami fill ────────────────────────────────────────────────────────────────────────────────────
 

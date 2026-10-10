@@ -18,9 +18,16 @@
 //! (`SC-W0210`). Rails of 2 nodes each are cut once near their starts, which sews them as one section:
 //! where the point 0.2 CSS pixels along the straight line from each rail's first node to its last lies
 //! along the rail, as Ink/Stitch places the rung it adds there.
+//!
+//! **Push compensation** shortens or lengthens the rails at the column's start and end after they are
+//! turned and before they are cut, as in Ink/Stitch (the `compensation` module). The points that say where
+//! to cut come from the rails as drawn, and each cut is where its point lies along the compensated rail:
+//! a cut in a part taken off falls on the rail's end, and leaves its section out.
 
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
 
+use crate::generators::satin::SatinParams;
+use crate::generators::satin::compensation::pushed;
 use crate::normalize::along::Along;
 use crate::normalize::satin::{Pairing, Satin};
 
@@ -31,26 +38,21 @@ const NEAR_START: f64 = 0.2 * 25.4 / 96.0;
 /// A section: the parts of the first and of the second rail between two neighbouring cuts.
 pub(crate) type Section = [Vec<Point>; 2];
 
-/// `satin`'s rails, swapped when `swap` says so and turned as `reverse` says, cut into sections. What was
-/// paired by fewer nodes than drawn goes to `warnings`. Measuring the rails costs `meter` a unit of work per
-/// point, and projecting a cut onto a rail one per side of it.
-pub(crate) fn sections(
-    satin: &Satin,
-    swap: bool,
-    reverse: &str,
-    warnings: &mut Vec<Diagnostic>,
-    meter: &mut Meter,
-) -> Result<Vec<Section>, Exhausted> {
+/// `satin`'s rails, swapped and turned as `params` say, with its push compensation, and cut into
+/// sections. What was paired by fewer nodes than drawn, and a push compensation too long for a rail, go to
+/// `warnings`. Measuring the rails costs `meter` a unit of work per point, and projecting a cut onto a
+/// rail one per side of it.
+pub(crate) fn sections(satin: &Satin, params: &SatinParams, warnings: &mut Vec<Diagnostic>, meter: &mut Meter) -> Result<Vec<Section>, Exhausted> {
     let mut rails = satin.rails.clone();
     let mut pairing = satin.pairing.clone();
-    if swap {
+    if params.swap_satin_rails {
         rails.swap(0, 1);
         match &mut pairing {
             Pairing::Rungs(rungs) => rungs.iter_mut().for_each(|rung| rung.swap(0, 1)),
             Pairing::Nodes(nodes) => nodes.swap(0, 1),
         }
     }
-    let turned = match reverse {
+    let turned = match params.reverse_rails {
         "first" => [true, false],
         "second" => [false, true],
         "both" => [true, true],
@@ -70,14 +72,28 @@ pub(crate) fn sections(
         }
     }
     let [first, second] = &rails;
-    let [rail_a, rail_b] = &[Along::new(first, meter)?, Along::new(second, meter)?];
+    let push = params.push_compensation_mm.map(|mm| mm.get());
+    let ((first, kept_a), (second, kept_b)) = (pushed(first, push, meter)?, pushed(second, push, meter)?);
+    if kept_a || kept_b {
+        warnings.push(too_long(push));
+    }
+    let [rail_a, rail_b] = [Along::new(&first, meter)?, Along::new(&second, meter)?];
     let (mut cuts_a, mut cuts_b) = (Vec::new(), Vec::new());
     for [a, b] in pairs(&pairing, warnings) {
         cuts_a.push(rail_a.project(a, meter)?);
         cuts_b.push(rail_b.project(b, meter)?);
     }
-    let (parts_a, parts_b) = (parts(rail_a, &mut cuts_a), parts(rail_b, &mut cuts_b));
+    let (parts_a, parts_b) = (parts(&rail_a, &mut cuts_a), parts(&rail_b, &mut cuts_b));
     Ok(parts_a.into_iter().zip(parts_b).filter_map(|(a, b)| Some([a?, b?])).collect())
+}
+
+/// `SC-W0211`, for a push compensation of `start` and `end` millimetres that would leave too little of a
+/// rail.
+fn too_long([start, end]: [f64; 2]) -> Diagnostic {
+    let message = format!(
+        "This satin column's push compensation, {start} mm at its start and {end} mm at its end, would leave less than 0.13 mm of a rail, so that rail keeps its length."
+    );
+    Diagnostic::new(Code::SatinPushTooLong, message).with_fix(Fix::Hint("Lower `push_compensation_mm`.".to_string()))
 }
 
 /// Whether the second of `rails` runs against the first, as Ink/Stitch judges it: the distances between

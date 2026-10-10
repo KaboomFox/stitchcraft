@@ -7,6 +7,7 @@
 use proptest::prelude::*;
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Mm, Point};
+use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::design::{Path, Segment, Subpath};
 use stitchcraft_engine::generators::passes::RepeatParams;
 use stitchcraft_engine::generators::running::{RunningParams, running_stitch};
@@ -27,7 +28,7 @@ fn sew(path: &Path, settings: &[(&str, &str)], id: &str) -> Vec<Point> {
     let set: ParamSet = settings.iter().copied().collect();
     let running = RunningParams::from_set(&set).unwrap().params;
     let passes = RepeatParams::from_set(&set).unwrap().params;
-    let mut rng = SplitMix64::for_element(id, running.random_seed.unwrap_or(0));
+    let mut rng = SplitMix64::for_element(id, CommonParams::from_set(&set).unwrap().params.random_seed.unwrap_or(0));
     let stitched = running_stitch(path, &running, &passes, Mm::new(0.3).unwrap(), &mut rng, &mut Budget::DEFAULT.meter()).unwrap();
     assert_eq!(stitched.runs.len(), 1);
     stitched.runs.into_iter().next().unwrap()

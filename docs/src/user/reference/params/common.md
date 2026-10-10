@@ -3,7 +3,7 @@
 # Common parameters
 
 Settings every stitch type shares: lock stitches where the element's stitching starts and
-ends, a trim or a stop after it, and the shortest stitch and jump.
+ends, a trim or a stop after it, the shortest stitch and jump, and where random variation starts.
 
 StitchCraft reads and checks them today; they change the stitches as plan assembly arrives
 (roadmap steps M3.7 to M3.9).
@@ -148,4 +148,17 @@ jump. Empty: the document's setting.
 
 - **Accepts:** a length from 0 to 20 mm, or empty (0 or less counts as empty)
 - **Default:** empty
+- **Ink/Stitch:** same key, meaning and default
+
+## Random variation
+
+### `random_seed`
+
+**Random seed.** Where random variation starts: a running stitch's random lengths, and a satin column's random
+widths and spacing. The same seed gives the same stitches, another seed others. Empty, each
+element gets its own.
+
+- **Accepts:** a number or any text, or empty to derive it from the element
+- **Default:** empty
+- **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin
 - **Ink/Stitch:** same key, meaning and default
