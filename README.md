@@ -4,7 +4,7 @@
 Vector art in, machine files out — PES for Brother first, then DST and more.</p>
 
 <p align="center">
-  <img alt="Status: bootstrapped (M0)" src="https://img.shields.io/badge/status-M0%20bootstrapped-8a5cf6">
+  <a href="https://kaboomfox.github.io/stitchcraft/dev/"><img alt="Documentation" src="https://img.shields.io/badge/docs-user%20guide-8a5cf6"></a>
   <img alt="Pure Rust" src="https://img.shields.io/badge/pure-Rust-b83a24?logo=rust&logoColor=white">
   <img alt="License: MIT OR Apache-2.0" src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-555555">
 </p>
@@ -28,10 +28,21 @@ How it is built:
 
 ## Status
 
-**M0 bootstrap committed:** the design, the roadmap and a workspace whose guardrails are already
-enforced (`cargo xtask ci`). **Next:** the M0 spikes (VectorCraft hello plug-in, geometry, headless
-screenshots), then **M1** — the stitch plan model and PES/DST writers, ending with the first sew-out on the
-machine. See [ROADMAP.md](ROADMAP.md).
+StitchCraft sews the strokes of an SVG design in running stitch, bean stitch or manual stitch, with lock
+stitches, trims and stops, and writes PES and DST files. It reads, draws and converts PES, PEC and DST
+files from other software. Satin columns come in milestone M4 and fills in M5.
+[ROADMAP.md](ROADMAP.md) is the status board.
+
+## Use it
+
+Build the `stitch` command from source ([install](docs/src/user/install.md)), then plan a design:
+
+```sh
+stitch plan design.svg -o design.pes --preview design.png
+```
+
+The [user guide](https://kaboomfox.github.io/stitchcraft/dev/user/) has tutorials, how-to guides and a
+page for each stitch type.
 
 ## Read more
 

@@ -21,5 +21,6 @@ How it is built:
 - **Building StitchCraft?** Read the [technical design](design/tdd.md), then the [roadmap](plan/roadmap.md).
 - **Contributing?** See [contributing](contributing/README.md).
 
-> **Status (2026-10-08):** design complete for the first milestones; repository bootstrapped with its
-> guardrails (milestone M0). The first sewable output is milestone M1.
+> **Status:** StitchCraft sews the strokes of an SVG design and writes PES and DST files. A stroke is
+> sewn in running stitch or manual stitch, with bean stitch where it is set. Satin columns come in
+> milestone M4 and fills in M5. The [roadmap](plan/roadmap.md) has every step.

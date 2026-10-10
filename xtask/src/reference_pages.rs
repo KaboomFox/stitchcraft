@@ -6,15 +6,14 @@
 use std::fmt::Write as _;
 
 use clap::CommandFactory;
-use stitchcraft_cli::cli::{self, Cli};
-use stitchcraft_cli::commands::{self, counts};
+use stitchcraft_cli::cli::Cli;
+use stitchcraft_cli::commands::counts;
 use stitchcraft_core::{Code, Severity};
 use stitchcraft_engine::testsheets::SHEETS;
 use stitchcraft_plan::profiles::BUILTIN;
 use stitchcraft_plan::{FormatId, TrimSupport};
-use stitchcraft_render::Settings;
 
-use crate::{shots, util};
+use crate::{examples, shots, util};
 
 const REFERENCE: &str = "docs/src/user/reference";
 
@@ -28,7 +27,7 @@ pub fn pages() -> Result<Vec<(String, String)>, String> {
         (format!("{REFERENCE}/cli.md"), cli()),
     ]
     .into_iter()
-    .chain(examples()?)
+    .chain(examples::pages(&util::root())?)
     .collect())
 }
 
@@ -155,37 +154,4 @@ fn cli() -> String {
         let _ = writeln!(out, "\n## stitch {name}\n\n```text\n{}```", sub.render_long_help());
     }
     out
-}
-
-/// What the tutorial's commands print, run for real so the docs show real output:
-/// `stitch testsheet TS-01 …` and `stitch preview TS-01.pes …`.
-fn examples() -> Result<Vec<(String, String)>, String> {
-    let dir = std::env::temp_dir().join(format!("stitchcraft-docs-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-    let (pes, png) = (dir.join("TS-01.pes"), dir.join("TS-01.png"));
-    let testsheet = commands::testsheet::run(&cli::TestsheetArgs {
-        sheet: Some("TS-01".into()),
-        list: false,
-        profile: Some("brother-200x200".into()),
-        output: Some(pes.clone()),
-        format: None,
-    });
-    let preview = commands::preview::run(&cli::PreviewArgs {
-        file: pes.clone(),
-        output: png.clone(),
-        style: cli::PreviewStyle::Realistic,
-        scale: Settings::DEFAULT_SCALE,
-    });
-    let _ = std::fs::remove_dir_all(&dir);
-    let shown = |outcome: commands::Outcome, command: &str| {
-        if outcome.status != commands::Status::Done {
-            return Err(format!("{command} failed: {}", outcome.stderr));
-        }
-        let stdout = outcome.stdout.replace(&pes.display().to_string(), "TS-01.pes").replace(&png.display().to_string(), "TS-01.png");
-        Ok(format!("$ {command}\n{stdout}"))
-    };
-    Ok(vec![
-        (format!("{REFERENCE}/generated/testsheet-ts-01.txt"), shown(testsheet, "stitch testsheet TS-01 --profile brother-200x200 -o TS-01.pes")?),
-        (format!("{REFERENCE}/generated/preview-ts-01.txt"), shown(preview, "stitch preview TS-01.pes -o TS-01.png")?),
-    ])
 }

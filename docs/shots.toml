@@ -7,11 +7,15 @@
 # "vectorcraft-ui" (VectorCraft window via its control channel, perceptual tolerance),
 # "photo" (a real sew-out; never regenerated, needs a sew-out report link).
 #
-# A "stitch" shot names a test sheet, a style ("realistic" or "simple") and a scale in pixels per
-# millimetre; it becomes docs/src/images/generated/<id>.png. Fixtures with parameters, as in
-#   fixture = "conformance/fixtures/fill/square-40mm.svg"
-#   params = [{ staggers = 1 }, { staggers = 4 }]
-# arrive with the first stitch types (M3).
+# A "stitch" shot names a style ("realistic" or "simple"), a scale in pixels per millimetre, and what to
+# draw: a test sheet (`sheet = "TS-01"`), or an SVG design (`fixture = "docs/fixtures/wave.svg"`) that the
+# engine plans for the reference machine as `stitch plan` does. It becomes
+# docs/src/images/generated/<id>.png. A design can have panels, each with a caption and parameters set on
+# every element:
+#   panels = [{ caption = "1.5 mm", params = { running_stitch_length_mm = "1.5" } }, …]
+# and then makes <id>-1.png, <id>-2.png and so on. A page shows them side by side between the lines
+# `<!-- shot: <id> -->` and `<!-- /shot -->`, which `cargo xtask docs` fills in. The plan of a design may
+# report only the diagnostic codes its shot lists in `allow = ["SC-W0402"]`.
 
 # ── Test sheets (shown on the test-sheets reference page, in this order) ────────────────────────────
 
@@ -37,7 +41,7 @@ kind = "stitch"
 sheet = "TS-02"
 style = "simple"
 scale = 4.0
-alt = "TS-02 in the simple style: a red cross marks the trim after the first dash of each red row, grey dashes show moves after a cut, blue dashes show jump threads left in place, and a blue square marks the stop in the middle of the green line."
+alt = "TS-02 in the simple style. A red cross marks the trim after the first dash of each red row, and a blue square marks the stop in the middle of the green line. Grey dashes show moves after a cut, and blue dashes show jump threads left in place."
 
 [[shot]]
 id = "testsheet-ts-02b"
@@ -94,3 +98,101 @@ sheet = "TS-10C"
 style = "realistic"
 scale = 3.0
 alt = "TS-10C as it will sew: a blue frame 150 mm wide and 190 mm high, with an F at the top left and a small cross in the centre."
+
+# ── Stitch types (designs from docs/fixtures/, planned by the engine; one image per panel) ──────────
+
+[[shot]]
+id = "running-length"
+kind = "stitch"
+fixture = "docs/fixtures/wave.svg"
+style = "simple"
+scale = 8.0
+alt = "A wave in running stitch, its needle points dotted along it"
+panels = [
+  { caption = "1.5 mm", params = { running_stitch_length_mm = "1.5" } },
+  { caption = "2.5 mm", params = { running_stitch_length_mm = "2.5" } },
+  { caption = "4 mm", params = { running_stitch_length_mm = "4" } },
+]
+
+[[shot]]
+id = "running-tolerance"
+kind = "stitch"
+fixture = "docs/fixtures/wave.svg"
+style = "simple"
+scale = 8.0
+alt = "A wave in 6 mm running stitch"
+panels = [
+  { caption = "0.1 mm", params = { running_stitch_length_mm = "6", running_stitch_tolerance_mm = "0.1" } },
+  { caption = "0.5 mm", params = { running_stitch_length_mm = "6", running_stitch_tolerance_mm = "0.5" } },
+  { caption = "2 mm", params = { running_stitch_length_mm = "6", running_stitch_tolerance_mm = "2" } },
+]
+
+[[shot]]
+id = "random-length"
+kind = "stitch"
+fixture = "docs/fixtures/parallel.svg"
+style = "simple"
+scale = 12.0
+alt = "6 rows of running stitch 1.6 mm apart, sewn back and forth as one path"
+panels = [
+  { caption = "even", params = {} },
+  { caption = "random", params = { enable_random_stitch_length = "true" } },
+]
+
+[[shot]]
+id = "manual"
+kind = "stitch"
+fixture = "docs/fixtures/nodes.svg"
+style = "simple"
+scale = 8.0
+alt = "A path of straight lines and one curve"
+panels = [
+  { caption = "running stitch", params = {} },
+  { caption = "manual stitch", params = { stroke_method = "manual_stitch" } },
+]
+
+[[shot]]
+id = "lock-drawn"
+kind = "stitch"
+fixture = "docs/fixtures/lock.svg"
+style = "realistic"
+scale = 40.0
+alt = "An 8 mm line with a lock at each end"
+panels = [
+  { caption = "arrow", params = { lock_start = "arrow", lock_end = "arrow" } },
+  { caption = "bowtie", params = { lock_start = "bowtie", lock_end = "bowtie" } },
+  { caption = "cross", params = { lock_start = "cross", lock_end = "cross" } },
+  { caption = "star", params = { lock_start = "star", lock_end = "star" } },
+]
+
+[[shot]]
+id = "lock-drawn-2"
+kind = "stitch"
+fixture = "docs/fixtures/lock.svg"
+style = "realistic"
+scale = 40.0
+alt = "An 8 mm line with a lock at each end"
+panels = [
+  { caption = "simple", params = { lock_start = "simple", lock_end = "simple" } },
+  { caption = "triangle", params = { lock_start = "triangle", lock_end = "triangle" } },
+  { caption = "zigzag", params = { lock_start = "zigzag", lock_end = "zigzag" } },
+  { caption = "half_stitch", params = { lock_start = "half_stitch", lock_end = "half_stitch" } },
+]
+
+# ── Tutorials ───────────────────────────────────────────────────────────────────────────────────────
+
+[[shot]]
+id = "badge"
+kind = "stitch"
+fixture = "docs/fixtures/badge.svg"
+style = "realistic"
+scale = 8.0
+alt = "A red star inside a blue ring, as the badge will sew"
+
+[[shot]]
+id = "badge-simple"
+kind = "stitch"
+fixture = "docs/fixtures/badge.svg"
+style = "simple"
+scale = 8.0
+alt = "The badge in the simple style: the needle points of the star and the ring, and grey dashes where the frame moves from the star to the ring after the colour change"

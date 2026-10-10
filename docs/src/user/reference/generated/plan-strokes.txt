@@ -1,0 +1,14 @@
+$ stitch plan strokes.svg -o strokes.pes --preview strokes.png --report strokes.json
+strokes.svg
+  file      strokes.pes (PES v1, 1725 bytes)
+  sha256    41a9620e08c4cc93d781b9e3aef9cd59b92444ad5ef3e20cd3be7304dc616d2c
+  profile   brother-200x200 (Brother, 200 × 200 mm hoop)
+  size      60.0 × 40.0 mm
+  stitches  118 stitches, 4 jumps, 0 trims, 2 colour changes, 0 stops
+  threads   1. unnamed (#c00000), shown as Brother PEC 5 "Red"
+            2. unnamed (#0040c0), shown as Brother PEC 21 "Ultramarine"
+            3. unnamed (#c00000), shown as Brother PEC 5 "Red"
+  preview   strokes.png (512 × 352 pixels)
+  report    strokes.json
+warning SC-W0011 (svg:patch:fill): This element is a fill, and this version of StitchCraft does not sew fills yet, so it is skipped.
+info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out.

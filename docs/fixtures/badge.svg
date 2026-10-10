@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="50mm" height="50mm" viewBox="0 0 50 50">
+  <!-- A red star inside a blue ring, 44 mm across. The star sews first. -->
+  <polygon id="star" fill="none" stroke="#c8102e" stroke-width="0.4"
+           points="25,10 28.53,20.15 39.27,20.36 30.71,26.85 33.82,37.14
+                   25,31 16.18,37.14 19.29,26.85 10.73,20.36 21.47,20.15"/>
+  <circle id="ring" cx="25" cy="25" r="22" fill="none" stroke="#1f4e9c" stroke-width="0.4"/>
+</svg>

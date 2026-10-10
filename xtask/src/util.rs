@@ -102,6 +102,11 @@ pub fn read(path: &Path) -> Result<String, String> {
     std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", rel(path)))
 }
 
+/// The bytes of the file at `path`.
+pub fn read_bytes(path: &Path) -> Result<Vec<u8>, String> {
+    std::fs::read(path).map_err(|e| format!("{}: {e}", rel(path)))
+}
+
 /// `path` relative to the repository root, with `/` separators.
 pub fn rel(path: &Path) -> String {
     let root = root();

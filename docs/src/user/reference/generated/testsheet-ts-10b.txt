@@ -1,0 +1,13 @@
+$ stitch testsheet TS-10B --profile brother-200x200 -o TS-10B.pes
+TS-10B · Hoop size: 190 × 150 mm frame
+  file      TS-10B.pes (PES v1, 1641 bytes)
+  sha256    468ae11b427c6eb442bd94f3fd8beae1cb13387aa733ece537bf21a47f426f88
+  profile   brother-200x200 (Brother, 200 × 200 mm hoop)
+  size      190.0 × 150.0 mm
+  stitches  307 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops
+  threads   1. Blue (#0a55a3), shown as Brother PEC 2 "Blue"
+after sewing, check:
+  - The machine accepts the file and shows the design (StitchCraft warns that it is larger than the comfort zone — expected).
+  - The frame measures 190.0 × 150.0 mm (± 0.5 mm), wide side left to right, the F at the top left.
+warning SC-W0702: The design is 190.0 × 150.0 mm, larger than the 150 × 150 mm comfort zone of Brother, 200 × 200 mm hoop.
+  hint: Use a firm stabilizer and hoop the fabric drum-tight, or scale the design down.
