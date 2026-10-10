@@ -59,7 +59,8 @@ wrong (`SC-E0101`) is skipped too, and the rest of the design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
 `min_stitch`) and the element's `min_stitch_length_mm`, or the design's shortest stitch when the element
-sets none.
+sets none. A satin column is given its longest stitch as well, the element's `max_stitch_length_mm`,
+which its split stitches keep to.
 
 Rules every generator follows:
 

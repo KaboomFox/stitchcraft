@@ -3,7 +3,8 @@
 # Common parameters
 
 Settings every stitch type shares: lock stitches where the element's stitching starts and
-ends, a trim or a stop after it, the shortest stitch and jump, and where random variation starts.
+ends, a trim or a stop after it, the shortest stitch and jump, the longest stitch, and where random
+variation starts.
 
 StitchCraft reads and checks them today; they change the stitches as plan assembly arrives
 (roadmap steps M3.7 to M3.9).
@@ -148,6 +149,18 @@ jump. Empty: the document's setting.
 
 - **Accepts:** a length from 0 to 20 mm, or empty (0 or less counts as empty)
 - **Default:** empty
+- **Ink/Stitch:** same key, meaning and default
+
+## Longest stitch
+
+### `max_stitch_length_mm`
+
+**Longest stitch.** Split stitches longer than this. Manual stitch splits them into equal parts, and a satin column
+as its split method says. Empty, every stitch is sewn whole.
+
+- **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
+- **Default:** empty
+- **Applies to:** Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin
 - **Ink/Stitch:** same key, meaning and default
 
 ## Random variation

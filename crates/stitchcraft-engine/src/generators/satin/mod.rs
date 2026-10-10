@@ -8,23 +8,24 @@
 //! they are sewn, shortened or lengthened by push compensation and cut into sections at the rungs (the
 //! `column` module), and needle points are placed in pairs across the column along the sections (`pairs`),
 //! each pair widened by pull compensation (`compensation`). Needle points that crowd together on a rail
-//! are inset (`short`), and the pairs are sewn rail to rail.
+//! are inset (`short`), and the pairs are sewn rail to rail, with long stitches split (`split`).
 //!
-//! These are the top stitches as Ink/Stitch places them, and the later steps of M4 add the rest: split
-//! stitches (M4.5) and underlays (M4.6). A path of 1 subpath, sewn along its centre line, follows in
-//! M4.8.
+//! These are the top stitches as Ink/Stitch places them, and the next step of M4 adds underlays (M4.6).
+//! A path of 1 subpath, sewn along its centre line, follows in M4.8.
 
 mod column;
 mod compensation;
 mod pairs;
 mod short;
+mod split;
 
 use stitchcraft_core::rng::SplitMix64;
-use stitchcraft_core::{Diagnostic, Exhausted, Meter};
+use stitchcraft_core::{Diagnostic, Exhausted, Meter, Mm};
 use stitchcraft_params::{ChoiceOption, StitchType, params};
 
 use crate::design::Path;
 use crate::generators::satin::compensation::Processor;
+use crate::generators::satin::split::Splitter;
 use crate::generators::{Stitched, method};
 use crate::normalize::satin::{Recognition, Satin, Shape, recognize};
 
@@ -126,6 +127,32 @@ params! {
         /// in. 0 moves none.
         short_stitch_distance_mm: Length = "0.25", label "Short stitch distance", range (0.0, 5.0);
     }
+
+    "Split stitches" {
+        /// How stitches longer than the longest stitch (`max_stitch_length_mm`) are split. Default splits
+        /// each into the fewest equal parts no longer than it. Simple splits at whole multiples of it from
+        /// the stitch's start. Staggered moves those splits along from one stitch to the next, so the needle
+        /// holes of neighbouring stitches do not line up in a row.
+        split_method: Choice = "default", label "Split method",
+            options ["default" => "Default", "simple" => "Simple", "staggered" => "Staggered"];
+
+        /// How far each split may move at random, in percent of a part, either way. With a random split
+        /// phase, how much each part's length may vary instead.
+        random_split_jitter_percent: Percent = "0", label "Split jitter", range (0.0, 100.0), when split_method == "default";
+
+        /// Start each stitch's splits at a random distance from its start, and space them by the longest
+        /// stitch, instead of dividing the stitch evenly. The needle holes of neighbouring stitches then
+        /// fall apart, at the cost of a few more stitches.
+        random_split_phase: Toggle = "false", label "Random split phase", when split_method == "default";
+
+        /// With a random split phase, also split stitches longer than this but no longer than the longest
+        /// stitch. Empty: the longest stitch.
+        min_random_split_length_mm: OptionalLength = "", label "Shortest split stitch", range (0.1, 25.0), when split_method == "default";
+
+        /// How many stitches the staggered splits take to come back to where they started. A fraction draws
+        /// diagonals that show less than whole numbers do.
+        split_staggers: Number = "4", label "Staggers", range (0.01, 100.0), when split_method == "staggered";
+    }
 }
 
 /// What a satin column's `path` is, with what recognition took by length, stood in for or left out
@@ -142,15 +169,24 @@ pub fn shape(path: &Path, diagnostics: &mut Vec<Diagnostic>, meter: &mut Meter) 
     })
 }
 
-/// The satin column `satin` sewn as `params` say, its random variation drawn from the element's `rng`: one
-/// run of needle points, a pair across the column at a time, from the rails' starts to their ends.
-pub fn satin_stitch(satin: &Satin, params: &SatinParams, rng: &mut SplitMix64, meter: &mut Meter) -> Result<Stitched, Exhausted> {
+/// The satin column `satin` sewn as `params` say, for an element whose shortest stitch is `min_stitch` and
+/// longest `max_stitch`, if it sets one, with its random variation drawn from the element's `rng`: one run
+/// of needle points, a pair across the column at a time, from the rails' starts to their ends.
+pub fn satin_stitch(
+    satin: &Satin,
+    params: &SatinParams,
+    min_stitch: Mm,
+    max_stitch: Option<Mm>,
+    rng: &mut SplitMix64,
+    meter: &mut Meter,
+) -> Result<Stitched, Exhausted> {
     let mut warnings = Vec::new();
     let sections = column::sections(satin, params, &mut warnings, meter)?;
-    let mut processor = Processor::new(params, rng);
-    let placed = pairs::pairs(&sections, params.zigzag_spacing_mm.get(), &mut processor, meter)?;
+    let placed = pairs::pairs(&sections, params.zigzag_spacing_mm.get(), &mut Processor::new(params, rng), meter)?;
+    let mut splitter = Splitter::new(params, max_stitch.map(Mm::get), min_stitch.get(), rng);
     let insets: Vec<f64> = params.short_stitch_inset.iter().map(|percent| percent / 100.0).collect();
-    let run = short::inset(placed, params.short_stitch_distance_mm.get(), &insets).into_iter().flatten().collect();
+    let short = short::inset(&placed, params.short_stitch_distance_mm.get(), &insets, splitter.inset_limit());
+    let run = splitter.sew(&placed, &short, meter)?;
     Ok(Stitched { runs: vec![run], warnings })
 }
 

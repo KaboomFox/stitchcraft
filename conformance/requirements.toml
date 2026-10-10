@@ -458,9 +458,10 @@ status = "active"
 id = "REQ-SAT-003"
 area = "satin"
 level = "L2"
-statement = "No top stitch exceeds max_stitch_length_mm after splitting; split seams follow the chosen method."
+statement = "Where max_stitch_length_mm is set, a top stitch longer than it is split as split_method says, as Ink/Stitch splits it. The default method splits it into the fewest equal parts no longer than it, each split moved by up to random_split_jitter_percent of a part, and the stitch back after it into as many parts as the stitch across before. With random_split_phase the splits start at a random share of the length and follow at the length. Simple splits at whole multiples of the length from the stitch's start, and staggered from a start that moves along by a split_staggers-th of it from one stitch to the next. Splits lie strictly between the stitch's insets."
+rationale = "Long satin stitches snag and lie loose. Splitting them as Ink/Stitch does sews a file the same in both."
 milestone = "M4"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-SAT-004"

@@ -5,6 +5,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M4.5: split stitches, as Ink/Stitch splits them (`REQ-SAT-003`). Where an element sets a longest stitch
+  (`max_stitch_length_mm`), a longer satin stitch is split as `split_method` says.
+  - **Default** splits it into the fewest equal parts no longer than the longest stitch, each split moved
+    at random by up to `random_split_jitter_percent` of a part. With `random_split_phase`, the splits
+    start at random instead and follow at the longest stitch.
+  - **Simple** splits at whole multiples of the longest stitch, which line up in rows, and **staggered**
+    moves them along by a `split_staggers`-th of it from one stitch to the next.
+  - With even splits, a short stitch's inset is at most a third of the longest stitch.
+  - `max_stitch_length_mm` moves from manual stitch's parameters to the settings every stitch type shares,
+    for manual stitch and satin columns. Designs store it under the same key as before.
 - M4.4: short stitches on curves as Ink/Stitch sews them, which has them on by default (`REQ-SAT-009`).
   On each rail of a satin column, a needle point closer than `short_stitch_distance_mm` (0.25 mm) to the
   last one left in place moves in along its stitch by `short_stitch_inset` (15 %) of the stitch. Points

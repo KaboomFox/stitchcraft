@@ -29,6 +29,13 @@ pub enum Kind {
         /// Largest accepted value.
         max: f64,
     },
+    /// A number without a unit within `min..=max`, whole or not.
+    Number {
+        /// Smallest accepted value.
+        min: f64,
+        /// Largest accepted value.
+        max: f64,
+    },
     /// A whole number within `min..=max`.
     Count {
         /// Smallest accepted value.
@@ -215,6 +222,7 @@ impl Kind {
             }
             Kind::Angle => "an angle in degrees".to_string(),
             Kind::Percent { min, max } => format!("a percentage from {min} to {max}"),
+            Kind::Number { min, max } => format!("a number from {min} to {max}"),
             Kind::Count { min, max } => format!("a whole number from {min} to {max}"),
             Kind::Toggle => "true or false".to_string(),
             Kind::Choice { options } => {

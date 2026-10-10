@@ -102,6 +102,7 @@ version and a registry schema version arrive with the first release, together wi
 | `OptionalLength` | `Option<Mm>` | as `Length`, or empty: the setting then comes from the document or the machine, or there is none. 0 or less counts as empty, as Ink/Stitch reads it | `float`, unit `mm`, no default |
 | `Angle` | degrees, `f64` | finite; normalized to (−180, 180] | `float`, unit `deg` |
 | `Percent` | `f64` | finite, within range | `float`, unit `%` |
+| `Number` | `f64` | finite, within range, without a unit | `float`, no unit |
 | `Count` | `u32` | whole, within range | `int` |
 | `Toggle` | `bool` | `true`/`false` (also `yes`/`no`, `on`/`off`, `1`/`0`) | `boolean`, `toggle` |
 | `Choice` | `&'static str` (the id) | one of the declared ids; unknown ids are a diagnostic, not a default | `combo`, `dropdown` |

@@ -108,8 +108,8 @@ twice the shortest stitch (raised).
 Every node of the path is a needle penetration, in order — for hand-placed stitches and imported stitch
 files. A curve gives only its end node: its control points are not stitched and it is not flattened. A
 node where the needle already is counts once, and a closed path comes back to its start. Segments longer
-than `max_stitch_length_mm` (if set) are split into the fewest equal parts no longer than it, but never
-into parts shorter than the shortest stitch. A value of 0 or less means "not set", as in Ink/Stitch, so
+than `max_stitch_length_mm` (if set, a setting manual stitch shares with satin columns) are split into the
+fewest equal parts no longer than it, but never into parts shorter than the shortest stitch. A value of 0 or less means "not set", as in Ink/Stitch, so
 every stitch is then sewn as drawn. Bean stitch applies; repeats do not. Lock stitches are added
 only when `force_lock_stitches` is set, as in Ink/Stitch (read at `d59c9ab`).
 

@@ -1,5 +1,6 @@
 //! Settings every stitch type shares: lock stitches, a trim or a stop after the element, the shortest
-//! stitch and jump, and the seed of the stitch types that vary at random.
+//! stitch and jump, the longest stitch of the types that split stitches, and the seed of the types that
+//! vary at random.
 //!
 //! Plan assembly and finalizing honour them (roadmap M3.7–M3.9); they are declared once, here, with
 //! Ink/Stitch's names and defaults, which are the interoperability contract
@@ -8,6 +9,10 @@
 use stitchcraft_params::{Origin, StitchType, params};
 
 use crate::locks::{LOCKS, SIZED_IN_MM, SIZED_IN_PERCENT};
+
+/// The stitch types that split stitches longer than a length: manual stitch, and satin columns whatever
+/// their method.
+const SPLIT: &[StitchType] = &[StitchType::ManualStitch, StitchType::SatinColumn, StitchType::EStitch, StitchType::SStitch, StitchType::SatinZigzag];
 
 /// The stitch types that vary at random, and so take a seed: running stitch's random lengths (ripple
 /// stitch sews its lines with them), and a satin column's random widths and spacing, whatever its method.
@@ -22,7 +27,8 @@ const RANDOMIZED: &[StitchType] = &[
 
 params! {
     /// Settings every stitch type shares: lock stitches where the element's stitching starts and
-    /// ends, a trim or a stop after it, the shortest stitch and jump, and where random variation starts.
+    /// ends, a trim or a stop after it, the shortest stitch and jump, the longest stitch, and where random
+    /// variation starts.
     ///
     /// StitchCraft reads and checks them today; they change the stitches as plan assembly arrives
     /// (roadmap steps M3.7 to M3.9).
@@ -93,6 +99,12 @@ params! {
         min_jump_stitch_length_mm: OptionalLength = "", label "Shortest jump", range (0.0, 20.0);
     }
 
+    "Longest stitch" {
+        /// Split stitches longer than this. Manual stitch splits them into equal parts, and a satin column
+        /// as its split method says. Empty, every stitch is sewn whole.
+        max_stitch_length_mm: OptionalLength = "", label "Longest stitch", range (0.1, 25.0), applies SPLIT;
+    }
+
     "Random variation" {
         /// Where random variation starts: a running stitch's random lengths, and a satin column's random
         /// widths and spacing. The same seed gives the same stitches, another seed others. Empty, each
@@ -116,6 +128,13 @@ mod tests {
         assert_eq!((p.lock_start_scale_mm.get(), p.lock_end_scale_percent), (0.7, 100.0));
         assert_eq!((p.trim_after, p.stop_after, p.min_stitch_length_mm, p.min_jump_stitch_length_mm), (false, false, None, None));
         assert_eq!((p.lock_custom_start.as_str(), p.random_seed), ("", None));
+    }
+
+    #[test]
+    fn the_longest_stitch_applies_to_the_stitch_types_that_split_stitches() {
+        let longest = CommonParams::SPECS.iter().find(|spec| spec.key == "max_stitch_length_mm").unwrap();
+        let splits = |t: &StitchType| matches!(t.family(), Family::Satin) || matches!(t, StitchType::ManualStitch);
+        assert_eq!(longest.applies_to, StitchType::ALL.iter().copied().filter(splits).collect::<Vec<_>>());
     }
 
     #[test]

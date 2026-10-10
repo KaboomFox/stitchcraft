@@ -30,12 +30,11 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 
 | Group | Parameters | Applies to |
 |---|---|---|
-| [Common parameters](params/common.md) | 15 | every stitch type |
+| [Common parameters](params/common.md) | 16 | every stitch type |
 | [Stroke parameters](params/stroke.md) | 1 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Running parameters](params/running.md) | 4 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
-| [Manual parameters](params/manual.md) | 1 | Manual stitch |
-| [Satin parameters](params/satin.md) | 13 | Satin column, E-stitch, S-stitch, Zigzag satin |
+| [Satin parameters](params/satin.md) | 18 | Satin column, E-stitch, S-stitch, Zigzag satin |
 
 ## Every parameter
 
@@ -52,13 +51,16 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`lock_start`](params/common.md#lock_start) | Start lock | Common parameters |
 | [`lock_start_scale_mm`](params/common.md#lock_start_scale_mm) | Start lock size | Common parameters |
 | [`lock_start_scale_percent`](params/common.md#lock_start_scale_percent) | Start lock scale | Common parameters |
-| [`max_stitch_length_mm`](params/manual.md#max_stitch_length_mm) | Longest stitch | Manual parameters |
+| [`max_stitch_length_mm`](params/common.md#max_stitch_length_mm) | Longest stitch | Common parameters |
 | [`min_jump_stitch_length_mm`](params/common.md#min_jump_stitch_length_mm) | Shortest jump | Common parameters |
+| [`min_random_split_length_mm`](params/satin.md#min_random_split_length_mm) | Shortest split stitch | Satin parameters |
 | [`min_stitch_length_mm`](params/common.md#min_stitch_length_mm) | Shortest stitch | Common parameters |
 | [`pull_compensation_mm`](params/satin.md#pull_compensation_mm) | Pull compensation | Satin parameters |
 | [`pull_compensation_percent`](params/satin.md#pull_compensation_percent) | Pull compensation (% of width) | Satin parameters |
 | [`push_compensation_mm`](params/satin.md#push_compensation_mm) | Push compensation | Satin parameters |
 | [`random_seed`](params/common.md#random_seed) | Random seed | Common parameters |
+| [`random_split_jitter_percent`](params/satin.md#random_split_jitter_percent) | Split jitter | Satin parameters |
+| [`random_split_phase`](params/satin.md#random_split_phase) | Random split phase | Satin parameters |
 | [`random_stitch_length_jitter_percent`](params/running.md#random_stitch_length_jitter_percent) | Length variation | Running parameters |
 | [`random_width_decrease_percent`](params/satin.md#random_width_decrease_percent) | Random width decrease | Satin parameters |
 | [`random_width_increase_percent`](params/satin.md#random_width_increase_percent) | Random width increase | Satin parameters |
@@ -71,6 +73,8 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`satin_method`](params/satin.md#satin_method) | Method | Satin parameters |
 | [`short_stitch_distance_mm`](params/satin.md#short_stitch_distance_mm) | Short stitch distance | Satin parameters |
 | [`short_stitch_inset`](params/satin.md#short_stitch_inset) | Short stitch inset | Satin parameters |
+| [`split_method`](params/satin.md#split_method) | Split method | Satin parameters |
+| [`split_staggers`](params/satin.md#split_staggers) | Staggers | Satin parameters |
 | [`stop_after`](params/common.md#stop_after) | Stop after | Common parameters |
 | [`stroke_method`](params/stroke.md#stroke_method) | Method | Stroke parameters |
 | [`swap_satin_rails`](params/satin.md#swap_satin_rails) | Swap rails | Satin parameters |

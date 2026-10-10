@@ -91,5 +91,6 @@ The reference lists each parameter with its range and default, on a page for eac
 
 - [running stitch](../reference/params/running.md)
 - [repeats and bean stitch](../reference/params/repeat.md)
-- [manual stitch](../reference/params/manual.md)
 - [the stroke method](../reference/params/stroke.md)
+- [the settings every stitch type shares](../reference/params/common.md), with manual stitch's longest
+  stitch

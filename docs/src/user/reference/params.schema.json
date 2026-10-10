@@ -239,7 +239,7 @@
     },
     "max_stitch_length_mm": {
       "default": null,
-      "description": "Split stitches longer than this into equal parts. Empty, every stitch is sewn as drawn.",
+      "description": "Split stitches longer than this. Manual stitch splits them into equal parts, and a satin column as its split method says. Empty, every stitch is sewn whole.",
       "maximum": 25.0,
       "minimum": 0.1,
       "title": "Longest stitch",
@@ -249,9 +249,13 @@
       ],
       "x-stitchcraft": {
         "applies_to": [
-          "manual_stitch"
+          "manual_stitch",
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
         ],
-        "group": "Manual stitch",
+        "group": "Longest stitch",
         "origin": "inkstitch",
         "stability": "stable",
         "unit": "mm"
@@ -272,6 +276,35 @@
         "origin": "inkstitch",
         "stability": "stable",
         "unit": "mm"
+      }
+    },
+    "min_random_split_length_mm": {
+      "default": null,
+      "description": "With a random split phase, also split stitches longer than this but no longer than the longest stitch. Empty: the longest stitch.",
+      "maximum": 25.0,
+      "minimum": 0.1,
+      "title": "Shortest split stitch",
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Split stitches",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm",
+        "visible_when": {
+          "any_of": [
+            "default"
+          ],
+          "key": "split_method"
+        }
       }
     },
     "min_stitch_length_mm": {
@@ -394,6 +427,55 @@
         "group": "Random variation",
         "origin": "inkstitch",
         "stability": "stable"
+      }
+    },
+    "random_split_jitter_percent": {
+      "default": 0.0,
+      "description": "How far each split may move at random, in percent of a part, either way. With a random split phase, how much each part's length may vary instead.",
+      "maximum": 100.0,
+      "minimum": 0.0,
+      "title": "Split jitter",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Split stitches",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "%",
+        "visible_when": {
+          "any_of": [
+            "default"
+          ],
+          "key": "split_method"
+        }
+      }
+    },
+    "random_split_phase": {
+      "default": false,
+      "description": "Start each stitch's splits at a random distance from its start, and space them by the longest stitch, instead of dividing the stitch evenly. The needle holes of neighbouring stitches then fall apart, at the cost of a few more stitches.",
+      "title": "Random split phase",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Split stitches",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "visible_when": {
+          "any_of": [
+            "default"
+          ],
+          "key": "split_method"
+        }
       }
     },
     "random_stitch_length_jitter_percent": {
@@ -670,6 +752,53 @@
         "unit": "%"
       }
     },
+    "split_method": {
+      "default": "default",
+      "description": "How stitches longer than the longest stitch (`max_stitch_length_mm`) are split. Default splits each into the fewest equal parts no longer than it. Simple splits at whole multiples of it from the stitch's start. Staggered moves those splits along from one stitch to the next, so the needle holes of neighbouring stitches do not line up in a row.",
+      "enum": [
+        "default",
+        "simple",
+        "staggered"
+      ],
+      "title": "Split method",
+      "type": "string",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Split stitches",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
+    "split_staggers": {
+      "default": 4.0,
+      "description": "How many stitches the staggered splits take to come back to where they started. A fraction draws diagonals that show less than whole numbers do.",
+      "maximum": 100.0,
+      "minimum": 0.01,
+      "title": "Staggers",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Split stitches",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "visible_when": {
+          "any_of": [
+            "staggered"
+          ],
+          "key": "split_method"
+        }
+      }
+    },
     "stop_after": {
       "default": false,
       "description": "Pause the machine after this element: to add an appliqué fabric, or to check the work.",
@@ -790,6 +919,7 @@
           "stop_after",
           "min_stitch_length_mm",
           "min_jump_stitch_length_mm",
+          "max_stitch_length_mm",
           "random_seed"
         ],
         "name": "CommonParams",
@@ -822,13 +952,6 @@
       },
       {
         "keys": [
-          "max_stitch_length_mm"
-        ],
-        "name": "ManualParams",
-        "title": "Manual parameters"
-      },
-      {
-        "keys": [
           "satin_column",
           "satin_method",
           "zigzag_spacing_mm",
@@ -841,7 +964,12 @@
           "random_width_increase_percent",
           "random_zigzag_spacing_percent",
           "short_stitch_inset",
-          "short_stitch_distance_mm"
+          "short_stitch_distance_mm",
+          "split_method",
+          "random_split_jitter_percent",
+          "random_split_phase",
+          "min_random_split_length_mm",
+          "split_staggers"
         ],
         "name": "SatinParams",
         "title": "Satin parameters"

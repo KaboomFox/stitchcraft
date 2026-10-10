@@ -205,7 +205,7 @@ fn property(spec: &ParamSpec) -> Result<Json, String> {
             json!({"type": if optional { json!(["number", "null"]) } else { json!("number") }, "minimum": min, "maximum": max})
         }
         Kind::Angle => json!({"type": "number"}),
-        Kind::Percent { min, max } => json!({"type": "number", "minimum": min, "maximum": max}),
+        Kind::Percent { min, max } | Kind::Number { min, max } => json!({"type": "number", "minimum": min, "maximum": max}),
         Kind::Count { min, max } => json!({"type": "integer", "minimum": min, "maximum": max}),
         Kind::Toggle => json!({"type": "boolean"}),
         Kind::Choice { options } => json!({"type": "string", "enum": options.iter().map(|o| o.id).collect::<Vec<_>>()}),
@@ -263,7 +263,7 @@ fn json_value(value: &Value) -> Json {
     match value {
         Value::Length(Some(mm)) => json!(mm.get()),
         Value::Length(None) | Value::Seed(None) => Json::Null,
-        Value::Angle(v) | Value::Percent(v) => json!(v),
+        Value::Angle(v) | Value::Percent(v) | Value::Number(v) => json!(v),
         Value::Count(n) => json!(n),
         Value::Toggle(on) => json!(on),
         Value::Choice(id) => json!(id),

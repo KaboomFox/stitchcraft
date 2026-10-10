@@ -6,9 +6,10 @@
 
 use proptest::prelude::*;
 use stitchcraft_core::{Budget, Code, Mm, Point};
+use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::design::{Path, Segment, Subpath};
 use stitchcraft_engine::generators::Stitched;
-use stitchcraft_engine::generators::manual::{ManualParams, manual_stitch};
+use stitchcraft_engine::generators::manual::manual_stitch;
 use stitchcraft_engine::generators::passes::RepeatParams;
 use stitchcraft_params::ParamSet;
 
@@ -19,9 +20,9 @@ fn p(x: f64, y: f64) -> Point {
 /// `path` sewn by hand with `settings` (Ink/Stitch keys and values) and the shortest stitch `min`.
 fn sew(path: &Path, settings: &[(&str, &str)], min: f64) -> Stitched {
     let set: ParamSet = settings.iter().copied().collect();
-    let manual = ManualParams::from_set(&set).unwrap().params;
+    let longest = CommonParams::from_set(&set).unwrap().params.max_stitch_length_mm;
     let passes = RepeatParams::from_set(&set).unwrap().params;
-    manual_stitch(path, &manual, &passes, Mm::new(min).unwrap(), &mut Budget::DEFAULT.meter()).unwrap()
+    manual_stitch(path, longest, &passes, Mm::new(min).unwrap(), &mut Budget::DEFAULT.meter()).unwrap()
 }
 
 /// One open subpath of straight lines through `points`.
@@ -66,7 +67,7 @@ fn req_run_006_a_longest_stitch_of_zero_or_less_sews_every_stitch_as_drawn() {
         assert!(sewn.warnings.is_empty(), "{raw:?}");
     }
     let set: ParamSet = [("max_stitch_length_mm", "0")].into_iter().collect();
-    let read = ManualParams::from_set(&set).unwrap();
+    let read = CommonParams::from_set(&set).unwrap();
     assert_eq!((read.params.max_stitch_length_mm, read.warnings.len()), (None, 0));
 }
 

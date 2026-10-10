@@ -138,18 +138,29 @@ along the column as it was.
    another take turns with the percentages and start over at the first, so `15 30` insets them by 15 %,
    30 %, 15 % and on. A point at least that far from the last one left in place stays, and the next
    points are measured from it. A distance of 0 insets none. The points are the compensated ones, and an
-   inset moves its point toward the other end of the stitch as negative pull compensation does. Where
-   split stitches (step 4) are on, as Ink/Stitch's default split method places them, an inset is at most
-   a third of the longest stitch (M4.5).
-4. **Split long stitches.** A stitch longer than `max_stitch_length_mm` (if set) is split into equal
-   pieces. `split_method` decides where the split points fall from one stitch to the next:
-   `simple` (same fractions every time), `staggered` (offsets cycle every `split_staggers` stitches, like
-   tatami rows) or `default` (random phase with `random_split_jitter_percent`, `random_split_phase`,
-   and pieces no shorter than `min_random_split_length_mm`). Split points never line up into a visible
-   seam on more than `split_staggers` consecutive stitches.
+   inset moves its point toward the other end of the stitch as negative pull compensation does. Even
+   splits (step 4) hold an inset to a third of the longest stitch.
+4. **Split long stitches,** as Ink/Stitch splits them, where the element sets a longest stitch
+   (`max_stitch_length_mm`, one of the settings every stitch type shares). A stitch's ends are its pair's
+   compensated points, and it is sewn between their insets. `split_method` says where the splits go.
+   - `default` splits a stitch into the fewest equal parts no longer than the longest stitch, and the
+     stitch back after it into as many parts as the stitch across before. `random_split_jitter_percent`
+     moves each split by up to that share of a part, either way, at random.
+   - With `random_split_phase`, the default method starts the splits a random share of the longest
+     stitch from the stitch's inset start instead, and follows at the longest stitch, longer or shorter
+     by up to the jitter. Stitches no longer than `min_random_split_length_mm` (by default the longest
+     stitch) are not split. Of 2 or more splits, one within the element's shortest stitch of an end is
+     left out.
+   - `simple` splits at whole multiples of the longest stitch from a stitch's start, and from a stitch
+     back's end, where they lie between its insets. The splits line up in rows.
+   - `staggered` does the same from a start that moves along by a `split_staggers`-th of the longest
+     stitch from one stitch to the next, and comes back after that many stitches. Fractions are allowed.
+   - With even splits (the default method without random phase), a short stitch's inset (step 3) is at
+     most a third of the longest stitch.
 5. **Alternate.** Each pair is sewn rail A first, then rail B, and the needle goes A, B, A, B and on.
    The stitch from A to B goes straight across, and the one from B to the next A slants. One zigzag cycle
    (A → B → A) spans `zigzag_spacing_mm`. The exit end is chosen by assembly (see *Start and end*).
+   Random splits are drawn after the pairs are placed, in the order the stitches are sewn.
 
 ## Underlays
 
@@ -186,7 +197,7 @@ override both (`REQ-GEN-001`). Travel between underlay passes uses `running_stit
 |---|---|
 | `REQ-SAT-001` | Pull compensation moves both ends of every top stitch outward along it, by `pull_compensation_mm` plus `pull_compensation_percent` of its width (± 0.01 mm). Ends moved past each other meet |
 | `REQ-SAT-002` | Consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails and within 5 % on curves. The last pair is at most a spacing on |
-| `REQ-SAT-003` | No top stitch exceeds `max_stitch_length_mm` after splitting; split seams follow the chosen method |
+| `REQ-SAT-003` | With a longest stitch, a longer top stitch is split as `split_method` says. By default it splits into the fewest equal parts, and the stitch back into as many as the stitch across before. Simple and staggered splits fall at whole multiples of the longest stitch, from a start that `staggered` moves along |
 | `REQ-SAT-004` | Underlays lie inside the inset band and precede the top stitches |
 | `REQ-SAT-005` | Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces `SC-E0201` and no stitches, and a rung that misses a rail joins the rail's nearest point (`SC-W0203`) |
 | `REQ-SAT-006` | A parameter with a value for each side changes only its own side: a rail's stitch ends, or the column's start or end |

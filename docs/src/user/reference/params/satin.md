@@ -144,3 +144,57 @@ in. 0 moves none.
 - **Accepts:** a length from 0 to 5 mm
 - **Default:** `0.25`
 - **Ink/Stitch:** same key, meaning and default
+
+## Split stitches
+
+### `split_method`
+
+**Split method.** How stitches longer than the longest stitch (`max_stitch_length_mm`) are split. Default splits
+each into the fewest equal parts no longer than it. Simple splits at whole multiples of it from
+the stitch's start. Staggered moves those splits along from one stitch to the next, so the needle
+holes of neighbouring stitches do not line up in a row.
+
+- **Accepts:** one of `default` (Default), `simple` (Simple), `staggered` (Staggered)
+- **Default:** `default`
+- **Ink/Stitch:** same key, meaning and default
+
+### `random_split_jitter_percent`
+
+**Split jitter.** How far each split may move at random, in percent of a part, either way. With a random split
+phase, how much each part's length may vary instead.
+
+- **Accepts:** a percentage from 0 to 100
+- **Default:** `0`
+- **Shown when** [`split_method`](#split_method) is `default`
+- **Ink/Stitch:** same key, meaning and default
+
+### `random_split_phase`
+
+**Random split phase.** Start each stitch's splits at a random distance from its start, and space them by the longest
+stitch, instead of dividing the stitch evenly. The needle holes of neighbouring stitches then
+fall apart, at the cost of a few more stitches.
+
+- **Accepts:** true or false
+- **Default:** `false`
+- **Shown when** [`split_method`](#split_method) is `default`
+- **Ink/Stitch:** same key, meaning and default
+
+### `min_random_split_length_mm`
+
+**Shortest split stitch.** With a random split phase, also split stitches longer than this but no longer than the longest
+stitch. Empty: the longest stitch.
+
+- **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
+- **Default:** empty
+- **Shown when** [`split_method`](#split_method) is `default`
+- **Ink/Stitch:** same key, meaning and default
+
+### `split_staggers`
+
+**Staggers.** How many stitches the staggered splits take to come back to where they started. A fraction draws
+diagonals that show less than whole numbers do.
+
+- **Accepts:** a number from 0.01 to 100
+- **Default:** `4`
+- **Shown when** [`split_method`](#split_method) is `staggered`
+- **Ink/Stitch:** same key, meaning and default
