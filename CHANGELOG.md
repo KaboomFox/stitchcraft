@@ -285,6 +285,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- Mutation testing on a pull request runs in 4 parts, dealt round-robin as the weekly run deals them, and
+  a fifth job adds them up. In one part, the 1,142 mutants in the lines M4.9 changes would have run past
+  the job's limit of an hour and a half.
 - The reference machine is a Brother PE800, as its owner says, not a Brother with an 8 × 8 in hoop
   ([ADR 0013](docs/src/design/adr/0013-brother-pe800-reference-machine.md)). Its profiles replace
   `brother-200x200`, one for each of its hoops: `brother-pe800-5x7` (130 × 180 mm, the reference and the
