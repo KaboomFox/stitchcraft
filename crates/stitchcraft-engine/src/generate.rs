@@ -116,20 +116,23 @@ fn sew(
     };
     let Some(satin_params) = kept(SatinParams::from_set(set), diagnostics) else { return Ok(None) };
     let min_stitch = common.as_ref().map(|common| shortest_stitch(common.min_stitch_length_mm, settings, profile));
+    let mut rng = SplitMix64::for_element(element.id.as_str(), common.as_ref().and_then(|common| common.random_seed).unwrap_or(0));
     let sewn = if satin_params.satin_column {
-        satin_column(path, &satin_params, diagnostics, meter)?
+        satin_column(path, &satin_params, &mut rng, diagnostics, meter)?
     } else {
-        stroke(element, path, min_stitch, diagnostics, meter)?
+        stroke(element, path, min_stitch, &mut rng, diagnostics, meter)?
     };
     let (Some(common), Some(min_stitch), Some((stitch_type, stitched))) = (common, min_stitch, sewn) else { return Ok(None) };
     diagnostics.extend(stitched.warnings);
     Ok(Some(Generated { common, stitch_type, groups: stitched.runs, min_stitch }))
 }
 
-/// A satin column's stitches by its `satin_method`, or `None` when it is skipped.
+/// A satin column's stitches by its `satin_method`, varied at random by the element's `rng`, or `None`
+/// when it is skipped.
 fn satin_column(
     path: &Path,
     params: &SatinParams,
+    rng: &mut SplitMix64,
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<Option<(StitchType, Stitched)>, Exhausted> {
@@ -142,7 +145,7 @@ fn satin_column(
         Some(SatinShape::Rails(rails)) => rails,
     };
     match StitchType::from_id(Family::Satin, params.satin_method) {
-        Some(StitchType::SatinColumn) => Ok(Some((StitchType::SatinColumn, satin_stitch(&rails, params, meter)?))),
+        Some(StitchType::SatinColumn) => Ok(Some((StitchType::SatinColumn, satin_stitch(&rails, params, rng, meter)?))),
         _ => {
             let method = params.satin_method;
             diagnostics.push(not_yet(&format!("This element's satin method, `{method}`, is not sewn by this version of StitchCraft yet")));
@@ -151,12 +154,14 @@ fn satin_column(
     }
 }
 
-/// A stroke's stitches by its `stroke_method`, with no stitch shorter than `min_stitch`, or `None` when it
-/// is skipped (`min_stitch` is `None` when the settings every stitch type shares cannot be read).
+/// A stroke's stitches by its `stroke_method`, with no stitch shorter than `min_stitch`, varied at random
+/// by the element's `rng`, or `None` when it is skipped (`min_stitch` is `None` when the settings every
+/// stitch type shares cannot be read).
 fn stroke(
     element: &Element,
     path: &Path,
     min_stitch: Option<Mm>,
+    rng: &mut SplitMix64,
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<Option<(StitchType, Stitched)>, Exhausted> {
@@ -167,8 +172,7 @@ fn stroke(
     match StitchType::from_id(Family::Stroke, stroke.stroke_method) {
         Some(StitchType::RunningStitch) => {
             let (Some(running), Some(passes)) = (kept(RunningParams::from_set(set), diagnostics), passes) else { return Ok(None) };
-            let mut rng = SplitMix64::for_element(element.id.as_str(), running.random_seed.unwrap_or(0));
-            Ok(Some((StitchType::RunningStitch, running_stitch(path, &running, &passes, min_stitch, &mut rng, meter)?)))
+            Ok(Some((StitchType::RunningStitch, running_stitch(path, &running, &passes, min_stitch, rng, meter)?)))
         }
         Some(StitchType::ManualStitch) => {
             let (Some(manual), Some(passes)) = (kept(ManualParams::from_set(set), diagnostics), passes) else { return Ok(None) };

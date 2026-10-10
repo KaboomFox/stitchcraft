@@ -30,10 +30,10 @@ How it is built:
 
 StitchCraft sews the strokes of an SVG design in running stitch, bean stitch or manual stitch, with lock
 stitches, trims and stops, and writes PES and DST files. It reads, draws and converts PES, PEC and DST
-files from other software. The engine sews the top stitches of satin columns, and the rest of milestone
-M4 adds compensation, short stitches, split stitches and underlays. An SVG's satin columns are sewn once
-`stitch plan` reads Ink/Stitch's settings, in M8. Fills come in M5. [ROADMAP.md](ROADMAP.md) is the
-status board.
+files from other software. The engine sews the top stitches of satin columns with their compensation,
+and the rest of milestone M4 adds short stitches, split stitches and underlays. An SVG's satin columns
+are sewn once `stitch plan` reads Ink/Stitch's settings, in M8. Fills come in M5.
+[ROADMAP.md](ROADMAP.md) is the status board.
 
 ## Use it
 

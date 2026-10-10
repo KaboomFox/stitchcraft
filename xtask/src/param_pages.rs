@@ -213,6 +213,9 @@ fn property(spec: &ParamSpec) -> Result<Json, String> {
         Kind::LengthList { min, max } => {
             json!({"type": "array", "minItems": 1, "maxItems": MAX_LIST, "items": {"type": "number", "minimum": min, "maximum": max}})
         }
+        Kind::LengthPair { min, max } | Kind::PercentPair { min, max } => {
+            json!({"type": "array", "minItems": 1, "maxItems": 2, "items": {"type": "number", "minimum": min, "maximum": max}})
+        }
         Kind::CountList { min, max } => {
             json!({"type": "array", "minItems": 1, "maxItems": MAX_LIST, "items": {"type": "integer", "minimum": min, "maximum": max}})
         }
@@ -266,6 +269,10 @@ fn json_value(value: &Value) -> Json {
         Value::Choice(id) => json!(id),
         Value::Seed(Some(seed)) => json!(seed),
         Value::Lengths(lengths) => json!(lengths.iter().map(|mm| mm.get()).collect::<Vec<_>>()),
+        Value::LengthPair([a, b]) if a == b => json!([a.get()]),
+        Value::LengthPair(pair) => json!(pair.map(|mm| mm.get())),
+        Value::PercentPair([a, b]) if a == b => json!([a]),
+        Value::PercentPair(pair) => json!(pair),
         Value::Counts(counts) => json!(counts),
         Value::Text(text) => json!(text),
     }

@@ -1,5 +1,5 @@
-//! Settings every stitch type shares: lock stitches, a trim or a stop after the element, and the
-//! shortest stitch and jump.
+//! Settings every stitch type shares: lock stitches, a trim or a stop after the element, the shortest
+//! stitch and jump, and the seed of the stitch types that vary at random.
 //!
 //! Plan assembly and finalizing honour them (roadmap M3.7–M3.9); they are declared once, here, with
 //! Ink/Stitch's names and defaults, which are the interoperability contract
@@ -9,9 +9,20 @@ use stitchcraft_params::{Origin, StitchType, params};
 
 use crate::locks::{LOCKS, SIZED_IN_MM, SIZED_IN_PERCENT};
 
+/// The stitch types that vary at random, and so take a seed: running stitch's random lengths (ripple
+/// stitch sews its lines with them), and a satin column's random widths and spacing, whatever its method.
+const RANDOMIZED: &[StitchType] = &[
+    StitchType::RunningStitch,
+    StitchType::RippleStitch,
+    StitchType::SatinColumn,
+    StitchType::EStitch,
+    StitchType::SStitch,
+    StitchType::SatinZigzag,
+];
+
 params! {
     /// Settings every stitch type shares: lock stitches where the element's stitching starts and
-    /// ends, a trim or a stop after it, and the shortest stitch and jump.
+    /// ends, a trim or a stop after it, the shortest stitch and jump, and where random variation starts.
     ///
     /// StitchCraft reads and checks them today; they change the stitches as plan assembly arrives
     /// (roadmap steps M3.7 to M3.9).
@@ -81,11 +92,18 @@ params! {
         /// jump. Empty: the document's setting.
         min_jump_stitch_length_mm: OptionalLength = "", label "Shortest jump", range (0.0, 20.0);
     }
+
+    "Random variation" {
+        /// Where random variation starts: a running stitch's random lengths, and a satin column's random
+        /// widths and spacing. The same seed gives the same stitches, another seed others. Empty, each
+        /// element gets its own.
+        random_seed: Seed = "", label "Random seed", applies RANDOMIZED;
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use stitchcraft_params::ParamSet;
+    use stitchcraft_params::{Family, ParamSet};
 
     use super::*;
 
@@ -97,7 +115,14 @@ mod tests {
         assert_eq!((p.ties, p.force_lock_stitches, p.lock_start, p.lock_end), ("0", false, "half_stitch", "half_stitch"));
         assert_eq!((p.lock_start_scale_mm.get(), p.lock_end_scale_percent), (0.7, 100.0));
         assert_eq!((p.trim_after, p.stop_after, p.min_stitch_length_mm, p.min_jump_stitch_length_mm), (false, false, None, None));
-        assert_eq!(p.lock_custom_start, "");
+        assert_eq!((p.lock_custom_start.as_str(), p.random_seed), ("", None));
+    }
+
+    #[test]
+    fn the_seed_applies_to_the_stitch_types_that_vary_at_random() {
+        let seed = CommonParams::SPECS.iter().find(|spec| spec.key == "random_seed").unwrap();
+        let varies = |t: &StitchType| matches!(t.family(), Family::Satin) || matches!(t, StitchType::RunningStitch | StitchType::RippleStitch);
+        assert_eq!(seed.applies_to, StitchType::ALL.iter().copied().filter(varies).collect::<Vec<_>>());
     }
 
     #[test]

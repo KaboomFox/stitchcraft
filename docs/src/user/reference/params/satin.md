@@ -59,3 +59,66 @@ goes from the first rail to the second.
 - **Accepts:** true or false
 - **Default:** `false`
 - **Ink/Stitch:** same key, meaning and default
+
+## Compensation
+
+### `pull_compensation_mm`
+
+**Pull compensation.** How far each end of every stitch reaches past its rail. The thread pulls the fabric in across the
+column as it sews, so a satin comes out narrower than drawn, and this makes up for it. Negative
+values make the column narrower. 2 values set the first rail's side, then the second's.
+
+- **Accepts:** a length from -10 to 10 mm, or 2 separated by a space
+- **Default:** `0`
+- **Ink/Stitch:** same key, meaning and default
+
+### `pull_compensation_percent`
+
+**Pull compensation (% of width).** More pull compensation, in percent of the column's width at each stitch, added to the length
+above: wide parts of a column reach out further than narrow ones. 2 values set the first rail's
+side, then the second's.
+
+- **Accepts:** a percentage from -100 to 100, or 2 separated by a space
+- **Default:** `0`
+- **Ink/Stitch:** same key, meaning and default
+
+### `push_compensation_mm`
+
+**Push compensation.** How much shorter the column is made at its start and its end. Satin stitches push the fabric out
+along the column, so it comes out longer than drawn, and this makes up for it. Negative values
+lengthen the column. 2 values set the start, then the end.
+
+- **Accepts:** a length from -10 to 10 mm, or 2 separated by a space
+- **Default:** `0`
+- **Ink/Stitch:** same key, meaning and default
+
+## Random variation
+
+### `random_width_decrease_percent`
+
+**Random width decrease.** How much narrower than the compensated column a stitch may come out on each side, chosen at
+random for each stitch, in percent of the column's width there. A ragged edge looks like fur or
+grass. 2 values set the first rail's side, then the second's.
+
+- **Accepts:** a percentage from 0 to 100, or 2 separated by a space
+- **Default:** `0`
+- **Ink/Stitch:** same key, meaning and default
+
+### `random_width_increase_percent`
+
+**Random width increase.** How much wider than the compensated column a stitch may come out on each side, chosen at random
+for each stitch, in percent of the column's width there. 2 values set the first rail's side, then
+the second's.
+
+- **Accepts:** a percentage from 0 to 100, or 2 separated by a space
+- **Default:** `0`
+- **Ink/Stitch:** same key, meaning and default
+
+### `random_zigzag_spacing_percent`
+
+**Random zigzag spacing.** How much the distance to each stitch may differ from the zigzag spacing, chosen at random, in
+percent of the spacing, longer or shorter.
+
+- **Accepts:** a percentage from 0 to 100
+- **Default:** `0`
+- **Ink/Stitch:** same key, meaning and default

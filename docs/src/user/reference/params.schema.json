@@ -291,9 +291,90 @@
         "unit": "mm"
       }
     },
+    "pull_compensation_mm": {
+      "default": [
+        0.0
+      ],
+      "description": "How far each end of every stitch reaches past its rail. The thread pulls the fabric in across the column as it sews, so a satin comes out narrower than drawn, and this makes up for it. Negative values make the column narrower. 2 values set the first rail's side, then the second's.",
+      "items": {
+        "maximum": 10.0,
+        "minimum": -10.0,
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Pull compensation",
+      "type": "array",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Compensation",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
+    "pull_compensation_percent": {
+      "default": [
+        0.0
+      ],
+      "description": "More pull compensation, in percent of the column's width at each stitch, added to the length above: wide parts of a column reach out further than narrow ones. 2 values set the first rail's side, then the second's.",
+      "items": {
+        "maximum": 100.0,
+        "minimum": -100.0,
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Pull compensation (% of width)",
+      "type": "array",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Compensation",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "%"
+      }
+    },
+    "push_compensation_mm": {
+      "default": [
+        0.0
+      ],
+      "description": "How much shorter the column is made at its start and its end. Satin stitches push the fabric out along the column, so it comes out longer than drawn, and this makes up for it. Negative values lengthen the column. 2 values set the start, then the end.",
+      "items": {
+        "maximum": 10.0,
+        "minimum": -10.0,
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Push compensation",
+      "type": "array",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Compensation",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
     "random_seed": {
       "default": null,
-      "description": "Where the random stitch lengths start: the same seed gives the same stitches, another seed others. Empty, each element gets its own.",
+      "description": "Where random variation starts: a running stitch's random lengths, and a satin column's random widths and spacing. The same seed gives the same stitches, another seed others. Empty, each element gets its own.",
       "minimum": 0,
       "title": "Random seed",
       "type": [
@@ -304,16 +385,20 @@
       "x-stitchcraft": {
         "applies_to": [
           "running_stitch",
-          "ripple_stitch"
+          "ripple_stitch",
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
         ],
-        "group": "Running stitch",
+        "group": "Random variation",
         "origin": "inkstitch",
         "stability": "stable"
       }
     },
     "random_stitch_length_jitter_percent": {
       "default": 10.0,
-      "description": "How much each stitch may be longer or shorter than the stitch length, in percent of it.",
+      "description": "How much each stitch may be longer or shorter than the stitch length, in percent of it. Where the random lengths start is the element's `random_seed`.",
       "maximum": 100.0,
       "minimum": 0.0,
       "title": "Length variation",
@@ -333,6 +418,80 @@
           ],
           "key": "enable_random_stitch_length"
         }
+      }
+    },
+    "random_width_decrease_percent": {
+      "default": [
+        0.0
+      ],
+      "description": "How much narrower than the compensated column a stitch may come out on each side, chosen at random for each stitch, in percent of the column's width there. A ragged edge looks like fur or grass. 2 values set the first rail's side, then the second's.",
+      "items": {
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Random width decrease",
+      "type": "array",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Random variation",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "%"
+      }
+    },
+    "random_width_increase_percent": {
+      "default": [
+        0.0
+      ],
+      "description": "How much wider than the compensated column a stitch may come out on each side, chosen at random for each stitch, in percent of the column's width there. 2 values set the first rail's side, then the second's.",
+      "items": {
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Random width increase",
+      "type": "array",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Random variation",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "%"
+      }
+    },
+    "random_zigzag_spacing_percent": {
+      "default": 0.0,
+      "description": "How much the distance to each stitch may differ from the zigzag spacing, chosen at random, in percent of the spacing, longer or shorter.",
+      "maximum": 100.0,
+      "minimum": 0.0,
+      "title": "Random zigzag spacing",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "satin_column",
+          "e_stitch",
+          "s_stitch",
+          "zigzag"
+        ],
+        "group": "Random variation",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "%"
       }
     },
     "repeats": {
@@ -583,7 +742,8 @@
           "trim_after",
           "stop_after",
           "min_stitch_length_mm",
-          "min_jump_stitch_length_mm"
+          "min_jump_stitch_length_mm",
+          "random_seed"
         ],
         "name": "CommonParams",
         "title": "Common parameters"
@@ -600,8 +760,7 @@
           "running_stitch_length_mm",
           "running_stitch_tolerance_mm",
           "enable_random_stitch_length",
-          "random_stitch_length_jitter_percent",
-          "random_seed"
+          "random_stitch_length_jitter_percent"
         ],
         "name": "RunningParams",
         "title": "Running parameters"
@@ -627,7 +786,13 @@
           "satin_method",
           "zigzag_spacing_mm",
           "reverse_rails",
-          "swap_satin_rails"
+          "swap_satin_rails",
+          "pull_compensation_mm",
+          "pull_compensation_percent",
+          "push_compensation_mm",
+          "random_width_decrease_percent",
+          "random_width_increase_percent",
+          "random_zigzag_spacing_percent"
         ],
         "name": "SatinParams",
         "title": "Satin parameters"

@@ -5,6 +5,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M4.3: satin compensation and random variation, as in Ink/Stitch (`REQ-SAT-001`, `REQ-SAT-006` to
+  `REQ-SAT-008`).
+  - **Pull compensation** moves both ends of every stitch outward along it, by `pull_compensation_mm`
+    plus `pull_compensation_percent` of the column's width there. Negative values move them inward, and
+    ends moved past each other meet.
+  - **Push compensation** (`push_compensation_mm`) shortens the column at its start and end, or
+    lengthens it where negative. A rail too short for it keeps its length, and `SC-W0211` says so.
+  - **Random variation.** `random_width_decrease_percent` and `random_width_increase_percent` vary each
+    stitch's width, and `random_zigzag_spacing_percent` the step to it. The element's `random_seed`
+    starts them, and their values differ from Ink/Stitch's (`DEV-SAT-002`).
+  - A parameter for each side takes 1 value for both or 2: for the first rail's side then the second's,
+    or for the start then the end.
+  - `random_seed` is now one of the settings every stitch type shares, for the types that vary at
+    random. It means what it did for running stitch.
 - M4.2: satin columns are sewn. Their top stitches go rail to rail, placed as Ink/Stitch places them
   (`REQ-SAT-002`). Pull compensation, short stitches on curves, split stitches and underlays follow in
   M4.3 to M4.6, and until then satins differ from Ink/Stitch's where those apply. Ink/Stitch's short

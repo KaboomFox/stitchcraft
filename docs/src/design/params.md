@@ -106,7 +106,9 @@ version and a registry schema version arrive with the first release, together wi
 | `Toggle` | `bool` | `true`/`false` (also `yes`/`no`, `on`/`off`, `1`/`0`) | `boolean`, `toggle` |
 | `Choice` | `&'static str` (the id) | one of the declared ids; unknown ids are a diagnostic, not a default | `combo`, `dropdown` |
 | `Seed` | `Option<u64>` | any; empty means "derive from the element"; text that is not a number is hashed (FNV-1a) | `random_seed` |
-| `LengthList` | `Vec<Mm>` | 1–16 values, each in range (patterns like `"2.5 1.0"`, per-side values) | `string`/`float` lists |
+| `LengthList` | `Vec<Mm>` | 1 to 16 values, each in range (patterns like `"2.5 1.0"`) | `string`/`float` lists |
+| `LengthPair` | `[Mm; 2]` | 1 value for both sides, or 2 for the first side and the second (a satin's rails, or its start and end). Each is in range, with units as for `Length` | `float`, unit `mm (each side)` |
+| `PercentPair` | `[f64; 2]` | as `LengthPair`, in percent | `float`, unit `% (each side)` |
 | `CountList` | `Vec<u32>` | 1–16 whole numbers, each in range | `string`/`int` lists |
 | `Text` | `String` | ≤ 4,096 bytes; kind-specific grammar (e.g. a custom lock path) is checked by its user | `string` |
 

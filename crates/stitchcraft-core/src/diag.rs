@@ -205,6 +205,14 @@ registry! {
     /// nodes.
     SatinNodesUnequal = "SC-W0210", Warning, "Satin rails without rungs have different numbers of nodes";
 
+    /// A satin column's push compensation, taken off a rail at the column's start and end, would leave less
+    /// than half a CSS pixel (0.13 mm) of it, so that rail keeps its length, as in Ink/Stitch. A negative
+    /// value at the other end still lengthens it.
+    ///
+    /// The message gives the push compensation at each end. Lower `push_compensation_mm`, or lengthen the
+    /// column.
+    SatinPushTooLong = "SC-W0211", Warning, "Satin push compensation too long for a rail; that rail keeps its length";
+
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
     /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that

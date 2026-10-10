@@ -5,20 +5,24 @@
 //! one setting on both its satin and its stroke tabs. Its path is first recognized as rails and rungs
 //! ([`crate::normalize::satin`]): a path that cannot be a satin column gets an error and no stitches, and
 //! what recognition took by length, stood in for or left out is named. Then the rails are turned the way
-//! they are sewn and cut into sections at the rungs (the `column` module), and needle points are placed in
-//! pairs across the column along the sections (`pairs`), sewn rail to rail.
+//! they are sewn, shortened or lengthened by push compensation and cut into sections at the rungs (the
+//! `column` module), and needle points are placed in pairs across the column along the sections (`pairs`),
+//! each pair widened by pull compensation (`compensation`), and sewn rail to rail.
 //!
-//! These are the top stitches as Ink/Stitch places them, and the later steps of M4 add the rest: pull
-//! compensation (M4.3), short stitches on curves (M4.4), split stitches (M4.5) and underlays (M4.6). A
-//! path of 1 subpath, sewn along its centre line, follows in M4.8.
+//! These are the top stitches as Ink/Stitch places them, and the later steps of M4 add the rest: short
+//! stitches on curves (M4.4), split stitches (M4.5) and underlays (M4.6). A path of 1 subpath, sewn along
+//! its centre line, follows in M4.8.
 
 mod column;
+mod compensation;
 mod pairs;
 
+use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Diagnostic, Exhausted, Meter};
 use stitchcraft_params::{ChoiceOption, StitchType, params};
 
 use crate::design::Path;
+use crate::generators::satin::compensation::Processor;
 use crate::generators::{Stitched, method};
 use crate::normalize::satin::{Recognition, Satin, Shape, recognize};
 
@@ -75,6 +79,39 @@ params! {
         /// goes from the first rail to the second.
         swap_satin_rails: Toggle = "false", label "Swap rails";
     }
+
+    "Compensation" {
+        /// How far each end of every stitch reaches past its rail. The thread pulls the fabric in across the
+        /// column as it sews, so a satin comes out narrower than drawn, and this makes up for it. Negative
+        /// values make the column narrower. 2 values set the first rail's side, then the second's.
+        pull_compensation_mm: LengthPair = "0", label "Pull compensation", range (-10.0, 10.0);
+
+        /// More pull compensation, in percent of the column's width at each stitch, added to the length
+        /// above: wide parts of a column reach out further than narrow ones. 2 values set the first rail's
+        /// side, then the second's.
+        pull_compensation_percent: PercentPair = "0", label "Pull compensation (% of width)", range (-100.0, 100.0);
+
+        /// How much shorter the column is made at its start and its end. Satin stitches push the fabric out
+        /// along the column, so it comes out longer than drawn, and this makes up for it. Negative values
+        /// lengthen the column. 2 values set the start, then the end.
+        push_compensation_mm: LengthPair = "0", label "Push compensation", range (-10.0, 10.0);
+    }
+
+    "Random variation" {
+        /// How much narrower than the compensated column a stitch may come out on each side, chosen at
+        /// random for each stitch, in percent of the column's width there. A ragged edge looks like fur or
+        /// grass. 2 values set the first rail's side, then the second's.
+        random_width_decrease_percent: PercentPair = "0", label "Random width decrease", range (0.0, 100.0);
+
+        /// How much wider than the compensated column a stitch may come out on each side, chosen at random
+        /// for each stitch, in percent of the column's width there. 2 values set the first rail's side, then
+        /// the second's.
+        random_width_increase_percent: PercentPair = "0", label "Random width increase", range (0.0, 100.0);
+
+        /// How much the distance to each stitch may differ from the zigzag spacing, chosen at random, in
+        /// percent of the spacing, longer or shorter.
+        random_zigzag_spacing_percent: Percent = "0", label "Random zigzag spacing", range (0.0, 100.0);
+    }
 }
 
 /// What a satin column's `path` is, with what recognition took by length, stood in for or left out
@@ -91,12 +128,13 @@ pub fn shape(path: &Path, diagnostics: &mut Vec<Diagnostic>, meter: &mut Meter) 
     })
 }
 
-/// The satin column `satin` sewn as `params` say: one run of needle points, a pair across the column at
-/// a time, from the rails' starts to their ends.
-pub fn satin_stitch(satin: &Satin, params: &SatinParams, meter: &mut Meter) -> Result<Stitched, Exhausted> {
+/// The satin column `satin` sewn as `params` say, its random variation drawn from the element's `rng`: one
+/// run of needle points, a pair across the column at a time, from the rails' starts to their ends.
+pub fn satin_stitch(satin: &Satin, params: &SatinParams, rng: &mut SplitMix64, meter: &mut Meter) -> Result<Stitched, Exhausted> {
     let mut warnings = Vec::new();
-    let sections = column::sections(satin, params.swap_satin_rails, params.reverse_rails, &mut warnings, meter)?;
-    let run = pairs::pairs(&sections, params.zigzag_spacing_mm.get(), meter)?.into_iter().flatten().collect();
+    let sections = column::sections(satin, params, &mut warnings, meter)?;
+    let mut processor = Processor::new(params, rng);
+    let run = pairs::pairs(&sections, params.zigzag_spacing_mm.get(), &mut processor, meter)?.into_iter().flatten().collect();
     Ok(Stitched { runs: vec![run], warnings })
 }
 

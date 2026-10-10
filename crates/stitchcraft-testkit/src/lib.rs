@@ -2,6 +2,7 @@
 //! assertions. A dev-dependency only (`cargo xtask layers` enforces it).
 //!
 //! - [`designs`]: small designs for the engine's cases, and a plan's shape at a glance.
+//! - [`satins`]: satin columns sewn as an element is, and their needle points read back in pairs.
 //! - [`plans`]: canonical stitch plans behind the format golden files.
 //! - [`equivalence`]: when two plans make a machine do the same thing (round-trip tests).
 //! - [`strategies`]: random plans for property tests, with fixed seeds on every PR.
@@ -17,4 +18,5 @@ pub mod designs;
 pub mod equivalence;
 pub mod fuzz;
 pub mod plans;
+pub mod satins;
 pub mod strategies;

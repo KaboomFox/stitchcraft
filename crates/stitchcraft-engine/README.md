@@ -10,8 +10,9 @@ repeats, bean stitch (`generators::passes`) and random length since M3.5; manual
 here since M3.7. Since M3.8 the entry point, `plan`, sends each element to its generator (`generate`) and
 joins the groups into one plan (`assemble`). Since M3.9 it fits the plan to the machine and checks it
 (`finalize`), and a plan that `plan` returns can be written as it is. Since M4.1 a satin column's path
-is read as its rails and rungs (`normalize::satin`), as Ink/Stitch reads it, and since M4.2 its top
-stitches are placed as Ink/Stitch places them (`generators::satin`). Design: `docs/src/design/engine-pipeline.md` and
+is read as its rails and rungs (`normalize::satin`), as Ink/Stitch reads it. Since M4.2 its top stitches
+are placed as Ink/Stitch places them (`generators::satin`), and since M4.3 compensated and varied at
+random as Ink/Stitch does. Design: `docs/src/design/engine-pipeline.md` and
 `docs/src/design/algorithms/`.
 
 ## Invariants

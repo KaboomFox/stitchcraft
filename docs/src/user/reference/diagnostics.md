@@ -21,6 +21,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0205`](#sc-w0205) | Warning | Satin subpath is one point; left out |
 | [`SC-W0207`](#sc-w0207) | Warning | Satin rung crosses a rail more than once; left out |
 | [`SC-W0210`](#sc-w0210) | Warning | Satin rails without rungs have different numbers of nodes |
+| [`SC-W0211`](#sc-w0211) | Warning | Satin push compensation too long for a rail; that rail keeps its length |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -203,6 +204,17 @@ follow the rails' lengths alone.
 
 The message gives both counts. Add rungs across the column, or give both rails the same number of
 nodes.
+
+## SC-W0211
+
+**Warning** — Satin push compensation too long for a rail; that rail keeps its length
+
+A satin column's push compensation, taken off a rail at the column's start and end, would leave less
+than half a CSS pixel (0.13 mm) of it, so that rail keeps its length, as in Ink/Stitch. A negative
+value at the other end still lengthens it.
+
+The message gives the push compensation at each end. Lower `push_compensation_mm`, or lengthen the
+column.
 
 ## SC-W0401
 

@@ -64,3 +64,10 @@ area = "satin"
 summary = "A rung that crosses a rail more than once, or runs along a rail for a while, is left out (SC-W0207). Ink/Stitch leaves a rung out only when it meets the two rails at more than 2 points in all, and uses one that crosses one rail twice and misses the other, or runs along a rail, at one of its crossings. A subpath that does not move is left out as a point before rails are told from rungs (SC-W0205), where Ink/Stitch counts a line of zero length among the subpaths."
 reason = "Which of its crossings such a rung means is not clear, so StitchCraft does not guess, and the warning names the rung. A line of zero length is neither a rail nor a rung. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_column.py)."
 requirements = ["REQ-SAT-005"]
+
+[[deviation]]
+id = "DEV-SAT-002"
+area = "satin"
+summary = "Random satin widths and spacing are drawn from StitchCraft's generator (SplitMix64, seeded from the element's id and random_seed), so the values differ from Ink/Stitch's for the same seed. The ranges, and when each value is drawn, are Ink/Stitch's."
+reason = "Every random value in StitchCraft comes from one fully specified generator, the same on every platform and never changed by a dependency (docs/src/design/determinism.md). Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_processor.py)."
+requirements = ["REQ-SAT-007"]

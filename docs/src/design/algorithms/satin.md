@@ -85,6 +85,34 @@ line from its first node to its last lies along it, as Ink/Stitch places the run
 When the resulting stitch directions deviate from the local column normal by more than 45° somewhere,
 the element gets `SC-W0208` ("add a rung here") with the location.
 
+## Compensation
+
+Thread under tension pulls the fabric in across a satin column, which then sews narrower than it is
+drawn. The stitches also push the fabric out at the column's ends, and it sews longer. StitchCraft makes
+up for both as Ink/Stitch does.
+
+- **Push compensation** (`push_compensation_mm`) acts on the rails after any reversal, before they are
+  cut into sections. It takes its length off each rail at the column's start and end, or adds it where
+  negative, straight on from the rail's first or last segment. 2 values set the start, then the end.
+  The points that say where to cut come from the rails as drawn, so a rung in a part taken off cuts the
+  rail at its end and leaves its section out. A rail the shortening would leave shorter than half a CSS
+  pixel keeps its length (`SC-W0211`), and a lengthening at its other end still applies.
+- **Pull compensation** acts on each pair as it is placed. Both ends move outward along the line through
+  the pair, each by `pull_compensation_mm` plus `pull_compensation_percent` of the pair's width, and 2
+  values set the first rail's side, then the second's. Negative values move the ends inward. Ends that
+  would cross meet instead, where their moves divide the width. A pair whose ends are closer than a
+  ten-thousandth of a CSS pixel has no direction to move them in, and stays as it is.
+- **Random variation** comes from the element's generator, seeded with `random_seed`
+  ([determinism](../determinism.md)). Each pair's share of the width on each side is drawn between
+  `pull_compensation_percent` less `random_width_decrease_percent` and plus
+  `random_width_increase_percent`. Each step's spacing is drawn between the zigzag spacing less and plus
+  `random_zigzag_spacing_percent` of it, and never below a hundredth of it. As in Ink/Stitch, a spacing
+  is drawn at each section's start and after each pair, and the widths with each pair. Ink/Stitch draws
+  from another generator, and its random values differ (`DEV-SAT-002`).
+
+Pairs are placed and measured from each other before pull compensation, which leaves each pair's place
+along the column as it was.
+
 ## Top stitches (method `satin_column`)
 
 1. **Place pairs along the sections,** as Ink/Stitch places them. A pair of needle points goes across
@@ -99,13 +127,10 @@ the element gets `SC-W0208` ("add a rung here") with the location.
      pair is short of the spacing.
    - The column starts with a pair at its start and ends with one at its end, unless the last pair is
      within 0.1 mm of it.
-   - `random_zigzag_spacing_percent` jitters each step (seeded, M4.3).
-2. **Compensate width.** For each pair, move both ends outward along the A–B line by
-   `pull_compensation_mm + pull_compensation_percent × width` per side; one value applies to both sides,
-   two values (`"0.2 0.4"`) apply per rail. `random_width_increase_percent` and
-   `random_width_decrease_percent` add per-side jitter. Push compensation (`push_compensation_mm`)
-   pulls the column's two ends inward along the column, because the fabric pushes satin stitches
-   outward at the ends.
+   - With `random_zigzag_spacing_percent`, each step's spacing is drawn at random (*Compensation*), and
+     a pair moves to lie that spacing from the one before.
+2. **Compensate width.** Each pair is widened by pull compensation as it is placed, with its random
+   share (*Compensation*).
 3. **Short stitches on curves.** Where consecutive points on the inner rail are closer than
    `short_stitch_distance_mm`, every other stitch ends `short_stitch_inset` percent of the width short of
    that rail, so the inner edge does not pile up.
@@ -152,18 +177,19 @@ override both (`REQ-GEN-001`). Travel between underlay passes uses `running_stit
 
 | Requirement | Property |
 |---|---|
-| `REQ-SAT-001` | Every top stitch end lies on its rail, offset outward by exactly the compensation (± 0.01 mm) |
+| `REQ-SAT-001` | Pull compensation moves both ends of every top stitch outward along it, by `pull_compensation_mm` plus `pull_compensation_percent` of its width (± 0.01 mm). Ends moved past each other meet |
 | `REQ-SAT-002` | Consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails and within 5 % on curves. The last pair is at most a spacing on |
 | `REQ-SAT-003` | No top stitch exceeds `max_stitch_length_mm` after splitting; split seams follow the chosen method |
 | `REQ-SAT-004` | Underlays lie inside the inset band and precede the top stitches |
 | `REQ-SAT-005` | Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces `SC-E0201` and no stitches, and a rung that misses a rail joins the rail's nearest point (`SC-W0203`) |
-| `REQ-SAT-006` | Asymmetric parameters affect only their side |
-| `REQ-SAT-007` | Random parameters are reproducible from the seed |
+| `REQ-SAT-006` | A parameter with a value for each side changes only its own side: a rail's stitch ends, or the column's start or end |
+| `REQ-SAT-007` | Random widths and spacing are reproducible from the element and its seed, and stay within their ranges |
+| `REQ-SAT-008` | Push compensation shortens the rails at the column's start and end before they are cut, or lengthens them where negative. A rail it would leave shorter than half a CSS pixel keeps its length (`SC-W0211`) |
 
 Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparison to tune defaults
 ([machine testing](../../plan/machine-testing.md)).
 
 ## Diagnostics
 
-`SC-E0201`, `SC-W0202`, `SC-W0203`, `SC-W0205`, `SC-W0206`, `SC-W0207`, `SC-W0208`, and `SC-W0209` (a satin
-wider than 12 mm risks snagging: consider split stitches or a fill).
+`SC-E0201`, `SC-W0202`, `SC-W0203`, `SC-W0205`, `SC-W0206`, `SC-W0207`, `SC-W0208`, `SC-W0209` (a satin
+wider than 12 mm risks snagging: consider split stitches or a fill), `SC-W0210` and `SC-W0211`.

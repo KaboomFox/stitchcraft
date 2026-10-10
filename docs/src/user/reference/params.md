@@ -30,12 +30,12 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 
 | Group | Parameters | Applies to |
 |---|---|---|
-| [Common parameters](params/common.md) | 14 | every stitch type |
+| [Common parameters](params/common.md) | 15 | every stitch type |
 | [Stroke parameters](params/stroke.md) | 1 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
-| [Running parameters](params/running.md) | 5 | Running stitch, Ripple stitch |
+| [Running parameters](params/running.md) | 4 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Manual parameters](params/manual.md) | 1 | Manual stitch |
-| [Satin parameters](params/satin.md) | 5 | Satin column, E-stitch, S-stitch, Zigzag satin |
+| [Satin parameters](params/satin.md) | 11 | Satin column, E-stitch, S-stitch, Zigzag satin |
 
 ## Every parameter
 
@@ -55,8 +55,14 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`max_stitch_length_mm`](params/manual.md#max_stitch_length_mm) | Longest stitch | Manual parameters |
 | [`min_jump_stitch_length_mm`](params/common.md#min_jump_stitch_length_mm) | Shortest jump | Common parameters |
 | [`min_stitch_length_mm`](params/common.md#min_stitch_length_mm) | Shortest stitch | Common parameters |
-| [`random_seed`](params/running.md#random_seed) | Random seed | Running parameters |
+| [`pull_compensation_mm`](params/satin.md#pull_compensation_mm) | Pull compensation | Satin parameters |
+| [`pull_compensation_percent`](params/satin.md#pull_compensation_percent) | Pull compensation (% of width) | Satin parameters |
+| [`push_compensation_mm`](params/satin.md#push_compensation_mm) | Push compensation | Satin parameters |
+| [`random_seed`](params/common.md#random_seed) | Random seed | Common parameters |
 | [`random_stitch_length_jitter_percent`](params/running.md#random_stitch_length_jitter_percent) | Length variation | Running parameters |
+| [`random_width_decrease_percent`](params/satin.md#random_width_decrease_percent) | Random width decrease | Satin parameters |
+| [`random_width_increase_percent`](params/satin.md#random_width_increase_percent) | Random width increase | Satin parameters |
+| [`random_zigzag_spacing_percent`](params/satin.md#random_zigzag_spacing_percent) | Random zigzag spacing | Satin parameters |
 | [`repeats`](params/repeat.md#repeats) | Repeats | Repeat parameters |
 | [`reverse_rails`](params/satin.md#reverse_rails) | Reverse rails | Satin parameters |
 | [`running_stitch_length_mm`](params/running.md#running_stitch_length_mm) | Stitch length | Running parameters |

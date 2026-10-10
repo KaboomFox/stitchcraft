@@ -52,6 +52,10 @@ kinds! {
     Seed => Option<u64>, |v| if let Value::Seed(seed) = v { Some(seed) } else { None };
     /// Lengths in millimetres.
     LengthList => Vec<Mm>, |v| if let Value::Lengths(lengths) = v { Some(lengths) } else { None };
+    /// A length in millimetres for each of 2 sides.
+    LengthPair => [Mm; 2], |v| if let Value::LengthPair(pair) = v { Some(pair) } else { None };
+    /// A percentage for each of 2 sides.
+    PercentPair => [f64; 2], |v| if let Value::PercentPair(pair) = v { Some(pair) } else { None };
     /// Whole numbers.
     CountList => Vec<u32>, |v| if let Value::Counts(counts) = v { Some(counts) } else { None };
     /// Text.

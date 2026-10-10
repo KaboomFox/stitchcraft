@@ -77,7 +77,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `scale_end` | float | % | 0.0 | `ripple_stitch` | P3 (M10) | planned |
 | `rotate_ripples` | boolean | — | true | `ripple_stitch` | P3 (M10) | planned |
 | `join_style` | dropdown | — | 0 | `ripple_stitch` | P3 (M10) | planned |
-| `random_seed` | random_seed | — | — | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#random_seed) |
+| `random_seed` | random_seed | — | — | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/common.md#random_seed) |
 
 ## Satin columns
 
@@ -85,9 +85,9 @@ registry uses these names as its keys so files move between the tools unchanged
 |---|---|---|---|---|---|---|
 | `satin_column` | toggle | — | — | all | P1 (M4) | [registered](../user/reference/params/satin.md#satin_column) |
 | `satin_method` | combo | — | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#satin_method) |
-| `random_width_decrease_percent` | float | % (each side) | 0 | all | P1 (M4) | planned |
-| `random_width_increase_percent` | float | % (each side) | 0 | all | P1 (M4) | planned |
-| `random_zigzag_spacing_percent` | float | ± % | 0 | all | P1 (M4) | planned |
+| `random_width_decrease_percent` | float | % (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#random_width_decrease_percent) |
+| `random_width_increase_percent` | float | % (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#random_width_increase_percent) |
+| `random_zigzag_spacing_percent` | float | ± % | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#random_zigzag_spacing_percent) |
 | `split_method` | combo | — | 0 | all | P1 (M4) | planned |
 | `max_stitch_length_mm` | float | mm | — | all | P1 (M4) | planned |
 | `random_split_jitter_percent` | float | ± % | 0 | `default` | P1 (M4) | planned |
@@ -97,9 +97,9 @@ registry uses these names as its keys so files move between the tools unchanged
 | `short_stitch_inset` | float | % | 15 | all | P1 (M4) | planned |
 | `short_stitch_distance_mm` | float | mm | 0.25 | all | P1 (M4) | planned |
 | `zigzag_spacing_mm` | float | mm/cycle | 0.4 | all | P1 (M4) | [registered](../user/reference/params/satin.md#zigzag_spacing_mm) |
-| `pull_compensation_percent` | float | % (each side) | 0 | all | P1 (M4) | planned |
-| `pull_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) | planned |
-| `push_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) | planned |
+| `pull_compensation_percent` | float | % (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#pull_compensation_percent) |
+| `pull_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#pull_compensation_mm) |
+| `push_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#push_compensation_mm) |
 | `reverse_rails` | combo | — | automatic | all | P1 (M4) | [registered](../user/reference/params/satin.md#reverse_rails) |
 | `swap_satin_rails` | boolean | — | false | all | P1 (M4) | [registered](../user/reference/params/satin.md#swap_satin_rails) |
 | `running_stitch_length_mm` | float | mm | 2.5 | all | P1 (M4) | planned |
@@ -122,7 +122,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `zigzag_underlay_inset_mm` | float | mm (each side) | — | all | P1 (M4) | planned |
 | `zigzag_underlay_inset_percent` | float | % (each side) | — | all | P1 (M4) | planned |
 | `zigzag_underlay_max_stitch_length_mm` | float | mm | — | all | P1 (M4) | planned |
-| `random_seed` | random_seed | — | — | all | P1 (M4) | planned |
+| `random_seed` | random_seed | — | — | all | P1 (M4) | [registered](../user/reference/params/common.md#random_seed) |
 
 ## Fills
 
@@ -261,4 +261,4 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
 
-_145 parameter declarations, 29 registered in StitchCraft._
+_145 parameter declarations, 36 registered in StitchCraft._

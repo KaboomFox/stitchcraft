@@ -52,6 +52,21 @@ pub enum Kind {
         /// Largest accepted value, in millimetres.
         max: f64,
     },
+    /// A length in millimetres within `min..=max`, or 2 separated by a space: Ink/Stitch's values "for each
+    /// side", one for both or the first's then the second's (a satin's rails, or its start and end).
+    LengthPair {
+        /// Smallest accepted value, in millimetres.
+        min: f64,
+        /// Largest accepted value, in millimetres.
+        max: f64,
+    },
+    /// A percentage within `min..=max`, or 2 separated by a space, as for a [`Kind::LengthPair`].
+    PercentPair {
+        /// Smallest accepted value.
+        min: f64,
+        /// Largest accepted value.
+        max: f64,
+    },
     /// 1 to [`MAX_LIST`] whole numbers, each within `min..=max`.
     CountList {
         /// Smallest accepted value.
@@ -177,8 +192,8 @@ impl Kind {
     /// The unit values are in, for docs and user interfaces: `mm`, `%`, `°`, or `""`.
     pub const fn unit(self) -> &'static str {
         match self {
-            Kind::Length { .. } | Kind::LengthList { .. } => "mm",
-            Kind::Percent { .. } => "%",
+            Kind::Length { .. } | Kind::LengthList { .. } | Kind::LengthPair { .. } => "mm",
+            Kind::Percent { .. } | Kind::PercentPair { .. } => "%",
             Kind::Angle => "°",
             _ => "",
         }
@@ -201,6 +216,8 @@ impl Kind {
             }
             Kind::Seed => "a number or any text, or empty to derive it from the element".to_string(),
             Kind::LengthList { min, max } => format!("1 to {MAX_LIST} lengths from {min} to {max} mm, separated by spaces"),
+            Kind::LengthPair { min, max } => format!("a length from {min} to {max} mm, or 2 separated by a space"),
+            Kind::PercentPair { min, max } => format!("a percentage from {min} to {max}, or 2 separated by a space"),
             Kind::CountList { min, max } => format!("1 to {MAX_LIST} whole numbers from {min} to {max}, separated by spaces"),
             Kind::Text { max_bytes } => format!("text of at most {max_bytes} bytes"),
         }
@@ -216,11 +233,13 @@ mod tests {
         let kinds = [
             Kind::Length { min: 0.0, max: 1.0, optional: false },
             Kind::LengthList { min: 0.0, max: 1.0 },
+            Kind::LengthPair { min: 0.0, max: 1.0 },
             Kind::Percent { min: 0.0, max: 1.0 },
+            Kind::PercentPair { min: 0.0, max: 1.0 },
             Kind::Angle,
             Kind::Count { min: 0, max: 1 },
             Kind::Toggle,
         ];
-        assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "%", "°", "", ""]);
+        assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "mm", "%", "%", "°", "", ""]);
     }
 }
