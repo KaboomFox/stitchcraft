@@ -1,6 +1,9 @@
 # ADR-0013: The reference machine is a Brother PE800, with a profile for each of its hoops
 
+<!-- The status line, a label and its value, which the ADR index is checked against. -->
+<!-- vale ai-tells.ColonUsage = NO -->
 **Status:** Accepted · 2026-10-10
+<!-- vale ai-tells.ColonUsage = YES -->
 
 ## Context
 
