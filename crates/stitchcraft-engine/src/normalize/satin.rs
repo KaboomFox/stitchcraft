@@ -78,7 +78,7 @@ pub enum Shape {
     /// Rails and rungs.
     Rails(Satin),
     /// One subpath: the column's centre line, its width the stroke's (Ink/Stitch's simple satin), from which
-    /// its rails and rungs are made ([`crate::normalize::centre_line`]).
+    /// its rails and rungs are made (`normalize::centre_line`).
     CentreLine {
         /// The line, flattened.
         line: Vec<Point>,

@@ -15,7 +15,7 @@
 //! with the needle travelling straight from each to the next, all in one run. The column starts near
 //! where the elements before it left the needle, and ends near where the next element starts (`ends`).
 //! A path of 1 subpath is the column's centre line, and its rails and rungs are made from it as Ink/Stitch
-//! makes them ([`crate::normalize::centre_line`]), then recognized like any others.
+//! makes them (`normalize::centre_line`), then recognized like any others.
 
 mod column;
 mod compensation;
