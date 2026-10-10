@@ -1,28 +1,32 @@
-//! Presentation properties: the part of CSS that decides whether an SVG element paints, and in which
-//! colours.
+//! Presentation properties: the part of CSS that decides whether an SVG element paints, in which
+//! colours, and how its stroke is shaped.
 //!
 //! SVG elements take their colours and visibility from properties, written as presentation attributes
 //! (`fill="red"`) or in the `style` attribute (`style="fill:red"`), which wins. Most properties inherit,
 //! so the reader hands a [`Style`] from each element to its children, and each element changes what it
 //! sets. A value that does not parse is ignored, as CSS ignores an invalid declaration: the last valid
 //! declaration in `style` wins, then a valid presentation attribute, so StitchCraft sees what an SVG
-//! viewer shows. The reader names a paint the element sets that never parses ([`Declared::paint`]).
+//! viewer shows. The reader names a paint, stroke width, join or miter limit that the element sets and
+//! that never parses ([`Declaration::unreadable`]).
 //!
 //! Colours are read as editors write them: keywords in any case (`currentcolor`), and an ICC colour
 //! after the sRGB one (`#cd853f icc-color(…)`, from Inkscape's colour-managed picker) is left for the
 //! sRGB one, as viewers without colour management do.
 //!
+//! The stroke's width and join matter to a satin column drawn as one path, its centre line: they give
+//! the column its width and its corners ([`Style::join`]).
+//!
 //! Read here: `fill`, `stroke`, `color` (for `currentColor`), `fill-rule`, `opacity`, `fill-opacity`,
-//! `stroke-opacity`, `visibility`, `display`, `paint-order` and the marker properties, each of the three
-//! markers on its own. Style sheets
+//! `stroke-opacity`, `stroke-width`, `stroke-linejoin`, `stroke-miterlimit`, `visibility`, `display`,
+//! `paint-order` and the marker properties, each of the three markers on its own. Style sheets
 //! (`<style>` elements) are not read; the document reader warns when a file has one.
 
 use std::str::FromStr;
 
 use roxmltree::Node;
-use stitchcraft_engine::design::FillRule;
+use stitchcraft_engine::design::{FillRule, Join};
 use stitchcraft_plan::Rgb;
-use svgtypes::{Color, Length, LengthUnit, PaintOrder, PaintOrderKind};
+use svgtypes::{Color, Length, LengthUnit, Number, PaintOrder, PaintOrderKind};
 
 /// The properties one element sets itself: its `style` attribute's declarations, then its presentation
 /// attributes.
@@ -52,6 +56,32 @@ impl<'a, 'input> Declared<'a, 'input> {
     /// What the element declares for the paint `property` (`fill` or `stroke`).
     pub fn paint(&self, property: &str) -> Declaration<'a, Paint<'a>> {
         self.value(property, Paint::parse)
+    }
+
+    /// What the element declares for `stroke-width`: a length or percentage of 0 or more.
+    pub fn stroke_width(&self) -> Declaration<'a, Length> {
+        self.value("stroke-width", |v| Length::from_str(v).ok().filter(|l| l.number >= 0.0 && l.number.is_finite()))
+    }
+
+    /// What the element declares for `stroke-linejoin`: a join SVG names.
+    pub fn line_join(&self) -> Declaration<'a, LineJoin> {
+        self.value("stroke-linejoin", LineJoin::parse)
+    }
+
+    /// What the element declares for `stroke-miterlimit`: a number of 1 or more.
+    pub fn miter_limit(&self) -> Declaration<'a, f64> {
+        self.value("stroke-miterlimit", |v| Number::from_str(v).ok().map(|n| n.0).filter(|n| *n >= 1.0 && n.is_finite()))
+    }
+
+    /// The stroke's shape as the element declares it where it does not read: each property, the value that
+    /// would win, and what a value must be.
+    pub fn unreadable_stroke(&self) -> impl Iterator<Item = (&'static str, &'a str, &'static str)> {
+        let declared = [
+            ("stroke-width", self.stroke_width().unreadable(), "a length of 0 or more"),
+            ("stroke-linejoin", self.line_join().unreadable(), "a join SVG names"),
+            ("stroke-miterlimit", self.miter_limit().unreadable(), "a number of 1 or more"),
+        ];
+        declared.into_iter().filter_map(|(property, value, what)| Some((property, value?, what)))
     }
 
     /// What the element declares for `property`, read with `parse`: the last declaration in `style` that
@@ -111,6 +141,45 @@ pub enum Declaration<'a, T> {
     /// Values none of which reads, the one that would win first: the inherited value stays, as in a
     /// viewer.
     Unreadable(&'a str),
+}
+
+impl<'a, T> Declaration<'a, T> {
+    /// The value that does not read, when the element declares none that does.
+    pub fn unreadable(self) -> Option<&'a str> {
+        match self {
+            Declaration::Unreadable(value) => Some(value),
+            Declaration::Inherited | Declaration::Set(_) => None,
+        }
+    }
+}
+
+/// The joins `stroke-linejoin` names.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LineJoin {
+    /// `miter`.
+    Miter,
+    /// `miter-clip` (SVG 2).
+    MiterClip,
+    /// `round`.
+    Round,
+    /// `bevel`.
+    Bevel,
+    /// `arcs` (SVG 2).
+    Arcs,
+}
+
+impl LineJoin {
+    /// The join `value` names, in any case.
+    fn parse(value: &str) -> Option<LineJoin> {
+        let names = [
+            ("miter", LineJoin::Miter),
+            ("miter-clip", LineJoin::MiterClip),
+            ("round", LineJoin::Round),
+            ("bevel", LineJoin::Bevel),
+            ("arcs", LineJoin::Arcs),
+        ];
+        names.into_iter().find(|(name, _)| value.eq_ignore_ascii_case(name)).map(|(_, join)| join)
+    }
 }
 
 /// The marker properties, one per place on a path.
@@ -270,6 +339,12 @@ pub struct Style<'a> {
     /// Which of `marker-start`, `marker-mid` and `marker-end` name a marker: arrowheads and the like,
     /// drawn on top of the outline. Each inherits on its own.
     pub markers: [bool; 3],
+    /// The `stroke-width` property, applied in the user units of the shape it strokes.
+    pub stroke_width: Length,
+    /// The `stroke-linejoin` property, when anything sets it.
+    pub line_join: Option<LineJoin>,
+    /// The `stroke-miterlimit` property.
+    pub miter_limit: f64,
 }
 
 impl Default for Style<'_> {
@@ -286,6 +361,9 @@ impl Default for Style<'_> {
             transparent: false,
             stroke_first: false,
             markers: [false; 3],
+            stroke_width: Length::new_number(1.0),
+            line_join: None,
+            miter_limit: 4.0,
         }
     }
 }
@@ -330,6 +408,15 @@ impl<'a> Style<'a> {
             let first = order.order.iter().find(|k| matches!(k, PaintOrderKind::Fill | PaintOrderKind::Stroke));
             style.stroke_first = first == Some(&PaintOrderKind::Stroke);
         }
+        if let Declaration::Set(width) = declared.stroke_width() {
+            style.stroke_width = width;
+        }
+        if let Declaration::Set(join) = declared.line_join() {
+            style.line_join = Some(join);
+        }
+        if let Declaration::Set(limit) = declared.miter_limit() {
+            style.miter_limit = limit;
+        }
         for (marked, value) in style.markers.iter_mut().zip(declared.markers()) {
             if let Some(value) = value.filter(|v| !v.eq_ignore_ascii_case("inherit")) {
                 *marked = names_something(value);
@@ -346,6 +433,18 @@ impl<'a> Style<'a> {
     /// Whether any marker property names a marker.
     pub fn has_markers(&self) -> bool {
         self.markers.contains(&true)
+    }
+
+    /// The join at the stroke's corners, as Ink/Stitch reads it: round and bevel as they say, a miter
+    /// limited by `stroke-miterlimit` when the join is `miter`, and otherwise a miter limited at 5. SVG 2's
+    /// `miter-clip` and `arcs` count as otherwise.
+    pub fn join(&self) -> Join {
+        match self.line_join {
+            Some(LineJoin::Miter) => Join::Miter { limit: self.miter_limit },
+            Some(LineJoin::Round) => Join::Round,
+            Some(LineJoin::Bevel) => Join::Bevel,
+            Some(LineJoin::MiterClip | LineJoin::Arcs) | None => Join::UNSET,
+        }
     }
 }
 

@@ -221,6 +221,15 @@ registry! {
     /// column.
     SatinPushTooLong = "SC-W0211", Warning, "Satin push compensation too long for a rail; that rail keeps its length";
 
+    /// A satin column is drawn as one path, its centre line, and its stroke is no wider than the design's
+    /// `min_satin_stroke_width_mm` (1 mm unless the design sets it). A column that narrow is sewn as a
+    /// stroke, by the element's stroke settings, as in Ink/Stitch: a running stitch unless they say
+    /// otherwise.
+    ///
+    /// The message gives the stroke's width and the limit. Widen the stroke to sew a satin column, or draw
+    /// the column with 2 rails.
+    SatinTooNarrow = "SC-W0212", Warning, "Satin column drawn as one path too narrow; sewn as a stroke";
+
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
     /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that
@@ -354,7 +363,9 @@ registry! {
 
     /// Part of the SVG uses a feature that StitchCraft does not stitch, so that part is left out or
     /// simplified: text that is not converted to paths, raster images, clones (`<use>`), nested `<svg>`
-    /// elements, style sheets, or a gradient or pattern used as a colour.
+    /// elements, style sheets, or a gradient or pattern used as a colour. Values that do not read are
+    /// named too. A colour that does not read is ignored, as a viewer ignores it, and one of Ink/Stitch's
+    /// design settings keeps its default.
     ///
     /// The message names the element and what was done. Convert text and clones to paths in the editor
     /// (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
@@ -372,7 +383,8 @@ registry! {
     /// An element's geometry cannot be used: its path data has an error (the path is stitched up to the
     /// error, as SVG viewers draw it), its transform is not valid (it is skipped with everything inside
     /// it), it draws nothing, or it lies more than 10 metres from the document's origin, beyond what
-    /// machine files can record (it is skipped).
+    /// machine files can record (it is skipped). A stroke width, join or miter limit that does not read
+    /// is named as well, and ignored as a viewer ignores it. A stroke too wide to measure is skipped.
     ///
     /// The message names the element. Check its path data and transform, or remove stray objects far from
     /// the design.

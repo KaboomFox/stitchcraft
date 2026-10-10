@@ -55,8 +55,10 @@ recognition finds is reported, and its `satin_method` picks the generator: the s
 M4.2. A satin column also reads the running stitch's length (`running_stitch_length_mm`): the stitches
 that join its underlays are no longer than the first value. For any other stroke the generator is its
 `stroke_method`. `running_stitch` (the default) and
-`manual_stitch` are sewn from M3. The other stroke and satin methods, satin columns drawn as their centre
-line, and fills are skipped with `SC-W0011` until their milestones. An element whose parameters are
+`manual_stitch` are sewn from M3. A satin column drawn as one path no wider than the design's
+`min_satin_stroke_width` is sewn as a stroke, with `SC-W0212`, as in Ink/Stitch (`REQ-SAT-015`). The other
+stroke and satin methods, wider satin columns drawn as their centre line, and fills are skipped with
+`SC-W0011` until their milestones. An element whose parameters are
 wrong (`SC-E0101`) is skipped too, and the rest of the design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
@@ -71,7 +73,8 @@ Rules every generator follows:
   ([ADR 0014](adr/0014-generators-see-their-neighbours.md), `REQ-GEN-003`). Each is given the last
   needle point of the elements before it, whatever their thread, and what the next element offers to
   end near: its first point, or its shape when it starts at its own nearest point. The offer comes from
-  the next element's shape and settings, never its stitches, so nothing waits for a later element. A
+  the next element's shape and settings and the design's, never its stitches, so nothing waits for a
+  later element. A
   satin column starts and ends by them ([satin](algorithms/satin.md#start-and-end)), and explicit
   start and end commands will override them (`REQ-GEN-001`).
 - **Seeded randomness:** each element's generator is seeded from a hash of its id mixed with its

@@ -87,11 +87,41 @@ pub enum FillRule {
     EvenOdd,
 }
 
+/// How a stroke turns its corners, as Ink/Stitch reads `stroke-linejoin` and `stroke-miterlimit`
+/// (`REQ-SVG-004`). A satin column drawn as one path turns its rails' corners so.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Join {
+    /// A sharp corner, cut square where its point would lie farther from the path than `limit` times half
+    /// the stroke's width: 4 when the join is `miter` and no limit is set, as SVG says, and 5 when the
+    /// join is not set at all, as Ink/Stitch reads it.
+    Miter {
+        /// How far the point may reach, in half widths; at least 1.
+        limit: f64,
+    },
+    /// A rounded corner.
+    Round,
+    /// A corner cut square.
+    Bevel,
+}
+
+impl Join {
+    /// The join of a stroke whose `stroke-linejoin` is not set, or names a join Ink/Stitch does not: a
+    /// miter limited at 5.
+    pub const UNSET: Join = Join::Miter { limit: 5.0 };
+}
+
 /// What an element is, geometrically.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Shape {
     /// An outline stitched along: running stitch and the other stroke methods.
-    Stroke(Path),
+    Stroke {
+        /// The outline.
+        path: Path,
+        /// The stroke's width, as the transforms scale it: how wide a satin column drawn as one path is.
+        width: Mm,
+        /// How the stroke turns its corners.
+        join: Join,
+    },
     /// An area to fill, bounded by `path` under `rule`.
     Fill {
         /// The boundary.
@@ -102,10 +132,16 @@ pub enum Shape {
 }
 
 impl Shape {
+    /// A stroke along `path` whose style says nothing: 1 SVG user unit wide, SVG's initial width, with the
+    /// join of a stroke that sets none.
+    pub fn stroke(path: Path) -> Shape {
+        Shape::Stroke { path, width: Mm::SVG_PX, join: Join::UNSET }
+    }
+
     /// The geometry, whichever kind of shape this is.
     pub fn path(&self) -> &Path {
         match self {
-            Shape::Stroke(path) | Shape::Fill { path, .. } => path,
+            Shape::Stroke { path, .. } | Shape::Fill { path, .. } => path,
         }
     }
 }
@@ -125,8 +161,9 @@ pub struct Element {
     pub params: ParamSet,
 }
 
-/// Settings for the whole design. Ink/Stitch keeps them in the document; the SVG adapter reads them from
-/// roadmap M8, and until then a design has the defaults.
+/// Settings for the whole design. Ink/Stitch keeps them in the document. The SVG adapter reads the
+/// collapse length, the shortest stitch and the narrowest satin stroke from the file's metadata, and the
+/// origin and stop position from Ink/Stitch's commands from roadmap M8. Until then those are unset.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct DesignSettings {
     /// Moves between groups of the same thread no longer than this are sewn on rather than jumped, for
@@ -140,16 +177,28 @@ pub struct DesignSettings {
     pub origin: Option<Point>,
     /// Where the frame moves before each stop (Ink/Stitch's stop position command); without one, it stays.
     pub stop_position: Option<Point>,
+    /// A satin column drawn as one path whose stroke is no wider than this is sewn as a stroke (Ink/Stitch's
+    /// `min_satin_stroke_width_mm`).
+    pub min_satin_stroke_width: Mm,
 }
 
 impl DesignSettings {
     /// The collapse length a design has unless it says otherwise: 3 mm, as in Ink/Stitch.
     pub const COLLAPSE_LEN: Mm = Mm::from_tenths(30);
+    /// The narrowest stroke a satin column drawn as one path is sewn across, unless the design says
+    /// otherwise: 1 mm, as in Ink/Stitch.
+    pub const MIN_SATIN_STROKE_WIDTH: Mm = Mm::from_tenths(10);
 }
 
 impl Default for DesignSettings {
     fn default() -> Self {
-        DesignSettings { collapse_len: DesignSettings::COLLAPSE_LEN, min_stitch_len: None, origin: None, stop_position: None }
+        DesignSettings {
+            collapse_len: DesignSettings::COLLAPSE_LEN,
+            min_stitch_len: None,
+            origin: None,
+            stop_position: None,
+            min_satin_stroke_width: DesignSettings::MIN_SATIN_STROKE_WIDTH,
+        }
     }
 }
 
@@ -163,9 +212,9 @@ pub struct Design {
 
 impl Design {
     /// A design of `elements`, checked: every id is unique, every point (the settings' too) lies within
-    /// [`WORKING_LIMIT_MM`] of the origin, and the settings' lengths are not negative. A failure is a bug
-    /// in the host adapter that built it, so it is `SC-E0009`; adapters drop or correct what they cannot
-    /// represent, with a diagnostic of their own.
+    /// [`WORKING_LIMIT_MM`] of the origin, no stroke is narrower than 0 or limits its miters below 1, and
+    /// the settings' lengths are not negative. A failure is a bug in the host adapter that built it, so it
+    /// is `SC-E0009`; adapters drop or correct what they cannot represent, with a diagnostic of their own.
     pub fn new(elements: Vec<Element>, settings: DesignSettings) -> Result<Design, Diagnostic> {
         let far = |p: Point| p.x().abs() > WORKING_LIMIT_MM || p.y().abs() > WORKING_LIMIT_MM;
         let mut ids = BTreeSet::new();
@@ -177,12 +226,20 @@ impl Design {
                 return Err(Diagnostic::new(Code::InternalCheckFailed, format!("Element `{}` lies more than 10 m from the origin.", element.id))
                     .with_element(element.id.clone()));
             }
+            if let Shape::Stroke { width, join, .. } = element.shape
+                && (width.get() < 0.0 || matches!(join, Join::Miter { limit } if !(limit >= 1.0 && limit.is_finite())))
+            {
+                let message = format!("Element `{}` has a stroke narrower than 0, or a miter limit below 1.", element.id);
+                return Err(Diagnostic::new(Code::InternalCheckFailed, message).with_element(element.id.clone()));
+            }
         }
         if settings.origin.into_iter().chain(settings.stop_position).any(far) {
             return Err(Diagnostic::new(Code::InternalCheckFailed, "The design's origin or stop position lies more than 10 m from the origin."));
         }
-        if settings.collapse_len.get() < 0.0 || settings.min_stitch_len.is_some_and(|m| m.get() < 0.0) {
-            return Err(Diagnostic::new(Code::InternalCheckFailed, "The design's collapse length or shortest stitch is negative."));
+        if settings.collapse_len.get() < 0.0 || settings.min_stitch_len.is_some_and(|m| m.get() < 0.0) || settings.min_satin_stroke_width.get() < 0.0
+        {
+            let message = "The design's collapse length, shortest stitch or narrowest satin stroke is negative.";
+            return Err(Diagnostic::new(Code::InternalCheckFailed, message));
         }
         Ok(Design { elements, settings })
     }
@@ -212,7 +269,7 @@ mod tests {
         Element {
             id: ElementId::new(id).unwrap(),
             name: None,
-            shape: Shape::Stroke(path),
+            shape: Shape::stroke(path),
             thread: Thread::new(Rgb::new(0, 0, 0)),
             params: ParamSet::new(),
         }
@@ -248,9 +305,37 @@ mod tests {
     }
 
     #[test]
+    fn strokes_are_never_narrower_than_0_nor_limit_their_miters_below_1() {
+        let stroke = |width: f64, join: Join| {
+            let Shape::Stroke { path, .. } = element("a", line(p(0.0, 0.0), p(1.0, 0.0))).shape else { panic!("a stroke") };
+            Element { shape: Shape::Stroke { path, width: Mm::new(width).unwrap(), join }, ..element("a", Path::default()) }
+        };
+        for (width, join) in [
+            (-0.1, Join::Round),
+            (1.0, Join::Miter { limit: 0.9 }),
+            (1.0, Join::Miter { limit: f64::INFINITY }),
+            (1.0, Join::Miter { limit: f64::NAN }),
+        ] {
+            let problem = Design::new(vec![stroke(width, join)], DesignSettings::default()).unwrap_err();
+            assert_eq!(
+                (problem.code, problem.element.map(|e| e.to_string())),
+                (Code::InternalCheckFailed, Some("a".to_string())),
+                "{width} {join:?}"
+            );
+        }
+        for (width, join) in [(0.0, Join::Miter { limit: 1.0 }), (2.0, Join::Bevel), (2.0, Join::UNSET)] {
+            assert!(Design::new(vec![stroke(width, join)], DesignSettings::default()).is_ok(), "{width} {join:?}");
+        }
+        // Unless a host says otherwise, a stroke is 1 SVG user unit wide, with the join Ink/Stitch gives one
+        // that sets none.
+        assert_eq!(element("a", Path::default()).shape, Shape::Stroke { path: Path::default(), width: Mm::SVG_PX, join: Join::Miter { limit: 5.0 } });
+    }
+
+    #[test]
     fn settings_default_to_ink_stitch_s_and_are_checked_too() {
         let settings = DesignSettings::default();
         assert_eq!((settings.collapse_len.get(), settings.min_stitch_len, settings.origin, settings.stop_position), (3.0, None, None, None));
+        assert_eq!(settings.min_satin_stroke_width.get(), 1.0);
         let one = || vec![element("a", line(p(0.0, 0.0), p(1.0, 0.0)))];
         let at = |x: f64| Some(p(x, 0.0));
         let bad = [
@@ -258,11 +343,18 @@ mod tests {
             DesignSettings { stop_position: at(-WORKING_LIMIT_MM - 1.0), ..settings },
             DesignSettings { collapse_len: Mm::new(-1.0).unwrap(), ..settings },
             DesignSettings { min_stitch_len: Some(Mm::new(-0.1).unwrap()), ..settings },
+            DesignSettings { min_satin_stroke_width: Mm::new(-0.1).unwrap(), ..settings },
         ];
         for settings in bad {
             assert_eq!(Design::new(one(), settings).unwrap_err().code, Code::InternalCheckFailed, "{settings:?}");
         }
-        let edge = DesignSettings { origin: at(WORKING_LIMIT_MM), stop_position: at(0.0), collapse_len: Mm::ZERO, min_stitch_len: Some(Mm::ZERO) };
+        let edge = DesignSettings {
+            origin: at(WORKING_LIMIT_MM),
+            stop_position: at(0.0),
+            collapse_len: Mm::ZERO,
+            min_stitch_len: Some(Mm::ZERO),
+            min_satin_stroke_width: Mm::ZERO,
+        };
         assert!(Design::new(one(), edge).is_ok());
     }
 }

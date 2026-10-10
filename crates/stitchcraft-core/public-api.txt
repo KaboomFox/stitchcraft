@@ -44,6 +44,7 @@ pub stitchcraft_core::diag::Code::SatinRailsByLength
 pub stitchcraft_core::diag::Code::SatinRungAmbiguous
 pub stitchcraft_core::diag::Code::SatinRungDangling
 pub stitchcraft_core::diag::Code::SatinSubpathPoint
+pub stitchcraft_core::diag::Code::SatinTooNarrow
 pub stitchcraft_core::diag::Code::SatinWithoutRails
 pub stitchcraft_core::diag::Code::StitchLengthRaised
 pub stitchcraft_core::diag::Code::StitchTypeNotYet
@@ -147,6 +148,7 @@ pub enum stitchcraft_core::units::UnitError
 pub stitchcraft_core::units::UnitError::NotFinite(f64)
 pub struct stitchcraft_core::units::Mm(_)
 impl stitchcraft_core::units::Mm
+pub const stitchcraft_core::units::Mm::SVG_PX: stitchcraft_core::units::Mm
 pub const stitchcraft_core::units::Mm::ZERO: stitchcraft_core::units::Mm
 pub fn stitchcraft_core::units::Mm::from_points(f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>
 pub fn stitchcraft_core::units::Mm::from_svg_px(f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>
@@ -200,6 +202,7 @@ pub stitchcraft_core::Code::SatinRailsByLength
 pub stitchcraft_core::Code::SatinRungAmbiguous
 pub stitchcraft_core::Code::SatinRungDangling
 pub stitchcraft_core::Code::SatinSubpathPoint
+pub stitchcraft_core::Code::SatinTooNarrow
 pub stitchcraft_core::Code::SatinWithoutRails
 pub stitchcraft_core::Code::StitchLengthRaised
 pub stitchcraft_core::Code::StitchTypeNotYet
@@ -287,6 +290,7 @@ pub const fn stitchcraft_core::budget::Meter::stitches_left(&self) -> u32
 pub const fn stitchcraft_core::budget::Meter::work_left(&self) -> u64
 pub struct stitchcraft_core::Mm(_)
 impl stitchcraft_core::units::Mm
+pub const stitchcraft_core::units::Mm::SVG_PX: stitchcraft_core::units::Mm
 pub const stitchcraft_core::units::Mm::ZERO: stitchcraft_core::units::Mm
 pub fn stitchcraft_core::units::Mm::from_points(f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>
 pub fn stitchcraft_core::units::Mm::from_svg_px(f64) -> core::result::Result<Self, stitchcraft_core::units::UnitError>

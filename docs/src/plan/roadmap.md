@@ -86,7 +86,8 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M4.5 ✅ | Split stitches (simple, staggered, random) | `REQ-SAT-003` |
 | M4.6 ✅ | Underlays: centre walk, contour, zigzag | `REQ-SAT-004`, `REQ-SAT-010` to `REQ-SAT-012` |
 | M4.7 ✅ | Start/end nearest point; generators see their neighbours (ADR 0014) | `REQ-GEN-003`, `REQ-SAT-013`, `REQ-SAT-014` |
-| M4.8 | Single-path satin (centre line + width) | cases |
+| M4.8 ✅ | A stroke's width and join, and Ink/Stitch's design settings, read from SVG as Ink/Stitch reads them. A satin column drawn as one path and too narrow to stitch across is sewn as a stroke, `SC-W0212` | `REQ-SVG-004`, `REQ-SVG-005`, `REQ-SAT-015` |
+| M4.9 | Single-path satin. Its centre line is offset by half the stroke's width to each side, with the stroke's join, into 2 rails with rungs at its corners | cases |
 | MC-3 🧵 | **TS-05** (width ladder 1 to 10 mm × 3 densities), **TS-06** (underlay comparison); kit: `stitch testsheet` for each, sewable from M4.6 | report filed; satin defaults tuned |
 
 ## M5 — Tatami fill

@@ -19,6 +19,7 @@
 //! the rails place them, and each is widened by pull compensation only as it goes into the column
 //! (the `compensation` module).
 
+use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use crate::generators::satin::column::Section;
@@ -30,7 +31,7 @@ use crate::normalize::stroke::distance_to_segment;
 pub(crate) type Pair = [Point; 2];
 
 /// Lengths below this, in millimetres, count as none: a hundredth of a CSS pixel, as in Ink/Stitch.
-const NO_LENGTH: f64 = 0.01 * 25.4 / 96.0;
+const NO_LENGTH: f64 = 0.01 * MM_PER_SVG_PX;
 
 /// How far off the spacing a pair may land, as a fraction of it, before it moves.
 const OFF: f64 = 0.05;

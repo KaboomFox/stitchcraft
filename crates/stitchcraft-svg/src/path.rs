@@ -309,6 +309,7 @@ pub fn to_mm(subs: &[Sub], map: Affine) -> Result<Path, String> {
 #[cfg(test)]
 mod tests {
     use stitchcraft_core::Budget;
+    use stitchcraft_core::units::MM_PER_SVG_PX;
 
     use super::*;
 
@@ -534,7 +535,7 @@ mod tests {
     #[test]
     fn mapping_into_millimetres_rejects_far_or_huge_points() {
         let subs = outline("M 0 0 L 96 0").subs;
-        let mm = to_mm(&subs, Affine::scale(25.4 / 96.0, 25.4 / 96.0)).unwrap();
+        let mm = to_mm(&subs, Affine::scale(MM_PER_SVG_PX, MM_PER_SVG_PX)).unwrap();
         assert_eq!(mm.subpaths[0].segments, [Segment::Line(Point::new(25.4, 0.0).unwrap())]);
         assert!(to_mm(&outline("M 0 0 L 20000 0").subs, Affine::IDENTITY).unwrap_err().contains("10 m"));
         // Exactly 10 m is still in reach, on either axis; a micrometre more is not.

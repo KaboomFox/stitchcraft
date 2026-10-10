@@ -8,6 +8,7 @@
 mod common;
 
 use common::{all_at, at, ends, fixture, ids, svg, warnings};
+use stitchcraft_core::units::MM_PER_SVG_PX as MM;
 use stitchcraft_core::{Budget, Code, math};
 use stitchcraft_engine::design::{FillRule, Segment, Shape};
 use stitchcraft_plan::Rgb;
@@ -19,7 +20,7 @@ fn req_svg_001_an_inkscape_document_in_millimetres() {
     let e = svg.design.elements();
     // The rectangle, moved by its layer's translate(10,5): a fill and a stroke along the same outline.
     assert_eq!(e[0].shape, Shape::Fill { path: e[1].shape.path().clone(), rule: FillRule::NonZero });
-    assert!(matches!(e[1].shape, Shape::Stroke(_)));
+    assert!(matches!(e[1].shape, Shape::Stroke { .. }));
     all_at(&ends(&e[0])[0], &[(10.0, 5.0), (40.0, 5.0), (40.0, 25.0), (10.0, 25.0)]);
     assert!(e[0].shape.path().subpaths[0].closed);
     assert_eq!((e[0].thread.color, e[1].thread.color), (Rgb::new(255, 0, 0), Rgb::new(0, 0, 255)));
@@ -333,9 +334,6 @@ fn req_svg_001_illustrator_s_entities() {
     assert_eq!(ids(&svg), ["svg:square:fill"]);
     assert_eq!(warnings(&svg), Vec::<String>::new());
 }
-
-/// Millimetres per CSS pixel.
-const MM: f64 = 25.4 / 96.0;
 
 #[test]
 fn reading_is_bounded_by_the_budget() {

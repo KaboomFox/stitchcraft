@@ -99,3 +99,10 @@ area = "satin"
 summary = "A satin column's running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch's settings window shows 0.1 mm."
 reason = "The key is declared once, as the running stitch's, and its default is what both sew for a file without it. Ink/Stitch declares 0.1 mm but reads a missing value as 0.2 mm, read at d59c9ab (lib/elements/satin_column/satin_column.py)."
 requirements = ["REQ-SAT-013", "REQ-SAT-014"]
+
+[[deviation]]
+id = "DEV-SVG-001"
+area = "svg"
+summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."
+reason = "The SVG reader takes the drawing as a viewer shows it (docs/src/design/svg-input.md), and a column is then as wide as its stroke looks. Ink/Stitch converts lengths with inkex, which has no factor for %, em or ex and gives 0 for them (inkex 1.4.1, inkex/units.py), and compares the join with lower-case names (lib/svg/styles.py at d59c9ab)."
+requirements = ["REQ-SVG-004"]

@@ -247,6 +247,24 @@ rationale = "Read as plain SVG, every command would add a stray line and a colou
 milestone = "M3"
 status = "active"
 
+[[req]]
+id = "REQ-SVG-004"
+area = "svg"
+level = "L2"
+statement = "The width of a stroke is its inherited stroke-width, 1 user unit when none is set, scaled by the average of how much the shape's transform stretches the x and y axes, in millimetres. The join is round or bevel when stroke-linejoin says so. When it says miter, the miter limit is stroke-miterlimit, 4 when none is set. Any other join, or none, is a miter limited at 5. SC-W0804 names each value that does not read, and the value is ignored, as a viewer ignores it."
+rationale = "A satin column drawn as one path takes its width and corners from its stroke. Ink/Stitch reads them this way, and a file then sews alike in both. DEV-SVG-001 lists the differences."
+milestone = "M4"
+status = "active"
+
+[[req]]
+id = "REQ-SVG-005"
+area = "svg"
+level = "L2"
+statement = "Ink/Stitch's design settings collapse_len_mm, min_stitch_len_mm and min_satin_stroke_width_mm, kept in the first metadata element of the file, are the design's settings. The first element of each name counts. SC-W0802 names a value that is not a number of 0 or more, and the design keeps its default."
+rationale = "A file that changes them sews as Ink/Stitch sews it, and a setting that is not applied is never silent."
+milestone = "M4"
+status = "active"
+
 # ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -568,6 +586,15 @@ area = "satin"
 level = "L2"
 statement = "With end_at_nearest_point and an element after it, a satin column ends at its compensated outline's point nearest the next stitch, unless that is within 5 CSS pixels of the line's end. Every part is cut where the end's cut crosses it: the column sews the first halves, follows the line to its end, sews the second halves and stitches the end last. After an odd centre walk the passes run from the column's end and from its start."
 rationale = "Ending near the next element saves a jump and a trim. Ink/Stitch ends a column this way by default, so a file sews alike in both."
+milestone = "M4"
+status = "active"
+
+[[req]]
+id = "REQ-SAT-015"
+area = "satin"
+level = "L2"
+statement = "A satin column drawn as one subpath whose stroke is no wider than the design's min_satin_stroke_width_mm (1 mm unless the design sets it) is sewn as a stroke, by its stroke settings, and SC-W0212 says so. It offers the element before it its first point, as a stroke does."
+rationale = "Ink/Stitch sews a satin too narrow to stitch across as a running stitch, and a file then sews alike in both."
 milestone = "M4"
 status = "active"
 

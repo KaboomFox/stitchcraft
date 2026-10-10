@@ -29,7 +29,7 @@ use crate::generators::manual::manual_stitch;
 use crate::generators::passes::RepeatParams;
 use crate::generators::running::{RunningParams, running_stitch};
 use crate::generators::satin::{self, SatinLengths, SatinParams, satin_stitch};
-use crate::generators::{Approach, Neighbours, Stitched, method};
+use crate::generators::{Approach, Neighbours, Stitched, method, mm};
 use crate::normalize::satin::Shape as SatinShape;
 use crate::registry::PARAMETERS;
 
@@ -113,8 +113,8 @@ fn sew(
 ) -> Result<Option<Generated>, Exhausted> {
     let set = &element.params;
     let common = kept(CommonParams::from_set(set), diagnostics);
-    let path = match &element.shape {
-        Shape::Stroke(path) => path,
+    let (path, width) = match &element.shape {
+        Shape::Stroke { path, width, .. } => (path, *width),
         Shape::Fill { .. } => {
             diagnostics.push(not_yet("This element is a fill, and this version of StitchCraft does not sew fills yet"));
             return Ok(None);
@@ -127,7 +127,16 @@ fn sew(
         jump: common.jump_length(settings.collapse_len),
     });
     let mut rng = SplitMix64::for_element(element.id.as_str(), common.as_ref().and_then(|common| common.random_seed).unwrap_or(0));
-    let sewn = if satin_params.satin_column {
+    let narrow = satin_params.satin_column && too_narrow(path, width, settings);
+    if narrow {
+        let (width, limit) = (mm(width.get()), mm(settings.min_satin_stroke_width.get()));
+        let message = format!(
+            "This satin column is drawn as one path, and its stroke, {width} mm wide, is no wider than the design's limit of {limit} mm, so it \
+             is sewn as a stroke."
+        );
+        diagnostics.push(Diagnostic::new(Code::SatinTooNarrow, message));
+    }
+    let sewn = if satin_params.satin_column && !narrow {
         satin_column(element, path, &satin_params, lengths, neighbours, &mut rng, diagnostics, meter)?
     } else {
         stroke(element, path, lengths, &mut rng, diagnostics, meter)?
@@ -144,9 +153,15 @@ struct Lengths {
     min_stitch: Mm,
     /// Its longest stitch, when it sets one.
     max_stitch: Option<Mm>,
-    /// Its jump length: its `min_jump_stitch_length_mm`, or the design's collapse length when it sets none
-    /// or 0, as Ink/Stitch's satin reads it.
+    /// Its jump length ([`CommonParams::jump_length`]).
     jump: Mm,
+}
+
+/// Whether a satin column is drawn too narrow to stitch across (`REQ-SAT-015`): as one subpath or none,
+/// counting the subpaths drawn as Ink/Stitch counts them, with its stroke `width` no wider than the
+/// design's `min_satin_stroke_width`. It is sewn as a stroke, as in Ink/Stitch.
+fn too_narrow(path: &Path, width: Mm, settings: &DesignSettings) -> bool {
+    path.subpaths.len() <= 1 && width.get() <= settings.min_satin_stroke_width.get()
 }
 
 /// A satin column's stitches by its `satin_method`, with the element's stitch `lengths`, between its
@@ -219,14 +234,15 @@ fn stroke(
     }
 }
 
-/// What `element` offers the element before it to end near, read from its shape and settings alone, with
-/// the budget's work to itself (`REQ-GEN-003`): a stroke its first point, a satin column its rails as they
-/// are sewn when it starts at its nearest point and otherwise its first rail's start. A fill offers nothing
-/// until fills are sewn, and neither does an element whose shape or settings cannot be read.
-pub fn approach(element: &Element, budget: &Budget) -> Option<Approach> {
-    let Shape::Stroke(path) = &element.shape else { return None };
+/// What `element` offers the element before it to end near, read from its shape, its settings and the
+/// design's `settings` alone, with the budget's work to itself (`REQ-GEN-003`): a stroke its first point,
+/// a satin column its rails as they are sewn when it starts at its nearest point and otherwise its first
+/// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A fill offers
+/// nothing until fills are sewn, and neither does an element whose shape or settings cannot be read.
+pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -> Option<Approach> {
+    let Shape::Stroke { path, width, .. } = &element.shape else { return None };
     let params = SatinParams::from_set(&element.params).ok()?.params;
-    if !params.satin_column {
+    if !params.satin_column || too_narrow(path, *width, settings) {
         return path.subpaths.first().map(|subpath| Approach::Point(subpath.start));
     }
     let meter = &mut budget.meter();

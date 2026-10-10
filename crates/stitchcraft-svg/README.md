@@ -8,6 +8,9 @@ inspection.
 **Status:** v1 (M3.3) reads paths and the basic shapes, groups and `<switch>`, transforms, the root's
 size and viewBox (so positions come out in millimetres), fill and stroke colours with `currentColor`, and
 everything that hides an element. A shape's fill is sewn before its stroke, as Ink/Stitch sews them.
+Since M4.8 it reads each stroke's width and join (`REQ-SVG-004`), which give a satin column drawn as one
+path its width and corners, and Ink/Stitch's design settings in the file's metadata (`src/settings.rs`,
+`REQ-SVG-005`).
 Ink/Stitch's own objects are not stitched (`src/inkstitch.rs`, `REQ-SVG-003`):
 - command symbols and the connectors that tie them to objects;
 - lines drawn with Inkscape's connector tool;

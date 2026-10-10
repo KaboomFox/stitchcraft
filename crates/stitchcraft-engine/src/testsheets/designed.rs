@@ -65,7 +65,7 @@ impl Drawing {
         self.elements.push(Element {
             id: ElementId::new(format!("{}:{name}", self.sheet))?,
             name: None,
-            shape: Shape::Stroke(Path { subpaths }),
+            shape: Shape::stroke(Path { subpaths }),
             thread: thread.clone(),
             params: params.iter().copied().collect::<ParamSet>(),
         });

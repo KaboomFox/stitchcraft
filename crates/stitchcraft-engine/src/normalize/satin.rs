@@ -29,6 +29,7 @@
 
 use std::collections::BTreeMap;
 
+use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
 
 use crate::design::{Path, Subpath};
@@ -40,7 +41,7 @@ pub const TOLERANCE: f64 = 0.01;
 
 /// The shortest subpath the meeting rule takes as a rail, in millimetres: a tenth of a CSS pixel,
 /// Ink/Stitch's limit.
-pub const MIN_RAIL: f64 = 0.1 * 25.4 / 96.0;
+pub const MIN_RAIL: f64 = 0.1 * MM_PER_SVG_PX;
 
 /// Two points closer than this, in millimetres, are one point.
 const SAME_POINT: f64 = 1e-6;

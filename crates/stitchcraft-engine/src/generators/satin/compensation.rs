@@ -23,6 +23,7 @@
 //! stitches' draws as they were.
 
 use stitchcraft_core::rng::SplitMix64;
+use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use crate::generators::satin::SatinParams;
@@ -31,11 +32,11 @@ use crate::normalize::along::Along;
 
 /// Points closer than this, in millimetres, are one point, with no direction between them: a
 /// ten-thousandth of a CSS pixel, as in Ink/Stitch.
-const SAME_POINT: f64 = 0.0001 * 25.4 / 96.0;
+const SAME_POINT: f64 = 0.0001 * MM_PER_SVG_PX;
 
 /// A rail keeps its length when push compensation would leave less of it than this, in millimetres: half
 /// a CSS pixel, as in Ink/Stitch.
-const SHORTEST_PUSHED: f64 = 0.5 * 25.4 / 96.0;
+const SHORTEST_PUSHED: f64 = 0.5 * MM_PER_SVG_PX;
 
 /// The shortest a step between stitches gets at random, as a multiple of the zigzag spacing.
 const SHORTEST_STEP: f64 = 0.01;
