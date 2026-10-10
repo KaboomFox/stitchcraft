@@ -163,6 +163,53 @@ fn req_sat_002_a_column_without_rungs_pairs_its_rails_nodes() {
 }
 
 #[test]
+fn req_sat_002_rails_of_2_nodes_are_cut_a_fifth_of_a_css_pixel_from_their_starts() {
+    // A trapezoid: rails 10 mm and 6 mm long. Each is cut 0.2 px (0.053 mm) from its start, and past the
+    // cut the pairs are at equal fractions of what is left of each rail.
+    let cut = 0.2 * 25.4 / 96.0;
+    let (points, _) = sewn_satin(&polylines(&[&[(0.0, 0.0), (10.0, 0.0)], &[(2.0, 4.0), (8.0, 4.0)]]), &[]);
+    let pairs = across(&points);
+    assert!(pairs.len() > 10);
+    for [a, b] in &pairs[1..] {
+        let (on_a, on_b) = ((a.x() - cut) / (10.0 - cut), (b.x() - 2.0 - cut) / (6.0 - cut));
+        assert!((on_a - on_b).abs() < 1e-9, "{a:?} {b:?}");
+    }
+}
+
+#[test]
+fn req_sat_002_where_the_rails_converge_a_pair_moves_to_lie_at_the_spacing() {
+    // A V: the rails close in, so a step along them gains less than the spacing across the column, and
+    // each pair moves on until it lies a spacing past the one before.
+    let v = polylines(&[&[(-5.0, 10.0), (0.0, 0.0)], &[(5.0, 10.0), (0.0, 0.0)]]);
+    let mut meter = Budget::DEFAULT.meter();
+    let Ok(Shape::Rails(satin)) = recognize(&v, &mut meter).unwrap().shape else { panic!() };
+    let params = SatinParams::from_set(&ParamSet::default()).unwrap().params;
+    let mut meter = Budget::DEFAULT.meter();
+    let pairs = across(&satin_stitch(&satin, &params, &mut meter).unwrap().runs[0]);
+    let gaps = gaps(&pairs);
+    let inside = &gaps[..gaps.len() - 1];
+    assert!(inside.iter().all(|gap| (gap - 0.4).abs() <= 0.02), "within 5 %: {gaps:?}");
+    assert!(inside[1..].iter().all(|gap| (gap - 0.4).abs() < 1e-6), "each moved to the spacing: {gaps:?}");
+    // The work pins how many places the pairs were tried at: a unit per point measured and per place.
+    assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 68);
+}
+
+#[test]
+fn req_sat_002_a_pair_that_moves_stops_at_its_section_s_end() {
+    // The first 9.985 mm narrow from 6 mm to 2, and the rest runs straight, with a rung between. Pairs
+    // step 0.371 mm along the lower rail and move to 0.4, until 9.6 mm: from there a step stays inside the
+    // section, and the move to 0.4 would leave it. It stops at the rung instead, 0.385 mm on, which is
+    // within 5 % of the spacing.
+    let narrowing =
+        polylines(&[&[(0.0, 0.0), (9.985, 0.0), (19.985, 0.0)], &[(0.0, 6.0), (9.985, 2.0), (19.985, 2.0)], &[(9.985, -1.0), (9.985, 3.0)]]);
+    let (points, warnings) = sewn_satin(&narrowing, &[]);
+    assert!(warnings.is_empty(), "{warnings:?}");
+    let x: Vec<f64> = across(&points).iter().map(|[a, _]| a.x()).collect();
+    assert!(x.iter().any(|x| (x - 9.985).abs() < 1e-9), "a pair on the rung: {x:?}");
+    assert!(x.iter().any(|x| (x - 10.385).abs() < 1e-6), "and the spacing on from it: {x:?}");
+}
+
+#[test]
 fn diag_sc_w0210_rails_without_rungs_with_different_numbers_of_nodes_are_named() {
     let uneven = polylines(&[&[(0.0, 0.0), (5.0, 0.0), (10.0, 0.0), (20.0, 0.0)], &[(0.0, 4.0), (15.0, 4.0), (20.0, 4.0)]]);
     let (points, warnings) = sewn_satin(&uneven, &[]);

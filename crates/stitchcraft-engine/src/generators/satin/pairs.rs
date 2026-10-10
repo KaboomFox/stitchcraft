@@ -111,8 +111,42 @@ mod tests {
         let previous = [p(0.0, 0.0), p(0.0, 4.0)];
         assert_eq!(gap([p(0.3, 0.0), p(0.5, 4.0)], previous), 0.5);
         assert_eq!(gap([p(-0.7, 0.0), p(0.2, 4.0)], previous), 0.7, "either way");
-        // A previous pair of no length: the distance from its point to the new pair.
+        // A previous pair of no length: the distance from its point to the new pair. Shorter than a
+        // hundredth of a CSS pixel (0.0026 mm) is no length.
         assert_eq!(gap([p(3.0, -1.0), p(3.0, 1.0)], [p(0.0, 0.0), p(0.0, 0.0)]), 3.0);
+        assert_eq!(gap([p(0.3, 0.0), p(0.3, 0.4)], [p(0.0, 0.0), p(0.002, 0.0)]), 0.3);
+        assert_eq!(gap([p(0.3, 0.0), p(0.3, 0.4)], [p(0.0, 0.0), p(0.003, 0.0)]), 0.4);
+        // Exactly a hundredth of a CSS pixel is a length, as in Ink/Stitch.
+        assert!((gap([p(0.3, 0.0), p(0.3, 0.4)], [p(0.0, 0.0), p(NO_LENGTH, 0.0)]) - 0.4).abs() < 1e-12);
+    }
+
+    // The next 3 cases sit exactly on a limit, where Ink/Stitch compares strictly. Their rails run along
+    // the axes and meet the needle points at their own points, so the arithmetic is exact.
+
+    #[test]
+    fn a_pair_a_hundredth_of_a_css_pixel_from_the_previous_one_stays_where_it_lands() {
+        // At a spacing of 10 mm the next pair lands on the rails' ends. The first rail runs along the
+        // start pair's line and the second runs exactly a hundredth of a CSS pixel across it, too near
+        // to scale the step by.
+        let section = [vec![p(0.0, 0.0), p(0.0, -10.0)], vec![p(0.0, 4.0), p(NO_LENGTH, 4.0)]];
+        let placed = pairs(&[section], 10.0, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(placed, [[p(0.0, 0.0), p(0.0, 4.0)], [p(0.0, -10.0), p(NO_LENGTH, 4.0)]]);
+    }
+
+    #[test]
+    fn a_pair_exactly_5_percent_off_the_spacing_stays_where_it_lands() {
+        // Halfway, the first rail has run 20 mm along the start pair's line and the second 19 mm across
+        // it: 5 % short of the 20 mm spacing.
+        let section = [vec![p(0.0, 0.0), p(0.0, -20.0), p(0.0, -40.0)], vec![p(0.0, 4.0), p(19.0, 4.0), p(38.0, 4.0)]];
+        let placed = pairs(&[section], 20.0, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(placed.get(1), Some(&[p(0.0, -20.0), p(19.0, 4.0)]), "{placed:?}");
+    }
+
+    #[test]
+    fn a_column_ending_exactly_0_1_mm_past_its_last_pair_gets_no_end_pair() {
+        let section = [vec![p(0.0, 0.0), p(0.1, 0.0)], vec![p(0.0, 4.0), p(0.1, 4.0)]];
+        let placed = pairs(&[section], 0.4, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(placed, [[p(0.0, 0.0), p(0.0, 4.0)]], "the start pair, with the end exactly 0.1 mm on");
     }
 
     #[test]

@@ -148,4 +148,20 @@ mod tests {
         let mut cuts = vec![0.0, 5.0, 5.0, 10.0];
         assert_eq!(parts(&along, &mut cuts), [None, Some(vec![p(0.0, 0.0), p(5.0, 0.0)]), None, Some(vec![p(5.0, 0.0), p(10.0, 0.0)]), None]);
     }
+
+    #[test]
+    fn a_rail_is_backwards_when_its_tenths_lie_nearer_the_other_rail_turned() {
+        let rails = |a: &[(f64, f64)], b: &[(f64, f64)]| [a.iter().map(|&(x, y)| p(x, y)).collect(), b.iter().map(|&(x, y)| p(x, y)).collect()];
+        let backwards = |a: &[(f64, f64)], b: &[(f64, f64)]| backwards(&rails(a, b), &mut Budget::DEFAULT.meter()).unwrap();
+        // Rails whose verdict turns on where along them the points are taken: each tenth from the start
+        // to 9 tenths, of both rails, and the second rail's from its end when it is turned.
+        assert!(backwards(&[(9.0, 4.0), (0.0, 8.0), (1.0, 6.0)], &[(0.0, 4.0), (1.0, 1.0)]));
+        assert!(!backwards(&[(1.0, 6.0), (9.0, 6.0), (6.0, 1.0)], &[(0.0, 2.0), (6.0, 1.0), (4.0, 5.0)]));
+        assert!(backwards(&[(6.0, 6.0), (5.0, 8.0), (9.0, 5.0)], &[(1.0, 7.0), (6.0, 10.0)]));
+        // As near one way as the other: not turned, as in Ink/Stitch. The tenths fall on the rails'
+        // points, so the distances are exactly equal.
+        let across: Vec<(f64, f64)> = (0..=10).map(|i| (10.0 - f64::from(i), 5.0)).collect();
+        let down: Vec<(f64, f64)> = (0..=10).map(|i| (20.0, f64::from(i))).collect();
+        assert!(!backwards(&across, &down));
+    }
 }
