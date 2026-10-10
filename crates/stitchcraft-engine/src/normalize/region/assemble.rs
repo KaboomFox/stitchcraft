@@ -333,7 +333,6 @@ mod tests {
         let ccw = |h: usize| match h {
             0 => 2,
             2 => 1,
-            1 => 0,
             other => other,
         };
         assert_eq!(link_maximal(4, &kept, &ccw), [None; 4]);
