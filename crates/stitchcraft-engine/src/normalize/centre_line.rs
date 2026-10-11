@@ -9,8 +9,8 @@
 //!   line's length where it lies. A blur spreads each score over 4 hundredths to either side, weighted 1,
 //!   2, 4, 8, 16, 8, 4, 2, 1. A rung goes where the blurred score stops falling or starts rising: just
 //!   before and after each sharp corner, where the column can bend its stitches round it.
-//! - **Nodes.** A rung goes at each node of the line too, but never at its very start or end, and a straight
-//!   line of 2 nodes gets one in its middle.
+//! - **Nodes.** A rung goes at each point of the flattened line too, but never at its very start or end,
+//!   and a straight line of 2 points gets one in its middle.
 //! - **Spacing.** Going along the line, a rung nearer than 1 mm to the last one kept is left out.
 //! - **Each rung** is perpendicular to the line where it lies, 1.2 times the column's width long, and is
 //!   kept only when it crosses each rail at exactly one point. It pairs those 2 points.
