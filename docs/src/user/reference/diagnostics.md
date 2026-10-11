@@ -31,6 +31,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0305`](#sc-w0305) | Warning | Fill part too thin for rows; sewn round its outline |
 | [`SC-I0306`](#sc-i0306) | Info | Nonzero fill rule fills a part the even-odd rule leaves empty |
 | [`SC-W0307`](#sc-w0307) | Warning | Fill in parts that are apart; each sewn on its own |
+| [`SC-I0308`](#sc-i0308) | Info | Fill underlay too thin for rows; sewn round the outline |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -325,6 +326,19 @@ an outline that crosses itself, is sewn one part after another: each part's rows
 a jump to the next, which the plan may trim. Ink/Stitch warns about such fills too.
 
 To choose the order the parts are sewn in, break the fill apart into one element for each part.
+
+## SC-I0308
+
+**Info** — Fill underlay too thin for rows; sewn round the outline
+
+A fill's underlay is sewn in rows `fill_underlay_row_spacing_mm` apart, 3 times the row spacing
+unless set. On a part so thin across those rows that none crosses it, that layer of underlay is
+sewn as a running stitch round the part's outline instead, as Ink/Stitch sews it, and the top rows
+are sewn over it as usual.
+
+The message counts the layers, and each part has one for each underlay angle. To sew the underlay
+in rows, set a smaller `fill_underlay_row_spacing_mm` or another `fill_underlay_angle`. To sew no
+underlay, turn `fill_underlay` off.
 
 ## SC-W0401
 

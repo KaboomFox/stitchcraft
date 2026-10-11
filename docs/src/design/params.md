@@ -117,6 +117,7 @@ version and a registry schema version arrive with the first release, together wi
 | `OptionalLengthPair`, `OptionalPercentPair` | `Option<[Mm; 2]>`, `Option<[f64; 2]>` | as `LengthPair` and `PercentPair`, or empty: the setting then comes from another one, as a zigzag underlay's inset comes from the contour's. 0 is a value, as Ink/Stitch reads it | `float`, unit `mm (each side)` or `% (each side)`, no default |
 | `PercentList` | `Vec<f64>` | 1 to 16 percentages, each in range (levels like `"15 30"`) | `float`, unit `%`, read as a list |
 | `CountList` | `Vec<u32>` | 1–16 whole numbers, each in range | `string`/`int` lists |
+| `OptionalAngleList` | `Option<Vec<f64>>` | 1 to 16 angles, each read as an `Angle`. Empty, the setting comes from another one, as a fill's underlay angles come from its angle | `float`, unit `deg`, read as a list, no default |
 | `Text` | `String` | ≤ 4,096 bytes; kind-specific grammar (e.g. a custom lock path) is checked by its user | `string` |
 
 Invalid values never fall back silently to defaults: the element gets `SC-E0101` (not a value of the

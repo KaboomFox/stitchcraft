@@ -287,6 +287,16 @@ registry! {
     /// To choose the order the parts are sewn in, break the fill apart into one element for each part.
     FillPartsApart = "SC-W0307", Warning, "Fill in parts that are apart; each sewn on its own";
 
+    /// A fill's underlay is sewn in rows `fill_underlay_row_spacing_mm` apart, 3 times the row spacing
+    /// unless set. On a part so thin across those rows that none crosses it, that layer of underlay is
+    /// sewn as a running stitch round the part's outline instead, as Ink/Stitch sews it, and the top rows
+    /// are sewn over it as usual.
+    ///
+    /// The message counts the layers, and each part has one for each underlay angle. To sew the underlay
+    /// in rows, set a smaller `fill_underlay_row_spacing_mm` or another `fill_underlay_angle`. To sew no
+    /// underlay, turn `fill_underlay` off.
+    FillUnderlayTooThin = "SC-I0308", Info, "Fill underlay too thin for rows; sewn round the outline";
+
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
     /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that

@@ -717,6 +717,24 @@ milestone = "M5"
 status = "active"
 
 [[req]]
+id = "REQ-FILL-TAT-011"
+area = "fill/tatami"
+level = "L2"
+statement = "With fill_underlay, on by default, each part sews its underlay before its top rows: a layer of rows for each angle of fill_underlay_angle in turn, or with none set, one at the fill's angle plus 90°. A layer's rows lie evenly fill_underlay_row_spacing_mm apart (empty: 3 times row_spacing_mm), and its needle points lie on the stagger grid of its rows fill_underlay_max_stitch_length_mm apart (empty: the fill's longest stitch), with the fill's staggers, fill_underlay_skip_last for skip_last and underlay_underpath for underpath. Each layer is routed as the top rows are, from the point of the part's rings nearest the needle back to that point, and the top rows start where the last layer ended, as Ink/Stitch sews them."
+rationale = "Underlay holds the fabric still while the fill is sewn and lifts the top rows, so less fabric shows between them. Its rows cross the top rows, which hide them."
+milestone = "M5"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-TAT-012"
+area = "fill/tatami"
+level = "L2"
+statement = "Each part's underlay is sewn on the part shrunk by fill_underlay_inset_mm, or on the part itself where that leaves nothing, each piece the shrinking leaves with layers of its own, and its top rows on the part grown by expand_mm (shrunk where it is negative). A part is shrunk and grown with round corners, as GEOS buffers a polygon, and agrees with shapely's buffer."
+rationale = "An inset keeps the underlay from showing at the fill's edge, and growing a fill closes the gaps that open between fills side by side as the thread pulls them in."
+milestone = "M5"
+status = "planned"
+
+[[req]]
 id = "REQ-FILL-TAT-009"
 area = "fill/tatami"
 level = "L2"

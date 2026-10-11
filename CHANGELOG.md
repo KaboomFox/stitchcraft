@@ -5,6 +5,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M5.6: a tatami fill sews its underlay before its top rows (`fill_underlay`, on by default,
+  `REQ-FILL-TAT-011`), as Ink/Stitch sews it.
+  - Each part gets a layer of rows for each angle of `fill_underlay_angle`, in the order given, or with
+    none set one square to the top rows. The rows lie 3 times the row spacing apart unless
+    `fill_underlay_row_spacing_mm` says otherwise, in stitches of the fill's longest stitch unless
+    `fill_underlay_max_stitch_length_mm` does, with `fill_underlay_skip_last` and `underlay_underpath` in
+    place of `skip_last` and `underpath`.
+  - Each layer is routed as the top rows are. It starts at the point of the part's rings nearest the
+    needle and ends there, and the next layer and then the top rows start there too. A layer too thin for a row is
+    sewn round the part's outline, and `SC-I0308` says so. The needle goes on to it as Ink/Stitch's stitch
+    plan does: straight on within the jump length, without the locks `force_lock_stitches` adds after
+    other groups.
+  - A list of angles is a kind of parameter (`OptionalAngleList`), each angle normalized as an angle is.
+  - `fill_underlay_inset_mm` and `expand_mm` need a polygon buffered as GEOS buffers it, which comes in a
+    step of its own, M5.7. Until then they are not registered (`SC-W0105`). Pull compensation and the
+    coverage and performance step move to M5.8 and M5.9.
 - M5.5: between rows a tatami fill's needle travels under the rows sewn after it (`underpath`, on by
   default, `REQ-FILL-TAT-005`), as Ink/Stitch's does.
   - Travel follows 3 gratings of lines across the part, at 45° to the rows either way and square to them,
@@ -548,6 +564,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   zero-length jumps.
 
 ### Golden files
+- Changed `conformance/golden/plans/strokes.pes` and `.dst` (M5.6). Each rectangle of the `strokes`
+  fixture's fill sews its underlay first: upright rows 0.75 mm apart, square to the fill's flat rows, in
+  stitches of 4 mm, from its point nearest the needle and back, where its top rows then start. The plan
+  has 128 stitches more (427 to 555).
 - Changed `conformance/golden/plans/strokes.pes` and `.dst` (M5.5). In each rectangle of the `strokes`
   fixture's fill the needle now goes from a top corner down to the far side under the rows instead of
   along the outline. The fill sews 2 stitches more.
