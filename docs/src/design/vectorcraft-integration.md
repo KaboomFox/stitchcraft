@@ -66,7 +66,7 @@ below are to that commit; the [compatibility gate](compatibility-gate.md) keeps 
 | Phase | Needs from VectorCraft | Delivers | Milestone |
 |---|---|---|---|
 | 1. ABI v1 plug-ins | nothing | per-object embroidery settings, previews, tools; machine files via `stitch export file.vectorcraft` | M6 |
-| 2. ABI v2 (upstream RFC) | generic plug-in features | export from File › Export, real stitch previews, rich parameter panels, progress | M9 |
+| 2. ABI v2 (upstream RFC) | generic plug-in features | export from File › Export, real stitch previews, rich parameter panels, progress | M9, after 1.0 |
 | 3. In-tree crate (optional) | ArtCraft's interest, or a fork | native speed, simulator panel, satin tool | post-1.0 |
 
 ## 4. Phase 1 design (ABI v1, no VectorCraft change)
