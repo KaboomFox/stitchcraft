@@ -22,8 +22,8 @@
 //! the point of that rail nearest the rung stands in (`SC-W0203`), as in Ink/Stitch. A rung that crosses
 //! a rail more than once is left out (`SC-W0207`): it does not say which crossing is meant.
 //!
-//! Each subpath is flattened to a polyline within [`TOLERANCE`], and two subpaths meet where they share a
-//! point, crossing or touching. A point where segments meet end to end is found twice and counted once, so
+//! Each subpath is flattened to a polyline within [`TOLERANCE`], as Ink/Stitch flattens it, and two
+//! subpaths meet where their polylines share a point, crossing or touching. A point where segments meet end to end is found twice and counted once, so
 //! a rung that ends exactly on a rail meets it once. Work is charged to the meter: one unit per pair of
 //! segments looked at.
 
@@ -35,9 +35,10 @@ use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
 use crate::design::{Path, Subpath};
 use crate::normalize::stroke::{self, nearest_on_segment, segments};
 
-/// How closely the polylines follow the subpaths, in millimetres: far finer than a stitch, so subpaths
-/// meet where the drawing shows them meeting.
-pub const TOLERANCE: f64 = 0.01;
+/// How closely the polylines follow the subpaths, in millimetres: a tenth of a CSS pixel, as Ink/Stitch
+/// flattens a satin column's path, by the same halving. Its rails then have the same points, which decide
+/// where the column's stitches go, where subpaths meet, and where a column drawn as one path gets rungs.
+pub const TOLERANCE: f64 = 0.1 * MM_PER_SVG_PX;
 
 /// The shortest subpath the meeting rule takes as a rail, in millimetres: a tenth of a CSS pixel,
 /// Ink/Stitch's limit.
@@ -395,6 +396,20 @@ mod tests {
         let curve = Segment::Cubic(p(12.0, 2.0), p(12.0, 8.0), p(10.0, 10.0));
         let closed = Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(10.0, 0.0)), curve], closed: true };
         assert_eq!(nodes(&closed), [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 0.0)], "closed: back to the start");
+    }
+
+    #[test]
+    fn curves_are_flattened_as_ink_stitch_flattens_them() {
+        use crate::design::Segment;
+        // A quarter circle 60 mm round, its control points 0.5523 of the radius along its end tangents.
+        // Halved until each piece's control points lie within a tenth of a CSS pixel of its chord, it takes
+        // 32 pieces; within a hundredth of a millimetre it would take 64.
+        let (r, k) = (60.0, 60.0 * 0.552_284_749_8);
+        let quarter = |x: f64| Subpath { start: p(x + r, 0.0), segments: vec![Segment::Cubic(p(x + r, k), p(x + k, r), p(x, r))], closed: false };
+        let path = Path { subpaths: vec![quarter(0.0), quarter(10.0)] };
+        let recognition = recognize(&path, &mut stitchcraft_core::Budget::DEFAULT.meter()).unwrap();
+        let Ok(Shape::Rails(satin)) = recognition.shape else { panic!("{recognition:?}") };
+        assert_eq!(satin.rails.map(|rail| rail.len()), [33, 33]);
     }
 
     #[test]
