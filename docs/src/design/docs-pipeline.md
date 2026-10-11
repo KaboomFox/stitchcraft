@@ -72,7 +72,9 @@ mandatory (accessibility), and the docs check fails on images without it.
 
 A page shows a shot between the lines `<!-- shot: running-length -->` and `<!-- /shot -->`. `cargo xtask
 docs` writes the figure there. Without panels the figure is one image. With panels it is a table with a
-column per panel, its caption on top and its image below it. Each image's alternative text is the shot's,
+column per panel, its caption on top and its image below it. A shot with `layout = "rows"` shows its
+panels one under another instead, each caption in bold above an image as wide as the page: pictures side by
+side shrink to share the page's width, and a wide picture's stitches then become too small to tell apart. Each image's alternative text is the shot's,
 followed by the panel's caption. The page
 cannot show an image under any other text, and a stale figure fails `--check` like a stale page.
 
