@@ -16,7 +16,8 @@
 //!    shrunk away, a hole grown over. What is left falls into parts, each an outline with its holes.
 //!
 //! GEOS leaves out a ring that it can tell the buffer wears away, before offsetting it, and a small ring's
-//! curve that has turned inside out. The engine follows its published rules, checked against its answers:
+//! curve that has turned inside out. The engine follows its rules, read in its source and checked against its
+//! answers:
 //!
 //! - **Worn away.** Shrinking wears away a triangle whose inscribed circle is smaller than the distance,
 //!   or any other ring whose bounding box is less than twice the distance across. A shrunk outline worn
