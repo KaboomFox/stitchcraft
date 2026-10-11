@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-bf1e2529.js";
+            window.path_to_searchindex_js = "searchindex-6b72b2ce.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f616c49b.js"></script>
+        <script src="toc-c73eb358.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -642,16 +642,12 @@ parameter is set per element, and <a href="user/stitches/README.html#setting-par
 <p><code>running_stitch_length_mm</code> sets how long each stitch is, 2.5 mm by default. Between 2 corners the stitches
 are spread evenly, and none is longer than the stitch length.</p>
 <!-- shot: running-length -->
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th style="text-align: center">1.5 mm</th><th style="text-align: center">2.5 mm</th><th style="text-align: center">4 mm</th></tr>
-</thead>
-<tbody>
-<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/running-length-1.png" alt="A wave in running stitch, its needle points dotted along it, 1.5 mm"><span class="img-wrapper"><img src="images/generated/running-length-1.png" alt="A wave in running stitch, its needle points dotted along it, 1.5 mm"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/running-length-2.png" alt="A wave in running stitch, its needle points dotted along it, 2.5 mm"><span class="img-wrapper"><img src="images/generated/running-length-2.png" alt="A wave in running stitch, its needle points dotted along it, 2.5 mm"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/running-length-3.png" alt="A wave in running stitch, its needle points dotted along it, 4 mm"><span class="img-wrapper"><img src="images/generated/running-length-3.png" alt="A wave in running stitch, its needle points dotted along it, 4 mm"></span></label></td></tr>
-</tbody>
-</table>
-</div>
+<p><strong>1.5 mm</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/running-length-1.png" alt="A wave 36 mm long in running stitch, its needle points dotted along it, 1.5 mm"><span class="img-wrapper"><img src="images/generated/running-length-1.png" alt="A wave 36 mm long in running stitch, its needle points dotted along it, 1.5 mm"></span></label></p>
+<p><strong>2.5 mm</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/running-length-2.png" alt="A wave 36 mm long in running stitch, its needle points dotted along it, 2.5 mm"><span class="img-wrapper"><img src="images/generated/running-length-2.png" alt="A wave 36 mm long in running stitch, its needle points dotted along it, 2.5 mm"></span></label></p>
+<p><strong>4 mm</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/running-length-3.png" alt="A wave 36 mm long in running stitch, its needle points dotted along it, 4 mm"><span class="img-wrapper"><img src="images/generated/running-length-3.png" alt="A wave 36 mm long in running stitch, its needle points dotted along it, 4 mm"></span></label></p>
 <!-- /shot -->
 <p>Short stitches follow a curve closely and make more needle holes. Long stitches are quicker to sew and
 show more of each stitch. With a list of lengths, such as <code>2.5 1</code>, the stitches take the lengths one after another along the
@@ -659,7 +655,9 @@ path.</p>
 <h2 id="corners-and-curves"><a class="header" href="#corners-and-curves">Corners and curves</a></h2>
 <p>Where the path turns by more than 30°, StitchCraft puts a needle point on the corner, and the line keeps
 its shape. Along a curve, a stitch strays from the curve by at most <code>running_stitch_tolerance_mm</code>, 0.2 mm
-by default. With a long stitch length the tolerance shows: here the stitches are 6 mm long.</p>
+by default. With a long stitch length the tolerance shows. Here a half disc is sewn in stitches up to 6 mm
+long. Both corners of its straight side get a needle point in every panel. The tolerance sets how closely
+the stitches follow the curve.</p>
 <!-- shot: running-tolerance -->
 <div class="table-wrapper">
 <table>
@@ -667,12 +665,14 @@ by default. With a long stitch length the tolerance shows: here the stitches are
 <tr><th style="text-align: center">0.1 mm</th><th style="text-align: center">0.5 mm</th><th style="text-align: center">2 mm</th></tr>
 </thead>
 <tbody>
-<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/running-tolerance-1.png" alt="A wave in 6 mm running stitch, 0.1 mm"><span class="img-wrapper"><img src="images/generated/running-tolerance-1.png" alt="A wave in 6 mm running stitch, 0.1 mm"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/running-tolerance-2.png" alt="A wave in 6 mm running stitch, 0.5 mm"><span class="img-wrapper"><img src="images/generated/running-tolerance-2.png" alt="A wave in 6 mm running stitch, 0.5 mm"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/running-tolerance-3.png" alt="A wave in 6 mm running stitch, 2 mm"><span class="img-wrapper"><img src="images/generated/running-tolerance-3.png" alt="A wave in 6 mm running stitch, 2 mm"></span></label></td></tr>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/running-tolerance-1.png" alt="A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 0.1 mm"><span class="img-wrapper"><img src="images/generated/running-tolerance-1.png" alt="A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 0.1 mm"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/running-tolerance-2.png" alt="A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 0.5 mm"><span class="img-wrapper"><img src="images/generated/running-tolerance-2.png" alt="A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 0.5 mm"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/running-tolerance-3.png" alt="A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 2 mm"><span class="img-wrapper"><img src="images/generated/running-tolerance-3.png" alt="A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 2 mm"></span></label></td></tr>
 </tbody>
 </table>
 </div>
 <!-- /shot -->
-<p>At 2 mm the stitches cut across the curve. At 0.1 mm StitchCraft shortens them where the curve bends.</p>
+<p>At 2 mm the curve is sewn in 3 straight stitches, and the half disc comes out as a trapezoid. At 0.1 mm
+StitchCraft shortens the stitches until each keeps within 0.1 mm of the curve, and the curve comes out
+round.</p>
 <h2 id="bean-stitch-and-repeats"><a class="header" href="#bean-stitch-and-repeats">Bean stitch and repeats</a></h2>
 <p><code>bean_stitch_repeats</code> sews each stitch more than once, for a bolder line. At 1 each stitch is sewn 3
 times, there, back and there again, and at 2 it is sewn 5 times. With a list such as <code>1 0</code>, the stitches
@@ -684,16 +684,10 @@ and there again. With an even number the stitching ends where it started.</p>
 stripes. <code>enable_random_stitch_length</code> varies each stitch’s length by up to
 <code>random_stitch_length_jitter_percent</code>, 10 % by default, and the stripes go.</p>
 <!-- shot: random-length -->
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th style="text-align: center">even</th><th style="text-align: center">random</th></tr>
-</thead>
-<tbody>
-<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/random-length-1.png" alt="6 rows of running stitch 1.6 mm apart, sewn back and forth as one path, even"><span class="img-wrapper"><img src="images/generated/random-length-1.png" alt="6 rows of running stitch 1.6 mm apart, sewn back and forth as one path, even"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/random-length-2.png" alt="6 rows of running stitch 1.6 mm apart, sewn back and forth as one path, random"><span class="img-wrapper"><img src="images/generated/random-length-2.png" alt="6 rows of running stitch 1.6 mm apart, sewn back and forth as one path, random"></span></label></td></tr>
-</tbody>
-</table>
-</div>
+<p><strong>even</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/random-length-1.png" alt="14 rows of running stitch 0.6 mm apart, sewn back and forth as one path, even"><span class="img-wrapper"><img src="images/generated/random-length-1.png" alt="14 rows of running stitch 0.6 mm apart, sewn back and forth as one path, even"></span></label></p>
+<p><strong>random</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/random-length-2.png" alt="14 rows of running stitch 0.6 mm apart, sewn back and forth as one path, random"><span class="img-wrapper"><img src="images/generated/random-length-2.png" alt="14 rows of running stitch 0.6 mm apart, sewn back and forth as one path, random"></span></label></p>
 <!-- /shot -->
 <p>The stitching still ends on each corner. <code>random_seed</code> sets where the random lengths start. The same
 element and seed give the same stitches every time, on every computer.</p>
@@ -1690,6 +1684,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#running-parameters">Running parameters</a></td><td>4</td><td>Running stitch, Ripple stitch</td></tr>
 <tr><td><a href="#repeat-parameters">Repeat parameters</a></td><td>2</td><td>Running stitch, Ripple stitch, Zigzag stitch, Manual stitch</td></tr>
 <tr><td><a href="#satin-parameters">Satin parameters</a></td><td>36</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
+<tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>3</td><td>Tatami fill</td></tr>
 </tbody>
 </table>
 </div>
@@ -1700,6 +1695,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><th>Key</th><th>Label</th><th>Group</th></tr>
 </thead>
 <tbody>
+<tr><td><a href="#angle"><code>angle</code></a></td><td>Angle</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#bean_stitch_repeats"><code>bean_stitch_repeats</code></a></td><td>Bean stitch</td><td>Repeat parameters</td></tr>
 <tr><td><a href="#center_walk_underlay"><code>center_walk_underlay</code></a></td><td>Centre walk underlay</td><td>Satin parameters</td></tr>
 <tr><td><a href="#center_walk_underlay_position"><code>center_walk_underlay_position</code></a></td><td>Centre walk position</td><td>Satin parameters</td></tr>
@@ -1713,6 +1709,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#contour_underlay_stitch_tolerance_mm"><code>contour_underlay_stitch_tolerance_mm</code></a></td><td>Contour tolerance</td><td>Satin parameters</td></tr>
 <tr><td><a href="#enable_random_stitch_length"><code>enable_random_stitch_length</code></a></td><td>Random stitch length</td><td>Running parameters</td></tr>
 <tr><td><a href="#end_at_nearest_point"><code>end_at_nearest_point</code></a></td><td>End at nearest point</td><td>Satin parameters</td></tr>
+<tr><td><a href="#end_row_spacing_mm"><code>end_row_spacing_mm</code></a></td><td>End row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#force_lock_stitches"><code>force_lock_stitches</code></a></td><td>Always lock</td><td>Common parameters</td></tr>
 <tr><td><a href="#lock_custom_end"><code>lock_custom_end</code></a></td><td>Custom end lock</td><td>Common parameters</td></tr>
 <tr><td><a href="#lock_custom_start"><code>lock_custom_start</code></a></td><td>Custom start lock</td><td>Common parameters</td></tr>
@@ -1738,6 +1735,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#random_zigzag_spacing_percent"><code>random_zigzag_spacing_percent</code></a></td><td>Random zigzag spacing</td><td>Satin parameters</td></tr>
 <tr><td><a href="#repeats"><code>repeats</code></a></td><td>Repeats</td><td>Repeat parameters</td></tr>
 <tr><td><a href="#reverse_rails"><code>reverse_rails</code></a></td><td>Reverse rails</td><td>Satin parameters</td></tr>
+<tr><td><a href="#row_spacing_mm"><code>row_spacing_mm</code></a></td><td>Row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#running_stitch_length_mm"><code>running_stitch_length_mm</code></a></td><td>Stitch length</td><td>Running parameters</td></tr>
 <tr><td><a href="#running_stitch_position"><code>running_stitch_position</code></a></td><td>Running stitch position</td><td>Satin parameters</td></tr>
 <tr><td><a href="#running_stitch_tolerance_mm"><code>running_stitch_tolerance_mm</code></a></td><td>Curve tolerance</td><td>Running parameters</td></tr>
@@ -2315,6 +2313,37 @@ half the contour’s. 2 values set the first rail’s side, then the second’s.
 <li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty)</li>
 <li><strong>Default:</strong> empty</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `TatamiParams` in the parameter registry. Edit the declaration, not this page. -->
+<h1 id="tatami-parameters"><a class="header" href="#tatami-parameters">Tatami parameters</a></h1>
+<p>Tatami fill: rows of running stitches across the fill’s area, the needle points of neighbouring rows
+offset so that they never line up. Ink/Stitch’s default fill.</p>
+<p>Applies to Tatami fill.</p>
+<h2 id="rows"><a class="header" href="#rows">Rows</a></h2>
+<h3 id="angle"><a class="header" href="#angle"><code>angle</code></a></h3>
+<p><strong>Angle.</strong> The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows
+and 90 upright ones.</p>
+<ul>
+<li><strong>Accepts:</strong> an angle in degrees</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="row_spacing_mm"><a class="header" href="#row_spacing_mm"><code>row_spacing_mm</code></a></h3>
+<p><strong>Row spacing.</strong> How far apart the rows are, measured square to them. Rows closer together cover the fabric more
+fully, and pull it in more.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.1 to 100 mm</li>
+<li><strong>Default:</strong> <code>0.25</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="end_row_spacing_mm"><a class="header" href="#end_row_spacing_mm"><code>end_row_spacing_mm</code></a></h3>
+<p><strong>End row spacing.</strong> The spacing of the last rows, for a fill that fades: from the first row the spacing changes
+steadily towards it, reaching it the fill’s height away. Empty, every row is the row spacing from
+the next.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.1 to 100 mm, or empty (0 or less counts as empty)</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs (DEV-FILL-003): With end_row_spacing_mm, the step from row to row changes from the row spacing to the end spacing over the part’s height, measured from the first row, and stays at the end spacing beyond it. Ink/Stitch carries the change on past the height, which reaches the rows within a row spacing of the part’s far side when the first row lies before the part. With an end spacing smaller than the row spacing, over a part a few rows tall, the steps then shrink towards 0 and the rows pile up short of the far side without end.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="glossary"><a class="header" href="#glossary">Glossary</a></h1>
@@ -3580,7 +3609,7 @@ that join its underlays are no longer than the first value. For any other stroke
 one is sewn between rails made from its line from M4.9 (<code>REQ-SAT-016</code>). The other stroke and satin
 methods, and fills, are skipped with <code>SC-W0011</code> until their milestones. A fill’s region is built
 already, so what it leaves out and how it will be sewn are said (<code>SC-W0303</code>, <code>SC-W0304</code>, <code>SC-I0306</code>,
-<code>SC-W0307</code>). An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and the rest of the
+<code>SC-W0307</code>), and its tatami settings are read and checked. An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and the rest of the
 design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element
@@ -4395,7 +4424,7 @@ against every other, and its winding against every segment of the ring. A line o
 to about 17 million units of work for each offset.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="fill-generators"><a class="header" href="#fill-generators">Fill generators</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/normalize/region/** -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/generators/tatami/** -->
 <p>A fill covers the area its path bounds, its <a href="#region-1">region</a>, with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).</p>
 <p>A fill sews the drawing’s shape with Ink/Stitch’s stitches. Ink/Stitch’s rows, their spacing and stagger,
@@ -4450,11 +4479,27 @@ build them in this order.</p>
 <code>fill_underlay_angle</code>, <code>fill_underlay_row_spacing_mm</code>, <code>fill_underlay_max_stitch_length_mm</code>,
 <code>fill_underlay_inset_mm</code>, <code>fill_underlay_skip_last</code>, <code>underlay_underpath</code>.</p>
 <h3 id="1-rows"><a class="header" href="#1-rows">1. Rows</a></h3>
-<p>Rows run across the region at <code>angle</code>, <code>row_spacing_mm</code> apart, on lines a whole number of spacings from
-the design’s origin. Fills side by side at the same angle and spacing then share their rows. With
-<code>end_row_spacing_mm</code> the spacing changes steadily from the first row to the last. Where a row crosses
-the region more than once, each stretch inside is a <em>segment</em>. A row that only touches the region at a
-point has none.</p>
+<p>Rows are laid across each part of the region on its own (<code>stitchcraft_engine::generators::tatami::rows</code>,
+since M5.2). They run at <code>angle</code>, counter-clockwise from horizontal on screen: at 0° left to right, at
+90° up the screen. Measured across them from the design’s origin, the first row of a part lies the
+largest whole number of <code>row_spacing_mm</code> from the origin that does not pass the part, and the rows follow
+it <code>row_spacing_mm</code> apart until they pass the part’s far side (<code>REQ-FILL-TAT-002</code>). Fills side by side
+at the same angle and spacing then share their rows. Angles of whole right angles are exact, so rows at
+0° or 90° run exactly along the drawing’s axes.</p>
+<p>With <code>end_row_spacing_mm</code>, each step to the next row is the row spacing plus the difference to the end
+spacing times the distance from the first row over the part’s height. The spacing then reaches the end
+spacing a part’s height from the first row. Ink/Stitch carries the change on beyond that. Over a part
+only a few rows tall, a shrinking spacing then turns so small that the rows pile up short of the far side
+without end. StitchCraft keeps the end spacing from there on (<code>DEV-FILL-003</code>).</p>
+<p>A row’s <em>segments</em> are the stretches of it in the part, its outline included, split at every point where
+the row meets the outline (<code>REQ-FILL-TAT-010</code>). Those are the points where it crosses the outline or the
+outline touches it from inside, and both ends of a stretch where it runs along the outline. A row along
+an edge is then a segment of its own, and a row that only touches the part at a point has none. This is
+how GEOS, the library behind Ink/Stitch’s shapes, cuts a line with a polygon. Its answers for 2,511 rows
+across 406 random polygons of grid squares and half squares, 98 of them with holes, are recorded and
+checked (<code>conformance/fixtures/geometry/shapely-rows.txt</code>).
+Which stretches lie inside is decided by counting the edges that cross the row, each over its height
+from its lower end up to but not including its upper end.</p>
 <h3 id="2-needle-points-along-a-row"><a class="header" href="#2-needle-points-along-a-row">2. Needle points along a row</a></h3>
 <p>A row’s needle points lie on a grid along it, <code>max_stitch_length_mm</code> apart and anchored at the origin.
 Each next row’s grid is shifted by <code>1/staggers</code> of a stitch, and fills side by side tile. A segment
@@ -5864,7 +5909,9 @@ and so on. The plan may report only the codes the shot lists in <code>allow</cod
 a picture never shows a design that the engine changed without the page saying so. The <code>alt</code> text is
 mandatory (accessibility), and the docs check fails on images without it.</p>
 <p>A page shows a shot between the lines <code>&lt;!-- shot: running-length --&gt;</code> and <code>&lt;!-- /shot --&gt;</code>. <code>cargo xtask docs</code> writes the figure there. Without panels the figure is one image. With panels it is a table with a
-column per panel, its caption on top and its image below it. Each image’s alternative text is the shot’s,
+column per panel, its caption on top and its image below it. A shot with <code>layout = "rows"</code> shows its
+panels one under another instead, each caption in bold above an image as wide as the page: pictures side by
+side shrink to share the page’s width, and a wide picture’s stitches then become too small to tell apart. Each image’s alternative text is the shot’s,
 followed by the panel’s caption. The page
 cannot show an image under any other text, and a stale figure fails <code>--check</code> like a stale page.</p>
 <h2 id="command-line-examples"><a class="header" href="#command-line-examples">Command-line examples</a></h2>
@@ -6087,12 +6134,12 @@ stitches once its stitch type or feature lands (see <em>Phase</em> and the param
 <tr><td><code>smoothness_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>contour_fill</code>, <code>guided_fill</code>, <code>meander_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
 <tr><td><code>expand_mm</code></td><td>float</td><td>mm</td><td>0</td><td>all</td><td>P1 (M5)</td><td>planned</td></tr>
 <tr><td><code>gap_fill_rows</code></td><td>int</td><td>rows</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>angle</code></td><td>float</td><td>deg</td><td>0</td><td><code>tatami_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
+<tr><td><code>angle</code></td><td>float</td><td>deg</td><td>0</td><td><code>tatami_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#angle">registered</a></td></tr>
 <tr><td><code>guided_fill_angle</code></td><td>float</td><td>deg</td><td>—</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>tartan_angle</code></td><td>float</td><td>deg</td><td>-45</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>4.0</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>row_spacing_mm</code></td><td>float</td><td>mm</td><td>0.25</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>end_row_spacing_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>tatami_fill</code>, <code>circular_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
+<tr><td><code>row_spacing_mm</code></td><td>float</td><td>mm</td><td>0.25</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#row_spacing_mm">registered</a></td></tr>
+<tr><td><code>end_row_spacing_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>tatami_fill</code>, <code>circular_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#end_row_spacing_mm">deviates</a></td></tr>
 <tr><td><code>stitch_position_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>staggers</code></td><td>int</td><td>—</td><td>4</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
 <tr><td><code>skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
@@ -6224,7 +6271,7 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewr
 </tbody>
 </table>
 </div>
-<p><em>145 parameter declarations, 64 registered in StitchCraft.</em></p>
+<p><em>145 parameter declarations, 67 registered in StitchCraft.</em></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="architecture-decision-records"><a class="header" href="#architecture-decision-records">Architecture decision records</a></h1>
 <p>Short records of decisions that shape the code, with their context and the alternatives we rejected.
@@ -6906,13 +6953,14 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 </thead>
 <tbody>
 <tr><td>M5.1 ✅</td><td>A fill’s region as the drawing shows it under its fill rule, in parts with holes, its subpaths cut exactly where they meet. Parts too small to sew are left out with <code>SC-W0303</code>, as Ink/Stitch leaves them out. Small fills (<code>SC-W0304</code>), the fill rule (<code>SC-I0306</code>) and fills in parts (<code>SC-W0307</code>) are pointed out</td><td><code>REQ-FILL-001</code>, <code>REQ-FILL-002</code></td></tr>
-<tr><td>M5.2</td><td>Rows and needle points as Ink/Stitch places them. Row and stagger grids anchored at the origin; graded spacing; random stitch length</td><td><code>REQ-FILL-TAT-002</code>, <code>REQ-FILL-TAT-003</code></td></tr>
-<tr><td>M5.3</td><td>Routing as Ink/Stitch routes. Every segment sewn once, back and forth, from the needle to the next element, with running stitches along the outline between. A region too thin for any row sewn round its outline, <code>SC-W0305</code>. Fills are sewn</td><td><code>REQ-FILL-TAT-001</code></td></tr>
-<tr><td>M5.4</td><td>Travel under the rows (<code>underpath</code>), off the rows already sewn</td><td><code>REQ-FILL-TAT-005</code></td></tr>
-<tr><td>M5.5</td><td>Parts sewn one at a time, each ending nearest the next, joined by jumps (<code>SC-W0307</code>)</td><td><code>REQ-FILL-TAT-008</code></td></tr>
-<tr><td>M5.6</td><td>Underlay, a pass for each angle on the inset region; <code>expand_mm</code></td><td><code>REQ-FILL-TAT-007</code> for the underlay’s rows</td></tr>
-<tr><td>M5.7</td><td>Pull compensation at the rows’ ends, holes and parts kept; gap-fill rows inside the region</td><td><code>REQ-FILL-TAT-006</code>, <code>REQ-FILL-TAT-007</code></td></tr>
-<tr><td>M5.8</td><td>Coverage metric and performance budget</td><td><code>REQ-FILL-TAT-004</code>, <code>REQ-FILL-TAT-009</code></td></tr>
+<tr><td>M5.2 ✅</td><td>Rows as Ink/Stitch lays them, at the angle and a whole number of row spacings from the origin, graded towards the end spacing. They are cut where they meet the outline, as GEOS cuts them</td><td><code>REQ-FILL-TAT-002</code>, <code>REQ-FILL-TAT-010</code></td></tr>
+<tr><td>M5.3</td><td>Needle points as Ink/Stitch places them, on the stagger grid from the origin, with <code>skip_last</code> and random stitch length. A fill’s longest stitch defaults to 4 mm, so a parameter can have a default for each family</td><td><code>REQ-FILL-TAT-003</code></td></tr>
+<tr><td>M5.4</td><td>Routing as Ink/Stitch routes. Every segment sewn once, back and forth, from the needle to the next element, with running stitches along the outline between. A region too thin for any row sewn round its outline, <code>SC-W0305</code>. Fills are sewn</td><td><code>REQ-FILL-TAT-001</code></td></tr>
+<tr><td>M5.5</td><td>Travel under the rows (<code>underpath</code>), off the rows already sewn</td><td><code>REQ-FILL-TAT-005</code></td></tr>
+<tr><td>M5.6</td><td>Parts sewn one at a time, each ending nearest the next, joined by jumps (<code>SC-W0307</code>)</td><td><code>REQ-FILL-TAT-008</code></td></tr>
+<tr><td>M5.7</td><td>Underlay, a pass for each angle on the inset region; <code>expand_mm</code></td><td><code>REQ-FILL-TAT-007</code> for the underlay’s rows</td></tr>
+<tr><td>M5.8</td><td>Pull compensation at the rows’ ends, holes and parts kept; gap-fill rows inside the region</td><td><code>REQ-FILL-TAT-006</code>, <code>REQ-FILL-TAT-007</code></td></tr>
+<tr><td>M5.9</td><td>Coverage metric and performance budget</td><td><code>REQ-FILL-TAT-004</code>, <code>REQ-FILL-TAT-009</code></td></tr>
 <tr><td>MC-4 🧵</td><td><strong>TS-07</strong> (fill + outline registration), <strong>TS-08</strong> (density ladder, angles), <strong>TS-09</strong> (underlay, travel)</td><td>report filed; fill defaults and pull compensation tuned</td></tr>
 </tbody>
 </table>

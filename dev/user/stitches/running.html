@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-bf1e2529.js";
+            window.path_to_searchindex_js = "../../searchindex-6b72b2ce.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-f616c49b.js"></script>
+        <script src="../../toc-c73eb358.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -192,16 +192,12 @@ parameter is set per element, and <a href="README.html#setting-parameters">setti
 <p><code>running_stitch_length_mm</code> sets how long each stitch is, 2.5 mm by default. Between 2 corners the stitches
 are spread evenly, and none is longer than the stitch length.</p>
 <!-- shot: running-length -->
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th style="text-align: center">1.5 mm</th><th style="text-align: center">2.5 mm</th><th style="text-align: center">4 mm</th></tr>
-</thead>
-<tbody>
-<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/running-length-1.png" alt="A wave in running stitch, its needle points dotted along it, 1.5 mm"><span class="img-wrapper"><img src="../../images/generated/running-length-1.png" alt="A wave in running stitch, its needle points dotted along it, 1.5 mm"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/running-length-2.png" alt="A wave in running stitch, its needle points dotted along it, 2.5 mm"><span class="img-wrapper"><img src="../../images/generated/running-length-2.png" alt="A wave in running stitch, its needle points dotted along it, 2.5 mm"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/running-length-3.png" alt="A wave in running stitch, its needle points dotted along it, 4 mm"><span class="img-wrapper"><img src="../../images/generated/running-length-3.png" alt="A wave in running stitch, its needle points dotted along it, 4 mm"></span></label></td></tr>
-</tbody>
-</table>
-</div>
+<p><strong>1.5 mm</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/running-length-1.png" alt="A wave 36 mm long in running stitch, its needle points dotted along it, 1.5 mm"><span class="img-wrapper"><img src="../../images/generated/running-length-1.png" alt="A wave 36 mm long in running stitch, its needle points dotted along it, 1.5 mm"></span></label></p>
+<p><strong>2.5 mm</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/running-length-2.png" alt="A wave 36 mm long in running stitch, its needle points dotted along it, 2.5 mm"><span class="img-wrapper"><img src="../../images/generated/running-length-2.png" alt="A wave 36 mm long in running stitch, its needle points dotted along it, 2.5 mm"></span></label></p>
+<p><strong>4 mm</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/running-length-3.png" alt="A wave 36 mm long in running stitch, its needle points dotted along it, 4 mm"><span class="img-wrapper"><img src="../../images/generated/running-length-3.png" alt="A wave 36 mm long in running stitch, its needle points dotted along it, 4 mm"></span></label></p>
 <!-- /shot -->
 <p>Short stitches follow a curve closely and make more needle holes. Long stitches are quicker to sew and
 show more of each stitch. With a list of lengths, such as <code>2.5 1</code>, the stitches take the lengths one after another along the
@@ -209,7 +205,9 @@ path.</p>
 <h2 id="corners-and-curves"><a class="header" href="#corners-and-curves">Corners and curves</a></h2>
 <p>Where the path turns by more than 30°, StitchCraft puts a needle point on the corner, and the line keeps
 its shape. Along a curve, a stitch strays from the curve by at most <code>running_stitch_tolerance_mm</code>, 0.2 mm
-by default. With a long stitch length the tolerance shows: here the stitches are 6 mm long.</p>
+by default. With a long stitch length the tolerance shows. Here a half disc is sewn in stitches up to 6 mm
+long. Both corners of its straight side get a needle point in every panel. The tolerance sets how closely
+the stitches follow the curve.</p>
 <!-- shot: running-tolerance -->
 <div class="table-wrapper">
 <table>
@@ -217,12 +215,14 @@ by default. With a long stitch length the tolerance shows: here the stitches are
 <tr><th style="text-align: center">0.1 mm</th><th style="text-align: center">0.5 mm</th><th style="text-align: center">2 mm</th></tr>
 </thead>
 <tbody>
-<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/running-tolerance-1.png" alt="A wave in 6 mm running stitch, 0.1 mm"><span class="img-wrapper"><img src="../../images/generated/running-tolerance-1.png" alt="A wave in 6 mm running stitch, 0.1 mm"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/running-tolerance-2.png" alt="A wave in 6 mm running stitch, 0.5 mm"><span class="img-wrapper"><img src="../../images/generated/running-tolerance-2.png" alt="A wave in 6 mm running stitch, 0.5 mm"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/running-tolerance-3.png" alt="A wave in 6 mm running stitch, 2 mm"><span class="img-wrapper"><img src="../../images/generated/running-tolerance-3.png" alt="A wave in 6 mm running stitch, 2 mm"></span></label></td></tr>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/running-tolerance-1.png" alt="A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 0.1 mm"><span class="img-wrapper"><img src="../../images/generated/running-tolerance-1.png" alt="A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 0.1 mm"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/running-tolerance-2.png" alt="A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 0.5 mm"><span class="img-wrapper"><img src="../../images/generated/running-tolerance-2.png" alt="A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 0.5 mm"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/running-tolerance-3.png" alt="A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 2 mm"><span class="img-wrapper"><img src="../../images/generated/running-tolerance-3.png" alt="A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 2 mm"></span></label></td></tr>
 </tbody>
 </table>
 </div>
 <!-- /shot -->
-<p>At 2 mm the stitches cut across the curve. At 0.1 mm StitchCraft shortens them where the curve bends.</p>
+<p>At 2 mm the curve is sewn in 3 straight stitches, and the half disc comes out as a trapezoid. At 0.1 mm
+StitchCraft shortens the stitches until each keeps within 0.1 mm of the curve, and the curve comes out
+round.</p>
 <h2 id="bean-stitch-and-repeats"><a class="header" href="#bean-stitch-and-repeats">Bean stitch and repeats</a></h2>
 <p><code>bean_stitch_repeats</code> sews each stitch more than once, for a bolder line. At 1 each stitch is sewn 3
 times, there, back and there again, and at 2 it is sewn 5 times. With a list such as <code>1 0</code>, the stitches
@@ -234,16 +234,10 @@ and there again. With an even number the stitching ends where it started.</p>
 stripes. <code>enable_random_stitch_length</code> varies each stitch’s length by up to
 <code>random_stitch_length_jitter_percent</code>, 10 % by default, and the stripes go.</p>
 <!-- shot: random-length -->
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th style="text-align: center">even</th><th style="text-align: center">random</th></tr>
-</thead>
-<tbody>
-<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/random-length-1.png" alt="6 rows of running stitch 1.6 mm apart, sewn back and forth as one path, even"><span class="img-wrapper"><img src="../../images/generated/random-length-1.png" alt="6 rows of running stitch 1.6 mm apart, sewn back and forth as one path, even"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/random-length-2.png" alt="6 rows of running stitch 1.6 mm apart, sewn back and forth as one path, random"><span class="img-wrapper"><img src="../../images/generated/random-length-2.png" alt="6 rows of running stitch 1.6 mm apart, sewn back and forth as one path, random"></span></label></td></tr>
-</tbody>
-</table>
-</div>
+<p><strong>even</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/random-length-1.png" alt="14 rows of running stitch 0.6 mm apart, sewn back and forth as one path, even"><span class="img-wrapper"><img src="../../images/generated/random-length-1.png" alt="14 rows of running stitch 0.6 mm apart, sewn back and forth as one path, even"></span></label></p>
+<p><strong>random</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/random-length-2.png" alt="14 rows of running stitch 0.6 mm apart, sewn back and forth as one path, random"><span class="img-wrapper"><img src="../../images/generated/random-length-2.png" alt="14 rows of running stitch 0.6 mm apart, sewn back and forth as one path, random"></span></label></p>
 <!-- /shot -->
 <p>The stitching still ends on each corner. <code>random_seed</code> sets where the random lengths start. The same
 element and seed give the same stitches every time, on every computer.</p>

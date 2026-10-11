@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-bf1e2529.js";
+            window.path_to_searchindex_js = "../../searchindex-6b72b2ce.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-f616c49b.js"></script>
+        <script src="../../toc-c73eb358.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,7 +181,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="fill-generators"><a class="header" href="#fill-generators">Fill generators</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/normalize/region/** -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/generators/tatami/** -->
 <p>A fill covers the area its path bounds, its <a href="#region">region</a>, with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).</p>
 <p>A fill sews the drawing’s shape with Ink/Stitch’s stitches. Ink/Stitch’s rows, their spacing and stagger,
@@ -236,11 +236,27 @@ build them in this order.</p>
 <code>fill_underlay_angle</code>, <code>fill_underlay_row_spacing_mm</code>, <code>fill_underlay_max_stitch_length_mm</code>,
 <code>fill_underlay_inset_mm</code>, <code>fill_underlay_skip_last</code>, <code>underlay_underpath</code>.</p>
 <h3 id="1-rows"><a class="header" href="#1-rows">1. Rows</a></h3>
-<p>Rows run across the region at <code>angle</code>, <code>row_spacing_mm</code> apart, on lines a whole number of spacings from
-the design’s origin. Fills side by side at the same angle and spacing then share their rows. With
-<code>end_row_spacing_mm</code> the spacing changes steadily from the first row to the last. Where a row crosses
-the region more than once, each stretch inside is a <em>segment</em>. A row that only touches the region at a
-point has none.</p>
+<p>Rows are laid across each part of the region on its own (<code>stitchcraft_engine::generators::tatami::rows</code>,
+since M5.2). They run at <code>angle</code>, counter-clockwise from horizontal on screen: at 0° left to right, at
+90° up the screen. Measured across them from the design’s origin, the first row of a part lies the
+largest whole number of <code>row_spacing_mm</code> from the origin that does not pass the part, and the rows follow
+it <code>row_spacing_mm</code> apart until they pass the part’s far side (<code>REQ-FILL-TAT-002</code>). Fills side by side
+at the same angle and spacing then share their rows. Angles of whole right angles are exact, so rows at
+0° or 90° run exactly along the drawing’s axes.</p>
+<p>With <code>end_row_spacing_mm</code>, each step to the next row is the row spacing plus the difference to the end
+spacing times the distance from the first row over the part’s height. The spacing then reaches the end
+spacing a part’s height from the first row. Ink/Stitch carries the change on beyond that. Over a part
+only a few rows tall, a shrinking spacing then turns so small that the rows pile up short of the far side
+without end. StitchCraft keeps the end spacing from there on (<code>DEV-FILL-003</code>).</p>
+<p>A row’s <em>segments</em> are the stretches of it in the part, its outline included, split at every point where
+the row meets the outline (<code>REQ-FILL-TAT-010</code>). Those are the points where it crosses the outline or the
+outline touches it from inside, and both ends of a stretch where it runs along the outline. A row along
+an edge is then a segment of its own, and a row that only touches the part at a point has none. This is
+how GEOS, the library behind Ink/Stitch’s shapes, cuts a line with a polygon. Its answers for 2,511 rows
+across 406 random polygons of grid squares and half squares, 98 of them with holes, are recorded and
+checked (<code>conformance/fixtures/geometry/shapely-rows.txt</code>).
+Which stretches lie inside is decided by counting the edges that cross the row, each over its height
+from its lower end up to but not including its upper end.</p>
 <h3 id="2-needle-points-along-a-row"><a class="header" href="#2-needle-points-along-a-row">2. Needle points along a row</a></h3>
 <p>A row’s needle points lie on a grid along it, <code>max_stitch_length_mm</code> apart and anchored at the origin.
 Each next row’s grid is shifted by <code>1/staggers</code> of a stitch, and fills side by side tile. A segment

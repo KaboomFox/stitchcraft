@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-bf1e2529.js";
+            window.path_to_searchindex_js = "../searchindex-6b72b2ce.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f616c49b.js"></script>
+        <script src="../toc-c73eb358.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -258,7 +258,9 @@ and so on. The plan may report only the codes the shot lists in <code>allow</cod
 a picture never shows a design that the engine changed without the page saying so. The <code>alt</code> text is
 mandatory (accessibility), and the docs check fails on images without it.</p>
 <p>A page shows a shot between the lines <code>&lt;!-- shot: running-length --&gt;</code> and <code>&lt;!-- /shot --&gt;</code>. <code>cargo xtask docs</code> writes the figure there. Without panels the figure is one image. With panels it is a table with a
-column per panel, its caption on top and its image below it. Each image’s alternative text is the shot’s,
+column per panel, its caption on top and its image below it. A shot with <code>layout = "rows"</code> shows its
+panels one under another instead, each caption in bold above an image as wide as the page: pictures side by
+side shrink to share the page’s width, and a wide picture’s stitches then become too small to tell apart. Each image’s alternative text is the shot’s,
 followed by the panel’s caption. The page
 cannot show an image under any other text, and a stale figure fails <code>--check</code> like a stale page.</p>
 <h2 id="command-line-examples"><a class="header" href="#command-line-examples">Command-line examples</a></h2>

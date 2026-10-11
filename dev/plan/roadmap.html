@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-bf1e2529.js";
+            window.path_to_searchindex_js = "../searchindex-6b72b2ce.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f616c49b.js"></script>
+        <script src="../toc-c73eb358.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -299,13 +299,14 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 </thead>
 <tbody>
 <tr><td>M5.1 ✅</td><td>A fill’s region as the drawing shows it under its fill rule, in parts with holes, its subpaths cut exactly where they meet. Parts too small to sew are left out with <code>SC-W0303</code>, as Ink/Stitch leaves them out. Small fills (<code>SC-W0304</code>), the fill rule (<code>SC-I0306</code>) and fills in parts (<code>SC-W0307</code>) are pointed out</td><td><code>REQ-FILL-001</code>, <code>REQ-FILL-002</code></td></tr>
-<tr><td>M5.2</td><td>Rows and needle points as Ink/Stitch places them. Row and stagger grids anchored at the origin; graded spacing; random stitch length</td><td><code>REQ-FILL-TAT-002</code>, <code>REQ-FILL-TAT-003</code></td></tr>
-<tr><td>M5.3</td><td>Routing as Ink/Stitch routes. Every segment sewn once, back and forth, from the needle to the next element, with running stitches along the outline between. A region too thin for any row sewn round its outline, <code>SC-W0305</code>. Fills are sewn</td><td><code>REQ-FILL-TAT-001</code></td></tr>
-<tr><td>M5.4</td><td>Travel under the rows (<code>underpath</code>), off the rows already sewn</td><td><code>REQ-FILL-TAT-005</code></td></tr>
-<tr><td>M5.5</td><td>Parts sewn one at a time, each ending nearest the next, joined by jumps (<code>SC-W0307</code>)</td><td><code>REQ-FILL-TAT-008</code></td></tr>
-<tr><td>M5.6</td><td>Underlay, a pass for each angle on the inset region; <code>expand_mm</code></td><td><code>REQ-FILL-TAT-007</code> for the underlay’s rows</td></tr>
-<tr><td>M5.7</td><td>Pull compensation at the rows’ ends, holes and parts kept; gap-fill rows inside the region</td><td><code>REQ-FILL-TAT-006</code>, <code>REQ-FILL-TAT-007</code></td></tr>
-<tr><td>M5.8</td><td>Coverage metric and performance budget</td><td><code>REQ-FILL-TAT-004</code>, <code>REQ-FILL-TAT-009</code></td></tr>
+<tr><td>M5.2 ✅</td><td>Rows as Ink/Stitch lays them, at the angle and a whole number of row spacings from the origin, graded towards the end spacing. They are cut where they meet the outline, as GEOS cuts them</td><td><code>REQ-FILL-TAT-002</code>, <code>REQ-FILL-TAT-010</code></td></tr>
+<tr><td>M5.3</td><td>Needle points as Ink/Stitch places them, on the stagger grid from the origin, with <code>skip_last</code> and random stitch length. A fill’s longest stitch defaults to 4 mm, so a parameter can have a default for each family</td><td><code>REQ-FILL-TAT-003</code></td></tr>
+<tr><td>M5.4</td><td>Routing as Ink/Stitch routes. Every segment sewn once, back and forth, from the needle to the next element, with running stitches along the outline between. A region too thin for any row sewn round its outline, <code>SC-W0305</code>. Fills are sewn</td><td><code>REQ-FILL-TAT-001</code></td></tr>
+<tr><td>M5.5</td><td>Travel under the rows (<code>underpath</code>), off the rows already sewn</td><td><code>REQ-FILL-TAT-005</code></td></tr>
+<tr><td>M5.6</td><td>Parts sewn one at a time, each ending nearest the next, joined by jumps (<code>SC-W0307</code>)</td><td><code>REQ-FILL-TAT-008</code></td></tr>
+<tr><td>M5.7</td><td>Underlay, a pass for each angle on the inset region; <code>expand_mm</code></td><td><code>REQ-FILL-TAT-007</code> for the underlay’s rows</td></tr>
+<tr><td>M5.8</td><td>Pull compensation at the rows’ ends, holes and parts kept; gap-fill rows inside the region</td><td><code>REQ-FILL-TAT-006</code>, <code>REQ-FILL-TAT-007</code></td></tr>
+<tr><td>M5.9</td><td>Coverage metric and performance budget</td><td><code>REQ-FILL-TAT-004</code>, <code>REQ-FILL-TAT-009</code></td></tr>
 <tr><td>MC-4 🧵</td><td><strong>TS-07</strong> (fill + outline registration), <strong>TS-08</strong> (density ladder, angles), <strong>TS-09</strong> (underlay, travel)</td><td>report filed; fill defaults and pull compensation tuned</td></tr>
 </tbody>
 </table>
