@@ -320,10 +320,10 @@ impl<T: Copy> Snap<T> {
         let cell = |v: f64| (v / self.near).floor() as i64;
         let (cx, cy) = (cell(p.x()), cell(p.y()));
         for x in cx.saturating_sub(1)..=cx.saturating_add(1) {
-            for y in cy.saturating_sub(1)..=cy.saturating_add(1) {
-                if let Some(&(_, value)) = self.cells.get(&(x, y)).and_then(|seen| seen.iter().find(|(q, _)| length(p, *q) < self.near)) {
-                    return value;
-                }
+            // The column's 3 cells in one look, in the order of y.
+            let column = self.cells.range((x, cy.saturating_sub(1))..=(x, cy.saturating_add(1)));
+            if let Some(&(_, value)) = column.flat_map(|(_, seen)| seen).find(|(q, _)| length(p, *q) < self.near) {
+                return value;
             }
         }
         let value = new();
