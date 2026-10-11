@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-eab0b8f0.js";
+            window.path_to_searchindex_js = "../../searchindex-812078b4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-c73eb358.js"></script>
+        <script src="../../toc-6a54873b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -269,7 +269,7 @@ nearest whole number, halves to the even one. Its offset is the fractional part 
 before’s and come back after <code>staggers</code> rows, so neighbouring rows never line them up into furrows. A
 fraction of a stagger draws diagonals that show less. Fills side by side at the same angle share the
 grid, as they share their rows.</p>
-<p>A segment is sewn from one end to the other, as routing decides (M5.4). It takes its start, then every
+<p>A segment is sewn from one end to the other, as routing decides. It takes its start, then every
 grid point past the start and before the end, and then its end, unless <code>skip_last</code> is on or the last
 point lies within 0.1 mm of it. A start on the grid is sewn once. Sewn the other way, a segment takes the
 same grid points.</p>
@@ -279,14 +279,54 @@ lies a random share of the longest stitch past it, and each next one a stitch on
 element’s generator, seeded with <code>random_seed</code>, in the order the segments are sewn. Ink/Stitch seeds a
 generator for each segment, and its random values differ (<code>DEV-FILL-004</code>).</p>
 <h3 id="3-routing-every-segment-once"><a class="header" href="#3-routing-every-segment-once">3. Routing: every segment once</a></h3>
-<p>The segments’ ends lie on the region’s outline. Joined by the stretches of outline between neighbouring
-ends, every other stretch twice and more where needed, they make a graph in which every point meets an
-even number of edges. One path can then take every edge (Hierholzer). The fill starts at the point
-nearest the needle and goes first to where it will end. That is the point of its outline nearest the
-next element’s first stitch, or its start when nothing follows. From there it sews its segments in one
-loop that comes back there, taking a segment wherever one is left. The rows go back and forth like a mown
-lawn, and the rows sewn later hide the way the needle came. Between segments the needle runs along the
-outline in running stitches (<code>running_stitch_length_mm</code>, <code>running_stitch_tolerance_mm</code>).</p>
+<p>Each part’s segments are sewn once each, in the order Ink/Stitch routes them
+(<code>stitchcraft_engine::generators::tatami::route</code>, since M5.4, <code>REQ-FILL-TAT-001</code>).</p>
+<ol>
+<li><strong>Order.</strong> The segments are taken row by row, across the rows, and within a row by how far their start
+lies from the corner of the part’s bounding box where x and y are least. Each runs along its row.</li>
+<li><strong>Graph.</strong> Each segment is an edge between its 2 ends, and the ends are nodes. A node belongs to the
+ring nearest it, or to the outline when a hole is as near. Its place is its distance along that ring
+from the ring’s start. Along each ring an edge joins each node to the next, and every other one of those
+stretches, from the first, gets a second edge. A node then meets its row and 3 stretches of ring, an
+even number of edges. Ink/Stitch’s graph knows an edge between 2 nodes by its kind, so a ring of 2
+nodes doubles only one of its 2 stretches. This graph does the same.</li>
+<li><strong>Start and end.</strong> The fill starts at the point of its rings nearest the needle and ends at the point
+nearest the next element. Each of the 2 points gets a node, which splits the stretch of that ring whose
+chord passes nearest it. Then the node nearest the needle is where the fill starts, and the one
+nearest the next element where it ends. Without a needle the fill starts at its first segment’s start,
+and without a next element it ends where it starts. Only rings that rows reach are looked at.
+Ink/Stitch joins an unreached ring with straight lines, which it sews as rows (<code>DEV-FILL-006</code>).</li>
+<li><strong>Even degrees.</strong> A row through a corner of the outline, or one along it, shares a node with the row
+beside it, and some nodes then meet an odd number of edges. Ink/Stitch adds paths between such nodes
+that may run along rows, and sews those rows a second time. StitchCraft pairs the odd nodes so that the
+needle’s way between pairs is shortest in all and joins each pair with an edge. Up to 16 nodes every
+pairing is weighed, and past that each node pairs with the nearest left. No row is sewn twice
+(<code>DEV-FILL-006</code>).</li>
+<li><strong>Walk.</strong> The walk starts at the end node. At each node it takes the node’s row if one is left,
+and otherwise the node’s first edge left. A node lists its edges neighbour by neighbour, each neighbour
+where its first edge to the node came and its edges in the order they came. A neighbour whose last edge
+is taken drops out of the list. When the walk reaches a node with no edge left it steps back, and the
+edges, in the order it steps back over them, are the route. The route comes back to the end node, and
+before it the needle runs from the fill’s start to that node. The running stitches between rows then
+mostly come just before the rows beside them, which cover them, and the rows go back and forth like a
+mown lawn.</li>
+<li><strong>Between rows.</strong> Steps between rows in a row are one stretch, from where the last row ended to where
+the next starts. Between 2 points of one ring the needle runs along the ring, the shorter way round, as
+in Ink/Stitch. Between 2 rings it takes the shortest way along rings and rows (<code>DEV-FILL-006</code>). It sews
+running stitches of the first <code>running_stitch_length_mm</code>, at least twice the shortest stitch, within
+<code>running_stitch_tolerance_mm</code>. The first of them would sew the row’s end again, so it is left out. With
+<code>skip_last</code> the row’s end is not sewn, and the first running stitch stays unless the next row starts
+beside it.</li>
+<li><strong>The shortest stitch.</strong> Rows the row spacing apart start and end nearer each other than the shortest
+stitch a machine sews well, and a row’s first grid point can lie just past its start. A needle point
+nearer the one before it than the shortest stitch is left out, as Ink/Stitch leaves out points nearer
+than its own shortest stitch. A part’s last point stays, and the points before it that are too near it
+go instead, finalize’s rule applied in the generator.</li>
+</ol>
+<p>The route follows Ink/Stitch’s from the same graph. StitchCraft’s rings start where the drawing starts
+them, and Ink/Stitch’s where GEOS’s overlay starts them, so which stretches are doubled, and with them the
+route, can differ (<code>DEV-FILL-005</code>). Until travel under the rows arrives (M5.5), the needle runs along the
+outline between rows, as Ink/Stitch’s does with <code>underpath</code> off.</p>
 <h3 id="4-travel-under-the-rows"><a class="header" href="#4-travel-under-the-rows">4. Travel under the rows</a></h3>
 <p>With <code>underpath</code>, on by default, travel may cross the region where rows sewn later will cover it. It
 follows lines square to the rows and lines at 45° to them either way. A line costs less the farther it
@@ -294,10 +334,13 @@ lies from the outline. Once a row is sewn, the lines crossing it are closed: no 
 already sewn. Travel stays inside the region (<code>REQ-FILL-TAT-005</code>). Where no way inside joins 2 points,
 the parts are joined as below, and <code>SC-W0501</code> says so.</p>
 <h3 id="5-parts"><a class="header" href="#5-parts">5. Parts</a></h3>
-<p>A region in parts sews them one at a time, in order of their distance from the needle. Each part ends
-at its point nearest the next part, and the last nearest the next element. Jumps join the parts, with
-ties and trims where the element’s settings say, never stitches across empty fabric (<code>SC-W0307</code>,
-<code>REQ-FILL-TAT-008</code>).</p>
+<p>A region in parts sews them one at a time, as Ink/Stitch sews them (<code>REQ-FILL-TAT-008</code>, since M5.4).
+The part nearest the needle goes first, a part the needle is in being 0 away. With no needle, the part
+with the least x goes first. Each part ends at its point nearest the next part. The last ends at the point
+of the fill nearest the next element’s first stitch, or nearest its shape when it starts nearest the
+needle. Each part is a group of its own, which assembly joins to the next as it joins any 2 groups:
+straight on within the collapse length, and otherwise with a jump and the ties and trims the element’s
+settings give. <code>SC-W0307</code> says the fill is in parts.</p>
 <h3 id="6-underlay"><a class="header" href="#6-underlay">6. Underlay</a></h3>
 <p>Before its top rows, each part sews its underlay, on by default. The underlay is sewn like the top
 rows, on the part shrunk by <code>fill_underlay_inset_mm</code>. It makes one pass for each angle in
@@ -317,8 +360,9 @@ Ink/Stitch repeats the last row, a row further on each time, and a repeat can ru
 StitchCraft takes the extra rows from the row grid and keeps them inside the region
 (<code>REQ-FILL-TAT-007</code>).</p>
 <h3 id="8-no-rows"><a class="header" href="#8-no-rows">8. No rows</a></h3>
-<p>If no row meets the region (it is thinner than the row spacing), it is sewn as a running stitch round
-its outline, as Ink/Stitch sews it, and <code>SC-W0305</code> says so.</p>
+<p>A part thinner than the row spacing has no row. It is sewn as a running stitch round its outline, from
+the outline’s start, as Ink/Stitch sews it, and <code>SC-W0305</code> says so (since M5.4). Where the fill rule
+leaves every face empty, the fill sews nothing, and <code>SC-W0303</code> says so.</p>
 <h3 id="properties-conformance"><a class="header" href="#properties-conformance">Properties (conformance)</a></h3>
 <div class="table-wrapper">
 <table>
@@ -333,7 +377,7 @@ its outline, as Ink/Stitch sews it, and <code>SC-W0305</code> says so.</p>
 <tr><td><code>REQ-FILL-TAT-005</code></td><td>Travel stitches lie inside the region (± 0.05 mm)</td></tr>
 <tr><td><code>REQ-FILL-TAT-006</code></td><td>Pull compensation preserves the number of holes and components</td></tr>
 <tr><td><code>REQ-FILL-TAT-007</code></td><td>All rows, including gap-fill rows, lie inside the region (± tolerance + compensation)</td></tr>
-<tr><td><code>REQ-FILL-TAT-008</code></td><td>A region in parts sews each part on its own, joined by jumps and <code>SC-W0307</code>, never long straight stitches</td></tr>
+<tr><td><code>REQ-FILL-TAT-008</code></td><td>A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element</td></tr>
 <tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget</td></tr>
 </tbody>
 </table>

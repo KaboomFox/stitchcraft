@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eab0b8f0.js";
+            window.path_to_searchindex_js = "../searchindex-812078b4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-c73eb358.js"></script>
+        <script src="../toc-6a54873b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -422,6 +422,12 @@ which is the to-do list for better tests. Each mutant is judged by its own crate
 mutant, which changes nothing a test could observe; it is listed under <code>[[equivalent]]</code> in
 <code>conformance/mutation.toml</code> with its file, its description, the source line it changes and why, so a
 listed equivalent stops counting as one as soon as its line changes.</p>
+<p>A mutant can also break the condition that ends a loop, as when a walk over a graph never takes away the
+edges it has used. The loop then runs until the work budget ends or cargo-mutants’ timeout stops it,
+which counts apart. A loop that keeps 40 bytes for each unit of work wants 20 GB by the end of the
+default budget, more than a CI runner has, and the job ends without a result when the runner runs out of
+memory. So in the mutants jobs each test binary runs with at most 4 GiB of address space, through
+<code>prlimit</code> as Cargo’s runner: such a mutant aborts at the cap, which counts as noticed.</p>
 
                     </main>
 

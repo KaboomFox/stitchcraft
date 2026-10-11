@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-eab0b8f0.js";
+            window.path_to_searchindex_js = "../../searchindex-812078b4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-c73eb358.js"></script>
+        <script src="../../toc-6a54873b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -234,26 +234,27 @@ The grey dashes are the frame’s move from the star to the ring, after the colo
 <p>Load <code>badge.pes</code> and sew it as in <a href="first-sew-out.html#3-load-it-on-the-machine">your first sew-out</a>. Thread
 red first, and blue when the machine stops.</p>
 <h2 id="when-stitchcraft-warns"><a class="header" href="#when-stitchcraft-warns">When StitchCraft warns</a></h2>
-<p>StitchCraft says what it changes or leaves out of a design. This one from StitchCraft’s tests has a
-filled rectangle and 2 lines that nearly touch:</p>
+<p>StitchCraft says what it changes or leaves out of a design. This one from StitchCraft’s tests has a fill
+of 2 rectangles and 2 lines that nearly touch:</p>
 <pre><code class="language-console">$ stitch plan strokes.svg -o strokes.pes --preview strokes.png --report strokes.json
 strokes.svg
-  file      strokes.pes (PES v1, 1725 bytes)
-  sha256    41a9620e08c4cc93d781b9e3aef9cd59b92444ad5ef3e20cd3be7304dc616d2c
+  file      strokes.pes (PES v1, 2578 bytes)
+  sha256    95cfe9e11c17f3cc8f05f633bd340963402e62b691019119c23c1660503498b3
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
-  size      60.0 × 40.0 mm
-  stitches  118 stitches, 4 jumps, 0 trims, 2 colour changes, 0 stops
+  size      60.0 × 45.0 mm
+  stitches  425 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops
   threads   1. unnamed (#c00000), shown as Brother PEC 5 "Red"
             2. unnamed (#0040c0), shown as Brother PEC 21 "Ultramarine"
             3. unnamed (#c00000), shown as Brother PEC 5 "Red"
-  preview   strokes.png (512 × 352 pixels)
+            4. unnamed (#00a000), shown as Brother PEC 37 "Leaf Green"
+  preview   strokes.png (512 × 392 pixels)
   report    strokes.json
-warning SC-W0011 (svg:patch:fill): This element is a fill, and this version of StitchCraft does not sew fills yet, so it is skipped.
+warning SC-W0307 (svg:patch:fill): This fill's area falls into 2 parts that are sewn one after another, with a jump between each.
+  hint: To choose the order the parts are sewn in, break the fill apart into one element for each part.
 info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out.
 </code></pre>
 <ul>
-<li><code>SC-W0011</code> names the fill. Fills are sewn from milestone M5, and until then the rest of the design is
-sewn without it.</li>
+<li><code>SC-W0307</code> names the fill, whose 2 rectangles are sewn one after the other, with a jump between them.</li>
 <li><code>SC-I0504</code> says a needle point too close to the one before was left out, where the lines nearly touch.</li>
 </ul>
 <p><code>stitch explain</code> with a code tells you more, and <a href="../reference/diagnostics.html">diagnostic codes</a> lists

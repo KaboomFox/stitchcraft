@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eab0b8f0.js";
+            window.path_to_searchindex_js = "../searchindex-812078b4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-c73eb358.js"></script>
+        <script src="../toc-6a54873b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,7 +181,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="engine-pipeline"><a class="header" href="#engine-pipeline">Engine pipeline</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
 <p>From a <code>Design</code> to a checked <code>StitchPlan</code>. Each stage is a module in <code>stitchcraft-engine</code> with its
 own tests; stages communicate only through the types in the <a href="data-model.html">data model</a>.</p>
 <pre><code class="language-text">Design ──▶ 1 normalize ──▶ 2 validate ──▶ 3 generate (per element) ──▶ 4 assemble ──▶ 5 finalize ──▶ 6 check ──▶ StitchPlan
@@ -233,11 +233,12 @@ that join its underlays are no longer than the first value. For any other stroke
 <code>stroke_method</code>. <code>running_stitch</code> (the default) and
 <code>manual_stitch</code> are sewn from M3. A satin column drawn as one path no wider than the design’s
 <code>min_satin_stroke_width</code> is sewn as a stroke, with <code>SC-W0212</code>, as in Ink/Stitch (<code>REQ-SAT-015</code>). A wider
-one is sewn between rails made from its line from M4.9 (<code>REQ-SAT-016</code>). The other stroke and satin
-methods, and fills, are skipped with <code>SC-W0011</code> until their milestones. A fill’s region is built
-already, so what it leaves out and how it will be sewn are said (<code>SC-W0303</code>, <code>SC-W0304</code>, <code>SC-I0306</code>,
-<code>SC-W0307</code>), and its tatami settings are read and checked. An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and the rest of the
-design still plans.</p>
+one is sewn between rails made from its line from M4.9 (<code>REQ-SAT-016</code>). A fill’s region is built first,
+so what it leaves out and how it will be sewn are said (<code>SC-W0303</code>, <code>SC-W0304</code>, <code>SC-I0306</code>, <code>SC-W0307</code>)
+whatever comes next, and its <code>fill_method</code> picks the generator: the tatami fill, sewn from M5.4, which
+reads the running stitch’s length and tolerance for its travel between rows. The other stroke, satin and
+fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are wrong
+(<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element
 sets none. A satin column is given its longest stitch as well, the element’s <code>max_stitch_length_mm</code>,
@@ -354,7 +355,9 @@ stop, a needle point less than its shortest stitch from the one before is left o
 runs on to the next point. The run’s first and last points and lock points always stay, and the points
 before them are left out instead. A point where the needle already is would sew in place, and it is
 left out too. A stitch into or out of a lock point is a lock stitch, whose shortest is 0.2 mm
-(<code>REQ-PLAN-002</code>). <code>SC-I0504</code> says how many points were left out (<code>REQ-FIN-001</code>).</li>
+(<code>REQ-PLAN-002</code>). <code>SC-I0504</code> says how many points were left out (<code>REQ-FIN-001</code>). The rule is one
+function, which a generator that joins pieces of its own also applies, as a tatami fill does to its
+rows and the travel between them, so that finalize finds nothing of its stitches to thin.</li>
 <li><strong>The longest stitch.</strong> A stitch longer than <code>profile.max_stitch</code> is split into the fewest equal parts
 no longer than it (<code>SC-I0703</code>, <code>REQ-FIN-001</code>). Such a stitch comes from a stitch placed by hand, from
 a custom lock’s long step, or from a move sewn on under a <code>min_jump_stitch_length_mm</code> longer than the
