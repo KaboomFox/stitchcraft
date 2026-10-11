@@ -40,7 +40,18 @@ pub fn side(a: Point, b: Point, c: Point) -> Side {
     let (left, right) = (abx * acy, aby * acx);
     let det = left - right;
     let bound = ERROR_BOUND * (left.abs() + right.abs());
-    let sign = if det.abs() <= bound { exact_determinant(a, b, c) } else { det };
+    let sign = if det.abs() <= bound {
+        if (abx == 0.0 || acy == 0.0) && (aby == 0.0 || acx == 0.0) {
+            // Both products have a factor of exactly 0, so the determinant is exactly 0: a difference of 2
+            // floats is 0 only where they are equal. Points level or upright with each other come here
+            // often, and the exact sum would only confirm it.
+            0.0
+        } else {
+            exact_determinant(a, b, c)
+        }
+    } else {
+        det
+    };
     if sign > 0.0 {
         Side::Left
     } else if sign < 0.0 {
@@ -137,6 +148,9 @@ mod tests {
         assert_eq!(side(p(0.0, 0.0), p(1.0, 0.0), p(0.5, -1.0)), Side::Right);
         assert_eq!(side(p(0.0, 0.0), p(1.0, 1.0), p(3.0, 3.0)), Side::On);
         assert_eq!(side(p(2.0, 2.0), p(2.0, 2.0), p(3.0, 5.0)), Side::On, "a line of no length has no sides");
+        // Level and upright points: a factor of each product is 0.
+        assert_eq!(side(p(1.0, 2.0), p(5.0, 2.0), p(9.0, 2.0)), Side::On);
+        assert_eq!(side(p(3.0, 1.0), p(3.0, 4.0), p(3.0, -6.0)), Side::On);
     }
 
     #[test]

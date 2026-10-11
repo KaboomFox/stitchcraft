@@ -5,6 +5,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M5.9: the coverage metric (`stitchcraft_testkit::metrics`) and the performance budget.
+  - Coverage rasterizes a fill's region and the thread of every stitch its plan sews, 0.4 mm wide, at
+    0.05 mm. A fill covers at least 98 % of its area at spacings from the machine's shortest stitch to
+    0.4 mm (`REQ-FILL-TAT-004`), for rectangles, an L, circles, rings, stars and a 5 mm bar at 5 angles.
+    Below the shortest stitch, each row's first needle point is left out (`DEV-FIN-001`), and a 5 mm bar at
+    0.25 mm on the Brother is 97 % covered.
+  - `cargo xtask perf` plans the reference hoop's whole field (`REQ-FILL-TAT-009`) with the engine's
+    `field` example in release. It counts the instructions one plan takes with valgrind's callgrind,
+    against a record in `conformance/perf.toml` that only goes down, and reports the time against
+    NFR-PERF-1's 50 ms: 280 million instructions and 29 ms at M5.9. It has its own CI job.
+  - Planning the field takes a fifth fewer instructions than before: crossings of the travel lines snap
+    with 3 lookups instead of 9, and the exact orientation test knows a cross product with a factor of
+    exactly 0 is 0. The stitches stay as they were.
 - M5.8: a tatami fill's top rows are lengthened past their ends by `pull_compensation_mm` plus
   `pull_compensation_percent` of each row's length (`REQ-FILL-TAT-006`), as Ink/Stitch lengthens them.
   `gap_fill_rows` sews rows again where the route leaves a stretch of more than 3 rows
@@ -502,6 +515,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- A design exactly the hoop's size fits it. Rounding put rows of a fill's underlay at 90° a hair past the
+  edge of the reference hoop's whole field, and the hoop check and the plan checker refused it, while the
+  check that the design is centred allowed the hair, as every length check does (`LENGTH_SLACK`). Both now
+  allow it too (`REQ-PLAN-001`, `REQ-PRF-002`).
 - With `skip_last`, a tatami fill's travel between 2 nodes that only an edge pairing them joins sews the
   row's end before it, as Ink/Stitch's does. Such an edge stands for a way of several edges
   (`DEV-FILL-006`), and Ink/Stitch never takes the 2 nodes for neighbours. The golden files stay as they

@@ -23,7 +23,7 @@ pub const MACHINE_LIMIT: i32 = 100_000;
 /// Lengths closer than this, in millimetres, count as equal: far below the 0.1 mm resolution of machine
 /// files, so floating-point rounding in a length that is exactly at a limit does not cross it. Generators
 /// place stitches with it and the plan checker checks them with it (both through [`at_least`]), so the
-/// two always agree.
+/// two always agree, on stitch lengths and on the hoop's edge alike.
 pub const LENGTH_SLACK: f64 = 1e-9;
 
 /// Whether `length` is at least `limit`, both in millimetres, counting lengths within [`LENGTH_SLACK`]
@@ -124,9 +124,10 @@ impl Size {
         Size { width: self.height, height: self.width }
     }
 
-    /// Whether something `width` × `height` millimetres fits inside this size without turning it.
+    /// Whether something `width` × `height` millimetres fits inside this size without turning it, extents
+    /// within [`LENGTH_SLACK`] of it counting as equal.
     pub fn holds(self, width: f64, height: f64) -> bool {
-        width <= self.width.0 && height <= self.height.0
+        at_least(self.width.0, width) && at_least(self.height.0, height)
     }
 }
 
@@ -275,6 +276,9 @@ mod tests {
         assert!(hoop.holds(200.0, 150.0));
         assert!(!hoop.holds(150.0, 200.0));
         assert!(hoop.rotated().holds(150.0, 200.0));
+        // Rounding a hair past the edge, within the slack, still fits; a ten-thousandth of a millimetre does not.
+        assert!(hoop.holds(200.0 + 1e-12, 150.0 + 1e-12));
+        assert!(!hoop.holds(200.0001, 150.0) && !hoop.holds(200.0, 150.0001));
     }
 
     #[test]

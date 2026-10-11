@@ -158,7 +158,13 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    stitch a machine sews well, and a row's first grid point can lie just past its start. A needle point
    nearer the one before it than the shortest stitch is left out, as Ink/Stitch leaves out points nearer
    than its own shortest stitch. A part's last point stays, and the points before it that are too near it
-   go instead, finalize's rule applied in the generator.
+   go instead, finalize's rule applied in the generator. Where the rows lie nearer each other than the
+   machine's shortest stitch, each row hands over to the next in a stitch too short to sew, so the next
+   row's first needle point is left out (`DEV-FIN-001`). The thread then runs from the row's end to the
+   next row's second needle point, and a sliver at each row's start shows. On the Brother, whose
+   shortest stitch is 0.3 mm, a bar 5 mm wide at Ink/Stitch's default of 0.25 mm is 97 % covered, and at
+   0.3 mm or more it is covered to its edges (`REQ-FILL-TAT-004`). Ink/Stitch's shortest stitch, 0.1 mm
+   by default, keeps the handover.
 
 The route follows Ink/Stitch's from the same graph. StitchCraft's rings start where the drawing starts
 them, and Ink/Stitch's where GEOS's overlay starts them, so which stretches are doubled, and with them the
@@ -291,12 +297,12 @@ the fill sews nothing, and `SC-W0303` says so.
 | `REQ-FILL-TAT-001` | Every row segment is covered exactly once by top stitches |
 | `REQ-FILL-TAT-002` | Measured row spacing equals the parameter (± 2 %), or follows the start→end gradient |
 | `REQ-FILL-TAT-003` | Needle points follow the stagger grid: a row's points lie a `staggers`-th of the longest stitch along from the row before's, and no 2 neighbouring rows line them up. A segment ends at its end unless `skip_last` is on or its last point lies within 0.1 mm of it |
-| `REQ-FILL-TAT-004` | Coverage: rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacing ≤ 0.4 mm |
+| `REQ-FILL-TAT-004` | Coverage (`stitchcraft_testkit::metrics`): rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacings from the machine's shortest stitch to 0.4 mm, since M5.9 |
 | `REQ-FILL-TAT-005` | With `underpath`, travel takes the cheapest way along the lines under the rows not sewn yet, and its way lies inside the region (± 0.05 mm) |
 | `REQ-FILL-TAT-006` | Each top row extends past its segment's ends by the compensation; the part keeps its holes and pieces |
 | `REQ-FILL-TAT-007` | Gap-fill rows follow a stretch of more than 3 rows; all rows, gap-fill rows included, lie inside the part within its compensation |
 | `REQ-FILL-TAT-008` | A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element |
-| `REQ-FILL-TAT-009` | A 130 × 180 mm rectangle at 0.4 mm, the reference hoop's whole field, plans within the NFR-PERF-1 budget |
+| `REQ-FILL-TAT-009` | A 130 × 180 mm rectangle at 0.4 mm, the reference hoop's whole field, plans within the NFR-PERF-1 budget, guarded by `cargo xtask perf` since M5.9 |
 | `REQ-FILL-TAT-011` | Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start |
 | `REQ-FILL-TAT-012` | The underlay covers the part shrunk by its inset and the top rows the part grown by `expand_mm`, as shapely buffers it, within a nanometre |
 
