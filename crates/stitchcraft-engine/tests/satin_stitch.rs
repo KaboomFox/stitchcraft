@@ -123,6 +123,23 @@ fn req_sat_002_a_column_without_rungs_pairs_its_rails_nodes() {
 }
 
 #[test]
+fn req_sat_002_swapping_the_rails_leaves_which_nodes_pair() {
+    // As above, but the upper rail is drawn backwards, and so turned, and the rails have 4 and 3 nodes. The
+    // lower rail's node at 5 mm goes with the upper's at 15 mm whether or not the rails are swapped: the
+    // swap only makes the upper rail sew first, from the right.
+    let uneven = polylines(&[&[(0.0, 0.0), (5.0, 0.0), (10.0, 0.0), (20.0, 0.0)], &[(20.0, 4.0), (15.0, 4.0), (0.0, 4.0)]]);
+    for swap in ["false", "true"] {
+        let (points, _) = sewn_satin(&uneven, &[("swap_satin_rails", swap), NO_SHORT_STITCHES]);
+        assert_eq!(points[0].y(), if swap == "true" { 4.0 } else { 0.0 }, "{swap}: the first rail sews first");
+        for [a, b] in across(&points) {
+            let (lower, upper) = if a.y() < b.y() { (a.x(), b.x()) } else { (b.x(), a.x()) };
+            let want = if lower <= 5.0 { 3.0 * lower } else { 15.0 + (lower - 5.0) / 3.0 };
+            assert!((upper - want).abs() < 1e-9, "{swap}: {a:?} {b:?}");
+        }
+    }
+}
+
+#[test]
 fn req_sat_002_rails_of_2_nodes_are_cut_a_fifth_of_a_css_pixel_from_their_starts() {
     // A trapezoid: rails 10 mm and 6 mm long. Each is cut 0.2 px (0.053 mm) from its start, and past the
     // cut the pairs are at equal fractions of what is left of each rail.
@@ -151,8 +168,9 @@ fn req_sat_002_where_the_rails_converge_a_pair_moves_to_lie_at_the_spacing() {
     let inside = &gaps[..gaps.len() - 1];
     assert!(inside.iter().all(|gap| (gap - 0.4).abs() <= 0.02), "within 5 %: {gaps:?}");
     assert!(inside[1..].iter().all(|gap| (gap - 0.4).abs() < 1e-6), "each moved to the spacing: {gaps:?}");
-    // The work pins how many places the pairs were tried at: a unit per point measured and per place.
-    assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 68);
+    // The work pins how many places the pairs were tried at: a unit per point measured and per place, and
+    // 2 per side of each rail for where the rung added near the rails' starts comes nearest it.
+    assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 70);
 }
 
 #[test]

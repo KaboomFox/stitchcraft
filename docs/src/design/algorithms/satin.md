@@ -23,7 +23,10 @@ matter most. Phase P1 (M4); the E, S and zigzag variants are P2 (M7).
 ## Recognizing rails and rungs
 
 An element is a satin column when its `satin_column` setting is on, whatever its `stroke_method` says.
-Its path's subpaths are flattened, and the reader finds where each pair of subpaths meets, crossing or
+Its path's subpaths are flattened as Ink/Stitch flattens them: each curve is halved until its control
+points lie within a tenth of a CSS pixel of the line between its ends. The rails are then the same
+polylines in both, which decide where the needle points go, where subpaths meet, and where a column
+drawn as one path gets its rungs. The reader finds where each pair of subpaths meets, crossing or
 touching. A point the two share counts once, and a rung that ends exactly on a rail meets it.
 
 StitchCraft tells rails from rungs as Ink/Stitch does, and a file sews the same in both.
@@ -92,8 +95,8 @@ Rungs cross the column where its line runs straight beside a sharp corner, and a
    length where it lies. Each score is spread over 4 hundredths to either side, weighted 1, 2, 4, 8, 16,
    8, 4, 2, 1. A rung goes where the spread scores stop falling or start rising: before and after each
    sharp corner, where the stitches can fan round it.
-2. A rung goes at each node of the line as well, never at its very start or end. A straight line of 2
-   nodes gets one rung in its middle.
+2. A rung goes at each point of the flattened line as well, never at its very start or end. A straight
+   line of 2 points gets one rung in its middle.
 3. Going along the line, a rung less than 1 mm from the last one placed is left out.
 4. Each rung is perpendicular to the line, 1.2 times the column's width long, and is kept only when it
    crosses each rail exactly once. It pairs the 2 points where it crosses them.
@@ -159,13 +162,22 @@ other: a section. A part of no length leaves its section out, as where two rungs
 point or one meets it at an end. Within a section, the point at a fraction of rail A's part goes with the
 point at the same fraction of rail B's.
 
-A column of 2 subpaths has no rungs, and its rails' nodes cut the rails instead, as in Ink/Stitch. The
-2nd node of one rail goes with the 2nd node of the other, and on in order, after any reversal, without
-each rail's 2 ends. Rails with different numbers of nodes pair as many as the one with fewer has
-(`SC-W0210`). Ink/Stitch's own warning for this counts the rails' points after flattening, not their
-nodes, and can warn where the nodes pair as drawn. Rails of 2 nodes each are cut once near their
-starts, and sew as one section. The cut on each rail is where the point 0.2 CSS pixels along the straight
-line from its first node to its last lies along it, as Ink/Stitch places the rung it adds there.
+A column of 2 subpaths has no rungs, and gets rungs across its rails' nodes instead, as Ink/Stitch adds
+them. The 2nd node of one rail goes with the 2nd node of the other, and on in order, without each rail's
+2 ends. Rails with different numbers of nodes pair as many as the one with fewer has (`SC-W0210`).
+Ink/Stitch's own warning for this counts the rails' points after flattening, not their nodes, and can
+warn where the nodes pair as drawn. Rails of 2 nodes each get one rung, across the points 0.2 CSS pixels
+along the straight line from each rail's first node to its last, and sew as one section.
+
+Each rail's nodes are turned as `reverse_rails` turns the rail drawn in that place, first or second,
+before any swap. Swapping the rails then changes only which one sews first, and the same nodes pair
+either way. Where the rails have different numbers of nodes, the longer rail's last nodes, in the order
+the turning leaves them, go without a partner.
+
+Each rung added is a tenth longer than the line between its points, half at each end, and cuts each
+rail where it comes nearest it, measured as at the start and end (see *Equally near points*). That is
+the node itself, or on a curved rail of 2 nodes, where the rung crosses the curve, or the curve's point
+nearest the rung when the rung does not reach it.
 
 When the resulting stitch directions deviate from the local column normal by more than 45° somewhere,
 the element gets `SC-W0208` ("add a rung here") with the location.
@@ -179,9 +191,10 @@ up for both as Ink/Stitch does.
 - **Push compensation** (`push_compensation_mm`) acts on the rails after any reversal, before they are
   cut into sections. It takes its length off each rail at the column's start and end, or adds it where
   negative, straight on from the rail's first or last segment. 2 values set the start, then the end.
-  The points that say where to cut come from the rails as drawn, so a rung in a part taken off cuts the
-  rail at its end and leaves its section out. A rail the shortening would leave shorter than half a CSS
-  pixel keeps its length (`SC-W0211`), and a lengthening at its other end still applies.
+  The points where a drawn rung cuts come from the rails as drawn, so a rung in a part taken off cuts the
+  rail at its end and leaves its section out. A rung added across the nodes is measured against the
+  compensated rails. A rail the shortening would leave shorter than half a CSS pixel keeps its length
+  (`SC-W0211`), and a lengthening at its other end still applies.
 - **Pull compensation** acts on each pair as it is placed. Both ends move outward along the line through
   the pair, each by `pull_compensation_mm` plus `pull_compensation_percent` of the pair's width, and 2
   values set the first rail's side, then the second's. Negative values move the ends inward. Ends that

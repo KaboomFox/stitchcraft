@@ -505,6 +505,9 @@ mod tests {
         assert_eq!(segments_meet(a, b, off, on), Meet::At(on), "d on the first, exactly");
         let (start, end, on) = (p(-2.09, 1.74), p(-7.7, 4.32), p(-3.96, 2.6));
         assert_eq!(segments_meet(on, p(0.75, 1.56), start, end), Meet::At(on), "a on the second, exactly");
+        let (a, on, c, d) = (p(-2.23, -3.27), p(0.75, 1.125), p(-0.5, 1.75), p(2.0, 0.5));
+        assert_eq!(segments_meet(a, on, c, d), Meet::At(on), "b on the second, exactly");
+        assert_ne!(lines_meet(a, on, c, d), Some(on), "worked out, it rounds");
         assert_eq!(segments_meet(p(0.0, 0.0), p(1.0, 0.0), p(0.0, 1.0), p(1.0, 2.0)), Meet::Apart, "to one side");
         assert_eq!(segments_meet(p(0.0, 0.0), p(1.0, 0.0), p(2.0, -1.0), p(2.0, 1.0)), Meet::Apart, "beyond an end");
     }
