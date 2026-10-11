@@ -192,9 +192,8 @@ fn diag_sc_i0306_the_nonzero_rule_filling_what_the_even_odd_rule_leaves_empty_is
          even-odd rule leaves empty. It stays in the fill, as the drawing shows it; Ink/Stitch would leave it empty."
     );
     // Under the even-odd rule, or with the hole drawn the other way round, there is nothing to say.
-    let about_the_rule = |said: Vec<String>| said.iter().filter(|m| m.contains("SC-I0306")).count();
-    assert_eq!(about_the_rule(said(fill("even-odd", same, FillRule::EvenOdd))), 0);
-    assert_eq!(about_the_rule(said(fill("turned", rings(&[&square(0.0, 0.0, 10.0), &turned(3.0, 3.0, 4.0)]), FillRule::NonZero))), 0);
+    assert_eq!(said(fill("even-odd", same, FillRule::EvenOdd)), Vec::<String>::new());
+    assert_eq!(said(fill("turned", rings(&[&square(0.0, 0.0, 10.0), &turned(3.0, 3.0, 4.0)]), FillRule::NonZero)), Vec::<String>::new());
 }
 
 #[test]
@@ -203,6 +202,6 @@ fn diag_sc_w0307_a_fill_in_parts_is_said_to_be_sewn_part_by_part() {
         said(fill("parts", rings(&[&square(0.0, 0.0, 10.0), &square(20.0, 0.0, 10.0)]), FillRule::NonZero)),
         ["warning SC-W0307: This fill's area falls into 2 parts that are sewn one after another, with a jump between each.",]
     );
-    // One part says nothing of parts.
-    assert!(!said(fill("one", rings(&[&square(0.0, 0.0, 10.0)]), FillRule::NonZero)).iter().any(|m| m.contains("SC-W0307")));
+    // One part says nothing.
+    assert_eq!(said(fill("one", rings(&[&square(0.0, 0.0, 10.0)]), FillRule::NonZero)), Vec::<String>::new());
 }

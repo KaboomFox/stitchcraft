@@ -239,7 +239,7 @@ mod tests {
         assert_eq!(g.degree(0), 5);
         g.remove(lap);
         assert_eq!(g.degree(0), 3);
-        assert_eq!(g.edge(1).map(|e| e.other(0)), None);
+        assert_eq!(g.edge(lap), None);
     }
 
     #[test]
