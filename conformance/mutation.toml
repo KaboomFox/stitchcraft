@@ -35,6 +35,30 @@ line = "if by_a + by_b < -width {"
 why = "when the two moves add up to exactly minus the width, the scale is the width over itself, exactly 1, and multiplying by it changes neither move"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/tatami/rings.rs"
+mutant = "replace > with >= in Rings<'a>::point"
+line = "let t = if to > from { ((place.at - from) / (to - from)).clamp(0.0, 1.0) } else { 0.0 };"
+why = "on a side of no length the fraction is 0 over 0, which is not a number, and Point::lerp takes a fraction that is not a number as 0, the other branch's value"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/tatami/rings.rs"
+mutant = "replace < with <= in Rings<'a>::forwards"
+line = "if ahead == behind { from <= to } else { ahead < behind }"
+why = "the else branch runs only when the 2 ways differ in length, where less and at most are the same test"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/tatami/route.rs"
+mutant = "replace + with * in matching"
+line = "for j in (i + 1)..n {"
+why = "the first row the loop then weighs is the set's lowest row itself, and pairing a row with itself leaves a set of odd size, which has no pairing, so it is passed over as a row outside the set is"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/tatami/travel.rs"
+mutant = "replace > with < in Network::search"
+line = "if distance.get(node).is_some_and(|&best| d > best) {"
+why = "an entry of the queue farther than its node's best distance then goes on to its neighbours, but the node left the queue at its best distance earlier and reached each neighbour by a shorter way than this entry can, so it changes no distance; an entry at its node's best distance is skipped by neither test"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/generators/tatami/stitches.rs"
 mutant = "replace < with <= in first_on_grid"
 line = "if along.0 * direction.0 + along.1 * direction.1 < 0.0 { past } else { (stitching.length - past) % stitching.length }"

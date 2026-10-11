@@ -432,7 +432,7 @@ mod tests {
         let says = Some("the zigzag looks wrong".to_string());
         let out = run(&BugReportArgs { output: Some(bundle.clone()), says, ..args(Some(design.clone())) });
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
-        assert!(out.stdout.contains("  plan          118 stitches, 4 jumps, 0 trims, 2 colour changes, 0 stops\n"), "{}", out.stdout);
+        assert!(out.stdout.contains("  plan          425 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops\n"), "{}", out.stdout);
         assert!(out.stdout.ends_with(&format!("{HOLDS_THE_DESIGN}\n")));
         // The design itself, the profile, the format, and the digest of what `stitch plan` writes.
         let written = json(&bundle);
@@ -446,7 +446,7 @@ mod tests {
         // Replayed: all the same.
         let out = replayed(&bundle);
         assert_eq!(out.status, Status::Done, "{}", out.stdout);
-        assert!(out.stdout.contains("  plan          same: 118 stitches, 4 jumps, 0 trims, 2 colour changes, 0 stops (sha256 "), "{}", out.stdout);
+        assert!(out.stdout.contains("  plan          same: 425 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops (sha256 "), "{}", out.stdout);
         assert!(out.stdout.ends_with("  diagnostics   same: 2\nreproduced\n"), "{}", out.stdout);
         // A design changed in the bundle is not the one its results came from.
         let moved = changed(&bundle, "moved.json", |value| {
@@ -481,12 +481,12 @@ mod tests {
         assert!(
             out.stdout.contains(
                 "  plan          differs
-    then:       118 stitches, 4 jumps, 0 trims, 2 colour changes, 0 stops (sha256 "
+    then:       425 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops (sha256 "
             ),
             "{}",
             out.stdout
         );
-        assert!(out.stdout.contains("    now:        118 stitches, 4 jumps, 0 trims, 2 colour changes, 0 stops (sha256 "), "{}", out.stdout);
+        assert!(out.stdout.contains("    now:        425 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops (sha256 "), "{}", out.stdout);
         // One recorded result changed at a time.
         let cases: [(&str, Change, &str); 3] = [
             ("plan.json", |v| v["result"]["plan"]["sha256"] = Value::from("0"), "  plan          differs\n"),

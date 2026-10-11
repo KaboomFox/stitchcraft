@@ -17,7 +17,7 @@ first length.
 
 - **Accepts:** 1 to 16 lengths from 0.1 to 25 mm, separated by spaces
 - **Default:** `2.5`
-- **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin
+- **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill
 - **Ink/Stitch:** same key, meaning and default
 
 ### `running_stitch_tolerance_mm`
@@ -27,8 +27,8 @@ more and shorter stitches. A satin column's way to its start and from its end ke
 
 - **Accepts:** a length from 0.01 to 5 mm
 - **Default:** `0.2`
-- **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin
-- **Ink/Stitch:** same key; StitchCraft differs (DEV-SAT-006): A satin column's running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch's settings window shows 0.1 mm.
+- **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill
+- **Ink/Stitch:** same key; StitchCraft differs (DEV-SAT-006): A satin column's and a tatami fill's running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch's settings window shows 0.1 mm.
 
 ### `enable_random_stitch_length`
 

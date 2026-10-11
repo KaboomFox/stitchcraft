@@ -221,17 +221,18 @@ mod tests {
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(std::fs::read(&output).unwrap().starts_with(b"#PES0001"));
         assert!(std::fs::read(&preview).unwrap().starts_with(b"\x89PNG"));
-        assert!(out.stdout.contains("  stitches  118 stitches, 4 jumps, 0 trims, 2 colour changes, 0 stops\n"), "{}", out.stdout);
+        assert!(out.stdout.contains("  stitches  425 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops\n"), "{}", out.stdout);
         assert!(out.stdout.contains("  threads   1. unnamed (#c00000), shown as Brother PEC 5 \"Red\"\n"));
         // What was said names its element, on the terminal and in the report.
         assert_eq!(
             out.stderr,
-            "warning SC-W0011 (svg:patch:fill): This element is a fill, and this version of StitchCraft does not sew fills yet, so it is skipped.\n\
+            "warning SC-W0307 (svg:patch:fill): This fill's area falls into 2 parts that are sewn one after another, with a jump between each.\n  \
+             hint: To choose the order the parts are sewn in, break the fill apart into one element for each part.\n\
              info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out.\n"
         );
         let report: Value = serde_json::from_slice(&std::fs::read(&report).unwrap()).unwrap();
-        assert_eq!((report["stitches"].as_u64(), report["color_changes"].as_u64()), (Some(118), Some(2)));
-        assert_eq!(report["size_mm"], json!([60.0, 40.0]));
+        assert_eq!((report["stitches"].as_u64(), report["color_changes"].as_u64()), (Some(425), Some(3)));
+        assert_eq!(report["size_mm"], json!([60.0, 45.0]));
         assert_eq!(report["diagnostics"][0]["element"], "svg:patch:fill");
         assert_eq!(report["file"]["sha256"], hex(&Sha256::digest(std::fs::read(&output).unwrap())));
         assert_eq!((report["design"].as_str(), report["file"]["path"].as_str()), (fixture("strokes.svg").to_str(), output.to_str()));
@@ -249,14 +250,14 @@ mod tests {
         assert!(!output.exists());
         let report: Value = serde_json::from_slice(&std::fs::read(&report).unwrap()).unwrap();
         assert_eq!((report["diagnostics"][0]["code"].as_str(), report.get("file")), (Some("SC-E0801"), None));
-        // A design with nothing to sew.
-        let only_fill = temp("only-fill.svg");
+        // A design with nothing to sew: a shape neither filled nor stroked.
+        let unpainted = temp("unpainted.svg");
         std::fs::write(
-            &only_fill,
-            br#"<svg xmlns="http://www.w3.org/2000/svg" width="20mm" height="20mm" viewBox="0 0 20 20"><rect width="10" height="10"/></svg>"#,
+            &unpainted,
+            br#"<svg xmlns="http://www.w3.org/2000/svg" width="20mm" height="20mm" viewBox="0 0 20 20"><rect width="10" height="10" fill="none"/></svg>"#,
         )
         .unwrap();
-        let out = run(&args(only_fill, temp("only-fill.pes")));
+        let out = run(&args(unpainted, temp("unpainted.pes")));
         assert_eq!(out.status, Status::DesignErrors);
         assert!(out.stderr.contains("error SC-E0010: The design has nothing to stitch"), "{}", out.stderr);
     }

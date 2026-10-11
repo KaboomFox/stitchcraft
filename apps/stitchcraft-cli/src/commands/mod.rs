@@ -166,7 +166,7 @@ pub fn describe_threads(out: &mut String, plan: &StitchPlan, palette: Option<&Pa
     }
 }
 
-/// A diagnostic's first line: `warning SC-W0011 (svg:patch:fill): …`, the element named when there is one.
+/// A diagnostic's first line: `warning SC-W0307 (svg:patch:fill): …`, the element named when there is one.
 pub fn headline(d: &Diagnostic) -> String {
     match &d.element {
         Some(element) => format!("{} {} ({element}): {}", d.severity().label(), d.code, d.message),

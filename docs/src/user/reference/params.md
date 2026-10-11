@@ -35,6 +35,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Running parameters](params/running.md) | 4 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Satin parameters](params/satin.md) | 36 | Satin column, E-stitch, S-stitch, Zigzag satin |
+| [Fill parameters](params/fill.md) | 1 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
 | [Tatami parameters](params/tatami.md) | 5 | Tatami fill |
 
 ## Every parameter
@@ -56,6 +57,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`enable_random_stitch_length`](params/running.md#enable_random_stitch_length) | Random stitch length | Running parameters |
 | [`end_at_nearest_point`](params/satin.md#end_at_nearest_point) | End at nearest point | Satin parameters |
 | [`end_row_spacing_mm`](params/tatami.md#end_row_spacing_mm) | End row spacing | Tatami parameters |
+| [`fill_method`](params/fill.md#fill_method) | Fill method | Fill parameters |
 | [`force_lock_stitches`](params/common.md#force_lock_stitches) | Always lock | Common parameters |
 | [`lock_custom_end`](params/common.md#lock_custom_end) | Custom end lock | Common parameters |
 | [`lock_custom_start`](params/common.md#lock_custom_start) | Custom start lock | Common parameters |

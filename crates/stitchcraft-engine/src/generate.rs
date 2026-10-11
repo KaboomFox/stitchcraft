@@ -17,21 +17,23 @@
 //! still plans (`REQ-GEN-002`): a stitch type StitchCraft does not sew yet (`SC-W0011`), parameters it
 //! cannot read (`SC-E0101`), a satin column with no rails (`SC-E0201`), or its work budget spent
 //! (`SC-E0004`). Each element has the budget's work to itself, so one that runs out costs nothing but
-//! itself. A fill is not sewn until the rest of roadmap M5, but its area is built already
-//! ([`crate::normalize::region`]), and what will be left out of it is said, as are its settings that
-//! cannot be used ([`crate::generators::tatami`]).
+//! itself. A fill's area is built first ([`crate::normalize::region`]), so what is left out of it is said
+//! even when its settings cannot be used, and its `fill_method` then picks the generator: a tatami fill
+//! ([`crate::generators::tatami`]), the only one sewn so far.
 
 use stitchcraft_core::{Budget, Code, Diagnostic, Exhausted, Meter, Mm, Point, SplitMix64};
 use stitchcraft_params::{ChoiceOption, Family, StitchType, Validated, params, unknown_keys};
 use stitchcraft_plan::MachineProfile;
 
 use crate::common::CommonParams;
-use crate::design::{DesignSettings, Element, Join, Path, Shape};
+use crate::design::{DesignSettings, Element, FillRule, Join, Path, Shape};
 use crate::generators::manual::manual_stitch;
 use crate::generators::passes::RepeatParams;
+use crate::generators::running::raised;
 use crate::generators::running::{RunningParams, running_stitch};
 use crate::generators::satin::{self, SatinLengths, SatinParams, satin_stitch};
 use crate::generators::tatami::TatamiParams;
+use crate::generators::tatami::sew::{Travel, tatami_fill};
 use crate::generators::{Approach, Neighbours, Stitched, method, mm};
 use crate::normalize::region;
 use crate::registry::PARAMETERS;
@@ -40,6 +42,45 @@ use crate::registry::PARAMETERS;
 /// gives the parameter's default as the first one's place in this list.
 pub const STROKE_METHODS: &[ChoiceOption] =
     &[method(StitchType::RunningStitch), method(StitchType::RippleStitch), method(StitchType::ZigzagStitch), method(StitchType::ManualStitch)];
+
+/// The fill methods `fill_method` offers, in Ink/Stitch's order, which its files count on: Ink/Stitch gives
+/// the parameter's default as the first one's place in this list.
+pub const FILL_METHODS: &[ChoiceOption] = &[
+    method(StitchType::TatamiFill),
+    method(StitchType::CircularFill),
+    method(StitchType::ContourFill),
+    method(StitchType::CrossStitch),
+    method(StitchType::GuidedFill),
+    method(StitchType::LinearGradientFill),
+    method(StitchType::MeanderFill),
+    method(StitchType::TartanFill),
+    method(StitchType::LegacyFill),
+];
+
+/// The stitch types of fills, one per method.
+const FILLS: &[StitchType] = &[
+    StitchType::TatamiFill,
+    StitchType::CircularFill,
+    StitchType::ContourFill,
+    StitchType::CrossStitch,
+    StitchType::GuidedFill,
+    StitchType::LinearGradientFill,
+    StitchType::MeanderFill,
+    StitchType::TartanFill,
+    StitchType::LegacyFill,
+];
+
+params! {
+    /// How a fill is sewn.
+    pub struct FillParams for FILLS;
+
+    "Fill" {
+        /// The stitch the area is filled with. A tatami fill sews rows of running stitches across it. The
+        /// other methods arrive in later versions; until then an element set to one is skipped
+        /// (`SC-W0011`).
+        fill_method: Choice = "tatami_fill", label "Fill method", choices FILL_METHODS;
+    }
+}
 
 params! {
     /// How a stroke is sewn.
@@ -126,38 +167,31 @@ fn sew(
 ) -> Result<Option<Generated>, Exhausted> {
     let set = &element.params;
     let common = kept(CommonParams::from_set_for(set, family(element)), diagnostics);
-    let (path, width, join) = match &element.shape {
-        Shape::Stroke { path, width, join } => (path, *width, *join),
-        Shape::Fill { path, rule } => {
-            // The area is built and the settings read already, so that what will be left out of the area,
-            // and settings that cannot be used, are said now.
-            diagnostics.extend(region::build(path, *rule, meter)?.diagnostics);
-            kept(TatamiParams::from_set(set), diagnostics);
-            kept(RunningParams::from_set_for(set, Family::Fill), diagnostics);
-            diagnostics.push(not_yet("This element is a fill, and this version of StitchCraft does not sew fills yet"));
-            return Ok(None);
-        }
-    };
-    let Some(satin_params) = kept(SatinParams::from_set(set), diagnostics) else { return Ok(None) };
     let lengths = common.as_ref().map(|common| Lengths {
         min_stitch: shortest_stitch(common.min_stitch_length_mm, settings, profile),
         max_stitch: common.max_stitch_length_mm,
         jump: common.jump_length(settings.collapse_len),
     });
     let mut rng = SplitMix64::for_element(element.id.as_str(), common.as_ref().and_then(|common| common.random_seed).unwrap_or(0));
-    let narrow = satin_params.satin_column && too_narrow(path, width, settings);
-    if narrow {
-        let (width, limit) = (mm(width.get()), mm(settings.min_satin_stroke_width.get()));
-        let message = format!(
-            "This satin column is drawn as one path, and its stroke, {width} mm wide, is no wider than the design's limit of {limit} mm, so it \
-             is sewn as a stroke."
-        );
-        diagnostics.push(Diagnostic::new(Code::SatinTooNarrow, message));
-    }
-    let sewn = if satin_params.satin_column && !narrow {
-        satin_column(element, (path, width, join), &satin_params, lengths, neighbours, &mut rng, diagnostics, meter)?
-    } else {
-        stroke(element, path, lengths, &mut rng, diagnostics, meter)?
+    let sewn = match &element.shape {
+        Shape::Fill { path, rule } => fill(element, (path, *rule), lengths, neighbours, &mut rng, diagnostics, meter)?,
+        Shape::Stroke { path, width, join } => {
+            let Some(satin_params) = kept(SatinParams::from_set(set), diagnostics) else { return Ok(None) };
+            let narrow = satin_params.satin_column && too_narrow(path, *width, settings);
+            if narrow {
+                let (width, limit) = (mm(width.get()), mm(settings.min_satin_stroke_width.get()));
+                let message = format!(
+                    "This satin column is drawn as one path, and its stroke, {width} mm wide, is no wider than the design's limit of {limit} mm, so \
+                     it is sewn as a stroke."
+                );
+                diagnostics.push(Diagnostic::new(Code::SatinTooNarrow, message));
+            }
+            if satin_params.satin_column && !narrow {
+                satin_column(element, (path, *width, *join), &satin_params, lengths, neighbours, &mut rng, diagnostics, meter)?
+            } else {
+                stroke(element, path, lengths, &mut rng, diagnostics, meter)?
+            }
+        }
     };
     let (Some(common), Some(Lengths { min_stitch, .. }), Some((stitch_type, stitched))) = (common, lengths, sewn) else { return Ok(None) };
     diagnostics.extend(stitched.warnings);
@@ -180,6 +214,48 @@ struct Lengths {
 /// design's `min_satin_stroke_width`. It is sewn as a stroke, as in Ink/Stitch.
 fn too_narrow(path: &Path, width: Mm, settings: &DesignSettings) -> bool {
     path.subpaths.len() <= 1 && width.get() <= settings.min_satin_stroke_width.get()
+}
+
+/// A fill's stitches by its `fill_method`, with the element's stitch `lengths`, between its `neighbours`,
+/// varied at random by its `rng`, or `None` when it is skipped (`lengths` is `None` when the settings
+/// every stitch type shares cannot be read). Its area is built first, so that what is left out of it is
+/// said whatever happens next. A tatami fill's needle travels in the first of the running stitch's
+/// lengths, at least twice the shortest stitch, and within its tolerance.
+fn fill(
+    element: &Element,
+    (path, rule): (&Path, FillRule),
+    lengths: Option<Lengths>,
+    neighbours: &Neighbours,
+    rng: &mut SplitMix64,
+    diagnostics: &mut Vec<Diagnostic>,
+    meter: &mut Meter,
+) -> Result<Option<(StitchType, Stitched)>, Exhausted> {
+    let set = &element.params;
+    let built = region::build(path, rule, meter)?;
+    diagnostics.extend(built.diagnostics);
+    let params = kept(FillParams::from_set(set), diagnostics);
+    let tatami = kept(TatamiParams::from_set(set), diagnostics);
+    let running = kept(RunningParams::from_set_for(set, Family::Fill), diagnostics);
+    let (Some(params), Some(tatami), Some(running), Some(lengths)) = (params, tatami, running, lengths) else { return Ok(None) };
+    if StitchType::from_id(Family::Fill, params.fill_method) != Some(StitchType::TatamiFill) {
+        let method = params.fill_method;
+        diagnostics.push(not_yet(&format!("This element's fill method, `{method}`, is not sewn by this version of StitchCraft yet")));
+        return Ok(None);
+    }
+    // A fill's longest stitch has a default of its own, so it is never empty; the registry reads it so.
+    let (Some(longest), Some(&length)) = (lengths.max_stitch, running.running_stitch_length_mm.first()) else {
+        diagnostics.push(Diagnostic::new(Code::InternalCheckFailed, "A fill's longest stitch or travel stitch length is missing."));
+        return Ok(None);
+    };
+    let min = lengths.min_stitch.get();
+    let travel = Travel {
+        length: raised("running_stitch_length_mm", length, min, diagnostics),
+        tolerance: running.running_stitch_tolerance_mm.get(),
+        min_stitch: min,
+    };
+    let stitching = tatami.stitching(longest, &running);
+    let stitched = tatami_fill(&built.region, &stitching, travel, neighbours.needle, neighbours.next.as_ref(), rng, meter)?;
+    Ok(Some((StitchType::TatamiFill, stitched)))
 }
 
 /// A satin column's stitches by its `satin_method`, with the element's stitch `lengths`, between its
@@ -248,10 +324,23 @@ fn stroke(
 /// What `element` offers the element before it to end near, read from its shape, its settings and the
 /// design's `settings` alone, with the budget's work to itself (`REQ-GEN-003`): a stroke its first point,
 /// a satin column its rails as they are sewn when it starts at its nearest point and otherwise its first
-/// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A fill offers
-/// nothing until fills are sewn, and neither does an element whose shape or settings cannot be read.
+/// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A tatami fill
+/// starts at its point nearest the needle and offers its area's rings, part by part, the outline before
+/// the holes. A fill StitchCraft does not sew offers nothing, and neither does an element whose shape or
+/// settings cannot be read.
 pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -> Option<Approach> {
-    let Shape::Stroke { path, width, join } = &element.shape else { return None };
+    let (path, width, join) = match &element.shape {
+        Shape::Stroke { path, width, join } => (path, width, join),
+        Shape::Fill { path, rule } => {
+            let method = FillParams::from_set(&element.params).ok()?.params.fill_method;
+            if StitchType::from_id(Family::Fill, method) != Some(StitchType::TatamiFill) {
+                return None;
+            }
+            let region = region::build(path, *rule, &mut budget.meter()).ok()?.region;
+            let rings: Vec<Vec<Point>> = region.parts.into_iter().flat_map(|part| std::iter::once(part.outline).chain(part.holes)).collect();
+            return (!rings.is_empty()).then_some(Approach::Shape(rings));
+        }
+    };
     let params = SatinParams::from_set(&element.params).ok()?.params;
     if !params.satin_column || too_narrow(path, *width, settings) {
         return path.subpaths.first().map(|subpath| Approach::Point(subpath.start));
@@ -302,6 +391,31 @@ mod tests {
     fn element(shape: Shape, params: &[(&str, &str)]) -> Element {
         let thread = Thread::new(Rgb::new(0, 0, 0));
         Element { id: ElementId::new("e").unwrap(), name: None, shape, thread, params: params.iter().copied().collect() }
+    }
+
+    #[test]
+    fn a_fill_is_sewn_by_its_method_and_without_a_longest_stitch_is_a_bug() {
+        let p = |x, y| Point::new(x, y).unwrap();
+        let segments = [p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)].map(Segment::Line).to_vec();
+        let square = Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] };
+        let shape = || Shape::Fill { path: square.clone(), rule: FillRule::NonZero };
+        let lengths = |max| Some(Lengths { min_stitch: Mm::new(0.3).unwrap(), max_stitch: max, jump: Mm::new(3.0).unwrap() });
+        let sew = |element: &Element, lengths, diagnostics: &mut Vec<Diagnostic>| {
+            let (rng, meter) = (&mut SplitMix64::new(1), &mut Budget::DEFAULT.meter());
+            fill(element, (&square, FillRule::NonZero), lengths, &Neighbours::default(), rng, diagnostics, meter).unwrap()
+        };
+        let codes = |diagnostics: &[Diagnostic]| diagnostics.iter().map(|d| d.code).collect::<Vec<_>>();
+        let mut diagnostics = Vec::new();
+        let sewn = sew(&element(shape(), &[]), lengths(Mm::new(4.0).ok()), &mut diagnostics);
+        assert_eq!((sewn.map(|(stitch_type, _)| stitch_type), codes(&diagnostics)), (Some(StitchType::TatamiFill), vec![]));
+        // A method not sewn yet.
+        let sewn = sew(&element(shape(), &[("fill_method", "contour_fill")]), lengths(Mm::new(4.0).ok()), &mut diagnostics);
+        assert_eq!((sewn.is_none(), codes(&diagnostics)), (true, vec![Code::StitchTypeNotYet]));
+        // The registry gives a fill a longest stitch of its own (`ParamSpec::in_family`), so only a bug in
+        // StitchCraft can leave it out.
+        let mut diagnostics = Vec::new();
+        let sewn = sew(&element(shape(), &[]), lengths(None), &mut diagnostics);
+        assert_eq!((sewn.is_none(), codes(&diagnostics)), (true, vec![Code::InternalCheckFailed]));
     }
 
     #[test]
