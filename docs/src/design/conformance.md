@@ -272,3 +272,10 @@ New code answers for itself at once: every pull request runs the mutants in the 
 mutant, which changes nothing a test could observe; it is listed under `[[equivalent]]` in
 `conformance/mutation.toml` with its file, its description, the source line it changes and why, so a
 listed equivalent stops counting as one as soon as its line changes.
+
+A mutant can also break the condition that ends a loop, as when a walk over a graph never takes away the
+edges it has used. The loop then runs until the work budget ends or cargo-mutants' timeout stops it,
+which counts apart. A loop that keeps 40 bytes for each unit of work wants 20 GB by the end of the
+default budget, more than a CI runner has, and the job ends without a result when the runner runs out of
+memory. So in the mutants jobs each test binary runs with at most 4 GiB of address space, through
+`prlimit` as Cargo's runner: such a mutant aborts at the cap, which counts as noticed.
