@@ -15,9 +15,17 @@ parameter is set per element, and [setting parameters](README.md#setting-paramet
 are spread evenly, and none is longer than the stitch length.
 
 <!-- shot: running-length -->
-| 1.5 mm | 2.5 mm | 4 mm |
-|:-:|:-:|:-:|
-| ![A wave in running stitch, its needle points dotted along it, 1.5 mm](../../images/generated/running-length-1.png) | ![A wave in running stitch, its needle points dotted along it, 2.5 mm](../../images/generated/running-length-2.png) | ![A wave in running stitch, its needle points dotted along it, 4 mm](../../images/generated/running-length-3.png) |
+**1.5 mm**
+
+![A wave 36 mm long in running stitch, its needle points dotted along it, 1.5 mm](../../images/generated/running-length-1.png)
+
+**2.5 mm**
+
+![A wave 36 mm long in running stitch, its needle points dotted along it, 2.5 mm](../../images/generated/running-length-2.png)
+
+**4 mm**
+
+![A wave 36 mm long in running stitch, its needle points dotted along it, 4 mm](../../images/generated/running-length-3.png)
 <!-- /shot -->
 
 Short stitches follow a curve closely and make more needle holes. Long stitches are quicker to sew and
@@ -28,15 +36,19 @@ path.
 
 Where the path turns by more than 30°, StitchCraft puts a needle point on the corner, and the line keeps
 its shape. Along a curve, a stitch strays from the curve by at most `running_stitch_tolerance_mm`, 0.2 mm
-by default. With a long stitch length the tolerance shows: here the stitches are 6 mm long.
+by default. With a long stitch length the tolerance shows. Here a half disc is sewn in stitches up to 6 mm
+long. Both corners of its straight side get a needle point in every panel. The tolerance sets how closely
+the stitches follow the curve.
 
 <!-- shot: running-tolerance -->
 | 0.1 mm | 0.5 mm | 2 mm |
 |:-:|:-:|:-:|
-| ![A wave in 6 mm running stitch, 0.1 mm](../../images/generated/running-tolerance-1.png) | ![A wave in 6 mm running stitch, 0.5 mm](../../images/generated/running-tolerance-2.png) | ![A wave in 6 mm running stitch, 2 mm](../../images/generated/running-tolerance-3.png) |
+| ![A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 0.1 mm](../../images/generated/running-tolerance-1.png) | ![A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 0.5 mm](../../images/generated/running-tolerance-2.png) | ![A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right, 2 mm](../../images/generated/running-tolerance-3.png) |
 <!-- /shot -->
 
-At 2 mm the stitches cut across the curve. At 0.1 mm StitchCraft shortens them where the curve bends.
+At 2 mm the curve is sewn in 3 straight stitches, and the half disc comes out as a trapezoid. At 0.1 mm
+StitchCraft shortens the stitches until each keeps within 0.1 mm of the curve, and the curve comes out
+round.
 
 ## Bean stitch and repeats
 
@@ -54,9 +66,13 @@ stripes. `enable_random_stitch_length` varies each stitch's length by up to
 `random_stitch_length_jitter_percent`, 10 % by default, and the stripes go.
 
 <!-- shot: random-length -->
-| even | random |
-|:-:|:-:|
-| ![6 rows of running stitch 1.6 mm apart, sewn back and forth as one path, even](../../images/generated/random-length-1.png) | ![6 rows of running stitch 1.6 mm apart, sewn back and forth as one path, random](../../images/generated/random-length-2.png) |
+**even**
+
+![14 rows of running stitch 0.6 mm apart, sewn back and forth as one path, even](../../images/generated/random-length-1.png)
+
+**random**
+
+![14 rows of running stitch 0.6 mm apart, sewn back and forth as one path, random](../../images/generated/random-length-2.png)
 <!-- /shot -->
 
 The stitching still ends on each corner. `random_seed` sets where the random lengths start. The same
