@@ -2,14 +2,17 @@
 //!
 //! A page marks a figure with `<!-- shot: ID -->` and `<!-- /shot -->`, each on a line of its own, and
 //! `cargo xtask docs` writes the figure between them. A shot without panels becomes one image with the
-//! shot's alternative text. A shot with panels becomes a table with a column per panel: the caption on
-//! top, and below it the panel's image, whose alternative text is the shot's followed by the caption. The
-//! links are relative to the page. `--check` fails when a figure is stale, as for a generated page, so the
+//! shot's alternative text. A shot with panels shows each panel's image with its caption, and the image's
+//! alternative text is the shot's followed by the caption. Laid out in columns (the default), the figure is
+//! a table with a column per panel, the caption on top. Laid out in rows, each caption is a line in bold
+//! with its image below it, as wide as the page allows: pictures side by side shrink to share the page's
+//! width, and a wide picture's stitches then become too small to tell apart. The links are relative to the
+//! page. `--check` fails when a figure is stale, as for a generated page, so the
 //! text a page shows with an image is always its shot's.
 
 use std::fmt::Write as _;
 
-use crate::shots::{self, Shot};
+use crate::shots::{self, Layout, Shot};
 
 /// The line that opens a figure, before the shot's id and `-->`.
 const OPEN: &str = "<!-- shot: ";
@@ -52,11 +55,19 @@ fn figure(page: &str, shot: &Shot) -> Result<String, String> {
     }
     let mut out = String::new();
     let captions: Vec<&str> = shot.panels.iter().map(|panel| panel.caption.as_str()).collect();
-    let _ = writeln!(out, "| {} |", captions.join(" | "));
-    let _ = writeln!(out, "|{}", ":-:|".repeat(captions.len()));
-    let cells: Vec<String> =
+    let images: Vec<String> =
         shot.images().iter().zip(&captions).map(|(name, caption)| format!("![{}, {caption}]({})", shot.alt, link(name))).collect();
-    let _ = writeln!(out, "| {} |", cells.join(" | "));
+    match shot.layout {
+        Layout::Columns => {
+            let _ = writeln!(out, "| {} |", captions.join(" | "));
+            let _ = writeln!(out, "|{}", ":-:|".repeat(captions.len()));
+            let _ = writeln!(out, "| {} |", images.join(" | "));
+        }
+        Layout::Rows => {
+            let rows: Vec<String> = captions.iter().zip(&images).map(|(caption, image)| format!("**{caption}**\n\n{image}\n")).collect();
+            out.push_str(&rows.join("\n"));
+        }
+    }
     Ok(out)
 }
 
@@ -86,6 +97,20 @@ mod tests {
         );
         assert_eq!(refresh("docs/src/user/stitches/running.md", &fresh, &shots).unwrap(), fresh, "written once, it stays");
         assert!(has_figures(page) && !has_figures("No figure.\n"));
+    }
+
+    #[test]
+    fn a_figure_in_rows_puts_each_caption_above_its_image() {
+        let shots = [Shot { layout: Layout::Rows, ..shot("wave", &["1.5 mm", "4 mm"]) }];
+        let page = "<!-- shot: wave -->\n<!-- /shot -->\n";
+        assert_eq!(
+            refresh("docs/src/user/stitches/running.md", page, &shots).unwrap(),
+            "<!-- shot: wave -->\n**1.5 mm**\n\n![A wave in running stitch, 1.5 mm](../../images/generated/wave-1.png)\n\n\
+             **4 mm**\n\n![A wave in running stitch, 4 mm](../../images/generated/wave-2.png)\n<!-- /shot -->\n"
+        );
+        let toml = "id = \"w\"\nkind = \"stitch\"\nlayout = \"rows\"";
+        assert_eq!(toml::from_str::<Shot>(toml).unwrap().layout, Layout::Rows);
+        assert!(toml::from_str::<Shot>("id = \"w\"\nkind = \"stitch\"\nlayout = \"grid\"").is_err(), "no other layout");
     }
 
     #[test]
