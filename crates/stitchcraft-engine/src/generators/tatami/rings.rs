@@ -120,9 +120,8 @@ impl<'a> Rings<'a> {
     /// and the ring's points between them. One unit of `meter` for each point.
     pub fn way(&self, ring: usize, from: f64, to: f64, forwards: bool, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
         let Some(r) = self.rings.get(ring) else { return Ok(Vec::new()) };
-        let (Some(start), Some(end)) = (self.point(Place { ring, at: from }), self.point(Place { ring, at: to })) else {
-            return Ok(Vec::new());
-        };
+        let point = |at| self.point(Place { ring, at });
+        let (Some(start), Some(end)) = (point(from), point(to)) else { return Ok(Vec::new()) };
         let length = r.length().max(f64::MIN_POSITIVE);
         // The ring's points by how far along the way they lie, the ring's start counted once.
         let ahead = |at: f64| if forwards { (at - from).rem_euclid(length) } else { (from - at).rem_euclid(length) };
@@ -163,23 +162,11 @@ mod tests {
     use stitchcraft_core::Budget;
 
     use super::*;
-
-    fn p(x: f64, y: f64) -> Point {
-        Point::new(x, y).unwrap()
-    }
-
-    /// A 10 × 4 rectangle drawn from its top left corner down the left side (counter-clockwise on screen),
-    /// with a 2 × 2 hole.
-    fn part() -> Polygon {
-        Polygon {
-            outline: vec![p(0.0, 0.0), p(0.0, 4.0), p(10.0, 4.0), p(10.0, 0.0), p(0.0, 0.0)],
-            holes: vec![vec![p(4.0, 1.0), p(6.0, 1.0), p(6.0, 3.0), p(4.0, 3.0), p(4.0, 1.0)]],
-        }
-    }
+    use crate::generators::tatami::fixture::{frame, p};
 
     #[test]
     fn a_point_lies_on_the_nearest_ring_at_its_nearest_point() {
-        let part = part();
+        let part = frame();
         let rings = Rings::new(&part, &mut Budget::DEFAULT.meter()).unwrap();
         let locate = |q: Point| rings.locate(q, |_| true, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         assert_eq!((rings.count(), rings.length(0), rings.length(1)), (2, 28.0, 8.0));
@@ -209,7 +196,7 @@ mod tests {
 
     #[test]
     fn points_along_a_ring_come_back_from_their_places() {
-        let part = part();
+        let part = frame();
         let rings = Rings::new(&part, &mut Budget::DEFAULT.meter()).unwrap();
         let at = |ring, at| rings.point(Place { ring, at }).unwrap();
         assert_eq!([at(0, 0.0), at(0, 1.0), at(0, 4.0), at(0, 9.0), at(0, 28.0)], [p(0.0, 0.0), p(0.0, 1.0), p(0.0, 4.0), p(5.0, 4.0), p(0.0, 0.0)]);
@@ -219,7 +206,7 @@ mod tests {
 
     #[test]
     fn the_way_between_two_places_takes_the_shorter_side_and_its_corners() {
-        let part = part();
+        let part = frame();
         let rings = Rings::new(&part, &mut Budget::DEFAULT.meter()).unwrap();
         // Rounded to a nanometre: a point inside a side is interpolated.
         let way = |from, to| {
@@ -247,7 +234,7 @@ mod tests {
 
     #[test]
     fn measuring_is_charged_to_the_budget() {
-        let part = part();
+        let part = frame();
         let mut meter = Budget::DEFAULT.meter();
         let rings = Rings::new(&part, &mut meter).unwrap();
         assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 10, "a unit per point");

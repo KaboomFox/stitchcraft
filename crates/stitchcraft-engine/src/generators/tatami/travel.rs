@@ -215,24 +215,12 @@ mod tests {
     use stitchcraft_core::Budget;
 
     use super::*;
-    use crate::normalize::region::Polygon;
+    use crate::generators::tatami::fixture::{frame, p};
 
-    fn p(x: f64, y: f64) -> Point {
-        Point::new(x, y).unwrap()
-    }
-
-    /// A 10 × 4 rectangle with a 2 × 2 hole, as the region gives them, crossed at y = 1.5 by a row on
-    /// each side of the hole.
-    fn frame() -> Polygon {
-        Polygon {
-            outline: vec![p(0.0, 0.0), p(0.0, 4.0), p(10.0, 4.0), p(10.0, 0.0), p(0.0, 0.0)],
-            holes: vec![vec![p(4.0, 1.0), p(6.0, 1.0), p(6.0, 3.0), p(4.0, 3.0), p(4.0, 1.0)]],
-        }
-    }
-
-    /// The rows' ends as nodes, where they lie on `rings`: (0, 1.5) and (10, 1.5) on the outline, 1.5 and
-    /// 16.5 along it, and (4, 1.5) and (6, 1.5) on the hole, 7.5 and 2.5 along it. Nodes 0 and 1 are the
-    /// left row's ends, 2 and 3 the right row's.
+    /// The ends of 2 rows across the frame at y = 1.5, one on each side of the hole, as nodes where they
+    /// lie on `rings`: (0, 1.5) and (10, 1.5) on the outline, 1.5 and 16.5 along it, and (4, 1.5) and
+    /// (6, 1.5) on the hole, 7.5 and 2.5 along it. Nodes 0 and 1 are the left row's ends, 2 and 3 the right
+    /// row's.
     fn nodes(rings: &Rings<'_>) -> Vec<Node> {
         [p(0.0, 1.5), p(4.0, 1.5), p(6.0, 1.5), p(10.0, 1.5)]
             .map(|q| Node { point: q, place: rings.locate(q, |_| true, &mut Budget::DEFAULT.meter()).unwrap().unwrap() })
@@ -284,6 +272,18 @@ mod tests {
         assert_eq!(network.distances(0, meter).unwrap(), [0.0, f64::INFINITY, f64::INFINITY, 13.0]);
         assert_eq!(network.way(0, 1, meter).unwrap(), None);
         assert_eq!(between(&nodes, &rings, &network, 0, 1, meter).unwrap(), None);
+    }
+
+    #[test]
+    fn a_ring_with_one_node_has_no_way_along_it() {
+        // The left row alone: one node on each ring, and only the row between them.
+        let part = frame();
+        let meter = &mut Budget::DEFAULT.meter();
+        let rings = Rings::new(&part, meter).unwrap();
+        let nodes = nodes(&rings)[..2].to_vec();
+        let network = Network::new(&nodes, &rings, &[[0, 1]], meter).unwrap();
+        assert_eq!(network.distances(0, meter).unwrap(), [0.0, 4.0]);
+        assert_eq!(network.way(1, 0, meter).unwrap(), Some(vec![(0, Along::Row)]));
     }
 
     #[test]

@@ -72,8 +72,8 @@ pub fn tatami_fill(
     let parts = in_order(region, needle, meter)?;
     let end = ending(region, next, meter)?;
     let mut needle = needle;
-    let mut runs = Vec::new();
-    let (mut outlined, mut jumped) = (0, false);
+    let (mut runs, mut warnings) = (Vec::new(), Vec::new());
+    let mut outlined = 0;
     for (i, part) in parts.iter().enumerate() {
         let here = match parts.get(i + 1) {
             Some(after) => nearest_pair(&rings_of(part), &rings_of(after), meter)?.map(|(on, _)| on),
@@ -82,7 +82,7 @@ pub fn tatami_fill(
         let rings = Rings::new(part, meter)?;
         let segments = segments(part, stitching, meter)?;
         let sewn = match route(&rings, &segments, needle, here, meter)? {
-            Some(route) => sew(&route, &rings, stitching, travel, rng, meter, &mut jumped)?,
+            Some(route) => sew(&route, &rings, stitching, travel, rng, meter, &mut warnings)?,
             None => {
                 outlined += 1;
                 vec![along_line(&part.outline, travel.length, travel.tolerance, travel.min_stitch, meter)?]
@@ -96,7 +96,6 @@ pub fn tatami_fill(
         needle = sewn.iter().rev().find_map(|run| run.last().copied()).or(needle);
         runs.extend(sewn);
     }
-    let mut warnings = Vec::new();
     if outlined > 0 {
         let message = match (outlined, parts.len()) {
             (1, 1) => {
@@ -111,9 +110,6 @@ pub fn tatami_fill(
             ),
         };
         warnings.push(Diagnostic::new(Code::FillTooThin, message));
-    }
-    if jumped {
-        warnings.push(Diagnostic::new(Code::InternalCheckFailed, "The needle found no way between 2 rows of this fill, so it jumps there."));
     }
     Ok(Stitched { runs, warnings })
 }
@@ -187,7 +183,8 @@ fn segments(part: &Polygon, stitching: &Stitching, meter: &mut Meter) -> Result<
     Ok(segments)
 }
 
-/// The runs `route` sews: one, unless the needle has to jump, which `jumped` then says.
+/// The runs `route` sews: one, unless the needle has to jump, which is a bug that a diagnostic added to
+/// `warnings` says, once for the part.
 fn sew(
     route: &Route,
     rings: &Rings<'_>,
@@ -195,7 +192,7 @@ fn sew(
     travel: Travel,
     rng: &mut SplitMix64,
     meter: &mut Meter,
-    jumped: &mut bool,
+    warnings: &mut Vec<Diagnostic>,
 ) -> Result<Vec<Vec<Point>>, Exhausted> {
     let rows: Vec<[usize; 2]> =
         route.steps.iter().filter_map(|step| if let Step::Row { from, to, .. } = *step { Some([from, to]) } else { None }).collect();
@@ -203,6 +200,7 @@ fn sew(
     let point = |node: usize| route.nodes.get(node).map(|n| n.point);
     let mut runs = Vec::new();
     let mut run: Vec<Point> = Vec::new();
+    let mut jumped = false;
     if let Some(Step::Travel { from, .. }) = route.steps.first() {
         run.extend(point(*from));
     }
@@ -219,7 +217,7 @@ fn sew(
                     extend(&mut run, stitches.into_iter().skip(usize::from(!keep_first)));
                 }
                 None => {
-                    *jumped = true;
+                    jumped = true;
                     runs.push(std::mem::take(&mut run));
                     run.extend(point(to));
                 }
@@ -227,6 +225,9 @@ fn sew(
         }
     }
     runs.push(run);
+    if jumped {
+        warnings.push(Diagnostic::new(Code::InternalCheckFailed, "The needle found no way between 2 rows of this fill, so it jumps there."));
+    }
     Ok(runs)
 }
 
@@ -244,25 +245,29 @@ mod tests {
     use stitchcraft_core::Budget;
 
     use super::*;
+    use crate::generators::tatami::fixture::{frame, p, rectangle};
     use crate::generators::tatami::rows::Grid;
 
-    fn p(x: f64, y: f64) -> Point {
-        Point::new(x, y).unwrap()
+    /// Rows 1 mm apart in stitches of 3 mm, and travel in stitches of 2 mm, nothing thinned.
+    fn stitching(skip_last: bool) -> Stitching {
+        Stitching { grid: Grid { angle: 0.0, spacing: 1.0, end_spacing: None }, length: 3.0, staggers: 4.0, skip_last, jitter: None }
     }
+
+    const TRAVEL: Travel = Travel { length: 2.0, tolerance: 0.2, min_stitch: 1e-6 };
 
     #[test]
     fn with_skip_last_a_row_s_end_is_sewn_before_travel_unless_the_next_row_starts_beside_it() {
         // 3 rows across a 10 × 4 rectangle. Routed, the bottom row hands over to the middle row, which
         // starts beside its end, and the middle row to the far end of the top row, round the top corners.
-        let part = Polygon { outline: vec![p(0.0, 0.0), p(0.0, 4.0), p(10.0, 4.0), p(10.0, 0.0), p(0.0, 0.0)], holes: Vec::new() };
+        let part = rectangle(4.0);
         let segments = [1.0, 2.0, 3.0].map(|y| (p(0.0, y), p(10.0, y)));
         let meter = &mut Budget::DEFAULT.meter();
         let rings = Rings::new(&part, meter).unwrap();
         let route = route(&rings, &segments, None, None, meter).unwrap().unwrap();
-        let stitching =
-            Stitching { grid: Grid { angle: 0.0, spacing: 1.0, end_spacing: None }, length: 3.0, staggers: 4.0, skip_last: true, jitter: None };
-        let travel = Travel { length: 2.0, tolerance: 0.2, min_stitch: 1e-6 };
-        let runs = sew(&route, &rings, &stitching, travel, &mut SplitMix64::new(1), meter, &mut false).unwrap();
+        let stitching = stitching(true);
+        let mut warnings = Vec::new();
+        let runs = sew(&route, &rings, &stitching, TRAVEL, &mut SplitMix64::new(1), meter, &mut warnings).unwrap();
+        assert_eq!((runs.len(), warnings), (1, Vec::new()));
         let run = &runs[0];
         let mut handovers = Vec::new();
         for pair in route.steps.windows(2) {
@@ -275,5 +280,21 @@ mod tests {
             handovers.push(beside);
         }
         assert_eq!(handovers, [true, false]);
+    }
+
+    #[test]
+    fn a_needle_that_finds_no_way_jumps_and_says_so_as_a_bug() {
+        // A row between 2 points of the frame's outline and one between 2 points of its hole, which nothing
+        // joins: the travel from the first to the second finds no way.
+        let part = frame();
+        let segments = [(p(0.0, 0.5), p(10.0, 0.5)), (p(4.0, 2.0), p(6.0, 2.0))];
+        let meter = &mut Budget::DEFAULT.meter();
+        let rings = Rings::new(&part, meter).unwrap();
+        let route = route(&rings, &segments, None, None, meter).unwrap().unwrap();
+        let mut warnings = Vec::new();
+        let runs = sew(&route, &rings, &stitching(false), TRAVEL, &mut SplitMix64::new(1), meter, &mut warnings).unwrap();
+        assert_eq!(runs.len(), 2, "the needle jumps once");
+        assert_eq!((runs[0].first(), runs[1].first()), (Some(&p(0.0, 0.5)), Some(&p(6.0, 2.0))));
+        assert_eq!(warnings.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::InternalCheckFailed]);
     }
 }

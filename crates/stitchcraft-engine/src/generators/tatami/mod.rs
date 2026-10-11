@@ -9,6 +9,8 @@
 //! them (`travel`), part after part ([`sew`]). Travel under the rows, underlay and compensation follow in
 //! the rest of M5.
 
+#[cfg(test)]
+mod fixture;
 mod graph;
 mod rings;
 mod route;

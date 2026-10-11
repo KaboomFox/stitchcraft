@@ -119,16 +119,14 @@ impl Graph {
         }
     }
 
-    /// Takes `id` off `node`'s edges to `neighbour`.
+    /// Takes `id` off `node`'s edges to `neighbour`; the neighbour drops out if no edge is left, and the
+    /// others keep their places.
     fn detach(&mut self, node: NodeId, neighbour: NodeId, id: EdgeId) {
         let Some(list) = self.around.get_mut(node) else { return };
-        let Some(place) = list.iter().position(|n| n.node == neighbour) else { return };
-        if let Some(n) = list.get_mut(place) {
+        for n in list.iter_mut().filter(|n| n.node == neighbour) {
             n.edges.retain(|&e| e != id);
-            if n.edges.is_empty() {
-                list.remove(place);
-            }
         }
+        list.retain(|n| !n.edges.is_empty());
     }
 
     /// `node`'s entry for `neighbour`, if they share an edge.
