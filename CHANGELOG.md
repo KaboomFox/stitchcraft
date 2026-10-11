@@ -5,6 +5,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M5.8: a tatami fill's top rows are lengthened past their ends by `pull_compensation_mm` plus
+  `pull_compensation_percent` of each row's length (`REQ-FILL-TAT-006`), as Ink/Stitch lengthens them.
+  `gap_fill_rows` sews rows again where the route leaves a stretch of more than 3 rows
+  (`REQ-FILL-TAT-007`), as Ink/Stitch does.
+  - The first value applies at the end the rows start from, the second at the other. A fill reads a value
+    below 0 as 0, as Ink/Stitch does, and `SC-W0312` says so. The part keeps its holes and its pieces,
+    where Ink/Stitch rebuilds it round the lengthened rows (`DEV-FILL-009`). Underlay is not compensated.
+  - Each gap-fill row is the grid's next row past the stretch's last, inside the part, where Ink/Stitch
+    repeats the last row, which can run outside it (`DEV-FILL-010`).
+  - The 2 pull compensation settings are declared once for satin columns and fills, with a reference page
+    of their own. A satin reads them as before.
+  - The golden files stay as they were: every fixture keeps both settings at 0.
 - M5.7: a tatami fill's underlay covers each part shrunk by `fill_underlay_inset_mm` (`REQ-FILL-TAT-012`),
   as Ink/Stitch sews it. Its top rows cover each part grown by `expand_mm`, or shrunk where that is negative.
   - A part is grown or shrunk as GEOS buffers a polygon, with round corners of 16 segments to a quarter

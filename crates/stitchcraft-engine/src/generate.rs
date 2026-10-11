@@ -29,11 +29,12 @@ use crate::common::CommonParams;
 use crate::design::{DesignSettings, Element, FillRule, Join, Path, Shape};
 use crate::generators::manual::manual_stitch;
 use crate::generators::passes::RepeatParams;
+use crate::generators::pull::PullParams;
 use crate::generators::running::raised;
 use crate::generators::running::{RunningParams, running_stitch};
 use crate::generators::satin::{self, SatinLengths, SatinParams, satin_stitch};
 use crate::generators::tatami::TatamiParams;
-use crate::generators::tatami::sew::{Travel, tatami_fill};
+use crate::generators::tatami::sew::{Pull, Travel, tatami_fill};
 use crate::generators::{Approach, Neighbours, Stitched, method, mm};
 use crate::normalize::region;
 use crate::registry::PARAMETERS;
@@ -237,7 +238,8 @@ fn fill(
     let params = kept(FillParams::from_set(set), diagnostics);
     let tatami = kept(TatamiParams::from_set(set), diagnostics);
     let running = kept(RunningParams::from_set_for(set, Family::Fill), diagnostics);
-    let (Some(params), Some(tatami), Some(running), Some(lengths)) = (params, tatami, running, lengths) else { return Ok(None) };
+    let pull = kept(PullParams::from_set(set), diagnostics);
+    let (Some(params), Some(tatami), Some(running), Some(pull), Some(lengths)) = (params, tatami, running, pull, lengths) else { return Ok(None) };
     if StitchType::from_id(Family::Fill, params.fill_method) != Some(StitchType::TatamiFill) {
         let method = params.fill_method;
         diagnostics.push(not_yet(&format!("This element's fill method, `{method}`, is not sewn by this version of StitchCraft yet")));
@@ -256,9 +258,27 @@ fn fill(
         underpath: tatami.underpath,
         jump: lengths.jump.get(),
     };
-    let fill = tatami.fill(longest, &running, travel);
+    let fill = tatami.fill(longest, &running, travel, fill_pull(&pull, diagnostics));
     let stitched = tatami_fill(&built.region, &fill, neighbours.needle, neighbours.next.as_ref(), rng, meter)?;
     Ok(Some((StitchType::TatamiFill, stitched)))
+}
+
+/// A fill's pull compensation, as its settings give it: Ink/Stitch reads a value below 0 as 0, and so does a
+/// fill here, saying so (`SC-W0312`).
+fn fill_pull(pull: &PullParams, diagnostics: &mut Vec<Diagnostic>) -> Pull {
+    let (mm, percent) = (pull.pull_compensation_mm.map(Mm::get), pull.pull_compensation_percent);
+    let below: Vec<&str> = [("`pull_compensation_mm`", mm), ("`pull_compensation_percent`", percent)]
+        .into_iter()
+        .filter(|(_, values)| values.iter().any(|value| *value < 0.0))
+        .map(|(key, _)| key)
+        .collect();
+    let message = match below.as_slice() {
+        [] => None,
+        [key] => Some(format!("{key} is below 0, and a fill reads it as 0, as Ink/Stitch does.")),
+        keys => Some(format!("{} are below 0, and a fill reads them as 0, as Ink/Stitch does.", keys.join(" and "))),
+    };
+    diagnostics.extend(message.map(|message| Diagnostic::new(Code::FillPullCompensationNegative, message)));
+    Pull { mm: mm.map(|value| value.max(0.0)), share: percent.map(|value| value.max(0.0) / 100.0) }
 }
 
 /// A satin column's stitches by its `satin_method`, with the element's stitch `lengths`, between its
@@ -278,12 +298,13 @@ fn satin_column(
 ) -> Result<Option<(StitchType, Stitched)>, Exhausted> {
     let Some(rails) = satin::rails(path, width, join, diagnostics, meter)? else { return Ok(None) };
     let running = kept(RunningParams::from_set(&element.params), diagnostics);
-    let (Some(Lengths { min_stitch, max_stitch, jump }), Some(running)) = (lengths, running) else { return Ok(None) };
+    let pull = kept(PullParams::from_set(&element.params), diagnostics);
+    let (Some(Lengths { min_stitch, max_stitch, jump }), Some(running), Some(pull)) = (lengths, running, pull) else { return Ok(None) };
     // The registry reads a list of 1 length or more.
     let Some(&travel) = running.running_stitch_length_mm.first() else { return Ok(None) };
     let lengths = SatinLengths { min_stitch, max_stitch, travel, tolerance: running.running_stitch_tolerance_mm, jump };
     match StitchType::from_id(Family::Satin, params.satin_method) {
-        Some(StitchType::SatinColumn) => Ok(Some((StitchType::SatinColumn, satin_stitch(&rails, params, lengths, neighbours, rng, meter)?))),
+        Some(StitchType::SatinColumn) => Ok(Some((StitchType::SatinColumn, satin_stitch(&rails, params, &pull, lengths, neighbours, rng, meter)?))),
         _ => {
             let method = params.satin_method;
             diagnostics.push(not_yet(&format!("This element's satin method, `{method}`, is not sewn by this version of StitchCraft yet")));

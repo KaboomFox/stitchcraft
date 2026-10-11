@@ -30,6 +30,7 @@ use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point};
 use stitchcraft_params::{ChoiceOption, Origin, StitchType, params};
 
 use crate::design::{Join, Path};
+use crate::generators::pull::PullParams;
 use crate::generators::satin::column::Section;
 pub(crate) use crate::generators::satin::column::{first_point, sewn_rails};
 use crate::generators::satin::compensation::Processor;
@@ -111,16 +112,6 @@ params! {
     }
 
     "Compensation" {
-        /// How far each end of every stitch reaches past its rail. The thread pulls the fabric in across the
-        /// column as it sews, so a satin comes out narrower than drawn, and this makes up for it. Negative
-        /// values make the column narrower. 2 values set the first rail's side, then the second's.
-        pull_compensation_mm: LengthPair = "0", label "Pull compensation", range (-10.0, 10.0);
-
-        /// More pull compensation, in percent of the column's width at each stitch, added to the length
-        /// above: wide parts of a column reach out further than narrow ones. 2 values set the first rail's
-        /// side, then the second's.
-        pull_compensation_percent: PercentPair = "0", label "Pull compensation (% of width)", range (-100.0, 100.0);
-
         /// How much shorter the column is made at its start and its end. Satin stitches push the fabric out
         /// along the column, so it comes out longer than drawn, and this makes up for it. Negative values
         /// lengthen the column. 2 values set the start, then the end.
@@ -333,6 +324,7 @@ pub struct SatinLengths {
 pub fn satin_stitch(
     satin: &Satin,
     params: &SatinParams,
+    pull: &PullParams,
     lengths: SatinLengths,
     neighbours: &Neighbours,
     rng: &mut SplitMix64,
@@ -340,7 +332,7 @@ pub fn satin_stitch(
 ) -> Result<Stitched, Exhausted> {
     let mut warnings = Vec::new();
     let sections = column::sections(satin, params, &mut warnings, meter)?;
-    let (placed, mut top) = top_stitches(&sections, params, lengths, rng, meter)?;
+    let (placed, mut top) = top_stitches(&sections, params, pull, lengths, rng, meter)?;
     let odd = underlay::ends_at_end(params);
     if odd {
         top.reverse();
@@ -378,11 +370,12 @@ pub fn satin_stitch(
 fn top_stitches(
     sections: &[Section],
     params: &SatinParams,
+    pull: &PullParams,
     lengths: SatinLengths,
     rng: &mut SplitMix64,
     meter: &mut Meter,
 ) -> Result<(Vec<Pair>, Vec<Point>), Exhausted> {
-    let placed = pairs::pairs(sections, params.zigzag_spacing_mm.get(), &mut Processor::new(params, rng), meter)?;
+    let placed = pairs::pairs(sections, params.zigzag_spacing_mm.get(), &mut Processor::new(params, pull, rng), meter)?;
     let mut splitter = Splitter::new(params, lengths.max_stitch.map(Mm::get), lengths.min_stitch.get(), rng);
     let insets: Vec<f64> = params.short_stitch_inset.iter().map(|percent| percent / 100.0).collect();
     let short = short::inset(&placed, params.short_stitch_distance_mm.get(), &insets, splitter.inset_limit());
