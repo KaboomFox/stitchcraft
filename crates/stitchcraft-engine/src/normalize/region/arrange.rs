@@ -19,10 +19,8 @@ use std::collections::BTreeMap;
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
+use super::SAME;
 use super::geom::{Envelope, Hit, Location, closed, compare_angle, hit, locate_in_ring, signed_area, without_repeats};
-
-/// Crossings this near a point already found, in millimetres, are that point.
-const SAME: f64 = 1e-9;
 
 /// The rings cut where they meet: points, and edges between them.
 #[derive(Clone, Debug, PartialEq)]
