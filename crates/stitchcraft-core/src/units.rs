@@ -205,6 +205,13 @@ mod tests {
     }
 
     #[test]
+    fn a_distance_is_the_length_of_the_line_between() {
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        assert_eq!(p(1.0, 2.0).distance(p(4.0, 6.0)), 5.0);
+        assert_eq!(p(-3.0, -5.0).distance(p(-3.0, -1.0)), 4.0);
+    }
+
+    #[test]
     fn host_units_convert_to_millimetres() {
         // 72 points and 96 SVG px are both one inch.
         assert!((Mm::from_points(72.0).unwrap().get() - 25.4).abs() < 1e-12);
