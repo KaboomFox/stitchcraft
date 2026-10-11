@@ -595,6 +595,11 @@ mod tests {
     }
 
     #[test]
+    fn no_segment_has_no_route() {
+        assert_eq!(route(&rings_of(&rectangle()), &[], Some(p(1.0, 1.0)), None, &mut Budget::DEFAULT.meter()).unwrap(), None);
+    }
+
+    #[test]
     fn rows_no_walk_reaches_are_walked_after_the_rest() {
         // A row between 2 points of the frame's outline, A (0, 0.5) and B (10, 0.5), and one between 2
         // points of its hole, C (4, 2) and D (6, 2): nothing joins the hole's nodes to the outline's. The

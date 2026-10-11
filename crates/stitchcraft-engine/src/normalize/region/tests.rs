@@ -153,6 +153,17 @@ fn parts_of_exactly_3_square_pixels_are_left_out_and_fills_of_exactly_20_are_not
 }
 
 #[test]
+fn a_part_covers_its_inside_and_its_rings_but_not_its_holes() {
+    let square = vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)];
+    let hole = vec![p(4.0, 4.0), p(6.0, 4.0), p(6.0, 6.0), p(4.0, 6.0)];
+    let built = region(&[square, hole], FillRule::EvenOdd);
+    let part = &built.region.parts[0];
+    let covers = |x, y| part.covers(p(x, y));
+    assert!(covers(2.0, 2.0) && covers(0.0, 5.0) && covers(4.0, 5.0), "inside, on the outline, on the hole's ring");
+    assert!(!covers(5.0, 5.0) && !covers(11.0, 5.0), "in the hole, outside");
+}
+
+#[test]
 fn holes_come_in_the_order_drawn() {
     // A square with 2 holes, the right one drawn first.
     let square = vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)];
