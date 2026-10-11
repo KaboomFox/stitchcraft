@@ -72,7 +72,8 @@ pub(crate) enum Step {
         from: NodeId,
         /// Where it arrives.
         to: NodeId,
-        /// Whether the 2 nodes share an edge, as the ends of neighbouring rows do.
+        /// Whether a row or a stretch of ring joins the 2 nodes, as it joins the ends of neighbouring rows
+        /// ([`Graph::beside`]).
         beside: bool,
     },
 }
@@ -361,7 +362,7 @@ fn walk(graph: &mut Graph, from: NodeId, meter: &mut Meter) -> Result<Vec<Step>,
 }
 
 /// `raw` with each stretch of travel steps made one, from where the stretch leaves to where the next row
-/// starts, or to where the last step arrives. `beside` when `graph` has an edge between the 2.
+/// starts, or to where the last step arrives. `beside` where a row or a stretch of ring of `graph` joins the 2.
 fn collapse(graph: &Graph, raw: Vec<Step>, meter: &mut Meter) -> Result<Vec<Step>, Exhausted> {
     let mut steps = Vec::with_capacity(raw.len());
     let mut leaves: Option<NodeId> = None;
@@ -371,7 +372,7 @@ fn collapse(graph: &Graph, raw: Vec<Step>, meter: &mut Meter) -> Result<Vec<Step
         match step {
             Step::Row { from, .. } => {
                 if let Some(a) = leaves.take() {
-                    steps.push(Step::Travel { from: a, to: from, beside: graph.joined(a, from) });
+                    steps.push(Step::Travel { from: a, to: from, beside: graph.beside(a, from) });
                 }
                 steps.push(step);
             }
@@ -384,7 +385,7 @@ fn collapse(graph: &Graph, raw: Vec<Step>, meter: &mut Meter) -> Result<Vec<Step
     if let (Some(a), Some(b)) = (leaves, arrives)
         && a != b
     {
-        steps.push(Step::Travel { from: a, to: b, beside: false });
+        steps.push(Step::Travel { from: a, to: b, beside: graph.beside(a, b) });
     }
     Ok(steps)
 }
@@ -468,6 +469,34 @@ mod tests {
         assert_eq!(node(5), Some((5.0, 3.0, Place { ring: 0, at: 8.0 })));
         assert!(matches!(route.steps.first(), Some(Step::Travel { from: 4, .. })));
         assert!(matches!(route.steps.last(), Some(Step::Travel { to: 5, .. })));
+    }
+
+    #[test]
+    fn the_travel_to_the_end_is_beside_it_where_a_stretch_of_ring_joins_them() {
+        // To the bottom side's middle, whose node splits the stretch from C to D: the route's last row ends
+        // at C.
+        let route = routed(&rectangle(), &two_rows(), None, Some(p(5.0, 9.0)));
+        assert_eq!(route.steps.last(), Some(&Step::Travel { from: 2, to: 4, beside: true }));
+    }
+
+    #[test]
+    fn travel_is_beside_where_a_row_or_a_stretch_of_ring_joins_its_ends_and_not_a_pairing() {
+        // A row from A to B, then travel on to C and D: made one, from B to D, the last step of the route.
+        let mut graph = Graph::default();
+        let [a, b, c, d] = [(); 4].map(|()| graph.add_node());
+        graph.add(b, c, Kind::Outline);
+        graph.add(c, d, Kind::Outline);
+        let raw = vec![
+            Step::Row { segment: 0, from: a, to: b },
+            Step::Travel { from: b, to: c, beside: false },
+            Step::Travel { from: c, to: d, beside: false },
+        ];
+        let last = |graph: &Graph| collapse(graph, raw.clone(), &mut Budget::DEFAULT.meter()).unwrap().last().copied();
+        assert_eq!(last(&graph), Some(Step::Travel { from: b, to: d, beside: false }));
+        graph.add(b, d, Kind::Paired);
+        assert_eq!(last(&graph), Some(Step::Travel { from: b, to: d, beside: false }));
+        graph.add(b, d, Kind::Extra);
+        assert_eq!(last(&graph), Some(Step::Travel { from: b, to: d, beside: true }));
     }
 
     #[test]

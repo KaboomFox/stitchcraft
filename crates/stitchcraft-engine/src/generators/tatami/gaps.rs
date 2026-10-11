@@ -118,6 +118,33 @@ mod tests {
     }
 
     #[test]
+    fn of_the_segments_beside_the_last_row_the_one_overlapping_it_most_is_taken() {
+        // Row 1, from x = 0 to 10, after row 0. Row 2 overlaps it by 2 mm in its first segment and 4 mm in
+        // its second, and row 3 by 3 mm in its first and 4 mm in its second. Row 4 only touches its end.
+        let segments = [
+            (p(0.0, -1.0), p(10.0, -1.0)),
+            (p(0.0, 0.0), p(10.0, 0.0)),
+            (p(1.0, 1.0), p(3.0, 1.0)),
+            (p(5.0, 1.0), p(9.0, 1.0)),
+            (p(6.0, 2.0), p(9.0, 2.0)),
+            (p(0.0, 2.0), p(4.0, 2.0)),
+            (p(10.0, 3.0), p(12.0, 3.0)),
+        ];
+        let rows = [0, 1, 2, 2, 3, 3, 4];
+        let found = gap_rows(&segments, &rows, 1, 0, 4, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(found, [(p(5.0, 1.0), p(9.0, 1.0)), (p(0.0, 2.0), p(4.0, 2.0))]);
+    }
+
+    #[test]
+    fn slanted_rows_are_measured_along_the_last_one() {
+        // Rows at 45°, each a step of (-1, 1) on from the one before: row 2 lies beside all of row 1.
+        let row = |k: f64| (p(-k, 5.0 + k), p(10.0 - k, 15.0 + k));
+        let found = gap_rows(&[row(0.0), row(1.0), row(2.0)], &[0, 1, 2], 1, 0, 2, &mut Budget::DEFAULT.meter()).unwrap();
+        let (a, b) = found[0];
+        assert!(found.len() == 1 && a.distance(p(-2.0, 7.0)) < 1e-12 && b.distance(p(8.0, 17.0)) < 1e-12, "{found:?}");
+    }
+
+    #[test]
     fn a_last_row_sewn_after_a_segment_of_its_own_row_has_none() {
         assert_eq!(gaps(4, 3, 2), Vec::new());
         assert_eq!(gaps(9, 3, 2), Vec::new(), "no such segment");

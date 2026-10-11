@@ -436,7 +436,6 @@ struct Sewing<'a> {
 /// The stretch of rows the route is sewing, for gap-fill rows: how many of its rows came after travel, as
 /// Ink/Stitch counts them, whether the needle has travelled since the last row, and the segments of the last
 /// row and the one before it.
-#[derive(Default)]
 struct Stretch {
     rows: usize,
     after_travel: bool,
@@ -444,6 +443,10 @@ struct Stretch {
 }
 
 impl Stretch {
+    /// The stretch a route starts with. Its first row counts as reached by travel: Ink/Stitch's route always
+    /// starts with travel, from its node nearest the needle, of no length where that is the first row's start.
+    const START: Self = Self { rows: 0, after_travel: true, last: [None, None] };
+
     /// Row segment `segment` is sewn.
     fn row(&mut self, segment: usize) {
         self.rows += usize::from(self.after_travel);
@@ -452,17 +455,18 @@ impl Stretch {
         self.last = [Some(segment), last];
     }
 
-    /// The needle travels from node `from` to node `to`, which are `beside` each other on the rings when the
-    /// travel hands over from a row to the next. Travel that is no handover leaves the stretch: the last row's
-    /// segment and the one before it when the stretch had more than 3 rows.
-    fn travel(&mut self, from: NodeId, to: NodeId, beside: bool) -> Option<(usize, usize)> {
+    /// The needle travels from node `from` to node `to`, which one edge joins (`beside`) when the travel
+    /// goes no farther than the next node: from a row to the next beside it, or from the last row to the
+    /// part's end beside it, as one edge of Ink/Stitch's route. Other travel leaves the stretch: the last
+    /// row's segment and the one before it when the stretch had more than 3 rows.
+    fn travel(&mut self, from: NodeId, to: NodeId, beside: bool) -> Option<[usize; 2]> {
         self.after_travel = true;
         if beside || from == to {
             return None;
         }
         let rows = std::mem::take(&mut self.rows);
         match self.last {
-            [Some(last), Some(before)] if rows > 3 => Some((last, before)),
+            [Some(last), Some(before)] if rows > 3 => Some([last, before]),
             _ => None,
         }
     }
@@ -475,7 +479,7 @@ impl Sewing<'_> {
         let route = self.route;
         let point = |node: usize| route.nodes.get(node).map(|n| n.point);
         // Each step's row as it is sewn, between its segment's lengthened ends.
-        let sewn: Vec<Option<[Point; 2]>> = route.steps.iter().map(|step| self.lengthened(step)).collect();
+        let sewn: Vec<Option<[Point; 2]>> = route.steps.iter().map(|step| self.row(step)).collect();
         let start_of = |i: usize| sewn.get(i).copied().flatten().map(|[a, _]| a);
         let row_before = |i: usize| i.checked_sub(1).and_then(|i| sewn.get(i).copied().flatten());
         let mut runs = Vec::new();
@@ -483,7 +487,7 @@ impl Sewing<'_> {
         let mut jumped = false;
         let lead = self.lead_in(meter)?;
         let skipped = usize::from(lead.as_ref().is_some_and(|(_, replaces)| *replaces));
-        let mut stretch = Stretch { after_travel: lead.is_some(), ..Stretch::default() };
+        let mut stretch = Stretch::START;
         match lead {
             Some((mut way, _)) => {
                 moved(&mut way, None, start_of(skipped));
@@ -506,20 +510,21 @@ impl Sewing<'_> {
                     stretch.row(segment);
                 }
                 Step::Travel { from, to, beside } => {
-                    if let (Some((last, before)), Some(ended)) = (stretch.travel(from, to, beside).filter(|_| self.gap_rows > 0), row_before(i)) {
-                        self.fill_gap(&mut run, [last, before], ended, rng, meter)?;
+                    if let (Some(rows), Some(ended)) = (stretch.travel(from, to, beside), row_before(i)) {
+                        self.fill_gap(&mut run, rows, ended, rng, meter)?;
                     }
+                    let next = start_of(i + 1);
                     match self.way(from, to, meter)? {
                         Some(mut way) => {
-                            moved(&mut way, row_before(i).map(|[_, b]| b), start_of(i + 1));
+                            moved(&mut way, row_before(i).map(|[_, b]| b), next);
                             let stitches = along_line(&way, self.travel.length, self.travel.tolerance, self.travel.min_stitch, meter)?;
-                            let keep_first = self.stitching.skip_last && !beside;
+                            let keep_first = self.stitching.skip_last && !(beside && next.is_some());
                             extend(&mut run, stitches.into_iter().skip(usize::from(!keep_first)));
                         }
                         None => {
                             jumped = true;
                             runs.push(std::mem::take(&mut run));
-                            run.extend(start_of(i + 1).or(point(to)));
+                            run.extend(next.or(point(to)));
                         }
                     }
                 }
@@ -551,22 +556,23 @@ impl Sewing<'_> {
 
     /// The row `step` sews, between its segment's ends lengthened by the pull compensation, from the end the
     /// route enters it by; `None` for travel.
-    fn lengthened(&self, step: &Step) -> Option<[Point; 2]> {
+    fn row(&self, step: &Step) -> Option<[Point; 2]> {
         let Step::Row { segment, from, .. } = *step else { return None };
-        let (&(start, end), entry) = (self.segments.get(segment)?, self.route.nodes.get(from)?.point);
-        let forward = entry.distance(start) <= entry.distance(end);
-        let [start, end] = self.pull_ends(start, end);
-        Some(if forward { [start, end] } else { [end, start] })
+        let (&segment, entry) = (self.segments.get(segment)?, self.route.nodes.get(from)?.point);
+        Some(self.lengthened(segment, forward(entry, segment)))
     }
 
-    /// The segment from `start` to `end` lengthened by the pull compensation.
-    fn pull_ends(&self, start: Point, end: Point) -> [Point; 2] {
-        offset([start, end], self.pull.mm, self.pull.share)
+    /// `segment` lengthened by the pull compensation at both ends, from its start where `forward` and from
+    /// its end otherwise.
+    fn lengthened(&self, (start, end): (Point, Point), forward: bool) -> [Point; 2] {
+        let [start, end] = offset([start, end], self.pull.mm, self.pull.share);
+        if forward { [start, end] } else { [end, start] }
     }
 
     /// Sews onto `run` the rows that fill the gap after the row of segment `last`, which the route sewed
-    /// after `before`'s and which ran between the `ended` points: back and forth from it, each lengthened as
-    /// the rows are, with straight stitches from each to the next, and straight back to where it ended.
+    /// after `before`'s, from `a` to `b`: back and forth from it, each lengthened as the rows are, with
+    /// straight stitches from each to the next, and straight back to `b`. Where no row lies past it, the
+    /// part ends there, and nothing is sewn.
     fn fill_gap(
         &self,
         run: &mut Vec<Point>,
@@ -575,12 +581,12 @@ impl Sewing<'_> {
         rng: &mut SplitMix64,
         meter: &mut Meter,
     ) -> Result<(), Exhausted> {
-        let Some(&(start, end)) = self.segments.get(last) else { return Ok(()) };
-        // Whether the last row ran from its segment's start to its end: the first row after it runs back.
-        let forward = (b.x() - a.x()) * (end.x() - start.x()) + (b.y() - a.y()) * (end.y() - start.y()) > 0.0;
-        for (k, (start, end)) in gap_rows(self.segments, self.rows, last, before, self.gap_rows, meter)?.into_iter().enumerate() {
-            let [start, end] = self.pull_ends(start, end);
-            let [from, to] = if (k % 2 == 0) == forward { [end, start] } else { [start, end] };
+        let extra = gap_rows(self.segments, self.rows, last, before, self.gap_rows, meter)?;
+        let Some(&segment) = self.segments.get(last).filter(|_| !extra.is_empty()) else { return Ok(()) };
+        // The first row after the last runs back.
+        let forward = forward(a, segment);
+        for (k, row) in extra.into_iter().enumerate() {
+            let [from, to] = self.lengthened(row, (k % 2 == 1) == forward);
             self.straight(run, from, meter)?;
             extend(run, row_points(from, to, self.stitching, rng, meter)?);
         }
@@ -610,6 +616,13 @@ impl Sewing<'_> {
         let Some(way) = lines.way(nearest, to, meter)? else { return Ok(None) };
         Ok(Some((self.smoothed(&way, meter)?, replaces)))
     }
+}
+
+/// Whether a row sewn from `from` runs from its segment's start to its end: whether `from` lies no farther
+/// from the start than from the end. A row starts at an end of its segment, or past it by the pull
+/// compensation, which is never below 0 for a fill.
+fn forward(from: Point, (start, end): (Point, Point)) -> bool {
+    from.distance(start) <= from.distance(end)
 }
 
 /// `way` with its first point moved to `first` and its last to `last`, where given: travel from where a

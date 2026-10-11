@@ -137,7 +137,8 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    that may run along rows, and sews those rows a second time. StitchCraft pairs the odd nodes so that the
    needle's way between pairs is shortest in all and joins each pair with an edge. Up to 16 nodes every
    pairing is weighed, and past that each node pairs with the nearest left. No row is sewn twice
-   (`DEV-FILL-006`).
+   (`DEV-FILL-006`). A pairing edge stands for a way of several edges, as Ink/Stitch's paths do, so travel
+   along it is never a handover between neighbouring rows, for `skip_last` or for gap-fill rows.
 5. **Walk.** The walk starts at the end node. At each node it takes the node's row if one is left,
    and otherwise the node's first edge left. A node lists its edges neighbour by neighbour, each neighbour
    where its first edge to the node came and its edges in the order they came. A neighbour whose last edge
@@ -264,14 +265,17 @@ smaller than a row spacing squared and holes the widened rows close over. Where 
 separate pieces, it keeps only the largest. StitchCraft keeps the part's holes, gaps and pieces, which the designer drew
 (`DEV-FILL-009`).
 
-Where the route leaves a stretch of more than 3 rows for another, the fabric can open a gap along its last
-row before the rows past it are sewn. There, `gap_fill_rows`, rounded up to an even number, sews that many
-more rows past the last one, back and forth, and comes back to where it ended (`REQ-FILL-TAT-007`, since
-M5.8). A stretch's rows are counted as Ink/Stitch counts them: the rows reached by travel. A stretch ends
-where the travel is more than a handover from one row to the next beside it. Each extra row is the next
-row of the grid, the stretch of its segment beside the last row, lengthened as the rows are. The extra
-rows stop at the part's edge, and where the part ends. Ink/Stitch repeats the last row a spacing further
-each time, and a repeat can run outside the part (`DEV-FILL-010`). Underlay has no gap-fill rows.
+Where the route leaves a stretch of more than 3 rows for another, the fabric can open a gap along its
+last row before the rows past it are sewn. There, `gap_fill_rows`, rounded up to an even number, sews
+that many more rows past the last one, back and forth, and comes back to where it ended
+(`REQ-FILL-TAT-007`, since M5.8). A stretch's rows are counted as Ink/Stitch counts them: the rows
+reached by travel. The route's first row is one of them, because Ink/Stitch's route always starts with
+travel, of no length where it starts on that row. A stretch ends where the travel is more than a handover
+from one row to the next beside it, or from the last row to the fill's end beside it, which Ink/Stitch's
+route takes in one edge too. Each extra row is the next row of the grid, the stretch of its segment
+beside the last row, lengthened as the rows are. The extra rows stop at the part's edge, and where the
+part ends. Ink/Stitch repeats the last row a spacing further each time, and a repeat can run outside the
+part (`DEV-FILL-010`). Underlay has no gap-fill rows.
 
 ### 8. No rows
 
