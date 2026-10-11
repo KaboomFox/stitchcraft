@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-116c8d8e.js";
+            window.path_to_searchindex_js = "../../searchindex-14aaa1ee.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-6a54873b.js"></script>
@@ -241,6 +241,15 @@ One section is the curve, and more mean the offset splits.</p>
 <p>Inside a tight bend the raw curve loops back on itself, inside the stroke: the edge skips the loop, and
 so does the offset. Where the line comes back near itself, the stroke covers part of the raw curve,
 which splits the offset there.</p>
+<h2 id="buffers-a-fills-part-grown-or-shrunk"><a class="header" href="#buffers-a-fills-part-grown-or-shrunk">Buffers: a fill’s part grown or shrunk</a></h2>
+<p>The same module grows or shrinks a fill’s part, as shapely’s <code>buffer</code> does for Ink/Stitch’s inset
+underlay and <code>expand_mm</code> (<a href="fills.html#6-underlay">fills</a>, <code>REQ-FILL-TAT-012</code>). Each ring’s raw curve is
+built as in step 1, closed, with round corners of 16 segments to a quarter circle. It runs to the ring’s
+left, outside an outline and inside a hole: a positive distance grows the part. In place of steps 2
+and 3, the area the curves wind round clockwise at least once comes from the fill’s own region code, and
+the loops where the curves fold over drop out of it. GEOS’s rules for a ring the buffer wears away, and
+for a small ring whose curve turns inside out, are followed as the <code>buffer</code> module’s docs say, and
+<code>conformance/oracle/buffer.py</code> checks the polygons against shapely’s.</p>
 <h2 id="checking-against-shapely"><a class="header" href="#checking-against-shapely">Checking against shapely</a></h2>
 <p><code>conformance/oracle/offset.py</code> asks shapely 2.2.0, with the GEOS 3.14.1 its wheels bundle, for the
 offset curves of 1,050 random lines: gentle and wild walks, arcs, spirals, waves and zigzags, walks on a

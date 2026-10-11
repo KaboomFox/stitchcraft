@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-116c8d8e.js";
+            window.path_to_searchindex_js = "../../searchindex-14aaa1ee.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-6a54873b.js"></script>
@@ -215,6 +215,8 @@
 <tr><td><a href="#sc-i0306"><code>SC-I0306</code></a></td><td>Info</td><td>Nonzero fill rule fills a part the even-odd rule leaves empty</td></tr>
 <tr><td><a href="#sc-w0307"><code>SC-W0307</code></a></td><td>Warning</td><td>Fill in parts that are apart; each sewn on its own</td></tr>
 <tr><td><a href="#sc-i0308"><code>SC-I0308</code></a></td><td>Info</td><td>Fill underlay too thin for rows; sewn round the outline</td></tr>
+<tr><td><a href="#sc-w0309"><code>SC-W0309</code></a></td><td>Warning</td><td>Fill’s expand shrinks a part away; sewn at its own size</td></tr>
+<tr><td><a href="#sc-w0310"><code>SC-W0310</code></a></td><td>Warning</td><td>Fill’s underlay inset shrinks a part away; underlay over all of it</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -422,6 +424,18 @@ are sewn over it as usual.</p>
 <p>The message counts the layers, and each part has one for each underlay angle. To sew the underlay
 in rows, set a smaller <code>fill_underlay_row_spacing_mm</code> or another <code>fill_underlay_angle</code>. To sew no
 underlay, turn <code>fill_underlay</code> off.</p>
+<h2 id="sc-w0309"><a class="header" href="#sc-w0309">SC-W0309</a></h2>
+<p><strong>Warning</strong> — Fill’s expand shrinks a part away; sewn at its own size</p>
+<p>A fill’s top rows are sewn on each part grown by <code>expand_mm</code>, or shrunk where it is negative. A part
+too thin for that much shrinking, which wears it away entirely, is sewn at its own size instead, as
+Ink/Stitch sews it, and Ink/Stitch warns of it too.</p>
+<p>The message counts the parts. Make <code>expand_mm</code> nearer 0.</p>
+<h2 id="sc-w0310"><a class="header" href="#sc-w0310">SC-W0310</a></h2>
+<p><strong>Warning</strong> — Fill’s underlay inset shrinks a part away; underlay over all of it</p>
+<p>A fill’s underlay is sewn on each part shrunk by <code>fill_underlay_inset_mm</code>. A part too thin for that
+much shrinking, which wears it away entirely, has its underlay sewn over all of it instead, as
+Ink/Stitch sews it, and Ink/Stitch warns of it too.</p>
+<p>The message counts the parts. Set a smaller <code>fill_underlay_inset_mm</code>, or turn <code>fill_underlay</code> off.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-116c8d8e.js";
+            window.path_to_searchindex_js = "../../searchindex-14aaa1ee.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-6a54873b.js"></script>
@@ -354,6 +354,10 @@ between the lines, the needle runs along the rings and rows, as with <code>under
 straight there, but it travels between 2 rings only from the fill’s start to its end, before any row
 is sewn. StitchCraft also travels between rings to pair nodes (<code>DEV-FILL-006</code>), after rows are sewn,
 which a straight way would cross.</li>
+<li><strong>A needle inside the part.</strong> The fill starts at the node of the network nearest the needle (since
+M5.7). For a needle on the rings or outside the part, that is the route’s start. For one inside, as
+after an inset underlay, it is a node inside, and the needle travels the cheapest way from there to the
+route’s start, or on to the end of the route’s first stretch of travel, as Ink/Stitch’s does.</li>
 </ol>
 <p>Equally cheap ways, the simplified rings and the points a way is cut into follow StitchCraft’s own rules,
 so the way can differ from Ink/Stitch’s in its details (<code>DEV-FILL-007</code>).</p>
@@ -381,9 +385,22 @@ goes on to that start as Ink/Stitch’s stitch plan joins a layer to the next on
 element’s jump length, and farther with a jump. The generator makes that join itself, because Ink/Stitch
 never forces locks after a layer of underlay, where assembly would after any group of an element with
 <code>force_lock_stitches</code>.</p>
-<p>Ink/Stitch sews the underlay on the part shrunk by <code>fill_underlay_inset_mm</code>, and the top rows on the part
-grown by <code>expand_mm</code>. Both need a polygon buffered as GEOS buffers it, which comes in M5.7. Until then the
-2 are not registered, and an element that sets them gets <code>SC-W0105</code>.</p>
+<p>The underlay is sewn on the part shrunk by <code>fill_underlay_inset_mm</code>, and the top rows on the part grown by
+<code>expand_mm</code>, or shrunk where it is negative (<code>REQ-FILL-TAT-012</code>, since M5.7). A part is grown or shrunk
+as GEOS buffers a polygon, which Ink/Stitch calls, with round corners of 16 segments to a quarter circle
+(<code>stitchcraft_engine::normalize::offset</code>). Each ring is offset, the offsets are cut where they cross, and
+the faces they wind round clockwise at least once are the area. Before offsetting, GEOS leaves out a ring
+that shrinking wears away. After, it leaves out a small ring’s offset that has turned inside out. The
+engine follows both rules. The polygons agree with shapely’s within a nanometre for 330 random polygons,
+some at the edges of both rules (<code>conformance/oracle/buffer.py</code>).</p>
+<p>Shrinking can cut a part into pieces. Each piece is sewn on its own, in order of its point of least x, and
+of least y among points level with it. That is GEOS’s order in all but a few cases, where GEOS orders
+pieces with a sliver among them, or pieces level at their least x, as it walks its graph (<code>DEV-FILL-008</code>).
+Every layer of the underlay is sewn on one piece before the next, each starting nearest the needle. Each
+piece’s top rows start nearest the needle too, after the piece before, and end nearest the next part or
+element. Ink/Stitch starts every piece’s top rows nearest where the needle was before the first
+(<code>DEV-FILL-008</code>). Where shrinking wears a part away entirely, the part itself is sewn, as in Ink/Stitch,
+and <code>SC-W0310</code> (inset) or <code>SC-W0309</code> (expand) says so, as Ink/Stitch warns.</p>
 <h3 id="7-pull-compensation-and-gap-fill-rows"><a class="header" href="#7-pull-compensation-and-gap-fill-rows">7. Pull compensation and gap-fill rows</a></h3>
 <p>The thread pulls a row in at its ends. Each segment is lengthened at both ends by <code>pull_compensation_mm</code>
 plus <code>pull_compensation_percent</code> of its length (one value, or one for each end). Ink/Stitch then rebuilds
@@ -417,6 +434,7 @@ the fill sews nothing, and <code>SC-W0303</code> says so.</p>
 <tr><td><code>REQ-FILL-TAT-008</code></td><td>A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element</td></tr>
 <tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget</td></tr>
 <tr><td><code>REQ-FILL-TAT-011</code></td><td>Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start</td></tr>
+<tr><td><code>REQ-FILL-TAT-012</code></td><td>The underlay covers the part shrunk by its inset and the top rows the part grown by <code>expand_mm</code>, as shapely buffers it, within a nanometre</td></tr>
 </tbody>
 </table>
 </div>
