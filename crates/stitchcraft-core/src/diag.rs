@@ -230,6 +230,23 @@ registry! {
     /// the column with 2 rails.
     SatinTooNarrow = "SC-W0212", Warning, "Satin column drawn as one path too narrow; sewn as a stroke";
 
+    /// A satin column drawn as one path, its centre line, is made into rails by offsetting the line by half
+    /// the stroke's width to each side. Where the line crosses itself or comes back near itself, the
+    /// offsets split into several curves, and the line is cut in half, and the halves again, at most 20
+    /// times. Parts whose offsets still split are left out, and so are parts that turn so tightly that an
+    /// offset vanishes. Ink/Stitch leaves out the same parts without a word. The rest of the column is sewn.
+    ///
+    /// The message says how many parts were left out. Draw the column with 2 rails where its line crosses
+    /// itself or turns more tightly than the column is wide, or make the stroke narrower.
+    SatinCentreLinePartsLeftOut = "SC-W0213", Warning, "Parts of a satin column drawn as one path left out";
+
+    /// A satin column drawn as one path, its centre line, could not be made into rails. Its offsets split
+    /// however it is cut, an offset vanishes because the stroke is wider than the line's turns allow, or
+    /// the line is shorter than a CSS pixel. The column is not sewn.
+    ///
+    /// Draw the column with 2 rails, or make the stroke narrower.
+    SatinCentreLineFailed = "SC-E0214", Error, "Satin column drawn as one path could not be made into rails";
+
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
     /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that

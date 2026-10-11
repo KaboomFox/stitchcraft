@@ -101,6 +101,13 @@ reason = "The key is declared once, as the running stitch's, and its default is 
 requirements = ["REQ-SAT-013", "REQ-SAT-014"]
 
 [[deviation]]
+id = "DEV-SAT-007"
+area = "satin"
+summary = "A satin column drawn as one path keeps the 2 rails made from its line as its rails, and each rung made pairs the points where it crosses them. Where 2 parts of the line join, the rung pairs the first points of the second part's rails. Ink/Stitch hands the rails and rungs back to its satin column as subpaths, which tells rails from rungs again by where they meet and how long they are, and adds a rung across the gap where parts join, 1.2 times as long, pairing where it crosses the rails. With 2 rungs or more on a column shorter than its rungs, it takes 2 rungs as the rails, and a line that crosses itself can make a rung meet more lines than a rail does. Ink/Stitch also keeps the first part of a line cut in half when its offset vanishes to one side, with the rail it has, where StitchCraft leaves that part out with SC-W0213, as it leaves out later ones."
+reason = "The rails made are known, so they need no guessing, and a column is never sewn between a rail and a rung. Where 2 parts meet on a straight stretch, the gap rung crosses the rails at those first points, and both sew alike. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_column.py, lib/elements/utils/stroke_to_satin.py). The case req_sat_017_the_rails_made_stay_the_rails (crates/stitchcraft-engine/tests/satin_centre_line.rs) draws the lines Ink/Stitch would make for a dash 3.3 mm long and 5 mm wide, and its rule for drawn columns takes the 2 rungs as the rails."
+requirements = ["REQ-SAT-016", "REQ-SAT-017"]
+
+[[deviation]]
 id = "DEV-SVG-001"
 area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."

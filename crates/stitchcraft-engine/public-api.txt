@@ -187,8 +187,8 @@ pub const stitchcraft_engine::generators::satin::SatinParams::GROUP: stitchcraft
 pub const stitchcraft_engine::generators::satin::SatinParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
 pub fn stitchcraft_engine::generators::satin::SatinParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 pub const stitchcraft_engine::generators::satin::SATIN_METHODS: &[stitchcraft_params::spec::ChoiceOption]
+pub fn stitchcraft_engine::generators::satin::rails(&stitchcraft_engine::design::Path, stitchcraft_core::units::Mm, stitchcraft_engine::design::Join, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_engine::normalize::satin::Satin>, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::generators::satin::satin_stitch(&stitchcraft_engine::normalize::satin::Satin, &stitchcraft_engine::generators::satin::SatinParams, stitchcraft_engine::generators::satin::SatinLengths, &stitchcraft_engine::generators::Neighbours, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
-pub fn stitchcraft_engine::generators::satin::shape(&stitchcraft_engine::design::Path, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_engine::normalize::satin::Shape>, stitchcraft_core::budget::Exhausted>
 pub enum stitchcraft_engine::generators::Approach
 pub stitchcraft_engine::generators::Approach::Point(stitchcraft_core::units::Point)
 pub stitchcraft_engine::generators::Approach::Shape(alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>)
@@ -215,6 +215,8 @@ pub stitchcraft_engine::normalize::satin::Pairing::Nodes([alloc::vec::Vec<stitch
 pub stitchcraft_engine::normalize::satin::Pairing::Rungs(alloc::vec::Vec<[stitchcraft_core::units::Point; 2]>)
 pub enum stitchcraft_engine::normalize::satin::Shape
 pub stitchcraft_engine::normalize::satin::Shape::CentreLine
+pub stitchcraft_engine::normalize::satin::Shape::CentreLine::closed: bool
+pub stitchcraft_engine::normalize::satin::Shape::CentreLine::line: alloc::vec::Vec<stitchcraft_core::units::Point>
 pub stitchcraft_engine::normalize::satin::Shape::Rails(stitchcraft_engine::normalize::satin::Satin)
 pub struct stitchcraft_engine::normalize::satin::Recognition
 pub stitchcraft_engine::normalize::satin::Recognition::shape: core::result::Result<stitchcraft_engine::normalize::satin::Shape, stitchcraft_core::diag::Diagnostic>

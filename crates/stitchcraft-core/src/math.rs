@@ -27,6 +27,11 @@ pub fn tan(x: f64) -> f64 {
     libm::tan(x)
 }
 
+/// Arccosine of `x`, in radians, for `x` in [-1, 1].
+pub fn acos(x: f64) -> f64 {
+    libm::acos(x)
+}
+
 /// Four-quadrant arctangent of `y / x`, in radians.
 pub fn atan2(y: f64, x: f64) -> f64 {
     libm::atan2(y, x)
@@ -70,7 +75,7 @@ mod tests {
     /// file and golden image could change: this test makes that a deliberate, reviewed decision.
     #[test]
     fn results_are_frozen_bit_for_bit() {
-        let cases: [(&str, f64, u64); 8] = [
+        let cases: [(&str, f64, u64); 9] = [
             ("sin(1)", sin(1.0), 0x3FEA_ED54_8F09_0CEE),
             ("cos(1)", cos(1.0), 0x3FE1_4A28_0FB5_068C),
             ("tan(0.5)", tan(0.5), 0x3FE1_7B4F_5BF3_474A),
@@ -79,6 +84,7 @@ mod tests {
             ("exp(1)", exp(1.0), 0x4005_BF0A_8B14_576A),
             ("pow(0.5,2.4)", pow(0.5, 2.4), 0x3FC8_4060_03B2_AE5D),
             ("cbrt(2)", cbrt(2.0), 0x3FF4_28A2_F98D_728B),
+            ("acos(0.3)", acos(0.3), 0x3FF4_41F5_ECBE_EF59),
         ];
         for (name, value, bits) in cases {
             assert_eq!(value.to_bits(), bits, "{name} = {value:e} changed: {:#018X}", value.to_bits());

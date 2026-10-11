@@ -77,8 +77,14 @@ pub enum Pairing {
 pub enum Shape {
     /// Rails and rungs.
     Rails(Satin),
-    /// One subpath: the column's centre line, its width the stroke's (Ink/Stitch's simple satin).
-    CentreLine,
+    /// One subpath: the column's centre line, its width the stroke's (Ink/Stitch's simple satin), from which
+    /// its rails and rungs are made (`normalize::centre_line`).
+    CentreLine {
+        /// The line, flattened.
+        line: Vec<Point>,
+        /// Whether the path ends by closing its last subpath (`Z`), which Ink/Stitch takes as a closed line.
+        closed: bool,
+    },
 }
 
 /// What recognizing a satin column gives.
@@ -121,7 +127,7 @@ pub fn recognize(path: &Path, meter: &mut Meter) -> Result<Recognition, Exhauste
     let shape = match lines.as_slice() {
         [] => Err(Diagnostic::new(Code::SatinWithoutRails, "This satin column has no subpath longer than a point, so it has no rails.")
             .with_fix(Fix::Hint("Draw the column as two rails, its edges, with rungs across both.".to_string()))),
-        [_] => Ok(Shape::CentreLine),
+        [one] => Ok(Shape::CentreLine { line: one.points.clone(), closed: path.subpaths.last().is_some_and(|s| s.closed) }),
         [a, b] => {
             Ok(Shape::Rails(Satin { rails: [a.points.clone(), b.points.clone()], pairing: Pairing::Nodes([a.nodes.clone(), b.nodes.clone()]) }))
         }

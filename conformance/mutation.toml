@@ -51,3 +51,99 @@ file = "crates/stitchcraft-engine/src/normalize/near.rs"
 mutant = "replace && with || in meeting"
 line = "(d_on && (a_on || b_on)).then_some(d)"
 why = "overlapping sides along one line: when neither end of the second lies on the first, an end of the first on the second would have to stick out past one of the second's ends, which would then lie on the first, so the changed test only adds cases that cannot occur"
+
+[[equivalent]]
+file = "crates/stitchcraft-core/src/exact.rs"
+mutant = "replace * with + in side"
+line = "let bound = ERROR_BOUND * (left.abs() + right.abs());"
+why = "the bound only decides when the exact sum is worked out: a bound of at least |left| + |right|, which the plain determinant never exceeds, sends every case to the exact sum, which gives the same signs"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/mod.rs"
+mutant = "delete match arm [] |[_] in offset"
+line = "[] | [_] => Offset::Empty,"
+why = "a shortcut GEOS takes too: a line of fewer than 2 distinct points has no raw curve, so the 3 steps find no section either (the_shortcuts_give_the_curves_of_the_3_steps)"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/mod.rs"
+mutant = "delete match arm [a, b] in offset"
+line = "[a, b] => Offset::Line(moved_segment(*a, *b, distance)),"
+why = "a shortcut GEOS takes too: the edge of a segment's stroke is its 2 moved copies and the caps, and its section on the offset's side is the moved segment, point for point (the_shortcuts_give_the_curves_of_the_3_steps)"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/mod.rs"
+mutant = "replace < with <= in stepped"
+line = "if distance < 0.0 {"
+why = "offset returns before the 3 steps when the distance is 0, so this test never sees 0"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/mod.rs"
+mutant = "replace < with <= in largest_polygon"
+line = "rings.into_iter().filter(|ring| boundary::doubled_area(ring) != 0.0).partition(|ring| boundary::doubled_area(ring) < 0.0);"
+why = "the rings of no area are left out just before, so no ring's area here is 0"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/boundary.rs"
+mutant = "replace * with + in boundary"
+line = "let mut beside = half * BESIDE;"
+why = "a larger first distance still gives way to a quarter of the gap to the nearest other piece, so the points that judge a piece stay where no piece passes between them and its middle, and the windings there are the same"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/boundary.rs"
+mutant = "replace * with / in boundary"
+line = "let mut beside = half * BESIDE;"
+why = "a larger first distance still gives way to a quarter of the gap to the nearest other piece, so the points that judge a piece stay where no piece passes between them and its middle, and the windings there are the same"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/boundary.rs"
+mutant = "replace + with * in cut"
+line = "for (j, &(c, d)) in segments.iter().enumerate().skip(i + 1) {"
+why = "comparing a segment with itself finds only its own ends, which add no piece; only the work charged grows"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/boundary.rs"
+mutant = "replace / with % in Nodes::node"
+line = "let cell = |v: f64| (v / self.near).floor() as i64;"
+why = "the cells only save work: with every point in the few cells round the origin, the search round a point still finds every point seen within near of it"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/boundary.rs"
+mutant = "replace / with * in Nodes::node"
+line = "let cell = |v: f64| (v / self.near).floor() as i64;"
+why = "the cells only save work: with every point in the few cells round the origin, the search round a point still finds every point seen within near of it"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/boundary.rs"
+mutant = "replace boxes_meet -> bool with true"
+line = "a.x().max(b.x()) + near >= c.x().min(d.x())"
+why = "the box test only saves work: segments that cross or touch, and ends within near of a segment, lie inside boxes grown by near that overlap, so without it the tests after it find the same cuts"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/boundary.rs"
+mutant = "replace && with || in boxes_meet"
+line = "&& c.x().max(d.x()) + near >= a.x().min(b.x())"
+why = "the box test only saves work: letting more pairs past it changes no cut, since the tests after it find none where the grown boxes are apart"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/boundary.rs"
+mutant = "replace && with || in boxes_meet"
+line = "&& a.y().max(b.y()) + near >= c.y().min(d.y())"
+why = "the box test only saves work: letting more pairs past it changes no cut, since the tests after it find none where the grown boxes are apart"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/boundary.rs"
+mutant = "replace && with || in boxes_meet"
+line = "&& c.y().max(d.y()) + near >= a.y().min(b.y())"
+why = "the box test only saves work: letting more pairs past it changes no cut, since the tests after it find none where the grown boxes are apart"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/generator.rs"
+mutant = "replace && with || in along"
+line = "} else if d_in && b_in {"
+why = "on one line, once the earlier pairs have failed, d lies inside the first segment exactly when b lies inside the second, so either test alone decides as both do"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/generator.rs"
+mutant = "replace < with <= in raw"
+line = "let reversed = distance < 0.0;"
+why = "offset returns before the 3 steps when the distance is 0, so no raw curve is made at distance 0"

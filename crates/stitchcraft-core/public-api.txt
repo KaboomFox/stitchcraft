@@ -37,6 +37,8 @@ pub stitchcraft_core::diag::Code::ParamClamped
 pub stitchcraft_core::diag::Code::ParamInvalid
 pub stitchcraft_core::diag::Code::ParamUnknown
 pub stitchcraft_core::diag::Code::PreviewTooLarge
+pub stitchcraft_core::diag::Code::SatinCentreLineFailed
+pub stitchcraft_core::diag::Code::SatinCentreLinePartsLeftOut
 pub stitchcraft_core::diag::Code::SatinContourTooShort
 pub stitchcraft_core::diag::Code::SatinNodesUnequal
 pub stitchcraft_core::diag::Code::SatinPushTooLong
@@ -110,7 +112,14 @@ pub fn stitchcraft_core::element::ElementId::as_str(&self) -> &str
 pub fn stitchcraft_core::element::ElementId::new(impl core::convert::Into<alloc::string::String>) -> core::result::Result<Self, stitchcraft_core::element::ElementIdError>
 impl core::fmt::Display for stitchcraft_core::element::ElementId
 pub fn stitchcraft_core::element::ElementId::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub mod stitchcraft_core::exact
+pub enum stitchcraft_core::exact::Side
+pub stitchcraft_core::exact::Side::Left
+pub stitchcraft_core::exact::Side::On
+pub stitchcraft_core::exact::Side::Right
+pub fn stitchcraft_core::exact::side(stitchcraft_core::units::Point, stitchcraft_core::units::Point, stitchcraft_core::units::Point) -> stitchcraft_core::exact::Side
 pub mod stitchcraft_core::math
+pub fn stitchcraft_core::math::acos(f64) -> f64
 pub fn stitchcraft_core::math::atan2(f64, f64) -> f64
 pub fn stitchcraft_core::math::cbrt(f64) -> f64
 pub fn stitchcraft_core::math::cos(f64) -> f64
@@ -195,6 +204,8 @@ pub stitchcraft_core::Code::ParamClamped
 pub stitchcraft_core::Code::ParamInvalid
 pub stitchcraft_core::Code::ParamUnknown
 pub stitchcraft_core::Code::PreviewTooLarge
+pub stitchcraft_core::Code::SatinCentreLineFailed
+pub stitchcraft_core::Code::SatinCentreLinePartsLeftOut
 pub stitchcraft_core::Code::SatinContourTooShort
 pub stitchcraft_core::Code::SatinNodesUnequal
 pub stitchcraft_core::Code::SatinPushTooLong

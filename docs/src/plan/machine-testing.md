@@ -60,7 +60,7 @@ Record anything that differs in the report.
 | **TS-09** Fill underlay & travel | A shape with holes and a separated part; with and without underlay | Travel hidden? Trims between parts? Holes clean? | MC-4 |
 | **TS-10A/B/C** Hoop size | Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop's field, with a centre cross and an "F" in the top-left corner | The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop's field is the right way round | MC-1, MC-5 |
 | **TS-11** New stitch types | Samples of the milestone's new types | Per type, as listed on its expected-result sheet | MC-6 |
-| **TS-12** Real design | A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours | Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? | MC-5, MC-7 |
+| **TS-12** Real design | A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours | Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? | MC-5, MC-7 |
 
 ## Checkpoint calendar
 
