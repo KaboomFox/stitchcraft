@@ -63,7 +63,7 @@ that join its underlays are no longer than the first value. For any other stroke
 one is sewn between rails made from its line from M4.9 (`REQ-SAT-016`). A fill's region is built first,
 so what it leaves out and how it will be sewn are said (`SC-W0303`, `SC-W0304`, `SC-I0306`, `SC-W0307`)
 whatever comes next, and its `fill_method` picks the generator: the tatami fill, sewn from M5.4, which
-reads the running stitch's length and tolerance for its travel between rows. The other stroke, satin and
+reads the running stitch's length and tolerance for its travel between rows, under the rows from M5.5. The other stroke, satin and
 fill methods are skipped with `SC-W0011` until their milestones. An element whose parameters are wrong
 (`SC-E0101`) is skipped too, and the rest of the design still plans.
 
