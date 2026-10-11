@@ -216,6 +216,11 @@ pub stitchcraft_engine::generators::tatami::rows::Segment::end: stitchcraft_core
 pub stitchcraft_engine::generators::tatami::rows::Segment::start: stitchcraft_core::units::Point
 pub fn stitchcraft_engine::generators::tatami::rows::rows(&stitchcraft_engine::normalize::region::Polygon, &stitchcraft_engine::generators::tatami::rows::Grid, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_engine::generators::tatami::rows::Row>, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::tatami::sew
+pub struct stitchcraft_engine::generators::tatami::sew::Fill
+pub stitchcraft_engine::generators::tatami::sew::Fill::expand: f64
+pub stitchcraft_engine::generators::tatami::sew::Fill::inset: f64
+pub stitchcraft_engine::generators::tatami::sew::Fill::top: stitchcraft_engine::generators::tatami::sew::Layer
+pub stitchcraft_engine::generators::tatami::sew::Fill::underlay: alloc::vec::Vec<stitchcraft_engine::generators::tatami::sew::Layer>
 pub struct stitchcraft_engine::generators::tatami::sew::Layer
 pub stitchcraft_engine::generators::tatami::sew::Layer::stitching: stitchcraft_engine::generators::tatami::stitches::Stitching
 pub stitchcraft_engine::generators::tatami::sew::Layer::travel: stitchcraft_engine::generators::tatami::sew::Travel
@@ -225,7 +230,7 @@ pub stitchcraft_engine::generators::tatami::sew::Travel::length: f64
 pub stitchcraft_engine::generators::tatami::sew::Travel::min_stitch: f64
 pub stitchcraft_engine::generators::tatami::sew::Travel::tolerance: f64
 pub stitchcraft_engine::generators::tatami::sew::Travel::underpath: bool
-pub fn stitchcraft_engine::generators::tatami::sew::tatami_fill(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::tatami::sew::Layer, &[stitchcraft_engine::generators::tatami::sew::Layer], core::option::Option<stitchcraft_core::units::Point>, core::option::Option<&stitchcraft_engine::generators::Approach>, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::generators::tatami::sew::tatami_fill(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::tatami::sew::Fill, core::option::Option<stitchcraft_core::units::Point>, core::option::Option<&stitchcraft_engine::generators::Approach>, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::tatami::stitches
 pub struct stitchcraft_engine::generators::tatami::stitches::Stitching
 pub stitchcraft_engine::generators::tatami::stitches::Stitching::grid: stitchcraft_engine::generators::tatami::rows::Grid
@@ -237,8 +242,10 @@ pub fn stitchcraft_engine::generators::tatami::stitches::row_points(stitchcraft_
 pub struct stitchcraft_engine::generators::tatami::TatamiParams
 pub stitchcraft_engine::generators::tatami::TatamiParams::angle: <stitchcraft_params::kinds::Angle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::tatami::TatamiParams::end_row_spacing_mm: <stitchcraft_params::kinds::OptionalLength as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::tatami::TatamiParams::expand_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::tatami::TatamiParams::fill_underlay: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::tatami::TatamiParams::fill_underlay_angle: <stitchcraft_params::kinds::OptionalAngleList as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::generators::tatami::TatamiParams::fill_underlay_inset_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::tatami::TatamiParams::fill_underlay_max_stitch_length_mm: <stitchcraft_params::kinds::OptionalLength as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::tatami::TatamiParams::fill_underlay_row_spacing_mm: <stitchcraft_params::kinds::OptionalLength as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::generators::tatami::TatamiParams::fill_underlay_skip_last: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
@@ -253,6 +260,7 @@ pub const stitchcraft_engine::generators::tatami::TatamiParams::SPECS: &'static 
 pub fn stitchcraft_engine::generators::tatami::TatamiParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 pub fn stitchcraft_engine::generators::tatami::TatamiParams::from_set_for(&stitchcraft_params::set::ParamSet, stitchcraft_params::stitch_type::Family) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 impl stitchcraft_engine::generators::tatami::TatamiParams
+pub fn stitchcraft_engine::generators::tatami::TatamiParams::fill(&self, stitchcraft_core::units::Mm, &stitchcraft_engine::generators::running::RunningParams, stitchcraft_engine::generators::tatami::sew::Travel) -> stitchcraft_engine::generators::tatami::sew::Fill
 pub fn stitchcraft_engine::generators::tatami::TatamiParams::grid(&self) -> stitchcraft_engine::generators::tatami::rows::Grid
 pub fn stitchcraft_engine::generators::tatami::TatamiParams::stitching(&self, stitchcraft_core::units::Mm, &stitchcraft_engine::generators::running::RunningParams) -> stitchcraft_engine::generators::tatami::stitches::Stitching
 pub fn stitchcraft_engine::generators::tatami::TatamiParams::underlay(&self, stitchcraft_core::units::Mm, stitchcraft_engine::generators::tatami::sew::Travel) -> alloc::vec::Vec<stitchcraft_engine::generators::tatami::sew::Layer>

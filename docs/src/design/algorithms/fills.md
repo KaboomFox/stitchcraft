@@ -192,6 +192,10 @@ since M5.5, `REQ-FILL-TAT-005`).
    straight there, but it travels between 2 rings only from the fill's start to its end, before any row
    is sewn. StitchCraft also travels between rings to pair nodes (`DEV-FILL-006`), after rows are sewn,
    which a straight way would cross.
+6. **A needle inside the part.** The fill starts at the node of the network nearest the needle (since
+   M5.7). For a needle on the rings or outside the part, that is the route's start. For one inside, as
+   after an inset underlay, it is a node inside, and the needle travels the cheapest way from there to the
+   route's start, or on to the end of the route's first stretch of travel, as Ink/Stitch's does.
 
 Equally cheap ways, the simplified rings and the points a way is cut into follow StitchCraft's own rules,
 so the way can differ from Ink/Stitch's in its details (`DEV-FILL-007`).
@@ -225,9 +229,22 @@ element's jump length, and farther with a jump. The generator makes that join it
 never forces locks after a layer of underlay, where assembly would after any group of an element with
 `force_lock_stitches`.
 
-Ink/Stitch sews the underlay on the part shrunk by `fill_underlay_inset_mm`, and the top rows on the part
-grown by `expand_mm`. Both need a polygon buffered as GEOS buffers it, which comes in M5.7. Until then the
-2 are not registered, and an element that sets them gets `SC-W0105`.
+The underlay is sewn on the part shrunk by `fill_underlay_inset_mm`, and the top rows on the part grown by
+`expand_mm`, or shrunk where it is negative (`REQ-FILL-TAT-012`, since M5.7). A part is grown or shrunk
+as GEOS buffers a polygon, which Ink/Stitch calls, with round corners of 16 segments to a quarter circle
+(`stitchcraft_engine::normalize::offset`). Each ring is offset, the offsets are cut where they cross, and
+the faces they wind round clockwise at least once are the area. Before offsetting, GEOS leaves out a ring
+that shrinking wears away. After, it leaves out a small ring's offset that has turned inside out. The
+engine follows both rules. The polygons agree with shapely's within a nanometre for 300 random polygons
+(`conformance/oracle/buffer.py`).
+
+Shrinking can cut a part into pieces. Each piece is sewn on its own, in order of its point of least x, and
+of least y among those, which is GEOS's order in all but a few cases of slivers (`DEV-FILL-008`). Every
+layer of the underlay is sewn on one piece before the next, each starting nearest the needle. Each piece's
+top rows start nearest the needle too, after the piece before, and end nearest the next part or element.
+Ink/Stitch starts every piece's top rows nearest where the needle was before the first (`DEV-FILL-008`).
+Where shrinking wears a part away entirely, the part itself is sewn, as in Ink/Stitch, and `SC-W0310`
+(inset) or `SC-W0309` (expand) says so, as Ink/Stitch warns.
 
 ### 7. Pull compensation and gap-fill rows
 
@@ -264,6 +281,7 @@ the fill sews nothing, and `SC-W0303` says so.
 | `REQ-FILL-TAT-008` | A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element |
 | `REQ-FILL-TAT-009` | A 130 × 180 mm rectangle at 0.4 mm, the reference hoop's whole field, plans within the NFR-PERF-1 budget |
 | `REQ-FILL-TAT-011` | Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start |
+| `REQ-FILL-TAT-012` | The underlay covers the part shrunk by its inset and the top rows the part grown by `expand_mm`, as shapely buffers it, within a nanometre |
 
 Machine checkpoint MC-4 sews a density ladder, an angle set and a fill-with-outline registration test
 to tune pull compensation ([machine testing](../../plan/machine-testing.md)).

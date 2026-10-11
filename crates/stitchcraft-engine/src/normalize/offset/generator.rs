@@ -429,6 +429,35 @@ fn side_curve(walk: &[Point], d: f64, join: Join, with_first: bool, meter: &mut 
     Ok(walker.curve)
 }
 
+/// The raw curve round the closed ring `points` (its first point repeated at its end, none repeated in a
+/// row) at `distance`, to its left for a positive distance and to its right for a negative one (y-up axes),
+/// with round corners, as GEOS offsets a polygon's ring to buffer it: the ring simplified towards that
+/// side, then walked from the segment back to its start, so that every corner is joined, and closed. Empty
+/// for a ring of fewer than 3 points.
+pub(super) fn ring_curve(points: &[Point], distance: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    let d = distance.abs();
+    let reversed = distance < 0.0;
+    let mut walk = simplified(points, d * SIMPLIFY, if reversed { Side::Right } else { Side::Left }, meter)?;
+    if reversed {
+        walk.reverse();
+    }
+    let (Some(&first), Some(&[before, _])) = (walk.first(), walk.last_chunk::<2>()) else { return Ok(Vec::new()) };
+    if walk.len() < 4 {
+        return Ok(Vec::new());
+    }
+    let mut walker = Generator::new(d, Join::Round, before, first);
+    for &p in walk.iter().skip(1) {
+        meter.charge(1)?;
+        walker.next(p);
+    }
+    walker.curve.close();
+    let mut out = walker.curve.points;
+    if reversed {
+        out.reverse();
+    }
+    Ok(out)
+}
+
 /// The closed ring around `points` (at least 2 different points, none repeated in a row) at `distance`:
 /// the left side forward, a cap, the right side backward and a cap, each side simplified on its own.
 pub(super) fn ring(points: &[Point], distance: f64, join: Join, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {

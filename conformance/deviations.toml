@@ -157,6 +157,13 @@ reason = "The search, the simplification and the running stitch are StitchCraft'
 requirements = ["REQ-FILL-TAT-005"]
 
 [[deviation]]
+id = "DEV-FILL-008"
+area = "fill/tatami"
+summary = "Where fill_underlay_inset_mm, or a negative expand_mm, cuts a part into pieces, the pieces are sewn in order of their point of least x, and of least y among those. GEOS gives them in the order it walks its graph, which Ink/Stitch sews them in, and that order differed in 4 of 2,000 random polygons shrunk into pieces, each time with a sliver among them. Each piece's top rows start at the point nearest the needle after the piece before, where Ink/Stitch starts every piece's top rows nearest the needle as it was before the first."
+reason = "The order of least x is GEOS's in all but those few cases, without walking a graph as GEOS walks its own (conformance/oracle/buffer.py). Starting each piece where the last ended keeps the needle's way between pieces short, where Ink/Stitch's needle goes back to near the first piece's start (lib/elements/fill_stitch.py at d59c9ab, to_stitch_groups)."
+requirements = ["REQ-FILL-TAT-012"]
+
+[[deviation]]
 id = "DEV-SVG-001"
 area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."
