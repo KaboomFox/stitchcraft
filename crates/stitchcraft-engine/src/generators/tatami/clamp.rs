@@ -7,25 +7,20 @@
 //!
 //! The way's ends lie on the part's rings, so they count as inside, as do points a rounding error outside
 //! them: a way that leaves the part straight from its start follows the ring from its start. A ring taken
-//! is the hole the way leaves into, else the outline.
+//! is the hole the way leaves into, else the outline. Points a rounding error apart are one point
+//! ([`SAME`]), as where the way leaves the part and where the ring takes over, worked out apart.
 
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use super::rings::Rings;
-use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::{Hit, Location, hit, locate_in_ring};
+use crate::normalize::region::{Polygon, SAME};
 use crate::normalize::stroke::distance_to_segment;
 
-/// How far apart, in millimetres, a stretch inside may start from where the last one ended before the ring
-/// between them is followed: 0.01 CSS pixels, as in Ink/Stitch.
-const JOINED: f64 = 0.01 * MM_PER_SVG_PX;
 /// Nearer than this, in millimetres, the way's exit and way back in are one point, and no ring is followed
-/// between them: 0.02 CSS pixels, where Ink/Stitch's 2 circles of 0.01 px meet.
+/// between them: 0.02 CSS pixels, where Ink/Stitch's 2 circles of 0.01 px round them meet.
 const NEAR: f64 = 0.02 * MM_PER_SVG_PX;
-/// The way's ends count as in the part this near its rings, in millimetres: 1e-9 CSS pixels, by which
-/// Ink/Stitch grows the part for the test.
-const GROWN: f64 = 1e-9 * MM_PER_SVG_PX;
 
 /// A stretch of the way between 2 points where it meets the rings: inside the part, or not (outside it,
 /// or along a ring).
@@ -43,34 +38,32 @@ pub(crate) fn clamp(way: &[Point], part: &Polygon, rings: &Rings<'_>, meter: &mu
     if stretches.iter().all(|stretch| stretch.inside) {
         return Ok(way.to_vec());
     }
-    // The way's ends count as stretches of their own, inside when the part covers them or they lie within
-    // `GROWN` of its rings.
+    // The way's ends count as stretches of their own, inside when the part covers them or they lie on one
+    // of its rings.
     let mut ends = |p: Point| -> Result<Stretch, Exhausted> {
-        let mut near = false;
+        let mut on = false;
         for ring in part.rings() {
             meter.charge(u64::try_from(ring.len()).unwrap_or(u64::MAX))?;
-            near |= ring.windows(2).any(|side| side.first().zip(side.get(1)).is_some_and(|(&a, &b)| distance_to_segment(p, a, b) <= GROWN));
+            on |= on_ring(p, ring);
         }
-        Ok(Stretch { points: vec![p], inside: near || part.covers(p) })
+        Ok(Stretch { points: vec![p], inside: on || part.covers(p) })
     };
     let (at_start, at_end) = (ends(start)?, ends(end)?);
+    // A stretch inside starts where the one before it ended, unless the way left the part in between: then
+    // the ring takes it from where it left (`exit`) to where it comes back.
     let mut kept: Vec<Point> = Vec::new();
     let mut exit: Option<Point> = None;
-    let mut was_inside = false;
     for stretch in std::iter::once(at_start).chain(stretches).chain(std::iter::once(at_end)) {
         if !stretch.inside {
-            was_inside = false;
             continue;
         }
         let (Some(&first), Some(&last)) = (stretch.points.first(), stretch.points.last()) else { continue };
         if let Some(left) = exit
-            && (!was_inside || left.distance(first) > JOINED)
             && left.distance(first) > NEAR
         {
             extend(&mut kept, round_ring(left, first, part, rings, meter)?);
         }
         extend(&mut kept, stretch.points);
-        was_inside = true;
         exit = Some(last);
     }
     if kept.is_empty() {
@@ -78,32 +71,41 @@ pub(crate) fn clamp(way: &[Point], part: &Polygon, rings: &Rings<'_>, meter: &mu
         return round_ring(start, end, part, rings, meter);
     }
     // A ring gives back the way's end within a rounding error, and travel must meet its rows exactly.
-    if let Some(last) = kept.last_mut().filter(|last| last.distance(end) <= JOINED) {
+    if let Some(last) = kept.last_mut().filter(|last| last.distance(end) <= SAME) {
         *last = end;
     }
     Ok(kept)
 }
 
-/// The way cut where it meets the part's rings, in stretches inside the part or not. A stretch along a
-/// ring is not inside. One unit of `meter` for each side of a ring each stitch is cut against.
+/// Whether `p` lies on `ring`, within a rounding error.
+fn on_ring(p: Point, ring: &[Point]) -> bool {
+    ring.windows(2).any(|side| side.first().zip(side.get(1)).is_some_and(|(&a, &b)| distance_to_segment(p, a, b) <= SAME))
+}
+
+/// The way cut where it meets the part's rings, in stretches inside the part or not, one for each piece
+/// between 2 cuts. A stretch along a ring is not inside. One unit of `meter` for each side of a ring each
+/// stitch is cut against.
 fn cut(way: &[Point], part: &Polygon, meter: &mut Meter) -> Result<Vec<Stretch>, Exhausted> {
     let rings: Vec<&[Point]> = part.rings().collect();
     let mut stretches: Vec<Stretch> = Vec::new();
     for pair in way.windows(2) {
+        // A stitch of no length meets nothing.
         let &[p, q] = pair else { continue };
+        if p == q {
+            continue;
+        }
         let mut cuts: Vec<(f64, Point)> = Vec::new();
         for ring in &rings {
             meter.charge(u64::try_from(ring.len()).unwrap_or(u64::MAX))?;
             for side in ring.windows(2) {
                 let &[a, b] = side else { continue };
                 match hit(p, q, a, b) {
-                    Hit::Cross(x) | Hit::Touch(x) => cuts.push((fraction(p, q, x), x)),
-                    Hit::Overlap(x, y) => cuts.extend([(fraction(p, q, x), x), (fraction(p, q, y), y)]),
+                    Hit::Cross(x) | Hit::Touch(x) => cuts.push((p.distance(x), x)),
+                    Hit::Overlap(x, y) => cuts.extend([(p.distance(x), x), (p.distance(y), y)]),
                     Hit::Apart => {}
                 }
             }
         }
-        cuts.retain(|&(t, _)| t > 0.0 && t < 1.0);
         cuts.sort_by(|a, b| a.0.total_cmp(&b.0));
         let points: Vec<Point> = std::iter::once(p).chain(cuts.into_iter().map(|(_, x)| x)).chain(std::iter::once(q)).collect();
         for piece in points.windows(2) {
@@ -113,38 +115,25 @@ fn cut(way: &[Point], part: &Polygon, meter: &mut Meter) -> Result<Vec<Stretch>,
             }
             let middle = u.lerp(v, 0.5);
             let inside = !rings.iter().any(|ring| locate_in_ring(middle, ring) == Location::Boundary) && part.covers(middle);
-            match stretches.last_mut() {
-                Some(last) if last.inside == inside && last.points.last() == Some(&u) => last.points.push(v),
-                _ => stretches.push(Stretch { points: vec![u, v], inside }),
-            }
+            stretches.push(Stretch { points: vec![u, v], inside });
         }
     }
     Ok(stretches)
 }
 
-/// How far along the segment from `p` to `q` its point `x` lies, from 0 at `p` to 1 at `q`.
-fn fraction(p: Point, q: Point, x: Point) -> f64 {
-    let (dx, dy) = (q.x() - p.x(), q.y() - p.y());
-    let length2 = dx * dx + dy * dy;
-    if length2 > 0.0 { ((x.x() - p.x()) * dx + (x.y() - p.y()) * dy) / length2 } else { 0.0 }
-}
-
 /// The way along a ring from `from` to `to`, the shorter way round: along the hole `from` lies on, else
 /// along the outline. One unit of `meter` for each point of the ring looked at.
 fn round_ring(from: Point, to: Point, part: &Polygon, rings: &Rings<'_>, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
-    let on =
-        |ring: &[Point]| ring.windows(2).any(|side| side.first().zip(side.get(1)).is_some_and(|(&a, &b)| distance_to_segment(from, a, b) <= JOINED));
-    let ring = part.holes.iter().position(|hole| on(hole)).map_or(0, |hole| hole + 1);
+    let ring = part.holes.iter().position(|hole| on_ring(from, hole)).map_or(0, |hole| hole + 1);
     let only = |r: usize| r == ring;
     let (Some(a), Some(b)) = (rings.locate(from, only, meter)?, rings.locate(to, only, meter)?) else { return Ok(vec![from, to]) };
     rings.way(ring, a.at, b.at, rings.forwards(ring, a.at, b.at), meter)
 }
 
-/// Adds `points` to `kept`, each unless it is within `JOINED` of where `kept` already ends: where the way
-/// leaves the part and where the ring takes over are worked out apart and can differ in their last bits.
+/// Adds `points` to `kept`, each unless it is where `kept` already ends, within a rounding error.
 fn extend(kept: &mut Vec<Point>, points: Vec<Point>) {
     for p in points {
-        if kept.last().is_none_or(|last| last.distance(p) > JOINED) {
+        if kept.last().is_none_or(|last| last.distance(p) > SAME) {
             kept.push(p);
         }
     }
@@ -165,7 +154,8 @@ mod tests {
 
     #[test]
     fn a_way_inside_stays_as_it_is() {
-        let way = [p(1.0, 1.0), p(5.0, 3.0), p(9.0, 1.0)];
+        // Its end repeated, as smoothing leaves it.
+        let way = [p(1.0, 1.0), p(5.0, 3.0), p(9.0, 1.0), p(9.0, 1.0)];
         assert_eq!(clamped(&rectangle(4.0), &way), way);
         assert_eq!(clamped(&rectangle(4.0), &[]), Vec::<Point>::new());
     }
@@ -182,6 +172,11 @@ mod tests {
         // Across the hole at y = 1.5: round its top, 3 long, not its bottom, 5.
         let way = [p(2.0, 1.5), p(8.0, 1.5)];
         assert_eq!(clamped(&frame(), &way), [p(2.0, 1.5), p(4.0, 1.5), p(4.0, 1.0), p(6.0, 1.0), p(6.0, 1.5), p(8.0, 1.5)]);
+        // The other way, and down across it at a slant, round its left side.
+        let way = [p(8.0, 1.5), p(2.0, 1.5)];
+        assert_eq!(clamped(&frame(), &way), [p(8.0, 1.5), p(6.0, 1.5), p(6.0, 1.0), p(4.0, 1.0), p(4.0, 1.5), p(2.0, 1.5)]);
+        let way = [p(5.0, 0.5), p(4.5, 3.5)];
+        assert_eq!(clamped(&frame(), &way), [p(5.0, 0.5), p(4.916666667, 1.0), p(4.0, 1.0), p(4.0, 3.0), p(4.583333333, 3.0), p(4.5, 3.5)]);
     }
 
     #[test]
@@ -195,6 +190,28 @@ mod tests {
         // A start worked out on the ring can lie a rounding error outside it, and still counts as on it.
         let way = [p(-1e-12, 1.0), p(-1.0, 2.0), p(1.0, 3.0)];
         assert_eq!(clamped(&rectangle(4.0), &way), [p(0.0, 1.0), p(0.0, 2.5), p(1.0, 3.0)]);
+    }
+
+    #[test]
+    fn a_way_that_comes_back_in_beside_where_it_left_follows_the_ring_unless_nearer_than_0_02_px() {
+        // Round the top right corner: out at (9.995, 0), back at (10, 0.005), 0.007 mm apart, more than
+        // 0.02 px (0.0053 mm): the ring takes the way round the corner.
+        let way = [p(9.987, 0.003), p(10.003, -0.003), p(9.997, 0.013)];
+        assert_eq!(clamped(&rectangle(4.0), &way), [p(9.987, 0.003), p(9.995, 0.0), p(10.0, 0.0), p(10.0, 0.005), p(9.997, 0.013)]);
+        // Out at (9.998, 0) and back at (10, 0.002), 0.003 mm apart: one point, and the way goes straight on.
+        let way = [p(9.994, 0.002), p(10.002, -0.002), p(9.998, 0.006)];
+        assert_eq!(clamped(&rectangle(4.0), &way), [p(9.994, 0.002), p(9.998, 0.0), p(10.0, 0.002), p(9.998, 0.006)]);
+        // Exactly 0.02 px apart is one point too, as Ink/Stitch's circles that touch meet. The way goes up
+        // through the top side at x = 10 - 2^-10, round outside the corner, and back in through the right
+        // side at a height that puts the 2 points exactly 0.02 px apart.
+        let (x, y, d) = (10.0 - 1.0 / 1024.0, 0.005_200_775_114_798_261, 1.0 / 1024.0);
+        let way = [p(x, d), p(x, -d), p(10.0 + d, -d), p(10.0 + d, y), p(10.0 - d, y)];
+        let meter = &mut Budget::DEFAULT.meter();
+        let part = rectangle(4.0);
+        let rings = Rings::new(&part, meter).unwrap();
+        let clamped = clamp(&way, &part, &rings, meter).unwrap();
+        assert_eq!(clamped, [p(x, d), p(x, 0.0), p(10.0, y), p(10.0 - d, y)]);
+        assert_eq!(clamped[1].distance(clamped[2]), NEAR);
     }
 
     #[test]
@@ -214,6 +231,14 @@ mod tests {
     fn a_way_wholly_outside_follows_the_outline_between_its_nearest_points() {
         let way = [p(-1.0, 1.0), p(-1.0, 3.0)];
         assert_eq!(clamped(&rectangle(4.0), &way), [p(0.0, 1.0), p(0.0, 3.0)]);
+    }
+
+    #[test]
+    fn points_a_rounding_error_apart_are_one_point() {
+        // 1e-9 mm apart, the region's tolerance, is one point; any farther, 2.
+        let mut kept = vec![p(0.0, 0.0)];
+        extend(&mut kept, vec![p(0.0, 1e-9), p(0.0, 2e-9)]);
+        assert_eq!(kept, [p(0.0, 0.0), p(0.0, 2e-9)]);
     }
 
     #[test]
