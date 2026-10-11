@@ -175,7 +175,7 @@ pub static SHEETS: &[TestSheet] = &[
         checks: &[
             "Rows, top to bottom, are at row spacings of 0.25, 0.3, 0.4, 0.5 and 0.6 mm, and the columns at angles of 0°, 45° and 90°, left to right. Each square is 30 mm wide.",
             "Coverage: in which squares does the fabric show between the rows? Rate each row of squares 1 (bare) to 5 (solid).",
-            "At 0.25 mm the rows lie nearer each other than the machine's shortest stitch of 0.3 mm, so each row's first needle point is left out. Does a sliver of fabric show at the rows' starts, along the squares' edges?",
+            "At 0.25 mm the rows lie nearer each other than the machine's shortest stitch of 0.3 mm. In the 0° and 90° squares, whose edges meet the rows square on, each row's first needle point is left out: does a sliver of fabric show at the rows' starts, along those edges? The 45° square's rows end 0.35 mm apart along its edges and keep their starts.",
             "Stiffness: rate each row of squares 1 (soft) to 5 (stiff as card). Is there puckering round any square, or furrows where needle points line up?",
             "Measure the 0° and the 90° square at 0.4 mm across, both ways. How much less than 30 mm are they?",
         ],
