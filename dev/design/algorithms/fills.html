@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-b9299949.js";
+            window.path_to_searchindex_js = "../../searchindex-bf1e2529.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-f616c49b.js"></script>
@@ -181,11 +181,54 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="fill-generators"><a class="header" href="#fill-generators">Fill generators</a></h1>
-<p>Fills cover a <code>Region</code> (valid polygons with holes, from the normalizer). Tatami is P1 (M5); contour,
-meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).</p>
+<!-- implements: crates/stitchcraft-engine/src/normalize/region/** -->
+<p>A fill covers the area its path bounds, its <a href="#region">region</a>, with rows of stitches. Tatami is P1 (M5);
+contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).</p>
+<p>A fill sews the drawing’s shape with Ink/Stitch’s stitches. Ink/Stitch’s rows, their spacing and stagger,
+the order it sews them in, its travel, underlay and compensation are what make its fills look good
+embroidered. StitchCraft keeps them, with their parameters’ names and defaults, and a file sews alike in
+both. Where the area Ink/Stitch fills departs from the drawing, StitchCraft follows the drawing, and a
+diagnostic says where the two differ. A part Ink/Stitch leaves out without a word is left out with a
+warning.</p>
+<h2 id="region"><a class="header" href="#region">Region</a></h2>
+<p>A fill’s region is the area an SVG renderer paints for its path, in parts with holes
+(<code>stitchcraft_engine::normalize::region</code>, <code>REQ-FILL-001</code>):</p>
+<ol>
+<li><strong>Rings.</strong> Each subpath is flattened within a tenth of a CSS pixel, as Ink/Stitch flattens a fill’s
+outline, and closed. A subpath of fewer than 3 distinct points bounds nothing and is left out
+(<code>DEV-FILL-002</code>).</li>
+<li><strong>Cuts.</strong> Wherever 2 segments cross, touch or run along each other, both are cut there. Which side of
+a line a point lies on is decided exactly. A point on a segment is then found on it, and segments that
+only touch are never taken to cross. Where 2 segments cross inside both, the crossing is worked out in
+floating point, and a crossing within 10⁻⁹ mm of a point already found is that point. A stretch drawn
+more than once becomes one edge that counts how many times it was drawn each way.</li>
+<li><strong>Faces.</strong> The edges bound faces. Outside everything the winding number is 0, and crossing an edge
+from its right to its left adds its count. Every face’s winding number follows from its neighbours’
+in whole numbers.</li>
+<li><strong>Fill rule.</strong> A face is filled when its winding number is not 0 (<code>nonzero</code>, SVG’s default) or is odd
+(<code>evenodd</code>). Ink/Stitch fills every fill as if its rule were even-odd. Where <code>nonzero</code> fills a face
+that even-odd leaves empty, StitchCraft fills it and <code>SC-I0306</code> says so (<code>DEV-FILL-001</code>).</li>
+<li><strong>Rings of the parts.</strong> The edges between filled and empty faces are joined into rings with the
+filled side on their right. Outlines turn clockwise and holes counter-clockwise in y-up axes, the other
+way round on screen, where y points down. Where rings meet at a point, they are joined the way GEOS
+joins them, the geometry library behind Ink/Stitch’s shapes. Parts that touch at a point stay apart. A
+hole that touches its outline stays a hole. Each ring starts at its point that comes first in the
+drawing, and parts and holes keep the drawing’s order too.</li>
+<li><strong>Parts too small to sew.</strong> A part of 3 square CSS pixels or less (0.21 mm²) is too small for a row
+of stitches and is left out. Ink/Stitch leaves it out without a word. StitchCraft says so with
+<code>SC-W0303</code> (<code>REQ-FILL-002</code>). A fill under 20 square CSS pixels (1.4 mm²) gets <code>SC-W0304</code>, as
+Ink/Stitch warns of it. A fill in parts gets <code>SC-W0307</code>, since each part is sewn on its own.</li>
+</ol>
+<p>The work is charged to the element’s budget, one unit for each point, segment, cut, half edge, pair of
+segments whose spans along x overlap, and ring compared with a face. Property tests draw random rings on
+a grid and count how many times they wind round points off the edges. Such a point lies in the region
+exactly when the fill rule fills it, unless it lies in a part left out. Every ring found is simple and
+turns the right way.</p>
 <h2 id="tatami-fill"><a class="header" href="#tatami-fill">Tatami fill</a></h2>
 <p>Parallel rows of running stitches across the region, with the needle points of neighbouring rows offset
-so they never line up into visible furrows. Most fills in most designs are tatami.</p>
+so they never line up into visible furrows. Most fills in most designs are tatami. Each step below sews
+as Ink/Stitch sews, on StitchCraft’s region, unless it says where it differs. The roadmap’s M5 steps
+build them in this order.</p>
 <p><strong>Parameters:</strong> <code>angle</code>, <code>row_spacing_mm</code>, <code>end_row_spacing_mm</code>, <code>max_stitch_length_mm</code>, <code>staggers</code>,
 <code>skip_last</code>, <code>underpath</code>, <code>running_stitch_length_mm</code>, <code>running_stitch_tolerance_mm</code>, <code>gap_fill_rows</code>,
 <code>pull_compensation_mm</code>, <code>pull_compensation_percent</code>, <code>expand_mm</code>, <code>random_seed</code>,
@@ -193,58 +236,58 @@ so they never line up into visible furrows. Most fills in most designs are tatam
 <code>fill_underlay_angle</code>, <code>fill_underlay_row_spacing_mm</code>, <code>fill_underlay_max_stitch_length_mm</code>,
 <code>fill_underlay_inset_mm</code>, <code>fill_underlay_skip_last</code>, <code>underlay_underpath</code>.</p>
 <h3 id="1-rows"><a class="header" href="#1-rows">1. Rows</a></h3>
-<ol>
-<li>Rotate the region by <code>−angle</code> so rows are horizontal (the rotation and its inverse are exact affine
-maps; all later geometry happens in this frame).</li>
-<li>Apply <code>expand_mm</code> as an offset of the region (a deliberate shape change the user asked for).</li>
-<li>Cast scan lines at <code>y = y₀ + k·spacing</code>. With <code>end_row_spacing_mm</code> the spacing varies linearly from
-the first to the last row (a density gradient). <code>y₀</code> is anchored to a global grid (multiples of the
-spacing from the design origin) so adjacent regions with the same settings share rows.</li>
-<li>Intersect each scan line with every edge using the half-open rule (an edge spans <code>[y_min, y_max)</code>),
-so a vertex exactly on a scan line is counted once. Sort the crossings; consecutive pairs are the
-row <em>segments</em> inside the region.</li>
-<li><strong>Pull compensation extends each segment at both ends</strong> by <code>pull_compensation_mm + pull_compensation_percent × segment length</code> (one value or two values for start/end side), clipped so
-it never reaches into a neighbouring segment of the same row. Holes, gaps and separate components
-keep their topology — the shape is never buffered as a whole, which would close gaps the designer
-left on purpose (<code>REQ-FILL-TAT-006</code>).</li>
-</ol>
+<p>Rows run across the region at <code>angle</code>, <code>row_spacing_mm</code> apart, on lines a whole number of spacings from
+the design’s origin. Fills side by side at the same angle and spacing then share their rows. With
+<code>end_row_spacing_mm</code> the spacing changes steadily from the first row to the last. Where a row crosses
+the region more than once, each stretch inside is a <em>segment</em>. A row that only touches the region at a
+point has none.</p>
 <h3 id="2-needle-points-along-a-row"><a class="header" href="#2-needle-points-along-a-row">2. Needle points along a row</a></h3>
-<p>Needle points fall on a global grid along the row direction: positions where
-<code>(x + offset_k) mod max_stitch_length = 0</code>, with <code>offset_k = (k mod staggers) / staggers × max_stitch_length</code> for row k. The segment’s two ends are always penetrations; a grid point closer than
-the minimum stitch length to an end is dropped. Optional random length jitter perturbs grid points by
-the seeded jitter without changing the ends. <code>skip_last</code> omits the final penetration of each row (a
-softer edge where rows turn).</p>
-<h3 id="3-routing-covering-every-segment-with-little-travel"><a class="header" href="#3-routing-covering-every-segment-with-little-travel">3. Routing: covering every segment with little travel</a></h3>
-<p>Treat the row segments as edges that must be sewn exactly once, and the region’s boundary and interior
-as places where the needle may travel. This is a rural postman problem; we use a standard coverage
-decomposition instead of a general solver:</p>
-<ol>
-<li><strong>Boustrophedon cells.</strong> Sweep the rows in order and group segments into <em>cells</em>: maximal stacks of
-consecutive rows with exactly one segment each that overlap their neighbours (Choset &amp; Pignon’s
-boustrophedon cellular decomposition). A cell is sewn back and forth with no travel at all.</li>
-<li><strong>Cell graph.</strong> Cells that touch (share a split or merge event) are adjacent. Order cells with a
-depth-first traversal of this graph starting from the cell nearest the entry hint, preferring the
-neighbour whose start is nearest the current exit; ties break by cell index (determinism).</li>
-<li><strong>Travel between cells</strong> follows the shortest path <em>inside</em> the region on a visibility graph of the
-region’s vertices (A* with Euclidean heuristic). With <code>underpath</code> the travel may cross the interior
-(it is covered by later rows); without it, travel follows the boundary. Travel is sewn as running
-stitch with <code>running_stitch_length_mm</code>.</li>
-<li><strong>Disconnected parts.</strong> If no inside path exists (the region has separate components), the parts are
-planned as separate sub-groups joined by tie-off → jump/trim → tie-in, with <code>SC-W0307</code> — never a
-straight stitch across empty fabric (<code>SC-W0501</code>), and never a silent change to what is sewn.</li>
-<li><strong>Exit.</strong> The last cell is chosen, when possible, to end near the exit hint.</li>
-</ol>
-<h3 id="4-gap-fill-rows"><a class="header" href="#4-gap-fill-rows">4. Gap-fill rows</a></h3>
-<p><code>gap_fill_rows</code> adds extra rows along the joins between cells (where fabric distortion opens gaps).
-They come from the same scan-line machinery and are clipped to the region (<code>REQ-FILL-TAT-007</code>), never
-copies of a previous row shifted along the stitch angle.</p>
-<h3 id="5-underlay"><a class="header" href="#5-underlay">5. Underlay</a></h3>
-<p>The same algorithm on the region inset by <code>fill_underlay_inset_mm</code>, at <code>fill_underlay_angle</code> (default:
-<code>angle + 90°</code>), with <code>fill_underlay_row_spacing_mm</code> (default: three times the top spacing) and its own
-maximum stitch length, sewn first and routed to end near the start of the top layer.</p>
-<h3 id="6-tiny-regions"><a class="header" href="#6-tiny-regions">6. Tiny regions</a></h3>
-<p>If no scan line meets the region (it is thinner than the row spacing), the generator outlines it with a
-running stitch and emits <code>SC-W0305</code> — the user decides whether that is acceptable.</p>
+<p>A row’s needle points lie on a grid along it, <code>max_stitch_length_mm</code> apart and anchored at the origin.
+Each next row’s grid is shifted by <code>1/staggers</code> of a stitch, and fills side by side tile. A segment
+starts with a needle point at its start, then takes the grid’s points. Its end gets one too, unless
+<code>skip_last</code> is on or the last grid point is within 0.1 mm of it. With <code>enable_random_stitch_length</code> the
+points are spaced by the seeded random lengths instead.</p>
+<h3 id="3-routing-every-segment-once"><a class="header" href="#3-routing-every-segment-once">3. Routing: every segment once</a></h3>
+<p>The segments’ ends lie on the region’s outline. Joined by the stretches of outline between neighbouring
+ends, every other stretch twice and more where needed, they make a graph in which every point meets an
+even number of edges. One path can then take every edge (Hierholzer). The fill starts at the point
+nearest the needle and goes first to where it will end. That is the point of its outline nearest the
+next element’s first stitch, or its start when nothing follows. From there it sews its segments in one
+loop that comes back there, taking a segment wherever one is left. The rows go back and forth like a mown
+lawn, and the rows sewn later hide the way the needle came. Between segments the needle runs along the
+outline in running stitches (<code>running_stitch_length_mm</code>, <code>running_stitch_tolerance_mm</code>).</p>
+<h3 id="4-travel-under-the-rows"><a class="header" href="#4-travel-under-the-rows">4. Travel under the rows</a></h3>
+<p>With <code>underpath</code>, on by default, travel may cross the region where rows sewn later will cover it. It
+follows lines square to the rows and lines at 45° to them either way. A line costs less the farther it
+lies from the outline. Once a row is sewn, the lines crossing it are closed: no travel runs over a row
+already sewn. Travel stays inside the region (<code>REQ-FILL-TAT-005</code>). Where no way inside joins 2 points,
+the parts are joined as below, and <code>SC-W0501</code> says so.</p>
+<h3 id="5-parts"><a class="header" href="#5-parts">5. Parts</a></h3>
+<p>A region in parts sews them one at a time, in order of their distance from the needle. Each part ends
+at its point nearest the next part, and the last nearest the next element. Jumps join the parts, with
+ties and trims where the element’s settings say, never stitches across empty fabric (<code>SC-W0307</code>,
+<code>REQ-FILL-TAT-008</code>).</p>
+<h3 id="6-underlay"><a class="header" href="#6-underlay">6. Underlay</a></h3>
+<p>Before its top rows, each part sews its underlay, on by default. The underlay is sewn like the top
+rows, on the part shrunk by <code>fill_underlay_inset_mm</code>. It makes one pass for each angle in
+<code>fill_underlay_angle</code> (default: <code>angle + 90°</code>), with <code>fill_underlay_row_spacing_mm</code> (default: three
+times the top spacing) and <code>fill_underlay_max_stitch_length_mm</code> (default: the top’s).
+<code>fill_underlay_skip_last</code> and <code>underlay_underpath</code> take the place of <code>skip_last</code> and <code>underpath</code>. Each pass
+starts where the one before ended. The top rows cover the part grown by <code>expand_mm</code>.</p>
+<h3 id="7-pull-compensation-and-gap-fill-rows"><a class="header" href="#7-pull-compensation-and-gap-fill-rows">7. Pull compensation and gap-fill rows</a></h3>
+<p>The thread pulls a row in at its ends. Each segment is lengthened at both ends by <code>pull_compensation_mm</code>
+plus <code>pull_compensation_percent</code> of its length (one value, or one for each end). Ink/Stitch then rebuilds
+the region round the lengthened rows, which can close a hole or a gap narrower than the compensation.
+StitchCraft keeps the region’s holes, gaps and parts, which the designer may have left on purpose
+(<code>REQ-FILL-TAT-006</code>).</p>
+<p>Where the needle leaves a stretch of more than 3 rows for another, the fabric can open a gap along its
+last row. There, <code>gap_fill_rows</code> (rounded up to an even number) sews that many more rows, back and forth.
+Ink/Stitch repeats the last row, a row further on each time, and a repeat can run outside the region.
+StitchCraft takes the extra rows from the row grid and keeps them inside the region
+(<code>REQ-FILL-TAT-007</code>).</p>
+<h3 id="8-no-rows"><a class="header" href="#8-no-rows">8. No rows</a></h3>
+<p>If no row meets the region (it is thinner than the row spacing), it is sewn as a running stitch round
+its outline, as Ink/Stitch sews it, and <code>SC-W0305</code> says so.</p>
 <h3 id="properties-conformance"><a class="header" href="#properties-conformance">Properties (conformance)</a></h3>
 <div class="table-wrapper">
 <table>
@@ -259,7 +302,7 @@ running stitch and emits <code>SC-W0305</code> — the user decides whether that
 <tr><td><code>REQ-FILL-TAT-005</code></td><td>Travel stitches lie inside the region (± 0.05 mm)</td></tr>
 <tr><td><code>REQ-FILL-TAT-006</code></td><td>Pull compensation preserves the number of holes and components</td></tr>
 <tr><td><code>REQ-FILL-TAT-007</code></td><td>All rows, including gap-fill rows, lie inside the region (± tolerance + compensation)</td></tr>
-<tr><td><code>REQ-FILL-TAT-008</code></td><td>Disconnected regions yield trims and <code>SC-W0307</code>, never long straight stitches</td></tr>
+<tr><td><code>REQ-FILL-TAT-008</code></td><td>A region in parts sews each part on its own, joined by jumps and <code>SC-W0307</code>, never long straight stitches</td></tr>
 <tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget</td></tr>
 </tbody>
 </table>
@@ -313,12 +356,8 @@ it; crosses use <code>cross_stitch_method</code> (simple, half, upright, double,
 routed row by row. Specified at M10.</p>
 <h2 id="references"><a class="header" href="#references">References</a></h2>
 <ul>
-<li>H. Choset and P. Pignon, “Coverage Path Planning: The Boustrophedon Cellular Decomposition,” <em>Field and
-Service Robotics</em>, Springer, 1998.</li>
 <li>H. Zhao et al., “Connected Fermat Spirals for Layered Fabrication,” <em>ACM Transactions on Graphics</em>
 35(4), SIGGRAPH 2016.</li>
-<li>H. A. Eiselt, M. Gendreau, G. Laporte, “Arc Routing Problems, Part II: The Rural Postman Problem,”
-<em>Operations Research</em> 43(3), 1995.</li>
 <li>C. Hierholzer, “Über die Möglichkeit, einen Linienzug ohne Wiederholung und ohne Unterbrechung zu
 umfahren,” <em>Mathematische Annalen</em> 6, 1873.</li>
 <li>D. Hilbert, “Über die stetige Abbildung einer Linie auf ein Flächenstück,” <em>Mathematische Annalen</em> 38, 1891.</li>

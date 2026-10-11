@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b9299949.js";
+            window.path_to_searchindex_js = "searchindex-bf1e2529.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-f616c49b.js"></script>
@@ -1321,6 +1321,10 @@ Arguments:
 <tr><td><a href="#sc-w0212"><code>SC-W0212</code></a></td><td>Warning</td><td>Satin column drawn as one path too narrow; sewn as a stroke</td></tr>
 <tr><td><a href="#sc-w0213"><code>SC-W0213</code></a></td><td>Warning</td><td>Parts of a satin column drawn as one path left out</td></tr>
 <tr><td><a href="#sc-e0214"><code>SC-E0214</code></a></td><td>Error</td><td>Satin column drawn as one path could not be made into rails</td></tr>
+<tr><td><a href="#sc-w0303"><code>SC-W0303</code></a></td><td>Warning</td><td>Parts of a fill too small to sew left out</td></tr>
+<tr><td><a href="#sc-w0304"><code>SC-W0304</code></a></td><td>Warning</td><td>Fill smaller than 1.4 mm²</td></tr>
+<tr><td><a href="#sc-i0306"><code>SC-I0306</code></a></td><td>Info</td><td>Nonzero fill rule fills a part the even-odd rule leaves empty</td></tr>
+<tr><td><a href="#sc-w0307"><code>SC-W0307</code></a></td><td>Warning</td><td>Fill in parts that are apart; each sewn on its own</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -1483,6 +1487,33 @@ itself or turns more tightly than the column is wide, or make the stroke narrowe
 however it is cut, an offset vanishes because the stroke is wider than the line’s turns allow, or
 the line is shorter than a CSS pixel. The column is not sewn.</p>
 <p>Draw the column with 2 rails, or make the stroke narrower.</p>
+<h2 id="sc-w0303"><a class="header" href="#sc-w0303">SC-W0303</a></h2>
+<p><strong>Warning</strong> — Parts of a fill too small to sew left out</p>
+<p>A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
+square CSS pixels), a speck about half a millimetre across, is too small for a row, so it is left
+out, as Ink/Stitch leaves it out. Where every part is that small, the fill sews nothing.</p>
+<p>The message counts the parts left out and is placed at the first. Draw them larger, or sew them as a
+running stitch.</p>
+<h2 id="sc-w0304"><a class="header" href="#sc-w0304">SC-W0304</a></h2>
+<p><strong>Warning</strong> — Fill smaller than 1.4 mm²</p>
+<p>This fill covers less than 1.4 mm² (20 square CSS pixels). Rows of stitches packed into so small an
+area pile up, and a running stitch round it or a satin column across it usually sews it better.
+Ink/Stitch gives the same advice. The fill is kept as drawn.</p>
+<h2 id="sc-i0306"><a class="header" href="#sc-i0306">SC-I0306</a></h2>
+<p><strong>Info</strong> — Nonzero fill rule fills a part the even-odd rule leaves empty</p>
+<p>A fill’s fill rule says which parts of it are filled where its subpaths lie inside each other or
+overlap. Under the rule <code>nonzero</code>, SVG’s default, a part that the subpaths wind round twice the same
+way is filled; the even-odd rule leaves it empty. StitchCraft fills it, as the drawing shows it.
+Ink/Stitch fills every shape by the even-odd rule, so the same file leaves that part empty in
+Ink/Stitch.</p>
+<p>To leave the part empty in both, set the fill rule to even-odd, or draw the inner subpath the other
+way round.</p>
+<h2 id="sc-w0307"><a class="header" href="#sc-w0307">SC-W0307</a></h2>
+<p><strong>Warning</strong> — Fill in parts that are apart; each sewn on its own</p>
+<p>A fill whose area falls into separate parts, such as one drawn as several shapes side by side, or
+an outline that crosses itself, is sewn one part after another: each part’s rows on their own, with
+a jump to the next, which the plan may trim. Ink/Stitch warns about such fills too.</p>
+<p>To choose the order the parts are sewn in, break the fill apart into one element for each part.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
@@ -2592,8 +2623,8 @@ hint; each code has a generated explanation page (<a href="#diagnostics">diagnos
 <h2 id="8-engine-pipeline-summary"><a class="header" href="#8-engine-pipeline-summary">8. Engine pipeline (summary)</a></h2>
 <p>Detailed in <a href="#engine-pipeline">engine pipeline</a>.</p>
 <ol>
-<li><strong>Normalize</strong> each element: flatten curves to tolerance, make regions valid under their fill
-rule, drop degenerate pieces (with a diagnostic), convert units.</li>
+<li><strong>Normalize</strong> each element. Curves are flattened to tolerance, and each fill’s region is built by
+its fill rule. Degenerate pieces are dropped with a diagnostic.</li>
 <li><strong>Validate</strong> parameters against the registry (type, range, applicability) and shapes against the
 stitch type (e.g. a satin needs two rails).</li>
 <li><strong>Generate</strong> a <code>StitchGroup</code> per element with its stitch type’s generator. Generators are pure
@@ -2621,9 +2652,10 @@ check the hoop and colour limits.</li>
 </tbody>
 </table>
 </div>
-<p>Each generator is designed from public embroidery practice and published algorithms (for example
-boustrophedon cell decomposition for fill routing and Connected Fermat Spirals for spiral fills),
-cited in its page.</p>
+<p>Generators follow Ink/Stitch’s stitch placement, worked out from its behaviour and from published
+algorithms such as an Eulerian path through a fill’s rows, or Connected Fermat Spirals for spiral fills.
+Each generator’s page cites them. Where one differs, <code>conformance/deviations.toml</code> says how and
+why.</p>
 <h2 id="10-machine-formats"><a class="header" href="#10-machine-formats">10. Machine formats</a></h2>
 <p>PES (v1 header + PEC block) and DST first, then EXP, JEF, VP3, XXX, U01. Writers quantize once,
 encode commands per the format’s rules and validate against limits (displacement per record, colour
@@ -2803,7 +2835,7 @@ GPL/AGPL/LGPL.</p>
 </thead>
 <tbody>
 <tr><td>Curves, affine (strokes are flattened by the engine, for determinism)</td><td><code>kurbo</code> 0.13</td><td>MIT/Apache</td><td>core, engine, adapters</td></tr>
-<tr><td>Polygon booleans, offsets</td><td><code>i_overlay</code> 9</td><td>MIT/Apache</td><td>engine</td></tr>
+<tr><td>Polygon booleans, offsets (a fill’s region and a satin’s offset rails are built by the engine)</td><td><code>i_overlay</code> 9</td><td>MIT/Apache</td><td>engine</td></tr>
 <tr><td>Spatial index</td><td><code>rstar</code> 0.13</td><td>MIT/Apache</td><td>engine</td></tr>
 <tr><td>Graphs</td><td><code>petgraph</code> 0.8</td><td>MIT/Apache</td><td>engine</td></tr>
 <tr><td>Deterministic transcendental math</td><td><code>libm</code> 0.2</td><td>MIT</td><td>core</td></tr>
@@ -2950,18 +2982,18 @@ makes a stroke that says nothing of either: 1 CSS pixel wide, with <code>Join::U
 ±10,000 mm, as far as machine-file coordinates go. No stroke is narrower than 0, a miter limit is a
 finite number of at least 1, and the settings’ lengths are not negative. Adapters drop what they cannot
 represent with a diagnostic of their own, so a failed check is a bug in the adapter (<code>SC-E0009</code>).</p>
-<p>Still to come, each with the step that needs it:</p>
-<ul>
-<li><strong>regions</strong>, fills normalized into polygons with holes (M5.1, <a href="#region">below</a>);</li>
-<li><strong>commands</strong> attached to elements, start and end points and targets (M8, for Ink/Stitch’s command
-symbols); trims and stops are the element parameters <code>trim_after</code> and <code>stop_after</code>, and the origin and
-stop position are design settings (M3.8).</li>
-</ul>
+<p><strong>Commands</strong> attached to elements come with M8, for Ink/Stitch’s command symbols such as start and end
+points. Trims and stops are the element parameters <code>trim_after</code> and <code>stop_after</code>, and the origin and
+stop position are design settings (M3.8).</p>
 <h3 id="region"><a class="header" href="#region">Region</a></h3>
-<p><code>Region</code> is a set of <code>Polygon { exterior: Ring, holes: Vec&lt;Ring&gt; }</code> produced by the normalizer from
-the host’s paths and fill rule (even-odd or non-zero). Curves are flattened with the element’s
-tolerance before booleans. Rings with area below <code>min_region_area</code> (default 0.01 mm²) are dropped with
-<code>SC-W0303</code>.</p>
+<p>A fill’s region is not part of the design: the normalizer builds it from the fill’s path and fill rule,
+since M5.1 (<code>stitchcraft_engine::normalize::region</code>):</p>
+<pre><code class="language-rust ignore">pub struct Region { pub parts: Vec&lt;Polygon&gt; }   // in the order the drawing reaches them
+pub struct Polygon { pub outline: Vec&lt;Point&gt;, pub holes: Vec&lt;Vec&lt;Point&gt;&gt; }   // closed rings, in millimetres</code></pre>
+<p>Each ring starts at its point that comes first in the drawing, and repeats it at its end. Outlines turn
+clockwise and holes counter-clockwise in y-up axes, and in those axes the region lies on the right of
+every ring. Parts of 3 square CSS pixels (0.21 mm²) or less are left out, with <code>SC-W0303</code>. The
+<a href="#region-1">fills design</a> builds the region step by step.</p>
 <h3 id="satinshape"><a class="header" href="#satinshape">SatinShape</a></h3>
 <p>A satin column’s path is recognized, since M4.1, as one of 2 shapes (<code>stitchcraft_engine::normalize::satin</code>):</p>
 <pre><code class="language-rust ignore">pub enum Shape {
@@ -3347,9 +3379,11 @@ another.</p>
 <tr><td><code>SC-W0212</code></td><td>Warning</td><td>Satin column drawn as one path too narrow; sewn as a stroke</td><td>M4</td></tr>
 <tr><td><code>SC-W0213</code></td><td>Warning</td><td>Parts of a satin column drawn as one path left out (still crossing after 20 cuts in half, or turning too tightly for its width)</td><td>M4</td></tr>
 <tr><td><code>SC-E0214</code></td><td>Error</td><td>Satin column drawn as one path could not be made into rails (too short, or too tight for its width)</td><td>M4</td></tr>
-<tr><td><code>SC-W0303</code></td><td>Warning</td><td>Tiny ring dropped from fill region</td><td>M5</td></tr>
+<tr><td><code>SC-W0303</code></td><td>Warning</td><td>Parts of a fill too small to sew left out (3 square CSS pixels or less, as in Ink/Stitch)</td><td>M5</td></tr>
+<tr><td><code>SC-W0304</code></td><td>Warning</td><td>Fill smaller than 1.4 mm² (20 square CSS pixels); a running stitch or a satin column may sew it better</td><td>M5</td></tr>
 <tr><td><code>SC-W0305</code></td><td>Warning</td><td>Region too small for fill rows; outlined with running stitch instead</td><td>M5</td></tr>
-<tr><td><code>SC-W0307</code></td><td>Warning</td><td>Region split into parts that are not connected; parts joined with trims</td><td>M5</td></tr>
+<tr><td><code>SC-I0306</code></td><td>Info</td><td>Nonzero fill rule fills a part the even-odd rule leaves empty (Ink/Stitch leaves it empty)</td><td>M5</td></tr>
+<tr><td><code>SC-W0307</code></td><td>Warning</td><td>Fill in parts that are apart; each sewn on its own, joined by jumps</td><td>M5</td></tr>
 <tr><td><code>SC-W0311</code></td><td>Warning</td><td>Spiral could not be connected in a narrow part; that part uses inner-to-outer contours</td><td>M7</td></tr>
 <tr><td><code>SC-W0401</code></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td><td>M3</td></tr>
 <tr><td><code>SC-W0402</code></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest</td><td>M3</td></tr>
@@ -3501,18 +3535,19 @@ own tests; stages communicate only through the types in the <a href="#data-model
 <h2 id="1-normalize"><a class="header" href="#1-normalize">1. Normalize</a></h2>
 <p>Per element, independent of the others:</p>
 <ul>
-<li><strong>Flatten curves</strong> with the element’s tolerance (default 0.1 mm for fills, a tenth of
-<code>running_stitch_tolerance_mm</code> for strokes, and a tenth of a CSS pixel for satin columns, as Ink/Stitch
-flattens them). Strokes and satin columns are halved (de Casteljau) until each piece’s
-control points lie within the tolerance of its chord (<code>stitchcraft_engine::normalize::stroke</code>), using
-only arithmetic and square roots so that every platform gets the same points. <code>kurbo</code>’s adaptive
-flattening is not used for this: in 0.13 it calls <code>powf</code> (<code>CubicBez::to_quads</code>) and <code>hypot</code>
-(<code>QuadBez::estimate_subdiv</code>) from the platform’s maths library, whose last bits differ between
-systems (<a href="#determinism-1">determinism</a>). Corners, joins between segments that turn by more than 30°,
-are marked so running stitches land exactly on them; a curve’s own bend is never a corner.</li>
-<li><strong>Regions:</strong> resolve the fill rule into valid polygons with holes (<code>i_overlay</code>), snap to a 1 µm grid
-first so near-coincident vertices become coincident, drop rings under the minimum area (<code>SC-W0303</code>),
-orient rings explicitly.</li>
+<li><strong>Flatten curves</strong> with the element’s tolerance (a tenth of <code>running_stitch_tolerance_mm</code> for strokes,
+and a tenth of a CSS pixel for fills and satin columns, as Ink/Stitch flattens them). Curves are halved
+(de Casteljau) until each piece’s control points lie within the tolerance of its chord
+(<code>stitchcraft_engine::normalize::stroke</code>), using only arithmetic and square roots so that every
+platform gets the same points. <code>kurbo</code>’s adaptive flattening is not used for this: in 0.13 it calls
+<code>powf</code> (<code>CubicBez::to_quads</code>) and <code>hypot</code> (<code>QuadBez::estimate_subdiv</code>) from the platform’s maths
+library, whose last bits differ between systems (<a href="#determinism-1">determinism</a>). Corners, joins between
+segments that turn by more than 30°, are marked so running stitches land exactly on them; a curve’s own
+bend is never a corner.</li>
+<li><strong>Regions:</strong> a fill’s subpaths are cut wherever they meet, and its fill rule says which faces between
+them are filled. The edges between filled and empty faces become outlines and holes, each turned one
+way, and parts too small to sew are left out with <code>SC-W0303</code>
+(<a href="#region-1">fills › Region</a>, <code>stitchcraft_engine::normalize::region</code>).</li>
 <li><strong>Satins:</strong> classify subpaths into rails and rungs (<a href="#recognizing-rails-and-rungs">satin</a>), or make
 them from a column’s centre line (<a href="#single-path-satin">single-path satin</a>).</li>
 <li><strong>Strokes:</strong> each subpath becomes its own path piece, in document order.</li>
@@ -3543,8 +3578,10 @@ that join its underlays are no longer than the first value. For any other stroke
 <code>manual_stitch</code> are sewn from M3. A satin column drawn as one path no wider than the design’s
 <code>min_satin_stroke_width</code> is sewn as a stroke, with <code>SC-W0212</code>, as in Ink/Stitch (<code>REQ-SAT-015</code>). A wider
 one is sewn between rails made from its line from M4.9 (<code>REQ-SAT-016</code>). The other stroke and satin
-methods, and fills, are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are
-wrong (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
+methods, and fills, are skipped with <code>SC-W0011</code> until their milestones. A fill’s region is built
+already, so what it leaves out and how it will be sewn are said (<code>SC-W0303</code>, <code>SC-W0304</code>, <code>SC-I0306</code>,
+<code>SC-W0307</code>). An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and the rest of the
+design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element
 sets none. A satin column is given its longest stitch as well, the element’s <code>max_stitch_length_mm</code>,
@@ -4358,11 +4395,54 @@ against every other, and its winding against every segment of the ring. A line o
 to about 17 million units of work for each offset.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="fill-generators"><a class="header" href="#fill-generators">Fill generators</a></h1>
-<p>Fills cover a <code>Region</code> (valid polygons with holes, from the normalizer). Tatami is P1 (M5); contour,
-meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).</p>
+<!-- implements: crates/stitchcraft-engine/src/normalize/region/** -->
+<p>A fill covers the area its path bounds, its <a href="#region-1">region</a>, with rows of stitches. Tatami is P1 (M5);
+contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).</p>
+<p>A fill sews the drawing’s shape with Ink/Stitch’s stitches. Ink/Stitch’s rows, their spacing and stagger,
+the order it sews them in, its travel, underlay and compensation are what make its fills look good
+embroidered. StitchCraft keeps them, with their parameters’ names and defaults, and a file sews alike in
+both. Where the area Ink/Stitch fills departs from the drawing, StitchCraft follows the drawing, and a
+diagnostic says where the two differ. A part Ink/Stitch leaves out without a word is left out with a
+warning.</p>
+<h2 id="region-1"><a class="header" href="#region-1">Region</a></h2>
+<p>A fill’s region is the area an SVG renderer paints for its path, in parts with holes
+(<code>stitchcraft_engine::normalize::region</code>, <code>REQ-FILL-001</code>):</p>
+<ol>
+<li><strong>Rings.</strong> Each subpath is flattened within a tenth of a CSS pixel, as Ink/Stitch flattens a fill’s
+outline, and closed. A subpath of fewer than 3 distinct points bounds nothing and is left out
+(<code>DEV-FILL-002</code>).</li>
+<li><strong>Cuts.</strong> Wherever 2 segments cross, touch or run along each other, both are cut there. Which side of
+a line a point lies on is decided exactly. A point on a segment is then found on it, and segments that
+only touch are never taken to cross. Where 2 segments cross inside both, the crossing is worked out in
+floating point, and a crossing within 10⁻⁹ mm of a point already found is that point. A stretch drawn
+more than once becomes one edge that counts how many times it was drawn each way.</li>
+<li><strong>Faces.</strong> The edges bound faces. Outside everything the winding number is 0, and crossing an edge
+from its right to its left adds its count. Every face’s winding number follows from its neighbours’
+in whole numbers.</li>
+<li><strong>Fill rule.</strong> A face is filled when its winding number is not 0 (<code>nonzero</code>, SVG’s default) or is odd
+(<code>evenodd</code>). Ink/Stitch fills every fill as if its rule were even-odd. Where <code>nonzero</code> fills a face
+that even-odd leaves empty, StitchCraft fills it and <code>SC-I0306</code> says so (<code>DEV-FILL-001</code>).</li>
+<li><strong>Rings of the parts.</strong> The edges between filled and empty faces are joined into rings with the
+filled side on their right. Outlines turn clockwise and holes counter-clockwise in y-up axes, the other
+way round on screen, where y points down. Where rings meet at a point, they are joined the way GEOS
+joins them, the geometry library behind Ink/Stitch’s shapes. Parts that touch at a point stay apart. A
+hole that touches its outline stays a hole. Each ring starts at its point that comes first in the
+drawing, and parts and holes keep the drawing’s order too.</li>
+<li><strong>Parts too small to sew.</strong> A part of 3 square CSS pixels or less (0.21 mm²) is too small for a row
+of stitches and is left out. Ink/Stitch leaves it out without a word. StitchCraft says so with
+<code>SC-W0303</code> (<code>REQ-FILL-002</code>). A fill under 20 square CSS pixels (1.4 mm²) gets <code>SC-W0304</code>, as
+Ink/Stitch warns of it. A fill in parts gets <code>SC-W0307</code>, since each part is sewn on its own.</li>
+</ol>
+<p>The work is charged to the element’s budget, one unit for each point, segment, cut, half edge, pair of
+segments whose spans along x overlap, and ring compared with a face. Property tests draw random rings on
+a grid and count how many times they wind round points off the edges. Such a point lies in the region
+exactly when the fill rule fills it, unless it lies in a part left out. Every ring found is simple and
+turns the right way.</p>
 <h2 id="tatami-fill"><a class="header" href="#tatami-fill">Tatami fill</a></h2>
 <p>Parallel rows of running stitches across the region, with the needle points of neighbouring rows offset
-so they never line up into visible furrows. Most fills in most designs are tatami.</p>
+so they never line up into visible furrows. Most fills in most designs are tatami. Each step below sews
+as Ink/Stitch sews, on StitchCraft’s region, unless it says where it differs. The roadmap’s M5 steps
+build them in this order.</p>
 <p><strong>Parameters:</strong> <code>angle</code>, <code>row_spacing_mm</code>, <code>end_row_spacing_mm</code>, <code>max_stitch_length_mm</code>, <code>staggers</code>,
 <code>skip_last</code>, <code>underpath</code>, <code>running_stitch_length_mm</code>, <code>running_stitch_tolerance_mm</code>, <code>gap_fill_rows</code>,
 <code>pull_compensation_mm</code>, <code>pull_compensation_percent</code>, <code>expand_mm</code>, <code>random_seed</code>,
@@ -4370,58 +4450,58 @@ so they never line up into visible furrows. Most fills in most designs are tatam
 <code>fill_underlay_angle</code>, <code>fill_underlay_row_spacing_mm</code>, <code>fill_underlay_max_stitch_length_mm</code>,
 <code>fill_underlay_inset_mm</code>, <code>fill_underlay_skip_last</code>, <code>underlay_underpath</code>.</p>
 <h3 id="1-rows"><a class="header" href="#1-rows">1. Rows</a></h3>
-<ol>
-<li>Rotate the region by <code>−angle</code> so rows are horizontal (the rotation and its inverse are exact affine
-maps; all later geometry happens in this frame).</li>
-<li>Apply <code>expand_mm</code> as an offset of the region (a deliberate shape change the user asked for).</li>
-<li>Cast scan lines at <code>y = y₀ + k·spacing</code>. With <code>end_row_spacing_mm</code> the spacing varies linearly from
-the first to the last row (a density gradient). <code>y₀</code> is anchored to a global grid (multiples of the
-spacing from the design origin) so adjacent regions with the same settings share rows.</li>
-<li>Intersect each scan line with every edge using the half-open rule (an edge spans <code>[y_min, y_max)</code>),
-so a vertex exactly on a scan line is counted once. Sort the crossings; consecutive pairs are the
-row <em>segments</em> inside the region.</li>
-<li><strong>Pull compensation extends each segment at both ends</strong> by <code>pull_compensation_mm + pull_compensation_percent × segment length</code> (one value or two values for start/end side), clipped so
-it never reaches into a neighbouring segment of the same row. Holes, gaps and separate components
-keep their topology — the shape is never buffered as a whole, which would close gaps the designer
-left on purpose (<code>REQ-FILL-TAT-006</code>).</li>
-</ol>
+<p>Rows run across the region at <code>angle</code>, <code>row_spacing_mm</code> apart, on lines a whole number of spacings from
+the design’s origin. Fills side by side at the same angle and spacing then share their rows. With
+<code>end_row_spacing_mm</code> the spacing changes steadily from the first row to the last. Where a row crosses
+the region more than once, each stretch inside is a <em>segment</em>. A row that only touches the region at a
+point has none.</p>
 <h3 id="2-needle-points-along-a-row"><a class="header" href="#2-needle-points-along-a-row">2. Needle points along a row</a></h3>
-<p>Needle points fall on a global grid along the row direction: positions where
-<code>(x + offset_k) mod max_stitch_length = 0</code>, with <code>offset_k = (k mod staggers) / staggers × max_stitch_length</code> for row k. The segment’s two ends are always penetrations; a grid point closer than
-the minimum stitch length to an end is dropped. Optional random length jitter perturbs grid points by
-the seeded jitter without changing the ends. <code>skip_last</code> omits the final penetration of each row (a
-softer edge where rows turn).</p>
-<h3 id="3-routing-covering-every-segment-with-little-travel"><a class="header" href="#3-routing-covering-every-segment-with-little-travel">3. Routing: covering every segment with little travel</a></h3>
-<p>Treat the row segments as edges that must be sewn exactly once, and the region’s boundary and interior
-as places where the needle may travel. This is a rural postman problem; we use a standard coverage
-decomposition instead of a general solver:</p>
-<ol>
-<li><strong>Boustrophedon cells.</strong> Sweep the rows in order and group segments into <em>cells</em>: maximal stacks of
-consecutive rows with exactly one segment each that overlap their neighbours (Choset &amp; Pignon’s
-boustrophedon cellular decomposition). A cell is sewn back and forth with no travel at all.</li>
-<li><strong>Cell graph.</strong> Cells that touch (share a split or merge event) are adjacent. Order cells with a
-depth-first traversal of this graph starting from the cell nearest the entry hint, preferring the
-neighbour whose start is nearest the current exit; ties break by cell index (determinism).</li>
-<li><strong>Travel between cells</strong> follows the shortest path <em>inside</em> the region on a visibility graph of the
-region’s vertices (A* with Euclidean heuristic). With <code>underpath</code> the travel may cross the interior
-(it is covered by later rows); without it, travel follows the boundary. Travel is sewn as running
-stitch with <code>running_stitch_length_mm</code>.</li>
-<li><strong>Disconnected parts.</strong> If no inside path exists (the region has separate components), the parts are
-planned as separate sub-groups joined by tie-off → jump/trim → tie-in, with <code>SC-W0307</code> — never a
-straight stitch across empty fabric (<code>SC-W0501</code>), and never a silent change to what is sewn.</li>
-<li><strong>Exit.</strong> The last cell is chosen, when possible, to end near the exit hint.</li>
-</ol>
-<h3 id="4-gap-fill-rows"><a class="header" href="#4-gap-fill-rows">4. Gap-fill rows</a></h3>
-<p><code>gap_fill_rows</code> adds extra rows along the joins between cells (where fabric distortion opens gaps).
-They come from the same scan-line machinery and are clipped to the region (<code>REQ-FILL-TAT-007</code>), never
-copies of a previous row shifted along the stitch angle.</p>
-<h3 id="5-underlay"><a class="header" href="#5-underlay">5. Underlay</a></h3>
-<p>The same algorithm on the region inset by <code>fill_underlay_inset_mm</code>, at <code>fill_underlay_angle</code> (default:
-<code>angle + 90°</code>), with <code>fill_underlay_row_spacing_mm</code> (default: three times the top spacing) and its own
-maximum stitch length, sewn first and routed to end near the start of the top layer.</p>
-<h3 id="6-tiny-regions"><a class="header" href="#6-tiny-regions">6. Tiny regions</a></h3>
-<p>If no scan line meets the region (it is thinner than the row spacing), the generator outlines it with a
-running stitch and emits <code>SC-W0305</code> — the user decides whether that is acceptable.</p>
+<p>A row’s needle points lie on a grid along it, <code>max_stitch_length_mm</code> apart and anchored at the origin.
+Each next row’s grid is shifted by <code>1/staggers</code> of a stitch, and fills side by side tile. A segment
+starts with a needle point at its start, then takes the grid’s points. Its end gets one too, unless
+<code>skip_last</code> is on or the last grid point is within 0.1 mm of it. With <code>enable_random_stitch_length</code> the
+points are spaced by the seeded random lengths instead.</p>
+<h3 id="3-routing-every-segment-once"><a class="header" href="#3-routing-every-segment-once">3. Routing: every segment once</a></h3>
+<p>The segments’ ends lie on the region’s outline. Joined by the stretches of outline between neighbouring
+ends, every other stretch twice and more where needed, they make a graph in which every point meets an
+even number of edges. One path can then take every edge (Hierholzer). The fill starts at the point
+nearest the needle and goes first to where it will end. That is the point of its outline nearest the
+next element’s first stitch, or its start when nothing follows. From there it sews its segments in one
+loop that comes back there, taking a segment wherever one is left. The rows go back and forth like a mown
+lawn, and the rows sewn later hide the way the needle came. Between segments the needle runs along the
+outline in running stitches (<code>running_stitch_length_mm</code>, <code>running_stitch_tolerance_mm</code>).</p>
+<h3 id="4-travel-under-the-rows"><a class="header" href="#4-travel-under-the-rows">4. Travel under the rows</a></h3>
+<p>With <code>underpath</code>, on by default, travel may cross the region where rows sewn later will cover it. It
+follows lines square to the rows and lines at 45° to them either way. A line costs less the farther it
+lies from the outline. Once a row is sewn, the lines crossing it are closed: no travel runs over a row
+already sewn. Travel stays inside the region (<code>REQ-FILL-TAT-005</code>). Where no way inside joins 2 points,
+the parts are joined as below, and <code>SC-W0501</code> says so.</p>
+<h3 id="5-parts"><a class="header" href="#5-parts">5. Parts</a></h3>
+<p>A region in parts sews them one at a time, in order of their distance from the needle. Each part ends
+at its point nearest the next part, and the last nearest the next element. Jumps join the parts, with
+ties and trims where the element’s settings say, never stitches across empty fabric (<code>SC-W0307</code>,
+<code>REQ-FILL-TAT-008</code>).</p>
+<h3 id="6-underlay"><a class="header" href="#6-underlay">6. Underlay</a></h3>
+<p>Before its top rows, each part sews its underlay, on by default. The underlay is sewn like the top
+rows, on the part shrunk by <code>fill_underlay_inset_mm</code>. It makes one pass for each angle in
+<code>fill_underlay_angle</code> (default: <code>angle + 90°</code>), with <code>fill_underlay_row_spacing_mm</code> (default: three
+times the top spacing) and <code>fill_underlay_max_stitch_length_mm</code> (default: the top’s).
+<code>fill_underlay_skip_last</code> and <code>underlay_underpath</code> take the place of <code>skip_last</code> and <code>underpath</code>. Each pass
+starts where the one before ended. The top rows cover the part grown by <code>expand_mm</code>.</p>
+<h3 id="7-pull-compensation-and-gap-fill-rows"><a class="header" href="#7-pull-compensation-and-gap-fill-rows">7. Pull compensation and gap-fill rows</a></h3>
+<p>The thread pulls a row in at its ends. Each segment is lengthened at both ends by <code>pull_compensation_mm</code>
+plus <code>pull_compensation_percent</code> of its length (one value, or one for each end). Ink/Stitch then rebuilds
+the region round the lengthened rows, which can close a hole or a gap narrower than the compensation.
+StitchCraft keeps the region’s holes, gaps and parts, which the designer may have left on purpose
+(<code>REQ-FILL-TAT-006</code>).</p>
+<p>Where the needle leaves a stretch of more than 3 rows for another, the fabric can open a gap along its
+last row. There, <code>gap_fill_rows</code> (rounded up to an even number) sews that many more rows, back and forth.
+Ink/Stitch repeats the last row, a row further on each time, and a repeat can run outside the region.
+StitchCraft takes the extra rows from the row grid and keeps them inside the region
+(<code>REQ-FILL-TAT-007</code>).</p>
+<h3 id="8-no-rows"><a class="header" href="#8-no-rows">8. No rows</a></h3>
+<p>If no row meets the region (it is thinner than the row spacing), it is sewn as a running stitch round
+its outline, as Ink/Stitch sews it, and <code>SC-W0305</code> says so.</p>
 <h3 id="properties-conformance-2"><a class="header" href="#properties-conformance-2">Properties (conformance)</a></h3>
 <div class="table-wrapper">
 <table>
@@ -4436,7 +4516,7 @@ running stitch and emits <code>SC-W0305</code> — the user decides whether that
 <tr><td><code>REQ-FILL-TAT-005</code></td><td>Travel stitches lie inside the region (± 0.05 mm)</td></tr>
 <tr><td><code>REQ-FILL-TAT-006</code></td><td>Pull compensation preserves the number of holes and components</td></tr>
 <tr><td><code>REQ-FILL-TAT-007</code></td><td>All rows, including gap-fill rows, lie inside the region (± tolerance + compensation)</td></tr>
-<tr><td><code>REQ-FILL-TAT-008</code></td><td>Disconnected regions yield trims and <code>SC-W0307</code>, never long straight stitches</td></tr>
+<tr><td><code>REQ-FILL-TAT-008</code></td><td>A region in parts sews each part on its own, joined by jumps and <code>SC-W0307</code>, never long straight stitches</td></tr>
 <tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget</td></tr>
 </tbody>
 </table>
@@ -4490,12 +4570,8 @@ it; crosses use <code>cross_stitch_method</code> (simple, half, upright, double,
 routed row by row. Specified at M10.</p>
 <h2 id="references"><a class="header" href="#references">References</a></h2>
 <ul>
-<li>H. Choset and P. Pignon, “Coverage Path Planning: The Boustrophedon Cellular Decomposition,” <em>Field and
-Service Robotics</em>, Springer, 1998.</li>
 <li>H. Zhao et al., “Connected Fermat Spirals for Layered Fabrication,” <em>ACM Transactions on Graphics</em>
 35(4), SIGGRAPH 2016.</li>
-<li>H. A. Eiselt, M. Gendreau, G. Laporte, “Arc Routing Problems, Part II: The Rural Postman Problem,”
-<em>Operations Research</em> 43(3), 1995.</li>
 <li>C. Hierholzer, “Über die Möglichkeit, einen Linienzug ohne Wiederholung und ohne Unterbrechung zu
 umfahren,” <em>Mathematische Annalen</em> 6, 1873.</li>
 <li>D. Hilbert, “Über die stetige Abbildung einer Linie auf ein Flächenstück,” <em>Mathematische Annalen</em> 38, 1891.</li>
@@ -6324,6 +6400,10 @@ permissively licensed and robust on degenerate input.</p>
 <p><strong>Revised in M3.4:</strong> strokes are not flattened with <code>kurbo</code>. Its <code>flatten</code> in 0.13 calls <code>powf</code> and
 <code>hypot</code> from the platform’s maths library, so the engine halves curves itself with arithmetic and square
 roots (<a href="#1-normalize">engine pipeline › Normalize</a>).</p>
+<p><strong>Revised in M5.1:</strong> a fill’s region is not built with <code>i_overlay</code> but by the engine
+(<a href="#region-1">fills › Region</a>). An integer-snapped overlay moves the drawing’s points
+onto its grid, and its loops cannot charge an element’s work budget. The engine keeps every point the
+drawing has and decides sides of lines exactly. It charges its work as it goes.</p>
 <h2 id="spike-m07-acceptance-criteria"><a class="header" href="#spike-m07-acceptance-criteria">Spike M0.7 acceptance criteria</a></h2>
 <ol>
 <li>Booleans and offsets of 10,000 random polygons with holes, plus the degenerate corpus: no panic, no
@@ -6825,13 +6905,13 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
 </thead>
 <tbody>
-<tr><td>M5.1</td><td>Region normalization (fill rules, snapping, tiny rings <code>SC-W0303</code>)</td><td>degenerate corpus green</td></tr>
-<tr><td>M5.2</td><td>Rows: scan lines, half-open rule, gradient spacing, global grid</td><td><code>REQ-FILL-TAT-002</code></td></tr>
-<tr><td>M5.3</td><td>Needle grid and staggers</td><td><code>REQ-FILL-TAT-003</code></td></tr>
-<tr><td>M5.4</td><td>Boustrophedon cells, cell graph, ordering</td><td><code>REQ-FILL-TAT-001</code></td></tr>
-<tr><td>M5.5</td><td>Travel inside the region (visibility graph, A*), disconnected parts <code>SC-W0307</code></td><td><code>REQ-FILL-TAT-005</code>, <code>REQ-FILL-TAT-008</code></td></tr>
-<tr><td>M5.6</td><td>Pull compensation by row extension</td><td><code>REQ-FILL-TAT-006</code></td></tr>
-<tr><td>M5.7</td><td>Underlay, gap-fill rows, tiny-region fallback <code>SC-W0305</code></td><td><code>REQ-FILL-TAT-007</code></td></tr>
+<tr><td>M5.1 ✅</td><td>A fill’s region as the drawing shows it under its fill rule, in parts with holes, its subpaths cut exactly where they meet. Parts too small to sew are left out with <code>SC-W0303</code>, as Ink/Stitch leaves them out. Small fills (<code>SC-W0304</code>), the fill rule (<code>SC-I0306</code>) and fills in parts (<code>SC-W0307</code>) are pointed out</td><td><code>REQ-FILL-001</code>, <code>REQ-FILL-002</code></td></tr>
+<tr><td>M5.2</td><td>Rows and needle points as Ink/Stitch places them. Row and stagger grids anchored at the origin; graded spacing; random stitch length</td><td><code>REQ-FILL-TAT-002</code>, <code>REQ-FILL-TAT-003</code></td></tr>
+<tr><td>M5.3</td><td>Routing as Ink/Stitch routes. Every segment sewn once, back and forth, from the needle to the next element, with running stitches along the outline between. A region too thin for any row sewn round its outline, <code>SC-W0305</code>. Fills are sewn</td><td><code>REQ-FILL-TAT-001</code></td></tr>
+<tr><td>M5.4</td><td>Travel under the rows (<code>underpath</code>), off the rows already sewn</td><td><code>REQ-FILL-TAT-005</code></td></tr>
+<tr><td>M5.5</td><td>Parts sewn one at a time, each ending nearest the next, joined by jumps (<code>SC-W0307</code>)</td><td><code>REQ-FILL-TAT-008</code></td></tr>
+<tr><td>M5.6</td><td>Underlay, a pass for each angle on the inset region; <code>expand_mm</code></td><td><code>REQ-FILL-TAT-007</code> for the underlay’s rows</td></tr>
+<tr><td>M5.7</td><td>Pull compensation at the rows’ ends, holes and parts kept; gap-fill rows inside the region</td><td><code>REQ-FILL-TAT-006</code>, <code>REQ-FILL-TAT-007</code></td></tr>
 <tr><td>M5.8</td><td>Coverage metric and performance budget</td><td><code>REQ-FILL-TAT-004</code>, <code>REQ-FILL-TAT-009</code></td></tr>
 <tr><td>MC-4 🧵</td><td><strong>TS-07</strong> (fill + outline registration), <strong>TS-08</strong> (density ladder, angles), <strong>TS-09</strong> (underlay, travel)</td><td>report filed; fill defaults and pull compensation tuned</td></tr>
 </tbody>

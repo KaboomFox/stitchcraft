@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b9299949.js";
+            window.path_to_searchindex_js = "../searchindex-bf1e2529.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f616c49b.js"></script>
@@ -191,18 +191,19 @@ own tests; stages communicate only through the types in the <a href="data-model.
 <h2 id="1-normalize"><a class="header" href="#1-normalize">1. Normalize</a></h2>
 <p>Per element, independent of the others:</p>
 <ul>
-<li><strong>Flatten curves</strong> with the element’s tolerance (default 0.1 mm for fills, a tenth of
-<code>running_stitch_tolerance_mm</code> for strokes, and a tenth of a CSS pixel for satin columns, as Ink/Stitch
-flattens them). Strokes and satin columns are halved (de Casteljau) until each piece’s
-control points lie within the tolerance of its chord (<code>stitchcraft_engine::normalize::stroke</code>), using
-only arithmetic and square roots so that every platform gets the same points. <code>kurbo</code>’s adaptive
-flattening is not used for this: in 0.13 it calls <code>powf</code> (<code>CubicBez::to_quads</code>) and <code>hypot</code>
-(<code>QuadBez::estimate_subdiv</code>) from the platform’s maths library, whose last bits differ between
-systems (<a href="determinism.html">determinism</a>). Corners, joins between segments that turn by more than 30°,
-are marked so running stitches land exactly on them; a curve’s own bend is never a corner.</li>
-<li><strong>Regions:</strong> resolve the fill rule into valid polygons with holes (<code>i_overlay</code>), snap to a 1 µm grid
-first so near-coincident vertices become coincident, drop rings under the minimum area (<code>SC-W0303</code>),
-orient rings explicitly.</li>
+<li><strong>Flatten curves</strong> with the element’s tolerance (a tenth of <code>running_stitch_tolerance_mm</code> for strokes,
+and a tenth of a CSS pixel for fills and satin columns, as Ink/Stitch flattens them). Curves are halved
+(de Casteljau) until each piece’s control points lie within the tolerance of its chord
+(<code>stitchcraft_engine::normalize::stroke</code>), using only arithmetic and square roots so that every
+platform gets the same points. <code>kurbo</code>’s adaptive flattening is not used for this: in 0.13 it calls
+<code>powf</code> (<code>CubicBez::to_quads</code>) and <code>hypot</code> (<code>QuadBez::estimate_subdiv</code>) from the platform’s maths
+library, whose last bits differ between systems (<a href="determinism.html">determinism</a>). Corners, joins between
+segments that turn by more than 30°, are marked so running stitches land exactly on them; a curve’s own
+bend is never a corner.</li>
+<li><strong>Regions:</strong> a fill’s subpaths are cut wherever they meet, and its fill rule says which faces between
+them are filled. The edges between filled and empty faces become outlines and holes, each turned one
+way, and parts too small to sew are left out with <code>SC-W0303</code>
+(<a href="algorithms/fills.html#region">fills › Region</a>, <code>stitchcraft_engine::normalize::region</code>).</li>
 <li><strong>Satins:</strong> classify subpaths into rails and rungs (<a href="algorithms/satin.html#recognizing-rails-and-rungs">satin</a>), or make
 them from a column’s centre line (<a href="algorithms/satin.html#single-path-satin">single-path satin</a>).</li>
 <li><strong>Strokes:</strong> each subpath becomes its own path piece, in document order.</li>
@@ -233,8 +234,10 @@ that join its underlays are no longer than the first value. For any other stroke
 <code>manual_stitch</code> are sewn from M3. A satin column drawn as one path no wider than the design’s
 <code>min_satin_stroke_width</code> is sewn as a stroke, with <code>SC-W0212</code>, as in Ink/Stitch (<code>REQ-SAT-015</code>). A wider
 one is sewn between rails made from its line from M4.9 (<code>REQ-SAT-016</code>). The other stroke and satin
-methods, and fills, are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are
-wrong (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
+methods, and fills, are skipped with <code>SC-W0011</code> until their milestones. A fill’s region is built
+already, so what it leaves out and how it will be sewn are said (<code>SC-W0303</code>, <code>SC-W0304</code>, <code>SC-I0306</code>,
+<code>SC-W0307</code>). An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and the rest of the
+design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element
 sets none. A satin column is given its longest stitch as well, the element’s <code>max_stitch_length_mm</code>,

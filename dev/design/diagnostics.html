@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b9299949.js";
+            window.path_to_searchindex_js = "../searchindex-bf1e2529.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f616c49b.js"></script>
@@ -276,9 +276,11 @@ another.</p>
 <tr><td><code>SC-W0212</code></td><td>Warning</td><td>Satin column drawn as one path too narrow; sewn as a stroke</td><td>M4</td></tr>
 <tr><td><code>SC-W0213</code></td><td>Warning</td><td>Parts of a satin column drawn as one path left out (still crossing after 20 cuts in half, or turning too tightly for its width)</td><td>M4</td></tr>
 <tr><td><code>SC-E0214</code></td><td>Error</td><td>Satin column drawn as one path could not be made into rails (too short, or too tight for its width)</td><td>M4</td></tr>
-<tr><td><code>SC-W0303</code></td><td>Warning</td><td>Tiny ring dropped from fill region</td><td>M5</td></tr>
+<tr><td><code>SC-W0303</code></td><td>Warning</td><td>Parts of a fill too small to sew left out (3 square CSS pixels or less, as in Ink/Stitch)</td><td>M5</td></tr>
+<tr><td><code>SC-W0304</code></td><td>Warning</td><td>Fill smaller than 1.4 mm² (20 square CSS pixels); a running stitch or a satin column may sew it better</td><td>M5</td></tr>
 <tr><td><code>SC-W0305</code></td><td>Warning</td><td>Region too small for fill rows; outlined with running stitch instead</td><td>M5</td></tr>
-<tr><td><code>SC-W0307</code></td><td>Warning</td><td>Region split into parts that are not connected; parts joined with trims</td><td>M5</td></tr>
+<tr><td><code>SC-I0306</code></td><td>Info</td><td>Nonzero fill rule fills a part the even-odd rule leaves empty (Ink/Stitch leaves it empty)</td><td>M5</td></tr>
+<tr><td><code>SC-W0307</code></td><td>Warning</td><td>Fill in parts that are apart; each sewn on its own, joined by jumps</td><td>M5</td></tr>
 <tr><td><code>SC-W0311</code></td><td>Warning</td><td>Spiral could not be connected in a narrow part; that part uses inner-to-outer contours</td><td>M7</td></tr>
 <tr><td><code>SC-W0401</code></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td><td>M3</td></tr>
 <tr><td><code>SC-W0402</code></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest</td><td>M3</td></tr>

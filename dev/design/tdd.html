@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b9299949.js";
+            window.path_to_searchindex_js = "../searchindex-bf1e2529.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f616c49b.js"></script>
@@ -404,8 +404,8 @@ hint; each code has a generated explanation page (<a href="diagnostics.html">dia
 <h2 id="8-engine-pipeline-summary"><a class="header" href="#8-engine-pipeline-summary">8. Engine pipeline (summary)</a></h2>
 <p>Detailed in <a href="engine-pipeline.html">engine pipeline</a>.</p>
 <ol>
-<li><strong>Normalize</strong> each element: flatten curves to tolerance, make regions valid under their fill
-rule, drop degenerate pieces (with a diagnostic), convert units.</li>
+<li><strong>Normalize</strong> each element. Curves are flattened to tolerance, and each fill’s region is built by
+its fill rule. Degenerate pieces are dropped with a diagnostic.</li>
 <li><strong>Validate</strong> parameters against the registry (type, range, applicability) and shapes against the
 stitch type (e.g. a satin needs two rails).</li>
 <li><strong>Generate</strong> a <code>StitchGroup</code> per element with its stitch type’s generator. Generators are pure
@@ -433,9 +433,10 @@ check the hoop and colour limits.</li>
 </tbody>
 </table>
 </div>
-<p>Each generator is designed from public embroidery practice and published algorithms (for example
-boustrophedon cell decomposition for fill routing and Connected Fermat Spirals for spiral fills),
-cited in its page.</p>
+<p>Generators follow Ink/Stitch’s stitch placement, worked out from its behaviour and from published
+algorithms such as an Eulerian path through a fill’s rows, or Connected Fermat Spirals for spiral fills.
+Each generator’s page cites them. Where one differs, <code>conformance/deviations.toml</code> says how and
+why.</p>
 <h2 id="10-machine-formats"><a class="header" href="#10-machine-formats">10. Machine formats</a></h2>
 <p>PES (v1 header + PEC block) and DST first, then EXP, JEF, VP3, XXX, U01. Writers quantize once,
 encode commands per the format’s rules and validate against limits (displacement per record, colour

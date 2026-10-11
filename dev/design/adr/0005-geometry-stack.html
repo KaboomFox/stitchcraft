@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-b9299949.js";
+            window.path_to_searchindex_js = "../../searchindex-bf1e2529.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-f616c49b.js"></script>
@@ -204,6 +204,10 @@ permissively licensed and robust on degenerate input.</p>
 <p><strong>Revised in M3.4:</strong> strokes are not flattened with <code>kurbo</code>. Its <code>flatten</code> in 0.13 calls <code>powf</code> and
 <code>hypot</code> from the platform’s maths library, so the engine halves curves itself with arithmetic and square
 roots (<a href="../engine-pipeline.html#1-normalize">engine pipeline › Normalize</a>).</p>
+<p><strong>Revised in M5.1:</strong> a fill’s region is not built with <code>i_overlay</code> but by the engine
+(<a href="../algorithms/fills.html#region">fills › Region</a>). An integer-snapped overlay moves the drawing’s points
+onto its grid, and its loops cannot charge an element’s work budget. The engine keeps every point the
+drawing has and decides sides of lines exactly. It charges its work as it goes.</p>
 <h2 id="spike-m07-acceptance-criteria"><a class="header" href="#spike-m07-acceptance-criteria">Spike M0.7 acceptance criteria</a></h2>
 <ol>
 <li>Booleans and offsets of 10,000 random polygons with holes, plus the degenerate corpus: no panic, no

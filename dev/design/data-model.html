@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b9299949.js";
+            window.path_to_searchindex_js = "../searchindex-bf1e2529.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f616c49b.js"></script>
@@ -242,18 +242,18 @@ makes a stroke that says nothing of either: 1 CSS pixel wide, with <code>Join::U
 ±10,000 mm, as far as machine-file coordinates go. No stroke is narrower than 0, a miter limit is a
 finite number of at least 1, and the settings’ lengths are not negative. Adapters drop what they cannot
 represent with a diagnostic of their own, so a failed check is a bug in the adapter (<code>SC-E0009</code>).</p>
-<p>Still to come, each with the step that needs it:</p>
-<ul>
-<li><strong>regions</strong>, fills normalized into polygons with holes (M5.1, <a href="#region">below</a>);</li>
-<li><strong>commands</strong> attached to elements, start and end points and targets (M8, for Ink/Stitch’s command
-symbols); trims and stops are the element parameters <code>trim_after</code> and <code>stop_after</code>, and the origin and
-stop position are design settings (M3.8).</li>
-</ul>
+<p><strong>Commands</strong> attached to elements come with M8, for Ink/Stitch’s command symbols such as start and end
+points. Trims and stops are the element parameters <code>trim_after</code> and <code>stop_after</code>, and the origin and
+stop position are design settings (M3.8).</p>
 <h3 id="region"><a class="header" href="#region">Region</a></h3>
-<p><code>Region</code> is a set of <code>Polygon { exterior: Ring, holes: Vec&lt;Ring&gt; }</code> produced by the normalizer from
-the host’s paths and fill rule (even-odd or non-zero). Curves are flattened with the element’s
-tolerance before booleans. Rings with area below <code>min_region_area</code> (default 0.01 mm²) are dropped with
-<code>SC-W0303</code>.</p>
+<p>A fill’s region is not part of the design: the normalizer builds it from the fill’s path and fill rule,
+since M5.1 (<code>stitchcraft_engine::normalize::region</code>):</p>
+<pre><code class="language-rust ignore">pub struct Region { pub parts: Vec&lt;Polygon&gt; }   // in the order the drawing reaches them
+pub struct Polygon { pub outline: Vec&lt;Point&gt;, pub holes: Vec&lt;Vec&lt;Point&gt;&gt; }   // closed rings, in millimetres</code></pre>
+<p>Each ring starts at its point that comes first in the drawing, and repeats it at its end. Outlines turn
+clockwise and holes counter-clockwise in y-up axes, and in those axes the region lies on the right of
+every ring. Parts of 3 square CSS pixels (0.21 mm²) or less are left out, with <code>SC-W0303</code>. The
+<a href="algorithms/fills.html#region">fills design</a> builds the region step by step.</p>
 <h3 id="satinshape"><a class="header" href="#satinshape">SatinShape</a></h3>
 <p>A satin column’s path is recognized, since M4.1, as one of 2 shapes (<code>stitchcraft_engine::normalize::satin</code>):</p>
 <pre><code class="language-rust ignore">pub enum Shape {
