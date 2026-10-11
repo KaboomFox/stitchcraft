@@ -108,6 +108,12 @@ fn a_needle_that_finds_no_way_jumps_and_says_so_as_a_bug() {
     assert_eq!(runs.len(), 2, "the needle jumps once");
     assert_eq!((runs[0].first(), runs[1].first()), (Some(&p(0.0, 0.5)), Some(&p(6.0, 2.0))));
     assert_eq!(warnings.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::InternalCheckFailed]);
+    // With 0.5 mm of pull compensation at each end, the needle still starts on the route's first node, and
+    // after the jump at the next row's lengthened start.
+    let (rows, how) = ((segments.to_vec(), vec![0, 1]), stitching(false));
+    let pull = Pull { mm: [0.5, 0.5], share: [0.0, 0.0] };
+    let runs = Sewing { pull, ..plain(&route, &part, &rings, &rows, &how, meter) }.sew(&mut SplitMix64::new(1), meter, &mut warnings).unwrap();
+    assert_eq!((runs[0].first(), runs[1].first()), (Some(&p(0.0, 0.5)), Some(&p(6.5, 2.0))));
 }
 
 /// Whether `q` lies within `within` of `part`'s rings or in it.
@@ -191,40 +197,38 @@ fn req_fill_tat_001_a_needle_inside_leads_in_from_the_lines_nearest_node_to_the_
     }
 }
 
-/// A 10 × 9 rectangle's rows at y = 1 to 8, each from x = 0 to 10, sewn by a route in 2 stretches: rows
-/// 1 to `first` back and forth from the left, travel along the outline to the end of row 8 on the same
-/// side, and rows 8 down to `first + 1`. The runs it sews with `gap_rows`, and with `pull`.
-fn two_stretches(first: usize, gap_rows: usize, pull: Pull) -> Vec<Vec<Point>> {
-    let part = Polygon { outline: vec![p(0.0, 0.0), p(0.0, 9.0), p(10.0, 9.0), p(10.0, 0.0), p(0.0, 0.0)], holes: Vec::new() };
+/// A 10 × 9 rectangle's rows at y = 1 to 8, each from x = 0 to 10, sewn in the order `order` gives,
+/// counted from 0: the first from the left, each of the others from the side the one before ended on, with
+/// travel along the outline between them. The runs it sews as `how` says, with `gap_rows` and `pull`.
+fn sew_rows(order: &[usize], how: &Stitching, gap_rows: usize, pull: Pull) -> Vec<Vec<Point>> {
+    let part = rectangle(9.0);
     let meter = &mut Budget::DEFAULT.meter();
     let rings = Rings::new(&part, meter).unwrap();
     let segments: Vec<(Point, Point)> = (1..=8).map(|y| (p(0.0, f64::from(y)), p(10.0, f64::from(y)))).collect();
-    let rows: Vec<usize> = (0..8).collect();
     // Row k's left end is node 2k, and its right end node 2k + 1.
     let nodes = segments.iter().flat_map(|&(a, b)| [a, b]).map(|q| Node { point: q, place: rings.locate(q, |_| true, meter).unwrap().unwrap() });
     let mut steps = Vec::new();
-    let sew = |steps: &mut Vec<Step>, row: usize, rightwards: bool| {
-        let (left, right) = (2 * row, 2 * row + 1);
-        let (from, to) = if rightwards { (left, right) } else { (right, left) };
-        if let Some(&Step::Row { to: before, .. }) = steps.last() {
-            steps.push(Step::Travel { from: before, to: from, beside: row.abs_diff(before / 2) == 1 });
+    for (k, &row) in order.iter().enumerate() {
+        let (from, to) = if k % 2 == 0 { (2 * row, 2 * row + 1) } else { (2 * row + 1, 2 * row) };
+        if let Some(&Step::Row { segment, to: end, .. }) = steps.last() {
+            steps.push(Step::Travel { from: end, to: from, beside: row.abs_diff(segment) == 1 });
         }
         steps.push(Step::Row { segment: row, from, to });
-    };
-    for row in 0..first {
-        sew(&mut steps, row, row % 2 == 0);
-    }
-    let side = first % 2;
-    for (k, row) in (first..8).rev().enumerate() {
-        sew(&mut steps, row, (k % 2 == 0) == (side == 0));
     }
     let route = Route { nodes: nodes.collect(), steps };
-    let (how, rows) = (stitching(false), (segments, rows));
+    let rows = (segments, (0..8).collect());
     let mut warnings = Vec::new();
-    let mut sewing = Sewing { pull, gap_rows, ..plain(&route, &part, &rings, &rows, &how, meter) };
+    let mut sewing = Sewing { pull, gap_rows, ..plain(&route, &part, &rings, &rows, how, meter) };
     let runs = sewing.sew(&mut SplitMix64::new(1), meter, &mut warnings).unwrap();
     assert_eq!(warnings, Vec::new());
     runs
+}
+
+/// [`sew_rows`] in 2 stretches: rows 1 to `first`, travel along the outline to the end of row 8 on the
+/// same side, and rows 8 down to `first + 1`.
+fn two_stretches(first: usize, gap_rows: usize, pull: Pull) -> Vec<Vec<Point>> {
+    let order: Vec<usize> = (0..first).chain((first..8).rev()).collect();
+    sew_rows(&order, &stitching(false), gap_rows, pull)
 }
 
 /// Whether `run` passes through `points` in that order.
@@ -233,10 +237,15 @@ fn passes(run: &[Point], points: &[(f64, f64)]) -> bool {
     points.iter().all(|&(x, y)| rest.any(|q| q.distance(p(x, y)) < 1e-9))
 }
 
+/// Whether `run` has a stitch from `a` to `b`.
+fn has_stitch(run: &[Point], a: (f64, f64), b: (f64, f64)) -> bool {
+    run.windows(2).any(|s| s[0].distance(p(a.0, a.1)) < 1e-9 && s[1].distance(p(b.0, b.1)) < 1e-9)
+}
+
 #[test]
 fn req_fill_tat_007_leaving_a_stretch_of_more_than_3_rows_sews_the_gap_rows_past_its_last_and_comes_back() {
-    // Rows 1 to 5, 4 of them after travel: leaving row 5's right end, 2 rows more, 6 back from the right
-    // and 7 from the left, then straight back to row 5's end, and on round the outline to row 8.
+    // Rows 1 to 5: leaving row 5's right end, 2 rows more, 6 back from the right and 7 from the left, then
+    // straight back to row 5's end, and on round the outline to row 8.
     let run = two_stretches(5, 2, Pull::default()).concat();
     assert!(passes(&run, &[(10.0, 5.0), (10.0, 6.0), (0.0, 6.0), (0.0, 7.0), (10.0, 7.0), (10.0, 5.0), (10.0, 8.0)]), "{run:?}");
     // Without gap rows, row 6 is sewn once, after rows 8 and 7.
@@ -252,9 +261,57 @@ fn req_fill_tat_007_leaving_a_stretch_of_more_than_3_rows_sews_the_gap_rows_past
 }
 
 #[test]
-fn req_fill_tat_007_a_stretch_of_3_rows_after_travel_has_no_gap_rows() {
-    // Rows 1 to 4: 3 of them after travel.
-    assert_eq!(two_stretches(4, 2, Pull::default()), two_stretches(4, 0, Pull::default()));
+fn req_fill_tat_007_a_stretch_of_4_rows_has_gap_rows_and_one_of_3_has_none() {
+    // The route's first row counts as reached by travel, as Ink/Stitch's route always starts with travel to
+    // it, of no length here. After rows 1 to 4, rows 5 and 6, then back to row 4's left end and on up the
+    // outline to row 8.
+    let run = two_stretches(4, 2, Pull::default()).concat();
+    assert!(passes(&run, &[(0.0, 4.0), (0.0, 5.0), (10.0, 5.0), (10.0, 6.0), (0.0, 6.0), (0.0, 4.0), (0.0, 8.0)]), "{run:?}");
+    // Rows 1 to 3, then rows 8 down to 4, which end the route.
+    assert_eq!(two_stretches(3, 2, Pull::default()), two_stretches(3, 0, Pull::default()));
+}
+
+#[test]
+fn req_fill_tat_007_the_travel_to_the_end_from_beside_it_ends_no_stretch() {
+    // A 10 × 9 rectangle's rows at y = 0 to 8, routed to an end on its left side at y = 3.5: rows 8 down
+    // to 4, travel to row 0, and rows 0 to 3 upwards, which end at row 3's left end, beside the end. The
+    // travel there is one edge of the outline, and in Ink/Stitch's route such travel ends no stretch.
+    let part = rectangle(9.0);
+    let meter = &mut Budget::DEFAULT.meter();
+    let rings = Rings::new(&part, meter).unwrap();
+    let rows = segments(&part, &stitching(false), meter).unwrap();
+    let route = route(&rings, &rows.0, None, Some(p(-5.0, 3.5)), meter).unwrap().unwrap();
+    let Some(&Step::Travel { from, beside, .. }) = route.steps.last() else { panic!("{:?}", route.steps) };
+    assert_eq!((route.nodes[from].point, beside), (p(0.0, 3.0), true));
+    let mut sewn = |route: &Route, skip_last| {
+        let how = stitching(skip_last);
+        let mut sewing = Sewing { gap_rows: 2, ..plain(route, &part, &rings, &rows, &how, meter) };
+        sewing.sew(&mut SplitMix64::new(1), meter, &mut Vec::new()).unwrap().concat()
+    };
+    // Leaving the first stretch, rows 3 and 2 fill its gap. Ending the second, none do: the needle comes
+    // along row 3 to its end and goes straight on to the end.
+    let heights = |run: &[Point]| run[run.len() - 3..].iter().map(|q| q.y()).collect::<Vec<_>>();
+    assert_eq!(heights(&sewn(&route, false)), [3.0, 3.0, 3.5]);
+    // Were that travel more than a handover, rows 4 and 5 would fill the gap past row 3 first, and the
+    // needle would come back down from row 5.
+    let mut leaving = route.clone();
+    if let Some(Step::Travel { beside, .. }) = leaving.steps.last_mut() {
+        *beside = false;
+    }
+    assert_eq!(heights(&sewn(&leaving, false)), [5.0, 3.0, 3.5]);
+    // With `skip_last`, the travel still sews row 3's end, as there is no next row to hand over to.
+    assert!(sewn(&route, true).contains(&p(0.0, 3.0)));
+}
+
+#[test]
+fn req_fill_tat_007_past_the_part_s_end_there_are_no_gap_rows_and_the_needle_sews_as_without() {
+    // Rows 4 to 8 upwards, then 1 to 3: past row 8 the part ends. With `skip_last` and stitches longer
+    // than the rows, the needle leaves the stretch well short of row 8's end, and goes there in one stitch.
+    let (order, how) = ([3, 4, 5, 6, 7, 0, 1, 2], Stitching { length: 20.0, ..stitching(true) });
+    let run = sew_rows(&order, &how, 2, Pull::default()).concat();
+    assert_eq!(run, sew_rows(&order, &how, 0, Pull::default()).concat());
+    let end = run.iter().position(|q| *q == p(10.0, 8.0)).unwrap();
+    assert!(run[end - 1].distance(run[end]) > TRAVEL.length, "{run:?}");
 }
 
 #[test]
@@ -266,6 +323,10 @@ fn req_fill_tat_006_rows_and_gap_rows_reach_past_their_ends_and_travel_joins_the
     let ends = [(11.25, 5.0), (11.25, 6.0), (-0.5, 6.0), (-0.5, 7.0), (11.25, 7.0), (11.25, 5.0), (11.25, 8.0), (-0.5, 8.0)];
     assert!(passes(&run, &ends), "{run:?}");
     assert!(run.iter().all(|q| (-0.5 - 1e-9..=11.25 + 1e-9).contains(&q.x())), "{run:?}");
+    // Each handover is one stitch, from a row's lengthened end to the next row's lengthened start.
+    for (end, start) in [((11.25, 1.0), (11.25, 2.0)), ((-0.5, 2.0), (-0.5, 3.0)), ((11.25, 7.0), (11.25, 6.0))] {
+        assert!(has_stitch(&run, end, start), "{end:?} to {start:?}: {run:?}");
+    }
     // 12 mm past each row's left end, more than the row's own 10 mm: each row is still sewn from the end the
     // route enters it by, row 1 rightwards and row 2 back.
     let far = two_stretches(5, 0, Pull { mm: [12.0, 0.0], share: [0.0, 0.0] }).concat();

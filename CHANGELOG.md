@@ -502,6 +502,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- With `skip_last`, a tatami fill's travel between 2 nodes that only an edge pairing them joins sews the
+  row's end before it, as Ink/Stitch's does. Such an edge stands for a way of several edges
+  (`DEV-FILL-006`), and Ink/Stitch never takes the 2 nodes for neighbours. The golden files stay as they
+  were.
 - Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
   found (`REQ-SAT-002`, `REQ-SAT-005`).
   - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails

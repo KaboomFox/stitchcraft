@@ -134,9 +134,11 @@ impl Graph {
         self.around.get(node)?.iter().find(|n| n.node == neighbour)
     }
 
-    /// Whether `a` and `b` share an edge.
-    pub fn joined(&self, a: NodeId, b: NodeId) -> bool {
-        self.neighbour(a, b).is_some()
+    /// Whether a row or a stretch of ring joins `a` and `b`, as it joins the ends of neighbouring rows. An
+    /// edge that pairs 2 nodes of odd degree does not count: it stands for the way of several edges that
+    /// Ink/Stitch's graph doubles in its place, and that graph only doubles the edges it has.
+    pub fn beside(&self, a: NodeId, b: NodeId) -> bool {
+        self.neighbour(a, b).is_some_and(|n| n.edges.iter().any(|&e| self.edge(e).is_some_and(|e| e.kind != Kind::Paired)))
     }
 
     /// How many edges meet at `node`, an edge to itself counting twice.
@@ -196,7 +198,11 @@ mod tests {
         assert_eq!(kinds(&g, 0), [(1, Kind::Row(0)), (1, Kind::Outline), (2, Kind::Outline), (2, Kind::Extra)]);
         assert_eq!(kinds(&g, 1), [(0, Kind::Row(0)), (0, Kind::Outline)]);
         assert_eq!((g.degree(0), g.degree(1), g.degree(2)), (4, 2, 2));
-        assert!(g.joined(2, 0) && !g.joined(1, 2));
+        assert!(g.beside(2, 0) && g.beside(0, 1) && !g.beside(1, 2));
+        // An edge pairing 2 nodes leaves them apart, and beside each other where another edge joins them too.
+        g.add(1, 2, Kind::Paired);
+        g.add(2, 0, Kind::Paired);
+        assert!(!g.beside(1, 2) && g.beside(2, 0));
     }
 
     #[test]
