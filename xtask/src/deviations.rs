@@ -100,6 +100,7 @@ mod tests {
             help: " Shape.\n",
             kind: Kind::Toggle,
             default: "false",
+            family_defaults: &[],
             group: "Locks",
             applies_to: StitchType::ALL,
             visible_when: None,

@@ -36,3 +36,25 @@ the next.
 - **Accepts:** a length from 0.1 to 100 mm, or empty (0 or less counts as empty)
 - **Default:** empty
 - **Ink/Stitch:** same key; StitchCraft differs (DEV-FILL-003): With end_row_spacing_mm, the step from row to row changes from the row spacing to the end spacing over the part's height, measured from the first row, and stays at the end spacing beyond it. Ink/Stitch carries the change on past the height, which reaches the rows within a row spacing of the part's far side when the first row lies before the part. With an end spacing smaller than the row spacing, over a part a few rows tall, the steps then shrink towards 0 and the rows pile up short of the far side without end.
+
+## Stitches
+
+### `staggers`
+
+**Staggers.** How many rows the needle points take to come back to where they started. Along each row they lie
+the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the
+row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show
+less than whole numbers do.
+
+- **Accepts:** a number from 0.01 to 100
+- **Default:** `4`
+- **Ink/Stitch:** same key, meaning and default
+
+### `skip_last`
+
+**Skip last stitch.** Leave out the needle point at the end of each row. It lies close to the start of the next row,
+and leaving it out lowers the stitch count and the density along the fill's edge.
+
+- **Accepts:** true or false
+- **Default:** `false`
+- **Ink/Stitch:** same key, meaning and default

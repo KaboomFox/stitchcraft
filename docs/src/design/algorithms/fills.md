@@ -90,11 +90,28 @@ from its lower end up to but not including its upper end.
 
 ### 2. Needle points along a row
 
-A row's needle points lie on a grid along it, `max_stitch_length_mm` apart and anchored at the origin.
-Each next row's grid is shifted by `1/staggers` of a stitch, and fills side by side tile. A segment
-starts with a needle point at its start, then takes the grid's points. Its end gets one too, unless
-`skip_last` is on or the last grid point is within 0.1 mm of it. With `enable_random_stitch_length` the
-points are spaced by the seeded random lengths instead.
+A row's needle points lie on a grid along it, as Ink/Stitch places them
+(`stitchcraft_engine::generators::tatami::stitches`, since M5.3). The grid's points are the longest
+stitch apart, `max_stitch_length_mm`. A fill always has one: 4 mm when it is not set or left empty, and
+0.1 mm, with `SC-W0102`, when it is 0 or less, as in Ink/Stitch. Measured along the rows from
+the design's origin, they lie at whole numbers of stitches plus the row's offset (`REQ-FILL-TAT-003`). A
+row's number is how far across the rows it lies from the origin, over `row_spacing_mm`, rounded to the
+nearest whole number, halves to the even one. Its offset is the fractional part of that number over
+`staggers`, times the longest stitch. Each row's points then lie a `staggers`-th of a stitch along from the row
+before's and come back after `staggers` rows, so neighbouring rows never line them up into furrows. A
+fraction of a stagger draws diagonals that show less. Fills side by side at the same angle share the
+grid, as they share their rows.
+
+A segment is sewn from one end to the other, as routing decides (M5.4). It takes its start, then every
+grid point past the start and before the end, and then its end, unless `skip_last` is on or the last
+point lies within 0.1 mm of it. A start on the grid is sewn once. Sewn the other way, a segment takes the
+same grid points.
+
+With `enable_random_stitch_length`, random lengths take the grid's place. The point nearest the start
+lies a random share of the longest stitch past it, and each next one a stitch on, longer or shorter by up to
+`random_stitch_length_jitter_percent` of it, while they lie before the end. The draws come from the
+element's generator, seeded with `random_seed`, in the order the segments are sewn. Ink/Stitch seeds a
+generator for each segment, and its random values differ (`DEV-FILL-004`).
 
 ### 3. Routing: every segment once
 
@@ -156,7 +173,7 @@ its outline, as Ink/Stitch sews it, and `SC-W0305` says so.
 |---|---|
 | `REQ-FILL-TAT-001` | Every row segment is covered exactly once by top stitches |
 | `REQ-FILL-TAT-002` | Measured row spacing equals the parameter (± 2 %), or follows the start→end gradient |
-| `REQ-FILL-TAT-003` | Needle points follow the stagger grid; no furrow of aligned points longer than `staggers` rows |
+| `REQ-FILL-TAT-003` | Needle points follow the stagger grid: a row's points lie a `staggers`-th of the longest stitch along from the row before's, and no 2 neighbouring rows line them up. A segment ends at its end unless `skip_last` is on or its last point lies within 0.1 mm of it |
 | `REQ-FILL-TAT-004` | Coverage: rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacing ≤ 0.4 mm |
 | `REQ-FILL-TAT-005` | Travel stitches lie inside the region (± 0.05 mm) |
 | `REQ-FILL-TAT-006` | Pull compensation preserves the number of holes and components |
