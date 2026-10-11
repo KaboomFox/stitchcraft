@@ -252,6 +252,7 @@ fn fill(
         length: raised("running_stitch_length_mm", length, min, diagnostics),
         tolerance: running.running_stitch_tolerance_mm.get(),
         min_stitch: min,
+        underpath: tatami.underpath,
     };
     let stitching = tatami.stitching(longest, &running);
     let stitched = tatami_fill(&built.region, &stitching, travel, neighbours.needle, neighbours.next.as_ref(), rng, meter)?;

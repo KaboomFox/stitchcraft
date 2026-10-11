@@ -5,6 +5,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M5.5: between rows a tatami fill's needle travels under the rows sewn after it (`underpath`, on by
+  default, `REQ-FILL-TAT-005`), as Ink/Stitch's does.
+  - Travel follows 3 gratings of lines across the part, at 45° to the rows either way and square to them,
+    the cheapest way. A line costs less the farther it lies from the part's rings, a stretch of ring 3
+    times its length, and a line closes once a row sewn crosses it. The way is smoothed and kept inside the
+    part. With `underpath` off the needle runs along the outline, as in M5.4.
+  - Where no line leads, as to a hole small enough to lie between the lines, the needle runs along the
+    rings and rows, where Ink/Stitch goes straight. Ties between equally cheap ways, the rings the costs
+    measure from and the points a way is smoothed through follow StitchCraft's own rules
+    (`DEV-FILL-007`).
 - M5.4: tatami fills are sewn (`REQ-FILL-TAT-001`, `REQ-FILL-TAT-008`).
   - Each part's row segments are sewn once each, back and forth, in the order Ink/Stitch routes them. One
     walk goes through the graph of the segments and the stretches of ring between their ends, with every
@@ -533,6 +543,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   zero-length jumps.
 
 ### Golden files
+- Changed `conformance/golden/plans/strokes.pes` and `.dst` (M5.5). In each rectangle of the `strokes`
+  fixture's fill the needle now goes from a top corner down to the far side under the rows instead of
+  along the outline. The fill sews 2 stitches more.
 - Changed `conformance/golden/plans/strokes.pes` and `.dst` (M5.4): the `strokes` fixture's fill is sewn
   now. The fixture draws it as 2 rectangles, to sew a fill in parts end to end.
 - Changed `conformance/golden/testsheets/TS-02.pes`, `TS-02B.pes`, `TS-10A.pes`, `TS-10B.pes` and

@@ -58,3 +58,14 @@ and leaving it out lowers the stitch count and the density along the fill's edge
 - **Accepts:** true or false
 - **Default:** `false`
 - **Ink/Stitch:** same key, meaning and default
+
+## Travel
+
+### `underpath`
+
+**Underpath.** Travel between rows runs inside the fill, under rows sewn after it, which hide it. Off, the
+needle travels along the fill's outline, where the travel can show along the edge.
+
+- **Accepts:** true or false
+- **Default:** `true`
+- **Ink/Stitch:** same key, meaning and default

@@ -146,7 +146,7 @@ fn meeting(a: Point, b: Point, c: Point, d: Point) -> Option<Point> {
 
 /// How far apart the sides from `a` to `b` and from `c` to `d` are: 0 where their lines cross within both,
 /// and otherwise as far as the nearest of their 4 ends is from the other side.
-fn apart(a: Point, b: Point, c: Point, d: Point) -> f64 {
+pub(crate) fn apart(a: Point, b: Point, c: Point, d: Point) -> f64 {
     if a == b {
         return to_side(a, c, d);
     }
