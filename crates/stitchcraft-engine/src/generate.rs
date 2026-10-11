@@ -18,7 +18,8 @@
 //! cannot read (`SC-E0101`), a satin column with no rails (`SC-E0201`), or its work budget spent
 //! (`SC-E0004`). Each element has the budget's work to itself, so one that runs out costs nothing but
 //! itself. A fill is not sewn until the rest of roadmap M5, but its area is built already
-//! ([`crate::normalize::region`]), and what will be left out of it is said.
+//! ([`crate::normalize::region`]), and what will be left out of it is said, as are its settings that
+//! cannot be used ([`crate::generators::tatami`]).
 
 use stitchcraft_core::{Budget, Code, Diagnostic, Exhausted, Meter, Mm, Point, SplitMix64};
 use stitchcraft_params::{ChoiceOption, Family, StitchType, Validated, params, unknown_keys};
@@ -30,6 +31,7 @@ use crate::generators::manual::manual_stitch;
 use crate::generators::passes::RepeatParams;
 use crate::generators::running::{RunningParams, running_stitch};
 use crate::generators::satin::{self, SatinLengths, SatinParams, satin_stitch};
+use crate::generators::tatami::TatamiParams;
 use crate::generators::{Approach, Neighbours, Stitched, method, mm};
 use crate::normalize::region;
 use crate::registry::PARAMETERS;
@@ -117,8 +119,10 @@ fn sew(
     let (path, width, join) = match &element.shape {
         Shape::Stroke { path, width, join } => (path, *width, *join),
         Shape::Fill { path, rule } => {
-            // The area is built already, so that what will be left out of it is said now.
+            // The area is built and the settings read already, so that what will be left out of the area,
+            // and settings that cannot be used, are said now.
             diagnostics.extend(region::build(path, *rule, meter)?.diagnostics);
+            kept(TatamiParams::from_set(set), diagnostics);
             diagnostics.push(not_yet("This element is a fill, and this version of StitchCraft does not sew fills yet"));
             return Ok(None);
         }

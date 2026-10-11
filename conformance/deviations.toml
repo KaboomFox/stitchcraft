@@ -122,6 +122,13 @@ reason = "A fill sews the area the drawing shows (REQ-FILL-001), and an SVG rend
 requirements = ["REQ-FILL-001"]
 
 [[deviation]]
+id = "DEV-FILL-003"
+area = "fill/tatami"
+summary = "With end_row_spacing_mm, the step from row to row changes from the row spacing to the end spacing over the part's height, measured from the first row, and stays at the end spacing beyond it. Ink/Stitch carries the change on past the height, which reaches the rows within a row spacing of the part's far side when the first row lies before the part. With an end spacing smaller than the row spacing, over a part a few rows tall, the steps then shrink towards 0 and the rows pile up short of the far side without end."
+reason = "Every fill's rows end, and a fading fill keeps the density it fades to. Elsewhere the rows lie where Ink/Stitch lays them. Ink/Stitch's behaviour was read at d59c9ab (lib/stitches/fill.py), and its step formula, worked through for a part 1 px tall with rows 1 px apart shrinking to 0.1 px and its first row 0.5 px before it, stacks rows towards 1.11 px for ever."
+requirements = ["REQ-FILL-TAT-002"]
+
+[[deviation]]
 id = "DEV-SVG-001"
 area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."

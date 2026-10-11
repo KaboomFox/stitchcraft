@@ -5,6 +5,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M5.2: a tatami fill's rows are laid as Ink/Stitch lays them. Its row settings `angle`, `row_spacing_mm`
+  and `end_row_spacing_mm` are read and checked. Fills are still skipped (`SC-W0011`).
+  - Rows run at the angle, a whole number of row spacings from the design's origin, so fills side by side
+    share their rows (`REQ-FILL-TAT-002`). With an end row spacing the spacing changes steadily towards it
+    over the part's height and keeps it beyond. Ink/Stitch's rows can pile up without end there over
+    parts a few rows tall (`DEV-FILL-003`).
+  - Each row is cut where it meets the outline, as GEOS cuts it for Ink/Stitch (`REQ-FILL-TAT-010`). A row
+    along an edge is a segment, and a row the outline touches from inside is split there. Shapely's pieces
+    of 2,511 rows across 406 random polygons, 98 of them with holes, are recorded and checked
+    (`conformance/fixtures/geometry/shapely-rows.txt`).
+  - The roadmap's M5 now has 9 steps: needle points get one of their own (M5.3).
 - M5.1: a fill's region, the area its path shows under its fill rule (`REQ-FILL-001`). Fills are not sewn
   yet (`SC-W0011`), but their region is built and what it leaves out is said.
   - Subpaths are flattened within a tenth of a CSS pixel and closed, and cut exactly wherever they cross,
@@ -338,6 +349,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ### Changed
 - The roadmap's M9, VectorCraft ABI v2 proposed upstream, comes last: after 1.0 and the work after it.
   1.0 has the ABI v1 plug-in from M6, and nothing before M9 waits on ArtCraft's answer to the RFC.
+- The running stitch page's pictures show their differences plainly. Each stitch length gets the page's
+  full width, the tolerance is shown on a half disc whose curve comes out round, angular or as a trapezoid,
+  and random stitch length on 14 rows close together, whose needle points line up in columns or scatter.
+  With `layout = "rows"` in `docs/shots.toml`, a shot's panels go one under another, each as wide as the
+  page.
 - A fill's subpaths and a satin column's are flattened within one tolerance, a tenth of a CSS pixel:
   `normalize::stroke::SHAPE_TOLERANCE`, which replaces `normalize::satin::TOLERANCE`.
 - Mutation testing on a pull request runs in 4 parts, dealt round-robin as the weekly run deals them, and
