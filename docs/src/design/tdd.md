@@ -116,7 +116,7 @@ identical to Ink/Stitch's SVG attributes because that is the interoperability co
 | Guided, gradient, ripple, tartan, cross stitch; auto-run/auto-satin | P3 | M10 |
 | EXP, JEF, VP3, XXX, U01 formats; thread catalogues | P3 | M11 |
 | 1.0 hardening, translations, release automation | — | M12 |
-| VectorCraft ABI v2 (upstream RFC): export inside VectorCraft, rich parameter panels, overlay preview | after 1.0 | M9, last |
+| VectorCraft ABI v2 (upstream RFC), for export from File › Export, overlay previews, rich parameter panels and a machine profile per document | after 1.0 | M9, last |
 
 The full milestone and step list is in [the roadmap](../plan/roadmap.md).
 

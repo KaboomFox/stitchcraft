@@ -167,11 +167,11 @@ an `ASSETS.md` row, never NC, GPL or unclear terms; ADR-0001 is amended in that 
 installed with Ink/Stitch, read in their own format; appliqué workflow, design splitting for small hoops, colour-change reordering, print worksheets, an
 in-tree VectorCraft crate if wanted.
 
-## M9 — VectorCraft ABI v2 (upstream)
+## M9 (VectorCraft ABI v2, upstream)
 
 M9 comes last, after 1.0 and the work after it. 1.0 has the ABI v1 plug-in from M6, and nothing before M9
 waits on ArtCraft's answer to the RFC. Its id stays M9, as every step id does.
 
 Open the [RFC](../design/rfc-vectorcraft-abi-v2.md) with ArtCraft; one PR per accepted proposal (with
-tests, following their `AGENTS.md`); then plug-in v2: File › Export PES/DST, overlay previews, rich
-parameter dialogs, document-level machine profile.
+tests, following their `AGENTS.md`); then plug-in v2, with export to PES and DST from File › Export,
+overlay previews, rich parameter dialogs and a machine profile per document.
