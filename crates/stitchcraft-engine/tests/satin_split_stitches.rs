@@ -167,8 +167,9 @@ fn req_sat_003_with_even_splits_a_short_stitch_s_inset_is_at_most_a_third_of_the
     // split into 3 parts at a longest stitch of 1.5 mm, which holds the insets to 0.5 mm.
     let (points, _) = sewn_satin(&quarter_ring(6.0, 2.0), &[("short_stitch_inset", "50"), ("max_stitch_length_mm", "1.5")]);
     // Every third needle point ends a stitch: the outer rail's on radius 6, the inner's from 2 to 2.5. The
-    // rails are flattened cubics, within a hundredth of a millimetre of circles.
+    // rails are cubics flattened within a tenth of a CSS pixel (0.026 mm), and those cubics lie within a
+    // thousandth of a millimetre of circles this small.
     let inner: Vec<f64> = points.iter().step_by(3).map(|p| p.distance(Point::ORIGIN)).filter(|r| *r < 4.0).collect();
-    assert!(inner.iter().all(|r| (2.0 - 1e-2..=2.5 + 1e-2).contains(r)), "{inner:?}");
+    assert!(inner.iter().all(|r| (2.0 - 0.03..=2.5 + 0.03).contains(r)), "{inner:?}");
     assert!(inner.iter().filter(|r| (*r - 2.5).abs() < 1e-2).count() > 5, "inset the most: {inner:?}");
 }

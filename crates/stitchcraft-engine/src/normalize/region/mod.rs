@@ -1,12 +1,12 @@
 //! The area a fill covers: its subpaths as rings, filled by the drawing's fill rule, in parts with holes
 //! (`REQ-FILL-001`, `REQ-FILL-002`).
 //!
-//! A fill should sew what the drawing shows, so its area is the area an SVG renderer paints. Each subpath
-//! is flattened within a tenth of a CSS pixel, as Ink/Stitch flattens it, and closed. Where subpaths cross,
-//! touch or run along each other they are cut, and every face between the cuts counts how many times the
-//! subpaths wind round it (`arrange`): the fill rule fills a face whose count is not 0 (`nonzero`, SVG's
-//! default) or is odd (`evenodd`). The edges between filled and empty faces become the parts' rings
-//! (`assemble`).
+//! A fill should sew what the drawing shows, so its area is the area an SVG renderer paints. Each
+//! subpath is flattened within a tenth of a CSS pixel ([`stroke::SHAPE_TOLERANCE`]), as Ink/Stitch
+//! flattens it, and closed. Where subpaths cross, touch or run along each other they are cut, and every
+//! face between the cuts counts how many times the subpaths wind round it (`arrange`): the fill rule
+//! fills a face whose count is not 0 (`nonzero`, SVG's default) or is odd (`evenodd`). The edges between
+//! filled and empty faces become the parts' rings (`assemble`).
 //!
 //! Ink/Stitch builds a fill's area differently: the subpath of the largest area is the outline and every
 //! other subpath a hole, whatever the fill rule, and a shape that is not valid is repaired by the even-odd
@@ -30,10 +30,6 @@ use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
 
 use crate::design::{FillRule, Path};
 use crate::normalize::stroke;
-
-/// How far a flattened curve may stray from the curve, in millimetres: a tenth of a CSS pixel, as
-/// Ink/Stitch flattens a fill's outline.
-const FLATNESS: f64 = 0.1 * MM_PER_SVG_PX;
 
 /// Points this near each other, in millimetres, are one point: a crossing found this near a point already
 /// found is that point, and a row's stretch this short is no segment.
@@ -100,7 +96,7 @@ pub struct Built {
 /// The region the subpaths of `path` bound under `rule`. One unit of `meter` for each point, segment and
 /// cut, each pair of segments whose spans along x overlap, each half edge, and each ring and face compared.
 pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Exhausted> {
-    let flat = stroke::flatten(path, FLATNESS, meter)?;
+    let flat = stroke::flatten(path, stroke::SHAPE_TOLERANCE, meter)?;
     let rings: Vec<Vec<Point>> =
         flat.pieces.into_iter().map(|piece| geom::closed(&piece.points)).filter(|ring| geom::without_repeats(ring).len() >= 4).collect();
     let arrangement = arrange::cut(&rings, meter)?;
