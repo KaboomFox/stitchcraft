@@ -82,7 +82,7 @@ pub fn rows(part: &Polygon, grid: &Grid, meter: &mut Meter) -> Result<Vec<Row>, 
 /// The direction along rows at `angle` degrees and the direction across them, square to it, in the
 /// drawing's axes (y down). Whole right angles are exact, so that rows at 0° or 90° run exactly along the
 /// axes.
-fn axes(angle: f64) -> ((f64, f64), (f64, f64)) {
+pub(crate) fn axes(angle: f64) -> ((f64, f64), (f64, f64)) {
     const RIGHT_ANGLES: [(f64, (f64, f64)); 4] = [(0.0, (0.0, 1.0)), (90.0, (1.0, 0.0)), (180.0, (0.0, -1.0)), (270.0, (-1.0, 0.0))];
     let turned = angle.rem_euclid(360.0);
     let (sin, cos) = RIGHT_ANGLES.iter().find(|(a, _)| *a == turned).map_or_else(|| math::sin_cos(math::to_radians(angle)), |&(_, sc)| sc);

@@ -10,6 +10,7 @@ use std::collections::BTreeSet;
 
 use crate::set::find;
 use crate::spec::{Kind, ParamGroup, ParamSpec, Stability};
+use crate::stitch_type::Family;
 
 /// Every problem in `registry`, one line each, naming the group or the parameter.
 pub fn audit(registry: &[&ParamGroup]) -> Vec<String> {
@@ -57,6 +58,16 @@ fn check(spec: &ParamSpec, registry: &[&ParamGroup]) -> Vec<&'static str> {
         require(options.iter().all(|o| !o.id.trim().is_empty() && !o.label.trim().is_empty()), "an option has no id or no label");
     }
     require(matches!(spec.read(spec.default), Ok((_, None))), "its default is not a value it accepts without a warning");
+    let families: BTreeSet<Family> = spec.family_defaults.iter().map(|&(family, _)| family).collect();
+    require(families.len() == spec.family_defaults.len(), "a family's default is given twice");
+    require(
+        families.iter().all(|family| spec.applies_to.iter().any(|t| t.family() == *family)),
+        "it has a default for a family it does not apply to",
+    );
+    require(
+        spec.family_defaults.iter().all(|&(family, value)| value != spec.default && matches!(spec.in_family(family).read(value), Ok((_, None)))),
+        "a family's default is the default, or not a value the family accepts without a warning",
+    );
     if let Some(condition) = spec.visible_when {
         // Shown for some value, and only for values the other parameter takes as they are.
         let possible = !condition.any_of.is_empty()
@@ -98,6 +109,7 @@ mod tests {
         help: " Distance between rows.\n",
         kind: Kind::Length { min: 0.1, max: 10.0, optional: false },
         default: "0.25",
+        family_defaults: &[],
         group: "Fill",
         applies_to: StitchType::ALL,
         visible_when: None,
@@ -160,6 +172,18 @@ mod tests {
             ParamSpec { key: "i", label: "I", stability: Stability::Deprecated { use_instead: Some("i") }, ..GOOD },
             ParamSpec { key: "a", label: "A2", ..GOOD },
             ParamSpec { key: "j", label: "J", visible_when: Some(Condition { key: "c", any_of: &[] }), ..GOOD },
+            ParamSpec { key: "k", label: "K", family_defaults: &[(Family::Fill, "1"), (Family::Fill, "2")], ..GOOD },
+            ParamSpec { key: "l", label: "L", applies_to: &[StitchType::SatinColumn], family_defaults: &[(Family::Fill, "1")], ..GOOD },
+            ParamSpec { key: "m", label: "M", family_defaults: &[(Family::Fill, "0.25")], ..GOOD },
+            ParamSpec { key: "n", label: "N", family_defaults: &[(Family::Satin, "99")], ..GOOD },
+            // A family with a default of its own needs a value: empty is not one there.
+            ParamSpec {
+                key: "o",
+                label: "O",
+                kind: Kind::Length { min: 0.1, max: 10.0, optional: true },
+                family_defaults: &[(Family::Fill, "")],
+                ..GOOD
+            },
         ];
         let problems = audit(&[&group(BROKEN)]);
         assert_eq!(
@@ -183,6 +207,11 @@ mod tests {
                 "`i`: it is deprecated in favour of itself or of a parameter that does not exist",
                 "`a`: declared twice",
                 "`j`: it is shown only when another parameter has a value that parameter cannot have",
+                "`k`: a family's default is given twice",
+                "`l`: it has a default for a family it does not apply to",
+                "`m`: a family's default is the default, or not a value the family accepts without a warning",
+                "`n`: a family's default is the default, or not a value the family accepts without a warning",
+                "`o`: a family's default is the default, or not a value the family accepts without a warning",
             ]
         );
     }

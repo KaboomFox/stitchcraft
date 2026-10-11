@@ -4,7 +4,7 @@
 //! declaration next to the generator that uses it. Everything about a parameter that people or programs
 //! read — the docs, the JSON Schema, a plug-in's manifest, a validation message — comes from here.
 
-use crate::stitch_type::StitchType;
+use crate::stitch_type::{Family, StitchType};
 
 /// What kind of value a parameter takes, with its limits.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -169,6 +169,11 @@ pub struct ParamSpec {
     /// The value when a design does not set it, written as a design would store it; empty for an
     /// optional length, a seed or a text that is empty by default.
     pub default: &'static str,
+    /// The default of each family whose default differs from `default`. Ink/Stitch declares such a
+    /// parameter once for each kind of element, each with its own default: a fill's longest stitch is
+    /// 4 mm, where a satin column has none. Such a family reads the parameter as one that needs a value
+    /// ([`ParamSpec::in_family`]).
+    pub family_defaults: &'static [(Family, &'static str)],
     /// The section of a user interface or a reference page it belongs to.
     pub group: &'static str,
     /// The stitch types it applies to.
@@ -185,6 +190,24 @@ impl ParamSpec {
     /// The help text as Markdown.
     pub fn help(&self) -> String {
         stitchcraft_core::text::doc_comment(self.help)
+    }
+
+    /// The value when a design does not set it, for a stitch type of `family`: the family's own default,
+    /// or [`ParamSpec::default`].
+    pub fn default_for(&self, family: Family) -> &'static str {
+        self.in_family(family).default
+    }
+
+    /// The parameter as a stitch type of `family` reads it. A family with a default of its own needs a
+    /// value: the default is the family's, and the kind is never empty, so that a length of 0 or less is
+    /// raised to the least it accepts rather than counting as empty. Ink/Stitch reads a fill's longest
+    /// stitch so, where manual stitch reads 0 or less as no longest stitch. A value left empty is the
+    /// default all the same ([`crate::read_param`]).
+    pub fn in_family(&self, family: Family) -> ParamSpec {
+        match self.family_defaults.iter().find(|(f, _)| *f == family) {
+            Some(&(_, default)) => ParamSpec { default, kind: self.kind.required(), ..*self },
+            None => *self,
+        }
     }
 }
 
@@ -245,6 +268,21 @@ impl Kind {
             Kind::Text { max_bytes } => format!("text of at most {max_bytes} bytes"),
         }
     }
+
+    /// Whether a value may be empty: an optional length or pair.
+    pub(crate) const fn optional(self) -> bool {
+        matches!(self, Kind::Length { optional: true, .. } | Kind::LengthPair { optional: true, .. } | Kind::PercentPair { optional: true, .. })
+    }
+
+    /// The same kind with a value always needed.
+    pub(crate) const fn required(self) -> Kind {
+        match self {
+            Kind::Length { min, max, .. } => Kind::Length { min, max, optional: false },
+            Kind::LengthPair { min, max, .. } => Kind::LengthPair { min, max, optional: false },
+            Kind::PercentPair { min, max, .. } => Kind::PercentPair { min, max, optional: false },
+            other => other,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -265,5 +303,27 @@ mod tests {
             Kind::Toggle,
         ];
         assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "mm", "%", "%", "%", "°", "", ""]);
+    }
+
+    #[test]
+    fn a_kind_made_required_is_never_empty() {
+        let kinds = [
+            Kind::Length { min: 0.1, max: 1.0, optional: true },
+            Kind::LengthPair { min: 0.0, max: 1.0, optional: true },
+            Kind::PercentPair { min: 0.0, max: 2.0, optional: true },
+            Kind::Length { min: 0.1, max: 1.0, optional: false },
+            Kind::Seed,
+        ];
+        assert_eq!(kinds.map(Kind::optional), [true, true, true, false, false]);
+        assert_eq!(
+            kinds.map(Kind::required),
+            [
+                Kind::Length { min: 0.1, max: 1.0, optional: false },
+                Kind::LengthPair { min: 0.0, max: 1.0, optional: false },
+                Kind::PercentPair { min: 0.0, max: 2.0, optional: false },
+                Kind::Length { min: 0.1, max: 1.0, optional: false },
+                Kind::Seed,
+            ]
+        );
     }
 }
