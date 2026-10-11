@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-835c00c5.js";
+            window.path_to_searchindex_js = "../../searchindex-116c8d8e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-6a54873b.js"></script>
@@ -366,12 +366,24 @@ needle. Each part is a group of its own, which assembly joins to the next as it 
 straight on within the collapse length, and otherwise with a jump and the ties and trims the element’s
 settings give. <code>SC-W0307</code> says the fill is in parts.</p>
 <h3 id="6-underlay"><a class="header" href="#6-underlay">6. Underlay</a></h3>
-<p>Before its top rows, each part sews its underlay, on by default. The underlay is sewn like the top
-rows, on the part shrunk by <code>fill_underlay_inset_mm</code>. It makes one pass for each angle in
-<code>fill_underlay_angle</code> (default: <code>angle + 90°</code>), with <code>fill_underlay_row_spacing_mm</code> (default: three
-times the top spacing) and <code>fill_underlay_max_stitch_length_mm</code> (default: the top’s).
-<code>fill_underlay_skip_last</code> and <code>underlay_underpath</code> take the place of <code>skip_last</code> and <code>underpath</code>. Each pass
-starts where the one before ended. The top rows cover the part grown by <code>expand_mm</code>.</p>
+<p>Before its top rows, each part sews its underlay, on by default (<code>REQ-FILL-TAT-011</code>, since M5.6). The
+underlay is a layer of rows for each angle in <code>fill_underlay_angle</code>, in the order given, or with none set
+one at <code>angle + 90°</code>, square to the top rows. A layer’s rows lie evenly <code>fill_underlay_row_spacing_mm</code>
+apart (default: 3 times the row spacing), with no end spacing. Their needle points lie on the stagger
+grid with the fill’s <code>staggers</code>, <code>fill_underlay_max_stitch_length_mm</code> apart (default: the fill’s longest
+stitch), never at random lengths. <code>fill_underlay_skip_last</code> and <code>underlay_underpath</code> take the place of
+<code>skip_last</code> and <code>underpath</code>.</p>
+<p>Each layer is routed as the top rows are (sections 3 and 4). It starts at the point of the part’s rings
+nearest the needle and ends there, as Ink/Stitch routes a fill with nothing to end near. The next layer,
+and then the top rows, start where it ended, so a part is still one run. A layer with no row is sewn round
+the part’s outline from its start, as the top rows are (section 8), and <code>SC-I0308</code> says so. The needle
+goes on to that start as Ink/Stitch’s stitch plan joins a layer to the next one: straight on within the
+element’s jump length, and farther with a jump. The generator makes that join itself, because Ink/Stitch
+never forces locks after a layer of underlay, where assembly would after any group of an element with
+<code>force_lock_stitches</code>.</p>
+<p>Ink/Stitch sews the underlay on the part shrunk by <code>fill_underlay_inset_mm</code>, and the top rows on the part
+grown by <code>expand_mm</code>. Both need a polygon buffered as GEOS buffers it, which comes in M5.7. Until then the
+2 are not registered, and an element that sets them gets <code>SC-W0105</code>.</p>
 <h3 id="7-pull-compensation-and-gap-fill-rows"><a class="header" href="#7-pull-compensation-and-gap-fill-rows">7. Pull compensation and gap-fill rows</a></h3>
 <p>The thread pulls a row in at its ends. Each segment is lengthened at both ends by <code>pull_compensation_mm</code>
 plus <code>pull_compensation_percent</code> of its length (one value, or one for each end). Ink/Stitch then rebuilds
@@ -385,8 +397,9 @@ StitchCraft takes the extra rows from the row grid and keeps them inside the reg
 (<code>REQ-FILL-TAT-007</code>).</p>
 <h3 id="8-no-rows"><a class="header" href="#8-no-rows">8. No rows</a></h3>
 <p>A part thinner than the row spacing has no row. It is sewn as a running stitch round its outline, from
-the outline’s start, as Ink/Stitch sews it, and <code>SC-W0305</code> says so (since M5.4). Where the fill rule
-leaves every face empty, the fill sews nothing, and <code>SC-W0303</code> says so.</p>
+the outline’s start, as Ink/Stitch sews it, and <code>SC-W0305</code> says so (since M5.4). A layer of underlay with
+no row is sewn so too, and <code>SC-I0308</code> says so (since M5.6). Where the fill rule leaves every face empty,
+the fill sews nothing, and <code>SC-W0303</code> says so.</p>
 <h3 id="properties-conformance"><a class="header" href="#properties-conformance">Properties (conformance)</a></h3>
 <div class="table-wrapper">
 <table>
@@ -403,6 +416,7 @@ leaves every face empty, the fill sews nothing, and <code>SC-W0303</code> says s
 <tr><td><code>REQ-FILL-TAT-007</code></td><td>All rows, including gap-fill rows, lie inside the region (± tolerance + compensation)</td></tr>
 <tr><td><code>REQ-FILL-TAT-008</code></td><td>A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element</td></tr>
 <tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget</td></tr>
+<tr><td><code>REQ-FILL-TAT-011</code></td><td>Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start</td></tr>
 </tbody>
 </table>
 </div>

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-835c00c5.js";
+            window.path_to_searchindex_js = "../../searchindex-116c8d8e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-6a54873b.js"></script>
@@ -196,7 +196,7 @@ accepted (<a href="diagnostics.html#sc-e0101"><code>SC-E0101</code></a>); a valu
 <li><strong>Angles</strong> are degrees (<code>45</code>, <code>45°</code> or <code>45deg</code>), turned into the range from −180 (exclusive) to 180.</li>
 <li><strong>Percentages</strong> may end in <code>%</code>.</li>
 <li><strong>On or off</strong> is <code>true</code> or <code>false</code>; <code>yes</code>/<code>no</code>, <code>on</code>/<code>off</code> and <code>1</code>/<code>0</code> work too.</li>
-<li><strong>Lists</strong> (several lengths or numbers) are separated by spaces or commas: <code>2.5 1.2</code>.</li>
+<li><strong>Lists</strong> (several lengths, numbers or angles) are separated by spaces or commas: <code>2.5 1.2</code>.</li>
 <li><strong>Seeds</strong> are a number or any text; empty means “derive it from the element”, so every element
 differs but every run is the same.</li>
 </ul>
@@ -215,7 +215,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/repeat.html">Repeat parameters</a></td><td>2</td><td>Running stitch, Ripple stitch, Zigzag stitch, Manual stitch</td></tr>
 <tr><td><a href="params/satin.html">Satin parameters</a></td><td>36</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
 <tr><td><a href="params/fill.html">Fill parameters</a></td><td>1</td><td>Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill</td></tr>
-<tr><td><a href="params/tatami.html">Tatami parameters</a></td><td>6</td><td>Tatami fill</td></tr>
+<tr><td><a href="params/tatami.html">Tatami parameters</a></td><td>12</td><td>Tatami fill</td></tr>
 </tbody>
 </table>
 </div>
@@ -242,6 +242,11 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/satin.html#end_at_nearest_point"><code>end_at_nearest_point</code></a></td><td>End at nearest point</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/tatami.html#end_row_spacing_mm"><code>end_row_spacing_mm</code></a></td><td>End row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/fill.html#fill_method"><code>fill_method</code></a></td><td>Fill method</td><td>Fill parameters</td></tr>
+<tr><td><a href="params/tatami.html#fill_underlay"><code>fill_underlay</code></a></td><td>Underlay</td><td>Tatami parameters</td></tr>
+<tr><td><a href="params/tatami.html#fill_underlay_angle"><code>fill_underlay_angle</code></a></td><td>Underlay angle</td><td>Tatami parameters</td></tr>
+<tr><td><a href="params/tatami.html#fill_underlay_max_stitch_length_mm"><code>fill_underlay_max_stitch_length_mm</code></a></td><td>Underlay longest stitch</td><td>Tatami parameters</td></tr>
+<tr><td><a href="params/tatami.html#fill_underlay_row_spacing_mm"><code>fill_underlay_row_spacing_mm</code></a></td><td>Underlay row spacing</td><td>Tatami parameters</td></tr>
+<tr><td><a href="params/tatami.html#fill_underlay_skip_last"><code>fill_underlay_skip_last</code></a></td><td>Skip last underlay stitch</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/common.html#force_lock_stitches"><code>force_lock_stitches</code></a></td><td>Always lock</td><td>Common parameters</td></tr>
 <tr><td><a href="params/common.html#lock_custom_end"><code>lock_custom_end</code></a></td><td>Custom end lock</td><td>Common parameters</td></tr>
 <tr><td><a href="params/common.html#lock_custom_start"><code>lock_custom_start</code></a></td><td>Custom start lock</td><td>Common parameters</td></tr>
@@ -285,6 +290,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/satin.html#swap_satin_rails"><code>swap_satin_rails</code></a></td><td>Swap rails</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/common.html#ties"><code>ties</code></a></td><td>Lock stitches</td><td>Common parameters</td></tr>
 <tr><td><a href="params/common.html#trim_after"><code>trim_after</code></a></td><td>Trim after</td><td>Common parameters</td></tr>
+<tr><td><a href="params/tatami.html#underlay_underpath"><code>underlay_underpath</code></a></td><td>Underlay underpath</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/tatami.html#underpath"><code>underpath</code></a></td><td>Underpath</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/satin.html#zigzag_spacing_mm"><code>zigzag_spacing_mm</code></a></td><td>Zigzag spacing</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#zigzag_underlay"><code>zigzag_underlay</code></a></td><td>Zigzag underlay</td><td>Satin parameters</td></tr>

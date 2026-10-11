@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-835c00c5.js";
+            window.path_to_searchindex_js = "../searchindex-116c8d8e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-6a54873b.js"></script>
@@ -284,6 +284,7 @@ version and a registry schema version arrive with the first release, together wi
 <tr><td><code>OptionalLengthPair</code>, <code>OptionalPercentPair</code></td><td><code>Option&lt;[Mm; 2]&gt;</code>, <code>Option&lt;[f64; 2]&gt;</code></td><td>as <code>LengthPair</code> and <code>PercentPair</code>, or empty: the setting then comes from another one, as a zigzag underlay’s inset comes from the contour’s. 0 is a value, as Ink/Stitch reads it</td><td><code>float</code>, unit <code>mm (each side)</code> or <code>% (each side)</code>, no default</td></tr>
 <tr><td><code>PercentList</code></td><td><code>Vec&lt;f64&gt;</code></td><td>1 to 16 percentages, each in range (levels like <code>"15 30"</code>)</td><td><code>float</code>, unit <code>%</code>, read as a list</td></tr>
 <tr><td><code>CountList</code></td><td><code>Vec&lt;u32&gt;</code></td><td>1–16 whole numbers, each in range</td><td><code>string</code>/<code>int</code> lists</td></tr>
+<tr><td><code>OptionalAngleList</code></td><td><code>Option&lt;Vec&lt;f64&gt;&gt;</code></td><td>1 to 16 angles, each read as an <code>Angle</code>. Empty, the setting comes from another one, as a fill’s underlay angles come from its angle</td><td><code>float</code>, unit <code>deg</code>, read as a list, no default</td></tr>
 <tr><td><code>Text</code></td><td><code>String</code></td><td>≤ 4,096 bytes; kind-specific grammar (e.g. a custom lock path) is checked by its user</td><td><code>string</code></td></tr>
 </tbody>
 </table>

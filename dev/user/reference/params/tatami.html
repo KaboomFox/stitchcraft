@@ -35,7 +35,7 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-835c00c5.js";
+            window.path_to_searchindex_js = "../../../searchindex-116c8d8e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../toc-6a54873b.js"></script>
@@ -234,6 +234,55 @@ and leaving it out lowers the stitch count and the density along the fill’s ed
 <h3 id="underpath"><a class="header" href="#underpath"><code>underpath</code></a></h3>
 <p><strong>Underpath.</strong> Travel between rows runs inside the fill, under rows sewn after it, which hide it. Off, the
 needle travels along the fill’s outline, where the travel can show along the edge.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false</li>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h2 id="underlay"><a class="header" href="#underlay">Underlay</a></h2>
+<h3 id="fill_underlay"><a class="header" href="#fill_underlay"><code>fill_underlay</code></a></h3>
+<p><strong>Underlay.</strong> Sew underlay before the top rows: rows of stitches farther apart than the top rows, square to
+them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top
+rows, so less fabric shows between them.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false</li>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="fill_underlay_angle"><a class="header" href="#fill_underlay_angle"><code>fill_underlay_angle</code></a></h3>
+<p><strong>Underlay angle.</strong> The direction of the underlay’s rows, in degrees counter-clockwise from horizontal. Several
+angles separated by spaces sew a layer of underlay at each, one after another. Empty: square to
+the top rows, at the fill’s angle plus 90°.</p>
+<ul>
+<li><strong>Accepts:</strong> 1 to 16 angles in degrees, separated by spaces, or empty</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="fill_underlay_row_spacing_mm"><a class="header" href="#fill_underlay_row_spacing_mm"><code>fill_underlay_row_spacing_mm</code></a></h3>
+<p><strong>Underlay row spacing.</strong> How far apart the underlay’s rows are, measured square to them. Empty: 3 times the row spacing.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.1 to 100 mm, or empty (0 or less counts as empty)</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="fill_underlay_max_stitch_length_mm"><a class="header" href="#fill_underlay_max_stitch_length_mm"><code>fill_underlay_max_stitch_length_mm</code></a></h3>
+<p><strong>Underlay longest stitch.</strong> How far apart the needle points along the underlay’s rows are. Empty: the fill’s longest stitch
+(<code>max_stitch_length_mm</code>).</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty)</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="fill_underlay_skip_last"><a class="header" href="#fill_underlay_skip_last"><code>fill_underlay_skip_last</code></a></h3>
+<p><strong>Skip last underlay stitch.</strong> Leave out the needle point at the end of each underlay row, as <code>skip_last</code> does for the top rows.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false</li>
+<li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="underlay_underpath"><a class="header" href="#underlay_underpath"><code>underlay_underpath</code></a></h3>
+<p><strong>Underlay underpath.</strong> Travel between the underlay’s rows runs inside the fill, under the underlay rows sewn after it.
+Off, the needle travels along the fill’s outline.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false</li>
 <li><strong>Default:</strong> <code>true</code></li>

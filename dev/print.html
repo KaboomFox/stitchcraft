@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-835c00c5.js";
+            window.path_to_searchindex_js = "searchindex-116c8d8e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-6a54873b.js"></script>
@@ -362,11 +362,11 @@ red first, and blue when the machine stops.</p>
 of 2 rectangles and 2 lines that nearly touch:</p>
 <pre><code class="language-console">$ stitch plan strokes.svg -o strokes.pes --preview strokes.png --report strokes.json
 strokes.svg
-  file      strokes.pes (PES v1, 2582 bytes)
-  sha256    bd5c17d0a10d4182c2fafbe9e441132b4e8f37b82b18a98d8ae875f1ff0f4d49
+  file      strokes.pes (PES v1, 2838 bytes)
+  sha256    21ec61203f8de823394fddddd76be5505d13434684f78581665095441e28713b
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      60.0 × 45.0 mm
-  stitches  427 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops
+  stitches  555 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops
   threads   1. unnamed (#c00000), shown as Brother PEC 5 "Red"
             2. unnamed (#0040c0), shown as Brother PEC 21 "Ultramarine"
             3. unnamed (#c00000), shown as Brother PEC 5 "Red"
@@ -615,7 +615,7 @@ stroke or the fill of a shape, and each sews in its own thread colour.</p>
 <tr><td><a href="#bean-stitch-and-repeats">Bean stitch</a></td><td>strokes, each stitch sewn 3 times or more</td><td>now</td></tr>
 <tr><td><a href="#manual-stitch">Manual stitch</a></td><td>strokes whose nodes are the needle points</td><td>now</td></tr>
 <tr><td>Satin column</td><td>wide strokes and borders</td><td>milestone M4</td></tr>
-<tr><td>Tatami fill</td><td>areas, in rows of running stitches</td><td>now, without underlay until later in milestone M5</td></tr>
+<tr><td>Tatami fill</td><td>areas, in rows of running stitches</td><td>now, with underlay; compensation later in milestone M5</td></tr>
 </tbody>
 </table>
 </div>
@@ -1321,6 +1321,7 @@ Arguments:
 <tr><td><a href="#sc-w0305"><code>SC-W0305</code></a></td><td>Warning</td><td>Fill part too thin for rows; sewn round its outline</td></tr>
 <tr><td><a href="#sc-i0306"><code>SC-I0306</code></a></td><td>Info</td><td>Nonzero fill rule fills a part the even-odd rule leaves empty</td></tr>
 <tr><td><a href="#sc-w0307"><code>SC-W0307</code></a></td><td>Warning</td><td>Fill in parts that are apart; each sewn on its own</td></tr>
+<tr><td><a href="#sc-i0308"><code>SC-I0308</code></a></td><td>Info</td><td>Fill underlay too thin for rows; sewn round the outline</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -1519,6 +1520,15 @@ way round.</p>
 an outline that crosses itself, is sewn one part after another: each part’s rows on their own, with
 a jump to the next, which the plan may trim. Ink/Stitch warns about such fills too.</p>
 <p>To choose the order the parts are sewn in, break the fill apart into one element for each part.</p>
+<h2 id="sc-i0308"><a class="header" href="#sc-i0308">SC-I0308</a></h2>
+<p><strong>Info</strong> — Fill underlay too thin for rows; sewn round the outline</p>
+<p>A fill’s underlay is sewn in rows <code>fill_underlay_row_spacing_mm</code> apart, 3 times the row spacing
+unless set. On a part so thin across those rows that none crosses it, that layer of underlay is
+sewn as a running stitch round the part’s outline instead, as Ink/Stitch sews it, and the top rows
+are sewn over it as usual.</p>
+<p>The message counts the layers, and each part has one for each underlay angle. To sew the underlay
+in rows, set a smaller <code>fill_underlay_row_spacing_mm</code> or another <code>fill_underlay_angle</code>. To sew no
+underlay, turn <code>fill_underlay</code> off.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
@@ -1677,7 +1687,7 @@ accepted (<a href="#sc-e0101"><code>SC-E0101</code></a>); a value outside its ra
 <li><strong>Angles</strong> are degrees (<code>45</code>, <code>45°</code> or <code>45deg</code>), turned into the range from −180 (exclusive) to 180.</li>
 <li><strong>Percentages</strong> may end in <code>%</code>.</li>
 <li><strong>On or off</strong> is <code>true</code> or <code>false</code>; <code>yes</code>/<code>no</code>, <code>on</code>/<code>off</code> and <code>1</code>/<code>0</code> work too.</li>
-<li><strong>Lists</strong> (several lengths or numbers) are separated by spaces or commas: <code>2.5 1.2</code>.</li>
+<li><strong>Lists</strong> (several lengths, numbers or angles) are separated by spaces or commas: <code>2.5 1.2</code>.</li>
 <li><strong>Seeds</strong> are a number or any text; empty means “derive it from the element”, so every element
 differs but every run is the same.</li>
 </ul>
@@ -1696,7 +1706,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#repeat-parameters">Repeat parameters</a></td><td>2</td><td>Running stitch, Ripple stitch, Zigzag stitch, Manual stitch</td></tr>
 <tr><td><a href="#satin-parameters">Satin parameters</a></td><td>36</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
 <tr><td><a href="#fill-parameters">Fill parameters</a></td><td>1</td><td>Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill</td></tr>
-<tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>6</td><td>Tatami fill</td></tr>
+<tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>12</td><td>Tatami fill</td></tr>
 </tbody>
 </table>
 </div>
@@ -1723,6 +1733,11 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#end_at_nearest_point"><code>end_at_nearest_point</code></a></td><td>End at nearest point</td><td>Satin parameters</td></tr>
 <tr><td><a href="#end_row_spacing_mm"><code>end_row_spacing_mm</code></a></td><td>End row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#fill_method"><code>fill_method</code></a></td><td>Fill method</td><td>Fill parameters</td></tr>
+<tr><td><a href="#fill_underlay"><code>fill_underlay</code></a></td><td>Underlay</td><td>Tatami parameters</td></tr>
+<tr><td><a href="#fill_underlay_angle"><code>fill_underlay_angle</code></a></td><td>Underlay angle</td><td>Tatami parameters</td></tr>
+<tr><td><a href="#fill_underlay_max_stitch_length_mm"><code>fill_underlay_max_stitch_length_mm</code></a></td><td>Underlay longest stitch</td><td>Tatami parameters</td></tr>
+<tr><td><a href="#fill_underlay_row_spacing_mm"><code>fill_underlay_row_spacing_mm</code></a></td><td>Underlay row spacing</td><td>Tatami parameters</td></tr>
+<tr><td><a href="#fill_underlay_skip_last"><code>fill_underlay_skip_last</code></a></td><td>Skip last underlay stitch</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#force_lock_stitches"><code>force_lock_stitches</code></a></td><td>Always lock</td><td>Common parameters</td></tr>
 <tr><td><a href="#lock_custom_end"><code>lock_custom_end</code></a></td><td>Custom end lock</td><td>Common parameters</td></tr>
 <tr><td><a href="#lock_custom_start"><code>lock_custom_start</code></a></td><td>Custom start lock</td><td>Common parameters</td></tr>
@@ -1766,6 +1781,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#swap_satin_rails"><code>swap_satin_rails</code></a></td><td>Swap rails</td><td>Satin parameters</td></tr>
 <tr><td><a href="#ties"><code>ties</code></a></td><td>Lock stitches</td><td>Common parameters</td></tr>
 <tr><td><a href="#trim_after"><code>trim_after</code></a></td><td>Trim after</td><td>Common parameters</td></tr>
+<tr><td><a href="#underlay_underpath"><code>underlay_underpath</code></a></td><td>Underlay underpath</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#underpath"><code>underpath</code></a></td><td>Underpath</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#zigzag_spacing_mm"><code>zigzag_spacing_mm</code></a></td><td>Zigzag spacing</td><td>Satin parameters</td></tr>
 <tr><td><a href="#zigzag_underlay"><code>zigzag_underlay</code></a></td><td>Zigzag underlay</td><td>Satin parameters</td></tr>
@@ -2403,6 +2419,55 @@ and leaving it out lowers the stitch count and the density along the fill’s ed
 <h3 id="underpath"><a class="header" href="#underpath"><code>underpath</code></a></h3>
 <p><strong>Underpath.</strong> Travel between rows runs inside the fill, under rows sewn after it, which hide it. Off, the
 needle travels along the fill’s outline, where the travel can show along the edge.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false</li>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h2 id="underlay"><a class="header" href="#underlay">Underlay</a></h2>
+<h3 id="fill_underlay"><a class="header" href="#fill_underlay"><code>fill_underlay</code></a></h3>
+<p><strong>Underlay.</strong> Sew underlay before the top rows: rows of stitches farther apart than the top rows, square to
+them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top
+rows, so less fabric shows between them.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false</li>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="fill_underlay_angle"><a class="header" href="#fill_underlay_angle"><code>fill_underlay_angle</code></a></h3>
+<p><strong>Underlay angle.</strong> The direction of the underlay’s rows, in degrees counter-clockwise from horizontal. Several
+angles separated by spaces sew a layer of underlay at each, one after another. Empty: square to
+the top rows, at the fill’s angle plus 90°.</p>
+<ul>
+<li><strong>Accepts:</strong> 1 to 16 angles in degrees, separated by spaces, or empty</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="fill_underlay_row_spacing_mm"><a class="header" href="#fill_underlay_row_spacing_mm"><code>fill_underlay_row_spacing_mm</code></a></h3>
+<p><strong>Underlay row spacing.</strong> How far apart the underlay’s rows are, measured square to them. Empty: 3 times the row spacing.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.1 to 100 mm, or empty (0 or less counts as empty)</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="fill_underlay_max_stitch_length_mm"><a class="header" href="#fill_underlay_max_stitch_length_mm"><code>fill_underlay_max_stitch_length_mm</code></a></h3>
+<p><strong>Underlay longest stitch.</strong> How far apart the needle points along the underlay’s rows are. Empty: the fill’s longest stitch
+(<code>max_stitch_length_mm</code>).</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty)</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="fill_underlay_skip_last"><a class="header" href="#fill_underlay_skip_last"><code>fill_underlay_skip_last</code></a></h3>
+<p><strong>Skip last underlay stitch.</strong> Leave out the needle point at the end of each underlay row, as <code>skip_last</code> does for the top rows.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false</li>
+<li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="underlay_underpath"><a class="header" href="#underlay_underpath"><code>underlay_underpath</code></a></h3>
+<p><strong>Underlay underpath.</strong> Travel between the underlay’s rows runs inside the fill, under the underlay rows sewn after it.
+Off, the needle travels along the fill’s outline.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false</li>
 <li><strong>Default:</strong> <code>true</code></li>
@@ -3308,6 +3373,7 @@ version and a registry schema version arrive with the first release, together wi
 <tr><td><code>OptionalLengthPair</code>, <code>OptionalPercentPair</code></td><td><code>Option&lt;[Mm; 2]&gt;</code>, <code>Option&lt;[f64; 2]&gt;</code></td><td>as <code>LengthPair</code> and <code>PercentPair</code>, or empty: the setting then comes from another one, as a zigzag underlay’s inset comes from the contour’s. 0 is a value, as Ink/Stitch reads it</td><td><code>float</code>, unit <code>mm (each side)</code> or <code>% (each side)</code>, no default</td></tr>
 <tr><td><code>PercentList</code></td><td><code>Vec&lt;f64&gt;</code></td><td>1 to 16 percentages, each in range (levels like <code>"15 30"</code>)</td><td><code>float</code>, unit <code>%</code>, read as a list</td></tr>
 <tr><td><code>CountList</code></td><td><code>Vec&lt;u32&gt;</code></td><td>1–16 whole numbers, each in range</td><td><code>string</code>/<code>int</code> lists</td></tr>
+<tr><td><code>OptionalAngleList</code></td><td><code>Option&lt;Vec&lt;f64&gt;&gt;</code></td><td>1 to 16 angles, each read as an <code>Angle</code>. Empty, the setting comes from another one, as a fill’s underlay angles come from its angle</td><td><code>float</code>, unit <code>deg</code>, read as a list, no default</td></tr>
 <tr><td><code>Text</code></td><td><code>String</code></td><td>≤ 4,096 bytes; kind-specific grammar (e.g. a custom lock path) is checked by its user</td><td><code>string</code></td></tr>
 </tbody>
 </table>
@@ -3486,6 +3552,7 @@ another.</p>
 <tr><td><code>SC-W0305</code></td><td>Warning</td><td>Fill part too thin for rows; sewn round its outline (as in Ink/Stitch)</td><td>M5</td></tr>
 <tr><td><code>SC-I0306</code></td><td>Info</td><td>Nonzero fill rule fills a part the even-odd rule leaves empty (Ink/Stitch leaves it empty)</td><td>M5</td></tr>
 <tr><td><code>SC-W0307</code></td><td>Warning</td><td>Fill in parts that are apart; each sewn on its own, joined by jumps</td><td>M5</td></tr>
+<tr><td><code>SC-I0308</code></td><td>Info</td><td>Fill underlay too thin for rows; sewn round the outline (as in Ink/Stitch)</td><td>M5</td></tr>
 <tr><td><code>SC-W0311</code></td><td>Warning</td><td>Spiral could not be connected in a narrow part; that part uses inner-to-outer contours</td><td>M7</td></tr>
 <tr><td><code>SC-W0401</code></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td><td>M3</td></tr>
 <tr><td><code>SC-W0402</code></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest</td><td>M3</td></tr>
@@ -3681,7 +3748,8 @@ that join its underlays are no longer than the first value. For any other stroke
 one is sewn between rails made from its line from M4.9 (<code>REQ-SAT-016</code>). A fill’s region is built first,
 so what it leaves out and how it will be sewn are said (<code>SC-W0303</code>, <code>SC-W0304</code>, <code>SC-I0306</code>, <code>SC-W0307</code>)
 whatever comes next, and its <code>fill_method</code> picks the generator: the tatami fill, sewn from M5.4, which
-reads the running stitch’s length and tolerance for its travel between rows, under the rows from M5.5. The other stroke, satin and
+reads the running stitch’s length and tolerance for its travel between rows, under the rows from M5.5,
+and sews its underlay before its top rows from M5.6. The other stroke, satin and
 fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are wrong
 (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
@@ -4684,12 +4752,24 @@ needle. Each part is a group of its own, which assembly joins to the next as it 
 straight on within the collapse length, and otherwise with a jump and the ties and trims the element’s
 settings give. <code>SC-W0307</code> says the fill is in parts.</p>
 <h3 id="6-underlay"><a class="header" href="#6-underlay">6. Underlay</a></h3>
-<p>Before its top rows, each part sews its underlay, on by default. The underlay is sewn like the top
-rows, on the part shrunk by <code>fill_underlay_inset_mm</code>. It makes one pass for each angle in
-<code>fill_underlay_angle</code> (default: <code>angle + 90°</code>), with <code>fill_underlay_row_spacing_mm</code> (default: three
-times the top spacing) and <code>fill_underlay_max_stitch_length_mm</code> (default: the top’s).
-<code>fill_underlay_skip_last</code> and <code>underlay_underpath</code> take the place of <code>skip_last</code> and <code>underpath</code>. Each pass
-starts where the one before ended. The top rows cover the part grown by <code>expand_mm</code>.</p>
+<p>Before its top rows, each part sews its underlay, on by default (<code>REQ-FILL-TAT-011</code>, since M5.6). The
+underlay is a layer of rows for each angle in <code>fill_underlay_angle</code>, in the order given, or with none set
+one at <code>angle + 90°</code>, square to the top rows. A layer’s rows lie evenly <code>fill_underlay_row_spacing_mm</code>
+apart (default: 3 times the row spacing), with no end spacing. Their needle points lie on the stagger
+grid with the fill’s <code>staggers</code>, <code>fill_underlay_max_stitch_length_mm</code> apart (default: the fill’s longest
+stitch), never at random lengths. <code>fill_underlay_skip_last</code> and <code>underlay_underpath</code> take the place of
+<code>skip_last</code> and <code>underpath</code>.</p>
+<p>Each layer is routed as the top rows are (sections 3 and 4). It starts at the point of the part’s rings
+nearest the needle and ends there, as Ink/Stitch routes a fill with nothing to end near. The next layer,
+and then the top rows, start where it ended, so a part is still one run. A layer with no row is sewn round
+the part’s outline from its start, as the top rows are (section 8), and <code>SC-I0308</code> says so. The needle
+goes on to that start as Ink/Stitch’s stitch plan joins a layer to the next one: straight on within the
+element’s jump length, and farther with a jump. The generator makes that join itself, because Ink/Stitch
+never forces locks after a layer of underlay, where assembly would after any group of an element with
+<code>force_lock_stitches</code>.</p>
+<p>Ink/Stitch sews the underlay on the part shrunk by <code>fill_underlay_inset_mm</code>, and the top rows on the part
+grown by <code>expand_mm</code>. Both need a polygon buffered as GEOS buffers it, which comes in M5.7. Until then the
+2 are not registered, and an element that sets them gets <code>SC-W0105</code>.</p>
 <h3 id="7-pull-compensation-and-gap-fill-rows"><a class="header" href="#7-pull-compensation-and-gap-fill-rows">7. Pull compensation and gap-fill rows</a></h3>
 <p>The thread pulls a row in at its ends. Each segment is lengthened at both ends by <code>pull_compensation_mm</code>
 plus <code>pull_compensation_percent</code> of its length (one value, or one for each end). Ink/Stitch then rebuilds
@@ -4703,8 +4783,9 @@ StitchCraft takes the extra rows from the row grid and keeps them inside the reg
 (<code>REQ-FILL-TAT-007</code>).</p>
 <h3 id="8-no-rows"><a class="header" href="#8-no-rows">8. No rows</a></h3>
 <p>A part thinner than the row spacing has no row. It is sewn as a running stitch round its outline, from
-the outline’s start, as Ink/Stitch sews it, and <code>SC-W0305</code> says so (since M5.4). Where the fill rule
-leaves every face empty, the fill sews nothing, and <code>SC-W0303</code> says so.</p>
+the outline’s start, as Ink/Stitch sews it, and <code>SC-W0305</code> says so (since M5.4). A layer of underlay with
+no row is sewn so too, and <code>SC-I0308</code> says so (since M5.6). Where the fill rule leaves every face empty,
+the fill sews nothing, and <code>SC-W0303</code> says so.</p>
 <h3 id="properties-conformance-2"><a class="header" href="#properties-conformance-2">Properties (conformance)</a></h3>
 <div class="table-wrapper">
 <table>
@@ -4721,6 +4802,7 @@ leaves every face empty, the fill sews nothing, and <code>SC-W0303</code> says s
 <tr><td><code>REQ-FILL-TAT-007</code></td><td>All rows, including gap-fill rows, lie inside the region (± tolerance + compensation)</td></tr>
 <tr><td><code>REQ-FILL-TAT-008</code></td><td>A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element</td></tr>
 <tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget</td></tr>
+<tr><td><code>REQ-FILL-TAT-011</code></td><td>Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start</td></tr>
 </tbody>
 </table>
 </div>
@@ -6323,13 +6405,13 @@ stitches once its stitch type or feature lands (see <em>Phase</em> and the param
 <tr><td><code>herringbone_width_mm</code></td><td>int</td><td>mm</td><td>0</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>pull_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
 <tr><td><code>pull_compensation_percent</code></td><td>float</td><td>% (each side)</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>fill_underlay</code></td><td>toggle</td><td>—</td><td>true</td><td>all</td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>fill_underlay_angle</code></td><td>float</td><td>deg</td><td>—</td><td>all</td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>fill_underlay_row_spacing_mm</code></td><td>float</td><td>mm</td><td>—</td><td>all</td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>fill_underlay_max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>—</td><td>all</td><td>P1 (M5)</td><td>planned</td></tr>
+<tr><td><code>fill_underlay</code></td><td>toggle</td><td>—</td><td>true</td><td>all</td><td>P1 (M5)</td><td><a href="#fill_underlay">registered</a></td></tr>
+<tr><td><code>fill_underlay_angle</code></td><td>float</td><td>deg</td><td>—</td><td>all</td><td>P1 (M5)</td><td><a href="#fill_underlay_angle">registered</a></td></tr>
+<tr><td><code>fill_underlay_row_spacing_mm</code></td><td>float</td><td>mm</td><td>—</td><td>all</td><td>P1 (M5)</td><td><a href="#fill_underlay_row_spacing_mm">registered</a></td></tr>
+<tr><td><code>fill_underlay_max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>—</td><td>all</td><td>P1 (M5)</td><td><a href="#fill_underlay_max_stitch_length_mm">registered</a></td></tr>
 <tr><td><code>fill_underlay_inset_mm</code></td><td>float</td><td>mm</td><td>0</td><td>all</td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>fill_underlay_skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td>all</td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>underlay_underpath</code></td><td>boolean</td><td>—</td><td>true</td><td>all</td><td>P1 (M5)</td><td>planned</td></tr>
+<tr><td><code>fill_underlay_skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td>all</td><td>P1 (M5)</td><td><a href="#fill_underlay_skip_last">registered</a></td></tr>
+<tr><td><code>underlay_underpath</code></td><td>boolean</td><td>—</td><td>true</td><td>all</td><td>P1 (M5)</td><td><a href="#underlay_underpath">registered</a></td></tr>
 <tr><td><code>random_seed</code></td><td>random_seed</td><td>—</td><td>—</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>meander_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td><a href="#random_seed">registered</a></td></tr>
 <tr><td><code>cross_stitch_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>cross_thread_count</code></td><td>int</td><td>—</td><td>4</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
@@ -6435,7 +6517,7 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewr
 </tbody>
 </table>
 </div>
-<p><em>145 parameter declarations, 77 registered in StitchCraft.</em></p>
+<p><em>145 parameter declarations, 83 registered in StitchCraft.</em></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="architecture-decision-records"><a class="header" href="#architecture-decision-records">Architecture decision records</a></h1>
 <p>Short records of decisions that shape the code, with their context and the alternatives we rejected.
@@ -7121,9 +7203,10 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M5.3 ✅</td><td>Needle points as Ink/Stitch places them, on the stagger grid from the origin, with <code>skip_last</code> and random stitch length. A fill’s longest stitch defaults to 4 mm, so a parameter can have a default for each family</td><td><code>REQ-FILL-TAT-003</code></td></tr>
 <tr><td>M5.4 ✅</td><td>Routing as Ink/Stitch routes. Every segment sewn once, back and forth, from the needle to the next element, with running stitches along the outline between. Parts sewn one at a time, nearest the needle first, each ending nearest the next. A part too thin for any row sewn round its outline, <code>SC-W0305</code>. <code>fill_method</code> registered. Fills are sewn</td><td><code>REQ-FILL-TAT-001</code>, <code>REQ-FILL-TAT-008</code></td></tr>
 <tr><td>M5.5 ✅</td><td>Travel under the rows (<code>underpath</code>), off the rows already sewn: the cheapest way along 3 gratings of lines, smoothed and kept inside the part. Where no line leads, along rings and rows (<code>DEV-FILL-007</code>)</td><td><code>REQ-FILL-TAT-005</code></td></tr>
-<tr><td>M5.6</td><td>Underlay, a pass for each angle on the inset region; <code>expand_mm</code></td><td><code>REQ-FILL-TAT-007</code> for the underlay’s rows</td></tr>
-<tr><td>M5.7</td><td>Pull compensation at the rows’ ends, holes and parts kept; gap-fill rows inside the region</td><td><code>REQ-FILL-TAT-006</code>, <code>REQ-FILL-TAT-007</code></td></tr>
-<tr><td>M5.8</td><td>Coverage metric and performance budget</td><td><code>REQ-FILL-TAT-004</code>, <code>REQ-FILL-TAT-009</code></td></tr>
+<tr><td>M5.6 ✅</td><td>Underlay as Ink/Stitch sews it: before its top rows each part sews a layer for each angle, each from the point nearest the needle back to it. <code>fill_underlay</code> and its settings registered, with a list of angles as a kind of parameter. A layer too thin for a row is sewn round the outline, <code>SC-I0308</code></td><td><code>REQ-FILL-TAT-011</code></td></tr>
+<tr><td>M5.7</td><td>The underlay on the part shrunk by <code>fill_underlay_inset_mm</code>, and the top rows on the part grown by <code>expand_mm</code>. A part is buffered as GEOS buffers a polygon, and checked against shapely</td><td><code>REQ-FILL-TAT-012</code>, <code>REQ-FILL-TAT-007</code> for the underlay’s rows</td></tr>
+<tr><td>M5.8</td><td>Pull compensation at the rows’ ends, holes and parts kept; gap-fill rows inside the region</td><td><code>REQ-FILL-TAT-006</code>, <code>REQ-FILL-TAT-007</code></td></tr>
+<tr><td>M5.9</td><td>Coverage metric and performance budget</td><td><code>REQ-FILL-TAT-004</code>, <code>REQ-FILL-TAT-009</code></td></tr>
 <tr><td>MC-4 🧵</td><td><strong>TS-07</strong> (fill + outline registration), <strong>TS-08</strong> (density ladder, angles), <strong>TS-09</strong> (underlay, travel)</td><td>report filed; fill defaults and pull compensation tuned</td></tr>
 </tbody>
 </table>
