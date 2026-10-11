@@ -264,7 +264,6 @@ pub struct stitchcraft_engine::normalize::satin::Satin
 pub stitchcraft_engine::normalize::satin::Satin::pairing: stitchcraft_engine::normalize::satin::Pairing
 pub stitchcraft_engine::normalize::satin::Satin::rails: [alloc::vec::Vec<stitchcraft_core::units::Point>; 2]
 pub const stitchcraft_engine::normalize::satin::MIN_RAIL: f64
-pub const stitchcraft_engine::normalize::satin::TOLERANCE: f64
 pub fn stitchcraft_engine::normalize::satin::recognize(&stitchcraft_engine::design::Path, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::normalize::satin::Recognition, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::normalize::stroke
 pub struct stitchcraft_engine::normalize::stroke::Piece
@@ -272,6 +271,7 @@ pub stitchcraft_engine::normalize::stroke::Piece::corners: alloc::vec::Vec<usize
 pub stitchcraft_engine::normalize::stroke::Piece::points: alloc::vec::Vec<stitchcraft_core::units::Point>
 pub struct stitchcraft_engine::normalize::stroke::StrokePath
 pub stitchcraft_engine::normalize::stroke::StrokePath::pieces: alloc::vec::Vec<stitchcraft_engine::normalize::stroke::Piece>
+pub const stitchcraft_engine::normalize::stroke::SHAPE_TOLERANCE: f64
 pub fn stitchcraft_engine::normalize::stroke::distance_to_segment(stitchcraft_core::units::Point, stitchcraft_core::units::Point, stitchcraft_core::units::Point) -> f64
 pub fn stitchcraft_engine::normalize::stroke::flatten(&stitchcraft_engine::design::Path, f64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::normalize::stroke::StrokePath, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::normalize::stroke::nearest_on_segment(stitchcraft_core::units::Point, stitchcraft_core::units::Point, stitchcraft_core::units::Point) -> stitchcraft_core::units::Point

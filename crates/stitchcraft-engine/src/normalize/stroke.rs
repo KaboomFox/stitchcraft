@@ -17,9 +17,15 @@
 //! A line a generator builds point by point, such as a satin column's underlay, is a polyline already:
 //! every join between its segments may be a corner, by the same 30°.
 
+use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use crate::design::{Path, Segment, Subpath};
+
+/// How far Ink/Stitch lets a shape's polylines stray from its curves, in millimetres: a tenth of a CSS
+/// pixel. A fill's subpaths and a satin column's are flattened within it, by the same halving, so that
+/// their points are the ones Ink/Stitch works from. A running stitch follows its own tolerance.
+pub const SHAPE_TOLERANCE: f64 = 0.1 * MM_PER_SVG_PX;
 
 /// The cosine of 30°: a join turns by more than 30° when the cosine of its turn is below this.
 const CORNER_COS: f64 = 0.866_025_403_784_438_6;
