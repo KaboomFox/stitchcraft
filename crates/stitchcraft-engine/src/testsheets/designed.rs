@@ -147,6 +147,14 @@ mod tests {
     }
 
     #[test]
+    fn rings_close_back_to_their_first_point_and_circles_start_on_their_right() {
+        let ring = polygon(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]).unwrap();
+        assert_eq!((ring.closed, ring.start, ring.segments.len()), (true, point((0.0, 0.0)).unwrap(), 2));
+        let circle = round((1.0, 2.0), 3.0).unwrap();
+        assert_eq!((circle.closed, circle.start, circle.segments.len()), (true, point((4.0, 2.0)).unwrap(), 4));
+    }
+
+    #[test]
     fn a_sheet_draws_with_exactly_the_diagnostics_it_asks_for() {
         // One fill of 2 squares apart, which the engine sews in 2 parts and warns of (SC-W0307).
         let parts = || {

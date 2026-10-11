@@ -469,6 +469,7 @@ mod tests {
         let plan = find("TS-07").unwrap().plan().unwrap();
         assert_eq!(plan.blocks.iter().map(|b| b.thread.name.as_deref()).collect::<Vec<_>>(), [Some("Red"), Some("Black")]);
         let mut shift: Option<(f64, f64)> = None;
+        let mut centres = Vec::new();
         for (pull, (x, y)) in ts07::CIRCLES {
             // Each outline starts at its circle's right-hand point, where the drawing starts it, and its needle
             // points lie on the circle, within the curves' few thousandths of a millimetre.
@@ -483,7 +484,15 @@ mod tests {
             let reach = sewn("TS-07", &format!("fill-{pull}")).iter().map(|q| q.distance(centre)).fold(0.0, f64::max);
             let compensation: f64 = pull.parse().unwrap();
             assert!((reach - ts07::RADIUS - compensation).abs() < 0.01, "{pull}: {reach}");
+            centres.push(centre);
         }
+        // Top left, top right, and below between them, as the first check says, and no 2 circles within a
+        // millimetre of each other, their compensations and all.
+        let [left, right, below] = centres[..] else { panic!("3 circles") };
+        assert!(left.y() == right.y() && left.x() < right.x() && below.y() > left.y(), "{centres:?}");
+        assert!((below.x() - (left.x() + right.x()) / 2.0).abs() < 1e-9, "{centres:?}");
+        let apart = [(left, right), (left, below), (right, below)].map(|(a, b)| a.distance(b));
+        assert!(apart.iter().all(|d| *d > 2.0 * (ts07::RADIUS + 0.4) + 1.0), "{apart:?}");
         // The first check names the compensations in the circles' order.
         let first = find("TS-07").unwrap().checks[0];
         let named = |pull: &str| if pull == "0" { "no pull compensation".to_string() } else { format!("{pull} mm") };
@@ -513,13 +522,12 @@ mod tests {
             assert!(tops.windows(2).all(|w| w[0].1[column] > w[1].1[column]), "{column}: {tops:?}");
         }
         // The first check names the spacings and the angles in the order they are sewn.
-        let listed = |items: Vec<String>| match items.split_last() {
-            Some((last, [])) => last.clone(),
-            Some((last, rest)) => format!("{} and {last}", rest.join(", ")),
-            None => String::new(),
+        let listed = |items: &[String]| {
+            let (last, rest) = items.split_last().unwrap();
+            format!("{} and {last}", rest.join(", "))
         };
-        let spacings = listed(ts08::SPACINGS.map(String::from).to_vec());
-        let angles = listed(ts08::ANGLES.map(|a| format!("{a}°")).to_vec());
+        let spacings = listed(&ts08::SPACINGS.map(String::from));
+        let angles = listed(&ts08::ANGLES.map(|a| format!("{a}°")));
         let first = find("TS-08").unwrap().checks[0];
         assert!(first.contains(&format!("spacings of {spacings} mm")) && first.contains(&format!("angles of {angles}")), "{first}");
     }
