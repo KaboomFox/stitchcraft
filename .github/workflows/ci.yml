@@ -77,6 +77,20 @@ jobs:
           tool: cargo-llvm-cov@0.9.1
       - run: .github/scripts/annotated.sh "coverage" cargo xtask coverage
 
+  perf:
+    # The performance budget: one plan of the reference hoop's whole field takes no more instructions than
+    # conformance/perf.toml records, counted by valgrind's callgrind; its time goes to the job summary.
+    name: perf (the hoop's whole field within its record)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Pinned toolchain (rust-toolchain.toml)
+        run: rustup toolchain install --profile minimal
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - name: Valgrind, whose callgrind counts the instructions
+        run: sudo apt-get update && sudo apt-get install --yes valgrind
+      - run: .github/scripts/annotated.sh "perf" cargo xtask perf
+
   tests:
     name: tests (${{ matrix.os }})
     strategy:

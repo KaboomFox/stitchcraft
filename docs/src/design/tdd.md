@@ -127,7 +127,7 @@ The full milestone and step list is in [the roadmap](../plan/roadmap.md).
 | NFR-ROB-1 | No panics in shipped code; no `unsafe` outside the one audited plug-in ABI module |
 | NFR-ROB-2 | All work is bounded by explicit budgets (stitches, iterations, input sizes); exceeding one is a diagnostic, never a hang |
 | NFR-DET-1 | Same input and version ⇒ byte-identical output on every supported platform, including wasm32 |
-| NFR-PERF-1 | A 130 × 180 mm tatami fill at 0.4 mm spacing, the reference hoop's whole field, plans in ≤ 50 ms natively (baseline set at M5, then guarded) |
+| NFR-PERF-1 | A 130 × 180 mm tatami fill at 0.4 mm spacing, the reference hoop's whole field, plans in ≤ 50 ms natively. Baseline set at M5.9: 29 ms on a 2.1 GHz Xeon, 282 million instructions, guarded by the instruction count (`cargo xtask perf`) |
 | NFR-PERF-2 | Live-effect previews fit VectorCraft's v1 budget (≤ 50 M instructions, ≤ 5 s) for a 130 × 180 mm design |
 | NFR-PORT-1 | Engine crates build for `wasm32-unknown-unknown` without WASI |
 | NFR-DOC-1 | 100 % of parameters, diagnostics, CLI commands and formats have generated reference pages |

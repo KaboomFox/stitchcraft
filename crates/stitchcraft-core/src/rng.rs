@@ -96,6 +96,21 @@ mod tests {
     }
 
     #[test]
+    fn a_float_is_the_next_number_s_top_53_bits() {
+        // Seed 0's first number, 0xE220A8397B1DCDAF, as a share of 2^64 cut to 53 bits; from -2 to 3, -2
+        // plus 5 times that.
+        assert_eq!(SplitMix64::new(0).next_f64(), 0.883_310_808_213_642_6);
+        assert_eq!(SplitMix64::new(0).next_in(-2.0, 3.0), 2.416_554_041_068_213_4);
+        // An empty, reversed or endless range gives its low end and draws nothing: the next draw is the
+        // generator's first.
+        for (low, high) in [(1.0, 1.0), (5.0, 2.0), (0.0, f64::INFINITY), (0.0, f64::NAN)] {
+            let mut rng = SplitMix64::new(0);
+            assert_eq!(rng.next_in(low, high), low, "{low}..{high}");
+            assert_eq!(rng.next_u64(), 0xE220_A839_7B1D_CDAF, "{low}..{high}");
+        }
+    }
+
+    #[test]
     fn element_generators_are_stable_and_independent() {
         let a1 = SplitMix64::for_element("vc:42", 0).next_u64();
         let a2 = SplitMix64::for_element("vc:42", 0).next_u64();
@@ -104,5 +119,8 @@ mod tests {
         assert_eq!(a1, a2, "same element, same seed: same stream");
         assert_ne!(a1, b, "different elements: different streams");
         assert_ne!(a1, a_seeded, "the user's seed changes the stream");
+        // The id's FNV-1a hash and the seed's first number joined by exclusive or: vectors worked out from
+        // both published definitions.
+        assert_eq!((a1, a_seeded), (0x4D48_729A_411D_5424, 0xD012_2B74_80DA_065B));
     }
 }

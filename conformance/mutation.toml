@@ -4,7 +4,7 @@
 
 [missed]
 stitchcraft-cli = 23
-stitchcraft-core = 13
+stitchcraft-core = 4
 stitchcraft-engine = 39
 stitchcraft-formats = 46
 stitchcraft-params = 0
@@ -81,6 +81,18 @@ file = "crates/stitchcraft-engine/src/normalize/near.rs"
 mutant = "replace && with || in meeting"
 line = "(d_on && (a_on || b_on)).then_some(d)"
 why = "overlapping sides along one line: when neither end of the second lies on the first, an end of the first on the second would have to stick out past one of the second's ends, which would then lie on the first, so the changed test only adds cases that cannot occur"
+
+[[equivalent]]
+file = "crates/stitchcraft-core/src/exact.rs"
+mutant = "replace == with != in side"
+line = "if left == 0.0 && right == 0.0 {"
+why = "the test is reached only within the error bound, where one product is 0 only if the other is too: were one 0 and the other not, the plain determinant would be the other, far beyond its own bound. So however the test is turned or joined, it holds where the original does, or fails where the exact sum then gives the same 0"
+
+[[equivalent]]
+file = "crates/stitchcraft-core/src/exact.rs"
+mutant = "replace && with || in side"
+line = "if left == 0.0 && right == 0.0 {"
+why = "the test is reached only within the error bound, where one product is 0 only if the other is too: were one 0 and the other not, the plain determinant would be the other, far beyond its own bound. So however the test is turned or joined, it holds where the original does, or fails where the exact sum then gives the same 0"
 
 [[equivalent]]
 file = "crates/stitchcraft-core/src/exact.rs"

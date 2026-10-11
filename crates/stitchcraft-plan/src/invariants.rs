@@ -7,7 +7,7 @@
 //!
 //! | Requirement | Rule |
 //! |---|---|
-//! | REQ-PLAN-001 | Every position is inside the profile's hoop, centred on the machine origin. |
+//! | REQ-PLAN-001 | Every position is inside the profile's hoop, centred on the machine origin, within `LENGTH_SLACK` of its edge counting as on it. |
 //! | REQ-PLAN-002 | While sewing, every stitch is between the profile's minimum (locks, into or out of a lock point: 0.2 mm) and maximum length. |
 //! | REQ-PLAN-003 | Every block sews at least one stitch; trims and stops happen where the needle is. |
 //! | REQ-PLAN-005 | While sewing, a stitch never lands where the needle already is. |
@@ -92,7 +92,7 @@ pub fn check(plan: &StitchPlan, profile: &MachineProfile) -> Vec<Violation> {
         }
         for (i, stitch) in block.stitches.iter().enumerate() {
             let at = stitch.at;
-            if at.x().abs() > half_width || at.y().abs() > half_height {
+            if !at_least(half_width, at.x().abs()) || !at_least(half_height, at.y().abs()) {
                 let message = format!(
                     "({:.2}, {:.2}) mm is outside the {} × {} mm hoop centred on the origin",
                     at.x(),
@@ -208,6 +208,15 @@ mod tests {
         edge.jump(p(x, -y), top());
         edge.stitch(p(x, 1.0 - y), top());
         assert_eq!(requirements(&edge.finish()), Vec::<&str>::new(), "the hoop's edge is inside");
+        // Rounding a hair past the edge, within the slack generators place stitches with, is the edge.
+        let mut rounded = valid();
+        rounded.jump(p(x + 1e-12, -y - 1e-12), top());
+        rounded.stitch(p(-x - 1e-12, y + 1e-12), top());
+        assert_eq!(requirements(&rounded.finish()), Vec::<&str>::new(), "within the slack");
+        let mut past = valid();
+        past.jump(p(x, -y - 0.0001), top());
+        past.stitch(p(-x - 0.0001, y), top());
+        assert_eq!(requirements(&past.finish()), vec![req::INSIDE_HOOP, req::INSIDE_HOOP]);
     }
 
     #[test]

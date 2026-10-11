@@ -42,3 +42,6 @@ stretch of rows (`generators::tatami`). Design:
 `stitchcraft-testkit`. Curves are flattened here, not with `kurbo`, so every platform gets the same
 points (`docs/src/design/engine-pipeline.md` › Normalize), and a fill's region is built here, not with
 `i_overlay`, so it keeps the drawing's points and charges the budget (ADR 0005).
+
+The `field` example uses `stitchcraft-testkit` too. It plans the reference hoop's whole field for
+`cargo xtask perf` (NFR-PERF-1).
