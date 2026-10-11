@@ -69,3 +69,59 @@ needle travels along the fill's outline, where the travel can show along the edg
 - **Accepts:** true or false
 - **Default:** `true`
 - **Ink/Stitch:** same key, meaning and default
+
+## Underlay
+
+### `fill_underlay`
+
+**Underlay.** Sew underlay before the top rows: rows of stitches farther apart than the top rows, square to
+them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top
+rows, so less fabric shows between them.
+
+- **Accepts:** true or false
+- **Default:** `true`
+- **Ink/Stitch:** same key, meaning and default
+
+### `fill_underlay_angle`
+
+**Underlay angle.** The direction of the underlay's rows, in degrees counter-clockwise from horizontal. Several
+angles separated by spaces sew a layer of underlay at each, one after another. Empty: square to
+the top rows, at the fill's angle plus 90°.
+
+- **Accepts:** 1 to 16 angles in degrees, separated by spaces, or empty
+- **Default:** empty
+- **Ink/Stitch:** same key, meaning and default
+
+### `fill_underlay_row_spacing_mm`
+
+**Underlay row spacing.** How far apart the underlay's rows are, measured square to them. Empty: 3 times the row spacing.
+
+- **Accepts:** a length from 0.1 to 100 mm, or empty (0 or less counts as empty)
+- **Default:** empty
+- **Ink/Stitch:** same key, meaning and default
+
+### `fill_underlay_max_stitch_length_mm`
+
+**Underlay longest stitch.** How far apart the needle points along the underlay's rows are. Empty: the fill's longest stitch
+(`max_stitch_length_mm`).
+
+- **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
+- **Default:** empty
+- **Ink/Stitch:** same key, meaning and default
+
+### `fill_underlay_skip_last`
+
+**Skip last underlay stitch.** Leave out the needle point at the end of each underlay row, as `skip_last` does for the top rows.
+
+- **Accepts:** true or false
+- **Default:** `false`
+- **Ink/Stitch:** same key, meaning and default
+
+### `underlay_underpath`
+
+**Underlay underpath.** Travel between the underlay's rows runs inside the fill, under the underlay rows sewn after it.
+Off, the needle travels along the fill's outline.
+
+- **Accepts:** true or false
+- **Default:** `true`
+- **Ink/Stitch:** same key, meaning and default

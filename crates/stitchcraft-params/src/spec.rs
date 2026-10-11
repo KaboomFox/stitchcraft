@@ -94,6 +94,13 @@ pub enum Kind {
         /// Largest accepted value.
         max: u32,
     },
+    /// 1 to [`MAX_LIST`] angles in degrees, each normalized to (−180, 180], as for a [`Kind::Angle`]. An
+    /// `optional` list may be left empty, and then comes from another parameter: a fill's underlay angles
+    /// from its angle.
+    AngleList {
+        /// Whether the value may be empty.
+        optional: bool,
+    },
     /// Free text of at most `max_bytes` bytes.
     Text {
         /// The longest accepted text, in bytes.
@@ -237,7 +244,7 @@ impl Kind {
         match self {
             Kind::Length { .. } | Kind::LengthList { .. } | Kind::LengthPair { .. } => "mm",
             Kind::Percent { .. } | Kind::PercentPair { .. } | Kind::PercentList { .. } => "%",
-            Kind::Angle => "°",
+            Kind::Angle | Kind::AngleList { .. } => "°",
             _ => "",
         }
     }
@@ -265,13 +272,20 @@ impl Kind {
             Kind::PercentPair { min, max, optional } => format!("a percentage from {min} to {max}, or 2 separated by a space{}", empty(optional)),
             Kind::PercentList { min, max } => format!("1 to {MAX_LIST} percentages from {min} to {max}, separated by spaces"),
             Kind::CountList { min, max } => format!("1 to {MAX_LIST} whole numbers from {min} to {max}, separated by spaces"),
+            Kind::AngleList { optional } => format!("1 to {MAX_LIST} angles in degrees, separated by spaces{}", empty(optional)),
             Kind::Text { max_bytes } => format!("text of at most {max_bytes} bytes"),
         }
     }
 
-    /// Whether a value may be empty: an optional length or pair.
+    /// Whether a value may be empty: an optional length, pair or list of angles.
     pub(crate) const fn optional(self) -> bool {
-        matches!(self, Kind::Length { optional: true, .. } | Kind::LengthPair { optional: true, .. } | Kind::PercentPair { optional: true, .. })
+        matches!(
+            self,
+            Kind::Length { optional: true, .. }
+                | Kind::LengthPair { optional: true, .. }
+                | Kind::PercentPair { optional: true, .. }
+                | Kind::AngleList { optional: true }
+        )
     }
 
     /// The same kind with a value always needed.
@@ -280,6 +294,7 @@ impl Kind {
             Kind::Length { min, max, .. } => Kind::Length { min, max, optional: false },
             Kind::LengthPair { min, max, .. } => Kind::LengthPair { min, max, optional: false },
             Kind::PercentPair { min, max, .. } => Kind::PercentPair { min, max, optional: false },
+            Kind::AngleList { .. } => Kind::AngleList { optional: false },
             other => other,
         }
     }
@@ -299,10 +314,11 @@ mod tests {
             Kind::PercentPair { min: 0.0, max: 1.0, optional: true },
             Kind::PercentList { min: 0.0, max: 1.0 },
             Kind::Angle,
+            Kind::AngleList { optional: true },
             Kind::Count { min: 0, max: 1 },
             Kind::Toggle,
         ];
-        assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "mm", "%", "%", "%", "°", "", ""]);
+        assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "mm", "%", "%", "%", "°", "°", "", ""]);
     }
 
     #[test]
@@ -311,19 +327,29 @@ mod tests {
             Kind::Length { min: 0.1, max: 1.0, optional: true },
             Kind::LengthPair { min: 0.0, max: 1.0, optional: true },
             Kind::PercentPair { min: 0.0, max: 2.0, optional: true },
+            Kind::AngleList { optional: true },
             Kind::Length { min: 0.1, max: 1.0, optional: false },
+            Kind::AngleList { optional: false },
             Kind::Seed,
         ];
-        assert_eq!(kinds.map(Kind::optional), [true, true, true, false, false]);
+        assert_eq!(kinds.map(Kind::optional), [true, true, true, true, false, false, false]);
         assert_eq!(
             kinds.map(Kind::required),
             [
                 Kind::Length { min: 0.1, max: 1.0, optional: false },
                 Kind::LengthPair { min: 0.0, max: 1.0, optional: false },
                 Kind::PercentPair { min: 0.0, max: 2.0, optional: false },
+                Kind::AngleList { optional: false },
                 Kind::Length { min: 0.1, max: 1.0, optional: false },
+                Kind::AngleList { optional: false },
                 Kind::Seed,
             ]
         );
+    }
+
+    #[test]
+    fn a_list_of_angles_says_whether_it_may_be_empty() {
+        assert_eq!(Kind::AngleList { optional: false }.describe(), "1 to 16 angles in degrees, separated by spaces");
+        assert_eq!(Kind::AngleList { optional: true }.describe(), "1 to 16 angles in degrees, separated by spaces, or empty");
     }
 }

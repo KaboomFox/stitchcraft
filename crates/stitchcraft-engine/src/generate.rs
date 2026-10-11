@@ -33,7 +33,7 @@ use crate::generators::running::raised;
 use crate::generators::running::{RunningParams, running_stitch};
 use crate::generators::satin::{self, SatinLengths, SatinParams, satin_stitch};
 use crate::generators::tatami::TatamiParams;
-use crate::generators::tatami::sew::{Travel, tatami_fill};
+use crate::generators::tatami::sew::{Layer, Travel, tatami_fill};
 use crate::generators::{Approach, Neighbours, Stitched, method, mm};
 use crate::normalize::region;
 use crate::registry::PARAMETERS;
@@ -220,7 +220,8 @@ fn too_narrow(path: &Path, width: Mm, settings: &DesignSettings) -> bool {
 /// varied at random by its `rng`, or `None` when it is skipped (`lengths` is `None` when the settings
 /// every stitch type shares cannot be read). Its area is built first, so that what is left out of it is
 /// said whatever happens next. A tatami fill's needle travels in the first of the running stitch's
-/// lengths, at least twice the shortest stitch, and within its tolerance.
+/// lengths, at least twice the shortest stitch, and within its tolerance, between its top rows and between
+/// the rows of its underlay.
 fn fill(
     element: &Element,
     (path, rule): (&Path, FillRule),
@@ -253,9 +254,11 @@ fn fill(
         tolerance: running.running_stitch_tolerance_mm.get(),
         min_stitch: min,
         underpath: tatami.underpath,
+        jump: lengths.jump.get(),
     };
-    let stitching = tatami.stitching(longest, &running);
-    let stitched = tatami_fill(&built.region, &stitching, travel, neighbours.needle, neighbours.next.as_ref(), rng, meter)?;
+    let top = Layer { stitching: tatami.stitching(longest, &running), travel };
+    let underlay = tatami.underlay(longest, travel);
+    let stitched = tatami_fill(&built.region, &top, &underlay, neighbours.needle, neighbours.next.as_ref(), rng, meter)?;
     Ok(Some((StitchType::TatamiFill, stitched)))
 }
 

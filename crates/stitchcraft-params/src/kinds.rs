@@ -66,6 +66,8 @@ kinds! {
     PercentList => Vec<f64>, |v| if let Value::Percents(percents) = v { Some(percents) } else { None };
     /// Whole numbers.
     CountList => Vec<u32>, |v| if let Value::Counts(counts) = v { Some(counts) } else { None };
+    /// Angles in degrees that may be left empty (`None`).
+    OptionalAngleList => Option<Vec<f64>>, |v| if let Value::Angles(angles) = v { Some(angles) } else { None };
     /// Text.
     Text => String, |v| if let Value::Text(text) = v { Some(text) } else { None };
 }

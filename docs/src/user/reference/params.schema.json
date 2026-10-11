@@ -339,6 +339,97 @@
         "stability": "stable"
       }
     },
+    "fill_underlay": {
+      "default": true,
+      "description": "Sew underlay before the top rows: rows of stitches farther apart than the top rows, square to them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top rows, so less fabric shows between them.",
+      "title": "Underlay",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tatami_fill"
+        ],
+        "group": "Underlay",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
+    "fill_underlay_angle": {
+      "default": null,
+      "description": "The direction of the underlay's rows, in degrees counter-clockwise from horizontal. Several angles separated by spaces sew a layer of underlay at each, one after another. Empty: square to the top rows, at the fill's angle plus 90°.",
+      "items": {
+        "type": "number"
+      },
+      "maxItems": 16,
+      "minItems": 1,
+      "title": "Underlay angle",
+      "type": [
+        "array",
+        "null"
+      ],
+      "x-stitchcraft": {
+        "applies_to": [
+          "tatami_fill"
+        ],
+        "group": "Underlay",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "°"
+      }
+    },
+    "fill_underlay_max_stitch_length_mm": {
+      "default": null,
+      "description": "How far apart the needle points along the underlay's rows are. Empty: the fill's longest stitch (`max_stitch_length_mm`).",
+      "maximum": 25.0,
+      "minimum": 0.1,
+      "title": "Underlay longest stitch",
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-stitchcraft": {
+        "applies_to": [
+          "tatami_fill"
+        ],
+        "group": "Underlay",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
+    "fill_underlay_row_spacing_mm": {
+      "default": null,
+      "description": "How far apart the underlay's rows are, measured square to them. Empty: 3 times the row spacing.",
+      "maximum": 100.0,
+      "minimum": 0.1,
+      "title": "Underlay row spacing",
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-stitchcraft": {
+        "applies_to": [
+          "tatami_fill"
+        ],
+        "group": "Underlay",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
+    "fill_underlay_skip_last": {
+      "default": false,
+      "description": "Leave out the needle point at the end of each underlay row, as `skip_last` does for the top rows.",
+      "title": "Skip last underlay stitch",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tatami_fill"
+        ],
+        "group": "Underlay",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "force_lock_stitches": {
       "default": false,
       "description": "Sew the end lock even when the next element starts so close that the needle would otherwise go straight on to it without one.",
@@ -1274,6 +1365,20 @@
         "stability": "stable"
       }
     },
+    "underlay_underpath": {
+      "default": true,
+      "description": "Travel between the underlay's rows runs inside the fill, under the underlay rows sewn after it. Off, the needle travels along the fill's outline.",
+      "title": "Underlay underpath",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tatami_fill"
+        ],
+        "group": "Underlay",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "underpath": {
       "default": true,
       "description": "Travel between rows runs inside the fill, under rows sewn after it, which hide it. Off, the needle travels along the fill's outline, where the travel can show along the edge.",
@@ -1532,7 +1637,13 @@
           "end_row_spacing_mm",
           "staggers",
           "skip_last",
-          "underpath"
+          "underpath",
+          "fill_underlay",
+          "fill_underlay_angle",
+          "fill_underlay_row_spacing_mm",
+          "fill_underlay_max_stitch_length_mm",
+          "fill_underlay_skip_last",
+          "underlay_underpath"
         ],
         "name": "TatamiParams",
         "title": "Tatami parameters"
