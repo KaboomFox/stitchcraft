@@ -7,16 +7,18 @@
 //! (`conformance/inkstitch-params.toml`; `cargo xtask docs --check` compares the two).
 
 use stitchcraft_core::Mm;
-use stitchcraft_params::{Origin, StitchType, params};
+use stitchcraft_params::{Family, Origin, StitchType, params};
 
 use crate::locks::{LOCKS, SIZED_IN_MM, SIZED_IN_PERCENT};
 
-/// The stitch types that split stitches longer than a length: manual stitch, and satin columns whatever
-/// their method.
-const SPLIT: &[StitchType] = &[StitchType::ManualStitch, StitchType::SatinColumn, StitchType::EStitch, StitchType::SStitch, StitchType::SatinZigzag];
+/// The stitch types with a longest stitch: manual stitch and satin columns, whatever their method, split
+/// longer stitches, and a tatami fill sews its rows in stitches that long.
+const LONGEST: &[StitchType] =
+    &[StitchType::ManualStitch, StitchType::SatinColumn, StitchType::EStitch, StitchType::SStitch, StitchType::SatinZigzag, StitchType::TatamiFill];
 
 /// The stitch types that vary at random, and so take a seed: running stitch's random lengths (ripple
-/// stitch sews its lines with them), and a satin column's random widths and spacing, whatever its method.
+/// stitch sews its lines with them), a satin column's random widths and spacing, whatever its method, and
+/// a tatami fill's random stitch lengths.
 const RANDOMIZED: &[StitchType] = &[
     StitchType::RunningStitch,
     StitchType::RippleStitch,
@@ -24,6 +26,7 @@ const RANDOMIZED: &[StitchType] = &[
     StitchType::EStitch,
     StitchType::SStitch,
     StitchType::SatinZigzag,
+    StitchType::TatamiFill,
 ];
 
 params! {
@@ -101,15 +104,17 @@ params! {
     }
 
     "Longest stitch" {
-        /// Split stitches longer than this. Manual stitch splits them into equal parts, and a satin column
-        /// as its split method says. Empty, every stitch is sewn whole.
-        max_stitch_length_mm: OptionalLength = "", label "Longest stitch", range (0.1, 25.0), applies SPLIT;
+        /// Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
+        /// its split method says. Empty, every stitch is sewn whole. A tatami fill sews its rows in
+        /// stitches this long.
+        max_stitch_length_mm: OptionalLength = "", label "Longest stitch", range (0.1, 25.0), applies LONGEST,
+            defaults [Family::Fill => "4"];
     }
 
     "Random variation" {
-        /// Where random variation starts: a running stitch's random lengths, and a satin column's random
-        /// widths and spacing. The same seed gives the same stitches, another seed others. Empty, each
-        /// element gets its own.
+        /// Where random variation starts: a running stitch's random lengths, a satin column's random
+        /// widths and spacing, and a tatami fill's random lengths. The same seed gives the same stitches,
+        /// another seed others. Empty, each element gets its own.
         random_seed: Seed = "", label "Random seed", applies RANDOMIZED;
     }
 }
@@ -126,7 +131,7 @@ impl CommonParams {
 
 #[cfg(test)]
 mod tests {
-    use stitchcraft_params::{Family, ParamSet};
+    use stitchcraft_params::ParamSet;
 
     use super::*;
 
@@ -142,16 +147,21 @@ mod tests {
     }
 
     #[test]
-    fn the_longest_stitch_applies_to_the_stitch_types_that_split_stitches() {
+    fn the_longest_stitch_applies_to_the_stitch_types_that_split_stitches_and_to_tatami_fills() {
         let longest = CommonParams::SPECS.iter().find(|spec| spec.key == "max_stitch_length_mm").unwrap();
-        let splits = |t: &StitchType| matches!(t.family(), Family::Satin) || matches!(t, StitchType::ManualStitch);
-        assert_eq!(longest.applies_to, StitchType::ALL.iter().copied().filter(splits).collect::<Vec<_>>());
+        let has = |t: &StitchType| matches!(t.family(), Family::Satin) || matches!(t, StitchType::ManualStitch | StitchType::TatamiFill);
+        assert_eq!(longest.applies_to, StitchType::ALL.iter().copied().filter(has).collect::<Vec<_>>());
+        // 4 mm for fills, as in Ink/Stitch, and none for the others.
+        let longest_for = |family| CommonParams::from_set_for(&ParamSet::new(), family).unwrap().params.max_stitch_length_mm.map(|mm| mm.get());
+        assert_eq!([Family::Stroke, Family::Satin, Family::Fill].map(longest_for), [None, None, Some(4.0)]);
     }
 
     #[test]
     fn the_seed_applies_to_the_stitch_types_that_vary_at_random() {
         let seed = CommonParams::SPECS.iter().find(|spec| spec.key == "random_seed").unwrap();
-        let varies = |t: &StitchType| matches!(t.family(), Family::Satin) || matches!(t, StitchType::RunningStitch | StitchType::RippleStitch);
+        let varies = |t: &StitchType| {
+            matches!(t.family(), Family::Satin) || matches!(t, StitchType::RunningStitch | StitchType::RippleStitch | StitchType::TatamiFill)
+        };
         assert_eq!(seed.applies_to, StitchType::ALL.iter().copied().filter(varies).collect::<Vec<_>>());
     }
 

@@ -254,13 +254,14 @@
     },
     "enable_random_stitch_length": {
       "default": false,
-      "description": "Vary the stitch lengths at random instead of spreading them evenly. Lines sewn close together then do not line their needle holes up, which avoids moiré patterns.",
+      "description": "Vary the stitch lengths at random instead of spreading them evenly, or in a tatami fill, instead of placing the needle points on the stagger grid. Lines and rows sewn close together then do not line their needle holes up, which avoids moiré patterns.",
       "title": "Random stitch length",
       "type": "boolean",
       "x-stitchcraft": {
         "applies_to": [
           "running_stitch",
-          "ripple_stitch"
+          "ripple_stitch",
+          "tatami_fill"
         ],
         "group": "Running stitch",
         "origin": "inkstitch",
@@ -500,7 +501,7 @@
     },
     "max_stitch_length_mm": {
       "default": null,
-      "description": "Split stitches longer than this. Manual stitch splits them into equal parts, and a satin column as its split method says. Empty, every stitch is sewn whole.",
+      "description": "Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as its split method says. Empty, every stitch is sewn whole. A tatami fill sews its rows in stitches this long.",
       "maximum": 25.0,
       "minimum": 0.1,
       "title": "Longest stitch",
@@ -514,8 +515,12 @@
           "satin_column",
           "e_stitch",
           "s_stitch",
-          "zigzag"
+          "zigzag",
+          "tatami_fill"
         ],
+        "family_defaults": {
+          "fill": 4.0
+        },
         "group": "Longest stitch",
         "origin": "inkstitch",
         "stability": "stable",
@@ -668,7 +673,7 @@
     },
     "random_seed": {
       "default": null,
-      "description": "Where random variation starts: a running stitch's random lengths, and a satin column's random widths and spacing. The same seed gives the same stitches, another seed others. Empty, each element gets its own.",
+      "description": "Where random variation starts: a running stitch's random lengths, a satin column's random widths and spacing, and a tatami fill's random lengths. The same seed gives the same stitches, another seed others. Empty, each element gets its own.",
       "minimum": 0,
       "title": "Random seed",
       "type": [
@@ -683,7 +688,8 @@
           "satin_column",
           "e_stitch",
           "s_stitch",
-          "zigzag"
+          "zigzag",
+          "tatami_fill"
         ],
         "group": "Random variation",
         "origin": "inkstitch",
@@ -741,7 +747,7 @@
     },
     "random_stitch_length_jitter_percent": {
       "default": 10.0,
-      "description": "How much each stitch may be longer or shorter than the stitch length, in percent of it. Where the random lengths start is the element's `random_seed`.",
+      "description": "How much each stitch may be longer or shorter than the stitch length, in percent of it. A tatami fill's stitch length is its longest stitch. Where the random lengths start is the element's `random_seed`.",
       "maximum": 100.0,
       "minimum": 0.0,
       "title": "Length variation",
@@ -749,7 +755,8 @@
       "x-stitchcraft": {
         "applies_to": [
           "running_stitch",
-          "ripple_stitch"
+          "ripple_stitch",
+          "tatami_fill"
         ],
         "group": "Running stitch",
         "origin": "inkstitch",
@@ -1059,6 +1066,20 @@
         "unit": "%"
       }
     },
+    "skip_last": {
+      "default": false,
+      "description": "Leave out the needle point at the end of each row. It lies close to the start of the next row, and leaving it out lowers the stitch count and the density along the fill's edge.",
+      "title": "Skip last stitch",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tatami_fill"
+        ],
+        "group": "Stitches",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "split_method": {
       "default": "default",
       "description": "How stitches longer than the longest stitch (`max_stitch_length_mm`) are split. Default splits each into the fewest equal parts no longer than it. Simple splits at whole multiples of it from the stitch's start. Staggered moves those splits along from one stitch to the next, so the needle holes of neighbouring stitches do not line up in a row.",
@@ -1104,6 +1125,22 @@
           ],
           "key": "split_method"
         }
+      }
+    },
+    "staggers": {
+      "default": 4.0,
+      "description": "How many rows the needle points take to come back to where they started. Along each row they lie the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show less than whole numbers do.",
+      "maximum": 100.0,
+      "minimum": 0.01,
+      "title": "Staggers",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tatami_fill"
+        ],
+        "group": "Stitches",
+        "origin": "inkstitch",
+        "stability": "stable"
       }
     },
     "start_at_nearest_point": {
@@ -1436,7 +1473,9 @@
         "keys": [
           "angle",
           "row_spacing_mm",
-          "end_row_spacing_mm"
+          "end_row_spacing_mm",
+          "staggers",
+          "skip_last"
         ],
         "name": "TatamiParams",
         "title": "Tatami parameters"

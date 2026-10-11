@@ -35,15 +35,16 @@
 //! ```text
 //! /// help text
 //! key: Kind = "default", label "Label" [, range (min, max)] [, options ["id" => "Label", …]]
-//!     [, choices CONST] [, applies STITCH_TYPES] [, when other_key == "value" | when other_key in VALUES]
-//!     [, origin ORIGIN] [, stability STABILITY];
+//!     [, choices CONST] [, applies STITCH_TYPES] [, defaults [Family::Fill => "value", …]]
+//!     [, when other_key == "value" | when other_key in VALUES] [, origin ORIGIN] [, stability STABILITY];
 //! ```
 //!
 //! `Kind` is one of the types in [`kinds`](crate::kinds). Numbers and lists need a `range`; choices need
 //! `options`, or `choices` naming a `&[ChoiceOption]` constant that several parameters share. Other
 //! combinations do not compile. `applies` overrides the struct's stitch types for
-//! one parameter. `when` shows the parameter only while another has a value, or one of the values in
-//! `VALUES` (a `&[&str]`). `origin` defaults to [`Origin::InkStitch`](crate::Origin) and `stability` to
+//! one parameter. `defaults` gives a family of stitch types its own default; `from_set_for` reads with it,
+//! and `from_set` with the plain default. `when` shows the parameter only while another has a value, or
+//! one of the values in `VALUES` (a `&[&str]`). `origin` defaults to [`Origin::InkStitch`](crate::Origin) and `stability` to
 //! [`Stability::Stable`](crate::Stability).
 
 /// Declares a group of parameters; see the [module documentation](crate::macros).
@@ -61,6 +62,7 @@ macro_rules! params {
                     $(, options [$($id:literal => $option:literal),+ $(,)?])?
                     $(, choices $choices:path)?
                     $(, applies $field_applies:expr)?
+                    $(, defaults [$($family:expr => $family_default:literal),+ $(,)?])?
                     $(, when $when_key:ident $when_test:tt $when_value:expr)?
                     $(, origin $origin:expr)?
                     $(, stability $stability:expr)?
@@ -88,6 +90,7 @@ macro_rules! params {
                         help: concat!($($doc, "\n"),+),
                         kind: $crate::__param_kind!($kind; $($min, $max)?; $($($id => $option),+)?; $($choices)?),
                         default: $default,
+                        family_defaults: &[$($(($family, $family_default),)+)?],
                         group: $group,
                         applies_to: $crate::__param_or!([$($field_applies)?] [$applies]),
                         visible_when: $crate::__param_when!($($when_key $when_test $when_value)?),
@@ -104,10 +107,20 @@ macro_rules! params {
             /// Reads `set`: every parameter from its text, or its default. Errors (`SC-E0101`) mean the
             /// element cannot be stitched; warnings (`SC-W0102`) come with the parameters.
             pub fn from_set(set: &$crate::ParamSet) -> Result<$crate::Validated<Self>, Vec<$crate::Diagnostic>> {
+                Self::from_set_with(set, None)
+            }
+
+            /// Reads `set` for a stitch type of `family`, as `from_set` does, with the family's own
+            /// defaults where a parameter has them.
+            pub fn from_set_for(set: &$crate::ParamSet, family: $crate::Family) -> Result<$crate::Validated<Self>, Vec<$crate::Diagnostic>> {
+                Self::from_set_with(set, Some(family))
+            }
+
+            fn from_set_with(set: &$crate::ParamSet, family: Option<$crate::Family>) -> Result<$crate::Validated<Self>, Vec<$crate::Diagnostic>> {
                 let mut problems = Vec::new();
                 let mut specs = Self::SPECS.iter();
                 $($(
-                    let $field = $crate::read_param::<$crate::kinds::$kind>(set, specs.next(), &mut problems);
+                    let $field = $crate::read_param::<$crate::kinds::$kind>(set, specs.next(), family, &mut problems);
                 )+)+
                 match ($($($field,)+)+) {
                     ($($(Some($field),)+)+) => Ok($crate::Validated { params: Self { $($($field,)+)+ }, warnings: problems }),
