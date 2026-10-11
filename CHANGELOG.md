@@ -10,10 +10,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - A part is grown or shrunk as GEOS buffers a polygon, with round corners of 16 segments to a quarter
     circle. Each ring is offset and the offsets are cut where they cross. The area they wind round is the
     part grown or shrunk. GEOS's rules for a ring that shrinking wears away, and for a small ring's offset
-    turned inside out, are followed. The polygons agree with shapely's within a nanometre for 300 random
-    polygons (`conformance/oracle/buffer.py`).
-  - Shrinking can cut a part into pieces, sewn in order of least x, GEOS's order in all but a few cases of
-    slivers. Each piece gets every layer of the underlay before the next, and each piece's top rows start
+    turned inside out, are followed. The polygons agree with shapely's within a nanometre for 330 random
+    polygons, some at the edges of those rules (`conformance/oracle/buffer.py`).
+  - Shrinking can cut a part into pieces, sewn in order of least x, GEOS's order in all but a few cases.
+    Each piece gets every layer of the underlay before the next, and each piece's top rows start
     where the last ended, where Ink/Stitch starts them all near the first's start (`DEV-FILL-008`). Where
     shrinking wears a part away entirely, the part itself is sewn, and `SC-W0309` (expand) or `SC-W0310`
     (inset) says so, as Ink/Stitch warns.

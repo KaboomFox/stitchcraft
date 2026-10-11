@@ -438,6 +438,16 @@ mod tests {
     }
 
     #[test]
+    fn the_nearest_node_is_the_lowest_numbered_of_those_as_near() {
+        // A point exactly between the first 2 nodes, and one nearest the third.
+        let lines = Underpath { points: vec![p(0.0, 0.0), p(2.0, 0.0), p(1.0, 5.0)], around: Vec::new(), edges: Vec::new(), closes: Vec::new() };
+        let meter = &mut Budget::DEFAULT.meter();
+        assert_eq!(lines.nearest(p(1.0, 0.0), meter).unwrap(), Some(0));
+        assert_eq!(lines.nearest(p(1.0, 4.0), meter).unwrap(), Some(2));
+        assert_eq!(Underpath { points: Vec::new(), ..lines }.nearest(p(1.0, 0.0), meter).unwrap(), None);
+    }
+
+    #[test]
     fn the_lines_cross_the_part_in_3_gratings_joined_where_they_cross() {
         // A 10 × 4 rectangle is a small part: its lines lie 1 mm and √2/2 mm apart. The diagonal lines at
         // 45° and 135° cross every 1 mm along each; the upright lines pass through those crossings.

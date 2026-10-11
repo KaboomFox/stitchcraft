@@ -235,16 +235,17 @@ as GEOS buffers a polygon, which Ink/Stitch calls, with round corners of 16 segm
 (`stitchcraft_engine::normalize::offset`). Each ring is offset, the offsets are cut where they cross, and
 the faces they wind round clockwise at least once are the area. Before offsetting, GEOS leaves out a ring
 that shrinking wears away. After, it leaves out a small ring's offset that has turned inside out. The
-engine follows both rules. The polygons agree with shapely's within a nanometre for 300 random polygons
-(`conformance/oracle/buffer.py`).
+engine follows both rules. The polygons agree with shapely's within a nanometre for 330 random polygons,
+some at the edges of both rules (`conformance/oracle/buffer.py`).
 
 Shrinking can cut a part into pieces. Each piece is sewn on its own, in order of its point of least x, and
-of least y among those, which is GEOS's order in all but a few cases of slivers (`DEV-FILL-008`). Every
-layer of the underlay is sewn on one piece before the next, each starting nearest the needle. Each piece's
-top rows start nearest the needle too, after the piece before, and end nearest the next part or element.
-Ink/Stitch starts every piece's top rows nearest where the needle was before the first (`DEV-FILL-008`).
-Where shrinking wears a part away entirely, the part itself is sewn, as in Ink/Stitch, and `SC-W0310`
-(inset) or `SC-W0309` (expand) says so, as Ink/Stitch warns.
+of least y among points level with it. That is GEOS's order in all but a few cases, where GEOS orders
+pieces with a sliver among them, or pieces level at their least x, as it walks its graph (`DEV-FILL-008`).
+Every layer of the underlay is sewn on one piece before the next, each starting nearest the needle. Each
+piece's top rows start nearest the needle too, after the piece before, and end nearest the next part or
+element. Ink/Stitch starts every piece's top rows nearest where the needle was before the first
+(`DEV-FILL-008`). Where shrinking wears a part away entirely, the part itself is sewn, as in Ink/Stitch,
+and `SC-W0310` (inset) or `SC-W0309` (expand) says so, as Ink/Stitch warns.
 
 ### 7. Pull compensation and gap-fill rows
 
