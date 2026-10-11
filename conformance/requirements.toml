@@ -668,7 +668,7 @@ status = "active"
 id = "REQ-FILL-TAT-004"
 area = "fill/tatami"
 level = "L2"
-statement = "Rasterized at 0.05 mm with a 0.4 mm thread, at least 98 percent of the region is covered at spacings from the machine's shortest stitch up to 0.4 mm. Rows nearer each other hand over in a stitch the machine does not sew, and the next row's first needle point is left out (DEV-FIN-001)."
+statement = "Rasterized at 0.05 mm with a 0.4 mm thread, at least 98 percent of the region is covered at spacings from the machine's shortest stitch up to 0.4 mm. Rows nearer each other that meet an edge square on hand over along it in a stitch the machine does not sew, and the next row's first needle point is left out (DEV-FIN-001)."
 milestone = "M5"
 status = "active"
 
