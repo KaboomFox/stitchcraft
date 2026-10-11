@@ -32,6 +32,13 @@ concurrency:
 env:
   CARGO_TERM_COLOR: never
   CARGO_INCREMENTAL: "0"
+  # Each test binary runs with at most 4 GiB of address space (docs/src/design/conformance.md). A mutant
+  # that breaks the condition ending a loop runs it until the work budget ends, and a loop that keeps 40
+  # bytes for each unit of work wants 20 GB at the default budget, more than the runner's 16 GB. The job
+  # then ends without a result when the runner runs out of memory, as one part of M5.4's did. At the cap
+  # the test aborts, which counts as noticed. Cargo runs test binaries through this runner; `--` ends
+  # prlimit's options, so the test binary's own options reach the test binary.
+  CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: prlimit --as=4294967296 --
 
 jobs:
   changed:
@@ -110,7 +117,8 @@ jobs:
           tool: cargo-mutants@27.1.0
       - name: Run this shard's mutants
         # cargo-mutants exits non-zero when it finds missed mutants; the comparison job decides. A mutant
-        # that makes a test run away is stopped by cargo-mutants' timeout, which counts apart.
+        # that makes a test run away is stopped by cargo-mutants' timeout, which counts apart, or by the
+        # memory cap above, which counts as noticed.
         # cargo-mutants numbers its shards from 0. Its default sharding cuts the list, which is in source
         # order, into consecutive slices: one part got all of stitchcraft-formats' mutants, whose tests are
         # the slowest, and took 23 minutes while the others took 4 to 7. Round-robin deals them out evenly.
