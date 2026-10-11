@@ -23,7 +23,7 @@
 
 mod arrange;
 mod assemble;
-mod geom;
+pub(crate) mod geom;
 
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
@@ -54,6 +54,11 @@ pub struct Polygon {
 }
 
 impl Polygon {
+    /// Its rings: the outline, then the holes.
+    pub(crate) fn rings(&self) -> impl Iterator<Item = &[Point]> {
+        std::iter::once(self.outline.as_slice()).chain(self.holes.iter().map(Vec::as_slice))
+    }
+
     /// Whether `p` lies in the part or on one of its rings, decided exactly.
     pub(crate) fn covers(&self, p: Point) -> bool {
         match geom::locate_in_ring(p, &self.outline) {

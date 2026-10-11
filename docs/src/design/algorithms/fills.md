@@ -147,10 +147,10 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    mostly come just before the rows beside them, which cover them, and the rows go back and forth like a
    mown lawn.
 6. **Between rows.** Steps between rows in a row are one stretch, from where the last row ended to where
-   the next starts. Between 2 points of one ring the needle runs along the ring, the shorter way round, as
-   in Ink/Stitch. Between 2 rings it takes the shortest way along rings and rows (`DEV-FILL-006`). It sews
-   running stitches of the first `running_stitch_length_mm`, at least twice the shortest stitch, within
-   `running_stitch_tolerance_mm`. The first of them would sew the row's end again, so it is left out. With
+   the next starts. The needle travels it under the rows (section 4), or with `underpath` off along the
+   ring between 2 points of one ring, the shorter way round, as in Ink/Stitch, and between 2 rings the
+   shortest way along rings and rows (`DEV-FILL-006`). It sews running stitches of the first
+   `running_stitch_length_mm`, at least twice the shortest stitch, within `running_stitch_tolerance_mm`. The first of them would sew the row's end again, so it is left out. With
    `skip_last` the row's end is not sewn, and the first running stitch stays unless the next row starts
    beside it.
 7. **The shortest stitch.** Rows the row spacing apart start and end nearer each other than the shortest
@@ -161,16 +161,40 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
 
 The route follows Ink/Stitch's from the same graph. StitchCraft's rings start where the drawing starts
 them, and Ink/Stitch's where GEOS's overlay starts them, so which stretches are doubled, and with them the
-route, can differ (`DEV-FILL-005`). Until travel under the rows arrives (M5.5), the needle runs along the
-outline between rows, as Ink/Stitch's does with `underpath` off.
+route, can differ (`DEV-FILL-005`).
 
 ### 4. Travel under the rows
 
-With `underpath`, on by default, travel may cross the region where rows sewn later will cover it. It
-follows lines square to the rows and lines at 45° to them either way. A line costs less the farther it
-lies from the outline. Once a row is sewn, the lines crossing it are closed: no travel runs over a row
-already sewn. Travel stays inside the region (`REQ-FILL-TAT-005`). Where no way inside joins 2 points,
-the parts are joined as below, and `SC-W0501` says so.
+With `underpath`, on by default, the needle runs between rows inside the part, under the rows sewn
+after it, which cover it, as Ink/Stitch's does (`stitchcraft_engine::generators::tatami::underpath`,
+since M5.5, `REQ-FILL-TAT-005`).
+
+1. **Lines.** 3 gratings of lines cross the part, laid as rows are (section 1). 2 of them lie at 45° to
+   the rows, one either way, their lines 2 mm apart, and the third square to the rows, its lines √2 mm
+   apart. A part smaller than 10,000 square CSS pixels (700 mm²) has less room, and its lines lie half as
+   far apart. The square lines pass through the crossings of the others, so the 3 make one network. Its
+   nodes are the crossings, the lines' ends on the rings and the route's nodes, and along each ring an
+   edge joins each node to the next. A crossing within 0.005 px of a node already found is that node.
+   Where either 45° grating misses the part, the needle runs as with `underpath` off.
+2. **Costs.** A piece of line costs its length in CSS pixels over its distance from the part's rings,
+   simplified within 0.5 mm, plus a tenth of a pixel. A stretch of ring costs 3 times the straight line
+   between its ends. Travel then keeps to the middle of the part, away from its edges.
+3. **Sewn rows close lines.** Once a row is sewn, the pieces of line that cross it close, and no later
+   travel follows them over it.
+4. **The way.** The needle takes the cheapest way. The way is cut into points 10 px apart within 4 px of
+   it, the corners of the points after its start are cut 5 times, a quarter of the way along each side
+   from each end, and its own ends go back at either end: it leaves its start straight and curves from
+   there. Then it is kept inside the part. Where it leaves the part or runs along a ring, the ring takes
+   its place, the shorter way round, from where it leaves to where it comes back: the hole it leaves into,
+   or else the outline. It is sewn in running stitches as in section 3.
+5. **A hole between the lines.** Where no line joins the 2 points, as for a hole small enough to lie
+   between the lines, the needle runs along the rings and rows, as with `underpath` off. Ink/Stitch goes
+   straight there, but it travels between 2 rings only from the fill's start to its end, before any row
+   is sewn. StitchCraft also travels between rings to pair nodes (`DEV-FILL-006`), after rows are sewn,
+   which a straight way would cross.
+
+Equally cheap ways, the simplified rings and the points a way is cut into follow StitchCraft's own rules,
+so the way can differ from Ink/Stitch's in its details (`DEV-FILL-007`).
 
 ### 5. Parts
 
@@ -219,7 +243,7 @@ leaves every face empty, the fill sews nothing, and `SC-W0303` says so.
 | `REQ-FILL-TAT-002` | Measured row spacing equals the parameter (± 2 %), or follows the start→end gradient |
 | `REQ-FILL-TAT-003` | Needle points follow the stagger grid: a row's points lie a `staggers`-th of the longest stitch along from the row before's, and no 2 neighbouring rows line them up. A segment ends at its end unless `skip_last` is on or its last point lies within 0.1 mm of it |
 | `REQ-FILL-TAT-004` | Coverage: rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacing ≤ 0.4 mm |
-| `REQ-FILL-TAT-005` | Travel stitches lie inside the region (± 0.05 mm) |
+| `REQ-FILL-TAT-005` | With `underpath`, travel takes the cheapest way along the lines under the rows not sewn yet, and its way lies inside the region (± 0.05 mm) |
 | `REQ-FILL-TAT-006` | Pull compensation preserves the number of holes and components |
 | `REQ-FILL-TAT-007` | All rows, including gap-fill rows, lie inside the region (± tolerance + compensation) |
 | `REQ-FILL-TAT-008` | A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element |
