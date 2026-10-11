@@ -93,6 +93,30 @@ scale = 8.0
 alt = "TS-06 as it will sew, in red: five satin columns 6 mm wide side by side, which look alike from above because their underlays lie beneath the top stitches."
 
 [[shot]]
+id = "testsheet-ts-07"
+kind = "stitch"
+sheet = "TS-07"
+style = "realistic"
+scale = 4.0
+alt = "TS-07 as it will sew: three red tatami circles, two side by side and one below them, each with a thin black outline along its edge."
+
+[[shot]]
+id = "testsheet-ts-08"
+kind = "stitch"
+sheet = "TS-08"
+style = "realistic"
+scale = 3.0
+alt = "TS-08 as it will sew, in blue: fifteen tatami squares in five rows of three, their rows level, slanting and upright from left to right, the top squares dense and the bottom ones open enough to show the underlay and travel beneath them."
+
+[[shot]]
+id = "testsheet-ts-09"
+kind = "stitch"
+sheet = "TS-09"
+style = "realistic"
+scale = 5.0
+alt = "TS-09 as it will sew, in green: the same shape three times, top to bottom, a rectangle with a square hole and a round hole and a bar to its right, which a jump thread along the bottom joins to it."
+
+[[shot]]
 id = "testsheet-ts-10a"
 kind = "stitch"
 sheet = "TS-10A"

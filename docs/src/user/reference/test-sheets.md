@@ -130,6 +130,60 @@ After sewing, check:
 - Does any underlay show past the top stitches, at the edges or at the ends?
 - Measure each column across, halfway down, and note any puckering round it.
 
+## TS-07 — Fill and outline registration at 3 pull compensations
+
+126.2 × 126.0 mm · 13522 stitches, 6 jumps, 6 trims, 1 colour change, 0 stops
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+![TS-07 as it will sew: three red tatami circles, two side by side and one below them, each with a thin black outline along its edge.](../../images/generated/testsheet-ts-07.png)
+
+Threads: Red, Black.
+
+After sewing, check:
+
+- Circles: top left with no pull compensation, top right with 0.2 mm, bottom with 0.4 mm. Each red fill is 60 mm across, with a black running stitch along its edge.
+- At 12 points round each circle, as the hours of a clock: does fabric show between the fill and the outline, or does the fill reach past it? Measure the largest gap and the largest overlap of each circle.
+- Measure each fill across, left to right and top to bottom. How much less than 60 mm is it, and how much of that does the compensation make up?
+- Any puckering round the circles, and where.
+
+## TS-08 — Fill density and angle
+
+100.0 × 170.0 mm · 16239 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+![TS-08 as it will sew, in blue: fifteen tatami squares in five rows of three, their rows level, slanting and upright from left to right, the top squares dense and the bottom ones open enough to show the underlay and travel beneath them.](../../images/generated/testsheet-ts-08.png)
+
+Threads: Blue.
+
+After sewing, check:
+
+- Rows, top to bottom, are at row spacings of 0.25, 0.3, 0.4, 0.5 and 0.6 mm, and the columns at angles of 0°, 45° and 90°, left to right. Each square is 30 mm wide.
+- Coverage: in which squares does the fabric show between the rows? Rate each row of squares 1 (bare) to 5 (solid).
+- At 0.25 mm the rows lie nearer each other than the machine's shortest stitch of 0.3 mm, so each row's first needle point is left out. Does a sliver of fabric show at the rows' starts, along the squares' edges?
+- Stiffness: rate each row of squares 1 (soft) to 5 (stiff as card). Is there puckering round any square, or furrows where needle points line up?
+- Measure the 0° and the 90° square at 0.4 mm across, both ways. How much less than 30 mm are they?
+
+## TS-09 — Fill underlay, travel and gap-filling rows round holes
+
+66.0 × 114.0 mm · 7788 stitches, 6 jumps, 3 trims, 0 colour changes, 0 stops
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+![TS-09 as it will sew, in green: the same shape three times, top to bottom, a rectangle with a square hole and a round hole and a bar to its right, which a jump thread along the bottom joins to it.](../../images/generated/testsheet-ts-09.png)
+
+Threads: Emerald Green.
+
+After sewing, check:
+
+- Top to bottom: without underlay, with Ink/Stitch's default underlay, and with the underlay and 2 gap-filling rows. Each is a 50 × 30 mm rectangle with a square hole and a round hole, and a bar 6 mm to its right that belongs to the same fill.
+- Travel: does any running stitch between rows show on top of the fill? Where?
+- The bar: was the thread to it cut, or does a jump thread run to it? Does the fill hold at both ends of that jump?
+- Holes: are their edges clean, with no row across them and no fabric showing round them?
+- Where the rows round a hole meet again, does a gap open along a row? Does the bottom copy, with gap-filling rows, close it?
+- How the 3 copies differ in stiffness, and any puckering.
+
 ## TS-10A — Hoop size: the 4 × 4 in hoop, a 100 × 100 mm frame
 
 100.0 × 100.0 mm · 195 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops

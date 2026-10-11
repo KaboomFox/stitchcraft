@@ -10,7 +10,9 @@
 //!
 //! The MC-1 sheets are drawn stitch by stitch (`sketch`), to test the machine and the file formats; from
 //! MC-2 they are drawn as designs and planned by the engine (`designed`), to test its stitches too. The MC-3
-//! sheets sew satin columns: a ladder of widths and spacings, and the underlays side by side.
+//! sheets sew satin columns: a ladder of widths and spacings, and the underlays side by side. The MC-4 sheets
+//! sew tatami fills: inside outlines at 3 pull compensations, at 5 spacings and 3 angles, and round holes
+//! and a part apart, with and without underlay and gap-filling rows.
 //! Sheets use exact Brother PEC thread colours, so a Brother machine shows the thread names the
 //! expected-result sheet lists.
 
@@ -23,6 +25,9 @@ mod ts03;
 mod ts04;
 mod ts05;
 mod ts06;
+mod ts07;
+mod ts08;
+mod ts09;
 mod ts10;
 
 pub use sketch::{STITCH_LEN, SheetError};
@@ -153,6 +158,45 @@ pub static SHEETS: &[TestSheet] = &[
         build: ts06::build,
     },
     TestSheet {
+        id: "TS-07",
+        title: "Fill and outline registration at 3 pull compensations",
+        checks: &[
+            "Circles: top left with no pull compensation, top right with 0.2 mm, bottom with 0.4 mm. Each red fill is 60 mm across, with a black running stitch along its edge.",
+            "At 12 points round each circle, as the hours of a clock: does fabric show between the fill and the outline, or does the fill reach past it? Measure the largest gap and the largest overlap of each circle.",
+            "Measure each fill across, left to right and top to bottom. How much less than 60 mm is it, and how much of that does the compensation make up?",
+            "Any puckering round the circles, and where.",
+        ],
+        profile: REFERENCE,
+        build: ts07::build,
+    },
+    TestSheet {
+        id: "TS-08",
+        title: "Fill density and angle",
+        checks: &[
+            "Rows, top to bottom, are at row spacings of 0.25, 0.3, 0.4, 0.5 and 0.6 mm, and the columns at angles of 0°, 45° and 90°, left to right. Each square is 30 mm wide.",
+            "Coverage: in which squares does the fabric show between the rows? Rate each row of squares 1 (bare) to 5 (solid).",
+            "At 0.25 mm the rows lie nearer each other than the machine's shortest stitch of 0.3 mm, so each row's first needle point is left out. Does a sliver of fabric show at the rows' starts, along the squares' edges?",
+            "Stiffness: rate each row of squares 1 (soft) to 5 (stiff as card). Is there puckering round any square, or furrows where needle points line up?",
+            "Measure the 0° and the 90° square at 0.4 mm across, both ways. How much less than 30 mm are they?",
+        ],
+        profile: REFERENCE,
+        build: ts08::build,
+    },
+    TestSheet {
+        id: "TS-09",
+        title: "Fill underlay, travel and gap-filling rows round holes",
+        checks: &[
+            "Top to bottom: without underlay, with Ink/Stitch's default underlay, and with the underlay and 2 gap-filling rows. Each is a 50 × 30 mm rectangle with a square hole and a round hole, and a bar 6 mm to its right that belongs to the same fill.",
+            "Travel: does any running stitch between rows show on top of the fill? Where?",
+            "The bar: was the thread to it cut, or does a jump thread run to it? Does the fill hold at both ends of that jump?",
+            "Holes: are their edges clean, with no row across them and no fabric showing round them?",
+            "Where the rows round a hole meet again, does a gap open along a row? Does the bottom copy, with gap-filling rows, close it?",
+            "How the 3 copies differ in stiffness, and any puckering.",
+        ],
+        profile: REFERENCE,
+        build: ts09::build,
+    },
+    TestSheet {
         id: "TS-10A",
         title: "Hoop size: the 4 × 4 in hoop, a 100 × 100 mm frame",
         checks: &[
@@ -225,6 +269,10 @@ mod tests {
         };
         assert_eq!(about("TS-05"), [91.0, 76.0, 0.0, 0.0]);
         assert_eq!(about("TS-06"), [62.0, 30.0, 0.0, 0.0]);
+        // The top-right circle's rows reach 0.2 mm past its edge either side.
+        assert_eq!(about("TS-07"), [126.2, 126.0, 0.0, 0.0]);
+        assert_eq!(about("TS-08"), [100.0, 170.0, 0.0, 0.0]);
+        assert_eq!(about("TS-09"), [66.0, 114.0, 0.0, 0.0]);
         // Each TS-10 frame is its hoop's whole field, as its title and checks say, and fits no smaller hoop.
         let hoops = [("ts-10a", "4 × 4 in", &BROTHER_PE800_4X4), ("TS-10B", "5 × 7 in", REFERENCE), ("TS-10C", "small", &BROTHER_PE800_SMALL)];
         for (id, hoop, profile) in hoops {
@@ -414,6 +462,98 @@ mod tests {
             let same = top.iter().zip(&plain).all(|(a, b)| (a.x() - b.x() - (left - plain_left)).abs() < 1e-9 && (a.y() - b.y()).abs() < 1e-9);
             assert!(same && (name == "none") == (points.len() == plain.len()), "{name}");
         }
+    }
+
+    #[test]
+    fn ts07_sews_its_fills_then_their_outlines_with_the_compensations_its_checks_name() {
+        let plan = find("TS-07").unwrap().plan().unwrap();
+        assert_eq!(plan.blocks.iter().map(|b| b.thread.name.as_deref()).collect::<Vec<_>>(), [Some("Red"), Some("Black")]);
+        let mut shift: Option<(f64, f64)> = None;
+        for (pull, (x, y)) in ts07::CIRCLES {
+            // Each outline starts at its circle's right-hand point, where the drawing starts it, and its needle
+            // points lie on the circle, within the curves' few thousandths of a millimetre.
+            let outline = sewn("TS-07", &format!("outline-{pull}"));
+            let centre = stitchcraft_core::Point::new(outline[0].x() - ts07::RADIUS, outline[0].y()).unwrap();
+            assert!(outline.iter().all(|q| (q.distance(centre) - ts07::RADIUS).abs() < 0.05), "{pull}");
+            // Each circle where the drawing puts it, all moved alike to centre the sheet.
+            let moved = *shift.get_or_insert((centre.x() - x, centre.y() - y));
+            assert!((centre.x() - x - moved.0).abs() < 1e-9 && (centre.y() - y - moved.1).abs() < 1e-9, "{pull}");
+            // The rows through the circle's middle reach its compensation past its edge, and none reaches farther.
+            // Row starts the machine's shortest stitch leaves out (DEV-FIN-001) can only fall short.
+            let reach = sewn("TS-07", &format!("fill-{pull}")).iter().map(|q| q.distance(centre)).fold(0.0, f64::max);
+            let compensation: f64 = pull.parse().unwrap();
+            assert!((reach - ts07::RADIUS - compensation).abs() < 0.01, "{pull}: {reach}");
+        }
+        // The first check names the compensations in the circles' order.
+        let first = find("TS-07").unwrap().checks[0];
+        let named = |pull: &str| if pull == "0" { "no pull compensation".to_string() } else { format!("{pull} mm") };
+        let at: Vec<usize> = ts07::CIRCLES.iter().map(|(pull, _)| first.find(&named(pull)).unwrap()).collect();
+        assert!(at.windows(2).all(|w| w[0] < w[1]), "{first}");
+    }
+
+    #[test]
+    fn ts08_sews_its_squares_by_spacing_and_angle_as_its_checks_name() {
+        let mut tops = Vec::new();
+        for spacing in ts08::SPACINGS {
+            let mut lefts = Vec::new();
+            let mut counts = Vec::new();
+            for angle in ts08::ANGLES {
+                let points = sewn("TS-08", &format!("{spacing}-{angle}"));
+                let (left, right) = across(&points);
+                assert!(right - left <= ts08::SIDE + 1e-9, "{spacing}-{angle}: within its square");
+                lefts.push(left);
+                counts.push(points.len());
+            }
+            assert!(lefts.windows(2).all(|w| w[1] - w[0] > ts08::SIDE), "{spacing}: left to right by angle");
+            tops.push((sewn("TS-08", &format!("{spacing}-0"))[0].y(), counts));
+        }
+        assert!(tops.windows(2).all(|w| w[0].0 < w[1].0), "top to bottom by spacing");
+        // Wider spacings sew fewer stitches in each column.
+        for column in 0..ts08::ANGLES.len() {
+            assert!(tops.windows(2).all(|w| w[0].1[column] > w[1].1[column]), "{column}: {tops:?}");
+        }
+        // The first check names the spacings and the angles in the order they are sewn.
+        let listed = |items: Vec<String>| match items.split_last() {
+            Some((last, [])) => last.clone(),
+            Some((last, rest)) => format!("{} and {last}", rest.join(", ")),
+            None => String::new(),
+        };
+        let spacings = listed(ts08::SPACINGS.map(String::from).to_vec());
+        let angles = listed(ts08::ANGLES.map(|a| format!("{a}°")).to_vec());
+        let first = find("TS-08").unwrap().checks[0];
+        assert!(first.contains(&format!("spacings of {spacings} mm")) && first.contains(&format!("angles of {angles}")), "{first}");
+    }
+
+    #[test]
+    fn ts09_sews_each_copy_round_its_holes_and_says_it_is_in_parts() {
+        // Each copy in its 2 parts, with a jump to the bar, locked wherever its stitching starts or ends, and
+        // trimmed after. The sheet draws only as it says SC-W0307 for each.
+        let squeeze =
+            |block: &String| block.chars().fold(String::new(), |out, c| if c == 's' && out.ends_with('s') { out } else { out + &c.to_string() });
+        assert_eq!(shape("TS-09").iter().map(squeeze).collect::<Vec<_>>(), ["JllllsllllJllllsllllT".repeat(3)]);
+        // Copies top to bottom from the drawing's top-left corner, which centring the sheet moves.
+        let bounds = find("TS-09").unwrap().plan().unwrap().bounds().unwrap();
+        let corner = (bounds.center().x() - bounds.width() / 2.0, bounds.center().y() - bounds.height() / 2.0);
+        let ([(left, top), (right, bottom)], ((x, y), radius)) = (ts09::SQUARE, ts09::ROUND);
+        let mut counts = Vec::new();
+        for (k, (name, _)) in ts09::COPIES.into_iter().enumerate() {
+            let at = |dx: f64, dy: f64| stitchcraft_core::Point::new(corner.0 + dx, corner.1 + k as f64 * (ts09::TALL + ts09::GAP) + dy).unwrap();
+            let (from, to) = (at(0.0, 0.0), at(ts09::BAR.1, ts09::TALL));
+            // Every needle point in its copy, and none in a hole or between the rectangle and the bar, by more
+            // than a hundredth of a millimetre.
+            let points = sewn("TS-09", name);
+            let between = |q: &stitchcraft_core::Point, a: stitchcraft_core::Point, b: stitchcraft_core::Point, by: f64| {
+                (a.x() + by..=b.x() - by).contains(&q.x()) && (a.y() + by..=b.y() - by).contains(&q.y())
+            };
+            assert!(points.iter().all(|q| between(q, from, to, -1e-9)), "{name}: in its copy");
+            let square = |q| between(q, at(left, top), at(right, bottom), 0.01);
+            let circle = |q: &stitchcraft_core::Point| q.distance(at(x, y)) < radius - 0.01;
+            let gap = |q| between(q, at(ts09::WIDE, 0.0), at(ts09::BAR.0, ts09::TALL), 0.01);
+            assert!(!points.iter().any(|q| square(q) || circle(q) || gap(q)), "{name}: in a hole or the gap");
+            counts.push(points.len());
+        }
+        // Underlay adds stitches, and gap-filling rows add more.
+        assert!(counts[0] < counts[1] && counts[1] < counts[2], "{counts:?}");
     }
 
     #[test]

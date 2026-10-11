@@ -103,7 +103,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M5.7 ✅ | The underlay on the part shrunk by `fill_underlay_inset_mm`, and the top rows on the part grown by `expand_mm`. A part is buffered as GEOS buffers a polygon, and checked against shapely. Pieces a shrinking cuts a part into sewn one after another (`DEV-FILL-008`), and a part a shrinking wears away said, `SC-W0309`, `SC-W0310`. A needle inside the part starts at the nearest node of the lines under the rows | `REQ-FILL-TAT-012` |
 | M5.8 ✅ | Pull compensation at the rows' ends, holes and parts kept (`DEV-FILL-009`), and below 0 read as 0, `SC-W0312`; gap-fill rows from the grid, inside the region (`DEV-FILL-010`). The pull compensation settings are shared with satins | `REQ-FILL-TAT-006`, `REQ-FILL-TAT-007` |
 | M5.9 ✅ | Coverage metric (`stitchcraft_testkit::metrics`), at least 98 % from the machine's shortest stitch to 0.4 mm; the hoop's whole field plans, its instructions guarded by `cargo xtask perf` | `REQ-FILL-TAT-004`, `REQ-FILL-TAT-009` |
-| MC-4 🧵 | **TS-07** (fill + outline registration), **TS-08** (density ladder, angles), **TS-09** (underlay, travel) | report filed; fill defaults and pull compensation tuned |
+| MC-4 🧵 | **TS-07** (fill + outline registration), **TS-08** (density ladder, angles), **TS-09** (underlay, travel); kit: `stitch testsheet` for each, sewable from M5.9 | report filed; fill defaults and pull compensation tuned |
 
 ## M6 — VectorCraft plug-in (ABI v1) and export from `.vectorcraft`
 
