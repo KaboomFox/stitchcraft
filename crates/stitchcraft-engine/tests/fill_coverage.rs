@@ -89,10 +89,11 @@ fn req_fill_tat_004_rows_from_the_shortest_stitch_to_0_4_mm_apart_cover_98_perce
 
 #[test]
 fn req_fill_tat_004_rows_closer_than_the_shortest_stitch_leave_their_starts_showing() {
-    // 0.25 mm apart, Ink/Stitch's default, each row hands over to the next in a stitch of 0.25 mm. The
-    // Brother's shortest stitch is 0.3 mm, so the next row's first needle point is left out (DEV-FIN-001),
-    // the thread runs from the row's end to the next row's second needle point, and a sliver at each row's
-    // start shows. The narrow bar has many starts for its area.
+    // 0.25 mm apart, Ink/Stitch's default, each row hands over to the next along the bar's sides, which
+    // meet the rows square on, in a stitch of 0.25 mm. The Brother's shortest stitch is 0.3 mm, so the next
+    // row's first needle point is left out (DEV-FIN-001), the thread runs from the row's end to the next
+    // row's second needle point, and a sliver at each row's start shows. The narrow bar has many starts for
+    // its area.
     let params = [("row_spacing_mm", "0.25"), ("fill_underlay", "false")];
     let (_, brother) = sewn(&[BAR], &params);
     assert!((0.95..0.98).contains(&brother), "{brother}");
@@ -102,7 +103,11 @@ fn req_fill_tat_004_rows_closer_than_the_shortest_stitch_leave_their_starts_show
     assert!(share >= 0.999, "{share}");
     // A wider part has fewer starts for its area: the rectangle on the Brother.
     let (_, rectangle) = sewn(&[RECTANGLE], &params);
-    assert!(rectangle >= 0.99, "{rectangle}");
+    assert!((0.99..0.995).contains(&rectangle), "{rectangle}");
+    // Along an edge at a slant to the rows, their ends lie farther apart than the rows: at 45°, 0.35 mm,
+    // which the Brother sews. The rectangle's handovers stay, and it is covered.
+    let (_, slanted) = sewn(&[RECTANGLE], &[params.as_slice(), &[("angle", "45")]].concat());
+    assert!(slanted >= 0.999, "{slanted}");
 }
 
 #[test]

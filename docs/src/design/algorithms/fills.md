@@ -159,12 +159,14 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    nearer the one before it than the shortest stitch is left out, as Ink/Stitch leaves out points nearer
    than its own shortest stitch. A part's last point stays, and the points before it that are too near it
    go instead, finalize's rule applied in the generator. Where the rows lie nearer each other than the
-   machine's shortest stitch, each row hands over to the next in a stitch too short to sew, so the next
-   row's first needle point is left out (`DEV-FIN-001`). The thread then runs from the row's end to the
-   next row's second needle point, and a sliver at each row's start shows. On the Brother, whose
-   shortest stitch is 0.3 mm, a bar 5 mm wide at Ink/Stitch's default of 0.25 mm is 97 % covered, and at
-   0.3 mm or more it is covered to its edges (`REQ-FILL-TAT-004`). Ink/Stitch's shortest stitch, 0.1 mm
-   by default, keeps the handover.
+   machine's shortest stitch and meet an edge square on, each row hands over to the next in a stitch too
+   short to sew, so the next row's first needle point is left out (`DEV-FIN-001`). The thread then runs
+   from the row's end to the next row's second needle point, and a sliver at each row's start shows. On
+   the Brother, whose shortest stitch is 0.3 mm, a bar 5 mm wide at Ink/Stitch's default of 0.25 mm is
+   97 % covered, and at 0.3 mm or more it is covered to its edges (`REQ-FILL-TAT-004`). Ink/Stitch's
+   shortest stitch, 0.1 mm by default, keeps the handover. Along an edge at a slant to the rows, their
+   ends lie farther apart: the spacing over the sine of the angle between edge and rows, 0.35 mm at 45°
+   for rows 0.25 mm apart, which the Brother sews.
 
 The route follows Ink/Stitch's from the same graph. StitchCraft's rings start where the drawing starts
 them, and Ink/Stitch's where GEOS's overlay starts them, so which stretches are doubled, and with them the
