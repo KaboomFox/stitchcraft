@@ -206,8 +206,9 @@ mod tests {
     #[test]
     fn the_record_reads_back_as_it_is_written() {
         assert_eq!(toml::from_str::<RecordFile>(&render(FIELD)).unwrap().field, FIELD);
-        // The committed file is as recording writes it, so that recording changes only the number.
-        let text = util::read(&util::root().join(RECORD)).unwrap();
+        // The committed file is as recording writes it, so that recording changes only the number. Git can
+        // check it out with Windows line endings.
+        let text = util::read(&util::root().join(RECORD)).unwrap().replace("\r\n", "\n");
         assert_eq!(render(toml::from_str::<RecordFile>(&text).unwrap().field), text);
     }
 }
