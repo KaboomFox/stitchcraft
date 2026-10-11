@@ -32,19 +32,23 @@ more and shorter stitches. A satin column's way to its start and from its end ke
 
 ### `enable_random_stitch_length`
 
-**Random stitch length.** Vary the stitch lengths at random instead of spreading them evenly. Lines sewn close together
-then do not line their needle holes up, which avoids moiré patterns.
+**Random stitch length.** Vary the stitch lengths at random instead of spreading them evenly, or in a tatami fill, instead
+of placing the needle points on the stagger grid. Lines and rows sewn close together then do not
+line their needle holes up, which avoids moiré patterns.
 
 - **Accepts:** true or false
 - **Default:** `false`
+- **Applies to:** Running stitch, Ripple stitch, Tatami fill
 - **Ink/Stitch:** same key, meaning and default
 
 ### `random_stitch_length_jitter_percent`
 
-**Length variation.** How much each stitch may be longer or shorter than the stitch length, in percent of it. Where the
-random lengths start is the element's `random_seed`.
+**Length variation.** How much each stitch may be longer or shorter than the stitch length, in percent of it. A tatami
+fill's stitch length is its longest stitch. Where the random lengths start is the element's
+`random_seed`.
 
 - **Accepts:** a percentage from 0 to 100
 - **Default:** `10`
 - **Shown when** [`enable_random_stitch_length`](#enable_random_stitch_length) is `true`
+- **Applies to:** Running stitch, Ripple stitch, Tatami fill
 - **Ink/Stitch:** same key, meaning and default

@@ -155,23 +155,24 @@ jump. Empty: the document's setting.
 
 ### `max_stitch_length_mm`
 
-**Longest stitch.** Split stitches longer than this. Manual stitch splits them into equal parts, and a satin column
-as its split method says. Empty, every stitch is sewn whole.
+**Longest stitch.** Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
+its split method says. Empty, every stitch is sewn whole. A tatami fill sews its rows in
+stitches this long.
 
-- **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
-- **Default:** empty
-- **Applies to:** Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin
+- **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty); for fills, a length from 0.1 to 25 mm, empty being the default
+- **Default:** empty, and `4` for fills
+- **Applies to:** Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill
 - **Ink/Stitch:** same key, meaning and default
 
 ## Random variation
 
 ### `random_seed`
 
-**Random seed.** Where random variation starts: a running stitch's random lengths, and a satin column's random
-widths and spacing. The same seed gives the same stitches, another seed others. Empty, each
-element gets its own.
+**Random seed.** Where random variation starts: a running stitch's random lengths, a satin column's random
+widths and spacing, and a tatami fill's random lengths. The same seed gives the same stitches,
+another seed others. Empty, each element gets its own.
 
 - **Accepts:** a number or any text, or empty to derive it from the element
 - **Default:** empty
-- **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin
+- **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill
 - **Ink/Stitch:** same key, meaning and default

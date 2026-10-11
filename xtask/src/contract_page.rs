@@ -305,14 +305,16 @@ fn disagreements(spec: &ParamSpec, origin: Origin, p: &Param) -> Vec<String> {
         (Kind::Toggle, _, _) if their_default.is_empty() => "false",
         _ => their_default,
     };
-    let same = match (spec.read(spec.default), spec.read(their_default)) {
+    // Ink/Stitch declares some parameters once for each kind of element, each with its own default; the
+    // registry gives such a family its own default.
+    let our_default = p.family().map_or(spec.default, |family| spec.default_for(family));
+    let same = match (spec.read(our_default), spec.read(their_default)) {
         (Ok((ours, _)), Ok((theirs, None))) => ours == theirs,
         _ => false,
     };
     if origin == Origin::InkStitch && !same {
         problems.push(format!(
-            "`{key}` defaults to \"{}\" here and \"{their_default}\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)",
-            spec.default
+            "`{key}` defaults to \"{our_default}\" here and \"{their_default}\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)"
         ));
     }
     if p.element == "common" && spec.applies_to != StitchType::ALL {
@@ -351,7 +353,9 @@ fn compatible(kind: Kind, their_type: &str, unit: &str) -> bool {
         Kind::PercentList { .. } => their_type == "float" && unit == "%",
         Kind::Angle => their_type == "float" && matches!(unit, "deg" | "degrees" | "°"),
         Kind::Percent { .. } => their_type == "float" && matches!(unit, "%" | "± %"),
-        Kind::Number { .. } => their_type == "float" && unit == "—",
+        // Ink/Stitch reads some numbers as floats that its settings window shows as whole numbers, such as a
+        // fill's staggers, whose fractions it documents.
+        Kind::Number { .. } => matches!(their_type, "float" | "int") && unit == "—",
         Kind::Count { .. } => their_type == "int",
         Kind::CountList { .. } => matches!(their_type, "int" | "string" | "str"),
         Kind::Toggle => matches!(their_type, "boolean" | "toggle"),
@@ -393,6 +397,7 @@ mod tests {
         help: " Distance between rows.\n",
         kind: Kind::Length { min: 0.1, max: 10.0, optional: false },
         default: "0.25",
+        family_defaults: &[],
         group: "Fill",
         applies_to: &[StitchType::TatamiFill],
         visible_when: None,
@@ -456,6 +461,31 @@ mod tests {
             Contract::parse(&data).unwrap().check(&[&group]),
             [
                 "`running_stitch_tolerance_mm` defaults to \"0.1\" here and \"0.2\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)"
+            ]
+        );
+    }
+
+    #[test]
+    fn a_family_with_its_own_default_is_compared_with_its_element_s_row() {
+        // Declared for satin columns too, with their own default: each row is compared with its family's.
+        let (data, _) = shared("0.2");
+        let both = |family_defaults: &'static [(Family, &'static str)]| {
+            let spec = ParamSpec {
+                key: "running_stitch_tolerance_mm",
+                default: "0.2",
+                family_defaults,
+                applies_to: &[StitchType::RunningStitch, StitchType::RippleStitch, StitchType::SatinColumn],
+                ..ROW_SPACING
+            };
+            let specs: &'static [ParamSpec] = Box::leak(Box::new([spec]));
+            ParamGroup { name: "RunningParams", help: " Running.\n", applies_to: &[StitchType::RunningStitch], specs }
+        };
+        let contract = Contract::parse(&data).unwrap();
+        assert_eq!(contract.check(&[&both(&[(Family::Satin, "0.1")])]), Vec::<String>::new());
+        assert_eq!(
+            contract.check(&[&both(&[])]),
+            [
+                "`running_stitch_tolerance_mm` defaults to \"0.2\" here and \"0.1\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)"
             ]
         );
     }

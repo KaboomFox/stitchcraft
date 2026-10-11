@@ -95,7 +95,7 @@ pub fn generate(element: &Element, settings: &DesignSettings, profile: &MachineP
 /// `SC-W0505` for the trim and stop that `element`, which sews nothing, sets after it: assembly has no
 /// place for them. Its settings were read once already; a setting that cannot be read was reported then.
 fn left_out(element: &Element) -> Option<Diagnostic> {
-    let common = CommonParams::from_set(&element.params).ok()?.params;
+    let common = CommonParams::from_set_for(&element.params, family(element)).ok()?.params;
     let what = match (common.trim_after, common.stop_after) {
         (true, true) => "the trim and the stop after it are",
         (true, false) => "the trim after it is",
@@ -103,6 +103,16 @@ fn left_out(element: &Element) -> Option<Diagnostic> {
         (false, false) => return None,
     };
     Some(Diagnostic::new(Code::TrimOrStopLeftOut, format!("This element sews no stitch, so {what} left out.")))
+}
+
+/// The family whose defaults an element's settings take: a fill's, a satin column's when its
+/// `satin_column` setting is on, or a stroke's. A setting that cannot be read is said where it is read.
+fn family(element: &Element) -> Family {
+    match element.shape {
+        Shape::Fill { .. } => Family::Fill,
+        Shape::Stroke { .. } if SatinParams::from_set(&element.params).is_ok_and(|read| read.params.satin_column) => Family::Satin,
+        Shape::Stroke { .. } => Family::Stroke,
+    }
 }
 
 /// The element's stitch groups, or `None` when it is skipped; what it says about it goes to `diagnostics`.
@@ -115,7 +125,7 @@ fn sew(
     meter: &mut Meter,
 ) -> Result<Option<Generated>, Exhausted> {
     let set = &element.params;
-    let common = kept(CommonParams::from_set(set), diagnostics);
+    let common = kept(CommonParams::from_set_for(set, family(element)), diagnostics);
     let (path, width, join) = match &element.shape {
         Shape::Stroke { path, width, join } => (path, *width, *join),
         Shape::Fill { path, rule } => {
@@ -123,6 +133,7 @@ fn sew(
             // and settings that cannot be used, are said now.
             diagnostics.extend(region::build(path, *rule, meter)?.diagnostics);
             kept(TatamiParams::from_set(set), diagnostics);
+            kept(RunningParams::from_set_for(set, Family::Fill), diagnostics);
             diagnostics.push(not_yet("This element is a fill, and this version of StitchCraft does not sew fills yet"));
             return Ok(None);
         }
@@ -278,4 +289,30 @@ fn kept<T>(read: Result<Validated<T>, Vec<Diagnostic>>, diagnostics: &mut Vec<Di
 /// `SC-W0011`: `why` the element is not sewn.
 fn not_yet(why: &str) -> Diagnostic {
     Diagnostic::new(Code::StitchTypeNotYet, format!("{why}, so it is skipped."))
+}
+
+#[cfg(test)]
+mod tests {
+    use stitchcraft_core::ElementId;
+    use stitchcraft_plan::{Rgb, Thread};
+
+    use super::*;
+    use crate::design::{FillRule, Segment, Subpath};
+
+    fn element(shape: Shape, params: &[(&str, &str)]) -> Element {
+        let thread = Thread::new(Rgb::new(0, 0, 0));
+        Element { id: ElementId::new("e").unwrap(), name: None, shape, thread, params: params.iter().copied().collect() }
+    }
+
+    #[test]
+    fn an_element_takes_the_defaults_of_the_family_that_sews_it() {
+        let start = Point::new(0.0, 0.0).unwrap();
+        let path = Path { subpaths: vec![Subpath { start, segments: vec![Segment::Line(Point::new(5.0, 0.0).unwrap())], closed: false }] };
+        let stroke = || Shape::stroke(path.clone());
+        assert_eq!(family(&element(Shape::Fill { path: path.clone(), rule: FillRule::NonZero }, &[])), Family::Fill);
+        assert_eq!(family(&element(stroke(), &[])), Family::Stroke);
+        assert_eq!(family(&element(stroke(), &[("satin_column", "true")])), Family::Satin);
+        // A satin setting that cannot be read is said where it is read; meanwhile the stroke's defaults.
+        assert_eq!(family(&element(stroke(), &[("satin_column", "true"), ("satin_method", "plaid")])), Family::Stroke);
+    }
 }
