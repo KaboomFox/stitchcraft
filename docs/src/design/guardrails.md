@@ -31,6 +31,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | API docs | Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links | `cargo xtask ci` (`RUSTDOCFLAGS=-D warnings`) | `cargo xtask ci` · CI |
 | **Public API review** | Changes to a library crate's public API show in the PR diff, as a change to its `public-api.txt` | `xtask/src/api.rs` (cargo-public-api, pinned) | `cargo xtask api --check` · CI |
 | **Coverage ratchet** | No crate's line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, with any function whose lines its unit tests and integration tests only run between them | `conformance/coverage.toml`, `xtask/src/coverage.rs` (cargo-llvm-cov) | `cargo xtask coverage` · CI job |
+| **Performance budget** | Planning the reference hoop's whole field (`REQ-FILL-TAT-009`) takes at most 2 % more instructions than recorded. Records only go down. Its time is reported against NFR-PERF-1's 50 ms, with a warning above it | `conformance/perf.toml`, `xtask/src/perf.rs` (valgrind's callgrind), the engine's `field` example | `cargo xtask perf` · CI job |
 | **Mutation testing** | Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down | `.cargo/mutants.toml`, `conformance/mutation.toml`, `xtask/src/mutants.rs` | `mutants.yml` · changed lines every PR, in 4 parts · everything weekly |
 | **Fuzzing** | Readers never panic, respect their caps and terminate; anything read round-trips and previews | `fuzz/`, `stitchcraft-testkit::fuzz` ([conformance](conformance.md#fuzzing)) | bodies every PR · an hour nightly |
 
@@ -39,6 +40,10 @@ are reported as skipped, while CI installs them and treats them as required. In 
 problem a check finds is also an annotation, on the right line of the pull request's diff when it names
 one, and a failed fuzz run puts the end of its output in one: the reason is visible without opening a
 log.
+
+The performance budget counts instructions, because they come out the same on any machine and in any
+run, where milliseconds do not. Its check fails for a change that slows planning, on whichever runner it
+runs. The time is still measured and reported, against the budget the requirement states in milliseconds.
 
 Coverage counts each build of a function apart and takes the build that runs the most lines. The unit
 tests and the integration tests use separate builds, and a generic function has one per type it is used

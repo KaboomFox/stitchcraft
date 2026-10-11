@@ -202,6 +202,13 @@ Metrics are defined once in `stitchcraft-testkit::metrics` so every case measure
 | Furrows | Longest run of rows whose needle points align within 0.1 mm |
 | Topology | Holes and components of the region vs. of the stitched area |
 
+Coverage is defined since M5.9, and the other metrics arrive with the cases that need them. A pixel is the
+region's when its centre lies inside the region's rings, by the even-odd rule, and covered when its centre
+lies within 0.2 mm of a stitch the plan sews, whatever its role: the thread is the stitch widened to
+0.4 mm and rounded at its ends. Each stitch is drawn a row of pixels at a time, along the stretch where
+the row crosses that shape. The work grows with the pixels the thread covers, not with the stitches
+times the pixels.
+
 ### L3 — Ink/Stitch differential (nightly)
 
 A pinned Ink/Stitch release runs as a black box on a corpus of Ink/Stitch-authored SVGs (our own or

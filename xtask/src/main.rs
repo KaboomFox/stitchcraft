@@ -26,6 +26,7 @@ mod layers;
 mod markdown;
 mod mutants;
 mod param_pages;
+mod perf;
 mod prose;
 mod reference_pages;
 mod shots;
@@ -61,6 +62,11 @@ pub const SUBCOMMANDS: &[(&str, Status, &str)] = &[
     ("api", Status::Ready, "write the library crates' public API snapshots; --check compares them"),
     ("coverage", Status::Ready, "line coverage per crate against the floors in conformance/coverage.toml; --record raises floors"),
     ("mutants", Status::Ready, "add up cargo-mutants results (DIR…) against conformance/mutation.toml; --record lowers counts"),
+    (
+        "perf",
+        Status::Ready,
+        "plan the hoop's whole field: instructions against conformance/perf.toml, time against NFR-PERF-1; --record lowers the record",
+    ),
     ("corpus", Status::Planned("M8"), "download the pinned real-world corpora (Ink/Stitch differential testing)"),
 ];
 
@@ -108,6 +114,7 @@ fn main() -> ExitCode {
         "api" => api::run(flag("--check")),
         "coverage" => coverage::run(flag("--record")),
         "mutants" => mutants::run(rest),
+        "perf" => perf::run(flag("--record")),
         "-h" | "--help" | "help" => {
             print!("{}", usage());
             Ok(())

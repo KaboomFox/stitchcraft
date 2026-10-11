@@ -160,7 +160,9 @@ Conformance level L0 checks these on every plan the suite produces. A violation 
 built the plan: the command line reports it as `SC-E0009` and writes nothing. "While sewing" means the
 previous movement was a `Normal` stitch with no trim since — the stitch lays thread between two holes,
 and its length is what the machine and fabric feel; the first stitch after a jump, a trim or a thread
-change starts a new run.
+change starts a new run. A length or a position within `LENGTH_SLACK` (10⁻⁹ mm) of a limit counts as at
+it, at the hoop's edge as for a stitch's length, so rounding cannot push a stitch placed exactly at a limit
+past it. Generators place stitches by the same test, and so does the check that a design fits the hoop.
 
 | Requirement | Rule | Since |
 |---|---|---|

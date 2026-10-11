@@ -139,7 +139,10 @@ mod tests {
     #[test]
     fn stitches_are_counted_separately() {
         let mut meter = Budget { max_stitches: 3, max_work: u64::MAX }.meter();
-        assert_eq!(meter.charge_stitches(3), Ok(()));
+        assert_eq!(meter.stitches_left(), 3);
+        assert_eq!(meter.charge_stitches(2), Ok(()));
+        assert_eq!(meter.stitches_left(), 1);
+        assert_eq!(meter.charge_stitches(1), Ok(()));
         assert_eq!(meter.charge_stitches(1), Err(Exhausted::Stitches));
         assert_eq!(meter.work_left(), u64::MAX);
     }

@@ -29,8 +29,9 @@ turned the wrong way or two crossing segments taken to miss. `stitchcraft_core::
 sign in plain floating point when the product is farther from zero than its largest possible rounding
 error, and otherwise computes it exactly as a sum of floats that do not overlap, with the error-free
 sums and products of J. R. Shewchuk's *Adaptive Precision Floating-Point Arithmetic and Fast Robust
-Geometric Predicates* (1997). It uses only `+`, `−` and `×`, and every platform gets the same answer,
-which is the true one.
+Geometric Predicates* (1997). Where both of its products are 0, as for points level or upright with each
+other, the cross product is exactly 0 without that sum, since far from underflow a product is 0 only where
+a factor is. It uses only `+`, `−` and `×`, and every platform gets the same answer, which is the true one.
 
 ## The seeded PRNG
 

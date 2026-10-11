@@ -73,6 +73,11 @@ mod tests {
     }
 
     #[test]
+    fn an_id_shows_as_its_text() {
+        assert_eq!(ElementId::new("vc:7").unwrap().to_string(), "vc:7");
+    }
+
+    #[test]
     fn errors_read_well() {
         assert_eq!(ElementIdError::TooLong { len: 300 }.to_string(), "an element id is at most 256 bytes; this one is 300");
     }
