@@ -8,7 +8,7 @@
 
 use proptest::prelude::*;
 use stitchcraft_core::rng::SplitMix64;
-use stitchcraft_core::{Budget, Point, math};
+use stitchcraft_core::{Budget, Code, Point, math};
 use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::generators::running::RunningParams;
 use stitchcraft_engine::generators::tatami::TatamiParams;
@@ -158,6 +158,13 @@ fn req_fill_tat_003_a_fill_s_stitch_settings_are_ink_stitch_s() {
     let (tatami, running) = (TatamiParams::from_set(&set).unwrap().params, RunningParams::from_set(&set).unwrap().params);
     let how = tatami.stitching(longest, &running);
     assert_eq!((how.staggers, how.skip_last, how.jitter), (2.5, true, Some(0.3)));
+    // A fill always has a longest stitch, as in Ink/Stitch: left empty, 4 mm; 0 or less, 0.1 mm, and said.
+    let longest = |value: &str| {
+        let read = CommonParams::from_set_for(&[("max_stitch_length_mm", value)].into_iter().collect(), Family::Fill).unwrap();
+        (read.params.max_stitch_length_mm.map(|mm| mm.get()), read.warnings.iter().map(|d| d.code).collect::<Vec<_>>())
+    };
+    assert_eq!(longest(""), (Some(4.0), vec![]));
+    assert_eq!(longest("0"), (Some(0.1), vec![Code::ParamClamped]));
 }
 
 #[test]

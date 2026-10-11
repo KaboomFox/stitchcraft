@@ -117,7 +117,7 @@ fn page(group: &ParamGroup, ledger: &[Deviation]) -> Result<String, String> {
             let _ = writeln!(out, "\n## {section}");
         }
         let _ = writeln!(out, "\n### `{}`\n\n**{}.** {}\n", spec.key, spec.label, spec.help());
-        let _ = writeln!(out, "- **Accepts:** {}", accepts(spec.kind));
+        let _ = writeln!(out, "- **Accepts:** {}", accepts(spec));
         let _ = writeln!(out, "- **Default:** {}", default(spec)?);
         if let Some(condition) = spec.visible_when {
             let _ = writeln!(out, "- **Shown when** [`{0}`](#{0}) is {1}", condition.key, either(condition.any_of));
@@ -147,15 +147,24 @@ fn page(group: &ParamGroup, ledger: &[Deviation]) -> Result<String, String> {
     Ok(out)
 }
 
-/// What a parameter accepts, for people: the validation messages' wording, with option labels added.
-fn accepts(kind: Kind) -> String {
-    match kind {
+/// What a parameter accepts, for people: the validation messages' wording, with option labels added, and
+/// what a family that needs a value accepts instead (`ParamSpec::in_family`).
+fn accepts(spec: &ParamSpec) -> String {
+    let describe = |kind: Kind| match kind {
         Kind::Choice { options } => {
             let options: Vec<String> = options.iter().map(|o| format!("`{}` ({})", o.id, o.label)).collect();
             format!("one of {}", options.join(", "))
         }
         other => other.describe(),
+    };
+    let mut text = describe(spec.kind);
+    for &(family, _) in spec.family_defaults {
+        let kind = spec.in_family(family).kind;
+        if kind != spec.kind {
+            let _ = write!(text, "; for {}, {}, empty being the default", family.plural(), describe(kind));
+        }
     }
+    text
 }
 
 /// The default as a design stores it, with each family's own; an empty default is explained by the help
@@ -367,5 +376,11 @@ mod tests {
         assert!(common.contains("- **Accepts:** one of `0` (At the start and the end), `1` (At the start)"));
         assert!(common.contains("- **Ink/Stitch:** same key; StitchCraft differs (DEV-LCK-001): Shapes differ."));
         assert_eq!(parsed["properties"]["lock_end"]["x-stitchcraft"]["deviation"], json!("DEV-LCK-001"));
+        // A family's own default, and what that family accepts since it needs a value.
+        assert!(common.contains(
+            "- **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty); for fills, a length from 0.1 to 25 mm, empty \
+             being the default\n- **Default:** empty, and `4` for fills\n"
+        ));
+        assert_eq!(parsed["properties"]["max_stitch_length_mm"]["x-stitchcraft"]["family_defaults"], json!({"fill": 4.0}));
     }
 }

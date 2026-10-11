@@ -225,6 +225,7 @@ pub stitchcraft_params::spec::ParamSpec::visible_when: core::option::Option<stit
 impl stitchcraft_params::spec::ParamSpec
 pub fn stitchcraft_params::spec::ParamSpec::default_for(&self, stitchcraft_params::stitch_type::Family) -> &'static str
 pub fn stitchcraft_params::spec::ParamSpec::help(&self) -> alloc::string::String
+pub fn stitchcraft_params::spec::ParamSpec::in_family(&self, stitchcraft_params::stitch_type::Family) -> stitchcraft_params::spec::ParamSpec
 impl stitchcraft_params::spec::ParamSpec
 pub fn stitchcraft_params::spec::ParamSpec::read(&self, &str) -> core::result::Result<(stitchcraft_params::value::Value, core::option::Option<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
 pub const stitchcraft_params::spec::MAX_LIST: usize
@@ -421,6 +422,7 @@ pub stitchcraft_params::ParamSpec::visible_when: core::option::Option<stitchcraf
 impl stitchcraft_params::spec::ParamSpec
 pub fn stitchcraft_params::spec::ParamSpec::default_for(&self, stitchcraft_params::stitch_type::Family) -> &'static str
 pub fn stitchcraft_params::spec::ParamSpec::help(&self) -> alloc::string::String
+pub fn stitchcraft_params::spec::ParamSpec::in_family(&self, stitchcraft_params::stitch_type::Family) -> stitchcraft_params::spec::ParamSpec
 impl stitchcraft_params::spec::ParamSpec
 pub fn stitchcraft_params::spec::ParamSpec::read(&self, &str) -> core::result::Result<(stitchcraft_params::value::Value, core::option::Option<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
 pub struct stitchcraft_params::Validated<T>

@@ -106,7 +106,7 @@ params! {
     "Longest stitch" {
         /// Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
         /// its split method says. Empty, every stitch is sewn whole. A tatami fill sews its rows in
-        /// stitches this long, 4 mm unless set.
+        /// stitches this long.
         max_stitch_length_mm: OptionalLength = "", label "Longest stitch", range (0.1, 25.0), applies LONGEST,
             defaults [Family::Fill => "4"];
     }

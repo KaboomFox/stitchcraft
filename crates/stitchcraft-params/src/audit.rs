@@ -65,8 +65,8 @@ fn check(spec: &ParamSpec, registry: &[&ParamGroup]) -> Vec<&'static str> {
         "it has a default for a family it does not apply to",
     );
     require(
-        spec.family_defaults.iter().all(|&(_, value)| value != spec.default && matches!(spec.read(value), Ok((_, None)))),
-        "a family's default is the default, or not a value it accepts without a warning",
+        spec.family_defaults.iter().all(|&(family, value)| value != spec.default && matches!(spec.in_family(family).read(value), Ok((_, None)))),
+        "a family's default is the default, or not a value the family accepts without a warning",
     );
     if let Some(condition) = spec.visible_when {
         // Shown for some value, and only for values the other parameter takes as they are.
@@ -176,6 +176,14 @@ mod tests {
             ParamSpec { key: "l", label: "L", applies_to: &[StitchType::SatinColumn], family_defaults: &[(Family::Fill, "1")], ..GOOD },
             ParamSpec { key: "m", label: "M", family_defaults: &[(Family::Fill, "0.25")], ..GOOD },
             ParamSpec { key: "n", label: "N", family_defaults: &[(Family::Satin, "99")], ..GOOD },
+            // A family with a default of its own needs a value: empty is not one there.
+            ParamSpec {
+                key: "o",
+                label: "O",
+                kind: Kind::Length { min: 0.1, max: 10.0, optional: true },
+                family_defaults: &[(Family::Fill, "")],
+                ..GOOD
+            },
         ];
         let problems = audit(&[&group(BROKEN)]);
         assert_eq!(
@@ -201,8 +209,9 @@ mod tests {
                 "`j`: it is shown only when another parameter has a value that parameter cannot have",
                 "`k`: a family's default is given twice",
                 "`l`: it has a default for a family it does not apply to",
-                "`m`: a family's default is the default, or not a value it accepts without a warning",
-                "`n`: a family's default is the default, or not a value it accepts without a warning",
+                "`m`: a family's default is the default, or not a value the family accepts without a warning",
+                "`n`: a family's default is the default, or not a value the family accepts without a warning",
+                "`o`: a family's default is the default, or not a value the family accepts without a warning",
             ]
         );
     }

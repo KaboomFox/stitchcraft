@@ -20,6 +20,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     manual stitch and satin columns. The engine reads an element's settings with its family's defaults.
     The reference pages and the JSON Schema list them, and the contract compares each Ink/Stitch row with
     its family's default.
+  - A family with a default of its own needs a value, as Ink/Stitch's fills need a longest stitch. An
+    empty value there is the family's default, and a length of 0 or less is raised to the least it
+    accepts, with `SC-W0102`. A fill's longest stitch is 4 mm when left empty and 0.1 mm when 0. Manual
+    stitch and satin columns read both as no longest stitch.
 - M5.2: a tatami fill's rows are laid as Ink/Stitch lays them. Its row settings `angle`, `row_spacing_mm`
   and `end_row_spacing_mm` are read and checked. Fills are still skipped (`SC-W0011`).
   - Rows run at the angle, a whole number of row spacings from the design's origin, so fills side by side

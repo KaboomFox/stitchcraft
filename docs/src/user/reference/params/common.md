@@ -157,9 +157,9 @@ jump. Empty: the document's setting.
 
 **Longest stitch.** Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
 its split method says. Empty, every stitch is sewn whole. A tatami fill sews its rows in
-stitches this long, 4 mm unless set.
+stitches this long.
 
-- **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
+- **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty); for fills, a length from 0.1 to 25 mm, empty being the default
 - **Default:** empty, and `4` for fills
 - **Applies to:** Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill
 - **Ink/Stitch:** same key, meaning and default

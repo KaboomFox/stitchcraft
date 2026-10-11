@@ -92,7 +92,8 @@ from its lower end up to but not including its upper end.
 
 A row's needle points lie on a grid along it, as Ink/Stitch places them
 (`stitchcraft_engine::generators::tatami::stitches`, since M5.3). The grid's points are the longest
-stitch apart, `max_stitch_length_mm`, which is 4 mm for fills unless set. Measured along the rows from
+stitch apart, `max_stitch_length_mm`. A fill always has one: 4 mm when it is not set or left empty, and
+0.1 mm, with `SC-W0102`, when it is 0 or less, as in Ink/Stitch. Measured along the rows from
 the design's origin, they lie at whole numbers of stitches plus the row's offset (`REQ-FILL-TAT-003`). A
 row's number is how far across the rows it lies from the origin, over `row_spacing_mm`, rounded to the
 nearest whole number, halves to the even one. Its offset is the fractional part of that number over
