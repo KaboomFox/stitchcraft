@@ -311,6 +311,15 @@ registry! {
     /// The message counts the parts. Set a smaller `fill_underlay_inset_mm`, or turn `fill_underlay` off.
     FillUnderlayInsetShrinksAway = "SC-W0310", Warning, "Fill's underlay inset shrinks a part away; underlay over all of it";
 
+    /// A fill's rows reach past its edge by its pull compensation, which makes up for the thread pulling
+    /// the fabric in. Ink/Stitch reads a fill's `pull_compensation_mm` or `pull_compensation_percent` below
+    /// 0 as 0, so that the rows reach the edge and no less, and so does StitchCraft. A satin column reads
+    /// the same settings below 0 as narrower.
+    ///
+    /// The message names the settings. Set them to 0 or more; to keep the rows inside the edge, use a
+    /// negative `expand_mm`.
+    FillPullCompensationNegative = "SC-W0312", Warning, "Fill's pull compensation below 0; read as 0";
+
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
     /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that

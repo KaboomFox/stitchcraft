@@ -1,6 +1,6 @@
 # Satin generators
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/normalize/near.rs, crates/stitchcraft-engine/src/normalize/centre_line.rs, crates/stitchcraft-engine/src/generators/satin/** -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/normalize/near.rs, crates/stitchcraft-engine/src/normalize/centre_line.rs, crates/stitchcraft-engine/src/generators/satin/**, crates/stitchcraft-engine/src/generators/pull.rs -->
 
 A satin column is a band of closely spaced stitches that swing from one edge to the other. It is the
 signature look of lettering and borders, and the stitch type where pull compensation and underlay
@@ -199,7 +199,9 @@ up for both as Ink/Stitch does.
   the pair, each by `pull_compensation_mm` plus `pull_compensation_percent` of the pair's width, and 2
   values set the first rail's side, then the second's. Negative values move the ends inward. Ends that
   would cross meet instead, where their moves divide the width. A pair whose ends are closer than a
-  ten-thousandth of a CSS pixel has no direction to move them in, and stays as it is.
+  ten-thousandth of a CSS pixel has no direction to move them in, and stays as it is. A tatami fill
+  lengthens its rows with the same move, as Ink/Stitch does, and the 2 settings are declared once for
+  both (`stitchcraft_engine::generators::pull`, [fills](fills.md#7-pull-compensation-and-gap-fill-rows)).
 - **Random variation** comes from the element's generator, seeded with `random_seed`
   ([determinism](../determinism.md)). Each pair's share of the width on each side is drawn between
   `pull_compensation_percent` less `random_width_decrease_percent` and plus

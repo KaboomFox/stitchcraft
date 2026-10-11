@@ -57,7 +57,7 @@ Record anything that differs in the report.
 | **TS-06** Satin underlays | The same column, 6 mm wide and 30 mm tall, with no underlay, a centre walk, a contour, a zigzag, and a contour with a zigzag (62 × 30 mm). Each column is sewn as drawn, from its top, and trimmed after | Edge sharpness, loft, puckering, underlay showing | MC-3 |
 | **TS-07** Registration | A 60 mm tatami circle with a running-stitch outline; at three pull-compensation values | Gap or overlap between fill and outline at 12 points around the circle | MC-4 |
 | **TS-08** Fill density & angle | 30 mm squares at spacing 0.25–0.6 mm and angles 0°, 45°, 90° | Coverage, stiffness, puckering, visible furrows | MC-4 |
-| **TS-09** Fill underlay & travel | A shape with holes and a separated part; with and without underlay | Travel hidden? Trims between parts? Holes clean? | MC-4 |
+| **TS-09** Fill underlay & travel | A shape with holes and a separated part; with and without underlay, and with 2 gap-filling rows | Travel hidden? Trims between parts? Holes clean? A gap where the rows round a hole meet? | MC-4 |
 | **TS-10A/B/C** Hoop size | Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop's field, with a centre cross and an "F" in the top-left corner | The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop's field is the right way round | MC-1, MC-5 |
 | **TS-11** New stitch types | Samples of the milestone's new types | Per type, as listed on its expected-result sheet | MC-6 |
 | **TS-12** Real design | A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours | Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? | MC-5, MC-7 |
@@ -69,7 +69,7 @@ Record anything that differs in the report.
 | MC-1 | M1 | TS-01, TS-02, TS-10A/B/C | Does the machine read our PES? Right size and orientation? Which trim encoding works? Does each hoop take a design as large as its profile allows, from PES v1? |
 | MC-2 | M3 | TS-03, TS-04, TS-02B | Minimum stitch length and lock defaults? Does the machine trim where an element asks? |
 | MC-3 | M4 | TS-05, TS-06 | Satin spacing, width limits, underlay defaults, pull compensation |
-| MC-4 | M5 | TS-07, TS-08, TS-09 | Fill spacing, compensation, underlay and travel defaults |
+| MC-4 | M5 | TS-07, TS-08, TS-09 | Fill spacing, pull compensation, gap-filling rows, underlay and travel defaults |
 | MC-5 | M6 | TS-12, TS-10 | Is the VectorCraft workflow complete and correct? |
 | MC-6 | M7 | TS-11 | New stitch types acceptable? |
 | MC-7 | M12 | all | Release regression |

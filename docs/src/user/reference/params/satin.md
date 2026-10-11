@@ -93,26 +93,6 @@ the first rail to the second: 50 is the middle.
 
 ## Compensation
 
-### `pull_compensation_mm`
-
-**Pull compensation.** How far each end of every stitch reaches past its rail. The thread pulls the fabric in across the
-column as it sews, so a satin comes out narrower than drawn, and this makes up for it. Negative
-values make the column narrower. 2 values set the first rail's side, then the second's.
-
-- **Accepts:** a length from -10 to 10 mm, or 2 separated by a space
-- **Default:** `0`
-- **Ink/Stitch:** same key, meaning and default
-
-### `pull_compensation_percent`
-
-**Pull compensation (% of width).** More pull compensation, in percent of the column's width at each stitch, added to the length
-above: wide parts of a column reach out further than narrow ones. 2 values set the first rail's
-side, then the second's.
-
-- **Accepts:** a percentage from -100 to 100, or 2 separated by a space
-- **Default:** `0`
-- **Ink/Stitch:** same key, meaning and default
-
 ### `push_compensation_mm`
 
 **Push compensation.** How much shorter the column is made at its start and its end. Satin stitches push the fabric out

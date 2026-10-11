@@ -13,6 +13,7 @@
 
 pub mod manual;
 pub mod passes;
+pub mod pull;
 pub mod running;
 pub mod satin;
 pub mod tatami;

@@ -34,9 +34,10 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Stroke parameters](params/stroke.md) | 1 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Running parameters](params/running.md) | 4 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
-| [Satin parameters](params/satin.md) | 36 | Satin column, E-stitch, S-stitch, Zigzag satin |
+| [Satin parameters](params/satin.md) | 34 | Satin column, E-stitch, S-stitch, Zigzag satin |
+| [Pull parameters](params/pull.md) | 2 | Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill |
 | [Fill parameters](params/fill.md) | 1 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
-| [Tatami parameters](params/tatami.md) | 14 | Tatami fill |
+| [Tatami parameters](params/tatami.md) | 15 | Tatami fill |
 
 ## Every parameter
 
@@ -66,6 +67,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`fill_underlay_row_spacing_mm`](params/tatami.md#fill_underlay_row_spacing_mm) | Underlay row spacing | Tatami parameters |
 | [`fill_underlay_skip_last`](params/tatami.md#fill_underlay_skip_last) | Skip last underlay stitch | Tatami parameters |
 | [`force_lock_stitches`](params/common.md#force_lock_stitches) | Always lock | Common parameters |
+| [`gap_fill_rows`](params/tatami.md#gap_fill_rows) | Gap-filling rows | Tatami parameters |
 | [`lock_custom_end`](params/common.md#lock_custom_end) | Custom end lock | Common parameters |
 | [`lock_custom_start`](params/common.md#lock_custom_start) | Custom start lock | Common parameters |
 | [`lock_end`](params/common.md#lock_end) | End lock | Common parameters |
@@ -78,8 +80,8 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`min_jump_stitch_length_mm`](params/common.md#min_jump_stitch_length_mm) | Shortest jump | Common parameters |
 | [`min_random_split_length_mm`](params/satin.md#min_random_split_length_mm) | Shortest split stitch | Satin parameters |
 | [`min_stitch_length_mm`](params/common.md#min_stitch_length_mm) | Shortest stitch | Common parameters |
-| [`pull_compensation_mm`](params/satin.md#pull_compensation_mm) | Pull compensation | Satin parameters |
-| [`pull_compensation_percent`](params/satin.md#pull_compensation_percent) | Pull compensation (% of width) | Satin parameters |
+| [`pull_compensation_mm`](params/pull.md#pull_compensation_mm) | Pull compensation | Pull parameters |
+| [`pull_compensation_percent`](params/pull.md#pull_compensation_percent) | Pull compensation (%) | Pull parameters |
 | [`push_compensation_mm`](params/satin.md#push_compensation_mm) | Push compensation | Satin parameters |
 | [`random_seed`](params/common.md#random_seed) | Random seed | Common parameters |
 | [`random_split_jitter_percent`](params/satin.md#random_split_jitter_percent) | Split jitter | Satin parameters |

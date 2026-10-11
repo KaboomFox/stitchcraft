@@ -29,6 +29,7 @@ pub stitchcraft_core::diag::Code::CustomLockUnusable
 pub stitchcraft_core::diag::Code::FillExpandShrinksAway
 pub stitchcraft_core::diag::Code::FillPartsApart
 pub stitchcraft_core::diag::Code::FillPartsTooSmall
+pub stitchcraft_core::diag::Code::FillPullCompensationNegative
 pub stitchcraft_core::diag::Code::FillRuleNotEvenOdd
 pub stitchcraft_core::diag::Code::FillSmall
 pub stitchcraft_core::diag::Code::FillTooThin
@@ -204,6 +205,7 @@ pub stitchcraft_core::Code::CustomLockUnusable
 pub stitchcraft_core::Code::FillExpandShrinksAway
 pub stitchcraft_core::Code::FillPartsApart
 pub stitchcraft_core::Code::FillPartsTooSmall
+pub stitchcraft_core::Code::FillPullCompensationNegative
 pub stitchcraft_core::Code::FillRuleNotEvenOdd
 pub stitchcraft_core::Code::FillSmall
 pub stitchcraft_core::Code::FillTooThin

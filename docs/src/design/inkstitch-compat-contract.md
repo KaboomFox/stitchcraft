@@ -97,8 +97,8 @@ registry uses these names as its keys so files move between the tools unchanged
 | `short_stitch_inset` | float | % | 15 | all | P1 (M4) | [registered](../user/reference/params/satin.md#short_stitch_inset) |
 | `short_stitch_distance_mm` | float | mm | 0.25 | all | P1 (M4) | [registered](../user/reference/params/satin.md#short_stitch_distance_mm) |
 | `zigzag_spacing_mm` | float | mm/cycle | 0.4 | all | P1 (M4) | [registered](../user/reference/params/satin.md#zigzag_spacing_mm) |
-| `pull_compensation_percent` | float | % (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#pull_compensation_percent) |
-| `pull_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#pull_compensation_mm) |
+| `pull_compensation_percent` | float | % (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/pull.md#pull_compensation_percent) |
+| `pull_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/pull.md#pull_compensation_mm) |
 | `push_compensation_mm` | float | mm (each side) | 0 | all | P1 (M4) | [registered](../user/reference/params/satin.md#push_compensation_mm) |
 | `reverse_rails` | combo | — | automatic | all | P1 (M4) | [registered](../user/reference/params/satin.md#reverse_rails) |
 | `swap_satin_rails` | boolean | — | false | all | P1 (M4) | [registered](../user/reference/params/satin.md#swap_satin_rails) |
@@ -141,7 +141,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `clip` | boolean | — | false | `meander_fill` | P2 (M7) | planned |
 | `smoothness_mm` | float | mm | 0 | `contour_fill`, `guided_fill`, `meander_fill` | P2 (M7) | planned |
 | `expand_mm` | float | mm | 0 | all | P1 (M5) | [registered](../user/reference/params/tatami.md#expand_mm) |
-| `gap_fill_rows` | int | rows | 0 | `tatami_fill` | P1 (M5) | planned |
+| `gap_fill_rows` | int | rows | 0 | `tatami_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#gap_fill_rows) |
 | `angle` | float | deg | 0 | `tatami_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#angle) |
 | `guided_fill_angle` | float | deg | — | `guided_fill` | P3 (M10) | planned |
 | `tartan_angle` | float | deg | -45 | `tartan_fill` | P3 (M10) | planned |
@@ -165,8 +165,8 @@ registry uses these names as its keys so files move between the tools unchanged
 | `zigzag_width_mm` | float | mm | 3 | `meander_fill` | P2 (M7) | planned |
 | `rows_per_thread` | int | — | 2 | `tartan_fill` | P3 (M10) | planned |
 | `herringbone_width_mm` | int | mm | 0 | `tartan_fill` | P3 (M10) | planned |
-| `pull_compensation_mm` | float | mm (each side) | 0 | `tatami_fill` | P1 (M5) | planned |
-| `pull_compensation_percent` | float | % (each side) | 0 | `tatami_fill` | P1 (M5) | planned |
+| `pull_compensation_mm` | float | mm (each side) | 0 | `tatami_fill` | P1 (M5) | [registered](../user/reference/params/pull.md#pull_compensation_mm) |
+| `pull_compensation_percent` | float | % (each side) | 0 | `tatami_fill` | P1 (M5) | [registered](../user/reference/params/pull.md#pull_compensation_percent) |
 | `fill_underlay` | toggle | — | true | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay) |
 | `fill_underlay_angle` | float | deg | — | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay_angle) |
 | `fill_underlay_row_spacing_mm` | float | mm | — | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay_row_spacing_mm) |
@@ -261,4 +261,4 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
 
-_145 parameter declarations, 85 registered in StitchCraft._
+_145 parameter declarations, 88 registered in StitchCraft._
