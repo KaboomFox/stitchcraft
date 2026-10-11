@@ -361,9 +361,9 @@ mod tests {
         assert_eq!(warnings.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::InternalCheckFailed]);
     }
 
-    /// Whether `q` lies in `part` or within `within` of its rings.
+    /// Whether `q` lies within `within` of `part`'s rings or in it.
     fn near_or_in(part: &Polygon, q: Point, within: f64) -> bool {
-        part.covers(q) || part.rings().any(|ring| ring.windows(2).any(|side| distance_to_segment(q, side[0], side[1]) <= within))
+        part.rings().any(|ring| ring.windows(2).any(|side| distance_to_segment(q, side[0], side[1]) <= within)) || part.covers(q)
     }
 
     #[test]
@@ -402,6 +402,13 @@ mod tests {
             }
         }
         assert!(ways > 3, "{ways}");
+        // Sewn as a whole, the part is one run, which says nothing.
+        let lines = Underpath::new(&part, &rings, &route.nodes, &segments, 30.0, meter).unwrap();
+        let network = Network::new(&route.nodes, &rings, &row_ends(&route), meter).unwrap();
+        let mut warnings = Vec::new();
+        let mut sewing = Sewing { route: &route, part: &part, rings: &rings, stitching: &how, travel, lines, network };
+        assert_eq!(sewing.sew(&mut SplitMix64::new(1), meter, &mut warnings).unwrap().len(), 1);
+        assert_eq!(warnings, Vec::new());
     }
 
     #[test]

@@ -275,9 +275,8 @@ impl Building {
 
     /// Lets crossings snap to node `id`, unless one it would snap to is there already.
     fn snap_to(&mut self, id: NodeId) {
-        if let Some(&p) = self.points.get(id) {
-            self.snaps.snap(p, || id);
-        }
+        let Some(&p) = self.points.get(id) else { return };
+        self.snaps.snap(p, || id);
     }
 
     /// Adds an edge between `a` and `b` costing `cost`; its number.
