@@ -22,6 +22,11 @@ permissively licensed and robust on degenerate input.
 `hypot` from the platform's maths library, so the engine halves curves itself with arithmetic and square
 roots ([engine pipeline › Normalize](../engine-pipeline.md#1-normalize)).
 
+**Revised in M5.1:** a fill's region is not built with `i_overlay` but by the engine
+([fills › Region](../algorithms/fills.md#region)). An integer-snapped overlay moves the drawing's points
+onto its grid, and its loops cannot charge an element's work budget. The engine keeps every point the
+drawing has and decides sides of lines exactly. It charges its work as it goes.
+
 ## Spike M0.7 acceptance criteria
 
 1. Booleans and offsets of 10,000 random polygons with holes, plus the degenerate corpus: no panic, no
