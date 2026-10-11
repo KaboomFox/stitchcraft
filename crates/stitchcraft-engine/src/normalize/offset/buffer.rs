@@ -27,9 +27,10 @@
 //!   farther from the ring than 0.99 of the distance, unless it has more than 4 times the ring's points.
 //!   Shrunk by less than that past nothing, the copy stays, in GEOS's answers and here.
 //!
-//! The parts come in GEOS's order: by their point of least x, and of least y among those. A part shrunk
-//! away entirely leaves nothing. The answers are checked against shapely's for random polygons
-//! (`conformance/oracle/buffer.py`).
+//! The parts come in order of their point of least x, and of least y among points level with it. GEOS gives
+//! them in the order it walks its graph, which this order matches in all but a few cases (`DEV-FILL-008`).
+//! A part shrunk away entirely gives no polygon. The answers are checked against shapely's for random
+//! polygons (`conformance/oracle/buffer.py`).
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
@@ -47,7 +48,7 @@ const CURVE_POINTS: usize = 4;
 const NEARNESS: f64 = 0.99;
 
 /// `polygon` grown by `distance`, or shrunk by a negative distance, as GEOS buffers it: the parts left, in
-/// GEOS's order, unless the edges of the area did not join into rings (a bug). No distance leaves the
+/// order of least x, unless the edges of the area did not join into rings (a bug). No distance leaves the
 /// polygon as it is. One unit of `meter` for each point walked, and for the work of cutting the curves and
 /// joining the area.
 pub(crate) fn buffer(polygon: &Polygon, distance: f64, meter: &mut Meter) -> Result<Result<Vec<Polygon>, Unjoined>, Exhausted> {
@@ -149,9 +150,6 @@ mod tests {
                 kept.push(p);
             }
         }
-        while kept.len() > 1 && kept.first().zip(kept.last()).is_some_and(|(&a, &b)| close(a, b)) {
-            kept.pop();
-        }
         kept
     }
 
@@ -187,7 +185,52 @@ mod tests {
             let agrees = found.len() == expected.len() && found.iter().zip(&expected).all(|(a, b)| same(a, b));
             differ.extend((!agrees).then_some(number));
         }
-        assert_eq!(seen, 300, "every case of the fixture is read");
+        assert_eq!(seen, 330, "every case of the fixture is read");
         assert_eq!(differ, Vec::<usize>::new(), "the fixture's polygons whose buffer differs");
+    }
+
+    /// The closed ring through `points`.
+    fn closed(points: &[(i32, i32)]) -> Vec<Point> {
+        points.iter().chain(&points[..1]).map(|&(x, y)| Point::new(f64::from(x), f64::from(y)).unwrap()).collect()
+    }
+
+    #[test]
+    fn a_triangle_wears_away_past_its_inscribed_circle_and_another_ring_past_half_its_box() {
+        // The circle inscribed in a 3-4-5 triangle has a radius of exactly 1, and a 4 × 3 rectangle's box is
+        // exactly 3 across: shrunk by exactly 1 and 1.5, neither wears away, and a hair more wears both away.
+        let triangle = closed(&[(0, 0), (0, 3), (4, 0)]);
+        let rectangle = closed(&[(0, 0), (0, 3), (4, 3), (4, 0)]);
+        for (ring, d) in [(&triangle, 1.0), (&rectangle, 1.5)] {
+            assert!(!worn_away(ring, d), "{ring:?} by {d}");
+            assert!(worn_away(ring, d + 1e-9), "{ring:?} by a hair more than {d}");
+        }
+    }
+
+    #[test]
+    fn a_small_ring_s_curve_is_inside_out_when_none_of_it_lies_farther_than_0_99_of_the_distance() {
+        // A square 1,000 across, and a curve 100 from it whose points all lie exactly 99 from the square,
+        // 0.99 of the distance: it has turned inside out. A hair farther, it has not, and a curve of more than
+        // 4 points for each of the ring's 5 never has.
+        let square = closed(&[(0, 0), (0, 1000), (1000, 1000), (1000, 0)]);
+        let meter = &mut Budget::DEFAULT.meter();
+        let curve = |x: f64, points: usize| vec![Point::new(x, 500.0).unwrap(); points];
+        assert!(inside_out(&square, 100.0, &curve(99.0, 20), meter).unwrap());
+        assert!(!inside_out(&square, 100.0, &curve(99.0 + 1e-9, 20), meter).unwrap());
+        assert!(!inside_out(&square, 100.0, &curve(99.0, 21), meter).unwrap());
+    }
+
+    #[test]
+    fn pieces_level_at_their_least_x_come_lowest_first() {
+        // 2 squares of 8 mm, one above the other, joined by a neck 2 mm wide, listed from the bottom and then
+        // from the top. Shrunk by 2 mm, the neck wears away, and the 2 pieces left both reach x = 2: the lower
+        // comes first. Shapely gives the lower first for the ring listed from the bottom and the upper for the
+        // one listed from the top, in the order its graph takes them (DEV-FILL-008).
+        let mut ring = [(0, 0), (0, 8), (3, 8), (3, 12), (0, 12), (0, 20), (8, 20), (8, 12), (5, 12), (5, 8), (8, 8), (8, 0)];
+        for _ in 0..2 {
+            let pieces = buffer(&Polygon { outline: closed(&ring), holes: Vec::new() }, -2.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+            let starts: Vec<(f64, f64)> = pieces.iter().map(|piece| (least(piece), least_y(piece))).collect();
+            assert_eq!(starts, [(2.0, 2.0), (2.0, 14.0)], "{ring:?}");
+            ring.rotate_left(5);
+        }
     }
 }

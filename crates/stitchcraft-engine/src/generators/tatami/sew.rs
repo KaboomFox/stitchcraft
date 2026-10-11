@@ -610,6 +610,40 @@ mod tests {
     }
 
     #[test]
+    fn req_fill_tat_001_a_needle_inside_leads_in_from_the_lines_nearest_node_to_the_first_row() {
+        // The needle inside a 10 mm square, 3 mm from its left side, and lines under rows 1 mm apart. The
+        // route starts with travel from the left side to the first row, and the lead-in takes its place: from
+        // the lines' node nearest the needle to the row's start. Without that travel the route starts with
+        // the row, which it keeps, and the lead-in ends at the row's start too.
+        let part = rectangle(10.0);
+        let meter = &mut Budget::DEFAULT.meter();
+        let rings = Rings::new(&part, meter).unwrap();
+        let how = stitching(false);
+        let segments = segments(&part, &how, meter).unwrap();
+        let needle = p(3.0, 4.6);
+        let mut route = route(&rings, &segments, Some(needle), None, meter).unwrap().unwrap();
+        let Some(&Step::Row { from: start, .. }) = route.steps.get(1) else { panic!("{:?}", route.steps) };
+        let at = route.nodes[start].point;
+        let travel = Travel { underpath: true, ..TRAVEL };
+        for replaces in [true, false] {
+            if !replaces {
+                route.steps.remove(0);
+            }
+            let lines = Underpath::new(&part, &rings, &route.nodes, &segments, 0.0, meter).unwrap();
+            let network = Network::new(&route.nodes, &rings, &row_ends(&route), meter).unwrap();
+            let mut sewing = Sewing { route: &route, part: &part, rings: &rings, stitching: &how, travel, lines, network, start: Some(needle) };
+            let (way, replaced) = sewing.lead_in(meter).unwrap().unwrap();
+            // The needle is 3 mm or more from every side, so a node within 1 mm of it is well inside.
+            assert!(way[0].distance(needle) < 1.0, "{:?}", way[0]);
+            assert_eq!((way.last(), replaced), (Some(&at), replaces));
+            let runs = sewing.sew(&mut SplitMix64::new(1), meter, &mut Vec::new()).unwrap();
+            assert_eq!((runs.len(), runs[0].first()), (1, way.first()));
+            let row = runs[0].iter().position(|&q| q == at).unwrap();
+            assert!((runs[0][row + 1].y() - at.y()).abs() < 1e-9, "the row follows the lead-in");
+        }
+    }
+
+    #[test]
     fn where_no_line_leads_the_needle_runs_along_the_rings_and_rows() {
         // A hole 0.2 mm across in the middle of a triangle the lines leave between them: the part is small,
         // so they lie 1 mm and 0.71 mm apart, and none reaches the hole. From the hole's left side the needle

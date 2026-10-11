@@ -7,8 +7,10 @@ quarter circle. This script records shapely's answers for random polygons: stars
 blocks of grid squares and half squares, whose points often lie in line and which have holes, flattened
 rings with dense points, dumbbells whose neck a shrinking cuts, and squares with holes near each other and
 the edge, which a growing merges or fills. Each is buffered at several distances, shrinking and growing.
-Last come small regular polygons shrunk just past nothing, which GEOS's rules for curves turned inside out
-decide.
+Then come small regular polygons shrunk just past nothing, which GEOS's rules for curves turned inside out
+decide. Last come the edges of its rules for rings that a shrinking wears away: triangles shrunk by about
+the radius of their inscribed circle, and regular polygons of 9 to 13 corners shrunk by exactly half their
+box's least width, which GEOS still offsets.
 The tests of `crates/stitchcraft-engine/src/normalize/offset/` check that the engine builds the same
 polygons. shapely runs as a black box: only its public API is used and only its answers are kept.
 
@@ -122,6 +124,27 @@ def small(rng):
     return [shapely.Polygon(points)], -r * rng.choice([1.001, 1.005, 1.01, 1.02, 1.05])
 
 
+def triangle(rng):
+    """A random triangle and a distance about the radius of its inscribed circle: GEOS wears a triangle away
+    when the distance is greater."""
+    while True:
+        polygon = shapely.Polygon([(round(rng.uniform(-8, 8), 4), round(rng.uniform(-8, 8), 4)) for _ in range(3)])
+        if polygon.area > 4:
+            break
+    radius = 2 * polygon.area / polygon.length
+    return polygon, -radius * rng.choice([0.99, 0.999, 1.001, 1.005, 1.01, 1.05])
+
+
+def level(rng):
+    """A regular polygon of 9, 11 or 13 corners, turned at random, and a distance of exactly half its box's
+    least width: GEOS wears a ring away when its box is less than twice the distance across, so it offsets
+    this one, past nothing, and keeps the small copy of it that the curve turns into."""
+    n, r, turn = rng.choice([9, 11, 13]), rng.uniform(1, 3), rng.uniform(0, 2 * math.pi)
+    polygon = shapely.Polygon([(round(r * math.cos(turn + 2 * math.pi * i / n), 6), round(r * math.sin(turn + 2 * math.pi * i / n), 6)) for i in range(n)])
+    minx, miny, maxx, maxy = polygon.bounds
+    return polygon, -min(maxx - minx, maxy - miny) / 2
+
+
 def numbers(polygon):
     words = [str(1 + len(polygon.interiors))]
     for r in [polygon.exterior, *polygon.interiors]:
@@ -155,6 +178,10 @@ def main():
     for _ in range(40):
         polygons, distance = small(rng)
         print(case(rng, oriented(polygons[0]), distance))
+    for make, count in [(triangle, 20), (level, 10)]:
+        for _ in range(count):
+            polygon, distance = make(rng)
+            print(case(rng, oriented(polygon), distance))
 
 
 if __name__ == "__main__":
