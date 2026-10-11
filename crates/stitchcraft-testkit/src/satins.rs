@@ -7,6 +7,7 @@ use stitchcraft_core::{Budget, Point};
 use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::design::{DesignSettings, Path, Segment, Subpath};
 use stitchcraft_engine::generators::Neighbours;
+use stitchcraft_engine::generators::pull::PullParams;
 use stitchcraft_engine::generators::running::RunningParams;
 use stitchcraft_engine::generators::satin::{SatinLengths, SatinParams, satin_stitch};
 use stitchcraft_engine::normalize::satin::{Shape, recognize};
@@ -38,7 +39,8 @@ pub fn sewn_between(path: &Path, params: &[(&str, &str)], neighbours: &Neighbour
     let seed = CommonParams::from_set(&set).unwrap().params.random_seed;
     let mut rng = SplitMix64::for_element(SATIN_ID, seed.unwrap_or(0));
     let params = SatinParams::from_set(&set).unwrap().params;
-    let stitched = satin_stitch(&satin, &params, satin_lengths(&set), neighbours, &mut rng, &mut meter).unwrap();
+    let pull = PullParams::from_set(&set).unwrap().params;
+    let stitched = satin_stitch(&satin, &params, &pull, satin_lengths(&set), neighbours, &mut rng, &mut meter).unwrap();
     assert_eq!(stitched.runs.len(), 1);
     (stitched.runs.into_iter().flatten().collect(), stitched.warnings.iter().map(ToString::to_string).collect())
 }

@@ -4,7 +4,7 @@
 //! on designs of a few straight strokes. The helpers are shared so every case builds them the same way.
 
 use stitchcraft_core::{Budget, ElementId, Mm, Point};
-use stitchcraft_engine::design::{Design, DesignSettings, Element, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::{PlanOutcome, plan};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::profiles::REFERENCE;
@@ -53,14 +53,36 @@ pub fn widened(element: Element, width: f64) -> Element {
 /// A path of open polylines, one subpath through each list of points. A list of one point is a subpath
 /// that does not move.
 pub fn polylines(parts: &[&[(f64, f64)]]) -> Path {
+    subpaths(parts, false)
+}
+
+/// A path of closed subpaths, one through each list of points: a fill's outline and holes.
+pub fn rings(parts: &[&[(f64, f64)]]) -> Path {
+    subpaths(parts, true)
+}
+
+/// A path of straight subpaths, one through each list of points, `closed` or open.
+fn subpaths(parts: &[&[(f64, f64)]], closed: bool) -> Path {
     let subpaths = parts
         .iter()
         .filter_map(|points| {
             let (&(x, y), rest) = points.split_first()?;
-            Some(Subpath { start: p(x, y), segments: rest.iter().map(|&(x, y)| Segment::Line(p(x, y))).collect(), closed: false })
+            Some(Subpath { start: p(x, y), segments: rest.iter().map(|&(x, y)| Segment::Line(p(x, y))).collect(), closed })
         })
         .collect();
     Path { subpaths }
+}
+
+/// A fill `id` of the rings `parts`, filled by the nonzero rule, sewn with `thread` and the parameters
+/// `params`.
+pub fn fill(id: &str, parts: &[&[(f64, f64)]], thread: &Thread, params: &[(&str, &str)]) -> Element {
+    Element {
+        id: ElementId::new(id).unwrap(),
+        name: None,
+        shape: Shape::Fill { path: rings(parts), rule: FillRule::NonZero },
+        thread: thread.clone(),
+        params: params.iter().copied().collect::<ParamSet>(),
+    }
 }
 
 /// `elements` planned for the reference machine, the design's origin where the coordinates are, so

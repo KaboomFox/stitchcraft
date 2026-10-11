@@ -34,6 +34,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0308`](#sc-i0308) | Info | Fill underlay too thin for rows; sewn round the outline |
 | [`SC-W0309`](#sc-w0309) | Warning | Fill's expand shrinks a part away; sewn at its own size |
 | [`SC-W0310`](#sc-w0310) | Warning | Fill's underlay inset shrinks a part away; underlay over all of it |
+| [`SC-W0312`](#sc-w0312) | Warning | Fill's pull compensation below 0; read as 0 |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -361,6 +362,18 @@ much shrinking, which wears it away entirely, has its underlay sewn over all of 
 Ink/Stitch sews it, and Ink/Stitch warns of it too.
 
 The message counts the parts. Set a smaller `fill_underlay_inset_mm`, or turn `fill_underlay` off.
+
+## SC-W0312
+
+**Warning** — Fill's pull compensation below 0; read as 0
+
+A fill's rows reach past its edge by its pull compensation, which makes up for the thread pulling
+the fabric in. Ink/Stitch reads a fill's `pull_compensation_mm` or `pull_compensation_percent` below
+0 as 0, so that the rows reach the edge and no less, and so does StitchCraft. A satin column reads
+the same settings below 0 as narrower.
+
+The message names the settings. Set them to 0 or more; to keep the rows inside the edge, use a
+negative `expand_mm`.
 
 ## SC-W0401
 

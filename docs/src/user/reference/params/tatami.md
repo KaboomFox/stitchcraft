@@ -47,6 +47,17 @@ and this closes them. Negative values pull the rows in from the edge.
 - **Default:** `0`
 - **Ink/Stitch:** same key, meaning and default
 
+### `gap_fill_rows`
+
+**Gap-filling rows.** Rows sewn again where the fill leaves a stretch of more than 3 rows for another: that many rows
+past the stretch's last row, back and forth, before the needle travels on. The rows on the far
+side are sewn later, and the fabric between can be pulled apart by then; these close the gap.
+Rounded up to an even number, so the needle comes back to where the stretch ended.
+
+- **Accepts:** a whole number from 0 to 100
+- **Default:** `0`
+- **Ink/Stitch:** same key, meaning and default
+
 ## Stitches
 
 ### `staggers`

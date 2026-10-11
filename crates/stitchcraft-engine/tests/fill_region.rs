@@ -12,19 +12,7 @@ use stitchcraft_core::{Budget, Code, ElementId, Point};
 use stitchcraft_engine::design::{Element, FillRule, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::normalize::region::{Built, Polygon, TINY_PART, build};
 use stitchcraft_params::ParamSet;
-use stitchcraft_testkit::designs::{RED, line, messages, p, planned};
-
-/// A path of closed subpaths, one through each list of points.
-fn rings(parts: &[&[(f64, f64)]]) -> Path {
-    let subpaths = parts
-        .iter()
-        .filter_map(|points| {
-            let (&(x, y), rest) = points.split_first()?;
-            Some(Subpath { start: p(x, y), segments: rest.iter().map(|&(x, y)| Segment::Line(p(x, y))).collect(), closed: true })
-        })
-        .collect();
-    Path { subpaths }
-}
+use stitchcraft_testkit::designs::{RED, line, messages, p, planned, rings};
 
 /// The corners of the square from (`x`, `y`) of side `s`, counter-clockwise in y-up axes.
 fn square(x: f64, y: f64, s: f64) -> [(f64, f64); 4] {

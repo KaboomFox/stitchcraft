@@ -108,6 +108,7 @@ another.
 | `SC-W0309` | Warning | Fill's expand shrinks a part away; sewn at its own size (as in Ink/Stitch) | M5 |
 | `SC-W0310` | Warning | Fill's underlay inset shrinks a part away; underlay over all of it (as in Ink/Stitch) | M5 |
 | `SC-W0311` | Warning | Spiral could not be connected in a narrow part; that part uses inner-to-outer contours | M7 |
+| `SC-W0312` | Warning | Fill's pull compensation below 0; read as 0 (as in Ink/Stitch) | M5 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |
 | `SC-W0403` | Warning | Hand-placed stitch shorter than the shortest stitch; point left out | M3 |

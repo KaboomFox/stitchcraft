@@ -13,7 +13,7 @@
 
 use stitchcraft_core::Point;
 
-use crate::generators::satin::compensation::offset;
+use crate::generators::pull::offset;
 use crate::generators::satin::pairs::Pair;
 
 /// `pairs` with their crowded needle points inset: those closer than `distance` millimetres to the last

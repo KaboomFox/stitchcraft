@@ -475,6 +475,22 @@
         "stability": "stable"
       }
     },
+    "gap_fill_rows": {
+      "default": 0,
+      "description": "Rows sewn again where the fill leaves a stretch of more than 3 rows for another: that many rows past the stretch's last row, back and forth, before the needle travels on. The rows on the far side are sewn later, and the fabric between can be pulled apart by then; these close the gap. Rounded up to an even number, so the needle comes back to where the stretch ended.",
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Gap-filling rows",
+      "type": "integer",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tatami_fill"
+        ],
+        "group": "Rows",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "lock_custom_end": {
       "default": "",
       "description": "The steps a custom end lock takes along the stitching after it ends, as numbers separated by spaces, each a number of `lock_end_scale_mm`. Positive steps go back into the stitching. The first step starts where the stitching ends, and `1 -1 1 -1` goes back and forth twice. Ink/Stitch also takes an SVG path that draws the lock. StitchCraft does not sew those yet, and sews the half stitch in its place (`SC-W0503`).",
@@ -752,7 +768,7 @@
       "default": [
         0.0
       ],
-      "description": "How far each end of every stitch reaches past its rail. The thread pulls the fabric in across the column as it sews, so a satin comes out narrower than drawn, and this makes up for it. Negative values make the column narrower. 2 values set the first rail's side, then the second's.",
+      "description": "How far each end of every stitch reaches past the shape's edge: a satin column's stitches past its rails, and a fill's rows past its outline and its holes. The thread pulls the fabric in along the stitches as it sews, so a shape comes out smaller than drawn, and this makes up for it. 2 values set the 2 ends: a satin's first rail's side, then the second's, or the end each fill row starts from at the fill's angle, then the other (at 0°, the left end, then the right). Negative values make a satin narrower; a fill reads them as 0, as Ink/Stitch does.",
       "items": {
         "maximum": 10.0,
         "minimum": -10.0,
@@ -767,9 +783,10 @@
           "satin_column",
           "e_stitch",
           "s_stitch",
-          "zigzag"
+          "zigzag",
+          "tatami_fill"
         ],
-        "group": "Compensation",
+        "group": "Pull compensation",
         "origin": "inkstitch",
         "stability": "stable",
         "unit": "mm"
@@ -779,7 +796,7 @@
       "default": [
         0.0
       ],
-      "description": "More pull compensation, in percent of the column's width at each stitch, added to the length above: wide parts of a column reach out further than narrow ones. 2 values set the first rail's side, then the second's.",
+      "description": "More pull compensation, in percent of each stitch's length, added to the length above: a satin's stitches reach out by a share of the column's width there, and a fill's rows by a share of each row's length, so wide parts and long rows reach further. 2 values set the 2 ends, as above. A fill reads negative values as 0, as Ink/Stitch does.",
       "items": {
         "maximum": 100.0,
         "minimum": -100.0,
@@ -787,16 +804,17 @@
       },
       "maxItems": 2,
       "minItems": 1,
-      "title": "Pull compensation (% of width)",
+      "title": "Pull compensation (%)",
       "type": "array",
       "x-stitchcraft": {
         "applies_to": [
           "satin_column",
           "e_stitch",
           "s_stitch",
-          "zigzag"
+          "zigzag",
+          "tatami_fill"
         ],
-        "group": "Compensation",
+        "group": "Pull compensation",
         "origin": "inkstitch",
         "stability": "stable",
         "unit": "%"
@@ -1625,8 +1643,6 @@
           "start_at_nearest_point",
           "end_at_nearest_point",
           "running_stitch_position",
-          "pull_compensation_mm",
-          "pull_compensation_percent",
           "push_compensation_mm",
           "random_width_decrease_percent",
           "random_width_increase_percent",
@@ -1659,6 +1675,14 @@
       },
       {
         "keys": [
+          "pull_compensation_mm",
+          "pull_compensation_percent"
+        ],
+        "name": "PullParams",
+        "title": "Pull parameters"
+      },
+      {
+        "keys": [
           "fill_method"
         ],
         "name": "FillParams",
@@ -1670,6 +1694,7 @@
           "row_spacing_mm",
           "end_row_spacing_mm",
           "expand_mm",
+          "gap_fill_rows",
           "staggers",
           "skip_last",
           "underpath",

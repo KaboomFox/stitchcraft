@@ -115,6 +115,7 @@ mod tests {
     use stitchcraft_params::ParamSet;
 
     use super::*;
+    use crate::generators::pull::PullParams;
     use crate::generators::satin::SatinParams;
 
     fn p(x: f64, y: f64) -> Point {
@@ -124,8 +125,9 @@ mod tests {
     /// The pairs along `sections`, `spacing` apart, with no compensation and no random variation.
     fn placed(sections: &[Section], spacing: f64) -> Vec<Pair> {
         let params = SatinParams::from_set(&ParamSet::new()).unwrap().params;
+        let pull = PullParams::from_set(&ParamSet::new()).unwrap().params;
         let mut rng = SplitMix64::new(0);
-        pairs(sections, spacing, &mut Processor::new(&params, &mut rng), &mut Budget::DEFAULT.meter()).unwrap()
+        pairs(sections, spacing, &mut Processor::new(&params, &pull, &mut rng), &mut Budget::DEFAULT.meter()).unwrap()
     }
 
     #[test]
