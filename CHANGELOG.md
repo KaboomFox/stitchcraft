@@ -5,6 +5,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- MC-4 kit: TS-07, TS-08 and TS-09, the fill test sheets, drawn as designs and sewn by the engine.
+  - **TS-07** fills 3 circles 60 mm across at pull compensations of 0, 0.2 and 0.4 mm, then sews a
+    running stitch along each edge, for the gap or overlap between fill and outline.
+  - **TS-08** fills squares 30 mm wide at row spacings of 0.25 to 0.6 mm and angles of 0°, 45° and 90°,
+    for the spacing that covers the fabric without stiffening it.
+  - **TS-09** fills a rectangle with 2 holes and a bar apart, without underlay, with it, and with
+    gap-filling rows, for the travel, the holes and the jump to the part apart.
 - M5.9: the coverage metric (`stitchcraft_testkit::metrics`) and the performance budget.
   - Coverage rasterizes a fill's region and the thread of every stitch its plan sews, 0.4 mm wide, at
     0.05 mm. A fill covers at least 98 % of its area at spacings from the machine's shortest stitch to
