@@ -74,6 +74,17 @@ Inside a tight bend the raw curve loops back on itself, inside the stroke: the e
 so does the offset. Where the line comes back near itself, the stroke covers part of the raw curve,
 which splits the offset there.
 
+## Buffers: a fill's part grown or shrunk
+
+The same module grows or shrinks a fill's part, as shapely's `buffer` does for Ink/Stitch's inset
+underlay and `expand_mm` ([fills](fills.md#6-underlay), `REQ-FILL-TAT-012`). Each ring's raw curve is
+built as in step 1, closed, with round corners of 16 segments to a quarter circle. It runs to the ring's
+left, outside an outline and inside a hole: a positive distance grows the part. In place of steps 2
+and 3, the area the curves wind round clockwise at least once comes from the fill's own region code, and
+the loops where the curves fold over drop out of it. GEOS's rules for a ring the buffer wears away, and
+for a small ring whose curve turns inside out, are followed as the `buffer` module's docs say, and
+`conformance/oracle/buffer.py` checks the polygons against shapely's.
+
 ## Checking against shapely
 
 `conformance/oracle/offset.py` asks shapely 2.2.0, with the GEOS 3.14.1 its wheels bundle, for the
