@@ -336,6 +336,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- A fill's subpaths and a satin column's are flattened within one tolerance, a tenth of a CSS pixel:
+  `normalize::stroke::SHAPE_TOLERANCE`, which replaces `normalize::satin::TOLERANCE`.
 - Mutation testing on a pull request runs in 4 parts, dealt round-robin as the weekly run deals them, and
   a fifth job adds them up. In one part, the 1,142 mutants in the lines M4.9 changes would have run past
   the job's limit of an hour and a half.
