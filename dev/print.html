@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-1c38b794.js";
+            window.path_to_searchindex_js = "searchindex-609458bd.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -2760,7 +2760,7 @@ identical to Ink/Stitch’s SVG attributes because that is the interoperability 
 <tr><td>NFR-ROB-1</td><td>No panics in shipped code; no <code>unsafe</code> outside the one audited plug-in ABI module</td></tr>
 <tr><td>NFR-ROB-2</td><td>All work is bounded by explicit budgets (stitches, iterations, input sizes); exceeding one is a diagnostic, never a hang</td></tr>
 <tr><td>NFR-DET-1</td><td>Same input and version ⇒ byte-identical output on every supported platform, including wasm32</td></tr>
-<tr><td>NFR-PERF-1</td><td>A 130 × 180 mm tatami fill at 0.4 mm spacing, the reference hoop’s whole field, plans in ≤ 50 ms natively (baseline set at M5, then guarded)</td></tr>
+<tr><td>NFR-PERF-1</td><td>A 130 × 180 mm tatami fill at 0.4 mm spacing, the reference hoop’s whole field, plans in ≤ 50 ms natively. Baseline set at M5.9: 29 ms on a 2.1 GHz Xeon, 282 million instructions, guarded by the instruction count (<code>cargo xtask perf</code>)</td></tr>
 <tr><td>NFR-PERF-2</td><td>Live-effect previews fit VectorCraft’s v1 budget (≤ 50 M instructions, ≤ 5 s) for a 130 × 180 mm design</td></tr>
 <tr><td>NFR-PORT-1</td><td>Engine crates build for <code>wasm32-unknown-unknown</code> without WASI</td></tr>
 <tr><td>NFR-DOC-1</td><td>100 % of parameters, diagnostics, CLI commands and formats have generated reference pages</td></tr>
@@ -3271,7 +3271,9 @@ and thread changes for reports.</li>
 built the plan: the command line reports it as <code>SC-E0009</code> and writes nothing. “While sewing” means the
 previous movement was a <code>Normal</code> stitch with no trim since — the stitch lays thread between two holes,
 and its length is what the machine and fabric feel; the first stitch after a jump, a trim or a thread
-change starts a new run.</p>
+change starts a new run. A length or a position within <code>LENGTH_SLACK</code> (10⁻⁹ mm) of a limit counts as at
+it, at the hoop’s edge as for a stitch’s length, so rounding cannot push a stitch placed exactly at a limit
+past it. Generators place stitches by the same test, and so does the check that a design fits the hoop.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -4787,7 +4789,15 @@ beside it.</li>
 stitch a machine sews well, and a row’s first grid point can lie just past its start. A needle point
 nearer the one before it than the shortest stitch is left out, as Ink/Stitch leaves out points nearer
 than its own shortest stitch. A part’s last point stays, and the points before it that are too near it
-go instead, finalize’s rule applied in the generator.</li>
+go instead, finalize’s rule applied in the generator. Where the rows lie nearer each other than the
+machine’s shortest stitch and meet an edge square on, each row hands over to the next in a stitch too
+short to sew, so the next row’s first needle point is left out (<code>DEV-FIN-001</code>). The thread then runs
+from the row’s end to the next row’s second needle point, and a sliver at each row’s start shows. On
+the Brother, whose shortest stitch is 0.3 mm, a bar 5 mm wide at Ink/Stitch’s default of 0.25 mm is
+97 % covered, and at 0.3 mm or more it is covered to its edges (<code>REQ-FILL-TAT-004</code>). Ink/Stitch’s
+shortest stitch, 0.1 mm by default, keeps the handover. Along an edge at a slant to the rows, their
+ends lie farther apart: the spacing over the sine of the angle between edge and rows, 0.35 mm at 45°
+for rows 0.25 mm apart, which the Brother sews.</li>
 </ol>
 <p>The route follows Ink/Stitch’s from the same graph. StitchCraft’s rings start where the drawing starts
 them, and Ink/Stitch’s where GEOS’s overlay starts them, so which stretches are doubled, and with them the
@@ -4907,12 +4917,12 @@ the fill sews nothing, and <code>SC-W0303</code> says so.</p>
 <tr><td><code>REQ-FILL-TAT-001</code></td><td>Every row segment is covered exactly once by top stitches</td></tr>
 <tr><td><code>REQ-FILL-TAT-002</code></td><td>Measured row spacing equals the parameter (± 2 %), or follows the start→end gradient</td></tr>
 <tr><td><code>REQ-FILL-TAT-003</code></td><td>Needle points follow the stagger grid: a row’s points lie a <code>staggers</code>-th of the longest stitch along from the row before’s, and no 2 neighbouring rows line them up. A segment ends at its end unless <code>skip_last</code> is on or its last point lies within 0.1 mm of it</td></tr>
-<tr><td><code>REQ-FILL-TAT-004</code></td><td>Coverage: rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacing ≤ 0.4 mm</td></tr>
+<tr><td><code>REQ-FILL-TAT-004</code></td><td>Coverage (<code>stitchcraft_testkit::metrics</code>): rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacings from the machine’s shortest stitch to 0.4 mm, since M5.9</td></tr>
 <tr><td><code>REQ-FILL-TAT-005</code></td><td>With <code>underpath</code>, travel takes the cheapest way along the lines under the rows not sewn yet, and its way lies inside the region (± 0.05 mm)</td></tr>
 <tr><td><code>REQ-FILL-TAT-006</code></td><td>Each top row extends past its segment’s ends by the compensation; the part keeps its holes and pieces</td></tr>
 <tr><td><code>REQ-FILL-TAT-007</code></td><td>Gap-fill rows follow a stretch of more than 3 rows; all rows, gap-fill rows included, lie inside the part within its compensation</td></tr>
 <tr><td><code>REQ-FILL-TAT-008</code></td><td>A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element</td></tr>
-<tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget</td></tr>
+<tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget, guarded by <code>cargo xtask perf</code> since M5.9</td></tr>
 <tr><td><code>REQ-FILL-TAT-011</code></td><td>Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start</td></tr>
 <tr><td><code>REQ-FILL-TAT-012</code></td><td>The underlay covers the part shrunk by its inset and the top rows the part grown by <code>expand_mm</code>, as shapely buffers it, within a nanometre</td></tr>
 </tbody>
@@ -5972,6 +5982,12 @@ and fresh seeds nightly (with failing seeds saved as new cases).</li>
 </tbody>
 </table>
 </div>
+<p>Coverage is defined since M5.9, and the other metrics arrive with the cases that need them. A pixel is the
+region’s when its centre lies inside the region’s rings, by the even-odd rule, and covered when its centre
+lies within 0.2 mm of a stitch the plan sews, whatever its role: the thread is the stitch widened to
+0.4 mm and rounded at its ends. Each stitch is drawn a row of pixels at a time, along the stretch where
+the row crosses that shape. The work grows with the pixels the thread covers, not with the stitches
+times the pixels.</p>
 <h3 id="l3--inkstitch-differential-nightly"><a class="header" href="#l3--inkstitch-differential-nightly">L3 — Ink/Stitch differential (nightly)</a></h3>
 <p>A pinned Ink/Stitch release runs as a black box on a corpus of Ink/Stitch-authored SVGs (our own or
 CC0), in a container, producing stitch files. We compare <strong>metrics, not stitches</strong>: stitch count
@@ -6076,8 +6092,9 @@ turned the wrong way or two crossing segments taken to miss. <code>stitchcraft_c
 sign in plain floating point when the product is farther from zero than its largest possible rounding
 error, and otherwise computes it exactly as a sum of floats that do not overlap, with the error-free
 sums and products of J. R. Shewchuk’s <em>Adaptive Precision Floating-Point Arithmetic and Fast Robust
-Geometric Predicates</em> (1997). It uses only <code>+</code>, <code>−</code> and <code>×</code>, and every platform gets the same answer,
-which is the true one.</p>
+Geometric Predicates</em> (1997). Where both of its products are 0, as for points level or upright with each
+other, the cross product is exactly 0 without that sum, since far from underflow a product is 0 only where
+a factor is. It uses only <code>+</code>, <code>−</code> and <code>×</code>, and every platform gets the same answer, which is the true one.</p>
 <h2 id="the-seeded-prng"><a class="header" href="#the-seeded-prng">The seeded PRNG</a></h2>
 <p><code>SplitMix64</code> (Steele, Lea &amp; Flood, 2014) is tiny, fast, statistically adequate for jitter, and fully
 specified by its 64-bit state update — so its output can be written into a conformance case and will
@@ -6146,6 +6163,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 <tr><td>API docs</td><td>Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links</td><td><code>cargo xtask ci</code> (<code>RUSTDOCFLAGS=-D warnings</code>)</td><td><code>cargo xtask ci</code> · CI</td></tr>
 <tr><td><strong>Public API review</strong></td><td>Changes to a library crate’s public API show in the PR diff, as a change to its <code>public-api.txt</code></td><td><code>xtask/src/api.rs</code> (cargo-public-api, pinned)</td><td><code>cargo xtask api --check</code> · CI</td></tr>
 <tr><td><strong>Coverage ratchet</strong></td><td>No crate’s line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, with any function whose lines its unit tests and integration tests only run between them</td><td><code>conformance/coverage.toml</code>, <code>xtask/src/coverage.rs</code> (cargo-llvm-cov)</td><td><code>cargo xtask coverage</code> · CI job</td></tr>
+<tr><td><strong>Performance budget</strong></td><td>Planning the reference hoop’s whole field (<code>REQ-FILL-TAT-009</code>) takes at most 2 % more instructions than recorded. Records only go down. Its time is reported against NFR-PERF-1’s 50 ms, with a warning above it</td><td><code>conformance/perf.toml</code>, <code>xtask/src/perf.rs</code> (valgrind’s callgrind), the engine’s <code>field</code> example</td><td><code>cargo xtask perf</code> · CI job</td></tr>
 <tr><td><strong>Mutation testing</strong></td><td>Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down</td><td><code>.cargo/mutants.toml</code>, <code>conformance/mutation.toml</code>, <code>xtask/src/mutants.rs</code></td><td><code>mutants.yml</code> · changed lines every PR, in 4 parts · everything weekly</td></tr>
 <tr><td><strong>Fuzzing</strong></td><td>Readers never panic, respect their caps and terminate; anything read round-trips and previews</td><td><code>fuzz/</code>, <code>stitchcraft-testkit::fuzz</code> (<a href="#fuzzing">conformance</a>)</td><td>bodies every PR · an hour nightly</td></tr>
 </tbody>
@@ -6156,6 +6174,9 @@ are reported as skipped, while CI installs them and treats them as required. In 
 problem a check finds is also an annotation, on the right line of the pull request’s diff when it names
 one, and a failed fuzz run puts the end of its output in one: the reason is visible without opening a
 log.</p>
+<p>The performance budget counts instructions, because they come out the same on any machine and in any
+run, where milliseconds do not. Its check fails for a change that slows planning, on whichever runner it
+runs. The time is still measured and reported, against the budget the requirement states in milliseconds.</p>
 <p>Coverage counts each build of a function apart and takes the build that runs the most lines. The unit
 tests and the integration tests use separate builds, and a generic function has one per type it is used
 with. A function whose lines only both kinds of test together run counts as partly untested, though every
@@ -7319,7 +7340,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M5.6 ✅</td><td>Underlay as Ink/Stitch sews it: before its top rows each part sews a layer for each angle, each from the point nearest the needle back to it. <code>fill_underlay</code> and its settings registered, with a list of angles as a kind of parameter. A layer too thin for a row is sewn round the outline, <code>SC-I0308</code></td><td><code>REQ-FILL-TAT-011</code></td></tr>
 <tr><td>M5.7 ✅</td><td>The underlay on the part shrunk by <code>fill_underlay_inset_mm</code>, and the top rows on the part grown by <code>expand_mm</code>. A part is buffered as GEOS buffers a polygon, and checked against shapely. Pieces a shrinking cuts a part into sewn one after another (<code>DEV-FILL-008</code>), and a part a shrinking wears away said, <code>SC-W0309</code>, <code>SC-W0310</code>. A needle inside the part starts at the nearest node of the lines under the rows</td><td><code>REQ-FILL-TAT-012</code></td></tr>
 <tr><td>M5.8 ✅</td><td>Pull compensation at the rows’ ends, holes and parts kept (<code>DEV-FILL-009</code>), and below 0 read as 0, <code>SC-W0312</code>; gap-fill rows from the grid, inside the region (<code>DEV-FILL-010</code>). The pull compensation settings are shared with satins</td><td><code>REQ-FILL-TAT-006</code>, <code>REQ-FILL-TAT-007</code></td></tr>
-<tr><td>M5.9</td><td>Coverage metric and performance budget</td><td><code>REQ-FILL-TAT-004</code>, <code>REQ-FILL-TAT-009</code></td></tr>
+<tr><td>M5.9 ✅</td><td>Coverage metric (<code>stitchcraft_testkit::metrics</code>), at least 98 % from the machine’s shortest stitch to 0.4 mm; the hoop’s whole field plans, its instructions guarded by <code>cargo xtask perf</code></td><td><code>REQ-FILL-TAT-004</code>, <code>REQ-FILL-TAT-009</code></td></tr>
 <tr><td>MC-4 🧵</td><td><strong>TS-07</strong> (fill + outline registration), <strong>TS-08</strong> (density ladder, angles), <strong>TS-09</strong> (underlay, travel)</td><td>report filed; fill defaults and pull compensation tuned</td></tr>
 </tbody>
 </table>
@@ -7448,7 +7469,7 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td><strong>TS-05</strong> Satin width ladder</td><td>3 rows at zigzag spacings of 0.3, 0.4 and 0.5 mm, each of 10 columns 20 mm tall and 1 to 10 mm wide, with no underlay (91 × 76 mm). Each column is sewn as drawn, from its top, and trimmed after</td><td>Coverage, fabric showing between stitches, edges straight, long stitches loose, how much narrower than drawn</td><td>MC-3</td></tr>
 <tr><td><strong>TS-06</strong> Satin underlays</td><td>The same column, 6 mm wide and 30 mm tall, with no underlay, a centre walk, a contour, a zigzag, and a contour with a zigzag (62 × 30 mm). Each column is sewn as drawn, from its top, and trimmed after</td><td>Edge sharpness, loft, puckering, underlay showing</td><td>MC-3</td></tr>
 <tr><td><strong>TS-07</strong> Registration</td><td>A 60 mm tatami circle with a running-stitch outline; at three pull-compensation values</td><td>Gap or overlap between fill and outline at 12 points around the circle</td><td>MC-4</td></tr>
-<tr><td><strong>TS-08</strong> Fill density &amp; angle</td><td>30 mm squares at spacing 0.25–0.6 mm and angles 0°, 45°, 90°</td><td>Coverage, stiffness, puckering, visible furrows</td><td>MC-4</td></tr>
+<tr><td><strong>TS-08</strong> Fill density &amp; angle</td><td>30 mm squares at spacings from 0.25 to 0.6 mm and angles 0°, 45°, 90°</td><td>Coverage, stiffness, puckering, visible furrows. At 0.25 mm, below the Brother’s shortest stitch of 0.3 mm, a sliver at each row’s start in the 0° and 90° squares, where the rows meet the edges square on (<code>DEV-FIN-001</code>). The 45° square’s rows end 0.35 mm apart along its edges and keep their starts. If the machine sews 0.25 mm stitches cleanly, the report can lower the profile’s shortest stitch</td><td>MC-4</td></tr>
 <tr><td><strong>TS-09</strong> Fill underlay &amp; travel</td><td>A shape with holes and a separated part; with and without underlay, and with 2 gap-filling rows</td><td>Travel hidden? Trims between parts? Holes clean? A gap where the rows round a hole meet?</td><td>MC-4</td></tr>
 <tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
 <tr><td><strong>TS-11</strong> New stitch types</td><td>Samples of the milestone’s new types</td><td>Per type, as listed on its expected-result sheet</td><td>MC-6</td></tr>

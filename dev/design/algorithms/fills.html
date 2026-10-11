@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-1c38b794.js";
+            window.path_to_searchindex_js = "../../searchindex-609458bd.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -322,7 +322,15 @@ beside it.</li>
 stitch a machine sews well, and a row’s first grid point can lie just past its start. A needle point
 nearer the one before it than the shortest stitch is left out, as Ink/Stitch leaves out points nearer
 than its own shortest stitch. A part’s last point stays, and the points before it that are too near it
-go instead, finalize’s rule applied in the generator.</li>
+go instead, finalize’s rule applied in the generator. Where the rows lie nearer each other than the
+machine’s shortest stitch and meet an edge square on, each row hands over to the next in a stitch too
+short to sew, so the next row’s first needle point is left out (<code>DEV-FIN-001</code>). The thread then runs
+from the row’s end to the next row’s second needle point, and a sliver at each row’s start shows. On
+the Brother, whose shortest stitch is 0.3 mm, a bar 5 mm wide at Ink/Stitch’s default of 0.25 mm is
+97 % covered, and at 0.3 mm or more it is covered to its edges (<code>REQ-FILL-TAT-004</code>). Ink/Stitch’s
+shortest stitch, 0.1 mm by default, keeps the handover. Along an edge at a slant to the rows, their
+ends lie farther apart: the spacing over the sine of the angle between edge and rows, 0.35 mm at 45°
+for rows 0.25 mm apart, which the Brother sews.</li>
 </ol>
 <p>The route follows Ink/Stitch’s from the same graph. StitchCraft’s rings start where the drawing starts
 them, and Ink/Stitch’s where GEOS’s overlay starts them, so which stretches are doubled, and with them the
@@ -442,12 +450,12 @@ the fill sews nothing, and <code>SC-W0303</code> says so.</p>
 <tr><td><code>REQ-FILL-TAT-001</code></td><td>Every row segment is covered exactly once by top stitches</td></tr>
 <tr><td><code>REQ-FILL-TAT-002</code></td><td>Measured row spacing equals the parameter (± 2 %), or follows the start→end gradient</td></tr>
 <tr><td><code>REQ-FILL-TAT-003</code></td><td>Needle points follow the stagger grid: a row’s points lie a <code>staggers</code>-th of the longest stitch along from the row before’s, and no 2 neighbouring rows line them up. A segment ends at its end unless <code>skip_last</code> is on or its last point lies within 0.1 mm of it</td></tr>
-<tr><td><code>REQ-FILL-TAT-004</code></td><td>Coverage: rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacing ≤ 0.4 mm</td></tr>
+<tr><td><code>REQ-FILL-TAT-004</code></td><td>Coverage (<code>stitchcraft_testkit::metrics</code>): rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacings from the machine’s shortest stitch to 0.4 mm, since M5.9</td></tr>
 <tr><td><code>REQ-FILL-TAT-005</code></td><td>With <code>underpath</code>, travel takes the cheapest way along the lines under the rows not sewn yet, and its way lies inside the region (± 0.05 mm)</td></tr>
 <tr><td><code>REQ-FILL-TAT-006</code></td><td>Each top row extends past its segment’s ends by the compensation; the part keeps its holes and pieces</td></tr>
 <tr><td><code>REQ-FILL-TAT-007</code></td><td>Gap-fill rows follow a stretch of more than 3 rows; all rows, gap-fill rows included, lie inside the part within its compensation</td></tr>
 <tr><td><code>REQ-FILL-TAT-008</code></td><td>A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element</td></tr>
-<tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget</td></tr>
+<tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget, guarded by <code>cargo xtask perf</code> since M5.9</td></tr>
 <tr><td><code>REQ-FILL-TAT-011</code></td><td>Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start</td></tr>
 <tr><td><code>REQ-FILL-TAT-012</code></td><td>The underlay covers the part shrunk by its inset and the top rows the part grown by <code>expand_mm</code>, as shapely buffers it, within a nanometre</td></tr>
 </tbody>

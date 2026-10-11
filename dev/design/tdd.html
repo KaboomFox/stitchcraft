@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1c38b794.js";
+            window.path_to_searchindex_js = "../searchindex-609458bd.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -319,7 +319,7 @@ identical to Ink/Stitch’s SVG attributes because that is the interoperability 
 <tr><td>NFR-ROB-1</td><td>No panics in shipped code; no <code>unsafe</code> outside the one audited plug-in ABI module</td></tr>
 <tr><td>NFR-ROB-2</td><td>All work is bounded by explicit budgets (stitches, iterations, input sizes); exceeding one is a diagnostic, never a hang</td></tr>
 <tr><td>NFR-DET-1</td><td>Same input and version ⇒ byte-identical output on every supported platform, including wasm32</td></tr>
-<tr><td>NFR-PERF-1</td><td>A 130 × 180 mm tatami fill at 0.4 mm spacing, the reference hoop’s whole field, plans in ≤ 50 ms natively (baseline set at M5, then guarded)</td></tr>
+<tr><td>NFR-PERF-1</td><td>A 130 × 180 mm tatami fill at 0.4 mm spacing, the reference hoop’s whole field, plans in ≤ 50 ms natively. Baseline set at M5.9: 29 ms on a 2.1 GHz Xeon, 282 million instructions, guarded by the instruction count (<code>cargo xtask perf</code>)</td></tr>
 <tr><td>NFR-PERF-2</td><td>Live-effect previews fit VectorCraft’s v1 budget (≤ 50 M instructions, ≤ 5 s) for a 130 × 180 mm design</td></tr>
 <tr><td>NFR-PORT-1</td><td>Engine crates build for <code>wasm32-unknown-unknown</code> without WASI</td></tr>
 <tr><td>NFR-DOC-1</td><td>100 % of parameters, diagnostics, CLI commands and formats have generated reference pages</td></tr>
