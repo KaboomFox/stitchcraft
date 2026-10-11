@@ -63,7 +63,7 @@ that join its underlays are no longer than the first value. For any other stroke
 one is sewn between rails made from its line from M4.9 (`REQ-SAT-016`). The other stroke and satin
 methods, and fills, are skipped with `SC-W0011` until their milestones. A fill's region is built
 already, so what it leaves out and how it will be sewn are said (`SC-W0303`, `SC-W0304`, `SC-I0306`,
-`SC-W0307`). An element whose parameters are wrong (`SC-E0101`) is skipped too, and the rest of the
+`SC-W0307`), and its tatami settings are read and checked. An element whose parameters are wrong (`SC-E0101`) is skipped too, and the rest of the
 design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's

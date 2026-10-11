@@ -14,10 +14,11 @@ use crate::generate::StrokeParams;
 use crate::generators::passes::RepeatParams;
 use crate::generators::running::RunningParams;
 use crate::generators::satin::SatinParams;
+use crate::generators::tatami::TatamiParams;
 
 /// Every parameter group, in the order the reference pages list them.
 pub const PARAMETERS: &[&ParamGroup] =
-    &[&CommonParams::GROUP, &StrokeParams::GROUP, &RunningParams::GROUP, &RepeatParams::GROUP, &SatinParams::GROUP];
+    &[&CommonParams::GROUP, &StrokeParams::GROUP, &RunningParams::GROUP, &RepeatParams::GROUP, &SatinParams::GROUP, &TatamiParams::GROUP];
 
 #[cfg(test)]
 mod tests {
