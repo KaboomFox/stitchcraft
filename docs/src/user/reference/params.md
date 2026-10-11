@@ -36,7 +36,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Satin parameters](params/satin.md) | 36 | Satin column, E-stitch, S-stitch, Zigzag satin |
 | [Fill parameters](params/fill.md) | 1 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
-| [Tatami parameters](params/tatami.md) | 5 | Tatami fill |
+| [Tatami parameters](params/tatami.md) | 6 | Tatami fill |
 
 ## Every parameter
 
@@ -101,6 +101,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`swap_satin_rails`](params/satin.md#swap_satin_rails) | Swap rails | Satin parameters |
 | [`ties`](params/common.md#ties) | Lock stitches | Common parameters |
 | [`trim_after`](params/common.md#trim_after) | Trim after | Common parameters |
+| [`underpath`](params/tatami.md#underpath) | Underpath | Tatami parameters |
 | [`zigzag_spacing_mm`](params/satin.md#zigzag_spacing_mm) | Zigzag spacing | Satin parameters |
 | [`zigzag_underlay`](params/satin.md#zigzag_underlay) | Zigzag underlay | Satin parameters |
 | [`zigzag_underlay_inset_mm`](params/satin.md#zigzag_underlay_inset_mm) | Zigzag underlay inset | Satin parameters |

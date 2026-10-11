@@ -40,6 +40,7 @@ use stitchcraft_core::{Exhausted, Meter, Point};
 use super::graph::{Edge, EdgeId, Graph, Kind, NodeId};
 use super::rings::{Place, Rings, distance_to_side};
 use super::travel::Network;
+use crate::normalize::near::key;
 
 /// The most odd nodes whose pairing is searched in full; more are paired greedily, nearest first.
 const PAIRED_IN_FULL: usize = 16;
@@ -130,11 +131,6 @@ struct Built {
     nodes: Vec<Node>,
     index: BTreeMap<(u64, u64), NodeId>,
     graph: Graph,
-}
-
-/// A point as a key: 2 points are one node when their coordinates are equal, -0 and 0 alike.
-fn key(p: Point) -> (u64, u64) {
-    ((p.x() + 0.0).to_bits(), (p.y() + 0.0).to_bits())
 }
 
 impl Built {

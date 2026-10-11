@@ -19,7 +19,8 @@ stroke, and since M4.9 a wider one is sewn between rails made from its centre li
 (`normalize::centre_line`), offset as shapely offsets them (`normalize::offset`). Since M5.1 a fill's
 region is built by its fill rule (`normalize::region`), and what it leaves out is said, and since M5.2
 its tatami rows are laid as Ink/Stitch lays them (`generators::tatami`). Since M5.4 a tatami fill is
-sewn part by part, its rows in the order Ink/Stitch routes them (`generators::tatami::route`). Design:
+sewn part by part, its rows in the order Ink/Stitch routes them (`generators::tatami::route`), and since
+M5.5 its needle runs between rows under the rows sewn after it (`generators::tatami::underpath`). Design:
 `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 
 ## Invariants

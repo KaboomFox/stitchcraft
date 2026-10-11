@@ -54,7 +54,7 @@ why = "the first row the loop then weighs is the set's lowest row itself, and pa
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/generators/tatami/travel.rs"
-mutant = "replace > with < in Network::search"
+mutant = "replace > with < in search"
 line = "if distance.get(node).is_some_and(|&best| d > best) {"
 why = "an entry of the queue farther than its node's best distance then goes on to its neighbours, but the node left the queue at its best distance earlier and reached each neighbour by a shorter way than this entry can, so it changes no distance; an entry at its node's best distance is skipped by neither test"
 
@@ -131,14 +131,14 @@ line = "for (j, &(c, d)) in segments.iter().enumerate().skip(i + 1) {"
 why = "comparing a segment with itself finds only its own ends, which add no piece; only the work charged grows"
 
 [[equivalent]]
-file = "crates/stitchcraft-engine/src/normalize/offset/boundary.rs"
-mutant = "replace / with % in Nodes::node"
+file = "crates/stitchcraft-engine/src/normalize/near.rs"
+mutant = "replace / with % in Snap<T>::snap"
 line = "let cell = |v: f64| (v / self.near).floor() as i64;"
 why = "the cells only save work: with every point in the few cells round the origin, the search round a point still finds every point seen within near of it"
 
 [[equivalent]]
-file = "crates/stitchcraft-engine/src/normalize/offset/boundary.rs"
-mutant = "replace / with * in Nodes::node"
+file = "crates/stitchcraft-engine/src/normalize/near.rs"
+mutant = "replace / with * in Snap<T>::snap"
 line = "let cell = |v: f64| (v / self.near).floor() as i64;"
 why = "the cells only save work: with every point in the few cells round the origin, the search round a point still finds every point seen within near of it"
 

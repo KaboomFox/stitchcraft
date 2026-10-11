@@ -7,12 +7,12 @@
 //! **Across the part.** Between points of 2 rings, or where the route pairs nodes on 2 rings, the needle
 //! takes the shortest way along rings and rows: the rows' lines lie inside the part, and the travel along
 //! them is covered by the rows when they are sewn after it. Ink/Stitch, travelling along the outline
-//! only, sews the rows on such a way a second time, as rows (`DEV-FILL-006`). Travel inside the part
-//! away from the rows comes with `underpath` (roadmap M5.5). Where no way joins the 2 points, the needle
-//! jumps.
+//! only, sews the rows on such a way a second time, as rows (`DEV-FILL-006`). These are travel's ways with
+//! `underpath` off, and in a part the lines travel under the rows follows miss ([`super::underpath`]).
+//! Where no way joins the 2 points, the needle jumps.
 //!
-//! Distances are compared exactly as computed, the nearer node first on a tie, so every platform finds
-//! the same way.
+//! Distances are compared exactly as computed, and of 2 nodes as near the lower-numbered goes first, so
+//! every platform finds the same way. The search is shared with travel under the rows.
 
 use std::cmp::{Ordering, Reverse};
 use std::collections::BinaryHeap;
@@ -20,7 +20,7 @@ use std::collections::BinaryHeap;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use super::graph::NodeId;
-use super::rings::Rings;
+use super::rings::{Rings, stretches};
 use super::route::Node;
 
 /// How a step of a way runs: along a ring, in its direction or against it, or along a row's line.
@@ -44,7 +44,7 @@ pub(crate) struct Network {
 }
 
 /// What a search finds: each node's distance from where it started, and the step that reaches it.
-type Searched = (Vec<f64>, Vec<Option<(NodeId, Along)>>);
+pub(crate) type Searched<S> = (Vec<f64>, Vec<Option<(NodeId, S)>>);
 
 /// A distance with a total order, for the queue.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -69,24 +69,10 @@ impl Network {
     /// `meter` for each node and row.
     pub fn new(nodes: &[Node], rings: &Rings<'_>, rows: &[[NodeId; 2]], meter: &mut Meter) -> Result<Network, Exhausted> {
         let mut around = vec![Vec::new(); nodes.len()];
-        let mut order: Vec<NodeId> = (0..nodes.len()).collect();
-        let place = |n: &NodeId| nodes.get(*n).map(|n| n.place);
-        order.sort_by(|a, b| {
-            let (pa, pb) = (place(a), place(b));
-            pa.map(|p| p.ring).cmp(&pb.map(|p| p.ring)).then(pa.map_or(0.0, |p| p.at).total_cmp(&pb.map_or(0.0, |p| p.at)))
-        });
-        for ring in order.chunk_by(|a, b| place(a).map(|p| p.ring) == place(b).map(|p| p.ring)) {
-            if ring.len() < 2 {
-                continue;
-            }
-            for (i, &a) in ring.iter().enumerate() {
-                meter.charge(1)?;
-                let Some(&b) = ring.get((i + 1) % ring.len()) else { continue };
-                let (Some(pa), Some(pb)) = (place(&a), place(&b)) else { continue };
-                let length = rings.way_length(pa.ring, pa.at, pb.at, true);
-                link(&mut around, a, b, length, Along::Ring { ring: pa.ring, forwards: true });
-                link(&mut around, b, a, length, Along::Ring { ring: pa.ring, forwards: false });
-            }
+        for [(a, pa), (b, pb)] in stretches(nodes.iter().map(|n| n.place).enumerate().collect(), meter)? {
+            let length = rings.way_length(pa.ring, pa.at, pb.at, true);
+            link(&mut around, a, b, length, Along::Ring { ring: pa.ring, forwards: true });
+            link(&mut around, b, a, length, Along::Ring { ring: pa.ring, forwards: false });
         }
         for &[a, b] in rows {
             meter.charge(1)?;
@@ -107,55 +93,73 @@ impl Network {
     /// The shortest way from `from` to `to`: each node after `from` with how the way reaches it. `None`
     /// when no way leads there. One unit of `meter` for each step looked at.
     pub fn way(&self, from: NodeId, to: NodeId, meter: &mut Meter) -> Result<Option<Vec<(NodeId, Along)>>, Exhausted> {
-        let (distance, came) = self.search(from, Some(to), meter)?;
-        if !distance.get(to).is_some_and(|d| d.is_finite()) {
-            return Ok(None);
-        }
-        let mut way = Vec::new();
-        let mut at = to;
-        while at != from {
-            meter.charge(1)?;
-            let Some(Some((before, along))) = came.get(at).copied() else { return Ok(None) };
-            way.push((at, along));
-            at = before;
-        }
-        way.reverse();
-        Ok(Some(way))
+        way_to(&self.search(from, Some(to), meter)?, from, to, meter)
     }
 
-    /// Dijkstra's search from `from`, stopping at `to` if given: each node's distance and the step it is
-    /// reached by.
-    fn search(&self, from: NodeId, to: Option<NodeId>, meter: &mut Meter) -> Result<Searched, Exhausted> {
-        let mut distance = vec![f64::INFINITY; self.around.len()];
-        let mut came: Vec<Option<(NodeId, Along)>> = vec![None; self.around.len()];
-        let mut queue = BinaryHeap::new();
-        if let Some(d) = distance.get_mut(from) {
-            *d = 0.0;
-            queue.push(Reverse((Distance(0.0), from)));
-        }
-        while let Some(Reverse((Distance(d), node))) = queue.pop() {
-            meter.charge(1)?;
-            if distance.get(node).is_some_and(|&best| d > best) {
-                continue;
-            }
-            if Some(node) == to {
-                break;
-            }
-            for &(next, length, along) in self.around.get(node).into_iter().flatten() {
-                let through = d + length;
-                if distance.get(next).is_some_and(|&best| through < best) {
-                    if let Some(slot) = distance.get_mut(next) {
-                        *slot = through;
-                    }
-                    if let Some(slot) = came.get_mut(next) {
-                        *slot = Some((node, along));
-                    }
-                    queue.push(Reverse((Distance(through), next)));
-                }
-            }
-        }
-        Ok((distance, came))
+    fn search(&self, from: NodeId, to: Option<NodeId>, meter: &mut Meter) -> Result<Searched<Along>, Exhausted> {
+        search(self.around.len(), from, to, |node| self.around.get(node).into_iter().flatten().copied(), meter)
     }
+}
+
+/// Dijkstra's search over `count` nodes from `from`, stopping at `to` if given: each node's distance and
+/// the step it is reached by. `steps` lists the steps out of a node: where each leads, how long it is, and
+/// how it runs. Nodes leave the queue nearest first, the lower-numbered of 2 as near, and a node keeps the
+/// first way to reach it unless a shorter one comes. One unit of `meter` for each node taken from the queue.
+pub(crate) fn search<S: Copy, I: IntoIterator<Item = (NodeId, f64, S)>>(
+    count: usize,
+    from: NodeId,
+    to: Option<NodeId>,
+    steps: impl Fn(NodeId) -> I,
+    meter: &mut Meter,
+) -> Result<Searched<S>, Exhausted> {
+    let mut distance = vec![f64::INFINITY; count];
+    let mut came: Vec<Option<(NodeId, S)>> = vec![None; count];
+    let mut queue = BinaryHeap::new();
+    if let Some(d) = distance.get_mut(from) {
+        *d = 0.0;
+        queue.push(Reverse((Distance(0.0), from)));
+    }
+    while let Some(Reverse((Distance(d), node))) = queue.pop() {
+        meter.charge(1)?;
+        if distance.get(node).is_some_and(|&best| d > best) {
+            continue;
+        }
+        if Some(node) == to {
+            break;
+        }
+        for (next, length, how) in steps(node) {
+            let through = d + length;
+            if distance.get(next).is_some_and(|&best| through < best) {
+                if let Some(slot) = distance.get_mut(next) {
+                    *slot = through;
+                }
+                if let Some(slot) = came.get_mut(next) {
+                    *slot = Some((node, how));
+                }
+                queue.push(Reverse((Distance(through), next)));
+            }
+        }
+    }
+    Ok((distance, came))
+}
+
+/// The shortest way from `from` to `to` that `searched` found: each node after `from` with how the way
+/// reaches it. `None` when no way leads there. One unit of `meter` for each step.
+pub(crate) fn way_to<S: Copy>(searched: &Searched<S>, from: NodeId, to: NodeId, meter: &mut Meter) -> Result<Option<Vec<(NodeId, S)>>, Exhausted> {
+    let (distance, came) = searched;
+    if !distance.get(to).is_some_and(|d| d.is_finite()) {
+        return Ok(None);
+    }
+    let mut way = Vec::new();
+    let mut at = to;
+    while at != from {
+        meter.charge(1)?;
+        let Some(Some((before, how))) = came.get(at).copied() else { return Ok(None) };
+        way.push((at, how));
+        at = before;
+    }
+    way.reverse();
+    Ok(Some(way))
 }
 
 /// Adds the step from `a` to `b` to the network.
