@@ -84,6 +84,18 @@ why = "overlapping sides along one line: when neither end of the second lies on 
 
 [[equivalent]]
 file = "crates/stitchcraft-core/src/exact.rs"
+mutant = "replace == with != in side"
+line = "if left == 0.0 && right == 0.0 {"
+why = "the test is reached only within the error bound, where one product is 0 only if the other is too: were one 0 and the other not, the plain determinant would be the other, far beyond its own bound. So however the test is turned or joined, it holds where the original does, or fails where the exact sum then gives the same 0"
+
+[[equivalent]]
+file = "crates/stitchcraft-core/src/exact.rs"
+mutant = "replace && with || in side"
+line = "if left == 0.0 && right == 0.0 {"
+why = "the test is reached only within the error bound, where one product is 0 only if the other is too: were one 0 and the other not, the plain determinant would be the other, far beyond its own bound. So however the test is turned or joined, it holds where the original does, or fails where the exact sum then gives the same 0"
+
+[[equivalent]]
+file = "crates/stitchcraft-core/src/exact.rs"
 mutant = "replace * with + in side"
 line = "let bound = ERROR_BOUND * (left.abs() + right.abs());"
 why = "the bound only decides when the exact sum is worked out: a bound of at least |left| + |right|, which the plain determinant never exceeds, sends every case to the exact sum, which gives the same signs"

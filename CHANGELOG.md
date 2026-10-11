@@ -14,10 +14,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - `cargo xtask perf` plans the reference hoop's whole field (`REQ-FILL-TAT-009`) with the engine's
     `field` example in release. It counts the instructions one plan takes with valgrind's callgrind,
     against a record in `conformance/perf.toml` that only goes down, and reports the time against
-    NFR-PERF-1's 50 ms: 280 million instructions and 29 ms at M5.9. It has its own CI job.
+    NFR-PERF-1's 50 ms: 282 million instructions and 29 ms at M5.9. It has its own CI job.
   - Planning the field takes a fifth fewer instructions than before: crossings of the travel lines snap
-    with 3 lookups instead of 9, and the exact orientation test knows a cross product with a factor of
-    exactly 0 is 0. The stitches stay as they were.
+    with 3 lookups instead of 9, and the exact orientation test knows a cross product is 0 when both its
+    products are. The stitches stay as they were.
 - M5.8: a tatami fill's top rows are lengthened past their ends by `pull_compensation_mm` plus
   `pull_compensation_percent` of each row's length (`REQ-FILL-TAT-006`), as Ink/Stitch lengthens them.
   `gap_fill_rows` sews rows again where the route leaves a stretch of more than 3 rows

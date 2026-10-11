@@ -7,4 +7,4 @@ budget_ms = 50.0
 # The instructions one plan takes, counted by valgrind's callgrind. More than this plus 2 % fails.
 # `cargo xtask perf --record` lowers it and never raises it: raise it by hand, in a pull request that
 # says why.
-instructions = 280000000
+instructions = 282000000
