@@ -35,7 +35,7 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-6b72b2ce.js";
+            window.path_to_searchindex_js = "../../../searchindex-c2900321.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../toc-c73eb358.js"></script>
@@ -313,23 +313,24 @@ jump. Empty: the document’s setting.</p>
 </ul>
 <h2 id="longest-stitch"><a class="header" href="#longest-stitch">Longest stitch</a></h2>
 <h3 id="max_stitch_length_mm"><a class="header" href="#max_stitch_length_mm"><code>max_stitch_length_mm</code></a></h3>
-<p><strong>Longest stitch.</strong> Split stitches longer than this. Manual stitch splits them into equal parts, and a satin column
-as its split method says. Empty, every stitch is sewn whole.</p>
+<p><strong>Longest stitch.</strong> Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
+its split method says. Empty, every stitch is sewn whole. A tatami fill sews its rows in
+stitches this long.</p>
 <ul>
-<li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty)</li>
-<li><strong>Default:</strong> empty</li>
-<li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin</li>
+<li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty); for fills, a length from 0.1 to 25 mm, empty being the default</li>
+<li><strong>Default:</strong> empty, and <code>4</code> for fills</li>
+<li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h2 id="random-variation"><a class="header" href="#random-variation">Random variation</a></h2>
 <h3 id="random_seed"><a class="header" href="#random_seed"><code>random_seed</code></a></h3>
-<p><strong>Random seed.</strong> Where random variation starts: a running stitch’s random lengths, and a satin column’s random
-widths and spacing. The same seed gives the same stitches, another seed others. Empty, each
-element gets its own.</p>
+<p><strong>Random seed.</strong> Where random variation starts: a running stitch’s random lengths, a satin column’s random
+widths and spacing, and a tatami fill’s random lengths. The same seed gives the same stitches,
+another seed others. Empty, each element gets its own.</p>
 <ul>
 <li><strong>Accepts:</strong> a number or any text, or empty to derive it from the element</li>
 <li><strong>Default:</strong> empty</li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 

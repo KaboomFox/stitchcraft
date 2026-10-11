@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6b72b2ce.js";
+            window.path_to_searchindex_js = "../searchindex-c2900321.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-c73eb358.js"></script>
@@ -224,9 +224,10 @@ embroiderer. The real declaration of the settings every stitch type shares, in
 }</code></pre>
 <p>Each parameter is <code>key: Kind = "default", label "Label"</code>, followed by what its kind needs and what is
 not the usual: <code>range (min, max)</code> for numbers and lists, <code>options [...]</code> or <code>choices CONST</code> for choices,
-<code>applies</code> when it covers fewer stitch types than its struct, <code>when other == "value"</code> (or
-<code>when other in VALUES</code>, a list of them) when a user interface shows it only then, <code>origin</code> (default
-<code>Origin::InkStitch</code>) and <code>stability</code> (default <code>Stability::Stable</code>).
+<code>applies</code> when it covers fewer stitch types than its struct, <code>defaults [Family::Fill =&gt; "4"]</code> when a
+family of stitch types has a default of its own, <code>when other == "value"</code> (or <code>when other in VALUES</code>, a
+list of them) when a user interface shows it only then, <code>origin</code> (default <code>Origin::InkStitch</code>) and
+<code>stability</code> (default <code>Stability::Stable</code>).
 A combination a kind does not take does not compile. Defaults are written as a design stores them, so
 they are checked by the same code as a design’s values. The grammar is in the <code>macros</code> module’s
 documentation.</p>
@@ -236,7 +237,9 @@ documentation.</p>
 each field’s type given by its kind (<code>kinds</code> module), so a field and its validation cannot disagree;</li>
 <li><code>CommonParams::SPECS</code> (a <code>const</code> slice of <code>ParamSpec</code>) and <code>CommonParams::GROUP</code>;</li>
 <li><code>CommonParams::from_set(&amp;ParamSet) -&gt; Result&lt;Validated&lt;CommonParams&gt;, Vec&lt;Diagnostic&gt;&gt;</code>: every
-parameter read from its text or its default, with the clamping warnings beside the values.</li>
+parameter read from its text or its default, with the clamping warnings beside the values;</li>
+<li><code>CommonParams::from_set_for(&amp;ParamSet, Family)</code>: the same with the family’s own defaults, which the
+engine reads an element’s settings with.</li>
 </ul>
 <p>The registry itself is <code>stitchcraft_engine::registry::PARAMETERS</code>, a plain <code>const</code> list of every
 declaration’s <code>GROUP</code> in the engine, next to the generators (no life-before-main tricks; adding a
@@ -248,6 +251,7 @@ generator’s parameters is one line there). <code>stitchcraft-params</code> kno
     pub help: &amp;'static str,         // the doc comment; `help()` gives the Markdown
     pub kind: Kind,                 // with its limits: range, options, maximum length
     pub default: &amp;'static str,      // as a design stores it; "" for an empty optional value
+    pub family_defaults: &amp;'static [(Family, &amp;'static str)], // a family's own default: `default_for`, `in_family`
     pub group: &amp;'static str,        // UI and docs section
     pub applies_to: &amp;'static [StitchType],
     pub visible_when: Option&lt;Condition&gt;,   // another key and the values it shows this for: lock_custom_start only for lock_start custom
@@ -314,8 +318,14 @@ never from changing a default.</li>
 defaults: <code>running_stitch_tolerance_mm</code> is 0.2 mm on a stroke and 0.1 mm on a satin or a fill. The
 contract is per key and stitch type, so the contract page matches a declaration with the rows for the
 stitch types it applies to, and a declaration for a stitch type Ink/Stitch does not give the key is
-reported. Declaring a key again for other stitch types (satins in M4, fills in M5) also needs lookups
-by key and stitch type: <code>find</code> by key alone returns the first declaration.</li>
+reported. A key is declared once, and a family whose default differs gets its own with <code>defaults</code>:
+<code>max_stitch_length_mm</code> is empty on manual stitch and satin columns and 4 mm on fills. A family with a
+default of its own needs a value (<code>ParamSpec::in_family</code>). There an empty value means its default. A
+length of 0 or less is raised to the least the key accepts instead of counting as empty, as Ink/Stitch
+reads a fill’s longest stitch. Elsewhere an optional value left empty is no value. The engine reads an
+element’s settings with its family’s defaults (<code>from_set_for</code>). The contract page compares each row
+with the default of the row’s family. The reference page lists each family’s default and what the
+family accepts, and the JSON Schema gives the defaults under <code>x-stitchcraft.family_defaults</code>.</li>
 </ol>
 <h2 id="generated-outputs"><a class="header" href="#generated-outputs">Generated outputs</a></h2>
 <div class="table-wrapper">

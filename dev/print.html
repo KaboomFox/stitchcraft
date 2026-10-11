@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-6b72b2ce.js";
+            window.path_to_searchindex_js = "searchindex-c2900321.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-c73eb358.js"></script>
@@ -1684,7 +1684,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#running-parameters">Running parameters</a></td><td>4</td><td>Running stitch, Ripple stitch</td></tr>
 <tr><td><a href="#repeat-parameters">Repeat parameters</a></td><td>2</td><td>Running stitch, Ripple stitch, Zigzag stitch, Manual stitch</td></tr>
 <tr><td><a href="#satin-parameters">Satin parameters</a></td><td>36</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
-<tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>3</td><td>Tatami fill</td></tr>
+<tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>5</td><td>Tatami fill</td></tr>
 </tbody>
 </table>
 </div>
@@ -1743,8 +1743,10 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#satin_method"><code>satin_method</code></a></td><td>Method</td><td>Satin parameters</td></tr>
 <tr><td><a href="#short_stitch_distance_mm"><code>short_stitch_distance_mm</code></a></td><td>Short stitch distance</td><td>Satin parameters</td></tr>
 <tr><td><a href="#short_stitch_inset"><code>short_stitch_inset</code></a></td><td>Short stitch inset</td><td>Satin parameters</td></tr>
+<tr><td><a href="#skip_last"><code>skip_last</code></a></td><td>Skip last stitch</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#split_method"><code>split_method</code></a></td><td>Split method</td><td>Satin parameters</td></tr>
 <tr><td><a href="#split_staggers"><code>split_staggers</code></a></td><td>Staggers</td><td>Satin parameters</td></tr>
+<tr><td><a href="#staggers"><code>staggers</code></a></td><td>Staggers</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#start_at_nearest_point"><code>start_at_nearest_point</code></a></td><td>Start at nearest point</td><td>Satin parameters</td></tr>
 <tr><td><a href="#stop_after"><code>stop_after</code></a></td><td>Stop after</td><td>Common parameters</td></tr>
 <tr><td><a href="#stroke_method"><code>stroke_method</code></a></td><td>Method</td><td>Stroke parameters</td></tr>
@@ -1893,23 +1895,24 @@ jump. Empty: the document’s setting.</p>
 </ul>
 <h2 id="longest-stitch"><a class="header" href="#longest-stitch">Longest stitch</a></h2>
 <h3 id="max_stitch_length_mm"><a class="header" href="#max_stitch_length_mm"><code>max_stitch_length_mm</code></a></h3>
-<p><strong>Longest stitch.</strong> Split stitches longer than this. Manual stitch splits them into equal parts, and a satin column
-as its split method says. Empty, every stitch is sewn whole.</p>
+<p><strong>Longest stitch.</strong> Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
+its split method says. Empty, every stitch is sewn whole. A tatami fill sews its rows in
+stitches this long.</p>
 <ul>
-<li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty)</li>
-<li><strong>Default:</strong> empty</li>
-<li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin</li>
+<li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty); for fills, a length from 0.1 to 25 mm, empty being the default</li>
+<li><strong>Default:</strong> empty, and <code>4</code> for fills</li>
+<li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h2 id="random-variation"><a class="header" href="#random-variation">Random variation</a></h2>
 <h3 id="random_seed"><a class="header" href="#random_seed"><code>random_seed</code></a></h3>
-<p><strong>Random seed.</strong> Where random variation starts: a running stitch’s random lengths, and a satin column’s random
-widths and spacing. The same seed gives the same stitches, another seed others. Empty, each
-element gets its own.</p>
+<p><strong>Random seed.</strong> Where random variation starts: a running stitch’s random lengths, a satin column’s random
+widths and spacing, and a tatami fill’s random lengths. The same seed gives the same stitches,
+another seed others. Empty, each element gets its own.</p>
 <ul>
 <li><strong>Accepts:</strong> a number or any text, or empty to derive it from the element</li>
 <li><strong>Default:</strong> empty</li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `StrokeParams` in the parameter registry. Edit the declaration, not this page. -->
@@ -1952,20 +1955,24 @@ more and shorter stitches. A satin column’s way to its start and from its end 
 <li><strong>Ink/Stitch:</strong> same key; StitchCraft differs (DEV-SAT-006): A satin column’s running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch’s settings window shows 0.1 mm.</li>
 </ul>
 <h3 id="enable_random_stitch_length"><a class="header" href="#enable_random_stitch_length"><code>enable_random_stitch_length</code></a></h3>
-<p><strong>Random stitch length.</strong> Vary the stitch lengths at random instead of spreading them evenly. Lines sewn close together
-then do not line their needle holes up, which avoids moiré patterns.</p>
+<p><strong>Random stitch length.</strong> Vary the stitch lengths at random instead of spreading them evenly, or in a tatami fill, instead
+of placing the needle points on the stagger grid. Lines and rows sewn close together then do not
+line their needle holes up, which avoids moiré patterns.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false</li>
 <li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Tatami fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h3 id="random_stitch_length_jitter_percent"><a class="header" href="#random_stitch_length_jitter_percent"><code>random_stitch_length_jitter_percent</code></a></h3>
-<p><strong>Length variation.</strong> How much each stitch may be longer or shorter than the stitch length, in percent of it. Where the
-random lengths start is the element’s <code>random_seed</code>.</p>
+<p><strong>Length variation.</strong> How much each stitch may be longer or shorter than the stitch length, in percent of it. A tatami
+fill’s stitch length is its longest stitch. Where the random lengths start is the element’s
+<code>random_seed</code>.</p>
 <ul>
 <li><strong>Accepts:</strong> a percentage from 0 to 100</li>
 <li><strong>Default:</strong> <code>10</code></li>
 <li><strong>Shown when</strong> <a href="#enable_random_stitch_length"><code>enable_random_stitch_length</code></a> is <code>true</code></li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Tatami fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `RepeatParams` in the parameter registry. Edit the declaration, not this page. -->
@@ -2344,6 +2351,25 @@ the next.</p>
 <li><strong>Accepts:</strong> a length from 0.1 to 100 mm, or empty (0 or less counts as empty)</li>
 <li><strong>Default:</strong> empty</li>
 <li><strong>Ink/Stitch:</strong> same key; StitchCraft differs (DEV-FILL-003): With end_row_spacing_mm, the step from row to row changes from the row spacing to the end spacing over the part’s height, measured from the first row, and stays at the end spacing beyond it. Ink/Stitch carries the change on past the height, which reaches the rows within a row spacing of the part’s far side when the first row lies before the part. With an end spacing smaller than the row spacing, over a part a few rows tall, the steps then shrink towards 0 and the rows pile up short of the far side without end.</li>
+</ul>
+<h2 id="stitches"><a class="header" href="#stitches">Stitches</a></h2>
+<h3 id="staggers"><a class="header" href="#staggers"><code>staggers</code></a></h3>
+<p><strong>Staggers.</strong> How many rows the needle points take to come back to where they started. Along each row they lie
+the longest stitch (<code>max_stitch_length_mm</code>) apart, a <code>staggers</code>-th of a stitch along from the
+row before’s, so that neighbouring rows never line them up. A fraction draws diagonals that show
+less than whole numbers do.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from 0.01 to 100</li>
+<li><strong>Default:</strong> <code>4</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="skip_last"><a class="header" href="#skip_last"><code>skip_last</code></a></h3>
+<p><strong>Skip last stitch.</strong> Leave out the needle point at the end of each row. It lies close to the start of the next row,
+and leaving it out lowers the stitch count and the density along the fill’s edge.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false</li>
+<li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="glossary"><a class="header" href="#glossary">Glossary</a></h1>
@@ -3185,9 +3211,10 @@ embroiderer. The real declaration of the settings every stitch type shares, in
 }</code></pre>
 <p>Each parameter is <code>key: Kind = "default", label "Label"</code>, followed by what its kind needs and what is
 not the usual: <code>range (min, max)</code> for numbers and lists, <code>options [...]</code> or <code>choices CONST</code> for choices,
-<code>applies</code> when it covers fewer stitch types than its struct, <code>when other == "value"</code> (or
-<code>when other in VALUES</code>, a list of them) when a user interface shows it only then, <code>origin</code> (default
-<code>Origin::InkStitch</code>) and <code>stability</code> (default <code>Stability::Stable</code>).
+<code>applies</code> when it covers fewer stitch types than its struct, <code>defaults [Family::Fill =&gt; "4"]</code> when a
+family of stitch types has a default of its own, <code>when other == "value"</code> (or <code>when other in VALUES</code>, a
+list of them) when a user interface shows it only then, <code>origin</code> (default <code>Origin::InkStitch</code>) and
+<code>stability</code> (default <code>Stability::Stable</code>).
 A combination a kind does not take does not compile. Defaults are written as a design stores them, so
 they are checked by the same code as a design’s values. The grammar is in the <code>macros</code> module’s
 documentation.</p>
@@ -3197,7 +3224,9 @@ documentation.</p>
 each field’s type given by its kind (<code>kinds</code> module), so a field and its validation cannot disagree;</li>
 <li><code>CommonParams::SPECS</code> (a <code>const</code> slice of <code>ParamSpec</code>) and <code>CommonParams::GROUP</code>;</li>
 <li><code>CommonParams::from_set(&amp;ParamSet) -&gt; Result&lt;Validated&lt;CommonParams&gt;, Vec&lt;Diagnostic&gt;&gt;</code>: every
-parameter read from its text or its default, with the clamping warnings beside the values.</li>
+parameter read from its text or its default, with the clamping warnings beside the values;</li>
+<li><code>CommonParams::from_set_for(&amp;ParamSet, Family)</code>: the same with the family’s own defaults, which the
+engine reads an element’s settings with.</li>
 </ul>
 <p>The registry itself is <code>stitchcraft_engine::registry::PARAMETERS</code>, a plain <code>const</code> list of every
 declaration’s <code>GROUP</code> in the engine, next to the generators (no life-before-main tricks; adding a
@@ -3209,6 +3238,7 @@ generator’s parameters is one line there). <code>stitchcraft-params</code> kno
     pub help: &amp;'static str,         // the doc comment; `help()` gives the Markdown
     pub kind: Kind,                 // with its limits: range, options, maximum length
     pub default: &amp;'static str,      // as a design stores it; "" for an empty optional value
+    pub family_defaults: &amp;'static [(Family, &amp;'static str)], // a family's own default: `default_for`, `in_family`
     pub group: &amp;'static str,        // UI and docs section
     pub applies_to: &amp;'static [StitchType],
     pub visible_when: Option&lt;Condition&gt;,   // another key and the values it shows this for: lock_custom_start only for lock_start custom
@@ -3275,8 +3305,14 @@ never from changing a default.</li>
 defaults: <code>running_stitch_tolerance_mm</code> is 0.2 mm on a stroke and 0.1 mm on a satin or a fill. The
 contract is per key and stitch type, so the contract page matches a declaration with the rows for the
 stitch types it applies to, and a declaration for a stitch type Ink/Stitch does not give the key is
-reported. Declaring a key again for other stitch types (satins in M4, fills in M5) also needs lookups
-by key and stitch type: <code>find</code> by key alone returns the first declaration.</li>
+reported. A key is declared once, and a family whose default differs gets its own with <code>defaults</code>:
+<code>max_stitch_length_mm</code> is empty on manual stitch and satin columns and 4 mm on fills. A family with a
+default of its own needs a value (<code>ParamSpec::in_family</code>). There an empty value means its default. A
+length of 0 or less is raised to the least the key accepts instead of counting as empty, as Ink/Stitch
+reads a fill’s longest stitch. Elsewhere an optional value left empty is no value. The engine reads an
+element’s settings with its family’s defaults (<code>from_set_for</code>). The contract page compares each row
+with the default of the row’s family. The reference page lists each family’s default and what the
+family accepts, and the JSON Schema gives the defaults under <code>x-stitchcraft.family_defaults</code>.</li>
 </ol>
 <h2 id="generated-outputs"><a class="header" href="#generated-outputs">Generated outputs</a></h2>
 <div class="table-wrapper">
@@ -4501,11 +4537,26 @@ checked (<code>conformance/fixtures/geometry/shapely-rows.txt</code>).
 Which stretches lie inside is decided by counting the edges that cross the row, each over its height
 from its lower end up to but not including its upper end.</p>
 <h3 id="2-needle-points-along-a-row"><a class="header" href="#2-needle-points-along-a-row">2. Needle points along a row</a></h3>
-<p>A row’s needle points lie on a grid along it, <code>max_stitch_length_mm</code> apart and anchored at the origin.
-Each next row’s grid is shifted by <code>1/staggers</code> of a stitch, and fills side by side tile. A segment
-starts with a needle point at its start, then takes the grid’s points. Its end gets one too, unless
-<code>skip_last</code> is on or the last grid point is within 0.1 mm of it. With <code>enable_random_stitch_length</code> the
-points are spaced by the seeded random lengths instead.</p>
+<p>A row’s needle points lie on a grid along it, as Ink/Stitch places them
+(<code>stitchcraft_engine::generators::tatami::stitches</code>, since M5.3). The grid’s points are the longest
+stitch apart, <code>max_stitch_length_mm</code>. A fill always has one: 4 mm when it is not set or left empty, and
+0.1 mm, with <code>SC-W0102</code>, when it is 0 or less, as in Ink/Stitch. Measured along the rows from
+the design’s origin, they lie at whole numbers of stitches plus the row’s offset (<code>REQ-FILL-TAT-003</code>). A
+row’s number is how far across the rows it lies from the origin, over <code>row_spacing_mm</code>, rounded to the
+nearest whole number, halves to the even one. Its offset is the fractional part of that number over
+<code>staggers</code>, times the longest stitch. Each row’s points then lie a <code>staggers</code>-th of a stitch along from the row
+before’s and come back after <code>staggers</code> rows, so neighbouring rows never line them up into furrows. A
+fraction of a stagger draws diagonals that show less. Fills side by side at the same angle share the
+grid, as they share their rows.</p>
+<p>A segment is sewn from one end to the other, as routing decides (M5.4). It takes its start, then every
+grid point past the start and before the end, and then its end, unless <code>skip_last</code> is on or the last
+point lies within 0.1 mm of it. A start on the grid is sewn once. Sewn the other way, a segment takes the
+same grid points.</p>
+<p>With <code>enable_random_stitch_length</code>, random lengths take the grid’s place. The point nearest the start
+lies a random share of the longest stitch past it, and each next one a stitch on, longer or shorter by up to
+<code>random_stitch_length_jitter_percent</code> of it, while they lie before the end. The draws come from the
+element’s generator, seeded with <code>random_seed</code>, in the order the segments are sewn. Ink/Stitch seeds a
+generator for each segment, and its random values differ (<code>DEV-FILL-004</code>).</p>
 <h3 id="3-routing-every-segment-once"><a class="header" href="#3-routing-every-segment-once">3. Routing: every segment once</a></h3>
 <p>The segments’ ends lie on the region’s outline. Joined by the stretches of outline between neighbouring
 ends, every other stretch twice and more where needed, they make a graph in which every point meets an
@@ -4556,7 +4607,7 @@ its outline, as Ink/Stitch sews it, and <code>SC-W0305</code> says so.</p>
 <tbody>
 <tr><td><code>REQ-FILL-TAT-001</code></td><td>Every row segment is covered exactly once by top stitches</td></tr>
 <tr><td><code>REQ-FILL-TAT-002</code></td><td>Measured row spacing equals the parameter (± 2 %), or follows the start→end gradient</td></tr>
-<tr><td><code>REQ-FILL-TAT-003</code></td><td>Needle points follow the stagger grid; no furrow of aligned points longer than <code>staggers</code> rows</td></tr>
+<tr><td><code>REQ-FILL-TAT-003</code></td><td>Needle points follow the stagger grid: a row’s points lie a <code>staggers</code>-th of the longest stitch along from the row before’s, and no 2 neighbouring rows line them up. A segment ends at its end unless <code>skip_last</code> is on or its last point lies within 0.1 mm of it</td></tr>
 <tr><td><code>REQ-FILL-TAT-004</code></td><td>Coverage: rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacing ≤ 0.4 mm</td></tr>
 <tr><td><code>REQ-FILL-TAT-005</code></td><td>Travel stitches lie inside the region (± 0.05 mm)</td></tr>
 <tr><td><code>REQ-FILL-TAT-006</code></td><td>Pull compensation preserves the number of holes and components</td></tr>
@@ -6137,20 +6188,20 @@ stitches once its stitch type or feature lands (see <em>Phase</em> and the param
 <tr><td><code>angle</code></td><td>float</td><td>deg</td><td>0</td><td><code>tatami_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#angle">registered</a></td></tr>
 <tr><td><code>guided_fill_angle</code></td><td>float</td><td>deg</td><td>—</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>tartan_angle</code></td><td>float</td><td>deg</td><td>-45</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>4.0</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
+<tr><td><code>max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>4.0</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#max_stitch_length_mm">registered</a></td></tr>
 <tr><td><code>row_spacing_mm</code></td><td>float</td><td>mm</td><td>0.25</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#row_spacing_mm">registered</a></td></tr>
 <tr><td><code>end_row_spacing_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>tatami_fill</code>, <code>circular_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#end_row_spacing_mm">deviates</a></td></tr>
 <tr><td><code>stitch_position_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>staggers</code></td><td>int</td><td>—</td><td>4</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
+<tr><td><code>staggers</code></td><td>int</td><td>—</td><td>4</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#staggers">registered</a></td></tr>
+<tr><td><code>skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#skip_last">registered</a></td></tr>
 <tr><td><code>flip</code></td><td>boolean</td><td>—</td><td>false</td><td><code>legacy_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>reverse</code></td><td>boolean</td><td>—</td><td>false</td><td><code>legacy_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>stop_at_ending_point</code></td><td>boolean</td><td>—</td><td>false</td><td><code>linear_gradient_fill</code>, <code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>underpath</code></td><td>boolean</td><td>—</td><td>true</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>circular_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
 <tr><td><code>running_stitch_length_mm</code></td><td>float</td><td>mm</td><td>2.5</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>meander_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
 <tr><td><code>running_stitch_tolerance_mm</code></td><td>float</td><td>mm</td><td>0.1</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>meander_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>enable_random_stitch_length</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>random_stitch_length_jitter_percent</code></td><td>float</td><td>± %</td><td>10</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
+<tr><td><code>enable_random_stitch_length</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td><a href="#enable_random_stitch_length">registered</a></td></tr>
+<tr><td><code>random_stitch_length_jitter_percent</code></td><td>float</td><td>± %</td><td>10</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td><a href="#random_stitch_length_jitter_percent">registered</a></td></tr>
 <tr><td><code>repeats</code></td><td>int</td><td>—</td><td>1</td><td><code>meander_fill</code>, <code>contour_fill</code>, <code>circular_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
 <tr><td><code>bean_stitch_repeats</code></td><td>str</td><td>—</td><td>0</td><td><code>meander_fill</code>, <code>circular_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>tartan_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
 <tr><td><code>zigzag_spacing_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
@@ -6166,7 +6217,7 @@ stitches once its stitch type or feature lands (see <em>Phase</em> and the param
 <tr><td><code>fill_underlay_inset_mm</code></td><td>float</td><td>mm</td><td>0</td><td>all</td><td>P1 (M5)</td><td>planned</td></tr>
 <tr><td><code>fill_underlay_skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td>all</td><td>P1 (M5)</td><td>planned</td></tr>
 <tr><td><code>underlay_underpath</code></td><td>boolean</td><td>—</td><td>true</td><td>all</td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>random_seed</code></td><td>random_seed</td><td>—</td><td>—</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>meander_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
+<tr><td><code>random_seed</code></td><td>random_seed</td><td>—</td><td>—</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>meander_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td><a href="#random_seed">registered</a></td></tr>
 <tr><td><code>cross_stitch_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>cross_thread_count</code></td><td>int</td><td>—</td><td>4</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>pattern_size_mm</code></td><td>float</td><td>mm (x y)</td><td>3</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
@@ -6271,7 +6322,7 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewr
 </tbody>
 </table>
 </div>
-<p><em>145 parameter declarations, 67 registered in StitchCraft.</em></p>
+<p><em>145 parameter declarations, 73 registered in StitchCraft.</em></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="architecture-decision-records"><a class="header" href="#architecture-decision-records">Architecture decision records</a></h1>
 <p>Short records of decisions that shape the code, with their context and the alternatives we rejected.
@@ -6954,7 +7005,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tbody>
 <tr><td>M5.1 ✅</td><td>A fill’s region as the drawing shows it under its fill rule, in parts with holes, its subpaths cut exactly where they meet. Parts too small to sew are left out with <code>SC-W0303</code>, as Ink/Stitch leaves them out. Small fills (<code>SC-W0304</code>), the fill rule (<code>SC-I0306</code>) and fills in parts (<code>SC-W0307</code>) are pointed out</td><td><code>REQ-FILL-001</code>, <code>REQ-FILL-002</code></td></tr>
 <tr><td>M5.2 ✅</td><td>Rows as Ink/Stitch lays them, at the angle and a whole number of row spacings from the origin, graded towards the end spacing. They are cut where they meet the outline, as GEOS cuts them</td><td><code>REQ-FILL-TAT-002</code>, <code>REQ-FILL-TAT-010</code></td></tr>
-<tr><td>M5.3</td><td>Needle points as Ink/Stitch places them, on the stagger grid from the origin, with <code>skip_last</code> and random stitch length. A fill’s longest stitch defaults to 4 mm, so a parameter can have a default for each family</td><td><code>REQ-FILL-TAT-003</code></td></tr>
+<tr><td>M5.3 ✅</td><td>Needle points as Ink/Stitch places them, on the stagger grid from the origin, with <code>skip_last</code> and random stitch length. A fill’s longest stitch defaults to 4 mm, so a parameter can have a default for each family</td><td><code>REQ-FILL-TAT-003</code></td></tr>
 <tr><td>M5.4</td><td>Routing as Ink/Stitch routes. Every segment sewn once, back and forth, from the needle to the next element, with running stitches along the outline between. A region too thin for any row sewn round its outline, <code>SC-W0305</code>. Fills are sewn</td><td><code>REQ-FILL-TAT-001</code></td></tr>
 <tr><td>M5.5</td><td>Travel under the rows (<code>underpath</code>), off the rows already sewn</td><td><code>REQ-FILL-TAT-005</code></td></tr>
 <tr><td>M5.6</td><td>Parts sewn one at a time, each ending nearest the next, joined by jumps (<code>SC-W0307</code>)</td><td><code>REQ-FILL-TAT-008</code></td></tr>

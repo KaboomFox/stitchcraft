@@ -35,7 +35,7 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-6b72b2ce.js";
+            window.path_to_searchindex_js = "../../../searchindex-c2900321.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../toc-c73eb358.js"></script>
@@ -206,20 +206,24 @@ more and shorter stitches. A satin column’s way to its start and from its end 
 <li><strong>Ink/Stitch:</strong> same key; StitchCraft differs (DEV-SAT-006): A satin column’s running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch’s settings window shows 0.1 mm.</li>
 </ul>
 <h3 id="enable_random_stitch_length"><a class="header" href="#enable_random_stitch_length"><code>enable_random_stitch_length</code></a></h3>
-<p><strong>Random stitch length.</strong> Vary the stitch lengths at random instead of spreading them evenly. Lines sewn close together
-then do not line their needle holes up, which avoids moiré patterns.</p>
+<p><strong>Random stitch length.</strong> Vary the stitch lengths at random instead of spreading them evenly, or in a tatami fill, instead
+of placing the needle points on the stagger grid. Lines and rows sewn close together then do not
+line their needle holes up, which avoids moiré patterns.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false</li>
 <li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Tatami fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h3 id="random_stitch_length_jitter_percent"><a class="header" href="#random_stitch_length_jitter_percent"><code>random_stitch_length_jitter_percent</code></a></h3>
-<p><strong>Length variation.</strong> How much each stitch may be longer or shorter than the stitch length, in percent of it. Where the
-random lengths start is the element’s <code>random_seed</code>.</p>
+<p><strong>Length variation.</strong> How much each stitch may be longer or shorter than the stitch length, in percent of it. A tatami
+fill’s stitch length is its longest stitch. Where the random lengths start is the element’s
+<code>random_seed</code>.</p>
 <ul>
 <li><strong>Accepts:</strong> a percentage from 0 to 100</li>
 <li><strong>Default:</strong> <code>10</code></li>
 <li><strong>Shown when</strong> <a href="#enable_random_stitch_length"><code>enable_random_stitch_length</code></a> is <code>true</code></li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Tatami fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 
