@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-14aaa1ee.js";
+            window.path_to_searchindex_js = "../../../searchindex-1c38b794.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-6a54873b.js"></script>
+        <script src="../../../toc-623c1739.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -217,6 +217,16 @@ corners, before its rows are laid. The thread’s pull opens gaps between fills 
 and this closes them. Negative values pull the rows in from the edge.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from -10 to 10 mm</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="gap_fill_rows"><a class="header" href="#gap_fill_rows"><code>gap_fill_rows</code></a></h3>
+<p><strong>Gap-filling rows.</strong> Rows sewn again where the fill leaves a stretch of more than 3 rows for another: that many rows
+past the stretch’s last row, back and forth, before the needle travels on. The rows on the far
+side are sewn later, and the fabric between can be pulled apart by then; these close the gap.
+Rounded up to an even number, so the needle comes back to where the stretch ended.</p>
+<ul>
+<li><strong>Accepts:</strong> a whole number from 0 to 100</li>
 <li><strong>Default:</strong> <code>0</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>

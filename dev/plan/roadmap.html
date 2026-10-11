@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-14aaa1ee.js";
+            window.path_to_searchindex_js = "../searchindex-1c38b794.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-6a54873b.js"></script>
+        <script src="../toc-623c1739.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -305,7 +305,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M5.5 ✅</td><td>Travel under the rows (<code>underpath</code>), off the rows already sewn: the cheapest way along 3 gratings of lines, smoothed and kept inside the part. Where no line leads, along rings and rows (<code>DEV-FILL-007</code>)</td><td><code>REQ-FILL-TAT-005</code></td></tr>
 <tr><td>M5.6 ✅</td><td>Underlay as Ink/Stitch sews it: before its top rows each part sews a layer for each angle, each from the point nearest the needle back to it. <code>fill_underlay</code> and its settings registered, with a list of angles as a kind of parameter. A layer too thin for a row is sewn round the outline, <code>SC-I0308</code></td><td><code>REQ-FILL-TAT-011</code></td></tr>
 <tr><td>M5.7 ✅</td><td>The underlay on the part shrunk by <code>fill_underlay_inset_mm</code>, and the top rows on the part grown by <code>expand_mm</code>. A part is buffered as GEOS buffers a polygon, and checked against shapely. Pieces a shrinking cuts a part into sewn one after another (<code>DEV-FILL-008</code>), and a part a shrinking wears away said, <code>SC-W0309</code>, <code>SC-W0310</code>. A needle inside the part starts at the nearest node of the lines under the rows</td><td><code>REQ-FILL-TAT-012</code></td></tr>
-<tr><td>M5.8</td><td>Pull compensation at the rows’ ends, holes and parts kept; gap-fill rows inside the region</td><td><code>REQ-FILL-TAT-006</code>, <code>REQ-FILL-TAT-007</code></td></tr>
+<tr><td>M5.8 ✅</td><td>Pull compensation at the rows’ ends, holes and parts kept (<code>DEV-FILL-009</code>), and below 0 read as 0, <code>SC-W0312</code>; gap-fill rows from the grid, inside the region (<code>DEV-FILL-010</code>). The pull compensation settings are shared with satins</td><td><code>REQ-FILL-TAT-006</code>, <code>REQ-FILL-TAT-007</code></td></tr>
 <tr><td>M5.9</td><td>Coverage metric and performance budget</td><td><code>REQ-FILL-TAT-004</code>, <code>REQ-FILL-TAT-009</code></td></tr>
 <tr><td>MC-4 🧵</td><td><strong>TS-07</strong> (fill + outline registration), <strong>TS-08</strong> (density ladder, angles), <strong>TS-09</strong> (underlay, travel)</td><td>report filed; fill defaults and pull compensation tuned</td></tr>
 </tbody>

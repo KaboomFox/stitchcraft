@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-14aaa1ee.js";
+            window.path_to_searchindex_js = "../../searchindex-1c38b794.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-6a54873b.js"></script>
+        <script src="../../toc-623c1739.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,7 +181,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="fill-generators"><a class="header" href="#fill-generators">Fill generators</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/generators/tatami/** -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/pull.rs -->
 <p>A fill covers the area its path bounds, its <a href="#region">region</a>, with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).</p>
 <p>A fill sews the drawing’s shape with Ink/Stitch’s stitches. Ink/Stitch’s rows, their spacing and stagger,
@@ -301,7 +301,8 @@ beside it, and some nodes then meet an odd number of edges. Ink/Stitch adds path
 that may run along rows, and sews those rows a second time. StitchCraft pairs the odd nodes so that the
 needle’s way between pairs is shortest in all and joins each pair with an edge. Up to 16 nodes every
 pairing is weighed, and past that each node pairs with the nearest left. No row is sewn twice
-(<code>DEV-FILL-006</code>).</li>
+(<code>DEV-FILL-006</code>). A pairing edge stands for a way of several edges, as Ink/Stitch’s paths do, so travel
+along it is never a handover between neighbouring rows, for <code>skip_last</code> or for gap-fill rows.</li>
 <li><strong>Walk.</strong> The walk starts at the end node. At each node it takes the node’s row if one is left,
 and otherwise the node’s first edge left. A node lists its edges neighbour by neighbour, each neighbour
 where its first edge to the node came and its edges in the order they came. A neighbour whose last edge
@@ -402,16 +403,30 @@ element. Ink/Stitch starts every piece’s top rows nearest where the needle was
 (<code>DEV-FILL-008</code>). Where shrinking wears a part away entirely, the part itself is sewn, as in Ink/Stitch,
 and <code>SC-W0310</code> (inset) or <code>SC-W0309</code> (expand) says so, as Ink/Stitch warns.</p>
 <h3 id="7-pull-compensation-and-gap-fill-rows"><a class="header" href="#7-pull-compensation-and-gap-fill-rows">7. Pull compensation and gap-fill rows</a></h3>
-<p>The thread pulls a row in at its ends. Each segment is lengthened at both ends by <code>pull_compensation_mm</code>
-plus <code>pull_compensation_percent</code> of its length (one value, or one for each end). Ink/Stitch then rebuilds
-the region round the lengthened rows, which can close a hole or a gap narrower than the compensation.
-StitchCraft keeps the region’s holes, gaps and parts, which the designer may have left on purpose
-(<code>REQ-FILL-TAT-006</code>).</p>
-<p>Where the needle leaves a stretch of more than 3 rows for another, the fabric can open a gap along its
-last row. There, <code>gap_fill_rows</code> (rounded up to an even number) sews that many more rows, back and forth.
-Ink/Stitch repeats the last row, a row further on each time, and a repeat can run outside the region.
-StitchCraft takes the extra rows from the row grid and keeps them inside the region
-(<code>REQ-FILL-TAT-007</code>).</p>
+<p>The thread pulls a row in at its ends. Each top row’s segment is lengthened at both ends by
+<code>pull_compensation_mm</code> plus <code>pull_compensation_percent</code> of its length (<code>REQ-FILL-TAT-006</code>, since M5.8).
+The first value applies at the end the rows start from at the fill’s angle. A second value, if given,
+applies at the other end. Ink/Stitch moves a satin’s stitches with the same function, and the two settings are declared once
+for both (<code>stitchcraft_engine::generators::pull</code>). A fill reads a value below 0 as 0, as Ink/Stitch does,
+and <code>SC-W0312</code> says so. The route is planned on the part as drawn. The needle’s ways keep their course,
+but each starts where the row before it ends and ends where the next row starts, both lengthened.
+Underlay is not compensated, as in Ink/Stitch.</p>
+<p>Ink/Stitch rebuilds the part round the lengthened rows, each widened by half the row spacing with round
+ends, and smooths the outline. Its rows then reach up to half a row spacing further, and it fills holes
+smaller than a row spacing squared and holes the widened rows close over. Where the widened rows form
+separate pieces, it keeps only the largest. StitchCraft keeps the part’s holes, gaps and pieces, which the designer drew
+(<code>DEV-FILL-009</code>).</p>
+<p>Where the route leaves a stretch of more than 3 rows for another, the fabric can open a gap along its
+last row before the rows past it are sewn. There, <code>gap_fill_rows</code>, rounded up to an even number, sews
+that many more rows past the last one, back and forth, and comes back to where it ended
+(<code>REQ-FILL-TAT-007</code>, since M5.8). A stretch’s rows are counted as Ink/Stitch counts them: the rows
+reached by travel. The route’s first row is one of them, because Ink/Stitch’s route always starts with
+travel, of no length where it starts on that row. A stretch ends where the travel is more than a handover
+from one row to the next beside it, or from the last row to the fill’s end beside it, which Ink/Stitch’s
+route takes in one edge too. Each extra row is the next row of the grid, the stretch of its segment
+beside the last row, lengthened as the rows are. The extra rows stop at the part’s edge, and where the
+part ends. Ink/Stitch repeats the last row a spacing further each time, and a repeat can run outside the
+part (<code>DEV-FILL-010</code>). Underlay has no gap-fill rows.</p>
 <h3 id="8-no-rows"><a class="header" href="#8-no-rows">8. No rows</a></h3>
 <p>A part thinner than the row spacing has no row. It is sewn as a running stitch round its outline, from
 the outline’s start, as Ink/Stitch sews it, and <code>SC-W0305</code> says so (since M5.4). A layer of underlay with
@@ -429,8 +444,8 @@ the fill sews nothing, and <code>SC-W0303</code> says so.</p>
 <tr><td><code>REQ-FILL-TAT-003</code></td><td>Needle points follow the stagger grid: a row’s points lie a <code>staggers</code>-th of the longest stitch along from the row before’s, and no 2 neighbouring rows line them up. A segment ends at its end unless <code>skip_last</code> is on or its last point lies within 0.1 mm of it</td></tr>
 <tr><td><code>REQ-FILL-TAT-004</code></td><td>Coverage: rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacing ≤ 0.4 mm</td></tr>
 <tr><td><code>REQ-FILL-TAT-005</code></td><td>With <code>underpath</code>, travel takes the cheapest way along the lines under the rows not sewn yet, and its way lies inside the region (± 0.05 mm)</td></tr>
-<tr><td><code>REQ-FILL-TAT-006</code></td><td>Pull compensation preserves the number of holes and components</td></tr>
-<tr><td><code>REQ-FILL-TAT-007</code></td><td>All rows, including gap-fill rows, lie inside the region (± tolerance + compensation)</td></tr>
+<tr><td><code>REQ-FILL-TAT-006</code></td><td>Each top row extends past its segment’s ends by the compensation; the part keeps its holes and pieces</td></tr>
+<tr><td><code>REQ-FILL-TAT-007</code></td><td>Gap-fill rows follow a stretch of more than 3 rows; all rows, gap-fill rows included, lie inside the part within its compensation</td></tr>
 <tr><td><code>REQ-FILL-TAT-008</code></td><td>A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element</td></tr>
 <tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget</td></tr>
 <tr><td><code>REQ-FILL-TAT-011</code></td><td>Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start</td></tr>

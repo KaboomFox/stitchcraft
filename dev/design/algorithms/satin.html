@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-14aaa1ee.js";
+            window.path_to_searchindex_js = "../../searchindex-1c38b794.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-6a54873b.js"></script>
+        <script src="../../toc-623c1739.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,7 +181,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="satin-generators"><a class="header" href="#satin-generators">Satin generators</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/normalize/near.rs, crates/stitchcraft-engine/src/normalize/centre_line.rs, crates/stitchcraft-engine/src/generators/satin/** -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/normalize/near.rs, crates/stitchcraft-engine/src/normalize/centre_line.rs, crates/stitchcraft-engine/src/generators/satin/**, crates/stitchcraft-engine/src/generators/pull.rs -->
 <p>A satin column is a band of closely spaced stitches that swing from one edge to the other. It is the
 signature look of lettering and borders, and the stitch type where pull compensation and underlay
 matter most. Phase P1 (M4); the E, S and zigzag variants are P2 (M7).</p>
@@ -348,7 +348,9 @@ compensated rails. A rail the shortening would leave shorter than half a CSS pix
 the pair, each by <code>pull_compensation_mm</code> plus <code>pull_compensation_percent</code> of the pair’s width, and 2
 values set the first rail’s side, then the second’s. Negative values move the ends inward. Ends that
 would cross meet instead, where their moves divide the width. A pair whose ends are closer than a
-ten-thousandth of a CSS pixel has no direction to move them in, and stays as it is.</li>
+ten-thousandth of a CSS pixel has no direction to move them in, and stays as it is. A tatami fill
+lengthens its rows with the same move, as Ink/Stitch does, and the 2 settings are declared once for
+both (<code>stitchcraft_engine::generators::pull</code>, <a href="fills.html#7-pull-compensation-and-gap-fill-rows">fills</a>).</li>
 <li><strong>Random variation</strong> comes from the element’s generator, seeded with <code>random_seed</code>
 (<a href="../determinism.html">determinism</a>). Each pair’s share of the width on each side is drawn between
 <code>pull_compensation_percent</code> less <code>random_width_decrease_percent</code> and plus

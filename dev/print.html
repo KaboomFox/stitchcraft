@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-14aaa1ee.js";
+            window.path_to_searchindex_js = "searchindex-1c38b794.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-6a54873b.js"></script>
+        <script src="toc-623c1739.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -1324,6 +1324,7 @@ Arguments:
 <tr><td><a href="#sc-i0308"><code>SC-I0308</code></a></td><td>Info</td><td>Fill underlay too thin for rows; sewn round the outline</td></tr>
 <tr><td><a href="#sc-w0309"><code>SC-W0309</code></a></td><td>Warning</td><td>Fill’s expand shrinks a part away; sewn at its own size</td></tr>
 <tr><td><a href="#sc-w0310"><code>SC-W0310</code></a></td><td>Warning</td><td>Fill’s underlay inset shrinks a part away; underlay over all of it</td></tr>
+<tr><td><a href="#sc-w0312"><code>SC-W0312</code></a></td><td>Warning</td><td>Fill’s pull compensation below 0; read as 0</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -1543,6 +1544,14 @@ Ink/Stitch sews it, and Ink/Stitch warns of it too.</p>
 much shrinking, which wears it away entirely, has its underlay sewn over all of it instead, as
 Ink/Stitch sews it, and Ink/Stitch warns of it too.</p>
 <p>The message counts the parts. Set a smaller <code>fill_underlay_inset_mm</code>, or turn <code>fill_underlay</code> off.</p>
+<h2 id="sc-w0312"><a class="header" href="#sc-w0312">SC-W0312</a></h2>
+<p><strong>Warning</strong> — Fill’s pull compensation below 0; read as 0</p>
+<p>A fill’s rows reach past its edge by its pull compensation, which makes up for the thread pulling
+the fabric in. Ink/Stitch reads a fill’s <code>pull_compensation_mm</code> or <code>pull_compensation_percent</code> below
+0 as 0, so that the rows reach the edge and no less, and so does StitchCraft. A satin column reads
+the same settings below 0 as narrower.</p>
+<p>The message names the settings. Set them to 0 or more; to keep the rows inside the edge, use a
+negative <code>expand_mm</code>.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
@@ -1718,9 +1727,10 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#stroke-parameters">Stroke parameters</a></td><td>1</td><td>Running stitch, Ripple stitch, Zigzag stitch, Manual stitch</td></tr>
 <tr><td><a href="#running-parameters">Running parameters</a></td><td>4</td><td>Running stitch, Ripple stitch</td></tr>
 <tr><td><a href="#repeat-parameters">Repeat parameters</a></td><td>2</td><td>Running stitch, Ripple stitch, Zigzag stitch, Manual stitch</td></tr>
-<tr><td><a href="#satin-parameters">Satin parameters</a></td><td>36</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
+<tr><td><a href="#satin-parameters">Satin parameters</a></td><td>34</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
+<tr><td><a href="#pull-parameters">Pull parameters</a></td><td>2</td><td>Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</td></tr>
 <tr><td><a href="#fill-parameters">Fill parameters</a></td><td>1</td><td>Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill</td></tr>
-<tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>14</td><td>Tatami fill</td></tr>
+<tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>15</td><td>Tatami fill</td></tr>
 </tbody>
 </table>
 </div>
@@ -1755,6 +1765,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#fill_underlay_row_spacing_mm"><code>fill_underlay_row_spacing_mm</code></a></td><td>Underlay row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#fill_underlay_skip_last"><code>fill_underlay_skip_last</code></a></td><td>Skip last underlay stitch</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#force_lock_stitches"><code>force_lock_stitches</code></a></td><td>Always lock</td><td>Common parameters</td></tr>
+<tr><td><a href="#gap_fill_rows"><code>gap_fill_rows</code></a></td><td>Gap-filling rows</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#lock_custom_end"><code>lock_custom_end</code></a></td><td>Custom end lock</td><td>Common parameters</td></tr>
 <tr><td><a href="#lock_custom_start"><code>lock_custom_start</code></a></td><td>Custom start lock</td><td>Common parameters</td></tr>
 <tr><td><a href="#lock_end"><code>lock_end</code></a></td><td>End lock</td><td>Common parameters</td></tr>
@@ -1767,8 +1778,8 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#min_jump_stitch_length_mm"><code>min_jump_stitch_length_mm</code></a></td><td>Shortest jump</td><td>Common parameters</td></tr>
 <tr><td><a href="#min_random_split_length_mm"><code>min_random_split_length_mm</code></a></td><td>Shortest split stitch</td><td>Satin parameters</td></tr>
 <tr><td><a href="#min_stitch_length_mm"><code>min_stitch_length_mm</code></a></td><td>Shortest stitch</td><td>Common parameters</td></tr>
-<tr><td><a href="#pull_compensation_mm"><code>pull_compensation_mm</code></a></td><td>Pull compensation</td><td>Satin parameters</td></tr>
-<tr><td><a href="#pull_compensation_percent"><code>pull_compensation_percent</code></a></td><td>Pull compensation (% of width)</td><td>Satin parameters</td></tr>
+<tr><td><a href="#pull_compensation_mm"><code>pull_compensation_mm</code></a></td><td>Pull compensation</td><td>Pull parameters</td></tr>
+<tr><td><a href="#pull_compensation_percent"><code>pull_compensation_percent</code></a></td><td>Pull compensation (%)</td><td>Pull parameters</td></tr>
 <tr><td><a href="#push_compensation_mm"><code>push_compensation_mm</code></a></td><td>Push compensation</td><td>Satin parameters</td></tr>
 <tr><td><a href="#random_seed"><code>random_seed</code></a></td><td>Random seed</td><td>Common parameters</td></tr>
 <tr><td><a href="#random_split_jitter_percent"><code>random_split_jitter_percent</code></a></td><td>Split jitter</td><td>Satin parameters</td></tr>
@@ -2123,24 +2134,6 @@ the first rail to the second: 50 is the middle.</p>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h2 id="compensation"><a class="header" href="#compensation">Compensation</a></h2>
-<h3 id="pull_compensation_mm"><a class="header" href="#pull_compensation_mm"><code>pull_compensation_mm</code></a></h3>
-<p><strong>Pull compensation.</strong> How far each end of every stitch reaches past its rail. The thread pulls the fabric in across the
-column as it sews, so a satin comes out narrower than drawn, and this makes up for it. Negative
-values make the column narrower. 2 values set the first rail’s side, then the second’s.</p>
-<ul>
-<li><strong>Accepts:</strong> a length from -10 to 10 mm, or 2 separated by a space</li>
-<li><strong>Default:</strong> <code>0</code></li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
-</ul>
-<h3 id="pull_compensation_percent"><a class="header" href="#pull_compensation_percent"><code>pull_compensation_percent</code></a></h3>
-<p><strong>Pull compensation (% of width).</strong> More pull compensation, in percent of the column’s width at each stitch, added to the length
-above: wide parts of a column reach out further than narrow ones. 2 values set the first rail’s
-side, then the second’s.</p>
-<ul>
-<li><strong>Accepts:</strong> a percentage from -100 to 100, or 2 separated by a space</li>
-<li><strong>Default:</strong> <code>0</code></li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
-</ul>
 <h3 id="push_compensation_mm"><a class="header" href="#push_compensation_mm"><code>push_compensation_mm</code></a></h3>
 <p><strong>Push compensation.</strong> How much shorter the column is made at its start and its end. Satin stitches push the fabric out
 along the column, so it comes out longer than drawn, and this makes up for it. Negative values
@@ -2367,6 +2360,34 @@ half the contour’s. 2 values set the first rail’s side, then the second’s.
 <li><strong>Default:</strong> empty</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `PullParams` in the parameter registry. Edit the declaration, not this page. -->
+<h1 id="pull-parameters"><a class="header" href="#pull-parameters">Pull parameters</a></h1>
+<p>Pull compensation: how far a satin column’s stitches and a tatami fill’s rows reach past the
+shape’s edge, to make up for the thread pulling the fabric in.</p>
+<p>Applies to Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill.</p>
+<h2 id="pull-compensation"><a class="header" href="#pull-compensation">Pull compensation</a></h2>
+<h3 id="pull_compensation_mm"><a class="header" href="#pull_compensation_mm"><code>pull_compensation_mm</code></a></h3>
+<p><strong>Pull compensation.</strong> How far each end of every stitch reaches past the shape’s edge: a satin column’s stitches past
+its rails, and a fill’s rows past its outline and its holes. The thread pulls the fabric in along
+the stitches as it sews, so a shape comes out smaller than drawn, and this makes up for it. 2
+values set the 2 ends: a satin’s first rail’s side, then the second’s, or the end each fill row
+starts from at the fill’s angle, then the other (at 0°, the left end, then the right). Negative
+values make a satin narrower; a fill reads them as 0, as Ink/Stitch does.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from -10 to 10 mm, or 2 separated by a space</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="pull_compensation_percent"><a class="header" href="#pull_compensation_percent"><code>pull_compensation_percent</code></a></h3>
+<p><strong>Pull compensation (%).</strong> More pull compensation, in percent of each stitch’s length, added to the length above: a
+satin’s stitches reach out by a share of the column’s width there, and a fill’s rows by a share
+of each row’s length, so wide parts and long rows reach further. 2 values set the 2 ends, as
+above. A fill reads negative values as 0, as Ink/Stitch does.</p>
+<ul>
+<li><strong>Accepts:</strong> a percentage from -100 to 100, or 2 separated by a space</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `FillParams` in the parameter registry. Edit the declaration, not this page. -->
 <h1 id="fill-parameters"><a class="header" href="#fill-parameters">Fill parameters</a></h1>
 <p>How a fill is sewn.</p>
@@ -2418,6 +2439,16 @@ corners, before its rows are laid. The thread’s pull opens gaps between fills 
 and this closes them. Negative values pull the rows in from the edge.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from -10 to 10 mm</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="gap_fill_rows"><a class="header" href="#gap_fill_rows"><code>gap_fill_rows</code></a></h3>
+<p><strong>Gap-filling rows.</strong> Rows sewn again where the fill leaves a stretch of more than 3 rows for another: that many rows
+past the stretch’s last row, back and forth, before the needle travels on. The rows on the far
+side are sewn later, and the fabric between can be pulled apart by then; these close the gap.
+Rounded up to an even number, so the needle comes back to where the stretch ended.</p>
+<ul>
+<li><strong>Accepts:</strong> a whole number from 0 to 100</li>
 <li><strong>Default:</strong> <code>0</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
@@ -3590,6 +3621,7 @@ another.</p>
 <tr><td><code>SC-W0309</code></td><td>Warning</td><td>Fill’s expand shrinks a part away; sewn at its own size (as in Ink/Stitch)</td><td>M5</td></tr>
 <tr><td><code>SC-W0310</code></td><td>Warning</td><td>Fill’s underlay inset shrinks a part away; underlay over all of it (as in Ink/Stitch)</td><td>M5</td></tr>
 <tr><td><code>SC-W0311</code></td><td>Warning</td><td>Spiral could not be connected in a narrow part; that part uses inner-to-outer contours</td><td>M7</td></tr>
+<tr><td><code>SC-W0312</code></td><td>Warning</td><td>Fill’s pull compensation below 0; read as 0 (as in Ink/Stitch)</td><td>M5</td></tr>
 <tr><td><code>SC-W0401</code></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td><td>M3</td></tr>
 <tr><td><code>SC-W0402</code></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest</td><td>M3</td></tr>
 <tr><td><code>SC-W0403</code></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td><td>M3</td></tr>
@@ -4151,7 +4183,7 @@ properties will include “lines never cross the target point” and “each lin
 interpolated curve”.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="satin-generators"><a class="header" href="#satin-generators">Satin generators</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/normalize/near.rs, crates/stitchcraft-engine/src/normalize/centre_line.rs, crates/stitchcraft-engine/src/generators/satin/** -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/normalize/near.rs, crates/stitchcraft-engine/src/normalize/centre_line.rs, crates/stitchcraft-engine/src/generators/satin/**, crates/stitchcraft-engine/src/generators/pull.rs -->
 <p>A satin column is a band of closely spaced stitches that swing from one edge to the other. It is the
 signature look of lettering and borders, and the stitch type where pull compensation and underlay
 matter most. Phase P1 (M4); the E, S and zigzag variants are P2 (M7).</p>
@@ -4318,7 +4350,9 @@ compensated rails. A rail the shortening would leave shorter than half a CSS pix
 the pair, each by <code>pull_compensation_mm</code> plus <code>pull_compensation_percent</code> of the pair’s width, and 2
 values set the first rail’s side, then the second’s. Negative values move the ends inward. Ends that
 would cross meet instead, where their moves divide the width. A pair whose ends are closer than a
-ten-thousandth of a CSS pixel has no direction to move them in, and stays as it is.</li>
+ten-thousandth of a CSS pixel has no direction to move them in, and stays as it is. A tatami fill
+lengthens its rows with the same move, as Ink/Stitch does, and the 2 settings are declared once for
+both (<code>stitchcraft_engine::generators::pull</code>, <a href="#7-pull-compensation-and-gap-fill-rows">fills</a>).</li>
 <li><strong>Random variation</strong> comes from the element’s generator, seeded with <code>random_seed</code>
 (<a href="#determinism-1">determinism</a>). Each pair’s share of the width on each side is drawn between
 <code>pull_compensation_percent</code> less <code>random_width_decrease_percent</code> and plus
@@ -4612,7 +4646,7 @@ against every other, and its winding against every segment of the ring. A line o
 to about 17 million units of work for each offset.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="fill-generators"><a class="header" href="#fill-generators">Fill generators</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/generators/tatami/** -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/pull.rs -->
 <p>A fill covers the area its path bounds, its <a href="#region-1">region</a>, with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).</p>
 <p>A fill sews the drawing’s shape with Ink/Stitch’s stitches. Ink/Stitch’s rows, their spacing and stagger,
@@ -4732,7 +4766,8 @@ beside it, and some nodes then meet an odd number of edges. Ink/Stitch adds path
 that may run along rows, and sews those rows a second time. StitchCraft pairs the odd nodes so that the
 needle’s way between pairs is shortest in all and joins each pair with an edge. Up to 16 nodes every
 pairing is weighed, and past that each node pairs with the nearest left. No row is sewn twice
-(<code>DEV-FILL-006</code>).</li>
+(<code>DEV-FILL-006</code>). A pairing edge stands for a way of several edges, as Ink/Stitch’s paths do, so travel
+along it is never a handover between neighbouring rows, for <code>skip_last</code> or for gap-fill rows.</li>
 <li><strong>Walk.</strong> The walk starts at the end node. At each node it takes the node’s row if one is left,
 and otherwise the node’s first edge left. A node lists its edges neighbour by neighbour, each neighbour
 where its first edge to the node came and its edges in the order they came. A neighbour whose last edge
@@ -4833,16 +4868,30 @@ element. Ink/Stitch starts every piece’s top rows nearest where the needle was
 (<code>DEV-FILL-008</code>). Where shrinking wears a part away entirely, the part itself is sewn, as in Ink/Stitch,
 and <code>SC-W0310</code> (inset) or <code>SC-W0309</code> (expand) says so, as Ink/Stitch warns.</p>
 <h3 id="7-pull-compensation-and-gap-fill-rows"><a class="header" href="#7-pull-compensation-and-gap-fill-rows">7. Pull compensation and gap-fill rows</a></h3>
-<p>The thread pulls a row in at its ends. Each segment is lengthened at both ends by <code>pull_compensation_mm</code>
-plus <code>pull_compensation_percent</code> of its length (one value, or one for each end). Ink/Stitch then rebuilds
-the region round the lengthened rows, which can close a hole or a gap narrower than the compensation.
-StitchCraft keeps the region’s holes, gaps and parts, which the designer may have left on purpose
-(<code>REQ-FILL-TAT-006</code>).</p>
-<p>Where the needle leaves a stretch of more than 3 rows for another, the fabric can open a gap along its
-last row. There, <code>gap_fill_rows</code> (rounded up to an even number) sews that many more rows, back and forth.
-Ink/Stitch repeats the last row, a row further on each time, and a repeat can run outside the region.
-StitchCraft takes the extra rows from the row grid and keeps them inside the region
-(<code>REQ-FILL-TAT-007</code>).</p>
+<p>The thread pulls a row in at its ends. Each top row’s segment is lengthened at both ends by
+<code>pull_compensation_mm</code> plus <code>pull_compensation_percent</code> of its length (<code>REQ-FILL-TAT-006</code>, since M5.8).
+The first value applies at the end the rows start from at the fill’s angle. A second value, if given,
+applies at the other end. Ink/Stitch moves a satin’s stitches with the same function, and the two settings are declared once
+for both (<code>stitchcraft_engine::generators::pull</code>). A fill reads a value below 0 as 0, as Ink/Stitch does,
+and <code>SC-W0312</code> says so. The route is planned on the part as drawn. The needle’s ways keep their course,
+but each starts where the row before it ends and ends where the next row starts, both lengthened.
+Underlay is not compensated, as in Ink/Stitch.</p>
+<p>Ink/Stitch rebuilds the part round the lengthened rows, each widened by half the row spacing with round
+ends, and smooths the outline. Its rows then reach up to half a row spacing further, and it fills holes
+smaller than a row spacing squared and holes the widened rows close over. Where the widened rows form
+separate pieces, it keeps only the largest. StitchCraft keeps the part’s holes, gaps and pieces, which the designer drew
+(<code>DEV-FILL-009</code>).</p>
+<p>Where the route leaves a stretch of more than 3 rows for another, the fabric can open a gap along its
+last row before the rows past it are sewn. There, <code>gap_fill_rows</code>, rounded up to an even number, sews
+that many more rows past the last one, back and forth, and comes back to where it ended
+(<code>REQ-FILL-TAT-007</code>, since M5.8). A stretch’s rows are counted as Ink/Stitch counts them: the rows
+reached by travel. The route’s first row is one of them, because Ink/Stitch’s route always starts with
+travel, of no length where it starts on that row. A stretch ends where the travel is more than a handover
+from one row to the next beside it, or from the last row to the fill’s end beside it, which Ink/Stitch’s
+route takes in one edge too. Each extra row is the next row of the grid, the stretch of its segment
+beside the last row, lengthened as the rows are. The extra rows stop at the part’s edge, and where the
+part ends. Ink/Stitch repeats the last row a spacing further each time, and a repeat can run outside the
+part (<code>DEV-FILL-010</code>). Underlay has no gap-fill rows.</p>
 <h3 id="8-no-rows"><a class="header" href="#8-no-rows">8. No rows</a></h3>
 <p>A part thinner than the row spacing has no row. It is sewn as a running stitch round its outline, from
 the outline’s start, as Ink/Stitch sews it, and <code>SC-W0305</code> says so (since M5.4). A layer of underlay with
@@ -4860,8 +4909,8 @@ the fill sews nothing, and <code>SC-W0303</code> says so.</p>
 <tr><td><code>REQ-FILL-TAT-003</code></td><td>Needle points follow the stagger grid: a row’s points lie a <code>staggers</code>-th of the longest stitch along from the row before’s, and no 2 neighbouring rows line them up. A segment ends at its end unless <code>skip_last</code> is on or its last point lies within 0.1 mm of it</td></tr>
 <tr><td><code>REQ-FILL-TAT-004</code></td><td>Coverage: rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacing ≤ 0.4 mm</td></tr>
 <tr><td><code>REQ-FILL-TAT-005</code></td><td>With <code>underpath</code>, travel takes the cheapest way along the lines under the rows not sewn yet, and its way lies inside the region (± 0.05 mm)</td></tr>
-<tr><td><code>REQ-FILL-TAT-006</code></td><td>Pull compensation preserves the number of holes and components</td></tr>
-<tr><td><code>REQ-FILL-TAT-007</code></td><td>All rows, including gap-fill rows, lie inside the region (± tolerance + compensation)</td></tr>
+<tr><td><code>REQ-FILL-TAT-006</code></td><td>Each top row extends past its segment’s ends by the compensation; the part keeps its holes and pieces</td></tr>
+<tr><td><code>REQ-FILL-TAT-007</code></td><td>Gap-fill rows follow a stretch of more than 3 rows; all rows, gap-fill rows included, lie inside the part within its compensation</td></tr>
 <tr><td><code>REQ-FILL-TAT-008</code></td><td>A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element</td></tr>
 <tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget</td></tr>
 <tr><td><code>REQ-FILL-TAT-011</code></td><td>Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start</td></tr>
@@ -5860,7 +5909,8 @@ SHA-256, downloaded by <code>cargo xtask corpus</code> — the same policy Vecto
 <p>The engine’s cases build their small designs with <code>stitchcraft_testkit::designs</code>. It also reads a plan’s
 shape at a glance: <code>J L4 S5 L4</code> is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
 stitches. Its strokes are as wide as an SVG stroke whose style says nothing, and <code>widened</code> gives one a
-width. The satin cases sew their columns with <code>stitchcraft_testkit::satins</code>, as an element is sewn on the
+width. Its fills are closed rings filled by the nonzero rule (<code>fill</code>, through <code>rings</code>), so a hole is drawn
+the other way round from its outline. The satin cases sew their columns with <code>stitchcraft_testkit::satins</code>, as an element is sewn on the
 reference machine, with the stitch lengths the engine gives it there (<code>satin_lengths</code>), and read the needle
 points back in pairs across the column. A column is sewn alone (<code>sewn_satin</code>) or between the neighbours a
 case gives it (<code>sewn_between</code>).</p>
@@ -6442,7 +6492,7 @@ stitches once its stitch type or feature lands (see <em>Phase</em> and the param
 <tr><td><code>clip</code></td><td>boolean</td><td>—</td><td>false</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
 <tr><td><code>smoothness_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>contour_fill</code>, <code>guided_fill</code>, <code>meander_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
 <tr><td><code>expand_mm</code></td><td>float</td><td>mm</td><td>0</td><td>all</td><td>P1 (M5)</td><td><a href="#expand_mm">registered</a></td></tr>
-<tr><td><code>gap_fill_rows</code></td><td>int</td><td>rows</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
+<tr><td><code>gap_fill_rows</code></td><td>int</td><td>rows</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="#gap_fill_rows">registered</a></td></tr>
 <tr><td><code>angle</code></td><td>float</td><td>deg</td><td>0</td><td><code>tatami_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#angle">registered</a></td></tr>
 <tr><td><code>guided_fill_angle</code></td><td>float</td><td>deg</td><td>—</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>tartan_angle</code></td><td>float</td><td>deg</td><td>-45</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
@@ -6466,8 +6516,8 @@ stitches once its stitch type or feature lands (see <em>Phase</em> and the param
 <tr><td><code>zigzag_width_mm</code></td><td>float</td><td>mm</td><td>3</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
 <tr><td><code>rows_per_thread</code></td><td>int</td><td>—</td><td>2</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>herringbone_width_mm</code></td><td>int</td><td>mm</td><td>0</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>pull_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
-<tr><td><code>pull_compensation_percent</code></td><td>float</td><td>% (each side)</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td>planned</td></tr>
+<tr><td><code>pull_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="#pull_compensation_mm">registered</a></td></tr>
+<tr><td><code>pull_compensation_percent</code></td><td>float</td><td>% (each side)</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="#pull_compensation_percent">registered</a></td></tr>
 <tr><td><code>fill_underlay</code></td><td>toggle</td><td>—</td><td>true</td><td>all</td><td>P1 (M5)</td><td><a href="#fill_underlay">registered</a></td></tr>
 <tr><td><code>fill_underlay_angle</code></td><td>float</td><td>deg</td><td>—</td><td>all</td><td>P1 (M5)</td><td><a href="#fill_underlay_angle">registered</a></td></tr>
 <tr><td><code>fill_underlay_row_spacing_mm</code></td><td>float</td><td>mm</td><td>—</td><td>all</td><td>P1 (M5)</td><td><a href="#fill_underlay_row_spacing_mm">registered</a></td></tr>
@@ -6580,7 +6630,7 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewr
 </tbody>
 </table>
 </div>
-<p><em>145 parameter declarations, 85 registered in StitchCraft.</em></p>
+<p><em>145 parameter declarations, 88 registered in StitchCraft.</em></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="architecture-decision-records"><a class="header" href="#architecture-decision-records">Architecture decision records</a></h1>
 <p>Short records of decisions that shape the code, with their context and the alternatives we rejected.
@@ -7268,7 +7318,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M5.5 ✅</td><td>Travel under the rows (<code>underpath</code>), off the rows already sewn: the cheapest way along 3 gratings of lines, smoothed and kept inside the part. Where no line leads, along rings and rows (<code>DEV-FILL-007</code>)</td><td><code>REQ-FILL-TAT-005</code></td></tr>
 <tr><td>M5.6 ✅</td><td>Underlay as Ink/Stitch sews it: before its top rows each part sews a layer for each angle, each from the point nearest the needle back to it. <code>fill_underlay</code> and its settings registered, with a list of angles as a kind of parameter. A layer too thin for a row is sewn round the outline, <code>SC-I0308</code></td><td><code>REQ-FILL-TAT-011</code></td></tr>
 <tr><td>M5.7 ✅</td><td>The underlay on the part shrunk by <code>fill_underlay_inset_mm</code>, and the top rows on the part grown by <code>expand_mm</code>. A part is buffered as GEOS buffers a polygon, and checked against shapely. Pieces a shrinking cuts a part into sewn one after another (<code>DEV-FILL-008</code>), and a part a shrinking wears away said, <code>SC-W0309</code>, <code>SC-W0310</code>. A needle inside the part starts at the nearest node of the lines under the rows</td><td><code>REQ-FILL-TAT-012</code></td></tr>
-<tr><td>M5.8</td><td>Pull compensation at the rows’ ends, holes and parts kept; gap-fill rows inside the region</td><td><code>REQ-FILL-TAT-006</code>, <code>REQ-FILL-TAT-007</code></td></tr>
+<tr><td>M5.8 ✅</td><td>Pull compensation at the rows’ ends, holes and parts kept (<code>DEV-FILL-009</code>), and below 0 read as 0, <code>SC-W0312</code>; gap-fill rows from the grid, inside the region (<code>DEV-FILL-010</code>). The pull compensation settings are shared with satins</td><td><code>REQ-FILL-TAT-006</code>, <code>REQ-FILL-TAT-007</code></td></tr>
 <tr><td>M5.9</td><td>Coverage metric and performance budget</td><td><code>REQ-FILL-TAT-004</code>, <code>REQ-FILL-TAT-009</code></td></tr>
 <tr><td>MC-4 🧵</td><td><strong>TS-07</strong> (fill + outline registration), <strong>TS-08</strong> (density ladder, angles), <strong>TS-09</strong> (underlay, travel)</td><td>report filed; fill defaults and pull compensation tuned</td></tr>
 </tbody>
@@ -7399,7 +7449,7 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td><strong>TS-06</strong> Satin underlays</td><td>The same column, 6 mm wide and 30 mm tall, with no underlay, a centre walk, a contour, a zigzag, and a contour with a zigzag (62 × 30 mm). Each column is sewn as drawn, from its top, and trimmed after</td><td>Edge sharpness, loft, puckering, underlay showing</td><td>MC-3</td></tr>
 <tr><td><strong>TS-07</strong> Registration</td><td>A 60 mm tatami circle with a running-stitch outline; at three pull-compensation values</td><td>Gap or overlap between fill and outline at 12 points around the circle</td><td>MC-4</td></tr>
 <tr><td><strong>TS-08</strong> Fill density &amp; angle</td><td>30 mm squares at spacing 0.25–0.6 mm and angles 0°, 45°, 90°</td><td>Coverage, stiffness, puckering, visible furrows</td><td>MC-4</td></tr>
-<tr><td><strong>TS-09</strong> Fill underlay &amp; travel</td><td>A shape with holes and a separated part; with and without underlay</td><td>Travel hidden? Trims between parts? Holes clean?</td><td>MC-4</td></tr>
+<tr><td><strong>TS-09</strong> Fill underlay &amp; travel</td><td>A shape with holes and a separated part; with and without underlay, and with 2 gap-filling rows</td><td>Travel hidden? Trims between parts? Holes clean? A gap where the rows round a hole meet?</td><td>MC-4</td></tr>
 <tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
 <tr><td><strong>TS-11</strong> New stitch types</td><td>Samples of the milestone’s new types</td><td>Per type, as listed on its expected-result sheet</td><td>MC-6</td></tr>
 <tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean?</td><td>MC-5, MC-7</td></tr>
@@ -7416,7 +7466,7 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td>MC-1</td><td>M1</td><td>TS-01, TS-02, TS-10A/B/C</td><td>Does the machine read our PES? Right size and orientation? Which trim encoding works? Does each hoop take a design as large as its profile allows, from PES v1?</td></tr>
 <tr><td>MC-2</td><td>M3</td><td>TS-03, TS-04, TS-02B</td><td>Minimum stitch length and lock defaults? Does the machine trim where an element asks?</td></tr>
 <tr><td>MC-3</td><td>M4</td><td>TS-05, TS-06</td><td>Satin spacing, width limits, underlay defaults, pull compensation</td></tr>
-<tr><td>MC-4</td><td>M5</td><td>TS-07, TS-08, TS-09</td><td>Fill spacing, compensation, underlay and travel defaults</td></tr>
+<tr><td>MC-4</td><td>M5</td><td>TS-07, TS-08, TS-09</td><td>Fill spacing, pull compensation, gap-filling rows, underlay and travel defaults</td></tr>
 <tr><td>MC-5</td><td>M6</td><td>TS-12, TS-10</td><td>Is the VectorCraft workflow complete and correct?</td></tr>
 <tr><td>MC-6</td><td>M7</td><td>TS-11</td><td>New stitch types acceptable?</td></tr>
 <tr><td>MC-7</td><td>M12</td><td>all</td><td>Release regression</td></tr>
