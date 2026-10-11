@@ -290,3 +290,29 @@ fn kept<T>(read: Result<Validated<T>, Vec<Diagnostic>>, diagnostics: &mut Vec<Di
 fn not_yet(why: &str) -> Diagnostic {
     Diagnostic::new(Code::StitchTypeNotYet, format!("{why}, so it is skipped."))
 }
+
+#[cfg(test)]
+mod tests {
+    use stitchcraft_core::ElementId;
+    use stitchcraft_plan::{Rgb, Thread};
+
+    use super::*;
+    use crate::design::{FillRule, Segment, Subpath};
+
+    fn element(shape: Shape, params: &[(&str, &str)]) -> Element {
+        let thread = Thread::new(Rgb::new(0, 0, 0));
+        Element { id: ElementId::new("e").unwrap(), name: None, shape, thread, params: params.iter().copied().collect() }
+    }
+
+    #[test]
+    fn an_element_takes_the_defaults_of_the_family_that_sews_it() {
+        let start = Point::new(0.0, 0.0).unwrap();
+        let path = Path { subpaths: vec![Subpath { start, segments: vec![Segment::Line(Point::new(5.0, 0.0).unwrap())], closed: false }] };
+        let stroke = || Shape::stroke(path.clone());
+        assert_eq!(family(&element(Shape::Fill { path: path.clone(), rule: FillRule::NonZero }, &[])), Family::Fill);
+        assert_eq!(family(&element(stroke(), &[])), Family::Stroke);
+        assert_eq!(family(&element(stroke(), &[("satin_column", "true")])), Family::Satin);
+        // A satin setting that cannot be read is said where it is read; meanwhile the stroke's defaults.
+        assert_eq!(family(&element(stroke(), &[("satin_column", "true"), ("satin_method", "plaid")])), Family::Stroke);
+    }
+}
