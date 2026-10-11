@@ -385,6 +385,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- Mutation testing runs each test binary with at most 4 GiB of address space. A mutant that keeps a loop
+  from ending can make it take more memory than the CI runner has, which ended one part of M5.4's
+  mutants without a result. At the cap the test aborts, which counts as noticed.
 - The roadmap's M9, VectorCraft ABI v2 proposed upstream, comes last: after 1.0 and the work after it.
   1.0 has the ABI v1 plug-in from M6, and nothing before M9 waits on ArtCraft's answer to the RFC.
 - The running stitch page's pictures show their differences plainly. Each stitch length gets the page's
