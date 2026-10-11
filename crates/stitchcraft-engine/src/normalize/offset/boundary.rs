@@ -18,7 +18,7 @@ use stitchcraft_core::exact::{self, Side};
 use stitchcraft_core::{Exhausted, Meter, Point, math};
 
 use super::generator::{Meet, segments_meet};
-use crate::normalize::near::{length, to_side};
+use crate::normalize::near::{Snap, key, length, to_side};
 
 /// How far beside a piece's middle its sides are judged, at most, as a fraction of the stroke's half
 /// width.
@@ -119,16 +119,16 @@ fn cut(ring: &[Point], near: f64, meter: &mut Meter) -> Result<Vec<(Point, Point
             }
         }
     }
-    let mut nodes = Nodes { near, cells: BTreeMap::new() };
+    let mut nodes = Snap::new(near);
     let mut pieces = Vec::new();
     for (&(a, b), points) in segments.iter().zip(&cuts) {
         // The cuts in order from `a`. The segment's own ends among them add no piece: a piece already
         // starts or ends at each.
         let mut along: Vec<(f64, Point)> = points.iter().map(|&p| (length(a, p), p)).collect();
         along.sort_by(|x, y| x.0.total_cmp(&y.0));
-        let mut from = nodes.node(a);
+        let mut from = nodes.snap(a, || a);
         for p in along.into_iter().map(|(_, p)| p).chain([b]) {
-            let p = nodes.node(p);
+            let p = nodes.snap(p, || p);
             if p != from {
                 pieces.push((from, p));
                 from = p;
@@ -138,45 +138,12 @@ fn cut(ring: &[Point], near: f64, meter: &mut Meter) -> Result<Vec<(Point, Point
     Ok(pieces)
 }
 
-/// The points where pieces of the ring meet. Points nearer each other than `near` are one, the first
-/// seen: where segments nearly coincide, rounding puts the points they meet at a hair apart, and the
-/// ring must still run through one point there.
-struct Nodes {
-    near: f64,
-    /// The points seen, by the square of side `near` they lie in.
-    cells: BTreeMap<(i64, i64), Vec<Point>>,
-}
-
-impl Nodes {
-    /// The point that stands for `p`: a point seen before within `near` of it, or `p` itself.
-    fn node(&mut self, p: Point) -> Point {
-        // Saturating casts: a cell index beyond i64 only merges cells far beyond any drawing.
-        #[allow(clippy::cast_possible_truncation)]
-        let cell = |v: f64| (v / self.near).floor() as i64;
-        let (cx, cy) = (cell(p.x()), cell(p.y()));
-        for x in cx.saturating_sub(1)..=cx.saturating_add(1) {
-            for y in cy.saturating_sub(1)..=cy.saturating_add(1) {
-                if let Some(&q) = self.cells.get(&(x, y)).and_then(|points| points.iter().find(|&&q| length(p, q) < self.near)) {
-                    return q;
-                }
-            }
-        }
-        self.cells.entry((cx, cy)).or_default().push(p);
-        p
-    }
-}
-
 /// Whether the boxes around the segments `a`–`b` and `c`–`d`, grown by `near`, meet.
 fn boxes_meet(a: Point, b: Point, c: Point, d: Point, near: f64) -> bool {
     a.x().max(b.x()) + near >= c.x().min(d.x())
         && c.x().max(d.x()) + near >= a.x().min(b.x())
         && a.y().max(b.y()) + near >= c.y().min(d.y())
         && c.y().max(d.y()) + near >= a.y().min(b.y())
-}
-
-/// A point as a key: its coordinates' bits, with −0 taken as 0.
-fn key(p: Point) -> (u64, u64) {
-    ((p.x() + 0.0).to_bits(), (p.y() + 0.0).to_bits())
 }
 
 /// `edges` joined end to end into rings, each started at the first edge not yet used. Where several unused

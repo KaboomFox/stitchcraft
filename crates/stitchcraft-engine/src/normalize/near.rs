@@ -1,4 +1,7 @@
-//! Nearest points: of polylines to a point, of 2 segments to each other, of polylines to polylines.
+//! Nearest points: of polylines to a point, of 2 segments to each other, of polylines to polylines. And
+//! points taken as one: equal ones by their bits ([`key`]), and ones nearer each other than a distance, as
+//! where lines worked out apart meet a hair apart ([`Snap`], for offset curves and the lines a fill
+//! travels under).
 //!
 //! Where an element starts and ends depends on where its neighbours are (`docs/src/design/adr/
 //! 0014-generators-see-their-neighbours.md`), measured as the nearest points between shapes. Shapes are
@@ -20,6 +23,8 @@
 //!   4 ends is from the other side.
 //!
 //! Only arithmetic and square roots are used (`docs/src/design/determinism.md`).
+
+use std::collections::BTreeMap;
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
@@ -146,7 +151,7 @@ fn meeting(a: Point, b: Point, c: Point, d: Point) -> Option<Point> {
 
 /// How far apart the sides from `a` to `b` and from `c` to `d` are: 0 where their lines cross within both,
 /// and otherwise as far as the nearest of their 4 ends is from the other side.
-fn apart(a: Point, b: Point, c: Point, d: Point) -> f64 {
+pub(crate) fn apart(a: Point, b: Point, c: Point, d: Point) -> f64 {
     if a == b {
         return to_side(a, c, d);
     }
@@ -285,6 +290,46 @@ fn along_to_point(points: &[Point], p: Point, meter: &mut Meter) -> Result<f64, 
         start += a.distance(b);
     }
     Ok(best.map_or(0.0, |(_, at)| at))
+}
+
+/// A point as a key: its coordinates' bits, -0 taken as 0, so 2 points are one key when their coordinates are
+/// equal.
+pub(crate) fn key(p: Point) -> (u64, u64) {
+    ((p.x() + 0.0).to_bits(), (p.y() + 0.0).to_bits())
+}
+
+/// Points nearer each other than `near` taken as one, the first seen: where lines cross or end at one
+/// place, rounding puts the points worked out for it a hair apart. Each point seen is kept with a value, in
+/// the square cell of side `near` it lies in, so a point is looked for in its own cell and the 8 round it.
+pub(crate) struct Snap<T> {
+    near: f64,
+    cells: BTreeMap<(i64, i64), Vec<(Point, T)>>,
+}
+
+impl<T: Copy> Snap<T> {
+    /// No point seen yet.
+    pub(crate) fn new(near: f64) -> Snap<T> {
+        Snap { near, cells: BTreeMap::new() }
+    }
+
+    /// The value of the first point seen nearer `p` than `near`, the cells taken row by row; with none, `p`
+    /// is kept with `new()`, which is given back.
+    pub(crate) fn snap(&mut self, p: Point, new: impl FnOnce() -> T) -> T {
+        // Saturating casts: a cell index beyond i64 only merges cells far beyond any drawing.
+        #[allow(clippy::cast_possible_truncation)]
+        let cell = |v: f64| (v / self.near).floor() as i64;
+        let (cx, cy) = (cell(p.x()), cell(p.y()));
+        for x in cx.saturating_sub(1)..=cx.saturating_add(1) {
+            for y in cy.saturating_sub(1)..=cy.saturating_add(1) {
+                if let Some(&(_, value)) = self.cells.get(&(x, y)).and_then(|seen| seen.iter().find(|(q, _)| length(p, *q) < self.near)) {
+                    return value;
+                }
+            }
+        }
+        let value = new();
+        self.cells.entry((cx, cy)).or_default().push((p, value));
+        value
+    }
 }
 
 #[cfg(test)]
