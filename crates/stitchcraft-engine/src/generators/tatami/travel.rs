@@ -20,7 +20,7 @@ use std::collections::BinaryHeap;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use super::graph::NodeId;
-use super::rings::Rings;
+use super::rings::{Rings, stretches};
 use super::route::Node;
 
 /// How a step of a way runs: along a ring, in its direction or against it, or along a row's line.
@@ -69,24 +69,10 @@ impl Network {
     /// `meter` for each node and row.
     pub fn new(nodes: &[Node], rings: &Rings<'_>, rows: &[[NodeId; 2]], meter: &mut Meter) -> Result<Network, Exhausted> {
         let mut around = vec![Vec::new(); nodes.len()];
-        let mut order: Vec<NodeId> = (0..nodes.len()).collect();
-        let place = |n: &NodeId| nodes.get(*n).map(|n| n.place);
-        order.sort_by(|a, b| {
-            let (pa, pb) = (place(a), place(b));
-            pa.map(|p| p.ring).cmp(&pb.map(|p| p.ring)).then(pa.map_or(0.0, |p| p.at).total_cmp(&pb.map_or(0.0, |p| p.at)))
-        });
-        for ring in order.chunk_by(|a, b| place(a).map(|p| p.ring) == place(b).map(|p| p.ring)) {
-            if ring.len() < 2 {
-                continue;
-            }
-            for (i, &a) in ring.iter().enumerate() {
-                meter.charge(1)?;
-                let Some(&b) = ring.get((i + 1) % ring.len()) else { continue };
-                let (Some(pa), Some(pb)) = (place(&a), place(&b)) else { continue };
-                let length = rings.way_length(pa.ring, pa.at, pb.at, true);
-                link(&mut around, a, b, length, Along::Ring { ring: pa.ring, forwards: true });
-                link(&mut around, b, a, length, Along::Ring { ring: pa.ring, forwards: false });
-            }
+        for [(a, pa), (b, pb)] in stretches(nodes.iter().map(|n| n.place).enumerate().collect(), meter)? {
+            let length = rings.way_length(pa.ring, pa.at, pb.at, true);
+            link(&mut around, a, b, length, Along::Ring { ring: pa.ring, forwards: true });
+            link(&mut around, b, a, length, Along::Ring { ring: pa.ring, forwards: false });
         }
         for &[a, b] in rows {
             meter.charge(1)?;

@@ -335,6 +335,17 @@ mod tests {
     }
 
     #[test]
+    fn the_network_runs_along_the_rows_the_route_sews() {
+        let steps = vec![
+            Step::Travel { from: 4, to: 0, beside: false },
+            Step::Row { segment: 1, from: 0, to: 1 },
+            Step::Travel { from: 1, to: 2, beside: true },
+            Step::Row { segment: 0, from: 3, to: 2 },
+        ];
+        assert_eq!(row_ends(&Route { nodes: Vec::new(), steps }), [[0, 1], [3, 2]]);
+    }
+
+    #[test]
     fn a_needle_that_finds_no_way_jumps_and_says_so_as_a_bug() {
         // A row between 2 points of the frame's outline and one between 2 points of its hole, which nothing
         // joins: the travel from the first to the second finds no way.

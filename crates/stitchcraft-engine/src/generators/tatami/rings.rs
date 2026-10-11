@@ -12,6 +12,7 @@
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
+use super::graph::NodeId;
 use crate::normalize::region::Polygon;
 
 /// One ring: its points, closed (the first repeated at the end), and how far along it each lies.
@@ -143,6 +144,25 @@ impl<'a> Rings<'a> {
     }
 }
 
+/// The nodes `placed` on the rings, each with the next along its ring and the last of a ring with its first,
+/// as pairs: the stretches of ring between them. Nodes are taken by ring and then by place, nodes at one
+/// place in the order given. A ring of one node has none. One unit of `meter` for each pair.
+pub(crate) fn stretches(mut placed: Vec<(NodeId, Place)>, meter: &mut Meter) -> Result<Vec<[(NodeId, Place); 2]>, Exhausted> {
+    placed.sort_by(|(_, a), (_, b)| a.ring.cmp(&b.ring).then(a.at.total_cmp(&b.at)));
+    let mut pairs = Vec::with_capacity(placed.len());
+    for ring in placed.chunk_by(|(_, a), (_, b)| a.ring == b.ring) {
+        if ring.len() < 2 {
+            continue;
+        }
+        for (i, &here) in ring.iter().enumerate() {
+            meter.charge(1)?;
+            let Some(&next) = ring.get((i + 1) % ring.len()) else { continue };
+            pairs.push([here, next]);
+        }
+    }
+    Ok(pairs)
+}
+
 /// How far `p` lies from the side from `a` to `b`, and how far along the side, from 0 at `a` to 1 at `b`,
 /// its nearest point lies.
 fn nearest_on_side(p: Point, a: Point, b: Point) -> (f64, f64) {
@@ -163,6 +183,16 @@ mod tests {
 
     use super::*;
     use crate::generators::tatami::fixture::{frame, p};
+
+    #[test]
+    fn stretches_join_each_node_to_the_next_along_its_ring_and_round_to_the_first() {
+        let place = |ring: usize, at: f64| Place { ring, at };
+        // Ring 1 has 3 nodes, given out of order, 2 of them at one place; ring 0 has 2, and ring 2 one.
+        let placed = vec![(0, place(1, 5.0)), (1, place(0, 3.0)), (2, place(1, 1.0)), (3, place(2, 0.5)), (4, place(0, 1.0)), (5, place(1, 1.0))];
+        let pairs: Vec<[usize; 2]> = stretches(placed, &mut Budget::DEFAULT.meter()).unwrap().into_iter().map(|[(a, _), (b, _)]| [a, b]).collect();
+        assert_eq!(pairs, [[4, 1], [1, 4], [2, 5], [5, 0], [0, 2]]);
+        assert!(stretches(vec![(0, place(0, 0.0)), (1, place(0, 1.0))], &mut Budget { max_stitches: 1, max_work: 1 }.meter()).is_err());
+    }
 
     #[test]
     fn a_point_lies_on_the_nearest_ring_at_its_nearest_point() {

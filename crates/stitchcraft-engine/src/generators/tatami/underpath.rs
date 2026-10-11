@@ -33,12 +33,12 @@ use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use super::graph::NodeId;
-use super::rings::{Place, Rings};
+use super::rings::{Place, Rings, stretches};
 use super::route::Node;
 use super::rows::{Grid, axes, rows};
 use super::travel::{search, way_to};
 use crate::generators::running::along_line;
-use crate::normalize::near::apart;
+use crate::normalize::near::{Snap, apart, key};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::{Hit, hit};
 use crate::normalize::stroke::distance_to_segment;
@@ -49,16 +49,17 @@ const PX_PER_MM: f64 = 1.0 / MM_PER_SVG_PX;
 /// apart.
 const SMALL_PART: f64 = 10_000.0 * MM_PER_SVG_PX * MM_PER_SVG_PX;
 /// The 3 gratings: how far each turns from the rows, in degrees, and how far apart its lines are, in
-/// millimetres, before a small part halves it.
-const GRATINGS: [(f64, f64); 3] = [(45.0, 2.0), (-45.0, 2.0), (-90.0, std::f64::consts::SQRT_2)];
+/// millimetres, before a small part halves it. Ink/Stitch turns the square lines by -90°, which lays the
+/// same lines.
+const GRATINGS: [(f64, f64); 3] = [(45.0, 2.0), (-45.0, 2.0), (90.0, std::f64::consts::SQRT_2)];
 /// An edge along a ring costs this many times the straight line between its ends.
 const ALONG_RING: f64 = 3.0;
 /// The rings that inside edges' distances are measured from are simplified within this, in millimetres.
 const SIMPLIFIED: f64 = 0.5;
 /// Added to an inside edge's distance from the rings, in pixels.
 const OFF_RING: f64 = 0.1;
-/// A square line crosses a diagonal one at a crossing of the 2 diagonal gratings within this, in
-/// millimetres (0.005 px, as Ink/Stitch snaps them).
+/// Crossings nearer each other than this, in millimetres, are one: 0.005 px, within which Ink/Stitch snaps
+/// the square lines to the diagonal ones.
 const SNAP: f64 = 0.005 * MM_PER_SVG_PX;
 /// How long, in millimetres, the stitches are that a way is cut into before it is smoothed (10 px), and how
 /// far they may stray from it (4 px): Ink/Stitch's, for a smoothness of 2.
@@ -130,25 +131,26 @@ impl Underpath {
                 }
             }
         }
-        // Where the diagonal lines cross each other, and where the square lines cross the first of them.
+        // Where the diagonal lines cross or touch each other, and where the square lines cross or touch the
+        // first of them: a line along a ring is cut where the others end on it.
         let mut cuts: [Vec<Vec<(f64, NodeId)>>; 3] =
             [vec![Vec::new(); diagonal.len()], vec![Vec::new(); other.len()], vec![Vec::new(); square.len()]];
         for (i, &(a, b)) in diagonal.iter().enumerate() {
             for (j, &(c, d)) in other.iter().enumerate() {
                 meter.charge(1)?;
-                if let Hit::Cross(p) = hit(a, b, c, d) {
+                if let Hit::Cross(p) | Hit::Touch(p) = hit(a, b, c, d) {
                     let node = built.crossing(p);
-                    push(&mut cuts[0], i, (fraction(a, b, p), node));
-                    push(&mut cuts[1], j, (fraction(c, d, p), node));
+                    push(&mut cuts[0], i, (a.distance(p), node));
+                    push(&mut cuts[1], j, (c.distance(p), node));
                 }
             }
         }
         for (k, &(e, f)) in square.iter().enumerate() {
             for &(a, b) in &diagonal {
                 meter.charge(1)?;
-                if let Hit::Cross(p) = hit(e, f, a, b) {
+                if let Hit::Cross(p) | Hit::Touch(p) = hit(e, f, a, b) {
                     let node = built.crossing(p);
-                    push(&mut cuts[2], k, (fraction(e, f, p), node));
+                    push(&mut cuts[2], k, (e.distance(p), node));
                 }
             }
         }
@@ -208,12 +210,6 @@ fn push(cuts: &mut [Vec<(f64, NodeId)>], index: usize, cut: (f64, NodeId)) {
     }
 }
 
-/// How far along the segment from `a` to `b` its point `p` lies, from 0 at `a` to 1 at `b`.
-fn fraction(a: Point, b: Point, p: Point) -> f64 {
-    let (dx, dy) = (b.x() - a.x(), b.y() - a.y());
-    ((p.x() - a.x()) * dx + (p.y() - a.y()) * dy) / (dx * dx + dy * dy)
-}
-
 /// The network as it is built.
 struct Building {
     points: Vec<Point>,
@@ -223,22 +219,8 @@ struct Building {
     edges: Vec<Edge>,
     /// The nodes on the rings by their exact coordinates, so that a line ending on a node is joined to it.
     on_rings: BTreeMap<(u64, u64), NodeId>,
-    /// The nodes a crossing snaps to, by the cell of a grid `SNAP` wide they lie in: the crossings found so
-    /// far and the diagonal lines' ends.
-    snaps: BTreeMap<(i64, i64), Vec<NodeId>>,
-}
-
-/// A point as a key: 2 points are one node when their coordinates are equal, -0 and 0 alike.
-fn key(p: Point) -> (u64, u64) {
-    ((p.x() + 0.0).to_bits(), (p.y() + 0.0).to_bits())
-}
-
-/// The cell of the grid `SNAP` wide that `p` lies in.
-fn cell(p: Point) -> (i64, i64) {
-    // Coordinates are far below 2^63 snaps, so the conversion is exact in range.
-    #[allow(clippy::cast_possible_truncation)]
-    let to = |v: f64| (v / SNAP).floor() as i64;
-    (to(p.x()), to(p.y()))
+    /// The nodes a crossing snaps to within `SNAP`: the crossings found so far and the diagonal lines' ends.
+    snaps: Snap<NodeId>,
 }
 
 impl Building {
@@ -249,7 +231,7 @@ impl Building {
             around: Vec::new(),
             edges: Vec::new(),
             on_rings: BTreeMap::new(),
-            snaps: BTreeMap::new(),
+            snaps: Snap::new(SNAP),
         };
         for node in nodes {
             let id = built.add(node.point, Some(node.place));
@@ -283,29 +265,18 @@ impl Building {
 
     /// The crossing at `p`: a node it snaps to within `SNAP`, else a new one.
     fn crossing(&mut self, p: Point) -> NodeId {
-        let (x, y) = cell(p);
-        for cx in x - 1..=x + 1 {
-            for cy in y - 1..=y + 1 {
-                let near = self
-                    .snaps
-                    .get(&(cx, cy))
-                    .and_then(|ids| ids.iter().copied().find(|&id| self.points.get(id).is_some_and(|q| q.distance(p) <= SNAP)));
-                if let Some(id) = near {
-                    return id;
-                }
-            }
+        let next = self.points.len();
+        let id = self.snaps.snap(p, || next);
+        if id == next {
+            self.add(p, None);
         }
-        let id = self.add(p, None);
-        self.snap_to(id);
         id
     }
 
-    /// Lets crossings snap to node `id`.
+    /// Lets crossings snap to node `id`, unless one it would snap to is there already.
     fn snap_to(&mut self, id: NodeId) {
-        let Some(&p) = self.points.get(id) else { return };
-        let ids = self.snaps.entry(cell(p)).or_default();
-        if !ids.contains(&id) {
-            ids.push(id);
+        if let Some(&p) = self.points.get(id) {
+            self.snaps.snap(p, || id);
         }
     }
 
@@ -324,18 +295,10 @@ impl Building {
     /// Joins each ring's nodes in order along it, each to the next and the last to the first, at 3 times
     /// the straight line between them, in pixels. One unit of `meter` for each node.
     fn join_rings(&mut self, meter: &mut Meter) -> Result<(), Exhausted> {
-        let mut placed: Vec<(Place, NodeId)> = self.places.iter().enumerate().filter_map(|(id, place)| Some(((*place)?, id))).collect();
-        placed.sort_by(|(a, _), (b, _)| a.ring.cmp(&b.ring).then(a.at.total_cmp(&b.at)));
-        for ring in placed.chunk_by(|(a, _), (b, _)| a.ring == b.ring) {
-            if ring.len() < 2 {
-                continue;
-            }
-            for (i, &(_, a)) in ring.iter().enumerate() {
-                meter.charge(1)?;
-                let Some(&(_, b)) = ring.get((i + 1) % ring.len()) else { continue };
-                let (Some(&p), Some(&q)) = (self.points.get(a), self.points.get(b)) else { continue };
-                self.link(a, b, ALONG_RING * p.distance(q) * PX_PER_MM);
-            }
+        let placed = self.places.iter().enumerate().filter_map(|(id, place)| Some((id, (*place)?))).collect();
+        for [(a, _), (b, _)] in stretches(placed, meter)? {
+            let (Some(&p), Some(&q)) = (self.points.get(a), self.points.get(b)) else { continue };
+            self.link(a, b, ALONG_RING * p.distance(q) * PX_PER_MM);
         }
         Ok(())
     }
@@ -449,9 +412,11 @@ pub(crate) fn smooth(way: &[Point], min_stitch: f64, meter: &mut Meter) -> Resul
 #[cfg(test)]
 mod tests {
     use stitchcraft_core::Budget;
+    use stitchcraft_core::math::sin_cos;
 
     use super::*;
     use crate::generators::tatami::fixture::{frame, p, rectangle};
+    use crate::normalize::stroke::distance_to_segment;
 
     fn underpath(part: &Polygon, segments: &[(Point, Point)], angle: f64) -> Option<Underpath> {
         let meter = &mut Budget::DEFAULT.meter();
@@ -480,6 +445,16 @@ mod tests {
         for q in &crossings {
             let k = q.x() / spacing;
             assert!((k - k.round()).abs() < 1e-6, "{q:?}");
+        }
+        // Each edge joins 2 neighbouring points of its line or ring: no other point lies on it. 2 lines that
+        // end at one point of a ring end there worked out apart, as 2 nodes a rounding error apart.
+        for edge in &u.edges {
+            let (a, b) = (u.points[edge.ends[0]], u.points[edge.ends[1]]);
+            for &q in &u.points {
+                if q.distance(a) > 1e-9 && q.distance(b) > 1e-9 {
+                    assert!(distance_to_segment(q, a, b) > 1e-9, "{q:?} on the edge from {a:?} to {b:?}");
+                }
+            }
         }
     }
 
@@ -531,6 +506,26 @@ mod tests {
     }
 
     #[test]
+    fn a_part_under_700_mm2_gets_its_lines_half_as_far_apart() {
+        // 10,000 square CSS pixels is 700.03 mm²: a square 26.45 mm across is under it, and one 26.47 mm
+        // across over it. Crossings of the 45° lines lie 1 mm apart in the first and 2 mm in the second.
+        let square = |side: f64| Polygon { outline: vec![p(0.0, 0.0), p(0.0, side), p(side, side), p(side, 0.0), p(0.0, 0.0)], holes: Vec::new() };
+        let closest = |part: &Polygon| {
+            let u = underpath(part, &[], 0.0).unwrap();
+            let middle: Vec<Point> = u.points.iter().copied().filter(|q| (8.0..12.0).contains(&q.x()) && (8.0..12.0).contains(&q.y())).collect();
+            let mut closest = f64::INFINITY;
+            for (i, a) in middle.iter().enumerate() {
+                for b in &middle[i + 1..] {
+                    closest = closest.min(a.distance(*b));
+                }
+            }
+            closest
+        };
+        assert!((closest(&square(26.45)) - 1.0).abs() < 1e-9);
+        assert!((closest(&square(26.47)) - 2.0).abs() < 1e-9);
+    }
+
+    #[test]
     fn a_part_the_diagonal_lines_miss_has_none() {
         // 0.2 mm tall: no diagonal line 1 mm apart need meet it in a segment, and these do not.
         let sliver = Polygon { outline: vec![p(0.3, 0.3), p(0.3, 0.5), p(0.6, 0.5), p(0.6, 0.3), p(0.3, 0.3)], holes: Vec::new() };
@@ -541,11 +536,22 @@ mod tests {
     #[test]
     fn a_ring_is_simplified_by_douglas_and_peucker_s_rule() {
         let meter = &mut Budget::DEFAULT.meter();
-        // A bump of 0.4 on a 10 long side stays out of a simplification within 0.5, and one of 0.6 stays in.
+        // A bump of 0.4 on a 10 long side stays out of a simplification within 0.5, as does one of exactly 0.5,
+        // and one of 0.6 stays in.
         let ring = |bump: f64| vec![p(0.0, 0.0), p(5.0, -bump), p(10.0, 0.0), p(10.0, 4.0), p(0.0, 4.0), p(0.0, 0.0)];
-        assert_eq!(simplify(&ring(0.4), 0.5, meter).unwrap(), [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 4.0), p(0.0, 4.0), p(0.0, 0.0)]);
+        for bump in [0.4, 0.5] {
+            assert_eq!(simplify(&ring(bump), 0.5, meter).unwrap(), [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 4.0), p(0.0, 4.0), p(0.0, 0.0)]);
+        }
         assert_eq!(simplify(&ring(0.6), 0.5, meter).unwrap(), ring(0.6));
         assert_eq!(simplify(&[p(1.0, 1.0)], 0.5, meter).unwrap(), [p(1.0, 1.0)]);
+        // Of 2 points as far from the line, 1 from the side from (0, 0) to (10, 0), the first stays, and the
+        // second then lies 0.28 from the line through it.
+        let tie = [p(0.0, 0.0), p(3.0, 1.0), p(5.0, 1.0), p(10.0, 0.0), p(10.0, -5.0), p(0.0, 0.0)];
+        assert_eq!(simplify(&tie, 0.5, meter).unwrap(), [p(0.0, 0.0), p(3.0, 1.0), p(10.0, 0.0), p(10.0, -5.0), p(0.0, 0.0)]);
+        // Each point between 2 that stay is looked at once for each span it lies in: 4, then 1, 2 and 1.
+        let mut counted = Budget::DEFAULT.meter();
+        simplify(&ring(0.6), 0.5, &mut counted).unwrap();
+        assert_eq!(Budget::DEFAULT.max_work - counted.work_left(), 8);
     }
 
     #[test]
@@ -561,6 +567,41 @@ mod tests {
         assert!(smoothed.iter().all(|q| q.distance(p(4.0, 0.0)) > 0.2), "{smoothed:?}");
         assert!(smoothed.iter().all(|q| q.x() >= -1e-9 && q.x() <= 4.0 + 1e-9 && q.y() >= -1e-9 && q.y() <= 4.0 + 1e-9));
         assert!(smooth(&[], 0.1, meter).unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_way_is_cut_within_4_px_of_it_before_it_is_smoothed() {
+        // A hairpin 0.34 mm wide. Stitches of 10 px across its turn would stray 1.15 mm from it, more than
+        // 4 px (1.06 mm), so a point goes on the turn, and the smoothed way passes within 0.3 mm of it.
+        let meter = &mut Budget::DEFAULT.meter();
+        let r = 0.169;
+        let mut way = vec![p(0.0, 3.4845)];
+        for i in 0..=12 {
+            let (sin, cos) = sin_cos(std::f64::consts::PI * f64::from(i) / 12.0);
+            way.push(p(r - r * cos, -r * sin));
+        }
+        way.push(p(2.0 * r, 3.4845));
+        let turn = p(r, -r);
+        let nearest = smooth(&way, 0.3, meter).unwrap().iter().map(|q| q.distance(turn)).fold(f64::INFINITY, f64::min);
+        assert!(nearest < 0.5, "{nearest}");
+    }
+
+    #[test]
+    fn crossings_within_0_005_px_are_one_node() {
+        // 0.005 px is 0.0013 mm: 0.001 mm away is the same crossing, and 0.002 mm away another.
+        let mut built = Building::new(&[]);
+        let first = built.crossing(p(1.0, 1.0));
+        assert_eq!(built.crossing(p(1.001, 1.0)), first);
+        assert_ne!(built.crossing(p(1.0, 1.002)), first);
+        // Either side of where the grid the crossings are found by starts a new cell, found from the other
+        // side, in x and in y.
+        let edge = 1000.0 * SNAP;
+        for (base, found, near) in [(3.0, 1e-7, -1e-7), (4.0, -1e-7, 1e-7)] {
+            let across = built.crossing(p(edge + found, base));
+            assert_eq!(built.crossing(p(edge + near, base)), across);
+            let down = built.crossing(p(base + 2.0, edge + found));
+            assert_eq!(built.crossing(p(base + 2.0, edge + near)), down);
+        }
     }
 
     #[test]
