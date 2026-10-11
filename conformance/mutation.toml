@@ -35,6 +35,12 @@ line = "if by_a + by_b < -width {"
 why = "when the two moves add up to exactly minus the width, the scale is the width over itself, exactly 1, and multiplying by it changes neither move"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/tatami/stitches.rs"
+mutant = "replace < with <= in first_on_grid"
+line = "if along.0 * direction.0 + along.1 * direction.1 < 0.0 { past } else { (stitching.length - past) % stitching.length }"
+why = "a row segment runs along its row, one way or the other, so the dot product of the rows' direction and the segment's is 1 or -1 and never 0"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/normalize/near.rs"
 mutant = "replace boxes_meet -> bool with true"
 line = "a.x().min(b.x()).max(c.x().min(d.x())) <= a.x().max(b.x()).min(c.x().max(d.x()))"

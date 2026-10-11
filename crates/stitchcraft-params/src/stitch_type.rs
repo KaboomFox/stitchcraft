@@ -187,6 +187,12 @@ mod tests {
     }
 
     #[test]
+    fn families_are_named_as_ink_stitch_names_its_elements() {
+        assert_eq!(Family::ALL.iter().map(|f| f.id()).collect::<Vec<_>>(), ["stroke", "satin", "fill"]);
+        assert_eq!(Family::ALL.iter().map(|f| f.plural()).collect::<Vec<_>>(), ["strokes", "satin columns", "fills"]);
+    }
+
+    #[test]
     fn families_hold_four_strokes_four_satins_and_nine_fills() {
         let count = |family: Family| StitchType::ALL.iter().filter(|t| t.family() == family).count();
         assert_eq!((count(Family::Stroke), count(Family::Satin), count(Family::Fill)), (4, 4, 9));

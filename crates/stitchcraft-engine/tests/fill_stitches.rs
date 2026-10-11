@@ -45,6 +45,11 @@ fn req_fill_tat_003_needle_points_lie_on_the_stagger_grid() {
     assert_eq!(row(-1.0), row(3.0), "above the origin too");
     // Sewn the other way, the same points, from the end.
     assert_eq!(xs(&sewn(p(18.7, 0.0), p(1.3, 0.0), &stitching(0.0))), [18.7, 16.0, 12.0, 8.0, 4.0, 1.3]);
+    // At 90° the rows run up the screen, along -y, and lie across along x: the column x = 0.25 is row 1,
+    // its grid a quarter stitch up from the origin's. Sewn down the screen, against the rows.
+    let ys = |points: &[Point]| points.iter().map(|q| (q.y() * 1e6).round() / 1e6).collect::<Vec<_>>();
+    assert_eq!(ys(&sewn(p(0.25, -18.7), p(0.25, -1.3), &stitching(90.0))), [-18.7, -17.0, -13.0, -9.0, -5.0, -1.3]);
+    assert_eq!(ys(&sewn(p(0.25, -1.3), p(0.25, -18.7), &stitching(90.0))), [-1.3, -5.0, -9.0, -13.0, -17.0, -18.7]);
     // Segments side by side share the grid.
     let (left, right) = (sewn(p(0.0, 0.25), p(10.0, 0.25), &stitching(0.0)), sewn(p(10.0, 0.25), p(20.0, 0.25), &stitching(0.0)));
     assert_eq!((xs(&left), xs(&right)), (vec![0.0, 1.0, 5.0, 9.0, 10.0], vec![10.0, 13.0, 17.0, 20.0]));
@@ -92,9 +97,10 @@ fn req_fill_tat_003_a_row_ends_at_its_end_unless_it_is_skipped_or_too_near() {
     // The last grid point 0.1 mm before the end, exactly: the end gets no point of its own.
     assert_eq!(xs(&sewn(p(-2.0, 0.0), p(0.1, 0.0), &how)), [-2.0, 0.0]);
     assert_eq!(xs(&sewn(p(-2.0, 0.0), p(0.11, 0.0), &how)), [-2.0, 0.0, 0.11]);
-    // With skip_last, never.
+    // With skip_last, never, nor a grid point on the end itself.
     let skipping = Stitching { skip_last: true, ..how };
     assert_eq!(xs(&sewn(p(1.3, 0.0), p(18.7, 0.0), &skipping)), [1.3, 4.0, 8.0, 12.0, 16.0]);
+    assert_eq!(xs(&sewn(p(1.3, 0.0), p(8.0, 0.0), &skipping)), [1.3, 4.0]);
     // A segment shorter than the way to the grid: its start and its end. Of no length: one point.
     assert_eq!(xs(&sewn(p(1.3, 0.0), p(2.5, 0.0), &how)), [1.3, 2.5]);
     assert_eq!(sewn(p(1.3, 0.0), p(1.3, 0.0), &how), [p(1.3, 0.0)]);
@@ -123,6 +129,16 @@ fn req_fill_tat_003_random_lengths_start_at_a_random_share_and_vary_by_the_jitte
     assert!(steps.iter().any(|step| (step - 4.0).abs() > 1e-6), "the lengths vary: {steps:?}");
     assert_eq!(run(3), points, "the same draws, the same points");
     assert_ne!(run(4), points);
+    // The draws, in order: the first point's share of a stitch, then each step's.
+    let mut rolls = SplitMix64::new(3);
+    let mut by = 4.0 * rolls.next_f64();
+    let mut want = vec![0.0];
+    while by < 40.0 {
+        want.push((by * 1e6).round() / 1e6);
+        by += 4.0 * (1.0 + 0.25 * (rolls.next_f64() - 0.5) * 2.0);
+    }
+    want.push(40.0);
+    assert_eq!(x, want);
 }
 
 #[test]
