@@ -94,13 +94,13 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 
 | Step | Deliverable | Done when |
 |---|---|---|
-| M5.1 | Region normalization (fill rules, snapping, tiny rings `SC-W0303`) | degenerate corpus green |
-| M5.2 | Rows: scan lines, half-open rule, gradient spacing, global grid | `REQ-FILL-TAT-002` |
-| M5.3 | Needle grid and staggers | `REQ-FILL-TAT-003` |
-| M5.4 | Boustrophedon cells, cell graph, ordering | `REQ-FILL-TAT-001` |
-| M5.5 | Travel inside the region (visibility graph, A*), disconnected parts `SC-W0307` | `REQ-FILL-TAT-005`, `REQ-FILL-TAT-008` |
-| M5.6 | Pull compensation by row extension | `REQ-FILL-TAT-006` |
-| M5.7 | Underlay, gap-fill rows, tiny-region fallback `SC-W0305` | `REQ-FILL-TAT-007` |
+| M5.1 ✅ | A fill's region as the drawing shows it under its fill rule, in parts with holes, its subpaths cut exactly where they meet. Parts too small to sew are left out with `SC-W0303`, as Ink/Stitch leaves them out. Small fills (`SC-W0304`), the fill rule (`SC-I0306`) and fills in parts (`SC-W0307`) are pointed out | `REQ-FILL-001`, `REQ-FILL-002` |
+| M5.2 | Rows and needle points as Ink/Stitch places them. Row and stagger grids anchored at the origin; graded spacing; random stitch length | `REQ-FILL-TAT-002`, `REQ-FILL-TAT-003` |
+| M5.3 | Routing as Ink/Stitch routes. Every segment sewn once, back and forth, from the needle to the next element, with running stitches along the outline between. A region too thin for any row sewn round its outline, `SC-W0305`. Fills are sewn | `REQ-FILL-TAT-001` |
+| M5.4 | Travel under the rows (`underpath`), off the rows already sewn | `REQ-FILL-TAT-005` |
+| M5.5 | Parts sewn one at a time, each ending nearest the next, joined by jumps (`SC-W0307`) | `REQ-FILL-TAT-008` |
+| M5.6 | Underlay, a pass for each angle on the inset region; `expand_mm` | `REQ-FILL-TAT-007` for the underlay's rows |
+| M5.7 | Pull compensation at the rows' ends, holes and parts kept; gap-fill rows inside the region | `REQ-FILL-TAT-006`, `REQ-FILL-TAT-007` |
 | M5.8 | Coverage metric and performance budget | `REQ-FILL-TAT-004`, `REQ-FILL-TAT-009` |
 | MC-4 🧵 | **TS-07** (fill + outline registration), **TS-08** (density ladder, angles), **TS-09** (underlay, travel) | report filed; fill defaults and pull compensation tuned |
 

@@ -147,3 +147,9 @@ file = "crates/stitchcraft-engine/src/normalize/offset/generator.rs"
 mutant = "replace < with <= in raw"
 line = "let reversed = distance < 0.0;"
 why = "offset returns before the 3 steps when the distance is 0, so no raw curve is made at distance 0"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/geom.rs"
+mutant = "replace == with != in locate_in_ring"
+line = "if low.y() <= p.y() && p.y() < high.y() && exact::side(low, high, p) == Side::Left {"
+why = "a closed ring spans the height of a point off it an even number of times, so the spans on the point's left and those on its right have the same parity, and counting either finds the same side of the ring"

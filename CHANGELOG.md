@@ -5,6 +5,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M5.1: a fill's region, the area its path shows under its fill rule (`REQ-FILL-001`). Fills are not sewn
+  yet (`SC-W0011`), but their region is built and what it leaves out is said.
+  - Subpaths are flattened within a tenth of a CSS pixel and closed, and cut exactly wherever they cross,
+    touch or run along each other. The faces between the cuts are filled by the fill rule, `nonzero` or
+    `evenodd`, and the edges between filled and empty faces become outlines and holes.
+  - Ink/Stitch fills every fill as if its rule were even-odd. A part the `nonzero` rule fills and the
+    even-odd rule leaves empty is filled, as the drawing shows it, and `SC-I0306` says so
+    (`DEV-FILL-001`). A subpath of fewer than 3 points bounds nothing (`DEV-FILL-002`).
+  - A part of 3 square CSS pixels (0.21 mm²) or less is left out, as Ink/Stitch leaves it out, but with
+    `SC-W0303` (`REQ-FILL-002`). A fill under 1.4 mm² gets `SC-W0304`, and a fill in parts `SC-W0307`.
+  - The rest of M5 follows Ink/Stitch's tatami fill: its rows, stagger, routing, travel, underlay and
+    compensation, on this region. The roadmap and the fills design say how.
 - M4.9: satin columns drawn as one path are sewn between rails made from their centre line.
   - The rails are the line offset by half the stroke's width to each side, with the stroke's join, point
     for point as shapely offsets it for Ink/Stitch (`REQ-SAT-016`). Shapely's answers for 1,050 random
@@ -324,6 +336,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- A fill's subpaths and a satin column's are flattened within one tolerance, a tenth of a CSS pixel:
+  `normalize::stroke::SHAPE_TOLERANCE`, which replaces `normalize::satin::TOLERANCE`.
 - Mutation testing on a pull request runs in 4 parts, dealt round-robin as the weekly run deals them, and
   a fifth job adds them up. In one part, the 1,142 mutants in the lines M4.9 changes would have run past
   the job's limit of an hour and a half.
