@@ -9,8 +9,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - Coverage rasterizes a fill's region and the thread of every stitch its plan sews, 0.4 mm wide, at
     0.05 mm. A fill covers at least 98 % of its area at spacings from the machine's shortest stitch to
     0.4 mm (`REQ-FILL-TAT-004`), for rectangles, an L, circles, rings, stars and a 5 mm bar at 5 angles.
-    Below the shortest stitch, each row's first needle point is left out (`DEV-FIN-001`), and a 5 mm bar at
-    0.25 mm on the Brother is 97 % covered.
+    Below the shortest stitch, rows that meet an edge square on leave out their first needle point there
+    (`DEV-FIN-001`), and a 5 mm bar at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, the
+    rows' ends lie 0.35 mm apart and keep their handovers.
   - `cargo xtask perf` plans the reference hoop's whole field (`REQ-FILL-TAT-009`) with the engine's
     `field` example in release. It counts the instructions one plan takes with valgrind's callgrind,
     against a record in `conformance/perf.toml` that only goes down, and reports the time against
