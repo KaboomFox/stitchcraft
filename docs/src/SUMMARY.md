@@ -45,6 +45,7 @@
   - [Stitch generators](design/algorithms/README.md)
     - [Strokes](design/algorithms/strokes.md)
     - [Satin](design/algorithms/satin.md)
+      - [Offset curves](design/algorithms/offset.md)
     - [Fills](design/algorithms/fills.md)
     - [Lock stitches](design/algorithms/locks.md)
   - [Machine formats](design/formats.md)

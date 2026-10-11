@@ -24,6 +24,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0210`](#sc-w0210) | Warning | Satin rails without rungs have different numbers of nodes |
 | [`SC-W0211`](#sc-w0211) | Warning | Satin push compensation too long for a rail; that rail keeps its length |
 | [`SC-W0212`](#sc-w0212) | Warning | Satin column drawn as one path too narrow; sewn as a stroke |
+| [`SC-W0213`](#sc-w0213) | Warning | Parts of a satin column drawn as one path left out |
+| [`SC-E0214`](#sc-e0214) | Error | Satin column drawn as one path could not be made into rails |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -240,6 +242,29 @@ otherwise.
 
 The message gives the stroke's width and the limit. Widen the stroke to sew a satin column, or draw
 the column with 2 rails.
+
+## SC-W0213
+
+**Warning** — Parts of a satin column drawn as one path left out
+
+A satin column drawn as one path, its centre line, is made into rails by offsetting the line by half
+the stroke's width to each side. Where the line crosses itself or comes back near itself, the
+offsets split into several curves, and the line is cut in half, and the halves again, at most 20
+times. Parts whose offsets still split are left out, and so are parts that turn so tightly that an
+offset vanishes. Ink/Stitch leaves out the same parts without a word. The rest of the column is sewn.
+
+The message says how many parts were left out. Draw the column with 2 rails where its line crosses
+itself or turns more tightly than the column is wide, or make the stroke narrower.
+
+## SC-E0214
+
+**Error** — Satin column drawn as one path could not be made into rails
+
+A satin column drawn as one path, its centre line, could not be made into rails. Its offsets split
+however it is cut, an offset vanishes because the stroke is wider than the line's turns allow, or
+the line is shorter than a CSS pixel. The column is not sewn.
+
+Draw the column with 2 rails, or make the stroke narrower.
 
 ## SC-W0401
 

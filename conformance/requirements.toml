@@ -598,6 +598,24 @@ rationale = "Ink/Stitch sews a satin too narrow to stitch across as a running st
 milestone = "M4"
 status = "active"
 
+[[req]]
+id = "REQ-SAT-016"
+area = "satin"
+level = "L2"
+statement = "A satin column drawn as one subpath and wider than the design's narrowest satin stroke is sewn between 2 rails. Each rail is its centre line offset by half the stroke's width, one to each side, with the stroke's join. The offsets are shapely's offset_curve."
+rationale = "Ink/Stitch makes the rails of such a column with shapely, and the same rails sew the same column."
+milestone = "M4"
+status = "active"
+
+[[req]]
+id = "REQ-SAT-017"
+area = "satin"
+level = "L2"
+statement = "Its rungs are Ink/Stitch's. They lie at the lows of the line's blurred corner scores and at its nodes, 1 mm apart or more. A rung is kept only when it crosses each rail once, and pairs those 2 points. Offsets that split into several curves, or ends within a CSS pixel of each other, get the line cut in half, up to 20 times, and a rung pairs the halves' rails where they meet. Parts whose offsets still split, or whose offset vanishes to one side, are left out, and SC-W0213 counts them. A closed line first starts at the first segment whose rung crosses the stroke's edge twice. SC-E0214 says when no rails can be made. The rails made stay the rails (DEV-SAT-007)."
+rationale = "The rungs set the angle of every stitch, and the start and the cuts set the order of sewing. Ink/Stitch places them this way."
+milestone = "M4"
+status = "active"
+
 # ── Tatami fill ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

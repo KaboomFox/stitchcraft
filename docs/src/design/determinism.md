@@ -1,6 +1,6 @@
 # Determinism
 
-<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/rng.rs, apps/stitchcraft-cli/src/commands/bug_report.rs -->
+<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/exact.rs, crates/stitchcraft-core/src/rng.rs, apps/stitchcraft-cli/src/commands/bug_report.rs -->
 
 **Same input, same version ⇒ byte-identical machine file and preview, on Linux, macOS, Windows and
 wasm32.** This makes golden-file conformance possible, makes bug reports reproducible, makes caches
@@ -12,6 +12,7 @@ safe, and means the docs images regenerated in CI match the ones on a contributo
 |---|---|---|
 | Hash map iteration order | No `HashMap`/`HashSet` in engine, formats, render, params or adapters' output paths; use `BTreeMap`, `BTreeSet`, `IndexMap` or sorted `Vec` | `clippy::disallowed_types` in `clippy.toml` |
 | Platform `libm` (`sin`, `cos`, `atan2`, `exp`, `powf` differ by last bits across OSes) | Call transcendental functions only through `stitchcraft_core::math`, which uses the pure-Rust `libm` crate | `clippy::disallowed_methods` on `f64::sin` & co. |
+| Which side of a line a point lies on: a rounded cross product can give the wrong sign for points nearly in line | The [offset curves](algorithms/offset.md) decide it with `stitchcraft_core::exact::side`, which is exact ([below](#exact-orientation)) | unit tests against exact integer arithmetic |
 | Randomness | Only `stitchcraft_core::rng::SplitMix64`, seeded per element from `random_seed` or a hash of the element id; never the OS RNG, never time | `clippy::disallowed_methods`/types for `rand::thread_rng`, `SystemTime`, `Instant` in libraries |
 | Floating-point contraction (FMA) | Rust does not contract `a * b + c` implicitly; we never call `mul_add` in quantization or comparisons | `clippy::disallowed_methods` on `f64::mul_add` in formats |
 | Parallelism | Results joined in document order; no reductions whose order depends on scheduling | engine design; CI compares sequential vs parallel output |
@@ -19,6 +20,17 @@ safe, and means the docs images regenerated in CI match the ones on a contributo
 | Quantization drift | Quantize absolute positions once, at encode time, with round-half-even (`Point::to_tenths`, shared by the writers and the previews); deltas are differences of quantized values | format conformance (`REQ-FMT-002`, `REQ-RND-001`) |
 | Rasterization (SIMD code paths, platform trigonometry in curve flattening) | tiny-skia without its `simd` feature; previews draw only lines and circles; grid positions convert to `f32` exactly; pure-Rust PNG encoding without timestamps ([rendering](rendering.md)) | golden PNG files compared on all three operating systems (`REQ-RND-002`); `f32` transcendental methods are disallowed like the `f64` ones |
 | Dependency upgrades | `Cargo.lock` committed; golden files re-blessed only in a PR that explains why | CI + review |
+
+## Exact orientation
+
+Whether a point lies left of a line, right of it or on it is the sign of a cross product. Rounded, that
+sign can come out wrong for points nearly in line. Geometry built on a wrong sign tears, with a corner
+turned the wrong way or two crossing segments taken to miss. `stitchcraft_core::exact::side` decides the
+sign in plain floating point when the product is farther from zero than its largest possible rounding
+error, and otherwise computes it exactly as a sum of floats that do not overlap, with the error-free
+sums and products of J. R. Shewchuk's *Adaptive Precision Floating-Point Arithmetic and Fast Robust
+Geometric Predicates* (1997). It uses only `+`, `−` and `×`, and every platform gets the same answer,
+which is the true one.
 
 ## The seeded PRNG
 

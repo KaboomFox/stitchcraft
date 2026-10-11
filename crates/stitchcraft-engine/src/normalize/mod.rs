@@ -7,6 +7,10 @@
 //! shapes of neighbours meet is measured here too (`near`), for where elements start and end.
 
 pub(crate) mod along;
+pub(crate) mod centre_line;
+#[cfg(test)]
+pub(crate) mod fixture;
 pub(crate) mod near;
+pub(crate) mod offset;
 pub mod satin;
 pub mod stroke;

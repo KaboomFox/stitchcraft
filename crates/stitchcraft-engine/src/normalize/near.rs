@@ -61,7 +61,7 @@ fn on_side(p: Point, a: Point, b: Point) -> Point {
 }
 
 /// How far `p` is from the side from `a` to `b`.
-fn to_side(p: Point, a: Point, b: Point) -> f64 {
+pub(crate) fn to_side(p: Point, a: Point, b: Point) -> f64 {
     if a == b {
         return length(p, a);
     }
@@ -283,6 +283,7 @@ mod tests {
     use stitchcraft_core::Budget;
 
     use super::*;
+    use crate::normalize::fixture::cases;
 
     fn p(x: f64, y: f64) -> Point {
         Point::new(x, y).unwrap()
@@ -433,28 +434,6 @@ mod tests {
     /// (`conformance/fixtures/geometry/shapely-nearest.txt`, written by `conformance/oracle/nearest.py`).
     const SHAPELY: &str = include_str!("../../../../conformance/fixtures/geometry/shapely-nearest.txt");
 
-    /// Reads the numbers of a case: a count of polylines, each a count of points and their coordinates.
-    struct Numbers<'a>(std::str::SplitWhitespace<'a>);
-
-    impl Numbers<'_> {
-        fn number(&mut self) -> f64 {
-            self.0.next().unwrap().parse().unwrap()
-        }
-        fn count(&mut self) -> usize {
-            self.0.next().unwrap().parse().unwrap()
-        }
-        fn point(&mut self) -> Point {
-            let x = self.number();
-            p(x, self.number())
-        }
-        fn polyline(&mut self) -> Vec<Point> {
-            (0..self.count()).map(|_| self.point()).collect()
-        }
-        fn polylines(&mut self) -> Vec<Vec<Point>> {
-            (0..self.count()).map(|_| self.polyline()).collect()
-        }
-    }
-
     fn slices(lines: &[Vec<Point>]) -> Vec<&[Point]> {
         lines.iter().map(Vec::as_slice).collect()
     }
@@ -467,12 +446,10 @@ mod tests {
     fn equally_near_points_are_taken_as_shapely_takes_them() {
         let meter = &mut Budget::DEFAULT.meter();
         let mut differ = Vec::new();
-        for (number, case) in SHAPELY.lines().enumerate().filter(|(_, case)| !case.starts_with('#')) {
-            let mut words = case.split_whitespace();
-            let kind = words.next().unwrap();
-            let mut n = Numbers(words);
-            assert!(["pt", "ll", "ap", "as"].contains(&kind), "line {}: unknown kind {kind}", number + 1);
-            let same = match kind {
+        for (number, mut n) in cases(SHAPELY) {
+            let kind = n.word().to_string();
+            assert!(["pt", "ll", "ap", "as"].contains(&kind.as_str()), "line {number}: unknown kind {kind}");
+            let same = match kind.as_str() {
                 "pt" => {
                     let (lines, from) = (n.polylines(), n.point());
                     nearest_to_point(&slices(&lines), from, meter).unwrap().unwrap().0.distance(n.point()) < CLOSE
@@ -488,7 +465,7 @@ mod tests {
                 }
             };
             // Every line of the test runs, a line that differs or not.
-            differ.extend((!same).then_some(number + 1));
+            differ.extend((!same).then_some(number));
         }
         assert_eq!(differ, Vec::<usize>::new(), "the fixture's lines whose answer differs");
     }

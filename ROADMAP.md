@@ -22,8 +22,8 @@ SVG of strokes to a machine file, with a preview and a report. `stitch bug-repor
 reproduces a problem, and `stitch plan` writes one by itself when StitchCraft finds a bug in itself. The
 conformance report shows every active requirement green. Next are the sew-out reports for MC-1, which
 closes M1, and for MC-2, which closes M3. The MC-2 sheets are drawn as designs and planned by the engine.
-M4 is under way. A satin column's path is read as its rails and rungs, and its underlays and top stitches
-are sewn as Ink/Stitch sews them. The MC-3 kit sews satin columns of every width from 1 to 10 mm, and
+M4's steps are done. A satin column's path is read as its rails and rungs, or made into them from its
+centre line, and its underlays and top stitches are sewn as Ink/Stitch sews them. The MC-3 kit sews satin columns of every width from 1 to 10 mm, and
 each underlay side by side. The reference machine is a Brother PE800 (ADR 0013), with a profile for each
 of its 3 hoops, and TS-02, TS-02B and TS-10 are redrawn to fit them.
 The repository is
@@ -37,7 +37,7 @@ open owner action from M0.5 is the code-of-conduct contact.
 | M1 | Stitch plan, Brother profile, PES/DST writers, test sheets | 🟡 M1.1 to M1.10 done, and M1 closes with MC-1 | MC-1 🟡 kit out for sewing (TS-02 and TS-10 redrawn for the PE800) |
 | M2 | Readers, preview renderer, fuzzing | 🟢 M2.1–M2.8 done | — |
 | M3 | Running stitch family, plan assembly, SVG input | 🟡 M3.1 to M3.10 done (parameter registry, a case for every diagnostic code, SVG input, running stitch, repeats and bean stitch, manual stitch, lock stitches, plan assembly, finalize and `stitch plan`, bug-report bundles). M3 closes with MC-2. | MC-2 🟡 kit ready for sewing (TS-02B, TS-03, TS-04) |
-| M4 | Satin column | 🟡 M4.1 to M4.8 done. Satin columns are sewn with their underlays and start and end at their nearest points. Their top stitches are placed, compensated, inset on curves and split, as in Ink/Stitch. A stroke's width and join are read, and a single-path satin too narrow to stitch across is sewn as a stroke. Wider single-path satins are next | MC-3 🟡 kit ready for sewing (TS-05, TS-06) |
+| M4 | Satin column | 🟡 M4.1 to M4.9 done. Satin columns are sewn with their underlays and start and end at their nearest points. Their top stitches are placed, compensated, inset on curves and split, as in Ink/Stitch. A column drawn as one path is as wide as its stroke. It is sewn between rails made from its centre line, or as a stroke when too narrow to stitch across. MC-3's sew-out closes M4 | MC-3 🟡 kit ready for sewing (TS-05, TS-06) |
 | M5 | Tatami fill | ⚪ | MC-4 ⚪ |
 | M6 | VectorCraft plug-in (ABI v1), export from `.vectorcraft`, compatibility gate | ⚪ | MC-5 ⚪ |
 | M7 | Zigzag/E/S stitches, contour, meander, circular fills | ⚪ | MC-6 ⚪ |

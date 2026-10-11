@@ -16,6 +16,7 @@
 pub mod budget;
 pub mod diag;
 pub mod element;
+pub mod exact;
 pub mod math;
 pub mod rect;
 pub mod rng;

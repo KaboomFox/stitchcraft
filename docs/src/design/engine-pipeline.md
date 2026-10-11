@@ -26,7 +26,8 @@ Per element, independent of the others:
 - **Regions:** resolve the fill rule into valid polygons with holes (`i_overlay`), snap to a 1 µm grid
   first so near-coincident vertices become coincident, drop rings under the minimum area (`SC-W0303`),
   orient rings explicitly.
-- **Satins:** classify subpaths into rails and rungs ([satin](algorithms/satin.md#recognizing-rails-and-rungs)).
+- **Satins:** classify subpaths into rails and rungs ([satin](algorithms/satin.md#recognizing-rails-and-rungs)), or make
+  them from a column's centre line ([single-path satin](algorithms/satin.md#single-path-satin)).
 - **Strokes:** each subpath becomes its own path piece, in document order.
 - **Commands** become hints (start/end/target points) on the element.
 
@@ -56,9 +57,9 @@ M4.2. A satin column also reads the running stitch's length (`running_stitch_len
 that join its underlays are no longer than the first value. For any other stroke the generator is its
 `stroke_method`. `running_stitch` (the default) and
 `manual_stitch` are sewn from M3. A satin column drawn as one path no wider than the design's
-`min_satin_stroke_width` is sewn as a stroke, with `SC-W0212`, as in Ink/Stitch (`REQ-SAT-015`). The other
-stroke and satin methods, wider satin columns drawn as their centre line, and fills are skipped with
-`SC-W0011` until their milestones. An element whose parameters are
+`min_satin_stroke_width` is sewn as a stroke, with `SC-W0212`, as in Ink/Stitch (`REQ-SAT-015`). A wider
+one is sewn between rails made from its line from M4.9 (`REQ-SAT-016`). The other stroke and satin
+methods, and fills, are skipped with `SC-W0011` until their milestones. An element whose parameters are
 wrong (`SC-E0101`) is skipped too, and the rest of the design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
