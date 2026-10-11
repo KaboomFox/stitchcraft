@@ -5,6 +5,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M5.7: a tatami fill's underlay covers each part shrunk by `fill_underlay_inset_mm` (`REQ-FILL-TAT-012`),
+  as Ink/Stitch sews it. Its top rows cover each part grown by `expand_mm`, or shrunk where that is negative.
+  - A part is grown or shrunk as GEOS buffers a polygon, with round corners of 16 segments to a quarter
+    circle. Each ring is offset and the offsets are cut where they cross. The area they wind round is the
+    part grown or shrunk. GEOS's rules for a ring that shrinking wears away, and for a small ring's offset
+    turned inside out, are followed. The polygons agree with shapely's within a nanometre for 330 random
+    polygons, some at the edges of those rules (`conformance/oracle/buffer.py`).
+  - Shrinking can cut a part into pieces, sewn in order of least x, GEOS's order in all but a few cases.
+    Each piece gets every layer of the underlay before the next, and each piece's top rows start
+    where the last ended, where Ink/Stitch starts them all near the first's start (`DEV-FILL-008`). Where
+    shrinking wears a part away entirely, the part itself is sewn, and `SC-W0309` (expand) or `SC-W0310`
+    (inset) says so, as Ink/Stitch warns.
+  - With `underpath`, a fill starts at the node of the lines under the rows nearest the needle, as
+    Ink/Stitch's does. For a needle inside a part, as after an inset underlay, that node lies inside, and
+    travel stitches run from it to the route's start under the rows.
 - M5.6: a tatami fill sews its underlay before its top rows (`fill_underlay`, on by default,
   `REQ-FILL-TAT-011`), as Ink/Stitch sews it.
   - Each part gets a layer of rows for each angle of `fill_underlay_angle`, in the order given, or with

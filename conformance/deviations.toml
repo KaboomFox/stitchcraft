@@ -157,6 +157,13 @@ reason = "The search, the simplification and the running stitch are StitchCraft'
 requirements = ["REQ-FILL-TAT-005"]
 
 [[deviation]]
+id = "DEV-FILL-008"
+area = "fill/tatami"
+summary = "Where fill_underlay_inset_mm, or a negative expand_mm, cuts a part into pieces, the pieces are sewn in order of their point of least x, and of least y among points level with it. GEOS gives them in the order it walks its graph, which Ink/Stitch sews them in. Of 2,000 random polygons grown or shrunk, 85 gave 2 or more pieces, and 81 of those came in the same order; the 4 others had a sliver among their pieces. For pieces level at their least x, GEOS's order turns on where the ring's points start: 2 squares one above the other, shrunk apart, give the lower first when the ring is listed from the bottom and the upper first when it is listed from the top, and 310 of 400 random such shapes, listed from random points, gave the lower first. Each piece's top rows start at the point nearest the needle after the piece before, where Ink/Stitch starts every piece's top rows nearest the needle as it was before the first."
+reason = "The order of least x is GEOS's in all but those few cases, and lowest first is the order GEOS gives most often for pieces level at their least x, without walking a graph as GEOS walks its own (conformance/oracle/buffer.py). Starting each piece where the last ended keeps the needle's way between pieces short, where Ink/Stitch's needle goes back to near the first piece's start (lib/elements/fill_stitch.py at d59c9ab, to_stitch_groups)."
+requirements = ["REQ-FILL-TAT-012"]
+
+[[deviation]]
 id = "DEV-SVG-001"
 area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."

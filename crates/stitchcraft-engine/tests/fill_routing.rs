@@ -3,8 +3,10 @@
 //! element; parts one at a time, nearest the needle first, each ending nearest the next. Between rows the
 //! needle travels along the outline, or with `underpath` inside the part, under the rows not sewn yet
 //! (`REQ-FILL-TAT-005`). Before its top rows each part sews its underlay, a layer for each angle, each
-//! back to where it started (`REQ-FILL-TAT-011`). A part too thin for a row is sewn round its outline
-//! (`SC-W0305`), and a layer of underlay too thin for one is too (`SC-I0308`).
+//! back to where it started (`REQ-FILL-TAT-011`), on the part shrunk by the underlay's inset, and the top
+//! rows cover the part grown by `expand_mm` (`REQ-FILL-TAT-012`). A part too thin for a row is sewn round
+//! its outline (`SC-W0305`), and a layer of underlay too thin for one is too (`SC-I0308`). Where the
+//! inset or expand shrinks a part away entirely, it is sewn at its own size (`SC-W0310`, `SC-W0309`).
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
@@ -15,7 +17,7 @@ use stitchcraft_core::{Budget, Code, ElementId, Point};
 use stitchcraft_engine::design::{Element, FillRule, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::generators::Approach;
 use stitchcraft_engine::generators::tatami::rows::{Grid, rows};
-use stitchcraft_engine::generators::tatami::sew::{Layer, Travel, tatami_fill};
+use stitchcraft_engine::generators::tatami::sew::{Fill, Layer, Travel, tatami_fill};
 use stitchcraft_engine::generators::tatami::stitches::{Stitching, row_points};
 use stitchcraft_engine::normalize::region::{Polygon, Region, build};
 use stitchcraft_params::ParamSet;
@@ -59,7 +61,17 @@ fn sewn_with(travel: Travel, region: &Region, how: &Stitching, needle: Option<Po
 
 /// The runs of a fill over `region`, its `top` rows after its `underlay`, which says nothing about it.
 fn layered(region: &Region, top: &Layer, underlay: &[Layer], needle: Option<Point>, next: Option<&Approach>) -> Vec<Vec<Point>> {
-    let stitched = tatami_fill(region, top, underlay, needle, next, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
+    sewn_fill(region, &fill_of(*top, underlay), needle, next)
+}
+
+/// A fill of `top` rows after `underlay`, neither grown nor shrunk.
+fn fill_of(top: Layer, underlay: &[Layer]) -> Fill {
+    Fill { top, expand: 0.0, underlay: underlay.to_vec(), inset: 0.0 }
+}
+
+/// The runs of `fill` over `region`, which says nothing about it.
+fn sewn_fill(region: &Region, fill: &Fill, needle: Option<Point>, next: Option<&Approach>) -> Vec<Vec<Point>> {
+    let stitched = tatami_fill(region, fill, needle, next, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
     assert_eq!(stitched.warnings, Vec::new());
     stitched.runs
 }
@@ -277,7 +289,7 @@ fn diag_sc_w0305_a_fill_too_thin_for_a_row_is_sewn_round_its_outline() {
     );
     let region = region(&[sliver]);
     let top = Layer { stitching: Stitching { grid: Grid { angle: 0.0, spacing: 0.25, end_spacing: None }, ..stitching(0.0) }, travel: TRAVEL };
-    let stitched = tatami_fill(&region, &top, &[], None, None, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
+    let stitched = tatami_fill(&region, &fill_of(top, &[]), None, None, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
     let run = &stitched.runs[0];
     assert_eq!((run[0], *run.last().unwrap()), (p(0.0, 0.05), p(0.0, 0.05)), "round its outline from its start");
     // Its underlay at 90° has rows across it, and comes back to its first row's start, on its left side.
@@ -287,7 +299,7 @@ fn diag_sc_w0305_a_fill_too_thin_for_a_row_is_sewn_round_its_outline() {
     let layered = |jump| {
         let top = Layer { travel: Travel { jump, ..top.travel }, ..top };
         let under = underlay(&[90.0]).into_iter().map(|layer| Layer { travel: Travel { jump, ..layer.travel }, ..layer }).collect::<Vec<_>>();
-        tatami_fill(&region, &top, &under, None, None, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap().runs
+        tatami_fill(&region, &fill_of(top, &under), None, None, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap().runs
     };
     let (on, apart) = (layered(0.2), layered(0.1));
     assert_eq!((on.len(), apart.len()), (1, 2));
@@ -318,14 +330,14 @@ fn req_fill_tat_001_routing_is_charged_to_the_budget() {
     let region = region(&FRAME);
     let top = Layer { stitching: stitching(0.0), travel: TRAVEL };
     let mut meter = Budget::DEFAULT.meter();
-    tatami_fill(&region, &top, &[], None, None, &mut SplitMix64::new(1), &mut meter).unwrap();
+    tatami_fill(&region, &fill_of(top, &[]), None, None, &mut SplitMix64::new(1), &mut meter).unwrap();
     let work = Budget::DEFAULT.max_work - meter.work_left();
     assert!(work > 100, "{work}");
     let tight = &mut Budget { max_stitches: 1_000_000, max_work: work - 1 }.meter();
-    assert!(tatami_fill(&region, &top, &[], None, None, &mut SplitMix64::new(1), tight).is_err());
+    assert!(tatami_fill(&region, &fill_of(top, &[]), None, None, &mut SplitMix64::new(1), tight).is_err());
     // The underlay is charged too: the same budget does not reach the top rows after it.
     let tight = &mut Budget { max_stitches: 1_000_000, max_work: work }.meter();
-    assert!(tatami_fill(&region, &top, &underlay(&[90.0]), None, None, &mut SplitMix64::new(1), tight).is_err());
+    assert!(tatami_fill(&region, &fill_of(top, &underlay(&[90.0])), None, None, &mut SplitMix64::new(1), tight).is_err());
 }
 
 #[test]
@@ -417,10 +429,146 @@ fn diag_sc_i0308_a_layer_of_underlay_too_thin_for_a_row_is_sewn_round_the_outlin
     let region = region(&[bar]);
     let top = Layer { stitching: Stitching { grid: Grid { angle: 0.0, spacing: 0.25, end_spacing: None }, ..stitching(0.0) }, travel: TRAVEL };
     let thin = Layer { stitching: Stitching { grid: Grid { angle: 90.0, spacing: 0.75, end_spacing: None }, ..stitching(90.0) }, travel: TRAVEL };
-    let stitched = tatami_fill(&region, &top, &[thin], None, None, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
+    let stitched = tatami_fill(&region, &fill_of(top, &[thin]), None, None, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
     assert_eq!(stitched.warnings.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::FillUnderlayTooThin]);
     assert_eq!(stitched.runs.len(), 1);
     let outline = &region.parts[0].outline;
     let back = stitched.runs[0].iter().skip(1).position(|q| q == &outline[0]).unwrap() + 1;
     assert!(outline.iter().all(|corner| stitched.runs[0][..=back].contains(corner)), "{:?}", &stitched.runs[0][..=back]);
+}
+
+/// A square 12 mm across.
+const SQUARE: [&[(f64, f64)]; 1] = [&[(0.0, 0.0), (12.0, 0.0), (12.0, 12.0), (0.0, 12.0)]];
+
+/// Whether `run` has a needle point within a nanometre of (`x`, `y`).
+fn has(run: &[Point], x: f64, y: f64) -> bool {
+    run.iter().any(|q| q.distance(p(x, y)) < 1e-9)
+}
+
+#[test]
+fn req_fill_tat_012_the_underlay_is_sewn_on_the_part_shrunk_by_its_inset() {
+    // Upright underlay rows 3 mm apart, at x = 3, 6 and 9, and flat top rows 1 mm apart in stitches of
+    // 4 mm, whose needle points on the top and bottom sides lie at x = 0, 4, 8 and 12. The underlay's rows
+    // reach the top and bottom sides, and shrunk by 2 mm they end 2 mm in from them.
+    let region = region(&SQUARE);
+    let top = Layer { stitching: Stitching { length: 4.0, ..stitching(0.0) }, travel: UNDER };
+    let sewn = |inset: f64| sewn_fill(&region, &Fill { inset, ..fill_of(top, &underlay(&[90.0])) }, Some(p(-1.0, 6.0)), None).concat();
+    let (plain, shrunk) = (sewn(0.0), sewn(2.0));
+    for x in [3.0, 6.0, 9.0] {
+        assert!(has(&plain, x, 0.0) && has(&plain, x, 12.0), "x = {x}: to the sides");
+        assert!(has(&shrunk, x, 2.0) && has(&shrunk, x, 10.0), "x = {x}: 2 mm in");
+        assert!(!has(&shrunk, x, 0.0) && !has(&shrunk, x, 12.0), "x = {x}: not to the sides");
+    }
+    // The top rows still reach the sides.
+    assert!(has(&shrunk, 0.0, 6.0) && has(&shrunk, 12.0, 6.0));
+}
+
+#[test]
+fn req_fill_tat_012_the_top_rows_cover_the_part_grown_or_shrunk_by_expand() {
+    // Grown by 1 mm, the square's rows run from x = -1 to 13; shrunk by 1 mm, from 1 to 11.
+    let region = region(&SQUARE);
+    let reach = |expand: f64| {
+        let run = sewn_fill(&region, &Fill { expand, ..fill_of(Layer { stitching: stitching(0.0), travel: UNDER }, &[]) }, None, None).concat();
+        run.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), q| (lo.min(q.x()), hi.max(q.x())))
+    };
+    for (expand, (left, right)) in [(0.0, (0.0, 12.0)), (1.0, (-1.0, 13.0)), (-1.0, (1.0, 11.0))] {
+        let (lo, hi) = reach(expand);
+        assert!((lo - left).abs() < 1e-9 && (hi - right).abs() < 1e-9, "expand {expand}: {lo} to {hi}");
+    }
+}
+
+#[test]
+fn req_fill_tat_012_a_part_shrunk_into_pieces_sews_each_piece_s_underlay_in_turn() {
+    // 2 squares 6 mm across, 4 mm apart, joined by a neck 1 mm wide, which shrinking by 1 mm takes away,
+    // but for a bump towards it, 1 mm from its corners: 0.13 mm high, a little more where the arcs round
+    // the corners, cut into 16 segments a quarter, cross. The left piece's 2 layers come first, then the
+    // right piece's, each from the point nearest the needle, and then the top rows over the whole part. The
+    // pieces lie farther apart than the jump length, so the needle jumps between them. The squares start at
+    // x = 0.5, so that no row runs along a piece's edge.
+    let dumbbell: Vec<(f64, f64)> = [
+        (0.0, 0.0),
+        (6.0, 0.0),
+        (6.0, 2.5),
+        (10.0, 2.5),
+        (10.0, 0.0),
+        (16.0, 0.0),
+        (16.0, 6.0),
+        (10.0, 6.0),
+        (10.0, 3.5),
+        (6.0, 3.5),
+        (6.0, 6.0),
+        (0.0, 6.0),
+    ]
+    .iter()
+    .map(|&(x, y)| (x + 0.5, y))
+    .collect();
+    let region = region(&[&dumbbell]);
+    let fill = Fill { inset: 1.0, ..fill_of(Layer { stitching: stitching(0.0), travel: UNDER }, &underlay(&[90.0, 0.0])) };
+    let runs = sewn_fill(&region, &fill, None, None);
+    assert_eq!(runs.len(), 2);
+    let bump = 0.14;
+    let inside = |q: &Point, x0: f64, x1: f64| q.x() >= x0 - 1e-9 && q.x() <= x1 + 1e-9 && q.y() >= 1.0 - 1e-9 && q.y() <= 5.0 + 1e-9;
+    assert!(runs[0].iter().all(|q| inside(q, 1.5, 5.5 + bump)), "the left piece's underlay");
+    assert!(runs[0].iter().any(|q| q.x() > 5.63 && (q.y() - 3.0).abs() < 1e-9), "with its bump");
+    // Each piece's upright rows, at x = 3 and at x = 12 and 15, end 1 mm in.
+    assert!(has(&runs[0], 3.0, 1.0) && has(&runs[0], 3.0, 5.0));
+    let right: Vec<Point> = runs[1].iter().take_while(|q| inside(q, 11.5 - bump, 15.5)).copied().collect();
+    assert!([(12.0, 1.0), (12.0, 5.0), (15.0, 1.0), (15.0, 5.0)].iter().all(|&(x, y)| has(&right, x, y)), "the right piece's underlay first");
+    assert!(has(&runs[1], 0.5, 3.0) && has(&runs[1], 16.5, 3.0), "then the top rows, across the whole part");
+}
+
+#[test]
+fn req_fill_tat_001_with_underpath_a_needle_inside_the_part_starts_at_the_nearest_node_of_the_lines() {
+    // The needle near the middle of the square, about 6 mm from every side. Under the rows, the fill starts at
+    // the node of the lines nearest it, inside, and travels from there; along the outline, at the outline.
+    let region = region(&SQUARE);
+    let part = &region.parts[0];
+    let needle = p(6.1, 5.9);
+    let under = sewn_with(UNDER, &region, &stitching(0.0), Some(needle), None);
+    let first = under[0][0];
+    assert!(to_rings(part, first) > 4.0 && first.distance(needle) < 1.0, "{first:?}");
+    let along = sewn_with(TRAVEL, &region, &stitching(0.0), Some(needle), None);
+    assert!(to_rings(part, along[0][0]) < 1e-9, "{:?}", along[0][0]);
+}
+
+/// A bar 20 mm long and 2 mm wide.
+const BAR: [&[(f64, f64)]; 1] = [&[(0.0, 0.0), (20.0, 0.0), (20.0, 2.0), (0.0, 2.0)]];
+
+#[test]
+fn diag_sc_w0310_an_inset_that_shrinks_a_part_away_sews_the_underlay_over_all_of_it() {
+    // Shrunk by 1.5 mm, the bar 2 mm wide wears away entirely: its underlay is sewn over all of the bar, as
+    // without an inset.
+    let sewn = |params: &[(&str, &str)]| planned(vec![Element { params: params.iter().copied().collect(), ..fill("bar", &BAR) }]);
+    let (inset, plain) = (sewn(&[("fill_underlay_inset_mm", "1.5")]), sewn(&[]));
+    assert_eq!(
+        messages(&inset),
+        ["warning SC-W0310: `fill_underlay_inset_mm` shrinks this fill away entirely, so its underlay is sewn over all of it."]
+    );
+    assert_eq!(inset.plan, plain.plan);
+    // Of a bar and a square, only the bar: 1 of its 2 parts.
+    let square: &[(f64, f64)] = &[(0.0, 10.0), (10.0, 10.0), (10.0, 20.0), (0.0, 20.0)];
+    let both = Element { params: [("fill_underlay_inset_mm", "1.5")].into_iter().collect(), ..fill("both", &[BAR[0], square]) };
+    assert!(
+        messages(&planned(vec![both])).contains(
+            &"warning SC-W0310: `fill_underlay_inset_mm` shrinks 1 of this fill's parts away entirely, so its underlay is sewn over all of that \
+          part."
+                .to_string()
+        )
+    );
+}
+
+#[test]
+fn diag_sc_w0309_an_expand_that_shrinks_a_part_away_sews_it_at_its_own_size() {
+    // Shrunk by 1.5 mm, 2 bars wear away entirely: each is sewn at its own size, as without expand.
+    let lower: &[(f64, f64)] = &[(0.0, 10.0), (20.0, 10.0), (20.0, 12.0), (0.0, 12.0)];
+    let sewn =
+        |params: &[(&str, &str)], parts: &[&[(f64, f64)]]| planned(vec![Element { params: params.iter().copied().collect(), ..fill("bars", parts) }]);
+    let (shrunk, plain) = (sewn(&[("expand_mm", "-1.5")], &BAR), sewn(&[], &BAR));
+    assert_eq!(messages(&shrunk), ["warning SC-W0309: `expand_mm` shrinks this fill away entirely, so its top rows are sewn over all of it."]);
+    assert_eq!(shrunk.plan, plain.plan);
+    let both = sewn(&[("expand_mm", "-1.5")], &[BAR[0], lower]);
+    assert!(
+        messages(&both).iter().any(|m| m
+            == "warning SC-W0309: `expand_mm` shrinks 2 of this fill's parts away entirely, so on each its top rows are sewn over all of the part.")
+    );
 }

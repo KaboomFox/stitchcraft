@@ -140,7 +140,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `meander_scale_percent` | float | % | 100 | `meander_fill` | P2 (M7) | planned |
 | `clip` | boolean | — | false | `meander_fill` | P2 (M7) | planned |
 | `smoothness_mm` | float | mm | 0 | `contour_fill`, `guided_fill`, `meander_fill` | P2 (M7) | planned |
-| `expand_mm` | float | mm | 0 | all | P1 (M5) | planned |
+| `expand_mm` | float | mm | 0 | all | P1 (M5) | [registered](../user/reference/params/tatami.md#expand_mm) |
 | `gap_fill_rows` | int | rows | 0 | `tatami_fill` | P1 (M5) | planned |
 | `angle` | float | deg | 0 | `tatami_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#angle) |
 | `guided_fill_angle` | float | deg | — | `guided_fill` | P3 (M10) | planned |
@@ -171,7 +171,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `fill_underlay_angle` | float | deg | — | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay_angle) |
 | `fill_underlay_row_spacing_mm` | float | mm | — | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay_row_spacing_mm) |
 | `fill_underlay_max_stitch_length_mm` | float | mm | — | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay_max_stitch_length_mm) |
-| `fill_underlay_inset_mm` | float | mm | 0 | all | P1 (M5) | planned |
+| `fill_underlay_inset_mm` | float | mm | 0 | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay_inset_mm) |
 | `fill_underlay_skip_last` | boolean | — | false | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay_skip_last) |
 | `underlay_underpath` | boolean | — | true | all | P1 (M5) | [registered](../user/reference/params/tatami.md#underlay_underpath) |
 | `random_seed` | random_seed | — | — | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `meander_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/common.md#random_seed) |
@@ -261,4 +261,4 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
 
-_145 parameter declarations, 83 registered in StitchCraft._
+_145 parameter declarations, 85 registered in StitchCraft._

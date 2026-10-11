@@ -306,6 +306,23 @@
         "unit": "mm"
       }
     },
+    "expand_mm": {
+      "default": 0.0,
+      "description": "How far past the drawn edge the top rows reach: each part is grown by this much, with round corners, before its rows are laid. The thread's pull opens gaps between fills sewn side by side, and this closes them. Negative values pull the rows in from the edge.",
+      "maximum": 10.0,
+      "minimum": -10.0,
+      "title": "Expand",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tatami_fill"
+        ],
+        "group": "Rows",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
     "fill_method": {
       "default": "tatami_fill",
       "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it. The other methods arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
@@ -374,6 +391,23 @@
         "origin": "inkstitch",
         "stability": "stable",
         "unit": "°"
+      }
+    },
+    "fill_underlay_inset_mm": {
+      "default": 0.0,
+      "description": "How far inside the fill's edge its underlay stops: each part is shrunk by this much, with round corners, before the underlay's rows are laid, so that none of the underlay shows beyond the top rows. Negative values let it reach past the edge.",
+      "maximum": 10.0,
+      "minimum": -10.0,
+      "title": "Underlay inset",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tatami_fill"
+        ],
+        "group": "Underlay",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
       }
     },
     "fill_underlay_max_stitch_length_mm": {
@@ -1635,6 +1669,7 @@
           "angle",
           "row_spacing_mm",
           "end_row_spacing_mm",
+          "expand_mm",
           "staggers",
           "skip_last",
           "underpath",
@@ -1642,6 +1677,7 @@
           "fill_underlay_angle",
           "fill_underlay_row_spacing_mm",
           "fill_underlay_max_stitch_length_mm",
+          "fill_underlay_inset_mm",
           "fill_underlay_skip_last",
           "underlay_underpath"
         ],

@@ -33,7 +33,7 @@ use crate::generators::running::raised;
 use crate::generators::running::{RunningParams, running_stitch};
 use crate::generators::satin::{self, SatinLengths, SatinParams, satin_stitch};
 use crate::generators::tatami::TatamiParams;
-use crate::generators::tatami::sew::{Layer, Travel, tatami_fill};
+use crate::generators::tatami::sew::{Travel, tatami_fill};
 use crate::generators::{Approach, Neighbours, Stitched, method, mm};
 use crate::normalize::region;
 use crate::registry::PARAMETERS;
@@ -256,9 +256,8 @@ fn fill(
         underpath: tatami.underpath,
         jump: lengths.jump.get(),
     };
-    let top = Layer { stitching: tatami.stitching(longest, &running), travel };
-    let underlay = tatami.underlay(longest, travel);
-    let stitched = tatami_fill(&built.region, &top, &underlay, neighbours.needle, neighbours.next.as_ref(), rng, meter)?;
+    let fill = tatami.fill(longest, &running, travel);
+    let stitched = tatami_fill(&built.region, &fill, neighbours.needle, neighbours.next.as_ref(), rng, meter)?;
     Ok(Some((StitchType::TatamiFill, stitched)))
 }
 

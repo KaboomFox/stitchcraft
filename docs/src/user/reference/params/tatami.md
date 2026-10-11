@@ -37,6 +37,16 @@ the next.
 - **Default:** empty
 - **Ink/Stitch:** same key; StitchCraft differs (DEV-FILL-003): With end_row_spacing_mm, the step from row to row changes from the row spacing to the end spacing over the part's height, measured from the first row, and stays at the end spacing beyond it. Ink/Stitch carries the change on past the height, which reaches the rows within a row spacing of the part's far side when the first row lies before the part. With an end spacing smaller than the row spacing, over a part a few rows tall, the steps then shrink towards 0 and the rows pile up short of the far side without end.
 
+### `expand_mm`
+
+**Expand.** How far past the drawn edge the top rows reach: each part is grown by this much, with round
+corners, before its rows are laid. The thread's pull opens gaps between fills sewn side by side,
+and this closes them. Negative values pull the rows in from the edge.
+
+- **Accepts:** a length from -10 to 10 mm
+- **Default:** `0`
+- **Ink/Stitch:** same key, meaning and default
+
 ## Stitches
 
 ### `staggers`
@@ -107,6 +117,16 @@ the top rows, at the fill's angle plus 90°.
 
 - **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
 - **Default:** empty
+- **Ink/Stitch:** same key, meaning and default
+
+### `fill_underlay_inset_mm`
+
+**Underlay inset.** How far inside the fill's edge its underlay stops: each part is shrunk by this much, with round
+corners, before the underlay's rows are laid, so that none of the underlay shows beyond the top
+rows. Negative values let it reach past the edge.
+
+- **Accepts:** a length from -10 to 10 mm
+- **Default:** `0`
 - **Ink/Stitch:** same key, meaning and default
 
 ### `fill_underlay_skip_last`

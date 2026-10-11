@@ -20,10 +20,15 @@
 //! Each ring of a part starts at the point the drawing reaches first; outlines run clockwise and holes
 //! counter-clockwise in y-up axes (counter-clockwise and clockwise on screen, where y points down). The
 //! parts come in the order the drawing reaches them.
+//!
+//! The area some rings bound, cut and joined so, is one function (`area`), which a part grown or shrunk
+//! also takes its area from: the rings are then its offset curves (`normalize::offset`).
 
 mod arrange;
 mod assemble;
 pub(crate) mod geom;
+
+pub(crate) use assemble::Unjoined;
 
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
@@ -104,24 +109,14 @@ pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Ex
     let flat = stroke::flatten(path, stroke::SHAPE_TOLERANCE, meter)?;
     let rings: Vec<Vec<Point>> =
         flat.pieces.into_iter().map(|piece| geom::closed(&piece.points)).filter(|ring| geom::without_repeats(ring).len() >= 4).collect();
-    let arrangement = arrange::cut(&rings, meter)?;
-    let faces = arrangement.faces(meter)?;
     let filled = |w: i64| match rule {
         FillRule::NonZero => w != 0,
         FillRule::EvenOdd => w.rem_euclid(2) == 1,
     };
-    let inside = |half: usize| faces.right_of.get(half).and_then(|&f| faces.winding.get(f)).is_some_and(|&w| filled(w));
-    let kept: Vec<bool> = (0..2 * arrangement.edges.len()).map(|h| inside(h) && !inside(h ^ 1)).collect();
-    let joined = assemble::parts(&arrangement, &kept, meter)?;
+    let Area { parts, windings } = area(&rings, filled, meter)?;
     // Rings that do not join are a bug: the region is left empty, and SC-E0009 says so.
-    let mut diagnostics: Vec<Diagnostic> = joined.as_ref().err().copied().map(assemble::Unjoined::diagnostic).into_iter().collect();
-    let parts = joined.unwrap_or_default();
-    let ring = |points: &[usize]| geom::closed(&points.iter().map(|&i| arrangement.point(i)).collect::<Vec<_>>());
-    let (mut kept_parts, mut left_out) = (Vec::new(), Vec::new());
-    for part in parts {
-        let polygon = Polygon { outline: ring(&part.outline), holes: part.holes.iter().map(|hole| ring(hole)).collect() };
-        if polygon.area() > TINY_PART { kept_parts.push(polygon) } else { left_out.push(polygon) }
-    }
+    let mut diagnostics: Vec<Diagnostic> = parts.as_ref().err().copied().map(Unjoined::diagnostic).into_iter().collect();
+    let (kept_parts, left_out): (Vec<Polygon>, Vec<Polygon>) = parts.unwrap_or_default().into_iter().partition(|polygon| polygon.area() > TINY_PART);
     let region = Region { parts: kept_parts };
     diagnostics.extend(tiny_parts(&left_out, region.parts.is_empty()));
     if region.parts.is_empty() && left_out.is_empty() {
@@ -147,7 +142,7 @@ pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Ex
                 .with_fix(Fix::Hint("To choose the order the parts are sewn in, break the fill apart into one element for each part.".to_string())),
         );
     }
-    if rule == FillRule::NonZero && faces.winding.iter().any(|&w| w != 0 && w.rem_euclid(2) == 0) {
+    if rule == FillRule::NonZero && windings.iter().any(|&w| w != 0 && w.rem_euclid(2) == 0) {
         let message = "Subpaths of this fill wind round some of it twice the same way, which its fill rule (nonzero) fills and the even-odd \
                        rule leaves empty. It stays in the fill, as the drawing shows it; Ink/Stitch would leave it empty.";
         diagnostics.push(
@@ -156,6 +151,31 @@ pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Ex
         );
     }
     Ok(Built { region, diagnostics })
+}
+
+/// The area some rings bound: the faces they cut the plane into whose winding numbers the rule given says
+/// are filled, as parts with holes.
+pub(crate) struct Area {
+    /// The parts, unless the edges between filled and empty faces did not join into rings (a bug).
+    pub(crate) parts: Result<Vec<Polygon>, Unjoined>,
+    /// Every face's winding number.
+    pub(crate) windings: Vec<i64>,
+}
+
+/// The area `rings` (each open or closed, in the direction drawn) bound: the faces they cut the plane into
+/// whose winding numbers `filled` says are filled ([`arrange`]), joined into parts ([`assemble`]). One unit
+/// of `meter` for each point, segment and cut, each pair of segments whose spans along x overlap, each half
+/// edge, and each ring and face compared.
+pub(crate) fn area(rings: &[Vec<Point>], filled: impl Fn(i64) -> bool, meter: &mut Meter) -> Result<Area, Exhausted> {
+    let arrangement = arrange::cut(rings, meter)?;
+    let faces = arrangement.faces(meter)?;
+    let inside = |half: usize| faces.right_of.get(half).and_then(|&f| faces.winding.get(f)).is_some_and(|&w| filled(w));
+    let kept: Vec<bool> = (0..2 * arrangement.edges.len()).map(|h| inside(h) && !inside(h ^ 1)).collect();
+    let ring = |points: &[usize]| geom::closed(&points.iter().map(|&i| arrangement.point(i)).collect::<Vec<_>>());
+    let parts = assemble::parts(&arrangement, &kept, meter)?.map(|parts| {
+        parts.iter().map(|part| Polygon { outline: ring(&part.outline), holes: part.holes.iter().map(|hole| ring(hole)).collect() }).collect()
+    });
+    Ok(Area { parts, windings: faces.winding })
 }
 
 /// `SC-W0303` for the parts left out, each too small to sew, located at the first; `all` when they were
