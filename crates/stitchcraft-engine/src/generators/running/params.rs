@@ -3,12 +3,13 @@
 //! two). Ripple stitch (M10) sews each of its lines with the same settings. The stitches that join a satin
 //! column's underlays are no longer than the running stitch's length, and its way to its start and from
 //! its end keeps to the running stitch's length and tolerance, which Ink/Stitch stores under the same keys.
+//! A tatami fill's needle travels between its rows in running stitches of the same length and tolerance.
 
 use stitchcraft_params::{Origin, StitchType, params};
 
 /// The stitch types that sew stitches of the running stitch's length and tolerance: running and ripple
-/// stitch along their lines, and satin columns, whatever their method, between their underlays and on
-/// their way to their start and from their end.
+/// stitch along their lines, satin columns, whatever their method, between their underlays and on their
+/// way to their start and from their end, and tatami fills between their rows.
 const RUNS: &[StitchType] = &[
     StitchType::RunningStitch,
     StitchType::RippleStitch,
@@ -16,6 +17,7 @@ const RUNS: &[StitchType] = &[
     StitchType::EStitch,
     StitchType::SStitch,
     StitchType::SatinZigzag,
+    StitchType::TatamiFill,
 ];
 
 /// The stitch types whose stitches may vary in length at random: running and ripple stitch along their

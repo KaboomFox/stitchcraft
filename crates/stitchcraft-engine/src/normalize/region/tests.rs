@@ -127,7 +127,10 @@ fn subpaths_of_fewer_than_3_points_bound_nothing() {
     let square = vec![p(0.0, 0.0), p(4.0, 0.0), p(4.0, 4.0), p(0.0, 4.0)];
     let built = region(&[square.clone(), vec![p(1.0, 1.0)], vec![p(2.0, 2.0), p(3.0, 2.0)]], FillRule::NonZero);
     assert_eq!(built, region(&[square], FillRule::NonZero));
-    assert_eq!(region(&[], FillRule::NonZero), Built::default());
+    // With nothing bounded at all, the fill says so.
+    let none = region(&[], FillRule::NonZero);
+    assert!(none.region.parts.is_empty());
+    assert_eq!(none.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::FillPartsTooSmall]);
 }
 
 #[test]

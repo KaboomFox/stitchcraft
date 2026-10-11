@@ -99,9 +99,9 @@ another.
 | `SC-W0212` | Warning | Satin column drawn as one path too narrow; sewn as a stroke | M4 |
 | `SC-W0213` | Warning | Parts of a satin column drawn as one path left out (still crossing after 20 cuts in half, or turning too tightly for its width) | M4 |
 | `SC-E0214` | Error | Satin column drawn as one path could not be made into rails (too short, or too tight for its width) | M4 |
-| `SC-W0303` | Warning | Parts of a fill too small to sew left out (3 square CSS pixels or less, as in Ink/Stitch) | M5 |
+| `SC-W0303` | Warning | Parts of a fill too small to sew left out (3 square CSS pixels or less, as in Ink/Stitch); a fill of no area sews nothing | M5 |
 | `SC-W0304` | Warning | Fill smaller than 1.4 mm² (20 square CSS pixels); a running stitch or a satin column may sew it better | M5 |
-| `SC-W0305` | Warning | Region too small for fill rows; outlined with running stitch instead | M5 |
+| `SC-W0305` | Warning | Fill part too thin for rows; sewn round its outline (as in Ink/Stitch) | M5 |
 | `SC-I0306` | Info | Nonzero fill rule fills a part the even-odd rule leaves empty (Ink/Stitch leaves it empty) | M5 |
 | `SC-W0307` | Warning | Fill in parts that are apart; each sewn on its own, joined by jumps | M5 |
 | `SC-W0311` | Warning | Spiral could not be connected in a narrow part; that part uses inner-to-outer contours | M7 |

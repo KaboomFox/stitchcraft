@@ -9,7 +9,7 @@ stroke or the fill of a shape, and each sews in its own thread colour.
 | [Bean stitch](running.md#bean-stitch-and-repeats) | strokes, each stitch sewn 3 times or more | now |
 | [Manual stitch](running.md#manual-stitch) | strokes whose nodes are the needle points | now |
 | Satin column | wide strokes and borders | milestone M4 |
-| Fill | areas | milestone M5 |
+| Tatami fill | areas, in rows of running stitches | now, without underlay until later in milestone M5 |
 
 Every element also gets [lock stitches](locks.md) where its stitching starts and ends, and a trim or a
 stop after it when it asks for one. An element of a type that is not sewn yet is left out, and `SC-W0011`

@@ -96,9 +96,9 @@ requirements = ["REQ-SAT-004"]
 [[deviation]]
 id = "DEV-SAT-006"
 area = "satin"
-summary = "A satin column's running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch's settings window shows 0.1 mm."
-reason = "The key is declared once, as the running stitch's, and its default is what both sew for a file without it. Ink/Stitch declares 0.1 mm but reads a missing value as 0.2 mm, read at d59c9ab (lib/elements/satin_column/satin_column.py)."
-requirements = ["REQ-SAT-013", "REQ-SAT-014"]
+summary = "A satin column's and a tatami fill's running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch's settings window shows 0.1 mm."
+reason = "The key is declared once, as the running stitch's, and its default is what both sew for a file without it. Ink/Stitch declares 0.1 mm but reads a missing value as 0.2 mm, read at d59c9ab (lib/elements/satin_column/satin_column.py, lib/elements/fill_stitch.py)."
+requirements = ["REQ-SAT-013", "REQ-SAT-014", "REQ-FILL-TAT-001"]
 
 [[deviation]]
 id = "DEV-SAT-007"
@@ -134,6 +134,20 @@ area = "fill/tatami"
 summary = "A tatami fill's random stitch lengths are drawn from StitchCraft's generator (SplitMix64, seeded from the element's id and random_seed), in the order its row segments are sewn, so the values differ from Ink/Stitch's for the same seed. The ranges are Ink/Stitch's: the first point a share of the longest stitch from the segment's start, and each next one a stitch on, longer or shorter by up to the jitter."
 reason = "Ink/Stitch draws from a generator of each segment's own, keyed by the segment's place in the sewing order (lib/stitches/tatami_fill.py, lib/stitches/running_stitch.py at d59c9ab). StitchCraft's generator is its own, for every platform alike (docs/src/design/determinism.md), as for satin columns (DEV-SAT-002)."
 requirements = ["REQ-FILL-TAT-003"]
+
+[[deviation]]
+id = "DEV-FILL-005"
+area = "fill/tatami"
+summary = "A tatami fill's route can differ from Ink/Stitch's where the 2 double different stretches of a ring. Each ring's nodes are numbered from its start, and every other stretch between them is doubled from the first. StitchCraft's rings start where the drawing starts them, and Ink/Stitch's where GEOS's overlay starts them. When the 2 starts lie an odd number of nodes apart, the other half of the stretches is doubled, and the walk through the graph takes another route. Every row is still sewn once, back and forth."
+reason = "Ink/Stitch's rings come out of GEOS's set_precision, read at d59c9ab (lib/elements/fill_stitch.py), and probing shapely 2.2.0 with random polygons found no simple rule for where it starts them: not the drawn start, and not one fixed corner. StitchCraft's region keeps the drawing's start (REQ-FILL-001), and the routing is Ink/Stitch's from there (lib/stitches/tatami_fill.py)."
+requirements = ["REQ-FILL-TAT-001"]
+
+[[deviation]]
+id = "DEV-FILL-006"
+area = "fill/tatami"
+summary = "Where a tatami fill's graph has nodes of odd degree, StitchCraft pairs them so that the needle's way between pairs is shortest in all and joins each pair with an edge, and the needle runs that way in running stitches. Ink/Stitch adds paths between them with its graph library, counted in edges, and a row on such a path is sewn again as a row. Between 2 rings, and from the start to the end when they lie on 2 rings, StitchCraft's needle runs along rings and rows, the shortest way. Ink/Stitch, travelling along the outline only, sews the rows on the way as rows. A start or end nearest a ring no row reaches is taken to the nearest ring a row reaches, where Ink/Stitch joins it with straight lines sewn as rows."
+reason = "No row is sewn twice (REQ-FILL-TAT-001): a second row on top of the first thickens the fill in a stripe. Ink/Stitch's behaviour was read at d59c9ab (lib/stitches/tatami_fill.py: graph_make_valid, find_stitch_path, insert_node), and networkx's eulerize, which it calls, at its documented API."
+requirements = ["REQ-FILL-TAT-001"]
 
 [[deviation]]
 id = "DEV-SVG-001"
