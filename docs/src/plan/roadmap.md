@@ -97,12 +97,11 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M5.1 ✅ | A fill's region as the drawing shows it under its fill rule, in parts with holes, its subpaths cut exactly where they meet. Parts too small to sew are left out with `SC-W0303`, as Ink/Stitch leaves them out. Small fills (`SC-W0304`), the fill rule (`SC-I0306`) and fills in parts (`SC-W0307`) are pointed out | `REQ-FILL-001`, `REQ-FILL-002` |
 | M5.2 ✅ | Rows as Ink/Stitch lays them, at the angle and a whole number of row spacings from the origin, graded towards the end spacing. They are cut where they meet the outline, as GEOS cuts them | `REQ-FILL-TAT-002`, `REQ-FILL-TAT-010` |
 | M5.3 ✅ | Needle points as Ink/Stitch places them, on the stagger grid from the origin, with `skip_last` and random stitch length. A fill's longest stitch defaults to 4 mm, so a parameter can have a default for each family | `REQ-FILL-TAT-003` |
-| M5.4 | Routing as Ink/Stitch routes. Every segment sewn once, back and forth, from the needle to the next element, with running stitches along the outline between. A region too thin for any row sewn round its outline, `SC-W0305`. Fills are sewn | `REQ-FILL-TAT-001` |
+| M5.4 ✅ | Routing as Ink/Stitch routes. Every segment sewn once, back and forth, from the needle to the next element, with running stitches along the outline between. Parts sewn one at a time, nearest the needle first, each ending nearest the next. A part too thin for any row sewn round its outline, `SC-W0305`. `fill_method` registered. Fills are sewn | `REQ-FILL-TAT-001`, `REQ-FILL-TAT-008` |
 | M5.5 | Travel under the rows (`underpath`), off the rows already sewn | `REQ-FILL-TAT-005` |
-| M5.6 | Parts sewn one at a time, each ending nearest the next, joined by jumps (`SC-W0307`) | `REQ-FILL-TAT-008` |
-| M5.7 | Underlay, a pass for each angle on the inset region; `expand_mm` | `REQ-FILL-TAT-007` for the underlay's rows |
-| M5.8 | Pull compensation at the rows' ends, holes and parts kept; gap-fill rows inside the region | `REQ-FILL-TAT-006`, `REQ-FILL-TAT-007` |
-| M5.9 | Coverage metric and performance budget | `REQ-FILL-TAT-004`, `REQ-FILL-TAT-009` |
+| M5.6 | Underlay, a pass for each angle on the inset region; `expand_mm` | `REQ-FILL-TAT-007` for the underlay's rows |
+| M5.7 | Pull compensation at the rows' ends, holes and parts kept; gap-fill rows inside the region | `REQ-FILL-TAT-006`, `REQ-FILL-TAT-007` |
+| M5.8 | Coverage metric and performance budget | `REQ-FILL-TAT-004`, `REQ-FILL-TAT-009` |
 | MC-4 🧵 | **TS-07** (fill + outline registration), **TS-08** (density ladder, angles), **TS-09** (underlay, travel) | report filed; fill defaults and pull compensation tuned |
 
 ## M6 — VectorCraft plug-in (ABI v1) and export from `.vectorcraft`

@@ -28,6 +28,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0214`](#sc-e0214) | Error | Satin column drawn as one path could not be made into rails |
 | [`SC-W0303`](#sc-w0303) | Warning | Parts of a fill too small to sew left out |
 | [`SC-W0304`](#sc-w0304) | Warning | Fill smaller than 1.4 mm² |
+| [`SC-W0305`](#sc-w0305) | Warning | Fill part too thin for rows; sewn round its outline |
 | [`SC-I0306`](#sc-i0306) | Info | Nonzero fill rule fills a part the even-odd rule leaves empty |
 | [`SC-W0307`](#sc-w0307) | Warning | Fill in parts that are apart; each sewn on its own |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
@@ -276,7 +277,9 @@ Draw the column with 2 rails, or make the stroke narrower.
 
 A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
 square CSS pixels), a speck about half a millimetre across, is too small for a row, so it is left
-out, as Ink/Stitch leaves it out. Where every part is that small, the fill sews nothing.
+out, as Ink/Stitch leaves it out. Where every part is that small, the fill sews nothing. So does a
+fill that bounds no area at all: subpaths that are lines or points, or that its fill rule leaves
+empty, such as 2 copies of one square under the even-odd rule.
 
 The message counts the parts left out and is placed at the first. Draw them larger, or sew them as a
 running stitch.
@@ -288,6 +291,17 @@ running stitch.
 This fill covers less than 1.4 mm² (20 square CSS pixels). Rows of stitches packed into so small an
 area pile up, and a running stitch round it or a satin column across it usually sews it better.
 Ink/Stitch gives the same advice. The fill is kept as drawn.
+
+## SC-W0305
+
+**Warning** — Fill part too thin for rows; sewn round its outline
+
+A fill is sewn in rows of stitches the row spacing apart, and a part of it so thin that no row
+crosses it gets none. Such a part is sewn as a running stitch round its outline instead, as
+Ink/Stitch sews it.
+
+The message counts the parts. Make them wider, set a smaller `row_spacing_mm`, or sew them as a
+stroke or a satin column.
 
 ## SC-I0306
 

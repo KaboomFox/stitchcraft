@@ -8,8 +8,8 @@
 //!
 //! Elements are generated in sewing order, and each sees its [`Neighbours`]: where the elements before it
 //! left the needle, and what the next element offers to end near, its [`Approach`]
-//! (`docs/src/design/adr/0014-generators-see-their-neighbours.md`). A satin column starts and ends by
-//! them; the other stitch types do not yet.
+//! (`docs/src/design/adr/0014-generators-see-their-neighbours.md`). A satin column and a tatami fill
+//! start and end by them; the other stitch types do not yet.
 
 pub mod manual;
 pub mod passes;
@@ -27,7 +27,8 @@ pub enum Approach {
     /// does not start at its nearest point.
     Point(Point),
     /// It starts at the point of these polylines nearest the needle: a satin column's rails as they are
-    /// sewn, swapped and turned, in the order the element before measures them.
+    /// sewn, swapped and turned, or a fill's rings, part by part and each outline before its holes, in the
+    /// order the element before measures them.
     Shape(Vec<Vec<Point>>),
 }
 
@@ -97,7 +98,9 @@ mod tests {
     #[test]
     fn each_method_leads_back_to_its_stitch_type() {
         // `method` builds the lists at compile time; here it runs, and each option is its type's id and name.
-        for (family, methods) in [(Family::Stroke, crate::generate::STROKE_METHODS), (Family::Satin, satin::SATIN_METHODS)] {
+        for (family, methods) in
+            [(Family::Stroke, crate::generate::STROKE_METHODS), (Family::Satin, satin::SATIN_METHODS), (Family::Fill, crate::generate::FILL_METHODS)]
+        {
             for option in methods {
                 assert_eq!(StitchType::from_id(family, option.id).map(method), Some(*option), "{option:?}");
             }

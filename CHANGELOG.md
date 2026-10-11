@@ -5,6 +5,25 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M5.4: tatami fills are sewn (`REQ-FILL-TAT-001`, `REQ-FILL-TAT-008`).
+  - Each part's row segments are sewn once each, back and forth, in the order Ink/Stitch routes them. One
+    walk goes through the graph of the segments and the stretches of ring between their ends, with every
+    other stretch doubled, and takes a row wherever one is left. The fill starts at the point of its rings
+    nearest the needle and ends at the point nearest the next element. Between rows the needle runs along
+    the outline, the shorter way round, in running stitches of the running stitch's length and tolerance.
+  - Nodes of odd degree are paired by the shortest way between them, and no row is sewn twice, where
+    Ink/Stitch can sew one again (`DEV-FILL-006`). The route can differ from Ink/Stitch's where the 2
+    start a ring at different points (`DEV-FILL-005`).
+  - A fill in parts sews the part nearest the needle first, and each part ends nearest the next. A part
+    too thin for a row is sewn round its outline (`SC-W0305`), and a fill that bounds no area says so
+    (`SC-W0303`). A fill leaves out needle points nearer the one before than the shortest stitch by
+    finalize's rule, which is now one function that both apply.
+  - A tatami fill offers its rings to the element before it, which ends nearest them. `fill_method` is
+    registered, and the other methods are skipped with `SC-W0011`. The running stitch's length and
+    tolerance apply to tatami fills, whose tolerance is 0.2 mm when unset, as Ink/Stitch sews it
+    (`DEV-SAT-006`).
+  - Travel under the rows (`underpath`), underlay and compensation come in the next M5 steps. The roadmap's
+    step for parts is done here, and the later M5 steps move up by one.
 - M5.3: a tatami fill's needle points are placed along its rows as Ink/Stitch places them
   (`REQ-FILL-TAT-003`). Fills are still skipped (`SC-W0011`) until M5.4 routes their rows.
   - The points lie on a grid the longest stitch apart, anchored at the design's origin, each row's a
@@ -519,6 +538,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   zero-length jumps.
 
 ### Golden files
+- Changed `conformance/golden/plans/strokes.pes` and `.dst` (M5.4): the `strokes` fixture's fill is sewn
+  now. The fixture draws it as 2 rectangles, to sew a fill in parts end to end.
 - Changed `conformance/golden/testsheets/TS-02.pes`, `TS-02B.pes`, `TS-10A.pes`, `TS-10B.pes` and
   `TS-10C.pes`: the sheets redrawn for the PE800's hoops (ADR 0013).
 - Added `conformance/golden/testsheets/TS-02B.pes`, `TS-03.pes` and `TS-04.pes`: the exact files MC-2

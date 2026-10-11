@@ -3,12 +3,21 @@
 //!
 //! A fill sews the drawing's shape with Ink/Stitch's stitches: its region is the area the drawing shows
 //! ([`crate::normalize::region`]), the rows across it lie where Ink/Stitch lays them ([`rows`]), and the
-//! needle points along each row lie where Ink/Stitch places them ([`stitches`]). The order the rows are
-//! sewn in, travel, underlay and compensation follow in the rest of M5. Until fills are sewn, their
-//! settings are read and checked, so that a value out of range is said now.
+//! needle points along each row lie where Ink/Stitch places them ([`stitches`]). Each part's rows are sewn
+//! once each, in the order Ink/Stitch routes them (`route`, on a graph kept in Ink/Stitch's order by
+//! `graph`, measured along the part's rings by `rings`), the needle travelling along the outline between
+//! them (`travel`), part after part ([`sew`]). Travel under the rows, underlay and compensation follow in
+//! the rest of M5.
 
+#[cfg(test)]
+mod fixture;
+mod graph;
+mod rings;
+mod route;
 pub mod rows;
+pub mod sew;
 pub mod stitches;
+mod travel;
 
 use stitchcraft_core::Mm;
 use stitchcraft_params::{Origin, StitchType, params};

@@ -114,7 +114,10 @@ fn req_lck_001_locks_go_where_ties_says_and_only_there() {
 fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plans() {
     let square =
         Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0)), Segment::Line(p(5.0, 5.0))], closed: true }] };
-    let fill = Element { shape: Shape::Fill { path: square, rule: FillRule::NonZero }, ..line("fill", (0.0, 0.0), 1.0, &RED, &[]) };
+    let fill = Element {
+        shape: Shape::Fill { path: square, rule: FillRule::NonZero },
+        ..line("fill", (0.0, 0.0), 1.0, &RED, &[("fill_method", "contour_fill")])
+    };
     let ripple = line("ripple", (0.0, 5.0), 10.0, &RED, &[("stroke_method", "ripple_stitch")]);
     let wrong = line("wrong", (0.0, 10.0), 10.0, &RED, &[("running_stitch_length_mm", "long")]);
     let unknown = line("unknown", (0.0, 12.0), 10.0, &RED, &[("stroke_method", "sparkle_stitch")]);
@@ -186,12 +189,16 @@ fn diag_sc_w0011_a_stitch_type_not_sewn_yet_is_named() {
         messages(&ripple),
         ["warning SC-W0011: This element's stroke method, `zigzag_stitch`, is not sewn by this version of StitchCraft yet, so it is skipped."]
     );
-    let square = Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 5.0))], closed: true }] };
-    let fill = Element { shape: Shape::Fill { path: square, rule: FillRule::EvenOdd }, ..line("f", (0.0, 0.0), 1.0, &RED, &[]) };
+    let square =
+        Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0)), Segment::Line(p(5.0, 5.0))], closed: true }] };
+    let fill = Element {
+        shape: Shape::Fill { path: square, rule: FillRule::EvenOdd },
+        ..line("f", (0.0, 0.0), 1.0, &RED, &[("fill_method", "meander_fill")])
+    };
     let outcome = sewn(vec![fill, line("ok", (0.0, 5.0), 10.0, &RED, &[])]);
     assert_eq!(
         messages(&outcome),
-        ["warning SC-W0011: This element is a fill, and this version of StitchCraft does not sew fills yet, so it is skipped."]
+        ["warning SC-W0011: This element's fill method, `meander_fill`, is not sewn by this version of StitchCraft yet, so it is skipped."]
     );
     assert_eq!(outcome.diagnostics[0].element.as_ref().map(ElementId::as_str), Some("f"));
 }

@@ -29,6 +29,7 @@
       - [Running stitch](user/reference/params/running.md)
       - [Repeats and bean stitch](user/reference/params/repeat.md)
       - [Satin column](user/reference/params/satin.md)
+      - [Fill](user/reference/params/fill.md)
       - [Tatami fill](user/reference/params/tatami.md)
     - [Glossary](user/reference/glossary.md)
     - [VectorCraft compatibility](user/reference/compatibility.md)

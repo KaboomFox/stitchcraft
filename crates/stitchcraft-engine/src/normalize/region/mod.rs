@@ -54,6 +54,15 @@ pub struct Polygon {
 }
 
 impl Polygon {
+    /// Whether `p` lies in the part or on one of its rings, decided exactly.
+    pub(crate) fn covers(&self, p: Point) -> bool {
+        match geom::locate_in_ring(p, &self.outline) {
+            geom::Location::Boundary => true,
+            geom::Location::Exterior => false,
+            geom::Location::Interior => self.holes.iter().all(|hole| geom::locate_in_ring(p, hole) != geom::Location::Interior),
+        }
+    }
+
     /// The area it covers: its outline's less its holes', in square millimetres.
     pub fn area(&self) -> f64 {
         geom::signed_area(&self.outline).abs() - self.holes.iter().map(|hole| geom::signed_area(hole).abs()).sum::<f64>()
@@ -110,6 +119,9 @@ pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Ex
     }
     let region = Region { parts: kept_parts };
     diagnostics.extend(tiny_parts(&left_out, region.parts.is_empty()));
+    if region.parts.is_empty() && left_out.is_empty() {
+        diagnostics.push(Diagnostic::new(Code::FillPartsTooSmall, "This fill bounds no area under its fill rule, so it sews nothing."));
+    }
     let area = region.area();
     if area > 0.0 && area < SMALL_FILL {
         let message = format!(

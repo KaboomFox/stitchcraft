@@ -642,9 +642,9 @@ status = "active"
 id = "REQ-FILL-TAT-001"
 area = "fill/tatami"
 level = "L2"
-statement = "Every row segment is covered exactly once by top stitches."
+statement = "Every row segment is sewn exactly once, in the order Ink/Stitch's routing takes them: one walk through the graph of the segments and the stretches of ring between their ends, every other stretch doubled, which takes a row wherever one is left. The fill starts at the point of its rings nearest the needle and ends at the point nearest the next element, and between rows the needle runs along the outline, the shorter way round."
 milestone = "M5"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-FILL-TAT-002"
@@ -702,9 +702,9 @@ status = "planned"
 id = "REQ-FILL-TAT-008"
 area = "fill/tatami"
 level = "L2"
-statement = "A region in parts sews each part on its own, in order of its distance from the needle, each ending nearest the next part. Parts are joined by jumps, with ties and trims where the element's settings say, never by stitches across empty fabric, and SC-W0307 says so."
+statement = "A region in parts sews each part on its own, in order of its distance from the needle (with no needle, of how far left it reaches), each part ending at its point nearest the next and the last nearest the next element, as Ink/Stitch sews them. Each part is a group of its own, joined to the next as assembly joins any 2 groups, and SC-W0307 says the fill is in parts."
 milestone = "M5"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-FILL-TAT-010"

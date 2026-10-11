@@ -12,7 +12,8 @@
 //!    of stitches (where the needle lands, and where a jump, trim or stop follows) and lock points always
 //!    stay, and leave out the ones before them instead; a point where the needle already is adds nothing
 //!    and is left out too. A stitch into or out of a lock point is a lock stitch, whose shortest is
-//!    0.2 mm. `SC-I0504` says how many were left out.
+//!    0.2 mm. `SC-I0504` says how many were left out. The rule is one function, `thin`, which the
+//!    generators that join pieces of their own share, so that they leave finalize nothing to thin.
 //! 2. **The longest stitch.** A stitch longer than the machine's is split into equal parts: a hand-placed
 //!    stitch, say, or a custom lock's long step (`SC-I0703`). Each part counts against the stitch budget.
 //! 3. **The machine.** Too many colour changes and stops for the machine's format is `SC-E0601`. A design
@@ -30,6 +31,7 @@ use stitchcraft_plan::{MachineProfile, Role, Stitch, StitchKind, StitchPlan};
 use crate::design::DesignSettings;
 use crate::generate::shortest_stitch;
 use crate::generators::mm;
+use crate::thin::thin;
 
 /// A plan fitted to the machine and checked.
 #[derive(Clone, Debug, PartialEq)]
@@ -127,32 +129,16 @@ impl<'s> Fitted<'s> {
     /// Fits the run of stitches gathered so far and moves it to `out`. Its first point is where the needle
     /// lands and its last where the next entry happens, so both stay, as lock points do.
     fn flush(&mut self, run: &mut Vec<Stitch>, out: &mut Vec<Stitch>, meter: &mut Meter) -> Result<(), Exhausted> {
-        let last = run.len().saturating_sub(1);
-        let mut kept: Vec<Stitch> = Vec::with_capacity(run.len());
-        for (i, point) in run.drain(..).enumerate() {
-            let Some(&from) = kept.last() else {
-                kept.push(point);
-                continue;
-            };
-            if at_least(from.at.distance(point.at), self.floor(&from, &point)) {
-                kept.push(point);
-            } else if i != last && point.origin.role != Role::Lock {
-                self.left_out(&point);
-            } else {
-                // A point that stays: the ones before it go instead, back to one that stays.
-                while kept.len() > 1
-                    && kept.last().is_some_and(|k| k.origin.role != Role::Lock && !at_least(k.at.distance(point.at), self.floor(k, &point)))
-                {
-                    kept.pop();
-                    self.left_out(&point);
-                }
-                // Where the needle already is, it adds nothing: a stitch in place.
-                if kept.last().is_some_and(|k| k.at == point.at) {
-                    self.left_out(&point);
-                } else {
-                    kept.push(point);
-                }
-            }
+        let mut short_of = Vec::new();
+        let kept = thin(
+            std::mem::take(run),
+            |point| point.at,
+            |from, to| !at_least(from.at.distance(to.at), self.floor(from, to)),
+            |point| point.origin.role == Role::Lock,
+            |next| short_of.push(self.shortest_of(next)),
+        );
+        for shortest in short_of {
+            self.left_out(shortest);
         }
         let mut from: Option<Stitch> = None;
         for point in kept {
@@ -176,10 +162,9 @@ impl<'s> Fitted<'s> {
         if from.origin.role == Role::Lock || to.origin.role == Role::Lock { LOCK_MIN_STITCH.get() } else { self.shortest_of(to) }
     }
 
-    /// Counts a needle point left out because a stitch to it, or from the one before it to `next`, would
-    /// be shorter than `next`'s element's shortest stitch.
-    fn left_out(&mut self, next: &Stitch) {
-        let shortest = self.shortest_of(next);
+    /// Counts a needle point left out because a stitch to it, or from the one before it to the point that
+    /// stays, would be shorter than `shortest`, that point's element's shortest stitch.
+    fn left_out(&mut self, shortest: f64) {
         self.merged += 1;
         self.short_of = Some(self.short_of.map_or((shortest, shortest), |(least, most)| (least.min(shortest), most.max(shortest))));
     }

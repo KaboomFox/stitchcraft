@@ -127,7 +127,10 @@ fn subpaths_of_fewer_than_3_points_bound_nothing() {
     let square = vec![p(0.0, 0.0), p(4.0, 0.0), p(4.0, 4.0), p(0.0, 4.0)];
     let built = region(&[square.clone(), vec![p(1.0, 1.0)], vec![p(2.0, 2.0), p(3.0, 2.0)]], FillRule::NonZero);
     assert_eq!(built, region(&[square], FillRule::NonZero));
-    assert_eq!(region(&[], FillRule::NonZero), Built::default());
+    // With nothing bounded at all, the fill says so.
+    let none = region(&[], FillRule::NonZero);
+    assert!(none.region.parts.is_empty());
+    assert_eq!(none.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::FillPartsTooSmall]);
 }
 
 #[test]
@@ -147,6 +150,17 @@ fn parts_of_exactly_3_square_pixels_are_left_out_and_fills_of_exactly_20_are_not
     let twenty = region(&[rectangle(20.0 * MM_PER_SVG_PX)], FillRule::NonZero);
     assert_eq!(twenty.region.area(), SMALL_FILL);
     assert!(twenty.diagnostics.is_empty());
+}
+
+#[test]
+fn a_part_covers_its_inside_and_its_rings_but_not_its_holes() {
+    let square = vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)];
+    let hole = vec![p(4.0, 4.0), p(6.0, 4.0), p(6.0, 6.0), p(4.0, 6.0)];
+    let built = region(&[square, hole], FillRule::EvenOdd);
+    let part = &built.region.parts[0];
+    let covers = |x, y| part.covers(p(x, y));
+    assert!(covers(2.0, 2.0) && covers(0.0, 5.0) && covers(4.0, 5.0), "inside, on the outline, on the hole's ring");
+    assert!(!covers(5.0, 5.0) && !covers(11.0, 5.0), "in the hole, outside");
 }
 
 #[test]

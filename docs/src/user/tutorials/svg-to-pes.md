@@ -57,15 +57,14 @@ red first, and blue when the machine stops.
 
 ## When StitchCraft warns
 
-StitchCraft says what it changes or leaves out of a design. This one from StitchCraft's tests has a
-filled rectangle and 2 lines that nearly touch:
+StitchCraft says what it changes or leaves out of a design. This one from StitchCraft's tests has a fill
+of 2 rectangles and 2 lines that nearly touch:
 
 ```console
 {{#include ../reference/generated/plan-strokes.txt}}
 ```
 
-- `SC-W0011` names the fill. Fills are sewn from milestone M5, and until then the rest of the design is
-  sewn without it.
+- `SC-W0307` names the fill, whose 2 rectangles are sewn one after the other, with a jump between them.
 - `SC-I0504` says a needle point too close to the one before was left out, where the lines nearly touch.
 
 `stitch explain` with a code tells you more, and [diagnostic codes](../reference/diagnostics.md) lists
