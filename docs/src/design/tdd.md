@@ -113,10 +113,10 @@ identical to Ink/Stitch's SVG attributes because that is the interoperability co
 | VectorCraft plug-in (ABI v1), export from `.vectorcraft`, compatibility gate | P1 | M6 |
 | Zigzag/E/S stitches, contour, meander, circular fill | P2 | M7 |
 | Ink/Stitch SVG import (attributes, commands, clones) and differential testing | P2 | M8 |
-| VectorCraft ABI v2 (upstream RFC): export inside VectorCraft, rich parameter panels, overlay preview | P2 | M9 |
 | Guided, gradient, ripple, tartan, cross stitch; auto-run/auto-satin | P3 | M10 |
 | EXP, JEF, VP3, XXX, U01 formats; thread catalogues | P3 | M11 |
 | 1.0 hardening, translations, release automation | — | M12 |
+| VectorCraft ABI v2 (upstream RFC), for export from File › Export, overlay previews, rich parameter panels and a machine profile per document | after 1.0 | M9, last |
 
 The full milestone and step list is in [the roadmap](../plan/roadmap.md).
 
@@ -270,7 +270,7 @@ Three phases (full design in [VectorCraft integration](vectorcraft-integration.m
    stitch preview. `dev.stitchcraft.tools` is an *object filter* (make satin, add rung, bake preview).
    Machine files come from `stitch export design.vectorcraft`. (The namespace is one constant, changed
    in one place once the project has a domain.)
-2. **ABI v2, proposed upstream (M9).** Exporter plug-ins, rich parameter schemas (labels, units,
+2. **ABI v2, proposed upstream (M9, after 1.0).** Exporter plug-ins, rich parameter schemas (labels, units,
    groups, conditions), a display-only overlay channel for real stitch previews, budget classes and
    document-level plug-in data. Written as [an RFC](rfc-vectorcraft-abi-v2.md) for the ArtCraft team;
    every item is generic, not embroidery-specific.

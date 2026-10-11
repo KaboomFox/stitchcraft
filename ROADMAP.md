@@ -44,9 +44,9 @@ open owner action from M0.5 is the code-of-conduct contact.
 | M6 | VectorCraft plug-in (ABI v1), export from `.vectorcraft`, compatibility gate | ⚪ | MC-5 ⚪ |
 | M7 | Zigzag/E/S stitches, contour, meander, circular fills | ⚪ | MC-6 ⚪ |
 | M8 | Ink/Stitch SVG interoperability, differential testing | ⚪ | — |
-| M9 | VectorCraft ABI v2 (upstream RFC) | ⚪ | — |
 | M10 | Guided, gradient, ripple, tartan, cross stitch; routing tools | ⚪ | — |
 | M11 | EXP, JEF, VP3, XXX, U01; thread catalogues | ⚪ | — |
 | M12 | 1.0: performance, docs audit, translations, release automation | ⚪ | MC-7 ⚪ |
+| M9 | VectorCraft ABI v2 (upstream RFC), last: after 1.0 and the work after it | ⚪ | none |
 
 Legend: ⚪ not started · 🟡 in progress · 🟢 done (with links to the checkpoint report)

@@ -385,6 +385,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The roadmap's M9, VectorCraft ABI v2 proposed upstream, comes last: after 1.0 and the work after it.
+  1.0 has the ABI v1 plug-in from M6, and nothing before M9 waits on ArtCraft's answer to the RFC.
 - The running stitch page's pictures show their differences plainly. Each stitch length gets the page's
   full width, the tolerance is shown on a half disc whose curve comes out round, angular or as a trapezoid,
   and random stitch length on 14 rows close together, whose needle points line up in columns or scatter.
