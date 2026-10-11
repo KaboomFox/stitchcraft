@@ -1,5 +1,6 @@
-//! A tatami fill sewn: its parts one at a time, each part's rows in the order `route` gives,
-//! with running stitches along the needle's way between them (`REQ-FILL-TAT-001`, `REQ-FILL-TAT-008`).
+//! A tatami fill sewn: its parts one at a time, in each part the layers of its underlay and then its top
+//! rows, each layer's rows in the order `route` gives, with running stitches along the needle's way
+//! between them (`REQ-FILL-TAT-001`, `REQ-FILL-TAT-008`, `REQ-FILL-TAT-011`).
 //!
 //! **Parts.** Ink/Stitch sews a fill's parts nearest the needle first, a part the needle is in being 0
 //! away, and with no needle, from the part farthest left. Each part ends at its point nearest the next
@@ -24,6 +25,17 @@
 //!
 //! **No rows.** A part too thin for any row is sewn as a running stitch round its outline, from the
 //! outline's start, as Ink/Stitch sews it (`SC-W0305`).
+//!
+//! **Underlay.** Before its top rows each part sews its underlay, a [`Layer`] for each angle, in the order
+//! given (`REQ-FILL-TAT-011`). A layer is sewn as the top rows are, with rows, travel and no row as above, but
+//! from the point of the part's rings nearest the needle back to that point, as Ink/Stitch sews a fill
+//! with nothing to end near. The next layer, and then the top rows, start where the last ended, so the
+//! part stays one run. A layer with no row goes round the outline from its start, as the top rows do
+//! (`SC-I0308`), and that start can lie away from the needle. The needle goes on to it as Ink/Stitch's
+//! stitch plan joins a layer to the next: straight on within the element's jump length, and farther in
+//! a run of its own, which assembly reaches with a jump. The join is made here because Ink/Stitch never
+//! forces locks after a layer of underlay, where assembly would after any group with
+//! `force_lock_stitches`.
 //!
 //! **The shortest stitch.** Rows the row spacing apart start and end nearer each other than the shortest
 //! stitch a machine sews well, and a row's first grid point can lie just past its start. A needle point
@@ -51,7 +63,8 @@ use crate::normalize::region::{Polygon, Region};
 use crate::thin::thin;
 
 /// How the needle travels between rows: in stitches this long, within this tolerance of the way, none
-/// shorter than the shortest stitch, in millimetres, and under the rows or along the rings.
+/// shorter than the shortest stitch, in millimetres, and under the rows or along the rings. And how far it
+/// goes straight on to a layer that starts away from it.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Travel {
     /// The running stitch's length.
@@ -62,16 +75,29 @@ pub struct Travel {
     pub min_stitch: f64,
     /// Whether travel runs under the rows not sewn yet (`underpath`).
     pub underpath: bool,
+    /// The element's jump length: a layer that starts no farther than this from the needle goes on from it
+    /// with a straight stitch, and one farther away is a run of its own.
+    pub jump: f64,
 }
 
-/// The stitches of a tatami fill over `region`, stitched as `stitching` says, travelling as `travel` says,
-/// from the needle where the elements before left it to near the `next` element. Random lengths draw from
-/// `rng`. Each part is a run. Work is charged to `meter` for every ring point, row, node, edge, step and
-/// stitch.
+/// One layer of a tatami fill: its top rows, or a layer of its underlay.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Layer {
+    /// Where the rows lie and how they are stitched.
+    pub stitching: Stitching,
+    /// How the needle travels between them.
+    pub travel: Travel,
+}
+
+/// The stitches of a tatami fill over `region`: in each part the layers of its `underlay` in order, each
+/// back to where it started, then its `top` rows, from the needle where the elements before left it to
+/// near the `next` element. Random lengths draw from `rng`. Each part is a run, unless a layer with no row
+/// starts farther from the needle than the jump length. Work is charged to `meter` for every ring point,
+/// row, node, edge, step and stitch.
 pub fn tatami_fill(
     region: &Region,
-    stitching: &Stitching,
-    travel: Travel,
+    top: &Layer,
+    underlay: &[Layer],
     needle: Option<Point>,
     next: Option<&Approach>,
     rng: &mut SplitMix64,
@@ -81,49 +107,111 @@ pub fn tatami_fill(
     let end = ending(region, next, meter)?;
     let mut needle = needle;
     let (mut runs, mut warnings) = (Vec::new(), Vec::new());
-    let mut outlined = 0;
-    for (i, part) in parts.iter().enumerate() {
+    // The parts whose top rows found no row, and the layers of underlay that found none.
+    let (mut outlined, mut bare) = (0, 0);
+    for (i, polygon) in parts.iter().enumerate() {
         let here = match parts.get(i + 1) {
-            Some(after) => nearest_pair(&rings_of(part), &rings_of(after), meter)?.map(|(on, _)| on),
+            Some(after) => nearest_pair(&rings_of(polygon), &rings_of(after), meter)?.map(|(on, _)| on),
             None => end,
         };
-        let rings = Rings::new(part, meter)?;
-        let segments = segments(part, stitching, meter)?;
-        let sewn = match route(&rings, &segments, needle, here, meter)? {
-            Some(route) => {
-                let lines = if travel.underpath { Underpath::new(part, &rings, &route.nodes, &segments, stitching.grid.angle, meter)? } else { None };
-                let network = Network::new(&route.nodes, &rings, &row_ends(&route), meter)?;
-                Sewing { route: &route, part, rings: &rings, stitching, travel, lines, network }.sew(rng, meter, &mut warnings)?
-            }
-            None => {
-                outlined += 1;
-                vec![along_line(&part.outline, travel.length, travel.tolerance, travel.min_stitch, meter)?]
-            }
-        };
+        let part = Part { polygon, rings: Rings::new(polygon, meter)? };
+        let mut sewn = Vec::new();
+        for layer in underlay {
+            let (layer_runs, rowless) = part.sew(layer, needle, None, rng, meter, &mut warnings)?;
+            bare += usize::from(rowless);
+            needle = layer_runs.iter().rev().find_map(|run| run.last().copied()).or(needle);
+            append(&mut sewn, layer_runs, layer.travel.jump);
+        }
+        let (top_runs, rowless) = part.sew(top, needle, here, rng, meter, &mut warnings)?;
+        outlined += usize::from(rowless);
+        append(&mut sewn, top_runs, top.travel.jump);
         let sewn: Vec<Vec<Point>> = sewn
             .into_iter()
-            .map(|run| thin(run, |p| *p, |a, b| !at_least(a.distance(*b), travel.min_stitch), |_| false, |_| ()))
+            .map(|run| thin(run, |p| *p, |a, b| !at_least(a.distance(*b), top.travel.min_stitch), |_| false, |_| ()))
             .filter(|run| !run.is_empty())
             .collect();
         needle = sewn.iter().rev().find_map(|run| run.last().copied()).or(needle);
         runs.extend(sewn);
     }
-    if outlined > 0 {
-        let message = match (outlined, parts.len()) {
-            (1, 1) => {
-                "This fill is too thin for a row of stitches at its row spacing, so it is sewn as a running stitch round its outline.".to_string()
-            }
-            (1, _) => "1 of this fill's parts is too thin for a row of stitches at its row spacing, so it is sewn as a running stitch round its \
-                       outline."
-                .to_string(),
-            (n, _) => format!(
-                "{n} of this fill's parts are too thin for a row of stitches at its row spacing, so each is sewn as a running stitch round its \
-                 outline."
-            ),
-        };
-        warnings.push(Diagnostic::new(Code::FillTooThin, message));
-    }
+    warnings.extend(too_thin(outlined, parts.len()));
+    warnings.extend(underlay_too_thin(bare));
     Ok(Stitched { runs, warnings })
+}
+
+/// `SC-W0305` for the `outlined` parts of `parts` whose top rows found no row and went round the outline.
+fn too_thin(outlined: usize, parts: usize) -> Option<Diagnostic> {
+    let message = match (outlined, parts) {
+        (0, _) => return None,
+        (1, 1) => "This fill is too thin for a row of stitches at its row spacing, so it is sewn as a running stitch round its outline.".to_string(),
+        (1, _) => "1 of this fill's parts is too thin for a row of stitches at its row spacing, so it is sewn as a running stitch round its \
+                   outline."
+            .to_string(),
+        (n, _) => format!(
+            "{n} of this fill's parts are too thin for a row of stitches at its row spacing, so each is sewn as a running stitch round its \
+             outline."
+        ),
+    };
+    Some(Diagnostic::new(Code::FillTooThin, message))
+}
+
+/// `SC-I0308` for the `bare` layers of underlay that found no row and went round their part's outline.
+fn underlay_too_thin(bare: usize) -> Option<Diagnostic> {
+    let message = match bare {
+        0 => return None,
+        1 => "1 layer of this fill's underlay finds no row at the underlay's row spacing, so it is sewn as a running stitch round its part's \
+              outline."
+            .to_string(),
+        n => format!(
+            "{n} layers of this fill's underlay find no row at the underlay's row spacing, so each is sewn as a running stitch round its part's \
+             outline."
+        ),
+    };
+    Some(Diagnostic::new(Code::FillUnderlayTooThin, message))
+}
+
+/// Adds the runs of the next layer to `runs`. Its first run goes on from the last of `runs` when it starts
+/// no farther than `jump` from where that one ends, as a layer starts where the last ended, or as
+/// Ink/Stitch sews on to a layer that starts near; otherwise it is a run of its own.
+fn append(runs: &mut Vec<Vec<Point>>, more: Vec<Vec<Point>>, jump: f64) {
+    let mut more = more.into_iter();
+    let Some(first) = more.next() else { return };
+    match runs.last_mut() {
+        Some(last) if last.last().zip(first.first()).is_some_and(|(a, b)| at_least(jump, a.distance(*b))) => extend(last, first),
+        _ => runs.push(first),
+    }
+    runs.extend(more);
+}
+
+/// A part, with its rings measured once for all its layers.
+struct Part<'a> {
+    polygon: &'a Polygon,
+    rings: Rings<'a>,
+}
+
+impl Part<'_> {
+    /// The runs `layer` sews over the part, from the point of its rings nearest `start` to the point
+    /// nearest `end`, or back to where it started without an `end`, and whether it found no row and went
+    /// round the outline. A jump the route needs is said in `warnings`.
+    fn sew(
+        &self,
+        layer: &Layer,
+        start: Option<Point>,
+        end: Option<Point>,
+        rng: &mut SplitMix64,
+        meter: &mut Meter,
+        warnings: &mut Vec<Diagnostic>,
+    ) -> Result<(Vec<Vec<Point>>, bool), Exhausted> {
+        let Layer { stitching, travel } = layer;
+        let (part, rings) = (self.polygon, &self.rings);
+        let segments = segments(part, stitching, meter)?;
+        let Some(route) = route(rings, &segments, start, end, meter)? else {
+            return Ok((vec![along_line(&part.outline, travel.length, travel.tolerance, travel.min_stitch, meter)?], true));
+        };
+        let lines = if travel.underpath { Underpath::new(part, rings, &route.nodes, &segments, stitching.grid.angle, meter)? } else { None };
+        let network = Network::new(&route.nodes, rings, &row_ends(&route), meter)?;
+        let mut sewing = Sewing { route: &route, part, rings, stitching, travel: *travel, lines, network };
+        Ok((sewing.sew(rng, meter, warnings)?, false))
+    }
 }
 
 /// A part's rings as polylines: the outline, then the holes.
@@ -292,7 +380,7 @@ mod tests {
         Stitching { grid: Grid { angle: 0.0, spacing: 1.0, end_spacing: None }, length: 3.0, staggers: 4.0, skip_last, jitter: None }
     }
 
-    const TRAVEL: Travel = Travel { length: 2.0, tolerance: 0.2, min_stitch: 1e-6, underpath: false };
+    const TRAVEL: Travel = Travel { length: 2.0, tolerance: 0.2, min_stitch: 1e-6, underpath: false, jump: 3.0 };
 
     /// The runs `route` sews in `part`, travelling along its rings and rows.
     fn sew(

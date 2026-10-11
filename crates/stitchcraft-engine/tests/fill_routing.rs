@@ -2,21 +2,24 @@
 //! the order Ink/Stitch routes them, from the point nearest the needle to the point nearest the next
 //! element; parts one at a time, nearest the needle first, each ending nearest the next. Between rows the
 //! needle travels along the outline, or with `underpath` inside the part, under the rows not sewn yet
-//! (`REQ-FILL-TAT-005`). A part too thin for a row is sewn round its outline (`SC-W0305`).
+//! (`REQ-FILL-TAT-005`). Before its top rows each part sews its underlay, a layer for each angle, each
+//! back to where it started (`REQ-FILL-TAT-011`). A part too thin for a row is sewn round its outline
+//! (`SC-W0305`), and a layer of underlay too thin for one is too (`SC-I0308`).
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
 use stitchcraft_core::math::sin_cos;
 use stitchcraft_core::rng::SplitMix64;
-use stitchcraft_core::{Budget, ElementId, Point};
+use stitchcraft_core::{Budget, Code, ElementId, Point};
 use stitchcraft_engine::design::{Element, FillRule, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::generators::Approach;
 use stitchcraft_engine::generators::tatami::rows::{Grid, rows};
-use stitchcraft_engine::generators::tatami::sew::{Travel, tatami_fill};
+use stitchcraft_engine::generators::tatami::sew::{Layer, Travel, tatami_fill};
 use stitchcraft_engine::generators::tatami::stitches::{Stitching, row_points};
 use stitchcraft_engine::normalize::region::{Polygon, Region, build};
 use stitchcraft_params::ParamSet;
+use stitchcraft_plan::{Role, StitchKind};
 use stitchcraft_testkit::designs::{RED, line, messages, p, planned};
 
 /// A path of closed subpaths, one through each list of points.
@@ -40,8 +43,9 @@ fn stitching(angle: f64) -> Stitching {
     Stitching { grid: Grid { angle, spacing: 1.0, end_spacing: None }, length: 3.0, staggers: 4.0, skip_last: false, jitter: None }
 }
 
-/// Travel along the outline in stitches of 2 mm, and a shortest stitch too short to thin anything.
-const TRAVEL: Travel = Travel { length: 2.0, tolerance: 0.2, min_stitch: 1e-6, underpath: false };
+/// Travel along the outline in stitches of 2 mm, a shortest stitch too short to thin anything, and the
+/// design's jump length.
+const TRAVEL: Travel = Travel { length: 2.0, tolerance: 0.2, min_stitch: 1e-6, underpath: false, jump: 3.0 };
 /// The same, under the rows.
 const UNDER: Travel = Travel { underpath: true, ..TRAVEL };
 
@@ -50,9 +54,20 @@ fn sewn(region: &Region, how: &Stitching, needle: Option<Point>, next: Option<&A
 }
 
 fn sewn_with(travel: Travel, region: &Region, how: &Stitching, needle: Option<Point>, next: Option<&Approach>) -> Vec<Vec<Point>> {
-    let stitched = tatami_fill(region, how, travel, needle, next, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
+    layered(region, &Layer { stitching: *how, travel }, &[], needle, next)
+}
+
+/// The runs of a fill over `region`, its `top` rows after its `underlay`, which says nothing about it.
+fn layered(region: &Region, top: &Layer, underlay: &[Layer], needle: Option<Point>, next: Option<&Approach>) -> Vec<Vec<Point>> {
+    let stitched = tatami_fill(region, top, underlay, needle, next, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
     assert_eq!(stitched.warnings, Vec::new());
     stitched.runs
+}
+
+/// Layers of underlay at `angles`, rows 3 mm apart in stitches of 3 mm, travelling under the rows.
+fn underlay(angles: &[f64]) -> Vec<Layer> {
+    let layer = |angle| Layer { stitching: Stitching { grid: Grid { spacing: 3.0, ..stitching(angle).grid }, ..stitching(angle) }, travel: UNDER };
+    angles.iter().copied().map(layer).collect()
 }
 
 /// How far `q` is from the segment from `a` to `b`.
@@ -261,18 +276,24 @@ fn diag_sc_w0305_a_fill_too_thin_for_a_row_is_sewn_round_its_outline() {
         ["warning SC-W0305: This fill is too thin for a row of stitches at its row spacing, so it is sewn as a running stitch round its outline."]
     );
     let region = region(&[sliver]);
-    let stitched = tatami_fill(
-        &region,
-        &Stitching { grid: Grid { angle: 0.0, spacing: 0.25, end_spacing: None }, ..stitching(0.0) },
-        TRAVEL,
-        None,
-        None,
-        &mut SplitMix64::new(1),
-        &mut Budget::DEFAULT.meter(),
-    )
-    .unwrap();
+    let top = Layer { stitching: Stitching { grid: Grid { angle: 0.0, spacing: 0.25, end_spacing: None }, ..stitching(0.0) }, travel: TRAVEL };
+    let stitched = tatami_fill(&region, &top, &[], None, None, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
     let run = &stitched.runs[0];
     assert_eq!((run[0], *run.last().unwrap()), (p(0.0, 0.05), p(0.0, 0.05)), "round its outline from its start");
+    // Its underlay at 90° has rows across it, and comes back to its first row's start, on its left side.
+    // The top rows then go round the outline from its start, 0.15 mm away: within the jump length the
+    // needle goes straight on there, and beyond it they are a run of their own, which assembly reaches with
+    // a jump, as Ink/Stitch's plan joins them.
+    let layered = |jump| {
+        let top = Layer { travel: Travel { jump, ..top.travel }, ..top };
+        let under = underlay(&[90.0]).into_iter().map(|layer| Layer { travel: Travel { jump, ..layer.travel }, ..layer }).collect::<Vec<_>>();
+        tatami_fill(&region, &top, &under, None, None, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap().runs
+    };
+    let (on, apart) = (layered(0.2), layered(0.1));
+    assert_eq!((on.len(), apart.len()), (1, 2));
+    assert_eq!((apart[0][0], *apart[0].last().unwrap()), (p(0.0, 0.2), p(0.0, 0.2)));
+    assert_eq!(&apart[1], run);
+    assert_eq!(on[0], [&apart[0][..], &apart[1][..]].concat());
     // One part of 2 too thin, and 2 of 3.
     let square: &[(f64, f64)] = &[(0.0, 10.0), (5.0, 10.0), (5.0, 15.0), (0.0, 15.0)];
     let outcome = planned(vec![fill("two", &[sliver, square])]);
@@ -295,10 +316,111 @@ fn diag_sc_w0305_a_fill_too_thin_for_a_row_is_sewn_round_its_outline() {
 #[test]
 fn req_fill_tat_001_routing_is_charged_to_the_budget() {
     let region = region(&FRAME);
+    let top = Layer { stitching: stitching(0.0), travel: TRAVEL };
     let mut meter = Budget::DEFAULT.meter();
-    tatami_fill(&region, &stitching(0.0), TRAVEL, None, None, &mut SplitMix64::new(1), &mut meter).unwrap();
+    tatami_fill(&region, &top, &[], None, None, &mut SplitMix64::new(1), &mut meter).unwrap();
     let work = Budget::DEFAULT.max_work - meter.work_left();
     assert!(work > 100, "{work}");
     let tight = &mut Budget { max_stitches: 1_000_000, max_work: work - 1 }.meter();
-    assert!(tatami_fill(&region, &stitching(0.0), TRAVEL, None, None, &mut SplitMix64::new(1), tight).is_err());
+    assert!(tatami_fill(&region, &top, &[], None, None, &mut SplitMix64::new(1), tight).is_err());
+    // The underlay is charged too: the same budget does not reach the top rows after it.
+    let tight = &mut Budget { max_stitches: 1_000_000, max_work: work }.meter();
+    assert!(tatami_fill(&region, &top, &underlay(&[90.0]), None, None, &mut SplitMix64::new(1), tight).is_err());
+}
+
+#[test]
+fn req_fill_tat_011_each_layer_comes_back_to_where_it_started_and_the_top_rows_follow() {
+    // The frame from outside its right side, the L from beside its inner corner, and the frame with no
+    // needle, where the first layer starts at its first row's start.
+    let next = Approach::Point(p(-2.0, 0.0));
+    for (shape, needle) in [(&FRAME[..], Some(p(13.0, 4.0))), (&ELL[..], Some(p(5.0, 5.5))), (&FRAME[..], None)] {
+        let region = region(shape);
+        let (top, underlay) = (Layer { stitching: stitching(30.0), travel: UNDER }, underlay(&[120.0, 0.0]));
+        let alone = |layer: &Layer, needle: Option<Point>, next: Option<&Approach>| {
+            let runs = layered(&region, layer, &[], needle, next);
+            assert_eq!(runs.len(), 1);
+            runs.into_iter().next().unwrap()
+        };
+        // Each layer, sewn with nothing after it, comes back to where it started, and the next starts there,
+        // as the top rows do: each a ring's point worked out again, so to a nanometre.
+        let first = alone(&underlay[0], needle, None);
+        let start = first[0];
+        let second = alone(&underlay[1], Some(start), None);
+        let rows = alone(&top, Some(start), Some(&next));
+        for q in [first.last(), second.first(), second.last(), rows.first()] {
+            assert!(q.unwrap().distance(start) < 1e-9, "{needle:?}: {q:?} is not {start:?}");
+        }
+        // Sewn together, the part is one run: the layers in turn, then the top rows, each going on from
+        // where the last ended.
+        let together = layered(&region, &top, &underlay, needle, Some(&next));
+        assert_eq!(together, [[&first[..], &second[1..], &rows[1..]].concat()], "{needle:?}");
+    }
+    // Without a needle the first layer starts at its first row's start.
+    let region = region(&FRAME);
+    let how = underlay(&[120.0])[0].stitching;
+    let first_row = rows(&region.parts[0], &how.grid, &mut Budget::DEFAULT.meter()).unwrap()[0].segments[0];
+    let runs = layered(&region, &Layer { stitching: stitching(30.0), travel: UNDER }, &underlay(&[120.0]), None, None);
+    assert_eq!(runs[0][0], first_row.start);
+}
+
+#[test]
+fn req_fill_tat_011_a_fill_sews_its_underlay_first_unless_it_is_turned_off() {
+    // A 10 mm square at 0°: its underlay's rows stand upright, 0.75 mm apart, in stitches of 4 mm, where
+    // its top rows lie flat and travel runs in stitches of 2.5 mm. The first long upright stitch comes
+    // before the first long flat one, and with the underlay off there is none.
+    let square: &[(f64, f64)] = &[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)];
+    let first_long = |params: &[(&str, &str)]| {
+        let element = Element { params: params.iter().copied().collect(), ..fill("square", &[square]) };
+        let outcome = planned(vec![element]);
+        let plan = outcome.plan.unwrap();
+        let stitches: Vec<Point> = plan.stitches().filter(|s| s.kind == StitchKind::Normal && s.origin.role == Role::Top).map(|s| s.at).collect();
+        let long = |upright: bool| {
+            stitches.windows(2).position(|w| {
+                let (dx, dy) = ((w[1].x() - w[0].x()).abs(), (w[1].y() - w[0].y()).abs());
+                if upright { dx < 1e-9 && dy > 3.0 } else { dy < 1e-9 && dx > 3.0 }
+            })
+        };
+        (long(true), long(false))
+    };
+    let (upright, flat) = first_long(&[]);
+    assert!(upright.unwrap() < flat.unwrap(), "{upright:?} {flat:?}");
+    assert_eq!(first_long(&[("fill_underlay", "false")]).0, None);
+    // At the angles it is given, in turn: flat first, then upright.
+    let (upright, flat) = first_long(&[("fill_underlay_angle", "0 90")]);
+    assert!(flat.unwrap() < upright.unwrap(), "{upright:?} {flat:?}");
+}
+
+#[test]
+fn diag_sc_i0308_a_layer_of_underlay_too_thin_for_a_row_is_sewn_round_the_outline() {
+    // Upright bars 0.5 mm wide, between the upright underlay rows at 0, 0.75, … 3 and 3.75 mm, which flat
+    // top rows 0.25 mm apart cross.
+    let bar: &[(f64, f64)] = &[(0.1, 0.0), (0.6, 0.0), (0.6, 20.0), (0.1, 20.0)];
+    let other: &[(f64, f64)] = &[(3.1, 0.0), (3.6, 0.0), (3.6, 20.0), (3.1, 20.0)];
+    let outcome = planned(vec![fill("bar", &[bar])]);
+    assert_eq!(
+        messages(&outcome),
+        ["info SC-I0308: 1 layer of this fill's underlay finds no row at the underlay's row spacing, so it is sewn as a running stitch round \
+          its part's outline."]
+    );
+    // 2 bars, each with an upright layer and a flat one, whose rows cross them: 2 of 4 layers find none.
+    let both = Element { params: [("fill_underlay_angle", "90 0")].into_iter().collect(), ..fill("bars", &[bar, other]) };
+    let shown = messages(&planned(vec![both]));
+    assert!(
+        shown.contains(
+            &"info SC-I0308: 2 layers of this fill's underlay find no row at the underlay's row spacing, so each is sewn as a running stitch \
+              round its part's outline."
+                .to_string()
+        ),
+        "{shown:?}"
+    );
+    // Round the outline from its start, back to it, and the top rows from there.
+    let region = region(&[bar]);
+    let top = Layer { stitching: Stitching { grid: Grid { angle: 0.0, spacing: 0.25, end_spacing: None }, ..stitching(0.0) }, travel: TRAVEL };
+    let thin = Layer { stitching: Stitching { grid: Grid { angle: 90.0, spacing: 0.75, end_spacing: None }, ..stitching(90.0) }, travel: TRAVEL };
+    let stitched = tatami_fill(&region, &top, &[thin], None, None, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(stitched.warnings.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::FillUnderlayTooThin]);
+    assert_eq!(stitched.runs.len(), 1);
+    let outline = &region.parts[0].outline;
+    let back = stitched.runs[0].iter().skip(1).position(|q| q == &outline[0]).unwrap() + 1;
+    assert!(outline.iter().all(|corner| stitched.runs[0][..=back].contains(corner)), "{:?}", &stitched.runs[0][..=back]);
 }

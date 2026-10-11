@@ -35,7 +35,7 @@ Designs store every value as text, the same way for every host:
 - **Angles** are degrees (`45`, `45°` or `45deg`), turned into the range from −180 (exclusive) to 180.
 - **Percentages** may end in `%`.
 - **On or off** is `true` or `false`; `yes`/`no`, `on`/`off` and `1`/`0` work too.
-- **Lists** (several lengths or numbers) are separated by spaces or commas: `2.5 1.2`.
+- **Lists** (several lengths, numbers or angles) are separated by spaces or commas: `2.5 1.2`.
 - **Seeds** are a number or any text; empty means \"derive it from the element\", so every element
   differs but every run is the same.
 
@@ -237,6 +237,10 @@ fn property(spec: &ParamSpec) -> Result<Json, String> {
         Kind::CountList { min, max } => {
             json!({"type": "array", "minItems": 1, "maxItems": MAX_LIST, "items": {"type": "integer", "minimum": min, "maximum": max}})
         }
+        Kind::AngleList { optional } => {
+            let kinds = if optional { json!(["array", "null"]) } else { json!("array") };
+            json!({"type": kinds, "minItems": 1, "maxItems": MAX_LIST, "items": {"type": "number"}})
+        }
         Kind::Text { max_bytes } => json!({"type": "string", "maxLength": max_bytes}),
     };
     let mut extra = json!({"group": spec.group, "origin": origin(spec.origin), "stability": stability(spec.stability)});
@@ -288,7 +292,7 @@ fn unwrapped(markdown: &str) -> String {
 fn json_value(value: &Value) -> Json {
     match value {
         Value::Length(Some(mm)) => json!(mm.get()),
-        Value::Length(None) | Value::Seed(None) | Value::LengthPair(None) | Value::PercentPair(None) => Json::Null,
+        Value::Length(None) | Value::Seed(None) | Value::LengthPair(None) | Value::PercentPair(None) | Value::Angles(None) => Json::Null,
         Value::Angle(v) | Value::Percent(v) | Value::Number(v) => json!(v),
         Value::Count(n) => json!(n),
         Value::Toggle(on) => json!(on),
@@ -301,6 +305,7 @@ fn json_value(value: &Value) -> Json {
         Value::PercentPair(Some(pair)) => json!(pair),
         Value::Percents(percents) => json!(percents),
         Value::Counts(counts) => json!(counts),
+        Value::Angles(Some(angles)) => json!(angles),
         Value::Text(text) => json!(text),
     }
 }

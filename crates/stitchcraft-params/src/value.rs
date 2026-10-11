@@ -5,10 +5,12 @@
 //! accepted, clamped into range with `SC-W0102`, or rejected with `SC-E0101`; it never falls back to the
 //! default in silence (REQ-PRM-002). Lengths accept a unit (`mm`, `in`, `pt`; millimetres without one);
 //! an optional length of 0 or less counts as empty, because Ink/Stitch reads it as "not set".
-//! angles are normalized to (−180, 180], and a seed may be any text: a number is used as it is, other
-//! text is hashed (FNV-1a), so any seed a file stores works. A value for each of 2 sides is 1 value, for
-//! both, or 2 separated by a space, as Ink/Stitch writes them. An optional pair is empty only when its text
-//! is: 0 is a value for a side, as in Ink/Stitch.
+//! Angles are normalized to (−180, 180], each angle of a list too, and a seed may be any text: a number is
+//! used as it is, other text is hashed (FNV-1a), so any seed a file stores works. A value for each of 2
+//! sides is 1 value, for both, or 2 separated by a space, as Ink/Stitch writes them. An optional pair is
+//! empty only when its text is: 0 is a value for a side, as in Ink/Stitch. Lists take spaces or commas
+//! between their values. Ink/Stitch splits its lists at spaces, and reads one it cannot split so, such as
+//! `45,90`, as its default.
 
 use stitchcraft_core::units::{MM_PER_INCH, MM_PER_POINT};
 use stitchcraft_core::{Code, Diagnostic, Mm};
@@ -44,6 +46,8 @@ pub enum Value {
     Percents(Vec<f64>),
     /// Whole numbers.
     Counts(Vec<u32>),
+    /// Angles in degrees, each in (−180, 180]; `None` only for an optional list left empty.
+    Angles(Option<Vec<f64>>),
     /// Text.
     Text(String),
 }
@@ -54,7 +58,7 @@ impl Value {
         let join = |items: Vec<String>| items.join(" ");
         match self {
             Value::Length(Some(mm)) => mm.get().to_string(),
-            Value::Length(None) | Value::Seed(None) | Value::LengthPair(None) | Value::PercentPair(None) => String::new(),
+            Value::Length(None) | Value::Seed(None) | Value::LengthPair(None) | Value::PercentPair(None) | Value::Angles(None) => String::new(),
             Value::Angle(v) | Value::Percent(v) | Value::Number(v) => v.to_string(),
             Value::Count(n) => n.to_string(),
             Value::Toggle(on) => on.to_string(),
@@ -65,6 +69,7 @@ impl Value {
             Value::PercentPair(Some(pair)) => pair_text(*pair),
             Value::Percents(percents) => join(percents.iter().map(f64::to_string).collect()),
             Value::Counts(counts) => join(counts.iter().map(u32::to_string).collect()),
+            Value::Angles(Some(angles)) => join(angles.iter().map(f64::to_string).collect()),
             Value::Text(text) => text.clone(),
         }
     }
@@ -85,10 +90,7 @@ impl Kind {
                 let (mm, clamped) = clamp(given, min, max);
                 Some((Value::Length(Some(Mm::new(mm).ok()?)), clamped))
             }
-            Kind::Angle => {
-                let degrees = number(text.strip_suffix('°').or_else(|| text.strip_suffix("deg")).unwrap_or(text))?.rem_euclid(360.0);
-                Some((Value::Angle(if degrees > 180.0 { degrees - 360.0 } else { degrees }), false))
-            }
+            Kind::Angle => Some((Value::Angle(angle(text)?), false)),
             Kind::Percent { min, max } => {
                 let (percent, clamped) = clamp(percent(text)?, min, max);
                 Some((Value::Percent(percent), clamped))
@@ -149,6 +151,11 @@ impl Kind {
                 }
                 Some((Value::Counts(counts), clamped))
             }
+            Kind::AngleList { optional: true } if text.is_empty() => Some((Value::Angles(None), false)),
+            Kind::AngleList { .. } => {
+                let angles = list(text)?.into_iter().map(angle).collect::<Option<Vec<f64>>>()?;
+                Some((Value::Angles(Some(angles)), false))
+            }
             Kind::Text { max_bytes } => (raw.len() <= max_bytes).then(|| (Value::Text(raw.to_string()), false)),
         }
     }
@@ -199,6 +206,18 @@ impl ParamSpec {
 fn number(text: &str) -> Option<f64> {
     let value: f64 = text.trim().parse().ok()?;
     value.is_finite().then_some(value)
+}
+
+/// An angle in degrees, from a number with an optional `°` or `deg`, normalized to (−180, 180].
+fn angle(text: &str) -> Option<f64> {
+    number(text.strip_suffix('°').or_else(|| text.strip_suffix("deg")).unwrap_or(text)).map(normalized_angle)
+}
+
+/// `degrees` turned by whole turns into (−180, 180], as an angle parameter holds it: an angle a generator
+/// works out, such as a fill's angle plus 90°, then means what the same angle typed in does.
+pub fn normalized_angle(degrees: f64) -> f64 {
+    let turned = degrees.rem_euclid(360.0);
+    if turned > 180.0 { turned - 360.0 } else { turned }
 }
 
 /// A percentage, from a number with an optional `%`.
@@ -314,6 +333,25 @@ mod tests {
         for (raw, degrees) in [("0", 0.0), ("180", 180.0), ("-180", 180.0), ("190", -170.0), ("450", 90.0), ("-90deg", -90.0), ("45°", 45.0)] {
             assert_eq!(Kind::Angle.parse(raw), Some((Value::Angle(degrees), false)), "{raw}");
         }
+        // An angle worked out means what the same angle typed in does: a fill's 135° plus 90°.
+        assert_eq!(normalized_angle(135.0 + 90.0), -135.0);
+        assert_eq!(normalized_angle(-540.0), 180.0);
+    }
+
+    #[test]
+    fn a_list_of_angles_normalizes_each_and_may_be_empty_when_optional() {
+        let angles = Kind::AngleList { optional: true };
+        assert_eq!(angles.parse(" "), Some((Value::Angles(None), false)));
+        assert_eq!(angles.parse("45"), Some((Value::Angles(Some(vec![45.0])), false)));
+        assert_eq!(angles.parse("0, 90deg  270° -450"), Some((Value::Angles(Some(vec![0.0, 90.0, -90.0, -90.0])), false)));
+        for bad in ["45 x", "NaN", "inf 0", &"1 ".repeat(17)] {
+            assert_eq!(angles.parse(bad), None, "{bad}");
+        }
+        // A list that needs a value has none when empty.
+        assert_eq!(Kind::AngleList { optional: false }.parse(""), None);
+        assert_eq!(Kind::AngleList { optional: false }.parse("30 -30"), Some((Value::Angles(Some(vec![30.0, -30.0])), false)));
+        assert_eq!(Value::Angles(None).to_raw(), "");
+        assert_eq!(Value::Angles(Some(vec![0.0, 90.0])).to_raw(), "0 90");
     }
 
     #[test]

@@ -50,6 +50,9 @@ params! {
 
         /// Whole numbers.
         some_counts: CountList = "0", label "Counts", range (0, 9);
+
+        /// Angles, or none.
+        some_angles: OptionalAngleList = "", label "Angles";
     }
 }
 
@@ -64,7 +67,21 @@ fn defaults_apply_when_the_design_says_nothing() {
     let p = read.params;
     assert_eq!((p.a_length_mm.get(), p.an_optional_mm, p.an_angle, p.a_percent, p.a_count), (2.5, None, 0.0, 100.0, 4));
     assert_eq!((p.a_toggle, p.a_choice, p.a_detail.as_str(), p.a_seed), (false, "one", "", None));
-    assert_eq!((p.some_lengths_mm.len(), p.some_counts.as_slice()), (1, [0].as_slice()));
+    assert_eq!((p.some_lengths_mm.len(), p.some_counts.as_slice(), p.some_angles), (1, [0].as_slice(), None));
+}
+
+#[test]
+fn a_list_of_angles_is_read_normalized_or_left_empty() {
+    let read = |value: &str| Everything::from_set(&set(&[("some_angles", value)])).map(|read| read.params.some_angles);
+    assert_eq!(read(" "), Ok(None));
+    assert_eq!(read("90 270"), Ok(Some(vec![90.0, -90.0])));
+    let problems = read("90 up").unwrap_err();
+    assert_eq!(
+        problems.iter().map(ToString::to_string).collect::<Vec<_>>(),
+        ["error SC-E0101: `some_angles` is \"90 up\", but it must be 1 to 16 angles in degrees, separated by spaces, or empty."]
+    );
+    let spec = find(&[&Everything::GROUP], "some_angles").unwrap();
+    assert_eq!((spec.kind, spec.kind.unit()), (Kind::AngleList { optional: true }, "°"));
 }
 
 #[test]
@@ -163,7 +180,7 @@ fn declarations_record_what_the_registry_needs() {
     assert_eq!(g.name, "Everything");
     assert_eq!(g.help(), "One parameter of every kind.");
     assert_eq!(g.applies_to, StitchType::ALL);
-    assert_eq!(g.specs.len(), 12);
+    assert_eq!(g.specs.len(), 13);
     let length = find(&[&g], "a_length_mm").unwrap();
     assert_eq!((length.label, length.help().as_str(), length.group, length.default), ("Length", "A length.", "Numbers", "2.5"));
     assert!(length.family_defaults.is_empty(), "the same default for every family unless it says");
