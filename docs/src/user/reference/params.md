@@ -36,7 +36,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Satin parameters](params/satin.md) | 36 | Satin column, E-stitch, S-stitch, Zigzag satin |
 | [Fill parameters](params/fill.md) | 1 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
-| [Tatami parameters](params/tatami.md) | 12 | Tatami fill |
+| [Tatami parameters](params/tatami.md) | 14 | Tatami fill |
 
 ## Every parameter
 
@@ -57,9 +57,11 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`enable_random_stitch_length`](params/running.md#enable_random_stitch_length) | Random stitch length | Running parameters |
 | [`end_at_nearest_point`](params/satin.md#end_at_nearest_point) | End at nearest point | Satin parameters |
 | [`end_row_spacing_mm`](params/tatami.md#end_row_spacing_mm) | End row spacing | Tatami parameters |
+| [`expand_mm`](params/tatami.md#expand_mm) | Expand | Tatami parameters |
 | [`fill_method`](params/fill.md#fill_method) | Fill method | Fill parameters |
 | [`fill_underlay`](params/tatami.md#fill_underlay) | Underlay | Tatami parameters |
 | [`fill_underlay_angle`](params/tatami.md#fill_underlay_angle) | Underlay angle | Tatami parameters |
+| [`fill_underlay_inset_mm`](params/tatami.md#fill_underlay_inset_mm) | Underlay inset | Tatami parameters |
 | [`fill_underlay_max_stitch_length_mm`](params/tatami.md#fill_underlay_max_stitch_length_mm) | Underlay longest stitch | Tatami parameters |
 | [`fill_underlay_row_spacing_mm`](params/tatami.md#fill_underlay_row_spacing_mm) | Underlay row spacing | Tatami parameters |
 | [`fill_underlay_skip_last`](params/tatami.md#fill_underlay_skip_last) | Skip last underlay stitch | Tatami parameters |

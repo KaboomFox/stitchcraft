@@ -9,7 +9,8 @@
 //! travels under the rows sewn after it (`underpath`), kept inside the part (`clamp`), or with `underpath`
 //! off along the outline (`travel`). Before its top rows each part sews its underlay: rows farther apart,
 //! square to the top rows unless set otherwise, a layer for each angle, each sewn as the top rows are
-//! ([`TatamiParams::underlay`]). Compensation follows in the rest of M5.
+//! ([`TatamiParams::underlay`]), on the part shrunk by the underlay's inset. The top rows cover the part
+//! grown by `expand_mm` ([`TatamiParams::fill`]). Compensation follows in the rest of M5.
 
 mod clamp;
 #[cfg(test)]
@@ -28,7 +29,7 @@ use stitchcraft_params::{Origin, StitchType, normalized_angle, params};
 
 use crate::generators::running::RunningParams;
 use crate::generators::tatami::rows::Grid;
-use crate::generators::tatami::sew::{Layer, Travel};
+use crate::generators::tatami::sew::{Fill, Layer, Travel};
 use crate::generators::tatami::stitches::Stitching;
 
 /// The stitch types a tatami fill's settings apply to.
@@ -53,6 +54,11 @@ params! {
         /// the next.
         end_row_spacing_mm: OptionalLength = "", label "End row spacing", range (0.1, 100.0),
             origin Origin::InkStitchDeviates { deviation: "DEV-FILL-003" };
+
+        /// How far past the drawn edge the top rows reach: each part is grown by this much, with round
+        /// corners, before its rows are laid. The thread's pull opens gaps between fills sewn side by side,
+        /// and this closes them. Negative values pull the rows in from the edge.
+        expand_mm: Length = "0", label "Expand", range (-10.0, 10.0);
     }
 
     "Stitches" {
@@ -91,6 +97,11 @@ params! {
         /// (`max_stitch_length_mm`).
         fill_underlay_max_stitch_length_mm: OptionalLength = "", label "Underlay longest stitch", range (0.1, 25.0);
 
+        /// How far inside the fill's edge its underlay stops: each part is shrunk by this much, with round
+        /// corners, before the underlay's rows are laid, so that none of the underlay shows beyond the top
+        /// rows. Negative values let it reach past the edge.
+        fill_underlay_inset_mm: Length = "0", label "Underlay inset", range (-10.0, 10.0);
+
         /// Leave out the needle point at the end of each underlay row, as `skip_last` does for the top rows.
         fill_underlay_skip_last: Toggle = "false", label "Skip last underlay stitch";
 
@@ -115,6 +126,18 @@ impl TatamiParams {
             staggers: self.staggers,
             skip_last: self.skip_last,
             jitter: running.enable_random_stitch_length.then_some(running.random_stitch_length_jitter_percent / 100.0),
+        }
+    }
+
+    /// The fill as it is sewn: its top rows, stitched with the element's `longest` stitch and the random
+    /// lengths its `running` settings turn on, over each part grown by `expand_mm`, after its underlay
+    /// over each part shrunk by `fill_underlay_inset_mm`, the needle travelling as `travel` says.
+    pub fn fill(&self, longest: Mm, running: &RunningParams, travel: Travel) -> Fill {
+        Fill {
+            top: Layer { stitching: self.stitching(longest, running), travel },
+            expand: self.expand_mm.get(),
+            underlay: self.underlay(longest, travel),
+            inset: self.fill_underlay_inset_mm.get(),
         }
     }
 
@@ -191,5 +214,19 @@ mod tests {
             assert_eq!((grid.spacing, length, skip_last, layer.travel.underpath), (2.0, 3.0, true, false));
         }
         assert_eq!(read(&[("fill_underlay", "false")]).underlay(longest, TRAVEL), Vec::new());
+    }
+
+    #[test]
+    fn req_fill_tat_012_the_fill_grows_its_top_rows_and_shrinks_its_underlay_as_set() {
+        let longest = Mm::new(4.0).unwrap();
+        let running = RunningParams::from_set(&ParamSet::new()).unwrap().params;
+        let set = [("angle", "10"), ("expand_mm", "0.5"), ("fill_underlay_inset_mm", "-0.25")];
+        let fill = read(&set).fill(longest, &running, TRAVEL);
+        assert_eq!((fill.expand, fill.inset), (0.5, -0.25));
+        assert_eq!(fill.top, Layer { stitching: read(&set).stitching(longest, &running), travel: TRAVEL });
+        assert_eq!(fill.underlay, read(&set).underlay(longest, TRAVEL));
+        // Neither, by default.
+        let plain = read(&[]).fill(longest, &running, TRAVEL);
+        assert_eq!((plain.expand, plain.inset), (0.0, 0.0));
     }
 }

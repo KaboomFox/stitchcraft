@@ -32,6 +32,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0306`](#sc-i0306) | Info | Nonzero fill rule fills a part the even-odd rule leaves empty |
 | [`SC-W0307`](#sc-w0307) | Warning | Fill in parts that are apart; each sewn on its own |
 | [`SC-I0308`](#sc-i0308) | Info | Fill underlay too thin for rows; sewn round the outline |
+| [`SC-W0309`](#sc-w0309) | Warning | Fill's expand shrinks a part away; sewn at its own size |
+| [`SC-W0310`](#sc-w0310) | Warning | Fill's underlay inset shrinks a part away; underlay over all of it |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -339,6 +341,26 @@ are sewn over it as usual.
 The message counts the layers, and each part has one for each underlay angle. To sew the underlay
 in rows, set a smaller `fill_underlay_row_spacing_mm` or another `fill_underlay_angle`. To sew no
 underlay, turn `fill_underlay` off.
+
+## SC-W0309
+
+**Warning** — Fill's expand shrinks a part away; sewn at its own size
+
+A fill's top rows are sewn on each part grown by `expand_mm`, or shrunk where it is negative. A part
+too thin for that much shrinking, which wears it away entirely, is sewn at its own size instead, as
+Ink/Stitch sews it, and Ink/Stitch warns of it too.
+
+The message counts the parts. Make `expand_mm` nearer 0.
+
+## SC-W0310
+
+**Warning** — Fill's underlay inset shrinks a part away; underlay over all of it
+
+A fill's underlay is sewn on each part shrunk by `fill_underlay_inset_mm`. A part too thin for that
+much shrinking, which wears it away entirely, has its underlay sewn over all of it instead, as
+Ink/Stitch sews it, and Ink/Stitch warns of it too.
+
+The message counts the parts. Set a smaller `fill_underlay_inset_mm`, or turn `fill_underlay` off.
 
 ## SC-W0401
 

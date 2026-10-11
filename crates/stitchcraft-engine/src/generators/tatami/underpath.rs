@@ -193,6 +193,20 @@ impl Underpath {
         Ok(Some(std::iter::once(from).chain(way.into_iter().map(|(node, ())| node)).filter_map(|node| self.points.get(node).copied()).collect()))
     }
 
+    /// The node nearest `p`, the lowest-numbered of those as near: where Ink/Stitch's fill starts. One unit
+    /// of `meter` for each node.
+    pub(crate) fn nearest(&self, p: Point, meter: &mut Meter) -> Result<Option<NodeId>, Exhausted> {
+        let mut best: Option<(f64, NodeId)> = None;
+        for (id, q) in self.points.iter().enumerate() {
+            meter.charge(1)?;
+            let d = q.distance(p);
+            if best.is_none_or(|(least, _)| d < least) {
+                best = Some((d, id));
+            }
+        }
+        Ok(best.map(|(_, id)| id))
+    }
+
     /// Row segment `segment` is sewn: the edges that cross it close.
     pub(crate) fn sew(&mut self, segment: usize) {
         for &id in self.closes.get(segment).into_iter().flatten() {
@@ -421,6 +435,16 @@ mod tests {
         let meter = &mut Budget::DEFAULT.meter();
         let rings = Rings::new(part, meter).unwrap();
         Underpath::new(part, &rings, &[], segments, angle, meter).unwrap()
+    }
+
+    #[test]
+    fn the_nearest_node_is_the_lowest_numbered_of_those_as_near() {
+        // A point exactly between the first 2 nodes, and one nearest the third.
+        let lines = Underpath { points: vec![p(0.0, 0.0), p(2.0, 0.0), p(1.0, 5.0)], around: Vec::new(), edges: Vec::new(), closes: Vec::new() };
+        let meter = &mut Budget::DEFAULT.meter();
+        assert_eq!(lines.nearest(p(1.0, 0.0), meter).unwrap(), Some(0));
+        assert_eq!(lines.nearest(p(1.0, 4.0), meter).unwrap(), Some(2));
+        assert_eq!(Underpath { points: Vec::new(), ..lines }.nearest(p(1.0, 0.0), meter).unwrap(), None);
     }
 
     #[test]

@@ -174,9 +174,21 @@ why = "on one line, once the earlier pairs have failed, d lies inside the first 
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/normalize/offset/generator.rs"
-mutant = "replace < with <= in raw"
+mutant = "replace < with <= in leftward"
 line = "let reversed = distance < 0.0;"
-why = "offset returns before the 3 steps when the distance is 0, so no raw curve is made at distance 0"
+why = "no curve is made at distance 0: offset returns before the 3 steps, and buffer returns the polygon as it is"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/buffer.rs"
+mutant = "replace < with <= in buffer"
+line = "if distance < 0.0 && worn_away(&polygon.outline, d) {"
+why = "buffer returns the polygon as it is just before when the distance is 0, so this test never sees 0"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/offset/buffer.rs"
+mutant = "replace > with >= in buffer"
+line = "if i > 0 && distance > 0.0 && worn_away(ring, d) {"
+why = "buffer returns the polygon as it is before the loop when the distance is 0, so this test never sees 0"
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/normalize/region/geom.rs"

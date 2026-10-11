@@ -297,6 +297,20 @@ registry! {
     /// underlay, turn `fill_underlay` off.
     FillUnderlayTooThin = "SC-I0308", Info, "Fill underlay too thin for rows; sewn round the outline";
 
+    /// A fill's top rows are sewn on each part grown by `expand_mm`, or shrunk where it is negative. A part
+    /// too thin for that much shrinking, which wears it away entirely, is sewn at its own size instead, as
+    /// Ink/Stitch sews it, and Ink/Stitch warns of it too.
+    ///
+    /// The message counts the parts. Make `expand_mm` nearer 0.
+    FillExpandShrinksAway = "SC-W0309", Warning, "Fill's expand shrinks a part away; sewn at its own size";
+
+    /// A fill's underlay is sewn on each part shrunk by `fill_underlay_inset_mm`. A part too thin for that
+    /// much shrinking, which wears it away entirely, has its underlay sewn over all of it instead, as
+    /// Ink/Stitch sews it, and Ink/Stitch warns of it too.
+    ///
+    /// The message counts the parts. Set a smaller `fill_underlay_inset_mm`, or turn `fill_underlay` off.
+    FillUnderlayInsetShrinksAway = "SC-W0310", Warning, "Fill's underlay inset shrinks a part away; underlay over all of it";
+
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
     /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that
