@@ -119,12 +119,13 @@ mod tests {
 
     #[test]
     fn of_the_segments_beside_the_last_row_the_one_overlapping_it_most_is_taken() {
-        // Row 1, from x = 0 to 10, after row 0. Row 2 overlaps it by 2 mm in its first segment and 4 mm in
-        // its second, and row 3 by 3 mm in its first and 4 mm in its second. Row 4 only touches its end.
+        // Row 1, from x = 0 to 10, after row 0. Row 2 overlaps it by 2 mm in its first segment, from its
+        // start, and 4 mm in its second, and row 3 by 3 mm in its first and 4 mm in its second. Row 4 only
+        // touches its end.
         let segments = [
             (p(0.0, -1.0), p(10.0, -1.0)),
             (p(0.0, 0.0), p(10.0, 0.0)),
-            (p(1.0, 1.0), p(3.0, 1.0)),
+            (p(0.0, 1.0), p(2.0, 1.0)),
             (p(5.0, 1.0), p(9.0, 1.0)),
             (p(6.0, 2.0), p(9.0, 2.0)),
             (p(0.0, 2.0), p(4.0, 2.0)),
