@@ -2,8 +2,9 @@
 # code in small ways and runs the changed crate's tests on each change (.cargo/mutants.toml); a change no
 # test notices is a behaviour nobody checks.
 #
-# Every pull request that touches Rust runs only the mutants in the lines it changes, which takes minutes:
-# each one must be noticed by a test or be a listed equivalent (conformance/mutation.toml). Every week, and
+# Every pull request that touches Rust runs only the mutants in the lines it changes, in four parts dealt
+# round-robin so that a large change fits the jobs' time: each one must be noticed by a test or be a listed
+# equivalent (conformance/mutation.toml). Every week, and
 # on demand, every mutant runs, in four parts dealt round-robin so that each gets a fair share of each
 # crate; `cargo xtask mutants` then adds them up per crate and fails when a crate has more missed mutants
 # than conformance/mutation.toml records. Each job summary lists the mutants no test notices.
@@ -34,10 +35,14 @@ env:
 
 jobs:
   changed:
-    name: no mutant in a changed line goes unnoticed
+    name: mutants in the changed lines, part ${{ matrix.part }} of 4
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -48,18 +53,44 @@ jobs:
       - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
         with:
           tool: cargo-mutants@27.1.0
-      - name: Run the mutants in the lines this pull request changes
-        # cargo-mutants exits 2 when it finds missed mutants and 3 for timeouts; the next step decides.
-        # Anything else (a failing baseline, say) is a failure here.
+      - name: Run this part of the mutants in the lines this pull request changes
+        # cargo-mutants exits 2 when it finds missed mutants and 3 for timeouts; the last job decides.
+        # Anything else (a failing baseline, say) is a failure here. cargo-mutants writes its lists only
+        # when it tries a mutant, and an empty list stands in for a part with none to try.
         env:
           BASE: ${{ github.base_ref }}
         run: |
           git diff "origin/$BASE...HEAD" > pr.diff
-          cargo mutants --workspace --in-diff pr.diff --jobs 2 --output changed || status=$?
+          cargo mutants --workspace --in-diff pr.diff --shard $(( ${{ matrix.part }} - 1 ))/4 --sharding round-robin --jobs 2 --output "part-${{ matrix.part }}" || status=$?
           echo "cargo mutants exited with ${status:-0}"
           case "${status:-0}" in 0|2|3) ;; *) exit "$status" ;; esac
+          mkdir -p "part-${{ matrix.part }}/mutants.out" && touch "part-${{ matrix.part }}/mutants.out/caught.txt"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: changed-part-${{ matrix.part }}
+          path: part-${{ matrix.part }}/mutants.out/*.txt
+
+  changed-summary:
+    name: no mutant in a changed line goes unnoticed
+    needs: changed
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install --profile minimal
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: changed-part-*
+          path: parts
       - name: Every one is noticed by a test, or a listed equivalent
-        run: cargo xtask mutants --changed changed
+        run: |
+          dirs=()
+          for part in parts/changed-part-*; do
+            mkdir -p "$part/mutants.out" && mv "$part"/*.txt "$part/mutants.out/"
+            dirs+=("$part")
+          done
+          cargo xtask mutants --changed "${dirs[@]}"
 
   shard:
     name: mutants, part ${{ matrix.part }} of 4
