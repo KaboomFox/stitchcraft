@@ -76,9 +76,22 @@ fn a_family_reads_its_own_default_and_the_others_the_plain_one() {
     assert_eq!(fill.a_fill_length_mm.map(|mm| mm.get()), Some(4.0));
     assert_eq!(Everything::from_set_for(&ParamSet::new(), Family::Satin).unwrap().params.a_fill_length_mm, None);
     assert_eq!(Everything::from_set(&ParamSet::new()).unwrap().params.a_fill_length_mm, None);
-    // A design's value stands for every family, empty ones too.
-    let empty = Everything::from_set_for(&set(&[("a_fill_length_mm", "")]), Family::Fill).unwrap().params;
-    assert_eq!(empty.a_fill_length_mm, None);
+    // A family with a default of its own needs a value, as Ink/Stitch's fills need a longest stitch: left
+    // empty, the length is the family's default, and 0 or less is raised to the least it accepts. The
+    // other families read both as no value.
+    let fill = |value: &str| {
+        let read = Everything::from_set_for(&set(&[("a_fill_length_mm", value)]), Family::Fill).unwrap();
+        (read.params.a_fill_length_mm.map(|mm| mm.get()), read.warnings.iter().map(|d| format!("{}: {}", d.code, d.message)).collect::<Vec<_>>())
+    };
+    assert_eq!(fill(" "), (Some(4.0), vec![]));
+    assert_eq!(fill("2.5"), (Some(2.5), vec![]));
+    assert_eq!(fill("0"), (Some(0.1), vec!["SC-W0102: `a_fill_length_mm` is 0, outside 0.1 to 25 mm; 0.1 mm is used.".to_string()]));
+    assert_eq!(fill("-2").0, Some(0.1));
+    for value in ["", "0", "-2"] {
+        let read = |family| Everything::from_set_for(&set(&[("a_fill_length_mm", value)]), family).unwrap();
+        assert!([Family::Stroke, Family::Satin].map(read).iter().all(|read| read.params.a_fill_length_mm.is_none() && read.warnings.is_empty()));
+        assert_eq!(Everything::from_set(&set(&[("a_fill_length_mm", value)])).unwrap().params.a_fill_length_mm, None);
+    }
 }
 
 #[test]

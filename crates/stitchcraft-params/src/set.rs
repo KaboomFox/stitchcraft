@@ -59,22 +59,25 @@ pub struct Validated<T> {
     pub warnings: Vec<Diagnostic>,
 }
 
-/// Reads parameter `spec` from `set` as kind `K`: its text, or its default when the design does not set
-/// it, `family`'s own when it has one. Problems go to `problems`; `None` means the value cannot be used
-/// (`SC-E0101`, or `SC-E0009` for a registry bug such as a default that does not parse).
+/// Reads parameter `spec` from `set` as kind `K`, as a stitch type of `family` reads it
+/// ([`ParamSpec::in_family`]): its text, or its default when the design does not set it. A value that
+/// may be empty and is, is not set either, as Ink/Stitch reads every empty setting. Problems go to
+/// `problems`; `None` means the value cannot be used (`SC-E0101`, or `SC-E0009` for a registry bug such
+/// as a default that does not parse).
 pub fn read_param<K: ParamKind>(
     set: &ParamSet,
     spec: Option<&ParamSpec>,
     family: Option<Family>,
     problems: &mut Vec<Diagnostic>,
 ) -> Option<K::Value> {
-    let Some(spec) = spec else {
+    let Some(declared) = spec else {
         problems.push(Diagnostic::new(Code::InternalCheckFailed, "A parameter group has fewer specs than fields."));
         return None;
     };
+    let spec = family.map_or(*declared, |family| declared.in_family(family));
     let (raw, from_design) = match set.get(spec.key) {
-        Some(raw) => (raw, true),
-        None => (family.map_or(spec.default, |family| spec.default_for(family)), false),
+        Some(raw) if !(declared.kind.optional() && raw.trim().is_empty()) => (raw, true),
+        _ => (spec.default, false),
     };
     match spec.read(raw) {
         Ok((value, warning)) if from_design || warning.is_none() => {
