@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-df24d111.js";
+            window.path_to_searchindex_js = "../searchindex-6bcde6e9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-67ac7601.js"></script>
+        <script src="../toc-f616c49b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,7 +181,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="conformance-testing"><a class="header" href="#conformance-testing">Conformance testing</a></h1>
-<!-- implements: crates/stitchcraft-testkit/src/** -->
+<!-- implements: crates/stitchcraft-testkit/src/**, crates/stitchcraft-engine/src/normalize/fixture.rs -->
 <p>When behaviour is specified only by its implementation, fixes for one input break another and nobody
 can say what “correct” means. StitchCraft specifies behaviour as <strong>requirements</strong>, proves each with <strong>cases</strong>, and reports the result
 as a <strong>matrix</strong> on every pull request. Code is written to make cases pass, not the other way round
@@ -262,6 +262,13 @@ files = ["golden/formats/every-command.pes", "golden/testsheets/TS-01.dst"]   # 
 </code></pre>
 <p>It needs Python with pyembroidery (<code>STITCHCRAFT_PYTHON</code>, see <code>conformance/oracle/requirements.txt</code>):
 without it the case is skipped locally (⏭ in the report) and fails in CI, like every optional tool.</p>
+<p>Geometry that Ink/Stitch leaves to shapely is checked against shapely’s own answers. Scripts in
+<code>conformance/oracle/</code> ask a pinned shapely, through its public API alone, about random lines: the
+nearest points of rails (<code>nearest.py</code>), offset curves (<code>offset.py</code>) and the measures that make a satin
+column’s rails from its centre line (<code>centre_line.py</code>). Their answers are fixtures under
+<code>conformance/fixtures/geometry/</code>, one question to a line of text, and the engine’s unit tests read them
+with a shared reader (<code>normalize::fixture</code>) and answer every question the same way. Regenerating a
+fixture needs shapely, and checking it does not.</p>
 <p>From M3, <code>design</code> cases take an SVG or JSON design and parameters, and check generator properties:</p>
 <pre><code class="language-toml">id = "fill-tatami-gap-preserved"
 requirements = ["REQ-FILL-TAT-006", "REQ-FILL-TAT-007"]

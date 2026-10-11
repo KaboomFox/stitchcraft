@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-df24d111.js";
+            window.path_to_searchindex_js = "../searchindex-6bcde6e9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-67ac7601.js"></script>
+        <script src="../toc-f616c49b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -258,9 +258,11 @@ tolerance before booleans. Rings with area below <code>min_region_area</code> (d
 <p>A satin column’s path is recognized, since M4.1, as one of 2 shapes (<code>stitchcraft_engine::normalize::satin</code>):</p>
 <pre><code class="language-rust ignore">pub enum Shape {
     Rails(Satin),   // 2 rails as polylines, and what pairs their points: rungs, or the rails' nodes
-    CentreLine,     // one subpath: the stroke's width and join make its rails (M4.9)
+    CentreLine { line: Vec&lt;Point&gt;, closed: bool },  // one subpath, flattened; closed when the path ends with Z
 }</code></pre>
-<p>How rails and rungs are recognised from a host path is part of the <a href="algorithms/satin.html">satin design</a>.</p>
+<p>A centre line is made into a <code>Satin</code> of its own, its rails offset from the line by the stroke’s width and
+join (<code>stitchcraft_engine::normalize::centre_line</code>, since M4.9). How rails and rungs are recognised from
+a host path, and made from a centre line, is part of the <a href="algorithms/satin.html">satin design</a>.</p>
 <h2 id="parameters"><a class="header" href="#parameters">Parameters</a></h2>
 <p><code>ParamSet</code> maps registry keys to typed values; generators receive <em>typed views</em>
 (<code>TatamiParams { row_spacing: Mm, angle: Deg, … }</code>) produced by the registry. See

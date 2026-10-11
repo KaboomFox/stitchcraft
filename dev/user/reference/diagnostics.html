@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-df24d111.js";
+            window.path_to_searchindex_js = "../../searchindex-6bcde6e9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-67ac7601.js"></script>
+        <script src="../../toc-f616c49b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -207,6 +207,8 @@
 <tr><td><a href="#sc-w0210"><code>SC-W0210</code></a></td><td>Warning</td><td>Satin rails without rungs have different numbers of nodes</td></tr>
 <tr><td><a href="#sc-w0211"><code>SC-W0211</code></a></td><td>Warning</td><td>Satin push compensation too long for a rail; that rail keeps its length</td></tr>
 <tr><td><a href="#sc-w0212"><code>SC-W0212</code></a></td><td>Warning</td><td>Satin column drawn as one path too narrow; sewn as a stroke</td></tr>
+<tr><td><a href="#sc-w0213"><code>SC-W0213</code></a></td><td>Warning</td><td>Parts of a satin column drawn as one path left out</td></tr>
+<tr><td><a href="#sc-e0214"><code>SC-E0214</code></a></td><td>Error</td><td>Satin column drawn as one path could not be made into rails</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -354,6 +356,21 @@ stroke, by the element’s stroke settings, as in Ink/Stitch: a running stitch u
 otherwise.</p>
 <p>The message gives the stroke’s width and the limit. Widen the stroke to sew a satin column, or draw
 the column with 2 rails.</p>
+<h2 id="sc-w0213"><a class="header" href="#sc-w0213">SC-W0213</a></h2>
+<p><strong>Warning</strong> — Parts of a satin column drawn as one path left out</p>
+<p>A satin column drawn as one path, its centre line, is made into rails by offsetting the line by half
+the stroke’s width to each side. Where the line crosses itself or comes back near itself, the
+offsets split into several curves, and the line is cut in half, and the halves again, at most 20
+times. Parts whose offsets still split are left out, and so are parts that turn so tightly that an
+offset vanishes. Ink/Stitch leaves out the same parts without a word. The rest of the column is sewn.</p>
+<p>The message says how many parts were left out. Draw the column with 2 rails where its line crosses
+itself or turns more tightly than the column is wide, or make the stroke narrower.</p>
+<h2 id="sc-e0214"><a class="header" href="#sc-e0214">SC-E0214</a></h2>
+<p><strong>Error</strong> — Satin column drawn as one path could not be made into rails</p>
+<p>A satin column drawn as one path, its centre line, could not be made into rails. Its offsets split
+however it is cut, an offset vanishes because the stroke is wider than the line’s turns allow, or
+the line is shorter than a CSS pixel. The column is not sewn.</p>
+<p>Draw the column with 2 rails, or make the stroke narrower.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-df24d111.js";
+            window.path_to_searchindex_js = "../searchindex-6bcde6e9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-67ac7601.js"></script>
+        <script src="../toc-f616c49b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -202,7 +202,8 @@ are marked so running stitches land exactly on them; a curve’s own bend is nev
 <li><strong>Regions:</strong> resolve the fill rule into valid polygons with holes (<code>i_overlay</code>), snap to a 1 µm grid
 first so near-coincident vertices become coincident, drop rings under the minimum area (<code>SC-W0303</code>),
 orient rings explicitly.</li>
-<li><strong>Satins:</strong> classify subpaths into rails and rungs (<a href="algorithms/satin.html#recognizing-rails-and-rungs">satin</a>).</li>
+<li><strong>Satins:</strong> classify subpaths into rails and rungs (<a href="algorithms/satin.html#recognizing-rails-and-rungs">satin</a>), or make
+them from a column’s centre line (<a href="algorithms/satin.html#single-path-satin">single-path satin</a>).</li>
 <li><strong>Strokes:</strong> each subpath becomes its own path piece, in document order.</li>
 <li><strong>Commands</strong> become hints (start/end/target points) on the element.</li>
 </ul>
@@ -229,9 +230,9 @@ M4.2. A satin column also reads the running stitch’s length (<code>running_sti
 that join its underlays are no longer than the first value. For any other stroke the generator is its
 <code>stroke_method</code>. <code>running_stitch</code> (the default) and
 <code>manual_stitch</code> are sewn from M3. A satin column drawn as one path no wider than the design’s
-<code>min_satin_stroke_width</code> is sewn as a stroke, with <code>SC-W0212</code>, as in Ink/Stitch (<code>REQ-SAT-015</code>). The other
-stroke and satin methods, wider satin columns drawn as their centre line, and fills are skipped with
-<code>SC-W0011</code> until their milestones. An element whose parameters are
+<code>min_satin_stroke_width</code> is sewn as a stroke, with <code>SC-W0212</code>, as in Ink/Stitch (<code>REQ-SAT-015</code>). A wider
+one is sewn between rails made from its line from M4.9 (<code>REQ-SAT-016</code>). The other stroke and satin
+methods, and fills, are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are
 wrong (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element

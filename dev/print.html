@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-df24d111.js";
+            window.path_to_searchindex_js = "searchindex-6bcde6e9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-67ac7601.js"></script>
+        <script src="toc-f616c49b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -1319,6 +1319,8 @@ Arguments:
 <tr><td><a href="#sc-w0210"><code>SC-W0210</code></a></td><td>Warning</td><td>Satin rails without rungs have different numbers of nodes</td></tr>
 <tr><td><a href="#sc-w0211"><code>SC-W0211</code></a></td><td>Warning</td><td>Satin push compensation too long for a rail; that rail keeps its length</td></tr>
 <tr><td><a href="#sc-w0212"><code>SC-W0212</code></a></td><td>Warning</td><td>Satin column drawn as one path too narrow; sewn as a stroke</td></tr>
+<tr><td><a href="#sc-w0213"><code>SC-W0213</code></a></td><td>Warning</td><td>Parts of a satin column drawn as one path left out</td></tr>
+<tr><td><a href="#sc-e0214"><code>SC-E0214</code></a></td><td>Error</td><td>Satin column drawn as one path could not be made into rails</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -1466,6 +1468,21 @@ stroke, by the element’s stroke settings, as in Ink/Stitch: a running stitch u
 otherwise.</p>
 <p>The message gives the stroke’s width and the limit. Widen the stroke to sew a satin column, or draw
 the column with 2 rails.</p>
+<h2 id="sc-w0213"><a class="header" href="#sc-w0213">SC-W0213</a></h2>
+<p><strong>Warning</strong> — Parts of a satin column drawn as one path left out</p>
+<p>A satin column drawn as one path, its centre line, is made into rails by offsetting the line by half
+the stroke’s width to each side. Where the line crosses itself or comes back near itself, the
+offsets split into several curves, and the line is cut in half, and the halves again, at most 20
+times. Parts whose offsets still split are left out, and so are parts that turn so tightly that an
+offset vanishes. Ink/Stitch leaves out the same parts without a word. The rest of the column is sewn.</p>
+<p>The message says how many parts were left out. Draw the column with 2 rails where its line crosses
+itself or turns more tightly than the column is wide, or make the stroke narrower.</p>
+<h2 id="sc-e0214"><a class="header" href="#sc-e0214">SC-E0214</a></h2>
+<p><strong>Error</strong> — Satin column drawn as one path could not be made into rails</p>
+<p>A satin column drawn as one path, its centre line, could not be made into rails. Its offsets split
+however it is cut, an offset vanishes because the stroke is wider than the line’s turns allow, or
+the line is shorter than a CSS pixel. The column is not sewn.</p>
+<p>Draw the column with 2 rails, or make the stroke narrower.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
@@ -1954,7 +1971,8 @@ the stitches: “1 0” makes every other stitch bold.</p>
 <p><strong>Satin column.</strong> Sew the path as a satin column. Two of its subpaths are the rails, the column’s edges, and the
 others are rungs across both, which say which point of one rail goes with which of the other.
 Without rungs, the rails’ nodes pair up instead. A path of 1 subpath is the column’s centre
-line, which a later version sews. Off, the path is sewn as a stroke, by its <code>stroke_method</code>.</p>
+line: the column is as wide as the stroke, and turns its corners as the stroke’s join does.
+Off, the path is sewn as a stroke, by its <code>stroke_method</code>.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false</li>
 <li><strong>Default:</strong> <code>false</code></li>
@@ -2948,9 +2966,11 @@ tolerance before booleans. Rings with area below <code>min_region_area</code> (d
 <p>A satin column’s path is recognized, since M4.1, as one of 2 shapes (<code>stitchcraft_engine::normalize::satin</code>):</p>
 <pre><code class="language-rust ignore">pub enum Shape {
     Rails(Satin),   // 2 rails as polylines, and what pairs their points: rungs, or the rails' nodes
-    CentreLine,     // one subpath: the stroke's width and join make its rails (M4.9)
+    CentreLine { line: Vec&lt;Point&gt;, closed: bool },  // one subpath, flattened; closed when the path ends with Z
 }</code></pre>
-<p>How rails and rungs are recognised from a host path is part of the <a href="#satin-generators">satin design</a>.</p>
+<p>A centre line is made into a <code>Satin</code> of its own, its rails offset from the line by the stroke’s width and
+join (<code>stitchcraft_engine::normalize::centre_line</code>, since M4.9). How rails and rungs are recognised from
+a host path, and made from a centre line, is part of the <a href="#satin-generators">satin design</a>.</p>
 <h2 id="parameters-3"><a class="header" href="#parameters-3">Parameters</a></h2>
 <p><code>ParamSet</code> maps registry keys to typed values; generators receive <em>typed views</em>
 (<code>TatamiParams { row_spacing: Mm, angle: Deg, … }</code>) produced by the registry. See
@@ -3325,6 +3345,8 @@ another.</p>
 <tr><td><code>SC-W0210</code></td><td>Warning</td><td>Satin rails without rungs have different numbers of nodes (some pair with none)</td><td>M4</td></tr>
 <tr><td><code>SC-W0211</code></td><td>Warning</td><td>Satin push compensation too long for a rail; that rail keeps its length</td><td>M4</td></tr>
 <tr><td><code>SC-W0212</code></td><td>Warning</td><td>Satin column drawn as one path too narrow; sewn as a stroke</td><td>M4</td></tr>
+<tr><td><code>SC-W0213</code></td><td>Warning</td><td>Parts of a satin column drawn as one path left out (still crossing after 20 cuts in half, or turning too tightly for its width)</td><td>M4</td></tr>
+<tr><td><code>SC-E0214</code></td><td>Error</td><td>Satin column drawn as one path could not be made into rails (too short, or too tight for its width)</td><td>M4</td></tr>
 <tr><td><code>SC-W0303</code></td><td>Warning</td><td>Tiny ring dropped from fill region</td><td>M5</td></tr>
 <tr><td><code>SC-W0305</code></td><td>Warning</td><td>Region too small for fill rows; outlined with running stitch instead</td><td>M5</td></tr>
 <tr><td><code>SC-W0307</code></td><td>Warning</td><td>Region split into parts that are not connected; parts joined with trims</td><td>M5</td></tr>
@@ -3490,7 +3512,8 @@ are marked so running stitches land exactly on them; a curve’s own bend is nev
 <li><strong>Regions:</strong> resolve the fill rule into valid polygons with holes (<code>i_overlay</code>), snap to a 1 µm grid
 first so near-coincident vertices become coincident, drop rings under the minimum area (<code>SC-W0303</code>),
 orient rings explicitly.</li>
-<li><strong>Satins:</strong> classify subpaths into rails and rungs (<a href="#recognizing-rails-and-rungs">satin</a>).</li>
+<li><strong>Satins:</strong> classify subpaths into rails and rungs (<a href="#recognizing-rails-and-rungs">satin</a>), or make
+them from a column’s centre line (<a href="#single-path-satin">single-path satin</a>).</li>
 <li><strong>Strokes:</strong> each subpath becomes its own path piece, in document order.</li>
 <li><strong>Commands</strong> become hints (start/end/target points) on the element.</li>
 </ul>
@@ -3517,9 +3540,9 @@ M4.2. A satin column also reads the running stitch’s length (<code>running_sti
 that join its underlays are no longer than the first value. For any other stroke the generator is its
 <code>stroke_method</code>. <code>running_stitch</code> (the default) and
 <code>manual_stitch</code> are sewn from M3. A satin column drawn as one path no wider than the design’s
-<code>min_satin_stroke_width</code> is sewn as a stroke, with <code>SC-W0212</code>, as in Ink/Stitch (<code>REQ-SAT-015</code>). The other
-stroke and satin methods, wider satin columns drawn as their centre line, and fills are skipped with
-<code>SC-W0011</code> until their milestones. An element whose parameters are
+<code>min_satin_stroke_width</code> is sewn as a stroke, with <code>SC-W0212</code>, as in Ink/Stitch (<code>REQ-SAT-015</code>). A wider
+one is sewn between rails made from its line from M4.9 (<code>REQ-SAT-016</code>). The other stroke and satin
+methods, and fills, are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are
 wrong (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element
@@ -3882,7 +3905,7 @@ properties will include “lines never cross the target point” and “each lin
 interpolated curve”.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="satin-generators"><a class="header" href="#satin-generators">Satin generators</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/normalize/near.rs, crates/stitchcraft-engine/src/generators/satin/** -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/normalize/near.rs, crates/stitchcraft-engine/src/normalize/centre_line.rs, crates/stitchcraft-engine/src/generators/satin/** -->
 <p>A satin column is a band of closely spaced stitches that swing from one edge to the other. It is the
 signature look of lettering and borders, and the stitch type where pull compensation and underlay
 matter most. Phase P1 (M4); the E, S and zigzag variants are P2 (M7).</p>
@@ -3942,8 +3965,62 @@ limit. As a stroke, it offers the element before it its first point.</p>
 <p>The rule counts the subpaths drawn, as Ink/Stitch counts them. A path of 2 subpaths, one of them a point,
 is never sewn as a stroke for its width. Recognition leaves the point out and reads the other subpath as a
 centre line.</p>
-<p>A wider column becomes 2 rails along its centre line from M4.9 on. Until then it is skipped, and
-<code>SC-W0011</code> says so.</p>
+<p>A wider column is sewn between 2 rails made from its centre line. Ink/Stitch makes the rails and places
+the rungs this way. It measures in CSS pixels, and its limits below are converted to millimetres.</p>
+<h3 id="rails-1"><a class="header" href="#rails-1">Rails</a></h3>
+<p>The rails are the centre line offset by half the stroke’s width to each side, with the stroke’s join at
+their corners (<code>REQ-SAT-016</code>). In y-up axes the first lies to the right of the line as it runs and the
+second to its left. The offsets are shapely’s <code>offset_curve</code>, which Ink/Stitch calls, point for point
+(<a href="#offset-curves">offset curves</a>). Inside a bend the offsets meet, and outside it they turn as the join
+says.</p>
+<h3 id="rungs"><a class="header" href="#rungs">Rungs</a></h3>
+<p>Rungs cross the column where its line runs straight beside a sharp corner, and at its nodes
+(<code>REQ-SAT-017</code>):</p>
+<ol>
+<li>Each corner of the line scores the square of its turn in degrees, in the hundredth of the line’s
+length where it lies. Each score is spread over 4 hundredths to either side, weighted 1, 2, 4, 8, 16,
+8, 4, 2, 1. A rung goes where the spread scores stop falling or start rising: before and after each
+sharp corner, where the stitches can fan round it.</li>
+<li>A rung goes at each node of the line as well, never at its very start or end. A straight line of 2
+nodes gets one rung in its middle.</li>
+<li>Going along the line, a rung less than 1 mm from the last one placed is left out.</li>
+<li>Each rung is perpendicular to the line, 1.2 times the column’s width long, and is kept only when it
+crosses each rail exactly once. It pairs the 2 points where it crosses them.</li>
+</ol>
+<p>A column whose rungs are all left out pairs its rails’ points in order, as a column drawn with 2 rails
+and no rungs does (see Correspondence).</p>
+<h3 id="lines-that-cross-themselves"><a class="header" href="#lines-that-cross-themselves">Lines that cross themselves</a></h3>
+<p>Where the line crosses itself or comes back near itself, its offsets split into several curves. A line
+whose offsets split, or whose ends lie within a CSS pixel of each other, is cut in half by length, and
+each half is made on its own, the halves of a half again, at most 20 times deep. The halves’ rails are
+joined end to end, and a rung pairs the first points of the second half’s rails, where the halves meet.</p>
+<p>A part whose offsets still split after 20 cuts is left out, and so is a part whose offset vanishes to
+one side, where the line turns more tightly than the column is wide. <code>SC-W0213</code> counts the stretches of the line left
+out, and the rest of the column is sewn. A stretch shorter than a CSS pixel is left out at once, since
+every half of it would be too. A column with no part left has no rails, and gets <code>SC-E0214</code> and no
+stitches.</p>
+<h3 id="closed-lines"><a class="header" href="#closed-lines">Closed lines</a></h3>
+<p>A path closed with <code>Z</code> is a closed line, as Ink/Stitch reads it. Before its rails are made, it is rolled
+to start in the middle of its first segment whose rung, a thousandth of a CSS pixel longer than the
+column is wide, crosses the edge of the stroke exactly twice: away from where the line crosses itself
+or folds tight. An end of the rung that lies on the edge counts as a crossing, as shapely counts it. A
+line that ends where it starts, closed or drawn back to its start, then starts and
+ends in the middle of its first segment. Its points are rounded to a ten-thousandth of a CSS pixel as
+Ink/Stitch rounds them. Points that then repeat are left out.</p>
+<h3 id="which-lines-are-the-rails"><a class="header" href="#which-lines-are-the-rails">Which lines are the rails</a></h3>
+<p>The rails made from the line are the column’s rails, and every rung pairs the points where it crosses
+them. Ink/Stitch hands the lines it makes back to its satin column as subpaths, which tells rails from
+rungs again by the rules of <a href="#recognizing-rails-and-rungs">Recognizing rails and rungs</a>. When a column
+is short beside its width, its rungs are longer than its rails, and with 2 rungs or more Ink/Stitch
+takes the 2 longest lines, rungs, as the rails. A line that crosses itself can make a rung meet more
+lines than a rail does. StitchCraft keeps the rails it made in both cases, <code>DEV-SAT-007</code> in the
+deviations ledger. Where 2 parts join, Ink/Stitch adds a rung across the gap and uses the points where
+it crosses the rails. Those are the first points of the second part’s rails wherever the parts meet on a
+straight stretch, and StitchCraft pairs those first points. Ink/Stitch also keeps a first part whose
+offset vanishes to one side, with its other rail, where StitchCraft leaves it out with the rest.</p>
+<p>Making the rails costs work in proportion to the square of the line’s number of points. A line of 1,000
+points takes up to about 35 million units of the default budget of 500 million. A plan makes a column’s
+rails twice: once to sew it, and once for the element before it to end near it.</p>
 <h2 id="orientation"><a class="header" href="#orientation">Orientation</a></h2>
 <ul>
 <li><code>swap_satin_rails</code> makes the second rail the first, before any reversal. The first rail sews first in
@@ -4185,6 +4262,88 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <p><code>SC-E0201</code>, <code>SC-W0202</code>, <code>SC-W0203</code>, <code>SC-W0205</code>, <code>SC-W0206</code> (a contour underlay too short for its insets
 keeps its length), <code>SC-W0207</code>, <code>SC-W0208</code>, <code>SC-W0209</code> (a satin wider than 12 mm risks snagging: consider
 split stitches or a fill), <code>SC-W0210</code>, <code>SC-W0211</code> and <code>SC-W0212</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="offset-curves"><a class="header" href="#offset-curves">Offset curves</a></h1>
+<!-- implements: crates/stitchcraft-engine/src/normalize/offset/** -->
+<p>A satin column drawn as one path gets its rails by offsetting its centre line by half the stroke’s width
+to each side (<a href="#single-path-satin">single-path satin</a>). Ink/Stitch makes them with shapely’s
+<code>LineString.offset_curve</code>, which the GEOS library computes, and the same rails sew the same column. So
+StitchCraft builds the curves that function returns, point for point (<code>REQ-SAT-016</code>), with the join
+Ink/Stitch passes and 16 segments to a quarter circle, shapely’s default.</p>
+<h2 id="the-curve-and-its-side"><a class="header" href="#the-curve-and-its-side">The curve and its side</a></h2>
+<p>An offset curve runs beside a line at a fixed distance, on the line’s left in y-up axes for a positive
+distance, which is its right on screen, and on the other side for a negative one. It runs the same way
+as the line. It is the part of the edge of the line’s stroke, the area within the distance of the line,
+that lies along that side. The answer is one curve, or several where the edge splits that side into
+pieces, or none where the stroke covers the whole side.</p>
+<p>A line of fewer than 2 distinct points, or of no length, has no offset, and a line of 2 points is that
+segment moved sideways. At no distance the offset is the line as it is. Anything longer goes through 3
+steps.</p>
+<h2 id="1-the-raw-curve"><a class="header" href="#1-the-raw-curve">1. The raw curve</a></h2>
+<p>Each segment of the line is moved sideways by the distance, and consecutive moved segments are joined
+at the node between them:</p>
+<ul>
+<li><strong>On the outside of a turn</strong>, the join decides. A mitre extends the 2 moved segments to the point
+where they meet, unless that point lies farther from the node than the mitre limit times the
+distance. Then it is cut square across the turn’s bisector at the limit, or bevelled when even the
+bevel lies beyond it. A round join is an arc about the node in equal steps of about a 64th of a
+full turn, and a bevel joins the moved ends straight, or takes them as one point when they are less
+than a thousandth of the distance apart.</li>
+<li><strong>On the inside of a turn</strong>, the curve goes to the point where the moved segments cross, or, if they
+miss each other, in towards the node and back out along 2 short closing segments that the stroke
+covers.</li>
+<li><strong>A turn back</strong> along the same line is a half circle with a round join, and a step across otherwise.</li>
+</ul>
+<p>Before the segments are moved, the line is simplified on the side the curve lies on. A node where the
+line turns towards that side, nearer than a hundredth of the distance to the node kept before it, is
+dropped: there the moved segments would cross and leave a small loop. GEOS also measures the node against
+the straight line past it, and against the lines to the points between, but a node that near the one
+before always passes. The first and last segments always stay. Points of the curve less than a ten-thousandth of the distance from
+the one before are left out.</p>
+<h2 id="2-the-edge-of-the-stroke"><a class="header" href="#2-the-edge-of-the-stroke">2. The edge of the stroke</a></h2>
+<p>The raw curves of both sides, the left forwards and the right backwards, joined by round caps around
+the line’s ends, make one ring around the line. Where the line turns or comes back near itself, the
+ring crosses itself. The stroke covers the points the ring winds round at least once, counted
+clockwise.</p>
+<p>The ring is cut at each point where it crosses itself, and at each end of a segment that lies on
+another segment, within a billionth of the half width. Each piece is judged by the winding just beside
+its middle, on each side. A piece with the covered area on one side only is part of the edge, turned to
+keep that area on its right, and pieces that coincide are one edge. The winding is counted with an exact
+orientation test (<a href="#determinism-1">determinism</a>), so a point that lies on a segment is never on one
+side on one computer and on the other side on another.</p>
+<p>The edges join into rings. Where a ring touches itself, it takes the edge that turns farthest to the
+right, and so stays as small as it can be, as the rings of GEOS’s polygons are. The rings that run
+clockwise are shells, and the others are holes. A ring of no area bounds nothing and is left out. The
+offset is looked for on the shell of the largest area and on the holes inside it.</p>
+<h2 id="3-the-sections"><a class="header" href="#3-the-sections">3. The sections</a></h2>
+<p>The pieces of the edge that lie on the raw curve of the offset’s side, both ends within a ten-thousandth
+of the distance of one of its segments, are the offset. A piece placed along several segments takes the
+place of the last. Consecutive pieces along a ring join into sections, the first starting at the piece
+placed first when it was placed, and the sections are ordered by where along the raw curve each starts.
+One section is the curve, and more mean the offset splits.</p>
+<p>Inside a tight bend the raw curve loops back on itself, inside the stroke: the edge skips the loop, and
+so does the offset. Where the line comes back near itself, the stroke covers part of the raw curve,
+which splits the offset there.</p>
+<h2 id="checking-against-shapely"><a class="header" href="#checking-against-shapely">Checking against shapely</a></h2>
+<p><code>conformance/oracle/offset.py</code> asks shapely 2.2.0, with the GEOS 3.14.1 its wheels bundle, for the
+offset curves of 1,050 random lines: gentle and wild walks, arcs, spirals, waves and zigzags, walks on a
+grid of whole numbers, whose points often lie in line and whose segments run back along others, and
+walks of tiny steps, which are simplified before they are offset. Each is offset at one of 6 distances
+to either side, with one of the joins and 5 mitre limits. Shapely’s answers are the fixture
+<code>conformance/fixtures/geometry/shapely-offset.txt</code>, and the engine’s unit tests check every curve point
+within a billionth of a millimetre, a point repeated a hair apart counted once. Shapely runs as a black
+box, through its public API.</p>
+<p>5 grid walks differ, all lines that run back exactly along themselves or whose stroke’s edge touches
+itself exactly. There the pieces of the edge coincide, and whether GEOS takes 2 of them to meet turns on
+the rounding of its own arithmetic. The engine merges points nearer each other than a billionth of the
+half width, and judges pieces that coincide as one. Its curves differ there by a node on a straight
+stretch, or by a short stretch beside the doubled-back part of the line. The test names those 5 lines,
+so that a change to them is seen.</p>
+<p>A closed line, one that ends where it starts, is buffered by GEOS as a ring, with no caps. The engine
+offsets only open lines. A satin column’s centre line with its ends together is cut in half first.</p>
+<p>Building the edge costs work in proportion to the square of the ring’s length: every piece is checked
+against every other, and its winding against every segment of the ring. A line of 1,000 points takes up
+to about 17 million units of work for each offset.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="fill-generators"><a class="header" href="#fill-generators">Fill generators</a></h1>
 <p>Fills cover a <code>Region</code> (valid polygons with holes, from the normalizer). Tatami is P1 (M5); contour,
@@ -5151,7 +5310,7 @@ changes before release. VectorCraft runs its gates locally rather than on every 
 ours.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="conformance-testing"><a class="header" href="#conformance-testing">Conformance testing</a></h1>
-<!-- implements: crates/stitchcraft-testkit/src/** -->
+<!-- implements: crates/stitchcraft-testkit/src/**, crates/stitchcraft-engine/src/normalize/fixture.rs -->
 <p>When behaviour is specified only by its implementation, fixes for one input break another and nobody
 can say what “correct” means. StitchCraft specifies behaviour as <strong>requirements</strong>, proves each with <strong>cases</strong>, and reports the result
 as a <strong>matrix</strong> on every pull request. Code is written to make cases pass, not the other way round
@@ -5232,6 +5391,13 @@ files = ["golden/formats/every-command.pes", "golden/testsheets/TS-01.dst"]   # 
 </code></pre>
 <p>It needs Python with pyembroidery (<code>STITCHCRAFT_PYTHON</code>, see <code>conformance/oracle/requirements.txt</code>):
 without it the case is skipped locally (⏭ in the report) and fails in CI, like every optional tool.</p>
+<p>Geometry that Ink/Stitch leaves to shapely is checked against shapely’s own answers. Scripts in
+<code>conformance/oracle/</code> ask a pinned shapely, through its public API alone, about random lines: the
+nearest points of rails (<code>nearest.py</code>), offset curves (<code>offset.py</code>) and the measures that make a satin
+column’s rails from its centre line (<code>centre_line.py</code>). Their answers are fixtures under
+<code>conformance/fixtures/geometry/</code>, one question to a line of text, and the engine’s unit tests read them
+with a shared reader (<code>normalize::fixture</code>) and answer every question the same way. Regenerating a
+fixture needs shapely, and checking it does not.</p>
 <p>From M3, <code>design</code> cases take an SVG or JSON design and parameters, and check generator properties:</p>
 <pre><code class="language-toml">id = "fill-tatami-gap-preserved"
 requirements = ["REQ-FILL-TAT-006", "REQ-FILL-TAT-007"]
@@ -5387,7 +5553,7 @@ mutant, which changes nothing a test could observe; it is listed under <code>[[e
 listed equivalent stops counting as one as soon as its line changes.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="determinism-1"><a class="header" href="#determinism-1">Determinism</a></h1>
-<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/rng.rs, apps/stitchcraft-cli/src/commands/bug_report.rs -->
+<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/exact.rs, crates/stitchcraft-core/src/rng.rs, apps/stitchcraft-cli/src/commands/bug_report.rs -->
 <p><strong>Same input, same version ⇒ byte-identical machine file and preview, on Linux, macOS, Windows and
 wasm32.</strong> This makes golden-file conformance possible, makes bug reports reproducible, makes caches
 safe, and means the docs images regenerated in CI match the ones on a contributor’s laptop.</p>
@@ -5400,6 +5566,7 @@ safe, and means the docs images regenerated in CI match the ones on a contributo
 <tbody>
 <tr><td>Hash map iteration order</td><td>No <code>HashMap</code>/<code>HashSet</code> in engine, formats, render, params or adapters’ output paths; use <code>BTreeMap</code>, <code>BTreeSet</code>, <code>IndexMap</code> or sorted <code>Vec</code></td><td><code>clippy::disallowed_types</code> in <code>clippy.toml</code></td></tr>
 <tr><td>Platform <code>libm</code> (<code>sin</code>, <code>cos</code>, <code>atan2</code>, <code>exp</code>, <code>powf</code> differ by last bits across OSes)</td><td>Call transcendental functions only through <code>stitchcraft_core::math</code>, which uses the pure-Rust <code>libm</code> crate</td><td><code>clippy::disallowed_methods</code> on <code>f64::sin</code> &amp; co.</td></tr>
+<tr><td>Which side of a line a point lies on: a rounded cross product can give the wrong sign for points nearly in line</td><td>The <a href="#offset-curves">offset curves</a> decide it with <code>stitchcraft_core::exact::side</code>, which is exact (<a href="#exact-orientation">below</a>)</td><td>unit tests against exact integer arithmetic</td></tr>
 <tr><td>Randomness</td><td>Only <code>stitchcraft_core::rng::SplitMix64</code>, seeded per element from <code>random_seed</code> or a hash of the element id; never the OS RNG, never time</td><td><code>clippy::disallowed_methods</code>/types for <code>rand::thread_rng</code>, <code>SystemTime</code>, <code>Instant</code> in libraries</td></tr>
 <tr><td>Floating-point contraction (FMA)</td><td>Rust does not contract <code>a * b + c</code> implicitly; we never call <code>mul_add</code> in quantization or comparisons</td><td><code>clippy::disallowed_methods</code> on <code>f64::mul_add</code> in formats</td></tr>
 <tr><td>Parallelism</td><td>Results joined in document order; no reductions whose order depends on scheduling</td><td>engine design; CI compares sequential vs parallel output</td></tr>
@@ -5410,6 +5577,15 @@ safe, and means the docs images regenerated in CI match the ones on a contributo
 </tbody>
 </table>
 </div>
+<h2 id="exact-orientation"><a class="header" href="#exact-orientation">Exact orientation</a></h2>
+<p>Whether a point lies left of a line, right of it or on it is the sign of a cross product. Rounded, that
+sign can come out wrong for points nearly in line. Geometry built on a wrong sign tears, with a corner
+turned the wrong way or two crossing segments taken to miss. <code>stitchcraft_core::exact::side</code> decides the
+sign in plain floating point when the product is farther from zero than its largest possible rounding
+error, and otherwise computes it exactly as a sum of floats that do not overlap, with the error-free
+sums and products of J. R. Shewchuk’s <em>Adaptive Precision Floating-Point Arithmetic and Fast Robust
+Geometric Predicates</em> (1997). It uses only <code>+</code>, <code>−</code> and <code>×</code>, and every platform gets the same answer,
+which is the true one.</p>
 <h2 id="the-seeded-prng"><a class="header" href="#the-seeded-prng">The seeded PRNG</a></h2>
 <p><code>SplitMix64</code> (Steele, Lea &amp; Flood, 2014) is tiny, fast, statistically adequate for jitter, and fully
 specified by its 64-bit state update — so its output can be written into a conformance case and will
@@ -6625,7 +6801,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M4.6 ✅</td><td>Underlays: centre walk, contour, zigzag</td><td><code>REQ-SAT-004</code>, <code>REQ-SAT-010</code> to <code>REQ-SAT-012</code></td></tr>
 <tr><td>M4.7 ✅</td><td>Start/end nearest point; generators see their neighbours (ADR 0014)</td><td><code>REQ-GEN-003</code>, <code>REQ-SAT-013</code>, <code>REQ-SAT-014</code></td></tr>
 <tr><td>M4.8 ✅</td><td>A stroke’s width and join, and Ink/Stitch’s design settings, read from SVG as Ink/Stitch reads them. A satin column drawn as one path and too narrow to stitch across is sewn as a stroke, <code>SC-W0212</code></td><td><code>REQ-SVG-004</code>, <code>REQ-SVG-005</code>, <code>REQ-SAT-015</code></td></tr>
-<tr><td>M4.9</td><td>Single-path satin. Its centre line is offset by half the stroke’s width to each side, with the stroke’s join, into 2 rails with rungs at its corners</td><td>cases</td></tr>
+<tr><td>M4.9 ✅</td><td>Single-path satin. Its centre line is offset by half the stroke’s width to each side, with the stroke’s join, into 2 rails, as shapely offsets it, with rungs beside its corners and at its nodes, as Ink/Stitch places them</td><td><code>REQ-SAT-016</code>, <code>REQ-SAT-017</code></td></tr>
 <tr><td>MC-3 🧵</td><td><strong>TS-05</strong> (width ladder 1 to 10 mm × 3 densities), <strong>TS-06</strong> (underlay comparison); kit: <code>stitch testsheet</code> for each, sewable from M4.6</td><td>report filed; satin defaults tuned</td></tr>
 </tbody>
 </table>
@@ -6775,7 +6951,7 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td><strong>TS-09</strong> Fill underlay &amp; travel</td><td>A shape with holes and a separated part; with and without underlay</td><td>Travel hidden? Trims between parts? Holes clean?</td><td>MC-4</td></tr>
 <tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
 <tr><td><strong>TS-11</strong> New stitch types</td><td>Samples of the milestone’s new types</td><td>Per type, as listed on its expected-result sheet</td><td>MC-6</td></tr>
-<tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden?</td><td>MC-5, MC-7</td></tr>
+<tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean?</td><td>MC-5, MC-7</td></tr>
 </tbody>
 </table>
 </div>

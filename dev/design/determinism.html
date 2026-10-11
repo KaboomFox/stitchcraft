@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-df24d111.js";
+            window.path_to_searchindex_js = "../searchindex-6bcde6e9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-67ac7601.js"></script>
+        <script src="../toc-f616c49b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,7 +181,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="determinism"><a class="header" href="#determinism">Determinism</a></h1>
-<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/rng.rs, apps/stitchcraft-cli/src/commands/bug_report.rs -->
+<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/exact.rs, crates/stitchcraft-core/src/rng.rs, apps/stitchcraft-cli/src/commands/bug_report.rs -->
 <p><strong>Same input, same version ⇒ byte-identical machine file and preview, on Linux, macOS, Windows and
 wasm32.</strong> This makes golden-file conformance possible, makes bug reports reproducible, makes caches
 safe, and means the docs images regenerated in CI match the ones on a contributor’s laptop.</p>
@@ -194,6 +194,7 @@ safe, and means the docs images regenerated in CI match the ones on a contributo
 <tbody>
 <tr><td>Hash map iteration order</td><td>No <code>HashMap</code>/<code>HashSet</code> in engine, formats, render, params or adapters’ output paths; use <code>BTreeMap</code>, <code>BTreeSet</code>, <code>IndexMap</code> or sorted <code>Vec</code></td><td><code>clippy::disallowed_types</code> in <code>clippy.toml</code></td></tr>
 <tr><td>Platform <code>libm</code> (<code>sin</code>, <code>cos</code>, <code>atan2</code>, <code>exp</code>, <code>powf</code> differ by last bits across OSes)</td><td>Call transcendental functions only through <code>stitchcraft_core::math</code>, which uses the pure-Rust <code>libm</code> crate</td><td><code>clippy::disallowed_methods</code> on <code>f64::sin</code> &amp; co.</td></tr>
+<tr><td>Which side of a line a point lies on: a rounded cross product can give the wrong sign for points nearly in line</td><td>The <a href="algorithms/offset.html">offset curves</a> decide it with <code>stitchcraft_core::exact::side</code>, which is exact (<a href="#exact-orientation">below</a>)</td><td>unit tests against exact integer arithmetic</td></tr>
 <tr><td>Randomness</td><td>Only <code>stitchcraft_core::rng::SplitMix64</code>, seeded per element from <code>random_seed</code> or a hash of the element id; never the OS RNG, never time</td><td><code>clippy::disallowed_methods</code>/types for <code>rand::thread_rng</code>, <code>SystemTime</code>, <code>Instant</code> in libraries</td></tr>
 <tr><td>Floating-point contraction (FMA)</td><td>Rust does not contract <code>a * b + c</code> implicitly; we never call <code>mul_add</code> in quantization or comparisons</td><td><code>clippy::disallowed_methods</code> on <code>f64::mul_add</code> in formats</td></tr>
 <tr><td>Parallelism</td><td>Results joined in document order; no reductions whose order depends on scheduling</td><td>engine design; CI compares sequential vs parallel output</td></tr>
@@ -204,6 +205,15 @@ safe, and means the docs images regenerated in CI match the ones on a contributo
 </tbody>
 </table>
 </div>
+<h2 id="exact-orientation"><a class="header" href="#exact-orientation">Exact orientation</a></h2>
+<p>Whether a point lies left of a line, right of it or on it is the sign of a cross product. Rounded, that
+sign can come out wrong for points nearly in line. Geometry built on a wrong sign tears, with a corner
+turned the wrong way or two crossing segments taken to miss. <code>stitchcraft_core::exact::side</code> decides the
+sign in plain floating point when the product is farther from zero than its largest possible rounding
+error, and otherwise computes it exactly as a sum of floats that do not overlap, with the error-free
+sums and products of J. R. Shewchuk’s <em>Adaptive Precision Floating-Point Arithmetic and Fast Robust
+Geometric Predicates</em> (1997). It uses only <code>+</code>, <code>−</code> and <code>×</code>, and every platform gets the same answer,
+which is the true one.</p>
 <h2 id="the-seeded-prng"><a class="header" href="#the-seeded-prng">The seeded PRNG</a></h2>
 <p><code>SplitMix64</code> (Steele, Lea &amp; Flood, 2014) is tiny, fast, statistically adequate for jitter, and fully
 specified by its 64-bit state update — so its output can be written into a conformance case and will
