@@ -324,6 +324,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The running stitch page's pictures show their differences plainly. Each stitch length gets the page's
+  full width, the tolerance is shown on a half disc whose curve comes out round, angular or as a trapezoid,
+  and random stitch length on 14 rows close together, whose needle points line up in columns or scatter.
+  With `layout = "rows"` in `docs/shots.toml`, a shot's panels go one under another, each as wide as the
+  page.
 - Mutation testing on a pull request runs in 4 parts, dealt round-robin as the weekly run deals them, and
   a fifth job adds them up. In one part, the 1,142 mutants in the lines M4.9 changes would have run past
   the job's limit of an hour and a half.
