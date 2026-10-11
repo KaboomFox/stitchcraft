@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c2900321.js";
+            window.path_to_searchindex_js = "../searchindex-eab0b8f0.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-c73eb358.js"></script>
@@ -301,10 +301,10 @@ identical to Ink/Stitch’s SVG attributes because that is the interoperability 
 <tr><td>VectorCraft plug-in (ABI v1), export from <code>.vectorcraft</code>, compatibility gate</td><td>P1</td><td>M6</td></tr>
 <tr><td>Zigzag/E/S stitches, contour, meander, circular fill</td><td>P2</td><td>M7</td></tr>
 <tr><td>Ink/Stitch SVG import (attributes, commands, clones) and differential testing</td><td>P2</td><td>M8</td></tr>
-<tr><td>VectorCraft ABI v2 (upstream RFC): export inside VectorCraft, rich parameter panels, overlay preview</td><td>P2</td><td>M9</td></tr>
 <tr><td>Guided, gradient, ripple, tartan, cross stitch; auto-run/auto-satin</td><td>P3</td><td>M10</td></tr>
 <tr><td>EXP, JEF, VP3, XXX, U01 formats; thread catalogues</td><td>P3</td><td>M11</td></tr>
 <tr><td>1.0 hardening, translations, release automation</td><td>—</td><td>M12</td></tr>
+<tr><td>VectorCraft ABI v2 (upstream RFC), for export from File › Export, overlay previews, rich parameter panels and a machine profile per document</td><td>after 1.0</td><td>M9, last</td></tr>
 </tbody>
 </table>
 </div>
@@ -467,7 +467,7 @@ Details: <a href="determinism.html">determinism</a>.</p>
 stitch preview. <code>dev.stitchcraft.tools</code> is an <em>object filter</em> (make satin, add rung, bake preview).
 Machine files come from <code>stitch export design.vectorcraft</code>. (The namespace is one constant, changed
 in one place once the project has a domain.)</li>
-<li><strong>ABI v2, proposed upstream (M9).</strong> Exporter plug-ins, rich parameter schemas (labels, units,
+<li><strong>ABI v2, proposed upstream (M9, after 1.0).</strong> Exporter plug-ins, rich parameter schemas (labels, units,
 groups, conditions), a display-only overlay channel for real stitch previews, budget classes and
 document-level plug-in data. Written as <a href="rfc-vectorcraft-abi-v2.html">an RFC</a> for the ArtCraft team;
 every item is generic, not embroidery-specific.</li>

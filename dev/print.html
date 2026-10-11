@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c2900321.js";
+            window.path_to_searchindex_js = "searchindex-eab0b8f0.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-c73eb358.js"></script>
@@ -2575,10 +2575,10 @@ identical to Ink/Stitch’s SVG attributes because that is the interoperability 
 <tr><td>VectorCraft plug-in (ABI v1), export from <code>.vectorcraft</code>, compatibility gate</td><td>P1</td><td>M6</td></tr>
 <tr><td>Zigzag/E/S stitches, contour, meander, circular fill</td><td>P2</td><td>M7</td></tr>
 <tr><td>Ink/Stitch SVG import (attributes, commands, clones) and differential testing</td><td>P2</td><td>M8</td></tr>
-<tr><td>VectorCraft ABI v2 (upstream RFC): export inside VectorCraft, rich parameter panels, overlay preview</td><td>P2</td><td>M9</td></tr>
 <tr><td>Guided, gradient, ripple, tartan, cross stitch; auto-run/auto-satin</td><td>P3</td><td>M10</td></tr>
 <tr><td>EXP, JEF, VP3, XXX, U01 formats; thread catalogues</td><td>P3</td><td>M11</td></tr>
 <tr><td>1.0 hardening, translations, release automation</td><td>—</td><td>M12</td></tr>
+<tr><td>VectorCraft ABI v2 (upstream RFC), for export from File › Export, overlay previews, rich parameter panels and a machine profile per document</td><td>after 1.0</td><td>M9, last</td></tr>
 </tbody>
 </table>
 </div>
@@ -2741,7 +2741,7 @@ Details: <a href="#determinism-1">determinism</a>.</p>
 stitch preview. <code>dev.stitchcraft.tools</code> is an <em>object filter</em> (make satin, add rung, bake preview).
 Machine files come from <code>stitch export design.vectorcraft</code>. (The namespace is one constant, changed
 in one place once the project has a domain.)</li>
-<li><strong>ABI v2, proposed upstream (M9).</strong> Exporter plug-ins, rich parameter schemas (labels, units,
+<li><strong>ABI v2, proposed upstream (M9, after 1.0).</strong> Exporter plug-ins, rich parameter schemas (labels, units,
 groups, conditions), a display-only overlay channel for real stitch previews, budget classes and
 document-level plug-in data. Written as <a href="#rfc-vectorcraft-plug-in-abi-v2">an RFC</a> for the ArtCraft team;
 every item is generic, not embroidery-specific.</li>
@@ -5169,7 +5169,7 @@ registry a plug-in could add PES to.</li>
 </thead>
 <tbody>
 <tr><td>1. ABI v1 plug-ins</td><td>nothing</td><td>per-object embroidery settings, previews, tools; machine files via <code>stitch export file.vectorcraft</code></td><td>M6</td></tr>
-<tr><td>2. ABI v2 (upstream RFC)</td><td>generic plug-in features</td><td>export from File › Export, real stitch previews, rich parameter panels, progress</td><td>M9</td></tr>
+<tr><td>2. ABI v2 (upstream RFC)</td><td>generic plug-in features</td><td>export from File › Export, real stitch previews, rich parameter panels, progress</td><td>M9, after 1.0</td></tr>
 <tr><td>3. In-tree crate (optional)</td><td>ArtCraft’s interest, or a fork</td><td>native speed, simulator panel, satin tool</td><td>post-1.0</td></tr>
 </tbody>
 </table>
@@ -7055,10 +7055,6 @@ stitch, with <code>SC-W0503</code>.</li>
 library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin, downloaded at a pinned
 commit by <code>cargo xtask corpus</code> and never committed, using only fonts whose licence allows it (OFL, CC0,
 CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).</p>
-<h2 id="m9--vectorcraft-abi-v2-upstream"><a class="header" href="#m9--vectorcraft-abi-v2-upstream">M9 — VectorCraft ABI v2 (upstream)</a></h2>
-<p>Open the <a href="#rfc-vectorcraft-plug-in-abi-v2">RFC</a> with ArtCraft; one PR per accepted proposal (with
-tests, following their <code>AGENTS.md</code>); then plug-in v2: File › Export PES/DST, overlay previews, rich
-parameter dialogs, document-level machine profile.</p>
 <h2 id="m10--more-stitch-types-ii"><a class="header" href="#m10--more-stitch-types-ii">M10 — More stitch types II</a></h2>
 <p>Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch, legacy fill; auto-run and auto-satin
 routing tools; per-layer ordering (underlay now, top later).</p>
@@ -7075,6 +7071,12 @@ own, Ink/Stitch’s fonts whose licence allows it (OFL, CC0, CC-BY, CC-BY-SA, ea
 an <code>ASSETS.md</code> row, never NC, GPL or unclear terms; ADR-0001 is amended in that step), and fonts a user has
 installed with Ink/Stitch, read in their own format; appliqué workflow, design splitting for small hoops, colour-change reordering, print worksheets, an
 in-tree VectorCraft crate if wanted.</p>
+<h2 id="m9-vectorcraft-abi-v2-upstream"><a class="header" href="#m9-vectorcraft-abi-v2-upstream">M9 (VectorCraft ABI v2, upstream)</a></h2>
+<p>M9 comes last, after 1.0 and the work after it. 1.0 has the ABI v1 plug-in from M6, and nothing before M9
+waits on ArtCraft’s answer to the RFC. Its id stays M9, as every step id does.</p>
+<p>Open the <a href="#rfc-vectorcraft-plug-in-abi-v2">RFC</a> with ArtCraft; one PR per accepted proposal (with
+tests, following their <code>AGENTS.md</code>); then plug-in v2, with export to PES and DST from File › Export,
+overlay previews, rich parameter dialogs and a machine profile per document.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="machine-testing-protocol"><a class="header" href="#machine-testing-protocol">Machine testing protocol</a></h1>
 <!-- implements: crates/stitchcraft-engine/src/testsheets/**, apps/stitchcraft-cli/src/commands/testsheet.rs -->
