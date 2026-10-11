@@ -37,6 +37,10 @@ pub struct stitchcraft_params::kinds::Number
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Number
 pub type stitchcraft_params::kinds::Number::Value = f64
 pub fn stitchcraft_params::kinds::Number::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+pub struct stitchcraft_params::kinds::OptionalAngleList
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::OptionalAngleList
+pub type stitchcraft_params::kinds::OptionalAngleList::Value = core::option::Option<alloc::vec::Vec<f64>>
+pub fn stitchcraft_params::kinds::OptionalAngleList::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<alloc::vec::Vec<f64>>>
 pub struct stitchcraft_params::kinds::OptionalLength
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::OptionalLength
 pub type stitchcraft_params::kinds::OptionalLength::Value = core::option::Option<stitchcraft_core::units::Mm>
@@ -100,6 +104,9 @@ pub fn stitchcraft_params::kinds::LengthPair::take(stitchcraft_params::value::Va
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Number
 pub type stitchcraft_params::kinds::Number::Value = f64
 pub fn stitchcraft_params::kinds::Number::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::OptionalAngleList
+pub type stitchcraft_params::kinds::OptionalAngleList::Value = core::option::Option<alloc::vec::Vec<f64>>
+pub fn stitchcraft_params::kinds::OptionalAngleList::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<alloc::vec::Vec<f64>>>
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::OptionalLength
 pub type stitchcraft_params::kinds::OptionalLength::Value = core::option::Option<stitchcraft_core::units::Mm>
 pub fn stitchcraft_params::kinds::OptionalLength::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<stitchcraft_core::units::Mm>>
@@ -146,6 +153,8 @@ pub fn stitchcraft_params::set::unknown_keys(&stitchcraft_params::set::ParamSet,
 pub mod stitchcraft_params::spec
 pub enum stitchcraft_params::spec::Kind
 pub stitchcraft_params::spec::Kind::Angle
+pub stitchcraft_params::spec::Kind::AngleList
+pub stitchcraft_params::spec::Kind::AngleList::optional: bool
 pub stitchcraft_params::spec::Kind::Choice
 pub stitchcraft_params::spec::Kind::Choice::options: &'static [stitchcraft_params::spec::ChoiceOption]
 pub stitchcraft_params::spec::Kind::Count
@@ -267,6 +276,7 @@ pub const fn stitchcraft_params::stitch_type::StitchType::name(self) -> &'static
 pub mod stitchcraft_params::value
 pub enum stitchcraft_params::value::Value
 pub stitchcraft_params::value::Value::Angle(f64)
+pub stitchcraft_params::value::Value::Angles(core::option::Option<alloc::vec::Vec<f64>>)
 pub stitchcraft_params::value::Value::Choice(&'static str)
 pub stitchcraft_params::value::Value::Count(u32)
 pub stitchcraft_params::value::Value::Counts(alloc::vec::Vec<u32>)
@@ -282,6 +292,7 @@ pub stitchcraft_params::value::Value::Text(alloc::string::String)
 pub stitchcraft_params::value::Value::Toggle(bool)
 impl stitchcraft_params::value::Value
 pub fn stitchcraft_params::value::Value::to_raw(&self) -> alloc::string::String
+pub fn stitchcraft_params::value::normalized_angle(f64) -> f64
 pub macro stitchcraft_params::params!
 pub enum stitchcraft_params::Family
 pub stitchcraft_params::Family::Fill
@@ -294,6 +305,8 @@ pub const fn stitchcraft_params::stitch_type::Family::method_param(self) -> &'st
 pub const fn stitchcraft_params::stitch_type::Family::plural(self) -> &'static str
 pub enum stitchcraft_params::Kind
 pub stitchcraft_params::Kind::Angle
+pub stitchcraft_params::Kind::AngleList
+pub stitchcraft_params::Kind::AngleList::optional: bool
 pub stitchcraft_params::Kind::Choice
 pub stitchcraft_params::Kind::Choice::options: &'static [stitchcraft_params::spec::ChoiceOption]
 pub stitchcraft_params::Kind::Count
@@ -371,6 +384,7 @@ pub const fn stitchcraft_params::stitch_type::StitchType::id(self) -> &'static s
 pub const fn stitchcraft_params::stitch_type::StitchType::name(self) -> &'static str
 pub enum stitchcraft_params::Value
 pub stitchcraft_params::Value::Angle(f64)
+pub stitchcraft_params::Value::Angles(core::option::Option<alloc::vec::Vec<f64>>)
 pub stitchcraft_params::Value::Choice(&'static str)
 pub stitchcraft_params::Value::Count(u32)
 pub stitchcraft_params::Value::Counts(alloc::vec::Vec<u32>)
@@ -457,6 +471,9 @@ pub fn stitchcraft_params::kinds::LengthPair::take(stitchcraft_params::value::Va
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Number
 pub type stitchcraft_params::kinds::Number::Value = f64
 pub fn stitchcraft_params::kinds::Number::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::OptionalAngleList
+pub type stitchcraft_params::kinds::OptionalAngleList::Value = core::option::Option<alloc::vec::Vec<f64>>
+pub fn stitchcraft_params::kinds::OptionalAngleList::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<alloc::vec::Vec<f64>>>
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::OptionalLength
 pub type stitchcraft_params::kinds::OptionalLength::Value = core::option::Option<stitchcraft_core::units::Mm>
 pub fn stitchcraft_params::kinds::OptionalLength::take(stitchcraft_params::value::Value) -> core::option::Option<core::option::Option<stitchcraft_core::units::Mm>>
@@ -486,5 +503,6 @@ pub type stitchcraft_params::kinds::Toggle::Value = bool
 pub fn stitchcraft_params::kinds::Toggle::take(stitchcraft_params::value::Value) -> core::option::Option<bool>
 pub fn stitchcraft_params::audit(&[&stitchcraft_params::spec::ParamGroup]) -> alloc::vec::Vec<alloc::string::String>
 pub fn stitchcraft_params::find(&[&stitchcraft_params::spec::ParamGroup], &str) -> core::option::Option<&'static stitchcraft_params::spec::ParamSpec>
+pub fn stitchcraft_params::normalized_angle(f64) -> f64
 pub fn stitchcraft_params::read_param<K: stitchcraft_params::kinds::ParamKind>(&stitchcraft_params::set::ParamSet, core::option::Option<&stitchcraft_params::spec::ParamSpec>, core::option::Option<stitchcraft_params::stitch_type::Family>, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>) -> core::option::Option<<K as stitchcraft_params::kinds::ParamKind>::Value>
 pub fn stitchcraft_params::unknown_keys(&stitchcraft_params::set::ParamSet, &[&stitchcraft_params::spec::ParamGroup]) -> alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>

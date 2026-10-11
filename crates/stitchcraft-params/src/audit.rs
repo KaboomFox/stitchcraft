@@ -93,7 +93,7 @@ fn range_is_usable(kind: Kind) -> bool {
         | Kind::Number { min, max } => min.is_finite() && max.is_finite() && min < max,
         Kind::Count { min, max } | Kind::CountList { min, max } => min < max,
         Kind::Text { max_bytes } => max_bytes > 0,
-        Kind::Angle | Kind::Toggle | Kind::Choice { .. } | Kind::Seed => true,
+        Kind::Angle | Kind::AngleList { .. } | Kind::Toggle | Kind::Choice { .. } | Kind::Seed => true,
     }
 }
 

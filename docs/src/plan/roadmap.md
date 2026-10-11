@@ -99,9 +99,10 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M5.3 ✅ | Needle points as Ink/Stitch places them, on the stagger grid from the origin, with `skip_last` and random stitch length. A fill's longest stitch defaults to 4 mm, so a parameter can have a default for each family | `REQ-FILL-TAT-003` |
 | M5.4 ✅ | Routing as Ink/Stitch routes. Every segment sewn once, back and forth, from the needle to the next element, with running stitches along the outline between. Parts sewn one at a time, nearest the needle first, each ending nearest the next. A part too thin for any row sewn round its outline, `SC-W0305`. `fill_method` registered. Fills are sewn | `REQ-FILL-TAT-001`, `REQ-FILL-TAT-008` |
 | M5.5 ✅ | Travel under the rows (`underpath`), off the rows already sewn: the cheapest way along 3 gratings of lines, smoothed and kept inside the part. Where no line leads, along rings and rows (`DEV-FILL-007`) | `REQ-FILL-TAT-005` |
-| M5.6 | Underlay, a pass for each angle on the inset region; `expand_mm` | `REQ-FILL-TAT-007` for the underlay's rows |
-| M5.7 | Pull compensation at the rows' ends, holes and parts kept; gap-fill rows inside the region | `REQ-FILL-TAT-006`, `REQ-FILL-TAT-007` |
-| M5.8 | Coverage metric and performance budget | `REQ-FILL-TAT-004`, `REQ-FILL-TAT-009` |
+| M5.6 ✅ | Underlay as Ink/Stitch sews it: before its top rows each part sews a layer for each angle, each from the point nearest the needle back to it. `fill_underlay` and its settings registered, with a list of angles as a kind of parameter. A layer too thin for a row is sewn round the outline, `SC-I0308` | `REQ-FILL-TAT-011` |
+| M5.7 | The underlay on the part shrunk by `fill_underlay_inset_mm`, and the top rows on the part grown by `expand_mm`. A part is buffered as GEOS buffers a polygon, and checked against shapely | `REQ-FILL-TAT-012`, `REQ-FILL-TAT-007` for the underlay's rows |
+| M5.8 | Pull compensation at the rows' ends, holes and parts kept; gap-fill rows inside the region | `REQ-FILL-TAT-006`, `REQ-FILL-TAT-007` |
+| M5.9 | Coverage metric and performance budget | `REQ-FILL-TAT-004`, `REQ-FILL-TAT-009` |
 | MC-4 🧵 | **TS-07** (fill + outline registration), **TS-08** (density ladder, angles), **TS-09** (underlay, travel) | report filed; fill defaults and pull compensation tuned |
 
 ## M6 — VectorCraft plug-in (ABI v1) and export from `.vectorcraft`

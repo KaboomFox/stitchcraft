@@ -187,6 +187,9 @@ macro_rules! __param_kind {
     (CountList; $min:expr, $max:expr; ;) => {
         $crate::Kind::CountList { min: $min, max: $max }
     };
+    (OptionalAngleList; ; ;) => {
+        $crate::Kind::AngleList { optional: true }
+    };
     (Text; ; ;) => {
         $crate::Kind::Text { max_bytes: $crate::MAX_TEXT }
     };

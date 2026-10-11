@@ -167,13 +167,13 @@ registry uses these names as its keys so files move between the tools unchanged
 | `herringbone_width_mm` | int | mm | 0 | `tartan_fill` | P3 (M10) | planned |
 | `pull_compensation_mm` | float | mm (each side) | 0 | `tatami_fill` | P1 (M5) | planned |
 | `pull_compensation_percent` | float | % (each side) | 0 | `tatami_fill` | P1 (M5) | planned |
-| `fill_underlay` | toggle | — | true | all | P1 (M5) | planned |
-| `fill_underlay_angle` | float | deg | — | all | P1 (M5) | planned |
-| `fill_underlay_row_spacing_mm` | float | mm | — | all | P1 (M5) | planned |
-| `fill_underlay_max_stitch_length_mm` | float | mm | — | all | P1 (M5) | planned |
+| `fill_underlay` | toggle | — | true | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay) |
+| `fill_underlay_angle` | float | deg | — | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay_angle) |
+| `fill_underlay_row_spacing_mm` | float | mm | — | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay_row_spacing_mm) |
+| `fill_underlay_max_stitch_length_mm` | float | mm | — | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay_max_stitch_length_mm) |
 | `fill_underlay_inset_mm` | float | mm | 0 | all | P1 (M5) | planned |
-| `fill_underlay_skip_last` | boolean | — | false | all | P1 (M5) | planned |
-| `underlay_underpath` | boolean | — | true | all | P1 (M5) | planned |
+| `fill_underlay_skip_last` | boolean | — | false | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay_skip_last) |
+| `underlay_underpath` | boolean | — | true | all | P1 (M5) | [registered](../user/reference/params/tatami.md#underlay_underpath) |
 | `random_seed` | random_seed | — | — | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `meander_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/common.md#random_seed) |
 | `cross_stitch_method` | combo | — | 0 | `cross_stitch` | P3 (M10) | planned |
 | `cross_thread_count` | int | — | 4 | `cross_stitch` | P3 (M10) | planned |
@@ -261,4 +261,4 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
 
-_145 parameter declarations, 77 registered in StitchCraft._
+_145 parameter declarations, 83 registered in StitchCraft._

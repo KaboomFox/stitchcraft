@@ -1,8 +1,8 @@
 # The whole way from a design to a machine file: an SVG of strokes in two threads and back, two lines
-# that nearly touch and a fill in 2 parts, planned as `stitch plan` plans it. The golden files are what
-# that writes.
+# that nearly touch and a fill in 2 parts, each with its underlay, planned as `stitch plan` plans it. The
+# golden files are what that writes.
 id = "strokes"
-requirements = ["REQ-ASM-001", "REQ-ASM-002", "REQ-LCK-001", "REQ-FIN-001", "REQ-FIN-003", "REQ-FILL-TAT-001", "REQ-FILL-TAT-008"]
+requirements = ["REQ-ASM-001", "REQ-ASM-002", "REQ-LCK-001", "REQ-FIN-001", "REQ-FIN-003", "REQ-FILL-TAT-001", "REQ-FILL-TAT-008", "REQ-FILL-TAT-011"]
 kind = "plan"
 svg = "fixtures/svg/strokes.svg"
 profile = "brother-pe800-5x7"

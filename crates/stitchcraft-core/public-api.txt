@@ -31,6 +31,7 @@ pub stitchcraft_core::diag::Code::FillPartsTooSmall
 pub stitchcraft_core::diag::Code::FillRuleNotEvenOdd
 pub stitchcraft_core::diag::Code::FillSmall
 pub stitchcraft_core::diag::Code::FillTooThin
+pub stitchcraft_core::diag::Code::FillUnderlayTooThin
 pub stitchcraft_core::diag::Code::HandStitchTooShort
 pub stitchcraft_core::diag::Code::InternalCheckFailed
 pub stitchcraft_core::diag::Code::JumpsCutInDst
@@ -203,6 +204,7 @@ pub stitchcraft_core::Code::FillPartsTooSmall
 pub stitchcraft_core::Code::FillRuleNotEvenOdd
 pub stitchcraft_core::Code::FillSmall
 pub stitchcraft_core::Code::FillTooThin
+pub stitchcraft_core::Code::FillUnderlayTooThin
 pub stitchcraft_core::Code::HandStitchTooShort
 pub stitchcraft_core::Code::InternalCheckFailed
 pub stitchcraft_core::Code::JumpsCutInDst
