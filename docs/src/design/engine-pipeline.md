@@ -15,14 +15,15 @@ Design ──▶ 1 normalize ──▶ 2 validate ──▶ 3 generate (per elem
 
 Per element, independent of the others:
 
-- **Flatten curves** with the element's tolerance (a tenth of a CSS pixel for fills, as Ink/Stitch
-  flattens them, and a tenth of `running_stitch_tolerance_mm` for strokes). Strokes are halved (de Casteljau) until each piece's
-  control points lie within the tolerance of its chord (`stitchcraft_engine::normalize::stroke`), using
-  only arithmetic and square roots so that every platform gets the same points. `kurbo`'s adaptive
-  flattening is not used for this: in 0.13 it calls `powf` (`CubicBez::to_quads`) and `hypot`
-  (`QuadBez::estimate_subdiv`) from the platform's maths library, whose last bits differ between
-  systems ([determinism](determinism.md)). Corners, joins between segments that turn by more than 30°,
-  are marked so running stitches land exactly on them; a curve's own bend is never a corner.
+- **Flatten curves** with the element's tolerance (a tenth of `running_stitch_tolerance_mm` for strokes,
+  and a tenth of a CSS pixel for fills and satin columns, as Ink/Stitch flattens them). Curves are halved
+  (de Casteljau) until each piece's control points lie within the tolerance of its chord
+  (`stitchcraft_engine::normalize::stroke`), using only arithmetic and square roots so that every
+  platform gets the same points. `kurbo`'s adaptive flattening is not used for this: in 0.13 it calls
+  `powf` (`CubicBez::to_quads`) and `hypot` (`QuadBez::estimate_subdiv`) from the platform's maths
+  library, whose last bits differ between systems ([determinism](determinism.md)). Corners, joins between
+  segments that turn by more than 30°, are marked so running stitches land exactly on them; a curve's own
+  bend is never a corner.
 - **Regions:** a fill's subpaths are cut wherever they meet, and its fill rule says which faces between
   them are filled. The edges between filled and empty faces become outlines and holes, each turned one
   way, and parts too small to sew are left out with `SC-W0303`
