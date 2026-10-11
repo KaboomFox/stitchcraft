@@ -21,9 +21,11 @@ region is built by its fill rule (`normalize::region`), and what it leaves out i
 its tatami rows are laid as Ink/Stitch lays them (`generators::tatami`). Since M5.4 a tatami fill is
 sewn part by part, its rows in the order Ink/Stitch routes them (`generators::tatami::route`), since
 M5.5 its needle runs between rows under the rows sewn after it (`generators::tatami::underpath`),
-since M5.6 each part sews its underlay first, a layer for each angle (`generators::tatami::sew`), and
+since M5.6 each part sews its underlay first, a layer for each angle (`generators::tatami::sew`),
 since M5.7 the underlay covers the part shrunk by its inset and the top rows the part grown by `expand_mm`,
-as shapely buffers it (`normalize::offset`). Design:
+as shapely buffers it (`normalize::offset`), and since M5.8 the top rows are lengthened by the pull
+compensation a satin's stitches share (`generators::pull`), with gap-filling rows where the route leaves a
+stretch of rows (`generators::tatami`). Design:
 `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 
 ## Invariants

@@ -132,7 +132,8 @@ SHA-256, downloaded by `cargo xtask corpus` — the same policy VectorCraft foll
 The engine's cases build their small designs with `stitchcraft_testkit::designs`. It also reads a plan's
 shape at a glance: `J L4 S5 L4` is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
 stitches. Its strokes are as wide as an SVG stroke whose style says nothing, and `widened` gives one a
-width. The satin cases sew their columns with `stitchcraft_testkit::satins`, as an element is sewn on the
+width. Its fills are closed rings filled by the nonzero rule (`fill`, through `rings`), so a hole is drawn
+the other way round from its outline. The satin cases sew their columns with `stitchcraft_testkit::satins`, as an element is sewn on the
 reference machine, with the stitch lengths the engine gives it there (`satin_lengths`), and read the needle
 points back in pairs across the column. A column is sewn alone (`sewn_satin`) or between the neighbours a
 case gives it (`sewn_between`).
