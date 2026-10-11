@@ -336,6 +336,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The roadmap's M9, VectorCraft ABI v2 proposed upstream, comes last: after 1.0 and the work after it.
+  1.0 has the ABI v1 plug-in from M6, and nothing before M9 waits on ArtCraft's answer to the RFC.
 - A fill's subpaths and a satin column's are flattened within one tolerance, a tenth of a CSS pixel:
   `normalize::stroke::SHAPE_TOLERANCE`, which replaces `normalize::satin::TOLERANCE`.
 - Mutation testing on a pull request runs in 4 parts, dealt round-robin as the weekly run deals them, and

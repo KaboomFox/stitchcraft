@@ -142,12 +142,6 @@ library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin,
 commit by `cargo xtask corpus` and never committed, using only fonts whose licence allows it (OFL, CC0,
 CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).
 
-## M9 — VectorCraft ABI v2 (upstream)
-
-Open the [RFC](../design/rfc-vectorcraft-abi-v2.md) with ArtCraft; one PR per accepted proposal (with
-tests, following their `AGENTS.md`); then plug-in v2: File › Export PES/DST, overlay previews, rich
-parameter dialogs, document-level machine profile.
-
 ## M10 — More stitch types II
 
 Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch, legacy fill; auto-run and auto-satin
@@ -171,3 +165,12 @@ own, Ink/Stitch's fonts whose licence allows it (OFL, CC0, CC-BY, CC-BY-SA, each
 an `ASSETS.md` row, never NC, GPL or unclear terms; ADR-0001 is amended in that step), and fonts a user has
 installed with Ink/Stitch, read in their own format; appliqué workflow, design splitting for small hoops, colour-change reordering, print worksheets, an
 in-tree VectorCraft crate if wanted.
+
+## M9 — VectorCraft ABI v2 (upstream)
+
+M9 comes last, after 1.0 and the work after it. 1.0 has the ABI v1 plug-in from M6, and nothing before M9
+waits on ArtCraft's answer to the RFC. Its id stays M9, as every step id does.
+
+Open the [RFC](../design/rfc-vectorcraft-abi-v2.md) with ArtCraft; one PR per accepted proposal (with
+tests, following their `AGENTS.md`); then plug-in v2: File › Export PES/DST, overlay previews, rich
+parameter dialogs, document-level machine profile.
