@@ -26,6 +26,10 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0212`](#sc-w0212) | Warning | Satin column drawn as one path too narrow; sewn as a stroke |
 | [`SC-W0213`](#sc-w0213) | Warning | Parts of a satin column drawn as one path left out |
 | [`SC-E0214`](#sc-e0214) | Error | Satin column drawn as one path could not be made into rails |
+| [`SC-W0303`](#sc-w0303) | Warning | Parts of a fill too small to sew left out |
+| [`SC-W0304`](#sc-w0304) | Warning | Fill smaller than 1.4 mm² |
+| [`SC-I0306`](#sc-i0306) | Info | Nonzero fill rule fills a part the even-odd rule leaves empty |
+| [`SC-W0307`](#sc-w0307) | Warning | Fill in parts that are apart; each sewn on its own |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -265,6 +269,48 @@ however it is cut, an offset vanishes because the stroke is wider than the line'
 the line is shorter than a CSS pixel. The column is not sewn.
 
 Draw the column with 2 rails, or make the stroke narrower.
+
+## SC-W0303
+
+**Warning** — Parts of a fill too small to sew left out
+
+A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
+square CSS pixels), a speck about half a millimetre across, is too small for a row, so it is left
+out, as Ink/Stitch leaves it out. Where every part is that small, the fill sews nothing.
+
+The message counts the parts left out and is placed at the first. Draw them larger, or sew them as a
+running stitch.
+
+## SC-W0304
+
+**Warning** — Fill smaller than 1.4 mm²
+
+This fill covers less than 1.4 mm² (20 square CSS pixels). Rows of stitches packed into so small an
+area pile up, and a running stitch round it or a satin column across it usually sews it better.
+Ink/Stitch gives the same advice. The fill is kept as drawn.
+
+## SC-I0306
+
+**Info** — Nonzero fill rule fills a part the even-odd rule leaves empty
+
+A fill's fill rule says which parts of it are filled where its subpaths lie inside each other or
+overlap. Under the rule `nonzero`, SVG's default, a part that the subpaths wind round twice the same
+way is filled; the even-odd rule leaves it empty. StitchCraft fills it, as the drawing shows it.
+Ink/Stitch fills every shape by the even-odd rule, so the same file leaves that part empty in
+Ink/Stitch.
+
+To leave the part empty in both, set the fill rule to even-odd, or draw the inner subpath the other
+way round.
+
+## SC-W0307
+
+**Warning** — Fill in parts that are apart; each sewn on its own
+
+A fill whose area falls into separate parts, such as one drawn as several shapes side by side, or
+an outline that crosses itself, is sewn one part after another: each part's rows on their own, with
+a jump to the next, which the plan may trim. Ink/Stitch warns about such fills too.
+
+To choose the order the parts are sewn in, break the fill apart into one element for each part.
 
 ## SC-W0401
 

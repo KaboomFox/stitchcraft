@@ -1,0 +1,8 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc d0a4944fb3902b438571b2e4a9e7510d38c6888b451ed4cdec126ac939610564 # shrinks to rings = [[Point { x: 5.0, y: 1.0 }, Point { x: 0.0, y: 4.0 }, Point { x: 0.0, y: 0.0 }], [Point { x: 3.0, y: 3.0 }, Point { x: 0.0, y: 0.0 }, Point { x: 0.0, y: 1.0 }]], even_odd = false
+cc 81e119a094fa87f5b6ca8236595630b91b6cc3e5c7d064ddc4f3a81b8764b4d3 # shrinks to rings = [[Point { x: 8.0, y: 7.0 }, Point { x: 2.0, y: 2.0 }, Point { x: 6.0, y: 4.0 }, Point { x: 0.0, y: 6.0 }]], even_odd = false

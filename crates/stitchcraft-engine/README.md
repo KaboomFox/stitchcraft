@@ -16,9 +16,9 @@ as Ink/Stitch does, since M4.4 inset where they crowd on curves, and since M4.5 
 long. Since M4.6 its underlays come first, as Ink/Stitch sews them, and since M4.7 it starts and ends
 at its nearest points. Since M4.8 a column drawn as one path and too narrow to stitch across is sewn as a
 stroke, and since M4.9 a wider one is sewn between rails made from its centre line
-(`normalize::centre_line`), offset as shapely offsets them (`normalize::offset`). Design:
-`docs/src/design/engine-pipeline.md` and
-`docs/src/design/algorithms/`.
+(`normalize::centre_line`), offset as shapely offsets them (`normalize::offset`). Since M5.1 a fill's
+region is built by its fill rule (`normalize::region`), and what it leaves out is said. Fills are sewn
+from M5.3. Design: `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 
 ## Invariants
 
@@ -32,4 +32,5 @@ stroke, and since M4.9 a wider one is sewn between rails made from its centre li
 
 `stitchcraft-core`, `stitchcraft-params`, `stitchcraft-plan`; `thiserror`. Tests also use `proptest` and
 `stitchcraft-testkit`. Curves are flattened here, not with `kurbo`, so every platform gets the same
-points (`docs/src/design/engine-pipeline.md` › Normalize).
+points (`docs/src/design/engine-pipeline.md` › Normalize), and a fill's region is built here, not with
+`i_overlay`, so it keeps the drawing's points and charges the budget (ADR 0005).

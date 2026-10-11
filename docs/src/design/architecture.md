@@ -75,7 +75,7 @@ GPL/AGPL/LGPL.
 | Need | Crate | Licence | Where |
 |---|---|---|---|
 | Curves, affine (strokes are flattened by the engine, for determinism) | `kurbo` 0.13 | MIT/Apache | core, engine, adapters |
-| Polygon booleans, offsets | `i_overlay` 9 | MIT/Apache | engine |
+| Polygon booleans, offsets (a fill's region and a satin's offset rails are built by the engine) | `i_overlay` 9 | MIT/Apache | engine |
 | Spatial index | `rstar` 0.13 | MIT/Apache | engine |
 | Graphs | `petgraph` 0.8 | MIT/Apache | engine |
 | Deterministic transcendental math | `libm` 0.2 | MIT | core |

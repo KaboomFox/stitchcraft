@@ -74,19 +74,24 @@ Invariants, checked by `Design::new`: element ids are unique, and every point is
 finite number of at least 1, and the settings' lengths are not negative. Adapters drop what they cannot
 represent with a diagnostic of their own, so a failed check is a bug in the adapter (`SC-E0009`).
 
-Still to come, each with the step that needs it:
-
-- **regions**, fills normalized into polygons with holes (M5.1, [below](#region));
-- **commands** attached to elements, start and end points and targets (M8, for Ink/Stitch's command
-  symbols); trims and stops are the element parameters `trim_after` and `stop_after`, and the origin and
-  stop position are design settings (M3.8).
+**Commands** attached to elements come with M8, for Ink/Stitch's command symbols such as start and end
+points. Trims and stops are the element parameters `trim_after` and `stop_after`, and the origin and
+stop position are design settings (M3.8).
 
 ### Region
 
-`Region` is a set of `Polygon { exterior: Ring, holes: Vec<Ring> }` produced by the normalizer from
-the host's paths and fill rule (even-odd or non-zero). Curves are flattened with the element's
-tolerance before booleans. Rings with area below `min_region_area` (default 0.01 mm²) are dropped with
-`SC-W0303`.
+A fill's region is not part of the design: the normalizer builds it from the fill's path and fill rule,
+since M5.1 (`stitchcraft_engine::normalize::region`):
+
+```rust,ignore
+pub struct Region { pub parts: Vec<Polygon> }   // in the order the drawing reaches them
+pub struct Polygon { pub outline: Vec<Point>, pub holes: Vec<Vec<Point>> }   // closed rings, in millimetres
+```
+
+Each ring starts at its point that comes first in the drawing, and repeats it at its end. Outlines turn
+clockwise and holes counter-clockwise in y-up axes, and in those axes the region lies on the right of
+every ring. Parts of 3 square CSS pixels (0.21 mm²) or less are left out, with `SC-W0303`. The
+[fills design](algorithms/fills.md#region) builds the region step by step.
 
 ### SatinShape
 

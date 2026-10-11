@@ -17,7 +17,8 @@
 //! still plans (`REQ-GEN-002`): a stitch type StitchCraft does not sew yet (`SC-W0011`), parameters it
 //! cannot read (`SC-E0101`), a satin column with no rails (`SC-E0201`), or its work budget spent
 //! (`SC-E0004`). Each element has the budget's work to itself, so one that runs out costs nothing but
-//! itself.
+//! itself. A fill is not sewn until the rest of roadmap M5, but its area is built already
+//! ([`crate::normalize::region`]), and what will be left out of it is said.
 
 use stitchcraft_core::{Budget, Code, Diagnostic, Exhausted, Meter, Mm, Point, SplitMix64};
 use stitchcraft_params::{ChoiceOption, Family, StitchType, Validated, params, unknown_keys};
@@ -30,6 +31,7 @@ use crate::generators::passes::RepeatParams;
 use crate::generators::running::{RunningParams, running_stitch};
 use crate::generators::satin::{self, SatinLengths, SatinParams, satin_stitch};
 use crate::generators::{Approach, Neighbours, Stitched, method, mm};
+use crate::normalize::region;
 use crate::registry::PARAMETERS;
 
 /// The stroke methods `stroke_method` offers, in Ink/Stitch's order, which its files count on: Ink/Stitch
@@ -114,7 +116,9 @@ fn sew(
     let common = kept(CommonParams::from_set(set), diagnostics);
     let (path, width, join) = match &element.shape {
         Shape::Stroke { path, width, join } => (path, *width, *join),
-        Shape::Fill { .. } => {
+        Shape::Fill { path, rule } => {
+            // The area is built already, so that what will be left out of it is said now.
+            diagnostics.extend(region::build(path, *rule, meter)?.diagnostics);
             diagnostics.push(not_yet("This element is a fill, and this version of StitchCraft does not sew fills yet"));
             return Ok(None);
         }

@@ -247,6 +247,36 @@ registry! {
     /// Draw the column with 2 rails, or make the stroke narrower.
     SatinCentreLineFailed = "SC-E0214", Error, "Satin column drawn as one path could not be made into rails";
 
+    /// A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
+    /// square CSS pixels), a speck about half a millimetre across, is too small for a row, so it is left
+    /// out, as Ink/Stitch leaves it out. Where every part is that small, the fill sews nothing.
+    ///
+    /// The message counts the parts left out and is placed at the first. Draw them larger, or sew them as a
+    /// running stitch.
+    FillPartsTooSmall = "SC-W0303", Warning, "Parts of a fill too small to sew left out";
+
+    /// This fill covers less than 1.4 mm² (20 square CSS pixels). Rows of stitches packed into so small an
+    /// area pile up, and a running stitch round it or a satin column across it usually sews it better.
+    /// Ink/Stitch gives the same advice. The fill is kept as drawn.
+    FillSmall = "SC-W0304", Warning, "Fill smaller than 1.4 mm²";
+
+    /// A fill's fill rule says which parts of it are filled where its subpaths lie inside each other or
+    /// overlap. Under the rule `nonzero`, SVG's default, a part that the subpaths wind round twice the same
+    /// way is filled; the even-odd rule leaves it empty. StitchCraft fills it, as the drawing shows it.
+    /// Ink/Stitch fills every shape by the even-odd rule, so the same file leaves that part empty in
+    /// Ink/Stitch.
+    ///
+    /// To leave the part empty in both, set the fill rule to even-odd, or draw the inner subpath the other
+    /// way round.
+    FillRuleNotEvenOdd = "SC-I0306", Info, "Nonzero fill rule fills a part the even-odd rule leaves empty";
+
+    /// A fill whose area falls into separate parts, such as one drawn as several shapes side by side, or
+    /// an outline that crosses itself, is sewn one part after another: each part's rows on their own, with
+    /// a jump to the next, which the plan may trim. Ink/Stitch warns about such fills too.
+    ///
+    /// To choose the order the parts are sewn in, break the fill apart into one element for each part.
+    FillPartsApart = "SC-W0307", Warning, "Fill in parts that are apart; each sewn on its own";
+
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
     /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that
