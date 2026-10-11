@@ -12,11 +12,11 @@
 //! start lies from the corner of the part's bounding box where x and y are least, as Ink/Stitch takes them.
 //! Each is sewn with its needle points ([`super::stitches`]) from the end the route enters it by.
 //!
-//! **Travel.** Between rows the needle runs under the rows not sewn yet (`underpath`, [`super::underpath`]),
+//! **Travel.** Between rows the needle runs under the rows not sewn yet (`underpath`, the `underpath` module),
 //! in running stitches of the running stitch length, within its tolerance (`running::along_line`). With
-//! `underpath` off, in a part the lines miss, and between 2 nodes no line joins, as to a hole too small for
-//! any line to reach, it runs along the part's rings and rows instead ([`super::travel`]), as Ink/Stitch's
-//! runs along the outline. The travel's first stitch lands on the row's end, which the row has sewn
+//! `underpath` off, in a part the lines miss, and between 2 nodes no line joins, as to a hole small enough to
+//! lie between the lines, it runs along the part's rings and rows instead (the `travel` module), as
+//! Ink/Stitch's runs along the outline. The travel's first stitch lands on the row's end, which the row has sewn
 //! already, so it is left out, as in Ink/Stitch. With `skip_last`, the row's end is not sewn, and the
 //! travel keeps its first stitch, unless the next row starts beside it. Rows and rings join every node of a
 //! part, so a way along them always leads on; were none found, the needle would jump, and `SC-E0009` would
