@@ -206,8 +206,8 @@ Full types in [data model](data-model.md).
 
 Detailed in [engine pipeline](engine-pipeline.md).
 
-1. **Normalize** each element: flatten curves to tolerance, make regions valid under their fill
-   rule, drop degenerate pieces (with a diagnostic), convert units.
+1. **Normalize** each element. Curves are flattened to tolerance, and each fill's region is built by
+   its fill rule. Degenerate pieces are dropped with a diagnostic.
 2. **Validate** parameters against the registry (type, range, applicability) and shapes against the
    stitch type (e.g. a satin needs two rails).
 3. **Generate** a `StitchGroup` per element with its stitch type's generator. Generators are pure
@@ -230,9 +230,10 @@ Detailed in [engine pipeline](engine-pipeline.md).
 | Ripple, zigzag stroke | P2/P3 | [strokes](algorithms/strokes.md) |
 | Lock stitches, travel, ordering | P1 | [engine pipeline](engine-pipeline.md#4-plan-assembly) |
 
-Each generator is designed from public embroidery practice and published algorithms (for example
-boustrophedon cell decomposition for fill routing and Connected Fermat Spirals for spiral fills),
-cited in its page.
+Generators follow Ink/Stitch's stitch placement, worked out from its behaviour and from published
+algorithms such as an Eulerian path through a fill's rows, or Connected Fermat Spirals for spiral fills.
+Each generator's page cites them. Where one differs, `conformance/deviations.toml` says how and
+why.
 
 ## 10. Machine formats
 

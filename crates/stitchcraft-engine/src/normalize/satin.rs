@@ -22,10 +22,12 @@
 //! the point of that rail nearest the rung stands in (`SC-W0203`), as in Ink/Stitch. A rung that crosses
 //! a rail more than once is left out (`SC-W0207`): it does not say which crossing is meant.
 //!
-//! Each subpath is flattened to a polyline within [`TOLERANCE`], as Ink/Stitch flattens it, and two
-//! subpaths meet where their polylines share a point, crossing or touching. A point where segments meet end to end is found twice and counted once, so
-//! a rung that ends exactly on a rail meets it once. Work is charged to the meter: one unit per pair of
-//! segments looked at.
+//! Each subpath is flattened to a polyline within [`stroke::SHAPE_TOLERANCE`], as Ink/Stitch flattens a
+//! satin column's path, so its rails have Ink/Stitch's points, which decide where the column's stitches
+//! go, where subpaths meet, and where a column drawn as one path gets rungs. 2 subpaths meet where their
+//! polylines share a point, crossing or touching. A point where segments meet end to end is found twice
+//! and counted once, so a rung that ends exactly on a rail meets it once. Work is charged to the meter:
+//! one unit per pair of segments looked at.
 
 use std::collections::BTreeMap;
 
@@ -34,11 +36,6 @@ use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
 
 use crate::design::{Path, Subpath};
 use crate::normalize::stroke::{self, nearest_on_segment, segments};
-
-/// How closely the polylines follow the subpaths, in millimetres: a tenth of a CSS pixel, as Ink/Stitch
-/// flattens a satin column's path, by the same halving. Its rails then have the same points, which decide
-/// where the column's stitches go, where subpaths meet, and where a column drawn as one path gets rungs.
-pub const TOLERANCE: f64 = 0.1 * MM_PER_SVG_PX;
 
 /// The shortest subpath the meeting rule takes as a rail, in millimetres: a tenth of a CSS pixel,
 /// Ink/Stitch's limit.
@@ -112,7 +109,7 @@ struct Line {
 
 /// `path`, a satin column's, as its rails and rungs, or why it cannot be one.
 pub fn recognize(path: &Path, meter: &mut Meter) -> Result<Recognition, Exhausted> {
-    let flat = stroke::flatten(path, TOLERANCE, meter)?;
+    let flat = stroke::flatten(path, stroke::SHAPE_TOLERANCE, meter)?;
     let mut warnings = Vec::new();
     let mut lines = Vec::new();
     for (index, (subpath, piece)) in path.subpaths.iter().zip(flat.pieces).enumerate() {

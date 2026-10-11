@@ -616,6 +616,26 @@ rationale = "The rungs set the angle of every stitch, and the start and the cuts
 milestone = "M4"
 status = "active"
 
+# ── Fill region ────────────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-FILL-001"
+area = "fill"
+level = "L2"
+statement = "A fill's region is the area its subpaths bound under its fill rule: a point off the edges is in it when the subpaths wind round it a number of times that is not 0 (nonzero) or is odd (evenodd). Curves are flattened within 0.1 CSS px, each subpath is closed, and one of fewer than 3 distinct points bounds nothing. Subpaths are cut exactly where they cross, touch or run along each other. Outlines turn clockwise and holes counter-clockwise in y-up axes, each ring from its point the drawing reaches first, and parts and holes come in the order the drawing reaches them."
+rationale = "A fill should sew the area the drawing shows, as an SVG renderer paints it, whatever way its subpaths were drawn."
+milestone = "M5"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-002"
+area = "fill"
+level = "L2"
+statement = "A part of a fill's region of 3 square CSS pixels (0.21 mm²) or less is left out, and SC-W0303 counts the parts left out. A region under 20 square CSS pixels (1.4 mm²) gets SC-W0304, and one in more than one part SC-W0307."
+rationale = "A row of stitches does not fit in a speck, and Ink/Stitch leaves such parts out, but without a word: a part of the drawing that sews nothing should be said."
+milestone = "M5"
+status = "active"
+
 # ── Tatami fill ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -680,7 +700,7 @@ status = "planned"
 id = "REQ-FILL-TAT-008"
 area = "fill/tatami"
 level = "L2"
-statement = "Disconnected regions are joined with trims and SC-W0307, never with long straight stitches across empty fabric."
+statement = "A region in parts sews each part on its own, in order of its distance from the needle, each ending nearest the next part. Parts are joined by jumps, with ties and trims where the element's settings say, never by stitches across empty fabric, and SC-W0307 says so."
 milestone = "M5"
 status = "planned"
 
