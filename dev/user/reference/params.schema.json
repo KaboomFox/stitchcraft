@@ -1274,6 +1274,20 @@
         "stability": "stable"
       }
     },
+    "underpath": {
+      "default": true,
+      "description": "Travel between rows runs inside the fill, under rows sewn after it, which hide it. Off, the needle travels along the fill's outline, where the travel can show along the edge.",
+      "title": "Underpath",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tatami_fill"
+        ],
+        "group": "Travel",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "zigzag_spacing_mm": {
       "default": 0.4,
       "description": "The distance from one stitch across the column to the next that goes the same way: from one rail to the other and back again is one spacing. It is measured across the column at its outside edge, and on a curve the stitches fan out from the inside edge.",
@@ -1517,7 +1531,8 @@
           "row_spacing_mm",
           "end_row_spacing_mm",
           "staggers",
-          "skip_last"
+          "skip_last",
+          "underpath"
         ],
         "name": "TatamiParams",
         "title": "Tatami parameters"
