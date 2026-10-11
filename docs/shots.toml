@@ -14,8 +14,9 @@
 # every element:
 #   panels = [{ caption = "1.5 mm", params = { running_stitch_length_mm = "1.5" } }, …]
 # and then makes <id>-1.png, <id>-2.png and so on. A page shows them side by side between the lines
-# `<!-- shot: <id> -->` and `<!-- /shot -->`, which `cargo xtask docs` fills in. The plan of a design may
-# report only the diagnostic codes its shot lists in `allow = ["SC-W0402"]`.
+# `<!-- shot: <id> -->` and `<!-- /shot -->`, which `cargo xtask docs` fills in. `layout = "rows"` shows
+# them one under another instead, each as wide as the page, for pictures too wide to share it. The plan of
+# a design may report only the diagnostic codes its shot lists in `allow = ["SC-W0402"]`.
 
 # ── Test sheets (shown on the test-sheets reference page, in this order) ────────────────────────────
 
@@ -122,8 +123,9 @@ id = "running-length"
 kind = "stitch"
 fixture = "docs/fixtures/wave.svg"
 style = "simple"
-scale = 8.0
-alt = "A wave in running stitch, its needle points dotted along it"
+scale = 20.0
+layout = "rows"
+alt = "A wave 36 mm long in running stitch, its needle points dotted along it"
 panels = [
   { caption = "1.5 mm", params = { running_stitch_length_mm = "1.5" } },
   { caption = "2.5 mm", params = { running_stitch_length_mm = "2.5" } },
@@ -133,10 +135,10 @@ panels = [
 [[shot]]
 id = "running-tolerance"
 kind = "stitch"
-fixture = "docs/fixtures/wave.svg"
+fixture = "docs/fixtures/half-disc.svg"
 style = "simple"
-scale = 8.0
-alt = "A wave in 6 mm running stitch"
+scale = 24.0
+alt = "A half disc 10 mm tall in 6 mm running stitch, a straight side on the left and a curve on the right"
 panels = [
   { caption = "0.1 mm", params = { running_stitch_length_mm = "6", running_stitch_tolerance_mm = "0.1" } },
   { caption = "0.5 mm", params = { running_stitch_length_mm = "6", running_stitch_tolerance_mm = "0.5" } },
@@ -148,8 +150,9 @@ id = "random-length"
 kind = "stitch"
 fixture = "docs/fixtures/parallel.svg"
 style = "simple"
-scale = 12.0
-alt = "6 rows of running stitch 1.6 mm apart, sewn back and forth as one path"
+scale = 20.0
+layout = "rows"
+alt = "14 rows of running stitch 0.6 mm apart, sewn back and forth as one path"
 panels = [
   { caption = "even", params = {} },
   { caption = "random", params = { enable_random_stitch_length = "true" } },

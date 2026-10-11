@@ -12,7 +12,8 @@
 //! regenerated; they must exist and link their sew-out report.
 //!
 //! A shot of a design with panels makes one image per panel, `<id>-1.png` and so on, and pages show them
-//! side by side in a figure that `cargo xtask docs` writes ([`crate::figures`]).
+//! in a figure that `cargo xtask docs` writes ([`crate::figures`]): side by side, or one under another
+//! for pictures too wide to share the page's width.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -74,6 +75,20 @@ pub struct Shot {
     /// `photo` shots: the sew-out report.
     #[serde(default)]
     pub report: String,
+    /// Shots with panels: how a page lays them out.
+    #[serde(default)]
+    pub layout: Layout,
+}
+
+/// How a page lays out a shot's panels.
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum Layout {
+    /// Side by side, a column each: for pictures narrow enough to share the page's width.
+    #[default]
+    Columns,
+    /// One under another, each with its caption above it and as wide as the page.
+    Rows,
 }
 
 /// One panel of a shot: what changes from the design as drawn, and the caption that says so.
