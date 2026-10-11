@@ -43,6 +43,13 @@ impl Unjoined {
         let message = "The edges of this fill's area could not be joined into rings, so it is not sewn. This is a bug in StitchCraft.";
         Diagnostic::new(Code::InternalCheckFailed, message)
     }
+
+    /// What to say when it happens to a part grown or shrunk (`SC-E0009`): the part is sewn at its own size.
+    pub(crate) fn grown(self) -> Diagnostic {
+        let message = "The edges of a part of this fill, grown or shrunk, could not be joined into rings, so the part is sewn at its own \
+                       size. This is a bug in StitchCraft.";
+        Diagnostic::new(Code::InternalCheckFailed, message)
+    }
 }
 
 /// The parts whose rings run along the half edges marked in `kept` (indexed as [`Arrangement::ends`]),
@@ -366,6 +373,9 @@ mod tests {
         let kept = vec![true, true, false, false, false, false, false, false];
         let unjoined = parts(&arrangement, &kept, &mut meter).unwrap().unwrap_err();
         assert_eq!(unjoined.diagnostic().code, Code::InternalCheckFailed);
+        let grown = unjoined.grown();
+        assert_eq!(grown.code, Code::InternalCheckFailed);
+        assert!(grown.message.contains("sewn at its own size"), "{}", grown.message);
     }
 
     #[test]

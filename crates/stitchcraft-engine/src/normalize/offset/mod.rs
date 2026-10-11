@@ -18,10 +18,16 @@
 //! A line of 2 points is simply moved. Positive distances offset to the left of the line in y-up axes,
 //! which is the right on screen, where y points down. Every curve runs the same way as the line. The
 //! answers are checked against shapely's for 1,050 random lines (`conformance/oracle/offset.py`).
+//!
+//! A fill's part is grown or shrunk the same way, as shapely's `buffer` does it for Ink/Stitch's inset
+//! underlay and `expand_mm` ([`buffer`](buffer::buffer)): each ring's raw curve, closed and with round
+//! corners, then the area those curves wind round, from the fill's own region code.
 
 mod boundary;
+mod buffer;
 mod generator;
 
+pub(crate) use buffer::buffer;
 pub(crate) use generator::{Meet, segments_meet};
 
 use stitchcraft_core::{Exhausted, Meter, Point};

@@ -105,6 +105,8 @@ another.
 | `SC-I0306` | Info | Nonzero fill rule fills a part the even-odd rule leaves empty (Ink/Stitch leaves it empty) | M5 |
 | `SC-W0307` | Warning | Fill in parts that are apart; each sewn on its own, joined by jumps | M5 |
 | `SC-I0308` | Info | Fill underlay too thin for rows; sewn round the outline (as in Ink/Stitch) | M5 |
+| `SC-W0309` | Warning | Fill's expand shrinks a part away; sewn at its own size (as in Ink/Stitch) | M5 |
+| `SC-W0310` | Warning | Fill's underlay inset shrinks a part away; underlay over all of it (as in Ink/Stitch) | M5 |
 | `SC-W0311` | Warning | Spiral could not be connected in a narrow part; that part uses inner-to-outer contours | M7 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |

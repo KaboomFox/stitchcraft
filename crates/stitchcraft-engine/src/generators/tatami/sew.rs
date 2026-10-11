@@ -26,6 +26,11 @@
 //! **No rows.** A part too thin for any row is sewn as a running stitch round its outline, from the
 //! outline's start, as Ink/Stitch sews it (`SC-W0305`).
 //!
+//! **A needle inside the part.** With the lines, the part starts at their node nearest the needle, as
+//! Ink/Stitch's does: for a needle on the rings or outside the part, the route's start, and for one inside,
+//! as after an inset underlay, a node inside, from which the needle travels under the rows to the route's
+//! start, or on to the end of its first stretch of travel.
+//!
 //! **Underlay.** Before its top rows each part sews its underlay, a [`Layer`] for each angle, in the order
 //! given (`REQ-FILL-TAT-011`). A layer is sewn as the top rows are, with rows, travel and no row as above, but
 //! from the point of the part's rings nearest the needle back to that point, as Ink/Stitch sews a fill
@@ -36,6 +41,13 @@
 //! a run of its own, which assembly reaches with a jump. The join is made here because Ink/Stitch never
 //! forces locks after a layer of underlay, where assembly would after any group with
 //! `force_lock_stitches`.
+//!
+//! **Inset and expand.** The underlay covers the part shrunk by its inset, and the top rows the part grown by
+//! `expand` (`REQ-FILL-TAT-012`), as `normalize::offset` grows and shrinks it. Shrinking can cut a
+//! part into pieces, sewn one after another in their order of least x: every layer on a piece, then the
+//! next piece's, each from the point nearest the needle, and each piece's top rows from where the last
+//! ended (`DEV-FILL-008`). Where shrinking leaves nothing, the part itself is sewn, as Ink/Stitch sews it,
+//! and `SC-W0310` or `SC-W0309` says so.
 //!
 //! **The shortest stitch.** Rows the row spacing apart start and end nearer each other than the shortest
 //! stitch a machine sews well, and a row's first grid point can lie just past its start. A needle point
@@ -59,7 +71,8 @@ use super::underpath::{Underpath, smooth};
 use crate::generators::running::along_line;
 use crate::generators::{Approach, Stitched};
 use crate::normalize::near::{nearest_pair, nearest_to_lines, nearest_to_point};
-use crate::normalize::region::{Polygon, Region};
+use crate::normalize::offset::buffer;
+use crate::normalize::region::{Polygon, Region, Unjoined};
 use crate::thin::thin;
 
 /// How the needle travels between rows: in stitches this long, within this tolerance of the way, none
@@ -89,15 +102,28 @@ pub struct Layer {
     pub travel: Travel,
 }
 
-/// The stitches of a tatami fill over `region`: in each part the layers of its `underlay` in order, each
-/// back to where it started, then its `top` rows, from the needle where the elements before left it to
-/// near the `next` element. Random lengths draw from `rng`. Each part is a run, unless a layer with no row
-/// starts farther from the needle than the jump length. Work is charged to `meter` for every ring point,
-/// row, node, edge, step and stitch.
+/// A tatami fill as it is sewn: in each part, its underlay's layers over the part shrunk by `inset`, then
+/// its top rows over the part grown by `expand`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Fill {
+    /// The top rows.
+    pub top: Layer,
+    /// How far each part is grown for its top rows, in millimetres; shrunk where it is negative.
+    pub expand: f64,
+    /// The underlay's layers, in the order they are sewn.
+    pub underlay: Vec<Layer>,
+    /// How far each part is shrunk for its underlay, in millimetres; grown where it is negative.
+    pub inset: f64,
+}
+
+/// The stitches of the tatami `fill` over `region`: in each part the layers of its underlay in order, each
+/// back to where it started, then its top rows, from the needle where the elements before left it to near
+/// the `next` element. Random lengths draw from `rng`. Each part is a run, unless a layer with no row, or a
+/// piece a part is cut into, starts farther from the needle than the jump length. Work is charged to
+/// `meter` for every ring point, row, node, edge, step and stitch.
 pub fn tatami_fill(
     region: &Region,
-    top: &Layer,
-    underlay: &[Layer],
+    fill: &Fill,
     needle: Option<Point>,
     next: Option<&Approach>,
     rng: &mut SplitMix64,
@@ -107,38 +133,89 @@ pub fn tatami_fill(
     let end = ending(region, next, meter)?;
     let mut needle = needle;
     let (mut runs, mut warnings) = (Vec::new(), Vec::new());
-    // The parts whose top rows found no row, and the layers of underlay that found none.
-    let (mut outlined, mut bare) = (0, 0);
+    let mut tally = Tally::default();
     for (i, polygon) in parts.iter().enumerate() {
         let here = match parts.get(i + 1) {
             Some(after) => nearest_pair(&rings_of(polygon), &rings_of(after), meter)?.map(|(on, _)| on),
             None => end,
         };
-        let part = Part { polygon, rings: Rings::new(polygon, meter)? };
         let mut sewn = Vec::new();
-        for layer in underlay {
-            let (layer_runs, rowless) = part.sew(layer, needle, None, rng, meter, &mut warnings)?;
-            bare += usize::from(rowless);
-            needle = layer_runs.iter().rev().find_map(|run| run.last().copied()).or(needle);
-            append(&mut sewn, layer_runs, layer.travel.jump);
+        if !fill.underlay.is_empty() {
+            let (pieces, gone) = pieces(polygon, -fill.inset, &mut warnings, meter)?;
+            tally.inset_gone += usize::from(gone);
+            for piece in &pieces {
+                let part = Part { polygon: piece, rings: Rings::new(piece, meter)? };
+                for layer in &fill.underlay {
+                    let (layer_runs, rowless) = part.sew(layer, needle, None, rng, meter, &mut warnings)?;
+                    tally.bare += usize::from(rowless);
+                    needle = layer_runs.iter().rev().find_map(|run| run.last().copied()).or(needle);
+                    append(&mut sewn, layer_runs, layer.travel.jump);
+                }
+            }
         }
-        let (top_runs, rowless) = part.sew(top, needle, here, rng, meter, &mut warnings)?;
-        outlined += usize::from(rowless);
-        append(&mut sewn, top_runs, top.travel.jump);
+        let (pieces, gone) = pieces(polygon, fill.expand, &mut warnings, meter)?;
+        tally.expand_gone += usize::from(gone);
+        for piece in &pieces {
+            let part = Part { polygon: piece, rings: Rings::new(piece, meter)? };
+            let (top_runs, rowless) = part.sew(&fill.top, needle, here, rng, meter, &mut warnings)?;
+            (tally.tops, tally.outlined) = (tally.tops + 1, tally.outlined + usize::from(rowless));
+            needle = top_runs.iter().rev().find_map(|run| run.last().copied()).or(needle);
+            append(&mut sewn, top_runs, fill.top.travel.jump);
+        }
         let sewn: Vec<Vec<Point>> = sewn
             .into_iter()
-            .map(|run| thin(run, |p| *p, |a, b| !at_least(a.distance(*b), top.travel.min_stitch), |_| false, |_| ()))
+            .map(|run| thin(run, |p| *p, |a, b| !at_least(a.distance(*b), fill.top.travel.min_stitch), |_| false, |_| ()))
             .filter(|run| !run.is_empty())
             .collect();
         needle = sewn.iter().rev().find_map(|run| run.last().copied()).or(needle);
         runs.extend(sewn);
     }
-    warnings.extend(too_thin(outlined, parts.len()));
-    warnings.extend(underlay_too_thin(bare));
+    warnings.extend(too_thin(tally.outlined, tally.tops));
+    warnings.extend(underlay_too_thin(tally.bare));
+    let parts = parts.len();
+    warnings.extend(shrunk_away(Code::FillExpandShrinksAway, "expand_mm", "its top rows are", tally.expand_gone, parts));
+    warnings.extend(shrunk_away(Code::FillUnderlayInsetShrinksAway, "fill_underlay_inset_mm", "its underlay is", tally.inset_gone, parts));
     Ok(Stitched { runs, warnings })
 }
 
-/// `SC-W0305` for the `outlined` parts of `parts` whose top rows found no row and went round the outline.
+/// What sewing a fill counted, for its diagnostics.
+#[derive(Default)]
+struct Tally {
+    /// The pieces sewn with top rows, and those of them that found no row and went round the outline.
+    tops: usize,
+    outlined: usize,
+    /// The layers of underlay that found no row.
+    bare: usize,
+    /// The parts that `expand` and that `inset` left nothing of.
+    expand_gone: usize,
+    inset_gone: usize,
+}
+
+/// The pieces `polygon` grown by `distance` falls into, or `polygon` itself where that leaves nothing, as
+/// Ink/Stitch sews it; and whether it left nothing. Where the grown area's edges do not join into rings, a
+/// bug that `warnings` gets, `polygon` itself.
+fn pieces(polygon: &Polygon, distance: f64, warnings: &mut Vec<Diagnostic>, meter: &mut Meter) -> Result<(Vec<Polygon>, bool), Exhausted> {
+    let grown = buffer(polygon, distance, meter)?;
+    let joined = grown.is_ok();
+    warnings.extend(grown.as_ref().err().copied().map(Unjoined::grown));
+    let pieces = grown.unwrap_or_default();
+    Ok(if pieces.is_empty() { (vec![polygon.clone()], joined) } else { (pieces, false) })
+}
+
+/// `code` for the `gone` parts of `parts` that `key` shrank away entirely, whose `what` sewn over all of
+/// the part.
+fn shrunk_away(code: Code, key: &str, what: &str, gone: usize, parts: usize) -> Option<Diagnostic> {
+    let message = match (gone, parts) {
+        (0, _) => return None,
+        (1, 1) => format!("`{key}` shrinks this fill away entirely, so {what} sewn over all of it."),
+        (1, _) => format!("`{key}` shrinks 1 of this fill's parts away entirely, so {what} sewn over all of that part."),
+        (n, _) => format!("`{key}` shrinks {n} of this fill's parts away entirely, so on each {what} sewn over all of the part."),
+    };
+    Some(Diagnostic::new(code, message))
+}
+
+/// `SC-W0305` for the `outlined` pieces of the `tops` sewn with top rows that found no row and went round
+/// the outline: the parts of the fill, or the pieces `expand_mm` cut them into.
 fn too_thin(outlined: usize, parts: usize) -> Option<Diagnostic> {
     let message = match (outlined, parts) {
         (0, _) => return None,
@@ -209,7 +286,7 @@ impl Part<'_> {
         };
         let lines = if travel.underpath { Underpath::new(part, rings, &route.nodes, &segments, stitching.grid.angle, meter)? } else { None };
         let network = Network::new(&route.nodes, rings, &row_ends(&route), meter)?;
-        let mut sewing = Sewing { route: &route, part, rings, stitching, travel: *travel, lines, network };
+        let mut sewing = Sewing { route: &route, part, rings, stitching, travel: *travel, lines, network, start };
         Ok((sewing.sew(rng, meter, warnings)?, false))
     }
 }
@@ -299,6 +376,8 @@ struct Sewing<'a> {
     lines: Option<Underpath>,
     /// The ways along the part's rings and rows.
     network: Network,
+    /// Where the needle was before the part.
+    start: Option<Point>,
 }
 
 impl Sewing<'_> {
@@ -310,10 +389,17 @@ impl Sewing<'_> {
         let mut runs = Vec::new();
         let mut run: Vec<Point> = Vec::new();
         let mut jumped = false;
-        if let Some(Step::Travel { from, .. }) = route.steps.first() {
-            run.extend(point(*from));
+        let lead = self.lead_in(meter)?;
+        let replaced = lead.as_ref().is_some_and(|(_, replaces)| *replaces);
+        match lead {
+            Some((way, _)) => run.extend(along_line(&way, self.travel.length, self.travel.tolerance, self.travel.min_stitch, meter)?),
+            None => {
+                if let Some(Step::Travel { from, .. }) = route.steps.first() {
+                    run.extend(point(*from));
+                }
+            }
         }
-        for step in &route.steps {
+        for step in route.steps.iter().skip(usize::from(replaced)) {
             match *step {
                 Step::Row { segment, from, to } => {
                     let (Some(a), Some(b)) = (point(from), point(to)) else { continue };
@@ -350,9 +436,31 @@ impl Sewing<'_> {
         if let Some(lines) = &self.lines
             && let Some(way) = lines.way(from, to, meter)?
         {
-            return Ok(Some(clamp(&smooth(&way, self.travel.min_stitch, meter)?, self.part, self.rings, meter)?));
+            return Ok(Some(self.smoothed(&way, meter)?));
         }
         between(&self.route.nodes, self.rings, &self.network, from, to, meter)
+    }
+
+    /// A way along the lines, smoothed and kept inside the part.
+    fn smoothed(&self, way: &[Point], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+        clamp(&smooth(way, self.travel.min_stitch, meter)?, self.part, self.rings, meter)
+    }
+
+    /// Where Ink/Stitch's fill starts with the lines: at the node of the lines nearest the needle, from
+    /// which it travels to the route's first node, or on to the end of the route's first stretch of travel,
+    /// which this way then takes the place of. A needle on the rings or outside the part is nearest the
+    /// route's first node, and needs no such way. The way, smoothed and kept inside the part, and whether
+    /// it takes the place of the first stretch; `None` without the lines or a needle, or where no line
+    /// leads from the nearest node.
+    fn lead_in(&self, meter: &mut Meter) -> Result<Option<(Vec<Point>, bool)>, Exhausted> {
+        let (Some(lines), Some(needle), Some(&first)) = (&self.lines, self.start, self.route.steps.first()) else { return Ok(None) };
+        let (from, to, replaces) = match first {
+            Step::Travel { from, to, .. } => (from, to, true),
+            Step::Row { from, .. } => (from, from, false),
+        };
+        let Some(nearest) = lines.nearest(needle, meter)?.filter(|&node| node != from) else { return Ok(None) };
+        let Some(way) = lines.way(nearest, to, meter)? else { return Ok(None) };
+        Ok(Some((self.smoothed(&way, meter)?, replaces)))
     }
 }
 
@@ -392,7 +500,9 @@ mod tests {
         warnings: &mut Vec<Diagnostic>,
     ) -> Vec<Vec<Point>> {
         let network = Network::new(&route.nodes, rings, &row_ends(route), meter).unwrap();
-        Sewing { route, part, rings, stitching, travel: TRAVEL, lines: None, network }.sew(&mut SplitMix64::new(1), meter, warnings).unwrap()
+        Sewing { route, part, rings, stitching, travel: TRAVEL, lines: None, network, start: None }
+            .sew(&mut SplitMix64::new(1), meter, warnings)
+            .unwrap()
     }
 
     #[test]
@@ -468,7 +578,7 @@ mod tests {
         let lines = Underpath::new(&part, &rings, &route.nodes, &segments, 30.0, meter).unwrap();
         let network = Network::new(&route.nodes, &rings, &row_ends(&route), meter).unwrap();
         let travel = Travel { underpath: true, ..TRAVEL };
-        let mut sewing = Sewing { route: &route, part: &part, rings: &rings, stitching: &how, travel, lines, network };
+        let mut sewing = Sewing { route: &route, part: &part, rings: &rings, stitching: &how, travel, lines, network, start: None };
         let mut ways = 0;
         for step in &route.steps {
             match *step {
@@ -494,7 +604,7 @@ mod tests {
         let lines = Underpath::new(&part, &rings, &route.nodes, &segments, 30.0, meter).unwrap();
         let network = Network::new(&route.nodes, &rings, &row_ends(&route), meter).unwrap();
         let mut warnings = Vec::new();
-        let mut sewing = Sewing { route: &route, part: &part, rings: &rings, stitching: &how, travel, lines, network };
+        let mut sewing = Sewing { route: &route, part: &part, rings: &rings, stitching: &how, travel, lines, network, start: None };
         assert_eq!(sewing.sew(&mut SplitMix64::new(1), meter, &mut warnings).unwrap().len(), 1);
         assert_eq!(warnings, Vec::new());
     }
@@ -515,7 +625,7 @@ mod tests {
         assert_eq!(lines.way(0, 2, meter).unwrap(), None, "no line reaches the hole");
         let network = Network::new(&route.nodes, &rings, &[[1, 0]], meter).unwrap();
         let (travel, how) = (Travel { underpath: true, ..TRAVEL }, stitching(false));
-        let sewing = Sewing { route: &route, part: &part, rings: &rings, stitching: &how, travel, lines: Some(lines), network };
+        let sewing = Sewing { route: &route, part: &part, rings: &rings, stitching: &how, travel, lines: Some(lines), network, start: None };
         assert_eq!(sewing.way(0, 2, meter).unwrap(), Some(points.to_vec()));
     }
 }
