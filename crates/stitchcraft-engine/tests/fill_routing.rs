@@ -122,6 +122,15 @@ fn req_fill_tat_001_the_fill_starts_nearest_the_needle_and_ends_nearest_the_next
     // A next element inside the fill: the fill ends on the outline nearest its start.
     let runs = sewn(&region, &stitching(0.0), None, Some(&Approach::Point(p(8.0, 3.5))));
     assert!(near(*runs[0].last().unwrap(), p(8.0, 4.0)), "{:?}", runs[0].last());
+    // A next element that offers its shape: the first of its lines that starts in the fill ends it nearest
+    // that start, here on the left side level with it, and otherwise the fill ends at its point nearest the
+    // shape, here the corner of the L's foot.
+    let starts_in = Approach::Shape(vec![vec![p(30.0, 30.0), p(40.0, 30.0)], vec![p(1.0, 3.0), p(1.0, 20.0)]]);
+    let runs = sewn(&region, &stitching(0.0), None, Some(&starts_in));
+    assert!(near(*runs[0].last().unwrap(), p(0.0, 3.0)), "{:?}", runs[0].last());
+    let beside = Approach::Shape(vec![vec![p(20.0, 6.0), p(30.0, 6.0)]]);
+    let runs = sewn(&region, &stitching(0.0), None, Some(&beside));
+    assert!(near(*runs[0].last().unwrap(), p(10.0, 4.0)), "{:?}", runs[0].last());
     // With neither, it starts at its first row's start and comes back there.
     let runs = sewn(&region, &stitching(0.0), None, None);
     let first_row = rows(&region.parts[0], &stitching(0.0).grid, &mut Budget::DEFAULT.meter()).unwrap()[0].segments[0];
@@ -189,7 +198,7 @@ fn diag_sc_w0305_a_fill_too_thin_for_a_row_is_sewn_round_its_outline() {
     .unwrap();
     let run = &stitched.runs[0];
     assert_eq!((run[0], *run.last().unwrap()), (p(0.0, 0.05), p(0.0, 0.05)), "round its outline from its start");
-    // One part of 2 too thin.
+    // One part of 2 too thin, and 2 of 3.
     let square: &[(f64, f64)] = &[(0.0, 10.0), (5.0, 10.0), (5.0, 15.0), (0.0, 15.0)];
     let outcome = planned(vec![fill("two", &[sliver, square])]);
     assert!(messages(&outcome).contains(
@@ -197,6 +206,15 @@ fn diag_sc_w0305_a_fill_too_thin_for_a_row_is_sewn_round_its_outline() {
           its outline."
             .to_string()
     ));
+    let lower: &[(f64, f64)] = &[(0.0, 30.05), (20.0, 30.05), (20.0, 30.2), (0.0, 30.2)];
+    let outcome = planned(vec![fill("three", &[sliver, lower, square])]);
+    assert!(
+        messages(&outcome).contains(
+            &"warning SC-W0305: 2 of this fill's parts are too thin for a row of stitches at its row spacing, so each is sewn as a running stitch \
+          round its outline."
+                .to_string()
+        )
+    );
 }
 
 #[test]

@@ -394,6 +394,31 @@ mod tests {
     }
 
     #[test]
+    fn a_fill_is_sewn_by_its_method_and_without_a_longest_stitch_is_a_bug() {
+        let p = |x, y| Point::new(x, y).unwrap();
+        let segments = [p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)].map(Segment::Line).to_vec();
+        let square = Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] };
+        let shape = || Shape::Fill { path: square.clone(), rule: FillRule::NonZero };
+        let lengths = |max| Some(Lengths { min_stitch: Mm::new(0.3).unwrap(), max_stitch: max, jump: Mm::new(3.0).unwrap() });
+        let sew = |element: &Element, lengths, diagnostics: &mut Vec<Diagnostic>| {
+            let (rng, meter) = (&mut SplitMix64::new(1), &mut Budget::DEFAULT.meter());
+            fill(element, (&square, FillRule::NonZero), lengths, &Neighbours::default(), rng, diagnostics, meter).unwrap()
+        };
+        let codes = |diagnostics: &[Diagnostic]| diagnostics.iter().map(|d| d.code).collect::<Vec<_>>();
+        let mut diagnostics = Vec::new();
+        let sewn = sew(&element(shape(), &[]), lengths(Mm::new(4.0).ok()), &mut diagnostics);
+        assert_eq!((sewn.map(|(stitch_type, _)| stitch_type), codes(&diagnostics)), (Some(StitchType::TatamiFill), vec![]));
+        // A method not sewn yet.
+        let sewn = sew(&element(shape(), &[("fill_method", "contour_fill")]), lengths(Mm::new(4.0).ok()), &mut diagnostics);
+        assert_eq!((sewn.is_none(), codes(&diagnostics)), (true, vec![Code::StitchTypeNotYet]));
+        // The registry gives a fill a longest stitch of its own (`ParamSpec::in_family`), so only a bug in
+        // StitchCraft can leave it out.
+        let mut diagnostics = Vec::new();
+        let sewn = sew(&element(shape(), &[]), lengths(None), &mut diagnostics);
+        assert_eq!((sewn.is_none(), codes(&diagnostics)), (true, vec![Code::InternalCheckFailed]));
+    }
+
+    #[test]
     fn an_element_takes_the_defaults_of_the_family_that_sews_it() {
         let start = Point::new(0.0, 0.0).unwrap();
         let path = Path { subpaths: vec![Subpath { start, segments: vec![Segment::Line(Point::new(5.0, 0.0).unwrap())], closed: false }] };

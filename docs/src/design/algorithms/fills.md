@@ -208,8 +208,8 @@ StitchCraft takes the extra rows from the row grid and keeps them inside the reg
 ### 8. No rows
 
 A part thinner than the row spacing has no row. It is sewn as a running stitch round its outline, from
-the outline's start, as Ink/Stitch sews it, and `SC-W0305` says so (since M5.4). A fill that bounds no
-area at all under its fill rule sews nothing, and `SC-W0303` says so.
+the outline's start, as Ink/Stitch sews it, and `SC-W0305` says so (since M5.4). Where the fill rule
+leaves every face empty, the fill sews nothing, and `SC-W0303` says so.
 
 ### Properties (conformance)
 

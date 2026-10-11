@@ -28,8 +28,9 @@
 //!
 //! The route follows Ink/Stitch's from the same graph. The rings start where the drawing starts them,
 //! which can double other stretches than Ink/Stitch does and so change the route (`DEV-FILL-005`).
-//! Rows that no walk reaches, which only rings that touch can cut off, are sewn after the rest, the needle
-//! jumping to them.
+//! A part's rows and rings join all its nodes, so one walk takes every row. Were some rows out of its
+//! reach, a second walk would sew them after the rest, and the needle, finding no way there, would jump,
+//! which `super::sew` reports as a bug (`SC-E0009`).
 
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
@@ -397,18 +398,16 @@ mod tests {
     use stitchcraft_core::Budget;
 
     use super::*;
+    use crate::generators::tatami::fixture::{frame, p};
     use crate::generators::tatami::rows::{Grid, rows};
     use crate::generators::tatami::travel::between;
     use crate::normalize::fixture::cases;
     use crate::normalize::region::Polygon;
 
-    fn p(x: f64, y: f64) -> Point {
-        Point::new(x, y).unwrap()
-    }
-
-    /// A 10 × 3 rectangle as the region gives it: from its top left corner, down the left side first.
+    /// A 10 × 3 rectangle: its left side runs from 0 to 3 along the outline, 26 long, and its right side
+    /// from 13 to 16.
     fn rectangle() -> Polygon {
-        Polygon { outline: vec![p(0.0, 0.0), p(0.0, 3.0), p(10.0, 3.0), p(10.0, 0.0), p(0.0, 0.0)], holes: Vec::new() }
+        crate::generators::tatami::fixture::rectangle(3.0)
     }
 
     /// Rows across the rectangle at y = 1 and 2, each from left to right. Their ends A (0, 1), B (10, 1),
@@ -593,6 +592,26 @@ mod tests {
         let steps = walk(&mut graph, a, &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(steps, [Step::Row { segment: 0, from: b, to: a }, Step::Travel { from: c, to: a, beside: false }]);
         assert_eq!(graph.degree(a), 0);
+    }
+
+    #[test]
+    fn rows_no_walk_reaches_are_walked_after_the_rest() {
+        // A row between 2 points of the frame's outline, A (0, 0.5) and B (10, 0.5), and one between 2
+        // points of its hole, C (4, 2) and D (6, 2): nothing joins the hole's nodes to the outline's. The
+        // walk from A sews the outline's row and leaves the hole's. A second walk sews it, and the needle
+        // travels there from A, where the first walk ended.
+        let segments = [(p(0.0, 0.5), p(10.0, 0.5)), (p(4.0, 2.0), p(6.0, 2.0))];
+        let route = routed(&frame(), &segments, None, None);
+        let [a, b, c, d] = [0, 1, 2, 3];
+        assert_eq!(
+            route.steps,
+            [
+                Step::Travel { from: a, to: b, beside: true },
+                Step::Row { segment: 0, from: b, to: a },
+                Step::Travel { from: a, to: d, beside: false },
+                Step::Row { segment: 1, from: d, to: c },
+            ]
+        );
     }
 
     /// Asserts that `route` sews each of `count` segments once, that each step starts where the one before
