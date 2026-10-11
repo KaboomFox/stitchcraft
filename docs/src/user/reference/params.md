@@ -35,11 +35,13 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Running parameters](params/running.md) | 4 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Satin parameters](params/satin.md) | 36 | Satin column, E-stitch, S-stitch, Zigzag satin |
+| [Tatami parameters](params/tatami.md) | 3 | Tatami fill |
 
 ## Every parameter
 
 | Key | Label | Group |
 |---|---|---|
+| [`angle`](params/tatami.md#angle) | Angle | Tatami parameters |
 | [`bean_stitch_repeats`](params/repeat.md#bean_stitch_repeats) | Bean stitch | Repeat parameters |
 | [`center_walk_underlay`](params/satin.md#center_walk_underlay) | Centre walk underlay | Satin parameters |
 | [`center_walk_underlay_position`](params/satin.md#center_walk_underlay_position) | Centre walk position | Satin parameters |
@@ -53,6 +55,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`contour_underlay_stitch_tolerance_mm`](params/satin.md#contour_underlay_stitch_tolerance_mm) | Contour tolerance | Satin parameters |
 | [`enable_random_stitch_length`](params/running.md#enable_random_stitch_length) | Random stitch length | Running parameters |
 | [`end_at_nearest_point`](params/satin.md#end_at_nearest_point) | End at nearest point | Satin parameters |
+| [`end_row_spacing_mm`](params/tatami.md#end_row_spacing_mm) | End row spacing | Tatami parameters |
 | [`force_lock_stitches`](params/common.md#force_lock_stitches) | Always lock | Common parameters |
 | [`lock_custom_end`](params/common.md#lock_custom_end) | Custom end lock | Common parameters |
 | [`lock_custom_start`](params/common.md#lock_custom_start) | Custom start lock | Common parameters |
@@ -78,6 +81,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`random_zigzag_spacing_percent`](params/satin.md#random_zigzag_spacing_percent) | Random zigzag spacing | Satin parameters |
 | [`repeats`](params/repeat.md#repeats) | Repeats | Repeat parameters |
 | [`reverse_rails`](params/satin.md#reverse_rails) | Reverse rails | Satin parameters |
+| [`row_spacing_mm`](params/tatami.md#row_spacing_mm) | Row spacing | Tatami parameters |
 | [`running_stitch_length_mm`](params/running.md#running_stitch_length_mm) | Stitch length | Running parameters |
 | [`running_stitch_position`](params/satin.md#running_stitch_position) | Running stitch position | Satin parameters |
 | [`running_stitch_tolerance_mm`](params/running.md#running_stitch_tolerance_mm) | Curve tolerance | Running parameters |
