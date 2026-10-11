@@ -1,7 +1,7 @@
 //! The needle points of a tatami fill's rows (`REQ-FILL-TAT-003`): on a grid along each row anchored at
 //! the design's origin, a `staggers`-th of the longest stitch along from the row before's, as Ink/Stitch
-//! places them; or at random lengths. Fills are not sewn until roadmap M5.4 routes their rows, but each
-//! row's needle points are placed already.
+//! places them; or at random lengths. Each row segment's needle points are placed from the end the route
+//! enters it by (`tests/fill_routing.rs`).
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]

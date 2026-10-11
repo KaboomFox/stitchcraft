@@ -1,6 +1,6 @@
 # Engine pipeline
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
 
 From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraft-engine` with its
 own tests; stages communicate only through the types in the [data model](data-model.md).
@@ -59,11 +59,12 @@ that join its underlays are no longer than the first value. For any other stroke
 `stroke_method`. `running_stitch` (the default) and
 `manual_stitch` are sewn from M3. A satin column drawn as one path no wider than the design's
 `min_satin_stroke_width` is sewn as a stroke, with `SC-W0212`, as in Ink/Stitch (`REQ-SAT-015`). A wider
-one is sewn between rails made from its line from M4.9 (`REQ-SAT-016`). The other stroke and satin
-methods, and fills, are skipped with `SC-W0011` until their milestones. A fill's region is built
-already, so what it leaves out and how it will be sewn are said (`SC-W0303`, `SC-W0304`, `SC-I0306`,
-`SC-W0307`), and its tatami settings are read and checked. An element whose parameters are wrong (`SC-E0101`) is skipped too, and the rest of the
-design still plans.
+one is sewn between rails made from its line from M4.9 (`REQ-SAT-016`). A fill's region is built first,
+so what it leaves out and how it will be sewn are said (`SC-W0303`, `SC-W0304`, `SC-I0306`, `SC-W0307`)
+whatever comes next, and its `fill_method` picks the generator: the tatami fill, sewn from M5.4, which
+reads the running stitch's length and tolerance for its travel between rows. The other stroke, satin and
+fill methods are skipped with `SC-W0011` until their milestones. An element whose parameters are wrong
+(`SC-E0101`) is skipped too, and the rest of the design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
 `min_stitch`) and the element's `min_stitch_length_mm`, or the design's shortest stitch when the element
@@ -182,7 +183,9 @@ comes from joining groups and from settings the machine cannot follow.
    runs on to the next point. The run's first and last points and lock points always stay, and the points
    before them are left out instead. A point where the needle already is would sew in place, and it is
    left out too. A stitch into or out of a lock point is a lock stitch, whose shortest is 0.2 mm
-   (`REQ-PLAN-002`). `SC-I0504` says how many points were left out (`REQ-FIN-001`).
+   (`REQ-PLAN-002`). `SC-I0504` says how many points were left out (`REQ-FIN-001`). The rule is one
+   function, which a generator that joins pieces of its own also applies, as a tatami fill does to its
+   rows and the travel between them, so that finalize finds nothing of its stitches to thin.
 2. **The longest stitch.** A stitch longer than `profile.max_stitch` is split into the fewest equal parts
    no longer than it (`SC-I0703`, `REQ-FIN-001`). Such a stitch comes from a stitch placed by hand, from
    a custom lock's long step, or from a move sewn on under a `min_jump_stitch_length_mm` longer than the

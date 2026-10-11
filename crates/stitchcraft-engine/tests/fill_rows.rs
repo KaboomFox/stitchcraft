@@ -2,8 +2,8 @@
 //! of row spacings from the design's origin, graded towards the end row spacing when one is set, and cut
 //! where they meet the outline, as Ink/Stitch lays them.
 //!
-//! Fills are not sewn until the rest of roadmap M5, but their rows are laid already, and their settings
-//! are read and checked.
+//! The rows are laid before they are routed and sewn (`tests/fill_routing.rs`), and their settings are
+//! read and checked.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]

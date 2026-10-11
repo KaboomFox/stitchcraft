@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Strokes for `stitch plan`, end to end: two threads and back, two lines that nearly touch, and a fill,
-     which this version skips. Hand-written for StitchCraft's conformance suite. -->
+<!-- Strokes for `stitch plan`, end to end: two threads and back, two lines that nearly touch, and a fill
+     in 2 parts. Hand-written for StitchCraft's conformance suite. -->
 <svg
    width="80mm"
    height="60mm"
@@ -35,12 +35,9 @@
        id="underline"
        style="fill:none;stroke:#c00000;stroke-width:0.5"
        d="M 10,50 H 40" />
-    <rect
+    <path
        id="patch"
        style="fill:#00a000;stroke:none"
-       x="45"
-       y="5"
-       width="20"
-       height="12" />
+       d="M 45,5 H 53 V 17 H 45 Z M 57,5 H 65 V 17 H 57 Z" />
   </g>
 </svg>

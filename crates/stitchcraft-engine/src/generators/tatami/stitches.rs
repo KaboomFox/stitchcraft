@@ -11,7 +11,7 @@
 //!
 //! **A segment**, sewn from its start to its end, takes its start, then each grid point past the start
 //! and before the end, and then its end, unless `skip_last` is on or the last point lies within 0.1 mm of
-//! it. Routing (roadmap M5.4) decides which way each segment is sewn, and sewn the other way a segment
+//! it. Routing ([`super::sew`]) decides which way each segment is sewn, and sewn the other way a segment
 //! takes the same grid points.
 //!
 //! **Random lengths** (`enable_random_stitch_length`) take the place of the grid: the first point lies a

@@ -249,7 +249,9 @@ registry! {
 
     /// A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
     /// square CSS pixels), a speck about half a millimetre across, is too small for a row, so it is left
-    /// out, as Ink/Stitch leaves it out. Where every part is that small, the fill sews nothing.
+    /// out, as Ink/Stitch leaves it out. Where every part is that small, the fill sews nothing. So does a
+    /// fill that bounds no area at all: subpaths that are lines or points, or that its fill rule leaves
+    /// empty, such as 2 copies of one square under the even-odd rule.
     ///
     /// The message counts the parts left out and is placed at the first. Draw them larger, or sew them as a
     /// running stitch.
@@ -259,6 +261,14 @@ registry! {
     /// area pile up, and a running stitch round it or a satin column across it usually sews it better.
     /// Ink/Stitch gives the same advice. The fill is kept as drawn.
     FillSmall = "SC-W0304", Warning, "Fill smaller than 1.4 mm²";
+
+    /// A fill is sewn in rows of stitches the row spacing apart, and a part of it so thin that no row
+    /// crosses it gets none. Such a part is sewn as a running stitch round its outline instead, as
+    /// Ink/Stitch sews it.
+    ///
+    /// The message counts the parts. Make them wider, set a smaller `row_spacing_mm`, or sew them as a
+    /// stroke or a satin column.
+    FillTooThin = "SC-W0305", Warning, "Fill part too thin for rows; sewn round its outline";
 
     /// A fill's fill rule says which parts of it are filled where its subpaths lie inside each other or
     /// overlap. Under the rule `nonzero`, SVG's default, a part that the subpaths wind round twice the same

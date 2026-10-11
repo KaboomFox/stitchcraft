@@ -206,21 +206,30 @@ pub(crate) fn nearest_to_point(lines: &[&[Point]], p: Point, meter: &mut Meter) 
 /// The point of the polylines `lines` nearest the polylines `other`, measured from `other`; `None` when
 /// either has no point. A unit of `meter`'s work per pair of sides.
 pub(crate) fn nearest_to_lines(lines: &[&[Point]], other: &[&[Point]], meter: &mut Meter) -> Result<Option<Point>, Exhausted> {
-    let mut best: Option<(Point, f64)> = None;
-    for &theirs in other {
-        for &line in lines {
-            for their_side in sides(theirs) {
-                for side in sides(line) {
+    Ok(nearest_pair(other, lines, meter)?.map(|(_, on)| on))
+}
+
+/// The points of the polylines `from` and `to` nearest each other, measured from `from`: the point of
+/// `from`, then that of `to`. Each polyline of `from` is measured against each of `to` in turn, side by
+/// side, its own sides outermost. `None` when either has no point. A unit of `meter`'s work per pair of
+/// sides.
+pub(crate) fn nearest_pair(from: &[&[Point]], to: &[&[Point]], meter: &mut Meter) -> Result<Option<(Point, Point)>, Exhausted> {
+    let mut best: Option<((Point, Point), f64)> = None;
+    for &line in from {
+        for &other in to {
+            for side in sides(line) {
+                for other_side in sides(other) {
                     meter.charge(1)?;
-                    let distance = apart(their_side.0, their_side.1, side.0, side.1);
+                    let distance = apart(side.0, side.1, other_side.0, other_side.1);
                     if best.is_none_or(|(_, d)| distance < d) {
-                        best = Some((between_segments(their_side, side).1, distance));
+                        let (on, on_other, _) = between_segments(side, other_side);
+                        best = Some(((on, on_other), distance));
                     }
                 }
             }
         }
     }
-    Ok(best.map(|(on, _)| on))
+    Ok(best.map(|(pair, _)| pair))
 }
 
 /// Which of a polyline and a segment measured against each other is measured from: it decides which of

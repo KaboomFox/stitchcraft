@@ -18,7 +18,9 @@ at its nearest points. Since M4.8 a column drawn as one path and too narrow to s
 stroke, and since M4.9 a wider one is sewn between rails made from its centre line
 (`normalize::centre_line`), offset as shapely offsets them (`normalize::offset`). Since M5.1 a fill's
 region is built by its fill rule (`normalize::region`), and what it leaves out is said, and since M5.2
-its tatami rows are laid as Ink/Stitch lays them (`generators::tatami`). Fills are sewn from M5.4. Design: `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
+its tatami rows are laid as Ink/Stitch lays them (`generators::tatami`). Since M5.4 a tatami fill is
+sewn part by part, its rows in the order Ink/Stitch routes them (`generators::tatami::route`). Design:
+`docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 
 ## Invariants
 

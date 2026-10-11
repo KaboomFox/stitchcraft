@@ -2,8 +2,8 @@
 //! cut exactly where its subpaths cross, touch or run along each other, in parts with holes. Parts too
 //! small to sew are left out with a warning, and small fills and fills in parts are pointed out.
 //!
-//! Fills are not sewn until the rest of roadmap M5, but a fill element's area is built already, so its
-//! warnings come out of the plan, ahead of `SC-W0011`.
+//! A fill element's area is built before it is sewn, so its warnings come out of the plan ahead of what
+//! sewing it says.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
@@ -131,7 +131,8 @@ fn req_fill_001_subpaths_of_fewer_than_3_points_bound_nothing() {
     let with_strays = rings(&[&square(0.0, 0.0, 10.0), &[(5.0, 5.0)], &[(2.0, 2.0), (8.0, 8.0)]]);
     assert_eq!(region(&with_strays, FillRule::EvenOdd), region(&rings(&[&square(0.0, 0.0, 10.0)]), FillRule::EvenOdd));
     let nothing = region(&rings(&[&[(0.0, 0.0), (5.0, 0.0)]]), FillRule::NonZero);
-    assert!(nothing.region.parts.is_empty() && nothing.diagnostics.is_empty());
+    assert!(nothing.region.parts.is_empty());
+    assert_eq!(nothing.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::FillPartsTooSmall], "it says it bounds nothing");
 }
 
 #[test]
@@ -153,10 +154,7 @@ fn diag_sc_w0303_parts_left_out_are_counted() {
     let tiny = TINY_PART.sqrt() * 0.9;
     assert_eq!(
         said(fill("specks", rings(&[&square(0.0, 0.0, 10.0), &square(20.0, 0.0, tiny), &square(30.0, 0.0, tiny)]), FillRule::NonZero)),
-        [
-            "warning SC-W0303: 2 parts of this fill cover 0.21 mm² or less each, too little for a row of stitches, so they are left out.",
-            "warning SC-W0011: This element is a fill, and this version of StitchCraft does not sew fills yet, so it is skipped.",
-        ]
+        ["warning SC-W0303: 2 parts of this fill cover 0.21 mm² or less each, too little for a row of stitches, so they are left out.",]
     );
     assert_eq!(
         said(fill("speck", rings(&[&square(0.0, 0.0, 10.0), &square(20.0, 0.0, tiny)]), FillRule::NonZero))[0],
@@ -170,6 +168,10 @@ fn diag_sc_w0303_parts_left_out_are_counted() {
         said(fill("dots", rings(&[&square(0.0, 0.0, 0.2), &square(5.0, 0.0, 0.2)]), FillRule::NonZero))[0],
         "warning SC-W0303: All 2 parts of this fill cover 0.21 mm² or less each, too little for a row of stitches, so they are left out."
     );
+    // A fill that bounds no area: a line, or a square drawn twice under the even-odd rule.
+    let empty = "warning SC-W0303: This fill bounds no area under its fill rule, so it sews nothing.";
+    assert_eq!(said(fill("line", rings(&[&[(0.0, 0.0), (5.0, 5.0)]]), FillRule::NonZero)), [empty]);
+    assert_eq!(said(fill("twice", rings(&[&square(0.0, 0.0, 5.0), &square(0.0, 0.0, 5.0)]), FillRule::EvenOdd)), [empty]);
 }
 
 #[test]
@@ -190,19 +192,17 @@ fn diag_sc_i0306_the_nonzero_rule_filling_what_the_even_odd_rule_leaves_empty_is
          even-odd rule leaves empty. It stays in the fill, as the drawing shows it; Ink/Stitch would leave it empty."
     );
     // Under the even-odd rule, or with the hole drawn the other way round, there is nothing to say.
-    assert_eq!(said(fill("even-odd", same, FillRule::EvenOdd)).len(), 1);
-    assert_eq!(said(fill("turned", rings(&[&square(0.0, 0.0, 10.0), &turned(3.0, 3.0, 4.0)]), FillRule::NonZero)).len(), 1);
+    let about_the_rule = |said: Vec<String>| said.iter().filter(|m| m.contains("SC-I0306")).count();
+    assert_eq!(about_the_rule(said(fill("even-odd", same, FillRule::EvenOdd))), 0);
+    assert_eq!(about_the_rule(said(fill("turned", rings(&[&square(0.0, 0.0, 10.0), &turned(3.0, 3.0, 4.0)]), FillRule::NonZero))), 0);
 }
 
 #[test]
 fn diag_sc_w0307_a_fill_in_parts_is_said_to_be_sewn_part_by_part() {
     assert_eq!(
         said(fill("parts", rings(&[&square(0.0, 0.0, 10.0), &square(20.0, 0.0, 10.0)]), FillRule::NonZero)),
-        [
-            "warning SC-W0307: This fill's area falls into 2 parts that are sewn one after another, with a jump between each.",
-            "warning SC-W0011: This element is a fill, and this version of StitchCraft does not sew fills yet, so it is skipped.",
-        ]
+        ["warning SC-W0307: This fill's area falls into 2 parts that are sewn one after another, with a jump between each.",]
     );
-    // One part says nothing.
-    assert_eq!(said(fill("one", rings(&[&square(0.0, 0.0, 10.0)]), FillRule::NonZero)).len(), 1);
+    // One part says nothing of parts.
+    assert!(!said(fill("one", rings(&[&square(0.0, 0.0, 10.0)]), FillRule::NonZero)).iter().any(|m| m.contains("SC-W0307")));
 }
