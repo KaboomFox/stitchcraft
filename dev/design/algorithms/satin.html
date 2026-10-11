@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-6bcde6e9.js";
+            window.path_to_searchindex_js = "../../searchindex-b9299949.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-f616c49b.js"></script>
@@ -199,7 +199,10 @@ point on rail B, controlling the stitch angle through curves.</li>
 </ul>
 <h2 id="recognizing-rails-and-rungs"><a class="header" href="#recognizing-rails-and-rungs">Recognizing rails and rungs</a></h2>
 <p>An element is a satin column when its <code>satin_column</code> setting is on, whatever its <code>stroke_method</code> says.
-Its path’s subpaths are flattened, and the reader finds where each pair of subpaths meets, crossing or
+Its path’s subpaths are flattened as Ink/Stitch flattens them: each curve is halved until its control
+points lie within a tenth of a CSS pixel of the line between its ends. The rails are then the same
+polylines in both, which decide where the needle points go, where subpaths meet, and where a column
+drawn as one path gets its rungs. The reader finds where each pair of subpaths meets, crossing or
 touching. A point the two share counts once, and a rung that ends exactly on a rail meets it.</p>
 <p>StitchCraft tells rails from rungs as Ink/Stitch does, and a file sews the same in both.</p>
 <ol>
@@ -257,8 +260,8 @@ says.</p>
 length where it lies. Each score is spread over 4 hundredths to either side, weighted 1, 2, 4, 8, 16,
 8, 4, 2, 1. A rung goes where the spread scores stop falling or start rising: before and after each
 sharp corner, where the stitches can fan round it.</li>
-<li>A rung goes at each node of the line as well, never at its very start or end. A straight line of 2
-nodes gets one rung in its middle.</li>
+<li>A rung goes at each point of the flattened line as well, never at its very start or end. A straight
+line of 2 points gets one rung in its middle.</li>
 <li>Going along the line, a rung less than 1 mm from the last one placed is left out.</li>
 <li>Each rung is perpendicular to the line, 1.2 times the column’s width long, and is kept only when it
 crosses each rail exactly once. It pairs the 2 points where it crosses them.</li>
@@ -313,13 +316,20 @@ rail is cut at its own distances, in order, and the n-th part of one rail goes w
 other: a section. A part of no length leaves its section out, as where two rungs meet a rail at one
 point or one meets it at an end. Within a section, the point at a fraction of rail A’s part goes with the
 point at the same fraction of rail B’s.</p>
-<p>A column of 2 subpaths has no rungs, and its rails’ nodes cut the rails instead, as in Ink/Stitch. The
-2nd node of one rail goes with the 2nd node of the other, and on in order, after any reversal, without
-each rail’s 2 ends. Rails with different numbers of nodes pair as many as the one with fewer has
-(<code>SC-W0210</code>). Ink/Stitch’s own warning for this counts the rails’ points after flattening, not their
-nodes, and can warn where the nodes pair as drawn. Rails of 2 nodes each are cut once near their
-starts, and sew as one section. The cut on each rail is where the point 0.2 CSS pixels along the straight
-line from its first node to its last lies along it, as Ink/Stitch places the rung it adds there.</p>
+<p>A column of 2 subpaths has no rungs, and gets rungs across its rails’ nodes instead, as Ink/Stitch adds
+them. The 2nd node of one rail goes with the 2nd node of the other, and on in order, without each rail’s
+2 ends. Rails with different numbers of nodes pair as many as the one with fewer has (<code>SC-W0210</code>).
+Ink/Stitch’s own warning for this counts the rails’ points after flattening, not their nodes, and can
+warn where the nodes pair as drawn. Rails of 2 nodes each get one rung, across the points 0.2 CSS pixels
+along the straight line from each rail’s first node to its last, and sew as one section.</p>
+<p>Each rail’s nodes are turned as <code>reverse_rails</code> turns the rail drawn in that place, first or second,
+before any swap. Swapping the rails then changes only which one sews first, and the same nodes pair
+either way. Where the rails have different numbers of nodes, the longer rail’s last nodes, in the order
+the turning leaves them, go without a partner.</p>
+<p>Each rung added is a tenth longer than the line between its points, half at each end, and cuts each
+rail where it comes nearest it, measured as at the start and end (see <em>Equally near points</em>). That is
+the node itself, or on a curved rail of 2 nodes, where the rung crosses the curve, or the curve’s point
+nearest the rung when the rung does not reach it.</p>
 <p>When the resulting stitch directions deviate from the local column normal by more than 45° somewhere,
 the element gets <code>SC-W0208</code> (“add a rung here”) with the location.</p>
 <h2 id="compensation"><a class="header" href="#compensation">Compensation</a></h2>
@@ -330,9 +340,10 @@ up for both as Ink/Stitch does.</p>
 <li><strong>Push compensation</strong> (<code>push_compensation_mm</code>) acts on the rails after any reversal, before they are
 cut into sections. It takes its length off each rail at the column’s start and end, or adds it where
 negative, straight on from the rail’s first or last segment. 2 values set the start, then the end.
-The points that say where to cut come from the rails as drawn, so a rung in a part taken off cuts the
-rail at its end and leaves its section out. A rail the shortening would leave shorter than half a CSS
-pixel keeps its length (<code>SC-W0211</code>), and a lengthening at its other end still applies.</li>
+The points where a drawn rung cuts come from the rails as drawn, so a rung in a part taken off cuts the
+rail at its end and leaves its section out. A rung added across the nodes is measured against the
+compensated rails. A rail the shortening would leave shorter than half a CSS pixel keeps its length
+(<code>SC-W0211</code>), and a lengthening at its other end still applies.</li>
 <li><strong>Pull compensation</strong> acts on each pair as it is placed. Both ends move outward along the line through
 the pair, each by <code>pull_compensation_mm</code> plus <code>pull_compensation_percent</code> of the pair’s width, and 2
 values set the first rail’s side, then the second’s. Negative values move the ends inward. Ends that

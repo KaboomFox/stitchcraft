@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6bcde6e9.js";
+            window.path_to_searchindex_js = "../searchindex-b9299949.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f616c49b.js"></script>
@@ -192,7 +192,8 @@ own tests; stages communicate only through the types in the <a href="data-model.
 <p>Per element, independent of the others:</p>
 <ul>
 <li><strong>Flatten curves</strong> with the element’s tolerance (default 0.1 mm for fills, a tenth of
-<code>running_stitch_tolerance_mm</code> for strokes). Strokes are halved (de Casteljau) until each piece’s
+<code>running_stitch_tolerance_mm</code> for strokes, and a tenth of a CSS pixel for satin columns, as Ink/Stitch
+flattens them). Strokes and satin columns are halved (de Casteljau) until each piece’s
 control points lie within the tolerance of its chord (<code>stitchcraft_engine::normalize::stroke</code>), using
 only arithmetic and square roots so that every platform gets the same points. <code>kurbo</code>’s adaptive
 flattening is not used for this: in 0.13 it calls <code>powf</code> (<code>CubicBez::to_quads</code>) and <code>hypot</code>
