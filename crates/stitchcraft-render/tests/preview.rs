@@ -18,6 +18,7 @@ use stitchcraft_formats::{decode, encode};
 use stitchcraft_plan::palette::BROTHER_PEC;
 use stitchcraft_plan::{FormatId, PlanBuilder, Provenance, Rgb, Role, StitchPlan, Thread};
 use stitchcraft_render::{Scene, Settings, Style, preview};
+use stitchcraft_testkit::equivalence::as_pes;
 use stitchcraft_testkit::strategies;
 
 fn p(x: f64, y: f64) -> Point {
@@ -79,8 +80,10 @@ fn through_pes(plan: &StitchPlan) -> StitchPlan {
     decode(&encode(plan, FormatId::PesV1, "preview").unwrap().bytes).unwrap().plan
 }
 
-/// What a PES file can say of `scene`: colours become Brother palette colours and roles are gone.
-fn as_pes_says(mut scene: Scene) -> Scene {
+/// What a PES file can say of `plan`: a trim before every jump after its first record (REQ-FMT-010),
+/// colours become Brother palette colours and roles are gone.
+fn as_pes_says(plan: &StitchPlan) -> Scene {
+    let mut scene = scene(&as_pes(plan));
     for hole in &mut scene.holes {
         hole.color = BROTHER_PEC.nearest(hole.color).unwrap().color;
         hole.lock = false;
@@ -104,10 +107,10 @@ fn req_rnd_001_previews_show_the_holes_a_machine_file_makes() {
 fn req_rnd_001_test_sheets_look_the_same_read_back_from_their_pes_files() {
     for sheet in testsheets::SHEETS {
         let plan = sheet.plan().unwrap();
-        assert_eq!(scene(&through_pes(&plan)), as_pes_says(scene(&plan)), "{}", sheet.id);
+        assert_eq!(scene(&through_pes(&plan)), as_pes_says(&plan), "{}", sheet.id);
     }
     let plan = sampler(0.04);
-    assert_eq!(scene(&through_pes(&plan)), as_pes_says(scene(&plan)), "sampler");
+    assert_eq!(scene(&through_pes(&plan)), as_pes_says(&plan), "sampler");
 }
 
 proptest! {
@@ -121,7 +124,7 @@ proptest! {
         // stop (`stitchcraft-formats/src/pes/read.rs`), so such plans read back differently.
         let pec = |b: &stitchcraft_plan::ColorBlock| BROTHER_PEC.nearest(b.thread.color).unwrap().index;
         prop_assume!(plan.blocks.windows(2).all(|w| pec(&w[0]) != pec(&w[1])));
-        prop_assert_eq!(scene(&through_pes(&plan)), as_pes_says(scene(&plan)));
+        prop_assert_eq!(scene(&through_pes(&plan)), as_pes_says(&plan));
     }
 }
 

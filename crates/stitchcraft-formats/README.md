@@ -9,7 +9,7 @@ PEC block) for Brother and DST for everything else come first.
 |---|---|
 | `lower` (private) | What every writer needs once: quantize, moves, colour changes, end, command checks; `split` for per-record limits |
 | `quantize` | `quantize` (mm → 0.1 mm, half to even), `Units`, `Delta` |
-| `pes` | PES v1 container; `pes::pec` the PEC block (header, stitch data); `pes::thumbnail` the 48 × 38 pictures |
+| `pes` | PES v1 container; `pes::pec` the PEC block (header, stitch data, every jump trim-flagged); `pes::thumbnail` the 48 × 38 pictures |
 | `dst` | Tajima DST: header, balanced-ternary records, trims as jump sequences |
 | `decode` | `decode` (recognises PES, PEC, DST), `Decoded`, and the `Recorder` every reader builds plans with (limits included) |
 | `pes::read`, `dst::read` | The readers: literal, bounded, typed errors |

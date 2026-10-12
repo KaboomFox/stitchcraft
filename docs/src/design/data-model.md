@@ -146,8 +146,9 @@ pub struct Provenance {
   colour change between blocks and one end.
 - **`Trim` and `Stop` happen where the needle is;** their `at` repeats the needle position so every entry
   has one (bounds, previews and reports never special-case commands), and the invariant checker verifies
-  it. Encoders decide how a format expresses them (PEC: trim-flagged jumps, and a stop as a change to the
-  same thread; DST: trims as a jump sequence) — see [formats](formats.md).
+  it. Encoders decide how a format expresses them. PEC puts a trim flag on every jump after the first
+  move, and records a stop as a change to the same thread. DST spells a trim as a run of jumps. See
+  [formats](formats.md).
 - **The origin is the centre of the hoop**, where the needle starts, above the fabric. The first
   `Normal` stitch is the first time it goes down.
 - `PlanBuilder` appends entries with the needle tracked; `PlanStats` counts stitches, jumps, trims, stops
