@@ -530,7 +530,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - The round-trip checks compare a file with what its format tells the machine
     (`stitchcraft_testkit::equivalence::format_events`, `as_pes`), and a cut with nothing sewn since the
     last one counts as none (`REQ-FMT-002`, `REQ-FMT-003`).
-  - TS-02B had the same plain jumps, and its file changes with this. No other test sheet had any.
+  - TS-02B and TS-09 had the same plain jumps, and their files change with this. No other test sheet had
+    any.
 - A design exactly the hoop's size fits it. Rounding put rows of a fill's underlay at 90° a hair past the
   edge of the reference hoop's whole field, and the hoop check and the plan checker refused it, while the
   check that the design is centred allowed the hair, as every length check does (`LENGTH_SLACK`). Both now
@@ -628,7 +629,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   zero-length jumps.
 
 ### Golden files
-- Changed `conformance/golden/testsheets/TS-02.pes` and `TS-02B.pes` (9 jumps each),
+- Changed `conformance/golden/testsheets/TS-02.pes` and `TS-02B.pes` (9 jumps each), `TS-09.pes` (3),
   `conformance/golden/plans/strokes.pes` (5), and `conformance/golden/formats/every-command.pes` (1) and
   `long-jumps.pes` (3) (MC-1): those jumps are trim-flagged now (`REQ-FMT-010`). Only their flag bits change,
   from `0x10` to `0x20`. The DST files stay as they were.
