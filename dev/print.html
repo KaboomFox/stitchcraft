@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-28baf2dc.js";
+            window.path_to_searchindex_js = "searchindex-1f0a742d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -330,7 +330,7 @@ order the file lists them, and the star comes first.</p>
 <pre><code class="language-console">$ stitch plan badge.svg -o badge.pes --preview badge.png
 badge.svg
   file      badge.pes (PES v1, 1498 bytes)
-  sha256    d9906494fa2d27dcfc71fe26e2eb89c9805078e5a24d896bef51bc98a707b4ef
+  sha256    ea312a694bd0b64c445d8c77271bd32c3e82c4b1e34a3dd755dee1105b380155
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      44.0 × 44.0 mm
   stitches  124 stitches, 2 jumps, 0 trims, 1 colour change, 0 stops
@@ -363,7 +363,7 @@ of 2 rectangles and 2 lines that nearly touch:</p>
 <pre><code class="language-console">$ stitch plan strokes.svg -o strokes.pes --preview strokes.png --report strokes.json
 strokes.svg
   file      strokes.pes (PES v1, 2838 bytes)
-  sha256    21ec61203f8de823394fddddd76be5505d13434684f78581665095441e28713b
+  sha256    f1d95e2de219eddcd36d2fb9b2730d07c44c06b48f5591ef7611eefbd6898f34
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      60.0 × 45.0 mm
   stitches  555 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops
@@ -416,9 +416,9 @@ machine will sew, before you spend thread on it. The examples use test sheet TS-
 <h2 id="describe-the-file"><a class="header" href="#describe-the-file">Describe the file</a></h2>
 <pre><code class="language-console">$ stitch inspect TS-02.pes --profile brother-pe800-5x7
 TS-02.pes · PES (#PES0001) · "TS-02"
-  sha256    2307e37affc62e8326e7bf864f9ebda7a4abbc1283798e19a426e274c6024d57
+  sha256    7c9e1a79353ef17172d1125172635b7f37bce80a1328c936c5eafa436bfff90b
   size      120.0 × 70.0 mm
-  stitches  93 stitches, 17 jumps, 7 trims, 2 colour changes, 1 stop
+  stitches  93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop
   extent    x -60.0 to 60.0 mm, y -35.0 to 35.0 mm from where the machine starts
   lengths   stitches from 2.5 to 2.5 mm
   threads   1. Red (#ed171f), shown as Brother PEC 5 "Red"
@@ -469,20 +469,19 @@ command says what changed.</p>
 read back:</p>
 <pre><code class="language-console">$ stitch convert TS-02.pes -o TS-02.dst
 TS-02.pes · PES (#PES0001) → DST
-  file      TS-02.dst (DST, 1004 bytes)
-  sha256    c0b87bc2239989d29f8f107d1a61e861234e92be3782854b6133472eb9f965d7
+  file      TS-02.dst (DST, 1085 bytes)
+  sha256    88d453b2512bb535f9dd2205cbb0be753a5eb9b1700ae9abf2e88062fabff927
   size      120.0 × 70.0 mm
-  stitches  93 stitches, 17 jumps, 7 trims, 2 colour changes, 1 stop
+  stitches  93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop
   threads   1. Red (#ed171f)
             2. Blue (#0a55a3)
             3. Emerald Green (#00673e)
             4. Emerald Green (#00673e) — a stop: keep the same thread
-info SC-I0605: The thread will be cut at 3 places the plan does not trim: DST machines cut it before 3 or more jump records in a row, and a jump longer than 24.2 mm takes that many.
 $ stitch inspect TS-02.dst
 TS-02.dst · DST · "TS-02"
-  sha256    c0b87bc2239989d29f8f107d1a61e861234e92be3782854b6133472eb9f965d7
+  sha256    88d453b2512bb535f9dd2205cbb0be753a5eb9b1700ae9abf2e88062fabff927
   size      120.0 × 70.0 mm
-  stitches  93 stitches, 46 jumps, 10 trims, 3 colour changes, 0 stops
+  stitches  93 stitches, 46 jumps, 14 trims, 3 colour changes, 0 stops
   extent    x -60.0 to 60.0 mm, y -35.0 to 35.0 mm from where the machine starts
   lengths   stitches from 2.5 to 2.5 mm
   threads   1. thread 1 (#000000)
@@ -502,6 +501,9 @@ they started, and a machine set to cut at 3 jumps in a row cuts there.</li>
 A jump longer than 24.2 mm takes 3 or more, and a machine set to 3 cuts the thread there too.
 <code>SC-I0605</code> counts these extra cuts. After a tie-off they save you cutting the jump thread by hand.
 Without one, the end of the stitching can pull out.</li>
+<li><strong>Jumps in a PES file.</strong> StitchCraft flags every jump in a PES file as a trim, as Ink/Stitch does, so
+TS-02 reads back with a trim before each of them, and its DST file cuts there. Only a PES file with
+plain jumps, as some other programs write, gets the extra cuts that <code>SC-I0605</code> counts.</li>
 </ul>
 <h2 id="dst-to-pes"><a class="header" href="#dst-to-pes">DST to PES</a></h2>
 <p>A PES file needs a colour for each thread, and a DST file has none to give. Each thread becomes a black
@@ -1188,8 +1190,8 @@ Arguments:
 <p>After sewing, check:</p>
 <ul>
 <li>The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop).</li>
-<li>Left half (red, trim-flagged jumps): for each row (gaps of 2, 5, 15, 30 mm, top to bottom), was the thread between the two dashes cut?</li>
-<li>Right half (blue, plain jumps): the same question for each row, and for the jumps between rows.</li>
+<li>Left half (red, a trim before every jump): for each row (gaps of 2, 5, 15, 30 mm, top to bottom), was the thread between the two dashes cut?</li>
+<li>Right half (blue, jumps without trims, which a PES file flags as trims too): did every dash sew? For each row, and between rows, was the thread cut?</li>
 <li>Any loose loops, knots or bird’s nests on the back, and where.</li>
 </ul>
 <h2 id="ts-02b--ts-02-drawn-as-a-design-trims-elements-ask-for"><a class="header" href="#ts-02b--ts-02-drawn-as-a-design-trims-elements-ask-for">TS-02B — TS-02 drawn as a design: trims elements ask for</a></h2>
@@ -2729,7 +2731,7 @@ its other hoops: <code>brother-pe800-4x4</code> (100 × 100 mm) and <code>brothe
 <tr><td>File format</td><td>PES v1 with PEC block</td><td>Changed only after a machine checkpoint proves another works</td></tr>
 <tr><td>Max stitch length</td><td>12.0 mm (split above)</td><td>Refined at MC-1</td></tr>
 <tr><td>Min stitch length</td><td>0.3 mm (merged below)</td><td>Refined at MC-2</td></tr>
-<tr><td>Trims</td><td>PEC trim-flagged jumps</td><td>Verified at MC-1 (some models honour trims, others trim on long jumps)</td></tr>
+<tr><td>Trims</td><td>A trim flag on every PEC jump after the first move (REQ-FMT-010)</td><td>MC-1: the PE800 cuts none of them</td></tr>
 <tr><td>Thread palette</td><td>Brother PEC palette (nearest colour, CIEDE2000)</td><td>—</td></tr>
 </tbody>
 </table>
@@ -3297,8 +3299,9 @@ blocks and ends after the last one, so a plan cannot misplace either; encoders w
 colour change between blocks and one end.</li>
 <li><strong><code>Trim</code> and <code>Stop</code> happen where the needle is;</strong> their <code>at</code> repeats the needle position so every entry
 has one (bounds, previews and reports never special-case commands), and the invariant checker verifies
-it. Encoders decide how a format expresses them (PEC: trim-flagged jumps, and a stop as a change to the
-same thread; DST: trims as a jump sequence) — see <a href="#machine-formats">formats</a>.</li>
+it. Encoders decide how a format expresses them. PEC puts a trim flag on every jump after the first
+move, and records a stop as a change to the same thread. DST spells a trim as a run of jumps. See
+<a href="#machine-formats">formats</a>.</li>
 <li><strong>The origin is the centre of the hoop</strong>, where the needle starts, above the fabric. The first
 <code>Normal</code> stitch is the first time it goes down.</li>
 <li><code>PlanBuilder</code> appends entries with the needle tracked; <code>PlanStats</code> counts stitches, jumps, trims, stops
@@ -5209,22 +5212,30 @@ stop command: a stop is a colour change to the same thread, which readers recogn
 <p><strong>Trims ride on the next move.</strong> PEC cannot cut in place, so a trim flags the next jump; a sewn move after a
 trim becomes a trim-flagged jump to its target and a zero-length stitch there, so the needle still goes
 down where the plan says. A trim right before the end needs no record.</p>
-<p><strong>Where we differ from pystitch on purpose.</strong> pystitch flags <em>every</em> jump after the
-first as a trim. StitchCraft flags only the jumps that follow a <code>Trim</code> in the plan and writes the others as
-plain jumps, so the plan decides — and test sheet TS-02 can tell the two encodings apart on a machine.</p>
+<p><strong>Jumps are trim-flagged, as pystitch writes them</strong> (REQ-FMT-010). Only the stitch data’s first record,
+the move from the origin, keeps the plain jump flag. StitchCraft first flagged only the jumps that follow
+a <code>Trim</code> in the plan and wrote the others as plain jumps, so the plan decided, and test sheet TS-02 sewed
+both. At machine checkpoint MC-1 the reference PE800 sewed nothing after the plain jumps inside a colour.
+TS-02’s right half was missing, and the machine’s stitch counter gave it 5 of its 40 stitches. The
+trim-flagged half sewed. Whether a trim-flagged jump is cut is the machine’s choice. The PE800 cuts none
+of them, and cuts the thread only at thread changes and stops. Machines that trim jumps cut those longer
+than their setting. A jump that goes nowhere has no record, since a record of it would be trim-flagged.
+The pieces of a sewn move longer than 204.7 mm keep the plain flag, because a cut there would cut the
+stitch’s own thread. No profile allows a stitch that long.</p>
 <p><strong>Checked against a reference.</strong> For the canonical plans, every PEC header byte — palette indices,
 extents, the origin fields, the graphics offset arithmetic — equals pystitch’s output for the same stitches,
-and pystitch decodes our files to exactly the plan’s stitches and commands (REQ-FMT-005, run as a pinned CI
-job from M2.4).</p>
+and a pinned pyembroidery reads our files to the same needle-downs, cuts and pauses as StitchCraft’s own
+reader (REQ-FMT-005, run as a pinned CI job from M2.4).</p>
 <p><strong>Colours.</strong> The PEC header stores palette <em>indices</em>, not RGB, so every thread is mapped to the
 nearest Brother PEC colour (CIEDE2000). Catalogue numbers from other brands cannot survive PES v1; a
 PES v6 writer (below) can carry a thread list with RGB and codes.</p>
 <h3 id="risks-found-in-the-field-and-how-we-test-them"><a class="header" href="#risks-found-in-the-field-and-how-we-test-them">Risks found in the field, and how we test them</a></h3>
 <p>Embroiderers report these with files from other software:</p>
 <ol>
-<li><strong>Trims ignored</strong> on some Brother machines. Test sheet TS-02 sews both encodings:
-trim-flagged jumps, and a long-jump-only variant for machines that trim on jump length. The profile
-records which one the machine honours.</li>
+<li><strong>Trims ignored</strong> on some Brother machines. Test sheet TS-02 sews jumps with and without a trim
+before them. At MC-1 the PE800 cut none of them, and skipped what followed the plain ones, so every
+jump is now trim-flagged and the operator cuts the jump threads. The MC-1 sew-out report sets the
+profile’s trim support.</li>
 <li><strong>Large designs hidden</strong> by an older Brother-family machine for PES v1 files beyond about 130 ×
 180 mm (root cause unknown). The PES v1 section carries a hoop indication, and pystitch sets it to
 the 130 × 180 mm class, which is our unconfirmed hypothesis for that report. The reference PE800’s
@@ -5307,10 +5318,13 @@ thread is cut, where the machine pauses. Every writer/reader pair keeps it on 25
 seed) and 10,000 more each night (fresh seed). DST is held to what its machines do with the plan
 (<code>equivalence::dst_events</code>): they cut the thread before long jumps the plan does not trim. Fresh seeds
 paid off before this was even merged: they found a DST design whose split jump pieces cancelled exactly,
-which is why only jumps of at most 1 mm make up a trim’s spelling.</p>
+which is why only jumps of at most 1 mm make up a trim’s spelling.
+PES is held to what its file says (<code>equivalence::pes_events</code>): a trim flag on every jump.</p>
 <p><strong>Converting.</strong> <code>stitch convert</code> is a read followed by a write, so the converted file makes the machine do
 the same thing as the original: the round-trip guarantee above — except that a DST file cuts the thread
-before long jumps where a PES machine leaves a jump thread, which <code>SC-I0605</code> reports. Records carry over
+before long jumps where a PES machine leaves a jump thread, which <code>SC-I0605</code> reports. A PES file from
+StitchCraft has a trim flag on every jump already, so only PES files with plain jumps get those cuts.
+Records carry over
 literally (a DST file’s 12 mm jump pieces stay separate jumps in a PES file), and what the new format
 cannot say is reported instead of guessed: a PES file made from a DST file names a placeholder black for
 every thread, because DST stores no colours (<code>SC-W0604</code>).</p>
@@ -5971,7 +5985,11 @@ suite produces, whatever the case is about. A case never needs to ask for them.<
 <p>Golden bytes for canonical plans; round trips on random plans (<code>proptest</code>); every command per format;
 empty and degenerate files; the <strong>pyembroidery oracle</strong> job (pinned version, in its own CI job) decodes
 our files and must agree on every stitch; <code>cargo-fuzz</code> targets run nightly with a persisted corpus
-(<a href="#conformance">formats</a>).</p>
+(<a href="#conformance">formats</a>).
+A file read back must do what its format tells the machine, which can mean more cuts than the plan has.
+DST machines cut before long runs of jumps (<code>REQ-FMT-008</code>), and a PES file flags every jump as a trim
+(<code>REQ-FMT-010</code>). <code>stitchcraft_testkit::equivalence::format_events</code> gives both, and drops a cut with
+nothing sewn since the last one, which changes nothing on the fabric.</p>
 <h4 id="fuzzing"><a class="header" href="#fuzzing">Fuzzing</a></h4>
 <p><code>fuzz/</code> holds one target per reader (<code>read_pes</code>, <code>read_dst</code>, <code>read_svg</code>) and one for a file’s whole
 journey (<code>read_write_preview</code>: read, write in every format, read the files back, preview). Each target
@@ -7301,7 +7319,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M1.8 ✅</td><td><code>stitch testsheet &lt;TS-xx&gt; --profile … -o file</code> (and <code>--list</code>), <code>stitch profiles</code>, <code>stitch explain</code>; the CLI moves to <code>clap</code> (<code>stitch inspect</code> needs the readers: M2.1)</td><td><code>trycmd</code> examples in the docs</td></tr>
 <tr><td>M1.9 ✅</td><td>Conformance runner v1: requirements × cases matrix, L0 + L1 goldens, job summary</td><td>report visible on PRs</td></tr>
 <tr><td>M1.10 ✅</td><td>Docs: profile, format, test-sheet, diagnostics and command-line reference generated; tutorial “Your first sew-out” with real output</td><td>docs check green</td></tr>
-<tr><td>MC-1 🧵</td><td>Sew <strong>TS-01</strong> (orientation, scale), <strong>TS-02</strong> (colour changes, stops, both trim encodings, jumps), <strong>TS-10A/B/C</strong> (a frame filling each of the PE800’s 3 hoops) from PES v1; same TS-01 from DST if the machine reads DST</td><td>Sew-out report filed; profile values confirmed or changed; PES v6 decision made</td></tr>
+<tr><td>MC-1 🧵</td><td>Sew <strong>TS-01</strong> (orientation, scale), <strong>TS-02</strong> (colour changes, stops, jumps with and without trims), <strong>TS-10A/B/C</strong> (a frame filling each of the PE800’s 3 hoops) from PES v1; same TS-01 from DST if the machine reads DST</td><td>Sew-out report filed; profile values confirmed or changed; PES v6 decision made</td></tr>
 </tbody>
 </table>
 </div>
@@ -7501,7 +7519,7 @@ cases, or bugs. Every profile change links its report.</li>
 </thead>
 <tbody>
 <tr><td><strong>TS-01</strong> Orientation &amp; scale</td><td>An asymmetric “F”, a 100 mm cross with 10 mm ticks, 10 mm squares in the corners (120 × 120 mm)</td><td>F not mirrored or rotated; 100 mm line = 100.0 ± 0.5 mm in X and Y; squares square</td><td>MC-1</td></tr>
-<tr><td><strong>TS-02</strong> Commands</td><td>3 colour blocks, a stop, and rows of 2 dashes separated by jumps of 2, 5, 15 and 30 mm. Trims are encoded as trim-flagged jumps on the left half (red), and the right half (blue) has plain jumps only (120 × 70 mm)</td><td>The machine stops for colours and the stop; which jumps were trimmed on each half; any loose loops</td><td>MC-1, MC-2</td></tr>
+<tr><td><strong>TS-02</strong> Commands</td><td>3 colour blocks, a stop, and rows of 2 dashes separated by jumps of 2, 5, 15 and 30 mm. The left half (red) has a trim before every jump, the right half (blue) none; PES flags every jump as a trim (REQ-FMT-010), so in a PES file the halves differ only in the plan (120 × 70 mm)</td><td>The machine stops for colours and the stop; every dash sews; which jumps were cut on each half; any loose loops</td><td>MC-1, MC-2</td></tr>
 <tr><td><strong>TS-02B</strong> Commands, from elements</td><td>TS-02 drawn as a design and planned by the engine. Each red dash but the last sets a trim after it (<code>trim_after</code>). The blue ones set none, and the 2 mm gap between them is sewn across, because it is within the 3 mm collapse length. The green line stops halfway (<code>stop_after</code>). The stitching has a lock wherever it starts or ends (120 × 70 mm)</td><td>The same as TS-02, and whether the thread of each dash pulls out where it was cut</td><td>MC-2</td></tr>
 <tr><td><strong>TS-03</strong> Running stitch</td><td>Lines at 1.5, 2.0, 2.5, 3.0 and 4.0 mm stitch length, bean 1× and 2×, circles at tolerances of 0.1, 0.2 and 0.5 mm, and 20 stitches placed by hand at 0.3, 0.4, 0.5, 0.7 and 1.0 mm (60 × 78 mm)</td><td>Even stitches, smooth curves, solid bean lines, and the shortest hand-placed stitch that sews cleanly</td><td>MC-2</td></tr>
 <tr><td><strong>TS-04</strong> Lock stitches</td><td>Lines about 30 mm long with every lock shape but custom at both ends, trimmed after: the half stitch on first stitches of 1.5, 2.5 and 4 mm, back-and-forth at 0.5, 0.7 and 1.0 mm, drawn shapes at 70, 100 and 150 % (110 × 65 mm)</td><td>Pull each tail gently: does the lock stay, or does the thread pull out? Is the lock visible from the front?</td><td>MC-2</td></tr>

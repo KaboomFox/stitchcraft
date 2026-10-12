@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-28baf2dc.js";
+            window.path_to_searchindex_js = "../searchindex-1f0a742d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -296,8 +296,9 @@ blocks and ends after the last one, so a plan cannot misplace either; encoders w
 colour change between blocks and one end.</li>
 <li><strong><code>Trim</code> and <code>Stop</code> happen where the needle is;</strong> their <code>at</code> repeats the needle position so every entry
 has one (bounds, previews and reports never special-case commands), and the invariant checker verifies
-it. Encoders decide how a format expresses them (PEC: trim-flagged jumps, and a stop as a change to the
-same thread; DST: trims as a jump sequence) — see <a href="formats.html">formats</a>.</li>
+it. Encoders decide how a format expresses them. PEC puts a trim flag on every jump after the first
+move, and records a stop as a change to the same thread. DST spells a trim as a run of jumps. See
+<a href="formats.html">formats</a>.</li>
 <li><strong>The origin is the centre of the hoop</strong>, where the needle starts, above the fabric. The first
 <code>Normal</code> stitch is the first time it goes down.</li>
 <li><code>PlanBuilder</code> appends entries with the needle tracked; <code>PlanStats</code> counts stitches, jumps, trims, stops

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-28baf2dc.js";
+            window.path_to_searchindex_js = "../../searchindex-1f0a742d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -189,20 +189,19 @@ command says what changed.</p>
 read back:</p>
 <pre><code class="language-console">$ stitch convert TS-02.pes -o TS-02.dst
 TS-02.pes · PES (#PES0001) → DST
-  file      TS-02.dst (DST, 1004 bytes)
-  sha256    c0b87bc2239989d29f8f107d1a61e861234e92be3782854b6133472eb9f965d7
+  file      TS-02.dst (DST, 1085 bytes)
+  sha256    88d453b2512bb535f9dd2205cbb0be753a5eb9b1700ae9abf2e88062fabff927
   size      120.0 × 70.0 mm
-  stitches  93 stitches, 17 jumps, 7 trims, 2 colour changes, 1 stop
+  stitches  93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop
   threads   1. Red (#ed171f)
             2. Blue (#0a55a3)
             3. Emerald Green (#00673e)
             4. Emerald Green (#00673e) — a stop: keep the same thread
-info SC-I0605: The thread will be cut at 3 places the plan does not trim: DST machines cut it before 3 or more jump records in a row, and a jump longer than 24.2 mm takes that many.
 $ stitch inspect TS-02.dst
 TS-02.dst · DST · "TS-02"
-  sha256    c0b87bc2239989d29f8f107d1a61e861234e92be3782854b6133472eb9f965d7
+  sha256    88d453b2512bb535f9dd2205cbb0be753a5eb9b1700ae9abf2e88062fabff927
   size      120.0 × 70.0 mm
-  stitches  93 stitches, 46 jumps, 10 trims, 3 colour changes, 0 stops
+  stitches  93 stitches, 46 jumps, 14 trims, 3 colour changes, 0 stops
   extent    x -60.0 to 60.0 mm, y -35.0 to 35.0 mm from where the machine starts
   lengths   stitches from 2.5 to 2.5 mm
   threads   1. thread 1 (#000000)
@@ -222,6 +221,9 @@ they started, and a machine set to cut at 3 jumps in a row cuts there.</li>
 A jump longer than 24.2 mm takes 3 or more, and a machine set to 3 cuts the thread there too.
 <code>SC-I0605</code> counts these extra cuts. After a tie-off they save you cutting the jump thread by hand.
 Without one, the end of the stitching can pull out.</li>
+<li><strong>Jumps in a PES file.</strong> StitchCraft flags every jump in a PES file as a trim, as Ink/Stitch does, so
+TS-02 reads back with a trim before each of them, and its DST file cuts there. Only a PES file with
+plain jumps, as some other programs write, gets the extra cuts that <code>SC-I0605</code> counts.</li>
 </ul>
 <h2 id="dst-to-pes"><a class="header" href="#dst-to-pes">DST to PES</a></h2>
 <p>A PES file needs a colour for each thread, and a DST file has none to give. Each thread becomes a black

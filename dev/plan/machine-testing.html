@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-28baf2dc.js";
+            window.path_to_searchindex_js = "../searchindex-1f0a742d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -235,7 +235,7 @@ cases, or bugs. Every profile change links its report.</li>
 </thead>
 <tbody>
 <tr><td><strong>TS-01</strong> Orientation &amp; scale</td><td>An asymmetric “F”, a 100 mm cross with 10 mm ticks, 10 mm squares in the corners (120 × 120 mm)</td><td>F not mirrored or rotated; 100 mm line = 100.0 ± 0.5 mm in X and Y; squares square</td><td>MC-1</td></tr>
-<tr><td><strong>TS-02</strong> Commands</td><td>3 colour blocks, a stop, and rows of 2 dashes separated by jumps of 2, 5, 15 and 30 mm. Trims are encoded as trim-flagged jumps on the left half (red), and the right half (blue) has plain jumps only (120 × 70 mm)</td><td>The machine stops for colours and the stop; which jumps were trimmed on each half; any loose loops</td><td>MC-1, MC-2</td></tr>
+<tr><td><strong>TS-02</strong> Commands</td><td>3 colour blocks, a stop, and rows of 2 dashes separated by jumps of 2, 5, 15 and 30 mm. The left half (red) has a trim before every jump, the right half (blue) none; PES flags every jump as a trim (REQ-FMT-010), so in a PES file the halves differ only in the plan (120 × 70 mm)</td><td>The machine stops for colours and the stop; every dash sews; which jumps were cut on each half; any loose loops</td><td>MC-1, MC-2</td></tr>
 <tr><td><strong>TS-02B</strong> Commands, from elements</td><td>TS-02 drawn as a design and planned by the engine. Each red dash but the last sets a trim after it (<code>trim_after</code>). The blue ones set none, and the 2 mm gap between them is sewn across, because it is within the 3 mm collapse length. The green line stops halfway (<code>stop_after</code>). The stitching has a lock wherever it starts or ends (120 × 70 mm)</td><td>The same as TS-02, and whether the thread of each dash pulls out where it was cut</td><td>MC-2</td></tr>
 <tr><td><strong>TS-03</strong> Running stitch</td><td>Lines at 1.5, 2.0, 2.5, 3.0 and 4.0 mm stitch length, bean 1× and 2×, circles at tolerances of 0.1, 0.2 and 0.5 mm, and 20 stitches placed by hand at 0.3, 0.4, 0.5, 0.7 and 1.0 mm (60 × 78 mm)</td><td>Even stitches, smooth curves, solid bean lines, and the shortest hand-placed stitch that sews cleanly</td><td>MC-2</td></tr>
 <tr><td><strong>TS-04</strong> Lock stitches</td><td>Lines about 30 mm long with every lock shape but custom at both ends, trimmed after: the half stitch on first stitches of 1.5, 2.5 and 4 mm, back-and-forth at 0.5, 0.7 and 1.0 mm, drawn shapes at 70, 100 and 150 % (110 × 65 mm)</td><td>Pull each tail gently: does the lock stay, or does the thread pull out? Is the lock visible from the front?</td><td>MC-2</td></tr>
