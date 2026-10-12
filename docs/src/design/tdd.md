@@ -57,7 +57,7 @@ its other hoops: `brother-pe800-4x4` (100 × 100 mm) and `brother-pe800-small` (
 | File format | PES v1 with PEC block | Changed only after a machine checkpoint proves another works |
 | Max stitch length | 12.0 mm (split above) | Refined at MC-1 |
 | Min stitch length | 0.3 mm (merged below) | Refined at MC-2 |
-| Trims | PEC trim-flagged jumps | Verified at MC-1 (some models honour trims, others trim on long jumps) |
+| Trims | A trim flag on every PEC jump after the first move (REQ-FMT-010) | MC-1: the PE800 cuts none of them |
 | Thread palette | Brother PEC palette (nearest colour, CIEDE2000) | — |
 
 Profiles are data (see [data model](data-model.md#machine-profiles)); adding a machine never touches

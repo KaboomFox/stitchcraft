@@ -23,6 +23,9 @@ read back:
   A jump longer than 24.2 mm takes 3 or more, and a machine set to 3 cuts the thread there too.
   `SC-I0605` counts these extra cuts. After a tie-off they save you cutting the jump thread by hand.
   Without one, the end of the stitching can pull out.
+- **Jumps in a PES file.** StitchCraft flags every jump in a PES file as a trim, as Ink/Stitch does, so
+  TS-02 reads back with a trim before each of them, and its DST file cuts there. Only a PES file with
+  plain jumps, as some other programs write, gets the extra cuts that `SC-I0605` counts.
 
 ## DST to PES
 

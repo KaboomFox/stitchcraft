@@ -55,14 +55,21 @@ stop command: a stop is a colour change to the same thread, which readers recogn
 trim becomes a trim-flagged jump to its target and a zero-length stitch there, so the needle still goes
 down where the plan says. A trim right before the end needs no record.
 
-**Where we differ from pystitch on purpose.** pystitch flags *every* jump after the
-first as a trim. StitchCraft flags only the jumps that follow a `Trim` in the plan and writes the others as
-plain jumps, so the plan decides — and test sheet TS-02 can tell the two encodings apart on a machine.
+**Jumps are trim-flagged, as pystitch writes them** (REQ-FMT-010). Only the stitch data's first record,
+the move from the origin, keeps the plain jump flag. StitchCraft first flagged only the jumps that follow
+a `Trim` in the plan and wrote the others as plain jumps, so the plan decided, and test sheet TS-02 sewed
+both. At machine checkpoint MC-1 the reference PE800 sewed nothing after the plain jumps inside a colour.
+TS-02's right half was missing, and the machine's stitch counter gave it 5 of its 40 stitches. The
+trim-flagged half sewed. Whether a trim-flagged jump is cut is the machine's choice. The PE800 cuts none
+of them, and cuts the thread only at thread changes and stops. Machines that trim jumps cut those longer
+than their setting. A jump that goes nowhere has no record, since a record of it would be trim-flagged.
+The pieces of a sewn move longer than 204.7 mm keep the plain flag, because a cut there would cut the
+stitch's own thread. No profile allows a stitch that long.
 
 **Checked against a reference.** For the canonical plans, every PEC header byte — palette indices,
 extents, the origin fields, the graphics offset arithmetic — equals pystitch's output for the same stitches,
-and pystitch decodes our files to exactly the plan's stitches and commands (REQ-FMT-005, run as a pinned CI
-job from M2.4).
+and a pinned pyembroidery reads our files to the same needle-downs, cuts and pauses as StitchCraft's own
+reader (REQ-FMT-005, run as a pinned CI job from M2.4).
 
 **Colours.** The PEC header stores palette *indices*, not RGB, so every thread is mapped to the
 nearest Brother PEC colour (CIEDE2000). Catalogue numbers from other brands cannot survive PES v1; a
@@ -72,9 +79,10 @@ PES v6 writer (below) can carry a thread list with RGB and codes.
 
 Embroiderers report these with files from other software:
 
-1. **Trims ignored** on some Brother machines. Test sheet TS-02 sews both encodings:
-   trim-flagged jumps, and a long-jump-only variant for machines that trim on jump length. The profile
-   records which one the machine honours.
+1. **Trims ignored** on some Brother machines. Test sheet TS-02 sews jumps with and without a trim
+   before them. At MC-1 the PE800 cut none of them, and skipped what followed the plain ones, so every
+   jump is now trim-flagged and the operator cuts the jump threads. The MC-1 sew-out report sets the
+   profile's trim support.
 2. **Large designs hidden** by an older Brother-family machine for PES v1 files beyond about 130 ×
    180 mm (root cause unknown). The PES v1 section carries a hoop indication, and pystitch sets it to
    the 130 × 180 mm class, which is our unconfirmed hypothesis for that report. The reference PE800's
@@ -156,10 +164,13 @@ seed) and 10,000 more each night (fresh seed). DST is held to what its machines 
 (`equivalence::dst_events`): they cut the thread before long jumps the plan does not trim. Fresh seeds
 paid off before this was even merged: they found a DST design whose split jump pieces cancelled exactly,
 which is why only jumps of at most 1 mm make up a trim's spelling.
+PES is held to what its file says (`equivalence::pes_events`): a trim flag on every jump.
 
 **Converting.** `stitch convert` is a read followed by a write, so the converted file makes the machine do
 the same thing as the original: the round-trip guarantee above — except that a DST file cuts the thread
-before long jumps where a PES machine leaves a jump thread, which `SC-I0605` reports. Records carry over
+before long jumps where a PES machine leaves a jump thread, which `SC-I0605` reports. A PES file from
+StitchCraft has a trim flag on every jump already, so only PES files with plain jumps get those cuts.
+Records carry over
 literally (a DST file's 12 mm jump pieces stay separate jumps in a PES file), and what the new format
 cannot say is reported instead of guessed: a PES file made from a DST file names a placeholder black for
 every thread, because DST stores no colours (`SC-W0604`).

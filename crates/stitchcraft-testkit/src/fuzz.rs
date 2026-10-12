@@ -13,8 +13,8 @@
 //!   [`MAX_RECORDS`] entries, every position within ±10 m.
 //! - **StitchCraft reads back what it writes from anything it read.** A plan read from any file is
 //!   written in every format without a panic, and reads back to a plan that makes the machine do the same
-//!   thing: what the plan does as PES ([`events`]), and what DST machines do with it as DST
-//!   ([`dst_events`]: they also cut the thread before long runs of jumps).
+//!   thing: what the plan tells a machine in that format ([`format_events`]: PES asks for a cut before
+//!   every jump, and DST machines cut the thread before long runs of jumps).
 //! - **Previews never panic** on anything read, in either style; refusals such as a spent budget are
 //!   fine.
 //! - **The SVG reader never panics** and refuses only with its own codes: `SC-E0801` for a file that is
@@ -28,7 +28,7 @@ use stitchcraft_plan::{FormatId, StitchPlan};
 use stitchcraft_render::raster::MARGIN_MM;
 use stitchcraft_render::{Scene, Settings, Style};
 
-use crate::equivalence::{dst_events, events};
+use crate::equivalence::{events, format_events};
 
 /// The PES/PEC reader on `data`.
 pub fn read_pes(data: &[u8]) {
@@ -51,8 +51,7 @@ pub fn read_write_preview(data: &[u8]) {
     for format in FormatId::ALL {
         let Ok(encoded) = encode(&decoded.plan, *format, &decoded.name) else { continue };
         let back = decode(&encoded.bytes).unwrap_or_else(|e| panic!("StitchCraft cannot read the {} file it wrote: {e}", format.name()));
-        let expected = if *format == FormatId::Dst { dst_events(&decoded.plan) } else { events(&decoded.plan) };
-        assert_eq!(events(&back.plan), expected, "the {} file makes the machine do something else", format.name());
+        assert_eq!(events(&back.plan), format_events(&decoded.plan, *format), "the {} file makes the machine do something else", format.name());
     }
     // Both styles, at a scale that keeps the image near 96 pixels so each input stays fast: filling and
     // encoding cost one step per pixel, whatever the stitches. Refusing (budget spent) is fine.

@@ -1,10 +1,15 @@
-//! TS-02 — machine commands: colour changes, a stop, jumps, and both ways of encoding trims.
+//! TS-02 — machine commands: colour changes, a stop, jumps, and trims.
 //!
 //! Four rows of two 10 mm dashes, the dashes of each row separated by a jump of 2, 5, 15 or 30 mm (top
-//! to bottom). The left half (red) puts a trim before every jump, so its jumps are trim-flagged; the right
-//! half (blue) has no trims, so its jumps are plain — a machine that trims long jumps by itself trims
-//! them anyway. A green line at the bottom has a stop in its middle. Sewn, it answers: does the machine
-//! stop for each colour and for the stop, and which jumps does it trim with each encoding?
+//! to bottom). The left half (red) puts a trim before every jump; the right half (blue) has no trims.
+//! A PES file flags every jump as a trim (REQ-FMT-010), so in PES the halves differ only in the plan:
+//! at MC-1 the PE800 sewed nothing after the plain-flagged jumps PES files first had for the right half.
+//! In DST, machines leave the right half's jumps of up to 2 records (24.2 mm) uncut (REQ-FMT-008). A
+//! green line at the bottom has a stop in its middle. Sewn, it answers: does the machine stop for each colour and for
+//! the stop, does every dash sew, and which jumps does it cut?
+//!
+//! The dashes have no lock stitches, so the first row, where the thread starts, can pull out once the
+//! machine moves on without cutting; TS-02B is the same sheet with the engine's locks.
 
 use stitchcraft_plan::StitchPlan;
 

@@ -87,8 +87,8 @@ pub static SHEETS: &[TestSheet] = &[
         title: "Colour changes, a stop, jumps and trims",
         checks: &[
             "The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop).",
-            "Left half (red, trim-flagged jumps): for each row (gaps of 2, 5, 15, 30 mm, top to bottom), was the thread between the two dashes cut?",
-            "Right half (blue, plain jumps): the same question for each row, and for the jumps between rows.",
+            "Left half (red, a trim before every jump): for each row (gaps of 2, 5, 15, 30 mm, top to bottom), was the thread between the two dashes cut?",
+            "Right half (blue, jumps without trims, which a PES file flags as trims too): did every dash sew? For each row, and between rows, was the thread cut?",
             "Any loose loops, knots or bird's nests on the back, and where.",
         ],
         profile: REFERENCE,

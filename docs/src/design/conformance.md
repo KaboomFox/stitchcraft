@@ -151,6 +151,10 @@ Golden bytes for canonical plans; round trips on random plans (`proptest`); ever
 empty and degenerate files; the **pyembroidery oracle** job (pinned version, in its own CI job) decodes
 our files and must agree on every stitch; `cargo-fuzz` targets run nightly with a persisted corpus
 ([formats](formats.md#conformance)).
+A file read back must do what its format tells the machine, which can mean more cuts than the plan has.
+DST machines cut before long runs of jumps (`REQ-FMT-008`), and a PES file flags every jump as a trim
+(`REQ-FMT-010`). `stitchcraft_testkit::equivalence::format_events` gives both, and drops a cut with
+nothing sewn since the last one, which changes nothing on the fabric.
 
 #### Fuzzing
 
