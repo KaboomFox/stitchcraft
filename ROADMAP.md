@@ -23,11 +23,12 @@ reproduces a problem, and `stitch plan` writes one by itself when StitchCraft fi
 conformance report shows every active requirement green. Next are the sew-out reports for MC-1, which
 closes M1, and for MC-2, which closes M3. The MC-2 sheets are drawn as designs and planned by the engine.
 M4's steps are done. A satin column's path is read as its rails and rungs, or made into them from its
-centre line, and its underlays and top stitches are sewn as Ink/Stitch sews them. M5 has begun: a fill's
-region is built as the drawing shows it, and tatami fills are sewn with their underlay, their rows and
-needle points where Ink/Stitch puts them. The MC-3 kit sews satin columns of every width from 1 to 10 mm, and
-each underlay side by side. The reference machine is a Brother PE800 (ADR 0013), with a profile for each
-of its 3 hoops, and TS-02, TS-02B and TS-10 are redrawn to fit them.
+centre line, and its underlays and top stitches are sewn as Ink/Stitch sews them. M5's steps are done too.
+Tatami fills are sewn as Ink/Stitch sews them, from the region the drawing shows. The MC-3 kit sews satin
+columns of every width from 1 to 10 mm, and each underlay side by side. The MC-4 kit sews tatami fills
+inside outlines at 3 pull compensations, squares at 5 spacings and 3 angles, and a fill round holes with a
+part apart. The reference machine is a Brother PE800 (ADR 0013), with a profile for each of its 3 hoops,
+and TS-02, TS-02B and TS-10 are redrawn to fit them.
 The repository is
 [KaboomFox/stitchcraft](https://github.com/KaboomFox/stitchcraft), with the docs published at
 [kaboomfox.github.io/stitchcraft](https://kaboomfox.github.io/stitchcraft/) and `main` protected; the
@@ -40,7 +41,7 @@ open owner action from M0.5 is the code-of-conduct contact.
 | M2 | Readers, preview renderer, fuzzing | 🟢 M2.1–M2.8 done | — |
 | M3 | Running stitch family, plan assembly, SVG input | 🟡 M3.1 to M3.10 done (parameter registry, a case for every diagnostic code, SVG input, running stitch, repeats and bean stitch, manual stitch, lock stitches, plan assembly, finalize and `stitch plan`, bug-report bundles). M3 closes with MC-2. | MC-2 🟡 kit ready for sewing (TS-02B, TS-03, TS-04) |
 | M4 | Satin column | 🟡 M4.1 to M4.9 done. Satin columns are sewn with their underlays and start and end at their nearest points. Their top stitches are placed, compensated, inset on curves and split, as in Ink/Stitch. A column drawn as one path is as wide as its stroke. It is sewn between rails made from its centre line, or as a stroke when too narrow to stitch across. MC-3's sew-out closes M4 | MC-3 🟡 kit ready for sewing (TS-05, TS-06) |
-| M5 | Tatami fill | 🟡 M5.1 to M5.9 done. A fill's region is built as the drawing shows it under its fill rule, and parts too small to sew are left out with a warning. Its rows, and the needle points along them, lie where Ink/Stitch puts them. Tatami fills are sewn part by part, each part's underlay first, a layer for each angle, then its rows in the order Ink/Stitch routes them, with running stitches under the rows between them, as Ink/Stitch sews them. The underlay covers each part shrunk by its inset, and the top rows each part grown by `expand_mm`. The top rows are lengthened by the pull compensation, and gap-fill rows close the gaps between stretches of rows. A fill covers at least 98 % of its area at spacings from the machine's shortest stitch to 0.4 mm, and the hoop's whole field plans in about 30 ms, guarded by an instruction count. Machine checkpoint MC-4 is next | MC-4 ⚪ |
+| M5 | Tatami fill | 🟡 M5.1 to M5.9 done. A fill's region is built as the drawing shows it under its fill rule, and parts too small to sew are left out with a warning. Its rows, and the needle points along them, lie where Ink/Stitch puts them. Tatami fills are sewn part by part, each part's underlay first, a layer for each angle, then its rows in the order Ink/Stitch routes them, with running stitches under the rows between them, as Ink/Stitch sews them. The underlay covers each part shrunk by its inset, and the top rows each part grown by `expand_mm`. The top rows are lengthened by the pull compensation, and gap-fill rows close the gaps between stretches of rows. A fill covers at least 98 % of its area at spacings from the machine's shortest stitch to 0.4 mm, and the hoop's whole field plans in about 30 ms, guarded by an instruction count. MC-4's sew-out closes M5 | MC-4 🟡 kit ready for sewing (TS-07, TS-08, TS-09) |
 | M6 | VectorCraft plug-in (ABI v1), export from `.vectorcraft`, compatibility gate | ⚪ | MC-5 ⚪ |
 | M7 | Zigzag/E/S stitches, contour, meander, circular fills | ⚪ | MC-6 ⚪ |
 | M8 | Ink/Stitch SVG interoperability, differential testing | ⚪ | — |
