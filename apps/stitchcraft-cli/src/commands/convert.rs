@@ -62,8 +62,9 @@ mod tests {
     use super::*;
     use crate::cli::Format;
 
-    fn golden(name: &str) -> PathBuf {
-        PathBuf::from(format!("{}/../../conformance/golden/{name}", env!("CARGO_MANIFEST_DIR")))
+    /// `path` under `conformance/`.
+    fn conformance(path: &str) -> PathBuf {
+        PathBuf::from(format!("{}/../../conformance/{path}", env!("CARGO_MANIFEST_DIR")))
     }
 
     fn temp(name: &str) -> PathBuf {
@@ -82,8 +83,9 @@ mod tests {
 
     #[test]
     fn diag_sc_i0605_pes_to_dst_sews_as_dst_machines_do() {
-        // TS-02's right half has no trims, and DST machines cut the thread before its long jumps.
-        let (source, output) = (golden("testsheets/TS-02.pes"), temp("TS-02.dst"));
+        // TS-02 as StitchCraft wrote it before MC-1: its right half has plain jumps, and DST machines cut
+        // the thread before the long ones.
+        let (source, output) = (conformance("fixtures/pes/plain-jumps.pes"), temp("TS-02.dst"));
         let out = convert(source.clone(), output.clone(), None);
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(out.stdout.starts_with(&format!("{} · PES (#PES0001) → DST\n", source.display())), "{}", out.stdout);
@@ -99,7 +101,7 @@ mod tests {
 
     #[test]
     fn diag_sc_w0604_converting_dst_says_its_colours_are_placeholders() {
-        let (source, output) = (golden("testsheets/TS-01.dst"), temp("TS-01-from-dst.bin"));
+        let (source, output) = (conformance("golden/testsheets/TS-01.dst"), temp("TS-01-from-dst.bin"));
         let out = convert(source.clone(), output.clone(), Some(Format::Pes));
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(out.stderr.starts_with("warning SC-W0604: DST stores no thread colours; every thread is a black placeholder."), "{}", out.stderr);
@@ -108,7 +110,7 @@ mod tests {
 
     #[test]
     fn unreadable_or_unnamed_inputs_are_reported() {
-        assert_eq!(convert(golden("testsheets/TS-01.pes"), temp("TS-01.png"), None).status, Status::Usage);
+        assert_eq!(convert(conformance("golden/testsheets/TS-01.pes"), temp("TS-01.png"), None).status, Status::Usage);
         assert_eq!(convert(temp("missing.dst"), temp("x.pes"), None).status, Status::Io);
         let junk = temp("junk.pes");
         std::fs::write(&junk, b"not embroidery").unwrap();

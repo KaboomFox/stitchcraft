@@ -30,10 +30,19 @@
 //! stop, which PEC records as a change to the same thread — is `FE B0` then a byte alternating `02`, `01`,
 //! starting with `02`. The end is `FF`.
 //!
-//! **Trims.** PEC cannot cut in place: a trim rides on the next move. The next jump gets the trim flag; a
-//! sewn move becomes a trim-flagged jump to its target followed by a zero-length stitch there, so the needle
-//! still goes down where the plan says. A trim with no move after it (before the end) needs no record:
-//! the machine stops there.
+//! **Jumps are trim-flagged** (REQ-FMT-010). Every jump after the stitch data's first record carries the
+//! trim flag, as pystitch writes them; only a first record that is a jump keeps the plain flag. At machine
+//! checkpoint MC-1 the reference PE800 sewed nothing after the plain jumps inside a colour on test sheet
+//! TS-02, while it sewed the trim-flagged half (`docs/src/design/formats.md`). Whether a trim-flagged
+//! jump is cut is the machine's choice: the PE800 cuts none, and machines that trim jumps cut those longer
+//! than their setting. A jump that goes nowhere has no record, since a record of it would be trim-flagged.
+//! The pieces of a sewn move longer than a long axis holds keep the plain flag, because a cut there would
+//! cut the stitch's own thread; no machine profile allows a stitch that long.
+//!
+//! **Trims.** PEC cannot cut in place: a trim rides on the next move. The next jump carries it; a sewn move
+//! becomes a trim-flagged jump to its target followed by a zero-length stitch there, so the needle still
+//! goes down where the plan says. A trim with no move after it (before the end) needs no record: the
+//! machine stops there.
 
 use stitchcraft_plan::FormatId;
 
@@ -126,8 +135,11 @@ pub(crate) fn stitch_data(ops: &[Op]) -> Vec<u8> {
                     }
                 }
             }
+            Op::Jump(delta) if delta == Delta::ZERO && !pending_trim => {}
             Op::Jump(delta) => {
-                jump(&mut out, delta, if pending_trim { TRIM } else { JUMP });
+                // Only the first record keeps the plain flag (see the module docs).
+                let flag = if out.is_empty() && !pending_trim { JUMP } else { TRIM };
+                jump(&mut out, delta, flag);
                 pending_trim = false;
             }
             Op::Trim => pending_trim = true,
@@ -141,10 +153,10 @@ pub(crate) fn stitch_data(ops: &[Op]) -> Vec<u8> {
     out
 }
 
-/// A jump of any length: long records, the first with `first_flag`, the rest with the jump flag.
+/// A jump of any length: long records, the first with `first_flag`, the rest trim-flagged.
 fn jump(out: &mut Vec<u8>, delta: Delta, first_flag: u8) {
     for (i, piece) in split(delta, LONG_LIMIT).enumerate() {
-        long(out, piece, if i == 0 { first_flag } else { JUMP });
+        long(out, piece, if i == 0 { first_flag } else { TRIM });
     }
 }
 
@@ -213,14 +225,34 @@ mod tests {
         assert_eq!(hex(&stitch_data(&[Op::Trim, Op::ColorChange, Op::Jump(d(30, 0))])), "FE B0 02 A0 1E A0 00");
         // A trim before the end needs no record.
         assert_eq!(hex(&stitch_data(&[Op::Trim, Op::End])), "FF");
-        // Only the first piece of a split jump carries the trim.
-        assert_eq!(hex(&stitch_data(&[Op::Trim, Op::Jump(d(3000, 0))])), "A5 DC A0 00 95 DC 90 00");
+        // Every piece of a split jump carries it.
+        assert_eq!(hex(&stitch_data(&[Op::Trim, Op::Jump(d(3000, 0))])), "A5 DC A0 00 A5 DC A0 00");
     }
 
-    /// Moves beyond ±2047 split within the limit; a long sewn move is jumps, then the stitch.
+    /// Every jump after the first record is trim-flagged, as pystitch writes them; the PE800 sewed nothing
+    /// after a plain jump inside a colour (MC-1, TS-02).
+    #[test]
+    fn req_fmt_010_jumps_after_the_first_record_are_trim_flagged() {
+        let cases: [(&[Op], &str); 5] = [
+            // The first record keeps the plain flag; a jump between stitches is trim-flagged.
+            (&[Op::Jump(d(100, 50)), Op::Stitch(d(10, 0)), Op::Jump(d(20, 0)), Op::Stitch(d(0, 0))], "90 64 90 32 0A 00 A0 14 A0 00 00 00"),
+            // So is the first jump of a colour.
+            (&[Op::Stitch(d(10, 0)), Op::ColorChange, Op::Jump(d(30, 0)), Op::Stitch(d(0, 0))], "0A 00 FE B0 02 A0 1E A0 00 00 00"),
+            // A jump that goes nowhere has no record, unless a trim rides on it.
+            (&[Op::Stitch(d(10, 0)), Op::Jump(d(0, 0)), Op::Stitch(d(5, 0))], "0A 00 05 00"),
+            (&[Op::Stitch(d(10, 0)), Op::Trim, Op::Jump(d(0, 0)), Op::Stitch(d(5, 0))], "0A 00 A0 00 A0 00 05 00"),
+            // Every piece of a split jump is trim-flagged.
+            (&[Op::Stitch(d(10, 0)), Op::Jump(d(3000, 0))], "0A 00 A5 DC A0 00 A5 DC A0 00"),
+        ];
+        for (ops, expected) in cases {
+            assert_eq!(hex(&stitch_data(ops)), expected, "{ops:?}");
+        }
+    }
+
+    /// Moves beyond ±2047 split within the limit; a long sewn move is plain jumps, then the stitch.
     #[test]
     fn req_fmt_007_long_moves_are_split() {
-        assert_eq!(hex(&stitch_data(&[Op::Jump(d(3000, 0))])), "95 DC 90 00 95 DC 90 00");
+        assert_eq!(hex(&stitch_data(&[Op::Jump(d(3000, 0))])), "95 DC 90 00 A5 DC A0 00");
         assert_eq!(hex(&stitch_data(&[Op::Stitch(d(-3000, 10))])), "9A 24 90 05 8A 24 05");
     }
 }
