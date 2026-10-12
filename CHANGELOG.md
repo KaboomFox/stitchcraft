@@ -523,6 +523,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- MC-1: PES files flag every jump after their first record as a trim, as pystitch writes them
+  (`REQ-FMT-010`). At the first sew-out on the reference PE800, the plain-flagged jumps inside a colour on
+  TS-02 made the machine skip the stitches after them, and the sheet's right half was missing. A jump that
+  goes nowhere is no longer written, since a record of it would be trim-flagged.
+  - The round-trip checks compare a file with what its format tells the machine
+    (`stitchcraft_testkit::equivalence::format_events`, `as_pes`), and a cut with nothing sewn since the
+    last one counts as none (`REQ-FMT-002`, `REQ-FMT-003`).
+  - TS-02B and TS-09 had the same plain jumps, and their files change with this. No other test sheet had
+    any.
 - A design exactly the hoop's size fits it. Rounding put rows of a fill's underlay at 90° a hair past the
   edge of the reference hoop's whole field, and the hoop check and the plan checker refused it, while the
   check that the design is centred allowed the hair, as every length check does (`LENGTH_SLACK`). Both now
@@ -620,6 +629,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   zero-length jumps.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-02.pes` and `TS-02B.pes` (9 jumps each), `TS-09.pes` (3),
+  `conformance/golden/plans/strokes.pes` (5), and `conformance/golden/formats/every-command.pes` (1) and
+  `long-jumps.pes` (3) (MC-1): those jumps are trim-flagged now (`REQ-FMT-010`). Only their flag bits change,
+  from `0x10` to `0x20`. The DST files stay as they were.
 - Changed `conformance/golden/plans/strokes.pes` and `.dst` (M5.6). Each rectangle of the `strokes`
   fixture's fill sews its underlay first: upright rows 0.75 mm apart, square to the fill's flat rows, in
   stitches of 4 mm, from its point nearest the needle and back, where its top rows then start. The plan

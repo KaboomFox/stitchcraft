@@ -1,8 +1,8 @@
 $ stitch inspect TS-02.pes --profile brother-pe800-5x7
 TS-02.pes · PES (#PES0001) · "TS-02"
-  sha256    2307e37affc62e8326e7bf864f9ebda7a4abbc1283798e19a426e274c6024d57
+  sha256    7c9e1a79353ef17172d1125172635b7f37bce80a1328c936c5eafa436bfff90b
   size      120.0 × 70.0 mm
-  stitches  93 stitches, 17 jumps, 7 trims, 2 colour changes, 1 stop
+  stitches  93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop
   extent    x -60.0 to 60.0 mm, y -35.0 to 35.0 mm from where the machine starts
   lengths   stitches from 2.5 to 2.5 mm
   threads   1. Red (#ed171f), shown as Brother PEC 5 "Red"

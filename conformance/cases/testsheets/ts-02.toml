@@ -1,4 +1,4 @@
-# Commands: colour changes, a stop, trim-flagged and plain jumps.
+# Commands: colour changes, a stop, jumps with and without a trim before them.
 # The invariants (REQ-PLAN-…) run on the sheet's plan; the golden files are the bytes MC-1 sews.
 id = "ts-02"
 requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PRF-002", "REQ-FMT-001"]
