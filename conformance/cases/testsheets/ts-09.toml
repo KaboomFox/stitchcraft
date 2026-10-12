@@ -1,0 +1,14 @@
+# One fill with 2 holes and a part apart, without underlay, with the default underlay, and with gap-filling
+# rows. The sheet draws only as the engine warns, once for each copy, that it sews the fill in parts
+# (SC-W0307); the diagnostics here are the hoop's, of which there are none. The invariants (REQ-PLAN-…) run
+# on the sheet's plan; the golden file is the bytes MC-4 sews.
+id = "ts-09"
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PRF-002", "REQ-FMT-001"]
+kind = "testsheet"
+sheet = "TS-09"
+profile = "brother-pe800-5x7"
+
+[expect]
+size_mm = [66.0, 114.0]
+diagnostics = []
+golden = ["golden/testsheets/TS-09.pes"]
