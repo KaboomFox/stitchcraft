@@ -9,8 +9,11 @@ mod common;
 
 use common::{all_at, at, ends, fixture, ids, svg, warnings};
 use stitchcraft_core::units::MM_PER_SVG_PX as MM;
-use stitchcraft_core::{Budget, Code, math};
+use stitchcraft_core::{Budget, Code, Mm, math};
 use stitchcraft_engine::design::{FillRule, Segment, Shape};
+use stitchcraft_engine::generators::manual::manual_stitch;
+use stitchcraft_engine::generators::passes::RepeatParams;
+use stitchcraft_params::ParamSet;
 use stitchcraft_plan::Rgb;
 
 #[test]
@@ -25,12 +28,11 @@ fn req_svg_001_an_inkscape_document_in_millimetres() {
     assert!(e[0].shape.path().subpaths[0].closed);
     assert_eq!((e[0].thread.color, e[1].thread.color), (Rgb::new(255, 0, 0), Rgb::new(0, 0, 255)));
     assert_eq!((e[0].name.as_deref(), e[2].name.as_deref()), (Some("Red box"), None));
-    // The circle: centre (60, 15), radius 8, a quarter turn at a time from its right, every point on it.
+    // The circle: centre (60, 15), radius 8, from its top round to its right and back, as inkex draws it,
+    // every node on it.
     let circle = &ends(&e[2])[0];
-    assert_eq!(circle.len(), 13);
-    for (i, (x, y)) in [(68.0, 15.0), (60.0, 23.0), (52.0, 15.0), (60.0, 7.0), (68.0, 15.0)].into_iter().enumerate() {
-        at(circle[3 * i], x, y);
-    }
+    assert_eq!(circle.len(), 7);
+    all_at(&[circle[0], circle[4], circle[6]], &[(60.0, 7.0), (68.0, 15.0), (60.0, 7.0)]);
     for p in circle {
         assert!((math::hypot(p.x() - 60.0, p.y() - 15.0) - 8.0).abs() <= common::UM, "{p:?} is off the circle");
     }
@@ -46,6 +48,36 @@ fn req_svg_001_an_inkscape_document_in_millimetres() {
     // The gradient is stitched in its first colour, and says so; the hidden layer is not there.
     assert_eq!(e[4].thread.color, Rgb::new(0x00, 0xaa, 0x00));
     assert_eq!(warnings(&svg), ["warning SC-W0802: The fill of `ellipse1` is a gradient; it is stitched in the gradient's first colour, #00aa00."]);
+}
+
+#[test]
+fn req_svg_001_arcs_are_read_in_the_pieces_inkex_cuts_them_into() {
+    // inkex, which Ink/Stitch reads files with, cuts an arc into equal pieces, one more than the whole
+    // quarter turns it makes, each a cubic curve. Manual stitch puts a needle point on each piece's end, so
+    // a file sews the same in both.
+    let drawn =
+        |body: &str| svg(format!(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100">{body}</svg>"#));
+    let pieces =
+        |data: &str| drawn(&format!(r#"<path d="{data}" fill="none" stroke="red"/>"#)).design.elements()[0].shape.path().subpaths[0].segments.len();
+    // A quarter turn, a half, 3 quarters, and a turn of 30°.
+    let arcs = ["M 10 50 A 20 20 0 0 1 30 30", "M 10 50 A 20 20 0 0 1 50 50", "M 30 30 A 20 20 0 1 0 50 50", "M 10 50 A 20 20 0 0 1 12.68 40"];
+    assert_eq!(arcs.map(pieces), [2, 3, 4, 1]);
+    // A circle as inkex draws it: from its top, 3 quarters round to its right and a quarter back, turning
+    // left on screen, in 4 pieces and 2.
+    let circle = drawn(r#"<circle cx="50" cy="50" r="20" fill="none" stroke="red"/>"#);
+    let element = &circle.design.elements()[0];
+    let (a, b) = (18.477_590_650_225_736, 7.653_668_647_301_796);
+    let nodes = [(50.0, 30.0), (50.0 - a, 50.0 - b), (50.0 - 14.142_135_623_730_95, 64.142_135_623_730_95), (50.0 + b, 50.0 + a), (70.0, 50.0)];
+    let back = [(64.142_135_623_730_95, 50.0 - 14.142_135_623_730_95), (50.0, 30.0)];
+    all_at(&ends(element)[0], &[&nodes[..], &back[..]].concat());
+    // Manual stitch sews 6 stitches round it, and 2 round each corner of a rounded rectangle.
+    let manual = |element: &stitchcraft_engine::design::Element| {
+        let once = RepeatParams::from_set(&ParamSet::new()).unwrap().params;
+        manual_stitch(element.shape.path(), None, &once, Mm::new(0.3).unwrap(), &mut Budget::DEFAULT.meter()).unwrap().runs
+    };
+    assert_eq!(manual(element)[0].len(), 7);
+    let rounded = drawn(r#"<rect x="10" y="10" width="40" height="20" rx="5" fill="none" stroke="red"/>"#);
+    assert_eq!(manual(&rounded.design.elements()[0])[0].len(), 13);
 }
 
 #[test]
@@ -201,12 +233,12 @@ fn req_svg_001_basic_shape_attributes() {
     let e = svg.design.elements();
     // One radius given: the other is the same, so the corners are round, not square.
     let rounded = &ends(&e[0])[0];
-    assert_eq!(rounded.len(), 17);
+    assert_eq!(rounded.len(), 13);
     at(rounded[0], 12.0, 10.0);
-    // An ellipse with one radius is a circle of that radius (SVG 2's `auto`).
-    at(ends(&e[1])[0][0], 55.0, 50.0);
+    // An ellipse with one radius is a circle of that radius (SVG 2's `auto`), from its top.
+    at(ends(&e[1])[0][0], 50.0, 45.0);
     // A percentage radius is of the viewport's diagonal over √2: 10 % of 100 here.
-    at(ends(&e[2])[0][0], 60.0, 50.0);
+    at(ends(&e[2])[0][0], 50.0, 40.0);
     // A point list that runs out mid-point keeps the points before it.
     all_at(&ends(&e[3])[0], &[(0.0, 0.0), (10.0, 0.0)]);
     assert_eq!(svg.warnings.len(), 2, "no-size and no-radius draw nothing: {:?}", warnings(&svg));
@@ -234,7 +266,7 @@ fn req_svg_001_radii_follow_the_specification() {
     // A radius of zero means square corners; a negative one is as if missing, so the other one is used.
     assert_eq!(ids(&svg), ["svg:square:fill", "svg:negative:fill"]);
     let segments = |i: usize| svg.design.elements()[i].shape.path().subpaths[0].segments.len();
-    assert_eq!((segments(0), segments(1)), (3, 16));
+    assert_eq!((segments(0), segments(1)), (3, 12));
     // An ellipse or circle with a zero radius draws nothing.
     assert_eq!(
         warnings(&svg),

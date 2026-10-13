@@ -19,8 +19,9 @@
 //! (Ink/Stitch's simple satin, whose width is the stroke's).
 //!
 //! Each rung gives a pair of points, one on each rail, where it crosses them. Where a rung misses a rail,
-//! the point of that rail nearest the rung stands in (`SC-W0203`), as in Ink/Stitch. A rung that crosses
-//! a rail more than once is left out (`SC-W0207`): it does not say which crossing is meant.
+//! the point of that rail nearest the rung stands in (`SC-W0203`), as in Ink/Stitch, and of points as near
+//! the one shapely's nearest points give. A rung that crosses a rail more than once is left out
+//! (`SC-W0207`): it does not say which crossing is meant.
 //!
 //! Each subpath is flattened to a polyline within [`stroke::SHAPE_TOLERANCE`], as Ink/Stitch flattens a
 //! satin column's path, so its rails have Ink/Stitch's points, which decide where the column's stitches
@@ -35,7 +36,8 @@ use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
 
 use crate::design::{Path, Subpath};
-use crate::normalize::stroke::{self, nearest_on_segment, segments};
+use crate::normalize::near::nearest_pair;
+use crate::normalize::stroke::{self, segments};
 
 /// The shortest subpath the meeting rule takes as a rail, in millimetres: a tenth of a CSS pixel,
 /// Ink/Stitch's limit.
@@ -80,7 +82,9 @@ pub enum Shape {
     CentreLine {
         /// The line, flattened.
         line: Vec<Point>,
-        /// Whether the path ends by closing its last subpath (`Z`), which Ink/Stitch takes as a closed line.
+        /// Whether its subpath is closed (`Z`). Ink/Stitch takes a path whose last command is `Z` as a
+        /// closed line, and the line is the path's one subpath there; a subpath left out as a point has no
+        /// say here.
         closed: bool,
     },
 }
@@ -105,6 +109,8 @@ struct Line {
     length: f64,
     /// Its bounding box: the least and the greatest x and y.
     bounds: [f64; 4],
+    /// Whether it is closed (`Z`).
+    closed: bool,
 }
 
 /// `path`, a satin column's, as its rails and rungs, or why it cannot be one.
@@ -120,12 +126,12 @@ pub fn recognize(path: &Path, meter: &mut Meter) -> Result<Recognition, Exhauste
             continue;
         }
         let length = piece.points.windows(2).map(|pair| pair[0].distance(pair[1])).sum();
-        lines.push(Line { number, bounds: bounds(&piece.points), points: piece.points, nodes: nodes(subpath), length });
+        lines.push(Line { number, bounds: bounds(&piece.points), points: piece.points, nodes: nodes(subpath), length, closed: subpath.closed });
     }
     let shape = match lines.as_slice() {
         [] => Err(Diagnostic::new(Code::SatinWithoutRails, "This satin column has no subpath longer than a point, so it has no rails.")
             .with_fix(Fix::Hint("Draw the column as two rails, its edges, with rungs across both.".to_string()))),
-        [one] => Ok(Shape::CentreLine { line: one.points.clone(), closed: path.subpaths.last().is_some_and(|s| s.closed) }),
+        [one] => Ok(Shape::CentreLine { line: one.points.clone(), closed: one.closed }),
         [a, b] => {
             Ok(Shape::Rails(Satin { rails: [a.points.clone(), b.points.clone()], pairing: Pairing::Nodes([a.nodes.clone(), b.nodes.clone()]) }))
         }
@@ -221,7 +227,7 @@ fn line(lines: &[Line], i: usize) -> &Line {
 }
 
 /// A subpath with no points, for a position that is not in the list.
-static EMPTY: Line = Line { number: 0, points: Vec::new(), nodes: Vec::new(), length: 0.0, bounds: [0.0; 4] };
+static EMPTY: Line = Line { number: 0, points: Vec::new(), nodes: Vec::new(), length: 0.0, bounds: [0.0; 4], closed: false };
 
 /// The nodes of `subpath`, as `Pairing::Nodes` has them.
 fn nodes(subpath: &Subpath) -> Vec<Point> {
@@ -252,24 +258,11 @@ fn add_once(found: &mut Vec<Point>, point: Point) {
     }
 }
 
-/// The point of `rail` nearest `rung`, which it does not meet.
+/// The point of `rail` nearest `rung`, which it does not meet: the second of shapely's nearest points of
+/// the rung and the rail, of equally near ones the first GEOS finds, which tries a side's ends before
+/// the other side's (`normalize::near`).
 fn nearest(rail: &Line, rung: &Line, meter: &mut Meter) -> Result<Point, Exhausted> {
-    let mut best: Option<(f64, Point)> = None;
-    for (p1, p2) in segments(&rung.points) {
-        for (q1, q2) in segments(&rail.points) {
-            meter.charge(1)?;
-            // Segments that do not meet are nearest at an end of one of them.
-            let ends = [(p1, nearest_on_segment(p1, q1, q2)), (p2, nearest_on_segment(p2, q1, q2))];
-            let others = [(nearest_on_segment(q1, p1, p2), q1), (nearest_on_segment(q2, p1, p2), q2)];
-            for (from, on) in ends.into_iter().chain(others) {
-                let distance = from.distance(on);
-                if best.is_none_or(|(d, _)| distance < d) {
-                    best = Some((distance, on));
-                }
-            }
-        }
-    }
-    Ok(best.map_or(Point::ORIGIN, |(_, on)| on))
+    Ok(nearest_pair(&[&rung.points], &[&rail.points], meter)?.map_or(Point::ORIGIN, |(_, on)| on))
 }
 
 /// The points the segments `p1`–`p2` and `q1`–`q2` share, ends included: none, the one where they cross
@@ -417,8 +410,8 @@ mod tests {
 
     #[test]
     fn the_nearest_point_of_a_rail_with_no_segments_is_the_origin() {
-        let rung =
-            Line { number: 1, points: vec![p(1.0, 1.0), p(2.0, 2.0)], nodes: Vec::new(), length: 2.0_f64.sqrt(), bounds: [1.0, 1.0, 2.0, 2.0] };
+        let points = vec![p(1.0, 1.0), p(2.0, 2.0)];
+        let rung = Line { number: 1, points, nodes: Vec::new(), length: 2.0_f64.sqrt(), bounds: [1.0, 1.0, 2.0, 2.0], closed: false };
         assert_eq!(nearest(&EMPTY, &rung, &mut stitchcraft_core::Budget::DEFAULT.meter()).unwrap(), Point::ORIGIN);
     }
 }

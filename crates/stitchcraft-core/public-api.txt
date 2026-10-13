@@ -49,6 +49,7 @@ pub stitchcraft_core::diag::Code::PreviewTooLarge
 pub stitchcraft_core::diag::Code::SatinCentreLineFailed
 pub stitchcraft_core::diag::Code::SatinCentreLinePartsLeftOut
 pub stitchcraft_core::diag::Code::SatinContourTooShort
+pub stitchcraft_core::diag::Code::SatinNoSection
 pub stitchcraft_core::diag::Code::SatinNodesUnequal
 pub stitchcraft_core::diag::Code::SatinPushTooLong
 pub stitchcraft_core::diag::Code::SatinRailsByLength
@@ -153,7 +154,7 @@ pub fn stitchcraft_core::rect::Rect::width(self) -> f64
 pub mod stitchcraft_core::rng
 pub struct stitchcraft_core::rng::SplitMix64
 impl stitchcraft_core::rng::SplitMix64
-pub fn stitchcraft_core::rng::SplitMix64::for_element(&str, u64) -> Self
+pub fn stitchcraft_core::rng::SplitMix64::for_element(&str, core::option::Option<u64>) -> Self
 pub const fn stitchcraft_core::rng::SplitMix64::new(u64) -> Self
 pub fn stitchcraft_core::rng::SplitMix64::next_f64(&mut self) -> f64
 pub fn stitchcraft_core::rng::SplitMix64::next_in(&mut self, f64, f64) -> f64
@@ -225,6 +226,7 @@ pub stitchcraft_core::Code::PreviewTooLarge
 pub stitchcraft_core::Code::SatinCentreLineFailed
 pub stitchcraft_core::Code::SatinCentreLinePartsLeftOut
 pub stitchcraft_core::Code::SatinContourTooShort
+pub stitchcraft_core::Code::SatinNoSection
 pub stitchcraft_core::Code::SatinNodesUnequal
 pub stitchcraft_core::Code::SatinPushTooLong
 pub stitchcraft_core::Code::SatinRailsByLength
@@ -355,7 +357,7 @@ pub const fn stitchcraft_core::units::Size::new(stitchcraft_core::units::Mm, sti
 pub const fn stitchcraft_core::units::Size::rotated(self) -> Self
 pub struct stitchcraft_core::SplitMix64
 impl stitchcraft_core::rng::SplitMix64
-pub fn stitchcraft_core::rng::SplitMix64::for_element(&str, u64) -> Self
+pub fn stitchcraft_core::rng::SplitMix64::for_element(&str, core::option::Option<u64>) -> Self
 pub const fn stitchcraft_core::rng::SplitMix64::new(u64) -> Self
 pub fn stitchcraft_core::rng::SplitMix64::next_f64(&mut self) -> f64
 pub fn stitchcraft_core::rng::SplitMix64::next_in(&mut self, f64, f64) -> f64

@@ -14,7 +14,12 @@
 //!    then shortens its stitches by less than half, which keeps every one at or above the shortest
 //!    stitch; in a shorter span, a stitch shortened below it joins its shorter neighbour, and the joined
 //!    stitch is no longer than the span. With random length, each stitch is drawn from its length
-//!    ± the jitter and each span starts at a random phase, then the same scaling applies.
+//!    ± the jitter and each span starts at a random phase, then the same scaling applies. Where the
+//!    stitches stray from the path by more than nine tenths of the tolerance, as on a curve too tight for
+//!    them, the span is spread again in one stitch more, and one more, as long as that takes no more
+//!    stitches than step 5 would make of it, until they keep to it: a small circle is sewn in even stitches
+//!    as long as the tolerance allows, where splitting would halve them. With random length the draws are
+//!    made again from where the span's started.
 //! 4. **Measure straight.** Steps 2 and 3 measure along the path, but a stitch is the straight line
 //!    between two needle points, and where the path bends back on itself within less than the shortest
 //!    stitch (a cusp, a tight loop) two points far apart along it can be close together. So the needle
@@ -248,22 +253,74 @@ fn stitch_piece(
     }
     cuts.push(end);
     // Each span's stitches, with the pattern carrying on from span to span (each piece starts it afresh).
+    let longest = lengths.longest(min);
     let mut needles = vec![start];
     lengths.next = 0;
     for span in cuts.windows(2) {
         let [from, to] = span else { continue };
-        let stitches = fit(to.at - from.at, lengths, min, meter)?;
-        let mut at = from.at;
-        for length in stitches.iter().take(stitches.len().saturating_sub(1)) {
-            at += length;
-            needles.push(along.needle(at));
-        }
-        needles.push(*to);
+        needles.extend(spread(along, (*from, *to), lengths, (min, longest, budget), meter)?.into_iter().skip(1));
     }
-    let longest = lengths.longest(min);
     let Some(needles) = space(needles, along, min, longest, meter)? else { return Ok(None) };
     let needles = follow(needles, along, budget, min, longest, meter)?;
     Ok(Some(needles.into_iter().map(|needle| needle.point).collect()))
+}
+
+/// The needles of the span between the needles `from` and `to`, both included: its stitches spread
+/// evenly ([`fit`]), in more of them where those stray from the piece by more than `budget` and that
+/// takes no more than [`follow`] would make of them. `limits` are the shortest stitch, the longest and
+/// the `budget`. Every try costs work from `meter`.
+fn spread(
+    along: &Along,
+    (from, to): (Needle, Needle),
+    lengths: &mut Lengths,
+    limits: (f64, f64, f64),
+    meter: &mut Meter,
+) -> Result<Vec<Needle>, Exhausted> {
+    let (min, longest, budget) = limits;
+    let length = to.at - from.at;
+    let before = lengths.mark();
+    let even = placed(along, (from, to), &fit(length, lengths, min, None, meter)?);
+    if keeps_to(&even, along, budget, meter)? {
+        return Ok(even);
+    }
+    let after = lengths.mark();
+    let split = follow(even.clone(), along, budget, min, longest, meter)?.len();
+    for count in even.len()..split {
+        lengths.rewind(&before);
+        let more = placed(along, (from, to), &fit(length, lengths, min, Some(count), meter)?);
+        if keeps_to(&more, along, budget, meter)? {
+            return Ok(more);
+        }
+    }
+    lengths.rewind(&after);
+    Ok(even)
+}
+
+/// The needles from `from` to `to` that `stitches`, laid end to end along the piece, give.
+fn placed(along: &Along, (from, to): (Needle, Needle), stitches: &[f64]) -> Vec<Needle> {
+    let mut needles = vec![from];
+    let mut at = from.at;
+    for length in stitches.iter().take(stitches.len().saturating_sub(1)) {
+        at += length;
+        needles.push(along.needle(at));
+    }
+    needles.push(to);
+    needles
+}
+
+/// Whether no point of the piece strays more than `budget` from the stitch between the needles around
+/// it. A unit of `meter`'s work for every point.
+fn keeps_to(needles: &[Needle], along: &Along, budget: f64, meter: &mut Meter) -> Result<bool, Exhausted> {
+    for pair in needles.windows(2) {
+        let [from, to] = pair else { continue };
+        for index in along.between(from, to) {
+            meter.charge(1)?;
+            if along.points.get(index).is_some_and(|&point| distance_to_segment(point, from.point, to.point) > budget) {
+                return Ok(false);
+            }
+        }
+    }
+    Ok(true)
 }
 
 /// Where stitch lengths come from: the pattern, taken in turn, and with random length the jitter and the
@@ -274,7 +331,23 @@ struct Lengths<'r> {
     random: Option<(f64, &'r mut SplitMix64)>,
 }
 
+/// Where the draws of [`Lengths`] stand: the pattern's next place, and the generator.
+type Mark = (usize, Option<SplitMix64>);
+
 impl Lengths<'_> {
+    /// Where the draws stand now.
+    fn mark(&self) -> Mark {
+        (self.next, self.random.as_ref().map(|(_, rng)| (**rng).clone()))
+    }
+
+    /// The draws back to where `mark` says they stood.
+    fn rewind(&mut self, (next, rng): &Mark) {
+        self.next = *next;
+        if let (Some((_, current)), Some(rng)) = (&mut self.random, rng) {
+            **current = rng.clone();
+        }
+    }
+
     /// The longest a stitch can be: the pattern's longest length (at least twice the shortest stitch,
     /// `min`), plus the jitter.
     fn longest(&self, min: f64) -> f64 {
@@ -295,12 +368,12 @@ impl Lengths<'_> {
 }
 
 /// The stitch lengths for a span `length` long: the next lengths from `source`, as many as it takes to
-/// reach `length`, all scaled by one factor to end exactly there; then each one shorter than `min` joined
-/// to its shorter neighbour. With no pattern, the span is one stitch.
-fn fit(length: f64, source: &mut Lengths, min: f64, meter: &mut Meter) -> Result<Vec<f64>, Exhausted> {
+/// reach `length`, or `count` of them, all scaled by one factor to end exactly there; then each one shorter
+/// than `min` joined to its shorter neighbour. With no pattern, the span is one stitch.
+fn fit(length: f64, source: &mut Lengths, min: f64, count: Option<usize>, meter: &mut Meter) -> Result<Vec<f64>, Exhausted> {
     let mut lengths = Vec::new();
     let mut sum = 0.0;
-    while lengths.is_empty() || !at_least(sum, length) {
+    while lengths.is_empty() || count.map_or(!at_least(sum, length), |count| lengths.len() < count) {
         meter.charge(1)?;
         let stitch = source.draw(lengths.is_empty(), length);
         lengths.push(stitch);

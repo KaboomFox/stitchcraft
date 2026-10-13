@@ -8,6 +8,15 @@ Applies to Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, 
 
 ## Fill
 
+### `fill`
+
+**Sew the fill.** Whether the fill is sewn. Off, it sews nothing, and the shape's outline, if it has one, is sewn as
+its stroke settings say. The element before it still ends near it, as Ink/Stitch's does.
+
+- **Accepts:** true or false
+- **Default:** `true`
+- **Ink/Stitch:** same key, meaning and default
+
 ### `fill_method`
 
 **Fill method.** The stitch the area is filled with. A tatami fill sews rows of running stitches across it. The

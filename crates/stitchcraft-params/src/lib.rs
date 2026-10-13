@@ -8,8 +8,8 @@
 //! - [`StitchType`]: the stitch types, by their Ink/Stitch method ids.
 //! - [`ParamSpec`], [`Kind`], [`ParamGroup`]: what the registry knows about each parameter.
 //! - [`ParamSet`]: an element's parameters as its design stores them (text), read into typed views by
-//!   each declaration's `from_set`, with `SC-E0101`, `SC-W0102` and `SC-W0105` for what is wrong
-//!   ([`value`], [`set`]).
+//!   each declaration's `from_set`, or `from_set_as` for an element of one stitch type, with `SC-E0101`,
+//!   `SC-W0102` and `SC-W0105` for what is wrong ([`value`], [`set`]).
 //! - [`audit()`]: what REQ-PRM-001 asks of every declaration, checked by the registry's own test.
 //!
 //! The registry itself — the list of every declaration — lives in `stitchcraft-engine`, next to the
@@ -27,7 +27,7 @@ pub mod value;
 pub use audit::audit;
 pub use kinds::ParamKind;
 pub use set::{ParamSet, Validated, find, read_param, unknown_keys};
-pub use spec::{ChoiceOption, Condition, Kind, MAX_LIST, MAX_TEXT, Origin, ParamGroup, ParamSpec, Stability};
+pub use spec::{ChoiceOption, Condition, Empty, Kind, MAX_LIST, MAX_TEXT, Origin, ParamGroup, ParamSpec, Stability};
 pub use stitch_type::{Family, StitchType};
 pub use stitchcraft_core::Diagnostic;
 pub use value::{Value, normalized_angle};
