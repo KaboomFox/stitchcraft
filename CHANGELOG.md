@@ -668,6 +668,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   that nothing is written after an error. Now only the report is written, and the exit status is 1, as
   Ink/Stitch writes its file only when no element fails. The picture is drawn before anything is
   written, so a picture that cannot be drawn stops the machine file too.
+- **A tight bend inside a curve** is followed by a running stitch within its tolerance
+  (`REQ-RUN-002`), which a review found. Where a curve turned back in a V narrower than the shortest
+  stitch, the needle past the tip was dropped, and the stitch over the gap could miss the tip by more than
+  a millimetre: by 1.24 mm for one cubic at the default settings, sewn 1.2 mm shorter than drawn. A
+  stitch that strays is now split at its farthest point whenever both parts are at least the shortest
+  stitch, and a part longer than the longest stitch is split along the path. A point nearer than the
+  shortest stitch to a needle is still passed over, and strays from the stitches by less than that. The
+  golden files stay as they were.
 - An SVG file's entities stay within the 64 MiB limit on the file with every reference expanded, however
   they are declared (review finding SVG-1, `SC-E0801`). The limit counted each name at its last
   declaration, where XML and the parser keep the first. A long value declared first, with a short one of
