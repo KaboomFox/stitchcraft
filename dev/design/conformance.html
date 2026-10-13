@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-bb62a4e8.js";
+            window.path_to_searchindex_js = "../searchindex-16cfbb98.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -320,10 +320,10 @@ is one line; its body is in <code>stitchcraft-testkit::fuzz</code>, so every pul
 seed files, every shortening of them and random or damaged bytes, on stable Rust and all three operating
 systems. The properties:</p>
 <ul>
-<li><strong>machine files</strong> (<code>REQ-FMT-006</code>): no panic; at most 2,000,000 entries and no position beyond ±10 m
-from any reader; a plan read from anything is written in every format, and each file reads back to a
-plan the machine sews the same way (for DST, the way DST machines sew the plan: <code>REQ-FMT-008</code>); a
-preview never panics;</li>
+<li><strong>machine files</strong> (<code>REQ-FMT-006</code>). No reader panics or gives more than 2,000,000 entries or a position
+beyond ±10 m. Each format writes a plan read from anything or refuses it. PES refuses a design more
+than 204.7 mm from its start (<code>REQ-FMT-011</code>). Each file reads back to a plan the machine sews the same
+way, for DST the way DST machines sew it (<code>REQ-FMT-008</code>). Previews never panic.</li>
 <li><strong>SVG</strong> (<code>REQ-SVG-002</code>): no panic; the reader refuses only with its own codes (<code>SC-E0801</code>,
 <code>SC-E0004</code>); what it reads is a valid design, with no point beyond ±10 m, and everything it says about
 the file is a warning.</li>

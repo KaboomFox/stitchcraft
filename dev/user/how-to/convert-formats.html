@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-bb62a4e8.js";
+            window.path_to_searchindex_js = "../../searchindex-16cfbb98.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -227,8 +227,10 @@ plain jumps, as some other programs write, gets the extra cuts that <code>SC-I06
 </ul>
 <h2 id="dst-to-pes"><a class="header" href="#dst-to-pes">DST to PES</a></h2>
 <p>A PES file needs a colour for each thread, and a DST file has none to give. Each thread becomes a black
-placeholder, and <code>SC-W0604</code> says so. The machine shows every colour block as black, and it pauses
-between them as the DST file did.</p>
+placeholder, and <code>SC-W0604</code> says so. The PES file gives each a Brother colour of its own, the nearest to
+black still free, from Black to Dark Gray, Dark Brown and on. The machine shows a new colour at each
+thread change, and pauses there as the DST file did. The colours it shows mean nothing. Load the threads
+the design’s author gives.</p>
 <p>The <a href="../../design/formats.html">machine formats design</a> describes how each format is written and read.</p>
 
                     </main>
