@@ -55,14 +55,14 @@ stop command: a stop is a colour change to the same thread, which readers recogn
 trim becomes a trim-flagged jump to its target and a zero-length stitch there, so the needle still goes
 down where the plan says. A trim right before the end needs no record.
 
-**Jumps are trim-flagged, as pystitch writes them** (REQ-FMT-010). Only the stitch data's first record,
-the move from the origin, keeps the plain jump flag. StitchCraft first flagged only the jumps that follow
-a `Trim` in the plan and wrote the others as plain jumps, so the plan decided, and test sheet TS-02 sewed
-both. At machine checkpoint MC-1 the reference PE800 sewed nothing after the plain jumps inside a colour.
-TS-02's right half was missing, and the machine's stitch counter gave it 5 of its 40 stitches. The
-trim-flagged half sewed. Whether a trim-flagged jump is cut is the machine's choice. The PE800 cuts none
-of them, and cuts the thread only at thread changes and stops. Machines that trim jumps cut those longer
-than their setting. A jump that goes nowhere has no record, since a record of it would be trim-flagged.
+**Jumps are trim-flagged, as pystitch writes them** (REQ-FMT-010). A machine treats a StitchCraft file
+as it treats one from Ink/Stitch. Only the stitch data's first record, the move from the origin,
+keeps the plain jump flag. StitchCraft first flagged only the jumps that follow a `Trim` in the plan and
+wrote the others as plain jumps, so the plan decided. Whether a trim-flagged jump is cut is the machine's
+choice. At machine checkpoint MC-1 the reference PE800 cut no jump of either flag and sewed test sheet
+TS-02 the same with both, and it cut the thread only at thread changes and stops. Machines that trim
+jumps cut those longer than their setting. A jump that goes nowhere has no record, since a record of it
+would be trim-flagged.
 The pieces of a sewn move longer than 204.7 mm keep the plain flag, because a cut there would cut the
 stitch's own thread. No profile allows a stitch that long.
 
@@ -88,9 +88,8 @@ list with RGB and codes.
 Embroiderers report these with files from other software:
 
 1. **Trims ignored** on some Brother machines. Test sheet TS-02 sews jumps with and without a trim
-   before them. At MC-1 the PE800 cut none of them, and skipped what followed the plain ones, so every
-   jump is now trim-flagged and the operator cuts the jump threads. The MC-1 sew-out report sets the
-   profile's trim support.
+   before them. At MC-1 the PE800 cut none of them: on that machine the operator cuts the jump
+   threads. The MC-1 sew-out report sets the profile's trim support.
 2. **Large designs hidden** by an older Brother-family machine for PES v1 files beyond about 130 ×
    180 mm (root cause unknown). The PES v1 section carries a hoop indication, and pystitch sets it to
    the 130 × 180 mm class, which is our unconfirmed hypothesis for that report. The reference PE800's

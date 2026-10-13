@@ -213,3 +213,15 @@ file = "crates/stitchcraft-formats/src/pes/pec.rs"
 mutant = "replace | with ^ in block"
 line = "let [low, high, _, _] = (0x9000 | (field & 0x0FFF)).to_le_bytes();"
 why = "the masked field is below 0x1000, and 0x9000 has none of its bits, so or and exclusive or give the same bytes"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
+mutant = "replace + with - in meeting"
+line = ".flat_map(|&dx| steps.iter().map(move |&dy| Node { x: near.x + dx, y: near.y + dy }))"
+why = "the steps are -2, 0 and 2, so taking them from the cell instead of adding them gives the same 9 cells in another order, and the nearest is chosen by distance and then by the cells' own order, whatever order they come in"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
+mutant = "replace > with >= in TwiceArea::plus"
+line = "let wraps = match (wrapped, term > 0) {"
+why = "adding a term of 0 never wraps, so the sign is read only for terms that are not 0"
