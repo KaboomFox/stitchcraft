@@ -219,3 +219,15 @@ file = "crates/stitchcraft-engine/src/generators/tatami/sides.rs"
 mutant = "replace < with <= in Sides<'a>::nearest"
 line = "if best.is_none_or(|(bd, bid, _)| d < bd || (d == bd && id < bid)) {"
 why = "sides are numbered one by one, so a side as near as the best with the same number is the best itself, offered again from another frame's cells: taking it again changes nothing"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
+mutant = "replace + with - in meeting"
+line = ".flat_map(|&dx| steps.iter().map(move |&dy| Node { x: near.x + dx, y: near.y + dy }))"
+why = "the steps are -2, 0 and 2, so taking them from the cell instead of adding them gives the same 9 cells in another order, and the nearest is chosen by distance and then by the cells' own order, whatever order they come in"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
+mutant = "replace > with >= in TwiceArea::plus"
+line = "let wraps = match (wrapped, term > 0) {"
+why = "adding a term of 0 never wraps, so the sign is read only for terms that are not 0"
