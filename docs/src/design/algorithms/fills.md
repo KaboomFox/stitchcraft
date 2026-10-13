@@ -49,7 +49,10 @@ A fill's region is the area an SVG renderer paints for its path, in parts with h
    Ink/Stitch warns of it. A fill in parts gets `SC-W0307`, since each part is sewn on its own.
 
 The work is charged to the element's budget, one unit for each point, edge bent and grid point tested
-against it, pair of edges whose spans along x overlap, half edge, and ring compared with a face.
+against it, pair of edges whose spans along x overlap, half edge, ring compared with a face or an outline,
+and point walked to find a ring's bounds or its place among the faces and outlines (`REQ-FILL-004`). Each
+ring's bounds are found once. A ring that bounds no face is located only in the faces whose bounds cover
+its own, and a hole apart from every outline only in the outlines whose bounds cover its own.
 Property tests draw random rings on a grid, and random rings with float coordinates beside near-copies of
 themselves, moved or turned by a hair or drawn back, and count how many times they wind round points off
 the edges. Such a point lies in the region exactly when the fill rule fills it, unless it lies in a part

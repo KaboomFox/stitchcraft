@@ -64,6 +64,8 @@ pub(crate) struct Envelope {
 impl Envelope {
     /// The bounds of `points`; of nothing, the bounds of the origin.
     pub(crate) fn of(points: &[Point]) -> Envelope {
+        #[cfg(test)]
+        looked_at::add(points.len());
         let Some(first) = points.first() else { return Envelope { min_x: 0.0, min_y: 0.0, max_x: 0.0, max_y: 0.0 } };
         let mut env = Envelope { min_x: first.x(), min_y: first.y(), max_x: first.x(), max_y: first.y() };
         for p in points {
@@ -84,6 +86,8 @@ impl Envelope {
 /// Where `p` lies relative to the closed ring `ring`: on it, or inside by the even-odd count of the
 /// ring's segments a ray from `p` to the right crosses.
 pub(crate) fn locate_in_ring(p: Point, ring: &[Point]) -> Location {
+    #[cfg(test)]
+    looked_at::add(ring.len());
     let mut crossings = 0_u32;
     for pair in ring.windows(2) {
         let (a, b) = (pair[0], pair[1]);
@@ -215,6 +219,28 @@ fn nearest_end(p1: Point, p2: Point, q1: Point, q2: Point) -> Point {
         }
     }
     best.0
+}
+
+/// In tests, the points [`Envelope::of`] and [`locate_in_ring`] look at on this thread, counted, so that a
+/// test can check that their callers charge the work budget for every one (`REQ-FILL-004`). Both are
+/// cheap for one ring, and their cost hides in loops that ask them of every ring again.
+#[cfg(test)]
+pub(crate) mod looked_at {
+    use std::cell::Cell;
+
+    thread_local! {
+        static POINTS: Cell<u64> = const { Cell::new(0) };
+    }
+
+    /// Counts `n` more points looked at.
+    pub(crate) fn add(n: usize) {
+        POINTS.with(|points| points.set(points.get().saturating_add(u64::try_from(n).unwrap_or(u64::MAX))));
+    }
+
+    /// The points looked at since the last call.
+    pub(crate) fn take() -> u64 {
+        POINTS.with(|points| points.replace(0))
+    }
 }
 
 #[cfg(test)]

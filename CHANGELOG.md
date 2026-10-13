@@ -563,6 +563,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - An area that could not be built says only that it is a bug (`SC-E0009`), and no longer that the fill
     bounds no area (REG-8).
   - TS-07 and TS-09 change by a hair (Golden files, below).
+- Building a fill's region charges the work budget for all of its work (review finding REG-5,
+  `REQ-FILL-004`). Placing each ring that bounds no face found every face's bounds again for it, and
+  joining each hole apart from every outline found every outline's points, bounds and area again, and
+  charged nothing. In a test build, a fill of 30 × 30 discs with round holes spent 40 of its 61 seconds
+  there, on 6 of the 214 million units it was charged. Each ring's bounds are found once now, and every
+  point walked is charged: those steps take 2 seconds, on 11 million units.
 - Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
   found (`REQ-SAT-002`, `REQ-SAT-005`).
   - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails

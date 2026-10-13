@@ -645,6 +645,15 @@ rationale = "A row of stitches does not fit in a speck, and Ink/Stitch leaves su
 milestone = "M5"
 status = "active"
 
+[[req]]
+id = "REQ-FILL-004"
+area = "fill"
+level = "L2"
+statement = "Building a fill's region charges the work budget for every point it walks to place each ring that bounds no face in the faces around it and to join each hole apart from every outline to the outline around it. Each ring's bounds are found once, and a ring is located only in the faces or outlines whose bounds cover its own."
+rationale = "The work budget stands for the time planning takes, so that a design is refused for being too large rather than planned for minutes. A loop that does not charge for its work lets a fill of many parts with holes take far longer than its budget allows."
+milestone = "M5"
+status = "active"
+
 # ── Tatami fill ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
