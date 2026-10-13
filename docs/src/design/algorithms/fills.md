@@ -209,6 +209,11 @@ since M5.5, `REQ-FILL-TAT-005`).
 Equally cheap ways, the simplified rings and the points a way is cut into follow StitchCraft's own rules,
 so the way can differ from Ink/Stitch's in its details (`DEV-FILL-007`).
 
+Travel asks the rings where a point lies on them, how far a line lies from them, and where a stitch meets
+them or lies inside. Each question looks only at the ring sides near its point, line or stitch, filed in a
+grid of square cells about as many as the sides, and gets the answer a look at every side would give
+(`REQ-FILL-TAT-013`).
+
 ### 5. Parts
 
 A region in parts sews them one at a time, as Ink/Stitch sews them (`REQ-FILL-TAT-008`, since M5.4).
@@ -307,6 +312,7 @@ the fill sews nothing, and `SC-W0303` says so.
 | `REQ-FILL-TAT-009` | A 130 × 180 mm rectangle at 0.4 mm, the reference hoop's whole field, plans within the NFR-PERF-1 budget, guarded by `cargo xtask perf` since M5.9 |
 | `REQ-FILL-TAT-011` | Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start |
 | `REQ-FILL-TAT-012` | The underlay covers the part shrunk by its inset and the top rows the part grown by `expand_mm`, as shapely buffers it, within a nanometre |
+| `REQ-FILL-TAT-013` | Questions about the rings look only at their sides near each point, line and stitch, and answer as a look at every side would: a 70 mm square with 14 × 14 round holes and a 120 × 60 mm background with 60 detailed holes plan within a tenth of the default work budget |
 
 Machine checkpoint MC-4 sews a density ladder, an angle set and a fill-with-outline registration test
 to tune pull compensation ([machine testing](../../plan/machine-testing.md)).

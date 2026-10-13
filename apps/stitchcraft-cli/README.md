@@ -36,9 +36,10 @@ Coming with their milestones: `export` (M6.5), `import-inkstitch` (M8), `conform
 ## Invariants
 
 - Contains no engine logic: it reads files, calls the engine, formats and renderer, and writes files.
-- Writes only plans that have been checked (invariants, hoop and comfort zone). The command line checks
-  its test sheets itself, and the engine's `plan` checks designs. When a check fails, the machine file is
-  not written, and `stitch plan` still writes its report to say why.
+- Writes only plans that have been checked (invariants, hoop and comfort zone), and none while anything
+  said about the design is an error, an element left out with one included (`REQ-CLI-003`). The command
+  line checks its test sheets itself, and the engine's `plan` checks designs. When a check fails or an
+  error is said, the machine file is not written, and `stitch plan` still writes its report to say why.
 - Never panics on bad arguments (arguments that are not valid Unicode included); exit codes are documented.
 - A panic anyway is a bug: `main` catches it (`commands::bug_report::guarded`), says so, and for
   `stitch plan` writes a bug-report bundle.

@@ -9,11 +9,18 @@
 //! along the ring when several are as near. The rings of [`crate::normalize::region`] run clockwise for
 //! outlines and counter-clockwise for holes in y-up axes, as Ink/Stitch's do, but start where the drawing
 //! starts them (`DEV-FILL-005`).
+//!
+//! **Near sides only.** Every question about a point, or a stitch, looks at the sides of the rings near it
+//! ([`Sides`]), not at every side, and answers as a look at every side would.
 
-use stitchcraft_core::{Exhausted, Meter, Point};
+use std::cell::RefCell;
+
+use stitchcraft_core::{Exhausted, Meter, Point, exact};
 
 use super::graph::NodeId;
+use super::sides::{Side, Sides};
 use crate::normalize::region::Polygon;
+use crate::normalize::region::geom::on_segment;
 
 /// One ring: its points, closed (the first repeated at the end), and how far along it each lies.
 #[derive(Clone, Debug)]
@@ -33,7 +40,16 @@ impl Ring<'_> {
 #[derive(Clone, Debug)]
 pub(crate) struct Rings<'a> {
     rings: Vec<Ring<'a>>,
+    /// Their sides, filed by where they lie.
+    sides: Sides<'a>,
+    /// Where a point lies relative to each ring ([`ON`], [`ODD`]), kept from one question to the next.
+    places: RefCell<Vec<u8>>,
 }
+
+/// A point lies on the ring.
+const ON: u8 = 1;
+/// A point lies inside the ring, by the even-odd count, unless it is on it.
+const ODD: u8 = 2;
 
 /// Where a point lies on a ring: which ring, and how far along it.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -45,7 +61,7 @@ pub(crate) struct Place {
 }
 
 impl<'a> Rings<'a> {
-    /// The rings of `part`. One unit of `meter` for each of their points.
+    /// The rings of `part`. One unit of `meter` for each of their points, and as [`Sides::new`] files them.
     pub fn new(part: &'a Polygon, meter: &mut Meter) -> Result<Rings<'a>, Exhausted> {
         let mut rings = Vec::with_capacity(1 + part.holes.len());
         for points in std::iter::once(&part.outline).chain(&part.holes) {
@@ -60,7 +76,8 @@ impl<'a> Rings<'a> {
             }
             rings.push(Ring { points, at });
         }
-        Ok(Rings { rings })
+        let sides = Sides::new(part.rings().collect(), meter)?;
+        Ok(Rings { rings, sides, places: RefCell::new(Vec::new()) })
     }
 
     /// How many rings there are.
@@ -74,21 +91,74 @@ impl<'a> Rings<'a> {
     }
 
     /// Where `p` lies on the rings `allowed` lets it lie on: the nearest of them, the first on a tie, at its
-    /// point nearest `p`, the first along it on a tie. `None` when no ring is allowed. One unit of
-    /// `meter` for each side of a ring looked at.
+    /// point nearest `p`, the first along it on a tie. `None` when no ring is allowed. Costs as
+    /// [`Sides::nearest`] does.
     pub fn locate(&self, p: Point, allowed: impl Fn(usize) -> bool, meter: &mut Meter) -> Result<Option<Place>, Exhausted> {
-        let mut best: Option<(f64, Place)> = None;
-        for (index, ring) in self.rings.iter().enumerate().filter(|(index, _)| allowed(*index)) {
-            meter.charge(u64::try_from(ring.points.len()).unwrap_or(u64::MAX))?;
-            for (pair, at) in ring.points.windows(2).zip(&ring.at) {
-                let [a, b] = [pair[0], pair[1]];
-                let (distance, t) = nearest_on_side(p, a, b);
-                if best.is_none_or(|(d, _)| distance < d) {
-                    best = Some((distance, Place { ring: index, at: at + t * a.distance(b) }));
-                }
+        let near = |side: &Side| distance_to_side(p, side.a, side.b);
+        let Some((_, Side { ring, index, a, b })) = self.sides.nearest((p, p), allowed, near, meter)? else { return Ok(None) };
+        let (_, t) = nearest_on_side(p, a, b);
+        let start = self.rings.get(ring).and_then(|r| r.at.get(index)).copied().unwrap_or(0.0);
+        Ok(Some(Place { ring, at: start + t * a.distance(b) }))
+    }
+
+    /// Calls `visit` with every side that could meet the stitch from `p` to `q`, in the rings' order and then
+    /// along each ring. Costs as [`Sides::in_box`] does.
+    pub fn meeting(&self, p: Point, q: Point, meter: &mut Meter, visit: impl FnMut(Side)) -> Result<(), Exhausted> {
+        self.sides.in_box(p.x().min(q.x()), p.y().min(q.y()), p.x().max(q.x()), p.y().max(q.y()), meter, visit)
+    }
+
+    /// The first of the rings `allowed` that `p` lies within `within` of, by `distance` from its sides.
+    /// Costs as [`Sides::in_box`] does.
+    pub fn ring_near(
+        &self,
+        p: Point,
+        within: f64,
+        allowed: impl Fn(usize) -> bool,
+        distance: impl Fn(Point, Point, Point) -> f64,
+        meter: &mut Meter,
+    ) -> Result<Option<usize>, Exhausted> {
+        // A side that near has a point in the box twice as wide, whatever the rounding of its edges.
+        let margin = 2.0 * within;
+        let mut found = None;
+        self.sides.in_box(p.x() - margin, p.y() - margin, p.x() + margin, p.y() + margin, meter, |side| {
+            if found.is_none() && allowed(side.ring) && distance(p, side.a, side.b) <= within {
+                found = Some(side.ring);
             }
-        }
-        Ok(best.map(|(_, place)| place))
+        })?;
+        Ok(found)
+    }
+
+    /// Whether `p` lies in the part or on its rings, decided as `Polygon::covers` decides it. Costs as
+    /// [`Sides::rightward`] does.
+    pub fn covers(&self, p: Point, meter: &mut Meter) -> Result<bool, Exhausted> {
+        self.place(p, meter, covered)
+    }
+
+    /// Whether `p` lies in the part and on none of its rings. Costs as [`Sides::rightward`] does.
+    pub fn inside(&self, p: Point, meter: &mut Meter) -> Result<bool, Exhausted> {
+        self.place(p, meter, |at| !at.iter().any(|&place| place & ON != 0) && covered(at))
+    }
+
+    /// `answer` to where `p` lies relative to each ring, the outline's first: on the ring ([`ON`]), and inside
+    /// it ([`ODD`]) by the even-odd count of its sides a ray from `p` to the right crosses, decided exactly
+    /// as `locate_in_ring` decides it. Only the sides that could hold `p` or cross the ray are tested.
+    fn place<T>(&self, p: Point, meter: &mut Meter, answer: impl FnOnce(&[u8]) -> T) -> Result<T, Exhausted> {
+        let mut places = self.places.borrow_mut();
+        places.clear();
+        places.resize(self.rings.len(), 0);
+        self.sides.rightward(p, meter, |Side { ring, a, b, .. }| {
+            let Some(place) = places.get_mut(ring) else { return };
+            if on_segment(p, a, b) {
+                *place |= ON;
+            }
+            // A side counts when it spans p's height, its lower end included and its upper end not, and p lies
+            // to its left, so that it crosses the ray from p to the right.
+            let (low, high) = if a.y() <= b.y() { (a, b) } else { (b, a) };
+            if low.y() <= p.y() && p.y() < high.y() && exact::side(low, high, p) == exact::Side::Left {
+                *place ^= ODD;
+            }
+        })?;
+        Ok(answer(&places))
     }
 
     /// The point `at` along ring `ring`; `None` when there is no such ring.
@@ -163,6 +233,14 @@ pub(crate) fn stretches(mut placed: Vec<(NodeId, Place)>, meter: &mut Meter) -> 
     Ok(pairs)
 }
 
+/// Whether a point lies in the part or on its rings, given where it lies relative to each ring ([`ON`],
+/// [`ODD`]), the outline's first: on the outline, or inside it and inside no hole.
+fn covered(places: &[u8]) -> bool {
+    let inside = |place: u8| place & ON == 0 && place & ODD != 0;
+    let Some((&outline, holes)) = places.split_first() else { return false };
+    outline & ON != 0 || (inside(outline) && !holes.iter().any(|&hole| inside(hole)))
+}
+
 /// How far `p` lies from the side from `a` to `b`, and how far along the side, from 0 at `a` to 1 at `b`,
 /// its nearest point lies.
 fn nearest_on_side(p: Point, a: Point, b: Point) -> (f64, f64) {
@@ -179,10 +257,13 @@ pub(crate) fn distance_to_side(p: Point, a: Point, b: Point) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use stitchcraft_core::Budget;
+    use stitchcraft_core::{Budget, SplitMix64};
 
     use super::*;
-    use crate::generators::tatami::fixture::{frame, p};
+    use crate::generators::tatami::fixture::{frame, p, scattered};
+    use crate::normalize::region::SAME;
+    use crate::normalize::region::geom::{Location, locate_in_ring};
+    use crate::normalize::stroke::distance_to_segment;
 
     #[test]
     fn stretches_join_each_node_to_the_next_along_its_ring_and_round_to_the_first() {
@@ -263,13 +344,84 @@ mod tests {
     }
 
     #[test]
+    fn points_are_placed_as_a_look_at_every_ring_places_them() {
+        // Points inside and outside random rings, some filed in a grid: at a corner, level with one, where a
+        // ray to the right meets corners, and on a side as far as rounding lets them.
+        let mut rng = SplitMix64::new(10);
+        let allowances: [fn(usize) -> bool; 2] = [|_| true, |ring| ring > 0];
+        for case in 0..30 {
+            let rings = scattered(&mut rng, case);
+            let part = Polygon { outline: rings[0].clone(), holes: rings[1..].to_vec() };
+            let measured = Rings::new(&part, &mut Budget::DEFAULT.meter()).unwrap();
+            let sides: Vec<(Point, Point)> = rings.iter().flat_map(|ring| ring.windows(2).map(|w| (w[0], w[1]))).collect();
+            for k in 0..80 {
+                let (a, b) = sides[usize::try_from(rng.next_u64() % u64::try_from(sides.len()).unwrap()).unwrap()];
+                let q = match k % 4 {
+                    0 => p(rng.next_in(-2.0, 22.0), rng.next_in(-2.0, 22.0)),
+                    1 => a,
+                    2 => p(rng.next_in(-2.0, 22.0), a.y()),
+                    _ => a.lerp(b, rng.next_in(0.0, 1.0)),
+                };
+                let meter = &mut Budget::DEFAULT.meter();
+                let on = part.rings().any(|ring| locate_in_ring(q, ring) == Location::Boundary);
+                assert_eq!(measured.covers(q, meter).unwrap(), part.covers(q), "case {case}, {q:?}");
+                assert_eq!(measured.inside(q, meter).unwrap(), !on && part.covers(q), "case {case}, {q:?}");
+                for allowed in allowances {
+                    let near = |ring: &[Point]| ring.windows(2).any(|w| distance_to_segment(q, w[0], w[1]) <= SAME);
+                    let looked = part.rings().enumerate().find(|&(index, ring)| allowed(index) && near(ring)).map(|(index, _)| index);
+                    assert_eq!(measured.ring_near(q, SAME, allowed, distance_to_segment, meter).unwrap(), looked, "case {case}, {q:?}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn questions_cost_the_cells_and_sides_they_look_at() {
+        // A part of 116 sides, filed in a grid. The work is pinned: placing a point on the rings, the sides a
+        // stitch could meet, the ring a point lies on, and whether a point is covered, or inside.
+        let rings = scattered(&mut SplitMix64::new(9), 10);
+        let part = Polygon { outline: rings[0].clone(), holes: rings[1..].to_vec() };
+        let measured = Rings::new(&part, &mut Budget::DEFAULT.meter()).unwrap();
+        let (q, corner) = (p(5.0, 7.0), rings[1][0]);
+        let cost = |ask: &dyn Fn(&mut Meter)| {
+            let mut meter = Budget::DEFAULT.meter();
+            ask(&mut meter);
+            Budget::DEFAULT.max_work - meter.work_left()
+        };
+        let costs = [
+            cost(&|meter| {
+                measured.locate(q, |_| true, meter).unwrap();
+            }),
+            cost(&|meter| measured.meeting(q, p(9.0, 8.0), meter, |_| ()).unwrap()),
+            cost(&|meter| {
+                measured.ring_near(corner, SAME, |_| true, distance_to_segment, meter).unwrap();
+            }),
+            cost(&|meter| {
+                measured.covers(q, meter).unwrap();
+            }),
+            cost(&|meter| {
+                measured.inside(corner, meter).unwrap();
+            }),
+        ];
+        assert_eq!(costs, [54, 15, 5, 42, 9]);
+    }
+
+    #[test]
     fn measuring_is_charged_to_the_budget() {
         let part = frame();
+        let used = |meter: Meter| Budget::DEFAULT.max_work - meter.work_left();
         let mut meter = Budget::DEFAULT.meter();
         let rings = Rings::new(&part, &mut meter).unwrap();
-        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 10, "a unit per point");
-        assert!(rings.locate(p(0.0, 0.0), |_| true, &mut Budget { max_stitches: 1, max_work: 6 }.meter()).is_err());
+        let mut filing = Budget::DEFAULT.meter();
+        Sides::new(part.rings().collect(), &mut filing).unwrap();
+        assert_eq!(used(meter), 10 + used(filing), "a unit per point, and the filing of the sides");
         assert!(Rings::new(&part, &mut Budget { max_stitches: 1, max_work: 3 }.meter()).is_err());
+        // Placing a point costs work, all of which it needs.
+        let mut placing = Budget::DEFAULT.meter();
+        rings.locate(p(0.0, 0.0), |_| true, &mut placing).unwrap();
+        let cost = used(placing);
+        assert!(cost > 0);
+        assert!(rings.locate(p(0.0, 0.0), |_| true, &mut Budget { max_stitches: 1, max_work: cost - 1 }.meter()).is_err());
         assert_eq!(distance_to_side(p(0.0, 3.0), p(0.0, 0.0), p(4.0, 0.0)), 3.0);
     }
 }
