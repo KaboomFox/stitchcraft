@@ -192,7 +192,7 @@ pub fn tatami_fill(
         }
         let sewn: Vec<Vec<Point>> = sewn
             .into_iter()
-            .map(|run| thin(run, |p| *p, |a, b| !at_least(a.distance(*b), fill.top.travel.min_stitch), |_| false, |_| ()))
+            .map(|run| thin(run, |a, b| !at_least(a.distance(*b), fill.top.travel.min_stitch), |_| false, |_| ()))
             .filter(|run| !run.is_empty())
             .collect();
         needle = sewn.iter().rev().find_map(|run| run.last().copied()).or(needle);
@@ -316,7 +316,6 @@ impl Part<'_> {
         let network = Network::new(&route.nodes, rings, &row_ends(&route), meter)?;
         let mut sewing = Sewing {
             route: &route,
-            part,
             rings,
             stitching,
             travel: *travel,
@@ -425,7 +424,6 @@ fn row_ends(route: &Route) -> Vec<[NodeId; 2]> {
 /// A part as it is sewn.
 struct Sewing<'a> {
     route: &'a Route,
-    part: &'a Polygon,
     rings: &'a Rings<'a>,
     stitching: &'a Stitching,
     travel: Travel,
@@ -562,7 +560,7 @@ impl Sewing<'_> {
 
     /// A way along the lines, smoothed and kept inside the part.
     fn smoothed(&self, way: &[Point], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
-        clamp(&smooth(way, self.travel.min_stitch, meter)?, self.part, self.rings, meter)
+        clamp(&smooth(way, self.travel.min_stitch, meter)?, self.rings, meter)
     }
 
     /// The row `step` sews, between its segment's ends lengthened by the pull compensation, from the end the

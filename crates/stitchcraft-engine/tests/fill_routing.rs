@@ -14,12 +14,14 @@
 use stitchcraft_core::math::sin_cos;
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Code, Point};
-use stitchcraft_engine::design::FillRule;
+use stitchcraft_engine::design::{Design, DesignSettings, FillRule};
 use stitchcraft_engine::generators::Approach;
 use stitchcraft_engine::generators::tatami::rows::{Grid, rows};
 use stitchcraft_engine::generators::tatami::sew::{Fill, Layer, Pull, Travel, tatami_fill};
 use stitchcraft_engine::generators::tatami::stitches::{Stitching, row_points};
 use stitchcraft_engine::normalize::region::{Polygon, Region, build};
+use stitchcraft_engine::plan;
+use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Role, StitchKind};
 use stitchcraft_testkit::designs::{RED, fill, line, messages, p, planned, rings};
 
@@ -324,6 +326,42 @@ fn diag_sc_w0305_a_fill_too_thin_for_a_row_is_sewn_round_its_outline() {
                 .to_string()
         )
     );
+}
+
+/// A `w` × `h` mm rectangle with `columns` × `rows` ellipses of radii `rx` and `ry` and `points` points each
+/// cut out of it, one in the middle of each cell of a grid: drawn the other way round, so that they are holes
+/// by either fill rule.
+fn holed(w: f64, h: f64, (columns, rows): (u32, u32), (rx, ry): (f64, f64), points: u32) -> Vec<Vec<(f64, f64)>> {
+    let mut parts = vec![vec![(0.0, 0.0), (w, 0.0), (w, h), (0.0, h)]];
+    for (i, j) in (0..columns).flat_map(|i| (0..rows).map(move |j| (i, j))) {
+        let (cx, cy) = ((f64::from(i) + 0.5) * w / f64::from(columns), (f64::from(j) + 0.5) * h / f64::from(rows));
+        let mut hole: Vec<(f64, f64)> = (0..points)
+            .map(|k| {
+                let (s, c) = sin_cos(f64::from(k) / f64::from(points) * std::f64::consts::TAU);
+                (cx + rx * c, cy + ry * s)
+            })
+            .collect();
+        hole.reverse();
+        parts.push(hole);
+    }
+    parts
+}
+
+#[test]
+fn req_fill_tat_013_fills_with_many_or_detailed_holes_plan_within_a_tenth_of_the_budget() {
+    // A 70 mm square with 14 × 14 round holes 3 mm across, of 33 points each as their curves flatten, and a
+    // 120 × 60 mm background with 15 × 4 holes of 200 points each: 6,500 and 12,000 points of rings, at the
+    // default settings. Looking at every side of every ring for each stitch of travel, both ran out of the
+    // whole budget.
+    let tenth = Budget { max_work: Budget::DEFAULT.max_work / 10, ..Budget::DEFAULT };
+    for (w, h, grid, radii, points) in [(70.0, 70.0, (14, 14), (1.5, 1.5), 33), (120.0, 60.0, (15, 4), (2.4, 5.25), 200)] {
+        let parts = holed(w, h, grid, radii, points);
+        let refs: Vec<&[(f64, f64)]> = parts.iter().map(Vec::as_slice).collect();
+        let settings = DesignSettings { origin: Some(p(w / 2.0, h / 2.0)), ..DesignSettings::default() };
+        let design = Design::new(vec![fill("holed", &refs, &RED, &[])], settings).unwrap();
+        let outcome = plan(&design, REFERENCE, &tenth);
+        assert!(outcome.diagnostics.is_empty() && outcome.plan.is_some(), "{w} × {h}: {:?}", messages(&outcome));
+    }
 }
 
 #[test]

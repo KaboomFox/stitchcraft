@@ -26,6 +26,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0212`](#sc-w0212) | Warning | Satin column drawn as one path too narrow; sewn as a stroke |
 | [`SC-W0213`](#sc-w0213) | Warning | Parts of a satin column drawn as one path left out |
 | [`SC-E0214`](#sc-e0214) | Error | Satin column drawn as one path could not be made into rails |
+| [`SC-W0215`](#sc-w0215) | Warning | Satin column too small for the shortest stitch; left out |
 | [`SC-W0303`](#sc-w0303) | Warning | Parts of a fill too small to sew left out |
 | [`SC-W0304`](#sc-w0304) | Warning | Fill smaller than 1.4 mm² |
 | [`SC-W0305`](#sc-w0305) | Warning | Fill part too thin for rows; sewn round its outline |
@@ -48,6 +49,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
 | [`SC-W0604`](#sc-w0604) | Warning | Thread colours unknown |
 | [`SC-I0605`](#sc-i0605) | Info | Long jumps cut in DST |
+| [`SC-W0606`](#sc-w0606) | Warning | Threads share a Brother colour |
 | [`SC-E0701`](#sc-e0701) | Error | Design does not fit the hoop |
 | [`SC-W0702`](#sc-w0702) | Warning | Design is larger than the comfort zone |
 | [`SC-I0703`](#sc-i0703) | Info | Stitches longer than the machine's longest stitch; split |
@@ -276,6 +278,17 @@ the line is shorter than a CSS pixel. The column is not sewn.
 
 Draw the column with 2 rails, or make the stroke narrower.
 
+## SC-W0215
+
+**Warning** — Satin column too small for the shortest stitch; left out
+
+A satin column is so small that every needle point of it lies within the shortest stitch of its
+first: a speck of a column, a few tenths of a millimetre across. Any stitch it could sew would be
+shorter than the machine sews well, would hammer one spot of the fabric and could break the thread,
+so it is left out, as a stroke that small is (`SC-W0401`). Ink/Stitch sews such a column.
+
+The message gives the shortest stitch. Draw the column larger, or delete it if it is a stray.
+
 ## SC-W0303
 
 **Warning** — Parts of a fill too small to sew left out
@@ -458,7 +471,9 @@ another lock shape.
 Needle points less than the shortest stitch from the one before were left out, so the stitch before
 each runs on to the next and none is shorter than the machine sews well. This happens where one
 element's stitching runs straight on into the next and they nearly touch: the stitch between them is
-whatever is left of the gap. Nothing visible changes.
+whatever is left of the gap. Where small elements are sewn over each other, a lock point or the last
+point before a jump, trim or stop can go too, when it comes within the shortest stitch of one that
+stays. Nothing visible changes.
 
 Nothing to do. If the count is large, check for elements drawn on top of each other.
 
@@ -507,8 +522,9 @@ StitchCraft does not know yet: please report it with the file.
 **Warning** — Thread colours unknown
 
 The file stores no thread colours (DST files never do: they only say where the machine pauses for
-the next thread), so every thread has a placeholder colour — in previews, and in files converted
-from this one, where the machine shows that colour at each thread change.
+the next thread), so every thread has a black placeholder colour in previews. A PES file converted
+from this one names each thread by the Brother colour nearest black that is still free (Black, Dark
+Gray, Dark Brown and so on), which says nothing of the threads the design needs.
 
 The stitches are not affected. Load the threads the design needs, in the order the design's
 author gives; StitchCraft cannot know them.
@@ -525,6 +541,19 @@ With a tie-off before the jump the cut is usually welcome: there is no jump thre
 Nothing to do. Where an element's ties are off, turn them on so its stitching holds when it is
 cut, or sew a PES file, where only trims cut. A machine set to another number of jump records cuts
 before other jumps: see its DST setting.
+
+## SC-W0606
+
+**Warning** — Threads share a Brother colour
+
+A PES file names each thread by a colour of the Brother palette, which has 61 thread colours.
+StitchCraft gives each different thread a colour of its own, the nearest one still free, so the
+machine asks for each thread change. A design with more different threads than that has some
+share a colour, and the machine shows that colour for each of them: at a change between 2 of them it
+shows the thread already in the machine, as for a stop.
+
+Load the threads in the order the report lists them, rather than by the colours the machine shows.
+Or use fewer different threads: merge those of nearly the same colour.
 
 ## SC-E0701
 
