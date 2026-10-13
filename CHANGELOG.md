@@ -459,6 +459,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- PES files flag every jump after their first record as a trim, as pystitch, Ink/Stitch's writer, flags
+  them (`REQ-FMT-010`). A machine treats them as it treats Ink/Stitch's. StitchCraft flagged only the
+  jumps after a trim in the plan. Whether a trim-flagged jump is cut is the machine's choice, and the
+  reference PE800 cuts none (MC-1). A jump that goes nowhere is no longer written, since a record of it
+  would be trim-flagged.
+  - The round-trip checks compare a file with what its format tells the machine
+    (`stitchcraft_testkit::equivalence::format_events`, `as_pes`), and a cut with nothing sewn since the
+    last one counts as none (`REQ-FMT-002`, `REQ-FMT-003`).
+  - TS-02, TS-02B and TS-09 had plain jumps inside a colour, and their files change with this. No other
+    test sheet had any.
 - Mutation testing runs each test binary with at most 4 GiB of address space. A mutant that keeps a loop
   from ending can make it take more memory than the CI runner has, which ended one part of M5.4's
   mutants without a result. At the cap the test aborts, which counts as noticed.
@@ -523,23 +533,36 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
-- MC-1: PES files flag every jump after their first record as a trim, as pystitch writes them
-  (`REQ-FMT-010`). At the first sew-out on the reference PE800, the plain-flagged jumps inside a colour on
-  TS-02 made the machine skip the stitches after them, and the sheet's right half was missing. A jump that
-  goes nowhere is no longer written, since a record of it would be trim-flagged.
-  - The round-trip checks compare a file with what its format tells the machine
-    (`stitchcraft_testkit::equivalence::format_events`, `as_pes`), and a cut with nothing sewn since the
-    last one counts as none (`REQ-FMT-002`, `REQ-FMT-003`).
-  - TS-02B and TS-09 had the same plain jumps, and their files change with this. No other test sheet had
-    any.
 - A design exactly the hoop's size fits it. Rounding put rows of a fill's underlay at 90° a hair past the
   edge of the reference hoop's whole field, and the hoop check and the plan checker refused it, while the
   check that the design is centred allowed the hair, as every length check does (`LENGTH_SLACK`). Both now
   allow it too (`REQ-PLAN-001`, `REQ-PRF-002`).
+- Planning no longer panics on a part that shrinking cuts into pieces whose least x lie in a chain of
+  steps under a nanometre that spans more than one (`REQ-FILL-TAT-012`). The pieces were sorted by
+  comparing 2 at a time, as level when their least x lie within a nanometre, which is no order on such
+  a chain, and Rust's sort can panic on that. Now a run of pieces, each within a nanometre of the one
+  before, is level and comes lowest first. Pieces that are not in such a chain come in the order they
+  came before.
 - With `skip_last`, a tatami fill's travel between 2 nodes that only an edge pairing them joins sews the
   row's end before it, as Ink/Stitch's does. Such an edge stands for a way of several edges
   (`DEV-FILL-006`), and Ink/Stitch never takes the 2 nodes for neighbours. The golden files stay as they
   were.
+- A fill whose shapes meet at corners or share edges sews all of them, in 1 part where they share edges,
+  however rounding left the points they share (review findings REG-3 and REG-7, `REQ-FILL-001`). Drawn
+  with relative path data, as Inkscape writes it, such points come out a few units in the last place
+  apart. The crossings near them were worked out in floating point and snapped to points nearby. That
+  could leave 2 edges crossing with no point between them, and whole faces then came out filled or empty
+  against the fill rule. In tests it happened to about 1 grid of squares in 8, 1 pinwheel or fan of
+  triangles in 4 and 1 triangulated grid in 2. Other grids came out in several parts.
+  - The rings are cut on a grid of 2⁻³⁵ mm (`normalize::region::snap`), much as Ink/Stitch puts a fill's
+    shape on a grid of 10⁻¹⁰ CSS pixels. Points a rounding error apart become one, and an edge that passes
+    through the cell of a corner or a crossing is bent through it, so that the edges meet only at their
+    ends. Which way a ring turns is decided exactly.
+  - A part grown or shrunk to an exact tangency, such as 2 squares joined by a neck and shrunk by half its
+    width, keeps both squares (REG-4, `REQ-FILL-TAT-012`). One of them was lost at 33 of 180 angles.
+  - An area that could not be built says only that it is a bug (`SC-E0009`), and no longer that the fill
+    bounds no area (REG-8).
+  - TS-07 and TS-09 change by a hair (Golden files, below).
 - Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
   found (`REQ-SAT-002`, `REQ-SAT-005`).
   - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails
@@ -635,12 +658,25 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   stitch, and a part longer than the longest stitch is split along the path. A point nearer than the
   shortest stitch to a needle is still passed over, and strays from the stitches by less than that. The
   golden files stay as they were.
+- An SVG file's entities stay within the 64 MiB limit on the file with every reference expanded, however
+  they are declared (review finding SVG-1, `SC-E0801`). The limit counted each name at its last
+  declaration, where XML and the parser keep the first. A long value declared first, with a short one of
+  the same name after it, let a 1 MiB file expand to gigabytes and run the reader out of memory. A name
+  declared twice now counts at its longer value. Declarations are looked for only in the document type's
+  internal subset (`<!DOCTYPE svg [ … ]>`), so one in a comment or in character data elsewhere neither
+  shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-07.pes` and `TS-09.pes` (REG-3): a fill's points lie on the
+  grid now, a hair from where they were. These sheets' rows lie at multiples of 0.25 mm, so many of their
+  needle points lie halfway between 2 tenths of a millimetre, where a change in the last bits changes
+  which way they round, and some round the other way now: 0.1 mm. Near the edges of TS-07's circles, where its rows
+  meet the edge at a slant, the travel between rows takes a point more or less in places, 5 stitches more
+  of 13,522. Their pictures in the docs change with them.
 - Changed `conformance/golden/testsheets/TS-02.pes` and `TS-02B.pes` (9 jumps each), `TS-09.pes` (3),
   `conformance/golden/plans/strokes.pes` (5), and `conformance/golden/formats/every-command.pes` (1) and
-  `long-jumps.pes` (3) (MC-1): those jumps are trim-flagged now (`REQ-FMT-010`). Only their flag bits change,
-  from `0x10` to `0x20`. The DST files stay as they were.
+  `long-jumps.pes` (3): those jumps are trim-flagged now, as pystitch flags them (`REQ-FMT-010`). Only
+  their flag bits change, from `0x10` to `0x20`. The DST files stay as they were.
 - Changed `conformance/golden/plans/strokes.pes` and `.dst` (M5.6). Each rectangle of the `strokes`
   fixture's fill sews its underlay first: upright rows 0.75 mm apart, square to the fill's flat rows, in
   stitches of 4 mm, from its point nearest the needle and back, where its top rows then start. The plan
