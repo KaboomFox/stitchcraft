@@ -312,6 +312,8 @@ fn diag_sc_e0009_an_area_that_could_not_be_built_says_only_so() {
     let failed = built(Area { parts: Err(Unjoined), windings: vec![1, 2] }, FillRule::NonZero);
     assert_eq!(failed.region, Region::default());
     assert_eq!(failed.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::InternalCheckFailed]);
+    // A point beyond the grid's reach is such a bug, a design lying within 10 m of the origin.
+    assert_eq!(region(&[vec![p(0.0, 0.0), p(1e5, 0.0), p(1e5, 1e5)]], FillRule::NonZero), failed);
 }
 
 #[test]

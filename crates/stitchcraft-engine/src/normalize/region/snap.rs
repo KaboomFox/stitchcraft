@@ -15,10 +15,11 @@
 //! cell of a hot point, a point the rings make, is bent through that point. The hot points are the rings'
 //! corners at first, and then the cells where 2 edges still cross: a crossing worked out in floating
 //! point lies in one of the cells round it, and the nearest of those that both edges pass through becomes
-//! hot. Edges are bent and checked for crossings until none cross, which one or two rounds settle. This is
-//! snap rounding (Hobby; Guibas and Marimont), with edges bent again as hot points are added (Halperin
-//! and Packer's iterated form). Every edge then runs from grid point to grid point and meets the others
-//! only at its ends, so the faces' winding numbers add up.
+//! hot. Edges are bent and checked for crossings until none cross: in every drawing tried, the first check
+//! that finds crossings finds them all, and bending through them settles the edges. This is snap rounding
+//! (Hobby; Guibas and Marimont), with edges bent again as hot points are added (Halperin and Packer's
+//! iterated form). Every edge then runs from grid point to grid point and meets the others only at its
+//! ends, so the faces' winding numbers add up.
 //!
 //! What it does to a drawing: points that rounding left a hair apart almost always round to the same grid
 //! point, so their shapes share the point, and a gap or an overlap that narrow closes. 2 points a hair apart
@@ -45,8 +46,9 @@ const HALF: f64 = GRID / 2.0;
 /// design lies within 10 m of the origin (`design::WORKING_LIMIT_MM`), and a part grows by 10 mm at most.
 const REACH: f64 = 65_536.0;
 
-/// How many rounds of bending edges, and of making hot the cells where edges still cross, before the
-/// rings are given up as a bug. Any drawing tried settles in 1 or 2.
+/// How many rounds, each bending edges or else making hot the cells where they cross, before the rings are
+/// given up as a bug. Every drawing tried settles within 6: up to 4 rounds of bending, 1 of crossings, and
+/// 1 that finds nothing left to do.
 const ROUNDS: usize = 64;
 
 /// A point of the grid, counted in half cells from the origin: its coordinates are even. Its cell holds
@@ -117,14 +119,19 @@ fn crosses(a: Node, b: Node, c: Node, d: Node) -> bool {
 
 /// The rings, each a closed list of grid points (its first repeated at its end), bent through every hot
 /// point whose cell they pass through until no 2 of their edges cross: each ring's points in the order it
-/// runs through them, its own corners among them. `Unjoined` should the edges not settle, a bug. One unit
-/// of `meter` for each edge bent and each hot point tested against it, and each pair of edges whose spans
-/// along x overlap.
+/// runs through them, its own corners among them. `Unjoined` should the edges not settle in [`ROUNDS`]
+/// rounds, a bug. One unit of `meter` for each edge bent and each hot point tested against it, and each
+/// pair of edges whose spans along x overlap.
 pub(crate) fn round(rings: &[Vec<Node>], meter: &mut Meter) -> Result<Result<Vec<Vec<Node>>, Unjoined>, Exhausted> {
+    settle(rings, ROUNDS, meter)
+}
+
+/// [`round`], with the edges given up as `Unjoined` should they not settle in `rounds` rounds.
+fn settle(rings: &[Vec<Node>], rounds: usize, meter: &mut Meter) -> Result<Result<Vec<Vec<Node>>, Unjoined>, Exhausted> {
     let mut hot: BTreeSet<Node> = rings.iter().flatten().copied().collect();
     let mut paths = rings.to_vec();
     // Each round bends the edges, or, once none can be bent further, makes hot the cells where they cross.
-    for _ in 0..ROUNDS {
+    for _ in 0..rounds {
         if bend(&mut paths, &hot, meter)? {
             continue;
         }
@@ -321,10 +328,15 @@ mod tests {
         assert!(!touches(n(-4, -2), n(2, 4), c), "top left");
         assert!(!touches(n(-2, -4), n(4, 2), c), "bottom right");
         assert!(!touches(n(4, -2), n(-2, 4), c), "top right");
-        // Past it, or ending short of it.
+        // Past it.
         assert!(!touches(n(-4, 2), n(4, 2), c));
-        assert!(!touches(n(-8, 0), n(-2, 0), c));
-        assert!(!touches(n(-8, 6), n(-2, 0), c));
+        // Ending short of it on a line through it, on each side, or short of its own corner: only the
+        // segment's bounds tell.
+        assert!(!touches(n(-8, 0), n(-2, 0), c), "left");
+        assert!(!touches(n(2, 0), n(8, 0), c), "right");
+        assert!(!touches(n(0, -8), n(0, -2), c), "below");
+        assert!(!touches(n(0, 2), n(0, 8), c), "above");
+        assert!(!touches(n(-8, 6), n(-2, 0), c), "short of the corner");
         // A segment of no length passes through its own cell only.
         assert!(!touches(n(2, 2), n(2, 2), c));
     }
@@ -350,15 +362,28 @@ mod tests {
         assert!(bend(&mut paths, &hot, &mut meter).unwrap());
         assert_eq!(paths[0], [n(0, 0), n(6, 2), n(10, 4), n(10, 6), n(20, 10), n(10, 6), n(10, 4), n(6, 2), n(0, 0)]);
         assert!(!bend(&mut paths, &hot, &mut meter).unwrap(), "bent through every one already");
+        // The same turned upside down and moved: running downhill, the edge reaches (-10, 26) before
+        // (-10, 24), the other way round from the points' own order.
+        let hot: BTreeSet<Node> = [n(-20, 30), n(0, 20), n(-10, 24), n(-14, 28), n(-14, 24), n(-6, 26), n(-10, 26)].into_iter().collect();
+        assert_eq!(through(n(-20, 30), n(0, 20), &hot, &mut meter).unwrap(), [n(-14, 28), n(-10, 26), n(-10, 24)]);
+    }
+
+    #[test]
+    fn how_far_along_a_segment_a_point_lies_is_its_distance_along_times_the_length() {
+        // From (2, 4) toward (8, 12), 10 long: (5, 8) lies 5 along, (8, 12) 10, (10, 4) 4.8 and (-4, -4) 10 back.
+        let along_from = |c| along(n(2, 4), n(8, 12), c);
+        assert_eq!([n(5, 8), n(8, 12), n(10, 4), n(-4, -4)].map(along_from), [50, 100, 48, -100]);
+    }
+
+    /// A bow tie: its 2 sides cross at (2, 2) mm, a grid point.
+    fn bow_tie() -> Vec<Node> {
+        [p(0.0, 0.0), p(4.0, 4.0), p(4.0, 0.0), p(0.0, 4.0), p(0.0, 0.0)].iter().map(|&q| Node::of(q).unwrap()).collect()
     }
 
     #[test]
     fn rings_that_cross_are_bent_through_the_cells_of_their_crossings() {
-        // A bow tie: its 2 sides cross at (2, 2) mm, a grid point.
-        let corners = [p(0.0, 0.0), p(4.0, 4.0), p(4.0, 0.0), p(0.0, 4.0), p(0.0, 0.0)];
-        let ring: Vec<Node> = corners.iter().map(|&q| Node::of(q).unwrap()).collect();
         let middle = Node::of(p(2.0, 2.0)).unwrap();
-        let paths = round(&[ring], &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        let paths = round(&[bow_tie()], &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         assert_eq!(paths[0].iter().filter(|&&q| q == middle).count(), 2);
         assert_eq!(paths[0].len(), 7);
         // 3 lines through one point, crossing there a hair apart in floating point: one point of the grid.
@@ -369,6 +394,53 @@ mod tests {
         let paths = round(std::slice::from_ref(&ring), &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         let middles: BTreeSet<Node> = paths[0].iter().filter(|q| q.point().distance(p(0.4, 0.7)) < 1e-6).copied().collect();
         assert_eq!(middles.len(), 1, "{middles:?}");
+    }
+
+    /// An even number of half cells from -2 `span` to 2 `span`: a grid point's coordinate.
+    fn even(rng: &mut stitchcraft_core::SplitMix64, span: u64) -> i64 {
+        2 * (i64::try_from(rng.next_u64() % (2 * span + 1)).unwrap() - i64::try_from(span).unwrap())
+    }
+
+    #[test]
+    fn nearly_parallel_edges_however_long_settle() {
+        // Pairs of edges up to several metres long, level or at a slant, each end a few half cells aside
+        // from a line through a common middle: they cross at angles down to a few half cells in their
+        // length. Floating point puts many of their crossings cells along them from where they are, and
+        // both edges still pass through a cell round that point.
+        let mut rng = stitchcraft_core::SplitMix64::new(0x5eed_0002);
+        let (mut crossed, mut far) = (0, 0);
+        for _ in 0..20_000 {
+            let middle = (even(&mut rng, 1 << 39), even(&mut rng, 1 << 39));
+            let step = if rng.next_u64().is_multiple_of(2) { (2, 0) } else { (2 + even(&mut rng, 500).abs(), even(&mut rng, 500)) };
+            let mut edge = || {
+                let k = (1_i64 << (20 + rng.next_u64() % 29)) / step.0.max(step.1.abs());
+                let mut end =
+                    |sign: i64| Node { x: middle.0 + sign * k * step.0 + even(&mut rng, 5), y: middle.1 + sign * k * step.1 + even(&mut rng, 5) };
+                (end(-1), end(1))
+            };
+            let ((a, b), (c, d)) = (edge(), edge());
+            if !crosses(a, b, c, d) {
+                continue;
+            }
+            crossed += 1;
+            // Whether floating point puts the crossing more than a cell, 2 half cells, from where it is.
+            let at = geom::crossing(a.point(), b.point(), c.point(), d.point());
+            let t = turn(c, d, a) as f64 / (turn(c, d, a) - turn(c, d, b)) as f64;
+            let (x, y) = (at.x() / HALF - a.x as f64 - t * (b.x - a.x) as f64, at.y() / HALF - a.y as f64 - t * (b.y - a.y) as f64);
+            far += usize::from(x * x + y * y > 4.0);
+            let settled = round(&[vec![a, b], vec![c, d]], &mut Budget::DEFAULT.meter()).unwrap();
+            assert!(settled.is_ok(), "{a:?}–{b:?} and {c:?}–{d:?}");
+        }
+        assert!(crossed > 5_000 && far > crossed / 10, "{crossed} crossed, {far} put more than a cell off");
+    }
+
+    #[test]
+    fn edges_that_do_not_settle_in_the_rounds_allowed_are_unjoined() {
+        // The bow tie takes 3 rounds: one finds where its sides cross, one bends them through that point,
+        // and one finds nothing left to bend and no crossing.
+        let mut meter = Budget::DEFAULT.meter();
+        assert!(settle(&[bow_tie()], 2, &mut meter).unwrap().is_err());
+        assert!(settle(&[bow_tie()], 3, &mut meter).unwrap().is_ok());
     }
 
     #[test]
