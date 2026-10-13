@@ -716,6 +716,33 @@ fn req_fill_tat_006_pull_compensation_keeps_every_piece_and_hole_of_the_part() {
     assert!(has(&points, 5.2, 5.0) && has(&points, 4.8, 4.75), "{points:?}");
 }
 
+/// How many of the top stitches of the fill of `parts`, set as `params` say, run along the level row at
+/// height `y` over `x`, and how far left and right along it they reach.
+fn over(parts: &[&[(f64, f64)]], params: &[(&str, &str)], x: f64, y: f64) -> (usize, (f64, f64)) {
+    let points = needle_points(parts, params);
+    let along: Vec<[Point; 2]> = points.windows(2).filter(|w| w[0].y() == y && w[1].y() == y).map(|w| [w[0], w[1]]).collect();
+    let passes = along.iter().filter(|[a, b]| a.x().min(b.x()) < x && x < a.x().max(b.x())).count();
+    (passes, span(&along.concat()))
+}
+
+#[test]
+fn req_fill_tat_006_a_row_is_lengthened_only_where_it_leaves_the_part() {
+    // Rows 1 mm apart. A notch up from the bottom side to y = 5, whose top side the row at y = 5 runs along,
+    // and a V whose tip touches that row at x = 3: the row meets the outline without leaving the part, at x =
+    // 2 and 4, and at x = 3, so it is 3 segments, and 2, end to end (REQ-FILL-TAT-010). Lengthened where they
+    // meet, the needle sewed past each joint and back over it.
+    let notch: [&[(f64, f64)]; 1] = [&[(0.0, 0.0), (6.0, 0.0), (6.0, 10.0), (4.0, 10.0), (4.0, 5.0), (2.0, 5.0), (2.0, 10.0), (0.0, 10.0)]];
+    let vee: [&[(f64, f64)]; 1] = [&[(0.0, 0.0), (6.0, 0.0), (6.0, 10.0), (4.0, 10.0), (3.0, 5.0), (2.0, 10.0), (0.0, 10.0)]];
+    for (parts, x) in [(&notch, 4.1), (&vee, 3.1)] {
+        for (pull, reach) in [("0", (0.0, 6.0)), ("0.3", (-0.3, 6.3))] {
+            let (passes, (left, right)) = over(parts, &[NO_UNDERLAY, ("row_spacing_mm", "1"), ("pull_compensation_mm", pull)], x, 5.0);
+            assert_eq!(passes, 1, "{pull} mm over x = {x}");
+            // Where the row leaves the part, it still reaches past it by the compensation.
+            assert_eq!(((left * 1e9).round() / 1e9, (right * 1e9).round() / 1e9), reach, "{pull} mm");
+        }
+    }
+}
+
 #[test]
 fn req_fill_tat_007_gap_rows_add_rows_inside_the_part() {
     // Round the frame's hole the route leaves stretches of rows for others: the gap rows add needle
@@ -741,6 +768,30 @@ fn req_fill_tat_007_every_row_lies_inside_the_part_within_its_compensation() {
         let points = needle_points(parts, &[("pull_compensation_mm", "0.4"), ("gap_fill_rows", "4"), ("angle", "30")]);
         assert!(points.iter().all(|&q| near_or_in(part, q, 0.4 + 1e-9)), "{parts:?}");
         assert!(points.iter().any(|&q| !near_or_in(part, q, 0.39)), "the rows reach out 0.4 mm: {parts:?}");
+    }
+}
+
+/// The stitches between the top needle points of the fill of `parts`, set as `params` say, that pass farther
+/// than `within` from the part, each looked at 19 points along it.
+fn leaving(parts: &[&[(f64, f64)]], params: &[(&str, &str)], within: f64) -> Vec<[Point; 2]> {
+    let part = &region(parts).parts[0];
+    let away = |w: &[Point]| (1..20).any(|k| !near_or_in(part, w[0].lerp(w[1], f64::from(k) / 20.0), within));
+    needle_points(parts, params).windows(2).filter(|w| away(w)).map(|w| [w[0], w[1]]).collect()
+}
+
+/// A U: arms 6 mm wide and 10 mm tall either side of a notch 8 mm wide, under a bar 10 mm tall.
+const YOU: [&[(f64, f64)]; 1] = [&[(0.0, 0.0), (6.0, 0.0), (6.0, 10.0), (14.0, 10.0), (14.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)]];
+
+#[test]
+fn req_fill_tat_007_the_stitches_to_and_from_gap_fill_rows_stay_inside_the_part() {
+    // The frame at 30°, and the U at 0°, where the rows past a stretch's last row lie on both sides of its
+    // notch. Every stitch keeps inside the part, but for a running stitch that cuts a corner of a ring by up
+    // to its tolerance, 0.2 mm.
+    for (parts, angle) in [(&HOLED[..], "30"), (&YOU[..], "0")] {
+        for gaps in ["0", "4"] {
+            let out = leaving(parts, &[NO_UNDERLAY, ("angle", angle), ("gap_fill_rows", gaps)], 0.25);
+            assert_eq!(out, Vec::<[Point; 2]>::new(), "{gaps} gap-fill rows at {angle}°");
+        }
     }
 }
 
