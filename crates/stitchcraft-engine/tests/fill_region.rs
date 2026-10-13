@@ -156,10 +156,11 @@ fn diag_sc_w0303_parts_left_out_are_counted() {
         said(fill("dots", rings(&[&square(0.0, 0.0, 0.2), &square(5.0, 0.0, 0.2)]), FillRule::NonZero))[0],
         "warning SC-W0303: All 2 parts of this fill cover 0.21 mm² or less each, too little for a row of stitches, so they are left out."
     );
-    // A fill that bounds no area: a line, or a square drawn twice under the even-odd rule.
+    // A fill that bounds no area: a line, or a square drawn twice under the even-odd rule (which Ink/Stitch
+    // fills, `SC-I0313`).
     let empty = "warning SC-W0303: This fill bounds no area under its fill rule, so it sews nothing.";
     assert_eq!(said(fill("line", rings(&[&[(0.0, 0.0), (5.0, 5.0)]]), FillRule::NonZero)), [empty]);
-    assert_eq!(said(fill("twice", rings(&[&square(0.0, 0.0, 5.0), &square(0.0, 0.0, 5.0)]), FillRule::EvenOdd)), [empty]);
+    assert_eq!(said(fill("twice", rings(&[&square(0.0, 0.0, 5.0), &square(0.0, 0.0, 5.0)]), FillRule::EvenOdd))[0], empty);
 }
 
 #[test]
@@ -182,6 +183,47 @@ fn diag_sc_i0306_the_nonzero_rule_filling_what_the_even_odd_rule_leaves_empty_is
     // Under the even-odd rule, or with the hole drawn the other way round, there is nothing to say.
     assert_eq!(said(fill("even-odd", same, FillRule::EvenOdd)), Vec::<String>::new());
     assert_eq!(said(fill("turned", rings(&[&square(0.0, 0.0, 10.0), &turned(3.0, 3.0, 4.0)]), FillRule::NonZero)), Vec::<String>::new());
+    // A notch drawn the same way round, its 2 sides along the outline, is filled under the nonzero rule,
+    // and Ink/Stitch fills it too: it counts a stretch drawn twice once. So does a square drawn twice.
+    for twice in [rings(&[&square(0.0, 0.0, 10.0), &square(0.0, 0.0, 5.0)]), rings(&[&square(0.0, 0.0, 10.0), &square(0.0, 0.0, 10.0)])] {
+        assert_eq!(said(fill("notch", twice, FillRule::NonZero)), Vec::<String>::new());
+    }
+}
+
+#[test]
+fn diag_sc_i0313_a_part_left_empty_beside_a_stretch_drawn_twice_is_said() {
+    let i0313 = "info SC-I0313: Subpaths of this fill run along each other at its edge, around a part its fill rule leaves empty, as \
+                 the drawing shows it. Ink/Stitch counts a stretch drawn twice once, and would fill that part.";
+    // A notch: a hole drawn in the outline's corner, its 2 sides along the outline. The drawing shows it
+    // empty under the even-odd rule, and under either rule drawn the other way round. Ink/Stitch merges
+    // the 2 sides into the outline and fills it.
+    let notch = rings(&[&square(0.0, 0.0, 10.0), &square(0.0, 0.0, 5.0)]);
+    assert_eq!(region(&notch, FillRule::EvenOdd).region.area(), 75.0, "as the drawing shows it");
+    assert_eq!(said(fill("notch", notch, FillRule::EvenOdd)), [i0313]);
+    let turned_notch = rings(&[&square(0.0, 0.0, 10.0), &turned(0.0, 0.0, 5.0)]);
+    for rule in [FillRule::EvenOdd, FillRule::NonZero] {
+        assert_eq!(said(fill("turned", turned_notch.clone(), rule)), [i0313], "{rule:?}");
+    }
+    // So with a hole along part of one side, and a square drawn twice, which leaves nothing to sew.
+    let along = rings(&[&square(0.0, 0.0, 10.0), &[(0.0, 2.0), (0.0, 4.0), (5.0, 4.0), (5.0, 2.0)]]);
+    assert_eq!(said(fill("along", along, FillRule::NonZero)), [i0313]);
+    let twice = said(fill("twice", rings(&[&square(0.0, 0.0, 10.0), &square(0.0, 0.0, 10.0)]), FillRule::EvenOdd));
+    assert_eq!(twice, ["warning SC-W0303: This fill bounds no area under its fill rule, so it sews nothing.", i0313]);
+    let built = region(&rings(&[&square(0.0, 0.0, 10.0), &square(0.0, 0.0, 5.0)]), FillRule::EvenOdd);
+    let note = built.diagnostics.iter().find(|d| d.code == Code::FillStretchDrawnTwice).unwrap();
+    assert_eq!(
+        note.fix.as_ref().map(|f| f.describe()).as_deref(),
+        Some("To sew it alike in both, draw the outline round the empty part instead of a subpath along it.")
+    );
+    // Where the stretch drawn twice lies between 2 holes, or between 2 parts that are both filled,
+    // Ink/Stitch's area is the drawing's, and there is nothing to say.
+    let holes =
+        rings(&[&square(0.0, 0.0, 10.0), &[(2.0, 2.0), (5.0, 2.0), (5.0, 5.0), (2.0, 5.0)], &[(5.0, 2.0), (8.0, 2.0), (8.0, 5.0), (5.0, 5.0)]]);
+    assert_eq!(said(fill("holes", holes, FillRule::EvenOdd)), Vec::<String>::new());
+    let side_by_side = rings(&[&square(0.0, 0.0, 5.0), &square(5.0, 0.0, 5.0)]);
+    for rule in [FillRule::EvenOdd, FillRule::NonZero] {
+        assert_eq!(said(fill("side-by-side", side_by_side.clone(), rule)), Vec::<String>::new(), "{rule:?}");
+    }
 }
 
 #[test]

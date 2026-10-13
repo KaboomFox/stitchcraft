@@ -523,6 +523,31 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Style sheets set an SVG's colours and what it hides (`REQ-SVG-006`). Illustrator and CorelDRAW write a
+  drawing's colours as classes in a `<style>` element, and a file read without it sewed black fills where
+  the drawing shows outlines, and sewed what the sheet hides.
+  - The reader applies a rule whose selector names an element or `*`, then classes and ids, or a list of
+    such selectors, in the order of CSS's cascade. One `SC-W0802` names the other selectors and the
+    at-rules, whose settings are not used.
+  - An `!important` declaration in a `style` attribute now overrides a later one there, as in CSS.
+  - A file's style sheets may have up to a million selectors and declarations. Each element is charged to
+    the budget for the declarations it takes, those of its `style` attribute included.
+- A circle or an ellipse starts at its top and turns left on screen, as Ink/Stitch reads it
+  (`REQ-SVG-001`). It started at its right and turned the other way, which moved the tie-in and the
+  direction of its running stitch. The golden `strokes` plan changes for its ring, and so does the
+  tutorial's badge, whose move from the star to the ring is 7 mm where it was 27 mm.
+- Ink/Stitch's `starting_point` and `ending_point` commands are noted as not applied yet (`SC-W0802`,
+  `REQ-SVG-003`), where they were dropped without a word.
+- An empty root `width`, `height` or `viewBox`, or a root `preserveAspectRatio` that does not read, is
+  ignored as a viewer ignores it, and `SC-W0804` names it. The whole file was refused. A viewBox with no
+  area says so, where the message said it was not 4 numbers.
+- A fill's parts that tie at their least x are sewn in order of their least y there
+  (`REQ-FILL-TAT-008`), as Ink/Stitch sews them. The drawing's order decided.
+- `SC-I0313` names a fill whose rule leaves a part beside its edge empty, which subpaths running along
+  each other bound, such as a notch drawn as a hole along the outline. Ink/Stitch's repair fills such a
+  part, and `SC-I0306` no longer says Ink/Stitch leaves it empty. `DEV-FILL-001` describes the repair as
+  it is, not as the even-odd rule.
+- The roadmap plans clip paths for M8, as Ink/Stitch applies them.
 - MC-1: PES files flag every jump after their first record as a trim, as pystitch writes them
   (`REQ-FMT-010`). At the first sew-out on the reference PE800, the plain-flagged jumps inside a colour on
   TS-02 made the machine skip the stitches after them, and the sheet's right half was missing. A jump that

@@ -234,7 +234,7 @@ status = "planned"
 id = "REQ-SVG-001"
 area = "svg"
 level = "L2"
-statement = "Paths, groups, transforms, viewBox units, colours and visibility map to the Design exactly (positions within 1 micrometre), each shape's fill before its stroke, as Ink/Stitch sews them."
+statement = "Paths, basic shapes, groups, transforms, viewBox units, colours and visibility map to the Design exactly (positions within 1 micrometre), each shape's fill before its stroke, as Ink/Stitch sews them. A circle or an ellipse starts at its top and turns left on screen, as Ink/Stitch reads it."
 milestone = "M3"
 status = "active"
 
@@ -272,6 +272,15 @@ level = "L2"
 statement = "Ink/Stitch's design settings collapse_len_mm, min_stitch_len_mm and min_satin_stroke_width_mm, kept in the first metadata element of the file, are the design's settings. The first element of each name counts. SC-W0802 names a value that is not a number of 0 or more, and the design keeps its default."
 rationale = "A file that changes them sews as Ink/Stitch sews it, and a setting that is not applied is never silent."
 milestone = "M4"
+status = "active"
+
+[[req]]
+id = "REQ-SVG-006"
+area = "svg"
+level = "L2"
+statement = "The rules of a file's style sheets set the properties of the elements they select, as in a viewer: rules whose selectors are an element name or *, classes and ids, and lists of them, in the order CSS's cascade gives them. An !important declaration wins, then the style attribute, then the more specific rule, then the later, and every rule wins over a presentation attribute. SC-W0802 names the selectors and at-rules that are not read."
+rationale = "Illustrator and CorelDRAW write a drawing's colours as classes in a style sheet. Read without it, a file would sew black fills where the drawing shows outlines, and sew what the sheet hides."
+milestone = "M3"
 status = "active"
 
 # ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
@@ -712,7 +721,7 @@ status = "active"
 id = "REQ-FILL-TAT-008"
 area = "fill/tatami"
 level = "L2"
-statement = "A region in parts sews each part on its own, in order of its distance from the needle (with no needle, of how far left it reaches), each part ending at its point nearest the next and the last nearest the next element, as Ink/Stitch sews them. Each part is a group of its own, joined to the next as assembly joins any 2 groups, and SC-W0307 says the fill is in parts."
+statement = "A region in parts sews each part on its own, in order of its distance from the needle (with no needle, of how far left it reaches), and parts that tie in order of their point of least x and of least y among the points level with it, each part ending at its point nearest the next and the last nearest the next element, as Ink/Stitch sews them. Each part is a group of its own, joined to the next as assembly joins any 2 groups, and SC-W0307 says the fill is in parts."
 milestone = "M5"
 status = "active"
 

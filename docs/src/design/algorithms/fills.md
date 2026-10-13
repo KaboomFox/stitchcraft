@@ -29,8 +29,13 @@ A fill's region is the area an SVG renderer paints for its path, in parts with h
    from its right to its left adds its count. Every face's winding number follows from its neighbours'
    in whole numbers.
 4. **Fill rule.** A face is filled when its winding number is not 0 (`nonzero`, SVG's default) or is odd
-   (`evenodd`). Ink/Stitch fills every fill as if its rule were even-odd. Where `nonzero` fills a face
-   that even-odd leaves empty, StitchCraft fills it and `SC-I0306` says so (`DEV-FILL-001`).
+   (`evenodd`). Ink/Stitch's area differs in 2 ways, and StitchCraft follows the drawing in both
+   (`DEV-FILL-001`). Ink/Stitch takes every subpath but the largest as a hole. Where `nonzero` fills a
+   face inside that even-odd leaves empty, StitchCraft fills it, and `SC-I0306` says Ink/Stitch leaves it
+   empty. And Ink/Stitch repairs a shape that is not valid by merging the subpaths' lines, a stretch drawn
+   twice into one, and filling the faces they bound by how deeply they nest. A face beside the outside
+   nests in nothing, and is always filled. Where the fill rule leaves such a face empty, a notch drawn as a
+   hole along the outline or a subpath drawn twice, `SC-I0313` says Ink/Stitch fills it.
 5. **Rings of the parts.** The edges between filled and empty faces are joined into rings with the
    filled side on their right. Outlines turn clockwise and holes counter-clockwise in y-up axes, the other
    way round on screen, where y points down. Where rings meet at a point, they are joined the way GEOS
@@ -213,7 +218,10 @@ so the way can differ from Ink/Stitch's in its details (`DEV-FILL-007`).
 
 A region in parts sews them one at a time, as Ink/Stitch sews them (`REQ-FILL-TAT-008`, since M5.4).
 The part nearest the needle goes first, a part the needle is in being 0 away. With no needle, the part
-with the least x goes first. Each part ends at its point nearest the next part. The last ends at the point
+with the least x goes first. Ink/Stitch sorts the parts with a stable sort. GEOS's repair gave the parts
+of 400 of 400 random fills tied at their least x in order of their point of least x, and of least y
+among the points level with it (shapely 2.2.0, GEOS 3.14.1). Parts that tie go in that order here too.
+Each part ends at its point nearest the next part. The last ends at the point
 of the fill nearest the next element's first stitch, or nearest its shape when it starts nearest the
 needle. Each part is a group of its own, which assembly joins to the next as it joins any 2 groups:
 straight on within the collapse length, and otherwise with a jump and the ties and trims the element's

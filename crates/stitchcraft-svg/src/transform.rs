@@ -116,6 +116,9 @@ pub fn user_units(length: Length, reference: f64) -> f64 {
     length.number * factor
 }
 
+/// Why a viewBox of zero or negative width or height cannot be used: a viewer draws nothing in it.
+pub const NO_AREA: &str = "its viewBox has no area";
+
 /// The map from the root element's user units to millimetres, from its `width`, `height`, `viewBox` and
 /// `preserveAspectRatio` (SVG 1.1 § 7.8). Without a viewBox a user unit is a CSS pixel, 1/96 inch.
 pub fn root_to_mm(width: Option<Length>, height: Option<Length>, view_box: Option<ViewBox>, aspect: AspectRatio) -> Result<Affine, String> {
@@ -131,7 +134,7 @@ pub fn root_to_mm(width: Option<Length>, height: Option<Length>, view_box: Optio
     let px = Affine::scale(MM_PER_SVG_PX, MM_PER_SVG_PX);
     let Some(vb) = view_box else { return Ok(px) };
     if !(vb.w > 0.0 && vb.h > 0.0) {
-        return Err("its viewBox has no area".to_string());
+        return Err(NO_AREA.to_string());
     }
     // The viewport in millimetres; a missing or relative size is the viewBox's, in pixels.
     let size = |length: Option<Length>, fallback: f64| match length {
