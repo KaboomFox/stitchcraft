@@ -272,7 +272,7 @@ fn diag_sc_w0305_a_fill_too_thin_for_a_row_is_sewn_round_its_outline() {
     let top = layer(Stitching { grid: Grid { angle: 0.0, spacing: 0.25, end_spacing: None }, ..stitching(0.0) }, TRAVEL);
     let stitched = tatami_fill(&region, &fill_of(top, &[]), None, None, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
     let run = &stitched.runs[0];
-    assert_eq!((run[0], *run.last().unwrap()), (p(0.0, 0.05), p(0.0, 0.05)), "round its outline from its start");
+    assert!(at(run[0], 0.0, 0.05) && at(*run.last().unwrap(), 0.0, 0.05), "round its outline from its start: {run:?}");
     // Its underlay at 90° has rows across it, and comes back to its first row's start, on its left side.
     // The top rows then go round the outline from its start, 0.15 mm away: within the jump length the
     // needle goes straight on there, and beyond it they are a run of their own, which assembly reaches with
@@ -284,7 +284,7 @@ fn diag_sc_w0305_a_fill_too_thin_for_a_row_is_sewn_round_its_outline() {
     };
     let (on, apart) = (layered(0.2), layered(0.1));
     assert_eq!((on.len(), apart.len()), (1, 2));
-    assert_eq!((apart[0][0], *apart[0].last().unwrap()), (p(0.0, 0.2), p(0.0, 0.2)));
+    assert!(at(apart[0][0], 0.0, 0.2) && at(*apart[0].last().unwrap(), 0.0, 0.2), "{:?}", apart[0]);
     assert_eq!(&apart[1], run);
     assert_eq!(on[0], [&apart[0][..], &apart[1][..]].concat());
     // One part of 2 too thin, and 2 of 3.
@@ -423,7 +423,13 @@ const SQUARE: [&[(f64, f64)]; 1] = [&[(0.0, 0.0), (12.0, 0.0), (12.0, 12.0), (0.
 
 /// Whether `run` has a needle point within a nanometre of (`x`, `y`).
 fn has(run: &[Point], x: f64, y: f64) -> bool {
-    run.iter().any(|q| q.distance(p(x, y)) < 1e-9)
+    run.iter().any(|&q| at(q, x, y))
+}
+
+/// Whether `q` lies within a nanometre of (`x`, `y`): a region's points lie on a grid finer than that
+/// (`normalize::region`), a hair from the drawing's.
+fn at(q: Point, x: f64, y: f64) -> bool {
+    q.distance(p(x, y)) < 1e-9
 }
 
 #[test]
@@ -607,11 +613,13 @@ fn req_fill_tat_006_pull_compensation_keeps_every_piece_and_hole_of_the_part() {
     let points = needle_points(&[dumbbell], &[NO_UNDERLAY, ("pull_compensation_mm", "0.5")]);
     assert!(points.iter().any(|q| q.x() < 3.0 && q.y() > 2.0) && points.iter().any(|q| q.x() > 7.0 && q.y() > 2.0), "{points:?}");
     // A slot 0.6 mm wide in a square: each row through it is still 2 rows, which reach 0.5 mm into it from
-    // either side, at y = 5 the left one to x = 5.2 and the right one to x = 4.8.
+    // either side, the left ones to x = 5.2 and the right ones to x = 4.8, at y = 5 and 4.75 among others.
+    // Where a row ends 0.25 mm from where the next one starts, the stitch between them is shorter than the
+    // shortest, and the next row's first needle point is left out.
     let square: &[(f64, f64)] = &[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)];
     let slot: &[(f64, f64)] = &[(4.7, 3.1), (4.7, 6.9), (5.3, 6.9), (5.3, 3.1)];
     let points = needle_points(&[square, slot], &[NO_UNDERLAY, ("pull_compensation_mm", "0.5")]);
-    assert!(has(&points, 5.2, 5.0) && has(&points, 4.8, 5.0), "{points:?}");
+    assert!(has(&points, 5.2, 5.0) && has(&points, 4.8, 4.75), "{points:?}");
 }
 
 #[test]

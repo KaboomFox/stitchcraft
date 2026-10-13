@@ -190,6 +190,38 @@ mod tests {
         assert_eq!(differ, Vec::<usize>::new(), "the fixture's polygons whose buffer differs");
     }
 
+    #[test]
+    fn req_fill_tat_012_a_part_shrunk_by_exactly_half_its_neck_keeps_both_ends() {
+        // 2 squares of 8 mm joined by a neck 1 mm wide, turned by each whole degree, shrunk by 0.5 mm: the
+        // neck's 2 sides move onto each other, and their curves cross all along it in rounding. Shapely keeps
+        // both squares at every angle, 98.2159 mm² in 1 piece or 2.
+        let dumbbell = [
+            (0.0, 0.0),
+            (0.0, 8.0),
+            (8.0, 8.0),
+            (8.0, 4.5),
+            (12.0, 4.5),
+            (12.0, 8.0),
+            (20.0, 8.0),
+            (20.0, 0.0),
+            (12.0, 0.0),
+            (12.0, 3.5),
+            (8.0, 3.5),
+            (8.0, 0.0),
+        ];
+        for degrees in 0..180 {
+            let (sin, cos) = stitchcraft_core::math::sin_cos(f64::from(degrees).to_radians());
+            let turn = |(x, y): (f64, f64)| Point::new(x * cos - y * sin, x * sin + y * cos).unwrap();
+            let outline: Vec<Point> = dumbbell.iter().chain(&dumbbell[..1]).map(|&q| turn(q)).collect();
+            let pieces = buffer(&Polygon { outline, holes: Vec::new() }, -0.5, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+            let area: f64 = pieces.iter().map(Polygon::area).sum();
+            assert!((area - 98.215_862_877_363_5).abs() < 1e-8, "{degrees}°: {area} mm² in {} pieces", pieces.len());
+            for centre in [turn((4.0, 4.0)), turn((16.0, 4.0))] {
+                assert!(pieces.iter().any(|piece| piece.covers(centre)), "{degrees}°: {centre:?}");
+            }
+        }
+    }
+
     /// The closed ring through `points`.
     fn closed(points: &[(i32, i32)]) -> Vec<Point> {
         points.iter().chain(&points[..1]).map(|&(x, y)| Point::new(f64::from(x), f64::from(y)).unwrap()).collect()
