@@ -23,7 +23,7 @@
 //! 4. **The check.** The plan invariants (`stitchcraft_plan::invariants`) must hold; a broken one is a bug
 //!    in StitchCraft (`SC-E0009`), and nothing is written.
 
-use stitchcraft_core::units::at_least;
+use stitchcraft_core::units::{at_least, up_to_tenth};
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point, Rect};
 use stitchcraft_plan::invariants::{self, LOCK_MIN_STITCH};
 use stitchcraft_plan::{MachineProfile, Role, Stitch, StitchKind, StitchPlan};
@@ -221,7 +221,9 @@ fn off_centre(bounds: Rect, profile: &MachineProfile) -> Option<Diagnostic> {
         return None;
     }
     let message = format!(
-        "From its origin, which goes to the hoop's centre, the design reaches {sideways:.1} mm sideways and {upwards:.1} mm up or down, but the {} reaches {} mm and {} mm.",
+        "From its origin, which goes to the hoop's centre, the design reaches {:.1} mm sideways and {:.1} mm up or down, but the {} reaches {} mm and {} mm.",
+        up_to_tenth(sideways),
+        up_to_tenth(upwards),
         profile.name,
         mm(half_width),
         mm(half_height)
@@ -245,8 +247,8 @@ fn stop_outside(plan: &StitchPlan, profile: &MachineProfile, meter: &mut Meter) 
     Ok(outside.map(|at| {
         let message = format!(
             "The stop position, where the frame goes before each stop, is {:.1} mm sideways and {:.1} mm up or down from the hoop's centre, but the {} reaches {} mm and {} mm.",
-            at.x().abs(),
-            at.y().abs(),
+            up_to_tenth(at.x().abs()),
+            up_to_tenth(at.y().abs()),
             profile.name,
             mm(half_width),
             mm(half_height)

@@ -77,7 +77,7 @@ another.
 
 | Code | Severity | Title | Milestone |
 |---|---|---|---|
-| `SC-E0004` | Error | Budget exhausted (work for one element, or stitches for the design) | M1 |
+| `SC-E0004` | Error | Budget exhausted (work for one element, work joining the elements, or stitches for the design) | M1 |
 | `SC-E0005` | Error | Preview too large (over 4,096 pixels on a side at the requested scale) | M2 |
 | `SC-E0009` | Error | Internal check failed (a StitchCraft bug; a bug-report bundle is written) | M1 |
 | `SC-E0010` | Error | Nothing to stitch (no embroiderable elements) | M1 |

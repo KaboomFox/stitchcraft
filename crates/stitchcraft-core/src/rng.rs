@@ -50,10 +50,11 @@ impl SplitMix64 {
         (self.next_u64() >> 11) as f64 * SCALE
     }
 
-    /// A uniformly distributed number in `[low, high)`; `low` if the range is empty or not finite.
+    /// A uniformly distributed number in `[low, high)`; `low` if the range is empty or not finite. Where
+    /// `low` plus a share of the span rounds up to `high`, the number below `high` is given instead.
     pub fn next_in(&mut self, low: f64, high: f64) -> f64 {
         let span = high - low;
-        if span.is_finite() && span > 0.0 { low + self.next_f64() * span } else { low }
+        if span.is_finite() && span > 0.0 { (low + self.next_f64() * span).min(high.next_down()) } else { low }
     }
 }
 
@@ -93,6 +94,9 @@ mod tests {
         }
         assert_eq!(rng.next_in(1.0, 1.0), 1.0);
         assert_eq!(rng.next_in(0.0, f64::NAN), 0.0);
+        // Where the floats lie 2 apart, low plus a share of the span rounds to high half the time: the
+        // number below high is taken instead.
+        assert!((0..2_000).all(|seed| SplitMix64::new(seed).next_in(1e16, 1e16 + 2.0) == 1e16));
     }
 
     #[test]

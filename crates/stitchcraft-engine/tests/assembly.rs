@@ -155,6 +155,18 @@ fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plan
             "error SC-E0010: The design has nothing to stitch: it has no elements, or every one was skipped."
         ]
     );
+    // Joining the elements has the work budget once more: running out there plans nothing, and no element
+    // is to blame.
+    let lines = (0..20).map(|i| line(&format!("l{i}"), (0.0, f64::from(i) * 2.0), 10.0, &RED, &[])).collect();
+    let outcome = plan(&Design::new(lines, DesignSettings::default()).unwrap(), REFERENCE, &Budget { max_stitches: 2_000_000, max_work: 327 });
+    assert_eq!(outcome.plan, None);
+    assert_eq!(
+        messages(&outcome),
+        [
+            "error SC-E0004: Joining the elements and fitting them to the machine needed more than the work budget of 327 units, so nothing was planned."
+        ]
+    );
+    assert_eq!(outcome.diagnostics[0].element, None);
     // The design's stitch limit holds for the whole plan.
     let few = Budget { max_stitches: 10, max_work: 1_000_000 };
     let design = Design::new(vec![line("a", (0.0, 0.0), 30.0, &RED, &[])], DesignSettings::default()).unwrap();

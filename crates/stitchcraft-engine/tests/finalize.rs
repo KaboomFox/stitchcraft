@@ -11,7 +11,7 @@
 #![allow(clippy::unwrap_used)]
 
 use proptest::prelude::*;
-use stitchcraft_core::{Budget, Code, Mm, Point, Size};
+use stitchcraft_core::{Budget, Code, ElementId, Mm, Point, Size};
 use stitchcraft_engine::design::{Design, DesignSettings};
 use stitchcraft_engine::finalize::finalize;
 use stitchcraft_engine::plan;
@@ -47,14 +47,16 @@ fn req_fin_001_needle_points_too_close_where_elements_join_are_left_out() {
 const TOP: Role = Role::Top;
 const LOCK: Role = Role::Lock;
 
-/// One run of stitches along x, with their roles, after a jump to the first, finalized with no element's
-/// shortest stitch: what finalizing keeps (`None` when the plan check refuses it) and what it says.
+/// One run of stitches along x, with their roles, after a jump to the first, of an element `e` finalized
+/// with no shortest stitch of its own: what finalizing keeps (`None` when the plan check refuses it) and
+/// what it says.
 fn fitted(points: &[(f64, Role)]) -> (Option<Vec<(f64, Role)>>, Vec<String>) {
     let mut b = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+    let e = b.element(ElementId::new("e").unwrap()).unwrap();
     let at = |x: f64| Point::new(x, 0.0).unwrap();
-    b.jump(at(points[0].0), Provenance::plan(Role::Travel));
+    b.jump(at(points[0].0), Provenance::new(e, Role::Travel));
     for &(x, role) in points {
-        b.stitch(at(x), Provenance::plan(role));
+        b.stitch(at(x), Provenance::new(e, role));
     }
     let out = finalize(b.finish(), REFERENCE, &DesignSettings::default(), &[], &mut Budget::DEFAULT.meter()).unwrap();
     let kept = out.plan.map(|plan| plan.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| (s.at.x(), s.origin.role)).collect());
@@ -177,8 +179,15 @@ fn req_fin_002_designs_the_machine_cannot_take_give_no_plan() {
             "error SC-E0701: From its origin, which goes to the hoop's centre, the design reaches 100.0 mm sideways and 0.0 mm up or down, but the Brother PE800 with its 5 × 7 in hoop reaches 65 mm and 90 mm."
         ]
     );
-    // A stop position past the edge: named as such, with the design inside the hoop.
+    // A hair past the edge reads as past it: what reaches past is given to the tenth above.
+    let origin = DesignSettings { origin: Some(p(0.0, 0.0)), ..DesignSettings::default() };
+    let hair = planned_with(vec![line("a", (0.0, 0.0), 65.04, &RED, &[])], origin);
+    assert!(messages(&hair)[0].contains("the design reaches 65.1 mm sideways and 0.0 mm up or down"), "{:?}", messages(&hair));
     let stop = [("stop_after", "true")];
+    let settings = DesignSettings { stop_position: Some(p(65.04, 0.0)), ..origin };
+    let stop_hair = planned_with(vec![line("a", (0.0, 0.0), 10.0, &RED, &stop), line("b", (0.0, 5.0), 10.0, &RED, &[])], settings);
+    assert!(messages(&stop_hair)[0].contains("is 65.1 mm sideways and 0.0 mm up or down"), "{:?}", messages(&stop_hair));
+    // A stop position past the edge: named as such, with the design inside the hoop.
     for (wide, settings) in [
         (120.0, DesignSettings { stop_position: Some(p(60.0, 100.0)), ..DesignSettings::default() }),
         (10.0, DesignSettings { stop_position: Some(p(0.0, 100.0)), ..DesignSettings::default() }),

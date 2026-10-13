@@ -13,12 +13,15 @@
 use crate::diag::{Code, Diagnostic, Fix};
 use crate::element::ElementId;
 
-/// The limits for one planning call.
+/// The limits for planning a design: the stitches the design may have, and the work each part of the
+/// planning may spend.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Budget {
     /// The most stitches one design may have.
     pub max_stitches: u32,
-    /// The most work units one call may spend.
+    /// The most work units planning one element may spend. Working out what an element offers the one
+    /// before it to end near has them again, and so do joining the elements and fitting them to the
+    /// machine, together.
     pub max_work: u64,
 }
 
@@ -41,7 +44,7 @@ impl Default for Budget {
 }
 
 /// What is left of a budget. Charging never wraps around and never panics; once a limit is reached,
-/// every further charge fails.
+/// every further charge of 1 or more fails.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Meter {
     work_left: u64,
@@ -100,14 +103,24 @@ impl Meter {
 }
 
 impl Exhausted {
-    /// The `SC-E0004` diagnostic hosts show, for `element` when the work ran out while planning it.
+    /// The `SC-E0004` diagnostic hosts show: for `element` when the work ran out while planning it, and
+    /// for the design, `None`, when it ran out joining the elements and fitting them to the machine, which
+    /// leaves nothing planned. The stitch limit is always the design's.
     pub fn diagnostic(self, budget: &Budget, element: Option<ElementId>) -> Diagnostic {
         let diagnostic = match self {
-            Exhausted::Work => Diagnostic::new(
+            Exhausted::Work if element.is_some() => Diagnostic::new(
                 Code::BudgetExhausted,
                 format!("Planning this element needed more than the work budget of {} units, so it was skipped.", budget.max_work),
             )
             .with_fix(Fix::Hint("Simplify the element (fewer nodes, wider spacing) or split it into smaller elements.".to_string())),
+            Exhausted::Work => Diagnostic::new(
+                Code::BudgetExhausted,
+                format!(
+                    "Joining the elements and fitting them to the machine needed more than the work budget of {} units, so nothing was planned.",
+                    budget.max_work
+                ),
+            )
+            .with_fix(Fix::Hint("Split the design into several files, or simplify its largest elements.".to_string())),
             Exhausted::Stitches => Diagnostic::new(
                 Code::BudgetExhausted,
                 format!("The design needs more than {} stitches, the limit for one design.", budget.max_stitches),
@@ -157,6 +170,16 @@ mod tests {
         assert_eq!(
             work.fix.map(|f| f.describe()).as_deref(),
             Some("Simplify the element (fewer nodes, wider spacing) or split it into smaller elements.")
+        );
+        let design = budget.meter().charge(budget.max_work + 1).unwrap_err().diagnostic(&budget, None);
+        assert_eq!(
+            design.to_string(),
+            "error SC-E0004: Joining the elements and fitting them to the machine needed more than the work budget of 500000000 units, so \
+             nothing was planned."
+        );
+        assert_eq!(
+            (design.element, design.fix.map(|f| f.describe())),
+            (None, Some("Split the design into several files, or simplify its largest elements.".to_string()))
         );
         let stitches = budget.meter().charge_stitches(budget.max_stitches + 1).unwrap_err().diagnostic(&budget, None);
         assert_eq!(stitches.to_string(), "error SC-E0004: The design needs more than 2000000 stitches, the limit for one design.");
