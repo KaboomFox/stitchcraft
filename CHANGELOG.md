@@ -627,8 +627,28 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - DST reading: a long jump followed by a long move back could be read as a trim (their split pieces
   cancelled exactly); trims are now runs of jumps of at most 1 mm, and the writer no longer writes
   zero-length jumps.
+- **Gap-fill rows stay inside a fill with holes and notches** (`REQ-FILL-TAT-007`), which a review
+  found. Each gap-fill row was the stretch of its grid row beside the stretch's last row, chosen afresh
+  for each, so 2 in a row could lie on either side of a hole or a notch. The needle hopped between them,
+  and back, in straight stitches: on a frame at 30° with 4 gap-fill rows, one ran 0.5 mm into the hole.
+  Each gap-fill row now lies beside the one before it, so they are one strip, and the hops are kept inside
+  the part as travel is.
+- **Pull compensation sews a row once where it meets the outline without leaving the part**
+  (`REQ-FILL-TAT-006`), which the same review found. A row that touches the outline from inside, or runs
+  along it, is split there into segments that meet end to end, and each was lengthened into the next. The
+  needle sewed past the joint and back, 3 times over twice the compensation. A segment is now lengthened
+  only where the row leaves the part, as Ink/Stitch's rebuilt part has one segment there.
+- **Stretches of rows end for gap-fill rows where Ink/Stitch's end** (`REQ-FILL-TAT-007`), which the same
+  review found. A stretch ended where the needle went on to a row not beside the last one. Ink/Stitch
+  counts the edges of the needle's way once the loops in it are taken out, and ends a stretch at more than
+  one, so a way out and back before the handover to the row beside ends one too. The fills page said the
+  two counted alike.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-09.pes`. Its bottom copy has 2 gap-filling rows, and a
+  stretch of its rows beside the square hole now ends as Ink/Stitch's gap fill ends one. 2 gap-fill rows
+  are sewn there, 9 stitches more (7,788 to 7,797). MC-4 sews TS-09, so its kit is built from this
+  version or a later one.
 - Changed `conformance/golden/testsheets/TS-02.pes` and `TS-02B.pes` (9 jumps each), `TS-09.pes` (3),
   `conformance/golden/plans/strokes.pes` (5), and `conformance/golden/formats/every-command.pes` (1) and
   `long-jumps.pes` (3) (MC-1): those jumps are trim-flagged now (`REQ-FMT-010`). Only their flag bits change,
