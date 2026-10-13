@@ -744,6 +744,15 @@ milestone = "M5"
 status = "active"
 
 [[req]]
+id = "REQ-FILL-TAT-013"
+area = "fill/tatami"
+level = "L2"
+statement = "Placing points on a fill's rings, weighing travel's lines by their distance from the rings, and keeping travel inside its part look only at the sides of the rings near each point, line and stitch, and answer as a look at every side would. At the default settings, a 70 mm square with 14 x 14 round holes 3 mm across, and a 120 x 60 mm background with 60 holes of 200 points each, plan within a tenth of the default work budget."
+rationale = "A fill's work should grow with its size, not with the square of its detail: a design should be refused for being huge, not for having detailed holes."
+milestone = "M5"
+status = "active"
+
+[[req]]
 id = "REQ-FILL-TAT-009"
 area = "fill/tatami"
 level = "L2"
@@ -794,5 +803,14 @@ area = "cli"
 level = "L1"
 statement = "When `stitch plan` finds a bug in StitchCraft — a failed plan check (SC-E0009) or a panic — it writes no machine file, writes a bug-report bundle next to the file it was asked for, says where, and ends with exit status 4."
 rationale = "The person who meets a bug should not have to know how to report it: the bundle is the report."
+milestone = "M3"
+status = "active"
+
+[[req]]
+id = "REQ-CLI-003"
+area = "cli"
+level = "L1"
+statement = "When anything said about a design is an error, an element left out with one included (SC-E0004, SC-E0101, SC-E0201, SC-E0214), `stitch plan` writes no machine file and no picture, writes the report when one is asked for, says that nothing was written, and ends with exit status 1."
+rationale = "A machine file without one of the design's elements is not the design, and a script that checks the exit status should not sew it. Ink/Stitch writes no file when an element fails."
 milestone = "M3"
 status = "active"

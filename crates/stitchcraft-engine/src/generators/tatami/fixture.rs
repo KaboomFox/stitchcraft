@@ -4,7 +4,7 @@
 // Test code may unwrap (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used)]
 
-use stitchcraft_core::Point;
+use stitchcraft_core::{Point, SplitMix64};
 
 use crate::normalize::region::Polygon;
 
@@ -22,4 +22,25 @@ pub(crate) fn rectangle(height: f64) -> Polygon {
 /// right side runs from 2 to 4 and its left side from 6 to 8.
 pub(crate) fn frame() -> Polygon {
     Polygon { holes: vec![vec![p(4.0, 1.0), p(6.0, 1.0), p(6.0, 3.0), p(4.0, 3.0), p(4.0, 1.0)]], ..rectangle(4.0) }
+}
+
+/// Random closed rings: a square of 20 mm from (1, 2) to (21, 22), off the origin so that a grid over them
+/// starts off it too, then `holes` small polygons of 3 to 22 sides inside it, which may overlap. From a few
+/// sides in all to some hundreds, as a fill's part has, so that both a look at every side and the grid of
+/// [`super::sides`] answer questions about them.
+pub(crate) fn scattered(rng: &mut SplitMix64, holes: usize) -> Vec<Vec<Point>> {
+    let mut out = vec![vec![p(1.0, 2.0), p(21.0, 2.0), p(21.0, 22.0), p(1.0, 22.0), p(1.0, 2.0)]];
+    for _ in 0..holes {
+        let (cx, cy, r) = (rng.next_in(3.0, 19.0), rng.next_in(4.0, 20.0), rng.next_in(0.1, 2.0));
+        let n = 3 + rng.next_u64() % 20;
+        let mut ring: Vec<Point> = (0..n)
+            .map(|k| {
+                let (s, c) = stitchcraft_core::math::sin_cos(std::f64::consts::TAU * (k as f64) / (n as f64));
+                p(cx + r * c, cy + r * s)
+            })
+            .collect();
+        ring.push(ring[0]);
+        out.push(ring);
+    }
+    out
 }
