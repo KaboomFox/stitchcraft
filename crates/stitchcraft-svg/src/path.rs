@@ -2,15 +2,18 @@
 //!
 //! Path data is read the way SVG viewers draw it (SVG 1.1 § 8.3, implementation notes F.5–F.6): relative
 //! commands, implicit line-tos, the smooth-curve reflections, closepath, and elliptical arcs. Arcs are
-//! turned into cubic Béziers here, at most 30° each, which stay within 0.4 micrometres of the true arc
-//! for any radius up to a metre. Degenerate arcs follow the spec: identical end points draw nothing, a
-//! zero radius draws a straight line, and radii too small for the end points grow until they fit. An
-//! error in the data ends the path there and keeps what came before, as viewers do; the caller warns.
+//! turned into cubic Béziers here as inkex turns them, which Ink/Stitch reads files with: in equal pieces,
+//! one more than the whole quarter turns the arc makes, so each turns by less than a quarter. Manual stitch
+//! puts a needle point on each piece's end, and a satin column's nodes are their ends, as in Ink/Stitch.
+//! A piece strays from the true arc by at most 0.03 % of its radius: 6 micrometres on a circle 4 cm across.
+//! Degenerate arcs follow the spec: identical end points draw nothing, a zero radius draws a straight line,
+//! and radii too small for the end points grow until they fit. An error in the data ends the path there and
+//! keeps what came before, as viewers do; the caller warns.
 //!
 //! Points stay in user units until [`to_mm`] maps a whole outline through the element's transform, so
 //! an outline is accepted or rejected as a unit.
 
-use std::f64::consts::{FRAC_PI_2, PI, TAU};
+use std::f64::consts::{FRAC_PI_2, TAU};
 
 use stitchcraft_core::budget::{Exhausted, Meter};
 use stitchcraft_core::{Point, math};
@@ -162,7 +165,8 @@ fn reflect(control: V, pen: V) -> V {
     (2.0 * pen.0 - control.0, 2.0 * pen.1 - control.1)
 }
 
-/// The elliptical arc from `from` to `to` (SVG 1.1, F.6.5 and F.6.6) as cubic Béziers of at most 30°.
+/// The elliptical arc from `from` to `to` (SVG 1.1, F.6.5 and F.6.6) as cubic Béziers, in equal pieces, one
+/// more than the whole quarter turns it makes, as inkex cuts it.
 pub fn arc(from: V, rx: f64, ry: f64, rotation: f64, large_arc: bool, sweep: bool, to: V) -> Vec<Seg> {
     if from == to {
         return Vec::new();
@@ -210,7 +214,7 @@ pub fn arc(from: V, rx: f64, ry: f64, rotation: f64, large_arc: bool, sweep: boo
         turn += TAU;
     }
     let sweep_angle = if sweep { turn } else { -turn };
-    let pieces = (1..=12_u32).find(|n| f64::from(*n) * PI / 6.0 >= sweep_angle.abs() - 1e-12).unwrap_or(12);
+    let pieces = piece_count(turn);
     let step = sweep_angle / f64::from(pieces);
     // Each piece's control points lie along the tangents, `bulge` of the way (the standard cubic arc).
     let bulge = 4.0 / 3.0 * math::tan(step / 4.0);
@@ -232,6 +236,13 @@ pub fn arc(from: V, rx: f64, ry: f64, rotation: f64, large_arc: bool, sweep: boo
             Seg::Cubic((p1.0 + bulge * d1.0, p1.1 + bulge * d1.1), (p2.0 - bulge * d2.0, p2.1 - bulge * d2.1), p2)
         })
         .collect()
+}
+
+/// How many equal pieces an arc that turns by `turn` radians is cut into, as inkex cuts it: one more than the
+/// whole quarter turns it makes, a turn up to a nanoradian short of a whole number of quarters counting as
+/// that many (`DEV-SVG-002`). A turn is less than 2 whole turns, so 8 pieces is room enough.
+fn piece_count(turn: f64) -> u32 {
+    (1..=8_u32).find(|n| f64::from(*n) * FRAC_PI_2 > turn + 1e-9).unwrap_or(8)
 }
 
 /// The outline of a rectangle, with rounded corners when both radii are positive (SVG 1.1 § 9.2).
@@ -258,16 +269,16 @@ pub fn rect(x: f64, y: f64, width: f64, height: f64, rx: f64, ry: f64) -> Vec<Su
     vec![Sub { start: (x + rx, y), segs, closed: true }]
 }
 
-/// The outline of an ellipse (a circle when the radii are equal), as four quarter arcs from its right.
+/// The outline of an ellipse (a circle when the radii are equal), as inkex draws it, which Ink/Stitch reads
+/// files with: from its top, 3 quarters of the way round to its right, turning left on screen, and a
+/// quarter on back to its top, in pieces as [`arc`] cuts them. SVG 2 starts it at its right and turns the
+/// other way, and a running stitch starts and runs as its path does, so StitchCraft reads it as Ink/Stitch
+/// does.
 pub fn ellipse(cx: f64, cy: f64, rx: f64, ry: f64) -> Vec<Sub> {
-    let quarters = [(cx, cy + ry), (cx - rx, cy), (cx, cy - ry), (cx + rx, cy)];
-    let mut from = (cx + rx, cy);
-    let mut segs = Vec::new();
-    for to in quarters {
-        segs.extend(arc(from, rx, ry, 0.0, false, true, to));
-        from = to;
-    }
-    vec![Sub { start: (cx + rx, cy), segs, closed: true }]
+    let (top, right) = ((cx, cy - ry), (cx + rx, cy));
+    let mut segs = arc(top, rx, ry, 0.0, true, false, right);
+    segs.extend(arc(right, rx, ry, 0.0, false, false, top));
+    vec![Sub { start: top, segs, closed: true }]
 }
 
 /// The outline through the points of a `points` attribute: a polyline, or a polygon when `closed`.
@@ -360,23 +371,41 @@ mod tests {
     }
 
     #[test]
-    fn req_svg_001_arcs_stay_within_a_micrometre_of_the_true_ellipse() {
-        // A half ellipse, rotated 30°: every point of every cubic lies on the ellipse.
+    fn a_turn_up_to_a_nanoradian_short_of_whole_quarters_counts_as_them() {
+        // A quarter turn is 2 pieces, and so is a turn a nanoradian less, to the last bit; a little less
+        // than that is 1. Whole turns and 3 quarters are 5 and 4.
+        let mut short = FRAC_PI_2 - 1e-9;
+        while short + 1e-9 > FRAC_PI_2 {
+            short = short.next_down();
+        }
+        while short + 1e-9 < FRAC_PI_2 {
+            short = short.next_up();
+        }
+        assert_eq!(short + 1e-9, FRAC_PI_2);
+        assert_eq!([FRAC_PI_2, short, FRAC_PI_2 - 2e-9, TAU, 3.0 * FRAC_PI_2].map(piece_count), [2, 2, 1, 5, 4]);
+    }
+
+    #[test]
+    fn req_svg_001_arcs_are_cut_as_inkex_cuts_them_and_keep_near_the_true_ellipse() {
+        // A half ellipse, rotated 30°: 3 pieces, each a sixth of a turn, their ends on the ellipse and every
+        // point of them within 0.03 % of it, scaled to the unit circle.
         let (rx, ry, rotation) = (80.0, 30.0, 30.0_f64);
         let (sin, cos) = math::sin_cos(math::to_radians(rotation));
         let from = (100.0 + rx * cos, 100.0 + rx * sin);
         let to = (100.0 - rx * cos, 100.0 - rx * sin);
         let segs = arc(from, rx, ry, rotation, false, true, to);
-        assert_eq!(segs.len(), 6, "180° in pieces of at most 30°");
+        assert_eq!(segs.len(), 3, "half a turn in pieces of less than a quarter turn");
+        // Back into the ellipse's frame: (u/rx)² + (v/ry)² = 1 on the curve.
+        let radial = |(x, y): V| {
+            let (dx, dy) = (x - 100.0, y - 100.0);
+            let (u, v) = (cos * dx + sin * dy, -sin * dx + cos * dy);
+            ((u / rx).powi(2) + (v / ry).powi(2)).sqrt()
+        };
         let mut start = from;
         for seg in segs {
             for i in 0..=10 {
-                let (x, y) = cubic_at(start, seg, f64::from(i) / 10.0);
-                // Back into the ellipse's frame: (u/rx)² + (v/ry)² = 1 on the curve.
-                let (dx, dy) = (x - 100.0, y - 100.0);
-                let (u, v) = (cos * dx + sin * dy, -sin * dx + cos * dy);
-                let radial = ((u / rx).powi(2) + (v / ry).powi(2)).sqrt();
-                assert!((radial - 1.0).abs() * rx < 0.001, "{radial}");
+                let off = (radial(cubic_at(start, seg, f64::from(i) / 10.0)) - 1.0).abs();
+                assert!(off < 3e-4 && (i % 10 != 0 || off < 1e-12), "{off}");
             }
             start = match seg {
                 Seg::Cubic(_, _, end) => end,
@@ -384,6 +413,15 @@ mod tests {
             };
         }
         assert_eq!(start, to, "the arc ends exactly at its end point");
+        // One piece more than its whole quarter turns: a quarter in 2, a little less in 1, 3 quarters in
+        // 4, and a little less than a whole turn in 4 too.
+        let circle = |to: V, large| arc((10.0, 0.0), 10.0, 10.0, 0.0, large, true, to).len();
+        let (s, c) = math::sin_cos(math::to_radians(89.0));
+        let (s2, c2) = math::sin_cos(math::to_radians(359.0));
+        assert_eq!(
+            [circle((0.0, 10.0), false), circle((10.0 * c, 10.0 * s), false), circle((0.0, -10.0), true), circle((10.0 * c2, 10.0 * s2), true)],
+            [2, 1, 4, 4]
+        );
     }
 
     #[test]
@@ -391,10 +429,12 @@ mod tests {
         assert_eq!(arc((5.0, 5.0), 10.0, 10.0, 0.0, false, true, (5.0, 5.0)), []);
         assert_eq!(arc((0.0, 0.0), 0.0, 10.0, 0.0, false, true, (5.0, 5.0)), [Seg::Line((5.0, 5.0))]);
         assert_eq!(arc((0.0, 0.0), f64::INFINITY, 10.0, 0.0, false, true, (5.0, 5.0)), [Seg::Line((5.0, 5.0))]);
-        // Radii too small: scaled up to a half circle through both points (centre at their midpoint).
+        // Radii too small: scaled up to a half circle through both points (centre at their midpoint), in 3
+        // pieces of a sixth of a turn.
         let segs = arc((0.0, 0.0), 1.0, 1.0, 0.0, false, true, (10.0, 0.0));
-        let Seg::Cubic(_, _, mid) = segs[2] else { panic!() };
-        assert!((mid.0 - 5.0).abs() < 1e-9 && (mid.1 + 5.0).abs() < 1e-9, "{mid:?}");
+        assert_eq!(segs.len(), 3);
+        let rise = 5.0 * 0.75_f64.sqrt();
+        assert!(near(end_of(&segs, 0), (2.5, -rise)) && near(end_of(&segs, 1), (7.5, -rise)), "{segs:?}");
         // Negative radii are their absolute value.
         assert_eq!(arc((0.0, 0.0), -5.0, -5.0, 0.0, false, true, (10.0, 0.0)), arc((0.0, 0.0), 5.0, 5.0, 0.0, false, true, (10.0, 0.0)));
     }
@@ -413,17 +453,20 @@ mod tests {
     fn the_flags_choose_one_of_four_arcs() {
         // A chord of 10 on a circle of radius 10: the centre is 8.66 above or below the chord.
         let rise = 100.0_f64.sqrt() - 75.0_f64.sqrt();
-        // Large arc, positive sweep: 300°, round the far side, over the top at (5, −18.66).
+        // Large arc, positive sweep: 300°, in 4 pieces, round the far side, over the top at (5, −18.66).
         let large = arc((0.0, 0.0), 10.0, 10.0, 0.0, true, true, (10.0, 0.0));
-        assert_eq!(large.len(), 10);
-        assert!(near(end_of(&large, 4), (5.0, -10.0 - 75.0_f64.sqrt())), "{:?}", end_of(&large, 4));
-        // Small arc, positive sweep: 60°, just over the chord.
+        assert_eq!(large.len(), 4);
+        assert!(near(end_of(&large, 1), (5.0, -10.0 - 75.0_f64.sqrt())), "{:?}", end_of(&large, 1));
+        // Small arc, positive sweep: 60°, one piece just over the chord, whose middle is a hair off the
+        // circle's.
         let small = arc((0.0, 0.0), 10.0, 10.0, 0.0, false, true, (10.0, 0.0));
-        assert_eq!(small.len(), 2);
-        assert!(near(end_of(&small, 0), (5.0, -rise)), "{:?}", end_of(&small, 0));
+        assert_eq!(small.len(), 1);
+        let middle = |segs: &[Seg]| cubic_at((0.0, 0.0), segs[0], 0.5);
+        let close = |a: V, b: V| (a.0 - b.0).abs() < 1e-3 && (a.1 - b.1).abs() < 1e-3;
+        assert!(close(middle(&small), (5.0, -rise)), "{:?}", middle(&small));
         // The other sweep mirrors both through the chord.
-        assert!(near(end_of(&arc((0.0, 0.0), 10.0, 10.0, 0.0, false, false, (10.0, 0.0)), 0), (5.0, rise)));
-        assert!(near(end_of(&arc((0.0, 0.0), 10.0, 10.0, 0.0, true, false, (10.0, 0.0)), 4), (5.0, 10.0 + 75.0_f64.sqrt())));
+        assert!(close(middle(&arc((0.0, 0.0), 10.0, 10.0, 0.0, false, false, (10.0, 0.0))), (5.0, rise)));
+        assert!(near(end_of(&arc((0.0, 0.0), 10.0, 10.0, 0.0, true, false, (10.0, 0.0)), 1), (5.0, 10.0 + 75.0_f64.sqrt())));
     }
 
     #[test]
@@ -435,17 +478,17 @@ mod tests {
             (50.0 + 20.0 * c * cos - 10.0 * s * sin, 50.0 + 20.0 * c * sin + 10.0 * s * cos)
         };
         let close = |a: V, b: V| (a.0 - b.0).abs() < 1e-9 && (a.1 - b.1).abs() < 1e-9;
-        // From 10° to 110°: the small arc turning positive is 100° of this ellipse, in four pieces…
+        // From 10° to 110°: the small arc turning positive is 100° of this ellipse, in 2 pieces…
         let small = arc(on(10.0), 20.0, 10.0, 30.0, false, true, on(110.0));
-        assert_eq!(small.len(), 4);
-        for (i, k) in (1..=4_u32).enumerate() {
-            assert!(close(end_of(&small, i), on(10.0 + 25.0 * f64::from(k))), "piece {k}");
+        assert_eq!(small.len(), 2);
+        for (i, k) in (1..=2_u32).enumerate() {
+            assert!(close(end_of(&small, i), on(10.0 + 50.0 * f64::from(k))), "piece {k}");
         }
-        // …and the large arc turning negative is the other 260°, in nine.
+        // …and the large arc turning negative is the other 260°, in 3.
         let large = arc(on(10.0), 20.0, 10.0, 30.0, true, false, on(110.0));
-        assert_eq!(large.len(), 9);
-        for (i, k) in (1..=9_u32).enumerate() {
-            assert!(close(end_of(&large, i), on(10.0 - 260.0 / 9.0 * f64::from(k))), "piece {k}");
+        assert_eq!(large.len(), 3);
+        for (i, k) in (1..=3_u32).enumerate() {
+            assert!(close(end_of(&large, i), on(10.0 - 260.0 / 3.0 * f64::from(k))), "piece {k}");
         }
         // A half chord of exactly 1e-9 of the radius still bends: the straight-line shortcut is below it.
         assert!(matches!(arc((0.0, 0.0), 1.0, 1.0, 0.0, false, true, (2e-9, 0.0))[..], [Seg::Cubic(..)]));
@@ -454,10 +497,12 @@ mod tests {
     #[test]
     fn radii_too_small_grow_on_any_chord() {
         // rx 1, ry 2 on a diagonal chord: both grow by the same factor until the chord is a diameter,
-        // and the half ellipse passes (7.5, −5), a quarter of the way round.
+        // and the half ellipse, in 3 pieces, passes (7.5, −5) a quarter of the way round, the middle of
+        // the second piece, to within its distance from the true ellipse.
         let segs = arc((0.0, 0.0), 1.0, 2.0, 0.0, false, true, (10.0, 10.0));
-        assert_eq!(segs.len(), 6);
-        assert!(near(end_of(&segs, 2), (7.5, -5.0)), "{:?}", end_of(&segs, 2));
+        assert_eq!(segs.len(), 3);
+        let middle = cubic_at(end_of(&segs, 0), segs[1], 0.5);
+        assert!((middle.0 - 7.5).abs() < 1e-3 && (middle.1 + 5.0).abs() < 1e-3, "{middle:?}");
     }
 
     #[test]
@@ -466,18 +511,18 @@ mod tests {
         // circle of radius 1, which an underflowing centre would make of it.
         assert_eq!(arc((0.0, 0.0), 1.0, 1.0, 0.0, false, true, (1e-200, 0.0)), [Seg::Line((1e-200, 0.0))]);
         assert_eq!(arc((0.0, 0.0), 1e300, 1e300, 0.0, false, true, (1e-300, 0.0)), [Seg::Line((1e-300, 0.0))]);
-        // The large arc goes all the way round: here a circle of radius 1e10 above the points.
+        // The large arc goes all the way round, in 5 pieces of a fifth of a turn: here a circle of radius
+        // 1e10 above the points, from its bottom.
+        let (s, c) = math::sin_cos(math::to_radians(144.0));
         let full = arc((0.0, 0.0), 1e10, 1e10, 0.0, true, true, (1e-300, 0.0));
-        assert_eq!(full.len(), 12);
-        let far = end_of(&full, 5);
-        assert!(far.0.abs() < 1e-3 && (far.1 + 2e10).abs() < 1e-3, "{far:?}");
-        let quarter = end_of(&full, 2);
-        assert!((quarter.0 + 1e10).abs() < 1e-3 && (quarter.1 + 1e10).abs() < 1e-3, "{quarter:?}");
+        assert_eq!(full.len(), 5);
+        let second = end_of(&full, 1);
+        assert!((second.0 + 1e10 * s).abs() < 1e-3 && (second.1 + 1e10 - 1e10 * c).abs() < 1e-3, "{second:?}");
         // Turning the other way, the circle is below the points.
         let other = arc((0.0, 0.0), 1e10, 1e10, 0.0, true, false, (1e-300, 0.0));
-        assert_eq!(other.len(), 12);
-        let quarter = end_of(&other, 2);
-        assert!((quarter.0 + 1e10).abs() < 1e-3 && (quarter.1 - 1e10).abs() < 1e-3, "{quarter:?}");
+        assert_eq!(other.len(), 5);
+        let second = end_of(&other, 1);
+        assert!((second.0 + 1e10 * s).abs() < 1e-3 && (second.1 - 1e10 + 1e10 * c).abs() < 1e-3, "{second:?}");
         // End points too close to tell apart once halved.
         assert_eq!(arc((0.0, 0.0), 1.0, 1.0, 0.0, true, true, (5e-324, 0.0)), [Seg::Line((5e-324, 0.0))]);
     }
@@ -490,6 +535,11 @@ mod tests {
         let o = outline("L 10 10");
         assert!(o.subs.is_empty() && o.error.is_some(), "path data must start with a move-to");
         assert_eq!(outline("M 5 5"), Outline::default(), "a lone move-to draws nothing");
+        // Nor after a closed subpath, which stays closed: a satin column drawn as that line is a closed one.
+        for data in ["M 0 0 L 10 0 L 10 10 Z M 50 50", "M 0 0 L 10 0 L 10 10 Z M 50 50 Z"] {
+            let o = outline(data);
+            assert_eq!((o.subs.len(), o.subs[0].closed), (1, true), "{data}");
+        }
     }
 
     #[test]
@@ -503,31 +553,32 @@ mod tests {
         let square = rect(1.0, 2.0, 10.0, 5.0, 0.0, 0.0);
         assert_eq!((square[0].start, ends(&square[0]), square[0].closed), ((1.0, 2.0), vec![(11.0, 2.0), (11.0, 7.0), (1.0, 7.0)], true));
         let rounded = rect(0.0, 0.0, 10.0, 6.0, 2.0, 20.0);
-        // ry is clamped to half the height; each corner is three 30° pieces.
-        assert_eq!(rounded[0].segs.len(), 4 + 4 * 3);
+        // ry is clamped to half the height; each corner is a quarter turn, in 2 pieces.
+        assert_eq!(rounded[0].segs.len(), 4 + 4 * 2);
         assert_eq!(ends(&rounded[0]).last(), Some(&(2.0, 0.0)));
         // Every side and corner of a rectangle at (1, 2), 10 × 6, with corners 2 across and 1 down.
         let r = rect(1.0, 2.0, 10.0, 6.0, 2.0, 1.0);
         assert_eq!(r[0].start, (3.0, 2.0));
-        // Each side is one line and each corner three arc pieces: the ends of the sides and corners.
+        // Each side is one line and each corner 2 arc pieces: the ends of the sides and corners.
         let points = ends(&r[0]);
         let expected = [(9.0, 2.0), (11.0, 3.0), (11.0, 7.0), (9.0, 8.0), (3.0, 8.0), (1.0, 7.0), (1.0, 3.0), (3.0, 2.0)];
-        let picked: Vec<V> = [0, 3, 4, 7, 8, 11, 12, 15].iter().map(|i| points[*i]).collect();
+        let picked: Vec<V> = [0, 2, 3, 5, 6, 8, 9, 11].iter().map(|i| points[*i]).collect();
         assert!(picked.iter().zip(expected).all(|(a, b)| near(*a, b)), "{picked:?}");
-        // The corners are quarter ellipses round their own centres: the points at 30° and 60° of each.
-        let quarter_points = [(1, (10.0, 2.133_974_6)), (2, (10.732_050_8, 2.5)), (5, (10.732_050_8, 7.5)), (6, (10.0, 7.866_025_4))];
-        let more = [(9, (2.0, 7.866_025_4)), (10, (1.267_949_2, 7.5)), (13, (1.267_949_2, 2.5)), (14, (2.0, 2.133_974_6))];
-        for (i, p) in quarter_points.into_iter().chain(more) {
+        // The corners are quarter ellipses round their own centres: the point halfway round each.
+        let halfway =
+            [(1, (10.414_213_6, 2.292_893_2)), (4, (10.414_213_6, 7.707_106_8)), (7, (1.585_786_4, 7.707_106_8)), (10, (1.585_786_4, 2.292_893_2))];
+        for (i, p) in halfway {
             assert!((points[i].0 - p.0).abs() < 1e-6 && (points[i].1 - p.1).abs() < 1e-6, "point {i}: {:?}", points[i]);
         }
         // A radius taller than half the rectangle is clamped to half of it: the first corner ends 3 down.
-        assert!(near(ends(&rect(0.0, 0.0, 10.0, 6.0, 2.0, 20.0)[0])[3], (10.0, 3.0)));
+        assert!(near(ends(&rect(0.0, 0.0, 10.0, 6.0, 2.0, 20.0)[0])[2], (10.0, 3.0)));
         // A radius wider than half the rectangle is clamped to half of it; one radius of zero is square.
         assert!(near(ends(&rect(0.0, 0.0, 10.0, 6.0, 8.0, 1.0)[0])[0], (5.0, 0.0)));
         assert_eq!(rect(0.0, 0.0, 10.0, 6.0, 0.0, 2.0)[0].segs.len(), 3);
         let circle = ellipse(0.0, 0.0, 10.0, 10.0);
-        assert_eq!(circle[0].segs.len(), 12);
-        assert_eq!(ends(&circle[0])[2], (0.0, 10.0), "a quarter turn clockwise on screen reaches the bottom");
+        assert_eq!(circle[0].segs.len(), 6, "3 quarters in 4 pieces, and a quarter in 2");
+        assert_eq!(circle[0].start, (0.0, -10.0), "from the top");
+        assert_eq!(ends(&circle[0])[3], (10.0, 0.0), "3 quarters of a turn left on screen reach the right");
         assert_eq!(polyline("0,0 10,0 10,10", true)[0].segs.len(), 2);
         assert!(polyline("0,0", false).is_empty());
     }

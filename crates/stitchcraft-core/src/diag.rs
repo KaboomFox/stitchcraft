@@ -247,6 +247,14 @@ registry! {
     /// Draw the column with 2 rails, or make the stroke narrower.
     SatinCentreLineFailed = "SC-E0214", Error, "Satin column drawn as one path could not be made into rails";
 
+    /// A satin column's rungs, or its push compensation, leave each of its sections with no length on one of
+    /// its rails, so no stitch goes across it and the column is not sewn. A rung from the first rail's
+    /// start to the second rail's end does this, and so does push compensation that takes off the parts of
+    /// a short column's rails where its rungs meet them. Ink/Stitch says such a column cannot be stitched.
+    ///
+    /// Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.
+    SatinNoSection = "SC-E0216", Error, "Satin column has no section to sew";
+
     /// A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
     /// square CSS pixels), a speck about half a millimetre across, is too small for a row, so it is left
     /// out, as Ink/Stitch leaves it out. Where every part is that small, the fill sews nothing. So does a

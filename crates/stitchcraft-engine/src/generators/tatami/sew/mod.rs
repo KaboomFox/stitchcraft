@@ -46,8 +46,10 @@
 //! `expand` (`REQ-FILL-TAT-012`), as `normalize::offset` grows and shrinks it. Shrinking can cut a
 //! part into pieces, sewn one after another in their order of least x: every layer on a piece, then the
 //! next piece's, each from the point nearest the needle, and each piece's top rows from where the last
-//! ended (`DEV-FILL-008`). Where shrinking leaves nothing, the part itself is sewn, as Ink/Stitch sews it,
-//! and `SC-W0310` or `SC-W0309` says so.
+//! ended (`DEV-FILL-008`). Ink/Stitch sews each piece's top rows as a group of its own, so with
+//! `force_lock_stitches` each is a run of its own here, which assembly ties off and jumps to, as Ink/Stitch's
+//! stitch plan does. Where shrinking leaves nothing, the part itself is sewn, as Ink/Stitch sews it, and
+//! `SC-W0310` or `SC-W0309` says so.
 //!
 //! **Pull compensation.** The top rows reach past their segments' ends by `pull_compensation_mm` plus
 //! `pull_compensation_percent` of the segment's length, at its start and at its end (`REQ-FILL-TAT-006`),
@@ -142,6 +144,9 @@ pub struct Fill {
     pub underlay: Vec<Layer>,
     /// How far each part is shrunk for its underlay, in millimetres; grown where it is negative.
     pub inset: f64,
+    /// Whether locks part the element's groups (`force_lock_stitches`): then each piece of top rows after
+    /// a part's first is a run of its own, however near, which assembly ties off and jumps to.
+    pub force_locks: bool,
 }
 
 /// The stitches of the tatami `fill` over `region`: in each part the layers of its underlay in order, each
@@ -183,12 +188,16 @@ pub fn tatami_fill(
         }
         let (pieces, gone) = pieces(polygon, fill.expand, &mut warnings, meter)?;
         tally.expand_gone += usize::from(gone);
-        for piece in &pieces {
+        for (k, piece) in pieces.iter().enumerate() {
             let part = Part { polygon: piece, rings: Rings::new(piece, meter)? };
             let (top_runs, rowless) = part.sew(&fill.top, needle, here, rng, meter, &mut warnings)?;
             (tally.tops, tally.outlined) = (tally.tops + 1, tally.outlined + usize::from(rowless));
             needle = top_runs.iter().rev().find_map(|run| run.last().copied()).or(needle);
-            append(&mut sewn, top_runs, fill.top.travel.jump);
+            if k > 0 && fill.force_locks {
+                sewn.extend(top_runs);
+            } else {
+                append(&mut sewn, top_runs, fill.top.travel.jump);
+            }
         }
         let sewn: Vec<Vec<Point>> = sewn
             .into_iter()

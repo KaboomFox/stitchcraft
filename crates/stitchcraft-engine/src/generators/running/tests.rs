@@ -11,7 +11,7 @@ fn even(pattern: &[f64]) -> Lengths<'static> {
 }
 
 fn fitted(length: f64, pattern: &[f64], min: f64) -> Vec<f64> {
-    fit(length, &mut even(pattern), min, &mut Budget::DEFAULT.meter()).unwrap()
+    fit(length, &mut even(pattern), min, None, &mut Budget::DEFAULT.meter()).unwrap()
 }
 
 fn close(a: &[f64], b: &[f64]) -> bool {
@@ -34,10 +34,10 @@ fn spans_are_divided_evenly() {
 fn patterns_carry_on_from_span_to_span() {
     let mut lengths = even(&[3.0, 1.0]);
     let mut meter = Budget::DEFAULT.meter();
-    let first = fit(8.0, &mut lengths, 0.3, &mut meter).unwrap();
+    let first = fit(8.0, &mut lengths, 0.3, None, &mut meter).unwrap();
     assert!(close(&first, &[3.0, 1.0, 3.0, 1.0]));
     // The next span starts where the pattern left off, and shrinks the stitches to end on its corner.
-    let second = fit(3.6, &mut lengths, 0.3, &mut meter).unwrap();
+    let second = fit(3.6, &mut lengths, 0.3, None, &mut meter).unwrap();
     assert!(close(&second, &[2.7, 0.9]));
     assert_eq!(lengths.next, 6);
 }
@@ -83,7 +83,7 @@ fn millimetres_read_well() {
 #[test]
 fn the_budget_bounds_the_work() {
     let mut meter = Budget { max_stitches: 1, max_work: 3 }.meter();
-    assert_eq!(fit(100.0, &mut even(&[1.0]), 0.3, &mut meter), Err(Exhausted::Work));
+    assert_eq!(fit(100.0, &mut even(&[1.0]), 0.3, None, &mut meter), Err(Exhausted::Work));
 }
 
 fn point(x: f64, y: f64) -> Point {
@@ -251,4 +251,43 @@ fn an_underlay_walk_too_small_for_a_stitch_is_sewn_as_its_ends() {
     let sewn = along_line(&walk, 2.5, 0.2, 0.3, &mut Budget::DEFAULT.meter()).unwrap();
     assert_eq!(sewn, [walk[0], walk[2]]);
     assert!(along_line(&[], 2.5, 0.2, 0.3, &mut Budget::DEFAULT.meter()).unwrap().is_empty(), "no walk at all");
+}
+
+#[test]
+fn a_span_spread_again_draws_its_random_lengths_again_from_where_they_began() {
+    // A half circle 5 mm across in stitches of 2.5 mm ± 10 %: the 4 of the first try stray more than
+    // 0.18 mm from it, so the span is spread again, in 5. Each try draws from where the span's draws began,
+    // so the 5 are the generator's first draws, as a fresh one gives them.
+    let points: Vec<(f64, f64)> = (0..=60)
+        .map(|i| {
+            let (sin, cos) = stitchcraft_core::math::sin_cos(std::f64::consts::PI * f64::from(i) / 60.0);
+            (2.5 * cos, 2.5 * sin)
+        })
+        .collect();
+    let mut meter = Budget::DEFAULT.meter();
+    let piece = piece(&points);
+    let along = Along::new(&piece.points, &mut meter).unwrap();
+    let ends = (along.vertex(0), along.vertex(points.len() - 1));
+    let length = ends.1.at - ends.0.at;
+    let fresh = |count: Option<usize>, meter: &mut Meter| {
+        let mut rng = SplitMix64::new(1);
+        let stitches = fit(length, &mut Lengths { pattern: vec![2.5], next: 0, random: Some((0.1, &mut rng)) }, 0.3, count, meter).unwrap();
+        placed(&along, ends, &stitches).iter().map(|needle| needle.point).collect::<Vec<_>>()
+    };
+    assert_eq!(fresh(None, &mut meter).len(), 5, "4 stitches at first");
+    let mut rng = SplitMix64::new(1);
+    let mut lengths = Lengths { pattern: vec![2.5], next: 0, random: Some((0.1, &mut rng)) };
+    let spread = spread(&along, ends, &mut lengths, (0.3, 2.75, 0.18), &mut meter).unwrap();
+    assert_eq!(spread.iter().map(|needle| needle.point).collect::<Vec<_>>(), fresh(Some(5), &mut meter));
+}
+
+#[test]
+fn stitches_that_stray_exactly_the_budget_keep_to_it() {
+    // As in `follow`: (2, 1) is 1 from the stitch, which is not too far for a budget of 1.
+    let mut meter = Budget::DEFAULT.meter();
+    let piece = piece(&[(0.0, 0.0), (2.0, 1.0), (4.0, 0.0)]);
+    let along = Along::new(&piece.points, &mut meter).unwrap();
+    let needles = [along.vertex(0), along.vertex(2)];
+    assert!(keeps_to(&needles, &along, 1.0, &mut meter).unwrap());
+    assert!(!keeps_to(&needles, &along, 0.999, &mut meter).unwrap());
 }

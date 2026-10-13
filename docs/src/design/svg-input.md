@@ -27,8 +27,14 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   user unit is a CSS pixel, 1/96 inch, unless they say otherwise.
 - Transforms compose through every ancestor. The matrices use `stitchcraft_core::math`, so the result
   is the same on every platform ([determinism](determinism.md)).
-- Path data is read as SVG viewers draw it, arcs included. An arc becomes cubic curves of at most 30°.
-  An error in the data ends the path at the error.
+- Path data is read as SVG viewers draw it, arcs included. An error in the data ends the path at the
+  error.
+- An arc becomes cubic curves as inkex, which Ink/Stitch reads files with, cuts it: in equal pieces, one
+  more than the whole quarter turns it makes. Manual stitch puts a needle point on each piece's end, as
+  Ink/Stitch's does. inkex counts the quarter turns in floating point, and its rounding can cut an arc of
+  a whole number of quarter turns into one piece fewer (`DEV-SVG-002`).
+- A `<circle>` or an `<ellipse>` starts at its top and goes round anticlockwise on screen, as inkex
+  draws it, so a stroke round it starts and runs as Ink/Stitch's does.
 - Positions are exact to within a micrometre (`REQ-SVG-001`). Any path data reads without failing the
   adapter, and fuzzing checks it (`REQ-SVG-002`).
 - A length may have spaces around it. One that does not read is 0, as in a viewer, and `SC-W0804` names
