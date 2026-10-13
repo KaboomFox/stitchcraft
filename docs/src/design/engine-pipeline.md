@@ -182,9 +182,12 @@ comes from joining groups and from settings the machine cannot follow.
    stitching runs straight on into the next, the stitch between them can be anything up to the collapse
    length, 0 included. Within each run of stitches, from where the needle lands to the next jump, trim or
    stop, a needle point less than its shortest stitch from the one before is left out. The stitch then
-   runs on to the next point. The run's first and last points and lock points always stay, and the points
-   before them are left out instead. A point where the needle already is would sew in place, and it is
-   left out too. A stitch into or out of a lock point is a lock stitch, whose shortest is 0.2 mm
+   runs on to the next point. The run's first and last points and lock points stay, and the points
+   before them are left out instead. Elements sewn over each other can bring the last point or a lock
+   point within the shortest stitch of one that stays before it, once the points between are left out.
+   It is then left out itself, the points before it stay, and a trim or stop after it happens where the
+   needle now is. So is a point where the needle already is, which would sew in place. Only the run's
+   first point always stays. A stitch into or out of a lock point is a lock stitch, whose shortest is 0.2 mm
    (`REQ-PLAN-002`). `SC-I0504` says how many points were left out (`REQ-FIN-001`). The rule is one
    function, which a generator that joins pieces of its own also applies, as a tatami fill does to its
    rows and the travel between them, so that finalize finds nothing of its stitches to thin.
