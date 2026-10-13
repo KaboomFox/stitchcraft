@@ -258,16 +258,20 @@ pub fn rect(x: f64, y: f64, width: f64, height: f64, rx: f64, ry: f64) -> Vec<Su
     vec![Sub { start: (x + rx, y), segs, closed: true }]
 }
 
-/// The outline of an ellipse (a circle when the radii are equal), as four quarter arcs from its right.
+/// The outline of an ellipse (a circle when the radii are equal), as four quarter arcs from its top,
+/// turning left on screen. SVG 2 starts it at its right and turns the other way. Ink/Stitch reads it as a
+/// path from the top that turns left, and a running stitch starts and runs as its path does, so
+/// StitchCraft reads it as Ink/Stitch does.
 pub fn ellipse(cx: f64, cy: f64, rx: f64, ry: f64) -> Vec<Sub> {
-    let quarters = [(cx, cy + ry), (cx - rx, cy), (cx, cy - ry), (cx + rx, cy)];
-    let mut from = (cx + rx, cy);
+    let top = (cx, cy - ry);
+    let quarters = [(cx - rx, cy), (cx, cy + ry), (cx + rx, cy), top];
+    let mut from = top;
     let mut segs = Vec::new();
     for to in quarters {
-        segs.extend(arc(from, rx, ry, 0.0, false, true, to));
+        segs.extend(arc(from, rx, ry, 0.0, false, false, to));
         from = to;
     }
-    vec![Sub { start: (cx + rx, cy), segs, closed: true }]
+    vec![Sub { start: top, segs, closed: true }]
 }
 
 /// The outline through the points of a `points` attribute: a polyline, or a polygon when `closed`.
@@ -527,7 +531,8 @@ mod tests {
         assert_eq!(rect(0.0, 0.0, 10.0, 6.0, 0.0, 2.0)[0].segs.len(), 3);
         let circle = ellipse(0.0, 0.0, 10.0, 10.0);
         assert_eq!(circle[0].segs.len(), 12);
-        assert_eq!(ends(&circle[0])[2], (0.0, 10.0), "a quarter turn clockwise on screen reaches the bottom");
+        assert_eq!(circle[0].start, (0.0, -10.0), "from the top");
+        assert_eq!(ends(&circle[0])[2], (-10.0, 0.0), "a quarter turn left on screen reaches the left");
         assert_eq!(polyline("0,0 10,0 10,10", true)[0].segs.len(), 2);
         assert!(polyline("0,0", false).is_empty());
     }

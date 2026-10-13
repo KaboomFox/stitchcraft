@@ -13,6 +13,12 @@
 //! for, and ends with exit status 4 (`REQ-CLI-002`). A bundle is JSON, so a maintainer can read the design
 //! out of it and the person reporting can see what it holds: their whole design, which is why `stitch`
 //! says so whenever it writes one.
+//!
+//! A bundle records the design name the run gave the machine file, and the replay uses it as it is: rebuilt
+//! from the file name, it would come out otherwise where that name is not UTF-8, or on another platform
+//! (`a\b.svg` names the design `a\b` on Linux and `b` on Windows). And anyone can attach a bundle to an
+//! issue, so the replay prints what it takes from one with each character a terminal would act on, or not
+//! show as itself, written as an escape such as `\u{1b}` (`REQ-CLI-004`).
 
 use std::any::Any;
 use std::fmt::Write as _;
@@ -25,7 +31,7 @@ use stitchcraft_core::{Code, Diagnostic};
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, profiles};
 
 use super::plan::{Sewn, design_name, sew};
-use super::{Outcome, Status, counts, headline, hex, output_format, render_diagnostics, write_file};
+use super::{Outcome, Status, counts, headline, hex, output_format, render_diagnostics};
 use crate::cli::{BugReportArgs, Command};
 use crate::files;
 
@@ -38,8 +44,10 @@ const HOLDS_THE_DESIGN: &str = "It holds your design, so share it only where you
 
 /// One run of `stitch plan`, as a bundle records it.
 pub struct Run<'a> {
-    /// Where the design was read from; its file name goes into the bundle.
+    /// Where the design was read from; its file name goes into the bundle, for people.
     pub design_path: &'a Path,
+    /// The design name machines show, which the machine file's label holds ([`design_name`]).
+    pub name: &'a str,
     /// The design file's bytes.
     pub design: &'a [u8],
     /// The machine profile it was planned for.
@@ -80,6 +88,10 @@ struct Bundle {
 struct DesignRecord {
     /// The file's name, for people.
     file: String,
+    /// The design name machines show, as the run gave it to the machine file. Bundles written before it was
+    /// recorded have none, and the replay takes the name from `file`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    name: Option<String>,
     /// The SHA-256 of its bytes when the bundle was written.
     sha256: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -159,7 +171,8 @@ fn after_panic(command: &Command, message: &str) -> Outcome {
         && let (Some(profile), Ok(format), Ok(design)) =
             (profiles::find(&args.profile), output_format(args.format, &args.output), files::read_capped(&args.design))
     {
-        return beside(&args.output, &Run { design_path: &args.design, design: &design, profile, format, says: None }, Err(message), stopped);
+        let run = Run { design_path: &args.design, name: design_name(&args.design), design: &design, profile, format, says: None };
+        return beside(&args.output, &run, Err(message), stopped);
     }
     Outcome { stderr: said + &format!("Please report it at {ISSUES}, with the command you ran and the files it read.\n"), ..stopped }
 }
@@ -185,7 +198,7 @@ fn make(args: &BugReportArgs, design_path: &Path) -> Outcome {
             return Outcome { stdout: String::new(), stderr: format!("stitch: cannot read {}: {e}\n", design_path.display()), status: Status::Io };
         }
     };
-    let run = Run { design_path, design: &design, profile, format, says: args.says.clone() };
+    let run = Run { design_path, name: design_name(design_path), design: &design, profile, format, says: args.says.clone() };
     let bundle = bundle(&run, guarded_sew(&run).as_ref().map_err(String::as_str));
     let path = args.output.clone().unwrap_or_else(|| design_path.with_extension("bug-report.json"));
     if let Err(e) = write(&path, &bundle) {
@@ -212,8 +225,7 @@ fn describe(out: &mut String, record: &Record) {
 
 /// Plans `run`'s design as `stitch plan` does, or the message of the panic that stopped it.
 fn guarded_sew(run: &Run) -> Result<Sewn, String> {
-    let name = design_name(run.design_path);
-    catch_unwind(|| sew(run.design, run.profile, run.format, name)).map_err(|payload| panic_message(payload.as_ref()))
+    catch_unwind(|| sew(run.design, run.profile, run.format, run.name)).map_err(|payload| panic_message(payload.as_ref()))
 }
 
 /// The bundle of `run` and what came of it.
@@ -231,7 +243,7 @@ fn bundle(run: &Run, sewn: Result<&Sewn, &str>) -> Bundle {
         command: "plan".to_string(),
         profile: run.profile.id.to_string(),
         format: run.format.extension().to_string(),
-        design: DesignRecord { file, sha256: hex(&Sha256::digest(run.design)), svg, svg_hex },
+        design: DesignRecord { file, name: Some(run.name.to_string()), sha256: hex(&Sha256::digest(run.design)), svg, svg_hex },
         result: record(sewn),
     }
 }
@@ -271,7 +283,7 @@ fn digest(plan: &StitchPlan) -> String {
 fn write(path: &Path, bundle: &Bundle) -> Result<(), String> {
     let mut text = serde_json::to_string_pretty(bundle).map_err(|e| e.to_string())?;
     text.push('\n');
-    write_file(path, text.as_bytes()).map_err(|outcome| outcome.stderr.trim_end().to_string())
+    files::write_atomically(path, text.as_bytes()).map_err(|e| e.to_string())
 }
 
 /// `stitch bug-report --replay BUNDLE`.
@@ -289,17 +301,18 @@ fn replay(path: &Path) -> Outcome {
     };
     let Replayable { bundle: then, design, profile, format } = then;
     let design_path = PathBuf::from(&then.design.file);
-    let run = Run { design_path: &design_path, design: &design, profile, format, says: then.says.clone() };
+    let name = then.design.name.clone().unwrap_or_else(|| design_name(&design_path).to_string());
+    let run = Run { design_path: &design_path, name: &name, design: &design, profile, format, says: then.says.clone() };
     let now = bundle(&run, guarded_sew(&run).as_ref().map_err(String::as_str));
     let mut out = String::new();
     let _ = writeln!(
         out,
         "{}: written by StitchCraft {} on {}, replayed by {} on {}",
         path.display(),
-        then.version,
-        then.platform,
-        now.version,
-        now.platform
+        printable(&then.version),
+        printable(&then.platform),
+        printable(&now.version),
+        printable(&now.platform)
     );
     let mut same = compare(&mut out, "design", &then.design.sha256, &now.design.sha256, |sha| format!("{} (sha256 {sha})", now.design.file));
     let plan = |p: &Option<PlanRecord>| p.as_ref().map_or_else(|| "none".to_string(), |p| format!("{} (sha256 {})", p.counts, p.sha256));
@@ -325,12 +338,12 @@ struct Replayable {
 /// The bundle in `bytes` (read from `path`), or why it cannot be replayed (`SC-E0012`).
 fn readable(path: &Path, bytes: &[u8]) -> Result<Replayable, String> {
     let shown = path.display();
-    let bundle: Bundle = serde_json::from_slice(bytes).map_err(|e| format!("{shown} is not a bug-report bundle: {e}."))?;
+    let bundle: Bundle = serde_json::from_slice(bytes).map_err(|e| format!("{shown} is not a bug-report bundle: {}.", printable(&e.to_string())))?;
     if bundle.stitchcraft_bug_report != BUNDLE_FORMAT {
         return Err(format!("{shown} is a bundle of format {}, and this StitchCraft replays format {BUNDLE_FORMAT}.", bundle.stitchcraft_bug_report));
     }
     if bundle.command != "plan" {
-        return Err(format!("{shown} records `stitch {}`, which this StitchCraft does not replay.", bundle.command));
+        return Err(format!("{shown} records `stitch {}`, which this StitchCraft does not replay.", printable(&bundle.command)));
     }
     let design = match (&bundle.design.svg, &bundle.design.svg_hex) {
         (Some(svg), None) => svg.as_bytes().to_vec(),
@@ -338,9 +351,9 @@ fn readable(path: &Path, bytes: &[u8]) -> Result<Replayable, String> {
         _ => return Err(format!("{shown} must hold its design once, as `svg` or as `svg_hex`.")),
     };
     let profile = profiles::find(&bundle.profile)
-        .ok_or_else(|| format!("{shown} names the profile `{}`, which this StitchCraft does not have.", bundle.profile))?;
+        .ok_or_else(|| format!("{shown} names the profile `{}`, which this StitchCraft does not have.", printable(&bundle.profile)))?;
     let format = FormatId::from_extension(&bundle.format)
-        .ok_or_else(|| format!("{shown} names the format `{}`, which this StitchCraft does not write.", bundle.format))?;
+        .ok_or_else(|| format!("{shown} names the format `{}`, which this StitchCraft does not write.", printable(&bundle.format)))?;
     Ok(Replayable { bundle, design, profile, format })
 }
 
@@ -353,15 +366,26 @@ fn unhex(text: &str) -> Option<Vec<u8>> {
     digits.chunks(2).map(|pair| std::str::from_utf8(pair).ok().and_then(|pair| u8::from_str_radix(pair, 16).ok())).collect()
 }
 
+/// `text` from a bundle as it can be printed: each character a terminal would act on or not show as itself
+/// (control characters, line breaks among them, and invisible format characters) as its escape, `\u{1b}`.
+fn printable(text: &str) -> String {
+    text.chars()
+        .map(|c| {
+            let escaped = c.escape_debug().to_string();
+            if c.is_control() || escaped.starts_with("\\u") { escaped } else { c.to_string() }
+        })
+        .collect()
+}
+
 /// One line comparing `what` then and now, shown by `show`; whether they are the same.
 fn compare<T: PartialEq>(out: &mut String, what: &str, then: &T, now: &T, show: impl Fn(&T) -> String) -> bool {
     if then == now {
-        let _ = writeln!(out, "  {what:<13} same: {}", show(now));
+        let _ = writeln!(out, "  {what:<13} same: {}", printable(&show(now)));
         return true;
     }
     let _ = writeln!(out, "  {what:<13} differs");
-    let _ = writeln!(out, "    then:       {}", show(then));
-    let _ = writeln!(out, "    now:        {}", show(now));
+    let _ = writeln!(out, "    then:       {}", printable(&show(then)));
+    let _ = writeln!(out, "    now:        {}", printable(&show(now)));
     false
 }
 
@@ -374,10 +398,10 @@ fn compare_diagnostics(out: &mut String, then: &[String], now: &[String]) -> boo
     }
     let _ = writeln!(out, "  diagnostics   differs");
     for d in then.iter().filter(|d| !now.contains(d)) {
-        let _ = writeln!(out, "    then only:  {d}");
+        let _ = writeln!(out, "    then only:  {}", printable(d));
     }
     for d in now.iter().filter(|d| !then.contains(d)) {
-        let _ = writeln!(out, "    now only:   {d}");
+        let _ = writeln!(out, "    now only:   {}", printable(d));
     }
     if then.iter().all(|d| now.contains(d)) && now.iter().all(|d| then.contains(d)) {
         let _ = writeln!(out, "    the same ones, in another order or number");
@@ -432,7 +456,7 @@ mod tests {
         let says = Some("the zigzag looks wrong".to_string());
         let out = run(&BugReportArgs { output: Some(bundle.clone()), says, ..args(Some(design.clone())) });
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
-        assert!(out.stdout.contains("  plan          555 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops\n"), "{}", out.stdout);
+        assert!(out.stdout.contains("  plan          557 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops\n"), "{}", out.stdout);
         assert!(out.stdout.ends_with(&format!("{HOLDS_THE_DESIGN}\n")));
         // The design itself, the profile, the format, and the digest of what `stitch plan` writes.
         let written = json(&bundle);
@@ -446,7 +470,7 @@ mod tests {
         // Replayed: all the same.
         let out = replayed(&bundle);
         assert_eq!(out.status, Status::Done, "{}", out.stdout);
-        assert!(out.stdout.contains("  plan          same: 555 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops (sha256 "), "{}", out.stdout);
+        assert!(out.stdout.contains("  plan          same: 557 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops (sha256 "), "{}", out.stdout);
         assert!(out.stdout.ends_with("  diagnostics   same: 2\nreproduced\n"), "{}", out.stdout);
         // A design changed in the bundle is not the one its results came from.
         let moved = changed(&bundle, "moved.json", |value| {
@@ -481,12 +505,12 @@ mod tests {
         assert!(
             out.stdout.contains(
                 "  plan          differs
-    then:       555 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops (sha256 "
+    then:       557 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops (sha256 "
             ),
             "{}",
             out.stdout
         );
-        assert!(out.stdout.contains("    now:        555 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops (sha256 "), "{}", out.stdout);
+        assert!(out.stdout.contains("    now:        557 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops (sha256 "), "{}", out.stdout);
         // One recorded result changed at a time.
         let cases: [(&str, Change, &str); 3] = [
             ("plan.json", |v| v["result"]["plan"]["sha256"] = Value::from("0"), "  plan          differs\n"),
@@ -529,7 +553,7 @@ mod tests {
         // A failed plan check: a bundle next to the machine file asked for, and exit status 4.
         let design = std::fs::read(conformance("fixtures/svg/strokes.svg")).unwrap();
         let profile = profiles::REFERENCE;
-        let run = Run { design_path: Path::new("strokes.svg"), design: &design, profile, format: FormatId::PesV1, says: None };
+        let run = Run { design_path: Path::new("strokes.svg"), name: "strokes", design: &design, profile, format: FormatId::PesV1, says: None };
         let check = Diagnostic::new(Code::InternalCheckFailed, "A stitch of 0.1 mm.");
         let sewn = Sewn { diagnostics: vec![check.clone()], plan: None, file: None };
         assert!(sewn.found_a_bug());
@@ -564,6 +588,67 @@ mod tests {
             )
         );
         assert_eq!(guarded(&Command::Profiles, || Outcome::done("fine".to_string())).stdout, "fine");
+    }
+
+    /// A bundle of `name` from `path`, planned for the reference profile as PES, written as `bundle`.
+    fn bundled(path: &Path, name: &str, bundle: &str) -> PathBuf {
+        let design = std::fs::read(conformance("fixtures/svg/strokes.svg")).unwrap();
+        let run = Run { design_path: path, name, design: &design, profile: profiles::REFERENCE, format: FormatId::PesV1, says: None };
+        let written = temp(bundle);
+        write(&written, &super::bundle(&run, guarded_sew(&run).as_ref().map_err(String::as_str))).unwrap();
+        written
+    }
+
+    #[test]
+    fn req_cli_001_a_bundle_replays_with_the_design_name_it_recorded() {
+        // Written on Linux, `a\b.svg` names the design `a\b`, and the machine file's label holds it. Windows
+        // would read `b` from that file name, so the replay takes the name the bundle recorded.
+        let bundle = bundled(Path::new("a\\b.svg"), "a\\b", "backslash.bug-report.json");
+        assert_eq!(json(&bundle)["design"]["name"], "a\\b");
+        assert_eq!(replayed(&bundle).status, Status::Done);
+        // A bundle written before names were recorded names the design after its file, as then.
+        let then = bundled(Path::new("strokes.svg"), "strokes", "named.bug-report.json");
+        let unnamed = changed(&then, "unnamed.json", |v| {
+            v["design"].as_object_mut().unwrap().remove("name");
+        });
+        assert_eq!(replayed(&unnamed).status, Status::Done);
+        // Another name is another label, and another machine file.
+        let renamed = changed(&then, "renamed.json", |v| v["design"]["name"] = Value::from("other"));
+        assert!(replayed(&renamed).stdout.contains("  machine file  differs\n"));
+    }
+
+    /// A file name that is not UTF-8 names the design `design`, which the bundle records, though the file
+    /// name it keeps for people reads `\u{FFFD}t\u{FFFD}.svg`.
+    #[cfg(unix)]
+    #[test]
+    fn req_cli_001_a_design_whose_file_name_is_not_utf_8_replays() {
+        use std::os::unix::ffi::OsStrExt as _;
+        let path = Path::new(std::ffi::OsStr::from_bytes(b"\xe9t\xe9.svg"));
+        let bundle = bundled(path, design_name(path), "latin1-name.bug-report.json");
+        let written = json(&bundle);
+        assert_eq!((written["design"]["file"].as_str(), written["design"]["name"].as_str()), (Some("\u{FFFD}t\u{FFFD}.svg"), Some("design")));
+        assert_eq!(replayed(&bundle).status, Status::Done);
+    }
+
+    #[test]
+    fn req_cli_004_a_replay_prints_what_the_bundle_says_as_text_only() {
+        // A bundle anyone may attach to an issue: a platform that would set the terminal's title and clear
+        // its screen, and a diagnostic that would print a line of its own and hide the lines after it.
+        let bundle = temp("terminal.bug-report.json");
+        assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(conformance("fixtures/svg/strokes.svg"))) }).status, Status::Done);
+        let hostile = changed(&bundle, "hostile.json", |v| {
+            v["platform"] = Value::from("linux x86_64\u{1b}]0;title\u{7}\u{1b}[2J");
+            v["result"]["diagnostics"][0] = Value::from("warning\nreproduced\u{1b}[8m");
+        });
+        let out = replayed(&hostile);
+        let printed = out.stdout.clone() + &out.stderr;
+        assert!(!printed.chars().any(|c| c.is_control() && c != '\n'), "{printed:?}");
+        assert!(out.stdout.contains(" on linux x86_64\\u{1b}]0;title\\u{7}\\u{1b}[2J, replayed by "), "{}", out.stdout);
+        assert!(out.stdout.contains("\n    then only:  warning\\nreproduced\\u{1b}[8m\n"), "{}", out.stdout);
+        assert!(out.stdout.ends_with("\nnot reproduced\n") && !out.stdout.lines().any(|line| line == "reproduced"), "{}", out.stdout);
+        // So are the names of a bundle that cannot be replayed (SC-E0012).
+        let profile = changed(&bundle, "profile.json", |v| v["profile"] = Value::from("pe800\u{1b}[2J"));
+        assert!(replayed(&profile).stderr.contains(" names the profile `pe800\\u{1b}[2J`, which "));
     }
 
     #[test]
