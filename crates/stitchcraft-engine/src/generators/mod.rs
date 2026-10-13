@@ -9,28 +9,35 @@
 //! Elements are generated in sewing order, and each sees its [`Neighbours`]: where the elements before it
 //! left the needle, and what the next element offers to end near, its [`Approach`]
 //! (`docs/src/design/adr/0014-generators-see-their-neighbours.md`). A satin column and a tatami fill
-//! start and end by them; the other stitch types do not yet.
+//! start and end by them; the other stitch types do not yet. Both end near the next stitch, found as
+//! Ink/Stitch's geometry library finds it, by the rules of the `next` module.
 
 pub mod manual;
+mod next;
 pub mod passes;
 pub mod pull;
 pub mod running;
 pub mod satin;
 pub mod tatami;
 
+pub(crate) use next::{Own, covers};
 use stitchcraft_core::{Code, Diagnostic, Point};
 use stitchcraft_params::{ChoiceOption, StitchType};
 
-/// What the next element offers the one before it to end near (Ink/Stitch's "next stitch").
+use crate::normalize::region::Polygon;
+
+/// What the next element offers the one before it to end near. The element before ends near its next
+/// stitch, the point of its own shape nearest this, as Ink/Stitch finds it (the `next` module).
 #[derive(Clone, Debug, PartialEq)]
 pub enum Approach {
     /// It starts at this point: a stroke's first point, or a satin column's first rail's start when it
     /// does not start at its nearest point.
     Point(Point),
     /// It starts at the point of these polylines nearest the needle: a satin column's rails as they are
-    /// sewn, swapped and turned, or a fill's rings, part by part and each outline before its holes, in the
-    /// order the element before measures them.
+    /// sewn, swapped and turned.
     Shape(Vec<Vec<Point>>),
+    /// It starts at the point of this area nearest the needle: a tatami fill's parts.
+    Area(Vec<Polygon>),
 }
 
 /// An element's neighbours in sewing order (`REQ-GEN-003`).

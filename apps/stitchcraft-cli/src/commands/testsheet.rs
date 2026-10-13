@@ -16,7 +16,7 @@ use stitchcraft_plan::invariants;
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 
-use super::{Outcome, Status, describe_file, describe_plan, describe_threads, output_format, render_diagnostics, write_file};
+use super::{Outcome, Status, describe_file, describe_plan, describe_threads, output_format, render_diagnostics, write_files};
 use crate::cli::TestsheetArgs;
 
 /// Runs `stitch testsheet`.
@@ -64,10 +64,11 @@ pub fn run(args: &TestsheetArgs) -> Outcome {
         }
     };
     diagnostics.extend(notes);
-    if let Err(outcome) = write_file(output, &bytes) {
-        return outcome;
+    let said = render_diagnostics(&diagnostics);
+    if let Err(unwritten) = write_files(&[(output, &bytes)], &said) {
+        return unwritten;
     }
-    Outcome { stdout: report(sheet, profile, format, output, &plan, &bytes), stderr: render_diagnostics(&diagnostics), status: Status::Done }
+    Outcome { stdout: report(sheet, profile, format, output, &plan, &bytes), stderr: said, status: Status::Done }
 }
 
 /// What was written, what the machine will ask for, and what to check.

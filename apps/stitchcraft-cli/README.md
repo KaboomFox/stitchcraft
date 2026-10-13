@@ -31,17 +31,23 @@ Coming with their milestones: `export` (M6.5), `import-inkstitch` (M8), `conform
   printing, so commands are tested without a terminal. `commands/mod.rs` holds what several share:
   reading a machine file, writing a file, the report lines and the diagnostics' rendering.
 - `files.rs` — files are written under a temporary name and renamed into place, so a machine never sees
-  half a file.
+  half a file, and reads stop past 64 MiB.
 
 ## Invariants
 
 - Contains no engine logic: it reads files, calls the engine, formats and renderer, and writes files.
-- Writes only plans that have been checked (invariants, hoop and comfort zone). The command line checks
-  its test sheets itself, and the engine's `plan` checks designs. When a check fails, the machine file is
-  not written, and `stitch plan` still writes its report to say why.
+- Writes only plans that have been checked (invariants, hoop and comfort zone), and none while anything
+  said about the design is an error, an element left out with one included (`REQ-CLI-003`). The command
+  line checks its test sheets itself, and the engine's `plan` checks designs. When a check fails or an
+  error is said, the machine file is not written, and `stitch plan` still writes its report to say why.
 - Never panics on bad arguments (arguments that are not valid Unicode included); exit codes are documented.
+- Writes the files a command was asked for all or none, and prints what was said about the design even
+  when one cannot be written, with the file and why (`REQ-CLI-006`).
+- Reads no more than 64 MiB from any path, a pipe or a device included (`REQ-CLI-005`).
 - A panic anyway is a bug: `main` catches it (`commands::bug_report::guarded`), says so, and for
   `stitch plan` writes a bug-report bundle.
+- A bug-report bundle is untrusted input: a replay prints what it takes from one with each character a
+  terminal would act on written as an escape (`REQ-CLI-004`).
 - A closed stdout (`stitch … | head`) ends the program quietly instead of panicking.
 
 ## Dependencies

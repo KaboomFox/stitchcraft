@@ -349,9 +349,8 @@ fn stroke(
 /// design's `settings` alone, with the budget's work to itself (`REQ-GEN-003`): a stroke its first point,
 /// a satin column its rails as they are sewn when it starts at its nearest point and otherwise its first
 /// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A tatami fill
-/// starts at its point nearest the needle and offers its area's rings, part by part, the outline before
-/// the holes. A fill StitchCraft does not sew offers nothing, and neither does an element whose shape or
-/// settings cannot be read.
+/// starts at its point nearest the needle and offers its area, its parts. A fill StitchCraft does not sew
+/// offers nothing, and neither does an element whose shape or settings cannot be read.
 pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -> Option<Approach> {
     let (path, width, join) = match &element.shape {
         Shape::Stroke { path, width, join } => (path, width, join),
@@ -360,9 +359,8 @@ pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -
             if StitchType::from_id(Family::Fill, method) != Some(StitchType::TatamiFill) {
                 return None;
             }
-            let region = region::build(path, *rule, &mut budget.meter()).ok()?.region;
-            let rings: Vec<Vec<Point>> = region.parts.into_iter().flat_map(|part| std::iter::once(part.outline).chain(part.holes)).collect();
-            return (!rings.is_empty()).then_some(Approach::Shape(rings));
+            let parts = region::build(path, *rule, &mut budget.meter()).ok()?.region.parts;
+            return (!parts.is_empty()).then_some(Approach::Area(parts));
         }
     };
     let params = SatinParams::from_set(&element.params).ok()?.params;

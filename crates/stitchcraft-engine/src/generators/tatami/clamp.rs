@@ -14,8 +14,8 @@ use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use super::rings::Rings;
-use crate::normalize::region::geom::{Hit, Location, hit, locate_in_ring};
-use crate::normalize::region::{Polygon, SAME};
+use crate::normalize::region::SAME;
+use crate::normalize::region::geom::{Hit, hit};
 use crate::normalize::stroke::distance_to_segment;
 
 /// Nearer than this, in millimetres, the way's exit and way back in are one point, and no ring is followed
@@ -30,23 +30,21 @@ struct Stretch {
     inside: bool,
 }
 
-/// `way` kept inside `part`, whose rings are `rings`. One unit of `meter` for each side of a ring each
-/// stitch of the way is cut against or each end is looked for on, and for each point of a ring followed.
-pub(crate) fn clamp(way: &[Point], part: &Polygon, rings: &Rings<'_>, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+/// `way` kept inside the part whose rings are `rings`. Cutting each stitch where it meets the rings
+/// ([`Rings::meeting`]), and placing each piece and each end in the part or out of it ([`Rings::inside`],
+/// [`Rings::covers`], [`Rings::ring_near`]), cost what those questions cost, and following a ring one unit
+/// of `meter` for each of its points.
+pub(crate) fn clamp(way: &[Point], rings: &Rings<'_>, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let (Some(&start), Some(&end)) = (way.first(), way.last()) else { return Ok(Vec::new()) };
-    let stretches = cut(way, part, meter)?;
+    let stretches = cut(way, rings, meter)?;
     if stretches.iter().all(|stretch| stretch.inside) {
         return Ok(way.to_vec());
     }
     // The way's ends count as stretches of their own, inside when the part covers them or they lie on one
     // of its rings.
     let mut ends = |p: Point| -> Result<Stretch, Exhausted> {
-        let mut on = false;
-        for ring in part.rings() {
-            meter.charge(u64::try_from(ring.len()).unwrap_or(u64::MAX))?;
-            on |= on_ring(p, ring);
-        }
-        Ok(Stretch { points: vec![p], inside: on || part.covers(p) })
+        let on = rings.ring_near(p, SAME, |_| true, distance_to_segment, meter)?.is_some();
+        Ok(Stretch { points: vec![p], inside: on || rings.covers(p, meter)? })
     };
     let (at_start, at_end) = (ends(start)?, ends(end)?);
     // A stretch inside starts where the one before it ended, unless the way left the part in between: then
@@ -61,14 +59,14 @@ pub(crate) fn clamp(way: &[Point], part: &Polygon, rings: &Rings<'_>, meter: &mu
         if let Some(left) = exit
             && left.distance(first) > NEAR
         {
-            extend(&mut kept, round_ring(left, first, part, rings, meter)?);
+            extend(&mut kept, round_ring(left, first, rings, meter)?);
         }
         extend(&mut kept, stretch.points);
         exit = Some(last);
     }
     if kept.is_empty() {
         // Nothing of the way lies inside: the outline from the point nearest its start to that nearest its end.
-        return round_ring(start, end, part, rings, meter);
+        return round_ring(start, end, rings, meter);
     }
     // A ring gives back the way's end within a rounding error, and travel must meet its rows exactly.
     if let Some(last) = kept.last_mut().filter(|last| last.distance(end) <= SAME) {
@@ -77,16 +75,10 @@ pub(crate) fn clamp(way: &[Point], part: &Polygon, rings: &Rings<'_>, meter: &mu
     Ok(kept)
 }
 
-/// Whether `p` lies on `ring`, within a rounding error.
-fn on_ring(p: Point, ring: &[Point]) -> bool {
-    ring.windows(2).any(|side| side.first().zip(side.get(1)).is_some_and(|(&a, &b)| distance_to_segment(p, a, b) <= SAME))
-}
-
 /// The way cut where it meets the part's rings, in stretches inside the part or not, one for each piece
-/// between 2 cuts. A stretch along a ring is not inside. One unit of `meter` for each side of a ring each
-/// stitch is cut against.
-fn cut(way: &[Point], part: &Polygon, meter: &mut Meter) -> Result<Vec<Stretch>, Exhausted> {
-    let rings: Vec<&[Point]> = part.rings().collect();
+/// between 2 cuts. A stretch along a ring is not inside. Costs as [`Rings::meeting`] does for each stitch,
+/// and as [`Rings::inside`] does for each piece.
+fn cut(way: &[Point], rings: &Rings<'_>, meter: &mut Meter) -> Result<Vec<Stretch>, Exhausted> {
     let mut stretches: Vec<Stretch> = Vec::new();
     for pair in way.windows(2) {
         // A stitch of no length meets nothing.
@@ -95,17 +87,11 @@ fn cut(way: &[Point], part: &Polygon, meter: &mut Meter) -> Result<Vec<Stretch>,
             continue;
         }
         let mut cuts: Vec<(f64, Point)> = Vec::new();
-        for ring in &rings {
-            meter.charge(u64::try_from(ring.len()).unwrap_or(u64::MAX))?;
-            for side in ring.windows(2) {
-                let &[a, b] = side else { continue };
-                match hit(p, q, a, b) {
-                    Hit::Cross(x) | Hit::Touch(x) => cuts.push((p.distance(x), x)),
-                    Hit::Overlap(x, y) => cuts.extend([(p.distance(x), x), (p.distance(y), y)]),
-                    Hit::Apart => {}
-                }
-            }
-        }
+        rings.meeting(p, q, meter, |side| match hit(p, q, side.a, side.b) {
+            Hit::Cross(x) | Hit::Touch(x) => cuts.push((p.distance(x), x)),
+            Hit::Overlap(x, y) => cuts.extend([(p.distance(x), x), (p.distance(y), y)]),
+            Hit::Apart => {}
+        })?;
         cuts.sort_by(|a, b| a.0.total_cmp(&b.0));
         let points: Vec<Point> = std::iter::once(p).chain(cuts.into_iter().map(|(_, x)| x)).chain(std::iter::once(q)).collect();
         for piece in points.windows(2) {
@@ -113,18 +99,16 @@ fn cut(way: &[Point], part: &Polygon, meter: &mut Meter) -> Result<Vec<Stretch>,
             if u == v {
                 continue;
             }
-            let middle = u.lerp(v, 0.5);
-            let inside = !rings.iter().any(|ring| locate_in_ring(middle, ring) == Location::Boundary) && part.covers(middle);
-            stretches.push(Stretch { points: vec![u, v], inside });
+            stretches.push(Stretch { points: vec![u, v], inside: rings.inside(u.lerp(v, 0.5), meter)? });
         }
     }
     Ok(stretches)
 }
 
 /// The way along a ring from `from` to `to`, the shorter way round: along the hole `from` lies on, else
-/// along the outline. One unit of `meter` for each point of the ring looked at.
-fn round_ring(from: Point, to: Point, part: &Polygon, rings: &Rings<'_>, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
-    let ring = part.holes.iter().position(|hole| on_ring(from, hole)).map_or(0, |hole| hole + 1);
+/// along the outline. One unit of `meter` for each cell and side looked at, and each point of the ring.
+fn round_ring(from: Point, to: Point, rings: &Rings<'_>, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    let ring = rings.ring_near(from, SAME, |r| r > 0, distance_to_segment, meter)?.unwrap_or(0);
     let only = |r: usize| r == ring;
     let (Some(a), Some(b)) = (rings.locate(from, only, meter)?, rings.locate(to, only, meter)?) else { return Ok(vec![from, to]) };
     rings.way(ring, a.at, b.at, rings.forwards(ring, a.at, b.at), meter)
@@ -145,11 +129,12 @@ mod tests {
 
     use super::*;
     use crate::generators::tatami::fixture::{frame, p, rectangle};
+    use crate::normalize::region::Polygon;
 
     fn clamped(part: &Polygon, way: &[Point]) -> Vec<Point> {
         let meter = &mut Budget::DEFAULT.meter();
         let rings = Rings::new(part, meter).unwrap();
-        clamp(way, part, &rings, meter).unwrap().into_iter().map(|q| p((q.x() * 1e9).round() / 1e9, (q.y() * 1e9).round() / 1e9)).collect()
+        clamp(way, &rings, meter).unwrap().into_iter().map(|q| p((q.x() * 1e9).round() / 1e9, (q.y() * 1e9).round() / 1e9)).collect()
     }
 
     #[test]
@@ -177,6 +162,15 @@ mod tests {
         assert_eq!(clamped(&frame(), &way), [p(8.0, 1.5), p(6.0, 1.5), p(6.0, 1.0), p(4.0, 1.0), p(4.0, 1.5), p(2.0, 1.5)]);
         let way = [p(5.0, 0.5), p(4.5, 3.5)];
         assert_eq!(clamped(&frame(), &way), [p(5.0, 0.5), p(4.916666667, 1.0), p(4.0, 1.0), p(4.0, 3.0), p(4.583333333, 3.0), p(4.5, 3.5)]);
+    }
+
+    #[test]
+    fn a_way_that_leaves_where_a_hole_touches_the_outline_follows_the_hole() {
+        // The hole's tip touches the top side at (5, 0). The way leaves there into the hole and comes back
+        // in through the hole's right side, so the hole, not the outline, takes its place.
+        let part = Polygon { holes: vec![vec![p(5.0, 0.0), p(4.0, 2.0), p(6.0, 2.0), p(5.0, 0.0)]], ..rectangle(4.0) };
+        let way = [p(3.0, 1.0), p(5.0, 0.0), p(5.0, 1.0), p(7.0, 1.5)];
+        assert_eq!(clamped(&part, &way), [p(3.0, 1.0), p(5.0, 0.0), p(5.571428571, 1.142857143), p(7.0, 1.5)]);
     }
 
     #[test]
@@ -209,7 +203,7 @@ mod tests {
         let meter = &mut Budget::DEFAULT.meter();
         let part = rectangle(4.0);
         let rings = Rings::new(&part, meter).unwrap();
-        let clamped = clamp(&way, &part, &rings, meter).unwrap();
+        let clamped = clamp(&way, &rings, meter).unwrap();
         assert_eq!(clamped, [p(x, d), p(x, 0.0), p(10.0, y), p(10.0 - d, y)]);
         assert_eq!(clamped[1].distance(clamped[2]), NEAR);
     }
@@ -223,7 +217,7 @@ mod tests {
         let way = [p(1.0, 1.0), p(5.0, -1.0), end];
         let meter = &mut Budget::DEFAULT.meter();
         let rings = Rings::new(&part, meter).unwrap();
-        let clamped = clamp(&way, &part, &rings, meter).unwrap();
+        let clamped = clamp(&way, &rings, meter).unwrap();
         assert_eq!((clamped.first(), clamped.last()), (Some(&p(1.0, 1.0)), Some(&end)), "{clamped:?}");
     }
 
@@ -242,12 +236,24 @@ mod tests {
     }
 
     #[test]
+    fn every_look_at_the_rings_is_charged() {
+        // A stitch inside the rectangle is cut against its 4 sides, and its middle then placed against them: 8
+        // sides looked at, a unit of work each.
+        let part = rectangle(4.0);
+        let rings = Rings::new(&part, &mut Budget::DEFAULT.meter()).unwrap();
+        let way = [p(2.0, 1.5), p(8.0, 2.5)];
+        let budget = |max_work| Budget { max_stitches: 1, max_work };
+        assert_eq!(clamp(&way, &rings, &mut budget(8).meter()).unwrap(), way);
+        assert!(clamp(&way, &rings, &mut budget(7).meter()).is_err());
+    }
+
+    #[test]
     fn clamping_is_charged_to_the_budget() {
         let part = frame();
         let meter = &mut Budget::DEFAULT.meter();
         let rings = Rings::new(&part, meter).unwrap();
         let way = [p(2.0, 1.5), p(8.0, 1.5)];
-        assert!(clamp(&way, &part, &rings, &mut Budget { max_stitches: 1, max_work: 5 }.meter()).is_err());
-        assert!(clamp(&way, &part, &rings, &mut Budget { max_stitches: 1, max_work: 12 }.meter()).is_err());
+        assert!(clamp(&way, &rings, &mut Budget { max_stitches: 1, max_work: 5 }.meter()).is_err());
+        assert!(clamp(&way, &rings, &mut Budget { max_stitches: 1, max_work: 12 }.meter()).is_err());
     }
 }

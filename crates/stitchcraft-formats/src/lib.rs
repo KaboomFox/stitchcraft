@@ -52,7 +52,7 @@ pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
 /// `plan` in `format`, with `name` as the design name machines show.
 pub fn encode(plan: &StitchPlan, format: FormatId, name: &str) -> Result<Encoded, EncodeError> {
     match format {
-        FormatId::PesV1 => pes::encode(plan, name).map(|bytes| Encoded { bytes, notes: Vec::new() }),
+        FormatId::PesV1 => pes::encode(plan, name),
         FormatId::Dst => dst::encode(plan, name),
     }
 }

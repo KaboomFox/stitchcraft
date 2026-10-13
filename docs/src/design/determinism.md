@@ -57,7 +57,7 @@ of a path to it. The file also records what came of them:
 
 - a SHA-256 of each entry of the plan, from each coordinate's bits, its kind, role and element, and each
   block's thread
-- the machine file's size and SHA-256
+- the machine file's size and SHA-256, and the design name its label holds, which the replay uses as it is
 - the first line of each diagnostic, and a panic's message if there was one
 
 `stitch bug-report --replay` plans the design again through the same code as `stitch plan` and compares
