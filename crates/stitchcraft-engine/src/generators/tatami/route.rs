@@ -24,7 +24,9 @@
 //! node with no edge left it steps back, and the edges, taken in the order it steps back over them, are
 //! the route. Travel then mostly comes just before the rows beside it, which cover it, and the rows go
 //! back and forth like a mown lawn. The route comes back to the fill's end, so the fill first travels
-//! from its start to its end and then sews it. Steps of travel in a row are one stretch of travel.
+//! from its start to its end and then sews it. Steps of travel in a row are one stretch of travel. As
+//! Ink/Stitch's gap fill counts, the stretch leaves the rows before it where it keeps more than one of its
+//! edges once the loops in it are taken out ([`Travelled`]), even when it ends beside where it left.
 //!
 //! The route follows Ink/Stitch's from the same graph. The rings start where the drawing starts them,
 //! which can double other stretches than Ink/Stitch does and so change the route (`DEV-FILL-005`).
@@ -75,6 +77,11 @@ pub(crate) enum Step {
         /// Whether a row or a stretch of ring joins the 2 nodes, as it joins the ends of neighbouring rows
         /// ([`Graph::beside`]).
         beside: bool,
+        /// Whether the travel leaves the stretch of rows before it, as Ink/Stitch's gap fill counts: more
+        /// than one edge of the walk's travel is left once loops back to a node the travel already reached
+        /// are taken out, or the one left stands for a way of several, as a pairing does ([`Travelled`]).
+        /// In the walk's own steps, whether the edge stands for a way of several.
+        leaves: bool,
     },
 }
 
@@ -113,7 +120,7 @@ pub(crate) fn route(
     let mut walked = built.graph.clone();
     let mut raw = Vec::new();
     if starting != ending {
-        raw.push(Step::Travel { from: starting, to: ending, beside: false });
+        raw.push(Step::Travel { from: starting, to: ending, beside: false, leaves: false });
     }
     let mut at = ending;
     loop {
@@ -121,7 +128,7 @@ pub(crate) fn route(
         // Rows a walk did not reach: walk again from the first one left.
         let left = walked.all().into_iter().find_map(|(_, id)| walked.edge(id).filter(|e| matches!(e.kind, Kind::Row(_))));
         let Some(Edge { ends: [next, _], .. }) = left else { break };
-        raw.push(Step::Travel { from: at, to: next, beside: false });
+        raw.push(Step::Travel { from: at, to: next, beside: false, leaves: true });
         at = next;
     }
     Ok(Some(Route { steps: collapse(&built.graph, raw, meter)?, nodes: built.nodes }))
@@ -352,7 +359,8 @@ fn walk(graph: &mut Graph, from: NodeId, meter: &mut Meter) -> Result<Vec<Step>,
                 if let (Some(edge), Some(&(before, _))) = (came, stack.last()) {
                     steps.push(match edge.kind {
                         Kind::Row(segment) => Step::Row { segment, from: current, to: before },
-                        Kind::Outline | Kind::Extra | Kind::Paired => Step::Travel { from: current, to: before, beside: false },
+                        Kind::Outline | Kind::Extra => Step::Travel { from: current, to: before, beside: false, leaves: false },
+                        Kind::Paired => Step::Travel { from: current, to: before, beside: false, leaves: true },
                     });
                 }
             }
@@ -362,32 +370,66 @@ fn walk(graph: &mut Graph, from: NodeId, meter: &mut Meter) -> Result<Vec<Step>,
 }
 
 /// `raw` with each stretch of travel steps made one, from where the stretch leaves to where the next row
-/// starts, or to where the last step arrives. `beside` where a row or a stretch of ring of `graph` joins the 2.
+/// starts, or to where the last step arrives: `beside` where a row or a stretch of ring of `graph` joins the
+/// 2, and `leaves` as [`Travelled`] finds it. The last stretch is left out where it comes back to where it
+/// left without leaving the rows.
 fn collapse(graph: &Graph, raw: Vec<Step>, meter: &mut Meter) -> Result<Vec<Step>, Exhausted> {
     let mut steps = Vec::with_capacity(raw.len());
-    let mut leaves: Option<NodeId> = None;
-    let mut arrives: Option<NodeId> = None;
+    let mut travelled = Travelled::default();
     for step in raw {
         meter.charge(1)?;
         match step {
             Step::Row { from, .. } => {
-                if let Some(a) = leaves.take() {
-                    steps.push(Step::Travel { from: a, to: from, beside: graph.beside(a, from) });
+                if let Some((a, _, leaves)) = travelled.take() {
+                    steps.push(Step::Travel { from: a, to: from, beside: graph.beside(a, from), leaves });
                 }
                 steps.push(step);
             }
-            Step::Travel { from, to, .. } => {
-                leaves.get_or_insert(from);
-                arrives = Some(to);
-            }
+            Step::Travel { from, to, leaves, .. } => travelled.add(from, to, leaves),
         }
     }
-    if let (Some(a), Some(b)) = (leaves, arrives)
-        && a != b
+    if let Some((a, b, leaves)) = travelled.take()
+        && (a != b || leaves)
     {
-        steps.push(Step::Travel { from: a, to: b, beside: graph.beside(a, b) });
+        steps.push(Step::Travel { from: a, to: b, beside: graph.beside(a, b), leaves });
     }
     Ok(steps)
+}
+
+/// A stretch of the walk's travel between 2 rows as Ink/Stitch's gap fill counts it, once it has taken out
+/// the loops: an edge that comes back to a node an edge of the stretch reached takes out the edges since
+/// that one, and itself. A loop back to where the stretch left stays.
+#[derive(Debug, Default)]
+struct Travelled {
+    /// Where the stretch leaves, and where it has got to.
+    from: Option<NodeId>,
+    to: Option<NodeId>,
+    /// The edges left, each with whether it stands for a way of several.
+    edges: Vec<bool>,
+    /// Each node an edge left reached, with how many edges were left then.
+    reached: BTreeMap<NodeId, usize>,
+}
+
+impl Travelled {
+    /// The edge from `from` to `to`, standing for a way of several where `several`.
+    fn add(&mut self, from: NodeId, to: NodeId, several: bool) {
+        self.from.get_or_insert(from);
+        self.to = Some(to);
+        if let Some(&kept) = self.reached.get(&to) {
+            self.edges.truncate(kept);
+            self.reached.clear();
+        } else {
+            self.edges.push(several);
+            self.reached.insert(to, self.edges.len());
+        }
+    }
+
+    /// Where the stretch left, where it got to, and whether it leaves the stretch of rows before it: more
+    /// than one edge left, or one standing for several. `None` for no travel. The next stretch starts afresh.
+    fn take(&mut self) -> Option<(NodeId, NodeId, bool)> {
+        let Travelled { from, to, edges, .. } = std::mem::take(self);
+        Some((from?, to?, edges.len() > 1 || edges.contains(&true)))
+    }
 }
 
 #[cfg(test)]
@@ -447,9 +489,9 @@ mod tests {
         assert_eq!(
             route.steps,
             [
-                Step::Travel { from: a, to: d, beside: false },
+                Step::Travel { from: a, to: d, beside: false, leaves: true },
                 Step::Row { segment: 1, from: d, to: c },
-                Step::Travel { from: c, to: b, beside: false },
+                Step::Travel { from: c, to: b, beside: false, leaves: true },
                 Step::Row { segment: 0, from: b, to: a },
             ]
         );
@@ -476,7 +518,7 @@ mod tests {
         // To the bottom side's middle, whose node splits the stretch from C to D: the route's last row ends
         // at C.
         let route = routed(&rectangle(), &two_rows(), None, Some(p(5.0, 9.0)));
-        assert_eq!(route.steps.last(), Some(&Step::Travel { from: 2, to: 4, beside: true }));
+        assert_eq!(route.steps.last(), Some(&Step::Travel { from: 2, to: 4, beside: true, leaves: false }));
     }
 
     #[test]
@@ -488,15 +530,79 @@ mod tests {
         graph.add(c, d, Kind::Outline);
         let raw = vec![
             Step::Row { segment: 0, from: a, to: b },
-            Step::Travel { from: b, to: c, beside: false },
-            Step::Travel { from: c, to: d, beside: false },
+            Step::Travel { from: b, to: c, beside: false, leaves: false },
+            Step::Travel { from: c, to: d, beside: false, leaves: false },
         ];
         let last = |graph: &Graph| collapse(graph, raw.clone(), &mut Budget::DEFAULT.meter()).unwrap().last().copied();
-        assert_eq!(last(&graph), Some(Step::Travel { from: b, to: d, beside: false }));
+        assert_eq!(last(&graph), Some(Step::Travel { from: b, to: d, beside: false, leaves: true }));
         graph.add(b, d, Kind::Paired);
-        assert_eq!(last(&graph), Some(Step::Travel { from: b, to: d, beside: false }));
+        assert_eq!(last(&graph), Some(Step::Travel { from: b, to: d, beside: false, leaves: true }));
         graph.add(b, d, Kind::Extra);
-        assert_eq!(last(&graph), Some(Step::Travel { from: b, to: d, beside: true }));
+        assert_eq!(last(&graph), Some(Step::Travel { from: b, to: d, beside: true, leaves: true }));
+    }
+
+    #[test]
+    fn req_fill_tat_007_travel_leaves_the_stretch_as_ink_stitch_s_gap_fill_counts_its_edges() {
+        // Rows end at A, B and C, and E lies off them. Travel from A to E and back, then on to C beside A:
+        // Ink/Stitch takes out loops only back to a node the travel reached, not to where it left, so 3
+        // edges stay, and the travel leaves the stretch though A and C are neighbours.
+        let mut graph = Graph::default();
+        let [a, b, c, e] = [(); 4].map(|()| graph.add_node());
+        graph.add(a, c, Kind::Outline);
+        let travel = |edges: &[(NodeId, NodeId, bool)], to: NodeId| {
+            let mut raw = vec![Step::Row { segment: 0, from: b, to: a }];
+            raw.extend(edges.iter().map(|&(from, to, leaves)| Step::Travel { from, to, beside: false, leaves }));
+            raw.push(Step::Row { segment: 1, from: to, to: b });
+            collapse(&graph, raw, &mut Budget::DEFAULT.meter()).unwrap()[1]
+        };
+        assert_eq!(travel(&[(a, e, false), (e, a, false), (a, c, false)], c), Step::Travel { from: a, to: c, beside: true, leaves: true });
+        // Out to E, on to C, back to E and on to C again: back at E the loop to it goes, and C is reached
+        // in 2 edges, A to E and E to C.
+        assert_eq!(
+            travel(&[(a, e, false), (e, c, false), (c, e, false), (e, c, false)], c),
+            Step::Travel { from: a, to: c, beside: true, leaves: true }
+        );
+        // Out to C, on to E and back to C: the loop goes, and one edge is left, a handover.
+        assert_eq!(travel(&[(a, c, false), (c, e, false), (e, c, false)], c), Step::Travel { from: a, to: c, beside: true, leaves: false });
+        // One edge standing for a way of several, as a pairing does, leaves the stretch.
+        assert_eq!(travel(&[(a, c, true)], c), Step::Travel { from: a, to: c, beside: true, leaves: true });
+    }
+
+    #[test]
+    fn travel_at_the_end_that_leaves_the_rows_and_comes_back_is_kept() {
+        // After the last row, out to C and back to A, where the walk ends: no travel at all, unless it
+        // leaves the stretch of rows, which Ink/Stitch then fills the gap after.
+        let mut graph = Graph::default();
+        let [a, b, c] = [(); 3].map(|()| graph.add_node());
+        let raw = |back: bool| {
+            let mut raw = vec![Step::Row { segment: 0, from: b, to: a }, Step::Travel { from: a, to: c, beside: false, leaves: false }];
+            raw.extend(back.then_some(Step::Travel { from: c, to: a, beside: false, leaves: false }));
+            raw
+        };
+        let collapsed = |raw| collapse(&graph, raw, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(collapsed(raw(true)).last(), Some(&Step::Travel { from: a, to: a, beside: false, leaves: true }));
+        assert_eq!(collapsed(vec![Step::Row { segment: 0, from: b, to: a }, Step::Travel { from: a, to: a, beside: false, leaves: false }]).len(), 1);
+        assert_eq!(collapsed(raw(false)).last(), Some(&Step::Travel { from: a, to: c, beside: false, leaves: false }));
+    }
+
+    #[test]
+    fn the_walk_hands_over_to_the_row_beside_after_travel_out_and_back() {
+        // A 12 × 9 frame round a 4 × 3 hole, its rows 0.5 mm apart and upright, each row's segments taken
+        // nearest the origin first: the walk takes travel out and back before it goes on to a row beside the
+        // last, which leaves the stretch for Ink/Stitch's gap fill.
+        let ring = |corners: [(f64, f64); 4]| corners.iter().chain(&corners[..1]).map(|&(x, y)| p(x, y)).collect::<Vec<_>>();
+        let part = Polygon {
+            outline: ring([(0.0, 0.0), (0.0, 9.0), (12.0, 9.0), (12.0, 0.0)]),
+            holes: vec![ring([(4.0, 3.0), (8.0, 3.0), (8.0, 6.0), (4.0, 6.0)])],
+        };
+        let mut segments = Vec::new();
+        for row in rows(&part, &Grid { angle: 90.0, spacing: 0.5, end_spacing: None }, &mut Budget::DEFAULT.meter()).unwrap() {
+            let mut pieces: Vec<(Point, Point)> = row.segments.into_iter().map(|s| (s.start, s.end)).collect();
+            pieces.sort_by(|a, b| a.0.distance(Point::ORIGIN).total_cmp(&b.0.distance(Point::ORIGIN)));
+            segments.extend(pieces);
+        }
+        let route = routed(&part, &segments, None, None);
+        assert!(route.steps.iter().any(|step| matches!(step, Step::Travel { beside: true, leaves: true, .. })), "{:?}", route.steps);
     }
 
     #[test]
@@ -615,7 +721,7 @@ mod tests {
         graph.add(a, c, Kind::Outline);
         graph.add(a, b, Kind::Row(0));
         let steps = walk(&mut graph, a, &mut Budget::DEFAULT.meter()).unwrap();
-        assert_eq!(steps, [Step::Row { segment: 0, from: b, to: a }, Step::Travel { from: c, to: a, beside: false }]);
+        assert_eq!(steps, [Step::Row { segment: 0, from: b, to: a }, Step::Travel { from: c, to: a, beside: false, leaves: false }]);
         assert_eq!(graph.degree(a), 0);
     }
 
@@ -636,9 +742,9 @@ mod tests {
         assert_eq!(
             route.steps,
             [
-                Step::Travel { from: a, to: b, beside: true },
+                Step::Travel { from: a, to: b, beside: true, leaves: true },
                 Step::Row { segment: 0, from: b, to: a },
-                Step::Travel { from: a, to: d, beside: false },
+                Step::Travel { from: a, to: d, beside: false, leaves: true },
                 Step::Row { segment: 1, from: d, to: c },
             ]
         );
