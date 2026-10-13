@@ -323,6 +323,28 @@
         "unit": "mm"
       }
     },
+    "fill": {
+      "default": true,
+      "description": "Whether the fill is sewn. Off, it sews nothing, and the shape's outline, if it has one, is sewn as its stroke settings say. The element before it still ends near it, as Ink/Stitch's does.",
+      "title": "Sew the fill",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tatami_fill",
+          "circular_fill",
+          "contour_fill",
+          "cross_stitch",
+          "guided_fill",
+          "linear_gradient_fill",
+          "meander_fill",
+          "tartan_fill",
+          "legacy_fill"
+        ],
+        "group": "Fill",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "fill_method": {
       "default": "tatami_fill",
       "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it. The other methods arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
@@ -720,9 +742,9 @@
     },
     "min_random_split_length_mm": {
       "default": null,
-      "description": "With a random split phase, also split stitches longer than this but no longer than the longest stitch. Empty: the longest stitch.",
+      "description": "With a random split phase, also split stitches longer than this but no longer than the longest stitch. 0 splits every stitch. Empty: the longest stitch.",
       "maximum": 25.0,
-      "minimum": 0.1,
+      "minimum": 0.0,
       "title": "Shortest split stitch",
       "type": [
         "number",
@@ -849,7 +871,7 @@
     },
     "random_seed": {
       "default": null,
-      "description": "Where random variation starts: a running stitch's random lengths, a satin column's random widths and spacing, and a tatami fill's random lengths. The same seed gives the same stitches, another seed others. Empty, each element gets its own.",
+      "description": "Where random variation starts: a running stitch's random lengths, a satin column's random widths and spacing, and a tatami fill's random lengths. The same seed gives the same stitches, another seed others, and elements alike given one seed vary alike. Empty, each element gets its own.",
       "minimum": 0,
       "title": "Random seed",
       "type": [
@@ -1683,6 +1705,7 @@
       },
       {
         "keys": [
+          "fill",
           "fill_method"
         ],
         "name": "FillParams",

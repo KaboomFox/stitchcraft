@@ -3,13 +3,17 @@
 //! Plans the reference hoop's whole field, a 130 × 180 mm tatami fill at 0.4 mm (`REQ-FILL-TAT-009`), with
 //! the engine's `field` example built in release, and measures it 2 ways:
 //!
-//! - **Instructions**, the guard. Valgrind's callgrind counts the instructions one plan takes, in
-//!   `pipeline::plan` and everything it calls. The count does not depend on how fast the machine is or what
-//!   else it runs, so a change that makes planning slower fails every time and nothing else does. A count
-//!   above the record in `conformance/perf.toml` by more than 2 % fails: the C library's allocator and
-//!   copies differ a little from one system to the next. `--record` lowers the record to today's count,
-//!   rounded up to a million, and never raises it; raising it is a hand edit, in a pull request that says
-//!   why. Without valgrind the count is skipped, except in CI, which installs it.
+//! - **Instructions**, the guard. Valgrind's callgrind counts the instructions one plan takes, in the
+//!   `field` example's `plan` and everything it calls. The count does not depend on how fast the machine
+//!   is or what else it runs, so a change that makes planning slower fails every time and nothing else
+//!   does. A count above the record in `conformance/perf.toml` by more than 2 % fails: the C library's
+//!   allocator and copies differ a little from one system to the next. `--record` lowers the record to
+//!   today's count, rounded up to a million, and never raises it; raising it is a hand edit, in a pull
+//!   request that says why. Without valgrind the count is skipped, except in CI, which installs it.
+//! - **The counted function.** Callgrind finds the function by its name, and counts 0, without a word,
+//!   when no function has it. So the example defines `plan` itself, never inlined, where a rename shows,
+//!   and a count below half the record fails, recording or not: callgrind lost the function, or planning
+//!   got so much faster that the record is lowered by hand.
 //! - **Time**, the budget itself. The median of 21 plans, in milliseconds, against NFR-PERF-1's 50 ms. How
 //!   fast and how busy the machine is change it, so a plan over the budget is a warning: the count is what
 //!   holds a change to account.
@@ -33,8 +37,10 @@ const RUNS: usize = 21;
 const SLACK_PERCENT: u64 = 2;
 /// Counts are recorded in whole millions, rounded up.
 const MILLION: u64 = 1_000_000;
-/// The function whose instructions callgrind counts, with everything it calls.
-const COUNTED: &str = "stitchcraft_engine::pipeline::plan";
+/// The function whose instructions callgrind counts, with everything it calls: the example's `plan`.
+const COUNTED: &str = "field::plan";
+/// The example's source, which defines [`COUNTED`].
+const SOURCE: &str = "crates/stitchcraft-engine/examples/field.rs";
 
 #[derive(Deserialize)]
 struct RecordFile {
@@ -92,6 +98,12 @@ pub fn run(record: bool) -> Result<(), String> {
                 std::fs::write(&path, render(field)).map_err(|e| format!("{RECORD}: {e}"))?;
                 report.push(format!("recorded {today} in {RECORD}"));
             }
+            Judged::Lost => findings.error(format!(
+                "callgrind counted {instructions} instructions in `{COUNTED}`, less than half the {} recorded in {RECORD}: it \
+                 counts nothing once the function is renamed or inlined (keep the `plan` of {SOURCE}), and if planning \
+                 really got this much faster, lower the record by hand, saying why in the pull request",
+                field.instructions
+            )),
         }
     } else if util::in_ci() {
         findings.error("valgrind is not installed: CI needs it to count the plan's instructions");
@@ -122,10 +134,15 @@ enum Judged {
     Over(u64),
     /// Recording, and below it: the new record, in whole millions.
     Lowered(u64),
+    /// Below half the record, recording or not: callgrind no longer counts the plan.
+    Lost,
 }
 
 /// `instructions` against `field`'s record, recording when `record` is set.
 fn judged(field: Field, instructions: u64, record: bool) -> Judged {
+    if instructions < field.instructions / 2 {
+        return Judged::Lost;
+    }
     let today = instructions.div_ceil(MILLION).saturating_mul(MILLION);
     let limit = field.instructions.saturating_add(field.instructions * SLACK_PERCENT / 100);
     match (record, today < field.instructions, instructions > limit) {
@@ -183,6 +200,24 @@ mod tests {
         assert_eq!(judged(FIELD, 285_600_000, false), Judged::Within);
         assert_eq!(judged(FIELD, 285_600_001, false), Judged::Over(285_600_000));
         assert_eq!(judged(FIELD, 200_000_000, false), Judged::Within, "faster passes without recording");
+    }
+
+    #[test]
+    fn a_count_of_0_or_below_half_the_record_fails() {
+        // Callgrind counts 0 when the counted function is renamed, moved or inlined.
+        for (count, record) in [(0, false), (0, true), (139_999_999, false), (139_999_999, true)] {
+            assert_eq!(judged(FIELD, count, record), Judged::Lost, "{count}");
+        }
+        assert_eq!(judged(FIELD, 140_000_000, false), Judged::Within);
+        assert_eq!(judged(FIELD, 140_000_000, true), Judged::Lowered(140_000_000));
+    }
+
+    #[test]
+    fn the_counted_function_is_the_example_s_own_and_never_inlined() {
+        let name = COUNTED.strip_prefix(&format!("{EXAMPLE}::")).unwrap();
+        let source = util::read(&util::root().join(SOURCE)).unwrap().replace("\r\n", "\n");
+        assert!(source.contains(&format!("#[inline(never)]\nfn {name}(")), "{SOURCE} defines `{name}`, never inlined");
+        assert!(BINARY.ends_with(&format!("/{EXAMPLE}")));
     }
 
     #[test]

@@ -4,15 +4,16 @@
 //! A fill sews the drawing's shape with Ink/Stitch's stitches: its region is the area the drawing shows
 //! ([`crate::normalize::region`]), the rows across it lie where Ink/Stitch lays them ([`rows`]), and the
 //! needle points along each row lie where Ink/Stitch places them ([`stitches`]). Each part's rows are sewn
-//! once each, in the order Ink/Stitch routes them (`route`, on a graph kept in Ink/Stitch's order by
-//! `graph`, measured along the part's rings by `rings`), part after part ([`sew`]). Between rows the needle
-//! travels under the rows sewn after it (`underpath`), kept inside the part (`clamp`), or with `underpath`
-//! off along the outline (`travel`). Before its top rows each part sews its underlay: rows farther apart,
+//! once each, in the order Ink/Stitch routes them (`route`, on a graph kept in Ink/Stitch's order by `graph`,
+//! measured along the part's rings by `rings`), part after part ([`sew`]). Between rows the needle travels
+//! under the rows sewn after it (`underpath`), kept inside the part (`clamp`), or with `underpath` off along
+//! the outline (`travel`). Where a point or a stitch lies against the part's rings is worked out from the
+//! nearby ring sides alone (`sides`). Before its top rows each part sews its underlay: rows farther apart,
 //! square to the top rows unless set otherwise, a layer for each angle, each sewn as the top rows are
 //! ([`TatamiParams::underlay`]), on the part shrunk by the underlay's inset. The top rows cover the part
 //! grown by `expand_mm` ([`TatamiParams::fill`]). The top rows reach past their ends by the pull compensation
-//! a satin's stitches share (`generators::pull`), and where the route leaves a stretch of rows, rows past
-//! its last fill the gap the fabric can open there (`gaps`).
+//! a satin's stitches share (`generators::pull`), and where the route leaves a stretch of rows, rows past its
+//! last fill the gap the fabric can open there (`gaps`).
 
 mod clamp;
 #[cfg(test)]
@@ -23,6 +24,7 @@ mod rings;
 mod route;
 pub mod rows;
 pub mod sew;
+mod sides;
 pub mod stitches;
 mod travel;
 mod underpath;
@@ -141,14 +143,16 @@ impl TatamiParams {
     /// The fill as it is sewn: its top rows, stitched with the element's `longest` stitch and the random
     /// lengths its `running` settings turn on, lengthened by `pull` and with the gap-filling rows, over each
     /// part grown by `expand_mm`, after its underlay over each part shrunk by `fill_underlay_inset_mm`, the
-    /// needle travelling as `travel` says.
-    pub fn fill(&self, longest: Mm, running: &RunningParams, travel: Travel, pull: Pull) -> Fill {
+    /// needle travelling as `travel` says. With `force_locks`, the element's `force_lock_stitches`, locks
+    /// part the pieces of top rows `expand_mm` cuts a part into.
+    pub fn fill(&self, longest: Mm, running: &RunningParams, travel: Travel, pull: Pull, force_locks: bool) -> Fill {
         let gap_rows = usize::try_from(self.gap_fill_rows.div_ceil(2) * 2).unwrap_or(usize::MAX);
         Fill {
             top: Layer { stitching: self.stitching(longest, running), travel, pull, gap_rows },
             expand: self.expand_mm.get(),
             underlay: self.underlay(longest, travel),
             inset: self.fill_underlay_inset_mm.get(),
+            force_locks,
         }
     }
 
@@ -237,13 +241,13 @@ mod tests {
         let longest = Mm::new(4.0).unwrap();
         let running = RunningParams::from_set(&ParamSet::new()).unwrap().params;
         let set = [("angle", "10"), ("expand_mm", "0.5"), ("fill_underlay_inset_mm", "-0.25")];
-        let fill = read(&set).fill(longest, &running, TRAVEL, Pull::default());
+        let fill = read(&set).fill(longest, &running, TRAVEL, Pull::default(), false);
         assert_eq!((fill.expand, fill.inset), (0.5, -0.25));
         let top = Layer { stitching: read(&set).stitching(longest, &running), travel: TRAVEL, pull: Pull::default(), gap_rows: 0 };
         assert_eq!(fill.top, top);
         assert_eq!(fill.underlay, read(&set).underlay(longest, TRAVEL));
         // Neither, by default.
-        let plain = read(&[]).fill(longest, &running, TRAVEL, Pull::default());
+        let plain = read(&[]).fill(longest, &running, TRAVEL, Pull::default(), false);
         assert_eq!((plain.expand, plain.inset), (0.0, 0.0));
     }
 
@@ -253,7 +257,7 @@ mod tests {
         let running = RunningParams::from_set(&ParamSet::new()).unwrap().params;
         let pull = Pull { mm: [0.5, 0.25], share: [0.1, 0.0] };
         for (rows, even) in [("0", 0), ("1", 2), ("2", 2), ("3", 4)] {
-            let fill = read(&[("gap_fill_rows", rows)]).fill(longest, &running, TRAVEL, pull);
+            let fill = read(&[("gap_fill_rows", rows)]).fill(longest, &running, TRAVEL, pull, false);
             assert_eq!((fill.top.pull, fill.top.gap_rows), (pull, even), "{rows}");
             assert!(fill.underlay.iter().all(|layer| layer.pull == Pull::default() && layer.gap_rows == 0), "{rows}");
         }

@@ -1,10 +1,10 @@
 $ stitch plan strokes.svg -o strokes.pes --preview strokes.png --report strokes.json
 strokes.svg
-  file      strokes.pes (PES v1, 2838 bytes)
-  sha256    f1d95e2de219eddcd36d2fb9b2730d07c44c06b48f5591ef7611eefbd6898f34
+  file      strokes.pes (PES v1, 2840 bytes)
+  sha256    d0ce3f4cb7843412b2ab0d4aeab07385fdf20b16a7e77cac3cefcf0b4b9193a3
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
-  size      60.0 × 45.0 mm
-  stitches  555 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops
+  size      59.9 × 45.0 mm
+  stitches  556 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops
   threads   1. unnamed (#c00000), shown as Brother PEC 5 "Red"
             2. unnamed (#0040c0), shown as Brother PEC 21 "Ultramarine"
             3. unnamed (#c00000), shown as Brother PEC 5 "Red"

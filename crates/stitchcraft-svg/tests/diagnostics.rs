@@ -32,8 +32,12 @@ fn diag_sc_e0801_a_file_that_is_not_svg_says_why() {
         says(br#"<svg xmlns="http://example.org/not-svg"/>"#),
         "The file's <svg> element is in the namespace http://example.org/not-svg, not SVG's."
     );
+    // A size or viewBox that does not read could put the design at any size, so the file is refused. One
+    // that is empty says nothing, and is read as missing (`diag_sc_w0804_root_attributes_a_viewer_ignores_are_named`).
     assert_eq!(says(br#"<svg width="x"/>"#), "The root element's width, \"x\", is not a length.");
-    assert_eq!(says(br#"<svg preserveAspectRatio="sideways"/>"#), "The root element's preserveAspectRatio, \"sideways\", is not one.");
+    assert_eq!(says(br#"<svg height="100 mm"/>"#), "The root element's height, \"100 mm\", is not a length.");
+    assert_eq!(says(br#"<svg viewBox="0 0 0 100"/>"#), "The drawing's size cannot be used: its viewBox has no area.");
+    assert_eq!(says(br#"<svg viewBox="0 0 10 -1"/>"#), "The drawing's size cannot be used: its viewBox has no area.");
     let nodes = format!("<svg>{}</svg>", "<g/>".repeat(1_000_000));
     assert_eq!(says(nodes.as_bytes()), "The file has more than 1000000 XML nodes, more than StitchCraft reads.");
     // Entities whose values are plain text are read (`REQ-SVG-001`); others could need far more memory than
@@ -67,7 +71,7 @@ fn diag_sc_w0802_what_is_not_stitched_is_named() {
     assert_eq!(
         warnings(&file),
         [
-            "warning SC-W0802: The file has a style sheet (`<style>`), which StitchCraft does not read: the colours, fills, outlines and hidden elements it sets are not used.",
+            "warning SC-W0802: StitchCraft does not read `g > rect` in the file's style sheet; what it sets is not used.",
             "warning SC-W0802: `title` is text, which is not stitched; it is left out.",
             "warning SC-W0802: `photo` is a raster image, which is not stitched; it is left out.",
             "warning SC-W0802: `clone` is a clone (`<use>`), which is not stitched yet; it is left out.",
@@ -80,8 +84,9 @@ fn diag_sc_w0802_what_is_not_stitched_is_named() {
     let text = &file.warnings[1];
     assert_eq!(text.element.as_ref().map(ToString::to_string).as_deref(), Some("svg:title"));
     assert_eq!(text.fix.as_ref().map(|f| f.describe()).as_deref(), Some("Convert the text to paths first (in Inkscape: Path › Object to Path)."));
-    // What can be stitched still is.
+    // What can be stitched still is, the style sheet's class included.
     assert_eq!(ids(&file), ["svg:patterned:fill", "svg:clipped:fill", "svg:styled:fill"]);
+    assert_eq!(file.design.elements()[2].thread.color.to_string(), "#ff0000");
 
     let more = svg(r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace" transform="scale(2)">
           <path id="arrow" d="M 0 0 L 10 0" stroke="red" fill="none" marker-end="url(#head)"/>
@@ -148,4 +153,38 @@ fn diag_sc_w0804_geometry_that_cannot_be_used_is_named() {
     .unwrap();
     assert_eq!(warnings(&lengths), ["warning SC-W0804: The y1 of `tilted`, \"eighty\", is not a length; 0 is used, as a viewer uses it."]);
     assert_eq!(ids(&lengths), ["svg:tilted:stroke"]);
+}
+
+#[test]
+fn diag_sc_w0804_root_attributes_a_viewer_ignores_are_named() {
+    // A viewer draws a file whose root has an empty width, height or viewBox, or an aspect ratio that does
+    // not read, as if the attribute were not there, and so does StitchCraft, naming each. The square is 10
+    // user units wide.
+    let square = |attributes: &str| svg(format!(r#"<svg xmlns="http://www.w3.org/2000/svg" {attributes}><rect width="10" height="10"/></svg>"#));
+    let corners = |file: &stitchcraft_svg::Svg| common::ends(&file.design.elements()[0])[0].iter().map(|p| (p.x(), p.y())).collect::<Vec<_>>();
+    let empty = square(r#"width="" height=" " viewBox="""#);
+    assert_eq!(
+        warnings(&empty),
+        [
+            "warning SC-W0804: The root element's width is empty; it is ignored, as a viewer ignores it.",
+            "warning SC-W0804: The root element's height is empty; it is ignored, as a viewer ignores it.",
+            "warning SC-W0804: The root element's viewBox is empty; it is ignored, as a viewer ignores it.",
+        ]
+    );
+    assert_eq!(corners(&empty), corners(&square("")), "as if none were there: a user unit is a CSS pixel");
+    assert_eq!(empty.warnings[0].element, None, "a note about the whole file names no element");
+    // xMidYMid meet, the default: the viewBox is half as large and in the middle of the width.
+    let sizes = r#"width="100mm" height="50mm" viewBox="0 0 100 100""#;
+    for (aspect, said) in [
+        (
+            "sideways",
+            "warning SC-W0804: The root element's preserveAspectRatio, \"sideways\", is not an aspect ratio SVG names; it is ignored, as a viewer ignores it.",
+        ),
+        ("", "warning SC-W0804: The root element's preserveAspectRatio is empty; it is ignored, as a viewer ignores it."),
+    ] {
+        let file = square(&format!(r#"{sizes} preserveAspectRatio="{aspect}""#));
+        assert_eq!(warnings(&file), [said]);
+        assert_eq!(corners(&file), corners(&square(sizes)));
+        assert_eq!(corners(&file)[0], (25.0, 0.0));
+    }
 }

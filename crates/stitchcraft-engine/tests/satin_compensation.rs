@@ -160,18 +160,18 @@ fn req_sat_007_random_widths_and_spacing_are_the_seed_s_and_stay_in_range() {
 #[test]
 fn req_sat_007_a_seed_sews_these_stitches_from_one_version_to_the_next() {
     // Frozen: the first pairs of a quarter ring, 20 mm out and 4 mm wide, with random widths and spacing
-    // and seed 11. The random values, the order they are drawn in, and where each one puts a pair along a
-    // curve, all show here.
+    // and seed 11, which alone seeds them. The random values, the order they are drawn in, and where each
+    // one puts a pair along a curve, all show here.
     let random = [("random_width_increase_percent", "20"), ("random_zigzag_spacing_percent", "30"), ("random_seed", "11"), NO_SHORT_STITCHES];
     let (points, _) = sewn_satin(&quarter_ring(20.0, 16.0), &random);
     let first: Vec<[f64; 4]> = across(&points).iter().take(6).map(|[a, b]| [a.x(), a.y(), b.x(), b.y()]).collect();
     let frozen: [[f64; 4]; 6] = [
-        [20.763_353_428_002_787, 0.0, 15.351_246_534_429_215, 0.0],
-        [20.702_713_488_948_582, 0.390_935_032_503_295_64, 15.512_041_638_801_772, 0.302_139_822_316_667_53],
-        [20.621_731_057_064_682, 0.736_996_940_838_874_8, 15.714_777_762_035_581, 0.570_230_238_166_095_2],
-        [20.358_976_063_687_592, 1.037_050_277_125_295_8, 15.392_535_073_162_71, 0.792_749_118_620_695_9],
-        [20.352_095_259_735_293, 1.396_144_780_109_040_5, 15.853_640_724_595_346, 1.095_278_733_159_802_6],
-        [20.199_977_201_330_412, 1.759_807_880_331_397, 15.414_109_255_676_218, 1.350_992_052_279_421_4],
+        [20.456_245_872_335_256, 0.0, 15.786_659_411_305_495, 0.0],
+        [20.021_612_078_953_112, 0.470_823_103_262_353_94, 15.971_255_037_776_356, 0.382_982_003_008_940_64],
+        [20.457_308_689_904_643, 0.886_061_408_383_543_9, 15.660_661_527_935_346, 0.686_715_825_540_243],
+        [20.275_842_041_050_197, 1.245_881_822_709_133, 15.279_347_534_929_352, 0.947_540_456_713_755_6],
+        [20.541_078_717_226_08, 1.789_373_952_798_411_2, 15.900_443_972_283_753, 1.392_867_141_324_502_8],
+        [20.532_647_296_322_683, 2.264_021_959_330_121_6, 15.713_885_027_868_635, 1.740_542_056_379_568_2],
     ];
     for (pair, want) in first.iter().zip(frozen) {
         assert!(pair.iter().zip(want).all(|(got, want)| (got - want).abs() < 1e-9), "{first:?}");

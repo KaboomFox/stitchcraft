@@ -1,7 +1,9 @@
 //! What REQ-PRM-001 asks of every registered parameter, as a check the registry's own test runs.
 //!
 //! A declaration that compiles can still be incomplete or contradictory: an empty range, a default
-//! outside it, an option listed twice, a visibility condition naming a parameter that does not exist.
+//! outside it, an option listed twice, a visibility condition naming a parameter that does not exist, or
+//! one an element could not read it by: of another declaration, shown only sometimes itself, or not read
+//! by every stitch type the condition's own parameter applies to.
 //! The generated reference pages, the JSON Schema and every host's settings panel trust that none of
 //! that happens, so [`audit()`] lists each such problem and the engine's registry test
 //! (`req_prm_001_every_registered_parameter_is_complete`) requires the list to be empty.
@@ -32,14 +34,14 @@ pub fn audit(registry: &[&ParamGroup]) -> Vec<String> {
             if !keys.insert(spec.key) {
                 problems.push(format!("`{}`: declared twice", spec.key));
             }
-            problems.extend(check(spec, registry).into_iter().map(|problem| format!("`{}`: {problem}", spec.key)));
+            problems.extend(check(spec, group, registry).into_iter().map(|problem| format!("`{}`: {problem}", spec.key)));
         }
     }
     problems
 }
 
-/// What is wrong with one parameter.
-fn check(spec: &ParamSpec, registry: &[&ParamGroup]) -> Vec<&'static str> {
+/// What is wrong with one parameter of `group`.
+fn check(spec: &ParamSpec, group: &ParamGroup, registry: &[&ParamGroup]) -> Vec<&'static str> {
     let mut problems = Vec::new();
     let mut require = |ok: bool, problem: &'static str| {
         if !ok {
@@ -74,6 +76,13 @@ fn check(spec: &ParamSpec, registry: &[&ParamGroup]) -> Vec<&'static str> {
             && find(registry, condition.key)
                 .is_some_and(|other| other.key != spec.key && condition.any_of.iter().all(|value| matches!(other.read(value), Ok((_, None)))));
         require(possible, "it is shown only when another parameter has a value that parameter cannot have");
+        // An element reads it by the other parameter's value as it reads that parameter: from the same
+        // declaration, always, for every stitch type this one applies to (`ParamSpec::read_by`).
+        let readable = group
+            .specs
+            .iter()
+            .any(|other| other.key == condition.key && other.visible_when.is_none() && spec.applies_to.iter().all(|t| other.applies_to.contains(t)));
+        require(readable, "it is shown by a parameter of another declaration, one shown only sometimes, or one that applies to fewer stitch types");
     }
     if let Stability::Deprecated { use_instead: Some(other) } = spec.stability {
         require(other != spec.key && find(registry, other).is_some(), "it is deprecated in favour of itself or of a parameter that does not exist");
@@ -100,14 +109,14 @@ fn range_is_usable(kind: Kind) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::spec::{ChoiceOption, Condition, Origin};
+    use crate::spec::{ChoiceOption, Condition, Empty, Origin};
     use crate::stitch_type::StitchType;
 
     const GOOD: ParamSpec = ParamSpec {
         key: "row_spacing_mm",
         label: "Row spacing",
         help: " Distance between rows.\n",
-        kind: Kind::Length { min: 0.1, max: 10.0, optional: false },
+        kind: Kind::Length { min: 0.1, max: 10.0, empty: Empty::Never },
         default: "0.25",
         family_defaults: &[],
         group: "Fill",
@@ -156,7 +165,7 @@ mod tests {
         const BROKEN: &[ParamSpec] = &[
             ParamSpec { key: "Row Spacing", label: " ", help: "", group: "", applies_to: &[], ..GOOD },
             ParamSpec { key: "a", label: "A", kind: Kind::Count { min: 3, max: 3 }, default: "3", ..GOOD },
-            ParamSpec { key: "b", label: "B", kind: Kind::Length { min: 0.0, max: f64::INFINITY, optional: false }, ..GOOD },
+            ParamSpec { key: "b", label: "B", kind: Kind::Length { min: 0.0, max: f64::INFINITY, empty: Empty::Never }, ..GOOD },
             ParamSpec {
                 key: "c",
                 label: "C",
@@ -167,7 +176,7 @@ mod tests {
             ParamSpec { key: "d", label: "D", visible_when: Some(Condition { key: "c", any_of: &["x", "z"] }), ..GOOD },
             ParamSpec { key: "e", label: "E", visible_when: Some(Condition { key: "e", any_of: &["0.25"] }), ..GOOD },
             ParamSpec { key: "f", label: "F", stability: Stability::Deprecated { use_instead: Some("gone") }, ..GOOD },
-            ParamSpec { key: "g", label: "G", kind: Kind::Length { min: 1.0, max: 1.0, optional: false }, default: "1", ..GOOD },
+            ParamSpec { key: "g", label: "G", kind: Kind::Length { min: 1.0, max: 1.0, empty: Empty::Never }, default: "1", ..GOOD },
             ParamSpec { key: "h", label: "H", kind: Kind::Text { max_bytes: 0 }, default: "", ..GOOD },
             ParamSpec { key: "i", label: "I", stability: Stability::Deprecated { use_instead: Some("i") }, ..GOOD },
             ParamSpec { key: "a", label: "A2", ..GOOD },
@@ -180,12 +189,20 @@ mod tests {
             ParamSpec {
                 key: "o",
                 label: "O",
-                kind: Kind::Length { min: 0.1, max: 10.0, optional: true },
+                kind: Kind::Length { min: 0.1, max: 10.0, empty: Empty::AtMostZero },
                 family_defaults: &[(Family::Fill, "")],
                 ..GOOD
             },
+            // Shown by a parameter shown only sometimes, by one of another declaration, and by one that
+            // applies to fewer stitch types.
+            ParamSpec { key: "p", label: "P", visible_when: Some(Condition { key: "d", any_of: &["0.25"] }), ..GOOD },
+            ParamSpec { key: "q", label: "Q", visible_when: Some(Condition { key: "elsewhere", any_of: &["0.25"] }), ..GOOD },
+            ParamSpec { key: "r", label: "R", applies_to: &[StitchType::SatinColumn], ..GOOD },
+            ParamSpec { key: "s", label: "S", visible_when: Some(Condition { key: "r", any_of: &["0.25"] }), ..GOOD },
         ];
-        let problems = audit(&[&group(BROKEN)]);
+        const ELSEWHERE: &[ParamSpec] = &[ParamSpec { key: "elsewhere", label: "Elsewhere", ..GOOD }];
+        let problems = audit(&[&group(BROKEN), &ParamGroup { name: "OtherParams", ..group(ELSEWHERE) }]);
+        let unreadable = "it is shown by a parameter of another declaration, one shown only sometimes, or one that applies to fewer stitch types";
         assert_eq!(
             problems,
             [
@@ -201,6 +218,7 @@ mod tests {
                 "`c`: its default is not a value it accepts without a warning",
                 "`d`: it is shown only when another parameter has a value that parameter cannot have",
                 "`e`: it is shown only when another parameter has a value that parameter cannot have",
+                &format!("`e`: {unreadable}"),
                 "`f`: it is deprecated in favour of itself or of a parameter that does not exist",
                 "`g`: its range is empty or not finite",
                 "`h`: its range is empty or not finite",
@@ -212,6 +230,9 @@ mod tests {
                 "`m`: a family's default is the default, or not a value the family accepts without a warning",
                 "`n`: a family's default is the default, or not a value the family accepts without a warning",
                 "`o`: a family's default is the default, or not a value the family accepts without a warning",
+                &format!("`p`: {unreadable}"),
+                &format!("`q`: {unreadable}"),
+                &format!("`s`: {unreadable}"),
             ]
         );
     }

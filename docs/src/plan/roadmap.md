@@ -35,7 +35,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | Step | Deliverable | Done when |
 |---|---|---|
 | M1.1 ✅ | `stitchcraft-core`: `Budget` and the diagnostics model (`Mm`, `Point`, `math` and `SplitMix64` with frozen reference values are already in the bootstrap) | unit tests; budget exhaustion is a diagnostic |
-| M1.2 ✅ | `stitchcraft-plan`: `Stitch`, `StitchKind`, `ColorBlock`, `StitchPlan`; invariant checker (`REQ-PLAN-001..007`) | each invariant has a violating and a passing case |
+| M1.2 ✅ | `stitchcraft-plan`: `Stitch`, `StitchKind`, `ColorBlock`, `StitchPlan`; invariant checker (`REQ-PLAN-001` to `003`, `005` to `007`) | each invariant has a violating and a passing case |
 | M1.3 ✅ | Machine profiles + `brother-200x200` (since replaced by the PE800's, [ADR 0013](../design/adr/0013-brother-pe800-reference-machine.md)); hoop and comfort diagnostics `SC-E0701`/`SC-W0702` with rotate hint | `REQ-PRF-001`, `REQ-PRF-002` active |
 | M1.4 ✅ | Quantization (absolute, round-half-even); PEC stitch encoder with spec vectors | `REQ-FMT-002` partial; encoder unit tests |
 | M1.5 ✅ | PES v1 writer: header, PEC header, palette indices, thumbnails | golden files (`REQ-FMT-001`) |
@@ -133,6 +133,9 @@ SVG adapter v2:
   position commands go into the design settings. Since M3 the adapter applies trim, stop and the ignore
   commands, and it never stitches commands, connectors or helper paths (`REQ-SVG-003`).
 - clones (`<use>`)
+- clip paths, as Ink/Stitch applies them: strokes and fills cut to the clip paths of the element and of
+  the groups around it, with the region code from M5.1. Until then the adapter sews the whole shape, and
+  `SC-W0802` says so.
 - custom locks drawn as SVG paths, which the adapter reads for the engine. Until then they sew the half
   stitch, with `SC-W0503`.
 - `stitch import-inkstitch file.svg -o file.vectorcraft`

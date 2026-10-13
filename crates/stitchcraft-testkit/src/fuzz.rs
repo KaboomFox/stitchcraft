@@ -99,6 +99,7 @@ fn within_caps(plan: &StitchPlan) {
 #[cfg(test)]
 mod tests {
     use proptest::prelude::*;
+    use stitchcraft_plan::{PlanBuilder, Provenance, Rgb, Role, Thread};
 
     use super::*;
     use crate::strategies;
@@ -126,6 +127,27 @@ mod tests {
                 read_dst(part);
                 read_write_preview(part);
             }
+            read_write_preview(&bytes);
+        }
+    }
+
+    /// Designs farther from their start than a PES file's origin field reaches (REQ-FMT-011) pass every
+    /// body: the PES writer refuses them. A DST file of a design 411 mm left of its start, as large frames
+    /// sew them, and a golden PES file whose origin field's first byte is changed, so that it reads as a
+    /// jump of −184.8 mm and the design reaches −204.8 mm.
+    #[test]
+    fn req_fmt_011_designs_far_from_their_start_pass_every_fuzz_body() {
+        let p = |x: f64| stitchcraft_core::Point::new(x, 0.0).unwrap();
+        let mut far = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+        far.jump(p(-411.4), Provenance::plan(Role::Travel));
+        for x in [-411.4, -409.4, -407.4] {
+            far.stitch(p(x), Provenance::plan(Role::Top));
+        }
+        let dst = encode(&far.finish(), FormatId::Dst, "far").unwrap().bytes;
+        let mut changed =
+            std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance/golden/formats/every-command.pes")).unwrap();
+        changed[22 + 528] = 0x98;
+        for bytes in [dst, changed] {
             read_write_preview(&bytes);
         }
     }
