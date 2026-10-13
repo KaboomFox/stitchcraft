@@ -277,7 +277,10 @@ and `SC-W0310` (inset) or `SC-W0309` (expand) says so, as Ink/Stitch warns.
 The thread pulls a row in at its ends. Each top row's segment is lengthened at both ends by
 `pull_compensation_mm` plus `pull_compensation_percent` of its length (`REQ-FILL-TAT-006`, since M5.8).
 The first value applies at the end the rows start from at the fill's angle. A second value, if given,
-applies at the other end. Ink/Stitch moves a satin's stitches with the same function, and the two settings are declared once
+applies at the other end. Where 2 segments of a row meet end to end, because the row only touches the
+outline there from inside or runs along it (section 1), the row goes on in the part. Both segments end at
+that point as they are, so the row is sewn once through it, as through Ink/Stitch's rebuilt part, where the
+row is one segment. Ink/Stitch moves a satin's stitches with the same function, and the two settings are declared once
 for both (`stitchcraft_engine::generators::pull`). A fill reads a value below 0 as 0, as Ink/Stitch does,
 and `SC-W0312` says so. The route is planned on the part as drawn. The needle's ways keep their course,
 but each starts where the row before it ends and ends where the next row starts, both lengthened.
@@ -294,12 +297,16 @@ last row before the rows past it are sewn. There, `gap_fill_rows`, rounded up to
 that many more rows past the last one, back and forth, and comes back to where it ended
 (`REQ-FILL-TAT-007`, since M5.8). A stretch's rows are counted as Ink/Stitch counts them: the rows
 reached by travel. The route's first row is one of them, because Ink/Stitch's route always starts with
-travel, of no length where it starts on that row. A stretch ends where the travel is more than a handover
-from one row to the next beside it, or from the last row to the fill's end beside it, which Ink/Stitch's
-route takes in one edge too. Each extra row is the next row of the grid, the stretch of its segment
-beside the last row, lengthened as the rows are. The extra rows stop at the part's edge, and where the
-part ends. Ink/Stitch repeats the last row a spacing further each time, and a repeat can run outside the
-part (`DEV-FILL-010`). Underlay has no gap-fill rows.
+travel, of no length where it starts on that row. Ink/Stitch's gap fill ends a stretch where the walk
+goes from one row to the next by more than one edge once the loops between them are taken out, and so does
+this one. An edge that comes back to a node where an earlier one of those edges ended takes out the edges
+since, and itself, but a loop back to the row it left stays. So travel out and back before a handover to the
+row beside ends a stretch, and a pairing edge, which stands for a way of several, does too. Each extra row
+is the next row of the grid, the stretch of its segment beside the extra row before it, or the last row
+for the first, lengthened as the rows are. The extra rows are one strip, stop at the part's edge, and stop
+where the part ends. The hop from each to the next, and the way back, are kept inside the part as travel
+is. Ink/Stitch repeats the last row a spacing further each time, and a repeat can run outside the part
+(`DEV-FILL-010`). Underlay has no gap-fill rows.
 
 ### 8. No rows
 
@@ -318,7 +325,7 @@ the fill sews nothing, and `SC-W0303` says so.
 | `REQ-FILL-TAT-004` | Coverage (`stitchcraft_testkit::metrics`): rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacings from the machine's shortest stitch to 0.4 mm, since M5.9 |
 | `REQ-FILL-TAT-005` | With `underpath`, travel takes the cheapest way along the lines under the rows not sewn yet, and its way lies inside the region (± 0.05 mm) |
 | `REQ-FILL-TAT-006` | Each top row extends past its segment's ends by the compensation; the part keeps its holes and pieces |
-| `REQ-FILL-TAT-007` | Gap-fill rows follow a stretch of more than 3 rows; all rows, gap-fill rows included, lie inside the part within its compensation |
+| `REQ-FILL-TAT-007` | Gap-fill rows follow a stretch of more than 3 rows, which ends where Ink/Stitch's gap fill ends one; all rows, gap-fill rows included, and the stitches between them lie inside the part within its compensation |
 | `REQ-FILL-TAT-008` | A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element |
 | `REQ-FILL-TAT-009` | A 130 × 180 mm rectangle at 0.4 mm, the reference hoop's whole field, plans within the NFR-PERF-1 budget, guarded by `cargo xtask perf` since M5.9 |
 | `REQ-FILL-TAT-011` | Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start |
