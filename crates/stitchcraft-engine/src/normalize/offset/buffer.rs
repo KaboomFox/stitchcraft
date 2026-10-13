@@ -28,8 +28,9 @@
 //!   farther from the ring than 0.99 of the distance, unless it has more than 4 times the ring's points.
 //!   Shrunk by less than that past nothing, the copy stays, in GEOS's answers and here.
 //!
-//! The parts come in order of their point of least x, and of least y among points level with it. GEOS gives
-//! them in the order it walks its graph, which this order matches in all but a few cases (`DEV-FILL-008`).
+//! The parts come in order of their point of least x, and of least y among parts level with each other:
+//! a run of parts, each with its least x within a nanometre of the one before. GEOS gives them in the
+//! order it walks its graph, which this order matches in all but a few cases (`DEV-FILL-008`).
 //! A part shrunk away entirely gives no polygon. The answers are checked against shapely's for random
 //! polygons (`conformance/oracle/buffer.py`).
 
@@ -72,13 +73,22 @@ pub(crate) fn buffer(polygon: &Polygon, distance: f64, meter: &mut Meter) -> Res
     }
     // An outline winds clockwise, -1 round what it bounds, and a part's area winds so.
     let area = area(&curves, |w| w <= -1, meter)?;
-    Ok(area.parts.map(|mut parts| {
-        parts.sort_by(|a, b| {
-            let (xa, xb) = (least(a), least(b));
-            if (xa - xb).abs() <= SAME { least_y(a).total_cmp(&least_y(b)) } else { xa.total_cmp(&xb) }
-        });
-        parts
-    }))
+    Ok(area.parts.map(in_order))
+}
+
+/// `parts` in order of their least x, and of their least y among parts level with each other: a run of
+/// parts, each with its least x within [`SAME`] of the one before, is level and comes lowest first, and
+/// parts level at the same height keep their order. Comparing 2 parts at a time, as level when their
+/// least x lie within `SAME` and by x otherwise, is no order where a run spans more than `SAME`. For least
+/// x of 0, 0.6 and 1.2 nm at falling heights, the first comes before the third, the third before the
+/// second and the second before the first, and Rust's sort may panic on that.
+fn in_order(parts: Vec<Polygon>) -> Vec<Polygon> {
+    let mut keyed: Vec<(f64, f64, usize, Polygon)> = parts.into_iter().enumerate().map(|(i, part)| (least(&part), least_y(&part), i, part)).collect();
+    keyed.sort_by(|a, b| a.0.total_cmp(&b.0));
+    for run in keyed.chunk_by_mut(|a, b| b.0 - a.0 <= SAME) {
+        run.sort_by(|a, b| a.1.total_cmp(&b.1).then(a.2.cmp(&b.2)));
+    }
+    keyed.into_iter().map(|(.., part)| part).collect()
 }
 
 /// Whether shrinking the closed `ring` by `d` wears it away, by GEOS's rules: a triangle whose inscribed
@@ -126,7 +136,7 @@ fn least_y(polygon: &Polygon) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use stitchcraft_core::Budget;
+    use stitchcraft_core::{Budget, SplitMix64};
 
     use super::*;
     use crate::normalize::fixture::cases;
@@ -229,9 +239,46 @@ mod tests {
         let mut ring = [(0, 0), (0, 8), (3, 8), (3, 12), (0, 12), (0, 20), (8, 20), (8, 12), (5, 12), (5, 8), (8, 8), (8, 0)];
         for _ in 0..2 {
             let pieces = buffer(&Polygon { outline: closed(&ring), holes: Vec::new() }, -2.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
-            let starts: Vec<(f64, f64)> = pieces.iter().map(|piece| (least(piece), least_y(piece))).collect();
-            assert_eq!(starts, [(2.0, 2.0), (2.0, 14.0)], "{ring:?}");
+            assert_eq!(corners(&pieces), [(2.0, 2.0), (2.0, 14.0)], "{ring:?}");
             ring.rotate_left(5);
         }
+    }
+
+    /// Each part's least x, and its least y there.
+    fn corners(parts: &[Polygon]) -> Vec<(f64, f64)> {
+        parts.iter().map(|part| (least(part), least_y(part))).collect()
+    }
+
+    /// A square of side 1 whose lowest left corner is at (`x`, `y`).
+    fn square(x: f64, y: f64) -> Polygon {
+        let ring = [(x, y), (x, y + 1.0), (x + 1.0, y + 1.0), (x + 1.0, y), (x, y)];
+        Polygon { outline: ring.iter().map(|&(x, y)| Point::new(x, y).unwrap()).collect(), holes: Vec::new() }
+    }
+
+    #[test]
+    fn parts_level_in_a_chain_come_lowest_first_from_any_order() {
+        // 30 squares whose least x lie 0.6 nm apart, each lower than the one to its left, and 3 more 1 mm to
+        // their right. Compared 2 at a time, as level when their least x lie within SAME and by x otherwise,
+        // the 30 go round in circles. In whatever order they come, the 30 are one level run and come lowest
+        // first, and then the 3, lowest first too.
+        let chain = (0..30).map(|k| square(f64::from(k) * 0.6e-9, -f64::from(k)));
+        let parts: Vec<Polygon> = chain.chain((0..3).map(|k| square(1.0 + f64::from(k) * 0.6e-9, f64::from(k)))).collect();
+        let expected: Vec<(f64, f64)> = corners(&parts[..30]).into_iter().rev().chain(corners(&parts[30..])).collect();
+        let mut rng = SplitMix64::new(1);
+        for _ in 0..200 {
+            // Shuffled: in the order of a random key for each part.
+            let mut keyed: Vec<(u64, Polygon)> = parts.iter().map(|part| (rng.next_u64(), part.clone())).collect();
+            keyed.sort_by_key(|&(key, _)| key);
+            assert_eq!(corners(&in_order(keyed.into_iter().map(|(_, part)| part).collect())), expected);
+        }
+    }
+
+    #[test]
+    fn parts_are_level_within_same_of_the_one_before_and_keep_their_order_at_one_height() {
+        // Least x SAME apart are level, and the lower comes first; 2 SAME apart, the left comes first.
+        assert_eq!(corners(&in_order(vec![square(0.0, 0.0), square(SAME, -1.0)])), [(SAME, -1.0), (0.0, 0.0)]);
+        assert_eq!(corners(&in_order(vec![square(0.0, 0.0), square(2.0 * SAME, -1.0)])), [(0.0, 0.0), (2.0 * SAME, -1.0)]);
+        // Level at the same height, they keep their order, whichever lies farther left.
+        assert_eq!(corners(&in_order(vec![square(SAME, 0.0), square(0.0, 0.0)])), [(SAME, 0.0), (0.0, 0.0)]);
     }
 }

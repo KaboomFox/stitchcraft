@@ -537,6 +537,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   edge of the reference hoop's whole field, and the hoop check and the plan checker refused it, while the
   check that the design is centred allowed the hair, as every length check does (`LENGTH_SLACK`). Both now
   allow it too (`REQ-PLAN-001`, `REQ-PRF-002`).
+- Planning no longer panics on a part that shrinking cuts into pieces whose least x lie in a chain of
+  steps under a nanometre that spans more than one (`REQ-FILL-TAT-012`). The pieces were sorted by
+  comparing 2 at a time, as level when their least x lie within a nanometre, which is no order on such
+  a chain, and Rust's sort can panic on that. Now a run of pieces, each within a nanometre of the one
+  before, is level and comes lowest first. Pieces that are not in such a chain come in the order they
+  came before.
 - With `skip_last`, a tatami fill's travel between 2 nodes that only an edge pairing them joins sews the
   row's end before it, as Ink/Stitch's does. Such an edge stands for a way of several edges
   (`DEV-FILL-006`), and Ink/Stitch never takes the 2 nodes for neighbours. The golden files stay as they

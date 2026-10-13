@@ -498,6 +498,42 @@ fn req_fill_tat_012_a_part_shrunk_into_pieces_sews_each_piece_s_underlay_in_turn
     assert!(has(&runs[1], 0.5, 3.0) && has(&runs[1], 16.5, 3.0), "then the top rows, across the whole part");
 }
 
+/// A comb: a spine from x = 10 to 11, and a tooth reaching left from it for each of `ends`, tooth k from
+/// y = −2k to −2k + 1.5 and from x = `ends[k]` to 8, joined to the spine by a neck 0.2 mm tall.
+fn comb(ends: &[f64]) -> Vec<(f64, f64)> {
+    let bottom = -2.0 * (ends.len() as f64 - 1.0);
+    let mut outline = vec![(10.0, 1.5), (11.0, 1.5), (11.0, bottom), (10.0, bottom)];
+    for (k, &x) in ends.iter().enumerate().rev() {
+        let y = -2.0 * k as f64;
+        outline.extend([(10.0, y + 0.65), (8.0, y + 0.65), (8.0, y), (x, y), (x, y + 1.5), (8.0, y + 1.5), (8.0, y + 0.85), (10.0, y + 0.85)]);
+    }
+    outline
+}
+
+/// Where along a comb each tooth's left end lies, in steps of 0.6 nm: a shuffle in which sorting the comb's
+/// pieces by comparing 2 at a time panicked.
+const SHUFFLED: [u32; 25] = [0, 22, 18, 9, 1, 7, 8, 12, 6, 15, 23, 4, 11, 24, 17, 19, 20, 21, 10, 5, 13, 14, 2, 16, 3];
+
+#[test]
+fn req_fill_tat_012_pieces_level_in_a_chain_of_steps_under_a_nanometre_come_lowest_first() {
+    // Shrunk by 0.3 mm, a comb of 25 teeth falls into its spine and a piece for each tooth. The teeth's left
+    // ends lie 0.6 nm apart, shuffled, so the pieces' least x lie in a chain of steps under a nanometre that
+    // spans more than one. Compared 2 at a time, as level when their least x lie within a nanometre and by
+    // x otherwise, the pieces went round in a circle, and sorting them panicked. They are level, one run
+    // of them, so they come lowest first, and then the spine.
+    let ends: Vec<f64> = SHUFFLED.iter().map(|&k| f64::from(k) * 0.6e-9).collect();
+    let outcome = planned(vec![fill("comb", &[&comb(&ends)], &RED, &[("expand_mm", "-0.3"), ("fill_underlay", "false")])]);
+    // The piece a needle point lies in: tooth k, from y = −2k + 0.3 to −2k + 1.2, or the spine, 25.
+    let piece = |q: Point| if q.x() > 9.0 { 25 } else { (0..25_u32).find(|&k| (q.y() + 2.0 * f64::from(k) - 0.75).abs() <= 1.0).unwrap() };
+    let mut sewn: Vec<u32> = Vec::new();
+    for stitch in outcome.plan.unwrap().blocks.iter().flat_map(|block| &block.stitches) {
+        if stitch.kind == StitchKind::Normal && !sewn.contains(&piece(stitch.at)) {
+            sewn.push(piece(stitch.at));
+        }
+    }
+    assert_eq!(sewn, (0..25).rev().chain([25]).collect::<Vec<_>>());
+}
+
 #[test]
 fn req_fill_tat_001_with_underpath_a_needle_inside_the_part_starts_at_the_nearest_node_of_the_lines() {
     // The needle near the middle of the square, about 6 mm from every side. Under the rows, the fill starts at
