@@ -11,6 +11,10 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
 - **Shapes.** Each `<path>`, `<rect>`, `<circle>`, `<ellipse>`, `<line>`, `<polyline>` and `<polygon>`
   that paints becomes one element per paint. A fill becomes an area and a stroke becomes an outline.
   A `<line>` has no fill.
+- **Where a shape starts.** A running stitch starts where its path starts and runs the way it runs, and
+  each basic shape starts and runs as Ink/Stitch reads it. A circle or an ellipse starts at its top and
+  turns left on screen. SVG 2 starts it at its right and turns the other way, which only dashes or
+  markers would show.
 - **Order.** Elements follow document order, which is SVG's paint order and the sewing order. A
   shape's fill is sewn before its stroke, as Ink/Stitch sews them, and the outline covers the fill's edge.
   When `paint-order` paints the stroke first, `SC-W0802` says the fill is sewn first.
@@ -25,6 +29,10 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
 
 - The root's `width`, `height`, `viewBox` and `preserveAspectRatio` map user units to millimetres. A
   user unit is a CSS pixel, 1/96 inch, unless they say otherwise.
+- A viewer ignores a root `width`, `height` or `viewBox` that is empty, and a `preserveAspectRatio` that
+  does not read. The adapter ignores them too, and `SC-W0804` names each. A `width`, `height` or
+  `viewBox` that does not read could put the design at any size, and the file is refused (`SC-E0801`).
+  So is a size of 0 or less, and a viewBox with no area, in which a viewer draws nothing.
 - Transforms compose through every ancestor. The matrices use `stitchcraft_core::math`, so the result
   is the same on every platform ([determinism](determinism.md)).
 - Path data is read as SVG viewers draw it, arcs included. An arc becomes cubic curves of at most 30°.
@@ -41,9 +49,19 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   swatch, gives that colour without one.
 - Colours read as editors write them. Keywords such as `currentcolor` may be in any case. An ICC colour
   after the sRGB one, which Inkscape's colour-managed picker writes, is left for the sRGB colour.
-- A declaration that does not read gives way to the next one, as in CSS: the last valid one in `style`,
-  else a valid presentation attribute. When none of an element's paints reads, the inherited paint
-  stays, and `SC-W0802` names the value.
+- Properties come from presentation attributes (`fill="red"`), the rules of style sheets and the `style`
+  attribute, in the order of CSS's cascade, as in a viewer (`REQ-SVG-006`). A rule overrides a
+  presentation attribute, and the `style` attribute overrides a rule. Of 2 rules, the more specific one
+  applies (more ids, then more classes, then an element name), and of 2 as specific, the later one. An
+  `!important` declaration overrides all of these. A declaration that does not read gives way to the
+  next one, as in CSS. When none of an element's paints reads, the inherited paint stays, and `SC-W0802`
+  names the value.
+- Style sheets are the `<style>` elements of the file, wherever they are, whose type is CSS. Illustrator
+  and CorelDRAW write a drawing's colours as classes there. The adapter reads a rule whose selector is an
+  element name or `*` followed by classes and ids, such as `rect`, `.cls-1`, `#logo` or `path.st0.st1`.
+  It reads a list of such selectors, such as `.a, .b`, as well. One `SC-W0802` names the other selectors,
+  such as `g > rect` or `a:hover`, and the at-rules, such as `@media` and `@import`. What they set is not
+  used. Ink/Stitch reads styles through inkex, which applies more kinds of selector.
 - `display: none` hides an element and everything in it. A hidden or fully transparent paint is left
   out, as a viewer leaves it out. The insides of `<defs>`, `<symbol>`, `<marker>`, `<pattern>`,
   `<clipPath>` and `<mask>` are never drawn.
@@ -78,8 +96,10 @@ them (`REQ-SVG-003`).
 - **Commands.** The `trim` and `stop` commands turn on the object's `trim_after` and `stop_after`. The
   `ignore_object` and `ignore_layer` commands leave out an object or a layer, as the
   `inkstitch:ignore_object` setting does, and `SC-I0805` lists each object left out. The
-  [command table](inkstitch-compat-contract.md#commands) gives what the adapter does with each of the
-  12 commands.
+  `starting_point` and `ending_point` commands, which place where Ink/Stitch starts and ends a fill or a
+  satin column, are not applied yet (`REQ-GEN-001`), and `SC-W0802` names each one on an object a viewer
+  shows. The [command table](inkstitch-compat-contract.md#commands) gives what the adapter does with
+  each of the 12 commands.
 - **Connectors** tie a command to its object.
 - **Helper paths** have one of Ink/Stitch's start markers. They steer the stitches of other objects.
 
@@ -99,23 +119,28 @@ defaults are in the [data model](data-model.md#engine-input-design-stitchcraft-e
 ## Reports
 
 - `SC-W0802` reports a feature that is not stitched. Text, images, clones, nested `<svg>` elements and
-  style sheets are such features. So are clipping, masks, filters, markers and the Ink/Stitch settings
-  that are not read yet.
+  the style sheet rules that are not read are such features. So are clipping, masks, filters, markers
+  and the Ink/Stitch settings that are not read yet. Clipping is planned for M8.
 - `SC-W0804` reports geometry that cannot be used:
   - path data with an error, stitched up to the error
   - a transform that does not parse, left out with its contents
   - an element that draws nothing
   - a point more than 10 m from the origin
   - a stroke width, join or miter limit that does not read, and a stroke too wide to measure
-- `SC-E0801` refuses a file that is not SVG, or that is larger than the adapter reads.
+  - an empty root `width`, `height` or `viewBox`, and a root `preserveAspectRatio` that does not read
+- `SC-E0801` refuses a file that is not SVG, or that is larger than the adapter reads. It refuses a file
+  whose size cannot be used too: a root `width`, `height` or `viewBox` that does not read, a size of 0
+  or less, or a viewBox with no area.
 
 ## Text and limits
 
 A file is UTF-8 text, or ISO-8859-1 when its XML declaration says so, which the adapter turns into UTF-8.
 A file in any other encoding is refused when it has a byte outside ASCII.
 
-A file is at most 64 MiB with a million XML nodes. Illustrator declares its namespaces as XML entities,
-and an entity whose value is plain text is read. A file is refused when an entity's value holds markup or
-other entities, or when its references would expand the file past 64 MiB. Without both rules a small
-file could need a large amount of memory. Reading charges the budget for each XML node, path segment and
-8 bytes of a transform or point list ([budgets](data-model.md#budgets)).
+A file is at most 64 MiB with a million XML nodes, and its style sheets have at most a million selectors,
+declarations and at-rules. Illustrator declares its namespaces as XML entities, and an entity whose value
+is plain text is read. A file is refused when an entity's value holds markup or other entities, or when
+its references would expand the file past 64 MiB. Without these rules a small file could need a large
+amount of memory. Reading charges the budget for each XML node, path segment and 8 bytes of a
+transform, point list or style sheet. Each element is charged for its classes, the style sheet rules
+tested against it and the declarations it takes ([budgets](data-model.md#budgets)).

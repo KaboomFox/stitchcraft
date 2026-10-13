@@ -9,13 +9,17 @@
 //! filled and empty faces become the parts' rings (`assemble`).
 //!
 //! Ink/Stitch builds a fill's area differently: the subpath of the largest area is the outline and every
-//! other subpath a hole, whatever the fill rule, and a shape that is not valid is repaired by the even-odd
-//! rule. Where the drawing's rule fills a part that the even-odd rule leaves empty, StitchCraft fills it
-//! and says so (`SC-I0306`, `DEV-FILL-001`). A subpath of fewer than 3 distinct points bounds nothing and
+//! other subpath a hole, whatever the fill rule, and a shape that is not valid is repaired. The repair
+//! merges the subpaths' lines, a stretch drawn twice into one, and fills the faces they bound by how
+//! deeply they nest. That is the even-odd rule, but where subpaths run along each other: a face beside the
+//! outside nests in nothing, and is always filled. StitchCraft follows the drawing (`DEV-FILL-001`), and
+//! says where that differs from Ink/Stitch: where the nonzero rule fills a face inside that the even-odd
+//! rule leaves empty (`SC-I0306`), and where the fill rule leaves a face beside the outside empty, which a
+//! stretch drawn twice bounds (`SC-I0313`). A subpath of fewer than 3 distinct points bounds nothing and
 //! is left out, where Ink/Stitch makes it a tiny triangle (`DEV-FILL-002`). Ink/Stitch's decisions about
 //! sewing are kept: a part of 3 square CSS pixels or less is too small for a row and is left out, but
 //! with a warning (`SC-W0303`), a fill under 20 square CSS pixels is better sewn otherwise (`SC-W0304`),
-//! and a fill in several parts is sewn one part after another (`SC-W0307`).
+//! and a fill in parts is sewn one part after another (`SC-W0307`).
 //!
 //! Each ring of a part starts at the point the drawing reaches first; outlines run clockwise and holes
 //! counter-clockwise in y-up axes (counter-clockwise and clockwise on screen, where y points down). The
@@ -98,8 +102,9 @@ impl Region {
 pub struct Built {
     /// The region.
     pub region: Region,
-    /// Parts left out, a fill too small, a fill in parts, and where the fill rule differs from the even-odd
-    /// rule (`SC-W0303`, `SC-W0304`, `SC-W0307`, `SC-I0306`), and `SC-E0009` should the rings not join.
+    /// Parts left out, a fill too small, a fill in parts, and where the area differs from Ink/Stitch's
+    /// (`SC-W0303`, `SC-W0304`, `SC-W0307`, `SC-I0306`, `SC-I0313`), and `SC-E0009` should the rings not
+    /// join.
     pub diagnostics: Vec<Diagnostic>,
 }
 
@@ -113,7 +118,7 @@ pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Ex
         FillRule::NonZero => w != 0,
         FillRule::EvenOdd => w.rem_euclid(2) == 1,
     };
-    let Area { parts, windings } = area(&rings, filled, meter)?;
+    let Area { parts, windings, beside_outside } = area(&rings, filled, meter)?;
     // Rings that do not join are a bug: the region is left empty, and SC-E0009 says so.
     let mut diagnostics: Vec<Diagnostic> = parts.as_ref().err().copied().map(Unjoined::diagnostic).into_iter().collect();
     let (kept_parts, left_out): (Vec<Polygon>, Vec<Polygon>) = parts.unwrap_or_default().into_iter().partition(|polygon| polygon.area() > TINY_PART);
@@ -142,12 +147,25 @@ pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Ex
                 .with_fix(Fix::Hint("To choose the order the parts are sewn in, break the fill apart into one element for each part.".to_string())),
         );
     }
-    if rule == FillRule::NonZero && windings.iter().any(|&w| w != 0 && w.rem_euclid(2) == 0) {
+    // Across the edge between a face and the outside, the winding number changes by the face's own: by an
+    // even number for a face the even-odd rule leaves empty, and by 0 for one the nonzero rule leaves
+    // empty. Rings then run along that edge both ways, or twice the same way, and Ink/Stitch's repair, which
+    // merges them into one edge, fills the face.
+    let faces = || windings.iter().zip(&beside_outside).take(windings.len().saturating_sub(1));
+    if rule == FillRule::NonZero && faces().any(|(&w, &beside)| w != 0 && w.rem_euclid(2) == 0 && !beside) {
         let message = "Subpaths of this fill wind round some of it twice the same way, which its fill rule (nonzero) fills and the even-odd \
                        rule leaves empty. It stays in the fill, as the drawing shows it; Ink/Stitch would leave it empty.";
         diagnostics.push(
             Diagnostic::new(Code::FillRuleNotEvenOdd, message)
                 .with_fix(Fix::Hint("To leave it empty, set the fill rule to even-odd, or draw the inner subpath the other way round.".to_string())),
+        );
+    }
+    if faces().any(|(&w, &beside)| beside && !filled(w)) {
+        let message = "Subpaths of this fill run along each other at its edge, around a part its fill rule leaves empty, as the drawing \
+                       shows it. Ink/Stitch counts a stretch drawn twice once, and would fill that part.";
+        diagnostics.push(
+            Diagnostic::new(Code::FillStretchDrawnTwice, message)
+                .with_fix(Fix::Hint("To sew it alike in both, draw the outline round the empty part instead of a subpath along it.".to_string())),
         );
     }
     Ok(Built { region, diagnostics })
@@ -158,8 +176,10 @@ pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Ex
 pub(crate) struct Area {
     /// The parts, unless the edges between filled and empty faces did not join into rings (a bug).
     pub(crate) parts: Result<Vec<Polygon>, Unjoined>,
-    /// Every face's winding number.
+    /// Every face's winding number; the last face is outside everything.
     pub(crate) windings: Vec<i64>,
+    /// For every face, whether it lies beside the outside: an edge has one on each side.
+    pub(crate) beside_outside: Vec<bool>,
 }
 
 /// The area `rings` (each open or closed, in the direction drawn) bound: the faces they cut the plane into
@@ -175,7 +195,20 @@ pub(crate) fn area(rings: &[Vec<Point>], filled: impl Fn(i64) -> bool, meter: &m
     let parts = assemble::parts(&arrangement, &kept, meter)?.map(|parts| {
         parts.iter().map(|part| Polygon { outline: ring(&part.outline), holes: part.holes.iter().map(|hole| ring(hole)).collect() }).collect()
     });
-    Ok(Area { parts, windings: faces.winding })
+    let outside = faces.winding.len().saturating_sub(1);
+    let mut beside_outside = vec![false; faces.winding.len()];
+    // The faces on the right of each edge's 2 halves.
+    let halves = &faces.right_of;
+    for (&a, &b) in halves.iter().step_by(2).zip(halves.iter().skip(1).step_by(2)) {
+        for (face, other) in [(a, b), (b, a)] {
+            if other == outside
+                && let Some(beside) = beside_outside.get_mut(face)
+            {
+                *beside = true;
+            }
+        }
+    }
+    Ok(Area { parts, windings: faces.winding, beside_outside })
 }
 
 /// `SC-W0303` for the parts left out, each too small to sew, located at the first; `all` when they were

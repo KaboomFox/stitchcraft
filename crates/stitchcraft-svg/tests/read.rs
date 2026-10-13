@@ -25,10 +25,11 @@ fn req_svg_001_an_inkscape_document_in_millimetres() {
     assert!(e[0].shape.path().subpaths[0].closed);
     assert_eq!((e[0].thread.color, e[1].thread.color), (Rgb::new(255, 0, 0), Rgb::new(0, 0, 255)));
     assert_eq!((e[0].name.as_deref(), e[2].name.as_deref()), (Some("Red box"), None));
-    // The circle: centre (60, 15), radius 8, a quarter turn at a time from its right, every point on it.
+    // The circle: centre (60, 15), radius 8, a quarter turn at a time from its top, turning left, every
+    // point on it.
     let circle = &ends(&e[2])[0];
     assert_eq!(circle.len(), 13);
-    for (i, (x, y)) in [(68.0, 15.0), (60.0, 23.0), (52.0, 15.0), (60.0, 7.0), (68.0, 15.0)].into_iter().enumerate() {
+    for (i, (x, y)) in [(60.0, 7.0), (52.0, 15.0), (60.0, 23.0), (68.0, 15.0), (60.0, 7.0)].into_iter().enumerate() {
         at(circle[3 * i], x, y);
     }
     for p in circle {
@@ -203,13 +204,32 @@ fn req_svg_001_basic_shape_attributes() {
     let rounded = &ends(&e[0])[0];
     assert_eq!(rounded.len(), 17);
     at(rounded[0], 12.0, 10.0);
-    // An ellipse with one radius is a circle of that radius (SVG 2's `auto`).
-    at(ends(&e[1])[0][0], 55.0, 50.0);
+    // An ellipse with one radius is a circle of that radius (SVG 2's `auto`), from its top.
+    at(ends(&e[1])[0][0], 50.0, 45.0);
+    at(ends(&e[1])[0][3], 45.0, 50.0);
     // A percentage radius is of the viewport's diagonal over √2: 10 % of 100 here.
-    at(ends(&e[2])[0][0], 60.0, 50.0);
+    at(ends(&e[2])[0][0], 50.0, 40.0);
     // A point list that runs out mid-point keeps the points before it.
     all_at(&ends(&e[3])[0], &[(0.0, 0.0), (10.0, 0.0)]);
     assert_eq!(svg.warnings.len(), 2, "no-size and no-radius draw nothing: {:?}", warnings(&svg));
+}
+
+#[test]
+fn req_svg_001_circles_and_ellipses_start_at_the_top_and_turn_left() {
+    // Ink/Stitch reads a circle or an ellipse as a path that starts at its top and turns left on screen, and
+    // a running stitch starts where its path starts: the tie-in and the way round follow.
+    let svg = svg(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100" fill="none" stroke="red">
+          <circle cx="50" cy="50" r="10"/><ellipse cx="50" cy="50" rx="20" ry="10"/>
+        </svg>"#);
+    for (element, (rx, ry)) in svg.design.elements().iter().zip([(10.0, 10.0), (20.0, 10.0)]) {
+        let points = &ends(element)[0];
+        assert_eq!(points.len(), 13, "{points:?}");
+        // A quarter turn at a time: the top, the left, the bottom, the right, and the top again.
+        let quarters = [(50.0, 50.0 - ry), (50.0 - rx, 50.0), (50.0, 50.0 + ry), (50.0 + rx, 50.0), (50.0, 50.0 - ry)];
+        for (i, (x, y)) in quarters.into_iter().enumerate() {
+            at(points[3 * i], x, y);
+        }
+    }
 }
 
 #[test]

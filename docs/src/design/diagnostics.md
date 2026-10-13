@@ -102,13 +102,14 @@ another.
 | `SC-W0303` | Warning | Parts of a fill too small to sew left out (3 square CSS pixels or less, as in Ink/Stitch); a fill of no area sews nothing | M5 |
 | `SC-W0304` | Warning | Fill smaller than 1.4 mm² (20 square CSS pixels); a running stitch or a satin column may sew it better | M5 |
 | `SC-W0305` | Warning | Fill part too thin for rows; sewn round its outline (as in Ink/Stitch) | M5 |
-| `SC-I0306` | Info | Nonzero fill rule fills a part the even-odd rule leaves empty (Ink/Stitch leaves it empty) | M5 |
+| `SC-I0306` | Info | Nonzero fill rule fills a part inside that the even-odd rule leaves empty (Ink/Stitch leaves it empty) | M5 |
 | `SC-W0307` | Warning | Fill in parts that are apart; each sewn on its own, joined by jumps | M5 |
 | `SC-I0308` | Info | Fill underlay too thin for rows; sewn round the outline (as in Ink/Stitch) | M5 |
 | `SC-W0309` | Warning | Fill's expand shrinks a part away; sewn at its own size (as in Ink/Stitch) | M5 |
 | `SC-W0310` | Warning | Fill's underlay inset shrinks a part away; underlay over all of it (as in Ink/Stitch) | M5 |
 | `SC-W0311` | Warning | Spiral could not be connected in a narrow part; that part uses inner-to-outer contours | M7 |
 | `SC-W0312` | Warning | Fill's pull compensation below 0; read as 0 (as in Ink/Stitch) | M5 |
+| `SC-I0313` | Info | Fill drawn twice along its edge; Ink/Stitch fills the part left empty (its repair merges the stretch) | M5 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |
 | `SC-W0403` | Warning | Hand-placed stitch shorter than the shortest stitch; point left out | M3 |

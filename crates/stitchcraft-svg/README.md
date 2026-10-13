@@ -19,6 +19,10 @@ Ink/Stitch's own objects are not stitched (`src/inkstitch.rs`, `REQ-SVG-003`):
 Its trim and stop commands set `trim_after` and `stop_after`. Its ignore commands and `ignore_object`
 setting leave objects and layers out and list them (`SC-I0805`, `REQ-ASM-004`).
 
+Style sheets set properties as in a viewer (`src/sheet.rs`, `REQ-SVG-006`). Their rules with element,
+class and id selectors, the ones Illustrator and CorelDRAW write, are read, in the order of CSS's cascade.
+One `SC-W0802` names the other selectors and the at-rules.
+
 Design: `docs/src/design/data-model.md` (the `Design`), `docs/src/design/architecture.md#hosts-ports-and-adapters`.
 
 ## Invariants
@@ -26,7 +30,7 @@ Design: `docs/src/design/data-model.md` (the `Design`), `docs/src/design/archite
 - Contains no stitch logic; only translation.
 - Never fails on content: any path data, degenerate arcs included, is read the way SVG viewers draw it
   (`REQ-SVG-002`); the reader is fuzzed nightly (`fuzz/fuzz_targets/read_svg.rs`). Only a file that is not
-  SVG at all is refused (`SC-E0801`).
+  SVG at all, or whose size cannot be read, is refused (`SC-E0801`).
 - Nothing is dropped silently: `SC-W0802` for SVG features it does not stitch, `SC-W0804` for geometry
   it cannot use, `SC-I0805` for what the file itself asks to leave out, unless a viewer would not show it
   either. Ink/Stitch's command symbols and their connectors are its controls, not drawing, so they are
@@ -34,8 +38,10 @@ Design: `docs/src/design/data-model.md` (the `Design`), `docs/src/design/archite
 - Positions are exact to within a micrometre (`REQ-SVG-001`) and the same on every platform: transforms
   and arcs use `stitchcraft_core::math`, never the platform's trigonometry.
 - Work is bounded. A file is at most 64 MiB with its entities expanded (`src/text.rs`) and a million XML
-  nodes, and reading charges the budget two units per XML node: one to find ids and Ink/Stitch's
-  commands, one to read it.
+  nodes, and its style sheets have at most a million selectors, declarations and at-rules. Reading
+  charges the budget two units per XML node, one in the pass that indexes the file and one in the pass
+  that reads it. Style sheets cost a unit per 8 bytes, and each element a unit per class, per rule tested
+  against it and per declaration it takes.
 - Parameters will round-trip unchanged (`REQ-PRM-003`, M8).
 
 ## Dependencies

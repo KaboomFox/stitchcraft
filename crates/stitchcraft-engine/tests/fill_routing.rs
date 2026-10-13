@@ -260,6 +260,26 @@ fn req_fill_tat_008_parts_are_sewn_nearest_the_needle_first_each_ending_nearest_
 }
 
 #[test]
+fn req_fill_tat_008_parts_that_tie_go_in_order_of_their_leftmost_point_s_y() {
+    // Ink/Stitch sorts the parts with a stable sort, and its geometry library gives them in order of their
+    // point of least x, and of least y among the points level with it. So of 2 squares level at their
+    // left, drawn the lower on screen first, the upper (of less y) is sewn first: with no needle, and with
+    // a needle as near both.
+    let lower: &[(f64, f64)] = &[(0.0, 20.0), (10.0, 20.0), (10.0, 30.0), (0.0, 30.0)];
+    let upper: &[(f64, f64)] = &[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)];
+    let level = region(&[lower, upper]);
+    assert_eq!(level.parts[0].outline[0], p(0.0, 20.0), "the region keeps the drawing's order");
+    for needle in [None, Some(p(-5.0, 15.0))] {
+        let runs = sewn(&level, &stitching(0.0), needle, None);
+        assert!(runs[0].iter().all(|q| q.y() <= 10.0), "{needle:?}: the part of least y first: {:?}", runs[0]);
+    }
+    // Through the whole plan, a design's first fill starts in it.
+    let outcome = planned(vec![fill("tied", &[lower, upper], &RED, &[])]);
+    let first = outcome.plan.as_ref().unwrap().blocks.iter().flat_map(|b| &b.stitches).find(|s| s.kind == StitchKind::Normal).unwrap();
+    assert!(first.at.y() <= 10.0, "{:?}", first.at);
+}
+
+#[test]
 fn diag_sc_w0305_a_fill_too_thin_for_a_row_is_sewn_round_its_outline() {
     // 0.15 mm tall, between the rows at 0 and 0.25: no row meets it.
     let sliver: &[(f64, f64)] = &[(0.0, 0.05), (20.0, 0.05), (20.0, 0.2), (0.0, 0.2)];
