@@ -19,7 +19,20 @@ const TRAVEL: Travel = Travel { length: 2.0, tolerance: 0.2, min_stitch: 1e-6, u
 /// the rings and rows, from no needle, with no pull compensation and no gap rows.
 fn plain<'a>(route: &'a Route, rings: &'a Rings<'a>, (segments, rows): &'a RowSegments, how: &'a Stitching, meter: &mut Meter) -> Sewing<'a> {
     let network = Network::new(&route.nodes, rings, &row_ends(route), meter).unwrap();
-    Sewing { route, rings, stitching: how, travel: TRAVEL, lines: None, network, start: None, segments, rows, pull: Pull::default(), gap_rows: 0 }
+    Sewing {
+        route,
+        rings,
+        stitching: how,
+        travel: TRAVEL,
+        lines: None,
+        network,
+        start: None,
+        segments,
+        rows,
+        pull: Pull::default(),
+        joints: joints(segments, meter).unwrap(),
+        gap_rows: 0,
+    }
 }
 
 /// The runs `route` through `segments`, one to a row, sews in the part of `rings`, travelling along its
@@ -66,9 +79,9 @@ fn with_skip_last_a_row_s_end_is_sewn_before_travel_unless_the_next_row_starts_b
 #[test]
 fn the_network_runs_along_the_rows_the_route_sews() {
     let steps = vec![
-        Step::Travel { from: 4, to: 0, beside: false },
+        Step::Travel { from: 4, to: 0, beside: false, leaves: false },
         Step::Row { segment: 1, from: 0, to: 1 },
-        Step::Travel { from: 1, to: 2, beside: true },
+        Step::Travel { from: 1, to: 2, beside: true, leaves: false },
         Step::Row { segment: 0, from: 3, to: 2 },
     ];
     assert_eq!(row_ends(&Route { nodes: Vec::new(), steps }), [[0, 1], [3, 2]]);
@@ -191,7 +204,8 @@ fn sew_rows(order: &[usize], how: &Stitching, gap_rows: usize, pull: Pull) -> Ve
     for (k, &row) in order.iter().enumerate() {
         let (from, to) = if k % 2 == 0 { (2 * row, 2 * row + 1) } else { (2 * row + 1, 2 * row) };
         if let Some(&Step::Row { segment, to: end, .. }) = steps.last() {
-            steps.push(Step::Travel { from: end, to: from, beside: row.abs_diff(segment) == 1 });
+            let beside = row.abs_diff(segment) == 1;
+            steps.push(Step::Travel { from: end, to: from, beside, leaves: !beside });
         }
         steps.push(Step::Row { segment: row, from, to });
     }
@@ -261,8 +275,8 @@ fn req_fill_tat_007_the_travel_to_the_end_from_beside_it_ends_no_stretch() {
     let rings = Rings::new(&part, meter).unwrap();
     let rows = segments(&part, &stitching(false), meter).unwrap();
     let route = route(&rings, &rows.0, None, Some(p(-5.0, 3.5)), meter).unwrap().unwrap();
-    let Some(&Step::Travel { from, beside, .. }) = route.steps.last() else { panic!("{:?}", route.steps) };
-    assert_eq!((route.nodes[from].point, beside), (p(0.0, 3.0), true));
+    let Some(&Step::Travel { from, beside, leaves, .. }) = route.steps.last() else { panic!("{:?}", route.steps) };
+    assert_eq!((route.nodes[from].point, beside, leaves), (p(0.0, 3.0), true, false));
     let mut sewn = |route: &Route, skip_last| {
         let how = stitching(skip_last);
         let mut sewing = Sewing { gap_rows: 2, ..plain(route, &rings, &rows, &how, meter) };
@@ -275,8 +289,8 @@ fn req_fill_tat_007_the_travel_to_the_end_from_beside_it_ends_no_stretch() {
     // Were that travel more than a handover, rows 4 and 5 would fill the gap past row 3 first, and the
     // needle would come back down from row 5.
     let mut leaving = route.clone();
-    if let Some(Step::Travel { beside, .. }) = leaving.steps.last_mut() {
-        *beside = false;
+    if let Some(Step::Travel { leaves, .. }) = leaving.steps.last_mut() {
+        *leaves = true;
     }
     assert_eq!(heights(&sewn(&leaving, false)), [5.0, 3.0, 3.5]);
     // With `skip_last`, the travel still sews row 3's end, as there is no next row to hand over to.
