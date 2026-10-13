@@ -29,7 +29,8 @@ order the file lists them, and the star comes first.
 
 `stitch plan` writes the machine file and, with `--preview`, a picture of it. It plans for the
 `brother-pe800-5x7` profile, the PE800 with its 5 × 7 in hoop, unless `--profile` names another. Each colour is a thread, and the
-PES file shows it as the nearest Brother palette colour. The machine stops between the red and the blue
+PES file shows it as the nearest Brother palette colour that no other thread of the design has. The
+machine stops between the red and the blue
 for you to change the thread.
 
 ## 3. Look at it
