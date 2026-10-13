@@ -167,7 +167,8 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    stitch a machine sews well, and a row's first grid point can lie just past its start. A needle point
    nearer the one before it than the shortest stitch is left out, as Ink/Stitch leaves out points nearer
    than its own shortest stitch. A part's last point stays, and the points before it that are too near it
-   go instead, finalize's rule applied in the generator. Where the rows lie nearer each other than the
+   go instead, unless that would bring it within the shortest stitch of the part's first: then it goes
+   itself. This is finalize's rule, applied in the generator. Where the rows lie nearer each other than the
    machine's shortest stitch and meet an edge square on, each row hands over to the next in a stitch too
    short to sew, so the next row's first needle point is left out (`DEV-FIN-001`). The thread then runs
    from the row's end to the next row's second needle point, and a sliver at each row's start shows. On
