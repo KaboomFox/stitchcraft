@@ -477,7 +477,7 @@ status = "active"
 id = "REQ-FIN-001"
 area = "plan/finalize"
 level = "L2"
-statement = "Finalizing fits every stitch to the machine: one longer than its longest is split into the fewest equal parts no longer than it (SC-I0703), and a needle point less than its element's shortest stitch (the one its generator used) from the one before is left out (SC-I0504), the ends of each run of stitches and lock points kept."
+statement = "Finalizing fits every stitch to the machine: one longer than its longest is split into the fewest equal parts no longer than it (SC-I0703), and a needle point less than its element's shortest stitch (the one its generator used) from the one before is left out (SC-I0504). The ends of each run of stitches and lock points stay, and the points before them go instead; but a run's last point or a lock point still too near one that stays before it goes itself, and a trim or stop after it happens where the needle is. A run's first point always stays."
 milestone = "M3"
 status = "active"
 
@@ -652,6 +652,15 @@ rationale = "The rungs set the angle of every stitch, and the start and the cuts
 milestone = "M4"
 status = "active"
 
+[[req]]
+id = "REQ-SAT-018"
+area = "satin"
+level = "L2"
+statement = "A satin column whose needle points all lie within its element's shortest stitch of its first sews nothing, and SC-W0215 says so (DEV-SAT-008). The rest of the design is planned as if it were not there."
+rationale = "Every stitch of such a speck is shorter than the machine sews well; sewn, it hammers one spot, and a plan of it fails the machine's limits."
+milestone = "M4"
+status = "active"
+
 # ── Fill region ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -771,6 +780,15 @@ milestone = "M5"
 status = "active"
 
 [[req]]
+id = "REQ-FILL-TAT-013"
+area = "fill/tatami"
+level = "L2"
+statement = "Placing points on a fill's rings, weighing travel's lines by their distance from the rings, and keeping travel inside its part look only at the sides of the rings near each point, line and stitch, and answer as a look at every side would. At the default settings, a 70 mm square with 14 x 14 round holes 3 mm across, and a 120 x 60 mm background with 60 holes of 200 points each, plan within a tenth of the default work budget."
+rationale = "A fill's work should grow with its size, not with the square of its detail: a design should be refused for being huge, not for having detailed holes."
+milestone = "M5"
+status = "active"
+
+[[req]]
 id = "REQ-FILL-TAT-009"
 area = "fill/tatami"
 level = "L2"
@@ -821,5 +839,14 @@ area = "cli"
 level = "L1"
 statement = "When `stitch plan` finds a bug in StitchCraft — a failed plan check (SC-E0009) or a panic — it writes no machine file, writes a bug-report bundle next to the file it was asked for, says where, and ends with exit status 4."
 rationale = "The person who meets a bug should not have to know how to report it: the bundle is the report."
+milestone = "M3"
+status = "active"
+
+[[req]]
+id = "REQ-CLI-003"
+area = "cli"
+level = "L1"
+statement = "When anything said about a design is an error, an element left out with one included (SC-E0004, SC-E0101, SC-E0201, SC-E0214), `stitch plan` writes no machine file and no picture, writes the report when one is asked for, says that nothing was written, and ends with exit status 1."
+rationale = "A machine file without one of the design's elements is not the design, and a script that checks the exit status should not sew it. Ink/Stitch writes no file when an element fails."
 milestone = "M3"
 status = "active"

@@ -12,7 +12,8 @@ use std::f64::consts::FRAC_PI_2;
 use proptest::prelude::*;
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::units::MM_PER_SVG_PX;
-use stitchcraft_core::{Budget, Point};
+use stitchcraft_core::{Budget, Code, Fix, Point};
+use stitchcraft_engine::PlanOutcome;
 use stitchcraft_engine::generators::Neighbours;
 use stitchcraft_engine::generators::pull::PullParams;
 use stitchcraft_engine::generators::satin::{SatinParams, satin_stitch};
@@ -202,6 +203,37 @@ fn diag_sc_w0210_rails_without_rungs_with_different_numbers_of_nodes_are_named()
     // The lower rail's node at 5 mm pairs with the upper's at 15 mm, and its node at 10 mm with none.
     let at_cut = across(&points).into_iter().find(|[a, _]| a.x() > 5.0 - 1e-9).unwrap();
     assert!(at_cut[1].x() >= 15.0 - 1e-9, "{at_cut:?}");
+}
+
+/// A satin column from (30, 0), `length` mm long and 0.2 mm across, planned after a 10 mm line.
+fn column_after_a_line(length: f64) -> PlanOutcome {
+    let column =
+        along("s", polylines(&[&[(30.0, 0.0), (30.0 + length, 0.0)], &[(30.0, 0.2), (30.0 + length, 0.2)]]), &RED, &[("satin_column", "true")]);
+    sewn(vec![along("a", polylines(&[&[(0.0, 0.0), (10.0, 0.0)]]), &RED, &[]), column])
+}
+
+#[test]
+fn req_sat_018_a_column_within_the_shortest_stitch_of_its_first_needle_point_sews_nothing() {
+    // 0.1 mm long: every needle point of the column lies within 0.3 mm of its first. The line is sewn alone.
+    let speck = column_after_a_line(0.1);
+    assert_eq!(shape_of(&speck), "J L4 S5 L4");
+    assert_eq!(speck.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::SatinTooSmall]);
+    // 0.4 mm long, its far end beyond the shortest stitch from its first needle point: sewn after the line.
+    let small = column_after_a_line(0.4);
+    assert!(small.diagnostics.iter().all(|d| d.code != Code::SatinTooSmall && d.code != Code::InternalCheckFailed), "{:?}", messages(&small));
+    assert_ne!(shape_of(&small), "J L4 S5 L4");
+}
+
+#[test]
+fn diag_sc_w0215_the_shortest_stitch_is_named() {
+    let speck = column_after_a_line(0.1);
+    let [said] = speck.diagnostics.as_slice() else { panic!("{:?}", messages(&speck)) };
+    assert_eq!(
+        said.to_string(),
+        "warning SC-W0215: Every needle point of this satin column lies within the shortest stitch (0.3 mm) of its first, so it is not \
+         stitched."
+    );
+    assert_eq!(said.fix, Some(Fix::Hint("Draw the column larger, or delete it if it is a stray.".to_string())));
 }
 
 #[test]

@@ -54,7 +54,7 @@ requirements = ["REQ-RUN-001"]
 [[deviation]]
 id = "DEV-FIN-001"
 area = "plan/finalize"
-summary = "StitchCraft fits every stitch to the machine: it leaves out needle points less than their element's shortest stitch from the one before, never less than the machine's (0.3 mm on the Brother), keeping the ends of each run of stitches, and splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else 0.1 mm, and splits nothing. Along an edge square to them, a tatami fill's rows nearer each other than the shortest stitch hand over in a stitch too short, so the next row's first needle point is left out and a sliver at its start shows: a bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay."
+summary = "StitchCraft fits every stitch to the machine: it leaves out needle points less than their element's shortest stitch from the one before, never less than the machine's (0.3 mm on the Brother), keeping the ends of each run of stitches and its lock points unless a stitch to one would fall short, and splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else 0.1 mm, and splits nothing. Along an edge square to them, a tatami fill's rows nearer each other than the shortest stitch hand over in a stitch too short, so the next row's first needle point is left out and a sliver at its start shows: a bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay."
 reason = "The machine profile says what the machine sews well; a stitch outside it hammers one hole, snags, or is refused (docs/src/design/engine-pipeline.md › Finalize)."
 requirements = ["REQ-FIN-001", "REQ-FILL-TAT-004"]
 
@@ -106,6 +106,13 @@ area = "satin"
 summary = "A satin column drawn as one path keeps the 2 rails made from its line as its rails, and each rung made pairs the points where it crosses them. Where 2 parts of the line join, the rung pairs the first points of the second part's rails. Ink/Stitch hands the rails and rungs back to its satin column as subpaths, which tells rails from rungs again by where they meet and how long they are, and adds a rung across the gap where parts join, 1.2 times as long, pairing where it crosses the rails. With 2 rungs or more on a column shorter than its rungs, it takes 2 rungs as the rails, and a line that crosses itself can make a rung meet more lines than a rail does. Ink/Stitch also keeps the first part of a line cut in half when its offset vanishes to one side, with the rail it has, where StitchCraft leaves that part out with SC-W0213, as it leaves out later ones."
 reason = "The rails made are known, so they need no guessing, and a column is never sewn between a rail and a rung. Where 2 parts meet on a straight stretch, the gap rung crosses the rails at those first points, and both sew alike. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_column.py, lib/elements/utils/stroke_to_satin.py). The case req_sat_017_the_rails_made_stay_the_rails (crates/stitchcraft-engine/tests/satin_centre_line.rs) draws the lines Ink/Stitch would make for a dash 3.3 mm long and 5 mm wide, and its rule for drawn columns takes the 2 rungs as the rails."
 requirements = ["REQ-SAT-016", "REQ-SAT-017"]
+
+[[deviation]]
+id = "DEV-SAT-008"
+area = "satin"
+summary = "A satin column whose needle points all lie within its element's shortest stitch of its first is not sewn, and SC-W0215 says so. Ink/Stitch sews it: its plan drops only stitches no longer than the element's shortest stitch, else the document's, 0.1 mm unless one is set."
+reason = "Every stitch of such a column is shorter than the machine sews well, and a stroke that small is left out the same way (DEV-RUN-004). Ink/Stitch's behaviour was read at d59c9ab (lib/stitch_plan/color_block.py, lib/elements/satin_column/satin_column.py)."
+requirements = ["REQ-SAT-018"]
 
 [[deviation]]
 id = "DEV-FILL-001"
