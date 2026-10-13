@@ -275,6 +275,10 @@ mod tests {
         // a declaration after it declares an entity, whatever quote the one before seems to open.
         let hidden = eighty(&format!("<!DOCTYPE svg [<!ATTLIST svg x CDATA '> <!ENTITY a '{long}'> <!ATTLIST svg y CDATA '>]>"));
         assert!(check_entities(&hidden).is_err(), "a declaration after a quote in another declaration");
+        // A literal of the external identifier before the subset is read to its closing quote, as the
+        // parser reads it, `>` and `[` included.
+        let literal = eighty(&format!(r#"<!DOCTYPE svg SYSTEM "odd>name[1].dtd" [<!ENTITY a '{long}'>]>"#));
+        assert!(check_entities(&literal).is_err(), "a `>` and a `[` in the external identifier");
         for valid in [
             r#"<!-- <!ENTITY logo SYSTEM "logo.svg"> --><svg/>"#,
             r#"<svg><desc><![CDATA[ e.g. <!ENTITY % x "y"> ]]></desc></svg>"#,
