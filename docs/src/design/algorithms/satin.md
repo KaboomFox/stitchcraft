@@ -262,6 +262,11 @@ along the column as it was.
    (A → B → A) spans `zigzag_spacing_mm`. The exit end is chosen by assembly (see *Start and end*).
    Random splits are drawn after the pairs are placed, in the order the stitches are sewn.
 
+**A column too small to sew.** A column whose needle points, underlays and travel included, all lie
+within its shortest stitch of its first, a speck a few tenths of a millimetre across, has no stitch the
+machine sews well. It sews nothing, and `SC-W0215` says so, as a stroke that small is left out
+(`SC-W0401`). Ink/Stitch sews it (`DEV-SAT-008`).
+
 ## Underlays
 
 Underlays are sewn before the top stitches, as Ink/Stitch sews them. The centre walk comes first, then the
@@ -400,6 +405,7 @@ end command, read from M8, would replace the needle point or the next stitch.
 | `REQ-SAT-013` | Starting at its nearest point, a column begins on the line between its rails nearest the needle, or on its outline when only that is within the jump length, and follows the line to its first stitch |
 | `REQ-SAT-014` | Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there. The column sews the first halves, then the second halves from the line's end, and stitches the end last |
 | `REQ-SAT-015` | A column drawn as one subpath whose stroke is no wider than the design's narrowest satin stroke sews as a stroke would, with `SC-W0212`. It offers its first point, as a stroke does |
+| `REQ-SAT-018` | A column whose needle points all lie within its shortest stitch of its first sews nothing, with `SC-W0215`, and the rest of the design is planned |
 
 Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparison to tune defaults
 ([machine testing](../../plan/machine-testing.md)).
@@ -408,4 +414,4 @@ Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparis
 
 `SC-E0201`, `SC-W0202`, `SC-W0203`, `SC-W0205`, `SC-W0206` (a contour underlay too short for its insets
 keeps its length), `SC-W0207`, `SC-W0208`, `SC-W0209` (a satin wider than 12 mm risks snagging: consider
-split stitches or a fill), `SC-W0210`, `SC-W0211` and `SC-W0212`.
+split stitches or a fill), `SC-W0210`, `SC-W0211`, `SC-W0212` and `SC-W0215` (a column too small to sew).

@@ -14,12 +14,14 @@
 use stitchcraft_core::math::sin_cos;
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Code, Point};
-use stitchcraft_engine::design::{Element, FillRule};
+use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule};
 use stitchcraft_engine::generators::Approach;
 use stitchcraft_engine::generators::tatami::rows::{Grid, rows};
 use stitchcraft_engine::generators::tatami::sew::{Fill, Layer, Pull, Travel, tatami_fill};
 use stitchcraft_engine::generators::tatami::stitches::{Stitching, row_points};
 use stitchcraft_engine::normalize::region::{Polygon, Region, build};
+use stitchcraft_engine::plan;
+use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Role, Stitch, StitchKind};
 use stitchcraft_testkit::designs::{RED, fill, line, messages, p, planned, rings};
 
@@ -356,6 +358,26 @@ fn req_fill_tat_008_parts_are_sewn_nearest_the_needle_first_each_ending_nearest_
 }
 
 #[test]
+fn req_fill_tat_008_parts_that_tie_go_in_order_of_their_leftmost_point_s_y() {
+    // Ink/Stitch sorts the parts with a stable sort, and its geometry library gives them in order of their
+    // point of least x, and of least y among the points level with it. So of 2 squares level at their
+    // left, drawn the lower on screen first, the upper (of less y) is sewn first: with no needle, and with
+    // a needle as near both.
+    let lower: &[(f64, f64)] = &[(0.0, 20.0), (10.0, 20.0), (10.0, 30.0), (0.0, 30.0)];
+    let upper: &[(f64, f64)] = &[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)];
+    let level = region(&[lower, upper]);
+    assert_eq!(level.parts[0].outline[0], p(0.0, 20.0), "the region keeps the drawing's order");
+    for needle in [None, Some(p(-5.0, 15.0))] {
+        let runs = sewn(&level, &stitching(0.0), needle, None);
+        assert!(runs[0].iter().all(|q| q.y() <= 10.0), "{needle:?}: the part of least y first: {:?}", runs[0]);
+    }
+    // Through the whole plan, a design's first fill starts in it.
+    let outcome = planned(vec![fill("tied", &[lower, upper], &RED, &[])]);
+    let first = outcome.plan.as_ref().unwrap().blocks.iter().flat_map(|b| &b.stitches).find(|s| s.kind == StitchKind::Normal).unwrap();
+    assert!(first.at.y() <= 10.0, "{:?}", first.at);
+}
+
+#[test]
 fn diag_sc_w0305_a_fill_too_thin_for_a_row_is_sewn_round_its_outline() {
     // 0.15 mm tall, between the rows at 0 and 0.25: no row meets it.
     let sliver: &[(f64, f64)] = &[(0.0, 0.05), (20.0, 0.05), (20.0, 0.2), (0.0, 0.2)];
@@ -400,6 +422,42 @@ fn diag_sc_w0305_a_fill_too_thin_for_a_row_is_sewn_round_its_outline() {
                 .to_string()
         )
     );
+}
+
+/// A `w` × `h` mm rectangle with `columns` × `rows` ellipses of radii `rx` and `ry` and `points` points each
+/// cut out of it, one in the middle of each cell of a grid: drawn the other way round, so that they are holes
+/// by either fill rule.
+fn holed(w: f64, h: f64, (columns, rows): (u32, u32), (rx, ry): (f64, f64), points: u32) -> Vec<Vec<(f64, f64)>> {
+    let mut parts = vec![vec![(0.0, 0.0), (w, 0.0), (w, h), (0.0, h)]];
+    for (i, j) in (0..columns).flat_map(|i| (0..rows).map(move |j| (i, j))) {
+        let (cx, cy) = ((f64::from(i) + 0.5) * w / f64::from(columns), (f64::from(j) + 0.5) * h / f64::from(rows));
+        let mut hole: Vec<(f64, f64)> = (0..points)
+            .map(|k| {
+                let (s, c) = sin_cos(f64::from(k) / f64::from(points) * std::f64::consts::TAU);
+                (cx + rx * c, cy + ry * s)
+            })
+            .collect();
+        hole.reverse();
+        parts.push(hole);
+    }
+    parts
+}
+
+#[test]
+fn req_fill_tat_013_fills_with_many_or_detailed_holes_plan_within_a_tenth_of_the_budget() {
+    // A 70 mm square with 14 × 14 round holes 3 mm across, of 33 points each as their curves flatten, and a
+    // 120 × 60 mm background with 15 × 4 holes of 200 points each: 6,500 and 12,000 points of rings, at the
+    // default settings. Looking at every side of every ring for each stitch of travel, both ran out of the
+    // whole budget.
+    let tenth = Budget { max_work: Budget::DEFAULT.max_work / 10, ..Budget::DEFAULT };
+    for (w, h, grid, radii, points) in [(70.0, 70.0, (14, 14), (1.5, 1.5), 33), (120.0, 60.0, (15, 4), (2.4, 5.25), 200)] {
+        let parts = holed(w, h, grid, radii, points);
+        let refs: Vec<&[(f64, f64)]> = parts.iter().map(Vec::as_slice).collect();
+        let settings = DesignSettings { origin: Some(p(w / 2.0, h / 2.0)), ..DesignSettings::default() };
+        let design = Design::new(vec![fill("holed", &refs, &RED, &[])], settings).unwrap();
+        let outcome = plan(&design, REFERENCE, &tenth);
+        assert!(outcome.diagnostics.is_empty() && outcome.plan.is_some(), "{w} × {h}: {:?}", messages(&outcome));
+    }
 }
 
 #[test]
@@ -754,6 +812,33 @@ fn req_fill_tat_006_pull_compensation_keeps_every_piece_and_hole_of_the_part() {
     assert!(has(&points, 5.2, 5.0) && has(&points, 4.8, 4.75), "{points:?}");
 }
 
+/// How many of the top stitches of the fill of `parts`, set as `params` say, run along the level row at
+/// height `y` over `x`, and how far left and right along it they reach.
+fn over(parts: &[&[(f64, f64)]], params: &[(&str, &str)], x: f64, y: f64) -> (usize, (f64, f64)) {
+    let points = needle_points(parts, params);
+    let along: Vec<[Point; 2]> = points.windows(2).filter(|w| w[0].y() == y && w[1].y() == y).map(|w| [w[0], w[1]]).collect();
+    let passes = along.iter().filter(|[a, b]| a.x().min(b.x()) < x && x < a.x().max(b.x())).count();
+    (passes, span(&along.concat()))
+}
+
+#[test]
+fn req_fill_tat_006_a_row_is_lengthened_only_where_it_leaves_the_part() {
+    // Rows 1 mm apart. A notch up from the bottom side to y = 5, whose top side the row at y = 5 runs along,
+    // and a V whose tip touches that row at x = 3: the row meets the outline without leaving the part, at x =
+    // 2 and 4, and at x = 3, so it is 3 segments, and 2, end to end (REQ-FILL-TAT-010). Lengthened where they
+    // meet, the needle sewed past each joint and back over it.
+    let notch: [&[(f64, f64)]; 1] = [&[(0.0, 0.0), (6.0, 0.0), (6.0, 10.0), (4.0, 10.0), (4.0, 5.0), (2.0, 5.0), (2.0, 10.0), (0.0, 10.0)]];
+    let vee: [&[(f64, f64)]; 1] = [&[(0.0, 0.0), (6.0, 0.0), (6.0, 10.0), (4.0, 10.0), (3.0, 5.0), (2.0, 10.0), (0.0, 10.0)]];
+    for (parts, x) in [(&notch, 4.1), (&vee, 3.1)] {
+        for (pull, reach) in [("0", (0.0, 6.0)), ("0.3", (-0.3, 6.3))] {
+            let (passes, (left, right)) = over(parts, &[NO_UNDERLAY, ("row_spacing_mm", "1"), ("pull_compensation_mm", pull)], x, 5.0);
+            assert_eq!(passes, 1, "{pull} mm over x = {x}");
+            // Where the row leaves the part, it still reaches past it by the compensation.
+            assert_eq!(((left * 1e9).round() / 1e9, (right * 1e9).round() / 1e9), reach, "{pull} mm");
+        }
+    }
+}
+
 #[test]
 fn req_fill_tat_007_gap_rows_add_rows_inside_the_part() {
     // Round the frame's hole the route leaves stretches of rows for others: the gap rows add needle
@@ -779,6 +864,30 @@ fn req_fill_tat_007_every_row_lies_inside_the_part_within_its_compensation() {
         let points = needle_points(parts, &[("pull_compensation_mm", "0.4"), ("gap_fill_rows", "4"), ("angle", "30")]);
         assert!(points.iter().all(|&q| near_or_in(part, q, 0.4 + 1e-9)), "{parts:?}");
         assert!(points.iter().any(|&q| !near_or_in(part, q, 0.39)), "the rows reach out 0.4 mm: {parts:?}");
+    }
+}
+
+/// The stitches between the top needle points of the fill of `parts`, set as `params` say, that pass farther
+/// than `within` from the part, each looked at 19 points along it.
+fn leaving(parts: &[&[(f64, f64)]], params: &[(&str, &str)], within: f64) -> Vec<[Point; 2]> {
+    let part = &region(parts).parts[0];
+    let away = |w: &[Point]| (1..20).any(|k| !near_or_in(part, w[0].lerp(w[1], f64::from(k) / 20.0), within));
+    needle_points(parts, params).windows(2).filter(|w| away(w)).map(|w| [w[0], w[1]]).collect()
+}
+
+/// A U: arms 6 mm wide and 10 mm tall either side of a notch 8 mm wide, under a bar 10 mm tall.
+const YOU: [&[(f64, f64)]; 1] = [&[(0.0, 0.0), (6.0, 0.0), (6.0, 10.0), (14.0, 10.0), (14.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)]];
+
+#[test]
+fn req_fill_tat_007_the_stitches_to_and_from_gap_fill_rows_stay_inside_the_part() {
+    // The frame at 30°, and the U at 0°, where the rows past a stretch's last row lie on both sides of its
+    // notch. Every stitch keeps inside the part, but for a running stitch that cuts a corner of a ring by up
+    // to its tolerance, 0.2 mm.
+    for (parts, angle) in [(&HOLED[..], "30"), (&YOU[..], "0")] {
+        for gaps in ["0", "4"] {
+            let out = leaving(parts, &[NO_UNDERLAY, ("angle", angle), ("gap_fill_rows", gaps)], 0.25);
+            assert_eq!(out, Vec::<[Point; 2]>::new(), "{gaps} gap-fill rows at {angle}°");
+        }
     }
 }
 

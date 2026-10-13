@@ -6,7 +6,7 @@
 //! [`split`] is the other shared piece: every format limits how far one record may move, and splits
 //! longer moves evenly (REQ-FMT-007).
 
-use stitchcraft_plan::{Rgb, StitchKind, StitchPlan};
+use stitchcraft_plan::{StitchKind, StitchPlan, Thread};
 
 use crate::error::EncodeError;
 use crate::quantize::{Delta, Units, quantize_point};
@@ -33,9 +33,9 @@ pub(crate) enum Op {
 pub(crate) struct Lowered {
     /// The operations, ending with exactly one [`Op::End`].
     pub ops: Vec<Op>,
-    /// The thread colour of every colour entry — the first block, each later block, each stop — in order.
-    /// Formats that list threads list these.
-    pub entries: Vec<Rgb>,
+    /// The thread of every colour entry — the first block, each later block, each stop — in order. Formats
+    /// that list threads list these.
+    pub entries: Vec<Thread>,
     /// The smallest and largest position the needle visits (the start at the origin excluded).
     pub bounds: (Units, Units),
 }
@@ -53,7 +53,7 @@ pub(crate) fn lower(plan: &StitchPlan, format: &'static str) -> Result<Lowered, 
         return Err(EncodeError::Empty);
     }
     let mut ops = Vec::with_capacity(plan.stitches().count() + plan.blocks.len() + 1);
-    let entries = plan.color_entries().iter().map(|entry| entry.thread.color).collect();
+    let entries = plan.color_entries().iter().map(|entry| entry.thread.clone()).collect();
     let mut needle = Units::default();
     let mut bounds: Option<(Units, Units)> = None;
 
@@ -140,7 +140,7 @@ impl ExactSizeIterator for Split {}
 #[cfg(test)]
 mod tests {
     use stitchcraft_core::Point;
-    use stitchcraft_plan::{PlanBuilder, Provenance, Role, Thread};
+    use stitchcraft_plan::{PlanBuilder, Provenance, Rgb, Role, Thread};
 
     use super::*;
 
@@ -192,7 +192,8 @@ mod tests {
                 Op::End,
             ]
         );
-        assert_eq!(lowered.entries, vec![Rgb::new(1, 2, 3), Rgb::new(4, 5, 6), Rgb::new(4, 5, 6)]);
+        let colors: Vec<Rgb> = lowered.entries.iter().map(|thread| thread.color).collect();
+        assert_eq!(colors, [Rgb::new(1, 2, 3), Rgb::new(4, 5, 6), Rgb::new(4, 5, 6)]);
         assert_eq!(lowered.changes(), 2);
         assert_eq!(lowered.bounds, (Units { x: -20, y: -10 }, Units { x: 35, y: 10 }));
     }

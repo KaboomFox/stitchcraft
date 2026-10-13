@@ -9,6 +9,7 @@
 // Test code may unwrap (clippy.toml allows it inside #[test] functions; these helpers are test code too).
 #![allow(clippy::unwrap_used)]
 
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use proptest::prelude::*;
@@ -81,11 +82,15 @@ fn through_pes(plan: &StitchPlan) -> StitchPlan {
 }
 
 /// What a PES file can say of `plan`: a trim before every jump after its first record (REQ-FMT-010),
-/// colours become Brother palette colours and roles are gone.
+/// threads become the Brother palette colours they are written as (REQ-THREAD-002) and roles are gone.
+/// The threads of one colour in these plans are one thread.
 fn as_pes_says(plan: &StitchPlan) -> Scene {
+    let entries = plan.color_entries();
+    let assigned = BROTHER_PEC.assign(entries.iter().map(|entry| entry.thread)).unwrap();
+    let shown: BTreeMap<Rgb, Rgb> = entries.iter().zip(&assigned.entries).map(|(entry, written)| (entry.thread.color, written.color)).collect();
     let mut scene = scene(&as_pes(plan));
     for hole in &mut scene.holes {
-        hole.color = BROTHER_PEC.nearest(hole.color).unwrap().color;
+        hole.color = shown.get(&hole.color).copied().unwrap();
         hole.lock = false;
     }
     scene
@@ -120,10 +125,10 @@ proptest! {
     /// never splits a stitch.
     #[test]
     fn req_rnd_001_random_plans_look_the_same_read_back_from_pes(plan in strategies::plan(120, 70.0)) {
-        // PES cannot tell two blocks whose threads are the same Brother colour from one block with a
-        // stop (`stitchcraft-formats/src/pes/read.rs`), so such plans read back differently.
-        let pec = |b: &stitchcraft_plan::ColorBlock| BROTHER_PEC.nearest(b.thread.color).unwrap().index;
-        prop_assume!(plan.blocks.windows(2).all(|w| pec(&w[0]) != pec(&w[1])));
+        // A change to the same thread is a stop in PES (`stitchcraft-formats/src/pes/read.rs`), so a plan
+        // that changes to the thread it has reads back differently. Different threads have different
+        // entries (REQ-THREAD-002).
+        prop_assume!(plan.blocks.windows(2).all(|w| w[0].thread != w[1].thread));
         prop_assert_eq!(scene(&through_pes(&plan)), as_pes_says(&plan));
     }
 }
