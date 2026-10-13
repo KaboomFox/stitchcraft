@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-d7b9ea02.js";
+            window.path_to_searchindex_js = "searchindex-a40e3e23.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -4142,9 +4142,12 @@ the longest length), as often as needed. When only the start is left and the end
 even that is closer than the shortest stitch, the part is not stitched (<code>SC-W0401</code>).</li>
 <li><strong>Respect the curve.</strong> If the chord between two consecutive needle points strays from the path by
 more than the tolerance left after flattening, split that stitch at the path’s point of greatest
-deviation, among those that leave both parts within the lengths above, and repeat. This bounds the
-visual error by <code>running_stitch_tolerance_mm</code> on any curve whose details are larger than the shortest
-stitch.</li>
+deviation, among those at least the shortest stitch from both its ends, and repeat. A part longer than
+the longest length is split along the path as in step 4. So the stitches stray from the path by at
+most <code>running_stitch_tolerance_mm</code>, except where the path’s details are smaller than the shortest
+stitch. There a point of the flattened path that is passed over lies nearer than the shortest stitch
+to a needle of its stitch, and the path strays by less than the shortest stitch plus a tenth of the
+tolerance.</li>
 <li><strong>Random length.</strong> With <code>enable_random_stitch_length</code>, each stitch length is drawn uniformly from
 <code>s × (1 ± jitter)</code>, the first of each span a random fraction of that (a random phase, below), then the
 span is rescaled to end on its corner. The element’s own generator draws them, seeded with its
