@@ -30,7 +30,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | Cross-platform | Tests on Linux, macOS, Windows; identical conformance hashes | `ci.yml` | CI |
 | API docs | Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links | `cargo xtask ci` (`RUSTDOCFLAGS=-D warnings`) | `cargo xtask ci` · CI |
 | **Public API review** | Changes to a library crate's public API show in the PR diff, as a change to its `public-api.txt` | `xtask/src/api.rs` (cargo-public-api, pinned) | `cargo xtask api --check` · CI |
-| **Coverage ratchet** | No crate's line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, with any function whose lines its unit tests and integration tests only run between them | `conformance/coverage.toml`, `xtask/src/coverage.rs` (cargo-llvm-cov) | `cargo xtask coverage` · CI job |
+| **Coverage ratchet** | No crate's line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, those only another build of a function or a closure on the line runs included | `conformance/coverage.toml`, `xtask/src/coverage.rs` (cargo-llvm-cov) | `cargo xtask coverage` · CI job |
 | **Performance budget** | Planning the reference hoop's whole field (`REQ-FILL-TAT-009`) takes at most 2 % more instructions than recorded. Records only go down. Its time is reported against NFR-PERF-1's 50 ms, with a warning above it | `conformance/perf.toml`, `xtask/src/perf.rs` (valgrind's callgrind), the engine's `field` example | `cargo xtask perf` · CI job |
 | **Mutation testing** | Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down | `.cargo/mutants.toml`, `conformance/mutation.toml`, `xtask/src/mutants.rs` | `mutants.yml` · changed lines every PR, in 4 parts · everything weekly |
 | **Fuzzing** | Readers never panic, respect their caps and terminate; anything read round-trips and previews | `fuzz/`, `stitchcraft-testkit::fuzz` ([conformance](conformance.md#fuzzing)) | bodies every PR · an hour nightly |
@@ -46,10 +46,15 @@ run, where milliseconds do not. Its check fails for a change that slows planning
 runs. The time is still measured and reported, against the budget the requirement states in milliseconds.
 
 Coverage counts each build of a function apart and takes the build that runs the most lines. The unit
-tests and the integration tests use separate builds, and a generic function has one per type it is used
-with. A function whose lines only both kinds of test together run counts as partly untested, though every
-line runs. The coverage job names such a function. Move the tests that run its other lines to the kind
-of test that runs most of it.
+tests and the integration tests use separate builds, a generic function has one per type it is used with,
+and a closure is a function of its own. So a line can count as untested though the lcov report counts it
+run. Only the other kind of test runs it, or only a closure on the line runs, as with a `?` after a
+closure argument whose error the tests never bring. The coverage job names these lines and the function
+they count against. Run them from the kind of test that runs most of the function.
+
+`cargo xtask coverage` runs the job locally. It needs cargo-llvm-cov and rustup's `llvm-tools`. Without
+the latter, `LLVM_COV` and `LLVM_PROFDATA` can name another LLVM's llvm-cov and llvm-profdata that read
+the toolchain's profiles: LLVM 20's read those of Rust 1.97.
 
 ## Design rules (reviewed, partly linted)
 

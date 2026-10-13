@@ -99,16 +99,18 @@ another.
 | `SC-W0212` | Warning | Satin column drawn as one path too narrow; sewn as a stroke | M4 |
 | `SC-W0213` | Warning | Parts of a satin column drawn as one path left out (still crossing after 20 cuts in half, or turning too tightly for its width) | M4 |
 | `SC-E0214` | Error | Satin column drawn as one path could not be made into rails (too short, or too tight for its width) | M4 |
+| `SC-W0215` | Warning | Satin column too small for the shortest stitch; left out (all within it of its first needle point; Ink/Stitch sews it) | M4 |
 | `SC-W0303` | Warning | Parts of a fill too small to sew left out (3 square CSS pixels or less, as in Ink/Stitch); a fill of no area sews nothing | M5 |
 | `SC-W0304` | Warning | Fill smaller than 1.4 mm² (20 square CSS pixels); a running stitch or a satin column may sew it better | M5 |
 | `SC-W0305` | Warning | Fill part too thin for rows; sewn round its outline (as in Ink/Stitch) | M5 |
-| `SC-I0306` | Info | Nonzero fill rule fills a part the even-odd rule leaves empty (Ink/Stitch leaves it empty) | M5 |
+| `SC-I0306` | Info | Nonzero fill rule fills a part inside that the even-odd rule leaves empty (Ink/Stitch leaves it empty) | M5 |
 | `SC-W0307` | Warning | Fill in parts that are apart; each sewn on its own, joined by jumps | M5 |
 | `SC-I0308` | Info | Fill underlay too thin for rows; sewn round the outline (as in Ink/Stitch) | M5 |
 | `SC-W0309` | Warning | Fill's expand shrinks a part away; sewn at its own size (as in Ink/Stitch) | M5 |
 | `SC-W0310` | Warning | Fill's underlay inset shrinks a part away; underlay over all of it (as in Ink/Stitch) | M5 |
 | `SC-W0311` | Warning | Spiral could not be connected in a narrow part; that part uses inner-to-outer contours | M7 |
 | `SC-W0312` | Warning | Fill's pull compensation below 0; read as 0 (as in Ink/Stitch) | M5 |
+| `SC-I0313` | Info | Fill drawn twice along its edge; Ink/Stitch fills the part left empty (its repair merges the stretch) | M5 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |
 | `SC-W0403` | Warning | Hand-placed stitch shorter than the shortest stitch; point left out | M3 |
@@ -121,6 +123,7 @@ another.
 | `SC-E0603` | Error | Machine file could not be read (wrong format, truncated, or a record that makes no sense) | M2 |
 | `SC-W0604` | Warning | Thread colours unknown (the file stores none, as DST never does; threads are placeholders) | M2 |
 | `SC-I0605` | Info | Long jumps cut in DST (machines cut the thread before three or more jump records in a row) | M3 |
+| `SC-W0606` | Warning | Threads share a Brother colour (more different threads than a PES file's 61 thread colours) | M3 |
 | `SC-E0701` | Error | Design does not fit the hoop | M1 |
 | `SC-W0702` | Warning | Design is larger than the comfort zone (the profile's most accurate area) | M1 |
 | `SC-I0703` | Info | Stitches longer than the machine's longest stitch; split | M3 |

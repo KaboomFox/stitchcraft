@@ -54,7 +54,7 @@ requirements = ["REQ-RUN-001"]
 [[deviation]]
 id = "DEV-FIN-001"
 area = "plan/finalize"
-summary = "StitchCraft fits every stitch to the machine: it leaves out needle points less than their element's shortest stitch from the one before, never less than the machine's (0.3 mm on the Brother), keeping the ends of each run of stitches, and splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else 0.1 mm, and splits nothing. Along an edge square to them, a tatami fill's rows nearer each other than the shortest stitch hand over in a stitch too short, so the next row's first needle point is left out and a sliver at its start shows: a bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay."
+summary = "StitchCraft fits every stitch to the machine: it leaves out needle points less than their element's shortest stitch from the one before, never less than the machine's (0.3 mm on the Brother), keeping the ends of each run of stitches and its lock points unless a stitch to one would fall short, and splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else 0.1 mm, and splits nothing. Along an edge square to them, a tatami fill's rows nearer each other than the shortest stitch hand over in a stitch too short, so the next row's first needle point is left out and a sliver at its start shows: a bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay."
 reason = "The machine profile says what the machine sews well; a stitch outside it hammers one hole, snags, or is refused (docs/src/design/engine-pipeline.md › Finalize)."
 requirements = ["REQ-FIN-001", "REQ-FILL-TAT-004"]
 
@@ -108,10 +108,17 @@ reason = "The rails made are known, so they need no guessing, and a column is ne
 requirements = ["REQ-SAT-016", "REQ-SAT-017"]
 
 [[deviation]]
+id = "DEV-SAT-008"
+area = "satin"
+summary = "A satin column whose needle points all lie within its element's shortest stitch of its first is not sewn, and SC-W0215 says so. Ink/Stitch sews it: its plan drops only stitches no longer than the element's shortest stitch, else the document's, 0.1 mm unless one is set."
+reason = "Every stitch of such a column is shorter than the machine sews well, and a stroke that small is left out the same way (DEV-RUN-004). Ink/Stitch's behaviour was read at d59c9ab (lib/stitch_plan/color_block.py, lib/elements/satin_column/satin_column.py)."
+requirements = ["REQ-SAT-018"]
+
+[[deviation]]
 id = "DEV-FILL-001"
 area = "fill"
-summary = "A fill's region follows its fill rule. Ink/Stitch takes the subpath of the largest area as the outline and every other subpath as a hole, whatever the fill rule, and repairs a shape that is not valid by the even-odd rule. Where the nonzero rule fills a part that the subpaths wind round twice the same way, such as a ring drawn inside another the same way round, or the overlap of 2 shapes drawn the same way round, StitchCraft fills it (SC-I0306) and Ink/Stitch leaves it empty."
-reason = "A fill sews the area the drawing shows, as an SVG renderer paints it (REQ-FILL-001). The information names each fill that differs, and its fill rule set to even-odd makes it sew alike in both. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/fill_stitch.py)."
+summary = "A fill's region follows its fill rule. Ink/Stitch takes the subpath of the largest area as the outline and every other subpath as a hole, whatever the fill rule, and repairs a shape that is not valid. The repair merges the subpaths' lines, a stretch drawn twice into one, and fills the faces they bound by how deeply they nest, which fills every face beside the outside. Where the nonzero rule fills a part inside that the subpaths wind round twice the same way, such as a ring drawn inside another the same way round, or the overlap of 2 shapes drawn the same way round, StitchCraft fills it (SC-I0306) and Ink/Stitch leaves it empty. Where the fill rule leaves a part beside the outside empty, which subpaths running along each other bound, such as a notch drawn as a hole along the outline or a subpath drawn twice, StitchCraft leaves it empty (SC-I0313) and Ink/Stitch fills it."
+reason = "A fill sews the area the drawing shows, as an SVG renderer paints it (REQ-FILL-001). The information names each fill that differs. The even-odd rule makes the first kind sew alike in both, and an outline drawn round the empty part the second. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/fill_stitch.py), and its repair observed through shapely 2.2.0 (GEOS 3.14.1): a 10 mm square with a 5 mm notch drawn as a hole in its corner covers 100 mm², where the even-odd rule leaves 75 mm²."
 requirements = ["REQ-FILL-001"]
 
 [[deviation]]
@@ -173,7 +180,7 @@ requirements = ["REQ-FILL-TAT-006"]
 [[deviation]]
 id = "DEV-FILL-010"
 area = "fill/tatami"
-summary = "Each gap-fill row is the next row of the grid past the stretch's last row, the stretch of its segment beside that row, so it stops at the part's edge, and the rows stop where the part ends. Ink/Stitch repeats the last row, moved a spacing further each time and keeping its length, so a repeat can run outside the part; its spacing is the distance between the last 2 rows, where the grid's rows follow the end row spacing. The hops between gap-fill rows and the way back are running stitches, where Ink/Stitch stitches them as rows."
+summary = "Each gap-fill row is the next row of the grid past the stretch's last row, the stretch of its segment beside the gap-fill row before it, or the last row for the first, so it stops at the part's edge, and the rows stop where the part ends. Ink/Stitch repeats the last row, moved a spacing further each time and keeping its length, so a repeat can run outside the part; its spacing is the distance between the last 2 rows, where the grid's rows follow the end row spacing. The hops between gap-fill rows and the way back are running stitches kept inside the part as travel is, where Ink/Stitch stitches them as rows, straight."
 reason = "Rows outside the part sew where the design has none (REQ-FILL-TAT-007). Ink/Stitch's gap fill: lib/stitches/tatami_fill.py at d59c9ab, fill_gaps and fill_gap."
 requirements = ["REQ-FILL-TAT-007"]
 
@@ -190,3 +197,10 @@ area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."
 reason = "The SVG reader takes the drawing as a viewer shows it (docs/src/design/svg-input.md), and a column is then as wide as its stroke looks. Ink/Stitch converts lengths with inkex, which has no factor for %, em or ex and gives 0 for them (inkex 1.4.1, inkex/units.py), and compares the join with lower-case names (lib/svg/styles.py at d59c9ab)."
 requirements = ["REQ-SVG-004"]
+
+[[deviation]]
+id = "DEV-THREAD-001"
+area = "formats/pes"
+summary = "PES files name each thread by a Brother entry chosen by CIEDE2000, the nearest pairs first, so a thread gets its nearest entry unless a thread nearer to it took it. pystitch, which writes Ink/Stitch's PES files, measures with an integer redmean distance, gives a tie to the later entry, and gives threads their entries in the order of a Python set. Each palette colour alone is written as itself by both. Other colours often get other entries: pure red is Vermilion here and Red there, pure blue Purple here and Ultramarine there. And where 2 threads have one nearest entry, pystitch may give it to the farther."
+reason = "CIEDE2000 picks the colour people see as nearest (REQ-THREAD-001, data-model.md). The nearest pairs first keep a palette colour on its own entry, in whatever order the threads come (REQ-THREAD-002)."
+requirements = ["REQ-THREAD-001", "REQ-THREAD-002"]

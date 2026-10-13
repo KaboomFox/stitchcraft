@@ -35,8 +35,13 @@ A fill's region is the area an SVG renderer paints for its path, in parts with h
    from its right to its left adds its count. Every face's winding number follows from its neighbours'
    in whole numbers.
 4. **Fill rule.** A face is filled when its winding number is not 0 (`nonzero`, SVG's default) or is odd
-   (`evenodd`). Ink/Stitch fills every fill as if its rule were even-odd. Where `nonzero` fills a face
-   that even-odd leaves empty, StitchCraft fills it and `SC-I0306` says so (`DEV-FILL-001`).
+   (`evenodd`). Ink/Stitch's area differs in 2 ways, and StitchCraft follows the drawing in both
+   (`DEV-FILL-001`). Ink/Stitch takes every subpath but the largest as a hole. Where `nonzero` fills a
+   face inside that even-odd leaves empty, StitchCraft fills it, and `SC-I0306` says Ink/Stitch leaves it
+   empty. And Ink/Stitch repairs a shape that is not valid by merging the subpaths' lines, a stretch drawn
+   twice into one, and filling the faces they bound by how deeply they nest. A face beside the outside
+   nests in nothing, and is always filled. Where the fill rule leaves such a face empty, a notch drawn as a
+   hole along the outline or a subpath drawn twice, `SC-I0313` says Ink/Stitch fills it.
 5. **Rings of the parts.** The edges between filled and empty faces are joined into rings with the
    filled side on their right. Outlines turn clockwise and holes counter-clockwise in y-up axes, the other
    way round on screen, where y points down. Where rings meet at a point, they are joined the way GEOS
@@ -172,7 +177,8 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    stitch a machine sews well, and a row's first grid point can lie just past its start. A needle point
    nearer the one before it than the shortest stitch is left out, as Ink/Stitch leaves out points nearer
    than its own shortest stitch. A part's last point stays, and the points before it that are too near it
-   go instead, finalize's rule applied in the generator. Where the rows lie nearer each other than the
+   go instead, unless that would bring it within the shortest stitch of the part's first: then it goes
+   itself. This is finalize's rule, applied in the generator. Where the rows lie nearer each other than the
    machine's shortest stitch and meet an edge square on, each row hands over to the next in a stitch too
    short to sew, so the next row's first needle point is left out (`DEV-FIN-001`). The thread then runs
    from the row's end to the next row's second needle point, and a sliver at each row's start shows. On
@@ -223,16 +229,24 @@ since M5.5, `REQ-FILL-TAT-005`).
 Equally cheap ways, the simplified rings and the points a way is cut into follow StitchCraft's own rules,
 so the way can differ from Ink/Stitch's in its details (`DEV-FILL-007`).
 
+Travel asks the rings where a point lies on them, how far a line lies from them, and where a stitch meets
+them or lies inside. Each question looks only at the ring sides near its point, line or stitch, filed in a
+grid of square cells about as many as the sides, and gets the answer a look at every side would give
+(`REQ-FILL-TAT-013`).
+
 ### 5. Parts
 
 A region in parts sews them one at a time, as Ink/Stitch sews them (`REQ-FILL-TAT-008`, since M5.4).
 The part nearest the needle goes first, a part the needle is in being 0 away. With no needle, the part
-with the least x goes first. Each part ends at its point nearest the next part. The last ends at the point
-of the fill nearest its next stitch. That is the next element's first stitch when it lies in the fill.
-Of a satin column's rails, the start of the first that lies in the fill is the next stitch, and of a
-fill's parts, the first outline's start that does. Failing those, for a fill after a fill, it is the
-first start of this fill's outlines that lies in the next, and otherwise the fill's point nearest the next
-element. Ink/Stitch's geometry library finds it so ([satin](satin.md#start-and-end)).
+with the least x goes first. Ink/Stitch sorts the parts with a stable sort. GEOS's repair gave the parts
+of 400 of 400 random fills tied at their least x in order of their point of least x, and of least y
+among the points level with it (shapely 2.2.0, GEOS 3.14.1). Parts that tie go in that order here too.
+Each part ends at its point nearest the next part. The last ends at the point of the fill nearest its
+next stitch. That is the next element's first stitch when it lies in the fill. Of a satin column's
+rails, the start of the first that lies in the fill is the next stitch, and of a fill's parts, the first
+outline's start that does. Failing those, for a fill after a fill, it is the first start of this fill's
+outlines that lies in the next, and otherwise the fill's point nearest the next element. Ink/Stitch's
+geometry library finds it so ([satin](satin.md#start-and-end)).
 Each part is a group of its own, which assembly joins to the next as it joins any 2 groups:
 straight on within the collapse length, and otherwise with a jump and the ties and trims the element's
 settings give. `SC-W0307` says the fill is in parts.
@@ -280,7 +294,10 @@ and `SC-W0310` (inset) or `SC-W0309` (expand) says so, as Ink/Stitch warns.
 The thread pulls a row in at its ends. Each top row's segment is lengthened at both ends by
 `pull_compensation_mm` plus `pull_compensation_percent` of its length (`REQ-FILL-TAT-006`, since M5.8).
 The first value applies at the end the rows start from at the fill's angle. A second value, if given,
-applies at the other end. Ink/Stitch moves a satin's stitches with the same function, and the two settings are declared once
+applies at the other end. Where 2 segments of a row meet end to end, because the row only touches the
+outline there from inside or runs along it (section 1), the row goes on in the part. Both segments end at
+that point as they are, so the row is sewn once through it, as through Ink/Stitch's rebuilt part, where the
+row is one segment. Ink/Stitch moves a satin's stitches with the same function, and the two settings are declared once
 for both (`stitchcraft_engine::generators::pull`). A fill reads a value below 0 as 0, as Ink/Stitch does,
 and `SC-W0312` says so. The route is planned on the part as drawn. The needle's ways keep their course,
 but each starts where the row before it ends and ends where the next row starts, both lengthened.
@@ -297,12 +314,16 @@ last row before the rows past it are sewn. There, `gap_fill_rows`, rounded up to
 that many more rows past the last one, back and forth, and comes back to where it ended
 (`REQ-FILL-TAT-007`, since M5.8). A stretch's rows are counted as Ink/Stitch counts them: the rows
 reached by travel. The route's first row is one of them, because Ink/Stitch's route always starts with
-travel, of no length where it starts on that row. A stretch ends where the travel is more than a handover
-from one row to the next beside it, or from the last row to the fill's end beside it, which Ink/Stitch's
-route takes in one edge too. Each extra row is the next row of the grid, the stretch of its segment
-beside the last row, lengthened as the rows are. The extra rows stop at the part's edge, and where the
-part ends. Ink/Stitch repeats the last row a spacing further each time, and a repeat can run outside the
-part (`DEV-FILL-010`). Underlay has no gap-fill rows.
+travel, of no length where it starts on that row. Ink/Stitch's gap fill ends a stretch where the walk
+goes from one row to the next by more than one edge once the loops between them are taken out, and so does
+this one. An edge that comes back to a node where an earlier one of those edges ended takes out the edges
+since, and itself, but a loop back to the row it left stays. So travel out and back before a handover to the
+row beside ends a stretch, and a pairing edge, which stands for a way of several, does too. Each extra row
+is the next row of the grid, the stretch of its segment beside the extra row before it, or the last row
+for the first, lengthened as the rows are. The extra rows are one strip, stop at the part's edge, and stop
+where the part ends. The hop from each to the next, and the way back, are kept inside the part as travel
+is. Ink/Stitch repeats the last row a spacing further each time, and a repeat can run outside the part
+(`DEV-FILL-010`). Underlay has no gap-fill rows.
 
 ### 8. No rows
 
@@ -321,11 +342,12 @@ the fill sews nothing, and `SC-W0303` says so.
 | `REQ-FILL-TAT-004` | Coverage (`stitchcraft_testkit::metrics`): rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacings from the machine's shortest stitch to 0.4 mm, since M5.9 |
 | `REQ-FILL-TAT-005` | With `underpath`, travel takes the cheapest way along the lines under the rows not sewn yet, and its way lies inside the region (± 0.05 mm) |
 | `REQ-FILL-TAT-006` | Each top row extends past its segment's ends by the compensation; the part keeps its holes and pieces |
-| `REQ-FILL-TAT-007` | Gap-fill rows follow a stretch of more than 3 rows; all rows, gap-fill rows included, lie inside the part within its compensation |
+| `REQ-FILL-TAT-007` | Gap-fill rows follow a stretch of more than 3 rows, which ends where Ink/Stitch's gap fill ends one; all rows, gap-fill rows included, and the stitches between them lie inside the part within its compensation |
 | `REQ-FILL-TAT-008` | A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element |
 | `REQ-FILL-TAT-009` | A 130 × 180 mm rectangle at 0.4 mm, the reference hoop's whole field, plans within the NFR-PERF-1 budget, guarded by `cargo xtask perf` since M5.9 |
 | `REQ-FILL-TAT-011` | Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start |
 | `REQ-FILL-TAT-012` | The underlay covers the part shrunk by its inset and the top rows the part grown by `expand_mm`, as shapely buffers it, within a nanometre |
+| `REQ-FILL-TAT-013` | Questions about the rings look only at their sides near each point, line and stitch, and answer as a look at every side would: a 70 mm square with 14 × 14 round holes and a 120 × 60 mm background with 60 detailed holes plan within a tenth of the default work budget |
 
 Machine checkpoint MC-4 sews a density ladder, an angle set and a fill-with-outline registration test
 to tune pull compensation ([machine testing](../../plan/machine-testing.md)).
