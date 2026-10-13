@@ -132,7 +132,7 @@ After sewing, check:
 
 ## TS-07 — Fill and outline registration at 3 pull compensations
 
-126.2 × 126.0 mm · 13522 stitches, 6 jumps, 6 trims, 1 colour change, 0 stops
+126.2 × 126.0 mm · 13527 stitches, 6 jumps, 6 trims, 1 colour change, 0 stops
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -167,7 +167,7 @@ After sewing, check:
 
 ## TS-09 — Fill underlay, travel and gap-filling rows round holes
 
-66.0 × 114.0 mm · 7777 stitches, 6 jumps, 3 trims, 0 colour changes, 0 stops
+66.0 × 114.0 mm · 7781 stitches, 6 jumps, 3 trims, 0 colour changes, 0 stops
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
