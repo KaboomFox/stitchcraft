@@ -650,6 +650,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - DST reading: a long jump followed by a long move back could be read as a trim (their split pieces
   cancelled exactly); trims are now runs of jumps of at most 1 mm, and the writer no longer writes
   zero-length jumps.
+- **Small elements sewn over each other** no longer lose the design its plan (`REQ-FIN-001`,
+  `REQ-FIN-003`), which a review found. Finalizing keeps the ends of each run of stitches and its lock
+  points, and leaves out the points before them that are too near. When 2 of those still came too near
+  each other, the stitch between them stayed, too short for the machine: 2 strokes 0.3 mm long laid over
+  each other at the default settings left a tie-off 0.05 mm from a tie-in. The plan check refused it
+  (`SC-E0009`), and the whole design was lost, with a bug report. Now the later one is left out too, the
+  points before it stay, and a trim or stop after a run's last point left out happens where the needle
+  stops. Only a run's first point always stays.
+- **A satin column too small to sew** sews nothing, and the new `SC-W0215` says so (`REQ-SAT-018`),
+  which the same review found. A column whose needle points all lie within its shortest stitch of its
+  first, a speck a few tenths of a millimetre across, sewed stitches all shorter than the machine sews,
+  and the design was lost the same way. Ink/Stitch sews such a column (`DEV-SAT-008`). The golden files
+  stay as they were.
 - **A tight bend inside a curve** is followed by a running stitch within its tolerance
   (`REQ-RUN-002`), which a review found. Where a curve turned back in a V narrower than the shortest
   stitch, the needle past the tip was dropped, and the stitch over the gap could miss the tip by more than
