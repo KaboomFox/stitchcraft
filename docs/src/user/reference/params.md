@@ -19,9 +19,16 @@ Designs store every value as text, the same way for every host:
 - **Angles** are degrees (`45`, `45°` or `45deg`), turned into the range from −180 (exclusive) to 180.
 - **Percentages** may end in `%`.
 - **On or off** is `true` or `false`; `yes`/`no`, `on`/`off` and `1`/`0` work too.
-- **Lists** (several lengths, numbers or angles) are separated by spaces or commas: `2.5 1.2`.
-- **Seeds** are a number or any text; empty means "derive it from the element", so every element
-  differs but every run is the same.
+- **Lists** (several lengths, numbers or angles) are separated by spaces: `2.5 1.2`. A comma separates
+  nothing and is no decimal point, so `2.5,1.2` and `3,5` are errors that say so. An angle in a list may
+  end with one comma (`0, 90`), as older files write a fill's underlay angles.
+- **Seeds** are a number or any text. Elements given the same seed vary alike; empty means "derive it
+  from the element", so every element differs but every run is the same.
+- **Empty** text, or spaces alone, is not set: the parameter takes its default, as in Ink/Stitch.
+
+An element reads only the settings its stitch type uses, and only those its other settings show: a
+running stitch reads no zigzag spacing, and no length variation while random stitch length is off. A
+setting it does not read is kept with the element, unchecked, and changes nothing.
 
 Programs that store values as JSON (and the [JSON Schema](params.schema.json) that describes them) use
 numbers, `true`/`false`, strings and arrays instead, and `null` for an empty value.
@@ -36,7 +43,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Satin parameters](params/satin.md) | 34 | Satin column, E-stitch, S-stitch, Zigzag satin |
 | [Pull parameters](params/pull.md) | 2 | Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill |
-| [Fill parameters](params/fill.md) | 1 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
+| [Fill parameters](params/fill.md) | 2 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
 | [Tatami parameters](params/tatami.md) | 15 | Tatami fill |
 
 ## Every parameter
@@ -59,6 +66,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`end_at_nearest_point`](params/satin.md#end_at_nearest_point) | End at nearest point | Satin parameters |
 | [`end_row_spacing_mm`](params/tatami.md#end_row_spacing_mm) | End row spacing | Tatami parameters |
 | [`expand_mm`](params/tatami.md#expand_mm) | Expand | Tatami parameters |
+| [`fill`](params/fill.md#fill) | Sew the fill | Fill parameters |
 | [`fill_method`](params/fill.md#fill_method) | Fill method | Fill parameters |
 | [`fill_underlay`](params/tatami.md#fill_underlay) | Underlay | Tatami parameters |
 | [`fill_underlay_angle`](params/tatami.md#fill_underlay_angle) | Underlay angle | Tatami parameters |

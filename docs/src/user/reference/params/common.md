@@ -170,7 +170,8 @@ stitches this long.
 
 **Random seed.** Where random variation starts: a running stitch's random lengths, a satin column's random
 widths and spacing, and a tatami fill's random lengths. The same seed gives the same stitches,
-another seed others. Empty, each element gets its own.
+another seed others, and elements alike given one seed vary alike. Empty, each element gets its
+own.
 
 - **Accepts:** a number or any text, or empty to derive it from the element
 - **Default:** empty

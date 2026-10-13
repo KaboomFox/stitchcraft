@@ -55,8 +55,8 @@ Each parameter is `key: Kind = "default", label "Label"`, followed by what its k
 not the usual: `range (min, max)` for numbers and lists, `options [...]` or `choices CONST` for choices,
 `applies` when it covers fewer stitch types than its struct, `defaults [Family::Fill => "4"]` when a
 family of stitch types has a default of its own, `when other == "value"` (or `when other in VALUES`, a
-list of them) when a user interface shows it only then, `origin` (default `Origin::InkStitch`) and
-`stability` (default `Stability::Stable`).
+list of them) when a user interface shows it, and an element reads it, only then, `origin` (default
+`Origin::InkStitch`) and `stability` (default `Stability::Stable`).
 A combination a kind does not take does not compile. Defaults are written as a design stores them, so
 they are checked by the same code as a design's values. The grammar is in the `macros` module's
 documentation.
@@ -68,8 +68,10 @@ The macro expands to:
 - `CommonParams::SPECS` (a `const` slice of `ParamSpec`) and `CommonParams::GROUP`;
 - `CommonParams::from_set(&ParamSet) -> Result<Validated<CommonParams>, Vec<Diagnostic>>`: every
   parameter read from its text or its default, with the clamping warnings beside the values;
-- `CommonParams::from_set_for(&ParamSet, Family)`: the same with the family's own defaults, which the
-  engine reads an element's settings with.
+- `CommonParams::from_set_as(&ParamSet, StitchType)`: the same as an element sewn as that stitch type
+  reads it, with its family's own defaults and only the parameters it uses
+  ([The parameters an element reads](#the-parameters-an-element-reads-req-prm-004)). The engine reads an element's settings
+  with it.
 
 The registry itself is `stitchcraft_engine::registry::PARAMETERS`, a plain `const` list of every
 declaration's `GROUP` in the engine, next to the generators (no life-before-main tricks; adding a
@@ -87,7 +89,7 @@ pub struct ParamSpec {
     pub family_defaults: &'static [(Family, &'static str)], // a family's own default: `default_for`, `in_family`
     pub group: &'static str,        // UI and docs section
     pub applies_to: &'static [StitchType],
-    pub visible_when: Option<Condition>,   // another key and the values it shows this for: lock_custom_start only for lock_start custom
+    pub visible_when: Option<Condition>,   // another key of the declaration and the values it shows and reads this for: lock_custom_start only for lock_start custom
     pub stability: Stability,       // Stable | Experimental | Deprecated { use_instead }
     pub origin: Origin,             // InkStitch | InkStitchDeviates { deviation } | StitchCraft
 }
@@ -103,7 +105,8 @@ version and a registry schema version arrive with the first release, together wi
 | Kind | Generators get | Validation | Ink/Stitch equivalent |
 |---|---|---|---|
 | `Length` | `Mm` | finite, within `range`; units accepted on input: mm, in, pt | `float`, unit `mm` |
-| `OptionalLength` | `Option<Mm>` | as `Length`, or empty: the setting then comes from the document or the machine, or there is none. 0 or less counts as empty, as Ink/Stitch reads it | `float`, unit `mm`, no default |
+| `OptionalLength` | `Option<Mm>` | as `Length`, or empty: the setting then comes from the document or the machine, or there is none. 0 or less counts as empty, since Ink/Stitch reads 0 as not set, and a length below 0 is none either | `float`, unit `mm`, no default |
+| `OptionalLengthWithZero` | `Option<Mm>` | as `OptionalLength`, but only empty text is empty, and 0 is a length, as Ink/Stitch reads a satin's shortest stitch to split | `float`, unit `mm`, no default |
 | `Angle` | degrees, `f64` | finite; normalized to (−180, 180] | `float`, unit `deg` |
 | `Percent` | `f64` | finite, within range | `float`, unit `%` |
 | `Number` | `f64` | finite, within range, without a unit | `float`, no unit |
@@ -126,10 +129,29 @@ is accepted. Keys the registry does not know are kept, so they round-trip, and r
 `SC-W0105`. Parsing lives in one place (`value` module), so every host reads text the same way: an SVG
 attribute, a command-line `key=value`, a VectorCraft effect record.
 
+Empty text, or spaces alone, is not set, whatever the kind, and the parameter takes its default
+(REQ-PRM-002). Ink/Stitch strips every value and reads an empty one so, and its settings window stores a
+field the user clears as empty text. Spaces separate the values of a list or a pair, as Ink/Stitch splits
+them. A comma separates nothing and is no decimal point, so text with one is `SC-E0101`, with a hint to
+use spaces and points. Ink/Stitch reads `3,5` or `45,90` as the default instead, without a word
+(`DEV-PRM-001`). Ink/Stitch leaves out one comma at the end of each of a fill's underlay angles, for
+older files, and so does StitchCraft for an angle of any list.
+
+### The parameters an element reads (REQ-PRM-004)
+
+An element reads only the parameters its stitch type uses. Any other parameter takes its default, and
+so does one whose `when` is false for the element. Its text is kept and not checked. Ink/Stitch reads a
+setting only where its stitch type uses it, and a path keeps a satin's settings when its stroke goes
+back to running stitch: that path must still sew, with nothing said of what it does not read. A `when`
+is read from the other parameter's value on the element, or its default, as the element reads that
+parameter. So the audit requires the other parameter to be of the same declaration and never hidden
+itself. It must also apply to every stitch type the hidden one applies to. A host that checks a whole
+set, such as a settings panel, reads every parameter with `from_set`.
+
 ### Completeness (REQ-PRM-001)
 
 A declaration that compiles can still be wrong: an empty range, a default outside it, a repeated option,
-a condition on a parameter that does not exist. `stitchcraft_params::audit` lists every such problem, and
+a condition on a parameter that does not exist or that an element could not read it by. `stitchcraft_params::audit` lists every such problem, and
 the engine's `req_prm_001_every_registered_parameter_is_complete` test requires the list to be empty.
 `cargo xtask docs --check` adds the cross-checks with outside data: a parameter of Ink/Stitch origin must
 be in the [compatibility contract](inkstitch-compat-contract.md) with a compatible type and the same
@@ -158,7 +180,7 @@ the lock and method identifiers must equal Ink/Stitch's.
    default of its own needs a value (`ParamSpec::in_family`). There an empty value means its default. A
    length of 0 or less is raised to the least the key accepts instead of counting as empty, as Ink/Stitch
    reads a fill's longest stitch. Elsewhere an optional value left empty is no value. The engine reads an
-   element's settings with its family's defaults (`from_set_for`). The contract page compares each row
+   element's settings with its family's defaults (`from_set_as`). The contract page compares each row
    with the default of the row's family. The reference page lists each family's default and what the
    family accepts, and the JSON Schema gives the defaults under `x-stitchcraft.family_defaults`.
 

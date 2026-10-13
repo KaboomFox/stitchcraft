@@ -28,7 +28,7 @@ fn sew(path: &Path, settings: &[(&str, &str)], id: &str) -> Vec<Point> {
     let set: ParamSet = settings.iter().copied().collect();
     let running = RunningParams::from_set(&set).unwrap().params;
     let passes = RepeatParams::from_set(&set).unwrap().params;
-    let mut rng = SplitMix64::for_element(id, CommonParams::from_set(&set).unwrap().params.random_seed.unwrap_or(0));
+    let mut rng = SplitMix64::for_element(id, CommonParams::from_set(&set).unwrap().params.random_seed);
     let stitched = running_stitch(path, &running, &passes, Mm::new(0.3).unwrap(), &mut rng, &mut Budget::DEFAULT.meter()).unwrap();
     assert_eq!(stitched.runs.len(), 1);
     stitched.runs.into_iter().next().unwrap()

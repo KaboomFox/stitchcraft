@@ -32,6 +32,7 @@ pub stitchcraft_core::diag::Code::FillPartsTooSmall
 pub stitchcraft_core::diag::Code::FillPullCompensationNegative
 pub stitchcraft_core::diag::Code::FillRuleNotEvenOdd
 pub stitchcraft_core::diag::Code::FillSmall
+pub stitchcraft_core::diag::Code::FillStretchDrawnTwice
 pub stitchcraft_core::diag::Code::FillTooThin
 pub stitchcraft_core::diag::Code::FillUnderlayInsetShrinksAway
 pub stitchcraft_core::diag::Code::FillUnderlayTooThin
@@ -49,6 +50,7 @@ pub stitchcraft_core::diag::Code::PreviewTooLarge
 pub stitchcraft_core::diag::Code::SatinCentreLineFailed
 pub stitchcraft_core::diag::Code::SatinCentreLinePartsLeftOut
 pub stitchcraft_core::diag::Code::SatinContourTooShort
+pub stitchcraft_core::diag::Code::SatinNoSection
 pub stitchcraft_core::diag::Code::SatinNodesUnequal
 pub stitchcraft_core::diag::Code::SatinPushTooLong
 pub stitchcraft_core::diag::Code::SatinRailsByLength
@@ -56,6 +58,7 @@ pub stitchcraft_core::diag::Code::SatinRungAmbiguous
 pub stitchcraft_core::diag::Code::SatinRungDangling
 pub stitchcraft_core::diag::Code::SatinSubpathPoint
 pub stitchcraft_core::diag::Code::SatinTooNarrow
+pub stitchcraft_core::diag::Code::SatinTooSmall
 pub stitchcraft_core::diag::Code::SatinWithoutRails
 pub stitchcraft_core::diag::Code::StitchLengthRaised
 pub stitchcraft_core::diag::Code::StitchTypeNotYet
@@ -67,6 +70,7 @@ pub stitchcraft_core::diag::Code::SvgGeometryUnusable
 pub stitchcraft_core::diag::Code::SvgObjectIgnored
 pub stitchcraft_core::diag::Code::SvgUnreadable
 pub stitchcraft_core::diag::Code::ThreadColorsUnknown
+pub stitchcraft_core::diag::Code::ThreadsShareColor
 pub stitchcraft_core::diag::Code::TooLargeForFormat
 pub stitchcraft_core::diag::Code::TooManyColorChanges
 pub stitchcraft_core::diag::Code::TrimOrStopLeftOut
@@ -153,7 +157,7 @@ pub fn stitchcraft_core::rect::Rect::width(self) -> f64
 pub mod stitchcraft_core::rng
 pub struct stitchcraft_core::rng::SplitMix64
 impl stitchcraft_core::rng::SplitMix64
-pub fn stitchcraft_core::rng::SplitMix64::for_element(&str, u64) -> Self
+pub fn stitchcraft_core::rng::SplitMix64::for_element(&str, core::option::Option<u64>) -> Self
 pub const fn stitchcraft_core::rng::SplitMix64::new(u64) -> Self
 pub fn stitchcraft_core::rng::SplitMix64::next_f64(&mut self) -> f64
 pub fn stitchcraft_core::rng::SplitMix64::next_in(&mut self, f64, f64) -> f64
@@ -209,6 +213,7 @@ pub stitchcraft_core::Code::FillPartsTooSmall
 pub stitchcraft_core::Code::FillPullCompensationNegative
 pub stitchcraft_core::Code::FillRuleNotEvenOdd
 pub stitchcraft_core::Code::FillSmall
+pub stitchcraft_core::Code::FillStretchDrawnTwice
 pub stitchcraft_core::Code::FillTooThin
 pub stitchcraft_core::Code::FillUnderlayInsetShrinksAway
 pub stitchcraft_core::Code::FillUnderlayTooThin
@@ -226,6 +231,7 @@ pub stitchcraft_core::Code::PreviewTooLarge
 pub stitchcraft_core::Code::SatinCentreLineFailed
 pub stitchcraft_core::Code::SatinCentreLinePartsLeftOut
 pub stitchcraft_core::Code::SatinContourTooShort
+pub stitchcraft_core::Code::SatinNoSection
 pub stitchcraft_core::Code::SatinNodesUnequal
 pub stitchcraft_core::Code::SatinPushTooLong
 pub stitchcraft_core::Code::SatinRailsByLength
@@ -233,6 +239,7 @@ pub stitchcraft_core::Code::SatinRungAmbiguous
 pub stitchcraft_core::Code::SatinRungDangling
 pub stitchcraft_core::Code::SatinSubpathPoint
 pub stitchcraft_core::Code::SatinTooNarrow
+pub stitchcraft_core::Code::SatinTooSmall
 pub stitchcraft_core::Code::SatinWithoutRails
 pub stitchcraft_core::Code::StitchLengthRaised
 pub stitchcraft_core::Code::StitchTypeNotYet
@@ -244,6 +251,7 @@ pub stitchcraft_core::Code::SvgGeometryUnusable
 pub stitchcraft_core::Code::SvgObjectIgnored
 pub stitchcraft_core::Code::SvgUnreadable
 pub stitchcraft_core::Code::ThreadColorsUnknown
+pub stitchcraft_core::Code::ThreadsShareColor
 pub stitchcraft_core::Code::TooLargeForFormat
 pub stitchcraft_core::Code::TooManyColorChanges
 pub stitchcraft_core::Code::TrimOrStopLeftOut
@@ -356,7 +364,7 @@ pub const fn stitchcraft_core::units::Size::new(stitchcraft_core::units::Mm, sti
 pub const fn stitchcraft_core::units::Size::rotated(self) -> Self
 pub struct stitchcraft_core::SplitMix64
 impl stitchcraft_core::rng::SplitMix64
-pub fn stitchcraft_core::rng::SplitMix64::for_element(&str, u64) -> Self
+pub fn stitchcraft_core::rng::SplitMix64::for_element(&str, core::option::Option<u64>) -> Self
 pub const fn stitchcraft_core::rng::SplitMix64::new(u64) -> Self
 pub fn stitchcraft_core::rng::SplitMix64::next_f64(&mut self) -> f64
 pub fn stitchcraft_core::rng::SplitMix64::next_in(&mut self, f64, f64) -> f64

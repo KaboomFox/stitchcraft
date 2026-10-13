@@ -7,10 +7,12 @@
 //! - **Repeats** sew the run k times, every other pass backwards. Each pass starts where the last one
 //!   ended, so a turnaround is never a stitch in place.
 //! - **Bean stitch** then sews each stitch from A to B 2b + 1 times: A to B, then b times back to A and on
-//!   to B. b is taken in turn from a list, which runs on from pass to pass, each turnaround taking one
-//!   step of it. That is Ink/Stitch's counting (it repeats the turnaround point, and the repeated point
-//!   takes a step), so a file sews the same in both tools; with a two-value list it also sews each stretch
-//!   of the line the same way on every pass.
+//!   to B. b is taken in turn from a list, which runs on from pass to pass. Every point of a pass takes a
+//!   step of it, and a point where the needle already is sews nothing: each pass after the first starts
+//!   with the point the last ended at, and manual stitch lists some points again. That is Ink/Stitch's
+//!   counting (it lists the turnaround point again, and the repeated point takes a step), so a file sews
+//!   the same in both tools; with a two-value list it also sews each stretch of the line the same way on
+//!   every pass.
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 use stitchcraft_params::{StitchType, params};
@@ -33,29 +35,33 @@ params! {
 }
 
 /// `run` sewn `repeats` times (at least once), each stitch then sewn 2b + 1 times with b taken in turn from
-/// `beans` (none: 0). Every needle point costs one unit of `meter`.
+/// `beans` (none: 0), a step for every point of every pass. A point where the needle already is takes its
+/// step and sews nothing. Every needle point costs one unit of `meter`.
 pub fn sew(run: &[Point], repeats: u32, beans: &[u32], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let Some((&start, rest)) = run.split_first() else { return Ok(Vec::new()) };
     let mut out = vec![start];
     let mut step = 0_usize;
     for pass in 0..repeats.max(1) {
-        // The way back: the run reversed. Its first point is where the last pass ended.
-        let points: Vec<Point> = if pass % 2 == 0 { rest.to_vec() } else { run.iter().rev().skip(1).copied().collect() };
-        if pass > 0 {
-            // The turnaround takes a step of the list.
-            step += 1;
-        }
+        // A pass after the first starts with the point the last ended at; the way back is the run reversed.
+        let points: Vec<Point> = match pass {
+            0 => rest.to_vec(),
+            _ if pass % 2 == 1 => run.iter().rev().copied().collect(),
+            _ => run.to_vec(),
+        };
         for to in points {
             let from = out.last().copied().unwrap_or(start);
             let bean = step.checked_rem(beans.len()).and_then(|i| beans.get(i)).copied().unwrap_or(0);
-            out.push(to);
+            step += 1;
             meter.charge(1)?;
+            if to == from {
+                continue;
+            }
+            out.push(to);
             for _ in 0..bean {
                 meter.charge(2)?;
                 out.push(from);
                 out.push(to);
             }
-            step += 1;
         }
     }
     Ok(out)
@@ -92,6 +98,9 @@ mod tests {
     fn bean_stitch_goes_back_and_forth_with_the_list_running_on() {
         assert_eq!(sewn(&[0.0, 1.0, 2.0], 1, &[1]), [0.0, 1.0, 0.0, 1.0, 2.0, 1.0, 2.0]);
         assert_eq!(sewn(&[0.0, 1.0, 2.0], 1, &[0, 2]), [0.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0]);
+        // A point where the needle is takes its step, and sews nothing.
+        assert_eq!(sewn(&[0.0, 1.0, 1.0, 2.0], 1, &[1, 0]), [0.0, 1.0, 0.0, 1.0, 2.0, 1.0, 2.0]);
+        assert_eq!(sewn(&[0.0, 0.0, 1.0], 1, &[]), [0.0, 1.0]);
         // Two passes: steps 0 and 1 there, the turnaround step 2, steps 3 and 4 back; step 3 takes the
         // list's first value again, so the first stitch back is the bold one.
         assert_eq!(sewn(&[0.0, 1.0, 2.0], 2, &[1, 0, 0]), [0.0, 1.0, 0.0, 1.0, 2.0, 1.0, 2.0, 1.0, 0.0]);

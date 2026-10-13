@@ -12,6 +12,9 @@
 //! `~2`, `~3`, … so that ids stay unique. The reader's own diagnostics name the SVG element:
 //! `svg:<label>`.
 //!
+//! **Style.** An element's colours and visibility come from its presentation attributes, the style sheets'
+//! rules that select it ([`crate::sheet`]) and its `style` attribute, in CSS's order ([`crate::style`]).
+//!
 //! **Strokes and settings.** A stroke's width and join come from its style ([`crate::style`]), scaled as
 //! its transforms stretch it ([`Affine::stretch`]); they shape a satin column drawn as one path. Ink/Stitch's
 //! design settings, in the file's first `<metadata>`, become the design's ([`crate::settings`]).
@@ -22,15 +25,18 @@
 //! listed (`SC-I0805`).
 //!
 //! **Nothing is dropped silently.** `SC-W0802` reports SVG features that StitchCraft does not stitch:
-//! text, images, clones, nested `<svg>`, style sheets, clipping, masks, filters, markers, gradients,
-//! patterns and Ink/Stitch's settings. `SC-W0804` reports geometry that cannot be used, and `SC-E0801` a
-//! file that cannot be read at all. What a viewer would not show either is left out without a word:
-//! `display: none`, hidden or fully transparent elements, and the insides of `<defs>`.
+//! text, images, clones, nested `<svg>`, style sheet rules it does not read, clipping, masks, filters,
+//! markers, gradients, patterns and Ink/Stitch's settings. `SC-W0804` reports geometry that cannot be used,
+//! and `SC-E0801` a file that cannot be read at all, or whose size cannot be read. What a viewer would not
+//! show either is left out without a word: `display: none`, hidden or fully transparent elements, and the
+//! insides of `<defs>`.
 //!
 //! **Limits keep any file cheap.** A file may be at most [`MAX_BYTES`] long with a million XML nodes, and
 //! its entities may expand it to no more than that ([`crate::text`] says which files are text it reads).
-//! Work is charged to the budget: two units per XML node (one to find its id and Ink/Stitch's commands,
-//! one to read it), one per path segment, and one per 8 bytes of a transform or point list.
+//! Work is charged to the budget: two units per XML node (one to find its id, style sheets and Ink/Stitch's
+//! commands, one to read it), one per path segment, one per 8 bytes of a transform, point list or style
+//! sheet, and for each element, one per class, per style sheet rule tested against it and per declaration
+//! it takes ([`crate::sheet`]).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
@@ -40,21 +46,25 @@ use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Meter, Mm};
 use stitchcraft_engine::design::{Design, Element, Shape};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
-use svgtypes::{AspectRatio, Color, Length, LengthUnit, ViewBox};
+use svgtypes::{Color, Length};
 
 use crate::inkstitch::{
     self, Does, Helper, IGNORE_OBJECT, INKSCAPE_NS, INKSTITCH_NS, Objects, Place, READ_ATTRIBUTES, STOP_AFTER, TRIM_AFTER, Unapplied, place,
 };
 use crate::path::{self, Seg, Sub};
 use crate::settings;
+use crate::sheet::{self, Sheet};
 use crate::style::{Declared, Paint, Style, rgb, without_icc};
 use crate::text::{self, unreadable};
 use crate::transform::{self, Affine, user_units};
 
+mod root;
+
 /// The most XML nodes a file may have.
 const MAX_NODES: u32 = 1_000_000;
 
-/// A transform or point list costs one work unit per this many bytes, about one per number pair.
+/// A transform, point list or style sheet costs one work unit per this many bytes, about one per number
+/// pair.
 const BYTES_PER_UNIT: usize = 8;
 
 /// How many `href`s a gradient may follow to find its colour stops.
@@ -173,12 +183,14 @@ struct Reader<'b, 'a, 'input> {
     ids: BTreeMap<&'a str, Node<'a, 'input>>,
     /// Ink/Stitch's commands.
     objects: Objects,
+    /// The rules of the document's style sheets.
+    sheet: Sheet<'a>,
     /// What the notes about commands call the objects and symbols they name.
     labels: BTreeMap<Place, String>,
-    /// Objects with a trim or stop command that a viewer shows, and those of them that are stitched.
+    /// Objects with commands that a viewer shows, and those of them that are stitched.
     shown_targets: BTreeSet<Place>,
     stitched_targets: BTreeSet<Place>,
-    /// Whether the file-wide notes (a style sheet, Ink/Stitch settings) have been given.
+    /// Whether the file-wide notes (style sheet rules not read, Ink/Stitch settings) have been given.
     noted_style_sheet: bool,
     noted_inkstitch: bool,
     /// Ink/Stitch's design settings.
@@ -198,6 +210,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             suffixes: BTreeMap::new(),
             ids: BTreeMap::new(),
             objects: Objects::default(),
+            sheet: Sheet::default(),
             labels: BTreeMap::new(),
             shown_targets: BTreeSet::new(),
             stitched_targets: BTreeSet::new(),
@@ -219,12 +232,18 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         self.ns = ns;
         let found = inkstitch::find(root, ns, &mut self.meter).map_err(|_| self.exhausted())?;
         (self.ids, self.objects) = (found.ids, found.objects);
+        for style in found.sheets.into_iter().filter(|style| sheet::is_css(*style)) {
+            for text in style.children().filter_map(|child| child.is_text().then(|| child.text()).flatten()) {
+                self.charge_text(text)?;
+                self.sheet.read(text).map_err(sheet::TooMany::diagnostic)?;
+            }
+        }
         let map = self.root_map(root)?;
         if root.has_attribute("transform") {
             self.note(None, "The root `<svg>` element's transform is not applied.".to_string(), None);
         }
         self.notice(root);
-        let root_context = match Style::default().child(&Declared::of(root)) {
+        let root_context = match Style::default().child(&self.declared(root)?) {
             Some(style) => Context::Shown { map, style },
             None => Context::Hidden,
         };
@@ -269,19 +288,29 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
     }
 
     /// Notes on the commands that are not applied, in document order: commands that StitchCraft does
-    /// not apply yet or that are not where they apply, and trims and stops on objects a viewer shows
-    /// that are not stitched shapes (Ink/Stitch applies them only to those).
+    /// not apply yet or that are not where they apply, on the objects a viewer shows. A trim, a stop, a
+    /// start or an end on an object that is not a stitched shape is noted as such: Ink/Stitch applies them
+    /// only to those. A start or an end on a stitched shape is noted too, until StitchCraft applies them
+    /// (`REQ-GEN-001`).
     fn command_notes(&mut self) {
         let mut notes = Vec::new();
-        for (target, command) in self.objects.trims_and_stops() {
-            if self.shown_targets.contains(&target) && !self.stitched_targets.contains(&target) {
-                let label = self.labels.get(&target).cloned().unwrap_or_default();
-                let message = format!(
-                    "`{label}` has an Ink/Stitch `{}` command, which is not applied: `{label}` is not a shape that is stitched.",
-                    command.name
-                );
-                notes.push((target, self.diagnostic(Code::SvgFeatureIgnored, Some(&label), message, None)));
+        for (target, command) in self.objects.tied() {
+            if !self.shown_targets.contains(&target) {
+                continue;
             }
+            let label = self.labels.get(&target).cloned().unwrap_or_default();
+            let name = command.name;
+            let message = match command.does {
+                Does::Trim | Does::Stop | Does::StartOrEnd if !self.stitched_targets.contains(&target) => {
+                    format!("`{label}` has an Ink/Stitch `{name}` command, which is not applied: `{label}` is not a shape that is stitched.")
+                }
+                Does::StartOrEnd => format!(
+                    "`{label}` has an Ink/Stitch `{name}` command, which StitchCraft does not apply yet. Ink/Stitch applies it to fills and satin \
+                     columns."
+                ),
+                _ => continue,
+            };
+            notes.push((target, self.diagnostic(Code::SvgFeatureIgnored, Some(&label), message, None)));
         }
         for &(symbol, command, why) in self.objects.unapplied() {
             let label = self.labels.get(&symbol).cloned().unwrap_or_default();
@@ -296,49 +325,18 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         self.warnings.extend(notes.into_iter().map(|(_, note)| note));
     }
 
-    /// The map from the root's user units to millimetres, from its size, viewBox and aspect ratio.
-    fn root_map(&mut self, root: Node<'a, 'input>) -> Result<Affine, Diagnostic> {
-        let length = |name: &str| match root.attribute(name).map(str::trim) {
-            None | Some("auto") => Ok(None),
-            Some(v) => Length::from_str(v).map(Some).map_err(|_| unreadable(format!("The root element's {name}, \"{v}\", is not a length."))),
-        };
-        let (width, height) = (length("width")?, length("height")?);
-        let view_box = match root.attribute("viewBox") {
-            None => None,
-            Some(v) => Some(ViewBox::from_str(v).map_err(|_| unreadable(format!("The root element's viewBox, \"{v}\", is not four numbers.")))?),
-        };
-        let aspect = match root.attribute("preserveAspectRatio") {
-            None => AspectRatio::default(),
-            Some(v) => AspectRatio::from_str(v).map_err(|_| unreadable(format!("The root element's preserveAspectRatio, \"{v}\", is not one.")))?,
-        };
-        // Without a viewBox or an absolute size, percentages are of a viewer's default size, 300 × 150.
-        let pixels = |length: Option<Length>, default: f64| match length {
-            Some(l) if l.unit != LengthUnit::Percent => user_units(l, 0.0),
-            _ => default,
-        };
-        self.viewport = view_box.map_or_else(|| (pixels(width, 300.0), pixels(height, 150.0)), |vb| (vb.w, vb.h));
-        transform::root_to_mm(width, height, view_box, aspect).map_err(|reason| unreadable(format!("The drawing's size cannot be used: {reason}.")))
-    }
-
-    /// File-wide notes: a style sheet, and Ink/Stitch settings, wherever they are. Ink/Stitch's design
-    /// settings are read here too, from the first `<metadata>` element's children ([`crate::settings`]).
+    /// File-wide notes, where the reader meets their subject: the style sheet rules not read, at the first
+    /// `<style>` element, and Ink/Stitch settings. Ink/Stitch's design settings are read here too, from the
+    /// first `<metadata>` element's children ([`crate::settings`]).
     fn notice(&mut self, node: Node<'a, 'input>) {
         if let Some(message) = self.settings.visit(node, self.is_svg(node)) {
             self.note(None, message, None);
         }
-        if !self.noted_style_sheet
-            && self.is_svg(node)
-            && node.tag_name().name() == "style"
-            && node.children().any(|c| c.text().is_some_and(|t| !t.trim().is_empty()))
-        {
+        if !self.noted_style_sheet && self.is_svg(node) && node.tag_name().name() == "style" {
             self.noted_style_sheet = true;
-            let hint = "Save the file with inline styles or presentation attributes instead of a style sheet.";
-            self.note(
-                None,
-                "The file has a style sheet (`<style>`), which StitchCraft does not read: the colours, fills, outlines and hidden elements it sets are not used."
-                    .to_string(),
-                Some(hint),
-            );
+            if let Some(message) = self.sheet.unread_note() {
+                self.note(None, message, Some(sheet::UNREAD_HINT));
+            }
         }
         if !self.noted_inkstitch && node.attributes().any(|a| a.namespace() == Some(INKSTITCH_NS) && !READ_ATTRIBUTES.contains(&a.name())) {
             self.noted_inkstitch = true;
@@ -355,7 +353,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
     fn visit(&mut self, node: Node<'a, 'input>, n: u32, map: Affine, inherited: &Style<'a>) -> Result<Context<'a>, Diagnostic> {
         let tag = node.tag_name().name();
         let Some(kind) = Kind::of(tag).filter(|_| self.is_svg(node)) else { return Ok(Context::Hidden) };
-        let declared = Declared::of(node);
+        let declared = self.declared(node)?;
         let Some(style) = inherited.child(&declared) else { return Ok(Context::Hidden) };
         let label = label(node, tag, n);
         if self.own_object(node, kind, &label, &declared, &style) {
@@ -696,18 +694,23 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
     /// nothing usable, as in a viewer.
     fn stop_colour(&mut self, stop: Node<'a, 'input>) -> Result<(Rgb, bool), Diagnostic> {
         let black = Rgb::new(0, 0, 0);
-        let value = Declared::of(stop).get("stop-color").map(without_icc).unwrap_or("black");
+        let value = self.declared(stop)?.get("stop-color").map(without_icc).unwrap_or("black");
         if !value.eq_ignore_ascii_case("currentColor") {
             return Ok(Color::from_str(value).map_or((black, false), |color| (rgb(color), true)));
         }
         // `color` inherits: the nearest element from the stop up that sets it.
         for node in stop.ancestors() {
             self.charge(1)?;
-            if let Some(color) = Declared::of(node).get("color").and_then(|v| Color::from_str(without_icc(v)).ok()) {
+            if let Some(color) = self.declared(node)?.get("color").and_then(|v| Color::from_str(without_icc(v)).ok()) {
                 return Ok((rgb(color), true));
             }
         }
         Ok((black, true))
+    }
+
+    /// What `node` declares, with the style sheets' rules that select it.
+    fn declared(&mut self, node: Node<'a, 'input>) -> Result<Declared<'a, 'input>, Diagnostic> {
+        self.sheet.declared(node, &mut self.meter).map_err(|_| self.exhausted())
     }
 
     /// The first element with `id`, as `getElementById` finds it.

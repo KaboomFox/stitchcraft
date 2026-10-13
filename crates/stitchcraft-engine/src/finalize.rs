@@ -9,11 +9,14 @@
 //!    element's shortest stitch from the one before is left out, so the stitch runs on to the next. That
 //!    is the shortest stitch the element's generator used (its own, else the design's, never below the
 //!    machine's), so finalize never thins what the generator spaced. The first and last points of a run
-//!    of stitches (where the needle lands, and where a jump, trim or stop follows) and lock points always
-//!    stay, and leave out the ones before them instead; a point where the needle already is adds nothing
-//!    and is left out too. A stitch into or out of a lock point is a lock stitch, whose shortest is
-//!    0.2 mm. `SC-I0504` says how many were left out. The rule is one function, `thin`, which the
-//!    generators that join pieces of their own share, so that they leave finalize nothing to thin.
+//!    of stitches (where the needle lands, and where a jump, trim or stop follows) and lock points stay,
+//!    and leave out the ones before them instead. One still too near the one that stays before it, as
+//!    when elements sewn over each other bring a tie-off within a lock stitch of a tie-in, is left out
+//!    itself, and a trim or stop after it happens where the needle now is; so is a point where the
+//!    needle already is. Only a run's first point never goes. A stitch into or out of a lock point is a
+//!    lock stitch, whose shortest is 0.2 mm. `SC-I0504` says how many were left out. The rule is one
+//!    function, `thin`, which the generators that join pieces of their own share, so that they leave
+//!    finalize nothing to thin.
 //! 2. **The longest stitch.** A stitch longer than the machine's is split into equal parts: a hand-placed
 //!    stitch, say, or a custom lock's long step (`SC-I0703`). Each part counts against the stitch budget.
 //! 3. **The machine.** Too many colour changes and stops for the machine's format is `SC-E0601`. A design
@@ -109,30 +112,40 @@ impl<'s> Fitted<'s> {
     }
 
     /// A block's entries with each run of stitches fitted: the stitches between two other entries (a
-    /// jump, a trim, a stop) or the block's ends.
+    /// jump, a trim, a stop) or the block's ends. Where fitting leaves out a run's last point, the trims
+    /// and stops after it happen where the run now ends, where the needle is.
     fn block(&mut self, entries: &[Stitch], meter: &mut Meter) -> Result<Vec<Stitch>, Exhausted> {
         let mut out = Vec::with_capacity(entries.len());
         let mut run: Vec<Stitch> = Vec::new();
+        // Where the needle stopped instead of at the last run's last point, until it moves on.
+        let mut moved: Option<Point> = None;
         for &entry in entries {
             meter.charge(1)?;
             if entry.kind == StitchKind::Normal {
                 run.push(entry);
-            } else {
-                self.flush(&mut run, &mut out, meter)?;
-                out.push(entry);
+                continue;
             }
+            if let Some(ended) = run.last().map(|last| last.at) {
+                self.flush(&mut run, &mut out, meter)?;
+                moved = out.last().map(|last| last.at).filter(|&at| at != ended);
+            }
+            if entry.kind == StitchKind::Jump {
+                moved = None;
+            }
+            let at = moved.filter(|_| entry.kind.is_command()).unwrap_or(entry.at);
+            out.push(Stitch { at, ..entry });
         }
         self.flush(&mut run, &mut out, meter)?;
         Ok(out)
     }
 
     /// Fits the run of stitches gathered so far and moves it to `out`. Its first point is where the needle
-    /// lands and its last where the next entry happens, so both stay, as lock points do.
+    /// lands and its last where the next entry happens, so both stay, as lock points do, unless the last
+    /// or a lock point is too near one that stays before it.
     fn flush(&mut self, run: &mut Vec<Stitch>, out: &mut Vec<Stitch>, meter: &mut Meter) -> Result<(), Exhausted> {
         let mut short_of = Vec::new();
         let kept = thin(
             std::mem::take(run),
-            |point| point.at,
             |from, to| !at_least(from.at.distance(to.at), self.floor(from, to)),
             |point| point.origin.role == Role::Lock,
             |next| short_of.push(self.shortest_of(next)),

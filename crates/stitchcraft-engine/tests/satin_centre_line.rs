@@ -194,6 +194,40 @@ fn req_sat_017_rungs_go_beside_sharp_corners_and_at_nodes() {
 }
 
 #[test]
+fn req_sat_017_with_every_rung_left_out_the_rails_are_one_section() {
+    // An L 2 mm wide: the rungs beside its corner miss the inner rail, and the rung at its corner node
+    // crosses only the outer one (checked with shapely), so none is kept. Ink/Stitch then sews the rails as
+    // one section, and pairs no nodes.
+    let l_shape = polylines(&[&[(0.0, 0.0), (8.0, 0.0), (8.0, 4.0)]]);
+    for join in [Join::UNSET, Join::Round] {
+        let (satin, said) = made(&l_shape, 2.0, join);
+        assert_eq!((satin.unwrap().pairing, said), (Pairing::Rungs(Vec::new()), Vec::<String>::new()), "{join:?}");
+    }
+    // So nothing is said of rails with different numbers of nodes.
+    let element = widened(along("l", l_shape, &RED, &[("satin_column", "true")]), 2.0);
+    let Shape::Stroke { path, width, .. } = element.shape.clone() else { panic!("a stroke") };
+    let element = Element { shape: Shape::Stroke { path, width, join: Join::Round }, ..element };
+    assert_eq!(messages(&planned(vec![element])), Vec::<String>::new());
+}
+
+#[test]
+fn req_sat_017_a_line_is_closed_when_its_own_subpath_is() {
+    // A node closed with Z after an open line, as the SVG reader reads `M 50 50 L 50 50 Z`: it is left out,
+    // and the line stays open. On `main` the line took the node's Z, and was rolled as a closed one.
+    let line = Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(10.0, 0.0)), Segment::Line(p(20.0, 5.0))], closed: false };
+    let stray = Subpath { start: p(50.0, 50.0), segments: vec![Segment::Line(p(50.0, 50.0))], closed: true };
+    let rails_of = |subpaths: Vec<Subpath>| made(&Path { subpaths }, 2.0, Join::UNSET);
+    let (alone, with_stray) = (rails_of(vec![line.clone()]), rails_of(vec![line.clone(), stray.clone()]));
+    assert_eq!(with_stray.1, ["warning SC-W0205: Subpath 2 of this satin column is one point, so it is left out."]);
+    assert_eq!(with_stray.0.unwrap().rails, alone.0.unwrap().rails);
+    // A line closed with Z stays closed, wherever a node left out is drawn.
+    let ring = Subpath { closed: true, ..line };
+    let alone = rails_of(vec![ring.clone()]).0.unwrap().rails;
+    assert_eq!(rails_of(vec![ring.clone(), stray.clone()]).0.unwrap().rails, alone);
+    assert_eq!(rails_of(vec![stray, ring]).0.unwrap().rails, alone);
+}
+
+#[test]
 fn req_sat_017_the_rails_made_stay_the_rails() {
     // A dash 3.3 mm long and 5 mm wide, with 2 nodes inside: 2 rungs, each 6 mm long, longer than the
     // rails.

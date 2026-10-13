@@ -12,7 +12,8 @@ use std::f64::consts::FRAC_PI_2;
 use proptest::prelude::*;
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::units::MM_PER_SVG_PX;
-use stitchcraft_core::{Budget, Point};
+use stitchcraft_core::{Budget, Code, Fix, Point};
+use stitchcraft_engine::PlanOutcome;
 use stitchcraft_engine::generators::Neighbours;
 use stitchcraft_engine::generators::pull::PullParams;
 use stitchcraft_engine::generators::satin::{SatinParams, satin_stitch};
@@ -202,6 +203,71 @@ fn diag_sc_w0210_rails_without_rungs_with_different_numbers_of_nodes_are_named()
     // The lower rail's node at 5 mm pairs with the upper's at 15 mm, and its node at 10 mm with none.
     let at_cut = across(&points).into_iter().find(|[a, _]| a.x() > 5.0 - 1e-9).unwrap();
     assert!(at_cut[1].x() >= 15.0 - 1e-9, "{at_cut:?}");
+}
+
+/// A satin column from (30, 0), `length` mm long and 0.2 mm across, planned after a 10 mm line.
+fn column_after_a_line(length: f64) -> PlanOutcome {
+    let column =
+        along("s", polylines(&[&[(30.0, 0.0), (30.0 + length, 0.0)], &[(30.0, 0.2), (30.0 + length, 0.2)]]), &RED, &[("satin_column", "true")]);
+    sewn(vec![along("a", polylines(&[&[(0.0, 0.0), (10.0, 0.0)]]), &RED, &[]), column])
+}
+
+#[test]
+fn req_sat_018_a_column_within_the_shortest_stitch_of_its_first_needle_point_sews_nothing() {
+    // 0.1 mm long: every needle point of the column lies within 0.3 mm of its first. The line is sewn alone.
+    let speck = column_after_a_line(0.1);
+    assert_eq!(shape_of(&speck), "J L4 S5 L4");
+    assert_eq!(speck.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::SatinTooSmall]);
+    // 0.4 mm long, its far end beyond the shortest stitch from its first needle point: sewn after the line.
+    let small = column_after_a_line(0.4);
+    assert!(small.diagnostics.iter().all(|d| d.code != Code::SatinTooSmall && d.code != Code::InternalCheckFailed), "{:?}", messages(&small));
+    assert_ne!(shape_of(&small), "J L4 S5 L4");
+}
+
+#[test]
+fn diag_sc_w0215_the_shortest_stitch_is_named() {
+    let speck = column_after_a_line(0.1);
+    let [said] = speck.diagnostics.as_slice() else { panic!("{:?}", messages(&speck)) };
+    assert_eq!(
+        said.to_string(),
+        "warning SC-W0215: Every needle point of this satin column lies within the shortest stitch (0.3 mm) of its first, so it is not \
+         stitched."
+    );
+    assert_eq!(said.fix, Some(Fix::Hint("Draw the column larger, or delete it if it is a stray.".to_string())));
+}
+
+/// The needle points `path`, a satin column, sews with `params`, and what it said.
+fn sewn_alone(path: &stitchcraft_engine::design::Path, params: &[(&str, &str)]) -> (Vec<Point>, Vec<String>) {
+    let mut meter = Budget::DEFAULT.meter();
+    let Ok(Shape::Rails(satin)) = recognize(path, &mut meter).unwrap().shape else { panic!("not rails") };
+    let set: ParamSet = params.iter().copied().collect();
+    let (params, pull) = (SatinParams::from_set(&set).unwrap().params, PullParams::from_set(&set).unwrap().params);
+    let rng = &mut SplitMix64::new(0);
+    let stitched = satin_stitch(&satin, &params, &pull, satin_lengths(&set), &Neighbours::default(), rng, &mut meter).unwrap();
+    (stitched.runs.concat(), stitched.warnings.iter().map(ToString::to_string).collect())
+}
+
+#[test]
+fn diag_sc_e0216_a_column_with_no_section_to_sew_is_not_sewn() {
+    let message = "error SC-E0216: Every section of this satin column has no length on one of its rails, so it has nothing to sew.";
+    // The rung joins the first rail's start to the second rail's end: each rail is cut at an end, and each
+    // section has no length on one rail (shapely projects the crossings to exactly 0 and 10). Ink/Stitch
+    // says the column cannot be stitched.
+    let diagonal = polylines(&[&[(0.0, 0.0), (10.0, 0.0)], &[(0.0, 4.0), (10.0, 4.0)], &[(-5.0, -2.0), (15.0, 6.0)]]);
+    assert_eq!(sewn_alone(&diagonal, &[]), (Vec::new(), vec![message.to_string()]));
+    // Push compensation can leave a column so: rails 3 mm long, pushed in 1 mm at each end, and a slanted rung
+    // that meets them inside the parts taken off.
+    let short = polylines(&[&[(0.0, 0.0), (3.0, 0.0)], &[(0.0, 4.0), (3.0, 4.0)], &[(0.25, -0.5), (2.75, 4.5)]]);
+    assert!(!sewn_alone(&short, &[]).0.is_empty());
+    assert_eq!(sewn_alone(&short, &[("push_compensation_mm", "1")]), (Vec::new(), vec![message.to_string()]));
+    // In a plan, the column is named, and the rest is sewn.
+    let outcome = sewn(vec![
+        along("diagonal", diagonal, &RED, &[("satin_column", "true")]),
+        along("ok", polylines(&[&[(0.0, 10.0), (10.0, 10.0)]]), &RED, &[]),
+    ]);
+    assert_eq!(messages(&outcome), [message]);
+    assert_eq!(outcome.diagnostics[0].element.as_ref().map(|e| e.as_str()), Some("diagonal"));
+    assert_eq!(shape_of(&outcome), "J L4 S5 L4");
 }
 
 #[test]
