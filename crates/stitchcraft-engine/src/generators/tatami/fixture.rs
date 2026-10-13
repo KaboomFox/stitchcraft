@@ -1,10 +1,11 @@
 //! Parts the tatami tests share, drawn as the region gives them: an outline from its top left corner
-//! down its left side, counter-clockwise on screen, and a hole the other way round.
+//! down its left side, counter-clockwise on screen, and a hole the other way round. Also how the tests
+//! pin the work a question about a part costs.
 
 // Test code may unwrap (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used)]
 
-use stitchcraft_core::{Point, SplitMix64};
+use stitchcraft_core::{Budget, Exhausted, Meter, Point, SplitMix64};
 
 use crate::normalize::region::Polygon;
 
@@ -43,4 +44,23 @@ pub(crate) fn scattered(rng: &mut SplitMix64, holes: usize) -> Vec<Vec<Point>> {
         out.push(ring);
     }
     out
+}
+
+/// A question that charges a meter.
+pub(crate) type Question<'a> = Box<dyn Fn(&mut Meter) -> Result<(), Exhausted> + 'a>;
+
+/// The work each of `questions` charges. Each needs all of it: with any less, it runs out, wherever the
+/// meter stops it.
+pub(crate) fn costs(questions: &[Question<'_>]) -> Vec<u64> {
+    let budget = |work: u64| Budget { max_stitches: 1, max_work: work }.meter();
+    questions
+        .iter()
+        .map(|ask| {
+            let mut meter = Budget::DEFAULT.meter();
+            ask(&mut meter).unwrap();
+            let work = Budget::DEFAULT.max_work - meter.work_left();
+            assert!((0..work).all(|less| ask(&mut budget(less)).is_err()), "{work}");
+            work
+        })
+        .collect()
 }
