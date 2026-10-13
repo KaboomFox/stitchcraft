@@ -40,8 +40,9 @@ pub(crate) struct Arrangement {
 }
 
 /// `rings` (each open or closed, in the direction drawn) cut where they meet, on the grid; `Unjoined`
-/// should their edges not settle, a bug. One unit of `meter` per point, per edge bent and hot point tested
-/// against it, per pair of edges whose spans along x overlap, and per edge.
+/// should a point lie beyond the grid's reach or the edges not settle, a bug. A ring whose points all round
+/// to one grid point is left out. One unit of `meter` per point, per edge bent and hot point tested against
+/// it, per pair of edges whose spans along x overlap, and per edge.
 pub(crate) fn cut(rings: &[Vec<Point>], meter: &mut Meter) -> Result<Result<Arrangement, Unjoined>, Exhausted> {
     let mut on_grid: Vec<Vec<Node>> = Vec::new();
     for ring in rings {
@@ -53,10 +54,9 @@ pub(crate) fn cut(rings: &[Vec<Point>], meter: &mut Meter) -> Result<Result<Arra
             on_grid.push(nodes);
         }
     }
-    let paths = match snap::round(&on_grid, meter)? {
-        Ok(paths) => paths,
-        Err(unjoined) => return Ok(Err(unjoined)),
-    };
+    // Rounding settles every drawing tried, so this return is a bug's. It stays on one line: coverage
+    // counts a line that no test can reach as untested.
+    let Ok(paths) = snap::round(&on_grid, meter)? else { return Ok(Err(Unjoined)) };
     let mut numbers: BTreeMap<Node, usize> = BTreeMap::new();
     let mut nodes: Vec<Node> = Vec::new();
     // The corners first, so that the rings of the parts start at a corner the drawing reaches first.
