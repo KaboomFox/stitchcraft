@@ -20,7 +20,7 @@
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter};
 
 use super::arrange::Arrangement;
-use super::geom::{Envelope, Location, closed, locate_in_ring, signed_area};
+use super::geom::{Envelope, Location, closed, locate_in_ring};
 
 /// One part of a fill's area: rings as numbered points of the arrangement, each open (its first point not
 /// repeated at its end).
@@ -32,8 +32,9 @@ pub(crate) struct Part {
     pub(crate) holes: Vec<Vec<usize>>,
 }
 
-/// The kept edges could not be joined into rings: an edge with no edge to follow it. The arrangement's
-/// faces always join, so this is a bug.
+/// A fill's area could not be built: the rings' edges did not settle on the grid ([`super::snap`]), or the
+/// kept edges could not be joined into rings, an edge having no edge to follow it. Neither happens to any
+/// drawing tried, and the arrangement's faces always join, so this is a bug.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct Unjoined;
 
@@ -180,10 +181,10 @@ fn join(groups: Vec<Vec<Vec<usize>>>, arrangement: &Arrangement) -> Vec<Part> {
     for rings in groups {
         let (mut outlines, mut holes) = (Vec::new(), Vec::new());
         for ring in rings {
-            let area = signed_area(&polyline(&ring));
-            if area < 0.0 {
+            let area = arrangement.twice_area(&ring);
+            if area.clockwise() {
                 outlines.push(ring);
-            } else if area > 0.0 {
+            } else if area.counter_clockwise() {
                 holes.push(ring);
             }
         }
@@ -208,10 +209,9 @@ fn join(groups: Vec<Vec<Vec<usize>>>, arrangement: &Arrangement) -> Vec<Part> {
                     .find(|p| !part.outline.contains(p))
                     .is_some_and(|&p| locate_in_ring(arrangement.point(p), &outline) == Location::Interior)
         };
-        // Of the outlines around it, the innermost: the smallest.
-        let size = |part: &Part| signed_area(&polyline(&part.outline)).abs();
+        // Of the outlines around it, the innermost: the smallest, whose clockwise area is nearest 0.
         let innermost =
-            parts.iter().enumerate().filter(|(_, part)| around(part)).min_by(|(_, a), (_, b)| size(a).total_cmp(&size(b))).map(|(i, _)| i);
+            parts.iter().enumerate().filter(|(_, part)| around(part)).max_by_key(|(_, part)| arrangement.twice_area(&part.outline)).map(|(i, _)| i);
         if let Some(part) = innermost.and_then(|i| parts.get_mut(i)) {
             part.holes.push(hole);
         }
@@ -246,7 +246,7 @@ mod tests {
     /// The parts of the area the rings wind round at least once, each ring as its points.
     fn filled(rings: &[Vec<Point>]) -> Vec<(Vec<Point>, Vec<Vec<Point>>)> {
         let mut meter = Budget::DEFAULT.meter();
-        let arrangement = cut(rings, &mut meter).unwrap();
+        let arrangement = cut(rings, &mut meter).unwrap().unwrap();
         let faces = arrangement.faces(&mut meter).unwrap();
         let inside = |h: usize| faces.winding.get(faces.right_of[h]).is_some_and(|&w| w != 0);
         let kept: Vec<bool> = (0..2 * arrangement.edges.len()).map(|h| inside(h) && !inside(h ^ 1)).collect();
@@ -327,7 +327,7 @@ mod tests {
             ring(&[(5.0, 0.0), (9.0, 0.0), (9.0, 4.0), (5.0, 4.0)]),
             ring(&[(1.0, 1.0), (2.0, 1.0), (2.0, 2.0), (1.0, 2.0)]),
         ];
-        let arrangement = cut(&rings, &mut Budget::DEFAULT.meter()).unwrap();
+        let arrangement = cut(&rings, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         let found = join(vec![vec![vec![3, 2, 1, 0], vec![7, 6, 5, 4], vec![8, 9, 10, 11]]], &arrangement);
         assert_eq!(found, [Part { outline: vec![0, 3, 2, 1], holes: vec![vec![8, 9, 10, 11]] }, Part { outline: vec![4, 7, 6, 5], holes: vec![] }]);
     }
@@ -349,7 +349,7 @@ mod tests {
     fn rings_of_no_area_are_neither_outlines_nor_holes() {
         // Never from an arrangement: a ring there and back inside a square is left out.
         let rings = [ring(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]), ring(&[(2.0, 2.0), (3.0, 3.0)])];
-        let arrangement = cut(&rings, &mut Budget::DEFAULT.meter()).unwrap();
+        let arrangement = cut(&rings, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         let found = join(vec![vec![vec![3, 2, 1, 0]], vec![vec![4, 5]]], &arrangement);
         assert_eq!(found, [Part { outline: vec![0, 3, 2, 1], holes: vec![] }]);
     }
@@ -369,7 +369,7 @@ mod tests {
         // Both halves of one edge kept: neither has a half to follow it.
         let rings = [ring(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)])];
         let mut meter = Budget::DEFAULT.meter();
-        let arrangement = cut(&rings, &mut meter).unwrap();
+        let arrangement = cut(&rings, &mut meter).unwrap().unwrap();
         let kept = vec![true, true, false, false, false, false, false, false];
         let unjoined = parts(&arrangement, &kept, &mut meter).unwrap().unwrap_err();
         assert_eq!(unjoined.diagnostic().code, Code::InternalCheckFailed);
@@ -382,7 +382,7 @@ mod tests {
     fn the_budget_bounds_the_work() {
         let rings = [ring(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)])];
         let mut meter = Budget::DEFAULT.meter();
-        let arrangement = cut(&rings, &mut meter).unwrap();
+        let arrangement = cut(&rings, &mut meter).unwrap().unwrap();
         let kept = vec![false, true, false, true, false, true, false, true];
         assert!(parts(&arrangement, &kept, &mut Budget { max_stitches: 1, max_work: 3 }.meter()).is_err());
         assert_eq!(parts(&arrangement, &kept, &mut meter).unwrap().unwrap().len(), 1);

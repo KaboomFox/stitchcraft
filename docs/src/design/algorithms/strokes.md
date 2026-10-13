@@ -53,9 +53,12 @@ checks straight. "The shortest stitch" is the one [Finalize](../engine-pipeline.
    even that is closer than the shortest stitch, the part is not stitched (`SC-W0401`).
 5. **Respect the curve.** If the chord between two consecutive needle points strays from the path by
    more than the tolerance left after flattening, split that stitch at the path's point of greatest
-   deviation, among those that leave both parts within the lengths above, and repeat. This bounds the
-   visual error by `running_stitch_tolerance_mm` on any curve whose details are larger than the shortest
-   stitch.
+   deviation, among those at least the shortest stitch from both its ends, and repeat. A part longer than
+   the longest length is split along the path as in step 4. So the stitches stray from the path by at
+   most `running_stitch_tolerance_mm`, except where the path's details are smaller than the shortest
+   stitch. There a point of the flattened path that is passed over lies nearer than the shortest stitch
+   to a needle of its stitch, and the path strays by less than the shortest stitch plus a tenth of the
+   tolerance.
 6. **Random length.** With `enable_random_stitch_length`, each stitch length is drawn uniformly from
    `s × (1 ± jitter)`, the first of each span a random fraction of that (a random phase, below), then the
    span is rescaled to end on its corner. The element's own generator draws them. It is seeded with the

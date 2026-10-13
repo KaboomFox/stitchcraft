@@ -26,8 +26,10 @@
 //!    points that would make a stitch shorter than the shortest stitch are dropped, and points are added
 //!    along the path where a drop would make one longer than the longest pattern length.
 //! 5. **Follow the curve.** A stitch whose straight line strays from the path by more than the remaining
-//!    nine tenths of the tolerance is split at a point of the path, the farthest one from it, as often as
-//!    needed, unless the split would leave a stitch outside those lengths.
+//!    nine tenths of the tolerance is split at the point of the path farthest from it, as often as needed,
+//!    and a part longer than the longest pattern length is split along the path as in step 4. A point
+//!    closer than the shortest stitch to an end of the stitch is passed over: it strays from the stitch by
+//!    less than that.
 //!
 //! Each run is then sewn its repeats and bean stitch ([`crate::generators::passes`]).
 //!
@@ -472,14 +474,14 @@ fn reach(kept: &mut Vec<Needle>, to: Needle, along: &Along, longest: f64, meter:
 }
 
 /// `needles` with more added wherever a stitch strays from the piece by more than `budget`: each split
-/// is at the piece's point farthest from the stitch (the first, on a tie) among those that leave both
-/// halves from `min` to `longest` long, measured straight.
+/// is at the piece's point farthest from the stitch (the first, on a tie) among those at least `min` from
+/// both its ends, measured straight, and a half longer than `longest` is split along the piece as
+/// [`reach`] splits it. A point passed over lies nearer than `min` to an end of the stitch, so it strays
+/// from the stitch by less than `min`.
 fn follow(needles: Vec<Needle>, along: &Along, budget: f64, min: f64, longest: f64, meter: &mut Meter) -> Result<Vec<Needle>, Exhausted> {
-    let fits = |a: Point, b: Point| {
-        let length = a.distance(b);
-        at_least(length, min) && at_least(longest, length)
-    };
+    let apart = |a: Point, b: Point| at_least(a.distance(b), min);
     let mut done: Vec<Needle> = Vec::with_capacity(needles.len());
+    // The needles still to reach, the next one last.
     let mut pending: Vec<Needle> = Vec::new();
     for needle in needles {
         let Some(&from) = done.last() else {
@@ -494,12 +496,18 @@ fn follow(needles: Vec<Needle>, along: &Along, budget: f64, min: f64, longest: f
                 meter.charge(1)?;
                 let Some(&point) = along.points.get(index) else { continue };
                 let off = distance_to_segment(point, from.point, to.point);
-                if worst.is_none_or(|(w, _)| off > w) && fits(from.point, point) && fits(point, to.point) {
+                if worst.is_none_or(|(w, _)| off > w) && apart(from.point, point) && apart(point, to.point) {
                     worst = Some((off, index));
                 }
             }
             match worst {
-                Some((off, index)) if off > budget => pending.push(along.vertex(index)),
+                Some((off, index)) if off > budget => {
+                    // From `from` by way of the point to `to`, each half split as `reach` splits it.
+                    let mut way = vec![from];
+                    reach(&mut way, along.vertex(index), along, longest, meter)?;
+                    reach(&mut way, to, along, longest, meter)?;
+                    pending.extend(way.iter().skip(1).rev().skip(1));
+                }
                 _ => {
                     done.push(to);
                     pending.pop();

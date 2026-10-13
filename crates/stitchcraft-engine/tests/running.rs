@@ -49,9 +49,14 @@ fn circle(cx: f64, cy: f64, radius: f64) -> Path {
     Path { subpaths: vec![Subpath { start: p(cx + radius, cy), segments, closed: true }] }
 }
 
+/// The cubic curve from `a` to `d`, its handles `b` and `c`.
+fn cubic(a: (f64, f64), b: (f64, f64), c: (f64, f64), d: (f64, f64)) -> Path {
+    Path { subpaths: vec![Subpath { start: p(a.0, a.1), segments: vec![Segment::Cubic(p(b.0, b.1), p(c.0, c.1), p(d.0, d.1))], closed: false }] }
+}
+
 /// A cubic curve with a cusp at (5, 7.5): it comes to a point there and goes back the way it came.
 fn cusp() -> Path {
-    Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Cubic(p(10.0, 10.0), p(0.0, 10.0), p(10.0, 0.0))], closed: false }] }
+    cubic((0.0, 0.0), (10.0, 10.0), (0.0, 10.0), (10.0, 0.0))
 }
 
 /// Points of the source path, `per_segment` along each segment (Bernstein form, independent of the
@@ -98,6 +103,17 @@ fn off_curve(q: Point, curve: &[Point]) -> f64 {
 
 fn lengths(run: &[Point]) -> Vec<f64> {
     run.windows(2).map(|s| s[0].distance(s[1])).collect()
+}
+
+/// How far the stitches of `run` stray from `path`, both ways: the farthest point of the path, sampled
+/// `per_segment` times along each segment, from the stitches; and the farthest needle point or middle of
+/// a stitch from the path.
+fn strays(path: &Path, run: &[Point], per_segment: u32) -> (f64, f64) {
+    let curve = samples(path, per_segment);
+    let from_curve = curve.iter().map(|q| off_run(*q, run)).fold(0.0, f64::max);
+    let middles = run.windows(2).map(|s| s[0].lerp(s[1], 0.5));
+    let from_stitches = run.iter().copied().chain(middles).map(|q| off_curve(q, &curve)).fold(0.0, f64::max);
+    (from_curve, from_stitches)
 }
 
 #[test]
@@ -158,14 +174,42 @@ fn req_run_002_curves_are_followed_within_the_tolerance() {
         let path = circle(50.0, 50.0, radius);
         let stitched = stitch(&path, &params("2.5", &tolerance.to_string()), 0.3);
         let run = &stitched.runs[0];
-        let curve = samples(&path, 400);
-        let worst_curve = curve.iter().map(|q| off_run(*q, run)).fold(0.0, f64::max);
-        // The stitches' own points and midpoints, against the curve.
-        let mut on_stitches = run.clone();
-        on_stitches.extend(run.windows(2).map(|s| s[0].lerp(s[1], 0.5)));
-        let worst_stitch = on_stitches.iter().map(|q| off_curve(*q, &curve)).fold(0.0, f64::max);
+        let (worst_curve, worst_stitch) = strays(&path, run, 400);
         assert!(worst_curve <= tolerance + 1e-6 && worst_stitch <= tolerance + 1e-6, "r {radius}: {worst_curve} {worst_stitch}");
         assert!(lengths(run).iter().all(|l| *l <= 2.5 + 1e-9 && *l >= 0.3 - 1e-9), "r {radius}");
+    }
+}
+
+#[test]
+fn req_run_002_a_tight_bend_inside_a_curve_is_followed_within_the_tolerance() {
+    // The curve turns back at its middle, (8.975, 15), in a V narrower there than the shortest stitch.
+    // Spread evenly, the needle past the tip lands across the V, too close to the one before it, and is
+    // dropped: the stitch over the gap missed the tip by 1.24 mm, though stitches of about 1.24, 1.7 and
+    // 1.7 mm reach it.
+    let path = cubic((0.0, 0.0), (20.0, 20.0), (-3.4, 20.0), (22.0, 0.0));
+    let stitched = stitch(&path, &params("2.5", "0.2"), 0.3);
+    let run = &stitched.runs[0];
+    let (worst_curve, worst_stitch) = strays(&path, run, 8000);
+    assert!(worst_curve <= 0.2 + 1e-6 && worst_stitch <= 0.2 + 1e-6, "{worst_curve} {worst_stitch}");
+    assert!(lengths(run).iter().all(|l| *l <= 2.5 + 1e-9 && *l >= 0.3 - 1e-9), "{:?}", lengths(run));
+}
+
+#[test]
+fn req_run_002_any_curve_is_followed_within_the_tolerance_or_the_shortest_stitch() {
+    // Random cubic curves in a 50 mm square, at the default settings. A point of the curve, or of a
+    // stitch, lies farther than the tolerance from the other only where a needle nearer it would make a
+    // stitch shorter than the shortest stitch: then within that, and the tenth of the tolerance that
+    // flattening the curve takes.
+    let (tolerance, min) = (0.2, 0.3);
+    let bound = f64::max(tolerance, min + tolerance / 10.0);
+    let mut rng = SplitMix64::new(0x00c0_ffee);
+    let mut point = || (rng.next_in(0.0, 50.0), rng.next_in(0.0, 50.0));
+    for case in 0..1_000 {
+        let path = cubic(point(), point(), point(), point());
+        for run in &stitch(&path, &params("2.5", "0.2"), min).runs {
+            let (worst_curve, worst_stitch) = strays(&path, run, 500);
+            assert!(worst_curve <= bound + 1e-6 && worst_stitch <= bound + 1e-6, "case {case}: {worst_curve} {worst_stitch}");
+        }
     }
 }
 
