@@ -663,6 +663,24 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   first, a speck a few tenths of a millimetre across, sewed stitches all shorter than the machine sews,
   and the design was lost the same way. Ink/Stitch sews such a column (`DEV-SAT-008`). The golden files
   stay as they were.
+- **Fills with many or detailed holes** are sewn instead of refused (`REQ-FILL-TAT-013`), which a review
+  found. Travel under the rows placed points on the rings, weighed its lines by their distance from the
+  rings and kept its way inside the part by looking at every side of every ring, for each point, line and
+  stitch. A 70 mm square with 14 × 14 round holes needed 813 million units of work, more than the
+  budget, and was refused with `SC-E0004`, the whole design with it. The ring sides are now filed in a
+  grid, and each question looks at the sides near it alone, with the same answers: the square needs 21
+  million units. The golden files stay as they were, and the hoop's whole field plans in about 1.5 % fewer
+  instructions.
+- To keep the needle's way between a fill's rows inside the part, StitchCraft looked at the rings 3 times
+  for each stitch and charged the work budget for one of them, which the same review found. The other 2
+  are now charged too, a unit for each cell and side they look at.
+- **`stitch plan` refuses a design with an element left out with an error** (`REQ-CLI-003`), which the
+  same review found. The engine leaves out an element it cannot sew, such as one whose planning runs past
+  its work budget (`SC-E0004`), and plans the rest. The command wrote the machine file without the
+  element and ended with exit status 0, though its help, its README and the diagnostics reference say
+  that nothing is written after an error. Now only the report is written, and the exit status is 1, as
+  Ink/Stitch writes its file only when no element fails. The picture is drawn before anything is
+  written, so a picture that cannot be drawn stops the machine file too.
 - **A tight bend inside a curve** is followed by a running stitch within its tolerance
   (`REQ-RUN-002`), which a review found. Where a curve turned back in a V narrower than the shortest
   stitch, the needle past the tip was dropped, and the stitch over the gap could miss the tip by more than

@@ -43,7 +43,8 @@ Adapters have already applied transforms and converted units, so normalization n
   a fill needs a non-empty region, and a running stitch needs a path longer than the minimum stitch
   length.
 - An element with an error diagnostic is skipped; the rest of the design still plans. A design whose
-  every element was skipped yields `SC-E0010`.
+  every element was skipped yields `SC-E0010`. `stitch plan` writes the machine file only when no error
+  is said, as Ink/Stitch writes its file only when no element fails (`REQ-CLI-003`).
 
 ## 3. Generate
 
