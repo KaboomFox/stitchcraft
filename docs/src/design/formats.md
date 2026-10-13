@@ -37,9 +37,9 @@ data) followed by a **PEC block**, which is what the machine actually sews from.
 | PEC offset | 32-bit little-endian offset of the PEC block: 22 |
 | PES section | A hoop indicator (0 = 100 × 100 mm, 1 = 130 × 180 mm; we write 1 for designs larger than 100 × 100 mm) and no design-editor objects. Machines sew from the PEC block; the section is for PE-Design. |
 | PEC header | `LA:` + label (16 characters, padded) + carriage return; thumbnail size; colour entries − 1; one Brother palette index per colour entry (each block, and each stop); padding to 512 bytes |
-| PEC graphics header | Bytes to the thumbnails; design width and height in 0.1 mm; the origin as seen from the design's top-left corner |
+| PEC graphics header | Bytes to the thumbnails, the design's width and height in 0.1 mm, and the start as seen from the design's top-left corner. That field holds −204.8 to 204.7 mm on each axis, and a design whose corner lies farther from the start is refused (`REQ-FMT-011`, `SC-E0602`) |
 | PEC stitches | Relative moves in 0.1 mm (see below) |
-| Thumbnails | 48 × 38 one-bit pictures with a rounded frame: the whole design, then one per colour entry, at one scale so they line up |
+| Thumbnails | 48 × 38 one-bit pictures with a rounded frame, of the whole design and then of each colour entry, at one scale so that they line up. No thread is drawn before the needle first goes down. Stitches stay inside the frame, and the byte after the stitch data's end mark is `00` (`REQ-FMT-012`) |
 
 The byte-level layout is documented in the writer modules (`crates/stitchcraft-formats/src/pes/`), next
 to the code that writes it, with the spec vectors that test it.
@@ -66,14 +66,22 @@ than their setting. A jump that goes nowhere has no record, since a record of it
 The pieces of a sewn move longer than 204.7 mm keep the plain flag, because a cut there would cut the
 stitch's own thread. No profile allows a stitch that long.
 
-**Checked against a reference.** For the canonical plans, every PEC header byte — palette indices,
-extents, the origin fields, the graphics offset arithmetic — equals pystitch's output for the same stitches,
-and a pinned pyembroidery reads our files to the same needle-downs, cuts and pauses as StitchCraft's own
-reader (REQ-FMT-005, run as a pinned CI job from M2.4).
+**Checked against a reference.** For the canonical plans, whose threads are palette colours, every PEC
+header byte equals pystitch's output for the same stitches, the palette indices and the origin fields
+among them. A pinned pyembroidery reads our files to the same needle-downs, cuts and pauses as
+StitchCraft's own reader (REQ-FMT-005, run as a pinned CI job from M2.4). Threads of other colours can get
+other entries than pystitch gives them (`DEV-THREAD-001`).
 
-**Colours.** The PEC header stores palette *indices*, not RGB, so every thread is mapped to the
-nearest Brother PEC colour (CIEDE2000). Catalogue numbers from other brands cannot survive PES v1; a
-PES v6 writer (below) can carry a thread list with RGB and codes.
+**Colours** (`REQ-THREAD-002`). The PEC header stores palette *indices*, not RGB, and a machine knows
+threads only by them. Threads written as one entry are one thread to it, shown in one colour, and a change
+between them reads as a stop. So the threads of a design get their entries together. A thread read from a
+PES file is an entry, by its colour and name, and is written back as it, Brother's applique steps 62 to 64
+included. The other threads are given the 61 thread colours, one each while they last, the nearest pairs
+first by CIEDE2000. A thread gets its nearest entry unless a thread nearer to it took it. Equal threads
+share one. With more different threads than that, the rest share their nearest entries, and `SC-W0606`
+says how many. `stitch plan`, `convert` and `inspect` name each thread by the entry the file has.
+Catalogue numbers from other brands cannot survive PES v1. A PES v6 writer (below) could store a thread
+list with RGB and codes.
 
 ### Risks found in the field, and how we test them
 
@@ -141,7 +149,7 @@ that points nowhere) become warnings in the result.
 
 | Reader | Reads | What it has to infer |
 |---|---|---|
-| PES / PEC | the PEC block of any PES version (`#PES0001` … `#PES0060`), and bare `#PEC0001` files; the block must start with `LA:` | A colour change to the same palette entry is a **stop**, as PEC writes stops. Blocks whose threads map to one Brother colour read back as one block with a stop, because PES v1 cannot tell them apart. Whether the stitch data starts with the **origin field** (below). |
+| PES / PEC | the PEC block of any PES version (`#PES0001` … `#PES0060`), and bare `#PEC0001` files; the block must start with `LA:` | A colour change to the same palette entry is a **stop**, as PEC writes stops. StitchCraft's writer gives different threads different entries, so only threads beyond the palette's 61 colours read back as a stop. Whether the stitch data starts with the **origin field** (below). |
 | DST | the header's label and every record | Three or more jumps in a row are a **trim** before them where something was sewn since the thread was last cut or changed, as DST machines read them (`REQ-FMT-008`); a trim's own spelling at the start of the run — up to 8 jumps of at most 1 mm that end where they started — moves the frame nowhere and is not kept as jumps. Colours: none — each block gets a placeholder thread, and a stop reads as a colour change. |
 
 **The PEC origin field** (`REQ-FMT-009`). Brother's software, pystitch and StitchCraft write 4 bytes
@@ -172,8 +180,8 @@ before long jumps where a PES machine leaves a jump thread, which `SC-I0605` rep
 StitchCraft has a trim flag on every jump already, so only PES files with plain jumps get those cuts.
 Records carry over
 literally (a DST file's 12 mm jump pieces stay separate jumps in a PES file), and what the new format
-cannot say is reported instead of guessed: a PES file made from a DST file names a placeholder black for
-every thread, because DST stores no colours (`SC-W0604`).
+cannot say is reported instead of guessed. A DST file's threads are placeholders, all black (`SC-W0604`).
+A PES file made from one names each by the Brother colour nearest black that is still free.
 
 ## Later formats
 
@@ -199,6 +207,9 @@ every thread, because DST stores no colours (`SC-W0604`).
 | `REQ-FMT-006` | Fuzzed readers never panic, never allocate beyond caps, always terminate |
 | `REQ-FMT-007` | Long moves are split within the format's per-record limit |
 | `REQ-FMT-008` | DST is read as its machines sew it (three or more jumps in a row after sewing cut the thread), and writing DST reports where they will cut and the plan does not (`SC-I0605`) |
+| `REQ-FMT-011` | A PES design whose top-left corner lies more than 204.7 mm from the start is refused, not written with its origin field wrapped round |
+| `REQ-FMT-012` | PEC thumbnails draw stitches only inside their frames, so the stitch data's end mark is followed by `00` |
+| `REQ-THREAD-002` | Different threads get different palette entries, the nearest pairs first, and a thread read from a file keeps its entry |
 
 The pyembroidery oracle is a conformance case (`conformance/cases/formats/pyembroidery-oracle.toml`): a
 pinned pyembroidery, installed by hash in CI, reads every golden machine file through

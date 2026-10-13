@@ -12,13 +12,13 @@
 //! | 32 | 4 | `FF 00 06 26`: thumbnail width in bytes (6) and height (38) |
 //! | 36 | 12 | spaces |
 //! | 48 | 1 | number of colour entries − 1 |
-//! | 49 | 463 | one Brother palette index per colour entry, padded with spaces |
+//! | 49 | 463 | one Brother palette index per colour entry, padded with spaces ([`super::encode`] takes them from `Palette::assign`) |
 //! | 512 | 2 | `00 00` |
 //! | 514 | 3 | bytes from offset 512 to the thumbnails (little-endian) |
 //! | 517 | 3 | `31 FF F0` (observed constant) |
 //! | 520 | 2 + 2 | design width and height in 0.1 mm (little-endian) |
 //! | 524 | 2 + 2 | `E0 01`, `B0 01` (observed constants, 480 and 432) |
-//! | 528 | 2 + 2 | big-endian `0x9000 \| (−min x)` and `0x9000 \| (−min y)`, 12-bit two's complement: the origin as seen from the design's top-left corner (observed) |
+//! | 528 | 2 + 2 | big-endian `0x9000 \| (−min x)` and `0x9000 \| (−min y)`, 12-bit two's complement: the origin as seen from the design's top-left corner (observed). A design whose corner lies farther from the start than that records is refused (REQ-FMT-011) |
 //! | 532 | … | stitch data |
 //! | … | 228 per picture | thumbnails ([`super::thumbnail`]) |
 //!
@@ -49,7 +49,7 @@ use stitchcraft_plan::FormatId;
 use crate::error::EncodeError;
 use crate::label::label;
 use crate::lower::{Lowered, Op, split};
-use crate::quantize::Delta;
+use crate::quantize::{Delta, Units};
 
 use super::thumbnail;
 
@@ -57,6 +57,9 @@ use super::thumbnail;
 const FORMAT: &str = "PES v1";
 /// The largest move one long-form axis records.
 pub(crate) const LONG_LIMIT: i32 = 2047;
+/// The largest value the origin field records on each axis, which reaches down to one less than its
+/// negative: 12-bit two's complement, as a long-form axis.
+const ORIGIN_LIMIT: i32 = LONG_LIMIT;
 /// Long-form flag bits.
 const LONG: u8 = 0x80;
 const JUMP: u8 = 0x10;
@@ -66,8 +69,8 @@ const HEADER_LEN: usize = 512;
 /// Bytes from offset 512 to the stitch data (the graphics header).
 const GRAPHICS_HEADER_LEN: usize = 20;
 
-/// The PEC block for `lowered`.
-pub(crate) fn block(lowered: &Lowered, name: &str) -> Result<Vec<u8>, EncodeError> {
+/// The PEC block for `lowered`, whose colour entries are the palette entries `indices`.
+pub(crate) fn block(lowered: &Lowered, indices: &[u8], name: &str) -> Result<Vec<u8>, EncodeError> {
     let stitches = stitch_data(&lowered.ops);
     let mut out = Vec::with_capacity(HEADER_LEN + GRAPHICS_HEADER_LEN + stitches.len() + thumbnail::BYTES * (1 + lowered.entries.len()));
 
@@ -79,11 +82,7 @@ pub(crate) fn block(lowered: &Lowered, name: &str) -> Result<Vec<u8>, EncodeErro
     out.extend_from_slice(&[b' '; 12]);
     let last_entry = u8::try_from(lowered.changes()).map_err(|_| too_many(lowered.changes()))?;
     out.push(last_entry);
-    let palette = FormatId::PesV1.palette().map(|id| id.palette()).ok_or(EncodeError::NoPaletteMatch { palette: "PES" })?;
-    for color in &lowered.entries {
-        let entry = palette.nearest(*color).ok_or(EncodeError::NoPaletteMatch { palette: palette.name })?;
-        out.push(entry.index);
-    }
+    out.extend_from_slice(indices);
     out.resize(HEADER_LEN, b' ');
 
     let to_thumbnails = GRAPHICS_HEADER_LEN + stitches.len();
@@ -95,8 +94,10 @@ pub(crate) fn block(lowered: &Lowered, name: &str) -> Result<Vec<u8>, EncodeErro
     out.extend_from_slice(&extent(min.x, max.x, "the design's width")?.to_le_bytes());
     out.extend_from_slice(&extent(min.y, max.y, "the design's height")?.to_le_bytes());
     out.extend_from_slice(&[0xE0, 0x01, 0xB0, 0x01]);
+    // The start as seen from the design's top-left corner, in 12 bits (REQ-FMT-011).
     for coordinate in [min.x, min.y] {
-        let [low, high, _, _] = (0x9000 | (coordinate.saturating_neg() & 0x0FFF)).to_le_bytes();
+        let field = coordinate.checked_neg().filter(|field| (-ORIGIN_LIMIT - 1..=ORIGIN_LIMIT).contains(field)).ok_or_else(|| far(min))?;
+        let [low, high, _, _] = (0x9000 | (field & 0x0FFF)).to_le_bytes();
         out.extend_from_slice(&[high, low]);
     }
     out.extend_from_slice(&stitches);
@@ -110,6 +111,13 @@ fn too_many(changes: usize) -> EncodeError {
 
 fn too_large(what: &str) -> EncodeError {
     EncodeError::TooLarge { format: FORMAT, what: what.to_string() }
+}
+
+/// The refusal of a design whose top-left corner is at `corner`, farther from the start than the origin
+/// field records.
+fn far(corner: Units) -> EncodeError {
+    let mm = |v: i32| f64::from(v) / 10.0;
+    too_large(&format!("a design whose top-left corner is ({:.1}, {:.1}) mm from where the machine starts", mm(corner.x), mm(corner.y)))
 }
 
 /// The stitch data for `ops` (see the module docs).

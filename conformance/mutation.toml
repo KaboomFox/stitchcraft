@@ -207,3 +207,9 @@ file = "crates/stitchcraft-engine/src/normalize/region/geom.rs"
 mutant = "replace == with != in locate_in_ring"
 line = "if low.y() <= p.y() && p.y() < high.y() && exact::side(low, high, p) == Side::Left {"
 why = "a closed ring spans the height of a point off it an even number of times, so the spans on the point's left and those on its right have the same parity, and counting either finds the same side of the ring"
+
+[[equivalent]]
+file = "crates/stitchcraft-formats/src/pes/pec.rs"
+mutant = "replace | with ^ in block"
+line = "let [low, high, _, _] = (0x9000 | (field & 0x0FFF)).to_le_bytes();"
+why = "the masked field is below 0x1000, and 0x9000 has none of its bits, so or and exclusive or give the same bytes"
