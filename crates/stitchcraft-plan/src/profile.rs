@@ -5,6 +5,7 @@
 //! justifies it (`docs/src/plan/machine-testing.md`), and each profile names its evidence. The built-in
 //! profiles are data in [`crate::profiles`].
 
+use stitchcraft_core::units::up_to_tenth;
 use stitchcraft_core::{Code, Diagnostic, Edit, Fix, Mm, Rect, Size};
 
 use crate::palette::{BROTHER_PEC, Palette};
@@ -149,10 +150,11 @@ impl MachineProfile {
 
     /// Whether a design with these bounds fits: `SC-E0701` when it does not fit the hoop, `SC-W0702`
     /// when it is larger than the comfort zone, `None` when it is fine. When turning the design 90
-    /// degrees would fit, the diagnostic offers that as a fix (REQ-PRF-002).
+    /// degrees would fit, the diagnostic offers that as a fix (REQ-PRF-002). The design's size is given to
+    /// the tenth of a millimetre above, so a design too large never reads as one that fits.
     pub fn check_fit(&self, bounds: Rect) -> Option<Diagnostic> {
         let (width, height) = (bounds.width(), bounds.height());
-        let design = format!("The design is {width:.1} × {height:.1} mm");
+        let design = format!("The design is {:.1} × {:.1} mm", up_to_tenth(width), up_to_tenth(height));
         if !self.hoop.holds(width, height) {
             let message = format!("{design}, but the {} sews at most {}.", self.name, describe(self.hoop));
             let fix = if self.hoop.rotated().holds(width, height) {

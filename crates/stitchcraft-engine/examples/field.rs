@@ -3,7 +3,7 @@
 //!
 //! `field RUNS` plans it once to warm up, then `RUNS` times, and prints the median time in milliseconds
 //! and the plan's stitch count: `median 37.3 ms, 20755 stitches`. `field 0` plans it once and prints its
-//! stitch count, for valgrind's callgrind to count the instructions one plan takes (`pipeline::plan`).
+//! stitch count, for valgrind's callgrind to count the instructions one plan takes, in `plan` below.
 
 // A binary prints what it measured; it times a benchmark, which library code never may (clippy.toml).
 #![allow(clippy::print_stdout, clippy::print_stderr, clippy::disallowed_types)]
@@ -17,6 +17,9 @@ use stitchcraft_testkit::designs::{RED, fill, planned};
 /// The field's corners, centred on the hoop's centre.
 const FIELD: &[(f64, f64)] = &[(-65.0, -90.0), (-65.0, 90.0), (65.0, 90.0), (65.0, -90.0)];
 
+/// One plan of the field. Callgrind counts its instructions by its name, `field::plan`, which a rename
+/// would lose (`xtask/src/perf.rs`), so it is never inlined into its callers.
+#[inline(never)]
 fn plan() -> PlanOutcome {
     planned(vec![fill("field", &[FIELD], &RED, &[("row_spacing_mm", "0.4")])])
 }

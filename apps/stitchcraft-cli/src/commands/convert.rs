@@ -13,7 +13,7 @@ use std::fmt::Write as _;
 use stitchcraft_formats::Encoded;
 
 use super::{Outcome, Status, describe_file, describe_plan, describe_threads, output_format, read_machine_file, reader_warnings};
-use super::{render_diagnostics, unknown_colors, write_file};
+use super::{render_diagnostics, unknown_colors, write_files};
 use crate::cli::ConvertArgs;
 
 /// Runs `stitch convert`.
@@ -42,15 +42,16 @@ pub fn run(args: &ConvertArgs) -> Outcome {
         }
     };
     diagnostics.extend(notes);
-    if let Err(outcome) = write_file(&args.output, &bytes) {
-        return outcome;
+    let said = warnings + &render_diagnostics(&diagnostics);
+    if let Err(unwritten) = write_files(&[(&args.output, &bytes)], &said) {
+        return unwritten;
     }
     let mut out = String::new();
     let _ = writeln!(out, "{} · {} → {}", args.file.display(), decoded.format, format.name());
     describe_file(&mut out, &args.output, format, &bytes);
     describe_plan(&mut out, &decoded.plan);
     describe_threads(&mut out, &decoded.plan, format.palette().map(|id| id.palette()));
-    Outcome { stdout: out, stderr: warnings + &render_diagnostics(&diagnostics), status: Status::Done }
+    Outcome { stdout: out, stderr: said, status: Status::Done }
 }
 
 #[cfg(test)]
@@ -106,6 +107,15 @@ mod tests {
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(out.stderr.starts_with("warning SC-W0604: DST stores no thread colours; every thread is a black placeholder."), "{}", out.stderr);
         assert_eq!(events(&read(&output).plan), events(&read(&source).plan));
+        // A file that cannot be written: what was said is printed all the same (REQ-CLI-006).
+        let nowhere = temp("no-such-folder").join("TS-01.pes");
+        let out = convert(source, nowhere.clone(), None);
+        assert_eq!(out.status, Status::Io);
+        assert!(
+            out.stderr.starts_with("warning SC-W0604: ") && out.stderr.contains(&format!("stitch: cannot write {}: ", nowhere.display())),
+            "{}",
+            out.stderr
+        );
     }
 
     #[test]

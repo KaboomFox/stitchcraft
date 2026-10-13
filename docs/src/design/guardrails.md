@@ -18,7 +18,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | **Module size** | Rust files warn above 800 lines, fail above 1,500 (generated files exempt) | `xtask/src/filesize.rs` | `cargo xtask filesize` · CI |
 | WebAssembly | L0–L3 crates and the plug-in build for `wasm32-unknown-unknown` | `xtask/src/wasm.rs` | `cargo xtask wasm` · CI |
 | **Movable into VectorCraft** | Every package is `stitchcraft-*`; crates inherit only workspace keys VectorCraft defines; tooling works from its own folder on StitchCraft's packages ([ADR-0011](adr/0011-movable-into-vectorcraft.md)) | `xtask/src/layers.rs`, `xtask/src/util.rs`, `xtask/src/join.rs` | `move` job in `compat.yml` · daily and on PRs touching manifests or tooling |
-| **No GPL code** | No GPL/AGPL licence text and no pasted Python source anywhere in the repository, documents included ([ADR-0012](adr/0012-read-dont-copy.md)) | `xtask/src/cleanroom.rs` | `cargo xtask cleanroom` · CI |
+| **No GPL code** | No GPL/AGPL licence text, in any case, nor a module's short GPL notice, and no pasted Python source anywhere in the repository: every text file, documents and files without an extension included ([ADR-0012](adr/0012-read-dont-copy.md)) | `xtask/src/cleanroom.rs` | `cargo xtask cleanroom` · CI |
 | Docs | Generated pages fresh, links and anchors valid, mentioned `cargo xtask` commands exist, ids exist, no long sentence on two pages, every repository path named exists | `xtask/src/docs.rs`, `xtask/src/docs_audit.rs` | `cargo xtask docs --check` · CI |
 | **Design pages follow the code** | Every source file of a crate or app is on a page's `implements` comment, and a branch that changes those files changes the page too or records a `Design-reviewed:` line | `xtask/src/design_map.rs`, `.claude/settings.json` (names the pages after each edit) | `cargo xtask docs --check` · CI |
 | Docs images | Every image declared in `docs/shots.toml`, with alt text, and regenerating to the committed file | `xtask/src/shots.rs` | `cargo xtask shots --check` · CI |
@@ -30,9 +30,9 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | Cross-platform | Tests on Linux, macOS, Windows; identical conformance hashes | `ci.yml` | CI |
 | API docs | Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links | `cargo xtask ci` (`RUSTDOCFLAGS=-D warnings`) | `cargo xtask ci` · CI |
 | **Public API review** | Changes to a library crate's public API show in the PR diff, as a change to its `public-api.txt` | `xtask/src/api.rs` (cargo-public-api, pinned) | `cargo xtask api --check` · CI |
-| **Coverage ratchet** | No crate's line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, with any function whose lines its unit tests and integration tests only run between them | `conformance/coverage.toml`, `xtask/src/coverage.rs` (cargo-llvm-cov) | `cargo xtask coverage` · CI job |
-| **Performance budget** | Planning the reference hoop's whole field (`REQ-FILL-TAT-009`) takes at most 2 % more instructions than recorded. Records only go down. Its time is reported against NFR-PERF-1's 50 ms, with a warning above it | `conformance/perf.toml`, `xtask/src/perf.rs` (valgrind's callgrind), the engine's `field` example | `cargo xtask perf` · CI job |
-| **Mutation testing** | Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down | `.cargo/mutants.toml`, `conformance/mutation.toml`, `xtask/src/mutants.rs` | `mutants.yml` · changed lines every PR, in 4 parts · everything weekly |
+| **Coverage ratchet** | No crate's line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, those only another build of a function or a closure on the line runs included | `conformance/coverage.toml`, `xtask/src/coverage.rs` (cargo-llvm-cov) | `cargo xtask coverage` · CI job |
+| **Performance budget** | Planning the reference hoop's whole field (`REQ-FILL-TAT-009`) takes at most 2 % more instructions than recorded. Records only go down. A count below half the record fails too: the counted function was lost. Its time is reported against NFR-PERF-1's 50 ms, with a warning above it | `conformance/perf.toml`, `xtask/src/perf.rs` (valgrind's callgrind), the engine's `field` example | `cargo xtask perf` · CI job |
+| **Mutation testing** | Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down. A weekly part whose unmutated tree failed its tests, or a recorded crate with no mutant tried, fails | `.cargo/mutants.toml`, `conformance/mutation.toml`, `xtask/src/mutants.rs` | `mutants.yml` · changed lines every PR, in 4 parts · everything weekly |
 | **Fuzzing** | Readers never panic, respect their caps and terminate; anything read round-trips and previews | `fuzz/`, `stitchcraft-testkit::fuzz` ([conformance](conformance.md#fuzzing)) | bodies every PR · an hour nightly |
 
 `cargo xtask ci` runs everything that does not need extra tools; tools that are not installed locally
@@ -46,10 +46,15 @@ run, where milliseconds do not. Its check fails for a change that slows planning
 runs. The time is still measured and reported, against the budget the requirement states in milliseconds.
 
 Coverage counts each build of a function apart and takes the build that runs the most lines. The unit
-tests and the integration tests use separate builds, and a generic function has one per type it is used
-with. A function whose lines only both kinds of test together run counts as partly untested, though every
-line runs. The coverage job names such a function. Move the tests that run its other lines to the kind
-of test that runs most of it.
+tests and the integration tests use separate builds, a generic function has one per type it is used with,
+and a closure is a function of its own. So a line can count as untested though the lcov report counts it
+run. Only the other kind of test runs it, or only a closure on the line runs, as with a `?` after a
+closure argument whose error the tests never bring. The coverage job names these lines and the function
+they count against. Run them from the kind of test that runs most of the function.
+
+`cargo xtask coverage` runs the job locally. It needs cargo-llvm-cov and rustup's `llvm-tools`. Without
+the latter, `LLVM_COV` and `LLVM_PROFDATA` can name another LLVM's llvm-cov and llvm-profdata that read
+the toolchain's profiles: LLVM 20's read those of Rust 1.97.
 
 ## Design rules (reviewed, partly linted)
 
