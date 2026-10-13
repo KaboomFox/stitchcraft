@@ -11,7 +11,10 @@
 //! an entity can make a small file very large, either by nesting (a value that refers to other entities)
 //! or by many references to one long value. So an entity's value must be plain text, with no `&`, `<` or
 //! `%`, and the file with every reference expanded may be no longer than [`MAX_BYTES`]. External and
-//! parameter entities are refused.
+//! parameter entities are refused. Entities are declared only in the internal subset of the document type
+//! declaration, `<!DOCTYPE svg [ … ]>`, so the text elsewhere, comments and character data among it,
+//! declares none. A name declared twice counts at its longer value: XML keeps the first declaration, and
+//! a long value declared first, with a short one after it, must not slip past the limit.
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -66,22 +69,10 @@ fn declared_encoding(bytes: &[u8]) -> Option<&str> {
 /// Checks the entities `text` declares: plain text values, no external or parameter entities, and the
 /// text with every reference expanded within [`MAX_BYTES`].
 pub fn check_entities(text: &str) -> Result<(), Diagnostic> {
-    let mut lengths: BTreeMap<&str, usize> = BTreeMap::new();
-    let mut rest = text;
-    while let Some((_, after)) = rest.split_once("<!ENTITY") {
-        let after = after.trim_start();
-        let name = after.split(|c: char| c.is_whitespace()).next().unwrap_or_default();
-        let declared = after.get(name.len()..).unwrap_or_default().trim_start();
-        let quote = declared.chars().next().filter(|c| matches!(c, '"' | '\''));
-        let Some((value, tail)) = quote.and_then(|q| declared.get(1..)?.split_once(q)) else {
-            return Err(entity(name, "which is not plain text in the file"));
-        };
-        if name.starts_with('%') || value.contains(['&', '<', '%']) {
-            return Err(entity(name, "whose value holds markup or other entities"));
-        }
-        lengths.insert(name, value.len());
-        rest = tail;
-    }
+    let lengths = match internal_subset(text) {
+        Some(subset) => declared(subset)?,
+        None => return Ok(()),
+    };
     if lengths.is_empty() {
         return Ok(());
     }
@@ -103,6 +94,94 @@ pub fn check_entities(text: &str) -> Result<(), Diagnostic> {
         )));
     }
     Ok(())
+}
+
+/// The text after the `[` that opens the internal subset of the file's document type declaration, if it
+/// has one. Before the declaration come only the XML declaration, comments, processing instructions and
+/// white space: anything else is the root element, and the file declares no entities.
+fn internal_subset(text: &str) -> Option<&str> {
+    let mut rest = text;
+    loop {
+        rest = rest.trim_start();
+        if let Some(after) = rest.strip_prefix("<!--") {
+            rest = after.split_once("-->")?.1;
+        } else if let Some(after) = rest.strip_prefix("<?") {
+            rest = after.split_once("?>")?.1;
+        } else {
+            // The name and any external identifier, its literals quoted, come before the subset.
+            let after = rest.strip_prefix("<!DOCTYPE")?;
+            let (at, opens) = outside_quotes(after).find(|&(_, c)| c == '[' || c == '>')?;
+            return if opens == '[' { after.get(at + 1..) } else { None };
+        }
+    }
+}
+
+/// The length of the value each name the internal subset `subset` declares, up to the `]` that ends it: of
+/// its longest value, for a name declared more than once. Refuses a value that is not plain text, an
+/// external or parameter entity, and anything in the subset but declarations, comments and processing
+/// instructions. Where the subset, or a comment or declaration in it, is left open, the count stops, and
+/// the parser refuses the file.
+fn declared(subset: &str) -> Result<BTreeMap<&str, usize>, Diagnostic> {
+    let mut lengths: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut rest = subset;
+    loop {
+        rest = rest.trim_start();
+        if rest.is_empty() || rest.starts_with(']') {
+            return Ok(lengths);
+        } else if let Some(after) = rest.strip_prefix("<!--") {
+            rest = after.split_once("-->").map_or("", |(_, tail)| tail);
+        } else if let Some(after) = rest.strip_prefix("<?") {
+            rest = after.split_once("?>").map_or("", |(_, tail)| tail);
+        } else if let Some(after) = rest.strip_prefix("<!ENTITY") {
+            let (name, length, tail) = entity_declaration(after)?;
+            let longest = lengths.entry(name).or_insert(length);
+            *longest = (*longest).max(length);
+            rest = tail;
+        } else if let Some(after) = rest.strip_prefix("<!") {
+            // Another declaration (an element's, its attributes', a notation's), which declares no entity. The
+            // parser takes it to end at the first `>`, quoted or not, and so does this count.
+            rest = after.split_once('>').map_or("", |(_, tail)| tail);
+        } else {
+            return Err(unreadable(
+                "The file's document type declaration refers to a parameter entity; StitchCraft reads entities of plain text only.",
+            ));
+        }
+    }
+}
+
+/// The name an entity declaration declares and its value's length, and the text after it, from the text
+/// after its `<!ENTITY`; refused unless its value is plain text in quotes.
+fn entity_declaration(after: &str) -> Result<(&str, usize, &str), Diagnostic> {
+    let after = after.trim_start();
+    let name = after.split(|c: char| c.is_whitespace()).next().unwrap_or_default();
+    let declared = after.get(name.len()..).unwrap_or_default().trim_start();
+    let quote = declared.chars().next().filter(|c| matches!(c, '"' | '\''));
+    let Some((value, tail)) = quote.and_then(|q| declared.get(1..)?.split_once(q)) else {
+        return Err(entity(name, "which is not plain text in the file"));
+    };
+    if name.starts_with('%') || value.contains(['&', '<', '%']) {
+        return Err(entity(name, "whose value holds markup or other entities"));
+    }
+    let Some(tail) = tail.trim_start().strip_prefix('>') else { return Err(entity(name, "which is not plain text in the file")) };
+    Ok((name, value.len(), tail))
+}
+
+/// The characters of `text` outside its quoted literals, with their offsets.
+fn outside_quotes(text: &str) -> impl Iterator<Item = (usize, char)> + '_ {
+    let mut quote: Option<char> = None;
+    text.char_indices().filter(move |&(_, c)| match quote {
+        Some(q) => {
+            if c == q {
+                quote = None;
+            }
+            false
+        }
+        None if matches!(c, '"' | '\'') => {
+            quote = Some(c);
+            false
+        }
+        None => true,
+    })
 }
 
 /// `SC-E0801` for the entity `name`, which is `what`.
@@ -165,5 +244,53 @@ mod tests {
         assert!(check_entities(&file(64)).is_err());
         assert!(check_entities("<svg>&amp; &unknown; &dangling</svg>").is_ok(), "no declarations, nothing to count");
         assert!(check_entities("<!DOCTYPE svg [<!ENTITY e 'never closed>]><svg/>").is_err());
+    }
+
+    /// 80 references to `a`, and the file's text before them.
+    fn eighty(prolog: &str) -> String {
+        format!("{prolog}<svg>{}</svg>", "&a;".repeat(80))
+    }
+
+    #[test]
+    fn diag_sc_e0801_a_name_declared_twice_counts_at_its_longest_value() {
+        // XML keeps the first of 2 declarations of a name, and the parser expands that one. The last used
+        // to set the name's length: a value of 1 MiB declared first and one of 1 byte after it let 80
+        // references expand the file to 80 MiB. Either way round, the file is refused.
+        let long = "x".repeat(1 << 20);
+        for subset in [format!("<!ENTITY a '{long}'><!ENTITY a 'y'>"), format!("<!ENTITY a 'y'><!ENTITY a '{long}'>")] {
+            assert!(check_entities(&eighty(&format!("<!DOCTYPE svg [{subset}]>"))).is_err(), "{}", &subset[..20]);
+        }
+    }
+
+    #[test]
+    fn diag_sc_e0801_only_the_document_type_s_own_subset_declares_entities() {
+        // A declaration in a comment, or in character data, declares nothing: it neither shortens a value
+        // nor refuses a file.
+        let long = "x".repeat(1 << 20);
+        let after = eighty(&format!("<!DOCTYPE svg [<!ENTITY a '{long}'>]><!-- <!ENTITY a 'y'> -->"));
+        assert!(check_entities(&after).is_err(), "a declaration in a comment after the subset");
+        let within = eighty(&format!("<!DOCTYPE svg [<!ENTITY a '{long}'><!-- <!ENTITY a 'y'> -->]>"));
+        assert!(check_entities(&within).is_err(), "a declaration in a comment inside the subset");
+        // The parser ends an element's or attributes' declaration at its first `>`, even one in quotes, so
+        // a declaration after it declares an entity, whatever quote the one before seems to open.
+        let hidden = eighty(&format!("<!DOCTYPE svg [<!ATTLIST svg x CDATA '> <!ENTITY a '{long}'> <!ATTLIST svg y CDATA '>]>"));
+        assert!(check_entities(&hidden).is_err(), "a declaration after a quote in another declaration");
+        for valid in [
+            r#"<!-- <!ENTITY logo SYSTEM "logo.svg"> --><svg/>"#,
+            r#"<svg><desc><![CDATA[ e.g. <!ENTITY % x "y"> ]]></desc></svg>"#,
+            r#"<?xml version="1.0"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg/>"#,
+            r#"<!DOCTYPE svg [<!-- ] --><!ATTLIST svg x CDATA "]"><!ENTITY ns_ai "http://ns.adobe.com/AdobeIllustrator/10.0/">]><svg>&ns_ai;</svg>"#,
+        ] {
+            assert_eq!(check_entities(valid), Ok(()), "{valid}");
+        }
+        // In the subset, the rules hold as before.
+        for refused in [
+            r#"<!DOCTYPE svg [<!ENTITY logo SYSTEM "logo.svg">]><svg/>"#,
+            r#"<!DOCTYPE svg [<!ENTITY % p "<!ENTITY a 'x'>">]><svg/>"#,
+            r#"<!DOCTYPE svg [<!ENTITY a "<g/>">]><svg/>"#,
+            r#"<!DOCTYPE svg [<!ENTITY a "x"> %p;]><svg/>"#,
+        ] {
+            assert!(check_entities(refused).is_err(), "{refused}");
+        }
     }
 }
