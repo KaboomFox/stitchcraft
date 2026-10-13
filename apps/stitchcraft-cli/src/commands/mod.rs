@@ -20,7 +20,7 @@ use stitchcraft_formats::Decoded;
 use stitchcraft_plan::palette::Palette;
 use stitchcraft_plan::{FormatId, StitchPlan};
 
-use crate::files;
+use crate::files::{self, Unwritten};
 
 /// What a command wants to say, and how the program ends.
 #[derive(Debug)]
@@ -65,9 +65,22 @@ impl Outcome {
         Outcome { stdout: String::new(), stderr: format!("stitch: {}\n", message.as_ref()), status: Status::Usage }
     }
 
-    /// A file could not be read or written.
-    fn io(verb: &str, path: &Path, error: &std::io::Error) -> Self {
-        Outcome { stdout: String::new(), stderr: format!("stitch: cannot {verb} {}: {error}\n", path.display()), status: Status::Io }
+    /// A file could not be read.
+    fn unread(path: &Path, error: &std::io::Error) -> Self {
+        Outcome { stdout: String::new(), stderr: format!("stitch: cannot read {}: {error}\n", path.display()), status: Status::Io }
+    }
+
+    /// Files that could not be written (`unwritten`), after `said`, what was said about the design: which
+    /// file, why, and which files were written (REQ-CLI-006).
+    fn unwritten(said: &str, unwritten: &Unwritten) -> Self {
+        let mut stderr = format!("{said}stitch: cannot write {}: {}\n", unwritten.path.display(), unwritten.error);
+        if unwritten.written.is_empty() {
+            stderr.push_str("nothing was written\n");
+        } else {
+            let written: Vec<String> = unwritten.written.iter().map(|path| path.display().to_string()).collect();
+            let _ = writeln!(stderr, "only {} written", written.join(", ") + if written.len() == 1 { " was" } else { " were" });
+        }
+        Outcome { stdout: String::new(), stderr, status: Status::Io }
     }
 
     /// Errors in the design: `stderr` (warnings found so far) and the diagnostics, and nothing written. A
@@ -83,7 +96,7 @@ impl Outcome {
 /// The bytes of the machine file at `path` and what they say, or the outcome that reports why they
 /// cannot be read (`SC-E0603` for a file that is not a machine file StitchCraft reads).
 pub fn read_machine_file(path: &Path) -> Result<(Vec<u8>, Decoded), Outcome> {
-    let bytes = files::read_capped(path).map_err(|e| Outcome::io("read", path, &e))?;
+    let bytes = files::read_capped(path).map_err(|e| Outcome::unread(path, &e))?;
     match stitchcraft_formats::decode(&bytes) {
         Ok(decoded) => Ok((bytes, decoded)),
         Err(e) => Err(Outcome { stdout: String::new(), stderr: render_diagnostics(&[e.diagnostic()]), status: Status::DesignErrors }),
@@ -102,9 +115,10 @@ pub fn unknown_colors(decoded: &Decoded) -> Option<Diagnostic> {
     })
 }
 
-/// Writes `bytes` to `path` in one step ([`files::write_atomically`]).
-pub fn write_file(path: &Path, bytes: &[u8]) -> Result<(), Outcome> {
-    files::write_atomically(path, bytes).map_err(|e| Outcome::io("write", path, &e))
+/// Writes each of `files`, a path and its bytes, all or none ([`files::write_all`]). When one cannot be
+/// written, the outcome says so after `said`, what was said about the design.
+pub fn write_files(files: &[(&Path, &[u8])], said: &str) -> Result<(), Outcome> {
+    files::write_all(files).map_err(|unwritten| Outcome::unwritten(said, &unwritten))
 }
 
 /// The format `--format` names, or else the one `output`'s extension names.
@@ -189,4 +203,28 @@ pub fn render_diagnostics(diagnostics: &[Diagnostic]) -> String {
         }
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use super::*;
+
+    #[test]
+    fn req_cli_006_a_file_that_cannot_be_written_is_said_after_the_design_and_so_are_those_written() {
+        let unwritten = |written: &[&str]| Unwritten {
+            path: PathBuf::from("design.json"),
+            error: std::io::Error::new(std::io::ErrorKind::PermissionDenied, "denied"),
+            written: written.iter().map(PathBuf::from).collect(),
+        };
+        let said = "warning SC-W0307: Two parts.\n";
+        let none = Outcome::unwritten(said, &unwritten(&[]));
+        assert_eq!(
+            (none.stderr.as_str(), none.status),
+            ("warning SC-W0307: Two parts.\nstitch: cannot write design.json: denied\nnothing was written\n", Status::Io)
+        );
+        assert!(Outcome::unwritten(said, &unwritten(&["design.pes"])).stderr.ends_with("design.json: denied\nonly design.pes was written\n"));
+        assert!(Outcome::unwritten("", &unwritten(&["design.pes", "design.png"])).stderr.ends_with("\nonly design.pes, design.png were written\n"));
+    }
 }

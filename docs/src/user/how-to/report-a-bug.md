@@ -18,7 +18,7 @@ stitch bug-report design.svg --profile brother-pe800-4x4 --says "the zigzag's co
 It plans the design exactly as `stitch plan` does and writes `design.bug-report.json` next to it (`-o`
 names another file). The bundle holds:
 
-- your design file, whole;
+- your design file, whole, and the design name the machine file's label holds;
 - the profile, the format (`--format pes|dst`, the profile's own by default) and the version of
   StitchCraft;
 - a digest of the plan's stitches, and the machine file's size and digest;
@@ -62,3 +62,6 @@ platform, so with the version that wrote the bundle, the replay reproduces it. W
 differs is listed under `then:` and `now:`: that is how to tell whether a bug is fixed. The exit status is
 1 when the bundle does not reproduce. The design is in the bundle's `design.svg` field, ready to save and
 open.
+
+Anyone can attach a bundle to an issue. The replay writes each character from it that a terminal would act
+on as an escape, such as `\u{1b}` for the one that starts a terminal's control sequences.

@@ -5,7 +5,9 @@
 //! it, so what comes back is written as it is. This command reads the SVG file, prints what was said about
 //! the design — element by element, and what the file format adds, such as DST's cuts before long jumps
 //! (`SC-I0605`) — and writes the files. Nothing is written when anything said is an error, an element left
-//! out included, except the report, which says why (`REQ-CLI-003`).
+//! out included, except the report, which says why (`REQ-CLI-003`). The machine file, the picture and the
+//! report are written all or none, and when one cannot be written, what was said about the design is
+//! printed before it (`REQ-CLI-006`).
 //!
 //! [`sew`] is the part a bug-report bundle records and replays (`super::bug_report`), so a bundle
 //! reproduces exactly what this command does. When it finds a bug in StitchCraft (`SC-E0009`), this
@@ -23,7 +25,7 @@ use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 use stitchcraft_render::{Settings, Style};
 
 use super::bug_report::{self, Run};
-use super::{Outcome, Status, describe_file, describe_plan, describe_threads, hex, output_format, render_diagnostics, write_file};
+use super::{Outcome, Status, describe_file, describe_plan, describe_threads, hex, output_format, render_diagnostics, write_files};
 use crate::cli::PlanArgs;
 use crate::files;
 
@@ -90,16 +92,22 @@ pub fn run(args: &PlanArgs) -> Outcome {
             return Outcome { stdout: String::new(), stderr: format!("stitch: cannot read {}: {e}\n", args.design.display()), status: Status::Io };
         }
     };
-    let sewn = sew(&bytes, profile, format, design_name(&args.design));
+    let name = design_name(&args.design);
+    let sewn = sew(&bytes, profile, format, name);
     if sewn.found_a_bug() {
         let refused = refuse(args, profile, &sewn.diagnostics);
-        return bug_report::beside(&args.output, &Run { design_path: &args.design, design: &bytes, profile, format, says: None }, Ok(&sewn), refused);
+        return bug_report::beside(
+            &args.output,
+            &Run { design_path: &args.design, name, design: &bytes, profile, format, says: None },
+            Ok(&sewn),
+            refused,
+        );
     }
     written(args, profile, format, sewn)
 }
 
 /// What `stitch plan` writes for the design `sewn`: the machine file, and the picture and the report asked
-/// for. When anything said is an error, only the report (`REQ-CLI-003`).
+/// for, all or none (`REQ-CLI-006`). When anything said is an error, only the report (`REQ-CLI-003`).
 fn written(args: &PlanArgs, profile: &MachineProfile, format: FormatId, sewn: Sewn) -> Outcome {
     let Sewn { mut diagnostics, plan: Some(plan), file: Some(machine_file) } = sewn else { return refuse(args, profile, &sewn.diagnostics) };
     // The picture is drawn before anything is written, so that one that cannot be drawn stops the rest too.
@@ -120,32 +128,30 @@ fn written(args: &PlanArgs, profile: &MachineProfile, format: FormatId, sewn: Se
     if diagnostics.iter().any(|d| d.severity() == Severity::Error) {
         return refuse(args, profile, &diagnostics);
     }
-    if let Err(outcome) = write_file(&args.output, &machine_file) {
-        return outcome;
+    let report = args.report.as_ref().map(|path| (path, report(args, profile, Some((format, &machine_file)), Some(&plan), &diagnostics)));
+    let mut files: Vec<(&Path, &[u8])> = vec![(&args.output, &machine_file)];
+    files.extend(picture.as_ref().map(|(path, image)| (path.as_path(), image.png.as_slice())));
+    files.extend(report.as_ref().map(|(path, text)| (path.as_path(), text.as_bytes())));
+    let said = render_diagnostics(&diagnostics);
+    if let Err(unwritten) = write_files(&files, &said) {
+        return unwritten;
     }
     let mut stdout = summary(args, profile, format, &plan, &machine_file);
-    if let Some((path, image)) = picture {
-        if let Err(outcome) = write_file(path, &image.png) {
-            return outcome;
-        }
+    if let Some((path, image)) = &picture {
         let _ = writeln!(stdout, "  preview   {} ({} × {} pixels)", path.display(), image.width, image.height);
     }
-    if let Some(path) = &args.report {
-        let report = report(args, profile, Some((format, &machine_file)), Some(&plan), &diagnostics);
-        if let Err(outcome) = write_file(path, report.as_bytes()) {
-            return outcome;
-        }
+    if let Some((path, _)) = &report {
         let _ = writeln!(stdout, "  report    {}", path.display());
     }
-    Outcome { stdout, stderr: render_diagnostics(&diagnostics), status: Status::Done }
+    Outcome { stdout, stderr: said, status: Status::Done }
 }
 
 /// Nothing is written but the report, which says why.
 fn refuse(args: &PlanArgs, profile: &MachineProfile, diagnostics: &[Diagnostic]) -> Outcome {
     if let Some(path) = &args.report
-        && let Err(outcome) = write_file(path, report(args, profile, None, None, diagnostics).as_bytes())
+        && let Err(unwritten) = write_files(&[(path, report(args, profile, None, None, diagnostics).as_bytes())], &render_diagnostics(diagnostics))
     {
-        return outcome;
+        return unwritten;
     }
     Outcome::refuse(String::new(), diagnostics)
 }
@@ -317,20 +323,35 @@ mod tests {
     }
 
     #[test]
-    fn a_file_that_cannot_be_written_stops_the_command() {
+    fn req_cli_006_when_a_file_cannot_be_written_none_is_and_what_was_said_is_printed() {
         // A folder that does not exist: the machine file, the picture, the report, and the report of a
-        // design that was refused.
+        // design that was refused. The other files are not written either, and what was said about the
+        // design is printed before the file that could not be written.
         let nowhere = temp("no-such-folder").join("x");
-        let machine_file = run(&args(fixture("strokes.svg"), nowhere.join("strokes.pes")));
-        let output = temp("written.pes");
-        let picture = run(&PlanArgs { preview: Some(nowhere.join("strokes.png")), ..args(fixture("strokes.svg"), output.clone()) });
-        let report = run(&PlanArgs { report: Some(nowhere.join("strokes.json")), ..args(fixture("strokes.svg"), output) });
+        let output = temp("unwritten.pes");
+        let _ = std::fs::remove_file(&output);
         let not_svg = temp("not-an-svg.svg");
         std::fs::write(&not_svg, b"stitches, please").unwrap();
-        let refused = run(&PlanArgs { report: Some(nowhere.join("refused.json")), ..args(not_svg, temp("refused.pes")) });
-        for out in [machine_file, picture, report, refused] {
+        let cases = [
+            (args(fixture("strokes.svg"), nowhere.join("strokes.pes")), nowhere.join("strokes.pes"), "SC-I0504"),
+            (
+                PlanArgs { preview: Some(nowhere.join("strokes.png")), ..args(fixture("strokes.svg"), output.clone()) },
+                nowhere.join("strokes.png"),
+                "SC-I0504",
+            ),
+            (
+                PlanArgs { report: Some(nowhere.join("strokes.json")), ..args(fixture("strokes.svg"), output.clone()) },
+                nowhere.join("strokes.json"),
+                "SC-I0504",
+            ),
+            (PlanArgs { report: Some(nowhere.join("refused.json")), ..args(not_svg, output.clone()) }, nowhere.join("refused.json"), "SC-E0801"),
+        ];
+        for (asked, unwritten, said) in cases {
+            let out = run(&asked);
             assert_eq!(out.status, Status::Io, "{}", out.stderr);
-            assert!(out.stderr.starts_with("stitch: cannot write "), "{}", out.stderr);
+            assert!(out.stderr.contains(said) && out.stderr.contains(&format!("stitch: cannot write {}: ", unwritten.display())), "{}", out.stderr);
+            assert!(out.stderr.ends_with("nothing was written\n") && out.stdout.is_empty(), "{}", out.stderr);
+            assert!(!output.exists(), "{}", unwritten.display());
         }
     }
 }
