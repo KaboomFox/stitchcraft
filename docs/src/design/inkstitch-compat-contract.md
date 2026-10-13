@@ -247,7 +247,7 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | Attribute | Kind | Phase | StitchCraft |
 |---|---|---|---|
 | `ignore_object` | element | P1 (M3) | read |
-| `stroke_first` | element | P1 (M5) | planned |
+| `stroke_first` | element | P1 (M8) | planned |
 | `cutwork_needle` | element | — | not planned |
 | `pattern_interval` | pattern | — | not planned |
 | `pattern_offset` | pattern | — | not planned |

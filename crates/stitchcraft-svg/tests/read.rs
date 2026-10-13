@@ -120,6 +120,24 @@ fn req_svg_001_viewbox_scale_and_aspect_ratio() {
 }
 
 #[test]
+fn req_svg_001_a_root_with_one_size_takes_the_other_from_its_viewbox_s_shape() {
+    // A viewer sizes the side not given by the viewBox's shape (SVG 2): a 100 × 50 viewBox 100 mm wide is
+    // 50 mm high, and its diagonal line is 100 × 50 mm. Ink/Stitch takes both sides from the viewBox, in
+    // pixels (DEV-SVG-009).
+    let line = |attributes: &str| {
+        let svg = svg(format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 50" {attributes}><path d="M 0 0 L 100 50" stroke="red" fill="none"/></svg>"#
+        ));
+        ends(&svg.design.elements()[0])[0].clone()
+    };
+    all_at(&line(r#"width="100mm""#), &[(0.0, 0.0), (100.0, 50.0)]);
+    all_at(&line(r#"height="25mm""#), &[(0.0, 0.0), (50.0, 25.0)]);
+    all_at(&line(r#"width="100mm" preserveAspectRatio="none""#), &[(0.0, 0.0), (100.0, 50.0)]);
+    // A percentage is of a viewport a file does not have, and counts as not given.
+    all_at(&line(r#"width="50%" height="25mm""#), &[(0.0, 0.0), (50.0, 25.0)]);
+}
+
+#[test]
 fn req_svg_001_colours_and_paint_order() {
     let svg = svg(r##"<svg xmlns="http://www.w3.org/2000/svg" color="#123456">
           <g fill="#f00" stroke="currentColor">
@@ -239,9 +257,28 @@ fn req_svg_001_basic_shape_attributes() {
     at(ends(&e[1])[0][0], 50.0, 45.0);
     // A percentage radius is of the viewport's diagonal over √2: 10 % of 100 here.
     at(ends(&e[2])[0][0], 50.0, 40.0);
-    // A point list that runs out mid-point keeps the points before it.
+    // A point list that runs out mid-point keeps the points before it, and says so.
     all_at(&ends(&e[3])[0], &[(0.0, 0.0), (10.0, 0.0)]);
-    assert_eq!(svg.warnings.len(), 2, "no-size and no-radius draw nothing: {:?}", warnings(&svg));
+    assert_eq!(svg.warnings.len(), 3, "odd is cut, no-size and no-radius draw nothing: {:?}", warnings(&svg));
+}
+
+#[test]
+fn diag_sc_w0804_a_list_of_points_with_an_error_is_stitched_up_to_the_error() {
+    // A viewer draws a polyline up to an error in its points, and the adapter stitches it so and says so.
+    // inkex skips what is not a number, and Ink/Stitch sews all 4 points (DEV-SVG-010).
+    let svg = svg(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100" fill="none" stroke="red">
+          <polyline id="cut" points="0,0 10,0 10,10 x 0,10"/>
+          <polyline id="early" points="0,0 x 10,0 10,10"/>
+          <polygon id="odd" points="0,0 10,0 10"/>
+        </svg>"#);
+    assert_eq!(ids(&svg), ["svg:cut:stroke", "svg:odd:stroke"]);
+    all_at(&ends(&svg.design.elements()[0])[0], &[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]);
+    let said = warnings(&svg);
+    assert_eq!(said.len(), 3, "{said:?}");
+    assert!(said[0].starts_with("warning SC-W0804: The list of points of `cut` has an error ("), "{}", said[0]);
+    assert!(said[0].ends_with("); it is stitched up to the error."), "{}", said[0]);
+    assert!(said[1].starts_with("warning SC-W0804: The list of points of `early` has an error before it draws anything ("), "{}", said[1]);
+    assert_eq!(said[2], "warning SC-W0804: The list of points of `odd` has an error (an odd number of coordinates); it is stitched up to the error.");
 }
 
 #[test]

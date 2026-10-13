@@ -511,15 +511,16 @@ registry! {
     /// setting off in Ink/Stitch's parameters.
     SvgObjectIgnored = "SC-I0805", Info, "Object left out, as the file asks";
 
-    /// An element's geometry cannot be used: its path data has an error (the path is stitched up to the
-    /// error, as SVG viewers draw it), its transform is not valid (it is skipped with everything inside
-    /// it), it draws nothing, or it lies more than 10 metres from the document's origin, beyond what
-    /// machine files can record (it is skipped). A stroke width, join or miter limit that does not read
-    /// is named as well, and ignored as a viewer ignores it, and so is an empty width, height or viewBox
-    /// of the drawing, or an aspect ratio that does not read. A stroke too wide to measure is skipped.
+    /// An element's geometry cannot be used: its path data or its list of points has an error (the path is
+    /// stitched up to the error, as SVG viewers draw it), its transform is not valid (it is skipped with
+    /// everything inside it), it draws nothing, or it lies more than 10 metres from the document's origin,
+    /// beyond what machine files can record (it is skipped). A stroke width, join or miter limit that does
+    /// not read is named as well, and ignored as a viewer ignores it, and so is an empty width, height or
+    /// viewBox of the drawing, or an aspect ratio that does not read. A stroke too wide to measure is
+    /// skipped.
     ///
-    /// The message names the element. Check its path data and transform, or remove stray objects far from
-    /// the design.
+    /// The message names the element. Check its path data, points and transform, or remove stray objects
+    /// far from the design.
     SvgGeometryUnusable = "SC-W0804", Warning, "Element geometry invalid or out of range";
 }
 

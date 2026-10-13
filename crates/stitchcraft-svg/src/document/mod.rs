@@ -551,11 +551,12 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 None
             }
         };
+        // What was wrong with the data, if anything: the attribute named as messages name it, and the error.
         let mut error = None;
         let subs = match geometry {
             Geometry::Path => {
                 let outline = path::path_data(node.attribute("d").unwrap_or_default(), &mut self.meter).map_err(|_| self.exhausted())?;
-                error = outline.error;
+                error = outline.error.map(|e| ("path data", e));
                 outline.subs
             }
             Geometry::Rect => {
@@ -585,15 +586,17 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             Geometry::Polyline | Geometry::Polygon => {
                 let points = node.attribute("points").unwrap_or_default();
                 self.charge_text(points)?;
-                path::polyline(points, geometry == Geometry::Polygon)
+                let outline = path::polyline(points, geometry == Geometry::Polygon);
+                error = outline.error.map(|e| ("list of points", e));
+                outline.subs
             }
         };
         match (error, subs.is_empty()) {
-            (Some(error), true) => {
-                self.unusable(label, format!("The path data of `{label}` has an error before it draws anything ({error}). It is left out."));
+            (Some((what, error)), true) => {
+                self.unusable(label, format!("The {what} of `{label}` has an error before it draws anything ({error}). It is left out."));
             }
-            (Some(error), false) => {
-                self.unusable(label, format!("The path data of `{label}` has an error ({error}); it is stitched up to the error."));
+            (Some((what, error)), false) => {
+                self.unusable(label, format!("The {what} of `{label}` has an error ({error}); it is stitched up to the error."));
             }
             (None, true) => self.unusable(label, format!("`{label}` draws nothing: its size or its data is empty. It is left out.")),
             (None, false) => {}
