@@ -138,9 +138,9 @@ requirements = ["REQ-FILL-TAT-003"]
 [[deviation]]
 id = "DEV-FILL-005"
 area = "fill/tatami"
-summary = "A tatami fill's route can differ from Ink/Stitch's where the 2 double different stretches of a ring. Each ring's nodes are numbered from its start, and every other stretch between them is doubled from the first. StitchCraft's rings start where the drawing starts them, and Ink/Stitch's where GEOS's overlay starts them. When the 2 starts lie an odd number of nodes apart, the other half of the stretches is doubled, and the walk through the graph takes another route. Every row is still sewn once, back and forth."
+summary = "A tatami fill's route can differ from Ink/Stitch's where the 2 double different stretches of a ring. Each ring's nodes are numbered from its start, and every other stretch between them is doubled from the first. StitchCraft's rings start where the drawing starts them, and Ink/Stitch's where GEOS's overlay starts them. When the 2 starts lie an odd number of nodes apart, the other half of the stretches is doubled, and the walk through the graph takes another route. Every row is still sewn once, back and forth. Where a fill's outlines start, and the order of its parts, which StitchCraft keeps as drawn and Ink/Stitch takes from the same overlay, also decide where a fill ends before another fill whose area holds an outline's start (REQ-GEN-003)."
 reason = "Ink/Stitch's rings come out of GEOS's set_precision, read at d59c9ab (lib/elements/fill_stitch.py), and probing shapely 2.2.0 with random polygons found no simple rule for where it starts them: not the drawn start, and not one fixed corner. StitchCraft's region keeps the drawing's start (REQ-FILL-001), and the routing is Ink/Stitch's from there (lib/stitches/tatami_fill.py)."
-requirements = ["REQ-FILL-TAT-001"]
+requirements = ["REQ-FILL-TAT-001", "REQ-GEN-003"]
 
 [[deviation]]
 id = "DEV-FILL-006"
@@ -176,6 +176,13 @@ area = "fill/tatami"
 summary = "Each gap-fill row is the next row of the grid past the stretch's last row, the stretch of its segment beside that row, so it stops at the part's edge, and the rows stop where the part ends. Ink/Stitch repeats the last row, moved a spacing further each time and keeping its length, so a repeat can run outside the part; its spacing is the distance between the last 2 rows, where the grid's rows follow the end row spacing. The hops between gap-fill rows and the way back are running stitches, where Ink/Stitch stitches them as rows."
 reason = "Rows outside the part sew where the design has none (REQ-FILL-TAT-007). Ink/Stitch's gap fill: lib/stitches/tatami_fill.py at d59c9ab, fill_gaps and fill_gap."
 requirements = ["REQ-FILL-TAT-007"]
+
+[[deviation]]
+id = "DEV-FILL-011"
+area = "fill/tatami"
+summary = "With underpath off, or in a part the gratings of lines miss, the needle travels between 2 points of one ring the shorter way round it, by length, and on a tie the way that does not pass the ring's start. Ink/Stitch's travel along the outline counts nodes instead: its graph has a node every CSS pixel along the outline's sides, and at their corners and the rows' ends, and its edges carry no length, so the way with fewer nodes is taken. That is about the shorter way, but a way past many short sides, as round a curve drawn in short pieces, has more nodes for its length, and the way with fewer nodes can be the longer."
+reason = "The shorter way sews the least thread for the same travel, and counting nodes is how Ink/Stitch's graph is built, not a choice about sewing. Ink/Stitch's travel was read at d59c9ab (lib/stitches/tatami_fill.py: build_travel_graph, add_boundary_travel_nodes, travel), and networkx's shortest_path, which weighs an edge without a weight as 1, at its documented API."
+requirements = ["REQ-FILL-TAT-001"]
 
 [[deviation]]
 id = "DEV-SVG-001"

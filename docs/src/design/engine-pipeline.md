@@ -1,6 +1,6 @@
 # Engine pipeline
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
 
 From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraft-engine` with its
 own tests; stages communicate only through the types in the [data model](data-model.md).
@@ -79,11 +79,13 @@ Rules every generator follows:
 - **The needle before, the next element after.** Elements are generated in sewing order
   ([ADR 0014](adr/0014-generators-see-their-neighbours.md), `REQ-GEN-003`). Each is given the last
   needle point of the elements before it, whatever their thread, and what the next element offers to
-  end near: its first point, or its shape when it starts at its own nearest point. The offer comes from
-  the next element's shape and settings and the design's, never its stitches, so nothing waits for a
-  later element. A
-  satin column starts and ends by them ([satin](algorithms/satin.md#start-and-end)), and explicit
-  start and end commands will override them (`REQ-GEN-001`).
+  end near: its first point, a satin column's rails when it starts at its own nearest point, or a tatami
+  fill's area. The offer comes from the next element's shape and settings and the design's, never its
+  stitches, so nothing waits for a later element. A satin column and a tatami fill start and end by them
+  ([satin](algorithms/satin.md#start-and-end), [fills](algorithms/fills.md#5-parts)), and explicit start
+  and end commands will override them (`REQ-GEN-001`). Each ends near its next stitch, its point nearest
+  the offer as Ink/Stitch's geometry library finds it, a point of one shape inside the other's area first
+  (`generators::next`).
 - **Seeded randomness:** each element's generator is seeded from a hash of its id mixed with its
   `random_seed`, one of the settings every stitch type shares. The PRNG is SplitMix64 from
   `stitchcraft-core` ([determinism](determinism.md)).
