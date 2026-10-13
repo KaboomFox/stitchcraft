@@ -26,6 +26,7 @@ mod split;
 mod underlay;
 
 use stitchcraft_core::rng::SplitMix64;
+use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point};
 use stitchcraft_params::{ChoiceOption, Origin, StitchType, params};
 
@@ -37,7 +38,7 @@ use crate::generators::satin::compensation::Processor;
 use crate::generators::satin::ends::Guides;
 use crate::generators::satin::pairs::Pair;
 use crate::generators::satin::split::Splitter;
-use crate::generators::{Neighbours, Stitched, method};
+use crate::generators::{Neighbours, Stitched, method, mm};
 use crate::normalize::centre_line::{Made, rails_and_rungs};
 use crate::normalize::satin::{Pairing, Recognition, Satin, Shape, recognize};
 
@@ -360,7 +361,23 @@ pub fn satin_stitch(
         guides.pieces(layers, top, start, end, odd, meter)?
     };
     let run = ends::join(pieces, lengths.travel.get(), lengths.min_stitch.get(), meter)?;
+    if let Some(speck) = too_small(&run, lengths.min_stitch.get()) {
+        warnings.push(speck);
+        return Ok(Stitched { runs: Vec::new(), warnings });
+    }
     Ok(Stitched { runs: vec![run], warnings })
+}
+
+/// `SC-W0215` for a column whose needle points `run` all lie within the shortest stitch `min` of its first:
+/// it has no stitch the machine sews well, and is left out. The run is as long as the stitch budget allowed
+/// its making, so this look at it charges nothing more.
+fn too_small(run: &[Point], min: f64) -> Option<Diagnostic> {
+    let first = run.first()?;
+    run.iter().all(|point| !at_least(first.distance(*point), min)).then(|| {
+        let message =
+            format!("Every needle point of this satin column lies within the shortest stitch ({} mm) of its first, so it is not stitched.", mm(min));
+        Diagnostic::new(Code::SatinTooSmall, message).with_fix(Fix::Hint("Draw the column larger, or delete it if it is a stray.".to_string()))
+    })
 }
 
 /// The top stitches along `sections`, from the rails' starts to their ends: placed, compensated and varied

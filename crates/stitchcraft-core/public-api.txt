@@ -56,6 +56,7 @@ pub stitchcraft_core::diag::Code::SatinRungAmbiguous
 pub stitchcraft_core::diag::Code::SatinRungDangling
 pub stitchcraft_core::diag::Code::SatinSubpathPoint
 pub stitchcraft_core::diag::Code::SatinTooNarrow
+pub stitchcraft_core::diag::Code::SatinTooSmall
 pub stitchcraft_core::diag::Code::SatinWithoutRails
 pub stitchcraft_core::diag::Code::StitchLengthRaised
 pub stitchcraft_core::diag::Code::StitchTypeNotYet
@@ -67,6 +68,7 @@ pub stitchcraft_core::diag::Code::SvgGeometryUnusable
 pub stitchcraft_core::diag::Code::SvgObjectIgnored
 pub stitchcraft_core::diag::Code::SvgUnreadable
 pub stitchcraft_core::diag::Code::ThreadColorsUnknown
+pub stitchcraft_core::diag::Code::ThreadsShareColor
 pub stitchcraft_core::diag::Code::TooLargeForFormat
 pub stitchcraft_core::diag::Code::TooManyColorChanges
 pub stitchcraft_core::diag::Code::TrimOrStopLeftOut
@@ -232,6 +234,7 @@ pub stitchcraft_core::Code::SatinRungAmbiguous
 pub stitchcraft_core::Code::SatinRungDangling
 pub stitchcraft_core::Code::SatinSubpathPoint
 pub stitchcraft_core::Code::SatinTooNarrow
+pub stitchcraft_core::Code::SatinTooSmall
 pub stitchcraft_core::Code::SatinWithoutRails
 pub stitchcraft_core::Code::StitchLengthRaised
 pub stitchcraft_core::Code::StitchTypeNotYet
@@ -243,6 +246,7 @@ pub stitchcraft_core::Code::SvgGeometryUnusable
 pub stitchcraft_core::Code::SvgObjectIgnored
 pub stitchcraft_core::Code::SvgUnreadable
 pub stitchcraft_core::Code::ThreadColorsUnknown
+pub stitchcraft_core::Code::ThreadsShareColor
 pub stitchcraft_core::Code::TooLargeForFormat
 pub stitchcraft_core::Code::TooManyColorChanges
 pub stitchcraft_core::Code::TrimOrStopLeftOut

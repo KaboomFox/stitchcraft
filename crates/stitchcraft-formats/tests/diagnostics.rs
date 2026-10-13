@@ -44,6 +44,14 @@ fn diag_sc_e0602_a_position_beyond_the_machine_grid_is_named() {
     stitch(&mut b, 0.0, 0.0);
     stitch(&mut b, 12_000.0, 0.0);
     assert_eq!(written(&b.finish()), "error SC-E0602: The position (12000.0, 0.0) mm does not fit the PES v1 format.");
+    // PES records where the design's top-left corner is from the start in 12 bits (REQ-FMT-011).
+    let mut b = PlanBuilder::new(red());
+    stitch(&mut b, -250.0, 3.0);
+    stitch(&mut b, -248.0, 5.0);
+    assert_eq!(
+        written(&b.finish()),
+        "error SC-E0602: A design whose top-left corner is (-250.0, 3.0) mm from where the machine starts does not fit the PES v1 format."
+    );
 }
 
 #[test]
@@ -82,6 +90,38 @@ fn diag_sc_i0605_dst_says_where_its_machines_cut_and_the_plan_does_not() {
         notes(&b.finish(), FormatId::Dst),
         [
             "info SC-I0605: The thread will be cut at 2 places the plan does not trim: DST machines cut it before 3 or more jump records in a row, and a jump longer than 24.2 mm takes that many."
+        ]
+    );
+}
+
+#[test]
+fn diag_sc_w0606_threads_beyond_the_palette_share_its_colours() {
+    // The 61 Brother thread colours, each a thread of its own, then 2 more threads: their nearest colours,
+    // Red and White, are taken, so each is shown as Red or White too.
+    let colors: Vec<Rgb> = stitchcraft_plan::palette::BROTHER_PEC.entries.iter().filter(|e| e.matchable).map(|e| e.color).collect();
+    let mut b = PlanBuilder::new(Thread::new(colors[0]));
+    stitch(&mut b, 0.0, 0.0);
+    for color in colors.iter().skip(1).copied().chain([Rgb::from_hex(0xD81B24), Rgb::from_hex(0xFFFFFF)]) {
+        b.change_thread(Thread::new(color));
+        stitch(&mut b, 1.0, 0.0);
+    }
+    assert_eq!(
+        notes(&b.finish(), FormatId::PesV1),
+        [
+            "warning SC-W0606: 2 of the design's 63 different threads have the Brother colour of another thread: a PES file names each thread by one of the 61 Brother thread colours, so the machine shows one colour for different threads."
+        ]
+    );
+    // One thread fewer: 1 thread shares.
+    let mut b = PlanBuilder::new(Thread::new(colors[0]));
+    stitch(&mut b, 0.0, 0.0);
+    for color in colors.iter().skip(1).copied().chain([Rgb::from_hex(0xD81B24)]) {
+        b.change_thread(Thread::new(color));
+        stitch(&mut b, 1.0, 0.0);
+    }
+    assert_eq!(
+        notes(&b.finish(), FormatId::PesV1),
+        [
+            "warning SC-W0606: 1 of the design's 62 different threads has the Brother colour of another thread: a PES file names each thread by one of the 61 Brother thread colours, so the machine shows one colour for different threads."
         ]
     );
 }
