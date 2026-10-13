@@ -221,6 +221,12 @@ line = "if best.is_none_or(|(bd, bid, _)| d < bd || (d == bd && id < bid)) {"
 why = "sides are numbered one by one, so a side as near as the best with the same number is the best itself, offered again from another frame's cells: taking it again changes nothing"
 
 [[equivalent]]
+file = "crates/stitchcraft-formats/src/pes/pec.rs"
+mutant = "replace | with ^ in block"
+line = "let [low, high, _, _] = (0x9000 | (field & 0x0FFF)).to_le_bytes();"
+why = "the masked field is below 0x1000, and 0x9000 has none of its bits, so or and exclusive or give the same bytes"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
 mutant = "replace + with - in meeting"
 line = ".flat_map(|&dx| steps.iter().map(move |&dy| Node { x: near.x + dx, y: near.y + dy }))"

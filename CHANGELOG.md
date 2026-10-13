@@ -533,6 +533,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Different threads get different Brother colours in PES files (`REQ-THREAD-002`). Each thread took its
+  nearest colour on its own, so 2 threads near one Brother colour were written as one. The machine showed
+  the same colour for both, and the file read back as one thread with a stop.
+  - A design's threads now get their colours together, the nearest pairs first. Past the palette's 61
+    thread colours, threads share, and `SC-W0606` says how many.
+  - A thread read from a PES file keeps its colour, Brother's applique steps 62 to 64 included, which
+    `stitch convert` turned into ordinary threads. `stitch plan`, `convert` and `inspect` name each thread
+    by the colour the file has.
+  - A PES file made from a DST file gives each of its black placeholder threads a colour of its own.
+  - `DEV-THREAD-001` records where the colours differ from those Ink/Stitch's files name.
+- A PES design whose top-left corner lies more than 204.7 mm from the start is refused (`REQ-FMT-011`,
+  `SC-E0602`). Its origin field wrapped round, and the design read back elsewhere, as `stitch convert` of
+  a DST file from a large frame showed.
+- A PES file of a design that starts by sewing keeps its pictures' top row blank (`REQ-FMT-012`). The move
+  from the start was drawn across the frame, and the byte after the stitch data's end mark was not 0.
+  pyembroidery's and pystitch's readers, which end the data at `FF 00`, read on into the pictures.
 - A command that cannot write one of its files writes none, and still prints what was said about the
   design (`REQ-CLI-006`). When `stitch plan` could not write its `--preview` or `--report`, it had
   written the machine file already. Only the failed write was printed, without the warnings, or a refused
@@ -662,6 +678,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - DST reading: a long jump followed by a long move back could be read as a trim (their split pieces
   cancelled exactly); trims are now runs of jumps of at most 1 mm, and the writer no longer writes
   zero-length jumps.
+- **Small elements sewn over each other** no longer lose the design its plan (`REQ-FIN-001`,
+  `REQ-FIN-003`), which a review found. Finalizing keeps the ends of each run of stitches and its lock
+  points, and leaves out the points before them that are too near. When 2 of those still came too near
+  each other, the stitch between them stayed, too short for the machine: 2 strokes 0.3 mm long laid over
+  each other at the default settings left a tie-off 0.05 mm from a tie-in. The plan check refused it
+  (`SC-E0009`), and the whole design was lost, with a bug report. Now the later one is left out too, the
+  points before it stay, and a trim or stop after a run's last point left out happens where the needle
+  stops. Only a run's first point always stays.
+- **A satin column too small to sew** sews nothing, and the new `SC-W0215` says so (`REQ-SAT-018`),
+  which the same review found. A column whose needle points all lie within its shortest stitch of its
+  first, a speck a few tenths of a millimetre across, sewed stitches all shorter than the machine sews,
+  and the design was lost the same way. Ink/Stitch sews such a column (`DEV-SAT-008`). The golden files
+  stay as they were.
 - **Fills with many or detailed holes** are sewn instead of refused (`REQ-FILL-TAT-013`), which a review
   found. Travel under the rows placed points on the rings, weighed its lines by their distance from the
   rings and kept its way inside the part by looking at every side of every ring, for each point, line and

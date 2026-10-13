@@ -247,6 +247,14 @@ registry! {
     /// Draw the column with 2 rails, or make the stroke narrower.
     SatinCentreLineFailed = "SC-E0214", Error, "Satin column drawn as one path could not be made into rails";
 
+    /// A satin column is so small that every needle point of it lies within the shortest stitch of its
+    /// first: a speck of a column, a few tenths of a millimetre across. Any stitch it could sew would be
+    /// shorter than the machine sews well, would hammer one spot of the fabric and could break the thread,
+    /// so it is left out, as a stroke that small is (`SC-W0401`). Ink/Stitch sews such a column.
+    ///
+    /// The message gives the shortest stitch. Draw the column larger, or delete it if it is a stray.
+    SatinTooSmall = "SC-W0215", Warning, "Satin column too small for the shortest stitch; left out";
+
     /// A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
     /// square CSS pixels), a speck about half a millimetre across, is too small for a row, so it is left
     /// out, as Ink/Stitch leaves it out. Where every part is that small, the fill sews nothing. So does a
@@ -371,7 +379,9 @@ registry! {
     /// Needle points less than the shortest stitch from the one before were left out, so the stitch before
     /// each runs on to the next and none is shorter than the machine sews well. This happens where one
     /// element's stitching runs straight on into the next and they nearly touch: the stitch between them is
-    /// whatever is left of the gap. Nothing visible changes.
+    /// whatever is left of the gap. Where small elements are sewn over each other, a lock point or the last
+    /// point before a jump, trim or stop can go too, when it comes within the shortest stitch of one that
+    /// stays. Nothing visible changes.
     ///
     /// Nothing to do. If the count is large, check for elements drawn on top of each other.
     StitchesMerged = "SC-I0504", Info, "Stitches shorter than the shortest stitch merged";
@@ -404,8 +414,9 @@ registry! {
     UnreadableFile = "SC-E0603", Error, "Machine file could not be read";
 
     /// The file stores no thread colours (DST files never do: they only say where the machine pauses for
-    /// the next thread), so every thread has a placeholder colour — in previews, and in files converted
-    /// from this one, where the machine shows that colour at each thread change.
+    /// the next thread), so every thread has a black placeholder colour in previews. A PES file converted
+    /// from this one names each thread by the Brother colour nearest black that is still free (Black, Dark
+    /// Gray, Dark Brown and so on), which says nothing of the threads the design needs.
     ///
     /// The stitches are not affected. Load the threads the design needs, in the order the design's
     /// author gives; StitchCraft cannot know them.
@@ -420,6 +431,16 @@ registry! {
     /// cut, or sew a PES file, where only trims cut. A machine set to another number of jump records cuts
     /// before other jumps: see its DST setting.
     JumpsCutInDst = "SC-I0605", Info, "Long jumps cut in DST";
+
+    /// A PES file names each thread by a colour of the Brother palette, which has 61 thread colours.
+    /// StitchCraft gives each different thread a colour of its own, the nearest one still free, so the
+    /// machine asks for each thread change. A design with more different threads than that has some
+    /// share a colour, and the machine shows that colour for each of them: at a change between 2 of them it
+    /// shows the thread already in the machine, as for a stop.
+    ///
+    /// Load the threads in the order the report lists them, rather than by the colours the machine shows.
+    /// Or use fewer different threads: merge those of nearly the same colour.
+    ThreadsShareColor = "SC-W0606", Warning, "Threads share a Brother colour";
 
     /// The design is wider or taller than the machine's hoop, so the machine cannot sew it in one
     /// hooping (most machines refuse the file).
