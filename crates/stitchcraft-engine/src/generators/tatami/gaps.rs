@@ -10,19 +10,21 @@
 //!
 //! Ink/Stitch repeats the last row, moved a row spacing further each time, so a repeat keeps the last row's
 //! length even where the part narrows, and can run outside it. Here each extra row is a row of the grid
-//! past the last one, the part of its segment beside the last row: it covers the same stretch but stops
-//! at the part's edge (`DEV-FILL-010`). Where the grid has no segment beside the last row, the part ends,
-//! there is no gap to fill, and the extra rows stop.
+//! past the last one, the part of its segment beside the extra row before it, or the last row for the
+//! first: it stops at the part's edge (`DEV-FILL-010`). The extra rows are then one strip, each within the
+//! one before, and the needle's hop from each to the next is a row spacing across. Where the grid has no
+//! segment beside the row before, the part ends, there is no gap to fill, and the extra rows stop.
 
 use std::cmp::Ordering;
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 /// The rows that fill the gap after row segment `last`, sewn after `before` in the same stretch: up to
-/// `count` rows, from the grid rows past `last`'s row, away from `before`'s, each the stretch of that row's
-/// segment beside `last` that overlaps it most, from its start to its end along the rows. `segments` are
-/// the part's row segments, and `rows` the grid row of each, in order across; none past the part's edge or
-/// for 2 segments of one row. One unit of `meter` for each segment looked at.
+/// `count` rows, from the grid rows past `last`'s row, away from `before`'s. Each is the stretch of that
+/// row's segment that overlaps the row before it most, `last` for the first, cut to the span of that row,
+/// from its start to its end along the rows. `segments` are the part's row segments, and `rows` the grid
+/// row of each, in order across; none past the part's edge or for 2 segments of one row. One unit of
+/// `meter` for each segment looked at.
 pub(super) fn gap_rows(
     segments: &[(Point, Point)],
     rows: &[usize],
@@ -38,6 +40,8 @@ pub(super) fn gap_rows(
     // How far along the last row a point lies, measured from its start.
     let along = |p: Point| ((p.x() - start.x()) * (end.x() - start.x()) + (p.y() - start.y()) * (end.y() - start.y())) / length;
     let mut found = Vec::new();
+    // The span along the last row of the row before the next: the last row's whole length at first.
+    let (mut from, mut to) = (0.0, length);
     for k in 1..=count {
         let target = match row.cmp(&row_before) {
             Ordering::Greater => row.checked_add(k),
@@ -46,18 +50,19 @@ pub(super) fn gap_rows(
         };
         let Some(target) = target else { break };
         let in_row = rows.partition_point(|&r| r < target)..rows.partition_point(|&r| r <= target);
-        let mut beside: Option<(f64, Point, Point)> = None;
+        let mut beside: Option<(f64, f64, f64, Point, Point)> = None;
         for &(s, e) in segments.get(in_row).unwrap_or_default() {
             meter.charge(1)?;
             let (ts, te) = (along(s), along(e));
-            let (low, high) = (ts.min(te).max(0.0), ts.max(te).min(length));
-            if high - low > beside.map_or(0.0, |(overlap, _, _)| overlap) {
+            let (low, high) = (ts.min(te).max(from), ts.max(te).min(to));
+            if high - low > beside.map_or(0.0, |(_, _, overlap, _, _)| overlap) {
                 let at = |t: f64| s.lerp(e, (t - ts) / (te - ts));
                 let (a, b) = if ts <= te { (at(low), at(high)) } else { (at(high), at(low)) };
-                beside = Some((high - low, a, b));
+                beside = Some((low, high, high - low, a, b));
             }
         }
-        let Some((_, a, b)) = beside else { break };
+        let Some((low, high, _, a, b)) = beside else { break };
+        (from, to) = (low, high);
         found.push((a, b));
     }
     Ok(found)
@@ -118,10 +123,11 @@ mod tests {
     }
 
     #[test]
-    fn of_the_segments_beside_the_last_row_the_one_overlapping_it_most_is_taken() {
+    fn of_the_segments_beside_the_row_before_the_one_overlapping_it_most_is_taken() {
         // Row 1, from x = 0 to 10, after row 0. Row 2 overlaps it by 2 mm in its first segment, from its
-        // start, and 4 mm in its second, and row 3 by 3 mm in its first and 4 mm in its second. Row 4 only
-        // touches its end.
+        // start, and 4 mm in its second, from 5 to 9, which is taken. Row 3 overlaps row 1 by 3 mm in its first
+        // segment and 4 mm in its second, but only the first lies beside row 2's, from 6 to 9: a row on the
+        // other side of the notch between them would leave the strip. Row 4 touches neither.
         let segments = [
             (p(0.0, -1.0), p(10.0, -1.0)),
             (p(0.0, 0.0), p(10.0, 0.0)),
@@ -133,7 +139,25 @@ mod tests {
         ];
         let rows = [0, 1, 2, 2, 3, 3, 4];
         let found = gap_rows(&segments, &rows, 1, 0, 4, &mut Budget::DEFAULT.meter()).unwrap();
-        assert_eq!(found, [(p(5.0, 1.0), p(9.0, 1.0)), (p(0.0, 2.0), p(4.0, 2.0))]);
+        assert_eq!(found, [(p(5.0, 1.0), p(9.0, 1.0)), (p(6.0, 2.0), p(9.0, 2.0))]);
+    }
+
+    #[test]
+    fn of_2_as_beside_the_first_is_taken_and_a_row_only_touching_is_not_beside() {
+        // Row 1, from x = 0 to 10, after row 0. Row 2 overlaps it from 6 to 8 in its first segment and from 0
+        // to 5 in its second, which is taken. Row 3 overlaps that by 2 mm in each of its segments, and the
+        // first is taken. Row 4 only touches the end of row 3's, at x = 2, and the rows stop.
+        let segments = [
+            (p(0.0, 0.0), p(10.0, 0.0)),
+            (p(0.0, 1.0), p(10.0, 1.0)),
+            (p(6.0, 2.0), p(8.0, 2.0)),
+            (p(0.0, 2.0), p(5.0, 2.0)),
+            (p(0.0, 3.0), p(2.0, 3.0)),
+            (p(3.0, 3.0), p(5.0, 3.0)),
+            (p(2.0, 4.0), p(4.0, 4.0)),
+        ];
+        let found = gap_rows(&segments, &[0, 1, 2, 2, 3, 3, 4], 1, 0, 4, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(found, [(p(0.0, 2.0), p(5.0, 2.0)), (p(0.0, 3.0), p(2.0, 3.0))]);
     }
 
     #[test]

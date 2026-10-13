@@ -167,7 +167,7 @@ After sewing, check:
 
 ## TS-09 — Fill underlay, travel and gap-filling rows round holes
 
-66.0 × 114.0 mm · 7788 stitches, 6 jumps, 3 trims, 0 colour changes, 0 stops
+66.0 × 114.0 mm · 7797 stitches, 6 jumps, 3 trims, 0 colour changes, 0 stops
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 

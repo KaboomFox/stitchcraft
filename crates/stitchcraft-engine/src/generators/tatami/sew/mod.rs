@@ -51,14 +51,17 @@
 //!
 //! **Pull compensation.** The top rows reach past their segments' ends by `pull_compensation_mm` plus
 //! `pull_compensation_percent` of the segment's length, at its start and at its end (`REQ-FILL-TAT-006`),
-//! moved as a satin's stitches are (`generators::pull`). The part, its route and the needle's ways stay
-//! as they are, and each way starts where the row before it ends and ends where the next row starts, both
-//! lengthened. Ink/Stitch rebuilds the part round the lengthened rows instead, which can fill its holes and
+//! moved as a satin's stitches are (`generators::pull`). Where 2 segments of a row meet end to end, the row
+//! going on in the part, both end there as they are, so the row is sewn once through the point. The part,
+//! its route and the needle's ways stay as they are, and each way starts where the row before it ends and
+//! ends where the next row starts, both lengthened. Ink/Stitch rebuilds the part round the lengthened rows instead, which can fill its holes and
 //! drop a piece of it (`DEV-FILL-009`). Underlay is not compensated, as in Ink/Stitch.
 //!
-//! **Gap-fill rows.** Where the route leaves a stretch of more than 3 rows for another, the top rows sew
-//! `gap_fill_rows` more past its last row, back and forth, and come back to where it ended (the `gaps`
-//! module, `REQ-FILL-TAT-007`). Underlay has none, as in Ink/Stitch.
+//! **Gap-fill rows.** Where the route leaves a stretch of more than 3 rows for another, as Ink/Stitch's gap
+//! fill finds (`route::Step::Travel`), the top rows sew `gap_fill_rows` more past its last row, back and
+//! forth, and come back to where it ended (the `gaps` module, `REQ-FILL-TAT-007`). The hop from each row to
+//! the next, and the way back, run between the rows' ends as they lie in the part, kept inside it as travel
+//! is (`clamp`). Underlay has none, as in Ink/Stitch.
 //!
 //! **The shortest stitch.** Rows the row spacing apart start and end nearer each other than the shortest
 //! stitch a machine sews well, and a row's first grid point can lie just past its start. A needle point
@@ -66,6 +69,8 @@
 //! Ink/Stitch's stitch plan leaves out points nearer than its own shortest stitch. A run's last point stays,
 //! and the points before it that it is too near go instead. It is finalize's rule, the same function
 //! (`crate::thin`), applied here so that the generator hands finalize stitches it has nothing to thin.
+
+use std::collections::BTreeSet;
 
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::units::at_least;
@@ -83,7 +88,7 @@ use super::underpath::{Underpath, smooth};
 use crate::generators::pull::offset;
 use crate::generators::running::along_line;
 use crate::generators::{Approach, Stitched};
-use crate::normalize::near::{nearest_pair, nearest_to_lines, nearest_to_point};
+use crate::normalize::near::{key, nearest_pair, nearest_to_lines, nearest_to_point};
 use crate::normalize::offset::buffer;
 use crate::normalize::region::{Polygon, Region, Unjoined};
 use crate::thin::thin;
@@ -309,6 +314,7 @@ impl Part<'_> {
         let Layer { stitching, travel, pull, gap_rows } = layer;
         let (part, rings) = (self.polygon, &self.rings);
         let (segments, rows) = segments(part, stitching, meter)?;
+        let joints = joints(&segments, meter)?;
         let Some(route) = route(rings, &segments, start, end, meter)? else {
             return Ok((vec![along_line(&part.outline, travel.length, travel.tolerance, travel.min_stitch, meter)?], true));
         };
@@ -325,6 +331,7 @@ impl Part<'_> {
             segments: &segments,
             rows: &rows,
             pull: *pull,
+            joints,
             gap_rows: *gap_rows,
         };
         Ok((sewing.sew(rng, meter, warnings)?, false))
@@ -405,6 +412,22 @@ fn segments(part: &Polygon, stitching: &Stitching, meter: &mut Meter) -> Result<
     Ok((segments, in_row))
 }
 
+/// The points where 2 of the row `segments` meet end to end, as keys: where a row meets the outline without
+/// leaving the part, touching it from inside or running along it, it is split there (`REQ-FILL-TAT-010`) and
+/// goes on. One unit of `meter` for each segment.
+fn joints(segments: &[(Point, Point)], meter: &mut Meter) -> Result<BTreeSet<(u64, u64)>, Exhausted> {
+    let (mut ends, mut joints) = (BTreeSet::new(), BTreeSet::new());
+    for &(start, end) in segments {
+        meter.charge(1)?;
+        for p in [start, end] {
+            if !ends.insert(key(p)) {
+                joints.insert(key(p));
+            }
+        }
+    }
+    Ok(joints)
+}
+
 /// The ends of each row segment the route sews, in the order sewn.
 fn row_ends(route: &Route) -> Vec<[NodeId; 2]> {
     route.steps.iter().filter_map(|step| if let Step::Row { from, to, .. } = *step { Some([from, to]) } else { None }).collect()
@@ -427,6 +450,8 @@ struct Sewing<'a> {
     rows: &'a [usize],
     /// How far the rows reach past their ends.
     pull: Pull,
+    /// The points where 2 segments of a row meet ([`joints`]), as keys.
+    joints: BTreeSet<(u64, u64)>,
     /// How many rows to sew again where the route leaves a stretch of rows.
     gap_rows: usize,
 }
@@ -453,13 +478,12 @@ impl Stretch {
         self.last = [Some(segment), last];
     }
 
-    /// The needle travels from node `from` to node `to`, which one edge joins (`beside`) when the travel
-    /// goes no farther than the next node: from a row to the next beside it, or from the last row to the
-    /// part's end beside it, as one edge of Ink/Stitch's route. Other travel leaves the stretch: the last
-    /// row's segment and the one before it when the stretch had more than 3 rows.
-    fn travel(&mut self, from: NodeId, to: NodeId, beside: bool) -> Option<[usize; 2]> {
+    /// The needle travels, and the travel `leaves` the stretch where Ink/Stitch's gap fill finds more than
+    /// one edge of travel in a row ([`super::route::Step::Travel`]): the last row's segment and the one
+    /// before it, when the stretch had more than 3 rows.
+    fn travel(&mut self, leaves: bool) -> Option<[usize; 2]> {
         self.after_travel = true;
-        if beside || from == to {
+        if !leaves {
             return None;
         }
         let rows = std::mem::take(&mut self.rows);
@@ -507,8 +531,8 @@ impl Sewing<'_> {
                     }
                     stretch.row(segment);
                 }
-                Step::Travel { from, to, beside } => {
-                    if let (Some(rows), Some(ended)) = (stretch.travel(from, to, beside), row_before(i)) {
+                Step::Travel { from, to, beside, leaves } => {
+                    if let (Some(rows), Some(ended)) = (stretch.travel(leaves), row_before(i)) {
                         self.fill_gap(&mut run, rows, ended, rng, meter)?;
                     }
                     let next = start_of(i + 1);
@@ -560,17 +584,21 @@ impl Sewing<'_> {
         Some(self.lengthened(segment, forward(entry, segment)))
     }
 
-    /// `segment` lengthened by the pull compensation at both ends, from its start where `forward` and from
-    /// its end otherwise.
+    /// `segment` lengthened by the pull compensation at its ends, from its start where `forward` and from its
+    /// end otherwise. An end where 2 segments of the row meet, the row going on in the part, is not
+    /// lengthened, so the row is sewn once there.
     fn lengthened(&self, (start, end): (Point, Point), forward: bool) -> [Point; 2] {
-        let [start, end] = offset([start, end], self.pull.mm, self.pull.share);
+        let Pull { mm: [mm_start, mm_end], share: [share_start, share_end] } = self.pull;
+        let at = |p: Point, mm: f64, share: f64| if self.joints.contains(&key(p)) { (0.0, 0.0) } else { (mm, share) };
+        let ((mm_start, share_start), (mm_end, share_end)) = (at(start, mm_start, share_start), at(end, mm_end, share_end));
+        let [start, end] = offset([start, end], [mm_start, mm_end], [share_start, share_end]);
         if forward { [start, end] } else { [end, start] }
     }
 
     /// Sews onto `run` the rows that fill the gap after the row of segment `last`, which the route sewed
-    /// after `before`'s, from `a` to `b`: back and forth from it, each lengthened as the rows are, with
-    /// straight stitches from each to the next, and straight back to `b`. Where no row lies past it, the
-    /// part ends there, and nothing is sewn.
+    /// after `before`'s, from `a` to `b`: back and forth from it, each lengthened as the rows are, with a hop
+    /// from each to the next, and one back to `b`. Where no row lies past it, the part ends there, and
+    /// nothing is sewn.
     fn fill_gap(
         &self,
         run: &mut Vec<Point>,
@@ -581,19 +609,26 @@ impl Sewing<'_> {
     ) -> Result<(), Exhausted> {
         let extra = gap_rows(self.segments, self.rows, last, before, self.gap_rows, meter)?;
         let Some(&segment) = self.segments.get(last).filter(|_| !extra.is_empty()) else { return Ok(()) };
-        // The first row after the last runs back.
+        // The first row after the last runs back. Where the needle is, before the rows are lengthened.
         let forward = forward(a, segment);
-        for (k, row) in extra.into_iter().enumerate() {
-            let [from, to] = self.lengthened(row, (k % 2 == 1) == forward);
-            self.straight(run, from, meter)?;
+        let ended = if forward { segment.1 } else { segment.0 };
+        let mut at = ended;
+        for (k, (start, end)) in extra.into_iter().enumerate() {
+            let ahead = (k % 2 == 1) == forward;
+            let [from, to] = self.lengthened((start, end), ahead);
+            let (enters, leaves) = if ahead { (start, end) } else { (end, start) };
+            self.hop(run, [at, enters], from, meter)?;
             extend(run, row_points(from, to, self.stitching, rng, meter)?);
+            at = leaves;
         }
-        self.straight(run, b, meter)
+        self.hop(run, [at, ended], b, meter)
     }
 
-    /// Running stitches straight on from the end of `run` to `to`.
-    fn straight(&self, run: &mut Vec<Point>, to: Point, meter: &mut Meter) -> Result<(), Exhausted> {
-        let way: Vec<Point> = run.last().copied().into_iter().chain([to]).collect();
+    /// Running stitches from the end of `run` to `to`, where the next row starts, lengthened: along the way
+    /// between the 2 rows' `ends` as they lie in the part, kept inside it as travel is.
+    fn hop(&self, run: &mut Vec<Point>, ends: [Point; 2], to: Point, meter: &mut Meter) -> Result<(), Exhausted> {
+        let mut way = clamp(&ends, self.rings, meter)?;
+        moved(&mut way, run.last().copied(), Some(to));
         extend(run, along_line(&way, self.travel.length, self.travel.tolerance, self.travel.min_stitch, meter)?);
         Ok(())
     }
