@@ -322,7 +322,6 @@ impl Part<'_> {
         let network = Network::new(&route.nodes, rings, &row_ends(&route), meter)?;
         let mut sewing = Sewing {
             route: &route,
-            part,
             rings,
             stitching,
             travel: *travel,
@@ -437,7 +436,6 @@ fn row_ends(route: &Route) -> Vec<[NodeId; 2]> {
 /// A part as it is sewn.
 struct Sewing<'a> {
     route: &'a Route,
-    part: &'a Polygon,
     rings: &'a Rings<'a>,
     stitching: &'a Stitching,
     travel: Travel,
@@ -575,7 +573,7 @@ impl Sewing<'_> {
 
     /// A way along the lines, smoothed and kept inside the part.
     fn smoothed(&self, way: &[Point], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
-        clamp(&smooth(way, self.travel.min_stitch, meter)?, self.part, self.rings, meter)
+        clamp(&smooth(way, self.travel.min_stitch, meter)?, self.rings, meter)
     }
 
     /// The row `step` sews, between its segment's ends lengthened by the pull compensation, from the end the
@@ -629,7 +627,7 @@ impl Sewing<'_> {
     /// Running stitches from the end of `run` to `to`, where the next row starts, lengthened: along the way
     /// between the 2 rows' `ends` as they lie in the part, kept inside it as travel is.
     fn hop(&self, run: &mut Vec<Point>, ends: [Point; 2], to: Point, meter: &mut Meter) -> Result<(), Exhausted> {
-        let mut way = clamp(&ends, self.part, self.rings, meter)?;
+        let mut way = clamp(&ends, self.rings, meter)?;
         moved(&mut way, run.last().copied(), Some(to));
         extend(run, along_line(&way, self.travel.length, self.travel.tolerance, self.travel.min_stitch, meter)?);
         Ok(())

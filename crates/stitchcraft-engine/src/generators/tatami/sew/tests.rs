@@ -17,18 +17,10 @@ const TRAVEL: Travel = Travel { length: 2.0, tolerance: 0.2, min_stitch: 1e-6, u
 
 /// `route` through `segments` sewn in `part`, whose rings are `rings`, as `how` says: travelling along
 /// the rings and rows, from no needle, with no pull compensation and no gap rows.
-fn plain<'a>(
-    route: &'a Route,
-    part: &'a Polygon,
-    rings: &'a Rings<'a>,
-    (segments, rows): &'a RowSegments,
-    how: &'a Stitching,
-    meter: &mut Meter,
-) -> Sewing<'a> {
+fn plain<'a>(route: &'a Route, rings: &'a Rings<'a>, (segments, rows): &'a RowSegments, how: &'a Stitching, meter: &mut Meter) -> Sewing<'a> {
     let network = Network::new(&route.nodes, rings, &row_ends(route), meter).unwrap();
     Sewing {
         route,
-        part,
         rings,
         stitching: how,
         travel: TRAVEL,
@@ -43,9 +35,9 @@ fn plain<'a>(
     }
 }
 
-/// The runs `route` through `segments`, one to a row, sews in `part`, travelling along its rings and rows.
+/// The runs `route` through `segments`, one to a row, sews in the part of `rings`, travelling along its
+/// rings and rows.
 fn sew(
-    part: &Polygon,
     route: &Route,
     rings: &Rings<'_>,
     segments: &[(Point, Point)],
@@ -54,7 +46,7 @@ fn sew(
     warnings: &mut Vec<Diagnostic>,
 ) -> Vec<Vec<Point>> {
     let segments = (segments.to_vec(), (0..segments.len()).collect());
-    plain(route, part, rings, &segments, stitching, meter).sew(&mut SplitMix64::new(1), meter, warnings).unwrap()
+    plain(route, rings, &segments, stitching, meter).sew(&mut SplitMix64::new(1), meter, warnings).unwrap()
 }
 
 #[test]
@@ -68,7 +60,7 @@ fn with_skip_last_a_row_s_end_is_sewn_before_travel_unless_the_next_row_starts_b
     let route = route(&rings, &segments, None, None, meter).unwrap().unwrap();
     let stitching = stitching(true);
     let mut warnings = Vec::new();
-    let runs = sew(&part, &route, &rings, &segments, &stitching, meter, &mut warnings);
+    let runs = sew(&route, &rings, &segments, &stitching, meter, &mut warnings);
     assert_eq!((runs.len(), warnings), (1, Vec::new()));
     let run = &runs[0];
     let mut handovers = Vec::new();
@@ -105,7 +97,7 @@ fn a_needle_that_finds_no_way_jumps_and_says_so_as_a_bug() {
     let rings = Rings::new(&part, meter).unwrap();
     let route = route(&rings, &segments, None, None, meter).unwrap().unwrap();
     let mut warnings = Vec::new();
-    let runs = sew(&part, &route, &rings, &segments, &stitching(false), meter, &mut warnings);
+    let runs = sew(&route, &rings, &segments, &stitching(false), meter, &mut warnings);
     assert_eq!(runs.len(), 2, "the needle jumps once");
     assert_eq!((runs[0].first(), runs[1].first()), (Some(&p(0.0, 0.5)), Some(&p(6.0, 2.0))));
     assert_eq!(warnings.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::InternalCheckFailed]);
@@ -113,7 +105,7 @@ fn a_needle_that_finds_no_way_jumps_and_says_so_as_a_bug() {
     // after the jump at the next row's lengthened start.
     let (rows, how) = ((segments.to_vec(), vec![0, 1]), stitching(false));
     let pull = Pull { mm: [0.5, 0.5], share: [0.0, 0.0] };
-    let runs = Sewing { pull, ..plain(&route, &part, &rings, &rows, &how, meter) }.sew(&mut SplitMix64::new(1), meter, &mut warnings).unwrap();
+    let runs = Sewing { pull, ..plain(&route, &rings, &rows, &how, meter) }.sew(&mut SplitMix64::new(1), meter, &mut warnings).unwrap();
     assert_eq!((runs[0].first(), runs[1].first()), (Some(&p(0.0, 0.5)), Some(&p(6.5, 2.0))));
 }
 
@@ -135,7 +127,7 @@ fn req_fill_tat_005_every_way_under_the_rows_lies_inside_the_part() {
     let route = route(&rings, &rows.0, None, None, meter).unwrap().unwrap();
     let lines = Underpath::new(&part, &rings, &route.nodes, &rows.0, 30.0, meter).unwrap();
     let travel = Travel { underpath: true, ..TRAVEL };
-    let mut sewing = Sewing { travel, lines, ..plain(&route, &part, &rings, &rows, &how, meter) };
+    let mut sewing = Sewing { travel, lines, ..plain(&route, &rings, &rows, &how, meter) };
     let mut ways = 0;
     for step in &route.steps {
         match *step {
@@ -160,7 +152,7 @@ fn req_fill_tat_005_every_way_under_the_rows_lies_inside_the_part() {
     // Sewn as a whole, the part is one run, which says nothing.
     let lines = Underpath::new(&part, &rings, &route.nodes, &rows.0, 30.0, meter).unwrap();
     let mut warnings = Vec::new();
-    let mut sewing = Sewing { travel, lines, ..plain(&route, &part, &rings, &rows, &how, meter) };
+    let mut sewing = Sewing { travel, lines, ..plain(&route, &rings, &rows, &how, meter) };
     assert_eq!(sewing.sew(&mut SplitMix64::new(1), meter, &mut warnings).unwrap().len(), 1);
     assert_eq!(warnings, Vec::new());
 }
@@ -186,7 +178,7 @@ fn req_fill_tat_001_a_needle_inside_leads_in_from_the_lines_nearest_node_to_the_
             route.steps.remove(0);
         }
         let lines = Underpath::new(&part, &rings, &route.nodes, &rows.0, 0.0, meter).unwrap();
-        let mut sewing = Sewing { travel, lines, start: Some(needle), ..plain(&route, &part, &rings, &rows, &how, meter) };
+        let mut sewing = Sewing { travel, lines, start: Some(needle), ..plain(&route, &rings, &rows, &how, meter) };
         let (way, replaced) = sewing.lead_in(meter).unwrap().unwrap();
         // The needle is 3 mm or more from every side, so a node within 1 mm of it is well inside.
         assert!(way[0].distance(needle) < 1.0, "{:?}", way[0]);
@@ -220,7 +212,7 @@ fn sew_rows(order: &[usize], how: &Stitching, gap_rows: usize, pull: Pull) -> Ve
     let route = Route { nodes: nodes.collect(), steps };
     let rows = (segments, (0..8).collect());
     let mut warnings = Vec::new();
-    let mut sewing = Sewing { pull, gap_rows, ..plain(&route, &part, &rings, &rows, how, meter) };
+    let mut sewing = Sewing { pull, gap_rows, ..plain(&route, &rings, &rows, how, meter) };
     let runs = sewing.sew(&mut SplitMix64::new(1), meter, &mut warnings).unwrap();
     assert_eq!(warnings, Vec::new());
     runs
@@ -287,7 +279,7 @@ fn req_fill_tat_007_the_travel_to_the_end_from_beside_it_ends_no_stretch() {
     assert_eq!((route.nodes[from].point, beside, leaves), (p(0.0, 3.0), true, false));
     let mut sewn = |route: &Route, skip_last| {
         let how = stitching(skip_last);
-        let mut sewing = Sewing { gap_rows: 2, ..plain(route, &part, &rings, &rows, &how, meter) };
+        let mut sewing = Sewing { gap_rows: 2, ..plain(route, &rings, &rows, &how, meter) };
         sewing.sew(&mut SplitMix64::new(1), meter, &mut Vec::new()).unwrap().concat()
     };
     // Leaving the first stretch, rows 3 and 2 fill its gap. Ending the second, none do: the needle comes
@@ -351,6 +343,6 @@ fn where_no_line_leads_the_needle_runs_along_the_rings_and_rows() {
     assert_eq!(lines.way(0, 2, meter).unwrap(), None, "no line reaches the hole");
     let network = Network::new(&route.nodes, &rings, &[[1, 0]], meter).unwrap();
     let (travel, how, rows) = (Travel { underpath: true, ..TRAVEL }, stitching(false), (vec![(points[1], points[0])], vec![0]));
-    let sewing = Sewing { travel, lines: Some(lines), network, ..plain(&route, &part, &rings, &rows, &how, meter) };
+    let sewing = Sewing { travel, lines: Some(lines), network, ..plain(&route, &rings, &rows, &how, meter) };
     assert_eq!(sewing.way(0, 2, meter).unwrap(), Some(points.to_vec()));
 }

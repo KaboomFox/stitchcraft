@@ -4,8 +4,8 @@
 //! The engine does the planning (`stitchcraft_engine::plan`): it fits the plan to the machine and checks
 //! it, so what comes back is written as it is. This command reads the SVG file, prints what was said about
 //! the design — element by element, and what the file format adds, such as DST's cuts before long jumps
-//! (`SC-I0605`) — and writes the files. Nothing is written when the design has errors, except the report,
-//! which says why.
+//! (`SC-I0605`) — and writes the files. Nothing is written when anything said is an error, an element left
+//! out included, except the report, which says why (`REQ-CLI-003`).
 //!
 //! [`sew`] is the part a bug-report bundle records and replays (`super::bug_report`), so a bundle
 //! reproduces exactly what this command does. When it finds a bug in StitchCraft (`SC-E0009`), this
@@ -16,7 +16,7 @@ use std::path::Path;
 
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use stitchcraft_core::{Budget, Code, Diagnostic};
+use stitchcraft_core::{Budget, Code, Diagnostic, Severity};
 use stitchcraft_formats::Encoded;
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
@@ -95,22 +95,40 @@ pub fn run(args: &PlanArgs) -> Outcome {
         let refused = refuse(args, profile, &sewn.diagnostics);
         return bug_report::beside(&args.output, &Run { design_path: &args.design, design: &bytes, profile, format, says: None }, Ok(&sewn), refused);
     }
+    written(args, profile, format, sewn)
+}
+
+/// What `stitch plan` writes for the design `sewn`: the machine file, and the picture and the report asked
+/// for. When anything said is an error, only the report (`REQ-CLI-003`).
+fn written(args: &PlanArgs, profile: &MachineProfile, format: FormatId, sewn: Sewn) -> Outcome {
     let Sewn { mut diagnostics, plan: Some(plan), file: Some(machine_file) } = sewn else { return refuse(args, profile, &sewn.diagnostics) };
+    // The picture is drawn before anything is written, so that one that cannot be drawn stops the rest too.
+    // The default scale is in range, so there are always settings.
+    let picture = match (&args.preview, Settings::new(Style::Realistic, Settings::DEFAULT_SCALE)) {
+        (Some(path), Some(settings)) => match stitchcraft_render::preview(&plan, settings, &mut Budget::DEFAULT.meter()) {
+            Ok(image) => Some((path, image)),
+            Err(e) => {
+                diagnostics.push(e.diagnostic());
+                None
+            }
+        },
+        _ => None,
+    };
+    // An element left out with an error leaves the rest of the design planned (`REQ-GEN-002`), but a machine
+    // file without it is not the design: Ink/Stitch writes no file when an element fails, and neither does
+    // this command.
+    if diagnostics.iter().any(|d| d.severity() == Severity::Error) {
+        return refuse(args, profile, &diagnostics);
+    }
     if let Err(outcome) = write_file(&args.output, &machine_file) {
         return outcome;
     }
     let mut stdout = summary(args, profile, format, &plan, &machine_file);
-    // The default scale is in range, so there are always settings; a preview too large to draw is said.
-    if let (Some(path), Some(settings)) = (&args.preview, Settings::new(Style::Realistic, Settings::DEFAULT_SCALE)) {
-        match stitchcraft_render::preview(&plan, settings, &mut Budget::DEFAULT.meter()) {
-            Ok(image) => {
-                if let Err(outcome) = write_file(path, &image.png) {
-                    return outcome;
-                }
-                let _ = writeln!(stdout, "  preview   {} ({} × {} pixels)", path.display(), image.width, image.height);
-            }
-            Err(e) => diagnostics.push(e.diagnostic()),
+    if let Some((path, image)) = picture {
+        if let Err(outcome) = write_file(path, &image.png) {
+            return outcome;
         }
+        let _ = writeln!(stdout, "  preview   {} ({} × {} pixels)", path.display(), image.width, image.height);
     }
     if let Some(path) = &args.report {
         let report = report(args, profile, Some((format, &machine_file)), Some(&plan), &diagnostics);
@@ -197,6 +215,8 @@ fn round(mm: f64) -> f64 {
 mod tests {
     use std::path::PathBuf;
 
+    use stitchcraft_core::ElementId;
+
     use super::*;
     use crate::cli::Format;
 
@@ -260,6 +280,25 @@ mod tests {
         let out = run(&args(unpainted, temp("unpainted.pes")));
         assert_eq!(out.status, Status::DesignErrors);
         assert!(out.stderr.contains("error SC-E0010: The design has nothing to stitch"), "{}", out.stderr);
+    }
+
+    #[test]
+    fn req_cli_003_an_element_left_out_with_an_error_writes_only_the_report() {
+        // The engine leaves out an element whose planning runs past its work budget, with `SC-E0004`, and plans
+        // the rest (`REQ-GEN-002`), as it does for a fill of 2,000 spikes after 12 s.
+        let (output, preview, report) = (temp("left-out.pes"), temp("left-out.png"), temp("left-out.json"));
+        let mut sewn = sew(&std::fs::read(fixture("strokes.svg")).unwrap(), profiles::REFERENCE, FormatId::PesV1, "strokes");
+        let fill = ElementId::new("svg:patch:fill").unwrap();
+        sewn.diagnostics.push(Budget::DEFAULT.meter().charge(u64::MAX).unwrap_err().diagnostic(&Budget::DEFAULT, Some(fill)));
+        assert!(sewn.plan.is_some() && sewn.file.is_some());
+        let asked = PlanArgs { preview: Some(preview.clone()), report: Some(report.clone()), ..args(fixture("strokes.svg"), output.clone()) };
+        let out = written(&asked, profiles::REFERENCE, FormatId::PesV1, sewn);
+        assert_eq!(out.status, Status::DesignErrors);
+        assert!(out.stderr.contains("\nerror SC-E0004 (svg:patch:fill): ") && out.stderr.ends_with("nothing was written\n"), "{}", out.stderr);
+        assert!(!output.exists() && !preview.exists());
+        let report: Value = serde_json::from_slice(&std::fs::read(&report).unwrap()).unwrap();
+        let said: Vec<&str> = report["diagnostics"].as_array().unwrap().iter().filter_map(|d| d["code"].as_str()).collect();
+        assert_eq!((said.last(), report.get("file")), (Some(&"SC-E0004"), None));
     }
 
     #[test]
