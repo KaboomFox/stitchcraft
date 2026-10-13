@@ -54,7 +54,7 @@ pub const stitchcraft_formats::label::LABEL_LEN: usize
 pub fn stitchcraft_formats::label::label(&str) -> [u8; 16]
 pub mod stitchcraft_formats::pes
 pub fn stitchcraft_formats::pes::decode(&[u8]) -> core::result::Result<stitchcraft_formats::decode::Decoded, stitchcraft_formats::error::DecodeError>
-pub fn stitchcraft_formats::pes::encode(&stitchcraft_plan::plan::StitchPlan, &str) -> core::result::Result<alloc::vec::Vec<u8>, stitchcraft_formats::error::EncodeError>
+pub fn stitchcraft_formats::pes::encode(&stitchcraft_plan::plan::StitchPlan, &str) -> core::result::Result<stitchcraft_formats::Encoded, stitchcraft_formats::error::EncodeError>
 pub mod stitchcraft_formats::quantize
 pub struct stitchcraft_formats::quantize::Delta
 pub stitchcraft_formats::quantize::Delta::dx: i32

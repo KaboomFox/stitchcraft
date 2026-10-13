@@ -25,12 +25,12 @@ fn req_svg_002_degenerate_geometry_follows_the_specification() {
     assert_eq!(e[0].shape.path().subpaths[0].segments, [Segment::Line(p(20.0, 10.0))]);
     // An arc that ends where it starts draws nothing; the line after it is drawn.
     assert_eq!(e[1].shape.path().subpaths[0].segments, [Segment::Line(p(20.0, 20.0))]);
-    // Radii too small for the end points grow until they fit: here a half circle of radius 10, in six
-    // pieces, through (20, 20) at the top, ending exactly at its end point.
+    // Radii too small for the end points grow until they fit: here a half circle of radius 10 over the
+    // top, in 3 pieces of a sixth of a turn, ending exactly at its end point.
     let half = &ends(&e[2])[0];
-    assert_eq!(half.len(), 7);
-    all_at(&[half[0], half[3], half[6]], &[(10.0, 30.0), (20.0, 20.0), (30.0, 30.0)]);
-    assert_eq!(half[6], p(30.0, 30.0));
+    let rise = 30.0 - 10.0 * 0.75_f64.sqrt();
+    all_at(half, &[(10.0, 30.0), (15.0, rise), (25.0, rise), (30.0, 30.0)]);
+    assert_eq!(half[3], p(30.0, 30.0));
     // An error ends the path; what came before it is stitched.
     all_at(&ends(&e[3])[0], &[(10.0, 40.0), (20.0, 40.0)]);
     assert!(svg.warnings.iter().all(|w| w.code == Code::SvgGeometryUnusable), "{:?}", warnings(&svg));

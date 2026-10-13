@@ -18,7 +18,7 @@ use stitchcraft_engine::plan;
 use stitchcraft_plan::invariants;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{MachineProfile, PlanBuilder, Provenance, Rgb, Role, StitchKind, Thread};
-use stitchcraft_testkit::designs::{BLUE, RED, line, messages, p, planned, planned_with, shape_of};
+use stitchcraft_testkit::designs::{BLUE, RED, along, line, messages, p, planned, planned_with, polylines, shape_of};
 
 /// Two 10 mm lines in one thread, the second starting `gap` mm after the first ends.
 fn joined(gap: f64) -> Vec<stitchcraft_engine::design::Element> {
@@ -91,12 +91,34 @@ fn req_fin_001_a_point_where_the_needle_already_is_is_left_out() {
 }
 
 #[test]
-fn req_fin_003_a_run_s_first_point_always_stays() {
-    // Where the needle lands is never moved: a run of two points too close is the plan check's to
-    // report (a generator's bug), not finalize's to hide.
+fn req_fin_001_a_run_s_first_point_always_stays_and_a_last_point_too_near_it_goes() {
+    // Where the needle lands is never moved. A last point too near it goes instead, and the run is its
+    // first point: no stitch shorter than the machine sews.
     let (kept, said) = fitted(&[(0.0, TOP), (0.1, TOP)]);
-    assert_eq!(kept, None);
-    assert!(said.iter().any(|s| s.starts_with("error SC-E0009")), "{said:?}");
+    assert_eq!(kept, Some(vec![(0.0, TOP)]));
+    assert_eq!(said, ["info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out."]);
+}
+
+#[test]
+fn req_fin_001_a_trim_or_stop_after_a_last_point_left_out_happens_where_the_needle_stops() {
+    // The run's last point, 0.1 mm from its first, goes: the trim and the stop after it happen where the
+    // needle stops instead, 0.3 mm on (REQ-PLAN-003). The jump after them still goes where it went.
+    let mut b = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+    let e = b.element(ElementId::new("e").unwrap()).unwrap();
+    let at = |x: f64| Point::new(x, 0.0).unwrap();
+    b.jump(at(0.0), Provenance::new(e, Role::Travel));
+    for x in [0.0, 0.3, 0.1] {
+        b.stitch(at(x), Provenance::new(e, TOP));
+    }
+    b.trim(None);
+    b.stop(None);
+    b.jump(at(5.0), Provenance::new(e, Role::Travel));
+    b.stitch(at(5.0), Provenance::new(e, TOP));
+    b.stitch(at(7.0), Provenance::new(e, TOP));
+    let out = finalize(b.finish(), REFERENCE, &DesignSettings::default(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+    let entries: Vec<(StitchKind, f64)> = out.plan.unwrap().stitches().map(|s| (s.kind, s.at.x())).collect();
+    use StitchKind::{Jump, Normal, Stop, Trim};
+    assert_eq!(entries, [(Jump, 0.0), (Normal, 0.0), (Normal, 0.3), (Trim, 0.3), (Stop, 0.3), (Jump, 5.0), (Normal, 5.0), (Normal, 7.0)]);
 }
 
 #[test]
@@ -235,6 +257,48 @@ fn the_stitches_finalize_adds_count_against_the_budget() {
     assert_eq!((outcome.plan, outcome.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>()), (None, vec![Code::BudgetExhausted]));
 }
 
+/// A design at the origin, with the design's shortest stitch `shortest` mm when it sets one.
+fn at_origin(shortest: Option<f64>) -> DesignSettings {
+    DesignSettings { origin: Some(p(0.0, 0.0)), min_stitch_len: shortest.map(|mm| Mm::new(mm).unwrap()), ..DesignSettings::default() }
+}
+
+#[test]
+fn req_fin_003_elements_sewn_over_each_other_are_planned() {
+    // Each element sews within its limits, but sewn straight on into each other, the needle points between
+    // the run's ends, or between locks, are too near them, and 2 points that stay end up too near each
+    // other. The later one goes instead.
+    let pair = |a: &[(f64, f64)], b: &[(f64, f64)], ties: &str| {
+        vec![along("a", polylines(&[a]), &RED, &[("ties", ties)]), along("b", polylines(&[b]), &RED, &[("ties", ties)])]
+    };
+    let designs = [
+        // 2 strokes 0.3 mm long, the second laid over the first 0.05 mm further on, at the default settings.
+        ("over", pair(&[(0.0, 0.0), (0.3, 0.0)], &[(0.05, 0.0), (0.35, 0.0)], "0"), None),
+        // The second turned back over the first, with no locks, and with tie-ins only.
+        ("back", pair(&[(0.3, 0.0), (0.0, 0.0)], &[(-0.15, 0.0), (0.15, 0.0)], "3"), None),
+        ("back, tie-ins", pair(&[(0.3, 0.0), (0.0, 0.0)], &[(-0.15, 0.0), (0.15, 0.0)], "1"), None),
+        // A hairpin 1.2 mm long, in a design whose shortest stitch is 1 mm.
+        ("hairpin", pair(&[(1.2, 0.0), (0.0, 0.0)], &[(-0.1, -0.05), (0.95, 0.1)], "3"), Some(1.0)),
+    ];
+    for (name, elements, shortest) in designs {
+        let outcome = planned_with(elements, at_origin(shortest));
+        assert!(outcome.diagnostics.iter().all(|d| d.code != Code::InternalCheckFailed), "{name}: {:?}", messages(&outcome));
+        assert_eq!(invariants::check(outcome.plan.as_ref().unwrap(), REFERENCE), Vec::new(), "{name}");
+    }
+}
+
+#[test]
+fn req_fin_003_a_plan_the_invariants_refuse_is_reported_as_a_bug() {
+    // A colour block that sews no stitch, which no generator makes: finalize has nothing to fit, and the plan
+    // check refuses the plan as a bug in StitchCraft instead of returning it.
+    let mut b = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+    let e = b.element(ElementId::new("e").unwrap()).unwrap();
+    b.jump(Point::new(1.0, 0.0).unwrap(), Provenance::new(e, Role::Travel));
+    let out = finalize(b.finish(), REFERENCE, &DesignSettings::default(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+    let said: Vec<String> = out.diagnostics.iter().map(ToString::to_string).collect();
+    assert!(out.plan.is_none(), "{said:?}");
+    assert_eq!(said, ["error SC-E0009: The stitch plan breaks REQ-PLAN-003 at block 0: the colour block sews no stitches"]);
+}
+
 #[test]
 fn req_plan_002_a_tie_in_s_last_stitch_into_the_stitching_is_a_lock_stitch() {
     // A hand-placed stitch of 0.4 mm with forced locks: the half stitch is 0.2 mm, into its first point too.
@@ -266,5 +330,37 @@ proptest! {
         prop_assert!(outcome.diagnostics.iter().all(|d| d.code != Code::InternalCheckFailed), "{:?}", messages(&outcome));
         let plan = outcome.plan.unwrap();
         prop_assert_eq!(invariants::check(&plan, REFERENCE), Vec::new());
+    }
+
+    /// Tiny strokes, running or by hand, and satin columns 0.2 mm wide, drawn over and back across each
+    /// other within 2 mm, with any locks and the design's shortest stitch up to 1 mm: no `SC-E0009`, and
+    /// any plan passes every plan invariant. Where nothing is big enough to sew, there is no plan.
+    #[test]
+    fn req_fin_003_tiny_elements_sewn_over_each_other_are_planned(
+        elements in prop::collection::vec((0..3_u8, (-1.0..1.0_f64, -1.0..1.0_f64), (-1.0..1.0_f64, -1.0..1.0_f64), 0..4_u8, any::<bool>()), 1..6),
+        shortest in prop_oneof![Just(None), Just(Some(0.5)), Just(Some(1.0))],
+    ) {
+        let mut design = Vec::new();
+        for (i, (kind, a, b, ties, force)) in elements.iter().enumerate() {
+            let (id, ties, force) = (format!("e{i}"), ties.to_string(), force.to_string());
+            let mut params = vec![("ties", ties.as_str()), ("force_lock_stitches", force.as_str())];
+            let path = match kind {
+                0 => polylines(&[&[*a, *b]]),
+                1 => {
+                    params.push(("stroke_method", "manual_stitch"));
+                    polylines(&[&[*a, *b]])
+                }
+                _ => {
+                    params.push(("satin_column", "true"));
+                    polylines(&[&[*a, *b], &[(a.0, a.1 + 0.2), (b.0, b.1 + 0.2)]])
+                }
+            };
+            design.push(along(&id, path, &RED, &params));
+        }
+        let outcome = planned_with(design, at_origin(shortest));
+        prop_assert!(outcome.diagnostics.iter().all(|d| d.code != Code::InternalCheckFailed), "{:?}", messages(&outcome));
+        if let Some(plan) = &outcome.plan {
+            prop_assert_eq!(invariants::check(plan, REFERENCE), Vec::new());
+        }
     }
 }

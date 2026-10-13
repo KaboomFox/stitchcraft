@@ -247,6 +247,21 @@ registry! {
     /// Draw the column with 2 rails, or make the stroke narrower.
     SatinCentreLineFailed = "SC-E0214", Error, "Satin column drawn as one path could not be made into rails";
 
+    /// A satin column is so small that every needle point of it lies within the shortest stitch of its
+    /// first: a speck of a column, a few tenths of a millimetre across. Any stitch it could sew would be
+    /// shorter than the machine sews well, would hammer one spot of the fabric and could break the thread,
+    /// so it is left out, as a stroke that small is (`SC-W0401`). Ink/Stitch sews such a column.
+    ///
+    /// The message gives the shortest stitch. Draw the column larger, or delete it if it is a stray.
+    SatinTooSmall = "SC-W0215", Warning, "Satin column too small for the shortest stitch; left out";
+    /// A satin column's rungs, or its push compensation, leave each of its sections with no length on one of
+    /// its rails, so no stitch goes across it and the column is not sewn. A rung from the first rail's
+    /// start to the second rail's end does this, and so does push compensation that takes off the parts of
+    /// a short column's rails where its rungs meet them. Ink/Stitch says such a column cannot be stitched.
+    ///
+    /// Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.
+    SatinNoSection = "SC-E0216", Error, "Satin column has no section to sew";
+
     /// A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
     /// square CSS pixels), a speck about half a millimetre across, is too small for a row, so it is left
     /// out, as Ink/Stitch leaves it out. Where every part is that small, the fill sews nothing. So does a
@@ -273,12 +288,12 @@ registry! {
     /// A fill's fill rule says which parts of it are filled where its subpaths lie inside each other or
     /// overlap. Under the rule `nonzero`, SVG's default, a part that the subpaths wind round twice the same
     /// way is filled; the even-odd rule leaves it empty. StitchCraft fills it, as the drawing shows it.
-    /// Ink/Stitch fills every shape by the even-odd rule, so the same file leaves that part empty in
-    /// Ink/Stitch.
+    /// Ink/Stitch takes every subpath but the largest as a hole, whatever the fill rule. Where such a part
+    /// lies inside the fill, away from its edge, the same file leaves it empty in Ink/Stitch.
     ///
     /// To leave the part empty in both, set the fill rule to even-odd, or draw the inner subpath the other
     /// way round.
-    FillRuleNotEvenOdd = "SC-I0306", Info, "Nonzero fill rule fills a part the even-odd rule leaves empty";
+    FillRuleNotEvenOdd = "SC-I0306", Info, "Nonzero fill rule fills a part inside that the even-odd rule leaves empty";
 
     /// A fill whose area falls into separate parts, such as one drawn as several shapes side by side, or
     /// an outline that crosses itself, is sewn one part after another: each part's rows on their own, with
@@ -319,6 +334,15 @@ registry! {
     /// The message names the settings. Set them to 0 or more; to keep the rows inside the edge, use a
     /// negative `expand_mm`.
     FillPullCompensationNegative = "SC-W0312", Warning, "Fill's pull compensation below 0; read as 0";
+
+    /// Two subpaths of a fill run along each other at its edge, around a part that its fill rule leaves
+    /// empty. A notch drawn as a hole whose sides lie on the outline is one, and a shape drawn twice is
+    /// another. StitchCraft leaves the part empty, as the drawing shows it. Ink/Stitch repairs such a shape
+    /// by merging each stretch drawn twice into one, which fills the part, and the same file then sews it
+    /// filled in Ink/Stitch.
+    ///
+    /// To sew it alike in both, draw the outline round the empty part instead of a subpath along it.
+    FillStretchDrawnTwice = "SC-I0313", Info, "Fill drawn twice along its edge; Ink/Stitch fills the part left empty";
 
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
@@ -371,7 +395,9 @@ registry! {
     /// Needle points less than the shortest stitch from the one before were left out, so the stitch before
     /// each runs on to the next and none is shorter than the machine sews well. This happens where one
     /// element's stitching runs straight on into the next and they nearly touch: the stitch between them is
-    /// whatever is left of the gap. Nothing visible changes.
+    /// whatever is left of the gap. Where small elements are sewn over each other, a lock point or the last
+    /// point before a jump, trim or stop can go too, when it comes within the shortest stitch of one that
+    /// stays. Nothing visible changes.
     ///
     /// Nothing to do. If the count is large, check for elements drawn on top of each other.
     StitchesMerged = "SC-I0504", Info, "Stitches shorter than the shortest stitch merged";
@@ -404,8 +430,9 @@ registry! {
     UnreadableFile = "SC-E0603", Error, "Machine file could not be read";
 
     /// The file stores no thread colours (DST files never do: they only say where the machine pauses for
-    /// the next thread), so every thread has a placeholder colour — in previews, and in files converted
-    /// from this one, where the machine shows that colour at each thread change.
+    /// the next thread), so every thread has a black placeholder colour in previews. A PES file converted
+    /// from this one names each thread by the Brother colour nearest black that is still free (Black, Dark
+    /// Gray, Dark Brown and so on), which says nothing of the threads the design needs.
     ///
     /// The stitches are not affected. Load the threads the design needs, in the order the design's
     /// author gives; StitchCraft cannot know them.
@@ -420,6 +447,16 @@ registry! {
     /// cut, or sew a PES file, where only trims cut. A machine set to another number of jump records cuts
     /// before other jumps: see its DST setting.
     JumpsCutInDst = "SC-I0605", Info, "Long jumps cut in DST";
+
+    /// A PES file names each thread by a colour of the Brother palette, which has 61 thread colours.
+    /// StitchCraft gives each different thread a colour of its own, the nearest one still free, so the
+    /// machine asks for each thread change. A design with more different threads than that has some
+    /// share a colour, and the machine shows that colour for each of them: at a change between 2 of them it
+    /// shows the thread already in the machine, as for a stop.
+    ///
+    /// Load the threads in the order the report lists them, rather than by the colours the machine shows.
+    /// Or use fewer different threads: merge those of nearly the same colour.
+    ThreadsShareColor = "SC-W0606", Warning, "Threads share a Brother colour";
 
     /// The design is wider or taller than the machine's hoop, so the machine cannot sew it in one
     /// hooping (most machines refuse the file). A design that fits the hoop can still reach past its edge
@@ -448,7 +485,8 @@ registry! {
     StitchesSplit = "SC-I0703", Info, "Stitches longer than the machine's longest stitch; split";
 
     /// The SVG file could not be read: it is not well-formed XML, its root is not an `<svg>` element,
-    /// its size or viewBox makes no sense, or it is larger than StitchCraft reads. Nothing was stitched.
+    /// its size or viewBox does not read or makes no sense, or it is larger than StitchCraft reads, its
+    /// style sheets included. Nothing was stitched.
     ///
     /// The message says what is wrong and, for XML errors, where. Open the file in a vector editor and
     /// save it again as plain SVG.
@@ -456,9 +494,9 @@ registry! {
 
     /// Part of the SVG uses a feature that StitchCraft does not stitch, so that part is left out or
     /// simplified: text that is not converted to paths, raster images, clones (`<use>`), nested `<svg>`
-    /// elements, style sheets, or a gradient or pattern used as a colour. Values that do not read are
-    /// named too. A colour that does not read is ignored, as a viewer ignores it, and one of Ink/Stitch's
-    /// design settings keeps its default.
+    /// elements, style sheet rules with selectors StitchCraft does not read, or a gradient or pattern used
+    /// as a colour. Values that do not read are named too. A colour that does not read is ignored, as a
+    /// viewer ignores it, and one of Ink/Stitch's design settings keeps its default.
     ///
     /// The message names the element and what was done. Convert text and clones to paths in the editor
     /// (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
@@ -477,7 +515,8 @@ registry! {
     /// error, as SVG viewers draw it), its transform is not valid (it is skipped with everything inside
     /// it), it draws nothing, or it lies more than 10 metres from the document's origin, beyond what
     /// machine files can record (it is skipped). A stroke width, join or miter limit that does not read
-    /// is named as well, and ignored as a viewer ignores it. A stroke too wide to measure is skipped.
+    /// is named as well, and ignored as a viewer ignores it, and so is an empty width, height or viewBox
+    /// of the drawing, or an aspect ratio that does not read. A stroke too wide to measure is skipped.
     ///
     /// The message names the element. Check its path data and transform, or remove stray objects far from
     /// the design.

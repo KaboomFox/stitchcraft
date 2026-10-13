@@ -37,7 +37,7 @@ pub fn sewn_between(path: &Path, params: &[(&str, &str)], neighbours: &Neighbour
     let Ok(Shape::Rails(satin)) = recognize(path, &mut meter).unwrap().shape else { panic!("not rails: {path:?}") };
     let set: ParamSet = params.iter().copied().collect();
     let seed = CommonParams::from_set(&set).unwrap().params.random_seed;
-    let mut rng = SplitMix64::for_element(SATIN_ID, seed.unwrap_or(0));
+    let mut rng = SplitMix64::for_element(SATIN_ID, seed);
     let params = SatinParams::from_set(&set).unwrap().params;
     let pull = PullParams::from_set(&set).unwrap().params;
     let stitched = satin_stitch(&satin, &params, &pull, satin_lengths(&set), neighbours, &mut rng, &mut meter).unwrap();

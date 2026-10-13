@@ -136,6 +136,21 @@ fn req_run_001_stitches_are_spread_evenly_between_corners() {
 }
 
 #[test]
+fn req_run_001_a_curve_too_tight_for_its_stitches_is_spread_evenly_in_more() {
+    // A circle 7 mm across at 2.5 mm and 0.2 mm: 9 even stitches of 2.44 mm stray 0.21 mm from it, more
+    // than the 0.18 mm the stitches have, and 10 of 2.2 mm stray 0.17 mm. Splitting each of the 9 in 2
+    // would sew 18 of 1.05 to 1.38 mm. Smaller circles likewise take the fewest even stitches that keep
+    // within it, and one 10 mm across needs no more than its length takes.
+    for (radius, count) in [(3.5, 10), (2.5, 9), (2.0, 8), (1.5, 7), (5.0, 13)] {
+        let run = &stitch(&circle(0.0, 0.0, radius), &params("2.5", "0.2"), 0.3).runs[0];
+        let l = lengths(run);
+        let (lo, hi) = (l.iter().copied().fold(f64::MAX, f64::min), l.iter().copied().fold(0.0, f64::max));
+        assert_eq!(l.len(), count, "r {radius}: {l:?}");
+        assert!(hi - lo < 0.01, "r {radius}: {l:?}");
+    }
+}
+
+#[test]
 fn req_run_001_stitches_are_measured_straight_where_the_path_bends_back() {
     // A stitch is the straight line between two needle points. Around a cusp, two points far apart
     // along the path can be close in a straight line; with a tolerance too loose to split the stitch

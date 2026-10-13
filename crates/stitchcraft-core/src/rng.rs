@@ -7,8 +7,9 @@
 //! - [`SplitMix64`] (Steele, Lea & Flood, "Fast splittable pseudorandom number generators", OOPSLA
 //!   2014) is fully specified by a 64-bit state update. Its output can be frozen in tests and will never
 //!   change with a dependency upgrade.
-//! - [`SplitMix64::for_element`] derives a per-element generator from the element's stable id and the
-//!   user's `random_seed` parameter, so editing one element never changes another element's stitches.
+//! - [`SplitMix64::for_element`] derives a per-element generator from the element's `random_seed` when it
+//!   has one, and otherwise from its stable id, so editing one element never changes another element's
+//!   stitches. A seed replaces the id, as in Ink/Stitch: 2 elements given one seed draw the same numbers.
 
 /// SplitMix64 pseudorandom number generator. Deterministic, fast, and statistically adequate for
 /// jitter; not for cryptography.
@@ -27,12 +28,15 @@ impl SplitMix64 {
         SplitMix64 { state: seed }
     }
 
-    /// The generator for one element: seeded from the element's stable id (FNV-1a) mixed with the
-    /// user's `random_seed` parameter (0 when the user left it empty).
-    pub fn for_element(element_id: &str, user_seed: u64) -> Self {
-        let id_hash = fnv1a64(element_id.as_bytes());
-        let mixed = SplitMix64::new(user_seed).next_u64();
-        SplitMix64::new(id_hash ^ mixed)
+    /// The generator for one element: from its `random_seed` parameter, `seed`, when it has one, and
+    /// otherwise from its stable id. A seed is mixed once, so that seeds a few apart draw unrelated numbers:
+    /// the state is the first number a generator started from it draws. Without one, it is the id's hash
+    /// (FNV-1a) joined by exclusive or with the first number a generator started from 0 draws.
+    pub fn for_element(element_id: &str, seed: Option<u64>) -> Self {
+        match seed {
+            Some(seed) => SplitMix64::new(SplitMix64::new(seed).next_u64()),
+            None => SplitMix64::new(fnv1a64(element_id.as_bytes()) ^ SplitMix64::new(0).next_u64()),
+        }
     }
 
     /// The next 64 random bits.
@@ -116,15 +120,25 @@ mod tests {
 
     #[test]
     fn element_generators_are_stable_and_independent() {
-        let a1 = SplitMix64::for_element("vc:42", 0).next_u64();
-        let a2 = SplitMix64::for_element("vc:42", 0).next_u64();
-        let b = SplitMix64::for_element("vc:43", 0).next_u64();
-        let a_seeded = SplitMix64::for_element("vc:42", 7).next_u64();
-        assert_eq!(a1, a2, "same element, same seed: same stream");
+        let a1 = SplitMix64::for_element("vc:42", None).next_u64();
+        let a2 = SplitMix64::for_element("vc:42", None).next_u64();
+        let b = SplitMix64::for_element("vc:43", None).next_u64();
+        assert_eq!(a1, a2, "same element: same stream");
         assert_ne!(a1, b, "different elements: different streams");
-        assert_ne!(a1, a_seeded, "the user's seed changes the stream");
-        // The id's FNV-1a hash and the seed's first number joined by exclusive or: vectors worked out from
+        // The id's FNV-1a hash and the first number from 0 joined by exclusive or: a vector worked out from
         // both published definitions.
-        assert_eq!((a1, a_seeded), (0x4D48_729A_411D_5424, 0xD012_2B74_80DA_065B));
+        assert_eq!(a1, 0x4D48_729A_411D_5424);
+    }
+
+    #[test]
+    fn a_seed_replaces_the_element_s_id() {
+        // 2 elements with one seed draw the same numbers, and another seed others; 0 is a seed like any other.
+        let seeded = |id: &str, seed: u64| SplitMix64::for_element(id, Some(seed)).next_u64();
+        assert_eq!(seeded("vc:42", 7), seeded("vc:43", 7));
+        assert_ne!(seeded("vc:42", 7), seeded("vc:42", 8));
+        assert_ne!(seeded("vc:42", 0), SplitMix64::for_element("vc:42", None).next_u64());
+        // The state is the first number from the seed: from 0, 0xE220A8397B1DCDAF, whose own first number
+        // the reference implementation gives as the generator's first.
+        assert_eq!(SplitMix64::for_element("any", Some(0)), SplitMix64::new(0xE220_A839_7B1D_CDAF));
     }
 }

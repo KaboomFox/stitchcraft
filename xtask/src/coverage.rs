@@ -11,17 +11,20 @@
 //! of `cargo xtask ci`.
 //!
 //! A crate below its floor gets what no test runs listed as warnings, which show on the pull request's page
-//! without the job's log: its untested lines, a warning per file on the first of them, from the run's lcov
-//! report, and from its JSON export the functions and closures no test calls, and the functions no one
-//! build of which runs all the code the tests run.
+//! without the job's log, in the files the summary measures: its untested lines, a warning per file on the
+//! first of them, from the run's lcov report, and from its JSON export the functions and closures no test
+//! calls, and the lines the summary counts untested though the lcov report counts them run.
 //!
 //! The last two lists are there because line coverage adds up function by function, and the lcov report
-//! merges them line by line. A closure that never runs is an untested line even where the line around it
-//! runs. And a function has a build for each test binary kind, the unit tests' and the one the
-//! integration tests link, as well as one per type a generic function is used with: llvm-cov counts the
-//! lines of the build that runs the most. A function whose lines only the unit tests and the integration
-//! tests together run is partly untested by that count, though every line runs.
+//! merges them line by line. A function has a build for each test binary kind, the unit tests' and the one
+//! the integration tests link, and one per type a generic function is used with, and a closure is a
+//! function of its own. For each function, the summary counts the lines of the build that runs the most of
+//! them ([`lines`] says which lines a build has, and which it runs). So a closure that never runs is an
+//! untested line even where the line around it runs. And the lcov report can count a line run that the
+//! summary counts untested: the function's code on it runs only in another build, or none of it runs and a
+//! closure on the line does, as with a `?` after a closure argument whose error no test brings.
 
+use std::cmp::Reverse;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::path::Path;
@@ -71,8 +74,13 @@ pub fn run(record: bool) -> Result<(), String> {
     let mut measure = util::cargo();
     measure.arg("llvm-cov").args(util::packages()?.args()).args(["--locked", "--json", "--summary-only", "--output-path", REPORT]);
     measure.args(["--ignore-filename-regex", IGNORED]);
-    util::run(measure, "cargo llvm-cov (is cargo-llvm-cov installed, with `rustup component add llvm-tools`?)")?;
-    let measured = per_crate(&util::read(&root.join(REPORT))?)?;
+    util::run(
+        measure,
+        "cargo llvm-cov (is cargo-llvm-cov installed, with `rustup component add llvm-tools` or with LLVM_COV and \
+         LLVM_PROFDATA set, as docs/src/design/guardrails.md says?)",
+    )?;
+    let files = summary_files(&util::read(&root.join(REPORT))?)?;
+    let measured = per_crate(&files);
     let path = root.join(FLOORS);
     let mut floors: FloorsFile = toml::from_str(&util::read(&path)?).map_err(|e| format!("{FLOORS}: {e}"))?;
 
@@ -108,7 +116,8 @@ pub fn run(record: bool) -> Result<(), String> {
         }
     }
     if !below.is_empty() {
-        match untested(&root, &below) {
+        let paths = files.into_iter().filter(|file| below.contains(&file.crate_name)).map(|file| file.path).collect();
+        match untested(&root, &paths) {
             Ok(found) if found.is_empty() => findings.warn("the reports list nothing untested in the crates below their floors"),
             Ok(found) => found.into_iter().for_each(|warning| findings.warn(warning)),
             Err(e) => findings.warn(format!("the untested lines could not be listed: {e}")),
@@ -133,41 +142,66 @@ pub fn run(record: bool) -> Result<(), String> {
     findings.finish("coverage", &format!("{} crates at or above their floors", measured.len()))
 }
 
-/// Line counts per crate from cargo-llvm-cov's JSON summary.
-fn per_crate(json: &str) -> Result<BTreeMap<String, Lines>, String> {
-    let report: serde_json::Value = serde_json::from_str(json).map_err(|e| format!("{REPORT}: {e}"))?;
-    let files = report.pointer("/data/0/files").and_then(serde_json::Value::as_array).ok_or(format!("{REPORT}: no files"))?;
-    let mut out: BTreeMap<String, Lines> = BTreeMap::new();
-    for file in files {
-        let name = file.get("filename").and_then(serde_json::Value::as_str).unwrap_or_default();
-        let Some(crate_name) = crate_of(Path::new(name)) else { continue };
-        let lines = file.pointer("/summary/lines");
-        let field = |key: &str| lines.and_then(|l| l.get(key)).and_then(serde_json::Value::as_u64).unwrap_or(0);
-        let entry = out.entry(crate_name).or_default();
-        entry.covered += field("covered");
-        entry.count += field("count");
-    }
-    Ok(out)
+/// A file the summary measures: its path as the reports give it, its crate, and its line counts.
+#[derive(Clone, Debug, PartialEq)]
+struct Measured {
+    path: String,
+    crate_name: String,
+    lines: Lines,
 }
 
-/// What no test runs in the files of `crates`, as warnings on the lines in question, from the last run's
+/// The files cargo-llvm-cov's JSON summary measures, in the crates of this repository.
+fn summary_files(json: &str) -> Result<Vec<Measured>, String> {
+    let report: serde_json::Value = serde_json::from_str(json).map_err(|e| format!("{REPORT}: {e}"))?;
+    let files = report.pointer("/data/0/files").and_then(serde_json::Value::as_array).ok_or(format!("{REPORT}: no files"))?;
+    let measured = files.iter().filter_map(|file| {
+        let path = file.get("filename").and_then(serde_json::Value::as_str)?;
+        let lines = file.pointer("/summary/lines");
+        let field = |key: &str| lines.and_then(|l| l.get(key)).and_then(serde_json::Value::as_u64).unwrap_or(0);
+        Some(Measured {
+            path: path.to_string(),
+            crate_name: crate_of(Path::new(path))?,
+            lines: Lines { covered: field("covered"), count: field("count") },
+        })
+    });
+    Ok(measured.collect())
+}
+
+/// Line counts per crate.
+fn per_crate(files: &[Measured]) -> BTreeMap<String, Lines> {
+    let mut out: BTreeMap<String, Lines> = BTreeMap::new();
+    for file in files {
+        let entry = out.entry(file.crate_name.clone()).or_default();
+        entry.covered += file.lines.covered;
+        entry.count += file.lines.count;
+    }
+    out
+}
+
+/// What no test runs in the files `paths` names, as warnings on the lines in question, from the last run's
 /// reports: the lines the lcov report merges to untested, then what only the function by function counts
 /// miss (see the module's documentation).
-fn untested(root: &Path, crates: &BTreeSet<String>) -> Result<Vec<String>, String> {
+fn untested(root: &Path, paths: &BTreeSet<String>) -> Result<Vec<String>, String> {
+    let shown = |path: &str| Path::new(path).strip_prefix(root).unwrap_or(Path::new(path)).to_string_lossy().replace('\\', "/");
     let mut warnings = Vec::new();
-    for (path, lines) in missed(&report(root, "--lcov", LCOV)?, root, crates) {
+    let missed = missed(&report(root, "--lcov", LCOV)?, paths);
+    for (path, lines) in &missed {
         let first = lines.first().copied().unwrap_or(1);
-        warnings.push(format!("{path}:{first}: untested lines {}", spans(&lines)));
+        warnings.push(format!("{}:{first}: untested lines {}", shown(path), spans(lines)));
     }
-    let Builds { never_called, split } = builds(&report(root, "--json", FUNCTIONS)?, root, crates)?;
+    let Builds { never_called, lost } = builds(&report(root, "--json", FUNCTIONS)?, paths, &missed)?;
     for (path, line) in never_called {
-        warnings.push(format!("{path}:{line}: no test calls the function or closure that starts here"));
+        warnings.push(format!("{}:{line}: no test calls the function or closure that starts here", shown(&path)));
     }
-    for (path, line) in split {
+    for ((path, start), lines) in lost {
+        let first = lines.first().copied().unwrap_or(start);
         warnings.push(format!(
-            "{path}:{line}: no one build of the function that starts here runs all the code its tests run, and coverage \
-             counts the build that runs the most: move the tests that run its other lines to the kind of test, unit or \
-             integration, that runs most of it"
+            "{}:{first}: coverage counts lines {} untested in the function that starts at line {start}, whose build that \
+             runs the most does not run its code there. Another build runs it, or a closure on the line runs, so the lcov \
+             report counts them run. Test that code from the kind of test, unit or integration, that runs most of the \
+             function",
+            shown(&path),
+            spans(&lines)
         ));
     }
     Ok(warnings)
@@ -181,67 +215,105 @@ fn report(root: &Path, format: &str, output: &str) -> Result<String, String> {
     util::read(&root.join(output))
 }
 
-/// Functions and closures by their builds, each as its file's path from `root` and its first line.
+/// Functions and closures by their builds, each by its file's path and its first line.
 #[derive(Debug, Default, PartialEq)]
 struct Builds {
     /// No build calls them.
     never_called: BTreeSet<(String, u64)>,
-    /// Called, but no one build runs every region that some build runs.
-    split: BTreeSet<(String, u64)>,
+    /// The lines each counts as untested that the lcov report counts run.
+    lost: BTreeMap<(String, u64), Vec<u64>>,
 }
 
-/// The functions and closures in the files of `crates` that the JSON export `json` counts as no build
-/// calling, or as split between builds. The export lists each build of a function apart (the unit tests'
-/// and the integration tests', and each instantiation of a generic function): the builds of one function
-/// start at the same place, and list the same regions in the same order.
-fn builds(json: &str, root: &Path, crates: &BTreeSet<String>) -> Result<Builds, String> {
+/// The functions and closures in the files `paths` names that no build calls, and the lines the others
+/// count as untested beyond `missed`, the lines the lcov report counts untested, from the JSON export
+/// `json`. The export lists each build of a function apart (the unit tests' and the integration tests', and
+/// each instantiation of a generic function): the builds of one function start at the same place.
+fn builds(json: &str, paths: &BTreeSet<String>, missed: &BTreeMap<String, Vec<u64>>) -> Result<Builds, String> {
     let report: serde_json::Value = serde_json::from_str(json).map_err(|e| format!("{FUNCTIONS}: {e}"))?;
     let functions = report.pointer("/data/0/functions").and_then(serde_json::Value::as_array).ok_or(format!("{FUNCTIONS}: no functions"))?;
-    // (path, first line, first column) -> each build's regions, as whether each ran.
-    let mut grouped: BTreeMap<(String, u64, u64), Vec<Vec<bool>>> = BTreeMap::new();
+    // (path, first line, first column) -> each build's lines, and whether each ran.
+    let mut grouped: BTreeMap<(String, u64, u64), Vec<BTreeMap<u64, bool>>> = BTreeMap::new();
     for function in functions {
-        let Some(path) = function.pointer("/filenames/0").and_then(serde_json::Value::as_str).map(Path::new) else { continue };
-        let Some(regions) = function.get("regions").and_then(serde_json::Value::as_array) else { continue };
-        let field = |region: &serde_json::Value, i: usize| region.get(i).and_then(serde_json::Value::as_u64);
-        let Some((line, column)) = regions.first().and_then(|first| Some((field(first, 0)?, field(first, 1)?))) else { continue };
-        if crate_of(path).is_none_or(|name| !crates.contains(&name)) {
+        let Some(path) = function.pointer("/filenames/0").and_then(serde_json::Value::as_str).filter(|path| paths.contains(*path)) else { continue };
+        let regions: Vec<Region> =
+            function.get("regions").and_then(serde_json::Value::as_array).into_iter().flatten().filter_map(Region::of).collect();
+        let Some(first) = regions.first() else { continue };
+        grouped.entry((path.to_string(), first.start.0, first.start.1)).or_default().push(lines(&regions));
+    }
+    let ran = |lines: &BTreeMap<u64, bool>| lines.values().filter(|ran| **ran).count();
+    let mut builds = Builds::default();
+    for ((path, start, _), runs) in grouped {
+        let Some(best) = runs.iter().max_by_key(|lines| ran(lines)) else { continue };
+        if ran(best) == 0 {
+            builds.never_called.insert((path, start));
             continue;
         }
-        let shown = path.strip_prefix(root).unwrap_or(path).to_string_lossy().replace('\\', "/");
-        let ran = regions.iter().map(|region| field(region, 4).is_some_and(|count| count > 0)).collect();
-        grouped.entry((shown, line, column)).or_default().push(ran);
-    }
-    let mut builds = Builds::default();
-    for ((path, line, _), ran) in grouped {
-        let longest = ran.iter().map(Vec::len).max().unwrap_or(0);
-        let any: Vec<bool> = (0..longest).map(|i| ran.iter().any(|build| build.get(i) == Some(&true))).collect();
-        if !any.contains(&true) {
-            builds.never_called.insert((path, line));
-        } else if !ran.iter().any(|build| any.iter().enumerate().all(|(i, ran)| !ran || build.get(i) == Some(&true))) {
-            builds.split.insert((path, line));
+        let untested = missed.get(&path);
+        let lost: BTreeSet<u64> = runs
+            .iter()
+            .flat_map(BTreeMap::keys)
+            .copied()
+            .filter(|line| best.get(line) != Some(&true) && untested.is_none_or(|lines| !lines.contains(line)))
+            .collect();
+        if !lost.is_empty() {
+            builds.lost.insert((path, start), lost.into_iter().collect());
         }
     }
     Ok(builds)
 }
 
-/// The lines lcov `text` counts as run 0 times, in the files of `crates`.
-fn missed(text: &str, root: &Path, crates: &BTreeSet<String>) -> Vec<(String, Vec<u64>)> {
-    let mut out = Vec::new();
-    let mut file: Option<(String, Vec<u64>)> = None;
+/// A region of one build of a function: where it starts and where it ends, as line and column, and how
+/// many times it ran.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Region {
+    start: (u64, u64),
+    end: (u64, u64),
+    count: u64,
+}
+
+impl Region {
+    /// A region of the JSON export, `[line, column, end line, end column, count, file, expanded file, kind]`,
+    /// when it is code (kind 0) in the function's own file (file 0), as rustc's regions are.
+    fn of(value: &serde_json::Value) -> Option<Region> {
+        let field = |i: usize| value.get(i).and_then(serde_json::Value::as_u64);
+        let region = Region { start: (field(0)?, field(1)?), end: (field(2)?, field(3)?), count: field(4)? };
+        (field(5)? == 0 && field(7)? == 0).then_some(region)
+    }
+}
+
+/// The lines one build of a function has, from its `regions`, and whether it runs each, as llvm-cov's
+/// summary counts them: a line is the build's when a region starts on it or is open at its start, and run
+/// when one of those ran, the innermost of the regions open at its start standing for all of them. A
+/// region that never runs inside one that does leaves its first line run: the line starts in the outer one.
+fn lines(regions: &[Region]) -> BTreeMap<u64, bool> {
+    let mut out = BTreeMap::new();
+    let (Some(first), Some(last)) = (regions.iter().map(|r| r.start.0).min(), regions.iter().map(|r| r.end.0).max()) else {
+        return out;
+    };
+    for line in first..=last {
+        // The innermost region open at the line's start: the last to start before it, of those the first to
+        // end. Regions over the same code count as one, which ran when one of them did.
+        let innermost = regions.iter().filter(|r| r.start.0 < line && r.end > (line, 1)).map(|r| (r.start, Reverse(r.end))).max();
+        let mut counted = regions.iter().filter(|r| r.start.0 == line || innermost == Some((r.start, Reverse(r.end)))).peekable();
+        if counted.peek().is_some() {
+            out.insert(line, counted.any(|r| r.count > 0));
+        }
+    }
+    out
+}
+
+/// The lines lcov `text` counts as run 0 times, in the files `paths` names.
+fn missed(text: &str, paths: &BTreeSet<String>) -> BTreeMap<String, Vec<u64>> {
+    let mut out: BTreeMap<String, Vec<u64>> = BTreeMap::new();
+    let mut file = None;
     for line in text.lines() {
         if let Some(path) = line.strip_prefix("SF:") {
-            let path = Path::new(path);
-            let shown = path.strip_prefix(root).unwrap_or(path).to_string_lossy().replace('\\', "/");
-            file = crate_of(path).filter(|name| crates.contains(name)).map(|_| (shown, Vec::new()));
-        } else if let (Some((_, lines)), Some(data)) = (file.as_mut(), line.strip_prefix("DA:")) {
+            file = paths.contains(path).then_some(path);
+        } else if let (Some(path), Some(data)) = (file, line.strip_prefix("DA:")) {
             let mut fields = data.split(',').map(str::parse::<u64>);
             if let (Some(Ok(number)), Some(Ok(0))) = (fields.next(), fields.next()) {
-                lines.push(number);
+                out.entry(path.to_string()).or_default().push(number);
             }
-        } else if line == "end_of_record"
-            && let Some(done) = file.take().filter(|(_, lines)| !lines.is_empty())
-        {
-            out.push(done);
         }
     }
     out
@@ -290,16 +362,43 @@ mod tests {
             {"filename":"/w/apps/stitchcraft-cli/src/main.rs","summary":{"lines":{"count":4,"covered":0}}},
             {"filename":"/rustc/library/core/src/x.rs","summary":{"lines":{"count":7,"covered":7}}}
         ]}]}"#;
-        let measured = per_crate(json).unwrap();
+        let files = summary_files(json).unwrap();
+        assert_eq!(
+            files.iter().map(|file| file.path.as_str()).collect::<Vec<_>>(),
+            ["/w/crates/stitchcraft-core/src/a.rs", "/w/crates/stitchcraft-core/src/b.rs", "/w/apps/stitchcraft-cli/src/main.rs"]
+        );
+        let measured = per_crate(&files);
         assert_eq!(measured.len(), 2);
         assert_eq!(measured["stitchcraft-core"], Lines { covered: 30, count: 40 });
         assert_eq!(measured["stitchcraft-core"].percent(), 75.0);
         assert_eq!(measured["stitchcraft-cli"].percent(), 0.0);
         assert_eq!(Lines::default().percent(), 100.0);
+        assert!(summary_files("{}").is_err());
     }
 
     #[test]
-    fn functions_no_build_calls_and_functions_split_between_builds_are_listed() {
+    fn lines_are_counted_as_llvm_cov_counts_them() {
+        let r = |start: (u64, u64), end: (u64, u64), count: u64| Region { start, end, count };
+        // A body that ran from line 10 to 13. In it, a block from 11 to 12 that did not: line 11 starts in
+        // the body, line 12 in the block. On 14, after the body, a `?` that never ran, and on 16, 2 regions
+        // over the same code, one of which ran. Line 15 has no code.
+        let regions = [r((10, 1), (13, 2), 3), r((11, 5), (12, 6), 0), r((14, 11), (14, 12), 0), r((16, 5), (16, 9), 0), r((16, 5), (16, 9), 1)];
+        assert_eq!(lines(&regions), BTreeMap::from([(10, true), (11, true), (12, false), (13, true), (14, false), (16, true)]));
+        // Of 2 regions open at a line's start, the inner one counts, and of those starting at one place the
+        // one ending first is the inner one: lines 21 and 22 start in the block that did not run.
+        let nested = lines(&[r((20, 1), (24, 2), 1), r((20, 1), (22, 2), 0), r((23, 1), (23, 9), 0)]);
+        assert_eq!([21, 22, 23, 24].map(|line| nested.get(&line).copied()), [Some(false), Some(false), Some(true), Some(true)]);
+        assert!(lines(&[]).is_empty());
+        let json = |region: &str| serde_json::from_str::<serde_json::Value>(region).unwrap();
+        assert_eq!(Region::of(&json("[4,5,6,7,8,0,0,0]")), Some(r((4, 5), (6, 7), 8)));
+        // Another file's code, a region of another kind, and something else are left out.
+        assert_eq!(Region::of(&json("[4,5,6,7,8,1,0,0]")), None);
+        assert_eq!(Region::of(&json("[4,5,6,7,8,0,0,2]")), None);
+        assert_eq!(Region::of(&json("[4,5]")), None);
+    }
+
+    #[test]
+    fn functions_no_build_calls_and_lines_the_best_build_misses_are_listed() {
         let json = r#"{"data":[{"functions":[
             {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[42,70,42,91,0,0,0,0]]},
             {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[42,20,42,40,1,0,0,0]]},
@@ -307,31 +406,44 @@ mod tests {
             {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[30,1,40,2,1,0,0,0],[33,5,34,6,1,0,0,0]]},
             {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[50,1,60,2,2,0,0,0],[52,5,53,6,1,0,0,0],[55,5,56,6,0,0,0,0]]},
             {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[50,1,60,2,4,0,0,0],[52,5,53,6,0,0,0,0],[55,5,56,6,4,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[62,1,64,2,2,0,0,0],[63,5,63,9,1,0,0,0],[63,20,63,21,0,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[62,1,64,2,2,0,0,0],[63,5,63,9,1,0,0,0],[63,20,63,21,1,0,0,0]]},
             {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[70,1,72,2,0,0,0,0]]},
             {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[70,1,72,2,2,0,0,0]]},
             {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[80,1,82,2,5,0,0,0]]},
             {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[90,1,90,20,2,0,0,0],[91,9,91,29,2,0,0,0],[93,11,93,12,0,0,0,0],[94,9,94,15,2,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[91,30,93,10,5,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/src/a.rs"],"regions":[[100,1,100,20,1,0,0,0],[101,5,101,9,0,0,0,0]]},
+            {"filenames":["/w/crates/stitchcraft-engine/tests/c.rs"],"regions":[[7,1,9,2,0,0,0,0]]},
             {"filenames":["/w/crates/stitchcraft-core/src/b.rs"],"regions":[[7,1,9,2,0,0,0,0]]}
         ]}]}"#;
-        let engine = BTreeSet::from(["stitchcraft-engine".to_string()]);
-        let found = builds(json, Path::new("/w"), &engine).unwrap();
-        let a = |line: u64| ("crates/stitchcraft-engine/src/a.rs".to_string(), line);
+        let a = "/w/crates/stitchcraft-engine/src/a.rs".to_string();
+        let paths = BTreeSet::from([a.clone()]);
+        let missed = BTreeMap::from([(a.clone(), vec![101])]);
+        let found = builds(json, &paths, &missed).unwrap();
+        let at = |line: u64| (a.clone(), line);
         // Line 42: a closure no build calls, beside one that runs. Line 30: one build runs all the other
-        // does. Line 50: each build runs a region the other does not. Line 70: one build of two runs. Line
-        // 80: a function with one build, which runs.
-        assert_eq!(found, Builds { never_called: BTreeSet::from([a(42)]), split: BTreeSet::from([a(50)]) });
-        assert!(builds("{}", Path::new("/w"), &engine).is_err());
+        // does. Line 50: each build runs a line the other does not, and the second, as good as the first,
+        // misses 53. Line 62: each build runs a region the other does not, on a line both run. Line 70: one
+        // build of two runs. Line 80: a function with one build, which runs. Line 90: a `?` after a closure
+        // argument, from 91 to 93, that never meets its error: the lcov report counts line 93 run, since the
+        // closure runs there. Line 101: a line no build runs, which the lcov report lists. Files the summary
+        // does not measure are left out.
+        assert_eq!(found, Builds { never_called: BTreeSet::from([at(42)]), lost: BTreeMap::from([(at(50), vec![53]), (at(90), vec![93])]) });
+        assert!(builds("{}", &paths, &missed).is_err());
     }
 
     #[test]
-    fn untested_lines_are_listed_for_the_crates_asked() {
+    fn untested_lines_are_listed_for_the_files_asked() {
         let lcov = "SF:/w/crates/stitchcraft-engine/src/a.rs\nDA:3,1\nDA:4,0\nDA:5,0\nDA:6,0\nDA:9,0\nDA:10,2\nend_of_record\n\
                     SF:/w/crates/stitchcraft-engine/src/b.rs\nDA:1,5\nend_of_record\n\
                     SF:/w/crates/stitchcraft-core/src/c.rs\nDA:7,0\nend_of_record\n";
-        let engine = BTreeSet::from(["stitchcraft-engine".to_string()]);
-        let missed = missed(lcov, Path::new("/w"), &engine);
-        assert_eq!(missed, [("crates/stitchcraft-engine/src/a.rs".to_string(), vec![4, 5, 6, 9])]);
-        assert_eq!(spans(&missed[0].1), "4-6, 9");
+        let a = "/w/crates/stitchcraft-engine/src/a.rs".to_string();
+        let paths = BTreeSet::from([a.clone(), "/w/crates/stitchcraft-engine/src/b.rs".to_string()]);
+        let missed = missed(lcov, &paths);
+        assert_eq!(missed, BTreeMap::from([(a.clone(), vec![4, 5, 6, 9])]));
+        assert_eq!(spans(&missed[&a]), "4-6, 9");
         assert_eq!(spans(&[]), "");
     }
 

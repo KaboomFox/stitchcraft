@@ -76,22 +76,32 @@ const SKIP_DIRS: &[&str] = &["target", ".git", "book", "node_modules", "corpus"]
 /// Files under `dir` (recursively, skipping build output) with one of the extensions `exts`, sorted so
 /// every report is in the same order.
 pub fn files(dir: &Path, exts: &[&str]) -> Vec<PathBuf> {
+    collect(dir, &|path| path.extension().and_then(|e| e.to_str()).is_some_and(|e| exts.contains(&e)))
+}
+
+/// Every file under `dir`, whatever its name (recursively, skipping build output), sorted.
+pub fn every_file(dir: &Path) -> Vec<PathBuf> {
+    collect(dir, &|_| true)
+}
+
+/// The files under `dir` that `keep`, sorted.
+fn collect(dir: &Path, keep: &dyn Fn(&Path) -> bool) -> Vec<PathBuf> {
     let mut out = Vec::new();
-    walk(dir, exts, &mut out);
+    walk(dir, keep, &mut out);
     out.sort();
     out
 }
 
-fn walk(dir: &Path, exts: &[&str], out: &mut Vec<PathBuf>) {
+fn walk(dir: &Path, keep: &dyn Fn(&Path) -> bool, out: &mut Vec<PathBuf>) {
     let Ok(entries) = std::fs::read_dir(dir) else { return };
     for entry in entries.flatten() {
         let path = entry.path();
         let name = entry.file_name();
         if path.is_dir() {
             if !SKIP_DIRS.iter().any(|skip| name == *skip) {
-                walk(&path, exts, out);
+                walk(&path, keep, out);
             }
-        } else if path.extension().and_then(|e| e.to_str()).is_some_and(|e| exts.contains(&e)) {
+        } else if keep(&path) {
             out.push(path);
         }
     }

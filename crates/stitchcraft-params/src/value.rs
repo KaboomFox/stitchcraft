@@ -3,20 +3,27 @@
 //! Every host stores parameters as text — an SVG attribute, a command-line `key=value`, a value in a
 //! VectorCraft effect record — so parsing happens once, here, the same way for all of them. A value is
 //! accepted, clamped into range with `SC-W0102`, or rejected with `SC-E0101`; it never falls back to the
-//! default in silence (REQ-PRM-002). Lengths accept a unit (`mm`, `in`, `pt`; millimetres without one);
-//! an optional length of 0 or less counts as empty, because Ink/Stitch reads it as "not set".
-//! Angles are normalized to (−180, 180], each angle of a list too, and a seed may be any text: a number is
-//! used as it is, other text is hashed (FNV-1a), so any seed a file stores works. A value for each of 2
-//! sides is 1 value, for both, or 2 separated by a space, as Ink/Stitch writes them. An optional pair is
-//! empty only when its text is: 0 is a value for a side, as in Ink/Stitch. Lists take spaces or commas
-//! between their values. Ink/Stitch splits its lists at spaces, and reads one it cannot split so, such as
-//! `45,90`, as its default.
+//! default in silence (REQ-PRM-002). Lengths accept a unit (`mm`, `in`, `pt`; millimetres without one).
+//! An optional length is empty as its kind says ([`Empty`]): most count 0 and below as empty, as
+//! Ink/Stitch reads 0 as "not set" there. Angles are normalized to (−180, 180], each angle of a list too,
+//! and a seed may be any text: a number is used as it is, other text is hashed (FNV-1a), so any seed a file
+//! stores works. A value for each of 2 sides is 1 value, for both, or 2 separated by a space, as Ink/Stitch
+//! writes them. An optional pair is empty only when its text is: 0 is a value for a side, as in Ink/Stitch.
+//!
+//! Spaces separate the values of a list or a pair, as in Ink/Stitch, which splits its lists at spaces and
+//! reads one it cannot split so, such as `45,90`, as its default. A tab, or a run of spaces, counts as one
+//! space (`DEV-PRM-001`). A comma separates nothing, and is no decimal point, so text with one does not
+//! read, and `SC-E0101` comes with a hint. An angle of a list may end with one comma, which is left out:
+//! Ink/Stitch reads a fill's underlay angles so, for older files.
 
 use stitchcraft_core::rng::fnv1a64;
 use stitchcraft_core::units::{MM_PER_INCH, MM_PER_POINT};
-use stitchcraft_core::{Code, Diagnostic, Mm};
+use stitchcraft_core::{Code, Diagnostic, Fix, Mm};
 
-use crate::spec::{Kind, MAX_LIST, ParamSpec};
+use crate::spec::{Empty, Kind, MAX_LIST, ParamSpec};
+
+/// What `SC-E0101` hints when the text it refuses has a comma.
+const COMMA_HINT: &str = "Separate values with spaces, and write decimals with a point.";
 
 /// A parameter's value, read and checked.
 #[derive(Clone, Debug, PartialEq)]
@@ -82,10 +89,10 @@ impl Kind {
     pub fn parse(self, raw: &str) -> Option<(Value, bool)> {
         let text = raw.trim();
         match self {
-            Kind::Length { optional: true, .. } if text.is_empty() => Some((Value::Length(None), false)),
-            Kind::Length { min, max, optional } => {
+            Kind::Length { empty, .. } if empty != Empty::Never && text.is_empty() => Some((Value::Length(None), false)),
+            Kind::Length { min, max, empty } => {
                 let given = length(text)?;
-                if optional && given <= 0.0 {
+                if empty == Empty::AtMostZero && given <= 0.0 {
                     return Some((Value::Length(None), false));
                 }
                 let (mm, clamped) = clamp(given, min, max);
@@ -154,7 +161,7 @@ impl Kind {
             }
             Kind::AngleList { optional: true } if text.is_empty() => Some((Value::Angles(None), false)),
             Kind::AngleList { .. } => {
-                let angles = list(text)?.into_iter().map(angle).collect::<Option<Vec<f64>>>()?;
+                let angles = list(text)?.into_iter().map(|item| angle(item.strip_suffix(',').unwrap_or(item))).collect::<Option<Vec<f64>>>()?;
                 Some((Value::Angles(Some(angles)), false))
             }
             Kind::Text { max_bytes } => (raw.len() <= max_bytes).then(|| (Value::Text(raw.to_string()), false)),
@@ -184,8 +191,9 @@ impl Kind {
 
 impl ParamSpec {
     /// `raw` read as this parameter's value: with `SC-W0102` when it was clamped into range, or
-    /// `SC-E0101` when it is not a value of the parameter's kind. The diagnostics name the parameter,
-    /// the value and what is accepted; hosts add the element.
+    /// `SC-E0101` when it is not a value of the parameter's kind, hinting at spaces and points when the
+    /// value has a comma and the kind holds numbers. The diagnostics name the parameter, the value and what
+    /// is accepted; hosts add the element.
     pub fn read(&self, raw: &str) -> Result<(Value, Option<Diagnostic>), Diagnostic> {
         match self.kind.parse(raw) {
             Some((value, false)) => Ok((value, None)),
@@ -198,7 +206,10 @@ impl ParamSpec {
                 let message = format!("`{}` is {}, outside {}; {}{unit} is used.", self.key, raw.trim(), self.kind.range(), value.to_raw());
                 Ok((value, Some(Diagnostic::new(Code::ParamClamped, message))))
             }
-            None => Err(Diagnostic::new(Code::ParamInvalid, format!("`{}` is \"{raw}\", but it must be {}.", self.key, self.kind.describe()))),
+            None => {
+                let problem = Diagnostic::new(Code::ParamInvalid, format!("`{}` is \"{raw}\", but it must be {}.", self.key, self.kind.describe()));
+                Err(if self.kind.numeric() && raw.contains(',') { problem.with_fix(Fix::Hint(COMMA_HINT.to_string())) } else { problem })
+            }
         }
     }
 }
@@ -257,7 +268,7 @@ fn clamp(value: f64, min: f64, max: f64) -> (f64, bool) {
 }
 
 /// The values of a pair, each read by `read` and clamped into `min..=max`, and whether either was clamped:
-/// 1 value, for both, or 2, separated by a space or a comma.
+/// 1 value, for both, or 2, separated by a space.
 fn pair(text: &str, read: fn(&str) -> Option<f64>, min: f64, max: f64) -> Option<([f64; 2], bool)> {
     let [a, b] = match list(text)?.as_slice() {
         [both] => [*both, *both],
@@ -273,9 +284,10 @@ fn pair_text([a, b]: [f64; 2]) -> String {
     if a == b { a.to_string() } else { format!("{a} {b}") }
 }
 
-/// The items of a list: 1 to [`MAX_LIST`] of them, separated by spaces or commas.
+/// The items of a list: 1 to [`MAX_LIST`] of them, separated by spaces or tabs, a run of them counting as
+/// one.
 fn list(text: &str) -> Option<Vec<&str>> {
-    let items: Vec<&str> = text.split(|c: char| c.is_whitespace() || c == ',').filter(|s| !s.is_empty()).collect();
+    let items: Vec<&str> = text.split_whitespace().collect();
     (1..=MAX_LIST).contains(&items.len()).then_some(items)
 }
 
@@ -284,7 +296,7 @@ mod tests {
     use super::*;
     use crate::spec::{ChoiceOption, MAX_TEXT};
 
-    const LENGTH: Kind = Kind::Length { min: 0.1, max: 10.0, optional: false };
+    const LENGTH: Kind = Kind::Length { min: 0.1, max: 10.0, empty: Empty::Never };
 
     fn mm(v: f64) -> Mm {
         Mm::new(v).unwrap()
@@ -304,7 +316,7 @@ mod tests {
         for bad in ["", "big", "NaN", "inf", "1e999", "2.5 cm"] {
             assert_eq!(LENGTH.parse(bad), None, "{bad}");
         }
-        let optional = Kind::Length { min: 0.0, max: 5.0, optional: true };
+        let optional = Kind::Length { min: 0.0, max: 5.0, empty: Empty::AtMostZero };
         assert_eq!(optional.parse(" "), Some((Value::Length(None), false)));
         assert_eq!(optional.parse("2"), Some((Value::Length(Some(mm(2.0))), false)));
         assert_eq!(optional.parse("9"), Some((Value::Length(Some(mm(5.0))), true)));
@@ -312,16 +324,23 @@ mod tests {
     }
 
     #[test]
-    fn an_optional_length_of_zero_or_less_is_empty() {
-        // As in Ink/Stitch, where 0 and below mean "not set": no maximum for manual stitch's longest
-        // stitch, the document's setting for the shortest stitch and jump. Not clamped, so no warning.
-        let optional = Kind::Length { min: 0.1, max: 25.0, optional: true };
+    fn an_optional_length_of_zero_or_less_is_empty_unless_zero_is_a_length() {
+        // Ink/Stitch reads 0 as "not set": no maximum for manual stitch's longest stitch, the document's
+        // setting for the shortest stitch and jump. Below 0 is no length either. Not clamped, so no warning.
+        let optional = Kind::Length { min: 0.1, max: 25.0, empty: Empty::AtMostZero };
         for raw in ["0", "-1", " 0mm ", "-0.5in", "0.0"] {
             assert_eq!(optional.parse(raw), Some((Value::Length(None), false)), "{raw}");
         }
         assert_eq!(optional.parse("0.05"), Some((Value::Length(Some(mm(0.1))), true)));
         // A required length is clamped as before.
         assert_eq!(LENGTH.parse("0"), Some((Value::Length(Some(mm(0.1))), true)));
+        // Where 0 is a length, as a satin's shortest stitch to split is in Ink/Stitch, only empty text is
+        // empty, and a length below 0 is raised to 0.
+        let zero = Kind::Length { min: 0.0, max: 25.0, empty: Empty::Blank };
+        assert_eq!(zero.parse(" "), Some((Value::Length(None), false)));
+        assert_eq!(zero.parse("0"), Some((Value::Length(Some(mm(0.0))), false)));
+        assert_eq!(zero.parse("-1"), Some((Value::Length(Some(mm(0.0))), true)));
+        assert_eq!(zero.parse("x"), None);
     }
 
     #[test]
@@ -339,8 +358,8 @@ mod tests {
         let angles = Kind::AngleList { optional: true };
         assert_eq!(angles.parse(" "), Some((Value::Angles(None), false)));
         assert_eq!(angles.parse("45"), Some((Value::Angles(Some(vec![45.0])), false)));
-        assert_eq!(angles.parse("0, 90deg  270° -450"), Some((Value::Angles(Some(vec![0.0, 90.0, -90.0, -90.0])), false)));
-        for bad in ["45 x", "NaN", "inf 0", &"1 ".repeat(17)] {
+        assert_eq!(angles.parse("0, 90deg  270° -450,"), Some((Value::Angles(Some(vec![0.0, 90.0, -90.0, -90.0])), false)));
+        for bad in ["45 x", "NaN", "inf 0", &"1 ".repeat(17), "0,90", "0,, 90", "45 ,"] {
             assert_eq!(angles.parse(bad), None, "{bad}");
         }
         // A list that needs a value has none when empty.
@@ -385,12 +404,16 @@ mod tests {
     fn lists_have_one_to_sixteen_values_each_in_range() {
         let lengths = Kind::LengthList { min: 0.3, max: 12.0 };
         assert_eq!(lengths.parse("2.5"), Some((Value::Lengths(vec![mm(2.5)]), false)));
-        assert_eq!(lengths.parse("2.5, 1 0.1"), Some((Value::Lengths(vec![mm(2.5), mm(1.0), mm(0.3)]), true)));
+        assert_eq!(lengths.parse("2.5 1\t0.1"), Some((Value::Lengths(vec![mm(2.5), mm(1.0), mm(0.3)]), true)));
+        for comma in ["2.5, 1", "3,5", "2.5,"] {
+            assert_eq!(lengths.parse(comma), None, "{comma}");
+        }
         assert_eq!(lengths.parse(""), None);
         assert_eq!(lengths.parse(&"1 ".repeat(17)), None);
         let percents = Kind::PercentList { min: 0.0, max: 50.0 };
         assert_eq!(percents.parse("15"), Some((Value::Percents(vec![15.0]), false)));
-        assert_eq!(percents.parse("10% 60, -5"), Some((Value::Percents(vec![10.0, 50.0, 0.0]), true)));
+        assert_eq!(percents.parse("10% 60 -5"), Some((Value::Percents(vec![10.0, 50.0, 0.0]), true)));
+        assert_eq!(percents.parse("10, 60"), None);
         assert_eq!(percents.parse("10 x"), None);
         let counts = Kind::CountList { min: 0, max: 9 };
         assert_eq!(counts.parse("0 1 2"), Some((Value::Counts(vec![0, 1, 2]), false)));
@@ -406,7 +429,8 @@ mod tests {
         let lengths = Kind::LengthPair { min: -10.0, max: 10.0, optional: false };
         assert_eq!(lengths.parse("0.2"), Some((Value::LengthPair(Some([mm(0.2), mm(0.2)])), false)));
         assert_eq!(lengths.parse(" -0.2  0.4mm "), Some((Value::LengthPair(Some([mm(-0.2), mm(0.4)])), false)));
-        assert_eq!(lengths.parse("0.1in,12"), Some((Value::LengthPair(Some([mm(0.1 * 25.4), mm(10.0)])), true)));
+        assert_eq!(lengths.parse("0.1in 12"), Some((Value::LengthPair(Some([mm(0.1 * 25.4), mm(10.0)])), true)));
+        assert_eq!(lengths.parse("0.1in,12"), None);
         assert_eq!(lengths.parse("-11 0"), Some((Value::LengthPair(Some([mm(-10.0), mm(0.0)])), true)));
         for bad in ["", "0.2 0.4 0.6", "0.2 x", "NaN"] {
             assert_eq!(lengths.parse(bad), None, "{bad}");

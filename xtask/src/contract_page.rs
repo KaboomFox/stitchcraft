@@ -367,7 +367,7 @@ fn compatible(kind: Kind, their_type: &str, unit: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use stitchcraft_params::{ChoiceOption, Condition, ParamSpec, Stability};
+    use stitchcraft_params::{ChoiceOption, Condition, Empty, ParamSpec, Stability};
 
     use super::*;
 
@@ -395,7 +395,7 @@ mod tests {
         key: "row_spacing_mm",
         label: "Row spacing",
         help: " Distance between rows.\n",
-        kind: Kind::Length { min: 0.1, max: 10.0, optional: false },
+        kind: Kind::Length { min: 0.1, max: 10.0, empty: Empty::Never },
         default: "0.25",
         family_defaults: &[],
         group: "Fill",

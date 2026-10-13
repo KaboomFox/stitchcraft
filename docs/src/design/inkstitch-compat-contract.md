@@ -128,7 +128,7 @@ registry uses these names as its keys so files move between the tools unchanged
 
 | Attribute | Type | Unit | Default | Applies to | Phase | StitchCraft |
 |---|---|---|---|---|---|---|
-| `fill` | toggle | — | true | all | P1 (M5) | planned |
+| `fill` | toggle | — | true | all | P1 (M5) | [registered](../user/reference/params/fill.md#fill) |
 | `fill_method` | combo | — | 0 | all | P1 (M5) | [registered](../user/reference/params/fill.md#fill_method) |
 | `guided_fill_strategy` | dropdown | — | 0 | `guided_fill` | P3 (M10) | planned |
 | `contour_strategy` | dropdown | — | 0 | `contour_fill` | P2 (M7) | planned |
@@ -226,8 +226,8 @@ StitchCraft's SVG adapter does with it (`stitchcraft_svg::inkstitch`). Their con
 
 | Command | Applies to | StitchCraft |
 |---|---|---|
-| `starting_point` | the object a connector ties it to | read with the stitch types it positions |
-| `ending_point` | the object a connector ties it to | read with the stitch types it positions |
+| `starting_point` | the object a connector ties it to | planned: noted on the object as not applied (`SC-W0802`) |
+| `ending_point` | the object a connector ties it to | planned: noted on the object as not applied (`SC-W0802`) |
 | `target_point` | the object a connector ties it to | read with the stitch types it positions |
 | `autoroute_start` | the object a connector ties it to | nothing to sew: input to Ink/Stitch's tools |
 | `autoroute_end` | the object a connector ties it to | nothing to sew: input to Ink/Stitch's tools |
@@ -261,4 +261,4 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
 
-_145 parameter declarations, 88 registered in StitchCraft._
+_145 parameter declarations, 89 registered in StitchCraft._

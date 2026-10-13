@@ -160,6 +160,25 @@ fn diag_sc_w0203_a_rung_that_misses_a_rail_joins_the_point_of_it_nearest_the_run
 }
 
 #[test]
+fn diag_sc_w0203_of_points_as_near_the_rung_the_rail_s_end_is_taken() {
+    // A rung between the rails, past the first rail's end: that end, (10, 0), and the foot of the rung's
+    // start, (6, 0), are both 2 from it. Shapely's nearest points take the rail's end, as GEOS tries a
+    // side's ends before the other side's.
+    let (satin, _) = ladder(&[
+        &[(0.0, 0.0), (10.0, 0.0)],
+        &[(0.0, 4.0), (10.0, 6.0)],
+        &[(2.0, -1.0), (2.0, 7.0)],
+        &[(3.0, -1.0), (3.0, 7.0)],
+        &[(4.0, -1.0), (4.0, 7.0)],
+        &[(6.0, 2.0), (13.0, 2.0)],
+    ]);
+    let [on_a, on_b] = satin.rungs[3];
+    assert_eq!(on_a, p(10.0, 0.0));
+    // Shapely's point on the second rail, the foot of the rung's start.
+    assert!(on_b.distance(p(5.384_615_384_615_384, 5.076_923_076_923_077)) < 1e-9, "{on_b:?}");
+}
+
+#[test]
 fn diag_sc_w0205_a_subpath_of_one_point_is_left_out() {
     // A stray node, and a line that does not move, drawn between the rails.
     let Recognition { shape, warnings } = recognized(&[LOWER, &[(7.0, 2.0)], &[(9.0, 2.0), (9.0, 2.0)], UPPER]);
