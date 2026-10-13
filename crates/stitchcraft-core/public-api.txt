@@ -56,6 +56,7 @@ pub stitchcraft_core::diag::Code::SatinRungAmbiguous
 pub stitchcraft_core::diag::Code::SatinRungDangling
 pub stitchcraft_core::diag::Code::SatinSubpathPoint
 pub stitchcraft_core::diag::Code::SatinTooNarrow
+pub stitchcraft_core::diag::Code::SatinTooSmall
 pub stitchcraft_core::diag::Code::SatinWithoutRails
 pub stitchcraft_core::diag::Code::StitchLengthRaised
 pub stitchcraft_core::diag::Code::StitchTypeNotYet
@@ -232,6 +233,7 @@ pub stitchcraft_core::Code::SatinRungAmbiguous
 pub stitchcraft_core::Code::SatinRungDangling
 pub stitchcraft_core::Code::SatinSubpathPoint
 pub stitchcraft_core::Code::SatinTooNarrow
+pub stitchcraft_core::Code::SatinTooSmall
 pub stitchcraft_core::Code::SatinWithoutRails
 pub stitchcraft_core::Code::StitchLengthRaised
 pub stitchcraft_core::Code::StitchTypeNotYet
