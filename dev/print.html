@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-674dd97d.js";
+            window.path_to_searchindex_js = "searchindex-bb62a4e8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -1284,7 +1284,7 @@ Arguments:
 <li>Measure the 0° and the 90° square at 0.4 mm across, both ways. How much less than 30 mm are they?</li>
 </ul>
 <h2 id="ts-09--fill-underlay-travel-and-gap-filling-rows-round-holes"><a class="header" href="#ts-09--fill-underlay-travel-and-gap-filling-rows-round-holes">TS-09 — Fill underlay, travel and gap-filling rows round holes</a></h2>
-<p>66.0 × 114.0 mm · 7788 stitches, 6 jumps, 3 trims, 0 colour changes, 0 stops</p>
+<p>66.0 × 114.0 mm · 7797 stitches, 6 jumps, 3 trims, 0 colour changes, 0 stops</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-09.png" alt="TS-09 as it will sew, in green: the same shape three times, top to bottom, a rectangle with a square hole and a round hole and a bar to its right, which a jump thread along the bottom joins to it."><span class="img-wrapper"><img src="images/generated/testsheet-ts-09.png" alt="TS-09 as it will sew, in green: the same shape three times, top to bottom, a rectangle with a square hole and a round hole and a bar to its right, which a jump thread along the bottom joins to it."></span></label></p>
 <p>Threads: Emerald Green.</p>
@@ -4964,7 +4964,10 @@ and <code>SC-W0310</code> (inset) or <code>SC-W0309</code> (expand) says so, as 
 <p>The thread pulls a row in at its ends. Each top row’s segment is lengthened at both ends by
 <code>pull_compensation_mm</code> plus <code>pull_compensation_percent</code> of its length (<code>REQ-FILL-TAT-006</code>, since M5.8).
 The first value applies at the end the rows start from at the fill’s angle. A second value, if given,
-applies at the other end. Ink/Stitch moves a satin’s stitches with the same function, and the two settings are declared once
+applies at the other end. Where 2 segments of a row meet end to end, because the row only touches the
+outline there from inside or runs along it (section 1), the row goes on in the part. Both segments end at
+that point as they are, so the row is sewn once through it, as through Ink/Stitch’s rebuilt part, where the
+row is one segment. Ink/Stitch moves a satin’s stitches with the same function, and the two settings are declared once
 for both (<code>stitchcraft_engine::generators::pull</code>). A fill reads a value below 0 as 0, as Ink/Stitch does,
 and <code>SC-W0312</code> says so. The route is planned on the part as drawn. The needle’s ways keep their course,
 but each starts where the row before it ends and ends where the next row starts, both lengthened.
@@ -4979,12 +4982,16 @@ last row before the rows past it are sewn. There, <code>gap_fill_rows</code>, ro
 that many more rows past the last one, back and forth, and comes back to where it ended
 (<code>REQ-FILL-TAT-007</code>, since M5.8). A stretch’s rows are counted as Ink/Stitch counts them: the rows
 reached by travel. The route’s first row is one of them, because Ink/Stitch’s route always starts with
-travel, of no length where it starts on that row. A stretch ends where the travel is more than a handover
-from one row to the next beside it, or from the last row to the fill’s end beside it, which Ink/Stitch’s
-route takes in one edge too. Each extra row is the next row of the grid, the stretch of its segment
-beside the last row, lengthened as the rows are. The extra rows stop at the part’s edge, and where the
-part ends. Ink/Stitch repeats the last row a spacing further each time, and a repeat can run outside the
-part (<code>DEV-FILL-010</code>). Underlay has no gap-fill rows.</p>
+travel, of no length where it starts on that row. Ink/Stitch’s gap fill ends a stretch where the walk
+goes from one row to the next by more than one edge once the loops between them are taken out, and so does
+this one. An edge that comes back to a node where an earlier one of those edges ended takes out the edges
+since, and itself, but a loop back to the row it left stays. So travel out and back before a handover to the
+row beside ends a stretch, and a pairing edge, which stands for a way of several, does too. Each extra row
+is the next row of the grid, the stretch of its segment beside the extra row before it, or the last row
+for the first, lengthened as the rows are. The extra rows are one strip, stop at the part’s edge, and stop
+where the part ends. The hop from each to the next, and the way back, are kept inside the part as travel
+is. Ink/Stitch repeats the last row a spacing further each time, and a repeat can run outside the part
+(<code>DEV-FILL-010</code>). Underlay has no gap-fill rows.</p>
 <h3 id="8-no-rows"><a class="header" href="#8-no-rows">8. No rows</a></h3>
 <p>A part thinner than the row spacing has no row. It is sewn as a running stitch round its outline, from
 the outline’s start, as Ink/Stitch sews it, and <code>SC-W0305</code> says so (since M5.4). A layer of underlay with
@@ -5003,7 +5010,7 @@ the fill sews nothing, and <code>SC-W0303</code> says so.</p>
 <tr><td><code>REQ-FILL-TAT-004</code></td><td>Coverage (<code>stitchcraft_testkit::metrics</code>): rasterized at 0.05 mm with 0.4 mm thread width, ≥ 98 % of the region is covered at spacings from the machine’s shortest stitch to 0.4 mm, since M5.9</td></tr>
 <tr><td><code>REQ-FILL-TAT-005</code></td><td>With <code>underpath</code>, travel takes the cheapest way along the lines under the rows not sewn yet, and its way lies inside the region (± 0.05 mm)</td></tr>
 <tr><td><code>REQ-FILL-TAT-006</code></td><td>Each top row extends past its segment’s ends by the compensation; the part keeps its holes and pieces</td></tr>
-<tr><td><code>REQ-FILL-TAT-007</code></td><td>Gap-fill rows follow a stretch of more than 3 rows; all rows, gap-fill rows included, lie inside the part within its compensation</td></tr>
+<tr><td><code>REQ-FILL-TAT-007</code></td><td>Gap-fill rows follow a stretch of more than 3 rows, which ends where Ink/Stitch’s gap fill ends one; all rows, gap-fill rows included, and the stitches between them lie inside the part within its compensation</td></tr>
 <tr><td><code>REQ-FILL-TAT-008</code></td><td>A region in parts sews each part on its own, nearest the needle first, each ending nearest the next part, the last nearest the next element</td></tr>
 <tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget, guarded by <code>cargo xtask perf</code> since M5.9</td></tr>
 <tr><td><code>REQ-FILL-TAT-011</code></td><td>Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start</td></tr>
@@ -6260,7 +6267,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 <tr><td>Cross-platform</td><td>Tests on Linux, macOS, Windows; identical conformance hashes</td><td><code>ci.yml</code></td><td>CI</td></tr>
 <tr><td>API docs</td><td>Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links</td><td><code>cargo xtask ci</code> (<code>RUSTDOCFLAGS=-D warnings</code>)</td><td><code>cargo xtask ci</code> · CI</td></tr>
 <tr><td><strong>Public API review</strong></td><td>Changes to a library crate’s public API show in the PR diff, as a change to its <code>public-api.txt</code></td><td><code>xtask/src/api.rs</code> (cargo-public-api, pinned)</td><td><code>cargo xtask api --check</code> · CI</td></tr>
-<tr><td><strong>Coverage ratchet</strong></td><td>No crate’s line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, with any function whose lines its unit tests and integration tests only run between them</td><td><code>conformance/coverage.toml</code>, <code>xtask/src/coverage.rs</code> (cargo-llvm-cov)</td><td><code>cargo xtask coverage</code> · CI job</td></tr>
+<tr><td><strong>Coverage ratchet</strong></td><td>No crate’s line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, those only another build of a function or a closure on the line runs included</td><td><code>conformance/coverage.toml</code>, <code>xtask/src/coverage.rs</code> (cargo-llvm-cov)</td><td><code>cargo xtask coverage</code> · CI job</td></tr>
 <tr><td><strong>Performance budget</strong></td><td>Planning the reference hoop’s whole field (<code>REQ-FILL-TAT-009</code>) takes at most 2 % more instructions than recorded. Records only go down. Its time is reported against NFR-PERF-1’s 50 ms, with a warning above it</td><td><code>conformance/perf.toml</code>, <code>xtask/src/perf.rs</code> (valgrind’s callgrind), the engine’s <code>field</code> example</td><td><code>cargo xtask perf</code> · CI job</td></tr>
 <tr><td><strong>Mutation testing</strong></td><td>Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down</td><td><code>.cargo/mutants.toml</code>, <code>conformance/mutation.toml</code>, <code>xtask/src/mutants.rs</code></td><td><code>mutants.yml</code> · changed lines every PR, in 4 parts · everything weekly</td></tr>
 <tr><td><strong>Fuzzing</strong></td><td>Readers never panic, respect their caps and terminate; anything read round-trips and previews</td><td><code>fuzz/</code>, <code>stitchcraft-testkit::fuzz</code> (<a href="#fuzzing">conformance</a>)</td><td>bodies every PR · an hour nightly</td></tr>
@@ -6276,10 +6283,14 @@ log.</p>
 run, where milliseconds do not. Its check fails for a change that slows planning, on whichever runner it
 runs. The time is still measured and reported, against the budget the requirement states in milliseconds.</p>
 <p>Coverage counts each build of a function apart and takes the build that runs the most lines. The unit
-tests and the integration tests use separate builds, and a generic function has one per type it is used
-with. A function whose lines only both kinds of test together run counts as partly untested, though every
-line runs. The coverage job names such a function. Move the tests that run its other lines to the kind
-of test that runs most of it.</p>
+tests and the integration tests use separate builds, a generic function has one per type it is used with,
+and a closure is a function of its own. So a line can count as untested though the lcov report counts it
+run. Only the other kind of test runs it, or only a closure on the line runs, as with a <code>?</code> after a
+closure argument whose error the tests never bring. The coverage job names these lines and the function
+they count against. Run them from the kind of test that runs most of the function.</p>
+<p><code>cargo xtask coverage</code> runs the job locally. It needs cargo-llvm-cov and rustup’s <code>llvm-tools</code>. Without
+the latter, <code>LLVM_COV</code> and <code>LLVM_PROFDATA</code> can name another LLVM’s llvm-cov and llvm-profdata that read
+the toolchain’s profiles: LLVM 20’s read those of Rust 1.97.</p>
 <h2 id="design-rules-reviewed-partly-linted"><a class="header" href="#design-rules-reviewed-partly-linted">Design rules (reviewed, partly linted)</a></h2>
 <ol>
 <li><strong>Everything user-visible is data first.</strong> A stitch type, parameter, diagnostic, profile or format is

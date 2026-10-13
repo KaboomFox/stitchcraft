@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-674dd97d.js";
+            window.path_to_searchindex_js = "../searchindex-bb62a4e8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -213,7 +213,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 <tr><td>Cross-platform</td><td>Tests on Linux, macOS, Windows; identical conformance hashes</td><td><code>ci.yml</code></td><td>CI</td></tr>
 <tr><td>API docs</td><td>Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links</td><td><code>cargo xtask ci</code> (<code>RUSTDOCFLAGS=-D warnings</code>)</td><td><code>cargo xtask ci</code> · CI</td></tr>
 <tr><td><strong>Public API review</strong></td><td>Changes to a library crate’s public API show in the PR diff, as a change to its <code>public-api.txt</code></td><td><code>xtask/src/api.rs</code> (cargo-public-api, pinned)</td><td><code>cargo xtask api --check</code> · CI</td></tr>
-<tr><td><strong>Coverage ratchet</strong></td><td>No crate’s line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, with any function whose lines its unit tests and integration tests only run between them</td><td><code>conformance/coverage.toml</code>, <code>xtask/src/coverage.rs</code> (cargo-llvm-cov)</td><td><code>cargo xtask coverage</code> · CI job</td></tr>
+<tr><td><strong>Coverage ratchet</strong></td><td>No crate’s line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, those only another build of a function or a closure on the line runs included</td><td><code>conformance/coverage.toml</code>, <code>xtask/src/coverage.rs</code> (cargo-llvm-cov)</td><td><code>cargo xtask coverage</code> · CI job</td></tr>
 <tr><td><strong>Performance budget</strong></td><td>Planning the reference hoop’s whole field (<code>REQ-FILL-TAT-009</code>) takes at most 2 % more instructions than recorded. Records only go down. Its time is reported against NFR-PERF-1’s 50 ms, with a warning above it</td><td><code>conformance/perf.toml</code>, <code>xtask/src/perf.rs</code> (valgrind’s callgrind), the engine’s <code>field</code> example</td><td><code>cargo xtask perf</code> · CI job</td></tr>
 <tr><td><strong>Mutation testing</strong></td><td>Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down</td><td><code>.cargo/mutants.toml</code>, <code>conformance/mutation.toml</code>, <code>xtask/src/mutants.rs</code></td><td><code>mutants.yml</code> · changed lines every PR, in 4 parts · everything weekly</td></tr>
 <tr><td><strong>Fuzzing</strong></td><td>Readers never panic, respect their caps and terminate; anything read round-trips and previews</td><td><code>fuzz/</code>, <code>stitchcraft-testkit::fuzz</code> (<a href="conformance.html#fuzzing">conformance</a>)</td><td>bodies every PR · an hour nightly</td></tr>
@@ -229,10 +229,14 @@ log.</p>
 run, where milliseconds do not. Its check fails for a change that slows planning, on whichever runner it
 runs. The time is still measured and reported, against the budget the requirement states in milliseconds.</p>
 <p>Coverage counts each build of a function apart and takes the build that runs the most lines. The unit
-tests and the integration tests use separate builds, and a generic function has one per type it is used
-with. A function whose lines only both kinds of test together run counts as partly untested, though every
-line runs. The coverage job names such a function. Move the tests that run its other lines to the kind
-of test that runs most of it.</p>
+tests and the integration tests use separate builds, a generic function has one per type it is used with,
+and a closure is a function of its own. So a line can count as untested though the lcov report counts it
+run. Only the other kind of test runs it, or only a closure on the line runs, as with a <code>?</code> after a
+closure argument whose error the tests never bring. The coverage job names these lines and the function
+they count against. Run them from the kind of test that runs most of the function.</p>
+<p><code>cargo xtask coverage</code> runs the job locally. It needs cargo-llvm-cov and rustup’s <code>llvm-tools</code>. Without
+the latter, <code>LLVM_COV</code> and <code>LLVM_PROFDATA</code> can name another LLVM’s llvm-cov and llvm-profdata that read
+the toolchain’s profiles: LLVM 20’s read those of Rust 1.97.</p>
 <h2 id="design-rules-reviewed-partly-linted"><a class="header" href="#design-rules-reviewed-partly-linted">Design rules (reviewed, partly linted)</a></h2>
 <ol>
 <li><strong>Everything user-visible is data first.</strong> A stitch type, parameter, diagnostic, profile or format is
