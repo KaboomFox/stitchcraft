@@ -42,12 +42,12 @@ struct Grid {
 }
 
 impl Grid {
-    /// The cells covering the box of `points`, about as many as `sides`, each at least `least` wide; `None`
-    /// for no points.
+    /// The cells covering the box of the points of `rings`, about as many as `sides`, each at least `least`
+    /// wide; `None` for no points.
     #[allow(clippy::cast_possible_truncation)]
-    fn over(points: impl Iterator<Item = Point> + Clone, sides: usize, least: f64) -> Option<Grid> {
+    fn over(rings: &[&[Point]], sides: usize, least: f64) -> Option<Grid> {
         let (mut left, mut bottom, mut right, mut top) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
-        for p in points {
+        for p in rings.iter().flat_map(|ring| ring.iter()) {
             (left, bottom, right, top) = (left.min(p.x()), bottom.min(p.y()), right.max(p.x()), top.max(p.y()));
         }
         if left > right {
@@ -123,7 +123,7 @@ impl<'a> Sides<'a> {
             length += ring.windows(2).map(|side| side[0].distance(side[1])).sum::<f64>();
         }
         let mean = if count > 0 { length / count as f64 } else { 0.0 };
-        let grid = if count > SCAN { Grid::over(rings.iter().flat_map(|ring| ring.iter().copied()), count, mean) } else { None };
+        let grid = if count > SCAN { Grid::over(&rings, count, mean) } else { None };
         let mut sides = Sides { rings, first, grid, starts: Vec::new(), filed: Vec::new(), gathered: RefCell::new(Vec::new()) };
         let Some(grid) = grid else { return Ok(sides) };
         // Counted first, then filed: every cell's sides in increasing order, as the sides come.
@@ -412,7 +412,7 @@ mod tests {
         let point = [p(1.0, 1.0)];
         let lone = Sides::new(vec![&point[..]], &mut Budget::DEFAULT.meter()).unwrap();
         assert!(in_box(&lone, 0.0, 0.0, 2.0, 2.0).is_empty());
-        assert_eq!(Grid::over(std::iter::empty(), 0, 1.0), None);
+        assert_eq!(Grid::over(&[], 0, 1.0), None);
     }
 
     /// A question that charges a meter.
@@ -478,7 +478,7 @@ mod tests {
                 questions.push(Box::new(move |meter| filed.nearest((q, q), |_| true, from(q), meter).map(|_| ())));
             }
             let asked: Vec<u64> = questions.iter().map(|ask| cost(|meter| ask(meter).unwrap())).collect();
-            assert_eq!(asked, costs, "{} sides", points.iter().map(|ring| ring.len() - 1).sum::<usize>());
+            assert_eq!(asked, costs, "gridded: {gridded}");
             // Each needs all the work it is charged: a unit less runs out.
             for (ask, units) in questions.iter().zip(asked) {
                 assert!(ask(&mut Budget { max_stitches: 1, max_work: units - 1 }.meter()).is_err());
