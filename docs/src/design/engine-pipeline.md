@@ -77,15 +77,15 @@ Rules every generator follows:
 
 - **Pure:** output depends only on (normalized shape, typed params, neighbours, seed, budget).
 - **The needle before, the next element after.** Elements are generated in sewing order
-  ([ADR 0014](adr/0014-generators-see-their-neighbours.md), `REQ-GEN-003`). Each is given the last
-  needle point of the elements before it, whatever their thread, and what the next element offers to
-  end near: its first point, a satin column's rails when it starts at its own nearest point, or a tatami
-  fill's area. The offer comes from the next element's shape and settings and the design's, never its
-  stitches, so nothing waits for a later element. A satin column and a tatami fill start and end by them
-  ([satin](algorithms/satin.md#start-and-end), [fills](algorithms/fills.md#5-parts)), and explicit start
-  and end commands will override them (`REQ-GEN-001`). Each ends near its next stitch, its point nearest
-  the offer as Ink/Stitch's geometry library finds it, a point of one shape inside the other's area first
-  (`generators::next`).
+  ([ADR 0014](adr/0014-generators-see-their-neighbours.md), `REQ-GEN-003`). Each is given the last needle
+  point of the elements before it, whatever their thread, and what the next element offers to end near.
+  That is its first point, or, when it starts at its own nearest point, its shape: a satin column's rails
+  or a tatami fill's area. The offer comes from the next element's shape and settings and the design's,
+  never its stitches, so nothing waits for a later element. A satin column and a tatami fill start and
+  end by them ([satin](algorithms/satin.md#start-and-end), [fills](algorithms/fills.md#5-parts)), and
+  explicit start and end commands will override them (`REQ-GEN-001`). Each ends near its next stitch, its
+  point nearest the offer as Ink/Stitch's geometry library finds it, a point of one shape inside the
+  other's area first (`generators::next`).
 - **Seeded randomness:** each element's generator is seeded from a hash of its id mixed with its
   `random_seed`, one of the settings every stitch type shares. The PRNG is SplitMix64 from
   `stitchcraft-core` ([determinism](determinism.md)).
