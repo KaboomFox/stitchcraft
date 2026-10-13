@@ -207,28 +207,44 @@ fn corners_closer_than_the_shortest_stitch_along_the_path_are_not_cut() {
 #[test]
 fn a_corner_keeps_its_needle_over_the_points_before_it() {
     // The path folds back before the corner at (2, 0.2), so the even spacing puts a needle at (2.1, 0),
-    // 0.22 from the corner in a straight line. The needle goes, not the corner.
+    // 0.22 from the corner in a straight line. The needle goes, not the corner. The stitch to the corner
+    // would miss the fold's end, (3, 0), by 1 mm: it goes there first, in 2 stitches of 1.5 mm.
     let fold = stitched(&[(0.0, 0.0), (3.0, 0.0), (3.0, 0.2), (2.0, 0.2), (2.0, 5.0)], &[3], 2.5);
-    assert_eq!(fold, [(0.0, 0.0), (2.0, 0.2), (2.0, 2.6), (2.0, 5.0)]);
+    assert_eq!(fold, [(0.0, 0.0), (1.5, 0.0), (3.0, 0.0), (2.0, 0.2), (2.0, 2.6), (2.0, 5.0)]);
 }
 
 /// [`follow`] from the first point of `points` to the last, for a deviation budget, a shortest stitch of
-/// 0.3 and no practical longest length: the needle points.
-fn followed(points: &[(f64, f64)], budget: f64) -> Vec<Point> {
+/// 0.3 and the `longest` stitch: the needle points.
+fn followed(points: &[(f64, f64)], budget: f64, longest: f64) -> Vec<Point> {
     let mut meter = Budget::DEFAULT.meter();
     let piece = piece(points);
     let along = Along::new(&piece.points, &mut meter).unwrap();
     let needles = vec![along.vertex(0), along.vertex(points.len() - 1)];
-    follow(needles, &along, budget, 0.3, 100.0, &mut meter).unwrap().iter().map(|n| n.point).collect()
+    follow(needles, &along, budget, 0.3, longest, &mut meter).unwrap().iter().map(|n| n.point).collect()
 }
 
 #[test]
 fn curves_are_split_at_their_farthest_point_while_they_stray_too_far() {
     // (1, 1) and (3, 1) both stray 1 from the stitch: the first is taken, and then nothing strays more
     // than 0.7.
-    assert_eq!(followed(&[(0.0, 0.0), (1.0, 1.0), (2.0, 0.0), (3.0, 1.0), (4.0, 0.0)], 0.7), [point(0.0, 0.0), point(1.0, 1.0), point(4.0, 0.0)]);
+    assert_eq!(
+        followed(&[(0.0, 0.0), (1.0, 1.0), (2.0, 0.0), (3.0, 1.0), (4.0, 0.0)], 0.7, 100.0),
+        [point(0.0, 0.0), point(1.0, 1.0), point(4.0, 0.0)]
+    );
     // Straying exactly the budget is not too far.
-    assert_eq!(followed(&[(0.0, 0.0), (2.0, 1.0), (4.0, 0.0)], 1.0), [point(0.0, 0.0), point(4.0, 0.0)]);
+    assert_eq!(followed(&[(0.0, 0.0), (2.0, 1.0), (4.0, 0.0)], 1.0, 100.0), [point(0.0, 0.0), point(4.0, 0.0)]);
+}
+
+#[test]
+fn a_split_farther_than_the_longest_stitch_reaches_its_point_in_stitches_along_the_piece() {
+    // A fold 4 mm deep and 0.6 mm wide at its mouth: the stitch across the mouth misses the fold's tip by
+    // 4 mm. Split there, both halves are longer than the longest stitch, 2.5, and each is split where the
+    // piece is half its length from its start.
+    let fold: Vec<(f64, f64)> = followed(&[(0.0, 0.0), (4.0, 0.0), (0.0, 0.6)], 0.18, 2.5)
+        .iter()
+        .map(|q| ((q.x() * 1e6).round() / 1e6, (q.y() * 1e6).round() / 1e6))
+        .collect();
+    assert_eq!(fold, [(0.0, 0.0), (2.0, 0.0), (4.0, 0.0), (2.0, 0.3), (0.0, 0.6)]);
 }
 
 #[test]

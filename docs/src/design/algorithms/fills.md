@@ -20,11 +20,17 @@ A fill's region is the area an SVG renderer paints for its path, in parts with h
 1. **Rings.** Each subpath is flattened within a tenth of a CSS pixel, as Ink/Stitch flattens a fill's
    outline, and closed. A subpath of fewer than 3 distinct points bounds nothing and is left out
    (`DEV-FILL-002`).
-2. **Cuts.** Wherever 2 segments cross, touch or run along each other, both are cut there. Which side of
-   a line a point lies on is decided exactly. A point on a segment is then found on it, and segments that
-   only touch are never taken to cross. Where 2 segments cross inside both, the crossing is worked out in
-   floating point, and a crossing within 10⁻⁹ mm of a point already found is that point. A stretch drawn
-   more than once becomes one edge that counts how many times it was drawn each way.
+2. **Cuts.** Wherever 2 segments cross, touch or run along each other, both are cut there, on a grid of
+   2⁻³⁵ mm, about 2.9 × 10⁻¹¹ mm. The rings' points go on the grid, much as Ink/Stitch puts a fill's
+   shape on a grid of 10⁻¹⁰ CSS pixels, about 2.6 × 10⁻¹¹ mm. So the corners that shapes share, which
+   relative path data and transforms leave a few units in the last place apart, become one point, and a
+   gap or an overlap that narrow closes. A segment that passes through the cell of a corner, or of a
+   point where 2 segments cross, is bent through that point. This is snap rounding, and the edges then
+   meet only at their ends however rounding left the drawing. Before it, crossings worked out in floating
+   point and snapped to points nearby could leave 2 edges crossing with no point between them, and whole
+   faces filled or empty against the rule. On the grid, which side of a line a point lies on and which
+   way a ring turns are decided exactly. A stretch drawn more than once becomes one edge that counts how
+   many times it was drawn each way.
 3. **Faces.** The edges bound faces. Outside everything the winding number is 0, and crossing an edge
    from its right to its left adds its count. Every face's winding number follows from its neighbours'
    in whole numbers.
@@ -47,11 +53,14 @@ A fill's region is the area an SVG renderer paints for its path, in parts with h
    `SC-W0303` (`REQ-FILL-002`). A fill under 20 square CSS pixels (1.4 mm²) gets `SC-W0304`, as
    Ink/Stitch warns of it. A fill in parts gets `SC-W0307`, since each part is sewn on its own.
 
-The work is charged to the element's budget, one unit for each point, segment, cut, half edge, pair of
-segments whose spans along x overlap, and ring compared with a face. Property tests draw random rings on
-a grid and count how many times they wind round points off the edges. Such a point lies in the region
-exactly when the fill rule fills it, unless it lies in a part left out. Every ring found is simple and
-turns the right way.
+The work is charged to the element's budget, one unit for each point, edge bent and grid point tested
+against it, pair of edges whose spans along x overlap, half edge, and ring compared with a face.
+Property tests draw random rings on a grid, and random rings with float coordinates beside near-copies of
+themselves, moved or turned by a hair or drawn back, and count how many times they wind round points off
+the edges. Such a point lies in the region exactly when the fill rule fills it, unless it lies in a part
+left out. Every ring found is simple and turns the right way, and the edges the rings are cut into meet
+only at their ends. Drawings of shapes that share corners and edges, written with relative path data as
+Inkscape writes them, fill their shapes' area, in 1 part where the shapes share edges.
 
 ## Tatami fill
 
@@ -256,7 +265,8 @@ engine follows both rules. The polygons agree with shapely's within a nanometre 
 some at the edges of both rules (`conformance/oracle/buffer.py`).
 
 Shrinking can cut a part into pieces. Each piece is sewn on its own, in order of its point of least x, and
-of least y among points level with it. That is GEOS's order in all but a few cases, where GEOS orders
+of least y among pieces level with each other: a run of pieces, each with its least x within a nanometre
+of the one before. That is GEOS's order in all but a few cases, where GEOS orders
 pieces with a sliver among them, or pieces level at their least x, as it walks its graph (`DEV-FILL-008`).
 Every layer of the underlay is sewn on one piece before the next, each starting nearest the needle. Each
 piece's top rows start nearest the needle too, after the piece before, and end nearest the next part or

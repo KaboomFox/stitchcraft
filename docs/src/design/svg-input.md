@@ -141,6 +141,9 @@ A file is at most 64 MiB with a million XML nodes, and its style sheets have at 
 declarations and at-rules. Illustrator declares its namespaces as XML entities, and an entity whose value
 is plain text is read. A file is refused when an entity's value holds markup or other entities, or when
 its references would expand the file past 64 MiB. Without these rules a small file could need a large
-amount of memory. Reading charges the budget for each XML node, path segment and 8 bytes of a
-transform, point list or style sheet. Each element is charged for its classes, the style sheet rules
-tested against it and the declarations it takes ([budgets](data-model.md#budgets)).
+amount of memory. Only the document type declaration's internal subset, `<!DOCTYPE svg [ … ]>`, declares
+entities: a declaration in a comment or in character data declares nothing. A name declared twice counts
+at its longer value. XML keeps the first declaration, and the limit must hold whichever the parser keeps.
+Reading charges the budget for each XML node, path segment and 8 bytes of a transform, point list or
+style sheet. Each element is charged for its classes, the style sheet rules tested against it and the
+declarations it takes ([budgets](data-model.md#budgets)).
