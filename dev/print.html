@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-1f0a742d.js";
+            window.path_to_searchindex_js = "searchindex-d7b9ea02.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -1259,7 +1259,7 @@ Arguments:
 <li>Measure each column across, halfway down, and note any puckering round it.</li>
 </ul>
 <h2 id="ts-07--fill-and-outline-registration-at-3-pull-compensations"><a class="header" href="#ts-07--fill-and-outline-registration-at-3-pull-compensations">TS-07 — Fill and outline registration at 3 pull compensations</a></h2>
-<p>126.2 × 126.0 mm · 13522 stitches, 6 jumps, 6 trims, 1 colour change, 0 stops</p>
+<p>126.2 × 126.0 mm · 13527 stitches, 6 jumps, 6 trims, 1 colour change, 0 stops</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-07.png" alt="TS-07 as it will sew: three red tatami circles, two side by side and one below them, each with a thin black outline along its edge."><span class="img-wrapper"><img src="images/generated/testsheet-ts-07.png" alt="TS-07 as it will sew: three red tatami circles, two side by side and one below them, each with a thin black outline along its edge."></span></label></p>
 <p>Threads: Red, Black.</p>
@@ -3801,7 +3801,10 @@ A file in any other encoding is refused when it has a byte outside ASCII.</p>
 <p>A file is at most 64 MiB with a million XML nodes. Illustrator declares its namespaces as XML entities,
 and an entity whose value is plain text is read. A file is refused when an entity’s value holds markup or
 other entities, or when its references would expand the file past 64 MiB. Without both rules a small
-file could need a large amount of memory. Reading charges the budget for each XML node, path segment and
+file could need a large amount of memory. Only the document type declaration’s internal subset,
+<code>&lt;!DOCTYPE svg [ … ]&gt;</code>, declares entities: a declaration in a comment or in character data declares
+nothing. A name declared twice counts at its longer value. XML keeps the first declaration, and the limit
+must hold whichever the parser keeps. Reading charges the budget for each XML node, path segment and
 8 bytes of a transform or point list (<a href="#budgets">budgets</a>).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="engine-pipeline"><a class="header" href="#engine-pipeline">Engine pipeline</a></h1>
@@ -4706,11 +4709,17 @@ warning.</p>
 <li><strong>Rings.</strong> Each subpath is flattened within a tenth of a CSS pixel, as Ink/Stitch flattens a fill’s
 outline, and closed. A subpath of fewer than 3 distinct points bounds nothing and is left out
 (<code>DEV-FILL-002</code>).</li>
-<li><strong>Cuts.</strong> Wherever 2 segments cross, touch or run along each other, both are cut there. Which side of
-a line a point lies on is decided exactly. A point on a segment is then found on it, and segments that
-only touch are never taken to cross. Where 2 segments cross inside both, the crossing is worked out in
-floating point, and a crossing within 10⁻⁹ mm of a point already found is that point. A stretch drawn
-more than once becomes one edge that counts how many times it was drawn each way.</li>
+<li><strong>Cuts.</strong> Wherever 2 segments cross, touch or run along each other, both are cut there, on a grid of
+2⁻³⁵ mm, about 2.9 × 10⁻¹¹ mm. The rings’ points go on the grid, much as Ink/Stitch puts a fill’s
+shape on a grid of 10⁻¹⁰ CSS pixels, about 2.6 × 10⁻¹¹ mm. So the corners that shapes share, which
+relative path data and transforms leave a few units in the last place apart, become one point, and a
+gap or an overlap that narrow closes. A segment that passes through the cell of a corner, or of a
+point where 2 segments cross, is bent through that point. This is snap rounding, and the edges then
+meet only at their ends however rounding left the drawing. Before it, crossings worked out in floating
+point and snapped to points nearby could leave 2 edges crossing with no point between them, and whole
+faces filled or empty against the rule. On the grid, which side of a line a point lies on and which
+way a ring turns are decided exactly. A stretch drawn more than once becomes one edge that counts how
+many times it was drawn each way.</li>
 <li><strong>Faces.</strong> The edges bound faces. Outside everything the winding number is 0, and crossing an edge
 from its right to its left adds its count. Every face’s winding number follows from its neighbours’
 in whole numbers.</li>
@@ -4728,11 +4737,14 @@ of stitches and is left out. Ink/Stitch leaves it out without a word. StitchCraf
 <code>SC-W0303</code> (<code>REQ-FILL-002</code>). A fill under 20 square CSS pixels (1.4 mm²) gets <code>SC-W0304</code>, as
 Ink/Stitch warns of it. A fill in parts gets <code>SC-W0307</code>, since each part is sewn on its own.</li>
 </ol>
-<p>The work is charged to the element’s budget, one unit for each point, segment, cut, half edge, pair of
-segments whose spans along x overlap, and ring compared with a face. Property tests draw random rings on
-a grid and count how many times they wind round points off the edges. Such a point lies in the region
-exactly when the fill rule fills it, unless it lies in a part left out. Every ring found is simple and
-turns the right way.</p>
+<p>The work is charged to the element’s budget, one unit for each point, edge bent and grid point tested
+against it, pair of edges whose spans along x overlap, half edge, and ring compared with a face.
+Property tests draw random rings on a grid, and random rings with float coordinates beside near-copies of
+themselves, moved or turned by a hair or drawn back, and count how many times they wind round points off
+the edges. Such a point lies in the region exactly when the fill rule fills it, unless it lies in a part
+left out. Every ring found is simple and turns the right way, and the edges the rings are cut into meet
+only at their ends. Drawings of shapes that share corners and edges, written with relative path data as
+Inkscape writes them, fill their shapes’ area, in 1 part where the shapes share edges.</p>
 <h2 id="tatami-fill"><a class="header" href="#tatami-fill">Tatami fill</a></h2>
 <p>Parallel rows of running stitches across the region, with the needle points of neighbouring rows offset
 so they never line up into visible furrows. Most fills in most designs are tatami. Each step below sews
@@ -4912,7 +4924,8 @@ that shrinking wears away. After, it leaves out a small ring’s offset that has
 engine follows both rules. The polygons agree with shapely’s within a nanometre for 330 random polygons,
 some at the edges of both rules (<code>conformance/oracle/buffer.py</code>).</p>
 <p>Shrinking can cut a part into pieces. Each piece is sewn on its own, in order of its point of least x, and
-of least y among points level with it. That is GEOS’s order in all but a few cases, where GEOS orders
+of least y among pieces level with each other: a run of pieces, each with its least x within a nanometre
+of the one before. That is GEOS’s order in all but a few cases, where GEOS orders
 pieces with a sliver among them, or pieces level at their least x, as it walks its graph (<code>DEV-FILL-008</code>).
 Every layer of the underlay is sewn on one piece before the next, each starting nearest the needle. Each
 piece’s top rows start nearest the needle too, after the piece before, and end nearest the next part or
@@ -5212,14 +5225,14 @@ stop command: a stop is a colour change to the same thread, which readers recogn
 <p><strong>Trims ride on the next move.</strong> PEC cannot cut in place, so a trim flags the next jump; a sewn move after a
 trim becomes a trim-flagged jump to its target and a zero-length stitch there, so the needle still goes
 down where the plan says. A trim right before the end needs no record.</p>
-<p><strong>Jumps are trim-flagged, as pystitch writes them</strong> (REQ-FMT-010). Only the stitch data’s first record,
-the move from the origin, keeps the plain jump flag. StitchCraft first flagged only the jumps that follow
-a <code>Trim</code> in the plan and wrote the others as plain jumps, so the plan decided, and test sheet TS-02 sewed
-both. At machine checkpoint MC-1 the reference PE800 sewed nothing after the plain jumps inside a colour.
-TS-02’s right half was missing, and the machine’s stitch counter gave it 5 of its 40 stitches. The
-trim-flagged half sewed. Whether a trim-flagged jump is cut is the machine’s choice. The PE800 cuts none
-of them, and cuts the thread only at thread changes and stops. Machines that trim jumps cut those longer
-than their setting. A jump that goes nowhere has no record, since a record of it would be trim-flagged.
+<p><strong>Jumps are trim-flagged, as pystitch writes them</strong> (REQ-FMT-010). A machine treats a StitchCraft file
+as it treats one from Ink/Stitch. Only the stitch data’s first record, the move from the origin,
+keeps the plain jump flag. StitchCraft first flagged only the jumps that follow a <code>Trim</code> in the plan and
+wrote the others as plain jumps, so the plan decided. Whether a trim-flagged jump is cut is the machine’s
+choice. At machine checkpoint MC-1 the reference PE800 cut no jump of either flag and sewed test sheet
+TS-02 the same with both, and it cut the thread only at thread changes and stops. Machines that trim
+jumps cut those longer than their setting. A jump that goes nowhere has no record, since a record of it
+would be trim-flagged.
 The pieces of a sewn move longer than 204.7 mm keep the plain flag, because a cut there would cut the
 stitch’s own thread. No profile allows a stitch that long.</p>
 <p><strong>Checked against a reference.</strong> For the canonical plans, every PEC header byte — palette indices,
@@ -5233,9 +5246,8 @@ PES v6 writer (below) can carry a thread list with RGB and codes.</p>
 <p>Embroiderers report these with files from other software:</p>
 <ol>
 <li><strong>Trims ignored</strong> on some Brother machines. Test sheet TS-02 sews jumps with and without a trim
-before them. At MC-1 the PE800 cut none of them, and skipped what followed the plain ones, so every
-jump is now trim-flagged and the operator cuts the jump threads. The MC-1 sew-out report sets the
-profile’s trim support.</li>
+before them. At MC-1 the PE800 cut none of them: on that machine the operator cuts the jump
+threads. The MC-1 sew-out report sets the profile’s trim support.</li>
 <li><strong>Large designs hidden</strong> by an older Brother-family machine for PES v1 files beyond about 130 ×
 180 mm (root cause unknown). The PES v1 section carries a hoop indication, and pystitch sets it to
 the 130 × 180 mm class, which is our unconfirmed hypothesis for that report. The reference PE800’s
