@@ -168,7 +168,7 @@ id = "REQ-FMT-010"
 area = "formats"
 level = "L1"
 statement = "PES files flag every jump after the stitch data's first record as a trim (`0x20`), as pystitch writes them, so the first record is the only one that can carry the plain jump flag (`0x10`). A jump that goes nowhere has no record unless a trim rides on it. Whether a trim-flagged jump is cut is the machine's choice."
-rationale = "At MC-1 the reference PE800 sewed nothing after the plain jumps inside a colour on test sheet TS-02, and its stitch counter gave that half 5 of its 40 stitches; the trim-flagged half sewed. Ink/Stitch's PES files, written by pystitch, never have a plain jump after their first move (formats.md, PES and PEC)."
+rationale = "Ink/Stitch's PES files, written by pystitch, never have a plain jump after their first move, so with the same flags a machine treats StitchCraft's files as it treats Ink/Stitch's (formats.md, PES and PEC). At MC-1 the reference PE800 cut no jump of either flag and sewed test sheet TS-02 the same with both."
 milestone = "M1"
 status = "active"
 

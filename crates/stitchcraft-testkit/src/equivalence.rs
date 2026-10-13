@@ -8,9 +8,9 @@
 //!
 //! Neither format can leave out every cut a plan leaves out. DST machines cut the thread before three or
 //! more jumps in a row (REQ-FMT-008); [`dst_events`] is what they do with a plan written as DST. A PES
-//! file flags every jump as a trim, as Ink/Stitch's do, because the reference machine sewed nothing after
-//! a plain jump inside a colour (REQ-FMT-010); [`as_pes`] is the plan it says, and [`pes_events`] what it
-//! tells the machine. [`format_events`] picks the events for a format.
+//! file flags every jump after its first record as a trim, as Ink/Stitch's do (REQ-FMT-010); [`as_pes`]
+//! is the plan it says, and [`pes_events`] what it tells the machine. [`format_events`] picks the events
+//! for a format.
 //!
 //! Positions are rounded and DST records counted here with this module's own code, not the writers': an
 //! oracle that shared the writers' arithmetic could not catch a bug in it.
