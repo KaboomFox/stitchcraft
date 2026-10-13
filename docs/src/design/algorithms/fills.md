@@ -248,7 +248,8 @@ engine follows both rules. The polygons agree with shapely's within a nanometre 
 some at the edges of both rules (`conformance/oracle/buffer.py`).
 
 Shrinking can cut a part into pieces. Each piece is sewn on its own, in order of its point of least x, and
-of least y among points level with it. That is GEOS's order in all but a few cases, where GEOS orders
+of least y among pieces level with each other: a run of pieces, each with its least x within a nanometre
+of the one before. That is GEOS's order in all but a few cases, where GEOS orders
 pieces with a sliver among them, or pieces level at their least x, as it walks its graph (`DEV-FILL-008`).
 Every layer of the underlay is sewn on one piece before the next, each starting nearest the needle. Each
 piece's top rows start nearest the needle too, after the piece before, and end nearest the next part or
