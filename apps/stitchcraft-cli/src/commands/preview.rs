@@ -11,7 +11,7 @@ use std::fmt::Write as _;
 use stitchcraft_core::Budget;
 use stitchcraft_render::Settings;
 
-use super::{Outcome, Status, read_machine_file, reader_warnings, render_diagnostics, unknown_colors, write_file};
+use super::{Outcome, Status, read_machine_file, reader_warnings, render_diagnostics, unknown_colors, write_files};
 use crate::cli::PreviewArgs;
 
 /// Runs `stitch preview`.
@@ -29,15 +29,16 @@ pub fn run(args: &PreviewArgs) -> Outcome {
         Ok(image) => image,
         Err(e) => return Outcome::refuse(warnings + &render_diagnostics(&diagnostics), &[e.diagnostic()]),
     };
-    if let Err(outcome) = write_file(&args.output, &image.png) {
-        return outcome;
+    let said = warnings + &render_diagnostics(&diagnostics);
+    if let Err(unwritten) = write_files(&[(&args.output, &image.png)], &said) {
+        return unwritten;
     }
     let mut out = String::new();
     let _ = writeln!(out, "{} · {} × {} pixels", args.output.display(), image.width, image.height);
     let name = if decoded.name.is_empty() { String::new() } else { format!(" · \"{}\"", decoded.name) };
     let _ = writeln!(out, "  from      {} · {}{name}", args.file.display(), decoded.format);
     let _ = writeln!(out, "  style     {}, {} pixels per millimetre", settings.style().name(), settings.scale());
-    Outcome { stdout: out, stderr: warnings + &render_diagnostics(&diagnostics), status: Status::Done }
+    Outcome { stdout: out, stderr: said, status: Status::Done }
 }
 
 #[cfg(test)]

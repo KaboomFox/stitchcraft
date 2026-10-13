@@ -549,6 +549,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - A PES file of a design that starts by sewing keeps its pictures' top row blank (`REQ-FMT-012`). The move
   from the start was drawn across the frame, and the byte after the stitch data's end mark was not 0.
   pyembroidery's and pystitch's readers, which end the data at `FF 00`, read on into the pictures.
+- A command that cannot write one of its files writes none, and still prints what was said about the
+  design (`REQ-CLI-006`). When `stitch plan` could not write its `--preview` or `--report`, it had
+  written the machine file already. Only the failed write was printed, without the warnings, or a refused
+  design's errors. A bug-report bundle that cannot be written says why once, where it said it twice.
+- `stitch` reads no more than 64 MiB from a pipe or a device either (`REQ-CLI-005`). It took the size the
+  file system gives, which is 0 for them, so `stitch inspect /dev/zero` read until memory ran out.
+- `stitch bug-report --replay` prints what it takes from a bundle as text only (`REQ-CLI-004`). Control
+  characters, line breaks and invisible ones among them, are written as escapes, so a bundle can no
+  longer set the terminal's title, clear its screen or print a line of its own.
+- `stitch bug-report --replay` reproduces a bundle whose design's file name is not UTF-8, or which was
+  written on another platform (`REQ-CLI-001`). The replay took the design name from the file name, and
+  the machine file's label came out otherwise. Bundles now record the name the run used.
 - A design exactly the hoop's size fits it. Rounding put rows of a fill's underlay at 90° a hair past the
   edge of the reference hoop's whole field, and the hoop check and the plan checker refused it, while the
   check that the design is centred allowed the hair, as every length check does (`LENGTH_SLACK`). Both now
