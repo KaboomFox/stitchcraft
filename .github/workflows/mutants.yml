@@ -7,7 +7,8 @@
 # equivalent (conformance/mutation.toml). Every week, and
 # on demand, every mutant runs, in four parts dealt round-robin so that each gets a fair share of each
 # crate; `cargo xtask mutants` then adds them up per crate and fails when a crate has more missed mutants
-# than conformance/mutation.toml records. Each job summary lists the mutants no test notices.
+# than conformance/mutation.toml records, when a part's unmutated tree failed its tests, and when a
+# recorded crate had no mutant tried. Each job summary lists the mutants no test notices.
 name: mutants
 
 on:
@@ -116,15 +117,17 @@ jobs:
         with:
           tool: cargo-mutants@27.1.0
       - name: Run this shard's mutants
-        # cargo-mutants exits non-zero when it finds missed mutants; the comparison job decides. A mutant
-        # that makes a test run away is stopped by cargo-mutants' timeout, which counts apart, or by the
-        # memory cap above, which counts as noticed.
+        # cargo-mutants exits 2 when it finds missed mutants and 3 for timeouts; the comparison job decides.
+        # Anything else (4, a failing baseline, say, after which it has still written its lists, empty) is
+        # a failure here. A mutant that makes a test run away is stopped by cargo-mutants' timeout, which
+        # counts apart, or by the memory cap above, which counts as noticed.
         # cargo-mutants numbers its shards from 0. Its default sharding cuts the list, which is in source
         # order, into consecutive slices: one part got all of stitchcraft-formats' mutants, whose tests are
         # the slowest, and took 23 minutes while the others took 4 to 7. Round-robin deals them out evenly.
         run: |
           cargo mutants --workspace --shard $(( ${{ matrix.part }} - 1 ))/4 --sharding round-robin --output "part-${{ matrix.part }}" || status=$?
           echo "cargo mutants exited with ${status:-0}"
+          case "${status:-0}" in 0|2|3) ;; *) exit "$status" ;; esac
           test -f "part-${{ matrix.part }}/mutants.out/outcomes.json"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
