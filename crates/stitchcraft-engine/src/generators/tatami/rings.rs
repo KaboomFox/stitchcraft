@@ -260,7 +260,7 @@ mod tests {
     use stitchcraft_core::{Budget, SplitMix64};
 
     use super::*;
-    use crate::generators::tatami::fixture::{frame, p, scattered};
+    use crate::generators::tatami::fixture::{Question, costs, frame, p, scattered};
     use crate::normalize::region::SAME;
     use crate::normalize::region::geom::{Location, locate_in_ring};
     use crate::normalize::stroke::distance_to_segment;
@@ -383,27 +383,14 @@ mod tests {
         let part = Polygon { outline: rings[0].clone(), holes: rings[1..].to_vec() };
         let measured = Rings::new(&part, &mut Budget::DEFAULT.meter()).unwrap();
         let (q, corner) = (p(5.0, 7.0), rings[1][0]);
-        let cost = |ask: &dyn Fn(&mut Meter)| {
-            let mut meter = Budget::DEFAULT.meter();
-            ask(&mut meter);
-            Budget::DEFAULT.max_work - meter.work_left()
-        };
-        let costs = [
-            cost(&|meter| {
-                measured.locate(q, |_| true, meter).unwrap();
-            }),
-            cost(&|meter| measured.meeting(q, p(9.0, 8.0), meter, |_| ()).unwrap()),
-            cost(&|meter| {
-                measured.ring_near(corner, SAME, |_| true, distance_to_segment, meter).unwrap();
-            }),
-            cost(&|meter| {
-                measured.covers(q, meter).unwrap();
-            }),
-            cost(&|meter| {
-                measured.inside(corner, meter).unwrap();
-            }),
+        let questions: [Question<'_>; 5] = [
+            Box::new(|meter| measured.locate(q, |_| true, meter).map(|_| ())),
+            Box::new(|meter| measured.meeting(q, p(9.0, 8.0), meter, |_| ())),
+            Box::new(|meter| measured.ring_near(corner, SAME, |_| true, distance_to_segment, meter).map(|_| ())),
+            Box::new(|meter| measured.covers(q, meter).map(|_| ())),
+            Box::new(|meter| measured.inside(corner, meter).map(|_| ())),
         ];
-        assert_eq!(costs, [54, 15, 5, 42, 9]);
+        assert_eq!(costs(&questions), [54, 15, 5, 42, 9]);
     }
 
     #[test]

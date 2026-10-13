@@ -324,7 +324,7 @@ mod tests {
     use stitchcraft_core::{Budget, SplitMix64};
 
     use super::*;
-    use crate::generators::tatami::fixture::{p, scattered};
+    use crate::generators::tatami::fixture::{Question, costs, p, scattered};
 
     /// Every side of `rings`, in order.
     fn all(rings: &[Vec<Point>]) -> Vec<Side> {
@@ -415,16 +415,6 @@ mod tests {
         assert_eq!(Grid::over(&[], 0, 1.0), None);
     }
 
-    /// A question that charges a meter.
-    type Question<'a> = Box<dyn Fn(&mut Meter) -> Result<(), Exhausted> + 'a>;
-
-    /// The work `ask` charges.
-    fn cost(ask: impl FnOnce(&mut Meter)) -> u64 {
-        let mut meter = Budget::DEFAULT.meter();
-        ask(&mut meter);
-        Budget::DEFAULT.max_work - meter.work_left()
-    }
-
     #[test]
     fn more_sides_than_scan_are_filed_in_a_grid() {
         let polygon = |n: usize| -> Vec<Point> {
@@ -462,7 +452,7 @@ mod tests {
         let (stretch, far) = ((p(2.0, 3.0), p(3.0, 3.5)), [p(40.0, -5.0), p(-5.0, 40.0), many[1][0]]);
         let near = |s: &Side| crate::normalize::near::apart(stretch.0, stretch.1, s.a, s.b);
         let from = |q: Point| move |s: &Side| crate::normalize::near::apart(q, q, s.a, s.b);
-        for (points, gridded, costs) in
+        for (points, gridded, expected) in
             [(many.iter().map(Vec::as_slice).collect::<Vec<_>>(), true, [513, 8, 24, 35, 41, 57, 77]), (vec![&few[..]], false, [5, 4, 4, 4, 4, 4, 4])]
         {
             let sides = Sides::new(points.clone(), &mut Budget::DEFAULT.meter()).unwrap();
@@ -477,12 +467,7 @@ mod tests {
             for q in far {
                 questions.push(Box::new(move |meter| filed.nearest((q, q), |_| true, from(q), meter).map(|_| ())));
             }
-            let asked: Vec<u64> = questions.iter().map(|ask| cost(|meter| ask(meter).unwrap())).collect();
-            assert_eq!(asked, costs, "gridded: {gridded}");
-            // Each needs all the work it is charged: a unit less runs out.
-            for (ask, units) in questions.iter().zip(asked) {
-                assert!(ask(&mut Budget { max_stitches: 1, max_work: units - 1 }.meter()).is_err());
-            }
+            assert_eq!(costs(&questions), expected, "gridded: {gridded}");
         }
     }
 }
