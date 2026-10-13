@@ -1,6 +1,6 @@
 # Engine pipeline
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
 
 From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraft-engine` with its
 own tests; stages communicate only through the types in the [data model](data-model.md).
@@ -45,7 +45,8 @@ Adapters have already applied transforms and converted units, so normalization n
   a fill needs a non-empty region, and a running stitch needs a path longer than the minimum stitch
   length.
 - An element with an error diagnostic is skipped; the rest of the design still plans. A design whose
-  every element was skipped yields `SC-E0010`.
+  every element was skipped yields `SC-E0010`. `stitch plan` writes the machine file only when no error
+  is said, as Ink/Stitch writes its file only when no element fails (`REQ-CLI-003`).
 
 ## 3. Generate
 
@@ -81,13 +82,15 @@ Rules every generator follows:
 
 - **Pure:** output depends only on (normalized shape, typed params, neighbours, seed, budget).
 - **The needle before, the next element after.** Elements are generated in sewing order
-  ([ADR 0014](adr/0014-generators-see-their-neighbours.md), `REQ-GEN-003`). Each is given the last
-  needle point of the elements before it, whatever their thread, and what the next element offers to
-  end near: its first point, or its shape when it starts at its own nearest point. The offer comes from
-  the next element's shape and settings and the design's, never its stitches, so nothing waits for a
-  later element. A
-  satin column starts and ends by them ([satin](algorithms/satin.md#start-and-end)), and explicit
-  start and end commands will override them (`REQ-GEN-001`).
+  ([ADR 0014](adr/0014-generators-see-their-neighbours.md), `REQ-GEN-003`). Each is given the last needle
+  point of the elements before it, whatever their thread, and what the next element offers to end near.
+  That is its first point, or, when it starts at its own nearest point, its shape: a satin column's rails
+  or a tatami fill's area. The offer comes from the next element's shape and settings and the design's,
+  never its stitches, so nothing waits for a later element. A satin column and a tatami fill start and
+  end by them ([satin](algorithms/satin.md#start-and-end), [fills](algorithms/fills.md#5-parts)), and
+  explicit start and end commands will override them (`REQ-GEN-001`). Each ends near its next stitch, its
+  point nearest the offer as Ink/Stitch's geometry library finds it, a point of one shape inside the
+  other's area first (`generators::next`).
 - **Seeded randomness:** each element's generator is seeded from its `random_seed`, one of the settings
   every stitch type shares. When that is empty, a hash of its id seeds it. A seed replaces the id, as in
   Ink/Stitch. The PRNG is SplitMix64 from `stitchcraft-core` ([determinism](determinism.md)).

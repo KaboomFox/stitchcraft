@@ -533,6 +533,87 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Different threads get different Brother colours in PES files (`REQ-THREAD-002`). Each thread took its
+  nearest colour on its own, so 2 threads near one Brother colour were written as one. The machine showed
+  the same colour for both, and the file read back as one thread with a stop.
+  - A design's threads now get their colours together, the nearest pairs first. Past the palette's 61
+    thread colours, threads share, and `SC-W0606` says how many.
+  - A thread read from a PES file keeps its colour, Brother's applique steps 62 to 64 included, which
+    `stitch convert` turned into ordinary threads. `stitch plan`, `convert` and `inspect` name each thread
+    by the colour the file has.
+  - A PES file made from a DST file gives each of its black placeholder threads a colour of its own.
+  - `DEV-THREAD-001` records where the colours differ from those Ink/Stitch's files name.
+- A PES design whose top-left corner lies more than 204.7 mm from the start is refused (`REQ-FMT-011`,
+  `SC-E0602`). Its origin field wrapped round, and the design read back elsewhere, as `stitch convert` of
+  a DST file from a large frame showed.
+- A PES file of a design that starts by sewing keeps its pictures' top row blank (`REQ-FMT-012`). The move
+  from the start was drawn across the frame, and the byte after the stitch data's end mark was not 0.
+  pyembroidery's and pystitch's readers, which end the data at `FF 00`, read on into the pictures.
+- A command that cannot write one of its files writes none, and still prints what was said about the
+  design (`REQ-CLI-006`). When `stitch plan` could not write its `--preview` or `--report`, it had
+  written the machine file already. Only the failed write was printed, without the warnings, or a refused
+  design's errors. A bug-report bundle that cannot be written says why once, where it said it twice.
+- `stitch` reads no more than 64 MiB from a pipe or a device either (`REQ-CLI-005`). It took the size the
+  file system gives, which is 0 for them, so `stitch inspect /dev/zero` read until memory ran out.
+- `stitch bug-report --replay` prints what it takes from a bundle as text only (`REQ-CLI-004`). Control
+  characters, line breaks and invisible ones among them, are written as escapes, so a bundle can no
+  longer set the terminal's title, clear its screen or print a line of its own.
+- `stitch bug-report --replay` reproduces a bundle whose design's file name is not UTF-8, or which was
+  written on another platform (`REQ-CLI-001`). The replay took the design name from the file name, and
+  the machine file's label came out otherwise. Bundles now record the name the run used.
+- Style sheets set an SVG's colours and what it hides (`REQ-SVG-006`). Illustrator and CorelDRAW write a
+  drawing's colours as classes in a `<style>` element, and a file read without it sewed black fills where
+  the drawing shows outlines, and sewed what the sheet hides.
+  - The reader applies a rule whose selector names an element or `*`, then classes and ids, or a list of
+    such selectors, in the order of CSS's cascade. One `SC-W0802` names the other selectors and the
+    at-rules, whose settings are not used.
+  - An `!important` declaration in a `style` attribute now overrides a later one there, as in CSS.
+  - A file's style sheets may have up to a million selectors and declarations. Each element is charged to
+    the budget for the declarations it takes, those of its `style` attribute included.
+- A circle or an ellipse starts at its top and turns left on screen, as Ink/Stitch reads it
+  (`REQ-SVG-001`). It started at its right and turned the other way, which moved the tie-in and the
+  direction of its running stitch. The golden `strokes` plan changes for its ring, and so does the
+  tutorial's badge, whose move from the star to the ring is 7 mm where it was 27 mm.
+- Ink/Stitch's `starting_point` and `ending_point` commands are noted as not applied yet (`SC-W0802`,
+  `REQ-SVG-003`), where they were dropped without a word.
+- An empty root `width`, `height` or `viewBox`, or a root `preserveAspectRatio` that does not read, is
+  ignored as a viewer ignores it, and `SC-W0804` names it. The whole file was refused. A viewBox with no
+  area says so, where the message said it was not 4 numbers.
+- A fill's parts that tie at their least x are sewn in order of their least y there
+  (`REQ-FILL-TAT-008`), as Ink/Stitch sews them. The drawing's order decided.
+- `SC-I0313` names a fill whose rule leaves a part beside its edge empty, which subpaths running along
+  each other bound, such as a notch drawn as a hole along the outline. Ink/Stitch's repair fills such a
+  part, and `SC-I0306` no longer says Ink/Stitch leaves it empty. `DEV-FILL-001` describes the repair as
+  it is, not as the even-odd rule.
+- The roadmap plans clip paths for M8, as Ink/Stitch applies them.
+- A tatami fill's rows are walked in the order Ink/Stitch walks them (`REQ-FILL-TAT-001`). Ink/Stitch
+  walks a copy of its graph, and its graph library's copy lists a node's neighbours in another order, so
+  where a node had several edges left the walk took another turn. The golden `strokes` plan changes, 557
+  stitches where it sewed 555. So do 2 MC-4 sheets: TS-08's square at 45° and 0.5 mm, along its edges,
+  and TS-09's ways under the rows and the direction of some rows.
+- Before a tatami fill, a satin column ends where Ink/Stitch ends it (`REQ-SAT-014`). A fill offers its
+  area, and the column ends at the start of its first rail that lies in it, or else of its second. It
+  ended where its rails came nearest the fill's edge.
+- Before a satin column, a fill ends at the first of the column's rail starts that lies in it, taken in
+  the rails' order as Ink/Stitch takes them (`REQ-GEN-003`). It tested each part against both starts
+  before the next part.
+- Before another fill, a fill ends at the first start of the next fill's outlines that lies in it, or
+  else at the first of its own that lies in the next, as Ink/Stitch's geometry library finds them. A
+  hole's start counted, and the fill's own outlines were not tested.
+- `DEV-FILL-011` records that with `underpath` off the needle travels round a ring the shorter way, where
+  Ink/Stitch takes the way with fewer nodes of its graph. The docs said Ink/Stitch takes the shorter way.
+- The weekly mutation run fails when it measured less than it should (`cargo xtask mutants`). A part whose
+  unmutated tree failed its tests looked like a part where every mutant was caught: cargo-mutants still
+  writes its lists, empty, and the shard step took any exit. The step now fails on exits other than 0, 2
+  and 3, as the pull request's does, and the comparison fails a part whose `outcomes.json` records a
+  failed baseline, and a crate `conformance/mutation.toml` records that had no mutant tried.
+- `cargo xtask cleanroom` reads every text file, licence files without an extension included. It
+  matches licence text in any case and the short GPL notice of a Python module. It finds any import of
+  Ink/Stitch's Inkscape and graph libraries, an import from shapely, and a module's relative imports. Of
+  Ink/Stitch's 89 `lib` modules it now finds 86, where it found 39.
+- `cargo xtask perf` counts the instructions of the `field` example's own `plan`, which is never inlined,
+  and fails a count below half the record. Callgrind counts 0 without a word when no function has the name
+  it is given, and the gate passed 0.
 - An element's settings are read as Ink/Stitch reads them (`REQ-PRM-002`, `REQ-PRM-004`).
   - Empty text, or spaces alone, is not set, and the setting takes its default. Ink/Stitch's settings
     window stores a field the user clears as empty text, and an element with one was refused
@@ -563,8 +644,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   list fell on other stitches than Ink/Stitch's.
 - An SVG arc is cut into curves as inkex cuts it, in equal pieces, one more than its whole quarter turns
   (`REQ-SVG-001`, `DEV-SVG-002`). It was cut into pieces of at most 30°, and manual stitch put a needle
-  point at each. A circle or an ellipse starts at its top and goes round anticlockwise on screen, as
-  inkex draws it. It started at its right and went clockwise.
+  point at each. A circle or an ellipse is drawn as inkex draws it: from its top 3 quarters round to its
+  right in one arc, and a quarter back in another. It was 4 arcs of a quarter each.
 - A satin column with no section to sew says so, `SC-E0216`, as Ink/Stitch refuses it. Its rungs or its
   push compensation can take each section's length off one of its rails, and it sewed nothing without a
   word.
@@ -691,6 +772,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - DST reading: a long jump followed by a long move back could be read as a trim (their split pieces
   cancelled exactly); trims are now runs of jumps of at most 1 mm, and the writer no longer writes
   zero-length jumps.
+- **Gap-fill rows stay inside a fill with holes and notches** (`REQ-FILL-TAT-007`), which a review
+  found. Each gap-fill row was the stretch of its grid row beside the stretch's last row, chosen afresh
+  for each, so 2 in a row could lie on either side of a hole or a notch. The needle hopped between them,
+  and back, in straight stitches: on a frame at 30° with 4 gap-fill rows, one ran 0.5 mm into the hole.
+  Each gap-fill row now lies beside the one before it, so they are one strip, and the hops are kept inside
+  the part as travel is.
+- **Pull compensation sews a row once where it meets the outline without leaving the part**
+  (`REQ-FILL-TAT-006`), which the same review found. A row that touches the outline from inside, or runs
+  along it, is split there into segments that meet end to end, and each was lengthened into the next. The
+  needle sewed past the joint and back, 3 times over twice the compensation. A segment is now lengthened
+  only where the row leaves the part, as Ink/Stitch's rebuilt part has one segment there.
+- **Stretches of rows end for gap-fill rows where Ink/Stitch's end** (`REQ-FILL-TAT-007`), which the same
+  review found. A stretch ended where the needle went on to a row not beside the last one. Ink/Stitch
+  counts the edges of the needle's way once the loops in it are taken out, and ends a stretch at more than
+  one, so a way out and back before the handover to the row beside ends one too. The fills page said the
+  two counted alike.
 - **Small elements sewn over each other** no longer lose the design its plan (`REQ-FIN-001`,
   `REQ-FIN-003`), which a review found. Finalizing keeps the ends of each run of stitches and its lock
   points, and leaves out the points before them that are too near. When 2 of those still came too near
@@ -704,6 +801,24 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   first, a speck a few tenths of a millimetre across, sewed stitches all shorter than the machine sews,
   and the design was lost the same way. Ink/Stitch sews such a column (`DEV-SAT-008`). The golden files
   stay as they were.
+- **Fills with many or detailed holes** are sewn instead of refused (`REQ-FILL-TAT-013`), which a review
+  found. Travel under the rows placed points on the rings, weighed its lines by their distance from the
+  rings and kept its way inside the part by looking at every side of every ring, for each point, line and
+  stitch. A 70 mm square with 14 × 14 round holes needed 813 million units of work, more than the
+  budget, and was refused with `SC-E0004`, the whole design with it. The ring sides are now filed in a
+  grid, and each question looks at the sides near it alone, with the same answers: the square needs 21
+  million units. The golden files stay as they were, and the hoop's whole field plans in about 1.5 % fewer
+  instructions.
+- To keep the needle's way between a fill's rows inside the part, StitchCraft looked at the rings 3 times
+  for each stitch and charged the work budget for one of them, which the same review found. The other 2
+  are now charged too, a unit for each cell and side they look at.
+- **`stitch plan` refuses a design with an element left out with an error** (`REQ-CLI-003`), which the
+  same review found. The engine leaves out an element it cannot sew, such as one whose planning runs past
+  its work budget (`SC-E0004`), and plans the rest. The command wrote the machine file without the
+  element and ended with exit status 0, though its help, its README and the diagnostics reference say
+  that nothing is written after an error. Now only the report is written, and the exit status is 1, as
+  Ink/Stitch writes its file only when no element fails. The picture is drawn before anything is
+  written, so a picture that cannot be drawn stops the machine file too.
 - **A tight bend inside a curve** is followed by a running stitch within its tolerance
   (`REQ-RUN-002`), which a review found. Where a curve turned back in a V narrower than the shortest
   stitch, the needle past the tip was dropped, and the stitch over the gap could miss the tip by more than
@@ -721,10 +836,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-09.pes`. Its bottom copy has 2 gap-filling rows, and a
+  stretch of its rows beside the square hole now ends as Ink/Stitch's gap fill ends one. 2 gap-fill rows
+  are sewn there, 9 stitches more (7,788 to 7,797). MC-4 sews TS-09, so its kit is built from this
+  version or a later one.
 - Changed `conformance/golden/plans/strokes.pes` and `.dst` (step 13 of the review's fixes). The
-  fixture's ring starts at its top, as inkex draws a circle, and the design, centred by its stitches,
-  moves 0.04 mm. Its fill's travel is spread evenly where it strayed, and the plan has a stitch fewer
-  (555 to 554).
+  fixture's ring is drawn in inkex's 2 arcs, and the design, centred by its stitches, is 4 micrometres
+  narrower. Its fill's travel is spread evenly where it strayed, and the plan has a stitch fewer (557 to
+  556).
 - Changed `conformance/golden/testsheets/TS-03.pes`: its circles at a tolerance of 0.1 mm and 0.2 mm are
   sewn in even stitches, 23 and 19 where they were 25 each (588 stitches, where there were 596).
 - Changed `conformance/golden/testsheets/TS-08.pes` and `TS-09.pes`: the travel between rows is spread

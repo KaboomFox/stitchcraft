@@ -7,8 +7,9 @@
 //! result. The record layout is the one the writer documents in [`super::pec`].
 //!
 //! A colour change to the same palette entry as the current one is read as a stop: that is how PEC
-//! writes stops (StitchCraft's writer included). Two colour blocks whose threads map to the same Brother
-//! colour therefore read back as one block with a stop — PES v1 cannot tell them apart.
+//! writes stops (StitchCraft's writer included). The writer gives different threads different entries
+//! while the palette's thread colours last (REQ-THREAD-002), so only threads beyond them read back as a
+//! stop. Each thread read is its entry's colour and name, which writes it back as that entry.
 //!
 //! **The origin field** (`REQ-FMT-009`). Brother's software writes 4 bytes before the first record: a
 //! long-form jump on both axes, from the corner of the box the header gives to the start, which the

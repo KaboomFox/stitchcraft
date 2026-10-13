@@ -2,12 +2,13 @@
 //! colours, and how its stroke is shaped.
 //!
 //! SVG elements take their colours and visibility from properties, written as presentation attributes
-//! (`fill="red"`) or in the `style` attribute (`style="fill:red"`), which wins. Most properties inherit,
-//! so the reader hands a [`Style`] from each element to its children, and each element changes what it
-//! sets. A value that does not parse is ignored, as CSS ignores an invalid declaration: the last valid
-//! declaration in `style` wins, then a valid presentation attribute, so StitchCraft sees what an SVG
-//! viewer shows. The reader names a paint, stroke width, join or miter limit that the element sets and
-//! that never parses ([`Declaration::unreadable`]).
+//! (`fill="red"`), in the rules of a style sheet ([`crate::sheet`]) or in the `style` attribute
+//! (`style="fill:red"`), each winning over the one before, and `!important` over all three. Most
+//! properties inherit, so the reader hands a [`Style`] from each element to its children, and each element
+//! changes what it sets. A value that does not parse is ignored, as CSS ignores an invalid declaration:
+//! the next declaration in that order wins, so StitchCraft sees what an SVG viewer shows. The reader names
+//! a paint, stroke width, join or miter limit that the element sets and that never parses
+//! ([`Declaration::unreadable`]).
 //!
 //! Colours are read as editors write them: keywords in any case (`currentcolor`), and an ICC colour
 //! after the sRGB one (`#cd853f icc-color(…)`, from Inkscape's colour-managed picker) is left for the
@@ -18,34 +19,62 @@
 //!
 //! Read here: `fill`, `stroke`, `color` (for `currentColor`), `fill-rule`, `opacity`, `fill-opacity`,
 //! `stroke-opacity`, `stroke-width`, `stroke-linejoin`, `stroke-miterlimit`, `visibility`, `display`,
-//! `paint-order` and the marker properties, each of the three markers on its own. Style sheets
-//! (`<style>` elements) are not read; the document reader warns when a file has one.
+//! `paint-order` and the marker properties, each of the three markers on its own.
 
 use std::str::FromStr;
 
 use roxmltree::Node;
+use stitchcraft_core::{Exhausted, Meter};
 use stitchcraft_engine::design::{FillRule, Join};
 use stitchcraft_plan::Rgb;
 use svgtypes::{Color, Length, LengthUnit, Number, PaintOrder, PaintOrderKind};
 
-/// The properties one element sets itself: its `style` attribute's declarations, then its presentation
-/// attributes.
+/// A `name: value` declaration as written, in a `style` attribute or a style sheet's rule.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Written<'a> {
+    /// The property's name, as written.
+    pub name: &'a str,
+    /// Its value, without `!important`.
+    pub value: &'a str,
+    /// Whether it is marked `!important`.
+    pub important: bool,
+}
+
+/// The properties one element sets itself: its `style` attribute's declarations and those of the style
+/// sheet's rules that select it, in the order CSS gives them, then its presentation attributes.
 pub struct Declared<'a, 'input> {
     node: Node<'a, 'input>,
-    style: Vec<(&'a str, &'a str)>,
+    /// Every declaration of the `style` attribute and of the rules, the one that wins first: the important
+    /// ones before the others, and of each, the `style` attribute's before the rules', the later before the
+    /// earlier, and the more specific rule's before the less.
+    cascade: Vec<(&'a str, &'a str)>,
 }
 
 impl<'a, 'input> Declared<'a, 'input> {
-    /// What `node` declares.
-    pub fn of(node: Node<'a, 'input>) -> Self {
-        Declared { node, style: node.attribute("style").map(declarations).unwrap_or_default() }
+    /// What `node` declares, with the declarations of the style sheet's rules that select it, `rules`, in
+    /// the order they apply: the most specific last, and of rules as specific, the later last. One unit of
+    /// `meter` per declaration, the `style` attribute's and the rules'.
+    pub fn of(node: Node<'a, 'input>, rules: &[&[Written<'a>]], meter: &mut Meter) -> Result<Self, Exhausted> {
+        let inline = node.attribute("style").map(declarations).unwrap_or_default();
+        let count = inline.len() + rules.iter().map(|rule| rule.len()).sum::<usize>();
+        meter.charge(u64::try_from(count).unwrap_or(u64::MAX))?;
+        let mut cascade = Vec::with_capacity(count);
+        for important in [true, false] {
+            let from_rules = rules.iter().rev().flat_map(|rule| rule.iter().rev());
+            let all = inline.iter().rev().chain(from_rules).filter(|w| w.important == important);
+            cascade.extend(all.map(|w| (w.name, w.value)));
+        }
+        Ok(Declared { node, cascade })
     }
 
-    /// The value `node` gives `property`: the last declaration in its `style` attribute, else the
-    /// presentation attribute.
+    /// The declarations of `property`, the one that wins first; presentation attributes are not looked at.
+    fn declared<'s>(&'s self, property: &'s str) -> impl Iterator<Item = &'a str> + 's {
+        self.cascade.iter().filter(move |(name, _)| name.eq_ignore_ascii_case(property)).map(|(_, value)| *value)
+    }
+
+    /// The value `node` gives `property`: the declaration that wins, else the presentation attribute.
     pub fn get(&self, property: &str) -> Option<&'a str> {
-        let declared = self.style.iter().rev().find(|(name, _)| name.eq_ignore_ascii_case(property)).map(|(_, value)| *value);
-        declared.or_else(|| self.node.attribute(property)).map(str::trim)
+        self.declared(property).next().or_else(|| self.node.attribute(property)).map(str::trim)
     }
 
     /// Whether `property` is set to something other than `none`: a clip path, mask or filter.
@@ -84,12 +113,11 @@ impl<'a, 'input> Declared<'a, 'input> {
         declared.into_iter().filter_map(|(property, value, what)| Some((property, value?, what)))
     }
 
-    /// What the element declares for `property`, read with `parse`: the last declaration in `style` that
-    /// reads, else the presentation attribute if it reads. `inherit` keeps the inherited value.
+    /// What the element declares for `property`, read with `parse`: the first declaration that reads, in
+    /// the order they win, else the presentation attribute if it reads. `inherit` keeps the inherited value.
     fn value<T>(&self, property: &str, parse: impl Fn(&'a str) -> Option<T>) -> Declaration<'a, T> {
-        let in_style = self.style.iter().rev().filter(|(name, _)| name.eq_ignore_ascii_case(property)).map(|(_, value)| *value);
         let mut unread = None;
-        for value in in_style.chain(self.node.attribute(property)).map(str::trim) {
+        for value in self.declared(property).chain(self.node.attribute(property)).map(str::trim) {
             if value.eq_ignore_ascii_case("inherit") {
                 return Declaration::Inherited;
             }
@@ -103,31 +131,22 @@ impl<'a, 'input> Declared<'a, 'input> {
         unread.map_or(Declaration::Inherited, Declaration::Unreadable)
     }
 
-    /// Every value the `style` attribute itself gives `property`, in order; presentation attributes are
-    /// not looked at.
-    pub fn in_style<'s>(&'s self, property: &'s str) -> impl Iterator<Item = &'a str> + 's {
-        self.style.iter().filter(move |(name, _)| name.eq_ignore_ascii_case(property)).map(|(_, value)| *value)
+    /// Every value the `style` attribute itself gives `property`, in order; style sheets and presentation
+    /// attributes are not looked at. It reads the attribute again, which [`Declared::of`] paid for.
+    pub fn in_style(&self, property: &str) -> Vec<&'a str> {
+        let inline = self.node.attribute("style").map(declarations).unwrap_or_default();
+        inline.into_iter().filter(|w| w.name.eq_ignore_ascii_case(property)).map(|w| w.value).collect()
     }
 
-    /// The values `node` gives `marker-start`, `marker-mid` and `marker-end`. In the `style` attribute the
-    /// `marker` shorthand sets all three where it stands in the list, and a later declaration wins; a
-    /// marker the `style` attribute does not set comes from its presentation attribute, or else from a
-    /// `marker` attribute.
+    /// The values `node` gives `marker-start`, `marker-mid` and `marker-end`. A `marker` declaration is a
+    /// shorthand that sets all three where it stands in the cascade, and the declaration that wins sets
+    /// each; a marker no declaration sets comes from its presentation attribute, or else from a `marker`
+    /// attribute.
     pub fn markers(&self) -> [Option<&'a str>; 3] {
-        let mut found = [None; 3];
-        for (name, value) in &self.style {
-            if name.eq_ignore_ascii_case("marker") {
-                found = [Some(*value); 3];
-            } else if let Some(slot) = MARKERS.iter().position(|m| name.eq_ignore_ascii_case(m)).and_then(|i| found.get_mut(i)) {
-                *slot = Some(*value);
-            }
-        }
-        for (slot, property) in found.iter_mut().zip(MARKERS) {
-            if slot.is_none() {
-                *slot = self.node.attribute(property).or_else(|| self.node.attribute("marker")).map(str::trim);
-            }
-        }
-        found
+        MARKERS.map(|property| {
+            let declared = self.cascade.iter().find(|(name, _)| name.eq_ignore_ascii_case(property) || name.eq_ignore_ascii_case("marker"));
+            declared.map(|(_, value)| *value).or_else(|| self.node.attribute(property).or_else(|| self.node.attribute("marker"))).map(str::trim)
+        })
     }
 }
 
@@ -190,37 +209,107 @@ fn names_something(value: &str) -> bool {
     !value.is_empty() && !value.eq_ignore_ascii_case("none")
 }
 
-/// The `name: value` declarations of a `style` attribute, in order. It splits on `;` outside quotes and
-/// parentheses, drops `!important`, and skips a declaration without a colon.
-fn declarations<'s>(style: &'s str) -> Vec<(&'s str, &'s str)> {
+/// The `name: value` declarations of a `style` attribute or a rule's block, in order. It splits on `;`
+/// outside quotes, parentheses and comments, takes `!important` off the value, skips a declaration without
+/// a colon, and trims the comments and spaces around each name and value.
+pub fn declarations<'s>(text: &'s str) -> Vec<Written<'s>> {
     let mut found = Vec::new();
     let mut add = |part: &'s str| {
-        if let Some((name, value)) = part.split_once(':') {
-            let value = value.trim();
-            let value = match value.rsplit_once('!') {
-                Some((before, flag)) if flag.trim().eq_ignore_ascii_case("important") => before.trim(),
-                _ => value,
-            };
-            found.push((name.trim(), value));
-        }
+        let Some((name, value)) = css_trim(part).split_once(':') else { return };
+        let value = css_trim(value);
+        let (value, important) = match value.rsplit_once('!') {
+            Some((before, flag)) if css_trim(flag).eq_ignore_ascii_case("important") => (css_trim(before), true),
+            _ => (value, false),
+        };
+        found.push(Written { name: css_trim(name), value, important });
     };
-    let (mut depth, mut quote, mut start) = (0_u32, None, 0);
-    for (i, byte) in style.bytes().enumerate() {
-        match (quote, byte) {
-            (Some(q), _) if byte == q => quote = None,
-            (None, b'"' | b'\'') => quote = Some(byte),
-            (None, b'(') => depth += 1,
-            (None, b')') => depth = depth.saturating_sub(1),
-            (None, b';') if depth == 0 => {
-                // `;` is ASCII, so both ends are character boundaries.
-                add(style.get(start..i).unwrap_or_default());
-                start = i + 1;
-            }
+    let mut start = 0;
+    for at in split_points(text, b';') {
+        // `;` is ASCII, so both ends are character boundaries.
+        add(text.get(start..at).unwrap_or_default());
+        start = at + 1;
+    }
+    add(text.get(start..).unwrap_or_default());
+    found
+}
+
+/// Where `text` has `separator` outside quotes, parentheses, brackets and comments: the byte offsets, in
+/// order. A quote, parenthesis or comment left open runs to the end.
+pub fn split_points(text: &str, separator: u8) -> Vec<usize> {
+    let bytes = text.as_bytes();
+    let (mut found, mut depth, mut i) = (Vec::new(), 0_u32, 0);
+    while let Some(&byte) = bytes.get(i) {
+        match byte {
+            b'"' | b'\'' => i = string_end(bytes, i),
+            b'/' if bytes.get(i + 1) == Some(&b'*') => i = comment_end(bytes, i),
+            b'(' | b'[' => depth += 1,
+            b')' | b']' => depth = depth.saturating_sub(1),
+            _ if byte == separator && depth == 0 => found.push(i),
             _ => {}
         }
+        i += 1;
     }
-    add(style.get(start..).unwrap_or_default());
     found
+}
+
+/// The offset of the last byte of the string that opens at `at` (its closing quote, or the text's end):
+/// a backslash escapes the byte after it.
+pub fn string_end(bytes: &[u8], at: usize) -> usize {
+    let quote = bytes.get(at).copied();
+    let mut i = at + 1;
+    while let Some(&byte) = bytes.get(i) {
+        if byte == b'\\' {
+            i += 1;
+        } else if Some(byte) == quote {
+            return i;
+        }
+        i += 1;
+    }
+    bytes.len().saturating_sub(1).max(at)
+}
+
+/// The offset of the last byte of the comment that opens at `at` (the `/` of its `*/`, or the text's end).
+pub fn comment_end(bytes: &[u8], at: usize) -> usize {
+    // The `*` of the `*/` comes after the `/*`: `/*/` opens a comment and does not close it.
+    let mut i = at + 3;
+    while let Some(&byte) = bytes.get(i) {
+        if byte == b'/' && bytes.get(i - 1) == Some(&b'*') {
+            return i;
+        }
+        i += 1;
+    }
+    bytes.len().saturating_sub(1).max(at)
+}
+
+/// `text` without the spaces and comments around it; those inside stay.
+pub fn css_trim(text: &str) -> &str {
+    let bytes = text.as_bytes();
+    let mut start = 0;
+    while let Some(&byte) = bytes.get(start) {
+        if byte.is_ascii_whitespace() {
+            start += 1;
+        } else if byte == b'/' && bytes.get(start + 1) == Some(&b'*') {
+            start = comment_end(bytes, start) + 1;
+        } else {
+            break;
+        }
+    }
+    // The end is after the last byte outside a comment that is not a space.
+    let (mut end, mut i) = (start, start);
+    while let Some(&byte) = bytes.get(i) {
+        if byte == b'/' && bytes.get(i + 1) == Some(&b'*') {
+            i = comment_end(bytes, i) + 1;
+            continue;
+        }
+        if byte == b'"' || byte == b'\'' {
+            i = string_end(bytes, i);
+        }
+        if !byte.is_ascii_whitespace() {
+            end = i + 1;
+        }
+        i += 1;
+    }
+    text.get(start..end).unwrap_or_default()
 }
 
 /// What a `fill` or `stroke` paints with, as declared. It is resolved per element: `currentColor` takes
@@ -463,13 +552,18 @@ mod tests {
     const BLUE: Paint<'static> = Paint::Plain(Plain::Color(Rgb::new(0, 0, 255)));
     const NONE: Paint<'static> = Paint::Plain(Plain::None);
 
+    /// What `node` declares, with the declarations of `rules`, read within the default budget.
+    fn declared<'a, 'input>(node: Node<'a, 'input>, rules: &[&[Written<'a>]]) -> Declared<'a, 'input> {
+        Declared::of(node, rules, &mut stitchcraft_core::Budget::DEFAULT.meter()).unwrap()
+    }
+
     /// `check` on the style of the element with id `id` in `svg`, inherited through every ancestor.
     fn with_style(svg: &str, id: &str, check: impl FnOnce(Option<Style<'_>>)) {
         let doc = Document::parse(svg).unwrap();
         let node = doc.descendants().find(|n| n.attribute("id") == Some(id)).unwrap();
         let mut chain: Vec<_> = node.ancestors().filter(roxmltree::Node::is_element).collect();
         chain.reverse();
-        check(chain.iter().try_fold(Style::default(), |style, n| style.child(&Declared::of(*n))));
+        check(chain.iter().try_fold(Style::default(), |style, n| style.child(&declared(*n, &[]))));
     }
 
     #[test]
@@ -495,7 +589,7 @@ mod tests {
                <path id="c" style="fill:inherit" fill="red"/><path id="d" style="fill:bogus" fill="inherit"/><path id="e"/></svg>"##,
         )
         .unwrap();
-        let paint = |id| Declared::of(doc.descendants().find(|n| n.attribute("id") == Some(id)).unwrap()).paint("fill");
+        let paint = |id| declared(doc.descendants().find(|n| n.attribute("id") == Some(id)).unwrap(), &[]).paint("fill");
         assert_eq!(paint("a"), Declaration::Set(BLUE));
         assert_eq!(paint("b"), Declaration::Unreadable("bogus"), "the value that would win is named");
         assert_eq!((paint("c"), paint("d"), paint("e")), (Declaration::Inherited, Declaration::Inherited, Declaration::Inherited));
@@ -507,13 +601,57 @@ mod tests {
             let s = s.unwrap();
             assert_eq!((s.fill, s.stroke), (BLUE, Paint::Plain(Plain::Color(Rgb::new(0, 255, 0)))));
         });
-        // The last declaration wins; quotes and parentheses do not split.
-        let d = declarations("fill:red;fill:url(#a;b) blue;font-family:'a;b'");
-        assert_eq!(d, [("fill", "red"), ("fill", "url(#a;b) blue"), ("font-family", "'a;b'")]);
-        assert_eq!(declarations(" ; nothing ; :x"), [("", "x")]);
-        // A quote ends where it closes; a `!` that is not `!important` stays in the value.
-        assert_eq!(declarations("font-family:'a;b';fill:red"), [("font-family", "'a;b'"), ("fill", "red")]);
-        assert_eq!(declarations("x: a!b; y: c ! IMPORTANT"), [("x", "a!b"), ("y", "c")]);
+        // The last declaration wins; quotes, parentheses and comments do not split.
+        let pairs = |text| declarations(text).iter().map(|w| (w.name, w.value)).collect::<Vec<_>>();
+        assert_eq!(pairs("fill:red;fill:url(#a;b) blue;font-family:'a;b'"), [("fill", "red"), ("fill", "url(#a;b) blue"), ("font-family", "'a;b'")]);
+        assert_eq!(pairs(" ; nothing ; :x"), [("", "x")]);
+        assert_eq!(pairs("/* a: b; */ fill /* c */ : /* d */ red /* e; */; stroke:blue"), [("fill", "red"), ("stroke", "blue")]);
+        assert_eq!(pairs("font: 12px/2 serif; fill: red"), [("font", "12px/2 serif"), ("fill", "red")], "a `/` alone starts no comment");
+        // A quote ends where it closes, an escaped quote does not close it, and a `!` that is not
+        // `!important` stays in the value.
+        assert_eq!(pairs(r#"font-family:'a;b';fill:red"#), [("font-family", "'a;b'"), ("fill", "red")]);
+        assert_eq!(pairs(r#"font-family:"a\";b";fill:red"#), [("font-family", r#""a\";b""#), ("fill", "red")]);
+        let flags = |text| declarations(text).iter().map(|w| (w.value, w.important)).collect::<Vec<_>>();
+        assert_eq!(flags("x: a!b; y: c ! IMPORTANT; z: d!important"), [("a!b", false), ("c", true), ("d", true)]);
+        // Something left open runs to the end.
+        assert_eq!(pairs("fill:red /* open"), [("fill", "red")]);
+        assert_eq!(pairs("font-family:'open; fill:red"), [("font-family", "'open; fill:red")]);
+    }
+
+    #[test]
+    fn comments_are_trimmed_and_nothing_else() {
+        assert_eq!(css_trim(" /* a */ x /* b */ y /* c */ "), "x /* b */ y");
+        // A comment ends at the first `*/` after its `/*`, whatever it holds.
+        assert_eq!(css_trim("/* a/b * c */x"), "x");
+        assert_eq!(css_trim("/*/ x */y"), "y", "`/*/` opens a comment and does not close it");
+        // A `/` or a `*` alone is no comment, and a comment's opening in a string is none either.
+        for kept in ["/x", "a*b", "1/2 x", "'/*' x", r#""a /* b" c"#] {
+            assert_eq!(css_trim(kept), kept);
+        }
+        assert_eq!(css_trim("x /* open"), "x");
+        assert_eq!(css_trim("/* open"), "");
+    }
+
+    #[test]
+    fn important_declarations_win_and_the_style_attribute_over_rules() {
+        let doc = Document::parse(r#"<svg><path id="p" fill="red" style="fill:blue;stroke:lime !important;marker:none"/></svg>"#).unwrap();
+        let node = doc.descendants().find(|n| n.attribute("id") == Some("p")).unwrap();
+        // The rules in the order they apply: the second wins over the first.
+        let first = declarations("fill:#000001;stroke:#000002 !important;marker-end:url(#m)");
+        let second = declarations("fill:#000003 !important;stroke:#000004 !important");
+        let both = declared(node, &[&first, &second]);
+        assert_eq!(both.paint("fill"), Declaration::Set(Paint::Plain(Plain::Color(Rgb::new(0, 0, 3)))), "important over the style attribute");
+        assert_eq!(both.get("stroke"), Some("lime"), "an important style attribute over important rules");
+        assert_eq!(both.markers(), [Some("none"), Some("none"), Some("none")], "the style attribute's shorthand over the rule");
+        assert_eq!(both.in_style("stroke"), ["lime"], "only the style attribute");
+        let one = declared(node, &[&first]);
+        assert_eq!(one.get("fill"), Some("blue"));
+        assert_eq!(one.get("stroke"), Some("lime"));
+        // A unit for each declaration: 3 in the style attribute, 3 and 2 in the rules.
+        let mut meter = stitchcraft_core::Budget { max_stitches: 1, max_work: 8 }.meter();
+        assert!(Declared::of(node, &[&first, &second], &mut meter).is_ok() && meter.work_left() == 0);
+        let mut short = stitchcraft_core::Budget { max_stitches: 1, max_work: 7 }.meter();
+        assert!(Declared::of(node, &[&first, &second], &mut short).is_err());
     }
 
     #[test]

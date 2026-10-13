@@ -22,6 +22,10 @@ PEC block) for Brother and DST for everything else come first.
 - Each writer splits moves beyond its per-record limit evenly and documents how every command is encoded
   (byte tables in the module docs, spec vectors in their tests).
 - Never write an empty plan; refuse what does not fit a format's fields instead of truncating it.
+- Formats that name threads by palette entries take them from `Palette::assign` (`stitchcraft-plan`), so
+  different threads stay different on the machine. What a file makes the machine do that the plan does
+  not say comes with it as a note (`Encoded::notes`): DST's cuts before long jumps, and PES threads that
+  share a colour.
 - Canonical plans (`stitchcraft-testkit::plans`) encode to the golden files in
   `conformance/golden/formats/` byte for byte (`tests/golden.rs`; bless with `STITCHCRAFT_BLESS=1`).
 - Readers treat every byte as hostile: lengths and offsets checked, records capped at the stitch budget,

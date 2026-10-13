@@ -245,6 +245,24 @@ fn req_svg_001_basic_shape_attributes() {
 }
 
 #[test]
+fn req_svg_001_circles_and_ellipses_start_at_the_top_and_turn_left() {
+    // Ink/Stitch reads a circle or an ellipse as a path that starts at its top and turns left on screen, and
+    // a running stitch starts where its path starts: the tie-in and the way round follow.
+    let svg = svg(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100" fill="none" stroke="red">
+          <circle cx="50" cy="50" r="10"/><ellipse cx="50" cy="50" rx="20" ry="10"/>
+        </svg>"#);
+    for (element, (rx, ry)) in svg.design.elements().iter().zip([(10.0, 10.0), (20.0, 10.0)]) {
+        let points = &ends(element)[0];
+        // As inkex draws it: from the top 3 quarters round to the right, in 4 pieces, and a quarter on back
+        // to the top, in 2.
+        assert_eq!(points.len(), 7, "{points:?}");
+        all_at(&[points[0], points[4], points[6]], &[(50.0, 50.0 - ry), (50.0 + rx, 50.0), (50.0, 50.0 - ry)]);
+        // Turning left on screen, past the left to below the centre.
+        assert!(points[1].x() < 50.0 && points[2].y() > 50.0, "{points:?}");
+    }
+}
+
+#[test]
 fn req_svg_001_percentages_without_a_viewbox() {
     // Of the root's size in pixels, when it has one…
     let sized = svg(r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="50%" height="50%"/></svg>"#);

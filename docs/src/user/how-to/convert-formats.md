@@ -30,7 +30,9 @@ read back:
 ## DST to PES
 
 A PES file needs a colour for each thread, and a DST file has none to give. Each thread becomes a black
-placeholder, and `SC-W0604` says so. The machine shows every colour block as black, and it pauses
-between them as the DST file did.
+placeholder, and `SC-W0604` says so. The PES file gives each a Brother colour of its own, the nearest to
+black still free, from Black to Dark Gray, Dark Brown and on. The machine shows a new colour at each
+thread change, and pauses there as the DST file did. The colours it shows mean nothing. Load the threads
+the design's author gives.
 
 The [machine formats design](../../design/formats.md) describes how each format is written and read.

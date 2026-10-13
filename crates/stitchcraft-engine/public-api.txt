@@ -280,6 +280,7 @@ pub fn stitchcraft_engine::generators::tatami::TatamiParams::grid(&self) -> stit
 pub fn stitchcraft_engine::generators::tatami::TatamiParams::stitching(&self, stitchcraft_core::units::Mm, &stitchcraft_engine::generators::running::RunningParams) -> stitchcraft_engine::generators::tatami::stitches::Stitching
 pub fn stitchcraft_engine::generators::tatami::TatamiParams::underlay(&self, stitchcraft_core::units::Mm, stitchcraft_engine::generators::tatami::sew::Travel) -> alloc::vec::Vec<stitchcraft_engine::generators::tatami::sew::Layer>
 pub enum stitchcraft_engine::generators::Approach
+pub stitchcraft_engine::generators::Approach::Area(alloc::vec::Vec<stitchcraft_engine::normalize::region::Polygon>)
 pub stitchcraft_engine::generators::Approach::Point(stitchcraft_core::units::Point)
 pub stitchcraft_engine::generators::Approach::Shape(alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>)
 pub struct stitchcraft_engine::generators::Neighbours

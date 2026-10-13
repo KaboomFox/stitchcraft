@@ -2,7 +2,9 @@
 //! follow.
 //!
 //! **Along a ring.** Between 2 points of one ring the needle travels along the ring, the shorter way
-//! round, as Ink/Stitch's travel along a fill's outline does ([`Rings::forwards`]).
+//! round ([`Rings::forwards`]). Ink/Stitch's travel along a fill's outline takes the way with fewer nodes
+//! of its graph, a node every CSS pixel along the outline's sides, which is about the shorter way but not
+//! always (`DEV-FILL-011`).
 //!
 //! **Across the part.** Between points of 2 rings, or where the route pairs nodes on 2 rings, the needle
 //! takes the shortest way along rings and rows: the rows' lines lie inside the part, and the travel along

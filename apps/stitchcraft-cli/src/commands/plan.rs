@@ -4,8 +4,10 @@
 //! The engine does the planning (`stitchcraft_engine::plan`): it fits the plan to the machine and checks
 //! it, so what comes back is written as it is. This command reads the SVG file, prints what was said about
 //! the design — element by element, and what the file format adds, such as DST's cuts before long jumps
-//! (`SC-I0605`) — and writes the files. Nothing is written when the design has errors, except the report,
-//! which says why.
+//! (`SC-I0605`) — and writes the files. Nothing is written when anything said is an error, an element left
+//! out included, except the report, which says why (`REQ-CLI-003`). The machine file, the picture and the
+//! report are written all or none, and when one cannot be written, what was said about the design is
+//! printed before it (`REQ-CLI-006`).
 //!
 //! [`sew`] is the part a bug-report bundle records and replays (`super::bug_report`), so a bundle
 //! reproduces exactly what this command does. When it finds a bug in StitchCraft (`SC-E0009`), this
@@ -16,14 +18,14 @@ use std::path::Path;
 
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use stitchcraft_core::{Budget, Code, Diagnostic};
+use stitchcraft_core::{Budget, Code, Diagnostic, Severity};
 use stitchcraft_formats::Encoded;
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 use stitchcraft_render::{Settings, Style};
 
 use super::bug_report::{self, Run};
-use super::{Outcome, Status, describe_file, describe_plan, describe_threads, hex, output_format, render_diagnostics, write_file};
+use super::{Outcome, Status, describe_file, describe_plan, describe_threads, hex, output_format, render_diagnostics, write_files};
 use crate::cli::PlanArgs;
 use crate::files;
 
@@ -90,44 +92,66 @@ pub fn run(args: &PlanArgs) -> Outcome {
             return Outcome { stdout: String::new(), stderr: format!("stitch: cannot read {}: {e}\n", args.design.display()), status: Status::Io };
         }
     };
-    let sewn = sew(&bytes, profile, format, design_name(&args.design));
+    let name = design_name(&args.design);
+    let sewn = sew(&bytes, profile, format, name);
     if sewn.found_a_bug() {
         let refused = refuse(args, profile, &sewn.diagnostics);
-        return bug_report::beside(&args.output, &Run { design_path: &args.design, design: &bytes, profile, format, says: None }, Ok(&sewn), refused);
+        return bug_report::beside(
+            &args.output,
+            &Run { design_path: &args.design, name, design: &bytes, profile, format, says: None },
+            Ok(&sewn),
+            refused,
+        );
     }
+    written(args, profile, format, sewn)
+}
+
+/// What `stitch plan` writes for the design `sewn`: the machine file, and the picture and the report asked
+/// for, all or none (`REQ-CLI-006`). When anything said is an error, only the report (`REQ-CLI-003`).
+fn written(args: &PlanArgs, profile: &MachineProfile, format: FormatId, sewn: Sewn) -> Outcome {
     let Sewn { mut diagnostics, plan: Some(plan), file: Some(machine_file) } = sewn else { return refuse(args, profile, &sewn.diagnostics) };
-    if let Err(outcome) = write_file(&args.output, &machine_file) {
-        return outcome;
+    // The picture is drawn before anything is written, so that one that cannot be drawn stops the rest too.
+    // The default scale is in range, so there are always settings.
+    let picture = match (&args.preview, Settings::new(Style::Realistic, Settings::DEFAULT_SCALE)) {
+        (Some(path), Some(settings)) => match stitchcraft_render::preview(&plan, settings, &mut Budget::DEFAULT.meter()) {
+            Ok(image) => Some((path, image)),
+            Err(e) => {
+                diagnostics.push(e.diagnostic());
+                None
+            }
+        },
+        _ => None,
+    };
+    // An element left out with an error leaves the rest of the design planned (`REQ-GEN-002`), but a machine
+    // file without it is not the design: Ink/Stitch writes no file when an element fails, and neither does
+    // this command.
+    if diagnostics.iter().any(|d| d.severity() == Severity::Error) {
+        return refuse(args, profile, &diagnostics);
+    }
+    let report = args.report.as_ref().map(|path| (path, report(args, profile, Some((format, &machine_file)), Some(&plan), &diagnostics)));
+    let mut files: Vec<(&Path, &[u8])> = vec![(&args.output, &machine_file)];
+    files.extend(picture.as_ref().map(|(path, image)| (path.as_path(), image.png.as_slice())));
+    files.extend(report.as_ref().map(|(path, text)| (path.as_path(), text.as_bytes())));
+    let said = render_diagnostics(&diagnostics);
+    if let Err(unwritten) = write_files(&files, &said) {
+        return unwritten;
     }
     let mut stdout = summary(args, profile, format, &plan, &machine_file);
-    // The default scale is in range, so there are always settings; a preview too large to draw is said.
-    if let (Some(path), Some(settings)) = (&args.preview, Settings::new(Style::Realistic, Settings::DEFAULT_SCALE)) {
-        match stitchcraft_render::preview(&plan, settings, &mut Budget::DEFAULT.meter()) {
-            Ok(image) => {
-                if let Err(outcome) = write_file(path, &image.png) {
-                    return outcome;
-                }
-                let _ = writeln!(stdout, "  preview   {} ({} × {} pixels)", path.display(), image.width, image.height);
-            }
-            Err(e) => diagnostics.push(e.diagnostic()),
-        }
+    if let Some((path, image)) = &picture {
+        let _ = writeln!(stdout, "  preview   {} ({} × {} pixels)", path.display(), image.width, image.height);
     }
-    if let Some(path) = &args.report {
-        let report = report(args, profile, Some((format, &machine_file)), Some(&plan), &diagnostics);
-        if let Err(outcome) = write_file(path, report.as_bytes()) {
-            return outcome;
-        }
+    if let Some((path, _)) = &report {
         let _ = writeln!(stdout, "  report    {}", path.display());
     }
-    Outcome { stdout, stderr: render_diagnostics(&diagnostics), status: Status::Done }
+    Outcome { stdout, stderr: said, status: Status::Done }
 }
 
 /// Nothing is written but the report, which says why.
 fn refuse(args: &PlanArgs, profile: &MachineProfile, diagnostics: &[Diagnostic]) -> Outcome {
     if let Some(path) = &args.report
-        && let Err(outcome) = write_file(path, report(args, profile, None, None, diagnostics).as_bytes())
+        && let Err(unwritten) = write_files(&[(path, report(args, profile, None, None, diagnostics).as_bytes())], &render_diagnostics(diagnostics))
     {
-        return outcome;
+        return unwritten;
     }
     Outcome::refuse(String::new(), diagnostics)
 }
@@ -197,6 +221,8 @@ fn round(mm: f64) -> f64 {
 mod tests {
     use std::path::PathBuf;
 
+    use stitchcraft_core::ElementId;
+
     use super::*;
     use crate::cli::Format;
 
@@ -221,7 +247,7 @@ mod tests {
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(std::fs::read(&output).unwrap().starts_with(b"#PES0001"));
         assert!(std::fs::read(&preview).unwrap().starts_with(b"\x89PNG"));
-        assert!(out.stdout.contains("  stitches  554 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops\n"), "{}", out.stdout);
+        assert!(out.stdout.contains("  stitches  556 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops\n"), "{}", out.stdout);
         assert!(out.stdout.contains("  threads   1. unnamed (#c00000), shown as Brother PEC 5 \"Red\"\n"));
         // What was said names its element, on the terminal and in the report.
         assert_eq!(
@@ -231,7 +257,7 @@ mod tests {
              info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out.\n"
         );
         let report: Value = serde_json::from_slice(&std::fs::read(&report).unwrap()).unwrap();
-        assert_eq!((report["stitches"].as_u64(), report["color_changes"].as_u64()), (Some(554), Some(3)));
+        assert_eq!((report["stitches"].as_u64(), report["color_changes"].as_u64()), (Some(556), Some(3)));
         assert_eq!(report["size_mm"], json!([59.9, 45.0]));
         assert_eq!(report["diagnostics"][0]["element"], "svg:patch:fill");
         assert_eq!(report["file"]["sha256"], hex(&Sha256::digest(std::fs::read(&output).unwrap())));
@@ -263,6 +289,25 @@ mod tests {
     }
 
     #[test]
+    fn req_cli_003_an_element_left_out_with_an_error_writes_only_the_report() {
+        // The engine leaves out an element whose planning runs past its work budget, with `SC-E0004`, and plans
+        // the rest (`REQ-GEN-002`), as it does for a fill of 2,000 spikes after 12 s.
+        let (output, preview, report) = (temp("left-out.pes"), temp("left-out.png"), temp("left-out.json"));
+        let mut sewn = sew(&std::fs::read(fixture("strokes.svg")).unwrap(), profiles::REFERENCE, FormatId::PesV1, "strokes");
+        let fill = ElementId::new("svg:patch:fill").unwrap();
+        sewn.diagnostics.push(Budget::DEFAULT.meter().charge(u64::MAX).unwrap_err().diagnostic(&Budget::DEFAULT, Some(fill)));
+        assert!(sewn.plan.is_some() && sewn.file.is_some());
+        let asked = PlanArgs { preview: Some(preview.clone()), report: Some(report.clone()), ..args(fixture("strokes.svg"), output.clone()) };
+        let out = written(&asked, profiles::REFERENCE, FormatId::PesV1, sewn);
+        assert_eq!(out.status, Status::DesignErrors);
+        assert!(out.stderr.contains("\nerror SC-E0004 (svg:patch:fill): ") && out.stderr.ends_with("nothing was written\n"), "{}", out.stderr);
+        assert!(!output.exists() && !preview.exists());
+        let report: Value = serde_json::from_slice(&std::fs::read(&report).unwrap()).unwrap();
+        let said: Vec<&str> = report["diagnostics"].as_array().unwrap().iter().filter_map(|d| d["code"].as_str()).collect();
+        assert_eq!((said.last(), report.get("file")), (Some(&"SC-E0004"), None));
+    }
+
+    #[test]
     fn formats_profiles_and_files_are_checked_first() {
         let dst = temp("strokes-as-dst.bin");
         let out = run(&PlanArgs { format: Some(Format::Dst), ..args(fixture("strokes.svg"), dst.clone()) });
@@ -278,20 +323,35 @@ mod tests {
     }
 
     #[test]
-    fn a_file_that_cannot_be_written_stops_the_command() {
+    fn req_cli_006_when_a_file_cannot_be_written_none_is_and_what_was_said_is_printed() {
         // A folder that does not exist: the machine file, the picture, the report, and the report of a
-        // design that was refused.
+        // design that was refused. The other files are not written either, and what was said about the
+        // design is printed before the file that could not be written.
         let nowhere = temp("no-such-folder").join("x");
-        let machine_file = run(&args(fixture("strokes.svg"), nowhere.join("strokes.pes")));
-        let output = temp("written.pes");
-        let picture = run(&PlanArgs { preview: Some(nowhere.join("strokes.png")), ..args(fixture("strokes.svg"), output.clone()) });
-        let report = run(&PlanArgs { report: Some(nowhere.join("strokes.json")), ..args(fixture("strokes.svg"), output) });
+        let output = temp("unwritten.pes");
+        let _ = std::fs::remove_file(&output);
         let not_svg = temp("not-an-svg.svg");
         std::fs::write(&not_svg, b"stitches, please").unwrap();
-        let refused = run(&PlanArgs { report: Some(nowhere.join("refused.json")), ..args(not_svg, temp("refused.pes")) });
-        for out in [machine_file, picture, report, refused] {
+        let cases = [
+            (args(fixture("strokes.svg"), nowhere.join("strokes.pes")), nowhere.join("strokes.pes"), "SC-I0504"),
+            (
+                PlanArgs { preview: Some(nowhere.join("strokes.png")), ..args(fixture("strokes.svg"), output.clone()) },
+                nowhere.join("strokes.png"),
+                "SC-I0504",
+            ),
+            (
+                PlanArgs { report: Some(nowhere.join("strokes.json")), ..args(fixture("strokes.svg"), output.clone()) },
+                nowhere.join("strokes.json"),
+                "SC-I0504",
+            ),
+            (PlanArgs { report: Some(nowhere.join("refused.json")), ..args(not_svg, output.clone()) }, nowhere.join("refused.json"), "SC-E0801"),
+        ];
+        for (asked, unwritten, said) in cases {
+            let out = run(&asked);
             assert_eq!(out.status, Status::Io, "{}", out.stderr);
-            assert!(out.stderr.starts_with("stitch: cannot write "), "{}", out.stderr);
+            assert!(out.stderr.contains(said) && out.stderr.contains(&format!("stitch: cannot write {}: ", unwritten.display())), "{}", out.stderr);
+            assert!(out.stderr.ends_with("nothing was written\n") && out.stdout.is_empty(), "{}", out.stderr);
+            assert!(!output.exists(), "{}", unwritten.display());
         }
     }
 }
