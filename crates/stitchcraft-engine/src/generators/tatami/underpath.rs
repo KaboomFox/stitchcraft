@@ -11,7 +11,8 @@
 //! **What an edge costs.** Ink/Stitch's costs, in its units, CSS pixels. Along a ring an edge costs 3 times
 //! the straight line between its ends. Inside, an edge costs its length over its distance from the part's
 //! rings, simplified within 0.5 mm, plus a tenth of a pixel. So travel keeps to the middle of the part and
-//! off its rings.
+//! off its rings. The distance is the nearest of the sides near the edge ([`super::sides`]), which is the
+//! nearest of them all.
 //!
 //! **Sewn rows close the lines across them.** Once a row is sewn, the edges that cross it close, and no later
 //! travel runs over it: travel runs under rows sewn after it, which hide it.
@@ -36,6 +37,7 @@ use super::graph::NodeId;
 use super::rings::{Place, Rings, stretches};
 use super::route::Node;
 use super::rows::{Grid, axes, rows};
+use super::sides::Sides;
 use super::travel::{search, way_to};
 use crate::generators::running::along_line;
 use crate::normalize::near::{Snap, apart, key};
@@ -98,7 +100,7 @@ impl Underpath {
     /// The lines travel may follow across `part`, whose rings are `rings`, between the route's `nodes`, for
     /// the fill's row `segments` at `angle` degrees. `None` when a diagonal grating misses the part, which
     /// then travels along its rings, as Ink/Stitch's does. One unit of `meter` for each line, each pair of
-    /// lines looked at for a crossing, each edge, each side its distance is measured from, and each row
+    /// lines looked at for a crossing, each edge, each cell and side looked at for its distance, and each row
     /// looked at for crossing an edge.
     pub(crate) fn new(
         part: &Polygon,
@@ -156,6 +158,7 @@ impl Underpath {
         }
         built.join_rings(meter)?;
         let simplified = part.rings().map(|ring| simplify(ring, SIMPLIFIED, meter)).collect::<Result<Vec<_>, _>>()?;
+        let simplified = Sides::new(simplified.iter().map(Vec::as_slice).collect(), meter)?;
         let mut inside = Vec::new();
         for (lines, cuts) in [&diagonal, &other, &square].into_iter().zip(&cuts) {
             for (&(a, b), along) in lines.iter().zip(cuts) {
@@ -317,17 +320,10 @@ impl Building {
     }
 
     /// Adds the inside edge from `a` to `b`, costing its length over its distance from the `simplified`
-    /// rings plus a tenth of a pixel, in pixels; its number. One unit of `meter` for each side measured.
-    fn inside(&mut self, a: NodeId, b: NodeId, simplified: &[Vec<Point>], meter: &mut Meter) -> Result<usize, Exhausted> {
+    /// rings plus a tenth of a pixel, in pixels; its number. Costs as [`Sides::nearest`] does.
+    fn inside(&mut self, a: NodeId, b: NodeId, simplified: &Sides<'_>, meter: &mut Meter) -> Result<usize, Exhausted> {
         let (Some(&p), Some(&q)) = (self.points.get(a), self.points.get(b)) else { return Ok(self.link(a, b, f64::INFINITY)) };
-        let mut nearest = f64::INFINITY;
-        for ring in simplified {
-            meter.charge(u64::try_from(ring.len()).unwrap_or(u64::MAX))?;
-            for side in ring.windows(2) {
-                let &[c, d] = side else { continue };
-                nearest = nearest.min(apart(p, q, c, d));
-            }
-        }
+        let nearest = simplified.nearest((p, q), |_| true, |side| apart(p, q, side.a, side.b), meter)?.map_or(f64::INFINITY, |(d, _)| d);
         Ok(self.link(a, b, p.distance(q) * PX_PER_MM / (nearest * PX_PER_MM + OFF_RING)))
     }
 }

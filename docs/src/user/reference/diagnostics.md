@@ -31,12 +31,13 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0303`](#sc-w0303) | Warning | Parts of a fill too small to sew left out |
 | [`SC-W0304`](#sc-w0304) | Warning | Fill smaller than 1.4 mm² |
 | [`SC-W0305`](#sc-w0305) | Warning | Fill part too thin for rows; sewn round its outline |
-| [`SC-I0306`](#sc-i0306) | Info | Nonzero fill rule fills a part the even-odd rule leaves empty |
+| [`SC-I0306`](#sc-i0306) | Info | Nonzero fill rule fills a part inside that the even-odd rule leaves empty |
 | [`SC-W0307`](#sc-w0307) | Warning | Fill in parts that are apart; each sewn on its own |
 | [`SC-I0308`](#sc-i0308) | Info | Fill underlay too thin for rows; sewn round the outline |
 | [`SC-W0309`](#sc-w0309) | Warning | Fill's expand shrinks a part away; sewn at its own size |
 | [`SC-W0310`](#sc-w0310) | Warning | Fill's underlay inset shrinks a part away; underlay over all of it |
 | [`SC-W0312`](#sc-w0312) | Warning | Fill's pull compensation below 0; read as 0 |
+| [`SC-I0313`](#sc-i0313) | Info | Fill drawn twice along its edge; Ink/Stitch fills the part left empty |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -49,6 +50,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
 | [`SC-W0604`](#sc-w0604) | Warning | Thread colours unknown |
 | [`SC-I0605`](#sc-i0605) | Info | Long jumps cut in DST |
+| [`SC-W0606`](#sc-w0606) | Warning | Threads share a Brother colour |
 | [`SC-E0701`](#sc-e0701) | Error | Design does not fit the hoop |
 | [`SC-W0702`](#sc-w0702) | Warning | Design is larger than the comfort zone |
 | [`SC-I0703`](#sc-i0703) | Info | Stitches longer than the machine's longest stitch; split |
@@ -333,13 +335,13 @@ stroke or a satin column.
 
 ## SC-I0306
 
-**Info** — Nonzero fill rule fills a part the even-odd rule leaves empty
+**Info** — Nonzero fill rule fills a part inside that the even-odd rule leaves empty
 
 A fill's fill rule says which parts of it are filled where its subpaths lie inside each other or
 overlap. Under the rule `nonzero`, SVG's default, a part that the subpaths wind round twice the same
 way is filled; the even-odd rule leaves it empty. StitchCraft fills it, as the drawing shows it.
-Ink/Stitch fills every shape by the even-odd rule, so the same file leaves that part empty in
-Ink/Stitch.
+Ink/Stitch takes every subpath but the largest as a hole, whatever the fill rule. Where such a part
+lies inside the fill, away from its edge, the same file leaves it empty in Ink/Stitch.
 
 To leave the part empty in both, set the fill rule to even-odd, or draw the inner subpath the other
 way round.
@@ -398,6 +400,18 @@ the same settings below 0 as narrower.
 
 The message names the settings. Set them to 0 or more; to keep the rows inside the edge, use a
 negative `expand_mm`.
+
+## SC-I0313
+
+**Info** — Fill drawn twice along its edge; Ink/Stitch fills the part left empty
+
+Two subpaths of a fill run along each other at its edge, around a part that its fill rule leaves
+empty. A notch drawn as a hole whose sides lie on the outline is one, and a shape drawn twice is
+another. StitchCraft leaves the part empty, as the drawing shows it. Ink/Stitch repairs such a shape
+by merging each stretch drawn twice into one, which fills the part, and the same file then sews it
+filled in Ink/Stitch.
+
+To sew it alike in both, draw the outline round the empty part instead of a subpath along it.
 
 ## SC-W0401
 
@@ -520,8 +534,9 @@ StitchCraft does not know yet: please report it with the file.
 **Warning** — Thread colours unknown
 
 The file stores no thread colours (DST files never do: they only say where the machine pauses for
-the next thread), so every thread has a placeholder colour — in previews, and in files converted
-from this one, where the machine shows that colour at each thread change.
+the next thread), so every thread has a black placeholder colour in previews. A PES file converted
+from this one names each thread by the Brother colour nearest black that is still free (Black, Dark
+Gray, Dark Brown and so on), which says nothing of the threads the design needs.
 
 The stitches are not affected. Load the threads the design needs, in the order the design's
 author gives; StitchCraft cannot know them.
@@ -538,6 +553,19 @@ With a tie-off before the jump the cut is usually welcome: there is no jump thre
 Nothing to do. Where an element's ties are off, turn them on so its stitching holds when it is
 cut, or sew a PES file, where only trims cut. A machine set to another number of jump records cuts
 before other jumps: see its DST setting.
+
+## SC-W0606
+
+**Warning** — Threads share a Brother colour
+
+A PES file names each thread by a colour of the Brother palette, which has 61 thread colours.
+StitchCraft gives each different thread a colour of its own, the nearest one still free, so the
+machine asks for each thread change. A design with more different threads than that has some
+share a colour, and the machine shows that colour for each of them: at a change between 2 of them it
+shows the thread already in the machine, as for a stop.
+
+Load the threads in the order the report lists them, rather than by the colours the machine shows.
+Or use fewer different threads: merge those of nearly the same colour.
 
 ## SC-E0701
 
@@ -576,7 +604,8 @@ To choose where the needle goes down instead, add nodes (manual stitch) or set
 **Error** — SVG could not be read
 
 The SVG file could not be read: it is not well-formed XML, its root is not an `<svg>` element,
-its size or viewBox makes no sense, or it is larger than StitchCraft reads. Nothing was stitched.
+its size or viewBox does not read or makes no sense, or it is larger than StitchCraft reads, its
+style sheets included. Nothing was stitched.
 
 The message says what is wrong and, for XML errors, where. Open the file in a vector editor and
 save it again as plain SVG.
@@ -587,9 +616,9 @@ save it again as plain SVG.
 
 Part of the SVG uses a feature that StitchCraft does not stitch, so that part is left out or
 simplified: text that is not converted to paths, raster images, clones (`<use>`), nested `<svg>`
-elements, style sheets, or a gradient or pattern used as a colour. Values that do not read are
-named too. A colour that does not read is ignored, as a viewer ignores it, and one of Ink/Stitch's
-design settings keeps its default.
+elements, style sheet rules with selectors StitchCraft does not read, or a gradient or pattern used
+as a colour. Values that do not read are named too. A colour that does not read is ignored, as a
+viewer ignores it, and one of Ink/Stitch's design settings keeps its default.
 
 The message names the element and what was done. Convert text and clones to paths in the editor
 (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
@@ -614,7 +643,8 @@ An element's geometry cannot be used: its path data has an error (the path is st
 error, as SVG viewers draw it), its transform is not valid (it is skipped with everything inside
 it), it draws nothing, or it lies more than 10 metres from the document's origin, beyond what
 machine files can record (it is skipped). A stroke width, join or miter limit that does not read
-is named as well, and ignored as a viewer ignores it. A stroke too wide to measure is skipped.
+is named as well, and ignored as a viewer ignores it, and so is an empty width, height or viewBox
+of the drawing, or an aspect ratio that does not read. A stroke too wide to measure is skipped.
 
 The message names the element. Check its path data and transform, or remove stray objects far from
 the design.

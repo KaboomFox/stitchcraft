@@ -88,6 +88,21 @@ mod tests {
     }
 
     #[test]
+    fn req_thread_002_the_threads_are_named_by_the_entries_the_file_has() {
+        // Entry 62 is "Applique Material", which colour matching never picks: its nearest thread colour
+        // is Orange (12).
+        let mut bytes = std::fs::read(golden("formats/one-stitch.pes")).unwrap();
+        bytes[22 + 49] = 62;
+        let dir = std::env::temp_dir().join(format!("stitchcraft-inspect-applique-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("applique.pes");
+        std::fs::write(&path, bytes).unwrap();
+        let out = inspect(path, None);
+        assert!(out.stdout.contains("  threads   1. Applique Material (#ffc864), shown as Brother PEC 62 \"Applique Material\"\n"), "{}", out.stdout);
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
     fn describes_a_dst_file() {
         let out = inspect(golden("testsheets/TS-01.dst"), None);
         assert_eq!(out.status, Status::Done);

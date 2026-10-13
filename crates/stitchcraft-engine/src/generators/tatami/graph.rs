@@ -8,12 +8,20 @@
 //! removed drops out of the list, and the others keep their places. This graph lists them the same way, so
 //! that the route makes the same choices.
 //!
+//! **The copy.** Ink/Stitch walks a copy of its graph, and the library copies a graph by adding its edges
+//! again, node by node in the order the nodes were added, each node's in the order it lists them. An edge
+//! comes into the copy from the end added first, so a node of the copy lists first its neighbours added
+//! before it, in the order they were added, and then the others, itself included, in its own order. The
+//! edges between 2 nodes keep their order. [`Graph::copied`] makes the same copy, for the walk.
+//!
 //! An edge is its 2 ends and its [`Kind`]. Ink/Stitch's graph knows an edge between 2 nodes by its kind,
 //! so adding an edge of a kind the 2 nodes already share adds nothing; the edges that pair nodes of odd
 //! degree are the exception and may repeat. An edge from a node to itself is listed once among the node's
 //! edges and counts twice towards its degree.
 //!
 //! Lookups never index blindly: a node or an edge that does not exist is simply not there.
+
+use stitchcraft_core::{Exhausted, Meter};
 
 /// A node, by the order it was added in.
 pub(crate) type NodeId = usize;
@@ -151,6 +159,25 @@ impl Graph {
         self.around.get(node).into_iter().flatten().flat_map(|n| n.edges.iter().copied())
     }
 
+    /// The graph as Ink/Stitch's graph library copies it: every edge, with its number, added again from the
+    /// node added first of its 2 ends, node by node, each node's edges in the order it lists them. One unit of
+    /// `meter` for each edge.
+    pub fn copied(&self, meter: &mut Meter) -> Result<Graph, Exhausted> {
+        let mut copy = Graph { edges: self.edges.clone(), around: vec![Vec::new(); self.around.len()] };
+        for (node, list) in self.around.iter().enumerate() {
+            for n in list.iter().filter(|n| n.node >= node) {
+                meter.charge(u64::try_from(n.edges.len()).unwrap_or(u64::MAX))?;
+                for &id in &n.edges {
+                    copy.attach(node, n.node, id);
+                    if n.node != node {
+                        copy.attach(n.node, node, id);
+                    }
+                }
+            }
+        }
+        Ok(copy)
+    }
+
     /// Every edge once: node by node, each node's edges to the neighbours not yet passed, in the order
     /// [`Graph::edges_at`] lists them. Each comes with the node it was listed from first.
     pub fn all(&self) -> Vec<(NodeId, EdgeId)> {
@@ -172,6 +199,8 @@ impl Graph {
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_core::Budget;
+
     use super::*;
 
     /// A graph of `count` nodes and no edges.
@@ -246,6 +275,32 @@ mod tests {
         g.remove(lap);
         assert_eq!(g.degree(0), 3);
         assert_eq!(g.edge(lap), None);
+    }
+
+    #[test]
+    fn a_copy_lists_the_neighbours_added_before_a_node_first_as_ink_stitch_s_graph_library_copies() {
+        let mut g = nodes(4);
+        let row = g.add(2, 3, Kind::Row(0)).unwrap();
+        g.add(2, 0, Kind::Outline);
+        g.add(0, 1, Kind::Outline);
+        g.add(2, 1, Kind::Extra);
+        g.add(2, 0, Kind::Extra);
+        g.add(2, 2, Kind::Outline);
+        let gone = g.add(1, 3, Kind::Paired).unwrap();
+        g.remove(gone);
+        assert_eq!(kinds(&g, 2), [(3, Kind::Row(0)), (0, Kind::Outline), (0, Kind::Extra), (1, Kind::Extra), (2, Kind::Outline)]);
+        let mut meter = Budget::DEFAULT.meter();
+        let copy = g.copied(&mut meter).unwrap();
+        // Node 2 lists 0, then 1, which came before it, then 3 and itself, in the order it listed them; the
+        // 2 edges to 0 keep their order.
+        assert_eq!(kinds(&copy, 2), [(0, Kind::Outline), (0, Kind::Extra), (1, Kind::Extra), (3, Kind::Row(0)), (2, Kind::Outline)]);
+        assert_eq!(kinds(&copy, 0), [(2, Kind::Outline), (2, Kind::Extra), (1, Kind::Outline)]);
+        assert_eq!(kinds(&copy, 3), [(2, Kind::Row(0))]);
+        // Every edge keeps its number, a removed one stays removed, and each edge costs a unit.
+        assert_eq!((copy.edge(row), copy.edge(gone)), (g.edge(row), None));
+        assert_eq!((0..4).map(|n| copy.degree(n)).collect::<Vec<_>>(), (0..4).map(|n| g.degree(n)).collect::<Vec<_>>());
+        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 6);
+        assert!(g.copied(&mut Budget { max_stitches: 1, max_work: 5 }.meter()).is_err());
     }
 
     #[test]

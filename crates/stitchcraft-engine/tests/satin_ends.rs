@@ -15,8 +15,9 @@ use stitchcraft_engine::PlanOutcome;
 use stitchcraft_engine::design::{DesignSettings, Element, Shape};
 use stitchcraft_engine::generate::approach;
 use stitchcraft_engine::generators::{Approach, Neighbours};
+use stitchcraft_engine::normalize::region::Polygon;
 use stitchcraft_plan::{Role, Stitch, StitchKind, Thread};
-use stitchcraft_testkit::designs::{BLUE, RED, along, messages, p, planned, polylines, widened};
+use stitchcraft_testkit::designs::{BLUE, RED, along, fill, messages, p, planned, polylines, widened};
 use stitchcraft_testkit::satins::{ladder, sewn_between, sewn_satin};
 
 /// The column 10 mm long and 6 mm wide, sewn with `params` between `neighbours`, and its warnings.
@@ -180,6 +181,25 @@ fn req_sat_014_the_next_element_s_rails_say_where_the_next_stitch_is() {
 }
 
 #[test]
+fn req_sat_014_before_a_fill_the_next_stitch_is_the_first_rail_start_that_lies_in_it() {
+    // A tatami fill's square holds the column. Ink/Stitch's geometry library finds the next stitch at the
+    // first rail's start, (0, 0), 0 away from the square, and the column ends there. Measured to the
+    // square's rings, it would end at (10, 0), where the rails come nearest them.
+    let end = |square: &[(f64, f64)], params: &[(&str, &str)]| {
+        let fill = fill("fill", &[square], &RED, &[("fill_underlay", "false")]);
+        *sewn_by(&planned(vec![satin("c", 0.0, &RED, params), fill]), 0).last().unwrap()
+    };
+    let around: &[(f64, f64)] = &[(-10.0, -10.0), (12.0, -10.0), (12.0, 20.0), (-10.0, 20.0)];
+    assert!(end(around, &[]).distance(p(0.0, 0.0)) < 1e-9, "{:?}", end(around, &[]));
+    // Swapped, the rail at y = 6 comes first, and its start is the next stitch.
+    let swapped = end(around, &[("swap_satin_rails", "true")]);
+    assert!(swapped.distance(p(0.0, 6.0)) < 1e-9, "{swapped:?}");
+    // A square that holds only the second rail's start, which the first rail misses: that start.
+    let second = end(&[(-2.0, 4.0), (2.0, 4.0), (2.0, 8.0), (-2.0, 8.0)], &[]);
+    assert!(second.distance(p(0.0, 6.0)) < 1e-9, "{second:?}");
+}
+
+#[test]
 fn req_sat_014_an_end_as_near_2_cuts_is_cut_at_the_first() {
     // Pairs every 0.5 mm, and the end at x = 5.25, as near the pair at 5 as the pair at 5.5: the column is
     // cut at 5, and the needle follows the line from there.
@@ -243,7 +263,8 @@ fn satin(id: &str, y: f64, thread: &Thread, params: &[(&str, &str)]) -> Element 
     along(id, path, thread, &[params, &[("satin_column", "true")]].concat())
 }
 
-/// `element` made a fill of the square 10 mm wide at its path's start, which StitchCraft does not sew yet.
+/// `element` made a fill of the square 10 mm wide at its path's start: a tatami fill unless its settings
+/// say otherwise.
 fn as_fill(element: Element) -> Element {
     let start = element.shape.path().points().next().unwrap();
     let (x, y) = (start.x(), start.y());
@@ -304,10 +325,13 @@ fn req_gen_003_what_an_element_offers_comes_from_its_shape_and_settings() {
     assert_eq!(first(&[]), Some(Approach::Point(p(0.0, 0.0))));
     assert_eq!(first(&[("swap_satin_rails", "true")]), Some(Approach::Point(p(0.0, 6.0))));
     assert_eq!(first(&[("reverse_rails", "first")]), Some(Approach::Point(p(10.0, 0.0))));
-    // A tatami fill offers its area's rings, the drawing's first point first; a fill of a method not sewn
-    // yet offers nothing.
-    let ring = vec![p(2.0, 3.0), p(2.0, 13.0), p(12.0, 13.0), p(12.0, 3.0), p(2.0, 3.0)];
-    assert_eq!(approach(&as_fill(stroke.clone()), &DesignSettings::default(), &Budget::DEFAULT), Some(Approach::Shape(vec![ring])));
+    // A tatami fill offers its area, its outline from the drawing's first point; a fill of a method not
+    // sewn yet offers nothing.
+    let outline = vec![p(2.0, 3.0), p(2.0, 13.0), p(12.0, 13.0), p(12.0, 3.0), p(2.0, 3.0)];
+    assert_eq!(
+        approach(&as_fill(stroke.clone()), &DesignSettings::default(), &Budget::DEFAULT),
+        Some(Approach::Area(vec![Polygon { outline, holes: Vec::new() }]))
+    );
     let contour = Element { params: [("fill_method", "contour_fill")].into_iter().collect(), ..as_fill(stroke) };
     assert_eq!(approach(&contour, &DesignSettings::default(), &Budget::DEFAULT), None);
     // A path that is no satin, unreadable settings and a spent budget offer nothing.

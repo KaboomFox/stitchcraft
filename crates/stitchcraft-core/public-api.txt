@@ -32,6 +32,7 @@ pub stitchcraft_core::diag::Code::FillPartsTooSmall
 pub stitchcraft_core::diag::Code::FillPullCompensationNegative
 pub stitchcraft_core::diag::Code::FillRuleNotEvenOdd
 pub stitchcraft_core::diag::Code::FillSmall
+pub stitchcraft_core::diag::Code::FillStretchDrawnTwice
 pub stitchcraft_core::diag::Code::FillTooThin
 pub stitchcraft_core::diag::Code::FillUnderlayInsetShrinksAway
 pub stitchcraft_core::diag::Code::FillUnderlayTooThin
@@ -69,6 +70,7 @@ pub stitchcraft_core::diag::Code::SvgGeometryUnusable
 pub stitchcraft_core::diag::Code::SvgObjectIgnored
 pub stitchcraft_core::diag::Code::SvgUnreadable
 pub stitchcraft_core::diag::Code::ThreadColorsUnknown
+pub stitchcraft_core::diag::Code::ThreadsShareColor
 pub stitchcraft_core::diag::Code::TooLargeForFormat
 pub stitchcraft_core::diag::Code::TooManyColorChanges
 pub stitchcraft_core::diag::Code::TrimOrStopLeftOut
@@ -210,6 +212,7 @@ pub stitchcraft_core::Code::FillPartsTooSmall
 pub stitchcraft_core::Code::FillPullCompensationNegative
 pub stitchcraft_core::Code::FillRuleNotEvenOdd
 pub stitchcraft_core::Code::FillSmall
+pub stitchcraft_core::Code::FillStretchDrawnTwice
 pub stitchcraft_core::Code::FillTooThin
 pub stitchcraft_core::Code::FillUnderlayInsetShrinksAway
 pub stitchcraft_core::Code::FillUnderlayTooThin
@@ -247,6 +250,7 @@ pub stitchcraft_core::Code::SvgGeometryUnusable
 pub stitchcraft_core::Code::SvgObjectIgnored
 pub stitchcraft_core::Code::SvgUnreadable
 pub stitchcraft_core::Code::ThreadColorsUnknown
+pub stitchcraft_core::Code::ThreadsShareColor
 pub stitchcraft_core::Code::TooLargeForFormat
 pub stitchcraft_core::Code::TooManyColorChanges
 pub stitchcraft_core::Code::TrimOrStopLeftOut
