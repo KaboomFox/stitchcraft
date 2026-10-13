@@ -414,8 +414,9 @@ registry! {
     UnreadableFile = "SC-E0603", Error, "Machine file could not be read";
 
     /// The file stores no thread colours (DST files never do: they only say where the machine pauses for
-    /// the next thread), so every thread has a placeholder colour — in previews, and in files converted
-    /// from this one, where the machine shows that colour at each thread change.
+    /// the next thread), so every thread has a black placeholder colour in previews. A PES file converted
+    /// from this one names each thread by the Brother colour nearest black that is still free (Black, Dark
+    /// Gray, Dark Brown and so on), which says nothing of the threads the design needs.
     ///
     /// The stitches are not affected. Load the threads the design needs, in the order the design's
     /// author gives; StitchCraft cannot know them.
@@ -430,6 +431,16 @@ registry! {
     /// cut, or sew a PES file, where only trims cut. A machine set to another number of jump records cuts
     /// before other jumps: see its DST setting.
     JumpsCutInDst = "SC-I0605", Info, "Long jumps cut in DST";
+
+    /// A PES file names each thread by a colour of the Brother palette, which has 61 thread colours.
+    /// StitchCraft gives each different thread a colour of its own, the nearest one still free, so the
+    /// machine asks for each thread change. A design with more different threads than that has some
+    /// share a colour, and the machine shows that colour for each of them: at a change between 2 of them it
+    /// shows the thread already in the machine, as for a stop.
+    ///
+    /// Load the threads in the order the report lists them, rather than by the colours the machine shows.
+    /// Or use fewer different threads: merge those of nearly the same colour.
+    ThreadsShareColor = "SC-W0606", Warning, "Threads share a Brother colour";
 
     /// The design is wider or taller than the machine's hoop, so the machine cannot sew it in one
     /// hooping (most machines refuse the file).

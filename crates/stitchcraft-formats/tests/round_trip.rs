@@ -20,9 +20,9 @@ fn round_trip(plan: &StitchPlan, format: FormatId) -> StitchPlan {
     decode(&encoded.bytes).unwrap().plan
 }
 
-/// The Brother palette index of every thread the machine asks for.
+/// The Brother palette index of every thread the machine asks for (REQ-THREAD-002).
 fn pec_threads(plan: &StitchPlan) -> Vec<u8> {
-    plan.color_entries().iter().filter_map(|e| BROTHER_PEC.nearest(e.thread.color)).map(|e| e.index).collect()
+    BROTHER_PEC.assign(plan.color_entries().iter().map(|e| e.thread)).unwrap().entries.iter().map(|e| e.index).collect()
 }
 
 #[test]
