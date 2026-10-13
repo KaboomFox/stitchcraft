@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-934d2b4f.js";
+            window.path_to_searchindex_js = "searchindex-674dd97d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -3856,7 +3856,8 @@ generator receives a typed struct or nothing.</li>
 a fill needs a non-empty region, and a running stitch needs a path longer than the minimum stitch
 length.</li>
 <li>An element with an error diagnostic is skipped; the rest of the design still plans. A design whose
-every element was skipped yields <code>SC-E0010</code>.</li>
+every element was skipped yields <code>SC-E0010</code>. <code>stitch plan</code> writes the machine file only when no error
+is said, as Ink/Stitch writes its file only when no element fails (<code>REQ-CLI-003</code>).</li>
 </ul>
 <h2 id="3-generate"><a class="header" href="#3-generate">3. Generate</a></h2>
 <p>Each element becomes stitch groups (<code>stitchcraft_engine::generate</code>): the needle points of each part of it
@@ -4914,6 +4915,10 @@ route’s start, or on to the end of the route’s first stretch of travel, as I
 </ol>
 <p>Equally cheap ways, the simplified rings and the points a way is cut into follow StitchCraft’s own rules,
 so the way can differ from Ink/Stitch’s in its details (<code>DEV-FILL-007</code>).</p>
+<p>Travel asks the rings where a point lies on them, how far a line lies from them, and where a stitch meets
+them or lies inside. Each question looks only at the ring sides near its point, line or stitch, filed in a
+grid of square cells about as many as the sides, and gets the answer a look at every side would give
+(<code>REQ-FILL-TAT-013</code>).</p>
 <h3 id="5-parts"><a class="header" href="#5-parts">5. Parts</a></h3>
 <p>A region in parts sews them one at a time, as Ink/Stitch sews them (<code>REQ-FILL-TAT-008</code>, since M5.4).
 The part nearest the needle goes first, a part the needle is in being 0 away. With no needle, the part
@@ -5003,6 +5008,7 @@ the fill sews nothing, and <code>SC-W0303</code> says so.</p>
 <tr><td><code>REQ-FILL-TAT-009</code></td><td>A 130 × 180 mm rectangle at 0.4 mm, the reference hoop’s whole field, plans within the NFR-PERF-1 budget, guarded by <code>cargo xtask perf</code> since M5.9</td></tr>
 <tr><td><code>REQ-FILL-TAT-011</code></td><td>Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start</td></tr>
 <tr><td><code>REQ-FILL-TAT-012</code></td><td>The underlay covers the part shrunk by its inset and the top rows the part grown by <code>expand_mm</code>, as shapely buffers it, within a nanometre</td></tr>
+<tr><td><code>REQ-FILL-TAT-013</code></td><td>Questions about the rings look only at their sides near each point, line and stitch, and answer as a look at every side would: a 70 mm square with 14 × 14 round holes and a 120 × 60 mm background with 60 detailed holes plan within a tenth of the default work budget</td></tr>
 </tbody>
 </table>
 </div>

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-934d2b4f.js";
+            window.path_to_searchindex_js = "../searchindex-674dd97d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -218,7 +218,8 @@ generator receives a typed struct or nothing.</li>
 a fill needs a non-empty region, and a running stitch needs a path longer than the minimum stitch
 length.</li>
 <li>An element with an error diagnostic is skipped; the rest of the design still plans. A design whose
-every element was skipped yields <code>SC-E0010</code>.</li>
+every element was skipped yields <code>SC-E0010</code>. <code>stitch plan</code> writes the machine file only when no error
+is said, as Ink/Stitch writes its file only when no element fails (<code>REQ-CLI-003</code>).</li>
 </ul>
 <h2 id="3-generate"><a class="header" href="#3-generate">3. Generate</a></h2>
 <p>Each element becomes stitch groups (<code>stitchcraft_engine::generate</code>): the needle points of each part of it
