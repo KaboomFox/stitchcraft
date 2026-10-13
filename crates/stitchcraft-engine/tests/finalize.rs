@@ -277,6 +277,18 @@ fn req_fin_003_elements_sewn_over_each_other_are_planned() {
 }
 
 #[test]
+fn req_fin_003_a_plan_the_invariants_refuse_is_reported_as_a_bug() {
+    // A colour block that sews no stitch, which no generator makes: finalize has nothing to fit, and the plan
+    // check refuses the plan as a bug in StitchCraft instead of returning it.
+    let mut b = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+    b.jump(Point::new(1.0, 0.0).unwrap(), Provenance::plan(Role::Travel));
+    let out = finalize(b.finish(), REFERENCE, &DesignSettings::default(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+    let said: Vec<String> = out.diagnostics.iter().map(ToString::to_string).collect();
+    assert!(out.plan.is_none(), "{said:?}");
+    assert_eq!(said, ["error SC-E0009: The stitch plan breaks REQ-PLAN-003 at block 0: the colour block sews no stitches"]);
+}
+
+#[test]
 fn req_plan_002_a_tie_in_s_last_stitch_into_the_stitching_is_a_lock_stitch() {
     // A hand-placed stitch of 0.4 mm with forced locks: the half stitch is 0.2 mm, into its first point too.
     let tiny = planned(vec![line("a", (0.0, 0.0), 0.4, &RED, &[("stroke_method", "manual_stitch"), ("force_lock_stitches", "true")])]);
