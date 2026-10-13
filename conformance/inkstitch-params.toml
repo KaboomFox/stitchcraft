@@ -1626,7 +1626,7 @@ milestone = "M3"
 name = "stroke_first"
 kind = "element"
 phase = "P1"
-milestone = "M5"
+milestone = "M8"
 
 [[attribute]]
 name = "cutwork_needle"
