@@ -79,11 +79,6 @@ impl Envelope {
     pub(crate) fn covers(&self, other: &Envelope) -> bool {
         other.min_x >= self.min_x && other.max_x <= self.max_x && other.min_y >= self.min_y && other.max_y <= self.max_y
     }
-
-    /// Whether the bounds share a point.
-    pub(crate) fn meets(&self, other: &Envelope) -> bool {
-        other.min_x <= self.max_x && other.max_x >= self.min_x && other.min_y <= self.max_y && other.max_y >= self.min_y
-    }
 }
 
 /// Where `p` lies relative to the closed ring `ring`: on it, or inside by the even-odd count of the
@@ -192,6 +187,9 @@ fn along(a: Point, b: Point, c: Point, d: Point) -> Hit {
 /// Where the lines through 2 segments that cross meet. The coordinates are taken relative to the middle
 /// of the box the segments' boxes share, which keeps the products small, and a point that rounding puts
 /// outside that box gives way to the end nearest the other segment.
+// Inlined into each caller: `hit` calls it for every pair of a row and a ring's segment that the travel
+// under the rows tests, and as a call of its own it costs the perf gate's plan 3.5 % more instructions.
+#[inline(always)]
 pub(crate) fn crossing(p1: Point, p2: Point, q1: Point, q2: Point) -> Point {
     let (lo_x, hi_x) = (p1.x().min(p2.x()).max(q1.x().min(q2.x())), p1.x().max(p2.x()).min(q1.x().max(q2.x())));
     let (lo_y, hi_y) = (p1.y().min(p2.y()).max(q1.y().min(q2.y())), p1.y().max(p2.y()).min(q1.y().max(q2.y())));
@@ -252,18 +250,14 @@ mod tests {
     }
 
     #[test]
-    fn envelopes_cover_and_meet() {
+    fn envelopes_cover() {
         let a = Envelope::of(&square());
         let b = Envelope::of(&[p(1.0, 1.0), p(2.0, 2.0)]);
         assert!(a.covers(&b) && !b.covers(&a));
-        assert!(a.meets(&b) && b.meets(&a));
-        assert!(!a.meets(&Envelope::of(&[p(5.0, 5.0)])));
-        // Bounds reaching out on any one side are not covered; bounds apart on any one side do not meet.
+        // Bounds reaching out on any one side are not covered.
         for (dx, dy) in [(-1.0, 0.0), (1.0, 0.0), (0.0, -1.0), (0.0, 1.0)] {
             let moved = Envelope::of(&[p(1.0 + 2.0 * dx, 1.0 + 2.0 * dy), p(3.0 + 2.0 * dx, 3.0 + 2.0 * dy)]);
-            assert!(!a.covers(&moved) && a.meets(&moved), "{moved:?}");
-            let apart = Envelope::of(&[p(1.0 + 5.0 * dx, 1.0 + 5.0 * dy), p(3.0 + 5.0 * dx, 3.0 + 5.0 * dy)]);
-            assert!(!a.meets(&apart) && !apart.meets(&a), "{apart:?}");
+            assert!(!a.covers(&moved), "{moved:?}");
         }
         assert_eq!(Envelope::of(&[]), Envelope { min_x: 0.0, min_y: 0.0, max_x: 0.0, max_y: 0.0 });
     }
