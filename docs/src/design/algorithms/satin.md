@@ -299,7 +299,7 @@ starts, as in Ink/Stitch, which does both by default. The engine gives each elem
 elements before it, whatever their thread. The second is what the next element offers to end near. Strokes
 offer their first point. Satin columns that start at their own nearest point offer their rails, and
 others the start of their first rail. Either way the rails are as they are sewn, after any swap and
-reversal. Fills offer nothing until they are sewn (M5).
+reversal. Tatami fills offer their area, their parts.
 
 **The line.** The way to the start and the way to the end follow a line between the rails,
 `running_stitch_position` percent of the way from the first rail to the second (50 is the middle). It is
@@ -324,8 +324,10 @@ where the first stitch's cut says, and the column goes on from its first stitch 
 
 **Ending at the nearest point** (`end_at_nearest_point`). With an element after it, the column ends at
 the point of its compensated outline nearest the next stitch. The next stitch is the point of the
-column's rails nearest the next element's first point, or nearest its rails when it offers them. The
-column's rails are measured as they are sewn. The column ignores an end less than 5 CSS pixels (1.32 mm)
+column's rails nearest the next element's first point, or nearest its rails when it offers them. Before
+a fill whose area holds the start of the column's first rail, or failing that of its second, the next
+stitch is that start, and otherwise the point of the rails nearest the fill's rings. The column's rails
+are measured as they are sewn. The column ignores an end less than 5 CSS pixels (1.32 mm)
 from the line's end, and ends as if it were the last element. Otherwise every part of the column is cut
 in 2 at the end's cut. The centre walk is cut before its repeats, and the zigzag's ways before their long
 stitches are split. The contour's sides and the top stitches are cut too. The column sews every part's
@@ -344,6 +346,15 @@ trade places in the halves above. The first pass works from the column's end tow
 second from its start. The centre walk's halves are its part from the cut to the end and its part from
 the cut to the start, each sewn its repeats. The first pass begins at the cut. Between the passes the
 needle goes to the line at the cut, where the second pass begins.
+
+**A point inside an area.** An area is 0 away from every point in it or on its rings, so before it
+measures between lines, Ink/Stitch's geometry library looks for such a point. It tests the next
+element's points first, then the element's own, each against every part of the other's area before the
+next point, and the first that lies in a part is the next stitch. Polylines are tested by their starts,
+in order, and an area by its parts' outline starts, never a hole's. So before a fill, the column's next
+stitch is the start of its first rail that lies in the fill, or else of its second. These rules were
+checked against shapely 2.2.0 as a black box. A fill finds its own next stitch by them too
+([fills](fills.md#5-parts)).
 
 **Equally near points.** Shapes are often equally near at several points, as rails side by side are. The
 column takes the point Ink/Stitch takes, found in the order its geometry library, shapely, finds them.

@@ -14,13 +14,13 @@
 use stitchcraft_core::math::sin_cos;
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Code, Point};
-use stitchcraft_engine::design::FillRule;
+use stitchcraft_engine::design::{Element, FillRule};
 use stitchcraft_engine::generators::Approach;
 use stitchcraft_engine::generators::tatami::rows::{Grid, rows};
 use stitchcraft_engine::generators::tatami::sew::{Fill, Layer, Pull, Travel, tatami_fill};
 use stitchcraft_engine::generators::tatami::stitches::{Stitching, row_points};
 use stitchcraft_engine::normalize::region::{Polygon, Region, build};
-use stitchcraft_plan::{Role, StitchKind};
+use stitchcraft_plan::{Role, Stitch, StitchKind};
 use stitchcraft_testkit::designs::{RED, fill, line, messages, p, planned, rings};
 
 fn region(parts: &[&[(f64, f64)]]) -> Region {
@@ -229,6 +229,102 @@ fn req_fill_tat_001_the_fill_starts_nearest_the_needle_and_ends_nearest_the_next
     let runs = sewn(&region, &stitching(0.0), None, None);
     let first_row = rows(&region.parts[0], &stitching(0.0).grid, &mut Budget::DEFAULT.meter()).unwrap()[0].segments[0];
     assert_eq!((runs[0][0], *runs[0].last().unwrap()), (first_row.start, first_row.start));
+}
+
+#[test]
+fn req_fill_tat_001_before_a_column_a_fill_ends_at_the_first_rail_start_that_lies_in_it() {
+    // 2 squares, the upper drawn first, and a column whose rails start at (0, 0), in the lower square, and
+    // at (0, 6), in the upper. Ink/Stitch's geometry library takes the rails' starts in order, each against
+    // every part: the fill ends as it ends before an element that starts at the first rail's start.
+    let squares = region(&[&[(-1.0, 5.0), (1.0, 5.0), (1.0, 7.0), (-1.0, 7.0)], &[(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)]]);
+    let end = |next: Approach| *sewn(&squares, &stitching(0.0), None, Some(&next)).last().unwrap().last().unwrap();
+    let rails = |first: f64, second: f64| Approach::Shape(vec![vec![p(0.0, first), p(10.0, first)], vec![p(0.0, second), p(10.0, second)]]);
+    let (at_lower, at_upper) = (end(Approach::Point(p(0.0, 0.0))), end(Approach::Point(p(0.0, 6.0))));
+    assert_ne!(at_lower, at_upper);
+    assert_eq!(end(rails(0.0, 6.0)), at_lower, "the lower rail first");
+    assert_eq!(end(rails(6.0, 0.0)), at_upper, "the upper rail first");
+}
+
+/// Where the fill of `parts`, with no underlay, ends before `next`, as planned: its last needle point.
+fn ends_before(parts: &[&[(f64, f64)]], next: Element) -> Point {
+    let plan = planned(vec![fill("fill", parts, &RED, &[NO_UNDERLAY]), next]).plan.unwrap();
+    let mine = |s: &&Stitch| s.kind == StitchKind::Normal && s.origin.role != Role::Lock && s.origin.element.map(|e| e.index()) == Some(0);
+    plan.stitches().filter(mine).map(|s| s.at).last().unwrap()
+}
+
+#[test]
+fn req_fill_tat_001_before_a_fill_a_fill_ends_where_one_s_outline_starts_in_the_other() {
+    // As Ink/Stitch's geometry library finds it: the first outline of the next fill that starts in this
+    // one, then the first of this fill's that starts in the next, and otherwise where their rings come
+    // nearest. Each case ends as before a stroke that starts at that point.
+    let before_fill = |parts: &[&[(f64, f64)]], next: &[&[(f64, f64)]]| ends_before(parts, fill("next", next, &RED, &[NO_UNDERLAY]));
+    let before_stroke = |parts: &[&[(f64, f64)]], at: (f64, f64)| ends_before(parts, line("next", at, 10.0, &RED, &[]));
+    let near = |a: Point, b: Point| a.distance(b) < 1e-9;
+    // A 10 mm square drawn from (10, 10), and one of 15 mm from (5, 5) that it holds: each starts in the
+    // other, and the next fill's start comes first.
+    let square: &[&[(f64, f64)]] = &[&[(10.0, 10.0), (0.0, 10.0), (0.0, 0.0), (10.0, 0.0)]];
+    let held = before_fill(square, &[&[(5.0, 5.0), (20.0, 5.0), (20.0, 20.0), (5.0, 20.0)]]);
+    assert!(near(held, before_stroke(square, (5.0, 5.0))), "{held:?}");
+    // The same drawn from (20, 20), outside the square: the square's own start, (10, 10), in the next fill.
+    let own = before_fill(square, &[&[(20.0, 20.0), (5.0, 20.0), (5.0, 5.0), (20.0, 5.0)]]);
+    assert!(near(own, p(10.0, 10.0)), "{own:?}");
+    // A hole's start does not count. A square of 4 mm drawn from (4, 4) in the 3 mm hole of a 20 mm
+    // square: the hole starts at (7, 7) in the square, and neither outline starts in the other. The fill
+    // ends where the 2 rings first meet, measured from the next fill's: its hole's first side, from (7, 7)
+    // to (3, 7), crosses the square's side x = 4 at (4, 7).
+    let small: &[&[(f64, f64)]] = &[&[(4.0, 4.0), (8.0, 4.0), (8.0, 8.0), (4.0, 8.0)]];
+    let holed: &[&[(f64, f64)]] = &[&[(20.0, 20.0), (0.0, 20.0), (0.0, 0.0), (20.0, 0.0)], &[(7.0, 7.0), (7.0, 3.0), (3.0, 3.0), (3.0, 7.0)]];
+    let meets = before_fill(small, holed);
+    assert!(near(meets, p(4.0, 7.0)), "{meets:?}");
+}
+
+/// The flat rows `run` sews, in order: for each row segment its row, `k` for the row at `k * spacing`, whether
+/// it lies right of `x = mid` when its row lies within `cut` (a hole's least and greatest y, which cuts
+/// rows in 2), and whether it is sewn rightwards. Read from the first horizontal stitch of each segment.
+/// Only rows 1 to `last` count: travel runs along the rows on the part's sides.
+fn flat_rows(run: &[Point], spacing: f64, last: i32, cut: (f64, f64), mid: f64) -> Vec<(i32, bool, bool)> {
+    let mut order: Vec<(i32, bool, bool)> = Vec::new();
+    for w in run.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        if (a.y() - b.y()).abs() > 1e-9 || (a.x() - b.x()).abs() < 1e-9 {
+            continue;
+        }
+        let Some(row) = (1..=last).find(|&k| (f64::from(k) * spacing - a.y()).abs() <= 1e-6) else { continue };
+        let right = a.y() > cut.0 && a.y() < cut.1 && (a.x() + b.x()) / 2.0 >= mid;
+        if !order.iter().any(|&(k, side, _)| (k, side) == (row, right)) {
+            order.push((row, right, b.x() > a.x()));
+        }
+    }
+    order
+}
+
+#[test]
+fn req_fill_tat_001_the_walk_takes_a_node_s_edges_in_the_order_of_ink_stitch_s_copied_graph() {
+    // Ink/Stitch walks a copy of its graph, and its graph library's copy lists each node's neighbours
+    // anew: first the nodes added before it, in the order they were added, then the rest, in its own order.
+    //
+    // A 10 mm square with a 4 mm hole in its middle, each ring drawn from its top left corner, and rows
+    // 1.3 mm apart: at y = 0 (along the top side), 1.3, 2.6, 3.9, 5.2 and 6.5 (cut in 2 by the hole), 7.8
+    // and 9.1. Walking the copy, the rows go back and forth from the bottom up, the cut rows' right pieces
+    // before their left: 9.1, 7.8, 6.5, 5.2 and 3.9 on the right, 6.5, 5.2 and 3.9 on the left, 2.6, 1.3.
+    // Walking the graph in the order its edges were added, the needle travels from 7.8's end up the right
+    // side to 3.9 and sews the right pieces downwards.
+    let frame = region(&[&[(0.0, 0.0), (0.0, 10.0), (10.0, 10.0), (10.0, 0.0)], &[(3.0, 3.0), (7.0, 3.0), (7.0, 7.0), (3.0, 7.0)]]);
+    let how = Stitching { grid: Grid { spacing: 1.3, ..stitching(0.0).grid }, ..stitching(0.0) };
+    let runs = sewn(&frame, &how, None, None);
+    let order: Vec<(i32, bool)> = flat_rows(&runs[0], 1.3, 7, (3.0, 7.0), 5.0).into_iter().map(|(row, right, _)| (row, right)).collect();
+    let ink_stitch = [(7, false), (6, false), (5, true), (4, true), (3, true), (5, false), (4, false), (3, false), (2, false), (1, false)];
+    assert_eq!(order, ink_stitch);
+    // A 10 × 5 rectangle, rows 1 mm apart at y = 0 (its top side) to 4, the needle left of its top left
+    // corner and the next element below its bottom side. Ink/Stitch's start splits the left side at
+    // (0, 0.5) and its end the bottom side at (2, 5), and from the end the walk of the copy sews the rows
+    // back and forth from the top, row 1 rightwards. Walking the graph in the order its edges were added
+    // sews rows 1 to 3 the other way, and travels from row 3's left end round the bottom corners to row 4's
+    // right end.
+    let rectangle = region(&[&[(0.0, 0.0), (0.0, 5.0), (10.0, 5.0), (10.0, 0.0)]]);
+    let runs = sewn(&rectangle, &stitching(0.0), Some(p(-1.0, 0.5)), Some(&Approach::Point(p(2.0, 6.0))));
+    let ways: Vec<(i32, bool)> = flat_rows(&runs[0], 1.0, 4, (0.0, 0.0), 5.0).into_iter().map(|(row, _, rightwards)| (row, rightwards)).collect();
+    assert_eq!(ways, [(1, true), (2, false), (3, true), (4, false)]);
 }
 
 #[test]
