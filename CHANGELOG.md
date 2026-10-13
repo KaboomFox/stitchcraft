@@ -523,6 +523,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Running out of work while joining the elements and fitting them to the machine says so for the design
+  (`SC-E0004`). It said that an element had been skipped, and named none.
+- A design too large never reads as one that fits. `SC-E0701` and `SC-W0702` give a design's size to the
+  tenth of a millimetre above, and so do `SC-E0701`'s messages for an origin or a stop position that
+  reaches past the hoop's edge. A design 130.04 mm wide read as 130.0 mm, in a hoop 130 mm wide.
+- The plan checker checks `REQ-PLAN-007`: every stitch and jump names an element the plan lists.
+  `REQ-PLAN-004` is retired, since whether a trim is tied off depends on lock settings a plan does not
+  hold, and assembly's cases check it (`REQ-ASM-003`, `REQ-LCK-001`).
+- `SplitMix64::next_in` stays below its upper end. Where the floats lie far apart, the low end plus a
+  share of the span rounded up to it.
+- The parameter registry hashes seed text with `stitchcraft_core::rng::fnv1a64`, not a copy of it.
+- Docs: the core crate's README says that `exact::side` is exact far from overflow and underflow, as its
+  module docs say. `Budget` says that each element has the work budget to itself.
+  `SC-E0701`'s explanation covers a design placed past the hoop's edge. The data model says that entries
+  62 and 63 of the PEC palette come from pystitch.
 - MC-1: PES files flag every jump after their first record as a trim, as pystitch writes them
   (`REQ-FMT-010`). At the first sew-out on the reference PE800, the plain-flagged jumps inside a colour on
   TS-02 made the machine skip the stitches after them, and the sheet's right half was missing. A jump that

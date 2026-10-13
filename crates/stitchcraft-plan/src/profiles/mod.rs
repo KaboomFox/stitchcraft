@@ -100,4 +100,21 @@ mod tests {
         assert_eq!(p.check_fit(bounds(120.0, 170.0)), None);
         assert_eq!(p.check_fit(bounds(130.0, 180.0)), None, "the field itself is fine");
     }
+
+    #[test]
+    fn req_prf_002_a_design_too_large_never_reads_as_one_that_fits() {
+        // 130.04 mm wide, in a hoop 130 mm wide: shown to the tenth above, not rounded down to the limit.
+        let p = &BROTHER_PE800_5X7;
+        let error = p.check_fit(bounds(130.04, 100.0)).unwrap();
+        assert_eq!(error.message, "The design is 130.1 × 100.0 mm, but the Brother PE800 with its 5 × 7 in hoop sews at most 130 × 180 mm.");
+        let mut zoned = p.clone();
+        zoned.comfort = Some(stitchcraft_core::Size::new(stitchcraft_core::Mm::from_tenths(1000), stitchcraft_core::Mm::from_tenths(1000)));
+        let warning = zoned.check_fit(bounds(100.01, 99.96)).unwrap();
+        assert!(warning.message.starts_with("The design is 100.1 × 100.0 mm, larger than"), "{}", warning.message);
+        // A rounding error above a tenth is that tenth, and a design of no height is 0 high.
+        let error = p.check_fit(bounds(130.5, 100.0 + 1e-12)).unwrap();
+        assert!(error.message.starts_with("The design is 130.5 × 100.0 mm"), "{}", error.message);
+        let error = p.check_fit(bounds(200.0, 0.0)).unwrap();
+        assert!(error.message.starts_with("The design is 200.0 × 0.0 mm"), "{}", error.message);
+    }
 }
