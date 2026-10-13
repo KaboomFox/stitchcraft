@@ -6,6 +6,13 @@
 //! (MIT), observed as a black box (`NOTICE`). Each picture has a rounded frame, as machine-made files
 //! do, and the stitches are drawn inside it at one scale for all pictures, so the per-colour pictures line
 //! up with the whole.
+//!
+//! **Only inside the frame** (REQ-FMT-012). The scale maps the design's bounds, every position the needle
+//! visits, onto the drawing area, so every line between them stays inside it. The start is not one of them:
+//! a plan that starts by sewing has no thread between the start and its first needle-down, and the move
+//! there draws only that needle-down. Drawn, it could cross the frame into the top row. That row's first
+//! byte follows the stitch data's end mark `FF`, and pyembroidery's and pystitch's readers end the stitch
+//! data only at `FF 00`.
 
 use crate::lower::{Lowered, Op};
 use crate::quantize::Units;
@@ -113,19 +120,20 @@ impl Scale {
 pub(crate) fn thumbnails(lowered: &Lowered) -> Vec<u8> {
     let scale = Scale::new(lowered.bounds);
     let mut pictures = vec![Picture::framed(); 1 + lowered.entries.len()];
-    let mut at = Units::default();
+    // Where the needle is, and whether it has gone down yet.
+    let (mut at, mut down) = (Units::default(), false);
     let mut entry = 1;
     for op in &lowered.ops {
         match *op {
             Op::Stitch(d) => {
                 let next = Units { x: at.x + d.dx, y: at.y + d.dy };
-                let (a, b) = (scale.pixel(at), scale.pixel(next));
+                let (a, b) = (scale.pixel(if down { at } else { next }), scale.pixel(next));
                 for index in [0, entry] {
                     if let Some(picture) = pictures.get_mut(index) {
                         picture.line(a, b);
                     }
                 }
-                at = next;
+                (at, down) = (next, true);
             }
             Op::Jump(d) => at = Units { x: at.x + d.dx, y: at.y + d.dy },
             Op::Stop | Op::ColorChange => entry += 1,
@@ -146,7 +154,7 @@ mod tests {
     }
 
     fn lowered(ops: Vec<Op>, entries: usize, bounds: (Units, Units)) -> Lowered {
-        Lowered { ops, entries: vec![stitchcraft_plan::Rgb::new(0, 0, 0); entries], bounds }
+        Lowered { ops, entries: vec![stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(0, 0, 0)); entries], bounds }
     }
 
     #[test]
@@ -163,10 +171,27 @@ mod tests {
     }
 
     #[test]
+    fn req_fmt_012_until_the_needle_first_goes_down_no_thread_is_drawn() {
+        // Stitches at (100, 100) and (200, 100) units, the first straight from the start, or from where a
+        // jump to (50, 100) left the needle: a line between them, x 17 to 43 on row 18, and none from the
+        // start or the jump, up and left of it.
+        let frame = ".#............................................#.";
+        for first in [vec![], vec![Op::Jump(Delta { dx: 50, dy: 100 })]] {
+            let mut ops = first.clone();
+            let to = if first.is_empty() { Delta { dx: 100, dy: 100 } } else { Delta { dx: 50, dy: 0 } };
+            ops.extend([Op::Stitch(to), Op::Stitch(Delta { dx: 100, dy: 0 }), Op::End]);
+            let bytes = thumbnails(&lowered(ops, 1, (Units { x: 50, y: 100 }, Units { x: 200, y: 100 })));
+            assert_eq!(row(&bytes, 0, 18), ".#...............###########################..#.", "{first:?}");
+            assert!((4..18).all(|y| row(&bytes, 0, y) == frame), "{first:?}");
+        }
+    }
+
+    #[test]
     fn stitches_are_drawn_to_scale_per_colour() {
         // A horizontal line, a colour change, a vertical line: 100 × 100 units.
         let ops = vec![
             Op::Jump(Delta { dx: -50, dy: -50 }),
+            Op::Stitch(Delta::ZERO),
             Op::Stitch(Delta { dx: 100, dy: 0 }),
             Op::ColorChange,
             Op::Stitch(Delta { dx: 0, dy: 100 }),

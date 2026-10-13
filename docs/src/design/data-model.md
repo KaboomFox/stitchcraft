@@ -188,7 +188,10 @@ Palettes are static tables (the Brother PEC palette first) of `PaletteEntry { in
 matchable }`. Nearest-colour matching uses CIEDE2000 in CIELAB (D65), through `stitchcraft_core::math`
 so it is deterministic, with ties going to the lower index; it is tested against the 34 reference pairs
 of Sharma, Wu & Dalal (2005). Entries that are not threads — Brother's applique steps 62–64 — are never
-matched. Each table names its source in its module docs and in a row of `NOTICE`. The PEC palette is the one
+matched. A format that names threads by entries gives a design's threads theirs together
+(`Palette::assign`, REQ-THREAD-002). Different threads get different entries while they last, the nearest
+pairs first, and a thread read from such a file gets its own ([formats](formats.md), PES). Each table names
+its source in its module docs and in a row of `NOTICE`. The PEC palette is the one
 MIT-licensed pyembroidery publishes, with the names of entries 62 and 63 from its fork pystitch. Thread
 catalogues (brand and number) arrive with M11.
 

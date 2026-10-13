@@ -22,8 +22,11 @@ mod thumbnail;
 
 pub use read::decode;
 
+use stitchcraft_core::{Code, Diagnostic};
+use stitchcraft_plan::palette::{Assigned, Palette};
 use stitchcraft_plan::{FormatId, StitchPlan};
 
+use crate::Encoded;
 use crate::error::EncodeError;
 use crate::lower::lower;
 
@@ -32,16 +35,20 @@ const PEC_OFFSET: u32 = 22;
 /// The largest design, in 0.1 mm, that the small-hoop indicator covers.
 const SMALL_HOOP: i32 = 1000;
 
-/// `plan` as a PES v1 file whose design name is `name`.
-pub fn encode(plan: &StitchPlan, name: &str) -> Result<Vec<u8>, EncodeError> {
+/// `plan` as a PES v1 file whose design name is `name`, with `SC-W0606` when different threads are written
+/// as one Brother colour.
+pub fn encode(plan: &StitchPlan, name: &str) -> Result<Encoded, EncodeError> {
     let format = FormatId::PesV1;
     let lowered = lower(plan, format.name())?;
     if lowered.changes() > format.max_color_changes() {
         return Err(EncodeError::TooManyColorChanges { format: format.name(), changes: lowered.changes(), max: format.max_color_changes() });
     }
+    let palette = format.palette().map(|id| id.palette()).ok_or(EncodeError::NoPaletteMatch { palette: "PES" })?;
+    let assigned = palette.assign(&lowered.entries).ok_or(EncodeError::NoPaletteMatch { palette: palette.name })?;
+    let indices: Vec<u8> = assigned.entries.iter().map(|entry| entry.index).collect();
     let (min, max) = lowered.bounds;
     let large = i64::from(max.x) - i64::from(min.x) > i64::from(SMALL_HOOP) || i64::from(max.y) - i64::from(min.y) > i64::from(SMALL_HOOP);
-    let pec = pec::block(&lowered, name)?;
+    let pec = pec::block(&lowered, &indices, name)?;
 
     let mut out = Vec::with_capacity(22 + pec.len());
     out.extend_from_slice(b"#PES0001");
@@ -49,5 +56,20 @@ pub fn encode(plan: &StitchPlan, name: &str) -> Result<Vec<u8>, EncodeError> {
     out.extend_from_slice(&u16::from(large).to_le_bytes());
     out.extend_from_slice(&[0; 8]);
     out.extend_from_slice(&pec);
-    Ok(out)
+    Ok(Encoded { bytes: out, notes: shared(&assigned, palette) })
+}
+
+/// `SC-W0606` when `assigned` writes different threads as one entry of `palette`.
+fn shared(assigned: &Assigned, palette: &Palette) -> Vec<Diagnostic> {
+    let have = match assigned.shared {
+        0 => return Vec::new(),
+        1 => "has",
+        _ => "have",
+    };
+    let colors = palette.entries.iter().filter(|entry| entry.matchable).count();
+    let message = format!(
+        "{} of the design's {} different threads {have} the Brother colour of another thread: a PES file names each thread by one of the {colors} Brother thread colours, so the machine shows one colour for different threads.",
+        assigned.shared, assigned.threads
+    );
+    vec![Diagnostic::new(Code::ThreadsShareColor, message)]
 }

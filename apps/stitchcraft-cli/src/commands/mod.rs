@@ -150,13 +150,16 @@ pub fn counts(plan: &StitchPlan) -> String {
 }
 
 /// The threads the machine asks for, one line each, with the palette entry a machine shows for each
-/// colour when the format stores palette indices.
+/// thread when the format stores palette indices: the entry the file has, or is written with
+/// ([`Palette::assign`]).
 pub fn describe_threads(out: &mut String, plan: &StitchPlan, palette: Option<&Palette>) {
-    for (i, entry) in plan.color_entries().iter().enumerate() {
+    let entries = plan.color_entries();
+    let assigned = palette.and_then(|p| p.assign(entries.iter().map(|entry| entry.thread)));
+    for (i, entry) in entries.iter().enumerate() {
         let thread = entry.thread;
         let name = thread.name.as_deref().unwrap_or("unnamed");
         let mut line = format!("{}. {name} ({})", i + 1, thread.color);
-        if let (Some(palette), Some(matched)) = (palette, palette.and_then(|p| p.nearest(thread.color))) {
+        if let (Some(palette), Some(matched)) = (palette, assigned.as_ref().and_then(|a| a.entries.get(i))) {
             let _ = write!(line, ", shown as {} {} \"{}\"", palette.name, matched.index, matched.name);
         }
         if entry.stop {

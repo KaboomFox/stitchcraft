@@ -173,12 +173,39 @@ milestone = "M1"
 status = "active"
 
 [[req]]
+id = "REQ-FMT-011"
+area = "formats"
+level = "L1"
+statement = "PES files record the start as seen from the design's top-left corner in 12 bits, −204.8 to 204.7 mm on each axis. A design whose corner lies farther from the start is refused (SC-E0602), not written with the field wrapped round."
+rationale = "A wrapped field puts the design elsewhere for every reader, StitchCraft's own included. Large frames sew DST designs that far from their start, and `stitch convert` reads them."
+milestone = "M3"
+status = "active"
+
+[[req]]
+id = "REQ-FMT-012"
+area = "formats"
+level = "L1"
+statement = "PEC thumbnails draw stitches only inside their frames: no thread is drawn before the needle first goes down. So the first byte after the stitch data's end mark, the start of the first picture's blank top row, is 0x00."
+rationale = "pyembroidery's and pystitch's readers, Ink/Stitch's importer among them, end the stitch data only at `FF 00`, and read on into the pictures otherwise."
+milestone = "M3"
+status = "active"
+
+[[req]]
 id = "REQ-THREAD-001"
 area = "threads"
 level = "L1"
 statement = "Palette tables match their published source at spot-checked entries; nearest-colour matching is deterministic (CIEDE2000 via libm)."
 rationale = "Thread colours that change between the screen and the machine confuse users."
 milestone = "M1"
+status = "active"
+
+[[req]]
+id = "REQ-THREAD-002"
+area = "threads"
+level = "L1"
+statement = "A format that names threads by palette entries writes a thread that is an entry, by colour and name as a file read with the palette gives it, as that entry, machine-special entries included. It gives the other threads the entries matching may pick: different threads different entries while they last, the nearest pairs first by CIEDE2000, and equal threads one entry. Once the entries run out, each thread left shares its nearest, and the writer says how many (SC-W0606). Reports name each thread by the entry the file has."
+rationale = "A machine knows threads only by their entries. 2 threads written as one are one thread to it: it shows the same colour for both, and a change between them reads as a stop. Ink/Stitch's PES files, written by pystitch, give different threads different entries."
+milestone = "M3"
 status = "active"
 
 # ── Rendering ──────────────────────────────────────────────────────────────────────────────────────
