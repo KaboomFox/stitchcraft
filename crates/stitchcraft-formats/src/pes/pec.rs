@@ -31,11 +31,11 @@
 //! starting with `02`. The end is `FF`.
 //!
 //! **Jumps are trim-flagged** (REQ-FMT-010). Every jump after the stitch data's first record carries the
-//! trim flag, as pystitch writes them; only a first record that is a jump keeps the plain flag. At machine
-//! checkpoint MC-1 the reference PE800 sewed nothing after the plain jumps inside a colour on test sheet
-//! TS-02, while it sewed the trim-flagged half (`docs/src/design/formats.md`). Whether a trim-flagged
-//! jump is cut is the machine's choice: the PE800 cuts none, and machines that trim jumps cut those longer
-//! than their setting. A jump that goes nowhere has no record, since a record of it would be trim-flagged.
+//! trim flag, as pystitch writes them, so a machine treats the file as it treats one from Ink/Stitch; only
+//! a first record that is a jump keeps the plain flag (`docs/src/design/formats.md`). Whether a
+//! trim-flagged jump is cut is the machine's choice: the reference PE800 cuts none (machine checkpoint
+//! MC-1), and machines that trim jumps cut those longer than their setting. A jump that goes nowhere has
+//! no record, since a record of it would be trim-flagged.
 //! The pieces of a sewn move longer than a long axis holds keep the plain flag, because a cut there would
 //! cut the stitch's own thread; no machine profile allows a stitch that long.
 //!
@@ -229,8 +229,7 @@ mod tests {
         assert_eq!(hex(&stitch_data(&[Op::Trim, Op::Jump(d(3000, 0))])), "A5 DC A0 00 A5 DC A0 00");
     }
 
-    /// Every jump after the first record is trim-flagged, as pystitch writes them; the PE800 sewed nothing
-    /// after a plain jump inside a colour (MC-1, TS-02).
+    /// Every jump after the first record is trim-flagged, as pystitch writes them.
     #[test]
     fn req_fmt_010_jumps_after_the_first_record_are_trim_flagged() {
         let cases: [(&[Op], &str); 5] = [
