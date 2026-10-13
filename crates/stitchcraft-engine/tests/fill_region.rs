@@ -1,6 +1,6 @@
 //! The area a fill covers (`REQ-FILL-001`, `REQ-FILL-002`): what the drawing shows under its fill rule,
-//! cut exactly where its subpaths cross, touch or run along each other, in parts with holes. Parts too
-//! small to sew are left out with a warning, and small fills and fills in parts are pointed out.
+//! its subpaths cut on a fine grid where they cross, touch or run along each other, in parts with holes.
+//! Parts too small to sew are left out with a warning, and small fills and fills in parts are pointed out.
 //!
 //! A fill element's area is built before it is sewn, so its warnings come out of the plan ahead of what
 //! sewing it says.
@@ -121,6 +121,15 @@ fn req_fill_001_subpaths_of_fewer_than_3_points_bound_nothing() {
     let nothing = region(&rings(&[&[(0.0, 0.0), (5.0, 0.0)]]), FillRule::NonZero);
     assert!(nothing.region.parts.is_empty());
     assert_eq!(nothing.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::FillPartsTooSmall], "it says it bounds nothing");
+}
+
+#[test]
+fn req_fill_001_a_subpath_a_hair_across_leaves_the_others_as_they_are() {
+    // Its 3 points round to one point of the grid, on the square's edge: it bounds nothing, and the square
+    // keeps its 4 corners.
+    let speck = [(5.0, 0.0), (5.0 + 1e-12, 0.0), (5.0, 1e-12)];
+    let alone = region(&rings(&[&square(0.0, 0.0, 10.0)]), FillRule::NonZero);
+    assert_eq!(region(&rings(&[&square(0.0, 0.0, 10.0), &speck]), FillRule::NonZero), alone);
 }
 
 #[test]
