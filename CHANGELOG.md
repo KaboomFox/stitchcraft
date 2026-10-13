@@ -523,6 +523,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Different threads get different Brother colours in PES files (`REQ-THREAD-002`). Each thread took its
+  nearest colour on its own, so 2 threads near one Brother colour were written as one. The machine showed
+  the same colour for both, and the file read back as one thread with a stop.
+  - A design's threads now get their colours together, the nearest pairs first. Past the palette's 61
+    thread colours, threads share, and `SC-W0606` says how many.
+  - A thread read from a PES file keeps its colour, Brother's applique steps 62 to 64 included, which
+    `stitch convert` turned into ordinary threads. `stitch plan`, `convert` and `inspect` name each thread
+    by the colour the file has.
+  - A PES file made from a DST file gives each of its black placeholder threads a colour of its own.
+  - `DEV-THREAD-001` records where the colours differ from those Ink/Stitch's files name.
+- A PES design whose top-left corner lies more than 204.7 mm from the start is refused (`REQ-FMT-011`,
+  `SC-E0602`). Its origin field wrapped round, and the design read back elsewhere, as `stitch convert` of
+  a DST file from a large frame showed.
+- A PES file of a design that starts by sewing keeps its pictures' top row blank (`REQ-FMT-012`). The move
+  from the start was drawn across the frame, and the byte after the stitch data's end mark was not 0.
+  pyembroidery's and pystitch's readers, which end the data at `FF 00`, read on into the pictures.
 - MC-1: PES files flag every jump after their first record as a trim, as pystitch writes them
   (`REQ-FMT-010`). At the first sew-out on the reference PE800, the plain-flagged jumps inside a colour on
   TS-02 made the machine skip the stitches after them, and the sheet's right half was missing. A jump that

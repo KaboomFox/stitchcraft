@@ -183,3 +183,10 @@ area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."
 reason = "The SVG reader takes the drawing as a viewer shows it (docs/src/design/svg-input.md), and a column is then as wide as its stroke looks. Ink/Stitch converts lengths with inkex, which has no factor for %, em or ex and gives 0 for them (inkex 1.4.1, inkex/units.py), and compares the join with lower-case names (lib/svg/styles.py at d59c9ab)."
 requirements = ["REQ-SVG-004"]
+
+[[deviation]]
+id = "DEV-THREAD-001"
+area = "formats/pes"
+summary = "PES files name each thread by a Brother entry chosen by CIEDE2000, the nearest pairs first, so a thread gets its nearest entry unless a thread nearer to it took it. pystitch, which writes Ink/Stitch's PES files, measures with an integer redmean distance, gives a tie to the later entry, and gives threads their entries in the order of a Python set. Each palette colour alone is written as itself by both. Other colours often get other entries: pure red is Vermilion here and Red there, pure blue Purple here and Ultramarine there. And where 2 threads have one nearest entry, pystitch may give it to the farther."
+reason = "CIEDE2000 picks the colour people see as nearest (REQ-THREAD-001, data-model.md). The nearest pairs first keep a palette colour on its own entry, in whatever order the threads come (REQ-THREAD-002)."
+requirements = ["REQ-THREAD-001", "REQ-THREAD-002"]

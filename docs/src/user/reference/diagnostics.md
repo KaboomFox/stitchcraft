@@ -47,6 +47,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
 | [`SC-W0604`](#sc-w0604) | Warning | Thread colours unknown |
 | [`SC-I0605`](#sc-i0605) | Info | Long jumps cut in DST |
+| [`SC-W0606`](#sc-w0606) | Warning | Threads share a Brother colour |
 | [`SC-E0701`](#sc-e0701) | Error | Design does not fit the hoop |
 | [`SC-W0702`](#sc-w0702) | Warning | Design is larger than the comfort zone |
 | [`SC-I0703`](#sc-i0703) | Info | Stitches longer than the machine's longest stitch; split |
@@ -494,8 +495,9 @@ StitchCraft does not know yet: please report it with the file.
 **Warning** — Thread colours unknown
 
 The file stores no thread colours (DST files never do: they only say where the machine pauses for
-the next thread), so every thread has a placeholder colour — in previews, and in files converted
-from this one, where the machine shows that colour at each thread change.
+the next thread), so every thread has a black placeholder colour in previews. A PES file converted
+from this one names each thread by the Brother colour nearest black that is still free (Black, Dark
+Gray, Dark Brown and so on), which says nothing of the threads the design needs.
 
 The stitches are not affected. Load the threads the design needs, in the order the design's
 author gives; StitchCraft cannot know them.
@@ -512,6 +514,19 @@ With a tie-off before the jump the cut is usually welcome: there is no jump thre
 Nothing to do. Where an element's ties are off, turn them on so its stitching holds when it is
 cut, or sew a PES file, where only trims cut. A machine set to another number of jump records cuts
 before other jumps: see its DST setting.
+
+## SC-W0606
+
+**Warning** — Threads share a Brother colour
+
+A PES file names each thread by a colour of the Brother palette, which has 61 thread colours.
+StitchCraft gives each different thread a colour of its own, the nearest one still free, so the
+machine asks for each thread change. A design with more different threads than that has some
+share a colour, and the machine shows that colour for each of them: at a change between 2 of them it
+shows the thread already in the machine, as for a stop.
+
+Load the threads in the order the report lists them, rather than by the colours the machine shows.
+Or use fewer different threads: merge those of nearly the same colour.
 
 ## SC-E0701
 
