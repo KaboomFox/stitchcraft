@@ -540,6 +540,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   row's end before it, as Ink/Stitch's does. Such an edge stands for a way of several edges
   (`DEV-FILL-006`), and Ink/Stitch never takes the 2 nodes for neighbours. The golden files stay as they
   were.
+- A fill whose shapes meet at corners or share edges sews all of them, in 1 part where they share edges,
+  however rounding left the points they share (review findings REG-3 and REG-7, `REQ-FILL-001`). Drawn
+  with relative path data, as Inkscape writes it, such points come out a few units in the last place
+  apart. The crossings near them were worked out in floating point and snapped to points nearby. That
+  could leave 2 edges crossing with no point between them, and whole faces then came out filled or empty
+  against the fill rule. In tests it happened to about 1 grid of squares in 8, 1 pinwheel or fan of
+  triangles in 4 and 1 triangulated grid in 2. Other grids came out in several parts.
+  - The rings are cut on a grid of 2⁻³⁵ mm (`normalize::region::snap`), much as Ink/Stitch puts a fill's
+    shape on a grid of 10⁻¹⁰ CSS pixels. Points a rounding error apart become one, and an edge that passes
+    through the cell of a corner or a crossing is bent through it, so that the edges meet only at their
+    ends. Which way a ring turns is decided exactly.
+  - A part grown or shrunk to an exact tangency, such as 2 squares joined by a neck and shrunk by half its
+    width, keeps both squares (REG-4, `REQ-FILL-TAT-012`). One of them was lost at 33 of 180 angles.
+  - An area that could not be built says only that it is a bug (`SC-E0009`), and no longer that the fill
+    bounds no area (REG-8).
+  - TS-07 and TS-09 change by a hair (Golden files, below).
 - Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
   found (`REQ-SAT-002`, `REQ-SAT-005`).
   - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails
@@ -629,6 +645,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   zero-length jumps.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-07.pes` and `TS-09.pes` (REG-3): a fill's points lie on the
+  grid now, a hair from where they were. These sheets' rows lie at multiples of 0.25 mm, so many of their
+  needle points lie halfway between 2 tenths of a millimetre, where a change in the last bits changes
+  which way they round, and some round the other way now: 0.1 mm. Near the edges of TS-07's circles, where its rows
+  meet the edge at a slant, the travel between rows takes a point more or less in places, 5 stitches more
+  of 13,522. Their pictures in the docs change with them.
 - Changed `conformance/golden/testsheets/TS-02.pes` and `TS-02B.pes` (9 jumps each), `TS-09.pes` (3),
   `conformance/golden/plans/strokes.pes` (5), and `conformance/golden/formats/every-command.pes` (1) and
   `long-jumps.pes` (3) (MC-1): those jumps are trim-flagged now (`REQ-FMT-010`). Only their flag bits change,
