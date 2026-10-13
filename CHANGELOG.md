@@ -627,6 +627,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - DST reading: a long jump followed by a long move back could be read as a trim (their split pieces
   cancelled exactly); trims are now runs of jumps of at most 1 mm, and the writer no longer writes
   zero-length jumps.
+- An SVG file's entities stay within the 64 MiB limit on the file with every reference expanded, however
+  they are declared (review finding SVG-1, `SC-E0801`). The limit counted each name at its last
+  declaration, where XML and the parser keep the first. A long value declared first, with a short one of
+  the same name after it, let a 1 MiB file expand to gigabytes and run the reader out of memory. A name
+  declared twice now counts at its longer value. Declarations are looked for only in the document type's
+  internal subset (`<!DOCTYPE svg [ … ]>`), so one in a comment or in character data elsewhere neither
+  shortens a value nor refuses the file.
 
 ### Golden files
 - Changed `conformance/golden/testsheets/TS-02.pes` and `TS-02B.pes` (9 jumps each), `TS-09.pes` (3),
