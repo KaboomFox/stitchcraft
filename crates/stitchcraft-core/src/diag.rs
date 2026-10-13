@@ -247,6 +247,13 @@ registry! {
     /// Draw the column with 2 rails, or make the stroke narrower.
     SatinCentreLineFailed = "SC-E0214", Error, "Satin column drawn as one path could not be made into rails";
 
+    /// A satin column is so small that every needle point of it lies within the shortest stitch of its
+    /// first: a speck of a column, a few tenths of a millimetre across. Any stitch it could sew would be
+    /// shorter than the machine sews well, would hammer one spot of the fabric and could break the thread,
+    /// so it is left out, as a stroke that small is (`SC-W0401`). Ink/Stitch sews such a column.
+    ///
+    /// The message gives the shortest stitch. Draw the column larger, or delete it if it is a stray.
+    SatinTooSmall = "SC-W0215", Warning, "Satin column too small for the shortest stitch; left out";
     /// A satin column's rungs, or its push compensation, leave each of its sections with no length on one of
     /// its rails, so no stitch goes across it and the column is not sewn. A rung from the first rail's
     /// start to the second rail's end does this, and so does push compensation that takes off the parts of
@@ -379,7 +386,9 @@ registry! {
     /// Needle points less than the shortest stitch from the one before were left out, so the stitch before
     /// each runs on to the next and none is shorter than the machine sews well. This happens where one
     /// element's stitching runs straight on into the next and they nearly touch: the stitch between them is
-    /// whatever is left of the gap. Nothing visible changes.
+    /// whatever is left of the gap. Where small elements are sewn over each other, a lock point or the last
+    /// point before a jump, trim or stop can go too, when it comes within the shortest stitch of one that
+    /// stays. Nothing visible changes.
     ///
     /// Nothing to do. If the count is large, check for elements drawn on top of each other.
     StitchesMerged = "SC-I0504", Info, "Stitches shorter than the shortest stitch merged";
