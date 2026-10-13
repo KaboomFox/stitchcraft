@@ -523,6 +523,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- A command that cannot write one of its files writes none, and still prints what was said about the
+  design (`REQ-CLI-006`). When `stitch plan` could not write its `--preview` or `--report`, it had
+  written the machine file already. Only the failed write was printed, without the warnings, or a refused
+  design's errors. A bug-report bundle that cannot be written says why once, where it said it twice.
+- `stitch` reads no more than 64 MiB from a pipe or a device either (`REQ-CLI-005`). It took the size the
+  file system gives, which is 0 for them, so `stitch inspect /dev/zero` read until memory ran out.
+- `stitch bug-report --replay` prints what it takes from a bundle as text only (`REQ-CLI-004`). Control
+  characters, line breaks and invisible ones among them, are written as escapes, so a bundle can no
+  longer set the terminal's title, clear its screen or print a line of its own.
+- `stitch bug-report --replay` reproduces a bundle whose design's file name is not UTF-8, or which was
+  written on another platform (`REQ-CLI-001`). The replay took the design name from the file name, and
+  the machine file's label came out otherwise. Bundles now record the name the run used.
 - MC-1: PES files flag every jump after their first record as a trim, as pystitch writes them
   (`REQ-FMT-010`). At the first sew-out on the reference PE800, the plain-flagged jumps inside a colour on
   TS-02 made the machine skip the stitches after them, and the sheet's right half was missing. A jump that
