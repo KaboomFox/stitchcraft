@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-a40e3e23.js";
+            window.path_to_searchindex_js = "../../searchindex-934d2b4f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -416,6 +416,10 @@ The stitch from A to B goes straight across, and the one from B to the next A sl
 (A → B → A) spans <code>zigzag_spacing_mm</code>. The exit end is chosen by assembly (see <em>Start and end</em>).
 Random splits are drawn after the pairs are placed, in the order the stitches are sewn.</li>
 </ol>
+<p><strong>A column too small to sew.</strong> A column whose needle points, underlays and travel included, all lie
+within its shortest stitch of its first, a speck a few tenths of a millimetre across, has no stitch the
+machine sews well. It sews nothing, and <code>SC-W0215</code> says so, as a stroke that small is left out
+(<code>SC-W0401</code>). Ink/Stitch sews it (<code>DEV-SAT-008</code>).</p>
 <h2 id="underlays"><a class="header" href="#underlays">Underlays</a></h2>
 <p>Underlays are sewn before the top stitches, as Ink/Stitch sews them. The centre walk comes first, then the
 contour and the zigzag, each one the element turns on, and all of them go into one run with the top
@@ -542,6 +546,7 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <tr><td><code>REQ-SAT-013</code></td><td>Starting at its nearest point, a column begins on the line between its rails nearest the needle, or on its outline when only that is within the jump length, and follows the line to its first stitch</td></tr>
 <tr><td><code>REQ-SAT-014</code></td><td>Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there. The column sews the first halves, then the second halves from the line’s end, and stitches the end last</td></tr>
 <tr><td><code>REQ-SAT-015</code></td><td>A column drawn as one subpath whose stroke is no wider than the design’s narrowest satin stroke sews as a stroke would, with <code>SC-W0212</code>. It offers its first point, as a stroke does</td></tr>
+<tr><td><code>REQ-SAT-018</code></td><td>A column whose needle points all lie within its shortest stitch of its first sews nothing, with <code>SC-W0215</code>, and the rest of the design is planned</td></tr>
 </tbody>
 </table>
 </div>
@@ -550,7 +555,7 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <h2 id="diagnostics"><a class="header" href="#diagnostics">Diagnostics</a></h2>
 <p><code>SC-E0201</code>, <code>SC-W0202</code>, <code>SC-W0203</code>, <code>SC-W0205</code>, <code>SC-W0206</code> (a contour underlay too short for its insets
 keeps its length), <code>SC-W0207</code>, <code>SC-W0208</code>, <code>SC-W0209</code> (a satin wider than 12 mm risks snagging: consider
-split stitches or a fill), <code>SC-W0210</code>, <code>SC-W0211</code> and <code>SC-W0212</code>.</p>
+split stitches or a fill), <code>SC-W0210</code>, <code>SC-W0211</code>, <code>SC-W0212</code> and <code>SC-W0215</code> (a column too small to sew).</p>
 
                     </main>
 

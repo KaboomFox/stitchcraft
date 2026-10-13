@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a40e3e23.js";
+            window.path_to_searchindex_js = "searchindex-934d2b4f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -1357,6 +1357,7 @@ Arguments:
 <tr><td><a href="#sc-w0212"><code>SC-W0212</code></a></td><td>Warning</td><td>Satin column drawn as one path too narrow; sewn as a stroke</td></tr>
 <tr><td><a href="#sc-w0213"><code>SC-W0213</code></a></td><td>Warning</td><td>Parts of a satin column drawn as one path left out</td></tr>
 <tr><td><a href="#sc-e0214"><code>SC-E0214</code></a></td><td>Error</td><td>Satin column drawn as one path could not be made into rails</td></tr>
+<tr><td><a href="#sc-w0215"><code>SC-W0215</code></a></td><td>Warning</td><td>Satin column too small for the shortest stitch; left out</td></tr>
 <tr><td><a href="#sc-w0303"><code>SC-W0303</code></a></td><td>Warning</td><td>Parts of a fill too small to sew left out</td></tr>
 <tr><td><a href="#sc-w0304"><code>SC-W0304</code></a></td><td>Warning</td><td>Fill smaller than 1.4 mm²</td></tr>
 <tr><td><a href="#sc-w0305"><code>SC-W0305</code></a></td><td>Warning</td><td>Fill part too thin for rows; sewn round its outline</td></tr>
@@ -1528,6 +1529,13 @@ itself or turns more tightly than the column is wide, or make the stroke narrowe
 however it is cut, an offset vanishes because the stroke is wider than the line’s turns allow, or
 the line is shorter than a CSS pixel. The column is not sewn.</p>
 <p>Draw the column with 2 rails, or make the stroke narrower.</p>
+<h2 id="sc-w0215"><a class="header" href="#sc-w0215">SC-W0215</a></h2>
+<p><strong>Warning</strong> — Satin column too small for the shortest stitch; left out</p>
+<p>A satin column is so small that every needle point of it lies within the shortest stitch of its
+first: a speck of a column, a few tenths of a millimetre across. Any stitch it could sew would be
+shorter than the machine sews well, would hammer one spot of the fabric and could break the thread,
+so it is left out, as a stroke that small is (<code>SC-W0401</code>). Ink/Stitch sews such a column.</p>
+<p>The message gives the shortest stitch. Draw the column larger, or delete it if it is a stray.</p>
 <h2 id="sc-w0303"><a class="header" href="#sc-w0303">SC-W0303</a></h2>
 <p><strong>Warning</strong> — Parts of a fill too small to sew left out</p>
 <p>A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
@@ -1641,7 +1649,9 @@ another lock shape.</p>
 <p>Needle points less than the shortest stitch from the one before were left out, so the stitch before
 each runs on to the next and none is shorter than the machine sews well. This happens where one
 element’s stitching runs straight on into the next and they nearly touch: the stitch between them is
-whatever is left of the gap. Nothing visible changes.</p>
+whatever is left of the gap. Where small elements are sewn over each other, a lock point or the last
+point before a jump, trim or stop can go too, when it comes within the shortest stitch of one that
+stays. Nothing visible changes.</p>
 <p>Nothing to do. If the count is large, check for elements drawn on top of each other.</p>
 <h2 id="sc-w0505"><a class="header" href="#sc-w0505">SC-W0505</a></h2>
 <p><strong>Warning</strong> — Trim or stop after an element that sews nothing; left out</p>
@@ -3656,6 +3666,7 @@ another.</p>
 <tr><td><code>SC-W0212</code></td><td>Warning</td><td>Satin column drawn as one path too narrow; sewn as a stroke</td><td>M4</td></tr>
 <tr><td><code>SC-W0213</code></td><td>Warning</td><td>Parts of a satin column drawn as one path left out (still crossing after 20 cuts in half, or turning too tightly for its width)</td><td>M4</td></tr>
 <tr><td><code>SC-E0214</code></td><td>Error</td><td>Satin column drawn as one path could not be made into rails (too short, or too tight for its width)</td><td>M4</td></tr>
+<tr><td><code>SC-W0215</code></td><td>Warning</td><td>Satin column too small for the shortest stitch; left out (all within it of its first needle point; Ink/Stitch sews it)</td><td>M4</td></tr>
 <tr><td><code>SC-W0303</code></td><td>Warning</td><td>Parts of a fill too small to sew left out (3 square CSS pixels or less, as in Ink/Stitch); a fill of no area sews nothing</td><td>M5</td></tr>
 <tr><td><code>SC-W0304</code></td><td>Warning</td><td>Fill smaller than 1.4 mm² (20 square CSS pixels); a running stitch or a satin column may sew it better</td><td>M5</td></tr>
 <tr><td><code>SC-W0305</code></td><td>Warning</td><td>Fill part too thin for rows; sewn round its outline (as in Ink/Stitch)</td><td>M5</td></tr>
@@ -3980,9 +3991,12 @@ never thins what the generator spaced. That is the element’s <code>min_stitch_
 stitching runs straight on into the next, the stitch between them can be anything up to the collapse
 length, 0 included. Within each run of stitches, from where the needle lands to the next jump, trim or
 stop, a needle point less than its shortest stitch from the one before is left out. The stitch then
-runs on to the next point. The run’s first and last points and lock points always stay, and the points
-before them are left out instead. A point where the needle already is would sew in place, and it is
-left out too. A stitch into or out of a lock point is a lock stitch, whose shortest is 0.2 mm
+runs on to the next point. The run’s first and last points and lock points stay, and the points
+before them are left out instead. Elements sewn over each other can bring the last point or a lock
+point within the shortest stitch of one that stays before it, once the points between are left out.
+It is then left out itself, the points before it stay, and a trim or stop after it happens where the
+needle now is. So is a point where the needle already is, which would sew in place. Only the run’s
+first point always stays. A stitch into or out of a lock point is a lock stitch, whose shortest is 0.2 mm
 (<code>REQ-PLAN-002</code>). <code>SC-I0504</code> says how many points were left out (<code>REQ-FIN-001</code>). The rule is one
 function, which a generator that joins pieces of its own also applies, as a tatami fill does to its
 rows and the travel between them, so that finalize finds nothing of its stitches to thin.</li>
@@ -4468,6 +4482,10 @@ The stitch from A to B goes straight across, and the one from B to the next A sl
 (A → B → A) spans <code>zigzag_spacing_mm</code>. The exit end is chosen by assembly (see <em>Start and end</em>).
 Random splits are drawn after the pairs are placed, in the order the stitches are sewn.</li>
 </ol>
+<p><strong>A column too small to sew.</strong> A column whose needle points, underlays and travel included, all lie
+within its shortest stitch of its first, a speck a few tenths of a millimetre across, has no stitch the
+machine sews well. It sews nothing, and <code>SC-W0215</code> says so, as a stroke that small is left out
+(<code>SC-W0401</code>). Ink/Stitch sews it (<code>DEV-SAT-008</code>).</p>
 <h2 id="underlays"><a class="header" href="#underlays">Underlays</a></h2>
 <p>Underlays are sewn before the top stitches, as Ink/Stitch sews them. The centre walk comes first, then the
 contour and the zigzag, each one the element turns on, and all of them go into one run with the top
@@ -4594,6 +4612,7 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <tr><td><code>REQ-SAT-013</code></td><td>Starting at its nearest point, a column begins on the line between its rails nearest the needle, or on its outline when only that is within the jump length, and follows the line to its first stitch</td></tr>
 <tr><td><code>REQ-SAT-014</code></td><td>Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there. The column sews the first halves, then the second halves from the line’s end, and stitches the end last</td></tr>
 <tr><td><code>REQ-SAT-015</code></td><td>A column drawn as one subpath whose stroke is no wider than the design’s narrowest satin stroke sews as a stroke would, with <code>SC-W0212</code>. It offers its first point, as a stroke does</td></tr>
+<tr><td><code>REQ-SAT-018</code></td><td>A column whose needle points all lie within its shortest stitch of its first sews nothing, with <code>SC-W0215</code>, and the rest of the design is planned</td></tr>
 </tbody>
 </table>
 </div>
@@ -4602,7 +4621,7 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <h2 id="diagnostics-2"><a class="header" href="#diagnostics-2">Diagnostics</a></h2>
 <p><code>SC-E0201</code>, <code>SC-W0202</code>, <code>SC-W0203</code>, <code>SC-W0205</code>, <code>SC-W0206</code> (a contour underlay too short for its insets
 keeps its length), <code>SC-W0207</code>, <code>SC-W0208</code>, <code>SC-W0209</code> (a satin wider than 12 mm risks snagging: consider
-split stitches or a fill), <code>SC-W0210</code>, <code>SC-W0211</code> and <code>SC-W0212</code>.</p>
+split stitches or a fill), <code>SC-W0210</code>, <code>SC-W0211</code>, <code>SC-W0212</code> and <code>SC-W0215</code> (a column too small to sew).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="offset-curves"><a class="header" href="#offset-curves">Offset curves</a></h1>
 <!-- implements: crates/stitchcraft-engine/src/normalize/offset/** -->
@@ -4846,7 +4865,8 @@ beside it.</li>
 stitch a machine sews well, and a row’s first grid point can lie just past its start. A needle point
 nearer the one before it than the shortest stitch is left out, as Ink/Stitch leaves out points nearer
 than its own shortest stitch. A part’s last point stays, and the points before it that are too near it
-go instead, finalize’s rule applied in the generator. Where the rows lie nearer each other than the
+go instead, unless that would bring it within the shortest stitch of the part’s first: then it goes
+itself. This is finalize’s rule, applied in the generator. Where the rows lie nearer each other than the
 machine’s shortest stitch and meet an edge square on, each row hands over to the next in a stitch too
 short to sew, so the next row’s first needle point is left out (<code>DEV-FIN-001</code>). The thread then runs
 from the row’s end to the next row’s second needle point, and a sliver at each row’s start shows. On
