@@ -11,22 +11,27 @@
 //! edge's count. So every face's winding number follows from its neighbours', in whole numbers, with no
 //! point tested: the fill rule then says which faces are inside, nonzero or odd.
 //!
-//! Sides are decided exactly ([`stitchcraft_core::exact::side`]). Only where 2 segments cross inside both
-//! is a point worked out, and a crossing within a billionth of a millimetre of a point already found is
-//! taken to be that point, so that 3 segments crossing at one point cut each other there once.
+//! The rings are cut on a fine grid ([`super::snap`]), so that their edges meet only at their ends however
+//! rounding left them, and every point is a grid point. Which way a ring turns, and which of 2 rings is the
+//! smaller, is then worked out exactly, however thin the ring, and sides are decided exactly too
+//! ([`stitchcraft_core::exact::side`]).
 
 use std::collections::BTreeMap;
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
-use super::SAME;
-use super::geom::{Envelope, Hit, Location, closed, compare_angle, hit, locate_in_ring, signed_area, without_repeats};
+use super::assemble::Unjoined;
+use super::geom::{Envelope, Location, closed, compare_angle, locate_in_ring};
+use super::snap::{self, Node, TwiceArea};
 
 /// The rings cut where they meet: points, and edges between them.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Arrangement {
-    /// The points, numbered in the order the rings reach them.
+    /// The points, numbered: first the rings' corners in the order the rings reach them, then the other
+    /// points where the rings are cut, in the order the rings reach those.
     pub(crate) points: Vec<Point>,
+    /// The points as grid points, in the same order.
+    nodes: Vec<Node>,
     /// The edges, each from one point to another: indices into `points`.
     pub(crate) edges: Vec<(usize, usize)>,
     /// For each edge, the rings that run along it from its first point to its second, less those that run
@@ -34,70 +39,41 @@ pub(crate) struct Arrangement {
     pub(crate) count: Vec<i64>,
 }
 
-/// One segment of a ring, and where it is cut.
-struct Segment {
-    a: Point,
-    b: Point,
-    cuts: Vec<Point>,
-}
-
-/// `rings` (each open or closed, in the direction drawn) cut where they meet. One unit of `meter` per
-/// point, per pair of segments whose spans along x overlap, and per segment and cut.
-pub(crate) fn cut(rings: &[Vec<Point>], meter: &mut Meter) -> Result<Arrangement, Exhausted> {
-    let mut segments: Vec<Segment> = Vec::new();
+/// `rings` (each open or closed, in the direction drawn) cut where they meet, on the grid; `Unjoined`
+/// should a point lie beyond the grid's reach or the edges not settle, a bug. A ring whose points all round
+/// to one grid point is left out. One unit of `meter` per point, per edge bent and hot point tested against
+/// it, per pair of edges whose spans along x overlap, and per edge.
+pub(crate) fn cut(rings: &[Vec<Point>], meter: &mut Meter) -> Result<Result<Arrangement, Unjoined>, Exhausted> {
+    let mut on_grid: Vec<Vec<Node>> = Vec::new();
     for ring in rings {
-        let ring = without_repeats(&closed(ring));
+        let ring = closed(ring);
         meter.charge(u64::try_from(ring.len()).unwrap_or(u64::MAX))?;
-        segments.extend(ring.windows(2).map(|w| Segment { a: w[0], b: w[1], cuts: Vec::new() }));
-    }
-    // A sweep along x: each segment against those that start before it ends.
-    let left = |s: &Segment| s.a.x().min(s.b.x());
-    let mut by_left: Vec<usize> = (0..segments.len()).collect();
-    by_left.sort_by(|&i, &j| segments.get(i).map_or(0.0, left).total_cmp(&segments.get(j).map_or(0.0, left)).then(i.cmp(&j)));
-    let mut found: Vec<(usize, Vec<Point>)> = Vec::new();
-    for (k, &i) in by_left.iter().enumerate() {
-        let Some(s) = segments.get(i) else { continue };
-        let (env, right) = (Envelope::of(&[s.a, s.b]), s.a.x().max(s.b.x()));
-        for &j in by_left.iter().skip(k + 1) {
-            let Some(t) = segments.get(j) else { continue };
-            if left(t) > right {
-                break;
-            }
-            meter.charge(1)?;
-            if !env.meets(&Envelope::of(&[t.a, t.b])) {
-                continue;
-            }
-            let points = match hit(s.a, s.b, t.a, t.b) {
-                Hit::Apart => continue,
-                Hit::Cross(p) | Hit::Touch(p) => vec![p],
-                Hit::Overlap(p, q) => vec![p, q],
-            };
-            found.push((i, points.clone()));
-            found.push((j, points));
+        let Some(mut nodes) = ring.iter().map(|&p| Node::of(p)).collect::<Option<Vec<Node>>>() else { return Ok(Err(Unjoined)) };
+        nodes.dedup();
+        if nodes.len() > 1 {
+            on_grid.push(nodes);
         }
     }
-    for (i, points) in found {
-        if let Some(s) = segments.get_mut(i) {
-            s.cuts.extend(points);
-        }
+    // Rounding settles every drawing tried, so this return is a bug's. It stays on one line: coverage
+    // counts a line that no test can reach as untested.
+    let Ok(paths) = snap::round(&on_grid, meter)? else { return Ok(Err(Unjoined)) };
+    let mut numbers: BTreeMap<Node, usize> = BTreeMap::new();
+    let mut nodes: Vec<Node> = Vec::new();
+    // The corners first, so that the rings of the parts start at a corner the drawing reaches first.
+    for &node in on_grid.iter().chain(&paths).flatten() {
+        numbers.entry(node).or_insert_with(|| {
+            nodes.push(node);
+            nodes.len() - 1
+        });
     }
-    let mut points = Points::default();
-    // Every point the rings reach is numbered first, so that a crossing found near one becomes it.
-    for s in &segments {
-        points.exact(s.a);
-    }
+    let number = |node: &Node| numbers.get(node).copied().unwrap_or(0);
     let mut edges: Vec<(usize, usize)> = Vec::new();
     let mut count: Vec<i64> = Vec::new();
     let mut by_ends: BTreeMap<(usize, usize), usize> = BTreeMap::new();
-    for s in segments {
-        meter.charge(u64::try_from(s.cuts.len() + 1).unwrap_or(u64::MAX))?;
-        let mut along: Vec<usize> = vec![points.exact(s.a), points.exact(s.b)];
-        along.extend(s.cuts.into_iter().map(|p| points.near(p)));
-        along.sort_by(|&u, &v| points.distance(u, s.a).total_cmp(&points.distance(v, s.a)).then(u.cmp(&v)));
-        along.dedup();
-        // Sorted by distance and deduplicated, neighbours are distinct points.
-        for pair in along.windows(2) {
-            let (u, v) = (pair[0], pair[1]);
+    for path in &paths {
+        meter.charge(u64::try_from(path.len()).unwrap_or(u64::MAX))?;
+        for pair in path.windows(2) {
+            let (u, v) = (number(&pair[0]), number(&pair[1]));
             let edge = *by_ends.entry((u.min(v), u.max(v))).or_insert_with(|| {
                 edges.push((u, v));
                 count.push(0);
@@ -107,67 +83,8 @@ pub(crate) fn cut(rings: &[Vec<Point>], meter: &mut Meter) -> Result<Arrangement
             count.get_mut(edge).into_iter().for_each(|c| *c += step);
         }
     }
-    Ok(Arrangement { points: points.list, edges, count })
-}
-
-/// The points found, numbered, with a lookup by position.
-#[derive(Default)]
-struct Points {
-    list: Vec<Point>,
-    /// Exact positions, as bits (with -0 as 0).
-    exact: BTreeMap<(u64, u64), usize>,
-    /// The points in each square of side [`SAME`], for crossings.
-    cells: BTreeMap<(i64, i64), Vec<usize>>,
-}
-
-impl Points {
-    fn key(p: Point) -> (u64, u64) {
-        ((p.x() + 0.0).to_bits(), (p.y() + 0.0).to_bits())
-    }
-
-    #[allow(clippy::cast_possible_truncation)]
-    fn cell(p: Point) -> (i64, i64) {
-        ((p.x() / SAME).floor() as i64, (p.y() / SAME).floor() as i64)
-    }
-
-    /// The number of `p`, which the rings reach exactly.
-    fn exact(&mut self, p: Point) -> usize {
-        if let Some(&i) = self.exact.get(&Self::key(p)) {
-            return i;
-        }
-        self.add(p)
-    }
-
-    /// The number of a point found within [`SAME`] of `p`, or of `p` added.
-    fn near(&mut self, p: Point) -> usize {
-        if let Some(&i) = self.exact.get(&Self::key(p)) {
-            return i;
-        }
-        // A point within SAME lies in p's square or one of the 8 around it.
-        let (cx, cy) = Self::cell(p);
-        for x in cx.saturating_sub(1)..=cx.saturating_add(1) {
-            for y in cy.saturating_sub(1)..=cy.saturating_add(1) {
-                for &i in self.cells.get(&(x, y)).into_iter().flatten() {
-                    if self.list.get(i).is_some_and(|q| (q.x() - p.x()).abs() <= SAME && (q.y() - p.y()).abs() <= SAME) {
-                        return i;
-                    }
-                }
-            }
-        }
-        self.add(p)
-    }
-
-    fn add(&mut self, p: Point) -> usize {
-        let i = self.list.len();
-        self.list.push(p);
-        self.exact.insert(Self::key(p), i);
-        self.cells.entry(Self::cell(p)).or_default().push(i);
-        i
-    }
-
-    fn distance(&self, i: usize, from: Point) -> f64 {
-        self.list.get(i).map_or(0.0, |p| from.distance(*p))
-    }
+    let points = nodes.iter().map(|node| node.point()).collect();
+    Ok(Ok(Arrangement { points, nodes, edges, count }))
 }
 
 /// The faces of an arrangement and their winding numbers.
@@ -190,6 +107,11 @@ impl Arrangement {
     /// The point numbered `i`.
     pub(crate) fn point(&self, i: usize) -> Point {
         self.points.get(i).copied().unwrap_or(Point::ORIGIN)
+    }
+
+    /// Twice the area of the closed ring through the points numbered in `ring`, exactly.
+    pub(crate) fn twice_area(&self, ring: &[usize]) -> TwiceArea {
+        TwiceArea::of(&ring.iter().filter_map(|&i| self.nodes.get(i).copied()).collect::<Vec<_>>())
     }
 
     /// For each half edge, the next half edge counter-clockwise round its start, among the halves `keep`
@@ -244,16 +166,14 @@ impl Arrangement {
             }
             rings.push(ring);
         }
-        let polylines: Vec<Vec<Point>> = rings
-            .iter()
-            .map(|ring| closed(&ring.iter().filter_map(|&h| self.ends(h)).map(|(from, _)| self.point(from)).collect::<Vec<_>>()))
-            .collect();
-        let areas: Vec<f64> = polylines.iter().map(|ring| signed_area(ring)).collect();
+        let starts: Vec<Vec<usize>> = rings.iter().map(|ring| ring.iter().filter_map(|&h| self.ends(h)).map(|(from, _)| from).collect()).collect();
+        let polylines: Vec<Vec<Point>> = starts.iter().map(|ring| closed(&ring.iter().map(|&i| self.point(i)).collect::<Vec<_>>())).collect();
+        let areas: Vec<TwiceArea> = starts.iter().map(|ring| self.twice_area(ring)).collect();
         // Clockwise rings bound faces, numbered in order; the others lie in the smallest face around them.
         let mut face_of_ring: Vec<Option<usize>> = vec![None; rings.len()];
         let mut bounds: Vec<usize> = Vec::new();
-        for (r, &area) in areas.iter().enumerate() {
-            if area < 0.0 {
+        for (r, area) in areas.iter().enumerate() {
+            if area.clockwise() {
                 face_of_ring[r] = Some(bounds.len());
                 bounds.push(r);
             }
@@ -268,9 +188,8 @@ impl Arrangement {
             let env = Envelope::of(polyline);
             let around =
                 |b: usize| polylines.get(b).is_some_and(|face| Envelope::of(face).covers(&env) && locate_in_ring(probe, face) == Location::Interior);
-            let area = |b: usize| areas.get(b).copied().unwrap_or(f64::NEG_INFINITY);
             // Of the faces around it, the smallest: the one whose clockwise ring's area is nearest 0.
-            let smallest = bounds.iter().enumerate().filter(|&(_, &b)| around(b)).max_by(|&(_, &a), &(_, &b)| area(a).total_cmp(&area(b)));
+            let smallest = bounds.iter().enumerate().filter(|&(_, &b)| around(b)).max_by_key(|&(_, &b)| areas.get(b).copied());
             face_of_ring[r] = Some(smallest.map_or(outside, |(f, _)| f));
         }
         let right_of: Vec<usize> = ring_of.iter().map(|r| r.and_then(|r| face_of_ring.get(r).copied().flatten()).unwrap_or(outside)).collect();
@@ -321,7 +240,7 @@ mod tests {
 
     fn arrange(rings: &[Vec<Point>]) -> (Arrangement, Faces) {
         let mut meter = Budget::DEFAULT.meter();
-        let arrangement = cut(rings, &mut meter).unwrap();
+        let arrangement = cut(rings, &mut meter).unwrap().unwrap();
         let faces = arrangement.faces(&mut meter).unwrap();
         (arrangement, faces)
     }
@@ -380,7 +299,7 @@ mod tests {
     }
 
     #[test]
-    fn crossings_found_near_a_point_already_found_are_that_point() {
+    fn crossings_at_one_point_are_one_point() {
         // 3 lines through one point, each pair crossing there: one point in the middle.
         let star = vec![p(-1.0, -1.0), p(1.0, 1.0), p(1.0, -1.0), p(-1.0, 1.0), p(0.3, -1.0), p(-0.3, 1.0)];
         let (arrangement, _) = arrange(&[star]);
@@ -391,16 +310,6 @@ mod tests {
         let (arrangement, _) = arrange(&[ring]);
         let middles = arrangement.points.iter().filter(|q| (q.x() - 0.4).abs() < 1e-6 && (q.y() - 0.7).abs() < 1e-6).count();
         assert_eq!(middles, 1);
-        // Within a billionth of a millimetre a point is the one found before it, in its own square or the
-        // next one either way; farther in x or in y, a new one.
-        let mut points = Points::default();
-        let first = points.near(p(1.5e-9, 1.5e-9));
-        for near in [p(1.6e-9, 1.4e-9), p(0.6e-9, 1.5e-9), p(2.4e-9, 1.5e-9), p(1.5e-9, 0.6e-9), p(1.5e-9, 2.4e-9)] {
-            assert_eq!(points.near(near), first, "{near:?}");
-        }
-        assert_ne!(points.near(p(1.7e-9, 2.9e-9)), first);
-        assert_ne!(points.near(p(2.9e-9, 1.7e-9)), first);
-        assert_ne!(points.near(p(0.4, 0.7)), first);
     }
 
     #[test]
@@ -419,31 +328,23 @@ mod tests {
         for work in [3, 10, 25] {
             assert!(cut(&rings, &mut Budget { max_stitches: 1, max_work: work }.meter()).is_err(), "{work}");
         }
-        let arrangement = cut(&rings, &mut Budget::DEFAULT.meter()).unwrap();
+        let arrangement = cut(&rings, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         assert!(arrangement.faces(&mut Budget { max_stitches: 1, max_work: 3 }.meter()).is_err());
         assert!(arrangement.faces(&mut Budget { max_stitches: 1, max_work: 24 }.meter()).is_err());
-        // A square: 5 points with the first again, 5 pairs of segments side by side along x, and each of
-        // its 4 segments with the 2 cuts its neighbours make at its ends.
+        // A square: 5 points with the first again; its 4 edges, the 2 along x each tested against the 4
+        // corners within its span along x and the 2 upright ones against the 2 on their line; 5 pairs of
+        // edges side by side along x; and the 5 points of the ring cut.
         let mut meter = Budget::DEFAULT.meter();
-        cut(&[square(0.0, 0.0, 4.0)], &mut meter).unwrap();
-        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 5 + 5 + 4 * 3);
+        cut(&[square(0.0, 0.0, 4.0)], &mut meter).unwrap().unwrap();
+        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 5 + (4 + 2 * 4 + 2 * 2) + 5 + 5);
     }
 
     #[test]
     fn points_are_numbered_once_whatever_the_sign_of_0() {
-        assert_eq!(Points::key(p(-0.0, 1.0)), Points::key(p(0.0, 1.0)));
-        assert_eq!(Points::key(p(1.0, -0.0)), Points::key(p(1.0, 0.0)));
         // Squares sharing the edge at x = 0, one drawn through -0: one edge between them, run both ways.
         let left = vec![p(-4.0, 0.0), p(-0.0, 0.0), p(-0.0, 4.0), p(-4.0, 4.0)];
         let (arrangement, faces) = arrange(&[left, square(0.0, 0.0, 4.0)]);
         assert_eq!((arrangement.points.len(), arrangement.edges.len()), (6, 7));
         assert_eq!(&faces.winding[..faces.winding.len() - 1], [1, 1]);
-    }
-
-    #[test]
-    fn crossings_are_looked_up_in_squares_a_billionth_of_a_millimetre_across() {
-        assert_eq!(Points::cell(p(0.0, 0.0)), (0, 0));
-        assert_eq!(Points::cell(p(2.5e-9, -1.5e-9)), (2, -2));
-        assert_eq!(Points::cell(p(-0.5e-9, 7.5e-9)), (-1, 7));
     }
 }
