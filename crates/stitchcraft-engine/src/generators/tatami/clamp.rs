@@ -18,9 +18,17 @@ use crate::normalize::region::SAME;
 use crate::normalize::region::geom::{Hit, hit};
 use crate::normalize::stroke::distance_to_segment;
 
-/// Nearer than this, in millimetres, the way's exit and way back in are one point, and no ring is followed
-/// between them: 0.02 CSS pixels, where Ink/Stitch's 2 circles of 0.01 px round them meet.
+/// Within this of each other, in millimetres, measured along x and y together ([`apart`]), the way's exit
+/// and way back in are one point, and no ring is followed between them: 0.02 CSS pixels, where Ink/Stitch's
+/// 2 diamonds of 0.01 px round them meet. Shapely's buffer of a point with one segment to a quarter circle
+/// is that diamond.
 const NEAR: f64 = 0.02 * MM_PER_SVG_PX;
+
+/// How far apart `a` and `b` lie along x and y together, |dx| + |dy|: within `2r`, diamonds of radius `r`
+/// round them meet.
+fn apart(a: Point, b: Point) -> f64 {
+    (a.x() - b.x()).abs() + (a.y() - b.y()).abs()
+}
 
 /// A stretch of the way between 2 points where it meets the rings: inside the part, or not (outside it,
 /// or along a ring).
@@ -57,7 +65,7 @@ pub(crate) fn clamp(way: &[Point], rings: &Rings<'_>, meter: &mut Meter) -> Resu
         }
         let (Some(&first), Some(&last)) = (stretch.points.first(), stretch.points.last()) else { continue };
         if let Some(left) = exit
-            && left.distance(first) > NEAR
+            && apart(left, first) > NEAR
         {
             extend(&mut kept, round_ring(left, first, rings, meter)?);
         }
@@ -187,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    fn a_way_that_comes_back_in_beside_where_it_left_follows_the_ring_unless_nearer_than_0_02_px() {
+    fn req_fill_tat_005_a_way_back_in_beside_where_it_left_follows_the_ring_unless_within_0_02_px_along_x_and_y() {
         // Round the top right corner: out at (9.995, 0), back at (10, 0.005), 0.007 mm apart, more than
         // 0.02 px (0.0053 mm): the ring takes the way round the corner.
         let way = [p(9.987, 0.003), p(10.003, -0.003), p(9.997, 0.013)];
@@ -195,17 +203,27 @@ mod tests {
         // Out at (9.998, 0) and back at (10, 0.002), 0.003 mm apart: one point, and the way goes straight on.
         let way = [p(9.994, 0.002), p(10.002, -0.002), p(9.998, 0.006)];
         assert_eq!(clamped(&rectangle(4.0), &way), [p(9.994, 0.002), p(9.998, 0.0), p(10.0, 0.002), p(9.998, 0.006)]);
-        // Exactly 0.02 px apart is one point too, as Ink/Stitch's circles that touch meet. The way goes up
-        // through the top side at x = 10 - 2^-10, round outside the corner, and back in through the right
-        // side at a height that puts the 2 points exactly 0.02 px apart.
-        let (x, y, d) = (10.0 - 1.0 / 1024.0, 0.005_200_775_114_798_261, 1.0 / 1024.0);
-        let way = [p(x, d), p(x, -d), p(10.0 + d, -d), p(10.0 + d, y), p(10.0 - d, y)];
-        let meter = &mut Budget::DEFAULT.meter();
-        let part = rectangle(4.0);
-        let rings = Rings::new(&part, meter).unwrap();
-        let clamped = clamp(&way, &rings, meter).unwrap();
+        // Exactly 0.02 px apart along x and y together is one point too, as Ink/Stitch's diamonds of 0.01 px
+        // round the 2 points then touch. The way goes up through the top side at x = 10 - 2^-10, round outside
+        // the corner, and back in through the right side at the height that puts the 2 points so far apart.
+        let (x, y, d) = (10.0 - 1.0 / 1024.0, 0.004_315_104_166_666_667, 1.0 / 1024.0);
+        let around = |y: f64| {
+            let way = [p(x, d), p(x, -d), p(10.0 + d, -d), p(10.0 + d, y), p(10.0 - d, y)];
+            let meter = &mut Budget::DEFAULT.meter();
+            let part = rectangle(4.0);
+            let rings = Rings::new(&part, meter).unwrap();
+            clamp(&way, &rings, meter).unwrap()
+        };
+        let clamped = around(y);
         assert_eq!(clamped, [p(x, d), p(x, 0.0), p(10.0, y), p(10.0 - d, y)]);
-        assert_eq!(clamped[1].distance(clamped[2]), NEAR);
+        assert_eq!(apart(clamped[1], clamped[2]), NEAR);
+        // A hair higher, the diamonds no longer meet, and the ring takes the way round the corner, though the
+        // 2 points lie only 0.0044 mm apart in a straight line, less than 0.02 px.
+        let higher = y.next_up();
+        let followed = around(higher);
+        assert_eq!((followed.len(), followed[2]), (5, p(10.0, 0.0)), "round the corner: {followed:?}");
+        assert!(followed[3].distance(p(10.0, higher)) < 1e-12, "{followed:?}");
+        assert!(p(x, 0.0).distance(p(10.0, higher)) < NEAR);
     }
 
     #[test]

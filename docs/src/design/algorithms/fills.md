@@ -120,8 +120,9 @@ row's number is how far across the rows it lies from the origin, over `row_spaci
 nearest whole number, halves to the even one. Its offset is the fractional part of that number over
 `staggers`, times the longest stitch. Each row's points then lie a `staggers`-th of a stitch along from the row
 before's and come back after `staggers` rows, so neighbouring rows never line them up into furrows. A
-fraction of a stagger draws diagonals that show less. Fills side by side at the same angle share the
-grid, as they share their rows.
+fraction of a stagger draws diagonals that show less. A negative `staggers` staggers the rows the other
+way, and 0 counts as 1, which lines every row's points up, as in Ink/Stitch. Fills side by side at the
+same angle share the grid, as they share their rows.
 
 A segment is sewn from one end to the other, as routing decides. It takes its start, then every
 grid point past the start and before the end, and then its end, unless `skip_last` is on or the last
