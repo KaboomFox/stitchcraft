@@ -7,7 +7,8 @@
 //! spacing, rounded to the nearest whole number (halves to the even one). Its offset is that number over
 //! `staggers`, less its whole part, times the longest stitch. Each row's points then lie a `staggers`-th
 //! of a stitch along from the row before's, and come back after `staggers` rows, so that neighbouring
-//! rows never line their points up into furrows. Fills side by side share the grid.
+//! rows never line their points up into furrows. A negative `staggers` staggers the rows the other way,
+//! and 0 counts as 1, as in Ink/Stitch. Fills side by side share the grid.
 //!
 //! **A segment**, sewn from its start to its end, takes its start, then each grid point past the start
 //! and before the end, and then its end, unless `skip_last` is on or the last point lies within 0.1 mm of
@@ -85,7 +86,9 @@ fn first_on_grid(start: Point, direction: (f64, f64), stitching: &Stitching) -> 
     let (along, across) = axes(stitching.grid.angle);
     let dot = |(x, y): (f64, f64)| start.x() * x + start.y() * y;
     let number = (dot(across) / stitching.grid.spacing).round_ties_even();
-    let offset = (number / stitching.staggers).rem_euclid(1.0) * stitching.length;
+    // Ink/Stitch reads a staggers of 0 as 1, which lines every row's points up.
+    let staggers = if stitching.staggers == 0.0 { 1.0 } else { stitching.staggers };
+    let offset = (number / staggers).rem_euclid(1.0) * stitching.length;
     // How far along the rows `start` lies past the grid point before it.
     let past = (dot(along) - offset).rem_euclid(stitching.length);
     // The grid point before `start` lies `past` behind it along the rows: ahead of it when the segment
