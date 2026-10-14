@@ -4,12 +4,14 @@
 //! - `--check` (fast, part of `docs`-style consistency): requirement ids are unique and well formed;
 //!   levels, statuses and milestones are valid; every data case parses and names existing requirements;
 //!   every Rust test named `req_…` names an existing requirement; every `active` requirement has at least
-//!   one case; the Ink/Stitch facts file parses.
+//!   one case; the Ink/Stitch facts file parses; every fixture has its row in the fixtures index, which says
+//!   where it comes from and under which licence.
 //! - Without `--check`, the suite also **runs**: data cases in-process, Rust-test cases through one
 //!   `cargo test`. It writes `target/conformance/report.md` (the requirement × case matrix, failures
 //!   first; appended to the GitHub job summary when `GITHUB_STEP_SUMMARY` is set), `report.json` and
 //!   `hashes.json` (one SHA-256 per output, for the cross-platform determinism job). It fails when a case
-//!   fails or an active requirement has no passing case.
+//!   fails or an active requirement has no passing case. A case that needs an optional tool is skipped
+//!   without it, and fails in CI: outside CI, a requirement whose cases were all skipped is skipped too.
 //! - `--filter <text>` runs only the cases whose id, test name or requirements contain the text.
 //! - `--bless <case>` rewrites the golden files of one data case instead of comparing them. A changed
 //!   golden file is a changed machine file: bless only on purpose, in a PR that says why.
@@ -20,6 +22,7 @@ mod report;
 mod runner;
 
 use std::collections::BTreeSet;
+use std::path::Path;
 
 pub use cases::requirement_ids;
 
@@ -28,18 +31,12 @@ use stitchcraft_core::Code;
 use crate::util::{self, Findings};
 
 const INKSTITCH: &str = "conformance/inkstitch-params.toml";
+/// The fixtures, and their index, `README.md`.
+const FIXTURES: &str = "conformance/fixtures";
 
 /// `cargo xtask conformance …`.
-pub fn run(args: &[String]) -> Result<(), String> {
-    let check_only = args.iter().any(|a| a == "--check");
-    let value = |flag: &str| -> Result<Option<String>, String> {
-        match args.iter().position(|a| a == flag) {
-            Some(i) => Ok(Some(args.get(i + 1).ok_or(format!("{flag} needs a value"))?.clone())),
-            None => Ok(None),
-        }
-    };
-    let bless = value("--bless")?;
-    let filter = value("--filter")?.map(|f| f.to_ascii_lowercase());
+pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>) -> Result<(), String> {
+    let filter = filter.map(str::to_ascii_lowercase);
     let root = util::root();
     let mut findings = Findings::default();
     let requirements = cases::load_requirements(&root)?;
@@ -80,6 +77,9 @@ pub fn run(args: &[String]) -> Result<(), String> {
     if facts.get("param").and_then(toml::Value::as_array).is_none_or(Vec::is_empty) {
         findings.error(format!("{INKSTITCH}: no [[param]] entries"));
     }
+    for fixture in unindexed(&root)? {
+        findings.error(format!("{FIXTURES}/{fixture} has no row in {FIXTURES}/README.md, which gives each fixture's origin and licence"));
+    }
     let active = requirements.iter().filter(|r| r.status == "active").count();
     let summary = format!(
         "{} requirements ({active} active), {} diagnostic codes, {} data cases, {} Rust-test cases",
@@ -92,8 +92,8 @@ pub fn run(args: &[String]) -> Result<(), String> {
         return findings.finish("conformance", &summary);
     }
 
-    if let Some(id) = &bless {
-        let Some(case) = data.iter().find(|c| &c.id == id) else {
+    if let Some(id) = bless {
+        let Some(case) = data.iter().find(|c| c.id == id) else {
             return Err(format!("there is no data case `{id}`"));
         };
         let outcome = runner::run_data_case(&root, case, true);
@@ -130,12 +130,12 @@ pub fn run(args: &[String]) -> Result<(), String> {
     }
     // A filtered run is partial: requirements and codes outside the filter are not expected to have run.
     for (r, verdict) in report::verdicts(&requirements, &outcomes).into_iter().filter(|_| filter.is_none()) {
-        if r.status == "active" && verdict != report::Verdict::Pass {
+        if r.status == "active" && !verdict.acceptable(util::in_ci()) {
             findings.error(format!("{} is active but has no passing case", r.id));
         }
     }
     for (code, verdict) in report::code_verdicts(&outcomes).into_iter().filter(|_| filter.is_none()) {
-        if verdict != report::Verdict::Pass {
+        if !verdict.acceptable(util::in_ci()) {
             findings.error(format!("{} has no passing diag_ case", code.id()));
         }
     }
@@ -168,6 +168,17 @@ fn check_requirements<'a>(requirements: &'a [cases::Requirement], findings: &mut
         }
     }
     seen
+}
+
+/// The files under the fixtures folder, by path in it, that its index has no row for. A row names its files in
+/// its first cell, each in inline code.
+fn unindexed(root: &Path) -> Result<Vec<String>, String> {
+    let dir = root.join(FIXTURES);
+    let index = util::read(&dir.join("README.md"))?;
+    let named: BTreeSet<&str> =
+        index.lines().filter_map(|line| line.strip_prefix("| ")?.split(" | ").next()).flat_map(|cell| cell.split('`').skip(1).step_by(2)).collect();
+    let files = util::every_file(&dir).into_iter().filter_map(|path| Some(path.strip_prefix(&dir).ok()?.to_string_lossy().replace('\\', "/")));
+    Ok(files.filter(|file| file != "README.md" && !named.contains(file.as_str())).collect())
 }
 
 /// `REQ-` + one or more upper-case segments + a three-digit number.
@@ -204,6 +215,11 @@ mod tests {
         assert!(!well_formed("REQ-run-001"));
         assert!(!well_formed("REQ-RUN-1"));
         assert!(!well_formed("RUN-001"));
+    }
+
+    #[test]
+    fn every_fixture_has_its_row_in_the_index() {
+        assert_eq!(unindexed(&util::root()).unwrap(), Vec::<String>::new());
     }
 
     #[test]

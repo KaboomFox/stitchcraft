@@ -14,30 +14,11 @@ use std::path::{Path, PathBuf};
 
 use serde_json::json;
 
-use crate::{join, util};
+use crate::util;
 
 const REPOSITORY: &str = "https://github.com/storytold/vectorcraft";
 const PINS: &str = "compat/vectorcraft.toml";
 const CONTRACT: &str = "compat/vc-contract";
-
-/// `cargo xtask compat …`.
-pub fn run(args: &[String]) -> Result<(), String> {
-    let value = |flag: &str| args.windows(2).find(|w| w.first().is_some_and(|f| f == flag)).and_then(|w| w.get(1)).cloned();
-    match args.first().map(String::as_str) {
-        Some("discover") => discover(args.iter().any(|a| a == "--json")),
-        Some("contract") => {
-            let reference = value("--ref").ok_or("contract needs --ref <tag|sha>")?;
-            let wasm = value("--wasm").ok_or("contract needs --wasm <file>")?;
-            contract(&reference, Path::new(&wasm))
-        }
-        Some("join") => join::run(args.get(1..).unwrap_or_default()),
-        Some("report") => Err("`compat report` arrives with roadmap step M6.6".into()),
-        _ => {
-            Err("usage: cargo xtask compat discover [--json] | contract --ref <tag|sha> --wasm <file> | join [--nested] <vectorcraft checkout>"
-                .into())
-        }
-    }
-}
 
 /// A SemVer version (`1.2.3` or `1.2.3-rc.1`).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -134,7 +115,7 @@ impl Remote {
     }
 }
 
-fn discover(as_json: bool) -> Result<(), String> {
+pub fn discover(as_json: bool) -> Result<(), String> {
     let output =
         std::process::Command::new("git").args(["ls-remote", "--tags", "--heads", REPOSITORY]).output().map_err(|e| format!("git ls-remote: {e}"))?;
     if !output.status.success() {
@@ -201,7 +182,7 @@ fn prepare_contract(reference: &str) -> Result<PathBuf, String> {
     Ok(dest)
 }
 
-fn contract(reference: &str, wasm: &Path) -> Result<(), String> {
+pub fn contract(reference: &str, wasm: &Path) -> Result<(), String> {
     let wasm = std::fs::canonicalize(wasm).map_err(|e| format!("{}: {e}", wasm.display()))?;
     let dir = prepare_contract(reference)?;
     let mut cmd = util::cargo();
