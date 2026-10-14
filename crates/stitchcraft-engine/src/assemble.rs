@@ -7,14 +7,17 @@
 //! stop. Anything else ends the group with its tie-off and starts the next with a jump and its tie-in, as
 //! `ties` allows ([`crate::locks`] sews them). That is where locks go, and the only place (`REQ-LCK-001`).
 //!
-//! The plan is built in the design's coordinates, then moved so the design's origin, or the centre of
-//! its stitches, is at the hoop's centre (`REQ-ASM-005`). What the machine cannot sew — a stitch too long
-//! or too short for it, a design too large for the hoop — is finalize's to fix or report (M3.9).
+//! The plan is built in the design's coordinates. Finalize moves it so the design's origin, or the centre
+//! of its stitches, is at the hoop's centre (`REQ-ASM-005`), once it has left out the points the machine
+//! cannot sew. What the machine cannot sew — a stitch too long or too short for it, a design too large for
+//! the hoop — is finalize's to fix or report (M3.9).
+
+use std::collections::BTreeSet;
 
 use stitchcraft_core::units::at_least;
-use stitchcraft_core::{Diagnostic, Exhausted, Meter, Mm, Point, Rect};
+use stitchcraft_core::{Diagnostic, Exhausted, Meter, Mm, Point};
 use stitchcraft_params::StitchType;
-use stitchcraft_plan::{ElementRef, PlanBuilder, Provenance, Role, StitchKind, StitchPlan, Thread};
+use stitchcraft_plan::{ElementRef, PlanBuilder, Provenance, Role, StitchPlan, Thread};
 
 use crate::design::{DesignSettings, Element};
 use crate::generate::Generated;
@@ -23,7 +26,7 @@ use crate::locks::{Lock, tie_in, tie_off};
 /// A design's stitch plan, before finalize, and what assembly says about it.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Assembled {
-    /// The plan, in hoop coordinates.
+    /// The plan, in the design's coordinates: finalize moves it to the hoop's centre.
     pub plan: StitchPlan,
     /// What the locks changed or could not sew as set, each naming its element.
     pub warnings: Vec<Diagnostic>,
@@ -37,8 +40,14 @@ pub struct Assembled {
 pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, meter: &mut Meter) -> Result<Option<Assembled>, Exhausted> {
     let parts: Vec<&(&Element, Generated)> = elements.iter().filter(|(_, generated)| generated.groups.iter().any(|g| !g.is_empty())).collect();
     let Some((first, _)) = parts.first() else { return Ok(None) };
-    let mut assembly =
-        Assembly { builder: PlanBuilder::new(first.thread.clone()), thread: first.thread.clone(), open: None, settings, warnings: Vec::new() };
+    let mut assembly = Assembly {
+        builder: PlanBuilder::new(first.thread.clone()),
+        thread: first.thread.clone(),
+        open: None,
+        settings,
+        warnings: Vec::new(),
+        settings_said: BTreeSet::new(),
+    };
     let mut shortest = Vec::with_capacity(parts.len());
     for (element, generated) in parts {
         // Each element registered has a stitch, so the stitch budget runs out long before element
@@ -54,7 +63,7 @@ pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, m
     }
     assembly.tie_off(meter)?;
     let Assembly { builder, warnings, .. } = assembly;
-    Ok(Some(Assembled { plan: centred(builder.finish(), settings.origin), warnings, shortest }))
+    Ok(Some(Assembled { plan: builder.finish(), warnings, shortest }))
 }
 
 /// One group, with its element.
@@ -95,6 +104,8 @@ struct Assembly<'a> {
     open: Option<Group<'a>>,
     settings: &'a DesignSettings,
     warnings: Vec<Diagnostic>,
+    /// The warnings about locks' settings kept so far, by element.
+    settings_said: BTreeSet<(String, String)>,
 }
 
 impl<'a> Assembly<'a> {
@@ -155,9 +166,14 @@ impl<'a> Assembly<'a> {
         Ok(())
     }
 
-    /// The lock's needle points, keeping its warnings, named after `group`'s element.
+    /// The lock's needle points, keeping its warnings, named after `group`'s element. A warning about the
+    /// lock's settings, which has no place, is the same at every group of the element: it is kept once.
     fn lock(&mut self, lock: Lock, group: Group<'_>) -> Vec<Point> {
-        self.warnings.extend(lock.warnings.into_iter().map(|w| w.with_element(group.element.id.clone())));
+        for warning in lock.warnings {
+            if warning.at.is_some() || self.settings_said.insert((group.element.id.as_str().to_string(), warning.to_string())) {
+                self.warnings.push(warning.with_element(group.element.id.clone()));
+            }
+        }
         lock.points
     }
 
@@ -170,15 +186,4 @@ impl<'a> Assembly<'a> {
         }
         Ok(())
     }
-}
-
-/// `plan` moved so that `origin`, or else the centre of the box around its stitches, is at the hoop's
-/// centre. Positions within the data model's reach stay finite, moved; were one not to, it would stay.
-fn centred(mut plan: StitchPlan, origin: Option<Point>) -> StitchPlan {
-    let sewn = plan.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at);
-    let Some(origin) = origin.or_else(|| Rect::around(sewn).map(Rect::center)) else { return plan };
-    for stitch in plan.blocks.iter_mut().flat_map(|b| b.stitches.iter_mut()) {
-        stitch.at = Point::new(stitch.at.x() - origin.x(), stitch.at.y() - origin.y()).unwrap_or(stitch.at);
-    }
-    plan
 }

@@ -494,14 +494,17 @@ another lock shape.
 
 **Info** — Stitches shorter than the shortest stitch merged
 
-Needle points less than the shortest stitch from the one before were left out, so the stitch before
-each runs on to the next and none is shorter than the machine sews well. This happens where one
-element's stitching runs straight on into the next and they nearly touch: the stitch between them is
-whatever is left of the gap. Where small elements are sewn over each other, a lock point or the last
-point before a jump, trim or stop can go too, when it comes within the shortest stitch of one that
-stays. Nothing visible changes.
+Needle points less than the shortest stitch from a needle point next to them were left out, so the
+stitch before each runs on to the next and none is shorter than the machine sews well. This happens
+where one element's stitching runs straight on into the next and they nearly touch: the stitch
+between them is whatever is left of the gap. A point that stays, such as a lock point or the last
+point before a jump, trim or stop, leaves out the points before it that it is too near, and a stitch
+into or out of a lock point may be as short as 0.2 mm. Where small elements are sewn over each other,
+a point that stays can go too, when it comes within the shortest stitch of another that stays.
+Nothing visible changes.
 
-Nothing to do. If the count is large, check for elements drawn on top of each other.
+The message gives how many points were left out and the shortest stitches that applied to them.
+Nothing needs doing. If the count is large, check for elements drawn on top of each other.
 
 ## SC-W0505
 

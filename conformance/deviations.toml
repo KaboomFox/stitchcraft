@@ -26,7 +26,7 @@ requirements = ["REQ-LCK-002"]
 [[deviation]]
 id = "DEV-LCK-002"
 area = "plan/locks"
-summary = "Locks of steps follow the stitching round its corners, as Ink/Stitch's custom steps do. They differ in 2 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn."
+summary = "Locks of steps follow the stitching round its corners, as Ink/Stitch's custom steps do. They differ in 5 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn. A step shorter than 0.2 mm is lengthened to 0.2 mm, with SC-W0502, where Ink/Stitch sews it as it is. A custom step of 0 is left out, with SC-W0503, where Ink/Stitch sews a stitch in place for it. And a custom step longer than 10 m, the data model's reach, is left out with SC-W0503."
 reason = "No lock stitch is shorter than 0.2 mm (REQ-LCK-002), so the needle never goes back into the hole it just left. Ink/Stitch's behaviour was read at d59c9ab (lib/stitch_plan/lock_stitch.py), docs/src/design/algorithms/locks.md."
 requirements = ["REQ-LCK-004"]
 

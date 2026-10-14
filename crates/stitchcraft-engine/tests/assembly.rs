@@ -10,7 +10,9 @@ use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Path
 use stitchcraft_engine::plan;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Rgb, Role, StitchKind, Thread};
-use stitchcraft_testkit::designs::{BLUE, RED, line, messages, p, planned as sewn, planned_with as sewn_with, shape, shape_of, stroke};
+use stitchcraft_testkit::designs::{
+    BLUE, RED, along, line, messages, p, planned as sewn, planned_with as sewn_with, polylines, shape, shape_of, stroke,
+};
 
 #[test]
 fn req_asm_001_elements_are_sewn_in_document_order_a_new_thread_a_new_block() {
@@ -90,6 +92,35 @@ fn req_asm_005_the_origin_goes_to_the_hoop_centre() {
     assert_eq!(first.at, p(0.0, 0.0));
     let stop = plan.stitches().find(|s| s.kind == StitchKind::Stop).unwrap();
     assert_eq!(stop.at, p(-10.0, -10.0));
+    // The box is the finished plan's, as in Ink/Stitch: b starts 0.27 mm from where a ends and is sewn
+    // on, and its first point, the design's lowest, is less than the shortest stitch from a's end, so
+    // finalize leaves it out.
+    let a = line("a", (0.0, 0.0), 10.0, &RED, &[]);
+    let b = along("b", polylines(&[&[(10.1, -0.25), (10.1, 9.75)]]), &RED, &[]);
+    let finished = sewn_with(vec![a, b], DesignSettings::default()).plan.unwrap();
+    let finished_box = Rect::around(finished.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at)).unwrap();
+    assert!(finished_box.center().distance(p(0.0, 0.0)) < 1e-9, "{finished_box:?}");
+}
+
+#[test]
+fn diag_sc_w0503_a_lock_setting_that_cannot_be_sewn_is_named_once_for_its_element() {
+    // 5 parts of one element, each tied in and off: what comes of its lock settings alone is the same at
+    // every part, and is said once, with no place.
+    let parts: Vec<((f64, f64), f64)> = (0..5).map(|i| ((12.0 * f64::from(i), 0.0), 8.0)).collect();
+    let locks = [("lock_start", "custom"), ("lock_custom_start", "1,5 1 -1"), ("lock_end", "zigzag"), ("lock_end_scale_percent", "10")];
+    let outcome = sewn(vec![stroke("a", &parts, &RED, &locks)]);
+    assert_eq!(shape_of(&outcome).matches('J').count(), 5);
+    assert_eq!(
+        messages(&outcome),
+        [
+            "warning SC-W0503: A part of the custom start lock is not a step it can sew (\"1,5\"), so it is left out.",
+            "warning SC-W0502: The end lock's shortest stitch would be 0.05 mm, shorter than 0.2 mm, so the lock is sewn 4.34 times as large."
+        ]
+    );
+    assert!(outcome.diagnostics.iter().all(|d| d.at.is_none() && d.element.as_ref().map(ElementId::as_str) == Some("a")));
+    // Another element with the same settings is named too.
+    let two = sewn(vec![stroke("a", &parts, &RED, &locks), stroke("b", &[((0.0, 30.0), 8.0)], &RED, &locks)]);
+    assert_eq!(two.diagnostics.iter().filter(|d| d.element.as_ref().map(ElementId::as_str) == Some("b")).count(), 2);
 }
 
 #[test]

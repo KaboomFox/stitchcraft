@@ -32,10 +32,8 @@ const RANDOMIZED: &[StitchType] = &[
 params! {
     /// Settings every stitch type shares: lock stitches where the element's stitching starts and
     /// ends, a trim or a stop after it, the shortest stitch and jump, the longest stitch, and where random
-    /// variation starts.
-    ///
-    /// StitchCraft reads and checks them today; they change the stitches as plan assembly arrives
-    /// (roadmap steps M3.7 to M3.9).
+    /// variation starts. Plan assembly sews the locks, trims and stops, and finalize holds each element's
+    /// stitches to its shortest stitch.
     pub struct CommonParams for StitchType::ALL;
 
     "Lock stitches" {
@@ -98,7 +96,7 @@ params! {
         /// hammer one hole. Empty: the larger of the document's setting and the machine's minimum.
         min_stitch_length_mm: OptionalLength = "", label "Shortest stitch", range (0.0, 10.0);
 
-        /// A move to the next element shorter than this is sewn straight on, without lock stitches or a
+        /// A move to the next element no longer than this is sewn straight on, without lock stitches or a
         /// jump. Empty: the document's setting.
         min_jump_stitch_length_mm: OptionalLength = "", label "Shortest jump", range (0.0, 20.0);
     }
