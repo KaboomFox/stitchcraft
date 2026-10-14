@@ -3,11 +3,16 @@
 //! The only part of StitchCraft that touches files and the terminal. Subcommands arrive with their roadmap
 //! milestones (`docs/src/plan/roadmap.md`). Every subcommand returns an outcome instead of printing, so
 //! `main` is the one place that writes to the terminal: arguments that are not valid Unicode are reported
-//! (by `clap`) instead of panicking, a closed stdout (`stitch … | head`) ends the program quietly, and a
-//! panic — a bug in StitchCraft — is reported with exit status 4 (`commands::bug_report::guarded`).
+//! (by `clap`) instead of panicking, and a panic — a bug in StitchCraft — is reported with exit status 4
+//! (`commands::bug_report::guarded`).
+//!
+//! A closed standard output (`stitch … | head`) ends the writing quietly, and the command's own exit status
+//! stands: what it did, it did. Any other error writing standard output or standard error is said, and
+//! ends with exit status 3 (`REQ-CLI-009`). Help and usage errors are coloured only on a terminal, and not
+//! when `NO_COLOR` is set or `TERM` is `dumb` (`REQ-CLI-010`).
 #![forbid(unsafe_code)]
 
-use std::io::{ErrorKind, Write};
+use std::io::{ErrorKind, IsTerminal, Write};
 use std::process::ExitCode;
 
 use clap::Parser;
@@ -33,23 +38,37 @@ fn main() -> ExitCode {
         Err(e) => {
             // `--help` and `--version` arrive here too, as "errors" that print to stdout and succeed.
             let status = if e.use_stderr() { Status::Usage } else { Status::Done };
-            let text = e.render().ansi().to_string();
+            let terminal = if e.use_stderr() { std::io::stderr().is_terminal() } else { std::io::stdout().is_terminal() };
+            let rendered = e.render();
+            let colour = coloured(terminal, std::env::var_os("NO_COLOR").as_deref(), std::env::var_os("TERM").as_deref());
+            let text = if colour { rendered.ansi().to_string() } else { rendered.to_string() };
             let stream: &mut dyn Write = if e.use_stderr() { &mut std::io::stderr() } else { &mut std::io::stdout() };
-            return write_or_quit(stream, &text, status.into());
+            return written(stream, &text, status).into();
         }
     };
     // A panic is a bug in StitchCraft (the libraries deny them): reported, with a bundle for `plan`.
     let outcome = commands::bug_report::guarded(&cli.command, || run(&cli));
-    let code = write_or_quit(&mut std::io::stdout(), &outcome.stdout, outcome.status.into());
-    write_or_quit(&mut std::io::stderr(), &outcome.stderr, code)
+    let status = written(&mut std::io::stdout(), &outcome.stdout, outcome.status);
+    written(&mut std::io::stderr(), &outcome.stderr, status).into()
 }
 
-/// Writes `text`; a closed pipe ends the program quietly with success, any other write error is a failure.
-fn write_or_quit(out: &mut dyn Write, text: &str, code: ExitCode) -> ExitCode {
+/// Whether to colour what goes to a stream that is a `terminal` or not, with the environment's `NO_COLOR`
+/// and `TERM`: on a terminal, unless `NO_COLOR` is set to anything (<https://no-color.org>) or the terminal
+/// is `dumb`.
+fn coloured(terminal: bool, no_color: Option<&std::ffi::OsStr>, term: Option<&std::ffi::OsStr>) -> bool {
+    terminal && no_color.is_none_or(|value| value.is_empty()) && term.is_none_or(|term| term != "dumb")
+}
+
+/// Writes `text` to `out`, and the status the program ends with: `status`, also when `out` is a closed pipe,
+/// or [`Status::Io`] after another error, which is said on standard error.
+fn written(out: &mut dyn Write, text: &str, status: Status) -> Status {
     match out.write_all(text.as_bytes()).and_then(|()| out.flush()) {
-        Ok(()) => code,
-        Err(e) if e.kind() == ErrorKind::BrokenPipe => ExitCode::SUCCESS,
-        Err(_) => ExitCode::FAILURE,
+        Ok(()) => status,
+        Err(e) if e.kind() == ErrorKind::BrokenPipe => status,
+        Err(e) => {
+            let _ = writeln!(std::io::stderr(), "stitch: cannot write the output: {e}");
+            Status::Io
+        }
     }
 }
 
@@ -81,6 +100,38 @@ mod tests {
         assert!(parse(&["testsheet", "TS-01"]).unwrap_err().use_stderr(), "profile and output are required");
         assert!(parse(&["testsheet", "--list"]).is_ok());
         assert!(parse(&["sew-it"]).unwrap_err().use_stderr());
+    }
+
+    /// A stream that refuses every write with `kind`.
+    struct Refusing(ErrorKind);
+
+    impl Write for Refusing {
+        fn write(&mut self, _: &[u8]) -> std::io::Result<usize> {
+            Err(std::io::Error::from(self.0))
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn req_cli_009_a_closed_pipe_keeps_the_status_and_other_errors_end_with_3() {
+        for status in [Status::Done, Status::DesignErrors, Status::Bug] {
+            assert_eq!(written(&mut Refusing(ErrorKind::BrokenPipe), "text", status), status);
+            assert_eq!(written(&mut Refusing(ErrorKind::StorageFull), "text", status), Status::Io);
+            assert_eq!(written(&mut Vec::new(), "text", status), status);
+        }
+    }
+
+    #[test]
+    fn req_cli_010_colour_only_on_a_terminal_without_no_color_or_a_dumb_terminal() {
+        use std::ffi::OsStr;
+        assert!(coloured(true, None, Some(OsStr::new("xterm-256color"))));
+        assert!(coloured(true, Some(OsStr::new("")), None), "NO_COLOR set to nothing does not count");
+        assert!(!coloured(false, None, None), "a pipe or a file");
+        assert!(!coloured(true, Some(OsStr::new("1")), None));
+        assert!(!coloured(true, None, Some(OsStr::new("dumb"))));
     }
 
     #[test]

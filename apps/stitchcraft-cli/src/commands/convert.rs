@@ -6,14 +6,16 @@
 //! a DST file stores no thread colours, so a PES file made from one names a placeholder colour for every
 //! thread (`SC-W0604`). The other way round, DST records a stop as a pause for the next thread, which is
 //! what a stop is, but its machines cut the thread before every jump longer than 24.2 mm, where a PES
-//! machine leaves a jump thread: `SC-I0605` says how many.
+//! machine leaves a jump thread: `SC-I0605` says how many. The summary's size and counts are the new
+//! file's, read back as a machine reads it (`REQ-CLI-008`), and the file may not be the one it is made from
+//! (`REQ-CLI-007`).
 
 use std::fmt::Write as _;
 
 use stitchcraft_formats::Encoded;
 
-use super::{Outcome, Status, describe_file, describe_plan, describe_threads, output_format, read_machine_file, reader_warnings};
-use super::{render_diagnostics, unknown_colors, write_files};
+use super::{Outcome, Status, describe_file, describe_plan, describe_threads, distinct, output_format, read_back, read_machine_file};
+use super::{reader_warnings, render_diagnostics, unknown_colors, write_files};
 use crate::cli::ConvertArgs;
 
 /// Runs `stitch convert`.
@@ -22,6 +24,9 @@ pub fn run(args: &ConvertArgs) -> Outcome {
         Ok(format) => format,
         Err(outcome) => return outcome,
     };
+    if let Err(outcome) = distinct(&[&args.file], &[&args.output]) {
+        return outcome;
+    }
     let (_, decoded) = match read_machine_file(&args.file) {
         Ok(read) => read,
         Err(outcome) => return outcome,
@@ -42,15 +47,19 @@ pub fn run(args: &ConvertArgs) -> Outcome {
         }
     };
     diagnostics.extend(notes);
+    let back = match read_back(&bytes, &decoded.plan) {
+        Ok(back) => back,
+        Err(bug) => return Outcome::refuse(warnings, &[bug]),
+    };
     let said = warnings + &render_diagnostics(&diagnostics);
-    if let Err(unwritten) = write_files(&[(&args.output, &bytes)], &said) {
-        return unwritten;
-    }
     let mut out = String::new();
     let _ = writeln!(out, "{} · {} → {}", args.file.display(), decoded.format, format.name());
     describe_file(&mut out, &args.output, format, &bytes);
-    describe_plan(&mut out, &decoded.plan);
+    describe_plan(&mut out, &back);
     describe_threads(&mut out, &decoded.plan, format.palette().map(|id| id.palette()));
+    if let Err(unwritten) = write_files(&[(&args.output, &bytes)], &said) {
+        return unwritten;
+    }
     Outcome { stdout: out, stderr: said, status: Status::Done }
 }
 

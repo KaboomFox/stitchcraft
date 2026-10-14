@@ -144,7 +144,11 @@ damaged or hostile: every offset and length is checked before use, the record co
 budget (2,000,000), positions must stay within ±10 m, and a problem is a typed error (`SC-E0603`) — never a
 panic and never a silent guess. Readers are literal: each record becomes one plan entry, so `inspect` shows
 what is in the file. Unusual but readable things (a thread index outside the palette, a thumbnail offset
-that points nowhere) become warnings in the result.
+that points nowhere) become warnings in the result. `stitch inspect` gives lengths to a hundredth of a
+millimetre and counts a stitch that does not move on its own. A file does not mark its lock stitches, so of
+the stitches shorter than a profile's shortest it also counts those 0.2 mm or longer, as a lock stitch may
+be. `stitch plan`, `testsheet` and `convert` read the file they wrote back the same way, and give its counts
+and size (`REQ-CLI-008`).
 
 | Reader | Reads | What it has to infer |
 |---|---|---|

@@ -6,11 +6,17 @@
 //! replaces the destination in one step. A command that writes several files writes them all to their
 //! temporary names first, and renames none into place unless every one was written (REQ-CLI-006).
 //!
+//! Each temporary name is the program's own: it is created new, so a file or a link already there under
+//! that name is neither written through nor replaced, and a link planted in a shared folder cannot steer the
+//! write to another file. Each is synced to the disk before it is renamed, and the folder after, so a
+//! stick pulled out once `stitch` is done holds the whole file.
+//!
 //! Reads stop past [`MAX_READ`] bytes, whatever the file says of its size: a pipe or a device says nothing,
 //! and `/dev/zero` never ends (REQ-CLI-005).
 
 use std::ffi::OsString;
-use std::io::{self, Read as _};
+use std::fs::{File, OpenOptions};
+use std::io::{self, Read as _, Write as _};
 use std::path::{Path, PathBuf};
 
 /// The largest file `stitch` reads: far beyond any embroidery file (a 2,000,000-stitch design is under
@@ -48,32 +54,79 @@ pub struct Unwritten {
     pub written: Vec<PathBuf>,
 }
 
+/// How many names [`staged`] tries before it gives up: as many temporary files as it would take a crashed
+/// run after crashed run to leave behind.
+const NAMES: u32 = 100;
+
 /// Writes each of `files`, a path and its bytes, every one whole or none: each goes to a temporary file next
 /// to it, and they are renamed into place once every one is written.
 pub fn write_all(files: &[(&Path, &[u8])]) -> Result<(), Unwritten> {
-    let mut staged: Vec<(OsString, &Path)> = Vec::new();
+    let mut staged_files: Vec<(OsString, &Path)> = Vec::new();
     let unwritten = |path: &Path, error, written| Unwritten { path: path.to_path_buf(), error, written };
     for &(path, bytes) in files {
-        let mut temporary = path.as_os_str().to_owned();
-        temporary.push(".partial");
-        if let Err(error) = std::fs::write(&temporary, bytes) {
-            let _ = std::fs::remove_file(&temporary);
-            for (left, _) in &staged {
-                let _ = std::fs::remove_file(left);
+        match staged(path, bytes) {
+            Ok(temporary) => staged_files.push((temporary, path)),
+            Err(error) => {
+                for (left, _) in &staged_files {
+                    let _ = std::fs::remove_file(left);
+                }
+                return Err(unwritten(path, error, Vec::new()));
             }
-            return Err(unwritten(path, error, Vec::new()));
         }
-        staged.push((temporary, path));
     }
-    for (i, (temporary, path)) in staged.iter().enumerate() {
+    for (i, (temporary, path)) in staged_files.iter().enumerate() {
         if let Err(error) = std::fs::rename(temporary, path) {
-            for (left, _) in staged.iter().skip(i) {
+            for (left, _) in staged_files.iter().skip(i) {
                 let _ = std::fs::remove_file(left);
             }
-            return Err(unwritten(path, error, staged.iter().take(i).map(|(_, p)| p.to_path_buf()).collect()));
+            return Err(unwritten(path, error, staged_files.iter().take(i).map(|(_, p)| p.to_path_buf()).collect()));
         }
+    }
+    for (_, path) in &staged_files {
+        sync_folder(path);
     }
     Ok(())
+}
+
+/// `bytes` written, and synced, to a new temporary file next to `path`, named `path` followed by
+/// `.<process>-<n>.partial`; its name. Nothing already there is opened: a name in use is passed over.
+fn staged(path: &Path, bytes: &[u8]) -> io::Result<OsString> {
+    let mut last = io::Error::new(io::ErrorKind::AlreadyExists, format!("{NAMES} temporary names next to it are in use"));
+    for n in 0..NAMES {
+        let mut temporary = path.as_os_str().to_owned();
+        temporary.push(format!(".{}-{n}.partial", std::process::id()));
+        let mut file = match OpenOptions::new().write(true).create_new(true).open(&temporary) {
+            Ok(file) => file,
+            Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {
+                last = e;
+                continue;
+            }
+            Err(e) => return Err(e),
+        };
+        return match file.write_all(bytes).and_then(|()| file.sync_all()) {
+            Ok(()) => Ok(temporary),
+            Err(e) => {
+                drop(file);
+                let _ = std::fs::remove_file(&temporary);
+                Err(e)
+            }
+        };
+    }
+    Err(last)
+}
+
+/// Syncs the folder `path` is in ([`folder`]), so that the rename into place is on the disk too. Only some
+/// platforms open a folder as a file (Unix does, Windows does not), and a folder that cannot be synced
+/// leaves the file written all the same.
+fn sync_folder(path: &Path) {
+    if let Ok(folder) = File::open(folder(path)) {
+        let _ = folder.sync_all();
+    }
+}
+
+/// The folder `path` is in: the current one for a bare file name.
+fn folder(path: &Path) -> &Path {
+    path.parent().filter(|p| !p.as_os_str().is_empty()).unwrap_or(Path::new("."))
 }
 
 #[cfg(test)]
@@ -88,8 +141,53 @@ mod tests {
         std::fs::write(&path, b"old").unwrap();
         write_atomically(&path, b"new").unwrap();
         assert_eq!(std::fs::read(&path).unwrap(), b"new");
-        assert!(!dir.join("a.pes.partial").exists());
+        assert_eq!(partial(&dir), Vec::<String>::new());
         assert!(write_atomically(&dir.join("missing-dir/a.pes"), b"x").is_err());
+    }
+
+    /// The temporary files left in `dir`.
+    fn partial(dir: &Path) -> Vec<String> {
+        let mut names: Vec<String> = std::fs::read_dir(dir)
+            .unwrap()
+            .filter_map(|entry| entry.ok()?.file_name().into_string().ok())
+            .filter(|name| name.ends_with(".partial"))
+            .collect();
+        names.sort();
+        names
+    }
+
+    /// REQ-CLI-006: a temporary name is created new, so a link planted under it, as anyone who can write in a
+    /// shared folder could plant one, is not written through, and a file left there is not replaced.
+    #[cfg(unix)]
+    #[test]
+    fn req_cli_006_a_link_planted_where_a_temporary_file_goes_is_not_followed() {
+        let dir = std::env::temp_dir().join(format!("stitchcraft-files-link-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let (victim, out) = (dir.join("victim.txt"), dir.join("out.pes"));
+        std::fs::write(&victim, b"precious notes").unwrap();
+        // Links where the temporary file went once, and where it goes first now.
+        let planted = [dir.join("out.pes.partial"), dir.join(format!("out.pes.{}-0.partial", std::process::id()))];
+        for link in &planted {
+            std::os::unix::fs::symlink(&victim, link).unwrap();
+        }
+        write_atomically(&out, b"#PES0001").unwrap();
+        assert_eq!((std::fs::read(&victim).unwrap(), std::fs::read(&out).unwrap()), (b"precious notes".to_vec(), b"#PES0001".to_vec()));
+        assert!(std::fs::symlink_metadata(&out).unwrap().file_type().is_file(), "the file itself, not a link");
+        // The planted links are left as they were, and no temporary file of the write stays.
+        let mut names: Vec<String> = planted.iter().map(|link| link.file_name().unwrap().to_str().unwrap().to_string()).collect();
+        names.sort();
+        assert_eq!(partial(&dir), names);
+        assert!(planted.iter().all(|link| std::fs::symlink_metadata(link).unwrap().file_type().is_symlink()));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn the_folder_synced_is_the_one_the_file_is_in() {
+        assert_eq!(
+            [folder(Path::new("x.pes")), folder(Path::new("out/x.pes")), folder(Path::new("/x.pes"))],
+            [Path::new("."), Path::new("out"), Path::new("/")]
+        );
     }
 
     /// REQ-CLI-006: every file is written, or none is.
@@ -104,13 +202,13 @@ mod tests {
         let (c, missing) = (dir.join("c.pes"), dir.join("missing").join("c.png"));
         let failed = write_all(&[(&c, b"c"), (&missing, b"x")]).unwrap_err();
         assert_eq!((&failed.path, &failed.written), (&missing, &Vec::new()));
-        assert!(!c.exists() && !dir.join("c.pes.partial").exists());
+        assert!(!c.exists() && partial(&dir).is_empty());
         // One that cannot be renamed into place, over a folder: the files before it stay, and are named.
         let (d, folder) = (dir.join("d.pes"), dir.join("folder"));
         std::fs::create_dir_all(folder.join("inside")).unwrap();
         let failed = write_all(&[(&d, b"d"), (&folder, b"x"), (&dir.join("e.pes"), b"e")]).unwrap_err();
         assert_eq!((&failed.path, &failed.written), (&folder, &vec![d.clone()]));
-        assert!(d.exists() && !dir.join("folder.partial").exists() && !dir.join("e.pes").exists() && !dir.join("e.pes.partial").exists());
+        assert!(d.exists() && !dir.join("e.pes").exists() && partial(&dir).is_empty());
     }
 
     /// REQ-CLI-005: a file of the cap's size is read, and a larger one refused by the size it says it has.
