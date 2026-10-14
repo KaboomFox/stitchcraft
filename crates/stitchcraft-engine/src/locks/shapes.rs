@@ -54,7 +54,8 @@ struct Design {
     shape: Shape,
 }
 
-/// Every lock, in the order Ink/Stitch offers them.
+/// Every lock, in the order Ink/Stitch offers them for the start. Its list for the end puts the cross
+/// before the bowtie; a file stores the lock's id, so the order changes only a settings window.
 const TABLE: &[Design] = &[
     Design { option: ChoiceOption { id: "half_stitch", label: "Half stitch" }, shape: Shape::HalfStitch },
     // A shaft along the stitching to the tip of a small arrowhead, round the head and back down the shaft.

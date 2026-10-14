@@ -237,7 +237,7 @@ fn diag_sc_w0502_lock_stitches_shorter_than_0_2_mm_are_lengthened() {
         ["warning SC-W0502: The start lock's shortest stitch would be 0.05 mm, shorter than 0.2 mm, so the lock is sewn 4.34 times as large."]
     );
     assert_eq!(start.warnings[0].code, Code::LockStitchLengthened);
-    assert_eq!(start.warnings[0].at, Some(group[0]));
+    assert_eq!(start.warnings[0].at, None, "it comes of the lock's settings, the same at every end");
     let (into, _) = sewn(&group, &start, &Lock::default());
     assert!((shortest(&into) - 0.2).abs() < 1e-9, "{into:?}");
     // Steps are lengthened one by one.
@@ -276,10 +276,15 @@ fn diag_sc_w0503_custom_locks_that_cannot_be_sewn_as_written_are_named() {
     assert_eq!(
         messages(&many),
         [
-            "warning SC-W0503: 4 parts of the custom start lock are not steps it can sew (\"1,5\", \"1-2\", \".\", …), so they are left out.",
+            "warning SC-W0503: 5 parts of the custom start lock are not steps it can sew (\"1,5\", \"1-2\", \".\", …), so they are left out.",
             "warning SC-W0503: The custom start lock has no steps to sew, so the half stitch is sewn instead.",
         ]
     );
+    // A step of 0 would sew in place, where Ink/Stitch sews a stitch in place (DEV-LCK-002): it is left out,
+    // and named.
+    let (zero, _) = locks(&group, "custom", &[("lock_custom_start", "1 0 -1")]);
+    assert_eq!(messages(&zero), ["warning SC-W0503: A part of the custom start lock is not a step it can sew (\"0\"), so it is left out."]);
+    assert_eq!(zero.points, locks(&group, "custom", &[("lock_custom_start", "1 -1")]).0.points);
 }
 
 proptest! {

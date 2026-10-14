@@ -254,7 +254,7 @@ mod tests {
             out.stderr,
             "warning SC-W0307 (svg:patch:fill): This fill's area falls into 2 parts that are sewn one after another, with a jump between each.\n  \
              hint: To choose the order the parts are sewn in, break the fill apart into one element for each part.\n\
-             info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out.\n"
+             info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from a needle point next to it was left out.\n"
         );
         let report: Value = serde_json::from_slice(&std::fs::read(&report).unwrap()).unwrap();
         assert_eq!((report["stitches"].as_u64(), report["color_changes"].as_u64()), (Some(556), Some(3)));

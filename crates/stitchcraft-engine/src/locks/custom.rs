@@ -6,9 +6,9 @@
 //! spaces, dots, commas and minus signs (a newline may end it) is numbers, and anything else a path. The
 //! numbers are the pieces between spaces that read as numbers, so `1,5` is not one.
 //!
-//! StitchCraft adds two rules of its own, and says when they apply instead of dropping a piece in silence:
-//! a step longer than 10 m (the data model's reach) is not sewn, and a step of 0 is no step, because it
-//! would sew in place. It does not sew drawn custom locks yet: the engine never reads SVG, so the adapter
+//! StitchCraft adds two rules of its own, and names the pieces they leave out (`SC-W0503`): a step longer
+//! than 10 m (the data model's reach) is not sewn, and a step of 0 is no step, because it would sew in
+//! place, where Ink/Stitch sews a stitch in place for it (`DEV-LCK-002`). It does not sew drawn custom locks yet: the engine never reads SVG, so the adapter
 //! will hand it the path (roadmap M8).
 
 use stitchcraft_core::{Exhausted, Meter};
@@ -39,11 +39,7 @@ pub(crate) fn read(text: &str, scale_mm: f64, meter: &mut Meter) -> Result<Read,
     for piece in body.split(' ').filter(|piece| !piece.is_empty()) {
         meter.charge(1)?;
         match piece.parse::<f64>().map(|units| units * scale_mm) {
-            Ok(step) if step.abs() <= WORKING_LIMIT_MM => {
-                if step != 0.0 {
-                    steps.push(step);
-                }
-            }
+            Ok(step) if step != 0.0 && step.abs() <= WORKING_LIMIT_MM => steps.push(step),
             _ => skipped.push(piece.to_string()),
         }
     }
@@ -68,7 +64,7 @@ mod tests {
     fn numbers_are_steps_in_sizes_of_the_scale() {
         assert_eq!(steps("1 1 -1 -1", 0.5), sewn(&[0.5, 0.5, -0.5, -0.5], &[]));
         assert_eq!(steps("  2  -.5 1.\n", 1.0), sewn(&[2.0, -0.5, 1.0], &[]), "spaces repeat, a newline ends it");
-        assert_eq!(steps("1 0 -0 -1", 1.0), sewn(&[1.0, -1.0], &[]), "0 is no step");
+        assert_eq!(steps("1 0 -0 -1", 1.0), sewn(&[1.0, -1.0], &["0", "-0"]), "0 is no step, and is named");
         assert_eq!(steps("", 1.0), sewn(&[], &[]));
     }
 

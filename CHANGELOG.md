@@ -745,6 +745,26 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   stitches (RUN-7).
   `DEV-RUN-006` records manual stitch's shortest stitch, and the docs of `passes` no longer say manual
   stitch comes in M3.6 (RUN-9).
+- A design without an origin is centred on the box around its finished plan's stitches, as Ink/Stitch
+  centres it (review finding PLN-5, `REQ-ASM-005`). Assembly centred the plan before finalize left out the
+  points too near their neighbours, and a point left out at the box's edge left the design off centre by up
+  to half the shortest stitch. Finalize centres the plan now, once it has fitted it. The golden files stay
+  as they were.
+- `SC-I0504` gives the shortest stitch that applied to each point left out, and says it was too near a
+  needle point next to it (review finding PLN-7, `REQ-FIN-001`). The points a lock point leaves out before
+  it were too near that lock point, by a lock stitch's 0.2 mm, and the message said they were less than
+  the element's shortest stitch from the point before them.
+- A warning about a lock's settings is given once for its element, with no place, where it was given at
+  every part the lock was sewn at (review finding PLN-8, `SC-W0502`, `SC-W0503`). A lock sewn straight where
+  the stitching turns is still named at each place.
+- A custom lock's step of 0 is named with the pieces left out (review finding PLN-9, `SC-W0503`). It was
+  dropped without a word. `DEV-LCK-002` lists all 5 ways custom steps differ from Ink/Stitch's.
+- Docs: `approach` says that a stroke of a method not sewn yet still offers its first point, as
+  ADR 0014 decides and Ink/Stitch's strokes all do, and which settings an offer depends on (review finding
+  PLN-10). The engine pipeline page says how stitches are tagged by role, which stitches finalize splits,
+  what Ink/Stitch's shortest stitch is when an element sets none, and how PES files flag jumps. The docs of
+  `min_jump_stitch_length_mm` say a move that long is sewn on too, and 3 stale comments are fixed
+  (PLN-11).
 - Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
   found (`REQ-SAT-002`, `REQ-SAT-005`).
   - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails

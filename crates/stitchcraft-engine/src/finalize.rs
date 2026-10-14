@@ -19,11 +19,14 @@
 //!    finalize nothing to thin.
 //! 2. **The longest stitch.** A stitch longer than the machine's is split into equal parts: a hand-placed
 //!    stitch, say, or a custom lock's long step (`SC-I0703`). Each part counts against the stitch budget.
-//! 3. **The machine.** Too many colour changes and stops for the machine's format is `SC-E0601`. A design
+//! 3. **The hoop's centre.** The fitted plan is moved so the design's origin, or else the centre of the
+//!    box around its stitches, is at the hoop's centre (`REQ-ASM-005`). The box is the finished plan's,
+//!    as in Ink/Stitch, so a point left out above does not move the design.
+//! 4. **The machine.** Too many colour changes and stops for the machine's format is `SC-E0601`. A design
 //!    larger than the hoop, reaching past its edge from an origin far from the design's middle, or with a
 //!    stop position past the edge is `SC-E0701`, whatever else is true of it. Otherwise a design larger
 //!    than the comfort zone is `SC-W0702`.
-//! 4. **The check.** The plan invariants (`stitchcraft_plan::invariants`) must hold; a broken one is a bug
+//! 5. **The check.** The plan invariants (`stitchcraft_plan::invariants`) must hold; a broken one is a bug
 //!    in StitchCraft (`SC-E0009`), and nothing is written.
 
 use stitchcraft_core::units::{at_least, up_to_tenth};
@@ -60,6 +63,7 @@ pub fn finalize(
     for block in &mut plan.blocks {
         block.stitches = fitted.block(&block.stitches, meter)?;
     }
+    let plan = centred(plan, settings.origin);
     let mut diagnostics = fitted.diagnostics();
     let changes = plan.stats().changes_including_stops();
     let max = profile.format.max_color_changes();
@@ -88,6 +92,17 @@ pub fn finalize(
     }
     diagnostics.extend(violations.iter().map(invariants::Violation::diagnostic));
     Ok(Finalized { plan: None, diagnostics })
+}
+
+/// `plan` moved so that `origin`, or else the centre of the box around its stitches, is at the hoop's
+/// centre. Positions within the data model's reach stay finite, moved; were one not to, it would stay.
+fn centred(mut plan: StitchPlan, origin: Option<Point>) -> StitchPlan {
+    let sewn = plan.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at);
+    let Some(origin) = origin.or_else(|| Rect::around(sewn).map(Rect::center)) else { return plan };
+    for stitch in plan.blocks.iter_mut().flat_map(|b| b.stitches.iter_mut()) {
+        stitch.at = Point::new(stitch.at.x() - origin.x(), stitch.at.y() - origin.y()).unwrap_or(stitch.at);
+    }
+    plan
 }
 
 /// The plan as it is fitted, and what fitting it changed.
@@ -148,10 +163,10 @@ impl<'s> Fitted<'s> {
             std::mem::take(run),
             |from, to| !at_least(from.at.distance(to.at), self.floor(from, to)),
             |point| point.origin.role == Role::Lock,
-            |next| short_of.push(self.shortest_of(next)),
+            |from, to| short_of.push(self.floor(from, to)),
         );
-        for shortest in short_of {
-            self.left_out(shortest);
+        for floor in short_of {
+            self.left_out(floor);
         }
         let mut from: Option<Stitch> = None;
         for point in kept {
@@ -175,8 +190,9 @@ impl<'s> Fitted<'s> {
         if from.origin.role == Role::Lock || to.origin.role == Role::Lock { LOCK_MIN_STITCH.get() } else { self.shortest_of(to) }
     }
 
-    /// Counts a needle point left out because a stitch to it, or from the one before it to the point that
-    /// stays, would be shorter than `shortest`, that point's element's shortest stitch.
+    /// Counts a needle point left out because the stitch into it, or out of it to the point that stays,
+    /// would be shorter than `shortest`: a lock stitch's shortest, or that of the element whose stitch it
+    /// is ([`Fitted::floor`]).
     fn left_out(&mut self, shortest: f64) {
         self.merged += 1;
         self.short_of = Some(self.short_of.map_or((shortest, shortest), |(least, most)| (least.min(shortest), most.max(shortest))));
@@ -207,8 +223,8 @@ impl<'s> Fitted<'s> {
         if let Some((least, most)) = self.short_of {
             let shortest = if least < most { format!("{} to {}", mm(least), mm(most)) } else { mm(least) };
             let message = match self.merged {
-                1 => format!("A needle point less than the shortest stitch ({shortest} mm) from the one before was left out."),
-                n => format!("{n} needle points less than the shortest stitch ({shortest} mm) from the one before were left out."),
+                1 => format!("A needle point less than the shortest stitch ({shortest} mm) from a needle point next to it was left out."),
+                n => format!("{n} needle points less than the shortest stitch ({shortest} mm) from a needle point next to them were left out."),
             };
             diagnostics.push(Diagnostic::new(Code::StitchesMerged, message));
         }

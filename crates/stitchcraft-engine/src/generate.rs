@@ -409,9 +409,12 @@ fn stroke(
 /// a satin column its rails as they are sewn when it starts at its nearest point and otherwise its first
 /// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A tatami fill
 /// starts at its point nearest the needle and offers its area, its parts, even when it is set not to be
-/// sewn, as Ink/Stitch's next element is the next in the drawing. A fill StitchCraft does not sew offers
-/// nothing, and neither does an element whose shape or settings cannot be read. Its settings are read as
-/// its stitch type reads them.
+/// sewn, as Ink/Stitch's next element is the next in the drawing. Where its stitch type is known, an
+/// element offers what Ink/Stitch's would, even of a method StitchCraft does not sew yet (ADR 0014): a
+/// stroke of any method its first point, as Ink/Stitch's strokes all do, and a satin column of any method
+/// its rails. A fill of a method StitchCraft does not sew offers nothing, since what it would offer is not
+/// known. Neither does an element whose shape cannot be read, or the settings its offer depends on: those
+/// that choose its stitch type, and a satin column's. They are read as its stitch type reads them.
 pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -> Option<Approach> {
     let stitch_type = stitch_type(element, settings, &mut Vec::new())?;
     let (path, width, join) = match &element.shape {
