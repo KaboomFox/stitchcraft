@@ -15,16 +15,16 @@
 //!   the first halves are sewn, the line is followed to its end (or, after an odd centre walk, to where the
 //!   second pass starts), the second halves are sewn, and the end is stitched last.
 //!
-//! The pieces are joined as the underlays are, in straight stitches no longer than the travel. A point of
-//! the line's way within the shortest stitch of the needle, or of the way's point before it, only routes
-//! the needle, and is left out: finalize would leave it out too, with a note about a point the design never
-//! drew. An end within the shortest stitch of the needle moves the needle's last point there instead of
-//! adding a stitch too short to sew, so the column's last stitch, often a top stitch, is never split.
+//! The pieces are joined as the underlays are, in straight stitches no longer than the travel, which the
+//! column raises to twice the shortest stitch, as it does for the line. A point of the line's way within
+//! the shortest stitch of the needle, or of the way's point before it, only routes the needle, and is left
+//! out: finalize would leave it out too, with a note about a point the design never drew. An end within the
+//! shortest stitch of the needle moves the needle's last point there instead of adding a stitch too short
+//! to sew, so the column's last stitch, often a top stitch, is never split.
 
 use stitchcraft_core::units::MM_PER_SVG_PX;
-use stitchcraft_core::{Diagnostic, Exhausted, Meter, Point};
+use stitchcraft_core::{Exhausted, Meter, Point};
 
-use crate::generators::running::raised;
 use crate::generators::satin::column::Section;
 use crate::generators::satin::compensation::Processor;
 use crate::generators::satin::pairs::{Pair, pairs};
@@ -111,20 +111,18 @@ pub(crate) struct Guides {
 }
 
 impl Guides {
-    /// The guides of the column cut into `sections`, sewn as `params` and `lengths` say. The line keeps to
-    /// the shortest stitch, raising its length with `SC-W0402` into `warnings` where it is shorter than
-    /// twice that.
+    /// The guides of the column cut into `sections`, sewn as `params` and `lengths` say, the line in
+    /// stitches no longer than `travel`: the column's travel, raised to keep to the shortest stitch.
     pub(crate) fn new(
         sections: &[Section],
         params: &SatinParams,
         lengths: SatinLengths,
-        warnings: &mut Vec<Diagnostic>,
+        travel: f64,
         meter: &mut Meter,
     ) -> Result<Guides, Exhausted> {
         let min_stitch = lengths.min_stitch.get();
-        let length = raised("running_stitch_length_mm", lengths.travel, min_stitch, warnings);
         let position = params.running_stitch_position / 100.0;
-        let line = walk_line(sections, position, lengths.tolerance.get(), length, min_stitch, meter)?;
+        let line = walk_line(sections, position, lengths.tolerance.get(), travel, min_stitch, meter)?;
         let cuts = pairs(sections, params.zigzag_spacing_mm.get(), &mut Processor::inset([0.0; 2], [0.0; 2]), meter)?;
         Ok(Guides { line, cuts })
     }

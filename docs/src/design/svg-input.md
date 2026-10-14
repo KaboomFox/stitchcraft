@@ -43,6 +43,10 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
 - Path data is read as SVG viewers draw it, arcs included. An error in the data, or in the list of
   points of a `<polyline>` or `<polygon>`, ends the path at the error, and `SC-W0804` names it. inkex
   skips what is not a number in a list of points, and Ink/Stitch sews the rest (`DEV-SVG-010`).
+- A path has the subpaths a viewer draws. A move-to with nothing drawn after it is no subpath, and a
+  command that draws after a closepath starts a new subpath where the closed one started. inkex keeps
+  such a move-to as a subpath of one point and runs the closed subpath on, so Ink/Stitch can count other
+  subpaths, which tell a satin column's rails from its rungs (`DEV-SVG-011`).
 - An arc becomes cubic curves as inkex, which Ink/Stitch reads files with, cuts it: in equal pieces, one
   more than the whole quarter turns it makes. Manual stitch puts a needle point on each piece's end, as
   Ink/Stitch's does. inkex counts the quarter turns in floating point, and its rounding can cut an arc of
