@@ -1,4 +1,9 @@
-//! Just enough Markdown for the docs checks: code fences, inline code, links and mdBook's heading ids.
+//! Just enough Markdown for the docs checks: code fences, comments, inline code, links, includes and
+//! mdBook's heading ids.
+//!
+//! A link's `#anchor` is checked against the ids the book will have, so the ids are made as mdBook 0.5
+//! makes them: from the text the heading shows, after smart punctuation (`docs/book.toml` turns it on).
+//! An indented line is code, and a heading inside an HTML comment is not shown, so neither has an id.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -32,6 +37,44 @@ pub fn prose_lines(text: &str) -> Vec<(usize, &str)> {
     out
 }
 
+/// The lines the book shows as Markdown, with their 1-based numbers: [`prose_lines`] outside HTML comments.
+/// A comment that starts a line hides it, and every line up to the one that closes it.
+pub fn rendered_lines(text: &str) -> Vec<(usize, &str)> {
+    let mut out = Vec::new();
+    let mut in_comment = false;
+    for (number, line) in prose_lines(text) {
+        if !in_comment && !line.trim_start().starts_with("<!--") {
+            out.push((number, line));
+            continue;
+        }
+        let comment = if in_comment { line } else { line.trim_start().get(4..).unwrap_or("") };
+        in_comment = !comment.contains("-->");
+    }
+    out
+}
+
+/// The files `text` includes with mdBook's `{{#include path}}` or `{{#rustdoc_include path}}`, each with
+/// its line number: the path as written, without the line range or anchor after a `:`. mdBook includes
+/// them before it reads the Markdown, so code blocks count too, and a `\` before the braces escapes one.
+pub fn includes(text: &str) -> Vec<(usize, String)> {
+    let mut out = Vec::new();
+    for (i, line) in text.lines().enumerate() {
+        let mut rest = line;
+        while let Some(pos) = rest.find("{{#") {
+            let escaped = rest.get(..pos).is_some_and(|before| before.ends_with('\\'));
+            let after = rest.get(pos + 3..).unwrap_or("");
+            let Some(end) = after.find("}}") else { break };
+            let directive = after.get(..end).unwrap_or("");
+            let path = directive.strip_prefix("include ").or_else(|| directive.strip_prefix("rustdoc_include "));
+            if let (false, Some(path)) = (escaped, path) {
+                out.push((i + 1, path.trim().split(':').next().unwrap_or("").to_string()));
+            }
+            rest = after.get(end + 2..).unwrap_or("");
+        }
+    }
+    out
+}
+
 /// `line` with the contents of inline code spans blanked out.
 pub fn without_inline_code(line: &str) -> String {
     let mut out = String::with_capacity(line.len());
@@ -59,10 +102,10 @@ pub fn without_inline_code(line: &str) -> String {
     out
 }
 
-/// Every link and image in the prose of `text` (code blocks and code spans excluded).
+/// Every link and image the book shows of `text` (code blocks, code spans and comments excluded).
 pub fn links(text: &str) -> Vec<Link> {
     let mut out = Vec::new();
-    for (number, raw) in prose_lines(text) {
+    for (number, raw) in rendered_lines(text) {
         let line = without_inline_code(raw);
         let mut rest = line.as_str();
         while let Some(pos) = rest.find("](") {
@@ -118,15 +161,19 @@ fn closing(after: &str, open: u8, close: u8) -> Option<usize> {
 pub fn heading_ids(text: &str) -> BTreeSet<String> {
     let mut seen: BTreeMap<String, usize> = BTreeMap::new();
     let mut ids = BTreeSet::new();
-    for (_, line) in prose_lines(text) {
-        let trimmed = line.trim_start();
+    for (_, line) in rendered_lines(text) {
+        let trimmed = line.trim_start_matches(' ');
+        // Four spaces or a tab make the line code.
+        if line.len() - trimmed.len() > 3 || trimmed.starts_with('\t') {
+            continue;
+        }
         let hashes = trimmed.bytes().take_while(|b| *b == b'#').count();
         let Some(rest) = trimmed.get(hashes..) else { continue };
         if !(1..=6).contains(&hashes) || !(rest.is_empty() || rest.starts_with(' ')) {
             continue;
         }
         let title = rest.trim().trim_end_matches('#').trim();
-        let id = normalize_id(&plain_heading(title));
+        let id = normalize_id(&shown(&link_text(title)));
         let count = seen.entry(id.clone()).or_insert(0);
         ids.insert(if *count == 0 { id } else { format!("{id}-{count}") });
         *count += 1;
@@ -134,8 +181,8 @@ pub fn heading_ids(text: &str) -> BTreeSet<String> {
     ids
 }
 
-/// Heading text as rendered: link syntax reduced to its text, code and emphasis markers removed.
-fn plain_heading(title: &str) -> String {
+/// Heading text with each link reduced to its text.
+fn link_text(title: &str) -> String {
     let mut out = String::new();
     let mut rest = title;
     while let Some(start) = rest.find('[') {
@@ -158,7 +205,39 @@ fn plain_heading(title: &str) -> String {
         }
     }
     out.push_str(rest);
-    out.chars().filter(|c| *c != '`' && *c != '*').collect()
+    out
+}
+
+/// The text the book shows for heading text `title`: code spans as written, and outside them no emphasis
+/// markers and no hyphens that smart punctuation makes into a dash (2 or more in a row). An underscore
+/// between letters or digits is text, as is one with spaces on both sides.
+fn shown(title: &str) -> String {
+    let chars: Vec<char> = title.chars().collect();
+    let mut out = String::new();
+    let mut code: Option<usize> = None;
+    let mut i = 0;
+    while let Some(&c) = chars.get(i) {
+        let run = chars.get(i..).unwrap_or_default().iter().take_while(|&&d| d == c).count();
+        let text = chars.get(i..i + run).unwrap_or_default();
+        let (before, after) = (i.checked_sub(1).and_then(|b| chars.get(b)).copied(), chars.get(i + run).copied());
+        match (c, code) {
+            ('`', None) => code = Some(run),
+            ('`', Some(open)) if open == run => code = None,
+            (_, Some(_)) => out.extend(text),
+            ('*', None) => {}
+            ('_', None) => {
+                let word = |c: Option<char>| c.is_some_and(char::is_alphanumeric);
+                let space = |c: Option<char>| c.is_none_or(char::is_whitespace);
+                if (word(before) && word(after)) || (space(before) && space(after)) {
+                    out.extend(text);
+                }
+            }
+            ('-', None) if run > 1 => {}
+            _ => out.extend(text),
+        }
+        i += run;
+    }
+    out
 }
 
 /// mdBook's id normalization: keep alphanumerics, `_` and `-` (lowercased), turn whitespace into `-`.
@@ -205,6 +284,31 @@ mod tests {
         for id in ["units-and-coordinates-stitchcraft-core", "f2--failures", "repeat", "repeat-1", "linked-heading"] {
             assert!(ids.contains(id), "missing {id} in {ids:?}");
         }
+    }
+
+    #[test]
+    fn heading_ids_are_the_ids_mdbook_writes_with_smart_punctuation() {
+        // Built with mdBook 0.5.4 and `smart-punctuation = true`, this page has exactly these ids: `--` becomes
+        // an en dash, which an id drops, and emphasis markers are not text. An indented line is code, and a
+        // heading in a comment is not shown. Underscores inside a word or a code span stay, and so does a code
+        // span's `--`.
+        let page = "# Page\n\n## Before -- after\n\n## The _emphasis_ heading\n\n## Rows... and more\n\n    # An indented code line\n\n\
+                    <!--\n## A heading in a comment\n-->\n\n## `min_stitch_length_mm` and snake_case\n\n## The `--check` flag\n";
+        let mdbook = ["page", "before--after", "the-emphasis-heading", "rows-and-more", "min_stitch_length_mm-and-snake_case", "the---check-flag"];
+        assert_eq!(heading_ids(page), mdbook.iter().map(|id| (*id).to_string()).collect::<BTreeSet<_>>());
+    }
+
+    #[test]
+    fn the_book_turns_double_hyphens_into_dashes() {
+        // Heading ids above assume it.
+        let book = std::fs::read_to_string(crate::util::root().join("docs/book.toml")).unwrap();
+        assert!(book.lines().any(|line| line.replace(' ', "") == "smart-punctuation=true"), "docs/book.toml");
+    }
+
+    #[test]
+    fn includes_are_found_in_code_blocks_too_but_not_escaped() {
+        let text = "```text\n{{#include generated/a.txt}}\n```\nThe badge: {{#include ../badge.svg:2:10}} and \\{{#include escaped.txt}}.\n";
+        assert_eq!(includes(text), [(2, "generated/a.txt".to_string()), (4, "../badge.svg".to_string())]);
     }
 
     #[test]

@@ -58,12 +58,29 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 /// Every generated file: the index, a page per declaration and the JSON Schema. Deviating parameters show
 /// their entry in `ledger`.
 pub fn pages(ledger: &[Deviation]) -> Result<Vec<(String, String)>, String> {
-    let mut pages = vec![(format!("{REFERENCE}/params.md"), index(ledger))];
+    let mut pages = vec![(index_path(), index(ledger))];
     for group in PARAMETERS {
-        pages.push((format!("{DIR}/{}.md", slug(group)), page(group, ledger)?));
+        pages.push((group_path(group), page(group, ledger)?));
     }
-    pages.push((format!("{REFERENCE}/params.schema.json"), schema()?));
+    pages.push((schema_path(), schema()?));
     Ok(pages)
+}
+
+/// The files [`pages`] writes, by path from the repository root, in the same order.
+pub fn paths() -> Vec<String> {
+    std::iter::once(index_path()).chain(PARAMETERS.iter().map(|group| group_path(group))).chain([schema_path()]).collect()
+}
+
+fn index_path() -> String {
+    format!("{REFERENCE}/params.md")
+}
+
+fn group_path(group: &ParamGroup) -> String {
+    format!("{DIR}/{}.md", slug(group))
+}
+
+fn schema_path() -> String {
+    format!("{REFERENCE}/params.schema.json")
 }
 
 /// Where `group`'s page describes `key`, relative to the reference directory: `params/common.md#ties`.

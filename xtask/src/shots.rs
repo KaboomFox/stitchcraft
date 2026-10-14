@@ -32,6 +32,8 @@ const SHOTS: &str = "docs/shots.toml";
 /// Where generated images live; pages link `images/generated/<id>.png`.
 pub const GENERATED: &str = "docs/src/images/generated";
 const PHOTOS: &str = "docs/src/images/photos";
+/// The kinds of file a photo may be.
+const PHOTO_EXTENSIONS: [&str; 3] = ["jpg", "jpeg", "png"];
 /// Where `--check` puts the new version of a stale image.
 const STALE: &str = "target/shots";
 
@@ -107,6 +109,15 @@ impl Shot {
     pub fn images(&self) -> Vec<String> {
         if self.panels.is_empty() { vec![self.id.clone()] } else { (1..=self.panels.len()).map(|n| format!("{}-{n}", self.id)).collect() }
     }
+
+    /// Whether `path` (absolute, under `root`) is one of this shot's images: a generated one in
+    /// [`GENERATED`], or the photo in `images/photos/`.
+    pub fn declares(&self, root: &Path, path: &Path) -> bool {
+        match self.kind.as_str() {
+            "photo" => PHOTO_EXTENSIONS.iter().any(|ext| root.join(PHOTOS).join(format!("{}.{ext}", self.id)) == path),
+            _ => self.images().iter().any(|name| root.join(GENERATED).join(format!("{name}.png")) == path),
+        }
+    }
 }
 
 /// The declared shots, in file order.
@@ -130,7 +141,7 @@ pub fn run(check_only: bool) -> Result<(), String> {
         }
         match shot.kind.as_str() {
             "photo" => {
-                let found = ["jpg", "jpeg", "png"].iter().any(|ext| root.join(PHOTOS).join(format!("{}.{ext}", shot.id)).is_file());
+                let found = PHOTO_EXTENSIONS.iter().any(|ext| root.join(PHOTOS).join(format!("{}.{ext}", shot.id)).is_file());
                 if !found {
                     findings.error(format!("photo `{}` is missing from {PHOTOS}/", shot.id));
                 }
@@ -176,6 +187,8 @@ pub fn stitch(root: &Path, shot: &Shot) -> Result<Vec<Vec<u8>>, String> {
     let settings = Settings::new(style, scale)
         .ok_or_else(|| format!("scale {scale} is outside {} to {} pixels per millimetre", Settings::MIN_SCALE, Settings::MAX_SCALE))?;
     let plans = match (shot.sheet.as_deref(), shot.fixture.as_deref()) {
+        // A sheet is drawn as it is: panels would name images that are never drawn.
+        (Some(_), None) if !shot.panels.is_empty() => return Err("a test sheet is drawn as it is: panels are for designs (`fixture`)".to_string()),
         (Some(id), None) => {
             let sheet = testsheets::find(id).ok_or_else(|| format!("there is no test sheet `{id}`"))?;
             vec![sheet.plan().map_err(|e| format!("{id} could not be drawn: {e}"))?]
@@ -248,4 +261,43 @@ fn keep(root: &Path, id: &str, png: &[u8], check_only: bool, findings: &mut Find
     let new = if kept { format!(" (the new one is {})", util::rel(&fresh)) } else { String::new() };
     let what = if current.is_some() { "is stale" } else { "is missing" };
     findings.error(format!("{file} {what}{new}: run `cargo xtask shots`, or add the `docs:refresh-shots` label to the pull request"));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A `stitch` shot `probe` of `sheet` or `fixture`, with `panels` that each set one length.
+    fn probe(sheet: Option<&str>, fixture: Option<&str>, lengths: &[&str]) -> Shot {
+        let panels = lengths
+            .iter()
+            .map(|length| Panel {
+                caption: format!("{length} mm"),
+                params: BTreeMap::from([("running_stitch_length_mm".to_string(), (*length).to_string())]),
+            })
+            .collect();
+        Shot {
+            id: "probe".to_string(),
+            kind: "stitch".to_string(),
+            alt: "A probe".to_string(),
+            sheet: sheet.map(str::to_string),
+            fixture: fixture.map(str::to_string),
+            panels,
+            allow: Vec::new(),
+            style: Some("simple".to_string()),
+            scale: Some(2.0),
+            report: String::new(),
+            layout: Layout::Columns,
+        }
+    }
+
+    #[test]
+    fn a_shot_draws_every_image_it_names_and_a_test_sheet_takes_no_panels() {
+        let root = util::root();
+        let design = probe(None, Some("docs/fixtures/wave.svg"), &["1.5", "4"]);
+        assert_eq!(stitch(&root, &design).unwrap().len(), design.images().len());
+        // A test sheet is drawn as it is: panels would name images that are never drawn.
+        let sheet = stitch(&root, &probe(Some("TS-01"), None, &["1.5", "4"]));
+        assert!(sheet.as_ref().is_err_and(|e| e.contains("panels")), "{sheet:?}");
+    }
 }

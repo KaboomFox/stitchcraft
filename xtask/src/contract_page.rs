@@ -131,7 +131,7 @@ its commands, and when StitchCraft supports each one. This is the interoperabili
 registry uses these names as its keys so files move between the tools unchanged
 ([ADR-0001](adr/0001-license-and-clean-room.md)).
 
-- **Checked against:** Ink/Stitch `main` at `d59c9ab` (2026-09-17), 145 parameters.
+- **Checked against:** Ink/Stitch `main` at `d59c9ab` (2026-09-17). The last line counts the declarations.
 - **Facts only:** names, types, units, defaults and applicability. Ink/Stitch's descriptions are GPL text
   and are not copied; StitchCraft's own help text lives in the [parameter registry](params.md).
 - **Machine-readable source:** `conformance/inkstitch-params.toml`; this page is generated from it and

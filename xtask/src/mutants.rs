@@ -23,7 +23,7 @@
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 use serde_json::Value;
@@ -98,17 +98,9 @@ impl<'a> Missed<'a> {
 }
 
 /// `cargo xtask mutants`.
-pub fn run(args: &[String]) -> Result<(), String> {
-    let record = args.iter().any(|a| a == "--record");
-    let dirs: Vec<&String> = args.iter().filter(|a| !a.starts_with("--")).collect();
-    if args.iter().any(|a| a == "--changed") {
-        if dirs.is_empty() {
-            return Err("name the cargo-mutants output directories of the changed-lines run".to_string());
-        }
-        return changed(&dirs.iter().map(|dir| Path::new(dir.as_str())).collect::<Vec<_>>());
-    }
-    if dirs.is_empty() {
-        return Err("name the cargo-mutants output directories to add up (each holds a mutants.out/)".to_string());
+pub fn run(record: bool, changed_lines: bool, dirs: &[PathBuf]) -> Result<(), String> {
+    if changed_lines {
+        return changed(&dirs.iter().map(PathBuf::as_path).collect::<Vec<_>>());
     }
     let root = util::root();
     let mut findings = Findings::default();
@@ -356,11 +348,11 @@ mod tests {
     #[test]
     fn a_week_in_which_no_mutant_was_tested_fails() {
         let base = std::env::temp_dir().join(format!("stitchcraft-mutants-none-{}", std::process::id()));
-        let dirs: Vec<String> = (1..=4).map(|n| base.join(format!("part-{n}")).display().to_string()).collect();
+        let dirs: Vec<PathBuf> = (1..=4).map(|n| base.join(format!("part-{n}"))).collect();
         for dir in &dirs {
-            part_with_failed_baseline(Path::new(dir));
+            part_with_failed_baseline(dir);
         }
-        assert!(run(&dirs).is_err(), "no mutant was tried, yet the run matched conformance/mutation.toml");
+        assert!(run(false, false, &dirs).is_err(), "no mutant was tried, yet the run matched conformance/mutation.toml");
         std::fs::remove_dir_all(&base).unwrap();
     }
 
