@@ -242,7 +242,7 @@ fn sew(
         Shape::Stroke { path, width, join } if stitch_type.family() == Family::Satin => {
             satin_column(&sewing, (path, *width, *join), &mut rng, diagnostics, meter)?
         }
-        Shape::Stroke { path, .. } => stroke(&sewing, path, &mut rng, diagnostics, meter)?,
+        Shape::Stroke { path, .. } => stroke(&sewing, path, &rng, diagnostics, meter)?,
     };
     let (Some(common), Some(Shared { min_stitch, .. }), Some(stitched)) = (common, shared, stitched) else { return Ok(None) };
     diagnostics.extend(stitched.warnings);
@@ -376,12 +376,12 @@ fn satin_column(
     Ok(Some(satin_stitch(&rails, &params, &pull, lengths, sewing.neighbours, rng, meter)?))
 }
 
-/// A stroke's stitches as `sewing` says, varied at random by its `rng`, or `None` when it is skipped. Its
-/// `stroke_method` picks the generator.
+/// A stroke's stitches as `sewing` says, varied at random by streams of its `rng`, or `None` when it is
+/// skipped. Its `stroke_method` picks the generator.
 fn stroke(
     sewing: &Sewing,
     path: &Path,
-    rng: &mut SplitMix64,
+    rng: &SplitMix64,
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<Option<Stitched>, Exhausted> {

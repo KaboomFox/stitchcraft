@@ -19,19 +19,30 @@ fn p(x: f64, y: f64) -> Point {
 
 /// A straight line from the origin `length` mm along x.
 fn line(length: f64) -> Path {
-    Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(length, 0.0))], closed: false }] }
+    Path { subpaths: vec![polyline(&[(0.0, 0.0), (length, 0.0)])] }
 }
 
-/// The one run of `path`, stitched with `settings` (Ink/Stitch keys and values) for element `id`, with a
-/// shortest stitch of 0.3 mm.
-fn sew(path: &Path, settings: &[(&str, &str)], id: &str) -> Vec<Point> {
+/// The runs of `path`, one per subpath, stitched with `settings` (Ink/Stitch keys and values) for element
+/// `id`, with a shortest stitch of 0.3 mm.
+fn sew_all(path: &Path, settings: &[(&str, &str)], id: &str) -> Vec<Vec<Point>> {
     let set: ParamSet = settings.iter().copied().collect();
     let running = RunningParams::from_set(&set).unwrap().params;
     let passes = RepeatParams::from_set(&set).unwrap().params;
-    let mut rng = SplitMix64::for_element(id, CommonParams::from_set(&set).unwrap().params.random_seed);
-    let stitched = running_stitch(path, &running, &passes, Mm::new(0.3).unwrap(), &mut rng, &mut Budget::DEFAULT.meter()).unwrap();
-    assert_eq!(stitched.runs.len(), 1);
-    stitched.runs.into_iter().next().unwrap()
+    let rng = SplitMix64::for_element(id, CommonParams::from_set(&set).unwrap().params.random_seed);
+    running_stitch(path, &running, &passes, Mm::new(0.3).unwrap(), &rng, &mut Budget::DEFAULT.meter()).unwrap().runs
+}
+
+/// The one run of `path`, as [`sew_all`] stitches it.
+fn sew(path: &Path, settings: &[(&str, &str)], id: &str) -> Vec<Point> {
+    let runs = sew_all(path, settings, id);
+    assert_eq!(runs.len(), 1);
+    runs.into_iter().next().unwrap()
+}
+
+/// One open subpath of straight lines through `points`.
+fn polyline(points: &[(f64, f64)]) -> Subpath {
+    let (first, rest) = points.split_first().unwrap();
+    Subpath { start: p(first.0, first.1), segments: rest.iter().map(|q| Segment::Line(p(q.0, q.1))).collect(), closed: false }
 }
 
 /// The stitches of `run` as pairs of x coordinates (every case here is along the x axis).
@@ -92,6 +103,29 @@ fn req_run_007_random_lengths_repeat_from_the_seed() {
     assert_eq!(sew(&line(100.0), &seeded, "e"), sew(&line(100.0), &seeded, "e"));
     // Off, the seed changes nothing.
     assert_eq!(sew(&line(100.0), &[("random_seed", "7")], "e"), sew(&line(100.0), &[], "f"));
+}
+
+#[test]
+fn req_run_007_each_span_draws_from_its_own_stream() {
+    // Ink/Stitch keys each stretch's random numbers by the stretch's place, so a change to one stretch
+    // leaves the others' stitches as they were. Here the first of 3 spans grows by 5 mm, and the 2 after
+    // it sew as before.
+    let random = [("enable_random_stitch_length", "true"), ("random_stitch_length_jitter_percent", "40")];
+    let path = |start: f64| Path { subpaths: vec![polyline(&[(start, 0.0), (20.0, 0.0), (20.0, 20.0), (40.0, 20.0)])] };
+    let after_the_first = |run: Vec<Point>| run.into_iter().skip_while(|q| *q != p(20.0, 0.0)).collect::<Vec<_>>();
+    let before = after_the_first(sew(&path(0.0), &random, "e"));
+    let after = after_the_first(sew(&path(-5.0), &random, "e"));
+    assert!(before.len() > 10, "{before:?}");
+    // The same to within a nanometre: a needle is placed by its distance from the subpath's start.
+    assert_eq!(after.len(), before.len());
+    assert!(after.iter().zip(&before).all(|(a, b)| a.distance(*b) < 1e-9), "{after:?}\n{before:?}");
+    // Subpaths drawn alike draw differently, so lines side by side do not line their needle points up,
+    // which random length is there to prevent. Ink/Stitch's keys start again with each subpath
+    // (DEV-RUN-005).
+    let twins = Path { subpaths: vec![polyline(&[(0.0, 0.0), (20.0, 0.0)]), polyline(&[(0.0, 1.0), (20.0, 1.0)])] };
+    let runs = sew_all(&twins, &random, "e");
+    let xs = |run: &[Point]| run.iter().map(|q| q.x()).collect::<Vec<_>>();
+    assert_ne!(xs(&runs[0]), xs(&runs[1]));
 }
 
 proptest! {

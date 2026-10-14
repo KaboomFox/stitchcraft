@@ -115,6 +115,7 @@ another.
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |
 | `SC-W0403` | Warning | Hand-placed stitch shorter than the shortest stitch; point left out | M3 |
+| `SC-W0404` | Warning | Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch | M3 |
 | `SC-W0502` | Warning | Lock stitch shorter than 0.2 mm; lengthened | M3 |
 | `SC-W0503` | Warning | Custom lock cannot be sewn as written | M3 |
 | `SC-I0504` | Info | Stitches shorter than the shortest stitch merged | M3 |

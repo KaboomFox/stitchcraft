@@ -1,5 +1,5 @@
-//! Manual stitch's conformance cases (`REQ-RUN-006`, `REQ-RUN-008`) and `SC-W0403`, through the engine's
-//! public API.
+//! Manual stitch's conformance cases (`REQ-RUN-006`, `REQ-RUN-008`), `SC-W0403` and `SC-W0404`, through
+//! the engine's public API.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used)]
@@ -147,6 +147,39 @@ fn diag_sc_w0403_hand_placed_stitches_shorter_than_the_shortest_stitch_are_named
         messages(&sew(&square, &[], 0.3)),
         [
             "warning SC-W0401: A part of the stroke is 0.8 mm long, but all of it lies within the shortest stitch (0.3 mm) of its ends, so it is not stitched."
+        ]
+    );
+}
+
+#[test]
+fn diag_sc_w0404_hand_placed_stitches_kept_longer_than_the_longest_are_named() {
+    // A longest stitch of 0.2 mm under a shortest of 0.3 mm: a 1 mm stitch is split into 3 parts of 0.33 mm,
+    // not the 5 the longest asks for, and the warning says so.
+    let hint = "Set `max_stitch_length_mm` to at least twice the shortest stitch, 0.6 mm.";
+    let three = sew(&lines(&[(0.0, 0.0), (1.0, 0.0)]), &[("max_stitch_length_mm", "0.2")], 0.3);
+    assert_eq!(three.runs[0].len(), 4, "3 stitches");
+    assert_eq!(
+        messages(&three),
+        [
+            "warning SC-W0404: 3 hand-placed stitches are sewn longer than `max_stitch_length_mm` (0.2 mm), up to 0.33 mm: splitting them would sew stitches shorter than the shortest stitch (0.3 mm)."
+        ]
+    );
+    assert_eq!(three.warnings[0].fix.as_ref().map(|f| f.describe()).as_deref(), Some(hint));
+    // A stitch just over the longest, which 2 parts would make too short, is sewn as drawn.
+    let one = sew(&lines(&[(0.0, 0.0), (0.55, 0.0), (1.55, 0.0)]), &[("max_stitch_length_mm", "0.5")], 0.3);
+    assert_eq!(
+        messages(&one),
+        [
+            "warning SC-W0404: A hand-placed stitch is sewn 0.55 mm long, longer than `max_stitch_length_mm` (0.5 mm): splitting it would sew stitches shorter than the shortest stitch (0.3 mm)."
+        ]
+    );
+    // Every subpath of the element counts in one warning.
+    let path =
+        Path { subpaths: [lines(&[(0.0, 0.0), (0.55, 0.0)]), lines(&[(0.0, 1.0), (0.58, 1.0)])].into_iter().flat_map(|l| l.subpaths).collect() };
+    assert_eq!(
+        messages(&sew(&path, &[("max_stitch_length_mm", "0.5")], 0.3)),
+        [
+            "warning SC-W0404: 2 hand-placed stitches are sewn longer than `max_stitch_length_mm` (0.5 mm), up to 0.58 mm: splitting them would sew stitches shorter than the shortest stitch (0.3 mm)."
         ]
     );
 }

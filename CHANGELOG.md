@@ -730,6 +730,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   `display`, `visibility`, the opacities, `fill-rule` and `paint-order` are read as inkex reads them,
   from the declaration the cascade puts first (SVG-9). The Ink/Stitch contract plans `stroke_first` for
   M8, as the code and the changelog do (SVG-10).
+- A running stitch with random length draws each span's lengths from its own stream of the element's
+  generator, keyed by the span's subpath and its place there (review finding RUN-3, `REQ-RUN-007`,
+  `SplitMix64::stream`). Every span drew from one stream of the element's, so a change to one span drew
+  new lengths for every span after it. Ink/Stitch keys each stretch the same way, and starts its keys again
+  in each subpath, so subpaths drawn alike sew alike there; StitchCraft's keys hold the subpath too, so
+  lines drawn alike side by side do not line their needle points up (`DEV-RUN-005`).
+- Manual stitch says when it sews stitches longer than `max_stitch_length_mm`, which it does where
+  splitting them would sew stitches shorter than the shortest stitch (review finding RUN-6, `SC-W0404`,
+  `REQ-RUN-006`). It did so without a word. Ink/Stitch splits such a stitch however short its parts come
+  out (`DEV-RUN-006`).
+- Docs: `DEV-RUN-004` gives the 3 ways Ink/Stitch sews a subpath of one point or a part too short
+  (RUN-8), and `DEV-RUN-005` and the strokes page give how its random length draws and places its
+  stitches (RUN-7).
+  `DEV-RUN-006` records manual stitch's shortest stitch, and the docs of `passes` no longer say manual
+  stitch comes in M3.6 (RUN-9).
 - Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
   found (`REQ-SAT-002`, `REQ-SAT-005`).
   - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails
