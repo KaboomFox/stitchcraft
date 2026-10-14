@@ -227,7 +227,7 @@ Arguments:
 
 Options:
       --replay <REPLAY>
-          Replay this bundle instead: plan its design again and say whether everything comes out the same
+          Replay this bundle instead: plan its design again, with the profile and format it names, and say whether everything comes out the same
 
   -o, --output <OUTPUT>
           The bundle to write; by default next to the design, as DESIGN.bug-report.json

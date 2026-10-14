@@ -61,7 +61,9 @@ StitchCraft gives the same plan, bit for bit, for the same design, profile, form
 platform, so with the version that wrote the bundle, the replay reproduces it. With another version, what
 differs is listed under `then:` and `now:`: that is how to tell whether a bug is fixed. The exit status is
 1 when the bundle does not reproduce. The design is in the bundle's `design.svg` field, ready to save and
-open.
+open, or in `design.svg_hex` as hexadecimal when the file is not UTF-8 text, as a Latin-1 SVG is not. A
+bundle also names the commit StitchCraft was built from, when it was built from a git checkout, which
+`stitch --version` shows too: until the first release, every build says the same version.
 
 Anyone can attach a bundle to an issue. The replay writes each character from it that a terminal would act
 on as an escape, such as `\u{1b}` for the one that starts a terminal's control sequences.

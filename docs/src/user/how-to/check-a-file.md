@@ -13,11 +13,14 @@ machine will sew, before you spend thread on it. The examples use test sheet TS-
 - **size** is the width and height of the stitching.
 - **stitches** counts the needle points, and the jumps, trims, colour changes and stops between them.
 - **extent** gives the lowest and highest x and y of the stitching, from where the machine starts.
-- **lengths** gives the shortest and the longest stitch.
+- **lengths** gives the shortest and the longest stitch, to a hundredth of a millimetre, and how many
+  stitches do not move at all, when a file has any.
 - **threads** lists the colour blocks in sewing order. Each colour is stored as a Brother palette colour
   in a PES file, which the line names. After a stop you sew on with the same thread.
 - **profile** appears with `--profile`, with the number of stitches longer than the machine's longest
-  stitch and shorter than its shortest. `stitch profiles` lists the machines.
+  stitch and shorter than its shortest. `stitch profiles` lists the machines. A file does not say which
+  stitches lock the thread, and StitchCraft's lock stitches are as short as 0.2 mm on purpose. The line
+  also counts the short stitches 0.2 mm or longer, which may be locks.
 
 ## Look at it
 

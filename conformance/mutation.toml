@@ -237,3 +237,27 @@ file = "crates/stitchcraft-engine/src/normalize/region/snap.rs"
 mutant = "replace > with >= in TwiceArea::plus"
 line = "let wraps = match (wrapped, term > 0) {"
 why = "adding a term of 0 never wraps, so the sign is read only for terms that are not 0"
+
+[[equivalent]]
+file = "apps/stitchcraft-cli/src/files.rs"
+mutant = "replace match guard e.kind() == io::ErrorKind::AlreadyExists with true in staged"
+line = "Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {"
+why = "a temporary name that fails for any other reason fails for every name in the same folder, so trying the other names ends in the same error, only later"
+
+[[equivalent]]
+file = "apps/stitchcraft-cli/src/files.rs"
+mutant = "replace sync_folder with ()"
+line = "if let Ok(folder) = File::open(folder(path)) {"
+why = "syncing the folder decides what a power cut leaves on the disk, which no test can see, and which folder it syncs is tested through `folder`"
+
+[[equivalent]]
+file = "apps/stitchcraft-cli/src/commands/inspect.rs"
+mutant = "replace > with >= in run"
+line = "let long = lengths.iter().filter(|l| **l > max + 1e-9).count();"
+why = "a stitch read from a file joins needle points a whole number of tenths of a millimetre apart, and its length is never exactly 1e-9 mm more than the profile's longest"
+
+[[equivalent]]
+file = "apps/stitchcraft-cli/src/commands/inspect.rs"
+mutant = "replace < with <= in run"
+line = "let short: Vec<f64> = lengths.iter().copied().filter(|l| *l < min - 1e-9).collect();"
+why = "a stitch read from a file joins needle points a whole number of tenths of a millimetre apart, and its length is never exactly 1e-9 mm less than the profile's shortest"

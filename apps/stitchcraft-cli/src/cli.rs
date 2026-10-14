@@ -9,12 +9,20 @@ use stitchcraft_render::{Settings, Style};
 
 /// stitch — StitchCraft machine embroidery.
 #[derive(Debug, Parser)]
-#[command(name = "stitch", version, about, long_about = None, after_help = AFTER_HELP)]
+#[command(name = "stitch", version = VERSION, about, long_about = None, after_help = AFTER_HELP)]
 pub struct Cli {
     /// What to do.
     #[command(subcommand)]
     pub command: Command,
 }
+
+/// The version `stitch --version` shows: the workspace's, and the commit it was built from when it was built
+/// from a git checkout (`build.rs`).
+const VERSION: &str = if env!("STITCHCRAFT_COMMIT").is_empty() {
+    env!("CARGO_PKG_VERSION")
+} else {
+    concat!(env!("CARGO_PKG_VERSION"), " (commit ", env!("STITCHCRAFT_COMMIT"), ")")
+};
 
 const AFTER_HELP: &str = "\
 Exit status: 0 done (warnings allowed) · 1 the design or file has errors (nothing written) · 2 usage
@@ -81,8 +89,9 @@ pub struct BugReportArgs {
     /// The design (SVG) StitchCraft gets wrong.
     #[arg(required_unless_present = "replay")]
     pub design: Option<PathBuf>,
-    /// Replay this bundle instead: plan its design again and say whether everything comes out the same.
-    #[arg(long, conflicts_with_all = ["design", "output", "format", "says"])]
+    /// Replay this bundle instead: plan its design again, with the profile and format it names, and say
+    /// whether everything comes out the same.
+    #[arg(long, conflicts_with_all = ["design", "output", "profile", "format", "says"])]
     pub replay: Option<PathBuf>,
     /// The bundle to write; by default next to the design, as DESIGN.bug-report.json.
     #[arg(long, short)]

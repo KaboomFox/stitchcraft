@@ -256,5 +256,5 @@ It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The c
 |---|---|
 | Machine file | `stitchcraft-formats` writer chosen by the profile or the output extension |
 | Preview PNG | `stitchcraft-render`, from the *quantized* plan (`REQ-RND-001`) |
-| Report JSON | CLI: stitch, jump, trim and colour counts, bounds, estimated sewing time, diagnostics |
+| Report JSON | The CLI's, with the counts and size of the machine file read back as a machine reads it, its SHA-256, the threads and the diagnostics |
 | Plug-in preview geometry | `stitchcraft-vc-plugin` from a single group ([integration](vectorcraft-integration.md#live-effect-previews-within-v1-budgets)) |

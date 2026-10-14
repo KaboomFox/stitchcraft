@@ -11,7 +11,7 @@ use std::fmt::Write as _;
 use stitchcraft_core::Budget;
 use stitchcraft_render::Settings;
 
-use super::{Outcome, Status, read_machine_file, reader_warnings, render_diagnostics, unknown_colors, write_files};
+use super::{Outcome, Status, distinct, read_machine_file, reader_warnings, render_diagnostics, unknown_colors, write_files};
 use crate::cli::PreviewArgs;
 
 /// Runs `stitch preview`.
@@ -19,6 +19,9 @@ pub fn run(args: &PreviewArgs) -> Outcome {
     let Some(settings) = Settings::new(args.style.into(), args.scale) else {
         return Outcome::usage(format!("the scale must be from {} to {} pixels per millimetre", Settings::MIN_SCALE, Settings::MAX_SCALE));
     };
+    if let Err(outcome) = distinct(&[&args.file], &[&args.output]) {
+        return outcome;
+    }
     let (_, decoded) = match read_machine_file(&args.file) {
         Ok(read) => read,
         Err(outcome) => return outcome,

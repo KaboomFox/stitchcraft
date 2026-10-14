@@ -11,14 +11,14 @@ pub mod profiles;
 pub mod testsheet;
 
 use std::fmt::Write as _;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use sha2::{Digest, Sha256};
 use stitchcraft_core::{Code, Diagnostic, Fix, Severity};
 use stitchcraft_formats::Decoded;
 use stitchcraft_plan::palette::Palette;
-use stitchcraft_plan::{FormatId, StitchPlan};
+use stitchcraft_plan::{FormatId, StitchKind, StitchPlan};
 
 use crate::files::{self, Unwritten};
 
@@ -115,6 +115,60 @@ pub fn unknown_colors(decoded: &Decoded) -> Option<Diagnostic> {
     })
 }
 
+/// A usage error when a file a command writes is a file it reads, or another it writes: the one written
+/// last would replace the other, and a design or a file made from it would be lost (`REQ-CLI-007`). Paths
+/// are compared where they lead, through links and `..`, and a file that does not exist yet by its folder.
+/// One whose folder does not exist either is left to fail when it is written.
+pub fn distinct(reads: &[&Path], writes: &[&Path]) -> Result<(), Outcome> {
+    let writes: Vec<(&Path, Option<PathBuf>)> = writes.iter().map(|path| (*path, resolved(path))).collect();
+    for (i, (path, at)) in writes.iter().enumerate() {
+        let Some(at) = at else { continue };
+        if let Some(read) = reads.iter().find(|read| resolved(read).as_ref() == Some(at)) {
+            return Err(Outcome::usage(format!(
+                "writing {} would replace {}, which it is made from: name another file",
+                path.display(),
+                read.display()
+            )));
+        }
+        if let Some((other, _)) = writes.iter().take(i).find(|(_, other)| other.as_ref() == Some(at)) {
+            return Err(Outcome::usage(format!("{} and {} are the same file: give each its own", other.display(), path.display())));
+        }
+    }
+    Ok(())
+}
+
+/// Where `path` leads: the file itself, or a file of that name in its folder when the file does not exist.
+fn resolved(path: &Path) -> Option<PathBuf> {
+    std::fs::canonicalize(path).ok().or_else(|| {
+        let name = path.file_name()?;
+        let folder = path.parent().filter(|folder| !folder.as_os_str().is_empty()).unwrap_or(Path::new("."));
+        std::fs::canonicalize(folder).ok().map(|folder| folder.join(name))
+    })
+}
+
+/// The plan the machine file `bytes` holds, read as `stitch inspect` reads it, with the threads of `plan`,
+/// the plan it was written from: what the file sews, in the design's colours, which summaries count and
+/// pictures draw (`REQ-CLI-008`). DST stores no colours and PES only a palette's, so each block of the file
+/// takes the thread of the plan's entry it starts at, the plan's threads counted again after each stop. A
+/// file that joins 2 of the plan's blocks into one, as PES joins blocks a palette shows alike, keeps the
+/// first one's thread. A file StitchCraft wrote that it cannot read is a bug in it (`SC-E0009`).
+pub fn read_back(bytes: &[u8], plan: &StitchPlan) -> Result<StitchPlan, Diagnostic> {
+    let mut back = stitchcraft_formats::decode(bytes)
+        .map_err(|e| {
+            Diagnostic::new(Code::InternalCheckFailed, format!("The machine file StitchCraft wrote does not read: {}", e.diagnostic().message))
+        })?
+        .plan;
+    let threads: Vec<_> = plan.color_entries().into_iter().map(|entry| entry.thread.clone()).collect();
+    let mut entry = 0;
+    for block in &mut back.blocks {
+        if let Some(thread) = threads.get(entry) {
+            block.thread = thread.clone();
+        }
+        entry += 1 + block.stitches.iter().filter(|s| s.kind == StitchKind::Stop).count();
+    }
+    Ok(back)
+}
+
 /// Writes each of `files`, a path and its bytes, all or none ([`files::write_all`]). When one cannot be
 /// written, the outcome says so after `said`, what was said about the design.
 pub fn write_files(files: &[(&Path, &[u8])], said: &str) -> Result<(), Outcome> {
@@ -142,6 +196,15 @@ pub fn hex(bytes: &[u8]) -> String {
         let _ = write!(s, "{b:02x}");
         s
     })
+}
+
+/// Bytes from lower- or upper-case hexadecimal, two digits each: what [`hex`] wrote.
+pub fn unhex(text: &str) -> Option<Vec<u8>> {
+    let digits = text.as_bytes();
+    if !digits.len().is_multiple_of(2) {
+        return None;
+    }
+    digits.chunks(2).map(|pair| std::str::from_utf8(pair).ok().and_then(|pair| u8::from_str_radix(pair, 16).ok())).collect()
 }
 
 /// The plan's size and counts, as report lines (`  size      …`, `  stitches  …`).
@@ -213,6 +276,28 @@ mod tests {
     use std::path::PathBuf;
 
     use super::*;
+
+    #[test]
+    fn req_cli_008_a_file_read_back_takes_the_plan_s_threads_after_a_stop_too() {
+        // A stop between stitches of one thread, then another thread: PES records the stop as a change to the
+        // same colour, which reads back as a stop, and the block after it takes the thread after the stop.
+        use stitchcraft_core::Point;
+        use stitchcraft_plan::{PlanBuilder, Provenance, Rgb, Role, Thread};
+        let (navy, red) = (Thread::new(Rgb::new(0, 0, 128)), Thread::new(Rgb::new(200, 0, 0)));
+        let mut plan = PlanBuilder::new(navy.clone());
+        let sew = |plan: &mut PlanBuilder, xs: [f64; 2]| xs.map(|x| plan.stitch(Point::new(x, 0.0).unwrap(), Provenance::plan(Role::Top)));
+        sew(&mut plan, [0.0, 1.0]);
+        plan.stop(None);
+        sew(&mut plan, [2.0, 3.0]);
+        plan.change_thread(red.clone());
+        sew(&mut plan, [4.0, 5.0]);
+        let plan = plan.finish();
+        let back = read_back(&stitchcraft_formats::encode(&plan, FormatId::PesV1, "stop").unwrap().bytes, &plan).unwrap();
+        assert_eq!(
+            back.blocks.iter().map(|b| (&b.thread, b.stitches.iter().any(|s| s.kind == StitchKind::Stop))).collect::<Vec<_>>(),
+            [(&navy, true), (&red, false)]
+        );
+    }
 
     #[test]
     fn req_cli_006_a_file_that_cannot_be_written_is_said_after_the_design_and_so_are_those_written() {

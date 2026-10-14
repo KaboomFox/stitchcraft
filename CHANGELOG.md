@@ -799,6 +799,37 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   JSON Schema gives a condition's values as JSON values, and `force_lock_stitches` says all it does. The
   design page says which generated outputs exist and which steps plan the others, and that a key's kind and
   range per family come with M7 (PAR-12).
+- A command refuses outputs that name the same file as each other or as a file it reads, with exit status
+  2 (review finding CLI-7, `REQ-CLI-007`). `stitch plan mine.svg -o mine.svg --format pes` replaced the
+  design, and `--report` naming the machine file left the report under its name.
+- Files are written under temporary names of their own, created new, and synced before they are renamed
+  into place (review finding CLI-13, `REQ-CLI-006`). The temporary name was fixed, and a link planted under
+  it in a shared folder steered the write to another file.
+- `stitch plan`, `testsheet` and `convert` print the size and counts of the file they wrote, read back as
+  `stitch inspect` reads it, and `stitch plan`'s report and picture are of it too (review findings CLI-12
+  and CLI-17, `REQ-CLI-008`). They printed the plan's counts, and `convert` the input's. A DST machine's
+  cut before a long jump showed as a jump thread, and the trims a PES file flags on its jumps were not
+  counted.
+- A closed standard output keeps a command's exit status, and any other error writing its output is said
+  and ends with 3 (review finding CLI-10, `REQ-CLI-009`). A refused design piped to a reader that was gone
+  ended with 0, and `stitch profiles > /dev/full` with 1 and no word.
+- Help and usage errors are coloured only on a terminal, and not with `NO_COLOR` set or a `dumb` terminal
+  (review finding CLI-8, `REQ-CLI-010`).
+- `stitch bug-report --replay` refuses `--profile`, which it took and ignored, since a replay plans for the
+  bundle's profile (review finding CLI-9).
+- `stitch inspect` gives lengths to a hundredth of a millimetre and counts stitches in place (review
+  finding CLI-11). Its count of short stitches says how many are 0.2 mm or longer, which a lock stitch
+  may explain. It said "from 0.3 mm" beside "4 shorter than 0.3 mm", and counted no
+  stitch in place at all.
+- A bug-report bundle names the commit StitchCraft was built from, and `stitch --version` shows it, and a
+  replay reads a bundle's format before the rest (review finding CLI-14, `REQ-CLI-001`). Every build said
+  0.0.1, and a replay called a bundle of another format not a bundle. `stitch plan` makes everything it
+  prints and writes before it writes a file, and a panic's bundle says whether it came while planning,
+  drawing the picture or writing, which a replay reruns as far as it can (review finding CLI-16,
+  `REQ-CLI-002`).
+- Docs now match the code on the machine testing page's pictures, the architecture page's release profile
+  and the report's contents, and in the CLI's README on `stitch convert` and the bug report guide on
+  `design.svg_hex` (review finding CLI-18).
 - Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
   found (`REQ-SAT-002`, `REQ-SAT-005`).
   - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails

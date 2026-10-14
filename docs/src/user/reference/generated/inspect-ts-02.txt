@@ -4,7 +4,7 @@ TS-02.pes · PES (#PES0001) · "TS-02"
   size      120.0 × 70.0 mm
   stitches  93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop
   extent    x -60.0 to 60.0 mm, y -35.0 to 35.0 mm from where the machine starts
-  lengths   stitches from 2.5 to 2.5 mm
+  lengths   stitches from 2.50 to 2.50 mm
   threads   1. Red (#ed171f), shown as Brother PEC 5 "Red"
             2. Blue (#0a55a3), shown as Brother PEC 2 "Blue"
             3. Emerald Green (#00673e), shown as Brother PEC 54 "Emerald Green"
