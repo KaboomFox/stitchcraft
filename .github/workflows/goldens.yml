@@ -50,7 +50,10 @@ jobs:
             *'"golden-change"'*) ;;
             *) echo "::error::Golden files changed. Add the golden-change label and explain in the PR why they must change."; exit 1 ;;
           esac
-          if ! git diff --name-only "$BASE"...HEAD | grep -qx CHANGELOG.md; then
+          # A line the branch adds to the changelog, not any change to it. grep reads the whole diff, so
+          # no early exit cuts the pipe.
+          added=$(git diff "$BASE"...HEAD -- CHANGELOG.md | grep -c '^+[^+]' || true)
+          if [ "${added:-0}" -eq 0 ]; then
             echo "::error::Golden files changed. Add a line to CHANGELOG.md saying what sews or looks different."
             exit 1
           fi

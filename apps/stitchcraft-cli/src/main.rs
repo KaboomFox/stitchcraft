@@ -11,6 +11,8 @@
 //! ends with exit status 3 (`REQ-CLI-009`). Help and usage errors are coloured only on a terminal, and not
 //! when `NO_COLOR` is set or `TERM` is `dumb` (`REQ-CLI-010`).
 #![forbid(unsafe_code)]
+// The binary of an app: it reads its environment (`NO_COLOR`, `TERM`).
+#![allow(clippy::disallowed_methods)]
 
 use std::io::{ErrorKind, IsTerminal, Write};
 use std::process::ExitCode;

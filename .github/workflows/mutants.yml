@@ -22,6 +22,7 @@ on:
       - .cargo/mutants.toml
       - conformance/mutation.toml
       - .github/workflows/mutants.yml
+      - .github/actions/tools/action.yml
 
 permissions:
   contents: read
@@ -58,9 +59,9 @@ jobs:
           fetch-depth: 0
       - run: rustup toolchain install --profile minimal
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+      - uses: ./.github/actions/tools
         with:
-          tool: cargo-mutants@27.1.0
+          tools: cargo-mutants
       - name: Run this part of the mutants in the lines this pull request changes
         # cargo-mutants exits 2 when it finds missed mutants and 3 for timeouts; the last job decides.
         # Anything else (a failing baseline, say) is a failure here. cargo-mutants writes its lists only
@@ -113,9 +114,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: rustup toolchain install --profile minimal
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+      - uses: ./.github/actions/tools
         with:
-          tool: cargo-mutants@27.1.0
+          tools: cargo-mutants
       - name: Run this shard's mutants
         # cargo-mutants exits 2 when it finds missed mutants and 3 for timeouts; the comparison job decides.
         # Anything else (4, a failing baseline, say, after which it has still written its lists, empty) is

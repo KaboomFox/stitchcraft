@@ -24,6 +24,8 @@ fn plan() -> PlanOutcome {
     planned(vec![fill("field", &[FIELD], &RED, &[("row_spacing_mm", "0.4")])])
 }
 
+// An example program reads its arguments.
+#[allow(clippy::disallowed_methods)]
 fn main() -> ExitCode {
     let Some(runs) = std::env::args().nth(1).and_then(|runs| runs.parse::<usize>().ok()) else {
         eprintln!("usage: field RUNS, a whole number of plans to time");

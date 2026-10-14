@@ -854,6 +854,41 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - The page on the docs pipeline lists the steps the docs workflow runs, and the conformance page its case
   kinds and what keeps a requirement's id (review findings XT-16, XT-19). The contract page leaves its
   count of parameters to its last line, which counts them.
+- CI makes each test sheet's and plan's machine files on Linux, macOS and Windows and compares them with
+  their golden files (review findings XT-1 and CORE-8). The conformance suite's data cases run in `cargo
+  test` now, where only the Linux job ran them. The docs promised a job that compared hashes across
+  platforms, which CI never had. They describe what CI does instead, and the suite no longer writes the
+  `hashes.json` that job was to read. WebAssembly is built, not run, as the docs now say.
+- The oracle test of nearest points counts its 1,600 cases, as the other oracle tests do, so a fixture
+  cut short fails it (review finding XT-5). The rows fixture's header says not to edit it, as the others'
+  headers do.
+- The nightly job on the newest Rust leaves out the API snapshots and the prose lint, which failed it every
+  night (review finding XT-6). The snapshots are the pinned toolchain's output and the lint is Vale's, so
+  neither says anything about a newer compiler. `cargo xtask ci --skip` takes the gates to leave out.
+- `cargo xtask prose` finds the added lines whatever diff prefixes Git is configured with (review finding
+  XT-7). With `diff.mnemonicPrefix` or `diff.noprefix` set, it found none and passed.
+- `cargo xtask unsafe-audit` no longer takes a comment for code (review finding XT-8). A crate root's
+  `#![forbid(unsafe_code)]` counts in its code only, and a character literal such as `'\"'` no longer hides
+  the code after it. Each `unsafe` block needs a `// SAFETY:` comment of its own, and the compatibility
+  probe's crate root must forbid unsafe code too. The checks leave out folders named `book` or `corpus`
+  only where the book and the fuzz corpus are made.
+- The satin cases' helpers sew a column with the element's shortest stitch where it is longer than the
+  machine's, as the engine does (review finding XT-18). They took the machine's. A test compares a column
+  the helpers sew with the one the engine plans.
+- Clippy refuses every transcendental method of `f64` and `f32`, `powi` among them, and `RandomState`
+  (review findings XT-20 and CORE-9). In library crates it refuses calls for files, threads, the
+  environment and processes, which `wasm32-unknown-unknown` lacks (review finding XT-21). `deny.toml` lets
+  `rand` and `getrandom` in only through proptest.
+- CI installs each tool at a pinned version, from one list in `.github/actions/tools` (review finding
+  XT-22). The compatibility job fails when it cannot discover VectorCraft's versions, or when the stable
+  or main track is empty, where before its tracks passed untested. cargo-deny checks the fuzz targets'
+  dependencies too. Changed golden files need a line added to the changelog, where any change to it
+  passed, a deletion included.
+- The Ink/Stitch contract records the value Ink/Stitch sews for a file that sets none where its code reads
+  a missing attribute as another value than its settings window shows (review finding PAR-14). A satin's
+  and a fill's `running_stitch_tolerance_mm` sew 0.2 mm, shown as 0.1 mm, and a ripple's `staggers` sews
+  1, shown as 0. `check_params.py` compares every getter in Ink/Stitch's code with the contract, and the
+  contract page compares the registry's defaults with the values sewn.
 - Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
   found (`REQ-SAT-002`, `REQ-SAT-005`).
   - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails

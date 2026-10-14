@@ -138,6 +138,9 @@ fn golden_dir() -> PathBuf {
 }
 
 #[test]
+// The test reads its golden files, and with STITCHCRAFT_BLESS set writes them, which clippy.toml keeps
+// out of library code.
+#[allow(clippy::disallowed_methods)]
 fn req_rnd_002_previews_match_their_golden_files() {
     let bless = std::env::var_os("STITCHCRAFT_BLESS").is_some();
     let ts01 = testsheets::find("TS-01").unwrap().plan().unwrap();

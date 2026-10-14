@@ -77,7 +77,8 @@ cargo xtask mutants --changed DIR  # a pull request's changed-line mutants: noti
 
 `cargo xtask ci` skips a step whose tool is not installed locally, and CI installs and requires each of
 them. They are the wasm target, `cargo-public-api`, `cargo-deny`, `typos`, Vale, `mdbook`, and
-pyembroidery for the reader oracle (`conformance/oracle/requirements.txt`). Coverage
+pyembroidery for the reader oracle (`conformance/oracle/requirements.txt`). CI pins their versions, the
+tools' in `.github/actions/tools/action.yml` and Vale's in `xtask/src/prose.rs`. Coverage
 (`cargo-llvm-cov`) and mutation testing (`cargo-mutants`) have CI jobs of their own. A change to a
 library's public API shows in its `public-api.txt`: say why in the pull request.
 

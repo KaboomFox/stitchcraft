@@ -1,5 +1,7 @@
-//! `cargo xtask wasm`: the library crates and the plug-in build for `wasm32-unknown-unknown`
-//! (no threads, no file system, no clocks), so the engine can run inside VectorCraft's sandbox.
+//! `cargo xtask wasm`: the library crates and the plug-in build for `wasm32-unknown-unknown`, so the engine
+//! can run inside VectorCraft's sandbox. That target has no threads, file system or clocks, and std's calls
+//! for them build there but fail or panic when run: `clippy.toml` keeps library crates from calling them,
+//! and this gate checks that they build.
 
 use crate::layers::{Class, TABLE};
 use crate::util;

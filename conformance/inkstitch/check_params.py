@@ -7,6 +7,12 @@ Ink/Stitch's own `@param` declarations, the method identifiers with its option l
 identifiers with its lock definitions, the commands with its command lists and the other attributes with
 its attribute list, and prints each difference.
 
+A declared default is what Ink/Stitch's settings window shows. What it sews for a file that sets no value
+is the fallback its code reads the attribute with, `self.get_..._param("name", fallback)`, and the two
+can differ. A row records the fallback (`fallback`) where it sews differently from the default, and the
+script compares every getter call in Ink/Stitch's `lib` with the row it reads. A fallback that differs in
+form but sews as the default is listed in `SAME_FALLBACK`, with the reason.
+
 Ink/Stitch's Python is read as text and parsed with `ast`: nothing from it is imported or run, and only
 facts are compared, never copied (ADR-0012). Run it whenever the contract moves to a new Ink/Stitch commit:
 
@@ -38,6 +44,21 @@ ATTRIBUTES = "lib/svg/tags.py"
 
 # The parameters whose values are stitch types; every other condition is listed by its value alone.
 METHODS = {"stroke": "stroke_method", "satin": "satin_method", "fill": "fill_method"}
+
+# The methods Ink/Stitch reads a parameter with (`get_param`, `get_float_param`, `get_split_mm_param_as_px`
+# and the like), defined in the common section's file.
+GETTER = re.compile(r"get_(?:\w+_)?param(?:_as_px)?")
+
+# Fallbacks that differ in form from the row's default but sew as it, with the reason, read in Ink/Stitch's
+# code. A listed fallback that is the default again is reported, so the list cannot go stale.
+SAME_FALLBACK = {
+    ("satin", "satin_method"): "'' is none of the ids the satin code tests for, so it sews as satin_column, option 0",
+    ("fill", "cross_stitch_method"): "'simple cross' holds none of the words the cross stitch code looks for in an "
+    "id (dense, upright, double, smyrna, flip, half), so it sews as simple_cross, option 0",
+    ("fill", "meander_pattern"): "the least tile is the first of the sorted tiles the options list, option 0",
+    ("stroke", "satin_guide_pattern_position"): "'line_count' is neither id the ripple code tests for "
+    "(render_at_rungs, adaptive), so it sews as default",
+}
 
 # Conditions the data file leaves out on purpose, with the reason. Everything else must match.
 OMITTED = {
@@ -114,9 +135,74 @@ def declarations(root, locks):
                     "unit": gettext(kw["unit"]) if "unit" in kw else None,
                     "default": default,
                     "applies_to": conditions,
-                    "options": [literal(o.args[0])[0] for o in getattr(kw.get("options"), "elts", []) if isinstance(o, ast.Call) and getattr(o.func, "id", "") == "ParamOption"],
+                    "options": option_ids(tree, kw.get("options")),
                 }
     return found, problems
+
+
+def option_ids(tree, node):
+    """The ids of a combo's `ParamOption`s, from the list itself or from the list a name in the same file holds."""
+    if isinstance(node, ast.Name):
+        held = (a.value for a in ast.walk(tree) if isinstance(a, ast.Assign) and any(getattr(t, "id", "") == node.id for t in a.targets))
+        node = next(held, None)
+    return [literal(o.args[0])[0] for o in getattr(node, "elts", []) if isinstance(o, ast.Call) and getattr(o.func, "id", "") == "ParamOption"]
+
+
+def implicit_fallbacks(root):
+    """{getter: the fallback it reads with when a call passes none}, from the getters' own signatures. The last
+    definition of a name is the method itself: its typing overloads come before it."""
+    tree = ast.parse((root / ELEMENTS["common"]).read_text(encoding="utf-8"))
+    found = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and GETTER.fullmatch(node.name):
+            given = dict(zip(reversed([a.arg for a in node.args.args]), reversed(node.args.defaults)))
+            found[node.name] = literal(given["default"]) if "default" in given else (None, None)
+    return found
+
+
+def as_read(getter, value):
+    """A literal fallback as its getter reads it: a toggle's as on or off, and a pair of equal numbers as one."""
+    if getter == "get_boolean_param" and (value is None or isinstance(value, bool)):
+        return bool(value)
+    if isinstance(value, (tuple, list)) and value and all(v == value[0] for v in value):
+        return value[0]
+    return value
+
+
+def getters(root, declared):
+    """{(section, name): [fallback]} for every getter call in Ink/Stitch's `lib` that reads a declared
+    parameter by its literal name. A call in an element's file reads that element's parameter where the
+    element declares it, and a call elsewhere reads the parameter of every section that declares the name. A
+    fallback is (value, None) for a literal, as its getter reads it, and (None, source) for a computed one."""
+    implicit = implicit_fallbacks(root)
+    files = {path: section for section, path in ELEMENTS.items()}
+    found = {}
+    for path in sorted((root / "lib").rglob("*.py")):
+        own = files.get(path.relative_to(root).as_posix())
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.args and GETTER.fullmatch(node.func.attr)):
+                continue
+            name = literal(node.args[0])[0]
+            sections = [section for section, declared_name in declared if declared_name == name]
+            keywords = {k.arg: k.value for k in node.keywords}
+            given = node.args[1] if len(node.args) > 1 else keywords.get("default")
+            value, source = literal(given) if given is not None else implicit.get(node.func.attr, (None, None))
+            for section in [own] if own in sections else sections:
+                found.setdefault((section, name), []).append((as_read(node.func.attr, value), source))
+    return found
+
+
+def same_fallback(expected, value, source, options):
+    """Whether a getter's fallback sews as the data file's `expected`: a computed one where the row declares no
+    default, an option's id where the row's default is the option's place, or an equal value."""
+    if source is not None:
+        return expected == "—"
+    if isinstance(value, bool) and expected == "—":
+        expected = "false"
+    if isinstance(expected, str) and expected.isdigit() and options and isinstance(value, str):
+        place = int(expected)
+        return place < len(options) and options[place] == value
+    return same_default(expected, value)
 
 
 def same_default(ours, theirs):
@@ -134,10 +220,7 @@ def same_default(ours, theirs):
 def methods_of(root, section):
     """The option ids of a section's method list (`_stroke_methods` and the like)."""
     tree = ast.parse((root / ELEMENTS[section]).read_text(encoding="utf-8"))
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Assign) and any(getattr(t, "id", "") == f"_{section}_methods" for t in node.targets):
-            return [literal(e.args[0])[0] for e in node.value.elts]
-    return []
+    return option_ids(tree, ast.Name(id=f"_{section}_methods"))
 
 
 def commands(root):
@@ -170,6 +253,7 @@ def main(checkout):
     data = tomllib.loads(DATA.read_text(encoding="utf-8"))
     locks = lock_ids(root)
     theirs, problems = declarations(root, locks)
+    reads = getters(root, theirs)
     ours = {(p["element"], p["name"]): p for p in data["param"]}
     for key in sorted(set(ours) | set(theirs)):
         if key not in ours:
@@ -185,6 +269,20 @@ def main(checkout):
             problems.append(f"{key[0]} {key[1]}: unit {row['unit']!r} here, {fact['unit']!r} in Ink/Stitch")
         if not same_default(row["default"], fact["default"]):
             problems.append(f"{key[0]} {key[1]}: default {row['default']!r} here, {fact['default']!r} in Ink/Stitch")
+        expected = row.get("fallback", row["default"])
+        fallbacks = {repr(f): f for f in reads.get(key, [])}
+        if not fallbacks:
+            problems.append(f"{key[0]} {key[1]}: no getter reads it by its name, so its fallback is not compared")
+        if len(fallbacks) > 1:
+            problems.append(f"{key[0]} {key[1]}: read with {len(fallbacks)} different fallbacks in Ink/Stitch: {sorted(fallbacks)}")
+        differ = [(v, s) for v, s in fallbacks.values() if not same_fallback(expected, v, s, fact["options"])]
+        if key in SAME_FALLBACK and not differ:
+            problems.append(f"{key[0]} {key[1]}: listed in SAME_FALLBACK, but read with its default")
+        for value, source in [] if key in SAME_FALLBACK else differ:
+            shown = source if source is not None else repr(value)
+            problems.append(f"{key[0]} {key[1]}: read as {shown} when a file sets none, {expected!r} here")
+        if "fallback" in row and same_default(row["default"], row["fallback"]):
+            problems.append(f"{key[0]} {key[1]}: `fallback` repeats the default")
         declared = sorted(c for c in fact["applies_to"] if (key[0], key[1], c) not in OMITTED)
         if sorted(row["applies_to"]) != declared:
             problems.append(f"{key[0]} {key[1]}: applies to {sorted(row['applies_to'])} here, {declared} in Ink/Stitch")

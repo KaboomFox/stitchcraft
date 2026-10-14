@@ -46,7 +46,10 @@ jobs:
       - id: discover
         name: Discover VectorCraft releases, pre-releases and branch heads
         run: |
-          echo "report=$(cargo xtask compat discover --json)" >> "$GITHUB_OUTPUT"
+          # A discovery that fails fails the step: inside `echo "report=$(…)"` its exit status would be lost,
+          # and every track would test nothing.
+          report=$(cargo xtask compat discover --json)
+          echo "report=$report" >> "$GITHUB_OUTPUT"
           { echo '```'; cargo xtask compat discover; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
   contract:

@@ -12,7 +12,10 @@ inputs:
     required: true
 outputs:
   ref:
-    description: The tag or commit; empty when VectorCraft has nothing on this track right now.
+    description: >-
+      The tag or commit; empty when VectorCraft has nothing on this track right now, which only the
+      pre-release and release-branch tracks may be. VectorCraft has releases and a main branch, so an empty
+      stable or main track is an error: discovery failed, or a branch was renamed.
     value: ${{ steps.ref.outputs.ref }}
 runs:
   using: composite
@@ -33,4 +36,8 @@ runs:
           main)           ref=$(jq -r '.main.sha // empty' <<<"$REPORT") ;;
           *) echo "unknown track: $TRACK" >&2; exit 1 ;;
         esac
+        if [ -z "$ref" ] && { [ "$TRACK" = stable ] || [ "$TRACK" = main ]; }; then
+          echo "::error::The $TRACK track names no VectorCraft version: discovery failed, or VectorCraft renamed a branch."
+          exit 1
+        fi
         echo "ref=$ref" >> "$GITHUB_OUTPUT"

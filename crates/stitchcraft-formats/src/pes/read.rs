@@ -234,6 +234,8 @@ mod tests {
 
     use super::*;
 
+    // A test reads the repository's files, which clippy.toml keeps out of library code.
+    #[allow(clippy::disallowed_methods)]
     fn golden(name: &str) -> Vec<u8> {
         std::fs::read(format!("{}/../../conformance/golden/{name}", env!("CARGO_MANIFEST_DIR"))).unwrap()
     }
@@ -333,6 +335,8 @@ mod tests {
         assert_eq!(kinds(&d), [(Jump, 1.6, 0.5), (Trim, 1.6, 0.5), (Jump, 1.9, 1.2), (Normal, 1.9, 1.2)]);
     }
 
+    // A test reads the repository's files, which clippy.toml keeps out of library code.
+    #[allow(clippy::disallowed_methods)]
     fn fixture(name: &str) -> Vec<u8> {
         std::fs::read(format!("{}/../../conformance/fixtures/pes/{name}", env!("CARGO_MANIFEST_DIR"))).unwrap()
     }

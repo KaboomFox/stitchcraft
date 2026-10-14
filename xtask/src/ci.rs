@@ -5,6 +5,10 @@
 //! when the tool is missing and required in CI (`CI` set), where the workflow installs them. Coverage is
 //! not a step here: it runs the whole suite again, instrumented, so CI gives it a job of its own.
 //!
+//! `--skip` leaves out gates by name, for a job that runs the gates on another compiler than the pinned
+//! one: the API snapshots are the pinned toolchain's rustdoc output, and the prose lint has nothing to do
+//! with the compiler. A name that is no gate is an error.
+//!
 //! Cargo steps name this repository's packages, so inside VectorCraft's workspace (ADR-0011) they build,
 //! lint and test StitchCraft only. There, `cargo-deny` is skipped, because it judges a whole workspace
 //! against one policy and VectorCraft's workspace answers to VectorCraft's, and optional tools stay
@@ -52,23 +56,44 @@ fn optional(available: fn() -> bool, missing: &'static str, guest: bool, step: B
     })
 }
 
-fn tool_step(program: &'static str, args: &'static [&'static str]) -> Box<dyn Fn() -> Outcome> {
+/// `program` run from the repository's root once with each of `runs`' arguments; the first run that fails
+/// fails the step.
+fn tool_step(program: &'static str, runs: &'static [&'static [&'static str]]) -> Box<dyn Fn() -> Outcome> {
     Box::new(move || {
-        let mut cmd = std::process::Command::new(program);
-        cmd.args(args);
-        outcome(util::run(cmd, &format!("{program} {}", args.join(" "))))
+        for args in runs {
+            let mut cmd = std::process::Command::new(program);
+            cmd.args(*args).current_dir(util::root());
+            if let Err(e) = util::run(cmd, &format!("{program} {}", args.join(" "))) {
+                return Outcome::Failed(e);
+            }
+        }
+        Outcome::Passed
     })
 }
 
-/// `cargo xtask ci`.
-pub fn run() -> Result<(), String> {
+/// cargo-deny's runs: the workspace, and the fuzz targets, a workspace of their own (`fuzz/`) with
+/// dependencies of their own. The compatibility probe (`compat/vc-contract`) is not judged here. Its
+/// dependencies are VectorCraft's, at whichever version a track tests, and VectorCraft's policy applies
+/// to them, as it does inside VectorCraft's workspace.
+const DENY: &[&[&str]] = &[&["check"], &["--manifest-path", "fuzz/Cargo.toml", "check"]];
+
+/// An error naming the first of `skip` that is none of `gates`.
+fn unknown_gate(skip: &[String], gates: &[&str]) -> Result<(), String> {
+    match skip.iter().find(|gate| !gates.contains(&gate.as_str())) {
+        Some(unknown) => Err(format!("there is no gate `{unknown}` to skip (the gates: {})", gates.join(", "))),
+        None => Ok(()),
+    }
+}
+
+/// `cargo xtask ci`, without the gates named in `skip`.
+pub fn run(skip: &[String]) -> Result<(), String> {
     let packages = util::packages()?;
     let guest = packages.guest;
     let doc_args = packages.args();
     let deny: Box<dyn Fn() -> Outcome> = if guest {
         Box::new(|| Outcome::Skipped("inside another workspace, whose own dependency policy applies"))
     } else {
-        optional(|| util::tool_available("cargo-deny", &["--version"]), "cargo install cargo-deny", guest, tool_step("cargo-deny", &["check"]))
+        optional(|| util::tool_available("cargo-deny", &["--version"]), "cargo install cargo-deny", guest, tool_step("cargo-deny", DENY))
     };
     let steps: Vec<Step> = vec![
         ("fmt", cargo_step("fmt", &packages, &["--", "--check"])),
@@ -93,12 +118,20 @@ pub fn run() -> Result<(), String> {
         ("wasm", optional(wasm::target_installed, "rustup target add wasm32-unknown-unknown", guest, Box::new(|| outcome(wasm::run())))),
         ("api", optional(api::available, api::INSTALL, guest, Box::new(|| outcome(api::run(true))))),
         ("deny", deny),
-        ("typos", optional(|| util::tool_available("typos", &["--version"]), "cargo install typos-cli", guest, tool_step("typos", &[]))),
+        ("typos", optional(|| util::tool_available("typos", &["--version"]), "cargo install typos-cli", guest, tool_step("typos", &[&[]]))),
         ("prose", optional(prose::available, prose::INSTALL, guest, Box::new(|| outcome(prose::run(prose::DEFAULT_BASE))))),
-        ("book", optional(|| util::tool_available("mdbook", &["--version"]), "cargo install mdbook", guest, tool_step("mdbook", &["build", "docs"]))),
+        (
+            "book",
+            optional(|| util::tool_available("mdbook", &["--version"]), "cargo install mdbook", guest, tool_step("mdbook", &[&["build", "docs"]])),
+        ),
     ];
+    unknown_gate(skip, &steps.iter().map(|(name, _)| *name).collect::<Vec<_>>())?;
     let mut summary = Vec::new();
     for (name, step) in &steps {
+        if skip.iter().any(|gate| gate.as_str() == *name) {
+            summary.push((*name, Outcome::Skipped("--skip")));
+            continue;
+        }
         eprintln!("\n=== ci: {name} ===");
         let result = step();
         summary.push((*name, result));
@@ -119,4 +152,17 @@ pub fn run() -> Result<(), String> {
         }
     }
     if failed == 0 { Ok(()) } else { Err(format!("{failed} of {} gates failed", summary.len())) }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_gate_to_skip_must_be_a_gate() {
+        let skip = |names: &[&str]| unknown_gate(&names.iter().map(|n| (*n).to_string()).collect::<Vec<_>>(), &["api", "prose"]);
+        assert_eq!(skip(&[]), Ok(()));
+        assert_eq!(skip(&["prose", "api"]), Ok(()));
+        assert_eq!(skip(&["api", "apo"]), Err("there is no gate `apo` to skip (the gates: api, prose)".to_string()));
+    }
 }

@@ -8,9 +8,8 @@
 //!   where it comes from and under which licence.
 //! - Without `--check`, the suite also **runs**: data cases in-process, Rust-test cases through one
 //!   `cargo test`. It writes `target/conformance/report.md` (the requirement × case matrix, failures
-//!   first; appended to the GitHub job summary when `GITHUB_STEP_SUMMARY` is set), `report.json` and
-//!   `hashes.json` (one SHA-256 per output, for the cross-platform determinism job). It fails when a case
-//!   fails or an active requirement has no passing case. A case that needs an optional tool is skipped
+//!   first; appended to the GitHub job summary when `GITHUB_STEP_SUMMARY` is set) and `report.json`. It
+//!   fails when a case fails or an active requirement has no passing case. A case that needs an optional tool is skipped
 //!   without it, and fails in CI: outside CI, a requirement whose cases were all skipped is skipped too.
 //! - `--filter <text>` runs only the cases whose id, test name or requirements contain the text.
 //! - `--bless <case>` rewrites the golden files of one data case instead of comparing them. A changed
@@ -215,6 +214,25 @@ mod tests {
         assert!(!well_formed("REQ-run-001"));
         assert!(!well_formed("REQ-RUN-1"));
         assert!(!well_formed("RUN-001"));
+    }
+
+    #[test]
+    fn every_data_case_but_the_oracle_passes_here() {
+        // `cargo test` runs on Linux, macOS and Windows in CI (`ci.yml`), so there each test sheet's and plan's
+        // machine files are compared with their golden files byte for byte (docs/src/design/determinism.md).
+        // The oracle needs Python and pyembroidery, which only the gates job installs.
+        let root = util::root();
+        let mut findings = Findings::default();
+        let data = cases::load_cases(&root, &mut findings);
+        assert!(findings.errors.is_empty() && data.len() > 10, "{:?}", findings.errors);
+        let failed: Vec<String> = data
+            .iter()
+            .filter(|case| !matches!(case.spec, cases::Spec::Oracle { .. }))
+            .map(|case| runner::run_data_case(&root, case, false))
+            .filter(|outcome| !outcome.passed())
+            .map(|outcome| format!("{} ({}): {}", outcome.case, outcome.file, outcome.failures.join("; ")))
+            .collect();
+        assert_eq!(failed, Vec::<String>::new());
     }
 
     #[test]
