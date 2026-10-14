@@ -36,6 +36,7 @@ pub stitchcraft_core::diag::Code::FillStretchDrawnTwice
 pub stitchcraft_core::diag::Code::FillTooThin
 pub stitchcraft_core::diag::Code::FillUnderlayInsetShrinksAway
 pub stitchcraft_core::diag::Code::FillUnderlayTooThin
+pub stitchcraft_core::diag::Code::HandStitchKeptLong
 pub stitchcraft_core::diag::Code::HandStitchTooShort
 pub stitchcraft_core::diag::Code::InternalCheckFailed
 pub stitchcraft_core::diag::Code::JumpsCutInDst
@@ -162,6 +163,7 @@ pub const fn stitchcraft_core::rng::SplitMix64::new(u64) -> Self
 pub fn stitchcraft_core::rng::SplitMix64::next_f64(&mut self) -> f64
 pub fn stitchcraft_core::rng::SplitMix64::next_in(&mut self, f64, f64) -> f64
 pub fn stitchcraft_core::rng::SplitMix64::next_u64(&mut self) -> u64
+pub fn stitchcraft_core::rng::SplitMix64::stream(&self, u64) -> Self
 pub fn stitchcraft_core::rng::fnv1a64(&[u8]) -> u64
 pub mod stitchcraft_core::text
 pub fn stitchcraft_core::text::doc_comment(&str) -> alloc::string::String
@@ -217,6 +219,7 @@ pub stitchcraft_core::Code::FillStretchDrawnTwice
 pub stitchcraft_core::Code::FillTooThin
 pub stitchcraft_core::Code::FillUnderlayInsetShrinksAway
 pub stitchcraft_core::Code::FillUnderlayTooThin
+pub stitchcraft_core::Code::HandStitchKeptLong
 pub stitchcraft_core::Code::HandStitchTooShort
 pub stitchcraft_core::Code::InternalCheckFailed
 pub stitchcraft_core::Code::JumpsCutInDst
@@ -369,3 +372,4 @@ pub const fn stitchcraft_core::rng::SplitMix64::new(u64) -> Self
 pub fn stitchcraft_core::rng::SplitMix64::next_f64(&mut self) -> f64
 pub fn stitchcraft_core::rng::SplitMix64::next_in(&mut self, f64, f64) -> f64
 pub fn stitchcraft_core::rng::SplitMix64::next_u64(&mut self) -> u64
+pub fn stitchcraft_core::rng::SplitMix64::stream(&self, u64) -> Self

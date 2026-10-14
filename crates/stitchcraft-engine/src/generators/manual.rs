@@ -12,7 +12,7 @@
 //!    point, or lies all within the shortest stitch of its ends, is not stitched (`SC-W0401`).
 //! 3. **The longest stitch.** A stitch longer than `max_stitch_length_mm`, if it is set, is split into the
 //!    fewest equal parts no longer than it, but never into parts shorter than the shortest stitch: the
-//!    shortest stitch wins.
+//!    shortest stitch wins, and `SC-W0404` says how many stitches stay longer.
 //! 4. **Bean stitch** applies ([`crate::generators::passes`]); repeats do not.
 //!
 //! Ink/Stitch's bean stitch takes a step of its list for every point it lists, and it lists some where
@@ -24,7 +24,7 @@
 //! over ([`passes::sew`]).
 
 use stitchcraft_core::units::at_least;
-use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Mm, Point};
+use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point};
 
 use crate::design::{Path, Subpath};
 use crate::generators::passes::{self, RepeatParams};
@@ -35,8 +35,10 @@ use crate::generators::{Stitched, TooSmall, mm, too_small};
 /// `max_stitch_length_mm`). Every node and every split costs work from `meter`.
 pub fn manual_stitch(path: &Path, max_stitch: Option<Mm>, passes: &RepeatParams, min_stitch: Mm, meter: &mut Meter) -> Result<Stitched, Exhausted> {
     let min = min_stitch.get();
+    let longest = max_stitch.map(Mm::get);
     let mut runs = Vec::with_capacity(path.subpaths.len());
     let mut warnings = Vec::new();
+    let mut long = Long::default();
     for subpath in &path.subpaths {
         let nodes = nodes(subpath, meter)?;
         let Some(Spaced { kept, short }) = spaced(&nodes, min, meter)? else {
@@ -55,9 +57,10 @@ pub fn manual_stitch(path: &Path, max_stitch: Option<Mm>, passes: &RepeatParams,
         if let Some(warning) = left_out(&short, min) {
             warnings.push(warning);
         }
-        let run = split(&kept, max_stitch.map(Mm::get), min, meter)?;
+        let run = split(&kept, longest, min, &mut long, meter)?;
         runs.push(passes::sew(&run, 1, &passes.bean_stitch_repeats, meter)?);
     }
+    warnings.extend(longest.and_then(|longest| kept_long(&long, longest, min)));
     Ok(Stitched { runs, warnings })
 }
 
@@ -114,12 +117,20 @@ fn spaced(nodes: &[Point], min: f64, meter: &mut Meter) -> Result<Option<Spaced>
     Ok(Some(Spaced { kept, short }))
 }
 
+/// The stitches sewn longer than the longest stitch because more parts would be shorter than the
+/// shortest: how many, and the longest of them.
+#[derive(Debug, Default, PartialEq)]
+struct Long {
+    count: usize,
+    longest: f64,
+}
+
 /// Each stitch of `run` longer than `longest`, if set, split into the fewest equal parts no longer than
-/// it, as long as each part is at least `min`. A stitch that needs splitting takes as many steps of a bean
-/// list as Ink/Stitch lists points for it: one for each part it needs, and one more for its end, which
-/// Ink/Stitch lists twice. The steps of parts too short to make, and of the second end, are the needle
-/// point listed again.
-fn split(run: &[Point], longest: Option<f64>, min: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+/// it, as long as each part is at least `min`; `long` counts the parts that stay longer for that. A stitch
+/// that needs splitting takes as many steps of a bean list as Ink/Stitch lists points for it: one for each
+/// part it needs, and one more for its end, which Ink/Stitch lists twice. The steps of parts too short to
+/// make, and of the second end, are the needle point listed again.
+fn split(run: &[Point], longest: Option<f64>, min: f64, long: &mut Long, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let Some(longest) = longest else { return Ok(run.to_vec()) };
     let mut out = Vec::with_capacity(run.len());
     out.extend(run.first());
@@ -138,6 +149,10 @@ fn split(run: &[Point], longest: Option<f64>, min: f64, meter: &mut Meter) -> Re
             meter.charge(1)?;
             parts -= 1;
         }
+        if parts < needed {
+            long.count = long.count.saturating_add(usize::try_from(parts).unwrap_or(usize::MAX));
+            long.longest = long.longest.max(length / f64::from(parts));
+        }
         for part in 1..parts {
             out.push(from.lerp(*to, f64::from(part) / f64::from(parts)));
         }
@@ -147,6 +162,28 @@ fn split(run: &[Point], longest: Option<f64>, min: f64, meter: &mut Meter) -> Re
         }
     }
     Ok(out)
+}
+
+/// `SC-W0404` for the stitches `long` counts, sewn longer than `longest` for the shortest stitch `min`, if
+/// any.
+fn kept_long(long: &Long, longest: f64, min: f64) -> Option<Diagnostic> {
+    let message = match long.count {
+        0 => return None,
+        1 => format!(
+            "A hand-placed stitch is sewn {} mm long, longer than `max_stitch_length_mm` ({} mm): splitting it would sew stitches shorter than the shortest stitch ({} mm).",
+            mm(long.longest),
+            mm(longest),
+            mm(min)
+        ),
+        n => format!(
+            "{n} hand-placed stitches are sewn longer than `max_stitch_length_mm` ({} mm), up to {} mm: splitting them would sew stitches shorter than the shortest stitch ({} mm).",
+            mm(longest),
+            mm(long.longest),
+            mm(min)
+        ),
+    };
+    let hint = format!("Set `max_stitch_length_mm` to at least twice the shortest stitch, {} mm.", mm(2.0 * min));
+    Some(Diagnostic::new(Code::HandStitchKeptLong, message).with_fix(Fix::Hint(hint)))
 }
 
 /// `SC-W0403` for the hand-placed stitches that were too short, if any.
@@ -218,23 +255,23 @@ mod tests {
         let mut meter = Budget::DEFAULT.meter();
         let run = [p(0.0, 0.0), p(10.0, 0.0), p(11.0, 0.0)];
         // Split, the end comes twice, as Ink/Stitch lists it.
-        assert_eq!(xs(&split(&run, Some(3.0), 0.3, &mut meter).unwrap()), [0.0, 2.5, 5.0, 7.5, 10.0, 10.0, 11.0]);
-        assert_eq!(xs(&split(&run, Some(10.0), 0.3, &mut meter).unwrap()), [0.0, 10.0, 11.0], "exactly the longest");
-        assert_eq!(xs(&split(&run, None, 0.3, &mut meter).unwrap()), [0.0, 10.0, 11.0]);
+        assert_eq!(xs(&split(&run, Some(3.0), 0.3, &mut Long::default(), &mut meter).unwrap()), [0.0, 2.5, 5.0, 7.5, 10.0, 10.0, 11.0]);
+        assert_eq!(xs(&split(&run, Some(10.0), 0.3, &mut Long::default(), &mut meter).unwrap()), [0.0, 10.0, 11.0], "exactly the longest");
+        assert_eq!(xs(&split(&run, None, 0.3, &mut Long::default(), &mut meter).unwrap()), [0.0, 10.0, 11.0]);
         // A longest stitch below the shortest: as many parts as keep each at least the shortest, 3 of the 5
         // it needs, and the needle point listed again for the 2 not made and for its end.
         let short = [p(0.0, 0.0), p(1.0, 0.0)];
-        let parts = xs(&split(&short, Some(0.2), 0.3, &mut meter).unwrap());
+        let parts = xs(&split(&short, Some(0.2), 0.3, &mut Long::default(), &mut meter).unwrap());
         assert_eq!(parts.len(), 4 + 3, "{parts:?}");
         assert!(parts[3..].iter().all(|x| (x - 1.0).abs() < 1e-12), "{parts:?}");
         // A stitch longer than the longest and shorter than the shortest is not split: its end comes once for
         // each of the 2 parts it needs and once more, 3 steps, as Ink/Stitch lists 3 points.
-        assert_eq!(xs(&split(&[p(0.0, 0.0), p(0.25, 0.0)], Some(0.2), 0.3, &mut meter).unwrap()), [0.0, 0.25, 0.25, 0.25]);
+        assert_eq!(xs(&split(&[p(0.0, 0.0), p(0.25, 0.0)], Some(0.2), 0.3, &mut Long::default(), &mut meter).unwrap()), [0.0, 0.25, 0.25, 0.25]);
     }
 
     #[test]
     fn the_budget_bounds_the_work() {
         let mut meter = Budget { max_stitches: 1, max_work: 3 }.meter();
-        assert_eq!(split(&[p(0.0, 0.0), p(100.0, 0.0)], Some(1.0), 0.3, &mut meter), Err(Exhausted::Work));
+        assert_eq!(split(&[p(0.0, 0.0), p(100.0, 0.0)], Some(1.0), 0.3, &mut Long::default(), &mut meter), Err(Exhausted::Work));
     }
 }

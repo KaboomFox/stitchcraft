@@ -28,7 +28,7 @@ fn params(length: &str, tolerance: &str) -> RunningParams {
 /// Sewn once, without bean stitch or random length.
 fn stitch(path: &Path, params: &RunningParams, min: f64) -> Stitched {
     let once = RepeatParams::from_set(&ParamSet::default()).unwrap().params;
-    running_stitch(path, params, &once, Mm::new(min).unwrap(), &mut SplitMix64::new(0), &mut Budget::DEFAULT.meter()).unwrap()
+    running_stitch(path, params, &once, Mm::new(min).unwrap(), &SplitMix64::new(0), &mut Budget::DEFAULT.meter()).unwrap()
 }
 
 /// A path through `points`, closed or not.

@@ -62,10 +62,12 @@ checks straight. "The shortest stitch" is the one [Finalize](../engine-pipeline.
    tolerance.
 6. **Random length.** With `enable_random_stitch_length`, each stitch length is drawn uniformly from
    `s × (1 ± jitter)`, the first of each span a random fraction of that (a random phase, below), then the
-   span is rescaled to end on its corner. The element's own generator draws them. It is seeded with the
-   element's `random_seed` (a setting every stitch type that varies at random shares), or with its id
-   when that is empty. A seed replaces the id, as in Ink/Stitch, so elements alike given one seed sew
-   alike, and the same element and seed always give the same stitches.
+   span is rescaled to end on its corner. Each span draws from its own stream of the element's generator,
+   keyed by its subpath's place in the path and its own place in the subpath, so a change to one span
+   leaves the lengths of the others as they were. The generator is seeded with the element's
+   `random_seed` (a setting every stitch type that varies at random shares), or with its id when that is
+   empty. A seed replaces the id, as in Ink/Stitch, so elements alike given one seed sew alike, and the
+   same element and seed always give the same stitches.
 
 **When the rules disagree,** the shortest stitch wins (a shorter stitch hammers one spot and can break the
 thread), then corners, then the tolerance. A part of the path that is a single point, shorter than the
@@ -74,7 +76,7 @@ every platform places the same stitches.
 
 **Compared with Ink/Stitch:** the same parameters, meanings and defaults; the placement differs in four
 documented ways, `DEV-RUN-001` to `DEV-RUN-004` in the deviations ledger (`conformance/deviations.toml`),
-and the random lengths come from another generator (`DEV-RUN-005`).
+and random length draws and places its lengths in other ways (`DEV-RUN-005`).
 
 **Satin underlays** walk lines made point by point by the satin generator
 ([satin](satin.md#underlays)), and steps 2 to 5 place their stitches, with each walk's own length and
@@ -100,10 +102,17 @@ finalizing merges what is too short.
 ### Random length
 
 Ink/Stitch draws each stitch from `s × (1 ± jitter)` and starts each stretch between corners at a random
-phase, its first stitch a random fraction of a drawn length, so rows sewn side by side with the same
-settings do not line their holes up. It does not rescale, so the last stitch before a corner is whatever
-is left. StitchCraft rescales each span to end on its corner (placement, step 6: no short leftover) and
-keeps the random phase, for the same reason.
+phase, so rows sewn side by side with the same settings do not line their holes up. One random number
+gives a stitch both its length and its phase: the first stitch of a stretch is its drawn length times
+that number. After a stitch that the tolerance made shorter, the next starts a new phase too. Ink/Stitch
+does not rescale, so the last stitch before a corner is whatever is left. Each stretch draws from a
+stream keyed by the seed and the stretch's place in its subpath, and the places start again in each
+subpath, so subpaths drawn alike sew alike.
+
+StitchCraft draws a stitch's length and its span's phase from 2 numbers. A phase starts only where a span
+starts, and each span is rescaled to end on its corner (placement, step 6: no short leftover). Its streams
+are keyed by the subpath's place as well, so subpaths drawn alike, such as lines side by side, start at
+different phases, which is what the random phase is for (`DEV-RUN-005`).
 
 ### Properties (conformance)
 
@@ -118,7 +127,8 @@ keeps the random phase, for the same reason.
 - Repeats alternate direction with no stitch in place; their parity decides the exit point
   (`REQ-RUN-005`).
 - With random length the lengths vary. The same element and seed give the same stitches, and another
-  seed gives others. A seed replaces the element's id, and elements given one seed draw the same lengths
+  seed gives others. A seed replaces the element's id, and elements given one seed draw the same lengths.
+  Each span draws from its own stream, so a change to one span leaves the others' lengths as they were
   (`REQ-RUN-007`).
 
 ### Diagnostics
@@ -129,13 +139,15 @@ twice the shortest stitch (raised), a stroke's or a satin underlay's, which the 
 ## Manual stitch
 
 Every node of the path is a needle penetration, in order — for hand-placed stitches and imported stitch
-files. A curve gives only its end node: its control points are not stitched and it is not flattened.
-When the path is closed it comes back to its start, and a node where the needle already is sews no
-stitch. Segments longer than `max_stitch_length_mm` (if set, a setting manual stitch shares with satin
-columns) are split into the fewest equal parts no longer than it, but never into parts shorter than the
-shortest stitch. A value of 0 means "not set", as in Ink/Stitch, and so does one below 0, so every stitch
-is then sewn as drawn. Bean stitch applies, and repeats do not. Lock stitches are added only when
-`force_lock_stitches` is set, as in Ink/Stitch (read at `d59c9ab`).
+files. A curve gives only its end node: its control points are not stitched and it is not flattened. When
+the path is closed it comes back to its start, and a node where the needle already is sews no stitch.
+Segments longer than `max_stitch_length_mm` (if set, a setting manual stitch shares with satin columns)
+are split into the fewest equal parts no longer than it, but never into parts shorter than the shortest
+stitch, and `SC-W0404` says how many stitches stay longer for that. Ink/Stitch splits a segment into the
+fewest equal parts no longer than the setting, however short they are (`DEV-RUN-006`). A value of 0 means
+"not set", as in Ink/Stitch, and so does one below 0, so every stitch is then sewn as drawn. Bean stitch
+applies, and repeats do not. Lock stitches are added only when `force_lock_stitches` is set, as in
+Ink/Stitch (read at `d59c9ab`).
 
 Ink/Stitch's bean stitch takes a step of its list for every point it lists, and it lists some where the
 needle already is. A node drawn twice is listed twice, and so is the end of each stitch Ink/Stitch
@@ -147,10 +159,12 @@ falls on the same stitches in both tools.
 The shortest stitch holds here too: a node closer than it to the needle point before it is left out, so
 the stitch before runs on to the next node, and `SC-W0403` says how many. A part's last node is always
 kept, leaving out the one before it instead. Ink/Stitch drops such points later, over the whole plan,
-without a word. A part that is a single point, or too small for one stitch, is not stitched (`SC-W0401`).
+without a word, and only those 0.1 mm or less from the point before at its default (`DEV-RUN-006`). A part
+that is one point, or too small for one stitch, is not stitched (`SC-W0401`).
 
-Properties: needle points are the nodes in order plus only the documented splits (`REQ-RUN-006`); no
-stitch is shorter than the shortest stitch (`REQ-RUN-008`).
+Properties: needle points are the nodes in order plus only the documented splits, and `SC-W0404` names
+a stitch kept longer than `max_stitch_length_mm` (`REQ-RUN-006`). Every stitch is at least as long as the
+shortest stitch (`REQ-RUN-008`).
 
 ## Zigzag stroke (P2, M7)
 

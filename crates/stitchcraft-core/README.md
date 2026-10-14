@@ -8,7 +8,7 @@ Layer **L0**. The foundations every other crate builds on.
 | `rect` | `Rect`, the bounds of a design or a part of it (never empty, never non-finite) |
 | `math` | Transcendental functions through the pure-Rust `libm` crate, so results are identical on every platform |
 | `exact` | `side` tells which side of a line a point lies on. Shewchuk's adaptive arithmetic makes the answer exact, and geometry built on it never turns a corner the wrong way |
-| `rng` | `SplitMix64`, the only random number generator StitchCraft uses; seeded per element from its `random_seed`, or from its id |
+| `rng` | `SplitMix64`, the only random number generator StitchCraft uses; seeded per element from its `random_seed`, or from its id, with streams keyed for the parts of an element |
 | `budget` | `Budget` and `Meter`: deterministic work limits; exhaustion becomes diagnostic `SC-E0004` |
 | `diag` | `Diagnostic`, `Severity`, `Fix`, and the **registry**: every `Code` with its title and explanation |
 | `element` | `ElementId`, the host's stable id for one object of the design |

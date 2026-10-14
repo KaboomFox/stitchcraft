@@ -1,8 +1,8 @@
 //! Passes over a run of stitches: repeats and bean stitch, for a bolder line or a line that comes back.
 //!
 //! Design: `docs/src/design/algorithms/strokes.md` › Repeats and bean stitch. A run is the needle points
-//! of one pass along a piece of a stroke; the generators that sew lines (running stitch now, manual stitch
-//! in M3.6) hand theirs to [`sew`]:
+//! of one pass along a piece of a stroke; the generators that sew lines, running stitch and manual stitch,
+//! hand theirs to [`sew`]:
 //!
 //! - **Repeats** sew the run k times, every other pass backwards. Each pass starts where the last one
 //!   ended, so a turnaround is never a stitch in place.
