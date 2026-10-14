@@ -6,6 +6,7 @@
 
 use crate::set::ParamSet;
 use crate::stitch_type::{Family, StitchType};
+use crate::value::{OFF, ON};
 
 /// What kind of value a parameter takes, with its limits.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -101,7 +102,8 @@ pub enum Kind {
         /// Whether the value may be empty.
         optional: bool,
     },
-    /// Free text of at most `max_bytes` bytes.
+    /// Free text of at most `max_bytes` bytes, stripped of the white space round it, as Ink/Stitch strips
+    /// it.
     Text {
         /// The longest accepted text, in bytes.
         max_bytes: usize,
@@ -117,15 +119,17 @@ pub enum Empty {
     /// split.
     Blank,
     /// Empty text, 0, and any length below it. Ink/Stitch reads 0 as "not set" for most of its optional
-    /// lengths. What it makes of a length below 0 differs from one to the next, and StitchCraft reads it as
-    /// not set too: a length below 0 is no length.
+    /// lengths. It reads a length below 0 as a length, and what it then sews differs from one to the next:
+    /// a jump length below 0 jumps between every 2 groups of stitches. StitchCraft reads it as not set too,
+    /// since a length below 0 is no length, and says so with `SC-W0102` (`DEV-PRM-003`).
     AtMostZero,
 }
 
 /// The most values a list parameter takes.
 pub const MAX_LIST: usize = 16;
 
-/// The longest text parameter, in bytes.
+/// The longest value any parameter takes, in bytes: a text's, and any other's, whose text is far shorter.
+/// A longer value does not read (`DEV-PRM-004`).
 pub const MAX_TEXT: usize = 4096;
 
 /// One option of a [`Kind::Choice`] parameter.
@@ -300,7 +304,7 @@ impl Kind {
             Kind::Percent { min, max } => format!("a percentage from {min} to {max}"),
             Kind::Number { min, max } => format!("a number from {min} to {max}"),
             Kind::Count { min, max } => format!("a whole number from {min} to {max}"),
-            Kind::Toggle => "true or false".to_string(),
+            Kind::Toggle => format!("true or false, in any case, or {} for true and {} for false", or(&ON[1..]), or(&OFF[1..])),
             Kind::Choice { options } => {
                 let ids: Vec<&str> = options.iter().map(|o| o.id).collect();
                 format!("one of {}", ids.join(", "))
@@ -330,6 +334,14 @@ impl Kind {
             Kind::AngleList { .. } => Kind::AngleList { optional: false },
             other => other,
         }
+    }
+}
+
+/// `words` joined as a sentence lists alternatives: "a", "a or b", "a, b or c".
+fn or(words: &[&str]) -> String {
+    match words.split_last() {
+        Some((last, rest)) if !rest.is_empty() => format!("{} or {last}", rest.join(", ")),
+        _ => words.concat(),
     }
 }
 
@@ -385,6 +397,11 @@ mod tests {
             lengths,
             ["a length from 0 to 25 mm", "a length from 0 to 25 mm, or empty", "a length from 0 to 25 mm, or empty (0 or less counts as empty)"]
         );
+    }
+
+    #[test]
+    fn alternatives_read_as_a_sentence() {
+        assert_eq!([&[][..], &["a"], &["a", "b"], &["a", "b", "c"]].map(or), ["", "a", "a or b", "a, b or c"]);
     }
 
     #[test]

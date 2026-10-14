@@ -28,7 +28,12 @@ The registry itself — the list of every declaration — is `stitchcraft_engine
 - Invalid values never fall back silently to defaults. Each produces `SC-E0101` or `SC-W0102`, and an
   unknown key `SC-W0105`, naming the key, the value and what is accepted. Empty or blank text is not
   set, and takes the default, as in Ink/Stitch.
-- Spaces separate the values of a list or a pair, and a comma separates nothing.
+- A value is stripped of the white space round it before it is read, whatever its kind, as Ink/Stitch
+  strips it, and a value longer than 4,096 bytes does not read, so reading one costs no more than that.
+- Spaces separate the values of a list or a pair, and a comma separates nothing. A unit follows its number
+  with no space.
+- A toggle reads Ink/Stitch's words for on (`yes`, `y`, `true`, `t`, `1`), their opposites and `off`.
+  Other text does not read (`toggle`, which the SVG reader shares).
 - Knows no stitch algorithm.
 
 ## Dependencies

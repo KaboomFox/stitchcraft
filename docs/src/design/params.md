@@ -16,7 +16,8 @@ params! { … }  ─────────┼──▶ VectorCraft plug-in man
 ```
 
 Nothing about a parameter is written twice, so its label, help, range and default cannot drift apart
-between the code, the docs and the user interfaces.
+between the code, the docs and the user interfaces. The diagram is the design's aim. [Generated
+outputs](#generated-outputs) says which outputs exist today and which steps add the others.
 
 ## Declaring parameters
 
@@ -104,14 +105,14 @@ version and a registry schema version arrive with the first release, together wi
 
 | Kind | Generators get | Validation | Ink/Stitch equivalent |
 |---|---|---|---|
-| `Length` | `Mm` | finite, within `range`; units accepted on input: mm, in, pt | `float`, unit `mm` |
-| `OptionalLength` | `Option<Mm>` | as `Length`, or empty: the setting then comes from the document or the machine, or there is none. 0 or less counts as empty, since Ink/Stitch reads 0 as not set, and a length below 0 is none either | `float`, unit `mm`, no default |
+| `Length` | `Mm` | finite, within `range`; a unit may follow the number with no space: mm, in, pt | `float`, unit `mm` |
+| `OptionalLength` | `Option<Mm>` | as `Length`, or empty: the setting then comes from the document or the machine, or there is none. 0 counts as empty, since Ink/Stitch reads 0 as not set, and a length below 0 does too, with `SC-W0102` (`DEV-PRM-003`) | `float`, unit `mm`, no default |
 | `OptionalLengthWithZero` | `Option<Mm>` | as `OptionalLength`, but only empty text is empty, and 0 is a length, as Ink/Stitch reads a satin's shortest stitch to split | `float`, unit `mm`, no default |
 | `Angle` | degrees, `f64` | finite; normalized to (−180, 180] | `float`, unit `deg` |
 | `Percent` | `f64` | finite, within range | `float`, unit `%` |
 | `Number` | `f64` | finite, within range, without a unit | `float`, no unit |
 | `Count` | `u32` | whole, within range | `int` |
-| `Toggle` | `bool` | `true`/`false` (also `yes`/`no`, `on`/`off`, `1`/`0`) | `boolean`, `toggle` |
+| `Toggle` | `bool` | `true` or `false` in any case, also Ink/Stitch's `yes`, `y`, `t` and `1` for true and their opposites and `off` for false. `on` is `SC-E0101`, where Ink/Stitch reads it as false (`DEV-PRM-001`) | `boolean`, `toggle` |
 | `Choice` | `&'static str` (the id) | one of the declared ids; unknown ids are a diagnostic, not a default | `combo`, `dropdown` |
 | `Seed` | `Option<u64>` | any; empty means "derive from the element"; text that is not a number is hashed (FNV-1a) | `random_seed` |
 | `LengthList` | `Vec<Mm>` | 1 to 16 values, each in range (patterns like `"2.5 1.0"`) | `string`/`float` lists |
@@ -121,7 +122,7 @@ version and a registry schema version arrive with the first release, together wi
 | `PercentList` | `Vec<f64>` | 1 to 16 percentages, each in range (levels like `"15 30"`) | `float`, unit `%`, read as a list |
 | `CountList` | `Vec<u32>` | 1–16 whole numbers, each in range | `string`/`int` lists |
 | `OptionalAngleList` | `Option<Vec<f64>>` | 1 to 16 angles, each read as an `Angle`. Empty, the setting comes from another one, as a fill's underlay angles come from its angle | `float`, unit `deg`, read as a list, no default |
-| `Text` | `String` | ≤ 4,096 bytes; kind-specific grammar (e.g. a custom lock path) is checked by its user | `string` |
+| `Text` | `String` | stripped of the white space round it, as Ink/Stitch strips it, then at most 4,096 bytes. A grammar of its own, such as a custom lock's, is checked where it is used | `string` |
 
 Invalid values never fall back silently to defaults: the element gets `SC-E0101` (not a value of the
 kind; the element cannot be stitched) or `SC-W0102` (clamped into range), with the key, the value and what
@@ -129,9 +130,17 @@ is accepted. Keys the registry does not know are kept, so they round-trip, and r
 `SC-W0105`. Parsing lives in one place (`value` module), so every host reads text the same way: an SVG
 attribute, a command-line `key=value`, a VectorCraft effect record.
 
+The ranges are StitchCraft's. Ink/Stitch sets a floor for most of its numbers and few ceilings, so many
+ranges here are narrower, and a value outside one is clamped where Ink/Stitch would sew it
+(`DEV-PRM-002`). A list holds at most 16 values, a pair 2, and no value is longer than 4,096 bytes, which
+bounds what reading one costs before any budget is charged. Longer text is `SC-E0101`, and its message
+quotes the value's first 64 characters (`DEV-PRM-004`).
+
 Empty text, or spaces alone, is not set, whatever the kind, and the parameter takes its default
 (REQ-PRM-002). Ink/Stitch strips every value and reads an empty one so, and its settings window stores a
-field the user clears as empty text. Spaces separate the values of a list or a pair, as Ink/Stitch splits
+field the user clears as empty text. A value is stripped of the white space round it before it is read,
+whatever its kind, text included. A custom lock's numbers with a tab or a line end round them are numbers
+here, as there. Spaces separate the values of a list or a pair, as Ink/Stitch splits
 them. A comma separates nothing and is no decimal point, so text with one is `SC-E0101`, with a hint to
 use spaces and points. Ink/Stitch reads `3,5` or `45,90` as the default instead, without a word
 (`DEV-PRM-001`). Ink/Stitch leaves out one comma at the end of each of a fill's underlay angles, for
@@ -162,8 +171,9 @@ the lock and method identifiers must equal Ink/Stitch's.
 
 1. If Ink/Stitch has the parameter with the same meaning, **use its attribute name verbatim**
    (`row_spacing_mm`). This keeps SVG files compatible with no mapping table.
-2. If our meaning differs, keep the name, mark `origin: InkStitchDeviates`, and document the difference
-   in the [compatibility contract](inkstitch-compat-contract.md) deviations section.
+2. If our meaning differs, keep the name, mark `origin: InkStitchDeviates`, and record the difference in
+   the deviations ledger (`conformance/deviations.toml`). An entry that changes how other keys of
+   Ink/Stitch's read or sew lists them under `params`, and each key's reference entry shows it.
 3. New parameters follow the same style: `snake_case`, a unit suffix for lengths (`_mm`), percentages
    (`_percent`) and angles where Ink/Stitch does (`angle` alone for row angles).
 4. Never reuse a removed key with a new meaning.
@@ -183,18 +193,23 @@ the lock and method identifiers must equal Ink/Stitch's.
    element's settings with its family's defaults (`from_set_as`). The contract page compares each row
    with the default of the row's family. The reference page lists each family's default and what the
    family accepts, and the JSON Schema gives the defaults under `x-stitchcraft.family_defaults`.
+7. **The same kind and range for every stitch type.** A family can change only a key's default. Some of
+   Ink/Stitch's keys need more. Its `zigzag_spacing_mm` is a list for a zigzag stroke and one number for a
+   satin column, and a meander fill reads it as a number that defaults to 0. Its ripple stitch reads a
+   `staggers` of 0 as no stagger, where a tatami fill's range starts at 0.01. The steps that add those
+   stitch types (M7 and M10) let a declaration give a family its own kind and range.
 
 ## Generated outputs
 
-| Output | Generated by | Checked by |
-|---|---|---|
-| Reference pages: the [index](../user/reference/params.md) and `docs/src/user/reference/params/*.md`, one per declaration | `cargo xtask docs` | `cargo xtask docs --check` (CI fails if stale; pages no declaration produces are deleted) |
-| `docs/src/user/reference/params.schema.json`: the parameters as JSON values (numbers, booleans, strings, arrays, `null` for empty), for editors, presets and JSON hosts | `cargo xtask docs` | same |
-| The *StitchCraft* column of the [Ink/Stitch compatibility contract](inkstitch-compat-contract.md) | `cargo xtask docs` | same, plus the cross-checks above |
-| VectorCraft manifests (embedded in each `.wasm`) | `build.rs` of the plug-in crate, from the registry | plug-in tests validate them against VectorCraft's manifest rules |
-| CLI parameter help | at runtime from the registry | `trycmd` examples |
-| SVG attribute read/write | `stitchcraft-svg` iterates the registry | round-trip property test `REQ-PRM-003` |
-| `proptest` strategies | `stitchcraft-testkit` iterates the registry | used by every generator property test |
+| Output | Generated by | Checked by | Since |
+|:-|:-|:-|:-|
+| The reference pages, the [index](../user/reference/params.md) and one page per declaration (`docs/src/user/reference/params/*.md`), with the deviations ledger's entries | `cargo xtask docs` | `cargo xtask docs --check`, which fails on a stale page and on a page left from a declaration since removed (`cargo xtask docs` deletes those) | M3.1 |
+| `docs/src/user/reference/params.schema.json`: the parameters as JSON values (numbers, booleans, strings, arrays, `null` for empty), for editors, presets and JSON hosts | `cargo xtask docs` | same | M3.1 |
+| The *StitchCraft* column of the [Ink/Stitch compatibility contract](inkstitch-compat-contract.md) | `cargo xtask docs` | same, plus the cross-checks above | M3.1 |
+| VectorCraft manifests (embedded in each `.wasm`) | `build.rs` of the plug-in crate, from the registry | plug-in tests validate them against VectorCraft's manifest rules | planned for M6.2 |
+| SVG attribute read/write | `stitchcraft-svg` iterates the registry | round-trip property test `REQ-PRM-003` | planned for M8 |
+| CLI parameter help (`stitch params`, `--param key=value`) | at runtime from the registry | `trycmd` examples | planned, in no step yet |
+| `proptest` strategies | `stitchcraft-testkit` iterates the registry | used by every generator property test | planned, in no step yet |
 
 ## Splitting for VectorCraft ABI v1
 

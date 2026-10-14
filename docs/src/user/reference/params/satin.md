@@ -16,7 +16,7 @@ Without rungs, the rails' nodes pair up instead. A path of 1 subpath is the colu
 line: the column is as wide as the stroke, and turns its corners as the stroke's join does.
 Off, the path is sewn as a stroke, by its `stroke_method`.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
 - **Applies to:** Running stitch, Manual stitch, Zigzag stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin
 - **Ink/Stitch:** same key, meaning and default
@@ -57,7 +57,7 @@ reverses the second rail when it runs against the first.
 **Swap rails.** Make the second rail the first. The column starts on its first rail, and each stitch across it
 goes from the first rail to the second.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
 - **Ink/Stitch:** same key, meaning and default
 
@@ -69,7 +69,7 @@ goes from the first rail to the second.
 column's edge when only that is close, then along the line under the column to its start. It
 saves a jump and a trim.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`
 - **Ink/Stitch:** same key, meaning and default
 
@@ -78,7 +78,7 @@ saves a jump and a trim.
 **End at nearest point.** End near where the next element starts: the column is sewn up to the end point, along the line
 under it to its end, and back, and ends on its edge nearest the next element.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`
 - **Ink/Stitch:** same key, meaning and default
 
@@ -185,7 +185,7 @@ phase, how much each part's length may vary instead.
 stitch, instead of dividing the stitch evenly. The needle holes of neighbouring stitches then
 fall apart, at the cost of a few more stitches.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
 - **Shown when** [`split_method`](#split_method) is `default`
 - **Ink/Stitch:** same key, meaning and default
@@ -218,7 +218,7 @@ diagonals that show less than whole numbers do.
 still along the column, and suits narrow columns. The other underlays and the top stitches
 follow it.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
 - **Ink/Stitch:** same key, meaning and default
 
@@ -229,7 +229,8 @@ each one is at most this long.
 
 - **Accepts:** a length from 0.1 to 25 mm
 - **Default:** `3`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-RUN-003.** No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column's travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Ink/Stitch's running stitch has no shortest stitch; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.
 
 ### `center_walk_underlay_stitch_tolerance_mm`
 
@@ -238,7 +239,8 @@ tolerance follows curves more closely, with more and shorter stitches.
 
 - **Accepts:** a length from 0.01 to 5 mm
 - **Default:** `0.2`
-- **Ink/Stitch:** same key; StitchCraft differs (DEV-SAT-004): The centre walk underlay keeps within center_walk_underlay_stitch_tolerance_mm of its line, and follows points that far apart. Ink/Stitch declares that parameter but uses running_stitch_tolerance_mm in its place, the tolerance of the satin's travel to its start and end. Both are 0.2 mm unless a file sets them.
+- **Ink/Stitch:** same key; StitchCraft differs:
+  - **DEV-SAT-004.** The centre walk underlay keeps within center_walk_underlay_stitch_tolerance_mm of its line, and follows points that far apart. Ink/Stitch declares that parameter but uses running_stitch_tolerance_mm in its place, the tolerance of the satin's travel to its start and end. Both are 0.2 mm unless a file sets them.
 
 ### `center_walk_underlay_repeats`
 
@@ -265,7 +267,7 @@ middle.
 **Contour underlay.** Sew a running stitch along each edge of the column, a little inside it, after any centre walk.
 It holds the edges still and keeps them crisp.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
 - **Ink/Stitch:** same key, meaning and default
 
@@ -276,7 +278,8 @@ one is at most this long.
 
 - **Accepts:** a length from 0.1 to 25 mm
 - **Default:** `3`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-RUN-003.** No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column's travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Ink/Stitch's running stitch has no shortest stitch; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.
 
 ### `contour_underlay_stitch_tolerance_mm`
 
@@ -313,7 +316,7 @@ set the first rail's side, then the second's.
 **Zigzag underlay.** Sew a sparse zigzag across the column, to its end and back, before the top stitches. It lifts
 them off the fabric and makes a wide column look fuller.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
 - **Ink/Stitch:** same key, meaning and default
 
@@ -349,4 +352,5 @@ half the contour's. 2 values set the first rail's side, then the second's.
 
 - **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
 - **Default:** empty
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.
