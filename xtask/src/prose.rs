@@ -18,6 +18,7 @@
 //! review.
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 use std::process::Command;
 
 use serde::Deserialize;
@@ -54,7 +55,7 @@ struct Alert {
 pub fn run(base: &str) -> Result<(), String> {
     let root = util::root();
     let since = util::git(&root, &["merge-base", base, "HEAD"])?.trim().to_string();
-    let mut added = added_lines(&util::git(&root, &["diff", "-U0", "--no-color", "--no-ext-diff", &since, "--", "*.md"])?);
+    let mut added = added_since(&root, &since)?;
     for path in util::git(&root, &["ls-files", "--others", "--exclude-standard", "--", "*.md"])?.lines() {
         let lines = util::read(&util::root().join(path))?.lines().count();
         added.insert(path.to_string(), (1..=lines).collect());
@@ -87,6 +88,13 @@ pub fn run(base: &str) -> Result<(), String> {
 /// `generated`), and not one of the vendored rules.
 fn checked(path: &str, generated: &BTreeSet<String>) -> bool {
     !SKIP.iter().any(|skip| path.starts_with(skip)) && !generated.contains(path)
+}
+
+/// The lines each Markdown file gains since `since`, in the repository at `dir`, by path. The diff names its
+/// own prefixes, so a Git configured with others (`diff.noprefix`, `diff.mnemonicPrefix`) changes nothing.
+fn added_since(dir: &Path, since: &str) -> Result<BTreeMap<String, BTreeSet<usize>>, String> {
+    let diff = util::git(dir, &["diff", "-U0", "--no-color", "--no-ext-diff", "--src-prefix=a/", "--dst-prefix=b/", since, "--", "*.md"])?;
+    Ok(added_lines(&diff))
 }
 
 /// The lines each file gains in a `git diff -U0`, by path.
@@ -166,6 +174,26 @@ diff --git a/docs/new.md b/docs/new.md
         assert_eq!(added.get("README.md"), Some(&BTreeSet::from([3, 11, 12])));
         assert_eq!(added.get("docs/new.md"), Some(&BTreeSet::from([1, 2, 3])));
         assert!(!added.contains_key("gone.md"));
+    }
+
+    #[test]
+    fn added_lines_are_found_whatever_prefixes_git_is_configured_with() {
+        let dir = std::env::temp_dir().join(format!("stitchcraft-prose-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let git = |args: &[&str]| util::git(&dir, args).unwrap();
+        git(&["init", "--quiet"]);
+        // Either setting takes away the `b/` a diff's new side starts with.
+        git(&["config", "diff.mnemonicPrefix", "true"]);
+        git(&["config", "diff.noprefix", "true"]);
+        std::fs::write(dir.join("notes.md"), "one\n").unwrap();
+        git(&["add", "notes.md"]);
+        git(&["-c", "user.name=t", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "one"]);
+        std::fs::write(dir.join("notes.md"), "one\ntwo\n").unwrap();
+        let unprefixed = added_lines(&git(&["diff", "-U0", "--no-color", "--no-ext-diff", "HEAD", "--", "*.md"]));
+        assert!(unprefixed.is_empty(), "a diff that takes the configured prefixes: {unprefixed:?}");
+        assert_eq!(added_since(&dir, "HEAD").unwrap().get("notes.md"), Some(&BTreeSet::from([2])));
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

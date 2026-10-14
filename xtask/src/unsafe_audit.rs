@@ -1,11 +1,14 @@
 //! `cargo xtask unsafe-audit`: `unsafe` lives in exactly one audited file.
 //!
 //! Rules (`AGENTS.md` › Non-negotiables):
-//! 1. Every crate root carries `#![forbid(unsafe_code)]`, except the VectorCraft plug-in, whose ABI shim
-//!    must handle raw pointers.
+//! 1. Every crate root carries `#![forbid(unsafe_code)]` in its code, a comment not counting, except the
+//!    VectorCraft plug-in, whose ABI shim must handle raw pointers. The roots are those of the crates, the
+//!    apps, xtask and the compatibility probe.
 //! 2. The `unsafe` keyword appears only in `apps/stitchcraft-vc-plugin/src/abi.rs`.
-//! 3. There, every `unsafe { … }` block is preceded by a `// SAFETY:` comment, and every `unsafe fn` has a
-//!    `# Safety` section in its documentation.
+//! 3. There, every `unsafe { … }` block is preceded by a `// SAFETY:` comment of its own, within the 3 lines
+//!    above it, and every `unsafe fn` has a `# Safety` section in its documentation.
+//!
+//! The rules read the code with comments, strings and character literals blanked ([`code_only`]).
 
 use std::path::Path;
 
@@ -53,9 +56,10 @@ pub fn code_only(source: &str) -> Vec<String> {
                             continue;
                         }
                         out.push(c);
-                    } else if c == '\'' && next == Some('"') && chars.get(i + 2) == Some(&'\'') {
-                        i += 3; // the char literal '"'
-                        out.push(' ');
+                    } else if let Some(end) = (c == '\'').then(|| char_literal_end(&chars, i)).flatten() {
+                        // A character literal, '"' and '\'' among them; a lifetime has no closing quote.
+                        out.extend(std::iter::repeat_n(' ', end + 1 - i));
+                        i = end + 1;
                         continue;
                     } else {
                         out.push(c);
@@ -99,6 +103,16 @@ pub fn code_only(source: &str) -> Vec<String> {
     lines
 }
 
+/// Where the character literal that opens at `chars[start]` (a `'`) ends: the index of its closing quote,
+/// or `None` for a lifetime, which has none.
+fn char_literal_end(chars: &[char], start: usize) -> Option<usize> {
+    match chars.get(start + 1)? {
+        // An escape: `'\n'`, `'\''`, `'\x41'`, `'\u{1F600}'`, closed after its first escaped character.
+        '\\' => (start + 3..chars.len()).find(|&j| chars.get(j) == Some(&'\'')),
+        _ => (chars.get(start + 2) == Some(&'\'')).then_some(start + 2),
+    }
+}
+
 /// Whether `line` contains `unsafe` as a whole word.
 fn has_unsafe_word(line: &str) -> bool {
     let is_word = |c: char| c.is_alphanumeric() || c == '_';
@@ -114,13 +128,15 @@ fn shim_problems(source: &str) -> Vec<String> {
     let raw: Vec<&str> = source.lines().collect();
     let code = code_only(source);
     let mut out = Vec::new();
+    // The last comment a block took: each block needs one of its own.
+    let mut taken: Option<usize> = None;
     for (i, line) in code.iter().enumerate() {
         let compact: String = line.split_whitespace().collect::<Vec<_>>().join(" ");
-        if compact.contains("unsafe {") {
-            let start = i.saturating_sub(3);
-            let has_comment = raw.get(start..i).is_some_and(|prev| prev.iter().any(|l| l.contains("// SAFETY:")));
-            if !has_comment {
-                out.push(format!("line {}: `unsafe` block without a `// SAFETY:` comment above it", i + 1));
+        for _ in compact.matches("unsafe {") {
+            let own = (i.saturating_sub(3)..i).find(|&j| taken.is_none_or(|t| j > t) && raw.get(j).is_some_and(|l| l.contains("// SAFETY:")));
+            match own {
+                Some(j) => taken = Some(j),
+                None => out.push(format!("line {}: `unsafe` block without a `// SAFETY:` comment of its own above it", i + 1)),
             }
         }
         if compact.contains("unsafe fn") || compact.contains("unsafe extern") {
@@ -155,6 +171,7 @@ pub fn run() -> Result<(), String> {
         }
     }
     check_file_root(&root.join("xtask/src/main.rs"), &mut findings)?;
+    check_root(&root.join("compat/vc-contract"), &mut findings)?;
 
     let mut files = Vec::new();
     for dir in ["crates", "apps", "xtask", "compat"] {
@@ -193,10 +210,15 @@ fn check_file_root(path: &Path, findings: &mut Findings) -> Result<(), String> {
     if rel == EXEMPT_ROOT {
         return Ok(());
     }
-    if !util::read(path)?.contains(FORBID) {
+    if !forbids(&util::read(path)?) {
         findings.error(format!("{rel}: crate root must contain `{FORBID}`"));
     }
     Ok(())
+}
+
+/// Whether the crate root `source` forbids unsafe code in its code: a comment saying so does not.
+fn forbids(source: &str) -> bool {
+    code_only(source).iter().any(|line| line.split_whitespace().collect::<String>().contains(FORBID))
 }
 
 #[cfg(test)]
@@ -219,5 +241,28 @@ mod tests {
         assert!(shim_problems(good).is_empty(), "{:?}", shim_problems(good));
         let bad = "pub unsafe fn f() {\n    let x = unsafe { g() };\n}";
         assert_eq!(shim_problems(bad).len(), 2);
+    }
+
+    #[test]
+    fn each_block_needs_a_safety_comment_of_its_own() {
+        let shared = "// SAFETY: a\nlet x = unsafe { a() };\nlet y = unsafe { b() };\n";
+        assert_eq!(shim_problems(shared), ["line 3: `unsafe` block without a `// SAFETY:` comment of its own above it"]);
+        let each = "// SAFETY: a\n// over 2 lines\nlet x = unsafe { a() };\n// SAFETY: b\nlet y = unsafe { b() };\n";
+        assert!(shim_problems(each).is_empty(), "{:?}", shim_problems(each));
+    }
+
+    #[test]
+    fn character_literals_are_not_code_and_lifetimes_are() {
+        let code = code_only(
+            "let q = '\\\"'; unsafe { x() }\nlet r = '\\''; let s: &'a str = \"unsafe\"; unsafe { y() }\nlet t = '\\u{22}'; unsafe { z() }",
+        );
+        assert!(code.iter().all(|line| has_unsafe_word(line)), "{code:?}");
+        assert!(code[1].contains("&'a str"), "{code:?}");
+    }
+
+    #[test]
+    fn a_crate_root_forbids_unsafe_code_in_its_code() {
+        assert!(forbids("//! A crate.\n#![forbid(unsafe_code)]\n"));
+        assert!(!forbids("// #![forbid(unsafe_code)]\n/* #![forbid(unsafe_code)] */\nlet s = \"#![forbid(unsafe_code)]\";\n"));
     }
 }

@@ -12,15 +12,17 @@ registry uses these names as its keys so files move between the tools unchanged
   and are not copied; StitchCraft's own help text lives in the [parameter registry](params.md).
 - **Machine-readable source:** `conformance/inkstitch-params.toml`; this page is generated from it and
   from the parameter registry by `cargo xtask docs`, and `cargo xtask docs --check` fails if they disagree:
-  a parameter declared with an Ink/Stitch origin must be listed here with a compatible type and the same
-  default.
+  a parameter declared with an Ink/Stitch origin must be listed here with a compatible type, and its
+  default must be the value Ink/Stitch sews.
+- **Default** is the value Ink/Stitch's settings window shows. For a few parameters its code sews another
+  value when a file sets none, and the cell gives that value after the default, as in `0.1 (0.2 when
+  unset)`. `—` means no default: the value is derived from another parameter or the shape.
 - **StitchCraft** says whether the [parameter registry](../user/reference/params.md) declares the
   parameter. *planned*: not yet; a design that sets it keeps it unchanged and gets `SC-W0105`.
   *registered*: StitchCraft reads and checks it under the same key, meaning and default; it changes the
   stitches once its stitch type or feature lands (see *Phase* and the parameter's reference entry).
   *deviates*: registered, with a meaning that differs as its reference entry describes.
-- **Phase** is when the parameter's stitch type lands ([roadmap](../plan/roadmap.md)). `—` means no default
-  (the value is derived from another parameter or the shape); `computed` means the default is an expression.
+- **Phase** is when the parameter's stitch type lands ([roadmap](../plan/roadmap.md)).
 
 ## All stitch types (ties, locks, trims, stops)
 
@@ -61,7 +63,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `line_count` | int | — | 10 | `ripple_stitch` | P3 (M10) | planned |
 | `min_line_dist_mm` | float | mm | — | `ripple_stitch` | P3 (M10) | planned |
 | `satin_guide_pattern_position` | combo | — | default | `ripple_stitch` | P3 (M10) | planned |
-| `staggers` | int | — | 0 | `ripple_stitch` | P3 (M10) | planned |
+| `staggers` | int | — | 0 (1 when unset) | `ripple_stitch` | P3 (M10) | planned |
 | `skip_start` | int | — | 0 | `ripple_stitch` | P3 (M10) | planned |
 | `skip_end` | int | — | 0 | `ripple_stitch` | P3 (M10) | planned |
 | `flip_copies` | boolean | — | true | `ripple_stitch` | P3 (M10) | planned |
@@ -103,7 +105,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `reverse_rails` | combo | — | automatic | all | P1 (M4) | [registered](../user/reference/params/satin.md#reverse_rails) |
 | `swap_satin_rails` | boolean | — | false | all | P1 (M4) | [registered](../user/reference/params/satin.md#swap_satin_rails) |
 | `running_stitch_length_mm` | float | mm | 2.5 | all | P1 (M4) | [registered](../user/reference/params/running.md#running_stitch_length_mm) |
-| `running_stitch_tolerance_mm` | float | mm | 0.1 | all | P1 (M4) | [deviates](../user/reference/params/running.md#running_stitch_tolerance_mm) |
+| `running_stitch_tolerance_mm` | float | mm | 0.1 (0.2 when unset) | all | P1 (M4) | [deviates](../user/reference/params/running.md#running_stitch_tolerance_mm) |
 | `running_stitch_position` | float | % | 50 | all | P1 (M4) | [registered](../user/reference/params/satin.md#running_stitch_position) |
 | `start_at_nearest_point` | boolean | — | true | all | P1 (M4) | [registered](../user/reference/params/satin.md#start_at_nearest_point) |
 | `end_at_nearest_point` | boolean | — | true | all | P1 (M4) | [registered](../user/reference/params/satin.md#end_at_nearest_point) |
@@ -156,7 +158,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `stop_at_ending_point` | boolean | — | false | `linear_gradient_fill`, `tartan_fill` | P3 (M10) | planned |
 | `underpath` | boolean | — | true | `tatami_fill`, `guided_fill`, `circular_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#underpath) |
 | `running_stitch_length_mm` | float | mm | 2.5 | `tatami_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill` | P1 (M5) | [registered](../user/reference/params/running.md#running_stitch_length_mm) |
-| `running_stitch_tolerance_mm` | float | mm | 0.1 | `tatami_fill`, `contour_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill` | P1 (M5) | [deviates](../user/reference/params/running.md#running_stitch_tolerance_mm) |
+| `running_stitch_tolerance_mm` | float | mm | 0.1 (0.2 when unset) | `tatami_fill`, `contour_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill` | P1 (M5) | [deviates](../user/reference/params/running.md#running_stitch_tolerance_mm) |
 | `enable_random_stitch_length` | boolean | — | false | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/running.md#enable_random_stitch_length) |
 | `random_stitch_length_jitter_percent` | float | ± % | 10 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/running.md#random_stitch_length_jitter_percent) |
 | `repeats` | int | — | 1 | `meander_fill`, `contour_fill`, `circular_fill` | P2 (M7) | planned |

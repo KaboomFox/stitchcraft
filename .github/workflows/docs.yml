@@ -34,9 +34,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: rustup toolchain install --profile minimal
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+      - uses: ./.github/actions/tools
         with:
-          tool: mdbook,typos
+          tools: mdbook,typos
       - name: Generated pages are fresh; links, anchors, ids and images are valid
         run: cargo xtask docs --check
       - name: Requirements and cases are consistent
@@ -71,9 +71,9 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26
+      - uses: ./.github/actions/tools
         with:
-          tool: mdbook
+          tools: mdbook
       - run: mdbook build docs
       - name: Choose the destination directory
         id: dest

@@ -150,8 +150,10 @@ a format pulls a heavy dependency (none planned). No flag may change the output 
 
 ## WebAssembly constraints
 
-Everything at L0–L3 must build for `wasm32-unknown-unknown` (checked by `cargo xtask wasm`): no
-threads, no filesystem, no clocks, no `std::env`, no randomness from the OS. The plug-in is built
+Everything in layers L0 to L3 must build for `wasm32-unknown-unknown`, which `cargo xtask wasm` checks. That target
+has no threads, file system, clocks, environment, processes or randomness from the OS, and std's calls
+for them build there but fail or panic when run, so `clippy.toml` keeps library crates from calling
+them. The plug-in is built
 in release with the workspace's profile (thin LTO, one codegen unit), and on `wasm32-unknown-unknown`
 a panic aborts. That is one more reason the no-panic rule is absolute: the module stops, and
 VectorCraft reports the plug-in as failed.

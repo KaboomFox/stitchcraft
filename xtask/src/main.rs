@@ -9,8 +9,9 @@
 //! `--check` fails instead of running the command's other mode. `cargo xtask docs --check` checks each
 //! `cargo xtask <name>` the docs and workflows mention against it ([`subcommands`]).
 #![forbid(unsafe_code)]
-// A command-line tool reports on the terminal.
-#![allow(clippy::print_stdout, clippy::print_stderr)]
+// A command-line tool reports on the terminal, and reads and writes the repository's files, which
+// `clippy.toml` keeps out of library crates.
+#![allow(clippy::print_stdout, clippy::print_stderr, clippy::disallowed_methods)]
 
 mod api;
 mod ci;
@@ -55,7 +56,11 @@ struct Cli {
 #[derive(Subcommand)]
 enum Command {
     /// Run every gate and print a summary
-    Ci,
+    Ci {
+        /// Leave out these gates, by name (`--skip api,prose`)
+        #[arg(long, value_name = "GATE", value_delimiter = ',')]
+        skip: Vec<String>,
+    },
     /// Check that crates depend only on lower layers
     Layers,
     /// Regenerate the generated pages, or check the docs
@@ -187,7 +192,7 @@ pub fn subcommands() -> Vec<String> {
 
 fn run(command: Command) -> Result<(), String> {
     match command {
-        Command::Ci => ci::run(),
+        Command::Ci { skip } => ci::run(&skip),
         Command::Layers => layers::run(),
         Command::Docs { pages: Some(Docs::For { hook, paths }), .. } => design_map::run_for(hook, &paths),
         Command::Docs { check, pages: None } => docs::run(check),
@@ -258,6 +263,7 @@ mod tests {
             &["compat", "join", "--nested", ".."],
             &["mutants", "--changed", "a", "b"],
             &["prose", "--base", "origin/main"],
+            &["ci", "--skip", "api,prose"],
         ] {
             assert!(Cli::try_parse_from(std::iter::once("xtask").chain(args.iter().copied())).is_ok(), "{args:?}");
         }

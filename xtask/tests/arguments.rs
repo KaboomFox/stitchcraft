@@ -1,8 +1,9 @@
 //! `cargo xtask` as people and workflows run it: an argument it does not know is refused before anything
 //! runs, so a misspelt `--check` cannot run the command's other mode and pass.
 
-// Test code may expect (clippy.toml allows it inside #[test] functions; this helper is test code too).
-#![allow(clippy::expect_used)]
+// Test code may expect (clippy.toml allows it inside #[test] functions; this helper is test code too). It
+// runs the xtask binary.
+#![allow(clippy::expect_used, clippy::disallowed_methods)]
 
 use std::process::{Command, Output};
 

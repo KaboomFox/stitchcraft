@@ -499,8 +499,9 @@ mod tests {
     #[test]
     fn equally_near_points_are_taken_as_shapely_takes_them() {
         let meter = &mut Budget::DEFAULT.meter();
-        let mut differ = Vec::new();
+        let (mut differ, mut seen) = (Vec::new(), 0);
         for (number, mut n) in cases(SHAPELY) {
+            seen += 1;
             let kind = n.word().to_string();
             assert!(["pt", "ll", "ap", "as"].contains(&kind.as_str()), "line {number}: unknown kind {kind}");
             let same = match kind.as_str() {
@@ -521,6 +522,7 @@ mod tests {
             // Every line of the test runs, a line that differs or not.
             differ.extend((!same).then_some(number));
         }
+        assert_eq!(seen, 1600, "every case of the fixture is read");
         assert_eq!(differ, Vec::<usize>::new(), "the fixture's lines whose answer differs");
     }
 }

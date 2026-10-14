@@ -10,6 +10,7 @@
 #![allow(clippy::unwrap_used, clippy::panic)]
 
 use stitchcraft_core::Point;
+use stitchcraft_plan::{Role, StitchKind};
 use stitchcraft_testkit::designs::{RED, along, messages, p, planned, polylines, shape_of};
 use stitchcraft_testkit::satins::{ladder, quarter_ring, sewn_satin};
 
@@ -85,6 +86,21 @@ fn req_sat_004_underlays_are_planned_in_one_run_with_the_top_stitches() {
     assert!(outcome.diagnostics.is_empty(), "{:?}", messages(&outcome));
     // 44 needle points of underlay and travel, and 26 pairs of top stitches, with a lock at each end.
     assert_eq!(shape_of(&outcome), "J L4 S96 L4");
+}
+
+#[test]
+fn the_cases_sew_a_column_as_the_engine_sews_an_element_that_sets_its_shortest_stitch() {
+    // A centre walk of 1 mm stitches, shorter than twice the element's shortest stitch of 2.5 mm, is raised
+    // to 5 mm by the engine, and must be by `sewn_satin`, which the cases above sew with.
+    let params = [("center_walk_underlay", "true"), ("center_walk_underlay_stitch_length_mm", "1"), ("min_stitch_length_mm", "2.5")];
+    let (sewn, warnings) = column(&params);
+    let element = [&[("satin_column", "true")][..], &params].concat();
+    let outcome = planned(vec![along("satin", ladder(10.0, 6.0, &[]), &RED, &element)]);
+    let stitches = outcome.plan.as_ref().unwrap().stitches();
+    let engine: Vec<Point> = stitches.filter(|s| s.kind == StitchKind::Normal && s.origin.role != Role::Lock).map(|s| s.at).collect();
+    assert_eq!(sewn, engine);
+    assert_eq!(warnings, messages(&outcome));
+    assert!(warnings.iter().any(|w| w.contains("so 5 mm is used")), "{warnings:?}");
 }
 
 #[test]

@@ -1,10 +1,8 @@
 //! Running cases: data cases in-process, Rust-test cases through `cargo test`.
 
 use std::collections::BTreeMap;
-use std::fmt::Write as _;
 use std::path::Path;
 
-use sha2::{Digest, Sha256};
 use stitchcraft_core::Budget;
 use stitchcraft_engine::testsheets;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, invariants, profiles};
@@ -27,8 +25,8 @@ pub struct Outcome {
     pub requirements: Vec<String>,
     /// What went wrong; empty when it passed.
     pub failures: Vec<String>,
-    /// Outputs it produced, with their SHA-256 (for the cross-platform determinism check).
-    pub outputs: Vec<(String, String)>,
+    /// The golden files it compared its outputs with, or wrote.
+    pub outputs: Vec<String>,
     /// Why the case could not run here (a tool is missing), if it did not.
     pub skipped: Option<String>,
 }
@@ -143,7 +141,7 @@ fn goldens(root: &Path, plan: &StitchPlan, name: &str, golden_files: &[String], 
                 continue;
             }
         };
-        outcome.outputs.push((golden.clone(), hex(&Sha256::digest(&bytes))));
+        outcome.outputs.push(golden.clone());
         if bless {
             let written = path.parent().map_or(Ok(()), std::fs::create_dir_all).and_then(|()| std::fs::write(&path, &bytes));
             if let Err(e) = written {
@@ -235,11 +233,4 @@ pub fn run_rust_cases(root: &Path, cases: &[RustCase]) -> Result<Vec<Outcome>, S
             }
         })
         .collect())
-}
-
-fn hex(bytes: &[u8]) -> String {
-    bytes.iter().fold(String::with_capacity(bytes.len() * 2), |mut s, b| {
-        let _ = write!(s, "{b:02x}");
-        s
-    })
 }

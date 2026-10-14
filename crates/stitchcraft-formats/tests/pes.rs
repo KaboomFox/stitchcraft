@@ -21,6 +21,8 @@ fn p(x: f64, y: f64) -> Point {
     Point::new(x, y).unwrap()
 }
 
+// A test reads the repository's files, which clippy.toml keeps out of library code.
+#[allow(clippy::disallowed_methods)]
 fn golden(name: &str) -> Vec<u8> {
     std::fs::read(format!("{}/../../conformance/golden/{name}", env!("CARGO_MANIFEST_DIR"))).unwrap()
 }

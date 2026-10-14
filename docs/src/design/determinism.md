@@ -11,11 +11,11 @@ safe, and means the docs images regenerated in CI match the ones on a contributo
 | Source | Rule | Enforced by |
 |---|---|---|
 | Hash map iteration order | No `HashMap`/`HashSet` in engine, formats, render, params or adapters' output paths; use `BTreeMap`, `BTreeSet`, `IndexMap` or sorted `Vec` | `clippy::disallowed_types` in `clippy.toml` |
-| Platform `libm` (`sin`, `cos`, `atan2`, `exp`, `powf` differ by last bits across OSes) | Call transcendental functions only through `stitchcraft_core::math`, which uses the pure-Rust `libm` crate | `clippy::disallowed_methods` on `f64::sin` & co. |
+| Platform `libm` (`sin`, `cos`, `atan2`, `exp`, `log`, `powf` and their kin differ by last bits across OSes, and `powi`'s precision varies even between calls) | Call transcendental functions only through `stitchcraft_core::math`, which uses the pure-Rust `libm` crate, and square by multiplying | `clippy::disallowed_methods` on `f64::sin` & co., and on the `f32` ones |
 | Which side of a line a point lies on: a rounded cross product can give the wrong sign for points nearly in line | The [offset curves](algorithms/offset.md) decide it with `stitchcraft_core::exact::side`, which is exact ([below](#exact-orientation)) | unit tests against exact integer arithmetic |
-| Randomness | Only `stitchcraft_core::rng::SplitMix64`, seeded per element from `random_seed` or a hash of the element id; never the OS RNG, never time | `clippy::disallowed_methods`/types for `rand::thread_rng`, `SystemTime`, `Instant` in libraries |
-| Floating-point contraction (FMA) | Rust does not contract `a * b + c` implicitly; we never call `mul_add` in quantization or comparisons | `clippy::disallowed_methods` on `f64::mul_add` in formats |
-| Parallelism | Results joined in document order; no reductions whose order depends on scheduling | engine design; CI compares sequential vs parallel output |
+| Randomness | Only `stitchcraft_core::rng::SplitMix64`, seeded per element from `random_seed` or a hash of the element id, with the OS's randomness and the time kept out | `clippy::disallowed_types` on `RandomState`, `SystemTime` and `Instant`; `deny.toml` lets `rand` and `getrandom` in only through the property tests' proptest |
+| Floating-point contraction (FMA) | Rust does not contract `a * b + c` implicitly, and we never call `mul_add` | `clippy::disallowed_methods` on `f64::mul_add` and `f32::mul_add`, everywhere |
+| Parallelism | Library crates run on the caller's thread alone. The parallel planning that the [engine pipeline](engine-pipeline.md#7-incremental-and-parallel-planning) plans for the command line joins its results in document order | `clippy::disallowed_methods` on `std::thread::spawn` and its kin |
 | Sorting ties | Every sort uses a total order with an explicit tie-breaker (`f64::total_cmp`, then index) | review checklist; property tests shuffle inputs |
 | Quantization drift | Quantize absolute positions once, at encode time, with round-half-even (`Point::to_tenths`, shared by the writers and the previews); deltas are differences of quantized values | format conformance (`REQ-FMT-002`, `REQ-RND-001`) |
 | Rasterization (SIMD code paths, platform trigonometry in curve flattening) | tiny-skia without its `simd` feature; previews draw only lines and circles; grid positions convert to `f32` exactly; pure-Rust PNG encoding without timestamps ([rendering](rendering.md)) | golden PNG files compared on all three operating systems (`REQ-RND-002`); `f32` transcendental methods are disallowed like the `f64` ones |
@@ -46,12 +46,18 @@ corners. The derivations are documented and tested with fixed vectors.
 
 ## Cross-platform check
 
-From M2 (when there are plans to hash), `ci.yml` runs the conformance suite on `ubuntu-latest`,
-`macos-latest` and `windows-latest` and, through `wasmtime`, on `wasm32-wasip1` (test-only; shipped code
-targets `wasm32-unknown-unknown`). Until then the frozen reference values in `stitchcraft-core`'s tests run
-on all three operating systems. Each run writes
-`target/conformance/hashes.json` (one SHA-256 per output); a final job fails if any two platforms
-disagree, and prints the first differing case.
+`ci.yml` runs `cargo test` on Linux, macOS and Windows for every pull request. Among the tests,
+xtask's `every_data_case_but_the_oracle_passes_here` runs the conformance suite's data cases. Each test
+sheet and plan is made again and encoded, and its machine files must equal their golden files byte for
+byte, so all three operating systems make the bytes the machine checkpoints sewed. The previews'
+golden files (`REQ-RND-002`), the formats' canonical plans (`REQ-FMT-001`) and the frozen reference
+values of `stitchcraft-core`'s tests are compared on all three as well. The oracle case reads the files
+with pyembroidery, which only the Linux gates job installs.
+
+WebAssembly is built, not run. `cargo xtask wasm` checks that the library crates and the plug-in build
+for `wasm32-unknown-unknown`, and the lints above keep the library crates off what that target lacks. A
+run of the cases on a WebAssembly runtime is not planned yet. Until one is, the rules in the table are
+what keep its output the same.
 
 ## Bug reports
 

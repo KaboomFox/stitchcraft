@@ -104,6 +104,8 @@ mod tests {
     use super::*;
     use crate::strategies;
 
+    // The seed corpora are every file of their folders.
+    #[allow(clippy::disallowed_methods)]
     fn golden_files() -> Vec<Vec<u8>> {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance/golden");
         let mut files = Vec::new();
@@ -144,14 +146,14 @@ mod tests {
             far.stitch(p(x), Provenance::plan(Role::Top));
         }
         let dst = encode(&far.finish(), FormatId::Dst, "far").unwrap().bytes;
-        let mut changed =
-            std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance/golden/formats/every-command.pes")).unwrap();
+        let mut changed = include_bytes!("../../../conformance/golden/formats/every-command.pes").to_vec();
         changed[22 + 528] = 0x98;
         for bytes in [dst, changed] {
             read_write_preview(&bytes);
         }
     }
 
+    #[allow(clippy::disallowed_methods)]
     fn svg_fixtures() -> Vec<Vec<u8>> {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance/fixtures/svg");
         let mut paths: Vec<_> = std::fs::read_dir(root).unwrap().map(|e| e.unwrap().path()).collect();

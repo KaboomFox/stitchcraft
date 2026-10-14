@@ -2,8 +2,8 @@
 //! (empty otherwise): `stitch --version` shows it, and a bug-report bundle records it, since every build of
 //! the workspace says the version it will be released as (`REQ-CLI-001`).
 
-// A build script speaks to Cargo on standard output.
-#![allow(clippy::print_stdout)]
+// A build script speaks to Cargo on standard output, and runs git.
+#![allow(clippy::print_stdout, clippy::disallowed_methods)]
 
 use std::process::Command;
 

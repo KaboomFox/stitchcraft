@@ -11,8 +11,8 @@ require identical output across platforms and runs.
 
 Ordered collections only; transcendental math through `libm`; a specified PRNG (SplitMix64) with seeds
 from element ids and `random_seed`; quantization of absolute positions once at encode time; total-order
-sorts with tie-breakers; budgets in work units, not time; a CI job comparing output hashes across Linux,
-macOS, Windows and wasm. Enforced by clippy `disallowed-types`/`disallowed-methods`. Details:
+sorts with tie-breakers; budgets in work units, not time; golden files compared byte for byte on Linux,
+macOS and Windows. Enforced by clippy `disallowed-types`/`disallowed-methods`. Details:
 [determinism](../determinism.md).
 
 ## Consequences
@@ -24,3 +24,9 @@ macOS, Windows and wasm. Enforced by clippy `disallowed-types`/`disallowed-metho
 
 - **Tolerance-only comparisons everywhere:** hides real regressions and makes images flaky. Rejected
   except for VectorCraft UI screenshots, which we do not control.
+
+## Amendment, 2026-10-14
+
+The decision first named a CI job that would compare output hashes across Linux, macOS, Windows and
+wasm. CI compares each operating system's outputs with the golden files instead, and builds the
+WebAssembly target without running it ([cross-platform check](../determinism.md#cross-platform-check)).
