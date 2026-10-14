@@ -84,9 +84,9 @@ start a tie-in and end a tie-off at the anchor.
 
 `lock_custom_start` and `lock_custom_end` hold numbers separated by spaces, or an SVG path that draws the
 lock. The numbers are steps, in sizes of `lock_*_scale_mm`. The kind of text sets how a file sews, and
-StitchCraft reads it as Ink/Stitch does (`REQ-LCK-004`). A text made only of digits, spaces, dots, commas
-and minus signs is numbers, and a newline may end it. Any other text is a path. The steps are the pieces
-between spaces that read as numbers, and `1,5` is not one of them.
+StitchCraft reads it as Ink/Stitch does (`REQ-LCK-004`). Stripped of the white space round it, as Ink/Stitch
+strips every value, a text made only of digits, spaces, dots, commas and minus signs is numbers. Any other
+text is a path. The steps are the pieces between spaces that read as numbers, and `1,5` is not one of them.
 
 StitchCraft reports what it cannot sew (`SC-W0503`), where Ink/Stitch passes over it in silence:
 

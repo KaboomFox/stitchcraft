@@ -15,9 +15,9 @@
 //! touches the part at a point has no segment.
 //!
 //! Which stretches are in the part is decided by counting, along the row, the edges that cross it, each
-//! counted over its height from its lower end up to but not including its upper end. An edge that only
-//! reaches the row from one side then counts once or twice, and the stretches beside the point stay as
-//! they were.
+//! counted over its height from its lower end up to but not including its upper end. Where the outline
+//! only reaches the row at a point, from one side, the 2 edges that meet there count both or neither, and
+//! the stretches beside the point stay as they were.
 
 use stitchcraft_core::{Exhausted, Meter, Point, math};
 

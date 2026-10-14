@@ -18,7 +18,9 @@ first length.
 - **Accepts:** 1 to 16 lengths from 0.1 to 25 mm, separated by spaces
 - **Default:** `2.5`
 - **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-RUN-003.** No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column's travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Ink/Stitch's running stitch has no shortest stitch; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.
+  - **DEV-SAT-005.** A satin column's travel, and a tatami fill's, take the first of the lengths running_stitch_length_mm gives. Ink/Stitch reads a satin's or a fill's value as one number, and sews a value of several with 2.5 mm, the default.
 
 ### `running_stitch_tolerance_mm`
 
@@ -28,7 +30,8 @@ more and shorter stitches. A satin column's way to its start and from its end ke
 - **Accepts:** a length from 0.01 to 5 mm
 - **Default:** `0.2`
 - **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill
-- **Ink/Stitch:** same key; StitchCraft differs (DEV-SAT-006): A satin column's and a tatami fill's running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch's settings window shows 0.1 mm.
+- **Ink/Stitch:** same key; StitchCraft differs:
+  - **DEV-SAT-006.** A satin column's and a tatami fill's running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch's settings window shows 0.1 mm.
 
 ### `enable_random_stitch_length`
 
@@ -36,7 +39,7 @@ more and shorter stitches. A satin column's way to its start and from its end ke
 of placing the needle points on the stagger grid. Lines and rows sewn close together then do not
 line their needle holes up, which avoids moiré patterns.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
 - **Applies to:** Running stitch, Ripple stitch, Tatami fill
 - **Ink/Stitch:** same key, meaning and default

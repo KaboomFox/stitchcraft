@@ -120,7 +120,8 @@ fn a_family_reads_its_own_default_and_the_others_the_plain_one() {
     for value in ["", "0", "-2"] {
         let read = |stitch_type| Everything::from_set_as(&set(&[("a_fill_length_mm", value)]), stitch_type).unwrap();
         let others = [StitchType::RunningStitch, StitchType::SatinColumn].map(read);
-        assert!(others.iter().all(|read| read.params.a_fill_length_mm.is_none() && read.warnings.is_empty()));
+        let named = usize::from(value == "-2");
+        assert!(others.iter().all(|read| read.params.a_fill_length_mm.is_none() && read.warnings.len() == named), "{value}");
         assert_eq!(Everything::from_set(&set(&[("a_fill_length_mm", value)])).unwrap().params.a_fill_length_mm, None);
     }
 }
@@ -155,6 +156,80 @@ fn req_prm_002_a_comma_neither_separates_values_nor_marks_decimals() {
     assert_eq!(Everything::from_set(&set(&[("a_choice", "one,two")])).unwrap_err()[0].fix, None);
     // Ink/Stitch drops a comma at the end of each of a fill's underlay angles, which older files wrote.
     assert_eq!(Everything::from_set(&set(&[("some_angles", "45, 90,")])).unwrap().params.some_angles, Some(vec![45.0, 90.0]));
+}
+
+#[test]
+fn req_prm_002_a_toggle_reads_ink_stitch_s_words_and_refuses_on() {
+    // Ink/Stitch reads yes, y, true, t and 1, in any case, as on, and any other text as off: `on` as well.
+    let toggle = |text: &str| Everything::from_set(&set(&[("a_toggle", text)])).map(|read| read.params.a_toggle);
+    for on in ["true", "True", "yes", "Y", "t", "1", " T "] {
+        assert_eq!(toggle(on), Ok(true), "{on}");
+    }
+    for off in ["false", "FALSE", "no", "n", "f", "0", "off"] {
+        assert_eq!(toggle(off), Ok(false), "{off}");
+    }
+    let problems = toggle("on").unwrap_err();
+    assert_eq!(
+        problems.iter().map(ToString::to_string).collect::<Vec<_>>(),
+        [
+            "error SC-E0101: `a_toggle` is \"on\", but it must be true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false."
+        ]
+    );
+}
+
+#[test]
+fn req_prm_002_text_is_stripped_as_ink_stitch_strips_it() {
+    // Ink/Stitch strips every value before it reads it: a text's tabs, line ends and other white space round
+    // it, as well as its spaces.
+    let detail = |text: &str| Everything::from_set(&set(&[("a_choice", "two"), ("a_detail", text)])).unwrap().params.a_detail;
+    for text in ["kept", " kept ", "\tkept\r\n", "\nkept\u{a0}"] {
+        assert_eq!(detail(text), "kept", "{text:?}");
+    }
+    assert_eq!(detail(" kept as is "), "kept as is", "white space inside stays");
+}
+
+#[test]
+fn req_prm_002_a_length_below_0_that_leaves_it_unset_is_named() {
+    // 0 leaves an optional length unset, as Ink/Stitch reads it. A length below 0 does too, and is named:
+    // Ink/Stitch reads it as a length, and a jump length below 0 jumps between every 2 groups there.
+    let optional = |text: &str| {
+        let read = Everything::from_set(&set(&[("an_optional_mm", text)])).unwrap();
+        (read.params.an_optional_mm, read.warnings.iter().map(ToString::to_string).collect::<Vec<_>>())
+    };
+    assert_eq!(optional("0"), (None, vec![]));
+    assert_eq!(optional("-0"), (None, vec![]));
+    assert_eq!(optional("-1"), (None, vec!["warning SC-W0102: `an_optional_mm` is -1, below 0, so it is not set.".to_string()]));
+}
+
+#[test]
+fn req_prm_002_a_unit_follows_its_number_with_no_space() {
+    // A single value read a unit after a space, which a list could not, since it splits at spaces first.
+    let length = |text: &str| Everything::from_set(&set(&[("a_length_mm", text)])).map(|read| read.params.a_length_mm.get());
+    assert_eq!(length("2.5mm"), Ok(2.5));
+    assert_eq!(length(" 0.1in "), Ok(2.54));
+    for spaced in ["2.5 mm", "0.1 in"] {
+        assert_eq!(codes(&Everything::from_set(&set(&[("a_length_mm", spaced)]))), [Code::ParamInvalid], "{spaced}");
+    }
+    assert_eq!(codes(&Everything::from_set(&set(&[("some_lengths_mm", "2.5 mm")]))), [Code::ParamInvalid]);
+    assert_eq!(codes(&Everything::from_set(&set(&[("a_percent", "50 %")]))), [Code::ParamInvalid]);
+}
+
+#[test]
+fn req_prm_002_a_value_longer_than_4096_bytes_does_not_read_and_its_message_quotes_its_start() {
+    // A list's values are read up to the 17th, and no value is read past 4,096 bytes, so a long text costs
+    // no more than that. The message quotes the text's first 64 characters.
+    let long = "1 ".repeat(3000);
+    let problems = Everything::from_set(&set(&[("some_lengths_mm", long.as_str())])).unwrap_err();
+    let start = "1 ".repeat(32);
+    assert_eq!(
+        problems.iter().map(ToString::to_string).collect::<Vec<_>>(),
+        [format!(
+            "error SC-E0101: `some_lengths_mm` is \"{start}…\" (6000 bytes), but it must be 1 to 16 lengths from 0.3 to 12 mm, separated by spaces."
+        )]
+    );
+    let seed = "x".repeat(4097);
+    assert_eq!(codes(&Everything::from_set(&set(&[("a_seed", seed.as_str())]))), [Code::ParamInvalid]);
+    assert_eq!(codes(&Everything::from_set(&set(&[("a_seed", &seed[1..])]))), []);
 }
 
 #[test]
@@ -200,7 +275,7 @@ fn req_prm_002_invalid_values_are_errors_that_say_what_is_accepted() {
         messages,
         [
             "SC-E0101: `a_length_mm` is \"long\", but it must be a length from 0.1 to 10 mm.",
-            "SC-E0101: `a_toggle` is \"maybe\", but it must be true or false.",
+            "SC-E0101: `a_toggle` is \"maybe\", but it must be true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false.",
             "SC-E0101: `a_choice` is \"three\", but it must be one of one, two.",
         ]
     );

@@ -777,6 +777,28 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   takes the rungs of a short, wide column for its rails with exactly 2 rungs, not 2 or more
   (`DEV-SAT-007`, SAS-7). `SC-W0208` and `SC-W0209`, which no step registered, move to M7 with the other
   satin methods (SAT-4).
+- A toggle reads Ink/Stitch's words for on, `yes`, `y`, `true`, `t` and `1`, their opposites and `off`, in
+  any case (review finding PAR-7, `REQ-PRM-002`, `DEV-PRM-001`). `on` read as true, where Ink/Stitch reads
+  it as off, and `y` and `t` refused the element. `on` is `SC-E0101` now, and the SVG reader's yes shares
+  the words.
+- A parameter's text is stripped of the white space round it before it is read, whatever its kind, as
+  Ink/Stitch strips it (review findings PAR-9 and PLN-4, `REQ-PRM-002`, `REQ-LCK-004`). A custom lock's numbers with a tab,
+  a line end or a no-break space round them were read as a drawn lock, and the half stitch was sewn.
+- An optional length below 0 is named with `SC-W0102` when it is read as not set (review finding PLN-3,
+  `DEV-PRM-003`). It was left unset without a word, and Ink/Stitch reads it as a length: a jump length
+  below 0 ties off and jumps between every 2 groups there.
+- A unit follows its number with no space, for every kind (review finding PAR-10). One length on its own
+  read `0.3 mm`, which a list could not. No value longer than 4,096 bytes reads, a list stops at its 17th value,
+  and a refused value's message quotes its first 64 characters (PAR-14). A 16 MiB list took 128 MiB to
+  refuse, and its message quoted all of it.
+- Docs: the deviations ledger records that ranges are StitchCraft's (`DEV-PRM-002`, PAR-11), and the size
+  limits on values (`DEV-PRM-004`, PAR-10). An entry lists the parameters whose reading or effect it
+  changes, and each parameter's reference entry shows those entries, where it said "same key, meaning and
+  default" whatever the ledger said (PAR-13). The reference index lists how reading any value differs.
+  `end_row_spacing_mm`'s help says each part of a fill fades over its own height, not the fill's (ROW-6). The
+  JSON Schema gives a condition's values as JSON values, and `force_lock_stitches` says all it does. The
+  design page says which generated outputs exist and which steps plan the others, and that a key's kind and
+  range per family come with M7 (PAR-12).
 - Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
   found (`REQ-SAT-002`, `REQ-SAT-005`).
   - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails

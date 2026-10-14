@@ -30,12 +30,14 @@ fully, and pull it in more.
 ### `end_row_spacing_mm`
 
 **End row spacing.** The spacing of the last rows, for a fill that fades: from the first row the spacing changes
-steadily towards it, reaching it the fill's height away. Empty, every row is the row spacing from
-the next.
+steadily towards it, reaching it the part's height away, in each part of the fill. Empty, every
+row is the row spacing from the next.
 
 - **Accepts:** a length from 0.1 to 100 mm, or empty (0 or less counts as empty)
 - **Default:** empty
-- **Ink/Stitch:** same key; StitchCraft differs (DEV-FILL-003): With end_row_spacing_mm, the step from row to row changes from the row spacing to the end spacing over the part's height, measured from the first row, and stays at the end spacing beyond it. Ink/Stitch carries the change on past the height, which reaches the rows within a row spacing of the part's far side when the first row lies before the part. With an end spacing smaller than the row spacing, over a part a few rows tall, the steps then shrink towards 0 and the rows pile up short of the far side without end.
+- **Ink/Stitch:** same key; StitchCraft differs:
+  - **DEV-FILL-003.** With end_row_spacing_mm, the step from row to row changes from the row spacing to the end spacing over the part's height, measured from the first row, and stays at the end spacing beyond it. Ink/Stitch carries the change on past the height, which reaches the rows within a row spacing of the part's far side when the first row lies before the part. With an end spacing smaller than the row spacing, over a part a few rows tall, the steps then shrink towards 0 and the rows pile up short of the far side without end.
+  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.
 
 ### `expand_mm`
 
@@ -45,7 +47,8 @@ and this closes them. Negative values pull the rows in from the edge.
 
 - **Accepts:** a length from -10 to 10 mm
 - **Default:** `0`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-FILL-008.** Where fill_underlay_inset_mm, or a negative expand_mm, cuts a part into pieces, the pieces are sewn in order of their point of least x, and of least y among pieces level with each other, each with its least x within a nanometre of the one before. GEOS gives them in the order it walks its graph, which Ink/Stitch sews them in. Of 2,000 random polygons grown or shrunk, 85 gave 2 or more pieces, and 81 of those came in the same order; the 4 others had a sliver among their pieces. For pieces level at their least x, GEOS's order turns on where the ring's points start: 2 squares one above the other, shrunk apart, give the lower first when the ring is listed from the bottom and the upper first when it is listed from the top, and 310 of 400 random such shapes, listed from random points, gave the lower first. Each piece's top rows start at the point nearest the needle after the piece before, where Ink/Stitch starts every piece's top rows nearest the needle as it was before the first.
 
 ### `gap_fill_rows`
 
@@ -56,7 +59,8 @@ Rounded up to an even number, so the needle comes back to where the stretch ende
 
 - **Accepts:** a whole number from 0 to 100
 - **Default:** `0`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-FILL-010.** Each gap-fill row is the next row of the grid past the stretch's last row, the stretch of its segment beside the gap-fill row before it, or the last row for the first, so it stops at the part's edge, and the rows stop where the part ends. Ink/Stitch repeats the last row, moved a spacing further each time and keeping its length, so a repeat can run outside the part; its spacing is the distance between the last 2 rows, where the grid's rows follow the end row spacing. The hops between gap-fill rows and the way back are running stitches kept inside the part as travel is, where Ink/Stitch stitches them as rows, straight.
 
 ## Stitches
 
@@ -77,7 +81,7 @@ which lines every row's points up, as in Ink/Stitch.
 **Skip last stitch.** Leave out the needle point at the end of each row. It lies close to the start of the next row,
 and leaving it out lowers the stitch count and the density along the fill's edge.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
 - **Ink/Stitch:** same key, meaning and default
 
@@ -88,9 +92,10 @@ and leaving it out lowers the stitch count and the density along the fill's edge
 **Underpath.** Travel between rows runs inside the fill, under rows sewn after it, which hide it. Off, the
 needle travels along the fill's outline, where the travel can show along the edge.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-FILL-011.** With underpath off, or in a part the gratings of lines miss, the needle travels between 2 points of one ring the shorter way round it, by length, and on a tie the way that does not pass the ring's start. Ink/Stitch's travel along the outline counts nodes instead: its graph has a node every CSS pixel along the outline's sides, and at their corners and the rows' ends, and its edges carry no length, so the way with fewer nodes is taken. That is about the shorter way, but a way past many short sides, as round a curve drawn in short pieces, has more nodes for its length, and the way with fewer nodes can be the longer.
 
 ## Underlay
 
@@ -100,7 +105,7 @@ needle travels along the fill's outline, where the travel can show along the edg
 them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top
 rows, so less fabric shows between them.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`
 - **Ink/Stitch:** same key, meaning and default
 
@@ -120,7 +125,8 @@ the top rows, at the fill's angle plus 90°.
 
 - **Accepts:** a length from 0.1 to 100 mm, or empty (0 or less counts as empty)
 - **Default:** empty
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.
 
 ### `fill_underlay_max_stitch_length_mm`
 
@@ -129,7 +135,8 @@ the top rows, at the fill's angle plus 90°.
 
 - **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
 - **Default:** empty
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.
 
 ### `fill_underlay_inset_mm`
 
@@ -139,13 +146,14 @@ rows. Negative values let it reach past the edge.
 
 - **Accepts:** a length from -10 to 10 mm
 - **Default:** `0`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-FILL-008.** Where fill_underlay_inset_mm, or a negative expand_mm, cuts a part into pieces, the pieces are sewn in order of their point of least x, and of least y among pieces level with each other, each with its least x within a nanometre of the one before. GEOS gives them in the order it walks its graph, which Ink/Stitch sews them in. Of 2,000 random polygons grown or shrunk, 85 gave 2 or more pieces, and 81 of those came in the same order; the 4 others had a sliver among their pieces. For pieces level at their least x, GEOS's order turns on where the ring's points start: 2 squares one above the other, shrunk apart, give the lower first when the ring is listed from the bottom and the upper first when it is listed from the top, and 310 of 400 random such shapes, listed from random points, gave the lower first. Each piece's top rows start at the point nearest the needle after the piece before, where Ink/Stitch starts every piece's top rows nearest the needle as it was before the first.
 
 ### `fill_underlay_skip_last`
 
 **Skip last underlay stitch.** Leave out the needle point at the end of each underlay row, as `skip_last` does for the top rows.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
 - **Ink/Stitch:** same key, meaning and default
 
@@ -154,6 +162,6 @@ rows. Negative values let it reach past the edge.
 **Underlay underpath.** Travel between the underlay's rows runs inside the fill, under the underlay rows sewn after it.
 Off, the needle travels along the fill's outline.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`
 - **Ink/Stitch:** same key, meaning and default

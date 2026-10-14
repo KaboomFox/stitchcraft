@@ -145,6 +145,21 @@ fn req_lck_004_custom_numbers_are_steps_into_the_stitching() {
     assert!(start.warnings.is_empty() && end.warnings.is_empty());
 }
 
+#[test]
+fn req_lck_004_a_custom_lock_s_text_is_stripped_first_as_in_ink_stitch() {
+    // Ink/Stitch strips a value before it tells numbers from a path, so white space round the numbers,
+    // tabs, line ends and no-break spaces among them, leaves them numbers.
+    let group = straight();
+    let (plain, _) = locks(&group, "custom", &[("lock_custom_start", "1 -1 1 -1")]);
+    for text in ["\t1 -1 1 -1", "1 -1 1 -1\t", "1 -1 1 -1\r\n", "\n1 -1 1 -1\n\n", "1 -1 1 -1\u{a0}"] {
+        let (start, end) = locks(&group, "custom", &[("lock_custom_start", text)]);
+        assert_eq!((&start.points, messages(&start), messages(&end)), (&plain.points, vec![], vec![]), "{text:?}");
+    }
+    // A tab among the numbers is no space between them: the text is a drawn lock, as in Ink/Stitch.
+    let (tabbed, _) = locks(&group, "custom", &[("lock_custom_start", "1\t-1")]);
+    assert_eq!(tabbed.warnings.iter().map(|w| w.code).collect::<Vec<_>>(), [Code::CustomLockUnusable]);
+}
+
 /// `got` is `want`, point by point, to within a nanometre.
 fn near(got: &[Point], want: &[Point]) {
     assert_eq!(got.len(), want.len(), "{got:?}");

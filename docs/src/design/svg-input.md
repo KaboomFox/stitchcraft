@@ -127,7 +127,8 @@ them (`REQ-SVG-003`).
 
 - **Commands.** The `trim` and `stop` commands turn on the object's `trim_after` and `stop_after`. The
   `ignore_object` and `ignore_layer` commands leave out an object or a layer, as the
-  `inkstitch:ignore_object` setting does, and `SC-I0805` lists each object left out. The
+  `inkstitch:ignore_object` setting does when it says yes in one of Ink/Stitch's words, which a toggle
+  reads too, and `SC-I0805` lists each object left out. The
   `starting_point` and `ending_point` commands, which place where Ink/Stitch starts and ends a fill or a
   satin column, are not applied yet (`REQ-GEN-001`), and `SC-W0802` names each one on an object a viewer
   shows. The [command table](inkstitch-compat-contract.md#commands) gives what the adapter does with
