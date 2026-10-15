@@ -84,6 +84,46 @@ fn req_svg_003_a_command_on_something_not_stitched_says_so() {
 }
 
 #[test]
+fn req_svg_003_start_and_end_commands_are_noted() {
+    // Ink/Stitch starts a fill or a satin column at its `starting_point` command and ends it at its
+    // `ending_point`. StitchCraft does not apply them yet, and says so for each object a viewer shows: on a
+    // shape it sews, and, as for a trim, on anything else. A `target_point` aims stitch types StitchCraft
+    // does not sew, so it changes nothing sewn here, and a command on a hidden object is quiet.
+    let svg = svg(drawing(
+        r##"<defs><symbol id="inkstitch_starting_point"><circle r="1"/></symbol><symbol id="inkstitch_ending_point-2"><circle r="1"/></symbol>
+              <symbol id="inkstitch_target_point"><circle r="1"/></symbol></defs>
+            <rect id="patch" x="10" y="10" width="40" height="30" fill="#0000ff"/>
+            <path id="line" d="M 10 60 L 90 60" stroke="red" fill="none"/>
+            <g id="group"><path d="M 10 70 L 90 70" stroke="red" fill="none"/></g>
+            <path id="hidden" d="M 10 80 L 90 80" stroke="red" fill="none" display="none"/>
+            <path id="c1" d="M 60,60 50,40" style="display:none" inkscape:connection-start="#u1" inkscape:connection-end="#patch"/>
+            <use id="u1" xlink:href="#inkstitch_starting_point" x="50" y="40"/>
+            <path id="c2" d="M 5,5 10,10" style="display:none" inkscape:connection-start="#patch" inkscape:connection-end="#u2"/>
+            <use id="u2" xlink:href="#inkstitch_ending_point-2" x="10" y="10"/>
+            <path id="c3" d="M 0,0 1,1" style="display:none" inkscape:connection-start="#u3" inkscape:connection-end="#patch"/>
+            <use id="u3" xlink:href="#inkstitch_target_point" x="30" y="25"/>
+            <path id="c4" d="M 0,0 1,1" style="display:none" inkscape:connection-start="#u4" inkscape:connection-end="#line"/>
+            <use id="u4" xlink:href="#inkstitch_ending_point-2" x="90" y="60"/>
+            <path id="c5" d="M 0,0 1,1" style="display:none" inkscape:connection-start="#u5" inkscape:connection-end="#group"/>
+            <use id="u5" xlink:href="#inkstitch_starting_point" x="10" y="70"/>
+            <path id="c6" d="M 0,0 1,1" style="display:none" inkscape:connection-start="#u6" inkscape:connection-end="#hidden"/>
+            <use id="u6" xlink:href="#inkstitch_starting_point" x="10" y="80"/>"##,
+    ));
+    assert_eq!(ids(&svg), ["svg:patch:fill", "svg:line:stroke", "svg:path@2:stroke"]);
+    assert_eq!(
+        warnings(&svg),
+        [
+            "warning SC-W0802: `patch` has an Ink/Stitch `starting_point` command, which StitchCraft does not apply yet. Ink/Stitch applies it to fills and satin columns.",
+            "warning SC-W0802: `patch` has an Ink/Stitch `ending_point` command, which StitchCraft does not apply yet. Ink/Stitch applies it to fills and satin columns.",
+            "warning SC-W0802: `line` has an Ink/Stitch `ending_point` command, which StitchCraft does not apply yet. Ink/Stitch applies it to fills and satin columns.",
+            "warning SC-W0802: `group` has an Ink/Stitch `starting_point` command, which is not applied: `group` is not a shape that is stitched.",
+        ]
+    );
+    let named: Vec<_> = svg.warnings.iter().map(|w| w.element.as_ref().unwrap().to_string()).collect();
+    assert_eq!(named, ["svg:patch", "svg:patch", "svg:line", "svg:group"]);
+}
+
+#[test]
 fn req_svg_003_only_ink_stitch_symbols_are_commands() {
     let svg = svg(drawing(
         r##"<defs><symbol id="inkstitch_sparkle"><circle r="1"/></symbol><symbol id="logo"><circle r="1"/></symbol>

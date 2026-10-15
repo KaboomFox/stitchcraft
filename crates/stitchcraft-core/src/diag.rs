@@ -281,12 +281,12 @@ registry! {
     /// A fill's fill rule says which parts of it are filled where its subpaths lie inside each other or
     /// overlap. Under the rule `nonzero`, SVG's default, a part that the subpaths wind round twice the same
     /// way is filled; the even-odd rule leaves it empty. StitchCraft fills it, as the drawing shows it.
-    /// Ink/Stitch fills every shape by the even-odd rule, so the same file leaves that part empty in
-    /// Ink/Stitch.
+    /// Ink/Stitch takes every subpath but the largest as a hole, whatever the fill rule. Where such a part
+    /// lies inside the fill, away from its edge, the same file leaves it empty in Ink/Stitch.
     ///
     /// To leave the part empty in both, set the fill rule to even-odd, or draw the inner subpath the other
     /// way round.
-    FillRuleNotEvenOdd = "SC-I0306", Info, "Nonzero fill rule fills a part the even-odd rule leaves empty";
+    FillRuleNotEvenOdd = "SC-I0306", Info, "Nonzero fill rule fills a part inside that the even-odd rule leaves empty";
 
     /// A fill whose area falls into separate parts, such as one drawn as several shapes side by side, or
     /// an outline that crosses itself, is sewn one part after another: each part's rows on their own, with
@@ -327,6 +327,15 @@ registry! {
     /// The message names the settings. Set them to 0 or more; to keep the rows inside the edge, use a
     /// negative `expand_mm`.
     FillPullCompensationNegative = "SC-W0312", Warning, "Fill's pull compensation below 0; read as 0";
+
+    /// Two subpaths of a fill run along each other at its edge, around a part that its fill rule leaves
+    /// empty. A notch drawn as a hole whose sides lie on the outline is one, and a shape drawn twice is
+    /// another. StitchCraft leaves the part empty, as the drawing shows it. Ink/Stitch repairs such a shape
+    /// by merging each stretch drawn twice into one, which fills the part, and the same file then sews it
+    /// filled in Ink/Stitch.
+    ///
+    /// To sew it alike in both, draw the outline round the empty part instead of a subpath along it.
+    FillStretchDrawnTwice = "SC-I0313", Info, "Fill drawn twice along its edge; Ink/Stitch fills the part left empty";
 
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
@@ -466,7 +475,8 @@ registry! {
     StitchesSplit = "SC-I0703", Info, "Stitches longer than the machine's longest stitch; split";
 
     /// The SVG file could not be read: it is not well-formed XML, its root is not an `<svg>` element,
-    /// its size or viewBox makes no sense, or it is larger than StitchCraft reads. Nothing was stitched.
+    /// its size or viewBox does not read or makes no sense, or it is larger than StitchCraft reads, its
+    /// style sheets included. Nothing was stitched.
     ///
     /// The message says what is wrong and, for XML errors, where. Open the file in a vector editor and
     /// save it again as plain SVG.
@@ -474,9 +484,9 @@ registry! {
 
     /// Part of the SVG uses a feature that StitchCraft does not stitch, so that part is left out or
     /// simplified: text that is not converted to paths, raster images, clones (`<use>`), nested `<svg>`
-    /// elements, style sheets, or a gradient or pattern used as a colour. Values that do not read are
-    /// named too. A colour that does not read is ignored, as a viewer ignores it, and one of Ink/Stitch's
-    /// design settings keeps its default.
+    /// elements, style sheet rules with selectors StitchCraft does not read, or a gradient or pattern used
+    /// as a colour. Values that do not read are named too. A colour that does not read is ignored, as a
+    /// viewer ignores it, and one of Ink/Stitch's design settings keeps its default.
     ///
     /// The message names the element and what was done. Convert text and clones to paths in the editor
     /// (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
@@ -495,7 +505,8 @@ registry! {
     /// error, as SVG viewers draw it), its transform is not valid (it is skipped with everything inside
     /// it), it draws nothing, or it lies more than 10 metres from the document's origin, beyond what
     /// machine files can record (it is skipped). A stroke width, join or miter limit that does not read
-    /// is named as well, and ignored as a viewer ignores it. A stroke too wide to measure is skipped.
+    /// is named as well, and ignored as a viewer ignores it, and so is an empty width, height or viewBox
+    /// of the drawing, or an aspect ratio that does not read. A stroke too wide to measure is skipped.
     ///
     /// The message names the element. Check its path data and transform, or remove stray objects far from
     /// the design.

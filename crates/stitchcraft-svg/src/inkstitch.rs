@@ -22,8 +22,10 @@
 //!   listed (`SC-I0805`).
 //!
 //! The other commands: `trim` and `stop` turn on the object's `trim_after` and `stop_after`, exactly as
-//! the settings would; `origin` and `stop_position` are not applied yet (`SC-W0802`); the rest position
-//! fills, satins and ripples, or feed Ink/Stitch's own tools, so they change nothing StitchCraft sews yet.
+//! the settings would. `starting_point` and `ending_point` place where Ink/Stitch starts and ends a fill
+//! or a satin column; they, `origin` and `stop_position` are not applied yet (`SC-W0802`). `target_point`
+//! aims circular fills and ripples, which StitchCraft does not sew yet, and the rest feed Ink/Stitch's own
+//! tools, so they change nothing StitchCraft sews.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -59,7 +61,10 @@ pub enum Does {
     IgnoreLayer,
     /// Nothing yet, and says so: it changes where the design sews.
     NotYet,
-    /// Nothing: it positions a fill, satin or ripple, which StitchCraft does not sew yet.
+    /// Nothing yet, and says so on the object it is tied to: it places where Ink/Stitch starts or ends a
+    /// fill or a satin column.
+    StartOrEnd,
+    /// Nothing: it aims a circular fill or a ripple, stitch types StitchCraft does not sew yet.
     Positions,
     /// Nothing: it is input to Ink/Stitch's own tools, not to sewing.
     ToolInput,
@@ -74,6 +79,7 @@ impl Does {
             Does::IgnoreObject => "applied: the object is left out and listed (`SC-I0805`)",
             Does::IgnoreLayer => "applied: every layer it is in is left out and listed (`SC-I0805`)",
             Does::NotYet => "planned: noted as not applied (`SC-W0802`)",
+            Does::StartOrEnd => "planned: noted on the object as not applied (`SC-W0802`)",
             Does::Positions => "read with the stitch types it positions",
             Does::ToolInput => "nothing to sew: input to Ink/Stitch's tools",
         }
@@ -92,8 +98,8 @@ pub struct Command {
 /// Ink/Stitch's commands, by the names its symbols carry (`lib/commands.py`); the compatibility
 /// contract lists the same names.
 pub const COMMANDS: [Command; 12] = [
-    Command { name: "starting_point", does: Does::Positions },
-    Command { name: "ending_point", does: Does::Positions },
+    Command { name: "starting_point", does: Does::StartOrEnd },
+    Command { name: "ending_point", does: Does::StartOrEnd },
     Command { name: "target_point", does: Does::Positions },
     Command { name: "autoroute_start", does: Does::ToolInput },
     Command { name: "autoroute_end", does: Does::ToolInput },
@@ -138,7 +144,10 @@ impl Helper {
             ("url(#inkstitch-pattern-marker", Helper::Pattern),
             ("url(#inkstitch-guide-line-marker", Helper::GuideLine),
         ];
-        declared.in_style("marker-start").find_map(|value| MARKERS.into_iter().find(|(prefix, _)| value.starts_with(prefix)).map(|(_, h)| h))
+        declared
+            .in_style("marker-start")
+            .into_iter()
+            .find_map(|value| MARKERS.into_iter().find(|(prefix, _)| value.starts_with(prefix)).map(|(_, h)| h))
     }
 }
 
@@ -179,10 +188,12 @@ pub(crate) fn place(node: Node<'_, '_>) -> Place {
     node.id().get()
 }
 
-/// The ids in a document, and its Ink/Stitch commands.
+/// The ids in a document, its style sheets and its Ink/Stitch commands.
 pub(crate) struct Found<'a, 'input> {
     /// The first element with each id, as `getElementById` finds it.
     pub ids: BTreeMap<&'a str, Node<'a, 'input>>,
+    /// The `<style>` elements, in order: wherever one is, its rules apply to the whole document.
+    pub sheets: Vec<Node<'a, 'input>>,
     /// The commands.
     pub objects: Objects,
 }
@@ -233,10 +244,9 @@ impl Objects {
         self.ignored_layers.contains(&place(node))
     }
 
-    /// The trim and stop commands, with the places of the objects they are tied to, in document order.
-    pub(crate) fn trims_and_stops(&self) -> Vec<(Place, Command)> {
-        let all = self.commands.iter().flat_map(|(node, commands)| commands.iter().map(|c| (*node, *c)));
-        all.filter(|(_, c)| matches!(c.does, Does::Trim | Does::Stop)).collect()
+    /// The commands tied to objects, with the places of the objects, in document order.
+    pub(crate) fn tied(&self) -> impl Iterator<Item = (Place, Command)> + '_ {
+        self.commands.iter().flat_map(|(node, commands)| commands.iter().map(|c| (*node, *c)))
     }
 
     /// The commands that are not applied, by their `<use>` elements' places, in document order.
@@ -245,11 +255,11 @@ impl Objects {
     }
 }
 
-/// The ids and Ink/Stitch commands of the document under `root`, whose SVG elements are in namespace
-/// `ns`. One unit of work per node, and one per step from a layer command up to its layers.
+/// The ids, style sheets and Ink/Stitch commands of the document under `root`, whose SVG elements are in
+/// namespace `ns`. One unit of work per node, and one per step from a layer command up to its layers.
 pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: &mut Meter) -> Result<Found<'a, 'input>, Exhausted> {
     let mut ids = BTreeMap::new();
-    let (mut connectors, mut uses) = (Vec::new(), Vec::new());
+    let (mut connectors, mut uses, mut sheets) = (Vec::new(), Vec::new(), Vec::new());
     for node in root.descendants() {
         meter.charge(1)?;
         if !node.is_element() {
@@ -264,6 +274,9 @@ pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: 
         }
         if node.tag_name() == svg_tag(ns, "use") {
             uses.push(node);
+        }
+        if node.tag_name() == svg_tag(ns, "style") {
+            sheets.push(node);
         }
     }
     // A link is `#` and an id, exactly: Ink/Stitch does not trim it either.
@@ -299,7 +312,7 @@ pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: 
             objects.commands.entry(place(target)).or_default().push(command);
         }
     }
-    Ok(Found { ids, objects })
+    Ok(Found { ids, sheets, objects })
 }
 
 #[cfg(test)]
@@ -321,7 +334,7 @@ mod tests {
     #[test]
     fn what_each_command_does_is_described_once() {
         assert_eq!(Does::Trim.describe(), "applied: turns on `trim_after`");
-        let all = [Does::Trim, Does::Stop, Does::IgnoreObject, Does::IgnoreLayer, Does::NotYet, Does::Positions, Does::ToolInput];
+        let all = [Does::Trim, Does::Stop, Does::IgnoreObject, Does::IgnoreLayer, Does::NotYet, Does::StartOrEnd, Does::Positions, Does::ToolInput];
         let texts: BTreeSet<&str> = all.iter().map(|d| d.describe()).collect();
         assert_eq!(texts.len(), all.len(), "{texts:?}");
         // Every command is described, and every description is used.

@@ -344,19 +344,30 @@ fn rings_of(part: &Polygon) -> Vec<&[Point]> {
 }
 
 /// `region`'s parts in the order they are sewn: nearest `needle` first, or with no needle, by how far left
-/// they reach; the drawing's order on a tie.
+/// they reach. Ink/Stitch sorts them so with a stable sort, over the order its geometry library gives
+/// them in, which in every case tried was by their point of least x, and of least y among the points level
+/// with it. Parts that tie go in that order here too (`REQ-FILL-TAT-008`).
 fn in_order<'a>(region: &'a Region, needle: Option<Point>, meter: &mut Meter) -> Result<Vec<&'a Polygon>, Exhausted> {
     let mut keyed = Vec::with_capacity(region.parts.len());
     for part in &region.parts {
+        let (x, y) = leftmost(part);
         let key = match needle {
             Some(p) if covers(part, p, meter)? => 0.0,
             Some(p) => nearest_to_point(&rings_of(part), p, meter)?.map_or(f64::INFINITY, |(_, d)| d),
-            None => part.outline.iter().map(|q| q.x()).fold(f64::INFINITY, f64::min),
+            None => x,
         };
-        keyed.push((key, part));
+        keyed.push(((key, x, y), part));
     }
-    keyed.sort_by(|a, b| a.0.total_cmp(&b.0));
+    keyed.sort_by(|(a, ..), (b, ..)| a.0.total_cmp(&b.0).then(a.1.total_cmp(&b.1)).then(a.2.total_cmp(&b.2)));
     Ok(keyed.into_iter().map(|(_, part)| part).collect())
+}
+
+/// The point of least x of `part`, and of least y among the points level with it.
+fn leftmost(part: &Polygon) -> (f64, f64) {
+    part.outline
+        .iter()
+        .map(|q| (q.x(), q.y()))
+        .fold((f64::INFINITY, f64::INFINITY), |least, q| if q.0.total_cmp(&least.0).then(q.1.total_cmp(&least.1)).is_lt() { q } else { least })
 }
 
 /// Where the fill ends: its point nearest what the `next` element offers. A point in the fill is itself.

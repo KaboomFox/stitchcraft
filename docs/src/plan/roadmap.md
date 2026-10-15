@@ -133,6 +133,9 @@ SVG adapter v2:
   position commands go into the design settings. Since M3 the adapter applies trim, stop and the ignore
   commands, and it never stitches commands, connectors or helper paths (`REQ-SVG-003`).
 - clones (`<use>`)
+- clip paths, as Ink/Stitch applies them: strokes and fills cut to the clip paths of the element and of
+  the groups around it, with the region code from M5.1. Until then the adapter sews the whole shape, and
+  `SC-W0802` says so.
 - custom locks drawn as SVG paths, which the adapter reads for the engine. Until then they sew the half
   stitch, with `SC-W0503`.
 - `stitch import-inkstitch file.svg -o file.vectorcraft`
