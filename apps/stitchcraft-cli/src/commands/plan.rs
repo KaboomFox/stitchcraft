@@ -247,7 +247,7 @@ mod tests {
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(std::fs::read(&output).unwrap().starts_with(b"#PES0001"));
         assert!(std::fs::read(&preview).unwrap().starts_with(b"\x89PNG"));
-        assert!(out.stdout.contains("  stitches  555 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops\n"), "{}", out.stdout);
+        assert!(out.stdout.contains("  stitches  557 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops\n"), "{}", out.stdout);
         assert!(out.stdout.contains("  threads   1. unnamed (#c00000), shown as Brother PEC 5 \"Red\"\n"));
         // What was said names its element, on the terminal and in the report.
         assert_eq!(
@@ -257,7 +257,7 @@ mod tests {
              info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out.\n"
         );
         let report: Value = serde_json::from_slice(&std::fs::read(&report).unwrap()).unwrap();
-        assert_eq!((report["stitches"].as_u64(), report["color_changes"].as_u64()), (Some(555), Some(3)));
+        assert_eq!((report["stitches"].as_u64(), report["color_changes"].as_u64()), (Some(557), Some(3)));
         assert_eq!(report["size_mm"], json!([59.9, 45.0]));
         assert_eq!(report["diagnostics"][0]["element"], "svg:patch:fill");
         assert_eq!(report["file"]["sha256"], hex(&Sha256::digest(std::fs::read(&output).unwrap())));

@@ -19,10 +19,11 @@
 //! shortest in all, along a ring or across the part along rows and rings, and joins each pair with one
 //! edge. No row is sewn twice (`DEV-FILL-006`).
 //!
-//! **The walk.** The walk starts at the fill's end. At each node it takes the node's row if one is left,
-//! and otherwise the node's first edge left, in the order [`super::graph`] keeps them. When it reaches a
-//! node with no edge left it steps back, and the edges, taken in the order it steps back over them, are
-//! the route. Travel then mostly comes just before the rows beside it, which cover it, and the rows go
+//! **The walk.** The walk starts at the fill's end, on a copy of the graph made as Ink/Stitch's graph
+//! library makes it, which lists each node's edges in another order ([`Graph::copied`]). At each node it
+//! takes the node's row if one is left, and otherwise the node's first edge left, in the copy's order.
+//! When it reaches a node with no edge left it steps back, and the edges, taken in the order it steps back
+//! over them, are the route. Travel then mostly comes just before the rows beside it, which cover it, and the rows go
 //! back and forth like a mown lawn. The route comes back to the fill's end, so the fill first travels
 //! from its start to its end and then sews it. Steps of travel in a row are one stretch of travel. As
 //! Ink/Stitch's gap fill counts, the stretch leaves the rows before it where it keeps more than one of its
@@ -96,7 +97,7 @@ pub(crate) struct Route {
 
 /// The route through `segments`, given in the order the rows are taken, each from its start to its end,
 /// on `rings`: from the point nearest `start` to the point nearest `end`. `None` when there is no
-/// segment. One unit of `meter` for each segment, node, edge looked at and step.
+/// segment. One unit of `meter` for each segment, node, edge looked at or copied, and step.
 pub(crate) fn route(
     rings: &Rings<'_>,
     segments: &[(Point, Point)],
@@ -117,7 +118,7 @@ pub(crate) fn route(
         Some(p) => nearest(&built.nodes, p, meter)?.unwrap_or(starting),
         None => starting,
     };
-    let mut walked = built.graph.clone();
+    let mut walked = built.graph.copied(meter)?;
     let mut raw = Vec::new();
     if starting != ending {
         raw.push(Step::Travel { from: starting, to: ending, beside: false, leaves: false });
@@ -477,9 +478,10 @@ mod tests {
 
     #[test]
     fn two_rows_go_the_way_ink_stitch_s_rules_lead() {
-        // The outline joins A–C (doubled), C–D, D–B (doubled) and B–A. Walked by hand from A: row A–B, B–A,
-        // A–C, row C–D, D–C, the second C–A, then back at C, D–B and the second B–D. Stepped back over, and
-        // the travel between rows made one:
+        // The outline joins A–C (doubled), C–D, D–B (doubled) and B–A. In the copy the walk takes, D lists
+        // its neighbours in the order they were added, B before C. Walked by hand from A: row A–B, B–A, A–C,
+        // row C–D, D–B, the second B–D, D–C and the second C–A. Stepped back over, and the travel between
+        // rows made one:
         let route = routed(&rectangle(), &two_rows(), None, None);
         let [a, b, c, d] = [0, 1, 2, 3];
         assert_eq!(
