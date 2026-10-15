@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-16cfbb98.js";
+            window.path_to_searchindex_js = "../../searchindex-ddbc65bc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -213,12 +213,13 @@
 <tr><td><a href="#sc-w0303"><code>SC-W0303</code></a></td><td>Warning</td><td>Parts of a fill too small to sew left out</td></tr>
 <tr><td><a href="#sc-w0304"><code>SC-W0304</code></a></td><td>Warning</td><td>Fill smaller than 1.4 mm²</td></tr>
 <tr><td><a href="#sc-w0305"><code>SC-W0305</code></a></td><td>Warning</td><td>Fill part too thin for rows; sewn round its outline</td></tr>
-<tr><td><a href="#sc-i0306"><code>SC-I0306</code></a></td><td>Info</td><td>Nonzero fill rule fills a part the even-odd rule leaves empty</td></tr>
+<tr><td><a href="#sc-i0306"><code>SC-I0306</code></a></td><td>Info</td><td>Nonzero fill rule fills a part inside that the even-odd rule leaves empty</td></tr>
 <tr><td><a href="#sc-w0307"><code>SC-W0307</code></a></td><td>Warning</td><td>Fill in parts that are apart; each sewn on its own</td></tr>
 <tr><td><a href="#sc-i0308"><code>SC-I0308</code></a></td><td>Info</td><td>Fill underlay too thin for rows; sewn round the outline</td></tr>
 <tr><td><a href="#sc-w0309"><code>SC-W0309</code></a></td><td>Warning</td><td>Fill’s expand shrinks a part away; sewn at its own size</td></tr>
 <tr><td><a href="#sc-w0310"><code>SC-W0310</code></a></td><td>Warning</td><td>Fill’s underlay inset shrinks a part away; underlay over all of it</td></tr>
 <tr><td><a href="#sc-w0312"><code>SC-W0312</code></a></td><td>Warning</td><td>Fill’s pull compensation below 0; read as 0</td></tr>
+<tr><td><a href="#sc-i0313"><code>SC-I0313</code></a></td><td>Info</td><td>Fill drawn twice along its edge; Ink/Stitch fills the part left empty</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -411,12 +412,12 @@ Ink/Stitch sews it.</p>
 <p>The message counts the parts. Make them wider, set a smaller <code>row_spacing_mm</code>, or sew them as a
 stroke or a satin column.</p>
 <h2 id="sc-i0306"><a class="header" href="#sc-i0306">SC-I0306</a></h2>
-<p><strong>Info</strong> — Nonzero fill rule fills a part the even-odd rule leaves empty</p>
+<p><strong>Info</strong> — Nonzero fill rule fills a part inside that the even-odd rule leaves empty</p>
 <p>A fill’s fill rule says which parts of it are filled where its subpaths lie inside each other or
 overlap. Under the rule <code>nonzero</code>, SVG’s default, a part that the subpaths wind round twice the same
 way is filled; the even-odd rule leaves it empty. StitchCraft fills it, as the drawing shows it.
-Ink/Stitch fills every shape by the even-odd rule, so the same file leaves that part empty in
-Ink/Stitch.</p>
+Ink/Stitch takes every subpath but the largest as a hole, whatever the fill rule. Where such a part
+lies inside the fill, away from its edge, the same file leaves it empty in Ink/Stitch.</p>
 <p>To leave the part empty in both, set the fill rule to even-odd, or draw the inner subpath the other
 way round.</p>
 <h2 id="sc-w0307"><a class="header" href="#sc-w0307">SC-W0307</a></h2>
@@ -454,6 +455,14 @@ the fabric in. Ink/Stitch reads a fill’s <code>pull_compensation_mm</code> or 
 the same settings below 0 as narrower.</p>
 <p>The message names the settings. Set them to 0 or more; to keep the rows inside the edge, use a
 negative <code>expand_mm</code>.</p>
+<h2 id="sc-i0313"><a class="header" href="#sc-i0313">SC-I0313</a></h2>
+<p><strong>Info</strong> — Fill drawn twice along its edge; Ink/Stitch fills the part left empty</p>
+<p>Two subpaths of a fill run along each other at its edge, around a part that its fill rule leaves
+empty. A notch drawn as a hole whose sides lie on the outline is one, and a shape drawn twice is
+another. StitchCraft leaves the part empty, as the drawing shows it. Ink/Stitch repairs such a shape
+by merging each stretch drawn twice into one, which fills the part, and the same file then sews it
+filled in Ink/Stitch.</p>
+<p>To sew it alike in both, draw the outline round the empty part instead of a subpath along it.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
@@ -579,16 +588,17 @@ sags; the machine may refuse it.</p>
 <h2 id="sc-e0801"><a class="header" href="#sc-e0801">SC-E0801</a></h2>
 <p><strong>Error</strong> — SVG could not be read</p>
 <p>The SVG file could not be read: it is not well-formed XML, its root is not an <code>&lt;svg&gt;</code> element,
-its size or viewBox makes no sense, or it is larger than StitchCraft reads. Nothing was stitched.</p>
+its size or viewBox does not read or makes no sense, or it is larger than StitchCraft reads, its
+style sheets included. Nothing was stitched.</p>
 <p>The message says what is wrong and, for XML errors, where. Open the file in a vector editor and
 save it again as plain SVG.</p>
 <h2 id="sc-w0802"><a class="header" href="#sc-w0802">SC-W0802</a></h2>
 <p><strong>Warning</strong> — SVG feature ignored</p>
 <p>Part of the SVG uses a feature that StitchCraft does not stitch, so that part is left out or
 simplified: text that is not converted to paths, raster images, clones (<code>&lt;use&gt;</code>), nested <code>&lt;svg&gt;</code>
-elements, style sheets, or a gradient or pattern used as a colour. Values that do not read are
-named too. A colour that does not read is ignored, as a viewer ignores it, and one of Ink/Stitch’s
-design settings keeps its default.</p>
+elements, style sheet rules with selectors StitchCraft does not read, or a gradient or pattern used
+as a colour. Values that do not read are named too. A colour that does not read is ignored, as a
+viewer ignores it, and one of Ink/Stitch’s design settings keeps its default.</p>
 <p>The message names the element and what was done. Convert text and clones to paths in the editor
 (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.</p>
 <h2 id="sc-i0805"><a class="header" href="#sc-i0805">SC-I0805</a></h2>
@@ -605,7 +615,8 @@ setting off in Ink/Stitch’s parameters.</p>
 error, as SVG viewers draw it), its transform is not valid (it is skipped with everything inside
 it), it draws nothing, or it lies more than 10 metres from the document’s origin, beyond what
 machine files can record (it is skipped). A stroke width, join or miter limit that does not read
-is named as well, and ignored as a viewer ignores it. A stroke too wide to measure is skipped.</p>
+is named as well, and ignored as a viewer ignores it, and so is an empty width, height or viewBox
+of the drawing, or an aspect ratio that does not read. A stroke too wide to measure is skipped.</p>
 <p>The message names the element. Check its path data and transform, or remove stray objects far from
 the design.</p>
 

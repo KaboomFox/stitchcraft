@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-16cfbb98.js";
+            window.path_to_searchindex_js = "../searchindex-ddbc65bc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -190,6 +190,10 @@ out. The engine never sees SVG (<a href="architecture.html#hosts-ports-and-adapt
 <li><strong>Shapes.</strong> Each <code>&lt;path&gt;</code>, <code>&lt;rect&gt;</code>, <code>&lt;circle&gt;</code>, <code>&lt;ellipse&gt;</code>, <code>&lt;line&gt;</code>, <code>&lt;polyline&gt;</code> and <code>&lt;polygon&gt;</code>
 that paints becomes one element per paint. A fill becomes an area and a stroke becomes an outline.
 A <code>&lt;line&gt;</code> has no fill.</li>
+<li><strong>Where a shape starts.</strong> A running stitch starts where its path starts and runs the way it runs, and
+each basic shape starts and runs as Ink/Stitch reads it. A circle or an ellipse starts at its top and
+turns left on screen. SVG 2 starts it at its right and turns the other way, which only dashes or
+markers would show.</li>
 <li><strong>Order.</strong> Elements follow document order, which is SVG’s paint order and the sewing order. A
 shape’s fill is sewn before its stroke, as Ink/Stitch sews them, and the outline covers the fill’s edge.
 When <code>paint-order</code> paints the stroke first, <code>SC-W0802</code> says the fill is sewn first.</li>
@@ -204,6 +208,10 @@ so on. The adapter’s own diagnostics name the SVG element as <code>svg:&lt;lab
 <ul>
 <li>The root’s <code>width</code>, <code>height</code>, <code>viewBox</code> and <code>preserveAspectRatio</code> map user units to millimetres. A
 user unit is a CSS pixel, 1/96 inch, unless they say otherwise.</li>
+<li>A viewer ignores a root <code>width</code>, <code>height</code> or <code>viewBox</code> that is empty, and a <code>preserveAspectRatio</code> that
+does not read. The adapter ignores them too, and <code>SC-W0804</code> names each. A <code>width</code>, <code>height</code> or
+<code>viewBox</code> that does not read could put the design at any size, and the file is refused (<code>SC-E0801</code>).
+So is a size of 0 or less, and a viewBox with no area, in which a viewer draws nothing.</li>
 <li>Transforms compose through every ancestor. The matrices use <code>stitchcraft_core::math</code>, so the result
 is the same on every platform (<a href="determinism.html">determinism</a>).</li>
 <li>Path data is read as SVG viewers draw it, arcs included. An arc becomes cubic curves of at most 30°.
@@ -220,9 +228,19 @@ and a pattern its fallback colour, each with a warning. A gradient of one colour
 swatch, gives that colour without one.</li>
 <li>Colours read as editors write them. Keywords such as <code>currentcolor</code> may be in any case. An ICC colour
 after the sRGB one, which Inkscape’s colour-managed picker writes, is left for the sRGB colour.</li>
-<li>A declaration that does not read gives way to the next one, as in CSS: the last valid one in <code>style</code>,
-else a valid presentation attribute. When none of an element’s paints reads, the inherited paint
-stays, and <code>SC-W0802</code> names the value.</li>
+<li>Properties come from presentation attributes (<code>fill="red"</code>), the rules of style sheets and the <code>style</code>
+attribute, in the order of CSS’s cascade, as in a viewer (<code>REQ-SVG-006</code>). A rule overrides a
+presentation attribute, and the <code>style</code> attribute overrides a rule. Of 2 rules, the more specific one
+applies (more ids, then more classes, then an element name), and of 2 as specific, the later one. An
+<code>!important</code> declaration overrides all of these. A declaration that does not read gives way to the
+next one, as in CSS. When none of an element’s paints reads, the inherited paint stays, and <code>SC-W0802</code>
+names the value.</li>
+<li>Style sheets are the <code>&lt;style&gt;</code> elements of the file, wherever they are, whose type is CSS. Illustrator
+and CorelDRAW write a drawing’s colours as classes there. The adapter reads a rule whose selector is an
+element name or <code>*</code> followed by classes and ids, such as <code>rect</code>, <code>.cls-1</code>, <code>#logo</code> or <code>path.st0.st1</code>.
+It reads a list of such selectors, such as <code>.a, .b</code>, as well. One <code>SC-W0802</code> names the other selectors,
+such as <code>g &gt; rect</code> or <code>a:hover</code>, and the at-rules, such as <code>@media</code> and <code>@import</code>. What they set is not
+used. Ink/Stitch reads styles through inkex, which applies more kinds of selector.</li>
 <li><code>display: none</code> hides an element and everything in it. A hidden or fully transparent paint is left
 out, as a viewer leaves it out. The insides of <code>&lt;defs&gt;</code>, <code>&lt;symbol&gt;</code>, <code>&lt;marker&gt;</code>, <code>&lt;pattern&gt;</code>,
 <code>&lt;clipPath&gt;</code> and <code>&lt;mask&gt;</code> are never drawn.</li>
@@ -254,8 +272,10 @@ them (<code>REQ-SVG-003</code>).</p>
 <li><strong>Commands.</strong> The <code>trim</code> and <code>stop</code> commands turn on the object’s <code>trim_after</code> and <code>stop_after</code>. The
 <code>ignore_object</code> and <code>ignore_layer</code> commands leave out an object or a layer, as the
 <code>inkstitch:ignore_object</code> setting does, and <code>SC-I0805</code> lists each object left out. The
-<a href="inkstitch-compat-contract.html#commands">command table</a> gives what the adapter does with each of the
-12 commands.</li>
+<code>starting_point</code> and <code>ending_point</code> commands, which place where Ink/Stitch starts and ends a fill or a
+satin column, are not applied yet (<code>REQ-GEN-001</code>), and <code>SC-W0802</code> names each one on an object a viewer
+shows. The <a href="inkstitch-compat-contract.html#commands">command table</a> gives what the adapter does with
+each of the 12 commands.</li>
 <li><strong>Connectors</strong> tie a command to its object.</li>
 <li><strong>Helper paths</strong> have one of Ink/Stitch’s start markers. They steer the stitches of other objects.</li>
 </ul>
@@ -272,8 +292,8 @@ defaults are in the <a href="data-model.html#engine-input-design-stitchcraft-eng
 <h2 id="reports"><a class="header" href="#reports">Reports</a></h2>
 <ul>
 <li><code>SC-W0802</code> reports a feature that is not stitched. Text, images, clones, nested <code>&lt;svg&gt;</code> elements and
-style sheets are such features. So are clipping, masks, filters, markers and the Ink/Stitch settings
-that are not read yet.</li>
+the style sheet rules that are not read are such features. So are clipping, masks, filters, markers
+and the Ink/Stitch settings that are not read yet. Clipping is planned for M8.</li>
 <li><code>SC-W0804</code> reports geometry that cannot be used:
 <ul>
 <li>path data with an error, stitched up to the error</li>
@@ -281,21 +301,26 @@ that are not read yet.</li>
 <li>an element that draws nothing</li>
 <li>a point more than 10 m from the origin</li>
 <li>a stroke width, join or miter limit that does not read, and a stroke too wide to measure</li>
+<li>an empty root <code>width</code>, <code>height</code> or <code>viewBox</code>, and a root <code>preserveAspectRatio</code> that does not read</li>
 </ul>
 </li>
-<li><code>SC-E0801</code> refuses a file that is not SVG, or that is larger than the adapter reads.</li>
+<li><code>SC-E0801</code> refuses a file that is not SVG, or that is larger than the adapter reads. It refuses a file
+whose size cannot be used too: a root <code>width</code>, <code>height</code> or <code>viewBox</code> that does not read, a size of 0
+or less, or a viewBox with no area.</li>
 </ul>
 <h2 id="text-and-limits"><a class="header" href="#text-and-limits">Text and limits</a></h2>
 <p>A file is UTF-8 text, or ISO-8859-1 when its XML declaration says so, which the adapter turns into UTF-8.
 A file in any other encoding is refused when it has a byte outside ASCII.</p>
-<p>A file is at most 64 MiB with a million XML nodes. Illustrator declares its namespaces as XML entities,
-and an entity whose value is plain text is read. A file is refused when an entity’s value holds markup or
-other entities, or when its references would expand the file past 64 MiB. Without both rules a small
-file could need a large amount of memory. Only the document type declaration’s internal subset,
-<code>&lt;!DOCTYPE svg [ … ]&gt;</code>, declares entities: a declaration in a comment or in character data declares
-nothing. A name declared twice counts at its longer value. XML keeps the first declaration, and the limit
-must hold whichever the parser keeps. Reading charges the budget for each XML node, path segment and
-8 bytes of a transform or point list (<a href="data-model.html#budgets">budgets</a>).</p>
+<p>A file is at most 64 MiB with a million XML nodes, and its style sheets have at most a million selectors,
+declarations and at-rules. Illustrator declares its namespaces as XML entities, and an entity whose value
+is plain text is read. A file is refused when an entity’s value holds markup or other entities, or when
+its references would expand the file past 64 MiB. Without these rules a small file could need a large
+amount of memory. Only the document type declaration’s internal subset, <code>&lt;!DOCTYPE svg [ … ]&gt;</code>, declares
+entities: a declaration in a comment or in character data declares nothing. A name declared twice counts
+at its longer value. XML keeps the first declaration, and the limit must hold whichever the parser keeps.
+Reading charges the budget for each XML node, path segment and 8 bytes of a transform, point list or
+style sheet. Each element is charged for its classes, the style sheet rules tested against it and the
+declarations it takes (<a href="data-model.html#budgets">budgets</a>).</p>
 
                     </main>
 

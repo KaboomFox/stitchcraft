@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-16cfbb98.js";
+            window.path_to_searchindex_js = "../searchindex-ddbc65bc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -341,6 +341,9 @@ fill with generated tiles; circular fill. One step per type with its requirement
 position commands go into the design settings. Since M3 the adapter applies trim, stop and the ignore
 commands, and it never stitches commands, connectors or helper paths (<code>REQ-SVG-003</code>).</li>
 <li>clones (<code>&lt;use&gt;</code>)</li>
+<li>clip paths, as Ink/Stitch applies them: strokes and fills cut to the clip paths of the element and of
+the groups around it, with the region code from M5.1. Until then the adapter sews the whole shape, and
+<code>SC-W0802</code> says so.</li>
 <li>custom locks drawn as SVG paths, which the adapter reads for the engine. Until then they sew the half
 stitch, with <code>SC-W0503</code>.</li>
 <li><code>stitch import-inkstitch file.svg -o file.vectorcraft</code></li>
