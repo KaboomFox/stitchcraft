@@ -602,6 +602,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   hole's start counted, and the fill's own outlines were not tested.
 - `DEV-FILL-011` records that with `underpath` off the needle travels round a ring the shorter way, where
   Ink/Stitch takes the way with fewer nodes of its graph. The docs said Ink/Stitch takes the shorter way.
+- The check for changed golden files compares a pull request with its base branch as it is now. It took
+  the base GitHub records when a pull request is opened, so a pull request opened before others merged
+  counted their golden files, and failed without the `golden-change` label it did not need.
 - The weekly mutation run fails when it measured less than it should (`cargo xtask mutants`). A part whose
   unmutated tree failed its tests looked like a part where every mutant was caught: cargo-mutants still
   writes its lists, empty, and the shard step took any exit. The step now fails on exits other than 0, 2
