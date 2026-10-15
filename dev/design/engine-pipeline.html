@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ddbc65bc.js";
+            window.path_to_searchindex_js = "../searchindex-40aac7f4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -181,7 +181,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="engine-pipeline"><a class="header" href="#engine-pipeline">Engine pipeline</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
 <p>From a <code>Design</code> to a checked <code>StitchPlan</code>. Each stage is a module in <code>stitchcraft-engine</code> with its
 own tests; stages communicate only through the types in the <a href="data-model.html">data model</a>.</p>
 <pre><code class="language-text">Design ──▶ 1 normalize ──▶ 2 validate ──▶ 3 generate (per element) ──▶ 4 assemble ──▶ 5 finalize ──▶ 6 check ──▶ StitchPlan
@@ -249,13 +249,15 @@ which its split stitches keep to.</p>
 <ul>
 <li><strong>Pure:</strong> output depends only on (normalized shape, typed params, neighbours, seed, budget).</li>
 <li><strong>The needle before, the next element after.</strong> Elements are generated in sewing order
-(<a href="adr/0014-generators-see-their-neighbours.html">ADR 0014</a>, <code>REQ-GEN-003</code>). Each is given the last
-needle point of the elements before it, whatever their thread, and what the next element offers to
-end near: its first point, or its shape when it starts at its own nearest point. The offer comes from
-the next element’s shape and settings and the design’s, never its stitches, so nothing waits for a
-later element. A
-satin column starts and ends by them (<a href="algorithms/satin.html#start-and-end">satin</a>), and explicit
-start and end commands will override them (<code>REQ-GEN-001</code>).</li>
+(<a href="adr/0014-generators-see-their-neighbours.html">ADR 0014</a>, <code>REQ-GEN-003</code>). Each is given the last needle
+point of the elements before it, whatever their thread, and what the next element offers to end near.
+That is its first point, or, when it starts at its own nearest point, its shape: a satin column’s rails
+or a tatami fill’s area. The offer comes from the next element’s shape and settings and the design’s,
+never its stitches, so nothing waits for a later element. A satin column and a tatami fill start and
+end by them (<a href="algorithms/satin.html#start-and-end">satin</a>, <a href="algorithms/fills.html#5-parts">fills</a>), and
+explicit start and end commands will override them (<code>REQ-GEN-001</code>). Each ends near its next stitch, its
+point nearest the offer as Ink/Stitch’s geometry library finds it, a point of one shape inside the
+other’s area first (<code>generators::next</code>).</li>
 <li><strong>Seeded randomness:</strong> each element’s generator is seeded from a hash of its id mixed with its
 <code>random_seed</code>, one of the settings every stitch type shares. The PRNG is SplitMix64 from
 <code>stitchcraft-core</code> (<a href="determinism.html">determinism</a>).</li>

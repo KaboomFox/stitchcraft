@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-ddbc65bc.js";
+            window.path_to_searchindex_js = "../../searchindex-40aac7f4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -206,8 +206,9 @@ shape when it starts at its own nearest point. The offer depends on the next ele
 settings only, never on its stitches, so no element waits for a later one.</li>
 <li>Generators are pure functions of their shape, parameters, these 2 neighbours, seed and budget.</li>
 <li>Where an element’s stitch type is known, it offers what Ink/Stitch’s would, even before StitchCraft
-sews that type. Fills offer nothing until they are sewn (M5), and the column before a fill ends as if
-it were the last element.</li>
+sews that type. A tatami fill, sewn from M5, offers its area. The element before ends near its next
+stitch, found on its own shape as Ink/Stitch’s geometry library finds it, a point of one shape inside
+the other’s area first.</li>
 </ol>
 <h2 id="consequences"><a class="header" href="#consequences">Consequences</a></h2>
 <ul>

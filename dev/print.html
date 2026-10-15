@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-ddbc65bc.js";
+            window.path_to_searchindex_js = "searchindex-40aac7f4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -363,11 +363,11 @@ red first, and blue when the machine stops.</p>
 of 2 rectangles and 2 lines that nearly touch:</p>
 <pre><code class="language-console">$ stitch plan strokes.svg -o strokes.pes --preview strokes.png --report strokes.json
 strokes.svg
-  file      strokes.pes (PES v1, 2838 bytes)
-  sha256    6f708aeec8d80d05accf016b2962f7aa07702540e79d1662506ef9d6eca7fdb9
+  file      strokes.pes (PES v1, 2842 bytes)
+  sha256    c66bc1e19af96419e5c1bdf1ca01ecdab2b4be03953ae63a2117d5d94a54c70d
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      59.9 × 45.0 mm
-  stitches  555 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops
+  stitches  557 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops
   threads   1. unnamed (#c00000), shown as Brother PEC 5 "Red"
             2. unnamed (#0040c0), shown as Brother PEC 21 "Ultramarine"
             3. unnamed (#c00000), shown as Brother PEC 5 "Red"
@@ -1276,7 +1276,7 @@ Arguments:
 <li>Any puckering round the circles, and where.</li>
 </ul>
 <h2 id="ts-08--fill-density-and-angle"><a class="header" href="#ts-08--fill-density-and-angle">TS-08 — Fill density and angle</a></h2>
-<p>100.0 × 170.0 mm · 16239 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops</p>
+<p>100.0 × 170.0 mm · 16238 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-08.png" alt="TS-08 as it will sew, in blue: fifteen tatami squares in five rows of three, their rows level, slanting and upright from left to right, the top squares dense and the bottom ones open enough to show the underlay and travel beneath them."><span class="img-wrapper"><img src="images/generated/testsheet-ts-08.png" alt="TS-08 as it will sew, in blue: fifteen tatami squares in five rows of three, their rows level, slanting and upright from left to right, the top squares dense and the bottom ones open enough to show the underlay and travel beneath them."></span></label></p>
 <p>Threads: Blue.</p>
@@ -1289,7 +1289,7 @@ Arguments:
 <li>Measure the 0° and the 90° square at 0.4 mm across, both ways. How much less than 30 mm are they?</li>
 </ul>
 <h2 id="ts-09--fill-underlay-travel-and-gap-filling-rows-round-holes"><a class="header" href="#ts-09--fill-underlay-travel-and-gap-filling-rows-round-holes">TS-09 — Fill underlay, travel and gap-filling rows round holes</a></h2>
-<p>66.0 × 114.0 mm · 7797 stitches, 6 jumps, 3 trims, 0 colour changes, 0 stops</p>
+<p>66.0 × 114.0 mm · 7781 stitches, 6 jumps, 3 trims, 0 colour changes, 0 stops</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-09.png" alt="TS-09 as it will sew, in green: the same shape three times, top to bottom, a rectangle with a square hole and a round hole and a bar to its right, which a jump thread along the bottom joins to it."><span class="img-wrapper"><img src="images/generated/testsheet-ts-09.png" alt="TS-09 as it will sew, in green: the same shape three times, top to bottom, a rectangle with a square hole and a round hole and a bar to its right, which a jump thread along the bottom joins to it."></span></label></p>
 <p>Threads: Emerald Green.</p>
@@ -3876,7 +3876,7 @@ style sheet. Each element is charged for its classes, the style sheet rules test
 declarations it takes (<a href="#budgets">budgets</a>).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="engine-pipeline"><a class="header" href="#engine-pipeline">Engine pipeline</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
 <p>From a <code>Design</code> to a checked <code>StitchPlan</code>. Each stage is a module in <code>stitchcraft-engine</code> with its
 own tests; stages communicate only through the types in the <a href="#data-model">data model</a>.</p>
 <pre><code class="language-text">Design ──▶ 1 normalize ──▶ 2 validate ──▶ 3 generate (per element) ──▶ 4 assemble ──▶ 5 finalize ──▶ 6 check ──▶ StitchPlan
@@ -3944,13 +3944,15 @@ which its split stitches keep to.</p>
 <ul>
 <li><strong>Pure:</strong> output depends only on (normalized shape, typed params, neighbours, seed, budget).</li>
 <li><strong>The needle before, the next element after.</strong> Elements are generated in sewing order
-(<a href="#adr-0014-generators-see-their-neighbours-the-needle-before-the-next-element-after">ADR 0014</a>, <code>REQ-GEN-003</code>). Each is given the last
-needle point of the elements before it, whatever their thread, and what the next element offers to
-end near: its first point, or its shape when it starts at its own nearest point. The offer comes from
-the next element’s shape and settings and the design’s, never its stitches, so nothing waits for a
-later element. A
-satin column starts and ends by them (<a href="#start-and-end-1">satin</a>), and explicit
-start and end commands will override them (<code>REQ-GEN-001</code>).</li>
+(<a href="#adr-0014-generators-see-their-neighbours-the-needle-before-the-next-element-after">ADR 0014</a>, <code>REQ-GEN-003</code>). Each is given the last needle
+point of the elements before it, whatever their thread, and what the next element offers to end near.
+That is its first point, or, when it starts at its own nearest point, its shape: a satin column’s rails
+or a tatami fill’s area. The offer comes from the next element’s shape and settings and the design’s,
+never its stitches, so nothing waits for a later element. A satin column and a tatami fill start and
+end by them (<a href="#start-and-end-1">satin</a>, <a href="#5-parts">fills</a>), and
+explicit start and end commands will override them (<code>REQ-GEN-001</code>). Each ends near its next stitch, its
+point nearest the offer as Ink/Stitch’s geometry library finds it, a point of one shape inside the
+other’s area first (<code>generators::next</code>).</li>
 <li><strong>Seeded randomness:</strong> each element’s generator is seeded from a hash of its id mixed with its
 <code>random_seed</code>, one of the settings every stitch type shares. The PRNG is SplitMix64 from
 <code>stitchcraft-core</code> (<a href="#determinism-1">determinism</a>).</li>
@@ -4178,7 +4180,8 @@ rests on is welcome when it helps the next reader check it again
 normalizer). Phase P1 (M3) unless noted.</p>
 <p>A stroke starts where it is drawn and ends where it is drawn, as in Ink/Stitch. Its generator is given its
 neighbours, as every generator is (<a href="#adr-0014-generators-see-their-neighbours-the-needle-before-the-next-element-after">ADR 0014</a>), and a
-stroke sews the same whatever they are. The column before a stroke ends near the stroke’s first point.</p>
+stroke sews the same whatever they are. A satin column or a tatami fill before a stroke ends near the
+stroke’s first point.</p>
 <h2 id="running-stitch-2"><a class="header" href="#running-stitch-2">Running stitch</a></h2>
 <p>The workhorse: outlines, details, travel, underlay.</p>
 <p><strong>Parameters:</strong> <code>running_stitch_length_mm</code> (one length or a repeating pattern of lengths, <code>LengthList</code>),
@@ -4581,7 +4584,7 @@ starts, as in Ink/Stitch, which does both by default. The engine gives each elem
 elements before it, whatever their thread. The second is what the next element offers to end near. Strokes
 offer their first point. Satin columns that start at their own nearest point offer their rails, and
 others the start of their first rail. Either way the rails are as they are sewn, after any swap and
-reversal. Fills offer nothing until they are sewn (M5).</p>
+reversal. Tatami fills offer their area, their parts.</p>
 <p><strong>The line.</strong> The way to the start and the way to the end follow a line between the rails,
 <code>running_stitch_position</code> percent of the way from the first rail to the second (50 is the middle). It is
 built as the centre walk’s is. Pairs are placed every <code>running_stitch_tolerance_mm</code> and moved in until
@@ -4602,8 +4605,10 @@ short stitches. From its start, the needle enters the line where the start’s c
 where the first stitch’s cut says, and the column goes on from its first stitch as before.</p>
 <p><strong>Ending at the nearest point</strong> (<code>end_at_nearest_point</code>). With an element after it, the column ends at
 the point of its compensated outline nearest the next stitch. The next stitch is the point of the
-column’s rails nearest the next element’s first point, or nearest its rails when it offers them. The
-column’s rails are measured as they are sewn. The column ignores an end less than 5 CSS pixels (1.32 mm)
+column’s rails nearest the next element’s first point, or nearest its rails when it offers them. Before
+a fill whose area holds the start of the column’s first rail, or failing that of its second, the next
+stitch is that start, and otherwise the point of the rails nearest the fill’s rings. The column’s rails
+are measured as they are sewn. The column ignores an end less than 5 CSS pixels (1.32 mm)
 from the line’s end, and ends as if it were the last element. Otherwise every part of the column is cut
 in 2 at the end’s cut. The centre walk is cut before its repeats, and the zigzag’s ways before their long
 stitches are split. The contour’s sides and the top stitches are cut too. The column sews every part’s
@@ -4620,6 +4625,14 @@ trade places in the halves above. The first pass works from the column’s end t
 second from its start. The centre walk’s halves are its part from the cut to the end and its part from
 the cut to the start, each sewn its repeats. The first pass begins at the cut. Between the passes the
 needle goes to the line at the cut, where the second pass begins.</p>
+<p><strong>A point inside an area.</strong> An area is 0 away from every point in it or on its rings, so before it
+measures between lines, Ink/Stitch’s geometry library looks for such a point. It tests the next
+element’s points first, then the element’s own, each against every part of the other’s area before the
+next point, and the first that lies in a part is the next stitch. Polylines are tested by their starts,
+in order, and an area by its parts’ outline starts, never a hole’s. So before a fill, the column’s next
+stitch is the start of its first rail that lies in the fill, or else of its second. These rules were
+checked against shapely 2.2.0 as a black box. A fill finds its own next stitch by them too
+(<a href="#5-parts">fills</a>).</p>
 <p><strong>Equally near points.</strong> Shapes are often equally near at several points, as rails side by side are. The
 column takes the point Ink/Stitch takes, found in the order its geometry library, shapely, finds them.
 Shapes are measured from one to the other, polyline by polyline and side by side. Sides that cross or
@@ -4897,11 +4910,12 @@ stretches, from the first, gets a second edge. A node then meets its row and 3 s
 even number of edges. Ink/Stitch’s graph knows an edge between 2 nodes by its kind, so a ring of 2
 nodes doubles only one of its 2 stretches. This graph does the same.</li>
 <li><strong>Start and end.</strong> The fill starts at the point of its rings nearest the needle and ends at the point
-nearest the next element. Each of the 2 points gets a node, which splits the stretch of that ring whose
-chord passes nearest it. Then the node nearest the needle is where the fill starts, and the one
-nearest the next element where it ends. Without a needle the fill starts at its first segment’s start,
-and without a next element it ends where it starts. Only rings that rows reach are looked at.
-Ink/Stitch joins an unreached ring with straight lines, which it sews as rows (<code>DEV-FILL-006</code>).</li>
+nearest its next stitch, which the next element’s shape gives (section 5). Each of the 2 points gets a
+node, which splits the stretch of that ring whose chord passes nearest it. Then the node nearest the
+needle is where the fill starts, and the one nearest the next stitch where it ends. Without a needle
+the fill starts at its first segment’s start, and without a next element it ends where it starts. Only
+rings that rows reach are looked at. Ink/Stitch joins an unreached ring with straight lines, which it
+sews as rows (<code>DEV-FILL-006</code>).</li>
 <li><strong>Even degrees.</strong> A row through a corner of the outline, or one along it, shares a node with the row
 beside it, and some nodes then meet an odd number of edges. Ink/Stitch adds paths between such nodes
 that may run along rows, and sews those rows a second time. StitchCraft pairs the odd nodes so that the
@@ -4909,21 +4923,25 @@ needle’s way between pairs is shortest in all and joins each pair with an edge
 pairing is weighed, and past that each node pairs with the nearest left. No row is sewn twice
 (<code>DEV-FILL-006</code>). A pairing edge stands for a way of several edges, as Ink/Stitch’s paths do, so travel
 along it is never a handover between neighbouring rows, for <code>skip_last</code> or for gap-fill rows.</li>
-<li><strong>Walk.</strong> The walk starts at the end node. At each node it takes the node’s row if one is left,
-and otherwise the node’s first edge left. A node lists its edges neighbour by neighbour, each neighbour
-where its first edge to the node came and its edges in the order they came. A neighbour whose last edge
-is taken drops out of the list. When the walk reaches a node with no edge left it steps back, and the
-edges, in the order it steps back over them, are the route. The route comes back to the end node, and
-before it the needle runs from the fill’s start to that node. The running stitches between rows then
-mostly come just before the rows beside them, which cover them, and the rows go back and forth like a
-mown lawn.</li>
+<li><strong>Walk.</strong> Ink/Stitch walks a copy of the graph, which its graph library makes by adding the edges
+again, node by node in the order the nodes came, each node’s edges in its own order. So in the copy a
+node lists first its neighbours that came before it, in the order they came, and then the others,
+itself included, in its own order. The walk starts at the end node. At each node it takes the node’s
+row if one is left, and otherwise the node’s first edge left. A node lists its edges neighbour by
+neighbour, each neighbour’s in the order they came. A neighbour whose last edge is taken drops out of
+the list. When the walk reaches a node with no edge left it steps back, and the edges, in the order it
+steps back over them, are the route. The route comes back to the end node, and before it the needle
+runs from the fill’s start to that node. The running stitches between rows then mostly come just
+before the rows beside them, which cover them, and the rows go back and forth like a mown lawn.</li>
 <li><strong>Between rows.</strong> Steps between rows in a row are one stretch, from where the last row ended to where
 the next starts. The needle travels it under the rows (section 4), or with <code>underpath</code> off along the
-ring between 2 points of one ring, the shorter way round, as in Ink/Stitch, and between 2 rings the
-shortest way along rings and rows (<code>DEV-FILL-006</code>). It sews running stitches of the first
-<code>running_stitch_length_mm</code>, at least twice the shortest stitch, within <code>running_stitch_tolerance_mm</code>. The first of them would sew the row’s end again, so it is left out. With
-<code>skip_last</code> the row’s end is not sewn, and the first running stitch stays unless the next row starts
-beside it.</li>
+ring between 2 points of one ring, the shorter way round, and between 2 rings the shortest way along
+rings and rows (<code>DEV-FILL-006</code>). Ink/Stitch’s needle takes the way round with fewer nodes of its
+graph, a node every CSS pixel along the outline’s sides, which is about the shorter way but not always
+(<code>DEV-FILL-011</code>). It sews running stitches of the first <code>running_stitch_length_mm</code>, at least twice the
+shortest stitch, within <code>running_stitch_tolerance_mm</code>. The first of them would sew the row’s end
+again, so it is left out. With <code>skip_last</code> the row’s end is not sewn, and the first running stitch
+stays unless the next row starts beside it.</li>
 <li><strong>The shortest stitch.</strong> Rows the row spacing apart start and end nearer each other than the shortest
 stitch a machine sews well, and a row’s first grid point can lie just past its start. A needle point
 nearer the one before it than the shortest stitch is left out, as Ink/Stitch leaves out points nearer
@@ -4987,9 +5005,13 @@ The part nearest the needle goes first, a part the needle is in being 0 away. Wi
 with the least x goes first. Ink/Stitch sorts the parts with a stable sort. GEOS’s repair gave the parts
 of 400 of 400 random fills tied at their least x in order of their point of least x, and of least y
 among the points level with it (shapely 2.2.0, GEOS 3.14.1). Parts that tie go in that order here too.
-Each part ends at its point nearest the next part. The last ends at the point
-of the fill nearest the next element’s first stitch, or nearest its shape when it starts nearest the
-needle. Each part is a group of its own, which assembly joins to the next as it joins any 2 groups:
+Each part ends at its point nearest the next part. The last ends at the point of the fill nearest its
+next stitch. That is the next element’s first stitch when it lies in the fill. Of a satin column’s
+rails, the start of the first that lies in the fill is the next stitch, and of a fill’s parts, the first
+outline’s start that does. Failing those, for a fill after a fill, it is the first start of this fill’s
+outlines that lies in the next, and otherwise the fill’s point nearest the next element. Ink/Stitch’s
+geometry library finds it so (<a href="#start-and-end-1">satin</a>).
+Each part is a group of its own, which assembly joins to the next as it joins any 2 groups:
 straight on within the collapse length, and otherwise with a jump and the ties and trims the element’s
 settings give. <code>SC-W0307</code> says the fill is in parts.</p>
 <h3 id="6-underlay"><a class="header" href="#6-underlay">6. Underlay</a></h3>
@@ -7380,8 +7402,9 @@ shape when it starts at its own nearest point. The offer depends on the next ele
 settings only, never on its stitches, so no element waits for a later one.</li>
 <li>Generators are pure functions of their shape, parameters, these 2 neighbours, seed and budget.</li>
 <li>Where an element’s stitch type is known, it offers what Ink/Stitch’s would, even before StitchCraft
-sews that type. Fills offer nothing until they are sewn (M5), and the column before a fill ends as if
-it were the last element.</li>
+sews that type. A tatami fill, sewn from M5, offers its area. The element before ends near its next
+stitch, found on its own shape as Ink/Stitch’s geometry library finds it, a point of one shape inside
+the other’s area first.</li>
 </ol>
 <h2 id="consequences-13"><a class="header" href="#consequences-13">Consequences</a></h2>
 <ul>
