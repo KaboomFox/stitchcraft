@@ -1,7 +1,7 @@
 <!-- SVG features StitchCraft does not stitch: each is reported (SC-W0802) and the rest is read.
      Hand-written for StitchCraft's conformance suite. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100" width="100mm" height="100mm">
-  <style>.a { fill: red; }</style>
+  <style>.a { fill: red; } g > rect { fill: blue; }</style>
   <defs>
     <pattern id="dots" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1"/></pattern>
     <clipPath id="clip"><rect width="10" height="10"/></clipPath>

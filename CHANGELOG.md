@@ -561,6 +561,31 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - `stitch bug-report --replay` reproduces a bundle whose design's file name is not UTF-8, or which was
   written on another platform (`REQ-CLI-001`). The replay took the design name from the file name, and
   the machine file's label came out otherwise. Bundles now record the name the run used.
+- Style sheets set an SVG's colours and what it hides (`REQ-SVG-006`). Illustrator and CorelDRAW write a
+  drawing's colours as classes in a `<style>` element, and a file read without it sewed black fills where
+  the drawing shows outlines, and sewed what the sheet hides.
+  - The reader applies a rule whose selector names an element or `*`, then classes and ids, or a list of
+    such selectors, in the order of CSS's cascade. One `SC-W0802` names the other selectors and the
+    at-rules, whose settings are not used.
+  - An `!important` declaration in a `style` attribute now overrides a later one there, as in CSS.
+  - A file's style sheets may have up to a million selectors and declarations. Each element is charged to
+    the budget for the declarations it takes, those of its `style` attribute included.
+- A circle or an ellipse starts at its top and turns left on screen, as Ink/Stitch reads it
+  (`REQ-SVG-001`). It started at its right and turned the other way, which moved the tie-in and the
+  direction of its running stitch. The golden `strokes` plan changes for its ring, and so does the
+  tutorial's badge, whose move from the star to the ring is 7 mm where it was 27 mm.
+- Ink/Stitch's `starting_point` and `ending_point` commands are noted as not applied yet (`SC-W0802`,
+  `REQ-SVG-003`), where they were dropped without a word.
+- An empty root `width`, `height` or `viewBox`, or a root `preserveAspectRatio` that does not read, is
+  ignored as a viewer ignores it, and `SC-W0804` names it. The whole file was refused. A viewBox with no
+  area says so, where the message said it was not 4 numbers.
+- A fill's parts that tie at their least x are sewn in order of their least y there
+  (`REQ-FILL-TAT-008`), as Ink/Stitch sews them. The drawing's order decided.
+- `SC-I0313` names a fill whose rule leaves a part beside its edge empty, which subpaths running along
+  each other bound, such as a notch drawn as a hole along the outline. Ink/Stitch's repair fills such a
+  part, and `SC-I0306` no longer says Ink/Stitch leaves it empty. `DEV-FILL-001` describes the repair as
+  it is, not as the even-odd rule.
+- The roadmap plans clip paths for M8, as Ink/Stitch applies them.
 - A design exactly the hoop's size fits it. Rounding put rows of a fill's underlay at 90° a hair past the
   edge of the reference hoop's whole field, and the hoop check and the plan checker refused it, while the
   check that the design is centred allowed the hair, as every length check does (`LENGTH_SLACK`). Both now

@@ -226,8 +226,8 @@ StitchCraft's SVG adapter does with it (`stitchcraft_svg::inkstitch`). Their con
 
 | Command | Applies to | StitchCraft |
 |---|---|---|
-| `starting_point` | the object a connector ties it to | read with the stitch types it positions |
-| `ending_point` | the object a connector ties it to | read with the stitch types it positions |
+| `starting_point` | the object a connector ties it to | planned: noted on the object as not applied (`SC-W0802`) |
+| `ending_point` | the object a connector ties it to | planned: noted on the object as not applied (`SC-W0802`) |
 | `target_point` | the object a connector ties it to | read with the stitch types it positions |
 | `autoroute_start` | the object a connector ties it to | nothing to sew: input to Ink/Stitch's tools |
 | `autoroute_end` | the object a connector ties it to | nothing to sew: input to Ink/Stitch's tools |

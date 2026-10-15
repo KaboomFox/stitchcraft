@@ -297,7 +297,7 @@ fn parts_of_exactly_3_square_pixels_are_left_out_and_fills_of_exactly_20_are_not
     // given as found.
     let rectangle =
         |w: f64| Polygon { outline: geom::closed(&[p(0.0, 0.0), p(0.0, MM_PER_SVG_PX), p(w, MM_PER_SVG_PX), p(w, 0.0)]), holes: Vec::new() };
-    let found = |parts: Vec<Polygon>| built(Area { parts: Ok(parts), windings: Vec::new() }, FillRule::NonZero);
+    let found = |parts: Vec<Polygon>| built(Area { parts: Ok(parts), windings: Vec::new(), beside_outside: Vec::new() }, FillRule::NonZero);
     let three = found(vec![rectangle(3.0 * MM_PER_SVG_PX)]);
     assert!(three.region.parts.is_empty());
     assert_eq!(three.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::FillPartsTooSmall]);
@@ -309,7 +309,7 @@ fn parts_of_exactly_3_square_pixels_are_left_out_and_fills_of_exactly_20_are_not
 #[test]
 fn diag_sc_e0009_an_area_that_could_not_be_built_says_only_so() {
     // A bug: the region is left empty, and SC-E0009 says so, not that the fill bounds no area.
-    let failed = built(Area { parts: Err(Unjoined), windings: vec![1, 2] }, FillRule::NonZero);
+    let failed = built(Area { parts: Err(Unjoined), windings: vec![1, 2], beside_outside: vec![true, false] }, FillRule::NonZero);
     assert_eq!(failed.region, Region::default());
     assert_eq!(failed.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::InternalCheckFailed]);
     // A point beyond the grid's reach is such a bug, a design lying within 10 m of the origin.

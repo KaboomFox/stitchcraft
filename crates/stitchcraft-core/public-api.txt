@@ -32,6 +32,7 @@ pub stitchcraft_core::diag::Code::FillPartsTooSmall
 pub stitchcraft_core::diag::Code::FillPullCompensationNegative
 pub stitchcraft_core::diag::Code::FillRuleNotEvenOdd
 pub stitchcraft_core::diag::Code::FillSmall
+pub stitchcraft_core::diag::Code::FillStretchDrawnTwice
 pub stitchcraft_core::diag::Code::FillTooThin
 pub stitchcraft_core::diag::Code::FillUnderlayInsetShrinksAway
 pub stitchcraft_core::diag::Code::FillUnderlayTooThin
@@ -210,6 +211,7 @@ pub stitchcraft_core::Code::FillPartsTooSmall
 pub stitchcraft_core::Code::FillPullCompensationNegative
 pub stitchcraft_core::Code::FillRuleNotEvenOdd
 pub stitchcraft_core::Code::FillSmall
+pub stitchcraft_core::Code::FillStretchDrawnTwice
 pub stitchcraft_core::Code::FillTooThin
 pub stitchcraft_core::Code::FillUnderlayInsetShrinksAway
 pub stitchcraft_core::Code::FillUnderlayTooThin
