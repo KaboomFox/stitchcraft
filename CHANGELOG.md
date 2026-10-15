@@ -586,6 +586,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   part, and `SC-I0306` no longer says Ink/Stitch leaves it empty. `DEV-FILL-001` describes the repair as
   it is, not as the even-odd rule.
 - The roadmap plans clip paths for M8, as Ink/Stitch applies them.
+- A tatami fill's rows are walked in the order Ink/Stitch walks them (`REQ-FILL-TAT-001`). Ink/Stitch
+  walks a copy of its graph, and its graph library's copy lists a node's neighbours in another order, so
+  where a node had several edges left the walk took another turn. The golden `strokes` plan changes, 557
+  stitches where it sewed 555. So do 2 MC-4 sheets: TS-08's square at 45° and 0.5 mm, along its edges,
+  and TS-09's ways under the rows and the direction of some rows.
+- Before a tatami fill, a satin column ends where Ink/Stitch ends it (`REQ-SAT-014`). A fill offers its
+  area, and the column ends at the start of its first rail that lies in it, or else of its second. It
+  ended where its rails came nearest the fill's edge.
+- Before a satin column, a fill ends at the first of the column's rail starts that lies in it, taken in
+  the rails' order as Ink/Stitch takes them (`REQ-GEN-003`). It tested each part against both starts
+  before the next part.
+- Before another fill, a fill ends at the first start of the next fill's outlines that lies in it, or
+  else at the first of its own that lies in the next, as Ink/Stitch's geometry library finds them. A
+  hole's start counted, and the fill's own outlines were not tested.
+- `DEV-FILL-011` records that with `underpath` off the needle travels round a ring the shorter way, where
+  Ink/Stitch takes the way with fewer nodes of its graph. The docs said Ink/Stitch takes the shorter way.
 - A design exactly the hoop's size fits it. Rounding put rows of a fill's underlay at 90° a hair past the
   edge of the reference hoop's whole field, and the hoop check and the plan checker refused it, while the
   check that the design is centred allowed the hair, as every length check does (`LENGTH_SLACK`). Both now

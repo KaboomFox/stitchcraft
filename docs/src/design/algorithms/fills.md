@@ -141,11 +141,12 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    even number of edges. Ink/Stitch's graph knows an edge between 2 nodes by its kind, so a ring of 2
    nodes doubles only one of its 2 stretches. This graph does the same.
 3. **Start and end.** The fill starts at the point of its rings nearest the needle and ends at the point
-   nearest the next element. Each of the 2 points gets a node, which splits the stretch of that ring whose
-   chord passes nearest it. Then the node nearest the needle is where the fill starts, and the one
-   nearest the next element where it ends. Without a needle the fill starts at its first segment's start,
-   and without a next element it ends where it starts. Only rings that rows reach are looked at.
-   Ink/Stitch joins an unreached ring with straight lines, which it sews as rows (`DEV-FILL-006`).
+   nearest its next stitch, which the next element's shape gives (section 5). Each of the 2 points gets a
+   node, which splits the stretch of that ring whose chord passes nearest it. Then the node nearest the
+   needle is where the fill starts, and the one nearest the next stitch where it ends. Without a needle
+   the fill starts at its first segment's start, and without a next element it ends where it starts. Only
+   rings that rows reach are looked at. Ink/Stitch joins an unreached ring with straight lines, which it
+   sews as rows (`DEV-FILL-006`).
 4. **Even degrees.** A row through a corner of the outline, or one along it, shares a node with the row
    beside it, and some nodes then meet an odd number of edges. Ink/Stitch adds paths between such nodes
    that may run along rows, and sews those rows a second time. StitchCraft pairs the odd nodes so that the
@@ -153,21 +154,25 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    pairing is weighed, and past that each node pairs with the nearest left. No row is sewn twice
    (`DEV-FILL-006`). A pairing edge stands for a way of several edges, as Ink/Stitch's paths do, so travel
    along it is never a handover between neighbouring rows, for `skip_last` or for gap-fill rows.
-5. **Walk.** The walk starts at the end node. At each node it takes the node's row if one is left,
-   and otherwise the node's first edge left. A node lists its edges neighbour by neighbour, each neighbour
-   where its first edge to the node came and its edges in the order they came. A neighbour whose last edge
-   is taken drops out of the list. When the walk reaches a node with no edge left it steps back, and the
-   edges, in the order it steps back over them, are the route. The route comes back to the end node, and
-   before it the needle runs from the fill's start to that node. The running stitches between rows then
-   mostly come just before the rows beside them, which cover them, and the rows go back and forth like a
-   mown lawn.
+5. **Walk.** Ink/Stitch walks a copy of the graph, which its graph library makes by adding the edges
+   again, node by node in the order the nodes came, each node's edges in its own order. So in the copy a
+   node lists first its neighbours that came before it, in the order they came, and then the others,
+   itself included, in its own order. The walk starts at the end node. At each node it takes the node's
+   row if one is left, and otherwise the node's first edge left. A node lists its edges neighbour by
+   neighbour, each neighbour's in the order they came. A neighbour whose last edge is taken drops out of
+   the list. When the walk reaches a node with no edge left it steps back, and the edges, in the order it
+   steps back over them, are the route. The route comes back to the end node, and before it the needle
+   runs from the fill's start to that node. The running stitches between rows then mostly come just
+   before the rows beside them, which cover them, and the rows go back and forth like a mown lawn.
 6. **Between rows.** Steps between rows in a row are one stretch, from where the last row ended to where
    the next starts. The needle travels it under the rows (section 4), or with `underpath` off along the
-   ring between 2 points of one ring, the shorter way round, as in Ink/Stitch, and between 2 rings the
-   shortest way along rings and rows (`DEV-FILL-006`). It sews running stitches of the first
-   `running_stitch_length_mm`, at least twice the shortest stitch, within `running_stitch_tolerance_mm`. The first of them would sew the row's end again, so it is left out. With
-   `skip_last` the row's end is not sewn, and the first running stitch stays unless the next row starts
-   beside it.
+   ring between 2 points of one ring, the shorter way round, and between 2 rings the shortest way along
+   rings and rows (`DEV-FILL-006`). Ink/Stitch's needle takes the way round with fewer nodes of its
+   graph, a node every CSS pixel along the outline's sides, which is about the shorter way but not always
+   (`DEV-FILL-011`). It sews running stitches of the first `running_stitch_length_mm`, at least twice the
+   shortest stitch, within `running_stitch_tolerance_mm`. The first of them would sew the row's end
+   again, so it is left out. With `skip_last` the row's end is not sewn, and the first running stitch
+   stays unless the next row starts beside it.
 7. **The shortest stitch.** Rows the row spacing apart start and end nearer each other than the shortest
    stitch a machine sews well, and a row's first grid point can lie just past its start. A needle point
    nearer the one before it than the shortest stitch is left out, as Ink/Stitch leaves out points nearer
@@ -236,9 +241,13 @@ The part nearest the needle goes first, a part the needle is in being 0 away. Wi
 with the least x goes first. Ink/Stitch sorts the parts with a stable sort. GEOS's repair gave the parts
 of 400 of 400 random fills tied at their least x in order of their point of least x, and of least y
 among the points level with it (shapely 2.2.0, GEOS 3.14.1). Parts that tie go in that order here too.
-Each part ends at its point nearest the next part. The last ends at the point
-of the fill nearest the next element's first stitch, or nearest its shape when it starts nearest the
-needle. Each part is a group of its own, which assembly joins to the next as it joins any 2 groups:
+Each part ends at its point nearest the next part. The last ends at the point of the fill nearest its
+next stitch. That is the next element's first stitch when it lies in the fill. Of a satin column's
+rails, the start of the first that lies in the fill is the next stitch, and of a fill's parts, the first
+outline's start that does. Failing those, for a fill after a fill, it is the first start of this fill's
+outlines that lies in the next, and otherwise the fill's point nearest the next element. Ink/Stitch's
+geometry library finds it so ([satin](satin.md#start-and-end)).
+Each part is a group of its own, which assembly joins to the next as it joins any 2 groups:
 straight on within the collapse length, and otherwise with a jump and the ties and trims the element's
 settings give. `SC-W0307` says the fill is in parts.
 

@@ -172,7 +172,8 @@ impl<'a> Rings<'a> {
     }
 
     /// Whether the shorter way along ring `ring` from `from` to `to` runs in the ring's own direction. On a
-    /// tie it takes the way that does not pass the ring's start, as Ink/Stitch's travel does.
+    /// tie it takes the way that does not pass the ring's start. Ink/Stitch takes the way with fewer nodes of
+    /// its travel graph instead, which is not always the shorter (`DEV-FILL-011`).
     pub fn forwards(&self, ring: usize, from: f64, to: f64) -> bool {
         let length = self.length(ring);
         let ahead = (to - from).rem_euclid(length.max(f64::MIN_POSITIVE));

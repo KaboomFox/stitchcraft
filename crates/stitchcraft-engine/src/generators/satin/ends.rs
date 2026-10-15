@@ -9,10 +9,11 @@
 //!   cut, and a part is cut in 2 at its own point nearest it.
 //! - **The start** is the line's point nearest the needle, or the compensated outline's when only that is
 //!   within the jump length. The needle follows the line from the start's cut to the first stitch's.
-//! - **The end** is the compensated outline's point nearest the next stitch, unless it is within 5 CSS
-//!   pixels of the line's end. Every part is cut in 2 at the end's cut: the first halves are sewn, the line
-//!   is followed to its end (or, after an odd centre walk, to where the second pass starts), the second
-//!   halves are sewn, and the end is stitched last.
+//! - **The end** is the compensated outline's point nearest the next stitch, found on the rails as
+//!   Ink/Stitch finds it (the `generators::next` module): before a fill, the first rail start that lies in
+//!   it. It changes nothing within 5 CSS pixels of the line's end. Every part is cut in 2 at the end's cut:
+//!   the first halves are sewn, the line is followed to its end (or, after an odd centre walk, to where the
+//!   second pass starts), the second halves are sewn, and the end is stitched last.
 //!
 //! The pieces are joined as the underlays are, in straight stitches no longer than the travel. A point of
 //! the line's way within the shortest stitch of the needle, or of the way's point before it, only routes
@@ -23,8 +24,6 @@
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Diagnostic, Exhausted, Meter, Point};
 
-use crate::generators::Approach;
-use crate::generators::passes;
 use crate::generators::running::raised;
 use crate::generators::satin::column::Section;
 use crate::generators::satin::compensation::Processor;
@@ -32,8 +31,9 @@ use crate::generators::satin::pairs::{Pair, pairs};
 use crate::generators::satin::split::evenly;
 use crate::generators::satin::underlay::{Layer, split_long, walk_line};
 use crate::generators::satin::{SatinLengths, SatinParams};
+use crate::generators::{Approach, Own, passes};
 use crate::normalize::along::Along;
-use crate::normalize::near::{Look, along_to_segment, length, nearest_to_lines, nearest_to_point};
+use crate::normalize::near::{Look, along_to_segment, length, nearest_to_point};
 
 // Ink/Stitch measures these limits in CSS pixels.
 
@@ -143,14 +143,11 @@ impl Guides {
     }
 
     /// Where a column whose rails, swapped and turned as they are sewn, are `rails` ends before what `next`
-    /// offers: the point of the compensated `outline` nearest the next stitch, the point of the rails
-    /// nearest `next`. `None` when that is within 5 CSS pixels of the line's end.
+    /// offers: the point of the compensated `outline` nearest the next stitch, found on the rails as
+    /// Ink/Stitch finds it ([`Approach::next_stitch`]). `None` when that is within 5 CSS pixels of the
+    /// line's end.
     pub(crate) fn end(&self, next: &Approach, rails: [&[Point]; 2], outline: [&[Point]; 2], meter: &mut Meter) -> Result<Option<Point>, Exhausted> {
-        let next_stitch = match next {
-            Approach::Point(point) => nearest_to_point(&rails, *point, meter)?.map(|(on, _)| on),
-            Approach::Shape(lines) => nearest_to_lines(&rails, &lines.iter().map(Vec::as_slice).collect::<Vec<_>>(), meter)?,
-        };
-        let Some(next_stitch) = next_stitch else { return Ok(None) };
+        let Some(next_stitch) = next.next_stitch(Own::Lines(&rails), meter)? else { return Ok(None) };
         let Some((end, _)) = nearest_to_point(&outline, next_stitch, meter)? else { return Ok(None) };
         let usual = self.line.last().is_some_and(|&last| length(last, end) < END_NEAR);
         Ok((!usual).then_some(end))

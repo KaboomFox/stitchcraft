@@ -4,8 +4,8 @@
 //!
 //! **Parts.** Ink/Stitch sews a fill's parts nearest the needle first, a part the needle is in being 0
 //! away, and with no needle, from the part farthest left. Each part ends at its point nearest the next
-//! part, and the last at the point of the fill nearest the next element: its first stitch, or for an
-//! element that starts nearest the needle, its shape. A part is a group of its own, which assembly joins to
+//! part, and the last at its point nearest the fill's next stitch, found on the fill's parts as Ink/Stitch
+//! finds it (the `generators::next` module). A part is a group of its own, which assembly joins to
 //! the next as it joins any 2 groups, with a jump and the locks and trims the settings ask for, or
 //! straight on when they are close (`SC-W0307` says the fill is in parts).
 //!
@@ -87,8 +87,8 @@ use super::travel::{Network, between};
 use super::underpath::{Underpath, smooth};
 use crate::generators::pull::offset;
 use crate::generators::running::along_line;
-use crate::generators::{Approach, Stitched};
-use crate::normalize::near::{key, nearest_pair, nearest_to_lines, nearest_to_point};
+use crate::generators::{Approach, Own, Stitched, covers};
+use crate::normalize::near::{key, nearest_pair, nearest_to_point};
 use crate::normalize::offset::buffer;
 use crate::normalize::region::{Polygon, Region, Unjoined};
 use crate::thin::thin;
@@ -163,7 +163,7 @@ pub fn tatami_fill(
     meter: &mut Meter,
 ) -> Result<Stitched, Exhausted> {
     let parts = in_order(region, needle, meter)?;
-    let end = ending(region, next, meter)?;
+    let end = next.map(|next| next.next_stitch(Own::Area(&region.parts), meter)).transpose()?.flatten();
     let mut needle = needle;
     let (mut runs, mut warnings) = (Vec::new(), Vec::new());
     let mut tally = Tally::default();
@@ -368,40 +368,6 @@ fn leftmost(part: &Polygon) -> (f64, f64) {
         .iter()
         .map(|q| (q.x(), q.y()))
         .fold((f64::INFINITY, f64::INFINITY), |least, q| if q.0.total_cmp(&least.0).then(q.1.total_cmp(&least.1)).is_lt() { q } else { least })
-}
-
-/// Where the fill ends: its point nearest what the `next` element offers. A point in the fill is itself.
-/// Of a shape, the first line whose start lies in the fill ends it there, and otherwise the fill's point
-/// nearest the shape, as Ink/Stitch's geometry library finds it.
-fn ending(region: &Region, next: Option<&Approach>, meter: &mut Meter) -> Result<Option<Point>, Exhausted> {
-    let rings: Vec<&[Point]> = region.parts.iter().flat_map(rings_of).collect();
-    match next {
-        None => Ok(None),
-        Some(Approach::Point(p)) => {
-            for part in &region.parts {
-                if covers(part, *p, meter)? {
-                    return Ok(Some(*p));
-                }
-            }
-            Ok(nearest_to_point(&rings, *p, meter)?.map(|(on, _)| on))
-        }
-        Some(Approach::Shape(lines)) => {
-            for part in &region.parts {
-                for start in lines.iter().filter_map(|line| line.first()) {
-                    if covers(part, *start, meter)? {
-                        return Ok(Some(*start));
-                    }
-                }
-            }
-            nearest_to_lines(&rings, &lines.iter().map(Vec::as_slice).collect::<Vec<_>>(), meter)
-        }
-    }
-}
-
-/// Whether `p` lies in `part` or on its rings. One unit of `meter` for each of their points.
-fn covers(part: &Polygon, p: Point, meter: &mut Meter) -> Result<bool, Exhausted> {
-    meter.charge(rings_of(part).iter().map(|ring| u64::try_from(ring.len()).unwrap_or(u64::MAX)).fold(0, u64::saturating_add))?;
-    Ok(part.covers(p))
 }
 
 /// A part's row segments, each from its start to its end, and the row of each, counted across.

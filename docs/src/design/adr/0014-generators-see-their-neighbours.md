@@ -29,8 +29,9 @@ are others.
    settings only, never on its stitches, so no element waits for a later one.
 3. Generators are pure functions of their shape, parameters, these 2 neighbours, seed and budget.
 4. Where an element's stitch type is known, it offers what Ink/Stitch's would, even before StitchCraft
-   sews that type. Fills offer nothing until they are sewn (M5), and the column before a fill ends as if
-   it were the last element.
+   sews that type. A tatami fill, sewn from M5, offers its area. The element before ends near its next
+   stitch, found on its own shape as Ink/Stitch's geometry library finds it, a point of one shape inside
+   the other's area first.
 
 ## Consequences
 
