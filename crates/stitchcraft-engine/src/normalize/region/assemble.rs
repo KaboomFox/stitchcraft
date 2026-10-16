@@ -17,10 +17,11 @@
 //! outline around it. Each ring starts at its point the drawing reaches first, and the parts and their
 //! holes come in that order too.
 
-use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter};
+use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Point};
 
 use super::arrange::Arrangement;
 use super::geom::{Envelope, Location, closed, locate_in_ring};
+use super::snap::TwiceArea;
 
 /// One part of a fill's area: rings as numbered points of the arrangement, each open (its first point not
 /// repeated at its end).
@@ -54,7 +55,8 @@ impl Unjoined {
 }
 
 /// The parts whose rings run along the half edges marked in `kept` (indexed as [`Arrangement::ends`]),
-/// each with the covered face on its right. One unit of `meter` per half edge.
+/// each with the covered face on its right. One unit of `meter` per half edge, and what joining the holes
+/// apart from every outline costs ([`join`]).
 pub(crate) fn parts(arrangement: &Arrangement, kept: &[bool], meter: &mut Meter) -> Result<Result<Vec<Part>, Unjoined>, Exhausted> {
     let halves = 2 * arrangement.edges.len();
     meter.charge(u64::try_from(halves).unwrap_or(u64::MAX))?;
@@ -63,7 +65,7 @@ pub(crate) fn parts(arrangement: &Arrangement, kept: &[bool], meter: &mut Meter)
     let ccw = |h: usize| next_ccw.get(h).copied().unwrap_or(h);
     let max_next = link_maximal(halves, &is_kept, &ccw);
     let Some(rings) = minimal_rings(halves, &is_kept, &ccw, &max_next, arrangement) else { return Ok(Err(Unjoined)) };
-    Ok(Ok(join(rings, arrangement)))
+    Ok(Ok(join(rings, arrangement, meter)?))
 }
 
 /// Step 1: for each kept half arriving at a point, the kept half that leaves next, turning
@@ -171,10 +173,23 @@ fn ring_points(start: usize, min_next: &[Option<usize>], used: &mut [bool], arra
     }
 }
 
+/// An outline as the holes apart from every outline are matched with it, worked out once for them all: its
+/// points, closed, to locate a hole's point in; its point numbers, sorted, to look a hole's points up in;
+/// its bounds; and its area.
+struct Outline {
+    polyline: Vec<Point>,
+    numbers: Vec<usize>,
+    envelope: Envelope,
+    area: TwiceArea,
+}
+
 /// The parts: each clockwise ring an outline with the holes cut from its ring of step 1, and each other
 /// hole in the smallest outline around it. Rings start at their first-numbered point, and holes and parts
-/// come in the order of those points.
-fn join(groups: Vec<Vec<Vec<usize>>>, arrangement: &Arrangement) -> Vec<Part> {
+/// come in the order of those points. With holes apart from every outline, one unit of `meter` per point
+/// of each outline and of each such hole, per pair of such a hole and an outline compared, and, where the
+/// outline's bounds cover the hole's, per point of the hole looked up on the outline and per point of the
+/// outline the hole is then located in.
+fn join(groups: Vec<Vec<Vec<usize>>>, arrangement: &Arrangement, meter: &mut Meter) -> Result<Vec<Part>, Exhausted> {
     let polyline = |ring: &[usize]| closed(&ring.iter().map(|&i| arrangement.point(i)).collect::<Vec<_>>());
     let mut parts: Vec<Part> = Vec::new();
     let mut free: Vec<Vec<usize>> = Vec::new();
@@ -197,21 +212,34 @@ fn join(groups: Vec<Vec<Vec<usize>>>, arrangement: &Arrangement) -> Vec<Part> {
             }
         }
     }
+    let mut outlines: Vec<Outline> = Vec::new();
+    if !free.is_empty() {
+        for part in &parts {
+            let polyline = polyline(&part.outline);
+            meter.charge(u64::try_from(polyline.len()).unwrap_or(u64::MAX))?;
+            let mut numbers = part.outline.clone();
+            numbers.sort_unstable();
+            outlines.push(Outline { envelope: Envelope::of(&polyline), polyline, numbers, area: arrangement.twice_area(&part.outline) });
+        }
+    }
     for hole in free {
-        let env = Envelope::of(&polyline(&hole));
+        let points = polyline(&hole);
+        meter.charge(u64::try_from(points.len() + outlines.len()).unwrap_or(u64::MAX))?;
+        let env = Envelope::of(&points);
         // An outline is around the hole when its bounds cover the hole's and a point of the hole off the
         // outline lies inside it.
-        let around = |part: &Part| {
-            let outline = polyline(&part.outline);
-            Envelope::of(&outline).covers(&env)
-                && hole
-                    .iter()
-                    .find(|p| !part.outline.contains(p))
-                    .is_some_and(|&p| locate_in_ring(arrangement.point(p), &outline) == Location::Interior)
-        };
+        let mut around: Vec<(usize, TwiceArea)> = Vec::new();
+        for (i, outline) in outlines.iter().enumerate() {
+            if outline.envelope.covers(&env) {
+                meter.charge(u64::try_from(hole.len() + outline.polyline.len()).unwrap_or(u64::MAX))?;
+                let off = hole.iter().find(|p| outline.numbers.binary_search(p).is_err());
+                if off.is_some_and(|&p| locate_in_ring(arrangement.point(p), &outline.polyline) == Location::Interior) {
+                    around.push((i, outline.area));
+                }
+            }
+        }
         // Of the outlines around it, the innermost: the smallest, whose clockwise area is nearest 0.
-        let innermost =
-            parts.iter().enumerate().filter(|(_, part)| around(part)).max_by_key(|(_, part)| arrangement.twice_area(&part.outline)).map(|(i, _)| i);
+        let innermost = around.iter().max_by_key(|&&(_, area)| area).map(|&(i, _)| i);
         if let Some(part) = innermost.and_then(|i| parts.get_mut(i)) {
             part.holes.push(hole);
         }
@@ -222,7 +250,7 @@ fn join(groups: Vec<Vec<Vec<usize>>>, arrangement: &Arrangement) -> Vec<Part> {
         part.holes.sort_by_key(|hole| hole.first().copied());
     }
     parts.sort_by_key(|part| part.outline.first().copied());
-    parts
+    Ok(parts)
 }
 
 /// Turns `ring` to start at its first-numbered point.
@@ -238,6 +266,7 @@ mod tests {
 
     use super::*;
     use crate::normalize::region::arrange::cut;
+    use crate::normalize::region::geom::looked_at;
 
     fn p(x: f64, y: f64) -> Point {
         Point::new(x, y).unwrap()
@@ -328,7 +357,7 @@ mod tests {
             ring(&[(1.0, 1.0), (2.0, 1.0), (2.0, 2.0), (1.0, 2.0)]),
         ];
         let arrangement = cut(&rings, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
-        let found = join(vec![vec![vec![3, 2, 1, 0], vec![7, 6, 5, 4], vec![8, 9, 10, 11]]], &arrangement);
+        let found = join(vec![vec![vec![3, 2, 1, 0], vec![7, 6, 5, 4], vec![8, 9, 10, 11]]], &arrangement, &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(found, [Part { outline: vec![0, 3, 2, 1], holes: vec![vec![8, 9, 10, 11]] }, Part { outline: vec![4, 7, 6, 5], holes: vec![] }]);
     }
 
@@ -350,7 +379,7 @@ mod tests {
         // Never from an arrangement: a ring there and back inside a square is left out.
         let rings = [ring(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]), ring(&[(2.0, 2.0), (3.0, 3.0)])];
         let arrangement = cut(&rings, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
-        let found = join(vec![vec![vec![3, 2, 1, 0]], vec![vec![4, 5]]], &arrangement);
+        let found = join(vec![vec![vec![3, 2, 1, 0]], vec![vec![4, 5]]], &arrangement, &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(found, [Part { outline: vec![0, 3, 2, 1], holes: vec![] }]);
     }
 
@@ -378,6 +407,49 @@ mod tests {
         assert!(grown.message.contains("sewn at its own size"), "{}", grown.message);
     }
 
+    /// A square `side` wide from (`x`, `y`), each side cut into `cuts` segments: counter-clockwise in y-up
+    /// axes, or clockwise when `turned`.
+    fn fine_square(x: f64, y: f64, side: f64, cuts: u32, turned: bool) -> Vec<Point> {
+        let corners = [p(x, y), p(x + side, y), p(x + side, y + side), p(x, y + side)];
+        let mut ring: Vec<Point> = corners
+            .iter()
+            .zip(corners.iter().cycle().skip(1))
+            .flat_map(|(&a, &b)| (0..cuts).map(move |i| a.lerp(b, f64::from(i) / f64::from(cuts))))
+            .collect();
+        if turned {
+            ring.reverse();
+        }
+        ring
+    }
+
+    #[test]
+    fn req_fill_004_placing_and_joining_rings_charges_every_point_they_look_at() {
+        // 5 × 5 squares 10 mm wide, each with a square hole apart from its outline, every ring of 100 points:
+        // each ring is placed in the faces around it, and each hole joined to the outline around it.
+        let rings: Vec<Vec<Point>> = (0..25_u32)
+            .flat_map(|k| {
+                let (x, y) = (f64::from(k % 5) * 12.0, f64::from(k / 5) * 12.0);
+                [fine_square(x, y, 10.0, 25, false), fine_square(x + 3.0, y + 3.0, 4.0, 25, true)]
+            })
+            .collect();
+        let mut meter = Budget::DEFAULT.meter();
+        let spent = |meter: &Meter| Budget::DEFAULT.max_work - meter.work_left();
+        let arrangement = cut(&rings, &mut meter).unwrap().unwrap();
+        looked_at::take();
+        let before = spent(&meter);
+        let faces = arrangement.faces(&mut meter).unwrap();
+        let (charged, looked) = (spent(&meter) - before, looked_at::take());
+        assert!(charged >= looked, "placing the rings: {charged} units charged for {looked} points looked at");
+        let inside = |h: usize| faces.winding.get(faces.right_of[h]).is_some_and(|&w| w != 0);
+        let kept: Vec<bool> = (0..2 * arrangement.edges.len()).map(|h| inside(h) && !inside(h ^ 1)).collect();
+        let before = spent(&meter);
+        let found = parts(&arrangement, &kept, &mut meter).unwrap().unwrap();
+        let (charged, looked) = (spent(&meter) - before, looked_at::take());
+        assert!(charged >= looked, "joining the holes: {charged} units charged for {looked} points looked at");
+        assert_eq!(found.len(), 25);
+        assert!(found.iter().all(|part| part.holes.len() == 1));
+    }
+
     #[test]
     fn the_budget_bounds_the_work() {
         let rings = [ring(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)])];
@@ -386,5 +458,15 @@ mod tests {
         let kept = vec![false, true, false, true, false, true, false, true];
         assert!(parts(&arrangement, &kept, &mut Budget { max_stitches: 1, max_work: 3 }.meter()).is_err());
         assert_eq!(parts(&arrangement, &kept, &mut meter).unwrap().unwrap().len(), 1);
+        // A square with a square hole apart from it: 16 halves; the outline's 5 points with the first again,
+        // for its bounds; the hole's 5, and the 1 outline it is compared with; and as the outline's bounds
+        // cover the hole's, the hole's 4 points looked up on it and its 5 points the hole is located in.
+        let rings = [ring(&[(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0)]), ring(&[(1.0, 1.0), (1.0, 3.0), (3.0, 3.0), (3.0, 1.0)])];
+        let arrangement = cut(&rings, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        let kept = vec![false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true];
+        let mut meter = Budget::DEFAULT.meter();
+        let found = parts(&arrangement, &kept, &mut meter).unwrap().unwrap();
+        assert_eq!((found.len(), found[0].holes.len()), (1, 1));
+        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 16 + 5 + (5 + 1) + (4 + 5));
     }
 }
