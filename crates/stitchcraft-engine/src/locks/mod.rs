@@ -44,8 +44,9 @@ pub struct Lock {
     /// The needle points. A tie-in's come before the group's first point, which ends the lock; a
     /// tie-off's come after its last point, which starts it. Empty when the group has no stitch to lock.
     pub points: Vec<Point>,
-    /// What was changed (`SC-W0502`) or could not be sewn as set (`SC-W0503`), located at the anchor.
-    /// They name no element: the caller adds it.
+    /// What was changed (`SC-W0502`) or could not be sewn as set (`SC-W0503`). What comes of the lock's
+    /// settings alone, the same at every end it is sewn at, has no place; a lock sewn straight where the
+    /// stitching turns is located at the anchor. They name no element: the caller adds it.
     pub warnings: Vec<Diagnostic>,
 }
 
@@ -172,12 +173,12 @@ fn sew(mut track: impl Iterator<Item = Point>, end: End, params: &CommonParams, 
             if at_least(short, LOCK_MIN_STITCH.get()) {
                 points
             } else {
-                warnings.push(straightened(end, short));
+                warnings.push(straightened(end, short).located(anchor));
                 planned.iter().map(|&x| frame.at((x, 0.0))).collect()
             }
         }
     };
-    Ok(Lock { points, warnings: warnings.into_iter().map(|w| w.located(anchor)).collect() })
+    Ok(Lock { points, warnings })
 }
 
 /// The stitching a lock of steps follows: the group's needle points from the anchor, without repeats, as

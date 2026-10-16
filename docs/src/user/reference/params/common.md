@@ -4,10 +4,8 @@
 
 Settings every stitch type shares: lock stitches where the element's stitching starts and
 ends, a trim or a stop after it, the shortest stitch and jump, the longest stitch, and where random
-variation starts.
-
-StitchCraft reads and checks them today; they change the stitches as plan assembly arrives
-(roadmap steps M3.7 to M3.9).
+variation starts. Plan assembly sews the locks, trims and stops, and finalize holds each element's
+stitches to its shortest stitch.
 
 Applies to every stitch type.
 
@@ -51,7 +49,7 @@ half stitch in its place (`SC-W0503`).
 - **Accepts:** text of at most 4096 bytes
 - **Default:** empty
 - **Shown when** [`lock_start`](#lock_start) is `custom`
-- **Ink/Stitch:** same key; StitchCraft differs (DEV-LCK-002): Locks of steps follow the stitching round its corners, as Ink/Stitch's custom steps do. They differ in 2 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn.
+- **Ink/Stitch:** same key; StitchCraft differs (DEV-LCK-002): Locks of steps follow the stitching round its corners, as Ink/Stitch's custom steps do. They differ in 5 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn. A step shorter than 0.2 mm is lengthened to 0.2 mm, with SC-W0502, where Ink/Stitch sews it as it is. A custom step of 0 is left out, with SC-W0503, where Ink/Stitch sews a stitch in place for it. And a custom step longer than 10 m, the data model's reach, is left out with SC-W0503.
 
 ### `lock_start_scale_mm`
 
@@ -92,7 +90,7 @@ sews the half stitch in its place (`SC-W0503`).
 - **Accepts:** text of at most 4096 bytes
 - **Default:** empty
 - **Shown when** [`lock_end`](#lock_end) is `custom`
-- **Ink/Stitch:** same key; StitchCraft differs (DEV-LCK-002): Locks of steps follow the stitching round its corners, as Ink/Stitch's custom steps do. They differ in 2 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn.
+- **Ink/Stitch:** same key; StitchCraft differs (DEV-LCK-002): Locks of steps follow the stitching round its corners, as Ink/Stitch's custom steps do. They differ in 5 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn. A step shorter than 0.2 mm is lengthened to 0.2 mm, with SC-W0502, where Ink/Stitch sews it as it is. A custom step of 0 is left out, with SC-W0503, where Ink/Stitch sews a stitch in place for it. And a custom step longer than 10 m, the data model's reach, is left out with SC-W0503.
 
 ### `lock_end_scale_mm`
 
@@ -144,7 +142,7 @@ hammer one hole. Empty: the larger of the document's setting and the machine's m
 
 ### `min_jump_stitch_length_mm`
 
-**Shortest jump.** A move to the next element shorter than this is sewn straight on, without lock stitches or a
+**Shortest jump.** A move to the next element no longer than this is sewn straight on, without lock stitches or a
 jump. Empty: the document's setting.
 
 - **Accepts:** a length from 0 to 20 mm, or empty (0 or less counts as empty)

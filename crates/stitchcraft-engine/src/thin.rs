@@ -21,9 +21,9 @@
 /// `run` without the needle points too near the one before them. `too_near` says whether a stitch from one
 /// point to another would be shorter than it may be (a point where the needle already is being too near),
 /// and `pinned` whether a point stays wherever it is. `left_out` hears of each point left out, by the
-/// point whose stitch fell short: the point itself, or the point that stays and leaves out the ones before
-/// it.
-pub(crate) fn thin<T>(run: Vec<T>, too_near: impl Fn(&T, &T) -> bool, pinned: impl Fn(&T) -> bool, mut left_out: impl FnMut(&T)) -> Vec<T> {
+/// stitch that fell short, from its first point to its second: into the point from the one before it, or
+/// out of it to the point that stays after it.
+pub(crate) fn thin<T>(run: Vec<T>, too_near: impl Fn(&T, &T) -> bool, pinned: impl Fn(&T) -> bool, mut left_out: impl FnMut(&T, &T)) -> Vec<T> {
     let last = run.len().saturating_sub(1);
     let mut kept: Vec<T> = Vec::with_capacity(run.len());
     for (i, point) in run.into_iter().enumerate() {
@@ -34,17 +34,18 @@ pub(crate) fn thin<T>(run: Vec<T>, too_near: impl Fn(&T, &T) -> bool, pinned: im
         if !too_near(from, &point) {
             kept.push(point);
         } else if i != last && !pinned(&point) {
-            left_out(&point);
+            left_out(from, &point);
         } else {
             // A point that stays: the ones before it that it is too near go instead, back to one that stays,
             // unless it is too near that one too.
             let gone = kept.iter().skip(1).rev().take_while(|k| !pinned(k) && too_near(k, &point)).count();
-            if kept.len().checked_sub(gone + 1).and_then(|stays| kept.get(stays)).is_some_and(|k| too_near(k, &point)) {
-                left_out(&point);
+            if let Some(stays) = kept.len().checked_sub(gone + 1).and_then(|stays| kept.get(stays)).filter(|k| too_near(k, &point)) {
+                left_out(stays, &point);
             } else {
                 for _ in 0..gone {
-                    kept.pop();
-                    left_out(&point);
+                    if let Some(k) = kept.pop() {
+                        left_out(&k, &point);
+                    }
                 }
                 kept.push(point);
             }
@@ -68,7 +69,7 @@ mod tests {
     fn thinned(xs: &[f64], pins: &[usize]) -> (Vec<f64>, usize) {
         let run: Vec<(usize, Point)> = xs.iter().map(|&x| p(x)).enumerate().collect();
         let mut count = 0;
-        let kept = thin(run, |a, b| a.1.distance(b.1) < 1.0, |(i, _)| pins.contains(i), |_| count += 1);
+        let kept = thin(run, |a, b| a.1.distance(b.1) < 1.0, |(i, _)| pins.contains(i), |_, _| count += 1);
         (kept.into_iter().map(|(_, q)| q.x()).collect(), count)
     }
 

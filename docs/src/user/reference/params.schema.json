@@ -725,7 +725,7 @@
     },
     "min_jump_stitch_length_mm": {
       "default": null,
-      "description": "A move to the next element shorter than this is sewn straight on, without lock stitches or a jump. Empty: the document's setting.",
+      "description": "A move to the next element no longer than this is sewn straight on, without lock stitches or a jump. Empty: the document's setting.",
       "maximum": 20.0,
       "minimum": 0.0,
       "title": "Shortest jump",

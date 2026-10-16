@@ -7,7 +7,7 @@
 //!
 //! Geometry stays exact here: lines and Bézier curves with their control points, already transformed
 //! into millimetres. Flattening to stitches is the generators' job, with the tolerance their parameters
-//! give, and regions are normalized into polygons with holes when fills arrive (roadmap M5.1).
+//! give, and a fill's region is normalized into polygons with holes ([`crate::normalize::region`]).
 
 use std::collections::BTreeSet;
 

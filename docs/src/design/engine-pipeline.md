@@ -98,8 +98,10 @@ Rules every generator follows:
   that runs out (`SC-E0004`) is skipped, and the others still plan. The stitch limit is for the whole
   design. Assembly and finalize share the budget's work once more, and running out there plans nothing.
   `SC-E0004` then says so for the whole design.
-- **Roles:** every stitch is tagged underlay, top, travel or lock, which previews colour-code and which
-  later enables per-layer ordering.
+- **Roles:** every stitch is tagged by its role. Assembly tags the stitches of groups as top and the lock
+  stitches as lock. The jumps between groups are travel. Previews draw the lock stitches apart. A
+  generator hands assembly its needle points without roles, so an element's underlay, and the running
+  stitches between its rows, are tagged top as well, until generators tag their own.
 
 Generators are listed in [algorithms](algorithms/README.md).
 
@@ -135,9 +137,10 @@ or stop. Both are left out, as Ink/Stitch leaves them out, and `SC-W0505` says s
 
 A jump lands where sewing resumes, on the tie-in's first point or on the group's first point when it has
 no tie-in, and the needle goes down there before the first stitch. The jump's own thread is the
-machine's business: StitchCraft trims where an element's `trim_after` is set, as Ink/Stitch does.
-Whether the reference machine also needs a trim on long jumps is test sheet TS-02's question at MC-1. Its
-answer becomes a profile value.
+machine's business. The plan trims where an element's `trim_after` is set, as Ink/Stitch's does. A PES
+file also flags every jump as a trim, as pystitch writes Ink/Stitch's
+([formats](formats.md#what-we-write-v1)), and whether a machine cuts at a jump is its own setting. At
+MC-1 the reference machine cut the thread only at thread changes and stops.
 
 Ink/Stitch (read at `d59c9ab`) joins groups the same way: one stitch from one group to the next within
 the collapse length, locks and a jump beyond it. It sews that stitch as it is; StitchCraft's finalize
@@ -161,9 +164,11 @@ beyond that length can cause.
 
 ### Origin and stop position
 
-The plan is in hoop coordinates: the design's origin goes to the hoop's centre, (0, 0), where the needle
-starts. The origin is the design's own (Ink/Stitch's origin command, read from M8) or else the centre of
-the box around every point where the needle goes down (`REQ-ASM-005`). A design's stop position
+The finished plan is in hoop coordinates: the design's origin goes to the hoop's centre, (0, 0), where the
+needle starts. The origin is the design's own (Ink/Stitch's origin command, read from M8) or else the centre
+of the box around every point where the needle goes down (`REQ-ASM-005`). Assembly builds the plan in the
+design's coordinates, and finalize moves it once it has left out the points the machine cannot sew, so the
+box is the finished plan's, as in Ink/Stitch. A design's stop position
 (Ink/Stitch's stop position command) adds a jump to it before each `Stop`. At the stop position the frame
 is clear of the needle for an appliqué or a check, and sewing resumes with a jump back.
 
@@ -181,8 +186,8 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 ## 5. Finalize
 
 Finalize fits the plan to the machine profile (`stitchcraft_engine::finalize`), and a plan that `plan`
-returns can be written as it is. Generators already sew within the machine's limits. What is left to fit
-comes from joining groups and from settings the machine cannot follow.
+returns can be written as it is. Generators sew within the machine's limits where their settings let
+them. What is left to fit comes from joining groups and from settings the machine cannot follow.
 
 1. **The shortest stitch** of each needle point is its element's: the one its generator used, so finalize
    never thins what the generator spaced. That is the element's `min_stitch_length_mm`, else the design's
@@ -200,16 +205,19 @@ comes from joining groups and from settings the machine cannot follow.
    function, which a generator that joins pieces of its own also applies, as a tatami fill does to its
    rows and the travel between them, so that finalize finds nothing of its stitches to thin.
 2. **The longest stitch.** A stitch longer than `profile.max_stitch` is split into the fewest equal parts
-   no longer than it (`SC-I0703`, `REQ-FIN-001`). Such a stitch comes from a stitch placed by hand, from
-   a custom lock's long step, or from a move sewn on under a `min_jump_stitch_length_mm` longer than the
-   machine's longest stitch. Each part counts against the design's stitch budget.
-3. **Colour limits:** colour changes and stops above what the profile's format records → `SC-E0601`.
-4. **Hoop:** a design larger than the hoop → `SC-E0701`, with a rotate-to-fit fix when rotating 90° would
+   no longer than it (`SC-I0703`, `REQ-FIN-001`). Such a stitch comes from a stitch placed by hand, a
+   custom lock's long step, a satin column wider than the machine's longest stitch, a tatami fill whose
+   `max_stitch_length_mm` is longer than it, or a move sewn on under a `min_jump_stitch_length_mm` that
+   long. Each part counts against the design's stitch budget.
+3. **The hoop's centre.** The fitted plan is moved so the design's origin is at the hoop's centre
+   ([origin](#origin-and-stop-position), `REQ-ASM-005`).
+4. **Colour limits:** colour changes and stops above what the profile's format records → `SC-E0601`.
+5. **Hoop:** a design larger than the hoop → `SC-E0701`, with a rotate-to-fit fix when rotating 90° would
    fit. When a design's origin is far from its middle, a design smaller than the hoop can cross the
    hoop's edge. That is `SC-E0701` as well. So is a stop position past the edge, which the message names. The size is
    the stitches' own. For a design that cannot be sewn, `SC-E0701` is the only message about its size.
    Otherwise, larger than the comfort zone → `SC-W0702` (`REQ-FIN-002`).
-5. The end is the plan's structure: the machine ends after the last block.
+6. The end is the plan's structure: the machine ends after the last block.
 
 After an error at any step, `plan` returns no plan, and the error's diagnostic says why.
 
@@ -217,7 +225,8 @@ Splitting jumps longer than a format can encode in one record is *not* done here
 job, because the limit is a property of the file format, not of the machine.
 
 Ink/Stitch (read at `d59c9ab`) removes short stitches once, over the whole plan: an entry no farther than
-its shortest stitch (the element's `min_stitch_length_mm`, else a global 0.1 mm) from the last one kept
+its shortest stitch (the element's `min_stitch_length_mm`, else the design's `min_stitch_len_mm`, 0.1 mm
+unless the file sets it) from the last one kept
 is dropped. It keeps lock stitches, the stitch right after a jump, and stop, trim and colour-change
 entries. A jump itself can be dropped. Nothing is split. StitchCraft uses the same shortest stitch for
 each element as Ink/Stitch, but never one below the machine's (0.3 mm on the Brother). It keeps the ends
