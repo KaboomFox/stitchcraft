@@ -12,8 +12,8 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | Format | One style, no bikeshedding | `rustfmt.toml` | `cargo xtask ci` · CI |
 | Clippy, warnings denied | Idiomatic, bug-prone patterns flagged | workspace `[lints]`, `clippy.toml` | `cargo xtask ci` · CI |
 | **No panics** | No `unwrap`, `expect`, `panic!`, `unreachable!`, `todo!`, `unimplemented!`, `dbg!` outside tests; `indexing_slicing` denied in parsers | workspace `[lints.clippy]`, crate attributes | `cargo xtask ci` · CI |
-| **No `unsafe`** | `unsafe_code = "forbid"` everywhere except the plug-in ABI shim, where every block needs a `// SAFETY:` comment | workspace `[lints.rust]`, `cargo xtask unsafe-audit` | `cargo xtask ci` · CI |
-| **Determinism** | No `HashMap`/`HashSet`, platform `sin`/`cos`/`atan2`, `SystemTime`, `Instant` in library crates | `clippy.toml` `disallowed-types` / `disallowed-methods` | `cargo xtask ci` · CI |
+| **No `unsafe`** | `unsafe_code` denied in the workspace and forbidden at every crate root, the compatibility probe's included, except the plug-in's: its ABI shim alone may use `unsafe`, with a `// SAFETY:` comment of its own above each block | workspace `[lints.rust]`, `cargo xtask unsafe-audit` | `cargo xtask ci` · CI |
+| **Determinism** | No `HashMap`/`HashSet`, `RandomState`, platform `sin`/`cos`/`atan2`/`powi` and their kin, `mul_add`, `SystemTime` or `Instant`; no files, threads, environment or processes in library crates; `rand` and `getrandom` only through proptest | `clippy.toml` `disallowed-types` / `disallowed-methods`, `deny.toml` `[bans]` | `cargo xtask ci` · CI |
 | **Layering** | Crates depend only on lower layers ([architecture](architecture.md)); dependencies like `clap` or `tiny-skia` only where allowed | `xtask/src/layers.rs` (append-only table) | `cargo xtask layers` · CI |
 | **Module size** | Rust files warn above 800 lines, fail above 1,500 (generated files exempt) | `xtask/src/filesize.rs` | `cargo xtask filesize` · CI |
 | WebAssembly | L0–L3 crates and the plug-in build for `wasm32-unknown-unknown` | `xtask/src/wasm.rs` | `cargo xtask wasm` · CI |
@@ -23,11 +23,11 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | **Design pages follow the code** | Every source file of a crate or app is on a page's `implements` comment, and a branch that changes those files changes the page too or records a `Design-reviewed:` line | `xtask/src/design_map.rs`, `.claude/settings.json` (names the pages after each edit) | `cargo xtask docs --check` · CI |
 | Docs images | Every image a page shows is one a shot in `docs/shots.toml` writes, with alt text, and regenerating to the committed file | `xtask/src/shots.rs` | `cargo xtask shots --check` · CI |
 | Conformance | Requirement/case consistency; every fixture has its row in the fixtures index; all cases pass; changed goldens need the `golden-change` label and a changelog line | `xtask/src/conformance/`, `ci.yml`, `goldens.yml` | `cargo xtask conformance` · CI |
-| Dependencies | Licence allow-list (GPL family denied), advisories, duplicates, sources | `deny.toml` | CI (`cargo-deny`) |
+| Dependencies | Licence allow-list (GPL family denied), advisories, duplicates, sources, for the workspace and the fuzz targets' | `deny.toml` | `cargo xtask ci` · CI (`cargo-deny`) |
 | Spelling | Typos in code, docs, commit-facing text | `typos.toml` | CI |
 | **Prose** | New Markdown lines follow the [writing style](../contributing/writing-style.md): the house rules and ai-tells, a style for phrasing that machine-written text overuses | `.vale.ini`, `.vale/styles/`, `xtask/src/prose.rs` (Vale) | `cargo xtask prose` · CI |
 | MSRV | Builds on the declared `rust-version` | workspace `Cargo.toml` | CI |
-| Cross-platform | Tests on Linux, macOS, Windows; identical conformance hashes | `ci.yml` | CI |
+| Cross-platform | Tests on Linux, macOS and Windows, among them the conformance suite's data cases, whose machine files must equal the golden files on each ([determinism](determinism.md#cross-platform-check)) | `ci.yml` | CI |
 | API docs | Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links | `cargo xtask ci` (`RUSTDOCFLAGS=-D warnings`) | `cargo xtask ci` · CI |
 | **Public API review** | Changes to a library crate's public API show in the PR diff, as a change to its `public-api.txt` | `xtask/src/api.rs` (cargo-public-api, pinned) | `cargo xtask api --check` · CI |
 | **Coverage ratchet** | No crate's line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, those only another build of a function or a closure on the line runs included | `conformance/coverage.toml`, `xtask/src/coverage.rs` (cargo-llvm-cov) | `cargo xtask coverage` · CI job |

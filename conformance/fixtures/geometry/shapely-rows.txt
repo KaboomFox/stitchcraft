@@ -1,4 +1,4 @@
-# Rows cut by shapely 2.2.0 (GEOS 3.14.1); conformance/oracle/rows.py, seed 20261011.
+# Rows cut by shapely 2.2.0 (GEOS 3.14.1); conformance/oracle/rows.py, seed 20261011. Do not edit; regenerate.
 0.5 1 4 0.0 1.0 1.0 1.0 0.0 0.0 0.0 1.0 1 0.5 1 0.0 0.5
 1.0 1 4 0.0 1.0 1.0 1.0 0.0 0.0 0.0 1.0 0
 0.5 1 4 0.0 3.0 1.0 2.0 0.0 2.0 0.0 3.0 2 2.0 1 0.0 1.0 2.5 1 0.0 0.5

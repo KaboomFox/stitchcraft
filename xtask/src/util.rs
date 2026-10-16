@@ -70,8 +70,16 @@ fn canonical(path: &Path) -> PathBuf {
     std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
 }
 
-/// Directory names never scanned.
-const SKIP_DIRS: &[&str] = &["target", ".git", "book", "node_modules", "corpus"];
+/// Directory names never scanned, wherever they are: build output and version control.
+const SKIP_DIRS: &[&str] = &["target", ".git", "node_modules"];
+/// Directories never scanned, relative to [`root`]: the built book and the fuzz targets' corpus, both
+/// generated. A folder elsewhere that has one of their names is scanned like any other.
+const SKIP_PATHS: &[&str] = &["docs/book", "fuzz/corpus"];
+
+/// Whether the walks leave the directory `path` out.
+fn skipped(path: &Path) -> bool {
+    path.file_name().is_some_and(|name| SKIP_DIRS.iter().any(|skip| name == *skip)) || SKIP_PATHS.iter().any(|skip| path == root().join(skip))
+}
 
 /// Files under `dir` (recursively, skipping build output) with one of the extensions `exts`, sorted so
 /// every report is in the same order.
@@ -96,9 +104,8 @@ fn walk(dir: &Path, keep: &dyn Fn(&Path) -> bool, out: &mut Vec<PathBuf>) {
     let Ok(entries) = std::fs::read_dir(dir) else { return };
     for entry in entries.flatten() {
         let path = entry.path();
-        let name = entry.file_name();
         if path.is_dir() {
-            if !SKIP_DIRS.iter().any(|skip| name == *skip) {
+            if !skipped(&path) {
                 walk(&path, keep, out);
             }
         } else if keep(&path) {
@@ -152,6 +159,15 @@ pub fn in_ci() -> bool {
 /// Whether `program args…` runs successfully (used to detect optional tools).
 pub fn tool_available(program: &str, args: &[&str]) -> bool {
     Command::new(program).args(args).output().is_ok_and(|o| o.status.success())
+}
+
+/// The version `.github/actions/tools/action.yml` installs `tool` at in CI, for the tests that tie a gate
+/// to the tool release it is made for.
+#[cfg(test)]
+pub fn pinned_version(tool: &str) -> Option<String> {
+    let action = read(&root().join(".github/actions/tools/action.yml")).ok()?;
+    let version = action.lines().find_map(|line| line.trim().strip_prefix(&format!("[{tool}]=")))?;
+    Some(version.trim().to_string())
 }
 
 /// A GitHub Actions workflow command showing `message` as a `level` annotation titled `title`, placed on
@@ -240,6 +256,14 @@ mod tests {
         });
         let ours = packages_in(&joined, Path::new("/vc/stitchcraft"));
         assert_eq!(ours, Packages { names: vec!["stitchcraft-core".into(), "stitchcraft-xtask".into()], guest: true });
+    }
+
+    #[test]
+    fn the_book_and_the_corpus_are_skipped_only_where_they_are_made() {
+        let root = root();
+        assert!(skipped(&root.join("docs/book")) && skipped(&root.join("fuzz/corpus")));
+        assert!(skipped(&root.join("fuzz/target")) && skipped(&root.join("crates/stitchcraft-core/target")));
+        assert!(!skipped(&root.join("crates/stitchcraft-engine/src/book")) && !skipped(&root.join("docs/src/corpus")));
     }
 
     #[test]

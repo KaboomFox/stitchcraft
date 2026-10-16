@@ -8,6 +8,7 @@ updates:
       cargo:
         patterns: ["*"]
   - package-ecosystem: github-actions
-    directory: "/"
+    # The workflows, and the composite actions they share: .github/actions/tools pins the tools' installer.
+    directories: ["/", "/.github/actions/*"]
     schedule:
       interval: weekly

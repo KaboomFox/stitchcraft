@@ -26,12 +26,14 @@ jobs:
       - run: |
           rustup toolchain install stable --profile minimal --component clippy,rustfmt
           rustup target add wasm32-unknown-unknown --toolchain stable
-      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+      - uses: ./.github/actions/tools
         with:
-          tool: cargo-deny,typos,mdbook
+          tools: cargo-deny,typos,mdbook
       - name: The independent reader for REQ-FMT-005 (pyembroidery, pinned by hash)
         uses: ./.github/actions/oracle
-      - run: cargo xtask ci
+      # The API snapshots are the pinned toolchain's rustdoc output, and the prose lint is Vale's, so neither
+      # says anything about the newest compiler (xtask/src/ci.rs).
+      - run: cargo xtask ci --skip api,prose
 
   fresh-seeds:
     name: property tests with fresh seeds
@@ -81,9 +83,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: rustup toolchain install nightly --profile minimal
-      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+      - uses: ./.github/actions/tools
         with:
-          tool: cargo-fuzz
+          tools: cargo-fuzz
       - name: Restore the corpus
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -121,7 +123,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+      - uses: ./.github/actions/tools
         with:
-          tool: lychee
+          tools: lychee
       - run: lychee --no-progress --max-concurrency 4 --accept 200,429 './*.md' 'docs/src/**/*.md' 'crates/*/README.md' 'apps/*/README.md'

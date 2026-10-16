@@ -13,6 +13,8 @@ use stitchcraft_svg::{Svg, read};
 pub const UM: f64 = 0.001;
 
 /// A fixture from `conformance/fixtures/svg/`.
+// A test reads the repository's files, which clippy.toml keeps out of library code.
+#[allow(clippy::disallowed_methods)]
 pub fn fixture(name: &str) -> Vec<u8> {
     std::fs::read(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance/fixtures/svg").join(name)).unwrap()
 }

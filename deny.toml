@@ -24,11 +24,23 @@ allow = [
     "Zlib",
     "Unicode-3.0",
 ]
+# The fuzz targets' workspace (fuzz/), checked too: libFuzzer's runtime is LLVM's, under the permissive
+# NCSA licence as well as MIT OR Apache-2.0. Only it may use that licence.
+exceptions = [
+    { allow = ["NCSA"], crate = "libfuzzer-sys" },
+]
 
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
 allow-wildcard-paths = true
+# No randomness from the OS in what ships (docs/src/design/determinism.md). A random number generator
+# comes only with proptest, for the property tests, and the OS's entropy only through it, its temporary
+# files and the job server of the C build that compiles libFuzzer for the fuzz targets.
+deny = [
+    { crate = "rand", wrappers = ["proptest"] },
+    { crate = "getrandom", wrappers = ["rand_core", "tempfile", "jobserver"] },
+]
 
 [sources]
 unknown-registry = "deny"

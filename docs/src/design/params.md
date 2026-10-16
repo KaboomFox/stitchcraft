@@ -162,10 +162,10 @@ set, such as a settings panel, reads every parameter with `from_set`.
 A declaration that compiles can still be wrong: an empty range, a default outside it, a repeated option,
 a condition on a parameter that does not exist or that an element could not read it by. `stitchcraft_params::audit` lists every such problem, and
 the engine's `req_prm_001_every_registered_parameter_is_complete` test requires the list to be empty.
-`cargo xtask docs --check` adds the cross-checks with outside data: a parameter of Ink/Stitch origin must
-be in the [compatibility contract](inkstitch-compat-contract.md) with a compatible type and the same
-default; one of StitchCraft's own must not take an Ink/Stitch key; deviations must name ledger entries;
-the lock and method identifiers must equal Ink/Stitch's.
+`cargo xtask docs --check` adds the cross-checks with outside data. A parameter of Ink/Stitch origin must
+be in the [compatibility contract](inkstitch-compat-contract.md) with a compatible type and the default
+Ink/Stitch sews, and one of StitchCraft's own must not take an Ink/Stitch key. Deviations must name ledger
+entries, and the lock and method identifiers must equal Ink/Stitch's.
 
 ## Naming rules
 
@@ -177,16 +177,19 @@ the lock and method identifiers must equal Ink/Stitch's.
 3. New parameters follow the same style: `snake_case`, a unit suffix for lengths (`_mm`), percentages
    (`_percent`) and angles where Ink/Stitch does (`angle` alone for row angles).
 4. Never reuse a removed key with a new meaning.
-5. **Defaults are part of the contract.** For a parameter of Ink/Stitch origin the registry default
-   equals Ink/Stitch's default, so an SVG that omits the attribute stitches the same way in both
-   tools. Better starting values for new objects come from [presets](#presets) and machine profiles,
-   never from changing a default.
+5. **Defaults are part of the contract.** For a parameter of Ink/Stitch origin the registry default is
+   the value Ink/Stitch sews for an SVG that omits the attribute, and the file stitches the same way in
+   both tools. That value is the default Ink/Stitch's settings window shows, except for the few
+   parameters its code reads with another value. The contract records those as `fallback`, and
+   `conformance/inkstitch/check_params.py` compares every one of its getters with the contract. Better
+   starting values for new objects come from [presets](#presets) and machine profiles, never from
+   changing a default.
 6. **A key belongs to its stitch types.** Ink/Stitch gives some keys to several elements with their own
-   defaults: `running_stitch_tolerance_mm` is 0.2 mm on a stroke and 0.1 mm on a satin or a fill. The
+   defaults: `max_stitch_length_mm` is empty on manual stitch and satin columns and 4 mm on fills. The
    contract is per key and stitch type, so the contract page matches a declaration with the rows for the
    stitch types it applies to, and a declaration for a stitch type Ink/Stitch does not give the key is
-   reported. A key is declared once, and a family whose default differs gets its own with `defaults`:
-   `max_stitch_length_mm` is empty on manual stitch and satin columns and 4 mm on fills. A family with a
+   reported. A key is declared once, and a family whose default differs gets its own with `defaults`, as
+   fills do for `max_stitch_length_mm`. A family with a
    default of its own needs a value (`ParamSpec::in_family`). There an empty value means its default. A
    length of 0 or less is raised to the least the key accepts instead of counting as empty, as Ink/Stitch
    reads a fill's longest stitch. Elsewhere an optional value left empty is no value. The engine reads an

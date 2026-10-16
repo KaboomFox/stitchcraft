@@ -419,7 +419,8 @@ mod tests {
         let radial = |(x, y): V| {
             let (dx, dy) = (x - 100.0, y - 100.0);
             let (u, v) = (cos * dx + sin * dy, -sin * dx + cos * dy);
-            ((u / rx).powi(2) + (v / ry).powi(2)).sqrt()
+            let (a, b) = (u / rx, v / ry);
+            (a * a + b * b).sqrt()
         };
         let mut start = from;
         for seg in segs {

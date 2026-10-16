@@ -371,8 +371,7 @@ mod tests {
 
     #[test]
     fn requirement_ids_exist_in_the_requirements_file() {
-        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../conformance/requirements.toml");
-        let text = std::fs::read_to_string(path).unwrap();
+        let text = include_str!("../../../conformance/requirements.toml");
         for id in [req::INSIDE_HOOP, req::STITCH_LENGTH, req::STRUCTURE, req::NO_STITCH_IN_PLACE, req::COLOR_CHANGES, req::NAMED] {
             assert!(text.contains(&format!("id = \"{id}\"")), "{id} is not in conformance/requirements.toml");
         }

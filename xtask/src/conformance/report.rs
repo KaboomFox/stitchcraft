@@ -1,8 +1,6 @@
 //! The conformance report: the requirement × case matrix and the diagnostic codes with their `diag_`
-//! cases, as Markdown (the pull request's job summary) and as JSON (for the docs), and output hashes (for
-//! the cross-platform determinism job).
+//! cases, as Markdown (the pull request's job summary) and as JSON (for the docs).
 
-use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use std::path::Path;
 
@@ -94,7 +92,7 @@ fn case_list(id: &str, outcomes: &[Outcome]) -> String {
     if cases.is_empty() { "—".to_string() } else { cases.join("<br>") }
 }
 
-/// Writes `report.md`, `report.json` and `hashes.json` into `dir` and returns the Markdown.
+/// Writes `report.md` and `report.json` into `dir` and returns the Markdown.
 pub fn write(dir: &Path, requirements: &[Requirement], outcomes: &[Outcome], commit: &str) -> Result<String, String> {
     let verdicts = verdicts(requirements, outcomes);
     let codes = code_verdicts(outcomes);
@@ -116,13 +114,10 @@ pub fn write(dir: &Path, requirements: &[Requirement], outcomes: &[Outcome], com
             "passed": o.passed(), "failures": o.failures, "skipped": o.skipped,
         })).collect::<Vec<_>>(),
     });
-    let hashes: BTreeMap<String, String> =
-        outcomes.iter().flat_map(|o| o.outputs.iter().map(move |(name, hash)| (format!("{}/{name}", o.case), hash.clone()))).collect();
     std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     let write = |name: &str, text: String| std::fs::write(dir.join(name), text).map_err(|e| format!("{name}: {e}"));
     write("report.md", markdown.clone())?;
     write("report.json", serde_json::to_string_pretty(&json).map_err(|e| e.to_string())? + "\n")?;
-    write("hashes.json", serde_json::to_string_pretty(&hashes).map_err(|e| e.to_string())? + "\n")?;
     Ok(markdown)
 }
 

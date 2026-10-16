@@ -15,6 +15,9 @@ fn golden_dir() -> PathBuf {
 }
 
 #[test]
+// The test reads its golden files, and with STITCHCRAFT_BLESS set writes them, which clippy.toml keeps
+// out of library code.
+#[allow(clippy::disallowed_methods)]
 fn req_fmt_001_canonical_plans_match_their_golden_files() {
     let bless = std::env::var_os("STITCHCRAFT_BLESS").is_some();
     for (name, plan) in plans::canonical() {

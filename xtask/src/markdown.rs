@@ -1,8 +1,9 @@
 //! Just enough Markdown for the docs checks: code fences, comments, inline code, links, includes and
 //! mdBook's heading ids.
 //!
-//! A link's `#anchor` is checked against the ids the book will have, so the ids are made as mdBook 0.5
-//! makes them: from the text the heading shows, after smart punctuation (`docs/book.toml` turns it on).
+//! A link's `#anchor` is checked against the ids the book will have, so the ids are made as mdBook 0.5.4,
+//! the release CI builds the book with, makes them: from the text the heading shows, after smart
+//! punctuation (`docs/book.toml` turns it on).
 //! An indented line is code, and a heading inside an HTML comment is not shown, so neither has an id.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -296,6 +297,11 @@ mod tests {
                     <!--\n## A heading in a comment\n-->\n\n## `min_stitch_length_mm` and snake_case\n\n## The `--check` flag\n";
         let mdbook = ["page", "before--after", "the-emphasis-heading", "rows-and-more", "min_stitch_length_mm-and-snake_case", "the---check-flag"];
         assert_eq!(heading_ids(page), mdbook.iter().map(|id| (*id).to_string()).collect::<BTreeSet<_>>());
+    }
+
+    #[test]
+    fn ci_builds_the_book_with_the_mdbook_these_ids_are_made_for() {
+        assert_eq!(crate::util::pinned_version("mdbook").as_deref(), Some("0.5.4"), ".github/actions/tools/action.yml");
     }
 
     #[test]
