@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-689ed547.js";
+            window.path_to_searchindex_js = "../../searchindex-c288a9c1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -263,12 +263,15 @@ and minus signs is numbers, and a newline may end it. Any other text is a path. 
 between spaces that read as numbers, and <code>1,5</code> is not one of them.</p>
 <p>StitchCraft reports what it cannot sew (<code>SC-W0503</code>), where Ink/Stitch passes over it in silence:</p>
 <ul>
-<li>A piece that is not a number, or a step longer than 10 m (the data model’s reach), is left out.</li>
+<li>Pieces that are not numbers are left out, with steps longer than 10 m (the data model’s reach) and steps
+of 0, which move nowhere and would sew in place.</li>
 <li>With no step left, as in an empty text, the half stitch is sewn instead.</li>
 <li>A lock drawn as an SVG path is not sewn yet, and the half stitch is sewn instead. The engine never reads
 SVG, and the SVG adapter will hand it the path (roadmap M8).</li>
 </ul>
-<p>A step of 0 moves nowhere and would sew in place. It is not a step.</p>
+<p>What comes of a lock’s settings alone, these and the enlargements below, is the same at every end the lock
+is sewn at, so it is said once for the element, with no place. A lock sewn straight where the stitching
+turns is said where it is sewn.</p>
 <h2 id="the-shortest-lock-stitch"><a class="header" href="#the-shortest-lock-stitch">The shortest lock stitch</a></h2>
 <p>A lock stitch is at least 0.2 mm long (<code>LOCK_MIN_STITCH</code>), and the plan checker holds lock stitches to
 that length (<code>REQ-PLAN-002</code>). The needle never goes back into the hole it just left. Joins count: a
@@ -292,12 +295,15 @@ one step, twice, like its half stitch.</li>
 <li>The drawn shapes are StitchCraft’s own designs.</li>
 <li>Ink/Stitch draws custom SVG paths. StitchCraft sews the half stitch with <code>SC-W0503</code> until M8.</li>
 </ul>
-<p>Both follow the stitching with custom steps. They differ in 2 places (<code>DEV-LCK-002</code>):</p>
+<p>Both follow the stitching with custom steps. They differ in 5 places (<code>DEV-LCK-002</code>):</p>
 <ul>
 <li>Ink/Stitch puts the needle points past the end of stitching shorter than the lock on its last needle
 point. StitchCraft goes straight on from the last stitch, and no two needle points coincide.</li>
 <li>Ink/Stitch follows a turn however sharp. StitchCraft sews straight a lock that a turn would fold onto
 itself.</li>
+<li>Ink/Stitch sews a step shorter than 0.2 mm as it is. StitchCraft lengthens it to 0.2 mm.</li>
+<li>Ink/Stitch sews a step of 0 as a stitch in place. StitchCraft leaves it out.</li>
+<li>StitchCraft leaves out a step longer than 10 m, which Ink/Stitch would sew.</li>
 </ul>
 <h2 id="properties"><a class="header" href="#properties">Properties</a></h2>
 <p>The conformance suite checks, through the engine’s public API (<code>crates/stitchcraft-engine/tests/locks.rs</code>):</p>

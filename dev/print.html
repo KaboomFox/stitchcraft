@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-689ed547.js";
+            window.path_to_searchindex_js = "searchindex-c288a9c1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -376,7 +376,7 @@ strokes.svg
   report    strokes.json
 warning SC-W0307 (svg:patch:fill): This fill's area falls into 2 parts that are sewn one after another, with a jump between each.
   hint: To choose the order the parts are sewn in, break the fill apart into one element for each part.
-info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out.
+info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from a needle point next to it was left out.
 </code></pre>
 <ul>
 <li><code>SC-W0307</code> names the fill, whose 2 rectangles are sewn one after the other, with a jump between them.</li>
@@ -1680,13 +1680,16 @@ longer than 10 m, are left out. If no step is left, the half stitch is sewn inst
 another lock shape.</p>
 <h2 id="sc-i0504"><a class="header" href="#sc-i0504">SC-I0504</a></h2>
 <p><strong>Info</strong> — Stitches shorter than the shortest stitch merged</p>
-<p>Needle points less than the shortest stitch from the one before were left out, so the stitch before
-each runs on to the next and none is shorter than the machine sews well. This happens where one
-element’s stitching runs straight on into the next and they nearly touch: the stitch between them is
-whatever is left of the gap. Where small elements are sewn over each other, a lock point or the last
-point before a jump, trim or stop can go too, when it comes within the shortest stitch of one that
-stays. Nothing visible changes.</p>
-<p>Nothing to do. If the count is large, check for elements drawn on top of each other.</p>
+<p>Needle points less than the shortest stitch from a needle point next to them were left out, so the
+stitch before each runs on to the next and none is shorter than the machine sews well. This happens
+where one element’s stitching runs straight on into the next and they nearly touch: the stitch
+between them is whatever is left of the gap. A point that stays, such as a lock point or the last
+point before a jump, trim or stop, leaves out the points before it that it is too near, and a stitch
+into or out of a lock point may be as short as 0.2 mm. Where small elements are sewn over each other,
+a point that stays can go too, when it comes within the shortest stitch of another that stays.
+Nothing visible changes.</p>
+<p>The message gives how many points were left out and the shortest stitches that applied to them.
+Nothing needs doing. If the count is large, check for elements drawn on top of each other.</p>
 <h2 id="sc-w0505"><a class="header" href="#sc-w0505">SC-W0505</a></h2>
 <p><strong>Warning</strong> — Trim or stop after an element that sews nothing; left out</p>
 <p>The element is set to trim or stop after it (<code>trim_after</code>, <code>stop_after</code>, or Ink/Stitch’s trim and
@@ -1931,9 +1934,8 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <h1 id="common-parameters"><a class="header" href="#common-parameters">Common parameters</a></h1>
 <p>Settings every stitch type shares: lock stitches where the element’s stitching starts and
 ends, a trim or a stop after it, the shortest stitch and jump, the longest stitch, and where random
-variation starts.</p>
-<p>StitchCraft reads and checks them today; they change the stitches as plan assembly arrives
-(roadmap steps M3.7 to M3.9).</p>
+variation starts. Plan assembly sews the locks, trims and stops, and finalize holds each element’s
+stitches to its shortest stitch.</p>
 <p>Applies to every stitch type.</p>
 <h2 id="lock-stitches"><a class="header" href="#lock-stitches">Lock stitches</a></h2>
 <h3 id="ties"><a class="header" href="#ties"><code>ties</code></a></h3>
@@ -1970,7 +1972,7 @@ half stitch in its place (<code>SC-W0503</code>).</p>
 <li><strong>Accepts:</strong> text of at most 4096 bytes</li>
 <li><strong>Default:</strong> empty</li>
 <li><strong>Shown when</strong> <a href="#lock_start"><code>lock_start</code></a> is <code>custom</code></li>
-<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs (DEV-LCK-002): Locks of steps follow the stitching round its corners, as Ink/Stitch’s custom steps do. They differ in 2 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn.</li>
+<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs (DEV-LCK-002): Locks of steps follow the stitching round its corners, as Ink/Stitch’s custom steps do. They differ in 5 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn. A step shorter than 0.2 mm is lengthened to 0.2 mm, with SC-W0502, where Ink/Stitch sews it as it is. A custom step of 0 is left out, with SC-W0503, where Ink/Stitch sews a stitch in place for it. And a custom step longer than 10 m, the data model’s reach, is left out with SC-W0503.</li>
 </ul>
 <h3 id="lock_start_scale_mm"><a class="header" href="#lock_start_scale_mm"><code>lock_start_scale_mm</code></a></h3>
 <p><strong>Start lock size.</strong> How long each step of a start lock made of steps (back and forth, or custom) is.</p>
@@ -2007,7 +2009,7 @@ sews the half stitch in its place (<code>SC-W0503</code>).</p>
 <li><strong>Accepts:</strong> text of at most 4096 bytes</li>
 <li><strong>Default:</strong> empty</li>
 <li><strong>Shown when</strong> <a href="#lock_end"><code>lock_end</code></a> is <code>custom</code></li>
-<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs (DEV-LCK-002): Locks of steps follow the stitching round its corners, as Ink/Stitch’s custom steps do. They differ in 2 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn.</li>
+<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs (DEV-LCK-002): Locks of steps follow the stitching round its corners, as Ink/Stitch’s custom steps do. They differ in 5 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn. A step shorter than 0.2 mm is lengthened to 0.2 mm, with SC-W0502, where Ink/Stitch sews it as it is. A custom step of 0 is left out, with SC-W0503, where Ink/Stitch sews a stitch in place for it. And a custom step longer than 10 m, the data model’s reach, is left out with SC-W0503.</li>
 </ul>
 <h3 id="lock_end_scale_mm"><a class="header" href="#lock_end_scale_mm"><code>lock_end_scale_mm</code></a></h3>
 <p><strong>End lock size.</strong> How long each step of an end lock made of steps (back and forth, or custom) is.</p>
@@ -2051,7 +2053,7 @@ hammer one hole. Empty: the larger of the document’s setting and the machine�
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h3 id="min_jump_stitch_length_mm"><a class="header" href="#min_jump_stitch_length_mm"><code>min_jump_stitch_length_mm</code></a></h3>
-<p><strong>Shortest jump.</strong> A move to the next element shorter than this is sewn straight on, without lock stitches or a
+<p><strong>Shortest jump.</strong> A move to the next element no longer than this is sewn straight on, without lock stitches or a
 jump. Empty: the document’s setting.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0 to 20 mm, or empty (0 or less counts as empty)</li>
@@ -4057,8 +4059,10 @@ Ink/Stitch. The PRNG is SplitMix64 from <code>stitchcraft-core</code> (<a href="
 that runs out (<code>SC-E0004</code>) is skipped, and the others still plan. The stitch limit is for the whole
 design. Assembly and finalize share the budget’s work once more, and running out there plans nothing.
 <code>SC-E0004</code> then says so for the whole design.</li>
-<li><strong>Roles:</strong> every stitch is tagged underlay, top, travel or lock, which previews colour-code and which
-later enables per-layer ordering.</li>
+<li><strong>Roles:</strong> every stitch is tagged by its role. Assembly tags the stitches of groups as top and the lock
+stitches as lock. The jumps between groups are travel. Previews draw the lock stitches apart. A
+generator hands assembly its needle points without roles, so an element’s underlay, and the running
+stitches between its rows, are tagged top as well, until generators tag their own.</li>
 </ul>
 <p>Generators are listed in <a href="design/algorithms/README.html">algorithms</a>.</p>
 <h2 id="4-plan-assembly"><a class="header" href="#4-plan-assembly">4. Plan assembly</a></h2>
@@ -4094,9 +4098,10 @@ distance from where the needle is to the next group’s first needle point:</p>
 or stop. Both are left out, as Ink/Stitch leaves them out, and <code>SC-W0505</code> says so.</p>
 <p>A jump lands where sewing resumes, on the tie-in’s first point or on the group’s first point when it has
 no tie-in, and the needle goes down there before the first stitch. The jump’s own thread is the
-machine’s business: StitchCraft trims where an element’s <code>trim_after</code> is set, as Ink/Stitch does.
-Whether the reference machine also needs a trim on long jumps is test sheet TS-02’s question at MC-1. Its
-answer becomes a profile value.</p>
+machine’s business. The plan trims where an element’s <code>trim_after</code> is set, as Ink/Stitch’s does. A PES
+file also flags every jump as a trim, as pystitch writes Ink/Stitch’s
+(<a href="#what-we-write-v1">formats</a>), and whether a machine cuts at a jump is its own setting. At
+MC-1 the reference machine cut the thread only at thread changes and stops.</p>
 <p>Ink/Stitch (read at <code>d59c9ab</code>) joins groups the same way: one stitch from one group to the next within
 the collapse length, locks and a jump beyond it. It sews that stitch as it is; StitchCraft’s finalize
 splits it if it is longer than the machine’s longest stitch, which only a <code>min_jump_stitch_length_mm</code>
@@ -4117,9 +4122,11 @@ by hand.</li>
 its size and its shortest stitch (0.2 mm).</li>
 </ul>
 <h3 id="origin-and-stop-position"><a class="header" href="#origin-and-stop-position">Origin and stop position</a></h3>
-<p>The plan is in hoop coordinates: the design’s origin goes to the hoop’s centre, (0, 0), where the needle
-starts. The origin is the design’s own (Ink/Stitch’s origin command, read from M8) or else the centre of
-the box around every point where the needle goes down (<code>REQ-ASM-005</code>). A design’s stop position
+<p>The finished plan is in hoop coordinates: the design’s origin goes to the hoop’s centre, (0, 0), where the
+needle starts. The origin is the design’s own (Ink/Stitch’s origin command, read from M8) or else the centre
+of the box around every point where the needle goes down (<code>REQ-ASM-005</code>). Assembly builds the plan in the
+design’s coordinates, and finalize moves it once it has left out the points the machine cannot sew, so the
+box is the finished plan’s, as in Ink/Stitch. A design’s stop position
 (Ink/Stitch’s stop position command) adds a jump to it before each <code>Stop</code>. At the stop position the frame
 is clear of the needle for an appliqué or a check, and sewing resumes with a jump back.</p>
 <h3 id="commands"><a class="header" href="#commands">Commands</a></h3>
@@ -4140,8 +4147,8 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 </div>
 <h2 id="5-finalize"><a class="header" href="#5-finalize">5. Finalize</a></h2>
 <p>Finalize fits the plan to the machine profile (<code>stitchcraft_engine::finalize</code>), and a plan that <code>plan</code>
-returns can be written as it is. Generators already sew within the machine’s limits. What is left to fit
-comes from joining groups and from settings the machine cannot follow.</p>
+returns can be written as it is. Generators sew within the machine’s limits where their settings let
+them. What is left to fit comes from joining groups and from settings the machine cannot follow.</p>
 <ol>
 <li><strong>The shortest stitch</strong> of each needle point is its element’s: the one its generator used, so finalize
 never thins what the generator spaced. That is the element’s <code>min_stitch_length_mm</code>, else the design’s
@@ -4159,9 +4166,12 @@ first point always stays. A stitch into or out of a lock point is a lock stitch,
 function, which a generator that joins pieces of its own also applies, as a tatami fill does to its
 rows and the travel between them, so that finalize finds nothing of its stitches to thin.</li>
 <li><strong>The longest stitch.</strong> A stitch longer than <code>profile.max_stitch</code> is split into the fewest equal parts
-no longer than it (<code>SC-I0703</code>, <code>REQ-FIN-001</code>). Such a stitch comes from a stitch placed by hand, from
-a custom lock’s long step, or from a move sewn on under a <code>min_jump_stitch_length_mm</code> longer than the
-machine’s longest stitch. Each part counts against the design’s stitch budget.</li>
+no longer than it (<code>SC-I0703</code>, <code>REQ-FIN-001</code>). Such a stitch comes from a stitch placed by hand, a
+custom lock’s long step, a satin column wider than the machine’s longest stitch, a tatami fill whose
+<code>max_stitch_length_mm</code> is longer than it, or a move sewn on under a <code>min_jump_stitch_length_mm</code> that
+long. Each part counts against the design’s stitch budget.</li>
+<li><strong>The hoop’s centre.</strong> The fitted plan is moved so the design’s origin is at the hoop’s centre
+(<a href="#origin-and-stop-position">origin</a>, <code>REQ-ASM-005</code>).</li>
 <li><strong>Colour limits:</strong> colour changes and stops above what the profile’s format records → <code>SC-E0601</code>.</li>
 <li><strong>Hoop:</strong> a design larger than the hoop → <code>SC-E0701</code>, with a rotate-to-fit fix when rotating 90° would
 fit. When a design’s origin is far from its middle, a design smaller than the hoop can cross the
@@ -4174,7 +4184,8 @@ Otherwise, larger than the comfort zone → <code>SC-W0702</code> (<code>REQ-FIN
 <p>Splitting jumps longer than a format can encode in one record is <em>not</em> done here: it is the encoder’s
 job, because the limit is a property of the file format, not of the machine.</p>
 <p>Ink/Stitch (read at <code>d59c9ab</code>) removes short stitches once, over the whole plan: an entry no farther than
-its shortest stitch (the element’s <code>min_stitch_length_mm</code>, else a global 0.1 mm) from the last one kept
+its shortest stitch (the element’s <code>min_stitch_length_mm</code>, else the design’s <code>min_stitch_len_mm</code>, 0.1 mm
+unless the file sets it) from the last one kept
 is dropped. It keeps lock stitches, the stitch right after a jump, and stop, trim and colour-change
 entries. A jump itself can be dropped. Nothing is split. StitchCraft uses the same shortest stitch for
 each element as Ink/Stitch, but never one below the machine’s (0.3 mm on the Brother). It keeps the ends
@@ -5389,12 +5400,15 @@ and minus signs is numbers, and a newline may end it. Any other text is a path. 
 between spaces that read as numbers, and <code>1,5</code> is not one of them.</p>
 <p>StitchCraft reports what it cannot sew (<code>SC-W0503</code>), where Ink/Stitch passes over it in silence:</p>
 <ul>
-<li>A piece that is not a number, or a step longer than 10 m (the data model’s reach), is left out.</li>
+<li>Pieces that are not numbers are left out, with steps longer than 10 m (the data model’s reach) and steps
+of 0, which move nowhere and would sew in place.</li>
 <li>With no step left, as in an empty text, the half stitch is sewn instead.</li>
 <li>A lock drawn as an SVG path is not sewn yet, and the half stitch is sewn instead. The engine never reads
 SVG, and the SVG adapter will hand it the path (roadmap M8).</li>
 </ul>
-<p>A step of 0 moves nowhere and would sew in place. It is not a step.</p>
+<p>What comes of a lock’s settings alone, these and the enlargements below, is the same at every end the lock
+is sewn at, so it is said once for the element, with no place. A lock sewn straight where the stitching
+turns is said where it is sewn.</p>
 <h2 id="the-shortest-lock-stitch"><a class="header" href="#the-shortest-lock-stitch">The shortest lock stitch</a></h2>
 <p>A lock stitch is at least 0.2 mm long (<code>LOCK_MIN_STITCH</code>), and the plan checker holds lock stitches to
 that length (<code>REQ-PLAN-002</code>). The needle never goes back into the hole it just left. Joins count: a
@@ -5418,12 +5432,15 @@ one step, twice, like its half stitch.</li>
 <li>The drawn shapes are StitchCraft’s own designs.</li>
 <li>Ink/Stitch draws custom SVG paths. StitchCraft sews the half stitch with <code>SC-W0503</code> until M8.</li>
 </ul>
-<p>Both follow the stitching with custom steps. They differ in 2 places (<code>DEV-LCK-002</code>):</p>
+<p>Both follow the stitching with custom steps. They differ in 5 places (<code>DEV-LCK-002</code>):</p>
 <ul>
 <li>Ink/Stitch puts the needle points past the end of stitching shorter than the lock on its last needle
 point. StitchCraft goes straight on from the last stitch, and no two needle points coincide.</li>
 <li>Ink/Stitch follows a turn however sharp. StitchCraft sews straight a lock that a turn would fold onto
 itself.</li>
+<li>Ink/Stitch sews a step shorter than 0.2 mm as it is. StitchCraft lengthens it to 0.2 mm.</li>
+<li>Ink/Stitch sews a step of 0 as a stitch in place. StitchCraft leaves it out.</li>
+<li>StitchCraft leaves out a step longer than 10 m, which Ink/Stitch would sew.</li>
 </ul>
 <h2 id="properties"><a class="header" href="#properties">Properties</a></h2>
 <p>The conformance suite checks, through the engine’s public API (<code>crates/stitchcraft-engine/tests/locks.rs</code>):</p>
