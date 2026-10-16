@@ -140,8 +140,9 @@ impl Arrangement {
         next
     }
 
-    /// The faces and their winding numbers. One unit of `meter` per half edge and per pair of ring and
-    /// face compared.
+    /// The faces and their winding numbers. One unit of `meter` per half edge, per point of the rings
+    /// traced (for their bounds), per pair of a ring bounding no face and a face compared, and per point of
+    /// each face whose bounds cover such a ring and that the ring is then located in.
     pub(crate) fn faces(&self, meter: &mut Meter) -> Result<Faces, Exhausted> {
         let halves = 2 * self.edges.len();
         meter.charge(u64::try_from(halves).unwrap_or(u64::MAX))?;
@@ -169,6 +170,12 @@ impl Arrangement {
         let starts: Vec<Vec<usize>> = rings.iter().map(|ring| ring.iter().filter_map(|&h| self.ends(h)).map(|(from, _)| from).collect()).collect();
         let polylines: Vec<Vec<Point>> = starts.iter().map(|ring| closed(&ring.iter().map(|&i| self.point(i)).collect::<Vec<_>>())).collect();
         let areas: Vec<TwiceArea> = starts.iter().map(|ring| self.twice_area(ring)).collect();
+        // Each ring's bounds, once: a ring is compared with every face, and a face with every ring.
+        let mut envelopes: Vec<Envelope> = Vec::with_capacity(polylines.len());
+        for polyline in &polylines {
+            meter.charge(u64::try_from(polyline.len()).unwrap_or(u64::MAX))?;
+            envelopes.push(Envelope::of(polyline));
+        }
         // Clockwise rings bound faces, numbered in order; the others lie in the smallest face around them.
         let mut face_of_ring: Vec<Option<usize>> = vec![None; rings.len()];
         let mut bounds: Vec<usize> = Vec::new();
@@ -179,18 +186,27 @@ impl Arrangement {
             }
         }
         let outside = bounds.len();
-        for (r, polyline) in polylines.iter().enumerate() {
+        for (r, (polyline, env)) in polylines.iter().zip(&envelopes).enumerate() {
             if face_of_ring.get(r).copied().flatten().is_some() {
                 continue;
             }
             meter.charge(u64::try_from(bounds.len()).unwrap_or(u64::MAX))?;
             let probe = polyline.first().copied().unwrap_or(Point::ORIGIN);
-            let env = Envelope::of(polyline);
-            let around =
-                |b: usize| polylines.get(b).is_some_and(|face| Envelope::of(face).covers(&env) && locate_in_ring(probe, face) == Location::Interior);
+            // The faces around it: those whose bounds cover its bounds, and inside which its first point lies.
+            let mut around: Vec<(usize, usize)> = Vec::new();
+            for (f, &b) in bounds.iter().enumerate() {
+                if let (Some(face), Some(face_env)) = (polylines.get(b), envelopes.get(b))
+                    && face_env.covers(env)
+                {
+                    meter.charge(u64::try_from(face.len()).unwrap_or(u64::MAX))?;
+                    if locate_in_ring(probe, face) == Location::Interior {
+                        around.push((f, b));
+                    }
+                }
+            }
             // Of the faces around it, the smallest: the one whose clockwise ring's area is nearest 0.
-            let smallest = bounds.iter().enumerate().filter(|&(_, &b)| around(b)).max_by_key(|&(_, &b)| areas.get(b).copied());
-            face_of_ring[r] = Some(smallest.map_or(outside, |(f, _)| f));
+            let smallest = around.iter().max_by_key(|&&(_, b)| areas.get(b).copied());
+            face_of_ring[r] = Some(smallest.map_or(outside, |&(f, _)| f));
         }
         let right_of: Vec<usize> = ring_of.iter().map(|r| r.and_then(|r| face_of_ring.get(r).copied().flatten()).unwrap_or(outside)).collect();
         // Winding numbers, from outside everything inwards: crossing a half from its right to its left adds
@@ -337,6 +353,15 @@ mod tests {
         let mut meter = Budget::DEFAULT.meter();
         cut(&[square(0.0, 0.0, 4.0)], &mut meter).unwrap().unwrap();
         assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 5 + (4 + 2 * 4 + 2 * 2) + 5 + 5);
+        // A square with a square hole apart from it: 16 halves; 4 rings traced, of 5 points each with the
+        // first again, for their bounds; 2 rings bounding no face, each compared with the 2 faces; and the
+        // faces whose bounds cover them located in, the square's for both and the hole's for the hole.
+        let mut hole = square(1.0, 1.0, 2.0);
+        hole.reverse();
+        let arrangement = cut(&[square(0.0, 0.0, 4.0), hole], &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        let mut meter = Budget::DEFAULT.meter();
+        arrangement.faces(&mut meter).unwrap();
+        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 16 + 4 * 5 + 2 * 2 + 3 * 5);
     }
 
     #[test]

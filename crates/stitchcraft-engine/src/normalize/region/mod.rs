@@ -113,7 +113,8 @@ pub struct Built {
 
 /// The region the subpaths of `path` bound under `rule`. One unit of `meter` for each point, each edge
 /// bent and each point tested against it, each pair of edges whose spans along x overlap, each half edge,
-/// and each ring and face compared.
+/// each ring compared with a face or an outline, and each point walked to find a ring's bounds or its place
+/// among the faces and outlines (`REQ-FILL-004`).
 pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Exhausted> {
     let flat = stroke::flatten(path, stroke::SHAPE_TOLERANCE, meter)?;
     let rings: Vec<Vec<Point>> =
@@ -200,7 +201,8 @@ pub(crate) struct Area {
 /// The area `rings` (each open or closed, in the direction drawn) bound: the faces they cut the plane into
 /// whose winding numbers `filled` says are filled ([`arrange`]), joined into parts ([`assemble`]). One unit
 /// of `meter` for each point, each edge bent and each point tested against it, each pair of edges whose
-/// spans along x overlap, each half edge, and each ring and face compared.
+/// spans along x overlap, each half edge, each ring compared with a face or an outline, and each point
+/// walked to find a ring's bounds or its place among the faces and outlines (`REQ-FILL-004`).
 pub(crate) fn area(rings: &[Vec<Point>], filled: impl Fn(i64) -> bool, meter: &mut Meter) -> Result<Area, Exhausted> {
     let arrangement = match arrange::cut(rings, meter)? {
         Ok(arrangement) => arrangement,
