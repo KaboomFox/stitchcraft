@@ -10,6 +10,8 @@
 //! - [`SplitMix64::for_element`] derives a per-element generator from the element's `random_seed` when it
 //!   has one, and otherwise from its stable id, so editing one element never changes another element's
 //!   stitches. A seed replaces the id, as in Ink/Stitch: 2 elements given one seed draw the same numbers.
+//! - [`SplitMix64::stream`] keys a generator for one part of an element, so editing one part never
+//!   changes another part's numbers either: a running stitch draws each span's lengths from its own.
 
 /// SplitMix64 pseudorandom number generator. Deterministic, fast, and statistically adequate for
 /// jitter; not for cryptography.
@@ -37,6 +39,16 @@ impl SplitMix64 {
             Some(seed) => SplitMix64::new(SplitMix64::new(seed).next_u64()),
             None => SplitMix64::new(fnv1a64(element_id.as_bytes()) ^ SplitMix64::new(0).next_u64()),
         }
+    }
+
+    /// Stream `key` of this generator: a generator whose numbers depend on this one's state and on `key`
+    /// alone. Making one draws nothing from this generator, so streams keyed by the parts of an element,
+    /// such as the spans of a running stitch, keep each part's numbers as they were when another part
+    /// changes. The key is spread by the golden gamma, joined to the state by exclusive or, and mixed
+    /// once, as [`SplitMix64::for_element`] mixes a seed.
+    #[must_use]
+    pub fn stream(&self, key: u64) -> Self {
+        SplitMix64::new(SplitMix64::new(self.state ^ key.wrapping_mul(GOLDEN_GAMMA)).next_u64())
     }
 
     /// The next 64 random bits.
@@ -140,5 +152,18 @@ mod tests {
         // The state is the first number from the seed: from 0, 0xE220A8397B1DCDAF, whose own first number
         // the reference implementation gives as the generator's first.
         assert_eq!(SplitMix64::for_element("any", Some(0)), SplitMix64::new(0xE220_A839_7B1D_CDAF));
+    }
+
+    #[test]
+    fn a_stream_depends_on_the_state_and_its_key_alone() {
+        // From state 0, stream 1 starts from the golden gamma mixed once: the second number seed 0 draws.
+        // Its first number, and that of stream 3 of stream 2, are worked out from the published definition.
+        let base = SplitMix64::new(0);
+        assert_eq!(base.stream(1), SplitMix64::new(0x6E78_9E6A_A1B9_65F4));
+        assert_eq!(base.stream(1).next_u64(), 0x46B7_3E79_F0C3_7C00);
+        assert_eq!(base.stream(2).stream(3).next_u64(), 0x71CC_622D_271A_84F0);
+        // Other keys, or another state, give other streams.
+        assert_ne!(base.stream(1).next_u64(), base.stream(2).next_u64());
+        assert_ne!(base.stream(1), SplitMix64::new(1).stream(1));
     }
 }

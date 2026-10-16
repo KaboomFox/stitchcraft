@@ -41,6 +41,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
+| [`SC-W0404`](#sc-w0404) | Warning | Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch |
 | [`SC-W0502`](#sc-w0502) | Warning | Lock stitch shorter than 0.2 mm; lengthened |
 | [`SC-W0503`](#sc-w0503) | Warning | Custom lock cannot be sewn as written |
 | [`SC-I0504`](#sc-i0504) | Info | Stitches shorter than the shortest stitch merged |
@@ -447,6 +448,19 @@ next point. A part's last point is always kept; the one before it goes instead.
 
 The message gives how many and the shortest of them. Move the nodes apart, or delete the extra
 ones.
+
+## SC-W0404
+
+**Warning** — Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch
+
+Hand-placed stitches (manual stitch) sewn longer than `max_stitch_length_mm`. A stitch longer than
+that is split into equal parts no longer than it, but never into parts shorter than the shortest
+stitch the machine sews well, which here took fewer parts: a shorter stitch would hammer one spot and
+could break the thread. Ink/Stitch splits such a stitch into the fewest parts no longer than the
+setting, however short they are.
+
+The message gives how many stitches are longer and the longest of them. Set `max_stitch_length_mm`
+to at least twice the shortest stitch: every split then leaves parts long enough.
 
 ## SC-W0502
 

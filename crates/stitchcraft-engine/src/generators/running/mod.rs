@@ -14,7 +14,9 @@
 //!    then shortens its stitches by less than half, which keeps every one at or above the shortest
 //!    stitch; in a shorter span, a stitch shortened below it joins its shorter neighbour, and the joined
 //!    stitch is no longer than the span. With random length, each stitch is drawn from its length
-//!    ± the jitter and each span starts at a random phase, then the same scaling applies. Where the
+//!    ± the jitter and each span starts at a random phase, then the same scaling applies. Each span draws
+//!    from its own stream of the element's generator, keyed by its subpath and its place there, so a
+//!    change to one span leaves the others' lengths as they were. Where the
 //!    stitches stray from the path by more than nine tenths of the tolerance, as on a curve too tight for
 //!    them, the span is spread again in one stitch more, and one more, as long as that takes no more
 //!    stitches than step 5 would make of it, until they keep to it: a small circle is sewn in even stitches
@@ -59,32 +61,34 @@ const FLATTEN_SHARE: f64 = 0.1;
 
 /// The running stitch along `path`, sewn as `passes` say, with no stitch shorter than `min_stitch` (the
 /// element's shortest stitch, or the machine's). `rng` is the element's generator
-/// ([`SplitMix64::for_element`], seeded with `random_seed`); only random length draws from it. Every point
-/// of the flattened path costs work from `meter`.
+/// ([`SplitMix64::for_element`], seeded with `random_seed`): random length keys a stream of it for each
+/// span ([`SplitMix64::stream`]), and draws nothing from it directly. Every point of the flattened path
+/// costs work from `meter`.
 pub fn running_stitch(
     path: &Path,
     params: &RunningParams,
     passes: &RepeatParams,
     min_stitch: Mm,
-    rng: &mut SplitMix64,
+    rng: &SplitMix64,
     meter: &mut Meter,
 ) -> Result<Stitched, Exhausted> {
     let min = min_stitch.get();
     let mut warnings = Vec::new();
     let pattern = pattern("running_stitch_length_mm", &params.running_stitch_length_mm, min, &mut warnings);
     let jitter = params.random_stitch_length_jitter_percent / 100.0;
-    let mut lengths = Lengths { pattern, next: 0, random: params.enable_random_stitch_length.then_some((jitter, rng)) };
+    let random = params.enable_random_stitch_length.then(|| Random::new(jitter, rng));
+    let mut lengths = Lengths { pattern, next: 0, random };
     let tolerance = params.running_stitch_tolerance_mm.get();
     let stroke = stroke::flatten(path, tolerance * FLATTEN_SHARE, meter)?;
     let mut runs = Vec::with_capacity(stroke.pieces.len());
-    for piece in &stroke.pieces {
+    for (index, piece) in stroke.pieces.iter().enumerate() {
         let along = Along::new(&piece.points, meter)?;
         let length = along.length();
         let skipped = if piece.points.len() < 2 {
             TooSmall::Point
         } else if !at_least(length, min) {
             TooSmall::Short(length)
-        } else if let Some(run) = stitch_piece(&along, &piece.corners, &mut lengths, min, tolerance * (1.0 - FLATTEN_SHARE), meter)? {
+        } else if let Some(run) = stitch_piece(&along, (&piece.corners, index), &mut lengths, min, tolerance * (1.0 - FLATTEN_SHARE), meter)? {
             runs.push(passes::sew(&run, passes.repeats, &passes.bean_stitch_repeats, meter)?);
             continue;
         } else {
@@ -139,7 +143,7 @@ pub(crate) fn along_line(points: &[Point], length: f64, tolerance: f64, min_stit
     let (Some(&first), Some(&last)) = (piece.points.first(), piece.points.last()) else { return Ok(Vec::new()) };
     let mut lengths = Lengths { pattern: vec![length], next: 0, random: None };
     let along = Along::new(&piece.points, meter)?;
-    Ok(stitch_piece(&along, &piece.corners, &mut lengths, min_stitch, tolerance, meter)?.unwrap_or_else(|| vec![first, last]))
+    Ok(stitch_piece(&along, (&piece.corners, 0), &mut lengths, min_stitch, tolerance, meter)?.unwrap_or_else(|| vec![first, last]))
 }
 
 /// A needle penetration: how far along the piece it is, where it is, and whether it is on a corner.
@@ -233,9 +237,10 @@ fn leaves(centre: Point, radius: f64, p: Point, q: Point) -> Option<f64> {
 }
 
 /// The needle points of one piece at least `min` long, or `None` if it lies all within `min` of its ends.
+/// `piece` is its corners and its place in the path, which keys its spans' random lengths.
 fn stitch_piece(
     along: &Along,
-    corners: &[usize],
+    (corners, piece): (&[usize], usize),
     lengths: &mut Lengths,
     min: f64,
     budget: f64,
@@ -258,8 +263,9 @@ fn stitch_piece(
     let longest = lengths.longest(min);
     let mut needles = vec![start];
     lengths.next = 0;
-    for span in cuts.windows(2) {
+    for (index, span) in cuts.windows(2).enumerate() {
         let [from, to] = span else { continue };
+        lengths.start(piece, index);
         needles.extend(spread(along, (*from, *to), lengths, (min, longest, budget), meter)?.into_iter().skip(1));
     }
     let Some(needles) = space(needles, along, min, longest, meter)? else { return Ok(None) };
@@ -325,35 +331,59 @@ fn keeps_to(needles: &[Needle], along: &Along, budget: f64, meter: &mut Meter) -
     Ok(true)
 }
 
-/// Where stitch lengths come from: the pattern, taken in turn, and with random length the jitter and the
-/// element's generator that vary each one.
-struct Lengths<'r> {
+/// Where stitch lengths come from: the pattern, taken in turn, and with random length the draws that vary
+/// each one.
+struct Lengths {
     pattern: Vec<f64>,
     next: usize,
-    random: Option<(f64, &'r mut SplitMix64)>,
+    random: Option<Random>,
 }
 
-/// Where the draws of [`Lengths`] stand: the pattern's next place, and the generator.
+/// Random length's draws: the jitter, the element's generator, and the stream of the span being sewn,
+/// which [`Lengths::start`] keys from it.
+struct Random {
+    jitter: f64,
+    element: SplitMix64,
+    span: SplitMix64,
+}
+
+impl Random {
+    /// Draws varied by `jitter` (a share of each length), from streams of the element's generator.
+    fn new(jitter: f64, element: &SplitMix64) -> Self {
+        Random { jitter, element: element.clone(), span: element.clone() }
+    }
+}
+
+/// Where the draws of [`Lengths`] stand: the pattern's next place, and the span's stream.
 type Mark = (usize, Option<SplitMix64>);
 
-impl Lengths<'_> {
+impl Lengths {
+    /// Starts span `span` of piece `piece`: random length draws from the stream of the element's generator
+    /// that the two places key, so a span's lengths do not depend on what the spans before it drew.
+    fn start(&mut self, piece: usize, span: usize) {
+        let key = |place: usize| u64::try_from(place).unwrap_or(u64::MAX);
+        if let Some(random) = &mut self.random {
+            random.span = random.element.stream(key(piece)).stream(key(span));
+        }
+    }
+
     /// Where the draws stand now.
     fn mark(&self) -> Mark {
-        (self.next, self.random.as_ref().map(|(_, rng)| (**rng).clone()))
+        (self.next, self.random.as_ref().map(|random| random.span.clone()))
     }
 
     /// The draws back to where `mark` says they stood.
-    fn rewind(&mut self, (next, rng): &Mark) {
+    fn rewind(&mut self, (next, span): &Mark) {
         self.next = *next;
-        if let (Some((_, current)), Some(rng)) = (&mut self.random, rng) {
-            **current = rng.clone();
+        if let (Some(random), Some(span)) = (&mut self.random, span) {
+            random.span = span.clone();
         }
     }
 
     /// The longest a stitch can be: the pattern's longest length (at least twice the shortest stitch,
     /// `min`), plus the jitter.
     fn longest(&self, min: f64) -> f64 {
-        let jitter = self.random.as_ref().map_or(0.0, |(jitter, _)| *jitter);
+        let jitter = self.random.as_ref().map_or(0.0, |random| random.jitter);
         self.pattern.iter().copied().fold(2.0 * min, f64::max) * (1.0 + jitter)
     }
 
@@ -363,9 +393,9 @@ impl Lengths<'_> {
     fn draw(&mut self, first: bool, otherwise: f64) -> f64 {
         let base = self.next.checked_rem(self.pattern.len()).and_then(|i| self.pattern.get(i)).copied().unwrap_or(otherwise);
         self.next += 1;
-        let Some((jitter, rng)) = &mut self.random else { return base };
-        let length = base * (1.0 + *jitter * (2.0 * rng.next_f64() - 1.0));
-        if first { length * rng.next_f64() } else { length }
+        let Some(Random { jitter, span, .. }) = &mut self.random else { return base };
+        let length = base * (1.0 + *jitter * (2.0 * span.next_f64() - 1.0));
+        if first { length * span.next_f64() } else { length }
     }
 }
 
