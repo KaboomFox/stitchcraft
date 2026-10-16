@@ -720,6 +720,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   together, goes straight on, as Ink/Stitch's diamonds of 0.01 px round the 2 points then meet (ROW-5,
   `REQ-FILL-TAT-005`). StitchCraft measured a straight line, and called the diamonds circles. The golden
   files stay as they were.
+- An SVG root with only a `width` or only a `height` takes the other from its viewBox's shape, as SVG 2
+  sizes an image (review finding SVG-7, `REQ-SVG-001`, `DEV-SVG-009`). The missing side was the
+  viewBox's, in pixels, which shrank or moved the drawing: a root 100 mm wide with a viewBox of 100 by
+  100 was drawn 26.46 mm wide.
+- A `<polyline>` or `<polygon>` whose list of points has an error is stitched up to the error with
+  `SC-W0804`, as path data is (review finding SVG-8, `DEV-SVG-010`). It was cut there without a word, and
+  an error before its second point was reported as an empty size or empty data.
+- Docs: the deviations ledger records 8 more ways the SVG reader follows a viewer where Ink/Stitch does
+  not, `DEV-SVG-003` to `DEV-SVG-010`, and the SVG design page cites each (review finding SVG-7). The
+  style module and the design page no longer say that an invalid declaration of any property gives way:
+  `display`, `visibility`, the opacities, `fill-rule` and `paint-order` are read as inkex reads them,
+  from the declaration the cascade puts first (SVG-9). The Ink/Stitch contract plans `stroke_first` for
+  M8, as the code and the changelog do (SVG-10).
 - Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
   found (`REQ-SAT-002`, `REQ-SAT-005`).
   - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails

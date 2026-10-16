@@ -5,10 +5,13 @@
 //! (`fill="red"`), in the rules of a style sheet ([`crate::sheet`]) or in the `style` attribute
 //! (`style="fill:red"`), each winning over the one before, and `!important` over all three. Most
 //! properties inherit, so the reader hands a [`Style`] from each element to its children, and each element
-//! changes what it sets. A value that does not parse is ignored, as CSS ignores an invalid declaration:
-//! the next declaration in that order wins, so StitchCraft sees what an SVG viewer shows. The reader names
-//! a paint, stroke width, join or miter limit that the element sets and that never parses
-//! ([`Declaration::unreadable`]).
+//! changes what it sets. A paint, colour, stroke width, join or miter limit that does not parse is
+//! ignored, as CSS ignores an invalid declaration: the next declaration in that order wins, so StitchCraft
+//! sees what an SVG viewer shows. The reader names a paint, stroke width, join or miter limit that the
+//! element sets and that never parses ([`Declaration::unreadable`]). `display`, `visibility`, `opacity`,
+//! `fill-opacity`, `stroke-opacity`, `fill-rule` and `paint-order` take the winning declaration as it is
+//! written, as inkex takes them: a value that does not read there changes nothing, where a viewer lets the
+//! declaration before it win.
 //!
 //! Colours are read as editors write them: keywords in any case (`currentcolor`), and an ICC colour
 //! after the sRGB one (`#cd853f icc-color(…)`, from Inkscape's colour-managed picker) is left for the

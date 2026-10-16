@@ -18,7 +18,7 @@ use std::f64::consts::{FRAC_PI_2, TAU};
 use stitchcraft_core::budget::{Exhausted, Meter};
 use stitchcraft_core::{Point, math};
 use stitchcraft_engine::design::{Path, Segment, Subpath, WORKING_LIMIT_MM};
-use svgtypes::{PathParser, PathSegment, PointsParser};
+use svgtypes::{NumberListParser, PathParser, PathSegment};
 
 use crate::transform::Affine;
 
@@ -281,12 +281,30 @@ pub fn ellipse(cx: f64, cy: f64, rx: f64, ry: f64) -> Vec<Sub> {
     vec![Sub { start: top, segs, closed: true }]
 }
 
-/// The outline through the points of a `points` attribute: a polyline, or a polygon when `closed`.
-pub fn polyline(points: &str, closed: bool) -> Vec<Sub> {
-    let mut points = PointsParser::from(points);
-    let Some(start) = points.next() else { return Vec::new() };
-    let segs: Vec<Seg> = points.map(Seg::Line).collect();
-    if segs.is_empty() { Vec::new() } else { vec![Sub { start, segs, closed }] }
+/// The outline through the points of a `points` attribute (a polyline, or a polygon when `closed`), and what
+/// was wrong with the list, if anything. A list with an error, or with an odd number of coordinates, is
+/// read up to the error, as a viewer draws it (`DEV-SVG-010`).
+pub fn polyline(points: &str, closed: bool) -> Outline {
+    let mut numbers = Vec::new();
+    let mut error = None;
+    for item in NumberListParser::from(points) {
+        match item {
+            Ok(number) => numbers.push(number),
+            Err(e) => {
+                error = Some(e.to_string());
+                break;
+            }
+        }
+    }
+    if error.is_none() && numbers.len() % 2 == 1 {
+        error = Some("an odd number of coordinates".to_string());
+    }
+    let points: Vec<V> = numbers.chunks_exact(2).filter_map(|pair| if let [x, y] = pair { Some((*x, *y)) } else { None }).collect();
+    let subs = match points.split_first() {
+        Some((&start, rest)) if !rest.is_empty() => vec![Sub { start, segs: rest.iter().map(|&p| Seg::Line(p)).collect(), closed }],
+        _ => Vec::new(),
+    };
+    Outline { subs, error }
 }
 
 /// `subs` mapped through `map` into millimetres, or why they cannot be: a number too large to compute
@@ -579,8 +597,8 @@ mod tests {
         assert_eq!(circle[0].segs.len(), 6, "3 quarters in 4 pieces, and a quarter in 2");
         assert_eq!(circle[0].start, (0.0, -10.0), "from the top");
         assert_eq!(ends(&circle[0])[3], (10.0, 0.0), "3 quarters of a turn left on screen reach the right");
-        assert_eq!(polyline("0,0 10,0 10,10", true)[0].segs.len(), 2);
-        assert!(polyline("0,0", false).is_empty());
+        assert_eq!(polyline("0,0 10,0 10,10", true).subs[0].segs.len(), 2);
+        assert_eq!(polyline("0,0", false), Outline::default());
     }
 
     #[test]
