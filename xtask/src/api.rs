@@ -5,8 +5,8 @@
 //! The listing is cargo-public-api's, read from rustdoc's JSON output. That output is still unstable in
 //! rustdoc, so the pinned toolchain produces it with `RUSTC_BOOTSTRAP=1`, for documentation only, never
 //! for code that ships: the snapshots then depend on `rust-toolchain.toml` and on cargo-public-api
-//! [`TOOL_VERSION`] (which CI installs), not on a moving nightly. A toolchain bump may reword some lines;
-//! that diff belongs in the bump's pull request.
+//! [`TOOL_VERSION`] (which `.github/actions/tools` installs in CI, as a test checks), not on a moving
+//! nightly. A toolchain bump may reword some lines; that diff belongs in the bump's pull request.
 
 use std::path::Path;
 
@@ -100,4 +100,14 @@ fn listing(root: &Path, crate_name: &str) -> Result<String, String> {
         "# The public API of {crate_name}, as `cargo xtask api` lists it (cargo-public-api {TOOL_VERSION}, -sss).\n\
          # Generated: do not edit. A change here is a change other code can see; say why in the pull request.\n{items}"
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ci_installs_the_cargo_public_api_the_snapshots_are_made_with() {
+        assert_eq!(util::pinned_version("cargo-public-api").as_deref(), Some(TOOL_VERSION), ".github/actions/tools/action.yml");
+    }
 }

@@ -4,13 +4,17 @@
 //! The data file holds facts only (names, types, units, defaults, applicability, phases); Ink/Stitch's
 //! descriptions are GPL text and are never copied. The registry adds the StitchCraft column. A parameter
 //! the registry declares with an Ink/Stitch origin must exist in the data file with a compatible kind and
-//! the same default, because defaults are part of the contract (`docs/src/design/params.md` › Naming
-//! rules); one with StitchCraft's own origin must not; the lock and method identifiers must match. The
-//! SVG adapter's commands must be Ink/Stitch's, and the attributes it reads must be listed.
+//! the default Ink/Stitch sews, because defaults are part of the contract (`docs/src/design/params.md` ›
+//! Naming rules); one with StitchCraft's own origin must not; the lock and method identifiers must match.
+//! The SVG adapter's commands must be Ink/Stitch's, and the attributes it reads must be listed.
 //!
-//! Ink/Stitch gives some keys to several elements, with different defaults (`running_stitch_tolerance_mm`
-//! is 0.2 mm on strokes and 0.1 mm on satins), so a declaration is matched with the rows for the stitch
-//! types it applies to, never by its key alone.
+//! The default Ink/Stitch sews for a file that sets none is a row's `fallback` where it has one, and its
+//! `default` otherwise. The default is what Ink/Stitch's settings window shows, and its code reads a few
+//! missing attributes as another value (`conformance/inkstitch/check_params.py` finds them).
+//!
+//! Ink/Stitch gives some keys to several elements, with different defaults (`max_stitch_length_mm` has none
+//! on satins and is 4 mm on fills), so a declaration is matched with the rows for the stitch types it
+//! applies to, never by its key alone.
 
 use std::collections::BTreeSet;
 
@@ -63,13 +67,22 @@ struct Param {
     #[serde(rename = "type")]
     kind: String,
     unit: String,
+    /// The value Ink/Stitch's settings window shows.
     default: String,
+    /// The value Ink/Stitch sews for a file that sets none, where it differs from `default`.
+    #[serde(default)]
+    fallback: Option<String>,
     applies_to: Vec<String>,
     phase: String,
     milestone: String,
 }
 
 impl Param {
+    /// The value Ink/Stitch sews for a file that sets none.
+    fn sewn(&self) -> &str {
+        self.fallback.as_deref().unwrap_or(&self.default)
+    }
+
     /// The family of stitch types of the row's element: none for the common settings and clones.
     fn family(&self) -> Option<Family> {
         match self.element.as_str() {
@@ -136,15 +149,17 @@ registry uses these names as its keys so files move between the tools unchanged
   and are not copied; StitchCraft's own help text lives in the [parameter registry](params.md).
 - **Machine-readable source:** `conformance/inkstitch-params.toml`; this page is generated from it and
   from the parameter registry by `cargo xtask docs`, and `cargo xtask docs --check` fails if they disagree:
-  a parameter declared with an Ink/Stitch origin must be listed here with a compatible type and the same
-  default.
+  a parameter declared with an Ink/Stitch origin must be listed here with a compatible type, and its
+  default must be the value Ink/Stitch sews.
+- **Default** is the value Ink/Stitch's settings window shows. For a few parameters its code sews another
+  value when a file sets none, and the cell gives that value after the default, as in `0.1 (0.2 when
+  unset)`. `—` means no default: the value is derived from another parameter or the shape.
 - **StitchCraft** says whether the [parameter registry](../user/reference/params.md) declares the
   parameter. *planned*: not yet; a design that sets it keeps it unchanged and gets `SC-W0105`.
   *registered*: StitchCraft reads and checks it under the same key, meaning and default; it changes the
   stitches once its stitch type or feature lands (see *Phase* and the parameter's reference entry).
   *deviates*: registered, with a meaning that differs as its reference entry describes.
-- **Phase** is when the parameter's stitch type lands ([roadmap](../plan/roadmap.md)). `—` means no default
-  (the value is derived from another parameter or the shape); `computed` means the default is an expression.
+- **Phase** is when the parameter's stitch type lands ([roadmap](../plan/roadmap.md)).
 ";
 
 impl Contract {
@@ -166,12 +181,15 @@ impl Contract {
                 } else {
                     p.applies_to.iter().map(|a| format!("`{a}`")).collect::<Vec<_>>().join(", ")
                 };
+                let default = match &p.fallback {
+                    Some(fallback) => format!("{} ({fallback} when unset)", p.default),
+                    None => p.default.clone(),
+                };
                 md.push_str(&format!(
-                    "| `{}` | {} | {} | {} | {applies} | {} ({}) | {} |\n",
+                    "| `{}` | {} | {} | {default} | {applies} | {} ({}) | {} |\n",
                     p.name,
                     p.kind,
                     p.unit.replace('|', "\\|"),
-                    p.default,
                     p.phase,
                     p.milestone,
                     status(registry, p)
@@ -296,7 +314,7 @@ fn disagreements(spec: &ParamSpec, origin: Origin, p: &Param) -> Vec<String> {
     if !compatible(spec.kind, &p.kind, &p.unit) {
         problems.push(format!("`{key}` is {} here, but Ink/Stitch's is a {} in {}", spec.kind.describe(), p.kind, p.unit));
     }
-    let their_default = if p.default == "—" { "" } else { p.default.as_str() };
+    let their_default = if p.sewn() == "—" { "" } else { p.sewn() };
     // Ink/Stitch gives some combo boxes their default as a place in the options, which the registry lists
     // in Ink/Stitch's order (`check` makes sure of it for the method parameters). It reads a toggle that
     // declares no default, such as `satin_column`, as off when the attribute is missing.
@@ -314,7 +332,7 @@ fn disagreements(spec: &ParamSpec, origin: Origin, p: &Param) -> Vec<String> {
     };
     if origin == Origin::InkStitch && !same {
         problems.push(format!(
-            "`{key}` defaults to \"{our_default}\" here and \"{their_default}\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)"
+            "`{key}` defaults to \"{our_default}\" here, and Ink/Stitch sews \"{their_default}\" for a file that sets none: defaults are part of the contract (declare a deviation if the difference is deliberate)"
         ));
     }
     if p.element == "common" && spec.applies_to != StitchType::ALL {
@@ -409,6 +427,13 @@ mod tests {
         ParamGroup { name: "TatamiFillParams", help: " Tatami.\n", applies_to: &[StitchType::TatamiFill], specs }
     }
 
+    /// The problem reported for a default unlike the one Ink/Stitch sews.
+    fn unlike(key: &str, ours: &str, theirs: &str) -> String {
+        format!(
+            "`{key}` defaults to \"{ours}\" here, and Ink/Stitch sews \"{theirs}\" for a file that sets none: defaults are part of the contract (declare a deviation if the difference is deliberate)"
+        )
+    }
+
     #[test]
     fn renders_sections_methods_counts_and_status() {
         let contract = Contract::parse(&data("0.25")).unwrap();
@@ -457,12 +482,19 @@ mod tests {
         assert!(page.contains("_3 parameter declarations, 1 registered in StitchCraft._"));
         assert_eq!(contract.check(&[&group]), Vec::<String>::new(), "compared with the stroke's default, not the satin's");
         let (data, group) = shared("0.1");
-        assert_eq!(
-            Contract::parse(&data).unwrap().check(&[&group]),
-            [
-                "`running_stitch_tolerance_mm` defaults to \"0.1\" here and \"0.2\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)"
-            ]
-        );
+        assert_eq!(Contract::parse(&data).unwrap().check(&[&group]), [unlike("running_stitch_tolerance_mm", "0.1", "0.2")]);
+    }
+
+    #[test]
+    fn a_row_s_fallback_is_the_default_it_is_compared_with_and_the_page_shows_both() {
+        // Ink/Stitch's settings window shows 0.1 and its code sews 0.2 when the attribute is missing.
+        let data = data("0.25").replacen("default = \"0.25\"", "default = \"0.1\"\nfallback = \"0.2\"", 1);
+        let contract = Contract::parse(&data).unwrap();
+        assert!(contract.render(&[]).contains("| `row_spacing_mm` | float | mm | 0.1 (0.2 when unset) | `tatami_fill` |"));
+        const SEWN: &[ParamSpec] = &[ParamSpec { default: "0.2", ..ROW_SPACING }];
+        const SHOWN: &[ParamSpec] = &[ParamSpec { default: "0.1", ..ROW_SPACING }];
+        assert_eq!(contract.check(&[&registry(SEWN)]), Vec::<String>::new());
+        assert_eq!(contract.check(&[&registry(SHOWN)]), [unlike("row_spacing_mm", "0.1", "0.2")]);
     }
 
     #[test]
@@ -482,12 +514,7 @@ mod tests {
         };
         let contract = Contract::parse(&data).unwrap();
         assert_eq!(contract.check(&[&both(&[(Family::Satin, "0.1")])]), Vec::<String>::new());
-        assert_eq!(
-            contract.check(&[&both(&[])]),
-            [
-                "`running_stitch_tolerance_mm` defaults to \"0.2\" here and \"0.1\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)"
-            ]
-        );
+        assert_eq!(contract.check(&[&both(&[])]), [unlike("running_stitch_tolerance_mm", "0.2", "0.1")]);
     }
 
     #[test]
@@ -519,12 +546,7 @@ mod tests {
         const OFF: &[ParamSpec] = &[ROW_SPACING, ParamSpec { key: "fill_underlay", kind: Kind::Toggle, default: "false", ..ROW_SPACING }];
         const ON: &[ParamSpec] = &[ROW_SPACING, ParamSpec { key: "fill_underlay", kind: Kind::Toggle, default: "true", ..ROW_SPACING }];
         assert_eq!(contract.check(&[&registry(OFF)]), Vec::<String>::new());
-        assert_eq!(
-            contract.check(&[&registry(ON)]),
-            [
-                "`fill_underlay` defaults to \"true\" here and \"false\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)"
-            ]
-        );
+        assert_eq!(contract.check(&[&registry(ON)]), [unlike("fill_underlay", "true", "false")]);
     }
 
     #[test]
@@ -548,7 +570,7 @@ mod tests {
             problems,
             [
                 "`row_spacing_mm` is a whole number from 1 to 9 here, but Ink/Stitch's is a float in mm",
-                "`row_spacing_mm` defaults to \"1\" here and \"0.25\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)",
+                unlike("row_spacing_mm", "1", "0.25").as_str(),
                 "`sparkle_mm` is declared with an Ink/Stitch origin, but conformance/inkstitch-params.toml has no such parameter",
                 "`lock_start` offers [\"bowtie\"], but the lock identifiers in conformance/inkstitch-params.toml are [\"half_stitch\"]",
                 "`fill_method`: StitchType has {\"circular_fill\", \"contour_fill\", \"cross_stitch\", \"guided_fill\", \"legacy_fill\", \"linear_gradient_fill\", \"meander_fill\", \"tartan_fill\", \"tatami_fill\"}, but conformance/inkstitch-params.toml lists {\"circular_fill\", \"contour_fill\", \"cross_stitch\", \"guided_fill\", \"linear_gradient_fill\", \"meander_fill\", \"old_fill\", \"tartan_fill\", \"tatami_fill\"}",
@@ -604,6 +626,7 @@ mod tests {
             kind: "float".to_string(),
             unit: "%".to_string(),
             default: "100".to_string(),
+            fallback: None,
             applies_to: vec!["arrow".to_string(), "zigzag".to_string()],
             phase: "P1".to_string(),
             milestone: "M3".to_string(),
@@ -638,12 +661,7 @@ mod tests {
         let order: Vec<StitchType> =
             contract.method.iter().filter(|m| m.param == "fill_method").map(|m| StitchType::from_id(Family::Fill, &m.value).unwrap()).collect();
         assert_eq!(contract.check(&[&fills(&order, "tatami_fill")]), Vec::<String>::new(), "Ink/Stitch's 0 is the first method");
-        assert_eq!(
-            contract.check(&[&fills(&order, "contour_fill")]),
-            [
-                "`fill_method` defaults to \"contour_fill\" here and \"tatami_fill\" in Ink/Stitch: defaults are part of the contract (declare a deviation if the difference is deliberate)"
-            ]
-        );
+        assert_eq!(contract.check(&[&fills(&order, "contour_fill")]), [unlike("fill_method", "contour_fill", "tatami_fill")]);
         let mut reordered = order;
         reordered.swap(0, 1);
         let problems = contract.check(&[&fills(&reordered, reordered[0].id())]);

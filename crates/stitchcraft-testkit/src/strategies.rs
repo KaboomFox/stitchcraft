@@ -13,6 +13,8 @@ use stitchcraft_plan::{PlanBuilder, Provenance, Rgb, Role, StitchPlan, Thread};
 pub const SEED: u64 = 0x5717_C4AF_7E57_0001;
 
 /// A configuration for `cases` cases: fixed seed, unless `PROPTEST_RNG_SEED` asks for another.
+// proptest reads its seed from the environment, and so does this.
+#[allow(clippy::disallowed_methods)]
 pub fn config(cases: u32) -> Config {
     let config = Config { cases, ..Config::default() };
     if std::env::var_os("PROPTEST_RNG_SEED").is_some() { config } else { Config { rng_seed: RngSeed::Fixed(SEED), ..config } }

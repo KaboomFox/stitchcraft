@@ -439,7 +439,7 @@ pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -
 
 /// The shortest stitch for an element whose own is `own`: the machine's, or the element's own if it is
 /// longer, or else the design's if that is. With no element (`None`), the design's or the machine's.
-pub(crate) fn shortest_stitch(own: Option<Mm>, settings: &DesignSettings, profile: &MachineProfile) -> Mm {
+pub fn shortest_stitch(own: Option<Mm>, settings: &DesignSettings, profile: &MachineProfile) -> Mm {
     let machine = profile.min_stitch;
     own.or(settings.min_stitch_len).and_then(|own| Mm::new(own.get().max(machine.get())).ok()).unwrap_or(machine)
 }

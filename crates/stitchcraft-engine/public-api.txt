@@ -126,6 +126,7 @@ pub const stitchcraft_engine::generate::FILL_METHODS: &[stitchcraft_params::spec
 pub const stitchcraft_engine::generate::STROKE_METHODS: &[stitchcraft_params::spec::ChoiceOption]
 pub fn stitchcraft_engine::generate::approach(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &stitchcraft_core::budget::Budget) -> core::option::Option<stitchcraft_engine::generators::Approach>
 pub fn stitchcraft_engine::generate::generate(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile, &stitchcraft_engine::generators::Neighbours, &stitchcraft_core::budget::Budget) -> stitchcraft_engine::generate::Generation
+pub fn stitchcraft_engine::generate::shortest_stitch(core::option::Option<stitchcraft_core::units::Mm>, &stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile) -> stitchcraft_core::units::Mm
 pub mod stitchcraft_engine::generators
 pub mod stitchcraft_engine::generators::manual
 pub fn stitchcraft_engine::generators::manual::manual_stitch(&stitchcraft_engine::design::Path, core::option::Option<stitchcraft_core::units::Mm>, &stitchcraft_engine::generators::passes::RepeatParams, stitchcraft_core::units::Mm, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>

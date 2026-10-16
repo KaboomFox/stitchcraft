@@ -2,8 +2,9 @@
 //! ending with their exit status, and the panic guard around them — and what each command writes and
 //! prints, run on real files.
 
-// Test code may unwrap (clippy.toml allows it inside #[test] functions; this helper is test code too).
-#![allow(clippy::unwrap_used)]
+// Test code may unwrap (clippy.toml allows it inside #[test] functions; this helper is test code too). It
+// runs `stitch` on files in folders of its own.
+#![allow(clippy::unwrap_used, clippy::disallowed_methods)]
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};

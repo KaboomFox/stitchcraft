@@ -258,7 +258,8 @@ it must read our files back to the same stitches. Details: [formats](formats.md)
 
 Ordered collections only (`BTreeMap`, `Vec`), transcendental functions from `libm`, a documented
 seeded PRNG (SplitMix64) with seeds derived from element id and the `random_seed` parameter,
-absolute quantization at encode time, and a CI job that compares output hashes across platforms.
+absolute quantization at encode time, and golden files compared byte for byte on every operating system
+CI tests on.
 Details: [determinism](determinism.md).
 
 ## 13. VectorCraft integration (summary)

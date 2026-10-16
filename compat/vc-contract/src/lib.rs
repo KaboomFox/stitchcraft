@@ -4,3 +4,4 @@
 //! environment variable into `vectorcraft-plugins` — the same code VectorCraft runs — and check that it
 //! installs, declares a valid manifest and behaves as specified. `cargo xtask compat contract` runs them
 //! against each VectorCraft ref the compatibility gate tracks (docs/src/design/compatibility-gate.md).
+#![forbid(unsafe_code)]

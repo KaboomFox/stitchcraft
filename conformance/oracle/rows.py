@@ -109,7 +109,7 @@ def case(polygon, spacing):
 def main():
     rng = random.Random(SEED)
     print(f"# Rows cut by shapely {shapely.__version__} (GEOS {shapely.geos_version_string}); "
-          "conformance/oracle/rows.py, seed {SEED}.".replace("{SEED}", str(SEED)))
+          "conformance/oracle/rows.py, seed {SEED}. Do not edit; regenerate.".replace("{SEED}", str(SEED)))
     for draw, sizes in [(polygons, GRIDS), (holed, HOLED)]:
         for size, cells, count in sizes:
             made = 0

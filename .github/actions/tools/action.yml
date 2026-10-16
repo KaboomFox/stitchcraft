@@ -1,0 +1,40 @@
+# The tools the gates run, at one version each, so a release of a tool cannot change a gate's verdict
+# between two runs of the same code. mdBook makes the anchor ids `cargo xtask docs --check` reproduces
+# (xtask/src/markdown.rs), and the API snapshots are cargo-public-api's output (xtask/src/api.rs): tests
+# there read the versions below. Every workflow installs these tools through this action.
+name: Pinned tools
+description: Install the named tools at the versions the gates are made for.
+inputs:
+  tools:
+    description: Comma-separated names, each one of the tools listed below.
+    required: true
+runs:
+  using: composite
+  steps:
+    - id: pinned
+      shell: bash
+      env:
+        TOOLS: ${{ inputs.tools }}
+      run: |
+        declare -A pinned=(
+          [cargo-deny]=0.20.2
+          [cargo-fuzz]=0.13.2
+          [cargo-llvm-cov]=0.9.1
+          [cargo-mutants]=27.1.0
+          [cargo-public-api]=0.52.0
+          [lychee]=0.24.2
+          [mdbook]=0.5.4
+          [typos]=1.50.3
+        )
+        wanted=()
+        for tool in ${TOOLS//,/ }; do
+          if [ -z "${pinned[$tool]:-}" ]; then
+            echo "::error::No version of $tool is pinned in .github/actions/tools/action.yml."
+            exit 1
+          fi
+          wanted+=("$tool@${pinned[$tool]}")
+        done
+        echo "tools=$(IFS=,; echo "${wanted[*]}")" >> "$GITHUB_OUTPUT"
+    - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+      with:
+        tool: ${{ steps.pinned.outputs.tools }}

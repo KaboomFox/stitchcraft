@@ -232,7 +232,6 @@ test`, then writes `target/conformance/`:
 - `report.md` — the requirement × case matrix, failures first, requirements nobody tests yet folded
   away; in GitHub Actions it is appended to the job summary, so every pull request shows it;
 - `report.json` — machine-readable results, for the docs (requirement pages will show their status);
-- `hashes.json` — one SHA-256 per output, for the [cross-platform determinism](determinism.md#cross-platform-check) job;
 - `diffs/` — for a machine-file golden that differs, previews (simple style) of the golden file and of
   the new output, so a reviewer sees what sews differently; CI keeps them as a workflow artifact when a
   run fails.
@@ -252,7 +251,7 @@ will let users validate a machine profile with the same cases.
 
 | When | What must pass |
 |---|---|
-| Every PR | L0, L1 (no fuzzing), L2 with fixed seeds, `--check` rules, cross-platform hashes, coverage floors, mutants in the changed lines |
+| Every PR | L0, L1 (no fuzzing), L2 with fixed seeds, `--check` rules, the data cases' golden files on Linux, macOS and Windows ([cross-platform check](determinism.md#cross-platform-check)), coverage floors, mutants in the changed lines |
 | Nightly | L1 fuzzing, L2 fresh seeds, L3 differential |
 | Weekly | Mutation testing of every shipped crate, against the recorded counts |
 | Milestone close | All requirements of the milestone `active` and green; its machine checkpoint signed off |

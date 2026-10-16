@@ -378,7 +378,10 @@ mod tests {
             assert_eq!(points.pop(), points.first().copied(), "{tolerance}");
             let n = points.len() as f64;
             let centre = (points.iter().map(|p| p.x()).sum::<f64>() / n, points.iter().map(|p| p.y()).sum::<f64>() / n);
-            let off = |p: &stitchcraft_core::Point| ((p.x() - centre.0).powi(2) + (p.y() - centre.1).powi(2)).sqrt() - 3.0;
+            let off = |p: &stitchcraft_core::Point| {
+                let (dx, dy) = (p.x() - centre.0, p.y() - centre.1);
+                (dx * dx + dy * dy).sqrt() - 3.0
+            };
             assert!(points.iter().all(|p| off(p).abs() < 0.05), "{tolerance}: {points:?}");
             centres.push(centre.0);
             counts.push(points.len());
