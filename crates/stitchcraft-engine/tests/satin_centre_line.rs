@@ -242,6 +242,18 @@ fn req_sat_017_the_rails_made_stay_the_rails() {
     let Ok(SatinShape::Rails(drawn)) = found.shape else { panic!("rails") };
     assert!(near(&drawn.rails[0], &[(1.1, 3.0), (1.1, -3.0)]), "{:?}", drawn.rails);
     assert_eq!(found.warnings.iter().map(|w| w.code).collect::<Vec<_>>(), [Code::SatinRailsByLength]);
+    // With a third rung, each rail meets 3 lines and each rung 2, and the rails are told apart as rails.
+    let third = [
+        &[(0.0, -2.5), (3.3, -2.5)][..],
+        &[(0.0, 2.5), (3.3, 2.5)],
+        &[(1.1, 3.0), (1.1, -3.0)],
+        &[(2.2, 3.0), (2.2, -3.0)],
+        &[(2.75, 3.0), (2.75, -3.0)],
+    ];
+    let found = recognize(&polylines(&third), &mut Budget::DEFAULT.meter()).unwrap();
+    let Ok(SatinShape::Rails(drawn)) = found.shape else { panic!("rails") };
+    assert!(near(&drawn.rails[0], &[(0.0, -2.5), (3.3, -2.5)]) && near(&drawn.rails[1], &[(0.0, 2.5), (3.3, 2.5)]), "{:?}", drawn.rails);
+    assert!(found.warnings.is_empty(), "{:?}", found.warnings);
 }
 
 #[test]

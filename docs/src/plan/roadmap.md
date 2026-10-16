@@ -122,7 +122,8 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 
 Zigzag stroke; E-stitch; S-stitch; zigzag satin; contour fill (three strategies, neck splitting); meander
 fill with generated tiles; circular fill. One step per type with its requirements, then **MC-6 🧵**
-(TS-11 sampler of the new types).
+(TS-11 sampler of the new types). With the satin methods come the warnings they all share: `SC-W0208`
+for stitches turned more than 45° from the column, and `SC-W0209` for a column wider than 12 mm.
 
 ## M8 — Ink/Stitch interoperability
 

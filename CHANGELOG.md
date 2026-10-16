@@ -768,6 +768,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   what Ink/Stitch's shortest stitch is when an element sets none, and how PES files flag jumps. The docs of
   `min_jump_stitch_length_mm` say a move that long is sewn on too, and 3 stale comments are fixed
   (PLN-11).
+- The straight stitches that join a satin column's underlays to each other and to its top stitches keep
+  to the shortest stitch, as its line to the start and the end does (review finding SAT-6, `REQ-SAT-004`,
+  `DEV-RUN-003`). With `running_stitch_length_mm` below twice the shortest stitch, the line was sewn in
+  stitches twice that long and the joins in stitches of the length set, which finalize then left out. Both
+  are sewn in the raised length now, and one `SC-W0402` says so.
+- Docs: a rung's place in a satin column drawn as one path is measured from the last place tried (kept or
+  not), as the code and Ink/Stitch measure it (review finding SAS-4). `DEV-SVG-011` records that a path read
+  from SVG has the subpaths a viewer draws. inkex keeps a move-to with nothing drawn after it as a point,
+  and runs a closed subpath on, so the satin page no longer says both count them alike (SAS-6). Ink/Stitch
+  takes the rungs of a short, wide column for its rails with exactly 2 rungs, not 2 or more
+  (`DEV-SAT-007`, SAS-7). `SC-W0208` and `SC-W0209`, which no step registered, move to M7 with the other
+  satin methods (SAT-4).
 - Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
   found (`REQ-SAT-002`, `REQ-SAT-005`).
   - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails

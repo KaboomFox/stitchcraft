@@ -47,9 +47,9 @@ requirements = ["REQ-RUN-001", "REQ-RUN-002", "REQ-SAT-010", "REQ-SAT-011"]
 [[deviation]]
 id = "DEV-RUN-003"
 area = "strokes/running"
-summary = "No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). Ink/Stitch's running stitch has no shortest stitch; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before."
+summary = "No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column's travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Ink/Stitch's running stitch has no shortest stitch; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before."
 reason = "The machine's shortest stitch is a limit: honoured where the stitches are placed, it never costs a corner or leaves an over-long stitch."
-requirements = ["REQ-RUN-001", "REQ-RUN-003", "REQ-SAT-010", "REQ-SAT-011"]
+requirements = ["REQ-RUN-001", "REQ-RUN-003", "REQ-SAT-004", "REQ-SAT-010", "REQ-SAT-011", "REQ-SAT-013", "REQ-SAT-014"]
 
 [[deviation]]
 id = "DEV-RUN-004"
@@ -124,7 +124,7 @@ requirements = ["REQ-SAT-013", "REQ-SAT-014", "REQ-FILL-TAT-001"]
 [[deviation]]
 id = "DEV-SAT-007"
 area = "satin"
-summary = "A satin column drawn as one path keeps the 2 rails made from its line as its rails, and each rung made pairs the points where it crosses them. Where 2 parts of the line join, the rung pairs the first points of the second part's rails. Ink/Stitch hands the rails and rungs back to its satin column as subpaths, which tells rails from rungs again by where they meet and how long they are, and adds a rung across the gap where parts join, 1.2 times as long, pairing where it crosses the rails. With 2 rungs or more on a column shorter than its rungs, it takes 2 rungs as the rails, and a line that crosses itself can make a rung meet more lines than a rail does. Ink/Stitch also keeps the first part of a line cut in half when its offset vanishes to one side, with the rail it has, where StitchCraft leaves that part out with SC-W0213, as it leaves out later ones."
+summary = "A satin column drawn as one path keeps the 2 rails made from its line as its rails, and each rung made pairs the points where it crosses them. Where 2 parts of the line join, the rung pairs the first points of the second part's rails. Ink/Stitch hands the rails and rungs back to its satin column as subpaths, which tells rails from rungs again by where they meet and how long they are, and adds a rung across the gap where parts join, 1.2 times as long, pairing where it crosses the rails. With exactly 2 rungs, or with rungs that cross each other, its rule falls back to the 2 longest lines. On a column shorter than its rungs those are 2 rungs. A line that crosses itself can also make a rung meet more lines than a rail does. Ink/Stitch also keeps the first part of a line cut in half when its offset vanishes to one side, with the rail it has, where StitchCraft leaves that part out with SC-W0213, as it leaves out later ones."
 reason = "The rails made are known, so they need no guessing, and a column is never sewn between a rail and a rung. Where 2 parts meet on a straight stretch, the gap rung crosses the rails at those first points, and both sew alike. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_column.py, lib/elements/utils/stroke_to_satin.py). The case req_sat_017_the_rails_made_stay_the_rails (crates/stitchcraft-engine/tests/satin_centre_line.rs) draws the lines Ink/Stitch would make for a dash 3.3 mm long and 5 mm wide, and its rule for drawn columns takes the 2 rungs as the rails."
 requirements = ["REQ-SAT-016", "REQ-SAT-017"]
 
@@ -288,3 +288,10 @@ area = "svg"
 summary = "A polyline or polygon whose list of points has an error is read up to the error, as a viewer draws it, and SC-W0804 names it. inkex reads the list as path data after an M, taking the numbers and skipping the rest, so Ink/Stitch sews all 4 points of 0,0 10,0 10,10 x 0,10, where StitchCraft sews 3."
 reason = "The drawing is sewn as a viewer shows it (REQ-SVG-001), and the warning says it is cut. inkex was read in inkex 1.4.1 (inkex/elements/_polygons.py; inkex/paths/path.py; inkex/utils.py: strargs)."
 requirements = ["REQ-SVG-001"]
+
+[[deviation]]
+id = "DEV-SVG-011"
+area = "svg"
+summary = "A path has the subpaths SVG draws. A move-to with nothing drawn after it is no subpath, and a command that draws after a closepath starts a new subpath where the closed one started. inkex, which Ink/Stitch reads paths with, keeps such a move-to as a subpath of 1 point. It also runs the commands after a closepath on in the closed subpath. Ink/Stitch then counts other subpaths than StitchCraft, and they decide how it sews the path. It tells a satin column's rails from its rungs by them and sews a stroke one subpath at a time. A path of more than 1 is a satin column there however narrow its stroke."
+reason = "The drawing is read as a viewer draws it (REQ-SVG-001), and a point that nothing draws is no part of it. inkex was read in inkex 1.4.1 (inkex/paths/path.py: CubicSuperPath.append_path_command), and Ink/Stitch at d59c9ab (lib/elements/element.py: path; lib/elements/utils/nodes.py; lib/elements/stroke.py: to_stitch_groups)."
+requirements = ["REQ-SVG-001", "REQ-SAT-005", "REQ-SAT-015"]

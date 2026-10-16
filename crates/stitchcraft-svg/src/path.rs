@@ -1,10 +1,12 @@
 //! Path data and the basic shapes, as subpaths of lines and Bézier curves, mapped into millimetres.
 //!
 //! Path data is read the way SVG viewers draw it (SVG 1.1 § 8.3, implementation notes F.5–F.6): relative
-//! commands, implicit line-tos, the smooth-curve reflections, closepath, and elliptical arcs. Arcs are
-//! turned into cubic Béziers here as inkex turns them, which Ink/Stitch reads files with: in equal pieces,
-//! one more than the whole quarter turns the arc makes, so each turns by less than a quarter. Manual stitch
-//! puts a needle point on each piece's end, and a satin column's nodes are their ends, as in Ink/Stitch.
+//! commands, implicit line-tos, the smooth-curve reflections, closepath, and elliptical arcs. A move-to
+//! with nothing drawn after it is no subpath, and a command after a closepath starts a new one, where
+//! inkex keeps a point and runs the closed subpath on (`DEV-SVG-011`). Arcs are turned into cubic Béziers
+//! here as inkex turns them, which Ink/Stitch reads files with: in equal pieces, one more than the whole
+//! quarter turns the arc makes, so each turns by less than a quarter. Manual stitch puts a needle point on
+//! each piece's end, and a satin column's nodes are their ends, as in Ink/Stitch.
 //! A piece strays from the true arc by at most 0.03 % of its radius: 6 micrometres on a circle 4 cm across.
 //! Degenerate arcs follow the spec: identical end points draw nothing, a zero radius draws a straight line,
 //! and radii too small for the end points grow until they fit. An error in the data ends the path there and

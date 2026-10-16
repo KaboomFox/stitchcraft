@@ -11,7 +11,8 @@
 //!   before and after each sharp corner, where the column can bend its stitches round it.
 //! - **Nodes.** A rung goes at each point of the flattened line too, but never at its very start or end,
 //!   and a straight line of 2 points gets one in its middle.
-//! - **Spacing.** Going along the line, a rung nearer than 1 mm to the last one kept is left out.
+//! - **Spacing.** Going along the line, a rung nearer than 1 mm to the last place tried is left out,
+//!   whether that place's rung was kept or not, as in Ink/Stitch.
 //! - **Each rung** is perpendicular to the line where it lies, 1.2 times the column's width long, and is
 //!   kept only when it crosses each rail at exactly one point. It pairs those 2 points.
 //!
@@ -42,7 +43,7 @@ use crate::normalize::offset::{self, Meet, Offset};
 const LOOP: f64 = MM_PER_SVG_PX;
 /// The deepest a line is cut in half.
 const MOST_CUTS: u32 = 20;
-/// Rungs nearer than this to the last one kept are left out, in millimetres.
+/// Rungs nearer than this to the last place tried, kept or not, are left out, in millimetres.
 const RUNG_SPACING: f64 = 1.0;
 /// How long a rung is, as a fraction of the column's width.
 const RUNG_REACH: f64 = 1.2;
@@ -630,6 +631,20 @@ mod tests {
         expected[..7].copy_from_slice(&[4, 8, 16, 8, 4, 2, 1]);
         expected[46..55].copy_from_slice(&BLUR.map(|w| 3 * w));
         assert_eq!(blurred(&spikes), expected);
+    }
+
+    #[test]
+    fn a_rung_near_the_last_place_tried_is_left_out_though_that_rung_was_not_kept() {
+        // Places 2 mm and 2.6 mm along: the first rung misses the first rail, which starts at x = 2.3, and
+        // the second is 0.6 mm from where the first was tried, so neither is kept.
+        let line = points(&[(0.0, 0.0), (2.0, 0.0), (2.6, 0.0), (5.0, 0.0)]);
+        let rails = [points(&[(2.3, -1.0), (5.0, -1.0)]), points(&[(0.0, 1.0), (5.0, 1.0)])];
+        let found = rungs(&line, 2.0, [&rails[0], &rails[1]], &mut Budget::DEFAULT.meter()).unwrap();
+        assert!(found.is_empty(), "{found:?}");
+        // Tried alone, the second place's rung crosses both rails.
+        let line = points(&[(0.0, 0.0), (2.6, 0.0), (5.0, 0.0)]);
+        let found = rungs(&line, 2.0, [&rails[0], &rails[1]], &mut Budget::DEFAULT.meter()).unwrap();
+        assert!(found.len() == 1 && same(&found[0], &[p(2.6, -1.0), p(2.6, 1.0)]), "{found:?}");
     }
 
     #[test]

@@ -32,6 +32,7 @@ use stitchcraft_params::{ChoiceOption, Origin, StitchType, params};
 
 use crate::design::{Join, Path};
 use crate::generators::pull::PullParams;
+use crate::generators::running::raised;
 use crate::generators::satin::column::Section;
 pub(crate) use crate::generators::satin::column::{first_point, sewn_rails};
 use crate::generators::satin::compensation::Processor;
@@ -306,7 +307,8 @@ pub struct SatinLengths {
     pub max_stitch: Option<Mm>,
     /// The longest stitch of the needle's travel between the underlays and on to the top stitches, and
     /// of the line it follows to the start and to the end: the first of the running stitch's lengths
-    /// (`running_stitch_length_mm`).
+    /// (`running_stitch_length_mm`). The column raises it to twice the shortest stitch where it is
+    /// shorter, and says so (`SC-W0402`).
     pub travel: Mm,
     /// How far the line to the start and to the end may stray from its pairs: the running stitch's
     /// tolerance (`running_stitch_tolerance_mm`).
@@ -347,12 +349,15 @@ pub fn satin_stitch(
         top.reverse();
     }
     let layers = underlay::underlays(&sections, params, lengths.min_stitch.get(), &mut warnings, meter)?;
+    // The needle's travel between the pieces and the line it follows to the start and the end keep to the
+    // shortest stitch alike: the length is raised once, with one warning.
+    let travel = raised("running_stitch_length_mm", lengths.travel, lengths.min_stitch.get(), &mut warnings);
     let needle = neighbours.needle.filter(|_| params.start_at_nearest_point);
     let next = neighbours.next.as_ref().filter(|_| params.end_at_nearest_point);
     let pieces = if needle.is_none() && next.is_none() {
         ends::sewn(layers, top, meter)?
     } else {
-        let guides = Guides::new(&sections, params, lengths, &mut warnings, meter)?;
+        let guides = Guides::new(&sections, params, lengths, travel, meter)?;
         let edges: [Vec<Point>; 2] = [placed.iter().map(|[a, _]| *a).collect(), placed.iter().map(|[_, b]| *b).collect()];
         let outline = [edges[0].as_slice(), edges[1].as_slice()];
         let start = match needle {
@@ -368,7 +373,7 @@ pub fn satin_stitch(
         };
         guides.pieces(layers, top, start, end, odd, meter)?
     };
-    let run = ends::join(pieces, lengths.travel.get(), lengths.min_stitch.get(), meter)?;
+    let run = ends::join(pieces, travel, lengths.min_stitch.get(), meter)?;
     if let Some(speck) = too_small(&run, lengths.min_stitch.get()) {
         warnings.push(speck);
         return Ok(Stitched { runs: Vec::new(), warnings });
