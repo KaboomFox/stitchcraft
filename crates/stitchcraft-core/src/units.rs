@@ -32,6 +32,14 @@ pub fn at_least(length: f64, limit: f64) -> bool {
     length >= limit - LENGTH_SLACK
 }
 
+/// `length`, in millimetres, rounded up to the tenth: 130.1 for 130.04. A message that says a length is
+/// past a limit gives it so, and a length past the limit never reads as within it. A length within
+/// [`LENGTH_SLACK`] above a tenth is that tenth, as [`at_least`] counts it, so a length exactly at a limit
+/// reads as the limit. 0 stays 0, never -0.
+pub fn up_to_tenth(length: f64) -> f64 {
+    ((length - LENGTH_SLACK) * 10.0).ceil() / 10.0 + 0.0
+}
+
 /// `mm` in machine units (0.1 mm), rounded half to even; `None` beyond ±[`MACHINE_LIMIT`].
 ///
 /// This is the one rounding StitchCraft applies to positions. Writers use it for every position they
@@ -196,6 +204,13 @@ impl Point {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn lengths_past_a_limit_round_up_to_the_tenth() {
+        let shown = [130.04, 130.0, 130.0 + 1e-12, 130.0 + 1e-6, 0.0, 2.25].map(up_to_tenth);
+        assert_eq!(shown, [130.1, 130.0, 130.0, 130.1, 0.0, 2.3]);
+        assert!(up_to_tenth(0.0).is_sign_positive(), "0, not -0");
+    }
 
     #[test]
     fn lengths_reject_non_finite_values() {

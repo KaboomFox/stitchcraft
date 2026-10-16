@@ -134,7 +134,7 @@ pub fn generate(element: &Element, settings: &DesignSettings, profile: &MachineP
     let generated = match sew(element, settings, profile, neighbours, &mut diagnostics, &mut budget.meter()) {
         Ok(generated) => generated,
         Err(exhausted) => {
-            diagnostics.push(exhausted.diagnostic(budget, None));
+            diagnostics.push(exhausted.diagnostic(budget, Some(element.id.clone())));
             None
         }
     };

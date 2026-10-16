@@ -96,7 +96,8 @@ Rules every generator follows:
   Ink/Stitch. The PRNG is SplitMix64 from `stitchcraft-core` ([determinism](determinism.md)).
 - **Budgeted:** every inner loop charges work units. Each element has the budget's work to itself. One
   that runs out (`SC-E0004`) is skipped, and the others still plan. The stitch limit is for the whole
-  design.
+  design. Assembly and finalize share the budget's work once more, and running out there plans nothing.
+  `SC-E0004` then says so for the whole design.
 - **Roles:** every stitch is tagged underlay, top, travel or lock, which previews colour-code and which
   later enables per-layer ordering.
 

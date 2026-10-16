@@ -9,7 +9,7 @@ Design: `docs/src/design/data-model.md`.
 |---|---|
 | `plan` | `StitchPlan` (colour blocks of `Stitch` entries: `Normal`, `Jump`, `Trim`, `Stop`), `Provenance`, `PlanStats` |
 | `builder` | `PlanBuilder`: appends entries with the needle tracked, so commands always happen where the needle is |
-| `invariants` | `check(plan, profile)`: the L0 rules `REQ-PLAN-001/002/003/005/006`, each violation naming its requirement |
+| `invariants` | `check(plan, profile)`: the L0 rules `REQ-PLAN-001/002/003/005/006/007`, each violation naming its requirement |
 | `profile` | `MachineProfile`, `FormatId`, `TrimSupport`, `PaletteId`; profile validation and the hoop/comfort check (`SC-E0701`, `SC-W0702`) |
 | `profiles` | The built-in profiles as data: the reference Brother PE800 with each of its hoops (`brother-pe800-5x7`, `brother-pe800-4x4`, `brother-pe800-small`) |
 | `thread`, `palette` | `Rgb`, `Thread`; the Brother PEC palette; CIEDE2000 nearest-colour matching |

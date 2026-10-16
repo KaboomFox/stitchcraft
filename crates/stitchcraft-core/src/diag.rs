@@ -459,10 +459,13 @@ registry! {
     ThreadsShareColor = "SC-W0606", Warning, "Threads share a Brother colour";
 
     /// The design is wider or taller than the machine's hoop, so the machine cannot sew it in one
-    /// hooping (most machines refuse the file).
+    /// hooping (most machines refuse the file). A design that fits the hoop can still reach past its edge
+    /// where it is placed: its origin, which goes to the hoop's centre, can lie far from its middle, and
+    /// its stop position, where the frame goes before each stop, can lie outside the hoop.
     ///
     /// If the message says the design fits when turned 90 degrees, rotate it. Otherwise scale it down,
-    /// or split it into parts that are sewn in separate hoopings.
+    /// or split it into parts that are sewn in separate hoopings. Where it reaches past the edge from
+    /// where it is placed, move its origin nearer its middle, or its stop position nearer the design.
     OutsideHoop = "SC-E0701", Error, "Design does not fit the hoop";
 
     /// The design fits the hoop but is larger than the profile's comfort zone: the area where this
