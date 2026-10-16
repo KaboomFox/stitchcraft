@@ -64,6 +64,21 @@ fn req_fill_tat_002_rows_are_the_row_spacing_apart_and_a_whole_number_of_spacing
 }
 
 #[test]
+fn req_fill_tat_002_a_row_ends_exactly_on_an_upright_or_level_side() {
+    // Where a row crosses a side along y or along x, its end lies on the side exactly, as GEOS cuts it,
+    // whatever the angle of the rows: segments ending on one side then compare as equal.
+    let frame = part(&[(0.0, 0.0), (6.0, 0.0), (6.0, 10.0), (0.0, 10.0)]);
+    for angle in [0.0, 30.0, 60.0, 90.0, 135.0] {
+        for row in laid(&frame, Grid { angle, spacing: 0.25, end_spacing: None }) {
+            for end in row.segments.iter().flat_map(|segment| [segment.start, segment.end]) {
+                let on_side = [end.x() == 0.0, end.x() == 6.0, end.y() == 0.0, end.y() == 10.0].contains(&true);
+                assert!(on_side, "{angle}°: {end:?} is a hair off the side it ends on");
+            }
+        }
+    }
+}
+
+#[test]
 fn req_fill_tat_002_graded_rows_change_from_the_row_spacing_to_the_end_spacing_over_the_height() {
     // A strip 20 mm tall, rows from 0.25 to 1 mm apart: the steps grow with the distance from the first
     // row, reach 1 mm at the height and stay there.

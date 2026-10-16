@@ -65,9 +65,10 @@ Rounded up to an even number, so the needle comes back to where the stretch ende
 **Staggers.** How many rows the needle points take to come back to where they started. Along each row they lie
 the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the
 row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show
-less than whole numbers do.
+less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1,
+which lines every row's points up, as in Ink/Stitch.
 
-- **Accepts:** a number from 0.01 to 100
+- **Accepts:** a number from -100 to 100
 - **Default:** `4`
 - **Ink/Stitch:** same key, meaning and default
 

@@ -709,6 +709,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   charged nothing. In a test build, a fill of 30 × 30 discs with round holes spent 40 of its 61 seconds
   there, on 6 of the 214 million units it was charged. Each ring's bounds are found once now, and every
   point walked is charged: those steps take 2 seconds, on 11 million units.
+- A negative `staggers` staggers a tatami fill's rows the other way, as in Ink/Stitch, and 0 counts as 1
+  (review finding ROW-3, `REQ-FILL-TAT-003`). A negative value was raised to 0.01 with
+  `SC-W0102`, which lines every row's needle points up into the furrows `staggers` is there to avoid. A
+  value past 100 either way is still held at 100, with `SC-W0102`.
+- A tatami fill's row that crosses a side along x or along y ends on the side exactly, as GEOS cuts it
+  (ROW-4, `REQ-FILL-TAT-002`). It could end a unit in the last place off, so rows ending on one side
+  compared as unequal. TS-08 and TS-09 change by a hair (Golden files, below).
+- Travel that leaves a fill's part and comes back in within 0.02 CSS pixels, measured along x and y
+  together, goes straight on, as Ink/Stitch's diamonds of 0.01 px round the 2 points then meet (ROW-5,
+  `REQ-FILL-TAT-005`). StitchCraft measured a straight line, and called the diamonds circles. The golden
+  files stay as they were.
 - Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
   found (`REQ-SAT-002`, `REQ-SAT-005`).
   - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails
@@ -860,6 +871,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-08.pes` and `TS-09.pes` (ROW-4): rows end exactly on the
+  sides of the squares and of the rectangle now, a unit in the last place from where they ended. Many
+  needle points of these sheets lie halfway between 2 tenths of a millimetre, so some round the other way:
+  673 stitches of TS-08 and 1,350 of TS-09 move by 0.1 mm. Their stitch counts stay as they were, and
+  their pictures in the docs change with them.
 - Changed `conformance/golden/testsheets/TS-09.pes`. Its bottom copy has 2 gap-filling rows, and a
   stretch of its rows beside the square hole now ends as Ink/Stitch's gap fill ends one. 2 gap-fill rows
   are sewn there, 9 stitches more (7,788 to 7,797). MC-4 sews TS-09, so its kit is built from this

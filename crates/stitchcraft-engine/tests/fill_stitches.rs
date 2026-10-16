@@ -117,6 +117,23 @@ fn req_fill_tat_003_fractional_staggers_come_back_after_their_whole_cycle() {
 }
 
 #[test]
+fn req_fill_tat_003_negative_staggers_go_the_other_way_and_0_is_1() {
+    // Ink/Stitch takes any staggers but 0, which it reads as 1, and offsets a row by its number over
+    // staggers, less its whole part: -4 staggers the rows the other way, a quarter stitch back each row.
+    let first = |staggers: f64, k: f64| xs(&sewn(p(1.3, 0.25 * k), p(18.7, 0.25 * k), &Stitching { staggers, ..stitching(0.0) }))[1];
+    assert_eq!([0.0, 1.0, 2.0, 3.0].map(|k| first(-4.0, k)), [4.0, 3.0, 2.0, 5.0]);
+    assert_eq!([0.0, 1.0, 2.0, 3.0].map(|k| first(0.0, k)), [4.0; 4]);
+    // An element's -4 is read as it is, with nothing said, and so is its 0.
+    for value in ["-4", "0"] {
+        let read = TatamiParams::from_set(&[("staggers", value)].into_iter().collect()).unwrap();
+        assert!(read.warnings.is_empty(), "{value}: {:?}", read.warnings);
+        let longest = CommonParams::from_set_as(&ParamSet::new(), StitchType::TatamiFill).unwrap().params.max_stitch_length_mm.unwrap();
+        let how = read.params.stitching(longest, &RunningParams::from_set(&ParamSet::new()).unwrap().params);
+        assert_eq!(how.staggers, value.parse::<f64>().unwrap());
+    }
+}
+
+#[test]
 fn req_fill_tat_003_random_lengths_start_at_a_random_share_and_vary_by_the_jitter() {
     let how = Stitching { jitter: Some(0.25), ..stitching(0.0) };
     let run = |seed: u64| row_points(p(0.0, 0.0), p(40.0, 0.0), &how, &mut SplitMix64::new(seed), &mut Budget::DEFAULT.meter()).unwrap();
