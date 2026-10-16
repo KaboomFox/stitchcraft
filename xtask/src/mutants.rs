@@ -14,6 +14,10 @@
 //!   (each DIR holds a `mutants.out/`) per crate and compares the missed counts with
 //!   `conformance/mutation.toml`. More missed mutants than recorded fails; `--record` lowers the recorded
 //!   counts to today's and never raises one (raising is a hand edit, in a pull request that says why).
+//!   A run that measured less than it should fails too, whether it records or not. cargo-mutants writes
+//!   its 4 lists, empty, before it checks that the unmutated tree passes its tests, so a part whose tree
+//!   failed them, or timed out, looks like a part where every mutant was caught: its `outcomes.json` says
+//!   which. And a crate the counts record must have a mutant tried, or its count proves nothing.
 //!
 //! Mutants that time out are counted apart: an endless loop is noticed, just slowly.
 
@@ -22,6 +26,7 @@ use std::fmt::Write as _;
 use std::path::Path;
 
 use serde::Deserialize;
+use serde_json::Value;
 
 use crate::util::{self, Findings};
 
@@ -106,6 +111,7 @@ pub fn run(args: &[String]) -> Result<(), String> {
         return Err("name the cargo-mutants output directories to add up (each holds a mutants.out/)".to_string());
     }
     let root = util::root();
+    let mut findings = Findings::default();
     let mut tallies: BTreeMap<String, Tally> = BTreeMap::new();
     for dir in dirs {
         let out = Path::new(dir).join("mutants.out");
@@ -113,11 +119,12 @@ pub fn run(args: &[String]) -> Result<(), String> {
             let text = std::fs::read_to_string(out.join(file)).map_err(|e| format!("{}: {e}", out.join(file).display()))?;
             add(&mut tallies, &text, kind);
         }
+        findings.errors.extend(unmeasured(&out));
     }
     let path = root.join(BASELINE);
     let mut baseline: BaselineFile = toml::from_str(&util::read(&path)?).map_err(|e| format!("{BASELINE}: {e}"))?;
+    findings.errors.extend(untried(&tallies, &baseline.missed));
 
-    let mut findings = Findings::default();
     let mut table = String::from("| Crate | Caught | Missed | Recorded | Timeouts | Unviable |\n|---|---:|---:|---:|---:|---:|\n");
     let mut numbers = Vec::new();
     for (crate_name, t) in &tallies {
@@ -216,6 +223,33 @@ fn parts(dirs: &[&Path]) -> Option<BTreeMap<&'static str, String>> {
     Some(OUTCOMES.iter().map(|&(file, _)| (file, joined(file))).collect())
 }
 
+/// Why the part of a run in `out` measured nothing, if it did not: cargo-mutants never finished it, or
+/// its unmutated tree did not pass its tests, so it tried no mutant. Its `outcomes.json` says which.
+fn unmeasured(out: &Path) -> Option<String> {
+    let path = out.join("outcomes.json");
+    let text = match std::fs::read_to_string(&path) {
+        Ok(text) => text,
+        Err(e) => return Some(format!("{}: {e}; cargo-mutants did not finish this part", path.display())),
+    };
+    let Ok(json) = serde_json::from_str::<Value>(&text) else {
+        return Some(format!("{}: not the outcomes cargo-mutants writes", path.display()));
+    };
+    let outcomes = json.get("outcomes").and_then(Value::as_array).into_iter().flatten();
+    let baseline = outcomes.filter(|o| o.get("scenario").and_then(Value::as_str) == Some("Baseline"));
+    let failed = baseline.map(|o| o.get("summary").and_then(Value::as_str).unwrap_or("no summary")).find(|summary| *summary != "Success");
+    failed.map(|summary| format!("{}: the unmutated tree's tests ended in `{summary}`, so this part tried no mutant", path.display()))
+}
+
+/// An error for each crate `recorded` that no outcome names: none of its mutants was tried, so its count
+/// proves nothing.
+fn untried(tallies: &BTreeMap<String, Tally>, recorded: &BTreeMap<String, u32>) -> Vec<String> {
+    recorded
+        .keys()
+        .filter(|name| !tallies.contains_key(*name))
+        .map(|name| format!("{name}: no mutant of it was tried, though {BASELINE} records its count; if the crate is gone, remove its line"))
+        .collect()
+}
+
 /// Adds the outcomes listed in `text` (one mutant per line, `path:line:col: description`).
 fn add(tallies: &mut BTreeMap<String, Tally>, text: &str, kind: Kind) {
     for line in text.lines().filter(|l| !l.trim().is_empty()) {
@@ -307,6 +341,58 @@ mod tests {
         assert_eq!(found["timeout.txt"].trim(), "", "a list no part wrote is empty");
         assert!(parts(&[none.as_path()]).is_none(), "no part found a mutant");
         std::fs::remove_dir_all(&base).unwrap();
+    }
+
+    /// A part of a run as cargo-mutants leaves it when its unmutated tree fails its tests: the 4 lists,
+    /// created empty with the output folder, and the baseline's outcome.
+    fn part_with_failed_baseline(dir: &Path) {
+        std::fs::create_dir_all(dir.join("mutants.out")).unwrap();
+        for (file, _) in OUTCOMES {
+            std::fs::write(dir.join("mutants.out").join(file), "").unwrap();
+        }
+        std::fs::write(dir.join("mutants.out").join("outcomes.json"), r#"{"outcomes": [{"scenario": "Baseline", "summary": "Failure"}]}"#).unwrap();
+    }
+
+    #[test]
+    fn a_week_in_which_no_mutant_was_tested_fails() {
+        let base = std::env::temp_dir().join(format!("stitchcraft-mutants-none-{}", std::process::id()));
+        let dirs: Vec<String> = (1..=4).map(|n| base.join(format!("part-{n}")).display().to_string()).collect();
+        for dir in &dirs {
+            part_with_failed_baseline(Path::new(dir));
+        }
+        assert!(run(&dirs).is_err(), "no mutant was tried, yet the run matched conformance/mutation.toml");
+        std::fs::remove_dir_all(&base).unwrap();
+    }
+
+    #[test]
+    fn a_part_whose_unmutated_tree_did_not_pass_or_that_never_finished_measured_nothing() {
+        let base = std::env::temp_dir().join(format!("stitchcraft-mutants-baseline-{}", std::process::id()));
+        part_with_failed_baseline(&base);
+        let out = base.join("mutants.out");
+        assert!(unmeasured(&out).is_some_and(|why| why.ends_with("ended in `Failure`, so this part tried no mutant")));
+        let write = |text: &str| std::fs::write(out.join("outcomes.json"), text).unwrap();
+        write(r#"{"outcomes": [{"scenario": "Baseline", "summary": "Timeout"}]}"#);
+        assert!(unmeasured(&out).is_some_and(|why| why.contains("`Timeout`")));
+        write(r#"{"outcomes": [{"scenario": "Baseline"}]}"#);
+        assert!(unmeasured(&out).is_some_and(|why| why.contains("`no summary`")));
+        write(r#"{"outcomes": [{"scenario": "Baseline", "summary": "Success"}, {"scenario": {"Mutant": {}}, "summary": "MissedMutant"}]}"#);
+        assert_eq!(unmeasured(&out), None, "a passing baseline, and missed mutants are counted elsewhere");
+        write("[");
+        assert!(unmeasured(&out).is_some_and(|why| why.ends_with("not the outcomes cargo-mutants writes")));
+        std::fs::remove_file(out.join("outcomes.json")).unwrap();
+        assert!(unmeasured(&out).is_some_and(|why| why.ends_with("cargo-mutants did not finish this part")));
+        std::fs::remove_dir_all(&base).unwrap();
+    }
+
+    #[test]
+    fn every_crate_the_counts_record_must_have_a_mutant_tried() {
+        let mut tallies = BTreeMap::new();
+        add(&mut tallies, "crates/stitchcraft-core/src/a.rs:1:1: x\n", Kind::Unviable);
+        let recorded = BTreeMap::from([("stitchcraft-core".to_string(), 4), ("stitchcraft-plan".to_string(), 0)]);
+        assert_eq!(
+            untried(&tallies, &recorded),
+            [format!("stitchcraft-plan: no mutant of it was tried, though {BASELINE} records its count; if the crate is gone, remove its line")]
+        );
     }
 
     #[test]
