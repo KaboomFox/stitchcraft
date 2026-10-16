@@ -830,6 +830,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   prints and writes before it writes a file, and a panic's bundle says whether it came while planning,
   drawing the picture or writing, which a replay reruns as far as it can (review finding CLI-16,
   `REQ-CLI-002`).
+- A build names its commit only when git tracks its sources (`REQ-CLI-001`). Built from a copy inside
+  another repository, as in the rehearsal of the move into VectorCraft, it named that repository's commit,
+  which holds none of the sources, and the test of `REQ-CLI-001` failed there.
 - Docs now match the code on the machine testing page's pictures, the architecture page's release profile
   and the report's contents, and in the CLI's README on `stitch convert` and the bug report guide on
   `design.svg_hex` (review finding CLI-18).
