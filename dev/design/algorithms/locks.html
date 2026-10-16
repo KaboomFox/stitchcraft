@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-2790d520.js";
+            window.path_to_searchindex_js = "../../searchindex-f93dd316.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -258,9 +258,9 @@ start a tie-in and end a tie-off at the anchor.</p>
 <h2 id="custom-locks"><a class="header" href="#custom-locks">Custom locks</a></h2>
 <p><code>lock_custom_start</code> and <code>lock_custom_end</code> hold numbers separated by spaces, or an SVG path that draws the
 lock. The numbers are steps, in sizes of <code>lock_*_scale_mm</code>. The kind of text sets how a file sews, and
-StitchCraft reads it as Ink/Stitch does (<code>REQ-LCK-004</code>). A text made only of digits, spaces, dots, commas
-and minus signs is numbers, and a newline may end it. Any other text is a path. The steps are the pieces
-between spaces that read as numbers, and <code>1,5</code> is not one of them.</p>
+StitchCraft reads it as Ink/Stitch does (<code>REQ-LCK-004</code>). Stripped of the white space round it, as Ink/Stitch
+strips every value, a text made only of digits, spaces, dots, commas and minus signs is numbers. Any other
+text is a path. The steps are the pieces between spaces that read as numbers, and <code>1,5</code> is not one of them.</p>
 <p>StitchCraft reports what it cannot sew (<code>SC-W0503</code>), where Ink/Stitch passes over it in silence:</p>
 <ul>
 <li>Pieces that are not numbers are left out, with steps longer than 10 m (the data model’s reach) and steps

@@ -35,7 +35,7 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-2790d520.js";
+            window.path_to_searchindex_js = "../../../searchindex-f93dd316.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../toc-623c1739.js"></script>
@@ -197,10 +197,12 @@ unravelling where its stitching starts and ends.</p>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h3 id="force_lock_stitches"><a class="header" href="#force_lock_stitches"><code>force_lock_stitches</code></a></h3>
-<p><strong>Always lock.</strong> Sew the end lock even when the next element starts so close that the needle would otherwise
-go straight on to it without one.</p>
+<p><strong>Always lock.</strong> Lock the end of every group of stitches, and jump to the next, even where the needle would
+otherwise go straight on to it. The end lock is sewn even where <code>ties</code> leaves it out, manual
+stitch gets the locks it otherwise goes without, and a fill whose top rows <code>expand_mm</code> cuts into
+pieces locks each piece on its own.</p>
 <ul>
-<li><strong>Accepts:</strong> true or false</li>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>false</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
@@ -210,7 +212,11 @@ half of the first stitch, which hides it. The other shapes are larger and grip m
 <ul>
 <li><strong>Accepts:</strong> one of <code>half_stitch</code> (Half stitch), <code>arrow</code> (Arrow), <code>back_forth</code> (Back and forth), <code>bowtie</code> (Bowtie), <code>cross</code> (Cross), <code>star</code> (Star), <code>simple</code> (Simple), <code>triangle</code> (Triangle), <code>zigzag</code> (Zigzag), <code>custom</code> (Custom)</li>
 <li><strong>Default:</strong> <code>half_stitch</code></li>
-<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs (DEV-LCK-001): Each Ink/Stitch lock id is accepted, with StitchCraft’s own shapes behind the ids and the same intent. The half stitch goes forth and back twice over half the first stitch, and back_forth twice over one step, where Ink/Stitch’s go out two steps and back. The drawn shapes are new. A custom lock drawn as an SVG path sews the half stitch, with SC-W0503, until M8.</li>
+<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs:
+<ul>
+<li><strong>DEV-LCK-001.</strong> Each Ink/Stitch lock id is accepted, with StitchCraft’s own shapes behind the ids and the same intent. The half stitch goes forth and back twice over half the first stitch, and back_forth twice over one step, where Ink/Stitch’s go out two steps and back. The drawn shapes are new. A custom lock drawn as an SVG path sews the half stitch, with SC-W0503, until M8.</li>
+</ul>
+</li>
 </ul>
 <h3 id="lock_custom_start"><a class="header" href="#lock_custom_start"><code>lock_custom_start</code></a></h3>
 <p><strong>Custom start lock.</strong> The steps a custom start lock takes along the stitching before it starts, as numbers separated
@@ -222,7 +228,11 @@ half stitch in its place (<code>SC-W0503</code>).</p>
 <li><strong>Accepts:</strong> text of at most 4096 bytes</li>
 <li><strong>Default:</strong> empty</li>
 <li><strong>Shown when</strong> <a href="#lock_start"><code>lock_start</code></a> is <code>custom</code></li>
-<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs (DEV-LCK-002): Locks of steps follow the stitching round its corners, as Ink/Stitch’s custom steps do. They differ in 5 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn. A step shorter than 0.2 mm is lengthened to 0.2 mm, with SC-W0502, where Ink/Stitch sews it as it is. A custom step of 0 is left out, with SC-W0503, where Ink/Stitch sews a stitch in place for it. And a custom step longer than 10 m, the data model’s reach, is left out with SC-W0503.</li>
+<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs:
+<ul>
+<li><strong>DEV-LCK-002.</strong> Locks of steps follow the stitching round its corners, as Ink/Stitch’s custom steps do. They differ in 5 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn. A step shorter than 0.2 mm is lengthened to 0.2 mm, with SC-W0502, where Ink/Stitch sews it as it is. A custom step of 0 is left out, with SC-W0503, where Ink/Stitch sews a stitch in place for it. And a custom step longer than 10 m, the data model’s reach, is left out with SC-W0503.</li>
+</ul>
+</li>
 </ul>
 <h3 id="lock_start_scale_mm"><a class="header" href="#lock_start_scale_mm"><code>lock_start_scale_mm</code></a></h3>
 <p><strong>Start lock size.</strong> How long each step of a start lock made of steps (back and forth, or custom) is.</p>
@@ -247,7 +257,11 @@ half of the last stitch, which hides it. The other shapes are larger and grip mo
 <ul>
 <li><strong>Accepts:</strong> one of <code>half_stitch</code> (Half stitch), <code>arrow</code> (Arrow), <code>back_forth</code> (Back and forth), <code>bowtie</code> (Bowtie), <code>cross</code> (Cross), <code>star</code> (Star), <code>simple</code> (Simple), <code>triangle</code> (Triangle), <code>zigzag</code> (Zigzag), <code>custom</code> (Custom)</li>
 <li><strong>Default:</strong> <code>half_stitch</code></li>
-<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs (DEV-LCK-001): Each Ink/Stitch lock id is accepted, with StitchCraft’s own shapes behind the ids and the same intent. The half stitch goes forth and back twice over half the first stitch, and back_forth twice over one step, where Ink/Stitch’s go out two steps and back. The drawn shapes are new. A custom lock drawn as an SVG path sews the half stitch, with SC-W0503, until M8.</li>
+<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs:
+<ul>
+<li><strong>DEV-LCK-001.</strong> Each Ink/Stitch lock id is accepted, with StitchCraft’s own shapes behind the ids and the same intent. The half stitch goes forth and back twice over half the first stitch, and back_forth twice over one step, where Ink/Stitch’s go out two steps and back. The drawn shapes are new. A custom lock drawn as an SVG path sews the half stitch, with SC-W0503, until M8.</li>
+</ul>
+</li>
 </ul>
 <h3 id="lock_custom_end"><a class="header" href="#lock_custom_end"><code>lock_custom_end</code></a></h3>
 <p><strong>Custom end lock.</strong> The steps a custom end lock takes along the stitching after it ends, as numbers separated by
@@ -259,7 +273,11 @@ sews the half stitch in its place (<code>SC-W0503</code>).</p>
 <li><strong>Accepts:</strong> text of at most 4096 bytes</li>
 <li><strong>Default:</strong> empty</li>
 <li><strong>Shown when</strong> <a href="#lock_end"><code>lock_end</code></a> is <code>custom</code></li>
-<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs (DEV-LCK-002): Locks of steps follow the stitching round its corners, as Ink/Stitch’s custom steps do. They differ in 5 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn. A step shorter than 0.2 mm is lengthened to 0.2 mm, with SC-W0502, where Ink/Stitch sews it as it is. A custom step of 0 is left out, with SC-W0503, where Ink/Stitch sews a stitch in place for it. And a custom step longer than 10 m, the data model’s reach, is left out with SC-W0503.</li>
+<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs:
+<ul>
+<li><strong>DEV-LCK-002.</strong> Locks of steps follow the stitching round its corners, as Ink/Stitch’s custom steps do. They differ in 5 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn. A step shorter than 0.2 mm is lengthened to 0.2 mm, with SC-W0502, where Ink/Stitch sews it as it is. A custom step of 0 is left out, with SC-W0503, where Ink/Stitch sews a stitch in place for it. And a custom step longer than 10 m, the data model’s reach, is left out with SC-W0503.</li>
+</ul>
+</li>
 </ul>
 <h3 id="lock_end_scale_mm"><a class="header" href="#lock_end_scale_mm"><code>lock_end_scale_mm</code></a></h3>
 <p><strong>End lock size.</strong> How long each step of an end lock made of steps (back and forth, or custom) is.</p>
@@ -282,14 +300,14 @@ along the stitching.</p>
 <h3 id="trim_after"><a class="header" href="#trim_after"><code>trim_after</code></a></h3>
 <p><strong>Trim after.</strong> Cut the thread after this element, even if the next one starts close by.</p>
 <ul>
-<li><strong>Accepts:</strong> true or false</li>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>false</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h3 id="stop_after"><a class="header" href="#stop_after"><code>stop_after</code></a></h3>
 <p><strong>Stop after.</strong> Pause the machine after this element: to add an appliqué fabric, or to check the work.</p>
 <ul>
-<li><strong>Accepts:</strong> true or false</li>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>false</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
@@ -300,7 +318,12 @@ hammer one hole. Empty: the larger of the document’s setting and the machine�
 <ul>
 <li><strong>Accepts:</strong> a length from 0 to 10 mm, or empty (0 or less counts as empty)</li>
 <li><strong>Default:</strong> empty</li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.</li>
+<li><strong>DEV-FIN-001.</strong> StitchCraft fits every stitch to the machine: it leaves out needle points less than their element’s shortest stitch from the one before, never less than the machine’s (0.3 mm on the Brother), keeping the ends of each run of stitches and its lock points unless a stitch to one would fall short, and splits stitches longer than the machine’s longest. Ink/Stitch drops stitches no longer than the element’s own shortest stitch, else 0.1 mm, and splits nothing. Along an edge square to them, a tatami fill’s rows nearer each other than the shortest stitch hand over in a stitch too short, so the next row’s first needle point is left out and a sliver at its start shows: a bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay.</li>
+</ul>
+</li>
 </ul>
 <h3 id="min_jump_stitch_length_mm"><a class="header" href="#min_jump_stitch_length_mm"><code>min_jump_stitch_length_mm</code></a></h3>
 <p><strong>Shortest jump.</strong> A move to the next element no longer than this is sewn straight on, without lock stitches or a
@@ -308,7 +331,11 @@ jump. Empty: the document’s setting.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0 to 20 mm, or empty (0 or less counts as empty)</li>
 <li><strong>Default:</strong> empty</li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.</li>
+</ul>
+</li>
 </ul>
 <h2 id="longest-stitch"><a class="header" href="#longest-stitch">Longest stitch</a></h2>
 <h3 id="max_stitch_length_mm"><a class="header" href="#max_stitch_length_mm"><code>max_stitch_length_mm</code></a></h3>
@@ -319,7 +346,12 @@ stitches this long.</p>
 <li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty); for fills, a length from 0.1 to 25 mm, empty being the default</li>
 <li><strong>Default:</strong> empty, and <code>4</code> for fills</li>
 <li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.</li>
+<li><strong>DEV-RUN-006.</strong> No hand-placed stitch is shorter than the shortest stitch. A node closer than that to the needle point before it is left out (SC-W0403), and a stitch longer than max_stitch_length_mm is split into no more parts than keep each at the shortest stitch or longer (SC-W0404). Ink/Stitch splits such a stitch into the fewest equal parts no longer than max_stitch_length_mm, however short they are, and its plan later leaves out stitches of at most 0.1 mm (its default), without a word.</li>
+</ul>
+</li>
 </ul>
 <h2 id="random-variation"><a class="header" href="#random-variation">Random variation</a></h2>
 <h3 id="random_seed"><a class="header" href="#random_seed"><code>random_seed</code></a></h3>
@@ -331,7 +363,13 @@ own.</p>
 <li><strong>Accepts:</strong> a number or any text, or empty to derive it from the element</li>
 <li><strong>Default:</strong> empty</li>
 <li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-RUN-005.</strong> A running stitch’s random lengths are drawn from StitchCraft’s generator (SplitMix64, seeded from random_seed, or from the element’s id when it has none), so the values differ from Ink/Stitch’s for the same seed. They are placed otherwise too. StitchCraft draws a stitch’s length and its span’s phase from 2 numbers, starts a phase only where a span starts, and scales each span’s stitches to end on its corner. Ink/Stitch draws one number for both a stitch’s length and its phase, starts a new phase after each stitch the tolerance shortened as well, and leaves what is left before a corner as the last stitch. Both key each span’s draws by its place in its subpath; StitchCraft’s keys hold the subpath’s place in the path too, where Ink/Stitch’s start again in each subpath, so subpaths drawn alike sew alike there.</li>
+<li><strong>DEV-SAT-002.</strong> Random satin widths, spacing and splits are drawn from StitchCraft’s generator (SplitMix64, seeded from random_seed, or from the element’s id when it has none), so the values differ from Ink/Stitch’s for the same seed. The ranges are Ink/Stitch’s, and so is when a width or a spacing is drawn. Ink/Stitch draws each stitch’s splits from a generator of the stitch’s own, where StitchCraft draws them from the element’s, in the order the stitches are sewn.</li>
+<li><strong>DEV-FILL-004.</strong> A tatami fill’s random stitch lengths are drawn from StitchCraft’s generator (SplitMix64, seeded from random_seed, or from the element’s id when it has none), in the order its row segments are sewn, so the values differ from Ink/Stitch’s for the same seed. The ranges are Ink/Stitch’s: the first point a share of the longest stitch from the segment’s start, and each next one a stitch on, longer or shorter by up to the jitter.</li>
+</ul>
+</li>
 </ul>
 
                     </main>

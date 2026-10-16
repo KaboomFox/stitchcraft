@@ -35,7 +35,7 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-2790d520.js";
+            window.path_to_searchindex_js = "../../../searchindex-f93dd316.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../toc-623c1739.js"></script>
@@ -196,7 +196,11 @@ values make a satin narrower; a fill reads them as 0, as Ink/Stitch does.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from -10 to 10 mm, or 2 separated by a space</li>
 <li><strong>Default:</strong> <code>0</code></li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-FILL-009.</strong> A fill’s pull compensation lengthens each top row at its ends, and the part keeps its holes and its pieces as drawn. Ink/Stitch rebuilds the part round the lengthened rows instead: each is widened by half the row spacing and 0.01 px with round ends, the widened rows are joined, and the outline is smoothed. Its rows then reach past the compensation by up to half a row spacing, less what the smoothing takes off. A hole of less than a row spacing squared, or one the widened rows close over, is filled. Where the widened rows fall into pieces, only the largest is kept, so a part whose rows a neck too thin for a row divides loses all but its largest side.</li>
+</ul>
+</li>
 </ul>
 <h3 id="pull_compensation_percent"><a class="header" href="#pull_compensation_percent"><code>pull_compensation_percent</code></a></h3>
 <p><strong>Pull compensation (%).</strong> More pull compensation, in percent of each stitch’s length, added to the length above: a
@@ -206,7 +210,11 @@ above. A fill reads negative values as 0, as Ink/Stitch does.</p>
 <ul>
 <li><strong>Accepts:</strong> a percentage from -100 to 100, or 2 separated by a space</li>
 <li><strong>Default:</strong> <code>0</code></li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-FILL-009.</strong> A fill’s pull compensation lengthens each top row at its ends, and the part keeps its holes and its pieces as drawn. Ink/Stitch rebuilds the part round the lengthened rows instead: each is widened by half the row spacing and 0.01 px with round ends, the widened rows are joined, and the outline is smoothed. Its rows then reach past the compensation by up to half a row spacing, less what the smoothing takes off. A hole of less than a row spacing squared, or one the widened rows close over, is filled. Where the widened rows fall into pieces, only the largest is kept, so a part whose rows a neck too thin for a row divides loses all but its largest side.</li>
+</ul>
+</li>
 </ul>
 
                     </main>
