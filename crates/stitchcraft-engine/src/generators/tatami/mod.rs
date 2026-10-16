@@ -55,8 +55,8 @@ params! {
         row_spacing_mm: Length = "0.25", label "Row spacing", range (0.1, 100.0);
 
         /// The spacing of the last rows, for a fill that fades: from the first row the spacing changes
-        /// steadily towards it, reaching it the fill's height away. Empty, every row is the row spacing from
-        /// the next.
+        /// steadily towards it, reaching it the part's height away, in each part of the fill. Empty, every
+        /// row is the row spacing from the next.
         end_row_spacing_mm: OptionalLength = "", label "End row spacing", range (0.1, 100.0),
             origin Origin::InkStitchDeviates { deviation: "DEV-FILL-003" };
 

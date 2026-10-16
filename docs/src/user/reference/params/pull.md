@@ -20,7 +20,8 @@ values make a satin narrower; a fill reads them as 0, as Ink/Stitch does.
 
 - **Accepts:** a length from -10 to 10 mm, or 2 separated by a space
 - **Default:** `0`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-FILL-009.** A fill's pull compensation lengthens each top row at its ends, and the part keeps its holes and its pieces as drawn. Ink/Stitch rebuilds the part round the lengthened rows instead: each is widened by half the row spacing and 0.01 px with round ends, the widened rows are joined, and the outline is smoothed. Its rows then reach past the compensation by up to half a row spacing, less what the smoothing takes off. A hole of less than a row spacing squared, or one the widened rows close over, is filled. Where the widened rows fall into pieces, only the largest is kept, so a part whose rows a neck too thin for a row divides loses all but its largest side.
 
 ### `pull_compensation_percent`
 
@@ -31,4 +32,5 @@ above. A fill reads negative values as 0, as Ink/Stitch does.
 
 - **Accepts:** a percentage from -100 to 100, or 2 separated by a space
 - **Default:** `0`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-FILL-009.** A fill's pull compensation lengthens each top row at its ends, and the part keeps its holes and its pieces as drawn. Ink/Stitch rebuilds the part round the lengthened rows instead: each is widened by half the row spacing and 0.01 px with round ends, the widened rows are joined, and the outline is smoothed. Its rows then reach past the compensation by up to half a row spacing, less what the smoothing takes off. A hole of less than a row spacing squared, or one the widened rows close over, is filled. Where the widened rows fall into pieces, only the largest is kept, so a part whose rows a neck too thin for a row divides loses all but its largest side.

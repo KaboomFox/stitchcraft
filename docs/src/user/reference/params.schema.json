@@ -287,7 +287,7 @@
     },
     "end_row_spacing_mm": {
       "default": null,
-      "description": "The spacing of the last rows, for a fill that fades: from the first row the spacing changes steadily towards it, reaching it the fill's height away. Empty, every row is the row spacing from the next.",
+      "description": "The spacing of the last rows, for a fill that fades: from the first row the spacing changes steadily towards it, reaching it the part's height away, in each part of the fill. Empty, every row is the row spacing from the next.",
       "maximum": 100.0,
       "minimum": 0.1,
       "title": "End row spacing",
@@ -488,7 +488,7 @@
     },
     "force_lock_stitches": {
       "default": false,
-      "description": "Sew the end lock even when the next element starts so close that the needle would otherwise go straight on to it without one.",
+      "description": "Lock the end of every group of stitches, and jump to the next, even where the needle would otherwise go straight on to it. The end lock is sewn even where `ties` leaves it out, manual stitch gets the locks it otherwise goes without, and a fill whose top rows `expand_mm` cuts into pieces locks each piece on its own.",
       "title": "Always lock",
       "type": "boolean",
       "x-stitchcraft": {
@@ -962,7 +962,7 @@
         "unit": "%",
         "visible_when": {
           "any_of": [
-            "true"
+            true
           ],
           "key": "enable_random_stitch_length"
         }

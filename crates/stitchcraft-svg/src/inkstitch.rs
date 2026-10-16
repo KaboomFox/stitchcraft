@@ -151,10 +151,10 @@ impl Helper {
     }
 }
 
-/// Ink/Stitch's reading of a yes (`lib/elements/element.py`): yes, y, true, t or 1, in any case, around
-/// spaces. Anything else, "on" included, is no.
+/// Ink/Stitch's reading of a yes (`lib/elements/element.py`): one of its words for on, which a toggle
+/// parameter reads too ([`stitchcraft_params::toggle`]). Anything else, "on" included, is no.
 pub(crate) fn yes(value: &str) -> bool {
-    ["yes", "y", "true", "t", "1"].iter().any(|word| value.trim().eq_ignore_ascii_case(word))
+    stitchcraft_params::toggle(value) == Some(true)
 }
 
 /// Whether `node` is a layer: a group Inkscape shows in its layers list.

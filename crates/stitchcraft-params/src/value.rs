@@ -3,12 +3,19 @@
 //! Every host stores parameters as text — an SVG attribute, a command-line `key=value`, a value in a
 //! VectorCraft effect record — so parsing happens once, here, the same way for all of them. A value is
 //! accepted, clamped into range with `SC-W0102`, or rejected with `SC-E0101`; it never falls back to the
-//! default in silence (REQ-PRM-002). Lengths accept a unit (`mm`, `in`, `pt`; millimetres without one).
-//! An optional length is empty as its kind says ([`Empty`]): most count 0 and below as empty, as
-//! Ink/Stitch reads 0 as "not set" there. Angles are normalized to (−180, 180], each angle of a list too,
-//! and a seed may be any text: a number is used as it is, other text is hashed (FNV-1a), so any seed a file
-//! stores works. A value for each of 2 sides is 1 value, for both, or 2 separated by a space, as Ink/Stitch
-//! writes them. An optional pair is empty only when its text is: 0 is a value for a side, as in Ink/Stitch.
+//! default in silence (REQ-PRM-002). Ink/Stitch strips every value of the white space round it before it
+//! reads it, and so does this module, text included. A value of more than [`MAX_TEXT`] bytes does not
+//! read, so reading one costs no more than that, and a message quotes only its start (`DEV-PRM-004`).
+//!
+//! Lengths accept a unit right after the number (`2.5mm`, `0.1in`, `7pt`; millimetres without one), which
+//! Ink/Stitch does not (`DEV-PRM-001`). An optional length is empty as its kind says ([`Empty`]): most
+//! count 0 as empty, as Ink/Stitch reads 0 as "not set" there, and a length below 0 as well, with
+//! `SC-W0102`, where Ink/Stitch reads it as a length (`DEV-PRM-003`). Angles are normalized to (−180, 180],
+//! each angle of a list too, and a seed may be any text: a number is used as it is, other text is hashed
+//! (FNV-1a), so any seed a file stores works. A value for each of 2 sides is 1 value, for both, or 2
+//! separated by a space, as Ink/Stitch writes them. An optional pair is empty only when its text is: 0 is a
+//! value for a side, as in Ink/Stitch. A toggle reads Ink/Stitch's words for on, their opposites and `off`
+//! ([`toggle`]).
 //!
 //! Spaces separate the values of a list or a pair, as in Ink/Stitch, which splits its lists at spaces and
 //! reads one it cannot split so, such as `45,90`, as its default. A tab, or a run of spaces, counts as one
@@ -20,10 +27,19 @@ use stitchcraft_core::rng::fnv1a64;
 use stitchcraft_core::units::{MM_PER_INCH, MM_PER_POINT};
 use stitchcraft_core::{Code, Diagnostic, Fix, Mm};
 
-use crate::spec::{Empty, Kind, MAX_LIST, ParamSpec};
+use crate::spec::{Empty, Kind, MAX_LIST, MAX_TEXT, ParamSpec};
 
 /// What `SC-E0101` hints when the text it refuses has a comma.
 const COMMA_HINT: &str = "Separate values with spaces, and write decimals with a point.";
+
+/// How many characters of a value a message quotes.
+const QUOTED: usize = 64;
+
+/// The words for on, in any case: Ink/Stitch's, which reads any other text as off.
+pub(crate) const ON: [&str; 5] = ["true", "yes", "y", "t", "1"];
+
+/// The words for off, in any case: the opposites of the words for on, and `off`.
+pub(crate) const OFF: [&str; 6] = ["false", "no", "n", "f", "0", "off"];
 
 /// A parameter's value, read and checked.
 #[derive(Clone, Debug, PartialEq)]
@@ -86,14 +102,18 @@ impl Value {
 impl Kind {
     /// `raw` read as a value of this kind, and whether it had to be clamped into range; `None` when it
     /// is not a value of this kind at all.
+    /// A length below 0 that leaves an optional length empty counts as clamped, so that it is said.
     pub fn parse(self, raw: &str) -> Option<(Value, bool)> {
+        if raw.len() > MAX_TEXT {
+            return None;
+        }
         let text = raw.trim();
         match self {
             Kind::Length { empty, .. } if empty != Empty::Never && text.is_empty() => Some((Value::Length(None), false)),
             Kind::Length { min, max, empty } => {
                 let given = length(text)?;
                 if empty == Empty::AtMostZero && given <= 0.0 {
-                    return Some((Value::Length(None), false));
+                    return Some((Value::Length(None), given < 0.0));
                 }
                 let (mm, clamped) = clamp(given, min, max);
                 Some((Value::Length(Some(Mm::new(mm).ok()?)), clamped))
@@ -111,11 +131,7 @@ impl Kind {
                 let (count, clamped) = count(text, min, max)?;
                 Some((Value::Count(count), clamped))
             }
-            Kind::Toggle => match text.to_ascii_lowercase().as_str() {
-                "true" | "1" | "yes" | "on" => Some((Value::Toggle(true), false)),
-                "false" | "0" | "no" | "off" => Some((Value::Toggle(false), false)),
-                _ => None,
-            },
+            Kind::Toggle => toggle(text).map(|on| (Value::Toggle(on), false)),
             Kind::Choice { options } => options.iter().find(|o| o.id == text).map(|o| (Value::Choice(o.id), false)),
             Kind::Seed if text.is_empty() => Some((Value::Seed(None), false)),
             Kind::Seed => Some((Value::Seed(Some(text.parse().unwrap_or_else(|_| fnv1a64(text.as_bytes())))), false)),
@@ -164,7 +180,7 @@ impl Kind {
                 let angles = list(text)?.into_iter().map(|item| angle(item.strip_suffix(',').unwrap_or(item))).collect::<Option<Vec<f64>>>()?;
                 Some((Value::Angles(Some(angles)), false))
             }
-            Kind::Text { max_bytes } => (raw.len() <= max_bytes).then(|| (Value::Text(raw.to_string()), false)),
+            Kind::Text { max_bytes } => (text.len() <= max_bytes).then(|| (Value::Text(text.to_string()), false)),
         }
     }
 
@@ -190,13 +206,17 @@ impl Kind {
 }
 
 impl ParamSpec {
-    /// `raw` read as this parameter's value: with `SC-W0102` when it was clamped into range, or
-    /// `SC-E0101` when it is not a value of the parameter's kind, hinting at spaces and points when the
-    /// value has a comma and the kind holds numbers. The diagnostics name the parameter, the value and what
-    /// is accepted; hosts add the element.
+    /// `raw` read as this parameter's value: with `SC-W0102` when it was clamped into range, or left empty
+    /// for being below 0, or `SC-E0101` when it is not a value of the parameter's kind, hinting at spaces
+    /// and points when the value has a comma and the kind holds numbers. The diagnostics name the
+    /// parameter, the value (its start, when long) and what is accepted; hosts add the element.
     pub fn read(&self, raw: &str) -> Result<(Value, Option<Diagnostic>), Diagnostic> {
         match self.kind.parse(raw) {
             Some((value, false)) => Ok((value, None)),
+            Some((Value::Length(None), true)) => {
+                let message = format!("`{}` is {}, below 0, so it is not set.", self.key, raw.trim());
+                Ok((Value::Length(None), Some(Diagnostic::new(Code::ParamClamped, message))))
+            }
             Some((value, true)) => {
                 let unit = match self.kind.unit() {
                     "" => "",
@@ -207,16 +227,39 @@ impl ParamSpec {
                 Ok((value, Some(Diagnostic::new(Code::ParamClamped, message))))
             }
             None => {
-                let problem = Diagnostic::new(Code::ParamInvalid, format!("`{}` is \"{raw}\", but it must be {}.", self.key, self.kind.describe()));
+                let problem =
+                    Diagnostic::new(Code::ParamInvalid, format!("`{}` is {}, but it must be {}.", self.key, quoted(raw), self.kind.describe()));
                 Err(if self.kind.numeric() && raw.contains(',') { problem.with_fix(Fix::Hint(COMMA_HINT.to_string())) } else { problem })
             }
         }
     }
 }
 
-/// A finite number.
+/// `text` read as a toggle: `Some(true)` for one of the words for on, Ink/Stitch's, `Some(false)` for one of
+/// their opposites or `off`, in any case and with white space round it, and `None` for any other text.
+/// Ink/Stitch reads such text as off, `on` too, and an element does not read it at all here (`DEV-PRM-001`).
+pub fn toggle(text: &str) -> Option<bool> {
+    let is = |words: &[&str]| words.iter().any(|word| text.trim().eq_ignore_ascii_case(word));
+    if is(&ON) {
+        Some(true)
+    } else if is(&OFF) {
+        Some(false)
+    } else {
+        None
+    }
+}
+
+/// `raw` in quotes for a message: whole, or its first [`QUOTED`] characters and how long it is.
+fn quoted(raw: &str) -> String {
+    match raw.char_indices().nth(QUOTED) {
+        Some((end, _)) => format!("\"{}…\" ({} bytes)", raw.get(..end).unwrap_or_default(), raw.len()),
+        None => format!("\"{raw}\""),
+    }
+}
+
+/// A finite number, written with nothing round it.
 fn number(text: &str) -> Option<f64> {
-    let value: f64 = text.trim().parse().ok()?;
+    let value: f64 = text.parse().ok()?;
     value.is_finite().then_some(value)
 }
 
@@ -237,9 +280,9 @@ fn percent(text: &str) -> Option<f64> {
     number(text.strip_suffix('%').unwrap_or(text))
 }
 
-/// A length in millimetres, from a number with an optional unit.
+/// A length in millimetres, from a number with an optional unit right after it.
 fn length(text: &str) -> Option<f64> {
-    let lower = text.trim().to_ascii_lowercase();
+    let lower = text.to_ascii_lowercase();
     let (number_part, factor) = [("mm", 1.0), ("in", MM_PER_INCH), ("pt", MM_PER_POINT)]
         .iter()
         .find_map(|(unit, factor)| lower.strip_suffix(unit).map(|n| (n.to_string(), *factor)))
@@ -250,7 +293,7 @@ fn length(text: &str) -> Option<f64> {
 
 /// A whole number clamped into `min..=max`, and whether it was.
 fn count(text: &str, min: u32, max: u32) -> Option<(u32, bool)> {
-    let n: i64 = text.trim().parse().ok()?;
+    let n: i64 = text.parse().ok()?;
     let (lo, hi) = (i64::from(min), i64::from(max));
     let clamped = n.clamp(lo, hi);
     Some((u32::try_from(clamped).ok()?, clamped != n))
@@ -285,9 +328,9 @@ fn pair_text([a, b]: [f64; 2]) -> String {
 }
 
 /// The items of a list: 1 to [`MAX_LIST`] of them, separated by spaces or tabs, a run of them counting as
-/// one.
+/// one. It stops at the item past the most.
 fn list(text: &str) -> Option<Vec<&str>> {
-    let items: Vec<&str> = text.split_whitespace().collect();
+    let items: Vec<&str> = text.split_whitespace().take(MAX_LIST + 1).collect();
     (1..=MAX_LIST).contains(&items.len()).then_some(items)
 }
 
@@ -326,10 +369,14 @@ mod tests {
     #[test]
     fn an_optional_length_of_zero_or_less_is_empty_unless_zero_is_a_length() {
         // Ink/Stitch reads 0 as "not set": no maximum for manual stitch's longest stitch, the document's
-        // setting for the shortest stitch and jump. Below 0 is no length either. Not clamped, so no warning.
+        // setting for the shortest stitch and jump. Below 0 is no length either, and that is said: it counts
+        // as clamped, where 0 does not.
         let optional = Kind::Length { min: 0.1, max: 25.0, empty: Empty::AtMostZero };
-        for raw in ["0", "-1", " 0mm ", "-0.5in", "0.0"] {
+        for raw in ["0", " 0mm ", "0.0", "-0"] {
             assert_eq!(optional.parse(raw), Some((Value::Length(None), false)), "{raw}");
+        }
+        for raw in ["-1", "-0.5in", "-1e-9"] {
+            assert_eq!(optional.parse(raw), Some((Value::Length(None), true)), "{raw}");
         }
         assert_eq!(optional.parse("0.05"), Some((Value::Length(Some(mm(0.1))), true)));
         // A required length is clamped as before.
@@ -420,8 +467,9 @@ mod tests {
         assert_eq!(counts.parse("0 99"), Some((Value::Counts(vec![0, 9]), true)));
         assert_eq!(counts.parse("1 x"), None);
         let text = Kind::Text { max_bytes: MAX_TEXT };
-        assert_eq!(text.parse(" kept as is "), Some((Value::Text(" kept as is ".to_string()), false)));
+        assert_eq!(text.parse(" kept as is \t"), Some((Value::Text("kept as is".to_string()), false)));
         assert_eq!(text.parse(&"x".repeat(MAX_TEXT + 1)), None);
+        assert_eq!(Kind::Text { max_bytes: 3 }.parse(" abc "), Some((Value::Text("abc".to_string()), false)), "stripped, then measured");
     }
 
     #[test]

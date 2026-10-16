@@ -30,4 +30,4 @@ pub use set::{ParamSet, Validated, find, read_param, unknown_keys};
 pub use spec::{ChoiceOption, Condition, Empty, Kind, MAX_LIST, MAX_TEXT, Origin, ParamGroup, ParamSpec, Stability};
 pub use stitch_type::{Family, StitchType};
 pub use stitchcraft_core::Diagnostic;
-pub use value::{Value, normalized_angle};
+pub use value::{Value, normalized_angle, toggle};
