@@ -81,6 +81,26 @@ fn req_svg_001_arcs_are_read_in_the_pieces_inkex_cuts_them_into() {
 }
 
 #[test]
+fn req_svg_001_a_path_has_the_subpaths_a_viewer_draws() {
+    // A move-to with nothing drawn after it is no subpath, and a line after a closepath starts a new one at
+    // the closed subpath's start, as SVG has it. inkex keeps the first as a subpath of 1 point and runs the
+    // second on in the closed subpath, so Ink/Stitch counts other subpaths (DEV-SVG-011).
+    let svg = svg(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100" fill="none" stroke="red">
+          <path id="lone" d="M 0 0 L 40 0 M 20 20"/>
+          <path id="after" d="M 0 0 L 10 0 L 10 10 Z L 5 5"/>
+        </svg>"#);
+    let e = svg.design.elements();
+    let [lone, after] = [ends(&e[0]), ends(&e[1])];
+    assert_eq!(lone.len(), 1, "{lone:?}");
+    all_at(&lone[0], &[(0.0, 0.0), (40.0, 0.0)]);
+    assert_eq!(after.len(), 2, "{after:?}");
+    all_at(&after[0], &[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]);
+    all_at(&after[1], &[(0.0, 0.0), (5.0, 5.0)]);
+    assert_eq!(e[1].shape.path().subpaths.iter().map(|s| s.closed).collect::<Vec<_>>(), [true, false]);
+    assert!(svg.warnings.is_empty(), "{:?}", warnings(&svg));
+}
+
+#[test]
 fn req_svg_001_pixels_nested_transforms_and_basic_shapes() {
     let svg = svg(fixture("px-document.svg"));
     // A line has no inside to fill, so only its stroke is there.

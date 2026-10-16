@@ -117,6 +117,22 @@ fn req_sat_004_the_needle_travels_straight_on_in_equal_stitches_no_longer_than_t
 }
 
 #[test]
+fn req_sat_004_the_travel_s_length_below_twice_the_shortest_stitch_is_raised() {
+    // A running stitch length of 0.2 mm is raised to 0.6 mm for the needle's travel between the underlays
+    // and on to the top stitches, as for a fill's travel and the column's own line, and one SC-W0402 says
+    // so. None of the travel's stitches is then shorter than the shortest stitch, for finalize to leave out.
+    let (sewn, warnings) = column(&[("contour_underlay", "true"), ("running_stitch_length_mm", "0.2")]);
+    assert_eq!(
+        warnings,
+        [
+            "warning SC-W0402: The stitch length 0.2 mm (`running_stitch_length_mm`) is shorter than twice the shortest stitch (0.3 mm), so 0.6 mm is used."
+        ]
+    );
+    let shortest = sewn.windows(2).map(|s| s[0].distance(s[1])).fold(f64::INFINITY, f64::min);
+    assert!(shortest >= 0.3 - 1e-9, "{shortest}");
+}
+
+#[test]
 fn req_sat_004_an_odd_centre_walk_ends_at_the_column_s_end_and_turns_the_rest_round() {
     for repeats in ["1", "3"] {
         let all =
