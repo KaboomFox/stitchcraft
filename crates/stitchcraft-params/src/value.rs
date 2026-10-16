@@ -16,6 +16,7 @@
 //! read, and `SC-E0101` comes with a hint. An angle of a list may end with one comma, which is left out:
 //! Ink/Stitch reads a fill's underlay angles so, for older files.
 
+use stitchcraft_core::rng::fnv1a64;
 use stitchcraft_core::units::{MM_PER_INCH, MM_PER_POINT};
 use stitchcraft_core::{Code, Diagnostic, Fix, Mm};
 
@@ -117,7 +118,7 @@ impl Kind {
             },
             Kind::Choice { options } => options.iter().find(|o| o.id == text).map(|o| (Value::Choice(o.id), false)),
             Kind::Seed if text.is_empty() => Some((Value::Seed(None), false)),
-            Kind::Seed => Some((Value::Seed(Some(text.parse().unwrap_or_else(|_| fnv1a(text)))), false)),
+            Kind::Seed => Some((Value::Seed(Some(text.parse().unwrap_or_else(|_| fnv1a64(text.as_bytes())))), false)),
             Kind::LengthList { min, max } => {
                 let mut clamped = false;
                 let mut lengths = Vec::new();
@@ -288,11 +289,6 @@ fn pair_text([a, b]: [f64; 2]) -> String {
 fn list(text: &str) -> Option<Vec<&str>> {
     let items: Vec<&str> = text.split_whitespace().collect();
     (1..=MAX_LIST).contains(&items.len()).then_some(items)
-}
-
-/// The 64-bit FNV-1a hash of `text`: a fixed, documented way to turn any seed text into a number.
-fn fnv1a(text: &str) -> u64 {
-    text.bytes().fold(0xcbf2_9ce4_8422_2325, |hash, byte| (hash ^ u64::from(byte)).wrapping_mul(0x0100_0000_01b3))
 }
 
 #[cfg(test)]

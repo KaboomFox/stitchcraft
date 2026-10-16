@@ -12,6 +12,7 @@
 //! | REQ-PLAN-003 | Every block sews at least one stitch; trims and stops happen where the needle is. |
 //! | REQ-PLAN-005 | While sewing, a stitch never lands where the needle already is. |
 //! | REQ-PLAN-006 | Colour changes plus stops fit the profile's format. |
+//! | REQ-PLAN-007 | Every stitch and jump names an element the plan lists; a trim or a stop may name none. |
 //!
 //! "While sewing" means the previous movement was a `Normal` stitch with no trim since: the stitch then
 //! lays thread between two needle holes, and its length is what the machine and the fabric feel. The first
@@ -42,6 +43,8 @@ pub mod req {
     pub const NO_STITCH_IN_PLACE: &str = "REQ-PLAN-005";
     /// Colour changes within the format's limit.
     pub const COLOR_CHANGES: &str = "REQ-PLAN-006";
+    /// Every stitch and jump names its element.
+    pub const NAMED: &str = "REQ-PLAN-007";
 }
 
 /// The shortest lock (tie-in, tie-off) stitch: locks are deliberately tiny back-and-forth stitches.
@@ -103,7 +106,18 @@ pub fn check(plan: &StitchPlan, profile: &MachineProfile) -> Vec<Violation> {
                 report.add(req::INSIDE_HOOP, b, Some(i), message);
             }
             match stitch.kind {
-                StitchKind::Normal | StitchKind::Jump => needle = at,
+                StitchKind::Normal | StitchKind::Jump => {
+                    needle = at;
+                    let what = if stitch.kind == StitchKind::Jump { "jump" } else { "stitch" };
+                    match stitch.origin.element {
+                        None => report.add(req::NAMED, b, Some(i), format!("the {what} names no element")),
+                        Some(element) if element.index() >= plan.elements.len() => {
+                            let message = format!("the {what} names element {}, which the plan does not list", element.index());
+                            report.add(req::NAMED, b, Some(i), message);
+                        }
+                        Some(_) => {}
+                    }
+                }
                 StitchKind::Trim | StitchKind::Stop => {
                     if at != needle {
                         let what = if stitch.kind == StitchKind::Trim { "trim" } else { "stop" };
@@ -157,9 +171,11 @@ impl Report {
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_core::ElementId;
+
     use super::*;
     use crate::builder::PlanBuilder;
-    use crate::plan::{Provenance, Role, Stitch};
+    use crate::plan::{ElementRef, Provenance, Role, Stitch};
     use crate::profiles::BROTHER_PE800_5X7 as PROFILE;
     use crate::thread::{Rgb, Thread};
 
@@ -167,20 +183,32 @@ mod tests {
         Point::new(x, y).unwrap()
     }
 
+    /// The plan's one element, `e`, in `role`.
+    fn of_e(role: Role) -> Provenance {
+        Provenance::new(ElementRef::from_index(0).unwrap(), role)
+    }
+
     fn top() -> Provenance {
-        Provenance::plan(Role::Top)
+        of_e(Role::Top)
+    }
+
+    /// A plan of thread `black` with its one element, `e`, registered.
+    fn plan_of_e() -> PlanBuilder {
+        let mut b = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+        b.element(ElementId::new("e").unwrap()).unwrap();
+        b
     }
 
     /// A small valid plan: jump in, a few 2.5 mm stitches, a trim, a second colour, a stop.
     fn valid() -> PlanBuilder {
-        let mut b = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
-        b.jump(p(-10.0, 0.0), Provenance::plan(Role::Travel));
+        let mut b = plan_of_e();
+        b.jump(p(-10.0, 0.0), of_e(Role::Travel));
         for i in 0..=4 {
             b.stitch(p(-10.0 + 2.5 * f64::from(i), 0.0), top());
         }
         b.trim(None);
         b.change_thread(Thread::new(Rgb::new(255, 0, 0)));
-        b.jump(p(10.0, 10.0), Provenance::plan(Role::Travel));
+        b.jump(p(10.0, 10.0), of_e(Role::Travel));
         b.stitch(p(10.0, 10.0), top());
         b.stitch(p(12.0, 10.0), top());
         b.stop(None);
@@ -232,12 +260,12 @@ mod tests {
         assert_eq!(requirements(&short.finish()), vec![req::STITCH_LENGTH]);
 
         let mut lock = valid();
-        lock.stitch(p(14.2, 10.0), Provenance::plan(Role::Lock));
+        lock.stitch(p(14.2, 10.0), of_e(Role::Lock));
         assert_eq!(requirements(&lock.finish()), Vec::<&str>::new(), "locks may be 0.2 mm");
 
         // A tie-in's last stitch, out of a lock point into the stitching's first one, belongs to the lock.
         let mut join = valid();
-        join.stitch(p(14.2, 10.0), Provenance::plan(Role::Lock));
+        join.stitch(p(14.2, 10.0), of_e(Role::Lock));
         join.stitch(p(14.4, 10.0), top());
         join.stitch(p(14.6, 10.0), top());
         assert_eq!(requirements(&join.finish()), vec![req::STITCH_LENGTH], "out of a lock point, 0.2 mm is fine; on from there it is not");
@@ -289,8 +317,28 @@ mod tests {
     }
 
     #[test]
+    fn req_plan_007_every_stitch_and_jump_names_its_element() {
+        // A jump and a stitch with no element, and a stitch naming an element the plan does not list.
+        let mut b = valid();
+        b.jump(p(20.0, 10.0), Provenance::plan(Role::Travel));
+        b.stitch(p(22.0, 10.0), Provenance::plan(Role::Top));
+        b.stitch(p(24.0, 10.0), Provenance::new(ElementRef::from_index(1).unwrap(), Role::Top));
+        let report: Vec<String> = check(&b.finish(), &PROFILE).iter().map(ToString::to_string).collect();
+        assert_eq!(
+            report,
+            [
+                "REQ-PLAN-007 at block 1, entry 5: the jump names no element",
+                "REQ-PLAN-007 at block 1, entry 6: the stitch names no element",
+                "REQ-PLAN-007 at block 1, entry 7: the stitch names element 1, which the plan does not list",
+            ]
+        );
+        // A trim or a stop may name none: `valid` has one of each.
+        assert_eq!(requirements(&valid().finish()), Vec::<&str>::new());
+    }
+
+    #[test]
     fn req_plan_006_colour_changes_fit_the_format() {
-        let mut b = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+        let mut b = plan_of_e();
         b.jump(p(0.0, 0.0), top());
         b.stitch(p(0.0, 0.0), top());
         for _ in 0..255 {
@@ -325,7 +373,7 @@ mod tests {
     fn requirement_ids_exist_in_the_requirements_file() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../conformance/requirements.toml");
         let text = std::fs::read_to_string(path).unwrap();
-        for id in [req::INSIDE_HOOP, req::STITCH_LENGTH, req::STRUCTURE, req::NO_STITCH_IN_PLACE, req::COLOR_CHANGES] {
+        for id in [req::INSIDE_HOOP, req::STITCH_LENGTH, req::STRUCTURE, req::NO_STITCH_IN_PLACE, req::COLOR_CHANGES, req::NAMED] {
             assert!(text.contains(&format!("id = \"{id}\"")), "{id} is not in conformance/requirements.toml");
         }
     }

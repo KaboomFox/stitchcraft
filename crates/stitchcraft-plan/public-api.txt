@@ -19,6 +19,7 @@ pub mod stitchcraft_plan::invariants
 pub mod stitchcraft_plan::invariants::req
 pub const stitchcraft_plan::invariants::req::COLOR_CHANGES: &str
 pub const stitchcraft_plan::invariants::req::INSIDE_HOOP: &str
+pub const stitchcraft_plan::invariants::req::NAMED: &str
 pub const stitchcraft_plan::invariants::req::NO_STITCH_IN_PLACE: &str
 pub const stitchcraft_plan::invariants::req::STITCH_LENGTH: &str
 pub const stitchcraft_plan::invariants::req::STRUCTURE: &str

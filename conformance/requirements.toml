@@ -38,8 +38,9 @@ id = "REQ-PLAN-004"
 area = "plan"
 level = "L0"
 statement = "A Trim is preceded by a tie-off and followed by a tie-in before the next Normal stitch when lock settings request them."
+rationale = "Retired: whether a tie-off and a tie-in belong round a trim depends on the elements' lock settings, which a plan does not carry, so the plan checker cannot check it. Assembly's cases check it with the settings: REQ-ASM-003 and REQ-LCK-001."
 milestone = "M3"
-status = "planned"
+status = "retired"
 
 [[req]]
 id = "REQ-PLAN-005"
@@ -61,9 +62,9 @@ status = "active"
 id = "REQ-PLAN-007"
 area = "plan"
 level = "L0"
-statement = "Every Normal and Jump entry names the element it came from."
+statement = "Every Normal and Jump entry names the element it came from, one the plan lists. A trim or a stop may name none."
 milestone = "M3"
-status = "planned"
+status = "active"
 
 # ── Machine profiles ───────────────────────────────────────────────────────────────────────────────
 

@@ -170,10 +170,13 @@ past it. Generators place stitches by the same test, and so does the check that 
 | `REQ-PLAN-001` | Every position is finite and inside the profile's hoop, centred on the origin. | M1 |
 | `REQ-PLAN-002` | While sewing, every stitch is between the profile's `min_stitch` (lock stitches, into or out of a lock point: 0.2 mm) and `max_stitch`. | M1 |
 | `REQ-PLAN-003` | Every block sews at least one stitch; trims and stops happen where the needle is. | M1 |
-| `REQ-PLAN-004` | A `Trim` is preceded by a tie-off and followed by a tie-in, when the element's lock settings ask for them. | M3 |
 | `REQ-PLAN-005` | While sewing, no stitch lands where the needle already is. | M1 |
 | `REQ-PLAN-006` | Thread changes plus stops fit the format (PES: 255; DST: 999). | M1 |
-| `REQ-PLAN-007` | Every `Normal` and `Jump` entry names its element. | M3 |
+| `REQ-PLAN-007` | Every `Normal` and `Jump` entry names an element the plan lists. A trim or a stop need not name one. | M3 |
+
+`REQ-PLAN-004`, a tie-off before a trim and a tie-in after it, is retired. Whether they belong there
+depends on the elements' lock settings, which a plan does not hold. Assembly's cases check it with the
+settings (`REQ-ASM-003`, `REQ-LCK-001`).
 
 ## Threads and palettes
 
@@ -192,7 +195,7 @@ matched. A format that names threads by entries gives a design's threads theirs 
 (`Palette::assign`, REQ-THREAD-002). Different threads get different entries while they last, the nearest
 pairs first, and a thread read from such a file gets its own ([formats](formats.md), PES). Each table names
 its source in its module docs and in a row of `NOTICE`. The PEC palette is the one
-MIT-licensed pyembroidery publishes, with the names of entries 62 and 63 from its fork pystitch. Thread
+MIT-licensed pyembroidery publishes, with entries 62 and 63 from its fork pystitch. Thread
 catalogues (brand and number) arrive with M11.
 
 ## Machine profiles
@@ -233,10 +236,12 @@ than the comfort zone), with "rotate 90°" as a one-click fix when turning the d
 ```rust,ignore
 pub struct Budget {
     pub max_stitches: u32,           // per design, default 2,000,000
-    pub max_work: u64,               // abstract work units, decremented by generators
+    pub max_work: u64,               // abstract work units per element, and once more for assembly
 }
 ```
 
 Work units are counted per inner loop iteration (scanline crossings, graph edge visits, offset
-steps) so a budget behaves identically on every machine. Exhaustion yields `SC-E0004` for the
-element; other elements still plan.
+steps) so a budget behaves identically on every machine. Each element has the work budget to itself,
+and so does working out what it offers the element before it to end near. Exhaustion there yields
+`SC-E0004` for the element, and other elements still plan. Assembly and finalize share the budget once
+more, and running out there plans nothing. `SC-E0004` then says so for the whole design.
