@@ -665,7 +665,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   hold, and assembly's cases check it (`REQ-ASM-003`, `REQ-LCK-001`).
 - `SplitMix64::next_in` stays below its upper end. Where the floats lie far apart, the low end plus a
   share of the span rounded up to it.
-- The parameter registry hashes seed text with `stitchcraft_core::rng::fnv1a64`, not a copy of it.
+- The parameter registry hashes a seed's text with `stitchcraft_core::rng::fnv1a64`, not with a copy of it.
 - Docs: the core crate's README says that `exact::side` is exact far from overflow and underflow, as its
   module docs say. `Budget` says that each element has the work budget to itself.
   `SC-E0701`'s explanation covers a design placed past the hoop's edge. The data model says that entries
