@@ -54,16 +54,23 @@ requirements = ["REQ-RUN-001", "REQ-RUN-003", "REQ-SAT-010", "REQ-SAT-011"]
 [[deviation]]
 id = "DEV-RUN-004"
 area = "strokes/running"
-summary = "A part of a path that is a single point, or too small for the shortest stitch, is not stitched and is reported (SC-W0401). Ink/Stitch stitches a single-point path as a short line."
-reason = "No stitches the design does not draw, and nothing left out without a word."
+summary = "A part of a path that is a single point, or too small for the shortest stitch, is not stitched and is reported (SC-W0401). Ink/Stitch differs in 3 ways. When a stroke's first subpath is a single point, it sews the whole stroke as a line 1 CSS pixel long from that point and leaves the other subpaths out. A single point after the first is one needle point for its running stitch, and its manual stitch leaves it out without a word. A part shorter than the shortest stitch is sewn as one stitch, which its plan leaves out only if it is 0.1 mm or shorter, at its default."
+reason = "No stitches the design does not draw, and nothing left out without a word. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/stroke.py: _get_paths; lib/stitches/running_stitch.py: even_running_stitch and random_running_stitch; lib/stitch_plan/color_block.py: filter_duplicate_stitches)."
 requirements = ["REQ-RUN-001"]
 
 [[deviation]]
 id = "DEV-RUN-005"
 area = "strokes/running"
-summary = "A running stitch's random lengths are drawn from StitchCraft's generator (SplitMix64, seeded from random_seed, or from the element's id when it has none), so the values differ from Ink/Stitch's for the same seed."
-reason = "Every random value in StitchCraft comes from one fully specified generator, the same on every platform and never changed by a dependency (docs/src/design/determinism.md), as for satin columns (DEV-SAT-002) and fills (DEV-FILL-004)."
+summary = "A running stitch's random lengths are drawn from StitchCraft's generator (SplitMix64, seeded from random_seed, or from the element's id when it has none), so the values differ from Ink/Stitch's for the same seed. They are placed otherwise too. StitchCraft draws a stitch's length and its span's phase from 2 numbers, starts a phase only where a span starts, and scales each span's stitches to end on its corner. Ink/Stitch draws one number for both a stitch's length and its phase, starts a new phase after each stitch the tolerance shortened as well, and leaves what is left before a corner as the last stitch. Both key each span's draws by its place in its subpath; StitchCraft's keys hold the subpath's place in the path too, where Ink/Stitch's start again in each subpath, so subpaths drawn alike sew alike there."
+reason = "Every random value in StitchCraft comes from one fully specified generator, the same on every platform and never changed by a dependency (docs/src/design/determinism.md), as for satin columns (DEV-SAT-002) and fills (DEV-FILL-004). Scaling leaves no short leftover before a corner (DEV-RUN-002), and keying by the subpath keeps lines drawn alike from lining their needle points up, which the random phase is there to prevent. Ink/Stitch's random length was read at d59c9ab (lib/stitches/running_stitch.py: stitch_curve_randomly and random_running_stitch; lib/utils/prng.py)."
 requirements = ["REQ-RUN-007"]
+
+[[deviation]]
+id = "DEV-RUN-006"
+area = "strokes/manual"
+summary = "No hand-placed stitch is shorter than the shortest stitch. A node closer than that to the needle point before it is left out (SC-W0403), and a stitch longer than max_stitch_length_mm is split into no more parts than keep each at the shortest stitch or longer (SC-W0404). Ink/Stitch splits such a stitch into the fewest equal parts no longer than max_stitch_length_mm, however short they are, and its plan later leaves out stitches of at most 0.1 mm (its default), without a word."
+reason = "The machine's shortest stitch is a limit: a shorter stitch hammers one spot and can break the thread (REQ-RUN-008), and a stitch kept longer for it is named. Ink/Stitch's manual stitch was read at d59c9ab (lib/elements/stroke.py: apply_max_stitch_length; lib/stitch_plan/color_block.py: filter_duplicate_stitches)."
+requirements = ["REQ-RUN-006", "REQ-RUN-008"]
 
 [[deviation]]
 id = "DEV-FIN-001"

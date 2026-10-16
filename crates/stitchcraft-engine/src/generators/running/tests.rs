@@ -6,7 +6,7 @@ use super::*;
 use crate::normalize::stroke::Piece;
 
 /// Evenly spaced lengths from `pattern`, without random length.
-fn even(pattern: &[f64]) -> Lengths<'static> {
+fn even(pattern: &[f64]) -> Lengths {
     Lengths { pattern: pattern.to_vec(), next: 0, random: None }
 }
 
@@ -189,7 +189,7 @@ fn stitched(points: &[(f64, f64)], corners: &[usize], length: f64) -> Vec<(f64, 
     let mut meter = Budget::DEFAULT.meter();
     let piece = Piece { corners: corners.to_vec(), ..piece(points) };
     let along = Along::new(&piece.points, &mut meter).unwrap();
-    let run = stitch_piece(&along, &piece.corners, &mut even(&[length]), 0.3, 0.18, &mut meter).unwrap().unwrap();
+    let run = stitch_piece(&along, (&piece.corners, 0), &mut even(&[length]), 0.3, 0.18, &mut meter).unwrap().unwrap();
     run.iter().map(|q| ((q.x() * 1e6).round() / 1e6, (q.y() * 1e6).round() / 1e6)).collect()
 }
 
@@ -253,8 +253,7 @@ fn random_lengths_are_frozen() {
     // phase), the others lie within 40 % of their length. Frozen, so a saved design keeps its stitches from
     // one version to the next; the values agree with an independent implementation of SplitMix64 and of
     // the formula.
-    let mut rng = SplitMix64::new(42);
-    let mut lengths = Lengths { pattern: vec![2.5, 1.0], next: 0, random: Some((0.4, &mut rng)) };
+    let mut lengths = Lengths { pattern: vec![2.5, 1.0], next: 0, random: Some(Random::new(0.4, &SplitMix64::new(42))) };
     let draws: Vec<f64> = (0..5).map(|i| lengths.draw(i == 0, 9.0)).collect();
     assert_eq!(draws, [0.4770334515316359, 0.822880904204111, 2.188381433047275, 0.630424134832197, 3.236456153093065]);
 }
@@ -286,13 +285,13 @@ fn a_span_spread_again_draws_its_random_lengths_again_from_where_they_began() {
     let ends = (along.vertex(0), along.vertex(points.len() - 1));
     let length = ends.1.at - ends.0.at;
     let fresh = |count: Option<usize>, meter: &mut Meter| {
-        let mut rng = SplitMix64::new(1);
-        let stitches = fit(length, &mut Lengths { pattern: vec![2.5], next: 0, random: Some((0.1, &mut rng)) }, 0.3, count, meter).unwrap();
+        let stitches =
+            fit(length, &mut Lengths { pattern: vec![2.5], next: 0, random: Some(Random::new(0.1, &SplitMix64::new(1))) }, 0.3, count, meter)
+                .unwrap();
         placed(&along, ends, &stitches).iter().map(|needle| needle.point).collect::<Vec<_>>()
     };
     assert_eq!(fresh(None, &mut meter).len(), 5, "4 stitches at first");
-    let mut rng = SplitMix64::new(1);
-    let mut lengths = Lengths { pattern: vec![2.5], next: 0, random: Some((0.1, &mut rng)) };
+    let mut lengths = Lengths { pattern: vec![2.5], next: 0, random: Some(Random::new(0.1, &SplitMix64::new(1))) };
     let spread = spread(&along, ends, &mut lengths, (0.3, 2.75, 0.18), &mut meter).unwrap();
     assert_eq!(spread.iter().map(|needle| needle.point).collect::<Vec<_>>(), fresh(Some(5), &mut meter));
 }

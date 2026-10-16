@@ -39,8 +39,10 @@ a factor is. It uses only `+`, `−` and `×`, and every platform gets the same 
 specified by its 64-bit state update — so its output can be written into a conformance case and will
 never change with a dependency upgrade. An element's generator starts from its `random_seed`, mixed once
 by SplitMix64 itself, or, when it has none, from the FNV-1a hash of its id. A seed replaces the id, as in
-Ink/Stitch, so elements given one seed draw the same numbers. The derivation is documented and tested with
-fixed vectors.
+Ink/Stitch, so elements given one seed draw the same numbers. A part of an element can draw from its own stream
+of the element's generator (`SplitMix64::stream`). The part's place keys the stream, so a change to one
+part leaves the numbers of the others as they were. A running stitch keys one for each span between
+corners. The derivations are documented and tested with fixed vectors.
 
 ## Cross-platform check
 

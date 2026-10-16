@@ -370,6 +370,16 @@ registry! {
     /// ones.
     HandStitchTooShort = "SC-W0403", Warning, "Hand-placed stitch shorter than the shortest stitch; point left out";
 
+    /// Hand-placed stitches (manual stitch) sewn longer than `max_stitch_length_mm`. A stitch longer than
+    /// that is split into equal parts no longer than it, but never into parts shorter than the shortest
+    /// stitch the machine sews well, which here took fewer parts: a shorter stitch would hammer one spot and
+    /// could break the thread. Ink/Stitch splits such a stitch into the fewest parts no longer than the
+    /// setting, however short they are.
+    ///
+    /// The message gives how many stitches are longer and the longest of them. Set `max_stitch_length_mm`
+    /// to at least twice the shortest stitch: every split then leaves parts long enough.
+    HandStitchKeptLong = "SC-W0404", Warning, "Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch";
+
     /// A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have. The needle
     /// would go back into the hole it just left, which can cut the thread and does not lock it. Each such
     /// step of a lock made of steps (back and forth, or a custom lock written as numbers) was lengthened
