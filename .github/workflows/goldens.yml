@@ -25,7 +25,10 @@ jobs:
       - name: Check the label and the changelog
         env:
           GH_TOKEN: ${{ github.token }}
-          BASE: ${{ github.event.pull_request.base.sha }}
+          # The base branch as it is now. GitHub leaves `pull_request.base.sha` at the commit the base had
+          # when the pull request was opened, and a diff from there counts the golden files that pull
+          # requests merged since have changed.
+          BASE: origin/${{ github.base_ref }}
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
         run: |
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
