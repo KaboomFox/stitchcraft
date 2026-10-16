@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-338ba49b.js";
+            window.path_to_searchindex_js = "../searchindex-689ed547.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -220,8 +220,10 @@ a factor is. It uses only <code>+</code>, <code>−</code> and <code>×</code>, 
 specified by its 64-bit state update — so its output can be written into a conformance case and will
 never change with a dependency upgrade. An element’s generator starts from its <code>random_seed</code>, mixed once
 by SplitMix64 itself, or, when it has none, from the FNV-1a hash of its id. A seed replaces the id, as in
-Ink/Stitch, so elements given one seed draw the same numbers. The derivation is documented and tested with
-fixed vectors.</p>
+Ink/Stitch, so elements given one seed draw the same numbers. A part of an element can draw from its own stream
+of the element’s generator (<code>SplitMix64::stream</code>). The part’s place keys the stream, so a change to one
+part leaves the numbers of the others as they were. A running stitch keys one for each span between
+corners. The derivations are documented and tested with fixed vectors.</p>
 <h2 id="cross-platform-check"><a class="header" href="#cross-platform-check">Cross-platform check</a></h2>
 <p>From M2 (when there are plans to hash), <code>ci.yml</code> runs the conformance suite on <code>ubuntu-latest</code>,
 <code>macos-latest</code> and <code>windows-latest</code> and, through <code>wasmtime</code>, on <code>wasm32-wasip1</code> (test-only; shipped code
