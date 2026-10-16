@@ -1,6 +1,6 @@
 # Determinism
 
-<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/exact.rs, crates/stitchcraft-core/src/rng.rs, apps/stitchcraft-cli/src/commands/bug_report.rs -->
+<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/exact.rs, crates/stitchcraft-core/src/rng.rs, apps/stitchcraft-cli/src/commands/bug_report.rs, apps/stitchcraft-cli/src/commands/bug_report/** -->
 
 **Same input, same version ⇒ byte-identical machine file and preview, on Linux, macOS, Windows and
 wasm32.** This makes golden-file conformance possible, makes bug reports reproducible, makes caches
@@ -62,7 +62,13 @@ of a path to it. The file also records what came of them:
 - a SHA-256 of each entry of the plan, from each coordinate's bits, its kind, role and element, and each
   block's thread
 - the machine file's size and SHA-256, and the design name its label holds, which the replay uses as it is
-- the first line of each diagnostic, and a panic's message if there was one
+- the first line of each diagnostic, and a panic's message if there was one, with the phase it came in
+  (planning, drawing the picture or writing the files)
+
+A replay plans the design again, and draws the picture again for a panic that came while drawing it. It
+leaves the files unwritten. `stitch --version` gives the version a build will be released as. Builds from a
+git checkout add their commit, which bundles record too. A replay reads the bundle's format first, and
+refuses a format it does not know by its number, whatever else the file holds.
 
 `stitch bug-report --replay` plans the design again through the same code as `stitch plan` and compares
 each record (`REQ-CLI-001`). `stitch plan` writes a bundle by itself when it finds a bug in StitchCraft

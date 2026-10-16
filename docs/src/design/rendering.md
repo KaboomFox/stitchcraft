@@ -12,6 +12,9 @@ docs, and for conformance diffs. Two promises shape it:
 - **The same bytes everywhere** (`REQ-RND-002`). A preview is a pure function of the plan and the
   settings, so documentation images can be compared byte for byte on every pull request.
 
+`stitch plan --preview` draws the machine file it wrote, read back as `stitch preview` reads it, in the
+design's colours. A DST machine's cut before a long jump then shows as a cut (`REQ-CLI-008`).
+
 ## Two steps: scene, then pixels
 
 ```text

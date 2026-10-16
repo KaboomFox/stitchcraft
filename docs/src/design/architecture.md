@@ -135,6 +135,12 @@ A future in-tree VectorCraft crate would be a fifth adapter calling the same two
 - **A bug in StitchCraft** is neither. It shows as a failed plan check (`SC-E0009`) or as a panic despite
   the lints. The command line catches it and ends with exit status 4. For `stitch plan` it also writes a
   bug-report bundle that reproduces the bug ([determinism](determinism.md#bug-reports)).
+- **The command line's own promises.** A command refuses outputs that name the same file as each other,
+  or as a file it reads (`REQ-CLI-007`), and writes each file under a temporary name of its own, created
+  new and synced before it is renamed into place (`REQ-CLI-006`). What it prints of a file it wrote is the
+  file read back (`REQ-CLI-008`). A closed standard output keeps a command's exit status, any other error
+  writing it ends with 3 (`REQ-CLI-009`), and help and errors are coloured only on a terminal
+  (`REQ-CLI-010`).
 
 ## Feature flags
 
@@ -146,8 +152,9 @@ a format pulls a heavy dependency (none planned). No flag may change the output 
 
 Everything at L0–L3 must build for `wasm32-unknown-unknown` (checked by `cargo xtask wasm`): no
 threads, no filesystem, no clocks, no `std::env`, no randomness from the OS. The plug-in is built
-with `opt-level = "z"`, LTO and `panic = "abort"`, which is one more reason the no-panic rule is
-absolute: in wasm a panic aborts the module and VectorCraft reports the plug-in as failed.
+in release with the workspace's profile (thin LTO, one codegen unit), and on `wasm32-unknown-unknown`
+a panic aborts. That is one more reason the no-panic rule is absolute: the module stops, and
+VectorCraft reports the plug-in as failed.
 
 ## Where does my code go?
 
