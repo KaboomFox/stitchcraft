@@ -110,6 +110,16 @@ impl<'a> Ring<'a> {
 /// between inside and outside there by the half-open count.
 type Meet = (f64, Point, bool);
 
+/// The point a share `t` of the way from `a` to `b` ([`Point::lerp`]), with a coordinate the 2 share kept
+/// exactly: a row crossing a side along x or along y ends on the side exactly, as GEOS cuts it, and rows
+/// ending on one side compare as equal. Weighing both ends, `lerp` can land an ulp off the side.
+fn toward(a: Point, b: Point, t: f64) -> Point {
+    let at = a.lerp(b, t);
+    let x = if a.x() == b.x() { a.x() } else { at.x() };
+    let y = if a.y() == b.y() { a.y() } else { at.y() };
+    Point::new(x, y).unwrap_or(at)
+}
+
 /// The segments of the row `v` across the rows, split where it meets the rings: the stretches inside,
 /// and those along the rings.
 fn cut(rings: &[Ring<'_>], v: f64) -> Vec<Segment> {
@@ -128,7 +138,7 @@ fn cut(rings: &[Ring<'_>], v: f64) -> Vec<Segment> {
             } else if bv == v {
                 meets.push((bu, b, counted));
             } else if counted {
-                let at = a.lerp(b, (v - av) / (bv - av));
+                let at = toward(a, b, (v - av) / (bv - av));
                 meets.push((au + (bu - au) * ((v - av) / (bv - av)), at, true));
             }
         }

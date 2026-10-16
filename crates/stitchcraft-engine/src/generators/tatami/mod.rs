@@ -76,8 +76,9 @@ params! {
         /// How many rows the needle points take to come back to where they started. Along each row they lie
         /// the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the
         /// row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show
-        /// less than whole numbers do.
-        staggers: Number = "4", label "Staggers", range (0.01, 100.0);
+        /// less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1,
+        /// which lines every row's points up, as in Ink/Stitch.
+        staggers: Number = "4", label "Staggers", range (-100.0, 100.0);
 
         /// Leave out the needle point at the end of each row. It lies close to the start of the next row,
         /// and leaving it out lowers the stitch count and the density along the fill's edge.
