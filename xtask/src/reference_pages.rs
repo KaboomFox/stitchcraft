@@ -4,6 +4,7 @@
 //! is stale.
 
 use std::fmt::Write as _;
+use std::path::Path;
 
 use clap::CommandFactory;
 use stitchcraft_cli::cli::Cli;
@@ -17,18 +18,29 @@ use crate::{examples, shots, util};
 
 const REFERENCE: &str = "docs/src/user/reference";
 
+/// Each page, by its file name in the reference directory, with the function that writes it.
+type Writer = fn() -> Result<String, String>;
+const PAGES: [(&str, Writer); 5] = [
+    ("profiles.md", || Ok(profiles())),
+    ("formats.md", || Ok(formats())),
+    ("test-sheets.md", test_sheets),
+    ("diagnostics.md", || Ok(diagnostics())),
+    ("cli.md", || Ok(cli())),
+];
+
 /// Every generated reference page: (path relative to the repository root, content).
 pub fn pages() -> Result<Vec<(String, String)>, String> {
-    Ok([
-        (format!("{REFERENCE}/profiles.md"), profiles()),
-        (format!("{REFERENCE}/formats.md"), formats()),
-        (format!("{REFERENCE}/test-sheets.md"), test_sheets()?),
-        (format!("{REFERENCE}/diagnostics.md"), diagnostics()),
-        (format!("{REFERENCE}/cli.md"), cli()),
-    ]
-    .into_iter()
-    .chain(examples::pages(&util::root())?)
-    .collect())
+    let mut pages = Vec::new();
+    for (name, write) in PAGES {
+        pages.push((format!("{REFERENCE}/{name}"), write()?));
+    }
+    pages.extend(examples::pages(&util::root())?);
+    Ok(pages)
+}
+
+/// The files [`pages`] writes, by path from the repository root, without writing them.
+pub fn paths(root: &Path) -> Result<Vec<String>, String> {
+    Ok(PAGES.iter().map(|(name, _)| format!("{REFERENCE}/{name}")).chain(examples::paths(root)?).collect())
 }
 
 fn header(title: &str, source: &str) -> String {

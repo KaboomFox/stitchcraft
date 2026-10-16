@@ -27,11 +27,9 @@ use crate::util;
 const MARKER: &str = "\n# StitchCraft (machine embroidery), joined by `cargo xtask compat join`: see\n# stitchcraft/docs/src/design/adr/0011-movable-into-vectorcraft.md\n";
 
 /// `cargo xtask compat join [--nested] <vectorcraft>`.
-pub fn run(args: &[String]) -> Result<(), String> {
-    let nested = args.iter().any(|a| a == "--nested");
-    let target = args.iter().find(|a| !a.starts_with("--")).ok_or("usage: cargo xtask compat join [--nested] <vectorcraft checkout>")?;
+pub fn run(nested: bool, target: &Path) -> Result<(), String> {
     let folder = std::fs::canonicalize(util::root()).map_err(|e| format!("{}: {e}", util::root().display()))?;
-    let vectorcraft = std::fs::canonicalize(target).map_err(|e| format!("{target}: {e}"))?;
+    let vectorcraft = std::fs::canonicalize(target).map_err(|e| format!("{}: {e}", target.display()))?;
     let prefix = prefix(&folder, &vectorcraft)?;
     let ours_path = folder.join("Cargo.toml");
     let theirs_path = vectorcraft.join("Cargo.toml");

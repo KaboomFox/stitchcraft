@@ -29,18 +29,21 @@ everything.
 | `clap` CLI definition | CLI reference | `cargo xtask docs` |
 | Machine profiles | machine profile reference | `cargo xtask docs` |
 | Format modules (limits, commands) | format reference | `cargo xtask docs` |
-| `conformance/requirements.toml` + latest report | requirement status pages | `cargo xtask docs` |
 | `conformance/inkstitch-params.toml` + registry | [compatibility contract](inkstitch-compat-contract.md) with status | `cargo xtask docs` |
-| Compatibility runs | supported VectorCraft versions | `cargo xtask compat report` |
+| Compatibility runs | supported VectorCraft versions | `cargo xtask compat report` (M6.6) |
 
 Generated pages are committed (reviewers see user-facing changes in the diff) and marked with a header
-comment; `cargo xtask docs --check` regenerates into a temporary directory and fails if anything
-differs.
+comment; `cargo xtask docs --check` regenerates them in memory and fails if anything differs, or if a
+file in a generated directory has lost its generator. The header is for people. The checks know
+a generated page by the generator that writes it, so a page that only says it is generated is checked as
+one written by hand. The conformance report is not a page of the book: `cargo xtask conformance` writes it
+to `target/conformance/`, and CI shows it in the job summary.
 
 ## Images: four kinds, each reproducible
 
 Every image in the docs is declared in `docs/shots.toml` with an id, a kind and how to make it. Pages
-reference `images/generated/<id>.png`. An image without a declaration fails the docs check.
+reference `images/generated/<id>.png`, or a photo in `images/photos/`. An image at any other path fails the
+docs check, whatever its file name.
 
 | Kind | Made by | Compared by | Notes |
 |---|---|---|---|
@@ -66,7 +69,7 @@ panels = [
 ```
 
 Each panel sets its parameters on every element of the design and becomes one image, `running-length-1.png`
-and so on. The plan may report only the codes the shot lists in `allow`, and a shot fails on any other:
+and so on. A test sheet is drawn as it is, so a shot of one has no panels. The plan may report only the codes the shot lists in `allow`, and a shot fails on any other:
 a picture never shows a design that the engine changed without the page saying so. The `alt` text is
 mandatory (accessibility), and the docs check fails on images without it.
 
@@ -94,16 +97,26 @@ dialogs' contents.
 
 ## What runs on every pull request
 
-`.github/workflows/docs.yml`:
+`.github/workflows/docs.yml` runs one job, `check`. Its steps:
 
-| Job | Fails when |
-|---|---|
-| `book` | `mdbook build` fails, or any page is missing from `SUMMARY.md` |
-| `check` | generated pages are stale; a relative link or `#anchor` is broken; a doc mentions a `cargo xtask` subcommand that does not exist (the drift we found in VectorCraft's own `AGENTS.md`); a `REQ-…` or `SC-…` id does not exist; an image lacks a declaration or alt text |
-| `examples` | a Rust snippet does not compile (`cargo test --doc`). Command-line examples are generated pages, which `check` covers |
-| `shots` | `cargo xtask shots --check`: a declared image is missing, has no alt text, or regenerates differently from the committed file — byte-exact for `stitch` shots, within tolerance for `vectorcraft-ui` and `vectorcraft-render` shots (generators in M6.7; a separate job with Xvfb and Mesa) |
-| `spelling` | `typos` finds a misspelling (allow-list in `typos.toml`) |
-| `links` | an internal link is broken (`lychee --offline`); external links are checked nightly, not per PR |
+- `cargo xtask docs --check` fails for a generated page that is stale or left over, and a page missing
+  from `SUMMARY.md`. A broken relative link, `#anchor` or included file fails it, with ids made as mdBook
+  makes them, smart punctuation included. A doc that names a `cargo xtask` subcommand that does not exist
+  fails it too: we found that drift in VectorCraft's own `AGENTS.md`. Ids must be in their files, `REQ-…`
+  and `DEV-…` alike, and an `SC-…` code registered once its milestone is done. An image must be one a shot
+  writes, with alt text.
+- `cargo xtask conformance --check` fails when requirements and cases disagree, or a fixture has no row
+  in the fixtures index.
+- `cargo xtask shots --check` fails for a declared image that is missing or has no alt text. It also
+  regenerates each image and compares it with the committed file. A `stitch` shot must come out byte for
+  byte the same. The `vectorcraft-ui` and `vectorcraft-render` shots get a tolerance, and their generators
+  arrive in M6.7 with a job of their own (Xvfb and Mesa).
+- `mdbook build docs` fails when the book does not build.
+- `cargo test --doc` fails when a Rust snippet does not compile. Command-line examples are generated
+  pages, which `docs --check` covers.
+- `typos` fails on a misspelling (allow-list in `typos.toml`).
+
+External links are checked nightly by lychee, not on pull requests.
 
 When a shot differs, `--check` writes the new image to `target/shots/` and the job keeps it as the
 `stale-images` artifact, next to the committed one in the PR's diff. An image under

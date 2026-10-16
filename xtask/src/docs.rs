@@ -1,24 +1,43 @@
 //! `cargo xtask docs [--check]`: generated pages, and the checks that keep the documentation true.
 //!
-//! Without `--check` it regenerates the generated pages. With `--check` it writes nothing and fails when:
-//! a generated page or a page's figure ([`crate::figures`]) is stale; a page is missing from `SUMMARY.md`; a relative link or `#anchor` is broken;
-//! a document mentions a `cargo xtask` subcommand that does not exist; a `REQ-…` id or `SC-…` code is not
-//! registered; the ADR index disagrees with the ADR files; an image has no alt text or no declaration in
-//! `docs/shots.toml` (`docs/src/design/docs-pipeline.md`); a long sentence is on two pages, or a path of
-//! the repository named in inline code does not exist ([`crate::docs_audit`]); a page's implements
-//! comment matches no file, or the branch changes a page's files but neither the page nor a
-//! `Design-reviewed:` line covers it ([`crate::design_map`]).
+//! Without `--check` it regenerates the generated pages, and deletes the ones no generator writes any more.
+//! With `--check` it writes nothing and fails when:
+//!
+//! - a generated page or a page's figure ([`crate::figures`]) is stale, or a generated directory holds a
+//!   file no generator writes;
+//! - a page is missing from `SUMMARY.md`, a relative link or an `#anchor` is broken (ids made as mdBook
+//!   makes them, [`crate::markdown`]), or an included file does not exist;
+//! - a document mentions a `cargo xtask` subcommand that does not exist;
+//! - a `REQ-…` or `DEV-…` id is not in its file, or an `SC-…` code is not registered although its milestone
+//!   is done (a page may name a code allocated to a milestone still to come);
+//! - the ADR index disagrees with the ADR files;
+//! - an image has no alt text, or is not an image a shot in `docs/shots.toml` declares
+//!   (`docs/src/design/docs-pipeline.md`);
+//! - a long sentence is on two pages, or a path of the repository named in inline code does not exist
+//!   ([`crate::docs_audit`]);
+//! - a page's implements comment matches no file, or the branch changes a page's files but neither the page
+//!   nor a `Design-reviewed:` line covers it ([`crate::design_map`]).
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use crate::markdown::{self, Link};
 use crate::util::{self, Findings};
-use crate::{SUBCOMMANDS, conformance, contract_page, design_map, deviations, docs_audit, figures, param_pages, reference_pages, shots};
+use crate::{conformance, contract_page, design_map, deviations, docs_audit, examples, figures, param_pages, reference_pages, shots};
 
 const DOCS_SRC: &str = "docs/src";
 const DIAGNOSTICS_PAGE: &str = "docs/src/design/diagnostics.md";
+const ROADMAP: &str = "docs/src/plan/roadmap.md";
 const ADR_DIR: &str = "docs/src/design/adr";
+
+/// The files the generators write, by path from the repository root: what `cargo xtask docs` writes and
+/// `--check` compares. The docs audit and the prose lint leave these pages to their sources, and only
+/// these: a page that says it is generated, and that no generator writes, is a page written by hand.
+pub fn generated_paths(root: &Path) -> Result<BTreeSet<String>, String> {
+    let mut paths: BTreeSet<String> = reference_pages::paths(root)?.into_iter().chain(param_pages::paths()).collect();
+    paths.insert(contract_page::PAGE.to_string());
+    Ok(paths)
+}
 
 /// `cargo xtask docs`.
 pub fn run(check_only: bool) -> Result<(), String> {
@@ -35,7 +54,7 @@ pub fn run(check_only: bool) -> Result<(), String> {
         check_links(&root, path, text, &mut findings);
     }
     xtask_mentions(&root, &pages, &mut findings)?;
-    ids(&pages, &mut findings)?;
+    ids(&root, &pages, &mut findings)?;
     allocations(&root, &mut findings)?;
     adr_index(&root, &mut findings)?;
     images(&root, &pages, &mut findings)?;
@@ -44,9 +63,10 @@ pub fn run(check_only: bool) -> Result<(), String> {
     findings.finish("docs", &format!("{} Markdown files checked", pages.len()))
 }
 
-/// Regenerates (or, with `check_only`, compares) every generated page, and removes (or reports) pages in
-/// the parameter reference directory that no declaration produces any more. Where the parameter registry,
-/// the Ink/Stitch contract and the deviations ledger disagree is an error either way.
+/// Regenerates (or, with `check_only`, compares) every generated page, and removes (or reports) files in
+/// the generated directories that no generator writes any more: a parameter page whose declaration is
+/// gone, an example's output whose example is. Where the parameter registry, the Ink/Stitch contract and
+/// the deviations ledger disagree is an error either way.
 fn generated_pages(root: &Path, check_only: bool, findings: &mut Findings) -> Result<(), String> {
     let registry = stitchcraft_engine::registry::PARAMETERS;
     let contract = contract_page::Contract::parse(&util::read(&root.join(contract_page::DATA))?)?;
@@ -60,13 +80,13 @@ fn generated_pages(root: &Path, check_only: bool, findings: &mut Findings) -> Re
     let mut pages = vec![(contract_page::PAGE.to_string(), contract.render(registry))];
     pages.extend(reference_pages::pages()?);
     pages.extend(param_pages::pages(&ledger)?);
-    for orphan in util::files(&root.join(param_pages::DIR), &["md"]) {
+    for orphan in [(param_pages::DIR, "md"), (examples::OUTPUT, "txt")].iter().flat_map(|(dir, kind)| util::files(&root.join(dir), &[kind])) {
         let page = util::rel(&orphan);
         if pages.iter().any(|(path, _)| *path == page) {
             continue;
         }
         if check_only {
-            findings.error(format!("{page} is generated by no parameter declaration: run `cargo xtask docs` to delete it"));
+            findings.error(format!("{page} is written by no generator any more: run `cargo xtask docs` to delete it"));
         } else {
             std::fs::remove_file(&orphan).map_err(|e| format!("{page}: {e}"))?;
             println!("deleted {page}");
@@ -122,7 +142,8 @@ fn summary(root: &Path, findings: &mut Findings) -> Result<(), String> {
     Ok(())
 }
 
-/// Relative links and anchors resolve; pages inside `docs/src` link only inside it.
+/// Relative links and anchors resolve, pages inside `docs/src` link only inside it, and included files
+/// exist (mdBook leaves a missing one's directive in the page and builds anyway).
 fn check_links(root: &Path, path: &Path, text: &str, findings: &mut Findings) {
     let src = root.join(DOCS_SRC);
     let in_book = path.starts_with(&src);
@@ -151,6 +172,11 @@ fn check_links(root: &Path, path: &Path, text: &str, findings: &mut Findings) {
             if !markdown::heading_ids(&target_text).contains(anchor) {
                 findings.error(format!("{here}: no heading for anchor `#{anchor}` in {}", util::rel(&resolved)));
             }
+        }
+    }
+    for (line, included) in markdown::includes(text) {
+        if !dir.join(&included).is_file() {
+            findings.error(format!("{}:{line}: `{{{{#include {included}}}}}` names no file", util::rel(path)));
         }
     }
 }
@@ -183,7 +209,7 @@ fn xtask_mentions(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findi
             while let Some(pos) = rest.find("cargo xtask ") {
                 let after = rest.get(pos + "cargo xtask ".len()..).unwrap_or("");
                 let name: String = after.chars().take_while(|c| c.is_ascii_lowercase() || *c == '-').collect();
-                if !name.is_empty() && !SUBCOMMANDS.iter().any(|(n, _, _)| *n == name) {
+                if !name.is_empty() && !crate::subcommands().contains(&name) {
                     findings.error(format!("{}:{}: `cargo xtask {name}` is not a subcommand", util::rel(path), number + 1));
                 }
                 rest = after;
@@ -193,26 +219,75 @@ fn xtask_mentions(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findi
     Ok(())
 }
 
-/// Requirement ids and diagnostic codes mentioned in Markdown are registered.
-fn ids(pages: &[(PathBuf, String)], findings: &mut Findings) -> Result<(), String> {
+/// Requirement and deviation ids mentioned in Markdown are in their files, and diagnostic codes are
+/// registered once the milestone the design's table allocates them to is done.
+fn ids(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) -> Result<(), String> {
     let requirements = conformance::requirement_ids()?;
-    let codes = diagnostic_codes()?;
+    let ledger: BTreeSet<String> = deviations::parse(&util::read(&root.join(deviations::LEDGER))?)?.into_iter().map(|d| d.id).collect();
+    let registered: BTreeSet<&str> = stitchcraft_core::Code::ALL.iter().map(|code| code.id()).collect();
+    let allocated = allocated(&util::read(&root.join(DIAGNOSTICS_PAGE))?);
+    let done = done_milestones(&util::read(&root.join(ROADMAP))?);
     for (path, text) in pages {
         for (number, line) in text.lines().enumerate() {
             let here = format!("{}:{}", util::rel(path), number + 1);
-            for id in find_requirement_ids(line) {
-                if !requirements.contains(&id) {
-                    findings.error(format!("{here}: {id} is not in conformance/requirements.toml"));
-                }
+            for id in find_ids(line, "REQ-").into_iter().filter(|id| !requirements.contains(id)) {
+                findings.error(format!("{here}: {id} is not in conformance/requirements.toml"));
             }
-            for code in find_codes(line) {
-                if !codes.contains(&code) {
-                    findings.error(format!("{here}: {code} is not registered in {DIAGNOSTICS_PAGE}"));
-                }
+            for id in find_ids(line, "DEV-").into_iter().filter(|id| !ledger.contains(id)) {
+                findings.error(format!("{here}: {id} is not in {}", deviations::LEDGER));
+            }
+            for why in find_codes(line).iter().filter_map(|code| unregistered(code, &registered, &allocated, &done)) {
+                findings.error(format!("{here}: {why}"));
             }
         }
     }
     Ok(())
+}
+
+/// Why a page may not name `code`, if it may not: an unregistered code must have its row in the design's
+/// table ([`allocated`]), for a milestone whose steps are not all done ([`done_milestones`]).
+fn unregistered(code: &str, registered: &BTreeSet<&str>, allocated: &BTreeMap<String, String>, done: &BTreeSet<String>) -> Option<String> {
+    if registered.contains(code) {
+        return None;
+    }
+    match allocated.get(code) {
+        None => Some(format!("{code} is neither registered nor allocated in {DIAGNOSTICS_PAGE}")),
+        Some(milestone) if done.contains(milestone) => Some(format!(
+            "{code} is allocated to {milestone}, whose steps are done, but is not registered: register it, or move its row in \
+             {DIAGNOSTICS_PAGE} to the milestone that will"
+        )),
+        Some(_) => None,
+    }
+}
+
+/// The milestone the design's code table on `page` allocates each code to: its row's last cell.
+fn allocated(page: &str) -> BTreeMap<String, String> {
+    page.lines()
+        .filter(|line| line.starts_with("| `SC-"))
+        .filter_map(|line| {
+            let cells: Vec<&str> = line.trim().trim_matches('|').split('|').map(str::trim).collect();
+            Some((cells.first()?.trim_matches('`').to_string(), cells.last()?.to_string()))
+        })
+        .collect()
+}
+
+/// The milestones of `roadmap` that have steps and whose steps are all done: each step's row starts with its
+/// id and the done mark, `| M3.1 ✅ |`.
+fn done_milestones(roadmap: &str) -> BTreeSet<String> {
+    let mut steps: BTreeMap<String, (usize, usize)> = BTreeMap::new();
+    for line in roadmap.lines() {
+        let Some(first) = line.strip_prefix("| M").and_then(|rest| rest.split('|').next()) else { continue };
+        let mut words = first.split_whitespace();
+        let (Some(step), marks) = (words.next(), words.collect::<Vec<_>>()) else { continue };
+        let Some((milestone, number)) = step.split_once('.') else { continue };
+        if milestone.is_empty() || !milestone.bytes().all(|b| b.is_ascii_digit()) || !number.bytes().all(|b| b.is_ascii_digit()) {
+            continue;
+        }
+        let tally = steps.entry(format!("M{milestone}")).or_default();
+        tally.0 += 1;
+        tally.1 += usize::from(marks == ["✅"]);
+    }
+    steps.into_iter().filter(|(_, (all, done))| all == done).map(|(milestone, _)| milestone).collect()
 }
 
 /// Every registered code has its row in the design's code table, with the same severity and a title that
@@ -242,11 +317,11 @@ fn allocations(root: &Path, findings: &mut Findings) -> Result<(), String> {
     Ok(())
 }
 
-/// `REQ-AREA[-SUB…]-NNN` ids in `line`.
-fn find_requirement_ids(line: &str) -> Vec<String> {
+/// Ids that start with `prefix` in `line`, such as `REQ-AREA[-SUB…]-NNN` or `DEV-AREA-NNN`.
+fn find_ids(line: &str, prefix: &str) -> Vec<String> {
     let mut out = Vec::new();
     let mut rest = line;
-    while let Some(pos) = rest.find("REQ-") {
+    while let Some(pos) = rest.find(prefix) {
         let tail = rest.get(pos..).unwrap_or("");
         let token: String = tail.chars().take_while(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || *c == '-').collect();
         let token = token.trim_end_matches('-');
@@ -254,7 +329,7 @@ fn find_requirement_ids(line: &str) -> Vec<String> {
         if digits.len() == 3 && digits.chars().all(|c| c.is_ascii_digit()) && token.matches('-').count() >= 2 {
             out.push(token.to_string());
         }
-        rest = tail.get(4..).unwrap_or("");
+        rest = tail.get(prefix.len()..).unwrap_or("");
     }
     out
 }
@@ -276,13 +351,6 @@ fn find_codes(line: &str) -> Vec<String> {
         rest = tail.get(3..).unwrap_or("");
     }
     out
-}
-
-/// The diagnostic codes registered in the diagnostics page's table (the registry until M3 moves it into
-/// `stitchcraft-core`).
-fn diagnostic_codes() -> Result<BTreeSet<String>, String> {
-    let text = util::read(&util::root().join(DIAGNOSTICS_PAGE))?;
-    Ok(text.lines().filter(|l| l.starts_with("| `SC-")).flat_map(find_codes).collect())
 }
 
 /// The ADR index lists every ADR with the status its file declares.
@@ -308,8 +376,8 @@ fn adr_index(root: &Path, findings: &mut Findings) -> Result<(), String> {
     Ok(())
 }
 
-/// Images have alt text; local images in the book are declared in `docs/shots.toml` (whose own alt
-/// texts `cargo xtask shots` checks).
+/// Images have alt text; a local image in the book is one a shot in `docs/shots.toml` declares, at the path
+/// the shot writes it to (`cargo xtask shots` checks the shots' own alt texts).
 fn images(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) -> Result<(), String> {
     let shots = shots::load(root)?;
     let src = root.join(DOCS_SRC);
@@ -320,8 +388,8 @@ fn images(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) -> 
                 findings.error(format!("{here}: image `{}` has no alt text", link.target));
             }
             if path.starts_with(&src) && !link.target.contains("://") {
-                let stem = Path::new(&link.target).file_stem().and_then(|s| s.to_str()).unwrap_or("");
-                if !shots.iter().any(|s| s.images().iter().any(|image| image == stem)) {
+                let image = normalized(&path.parent().unwrap_or(root).join(&link.target));
+                if !shots.iter().any(|shot| shot.declares(root, &image)) {
                     findings.error(format!("{here}: image `{}` is not declared in docs/shots.toml", link.target));
                 }
             }
@@ -335,9 +403,31 @@ mod tests {
     use super::*;
 
     #[test]
-    fn finds_requirement_ids_but_not_placeholders() {
-        assert_eq!(find_requirement_ids("see REQ-FILL-TAT-006 and REQ-RUN-001..003"), vec!["REQ-FILL-TAT-006", "REQ-RUN-001"]);
-        assert!(find_requirement_ids("REQ-… and REQ-PLAN-* and `REQ-`").is_empty());
+    fn finds_requirement_and_deviation_ids_but_not_placeholders() {
+        assert_eq!(find_ids("see REQ-FILL-TAT-006 and REQ-RUN-001..003", "REQ-"), vec!["REQ-FILL-TAT-006", "REQ-RUN-001"]);
+        assert!(find_ids("REQ-… and REQ-PLAN-* and `REQ-`", "REQ-").is_empty());
+        assert_eq!(find_ids("`DEV-SVG-011`, DEV-FILL-TAT-001 and DEV-NNN.", "DEV-"), vec!["DEV-SVG-011", "DEV-FILL-TAT-001"]);
+    }
+
+    #[test]
+    fn a_code_a_page_names_is_registered_once_its_milestone_is_done() {
+        let table =
+            "| `SC-W0101` | Warning | Unknown parameter | M3 |\n| `SC-W0901` | Warning | Planned | M7 |\n| `SC-W0902` | Warning | Forgotten | M4 |\n";
+        let allocated = allocated(table);
+        let registered = BTreeSet::from(["SC-W0101"]);
+        let done =
+            done_milestones("## M3\n| M3.1 ✅ | a |\n| M3.2 ✅ | b |\n## M4\n| M4.1 ✅ | c |\n## M6\n| M6.1 | d |\n| M0.5 👤 (partly ✅) | e |\n");
+        assert_eq!(done, BTreeSet::from(["M3".to_string(), "M4".to_string()]));
+        let why = |code: &str| unregistered(code, &registered, &allocated, &done);
+        assert_eq!([why("SC-W0101"), why("SC-W0901")], [None, None], "registered, and planned for M7");
+        assert!(why("SC-W0902").is_some_and(|why| why.starts_with("SC-W0902 is allocated to M4, whose steps are done, but is not registered")));
+        assert!(why("SC-E0999").is_some_and(|why| why.contains("neither registered nor allocated")));
+    }
+
+    #[test]
+    fn the_milestones_done_are_the_roadmap_s() {
+        let done = done_milestones(&util::read(&util::root().join(ROADMAP)).unwrap());
+        assert!(["M1", "M2", "M3", "M4", "M5"].iter().all(|m| done.contains(*m)) && !done.contains("M0") && !done.contains("M6"), "{done:?}");
     }
 
     #[test]
