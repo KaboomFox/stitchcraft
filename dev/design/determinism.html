@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d1224425.js";
+            window.path_to_searchindex_js = "../searchindex-c9ef74e9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -193,11 +193,11 @@ safe, and means the docs images regenerated in CI match the ones on a contributo
 </thead>
 <tbody>
 <tr><td>Hash map iteration order</td><td>No <code>HashMap</code>/<code>HashSet</code> in engine, formats, render, params or adapters’ output paths; use <code>BTreeMap</code>, <code>BTreeSet</code>, <code>IndexMap</code> or sorted <code>Vec</code></td><td><code>clippy::disallowed_types</code> in <code>clippy.toml</code></td></tr>
-<tr><td>Platform <code>libm</code> (<code>sin</code>, <code>cos</code>, <code>atan2</code>, <code>exp</code>, <code>powf</code> differ by last bits across OSes)</td><td>Call transcendental functions only through <code>stitchcraft_core::math</code>, which uses the pure-Rust <code>libm</code> crate</td><td><code>clippy::disallowed_methods</code> on <code>f64::sin</code> &amp; co.</td></tr>
+<tr><td>Platform <code>libm</code> (<code>sin</code>, <code>cos</code>, <code>atan2</code>, <code>exp</code>, <code>log</code>, <code>powf</code> and their kin differ by last bits across OSes, and <code>powi</code>’s precision varies even between calls)</td><td>Call transcendental functions only through <code>stitchcraft_core::math</code>, which uses the pure-Rust <code>libm</code> crate, and square by multiplying</td><td><code>clippy::disallowed_methods</code> on <code>f64::sin</code> &amp; co., and on the <code>f32</code> ones</td></tr>
 <tr><td>Which side of a line a point lies on: a rounded cross product can give the wrong sign for points nearly in line</td><td>The <a href="algorithms/offset.html">offset curves</a> decide it with <code>stitchcraft_core::exact::side</code>, which is exact (<a href="#exact-orientation">below</a>)</td><td>unit tests against exact integer arithmetic</td></tr>
-<tr><td>Randomness</td><td>Only <code>stitchcraft_core::rng::SplitMix64</code>, seeded per element from <code>random_seed</code> or a hash of the element id; never the OS RNG, never time</td><td><code>clippy::disallowed_methods</code>/types for <code>rand::thread_rng</code>, <code>SystemTime</code>, <code>Instant</code> in libraries</td></tr>
-<tr><td>Floating-point contraction (FMA)</td><td>Rust does not contract <code>a * b + c</code> implicitly; we never call <code>mul_add</code> in quantization or comparisons</td><td><code>clippy::disallowed_methods</code> on <code>f64::mul_add</code> in formats</td></tr>
-<tr><td>Parallelism</td><td>Results joined in document order; no reductions whose order depends on scheduling</td><td>engine design; CI compares sequential vs parallel output</td></tr>
+<tr><td>Randomness</td><td>Only <code>stitchcraft_core::rng::SplitMix64</code>, seeded per element from <code>random_seed</code> or a hash of the element id, with the OS’s randomness and the time kept out</td><td><code>clippy::disallowed_types</code> on <code>RandomState</code>, <code>SystemTime</code> and <code>Instant</code>; <code>deny.toml</code> lets <code>rand</code> and <code>getrandom</code> in only through the property tests’ proptest</td></tr>
+<tr><td>Floating-point contraction (FMA)</td><td>Rust does not contract <code>a * b + c</code> implicitly, and we never call <code>mul_add</code></td><td><code>clippy::disallowed_methods</code> on <code>f64::mul_add</code> and <code>f32::mul_add</code>, everywhere</td></tr>
+<tr><td>Parallelism</td><td>Library crates run on the caller’s thread alone. The parallel planning that the <a href="engine-pipeline.html#7-incremental-and-parallel-planning">engine pipeline</a> plans for the command line joins its results in document order</td><td><code>clippy::disallowed_methods</code> on <code>std::thread::spawn</code> and its kin</td></tr>
 <tr><td>Sorting ties</td><td>Every sort uses a total order with an explicit tie-breaker (<code>f64::total_cmp</code>, then index)</td><td>review checklist; property tests shuffle inputs</td></tr>
 <tr><td>Quantization drift</td><td>Quantize absolute positions once, at encode time, with round-half-even (<code>Point::to_tenths</code>, shared by the writers and the previews); deltas are differences of quantized values</td><td>format conformance (<code>REQ-FMT-002</code>, <code>REQ-RND-001</code>)</td></tr>
 <tr><td>Rasterization (SIMD code paths, platform trigonometry in curve flattening)</td><td>tiny-skia without its <code>simd</code> feature; previews draw only lines and circles; grid positions convert to <code>f32</code> exactly; pure-Rust PNG encoding without timestamps (<a href="rendering.html">rendering</a>)</td><td>golden PNG files compared on all three operating systems (<code>REQ-RND-002</code>); <code>f32</code> transcendental methods are disallowed like the <code>f64</code> ones</td></tr>
@@ -225,12 +225,17 @@ of the element’s generator (<code>SplitMix64::stream</code>). The part’s pla
 part leaves the numbers of the others as they were. A running stitch keys one for each span between
 corners. The derivations are documented and tested with fixed vectors.</p>
 <h2 id="cross-platform-check"><a class="header" href="#cross-platform-check">Cross-platform check</a></h2>
-<p>From M2 (when there are plans to hash), <code>ci.yml</code> runs the conformance suite on <code>ubuntu-latest</code>,
-<code>macos-latest</code> and <code>windows-latest</code> and, through <code>wasmtime</code>, on <code>wasm32-wasip1</code> (test-only; shipped code
-targets <code>wasm32-unknown-unknown</code>). Until then the frozen reference values in <code>stitchcraft-core</code>’s tests run
-on all three operating systems. Each run writes
-<code>target/conformance/hashes.json</code> (one SHA-256 per output); a final job fails if any two platforms
-disagree, and prints the first differing case.</p>
+<p><code>ci.yml</code> runs <code>cargo test</code> on Linux, macOS and Windows for every pull request. Among the tests,
+xtask’s <code>every_data_case_but_the_oracle_passes_here</code> runs the conformance suite’s data cases. Each test
+sheet and plan is made again and encoded, and its machine files must equal their golden files byte for
+byte, so all three operating systems make the bytes the machine checkpoints sewed. The previews’
+golden files (<code>REQ-RND-002</code>), the formats’ canonical plans (<code>REQ-FMT-001</code>) and the frozen reference
+values of <code>stitchcraft-core</code>’s tests are compared on all three as well. The oracle case reads the files
+with pyembroidery, which only the Linux gates job installs.</p>
+<p>WebAssembly is built, not run. <code>cargo xtask wasm</code> checks that the library crates and the plug-in build
+for <code>wasm32-unknown-unknown</code>, and the lints above keep the library crates off what that target lacks. A
+run of the cases on a WebAssembly runtime is not planned yet. Until one is, the rules in the table are
+what keep its output the same.</p>
 <h2 id="bug-reports"><a class="header" href="#bug-reports">Bug reports</a></h2>
 <p>Because the same design, profile, format and version give the same plan everywhere, those four are all a
 bug report needs. <code>stitch bug-report</code> writes them into one JSON file, with the design file itself in place

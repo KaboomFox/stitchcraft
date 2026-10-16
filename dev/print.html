@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-d1224425.js";
+            window.path_to_searchindex_js = "searchindex-c9ef74e9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -3128,7 +3128,8 @@ so — never a silent straight line across the design.</li>
 <h2 id="12-determinism"><a class="header" href="#12-determinism">12. Determinism</a></h2>
 <p>Ordered collections only (<code>BTreeMap</code>, <code>Vec</code>), transcendental functions from <code>libm</code>, a documented
 seeded PRNG (SplitMix64) with seeds derived from element id and the <code>random_seed</code> parameter,
-absolute quantization at encode time, and a CI job that compares output hashes across platforms.
+absolute quantization at encode time, and golden files compared byte for byte on every operating system
+CI tests on.
 Details: <a href="#determinism-1">determinism</a>.</p>
 <h2 id="13-vectorcraft-integration-summary"><a class="header" href="#13-vectorcraft-integration-summary">13. VectorCraft integration (summary)</a></h2>
 <p>Three phases (full design in <a href="#vectorcraft-integration">VectorCraft integration</a>):</p>
@@ -3354,8 +3355,10 @@ writing it ends with 3 (<code>REQ-CLI-009</code>), and help and errors are colou
 in the registry (they appear in docs with a badge); <code>stitchcraft-formats/&lt;format&gt;</code> flags exist only if
 a format pulls a heavy dependency (none planned). No flag may change the output of a stable generator.</p>
 <h2 id="webassembly-constraints"><a class="header" href="#webassembly-constraints">WebAssembly constraints</a></h2>
-<p>Everything at L0–L3 must build for <code>wasm32-unknown-unknown</code> (checked by <code>cargo xtask wasm</code>): no
-threads, no filesystem, no clocks, no <code>std::env</code>, no randomness from the OS. The plug-in is built
+<p>Everything in layers L0 to L3 must build for <code>wasm32-unknown-unknown</code>, which <code>cargo xtask wasm</code> checks. That target
+has no threads, file system, clocks, environment, processes or randomness from the OS, and std’s calls
+for them build there but fail or panic when run, so <code>clippy.toml</code> keeps library crates from calling
+them. The plug-in is built
 in release with the workspace’s profile (thin LTO, one codegen unit), and on <code>wasm32-unknown-unknown</code>
 a panic aborts. That is one more reason the no-panic rule is absolute: the module stops, and
 VectorCraft reports the plug-in as failed.</p>
@@ -3726,10 +3729,10 @@ set, such as a settings panel, reads every parameter with <code>from_set</code>.
 <p>A declaration that compiles can still be wrong: an empty range, a default outside it, a repeated option,
 a condition on a parameter that does not exist or that an element could not read it by. <code>stitchcraft_params::audit</code> lists every such problem, and
 the engine’s <code>req_prm_001_every_registered_parameter_is_complete</code> test requires the list to be empty.
-<code>cargo xtask docs --check</code> adds the cross-checks with outside data: a parameter of Ink/Stitch origin must
-be in the <a href="#inkstitch-compatibility-contract">compatibility contract</a> with a compatible type and the same
-default; one of StitchCraft’s own must not take an Ink/Stitch key; deviations must name ledger entries;
-the lock and method identifiers must equal Ink/Stitch’s.</p>
+<code>cargo xtask docs --check</code> adds the cross-checks with outside data. A parameter of Ink/Stitch origin must
+be in the <a href="#inkstitch-compatibility-contract">compatibility contract</a> with a compatible type and the default
+Ink/Stitch sews, and one of StitchCraft’s own must not take an Ink/Stitch key. Deviations must name ledger
+entries, and the lock and method identifiers must equal Ink/Stitch’s.</p>
 <h2 id="naming-rules"><a class="header" href="#naming-rules">Naming rules</a></h2>
 <ol>
 <li>If Ink/Stitch has the parameter with the same meaning, <strong>use its attribute name verbatim</strong>
@@ -3740,16 +3743,19 @@ Ink/Stitch’s read or sew lists them under <code>params</code>, and each key’
 <li>New parameters follow the same style: <code>snake_case</code>, a unit suffix for lengths (<code>_mm</code>), percentages
 (<code>_percent</code>) and angles where Ink/Stitch does (<code>angle</code> alone for row angles).</li>
 <li>Never reuse a removed key with a new meaning.</li>
-<li><strong>Defaults are part of the contract.</strong> For a parameter of Ink/Stitch origin the registry default
-equals Ink/Stitch’s default, so an SVG that omits the attribute stitches the same way in both
-tools. Better starting values for new objects come from <a href="#presets">presets</a> and machine profiles,
-never from changing a default.</li>
+<li><strong>Defaults are part of the contract.</strong> For a parameter of Ink/Stitch origin the registry default is
+the value Ink/Stitch sews for an SVG that omits the attribute, and the file stitches the same way in
+both tools. That value is the default Ink/Stitch’s settings window shows, except for the few
+parameters its code reads with another value. The contract records those as <code>fallback</code>, and
+<code>conformance/inkstitch/check_params.py</code> compares every one of its getters with the contract. Better
+starting values for new objects come from <a href="#presets">presets</a> and machine profiles, never from
+changing a default.</li>
 <li><strong>A key belongs to its stitch types.</strong> Ink/Stitch gives some keys to several elements with their own
-defaults: <code>running_stitch_tolerance_mm</code> is 0.2 mm on a stroke and 0.1 mm on a satin or a fill. The
+defaults: <code>max_stitch_length_mm</code> is empty on manual stitch and satin columns and 4 mm on fills. The
 contract is per key and stitch type, so the contract page matches a declaration with the rows for the
 stitch types it applies to, and a declaration for a stitch type Ink/Stitch does not give the key is
-reported. A key is declared once, and a family whose default differs gets its own with <code>defaults</code>:
-<code>max_stitch_length_mm</code> is empty on manual stitch and satin columns and 4 mm on fills. A family with a
+reported. A key is declared once, and a family whose default differs gets its own with <code>defaults</code>, as
+fills do for <code>max_stitch_length_mm</code>. A family with a
 default of its own needs a value (<code>ParamSpec::in_family</code>). There an empty value means its default. A
 length of 0 or less is raised to the least the key accepts instead of counting as empty, as Ink/Stitch
 reads a fill’s longest stitch. Elsewhere an optional value left empty is no value. The engine reads an
@@ -6531,7 +6537,6 @@ with such a record.</p>
 <li><code>report.md</code> — the requirement × case matrix, failures first, requirements nobody tests yet folded
 away; in GitHub Actions it is appended to the job summary, so every pull request shows it;</li>
 <li><code>report.json</code> — machine-readable results, for the docs (requirement pages will show their status);</li>
-<li><code>hashes.json</code> — one SHA-256 per output, for the <a href="#cross-platform-check">cross-platform determinism</a> job;</li>
 <li><code>diffs/</code> — for a machine-file golden that differs, previews (simple style) of the golden file and of
 the new output, so a reviewer sees what sews differently; CI keeps them as a workflow artifact when a
 run fails.</li>
@@ -6552,7 +6557,7 @@ will let users validate a machine profile with the same cases.</p>
 <tr><th>When</th><th>What must pass</th></tr>
 </thead>
 <tbody>
-<tr><td>Every PR</td><td>L0, L1 (no fuzzing), L2 with fixed seeds, <code>--check</code> rules, cross-platform hashes, coverage floors, mutants in the changed lines</td></tr>
+<tr><td>Every PR</td><td>L0, L1 (no fuzzing), L2 with fixed seeds, <code>--check</code> rules, the data cases’ golden files on Linux, macOS and Windows (<a href="#cross-platform-check">cross-platform check</a>), coverage floors, mutants in the changed lines</td></tr>
 <tr><td>Nightly</td><td>L1 fuzzing, L2 fresh seeds, L3 differential</td></tr>
 <tr><td>Weekly</td><td>Mutation testing of every shipped crate, against the recorded counts</td></tr>
 <tr><td>Milestone close</td><td>All requirements of the milestone <code>active</code> and green; its machine checkpoint signed off</td></tr>
@@ -6597,11 +6602,11 @@ safe, and means the docs images regenerated in CI match the ones on a contributo
 </thead>
 <tbody>
 <tr><td>Hash map iteration order</td><td>No <code>HashMap</code>/<code>HashSet</code> in engine, formats, render, params or adapters’ output paths; use <code>BTreeMap</code>, <code>BTreeSet</code>, <code>IndexMap</code> or sorted <code>Vec</code></td><td><code>clippy::disallowed_types</code> in <code>clippy.toml</code></td></tr>
-<tr><td>Platform <code>libm</code> (<code>sin</code>, <code>cos</code>, <code>atan2</code>, <code>exp</code>, <code>powf</code> differ by last bits across OSes)</td><td>Call transcendental functions only through <code>stitchcraft_core::math</code>, which uses the pure-Rust <code>libm</code> crate</td><td><code>clippy::disallowed_methods</code> on <code>f64::sin</code> &amp; co.</td></tr>
+<tr><td>Platform <code>libm</code> (<code>sin</code>, <code>cos</code>, <code>atan2</code>, <code>exp</code>, <code>log</code>, <code>powf</code> and their kin differ by last bits across OSes, and <code>powi</code>’s precision varies even between calls)</td><td>Call transcendental functions only through <code>stitchcraft_core::math</code>, which uses the pure-Rust <code>libm</code> crate, and square by multiplying</td><td><code>clippy::disallowed_methods</code> on <code>f64::sin</code> &amp; co., and on the <code>f32</code> ones</td></tr>
 <tr><td>Which side of a line a point lies on: a rounded cross product can give the wrong sign for points nearly in line</td><td>The <a href="#offset-curves">offset curves</a> decide it with <code>stitchcraft_core::exact::side</code>, which is exact (<a href="#exact-orientation">below</a>)</td><td>unit tests against exact integer arithmetic</td></tr>
-<tr><td>Randomness</td><td>Only <code>stitchcraft_core::rng::SplitMix64</code>, seeded per element from <code>random_seed</code> or a hash of the element id; never the OS RNG, never time</td><td><code>clippy::disallowed_methods</code>/types for <code>rand::thread_rng</code>, <code>SystemTime</code>, <code>Instant</code> in libraries</td></tr>
-<tr><td>Floating-point contraction (FMA)</td><td>Rust does not contract <code>a * b + c</code> implicitly; we never call <code>mul_add</code> in quantization or comparisons</td><td><code>clippy::disallowed_methods</code> on <code>f64::mul_add</code> in formats</td></tr>
-<tr><td>Parallelism</td><td>Results joined in document order; no reductions whose order depends on scheduling</td><td>engine design; CI compares sequential vs parallel output</td></tr>
+<tr><td>Randomness</td><td>Only <code>stitchcraft_core::rng::SplitMix64</code>, seeded per element from <code>random_seed</code> or a hash of the element id, with the OS’s randomness and the time kept out</td><td><code>clippy::disallowed_types</code> on <code>RandomState</code>, <code>SystemTime</code> and <code>Instant</code>; <code>deny.toml</code> lets <code>rand</code> and <code>getrandom</code> in only through the property tests’ proptest</td></tr>
+<tr><td>Floating-point contraction (FMA)</td><td>Rust does not contract <code>a * b + c</code> implicitly, and we never call <code>mul_add</code></td><td><code>clippy::disallowed_methods</code> on <code>f64::mul_add</code> and <code>f32::mul_add</code>, everywhere</td></tr>
+<tr><td>Parallelism</td><td>Library crates run on the caller’s thread alone. The parallel planning that the <a href="#7-incremental-and-parallel-planning">engine pipeline</a> plans for the command line joins its results in document order</td><td><code>clippy::disallowed_methods</code> on <code>std::thread::spawn</code> and its kin</td></tr>
 <tr><td>Sorting ties</td><td>Every sort uses a total order with an explicit tie-breaker (<code>f64::total_cmp</code>, then index)</td><td>review checklist; property tests shuffle inputs</td></tr>
 <tr><td>Quantization drift</td><td>Quantize absolute positions once, at encode time, with round-half-even (<code>Point::to_tenths</code>, shared by the writers and the previews); deltas are differences of quantized values</td><td>format conformance (<code>REQ-FMT-002</code>, <code>REQ-RND-001</code>)</td></tr>
 <tr><td>Rasterization (SIMD code paths, platform trigonometry in curve flattening)</td><td>tiny-skia without its <code>simd</code> feature; previews draw only lines and circles; grid positions convert to <code>f32</code> exactly; pure-Rust PNG encoding without timestamps (<a href="#rendering-previews">rendering</a>)</td><td>golden PNG files compared on all three operating systems (<code>REQ-RND-002</code>); <code>f32</code> transcendental methods are disallowed like the <code>f64</code> ones</td></tr>
@@ -6629,12 +6634,17 @@ of the element’s generator (<code>SplitMix64::stream</code>). The part’s pla
 part leaves the numbers of the others as they were. A running stitch keys one for each span between
 corners. The derivations are documented and tested with fixed vectors.</p>
 <h2 id="cross-platform-check"><a class="header" href="#cross-platform-check">Cross-platform check</a></h2>
-<p>From M2 (when there are plans to hash), <code>ci.yml</code> runs the conformance suite on <code>ubuntu-latest</code>,
-<code>macos-latest</code> and <code>windows-latest</code> and, through <code>wasmtime</code>, on <code>wasm32-wasip1</code> (test-only; shipped code
-targets <code>wasm32-unknown-unknown</code>). Until then the frozen reference values in <code>stitchcraft-core</code>’s tests run
-on all three operating systems. Each run writes
-<code>target/conformance/hashes.json</code> (one SHA-256 per output); a final job fails if any two platforms
-disagree, and prints the first differing case.</p>
+<p><code>ci.yml</code> runs <code>cargo test</code> on Linux, macOS and Windows for every pull request. Among the tests,
+xtask’s <code>every_data_case_but_the_oracle_passes_here</code> runs the conformance suite’s data cases. Each test
+sheet and plan is made again and encoded, and its machine files must equal their golden files byte for
+byte, so all three operating systems make the bytes the machine checkpoints sewed. The previews’
+golden files (<code>REQ-RND-002</code>), the formats’ canonical plans (<code>REQ-FMT-001</code>) and the frozen reference
+values of <code>stitchcraft-core</code>’s tests are compared on all three as well. The oracle case reads the files
+with pyembroidery, which only the Linux gates job installs.</p>
+<p>WebAssembly is built, not run. <code>cargo xtask wasm</code> checks that the library crates and the plug-in build
+for <code>wasm32-unknown-unknown</code>, and the lints above keep the library crates off what that target lacks. A
+run of the cases on a WebAssembly runtime is not planned yet. Until one is, the rules in the table are
+what keep its output the same.</p>
 <h2 id="bug-reports"><a class="header" href="#bug-reports">Bug reports</a></h2>
 <p>Because the same design, profile, format and version give the same plan everywhere, those four are all a
 bug report needs. <code>stitch bug-report</code> writes them into one JSON file, with the design file itself in place
@@ -6677,8 +6687,8 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 <tr><td>Format</td><td>One style, no bikeshedding</td><td><code>rustfmt.toml</code></td><td><code>cargo xtask ci</code> · CI</td></tr>
 <tr><td>Clippy, warnings denied</td><td>Idiomatic, bug-prone patterns flagged</td><td>workspace <code>[lints]</code>, <code>clippy.toml</code></td><td><code>cargo xtask ci</code> · CI</td></tr>
 <tr><td><strong>No panics</strong></td><td>No <code>unwrap</code>, <code>expect</code>, <code>panic!</code>, <code>unreachable!</code>, <code>todo!</code>, <code>unimplemented!</code>, <code>dbg!</code> outside tests; <code>indexing_slicing</code> denied in parsers</td><td>workspace <code>[lints.clippy]</code>, crate attributes</td><td><code>cargo xtask ci</code> · CI</td></tr>
-<tr><td><strong>No <code>unsafe</code></strong></td><td><code>unsafe_code = "forbid"</code> everywhere except the plug-in ABI shim, where every block needs a <code>// SAFETY:</code> comment</td><td>workspace <code>[lints.rust]</code>, <code>cargo xtask unsafe-audit</code></td><td><code>cargo xtask ci</code> · CI</td></tr>
-<tr><td><strong>Determinism</strong></td><td>No <code>HashMap</code>/<code>HashSet</code>, platform <code>sin</code>/<code>cos</code>/<code>atan2</code>, <code>SystemTime</code>, <code>Instant</code> in library crates</td><td><code>clippy.toml</code> <code>disallowed-types</code> / <code>disallowed-methods</code></td><td><code>cargo xtask ci</code> · CI</td></tr>
+<tr><td><strong>No <code>unsafe</code></strong></td><td><code>unsafe_code</code> denied in the workspace and forbidden at every crate root, the compatibility probe’s included, except the plug-in’s: its ABI shim alone may use <code>unsafe</code>, with a <code>// SAFETY:</code> comment of its own above each block</td><td>workspace <code>[lints.rust]</code>, <code>cargo xtask unsafe-audit</code></td><td><code>cargo xtask ci</code> · CI</td></tr>
+<tr><td><strong>Determinism</strong></td><td>No <code>HashMap</code>/<code>HashSet</code>, <code>RandomState</code>, platform <code>sin</code>/<code>cos</code>/<code>atan2</code>/<code>powi</code> and their kin, <code>mul_add</code>, <code>SystemTime</code> or <code>Instant</code>; no files, threads, environment or processes in library crates; <code>rand</code> and <code>getrandom</code> only through proptest</td><td><code>clippy.toml</code> <code>disallowed-types</code> / <code>disallowed-methods</code>, <code>deny.toml</code> <code>[bans]</code></td><td><code>cargo xtask ci</code> · CI</td></tr>
 <tr><td><strong>Layering</strong></td><td>Crates depend only on lower layers (<a href="#architecture">architecture</a>); dependencies like <code>clap</code> or <code>tiny-skia</code> only where allowed</td><td><code>xtask/src/layers.rs</code> (append-only table)</td><td><code>cargo xtask layers</code> · CI</td></tr>
 <tr><td><strong>Module size</strong></td><td>Rust files warn above 800 lines, fail above 1,500 (generated files exempt)</td><td><code>xtask/src/filesize.rs</code></td><td><code>cargo xtask filesize</code> · CI</td></tr>
 <tr><td>WebAssembly</td><td>L0–L3 crates and the plug-in build for <code>wasm32-unknown-unknown</code></td><td><code>xtask/src/wasm.rs</code></td><td><code>cargo xtask wasm</code> · CI</td></tr>
@@ -6688,11 +6698,11 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 <tr><td><strong>Design pages follow the code</strong></td><td>Every source file of a crate or app is on a page’s <code>implements</code> comment, and a branch that changes those files changes the page too or records a <code>Design-reviewed:</code> line</td><td><code>xtask/src/design_map.rs</code>, <code>.claude/settings.json</code> (names the pages after each edit)</td><td><code>cargo xtask docs --check</code> · CI</td></tr>
 <tr><td>Docs images</td><td>Every image a page shows is one a shot in <code>docs/shots.toml</code> writes, with alt text, and regenerating to the committed file</td><td><code>xtask/src/shots.rs</code></td><td><code>cargo xtask shots --check</code> · CI</td></tr>
 <tr><td>Conformance</td><td>Requirement/case consistency; every fixture has its row in the fixtures index; all cases pass; changed goldens need the <code>golden-change</code> label and a changelog line</td><td><code>xtask/src/conformance/</code>, <code>ci.yml</code>, <code>goldens.yml</code></td><td><code>cargo xtask conformance</code> · CI</td></tr>
-<tr><td>Dependencies</td><td>Licence allow-list (GPL family denied), advisories, duplicates, sources</td><td><code>deny.toml</code></td><td>CI (<code>cargo-deny</code>)</td></tr>
+<tr><td>Dependencies</td><td>Licence allow-list (GPL family denied), advisories, duplicates, sources, for the workspace and the fuzz targets’</td><td><code>deny.toml</code></td><td><code>cargo xtask ci</code> · CI (<code>cargo-deny</code>)</td></tr>
 <tr><td>Spelling</td><td>Typos in code, docs, commit-facing text</td><td><code>typos.toml</code></td><td>CI</td></tr>
 <tr><td><strong>Prose</strong></td><td>New Markdown lines follow the <a href="#writing-style">writing style</a>: the house rules and ai-tells, a style for phrasing that machine-written text overuses</td><td><code>.vale.ini</code>, <code>.vale/styles/</code>, <code>xtask/src/prose.rs</code> (Vale)</td><td><code>cargo xtask prose</code> · CI</td></tr>
 <tr><td>MSRV</td><td>Builds on the declared <code>rust-version</code></td><td>workspace <code>Cargo.toml</code></td><td>CI</td></tr>
-<tr><td>Cross-platform</td><td>Tests on Linux, macOS, Windows; identical conformance hashes</td><td><code>ci.yml</code></td><td>CI</td></tr>
+<tr><td>Cross-platform</td><td>Tests on Linux, macOS and Windows, among them the conformance suite’s data cases, whose machine files must equal the golden files on each (<a href="#cross-platform-check">determinism</a>)</td><td><code>ci.yml</code></td><td>CI</td></tr>
 <tr><td>API docs</td><td>Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links</td><td><code>cargo xtask ci</code> (<code>RUSTDOCFLAGS=-D warnings</code>)</td><td><code>cargo xtask ci</code> · CI</td></tr>
 <tr><td><strong>Public API review</strong></td><td>Changes to a library crate’s public API show in the PR diff, as a change to its <code>public-api.txt</code></td><td><code>xtask/src/api.rs</code> (cargo-public-api, pinned)</td><td><code>cargo xtask api --check</code> · CI</td></tr>
 <tr><td><strong>Coverage ratchet</strong></td><td>No crate’s line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, those only another build of a function or a closure on the line runs included</td><td><code>conformance/coverage.toml</code>, <code>xtask/src/coverage.rs</code> (cargo-llvm-cov)</td><td><code>cargo xtask coverage</code> · CI job</td></tr>
@@ -6912,15 +6922,16 @@ registry uses these names as its keys so files move between the tools unchanged
 and are not copied; StitchCraft’s own help text lives in the <a href="#parameter-registry">parameter registry</a>.</li>
 <li><strong>Machine-readable source:</strong> <code>conformance/inkstitch-params.toml</code>; this page is generated from it and
 from the parameter registry by <code>cargo xtask docs</code>, and <code>cargo xtask docs --check</code> fails if they disagree:
-a parameter declared with an Ink/Stitch origin must be listed here with a compatible type and the same
-default.</li>
+a parameter declared with an Ink/Stitch origin must be listed here with a compatible type, and its
+default must be the value Ink/Stitch sews.</li>
+<li><strong>Default</strong> is the value Ink/Stitch’s settings window shows. For a few parameters its code sews another
+value when a file sets none, and the cell gives that value after the default, as in <code>0.1 (0.2 when unset)</code>. <code>—</code> means no default: the value is derived from another parameter or the shape.</li>
 <li><strong>StitchCraft</strong> says whether the <a href="#parameters-2">parameter registry</a> declares the
 parameter. <em>planned</em>: not yet; a design that sets it keeps it unchanged and gets <code>SC-W0105</code>.
 <em>registered</em>: StitchCraft reads and checks it under the same key, meaning and default; it changes the
 stitches once its stitch type or feature lands (see <em>Phase</em> and the parameter’s reference entry).
 <em>deviates</em>: registered, with a meaning that differs as its reference entry describes.</li>
-<li><strong>Phase</strong> is when the parameter’s stitch type lands (<a href="#roadmap-small-steps-to-the-final-project">roadmap</a>). <code>—</code> means no default
-(the value is derived from another parameter or the shape); <code>computed</code> means the default is an expression.</li>
+<li><strong>Phase</strong> is when the parameter’s stitch type lands (<a href="#roadmap-small-steps-to-the-final-project">roadmap</a>).</li>
 </ul>
 <h2 id="all-stitch-types-ties-locks-trims-stops"><a class="header" href="#all-stitch-types-ties-locks-trims-stops">All stitch types (ties, locks, trims, stops)</a></h2>
 <div class="table-wrapper">
@@ -6969,7 +6980,7 @@ stitches once its stitch type or feature lands (see <em>Phase</em> and the param
 <tr><td><code>line_count</code></td><td>int</td><td>—</td><td>10</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>min_line_dist_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>satin_guide_pattern_position</code></td><td>combo</td><td>—</td><td>default</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>staggers</code></td><td>int</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>staggers</code></td><td>int</td><td>—</td><td>0 (1 when unset)</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>skip_start</code></td><td>int</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>skip_end</code></td><td>int</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>flip_copies</code></td><td>boolean</td><td>—</td><td>true</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
@@ -7016,7 +7027,7 @@ stitches once its stitch type or feature lands (see <em>Phase</em> and the param
 <tr><td><code>reverse_rails</code></td><td>combo</td><td>—</td><td>automatic</td><td>all</td><td>P1 (M4)</td><td><a href="#reverse_rails">registered</a></td></tr>
 <tr><td><code>swap_satin_rails</code></td><td>boolean</td><td>—</td><td>false</td><td>all</td><td>P1 (M4)</td><td><a href="#swap_satin_rails">registered</a></td></tr>
 <tr><td><code>running_stitch_length_mm</code></td><td>float</td><td>mm</td><td>2.5</td><td>all</td><td>P1 (M4)</td><td><a href="#running_stitch_length_mm">registered</a></td></tr>
-<tr><td><code>running_stitch_tolerance_mm</code></td><td>float</td><td>mm</td><td>0.1</td><td>all</td><td>P1 (M4)</td><td><a href="#running_stitch_tolerance_mm">deviates</a></td></tr>
+<tr><td><code>running_stitch_tolerance_mm</code></td><td>float</td><td>mm</td><td>0.1 (0.2 when unset)</td><td>all</td><td>P1 (M4)</td><td><a href="#running_stitch_tolerance_mm">deviates</a></td></tr>
 <tr><td><code>running_stitch_position</code></td><td>float</td><td>%</td><td>50</td><td>all</td><td>P1 (M4)</td><td><a href="#running_stitch_position">registered</a></td></tr>
 <tr><td><code>start_at_nearest_point</code></td><td>boolean</td><td>—</td><td>true</td><td>all</td><td>P1 (M4)</td><td><a href="#start_at_nearest_point">registered</a></td></tr>
 <tr><td><code>end_at_nearest_point</code></td><td>boolean</td><td>—</td><td>true</td><td>all</td><td>P1 (M4)</td><td><a href="#end_at_nearest_point">registered</a></td></tr>
@@ -7074,7 +7085,7 @@ stitches once its stitch type or feature lands (see <em>Phase</em> and the param
 <tr><td><code>stop_at_ending_point</code></td><td>boolean</td><td>—</td><td>false</td><td><code>linear_gradient_fill</code>, <code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>underpath</code></td><td>boolean</td><td>—</td><td>true</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>circular_fill</code></td><td>P1 (M5)</td><td><a href="#underpath">registered</a></td></tr>
 <tr><td><code>running_stitch_length_mm</code></td><td>float</td><td>mm</td><td>2.5</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>meander_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td><a href="#running_stitch_length_mm">registered</a></td></tr>
-<tr><td><code>running_stitch_tolerance_mm</code></td><td>float</td><td>mm</td><td>0.1</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>meander_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td><a href="#running_stitch_tolerance_mm">deviates</a></td></tr>
+<tr><td><code>running_stitch_tolerance_mm</code></td><td>float</td><td>mm</td><td>0.1 (0.2 when unset)</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>meander_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td><a href="#running_stitch_tolerance_mm">deviates</a></td></tr>
 <tr><td><code>enable_random_stitch_length</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td><a href="#enable_random_stitch_length">registered</a></td></tr>
 <tr><td><code>random_stitch_length_jitter_percent</code></td><td>float</td><td>± %</td><td>10</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td><a href="#random_stitch_length_jitter_percent">registered</a></td></tr>
 <tr><td><code>repeats</code></td><td>int</td><td>—</td><td>1</td><td><code>meander_fill</code>, <code>contour_fill</code>, <code>circular_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
@@ -7335,8 +7346,8 @@ require identical output across platforms and runs.</p>
 <h2 id="decision-3"><a class="header" href="#decision-3">Decision</a></h2>
 <p>Ordered collections only; transcendental math through <code>libm</code>; a specified PRNG (SplitMix64) with seeds
 from element ids and <code>random_seed</code>; quantization of absolute positions once at encode time; total-order
-sorts with tie-breakers; budgets in work units, not time; a CI job comparing output hashes across Linux,
-macOS, Windows and wasm. Enforced by clippy <code>disallowed-types</code>/<code>disallowed-methods</code>. Details:
+sorts with tie-breakers; budgets in work units, not time; golden files compared byte for byte on Linux,
+macOS and Windows. Enforced by clippy <code>disallowed-types</code>/<code>disallowed-methods</code>. Details:
 <a href="#determinism-1">determinism</a>.</p>
 <h2 id="consequences-3"><a class="header" href="#consequences-3">Consequences</a></h2>
 <ul>
@@ -7348,6 +7359,10 @@ macOS, Windows and wasm. Enforced by clippy <code>disallowed-types</code>/<code>
 <li><strong>Tolerance-only comparisons everywhere:</strong> hides real regressions and makes images flaky. Rejected
 except for VectorCraft UI screenshots, which we do not control.</li>
 </ul>
+<h2 id="amendment-2026-10-14"><a class="header" href="#amendment-2026-10-14">Amendment, 2026-10-14</a></h2>
+<p>The decision first named a CI job that would compare output hashes across Linux, macOS, Windows and
+wasm. CI compares each operating system’s outputs with the golden files instead, and builds the
+WebAssembly target without running it (<a href="#cross-platform-check">cross-platform check</a>).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="adr-0005-geometry-stack"><a class="header" href="#adr-0005-geometry-stack">ADR-0005: Geometry stack</a></h1>
 <p><strong>Status:</strong> Proposed — confirmed or revised by spike M0.7 · 2026-10-08</p>
@@ -8141,8 +8156,9 @@ each).</li>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="playbook-add-or-change-a-parameter"><a class="header" href="#playbook-add-or-change-a-parameter">Playbook: add or change a parameter</a></h1>
 <ol>
-<li><strong>Name it.</strong> If Ink/Stitch has the same parameter, use its attribute name, meaning and default
-(<a href="#naming-rules">naming rules</a>); otherwise follow the same style.</li>
+<li><strong>Name it.</strong> If Ink/Stitch has the same parameter, use its attribute name and meaning, and the default
+it sews for a file that sets none (<a href="#naming-rules">naming rules</a>). Otherwise follow
+the same style.</li>
 <li><strong>Declare it</strong> in the generator’s <code>params!</code> block: kind, default (written as a design stores it),
 range or options, section, visibility condition, origin, and the doc comment — the help users will
 read, so write it for an embroiderer and mention the visible effect. A new declaration (a new
@@ -8154,9 +8170,10 @@ plus a property test if it has a monotonic effect.</li>
 <li><strong>Check limits:</strong> the plug-in test fails if the family’s VectorCraft manifest would exceed 64
 parameters; if it does, discuss moving rarely used parameters to a preset or to ABI v2.</li>
 <li><strong>Regenerate docs:</strong> <code>cargo xtask docs</code> writes the reference page, the JSON Schema and the
-compatibility contract’s StitchCraft column, and checks the declaration against the contract (an
-Ink/Stitch parameter needs a compatible type and the same default; a deliberate difference needs an
-entry in <code>conformance/deviations.toml</code>). Add a before/after shot if the effect is visual.</li>
+compatibility contract’s StitchCraft column, and checks the declaration against the contract. An
+Ink/Stitch parameter needs a compatible type and the default Ink/Stitch sews, and a deliberate
+difference needs an entry in <code>conformance/deviations.toml</code>. Add a before/after shot if the effect is
+visual.</li>
 <li><strong>Changing</strong> an existing parameter’s meaning, unit or default is a breaking change: add a migration
 and a case with old input, and a changelog line.</li>
 </ol>

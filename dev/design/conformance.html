@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d1224425.js";
+            window.path_to_searchindex_js = "../searchindex-c9ef74e9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -393,7 +393,6 @@ with such a record.</p>
 <li><code>report.md</code> — the requirement × case matrix, failures first, requirements nobody tests yet folded
 away; in GitHub Actions it is appended to the job summary, so every pull request shows it;</li>
 <li><code>report.json</code> — machine-readable results, for the docs (requirement pages will show their status);</li>
-<li><code>hashes.json</code> — one SHA-256 per output, for the <a href="determinism.html#cross-platform-check">cross-platform determinism</a> job;</li>
 <li><code>diffs/</code> — for a machine-file golden that differs, previews (simple style) of the golden file and of
 the new output, so a reviewer sees what sews differently; CI keeps them as a workflow artifact when a
 run fails.</li>
@@ -414,7 +413,7 @@ will let users validate a machine profile with the same cases.</p>
 <tr><th>When</th><th>What must pass</th></tr>
 </thead>
 <tbody>
-<tr><td>Every PR</td><td>L0, L1 (no fuzzing), L2 with fixed seeds, <code>--check</code> rules, cross-platform hashes, coverage floors, mutants in the changed lines</td></tr>
+<tr><td>Every PR</td><td>L0, L1 (no fuzzing), L2 with fixed seeds, <code>--check</code> rules, the data cases’ golden files on Linux, macOS and Windows (<a href="determinism.html#cross-platform-check">cross-platform check</a>), coverage floors, mutants in the changed lines</td></tr>
 <tr><td>Nightly</td><td>L1 fuzzing, L2 fresh seeds, L3 differential</td></tr>
 <tr><td>Weekly</td><td>Mutation testing of every shipped crate, against the recorded counts</td></tr>
 <tr><td>Milestone close</td><td>All requirements of the milestone <code>active</code> and green; its machine checkpoint signed off</td></tr>

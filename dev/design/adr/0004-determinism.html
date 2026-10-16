@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-d1224425.js";
+            window.path_to_searchindex_js = "../../searchindex-c9ef74e9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -188,8 +188,8 @@ require identical output across platforms and runs.</p>
 <h2 id="decision"><a class="header" href="#decision">Decision</a></h2>
 <p>Ordered collections only; transcendental math through <code>libm</code>; a specified PRNG (SplitMix64) with seeds
 from element ids and <code>random_seed</code>; quantization of absolute positions once at encode time; total-order
-sorts with tie-breakers; budgets in work units, not time; a CI job comparing output hashes across Linux,
-macOS, Windows and wasm. Enforced by clippy <code>disallowed-types</code>/<code>disallowed-methods</code>. Details:
+sorts with tie-breakers; budgets in work units, not time; golden files compared byte for byte on Linux,
+macOS and Windows. Enforced by clippy <code>disallowed-types</code>/<code>disallowed-methods</code>. Details:
 <a href="../determinism.html">determinism</a>.</p>
 <h2 id="consequences"><a class="header" href="#consequences">Consequences</a></h2>
 <ul>
@@ -201,6 +201,10 @@ macOS, Windows and wasm. Enforced by clippy <code>disallowed-types</code>/<code>
 <li><strong>Tolerance-only comparisons everywhere:</strong> hides real regressions and makes images flaky. Rejected
 except for VectorCraft UI screenshots, which we do not control.</li>
 </ul>
+<h2 id="amendment-2026-10-14"><a class="header" href="#amendment-2026-10-14">Amendment, 2026-10-14</a></h2>
+<p>The decision first named a CI job that would compare output hashes across Linux, macOS, Windows and
+wasm. CI compares each operating system’s outputs with the golden files instead, and builds the
+WebAssembly target without running it (<a href="../determinism.html#cross-platform-check">cross-platform check</a>).</p>
 
                     </main>
 

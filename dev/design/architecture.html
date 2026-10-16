@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d1224425.js";
+            window.path_to_searchindex_js = "../searchindex-c9ef74e9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -325,8 +325,10 @@ writing it ends with 3 (<code>REQ-CLI-009</code>), and help and errors are colou
 in the registry (they appear in docs with a badge); <code>stitchcraft-formats/&lt;format&gt;</code> flags exist only if
 a format pulls a heavy dependency (none planned). No flag may change the output of a stable generator.</p>
 <h2 id="webassembly-constraints"><a class="header" href="#webassembly-constraints">WebAssembly constraints</a></h2>
-<p>Everything at L0–L3 must build for <code>wasm32-unknown-unknown</code> (checked by <code>cargo xtask wasm</code>): no
-threads, no filesystem, no clocks, no <code>std::env</code>, no randomness from the OS. The plug-in is built
+<p>Everything in layers L0 to L3 must build for <code>wasm32-unknown-unknown</code>, which <code>cargo xtask wasm</code> checks. That target
+has no threads, file system, clocks, environment, processes or randomness from the OS, and std’s calls
+for them build there but fail or panic when run, so <code>clippy.toml</code> keeps library crates from calling
+them. The plug-in is built
 in release with the workspace’s profile (thin LTO, one codegen unit), and on <code>wasm32-unknown-unknown</code>
 a panic aborts. That is one more reason the no-panic rule is absolute: the module stops, and
 VectorCraft reports the plug-in as failed.</p>

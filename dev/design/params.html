@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d1224425.js";
+            window.path_to_searchindex_js = "../searchindex-c9ef74e9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -325,10 +325,10 @@ set, such as a settings panel, reads every parameter with <code>from_set</code>.
 <p>A declaration that compiles can still be wrong: an empty range, a default outside it, a repeated option,
 a condition on a parameter that does not exist or that an element could not read it by. <code>stitchcraft_params::audit</code> lists every such problem, and
 the engine’s <code>req_prm_001_every_registered_parameter_is_complete</code> test requires the list to be empty.
-<code>cargo xtask docs --check</code> adds the cross-checks with outside data: a parameter of Ink/Stitch origin must
-be in the <a href="inkstitch-compat-contract.html">compatibility contract</a> with a compatible type and the same
-default; one of StitchCraft’s own must not take an Ink/Stitch key; deviations must name ledger entries;
-the lock and method identifiers must equal Ink/Stitch’s.</p>
+<code>cargo xtask docs --check</code> adds the cross-checks with outside data. A parameter of Ink/Stitch origin must
+be in the <a href="inkstitch-compat-contract.html">compatibility contract</a> with a compatible type and the default
+Ink/Stitch sews, and one of StitchCraft’s own must not take an Ink/Stitch key. Deviations must name ledger
+entries, and the lock and method identifiers must equal Ink/Stitch’s.</p>
 <h2 id="naming-rules"><a class="header" href="#naming-rules">Naming rules</a></h2>
 <ol>
 <li>If Ink/Stitch has the parameter with the same meaning, <strong>use its attribute name verbatim</strong>
@@ -339,16 +339,19 @@ Ink/Stitch’s read or sew lists them under <code>params</code>, and each key’
 <li>New parameters follow the same style: <code>snake_case</code>, a unit suffix for lengths (<code>_mm</code>), percentages
 (<code>_percent</code>) and angles where Ink/Stitch does (<code>angle</code> alone for row angles).</li>
 <li>Never reuse a removed key with a new meaning.</li>
-<li><strong>Defaults are part of the contract.</strong> For a parameter of Ink/Stitch origin the registry default
-equals Ink/Stitch’s default, so an SVG that omits the attribute stitches the same way in both
-tools. Better starting values for new objects come from <a href="#presets">presets</a> and machine profiles,
-never from changing a default.</li>
+<li><strong>Defaults are part of the contract.</strong> For a parameter of Ink/Stitch origin the registry default is
+the value Ink/Stitch sews for an SVG that omits the attribute, and the file stitches the same way in
+both tools. That value is the default Ink/Stitch’s settings window shows, except for the few
+parameters its code reads with another value. The contract records those as <code>fallback</code>, and
+<code>conformance/inkstitch/check_params.py</code> compares every one of its getters with the contract. Better
+starting values for new objects come from <a href="#presets">presets</a> and machine profiles, never from
+changing a default.</li>
 <li><strong>A key belongs to its stitch types.</strong> Ink/Stitch gives some keys to several elements with their own
-defaults: <code>running_stitch_tolerance_mm</code> is 0.2 mm on a stroke and 0.1 mm on a satin or a fill. The
+defaults: <code>max_stitch_length_mm</code> is empty on manual stitch and satin columns and 4 mm on fills. The
 contract is per key and stitch type, so the contract page matches a declaration with the rows for the
 stitch types it applies to, and a declaration for a stitch type Ink/Stitch does not give the key is
-reported. A key is declared once, and a family whose default differs gets its own with <code>defaults</code>:
-<code>max_stitch_length_mm</code> is empty on manual stitch and satin columns and 4 mm on fills. A family with a
+reported. A key is declared once, and a family whose default differs gets its own with <code>defaults</code>, as
+fills do for <code>max_stitch_length_mm</code>. A family with a
 default of its own needs a value (<code>ParamSpec::in_family</code>). There an empty value means its default. A
 length of 0 or less is raised to the least the key accepts instead of counting as empty, as Ink/Stitch
 reads a fill’s longest stitch. Elsewhere an optional value left empty is no value. The engine reads an

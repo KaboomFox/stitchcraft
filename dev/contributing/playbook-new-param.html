@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d1224425.js";
+            window.path_to_searchindex_js = "../searchindex-c9ef74e9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -182,8 +182,9 @@
                     <main>
                         <h1 id="playbook-add-or-change-a-parameter"><a class="header" href="#playbook-add-or-change-a-parameter">Playbook: add or change a parameter</a></h1>
 <ol>
-<li><strong>Name it.</strong> If Ink/Stitch has the same parameter, use its attribute name, meaning and default
-(<a href="../design/params.html#naming-rules">naming rules</a>); otherwise follow the same style.</li>
+<li><strong>Name it.</strong> If Ink/Stitch has the same parameter, use its attribute name and meaning, and the default
+it sews for a file that sets none (<a href="../design/params.html#naming-rules">naming rules</a>). Otherwise follow
+the same style.</li>
 <li><strong>Declare it</strong> in the generator’s <code>params!</code> block: kind, default (written as a design stores it),
 range or options, section, visibility condition, origin, and the doc comment — the help users will
 read, so write it for an embroiderer and mention the visible effect. A new declaration (a new
@@ -195,9 +196,10 @@ plus a property test if it has a monotonic effect.</li>
 <li><strong>Check limits:</strong> the plug-in test fails if the family’s VectorCraft manifest would exceed 64
 parameters; if it does, discuss moving rarely used parameters to a preset or to ABI v2.</li>
 <li><strong>Regenerate docs:</strong> <code>cargo xtask docs</code> writes the reference page, the JSON Schema and the
-compatibility contract’s StitchCraft column, and checks the declaration against the contract (an
-Ink/Stitch parameter needs a compatible type and the same default; a deliberate difference needs an
-entry in <code>conformance/deviations.toml</code>). Add a before/after shot if the effect is visual.</li>
+compatibility contract’s StitchCraft column, and checks the declaration against the contract. An
+Ink/Stitch parameter needs a compatible type and the default Ink/Stitch sews, and a deliberate
+difference needs an entry in <code>conformance/deviations.toml</code>. Add a before/after shot if the effect is
+visual.</li>
 <li><strong>Changing</strong> an existing parameter’s meaning, unit or default is a breaking change: add a migration
 and a case with old input, and a changelog line.</li>
 </ol>

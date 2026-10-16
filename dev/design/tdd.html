@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d1224425.js";
+            window.path_to_searchindex_js = "../searchindex-c9ef74e9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -457,7 +457,8 @@ so — never a silent straight line across the design.</li>
 <h2 id="12-determinism"><a class="header" href="#12-determinism">12. Determinism</a></h2>
 <p>Ordered collections only (<code>BTreeMap</code>, <code>Vec</code>), transcendental functions from <code>libm</code>, a documented
 seeded PRNG (SplitMix64) with seeds derived from element id and the <code>random_seed</code> parameter,
-absolute quantization at encode time, and a CI job that compares output hashes across platforms.
+absolute quantization at encode time, and golden files compared byte for byte on every operating system
+CI tests on.
 Details: <a href="determinism.html">determinism</a>.</p>
 <h2 id="13-vectorcraft-integration-summary"><a class="header" href="#13-vectorcraft-integration-summary">13. VectorCraft integration (summary)</a></h2>
 <p>Three phases (full design in <a href="vectorcraft-integration.html">VectorCraft integration</a>):</p>
