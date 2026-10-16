@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2d82b196.js";
+            window.path_to_searchindex_js = "../searchindex-d1224425.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -215,18 +215,21 @@ everything.</p>
 <tr><td><code>clap</code> CLI definition</td><td>CLI reference</td><td><code>cargo xtask docs</code></td></tr>
 <tr><td>Machine profiles</td><td>machine profile reference</td><td><code>cargo xtask docs</code></td></tr>
 <tr><td>Format modules (limits, commands)</td><td>format reference</td><td><code>cargo xtask docs</code></td></tr>
-<tr><td><code>conformance/requirements.toml</code> + latest report</td><td>requirement status pages</td><td><code>cargo xtask docs</code></td></tr>
 <tr><td><code>conformance/inkstitch-params.toml</code> + registry</td><td><a href="inkstitch-compat-contract.html">compatibility contract</a> with status</td><td><code>cargo xtask docs</code></td></tr>
-<tr><td>Compatibility runs</td><td>supported VectorCraft versions</td><td><code>cargo xtask compat report</code></td></tr>
+<tr><td>Compatibility runs</td><td>supported VectorCraft versions</td><td><code>cargo xtask compat report</code> (M6.6)</td></tr>
 </tbody>
 </table>
 </div>
 <p>Generated pages are committed (reviewers see user-facing changes in the diff) and marked with a header
-comment; <code>cargo xtask docs --check</code> regenerates into a temporary directory and fails if anything
-differs.</p>
+comment; <code>cargo xtask docs --check</code> regenerates them in memory and fails if anything differs, or if a
+file in a generated directory has lost its generator. The header is for people. The checks know
+a generated page by the generator that writes it, so a page that only says it is generated is checked as
+one written by hand. The conformance report is not a page of the book: <code>cargo xtask conformance</code> writes it
+to <code>target/conformance/</code>, and CI shows it in the job summary.</p>
 <h2 id="images-four-kinds-each-reproducible"><a class="header" href="#images-four-kinds-each-reproducible">Images: four kinds, each reproducible</a></h2>
 <p>Every image in the docs is declared in <code>docs/shots.toml</code> with an id, a kind and how to make it. Pages
-reference <code>images/generated/&lt;id&gt;.png</code>. An image without a declaration fails the docs check.</p>
+reference <code>images/generated/&lt;id&gt;.png</code>, or a photo in <code>images/photos/</code>. An image at any other path fails the
+docs check, whatever its file name.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -254,7 +257,7 @@ panels = [
 ]
 </code></pre>
 <p>Each panel sets its parameters on every element of the design and becomes one image, <code>running-length-1.png</code>
-and so on. The plan may report only the codes the shot lists in <code>allow</code>, and a shot fails on any other:
+and so on. A test sheet is drawn as it is, so a shot of one has no panels. The plan may report only the codes the shot lists in <code>allow</code>, and a shot fails on any other:
 a picture never shows a design that the engine changed without the page saying so. The <code>alt</code> text is
 mandatory (accessibility), and the docs check fails on images without it.</p>
 <p>A page shows a shot between the lines <code>&lt;!-- shot: running-length --&gt;</code> and <code>&lt;!-- /shot --&gt;</code>. <code>cargo xtask docs</code> writes the figure there. Without panels the figure is one image. With panels it is a table with a
@@ -275,22 +278,26 @@ written again. Pages show what the command prints today.</p>
 <code>vectorcraft-render</code> shots, and VectorCraft’s own approach — semantic headless frame tests — covers the
 dialogs’ contents.</p>
 <h2 id="what-runs-on-every-pull-request"><a class="header" href="#what-runs-on-every-pull-request">What runs on every pull request</a></h2>
-<p><code>.github/workflows/docs.yml</code>:</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>Job</th><th>Fails when</th></tr>
-</thead>
-<tbody>
-<tr><td><code>book</code></td><td><code>mdbook build</code> fails, or any page is missing from <code>SUMMARY.md</code></td></tr>
-<tr><td><code>check</code></td><td>generated pages are stale; a relative link or <code>#anchor</code> is broken; a doc mentions a <code>cargo xtask</code> subcommand that does not exist (the drift we found in VectorCraft’s own <code>AGENTS.md</code>); a <code>REQ-…</code> or <code>SC-…</code> id does not exist; an image lacks a declaration or alt text</td></tr>
-<tr><td><code>examples</code></td><td>a Rust snippet does not compile (<code>cargo test --doc</code>). Command-line examples are generated pages, which <code>check</code> covers</td></tr>
-<tr><td><code>shots</code></td><td><code>cargo xtask shots --check</code>: a declared image is missing, has no alt text, or regenerates differently from the committed file — byte-exact for <code>stitch</code> shots, within tolerance for <code>vectorcraft-ui</code> and <code>vectorcraft-render</code> shots (generators in M6.7; a separate job with Xvfb and Mesa)</td></tr>
-<tr><td><code>spelling</code></td><td><code>typos</code> finds a misspelling (allow-list in <code>typos.toml</code>)</td></tr>
-<tr><td><code>links</code></td><td>an internal link is broken (<code>lychee --offline</code>); external links are checked nightly, not per PR</td></tr>
-</tbody>
-</table>
-</div>
+<p><code>.github/workflows/docs.yml</code> runs one job, <code>check</code>. Its steps:</p>
+<ul>
+<li><code>cargo xtask docs --check</code> fails for a generated page that is stale or left over, and a page missing
+from <code>SUMMARY.md</code>. A broken relative link, <code>#anchor</code> or included file fails it, with ids made as mdBook
+makes them, smart punctuation included. A doc that names a <code>cargo xtask</code> subcommand that does not exist
+fails it too: we found that drift in VectorCraft’s own <code>AGENTS.md</code>. Ids must be in their files, <code>REQ-…</code>
+and <code>DEV-…</code> alike, and an <code>SC-…</code> code registered once its milestone is done. An image must be one a shot
+writes, with alt text.</li>
+<li><code>cargo xtask conformance --check</code> fails when requirements and cases disagree, or a fixture has no row
+in the fixtures index.</li>
+<li><code>cargo xtask shots --check</code> fails for a declared image that is missing or has no alt text. It also
+regenerates each image and compares it with the committed file. A <code>stitch</code> shot must come out byte for
+byte the same. The <code>vectorcraft-ui</code> and <code>vectorcraft-render</code> shots get a tolerance, and their generators
+arrive in M6.7 with a job of their own (Xvfb and Mesa).</li>
+<li><code>mdbook build docs</code> fails when the book does not build.</li>
+<li><code>cargo test --doc</code> fails when a Rust snippet does not compile. Command-line examples are generated
+pages, which <code>docs --check</code> covers.</li>
+<li><code>typos</code> fails on a misspelling (allow-list in <code>typos.toml</code>).</li>
+</ul>
+<p>External links are checked nightly by lychee, not on pull requests.</p>
 <p>When a shot differs, <code>--check</code> writes the new image to <code>target/shots/</code> and the job keeps it as the
 <code>stale-images</code> artifact, next to the committed one in the PR’s diff. An image under
 <code>docs/src/images/generated/</code> that no shot declares is an error too, so renamed shots leave nothing

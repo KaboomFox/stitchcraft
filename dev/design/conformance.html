@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2d82b196.js";
+            window.path_to_searchindex_js = "../searchindex-d1224425.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -215,7 +215,9 @@ status = "planned"        # planned | active | retired
 </code></pre>
 <p>Rules, enforced in CI:</p>
 <ul>
-<li>ids are unique and never reused; retired requirements stay in the file (<code>--check</code>);</li>
+<li>ids are unique (<code>--check</code>), and never reused: a retired requirement stays in the file as <code>retired</code>.
+The checks read the file as it is, so review keeps the second rule. <code>--check</code> helps, failing for a case
+that names an id the file lacks, and <code>docs --check</code> fails for a page that names one;</li>
 <li>every case names existing requirements, and an <code>active</code> requirement has at least one case (<code>--check</code>)
 that passes (the run);</li>
 <li>a milestone cannot be closed while one of its requirements is <code>planned</code> (review);</li>
@@ -261,37 +263,41 @@ kind = "oracle"
 files = ["golden/formats/every-command.pes", "golden/testsheets/TS-01.dst"]   # …
 </code></pre>
 <p>It needs Python with pyembroidery (<code>STITCHCRAFT_PYTHON</code>, see <code>conformance/oracle/requirements.txt</code>):
-without it the case is skipped locally (⏭ in the report) and fails in CI, like every optional tool.</p>
+without it the case is skipped locally (⏭ in the report) and fails in CI, like every optional tool. A
+requirement whose cases were all skipped is skipped too, and fails the run only in CI.</p>
 <p>Geometry that Ink/Stitch leaves to shapely is checked against shapely’s own answers. Scripts in
-<code>conformance/oracle/</code> ask a pinned shapely, through its public API alone, about random lines: the
-nearest points of rails (<code>nearest.py</code>), offset curves (<code>offset.py</code>) and the measures that make a satin
-column’s rails from its centre line (<code>centre_line.py</code>). Their answers are fixtures under
-<code>conformance/fixtures/geometry/</code>, one question to a line of text, and the engine’s unit tests read them
-with a shared reader (<code>normalize::fixture</code>) and answer every question the same way. Regenerating a
-fixture needs shapely, and checking it does not.</p>
-<p>From M3, <code>design</code> cases take an SVG or JSON design and parameters, and check generator properties:</p>
-<pre><code class="language-toml">id = "fill-tatami-gap-preserved"
-requirements = ["REQ-FILL-TAT-006", "REQ-FILL-TAT-007"]
-input = "fixtures/fill/c-shape-gap-1mm.svg"     # or an inline design
+<code>conformance/oracle/</code> ask a pinned shapely, through its public API alone, about random shapes:</p>
+<ul>
+<li>the nearest points of rails (<code>nearest.py</code>)</li>
+<li>offset curves (<code>offset.py</code>)</li>
+<li>the measures that make a satin column’s rails from its centre line (<code>centre_line.py</code>)</li>
+<li>polygons shrunk and grown, for a fill’s inset underlay and its expanded rows (<code>buffer.py</code>)</li>
+<li>the pieces of rows that polygons cut, for a fill’s rows (<code>rows.py</code>)</li>
+</ul>
+<p>Their answers are fixtures under <code>conformance/fixtures/geometry/</code>, one question to a line of text, and the
+engine’s unit tests read them with a shared reader (<code>normalize::fixture</code>) and answer every question the
+same way. Regenerating a fixture needs shapely, and checking it does not.</p>
+<p>The <code>plan</code> kind takes an SVG design the whole way to machine files, as <code>stitch plan</code> does for a profile.
+It checks the plan, and compares the files written from it with golden files. The <code>strokes</code> case:</p>
+<pre><code class="language-toml"># The whole way from a design to a machine file: an SVG of strokes in two threads and back, two lines
+# that nearly touch and a fill in 2 parts, each with its underlay, planned as `stitch plan` plans it. The
+# golden files are what that writes.
+id = "strokes"
+requirements = ["REQ-ASM-001", "REQ-ASM-002", "REQ-LCK-001", "REQ-FIN-001", "REQ-FIN-003", "REQ-FILL-TAT-001", "REQ-FILL-TAT-008", "REQ-FILL-TAT-011"]
+kind = "plan"
+svg = "fixtures/svg/strokes.svg"
 profile = "brother-pe800-5x7"
 
-[params]
-fill_method = "tatami_fill"
-row_spacing_mm = 0.4
-pull_compensation_mm = 0.6                       # wider than half the gap
-
 [expect]
-invariants = "all"                               # every L0 plan invariant
-holes = "same-as-input"
-components = "same-as-input"
-inside_region_tolerance_mm = 0.65
-diagnostics = []                                 # exactly these codes, no others
-golden = "golden/fill-tatami-gap-preserved.csv"  # stitch list after quantization
+size_mm = [59.920508, 45.0]
+diagnostics = ["SC-W0307", "SC-I0504"]
+golden = ["golden/plans/strokes.pes", "golden/plans/strokes.dst"]
 </code></pre>
-<p>Inline designs are allowed for small cases; fixtures are SVG or JSON designs under
-<code>conformance/fixtures/</code> (small, hand-written or generated, with a row in the fixtures index stating their
-origin and licence). Large real-world corpora live in a separate repository pinned by commit and
-SHA-256, downloaded by <code>cargo xtask corpus</code> — the same policy VectorCraft follows for its corpora.</p>
+<p>What a generator keeps of a shape, such as the holes of a fill, is checked by Rust tests named after their
+requirement. Fixtures are small files under <code>conformance/fixtures/</code>, hand-written or generated, each with
+a row in the fixtures index stating its origin and licence (<code>--check</code>). Large real-world corpora will
+live in a repository of their own, as VectorCraft’s do. <code>cargo xtask corpus</code> (M8) will download them at a
+commit and with a SHA-256 this repository pins.</p>
 <p>The engine’s cases build their small designs with <code>stitchcraft_testkit::designs</code>. It also reads a plan’s
 shape at a glance: <code>J L4 S5 L4</code> is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
 stitches. Its strokes are as wide as an SVG stroke whose style says nothing, and <code>widened</code> gives one a
