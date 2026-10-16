@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-914264cc.js";
+            window.path_to_searchindex_js = "../../searchindex-8c05eca3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -287,8 +287,9 @@ row’s number is how far across the rows it lies from the origin, over <code>ro
 nearest whole number, halves to the even one. Its offset is the fractional part of that number over
 <code>staggers</code>, times the longest stitch. Each row’s points then lie a <code>staggers</code>-th of a stitch along from the row
 before’s and come back after <code>staggers</code> rows, so neighbouring rows never line them up into furrows. A
-fraction of a stagger draws diagonals that show less. Fills side by side at the same angle share the
-grid, as they share their rows.</p>
+fraction of a stagger draws diagonals that show less. A negative <code>staggers</code> staggers the rows the other
+way, and 0 counts as 1, which lines every row’s points up, as in Ink/Stitch. Fills side by side at the
+same angle share the grid, as they share their rows.</p>
 <p>A segment is sewn from one end to the other, as routing decides. It takes its start, then every
 grid point past the start and before the end, and then its end, unless <code>skip_last</code> is on or the last
 point lies within 0.1 mm of it. A start on the grid is sewn once. Sewn the other way, a segment takes the
