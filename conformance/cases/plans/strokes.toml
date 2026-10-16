@@ -8,6 +8,6 @@ svg = "fixtures/svg/strokes.svg"
 profile = "brother-pe800-5x7"
 
 [expect]
-size_mm = [59.924256, 45.0]
+size_mm = [59.920508, 45.0]
 diagnostics = ["SC-W0307", "SC-I0504"]
 golden = ["golden/plans/strokes.pes", "golden/plans/strokes.dst"]

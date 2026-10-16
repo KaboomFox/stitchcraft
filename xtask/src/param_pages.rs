@@ -7,7 +7,7 @@ use std::fmt::Write as _;
 
 use serde_json::{Value as Json, json};
 use stitchcraft_engine::registry::PARAMETERS;
-use stitchcraft_params::{Kind, MAX_LIST, Origin, ParamGroup, ParamSpec, Stability, StitchType, Value};
+use stitchcraft_params::{Empty, Kind, MAX_LIST, Origin, ParamGroup, ParamSpec, Stability, StitchType, Value};
 
 use crate::deviations::{self, Deviation};
 
@@ -35,9 +35,16 @@ Designs store every value as text, the same way for every host:
 - **Angles** are degrees (`45`, `45°` or `45deg`), turned into the range from −180 (exclusive) to 180.
 - **Percentages** may end in `%`.
 - **On or off** is `true` or `false`; `yes`/`no`, `on`/`off` and `1`/`0` work too.
-- **Lists** (several lengths, numbers or angles) are separated by spaces or commas: `2.5 1.2`.
-- **Seeds** are a number or any text; empty means \"derive it from the element\", so every element
-  differs but every run is the same.
+- **Lists** (several lengths, numbers or angles) are separated by spaces: `2.5 1.2`. A comma separates
+  nothing and is no decimal point, so `2.5,1.2` and `3,5` are errors that say so. An angle in a list may
+  end with one comma (`0, 90`), as older files write a fill's underlay angles.
+- **Seeds** are a number or any text. Elements given the same seed vary alike; empty means \"derive it
+  from the element\", so every element differs but every run is the same.
+- **Empty** text, or spaces alone, is not set: the parameter takes its default, as in Ink/Stitch.
+
+An element reads only the settings its stitch type uses, and only those its other settings show: a
+running stitch reads no zigzag spacing, and no length variation while random stitch length is off. A
+setting it does not read is kept with the element, unchecked, and changes nothing.
 
 Programs that store values as JSON (and the [JSON Schema](params.schema.json) that describes them) use
 numbers, `true`/`false`, strings and arrays instead, and `null` for an empty value.
@@ -218,8 +225,8 @@ fn schema() -> Result<String, String> {
 fn property(spec: &ParamSpec) -> Result<Json, String> {
     let (value, _) = spec.read(spec.default).map_err(|d| format!("`{}`: {}", spec.key, d.message))?;
     let mut property = match spec.kind {
-        Kind::Length { min, max, optional } => {
-            json!({"type": if optional { json!(["number", "null"]) } else { json!("number") }, "minimum": min, "maximum": max})
+        Kind::Length { min, max, empty } => {
+            json!({"type": if empty == Empty::Never { json!("number") } else { json!(["number", "null"]) }, "minimum": min, "maximum": max})
         }
         Kind::Angle => json!({"type": "number"}),
         Kind::Percent { min, max } | Kind::Number { min, max } => json!({"type": "number", "minimum": min, "maximum": max}),

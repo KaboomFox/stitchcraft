@@ -37,7 +37,12 @@ checks straight. "The shortest stitch" is the one [Finalize](../engine-pipeline.
    as many as it needs and scales them by one factor to end exactly on its corner. Lengths below twice
    the shortest stitch are raised to it (`SC-W0402`), so a span longer than the longest length scales its
    stitches by more than a half and keeps each at or above the shortest stitch; in a shorter span, a
-   stitch scaled below it joins its shorter neighbour.
+   stitch scaled below it joins its shorter neighbour. Where those stitches stray from the path by more
+   than the tolerance left after flattening, as on a curve too tight for them, the span is spread again
+   in one stitch more, then one more, as long as that takes no more stitches than step 5 would make of
+   it, until they keep to it. A small circle is so sewn in even stitches as long as the tolerance allows,
+   where splitting the stray ones would halve them. With random length, each try draws its lengths again
+   from where the span's draws began.
 4. **Measure straight.** Where the path bends back on itself within less than the shortest stitch (a
    cusp, a tight loop, a curl at an end), two points far apart along it can be close in a straight line.
    Going along the needle points: one closer than the shortest stitch to the last one kept is dropped; a
@@ -57,9 +62,10 @@ checks straight. "The shortest stitch" is the one [Finalize](../engine-pipeline.
    tolerance.
 6. **Random length.** With `enable_random_stitch_length`, each stitch length is drawn uniformly from
    `s × (1 ± jitter)`, the first of each span a random fraction of that (a random phase, below), then the
-   span is rescaled to end on its corner. The element's own generator draws them, seeded with its
-   `random_seed` (a setting every stitch type that varies at random shares), and the same element and
-   seed always give the same stitches.
+   span is rescaled to end on its corner. The element's own generator draws them. It is seeded with the
+   element's `random_seed` (a setting every stitch type that varies at random shares), or with its id
+   when that is empty. A seed replaces the id, as in Ink/Stitch, so elements alike given one seed sew
+   alike, and the same element and seed always give the same stitches.
 
 **When the rules disagree,** the shortest stitch wins (a shorter stitch hammers one spot and can break the
 thread), then corners, then the tolerance. A part of the path that is a single point, shorter than the
@@ -67,7 +73,8 @@ shortest stitch, or lying all within it of its ends, is not stitched (`SC-W0401`
 every platform places the same stitches.
 
 **Compared with Ink/Stitch:** the same parameters, meanings and defaults; the placement differs in four
-documented ways, `DEV-RUN-001` to `DEV-RUN-004` in the deviations ledger (`conformance/deviations.toml`).
+documented ways, `DEV-RUN-001` to `DEV-RUN-004` in the deviations ledger (`conformance/deviations.toml`),
+and the random lengths come from another generator (`DEV-RUN-005`).
 
 **Satin underlays** walk lines made point by point by the satin generator
 ([satin](satin.md#underlays)), and steps 2 to 5 place their stitches, with each walk's own length and
@@ -100,17 +107,19 @@ keeps the random phase, for the same reason.
 
 ### Properties (conformance)
 
-- Stitches are spread evenly between corners; every stitch, measured straight, is at most
-  `s × (1 + jitter)` + 1 µm for the longest length `s` and at least the shortest stitch; a part too small
-  for that is reported (`REQ-RUN-001`).
+- Stitches are spread evenly between corners, in more of them where they stray beyond the tolerance, as
+  long as that takes no more than splitting. Measured straight, every stitch is at most
+  `s × (1 + jitter)` + 1 µm for the longest length `s` and at least the shortest stitch, and a part too
+  small for that is reported (`REQ-RUN-001`).
 - Deviation from the source path ≤ tolerance, both ways, measured densely (`REQ-RUN-002`).
 - Corners are penetration points unless that would make a stitch too short (`REQ-RUN-003`).
 - Bean stitch sews each stitch `2b + 1` times, so a run of n stitches with b throughout has exactly
   `n × (2b + 1)`; the list runs on across repeats, each turnaround taking a step (`REQ-RUN-004`).
 - Repeats alternate direction with no stitch in place; their parity decides the exit point
   (`REQ-RUN-005`).
-- Random length: the same element and seed give the same stitches, another seed others, and the lengths
-  vary (`REQ-RUN-007`).
+- With random length the lengths vary. The same element and seed give the same stitches, and another
+  seed gives others. A seed replaces the element's id, and elements given one seed draw the same lengths
+  (`REQ-RUN-007`).
 
 ### Diagnostics
 
@@ -120,12 +129,20 @@ twice the shortest stitch (raised), a stroke's or a satin underlay's, which the 
 ## Manual stitch
 
 Every node of the path is a needle penetration, in order — for hand-placed stitches and imported stitch
-files. A curve gives only its end node: its control points are not stitched and it is not flattened. A
-node where the needle already is counts once, and a closed path comes back to its start. Segments longer
-than `max_stitch_length_mm` (if set, a setting manual stitch shares with satin columns) are split into the
-fewest equal parts no longer than it, but never into parts shorter than the shortest stitch. A value of 0 or less means "not set", as in Ink/Stitch, so
-every stitch is then sewn as drawn. Bean stitch applies; repeats do not. Lock stitches are added
-only when `force_lock_stitches` is set, as in Ink/Stitch (read at `d59c9ab`).
+files. A curve gives only its end node: its control points are not stitched and it is not flattened.
+When the path is closed it comes back to its start, and a node where the needle already is sews no
+stitch. Segments longer than `max_stitch_length_mm` (if set, a setting manual stitch shares with satin
+columns) are split into the fewest equal parts no longer than it, but never into parts shorter than the
+shortest stitch. A value of 0 means "not set", as in Ink/Stitch, and so does one below 0, so every stitch
+is then sewn as drawn. Bean stitch applies, and repeats do not. Lock stitches are added only when
+`force_lock_stitches` is set, as in Ink/Stitch (read at `d59c9ab`).
+
+Ink/Stitch's bean stitch takes a step of its list for every point it lists, and it lists some where the
+needle already is. A node drawn twice is listed twice, and so is the end of each stitch Ink/Stitch
+splits. Where a closed path came back to its start already, the start is listed once more. Its stitch
+plan leaves out stitches shorter than its shortest stitch only after the bean stitch, and a node left out
+for that keeps its step. StitchCraft gives each of these its step, sewing nothing, and a bean list then
+falls on the same stitches in both tools.
 
 The shortest stitch holds here too: a node closer than it to the needle point before it is left out, so
 the stitch before runs on to the next node, and `SC-W0403` says how many. A part's last node is always

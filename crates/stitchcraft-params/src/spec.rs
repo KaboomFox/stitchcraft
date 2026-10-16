@@ -4,21 +4,21 @@
 //! declaration next to the generator that uses it. Everything about a parameter that people or programs
 //! read — the docs, the JSON Schema, a plug-in's manifest, a validation message — comes from here.
 
+use crate::set::ParamSet;
 use crate::stitch_type::{Family, StitchType};
 
 /// What kind of value a parameter takes, with its limits.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Kind {
-    /// A length in millimetres within `min..=max`. An `optional` length may be left empty; then the
-    /// setting comes from elsewhere (a document setting or the machine profile), or there is none. A
-    /// value of 0 or less counts as empty, because Ink/Stitch reads it as "not set".
+    /// A length in millimetres within `min..=max`. A length that may be left empty, as `empty` says, then
+    /// comes from elsewhere (a document setting or the machine profile), or there is none.
     Length {
         /// Smallest accepted value, in millimetres.
         min: f64,
         /// Largest accepted value, in millimetres.
         max: f64,
-        /// Whether the value may be empty.
-        optional: bool,
+        /// Which values leave it empty.
+        empty: Empty,
     },
     /// An angle in degrees, normalized to (−180, 180].
     Angle,
@@ -108,6 +108,20 @@ pub enum Kind {
     },
 }
 
+/// Which values leave a [`Kind::Length`] empty.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Empty {
+    /// None: the length always has a value.
+    Never,
+    /// Empty text alone: 0 is a length like any other, as Ink/Stitch reads a satin's shortest stitch to
+    /// split.
+    Blank,
+    /// Empty text, 0, and any length below it. Ink/Stitch reads 0 as "not set" for most of its optional
+    /// lengths. What it makes of a length below 0 differs from one to the next, and StitchCraft reads it as
+    /// not set too: a length below 0 is no length.
+    AtMostZero,
+}
+
 /// The most values a list parameter takes.
 pub const MAX_LIST: usize = 16;
 
@@ -124,13 +138,26 @@ pub struct ChoiceOption {
 }
 
 /// When a user interface shows a parameter: only while another parameter has one of the given values. A
-/// lock's size, say, matters only for the lock shapes it sizes.
+/// lock's size, say, matters only for the lock shapes it sizes, and an element reads it only then
+/// ([`ParamSpec::read_by`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Condition {
-    /// The other parameter.
+    /// The other parameter: one of the same declaration, with no condition of its own.
     pub key: &'static str,
     /// The values it may have, written as a design stores them.
     pub any_of: &'static [&'static str],
+}
+
+impl Condition {
+    /// Whether the condition holds for an element of `family` with the settings `set`: the value the other
+    /// parameter has there, or its default, written as a design stores it, is one of `any_of`. It holds
+    /// when that value does not read, or when `specs` lacks the parameter, so that what is said of a
+    /// value that does not read is said of both.
+    pub fn holds(&self, family: Family, set: &ParamSet, specs: &[ParamSpec]) -> bool {
+        let Some(other) = specs.iter().find(|spec| spec.key == self.key).map(|spec| spec.in_family(family)) else { return true };
+        let text = set.get(self.key).filter(|text| !text.trim().is_empty()).unwrap_or(other.default);
+        other.kind.parse(text).is_none_or(|(value, _)| self.any_of.contains(&value.to_raw().as_str()))
+    }
 }
 
 /// How settled a parameter is.
@@ -216,6 +243,14 @@ impl ParamSpec {
             None => *self,
         }
     }
+
+    /// Whether an element sewn as `stitch_type` with the settings `set` reads the parameter: it applies to
+    /// the stitch type, and the condition it is shown under holds there ([`Condition::holds`], `specs` being
+    /// its declaration's). Ink/Stitch reads a setting only where its stitch type uses it, so text the
+    /// element does not read is kept and changes nothing.
+    pub fn read_by(&self, stitch_type: StitchType, set: &ParamSet, specs: &[ParamSpec]) -> bool {
+        self.applies_to.contains(&stitch_type) && self.visible_when.is_none_or(|condition| condition.holds(stitch_type.family(), set, specs))
+    }
 }
 
 /// The parameters one `params!` declaration registers.
@@ -253,8 +288,12 @@ impl Kind {
     pub fn describe(self) -> String {
         let empty = |optional: bool| if optional { ", or empty" } else { "" };
         match self {
-            Kind::Length { min, max, optional } => {
-                let empty = if optional { ", or empty (0 or less counts as empty)" } else { "" };
+            Kind::Length { min, max, empty } => {
+                let empty = match empty {
+                    Empty::Never => "",
+                    Empty::Blank => ", or empty",
+                    Empty::AtMostZero => ", or empty (0 or less counts as empty)",
+                };
                 format!("a length from {min} to {max} mm{empty}")
             }
             Kind::Angle => "an angle in degrees".to_string(),
@@ -277,21 +316,15 @@ impl Kind {
         }
     }
 
-    /// Whether a value may be empty: an optional length, pair or list of angles.
-    pub(crate) const fn optional(self) -> bool {
-        matches!(
-            self,
-            Kind::Length { optional: true, .. }
-                | Kind::LengthPair { optional: true, .. }
-                | Kind::PercentPair { optional: true, .. }
-                | Kind::AngleList { optional: true }
-        )
+    /// Whether its values are numbers, which a comma neither separates nor writes.
+    pub(crate) const fn numeric(self) -> bool {
+        !matches!(self, Kind::Toggle | Kind::Choice { .. } | Kind::Seed | Kind::Text { .. })
     }
 
     /// The same kind with a value always needed.
     pub(crate) const fn required(self) -> Kind {
         match self {
-            Kind::Length { min, max, .. } => Kind::Length { min, max, optional: false },
+            Kind::Length { min, max, .. } => Kind::Length { min, max, empty: Empty::Never },
             Kind::LengthPair { min, max, .. } => Kind::LengthPair { min, max, optional: false },
             Kind::PercentPair { min, max, .. } => Kind::PercentPair { min, max, optional: false },
             Kind::AngleList { .. } => Kind::AngleList { optional: false },
@@ -307,7 +340,7 @@ mod tests {
     #[test]
     fn units_name_what_values_are_in() {
         let kinds = [
-            Kind::Length { min: 0.0, max: 1.0, optional: false },
+            Kind::Length { min: 0.0, max: 1.0, empty: Empty::Never },
             Kind::LengthList { min: 0.0, max: 1.0 },
             Kind::LengthPair { min: 0.0, max: 1.0, optional: false },
             Kind::Percent { min: 0.0, max: 1.0 },
@@ -324,27 +357,41 @@ mod tests {
     #[test]
     fn a_kind_made_required_is_never_empty() {
         let kinds = [
-            Kind::Length { min: 0.1, max: 1.0, optional: true },
+            Kind::Length { min: 0.1, max: 1.0, empty: Empty::AtMostZero },
+            Kind::Length { min: 0.0, max: 1.0, empty: Empty::Blank },
             Kind::LengthPair { min: 0.0, max: 1.0, optional: true },
             Kind::PercentPair { min: 0.0, max: 2.0, optional: true },
             Kind::AngleList { optional: true },
-            Kind::Length { min: 0.1, max: 1.0, optional: false },
+            Kind::Length { min: 0.1, max: 1.0, empty: Empty::Never },
             Kind::AngleList { optional: false },
             Kind::Seed,
         ];
-        assert_eq!(kinds.map(Kind::optional), [true, true, true, true, false, false, false]);
         assert_eq!(
             kinds.map(Kind::required),
             [
-                Kind::Length { min: 0.1, max: 1.0, optional: false },
+                Kind::Length { min: 0.1, max: 1.0, empty: Empty::Never },
+                Kind::Length { min: 0.0, max: 1.0, empty: Empty::Never },
                 Kind::LengthPair { min: 0.0, max: 1.0, optional: false },
                 Kind::PercentPair { min: 0.0, max: 2.0, optional: false },
                 Kind::AngleList { optional: false },
-                Kind::Length { min: 0.1, max: 1.0, optional: false },
+                Kind::Length { min: 0.1, max: 1.0, empty: Empty::Never },
                 Kind::AngleList { optional: false },
                 Kind::Seed,
             ]
         );
+        // What each takes, said for messages and the reference pages.
+        let lengths = [Empty::Never, Empty::Blank, Empty::AtMostZero].map(|empty| Kind::Length { min: 0.0, max: 25.0, empty }.describe());
+        assert_eq!(
+            lengths,
+            ["a length from 0 to 25 mm", "a length from 0 to 25 mm, or empty", "a length from 0 to 25 mm, or empty (0 or less counts as empty)"]
+        );
+    }
+
+    #[test]
+    fn only_numbers_are_numeric() {
+        let numeric = [Kind::Angle, Kind::Count { min: 0, max: 1 }, Kind::AngleList { optional: true }, Kind::Toggle, Kind::Seed];
+        assert_eq!(numeric.map(Kind::numeric), [true, true, true, false, false]);
+        assert!(!Kind::Text { max_bytes: 1 }.numeric() && !Kind::Choice { options: &[] }.numeric());
     }
 
     #[test]

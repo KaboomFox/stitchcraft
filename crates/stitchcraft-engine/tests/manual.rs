@@ -57,6 +57,39 @@ fn req_run_006_manual_stitch_puts_a_needle_on_every_node() {
     assert_eq!(bean.runs, [vec![p(0.0, 0.0), p(2.0, 0.0), p(0.0, 0.0), p(2.0, 0.0)]]);
 }
 
+/// The stretches between consecutive `marks` along the x axis that `run` sews 3 times: those a bean stitch
+/// of 1 makes bold.
+fn bold(run: &[Point], marks: &[f64]) -> Vec<(f64, f64)> {
+    let times =
+        |a: f64, b: f64| run.windows(2).filter(|s| (s[0].x().min(s[1].x()) - a).abs() < 1e-9 && (s[0].x().max(s[1].x()) - b).abs() < 1e-9).count();
+    marks.windows(2).map(|w| (w[0], w[1])).filter(|&(a, b)| times(a, b) == 3).collect()
+}
+
+#[test]
+fn req_run_006_every_node_ink_stitch_lists_takes_a_step_of_the_bean_list() {
+    // Ink/Stitch lists the end of a split stitch twice, and its bean stitch takes a step of the list for
+    // each node it lists, with no stitch where the needle already is. Nodes 0, 10 and 20 mm, a 3 mm longest
+    // stitch and bean "1 0": 0 to 2.5, 5 to 7.5, 12.5 to 15 and 17.5 to 20 are bold.
+    let marks: Vec<f64> = (0..=8).map(|k| 2.5 * f64::from(k)).collect();
+    let split = sew(&lines(&[(0.0, 0.0), (10.0, 0.0), (20.0, 0.0)]), &[("max_stitch_length_mm", "3"), ("bean_stitch_repeats", "1 0")], 0.3);
+    assert_eq!(bold(&split.runs[0], &marks), [(0.0, 2.5), (5.0, 7.5), (12.5, 15.0), (17.5, 20.0)]);
+    // A node drawn twice is listed twice: both stitches are bold.
+    let twice = Path {
+        subpaths: vec![Subpath {
+            start: p(0.0, 0.0),
+            segments: vec![Segment::Line(p(10.0, 0.0)), Segment::Line(p(10.0, 0.0)), Segment::Line(p(20.0, 0.0))],
+            closed: false,
+        }],
+    };
+    let sewn = sew(&twice, &[("bean_stitch_repeats", "1 0")], 0.3);
+    assert_eq!(bold(&sewn.runs[0], &[0.0, 10.0, 20.0]), [(0.0, 10.0), (10.0, 20.0)]);
+    assert!(sewn.warnings.is_empty());
+    // A node too near the one before is left out, and takes its step: the stitch after it is bold, as in
+    // Ink/Stitch, whose plan leaves out the short stitches after its bean stitch.
+    let near = sew(&lines(&[(0.0, 0.0), (0.1, 0.0), (5.0, 0.0), (10.0, 0.0)]), &[("bean_stitch_repeats", "1 0")], 0.3);
+    assert_eq!(bold(&near.runs[0], &[0.0, 5.0, 10.0]), [(5.0, 10.0)]);
+}
+
 #[test]
 fn req_run_006_a_longest_stitch_of_zero_or_less_sews_every_stitch_as_drawn() {
     // Ink/Stitch reads 0 and below as "no maximum", so a file that says so is not cut into short stitches.

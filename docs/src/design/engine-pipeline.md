@@ -37,8 +37,10 @@ Adapters have already applied transforms and converted units, so normalization n
 
 ## 2. Validate
 
-- Parameters are checked by the registry: type, range, applicability, visibility conditions; the
-  generator receives a typed struct or nothing.
+- Parameters are read by the registry as the element's stitch type reads them. Blank text takes the
+  default, and a setting the stitch type does not use, or that its other settings hide, is kept unread
+  ([parameters](params.md#the-parameters-an-element-reads-req-prm-004)). The rest are checked for type and range,
+  and the generator receives a typed struct or nothing.
 - Shapes are checked against the stitch type. A satin needs a subpath longer than a point (`SC-E0201`),
   a fill needs a non-empty region, and a running stitch needs a path longer than the minimum stitch
   length.
@@ -60,12 +62,14 @@ M4.2. A satin column also reads the running stitch's length (`running_stitch_len
 that join its underlays are no longer than the first value. For any other stroke the generator is its
 `stroke_method`. `running_stitch` (the default) and
 `manual_stitch` are sewn from M3. A satin column drawn as one path no wider than the design's
-`min_satin_stroke_width` is sewn as a stroke, with `SC-W0212`, as in Ink/Stitch (`REQ-SAT-015`). A wider
-one is sewn between rails made from its line from M4.9 (`REQ-SAT-016`). A fill's region is built first,
-so what it leaves out and how it will be sewn are said (`SC-W0303`, `SC-W0304`, `SC-I0306`, `SC-W0307`)
+`min_satin_stroke_width` is sewn as a stroke, with `SC-W0212`, as in Ink/Stitch (`REQ-SAT-015`). Wider,
+it is sewn between rails made from its line from M4.9 (`REQ-SAT-016`). A fill whose `fill` setting is
+off sews nothing, and nothing is said of it (`REQ-FILL-003`). Another fill's region is built first, so
+what it leaves out and how it will be sewn are said (`SC-W0303`, `SC-W0304`, `SC-I0306`, `SC-W0307`)
 whatever comes next, and its `fill_method` picks the generator: the tatami fill, sewn from M5.4, which
-reads the running stitch's length and tolerance for its travel between rows, under the rows from M5.5,
-and sews its underlay before its top rows from M5.6. The other stroke, satin and
+reads the running stitch's length and tolerance for its travel between rows (the first of the lengths,
+as a satin column does), under the rows from M5.5, and sews its underlay before its top rows from
+M5.6. The other stroke, satin and
 fill methods are skipped with `SC-W0011` until their milestones. An element whose parameters are wrong
 (`SC-E0101`) is skipped too, and the rest of the design still plans.
 
@@ -87,9 +91,9 @@ Rules every generator follows:
   explicit start and end commands will override them (`REQ-GEN-001`). Each ends near its next stitch, its
   point nearest the offer as Ink/Stitch's geometry library finds it, a point of one shape inside the
   other's area first (`generators::next`).
-- **Seeded randomness:** each element's generator is seeded from a hash of its id mixed with its
-  `random_seed`, one of the settings every stitch type shares. The PRNG is SplitMix64 from
-  `stitchcraft-core` ([determinism](determinism.md)).
+- **Seeded randomness:** each element's generator is seeded from its `random_seed`, one of the settings
+  every stitch type shares. When that is empty, a hash of its id seeds it. A seed replaces the id, as in
+  Ink/Stitch. The PRNG is SplitMix64 from `stitchcraft-core` ([determinism](determinism.md)).
 - **Budgeted:** every inner loop charges work units. Each element has the budget's work to itself. One
   that runs out (`SC-E0004`) is skipped, and the others still plan. The stitch limit is for the whole
   design.
