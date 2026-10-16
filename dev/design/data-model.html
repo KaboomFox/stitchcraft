@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a1ae4710.js";
+            window.path_to_searchindex_js = "../searchindex-e9e69af8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -322,13 +322,15 @@ past it. Generators place stitches by the same test, and so does the check that 
 <tr><td><code>REQ-PLAN-001</code></td><td>Every position is finite and inside the profile’s hoop, centred on the origin.</td><td>M1</td></tr>
 <tr><td><code>REQ-PLAN-002</code></td><td>While sewing, every stitch is between the profile’s <code>min_stitch</code> (lock stitches, into or out of a lock point: 0.2 mm) and <code>max_stitch</code>.</td><td>M1</td></tr>
 <tr><td><code>REQ-PLAN-003</code></td><td>Every block sews at least one stitch; trims and stops happen where the needle is.</td><td>M1</td></tr>
-<tr><td><code>REQ-PLAN-004</code></td><td>A <code>Trim</code> is preceded by a tie-off and followed by a tie-in, when the element’s lock settings ask for them.</td><td>M3</td></tr>
 <tr><td><code>REQ-PLAN-005</code></td><td>While sewing, no stitch lands where the needle already is.</td><td>M1</td></tr>
 <tr><td><code>REQ-PLAN-006</code></td><td>Thread changes plus stops fit the format (PES: 255; DST: 999).</td><td>M1</td></tr>
-<tr><td><code>REQ-PLAN-007</code></td><td>Every <code>Normal</code> and <code>Jump</code> entry names its element.</td><td>M3</td></tr>
+<tr><td><code>REQ-PLAN-007</code></td><td>Every <code>Normal</code> and <code>Jump</code> entry names an element the plan lists. A trim or a stop need not name one.</td><td>M3</td></tr>
 </tbody>
 </table>
 </div>
+<p><code>REQ-PLAN-004</code>, a tie-off before a trim and a tie-in after it, is retired. Whether they belong there
+depends on the elements’ lock settings, which a plan does not hold. Assembly’s cases check it with the
+settings (<code>REQ-ASM-003</code>, <code>REQ-LCK-001</code>).</p>
 <h2 id="threads-and-palettes"><a class="header" href="#threads-and-palettes">Threads and palettes</a></h2>
 <pre><code class="language-rust ignore">pub struct Thread {
     pub color: Rgb,                  // what the user chose
@@ -341,7 +343,7 @@ matched. A format that names threads by entries gives a design’s threads their
 (<code>Palette::assign</code>, REQ-THREAD-002). Different threads get different entries while they last, the nearest
 pairs first, and a thread read from such a file gets its own (<a href="formats.html">formats</a>, PES). Each table names
 its source in its module docs and in a row of <code>NOTICE</code>. The PEC palette is the one
-MIT-licensed pyembroidery publishes, with the names of entries 62 and 63 from its fork pystitch. Thread
+MIT-licensed pyembroidery publishes, with entries 62 and 63 from its fork pystitch. Thread
 catalogues (brand and number) arrive with M11.</p>
 <h2 id="machine-profiles"><a class="header" href="#machine-profiles">Machine profiles</a></h2>
 <pre><code class="language-rust ignore">pub struct MachineProfile {
@@ -372,11 +374,13 @@ than the comfort zone), with “rotate 90°” as a one-click fix when turning t
 <h2 id="budgets"><a class="header" href="#budgets">Budgets</a></h2>
 <pre><code class="language-rust ignore">pub struct Budget {
     pub max_stitches: u32,           // per design, default 2,000,000
-    pub max_work: u64,               // abstract work units, decremented by generators
+    pub max_work: u64,               // abstract work units per element, and once more for assembly
 }</code></pre>
 <p>Work units are counted per inner loop iteration (scanline crossings, graph edge visits, offset
-steps) so a budget behaves identically on every machine. Exhaustion yields <code>SC-E0004</code> for the
-element; other elements still plan.</p>
+steps) so a budget behaves identically on every machine. Each element has the work budget to itself,
+and so does working out what it offers the element before it to end near. Exhaustion there yields
+<code>SC-E0004</code> for the element, and other elements still plan. Assembly and finalize share the budget once
+more, and running out there plans nothing. <code>SC-E0004</code> then says so for the whole design.</p>
 
                     </main>
 

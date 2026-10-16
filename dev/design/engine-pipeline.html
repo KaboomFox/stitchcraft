@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a1ae4710.js";
+            window.path_to_searchindex_js = "../searchindex-e9e69af8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -267,7 +267,8 @@ every stitch type shares. When that is empty, a hash of its id seeds it. A seed 
 Ink/Stitch. The PRNG is SplitMix64 from <code>stitchcraft-core</code> (<a href="determinism.html">determinism</a>).</li>
 <li><strong>Budgeted:</strong> every inner loop charges work units. Each element has the budget’s work to itself. One
 that runs out (<code>SC-E0004</code>) is skipped, and the others still plan. The stitch limit is for the whole
-design.</li>
+design. Assembly and finalize share the budget’s work once more, and running out there plans nothing.
+<code>SC-E0004</code> then says so for the whole design.</li>
 <li><strong>Roles:</strong> every stitch is tagged underlay, top, travel or lock, which previews colour-code and which
 later enables per-layer ordering.</li>
 </ul>
