@@ -602,6 +602,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   hole's start counted, and the fill's own outlines were not tested.
 - `DEV-FILL-011` records that with `underpath` off the needle travels round a ring the shorter way, where
   Ink/Stitch takes the way with fewer nodes of its graph. The docs said Ink/Stitch takes the shorter way.
+- The check for changed golden files compares a pull request with its base branch as it is now. It took
+  the base GitHub records when a pull request is opened, so a pull request opened before others merged
+  counted their golden files, and failed without the `golden-change` label it did not need.
 - The weekly mutation run fails when it measured less than it should (`cargo xtask mutants`). A part whose
   unmutated tree failed its tests looked like a part where every mutant was caught: cargo-mutants still
   writes its lists, empty, and the shard step took any exit. The step now fails on exits other than 0, 2
@@ -665,7 +668,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   hold, and assembly's cases check it (`REQ-ASM-003`, `REQ-LCK-001`).
 - `SplitMix64::next_in` stays below its upper end. Where the floats lie far apart, the low end plus a
   share of the span rounded up to it.
-- The parameter registry hashes seed text with `stitchcraft_core::rng::fnv1a64`, not a copy of it.
+- The parameter registry hashes a seed's text with `stitchcraft_core::rng::fnv1a64`, not with a copy of it.
 - Docs: the core crate's README says that `exact::side` is exact far from overflow and underflow, as its
   module docs say. `Budget` says that each element has the work budget to itself.
   `SC-E0701`'s explanation covers a design placed past the hoop's edge. The data model says that entries
@@ -827,6 +830,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   prints and writes before it writes a file, and a panic's bundle says whether it came while planning,
   drawing the picture or writing, which a replay reruns as far as it can (review finding CLI-16,
   `REQ-CLI-002`).
+- A build names its commit only when git tracks its sources (`REQ-CLI-001`). Built from a copy inside
+  another repository, as in the rehearsal of the move into VectorCraft, it named that repository's commit,
+  which holds none of the sources, and the test of `REQ-CLI-001` failed there.
 - Docs now match the code on the machine testing page's pictures, the architecture page's release profile
   and the report's contents, and in the CLI's README on `stitch convert` and the bug report guide on
   `design.svg_hex` (review finding CLI-18).

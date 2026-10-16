@@ -115,10 +115,16 @@ fn req_cli_001_a_bundle_names_the_commit_its_stitchcraft_was_built_from() {
     let out = stitch_in(&dir, &["bug-report", "strokes.svg"]);
     assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
     let bundle: serde_json::Value = serde_json::from_slice(&std::fs::read(dir.join("strokes.bug-report.json")).unwrap()).unwrap();
-    // Built from a git checkout, the bundle names the commit, and `--version` shows it. A copy of the sources
-    // without git, as cargo-mutants builds, has no commit to name.
+    // Built from a git checkout, one whose git tracks these sources, the bundle names the commit, and
+    // `--version` shows it. A copy of the sources without git, as cargo-mutants builds, has no commit to
+    // name, and nor has a copy inside a repository that does not track it, as the rehearsal of the move into
+    // VectorCraft makes: that repository's commit holds none of the sources.
     let commit = env!("STITCHCRAFT_COMMIT");
-    let checkout = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.git").exists();
+    let checkout = Command::new("git")
+        .args(["ls-files", "--error-unmatch", "build.rs"])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .is_ok_and(|out| out.status.success());
     assert_eq!(!commit.is_empty(), checkout, "commit {commit:?}");
     if checkout {
         assert!(commit.len() == 12 && commit.bytes().all(|b| b.is_ascii_hexdigit()), "{commit}");
