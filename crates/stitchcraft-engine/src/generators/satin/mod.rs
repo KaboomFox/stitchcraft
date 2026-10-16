@@ -165,8 +165,8 @@ params! {
         random_split_phase: Toggle = "false", label "Random split phase", when split_method == "default";
 
         /// With a random split phase, also split stitches longer than this but no longer than the longest
-        /// stitch. Empty: the longest stitch.
-        min_random_split_length_mm: OptionalLength = "", label "Shortest split stitch", range (0.1, 25.0), when split_method == "default";
+        /// stitch. 0 splits every stitch. Empty: the longest stitch.
+        min_random_split_length_mm: OptionalLengthWithZero = "", label "Shortest split stitch", range (0.0, 25.0), when split_method == "default";
 
         /// How many stitches the staggered splits take to come back to where they started. A fraction draws
         /// diagonals that show less than whole numbers do.
@@ -258,8 +258,8 @@ pub fn rails(path: &Path, width: Mm, join: Join, diagnostics: &mut Vec<Diagnosti
 }
 
 /// The rails and rungs made from the centre line `line`, with `SC-W0213` for the stretches left out;
-/// `None`, with `SC-E0214`, when no part of it can be made. A column with no rungs pairs its rails' points
-/// in order, as one drawn with 2 rails does.
+/// `None`, with `SC-E0214`, when no part of it can be made. A column whose rungs are all left out is one
+/// section, as in Ink/Stitch, which makes its rungs again from the line drawn and finds none to add.
 fn from_centre_line(
     line: &[Point],
     closed: bool,
@@ -294,8 +294,7 @@ fn from_centre_line(
             "Draw the column with 2 rails where its line crosses itself or turns more tightly than the column is wide.".to_string(),
         )));
     }
-    let pairing = if rungs.is_empty() { Pairing::Nodes(rails.clone()) } else { Pairing::Rungs(rungs) };
-    Ok(Some(Satin { rails, pairing }))
+    Ok(Some(Satin { rails, pairing: Pairing::Rungs(rungs) }))
 }
 
 /// The lengths a satin column's stitches keep to that come from settings other than its own.
@@ -333,6 +332,15 @@ pub fn satin_stitch(
 ) -> Result<Stitched, Exhausted> {
     let mut warnings = Vec::new();
     let sections = column::sections(satin, params, &mut warnings, meter)?;
+    if sections.is_empty() {
+        warnings.push(
+            Diagnostic::new(Code::SatinNoSection, "Every section of this satin column has no length on one of its rails, so it has nothing to sew.")
+                .with_fix(Fix::Hint(
+                    "Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.".to_string(),
+                )),
+        );
+        return Ok(Stitched { runs: Vec::new(), warnings });
+    }
     let (placed, mut top) = top_stitches(&sections, params, pull, lengths, rng, meter)?;
     let odd = underlay::ends_at_end(params);
     if odd {

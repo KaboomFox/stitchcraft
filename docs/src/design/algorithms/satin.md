@@ -46,8 +46,9 @@ StitchCraft tells rails from rungs as Ink/Stitch does, and a file sews the same 
    in step 3.
 6. Every other subpath is a rung. A rung joins the point where it crosses the first rail to the point
    where it crosses the second. Where it misses a rail, the point of that rail nearest the rung is used,
-   with `SC-W0203`. A rung that crosses a rail more than once does not say which crossing it means. It
-   is left out, with `SC-W0207`, and the satin is sewn without it.
+   with `SC-W0203`. Of points as near as each other, it is the one shapely's nearest points of the rung
+   and the rail give (see *Equally near points*). A rung that crosses a rail more than once does not say
+   which crossing it means. It is left out, with `SC-W0207`, and the satin is sewn without it.
 
 Recognition runs before any stitch is computed. The generator only ever gets rails, and odd geometry is
 a diagnostic that names the subpath, never a crash. Subpaths are numbered from 1 in the order the path
@@ -101,8 +102,9 @@ Rungs cross the column where its line runs straight beside a sharp corner, and a
 4. Each rung is perpendicular to the line, 1.2 times the column's width long, and is kept only when it
    crosses each rail exactly once. It pairs the 2 points where it crosses them.
 
-A column whose rungs are all left out pairs its rails' points in order, as a column drawn with 2 rails
-and no rungs does (see Correspondence).
+A column whose rungs are all left out is one section, from its rails' starts to their ends (see
+Correspondence), as in Ink/Stitch. Ink/Stitch adds rungs across the nodes from the path as drawn, and a
+path of one line gives none.
 
 ### Lines that cross themselves
 
@@ -119,13 +121,17 @@ stitches.
 
 ### Closed lines
 
-A path closed with `Z` is a closed line, as Ink/Stitch reads it. Before its rails are made, it is rolled
-to start in the middle of its first segment whose rung, a thousandth of a CSS pixel longer than the
-column is wide, crosses the edge of the stroke exactly twice: away from where the line crosses itself
-or folds tight. An end of the rung that lies on the edge counts as a crossing, as shapely counts it. A
-line that ends where it starts, closed or drawn back to its start, then starts and
-ends in the middle of its first segment. Its points are rounded to a ten-thousandth of a CSS pixel as
-Ink/Stitch rounds them. Points that then repeat are left out.
+A line whose subpath is closed with `Z` is a closed line, as Ink/Stitch reads a path whose last command
+is `Z`. Subpaths left out as points have no say, and an open line followed by a point closed with `Z` is
+open. After a closed line, a move-to, which draws nothing, leaves it closed, where Ink/Stitch reads it as
+open (`DEV-SAT-001`).
+
+Before its rails are made, a closed line is rolled to start in the middle of its first segment whose
+rung, a thousandth of a CSS pixel longer than the column is wide, crosses the edge of the stroke exactly
+twice: away from where the line crosses itself or folds tight. An end of the rung that lies on the edge
+counts as a crossing, as shapely counts it. A line that ends where it starts, closed or drawn back to its
+start, then starts and ends in the middle of its first segment. Its points are rounded to a
+ten-thousandth of a CSS pixel as Ink/Stitch rounds them. Points that then repeat are left out.
 
 ### Which lines are the rails
 
@@ -159,7 +165,9 @@ rails twice: once to sew it, and once for the element before it to end near it.
 Every rung cuts each rail at the distance along it of the rung's point on it, after any reversal. Each
 rail is cut at its own distances, in order, and the n-th part of one rail goes with the n-th part of the
 other: a section. A part of no length leaves its section out, as where two rungs meet a rail at one
-point or one meets it at an end. Within a section, the point at a fraction of rail A's part goes with the
+point or one meets it at an end. A column left with no section sews nothing, and `SC-E0216` says why.
+Ink/Stitch refuses it too, unless rounding its rails in CSS pixels leaves a section a few millionths of
+a pixel long, which it sews as a fan. Within a section, the point at a fraction of rail A's part goes with the
 point at the same fraction of rail B's.
 
 A column of 2 subpaths has no rungs, and gets rungs across its rails' nodes instead, as Ink/Stitch adds
@@ -394,7 +402,7 @@ end command, read from M8, would replace the needle point or the next stitch.
 | `REQ-SAT-002` | Consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails and within 5 % on curves. The last pair is at most a spacing on |
 | `REQ-SAT-003` | With a longest stitch, a longer top stitch is split as `split_method` says. By default it splits into the fewest equal parts, and the stitch back into as many as the stitch across before. Simple and staggered splits fall at whole multiples of the longest stitch, from a start that `staggered` moves along |
 | `REQ-SAT-004` | Underlays come before the top stitches and leave them as they were: the centre walk, then the contour and the zigzag. Straight stitches of one length join them, no longer than the running stitch's length. After an odd centre walk the rest runs from the column's end |
-| `REQ-SAT-005` | Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces `SC-E0201` and no stitches, and a rung that misses a rail joins the rail's nearest point (`SC-W0203`) |
+| `REQ-SAT-005` | Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces `SC-E0201` and no stitches, and a rung that misses a rail joins the rail's nearest point (`SC-W0203`), the one shapely gives of points as near. A column with no section to sew produces `SC-E0216` and no stitches |
 | `REQ-SAT-006` | A parameter with a value for each side changes only its own side: a rail's stitch ends, or the column's start or end |
 | `REQ-SAT-007` | Random widths and spacing are reproducible from the element and its seed, and stay within their ranges |
 | `REQ-SAT-008` | Push compensation shortens the rails at the column's start and end before they are cut, or lengthens them where negative. A rail it would leave shorter than half a CSS pixel keeps its length (`SC-W0211`) |
@@ -414,4 +422,5 @@ Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparis
 
 `SC-E0201`, `SC-W0202`, `SC-W0203`, `SC-W0205`, `SC-W0206` (a contour underlay too short for its insets
 keeps its length), `SC-W0207`, `SC-W0208`, `SC-W0209` (a satin wider than 12 mm risks snagging: consider
-split stitches or a fill), `SC-W0210`, `SC-W0211`, `SC-W0212` and `SC-W0215` (a column too small to sew).
+split stitches or a fill), `SC-W0210`, `SC-W0211`, `SC-W0212`, `SC-W0213`, `SC-E0214`, `SC-W0215` (a column
+too small to sew) and `SC-E0216` (a column without a section to sew).

@@ -114,16 +114,17 @@ params! {
     "Random variation" {
         /// Where random variation starts: a running stitch's random lengths, a satin column's random
         /// widths and spacing, and a tatami fill's random lengths. The same seed gives the same stitches,
-        /// another seed others. Empty, each element gets its own.
+        /// another seed others, and elements alike given one seed vary alike. Empty, each element gets its
+        /// own.
         random_seed: Seed = "", label "Random seed", applies RANDOMIZED;
     }
 }
 
 impl CommonParams {
     /// The element's jump length: its `min_jump_stitch_length_mm`, or `collapse_len`, the design's, when it
-    /// sets none. A setting of 0 or less is none, as in Ink/Stitch: `stitchcraft_params` reads an optional
-    /// length that way. Assembly sews on across moves no longer than this, and a satin column chooses where
-    /// it starts by it.
+    /// sets none. A setting of 0 is none, as in Ink/Stitch, and so is one below 0: `stitchcraft_params`
+    /// reads the length so ([`Empty::AtMostZero`](stitchcraft_params::Empty::AtMostZero)). Assembly sews on
+    /// across moves no longer than this, and a satin column chooses where it starts by it.
     pub fn jump_length(&self, collapse_len: Mm) -> Mm {
         self.min_jump_stitch_length_mm.unwrap_or(collapse_len)
     }
@@ -152,8 +153,12 @@ mod tests {
         let has = |t: &StitchType| matches!(t.family(), Family::Satin) || matches!(t, StitchType::ManualStitch | StitchType::TatamiFill);
         assert_eq!(longest.applies_to, StitchType::ALL.iter().copied().filter(has).collect::<Vec<_>>());
         // 4 mm for fills, as in Ink/Stitch, and none for the others.
-        let longest_for = |family| CommonParams::from_set_for(&ParamSet::new(), family).unwrap().params.max_stitch_length_mm.map(|mm| mm.get());
-        assert_eq!([Family::Stroke, Family::Satin, Family::Fill].map(longest_for), [None, None, Some(4.0)]);
+        let longest_for =
+            |stitch_type| CommonParams::from_set_as(&ParamSet::new(), stitch_type).unwrap().params.max_stitch_length_mm.map(|mm| mm.get());
+        assert_eq!([StitchType::ManualStitch, StitchType::SatinColumn, StitchType::TatamiFill].map(longest_for), [None, None, Some(4.0)]);
+        // A running stitch reads none, whatever the element sets.
+        let set: ParamSet = [("max_stitch_length_mm", "abc")].into_iter().collect();
+        assert_eq!(CommonParams::from_set_as(&set, StitchType::RunningStitch).unwrap().params.max_stitch_length_mm, None);
     }
 
     #[test]

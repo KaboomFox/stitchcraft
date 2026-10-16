@@ -617,6 +617,47 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - `cargo xtask perf` counts the instructions of the `field` example's own `plan`, which is never inlined,
   and fails a count below half the record. Callgrind counts 0 without a word when no function has the name
   it is given, and the gate passed 0.
+- An element's settings are read as Ink/Stitch reads them (`REQ-PRM-002`, `REQ-PRM-004`).
+  - Empty text, or spaces alone, is not set, and the setting takes its default. Ink/Stitch's settings
+    window stores a field the user clears as empty text, and an element with one was refused
+    (`SC-E0101`).
+  - An element reads only the settings its stitch type uses, and those its other settings show. Before,
+    a running stitch was refused for a satin's or a zigzag's spacing, or for a length variation while
+    random stitch length was off, none of which it uses.
+  - Spaces alone separate the values of a list or a pair. A comma did too, so `3,5` sewed stitches of
+    3 mm and 5 mm, where Ink/Stitch sews its default. Text with a comma is now `SC-E0101`, with a hint to
+    use spaces and points (`DEV-PRM-001`). An angle of a list may still end with one comma.
+  - A `min_random_split_length_mm` of 0 splits every stitch, as in Ink/Stitch. It read as empty, the
+    longest stitch.
+- A `random_seed` replaces the element's id as its seed, as in Ink/Stitch (`REQ-RUN-007`). It was mixed
+  with the id, so elements given one seed varied apart, and a seed of 0 was no seed. `DEV-RUN-005`
+  records that the random lengths still differ from Ink/Stitch's.
+- A fill whose `fill` setting is off sews nothing, as in Ink/Stitch (`REQ-FILL-003`). StitchCraft did not
+  know the setting, and sewed the fill.
+- With `force_lock_stitches`, each piece of top rows that `expand_mm` cuts a part into is tied off and
+  jumped to, as Ink/Stitch's groups are (`REQ-FILL-TAT-012`). The pieces were joined.
+- `DEV-SAT-005` now records that a tatami fill's travel takes the first of a list of
+  `running_stitch_length_mm`, as a satin column's does. Ink/Stitch's fill reads the key as one number.
+- Where a running stitch's even stitches stray from a curve, the span is spread again in more of them,
+  as long as that takes no more stitches than splitting the stray ones (`REQ-RUN-001`, `DEV-RUN-002`).
+  A circle 7 mm across is sewn in 10 stitches of 2.16 mm, where it was sewn in 18 of 1.1 to 1.4 mm.
+- Manual stitch's bean stitch list takes a step for every point Ink/Stitch lists, and sews nothing for
+  one where the needle already is (`REQ-RUN-006`). Ink/Stitch lists the end of each stitch it splits
+  twice, as it lists a node drawn twice, and a node left out for the shortest stitch keeps its step. The
+  list fell on other stitches than Ink/Stitch's.
+- An SVG arc is cut into curves as inkex cuts it, in equal pieces, one more than its whole quarter turns
+  (`REQ-SVG-001`, `DEV-SVG-002`). It was cut into pieces of at most 30°, and manual stitch put a needle
+  point at each. A circle or an ellipse is drawn as inkex draws it: from its top 3 quarters round to its
+  right in one arc, and a quarter back in another. It was 4 arcs of a quarter each.
+- A satin column with no section to sew says so, `SC-E0216`, as Ink/Stitch refuses it. Its rungs or its
+  push compensation can take each section's length off one of its rails, and it sewed nothing without a
+  word.
+- A satin column drawn as one line whose rungs are all left out is one section, as in Ink/Stitch. Its
+  rails' points were paired in order.
+- A satin column drawn as one line is closed when its own subpath is. A point closed with `Z` after an
+  open line made the line closed, and its rails looped back.
+- A rung that misses a rail joins the rail where shapely's nearest points put it, of points as near. It
+  took another.
 - A design exactly the hoop's size fits it. Rounding put rows of a fill's underlay at 90° a hair past the
   edge of the reference hoop's whole field, and the hoop check and the plan checker refused it, while the
   check that the design is centred allowed the hair, as every length check does (`LENGTH_SLACK`). Both now
@@ -802,6 +843,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   stretch of its rows beside the square hole now ends as Ink/Stitch's gap fill ends one. 2 gap-fill rows
   are sewn there, 9 stitches more (7,788 to 7,797). MC-4 sews TS-09, so its kit is built from this
   version or a later one.
+- Changed `conformance/golden/plans/strokes.pes` and `.dst` (step 13 of the review's fixes). The
+  fixture's ring is drawn in inkex's 2 arcs, and the design, centred by its stitches, is 4 micrometres
+  narrower. Its fill's travel is spread evenly where it strayed, and the plan has a stitch fewer (557 to
+  556).
+- Changed `conformance/golden/testsheets/TS-03.pes`: its circles at a tolerance of 0.1 mm and 0.2 mm are
+  sewn in even stitches, 23 and 19 where they were 25 each (588 stitches, where there were 596).
+- Changed `conformance/golden/testsheets/TS-08.pes` and `TS-09.pes`: the travel between rows is spread
+  evenly where it strayed. TS-08's square at 0° and 0.4 mm has a stitch fewer, its square at 90° and
+  0.6 mm moves stitches, and TS-09's travel moves in all 3 copies.
 - Changed `conformance/golden/testsheets/TS-07.pes` and `TS-09.pes` (REG-3): a fill's points lie on the
   grid now, a hair from where they were. These sheets' rows lie at multiples of 0.25 mm, so many of their
   needle points lie halfway between 2 tenths of a millimetre, where a change in the last bits changes

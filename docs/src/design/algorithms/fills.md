@@ -12,6 +12,10 @@ both. Where the area Ink/Stitch fills departs from the drawing, StitchCraft foll
 diagnostic says where the two differ. A part Ink/Stitch leaves out without a word is left out with a
 warning.
 
+A fill whose `fill` setting is off sews nothing, and nothing is said of it, as in Ink/Stitch
+(`REQ-FILL-003`). The path's outline, if it has one, is sewn as its stroke settings say, and the element
+before it still ends near its area, as Ink/Stitch's does.
+
 ## Region
 
 A fill's region is the area an SVG renderer paints for its path, in parts with holes
@@ -170,9 +174,10 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    rings and rows (`DEV-FILL-006`). Ink/Stitch's needle takes the way round with fewer nodes of its
    graph, a node every CSS pixel along the outline's sides, which is about the shorter way but not always
    (`DEV-FILL-011`). It sews running stitches of the first `running_stitch_length_mm`, at least twice the
-   shortest stitch, within `running_stitch_tolerance_mm`. The first of them would sew the row's end
-   again, so it is left out. With `skip_last` the row's end is not sewn, and the first running stitch
-   stays unless the next row starts beside it.
+   shortest stitch, within `running_stitch_tolerance_mm`. Ink/Stitch reads a fill's value as one number,
+   and sews a value of several in its default, 2.5 mm (`DEV-SAT-005`). The first running stitch would sew
+   the row's end again, so it is left out. With `skip_last` the row's end is not sewn, and the first
+   running stitch stays unless the next row starts beside it.
 7. **The shortest stitch.** Rows the row spacing apart start and end nearer each other than the shortest
    stitch a machine sews well, and a row's first grid point can lie just past its start. A needle point
    nearer the one before it than the shortest stitch is left out, as Ink/Stitch leaves out points nearer
@@ -286,7 +291,8 @@ pieces with a sliver among them, or pieces level at their least x, as it walks i
 Every layer of the underlay is sewn on one piece before the next, each starting nearest the needle. Each
 piece's top rows start nearest the needle too, after the piece before, and end nearest the next part or
 element. Ink/Stitch starts every piece's top rows nearest where the needle was before the first
-(`DEV-FILL-008`). Where shrinking wears a part away entirely, the part itself is sewn, as in Ink/Stitch,
+(`DEV-FILL-008`). Ink/Stitch sews each piece's top rows as a group of its own. With
+`force_lock_stitches`, so does StitchCraft: assembly ties each off and jumps to the next, however near. Where shrinking wears a part away entirely, the part itself is sewn, as in Ink/Stitch,
 and `SC-W0310` (inset) or `SC-W0309` (expand) says so, as Ink/Stitch warns.
 
 ### 7. Pull compensation and gap-fill rows

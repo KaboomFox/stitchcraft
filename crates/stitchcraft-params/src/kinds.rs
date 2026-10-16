@@ -36,8 +36,10 @@ macro_rules! kinds {
 kinds! {
     /// A length in millimetres.
     Length => Mm, |v| if let Value::Length(Some(mm)) = v { Some(mm) } else { None };
-    /// A length in millimetres that may be left empty (`None`).
+    /// A length in millimetres that may be left empty (`None`), 0 or less counting as empty.
     OptionalLength => Option<Mm>, |v| if let Value::Length(mm) = v { Some(mm) } else { None };
+    /// A length in millimetres that may be left empty (`None`), 0 being a length.
+    OptionalLengthWithZero => Option<Mm>, |v| if let Value::Length(mm) = v { Some(mm) } else { None };
     /// An angle in degrees, in (−180, 180].
     Angle => f64, |v| if let Value::Angle(degrees) = v { Some(degrees) } else { None };
     /// A percentage.

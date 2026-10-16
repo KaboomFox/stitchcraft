@@ -41,11 +41,15 @@
 //!
 //! `Kind` is one of the types in [`kinds`](crate::kinds). Numbers and lists need a `range`; choices need
 //! `options`, or `choices` naming a `&[ChoiceOption]` constant that several parameters share. Other
-//! combinations do not compile. `applies` overrides the struct's stitch types for
-//! one parameter. `defaults` gives a family of stitch types its own default; `from_set_for` reads with it,
-//! and `from_set` with the plain default. `when` shows the parameter only while another has a value, or
-//! one of the values in `VALUES` (a `&[&str]`). `origin` defaults to [`Origin::InkStitch`](crate::Origin) and `stability` to
-//! [`Stability::Stable`](crate::Stability).
+//! combinations do not compile. `applies` overrides the struct's stitch types for one parameter.
+//! `defaults` gives a family of stitch types its own default. `when` shows the parameter only while
+//! another of the same declaration has a value, or one of the values in `VALUES` (a `&[&str]`). `origin`
+//! defaults to [`Origin::InkStitch`](crate::Origin) and `stability` to [`Stability::Stable`](crate::Stability).
+//!
+//! `from_set_as` reads a design's values as an element of one stitch type reads them, with its family's
+//! defaults, and only the parameters it uses: one that does not apply to the stitch type, or whose `when`
+//! does not hold, takes its default, its text unread ([`read_param`](crate::read_param)). `from_set` reads
+//! every parameter with the plain defaults, for a host that checks a whole set.
 
 /// Declares a group of parameters; see the [module documentation](crate::macros).
 #[macro_export]
@@ -110,17 +114,18 @@ macro_rules! params {
                 Self::from_set_with(set, None)
             }
 
-            /// Reads `set` for a stitch type of `family`, as `from_set` does, with the family's own
-            /// defaults where a parameter has them.
-            pub fn from_set_for(set: &$crate::ParamSet, family: $crate::Family) -> Result<$crate::Validated<Self>, Vec<$crate::Diagnostic>> {
-                Self::from_set_with(set, Some(family))
+            /// Reads `set` as an element sewn as `stitch_type` reads it: as `from_set` does, with the
+            /// defaults of the stitch type's family, and only the parameters it uses. The others take their
+            /// defaults, and nothing is said of their text.
+            pub fn from_set_as(set: &$crate::ParamSet, stitch_type: $crate::StitchType) -> Result<$crate::Validated<Self>, Vec<$crate::Diagnostic>> {
+                Self::from_set_with(set, Some(stitch_type))
             }
 
-            fn from_set_with(set: &$crate::ParamSet, family: Option<$crate::Family>) -> Result<$crate::Validated<Self>, Vec<$crate::Diagnostic>> {
+            fn from_set_with(set: &$crate::ParamSet, as_type: Option<$crate::StitchType>) -> Result<$crate::Validated<Self>, Vec<$crate::Diagnostic>> {
                 let mut problems = Vec::new();
                 let mut specs = Self::SPECS.iter();
                 $($(
-                    let $field = $crate::read_param::<$crate::kinds::$kind>(set, specs.next(), family, &mut problems);
+                    let $field = $crate::read_param::<$crate::kinds::$kind>(set, specs.next(), as_type, Self::SPECS, &mut problems);
                 )+)+
                 match ($($($field,)+)+) {
                     ($($(Some($field),)+)+) => Ok($crate::Validated { params: Self { $($($field,)+)+ }, warnings: problems }),
@@ -137,10 +142,13 @@ macro_rules! params {
 #[macro_export]
 macro_rules! __param_kind {
     (Length; $min:expr, $max:expr; ;) => {
-        $crate::Kind::Length { min: $min, max: $max, optional: false }
+        $crate::Kind::Length { min: $min, max: $max, empty: $crate::Empty::Never }
     };
     (OptionalLength; $min:expr, $max:expr; ;) => {
-        $crate::Kind::Length { min: $min, max: $max, optional: true }
+        $crate::Kind::Length { min: $min, max: $max, empty: $crate::Empty::AtMostZero }
+    };
+    (OptionalLengthWithZero; $min:expr, $max:expr; ;) => {
+        $crate::Kind::Length { min: $min, max: $max, empty: $crate::Empty::Blank }
     };
     (Angle; ; ;) => {
         $crate::Kind::Angle

@@ -55,7 +55,7 @@ fn layered(region: &Region, top: &Layer, underlay: &[Layer], needle: Option<Poin
 
 /// A fill of `top` rows after `underlay`, neither grown nor shrunk.
 fn fill_of(top: Layer, underlay: &[Layer]) -> Fill {
-    Fill { top, expand: 0.0, underlay: underlay.to_vec(), inset: 0.0 }
+    Fill { top, expand: 0.0, underlay: underlay.to_vec(), inset: 0.0, force_locks: false }
 }
 
 /// The runs of `fill` over `region`, which says nothing about it.
@@ -616,6 +616,38 @@ fn req_fill_tat_012_the_top_rows_cover_the_part_grown_or_shrunk_by_expand() {
         let (lo, hi) = reach(expand);
         assert!((lo - left).abs() < 1e-9 && (hi - right).abs() < 1e-9, "expand {expand}: {lo} to {hi}");
     }
+}
+
+#[test]
+fn req_fill_tat_012_forced_locks_part_the_pieces_expand_cuts_a_part_into() {
+    // A dumbbell whose neck, 0.6 mm wide, a negative expand takes away: its top rows are 2 pieces, close
+    // together. Ink/Stitch sews each piece as a group of its own, and with forced locks ties each off and
+    // jumps to the next. Without them, the needle sews straight on.
+    let dumbbell: &[(f64, f64)] = &[
+        (0.0, 0.0),
+        (10.0, 0.0),
+        (10.0, 4.7),
+        (10.5, 4.7),
+        (10.5, 0.0),
+        (20.5, 0.0),
+        (20.5, 10.0),
+        (10.5, 10.0),
+        (10.5, 5.3),
+        (10.0, 5.3),
+        (10.0, 10.0),
+        (0.0, 10.0),
+    ];
+    // The jumps, each where it lands, measured along x from the fill's leftmost needle point.
+    let jumps = |force: &str| {
+        let params = [("expand_mm", "-0.5"), ("angle", "90"), ("force_lock_stitches", force)];
+        let plan = planned(vec![fill("f", &[dumbbell], &RED, &params)]).plan.unwrap();
+        let left = plan.stitches().map(|s| s.at.x()).fold(f64::INFINITY, f64::min);
+        plan.stitches().filter(|s| s.kind == StitchKind::Jump).map(|s| s.at.x() - left).collect::<Vec<_>>()
+    };
+    assert_eq!((jumps("false").len(), jumps("true").len()), (1, 2));
+    // The second lands in the right piece, past the neck's middle: the underlay and the first piece's top
+    // rows are still one group, as Ink/Stitch's stitch plan never forces locks after a layer of underlay.
+    assert!(jumps("true")[1] > 10.25, "{:?}", jumps("true"));
 }
 
 #[test]

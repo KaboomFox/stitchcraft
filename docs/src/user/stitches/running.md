@@ -47,8 +47,8 @@ the stitches follow the curve.
 <!-- /shot -->
 
 At 2 mm the curve is sewn in 3 straight stitches, and the half disc comes out as a trapezoid. At 0.1 mm
-StitchCraft shortens the stitches until each keeps within 0.1 mm of the curve, and the curve comes out
-round.
+StitchCraft sews the curve in more stitches, still all of one length, until each keeps within 0.1 mm of
+it, and the curve comes out round.
 
 ## Bean stitch and repeats
 
@@ -76,7 +76,8 @@ stripes. `enable_random_stitch_length` varies each stitch's length by up to
 <!-- /shot -->
 
 The stitching still ends on each corner. `random_seed` sets where the random lengths start. The same
-element and seed give the same stitches every time, on every computer.
+element and seed give the same stitches every time, on every computer, and elements alike given the same
+seed vary alike. Left empty, each element varies its own way.
 
 ## Manual stitch
 

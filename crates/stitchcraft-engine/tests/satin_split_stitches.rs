@@ -9,6 +9,7 @@
 #![allow(clippy::unwrap_used, clippy::panic)]
 
 use stitchcraft_core::Point;
+use stitchcraft_engine::generators::satin::SatinParams;
 use stitchcraft_testkit::satins::{NO_SHORT_STITCHES, ladder, quarter_ring, sewn_satin};
 
 /// The needle points of a column 10 mm long and 7 mm wide, sewn with `params` and no short stitches.
@@ -110,18 +111,34 @@ fn req_sat_003_a_random_phase_starts_the_splits_at_random_and_spaces_them_by_the
     assert!(starts.windows(2).any(|w| (w[0] - w[1]).abs() > 0.1), "the phase varies: {starts:?}");
 }
 
+/// The needle points of a column 10 mm long and 2 mm wide, its stitches shorter than its 3 mm longest
+/// stitch, split with a random phase, sewn with `params` and no short stitches, and what was said.
+fn narrow(params: &[(&str, &str)]) -> (Vec<Point>, Vec<String>) {
+    let mut params = params.to_vec();
+    params.extend([("max_stitch_length_mm", "3"), ("random_split_phase", "true"), NO_SHORT_STITCHES]);
+    sewn_satin(&ladder(10.0, 2.0, &[]), &params)
+}
+
 #[test]
 fn req_sat_003_a_random_phase_splits_only_stitches_longer_than_the_shortest_to_split() {
-    // A column 2 mm wide: its stitches are shorter than the 3 mm longest stitch, and not split, unless the
-    // shortest stitch to split is under 2 mm.
-    let narrow = |params: &[(&str, &str)]| {
-        let mut params = params.to_vec();
-        params.extend([("max_stitch_length_mm", "3"), ("random_split_phase", "true"), NO_SHORT_STITCHES]);
-        sewn_satin(&ladder(10.0, 2.0, &[]), &params).0
-    };
-    assert_eq!(narrow(&[]), sewn_satin(&ladder(10.0, 2.0, &[]), &[NO_SHORT_STITCHES]).0);
-    let split = narrow(&[("min_random_split_length_mm", "1.5")]);
+    // The stitches are not split, unless the shortest stitch to split is under 2 mm.
+    assert_eq!(narrow(&[]).0, sewn_satin(&ladder(10.0, 2.0, &[]), &[NO_SHORT_STITCHES]).0);
+    let split = narrow(&[("min_random_split_length_mm", "1.5")]).0;
     assert!(split.iter().any(|p| p.y() > 1e-9 && p.y() < 2.0 - 1e-9), "some split");
+}
+
+#[test]
+fn req_sat_003_a_shortest_stitch_to_split_of_0_splits_every_stitch() {
+    // Ink/Stitch reads 0 as a length, and splits every stitch longer than it: as 0.1 mm does here. Empty, it
+    // is the longest stitch. Below 0, it is raised to 0 and said.
+    let (zero, tenth) = (narrow(&[("min_random_split_length_mm", "0")]), narrow(&[("min_random_split_length_mm", "0.1")]));
+    assert_eq!((&zero.1, &tenth.1), (&Vec::new(), &Vec::new()));
+    assert_eq!(zero.0, tenth.0);
+    assert_ne!(zero.0, narrow(&[]).0);
+    assert_eq!(narrow(&[("min_random_split_length_mm", "-1")]).0, zero.0);
+    let read = SatinParams::from_set(&[("min_random_split_length_mm", "-1")].into_iter().collect()).unwrap();
+    let said: Vec<String> = read.warnings.iter().map(ToString::to_string).collect();
+    assert_eq!(said, ["warning SC-W0102: `min_random_split_length_mm` is -1, outside 0 to 25 mm; 0 mm is used."]);
 }
 
 /// The splits a staggered stitch has, from its start: whole multiples of `every` from `offset`, measured

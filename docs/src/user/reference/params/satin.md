@@ -193,9 +193,9 @@ fall apart, at the cost of a few more stitches.
 ### `min_random_split_length_mm`
 
 **Shortest split stitch.** With a random split phase, also split stitches longer than this but no longer than the longest
-stitch. Empty: the longest stitch.
+stitch. 0 splits every stitch. Empty: the longest stitch.
 
-- **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
+- **Accepts:** a length from 0 to 25 mm, or empty
 - **Default:** empty
 - **Shown when** [`split_method`](#split_method) is `default`
 - **Ink/Stitch:** same key, meaning and default

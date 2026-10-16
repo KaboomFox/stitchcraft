@@ -10,6 +10,13 @@
 # requirements = ["REQ-FILL-TAT-006"]
 
 [[deviation]]
+id = "DEV-PRM-001"
+area = "params"
+summary = "A value StitchCraft cannot read refuses its element (SC-E0101), and the rest of the design is sewn. Ink/Stitch sews such a value as the parameter's default, or a toggle as off, without a word: it sews 3,5 for running_stitch_length_mm as 2.5 mm stitches. StitchCraft reads a tab, or several spaces, between a list's values as one space, where Ink/Stitch sews a list with a tab between values as its default, and a fill's underlay angles with 2 spaces between them too."
+reason = "Guessing could sew what the designer did not ask for, and a value that changes nothing in silence is lost work (REQ-PRM-002). A tab or a second space separates values as plainly as one space does. Ink/Stitch's readers were read at d59c9ab (lib/elements/element.py, lib/elements/fill_stitch.py)."
+requirements = ["REQ-PRM-002"]
+
+[[deviation]]
 id = "DEV-LCK-001"
 area = "plan/locks"
 summary = "Each Ink/Stitch lock id is accepted, with StitchCraft's own shapes behind the ids and the same intent. The half stitch goes forth and back twice over half the first stitch, and back_forth twice over one step, where Ink/Stitch's go out two steps and back. The drawn shapes are new. A custom lock drawn as an SVG path sews the half stitch, with SC-W0503, until M8."
@@ -33,8 +40,8 @@ requirements = ["REQ-RUN-003", "REQ-SAT-010", "REQ-SAT-011"]
 [[deviation]]
 id = "DEV-RUN-002"
 area = "strokes/running"
-summary = "Stitches are spread evenly along the path between corners, then split where they stray beyond the tolerance. Ink/Stitch makes each stitch as long as the tolerance allows, measured straight, and divides what is left evenly again after each one."
-reason = "Equal stitches between corners with no short leftover, and the tolerance met exactly where the path needs it."
+summary = "Stitches are spread evenly along the path between corners. Where they stray beyond the tolerance, the span is spread evenly in more of them when that takes no more stitches than splitting the stray ones, and otherwise the stray ones are split. Ink/Stitch makes each stitch as long as the tolerance allows, measured straight, and divides what is left evenly again after each one."
+reason = "Equal stitches between corners with no short leftover, and the tolerance met exactly where the path needs it: a small circle is sewn in even stitches as long as the tolerance allows, as Ink/Stitch sews it."
 requirements = ["REQ-RUN-001", "REQ-RUN-002", "REQ-SAT-010", "REQ-SAT-011"]
 
 [[deviation]]
@@ -52,6 +59,13 @@ reason = "No stitches the design does not draw, and nothing left out without a w
 requirements = ["REQ-RUN-001"]
 
 [[deviation]]
+id = "DEV-RUN-005"
+area = "strokes/running"
+summary = "A running stitch's random lengths are drawn from StitchCraft's generator (SplitMix64, seeded from random_seed, or from the element's id when it has none), so the values differ from Ink/Stitch's for the same seed."
+reason = "Every random value in StitchCraft comes from one fully specified generator, the same on every platform and never changed by a dependency (docs/src/design/determinism.md), as for satin columns (DEV-SAT-002) and fills (DEV-FILL-004)."
+requirements = ["REQ-RUN-007"]
+
+[[deviation]]
 id = "DEV-FIN-001"
 area = "plan/finalize"
 summary = "StitchCraft fits every stitch to the machine: it leaves out needle points less than their element's shortest stitch from the one before, never less than the machine's (0.3 mm on the Brother), keeping the ends of each run of stitches and its lock points unless a stitch to one would fall short, and splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else 0.1 mm, and splits nothing. Along an edge square to them, a tatami fill's rows nearer each other than the shortest stitch hand over in a stitch too short, so the next row's first needle point is left out and a sliver at its start shows: a bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay."
@@ -61,14 +75,14 @@ requirements = ["REQ-FIN-001", "REQ-FILL-TAT-004"]
 [[deviation]]
 id = "DEV-SAT-001"
 area = "satin"
-summary = "A rung that crosses a rail more than once, or runs along a rail for a while, is left out (SC-W0207). Ink/Stitch leaves a rung out only when it meets the two rails at more than 2 points in all, and uses one that crosses one rail twice and misses the other, or runs along a rail, at one of its crossings. A subpath that does not move is left out as a point before rails are told from rungs (SC-W0205), where Ink/Stitch counts a line of zero length among the subpaths."
-reason = "Which of its crossings such a rung means is not clear, so StitchCraft does not guess, and the warning names the rung. A line of zero length is neither a rail nor a rung. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_column.py)."
+summary = "A rung that crosses a rail more than once, or runs along a rail for a while, is left out (SC-W0207). Ink/Stitch leaves a rung out only when it meets the two rails at more than 2 points in all, and uses one that crosses one rail twice and misses the other, or runs along a rail, at one of its crossings. A subpath that does not move is left out as a point before rails are told from rungs (SC-W0205), where Ink/Stitch counts a line of zero length among the subpaths. A column drawn as one line is closed when that line is closed with Z, where Ink/Stitch takes the path's last command, so a move-to drawn after a closed line leaves it open there."
+reason = "Which of its crossings such a rung means is not clear, so StitchCraft does not guess, and the warning names the rung. A line of zero length is neither a rail nor a rung, and a move-to alone draws nothing. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_column.py, lib/elements/element.py)."
 requirements = ["REQ-SAT-005"]
 
 [[deviation]]
 id = "DEV-SAT-002"
 area = "satin"
-summary = "Random satin widths, spacing and splits are drawn from StitchCraft's generator (SplitMix64, seeded from the element's id and random_seed), so the values differ from Ink/Stitch's for the same seed. The ranges are Ink/Stitch's, and so is when a width or a spacing is drawn. Ink/Stitch draws each stitch's splits from a generator of the stitch's own, where StitchCraft draws them from the element's, in the order the stitches are sewn."
+summary = "Random satin widths, spacing and splits are drawn from StitchCraft's generator (SplitMix64, seeded from random_seed, or from the element's id when it has none), so the values differ from Ink/Stitch's for the same seed. The ranges are Ink/Stitch's, and so is when a width or a spacing is drawn. Ink/Stitch draws each stitch's splits from a generator of the stitch's own, where StitchCraft draws them from the element's, in the order the stitches are sewn."
 reason = "Every random value in StitchCraft comes from one fully specified generator, the same on every platform and never changed by a dependency (docs/src/design/determinism.md). Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_processor.py)."
 requirements = ["REQ-SAT-007"]
 
@@ -89,9 +103,9 @@ requirements = ["REQ-SAT-010"]
 [[deviation]]
 id = "DEV-SAT-005"
 area = "satin"
-summary = "A satin column's travel takes the first of the lengths running_stitch_length_mm gives. Ink/Stitch reads a satin's value as one number, and sews a value of several with 2.5 mm, the default."
-reason = "The key is declared once, as the running stitch's list of lengths, and a stroke turned into a satin column keeps its value. Its first length is the one the stroke started with. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_column.py)."
-requirements = ["REQ-SAT-004"]
+summary = "A satin column's travel, and a tatami fill's, take the first of the lengths running_stitch_length_mm gives. Ink/Stitch reads a satin's or a fill's value as one number, and sews a value of several with 2.5 mm, the default."
+reason = "The key is declared once, as the running stitch's list of lengths, and a stroke turned into a satin column keeps its value, as does a path with a fill and a stroke. Its first length is the one the stroke started with. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/satin_column.py, lib/elements/fill_stitch.py)."
+requirements = ["REQ-SAT-004", "REQ-FILL-TAT-005"]
 
 [[deviation]]
 id = "DEV-SAT-006"
@@ -138,7 +152,7 @@ requirements = ["REQ-FILL-TAT-002"]
 [[deviation]]
 id = "DEV-FILL-004"
 area = "fill/tatami"
-summary = "A tatami fill's random stitch lengths are drawn from StitchCraft's generator (SplitMix64, seeded from the element's id and random_seed), in the order its row segments are sewn, so the values differ from Ink/Stitch's for the same seed. The ranges are Ink/Stitch's: the first point a share of the longest stitch from the segment's start, and each next one a stitch on, longer or shorter by up to the jitter."
+summary = "A tatami fill's random stitch lengths are drawn from StitchCraft's generator (SplitMix64, seeded from random_seed, or from the element's id when it has none), in the order its row segments are sewn, so the values differ from Ink/Stitch's for the same seed. The ranges are Ink/Stitch's: the first point a share of the longest stitch from the segment's start, and each next one a stitch on, longer or shorter by up to the jitter."
 reason = "Ink/Stitch draws from a generator of each segment's own, keyed by the segment's place in the sewing order (lib/stitches/tatami_fill.py, lib/stitches/running_stitch.py at d59c9ab). StitchCraft's generator is its own, for every platform alike (docs/src/design/determinism.md), as for satin columns (DEV-SAT-002)."
 requirements = ["REQ-FILL-TAT-003"]
 
@@ -204,3 +218,10 @@ area = "formats/pes"
 summary = "PES files name each thread by a Brother entry chosen by CIEDE2000, the nearest pairs first, so a thread gets its nearest entry unless a thread nearer to it took it. pystitch, which writes Ink/Stitch's PES files, measures with an integer redmean distance, gives a tie to the later entry, and gives threads their entries in the order of a Python set. Each palette colour alone is written as itself by both. Other colours often get other entries: pure red is Vermilion here and Red there, pure blue Purple here and Ultramarine there. And where 2 threads have one nearest entry, pystitch may give it to the farther."
 reason = "CIEDE2000 picks the colour people see as nearest (REQ-THREAD-001, data-model.md). The nearest pairs first keep a palette colour on its own entry, in whatever order the threads come (REQ-THREAD-002)."
 requirements = ["REQ-THREAD-001", "REQ-THREAD-002"]
+
+[[deviation]]
+id = "DEV-SVG-002"
+area = "svg"
+summary = "An arc that turns by a whole number of quarter turns is cut into one piece more than those quarters, and so is one that turns by a nanoradian less. inkex works its count out in floating point, from angles found with arc cosines, so where its rounding falls short it cuts such an arc into one piece fewer, of a whole quarter turn each."
+reason = "The count is the arc's own, the same on every platform, and 2 pieces for a rounded corner is what inkex gives when its rounding does not fall short (inkex 1.4.1, inkex/paths/arc.py, arc_to_path). Manual stitch puts a needle point on each piece's end."
+requirements = ["REQ-SVG-001"]

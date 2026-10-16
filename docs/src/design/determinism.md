@@ -37,8 +37,10 @@ a factor is. It uses only `+`, `−` and `×`, and every platform gets the same 
 
 `SplitMix64` (Steele, Lea & Flood, 2014) is tiny, fast, statistically adequate for jitter, and fully
 specified by its 64-bit state update — so its output can be written into a conformance case and will
-never change with a dependency upgrade. Element seeds are derived by FNV-1a hashing of the element id
-and mixing in `random_seed`; the derivation is documented and tested with fixed vectors.
+never change with a dependency upgrade. An element's generator starts from its `random_seed`, mixed once
+by SplitMix64 itself, or, when it has none, from the FNV-1a hash of its id. A seed replaces the id, as in
+Ink/Stitch, so elements given one seed draw the same numbers. The derivation is documented and tested with
+fixed vectors.
 
 ## Cross-platform check
 

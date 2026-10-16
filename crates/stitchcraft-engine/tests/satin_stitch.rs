@@ -236,6 +236,40 @@ fn diag_sc_w0215_the_shortest_stitch_is_named() {
     assert_eq!(said.fix, Some(Fix::Hint("Draw the column larger, or delete it if it is a stray.".to_string())));
 }
 
+/// The needle points `path`, a satin column, sews with `params`, and what it said.
+fn sewn_alone(path: &stitchcraft_engine::design::Path, params: &[(&str, &str)]) -> (Vec<Point>, Vec<String>) {
+    let mut meter = Budget::DEFAULT.meter();
+    let Ok(Shape::Rails(satin)) = recognize(path, &mut meter).unwrap().shape else { panic!("not rails") };
+    let set: ParamSet = params.iter().copied().collect();
+    let (params, pull) = (SatinParams::from_set(&set).unwrap().params, PullParams::from_set(&set).unwrap().params);
+    let rng = &mut SplitMix64::new(0);
+    let stitched = satin_stitch(&satin, &params, &pull, satin_lengths(&set), &Neighbours::default(), rng, &mut meter).unwrap();
+    (stitched.runs.concat(), stitched.warnings.iter().map(ToString::to_string).collect())
+}
+
+#[test]
+fn diag_sc_e0216_a_column_with_no_section_to_sew_is_not_sewn() {
+    let message = "error SC-E0216: Every section of this satin column has no length on one of its rails, so it has nothing to sew.";
+    // The rung joins the first rail's start to the second rail's end: each rail is cut at an end, and each
+    // section has no length on one rail (shapely projects the crossings to exactly 0 and 10). Ink/Stitch
+    // says the column cannot be stitched.
+    let diagonal = polylines(&[&[(0.0, 0.0), (10.0, 0.0)], &[(0.0, 4.0), (10.0, 4.0)], &[(-5.0, -2.0), (15.0, 6.0)]]);
+    assert_eq!(sewn_alone(&diagonal, &[]), (Vec::new(), vec![message.to_string()]));
+    // Push compensation can leave a column so: rails 3 mm long, pushed in 1 mm at each end, and a slanted rung
+    // that meets them inside the parts taken off.
+    let short = polylines(&[&[(0.0, 0.0), (3.0, 0.0)], &[(0.0, 4.0), (3.0, 4.0)], &[(0.25, -0.5), (2.75, 4.5)]]);
+    assert!(!sewn_alone(&short, &[]).0.is_empty());
+    assert_eq!(sewn_alone(&short, &[("push_compensation_mm", "1")]), (Vec::new(), vec![message.to_string()]));
+    // In a plan, the column is named, and the rest is sewn.
+    let outcome = sewn(vec![
+        along("diagonal", diagonal, &RED, &[("satin_column", "true")]),
+        along("ok", polylines(&[&[(0.0, 10.0), (10.0, 10.0)]]), &RED, &[]),
+    ]);
+    assert_eq!(messages(&outcome), [message]);
+    assert_eq!(outcome.diagnostics[0].element.as_ref().map(|e| e.as_str()), Some("diagonal"));
+    assert_eq!(shape_of(&outcome), "J L4 S5 L4");
+}
+
 #[test]
 fn req_sat_002_a_satin_column_is_planned_with_locks_at_both_ends() {
     let column = along("satin", ladder(4.0, 2.0, &[1.0, 2.0, 3.0]), &RED, &[("satin_column", "true")]);

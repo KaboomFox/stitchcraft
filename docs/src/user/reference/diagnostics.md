@@ -27,6 +27,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0213`](#sc-w0213) | Warning | Parts of a satin column drawn as one path left out |
 | [`SC-E0214`](#sc-e0214) | Error | Satin column drawn as one path could not be made into rails |
 | [`SC-W0215`](#sc-w0215) | Warning | Satin column too small for the shortest stitch; left out |
+| [`SC-E0216`](#sc-e0216) | Error | Satin column has no section to sew |
 | [`SC-W0303`](#sc-w0303) | Warning | Parts of a fill too small to sew left out |
 | [`SC-W0304`](#sc-w0304) | Warning | Fill smaller than 1.4 mm² |
 | [`SC-W0305`](#sc-w0305) | Warning | Fill part too thin for rows; sewn round its outline |
@@ -288,6 +289,17 @@ shorter than the machine sews well, would hammer one spot of the fabric and coul
 so it is left out, as a stroke that small is (`SC-W0401`). Ink/Stitch sews such a column.
 
 The message gives the shortest stitch. Draw the column larger, or delete it if it is a stray.
+
+## SC-E0216
+
+**Error** — Satin column has no section to sew
+
+A satin column's rungs, or its push compensation, leave each of its sections with no length on one of
+its rails, so no stitch goes across it and the column is not sewn. A rung from the first rail's
+start to the second rail's end does this, and so does push compensation that takes off the parts of
+a short column's rails where its rungs meet them. Ink/Stitch says such a column cannot be stitched.
+
+Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.
 
 ## SC-W0303
 

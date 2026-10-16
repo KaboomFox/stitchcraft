@@ -1,12 +1,13 @@
 //! The `params!` declaration end to end, with one parameter of every kind: what the registry records,
 //! and how designs' values are read (REQ-PRM-002: invalid values are errors that say what is accepted,
-//! out-of-range values are clamped with a warning, and nothing falls back to a default in silence).
+//! out-of-range values are clamped with a warning, and nothing falls back to a default in silence; an
+//! empty value is not set), and read for one stitch type (REQ-PRM-004: only the settings it uses).
 
 // Test code may unwrap (clippy.toml allows it inside #[test] functions; these helpers are test code too).
 #![allow(clippy::unwrap_used)]
 
-use stitchcraft_core::{Code, Severity};
-use stitchcraft_params::{Condition, Family, Kind, Origin, ParamSet, StitchType, find, params, unknown_keys};
+use stitchcraft_core::{Code, Diagnostic, Fix, Severity};
+use stitchcraft_params::{Condition, Empty, Family, Kind, Origin, ParamSet, StitchType, Validated, find, params, unknown_keys};
 
 params! {
     /// One parameter of every kind.
@@ -36,6 +37,9 @@ params! {
         /// On or off.
         a_toggle: Toggle = "false", label "Toggle";
 
+        /// A length shown while the toggle is on.
+        a_toggled_mm: Length = "1", label "Toggled length", range (0.1, 10.0), when a_toggle == "true";
+
         /// A choice.
         a_choice: Choice = "one", label "Choice", options ["one" => "One", "two" => "Two"];
 
@@ -58,6 +62,15 @@ params! {
 
 fn set(pairs: &[(&str, &str)]) -> ParamSet {
     pairs.iter().copied().collect()
+}
+
+/// The codes of what reading said: its warnings, or its errors.
+fn codes<T>(read: &Result<Validated<T>, Vec<Diagnostic>>) -> Vec<Code> {
+    let said = match read {
+        Ok(read) => &read.warnings,
+        Err(problems) => problems,
+    };
+    said.iter().map(|d| d.code).collect()
 }
 
 #[test]
@@ -89,15 +102,15 @@ fn a_family_reads_its_own_default_and_the_others_the_plain_one() {
     let spec = find(&[&Everything::GROUP], "a_fill_length_mm").unwrap();
     assert_eq!((spec.default, spec.family_defaults), ("", &[(Family::Fill, "4.0")][..]));
     assert_eq!(Family::ALL.iter().map(|family| spec.default_for(*family)).collect::<Vec<_>>(), ["", "", "4.0"]);
-    let fill = Everything::from_set_for(&ParamSet::new(), Family::Fill).unwrap().params;
+    let fill = Everything::from_set_as(&ParamSet::new(), StitchType::TatamiFill).unwrap().params;
     assert_eq!(fill.a_fill_length_mm.map(|mm| mm.get()), Some(4.0));
-    assert_eq!(Everything::from_set_for(&ParamSet::new(), Family::Satin).unwrap().params.a_fill_length_mm, None);
+    assert_eq!(Everything::from_set_as(&ParamSet::new(), StitchType::SatinColumn).unwrap().params.a_fill_length_mm, None);
     assert_eq!(Everything::from_set(&ParamSet::new()).unwrap().params.a_fill_length_mm, None);
     // A family with a default of its own needs a value, as Ink/Stitch's fills need a longest stitch: left
     // empty, the length is the family's default, and 0 or less is raised to the least it accepts. The
     // other families read both as no value.
     let fill = |value: &str| {
-        let read = Everything::from_set_for(&set(&[("a_fill_length_mm", value)]), Family::Fill).unwrap();
+        let read = Everything::from_set_as(&set(&[("a_fill_length_mm", value)]), StitchType::TatamiFill).unwrap();
         (read.params.a_fill_length_mm.map(|mm| mm.get()), read.warnings.iter().map(|d| format!("{}: {}", d.code, d.message)).collect::<Vec<_>>())
     };
     assert_eq!(fill(" "), (Some(4.0), vec![]));
@@ -105,10 +118,78 @@ fn a_family_reads_its_own_default_and_the_others_the_plain_one() {
     assert_eq!(fill("0"), (Some(0.1), vec!["SC-W0102: `a_fill_length_mm` is 0, outside 0.1 to 25 mm; 0.1 mm is used.".to_string()]));
     assert_eq!(fill("-2").0, Some(0.1));
     for value in ["", "0", "-2"] {
-        let read = |family| Everything::from_set_for(&set(&[("a_fill_length_mm", value)]), family).unwrap();
-        assert!([Family::Stroke, Family::Satin].map(read).iter().all(|read| read.params.a_fill_length_mm.is_none() && read.warnings.is_empty()));
+        let read = |stitch_type| Everything::from_set_as(&set(&[("a_fill_length_mm", value)]), stitch_type).unwrap();
+        let others = [StitchType::RunningStitch, StitchType::SatinColumn].map(read);
+        assert!(others.iter().all(|read| read.params.a_fill_length_mm.is_none() && read.warnings.is_empty()));
         assert_eq!(Everything::from_set(&set(&[("a_fill_length_mm", value)])).unwrap().params.a_fill_length_mm, None);
     }
+}
+
+#[test]
+fn req_prm_002_an_empty_or_blank_value_is_not_set_whatever_the_kind() {
+    // Ink/Stitch strips every value and reads an empty one as not set, and its settings window stores a
+    // field the user clears as an empty value.
+    let plain = Everything::from_set(&ParamSet::new());
+    for spec in Everything::SPECS {
+        for blank in ["", " ", "\t \n"] {
+            assert_eq!(Everything::from_set(&set(&[(spec.key, blank)])), plain, "{} = {blank:?}", spec.key);
+        }
+    }
+}
+
+#[test]
+fn req_prm_002_a_comma_neither_separates_values_nor_marks_decimals() {
+    // Ink/Stitch splits a list at its spaces, and reads a number with a comma in it as no number.
+    let message = "error SC-E0101: `some_lengths_mm` is \"3,5\", but it must be 1 to 16 lengths from 0.3 to 12 mm, separated by spaces.";
+    let problems = Everything::from_set(&set(&[("some_lengths_mm", "3,5")])).unwrap_err();
+    assert_eq!(problems.iter().map(ToString::to_string).collect::<Vec<_>>(), [message]);
+    let hint = Some(Fix::Hint("Separate values with spaces, and write decimals with a point.".to_string()));
+    assert_eq!(problems[0].fix, hint);
+    for (key, text) in [("some_counts", "1,0"), ("some_angles", "45,90"), ("a_length_mm", "2,5"), ("an_angle", "1,5")] {
+        let problems = Everything::from_set(&set(&[(key, text)])).unwrap_err();
+        assert_eq!(problems.iter().map(|d| (d.code, d.fix.clone())).collect::<Vec<_>>(), [(Code::ParamInvalid, hint.clone())], "{key}");
+    }
+    // A value that does not read for another reason has no such hint, nor has a comma where values are not
+    // numbers.
+    assert_eq!(Everything::from_set(&set(&[("some_counts", "1 x")])).unwrap_err()[0].fix, None);
+    assert_eq!(Everything::from_set(&set(&[("a_choice", "one,two")])).unwrap_err()[0].fix, None);
+    // Ink/Stitch drops a comma at the end of each of a fill's underlay angles, which older files wrote.
+    assert_eq!(Everything::from_set(&set(&[("some_angles", "45, 90,")])).unwrap().params.some_angles, Some(vec![45.0, 90.0]));
+}
+
+#[test]
+fn req_prm_004_a_stitch_type_reads_only_the_settings_it_uses() {
+    // `some_lengths_mm` applies to running stitch alone. Another stitch type takes its default and keeps
+    // its text unread: text it could not read refuses nothing, and a value out of range is not clamped.
+    for text in ["abc", "99"] {
+        let design = set(&[("some_lengths_mm", text)]);
+        let fill = Everything::from_set_as(&design, StitchType::TatamiFill).unwrap();
+        assert_eq!((fill.params.some_lengths_mm.iter().map(|mm| mm.get()).collect::<Vec<_>>(), fill.warnings), (vec![2.5], vec![]), "{text}");
+        assert_eq!(design.get("some_lengths_mm"), Some(text));
+    }
+    assert_eq!(codes(&Everything::from_set_as(&set(&[("some_lengths_mm", "abc")]), StitchType::RunningStitch)), [Code::ParamInvalid]);
+    // A setting shown only while another has a value is read only then: `a_toggled_mm` while `a_toggle` is
+    // on, however the toggle is written.
+    let toggled = |toggle: Option<&str>| {
+        let mut pairs = vec![("a_toggled_mm", "abc")];
+        pairs.extend(toggle.map(|toggle| ("a_toggle", toggle)));
+        Everything::from_set_as(&set(&pairs), StitchType::RunningStitch)
+    };
+    for off in [None, Some("false"), Some("0"), Some(" ")] {
+        assert_eq!(toggled(off).map(|read| read.params.a_toggled_mm.get()), Ok(1.0), "{off:?}");
+    }
+    for on in ["true", "True", "1", "yes"] {
+        assert_eq!(codes(&toggled(Some(on))), [Code::ParamInvalid], "{on}");
+    }
+    // While the other setting does not read, the setting is read too, and both are said.
+    assert_eq!(codes(&toggled(Some("maybe"))), [Code::ParamInvalid, Code::ParamInvalid]);
+    // `a_detail` is shown for the second choice, and the first is the default.
+    let detail = |pairs: &[(&str, &str)]| Everything::from_set_as(&set(pairs), StitchType::RunningStitch).unwrap().params.a_detail;
+    assert_eq!(detail(&[("a_detail", "kept")]), "");
+    assert_eq!(detail(&[("a_choice", "two"), ("a_detail", "kept")]), "kept");
+    // `from_set` reads every setting, for a host that checks them all.
+    assert_eq!(codes(&Everything::from_set(&set(&[("some_lengths_mm", "abc")]))), [Code::ParamInvalid]);
+    assert_eq!(codes(&Everything::from_set(&set(&[("a_toggled_mm", "abc")]))), [Code::ParamInvalid]);
 }
 
 #[test]
@@ -180,11 +261,11 @@ fn declarations_record_what_the_registry_needs() {
     assert_eq!(g.name, "Everything");
     assert_eq!(g.help(), "One parameter of every kind.");
     assert_eq!(g.applies_to, StitchType::ALL);
-    assert_eq!(g.specs.len(), 13);
+    assert_eq!(g.specs.len(), 14);
     let length = find(&[&g], "a_length_mm").unwrap();
     assert_eq!((length.label, length.help().as_str(), length.group, length.default), ("Length", "A length.", "Numbers", "2.5"));
     assert!(length.family_defaults.is_empty(), "the same default for every family unless it says");
-    assert_eq!(length.kind, Kind::Length { min: 0.1, max: 10.0, optional: false });
+    assert_eq!(length.kind, Kind::Length { min: 0.1, max: 10.0, empty: Empty::Never });
     assert_eq!(length.applies_to, StitchType::ALL);
     assert_eq!(length.origin, Origin::InkStitch);
     let lengths = find(&[&g], "some_lengths_mm").unwrap();
