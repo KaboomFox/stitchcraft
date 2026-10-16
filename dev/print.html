@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c288a9c1.js";
+            window.path_to_searchindex_js = "searchindex-2790d520.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -3754,8 +3754,8 @@ another.</p>
 <tr><td><code>SC-W0205</code></td><td>Warning</td><td>Satin subpath is one point; left out</td><td>M4</td></tr>
 <tr><td><code>SC-W0206</code></td><td>Warning</td><td>Satin contour underlay too short for its insets; it keeps its length</td><td>M4</td></tr>
 <tr><td><code>SC-W0207</code></td><td>Warning</td><td>Satin rung crosses a rail more than once; left out</td><td>M4</td></tr>
-<tr><td><code>SC-W0208</code></td><td>Warning</td><td>Satin stitches skew more than 45° from the column; add a rung here</td><td>M4</td></tr>
-<tr><td><code>SC-W0209</code></td><td>Warning</td><td>Satin wider than 12 mm; long stitches may snag</td><td>M4</td></tr>
+<tr><td><code>SC-W0208</code></td><td>Warning</td><td>Satin stitches skew more than 45° from the column; add a rung here</td><td>M7</td></tr>
+<tr><td><code>SC-W0209</code></td><td>Warning</td><td>Satin wider than 12 mm; long stitches may snag</td><td>M7</td></tr>
 <tr><td><code>SC-W0210</code></td><td>Warning</td><td>Satin rails without rungs have different numbers of nodes (some pair with none)</td><td>M4</td></tr>
 <tr><td><code>SC-W0211</code></td><td>Warning</td><td>Satin push compensation too long for a rail; that rail keeps its length</td><td>M4</td></tr>
 <tr><td><code>SC-W0212</code></td><td>Warning</td><td>Satin column drawn as one path too narrow; sewn as a stroke</td><td>M4</td></tr>
@@ -3842,6 +3842,10 @@ is the same on every platform (<a href="#determinism-1">determinism</a>).</li>
 <li>Path data is read as SVG viewers draw it, arcs included. An error in the data, or in the list of
 points of a <code>&lt;polyline&gt;</code> or <code>&lt;polygon&gt;</code>, ends the path at the error, and <code>SC-W0804</code> names it. inkex
 skips what is not a number in a list of points, and Ink/Stitch sews the rest (<code>DEV-SVG-010</code>).</li>
+<li>A path has the subpaths a viewer draws. A move-to with nothing drawn after it is no subpath, and a
+command that draws after a closepath starts a new subpath where the closed one started. inkex keeps
+such a move-to as a subpath of one point and runs the closed subpath on, so Ink/Stitch can count other
+subpaths, which tell a satin column’s rails from its rungs (<code>DEV-SVG-011</code>).</li>
 <li>An arc becomes cubic curves as inkex, which Ink/Stitch reads files with, cuts it: in equal pieces, one
 more than the whole quarter turns it makes. Manual stitch puts a needle point on each piece’s end, as
 Ink/Stitch’s does. inkex counts the quarter turns in floating point, and its rounding can cut an arc of
@@ -4465,10 +4469,12 @@ point on rail B, controlling the stitch angle through curves.</li>
 <h2 id="recognizing-rails-and-rungs"><a class="header" href="#recognizing-rails-and-rungs">Recognizing rails and rungs</a></h2>
 <p>An element is a satin column when its <code>satin_column</code> setting is on, whatever its <code>stroke_method</code> says.
 Its path’s subpaths are flattened as Ink/Stitch flattens them: each curve is halved until its control
-points lie within a tenth of a CSS pixel of the line between its ends. The rails are then the same
-polylines in both, which decide where the needle points go, where subpaths meet, and where a column
-drawn as one path gets its rungs. The reader finds where each pair of subpaths meets, crossing or
-touching. A point the two share counts once, and a rung that ends exactly on a rail meets it.</p>
+points lie within a tenth of a CSS pixel of the line between its ends. The same subpaths are then the
+same polylines in both, which decide where the needle points go, where subpaths meet, and where a column
+drawn as one path gets its rungs. A path read from SVG has the subpaths a viewer draws, and inkex, which
+Ink/Stitch reads files with, does not always count them alike (<code>DEV-SVG-011</code>). The reader finds where
+each pair of subpaths meets, crossing or touching. A point the two share counts once, and a rung that
+ends exactly on a rail meets it.</p>
 <p>StitchCraft tells rails from rungs as Ink/Stitch does, and a file sews the same in both.</p>
 <ol>
 <li>A subpath that is one point is left out, with <code>SC-W0205</code>.</li>
@@ -4507,9 +4513,11 @@ corners: the stroke’s width as the transforms scale it, and its join
 <code>min_satin_stroke_width_mm</code>, and it is 1 mm unless the design sets it. Such a column is sewn as the
 element’s stroke settings sew a stroke, by default in running stitch. <code>SC-W0212</code> gives its width and the
 limit. As a stroke, it offers the element before it its first point.</p>
-<p>The rule counts the subpaths drawn, as Ink/Stitch counts them. A path of 2 subpaths, one of them a point,
-is never sewn as a stroke for its width. Recognition leaves the point out and reads the other subpath as a
-centre line.</p>
+<p>The rule counts the path’s subpaths as Ink/Stitch counts them, before any is left out as a point. A path
+of 2 subpaths, one of them a point, is never sewn as a stroke for its width. Recognition leaves the point
+out and reads the other subpath as a centre line. In SVG, a move-to with nothing drawn after it is no
+subpath, where inkex keeps it as a point, so Ink/Stitch can sew a path as a satin column where
+StitchCraft sews it as a stroke (<code>DEV-SVG-011</code>).</p>
 <p>A wider column is sewn between 2 rails made from its centre line. Ink/Stitch makes the rails and places
 the rungs this way. It measures in CSS pixels, and its limits below are converted to millimetres.</p>
 <h3 id="rails-1"><a class="header" href="#rails-1">Rails</a></h3>
@@ -4528,7 +4536,8 @@ length where it lies. Each score is spread over 4 hundredths to either side, wei
 sharp corner, where the stitches can fan round it.</li>
 <li>A rung goes at each point of the flattened line as well, never at its very start or end. A straight
 line of 2 points gets one rung in its middle.</li>
-<li>Going along the line, a rung less than 1 mm from the last one placed is left out.</li>
+<li>Going along the line, a rung less than 1 mm from the last place tried is left out, whether step 4
+kept that place’s rung or not.</li>
 <li>Each rung is perpendicular to the line, 1.2 times the column’s width long, and is kept only when it
 crosses each rail exactly once. It pairs the 2 points where it crosses them.</li>
 </ol>
@@ -4560,13 +4569,16 @@ ten-thousandth of a CSS pixel as Ink/Stitch rounds them. Points that then repeat
 <p>The rails made from the line are the column’s rails, and every rung pairs the points where it crosses
 them. Ink/Stitch hands the lines it makes back to its satin column as subpaths, which tells rails from
 rungs again by the rules of <a href="#recognizing-rails-and-rungs">Recognizing rails and rungs</a>. When a column
-is short beside its width, its rungs are longer than its rails, and with 2 rungs or more Ink/Stitch
-takes the 2 longest lines, rungs, as the rails. A line that crosses itself can make a rung meet more
-lines than a rail does. StitchCraft keeps the rails it made in both cases, <code>DEV-SAT-007</code> in the
-deviations ledger. Where 2 parts join, Ink/Stitch adds a rung across the gap and uses the points where
-it crosses the rails. Those are the first points of the second part’s rails wherever the parts meet on a
-straight stretch, and StitchCraft pairs those first points. Ink/Stitch also keeps a first part whose
-offset vanishes to one side, with its other rail, where StitchCraft leaves it out with the rest.</p>
+is short beside its width, its rungs are longer than its rails. With exactly 2 rungs, or with rungs
+that cross each other, where the lines meet does not tell the rails apart, and Ink/Stitch takes the 2
+longest lines, rungs, as the rails. With 3 rungs or more that do not cross, each rail meets more than 2
+lines and each rung only the 2 rails, so the rails are found by where they meet. A line that crosses
+itself can make a rung meet more lines than a rail does. StitchCraft keeps the rails it made in both
+cases, <code>DEV-SAT-007</code> in the deviations ledger. Where 2 parts join, Ink/Stitch adds a rung across the gap
+and uses the points where it crosses the rails. Those are the first points of the second part’s rails
+wherever the parts meet on a straight stretch, and StitchCraft pairs those first points. Ink/Stitch also
+keeps a first part whose offset vanishes to one side, with its other rail, where StitchCraft leaves it
+out with the rest.</p>
 <p>Making the rails costs work in proportion to the square of the line’s number of points. A line of 1,000
 points takes up to about 35 million units of the default budget of 500 million. A plan makes a column’s
 rails twice: once to sew it, and once for the element before it to end near it.</p>
@@ -4602,8 +4614,8 @@ the turning leaves them, go without a partner.</p>
 rail where it comes nearest it, measured as at the start and end (see <em>Equally near points</em>). That is
 the node itself, or on a curved rail of 2 nodes, where the rung crosses the curve, or the curve’s point
 nearest the rung when the rung does not reach it.</p>
-<p>When the resulting stitch directions deviate from the local column normal by more than 45° somewhere,
-the element gets <code>SC-W0208</code> (“add a rung here”) with the location.</p>
+<p>From M7, which adds the other satin methods, <code>SC-W0208</code> (“add a rung here”) will name the place where
+stitches turn more than 45° from the column’s normal.</p>
 <h2 id="compensation-1"><a class="header" href="#compensation-1">Compensation</a></h2>
 <p>Thread under tension pulls the fabric in across a satin column, which then sews narrower than it is
 drawn. The stitches also push the fabric out at the column’s ends, and it sews longer. StitchCraft makes
@@ -4714,8 +4726,10 @@ underlay on leaves the top stitches as they were.</p>
 </div>
 <p>A centre walk with an odd number of repeats ends at the column’s end. The contour’s first side then goes
 back and its second side on, the zigzag starts from the end, and the top stitches run from the end to the
-start. Straight stitches join each part to the next, all of one length and no longer than the first of
-the running stitch’s lengths (<code>running_stitch_length_mm</code>).</p>
+start. Straight stitches join each part to the next, all of one length and no longer than the column’s
+travel length. That is the first of the running stitch’s lengths (<code>running_stitch_length_mm</code>), raised to
+twice the shortest stitch where it is shorter, as a running stitch’s lengths are (<code>DEV-RUN-003</code>), and
+<code>SC-W0402</code> says so once for the column.</p>
 <p>The walks are running stitches, placed as a stroke’s are (<a href="#running-stitch-2">strokes</a>), and they
 differ from Ink/Stitch’s in the same ways (<code>DEV-RUN-001</code> to <code>DEV-RUN-003</code>). Where the insets cross in a
 narrow column, a pair’s ends meet as pull compensation’s do, and the contour’s sides then run along one
@@ -4733,8 +4747,8 @@ reversal. Tatami fills offer their area, their parts.</p>
 <p><strong>The line.</strong> The way to the start and the way to the end follow a line between the rails,
 <code>running_stitch_position</code> percent of the way from the first rail to the second (50 is the middle). It is
 built as the centre walk’s is. Pairs are placed every <code>running_stitch_tolerance_mm</code> and moved in until
-their ends meet the line. A running stitch of the first of the running stitch’s lengths
-(<code>running_stitch_length_mm</code>) goes through them within the same tolerance.</p>
+their ends meet the line. A running stitch of the column’s travel length
+(<a href="#underlays">Underlays</a>) goes through them within the same tolerance.</p>
 <p><strong>Cuts.</strong> A place on the column is found by its cut, one of the pairs placed at the zigzag spacing with
 no compensation and nothing random. The cut is the pair with the point nearest the place. Where the
 needle enters the line for a place is the line’s point nearest that cut. A part of the column is cut in 2
@@ -4816,7 +4830,7 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <tr><td><code>REQ-SAT-001</code></td><td>Pull compensation moves both ends of every top stitch outward along it, by <code>pull_compensation_mm</code> plus <code>pull_compensation_percent</code> of its width (± 0.01 mm). Ends moved past each other meet</td></tr>
 <tr><td><code>REQ-SAT-002</code></td><td>Consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails and within 5 % on curves. The last pair is at most a spacing on</td></tr>
 <tr><td><code>REQ-SAT-003</code></td><td>With a longest stitch, a longer top stitch is split as <code>split_method</code> says. By default it splits into the fewest equal parts, and the stitch back into as many as the stitch across before. Simple and staggered splits fall at whole multiples of the longest stitch, from a start that <code>staggered</code> moves along</td></tr>
-<tr><td><code>REQ-SAT-004</code></td><td>Underlays come before the top stitches and leave them as they were: the centre walk, then the contour and the zigzag. Straight stitches of one length join them, no longer than the running stitch’s length. After an odd centre walk the rest runs from the column’s end</td></tr>
+<tr><td><code>REQ-SAT-004</code></td><td>Underlays come before the top stitches and leave them as they were: the centre walk, then the contour and the zigzag. Straight stitches of one length join them, no longer than the running stitch’s length raised to twice the shortest stitch. After an odd centre walk the rest runs from the column’s end</td></tr>
 <tr><td><code>REQ-SAT-005</code></td><td>Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces <code>SC-E0201</code> and no stitches, and a rung that misses a rail joins the rail’s nearest point (<code>SC-W0203</code>), the one shapely gives of points as near. A column with no section to sew produces <code>SC-E0216</code> and no stitches</td></tr>
 <tr><td><code>REQ-SAT-006</code></td><td>A parameter with a value for each side changes only its own side: a rail’s stitch ends, or the column’s start or end</td></tr>
 <tr><td><code>REQ-SAT-007</code></td><td>Random widths and spacing are reproducible from the element and its seed, and stay within their ranges</td></tr>
@@ -4836,9 +4850,11 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 (<a href="#machine-testing-protocol">machine testing</a>).</p>
 <h2 id="diagnostics-2"><a class="header" href="#diagnostics-2">Diagnostics</a></h2>
 <p><code>SC-E0201</code>, <code>SC-W0202</code>, <code>SC-W0203</code>, <code>SC-W0205</code>, <code>SC-W0206</code> (a contour underlay too short for its insets
-keeps its length), <code>SC-W0207</code>, <code>SC-W0208</code>, <code>SC-W0209</code> (a satin wider than 12 mm risks snagging: consider
-split stitches or a fill), <code>SC-W0210</code>, <code>SC-W0211</code>, <code>SC-W0212</code>, <code>SC-W0213</code>, <code>SC-E0214</code>, <code>SC-W0215</code> (a column
-too small to sew) and <code>SC-E0216</code> (a column without a section to sew).</p>
+keeps its length), <code>SC-W0207</code>, <code>SC-W0210</code>, <code>SC-W0211</code>, <code>SC-W0212</code>, <code>SC-W0213</code>, <code>SC-E0214</code>, <code>SC-W0215</code> (a
+column too small to sew) and <code>SC-E0216</code> (a column without a section to sew). The running stitch’s
+<code>SC-W0402</code> names a travel length raised to twice the shortest stitch. M7 adds <code>SC-W0208</code> (stitches turned
+more than 45° from the column) and <code>SC-W0209</code> (a satin wider than 12 mm risks snagging: consider split
+stitches or a fill).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="offset-curves"><a class="header" href="#offset-curves">Offset curves</a></h1>
 <!-- implements: crates/stitchcraft-engine/src/normalize/offset/** -->
@@ -7739,7 +7755,8 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <h2 id="m7--more-stitch-types-i"><a class="header" href="#m7--more-stitch-types-i">M7 — More stitch types I</a></h2>
 <p>Zigzag stroke; E-stitch; S-stitch; zigzag satin; contour fill (three strategies, neck splitting); meander
 fill with generated tiles; circular fill. One step per type with its requirements, then <strong>MC-6 🧵</strong>
-(TS-11 sampler of the new types).</p>
+(TS-11 sampler of the new types). With the satin methods come the warnings they all share: <code>SC-W0208</code>
+for stitches turned more than 45° from the column, and <code>SC-W0209</code> for a column wider than 12 mm.</p>
 <h2 id="m8--inkstitch-interoperability"><a class="header" href="#m8--inkstitch-interoperability">M8 — Ink/Stitch interoperability</a></h2>
 <p>SVG adapter v2:</p>
 <ul>

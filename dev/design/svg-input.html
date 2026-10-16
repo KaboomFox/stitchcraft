@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c288a9c1.js";
+            window.path_to_searchindex_js = "../searchindex-2790d520.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -222,6 +222,10 @@ is the same on every platform (<a href="determinism.html">determinism</a>).</li>
 <li>Path data is read as SVG viewers draw it, arcs included. An error in the data, or in the list of
 points of a <code>&lt;polyline&gt;</code> or <code>&lt;polygon&gt;</code>, ends the path at the error, and <code>SC-W0804</code> names it. inkex
 skips what is not a number in a list of points, and Ink/Stitch sews the rest (<code>DEV-SVG-010</code>).</li>
+<li>A path has the subpaths a viewer draws. A move-to with nothing drawn after it is no subpath, and a
+command that draws after a closepath starts a new subpath where the closed one started. inkex keeps
+such a move-to as a subpath of one point and runs the closed subpath on, so Ink/Stitch can count other
+subpaths, which tell a satin column’s rails from its rungs (<code>DEV-SVG-011</code>).</li>
 <li>An arc becomes cubic curves as inkex, which Ink/Stitch reads files with, cuts it: in equal pieces, one
 more than the whole quarter turns it makes. Manual stitch puts a needle point on each piece’s end, as
 Ink/Stitch’s does. inkex counts the quarter turns in floating point, and its rounding can cut an arc of
