@@ -18,8 +18,10 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
 - **Order.** Elements follow document order, which is SVG's paint order and the sewing order. A
   shape's fill is sewn before its stroke, as Ink/Stitch sews them, and the outline covers the fill's edge.
   When `paint-order` paints the stroke first, `SC-W0802` says the fill is sewn first.
-- **Groups.** `<g>`, `<a>` and the child a `<switch>` chooses pass their transform and style to their
-  children.
+- **Groups.** `<g>`, `<a>` and `<switch>` pass their transform and style to their children. A
+  `<switch>` draws only its first child whose conditions pass, as a viewer does. Ink/Stitch sews every
+  child of a switch, and drops the transforms of the switch and of the elements above it
+  (`DEV-SVG-004`).
 - **Ids.** An element's id is `svg:<label>:fill` or `svg:<label>:stroke`. The label is the SVG
   element's `id`, or `<tag>@<n>` for the n-th element of that kind. A repeated id gets `~2`, `~3` and
   so on. The adapter's own diagnostics name the SVG element as `svg:<label>`.
@@ -28,40 +30,57 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
 ## Geometry and units
 
 - The root's `width`, `height`, `viewBox` and `preserveAspectRatio` map user units to millimetres. A
-  user unit is a CSS pixel, 1/96 inch, unless they say otherwise.
+  user unit is a CSS pixel, 1/96 inch, unless they say otherwise. A root with only a width or only a
+  height takes the other from its viewBox's shape, as SVG 2 sizes an image, and a percentage counts as
+  missing. Ink/Stitch takes both sides from the viewBox, in pixels, when either is missing
+  (`DEV-SVG-009`).
 - A viewer ignores a root `width`, `height` or `viewBox` that is empty, and a `preserveAspectRatio` that
   does not read. The adapter ignores them too, and `SC-W0804` names each. A `width`, `height` or
   `viewBox` that does not read could put the design at any size, and the file is refused (`SC-E0801`).
   So is a size of 0 or less, and a viewBox with no area, in which a viewer draws nothing.
 - Transforms compose through every ancestor. The matrices use `stitchcraft_core::math`, so the result
   is the same on every platform ([determinism](determinism.md)).
-- Path data is read as SVG viewers draw it, arcs included. An error in the data ends the path at the
-  error.
+- Path data is read as SVG viewers draw it, arcs included. An error in the data, or in the list of
+  points of a `<polyline>` or `<polygon>`, ends the path at the error, and `SC-W0804` names it. inkex
+  skips what is not a number in a list of points, and Ink/Stitch sews the rest (`DEV-SVG-010`).
 - An arc becomes cubic curves as inkex, which Ink/Stitch reads files with, cuts it: in equal pieces, one
   more than the whole quarter turns it makes. Manual stitch puts a needle point on each piece's end, as
   Ink/Stitch's does. inkex counts the quarter turns in floating point, and its rounding can cut an arc of
   a whole number of quarter turns into one piece fewer (`DEV-SVG-002`).
 - A `<circle>` or an `<ellipse>` starts at its top and goes round anticlockwise on screen, as inkex
   draws it, so a stroke round it starts and runs as Ink/Stitch's does.
+- A `<rect>` with one radius rounds its corners with it, and one with a radius of 0 has square corners.
+  An `<ellipse>` with one radius is a circle of that radius. That is how SVG 2 draws them. inkex rounds
+  a rect whose `rx` or `ry` is 0 with the other, and takes an ellipse's missing radius as 0
+  (`DEV-SVG-006`).
 - Positions are exact to within a micrometre (`REQ-SVG-001`). Any path data reads without failing the
   adapter, and fuzzing checks it (`REQ-SVG-002`).
 - A length may have spaces around it. One that does not read is 0, as in a viewer, and `SC-W0804` names
-  it.
+  it. A percentage is of the viewport's width, height or diagonal over √2, an `em` is 16 user units and
+  an `ex` 8, as with a viewer's default font. inkex reads them as 0 in a shape's attributes
+  (`DEV-SVG-005`).
 
 ## Colour and visibility
 
 - `fill`, `stroke`, `color` and `currentColor` give the thread colour. A gradient gives its first colour
   and a pattern its fallback colour, each with a warning. A gradient of one colour, such as an Inkscape
-  swatch, gives that colour without one.
+  swatch, gives that colour without one. A gradient without stops paints nothing, as in a viewer, and
+  so does a reference to an element the file does not have, unless a colour is written after it.
+  Ink/Stitch sews such a fill in black (`DEV-SVG-007`).
 - Colours read as editors write them. Keywords such as `currentcolor` may be in any case. An ICC colour
   after the sRGB one, which Inkscape's colour-managed picker writes, is left for the sRGB colour.
 - Properties come from presentation attributes (`fill="red"`), the rules of style sheets and the `style`
   attribute, in the order of CSS's cascade, as in a viewer (`REQ-SVG-006`). A rule overrides a
   presentation attribute, and the `style` attribute overrides a rule. Of 2 rules, the more specific one
   applies (more ids, then more classes, then an element name), and of 2 as specific, the later one. An
-  `!important` declaration overrides all of these. A declaration that does not read gives way to the
-  next one, as in CSS. When none of an element's paints reads, the inherited paint stays, and `SC-W0802`
-  names the value.
+  `!important` declaration overrides all of these. A paint, colour, stroke width, join or miter limit
+  that does not read gives way to the next declaration, as in CSS. When none of an element's paints
+  reads, the inherited paint stays, and `SC-W0802` names the value. inkex takes the declaration the
+  cascade puts first whether it reads or not, and Ink/Stitch sews a fill whose colour does not read in
+  black and leaves such a stroke out (`DEV-SVG-008`). `display`, `visibility`, `opacity`,
+  `fill-opacity`, `stroke-opacity`, `fill-rule` and `paint-order` are read as inkex reads them, from
+  the declaration the cascade puts first. A value there that does not read is ignored, and the
+  declarations after it are not used, where a viewer would use the next one.
 - Style sheets are the `<style>` elements of the file, wherever they are, whose type is CSS. Illustrator
   and CorelDRAW write a drawing's colours as classes there. The adapter reads a rule whose selector is an
   element name or `*` followed by classes and ids, such as `rect`, `.cls-1`, `#logo` or `path.st0.st1`.
@@ -69,8 +88,11 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   such as `g > rect` or `a:hover`, and the at-rules, such as `@media` and `@import`. What they set is not
   used. Ink/Stitch reads styles through inkex, which applies more kinds of selector.
 - `display: none` hides an element and everything in it. A hidden or fully transparent paint is left
-  out, as a viewer leaves it out. The insides of `<defs>`, `<symbol>`, `<marker>`, `<pattern>`,
-  `<clipPath>` and `<mask>` are never drawn.
+  out, as a viewer leaves it out. `visibility` hides a paint, and so does an `opacity` of 0 on its
+  element or above it. A `fill-opacity` or `stroke-opacity` of 0 makes its paint clear, as does a colour
+  that is `transparent` or has an alpha of 0. Ink/Stitch leaves out only what `display` hides and a fill
+  whose `fill-opacity` is written `0` (`DEV-SVG-003`). The insides of `<defs>`, `<symbol>`, `<marker>`,
+  `<pattern>`, `<clipPath>` and `<mask>` are never drawn.
 
 ## Stroke width and join
 
@@ -128,7 +150,7 @@ defaults are in the [data model](data-model.md#engine-input-design-stitchcraft-e
   the style sheet rules that are not read are such features. So are clipping, masks, filters, markers
   and the Ink/Stitch settings that are not read yet. Clipping is planned for M8.
 - `SC-W0804` reports geometry that cannot be used:
-  - path data with an error, stitched up to the error
+  - path data or a list of points with an error, stitched up to the error
   - a transform that does not parse, left out with its contents
   - an element that draws nothing
   - a point more than 10 m from the origin

@@ -120,7 +120,10 @@ pub fn user_units(length: Length, reference: f64) -> f64 {
 pub const NO_AREA: &str = "its viewBox has no area";
 
 /// The map from the root element's user units to millimetres, from its `width`, `height`, `viewBox` and
-/// `preserveAspectRatio` (SVG 1.1 § 7.8). Without a viewBox a user unit is a CSS pixel, 1/96 inch.
+/// `preserveAspectRatio` (SVG 1.1 § 7.8). Without a viewBox a user unit is a CSS pixel, 1/96 inch. With one,
+/// a side given in a unit other than % is that long, and a side not given takes the viewBox's shape from
+/// the other, as a viewer sizes it (SVG 2). With neither given, the sides are the viewBox's, in pixels. A
+/// percentage is of a viewport a file does not have, and counts as not given.
 pub fn root_to_mm(width: Option<Length>, height: Option<Length>, view_box: Option<ViewBox>, aspect: AspectRatio) -> Result<Affine, String> {
     // A zero size turns rendering off, and a negative one is an error (SVG 1.1 § 7.7).
     for (name, length) in [("width", width), ("height", height)] {
@@ -136,12 +139,14 @@ pub fn root_to_mm(width: Option<Length>, height: Option<Length>, view_box: Optio
     if !(vb.w > 0.0 && vb.h > 0.0) {
         return Err(NO_AREA.to_string());
     }
-    // The viewport in millimetres; a missing or relative size is the viewBox's, in pixels.
-    let size = |length: Option<Length>, fallback: f64| match length {
-        Some(l) if l.unit != LengthUnit::Percent => user_units(l, 0.0) * MM_PER_SVG_PX,
-        _ => fallback * MM_PER_SVG_PX,
+    // The viewport in millimetres.
+    let given = |length: Option<Length>| length.filter(|l| l.unit != LengthUnit::Percent).map(|l| user_units(l, 0.0) * MM_PER_SVG_PX);
+    let (width, height) = match (given(width), given(height)) {
+        (Some(width), Some(height)) => (width, height),
+        (Some(width), None) => (width, width * vb.h / vb.w),
+        (None, Some(height)) => (height * vb.w / vb.h, height),
+        (None, None) => (vb.w * MM_PER_SVG_PX, vb.h * MM_PER_SVG_PX),
     };
-    let (width, height) = (size(width, vb.w), size(height, vb.h));
     let (sx, sy) = (width / vb.w, height / vb.h);
     let (fx, fy) = match aspect.align {
         Align::None => return Ok(Affine::translate(-vb.x * sx, -vb.y * sy).after(Affine::scale(sx, sy))),

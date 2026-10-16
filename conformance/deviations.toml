@@ -225,3 +225,59 @@ area = "svg"
 summary = "An arc that turns by a whole number of quarter turns is cut into one piece more than those quarters, and so is one that turns by a nanoradian less. inkex works its count out in floating point, from angles found with arc cosines, so where its rounding falls short it cuts such an arc into one piece fewer, of a whole quarter turn each."
 reason = "The count is the arc's own, the same on every platform, and 2 pieces for a rounded corner is what inkex gives when its rounding does not fall short (inkex 1.4.1, inkex/paths/arc.py, arc_to_path). Manual stitch puts a needle point on each piece's end."
 requirements = ["REQ-SVG-001"]
+
+[[deviation]]
+id = "DEV-SVG-003"
+area = "svg"
+summary = "A paint a viewer does not show is left out: one that visibility hides (hidden or collapse), one under an opacity of 0, one whose fill-opacity or stroke-opacity is 0 however it is written, such as 0.0 or 0%, and one whose colour is transparent or has an alpha of 0. Ink/Stitch leaves out what display hides and a fill whose fill-opacity is written as 0, and sews the rest: a fill in transparent, for one, it sews in black."
+reason = "Thread sewn where the drawing shows nothing is thread the designer never sees on screen (REQ-SVG-001). Ink/Stitch's tests were read at d59c9ab (lib/elements/utils/nodes.py: node_to_elements and iterate_nodes compare fill-opacity with the text 0 and test no other opacity, nor visibility), and inkex knows no colour named transparent (inkex 1.4.1, inkex/colors.py), so Ink/Stitch sews such a fill in its default black (lib/elements/element.py: fill_color)."
+requirements = ["REQ-SVG-001"]
+
+[[deviation]]
+id = "DEV-SVG-004"
+area = "svg"
+summary = "A switch element draws only its first child that passes its conditions, as a viewer does, under the transforms of the switch and of every element above it. Ink/Stitch sews every child of a switch, and follows transforms up through groups and links only, so it drops those of the switch and of the elements above it."
+reason = "The design is what a viewer shows, where it shows it (REQ-SVG-001). Ink/Stitch's walk and transforms were read at d59c9ab (lib/elements/utils/nodes.py: iterate_nodes; lib/svg/path.py: compose_parent_transforms)."
+requirements = ["REQ-SVG-001"]
+
+[[deviation]]
+id = "DEV-SVG-005"
+area = "svg"
+summary = "A length in %, em or ex in a shape's attributes is read as a viewer reads it: a percentage is of the viewport's width, height or diagonal over √2, an em is 16 user units and an ex 8, as with a viewer's default font. inkex, which Ink/Stitch reads shapes with, reads such a length as 0, so a rect 50% wide has no width there."
+reason = "The drawing is sewn as a viewer shows it (REQ-SVG-001). inkex's units have no %, em or ex, and it converts them to 0 (inkex 1.4.1, inkex/units.py: convert_unit), which its shapes read their attributes with (inkex/elements/_polygons.py)."
+requirements = ["REQ-SVG-001"]
+
+[[deviation]]
+id = "DEV-SVG-006"
+area = "svg"
+summary = "A rect with an rx or ry of 0 has square corners, and an ellipse with only one radius is a circle of that radius, as SVG 2 draws them. inkex rounds such a rect's corners with its other radius, and takes the ellipse's missing radius as 0, which flattens it to a line."
+reason = "The drawing is sewn as a viewer shows it (REQ-SVG-001). inkex's rect and ellipse were read in inkex 1.4.1 (inkex/elements/_polygons.py)."
+requirements = ["REQ-SVG-001"]
+
+[[deviation]]
+id = "DEV-SVG-007"
+area = "svg"
+summary = "A fill whose url() names nothing in the file, with no colour written after it, paints nothing, as in a viewer. Ink/Stitch sews it in black. Such a stroke is left out by both."
+reason = "Thread sewn where the drawing shows nothing is thread the designer never sees on screen (REQ-SVG-001). inkex fails to read a paint that names nothing (inkex 1.4.1, inkex/properties.py), and Ink/Stitch then sews a fill in its default black and leaves a stroke out (lib/elements/element.py at d59c9ab: _get_color, fill_color and stroke_color)."
+requirements = ["REQ-SVG-001"]
+
+[[deviation]]
+id = "DEV-SVG-008"
+area = "svg"
+summary = "A fill or stroke colour that does not read gives way, as CSS has it, to the next declaration of it, and without one to the inherited paint: a fill of bogus in the style attribute and red as an attribute is red. SC-W0802 names the value when none of the element's own declarations reads. inkex takes the winning declaration whether it reads or not, and Ink/Stitch sews a fill whose colour does not read in black and leaves such a stroke out."
+reason = "A viewer shows the colour CSS's cascade leaves (REQ-SVG-001, REQ-SVG-006), and the warning says when an element's own colour is lost. inkex's cascade was read in inkex 1.4.1 (inkex/styles.py), and Ink/Stitch's colours at d59c9ab (lib/elements/element.py: _get_color)."
+requirements = ["REQ-SVG-001", "REQ-SVG-006"]
+
+[[deviation]]
+id = "DEV-SVG-009"
+area = "svg"
+summary = "A root with only a width or only a height takes the other from its viewBox's shape, as SVG 2 sizes an image: a root 10 mm wide with a viewBox of 100 by 100 is 10 mm square. Ink/Stitch takes both sides from the viewBox, in pixels, when either is missing, so the same root is 26.46 mm square there."
+reason = "The drawing is sewn at the size a viewer shows it (REQ-SVG-001). Ink/Stitch's size was read at d59c9ab (lib/svg/units.py: get_doc_size)."
+requirements = ["REQ-SVG-001"]
+
+[[deviation]]
+id = "DEV-SVG-010"
+area = "svg"
+summary = "A polyline or polygon whose list of points has an error is read up to the error, as a viewer draws it, and SC-W0804 names it. inkex reads the list as path data after an M, taking the numbers and skipping the rest, so Ink/Stitch sews all 4 points of 0,0 10,0 10,10 x 0,10, where StitchCraft sews 3."
+reason = "The drawing is sewn as a viewer shows it (REQ-SVG-001), and the warning says it is cut. inkex was read in inkex 1.4.1 (inkex/elements/_polygons.py; inkex/paths/path.py; inkex/utils.py: strargs)."
+requirements = ["REQ-SVG-001"]
