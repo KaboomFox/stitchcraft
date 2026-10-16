@@ -307,6 +307,7 @@ pub stitchcraft_params::value::Value::Toggle(bool)
 impl stitchcraft_params::value::Value
 pub fn stitchcraft_params::value::Value::to_raw(&self) -> alloc::string::String
 pub fn stitchcraft_params::value::normalized_angle(f64) -> f64
+pub fn stitchcraft_params::value::toggle(&str) -> core::option::Option<bool>
 pub macro stitchcraft_params::params!
 pub enum stitchcraft_params::Empty
 pub stitchcraft_params::Empty::AtMostZero
@@ -529,4 +530,5 @@ pub fn stitchcraft_params::audit(&[&stitchcraft_params::spec::ParamGroup]) -> al
 pub fn stitchcraft_params::find(&[&stitchcraft_params::spec::ParamGroup], &str) -> core::option::Option<&'static stitchcraft_params::spec::ParamSpec>
 pub fn stitchcraft_params::normalized_angle(f64) -> f64
 pub fn stitchcraft_params::read_param<K: stitchcraft_params::kinds::ParamKind>(&stitchcraft_params::set::ParamSet, core::option::Option<&stitchcraft_params::spec::ParamSpec>, core::option::Option<stitchcraft_params::stitch_type::StitchType>, &[stitchcraft_params::spec::ParamSpec], &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>) -> core::option::Option<<K as stitchcraft_params::kinds::ParamKind>::Value>
+pub fn stitchcraft_params::toggle(&str) -> core::option::Option<bool>
 pub fn stitchcraft_params::unknown_keys(&stitchcraft_params::set::ParamSet, &[&stitchcraft_params::spec::ParamGroup]) -> alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>

@@ -243,7 +243,7 @@ status = "active"
 id = "REQ-PRM-002"
 area = "params"
 level = "L2"
-statement = "Invalid parameter values produce SC-E0101 or SC-W0102 with the key, the value and the accepted range; they never fall back silently to defaults. Empty or blank text is not set, and the parameter takes its default, as in Ink/Stitch. Spaces separate the values of a list or a pair, and text with a comma does not read, and gets a hint, but for one comma at the end of an angle of a list."
+statement = "Invalid parameter values produce SC-E0101 or SC-W0102 with the key, the value and the accepted range; they never fall back silently to defaults. A value is stripped of the white space round it, as in Ink/Stitch, text included, and empty or blank text is not set, and the parameter takes its default. Spaces separate the values of a list or a pair, and text with a comma does not read, and gets a hint, but for one comma at the end of an angle of a list. A unit follows its number with no space. A toggle reads Ink/Stitch's words for on, their opposites and off, and nothing else. A length below 0 that leaves an optional length unset is named (SC-W0102), and a value longer than 4,096 bytes does not read, its message quoting its start."
 milestone = "M3"
 status = "active"
 

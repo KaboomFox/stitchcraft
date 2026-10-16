@@ -42,8 +42,10 @@ params! {
         ties: Choice = "0", label "Lock stitches",
             options ["0" => "At the start and the end", "1" => "At the start", "2" => "At the end", "3" => "None"];
 
-        /// Sew the end lock even when the next element starts so close that the needle would otherwise
-        /// go straight on to it without one.
+        /// Lock the end of every group of stitches, and jump to the next, even where the needle would
+        /// otherwise go straight on to it. The end lock is sewn even where `ties` leaves it out, manual
+        /// stitch gets the locks it otherwise goes without, and a fill whose top rows `expand_mm` cuts into
+        /// pieces locks each piece on its own.
         force_lock_stitches: Toggle = "false", label "Always lock";
 
         /// The shape of the lock stitches at the start. The half stitch goes back and forth over the first
@@ -120,9 +122,10 @@ params! {
 
 impl CommonParams {
     /// The element's jump length: its `min_jump_stitch_length_mm`, or `collapse_len`, the design's, when it
-    /// sets none. A setting of 0 is none, as in Ink/Stitch, and so is one below 0: `stitchcraft_params`
-    /// reads the length so ([`Empty::AtMostZero`](stitchcraft_params::Empty::AtMostZero)). Assembly sews on
-    /// across moves no longer than this, and a satin column chooses where it starts by it.
+    /// sets none. A setting of 0 is none, as in Ink/Stitch, and so is one below 0, with `SC-W0102`, where
+    /// Ink/Stitch jumps between every 2 groups: `stitchcraft_params` reads the length so
+    /// ([`Empty::AtMostZero`](stitchcraft_params::Empty::AtMostZero), `DEV-PRM-003`). Assembly sews on across
+    /// moves no longer than this, and a satin column chooses where it starts by it.
     pub fn jump_length(&self, collapse_len: Mm) -> Mm {
         self.min_jump_stitch_length_mm.unwrap_or(collapse_len)
     }

@@ -2,13 +2,15 @@
 //! behaviour, with its reason and the requirement that motivates it (`docs/src/design/conformance.md`).
 //!
 //! It is the one place a deviation is described. A parameter that deviates names its entry
-//! (`Origin::InkStitchDeviates { deviation }`) and the reference pages show the entry's summary; the
-//! Ink/Stitch differential (L3, from M8) reads the same file to report a documented difference as such.
+//! (`Origin::InkStitchDeviates { deviation }`), an entry names the other parameters of Ink/Stitch's whose
+//! reading or effect it changes (`params`), and the reference pages show the entries' summaries with each
+//! parameter; the Ink/Stitch differential (L3, from M8) reads the same file to report a documented
+//! difference as such.
 
 use std::collections::BTreeSet;
 
 use serde::Deserialize;
-use stitchcraft_params::{Origin, ParamGroup};
+use stitchcraft_params::{Origin, ParamGroup, find};
 
 /// The ledger, relative to the repository root.
 pub const LEDGER: &str = "conformance/deviations.toml";
@@ -26,6 +28,10 @@ pub struct Deviation {
     pub reason: String,
     /// The requirements it serves.
     pub requirements: Vec<String>,
+    /// The parameters of Ink/Stitch's origin whose reading or effect it changes, besides those that name
+    /// it as their origin.
+    #[serde(default)]
+    pub params: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -40,7 +46,8 @@ pub fn parse(text: &str) -> Result<Vec<Deviation>, String> {
 }
 
 /// What is wrong with the ledger and the registry's references to it: malformed or repeated ids,
-/// requirements that do not exist, parameters naming entries that do not exist.
+/// requirements that do not exist, parameters naming entries that do not exist, and entries naming
+/// parameters the registry lacks, or that are StitchCraft's own.
 pub fn check(ledger: &[Deviation], requirements: &BTreeSet<String>, registry: &[&ParamGroup]) -> Vec<String> {
     let mut problems = Vec::new();
     let mut ids = BTreeSet::new();
@@ -57,6 +64,13 @@ pub fn check(ledger: &[Deviation], requirements: &BTreeSet<String>, registry: &[
         for r in d.requirements.iter().filter(|r| !requirements.contains(*r)) {
             problems.push(format!("`{}` names {r}, which is not in conformance/requirements.toml", d.id));
         }
+        for key in &d.params {
+            match find(registry, key).map(|spec| spec.origin) {
+                None => problems.push(format!("`{}` names the parameter `{key}`, which the registry does not declare", d.id)),
+                Some(Origin::StitchCraft) => problems.push(format!("`{}` names `{key}`, which is StitchCraft's own and so cannot differ", d.id)),
+                Some(_) => {}
+            }
+        }
     }
     for spec in registry.iter().flat_map(|g| g.specs) {
         if let Origin::InkStitchDeviates { deviation } = spec.origin
@@ -71,6 +85,11 @@ pub fn check(ledger: &[Deviation], requirements: &BTreeSet<String>, registry: &[
 /// The summary of entry `id`.
 pub fn summary<'a>(ledger: &'a [Deviation], id: &str) -> Option<&'a str> {
     ledger.iter().find(|d| d.id == id).map(|d| d.summary.as_str())
+}
+
+/// The entries that name the parameter `key` in their `params`.
+pub fn naming<'a>(ledger: &'a [Deviation], key: &str) -> impl Iterator<Item = &'a Deviation> {
+    ledger.iter().filter(move |d| d.params.iter().any(|p| p == key))
 }
 
 /// `DEV-LCK-001`, `DEV-FILL-TAT-006`: upper-case areas, a three-digit number.
@@ -120,11 +139,13 @@ mod tests {
     #[test]
     fn every_problem_is_named() {
         let text = format!("{ENTRY}{}", ENTRY.replace("REQ-LCK-002", "REQ-NOPE-001").replace("Clean room.", ""));
-        let ledger =
-            parse(&format!("{text}[[deviation]]\nid = \"DEV-1\"\narea = \"x\"\nsummary = \"s\"\nreason = \"r\"\nrequirements = [\"REQ-LCK-002\"]\n"))
-                .unwrap();
+        let ledger = parse(&format!(
+            "{text}[[deviation]]\nid = \"DEV-1\"\narea = \"x\"\nsummary = \"s\"\nreason = \"r\"\nrequirements = [\"REQ-LCK-002\"]\n\
+             params = [\"lock_start\", \"lock_shine\", \"lock_own\"]\n"
+        ))
+        .unwrap();
         let requirements: BTreeSet<String> = ["REQ-LCK-002".to_string()].into();
-        const SPECS: &[ParamSpec] = &[spec("DEV-LCK-009")];
+        const SPECS: &[ParamSpec] = &[spec("DEV-LCK-009"), ParamSpec { key: "lock_own", origin: Origin::StitchCraft, ..spec("") }];
         let group = ParamGroup { name: "LockParams", help: " Locks.\n", applies_to: StitchType::ALL, specs: SPECS };
         assert_eq!(
             check(&ledger, &requirements, &[&group]),
@@ -133,9 +154,12 @@ mod tests {
                 "`DEV-LCK-001` needs a summary, a reason and at least one requirement",
                 "`DEV-LCK-001` names REQ-NOPE-001, which is not in conformance/requirements.toml",
                 "`DEV-1` is not a deviation id (DEV-<AREA>-<NNN>)",
+                "`DEV-1` names the parameter `lock_shine`, which the registry does not declare",
+                "`DEV-1` names `lock_own`, which is StitchCraft's own and so cannot differ",
                 "`lock_start` deviates as `DEV-LCK-009`, which is not in conformance/deviations.toml",
             ]
         );
+        assert_eq!(naming(&ledger, "lock_start").map(|d| d.id.as_str()).collect::<Vec<_>>(), ["DEV-1"]);
     }
 
     #[test]

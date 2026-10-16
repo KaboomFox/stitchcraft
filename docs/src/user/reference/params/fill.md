@@ -13,7 +13,7 @@ Applies to Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, 
 **Sew the fill.** Whether the fill is sewn. Off, it sews nothing, and the shape's outline, if it has one, is sewn as
 its stroke settings say. The element before it still ends near it, as Ink/Stitch's does.
 
-- **Accepts:** true or false
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`
 - **Ink/Stitch:** same key, meaning and default
 
