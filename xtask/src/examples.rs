@@ -55,12 +55,28 @@ struct Ran {
 
 /// Every example's output: (path from the repository root, text).
 pub fn pages(root: &Path) -> Result<Vec<(String, String)>, String> {
-    let declared: Declarations = toml::from_str(&util::read(&root.join(DECLARATIONS))?).map_err(|e| format!("{DECLARATIONS}: {e}"))?;
-    if declared.example.is_empty() {
+    let declared = declared(root)?;
+    if declared.is_empty() {
         return Ok(Vec::new());
     }
     let stitch = binary(root)?;
-    declared.example.iter().map(|example| Ok((format!("{OUTPUT}/{}.txt", example.id), shown(root, &stitch, example)?))).collect()
+    declared.iter().map(|example| Ok((output(example), shown(root, &stitch, example)?))).collect()
+}
+
+/// The files [`pages`] writes, by path from the repository root, without running anything.
+pub fn paths(root: &Path) -> Result<Vec<String>, String> {
+    Ok(declared(root)?.iter().map(output).collect())
+}
+
+/// The declared examples, in file order.
+fn declared(root: &Path) -> Result<Vec<Example>, String> {
+    let declared: Declarations = toml::from_str(&util::read(&root.join(DECLARATIONS))?).map_err(|e| format!("{DECLARATIONS}: {e}"))?;
+    Ok(declared.example)
+}
+
+/// Where `example`'s output goes, from the repository root.
+fn output(example: &Example) -> String {
+    format!("{OUTPUT}/{}.txt", example.id)
 }
 
 /// Builds the `stitch` binary and returns its path, as cargo reports it.

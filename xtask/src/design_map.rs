@@ -1,7 +1,8 @@
 //! Docs that follow the code: each page names the source files it describes, and a branch that changes
 //! those files reviews the page.
 //!
-//! A page declares the files with one comment on its own line, usually right below its title:
+//! A page declares the files with one comment on its own line, outside code blocks, usually right below its
+//! title:
 //!
 //! ```markdown
 //! <!-- implements: crates/stitchcraft-formats/src/**, apps/stitchcraft-cli/src/commands/convert.rs -->
@@ -26,6 +27,7 @@ use std::collections::BTreeSet;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
+use crate::markdown;
 use crate::util::{self, Findings};
 
 /// The comment that declares a page's files.
@@ -48,19 +50,21 @@ pub struct Page {
     pub patterns: Vec<String>,
 }
 
-/// The pages among `pages` (absolute paths with their text) that declare the files they describe.
+/// The pages among `pages` (absolute paths with their text) that declare the files they describe. A
+/// comment in a code block is an example, not a declaration.
 pub fn pages(pages: &[(PathBuf, String)]) -> Vec<Page> {
     let mut out = Vec::new();
     for (path, text) in pages {
-        let patterns: Vec<String> = text
-            .lines()
+        let lines: Vec<&str> = markdown::prose_lines(text).into_iter().map(|(_, line)| line).collect();
+        let patterns: Vec<String> = lines
+            .iter()
             .filter_map(|line| line.trim().strip_prefix(MARKER)?.strip_suffix("-->"))
             .flat_map(|list| list.split(',').map(|p| p.trim().to_string()).filter(|p| !p.is_empty()).collect::<Vec<_>>())
             .collect();
         if patterns.is_empty() {
             continue;
         }
-        let title = text.lines().find_map(|l| l.strip_prefix("# ")).unwrap_or_default().trim().to_string();
+        let title = lines.iter().find_map(|l| l.strip_prefix("# ")).unwrap_or_default().trim().to_string();
         out.push(Page { path: util::rel(path), title, patterns });
     }
     out
@@ -164,20 +168,17 @@ fn drift(pages: &[Page], changed: &BTreeSet<String>, messages: &str) -> Vec<Stri
 }
 
 /// `cargo xtask docs for PATH…`, or `--hook` for Claude Code.
-pub fn run_for(args: &[String]) -> Result<(), String> {
+pub fn run_for(hook: bool, args: &[String]) -> Result<(), String> {
     let root = util::root();
     let md: Vec<(PathBuf, String)> = util::files(&root, &["md"]).into_iter().map(|p| util::read(&p).map(|t| (p, t))).collect::<Result<_, _>>()?;
     let pages = pages(&md);
-    if args.first().is_some_and(|a| a == "--hook") {
+    if hook {
         let mut input = String::new();
         std::io::stdin().read_to_string(&mut input).map_err(|e| format!("stdin: {e}"))?;
         if let Some(context) = hook_context(&root, &pages, &input) {
             println!("{}", serde_json::json!({ "hookSpecificOutput": { "hookEventName": "PostToolUse", "additionalContext": context } }));
         }
         return Ok(());
-    }
-    if args.is_empty() {
-        return Err("usage: cargo xtask docs for PATH… (or --hook)".to_string());
     }
     for arg in args {
         let file = relative(&root, arg).unwrap_or_else(|| arg.clone());
@@ -241,6 +242,19 @@ mod tests {
         assert!(!matches("apps/a/src/commands/c*.rs", "apps/a/src/commands/inspect.rs"));
         assert!(matches("docs/src/a.md", "docs/src/a.md") && !matches("docs/src/a.md", "docs/src/a.mdx"));
         assert!(matches("*", "x") && !matches("*", "x/y"));
+    }
+
+    #[test]
+    fn an_implements_comment_in_a_code_block_is_an_example_not_a_declaration() {
+        let example = "```markdown\n# Not the title\n<!-- implements: crates/** -->\n```\n";
+        let md = [
+            (
+                util::root().join("docs/src/design/example.md"),
+                format!("# Keeping pages true\n\nA page names its files in a comment such as:\n\n{example}"),
+            ),
+            (util::root().join("docs/src/design/real.md"), format!("{example}\n# Real\n\n<!-- implements: crates/a/src/** -->\n")),
+        ];
+        assert_eq!(pages(&md), [page("docs/src/design/real.md", &["crates/a/src/**"]).with_title("Real")]);
     }
 
     #[test]

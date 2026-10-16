@@ -836,6 +836,30 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - Docs now match the code on the machine testing page's pictures, the architecture page's release profile
   and the report's contents, and in the CLI's README on `stitch convert` and the bug report guide on
   `design.svg_hex` (review finding CLI-18).
+- `cargo xtask` refuses an argument a command does not take, with exit status 2 and before anything runs
+  (review finding XT-14). `cargo xtask docs --checks` rewrote the pages and passed. The commands and their
+  options are declared once, with `clap`, which writes the help from them.
+- `cargo xtask docs --check` checks an `#anchor` against the ids mdBook writes, with smart punctuation,
+  and fails for an included file that does not exist (review finding XT-11). A heading with `--` or
+  emphasis in it had another id than the book's, and a heading in an indented line or a comment had one
+  where the book has none. mdBook builds a page whose included file is missing. A file in a generated
+  directory is an error once its generator is gone, and an image must be where its shot writes it.
+- An `implements` comment in a code block is an example, and declares nothing (review finding XT-12).
+- A shot of a test sheet with panels is refused (review finding XT-13). A sheet was drawn once, and the
+  images its panels named were never compared.
+- A code a page names must be registered once its milestone is done, and a `DEV-…` id must be in the
+  deviations ledger (review finding XT-10). Any code with a row in the design's table passed, and
+  deviation ids were not checked.
+- Locally, `cargo xtask conformance` without pyembroidery passes, and CI still requires it (review finding
+  XT-15). A requirement whose one case was skipped failed the run, which the docs said it would not.
+- A page counts as generated when a generator writes it, whatever its first line says (review finding
+  XT-23). The VectorCraft compatibility page said a command that does not exist yet wrote it, and the docs
+  audit and the prose lint passed over it. It says now that step M6.6 will write it.
+- `cargo xtask conformance --check` requires a row in the fixtures index for every fixture (review finding
+  XT-17). The fixtures of shapely's buffers and rows had none.
+- The page on the docs pipeline lists the steps the docs workflow runs, and the conformance page its case
+  kinds and what keeps a requirement's id (review findings XT-16, XT-19). The contract page leaves its
+  count of parameters to its last line, which counts them.
 - Satin columns are sewn as Ink/Stitch sews them in 3 more places, which a review against Ink/Stitch
   found (`REQ-SAT-002`, `REQ-SAT-005`).
   - **Swapped rails without rungs.** With rails of different numbers of nodes, one turned and the rails

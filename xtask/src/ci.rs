@@ -89,12 +89,12 @@ pub fn run() -> Result<(), String> {
         ("unsafe-audit", Box::new(|| outcome(unsafe_audit::run()))),
         ("docs", Box::new(|| outcome(docs::run(true)))),
         ("shots", Box::new(|| outcome(shots::run(true)))),
-        ("conformance", Box::new(|| outcome(conformance::run(&[])))),
+        ("conformance", Box::new(|| outcome(conformance::run(false, None, None)))),
         ("wasm", optional(wasm::target_installed, "rustup target add wasm32-unknown-unknown", guest, Box::new(|| outcome(wasm::run())))),
         ("api", optional(api::available, api::INSTALL, guest, Box::new(|| outcome(api::run(true))))),
         ("deny", deny),
         ("typos", optional(|| util::tool_available("typos", &["--version"]), "cargo install typos-cli", guest, tool_step("typos", &[]))),
-        ("prose", optional(prose::available, prose::INSTALL, guest, Box::new(|| outcome(prose::run(&[]))))),
+        ("prose", optional(prose::available, prose::INSTALL, guest, Box::new(|| outcome(prose::run(prose::DEFAULT_BASE))))),
         ("book", optional(|| util::tool_available("mdbook", &["--version"]), "cargo install mdbook", guest, tool_step("mdbook", &["build", "docs"]))),
     ];
     let mut summary = Vec::new();

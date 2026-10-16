@@ -21,6 +21,8 @@ pub enum Verdict {
     Fail,
     /// No case covers it.
     Untested,
+    /// Its cases did not run here, for want of a tool, and none ran and failed.
+    Skipped,
 }
 
 impl Verdict {
@@ -29,15 +31,33 @@ impl Verdict {
             Verdict::Pass => "✅",
             Verdict::Fail => "❌",
             Verdict::Untested => "⚪",
+            Verdict::Skipped => "⏭",
         }
+    }
+
+    /// Its name in `report.json`.
+    fn name(self) -> &'static str {
+        match self {
+            Verdict::Pass => "pass",
+            Verdict::Fail => "fail",
+            Verdict::Untested => "untested",
+            Verdict::Skipped => "skipped",
+        }
+    }
+
+    /// Whether an active requirement or a registered code may stand so: it passed, or, outside CI, its cases
+    /// were skipped as optional tools are (`docs/src/design/conformance.md`).
+    pub fn acceptable(self, in_ci: bool) -> bool {
+        self == Verdict::Pass || (self == Verdict::Skipped && !in_ci)
     }
 }
 
 /// The verdict for `id` (a requirement or a diagnostic code) from the cases that cover it.
 fn verdict(id: &str, outcomes: &[Outcome]) -> Verdict {
-    let ran: Vec<&Outcome> = outcomes.iter().filter(|o| o.requirements.iter().any(|r| r == id) && o.skipped.is_none()).collect();
+    let covering: Vec<&Outcome> = outcomes.iter().filter(|o| o.requirements.iter().any(|r| r == id)).collect();
+    let ran: Vec<&&Outcome> = covering.iter().filter(|o| o.skipped.is_none()).collect();
     if ran.is_empty() {
-        Verdict::Untested
+        if covering.is_empty() { Verdict::Untested } else { Verdict::Skipped }
     } else if ran.iter().all(|o| o.passed()) {
         Verdict::Pass
     } else {
@@ -83,12 +103,12 @@ pub fn write(dir: &Path, requirements: &[Requirement], outcomes: &[Outcome], com
         "commit": commit,
         "requirements": verdicts.iter().map(|(r, v)| json!({
             "id": r.id, "level": r.level, "status": r.status, "milestone": r.milestone,
-            "result": match v { Verdict::Pass => "pass", Verdict::Fail => "fail", Verdict::Untested => "untested" },
+            "result": v.name(),
             "cases": outcomes.iter().filter(|o| o.requirements.contains(&r.id)).map(|o| o.case.clone()).collect::<Vec<_>>(),
         })).collect::<Vec<_>>(),
         "diagnostics": codes.iter().map(|(code, v)| json!({
             "code": code.id(),
-            "result": match v { Verdict::Pass => "pass", Verdict::Fail => "fail", Verdict::Untested => "untested" },
+            "result": v.name(),
             "cases": outcomes.iter().filter(|o| o.requirements.iter().any(|r| r == code.id())).map(|o| o.case.clone()).collect::<Vec<_>>(),
         })).collect::<Vec<_>>(),
         "cases": outcomes.iter().map(|o| json!({
@@ -183,6 +203,17 @@ mod tests {
             outputs: Vec::new(),
             skipped: None,
         }
+    }
+
+    #[test]
+    fn a_requirement_whose_cases_were_all_skipped_is_skipped_and_fails_only_in_ci() {
+        let skipped = Outcome { skipped: Some("pyembroidery is not installed".into()), ..outcome("oracle", &["REQ-A-001", "REQ-A-002"], &[]) };
+        let outcomes = [skipped, outcome("ok_case", &["REQ-A-002"], &[])];
+        let requirements = [req("REQ-A-001", "active"), req("REQ-A-002", "active"), req("REQ-A-003", "active")];
+        let v = verdicts(&requirements, &outcomes);
+        assert_eq!(v.iter().map(|(_, v)| *v).collect::<Vec<_>>(), [Verdict::Skipped, Verdict::Pass, Verdict::Untested]);
+        assert!(Verdict::Skipped.acceptable(false) && !Verdict::Skipped.acceptable(true));
+        assert!(Verdict::Pass.acceptable(true) && !Verdict::Untested.acceptable(false) && !Verdict::Fail.acceptable(false));
     }
 
     #[test]

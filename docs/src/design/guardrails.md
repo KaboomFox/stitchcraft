@@ -19,10 +19,10 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | WebAssembly | L0–L3 crates and the plug-in build for `wasm32-unknown-unknown` | `xtask/src/wasm.rs` | `cargo xtask wasm` · CI |
 | **Movable into VectorCraft** | Every package is `stitchcraft-*`; crates inherit only workspace keys VectorCraft defines; tooling works from its own folder on StitchCraft's packages ([ADR-0011](adr/0011-movable-into-vectorcraft.md)) | `xtask/src/layers.rs`, `xtask/src/util.rs`, `xtask/src/join.rs` | `move` job in `compat.yml` · daily and on PRs touching manifests or tooling |
 | **No GPL code** | No GPL/AGPL licence text, in any case, nor a module's short GPL notice, and no pasted Python source anywhere in the repository: every text file, documents and files without an extension included ([ADR-0012](adr/0012-read-dont-copy.md)) | `xtask/src/cleanroom.rs` | `cargo xtask cleanroom` · CI |
-| Docs | Generated pages fresh, links and anchors valid, mentioned `cargo xtask` commands exist, ids exist, no long sentence on two pages, every repository path named exists | `xtask/src/docs.rs`, `xtask/src/docs_audit.rs` | `cargo xtask docs --check` · CI |
+| Docs | Generated pages fresh and none left over; links, anchors (as mdBook makes them) and included files valid; mentioned `cargo xtask` commands exist; `REQ-` and `DEV-` ids exist, and a code is registered once its milestone is done; no long sentence on two pages; every repository path named exists | `xtask/src/docs.rs`, `xtask/src/docs_audit.rs`, `xtask/src/markdown.rs` | `cargo xtask docs --check` · CI |
 | **Design pages follow the code** | Every source file of a crate or app is on a page's `implements` comment, and a branch that changes those files changes the page too or records a `Design-reviewed:` line | `xtask/src/design_map.rs`, `.claude/settings.json` (names the pages after each edit) | `cargo xtask docs --check` · CI |
-| Docs images | Every image declared in `docs/shots.toml`, with alt text, and regenerating to the committed file | `xtask/src/shots.rs` | `cargo xtask shots --check` · CI |
-| Conformance | Requirement/case consistency; all cases pass; changed goldens need the `golden-change` label and a changelog line | `xtask/src/conformance/`, `ci.yml`, `goldens.yml` | `cargo xtask conformance` · CI |
+| Docs images | Every image a page shows is one a shot in `docs/shots.toml` writes, with alt text, and regenerating to the committed file | `xtask/src/shots.rs` | `cargo xtask shots --check` · CI |
+| Conformance | Requirement/case consistency; every fixture has its row in the fixtures index; all cases pass; changed goldens need the `golden-change` label and a changelog line | `xtask/src/conformance/`, `ci.yml`, `goldens.yml` | `cargo xtask conformance` · CI |
 | Dependencies | Licence allow-list (GPL family denied), advisories, duplicates, sources | `deny.toml` | CI (`cargo-deny`) |
 | Spelling | Typos in code, docs, commit-facing text | `typos.toml` | CI |
 | **Prose** | New Markdown lines follow the [writing style](../contributing/writing-style.md): the house rules and ai-tells, a style for phrasing that machine-written text overuses | `.vale.ini`, `.vale/styles/`, `xtask/src/prose.rs` (Vale) | `cargo xtask prose` · CI |
@@ -36,7 +36,9 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | **Fuzzing** | Readers never panic, respect their caps and terminate; anything read round-trips and previews | `fuzz/`, `stitchcraft-testkit::fuzz` ([conformance](conformance.md#fuzzing)) | bodies every PR · an hour nightly |
 
 `cargo xtask ci` runs everything that does not need extra tools; tools that are not installed locally
-are reported as skipped, while CI installs them and treats them as required. In GitHub Actions every
+are reported as skipped, while CI installs them and treats them as required. `cargo xtask` refuses an
+option it does not know with exit status 2, before anything runs, so a misspelt `--check` cannot run a
+command's other mode. In GitHub Actions every
 problem a check finds is also an annotation, on the right line of the pull request's diff when it names
 one, and a failed fuzz run puts the end of its output in one: the reason is visible without opening a
 log.

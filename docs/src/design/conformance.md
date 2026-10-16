@@ -35,7 +35,9 @@ status = "planned"        # planned | active | retired
 
 Rules, enforced in CI:
 
-- ids are unique and never reused; retired requirements stay in the file (`--check`);
+- ids are unique (`--check`), and never reused: a retired requirement stays in the file as `retired`.
+  The checks read the file as it is, so review keeps the second rule. `--check` helps, failing for a case
+  that names an id the file lacks, and `docs --check` fails for a page that names one;
 - every case names existing requirements, and an `active` requirement has at least one case (`--check`)
   that passes (the run);
 - a milestone cannot be closed while one of its requirements is `planned` (review);
@@ -92,42 +94,34 @@ files = ["golden/formats/every-command.pes", "golden/testsheets/TS-01.dst"]   # 
 ```
 
 It needs Python with pyembroidery (`STITCHCRAFT_PYTHON`, see `conformance/oracle/requirements.txt`):
-without it the case is skipped locally (⏭ in the report) and fails in CI, like every optional tool.
+without it the case is skipped locally (⏭ in the report) and fails in CI, like every optional tool. A
+requirement whose cases were all skipped is skipped too, and fails the run only in CI.
 
 Geometry that Ink/Stitch leaves to shapely is checked against shapely's own answers. Scripts in
-`conformance/oracle/` ask a pinned shapely, through its public API alone, about random lines: the
-nearest points of rails (`nearest.py`), offset curves (`offset.py`) and the measures that make a satin
-column's rails from its centre line (`centre_line.py`). Their answers are fixtures under
-`conformance/fixtures/geometry/`, one question to a line of text, and the engine's unit tests read them
-with a shared reader (`normalize::fixture`) and answer every question the same way. Regenerating a
-fixture needs shapely, and checking it does not.
+`conformance/oracle/` ask a pinned shapely, through its public API alone, about random shapes:
 
-From M3, `design` cases take an SVG or JSON design and parameters, and check generator properties:
+- the nearest points of rails (`nearest.py`)
+- offset curves (`offset.py`)
+- the measures that make a satin column's rails from its centre line (`centre_line.py`)
+- polygons shrunk and grown, for a fill's inset underlay and its expanded rows (`buffer.py`)
+- the pieces of rows that polygons cut, for a fill's rows (`rows.py`)
+
+Their answers are fixtures under `conformance/fixtures/geometry/`, one question to a line of text, and the
+engine's unit tests read them with a shared reader (`normalize::fixture`) and answer every question the
+same way. Regenerating a fixture needs shapely, and checking it does not.
+
+The `plan` kind takes an SVG design the whole way to machine files, as `stitch plan` does for a profile.
+It checks the plan, and compares the files written from it with golden files. The `strokes` case:
 
 ```toml
-id = "fill-tatami-gap-preserved"
-requirements = ["REQ-FILL-TAT-006", "REQ-FILL-TAT-007"]
-input = "fixtures/fill/c-shape-gap-1mm.svg"     # or an inline design
-profile = "brother-pe800-5x7"
-
-[params]
-fill_method = "tatami_fill"
-row_spacing_mm = 0.4
-pull_compensation_mm = 0.6                       # wider than half the gap
-
-[expect]
-invariants = "all"                               # every L0 plan invariant
-holes = "same-as-input"
-components = "same-as-input"
-inside_region_tolerance_mm = 0.65
-diagnostics = []                                 # exactly these codes, no others
-golden = "golden/fill-tatami-gap-preserved.csv"  # stitch list after quantization
+{{#include ../../../conformance/cases/plans/strokes.toml}}
 ```
 
-Inline designs are allowed for small cases; fixtures are SVG or JSON designs under
-`conformance/fixtures/` (small, hand-written or generated, with a row in the fixtures index stating their
-origin and licence). Large real-world corpora live in a separate repository pinned by commit and
-SHA-256, downloaded by `cargo xtask corpus` — the same policy VectorCraft follows for its corpora.
+What a generator keeps of a shape, such as the holes of a fill, is checked by Rust tests named after their
+requirement. Fixtures are small files under `conformance/fixtures/`, hand-written or generated, each with
+a row in the fixtures index stating its origin and licence (`--check`). Large real-world corpora will
+live in a repository of their own, as VectorCraft's do. `cargo xtask corpus` (M8) will download them at a
+commit and with a SHA-256 this repository pins.
 
 The engine's cases build their small designs with `stitchcraft_testkit::designs`. It also reads a plan's
 shape at a glance: `J L4 S5 L4` is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock

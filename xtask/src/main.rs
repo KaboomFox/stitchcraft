@@ -3,6 +3,11 @@
 //! Every rule the project enforces runs from here — locally with `cargo xtask ci`, and in GitHub Actions
 //! on every pull request — so the rules hold without anyone having to remember them
 //! (`docs/src/design/guardrails.md`). Each subcommand is a module with its own tests.
+//!
+//! The grammar below declares every subcommand and option once: `clap` parses it, writes `--help` from it,
+//! and refuses an argument it does not declare with exit status 2 before anything runs, so a misspelt
+//! `--check` fails instead of running the command's other mode. `cargo xtask docs --check` checks each
+//! `cargo xtask <name>` the docs and workflows mention against it ([`subcommands`]).
 #![forbid(unsafe_code)]
 // A command-line tool reports on the terminal.
 #![allow(clippy::print_stdout, clippy::print_stderr)]
@@ -34,104 +39,231 @@ mod unsafe_audit;
 mod util;
 mod wasm;
 
+use std::path::PathBuf;
 use std::process::ExitCode;
 
-/// Whether a subcommand works today or arrives with a roadmap step.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Status {
-    /// Implemented.
-    Ready,
-    /// Arrives with the given roadmap step; documents may already describe it.
-    Planned(&'static str),
+use clap::{CommandFactory, Parser, Subcommand};
+
+/// `cargo xtask`.
+#[derive(Parser)]
+#[command(name = "cargo xtask", bin_name = "cargo xtask", about = "StitchCraft repository automation", disable_version_flag = true)]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Command>,
 }
 
-/// Every subcommand: name, status, one-line help. `cargo xtask docs --check` fails when a document mentions
-/// `cargo xtask <name>` for a name that is not listed here.
-pub const SUBCOMMANDS: &[(&str, Status, &str)] = &[
-    ("ci", Status::Ready, "run every gate and print a summary"),
-    ("layers", Status::Ready, "check that crates depend only on lower layers"),
-    ("docs", Status::Ready, "regenerate generated pages; --check verifies docs without writing; `for PATH…` names the pages that describe a file"),
-    ("prose", Status::Ready, "lint the Markdown lines a branch adds with Vale (house style and ai-tells); --base REF"),
-    ("conformance", Status::Ready, "run the conformance suite and write the report; --check, --filter TEXT, --bless CASE"),
-    ("cleanroom", Status::Ready, "no GPL licence text or pasted Python source anywhere in the repository"),
-    ("unsafe-audit", Status::Ready, "unsafe only in the plug-in ABI shim, always with SAFETY comments"),
-    ("filesize", Status::Ready, "Rust files warn above 800 lines and fail above 1,500"),
-    ("wasm", Status::Ready, "library crates and the plug-in build for wasm32-unknown-unknown"),
-    ("compat", Status::Ready, "VectorCraft compatibility: `discover`, `contract --ref R --wasm FILE`, `join [--nested] DIR` (report: M6.6)"),
-    ("shots", Status::Ready, "regenerate the documentation images; --check compares them with the committed ones"),
-    ("api", Status::Ready, "write the library crates' public API snapshots; --check compares them"),
-    ("coverage", Status::Ready, "line coverage per crate against the floors in conformance/coverage.toml; --record raises floors"),
-    ("mutants", Status::Ready, "add up cargo-mutants results (DIR…) against conformance/mutation.toml; --record lowers counts"),
-    (
-        "perf",
-        Status::Ready,
-        "plan the hoop's whole field: instructions against conformance/perf.toml, time against NFR-PERF-1; --record lowers the record",
-    ),
-    ("corpus", Status::Planned("M8"), "download the pinned real-world corpora (Ink/Stitch differential testing)"),
-];
+#[derive(Subcommand)]
+enum Command {
+    /// Run every gate and print a summary
+    Ci,
+    /// Check that crates depend only on lower layers
+    Layers,
+    /// Regenerate the generated pages, or check the docs
+    #[command(args_conflicts_with_subcommands = true)]
+    Docs {
+        /// Verify the docs without writing
+        #[arg(long)]
+        check: bool,
+        #[command(subcommand)]
+        pages: Option<Docs>,
+    },
+    /// Lint the Markdown lines a branch adds with Vale (house style and ai-tells)
+    Prose {
+        /// The branch is what changed since its merge base with REF
+        #[arg(long, value_name = "REF", default_value = prose::DEFAULT_BASE)]
+        base: String,
+    },
+    /// Run the conformance suite and write the report
+    Conformance {
+        /// Check requirements and cases without running them
+        #[arg(long)]
+        check: bool,
+        /// Run only the cases whose id, test name or requirements contain TEXT
+        #[arg(long, value_name = "TEXT")]
+        filter: Option<String>,
+        /// Rewrite the golden files of one data case
+        #[arg(long, value_name = "CASE")]
+        bless: Option<String>,
+    },
+    /// No GPL licence text or pasted Python source anywhere in the repository
+    Cleanroom,
+    /// Unsafe only in the plug-in ABI shim, always with SAFETY comments
+    UnsafeAudit,
+    /// Rust files warn above 800 lines and fail above 1,500
+    Filesize,
+    /// Library crates and the plug-in build for wasm32-unknown-unknown
+    Wasm,
+    /// VectorCraft compatibility
+    Compat {
+        #[command(subcommand)]
+        command: Compat,
+    },
+    /// Regenerate the documentation images
+    Shots {
+        /// Compare them with the committed ones without writing
+        #[arg(long)]
+        check: bool,
+    },
+    /// Write the library crates' public API snapshots
+    Api {
+        /// Compare them with the committed ones without writing
+        #[arg(long)]
+        check: bool,
+    },
+    /// Line coverage per crate against the floors in conformance/coverage.toml
+    Coverage {
+        /// Raise the floors to today's coverage
+        #[arg(long)]
+        record: bool,
+    },
+    /// Add up cargo-mutants results against conformance/mutation.toml
+    Mutants {
+        /// Lower the recorded counts to today's
+        #[arg(long)]
+        record: bool,
+        /// Fail for any mutant of the changed lines that no test notices
+        #[arg(long, conflicts_with = "record")]
+        changed: bool,
+        /// cargo-mutants output directories, each holding a mutants.out/
+        #[arg(required = true)]
+        dirs: Vec<PathBuf>,
+    },
+    /// Plan the hoop's whole field: instructions against conformance/perf.toml, time against NFR-PERF-1
+    Perf {
+        /// Lower the record to today's count
+        #[arg(long)]
+        record: bool,
+    },
+    /// Download the pinned real-world corpora for Ink/Stitch differential testing (planned: M8)
+    Corpus,
+}
 
-fn usage() -> String {
-    let mut text = String::from("cargo xtask — StitchCraft repository automation\n\nUSAGE: cargo xtask <command> [options]\n\n");
-    for (name, status, help) in SUBCOMMANDS {
-        let tag = match status {
-            Status::Ready => String::new(),
-            Status::Planned(step) => format!(" (planned: {step})"),
-        };
-        text.push_str(&format!("  {name:<14}{help}{tag}\n"));
+#[derive(Subcommand)]
+enum Docs {
+    /// Name the pages that describe each file
+    For {
+        /// Answer a Claude Code PostToolUse hook, which names the edited file on standard input
+        #[arg(long, conflicts_with = "paths")]
+        hook: bool,
+        /// Files, by path from the repository root
+        #[arg(required_unless_present = "hook")]
+        paths: Vec<String>,
+    },
+}
+
+#[derive(Subcommand)]
+enum Compat {
+    /// The VectorCraft versions each track names today
+    Discover {
+        /// As JSON, for the workflows
+        #[arg(long)]
+        json: bool,
+    },
+    /// Load the built plug-in into VectorCraft's host at a version
+    Contract {
+        /// The VectorCraft tag or commit
+        #[arg(long = "ref", value_name = "TAG|SHA")]
+        reference: String,
+        /// The plug-in's module
+        #[arg(long, value_name = "FILE")]
+        wasm: PathBuf,
+    },
+    /// Join this folder to a VectorCraft checkout's workspace
+    Join {
+        /// Keep StitchCraft's own workspace inside VectorCraft's
+        #[arg(long)]
+        nested: bool,
+        /// The VectorCraft checkout
+        vectorcraft: PathBuf,
+    },
+    /// The compatibility report (planned: M6.6)
+    Report,
+}
+
+/// The subcommands' names, against which `cargo xtask docs --check` checks every `cargo xtask <name>`.
+pub fn subcommands() -> Vec<String> {
+    Cli::command().get_subcommands().map(|command| command.get_name().to_string()).collect()
+}
+
+fn run(command: Command) -> Result<(), String> {
+    match command {
+        Command::Ci => ci::run(),
+        Command::Layers => layers::run(),
+        Command::Docs { pages: Some(Docs::For { hook, paths }), .. } => design_map::run_for(hook, &paths),
+        Command::Docs { check, pages: None } => docs::run(check),
+        Command::Prose { base } => prose::run(&base),
+        Command::Conformance { check, filter, bless } => conformance::run(check, filter.as_deref(), bless.as_deref()),
+        Command::Cleanroom => cleanroom::run(),
+        Command::UnsafeAudit => unsafe_audit::run(),
+        Command::Filesize => filesize::run(),
+        Command::Wasm => wasm::run(),
+        Command::Compat { command: Compat::Discover { json } } => compat::discover(json),
+        Command::Compat { command: Compat::Contract { reference, wasm } } => compat::contract(&reference, &wasm),
+        Command::Compat { command: Compat::Join { nested, vectorcraft } } => join::run(nested, &vectorcraft),
+        Command::Compat { command: Compat::Report } => Err("`compat report` arrives with roadmap step M6.6".to_string()),
+        Command::Shots { check } => shots::run(check),
+        Command::Api { check } => api::run(check),
+        Command::Coverage { record } => coverage::run(record),
+        Command::Mutants { record, changed, dirs } => mutants::run(record, changed, &dirs),
+        Command::Perf { record } => perf::run(record),
+        Command::Corpus => Err("`corpus` arrives with roadmap step M8".to_string()),
     }
-    text
 }
 
 fn main() -> ExitCode {
-    let mut args = Vec::new();
-    for arg in std::env::args_os().skip(1) {
-        match arg.into_string() {
-            Ok(a) => args.push(a),
-            Err(raw) => {
-                eprintln!("xtask: argument is not valid Unicode: {}", raw.to_string_lossy());
-                return ExitCode::from(2);
-            }
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(e) => {
+            // Help prints to standard output and succeeds; anything else is a usage error, status 2.
+            let _ = e.print();
+            return ExitCode::from(u8::try_from(e.exit_code()).unwrap_or(2));
         }
-    }
-    let Some((command, rest)) = args.split_first() else {
-        print!("{}", usage());
+    };
+    let Some(command) = cli.command else {
+        let _ = Cli::command().print_help();
         return ExitCode::SUCCESS;
     };
-    let flag = |f: &str| rest.iter().any(|a| a == f);
-    let result = match command.as_str() {
-        "ci" => ci::run(),
-        "layers" => layers::run(),
-        "docs" if rest.first().is_some_and(|a| a == "for") => design_map::run_for(rest.get(1..).unwrap_or_default()),
-        "docs" => docs::run(flag("--check")),
-        "prose" => prose::run(rest),
-        "conformance" => conformance::run(rest),
-        "cleanroom" => cleanroom::run(),
-        "unsafe-audit" => unsafe_audit::run(),
-        "filesize" => filesize::run(),
-        "wasm" => wasm::run(),
-        "compat" => compat::run(rest),
-        "shots" => shots::run(flag("--check")),
-        "api" => api::run(flag("--check")),
-        "coverage" => coverage::run(flag("--record")),
-        "mutants" => mutants::run(rest),
-        "perf" => perf::run(flag("--record")),
-        "-h" | "--help" | "help" => {
-            print!("{}", usage());
-            Ok(())
-        }
-        other => match SUBCOMMANDS.iter().find(|(name, _, _)| *name == other) {
-            Some((_, Status::Planned(step), _)) => Err(format!("`{other}` arrives with roadmap step {step}")),
-            _ => Err(format!("unknown command `{other}`\n\n{}", usage())),
-        },
-    };
-    match result {
+    let name = std::env::args().nth(1).unwrap_or_default();
+    match run(command) {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
             eprintln!("xtask: {e}");
             if std::env::var_os("GITHUB_ACTIONS").is_some() {
-                println!("{}", util::annotation("error", &format!("cargo xtask {command}"), &e));
+                println!("{}", util::annotation("error", &format!("cargo xtask {name}"), &e));
             }
             ExitCode::FAILURE
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_grammar_is_consistent() {
+        Cli::command().debug_assert();
+    }
+
+    #[test]
+    fn the_workflows_invocations_parse() {
+        for args in [
+            &["docs", "--check"][..],
+            &["docs", "for", "--hook"],
+            &["docs", "for", "crates/stitchcraft-core/src/lib.rs"],
+            &["conformance", "--check"],
+            &["conformance", "--filter", "ts-01", "--bless", "ts-01"],
+            &["compat", "discover", "--json"],
+            &["compat", "contract", "--ref", "v0.7.0", "--wasm", "plugin.wasm"],
+            &["compat", "join", "--nested", ".."],
+            &["mutants", "--changed", "a", "b"],
+            &["prose", "--base", "origin/main"],
+        ] {
+            assert!(Cli::try_parse_from(std::iter::once("xtask").chain(args.iter().copied())).is_ok(), "{args:?}");
+        }
+        for args in [&["docs", "--check", "for", "x"][..], &["docs", "for"], &["mutants"], &["mutants", "--record", "--changed", "a"]] {
+            assert!(Cli::try_parse_from(std::iter::once("xtask").chain(args.iter().copied())).is_err(), "{args:?}");
+        }
+        assert!(subcommands().iter().any(|name| name == "unsafe-audit") && subcommands().iter().any(|name| name == "corpus"));
     }
 }
