@@ -4,7 +4,7 @@ badge.svg
   sha256    5fea2f6734fadacdc1f3f1a7268bd964d3ab6c4bf1ba3b9f8fd6d10a4aae0d8c
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      44.0 × 44.0 mm
-  stitches  124 stitches, 2 jumps, 0 trims, 1 colour change, 0 stops
+  stitches  124 stitches, 2 jumps, 1 trim, 1 colour change, 0 stops
   threads   1. unnamed (#c8102e), shown as Brother PEC 5 "Red"
             2. unnamed (#1f4e9c), shown as Brother PEC 2 "Blue"
   preview   badge.png (384 × 384 pixels)

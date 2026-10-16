@@ -4,7 +4,7 @@ TS-01 · Orientation and scale
   sha256    854cde9f533e3b6567afb570a0eb3d4547e7813f5649da97d27be104f8cd18c6
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      120.0 × 120.0 mm
-  stitches  274 stitches, 7 jumps, 7 trims, 0 colour changes, 0 stops
+  stitches  274 stitches, 7 jumps, 6 trims, 0 colour changes, 0 stops
   threads   1. Black (#000000), shown as Brother PEC 20 "Black"
 after sewing, check:
   - The F reads normally: not mirrored, not upside down, not turned.

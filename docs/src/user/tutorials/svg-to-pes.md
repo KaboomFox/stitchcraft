@@ -69,7 +69,8 @@ of 2 rectangles and 2 lines that nearly touch:
 - `SC-I0504` says a needle point too close to the one before was left out, where the lines nearly touch.
 
 `stitch explain` with a code tells you more, and [diagnostic codes](../reference/diagnostics.md) lists
-them all. `--report` writes the summary and the messages as JSON, for scripts.
+them all. `--report` writes the file's counts, size and SHA-256, the threads and the messages as JSON, for
+scripts.
 
 ## Next
 

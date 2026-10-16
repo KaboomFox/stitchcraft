@@ -4,7 +4,8 @@
 //! (`SC-E0701`, `SC-W0702`), then the plan invariants (a violation is a StitchCraft bug, `SC-E0009`). The
 //! profile is the sheet's own, the hoop it is sewn in, unless `--profile` names another. A sheet larger
 //! than that hoop is refused before the invariants run, whose positions outside the hoop would call it a
-//! bug. The report prints the file's SHA-256, so a sew-out report names exactly the bytes that were sewn.
+//! bug. The report prints the file's SHA-256, so a sew-out report names exactly the bytes that were sewn,
+//! and its size and counts are the file's, read back as a machine reads it (`REQ-CLI-008`).
 
 use std::fmt::Write as _;
 use std::path::Path;
@@ -16,7 +17,7 @@ use stitchcraft_plan::invariants;
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 
-use super::{Outcome, Status, describe_file, describe_plan, describe_threads, output_format, render_diagnostics, write_files};
+use super::{Outcome, Status, describe_file, describe_plan, describe_threads, output_format, read_back, render_diagnostics, write_files};
 use crate::cli::TestsheetArgs;
 
 /// Runs `stitch testsheet`.
@@ -64,20 +65,32 @@ pub fn run(args: &TestsheetArgs) -> Outcome {
         }
     };
     diagnostics.extend(notes);
+    let back = match read_back(&bytes, &plan) {
+        Ok(back) => back,
+        Err(bug) => return Outcome::refuse(String::new(), &[bug]),
+    };
     let said = render_diagnostics(&diagnostics);
+    let stdout = report(sheet, profile, format, output, (&plan, &back), &bytes);
     if let Err(unwritten) = write_files(&[(output, &bytes)], &said) {
         return unwritten;
     }
-    Outcome { stdout: report(sheet, profile, format, output, &plan, &bytes), stderr: said, status: Status::Done }
+    Outcome { stdout, stderr: said, status: Status::Done }
 }
 
-/// What was written, what the machine will ask for, and what to check.
-fn report(sheet: &TestSheet, profile: &MachineProfile, format: FormatId, output: &Path, plan: &StitchPlan, bytes: &[u8]) -> String {
+/// What is written, read `back`, what the machine will ask for of the `plan`, and what to check.
+fn report(
+    sheet: &TestSheet,
+    profile: &MachineProfile,
+    format: FormatId,
+    output: &Path,
+    (plan, back): (&StitchPlan, &StitchPlan),
+    bytes: &[u8],
+) -> String {
     let mut out = String::new();
     let _ = writeln!(out, "{} · {}", sheet.id, sheet.title);
     describe_file(&mut out, output, format, bytes);
     let _ = writeln!(out, "  profile   {} ({})", profile.id, profile.name);
-    describe_plan(&mut out, plan);
+    describe_plan(&mut out, back);
     describe_threads(&mut out, plan, format.palette().map(|id| id.palette()));
     let _ = writeln!(out, "after sewing, check:");
     for check in sheet.checks {
@@ -117,7 +130,8 @@ mod tests {
         assert!(out.stdout.starts_with("TS-01 · Orientation and scale\n"));
         assert!(out.stdout.contains(&format!("sha256    {}", hex(&Sha256::digest(&bytes)))));
         assert!(out.stdout.contains("size      120.0 × 120.0 mm"));
-        assert!(out.stdout.contains("stitches  274 stitches, 7 jumps, 7 trims, 0 colour changes, 0 stops"));
+        // The file's counts: the sheet's plan ends with a trim, which a PES file has no record for.
+        assert!(out.stdout.contains("stitches  274 stitches, 7 jumps, 6 trims, 0 colour changes, 0 stops"));
         assert!(out.stdout.contains("  threads   1. Black (#000000), shown as Brother PEC 20 \"Black\"\n"));
         assert!(out.stdout.contains("after sewing, check:\n  - The F reads normally"));
     }
