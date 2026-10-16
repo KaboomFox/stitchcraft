@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-6b295a51.js";
+            window.path_to_searchindex_js = "../../searchindex-a1ae4710.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -190,6 +190,9 @@ embroidered. StitchCraft keeps them, with their parameters’ names and defaults
 both. Where the area Ink/Stitch fills departs from the drawing, StitchCraft follows the drawing, and a
 diagnostic says where the two differ. A part Ink/Stitch leaves out without a word is left out with a
 warning.</p>
+<p>A fill whose <code>fill</code> setting is off sews nothing, and nothing is said of it, as in Ink/Stitch
+(<code>REQ-FILL-003</code>). The path’s outline, if it has one, is sewn as its stroke settings say, and the element
+before it still ends near its area, as Ink/Stitch’s does.</p>
 <h2 id="region"><a class="header" href="#region">Region</a></h2>
 <p>A fill’s region is the area an SVG renderer paints for its path, in parts with holes
 (<code>stitchcraft_engine::normalize::region</code>, <code>REQ-FILL-001</code>):</p>
@@ -334,9 +337,10 @@ ring between 2 points of one ring, the shorter way round, and between 2 rings th
 rings and rows (<code>DEV-FILL-006</code>). Ink/Stitch’s needle takes the way round with fewer nodes of its
 graph, a node every CSS pixel along the outline’s sides, which is about the shorter way but not always
 (<code>DEV-FILL-011</code>). It sews running stitches of the first <code>running_stitch_length_mm</code>, at least twice the
-shortest stitch, within <code>running_stitch_tolerance_mm</code>. The first of them would sew the row’s end
-again, so it is left out. With <code>skip_last</code> the row’s end is not sewn, and the first running stitch
-stays unless the next row starts beside it.</li>
+shortest stitch, within <code>running_stitch_tolerance_mm</code>. Ink/Stitch reads a fill’s value as one number,
+and sews a value of several in its default, 2.5 mm (<code>DEV-SAT-005</code>). The first running stitch would sew
+the row’s end again, so it is left out. With <code>skip_last</code> the row’s end is not sewn, and the first
+running stitch stays unless the next row starts beside it.</li>
 <li><strong>The shortest stitch.</strong> Rows the row spacing apart start and end nearer each other than the shortest
 stitch a machine sews well, and a row’s first grid point can lie just past its start. A needle point
 nearer the one before it than the shortest stitch is left out, as Ink/Stitch leaves out points nearer
@@ -440,7 +444,8 @@ pieces with a sliver among them, or pieces level at their least x, as it walks i
 Every layer of the underlay is sewn on one piece before the next, each starting nearest the needle. Each
 piece’s top rows start nearest the needle too, after the piece before, and end nearest the next part or
 element. Ink/Stitch starts every piece’s top rows nearest where the needle was before the first
-(<code>DEV-FILL-008</code>). Where shrinking wears a part away entirely, the part itself is sewn, as in Ink/Stitch,
+(<code>DEV-FILL-008</code>). Ink/Stitch sews each piece’s top rows as a group of its own. With
+<code>force_lock_stitches</code>, so does StitchCraft: assembly ties each off and jumps to the next, however near. Where shrinking wears a part away entirely, the part itself is sewn, as in Ink/Stitch,
 and <code>SC-W0310</code> (inset) or <code>SC-W0309</code> (expand) says so, as Ink/Stitch warns.</p>
 <h3 id="7-pull-compensation-and-gap-fill-rows"><a class="header" href="#7-pull-compensation-and-gap-fill-rows">7. Pull compensation and gap-fill rows</a></h3>
 <p>The thread pulls a row in at its ends. Each top row’s segment is lengthened at both ends by

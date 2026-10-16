@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-6b295a51.js";
+            window.path_to_searchindex_js = "../../searchindex-a1ae4710.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -221,8 +221,9 @@ a third rung step 3 finds them.</li>
 in step 3.</li>
 <li>Every other subpath is a rung. A rung joins the point where it crosses the first rail to the point
 where it crosses the second. Where it misses a rail, the point of that rail nearest the rung is used,
-with <code>SC-W0203</code>. A rung that crosses a rail more than once does not say which crossing it means. It
-is left out, with <code>SC-W0207</code>, and the satin is sewn without it.</li>
+with <code>SC-W0203</code>. Of points as near as each other, it is the one shapely’s nearest points of the rung
+and the rail give (see <em>Equally near points</em>). A rung that crosses a rail more than once does not say
+which crossing it means. It is left out, with <code>SC-W0207</code>, and the satin is sewn without it.</li>
 </ol>
 <p>Recognition runs before any stitch is computed. The generator only ever gets rails, and odd geometry is
 a diagnostic that names the subpath, never a crash. Subpaths are numbered from 1 in the order the path
@@ -266,8 +267,9 @@ line of 2 points gets one rung in its middle.</li>
 <li>Each rung is perpendicular to the line, 1.2 times the column’s width long, and is kept only when it
 crosses each rail exactly once. It pairs the 2 points where it crosses them.</li>
 </ol>
-<p>A column whose rungs are all left out pairs its rails’ points in order, as a column drawn with 2 rails
-and no rungs does (see Correspondence).</p>
+<p>A column whose rungs are all left out is one section, from its rails’ starts to their ends (see
+Correspondence), as in Ink/Stitch. Ink/Stitch adds rungs across the nodes from the path as drawn, and a
+path of one line gives none.</p>
 <h3 id="lines-that-cross-themselves"><a class="header" href="#lines-that-cross-themselves">Lines that cross themselves</a></h3>
 <p>Where the line crosses itself or comes back near itself, its offsets split into several curves. A line
 whose offsets split, or whose ends lie within a CSS pixel of each other, is cut in half by length, and
@@ -279,13 +281,16 @@ out, and the rest of the column is sewn. A stretch shorter than a CSS pixel is l
 every half of it would be too. A column with no part left has no rails, and gets <code>SC-E0214</code> and no
 stitches.</p>
 <h3 id="closed-lines"><a class="header" href="#closed-lines">Closed lines</a></h3>
-<p>A path closed with <code>Z</code> is a closed line, as Ink/Stitch reads it. Before its rails are made, it is rolled
-to start in the middle of its first segment whose rung, a thousandth of a CSS pixel longer than the
-column is wide, crosses the edge of the stroke exactly twice: away from where the line crosses itself
-or folds tight. An end of the rung that lies on the edge counts as a crossing, as shapely counts it. A
-line that ends where it starts, closed or drawn back to its start, then starts and
-ends in the middle of its first segment. Its points are rounded to a ten-thousandth of a CSS pixel as
-Ink/Stitch rounds them. Points that then repeat are left out.</p>
+<p>A line whose subpath is closed with <code>Z</code> is a closed line, as Ink/Stitch reads a path whose last command
+is <code>Z</code>. Subpaths left out as points have no say, and an open line followed by a point closed with <code>Z</code> is
+open. After a closed line, a move-to, which draws nothing, leaves it closed, where Ink/Stitch reads it as
+open (<code>DEV-SAT-001</code>).</p>
+<p>Before its rails are made, a closed line is rolled to start in the middle of its first segment whose
+rung, a thousandth of a CSS pixel longer than the column is wide, crosses the edge of the stroke exactly
+twice: away from where the line crosses itself or folds tight. An end of the rung that lies on the edge
+counts as a crossing, as shapely counts it. A line that ends where it starts, closed or drawn back to its
+start, then starts and ends in the middle of its first segment. Its points are rounded to a
+ten-thousandth of a CSS pixel as Ink/Stitch rounds them. Points that then repeat are left out.</p>
 <h3 id="which-lines-are-the-rails"><a class="header" href="#which-lines-are-the-rails">Which lines are the rails</a></h3>
 <p>The rails made from the line are the column’s rails, and every rung pairs the points where it crosses
 them. Ink/Stitch hands the lines it makes back to its satin column as subpaths, which tells rails from
@@ -314,7 +319,9 @@ wins. <code>none</code>, <code>first</code>, <code>second</code> and <code>both<
 <p>Every rung cuts each rail at the distance along it of the rung’s point on it, after any reversal. Each
 rail is cut at its own distances, in order, and the n-th part of one rail goes with the n-th part of the
 other: a section. A part of no length leaves its section out, as where two rungs meet a rail at one
-point or one meets it at an end. Within a section, the point at a fraction of rail A’s part goes with the
+point or one meets it at an end. A column left with no section sews nothing, and <code>SC-E0216</code> says why.
+Ink/Stitch refuses it too, unless rounding its rails in CSS pixels leaves a section a few millionths of
+a pixel long, which it sews as a fan. Within a section, the point at a fraction of rail A’s part goes with the
 point at the same fraction of rail B’s.</p>
 <p>A column of 2 subpaths has no rungs, and gets rungs across its rails’ nodes instead, as Ink/Stitch adds
 them. The 2nd node of one rail goes with the 2nd node of the other, and on in order, without each rail’s
@@ -545,7 +552,7 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <tr><td><code>REQ-SAT-002</code></td><td>Consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails and within 5 % on curves. The last pair is at most a spacing on</td></tr>
 <tr><td><code>REQ-SAT-003</code></td><td>With a longest stitch, a longer top stitch is split as <code>split_method</code> says. By default it splits into the fewest equal parts, and the stitch back into as many as the stitch across before. Simple and staggered splits fall at whole multiples of the longest stitch, from a start that <code>staggered</code> moves along</td></tr>
 <tr><td><code>REQ-SAT-004</code></td><td>Underlays come before the top stitches and leave them as they were: the centre walk, then the contour and the zigzag. Straight stitches of one length join them, no longer than the running stitch’s length. After an odd centre walk the rest runs from the column’s end</td></tr>
-<tr><td><code>REQ-SAT-005</code></td><td>Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces <code>SC-E0201</code> and no stitches, and a rung that misses a rail joins the rail’s nearest point (<code>SC-W0203</code>)</td></tr>
+<tr><td><code>REQ-SAT-005</code></td><td>Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces <code>SC-E0201</code> and no stitches, and a rung that misses a rail joins the rail’s nearest point (<code>SC-W0203</code>), the one shapely gives of points as near. A column with no section to sew produces <code>SC-E0216</code> and no stitches</td></tr>
 <tr><td><code>REQ-SAT-006</code></td><td>A parameter with a value for each side changes only its own side: a rail’s stitch ends, or the column’s start or end</td></tr>
 <tr><td><code>REQ-SAT-007</code></td><td>Random widths and spacing are reproducible from the element and its seed, and stay within their ranges</td></tr>
 <tr><td><code>REQ-SAT-008</code></td><td>Push compensation shortens the rails at the column’s start and end before they are cut, or lengthens them where negative. A rail it would leave shorter than half a CSS pixel keeps its length (<code>SC-W0211</code>)</td></tr>
@@ -565,7 +572,8 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <h2 id="diagnostics"><a class="header" href="#diagnostics">Diagnostics</a></h2>
 <p><code>SC-E0201</code>, <code>SC-W0202</code>, <code>SC-W0203</code>, <code>SC-W0205</code>, <code>SC-W0206</code> (a contour underlay too short for its insets
 keeps its length), <code>SC-W0207</code>, <code>SC-W0208</code>, <code>SC-W0209</code> (a satin wider than 12 mm risks snagging: consider
-split stitches or a fill), <code>SC-W0210</code>, <code>SC-W0211</code>, <code>SC-W0212</code> and <code>SC-W0215</code> (a column too small to sew).</p>
+split stitches or a fill), <code>SC-W0210</code>, <code>SC-W0211</code>, <code>SC-W0212</code>, <code>SC-W0213</code>, <code>SC-E0214</code>, <code>SC-W0215</code> (a column
+too small to sew) and <code>SC-E0216</code> (a column without a section to sew).</p>
 
                     </main>
 

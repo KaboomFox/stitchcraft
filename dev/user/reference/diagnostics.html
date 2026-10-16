@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-6b295a51.js";
+            window.path_to_searchindex_js = "../../searchindex-a1ae4710.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -210,6 +210,7 @@
 <tr><td><a href="#sc-w0213"><code>SC-W0213</code></a></td><td>Warning</td><td>Parts of a satin column drawn as one path left out</td></tr>
 <tr><td><a href="#sc-e0214"><code>SC-E0214</code></a></td><td>Error</td><td>Satin column drawn as one path could not be made into rails</td></tr>
 <tr><td><a href="#sc-w0215"><code>SC-W0215</code></a></td><td>Warning</td><td>Satin column too small for the shortest stitch; left out</td></tr>
+<tr><td><a href="#sc-e0216"><code>SC-E0216</code></a></td><td>Error</td><td>Satin column has no section to sew</td></tr>
 <tr><td><a href="#sc-w0303"><code>SC-W0303</code></a></td><td>Warning</td><td>Parts of a fill too small to sew left out</td></tr>
 <tr><td><a href="#sc-w0304"><code>SC-W0304</code></a></td><td>Warning</td><td>Fill smaller than 1.4 mm²</td></tr>
 <tr><td><a href="#sc-w0305"><code>SC-W0305</code></a></td><td>Warning</td><td>Fill part too thin for rows; sewn round its outline</td></tr>
@@ -390,6 +391,13 @@ first: a speck of a column, a few tenths of a millimetre across. Any stitch it c
 shorter than the machine sews well, would hammer one spot of the fabric and could break the thread,
 so it is left out, as a stroke that small is (<code>SC-W0401</code>). Ink/Stitch sews such a column.</p>
 <p>The message gives the shortest stitch. Draw the column larger, or delete it if it is a stray.</p>
+<h2 id="sc-e0216"><a class="header" href="#sc-e0216">SC-E0216</a></h2>
+<p><strong>Error</strong> — Satin column has no section to sew</p>
+<p>A satin column’s rungs, or its push compensation, leave each of its sections with no length on one of
+its rails, so no stitch goes across it and the column is not sewn. A rung from the first rail’s
+start to the second rail’s end does this, and so does push compensation that takes off the parts of
+a short column’s rails where its rungs meet them. Ink/Stitch says such a column cannot be stitched.</p>
+<p>Move the rungs so that each meets both rails away from their ends, or lower <code>push_compensation_mm</code>.</p>
 <h2 id="sc-w0303"><a class="header" href="#sc-w0303">SC-W0303</a></h2>
 <p><strong>Warning</strong> — Parts of a fill too small to sew left out</p>
 <p>A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6b295a51.js";
+            window.path_to_searchindex_js = "../searchindex-a1ae4710.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -214,8 +214,14 @@ does not read. The adapter ignores them too, and <code>SC-W0804</code> names eac
 So is a size of 0 or less, and a viewBox with no area, in which a viewer draws nothing.</li>
 <li>Transforms compose through every ancestor. The matrices use <code>stitchcraft_core::math</code>, so the result
 is the same on every platform (<a href="determinism.html">determinism</a>).</li>
-<li>Path data is read as SVG viewers draw it, arcs included. An arc becomes cubic curves of at most 30°.
-An error in the data ends the path at the error.</li>
+<li>Path data is read as SVG viewers draw it, arcs included. An error in the data ends the path at the
+error.</li>
+<li>An arc becomes cubic curves as inkex, which Ink/Stitch reads files with, cuts it: in equal pieces, one
+more than the whole quarter turns it makes. Manual stitch puts a needle point on each piece’s end, as
+Ink/Stitch’s does. inkex counts the quarter turns in floating point, and its rounding can cut an arc of
+a whole number of quarter turns into one piece fewer (<code>DEV-SVG-002</code>).</li>
+<li>A <code>&lt;circle&gt;</code> or an <code>&lt;ellipse&gt;</code> starts at its top and goes round anticlockwise on screen, as inkex
+draws it, so a stroke round it starts and runs as Ink/Stitch’s does.</li>
 <li>Positions are exact to within a micrometre (<code>REQ-SVG-001</code>). Any path data reads without failing the
 adapter, and fuzzing checks it (<code>REQ-SVG-002</code>).</li>
 <li>A length may have spaces around it. One that does not read is 0, as in a viewer, and <code>SC-W0804</code> names

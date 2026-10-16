@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-6b295a51.js";
+            window.path_to_searchindex_js = "../../searchindex-a1ae4710.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -221,8 +221,8 @@ the stitches follow the curve.</p>
 </div>
 <!-- /shot -->
 <p>At 2 mm the curve is sewn in 3 straight stitches, and the half disc comes out as a trapezoid. At 0.1 mm
-StitchCraft shortens the stitches until each keeps within 0.1 mm of the curve, and the curve comes out
-round.</p>
+StitchCraft sews the curve in more stitches, still all of one length, until each keeps within 0.1 mm of
+it, and the curve comes out round.</p>
 <h2 id="bean-stitch-and-repeats"><a class="header" href="#bean-stitch-and-repeats">Bean stitch and repeats</a></h2>
 <p><code>bean_stitch_repeats</code> sews each stitch more than once, for a bolder line. At 1 each stitch is sewn 3
 times, there, back and there again, and at 2 it is sewn 5 times. With a list such as <code>1 0</code>, the stitches
@@ -240,7 +240,8 @@ stripes. <code>enable_random_stitch_length</code> varies each stitch’s length 
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/random-length-2.png" alt="14 rows of running stitch 0.6 mm apart, sewn back and forth as one path, random"><span class="img-wrapper"><img src="../../images/generated/random-length-2.png" alt="14 rows of running stitch 0.6 mm apart, sewn back and forth as one path, random"></span></label></p>
 <!-- /shot -->
 <p>The stitching still ends on each corner. <code>random_seed</code> sets where the random lengths start. The same
-element and seed give the same stitches every time, on every computer.</p>
+element and seed give the same stitches every time, on every computer, and elements alike given the same
+seed vary alike. Left empty, each element varies its own way.</p>
 <h2 id="manual-stitch"><a class="header" href="#manual-stitch">Manual stitch</a></h2>
 <p>With <code>stroke_method</code> set to <code>manual_stitch</code>, each node of the path is a needle point and nothing else is.
 A curve gives only its end node. Use it to place stitches by hand, or to sew a stitch file that was

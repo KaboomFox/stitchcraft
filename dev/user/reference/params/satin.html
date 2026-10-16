@@ -35,7 +35,7 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-6b295a51.js";
+            window.path_to_searchindex_js = "../../../searchindex-a1ae4710.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../toc-623c1739.js"></script>
@@ -346,9 +346,9 @@ fall apart, at the cost of a few more stitches.</p>
 </ul>
 <h3 id="min_random_split_length_mm"><a class="header" href="#min_random_split_length_mm"><code>min_random_split_length_mm</code></a></h3>
 <p><strong>Shortest split stitch.</strong> With a random split phase, also split stitches longer than this but no longer than the longest
-stitch. Empty: the longest stitch.</p>
+stitch. 0 splits every stitch. Empty: the longest stitch.</p>
 <ul>
-<li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty)</li>
+<li><strong>Accepts:</strong> a length from 0 to 25 mm, or empty</li>
 <li><strong>Default:</strong> empty</li>
 <li><strong>Shown when</strong> <a href="#split_method"><code>split_method</code></a> is <code>default</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-6b295a51.js";
+            window.path_to_searchindex_js = "../../searchindex-a1ae4710.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -196,10 +196,16 @@ accepted (<a href="diagnostics.html#sc-e0101"><code>SC-E0101</code></a>); a valu
 <li><strong>Angles</strong> are degrees (<code>45</code>, <code>45°</code> or <code>45deg</code>), turned into the range from −180 (exclusive) to 180.</li>
 <li><strong>Percentages</strong> may end in <code>%</code>.</li>
 <li><strong>On or off</strong> is <code>true</code> or <code>false</code>; <code>yes</code>/<code>no</code>, <code>on</code>/<code>off</code> and <code>1</code>/<code>0</code> work too.</li>
-<li><strong>Lists</strong> (several lengths, numbers or angles) are separated by spaces or commas: <code>2.5 1.2</code>.</li>
-<li><strong>Seeds</strong> are a number or any text; empty means “derive it from the element”, so every element
-differs but every run is the same.</li>
+<li><strong>Lists</strong> (several lengths, numbers or angles) are separated by spaces: <code>2.5 1.2</code>. A comma separates
+nothing and is no decimal point, so <code>2.5,1.2</code> and <code>3,5</code> are errors that say so. An angle in a list may
+end with one comma (<code>0, 90</code>), as older files write a fill’s underlay angles.</li>
+<li><strong>Seeds</strong> are a number or any text. Elements given the same seed vary alike; empty means “derive it
+from the element”, so every element differs but every run is the same.</li>
+<li><strong>Empty</strong> text, or spaces alone, is not set: the parameter takes its default, as in Ink/Stitch.</li>
 </ul>
+<p>An element reads only the settings its stitch type uses, and only those its other settings show: a
+running stitch reads no zigzag spacing, and no length variation while random stitch length is off. A
+setting it does not read is kept with the element, unchecked, and changes nothing.</p>
 <p>Programs that store values as JSON (and the <a href="params.schema.json">JSON Schema</a> that describes them) use
 numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <code>null</code> for an empty value.</p>
 <h2 id="groups"><a class="header" href="#groups">Groups</a></h2>
@@ -215,7 +221,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/repeat.html">Repeat parameters</a></td><td>2</td><td>Running stitch, Ripple stitch, Zigzag stitch, Manual stitch</td></tr>
 <tr><td><a href="params/satin.html">Satin parameters</a></td><td>34</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
 <tr><td><a href="params/pull.html">Pull parameters</a></td><td>2</td><td>Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</td></tr>
-<tr><td><a href="params/fill.html">Fill parameters</a></td><td>1</td><td>Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill</td></tr>
+<tr><td><a href="params/fill.html">Fill parameters</a></td><td>2</td><td>Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill</td></tr>
 <tr><td><a href="params/tatami.html">Tatami parameters</a></td><td>15</td><td>Tatami fill</td></tr>
 </tbody>
 </table>
@@ -243,6 +249,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/satin.html#end_at_nearest_point"><code>end_at_nearest_point</code></a></td><td>End at nearest point</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/tatami.html#end_row_spacing_mm"><code>end_row_spacing_mm</code></a></td><td>End row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/tatami.html#expand_mm"><code>expand_mm</code></a></td><td>Expand</td><td>Tatami parameters</td></tr>
+<tr><td><a href="params/fill.html#fill"><code>fill</code></a></td><td>Sew the fill</td><td>Fill parameters</td></tr>
 <tr><td><a href="params/fill.html#fill_method"><code>fill_method</code></a></td><td>Fill method</td><td>Fill parameters</td></tr>
 <tr><td><a href="params/tatami.html#fill_underlay"><code>fill_underlay</code></a></td><td>Underlay</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/tatami.html#fill_underlay_angle"><code>fill_underlay_angle</code></a></td><td>Underlay angle</td><td>Tatami parameters</td></tr>

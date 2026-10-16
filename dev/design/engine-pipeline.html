@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6b295a51.js";
+            window.path_to_searchindex_js = "../searchindex-a1ae4710.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -212,8 +212,10 @@ them from a column’s centre line (<a href="algorithms/satin.html#single-path-s
 <p>Adapters have already applied transforms and converted units, so normalization never sees host types.</p>
 <h2 id="2-validate"><a class="header" href="#2-validate">2. Validate</a></h2>
 <ul>
-<li>Parameters are checked by the registry: type, range, applicability, visibility conditions; the
-generator receives a typed struct or nothing.</li>
+<li>Parameters are read by the registry as the element’s stitch type reads them. Blank text takes the
+default, and a setting the stitch type does not use, or that its other settings hide, is kept unread
+(<a href="params.html#the-parameters-an-element-reads-req-prm-004">parameters</a>). The rest are checked for type and range,
+and the generator receives a typed struct or nothing.</li>
 <li>Shapes are checked against the stitch type. A satin needs a subpath longer than a point (<code>SC-E0201</code>),
 a fill needs a non-empty region, and a running stitch needs a path longer than the minimum stitch
 length.</li>
@@ -233,12 +235,14 @@ M4.2. A satin column also reads the running stitch’s length (<code>running_sti
 that join its underlays are no longer than the first value. For any other stroke the generator is its
 <code>stroke_method</code>. <code>running_stitch</code> (the default) and
 <code>manual_stitch</code> are sewn from M3. A satin column drawn as one path no wider than the design’s
-<code>min_satin_stroke_width</code> is sewn as a stroke, with <code>SC-W0212</code>, as in Ink/Stitch (<code>REQ-SAT-015</code>). A wider
-one is sewn between rails made from its line from M4.9 (<code>REQ-SAT-016</code>). A fill’s region is built first,
-so what it leaves out and how it will be sewn are said (<code>SC-W0303</code>, <code>SC-W0304</code>, <code>SC-I0306</code>, <code>SC-W0307</code>)
+<code>min_satin_stroke_width</code> is sewn as a stroke, with <code>SC-W0212</code>, as in Ink/Stitch (<code>REQ-SAT-015</code>). Wider,
+it is sewn between rails made from its line from M4.9 (<code>REQ-SAT-016</code>). A fill whose <code>fill</code> setting is
+off sews nothing, and nothing is said of it (<code>REQ-FILL-003</code>). Another fill’s region is built first, so
+what it leaves out and how it will be sewn are said (<code>SC-W0303</code>, <code>SC-W0304</code>, <code>SC-I0306</code>, <code>SC-W0307</code>)
 whatever comes next, and its <code>fill_method</code> picks the generator: the tatami fill, sewn from M5.4, which
-reads the running stitch’s length and tolerance for its travel between rows, under the rows from M5.5,
-and sews its underlay before its top rows from M5.6. The other stroke, satin and
+reads the running stitch’s length and tolerance for its travel between rows (the first of the lengths,
+as a satin column does), under the rows from M5.5, and sews its underlay before its top rows from
+M5.6. The other stroke, satin and
 fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are wrong
 (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
@@ -258,9 +262,9 @@ end by them (<a href="algorithms/satin.html#start-and-end">satin</a>, <a href="a
 explicit start and end commands will override them (<code>REQ-GEN-001</code>). Each ends near its next stitch, its
 point nearest the offer as Ink/Stitch’s geometry library finds it, a point of one shape inside the
 other’s area first (<code>generators::next</code>).</li>
-<li><strong>Seeded randomness:</strong> each element’s generator is seeded from a hash of its id mixed with its
-<code>random_seed</code>, one of the settings every stitch type shares. The PRNG is SplitMix64 from
-<code>stitchcraft-core</code> (<a href="determinism.html">determinism</a>).</li>
+<li><strong>Seeded randomness:</strong> each element’s generator is seeded from its <code>random_seed</code>, one of the settings
+every stitch type shares. When that is empty, a hash of its id seeds it. A seed replaces the id, as in
+Ink/Stitch. The PRNG is SplitMix64 from <code>stitchcraft-core</code> (<a href="determinism.html">determinism</a>).</li>
 <li><strong>Budgeted:</strong> every inner loop charges work units. Each element has the budget’s work to itself. One
 that runs out (<code>SC-E0004</code>) is skipped, and the others still plan. The stitch limit is for the whole
 design.</li>
