@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-e9e69af8.js";
+            window.path_to_searchindex_js = "searchindex-914264cc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -4926,7 +4926,10 @@ of stitches and is left out. Ink/Stitch leaves it out without a word. StitchCraf
 Ink/Stitch warns of it. A fill in parts gets <code>SC-W0307</code>, since each part is sewn on its own.</li>
 </ol>
 <p>The work is charged to the element’s budget, one unit for each point, edge bent and grid point tested
-against it, pair of edges whose spans along x overlap, half edge, and ring compared with a face.
+against it, pair of edges whose spans along x overlap, half edge, ring compared with a face or an outline,
+and point walked to find a ring’s bounds or its place among the faces and outlines (<code>REQ-FILL-004</code>). Each
+ring’s bounds are found once. A ring that bounds no face is located only in the faces whose bounds cover
+its own, and a hole apart from every outline only in the outlines whose bounds cover its own.
 Property tests draw random rings on a grid, and random rings with float coordinates beside near-copies of
 themselves, moved or turned by a hair or drawn back, and count how many times they wind round points off
 the edges. Such a point lies in the region exactly when the fill rule fills it, unless it lies in a part
