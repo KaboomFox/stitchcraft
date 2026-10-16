@@ -525,7 +525,7 @@ mod tests {
         // A diagnostic left out, and the same ones in another order.
         let fewer = changed(&bundle, "fewer.json", |v| v["result"]["diagnostics"].as_array_mut().unwrap().truncate(1));
         let out = replayed(&fewer);
-        let merged = "info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out.";
+        let merged = "info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from a needle point next to it was left out.";
         assert!(out.stdout.contains(&format!("  diagnostics   differs\n    now only:   {merged}\n")), "{}", out.stdout);
         assert!(!out.stdout.contains("another order"), "{}", out.stdout);
         let swapped = changed(&bundle, "swapped.json", |v| v["result"]["diagnostics"].as_array_mut().unwrap().reverse());

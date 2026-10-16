@@ -115,7 +115,7 @@ fn req_sat_015_only_a_path_of_one_subpath_is_a_centre_line_by_its_width() {
         messages(&outcome),
         [
             "warning SC-W0205: Subpath 2 of this satin column is one point, so it is left out.",
-            "info SC-I0504: 26 needle points less than the shortest stitch (0.3 mm) from the one before were left out."
+            "info SC-I0504: 26 needle points less than the shortest stitch (0.3 mm) from a needle point next to them were left out."
         ]
     );
     let alone = planned(vec![along("alone", polylines(&[&[(0.0, 0.0), (10.0, 0.0)]]), &RED, &[("satin_column", "true")]), ok()]);

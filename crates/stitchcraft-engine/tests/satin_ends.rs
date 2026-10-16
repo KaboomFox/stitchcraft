@@ -332,8 +332,15 @@ fn req_gen_003_what_an_element_offers_comes_from_its_shape_and_settings() {
         approach(&as_fill(stroke.clone()), &DesignSettings::default(), &Budget::DEFAULT),
         Some(Approach::Area(vec![Polygon { outline, holes: Vec::new() }]))
     );
-    let contour = Element { params: [("fill_method", "contour_fill")].into_iter().collect(), ..as_fill(stroke) };
+    let contour = Element { params: [("fill_method", "contour_fill")].into_iter().collect(), ..as_fill(stroke.clone()) };
     assert_eq!(approach(&contour, &DesignSettings::default(), &Budget::DEFAULT), None);
+    // A stroke of a method not sewn yet still offers its first point, as Ink/Stitch's strokes of every
+    // method do (ADR 0014), so the element before it ends as it does in Ink/Stitch. So does a stroke whose
+    // running stitch settings cannot be read: its offer does not depend on them.
+    for params in [&[("stroke_method", "ripple_stitch")][..], &[("running_stitch_length_mm", "lots")]] {
+        let other = Element { params: params.iter().copied().collect(), ..stroke.clone() };
+        assert_eq!(approach(&other, &DesignSettings::default(), &Budget::DEFAULT), Some(Approach::Point(p(2.0, 3.0))), "{params:?}");
+    }
     // A path that is no satin, unreadable settings and a spent budget offer nothing.
     // A column of one point, as narrow as a stroke that sets no width, is a stroke and offers that point
     // (`REQ-SAT-015`). 3 mm wide it is a column with no rails.

@@ -90,12 +90,15 @@ between spaces that read as numbers, and `1,5` is not one of them.
 
 StitchCraft reports what it cannot sew (`SC-W0503`), where Ink/Stitch passes over it in silence:
 
-- A piece that is not a number, or a step longer than 10 m (the data model's reach), is left out.
+- Pieces that are not numbers are left out, with steps longer than 10 m (the data model's reach) and steps
+  of 0, which move nowhere and would sew in place.
 - With no step left, as in an empty text, the half stitch is sewn instead.
 - A lock drawn as an SVG path is not sewn yet, and the half stitch is sewn instead. The engine never reads
   SVG, and the SVG adapter will hand it the path (roadmap M8).
 
-A step of 0 moves nowhere and would sew in place. It is not a step.
+What comes of a lock's settings alone, these and the enlargements below, is the same at every end the lock
+is sewn at, so it is said once for the element, with no place. A lock sewn straight where the stitching
+turns is said where it is sewn.
 
 ## The shortest lock stitch
 
@@ -123,12 +126,15 @@ and which size parameter applies to which lock are the same. The shapes differ (
 - The drawn shapes are StitchCraft's own designs.
 - Ink/Stitch draws custom SVG paths. StitchCraft sews the half stitch with `SC-W0503` until M8.
 
-Both follow the stitching with custom steps. They differ in 2 places (`DEV-LCK-002`):
+Both follow the stitching with custom steps. They differ in 5 places (`DEV-LCK-002`):
 
 - Ink/Stitch puts the needle points past the end of stitching shorter than the lock on its last needle
   point. StitchCraft goes straight on from the last stitch, and no two needle points coincide.
 - Ink/Stitch follows a turn however sharp. StitchCraft sews straight a lock that a turn would fold onto
   itself.
+- Ink/Stitch sews a step shorter than 0.2 mm as it is. StitchCraft lengthens it to 0.2 mm.
+- Ink/Stitch sews a step of 0 as a stitch in place. StitchCraft leaves it out.
+- StitchCraft leaves out a step longer than 10 m, which Ink/Stitch would sew.
 
 ## Properties
 

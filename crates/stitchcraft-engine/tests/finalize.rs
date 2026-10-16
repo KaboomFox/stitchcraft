@@ -30,15 +30,21 @@ fn req_fin_001_needle_points_too_close_where_elements_join_are_left_out() {
     // 0.1 mm apart: the second line's first point goes, and the stitch runs on to its second.
     let close = planned(joined(0.1));
     assert_eq!(shape_of(&close), "J L4 S9 L4");
-    assert_eq!(messages(&close), ["info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out."]);
+    assert_eq!(
+        messages(&close),
+        ["info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from a needle point next to it was left out."]
+    );
     let plan = close.plan.unwrap();
     let sewn = plan.sewn_stitches();
     assert!(sewn.iter().all(|s| s.is_lock() || s.length() >= 0.3), "{sewn:?}");
     // Touching, and the design's own shortest stitch when it is longer than the machine's.
     assert_eq!(shape_of(&planned(joined(0.0))), "J L4 S9 L4");
-    let longer = DesignSettings { min_stitch_len: Some(Mm::new(0.5).unwrap()), origin: Some(p(0.0, 0.0)), ..DesignSettings::default() };
+    let longer = at_origin(Some(0.5));
     let outcome = planned_with(joined(0.4), longer);
-    assert_eq!(messages(&outcome), ["info SC-I0504: A needle point less than the shortest stitch (0.5 mm) from the one before was left out."]);
+    assert_eq!(
+        messages(&outcome),
+        ["info SC-I0504: A needle point less than the shortest stitch (0.5 mm) from a needle point next to it was left out."]
+    );
     // Far enough apart, nothing changes.
     let apart = planned(joined(0.3));
     assert_eq!((shape_of(&apart), messages(&apart)), ("J L4 S10 L4".to_string(), Vec::<String>::new()));
@@ -58,7 +64,7 @@ fn fitted(points: &[(f64, Role)]) -> (Option<Vec<(f64, Role)>>, Vec<String>) {
     for &(x, role) in points {
         b.stitch(at(x), Provenance::new(e, role));
     }
-    let out = finalize(b.finish(), REFERENCE, &DesignSettings::default(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+    let out = finalize(b.finish(), REFERENCE, &at_origin(None), &[], &mut Budget::DEFAULT.meter()).unwrap();
     let kept = out.plan.map(|plan| plan.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| (s.at.x(), s.origin.role)).collect());
     (kept, out.diagnostics.iter().map(ToString::to_string).collect())
 }
@@ -67,7 +73,7 @@ fn fitted(points: &[(f64, Role)]) -> (Option<Vec<(f64, Role)>>, Vec<String>) {
 fn req_fin_001_a_run_s_last_point_stays_and_the_one_before_it_goes() {
     let (kept, said) = fitted(&[(0.0, TOP), (5.0, TOP), (5.1, TOP)]);
     assert_eq!(kept, Some(vec![(0.0, TOP), (5.1, TOP)]));
-    assert_eq!(said, ["info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out."]);
+    assert_eq!(said, ["info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from a needle point next to it was left out."]);
 }
 
 #[test]
@@ -77,9 +83,10 @@ fn req_fin_001_a_lock_point_stays_and_the_points_too_close_before_it_go() {
     let (kept, _) = fitted(&[(0.0, TOP), (3.0, TOP), (5.0, TOP), (5.1, LOCK), (7.0, LOCK)]);
     assert_eq!(kept, Some(vec![(0.0, TOP), (3.0, TOP), (5.1, LOCK), (7.0, LOCK)]));
     // Two points 0.3 mm apart, both within 0.2 mm of the lock point: both go.
+    // They go for the lock stitch's shortest, 0.2 mm, to the point after them, as the message says.
     let (kept, said) = fitted(&[(0.0, TOP), (4.85, TOP), (5.15, TOP), (5.0, LOCK), (7.0, LOCK)]);
     assert_eq!(kept, Some(vec![(0.0, TOP), (5.0, LOCK), (7.0, LOCK)]));
-    assert_eq!(said, ["info SC-I0504: 2 needle points less than the shortest stitch (0.3 mm) from the one before were left out."]);
+    assert_eq!(said, ["info SC-I0504: 2 needle points less than the shortest stitch (0.2 mm) from a needle point next to them were left out."]);
 }
 
 #[test]
@@ -87,7 +94,7 @@ fn req_fin_001_a_point_where_the_needle_already_is_is_left_out() {
     // The run comes back to where it landed, and everything between is too close: no stitch in place.
     let (kept, said) = fitted(&[(0.0, TOP), (0.2, TOP), (0.0, TOP)]);
     assert_eq!(kept, Some(vec![(0.0, TOP)]));
-    assert_eq!(said, ["info SC-I0504: 2 needle points less than the shortest stitch (0.3 mm) from the one before were left out."]);
+    assert_eq!(said, ["info SC-I0504: 2 needle points less than the shortest stitch (0.3 mm) from a needle point next to them were left out."]);
 }
 
 #[test]
@@ -96,7 +103,7 @@ fn req_fin_001_a_run_s_first_point_always_stays_and_a_last_point_too_near_it_goe
     // first point: no stitch shorter than the machine sews.
     let (kept, said) = fitted(&[(0.0, TOP), (0.1, TOP)]);
     assert_eq!(kept, Some(vec![(0.0, TOP)]));
-    assert_eq!(said, ["info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from the one before was left out."]);
+    assert_eq!(said, ["info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from a needle point next to it was left out."]);
 }
 
 #[test]
@@ -115,7 +122,7 @@ fn req_fin_001_a_trim_or_stop_after_a_last_point_left_out_happens_where_the_need
     b.jump(at(5.0), Provenance::new(e, Role::Travel));
     b.stitch(at(5.0), Provenance::new(e, TOP));
     b.stitch(at(7.0), Provenance::new(e, TOP));
-    let out = finalize(b.finish(), REFERENCE, &DesignSettings::default(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+    let out = finalize(b.finish(), REFERENCE, &at_origin(None), &[], &mut Budget::DEFAULT.meter()).unwrap();
     let entries: Vec<(StitchKind, f64)> = out.plan.unwrap().stitches().map(|s| (s.kind, s.at.x())).collect();
     use StitchKind::{Jump, Normal, Stop, Trim};
     assert_eq!(entries, [(Jump, 0.0), (Normal, 0.0), (Normal, 0.3), (Trim, 0.3), (Stop, 0.3), (Jump, 5.0), (Normal, 5.0), (Normal, 7.0)]);
@@ -124,7 +131,7 @@ fn req_fin_001_a_trim_or_stop_after_a_last_point_left_out_happens_where_the_need
 #[test]
 fn req_fin_001_an_element_keeps_its_own_shortest_stitch() {
     // The design's shortest stitch is 1 mm, and the element's own 0.3 mm: its stitches may be as short.
-    let settings = DesignSettings { origin: Some(p(0.0, 0.0)), min_stitch_len: Some(Mm::new(1.0).unwrap()), ..DesignSettings::default() };
+    let settings = at_origin(Some(1.0));
     // A 0.8 mm line sewn there and back: the turn stays, so the stitching does not end where it started.
     let back = [("min_stitch_length_mm", "0.3"), ("repeats", "2"), ("ties", "3")];
     let outcome = planned_with(vec![line("a", (0.0, 0.0), 0.8, &RED, &back), line("b", (0.0, 10.0), 10.0, &RED, &[])], settings);
@@ -160,7 +167,7 @@ fn diag_sc_i0504_points_left_out_are_counted() {
     let three = vec![line("a", (0.0, 0.0), 10.0, &RED, &[]), line("b", (10.1, 0.0), 10.0, &RED, &[]), line("c", (20.2, 0.0), 10.0, &RED, &[])];
     assert_eq!(
         messages(&planned(three)),
-        ["info SC-I0504: 2 needle points less than the shortest stitch (0.3 mm) from the one before were left out."]
+        ["info SC-I0504: 2 needle points less than the shortest stitch (0.3 mm) from a needle point next to them were left out."]
     );
     // Each point is held to its own element's shortest stitch, and the message gives them all.
     let mixed = vec![
@@ -170,7 +177,7 @@ fn diag_sc_i0504_points_left_out_are_counted() {
     ];
     assert_eq!(
         messages(&planned(mixed)),
-        ["info SC-I0504: 2 needle points less than the shortest stitch (0.3 to 0.5 mm) from the one before were left out."]
+        ["info SC-I0504: 2 needle points less than the shortest stitch (0.3 to 0.5 mm) from a needle point next to them were left out."]
     );
 }
 
@@ -192,8 +199,7 @@ fn req_fin_002_designs_the_machine_cannot_take_give_no_plan() {
         "the size, not the reach"
     );
     // Small enough, but reaching past the edge from where its origin puts it.
-    let aside =
-        planned_with(vec![line("a", (0.0, 0.0), 100.0, &RED, &[])], DesignSettings { origin: Some(p(0.0, 0.0)), ..DesignSettings::default() });
+    let aside = planned_with(vec![line("a", (0.0, 0.0), 100.0, &RED, &[])], at_origin(None));
     assert_eq!(aside.plan, None);
     assert_eq!(
         messages(&aside),
@@ -202,7 +208,7 @@ fn req_fin_002_designs_the_machine_cannot_take_give_no_plan() {
         ]
     );
     // A hair past the edge reads as past it: what reaches past is given to the tenth above.
-    let origin = DesignSettings { origin: Some(p(0.0, 0.0)), ..DesignSettings::default() };
+    let origin = at_origin(None);
     let hair = planned_with(vec![line("a", (0.0, 0.0), 65.04, &RED, &[])], origin);
     assert!(messages(&hair)[0].contains("the design reaches 65.1 mm sideways and 0.0 mm up or down"), "{:?}", messages(&hair));
     let stop = [("stop_after", "true")];
@@ -293,7 +299,7 @@ fn req_fin_003_a_plan_the_invariants_refuse_is_reported_as_a_bug() {
     let mut b = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
     let e = b.element(ElementId::new("e").unwrap()).unwrap();
     b.jump(Point::new(1.0, 0.0).unwrap(), Provenance::new(e, Role::Travel));
-    let out = finalize(b.finish(), REFERENCE, &DesignSettings::default(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+    let out = finalize(b.finish(), REFERENCE, &at_origin(None), &[], &mut Budget::DEFAULT.meter()).unwrap();
     let said: Vec<String> = out.diagnostics.iter().map(ToString::to_string).collect();
     assert!(out.plan.is_none(), "{said:?}");
     assert_eq!(said, ["error SC-E0009: The stitch plan breaks REQ-PLAN-003 at block 0: the colour block sews no stitches"]);
