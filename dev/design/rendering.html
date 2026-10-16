@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f93dd316.js";
+            window.path_to_searchindex_js = "../searchindex-2d82b196.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -192,6 +192,8 @@ anything.</li>
 <li><strong>The same bytes everywhere</strong> (<code>REQ-RND-002</code>). A preview is a pure function of the plan and the
 settings, so documentation images can be compared byte for byte on every pull request.</li>
 </ul>
+<p><code>stitch plan --preview</code> draws the machine file it wrote, read back as <code>stitch preview</code> reads it, in the
+design’s colours. A DST machine’s cut before a long jump then shows as a cut (<code>REQ-CLI-008</code>).</p>
 <h2 id="two-steps-scene-then-pixels"><a class="header" href="#two-steps-scene-then-pixels">Two steps: scene, then pixels</a></h2>
 <pre><code class="language-text">StitchPlan ──Scene::of──▶ Scene (machine units, plain data) ──Scene::render──▶ PNG
 </code></pre>

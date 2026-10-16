@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f93dd316.js";
+            window.path_to_searchindex_js = "../searchindex-2d82b196.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -313,6 +313,12 @@ or exit codes.</li>
 <li><strong>A bug in StitchCraft</strong> is neither. It shows as a failed plan check (<code>SC-E0009</code>) or as a panic despite
 the lints. The command line catches it and ends with exit status 4. For <code>stitch plan</code> it also writes a
 bug-report bundle that reproduces the bug (<a href="determinism.html#bug-reports">determinism</a>).</li>
+<li><strong>The command line’s own promises.</strong> A command refuses outputs that name the same file as each other,
+or as a file it reads (<code>REQ-CLI-007</code>), and writes each file under a temporary name of its own, created
+new and synced before it is renamed into place (<code>REQ-CLI-006</code>). What it prints of a file it wrote is the
+file read back (<code>REQ-CLI-008</code>). A closed standard output keeps a command’s exit status, any other error
+writing it ends with 3 (<code>REQ-CLI-009</code>), and help and errors are coloured only on a terminal
+(<code>REQ-CLI-010</code>).</li>
 </ul>
 <h2 id="feature-flags"><a class="header" href="#feature-flags">Feature flags</a></h2>
 <p>Kept minimal: <code>stitchcraft-engine/experimental</code> exposes generators whose status is <code>experimental</code>
@@ -321,8 +327,9 @@ a format pulls a heavy dependency (none planned). No flag may change the output 
 <h2 id="webassembly-constraints"><a class="header" href="#webassembly-constraints">WebAssembly constraints</a></h2>
 <p>Everything at L0–L3 must build for <code>wasm32-unknown-unknown</code> (checked by <code>cargo xtask wasm</code>): no
 threads, no filesystem, no clocks, no <code>std::env</code>, no randomness from the OS. The plug-in is built
-with <code>opt-level = "z"</code>, LTO and <code>panic = "abort"</code>, which is one more reason the no-panic rule is
-absolute: in wasm a panic aborts the module and VectorCraft reports the plug-in as failed.</p>
+in release with the workspace’s profile (thin LTO, one codegen unit), and on <code>wasm32-unknown-unknown</code>
+a panic aborts. That is one more reason the no-panic rule is absolute: the module stops, and
+VectorCraft reports the plug-in as failed.</p>
 <h2 id="where-does-my-code-go"><a class="header" href="#where-does-my-code-go">Where does my code go?</a></h2>
 <div class="table-wrapper">
 <table>

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f93dd316.js";
+            window.path_to_searchindex_js = "../searchindex-2d82b196.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -181,7 +181,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="determinism"><a class="header" href="#determinism">Determinism</a></h1>
-<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/exact.rs, crates/stitchcraft-core/src/rng.rs, apps/stitchcraft-cli/src/commands/bug_report.rs -->
+<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/exact.rs, crates/stitchcraft-core/src/rng.rs, apps/stitchcraft-cli/src/commands/bug_report.rs, apps/stitchcraft-cli/src/commands/bug_report/** -->
 <p><strong>Same input, same version ⇒ byte-identical machine file and preview, on Linux, macOS, Windows and
 wasm32.</strong> This makes golden-file conformance possible, makes bug reports reproducible, makes caches
 safe, and means the docs images regenerated in CI match the ones on a contributor’s laptop.</p>
@@ -239,8 +239,13 @@ of a path to it. The file also records what came of them:</p>
 <li>a SHA-256 of each entry of the plan, from each coordinate’s bits, its kind, role and element, and each
 block’s thread</li>
 <li>the machine file’s size and SHA-256, and the design name its label holds, which the replay uses as it is</li>
-<li>the first line of each diagnostic, and a panic’s message if there was one</li>
+<li>the first line of each diagnostic, and a panic’s message if there was one, with the phase it came in
+(planning, drawing the picture or writing the files)</li>
 </ul>
+<p>A replay plans the design again, and draws the picture again for a panic that came while drawing it. It
+leaves the files unwritten. <code>stitch --version</code> gives the version a build will be released as. Builds from a
+git checkout add their commit, which bundles record too. A replay reads the bundle’s format first, and
+refuses a format it does not know by its number, whatever else the file holds.</p>
 <p><code>stitch bug-report --replay</code> plans the design again through the same code as <code>stitch plan</code> and compares
 each record (<code>REQ-CLI-001</code>). <code>stitch plan</code> writes a bundle by itself when it finds a bug in StitchCraft
 (<code>REQ-CLI-002</code>). The user guide’s <a href="../user/how-to/report-a-bug.html">Report a bug</a> shows both.</p>

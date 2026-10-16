@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-f93dd316.js";
+            window.path_to_searchindex_js = "../../searchindex-2d82b196.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -191,7 +191,7 @@ TS-02.pes · PES (#PES0001) · "TS-02"
   size      120.0 × 70.0 mm
   stitches  93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop
   extent    x -60.0 to 60.0 mm, y -35.0 to 35.0 mm from where the machine starts
-  lengths   stitches from 2.5 to 2.5 mm
+  lengths   stitches from 2.50 to 2.50 mm
   threads   1. Red (#ed171f), shown as Brother PEC 5 "Red"
             2. Blue (#0a55a3), shown as Brother PEC 2 "Blue"
             3. Emerald Green (#00673e), shown as Brother PEC 54 "Emerald Green"
@@ -203,11 +203,14 @@ TS-02.pes · PES (#PES0001) · "TS-02"
 <li><strong>size</strong> is the width and height of the stitching.</li>
 <li><strong>stitches</strong> counts the needle points, and the jumps, trims, colour changes and stops between them.</li>
 <li><strong>extent</strong> gives the lowest and highest x and y of the stitching, from where the machine starts.</li>
-<li><strong>lengths</strong> gives the shortest and the longest stitch.</li>
+<li><strong>lengths</strong> gives the shortest and the longest stitch, to a hundredth of a millimetre, and how many
+stitches do not move at all, when a file has any.</li>
 <li><strong>threads</strong> lists the colour blocks in sewing order. Each colour is stored as a Brother palette colour
 in a PES file, which the line names. After a stop you sew on with the same thread.</li>
 <li><strong>profile</strong> appears with <code>--profile</code>, with the number of stitches longer than the machine’s longest
-stitch and shorter than its shortest. <code>stitch profiles</code> lists the machines.</li>
+stitch and shorter than its shortest. <code>stitch profiles</code> lists the machines. A file does not say which
+stitches lock the thread, and StitchCraft’s lock stitches are as short as 0.2 mm on purpose. The line
+also counts the short stitches 0.2 mm or longer, which may be locks.</li>
 </ul>
 <h2 id="look-at-it"><a class="header" href="#look-at-it">Look at it</a></h2>
 <pre><code class="language-console">$ stitch preview TS-02.pes -o TS-02.png --style simple

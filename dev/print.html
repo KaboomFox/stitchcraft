@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-f93dd316.js";
+            window.path_to_searchindex_js = "searchindex-2d82b196.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -268,7 +268,7 @@ TS-01 · Orientation and scale
   sha256    854cde9f533e3b6567afb570a0eb3d4547e7813f5649da97d27be104f8cd18c6
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      120.0 × 120.0 mm
-  stitches  274 stitches, 7 jumps, 7 trims, 0 colour changes, 0 stops
+  stitches  274 stitches, 7 jumps, 6 trims, 0 colour changes, 0 stops
   threads   1. Black (#000000), shown as Brother PEC 20 "Black"
 after sewing, check:
   - The F reads normally: not mirrored, not upside down, not turned.
@@ -333,7 +333,7 @@ badge.svg
   sha256    5fea2f6734fadacdc1f3f1a7268bd964d3ab6c4bf1ba3b9f8fd6d10a4aae0d8c
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      44.0 × 44.0 mm
-  stitches  124 stitches, 2 jumps, 0 trims, 1 colour change, 0 stops
+  stitches  124 stitches, 2 jumps, 1 trim, 1 colour change, 0 stops
   threads   1. unnamed (#c8102e), shown as Brother PEC 5 "Red"
             2. unnamed (#1f4e9c), shown as Brother PEC 2 "Blue"
   preview   badge.png (384 × 384 pixels)
@@ -366,8 +366,8 @@ strokes.svg
   file      strokes.pes (PES v1, 2840 bytes)
   sha256    d0ce3f4cb7843412b2ab0d4aeab07385fdf20b16a7e77cac3cefcf0b4b9193a3
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
-  size      59.9 × 45.0 mm
-  stitches  556 stitches, 6 jumps, 0 trims, 3 colour changes, 0 stops
+  size      60.0 × 45.0 mm
+  stitches  556 stitches, 6 jumps, 5 trims, 3 colour changes, 0 stops
   threads   1. unnamed (#c00000), shown as Brother PEC 5 "Red"
             2. unnamed (#0040c0), shown as Brother PEC 21 "Ultramarine"
             3. unnamed (#c00000), shown as Brother PEC 5 "Red"
@@ -383,7 +383,8 @@ info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from a need
 <li><code>SC-I0504</code> says a needle point too close to the one before was left out, where the lines nearly touch.</li>
 </ul>
 <p><code>stitch explain</code> with a code tells you more, and <a href="#diagnostic-codes">diagnostic codes</a> lists
-them all. <code>--report</code> writes the summary and the messages as JSON, for scripts.</p>
+them all. <code>--report</code> writes the file’s counts, size and SHA-256, the threads and the messages as JSON, for
+scripts.</p>
 <h2 id="next-1"><a class="header" href="#next-1">Next</a></h2>
 <p><a href="user/stitches/README.html">Stitch types</a> shows what each stitch type does and the parameters that change it.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -421,7 +422,7 @@ TS-02.pes · PES (#PES0001) · "TS-02"
   size      120.0 × 70.0 mm
   stitches  93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop
   extent    x -60.0 to 60.0 mm, y -35.0 to 35.0 mm from where the machine starts
-  lengths   stitches from 2.5 to 2.5 mm
+  lengths   stitches from 2.50 to 2.50 mm
   threads   1. Red (#ed171f), shown as Brother PEC 5 "Red"
             2. Blue (#0a55a3), shown as Brother PEC 2 "Blue"
             3. Emerald Green (#00673e), shown as Brother PEC 54 "Emerald Green"
@@ -433,11 +434,14 @@ TS-02.pes · PES (#PES0001) · "TS-02"
 <li><strong>size</strong> is the width and height of the stitching.</li>
 <li><strong>stitches</strong> counts the needle points, and the jumps, trims, colour changes and stops between them.</li>
 <li><strong>extent</strong> gives the lowest and highest x and y of the stitching, from where the machine starts.</li>
-<li><strong>lengths</strong> gives the shortest and the longest stitch.</li>
+<li><strong>lengths</strong> gives the shortest and the longest stitch, to a hundredth of a millimetre, and how many
+stitches do not move at all, when a file has any.</li>
 <li><strong>threads</strong> lists the colour blocks in sewing order. Each colour is stored as a Brother palette colour
 in a PES file, which the line names. After a stop you sew on with the same thread.</li>
 <li><strong>profile</strong> appears with <code>--profile</code>, with the number of stitches longer than the machine’s longest
-stitch and shorter than its shortest. <code>stitch profiles</code> lists the machines.</li>
+stitch and shorter than its shortest. <code>stitch profiles</code> lists the machines. A file does not say which
+stitches lock the thread, and StitchCraft’s lock stitches are as short as 0.2 mm on purpose. The line
+also counts the short stitches 0.2 mm or longer, which may be locks.</li>
 </ul>
 <h2 id="look-at-it"><a class="header" href="#look-at-it">Look at it</a></h2>
 <pre><code class="language-console">$ stitch preview TS-02.pes -o TS-02.png --style simple
@@ -473,7 +477,7 @@ TS-02.pes · PES (#PES0001) → DST
   file      TS-02.dst (DST, 1085 bytes)
   sha256    88d453b2512bb535f9dd2205cbb0be753a5eb9b1700ae9abf2e88062fabff927
   size      120.0 × 70.0 mm
-  stitches  93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop
+  stitches  93 stitches, 46 jumps, 14 trims, 3 colour changes, 0 stops
   threads   1. Red (#ed171f)
             2. Blue (#0a55a3)
             3. Emerald Green (#00673e)
@@ -484,7 +488,7 @@ TS-02.dst · DST · "TS-02"
   size      120.0 × 70.0 mm
   stitches  93 stitches, 46 jumps, 14 trims, 3 colour changes, 0 stops
   extent    x -60.0 to 60.0 mm, y -35.0 to 35.0 mm from where the machine starts
-  lengths   stitches from 2.5 to 2.5 mm
+  lengths   stitches from 2.50 to 2.50 mm
   threads   1. thread 1 (#000000)
             2. thread 2 (#000000)
             3. thread 3 (#000000)
@@ -605,7 +609,9 @@ reproduced
 platform, so with the version that wrote the bundle, the replay reproduces it. With another version, what
 differs is listed under <code>then:</code> and <code>now:</code>: that is how to tell whether a bug is fixed. The exit status is
 1 when the bundle does not reproduce. The design is in the bundle’s <code>design.svg</code> field, ready to save and
-open.</p>
+open, or in <code>design.svg_hex</code> as hexadecimal when the file is not UTF-8 text, as a Latin-1 SVG is not. A
+bundle also names the commit StitchCraft was built from, when it was built from a git checkout, which
+<code>stitch --version</code> shows too: until the first release, every build says the same version.</p>
 <p>Anyone can attach a bundle to an issue. The replay writes each character from it that a terminal would act
 on as an escape, such as <code>\u{1b}</code> for the one that starts a terminal’s control sequences.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -1072,7 +1078,7 @@ Arguments:
 
 Options:
       --replay &lt;REPLAY&gt;
-          Replay this bundle instead: plan its design again and say whether everything comes out the same
+          Replay this bundle instead: plan its design again, with the profile and format it names, and say whether everything comes out the same
 
   -o, --output &lt;OUTPUT&gt;
           The bundle to write; by default next to the design, as DESIGN.bug-report.json
@@ -3344,6 +3350,12 @@ or exit codes.</li>
 <li><strong>A bug in StitchCraft</strong> is neither. It shows as a failed plan check (<code>SC-E0009</code>) or as a panic despite
 the lints. The command line catches it and ends with exit status 4. For <code>stitch plan</code> it also writes a
 bug-report bundle that reproduces the bug (<a href="#bug-reports">determinism</a>).</li>
+<li><strong>The command line’s own promises.</strong> A command refuses outputs that name the same file as each other,
+or as a file it reads (<code>REQ-CLI-007</code>), and writes each file under a temporary name of its own, created
+new and synced before it is renamed into place (<code>REQ-CLI-006</code>). What it prints of a file it wrote is the
+file read back (<code>REQ-CLI-008</code>). A closed standard output keeps a command’s exit status, any other error
+writing it ends with 3 (<code>REQ-CLI-009</code>), and help and errors are coloured only on a terminal
+(<code>REQ-CLI-010</code>).</li>
 </ul>
 <h2 id="feature-flags"><a class="header" href="#feature-flags">Feature flags</a></h2>
 <p>Kept minimal: <code>stitchcraft-engine/experimental</code> exposes generators whose status is <code>experimental</code>
@@ -3352,8 +3364,9 @@ a format pulls a heavy dependency (none planned). No flag may change the output 
 <h2 id="webassembly-constraints"><a class="header" href="#webassembly-constraints">WebAssembly constraints</a></h2>
 <p>Everything at L0–L3 must build for <code>wasm32-unknown-unknown</code> (checked by <code>cargo xtask wasm</code>): no
 threads, no filesystem, no clocks, no <code>std::env</code>, no randomness from the OS. The plug-in is built
-with <code>opt-level = "z"</code>, LTO and <code>panic = "abort"</code>, which is one more reason the no-panic rule is
-absolute: in wasm a panic aborts the module and VectorCraft reports the plug-in as failed.</p>
+in release with the workspace’s profile (thin LTO, one codegen unit), and on <code>wasm32-unknown-unknown</code>
+a panic aborts. That is one more reason the no-panic rule is absolute: the module stops, and
+VectorCraft reports the plug-in as failed.</p>
 <h2 id="where-does-my-code-go"><a class="header" href="#where-does-my-code-go">Where does my code go?</a></h2>
 <div class="table-wrapper">
 <table>
@@ -4346,7 +4359,7 @@ plug-in stays single-threaded.</li>
 <tbody>
 <tr><td>Machine file</td><td><code>stitchcraft-formats</code> writer chosen by the profile or the output extension</td></tr>
 <tr><td>Preview PNG</td><td><code>stitchcraft-render</code>, from the <em>quantized</em> plan (<code>REQ-RND-001</code>)</td></tr>
-<tr><td>Report JSON</td><td>CLI: stitch, jump, trim and colour counts, bounds, estimated sewing time, diagnostics</td></tr>
+<tr><td>Report JSON</td><td>The CLI’s, with the counts and size of the machine file read back as a machine reads it, its SHA-256, the threads and the diagnostics</td></tr>
 <tr><td>Plug-in preview geometry</td><td><code>stitchcraft-vc-plugin</code> from a single group (<a href="#live-effect-previews-within-v1-budgets">integration</a>)</td></tr>
 </tbody>
 </table>
@@ -5736,7 +5749,11 @@ damaged or hostile: every offset and length is checked before use, the record co
 budget (2,000,000), positions must stay within ±10 m, and a problem is a typed error (<code>SC-E0603</code>) — never a
 panic and never a silent guess. Readers are literal: each record becomes one plan entry, so <code>inspect</code> shows
 what is in the file. Unusual but readable things (a thread index outside the palette, a thumbnail offset
-that points nowhere) become warnings in the result.</p>
+that points nowhere) become warnings in the result. <code>stitch inspect</code> gives lengths to a hundredth of a
+millimetre and counts a stitch that does not move on its own. A file does not mark its lock stitches, so of
+the stitches shorter than a profile’s shortest it also counts those 0.2 mm or longer, as a lock stitch may
+be. <code>stitch plan</code>, <code>testsheet</code> and <code>convert</code> read the file they wrote back the same way, and give its counts
+and size (<code>REQ-CLI-008</code>).</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -5832,6 +5849,8 @@ anything.</li>
 <li><strong>The same bytes everywhere</strong> (<code>REQ-RND-002</code>). A preview is a pure function of the plan and the
 settings, so documentation images can be compared byte for byte on every pull request.</li>
 </ul>
+<p><code>stitch plan --preview</code> draws the machine file it wrote, read back as <code>stitch preview</code> reads it, in the
+design’s colours. A DST machine’s cut before a long jump then shows as a cut (<code>REQ-CLI-008</code>).</p>
 <h2 id="two-steps-scene-then-pixels"><a class="header" href="#two-steps-scene-then-pixels">Two steps: scene, then pixels</a></h2>
 <pre><code class="language-text">StitchPlan ──Scene::of──▶ Scene (machine units, plain data) ──Scene::render──▶ PNG
 </code></pre>
@@ -6568,7 +6587,7 @@ memory. So in the mutants jobs each test binary runs with at most 4 GiB of addre
 <code>prlimit</code> as Cargo’s runner: such a mutant aborts at the cap, which counts as noticed.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="determinism-1"><a class="header" href="#determinism-1">Determinism</a></h1>
-<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/exact.rs, crates/stitchcraft-core/src/rng.rs, apps/stitchcraft-cli/src/commands/bug_report.rs -->
+<!-- implements: crates/stitchcraft-core/src/math.rs, crates/stitchcraft-core/src/exact.rs, crates/stitchcraft-core/src/rng.rs, apps/stitchcraft-cli/src/commands/bug_report.rs, apps/stitchcraft-cli/src/commands/bug_report/** -->
 <p><strong>Same input, same version ⇒ byte-identical machine file and preview, on Linux, macOS, Windows and
 wasm32.</strong> This makes golden-file conformance possible, makes bug reports reproducible, makes caches
 safe, and means the docs images regenerated in CI match the ones on a contributor’s laptop.</p>
@@ -6626,8 +6645,13 @@ of a path to it. The file also records what came of them:</p>
 <li>a SHA-256 of each entry of the plan, from each coordinate’s bits, its kind, role and element, and each
 block’s thread</li>
 <li>the machine file’s size and SHA-256, and the design name its label holds, which the replay uses as it is</li>
-<li>the first line of each diagnostic, and a panic’s message if there was one</li>
+<li>the first line of each diagnostic, and a panic’s message if there was one, with the phase it came in
+(planning, drawing the picture or writing the files)</li>
 </ul>
+<p>A replay plans the design again, and draws the picture again for a panic that came while drawing it. It
+leaves the files unwritten. <code>stitch --version</code> gives the version a build will be released as. Builds from a
+git checkout add their commit, which bundles record too. A replay reads the bundle’s format first, and
+refuses a format it does not know by its number, whatever else the file holds.</p>
 <p><code>stitch bug-report --replay</code> plans the design again through the same code as <code>stitch plan</code> and compares
 each record (<code>REQ-CLI-001</code>). <code>stitch plan</code> writes a bundle by itself when it finds a bug in StitchCraft
 (<code>REQ-CLI-002</code>). The user guide’s <a href="#report-a-bug">Report a bug</a> shows both.</p>
@@ -7940,8 +7964,8 @@ sheets test them (<a href="#adr-0013-the-reference-machine-is-a-brother-pe800-wi
 <li><strong>StitchCraft generates</strong> each test sheet deterministically: <code>stitch testsheet TS-xx -o TS-xx.pes</code>
 checks it against the profile of the hoop it is for. It prints that profile, the file’s SHA-256, its
 size and counts, the threads in the order they are sewn (with the Brother palette name the machine
-shows for each) and what to check after sewing. From M2.7 it
-also writes a picture of the expected result; until then, previews are drawn by the conformance tooling.
+shows for each) and what to check after sewing. Its size and counts are the file’s, read back as the
+machine reads it. <code>stitch preview TS-xx.pes -o TS-xx.png</code> draws a picture of what the file sews.
 <code>stitch testsheet --list</code> lists the sheets. The MC-1 sheets are drawn stitch by stitch, to test the
 machine and the file formats; from MC-2, sheets are drawn as designs and planned by the engine, so
 sewing them tests its stitches, locks and plan assembly too.</li>

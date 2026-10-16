@@ -3,7 +3,7 @@ TS-02.pes · PES (#PES0001) → DST
   file      TS-02.dst (DST, 1085 bytes)
   sha256    88d453b2512bb535f9dd2205cbb0be753a5eb9b1700ae9abf2e88062fabff927
   size      120.0 × 70.0 mm
-  stitches  93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop
+  stitches  93 stitches, 46 jumps, 14 trims, 3 colour changes, 0 stops
   threads   1. Red (#ed171f)
             2. Blue (#0a55a3)
             3. Emerald Green (#00673e)
@@ -14,7 +14,7 @@ TS-02.dst · DST · "TS-02"
   size      120.0 × 70.0 mm
   stitches  93 stitches, 46 jumps, 14 trims, 3 colour changes, 0 stops
   extent    x -60.0 to 60.0 mm, y -35.0 to 35.0 mm from where the machine starts
-  lengths   stitches from 2.5 to 2.5 mm
+  lengths   stitches from 2.50 to 2.50 mm
   threads   1. thread 1 (#000000)
             2. thread 2 (#000000)
             3. thread 3 (#000000)
