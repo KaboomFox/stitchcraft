@@ -89,14 +89,18 @@ fn a_run_is_one_command_line_that_ends_asking_for_each_module_s_last_error() {
         "##,
     );
     let args = arguments(&s.run[0], Path::new("/plugins"), Path::new("/out")).unwrap();
+    // A file's path is the platform's, with `\` before the file's name on Windows.
+    let at = |dir: &str, file: &str| Path::new(dir).join(file).to_string_lossy().into_owned();
+    let (opened, exported) = (at("/out", "in.vectorcraft"), at("/out", "out.png"));
+    let install = json!({ "path": at("/plugins", "fill.wasm") }).to_string();
     let expected = [
         "run",
         "--in",
-        "/out/in.vectorcraft",
+        opened.as_str(),
         "--cmd",
         "plugin.install",
         "--params",
-        r#"{"path":"/plugins/fill.wasm"}"#,
+        install.as_str(),
         "--cmd",
         "paint.setFill",
         "--params",
@@ -106,7 +110,7 @@ fn a_run_is_one_command_line_that_ends_asking_for_each_module_s_last_error() {
         "--params",
         r#"{"effect":"plugin.dev.stitchcraft.fill","item":null,"params":{"angle":45,"row_spacing_mm":0.4,"underlay":true}}"#,
         "--export",
-        "/out/out.png",
+        exported.as_str(),
         "--cmd",
         "plugin.info",
         "--params",

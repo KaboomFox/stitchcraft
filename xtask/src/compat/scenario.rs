@@ -257,7 +257,7 @@ fn arguments(run: &Run, plugins: &Path, out: &Path) -> Result<Vec<String>, Strin
         match step.action()? {
             Action::Command(id, params) => args.extend(command(id, params)),
             Action::Apply(family, params) => {
-                args.extend(command("effect.apply", json!({ "effect": effect_id(family), "item": null, "params": params })))
+                args.extend(command("effect.apply", json!({ "effect": effect_id(family), "item": null, "params": params })));
             }
             Action::Export(file) => args.extend(["--export".to_string(), path(out, file)]),
         }
