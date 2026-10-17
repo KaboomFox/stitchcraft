@@ -84,6 +84,57 @@ fn req_cli_001_a_bundle_reproduces_its_plan_byte_for_byte() {
 }
 
 #[test]
+fn req_vc_008_a_bundle_holds_a_vectorcraft_document_and_reproduces_its_plan() {
+    let (design, bundle) = (conformance("fixtures/vectorcraft/patch.vectorcraft"), temp("patch.bug-report.json"));
+    let out = run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(design.clone())) });
+    assert_eq!(out.status, Status::Done, "{}", out.stderr);
+    let written = json(&bundle);
+    assert_eq!(written["design"]["vectorcraft"].as_str().map(str::as_bytes), Some(std::fs::read(&design).unwrap().as_slice()));
+    assert!(written["design"].get("svg").is_none() && written["result"]["plan"].is_object(), "{written}");
+    let out = replayed(&bundle);
+    assert!(out.status == Status::Done && out.stdout.ends_with("reproduced\n"), "{}", out.stdout);
+    // VectorCraft keeps images and other data after the JSON, behind a marker, and StitchCraft reads none
+    // of it: the bundle keeps the JSON alone, as text, and its digest.
+    let text = std::fs::read(&design).unwrap();
+    let (blobs, bundle) = (temp("blobs.vectorcraft"), temp("blobs.bug-report.json"));
+    std::fs::write(&blobs, [&text[..], b"\n\0VCBLOBS\0\xff\xfe"].concat()).unwrap();
+    assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(blobs)) }).status, Status::Done);
+    let kept = &json(&bundle)["design"];
+    assert_eq!(kept["vectorcraft"].as_str().map(str::as_bytes), Some(text.as_slice()), "{kept}");
+    assert_eq!((kept.get("vectorcraft_hex"), kept["sha256"].as_str()), (None, Some(hex(&Sha256::digest(&text)).as_str())));
+    assert!(replayed(&bundle).stdout.ends_with("\nreproduced\n"));
+    // A compressed document, and one with a NUL byte that is not the marker's, are kept whole, in
+    // hexadecimal.
+    for (name, bytes) in [("packed.vectorcraft", b"\x1f\x8b\x08 not a stream".to_vec()), ("damaged.vectorcraft", [&text[..], b"\0\xff"].concat())] {
+        let (design, bundle) = (temp(name), temp(&format!("{name}.bug-report.json")));
+        std::fs::write(&design, &bytes).unwrap();
+        assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(design)) }).status, Status::Done);
+        assert_eq!(json(&bundle)["design"]["vectorcraft_hex"].as_str(), Some(hex(&bytes).as_str()), "{name}");
+        assert!(replayed(&bundle).stdout.ends_with("\nreproduced\n"), "{name}");
+    }
+    // The design is held once, under the field of its kind.
+    let both = changed(&bundle, "both.json", |v| v["design"]["svg"] = Value::from("<svg/>"));
+    assert!(replayed(&both).stderr.contains("must hold its design once"), "{}", replayed(&both).stderr);
+}
+
+#[test]
+fn req_cli_005_a_replay_reads_a_bundle_larger_than_a_design() {
+    // A bundle can hold a design of the most `stitch` reads, twice as large in hexadecimal, and what was
+    // said of it: a replay reads it whole.
+    let (design, bundle) = (conformance("fixtures/svg/strokes.svg"), temp("large.bug-report.json"));
+    assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(design)) }).status, Status::Done);
+    let mut file = std::fs::OpenOptions::new().append(true).open(&bundle).unwrap();
+    std::io::copy(&mut std::io::Read::take(std::io::repeat(b' '), files::MAX_READ), &mut file).unwrap();
+    let out = replayed(&bundle);
+    assert!(out.status == Status::Done && out.stdout.ends_with("\nreproduced\n"), "{}{}", out.stdout, out.stderr);
+    // Past that, a file is refused unread.
+    let huge = temp("huge.bug-report.json");
+    std::fs::File::create(&huge).unwrap().set_len(BUNDLE_MAX + 1).unwrap();
+    let out = replayed(&huge);
+    assert!(out.status == Status::Io && out.stderr.contains(&format!("stitch reads at most {BUNDLE_MAX}")), "{}", out.stderr);
+}
+
+#[test]
 fn req_cli_001_each_difference_is_named_and_any_one_fails_the_replay() {
     let bundle = temp("each.bug-report.json");
     assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(conformance("fixtures/svg/strokes.svg"))) }).status, Status::Done);
@@ -215,7 +266,7 @@ fn strokes() -> Vec<u8> {
 
 /// A run of `design` from `path`, named `name`, planned for the reference profile as PES.
 fn pes<'a>(path: &'a Path, name: &'a str, design: &'a [u8]) -> Run<'a> {
-    Run { design_path: path, name, design, profile: profiles::REFERENCE, format: FormatId::PesV1, says: None }
+    Run { design_path: path, source: Source::Svg, name, design, profile: profiles::REFERENCE, format: FormatId::PesV1, says: None }
 }
 
 /// A bundle of the fixture `strokes.svg` as `name` from `path`, planned for the reference profile as PES,
@@ -298,10 +349,14 @@ fn diag_sc_e0012_a_file_that_is_not_a_bundle_is_not_replayed() {
     assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(conformance("fixtures/svg/strokes.svg"))) }).status, Status::Done);
     let cases: [(&str, Change, &str); 5] = [
         ("newer.json", |v| v["stitchcraft_bug_report"] = Value::from(2), "is a bundle of format 2, and this StitchCraft replays format 1."),
-        ("export.json", |v| v["command"] = Value::from("export"), "records `stitch export`, which this StitchCraft does not replay."),
+        ("embroider.json", |v| v["command"] = Value::from("embroider"), "records `stitch embroider`, which this StitchCraft does not replay."),
         ("singer.json", |v| v["profile"] = Value::from("singer"), "names the profile `singer`, which this StitchCraft does not have."),
         ("jef.json", |v| v["format"] = Value::from("jef"), "names the format `jef`, which this StitchCraft does not write."),
-        ("twice.json", |v| v["design"]["svg_hex"] = Value::from("00"), "must hold its design once, as `svg` or as `svg_hex`."),
+        (
+            "twice.json",
+            |v| v["design"]["svg_hex"] = Value::from("00"),
+            "must hold its design once: as `svg` or `svg_hex` for an SVG file, as `vectorcraft` or `vectorcraft_hex` for a VectorCraft document.",
+        ),
     ];
     for (name, change, says) in cases {
         let path = changed(&bundle, name, change);

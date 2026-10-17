@@ -137,6 +137,14 @@ mod tests {
     }
 
     #[test]
+    fn req_vc_008_export_is_another_name_for_plan() {
+        let Command::Plan(args) = parse(&["export", "patch.vectorcraft", "-o", "patch.pes"]).unwrap().command else {
+            panic!("`stitch export` is `stitch plan`")
+        };
+        assert_eq!(args.design, std::path::PathBuf::from("patch.vectorcraft"));
+    }
+
+    #[test]
     fn subcommands_dispatch() {
         let out = run(&parse(&["explain", "SC-E0701"]).unwrap());
         assert_eq!(out.status, Status::Done);

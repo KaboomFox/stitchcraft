@@ -7,6 +7,7 @@ pub stitchcraft_vectorcraft::Effect::preview_level: core::option::Option<alloc::
 pub struct stitchcraft_vectorcraft::VectorCraft
 pub stitchcraft_vectorcraft::VectorCraft::design: stitchcraft_engine::design::Design
 pub stitchcraft_vectorcraft::VectorCraft::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub const stitchcraft_vectorcraft::EXTENSIONS: &[&str]
 pub const stitchcraft_vectorcraft::FORMAT: u64
 pub const stitchcraft_vectorcraft::MAX_BYTES: usize
 pub const stitchcraft_vectorcraft::PLUGIN_NAMESPACE: &str
@@ -18,3 +19,4 @@ pub fn stitchcraft_vectorcraft::effect_output(stitchcraft_params::stitch_type::F
 pub fn stitchcraft_vectorcraft::effect_ribbons(impl core::iter::traits::collect::IntoIterator<Item = (stitchcraft_core::units::Point, stitchcraft_core::units::Point)>) -> core::option::Option<alloc::vec::Vec<u8>>
 pub fn stitchcraft_vectorcraft::read(&[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_vectorcraft::VectorCraft, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_vectorcraft::read_effect(stitchcraft_params::stitch_type::Family, &[u8], &[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_vectorcraft::Effect, stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_vectorcraft::read_part(&[u8]) -> &[u8]

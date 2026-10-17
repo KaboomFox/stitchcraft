@@ -1,8 +1,13 @@
-//! `stitch plan DESIGN.svg -o FILE.pes`: plans a design for a machine and writes the machine file, and a
-//! picture of it and a report when asked.
+//! `stitch plan DESIGN -o FILE.pes`: plans a design for a machine and writes the machine file, and a
+//! picture of it and a report when asked. `stitch export` is the same command, by the name a VectorCraft
+//! user looks for.
+//!
+//! **Designs.** A design is an SVG file, or a VectorCraft document, which its extension tells apart
+//! ([`Source`], `REQ-VC-008`). Both are read into the engine's design model by their adapters, and all
+//! that follows is the same for both: one way through the engine, so a document sews as its SVG would.
 //!
 //! The engine does the planning (`stitchcraft_engine::plan`): it fits the plan to the machine and checks
-//! it, so what comes back is written as it is. This command reads the SVG file, prints what was said about
+//! it, so what comes back is written as it is. This command reads the design, prints what was said about
 //! the design — element by element, and what the file format adds, such as DST's cuts before long jumps
 //! (`SC-I0605`) — and writes the files. Nothing is written when anything said is an error, an element left
 //! out included, except the report, which says why (`REQ-CLI-003`). The machine file, the picture and the
@@ -27,6 +32,7 @@ use std::path::Path;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use stitchcraft_core::{Budget, Code, Diagnostic, Severity};
+use stitchcraft_engine::design::Design;
 use stitchcraft_formats::Encoded;
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
@@ -39,12 +45,48 @@ use super::{
 use crate::cli::PlanArgs;
 use crate::files;
 
+/// What a design file is, which decides how it is read: a VectorCraft document by its extension, in any
+/// case ([`stitchcraft_vectorcraft::EXTENSIONS`]), and an SVG file otherwise.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Source {
+    /// An SVG file, read by `stitchcraft-svg`.
+    Svg,
+    /// A VectorCraft document, read by `stitchcraft-vectorcraft`.
+    VectorCraft,
+}
+
+impl Source {
+    /// What the design at `path` is, by its extension.
+    pub fn of(path: &Path) -> Source {
+        let extension = path.extension().and_then(|extension| extension.to_str()).unwrap_or_default();
+        let document = stitchcraft_vectorcraft::EXTENSIONS.iter().any(|known| extension.eq_ignore_ascii_case(known));
+        if document { Source::VectorCraft } else { Source::Svg }
+    }
+
+    /// The part of the design file `bytes` its reader reads, which reads as the file does: a VectorCraft
+    /// document's JSON without the images and other data after it ([`stitchcraft_vectorcraft::read_part`]),
+    /// and an SVG file whole. A bug-report bundle keeps it.
+    pub fn read_part(self, bytes: &[u8]) -> &[u8] {
+        match self {
+            Source::Svg => bytes,
+            Source::VectorCraft => stitchcraft_vectorcraft::read_part(bytes),
+        }
+    }
+
+    /// The design in `bytes`, read as this kind of file, with what its reader said; or why it can't be read.
+    pub fn read(self, bytes: &[u8]) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
+        match self {
+            Source::Svg => stitchcraft_svg::read(bytes, &Budget::DEFAULT).map(|svg| (svg.design, svg.warnings)),
+            Source::VectorCraft => stitchcraft_vectorcraft::read(bytes, &Budget::DEFAULT).map(|read| (read.design, read.warnings)),
+        }
+    }
+}
+
 /// A design planned for a machine and written in a format: what `stitch plan` writes, and what a
 /// bug-report bundle records and replays.
 #[derive(Debug)]
 pub struct Sewn {
-    /// Everything said: the SVG reader's warnings, then the engine's diagnostics, then the format's
-    /// notes.
+    /// Everything said: the reader's warnings, then the engine's diagnostics, then the format's notes.
     pub diagnostics: Vec<Diagnostic>,
     /// The plan, when the engine returned one.
     pub plan: Option<StitchPlan>,
@@ -61,15 +103,15 @@ impl Sewn {
     }
 }
 
-/// The SVG file `design` planned for `profile` and written in `format`, with `name` as the design name
-/// machines show, and the file read back.
-pub fn sew(design: &[u8], profile: &MachineProfile, format: FormatId, name: &str) -> Sewn {
-    let svg = match stitchcraft_svg::read(design, &Budget::DEFAULT) {
-        Ok(svg) => svg,
+/// The design file `design`, of the kind `source`, planned for `profile` and written in `format`, with
+/// `name` as the design name machines show, and the file read back.
+pub fn sew(source: Source, design: &[u8], profile: &MachineProfile, format: FormatId, name: &str) -> Sewn {
+    let (design, warnings) = match source.read(design) {
+        Ok(read) => read,
         Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None },
     };
-    let outcome = stitchcraft_engine::plan(&svg.design, profile, &Budget::DEFAULT);
-    let mut diagnostics = svg.warnings;
+    let outcome = stitchcraft_engine::plan(&design, profile, &Budget::DEFAULT);
+    let mut diagnostics = warnings;
     diagnostics.extend(outcome.diagnostics);
     let Some(plan) = outcome.plan else { return Sewn { diagnostics, plan: None, file: None, back: None } };
     match stitchcraft_formats::encode(&plan, format, name) {
@@ -117,7 +159,8 @@ pub fn run(args: &PlanArgs) -> Outcome {
             return Outcome { stdout: String::new(), stderr: format!("stitch: cannot read {}: {e}\n", args.design.display()), status: Status::Io };
         }
     };
-    let run = Run { design_path: &args.design, name: design_name(&args.design), design: &bytes, profile, format, says: None };
+    let source = Source::of(&args.design);
+    let run = Run { design_path: &args.design, source, name: design_name(&args.design), design: &bytes, profile, format, says: None };
     // A panic is a bug in StitchCraft: with the design's bytes in hand, and where it came, a bundle can
     // reproduce it (`REQ-CLI-002`).
     let phase = Cell::new(Phase::Plan);
@@ -132,7 +175,7 @@ pub fn run(args: &PlanArgs) -> Outcome {
 /// `stitch plan` once the design is read: planned and, unless StitchCraft found a bug in itself, written.
 /// `phase` follows where it is, for a bundle.
 fn planned(args: &PlanArgs, run: &Run, phase: &Cell<Phase>) -> Outcome {
-    let sewn = sew(run.design, run.profile, run.format, run.name);
+    let sewn = sew(run.source, run.design, run.profile, run.format, run.name);
     if sewn.found_a_bug() {
         let refused = refuse(args, run.profile, &sewn.diagnostics);
         return bug_report::beside(&args.output, run, Ok(&sewn), refused);
@@ -267,6 +310,10 @@ mod tests {
         PathBuf::from(format!("{}/../../conformance/fixtures/svg/{name}", env!("CARGO_MANIFEST_DIR")))
     }
 
+    fn vectorcraft(name: &str) -> PathBuf {
+        PathBuf::from(format!("{}/../../conformance/fixtures/vectorcraft/{name}", env!("CARGO_MANIFEST_DIR")))
+    }
+
     fn temp(name: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!("stitchcraft-plan-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
@@ -304,13 +351,54 @@ mod tests {
     }
 
     #[test]
+    fn req_vc_008_a_design_is_told_by_its_extension() {
+        let documents = ["patch.vectorcraft", "old/patch.drawcraft", "PATCH.VectorCraft", "start.vctemplate"];
+        let svg = ["patch.svg", "vectorcraft", "patch.vectorcraft.svg", "patch.vectorcraf"];
+        for (paths, source) in [(&documents[..], Source::VectorCraft), (&svg[..], Source::Svg)] {
+            for path in paths {
+                assert_eq!(Source::of(Path::new(path)), source, "{path}");
+            }
+        }
+    }
+
+    #[test]
+    fn req_vc_008_stitch_plan_reads_a_vectorcraft_document() {
+        let (output, preview, report) = (temp("patch.pes"), temp("patch.png"), temp("patch.json"));
+        let out =
+            run(&PlanArgs { preview: Some(preview.clone()), report: Some(report.clone()), ..args(vectorcraft("patch.vectorcraft"), output.clone()) });
+        assert_eq!(out.status, Status::Done, "{}", out.stderr);
+        assert!(std::fs::read(&output).unwrap().starts_with(b"#PES0001"));
+        assert!(std::fs::read(&preview).unwrap().starts_with(b"\x89PNG"));
+        // What the reader said comes first: the placement line left out by its name, and the start marker,
+        // which is not applied yet.
+        assert!(out.stderr.starts_with("info SC-I0811 (vc:10): ") && out.stderr.contains("\nwarning SC-W0807 (vc:4): "), "{}", out.stderr);
+        let report: Value = serde_json::from_slice(&std::fs::read(&report).unwrap()).unwrap();
+        let codes: Vec<&str> = report["diagnostics"].as_array().unwrap().iter().filter_map(|d| d["code"].as_str()).collect();
+        assert!(codes.starts_with(&["SC-I0811", "SC-W0807"]), "{codes:?}");
+        // The background's red, the border's blue, the stem's green and the dots' gold.
+        assert!(out.stdout.contains(", 3 colour changes, "), "{}", out.stdout);
+        // The same document under VectorCraft's former extension, which names the design the same.
+        let old = temp("patch.drawcraft");
+        std::fs::copy(vectorcraft("patch.vectorcraft"), &old).unwrap();
+        let again = temp("patch-again.pes");
+        assert_eq!(run(&args(old, again.clone())).status, Status::Done);
+        assert_eq!(std::fs::read(&again).unwrap(), std::fs::read(&output).unwrap());
+        // A file that isn't a VectorCraft document is refused as one.
+        let not_vectorcraft = temp("not.vectorcraft");
+        std::fs::write(&not_vectorcraft, b"<svg/>").unwrap();
+        let refused = run(&args(not_vectorcraft, temp("not.pes")));
+        assert_eq!(refused.status, Status::DesignErrors);
+        assert!(refused.stderr.starts_with("error SC-E0806: "), "{}", refused.stderr);
+    }
+
+    #[test]
     fn req_cli_008_the_picture_is_of_the_file_as_written() {
         // DST machines cut the thread before the 47 mm jump, where the plan leaves a jump thread: the picture
         // draws the cut, as `stitch preview` of the file does, in the design's colours.
         let (output, preview) = (temp("picture.dst"), temp("picture.png"));
         let out = run(&PlanArgs { preview: Some(preview.clone()), ..args(fixture("strokes.svg"), output) });
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
-        let sewn = sew(&std::fs::read(fixture("strokes.svg")).unwrap(), profiles::REFERENCE, FormatId::Dst, "picture");
+        let sewn = sew(Source::Svg, &std::fs::read(fixture("strokes.svg")).unwrap(), profiles::REFERENCE, FormatId::Dst, "picture");
         let drawn = std::fs::read(&preview).unwrap();
         assert_eq!(drawn, picture(sewn.back.as_ref().unwrap()).unwrap().png);
         assert_ne!(drawn, picture(sewn.plan.as_ref().unwrap()).unwrap().png, "the plan's jump thread, where the file cuts");
@@ -350,7 +438,7 @@ mod tests {
         // The engine leaves out an element whose planning runs past its work budget, with `SC-E0004`, and plans
         // the rest (`REQ-GEN-002`), as it does for a fill of 2,000 spikes after 12 s.
         let (output, preview, report) = (temp("left-out.pes"), temp("left-out.png"), temp("left-out.json"));
-        let mut sewn = sew(&std::fs::read(fixture("strokes.svg")).unwrap(), profiles::REFERENCE, FormatId::PesV1, "strokes");
+        let mut sewn = sew(Source::Svg, &std::fs::read(fixture("strokes.svg")).unwrap(), profiles::REFERENCE, FormatId::PesV1, "strokes");
         let fill = ElementId::new("svg:patch:fill").unwrap();
         sewn.diagnostics.push(Budget::DEFAULT.meter().charge(u64::MAX).unwrap_err().diagnostic(&Budget::DEFAULT, Some(fill)));
         assert!(sewn.plan.is_some() && sewn.file.is_some());

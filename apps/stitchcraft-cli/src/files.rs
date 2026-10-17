@@ -11,8 +11,9 @@
 //! write to another file. Each is synced to the disk before it is renamed, and the folder after, so a
 //! stick pulled out once `stitch` is done holds the whole file.
 //!
-//! Reads stop past [`MAX_READ`] bytes, whatever the file says of its size: a pipe or a device says nothing,
-//! and `/dev/zero` never ends (REQ-CLI-005).
+//! Reads stop past a cap, whatever the file says of its size: a pipe or a device says nothing, and
+//! `/dev/zero` never ends (REQ-CLI-005). The cap is [`MAX_READ`] bytes, and more for a bug-report bundle,
+//! which can hold a design that large twice over, in hexadecimal.
 
 use std::ffi::OsString;
 use std::fs::{File, OpenOptions};
@@ -25,15 +26,20 @@ pub const MAX_READ: u64 = 64 * 1024 * 1024;
 
 /// Reads `path`, refusing files larger than [`MAX_READ`].
 pub fn read_capped(path: &Path) -> io::Result<Vec<u8>> {
-    let too_large = |size: String| io::Error::new(io::ErrorKind::InvalidData, format!("the file is {size} bytes; stitch reads at most {MAX_READ}"));
+    read_at_most(path, MAX_READ)
+}
+
+/// Reads `path`, refusing files larger than `cap` bytes.
+pub fn read_at_most(path: &Path, cap: u64) -> io::Result<Vec<u8>> {
+    let too_large = |size: String| io::Error::new(io::ErrorKind::InvalidData, format!("the file is {size} bytes; stitch reads at most {cap}"));
     let size = std::fs::metadata(path)?.len();
-    if size > MAX_READ {
+    if size > cap {
         return Err(too_large(size.to_string()));
     }
     let mut bytes = Vec::new();
-    std::fs::File::open(path)?.take(MAX_READ + 1).read_to_end(&mut bytes)?;
-    if u64::try_from(bytes.len()).unwrap_or(u64::MAX) > MAX_READ {
-        return Err(too_large(format!("more than {MAX_READ}")));
+    std::fs::File::open(path)?.take(cap.saturating_add(1)).read_to_end(&mut bytes)?;
+    if u64::try_from(bytes.len()).unwrap_or(u64::MAX) > cap {
+        return Err(too_large(format!("more than {cap}")));
     }
     Ok(bytes)
 }
