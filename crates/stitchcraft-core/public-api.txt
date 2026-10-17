@@ -76,6 +76,7 @@ pub stitchcraft_core::diag::Code::TooLargeForFormat
 pub stitchcraft_core::diag::Code::TooManyColorChanges
 pub stitchcraft_core::diag::Code::TrimOrStopLeftOut
 pub stitchcraft_core::diag::Code::UnreadableFile
+pub stitchcraft_core::diag::Code::VcEffectUnchanged
 pub stitchcraft_core::diag::Code::VcFeatureIgnored
 pub stitchcraft_core::diag::Code::VcGeometryUnusable
 pub stitchcraft_core::diag::Code::VcNewerFormat
@@ -267,6 +268,7 @@ pub stitchcraft_core::Code::TooLargeForFormat
 pub stitchcraft_core::Code::TooManyColorChanges
 pub stitchcraft_core::Code::TrimOrStopLeftOut
 pub stitchcraft_core::Code::UnreadableFile
+pub stitchcraft_core::Code::VcEffectUnchanged
 pub stitchcraft_core::Code::VcFeatureIgnored
 pub stitchcraft_core::Code::VcGeometryUnusable
 pub stitchcraft_core::Code::VcNewerFormat

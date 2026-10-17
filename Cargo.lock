@@ -777,7 +777,12 @@ dependencies = [
 name = "stitchcraft-vc-plugin"
 version = "0.0.1"
 dependencies = [
+ "serde",
  "serde_json",
+ "stitchcraft-core",
+ "stitchcraft-engine",
+ "stitchcraft-params",
+ "stitchcraft-plan",
  "stitchcraft-vectorcraft",
 ]
 

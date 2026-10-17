@@ -200,6 +200,23 @@ pub(crate) struct Effect {
     pub visible: bool,
 }
 
+/// What a live effect is given (plug-in ABI v1): the object's geometry, in a list of one.
+#[derive(Deserialize)]
+pub(crate) struct EffectInput {
+    #[serde(default)]
+    pub objects: Vec<EffectObject>,
+}
+
+/// An object a live effect is given: its path, in document coordinates, and its fill rule (`nonzero` or
+/// `evenodd`). Its `type` and `bounds` are not needed.
+#[derive(Deserialize)]
+pub(crate) struct EffectObject {
+    #[serde(default)]
+    pub path: Option<PathData>,
+    #[serde(rename = "fillRule", default)]
+    pub fill_rule: Option<String>,
+}
+
 /// A path: its subpaths.
 #[derive(Deserialize)]
 pub(crate) struct PathData {

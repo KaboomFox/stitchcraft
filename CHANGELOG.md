@@ -5,6 +5,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.2: VectorCraft plug-ins for the stitch families. Each is its own WebAssembly module, which a feature
+  of `stitchcraft-vc-plugin` picks. A family's live effect sews the object it is applied to with the
+  engine, and VectorCraft draws the stitches instead of the object's art. A stroke's stitches and a satin
+  column's come back as paths, and a fill's as one thin ribbon for each stitch.
+  - The parameter registry makes each dialog. A dialog has every parameter of its family that one value
+    of VectorCraft's kinds can hold, with the method's group first and the settings every element shares
+    last, as in Ink/Stitch (`REQ-VC-002`). A record of a dialog's defaults sews as an element without
+    settings.
+  - When an effect can't show stitches, VectorCraft draws the object as it is and shows why as the
+    plug-in's last error. For an object that sews nothing, that is the message that says why. A satin
+    column drawn as one path gets `SC-I0810`, since VectorCraft doesn't pass a live effect its width.
+  - `cargo xtask compat contract` builds the four modules and notes their sizes. The contract tests
+    install each in VectorCraft's host and run its effect. The command's `--wasm` option is gone.
 - M6.1: `stitchcraft-vectorcraft` reads `.vectorcraft` files into designs, as the SVG adapter reads SVG.
   It reads formats 1 to 4, plain or compressed, and stops at the data format 4 keeps after its JSON.
   Layers, groups, paths and compound paths are stitched in paint order, each fill and stroke in its

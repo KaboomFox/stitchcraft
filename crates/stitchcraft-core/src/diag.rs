@@ -549,8 +549,12 @@ registry! {
     /// read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
     /// is damaged, or it unpacks to more JSON than StitchCraft reads. Nothing was stitched.
     ///
+    /// A StitchCraft live effect gives this message when what VectorCraft passes it does not read as
+    /// VectorCraft's plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The effect
+    /// leaves the object as it is.
+    ///
     /// The message says what is wrong and, for JSON errors, where. Open the file in VectorCraft and save it
-    /// again.
+    /// again. For a live effect, install the StitchCraft plug-ins made for that version of VectorCraft.
     VcUnreadable = "SC-E0806", Error, "VectorCraft file could not be read";
 
     /// Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft
@@ -568,7 +572,8 @@ registry! {
     /// An object's geometry cannot be used, and the object, or the stroke, is left out: a coordinate or a
     /// stroke's width is not a number, the object draws nothing, or it lies more than 10 metres from the
     /// document's origin, beyond what machine files can record. A StitchCraft stroke or satin effect takes
-    /// a width that is not a number as 0.
+    /// a width that is not a number as 0. A StitchCraft live effect leaves such an object as it is, with
+    /// this message as the plug-in's last error.
     ///
     /// The message names the object. Check its anchors, or remove stray objects far from the design.
     VcGeometryUnusable = "SC-W0808", Warning, "VectorCraft geometry unusable";
@@ -580,6 +585,16 @@ registry! {
     /// The message names the layer or the guide. To stitch a layer, turn its Template option off, or its
     /// Print option on, in VectorCraft's Layer Options.
     VcNotPrinted = "SC-I0809", Info, "VectorCraft layer or guide left out, as it does not print";
+
+    /// A StitchCraft live effect draws the object it is applied to as its stitches. It leaves the object
+    /// as it is when it cannot show them, and VectorCraft shows this message as the plug-in's last error:
+    /// the object sews no stitch, or it is a satin column drawn as one path. Such a column is as wide as
+    /// its stroke, and VectorCraft gives a live effect no stroke. When another message says why an object
+    /// sews no stitch, the effect shows that message instead.
+    ///
+    /// The message says which. A satin column drawn as one path still sews as wide as its stroke; to see
+    /// its stitches in VectorCraft, draw it with 2 rails.
+    VcEffectUnchanged = "SC-I0810", Info, "VectorCraft live effect leaves the object as it is";
 }
 
 impl Code {
