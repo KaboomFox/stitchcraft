@@ -85,8 +85,10 @@ The tools an object filter was to give are VectorCraft's own commands, or wait f
 ([tools](#tools-vectorcrafts-own-commands)).
 
 `<ns>` is a reverse-DNS namespace defined in one constant (`PLUGIN_NAMESPACE`) in the VectorCraft adapter,
-which reads the effect records too. The plug-in crate imports it. A live effect's id ends with its stitch
-family's (`stitchcraft_params::Family::id`).
+which reads the effect records too. The adapter makes the ids from it, a plug-in's with `plugin_id` and its
+live effect's with `effect_id`, and `effect_name` reads one back. The plug-in crate and the compatibility
+gate use the same functions. A live effect's id ends with its stitch family's
+(`stitchcraft_params::Family::id`).
 Manifests are generated from the [parameter registry](params.md#splitting-for-vectorcraft-abi-v1); a
 test validates each against VectorCraft's manifest rules (id charset, ≤ 64 parameters, names, ranges) so
 an invalid manifest never reaches a user.

@@ -23,6 +23,7 @@ stitchcraft-params = { workspace = true }
 stitchcraft-plan = { workspace = true }
 stitchcraft-render = { workspace = true }
 stitchcraft-svg = { workspace = true }
+stitchcraft-vectorcraft = { workspace = true }
 stitchcraft-testkit = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

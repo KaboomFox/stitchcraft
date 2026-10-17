@@ -34,8 +34,8 @@ In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Ope
   every block carries a `// SAFETY:` comment, checked by `cargo xtask unsafe-audit`. Everything else is
   safe Rust tested natively, and every module contains all of it. The feature only picks what
   `vc_manifest` and `vc_run` serve (`MODULE`).
-- Plug-in ids derive from one constant, `PLUGIN_NAMESPACE`. The VectorCraft adapter owns it, as it reads
-  the effect records those ids name in documents, and the plug-in re-exports it.
+- Plug-in ids come from one function, `plugin_id`. The VectorCraft adapter owns it, with the effect ids
+  documents record, as it reads those records, and the plug-in re-exports it.
 - Manifests are made from the parameter registry and satisfy VectorCraft's rules (validated by tests,
   `REQ-VC-002`). A record of a manifest's defaults sews as an element without settings.
 - Contains no engine logic: the VectorCraft adapter reads the object and writes the stitches, and the
@@ -50,4 +50,4 @@ In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Ope
 
 `serde` and `serde_json` (the ABI's JSON), `stitchcraft-params` and `stitchcraft-engine` (the registry, and
 the sewing), `stitchcraft-plan` (the reference machine), `stitchcraft-core` (diagnostics and the budget),
-and `stitchcraft-vectorcraft` (`PLUGIN_NAMESPACE`, and what a live effect reads and writes).
+and `stitchcraft-vectorcraft` (`plugin_id`, and what a live effect reads and writes).

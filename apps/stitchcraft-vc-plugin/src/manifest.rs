@@ -38,7 +38,7 @@ use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Empty, Family, Kind, ParamGroup, ParamSpec, Value as Parsed};
-pub use stitchcraft_vectorcraft::{PLUGIN_NAMESPACE, PREVIEW_LEVEL};
+pub use stitchcraft_vectorcraft::{PREVIEW_LEVEL, plugin_id};
 
 use crate::preview::Level;
 
@@ -117,11 +117,6 @@ pub enum Schema {
         /// Its value when the user leaves it.
         default: &'static str,
     },
-}
-
-/// The id of plug-in `name` (`dev.stitchcraft.<name>`).
-pub fn plugin_id(name: &str) -> String {
-    format!("{PLUGIN_NAMESPACE}.{name}")
 }
 
 /// The manifest of the M0.6 *hello* live effect: returns the object's geometry unchanged.

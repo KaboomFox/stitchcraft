@@ -14,9 +14,13 @@ pub const stitchcraft_vectorcraft::PLUGIN_NAMESPACE: &str
 pub const stitchcraft_vectorcraft::PREVIEW_LEVEL: &str
 pub const stitchcraft_vectorcraft::RIBBON_MM: f64
 pub fn stitchcraft_vectorcraft::effect_error(&stitchcraft_core::diag::Diagnostic) -> alloc::vec::Vec<u8>
+pub fn stitchcraft_vectorcraft::effect_id(&str) -> alloc::string::String
 pub fn stitchcraft_vectorcraft::effect_lines<'a>(impl core::iter::traits::collect::IntoIterator<Item = &'a [stitchcraft_core::units::Point]>) -> core::option::Option<alloc::vec::Vec<u8>>
+pub fn stitchcraft_vectorcraft::effect_name(&str) -> core::option::Option<&str>
 pub fn stitchcraft_vectorcraft::effect_output(stitchcraft_params::stitch_type::Family, &[alloc::vec::Vec<stitchcraft_core::units::Point>]) -> core::option::Option<alloc::vec::Vec<u8>>
 pub fn stitchcraft_vectorcraft::effect_ribbons(impl core::iter::traits::collect::IntoIterator<Item = (stitchcraft_core::units::Point, stitchcraft_core::units::Point)>) -> core::option::Option<alloc::vec::Vec<u8>>
+pub fn stitchcraft_vectorcraft::param_text(&serde_json::value::Value) -> core::option::Option<alloc::string::String>
+pub fn stitchcraft_vectorcraft::plugin_id(&str) -> alloc::string::String
 pub fn stitchcraft_vectorcraft::read(&[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_vectorcraft::VectorCraft, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_vectorcraft::read_effect(stitchcraft_params::stitch_type::Family, &[u8], &[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_vectorcraft::Effect, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_vectorcraft::read_part(&[u8]) -> &[u8]

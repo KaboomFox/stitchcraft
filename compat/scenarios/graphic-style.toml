@@ -1,0 +1,30 @@
+# Level B: a graphic style that holds a fill effect, applied to a group: each path inside sews with the
+# effect in the style's colour (docs/src/user/how-to/vectorcraft-columns-and-presets.md). The group is
+# drawn first, so that Next Object Below reaches it from the styled square. The square is drawn with its
+# effect before the style reaches the group, so that each has a drawing of its own after which the fill
+# module's last error is asked. Coordinates are points.
+description = "A graphic style holding a fill effect, applied to a group, sews each path inside in the style's colour."
+requirements = ["REQ-VC-006"]
+
+[[run]]
+plugins = ["fill"]
+steps = [
+  { cmd = "shape.rectangle", params = { x = 0, y = 300, width = 36, height = 36 } },
+  { cmd = "shape.rectangle", params = { x = 72, y = 300, width = 36, height = 36 } },
+  { cmd = "select.all" },
+  { cmd = "object.group" },
+  { cmd = "shape.rectangle", params = { x = 0, y = 400, width = 72, height = 72 } },
+  { cmd = "paint.setFill", params = { color = "#e6b31a" } },
+  { apply = "fill", params = { angle = 90 } },
+  { export = "square.png" },
+  { cmd = "graphicStyle.new", params = { name = "Gold" } },
+  { cmd = "select.nextBelow" },
+  { cmd = "graphicStyle.apply", params = { name = "Gold" } },
+  { export = "after.vectorcraft" },
+  { export = "after.png" },
+]
+
+[expect]
+applied = ["after.vectorcraft"]
+# The effect's 90° tells its 3 fills from fills of the style's paint alone, which have no settings.
+elements = [{ file = "after.vectorcraft", element = "fill", count = 3, thread = "#e6b31a", params = { angle = 90 } }]

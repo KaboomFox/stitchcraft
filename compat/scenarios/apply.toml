@@ -1,0 +1,24 @@
+# Level B: a fill and a stroke applied as their dialogs apply them, saved, and sewn by StitchCraft
+# (docs/src/design/compatibility-gate.md). Coordinates are points.
+description = "A fill and a stroke, applied as their dialogs apply them and saved, sew with the parameters the dialogs set."
+requirements = ["REQ-VC-001", "REQ-VC-004", "REQ-PRM-003"]
+
+[[run]]
+plugins = ["stroke", "fill"]
+steps = [
+  { cmd = "shape.rectangle", params = { x = 0, y = 0, width = 72, height = 72 } },
+  { cmd = "paint.setFill", params = { color = "#c00000" } },
+  { apply = "fill", params = { angle = 45, row_spacing_mm = 0.4 } },
+  { cmd = "shape.line", params = { x1 = 0, y1 = 100, x2 = 144, y2 = 100 } },
+  { apply = "stroke", params = { running_stitch_length_mm = 2.5 } },
+  { export = "after.vectorcraft" },
+  # Drawing it runs the live effects, which must leave no last error.
+  { export = "after.png" },
+]
+
+[expect]
+applied = ["after.vectorcraft"]
+elements = [
+  { file = "after.vectorcraft", element = "fill", count = 1, thread = "#c00000" },
+  { file = "after.vectorcraft", element = "stroke", count = 1 },
+]

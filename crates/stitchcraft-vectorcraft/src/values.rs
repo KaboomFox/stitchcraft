@@ -18,7 +18,7 @@ pub(crate) fn sews(key: &str) -> bool {
 /// A parameter's value as text, as the parameters read it: a number as a decimal, a whole number without
 /// a point; a toggle as `true` or `false`; a choice as its id; a list as its values with spaces between.
 /// `None` for anything else.
-pub(crate) fn text(value: &Value) -> Option<String> {
+pub fn text(value: &Value) -> Option<String> {
     match value {
         Value::Bool(on) => Some(on.to_string()),
         Value::Number(n) => Some(number(n)),
