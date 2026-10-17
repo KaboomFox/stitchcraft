@@ -128,6 +128,22 @@ pub fn show(family: Family, effect: &Effect, spend: u64) -> Vec<u8> {
 fn preview(family: Family, effect: &Effect, spend: u64) -> Shown {
     let (element, spend) = (&effect.element, Spend(spend));
     if let Some(unseen) = centre_line(family, element, spend) {
+        // MEASUREMENT ONLY (branch m6.4-measure, never merged): convert the centre line, 3 mm wide.
+        if let Shape::Stroke { path, .. } = &element.shape {
+            let mut said = Vec::new();
+            let width = stitchcraft_core::Mm::new(3.0).unwrap_or(stitchcraft_core::Mm::ZERO);
+            let join = stitchcraft_engine::design::Join::Miter { limit: 10.0 };
+            if let Ok(Some(satin)) = stitchcraft_engine::generators::satin::rails(path, width, join, &mut said, &mut Budget::DEFAULT.meter()) {
+                let rungs: Vec<Vec<stitchcraft_core::Point>> = match satin.pairing {
+                    stitchcraft_engine::normalize::satin::Pairing::Rungs(r) => r.iter().map(|pair| pair.to_vec()).collect(),
+                    stitchcraft_engine::normalize::satin::Pairing::Nodes(_) => Vec::new(),
+                };
+                let lines = satin.rails.iter().map(Vec::as_slice).chain(rungs.iter().map(Vec::as_slice));
+                if let Some(out) = effect_lines(lines) {
+                    return Shown::Drawn(Level::Exact, out);
+                }
+            }
+        }
         return Shown::Unsewn(unseen);
     }
     match (Level::read(effect.preview_level.as_deref()), family) {
