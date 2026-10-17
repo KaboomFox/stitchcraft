@@ -179,9 +179,10 @@ fn req_vc_006_a_group_s_paints_under_what_it_holds_come_after_the_object_s_own()
 }
 
 #[test]
-fn req_vc_006_the_paints_over_the_stitches_give_the_thread_the_outermost_first() {
-    // VectorCraft paints the stitches of a group's effect with the paints of that group and of the groups
-    // inside it, each group's over what it holds. A group around it paints the object's shape.
+fn req_vc_006_the_topmost_paint_gives_the_thread_the_outermost_group_s_first() {
+    // VectorCraft paints a group's effect's stitches with the object's paints and the groups', each
+    // group's over its contents. A group around the one that gives the effect paints the object's shape,
+    // and its paints over its contents cover the stitches too.
     let own = looks(&[fill(G)], &[]);
     let blue = |id: u32, children: &[String]| group(id, &looks(&[fill(B)], &[]), "", children);
     let fill_effect = |id: u32, items: &[String], children: &[String]| group(id, &looks(items, &[effect("fill", "{}")]), "", children);
@@ -190,36 +191,40 @@ fn req_vc_006_the_paints_over_the_stitches_give_the_thread_the_outermost_first()
         fill_effect(2, &[fill(R)], &[blue(3, &[square(4, 0.0, 0.0, &own)])]),
         // Group 5 doesn't paint, and group 6's blue is on top.
         fill_effect(5, &[], &[blue(6, &[square(7, 50.0, 0.0, &own)])]),
-        // Group 8 paints the squares' shapes, and square 10's stitches show in its own green. Square 11
-        // has no paint of its own, and shows in group 8's blue.
+        // Group 8's blue covers squares 10 and 11, which group 9's effect stitches.
         blue(8, &[fill_effect(9, &[], &[square(10, 100.0, 0.0, &own), square(11, 150.0, 0.0, "{}")])]),
+        // Group 12 paints its blue under its contents, and square 14's own green shows.
+        group(12, &looks_over(&[fill(B)], &[], 1), "", &[fill_effect(13, &[], &[square(14, 200.0, 0.0, &own)])]),
+        // Group 15's green at 10% lets square 16's own red show.
+        fill_effect(
+            15,
+            &[r#"{"kind": "fill", "opacity": 0.1, "paint": {"type": "solid", "color": {"model": "rgb", "r": 0, "g": 1, "b": 0}}}"#.to_string()],
+            &[square(16, 250.0, 0.0, RED)],
+        ),
     ];
     let read = read_ok(&document(4, &objects.join(",")));
-    assert_eq!(ids(&read), ["vc:4:fill", "vc:7:fill", "vc:10:fill", "vc:11:fill"]);
+    assert_eq!(ids(&read), ["vc:4:fill", "vc:7:fill", "vc:10:fill", "vc:11:fill", "vc:14:fill", "vc:16:fill"]);
     let colours: Vec<Rgb> = read.design.elements().iter().map(|e| e.thread.color).collect();
-    assert_eq!(colours, [rgb(R), rgb(B), rgb(G), rgb(B)]);
+    assert_eq!(colours, [rgb(R), rgb(B), rgb(B), rgb(B), rgb(G), rgb(R)]);
 }
 
 #[test]
-fn req_vc_006_an_object_s_own_effects_take_its_own_paints_first() {
-    // VectorCraft paints an object's own effects with its own paints alone, and a group's paints over the
-    // object's shape. What the object doesn't paint, a stroke here, comes from the group.
-    let objects = [group(
-        2,
-        &looks(&[stroke(PT_3MM, G)], &[]),
-        "",
-        &[
-            line(3, "", &looks(&[], &[effect("satin", "{}")])),
-            line(4, "", &looks(&[stroke(1.0, B)], &[effect("satin", "{}")])),
-            line(5, "", &looks(&[fill(B), no_stroke(2.2)], &[effect("satin", "{}")])),
-        ],
-    )];
+fn req_vc_006_an_object_s_own_effects_take_the_topmost_paint_too() {
+    // VectorCraft paints an object's own effects with its own paints, and a group's paints over the
+    // object's shape, over them unless the group's Contents row is moved up.
+    let satin = |id: u32, items: &[String]| line(id, "", &looks(items, &[effect("satin", "{}")]));
+    let objects = [
+        group(2, &looks(&[stroke(PT_3MM, G)], &[]), "", &[satin(3, &[]), satin(4, &[stroke(1.0, B)]), satin(5, &[fill(B), no_stroke(2.2)])]),
+        group(6, &looks_over(&[stroke(PT_3MM, G)], &[], 1), "", &[satin(7, &[stroke(1.0, B)])]),
+    ];
     let read = read_ok(&document(4, &objects.join(",")));
     assert_eq!(sews(&read, "vc:3:satin"), (rgb(G), 3.0));
-    assert_eq!(sews(&read, "vc:4:satin"), (rgb(B), 0.353));
+    assert_eq!(sews(&read, "vc:4:satin"), (rgb(G), 3.0));
     assert_eq!(sews(&read, "vc:5:satin"), (rgb(G), 3.0));
-    // The group's paints are named, as no element of their own, and nothing else is said.
-    assert_eq!(said(&read), [(Code::VcFeatureIgnored, "vc:2".to_string())]);
+    assert_eq!(sews(&read, "vc:7:satin"), (rgb(B), 0.353));
+    // The groups' paints are named, as no element of their own, and nothing else is said.
+    let w = Code::VcFeatureIgnored;
+    assert_eq!(said(&read), [(w, "vc:2".to_string()), (w, "vc:6".to_string())]);
     assert!(read.warnings[0].message.contains("give their thread and stroke"), "{}", read.warnings[0]);
 }
 
@@ -230,7 +235,18 @@ fn req_vc_006_a_group_s_effects_leave_out_what_nothing_paints() {
     let unpainted = looks(&[r#"{"kind": "fill", "paint": {"type": "none"}}"#.to_string(), no_stroke(1.0)], &[]);
     // A gradient without stops paints nothing either.
     let stopless = looks(&[r#"{"kind": "fill", "paint": {"type": "gradient", "gradient": {"kind": "Linear", "stops": []}}}"#.to_string()], &[]);
-    let squares = [square(3, 0.0, 0.0, "{}"), square(4, 50.0, 0.0, &unpainted), square(5, 100.0, 0.0, RED), square(6, 150.0, 0.0, &stopless)];
+    // Nothing is said of what VectorCraft doesn't draw: a fill rule, an effect of its own, geometry.
+    let quiet = r#"{"id": 7, "appearance": {"effects": [{"id": "distort.roughen"}]}, "kind": {"type": "path", "rule": "Spiral",
+        "path": {"subpaths": [{"closed": true, "anchors": [{"p": [0, 0]}, {"p": [36, 0]}, {"p": [36, 36]}]}]}}}"#;
+    let point = r#"{"id": 8, "kind": {"type": "path", "path": {"subpaths": [{"anchors": [{"p": [0, 0]}]}]}}}"#;
+    let squares = [
+        square(3, 0.0, 0.0, "{}"),
+        square(4, 50.0, 0.0, &unpainted),
+        square(5, 100.0, 0.0, RED),
+        square(6, 150.0, 0.0, &stopless),
+        quiet.to_string(),
+        point.to_string(),
+    ];
     let objects = [group(2, &looks(&[], &[effect("fill", "{}")]), "", &squares)];
     let read = read_ok(&document(4, &objects.join(",")));
     assert_eq!(ids(&read), ["vc:5:fill"]);
@@ -254,14 +270,17 @@ fn req_vc_006_a_clipping_object_takes_the_group_s_effects_and_only_its_own_paint
         clip(2, square(3, 0.0, 0.0, &looks(&[stroke(1.0, B)], &[])), square(4, 0.0, 0.0, "{}")),
         // Compound 6 paints nothing, as Make Clipping Mask leaves it, and sews nothing.
         clip(5, compound, square(7, 50.0, 0.0, "{}")),
+        // A group can clip in a file VectorCraft imports, and VectorCraft paints nothing of it.
+        clip(8, group(9, "{}", "", &[square(10, 100.0, 0.0, RED)]), square(11, 100.0, 0.0, "{}")),
     ];
     let read = read_ok(&document(4, &objects.join(",")));
-    assert_eq!(ids(&read), ["vc:3:fill", "vc:4:fill", "vc:7:fill"]);
+    assert_eq!(ids(&read), ["vc:3:fill", "vc:4:fill", "vc:7:fill", "vc:11:fill"]);
     assert!(read.design.elements().iter().all(|e| params(e) == [("angle", "30")]), "{:?}", read.design.elements());
     let colours: Vec<Rgb> = read.design.elements().iter().map(|e| e.thread.color).collect();
-    assert_eq!(colours, [rgb(B), rgb(G), rgb(G)]);
+    assert_eq!(colours, [rgb(B), rgb(G), rgb(G), rgb(G)]);
     // What is said is said of the groups: their clipping, and their paints.
-    assert!(read.warnings.iter().all(|w| w.element.as_ref().is_some_and(|e| ["vc:2", "vc:5"].contains(&e.as_str()))), "{:?}", read.warnings);
+    let groups = ["vc:2", "vc:5", "vc:8"];
+    assert!(read.warnings.iter().all(|w| w.element.as_ref().is_some_and(|e| groups.contains(&e.as_str()))), "{:?}", read.warnings);
 }
 
 #[test]
