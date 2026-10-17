@@ -1,0 +1,429 @@
+{
+  "format": "vectorcraft",
+  "version": 4,
+  "generator": "VectorCraft 0.12.0",
+  "preview": {
+    "mime": "image/png",
+    "data": "iVBORw0KGgo="
+  },
+  "document": {
+    "version": 1,
+    "title": "Drawing",
+    "units": "Points",
+    "color_mode": "Rgb",
+    "artboards": [
+      {
+        "id": 9,
+        "name": "Artboard 1",
+        "rect": {
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 432.0,
+          "y1": 288.0
+        }
+      }
+    ],
+    "layers": [
+      {
+        "id": 1,
+        "name": "Art",
+        "kind": {
+          "type": "layer",
+          "color": {
+            "Preset": 0
+          },
+          "template": false,
+          "printable": true,
+          "children": [
+            {
+              "id": 2,
+              "name": "Square",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 1.0,
+                        "g": 0.0,
+                        "b": 0.0
+                      },
+                      "swatch": "Red"
+                    }
+                  },
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "gray",
+                        "k": 1.0
+                      }
+                    },
+                    "width": 2.834646,
+                    "join": "Round"
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            72,
+                            72
+                          ]
+                        },
+                        {
+                          "p": [
+                            144,
+                            72
+                          ]
+                        },
+                        {
+                          "p": [
+                            144,
+                            144
+                          ]
+                        },
+                        {
+                          "p": [
+                            72,
+                            144
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 3,
+              "name": "Ring",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "cmyk",
+                        "c": 1.0,
+                        "m": 0.0,
+                        "y": 0.0,
+                        "k": 0.0
+                      }
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "compound",
+                "rule": "EvenOdd",
+                "children": [
+                  {
+                    "id": 4,
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  324,
+                                  108
+                                ],
+                                "in": [
+                                  324,
+                                  88.1177
+                                ],
+                                "out": [
+                                  324,
+                                  127.8823
+                                ],
+                                "kind": "Smooth"
+                              },
+                              {
+                                "p": [
+                                  288,
+                                  144
+                                ],
+                                "in": [
+                                  307.8823,
+                                  144
+                                ],
+                                "out": [
+                                  268.1177,
+                                  144
+                                ],
+                                "kind": "Smooth"
+                              },
+                              {
+                                "p": [
+                                  252,
+                                  108
+                                ],
+                                "in": [
+                                  252,
+                                  127.8823
+                                ],
+                                "out": [
+                                  252,
+                                  88.1177
+                                ],
+                                "kind": "Smooth"
+                              },
+                              {
+                                "p": [
+                                  288,
+                                  72
+                                ],
+                                "in": [
+                                  268.1177,
+                                  72
+                                ],
+                                "out": [
+                                  307.8823,
+                                  72
+                                ],
+                                "kind": "Smooth"
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": 5,
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  306,
+                                  108
+                                ],
+                                "in": [
+                                  306,
+                                  98.0589
+                                ],
+                                "out": [
+                                  306,
+                                  117.9411
+                                ],
+                                "kind": "Smooth"
+                              },
+                              {
+                                "p": [
+                                  288,
+                                  126
+                                ],
+                                "in": [
+                                  297.9411,
+                                  126
+                                ],
+                                "out": [
+                                  278.0589,
+                                  126
+                                ],
+                                "kind": "Smooth"
+                              },
+                              {
+                                "p": [
+                                  270,
+                                  108
+                                ],
+                                "in": [
+                                  270,
+                                  117.9411
+                                ],
+                                "out": [
+                                  270,
+                                  98.0589
+                                ],
+                                "kind": "Smooth"
+                              },
+                              {
+                                "p": [
+                                  288,
+                                  90
+                                ],
+                                "in": [
+                                  278.0589,
+                                  90
+                                ],
+                                "out": [
+                                  297.9411,
+                                  90
+                                ],
+                                "kind": "Smooth"
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": 6,
+              "name": "Wave",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.0,
+                        "g": 0.0,
+                        "b": 1.0
+                      }
+                    },
+                    "width": 1.417323,
+                    "miter_limit": 4.0
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            72,
+                            216
+                          ],
+                          "out": [
+                            126,
+                            162
+                          ]
+                        },
+                        {
+                          "p": [
+                            180,
+                            216
+                          ],
+                          "in": [
+                            162,
+                            270
+                          ],
+                          "out": [
+                            198,
+                            162
+                          ],
+                          "kind": "Smooth"
+                        },
+                        {
+                          "p": [
+                            288,
+                            216
+                          ],
+                          "in": [
+                            234,
+                            270
+                          ]
+                        }
+                      ],
+                      "closed": false
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": 7,
+        "name": "Notes",
+        "kind": {
+          "type": "layer",
+          "color": {
+            "Preset": 1
+          },
+          "template": true,
+          "printable": true,
+          "children": [
+            {
+              "id": 8,
+              "name": "Sketch",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.5,
+                        "g": 0.5,
+                        "b": 0.5
+                      }
+                    },
+                    "width": 1.0
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            400,
+                            300
+                          ]
+                        }
+                      ],
+                      "closed": false
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "next_id": 10,
+    "images": {}
+  },
+  "images": {
+    "photo": {
+      "mime": "image/png",
+      "blob": [
+        0,
+        8
+      ]
+    }
+  }
+}
+ VCBLOBS ‰PNG    

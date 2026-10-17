@@ -52,7 +52,7 @@ with a cached target directory for branch tracks. Scenarios are data files in `c
 | Scenario | Steps | Checks |
 |---|---|---|
 | `install-and-list` | `--cmd plugin.install`, `--cmd plugin.list` | our plug-ins listed with the right kinds |
-| `apply-running` / `-satin` / `-fill` | open fixture, `effect.apply {"effect": "plugin.<ns>.<x>", "ids": […], "params": {…}}`, `--export out.png` | PNG matches golden within tolerance; no `lastError` |
+| `apply-stroke` / `-satin` / `-fill` | open fixture, `effect.apply {"effect": "plugin.<ns>.<x>", "ids": […], "params": {…}}`, `--export out.png` | PNG matches golden within tolerance; no `lastError` |
 | `save-reopen` | apply, `app.save`, reopen, `effect.list` | parameters identical (`REQ-PRM-003`) |
 | `export-pes` | VectorCraft saves `.vectorcraft`; `stitch export` reads it | our CLI reads the version's files; PES golden matches |
 | `missing-plugin` | open a document with our effect records without the plug-in installed | document opens; records preserved on save |

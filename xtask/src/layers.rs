@@ -51,6 +51,7 @@ pub const RESTRICTED: &[(&str, &[&str])] = &[
     ("tiny-skia", &["stitchcraft-render"]),
     ("roxmltree", &["stitchcraft-svg"]),
     ("svgtypes", &["stitchcraft-svg"]),
+    ("flate2", &["stitchcraft-vectorcraft", "stitchcraft-testkit"]),
 ];
 
 /// Kind of a dependency edge.

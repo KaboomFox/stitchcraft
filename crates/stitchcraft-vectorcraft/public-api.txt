@@ -1,3 +1,10 @@
 # The public API of stitchcraft-vectorcraft, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
 # Generated: do not edit. A change here is a change other code can see; say why in the pull request.
 pub mod stitchcraft_vectorcraft
+pub struct stitchcraft_vectorcraft::VectorCraft
+pub stitchcraft_vectorcraft::VectorCraft::design: stitchcraft_engine::design::Design
+pub stitchcraft_vectorcraft::VectorCraft::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub const stitchcraft_vectorcraft::FORMAT: u64
+pub const stitchcraft_vectorcraft::MAX_BYTES: usize
+pub const stitchcraft_vectorcraft::PLUGIN_NAMESPACE: &str
+pub fn stitchcraft_vectorcraft::read(&[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_vectorcraft::VectorCraft, stitchcraft_core::diag::Diagnostic>

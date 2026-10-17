@@ -5,6 +5,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.1: `stitchcraft-vectorcraft` reads `.vectorcraft` files into designs, as the SVG adapter reads SVG.
+  It reads formats 1 to 4, plain or compressed, and stops at the data format 4 keeps after its JSON.
+  Layers, groups, paths and compound paths are stitched in paint order, each fill and stroke in its
+  colour, CMYK, grey and Lab converted as VectorCraft draws them.
+  - StitchCraft's fill, stroke and satin effects, kept in an object's appearance, say how it sews, with
+    their parameters (`REQ-VC-004`). An object without them sews its fills, then its strokes.
+  - What isn't stitched is named, with how to make paths of it in VectorCraft (`REQ-VC-005`). That
+    includes text, images, symbols, blends and other live objects, clipping, masks and VectorCraft's own
+    effects (`SC-W0807`). Geometry that can't be used is `SC-W0808`, and template layers, layers that
+    don't print and guides `SC-I0809`. A file that isn't a VectorCraft document is refused (`SC-E0806`),
+    and a newer format is read as far as it goes (`SC-W0803`).
+  - At most 64 MiB of JSON, unpacked a piece at a time, and the budget charged for every object, anchor
+    and element. The `read_vectorcraft` fuzz target runs nightly from the new VectorCraft fixtures,
+    VectorCraft's own `ribbons` example among them.
+  - `stitchcraft_core::Labels` gives repeated ids their suffixes, in both adapters.
 - M0.8: VectorCraft's window runs in CI without a screen, and xa11y drives it. `cargo xtask compat window`
   runs the window probe (`compat/vc-window`) against the pinned stable release's app. It fetches the app
   from the release's Linux archive and checks it against the SHA-256 now in `compat/vectorcraft.toml`.
