@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-5e00cc48.js";
+            window.path_to_searchindex_js = "searchindex-d0a8567d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -4460,8 +4460,8 @@ stitches by more than a half and keeps each at or above the shortest stitch; in 
 stitch scaled below it joins its shorter neighbour. Where those stitches stray from the path by more
 than the tolerance left after flattening, as on a curve too tight for them, the span is spread again
 in one stitch more, then one more, as long as that takes no more stitches than step 5 would make of
-it, until they keep to it. A small circle is so sewn in even stitches as long as the tolerance allows,
-where splitting the stray ones would halve them. With random length, each try draws its lengths again
+it, until they keep to it. A small circle is so sewn in even stitches as long as the tolerance left after
+flattening allows, where splitting the stray ones would halve them. With random length, each try draws its lengths again
 from where the span’s draws began.</li>
 <li><strong>Measure straight.</strong> Where the path bends back on itself within less than the shortest stitch (a
 cusp, a tight loop, a curl at an end), two points far apart along it can be close in a straight line.
@@ -4530,8 +4530,9 @@ are keyed by the subpath’s place as well, so subpaths drawn alike, such as lin
 different phases, which is what the random phase is for (<code>DEV-RUN-005</code>).</p>
 <h3 id="properties-conformance"><a class="header" href="#properties-conformance">Properties (conformance)</a></h3>
 <ul>
-<li>Stitches are spread evenly between corners, in more of them where they stray beyond the tolerance, as
-long as that takes no more than splitting. Measured straight, every stitch is at most
+<li>Stitches are spread evenly between corners, in more of them where they stray from the points of the
+flattened path by more than the tolerance left after flattening, as long as that takes no more than
+splitting. Measured straight, every stitch is at most
 <code>s × (1 + jitter)</code> + 1 µm for the longest length <code>s</code> and at least the shortest stitch, and a part too
 small for that is reported (<code>REQ-RUN-001</code>).</li>
 <li>Deviation from the source path ≤ tolerance, both ways, measured densely (<code>REQ-RUN-002</code>).</li>
