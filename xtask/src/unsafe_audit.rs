@@ -171,7 +171,9 @@ pub fn run() -> Result<(), String> {
         }
     }
     check_file_root(&root.join("xtask/src/main.rs"), &mut findings)?;
-    check_root(&root.join("compat/vc-contract"), &mut findings)?;
+    for probe in ["compat/vc-contract", "compat/vc-window"] {
+        check_root(&root.join(probe), &mut findings)?;
+    }
 
     let mut files = Vec::new();
     for dir in ["crates", "apps", "xtask", "compat"] {
