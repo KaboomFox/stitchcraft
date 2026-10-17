@@ -185,10 +185,10 @@ fn the_host_refuses_a_value_a_choice_does_not_offer() {
     assert!(refused.contains("fill_method"), "{refused}");
 }
 
-/// The parameters VectorCraft passes `plugin`'s `vc_run` for a record that sets none: every declared
-/// parameter at its default, and the effect's context.
-fn default_params(plugin: &Plugin) -> Vec<u8> {
-    let mut params = plugin.manifest().resolve_params(&json!({})).unwrap();
+/// The parameters VectorCraft passes `plugin`'s `vc_run` for a record that sets `set`: every other
+/// declared parameter at its default, and the effect's context.
+fn default_params(plugin: &Plugin, set: &Value) -> Vec<u8> {
+    let mut params = plugin.manifest().resolve_params(set).unwrap();
     params.insert("_context".into(), json!({"mode": "effect", "bounds": [0, 0, 100, 100]}));
     serde_json::to_vec(&Value::Object(params)).unwrap()
 }
@@ -213,15 +213,22 @@ fn each_family_s_effect_prints_what_it_costs() {
     ];
     for (family, shapes) in sizes {
         let plugin = Plugin::load(&module(family), Limits::default()).unwrap();
-        let params = default_params(&plugin);
-        let mut costs = Vec::new();
-        for (name, path) in shapes {
-            let input = effect_input(&path, json!({}));
-            let limits = Limits { fuel_base: 1 << 36, fuel_per_byte: 0, ..Limits::default() };
-            let output = plugin.run_limited(&input, &params, &limits).unwrap();
-            let used = fuel(&plugin, &input, &params);
-            costs.push(format!("{name}: {} anchors, {} bytes, {used} instructions", anchors(&output), output.len()));
+        let settings: &[(&str, Value)] = if family == "fill" {
+            &[("defaults", json!({})), ("no underpath", json!({"underpath": false, "underlay_underpath": false}))]
+        } else {
+            &[("defaults", json!({}))]
+        };
+        for (setting, set) in settings {
+            let params = default_params(&plugin, set);
+            let mut costs = Vec::new();
+            for (name, path) in &shapes {
+                let input = effect_input(path, json!({}));
+                let limits = Limits { fuel_base: 1 << 36, fuel_per_byte: 0, ..Limits::default() };
+                let output = plugin.run_limited(&input, &params, &limits).unwrap();
+                let used = fuel(&plugin, &input, &params);
+                costs.push(format!("{name}: {} anchors, {} bytes, {used} instructions", anchors(&output), output.len()));
+            }
+            println!("::notice title={family} effect costs, {setting}::{}", costs.join("; "));
         }
-        println!("::notice title={family} effect costs::{}", costs.join("; "));
     }
 }
