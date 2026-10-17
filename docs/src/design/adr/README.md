@@ -10,7 +10,7 @@ supersedes the old one.
 | [0002](0002-host-agnostic-engine-plugin-first.md) | Host-agnostic engine; VectorCraft ABI v1 plug-in first | Accepted |
 | [0003](0003-parameter-registry.md) | One parameter registry generates everything | Accepted |
 | [0004](0004-determinism.md) | Determinism by construction | Accepted |
-| [0005](0005-geometry-stack.md) | Geometry stack | Proposed (spike M0.7) |
+| [0005](0005-geometry-stack.md) | Geometry stack | Accepted (spike M0.7) |
 | [0006](0006-docs-mdbook-diataxis.md) | mdBook, Diátaxis, generated reference, CI-regenerated images | Accepted |
 | [0007](0007-pes-first-brother-profile.md) | PES v1 first, for the Brother 200 × 200 mm machine | Accepted (decisions 2 and 3 replaced by 0013) |
 | [0008](0008-conformance-first.md) | Conformance-first development | Accepted |

@@ -103,6 +103,13 @@ half width, and judges pieces that coincide as one. Its curves differ there by a
 stretch, or by a short stretch beside the doubled-back part of the line. The test names those 5 lines,
 so that a change to them is seen.
 
+Shapely's answers fix what the polygons are. A property test checks that any polygon gives valid ones:
+`any_polygon_with_holes_grows_and_shrinks_into_valid_parts` grows and shrinks random stars with up to 3
+star-shaped holes by up to 8 mm. Each must finish within the work budget. Every ring must be closed and
+within reach of the polygon's bounds, with outlines clockwise and holes counter-clockwise (y up). Growing
+must add area, and shrinking take it away. Spike M0.7 ran it on 10,000 polygons ([ADR-0005](../adr/0005-geometry-stack.md)),
+and its speed against GEOS's is recorded there.
+
 A closed line, one that ends where it starts, is buffered by GEOS as a ring, with no caps. The engine
 offsets only open lines. A satin column's centre line with its ends together is cut in half first.
 

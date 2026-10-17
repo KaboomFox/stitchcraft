@@ -69,6 +69,7 @@ cargo xtask compat join [--nested] DIR  # make this folder, copied into a Vector
 cargo xtask unsafe-audit           # unsafe only in the ABI shim, always with SAFETY comments
 cargo xtask filesize               # warn above 800 lines, fail above 1,500
 cargo xtask wasm                   # library crates build for wasm32-unknown-unknown
+cargo xtask wasm --goldens         # stitch, built for WASI and run by wasmtime, makes the golden files
 cargo xtask api                    # rewrite the public API snapshots (crates/*/public-api.txt)
 cargo xtask coverage               # line coverage per crate against conformance/coverage.toml (CI job)
 cargo xtask mutants DIR…           # cargo-mutants results against conformance/mutation.toml (weekly)
@@ -76,9 +77,9 @@ cargo xtask mutants --changed DIR  # a pull request's changed-line mutants: noti
 ```
 
 `cargo xtask ci` skips a step whose tool is not installed locally, and CI installs and requires each of
-them. They are the wasm target, `cargo-public-api`, `cargo-deny`, `typos`, Vale, `mdbook`, and
-pyembroidery for the reader oracle (`conformance/oracle/requirements.txt`). CI pins their versions, the
-tools' in `.github/actions/tools/action.yml` and Vale's in `xtask/src/prose.rs`. Coverage
+them. They are the wasm targets, wasmtime, `cargo-public-api`, `cargo-deny`, `typos`, Vale, `mdbook`,
+and pyembroidery for the reader oracle (`conformance/oracle/requirements.txt`). CI pins their versions,
+the tools' in `.github/actions/tools/action.yml`, wasmtime's in `ci.yml` and Vale's in `xtask/src/prose.rs`. Coverage
 (`cargo-llvm-cov`) and mutation testing (`cargo-mutants`) have CI jobs of their own. A change to a
 library's public API shows in its `public-api.txt`: say why in the pull request.
 

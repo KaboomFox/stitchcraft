@@ -5,6 +5,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M0.7: the geometry is the engine's own, and ADR-0005 says so. The spike checked it against the ADR's
+  criteria. 10,000 random polygons with holes grow and shrink into valid parts, in a new property test
+  (`any_polygon_with_holes_grows_and_shrinks_into_valid_parts`). The golden files come out the same as
+  WebAssembly, and 300 insets of a large region take 218 to 448 ms, where GEOS takes 104 to 149 ms and
+  the ADR asked for 200. M7 makes the offsetter fast enough before contour fill relies on it.
+  - `cargo xtask wasm --goldens`, the `wasm-goldens` gate, builds `stitch` for `wasm32-wasip1` and runs it
+    under wasmtime on every test-sheet and plan case. All 16 golden files come out byte for byte. The
+    gates job installs the target and wasmtime 49.0.3, pinned by hash.
+  - `stitch` built for WASI writes its files. It named its temporary files after its process id, which a
+    WASI program lacks, and stopped at the first file. There the names count from 0.
 - M0.6: what a plug-in's JSON costs in VectorCraft's host is measured. A contract test runs the *hello*
   plug-in in VectorCraft's own host and finds the instructions it spends for each byte of JSON it reads
   (512) and writes (822). An anchor of a path is 40 bytes of JSON, and the host runs about 1.9 billion
