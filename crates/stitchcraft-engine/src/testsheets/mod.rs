@@ -114,7 +114,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Running stitch lines (top five; 1.5, 2.0, 2.5, 3.0 and 4.0 mm): the stitches of each line are even; ten stitches, counted inside the small lock at each end, measure 15, 20, 25, 30 and 40 mm.",
             "Bean stitch lines (next two; each stitch sewn three and five times): solid and raised, with no gaps.",
             "Circles (6 mm across; tolerance 0.1, 0.2 and 0.5 mm, left to right): round, with fewer and straighter stitches to the right.",
-            "Short stitches placed by hand (bottom five; 0.3, 0.4, 0.5, 0.7 and 1.0 mm, each with a small back-and-forth lock at both ends): which lines sew cleanly, with no thread breaks, knots or bunching on the back? The shortest clean one is the machine's shortest stitch; if the 0.3 mm line is clean, it is 0.3 mm or less, since StitchCraft sews nothing shorter.",
+            "Short stitches placed by hand (bottom five; 0.3, 0.4, 0.5, 0.7 and 1.0 mm, each with a small back-and-forth lock at both ends): which lines sew cleanly, with no thread breaks, knots or bunching on the back? The shortest clean one is the machine's shortest stitch; if the 0.3 mm line is clean, it is 0.3 mm or less: the sheet has no shorter line.",
         ],
         profile: REFERENCE,
         build: ts03::build,
@@ -644,14 +644,24 @@ mod tests {
         ((dx * dx + dy * dy).sqrt(), (1.0 - t) * a.distance(b))
     }
 
+    /// How far before `b` the stitch from `p` to `q` crosses the segment from `a` to `b`, if it crosses it.
+    fn crossing(p: stitchcraft_core::Point, q: stitchcraft_core::Point, a: stitchcraft_core::Point, b: stitchcraft_core::Point) -> Option<f64> {
+        let (rx, ry, sx, sy, wx, wy) = (q.x() - p.x(), q.y() - p.y(), b.x() - a.x(), b.y() - a.y(), a.x() - p.x(), a.y() - p.y());
+        let across = rx * sy - ry * sx;
+        // How far along the stitch and along the segment they meet, as fractions of each. Parallel ones meet
+        // nowhere: the fractions are infinite or not numbers, and fail the test.
+        let (t, u) = ((wx * sy - wy * sx) / across, (wx * ry - wy * rx) / across);
+        (0.0 < t && t < 1.0 && 0.0 < u && u < 1.0).then_some((1.0 - u) * a.distance(b))
+    }
+
     #[test]
     fn no_sheet_sews_over_a_jump_thread_the_machine_leaves() {
         // The reference machine cuts the thread at colour changes and stops, and at no jump, a trim's or not
         // (MC-1, formats.md). A jump leaves its thread on the fabric, straight from where the needle came up to
         // where it goes down again, until the operator snips it at the next stop or after sewing. A needle that
-        // comes down within reach of it sews it down, and then more than the lock holds the tail a pull test
-        // pulls. Round the hole where it goes down, the thread is held already, and its tie-in, which ties in
-        // its own thread, may lie along it.
+        // comes down within reach of it sews it down, and so does a stitch that lies across it: then more than
+        // the lock holds the tail a pull test pulls. Round the hole where it goes down, the thread is held
+        // already, and its tie-in, which ties in its own thread, may lie along it.
         let mut sewn_over = Vec::new();
         for sheet in SHEETS.iter().filter(|sheet| !SEWN_AT_MC1.contains(&sheet.id)) {
             for block in &sheet.plan().unwrap().blocks {
@@ -666,27 +676,35 @@ mod tests {
                         StitchKind::Trim => {}
                         StitchKind::Jump => jump = jump.map(|(from, _)| from).or(needle).map(|from| (from, s.at)),
                         StitchKind::Normal => {
-                            if let Some(thread) = jump.take().filter(|(from, to)| from != to) {
+                            // The needle lands where it jumped to, or sews a stitch from where it went down last.
+                            let landed = jump.take();
+                            let stitch = needle.filter(|_| landed.is_none());
+                            if let Some(thread) = landed.filter(|(from, to)| from != to) {
                                 threads.push(thread);
                                 tying_in = true;
                             }
                             tying_in &= s.origin.role == Role::Lock;
-                            // Each thread on the fabric, how far the needle comes down from it and how far before
-                            // it lands, and whether this is the tie-in where the newest one lands.
-                            let near = threads
-                                .iter()
-                                .enumerate()
-                                .map(|(k, &(a, b))| (sheet.id, a, b, s.at, off(s.at, a, b), tying_in && k + 1 == threads.len()));
-                            sewn_over.extend(near.filter(|&(.., (apart, before), own_tie_in)| !own_tie_in && apart < CATCHES && before >= CATCHES));
+                            // Each thread on the fabric: how far the needle comes down from it and how far before it
+                            // lands, how far before it lands the stitch crosses it, and whether this is the tie-in
+                            // where the newest one lands.
+                            let near = threads.iter().enumerate().map(|(k, &(a, b))| {
+                                let crossed = stitch.and_then(|from| crossing(from, s.at, a, b));
+                                (sheet.id, a, b, s.at, off(s.at, a, b), crossed, tying_in && k + 1 == threads.len())
+                            });
+                            sewn_over.extend(near.filter(|&(.., (apart, before), crossed, own_tie_in)| {
+                                !own_tie_in && (apart < CATCHES && before >= CATCHES || crossed.is_some_and(|at| at >= CATCHES))
+                            }));
                             needle = Some(s.at);
                         }
                     }
                 }
             }
         }
-        // The count is taken here, so that every line of the test runs whether it passes or not.
+        // The count is taken here, so that every line of the test runs whether it passes or not. Each stitch is
+        // listed as (sheet, thread from, thread to, needle, (mm off the thread, mm before it lands), mm before it
+        // lands where the stitch crosses it, tie-in).
         let found = sewn_over.len();
-        assert!(found == 0, "{found} needle-downs on a jump thread (sheet, from, to, needle, (mm off, mm before it lands)):\n{sewn_over:#?}");
+        assert!(found == 0, "{found} stitches on a jump thread:\n{sewn_over:#?}");
     }
 
     #[test]

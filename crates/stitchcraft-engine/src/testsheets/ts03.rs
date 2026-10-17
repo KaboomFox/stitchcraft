@@ -10,7 +10,8 @@
 //!    tolerance, the fewer and straighter the stitches.
 //! 4. Five lines of 20 stitches placed by hand (manual stitch), 0.3, 0.4, 0.5, 0.7 and 1.0 mm long, with
 //!    back-and-forth locks so they hold. The shortest that sews cleanly is the machine's shortest stitch:
-//!    the profile says 0.3 mm until this sheet has been sewn, and StitchCraft sews nothing shorter.
+//!    the profile says 0.3 mm until this sheet has been sewn, and the engine places no hand-placed stitch
+//!    shorter than the profile's, so the sheet has no shorter line.
 //!
 //! Every element is trimmed after, so the lines stand apart. The reference machine cuts no jump (MC-1), so
 //! each jump's thread stays on the fabric, and no element starts along the thread that brought the needle to
