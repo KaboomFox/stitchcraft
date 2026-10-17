@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ffb161fe.js";
+            window.path_to_searchindex_js = "../searchindex-140778d6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-8df736a7.js"></script>
@@ -274,8 +274,10 @@ registry a plug-in could add PES to.</li>
 <p>The tools an object filter was to give are VectorCraft’s own commands, or wait for ABI v2
 (<a href="#tools-vectorcrafts-own-commands">tools</a>).</p>
 <p><code>&lt;ns&gt;</code> is a reverse-DNS namespace defined in one constant (<code>PLUGIN_NAMESPACE</code>) in the VectorCraft adapter,
-which reads the effect records too. The plug-in crate imports it. A live effect’s id ends with its stitch
-family’s (<code>stitchcraft_params::Family::id</code>).
+which reads the effect records too. The adapter makes the ids from it, a plug-in’s with <code>plugin_id</code> and its
+live effect’s with <code>effect_id</code>, and <code>effect_name</code> reads one back. The plug-in crate and the compatibility
+gate use the same functions. A live effect’s id ends with its stitch family’s
+(<code>stitchcraft_params::Family::id</code>).
 Manifests are generated from the <a href="params.html#splitting-for-vectorcraft-abi-v1">parameter registry</a>; a
 test validates each against VectorCraft’s manifest rules (id charset, ≤ 64 parameters, names, ranges) so
 an invalid manifest never reaches a user.</p>
