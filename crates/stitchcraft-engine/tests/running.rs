@@ -148,6 +148,17 @@ fn req_run_001_a_curve_too_tight_for_its_stitches_is_spread_evenly_in_more() {
         assert_eq!(l.len(), count, "r {radius}: {l:?}");
         assert!(hi - lo < 0.01, "r {radius}: {l:?}");
     }
+    // TS-03's circles, 6 mm across, at 0.1, 0.2 and 0.5 mm. The stitches have nine tenths of the tolerance
+    // from the points of the path flattened within the other tenth, and their needle points lie on that path,
+    // a little inside the circle: 13 even stitches stray more than 0.09 mm from those points and 9 more than
+    // 0.18 mm, so the circles take 14 and 10. Ink/Stitch's stitches may stray by the whole tolerance at its
+    // points, and would take one fewer (DEV-RUN-002).
+    for (tolerance, count) in [("0.1", 14), ("0.2", 10), ("0.5", 8)] {
+        let l = lengths(&stitch(&circle(0.0, 0.0, 3.0), &params("2.5", tolerance), 0.3).runs[0]);
+        let (lo, hi) = (l.iter().copied().fold(f64::MAX, f64::min), l.iter().copied().fold(0.0, f64::max));
+        assert_eq!(l.len(), count, "tolerance {tolerance}: {l:?}");
+        assert!(hi - lo < 0.01, "tolerance {tolerance}: {l:?}");
+    }
 }
 
 #[test]
