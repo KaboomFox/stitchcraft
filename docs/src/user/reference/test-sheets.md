@@ -54,10 +54,10 @@ Threads: Red, Blue, Emerald Green, Emerald Green (stop).
 
 After sewing, check:
 
-- The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop).
-- Left half (red; every dash but the last asks for a trim after it): for each row (gaps of 2, 5, 15, 30 mm, top to bottom), was the thread between the two dashes cut?
-- Right half (blue; no trims): the 2 mm gap is sewn across. For the other rows, and between rows, was the jump thread cut?
-- Where the thread was cut, the stitching ends and starts again with a small lock: pull each tail gently. Does the dash hold?
+- The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop), and cuts the thread at each.
+- Left half (red; every dash but the last asks for a trim after it): the machine cuts no jump, so its rows (gaps of 2, 5, 15, 30 mm, top to bottom) are joined by threads. Did every dash stay sewn while the machine went on to the next?
+- Right half (blue; no trims): the 2 mm gap is sewn across, and threads join the other dashes and the rows. Did every dash stay sewn?
+- Each dash starts and ends with a small lock. Snip the threads between the dashes, then pull each tail gently: does the dash hold?
 - Any loose loops, knots or bird's nests on the back, and where.
 
 ## TS-03 — Running stitch: lengths, bean stitch, curves, the shortest stitch
@@ -72,14 +72,14 @@ Threads: Blue.
 
 After sewing, check:
 
-- Running stitch lines (top five; 1.5, 2.0, 2.5, 3.0 and 4.0 mm): the stitches of each line are even; ten stitches measure 15, 20, 25, 30 and 40 mm.
+- Running stitch lines (top five; 1.5, 2.0, 2.5, 3.0 and 4.0 mm): the stitches of each line are even; ten stitches, counted inside the small lock at each end, measure 15, 20, 25, 30 and 40 mm.
 - Bean stitch lines (next two; each stitch sewn three and five times): solid and raised, with no gaps.
 - Circles (6 mm across; tolerance 0.1, 0.2 and 0.5 mm, left to right): round, with fewer and straighter stitches to the right.
-- Short stitches placed by hand (bottom five; 0.3, 0.4, 0.5, 0.7 and 1.0 mm): which lines sew cleanly, with no thread breaks, knots or bunching on the back? The shortest clean one is the machine's shortest stitch.
+- Short stitches placed by hand (bottom five; 0.3, 0.4, 0.5, 0.7 and 1.0 mm, each with a small back-and-forth lock at both ends): which lines sew cleanly, with no thread breaks, knots or bunching on the back? The shortest clean one is the machine's shortest stitch; if the 0.3 mm line is clean, it is 0.3 mm or less: the sheet has no shorter line.
 
 ## TS-04 — Lock stitches: do they hold, and do they show?
 
-110.0 × 64.5 mm · 600 stitches, 27 jumps, 27 trims, 0 colour changes, 0 stops
+110.0 × 64.5 mm · 623 stitches, 27 jumps, 27 trims, 0 colour changes, 0 stops
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -89,8 +89,9 @@ Threads: Red.
 
 After sewing, check:
 
-- Rows, top to bottom: half stitch, arrow, back and forth, bowtie, cross, star, simple, triangle, zigzag. Each line has its lock at both ends and was trimmed after: pull each tail gently. Does the lock hold, or does the line come undone?
-- Columns, left to right, are small, medium and large: the half stitch on first stitches of 1.5, 2.5 and 4 mm, back and forth at 0.5, 0.7 and 1.0 mm, the others at 70, 100 and 150 %.
+- Rows, top to bottom: half stitch, arrow, back and forth, bowtie, cross, star, simple, triangle, zigzag. Each line has its lock at both ends and was trimmed after, but the machine cuts no jump: snip the threads between the lines, then pull each tail gently. Does the lock hold, or does the line come undone?
+- Columns, left to right, are small, medium and large: the half stitch on first stitches of 1, 1.5 and 2.5 mm, back and forth at 0.5, 0.7 and 1.0 mm, the others at 70, 100 and 150 %.
+- Rows 1, 3, 5, 7 and 9 are sewn left to right and the others right to left: a line's start is the end it was sewn from.
 - Which locks show from the front, and how much (1 hidden to 5 obvious)?
 - Any thread breaks or knots at the locks, and where.
 

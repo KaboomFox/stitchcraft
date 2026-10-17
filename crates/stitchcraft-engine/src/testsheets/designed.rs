@@ -48,9 +48,17 @@ impl Drawing {
         self.stroke(name, vec![line(a, &[b])?, line(c, &[d])?], thread, &params)
     }
 
-    /// A circle of `radius` round `centre`, sewn along with `thread` and the Ink/Stitch `params`.
-    pub fn circle(&mut self, name: &str, centre: (f64, f64), radius: f64, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
-        self.add(name, Shape::stroke(Path { subpaths: vec![round(centre, radius)?] }), thread, params)
+    /// A circle of `radius` round `centre`, sewn along from `start` with `thread` and the Ink/Stitch `params`.
+    pub fn circle(
+        &mut self,
+        name: &str,
+        centre: (f64, f64),
+        radius: f64,
+        start: Start,
+        thread: &Thread,
+        params: &[(&str, &str)],
+    ) -> Result<(), SheetError> {
+        self.add(name, Shape::stroke(Path { subpaths: vec![round_from(centre, radius, start)?] }), thread, params)
     }
 
     /// A fill named `name` of the area its closed `rings` bound by the even-odd rule, so a ring inside
@@ -92,24 +100,67 @@ impl Drawing {
     }
 }
 
+/// The rails of a satin column across `left` to `right` and `top` to `bottom`, each running the way the column
+/// is sewn: `down` or up, its first rail the left one (`from_left`) or the right one. A column starts on its
+/// first rail, so a sheet starts each one on the side the needle comes from: the reference machine leaves a
+/// jump's thread on the fabric (MC-1), and a column that started on its far side would sew it down along its
+/// end. Sewn up or from the right, a column's zigzag is its mirror image, the same stitches to the eye.
+pub(super) fn rails((left, right): (f64, f64), (top, bottom): (f64, f64), down: bool, from_left: bool) -> [[(f64, f64); 2]; 2] {
+    let (from, to) = if down { (top, bottom) } else { (bottom, top) };
+    let (first, second) = if from_left { (left, right) } else { (right, left) };
+    [[(first, from), (first, to)], [(second, from), (second, to)]]
+}
+
 /// The closed ring through `points`, back to the first.
 pub(super) fn polygon(points: &[(f64, f64)]) -> Result<Subpath, UnitError> {
     let Some((&first, rest)) = points.split_first() else { return Ok(Subpath { start: Point::ORIGIN, segments: Vec::new(), closed: true }) };
     Ok(Subpath { closed: true, ..line(first, rest)? })
 }
 
+/// Where a circle starts and ends: a point where one of its axes crosses it. A circle runs clockwise as seen
+/// from the front, the drawing's y axis pointing down: from its right-hand point down to its bottom.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Start {
+    /// Its right-hand point, at 3 o'clock, where an SVG circle starts.
+    Right,
+    /// Its left-hand point, at 9 o'clock.
+    Left,
+    /// Its top, at 12 o'clock.
+    Top,
+}
+
 /// A circle of `radius` round `centre`: four cubic curves from its right-hand point, back to it.
 pub(super) fn round(centre: (f64, f64), radius: f64) -> Result<Subpath, UnitError> {
+    round_from(centre, radius, Start::Right)
+}
+
+/// A circle of `radius` round `centre`: four cubic curves from `start`, clockwise, back to it. A sheet starts
+/// a circle where the jump to it arrives, since the reference machine does not cut the jump's thread, and a
+/// circle that crossed it would sew it down.
+pub(super) fn round_from(centre: (f64, f64), radius: f64, start: Start) -> Result<Subpath, UnitError> {
     // The control points of a quarter circle: 4/3 (√2 − 1) of the radius from its ends.
     let (x, y, r, k) = (centre.0, centre.1, radius, 4.0 / 3.0 * (SQRT_2 - 1.0) * radius);
-    let quarter = |c1, c2, end| Ok::<_, UnitError>(Segment::Cubic(point(c1)?, point(c2)?, point(end)?));
-    let segments = vec![
-        quarter((x + r, y + k), (x + k, y + r), (x, y + r))?,
-        quarter((x - k, y + r), (x - r, y + k), (x - r, y))?,
-        quarter((x - r, y - k), (x - k, y - r), (x, y - r))?,
-        quarter((x + k, y - r), (x + r, y - k), (x + r, y))?,
+    // The quarters clockwise, each to the next point from the one before: to the bottom, the left, the top and
+    // the right.
+    let quarters = [
+        [(x + r, y + k), (x + k, y + r), (x, y + r)],
+        [(x - k, y + r), (x - r, y + k), (x - r, y)],
+        [(x - r, y - k), (x - k, y - r), (x, y - r)],
+        [(x + k, y - r), (x + r, y - k), (x + r, y)],
     ];
-    Ok(Subpath { start: point((x + r, y))?, segments, closed: true })
+    let first = match start {
+        Start::Right => 0,
+        Start::Left => 2,
+        Start::Top => 3,
+    };
+    let mut segments = Vec::with_capacity(quarters.len());
+    // The circle closes where it starts: at the end of its last quarter.
+    let mut end = (x, y);
+    for &[c1, c2, to] in quarters.iter().cycle().skip(first).take(quarters.len()) {
+        segments.push(Segment::Cubic(point(c1)?, point(c2)?, point(to)?));
+        end = to;
+    }
+    Ok(Subpath { start: point(end)?, segments, closed: true })
 }
 
 /// A point from literal coordinates.
@@ -152,6 +203,24 @@ mod tests {
         assert_eq!((ring.closed, ring.start, ring.segments.len()), (true, point((0.0, 0.0)).unwrap(), 2));
         let circle = round((1.0, 2.0), 3.0).unwrap();
         assert_eq!((circle.closed, circle.start, circle.segments.len()), (true, point((4.0, 2.0)).unwrap(), 4));
+    }
+
+    #[test]
+    fn a_circle_starts_where_asked_and_runs_clockwise_through_the_same_curves() {
+        let ends = |start| {
+            let circle = round_from((1.0, 2.0), 3.0, start).unwrap();
+            let ends: Vec<Point> = circle.segments.iter().map(|s| if let Segment::Cubic(_, _, end) = s { *end } else { panic!("{s:?}") }).collect();
+            (circle.start, ends)
+        };
+        let [right, bottom, left, top] = [(4.0, 2.0), (1.0, 5.0), (-2.0, 2.0), (1.0, -1.0)].map(|p| point(p).unwrap());
+        assert_eq!(ends(Start::Right), (right, vec![bottom, left, top, right]));
+        assert_eq!(ends(Start::Left), (left, vec![top, right, bottom, left]));
+        assert_eq!(ends(Start::Top), (top, vec![right, bottom, left, top]));
+        // The same curves, whichever point it starts from.
+        let curves = |start| round_from((1.0, 2.0), 3.0, start).unwrap().segments;
+        let mut turned = curves(Start::Right);
+        turned.rotate_left(2);
+        assert_eq!(curves(Start::Left), turned);
     }
 
     #[test]

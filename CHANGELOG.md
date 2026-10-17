@@ -833,6 +833,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - A build names its commit only when git tracks its sources (`REQ-CLI-001`). Built from a copy inside
   another repository, as in the rehearsal of the move into VectorCraft, it named that repository's commit,
   which holds none of the sources, and the test of `REQ-CLI-001` failed there.
+- The test sheets from MC-2 on sew nothing over a jump thread the reference machine leaves. It cuts no
+  jump (MC-1), and TS-03, TS-04, TS-05 and TS-06 started each row or column along the thread of the jump
+  to it, while TS-07's outlines crossed theirs. Stitches sewn over the thread would pin the tail a pull
+  test pulls, beside the lock. Rows and columns now alternate between both directions, TS-03's circles are
+  sewn right to left, TS-06's centre-walk column first, and TS-07's outlines from where their jumps arrive.
+  A test checks every sheet from MC-2 on for it.
+- TS-04's half stitch has 3 sizes, on first stitches of 1, 1.5 and 2.5 mm: its 2.5 and 4 mm lines both had
+  the 1 mm lock. The checks `stitch testsheet` prints say which end of a TS-04 line is its start, to count
+  TS-03's stitches inside the locks at their ends, and that a clean 0.3 mm line means 0.3 mm or less. The
+  question whether TS-02B's jumps were cut is gone: MC-1 answered it.
 - Docs now match the code on the machine testing page's pictures, the architecture page's release profile
   and the report's contents, and in the CLI's README on `stitch convert` and the bug report guide on
   `design.svg_hex` (review finding CLI-18).
@@ -1046,6 +1056,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-03.pes`, `TS-04.pes`, `TS-05.pes`, `TS-06.pes` and
+  `TS-07.pes`. Each is sewn in a new order, so that no jump thread lies under stitching sewn after it.
+  TS-04's half stitch is on first stitches of 1, 1.5 and 2.5 mm (623 stitches, where there were 600), and
+  the others keep their stitches, in a new order and direction. MC-2, MC-3 and MC-4 sew these sheets, so
+  their kits are built from this version or a later one.
 - Changed `conformance/golden/testsheets/TS-08.pes` and `TS-09.pes` (ROW-4): rows end exactly on the
   sides of the squares and of the rectangle now, a unit in the last place from where they ended. Many
   needle points of these sheets lie halfway between 2 tenths of a millimetre, so some round the other way:
