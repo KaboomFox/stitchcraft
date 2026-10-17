@@ -1,0 +1,425 @@
+{
+  "format": "vectorcraft",
+  "version": 4,
+  "generator": "hand-written for StitchCraft",
+  "document": {
+    "version": 1,
+    "title": "Patch",
+    "artboards": [
+      {
+        "id": 7,
+        "name": "Patch",
+        "rect": {
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 108.0,
+          "y1": 108.0
+        }
+      }
+    ],
+    "layers": [
+      {
+        "id": 1,
+        "name": "Layer 1",
+        "kind": {
+          "type": "layer",
+          "color": {
+            "Preset": 0
+          },
+          "children": [
+            {
+              "id": 2,
+              "name": "Disc",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.1216,
+                        "g": 0.3059,
+                        "b": 0.6118
+                      }
+                    }
+                  },
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "none"
+                    },
+                    "width": 1.0
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.fill",
+                    "params": {
+                      "angle": 45
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            94,
+                            54
+                          ],
+                          "in": [
+                            94,
+                            31.908
+                          ],
+                          "out": [
+                            94,
+                            76.092
+                          ]
+                        },
+                        {
+                          "p": [
+                            54,
+                            94
+                          ],
+                          "in": [
+                            76.092,
+                            94
+                          ],
+                          "out": [
+                            31.908,
+                            94
+                          ]
+                        },
+                        {
+                          "p": [
+                            14,
+                            54
+                          ],
+                          "in": [
+                            14,
+                            76.092
+                          ],
+                          "out": [
+                            14,
+                            31.908
+                          ]
+                        },
+                        {
+                          "p": [
+                            54,
+                            14
+                          ],
+                          "in": [
+                            31.908,
+                            14
+                          ],
+                          "out": [
+                            76.092,
+                            14
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 3,
+              "name": "Star",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "none"
+                    }
+                  },
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 1.0
+                      }
+                    },
+                    "width": 1.0
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.stroke",
+                    "params": {}
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            54.0,
+                            30.49
+                          ]
+                        },
+                        {
+                          "p": [
+                            60.466,
+                            47.591
+                          ]
+                        },
+                        {
+                          "p": [
+                            78.727,
+                            48.456
+                          ]
+                        },
+                        {
+                          "p": [
+                            64.462,
+                            59.889
+                          ]
+                        },
+                        {
+                          "p": [
+                            69.282,
+                            77.524
+                          ]
+                        },
+                        {
+                          "p": [
+                            54.0,
+                            67.49
+                          ]
+                        },
+                        {
+                          "p": [
+                            38.718,
+                            77.524
+                          ]
+                        },
+                        {
+                          "p": [
+                            43.538,
+                            59.889
+                          ]
+                        },
+                        {
+                          "p": [
+                            29.273,
+                            48.456
+                          ]
+                        },
+                        {
+                          "p": [
+                            47.534,
+                            47.591
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 4,
+              "name": "Border",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "none"
+                    }
+                  },
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.851,
+                        "g": 0.6431,
+                        "b": 0.0
+                      }
+                    },
+                    "width": 1.0
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.satin",
+                    "params": {}
+                  }
+                ]
+              },
+              "kind": {
+                "type": "compound",
+                "rule": "NonZero",
+                "children": [
+                  {
+                    "id": 5,
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  96,
+                                  54
+                                ],
+                                "in": [
+                                  96,
+                                  30.803
+                                ],
+                                "out": [
+                                  96,
+                                  77.197
+                                ]
+                              },
+                              {
+                                "p": [
+                                  54,
+                                  96
+                                ],
+                                "in": [
+                                  77.197,
+                                  96
+                                ],
+                                "out": [
+                                  30.803,
+                                  96
+                                ]
+                              },
+                              {
+                                "p": [
+                                  12,
+                                  54
+                                ],
+                                "in": [
+                                  12,
+                                  77.197
+                                ],
+                                "out": [
+                                  12,
+                                  30.803
+                                ]
+                              },
+                              {
+                                "p": [
+                                  54,
+                                  12
+                                ],
+                                "in": [
+                                  30.803,
+                                  12
+                                ],
+                                "out": [
+                                  77.197,
+                                  12
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  89,
+                                  54
+                                ],
+                                "in": [
+                                  89,
+                                  34.669
+                                ],
+                                "out": [
+                                  89,
+                                  73.331
+                                ]
+                              },
+                              {
+                                "p": [
+                                  54,
+                                  89
+                                ],
+                                "in": [
+                                  73.331,
+                                  89
+                                ],
+                                "out": [
+                                  34.669,
+                                  89
+                                ]
+                              },
+                              {
+                                "p": [
+                                  19,
+                                  54
+                                ],
+                                "in": [
+                                  19,
+                                  73.331
+                                ],
+                                "out": [
+                                  19,
+                                  34.669
+                                ]
+                              },
+                              {
+                                "p": [
+                                  54,
+                                  19
+                                ],
+                                "in": [
+                                  34.669,
+                                  19
+                                ],
+                                "out": [
+                                  73.331,
+                                  19
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "next_id": 8
+  }
+}
