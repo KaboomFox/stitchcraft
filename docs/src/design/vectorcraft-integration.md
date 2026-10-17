@@ -146,8 +146,9 @@ The plan had one object filter, `<ns>.tools`, to make a satin column from 2 path
 preview to paths and draw a test sheet. VectorCraft's own commands do the first three, and M6.4 checked
 them in its source, 0.7.0 to 0.12.0. Make Compound Path changed at 0.10.0. Before, the compound path takes
 the appearance of the frontmost path it is made of and turns none round. From 0.10.0, it takes the
-backmost path's, and reverses each path in front that winds the same way as the backmost one. So the
-StitchCraft effect is applied after the paths are joined, which works in every version:
+backmost path's, and reverses each path in front that winds the same way as the backmost one. A
+straight path counts as winding clockwise, so of 2 straight rails the front one is always reversed. So
+the StitchCraft effect is applied after the paths are joined, which works in every version:
 
 | Task | In VectorCraft | Why it sews |
 |---|---|---|
@@ -286,7 +287,8 @@ anchor, leaves that end of the segment straight, and a segment without handles i
   for them. So are objects and paints of opacity 0, paints turned off and strokes of width 0.
 - **Template layers, layers that don't print, and guides** are left out with `SC-I0809`. VectorCraft
   shows them, dimmed or as guides, but prints and exports none of them.
-- **A Shaper group's sources**, its first child, are left out: the group shows the shapes it makes of
+- **A Shaper group's sources** are left out. The group shows the shapes it makes of them, and keeps them
+  as its first child, transparent. Make Clipping Mask on a Shaper group puts its clipping object before
   them.
 - **Text, images and symbols,** and the objects VectorCraft computes as it draws them (blends, envelopes,
   meshes, repeats, placed documents and VectorCraft's Intertwine objects), are left out with `SC-W0807`.
@@ -301,7 +303,8 @@ gradient gives its first stop's colour, with `SC-W0807` unless every stop has th
 gives black, with `SC-W0807`. A stroke's width, in points, and its join, with its miter limit (10 when
 the file omits it, as VectorCraft draws it), shape a satin column drawn as one path. A stroke drawn with
 a brush is stitched along its path, without the brush's art, with `SC-W0807`. A group's or a layer's own
-fills and strokes, which paint every member, are left out with `SC-W0807`.
+fills and strokes, which paint every member, are not stitched as shapes of their own. They give
+StitchCraft effects their thread and stroke (below), with `SC-W0807`.
 
 **Effects.** StitchCraft's live effects are kept in the object's appearance as `{"id":
 "plugin.dev.stitchcraft.<family>", "params": {…}, "visible": true}`. The family is `stroke`, `satin` or
@@ -313,24 +316,33 @@ effect. The record's parameters are the element's. A number is written as a deci
 or `false`, a choice as its id and a list as its values with spaces between. What the record leaves out
 takes its default, as in the plug-in's dialog. The thread is the colour of the first fill VectorCraft
 draws for a fill, and of the first stroke it draws for the others, falling back on the other kind. A
-`stroke` or `satin` effect follows the first visible stroke's width and join, or a width of 0 when there
-is none, and a satin column too narrow to stitch across is sewn as a stroke, with `SC-W0212`.
+`stroke` or `satin` effect follows the width and join of that stroke, or a width of 0 when none is drawn.
+VectorCraft writes a stroke of paint none for an object without one, which it doesn't draw. A satin
+column too narrow to stitch across is sewn as a stroke, with `SC-W0212`.
 VectorCraft's own effects change what an object draws, and are left out with `SC-W0807` (Object › Expand
 Appearance makes paths of what they draw).
 
 **A group's effects** (`REQ-VC-006`). VectorCraft runs a group's or a layer's geometry effects on each
-path and compound path inside it, however deep, with the group's bounds as their frame, and draws what
-they return in that object's own paint (`evaluate_container` and `reshape_leaves` in `crates/effects`,
-0.7.0 to 0.12.0). The group's own paints paint them too. StitchCraft's live effects are geometry
-effects, and applying a graphic style to a group puts its effects and paints on the group. So each path
-inside sews as the group's StitchCraft effects say, as the preview shows it. An object with StitchCraft
-effects that doesn't paint itself takes its thread, and the stroke a stroke or a satin column follows, from
-the nearest group or layer around it that paints. A clip group's first object is its clipping
-object, of any kind. VectorCraft draws its own paints, over the clipped art, and runs the group's effects
-on its outline too, which only changes the clip, and StitchCraft doesn't clip. So the clipping object
-sews by its own appearance alone. Where StitchCraft effects meet from more than one level, a path's own
-and a group's, or 2 groups', VectorCraft draws one effect run on the stitches another drew, which a
-machine cannot sew. The path sews as the nearest effects say, and `SC-W0807` names it.
+path and compound path inside it, however deep, with the group's bounds as their frame (`reshape_leaves`
+in `crates/effects`, 0.7.0 to 0.12.0). It paints what they return with that object's own paints and with
+the group's (`evaluate_container`). The group's paints go over its contents, except those the Appearance
+panel lists under its Contents row (`contents_index`), which is last in the list by default.
+StitchCraft's live effects are geometry effects, and applying a graphic style to a group puts its
+effects and paints on the group. So each path inside sews as the group's StitchCraft effects say, as
+the preview shows it, in the thread and with the stroke of the paint VectorCraft draws over the others.
+For a group's effects, those are first the paints of that group and of the groups inside it that go over
+their contents, the outermost first. The object's own paints come next, then the groups' paints that go
+under, the innermost first. Last come the paints of the groups around that group, which paint the
+object's shape, in the same order. A path that neither its own paints nor a group's paint is invisible,
+and is left out without a word. VectorCraft paints an object's own effects with its own paints, and the
+groups around give what those don't.
+
+A clip group's first object is its clipping object, which is a path, a compound path or text. VectorCraft
+runs the group's effects on it too, and paints what they draw with its own paints alone (`clip_paint` in
+`crates/doc`): its fills under the clipped art and its strokes over it. After Make Clipping Mask it has
+none, and sews nothing. Where StitchCraft effects meet from more than one level, a path's own and a
+group's, or 2 groups', VectorCraft draws one effect run on the stitches another drew, which a machine
+cannot sew. The path sews as the nearest effects say, and `SC-W0807` names it.
 
 **Ids.** An element is `vc:<object id>:<what>`: `fill` or `stroke` for a paint, with its rank among the
 object's fills or strokes from the second on (`fill.2`), and the family for an effect. VectorCraft keeps

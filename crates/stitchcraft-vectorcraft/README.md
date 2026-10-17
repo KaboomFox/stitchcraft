@@ -17,8 +17,8 @@ parameter values (`src/values.rs`) with a document's code, and an object sews al
 its preview. The plug-in's `preview_level` is kept apart from the element's settings, in a file as in a
 live effect (`PREVIEW_LEVEL`). From M6.3 the geometry is written by hand, to a thousandth of a point
 (`src/writer.rs`): stitches as lines or as a fill's ribbons, and any segments as ribbons. From M6.4 a
-group's or a layer's StitchCraft effects sew each path inside it, as VectorCraft draws them, which is how
-a graphic style applied to a group sews (`REQ-VC-006`).
+group's or a layer's StitchCraft effects sew each path inside it, as VectorCraft draws them, in the thread
+of the paint it draws over the others, which is how a graphic style applied to a group sews (`REQ-VC-006`).
 Design: `docs/src/design/vectorcraft-integration.md#reading-vectorcraft-files-stitchcraft-vectorcraft`.
 The VectorCraft versions it reads are proven by `docs/src/design/compatibility-gate.md`.
 
