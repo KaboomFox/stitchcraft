@@ -71,11 +71,13 @@ fn tool_step(program: &'static str, runs: &'static [&'static [&'static str]]) ->
     })
 }
 
-/// cargo-deny's runs: the workspace, and the fuzz targets, a workspace of their own (`fuzz/`) with
-/// dependencies of their own. The compatibility probe (`compat/vc-contract`) is not judged here. Its
-/// dependencies are VectorCraft's, at whichever version a track tests, and VectorCraft's policy applies
-/// to them, as it does inside VectorCraft's workspace.
-const DENY: &[&[&str]] = &[&["check"], &["--manifest-path", "fuzz/Cargo.toml", "check"]];
+/// cargo-deny's runs: the workspace, and the workspaces of their own with dependencies of their own: the
+/// fuzz targets (`fuzz/`) and the window probe (`compat/vc-window`), whose xa11y we chose. The contract
+/// tests (`compat/vc-contract`) are not judged here. Their dependencies are VectorCraft's, at whichever
+/// version a track tests, and VectorCraft's policy applies to them, as it does inside VectorCraft's
+/// workspace.
+const DENY: &[&[&str]] =
+    &[&["check"], &["--manifest-path", "fuzz/Cargo.toml", "check"], &["--manifest-path", "compat/vc-window/Cargo.toml", "check"]];
 
 /// An error naming the first of `skip` that is none of `gates`.
 fn unknown_gate(skip: &[String], gates: &[&str]) -> Result<(), String> {

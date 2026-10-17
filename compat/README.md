@@ -5,9 +5,9 @@
 - `vc-contract/` — Level A contract tests: our built `.wasm` plug-ins loaded into VectorCraft's real plug-in
   host (`vectorcraft-plugins`) at the ref under test. A separate workspace, built by
   `cargo xtask compat contract`.
-- `vc-window/` — the window probe: the stable release's app, run without a screen, photographed twice
-  over its control channel and driven through its accessibility tree with xa11y. A separate workspace,
-  run by `cargo xtask compat window` in a private desktop (Xvfb, D-Bus, AT-SPI; Linux).
+- `vc-window/` holds the window probe. It runs the stable release's app without a screen and compares its
+  screenshots, and xa11y drives the app through its accessibility tree. A separate workspace, run by
+  `cargo xtask compat window` in a desktop of its own (Xvfb, D-Bus and AT-SPI, on Linux).
 - `scenarios/` (M6.6) — Level B end-to-end scenarios run with the real `vectorcraft-cli`.
 
 ```sh
