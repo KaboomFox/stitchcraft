@@ -1,0 +1,21 @@
+# Level B: a satin column of 2 rails and a rung, joined with Make Compound Path and given the satin
+# effect after (docs/src/user/how-to/vectorcraft-columns-and-presets.md). Coordinates are points.
+description = "2 rails and a rung joined with Make Compound Path, then given the satin effect, sew as one satin column."
+requirements = ["REQ-VC-007"]
+
+[[run]]
+plugins = ["satin"]
+steps = [
+  { cmd = "shape.line", params = { x1 = 0, y1 = 200, x2 = 144, y2 = 200 } },
+  { cmd = "shape.line", params = { x1 = 0, y1 = 211, x2 = 144, y2 = 211 } },
+  { cmd = "shape.line", params = { x1 = 72, y1 = 195, x2 = 72, y2 = 216 } },
+  { cmd = "select.all" },
+  { cmd = "object.compoundPath.make" },
+  { apply = "satin" },
+  { export = "after.vectorcraft" },
+  { export = "after.png" },
+]
+
+[expect]
+applied = ["after.vectorcraft"]
+elements = [{ file = "after.vectorcraft", element = "satin", count = 1 }]

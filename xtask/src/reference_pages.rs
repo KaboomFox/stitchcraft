@@ -1,7 +1,7 @@
 //! Generates the user reference pages from the registries they describe, so the documentation cannot
-//! drift from the code: machine profiles, file formats, test sheets, diagnostic codes and the command
-//! line (`docs/src/design/docs-pipeline.md`). `cargo xtask docs` writes them; `--check` fails when one
-//! is stale.
+//! drift from the code: machine profiles, file formats, test sheets, diagnostic codes, the command line
+//! and the VectorCraft versions the compatibility gate found working (`docs/src/design/docs-pipeline.md`).
+//! `cargo xtask docs` writes them; `--check` fails when one is stale.
 
 use std::fmt::Write as _;
 use std::path::Path;
@@ -14,18 +14,20 @@ use stitchcraft_engine::testsheets::SHEETS;
 use stitchcraft_plan::profiles::BUILTIN;
 use stitchcraft_plan::{FormatId, TrimSupport};
 
+use crate::compat::report;
 use crate::{examples, shots, util};
 
 const REFERENCE: &str = "docs/src/user/reference";
 
 /// Each page, by its file name in the reference directory, with the function that writes it.
 type Writer = fn() -> Result<String, String>;
-const PAGES: [(&str, Writer); 5] = [
+const PAGES: [(&str, Writer); 6] = [
     ("profiles.md", || Ok(profiles())),
     ("formats.md", || Ok(formats())),
     ("test-sheets.md", test_sheets),
     ("diagnostics.md", || Ok(diagnostics())),
     ("cli.md", || Ok(cli())),
+    (report::PAGE, report::page),
 ];
 
 /// Every generated reference page: (path relative to the repository root, content).

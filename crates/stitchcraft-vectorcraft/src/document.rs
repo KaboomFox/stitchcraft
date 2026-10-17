@@ -65,7 +65,7 @@ use crate::container::{self, unreadable};
 use crate::geometry::{self, UNUSABLE_HINT};
 use crate::values::{sews, text};
 use crate::wire::{self, Effect, Item, Kind, Node, Paint, PathData};
-use crate::{FORMAT, PLUGIN_NAMESPACE, color};
+use crate::{FORMAT, color, effect_name};
 
 /// A stroke's miter limit when the file leaves it out: VectorCraft's, as Illustrator's.
 const MITER_LIMIT: f64 = 10.0;
@@ -122,7 +122,7 @@ enum Ours<'a> {
 
 /// The StitchCraft effect `effect` is, if it is one.
 fn ours(effect: &Effect) -> Option<Ours<'_>> {
-    let name = effect.id.strip_prefix("plugin.")?.strip_prefix(PLUGIN_NAMESPACE)?.strip_prefix('.')?;
+    let name = effect_name(&effect.id)?;
     Some(Family::ALL.iter().find(|f| f.id() == name).map_or(Ours::Other(name), |f| Ours::Family(*f, &effect.params)))
 }
 

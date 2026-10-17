@@ -176,6 +176,26 @@ enum Compat {
         #[arg(long = "ref", value_name = "TAG|SHA")]
         reference: String,
     },
+    /// Level B: the scenarios of compat/scenarios with a VectorCraft release's vectorcraft-cli, or another
+    E2e {
+        /// The release, whose Linux archive is fetched and checked by its SHA-256
+        #[arg(long = "ref", value_name = "TAG", required_unless_present = "cli")]
+        reference: Option<String>,
+        /// A vectorcraft-cli to run instead, such as one built from a branch
+        #[arg(long, value_name = "FILE")]
+        cli: Option<PathBuf>,
+    },
+    /// Both levels on one track, with its result in target/compat/results for the report
+    Track {
+        /// stable, prerelease, release-branch or main
+        track: String,
+        /// The VectorCraft tag or commit
+        #[arg(long = "ref", value_name = "TAG|SHA")]
+        reference: String,
+        /// The vectorcraft-cli to run, for a branch; a release's is fetched
+        #[arg(long, value_name = "FILE")]
+        cli: Option<PathBuf>,
+    },
     /// VectorCraft's window without a screen: screenshots alike, and xa11y driving it (Linux)
     Window {
         /// The app to run, instead of the pinned stable release's `bin/vectorcraft`
@@ -190,8 +210,33 @@ enum Compat {
         /// The VectorCraft checkout
         vectorcraft: PathBuf,
     },
-    /// The compatibility report (planned: M6.6)
-    Report,
+    /// What a scheduled run does with the tracks' results: issues, and the adoption of a new release (JSON)
+    Report {
+        /// The folder of the tracks' results
+        #[arg(long, value_name = "DIR")]
+        results: PathBuf,
+        /// What `compat discover --json` said; empty when discovery failed
+        #[arg(long, value_name = "JSON")]
+        discovered: String,
+        /// How the move job ended
+        #[arg(long = "move", value_name = "RESULT", value_parser = compat::report::JOB_RESULTS)]
+        moved: String,
+        /// The day of the run, YYYY-MM-DD in UTC
+        #[arg(long)]
+        date: String,
+        /// The run's address, for the issues and the pull request
+        #[arg(long, value_name = "URL")]
+        run_url: String,
+        /// Write the adoption: the pins, the contract crate's tag and the record
+        #[arg(long)]
+        write: bool,
+    },
+    /// File one of the issues `compat report` decides, in the repository GITHUB_REPOSITORY names (gh)
+    Issue {
+        /// The issue, as `compat report` prints it
+        #[arg(value_name = "JSON")]
+        issue: String,
+    },
 }
 
 /// The subcommands' names, against which `cargo xtask docs --check` checks every `cargo xtask <name>`.
@@ -216,7 +261,12 @@ fn run(command: Command) -> Result<(), String> {
         Command::Compat { command: Compat::Contract { reference } } => compat::contract(&reference),
         Command::Compat { command: Compat::Window { app } } => window::run(app.as_deref()),
         Command::Compat { command: Compat::Join { nested, vectorcraft } } => join::run(nested, &vectorcraft),
-        Command::Compat { command: Compat::Report } => Err("`compat report` arrives with roadmap step M6.6".to_string()),
+        Command::Compat { command: Compat::E2e { reference, cli } } => compat::e2e(reference.as_deref(), cli.as_deref()),
+        Command::Compat { command: Compat::Track { track, reference, cli } } => compat::track(&track, &reference, cli.as_deref()),
+        Command::Compat { command: Compat::Report { results, discovered, moved, date, run_url, write } } => {
+            compat::report::run(&results, &discovered, &moved, &date, &run_url, write)
+        }
+        Command::Compat { command: Compat::Issue { issue } } => compat::report::file(&issue),
         Command::Shots { check } => shots::run(check),
         Command::Api { check } => api::run(check),
         Command::Coverage { record } => coverage::run(record),
@@ -271,6 +321,27 @@ mod tests {
             &["conformance", "--filter", "ts-01", "--bless", "ts-01"],
             &["compat", "discover", "--json"],
             &["compat", "contract", "--ref", "v0.7.0"],
+            &["compat", "e2e", "--ref", "v0.12.0"],
+            &["compat", "e2e", "--cli", "vectorcraft/target/release/vectorcraft-cli"],
+            &["compat", "track", "stable", "--ref", "v0.12.0"],
+            &["compat", "track", "main", "--ref", "f7de3d6", "--cli", "vectorcraft/target/release/vectorcraft-cli"],
+            &[
+                "compat",
+                "report",
+                "--results",
+                "results",
+                "--discovered",
+                "{}",
+                "--move",
+                "success",
+                "--date",
+                "2026-10-18",
+                "--run-url",
+                "u",
+                "--write",
+            ],
+            &["compat", "report", "--results", "r", "--discovered", "", "--move", "skipped", "--date", "d", "--run-url", "u"],
+            &["compat", "issue", "{}"],
             &["compat", "join", "--nested", ".."],
             &["compat", "window"],
             &["compat", "window", "--app", "vectorcraft/target/release/vectorcraft"],
@@ -281,7 +352,14 @@ mod tests {
         ] {
             assert!(Cli::try_parse_from(std::iter::once("xtask").chain(args.iter().copied())).is_ok(), "{args:?}");
         }
-        for args in [&["docs", "--check", "for", "x"][..], &["docs", "for"], &["mutants"], &["mutants", "--record", "--changed", "a"]] {
+        for args in [
+            &["docs", "--check", "for", "x"][..],
+            &["docs", "for"],
+            &["mutants"],
+            &["mutants", "--record", "--changed", "a"],
+            &["compat", "e2e"],
+            &["compat", "report", "--results", "r", "--discovered", "{}", "--move", "timed-out", "--date", "d", "--run-url", "u"],
+        ] {
             assert!(Cli::try_parse_from(std::iter::once("xtask").chain(args.iter().copied())).is_err(), "{args:?}");
         }
         assert!(subcommands().iter().any(|name| name == "unsafe-audit") && subcommands().iter().any(|name| name == "corpus"));

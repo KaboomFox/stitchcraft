@@ -5,6 +5,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.6: the VectorCraft compatibility gate is complete. Every day both levels run on VectorCraft's four
+  tracks, the latest release and pre-release and the `release` and `main` branches (`cargo xtask compat
+  track`).
+  - Level B: VectorCraft's own command line draws, applies the plug-ins' effects and saves, in the
+    scenarios of `compat/scenarios/`, and StitchCraft checks what it saved. A saved file must sew as its
+    effects were sent. VectorCraft must list each module, whose last error must be empty after each
+    drawing of the document. The scenarios include a graphic style, a compound satin column and a
+    document saved without the plug-ins. A release's `vectorcraft-cli` comes from its Linux archive,
+    checked by its SHA-256, and a branch's is built.
+  - Each track has one issue, labelled by how much it blocks, and closed when the track passes again.
+  - A new release that passes is adopted by a pull request the run opens, which pins it and adds it to
+    `compat/supported.toml`. The user guide's supported-versions page is generated from that record.
 - M6.5: `stitch plan` reads VectorCraft documents, `.vectorcraft`, `.drawcraft` and `.vctemplate`, as it
   reads SVG files, and `stitch export` is another name for it (`REQ-VC-008`). It writes the machine file,
   the picture and the report, and says what the reader left out. A bug-report bundle includes the part of

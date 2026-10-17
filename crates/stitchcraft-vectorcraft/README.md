@@ -24,7 +24,10 @@ it out, and `stitch:start` and `stitch:end` mark where the shape grouped with th
 (`REQ-VC-009`).
 `EXTENSIONS` lists the documents' file name extensions, a template's among them, by which `stitch plan`
 tells a document from an SVG file. `read_part` is the part of a file the reader reads, which a bug-report
-bundle keeps: a plain file's JSON, without the images and other data after it.
+bundle keeps: a plain file's JSON, without the images and other data after it. `plugin_id`, `effect_id`
+and `effect_name` are the plug-ins' ids and their live effects', one definition for the plug-in, this
+reader and the compatibility gate. `param_text` writes a parameter's value as an element holds it, which
+the gate compares settings with.
 Design: `docs/src/design/vectorcraft-integration.md#reading-vectorcraft-files-stitchcraft-vectorcraft`.
 The VectorCraft versions it reads are proven by `docs/src/design/compatibility-gate.md`.
 
