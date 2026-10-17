@@ -103,6 +103,10 @@ pub struct Shot {
     /// dialog, whose labels are checked against the module's parameters.
     #[serde(default)]
     pub dialog: Option<String>,
+    /// `vectorcraft-render` shots: a file of the repository the document is kept as, for pages that sew
+    /// it. `cargo xtask shots --vectorcraft` writes it while it sews otherwise than the document drawn.
+    #[serde(default)]
+    pub document: Option<String>,
 }
 
 /// How a page lays out a shot's panels.
@@ -165,6 +169,11 @@ pub fn run(check_only: bool, vectorcraft: bool) -> Result<(), String> {
         if vectorcraft {
             continue;
         }
+        if matches!(shot.kind.as_str(), "photo" | "stitch") {
+            for problem in foreign(shot) {
+                findings.error(format!("shot `{}`: {problem}", shot.id));
+            }
+        }
         match shot.kind.as_str() {
             "photo" => {
                 let found = PHOTO_EXTENSIONS.iter().any(|ext| root.join(PHOTOS).join(format!("{}.{ext}", shot.id)).is_file());
@@ -204,6 +213,12 @@ pub fn run(check_only: bool, vectorcraft: bool) -> Result<(), String> {
     }
     let verb = if check_only { "current" } else { "regenerated" };
     findings.finish("shots", &format!("{} shots declared, all {verb}", shots.len()))
+}
+
+/// What `shot`, a `stitch` or `photo` shot, sets that only a VectorCraft shot reads.
+fn foreign(shot: &Shot) -> Vec<String> {
+    let vectorcraft = !shot.plugins.is_empty() || !shot.steps.is_empty() || !shot.menu.is_empty() || shot.dialog.is_some() || shot.document.is_some();
+    if vectorcraft { vec!["`plugins`, `steps`, `menu`, `dialog` and `document` are a VectorCraft shot's".to_string()] } else { Vec::new() }
 }
 
 /// The PNG files of a `stitch` shot, one per image it makes ([`Shot::images`]).
@@ -333,7 +348,17 @@ mod tests {
             steps: Vec::new(),
             menu: Vec::new(),
             dialog: None,
+            document: None,
         }
+    }
+
+    #[test]
+    fn a_stitch_or_photo_shot_sets_no_vectorcraft_field() {
+        let shot = |toml: &str| -> Shot { toml::from_str(&format!("id = \"probe\"\nalt = \"A probe\"\n{toml}")).unwrap() };
+        let refused = "`plugins`, `steps`, `menu`, `dialog` and `document` are a VectorCraft shot's";
+        assert_eq!(foreign(&shot("kind = \"stitch\"\nmenu = [\"Effect\"]")), [refused]);
+        assert_eq!(foreign(&shot("kind = \"photo\"\nsteps = [{ cmd = \"select.all\" }]")), [refused]);
+        assert!(foreign(&shot("kind = \"stitch\"\nfixture = \"docs/fixtures/wave.svg\"")).is_empty());
     }
 
     #[test]

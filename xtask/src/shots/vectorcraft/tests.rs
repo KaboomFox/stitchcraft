@@ -13,6 +13,43 @@ fn picture(width: u32, changed: usize) -> Vec<u8> {
     pixmap.encode_png().unwrap()
 }
 
+/// A PNG of `width` × `height` grey pixels, with the `block` (x, y, width, height) 9 lighter in red.
+fn picture_with(width: u32, height: u32, block: (u32, u32, u32, u32)) -> Vec<u8> {
+    let mut pixmap = tiny_skia::Pixmap::new(width, height).unwrap();
+    pixmap.fill(tiny_skia::Color::from_rgba8(100, 100, 100, 255));
+    let (bx, by, bw, bh) = block;
+    for (i, pixel) in pixmap.data_mut().chunks_exact_mut(4).enumerate() {
+        let i = u32::try_from(i).unwrap();
+        let (x, y) = (i % width, i / width);
+        if (bx..bx + bw).contains(&x) && (by..by + bh).contains(&y) {
+            pixel[0] = 109;
+        }
+    }
+    pixmap.encode_png().unwrap()
+}
+
+#[test]
+fn a_change_in_one_place_is_never_close() {
+    // A setting's value changed in a dialog: 600 pixels of a 400 × 1,400 picture, 0.11 % of it.
+    let committed = picture_with(400, 1400, (0, 0, 0, 0));
+    assert!(!close(&committed, &picture_with(400, 1400, (200, 700, 30, 20))));
+    // A few pixels apart in each of several places stay close, as an anti-aliased edge moved.
+    let mut scattered = tiny_skia::Pixmap::decode_png(&committed).unwrap();
+    for (i, pixel) in scattered.data_mut().chunks_exact_mut(4).enumerate().filter(|(i, _)| i % 997 == 0) {
+        pixel[0] = 109 + u8::try_from(i % 2).unwrap();
+    }
+    assert!(close(&committed, &scattered.encode_png().unwrap()));
+}
+
+#[test]
+fn a_ui_shot_the_window_took_no_picture_of_is_an_error() {
+    let ui = shot(UI, "plugins = [\"fill\"]\nmenu = [\"Effect\"]");
+    let entry = json!({ "id": "probe", "picture": "/no/such/picture.png" });
+    let mut findings = Findings::default();
+    kept(&util::root(), &[(&ui, entry)], true, &mut findings).unwrap();
+    assert!(findings.errors.iter().any(|e| e.contains("shot `probe`: VectorCraft's window took no picture")), "{:?}", findings.errors);
+}
+
 #[test]
 fn pictures_within_two_pixels_in_a_thousand_are_the_same() {
     let committed = picture(100, 0);
@@ -67,6 +104,8 @@ fn a_vectorcraft_shot_is_declared_with_its_kind_s_fields() {
         ]
     );
     assert_eq!(problems(&shot(UI, "menu = [\"Effect\"]\ndialog = \"lace\"")), ["`dialog = \"lace\"` names no stitch family"]);
+    assert_eq!(problems(&shot(UI, "menu = [\"Effect\"]\ndocument = \"a.vectorcraft\"")), ["`document` is a vectorcraft-render shot's"]);
+    assert_eq!(problems(&shot(RENDER, "document = \"a.svg\"")), ["its document `a.svg` is not a `.vectorcraft` file"]);
 }
 
 #[test]
@@ -89,6 +128,32 @@ fn the_window_s_job_names_the_dialog_s_row_and_its_parameters_from_the_manifest(
     let menu = shot(UI, "plugins = [\"fill\"]\nmenu = [\"Effect\", \"Plug-ins\"]");
     let entry = job(&menu, Path::new("/d"), Path::new("/m"), Path::new("/p")).unwrap();
     assert_eq!((&entry["dialog"], &entry["window"]), (&Value::Null, &Value::Null));
+}
+
+#[test]
+fn a_kept_document_is_written_only_when_it_sews_otherwise() {
+    let root = util::root();
+    let dir = "target/xtask-tests/vectorcraft-document";
+    let _ = std::fs::remove_dir_all(root.join(dir));
+    std::fs::create_dir_all(root.join(dir)).unwrap();
+    let kept = format!("{dir}/patch.vectorcraft");
+    let drawn = std::fs::read(root.join("docs/fixtures/round-patch.vectorcraft")).unwrap();
+    let errors = |drawn: &[u8], check_only: bool| {
+        let mut findings = Findings::default();
+        keep_document(&root, &kept, drawn, check_only, &mut findings);
+        findings.errors
+    };
+    assert!(errors(&drawn, true).iter().any(|e| e.contains("patch.vectorcraft is missing")));
+    assert!(errors(&drawn, false).is_empty());
+    assert_eq!(std::fs::read(root.join(&kept)).unwrap(), drawn, "written");
+    // The same drawing written otherwise, here without its indentation, sews the same and is kept.
+    let compact = serde_json::to_vec(&serde_json::from_slice::<Value>(&drawn).unwrap()).unwrap();
+    assert!(errors(&compact, true).is_empty());
+    // With the fill's rows at 90 degrees it sews otherwise.
+    let turned = String::from_utf8(drawn).unwrap().replace("\"angle\": 45", "\"angle\": 90");
+    let said = errors(turned.as_bytes(), true);
+    assert!(said.iter().any(|e| e.contains("patch.vectorcraft sews otherwise than the document VectorCraft draws")), "{said:?}");
+    assert!(errors(b"{}", true).iter().any(|e| e.contains("the document VectorCraft drew:")));
 }
 
 #[test]

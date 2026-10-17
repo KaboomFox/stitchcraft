@@ -45,7 +45,7 @@ fn vectorcraft_ui_shots() {
     let shots = std::fs::read_to_string(&job)
         .map_err(|e| e.to_string())
         .and_then(|text| serde_json::from_str::<Value>(&text).map_err(|e| e.to_string()))
-        .map(|job| job.get("shots").and_then(Value::as_array).cloned().unwrap_or_default());
+        .and_then(|job| job.get("shots").and_then(Value::as_array).cloned().filter(|shots| !shots.is_empty()).ok_or("it lists no shots".to_string()));
     let shots = match shots {
         Ok(shots) => shots,
         Err(why) => {

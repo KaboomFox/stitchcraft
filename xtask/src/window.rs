@@ -24,7 +24,7 @@
 //! `tests/shots.rs` drives the window to each menu and dialog that `cargo xtask shots --vectorcraft` asks
 //! for (`xtask/src/shots/vectorcraft.rs`).
 
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -35,26 +35,63 @@ use crate::util;
 
 /// The probe's crate.
 const PROBE: &str = "compat/vc-window";
+/// The probe's names for what this tells it, as its `src/lib.rs` declares them: the variables that name
+/// the app (its `APP`), the folder it records into (`OUT`) and the shots' job (`SHOTS`), and its file of
+/// records in that folder (`FINDINGS`). Its workspace is its own, so a test checks the two agree.
+const APP_VAR: &str = "STITCHCRAFT_VECTORCRAFT_APP";
+const OUT_VAR: &str = "STITCHCRAFT_WINDOW_OUT";
+const SHOTS_VAR: &str = "STITCHCRAFT_SHOTS";
+const FINDINGS: &str = "findings.jsonl";
 /// Where the tests record: screenshots, the tree, the app's logs and the findings.
 const OUT: &str = "target/compat/window";
-/// The X screen's width and height in pixels: room for VectorCraft's window at its default size, 1440 × 900,
-/// which it keeps on a screen that also has room for a taskbar, and at [`DIALOG_WINDOW`].
-const SCREEN: [u32; 2] = [1600, 2100];
+/// VectorCraft's window at the size it opens, which it keeps on a screen that also has room for a taskbar.
+const DEFAULT_WINDOW: [u32; 2] = [1440, 900];
+/// The X screen's width and height in pixels: room for the window at [`DEFAULT_WINDOW`] and at
+/// [`DIALOG_WINDOW`], with the window at the screen's corner. X starts the pointer at the screen's centre,
+/// where it would light up whatever it is over: this screen is wide enough to keep it right of the window.
+const SCREEN: [u32; 2] = [3000, 2100];
 /// The size of VectorCraft's window for the picture of a plug-in's dialog: its default width, and tall
 /// enough for a dialog of 48 settings, satin's. A plug-in's dialog has a row a setting and doesn't scroll
 /// (VectorCraft's `form::schema_fields`): at the default height, fill's and satin's run off the window's
 /// top and bottom.
 pub(crate) const DIALOG_WINDOW: [u32; 2] = [1440, 2000];
 const _: () = assert!(DIALOG_WINDOW[0] <= SCREEN[0] && DIALOG_WINDOW[1] <= SCREEN[1], "the dialogs' window fits on the screen");
+const _: () = assert!(SCREEN[0] / 2 >= DIALOG_WINDOW[0] && SCREEN[0] / 2 >= DEFAULT_WINDOW[0], "the pointer starts right of the window");
 /// Turns the accessibility bus's screen-reader flag on, then runs the rest of the command line. `sh -c`
 /// takes the command line as its arguments (`"$@"`), so nothing is quoted into the script.
 const SCREEN_READER_ON: &str = "dbus-send --session --print-reply --dest=org.a11y.Bus /org/a11y/bus \
     org.freedesktop.DBus.Properties.Set string:org.a11y.Status string:ScreenReaderEnabled variant:boolean:true >/dev/null && exec \"$@\"";
-/// The programs the desktop takes, and the Ubuntu packages that have them.
-const NEEDS: &str = "xvfb-run, dbus-run-session and dbus-send (on Ubuntu: `apt install xvfb dbus at-spi2-core`)";
+/// The programs the desktop takes.
+const PROGRAMS: [&str; 3] = ["xvfb-run", "dbus-run-session", "dbus-send"];
+/// What the desktop needs: its programs, and where the Ubuntu packages that have them are listed, with the
+/// libraries the probe builds with.
+const NEEDS: &str = "xvfb-run, dbus-run-session and dbus-send (on Ubuntu, the packages `.github/actions/desktop` installs)";
+
+/// Whether the private desktop can be made here: on Linux, with its [`PROGRAMS`] in the folders of
+/// `path`, `PATH`'s value. Checked first, before an app is fetched or a previous run's records cleared.
+fn ready_with(path: Option<&OsStr>) -> Result<(), String> {
+    if !cfg!(target_os = "linux") {
+        return Err("VectorCraft's window runs on Linux here: its desktop is Xvfb's and AT-SPI's".to_string());
+    }
+    if !PROGRAMS.iter().all(|program| on_path(path, program)) {
+        return Err(format!("VectorCraft's window needs {NEEDS}"));
+    }
+    Ok(())
+}
+
+/// [`ready_with`] the `PATH` this runs with.
+pub(crate) fn ready() -> Result<(), String> {
+    ready_with(std::env::var_os("PATH").as_deref())
+}
 
 /// Runs the probe's tests with `app`, or the pinned release's, in a private desktop.
 pub fn run(app: Option<&Path>) -> Result<(), String> {
+    run_with(app, std::env::var_os("PATH").as_deref())
+}
+
+/// [`run`], with the desktop's programs looked for in `path`.
+fn run_with(app: Option<&Path>, path: Option<&OsStr>) -> Result<(), String> {
+    ready_with(path)?;
     let app = match app {
         Some(app) => std::fs::canonicalize(app).map_err(|e| format!("{}: {e}", app.display()))?,
         None => released()?,
@@ -75,6 +112,7 @@ pub fn run(app: Option<&Path>) -> Result<(), String> {
 /// Takes the `vectorcraft-ui` shots that the job file `job` lists, in the window of `app`, recording into
 /// `out`: what the shots recorded as errors. Their notices are shown, as annotations in GitHub Actions.
 pub(crate) fn shots(app: &Path, job: &Path, out: &Path) -> Result<Vec<String>, String> {
+    ready()?;
     let ran = in_desktop(app, out, &["--test", "shots"], Some(job));
     let errors = show(out, std::env::var_os("GITHUB_ACTIONS").is_some())?;
     match ran {
@@ -84,14 +122,9 @@ pub(crate) fn shots(app: &Path, job: &Path, out: &Path) -> Result<Vec<String>, S
 }
 
 /// Runs the probe's tests, or those `tests` picks, with the app `app` in a private desktop, recording into
-/// `out`, which starts empty, and with `job` as the shots to take.
+/// `out`, which starts empty, and with `job` as the shots to take. The caller has checked that the desktop
+/// can be made ([`ready`]).
 fn in_desktop(app: &Path, out: &Path, tests: &[&str], job: Option<&Path>) -> Result<(), String> {
-    if !cfg!(target_os = "linux") {
-        return Err("VectorCraft's window runs on Linux here: its desktop is Xvfb's and AT-SPI's".to_string());
-    }
-    if !["xvfb-run", "dbus-run-session", "dbus-send"].iter().all(|program| on_path(program)) {
-        return Err(format!("VectorCraft's window needs {NEEDS}"));
-    }
     let root = util::root();
     if out.exists() {
         std::fs::remove_dir_all(out).map_err(|e| format!("{}: {e}", util::rel(out)))?;
@@ -116,12 +149,12 @@ fn in_desktop(app: &Path, out: &Path, tests: &[&str], job: Option<&Path>) -> Res
         .env("XDG_CACHE_HOME", out.join("cache"))
         .env_remove("WAYLAND_DISPLAY")
         .env_remove("AT_SPI_BUS_ADDRESS")
-        .env("STITCHCRAFT_VECTORCRAFT_APP", app)
-        .env("STITCHCRAFT_WINDOW_OUT", out)
+        .env(APP_VAR, app)
+        .env(OUT_VAR, out)
         // One build directory for the compatibility crates, inside the cached `target/`.
         .env("CARGO_TARGET_DIR", root.join("target/compat-build"));
     if let Some(job) = job {
-        cmd.env("STITCHCRAFT_SHOTS", job);
+        cmd.env(SHOTS_VAR, job);
     }
     util::run(cmd, "VectorCraft's window")
 }
@@ -147,7 +180,7 @@ fn private_folder(dir: &Path) -> Result<(), String> {
 /// Prints the notices the tests recorded in `out`, as annotations with `annotate`, and returns their
 /// errors.
 fn show(out: &Path, annotate: bool) -> Result<Vec<String>, String> {
-    let path = out.join("findings.jsonl");
+    let path = out.join(FINDINGS);
     let text = if path.exists() { util::read(&path)? } else { String::new() };
     let mut errors = Vec::new();
     for line in text.lines() {
@@ -170,9 +203,9 @@ fn released() -> Result<PathBuf, String> {
     Ok(release::fetch(compat::pinned_tag(&pins, "stable"))?.root.join("bin/vectorcraft"))
 }
 
-/// Whether `program` is a file in a folder of `PATH`.
-fn on_path(program: &str) -> bool {
-    std::env::var_os("PATH").is_some_and(|path| std::env::split_paths(&path).any(|dir| dir.join(program).is_file()))
+/// Whether `program` is a file in a folder of `path`, `PATH`'s value.
+fn on_path(path: Option<&OsStr>, program: &str) -> bool {
+    path.is_some_and(|path| std::env::split_paths(path).any(|dir| dir.join(program).is_file()))
 }
 
 #[cfg(test)]
@@ -191,12 +224,29 @@ mod tests {
             "xvfb-run",
             "--auto-servernum",
             "--server-args",
-            "-screen 0 1600x2100x24",
+            "-screen 0 3000x2100x24",
             "cargo",
             "test",
         ];
         assert_eq!(line, expected.map(OsString::from));
         assert!(SCREEN_READER_ON.ends_with("&& exec \"$@\"") && SCREEN_READER_ON.contains("ScreenReaderEnabled variant:boolean:true"));
+    }
+
+    #[test]
+    fn the_names_are_the_probe_s() {
+        let probe = util::read(&util::root().join(PROBE).join("src/lib.rs")).unwrap();
+        for (name, value) in [("APP", APP_VAR), ("OUT", OUT_VAR), ("SHOTS", SHOTS_VAR), ("FINDINGS", FINDINGS)] {
+            assert!(probe.contains(&format!("pub const {name}: &str = \"{value}\";")), "the probe's {name} is not {value}");
+        }
+    }
+
+    #[test]
+    fn the_desktop_is_checked_before_the_app() {
+        // With none of the desktop's programs on `PATH`, that is what is said: neither the app nor a
+        // previous run's findings.
+        let said = run_with(Some(Path::new("/no/such/vectorcraft")), Some(OsStr::new(""))).unwrap_err();
+        let desktop = if cfg!(target_os = "linux") { "needs xvfb-run" } else { "runs on Linux" };
+        assert!(said.contains(desktop), "{said}");
     }
 
     #[test]
@@ -207,11 +257,12 @@ mod tests {
             r#"{"test":"a","level":"notice","title":"window","message":"1440×900"}"#,
             r#"{"test":"b","level":"error","title":"b","message":"no tree"}"#,
         ];
-        std::fs::write(out.join("findings.jsonl"), lines.join("\n")).unwrap();
+        std::fs::write(out.join(FINDINGS), lines.join("\n")).unwrap();
         assert_eq!(show(&out, false).unwrap(), ["b: no tree"]);
-        std::fs::remove_file(out.join("findings.jsonl")).unwrap();
+        std::fs::remove_file(out.join(FINDINGS)).unwrap();
         assert!(show(&out, false).unwrap().is_empty());
         // The command runs on Linux, where `sh` always is.
-        assert!(!on_path("no-such-program-anywhere") && (on_path("sh") || !cfg!(target_os = "linux")));
+        let path = std::env::var_os("PATH");
+        assert!(!on_path(path.as_deref(), "no-such-program-anywhere") && (on_path(path.as_deref(), "sh") || !cfg!(target_os = "linux")));
     }
 }

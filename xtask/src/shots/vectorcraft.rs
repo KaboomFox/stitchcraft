@@ -22,8 +22,10 @@
 //!
 //! **Why a tolerance.** Mesa draws VectorCraft's window in software, and a newer Mesa from Ubuntu's updates
 //! may move an anti-aliased edge. A picture stays while no more than [`PER_THOUSAND`] in a thousand of its
-//! pixels differ from the committed one by more than [`TOLERANCE`] in a channel, 0.2 %, so that the pictures
-//! change when VectorCraft does.
+//! pixels differ from the committed one by more than [`TOLERANCE`] in a channel, 0.2 %, and no more than
+//! [`PER_TILE`] in any square of [`TILE`] pixels a side. A moved edge is a few pixels in many places, and a
+//! change of content, such as a default value in a dialog's field, a few dozen in one: the pictures change
+//! when VectorCraft or a dialog's contents do.
 
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -46,39 +48,52 @@ pub(super) const UI: &str = "vectorcraft-ui";
 const PER_THOUSAND: u64 = 2;
 /// How far a channel of a pixel may differ, of 255, before the pixel counts as different.
 const TOLERANCE: u8 = 8;
+/// The side, in pixels, of the squares a picture is cut into to find a change in one place.
+const TILE: usize = 16;
+/// How many of a [`TILE`]'s pixels may differ by more than [`TOLERANCE`].
+const PER_TILE: u32 = 8;
 /// Where the shots' documents and pictures, and the window's records, are made.
 const OUT: &str = "target/shots-vectorcraft";
 /// The drawing that ends a `vectorcraft-ui` shot's run, in its folder: a render shot's is its picture.
 const CANVAS: &str = "canvas.png";
 
 /// Whether the pictures `a` and `b`, two PNG files, are the same within the tolerance: of one size, with no
-/// more than [`PER_THOUSAND`] in a thousand of their pixels further apart than [`TOLERANCE`] in a channel.
+/// more than [`PER_THOUSAND`] in a thousand of their pixels further apart than [`TOLERANCE`] in a channel,
+/// and no more than [`PER_TILE`] of them in any [`TILE`] square.
 pub(super) fn close(a: &[u8], b: &[u8]) -> bool {
     let (Ok(a), Ok(b)) = (tiny_skia::Pixmap::decode_png(a), tiny_skia::Pixmap::decode_png(b)) else { return false };
     if (a.width(), a.height()) != (b.width(), b.height()) {
         return false;
     }
-    let apart = a
-        .data()
-        .chunks_exact(4)
-        .zip(b.data().chunks_exact(4))
-        .filter(|(p, q)| p.iter().zip(q.iter()).any(|(x, y)| x.abs_diff(*y) > TOLERANCE))
-        .count();
+    let width = a.width() as usize;
+    let across = width.div_ceil(TILE);
+    let mut in_tile = vec![0_u32; across * (a.height() as usize).div_ceil(TILE)];
+    let mut apart: u64 = 0;
+    let pixels = a.data().chunks_exact(4).zip(b.data().chunks_exact(4));
+    for (i, _) in pixels.enumerate().filter(|(_, (p, q))| p.iter().zip(q.iter()).any(|(x, y)| x.abs_diff(*y) > TOLERANCE)) {
+        apart += 1;
+        if let Some(count) = in_tile.get_mut(i / width / TILE * across + i % width / TILE) {
+            *count += 1;
+        }
+    }
     let pixels = u64::from(a.width()) * u64::from(a.height());
-    (apart as u64).saturating_mul(1000) <= PER_THOUSAND.saturating_mul(pixels)
+    apart.saturating_mul(1000) <= PER_THOUSAND.saturating_mul(pixels) && in_tile.iter().all(|count| *count <= PER_TILE)
 }
 
-/// Without `--vectorcraft`: `shot` is declared as a VectorCraft shot can be, and its picture is committed.
+/// Without `--vectorcraft`: `shot` is declared as a VectorCraft shot can be, and its picture, and its
+/// document when it keeps one, are committed.
 pub(super) fn committed(root: &Path, shot: &Shot, findings: &mut Findings) {
     for problem in problems(shot) {
         findings.error(format!("shot `{}`: {problem}", shot.id));
     }
-    let path = root.join(GENERATED).join(format!("{}.png", shot.id));
-    if !path.is_file() {
-        findings.error(format!(
-            "{} is missing: `cargo xtask shots --vectorcraft` makes it on Linux, or add the `docs:refresh-shots` label to the pull request",
-            util::rel(&path)
-        ));
+    let picture = root.join(GENERATED).join(format!("{}.png", shot.id));
+    for path in std::iter::once(picture).chain(shot.document.iter().map(|document| root.join(document))) {
+        if !path.is_file() {
+            findings.error(format!(
+                "{} is missing: `cargo xtask shots --vectorcraft` makes it on Linux, or add the `docs:refresh-shots` label to the pull request",
+                util::rel(&path)
+            ));
+        }
     }
 }
 
@@ -114,6 +129,11 @@ fn problems(shot: &Shot) -> Vec<String> {
     }
     if shot.kind == RENDER && (!shot.menu.is_empty() || shot.dialog.is_some()) {
         found.push("`menu` and `dialog` are a vectorcraft-ui shot's".to_string());
+    }
+    match shot.document.as_deref() {
+        Some(_) if shot.kind == UI => found.push("`document` is a vectorcraft-render shot's".to_string()),
+        Some(document) if !document.ends_with(".vectorcraft") => found.push(format!("its document `{document}` is not a `.vectorcraft` file")),
+        _ => {}
     }
     if shot.kind == UI {
         if shot.menu.is_empty() {
@@ -156,6 +176,9 @@ fn make(root: &Path, shots: &[&Shot], check_only: bool, findings: &mut Findings)
     if !cfg!(target_os = "linux") {
         return Err("they are made on Linux, by the pinned release's Linux archive".to_string());
     }
+    if shots.iter().any(|shot| shot.kind == UI) {
+        window::ready()?;
+    }
     let pins = compat::load_pins()?;
     let fetched = release::fetch(compat::pinned_tag(&pins, "stable"))?;
     let modules = compat::build_modules()?;
@@ -176,8 +199,11 @@ fn make(root: &Path, shots: &[&Shot], check_only: bool, findings: &mut Findings)
             findings.error(format!("shot `{}`: {e}", shot.id));
         } else if shot.kind == RENDER {
             keep(root, &shot.id, &util::read_bytes(&dir.join(&picture))?, check_only, findings, Same::Close);
+            if let Some(kept) = &shot.document {
+                keep_document(root, kept, &util::read_bytes(&dir.join(&document))?, check_only, findings);
+            }
         } else {
-            ui.push((shot, job(shot, &dir.join(&document), &modules, &dir.join(&picture))?));
+            ui.push((*shot, job(shot, &dir.join(&document), &modules, &dir.join(&picture))?));
         }
     }
     if ui.is_empty() {
@@ -189,10 +215,40 @@ fn make(root: &Path, shots: &[&Shot], check_only: bool, findings: &mut Findings)
     for error in window::shots(&fetched.root.join("bin/vectorcraft"), &job_file, &out.join("window"))? {
         findings.error(format!("VectorCraft's window: {error}"));
     }
+    kept(root, &ui, check_only, findings)
+}
+
+/// Writes `drawn`, the document VectorCraft drew, as the file `kept`, or with `check_only` says it is stale,
+/// unless the committed file sews the same: VectorCraft may write the same drawing otherwise, as another
+/// release does.
+fn keep_document(root: &Path, kept: &str, drawn: &[u8], check_only: bool, findings: &mut Findings) {
+    let sewn = match scenario::sewn(drawn) {
+        Ok(sewn) => sewn,
+        Err(e) => return findings.error(format!("{kept}: the document VectorCraft drew: {e}")),
+    };
+    let path = root.join(kept);
+    let committed = std::fs::read(&path).ok();
+    if committed.as_deref().is_some_and(|committed| scenario::sewn(committed).is_ok_and(|pes| pes == sewn)) {
+        return;
+    }
+    if check_only {
+        let what = if committed.is_some() { "sews otherwise than the document VectorCraft draws" } else { "is missing" };
+        findings.error(format!("{kept} {what}: run `cargo xtask shots --vectorcraft`, or add the `docs:refresh-shots` label to the pull request"));
+    } else {
+        match std::fs::write(&path, drawn) {
+            Ok(()) => println!("updated {kept}"),
+            Err(e) => findings.error(format!("{kept}: {e}")),
+        }
+    }
+}
+
+/// Keeps the pictures VectorCraft's window took for the UI shots `ui`, each with its job entry.
+fn kept(root: &Path, ui: &[(&Shot, Value)], check_only: bool, findings: &mut Findings) -> Result<(), String> {
     for (shot, entry) in ui {
         let taken = entry.get("picture").and_then(Value::as_str).map(Path::new).filter(|picture| picture.is_file());
-        if let Some(picture) = taken {
-            keep(root, &shot.id, &util::read_bytes(picture)?, check_only, findings, Same::Close);
+        match taken {
+            Some(picture) => keep(root, &shot.id, &util::read_bytes(picture)?, check_only, findings, Same::Close),
+            None => findings.error(format!("shot `{}`: VectorCraft's window took no picture", shot.id)),
         }
     }
     Ok(())
