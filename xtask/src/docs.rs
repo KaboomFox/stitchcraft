@@ -427,7 +427,7 @@ mod tests {
     #[test]
     fn the_milestones_done_are_the_roadmap_s() {
         let done = done_milestones(&util::read(&util::root().join(ROADMAP)).unwrap());
-        assert!(["M1", "M2", "M3", "M4", "M5"].iter().all(|m| done.contains(*m)) && !done.contains("M0") && !done.contains("M6"), "{done:?}");
+        assert!(["M1", "M2", "M3", "M4", "M5", "M6"].iter().all(|m| done.contains(*m)) && !done.contains("M0") && !done.contains("M7"), "{done:?}");
     }
 
     #[test]
