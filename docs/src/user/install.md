@@ -42,10 +42,11 @@ folder for plug-ins as `stitchcraft-fill.wasm`. Build again with `--features str
 `--features satin`, and copy the file each time, as `stitchcraft-stroke.wasm` and
 `stitchcraft-satin.wasm`.
 
-In VectorCraft, choose that folder in **Edit › Preferences › Performance & Storage › Additional Plug-ins
-Folder**. VectorCraft installs the plug-ins in it whenever it starts, and their effects are under
-**Effect › Plug-ins**. [Embroider a VectorCraft design](how-to/embroider-a-vectorcraft-design.md) shows
-how to use them.
+In VectorCraft's desktop app, choose that folder in **Edit › Preferences › Performance & Storage ›
+Additional Plug-ins Folder**. VectorCraft installs the plug-ins in it whenever it starts, and their
+effects are under **Effect › Plug-ins**. In VectorCraft on the web, open each file with **File › Open**
+instead, once each time VectorCraft is opened. [Embroider a VectorCraft
+design](how-to/embroider-a-vectorcraft-design.md) shows how to use them.
 
 ## Next
 

@@ -65,8 +65,9 @@ its arithmetic is the plug-in's.
 ## Bug reports
 
 Because the same design, profile, format and version give the same plan everywhere, those four are all a
-bug report needs. `stitch bug-report` writes them into one JSON file, with the design file itself, an SVG
-file or a VectorCraft document, in place of a path to it. The file also records what came of them:
+bug report needs. `stitch bug-report` writes them into one JSON file, with the design itself in place of
+a path to it. That is an SVG file whole, or the part of a VectorCraft document its reader reads, which
+reads as the whole document does. The file also records what came of them:
 
 - a SHA-256 of each entry of the plan, from each coordinate's bits, its kind, role and element, and each
   block's thread

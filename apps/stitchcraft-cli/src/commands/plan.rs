@@ -63,6 +63,16 @@ impl Source {
         if document { Source::VectorCraft } else { Source::Svg }
     }
 
+    /// The part of the design file `bytes` its reader reads, which reads as the file does: a VectorCraft
+    /// document's JSON without the images and other data after it ([`stitchcraft_vectorcraft::read_part`]),
+    /// and an SVG file whole. A bug-report bundle keeps it.
+    pub fn read_part(self, bytes: &[u8]) -> &[u8] {
+        match self {
+            Source::Svg => bytes,
+            Source::VectorCraft => stitchcraft_vectorcraft::read_part(bytes),
+        }
+    }
+
     /// The design in `bytes`, read as this kind of file, with what its reader said; or why it can't be read.
     pub fn read(self, bytes: &[u8]) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
         match self {
@@ -342,7 +352,7 @@ mod tests {
 
     #[test]
     fn req_vc_008_a_design_is_told_by_its_extension() {
-        let documents = ["patch.vectorcraft", "old/patch.drawcraft", "PATCH.VectorCraft"];
+        let documents = ["patch.vectorcraft", "old/patch.drawcraft", "PATCH.VectorCraft", "start.vctemplate"];
         let svg = ["patch.svg", "vectorcraft", "patch.vectorcraft.svg", "patch.vectorcraf"];
         for (paths, source) in [(&documents[..], Source::VectorCraft), (&svg[..], Source::Svg)] {
             for path in paths {

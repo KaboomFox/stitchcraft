@@ -18,7 +18,7 @@
 //! A group's own paints paint the shapes it holds too, over them unless its Contents row is moved up, and
 //! give an effect its thread and stroke when they are on top ([`painting`]). Applying a graphic style to a
 //! group puts its effects and paints there. So the paths inside sew by the StitchCraft effects of the
-//! group, as the previews show them. A path that neither its own paints nor a group's paint is invisible,
+//! group, as the previews show them, unless a name leaves one out (below). A path that neither its own paints nor a group's paint is invisible,
 //! and is left out without a word. A clip group's first object is its clipping object. VectorCraft paints a
 //! path, a compound path or text there with its own paints alone, and nothing else. The group's effects run
 //! on a path or a compound path there too. A path those effects reach from more than one level, its own and
@@ -34,6 +34,14 @@
 //! geometry that cannot be used and `SC-I0809` the layers and guides VectorCraft does not print. What
 //! VectorCraft does not draw is left out without a word: a hidden object, an object or a paint of opacity
 //! 0, a paint turned off, and a stroke of width 0.
+//!
+//! **Names** (`REQ-VC-009`). ABI v1 has no command objects, so a name gives Ink/Stitch's commands, read
+//! once the objects VectorCraft draws nothing of are left out ([`marker`]). `stitch:ignore` leaves an object
+//! or a layer out with everything in it, and `SC-I0811` lists it. `stitch:start` and `stitch:end` mark
+//! where the shape grouped with them starts or ends: the marker is never stitched, and `SC-W0807` names it
+//! until the generators start and end at such hints (M8). A group or a layer is never a marker, and a word
+//! after `stitch:` that names none is ignored: `SC-W0807` names both, in case of a slip. A live effect
+//! is never given a name, so its preview shows what a name leaves out.
 //!
 //! **Work is bounded.** Besides the bytes [`crate::container`] charges, each object, appearance item,
 //! effect and effect parameter costs one unit, and each subpath one unit and one more for each anchor. An
@@ -218,7 +226,7 @@ fn unseen(node: &Node, around: &Around) -> bool {
 }
 
 /// What a name that begins with `stitch:` asks of StitchCraft (`REQ-VC-009`).
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum Marker {
     /// Leave the object out, with everything in it.
     Ignore,
@@ -230,8 +238,11 @@ enum Marker {
     Unknown,
 }
 
-/// The marker `name` is: `stitch:` and a word, alone or followed by a space and a note, in any mix of upper
-/// and lower case. `None` for a name that doesn't begin with `stitch:`.
+/// The word after `stitch:` of each marker StitchCraft reads.
+const MARKERS: [(&str, Marker); 3] = [("ignore", Marker::Ignore), ("start", Marker::Start), ("end", Marker::End)];
+
+/// The marker `name` is: `stitch:` and a word, after any white space, alone or followed by white space and a
+/// note, in any mix of upper and lower case. `None` for a name that doesn't begin with `stitch:`.
 fn marker(name: &str) -> Option<Marker> {
     const PREFIX: &str = "stitch:";
     let name = name.trim_start();
@@ -239,12 +250,13 @@ fn marker(name: &str) -> Option<Marker> {
         return None;
     }
     let word = name.get(PREFIX.len()..)?.split(char::is_whitespace).next().unwrap_or_default();
-    Some(match word.to_ascii_lowercase().as_str() {
-        "ignore" => Marker::Ignore,
-        "start" => Marker::Start,
-        "end" => Marker::End,
-        _ => Marker::Unknown,
-    })
+    Some(MARKERS.iter().find(|(known, _)| word.eq_ignore_ascii_case(known)).map_or(Marker::Unknown, |&(_, marker)| marker))
+}
+
+/// The markers StitchCraft reads, as a sentence names them: `stitch:ignore, stitch:start and stitch:end`.
+fn markers_read() -> String {
+    let names: Vec<String> = MARKERS.iter().map(|(word, _)| format!("stitch:{word}")).collect();
+    names.split_last().map(|(last, rest)| format!("{} and {last}", rest.join(", "))).unwrap_or_default()
 }
 
 struct Reader {
@@ -292,22 +304,19 @@ impl Reader {
         if !node.visible || node.opacity == Some(0.0) || clipped_away || unseen(node, around) {
             return Ok(());
         }
-        // Then the name, which can leave the object out or mark where a shape starts or ends.
+        // Then the name, which can leave the object out or mark where a shape starts or ends. A group or a
+        // layer holds the shapes, and is never a marker itself.
         if let Some(marked) = node.name.as_deref().and_then(marker) {
-            let what = match node.kind.as_ref().map(|kind| kind.name.as_str()) {
-                Some("layer") => "The layer",
-                Some("group") => "The group",
-                _ => "The object",
-            };
-            let shown = called(node, what);
-            match marked {
-                Marker::Ignore => {
+            let container = node.kind.as_ref().map(|kind| kind.name.as_str()).filter(|kind| matches!(*kind, "layer" | "group"));
+            let shown = called(node, &container.map_or_else(|| "The object".to_string(), |kind| format!("The {kind}")));
+            let (verb, noun) = if marked == Marker::Start { ("starts", "start") } else { ("ends", "end") };
+            match (marked, container) {
+                (Marker::Ignore, _) => {
                     let message = format!("{shown} is named stitch:ignore, and is left out with everything in it.");
                     self.warn(Code::VcObjectIgnored, Some(&label), message, Some("Rename it to stitch it."));
                     return Ok(());
                 }
-                Marker::Start | Marker::End => {
-                    let (verb, noun) = if matches!(marked, Marker::Start) { ("starts", "start") } else { ("ends", "end") };
+                (Marker::Start | Marker::End, None) => {
                     let message = format!(
                         "{shown} marks where the shape grouped with it {verb}, and is not stitched. StitchCraft doesn't yet {noun} a shape \
                          at a marker: it chooses where."
@@ -315,9 +324,13 @@ impl Reader {
                     self.feature(&label, message, None);
                     return Ok(());
                 }
-                Marker::Unknown => {
-                    let message = format!("{shown} begins with stitch:, which names no marker StitchCraft reads, and is stitched as it is drawn.");
-                    self.feature(&label, message, Some("StitchCraft reads stitch:ignore, stitch:start and stitch:end."));
+                (Marker::Start | Marker::End, Some(kind)) => {
+                    let message = format!("{shown} is named as a {noun} marker, which a {kind} can't be, and the name is ignored.");
+                    self.feature(&label, message, Some(&format!("Name a small path grouped with the shape stitch:{noun}.")));
+                }
+                (Marker::Unknown, _) => {
+                    let message = format!("{shown} begins with stitch:, which names no marker StitchCraft reads, and the name is ignored.");
+                    self.feature(&label, message, Some(&format!("StitchCraft reads {}.", markers_read())));
                 }
             }
         }

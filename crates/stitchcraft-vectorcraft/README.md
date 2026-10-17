@@ -22,8 +22,9 @@ of the paint it draws over the others, which is how a graphic style applied to a
 From M6.5 Ink/Stitch's commands can be written in an object's or a layer's name. `stitch:ignore` leaves
 it out, and `stitch:start` and `stitch:end` mark where the shape grouped with them starts or ends
 (`REQ-VC-009`).
-`EXTENSIONS` lists the documents' file name extensions, by which `stitch plan` tells a document from an
-SVG file.
+`EXTENSIONS` lists the documents' file name extensions, a template's among them, by which `stitch plan`
+tells a document from an SVG file. `read_part` is the part of a file the reader reads, which a bug-report
+bundle keeps: a plain file's JSON, without the images and other data after it.
 Design: `docs/src/design/vectorcraft-integration.md#reading-vectorcraft-files-stitchcraft-vectorcraft`.
 The VectorCraft versions it reads are proven by `docs/src/design/compatibility-gate.md`.
 

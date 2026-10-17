@@ -24,6 +24,9 @@ out with everything in it. Placement lines, notes and pictures to trace stay in 
 note can follow the name after a space, as in `stitch:ignore placement line`. Upper and lower case are
 read alike. A hidden object is left out too.
 
+VectorCraft's preview can't see names. An object named `stitch:ignore` that a StitchCraft effect sews, its
+own or its group's, still shows its stitches there, and `stitch export` leaves it out.
+
 ## Write the machine file
 
 Save the document, and run `stitch export` on it. This patch has a fill, a satin border, a curve of
@@ -42,6 +45,10 @@ named `stitch:ignore placement line`:
 `--preview` adds a picture. It is [`stitch plan`](../reference/cli.md#stitch-plan) by another name, which
 reads an SVG file the same way and takes the same options.
 
+StitchCraft reads documents of up to 64 MiB. Pictures embedded to trace from can make one larger: place
+them with **Link** checked in VectorCraft's Place dialog, and VectorCraft saves a small preview of each
+in the document instead.
+
 ## Read what it says
 
 Each line under the summary names an object by its id in the document, such as `vc:10`, and says what
@@ -56,8 +63,8 @@ is drawn, with the VectorCraft command that makes it sewable, such as **Type ›
 
 A small path named `stitch:start` or `stitch:end`, grouped with a fill or a satin column, marks where the
 fill or the column is to start or end, as Ink/Stitch's starting and ending positions do. A marker is
-never sewn. StitchCraft doesn't start or end a shape at one yet, and chooses where, as the patch's start
-marker shows.
+never sewn, and a group or a layer is never a marker. StitchCraft doesn't start or end a shape at one
+yet, and chooses where, as the patch's start marker shows.
 
 ## When it sews wrong
 

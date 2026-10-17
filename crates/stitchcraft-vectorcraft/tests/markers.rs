@@ -80,7 +80,8 @@ fn req_vc_009_a_stitch_name_stitchcraft_does_not_read_is_named_and_stitched() {
     let read = read_ok(&document(4, &objects.join(",")));
     assert_eq!(ids(&read), ["vc:2:fill", "vc:3:fill"]);
     assert_eq!(said(&read), [about(NAMED, 2), about(NAMED, 3)]);
-    assert!(read.warnings[0].fix.is_some(), "the hint names the markers StitchCraft reads");
+    let hint = read.warnings[0].fix.as_ref().map(stitchcraft_core::Fix::describe);
+    assert_eq!(hint.as_deref(), Some("StitchCraft reads stitch:ignore, stitch:start and stitch:end."));
 }
 
 #[test]
@@ -94,4 +95,33 @@ fn req_vc_009_a_name_is_not_read_on_what_vectorcraft_draws_nothing_of() {
     let read = read_ok(&document(4, &group));
     assert!(ids(&read).is_empty(), "{:?}", ids(&read));
     assert_eq!(said(&read), []);
+}
+
+#[test]
+fn req_vc_009_a_stitch_name_says_nothing_of_whether_its_object_is_stitched() {
+    // Text isn't stitched, and a path that no paint paints draws nothing: neither is said to be stitched.
+    let text = named(r#"{"id": 2, "kind": {"type": "text", "runs": [{"text": "Hi"}]}}"#, "stitch:trim");
+    let unpainted = named(&square(3, 0.0, 0.0, "{}"), "stitch:trim");
+    let read = read_ok(&document(4, &[text, unpainted].join(",")));
+    assert!(ids(&read).is_empty(), "{:?}", ids(&read));
+    for said in &read.warnings {
+        assert!(!said.message.contains("is stitched"), "{said}");
+    }
+    assert_eq!(said(&read).first(), Some(&about(NAMED, 2)));
+}
+
+#[test]
+fn req_vc_009_a_group_or_a_layer_is_never_a_marker() {
+    // What a group or a layer named as a marker holds is stitched, and the name is said not to be read.
+    let group = named(&format!(r#"{{"id": 4, "kind": {{"type": "group", "children": [{}]}}}}"#, square(5, 100.0, 0.0, RED)), "stitch:end");
+    let layer = format!(
+        r#"{{"format": "vectorcraft", "version": 4, "document": {{"layers": [{{"id": 1, "name": "stitch:start", "kind": {{"type": "layer",
+            "children": [{}, {}, {group}]}}}}]}}}}"#,
+        square(2, 0.0, 0.0, RED),
+        square(3, 50.0, 0.0, RED)
+    );
+    let read = read_ok(layer.as_bytes());
+    assert_eq!(ids(&read), ["vc:2:fill", "vc:3:fill", "vc:5:fill"]);
+    assert_eq!(said(&read), [about(NAMED, 1), about(NAMED, 4)]);
+    assert!(read.warnings.iter().all(|w| w.message.contains("can't be, and the name is ignored")), "{:?}", read.warnings);
 }
