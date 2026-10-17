@@ -121,9 +121,8 @@ as it is and shows the message as the plug-in's last error. That happens when th
 sews no stitch, with the message that says why, and for a satin column drawn as one path, which is as
 wide as its stroke, with `SC-I0810`. A drawing that vanished instead could not be clicked to change the
 setting that emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
-shows, and the command line reports them (M6.5). Until M6.3's levels, an object whose stitches cost more
-to write than a live effect may spend runs out of instructions. VectorCraft then draws it as it is, with
-its own error.
+shows, and the command line reports them (M6.5). How much of the stitches it shows, within what
+VectorCraft lets it spend, is its preview level (below).
 
 ### The workflow
 
@@ -153,27 +152,47 @@ back:
 | One anchor of a path, as JSON | 40 bytes |
 | Speed on GitHub's Linux runners | about 1.9 billion instructions a second |
 
-The instruction budget runs out long before the clock: 50 million instructions take about 26 ms.
-Reading a path uses an eighth of the 4,000 instructions each of its bytes brings, so writing is what
-limits a preview. Written as *hello* writes it, the 50 million instructions buy about 60 KB of JSON:
-about 1,500 anchors, a stroke of that many stitches, or a few hundred fill stitches drawn as ribbons.
-Generating a large fill is cheap, but **writing tens of thousands of stitches as JSON geometry is not.**
-So the plug-in estimates the output size before generating and picks a preview level:
+The instruction budget runs out long before the clock: 50 million instructions take about 26 ms. Reading
+a path uses an eighth of the 4,000 instructions each of its bytes brings. M6.3 measured the plug-ins
+themselves in the host, on the shapes the contract tests run, with the same numbers in VectorCraft 0.12.0
+and on `main`:
 
-| Level | Geometry returned | Used when |
+| Measured | Value |
+|---|---|
+| Writing the plug-ins' geometry, by hand, to a thousandth of a point | about 16 instructions a byte |
+| One anchor, written by hand | 18 to 20 bytes along a stroke or a satin column, 26 to 27 in a fill's ribbons |
+| A unit of the engine's work for a stroke | about 880 instructions |
+| A unit of the engine's work for a satin column | about 4,730 instructions |
+| A unit of the engine's work for a fill | 1,900 to 5,300 instructions, by the part of the work |
+| The exact preview of a 7 mm square fill with its defaults | 27 million instructions, 85 % of the engine's work spent on the travel under its rows |
+| The rows preview of square fills from 3.5 mm to 226 mm | 1.6 to 11 million instructions |
+| The outline preview of square fills from 3.5 mm to 903 mm | 1.7 to 5 million instructions |
+
+So the engine's work, and not the JSON, is what limits a preview. The plug-in turns the instructions it
+has left after reading its input into a budget of the engine's work units, and prices what it writes by
+the anchor. It shows less when the engine runs out, or when what it would write costs more than its
+share, instead of being stopped (`apps/stitchcraft-vc-plugin/src/preview.rs`):
+
+| Level | Geometry returned | Auto shows it |
 |---|---|---|
-| Exact | The stitch polyline (strokes, satins) or one thin closed ribbon per stitch (fills) | Estimated output under the budget |
-| Rows | One ribbon per fill row segment (direction and density visible) | Large fills |
-| Outline | The original geometry plus a direction hatch | Estimate still too large |
+| Exact | The stitch polyline (strokes, satins) or one thin closed ribbon per stitch (fills) | For a stroke or a satin column, within nine tenths of the budget |
+| Rows | One ribbon per row segment of a fill's top rows: where its stitches lie and which way they run | For a fill, within eight tenths |
+| Outline | The object's path as lines for a stroke or a satin column, and as ribbons for a fill, which are hatched every 3 mm in its direction | When the others cost too much |
 
-A `preview_level` choice parameter lets the user force a level (VectorCraft reserves the name `preview`).
-M6.3 fixes each level's budget with a conformance case, from these numbers and its own writer's, which
-can write fewer digits without a `serde_json` value in between. The contract test
-`hello_reads_and_writes_json_within_the_recorded_budget` measures the costs again on every track the
-[compatibility gate](compatibility-gate.md) tests, and fails if either rises by more than a quarter. If a
-run still fails, VectorCraft draws the object unchanged and reports the error through `plugin.info`'s
-`lastError`, and our message says which level to choose. The real stitches are always available from the
-CLI preview, and ABI v2's overlay channel removes this limitation.
+The `preview_level` parameter, `auto` by default, lets the user pick a level (VectorCraft reserves the
+name `preview`). A level the user picks gets the whole budget, and when that is not enough, `SC-I0810`
+names a cheaper one. The units of a stroke's work and of a satin column's cost the same on every shape
+measured, so a budget of units bounds their exact previews. A fill's units vary too much for that. A 7 mm
+square's exact preview already takes more than half of what VectorCraft allows, and a budget of units that
+ran out early, in the dearer work, took 71 million instructions. So auto shows a fill's rows, and its exact
+preview is the user's to pick, with all that VectorCraft allows, which stops one that needs more with its
+own error. The
+contract test `req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits` runs each level on
+shapes of growing size on every track the [compatibility gate](compatibility-gate.md) tests, and fails
+when VectorCraft stops a run that must finish. It prints what each run takes, which the budget's numbers
+are measured from. `hello_reads_and_writes_json_within_the_recorded_budget` still measures what JSON
+costs. The real stitches are always available from the CLI preview, and ABI v2's overlay channel removes
+this limitation.
 
 Paint caveat: a live effect cannot read the object's paint, so a fill preview shows ribbons painted with
 the object's own fill; stroke previews use the object's stroke. Users set the fill/stroke to the thread

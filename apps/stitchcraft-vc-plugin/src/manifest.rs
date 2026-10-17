@@ -26,6 +26,9 @@
 //! those it shares with other families, and last the settings every element shares (`CommonParams`),
 //! where Ink/Stitch's dialogs list them too. A fill's dialog opens with `fill` and `fill_method`, as
 //! Ink/Stitch's does.
+//!
+//! **The preview.** Last comes `preview_level` ([`PREVIEW_LEVEL`]), which is the plug-in's and no
+//! stitch's: how much of the stitches the live effect shows ([`crate::preview::Level`]).
 
 use serde::Serialize;
 use serde::ser::{SerializeMap, Serializer};
@@ -35,7 +38,9 @@ use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Empty, Family, Kind, ParamGroup, ParamSpec, Value as Parsed};
-pub use stitchcraft_vectorcraft::PLUGIN_NAMESPACE;
+pub use stitchcraft_vectorcraft::{PLUGIN_NAMESPACE, PREVIEW_LEVEL};
+
+use crate::preview::Level;
 
 /// VectorCraft ABI v1 limits on manifests (VectorCraft `crates/plugins/src/manifest.rs`).
 pub mod limits {
@@ -147,8 +152,14 @@ pub fn family(family: Family) -> Manifest {
         kind: "effect",
         author: AUTHOR,
         description,
-        params: params(family),
+        params: params(family).into_iter().chain([(PREVIEW_LEVEL, preview_level(family))]).collect(),
     }
+}
+
+/// How a family's manifest declares [`PREVIEW_LEVEL`]: a choice of the levels its previews offer, auto by
+/// default.
+fn preview_level(family: Family) -> Schema {
+    Schema::Choice { options: Level::offered(family).iter().map(|level| level.id()).collect(), default: Level::Auto.id() }
 }
 
 /// The parameters `family`'s manifest declares, in the dialog's order.
@@ -333,6 +344,17 @@ mod tests {
     }
 
     #[test]
+    fn each_family_s_dialog_ends_with_its_preview_levels_auto_first() {
+        let levels = |each: Family| family(each).params.last().cloned();
+        let choice = |options: &[&'static str]| Some((PREVIEW_LEVEL, Schema::Choice { options: options.to_vec(), default: "auto" }));
+        assert_eq!(levels(Family::Fill), choice(&["auto", "exact", "rows", "outline"]));
+        assert_eq!(levels(Family::Stroke), choice(&["auto", "exact", "outline"]));
+        assert_eq!(levels(Family::Satin), choice(&["auto", "exact", "outline"]));
+        // It is the plug-in's, and no parameter of the registry has its name.
+        assert!(PARAMETERS.iter().flat_map(|group| group.specs).all(|spec| spec.key != PREVIEW_LEVEL));
+    }
+
+    #[test]
     fn req_vc_002_the_dialog_opens_with_the_method_and_ends_with_the_settings_every_element_shares() {
         let keys = |each: Family| -> Vec<&'static str> { family(each).params.iter().map(|(key, _)| *key).collect() };
         // VectorCraft's dialog follows the JSON text, which keeps the manifest's order.
@@ -344,7 +366,7 @@ mod tests {
         assert_eq!(fill[..3], ["fill", "fill_method", "angle"]);
         assert!(place(&fill, "underlay_underpath") < place(&fill, "running_stitch_length_mm"));
         assert!(place(&fill, "pull_compensation_mm") < place(&fill, "ties"));
-        assert_eq!(fill.last(), Some(&"max_stitch_length_mm"));
+        assert_eq!(fill[fill.len() - 2..], ["max_stitch_length_mm", PREVIEW_LEVEL]);
         let stroke = keys(Family::Stroke);
         assert_eq!(stroke[..3], ["stroke_method", "repeats", "bean_stitch_repeats"]);
         assert_eq!(stroke[3], "running_stitch_length_mm");
@@ -359,7 +381,7 @@ mod tests {
         // VectorCraft stores every declared parameter, at its default when the user leaves it: each must
         // read as the registry's default, as an element without settings reads it.
         for each in Family::ALL {
-            for (key, schema) in family(*each).params {
+            for (key, schema) in family(*each).params.into_iter().filter(|(key, _)| *key != PREVIEW_LEVEL) {
                 let spec = PARAMETERS.iter().flat_map(|g| g.specs).find(|s| s.key == key).unwrap().in_family(*each);
                 // VectorCraft stores a number's default clamped into its range.
                 let stored = match schema {

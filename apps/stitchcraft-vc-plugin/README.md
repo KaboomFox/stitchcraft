@@ -5,10 +5,12 @@ ABI v1 (no imports; JSON in linear memory).
 
 **Status:** one live effect for each stitch family, from M6.2: *StitchCraft Stroke*, *StitchCraft Satin*
 and *StitchCraft Fill*. Each sews the object it is applied to, with the parameters set in its dialog, and
-shows the stitches in place of the object's art. M6.3 adds the cheaper preview levels for objects with
-more stitches than a live effect may write, and M6.4 the tools. Without a family the module is M0.6's
-*hello* effect, which returns the object's geometry unchanged. The contract tests measure the host's costs
-with it (`docs/src/design/vectorcraft-integration.md`).
+shows as much of the stitches as VectorCraft lets a live effect spend on, in place of the object's art
+(M6.3, `src/preview.rs`). A stroke and a satin column show their stitches, and a fill its rows; the
+outline shows when they cost too much, and the dialog's `preview_level` picks a level. M6.4 adds the
+tools. Without a family the module is M0.6's *hello* effect, which returns the object's geometry
+unchanged. The contract tests measure the host's costs with it
+(`docs/src/design/vectorcraft-integration.md`).
 
 ## Build
 
@@ -39,6 +41,9 @@ In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Ope
   engine sews it.
 - A live effect never makes an object vanish. When it can't show stitches, VectorCraft draws the object as
   it is, with the reason as the plug-in's last error.
+- A preview spends at most what VectorCraft allows (`REQ-VC-003`). The plug-in prices the engine's work in
+  instructions, with numbers the contract tests measure, and the engine stops before VectorCraft would. A
+  fill's exact preview, which the user picks, is the exception, and VectorCraft bounds it.
 
 ## Dependencies
 

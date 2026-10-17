@@ -1,13 +1,20 @@
 # The public API of stitchcraft-vectorcraft, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
 # Generated: do not edit. A change here is a change other code can see; say why in the pull request.
 pub mod stitchcraft_vectorcraft
+pub struct stitchcraft_vectorcraft::Effect
+pub stitchcraft_vectorcraft::Effect::element: stitchcraft_engine::design::Element
+pub stitchcraft_vectorcraft::Effect::preview_level: core::option::Option<alloc::string::String>
 pub struct stitchcraft_vectorcraft::VectorCraft
 pub stitchcraft_vectorcraft::VectorCraft::design: stitchcraft_engine::design::Design
 pub stitchcraft_vectorcraft::VectorCraft::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub const stitchcraft_vectorcraft::FORMAT: u64
 pub const stitchcraft_vectorcraft::MAX_BYTES: usize
 pub const stitchcraft_vectorcraft::PLUGIN_NAMESPACE: &str
-pub fn stitchcraft_vectorcraft::effect_element(stitchcraft_params::stitch_type::Family, &[u8], &[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_engine::design::Element, stitchcraft_core::diag::Diagnostic>
+pub const stitchcraft_vectorcraft::PREVIEW_LEVEL: &str
+pub const stitchcraft_vectorcraft::RIBBON_MM: f64
 pub fn stitchcraft_vectorcraft::effect_error(&stitchcraft_core::diag::Diagnostic) -> alloc::vec::Vec<u8>
-pub fn stitchcraft_vectorcraft::effect_output(stitchcraft_params::stitch_type::Family, &[alloc::vec::Vec<stitchcraft_core::units::Point>]) -> core::result::Result<core::option::Option<alloc::vec::Vec<u8>>, serde_json::error::Error>
+pub fn stitchcraft_vectorcraft::effect_lines<'a>(impl core::iter::traits::collect::IntoIterator<Item = &'a [stitchcraft_core::units::Point]>) -> core::option::Option<alloc::vec::Vec<u8>>
+pub fn stitchcraft_vectorcraft::effect_output(stitchcraft_params::stitch_type::Family, &[alloc::vec::Vec<stitchcraft_core::units::Point>]) -> core::option::Option<alloc::vec::Vec<u8>>
+pub fn stitchcraft_vectorcraft::effect_ribbons(impl core::iter::traits::collect::IntoIterator<Item = (stitchcraft_core::units::Point, stitchcraft_core::units::Point)>) -> core::option::Option<alloc::vec::Vec<u8>>
 pub fn stitchcraft_vectorcraft::read(&[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_vectorcraft::VectorCraft, stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_vectorcraft::read_effect(stitchcraft_params::stitch_type::Family, &[u8], &[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_vectorcraft::Effect, stitchcraft_core::diag::Diagnostic>

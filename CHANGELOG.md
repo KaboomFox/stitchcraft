@@ -5,6 +5,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.3: the VectorCraft plug-ins' previews have levels, and each spends at most what VectorCraft lets a
+  live effect spend (`REQ-VC-003`). The dialog's `preview_level` is auto, exact, rows for a fill, or the
+  outline. Auto shows a stroke's and a satin column's stitches, and a fill's top rows, one ribbon for
+  each row segment. The outline shows when they cost too much. A level the user picks gets the whole
+  budget, and `SC-I0810` names a cheaper one when that is not enough.
+  - The plug-in prices the engine's work in instructions, which the contract tests measured in VectorCraft's
+    host. The engine's work limits a preview more than the JSON does. A 7 mm square fill's exact preview
+    takes 27 million of the 50 million instructions VectorCraft allows, and its rows 1.7 million.
+  - `stitchcraft_engine::generate::rows` lays a fill's top rows without sewing them, as `generate` lays
+    them.
+  - The geometry is written by hand, to a thousandth of a point: 18 to 27 bytes an anchor instead of 40,
+    and 16 instructions a byte instead of hundreds.
+  - The reader leaves `preview_level` out of an element's settings.
 - M6.2: VectorCraft plug-ins for the stitch families. Each is its own WebAssembly module, which a feature
   of `stitchcraft-vc-plugin` picks. A family's live effect sews the object it is applied to with the
   engine, and VectorCraft draws the stitches instead of the object's art. A stroke's stitches and a satin

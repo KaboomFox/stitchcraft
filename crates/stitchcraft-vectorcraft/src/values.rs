@@ -6,6 +6,15 @@
 
 use serde_json::{Number, Value};
 
+use crate::PREVIEW_LEVEL;
+
+/// Whether `key`, a parameter of a StitchCraft effect, is a setting of the element it sews: not one of
+/// VectorCraft's own, which start with `_` (such as the `_context` a live effect is given), nor the
+/// plug-in's [`PREVIEW_LEVEL`].
+pub(crate) fn sews(key: &str) -> bool {
+    !key.starts_with('_') && key != PREVIEW_LEVEL
+}
+
 /// A parameter's value as text, as the parameters read it: a number as a decimal, a whole number without
 /// a point; a toggle as `true` or `false`; a choice as its id; a list as its values with spaces between.
 /// `None` for anything else.

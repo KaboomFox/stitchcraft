@@ -18,6 +18,10 @@
 
 pub mod effect;
 pub mod manifest;
+pub mod preview;
+
+#[cfg(test)]
+mod testing;
 
 mod abi;
 

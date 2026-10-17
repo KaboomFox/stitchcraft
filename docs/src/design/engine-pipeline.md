@@ -78,6 +78,10 @@ Each element is generated with the shortest stitch for it: the larger of the mac
 sets none. A satin column is given its longest stitch as well, the element's `max_stitch_length_mm`,
 which its split stitches keep to.
 
+A preview that cannot afford a fill's stitches shows its top rows (`stitchcraft_engine::generate::rows`,
+from M6.3). The fill's settings are read as for sewing it, and what they say is said the same, but only
+the region is built and the rows laid over it: no needle point is placed and no route is searched.
+
 Rules every generator follows:
 
 - **Pure:** output depends only on (normalized shape, typed params, neighbours, seed, budget).
@@ -257,4 +261,4 @@ It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The c
 | Machine file | `stitchcraft-formats` writer chosen by the profile or the output extension |
 | Preview PNG | `stitchcraft-render`, from the *quantized* plan (`REQ-RND-001`) |
 | Report JSON | The CLI's, with the counts and size of the machine file read back as a machine reads it, its SHA-256, the threads and the diagnostics |
-| Plug-in preview geometry | `stitchcraft-vc-plugin` from a single group ([integration](vectorcraft-integration.md#live-effect-previews-within-v1-budgets)) |
+| Plug-in preview geometry | `stitchcraft-vc-plugin`, from one element's groups, its top rows or its path, by the preview's level ([integration](vectorcraft-integration.md#live-effect-previews-within-v1-budgets)) |
