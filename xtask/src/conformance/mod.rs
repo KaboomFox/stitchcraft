@@ -19,11 +19,13 @@ mod cases;
 mod oracle;
 mod report;
 mod runner;
+mod wasm;
 
 use std::collections::BTreeSet;
 use std::path::Path;
 
 pub use cases::requirement_ids;
+pub use wasm::made_as_wasm;
 
 use stitchcraft_core::Code;
 

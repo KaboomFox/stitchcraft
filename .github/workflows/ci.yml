@@ -31,14 +31,25 @@ jobs:
         with:
           # `cargo xtask prose` lints the lines added since the merge base with origin/main.
           fetch-depth: 0
-      - name: Pinned toolchain (rust-toolchain.toml) and the wasm target
+      - name: Pinned toolchain (rust-toolchain.toml) and the wasm targets
         run: |
           rustup toolchain install --profile minimal
-          rustup target add wasm32-unknown-unknown
+          rustup target add wasm32-unknown-unknown wasm32-wasip1
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - uses: ./.github/actions/tools
         with:
           tools: cargo-deny,typos,mdbook,cargo-public-api
+      - name: wasmtime, which runs `stitch` as WebAssembly for `cargo xtask wasm --goldens` (pinned by hash)
+        env:
+          VERSION: "49.0.3"
+          SHA256: 4001225413f208345b980525f31c4080e1873808b38d0ddc7918497340667fbb
+        run: |
+          archive="wasmtime-v$VERSION-x86_64-linux"
+          curl --fail --silent --show-error --location --output "$RUNNER_TEMP/$archive.tar.xz" \
+            "https://github.com/bytecodealliance/wasmtime/releases/download/v$VERSION/$archive.tar.xz"
+          echo "$SHA256  $RUNNER_TEMP/$archive.tar.xz" | sha256sum --check --strict
+          tar --extract --xz --file "$RUNNER_TEMP/$archive.tar.xz" --directory "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/$archive" >> "$GITHUB_PATH"
       - name: The independent reader for REQ-FMT-005 (pyembroidery, pinned by hash)
         uses: ./.github/actions/oracle
       - name: Vale for `cargo xtask prose`, built from its tagged source (Go's checksum database checks it)
