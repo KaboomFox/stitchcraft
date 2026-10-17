@@ -215,12 +215,12 @@ enum Compat {
         /// The folder of the tracks' results
         #[arg(long, value_name = "DIR")]
         results: PathBuf,
-        /// What `compat discover --json` said
+        /// What `compat discover --json` said; empty when discovery failed
         #[arg(long, value_name = "JSON")]
         discovered: String,
-        /// Moving into VectorCraft failed
-        #[arg(long)]
-        move_failed: bool,
+        /// How the move job ended
+        #[arg(long = "move", value_name = "RESULT", value_parser = compat::report::JOB_RESULTS)]
+        moved: String,
         /// The day of the run, YYYY-MM-DD in UTC
         #[arg(long)]
         date: String,
@@ -230,6 +230,12 @@ enum Compat {
         /// Write the adoption: the pins, the contract crate's tag and the record
         #[arg(long)]
         write: bool,
+    },
+    /// File one of the issues `compat report` decides, in the repository GITHUB_REPOSITORY names (gh)
+    Issue {
+        /// The issue, as `compat report` prints it
+        #[arg(value_name = "JSON")]
+        issue: String,
     },
 }
 
@@ -257,9 +263,10 @@ fn run(command: Command) -> Result<(), String> {
         Command::Compat { command: Compat::Join { nested, vectorcraft } } => join::run(nested, &vectorcraft),
         Command::Compat { command: Compat::E2e { reference, cli } } => compat::e2e(reference.as_deref(), cli.as_deref()),
         Command::Compat { command: Compat::Track { track, reference, cli } } => compat::track(&track, &reference, cli.as_deref()),
-        Command::Compat { command: Compat::Report { results, discovered, move_failed, date, run_url, write } } => {
-            compat::report::run(&results, &discovered, move_failed, &date, &run_url, write)
+        Command::Compat { command: Compat::Report { results, discovered, moved, date, run_url, write } } => {
+            compat::report::run(&results, &discovered, &moved, &date, &run_url, write)
         }
+        Command::Compat { command: Compat::Issue { issue } } => compat::report::file(&issue),
         Command::Shots { check } => shots::run(check),
         Command::Api { check } => api::run(check),
         Command::Coverage { record } => coverage::run(record),
@@ -318,8 +325,23 @@ mod tests {
             &["compat", "e2e", "--cli", "vectorcraft/target/release/vectorcraft-cli"],
             &["compat", "track", "stable", "--ref", "v0.12.0"],
             &["compat", "track", "main", "--ref", "f7de3d6", "--cli", "vectorcraft/target/release/vectorcraft-cli"],
-            &["compat", "report", "--results", "results", "--discovered", "{}", "--date", "2026-10-18", "--run-url", "u", "--write"],
-            &["compat", "report", "--results", "r", "--discovered", "{}", "--move-failed", "--date", "d", "--run-url", "u"],
+            &[
+                "compat",
+                "report",
+                "--results",
+                "results",
+                "--discovered",
+                "{}",
+                "--move",
+                "success",
+                "--date",
+                "2026-10-18",
+                "--run-url",
+                "u",
+                "--write",
+            ],
+            &["compat", "report", "--results", "r", "--discovered", "", "--move", "skipped", "--date", "d", "--run-url", "u"],
+            &["compat", "issue", "{}"],
             &["compat", "join", "--nested", ".."],
             &["compat", "window"],
             &["compat", "window", "--app", "vectorcraft/target/release/vectorcraft"],
@@ -330,9 +352,14 @@ mod tests {
         ] {
             assert!(Cli::try_parse_from(std::iter::once("xtask").chain(args.iter().copied())).is_ok(), "{args:?}");
         }
-        for args in
-            [&["docs", "--check", "for", "x"][..], &["docs", "for"], &["mutants"], &["mutants", "--record", "--changed", "a"], &["compat", "e2e"]]
-        {
+        for args in [
+            &["docs", "--check", "for", "x"][..],
+            &["docs", "for"],
+            &["mutants"],
+            &["mutants", "--record", "--changed", "a"],
+            &["compat", "e2e"],
+            &["compat", "report", "--results", "r", "--discovered", "{}", "--move", "timed-out", "--date", "d", "--run-url", "u"],
+        ] {
             assert!(Cli::try_parse_from(std::iter::once("xtask").chain(args.iter().copied())).is_err(), "{args:?}");
         }
         assert!(subcommands().iter().any(|name| name == "unsafe-audit") && subcommands().iter().any(|name| name == "corpus"));

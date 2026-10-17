@@ -227,7 +227,8 @@ jobs:
 
   report:
     needs: [discover, track, move]
-    if: always() && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'))
+    # Also when a track failed, and never for a cancelled run, whose tracks wrote no results.
+    if: ${{ !cancelled() && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')) }}
     runs-on: ubuntu-24.04
     permissions:
       # The adopting pull request's branch, the pull request, the issues, and dispatching the pull request's
@@ -250,39 +251,25 @@ jobs:
           merge-multiple: true
       - name: Decide, and write the adoption of a new release that passed
         env:
+          # Empty when discovery failed.
           REPORT: ${{ needs.discover.outputs.report }}
-          MOVE_FAILED: ${{ needs.move.result == 'failure' && '--move-failed' || '' }}
+          MOVE: ${{ needs.move.result }}
         run: |
           mkdir -p results
-          # The record and the pins change only for an adoption, which the next step commits.
-          cargo xtask compat report --results results --discovered "$REPORT" --date "$(date -u +%F)" \
-            --run-url "$RUN_URL" $MOVE_FAILED --write > decisions.json
+          # The record and the pins change only for an adoption, which the last step commits.
+          cargo xtask compat report --results results --discovered "$REPORT" --move "$MOVE" --date "$(date -u +%F)" \
+            --run-url "$RUN_URL" --write > decisions.json
           jq . decisions.json
-      - name: Open, update or close each track's issue
+      - name: Open, comment on or close each issue
+        # `cargo xtask compat issue` comments on the open issue with the title, if there is one, and opens
+        # one only if there isn't. An issue that can't be filed doesn't stop the others.
         run: |
-          jq -c '.issues[]' decisions.json | while read -r issue; do
-            title=$(jq -r .title <<<"$issue")
-            label=$(jq -r '.labels[0]' <<<"$issue")
-            body=$(jq -r .body <<<"$issue")
-            case "$label" in
-              upstream-stable) about="VectorCraft's latest release breaks the plug-in: StitchCraft can't release" ;;
-              upstream-prerelease) about="A VectorCraft pre-release breaks the plug-in" ;;
-              *) about="A VectorCraft branch breaks the plug-in, or moving into VectorCraft" ;;
-            esac
-            gh label list --repo "$GITHUB_REPOSITORY" --search "$label" --json name --jq '.[].name' | grep -qx "$label" ||
-              gh label create "$label" --repo "$GITHUB_REPOSITORY" --color B60205 --description "$about"
-            number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --label "$label" --search "\"$title\" in:title" \
-              --json number,title --jq "map(select(.title == \"$title\"))[0].number // empty")
-            if [ "$(jq -r .failing <<<"$issue")" = true ]; then
-              if [ -n "$number" ]; then
-                gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
-              else
-                gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --label "$label" --body "$body"
-              fi
-            elif [ -n "$number" ]; then
-              gh issue close "$number" --repo "$GITHUB_REPOSITORY" --comment "$body"
-            fi
-          done
+          jq -c '.issues[]' decisions.json > issues.jsonl
+          failed=0
+          while read -r issue; do
+            cargo xtask compat issue "$issue" || failed=1
+          done < issues.jsonl
+          exit "$failed"
       - name: Adopt a new release with a pull request
         run: |
           if [ "$(jq -r '.adopt != null' decisions.json)" != true ]; then
@@ -309,9 +296,8 @@ jobs:
               gh workflow run "$workflow" --repo "$GITHUB_REPOSITORY" --ref "$branch"
             done
           else
-            # The repository doesn't let GitHub Actions open pull requests (Settings › Actions › General).
-            compare="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/main...$branch?expand=1"
-            echo "::warning::Couldn't open the pull request: open it from $compare"
-            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --label upstream-stable \
-              --body "$body"$'\n\n'"GitHub Actions may not open pull requests here, so the branch waits: $compare"
+            # The repository doesn't let GitHub Actions open pull requests (Settings › Actions › General): one
+            # issue says so, under the same title every time, until the release is adopted.
+            echo "::warning::GitHub Actions may not open pull requests here, so $branch waits for one."
+            cargo xtask compat issue "$(jq -c .adopt.waiting decisions.json)"
           fi

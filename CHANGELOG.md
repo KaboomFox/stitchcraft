@@ -10,9 +10,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   track`).
   - Level B: VectorCraft's own command line draws, applies the plug-ins' effects and saves, in the
     scenarios of `compat/scenarios/`, and StitchCraft checks what it saved. A saved file must sew as its
-    effects were sent, and VectorCraft must list each module with its last error empty. A graphic
-    style, a compound satin column and a document saved without the plug-ins are among them. A release's
-    `vectorcraft-cli` comes from its Linux archive, checked by its SHA-256, and a branch's is built.
+    effects were sent. VectorCraft must list each module, whose last error must be empty after each
+    drawing of the document. The scenarios include a graphic style, a compound satin column and a
+    document saved without the plug-ins. A release's `vectorcraft-cli` comes from its Linux archive,
+    checked by its SHA-256, and a branch's is built.
   - Each track has one issue, labelled by how much it blocks, and closed when the track passes again.
   - A new release that passes is adopted by a pull request the run opens, which pins it and adds it to
     `compat/supported.toml`. The user guide's supported-versions page is generated from that record.

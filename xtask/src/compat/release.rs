@@ -10,7 +10,7 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use super::{PINS, load_pins, pinned_tag};
+use super::{load_pins, pinned_tag, repository};
 use crate::util;
 
 /// The pins file's key for the SHA-256 of the stable release's Linux x86_64 archive.
@@ -48,8 +48,7 @@ pub struct Fetched {
 /// file's for the pinned stable release, and against the release's own list for any other.
 pub fn fetch(tag: &str) -> Result<Fetched, String> {
     let pins = load_pins()?;
-    let repository = pins.get("repository").and_then(toml::Value::as_str).ok_or(format!("{PINS}: no `repository`"))?;
-    let archive = archive(repository, tag)?;
+    let archive = archive(repository(&pins)?, tag)?;
     let file_name = format!("{}.tar.gz", archive.name);
     let expected = match pinned_sum(&pins, tag) {
         Some(sum) => sum.to_string(),

@@ -65,6 +65,7 @@ fn a_scenario_that_doesn_t_hold_together_is_refused() {
             "run 1: it applies `fill` without installing that module".to_string(),
             "run 1: `apply = \"lace\"` names no stitch family".to_string(),
             format!("run 1: {one}"),
+            "run 1: it applies `fill`, and no drawing shows it after".to_string(),
             "it checks `b.vectorcraft`, which no run exports".to_string(),
             "it checks `c.vectorcraft`, which no run exports".to_string(),
             "it checks `d.vectorcraft`, which no run exports".to_string(),
@@ -75,7 +76,7 @@ fn a_scenario_that_doesn_t_hold_together_is_refused() {
 }
 
 #[test]
-fn a_run_is_one_command_line_that_ends_asking_for_each_module_s_last_error() {
+fn a_run_is_one_command_line_that_asks_each_module_for_its_last_error_after_each_drawing() {
     let s = scenario(
         r##"description = "d"
         [[run]]
@@ -85,13 +86,14 @@ fn a_run_is_one_command_line_that_ends_asking_for_each_module_s_last_error() {
           { cmd = "paint.setFill", params = { color = "#c00000" } },
           { apply = "fill", params = { angle = 45, row_spacing_mm = 0.4, underlay = true } },
           { export = "out.png" },
+          { export = "out.vectorcraft" },
         ]
         "##,
     );
     let args = arguments(&s.run[0], Path::new("/plugins"), Path::new("/out")).unwrap();
     // A file's path is the platform's, with `\` before the file's name on Windows.
     let at = |dir: &str, file: &str| Path::new(dir).join(file).to_string_lossy().into_owned();
-    let (opened, exported) = (at("/out", "in.vectorcraft"), at("/out", "out.png"));
+    let (opened, exported, saved) = (at("/out", "in.vectorcraft"), at("/out", "out.png"), at("/out", "out.vectorcraft"));
     let install = json!({ "path": at("/plugins", "fill.wasm") }).to_string();
     let expected = [
         "run",
@@ -115,8 +117,41 @@ fn a_run_is_one_command_line_that_ends_asking_for_each_module_s_last_error() {
         "plugin.info",
         "--params",
         r#"{"id":"dev.stitchcraft.fill"}"#,
+        // Saving draws nothing, so nothing new is asked.
+        "--export",
+        saved.as_str(),
     ];
     assert_eq!(args, expected);
+}
+
+#[test]
+fn each_effect_is_drawn_before_its_module_is_asked_for_its_last_error() {
+    let s = scenario(
+        r#"description = "d"
+        [[run]]
+        plugins = ["fill", "stroke"]
+        steps = [
+          { apply = "fill" },
+          { apply = "fill" },
+          { export = "a.png" },
+          { apply = "stroke" },
+          { export = "b.vectorcraft" },
+        ]
+        [[run]]
+        steps = [{ cmd = "shape.line" }, { export = "c.vectorcraft" }]
+        [expect]
+        applied = ["b.vectorcraft", "c.vectorcraft"]
+        "#,
+    );
+    let found = problems(&s, &modules(), &std::collections::BTreeSet::new());
+    assert_eq!(
+        found,
+        [
+            "run 1: it applies `fill` again before a drawing shows the first",
+            "run 1: it applies `stroke`, and no drawing shows it after",
+            "it checks `c.vectorcraft` as applied, and no `apply` step comes before it is exported",
+        ]
+    );
 }
 
 #[test]
@@ -134,7 +169,7 @@ fn a_file_sews_as_its_effects_were_sent_only_when_vectorcraft_stored_them_so() {
     let moved = doc.pointer_mut("/document/layers/0/kind/children/1/kind/children/0/appearance").unwrap();
     let record = moved["effects"].as_array_mut().unwrap().remove(0);
     moved["items"][0]["effects"] = json!([record]);
-    let stored = restore(&mut doc, &[fill_on_2(&json!({ "angle": 45 }))]);
+    let stored = restore(&mut doc, &[fill_on_2(&json!({ "angle": 45 }))]).unwrap();
     assert_eq!(stored.len(), 1);
     let restored = node(&mut doc);
     assert_eq!(restored["appearance"]["items"][0]["effects"], json!([]));
@@ -142,19 +177,35 @@ fn a_file_sews_as_its_effects_were_sent_only_when_vectorcraft_stored_them_so() {
 }
 
 #[test]
-fn elements_are_counted_by_kind_and_thread() {
+fn an_object_vectorcraft_didn_t_save_fails_the_check() {
+    // `effect.apply` said it applied the fill to object 999, which the file doesn't hold: nothing would be
+    // put back, and the file sewing as it does would prove nothing.
+    let failure = sews_as_applied(&patch(), &[Applied { ids: vec![999], ..fill_on_2(&json!({ "angle": 90 })) }]).unwrap_err();
+    assert!(failure.contains("999"), "{failure}");
+}
+
+#[test]
+fn elements_are_counted_by_kind_thread_and_settings() {
     let bytes = patch();
-    let elements = |element: &str, count, thread: Option<&str>| Elements {
+    let elements = |element: &str, count, thread: Option<&str>, params: &str| Elements {
         file: "patch".into(),
         element: element.into(),
         count,
         thread: thread.map(str::to_string),
+        params: (!params.is_empty()).then(|| toml::from_str(params).unwrap()),
     };
-    assert_eq!(holds(&bytes, &elements("fill", 3, None)), Ok(()));
-    assert_eq!(holds(&bytes, &elements("fill", 2, Some("#E6B31A"))), Ok(()));
-    assert_eq!(holds(&bytes, &elements("satin", 1, None)), Ok(()));
-    let failure = holds(&bytes, &elements("stroke", 2, Some("#008033"))).unwrap_err();
+    assert_eq!(holds(&bytes, &elements("fill", 3, None, "")), Ok(()));
+    assert_eq!(holds(&bytes, &elements("fill", 2, Some("#E6B31A"), "")), Ok(()));
+    assert_eq!(holds(&bytes, &elements("satin", 1, None, "")), Ok(()));
+    let failure = holds(&bytes, &elements("stroke", 2, Some("#008033"), "")).unwrap_err();
     assert!(failure.starts_with("2 `stroke` elements in #008033 are expected, and it holds 1: vc:2:fill #bf0000, vc:5:satin #0033b3"), "{failure}");
+    // The group's fill effect sets 90°, which tells its 2 squares from a fill a paint alone would sew.
+    assert_eq!(holds(&bytes, &elements("fill", 2, Some("#E6B31A"), "angle = 90")), Ok(()));
+    assert_eq!(holds(&bytes, &elements("fill", 1, None, "angle = 45\nrow_spacing_mm = 0.4")), Ok(()));
+    let failure = holds(&bytes, &elements("fill", 3, None, "angle = 90")).unwrap_err();
+    assert!(failure.starts_with("3 `fill` elements with angle = 90 are expected, and it holds 2: vc:2:fill #bf0000 (angle = 45), "), "{failure}");
+    // A setting no parameter could hold matches nothing.
+    assert!(holds(&bytes, &elements("fill", 2, None, "angle = { a = 1 }")).is_err());
 }
 
 #[test]
@@ -217,7 +268,12 @@ fn a_scenario_runs_and_its_checks_say_what_fails() {
     let good = r##"description = "d"
         [[run]]
         plugins = ["fill"]
-        steps = [{ cmd = "plugin.list" }, { apply = "fill", params = { angle = 45, row_spacing_mm = 0.4 } }, { export = "a.vectorcraft" }]
+        steps = [
+          { cmd = "plugin.list" },
+          { apply = "fill", params = { angle = 45, row_spacing_mm = 0.4 } },
+          { export = "a.vectorcraft" },
+          { export = "a.png" },
+        ]
         [[run]]
         open = "a.vectorcraft"
         steps = [{ export = "b.vectorcraft" }, { export = "b.png" }]
@@ -237,7 +293,7 @@ fn a_scenario_runs_and_its_checks_say_what_fails() {
     assert!(failures[2].starts_with("b.vectorcraft: it sews otherwise"), "{failures:?}");
     // A module's last error, and a command VectorCraft refuses, stop the scenario.
     let failures = run_with(good, r#""the budget ran out""#, "error");
-    assert_eq!(failures, [r#"run 1: fill's last error is "the budget ran out""#]);
+    assert_eq!(failures, [r#"run 1: after a.png, fill's last error is "the budget ran out""#]);
     let refused = good.replace("{ cmd = \"plugin.list\" }", "{ cmd = \"fail\" }");
     let failures = run_with(&refused, "null", "refused");
     assert_eq!(failures, ["vectorcraft-cli exit status: 1 after 1 results: vectorcraft-cli: no such command"]);
