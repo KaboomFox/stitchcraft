@@ -40,7 +40,8 @@ use crate::generators::running::raised;
 use crate::generators::running::{RunningParams, running_stitch};
 use crate::generators::satin::{self, SATIN_COLUMN, SatinLengths, SatinParams, satin_stitch};
 use crate::generators::tatami::TatamiParams;
-use crate::generators::tatami::sew::{Pull, Travel, tatami_fill};
+use crate::generators::tatami::rows::Segment;
+use crate::generators::tatami::sew::{Fill, Pull, Travel, tatami_fill, top_rows};
 use crate::generators::{Approach, Neighbours, Stitched, method, mm};
 use crate::normalize::region::{self, Region};
 use crate::registry::PARAMETERS;
@@ -131,17 +132,45 @@ pub struct Generation {
 /// `neighbours`, with the budget's work to itself.
 pub fn generate(element: &Element, settings: &DesignSettings, profile: &MachineProfile, neighbours: &Neighbours, budget: &Budget) -> Generation {
     let mut diagnostics = unknown_keys(&element.params, PARAMETERS);
-    let generated = match sew(element, settings, profile, neighbours, &mut diagnostics, &mut budget.meter()) {
-        Ok(generated) => generated,
-        Err(exhausted) => {
-            diagnostics.push(exhausted.diagnostic(budget, Some(element.id.clone())));
-            None
-        }
-    };
+    let sewn = sew(element, settings, profile, neighbours, &mut diagnostics, &mut budget.meter());
+    let generated = within(element, budget, &mut diagnostics, sewn);
     if !generated.as_ref().is_some_and(|g| g.groups.iter().any(|group| !group.is_empty())) {
         diagnostics.extend(left_out(element));
     }
-    Generation { generated, diagnostics: diagnostics.into_iter().map(|d| d.with_element(element.id.clone())).collect() }
+    Generation { generated, diagnostics: named(element, diagnostics) }
+}
+
+/// What a preview shows of a fill too costly to sew: where its top stitches lie ([`rows`]).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Rows {
+    /// The segments of its top rows, in millimetres; `None` when it is skipped, or is not a fill.
+    pub segments: Option<Vec<Segment>>,
+    /// What was changed, left out or wrong, each naming the element.
+    pub diagnostics: Vec<Diagnostic>,
+}
+
+/// The segments of the top rows of `element`, a fill, in a design with `settings` on the machine `profile`
+/// describes, with the budget's work: where [`generate`] lays its top stitches, without the stitches, the
+/// underlay or the needle's travel, for a small part of the work. Its settings are read as `generate`
+/// reads them, and what they say is said the same.
+pub fn rows(element: &Element, settings: &DesignSettings, profile: &MachineProfile, budget: &Budget) -> Rows {
+    let mut diagnostics = unknown_keys(&element.params, PARAMETERS);
+    let laid = top_rows_of(element, settings, profile, &mut diagnostics, &mut budget.meter());
+    let segments = within(element, budget, &mut diagnostics, laid);
+    Rows { segments, diagnostics: named(element, diagnostics) }
+}
+
+/// What `run` gave, or `None`, with `SC-E0004` in `diagnostics`, when it spent `element`'s budget.
+fn within<T>(element: &Element, budget: &Budget, diagnostics: &mut Vec<Diagnostic>, run: Result<Option<T>, Exhausted>) -> Option<T> {
+    run.unwrap_or_else(|exhausted| {
+        diagnostics.push(exhausted.diagnostic(budget, Some(element.id.clone())));
+        None
+    })
+}
+
+/// `diagnostics`, each naming `element`.
+fn named(element: &Element, diagnostics: Vec<Diagnostic>) -> Vec<Diagnostic> {
+    diagnostics.into_iter().map(|d| d.with_element(element.id.clone())).collect()
 }
 
 /// `SC-W0505` for the trim and stop that `element`, which sews nothing, sets after it: assembly has no
@@ -206,9 +235,6 @@ fn method_type(family: Family, method: &str, diagnostics: &mut Vec<Diagnostic>) 
 }
 
 /// The element's stitch groups, or `None` when it is skipped; what it says about it goes to `diagnostics`.
-/// Its settings are read as its stitch type reads them (`REQ-PRM-004`). A fill set not to be sewn sews
-/// nothing, and its area is not built; another fill's area is built first, so what is left out of it is
-/// said whatever its settings.
 fn sew(
     element: &Element,
     settings: &DesignSettings,
@@ -217,6 +243,58 @@ fn sew(
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<Option<Generated>, Exhausted> {
+    let Some(Prepared { region, common, sewing }) = prepare(element, settings, profile, neighbours, diagnostics, meter)? else { return Ok(None) };
+    let mut rng = SplitMix64::for_element(element.id.as_str(), common.as_ref().and_then(|common| common.random_seed));
+    let stitched = match &element.shape {
+        Shape::Fill { .. } => fill(&sewing, &region, &mut rng, diagnostics, meter)?,
+        Shape::Stroke { path, width, join } if sewing.stitch_type.family() == Family::Satin => {
+            satin_column(&sewing, (path, *width, *join), &mut rng, diagnostics, meter)?
+        }
+        Shape::Stroke { path, .. } => stroke(&sewing, path, &rng, diagnostics, meter)?,
+    };
+    let (Some(common), Some(Shared { min_stitch, .. }), Some(stitched)) = (common, sewing.shared, stitched) else { return Ok(None) };
+    diagnostics.extend(stitched.warnings);
+    Ok(Some(Generated { common, stitch_type: sewing.stitch_type, groups: stitched.runs, min_stitch }))
+}
+
+/// The segments of a fill's top rows, or `None` when it is skipped or is not a fill; what it says about it
+/// goes to `diagnostics`.
+fn top_rows_of(
+    element: &Element,
+    settings: &DesignSettings,
+    profile: &MachineProfile,
+    diagnostics: &mut Vec<Diagnostic>,
+    meter: &mut Meter,
+) -> Result<Option<Vec<Segment>>, Exhausted> {
+    if !matches!(element.shape, Shape::Fill { .. }) {
+        return Ok(None);
+    }
+    let neighbours = Neighbours::default();
+    let Some(Prepared { region, sewing, .. }) = prepare(element, settings, profile, &neighbours, diagnostics, meter)? else { return Ok(None) };
+    let Some(fill) = fill_settings(&sewing, diagnostics) else { return Ok(None) };
+    top_rows(&region, &fill, meter).map(Some)
+}
+
+/// An element read for sewing: its area, when it is a fill, the settings every stitch type shares, and how
+/// its generator reads it.
+struct Prepared<'a> {
+    region: Region,
+    common: Option<CommonParams>,
+    sewing: Sewing<'a>,
+}
+
+/// `element` read for sewing, or `None` when it is skipped; what it says about it goes to `diagnostics`.
+/// Its settings are read as its stitch type reads them (`REQ-PRM-004`). A fill set not to be sewn sews
+/// nothing, and its area is not built; another fill's area is built first, so what is left out of it is
+/// said whatever its settings.
+fn prepare<'a>(
+    element: &'a Element,
+    settings: &DesignSettings,
+    profile: &MachineProfile,
+    neighbours: &'a Neighbours,
+    diagnostics: &mut Vec<Diagnostic>,
+    meter: &mut Meter,
+) -> Result<Option<Prepared<'a>>, Exhausted> {
     let set = &element.params;
     let region = match &element.shape {
         Shape::Fill { path, rule } => {
@@ -235,18 +313,7 @@ fn sew(
         jump: common.jump_length(settings.collapse_len),
         force_locks: common.force_lock_stitches,
     });
-    let sewing = Sewing { set, stitch_type, shared, neighbours };
-    let mut rng = SplitMix64::for_element(element.id.as_str(), common.as_ref().and_then(|common| common.random_seed));
-    let stitched = match &element.shape {
-        Shape::Fill { .. } => fill(&sewing, &region, &mut rng, diagnostics, meter)?,
-        Shape::Stroke { path, width, join } if stitch_type.family() == Family::Satin => {
-            satin_column(&sewing, (path, *width, *join), &mut rng, diagnostics, meter)?
-        }
-        Shape::Stroke { path, .. } => stroke(&sewing, path, &rng, diagnostics, meter)?,
-    };
-    let (Some(common), Some(Shared { min_stitch, .. }), Some(stitched)) = (common, shared, stitched) else { return Ok(None) };
-    diagnostics.extend(stitched.warnings);
-    Ok(Some(Generated { common, stitch_type, groups: stitched.runs, min_stitch }))
+    Ok(Some(Prepared { region, common, sewing: Sewing { set, stitch_type, shared, neighbours } }))
 }
 
 /// What the settings every stitch type shares give an element's generator.
@@ -304,19 +371,27 @@ fn fill(
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<Option<Stitched>, Exhausted> {
+    let Some(fill) = fill_settings(sewing, diagnostics) else { return Ok(None) };
+    let neighbours = sewing.neighbours;
+    Ok(Some(tatami_fill(region, &fill, neighbours.needle, neighbours.next.as_ref(), rng, meter)?))
+}
+
+/// The tatami fill `sewing` describes, its settings read as its stitch type reads them; `None` when they
+/// cannot be read, or when its fill method is not sewn yet (`SC-W0011`), which `diagnostics` says.
+fn fill_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<Fill> {
     let tatami = sewing.read(TatamiParams::from_set_as, diagnostics);
     let running = sewing.read(RunningParams::from_set_as, diagnostics);
     let pull = sewing.read(PullParams::from_set_as, diagnostics);
-    let (Some(tatami), Some(running), Some(pull), Some(shared)) = (tatami, running, pull, sewing.shared) else { return Ok(None) };
+    let (Some(tatami), Some(running), Some(pull), Some(shared)) = (tatami, running, pull, sewing.shared) else { return None };
     if sewing.stitch_type != StitchType::TatamiFill {
         let method = sewing.stitch_type.id();
         diagnostics.push(not_yet(&format!("This element's fill method, `{method}`, is not sewn by this version of StitchCraft yet")));
-        return Ok(None);
+        return None;
     }
     // A fill's longest stitch has a default of its own, so it is never empty; the registry reads it so.
     let (Some(longest), Some(&length)) = (shared.max_stitch, running.running_stitch_length_mm.first()) else {
         diagnostics.push(Diagnostic::new(Code::InternalCheckFailed, "A fill's longest stitch or travel stitch length is missing."));
-        return Ok(None);
+        return None;
     };
     let min = shared.min_stitch.get();
     let travel = Travel {
@@ -326,9 +401,7 @@ fn fill(
         underpath: tatami.underpath,
         jump: shared.jump.get(),
     };
-    let fill = tatami.fill(longest, &running, travel, fill_pull(&pull, diagnostics), shared.force_locks);
-    let neighbours = sewing.neighbours;
-    Ok(Some(tatami_fill(region, &fill, neighbours.needle, neighbours.next.as_ref(), rng, meter)?))
+    Some(tatami.fill(longest, &running, travel, fill_pull(&pull, diagnostics), shared.force_locks))
 }
 
 /// A fill's pull compensation, as its settings give it: Ink/Stitch reads a value below 0 as 0, and so does a
@@ -483,6 +556,45 @@ mod tests {
 
     fn codes(diagnostics: &[Diagnostic]) -> Vec<Code> {
         diagnostics.iter().map(|d| d.code).collect()
+    }
+
+    #[test]
+    fn a_fill_s_top_rows_are_laid_as_its_top_stitches_are_without_sewing_it() {
+        let segments = [p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)].map(Segment::Line).to_vec();
+        let square = Shape::Fill { path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] }, rule: FillRule::NonZero };
+        let laid = |shape: &Shape, params: &[(&str, &str)], budget: &Budget| {
+            rows(&element(shape.clone(), params), &DesignSettings::default(), stitchcraft_plan::profiles::REFERENCE, budget)
+        };
+        // Rows a quarter of a millimetre apart, across the 10 mm square, each one segment from side to side.
+        let across =
+            |rows: &Rows| rows.segments.as_ref().map(|segments| (segments.len(), segments.iter().map(|s| s.start.distance(s.end)).sum::<f64>()));
+        let plain = laid(&square, &[], &Budget::DEFAULT);
+        assert_eq!((across(&plain), plain.diagnostics), (Some((40, 400.0)), vec![]));
+        // Grown by `expand_mm` as the top stitches are, and the generator's own rows: every top needle point
+        // of the fill without its underlay lies on one of them.
+        let grown = laid(&square, &[("expand_mm", "1")], &Budget::DEFAULT);
+        assert_eq!(across(&grown).map(|(count, _)| count), Some(48));
+        let sewn = generate(
+            &element(square.clone(), &[("fill_underlay", "false")]),
+            &DesignSettings::default(),
+            stitchcraft_plan::profiles::REFERENCE,
+            &Neighbours::default(),
+            &Budget::DEFAULT,
+        );
+        let tops = plain.segments.unwrap_or_default();
+        let on_a_row = |q: &Point| tops.iter().any(|s| (q.y() - s.start.y()).abs() < 1e-9 && q.x() >= -1e-9 && q.x() <= 10.0 + 1e-9);
+        let points: Vec<Point> = sewn.generated.unwrap().groups.into_iter().flatten().collect();
+        assert!(points.iter().filter(|q| on_a_row(q)).count() * 10 > points.len() * 9, "most needle points lie on the rows");
+        // Not a fill, a fill not sewn, a method not sewn yet, and a budget spent: no rows, and the same words
+        // as generating it.
+        let line = Shape::stroke(Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0))], closed: false }] });
+        assert_eq!(laid(&line, &[], &Budget::DEFAULT), Rows { segments: None, diagnostics: vec![] });
+        assert_eq!(laid(&square, &[("fill", "false")], &Budget::DEFAULT), Rows { segments: None, diagnostics: vec![] });
+        let contour = laid(&square, &[("fill_method", "contour_fill")], &Budget::DEFAULT);
+        assert_eq!((contour.segments, codes(&contour.diagnostics)), (None, vec![Code::StitchTypeNotYet]));
+        let spent = laid(&square, &[], &Budget { max_stitches: 1, max_work: 10 });
+        assert_eq!((spent.segments, codes(&spent.diagnostics)), (None, vec![Code::BudgetExhausted]));
+        assert!(spent.diagnostics.iter().all(|d| d.element.as_ref().map(ElementId::as_str) == Some("e")));
     }
 
     #[test]

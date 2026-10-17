@@ -1,28 +1,14 @@
 //! What the plug-ins do with VectorCraft's JSON. Safe Rust, tested natively; `abi.rs` only moves bytes.
 //!
-//! A family's live effect sews the object it is given as the family, with its record's parameters, and
-//! gives the stitches back as geometry for VectorCraft to draw ([`sew`]). The VectorCraft adapter reads
-//! the object and writes the stitches; the engine sews it as it sews an element of a design: `generate`,
-//! on the reference machine, with no neighbours, since a live effect sees one object. These stitches are
-//! the exact level of M6.3's previews, which adds cheaper levels for objects whose stitches cost more to
-//! write than a live effect may spend.
-//!
-//! **When it shows no stitches.** The effect leaves the object as it is, and says why as the plug-in's
-//! last error, when the object cannot be sewn, when it sews no stitch, and when it is a satin column drawn
-//! as one path: such a column is as wide as its stroke, and VectorCraft gives a live effect no stroke
-//! (`SC-I0810`). A drawing that vanished, because a setting or a method it cannot sew yet left it no
-//! stitches, could not be clicked to change the setting. Warnings about stitches that are shown have no
-//! way to VectorCraft; the reports of the command line give them.
+//! A family's live effect reads the object it is given with the VectorCraft adapter, as an element of its
+//! family with its record's parameters, and shows it as [`crate::preview`] decides: its stitches, a fill's
+//! rows or its outline, or the object as it is, with why ([`sew`]).
 
 use serde_json::{Value, json};
-use stitchcraft_core::{Budget, Code, Diagnostic, Fix};
-use stitchcraft_engine::design::{DesignSettings, Element, Shape};
-use stitchcraft_engine::generate::generate;
-use stitchcraft_engine::generators::Neighbours;
-use stitchcraft_engine::normalize::satin::{Shape as Column, recognize};
 use stitchcraft_params::Family;
-use stitchcraft_plan::profiles::REFERENCE;
-use stitchcraft_vectorcraft::{effect_element, effect_error, effect_output};
+use stitchcraft_vectorcraft::{effect_error, read_effect};
+
+use crate::preview::{show, spendable};
 
 /// Why a run failed. The ABI shim turns these into the negative return codes VectorCraft expects.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -43,40 +29,16 @@ impl RunError {
     }
 }
 
-/// A family's live effect: the object VectorCraft gives it sewn as `family`, with the record's parameters,
-/// and its stitches given back as geometry. When it shows no stitches, the output says why instead, and
-/// VectorCraft shows that as the plug-in's last error and draws the object as it is.
+/// A family's live effect: the object VectorCraft gives it, read as an element of `family` with the
+/// record's parameters, and shown within what VectorCraft lets the effect spend. When it shows no
+/// stitches, the output says why instead, and VectorCraft shows that as the plug-in's last error and draws
+/// the object as it is.
 pub fn sew(family: Family, input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
-    let budget = Budget::DEFAULT;
-    let element = match effect_element(family, input, params, &budget) {
-        Ok(element) => element,
-        Err(refusal) => return Ok(effect_error(&refusal)),
-    };
-    if let Some(unseen) = centre_line(family, &element, &budget) {
-        return Ok(effect_error(&unseen));
-    }
-    let generation = generate(&element, &DesignSettings::default(), REFERENCE, &Neighbours::default(), &budget);
-    let groups = generation.generated.map(|generated| generated.groups).unwrap_or_default();
-    Ok(effect_output(family, &groups).unwrap_or_else(|| effect_error(&no_stitch(generation.diagnostics))))
-}
-
-/// `SC-I0810` when `element`, of `family`, is a satin column drawn as one path, its centre line: the
-/// column is as wide as its stroke, which VectorCraft does not give a live effect.
-fn centre_line(family: Family, element: &Element, budget: &Budget) -> Option<Diagnostic> {
-    let (Family::Satin, Shape::Stroke { path, .. }) = (family, &element.shape) else { return None };
-    let Ok(Column::CentreLine { .. }) = recognize(path, &mut budget.meter()).ok()?.shape else { return None };
-    let message = "This satin column is drawn as one path, so it is as wide as its stroke, which VectorCraft does not give a live effect: \
-                   the effect leaves it as it is.";
-    Some(Diagnostic::new(Code::VcEffectUnchanged, message).with_fix(Fix::Hint("To see its stitches in VectorCraft, draw it with 2 rails.".into())))
-}
-
-/// Why an element sews no stitch: the most serious of what sewing it said, the first of those, or
-/// `SC-I0810` when it said nothing, as for a fill set not to be sewn.
-fn no_stitch(diagnostics: Vec<Diagnostic>) -> Diagnostic {
-    diagnostics
-        .into_iter()
-        .min_by_key(Diagnostic::severity)
-        .unwrap_or_else(|| Diagnostic::new(Code::VcEffectUnchanged, "This object sews no stitch, so the live effect leaves it as it is."))
+    let spend = spendable(input.len(), params.len());
+    Ok(match read_effect(family, input, params, &crate::preview::reading(spend)) {
+        Ok(effect) => show(family, &effect, spend),
+        Err(refusal) => effect_error(&refusal),
+    })
 }
 
 /// The *hello* live effect: every input object's geometry, unchanged.
@@ -169,19 +131,11 @@ mod tests {
     }
 
     #[test]
-    fn what_cannot_be_sewn_is_the_live_effect_s_error_and_the_most_serious_first() {
+    fn what_cannot_be_sewn_is_the_live_effect_s_error() {
         // A method that arrives in a later version is said, rather than the object vanishing.
         assert!(error(&run(Family::Fill, &square(), &[("fill_method", json!("contour_fill"))])).starts_with("warning SC-W0011: "));
         assert!(error(&run(Family::Fill, &square(), &[("fill_method", json!("plaid"))])).starts_with("error SC-E0101: "));
         assert!(error(&run(Family::Stroke, &json!({"subpaths": []}), &[])).starts_with("warning SC-W0808: It draws nothing"));
-        // The most serious comes first, and the first of those.
-        let said = vec![
-            Diagnostic::new(Code::VcNotPrinted, "a"),
-            Diagnostic::new(Code::VcGeometryUnusable, "b"),
-            Diagnostic::new(Code::VcUnreadable, "c"),
-            Diagnostic::new(Code::BudgetExhausted, "d"),
-        ];
-        assert_eq!(no_stitch(said).message, "c");
     }
 
     #[test]

@@ -200,35 +200,42 @@ fn anchors(output: &[u8]) -> usize {
     subpaths.filter_map(|subpath| subpath["anchors"].as_array()).map(Vec::len).sum()
 }
 
-/// What each family's live effect costs in VectorCraft's host on shapes of growing size: the instructions
-/// a run takes, against the anchors and bytes it writes. Printed on every run, for the preview levels.
+/// Each family's live effect at each preview level, on shapes of growing size, within VectorCraft's
+/// limits: every run finishes (`REQ-VC-003`). The test prints what each run takes against what VectorCraft
+/// allows it, and the anchors it writes, which the plug-in's budget (`apps/stitchcraft-vc-plugin/src/
+/// preview.rs`) is measured from.
 #[test]
-fn each_family_s_effect_prints_what_it_costs() {
+fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
     let square = |side: f64| shapes::rectangle(Rect::new(0.0, 0.0, side, side));
     let rails = |length: f64| lines(&[&[(0.0, 0.0), (length, 0.0)], &[(0.0, 20.0), (length, 20.0)]]);
-    let sizes: [(&str, Vec<(String, PathData)>); 3] = [
-        ("stroke", [20.0, 80.0, 320.0].map(|side| (format!("square {side} pt"), square(side))).to_vec()),
-        ("satin", [60.0, 240.0, 960.0].map(|length| (format!("rails {length} pt"), rails(length))).to_vec()),
-        ("fill", [20.0, 40.0, 80.0].map(|side| (format!("square {side} pt"), square(side))).to_vec()),
+    let squares = |sides: &[f64]| sides.iter().map(|side| (format!("square {side} pt"), square(*side))).collect::<Vec<_>>();
+    let runs = [
+        Runs { family: "stroke", levels: &["auto", "outline"], shapes: squares(&[20.0, 320.0, 5120.0]) },
+        Runs { family: "satin", levels: &["auto", "outline"], shapes: [60.0, 960.0, 15360.0].map(|length| (format!("rails {length} pt"), rails(length))).to_vec() },
+        Runs { family: "fill", levels: &["auto", "exact", "rows", "outline"], shapes: squares(&[10.0, 20.0, 40.0, 80.0, 160.0, 320.0, 640.0]) },
     ];
-    for (family, shapes) in sizes {
+    for Runs { family, levels, shapes } in runs {
         let plugin = Plugin::load(&module(family), Limits::default()).unwrap();
-        let settings: &[(&str, Value)] = if family == "fill" {
-            &[("defaults", json!({})), ("no underpath", json!({"underpath": false, "underlay_underpath": false}))]
-        } else {
-            &[("defaults", json!({}))]
-        };
-        for (setting, set) in settings {
-            let params = default_params(&plugin, set);
+        for level in levels {
+            let params = default_params(&plugin, &json!({"preview_level": level}));
             let mut costs = Vec::new();
             for (name, path) in &shapes {
                 let input = effect_input(path, json!({}));
-                let limits = Limits { fuel_base: 1 << 36, fuel_per_byte: 0, ..Limits::default() };
-                let output = plugin.run_limited(&input, &params, &limits).unwrap();
+                let allowed = Limits::default().fuel_base + Limits::default().fuel_per_byte * input.len() as u64;
+                let output = plugin.run(&input, &params).unwrap_or_else(|e| panic!("{family} {level} {name}: {e}"));
                 let used = fuel(&plugin, &input, &params);
-                costs.push(format!("{name}: {} anchors, {} bytes, {used} instructions", anchors(&output), output.len()));
+                let shown = serde_json::from_slice::<Value>(&output).ok().and_then(|v| v["error"].as_str().map(|e| e.chars().take(40).collect::<String>()));
+                let what = shown.map_or_else(|| format!("{} anchors", anchors(&output)), |error| format!("error {error}…"));
+                costs.push(format!("{name}: {what}, {used} of {allowed}"));
             }
-            println!("::notice title={family} effect costs, {setting}::{}", costs.join("; "));
+            println!("::notice title={family} {level}::{}", costs.join("; "));
         }
     }
+}
+
+/// A family's preview runs: the levels it shows each shape at.
+struct Runs {
+    family: &'static str,
+    levels: &'static [&'static str],
+    shapes: Vec<(String, PathData)>,
 }

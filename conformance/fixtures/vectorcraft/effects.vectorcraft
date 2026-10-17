@@ -64,7 +64,8 @@
                     "params": {
                       "fill_method": "auto_fill",
                       "row_spacing_mm": 0.3,
-                      "fill_underlay": true
+                      "fill_underlay": true,
+                      "preview_level": "rows"
                     }
                   },
                   {

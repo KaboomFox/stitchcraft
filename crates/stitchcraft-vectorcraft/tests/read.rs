@@ -242,6 +242,7 @@ fn req_vc_004_effects_say_how_an_object_sews() {
     let fill = element(&read, "vc:50:fill");
     assert!(matches!(fill.shape, Shape::Fill { .. }));
     assert_eq!(fill.thread.color, Rgb::new(255, 0, 0));
+    // Its preview level is the plug-in's, and not a setting of the element.
     let params: Vec<(&str, &str)> = fill.params.iter().collect();
     assert_eq!(params, [("fill_method", "auto_fill"), ("fill_underlay", "true"), ("row_spacing_mm", "0.3")]);
     let stroke = element(&read, "vc:50:stroke");

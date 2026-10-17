@@ -18,6 +18,7 @@
 
 pub mod effect;
 pub mod manifest;
+pub mod preview;
 
 mod abi;
 
