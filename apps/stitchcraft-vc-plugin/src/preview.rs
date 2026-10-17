@@ -2,26 +2,30 @@
 //!
 //! **The budget.** VectorCraft lets a live effect run 50 million instructions, and 4,000 more for each byte
 //! of its input, and stops it there ([`FUEL_BASE`], [`FUEL_PER_BYTE`]). The engine counts its own work in
-//! units, and the contract tests measure what a unit costs in VectorCraft's host
-//! (`compat/vc-contract`): a few hundred to a few thousand instructions, by the kind of work
-//! ([`per_unit`]). So the effect turns the instructions it has left, after reading its input, into a
-//! budget of units and of needle points for the engine. When the engine runs out of one, the effect shows
-//! less, rather than being stopped by VectorCraft.
+//! units, and the contract tests measure what a unit costs in VectorCraft's host (`compat/vc-contract`).
+//! The effect turns the instructions it has left, after reading its input, into a budget of units and of
+//! needle points for the engine, and shows less when the engine runs out, rather than be stopped.
 //!
 //! **Levels** (`preview_level`, [`Level`]). *Exact* shows every stitch. *Rows* shows a fill's top rows,
-//! one ribbon for each row segment, which costs a small part of sewing it: where its stitches lie and
-//! which way they run, without the stitches, the underlay or the needle's travel. *Outline* shows the
-//! object's path, as lines for a stroke or a satin column and as ribbons for a fill, with the fill's
-//! direction hatched across it every few millimetres. *Auto*, the default, shows the most the budget
-//! allows: exact, then rows for a fill, then the outline, each given its share of the budget, so that the
-//! next always has what it needs when one runs out. A level the user picks gets the whole budget, and
-//! when that is not enough the effect says which level to pick instead.
+//! one ribbon for each row segment: where its stitches lie and which way they run, without the stitches,
+//! the underlay or the needle's travel, for a small part of the work. *Outline* shows the object's path,
+//! as lines for a stroke or a satin column and as ribbons for a fill, hatched in the fill's direction every
+//! few millimetres. *Auto*, the default, shows a stroke or a satin column exactly and a fill by its rows,
+//! and the outline when that costs too much. A level the user picks gets the whole budget, and when that
+//! is not enough the effect names a cheaper one (`SC-I0810`).
 //!
-//! **Where the numbers come from.** Spike M0.6 measured reading JSON at 512 instructions a byte. M6.3
-//! measured the rest on the shapes the contract tests run, every one in VectorCraft's host, and each
-//! constant here is the largest it measured, with a margin. The contract tests fail when a level takes
-//! more than VectorCraft allows, which is when a constant needs measuring again
-//! (`docs/src/design/vectorcraft-integration.md`, live-effect previews).
+//! **Why auto shows a fill's rows.** A stroke's work costs about 880 instructions a unit and a satin
+//! column's 4,730, on every shape measured, so a budget of units bounds their exact previews. A fill's
+//! costs from 1,900 to 5,300 by the part of the work, and sewing a 7 mm square takes 26 million: an exact
+//! preview of a fill fits only when it is small, and no budget of units can tell beforehand. So a fill's
+//! exact preview is the user's to pick, with all that VectorCraft allows, which stops one that needs more
+//! with its own error.
+//!
+//! **Where the numbers come from.** Spike M0.6 measured reading JSON at 512 instructions a byte, and M6.3
+//! the rest, in VectorCraft's host, on the shapes the contract tests run. Each constant here is the
+//! largest measured, with a margin. The contract tests fail when a level takes more than VectorCraft
+//! allows, which is when a constant needs measuring again (`docs/src/design/vectorcraft-integration.md`,
+//! live-effect previews).
 
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix};
 use stitchcraft_engine::design::{DesignSettings, Element, Shape};
@@ -126,14 +130,12 @@ fn preview(family: Family, effect: &Effect, spend: u64) -> Shown {
     }
     let tenths = |n: u64| spend.saturating_mul(n) / 10;
     match (Level::read(effect.preview_level.as_deref()), family) {
-        (Level::Exact, _) => exact(family, element, spend),
+        (Level::Exact, _) => exact(family, element, None),
         (Level::Rows, Family::Fill) => fill_rows(element, spend),
         // A stroke's and a satin column's previews offer no rows.
         (Level::Outline | Level::Rows, _) => outline(family, element, spend),
-        (Level::Auto, Family::Fill) => {
-            exact(family, element, tenths(7)).or(|| fill_rows(element, tenths(2))).or(|| outline(family, element, tenths(1)))
-        }
-        (Level::Auto, Family::Stroke | Family::Satin) => exact(family, element, tenths(9)).or(|| outline(family, element, tenths(1))),
+        (Level::Auto, Family::Fill) => fill_rows(element, tenths(8)).or(|| outline(family, element, tenths(2))),
+        (Level::Auto, Family::Stroke | Family::Satin) => exact(family, element, Some(tenths(9))).or(|| outline(family, element, tenths(1))),
     }
 }
 
@@ -147,11 +149,15 @@ impl Shown {
     }
 }
 
-/// Every stitch of `element`, of `family`, within `spend` instructions: nine tenths for the engine's work
-/// and a tenth for writing the needle points.
-fn exact(family: Family, element: &Element, spend: u64) -> Shown {
-    let anchors = if family == Family::Fill { RIBBON_ANCHORS } else { 1 };
-    let budget = Budget { max_work: spend / 10 * 9 / per_unit(family), max_stitches: points(spend / 10 / (PER_ANCHOR * anchors)) };
+/// Every stitch of `element`, of `family`: within `spend` instructions, nine tenths for the engine's work
+/// and a tenth for writing the needle points, for a family whose work [`per_unit`] prices; or else within
+/// what VectorCraft allows, which stops a run that needs more.
+fn exact(family: Family, element: &Element, spend: Option<u64>) -> Shown {
+    let budget = match (spend, per_unit(family)) {
+        // A stroke's and a satin column's needle points are an anchor each.
+        (Some(spend), Some(per_unit)) => Budget { max_work: spend / 10 * 9 / per_unit, max_stitches: points(spend / 10 / PER_ANCHOR) },
+        _ => Budget::DEFAULT,
+    };
     let generation = generate(element, &DesignSettings::default(), REFERENCE, &Neighbours::default(), &budget);
     if spent(&generation.diagnostics) {
         return Shown::TooCostly;
@@ -214,13 +220,14 @@ fn writing(count: usize, anchors: u64) -> u64 {
 }
 
 /// The instructions the engine runs for each unit of work it charges, sewing an element of `family`,
-/// measured in VectorCraft's host with a margin. A fill's work is at up to 2,800 a unit before the needle's
-/// travel under its rows, which is at about 1,900; a budget that runs out runs out early, in the dearer work.
-fn per_unit(family: Family) -> u64 {
+/// measured in VectorCraft's host with a margin: 880 for a stroke and 4,730 for a satin column, the same
+/// on every shape measured. `None` for a fill, whose units cost from 1,900 to 5,300 instructions by the
+/// part of the work, so that no one price bounds a fill's exact preview.
+fn per_unit(family: Family) -> Option<u64> {
     match family {
-        Family::Stroke => 1_100,
-        Family::Satin => 5_500,
-        Family::Fill => 3_200,
+        Family::Stroke => Some(1_100),
+        Family::Satin => Some(5_500),
+        Family::Fill => None,
     }
 }
 
@@ -314,9 +321,9 @@ mod tests {
 
     #[test]
     fn req_vc_003_auto_shows_the_most_the_budget_allows() {
-        // A 3.5 mm fill exactly, a 28 mm fill by its rows, and a 90 cm one by its outline.
-        assert_eq!(level(&shown(Family::Fill, &square(10.0), "auto")), Some(Level::Exact));
-        assert_eq!(level(&shown(Family::Fill, &square(80.0), "auto")), Some(Level::Rows));
+        // A fill by its rows, a 3.5 mm one as a 90 cm one, which shows its outline when they cost too much.
+        assert_eq!(level(&shown(Family::Fill, &square(10.0), "auto")), Some(Level::Rows));
+        assert_eq!(level(&shown(Family::Fill, &square(1280.0), "auto")), Some(Level::Rows));
         assert_eq!(level(&shown(Family::Fill, &square(2560.0), "auto")), Some(Level::Outline));
         // A stroke and a satin column exactly, and a stroke 36 m long by its outline.
         assert_eq!(level(&shown(Family::Stroke, &square(320.0), "auto")), Some(Level::Exact));
@@ -327,9 +334,11 @@ mod tests {
     #[test]
     fn req_vc_003_a_level_the_user_picks_gets_the_whole_budget() {
         // Rows that auto's share cannot afford, the whole budget can.
-        assert_eq!(level(&shown(Family::Fill, &square(1280.0), "auto")), Some(Level::Outline));
-        assert_eq!(level(&shown(Family::Fill, &square(1280.0), "rows")), Some(Level::Rows));
+        assert_eq!(level(&shown(Family::Fill, &square(1600.0), "auto")), Some(Level::Outline));
+        assert_eq!(level(&shown(Family::Fill, &square(1600.0), "rows")), Some(Level::Rows));
         assert_eq!(level(&shown(Family::Fill, &square(80.0), "outline")), Some(Level::Outline));
+        // A fill's exact preview has all VectorCraft allows: natively, all there is.
+        assert_eq!(level(&shown(Family::Fill, &square(80.0), "exact")), Some(Level::Exact));
         // A stroke's outline is its path as lines, a fill's as ribbons, hatched.
         let Shown::Drawn(_, json) = shown(Family::Stroke, &square(80.0), "outline") else { panic!("no outline") };
         let lines: Value = serde_json::from_slice(&json).unwrap();
@@ -352,11 +361,10 @@ mod tests {
         assert_eq!(text(said(Family::Satin, Level::Exact)), format!("{} Set its preview level to `outline`.", start("exact")));
         assert_eq!(text(said(Family::Stroke, Level::Outline)), format!("{} The command line's preview shows its stitches.", start("outline")));
         assert_eq!(text(said(Family::Fill, Level::Auto)), format!("{} The command line's preview shows its stitches.", start("auto")));
-        // As a run says it: a fill too large to sew exactly, at the level picked.
-        let (input, params) = (input(&square(80.0)), params_with(Family::Fill, "exact"));
+        // As a run says it: rows too costly at the level picked, and auto with nothing to spend.
+        let (input, params) = (input(&square(2560.0)), params_with(Family::Fill, "rows"));
         let effect = read_effect(Family::Fill, &input, &params, &Budget::DEFAULT).unwrap();
-        assert_eq!(text(show(Family::Fill, &effect, spendable(input.len(), params.len()))), text(said(Family::Fill, Level::Exact)));
-        // Auto, with nothing to spend.
+        assert_eq!(text(show(Family::Fill, &effect, spendable(input.len(), params.len()))), text(said(Family::Fill, Level::Rows)));
         let auto = read_effect(Family::Fill, &input, &params_with(Family::Fill, "auto"), &Budget::DEFAULT).unwrap();
         assert_eq!(text(show(Family::Fill, &auto, 0)), text(said(Family::Fill, Level::Auto)));
     }
