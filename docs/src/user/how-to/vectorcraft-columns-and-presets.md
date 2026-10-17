@@ -32,18 +32,19 @@ A graphic style keeps an appearance, StitchCraft's effects included:
 2. Choose **Window › Graphic Styles › New Graphic Style**.
 3. Select other objects and click the style in the Graphic Styles panel.
 
-Each object gets a copy of the effect, with the style's parameters, and sews with them. A style applied to
-a group or a layer puts its effects on the group: they reach every path inside it, and each sews in its
-own colour. Keep StitchCraft's effects at one level, though. A path that has its own StitchCraft effect
-inside such a group, or sits inside 2 such groups, is drawn as one effect run on the stitches of the other.
-It sews as the nearest effect says, and the command line warns about it (`SC-W0807`). Alt-clicking a style
-adds its effects to the object's own, and an object with 2 fill effects sews twice.
+Each object gets a copy of the effect, with the style's parameters, and sews with them. A style applied
+to a group or a layer puts its effects on the group, and every path inside it sews with them. Each sews
+in its own colour, or the style's where it has none. Keep StitchCraft's effects at one level, though. A
+path that has its own StitchCraft effect inside such a group, or sits inside 2 such groups, is drawn as
+one effect run on the stitches of the other. It sews as the nearest effect says, and the command line
+warns about it (`SC-W0807`). Alt-clicking a style adds its effects to the object's own, and an object
+with 2 fill effects sews twice.
 
 ## Turn a preview into paths
 
 **Object › Expand Appearance** turns what an effect shows into ordinary objects, with strokes outlined.
-Those objects are the shapes the preview draws, and they sew differently from the effect. Expand a copy for
-a picture of the stitches, and keep the original to sew.
+Those objects are the shapes the preview draws, and they sew differently from the effect. Expand a copy
+for a picture of the stitches, and keep the original to sew.
 
 ## Not in VectorCraft yet
 

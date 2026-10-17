@@ -436,6 +436,28 @@ fn req_vc_006_a_group_s_effects_sew_each_path_inside_it() {
 }
 
 #[test]
+fn req_vc_006_a_path_without_paint_takes_its_thread_from_the_group_whose_effect_it_sews() {
+    // A style made from a painted object paints the group it is applied to, and VectorCraft draws the paths
+    // inside, as the effect changes them, in the group's paint. A clipping path is the clip's outline, and
+    // VectorCraft draws no art of it: no effect reaches it.
+    let green = r#"{"kind": "stroke", "width": 1, "paint": {"type": "solid", "color": {"model": "rgb", "r": 0, "g": 1, "b": 0}}}"#;
+    let line = |id: u32, extra: &str| {
+        format!(r#"{{"id": {id}, "kind": {{"type": "path", {extra} "path": {{"subpaths": [{{"anchors": [{{"p": [0, 0]}}, {{"p": [50, 0]}}]}}]}}}}}}"#)
+    };
+    let group = format!(
+        r#"{{"id": 2, "appearance": {{"items": [{green}], "effects": [{{"id": "plugin.dev.stitchcraft.stroke"}}]}},
+            "kind": {{"type": "group", "clip": true, "children": [{}, {}]}}}}"#,
+        line(3, r#""clipping": true,"#),
+        line(4, "")
+    );
+    let read = read_ok(&document(4, &group));
+    assert_eq!(ids(&read), ["vc:4:stroke"]);
+    assert_eq!(element(&read, "vc:4:stroke").thread.color, Rgb::new(0, 255, 0));
+    // The group's clipping and its paint, which StitchCraft doesn't sew as an element of its own, are named.
+    assert_eq!(said(&read), [(Code::VcFeatureIgnored, "vc:2".to_string()), (Code::VcFeatureIgnored, "vc:2".to_string())]);
+}
+
+#[test]
 fn diag_sc_w0807_a_path_stitchcraft_effects_reach_from_2_levels_sews_by_the_nearest() {
     // VectorCraft runs a group's effect on each path inside, then the path's own on what that drew: an
     // effect on another's stitches, which no machine sews. The nearest effects say how the path sews.
