@@ -259,7 +259,7 @@ fn req_vc_004_without_effects_an_object_sews_its_fills_then_its_strokes() {
 }
 
 #[test]
-fn req_vc_004_an_effect_s_thread_is_the_first_paint_vectorcraft_draws() {
+fn req_vc_004_an_effect_s_thread_is_a_paint_vectorcraft_draws() {
     // A gradient without stops and a stroke of width 0 draw nothing, so the thread is the next paint's.
     let blue = r#"{"kind": "fill", "paint": {"type": "solid", "color": {"model": "rgb", "r": 0, "g": 0, "b": 1}}}"#;
     let nothing = r#"{"kind": "fill", "paint": {"type": "gradient", "gradient": {"kind": "Linear", "stops": []}}},
@@ -272,6 +272,34 @@ fn req_vc_004_an_effect_s_thread_is_the_first_paint_vectorcraft_draws() {
     assert!(read.design.elements().iter().all(|e| e.thread.color == Rgb::new(0, 0, 255)), "{:?}", read.design.elements());
     assert!(element(&read, "vc:2:fill").params.iter().next().is_none());
     assert_eq!(said(&read), []);
+}
+
+#[test]
+fn req_vc_004_an_effect_takes_the_topmost_opaque_paint() {
+    // VectorCraft paints an appearance's items in their order, the last on top. One that lets those under
+    // it show, of opacity under 1, gives way to them, and gives the thread only when no other does.
+    let fill = |rgb: &str, opacity: f64| {
+        format!(r#"{{"kind": "fill", "opacity": {opacity}, "paint": {{"type": "solid", "color": {{"model": "rgb", {rgb}}}}}}}"#)
+    };
+    let (red, blue) = (r#""r": 1, "g": 0, "b": 0"#, r#""r": 0, "g": 0, "b": 1"#);
+    let filled = |id: u32, items: &[String]| {
+        let effect = r#"[{"id": "plugin.dev.stitchcraft.fill"}]"#;
+        square(id, f64::from(id) * 50.0, 0.0, &format!(r#"{{"items": [{}], "effects": {effect}}}"#, items.join(",")))
+    };
+    let objects = [filled(2, &[fill(red, 1.0), fill(blue, 1.0)]), filled(3, &[fill(red, 1.0), fill(blue, 0.5)]), filled(4, &[fill(blue, 0.5)])];
+    let read = read_ok(&document(4, &objects.join(",")));
+    let colours: Vec<Rgb> = read.design.elements().iter().map(|e| e.thread.color).collect();
+    assert_eq!(colours, [Rgb::new(0, 0, 255), Rgb::new(255, 0, 0), Rgb::new(0, 0, 255)]);
+    // A satin column follows the topmost stroke: a white line drawn over a wider black one.
+    let gray = |k: f64, width: f64| {
+        format!(r#"{{"kind": "stroke", "width": {width}, "paint": {{"type": "solid", "color": {{"model": "gray", "k": {k}}}}}}}"#)
+    };
+    let satin = format!(r#"{{"items": [{}, {}], "effects": [{{"id": "plugin.dev.stitchcraft.satin"}}]}}"#, gray(1.0, 8.503_937), gray(0.0, 2.0));
+    let read = read_ok(&document(4, &line(5, "", &satin)));
+    let column = element(&read, "vc:5:satin");
+    let Shape::Stroke { width, .. } = column.shape else { panic!("{:?}", column.shape) };
+    assert!((width.get() - 2.0 * MM).abs() < 1e-9, "{width:?}");
+    assert_eq!(column.thread.color, Rgb::new(255, 255, 255));
 }
 
 #[test]
