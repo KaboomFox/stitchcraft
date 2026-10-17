@@ -33,7 +33,7 @@ use crate::writer::Geometry;
 
 /// How wide a fill's ribbons are, in millimetres: half a thread, so that rows a quarter of a millimetre
 /// apart still show as rows.
-const RIBBON_MM: f64 = 0.2;
+pub const RIBBON_MM: f64 = 0.2;
 
 /// What a live effect is given, read: the element its family sews, and what its preview should show.
 #[derive(Clone, Debug, PartialEq)]

@@ -235,11 +235,12 @@ fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
         for (k, (name, path)) in shapes.iter().enumerate() {
             let input = effect_input(path, json!({}));
             let allowed = Limits::default().fuel_base + Limits::default().fuel_per_byte * input.len() as u64;
-            let used = fuel(&plugin, &input, &params);
+            // Measured only when it finishes: a run VectorCraft stops may run on far longer without a limit.
             let what = match plugin.run(&input, &params) {
                 Ok(output) => {
                     let error = serde_json::from_slice::<Value>(&output).ok().and_then(|v| v["error"].as_str().map(str::to_string));
-                    error.map_or_else(|| format!("{} anchors", anchors(&output)), |error| format!("error {}…", error.chars().take(60).collect::<String>()))
+                    let shown = error.map_or_else(|| format!("{} anchors", anchors(&output)), |error| format!("error {}…", error.chars().take(60).collect::<String>()));
+                    format!("{shown}, {} of {allowed}", fuel(&plugin, &input, &params))
                 }
                 Err(e) if k < finishing => {
                     failed.push(format!("{family} {level} {name}"));
@@ -247,7 +248,7 @@ fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
                 }
                 Err(e) => format!("stopped ({e})"),
             };
-            costs.push(format!("{name}: {what}, {used} of {allowed}"));
+            costs.push(format!("{name}: {what}"));
         }
         println!("::notice title={family} {level}::{}", costs.join("; "));
     }

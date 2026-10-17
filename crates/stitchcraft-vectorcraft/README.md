@@ -13,7 +13,9 @@ visibility. Fills and strokes give threads in VectorCraft's colours, CMYK, grey 
 (`REQ-VC-004`, `src/document.rs`). The JSON is read into the few fields the adapter uses (`src/wire.rs`).
 M6.2 adds what a live effect reads and writes (`src/effect.rs`). It reads paths (`src/geometry.rs`) and
 parameter values (`src/values.rs`) with a document's code, and an object sews alike from a file and in
-its preview.
+its preview. The plug-in's `preview_level` is kept apart from the element's settings, in a file as in a
+live effect (`PREVIEW_LEVEL`). From M6.3 the geometry is written by hand, to a thousandth of a point
+(`src/writer.rs`): stitches as lines or as a fill's ribbons, and any segments as ribbons.
 Design: `docs/src/design/vectorcraft-integration.md#reading-vectorcraft-files-stitchcraft-vectorcraft`.
 The VectorCraft versions it reads are proven by `docs/src/design/compatibility-gate.md`.
 

@@ -115,6 +115,9 @@ pub stitchcraft_engine::generate::Generated::stitch_type: stitchcraft_params::st
 pub struct stitchcraft_engine::generate::Generation
 pub stitchcraft_engine::generate::Generation::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub stitchcraft_engine::generate::Generation::generated: core::option::Option<stitchcraft_engine::generate::Generated>
+pub struct stitchcraft_engine::generate::Rows
+pub stitchcraft_engine::generate::Rows::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub stitchcraft_engine::generate::Rows::segments: core::option::Option<alloc::vec::Vec<stitchcraft_engine::generators::tatami::rows::Segment>>
 pub struct stitchcraft_engine::generate::StrokeParams
 pub stitchcraft_engine::generate::StrokeParams::stroke_method: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 impl stitchcraft_engine::generate::StrokeParams
@@ -126,6 +129,7 @@ pub const stitchcraft_engine::generate::FILL_METHODS: &[stitchcraft_params::spec
 pub const stitchcraft_engine::generate::STROKE_METHODS: &[stitchcraft_params::spec::ChoiceOption]
 pub fn stitchcraft_engine::generate::approach(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &stitchcraft_core::budget::Budget) -> core::option::Option<stitchcraft_engine::generators::Approach>
 pub fn stitchcraft_engine::generate::generate(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile, &stitchcraft_engine::generators::Neighbours, &stitchcraft_core::budget::Budget) -> stitchcraft_engine::generate::Generation
+pub fn stitchcraft_engine::generate::rows(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile, &stitchcraft_core::budget::Budget) -> stitchcraft_engine::generate::Rows
 pub fn stitchcraft_engine::generate::shortest_stitch(core::option::Option<stitchcraft_core::units::Mm>, &stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile) -> stitchcraft_core::units::Mm
 pub mod stitchcraft_engine::generators
 pub mod stitchcraft_engine::generators::manual
@@ -247,6 +251,7 @@ pub stitchcraft_engine::generators::tatami::sew::Travel::min_stitch: f64
 pub stitchcraft_engine::generators::tatami::sew::Travel::tolerance: f64
 pub stitchcraft_engine::generators::tatami::sew::Travel::underpath: bool
 pub fn stitchcraft_engine::generators::tatami::sew::tatami_fill(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::tatami::sew::Fill, core::option::Option<stitchcraft_core::units::Point>, core::option::Option<&stitchcraft_engine::generators::Approach>, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::generators::tatami::sew::top_rows(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::tatami::sew::Fill, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_engine::generators::tatami::rows::Segment>, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::tatami::stitches
 pub struct stitchcraft_engine::generators::tatami::stitches::Stitching
 pub stitchcraft_engine::generators::tatami::stitches::Stitching::grid: stitchcraft_engine::generators::tatami::rows::Grid

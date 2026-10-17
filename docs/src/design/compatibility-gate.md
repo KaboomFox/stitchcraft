@@ -35,12 +35,13 @@ checks:
 2. `vc_abi_version` is a version the host supports.
 3. Live effects run through `vectorcraft_plugins::effect::apply` on fixture geometry, finish within the
    host's limits, and return the expected preview geometry: paths of stitches for strokes and satin
-   columns and closed ribbons for fills, and from M6.3 each preview level's golden JSON, tolerance 1 µm.
-   When an effect can't show stitches, its last error says why.
+   columns and closed ribbons for fills. When an effect can't show stitches, its last error says why.
+   Which level a shape shows, and the geometry of each, the plug-in's native tests check.
 4. Filters run and return valid objects.
 5. Error paths: invalid parameters are rejected by the host with the expected message.
 6. Budget: the *hello* plug-in's cost for each byte of JSON it reads and writes stays within a quarter
    above the costs [recorded for previews](vectorcraft-integration.md#live-effect-previews-within-v1-budgets).
+   Every preview level finishes on shapes of growing size, within VectorCraft's limits (`REQ-VC-003`).
    Each run prints the costs.
 
 `vectorcraft-plugins` depends only on `geom`, `color`, `doc` and `wasmi`, so this builds quickly.

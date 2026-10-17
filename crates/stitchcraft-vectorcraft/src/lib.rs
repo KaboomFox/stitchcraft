@@ -36,7 +36,7 @@ mod writer;
 
 pub use container::MAX_BYTES;
 pub use document::{VectorCraft, read};
-pub use effect::{Effect, effect_error, effect_lines, effect_output, effect_ribbons, read_effect};
+pub use effect::{Effect, RIBBON_MM, effect_error, effect_lines, effect_output, effect_ribbons, read_effect};
 
 /// The namespace of StitchCraft's VectorCraft plug-ins. A live effect's id is `plugin.`, this, a dot and
 /// its stitch family's id (`plugin.dev.stitchcraft.fill`), which is how a document records the effect.
