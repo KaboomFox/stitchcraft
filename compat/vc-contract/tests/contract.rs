@@ -214,6 +214,7 @@ fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
         Runs { family: "satin", levels: &["auto", "outline"], shapes: [60.0, 960.0, 15360.0].map(|length| (format!("rails {length} pt"), rails(length))).to_vec() },
         Runs { family: "fill", levels: &["auto", "exact", "rows", "outline"], shapes: squares(&[10.0, 20.0, 40.0, 80.0, 160.0, 320.0, 640.0]) },
     ];
+    let mut failed = Vec::new();
     for Runs { family, levels, shapes } in runs {
         let plugin = Plugin::load(&module(family), Limits::default()).unwrap();
         for level in levels {
@@ -222,15 +223,23 @@ fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
             for (name, path) in &shapes {
                 let input = effect_input(path, json!({}));
                 let allowed = Limits::default().fuel_base + Limits::default().fuel_per_byte * input.len() as u64;
-                let output = plugin.run(&input, &params).unwrap_or_else(|e| panic!("{family} {level} {name}: {e}"));
                 let used = fuel(&plugin, &input, &params);
-                let shown = serde_json::from_slice::<Value>(&output).ok().and_then(|v| v["error"].as_str().map(|e| e.chars().take(40).collect::<String>()));
-                let what = shown.map_or_else(|| format!("{} anchors", anchors(&output)), |error| format!("error {error}…"));
+                let what = match plugin.run(&input, &params) {
+                    Ok(output) => {
+                        let error = serde_json::from_slice::<Value>(&output).ok().and_then(|v| v["error"].as_str().map(str::to_string));
+                        error.map_or_else(|| format!("{} anchors", anchors(&output)), |error| format!("error {}…", error.chars().take(60).collect::<String>()))
+                    }
+                    Err(e) => {
+                        failed.push(format!("{family} {level} {name}"));
+                        format!("FAILED ({e})")
+                    }
+                };
                 costs.push(format!("{name}: {what}, {used} of {allowed}"));
             }
             println!("::notice title={family} {level}::{}", costs.join("; "));
         }
     }
+    assert!(failed.is_empty(), "past VectorCraft's limits: {failed:?}");
 }
 
 /// A family's preview runs: the levels it shows each shape at.
