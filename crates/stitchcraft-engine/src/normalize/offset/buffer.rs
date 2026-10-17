@@ -136,6 +136,7 @@ fn least_y(polygon: &Polygon) -> f64 {
 
 #[cfg(test)]
 mod tests {
+    use proptest::prelude::*;
     use stitchcraft_core::{Budget, SplitMix64};
 
     use super::*;
@@ -312,5 +313,50 @@ mod tests {
         assert_eq!(corners(&in_order(vec![square(0.0, 0.0), square(2.0 * SAME, -1.0)])), [(0.0, 0.0), (2.0 * SAME, -1.0)]);
         // Level at the same height, they keep their order, whichever lies farther left.
         assert_eq!(corners(&in_order(vec![square(SAME, 0.0), square(0.0, 0.0)])), [(SAME, 0.0), (0.0, 0.0)]);
+    }
+
+    /// A star round (`cx`, `cy`): a corner at each of `radii`, evenly round, clockwise in y-up axes when
+    /// `clockwise`, and closed.
+    fn star((cx, cy): (f64, f64), radii: &[f64], clockwise: bool) -> Vec<Point> {
+        let turn = if clockwise { -std::f64::consts::TAU } else { std::f64::consts::TAU };
+        let corner = |(k, r): (usize, &f64)| {
+            let (sin, cos) = stitchcraft_core::math::sin_cos(turn * k as f64 / radii.len() as f64);
+            Point::new(cx + r * cos, cy + r * sin).unwrap()
+        };
+        let ring: Vec<Point> = radii.iter().enumerate().map(corner).collect();
+        ring.iter().copied().chain(ring.first().copied()).collect()
+    }
+
+    /// A polygon with holes: a star 10 to 60 mm across with up to 3 small stars inside it as holes.
+    fn polygon_with_holes() -> impl Strategy<Value = Polygon> {
+        let hole = ((-1.5..1.5_f64, -1.5..1.5_f64), prop::collection::vec(0.5..2.5_f64, 3..12));
+        (prop::collection::vec(5.0..30.0_f64, 3..40), prop::collection::vec(hole, 0..4)).prop_map(|(radii, holes)| Polygon {
+            outline: star((0.0, 0.0), &radii, true),
+            holes: holes.iter().map(|(centre, radii)| star(*centre, radii, false)).collect(),
+        })
+    }
+
+    proptest! {
+        // Spike M0.7 ran this with PROPTEST_CASES=10000 (ADR-0005, criterion 1).
+        #[test]
+        fn any_polygon_with_holes_grows_and_shrinks_into_valid_parts(polygon in polygon_with_holes(), distance in -8.0..8.0_f64) {
+            // Within the work budget, and joined into rings: no panic, no hang, no bug.
+            let parts = buffer(&polygon, distance, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+            let bounds = Envelope::of(&polygon.outline);
+            let reach = distance.max(0.0) + 1e-6;
+            for part in &parts {
+                // Closed rings, outlines clockwise and holes counter-clockwise (y up), within reach of the
+                // polygon's bounds.
+                for (k, ring) in part.rings().enumerate() {
+                    prop_assert!(ring.len() >= 4 && ring.first() == ring.last(), "{ring:?}");
+                    prop_assert!((signed_area(ring) < 0.0) == (k == 0), "ring {k} turns the wrong way");
+                    let inside = |p: &Point| (bounds.min_x - reach..=bounds.max_x + reach).contains(&p.x()) && (bounds.min_y - reach..=bounds.max_y + reach).contains(&p.y());
+                    prop_assert!(ring.iter().all(inside), "{ring:?} outside {bounds:?}");
+                }
+            }
+            // Growing adds area, and shrinking takes it away.
+            let (before, after) = (polygon.area(), parts.iter().map(Polygon::area).sum::<f64>());
+            prop_assert!(if distance > 0.0 { after >= before - 1e-9 } else { after <= before + 1e-9 }, "{before} mm², {after} mm² by {distance}");
+        }
     }
 }
