@@ -4,10 +4,14 @@
 //! StitchCraft is deterministic (`docs/src/design/determinism.md`): the same design, profile, format and
 //! version give the same plan, bit for bit, on every platform. So a bundle holds exactly those — the design
 //! file itself, an SVG file or a VectorCraft document under a field named for its kind ([`Source`]), the
-//! profile's id, the format and the version — and what came of them: a digest of every
-//! entry of the plan, the machine file's size and digest, every diagnostic, and a panic's message if there
-//! was one. Replaying plans the design again through the same code as `stitch plan` ([`sew`]) and
-//! compares each of them (`REQ-CLI-001`).
+//! profile's id, the format and the version — and what came of them: a digest of every entry of the plan,
+//! the machine file's size and digest, every diagnostic, and a panic's message if there was one. Replaying
+//! plans the design again through the same code as `stitch plan` ([`sew`]) and compares each of them
+//! (`REQ-CLI-001`).
+//!
+//! Of a VectorCraft document, a bundle keeps the part its reader reads: its JSON, without the images and
+//! other data VectorCraft keeps after it. That part reads as the whole file does, keeps a bundle small
+//! enough to attach to an issue, and leaves the pictures a design was traced from out of it.
 //!
 //! `stitch plan` writes a bundle by itself when it finds a bug in StitchCraft — a failed plan check
 //! (`SC-E0009`) or a panic, which it catches with the design in hand, and `main` with [`guarded`] before
@@ -44,6 +48,10 @@ use crate::files;
 
 /// The bundle format this StitchCraft writes and replays.
 const BUNDLE_FORMAT: u32 = 1;
+
+/// The largest bundle a replay reads: a bundle can hold a design of [`files::MAX_READ`] bytes, twice as
+/// many in hexadecimal or in text with its characters escaped, and what was said of it (`REQ-CLI-005`).
+const BUNDLE_MAX: u64 = 3 * files::MAX_READ;
 /// The commit this StitchCraft was built from, or empty when it was not built from a git checkout.
 pub const COMMIT: &str = env!("STITCHCRAFT_COMMIT");
 /// Where bugs are reported.
@@ -114,9 +122,10 @@ struct Bundle {
     result: Record,
 }
 
-/// The design file in a bundle, under the fields of its kind: `svg` or `vectorcraft` for its text when it is
-/// UTF-8, `svg_hex` or `vectorcraft_hex` for its bytes in hexadecimal otherwise, such as a compressed
-/// VectorCraft document's. A bundle written before VectorCraft documents were read holds an SVG file.
+/// The design file in a bundle, the part of it its reader reads ([`Source::read_part`]), under the fields of
+/// its kind: `svg` or `vectorcraft` for its text when it is UTF-8, `svg_hex` or `vectorcraft_hex` for its
+/// bytes in hexadecimal otherwise, such as a compressed VectorCraft document's. A bundle written before
+/// VectorCraft documents were read holds an SVG file.
 #[derive(Debug, Serialize, Deserialize)]
 struct DesignRecord {
     /// The file's name, for people.
@@ -288,9 +297,10 @@ fn borrowed(sewn: &Result<Sewn, (String, Phase)>) -> Result<&Sewn, (&str, Phase)
 
 /// The bundle of `run` and what came of it.
 fn bundle(run: &Run, sewn: Result<&Sewn, (&str, Phase)>) -> Bundle {
-    let (text, hexed) = match std::str::from_utf8(run.design) {
+    let kept = run.source.read_part(run.design);
+    let (text, hexed) = match std::str::from_utf8(kept) {
         Ok(text) => (Some(text.to_string()), None),
-        Err(_) => (None, Some(hex(run.design))),
+        Err(_) => (None, Some(hex(kept))),
     };
     let ((svg, svg_hex), (vectorcraft, vectorcraft_hex)) = match run.source {
         Source::Svg => ((text, hexed), (None, None)),
@@ -309,7 +319,7 @@ fn bundle(run: &Run, sewn: Result<&Sewn, (&str, Phase)>) -> Bundle {
         design: DesignRecord {
             file,
             name: Some(run.name.to_string()),
-            sha256: hex(&Sha256::digest(run.design)),
+            sha256: hex(&Sha256::digest(kept)),
             svg,
             svg_hex,
             vectorcraft,
@@ -366,7 +376,7 @@ fn write(path: &Path, bundle: &Bundle) -> Result<(), String> {
 
 /// `stitch bug-report --replay BUNDLE`.
 fn replay(path: &Path) -> Outcome {
-    let bytes = match files::read_capped(path) {
+    let bytes = match files::read_at_most(path, BUNDLE_MAX) {
         Ok(bytes) => bytes,
         Err(e) => return Outcome { stdout: String::new(), stderr: format!("stitch: cannot read {}: {e}\n", path.display()), status: Status::Io },
     };

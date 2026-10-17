@@ -19,7 +19,8 @@ stitch bug-report design.svg --profile brother-pe800-4x4 --says "the zigzag's co
 It plans the design exactly as `stitch plan` does and writes `design.bug-report.json` next to it (`-o`
 names another file). The bundle holds:
 
-- your design file, whole, and the design name the machine file's label holds;
+- your design file, whole, or a VectorCraft document's JSON without the pictures after it, and the
+  design name the machine file's label holds;
 - the profile, the format (`--format pes|dst`, the profile's own by default) and the version of
   StitchCraft;
 - a digest of the plan's stitches, and the machine file's size and digest;
@@ -62,9 +63,10 @@ StitchCraft gives the same plan, bit for bit, for the same design, profile, form
 platform, so with the version that wrote the bundle, the replay reproduces it. With another version, what
 differs is listed under `then:` and `now:`: that is how to tell whether a bug is fixed. The exit status is
 1 when the bundle does not reproduce. The design is in the bundle's `design.svg` field, ready to save and
-open, or in `design.svg_hex` as hexadecimal when the file is not UTF-8 text, as a Latin-1 SVG is not. For a
-VectorCraft document the fields are `design.vectorcraft`, and `design.vectorcraft_hex` for one that
-VectorCraft compressed. A bundle also names the commit StitchCraft was built from, when it was built from
+open, or in `design.svg_hex` as hexadecimal when the file is not UTF-8 text, as a Latin-1 SVG is not. Of a
+VectorCraft document, the bundle keeps the part StitchCraft reads, in `design.vectorcraft`: its JSON,
+without the images and other data VectorCraft keeps after it. Compressed documents are kept whole, in
+`design.vectorcraft_hex`. A bundle also names the commit StitchCraft was built from, when it was built from
 a git checkout, which `stitch --version` shows too: until the first release, every build says the same
 version.
 

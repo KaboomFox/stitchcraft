@@ -5,14 +5,14 @@ The command-line tool: the only StitchCraft component that touches the file syst
 
 | Command | Since | What it does |
 |---|---|---|
-| `stitch plan design.svg -o design.pes --preview design.png --report design.json` | M3.9 | Plans a design for the machine `--profile` names, `brother-pe800-5x7` by default, and writes the machine file (`--format pes\|dst` overrides the extension). `--preview` adds a picture of what it will sew, and `--report` a JSON report. Prints what was said about the design, element by element. The design is an SVG file, or from M6.5 a VectorCraft document (`.vectorcraft`, or `.drawcraft` from before VectorCraft's rename), and `stitch export` is another name for the command |
+| `stitch plan design.svg -o design.pes --preview design.png --report design.json` | M3.9 | Plans a design for the machine `--profile` names, `brother-pe800-5x7` by default, and writes the machine file (`--format pes\|dst` overrides the extension). `--preview` adds a picture of what it will sew, and `--report` a JSON report. Prints what was said about the design, element by element. The design is an SVG file, or from M6.5 a VectorCraft document (`.vectorcraft`, `.drawcraft` from before VectorCraft's rename, or a `.vctemplate` template), and `stitch export` is another name for the command |
 | `stitch testsheet TS-01 -o TS-01.pes` | M1.8 | Writes a machine-checkpoint test sheet, checked against the profile of the hoop it is for unless `--profile` names another (`--list` lists them, and `--format pes\|dst` overrides the extension). Prints its SHA-256, size and counts, its threads in the order they are sewn, and what to check after sewing |
 | `stitch inspect design.pes --profile brother-pe800-5x7` | M2.1 | Reads any PES, PEC or DST file and describes it: size, counts, extent, stitch lengths, threads; with `--profile`, the hoop check and stitches outside the machine's limits |
 | `stitch preview design.pes -o design.png` | M2.7 | Draws any PES, PEC or DST file as it will sew (`--style realistic\|simple`, `--scale` in pixels per millimetre) |
 | `stitch convert design.dst -o design.pes` | M2.7 | Rewrites a machine file in another format (`--format pes\|dst` overrides the extension); says what the new format cannot store |
 | `stitch profiles` | M1.8 | The built-in machine profiles and the evidence behind their values |
 | `stitch explain SC-W0702` | M1.8 | A diagnostic's explanation, from the registry |
-| `stitch bug-report design.svg --says "…"` | M3.10 | Writes a bug-report bundle, which keeps the design, an SVG file or a VectorCraft document, with the profile, format and version it was planned with, and digests of what came of them (`--replay BUNDLE` plans it again and compares) |
+| `stitch bug-report design.svg --says "…"` | M3.10 | Writes a bug-report bundle, which keeps the design, an SVG file or the part of a VectorCraft document its reader reads, with the profile, format and version it was planned with, and digests of what came of them (`--replay BUNDLE` plans it again and compares) |
 
 Coming with their milestones: `import-inkstitch` (M8), `conformance run`.
 
@@ -31,7 +31,7 @@ Coming with their milestones: `import-inkstitch` (M8), `conformance run`.
   printing, so commands are tested without a terminal. `commands/mod.rs` holds what several share:
   reading a machine file, writing a file, the report lines and the diagnostics' rendering.
 - `files.rs` — files are written under a temporary name and renamed into place, so a machine never sees
-  half a file, and reads stop past 64 MiB.
+  half a file, and reads stop past a cap.
 
 ## Invariants
 
@@ -49,7 +49,8 @@ Coming with their milestones: `import-inkstitch` (M8), `conformance run`.
   each other or as a file it reads (`REQ-CLI-007`).
 - Says what is in a file it wrote by reading the file back: the summary's size and counts, the report's
   and the picture (`REQ-CLI-008`).
-- Reads no more than 64 MiB from any path, a pipe or a device included (`REQ-CLI-005`).
+- Reads no more than 64 MiB from any path, a pipe or a device included, and 192 MiB from a bug-report
+  bundle it replays, which can hold a design that large in hexadecimal (`REQ-CLI-005`).
 - A panic anyway is a bug: `stitch plan` catches it once it has read the design, and `main` before then
   and in the other commands (`commands::bug_report::guarded`). Each says so, and `stitch plan` writes a
   bug-report bundle that says where the panic came, which a replay reruns.

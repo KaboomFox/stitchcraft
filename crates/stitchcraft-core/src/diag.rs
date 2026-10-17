@@ -566,8 +566,8 @@ registry! {
     /// around it, or 2 groups', sews as the nearest say: VectorCraft runs each on the stitches the one
     /// before drew, which no machine sews. A start or end marker, an object named `stitch:start` or
     /// `stitch:end`, is never stitched, and StitchCraft does not yet start or end a shape where one says.
-    /// A name that begins with `stitch:` and names no marker StitchCraft reads is said too, and its object
-    /// is stitched as it is drawn.
+    /// A name that begins with `stitch:` and names no marker StitchCraft reads is said too, as is a group or
+    /// a layer named as a marker, which only a shape can be: the name is ignored.
     ///
     /// The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
     /// of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
@@ -605,8 +605,8 @@ registry! {
     VcEffectUnchanged = "SC-I0810", Info, "VectorCraft live effect leaves the object as it is";
 
     /// An object or a layer is left out because its name asks for it: the name is `stitch:ignore`, alone
-    /// or followed by a space and a note, in any mix of upper and lower case. Designs keep placement lines,
-    /// templates and notes this way, in the drawing but out of the sew-out, as Ink/Stitch's ignore
+    /// or followed by white space and a note, in any mix of upper and lower case. Designs keep placement
+    /// lines, templates and notes this way, in the drawing but out of the sew-out, as Ink/Stitch's ignore
     /// commands keep them. Everything in a group or a layer so named is left out with it.
     ///
     /// The message names what was left out. To stitch it, rename it in VectorCraft's Layers panel.

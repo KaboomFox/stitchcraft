@@ -136,9 +136,10 @@ it spend, is its preview level (below).
 4. `stitch export design.vectorcraft -o design.pes --preview design.png` writes the machine file, for the
    machine `--profile` names (`brother-pe800-5x7` by default), and a picture of what will sew. It says
    what the reader left out or changed, with the engine's warnings. `stitch export` is another name for
-   `stitch plan`, which reads a VectorCraft document as it reads an SVG file (`REQ-VC-008`), and
-   `--report` adds the JSON report. A bug-report bundle includes the document, and its replay reads it the
-   same way.
+   `stitch plan`, which reads a VectorCraft document (`.vectorcraft`, `.drawcraft`, or a `.vctemplate`
+   template) as it reads an SVG file (`REQ-VC-008`), and `--report` adds the JSON report. A bug-report
+   bundle includes the part of the document the reader reads, which is its JSON without the images after
+   it. Its replay reads that part the same way.
 
 Stitching order is paint order (bottom first). Hidden objects are skipped, as VectorCraft draws nothing
 for them, and locked objects are stitched. Thread colours come from the object's fill for a fill, and
@@ -247,18 +248,22 @@ colour, which they want anyway for export.
 
 Ink/Stitch's commands are symbols linked to an object, and ABI v1 has nothing to link. `trim_after` and
 `stop_after` are ordinary parameters. StitchCraft reads the others from names, an object's or a layer's,
-which VectorCraft's Layers panel sets (`REQ-VC-009`). A name is read when it begins with `stitch:`, in
-any mix of upper and lower case. Its word ends at the first space, so a note can follow it:
+which VectorCraft's Layers panel sets (`REQ-VC-009`). A name is read when it begins with `stitch:`,
+after any white space, in any mix of upper and lower case. Its word ends at the first white space, so a
+note can follow it:
 
 | Name | Ink/Stitch's command | What StitchCraft does |
 |---|---|---|
 | `stitch:ignore` | `ignore_object`, `ignore_layer` | Leaves the object or the layer out with everything in it, and lists it with `SC-I0811` |
-| `stitch:start`, `stitch:end` | `starting_point`, `ending_point` | Marks where the fill or the satin column grouped with it starts or ends, and never stitches the marker. Until the generators start and end at hints (`REQ-GEN-001`, M8), they choose where, and `SC-W0807` names the marker |
-| Any other word after `stitch:` | | Stitches the object as it is drawn. `SC-W0807` names it, in case the word is a misspelt marker |
+| `stitch:start`, `stitch:end` | `starting_point`, `ending_point` | Marks where the fill or the satin column grouped with it starts or ends, and never stitches the marker. Until the generators start and end at hints (`REQ-GEN-001`, M8), they choose where, and `SC-W0807` names the marker. A group or a layer is never a marker: `SC-W0807` names it, and what it holds is read as under any other name |
+| Any other word after `stitch:` | | Ignores the name, and `SC-W0807` names the object, in case the word is a misspelt marker |
 
-Hiding an object leaves it out too, without a word. The adapter reads a name after it leaves out what
-VectorCraft draws nothing of, so a name on an invisible object says nothing. ABI v2's sixth proposal
-would let a live effect read the markers beside its object, so its preview could start and end at them.
+Hiding an object leaves it out too, without a word, and a name on a hidden object says nothing. A live
+effect is given its object's geometry alone (VectorCraft's `docs/plugins.md`, Input), never its name. So
+VectorCraft's preview still shows the stitches of an object these names leave out, a marker included,
+when it has a StitchCraft effect or is in a group that has one. `stitch export` leaves them out. ABI v2's
+sixth proposal would let a live effect read the markers beside its object, so its preview could start and
+end at them.
 
 ### Reading `.vectorcraft` files (`stitchcraft-vectorcraft`)
 
@@ -275,12 +280,13 @@ JSON ends at the first one, and nothing after the marker is read. The top level 
 alike: points as `{"x", "y"}` or `[x, y]` in any of them. A newer format is read as far as it goes, with
 `SC-W0803`, where VectorCraft's own readers refuse it.
 
-**Limits.** At most 64 MiB of JSON, unpacked, as for an SVG file. A gzip stream is unpacked only up to
-the marker, and no further than the limit. Nesting deeper than the JSON reader allows (128 levels, about
-40 levels of groups) refuses the file. VectorCraft itself keeps 32. The JSON is read into the few things
-the adapter uses, and the rest is skipped as it is read: images, previews and text runs are never kept.
-Every object, appearance item, effect and anchor charges the budget, and so does each element for its
-copy of the object's path.
+**Limits.** At most 64 MiB of JSON, unpacked, as for an SVG file, and the command line reads at most 64
+MiB of any file (`REQ-CLI-005`), images included. A gzip stream is unpacked only up to the marker, and no
+further than the limit. Nesting deeper than the JSON reader allows (128 levels, about 40 levels of
+groups) refuses the file. VectorCraft itself keeps 32. The JSON is read into the few things the adapter
+uses, and the rest is skipped as it is read: images, previews and text runs are never kept. Every object,
+appearance item, effect and anchor charges the budget, and so does each element for its copy of the
+object's path.
 
 **Coordinates.** VectorCraft keeps every path in document coordinates. Moving or scaling a group moves
 its paths' anchors, so layers, groups and compound paths have no transform. Coordinates are points, 1/72
@@ -344,13 +350,13 @@ group's own paints paint the shapes inside it as its effects and those of the gr
 (`evaluate_container`). They go over its contents. The Contents row of its Appearance panel
 (`contents_index`) is last in the list by default, and the paints listed under it go under the contents.
 StitchCraft's live effects are geometry effects, and applying a graphic style to a group puts its effects
-and paints on the group. So each path inside sews as the group's StitchCraft effects say, as the preview
-shows it. Its thread and stroke come from the paints over it, the topmost first, as for an object's own
-paints. The groups' paints over their contents come first, the outermost first, then the object's own,
-then the groups' paints under their contents, the innermost first. The same order applies to an object's
-own effects, which VectorCraft paints with its own paints, under the groups' paints over the object's
-shape. A path that neither its own paints nor a group's paint is invisible, and is left out without a
-word.
+and paints on the group. So each path inside sews as the group's StitchCraft effects say, and as the
+preview shows it. A name can leave one out ([commands](#commands-in-v1)). Its thread and stroke come from
+the paints over it, the topmost first, as for an object's own paints. The groups' paints over their
+contents come first, the outermost first, then the object's own, then the groups' paints under their
+contents, the innermost first. The same order applies to an object's own effects, which VectorCraft
+paints with its own paints, under the groups' paints over the object's shape. A path that neither its own
+paints nor a group's paint is invisible, and is left out without a word.
 
 A clip group's first object is its clipping object. VectorCraft paints a path, a compound path or text
 there with its own paints alone (`clip_paint` in `crates/doc`): its fills under the clipped art and its
