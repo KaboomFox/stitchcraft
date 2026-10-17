@@ -38,13 +38,13 @@ to a group or a layer puts its effects on the group, and every path inside it se
 fills and strokes go on the group too, and VectorCraft paints them over the group's contents. Each path
 inside sews in the colour on top, the style's fill for a fill effect and the style's stroke for a satin
 column, which follows its width. Where the style has no paint of that kind, or lets the path show through
-it, the path's own paint gives the colour. A path without paint under a style without any is invisible
-and isn't sewn. To show the paths' own colours over the style's, drag the Contents row above the style's
-fills and strokes in the Appearance panel. Keep StitchCraft's effects at one level, though. A path that
-has its own StitchCraft effect inside such a group, or sits inside 2 such groups, is drawn as one effect
-run on the stitches of the other. It sews as the nearest effect says, and the command line warns about it
-(`SC-W0807`). Alt-clicking a style adds its effects to the object's own, and an object with 2 fill
-effects sews twice.
+it, the path's own paint of that kind gives the colour, and with none on either, the topmost paint of the
+other kind does. A path without paint under a style without any is invisible and isn't sewn. To show the
+paths' own colours over the style's, drag the Contents row above the style's fills and strokes in the
+Appearance panel. Keep StitchCraft's effects at one level, though. A path that has its own StitchCraft
+effect inside such a group, or sits inside 2 such groups, is drawn as one effect run on the stitches of
+the other. It sews as the nearest effect says, and the command line warns about it (`SC-W0807`).
+Alt-clicking a style adds its effects to the object's own, and an object with 2 fill effects sews twice.
 
 ## Turn a preview into paths
 

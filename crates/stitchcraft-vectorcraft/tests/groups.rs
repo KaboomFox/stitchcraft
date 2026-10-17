@@ -239,6 +239,12 @@ fn req_vc_006_a_group_s_effects_leave_out_what_nothing_paints() {
     let quiet = r#"{"id": 7, "appearance": {"effects": [{"id": "distort.roughen"}]}, "kind": {"type": "path", "rule": "Spiral",
         "path": {"subpaths": [{"closed": true, "anchors": [{"p": [0, 0]}, {"p": [36, 0]}, {"p": [36, 36]}]}]}}}"#;
     let point = r#"{"id": 8, "kind": {"type": "path", "path": {"subpaths": [{"anchors": [{"p": [0, 0]}]}]}}}"#;
+    let triangle = r#""path": {"subpaths": [{"closed": true, "anchors": [{"p": [0, 0]}, {"p": [36, 0]}, {"p": [36, 36]}]}]}"#;
+    // Nor of what a compound path holds that isn't a path, or of an opacity mask.
+    let mixed = format!(
+        r#"{{"id": 9, "kind": {{"type": "compound", "children": [{{"id": 91, "kind": {{"type": "text"}}}}, {{"id": 92, "kind": {{"type": "path", {triangle}}}}}]}}}}"#
+    );
+    let masked = format!(r#"{{"id": 10, "mask": {{}}, "kind": {{"type": "path", {triangle}}}}}"#);
     let squares = [
         square(3, 0.0, 0.0, "{}"),
         square(4, 50.0, 0.0, &unpainted),
@@ -246,6 +252,8 @@ fn req_vc_006_a_group_s_effects_leave_out_what_nothing_paints() {
         square(6, 150.0, 0.0, &stopless),
         quiet.to_string(),
         point.to_string(),
+        mixed,
+        masked,
     ];
     let objects = [group(2, &looks(&[], &[effect("fill", "{}")]), "", &squares)];
     let read = read_ok(&document(4, &objects.join(",")));
@@ -281,6 +289,19 @@ fn req_vc_006_a_clipping_object_takes_the_group_s_effects_and_only_its_own_paint
     // What is said is said of the groups: their clipping, and their paints.
     let groups = ["vc:2", "vc:5", "vc:8"];
     assert!(read.warnings.iter().all(|w| w.element.as_ref().is_some_and(|e| groups.contains(&e.as_str()))), "{:?}", read.warnings);
+}
+
+#[test]
+fn req_vc_006_a_clipping_object_vectorcraft_paints_nothing_of_counts_as_a_hidden_one_does() {
+    // An object without an id is labelled by its place among the objects read. A group as a clipping object,
+    // which VectorCraft paints nothing of, counts, as a hidden group does, and what either holds doesn't.
+    let anonymous = |appearance: &str| square(99, 0.0, 0.0, appearance).replacen(r#""id": 99, "#, "", 1);
+    let clipping = format!(r#"{{"kind": {{"type": "group", "children": [{}]}}}}"#, anonymous(RED));
+    let hidden = format!(r#"{{"visible": false, "kind": {{"type": "group", "children": [{}]}}}}"#, anonymous(RED));
+    let clip = format!(r#"{{"kind": {{"type": "group", "clip": true, "children": [{clipping}, {}]}}}}"#, anonymous(RED));
+    let read = read_ok(&document(4, &[clip, hidden, anonymous(RED)].join(",")));
+    // The layer is #1, the clip group #2 and its clipping group #3, then the hidden group #5.
+    assert_eq!(ids(&read), ["vc:#4:fill", "vc:#6:fill"]);
 }
 
 #[test]

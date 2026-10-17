@@ -20,10 +20,10 @@
 //! group puts its effects and paints there. So the paths inside sew by the StitchCraft effects of the
 //! group, as the previews show them. A path that neither its own paints nor a group's paint is invisible,
 //! and is left out without a word. A clip group's first object is its clipping object. VectorCraft paints a
-//! path, a compound path or text there with its own paints alone, after the group's effects have run on
-//! it, and nothing else. A path those effects reach from more than one level, its own and a group's, or 2
-//! groups', is drawn in VectorCraft as one effect run on the stitches of another, which a machine cannot
-//! sew. It sews by the nearest, and `SC-W0807` says so.
+//! path, a compound path or text there with its own paints alone, and nothing else. The group's effects run
+//! on a path or a compound path there too. A path those effects reach from more than one level, its own and
+//! a group's, or 2 groups', is drawn in VectorCraft as one effect run on the stitches of another, which a
+//! machine cannot sew. It sews by the nearest, and `SC-W0807` says so.
 //!
 //! **Ids.** A design element is `vc:<label>:<what>`. The label is the object's id, which VectorCraft keeps
 //! when it saves, or `#<n>` when it has none (the n-th object read), with `~2`, `~3`, … when it repeats
@@ -135,6 +135,9 @@ struct Around<'a> {
     /// The paints of the groups and layers around that paint, the outermost first: none for a clip group's
     /// clipping object, which no group paints.
     painters: Rc<[Rc<Paints<'a>>]>,
+    /// Whether the object is a clip group's clipping object, which VectorCraft paints only when it is a
+    /// path, a compound path or text.
+    clipping: bool,
 }
 
 /// A group's or a layer's own paints, which VectorCraft paints its contents with: the items before the
@@ -204,6 +207,16 @@ fn first_of<'p, 'a>(painting: &Painting<'p, 'a>, of: impl Fn(&Part<'a>) -> Optio
     opaque.or_else(|| painting.iter().find(|(_, part)| of(part).is_some())).copied()
 }
 
+/// Whether VectorCraft draws nothing of `node`, a path or a compound path that the StitchCraft effects of
+/// the groups `around` reach: it has none of its own, and neither its own paints nor the groups' paint it.
+fn unseen(node: &Node, around: &Around) -> bool {
+    node.kind.as_ref().is_some_and(|kind| !kind.guide && matches!(kind.name.as_str(), "path" | "compound"))
+        && !around.effects.is_empty()
+        && !node.appearance.effects.iter().any(|effect| effect.visible && matches!(ours(effect), Some(Ours::Family(..))))
+        && !Part::new(&node.appearance.items).paints()
+        && !around.painters.iter().any(|p| p.above.paints() || p.below.paints())
+}
+
 struct Reader {
     meter: Meter,
     labels: Labels,
@@ -245,7 +258,8 @@ impl Reader {
         let base = node.id.map_or_else(|| format!("#{}", self.objects), |id| id.to_string());
         let label = self.labels.claim(base, &mut self.meter).map_err(|_| exhausted())?;
         // VectorCraft draws nothing for these, and nothing is said.
-        if !node.visible || node.opacity == Some(0.0) {
+        let clipped_away = around.clipping && !node.kind.as_ref().is_some_and(|kind| matches!(kind.name.as_str(), "path" | "compound" | "text"));
+        if !node.visible || node.opacity == Some(0.0) || clipped_away || unseen(node, around) {
             return Ok(());
         }
         if node.mask.is_some() {
@@ -335,18 +349,16 @@ impl Reader {
                 Some(paints) => around.painters.iter().cloned().chain([paints]).collect(),
                 None => Rc::clone(&around.painters),
             },
+            clipping: false,
         });
         let inside = inside.as_ref().unwrap_or(around);
         for (k, child) in kind.children.iter().enumerate() {
             match (k, kind.clip, node.shaper.is_some()) {
                 // A clip group's first object is its clipping object. VectorCraft runs the effects of the
-                // groups around it on a path or a compound path there too, and paints what they draw, or
-                // text, with its own paints alone. It draws nothing of anything else there.
+                // groups around it on it too, and paints it with its own paints alone.
                 (0, true, _) => {
-                    if matches!(child.kind.as_ref().map(|kind| kind.name.as_str()), Some("path" | "compound" | "text")) {
-                        let clipping = Around { effects: Rc::clone(&inside.effects), levels: inside.levels, painters: Rc::default() };
-                        self.node(child, &clipping)?;
-                    }
+                    let clipping = Around { effects: Rc::clone(&inside.effects), levels: inside.levels, painters: Rc::default(), clipping: true };
+                    self.node(child, &clipping)?;
                 }
                 // A Shaper group's first object holds the sources it shows the shapes of.
                 (0, false, true) => {}
@@ -393,15 +405,6 @@ impl Reader {
     /// A path's or a compound path's elements: by the StitchCraft effects that reach it if any do, its own
     /// or else those `around` it, and by its paints if not.
     fn shape<'a>(&mut self, node: &'a Node, label: &str, data: &[&PathData], rule: Option<&str>, around: &Around<'a>) -> Result<(), Diagnostic> {
-        let paints = Part::new(&node.appearance.items);
-        // VectorCraft paints the stitches of a group's effects on an object without its own with the
-        // object's paints and the groups', and draws nothing where none paints: the object is left out
-        // without a word.
-        let own_effects = node.appearance.effects.iter().any(|effect| effect.visible && matches!(ours(effect), Some(Ours::Family(..))));
-        let painted = paints.paints() || around.painters.iter().any(|p| p.above.paints() || p.below.paints());
-        if !own_effects && !around.effects.is_empty() && !painted {
-            return Ok(());
-        }
         let Some(path) = self.path(node, label, data)? else { return Ok(()) };
         let rule = match rule {
             None | Some("NonZero") => FillRule::NonZero,
@@ -438,6 +441,7 @@ impl Reader {
         }
         // Each group around that paints is a step more in finding the thread and the stroke.
         self.charge(around.painters.len() as u64)?;
+        let paints = Part::new(&node.appearance.items);
         self.by_effects(node, label, &path, rule, effects, &painting(label, &paints, around))
     }
 
