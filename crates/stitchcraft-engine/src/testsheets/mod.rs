@@ -433,12 +433,10 @@ mod tests {
         assert!(third.starts_with(&format!("Rows {} are sewn left to right", listed(&rightwards))), "{third}");
     }
 
-    /// `items` as a list in words: `1, 2 and 3`.
+    /// `items`, 2 or more, as a list in words: `1, 2 and 3`.
     fn listed(items: &[String]) -> String {
-        match items.split_last() {
-            Some((last, rest)) if !rest.is_empty() => format!("{} and {last}", rest.join(", ")),
-            _ => items.join(""),
-        }
+        let (last, rest) = items.split_last().unwrap();
+        format!("{} and {last}", rest.join(", "))
     }
 
     /// The left and right edges of `points`.
@@ -669,23 +667,24 @@ mod tests {
                                 tying_in = true;
                             }
                             tying_in &= s.origin.role == Role::Lock;
-                            for (k, &(a, b)) in threads.iter().enumerate() {
-                                let own_tie_in = tying_in && k + 1 == threads.len();
-                                let (apart, before) = off(s.at, a, b);
-                                if !own_tie_in && apart < CATCHES && before >= CATCHES {
-                                    sewn_over.push(format!(
-                                        "{}: {a:?} to {b:?} under {:?}, {apart:.2} mm, {before:.2} mm before it lands",
-                                        sheet.id, s.at
-                                    ));
-                                }
-                            }
+                            // Each thread on the fabric, how far the needle comes down from it and how far before
+                            // it lands, and whether this is the tie-in where the newest one lands.
+                            let near = threads
+                                .iter()
+                                .enumerate()
+                                .map(|(k, &(a, b))| (sheet.id, a, b, s.at, off(s.at, a, b), tying_in && k + 1 == threads.len()));
+                            sewn_over.extend(near.filter(|&(.., (apart, before), own_tie_in)| !own_tie_in && apart < CATCHES && before >= CATCHES));
                             needle = Some(s.at);
                         }
                     }
                 }
             }
         }
-        assert!(sewn_over.is_empty(), "{} needle-downs on a jump thread:\n{}", sewn_over.len(), sewn_over.join("\n"));
+        assert!(
+            sewn_over.is_empty(),
+            "{} needle-downs on a jump thread (sheet, from, to, needle, (mm off, mm before it lands)):\n{sewn_over:#?}",
+            sewn_over.len()
+        );
     }
 
     #[test]

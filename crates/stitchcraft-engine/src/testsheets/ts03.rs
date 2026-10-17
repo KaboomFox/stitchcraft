@@ -69,14 +69,8 @@ pub(super) fn build() -> Result<StitchPlan, SheetError> {
     // its right, and arrives on the next one's right, so it crosses only circles already sewn.
     for (x, tolerance) in CIRCLES.into_iter().zip(TOLERANCES).rev() {
         let tolerance = tolerance.to_string();
-        d.circle(
-            &format!("circle-{tolerance}"),
-            (x, y),
-            RADIUS,
-            Start::Right,
-            &blue,
-            &[("running_stitch_tolerance_mm", &tolerance), ("trim_after", "true")],
-        )?;
+        let params = [("running_stitch_tolerance_mm", tolerance.as_str()), ("trim_after", "true")];
+        d.circle(&format!("circle-{tolerance}"), (x, y), RADIUS, Start::Right, &blue, &params)?;
     }
     y += RADIUS + ROW;
     // Each line starts below where the one before ended, the first below the last circle's end, and they run
