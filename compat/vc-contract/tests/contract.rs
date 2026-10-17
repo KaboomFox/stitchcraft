@@ -262,3 +262,45 @@ struct Runs {
     shapes: Vec<(String, PathData)>,
     finishing: usize,
 }
+
+/// MEASUREMENT ONLY (branch m6.4-measure, never merged): what converting a satin column's centre line costs.
+#[test]
+fn measure_centre_line_conversion() {
+    let plugin = Plugin::load(&module("satin"), Limits::default()).unwrap();
+    let params = default_params(&plugin, &json!({}));
+    let mm = 72.0 / 25.4;
+    let circle = |r: f64| shapes::ellipse(Rect::new(0.0, 0.0, 2.0 * r * mm, 2.0 * r * mm));
+    let s_curve = |l: f64| {
+        let a = l * mm / 6.0;
+        let mut path = BezPath::new();
+        path.move_to(Point::new(0.0, 0.0));
+        path.curve_to(Point::new(a, 2.0 * a), Point::new(2.0 * a, 2.0 * a), Point::new(3.0 * a, 0.0));
+        path.curve_to(Point::new(4.0 * a, -2.0 * a), Point::new(5.0 * a, -2.0 * a), Point::new(6.0 * a, 0.0));
+        PathData::from_bezpath(&path)
+    };
+    let zig = |n: u32| {
+        let mut path = BezPath::new();
+        path.move_to(Point::new(0.0, 0.0));
+        for i in 1..=n {
+            path.line_to(Point::new(f64::from(i) * 5.0 * mm, if i % 2 == 1 { 5.0 * mm } else { 0.0 }));
+        }
+        PathData::from_bezpath(&path)
+    };
+    let mut said = Vec::new();
+    for (name, path) in [
+        ("circle 5 mm", circle(5.0)),
+        ("circle 15 mm", circle(15.0)),
+        ("circle 25 mm", circle(25.0)),
+        ("S 30 mm", s_curve(30.0)),
+        ("S 60 mm", s_curve(60.0)),
+        ("S 120 mm", s_curve(120.0)),
+        ("zigzag 10", zig(10)),
+        ("zigzag 40", zig(40)),
+    ] {
+        let input = effect_input(&path, json!({}));
+        let out = plugin.run(&input, &params);
+        let shown = out.as_ref().map(|o| anchors(o)).unwrap_or(0);
+        said.push(format!("{name}: {} instructions, {shown} anchors", fuel(&plugin, &input, &params)));
+    }
+    println!("::notice title=centre line conversion::{}", said.join("; "));
+}
