@@ -355,7 +355,7 @@ status = "active"
 id = "REQ-RUN-001"
 area = "strokes/running"
 level = "L2"
-statement = "Stitches are spread evenly between corners, in more of them where they stray from a curve by more than the tolerance allows, as long as that takes no more stitches than splitting the stray ones. Every stitch, measured straight, is at most the longest running_stitch_length_mm (raised to twice the shortest stitch) times (1 + jitter) and at least the shortest stitch; a part of the path too small for that (shorter than the shortest stitch, or all within it of its ends) is not stitched and is reported (SC-W0401)."
+statement = "Stitches are spread evenly between corners, in more of them where they stray by more than nine tenths of running_stitch_tolerance_mm from the points of the path flattened within the other tenth, as long as that takes no more stitches than splitting the stray ones. Every stitch, measured straight, is at most the longest running_stitch_length_mm (raised to twice the shortest stitch) times (1 + jitter) and at least the shortest stitch; a part of the path too small for that (shorter than the shortest stitch, or all within it of its ends) is not stitched and is reported (SC-W0401)."
 milestone = "M3"
 status = "active"
 

@@ -62,8 +62,8 @@ requirements = ["REQ-RUN-003", "REQ-SAT-010", "REQ-SAT-011"]
 [[deviation]]
 id = "DEV-RUN-002"
 area = "strokes/running"
-summary = "Stitches are spread evenly along the path between corners. Where they stray beyond the tolerance, the span is spread evenly in more of them when that takes no more stitches than splitting the stray ones, and otherwise the stray ones are split. Ink/Stitch makes each stitch as long as the tolerance allows, measured straight, and divides what is left evenly again after each one."
-reason = "Equal stitches between corners with no short leftover, and the tolerance met exactly where the path needs it: a small circle is sewn in even stitches as long as the tolerance allows, as Ink/Stitch sews it."
+summary = "Stitches are spread evenly along the path between corners. The path is flattened within a tenth of the tolerance, and where the stitches stray from its points by more than the other nine tenths, the span is spread evenly in more of them when that takes no more stitches than splitting the stray ones, and otherwise the stray ones are split. Ink/Stitch makes each stitch as long as the whole tolerance allows at the points of its path, measured straight, and divides what is left evenly again after each one. A small circle can take one stitch more than Ink/Stitch's: TS-03's circles 6 mm across take 14 and 10 at 0.1 and 0.2 mm."
+reason = "Equal stitches between corners with no short leftover, and the tolerance met where the path needs it. The stitches keep within the tolerance of the drawn path between the flattened points too, where Ink/Stitch's keep within it at its points. A small circle is sewn in even stitches as long as that allows."
 requirements = ["REQ-RUN-001", "REQ-RUN-002", "REQ-SAT-010", "REQ-SAT-011"]
 
 [[deviation]]
