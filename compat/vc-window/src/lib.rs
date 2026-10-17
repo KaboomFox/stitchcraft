@@ -137,6 +137,35 @@ impl Window {
         }
     }
 
+    /// Whether `ui.inspect` shows what `done` looks for within `wait`.
+    pub fn shows(&mut self, wait: Duration, done: impl Fn(&Value) -> bool) -> Result<bool, String> {
+        let started = Instant::now();
+        loop {
+            if done(&self.inspect()?) {
+                return Ok(true);
+            }
+            if started.elapsed() > wait {
+                return Ok(false);
+            }
+            std::thread::sleep(POLL);
+        }
+    }
+
+    /// The first row of `shot`, a screenshot of this window, below the canvas: the status bar's. Its frame
+    /// timings change with every frame the app draws, so two screenshots differ there.
+    pub fn below_canvas(&mut self, shot: &Pixels) -> Result<u32, String> {
+        let inspect = self.inspect()?;
+        let number = |at: &str| inspect.pointer(at).and_then(Value::as_f64).ok_or(format!("ui.inspect shows no {at}: {inspect}"));
+        // `window` and `canvasRect` are in points; the screenshot is in pixels.
+        let scale = f64::from(shot.width) / number("/window/0")?;
+        let row = ((number("/canvasRect/1")? + number("/canvasRect/3")?) * scale).round();
+        if row > 0.0 && row <= f64::from(shot.height) {
+            Ok(row as u32)
+        } else {
+            Err(format!("the canvas ends at row {row}, outside the {}×{} screenshot", shot.width, shot.height))
+        }
+    }
+
     /// A screenshot of the window, as the app writes it to `<name>.png`, and its pixels.
     pub fn screenshot(&mut self, name: &str) -> Result<Pixels, String> {
         let path = out()?.join(format!("{name}.png"));
@@ -224,6 +253,15 @@ impl Pixels {
         same_size.then(|| self.rgba.chunks_exact(4).zip(other.rgba.chunks_exact(4)).filter(differs).count())
     }
 
+    /// Rows `from` to `to`, the last excluded, cut to the picture.
+    pub fn rows(&self, from: u32, to: u32) -> Pixels {
+        let from = from.min(self.height);
+        let to = to.clamp(from, self.height);
+        let stride = self.width as usize * 4;
+        let rgba = self.rgba.get(from as usize * stride..to as usize * stride).unwrap_or_default().to_vec();
+        Pixels { width: self.width, height: to - from, rgba }
+    }
+
     /// The number of pixels.
     pub fn count(&self) -> u64 {
         u64::from(self.width) * u64::from(self.height)
@@ -279,6 +317,15 @@ mod tests {
         assert_eq!(a.differing(&b, 8), Some(1));
         assert_eq!(a.differing(&b, 9), Some(0));
         assert_eq!(a.differing(&Pixels { width: 1, height: 2, rgba: a.rgba.clone() }, 0), None);
+    }
+
+    #[test]
+    fn rows_are_cut_to_the_picture() {
+        let tall = Pixels { width: 1, height: 3, rgba: (0..12).collect() };
+        assert_eq!(tall.rows(1, 2), Pixels { width: 1, height: 1, rgba: vec![4, 5, 6, 7] });
+        assert_eq!(tall.rows(2, 9), Pixels { width: 1, height: 1, rgba: vec![8, 9, 10, 11] });
+        assert_eq!(tall.rows(2, 1).height, 0);
+        assert_eq!(tall.rows(5, 9), Pixels { width: 1, height: 0, rgba: Vec::new() });
     }
 
     #[test]
