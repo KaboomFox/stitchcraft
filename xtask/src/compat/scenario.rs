@@ -86,10 +86,13 @@ pub struct Run {
     pub plugins: Vec<String>,
     /// The steps.
     pub steps: Vec<Step>,
+    /// The pixels per point of the run's pictures (`--scale`); VectorCraft's own, 1, without one.
+    #[serde(default)]
+    pub scale: Option<f64>,
 }
 
 /// A step: a VectorCraft command, a stitch family's live effect applied, or an export.
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Step {
     /// A command's id, such as `shape.rectangle`.
@@ -151,6 +154,12 @@ enum Action<'a> {
 }
 
 impl Step {
+    /// Whether the step reads: exactly one of `cmd`, `apply` and `export`, a family that is one, and
+    /// parameters only for the first two.
+    pub(crate) fn check(&self) -> Result<(), String> {
+        self.action().map(drop)
+    }
+
     /// What the step does, or why it can't be read: exactly one of `cmd`, `apply` and `export`, and
     /// parameters only for the first two.
     fn action(&self) -> Result<Action<'_>, String> {
@@ -289,6 +298,9 @@ fn arguments(run: &Run, plugins: &Path, out: &Path) -> Result<Vec<String>, Strin
     if let Some(open) = &run.open {
         args.extend(["--in".to_string(), path(out, open)]);
     }
+    if let Some(scale) = run.scale {
+        args.extend(["--scale".to_string(), scale.to_string()]);
+    }
     for module in &run.plugins {
         args.extend(command("plugin.install", json!({ "path": path(plugins, &format!("{module}.wasm")) })));
     }
@@ -339,6 +351,13 @@ pub fn run(scenario: &Scenario, cli: &Path, plugins: &Path, out: &Path) -> Vec<S
         }
     }
     check(&scenario.expect, out, &ran)
+}
+
+/// Makes the files `run` exports, into `out`, with the `vectorcraft-cli` at `cli` and the modules in
+/// `plugins`, as a scenario's run is made and checked: the docs' VectorCraft shots draw their documents so.
+pub(crate) fn draw(run: &Run, cli: &Path, plugins: &Path, out: &Path) -> Result<(), String> {
+    std::fs::create_dir_all(out).map_err(|e| format!("{}: {e}", util::rel(out)))?;
+    run_once(run, 1, cli, plugins, out, &mut Ran::default())
 }
 
 /// One run: `vectorcraft-cli` and what its results say. Its exports' effects go to `ran`.

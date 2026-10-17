@@ -19,6 +19,10 @@
 //! The tests record what they measured, and why they failed, in `target/compat/window/findings.jsonl`
 //! (`compat/vc-window/src/lib.rs`); the command prints the records, as annotations in GitHub Actions.
 //! Linux only: the desktop is X11's and AT-SPI's.
+//!
+//! The docs' `vectorcraft-ui` pictures are taken in the same desktop ([`shots`]): the probe's
+//! `tests/shots.rs` drives the window to each menu and dialog that `cargo xtask shots --vectorcraft` asks
+//! for (`xtask/src/shots/vectorcraft.rs`).
 
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
@@ -45,46 +49,12 @@ const NEEDS: &str = "xvfb-run, dbus-run-session and dbus-send (on Ubuntu: `apt i
 
 /// Runs the probe's tests with `app`, or the pinned release's, in a private desktop.
 pub fn run(app: Option<&Path>) -> Result<(), String> {
-    if !cfg!(target_os = "linux") {
-        return Err("`compat window` runs on Linux: its desktop is Xvfb's and AT-SPI's".to_string());
-    }
-    if !["xvfb-run", "dbus-run-session", "dbus-send"].iter().all(|program| on_path(program)) {
-        return Err(format!("`compat window` needs {NEEDS}"));
-    }
     let app = match app {
         Some(app) => std::fs::canonicalize(app).map_err(|e| format!("{}: {e}", app.display()))?,
         None => released()?,
     };
-    let root = util::root();
-    let out = root.join(OUT);
-    if out.exists() {
-        std::fs::remove_dir_all(&out).map_err(|e| format!("{OUT}: {e}"))?;
-    }
-    let runtime = out.join("runtime");
-    private_folder(&runtime)?;
-    let tests: Vec<OsString> = vec![
-        util::cargo().get_program().to_os_string(),
-        "test".into(),
-        "--locked".into(),
-        "--manifest-path".into(),
-        root.join(PROBE).join("Cargo.toml").into(),
-        "--".into(),
-        // One window at a time: each test finds its own by its process.
-        "--test-threads=1".into(),
-    ];
-    let mut cmd = Command::new("dbus-run-session");
-    cmd.args(desktop(tests))
-        // The desktop's own: settings in memory, sockets and caches in `out`, and X11 alone.
-        .env("GSETTINGS_BACKEND", "memory")
-        .env("XDG_RUNTIME_DIR", &runtime)
-        .env("XDG_CACHE_HOME", out.join("cache"))
-        .env_remove("WAYLAND_DISPLAY")
-        .env_remove("AT_SPI_BUS_ADDRESS")
-        .env("STITCHCRAFT_VECTORCRAFT_APP", &app)
-        .env("STITCHCRAFT_WINDOW_OUT", &out)
-        // One build directory for the compatibility crates, inside the cached `target/`.
-        .env("CARGO_TARGET_DIR", root.join("target/compat-build"));
-    let ran = util::run(cmd, "the window probe");
+    let out = util::root().join(OUT);
+    let ran = in_desktop(&app, &out, &[], None);
     let errors = show(&out, std::env::var_os("GITHUB_ACTIONS").is_some())?;
     match ran {
         Ok(()) => {
@@ -94,6 +64,60 @@ pub fn run(app: Option<&Path>) -> Result<(), String> {
         Err(e) if errors.is_empty() => Err(e),
         Err(_) => Err(errors.join("\n\n")),
     }
+}
+
+/// Takes the `vectorcraft-ui` shots that the job file `job` lists, in the window of `app`, recording into
+/// `out`: what the shots recorded as errors. Their notices are shown, as annotations in GitHub Actions.
+pub(crate) fn shots(app: &Path, job: &Path, out: &Path) -> Result<Vec<String>, String> {
+    let ran = in_desktop(app, out, &["--test", "shots"], Some(job));
+    let errors = show(out, std::env::var_os("GITHUB_ACTIONS").is_some())?;
+    match ran {
+        Err(e) if errors.is_empty() => Err(e),
+        _ => Ok(errors),
+    }
+}
+
+/// Runs the probe's tests, or those `tests` picks, with the app `app` in a private desktop, recording into
+/// `out`, which starts empty, and with `job` as the shots to take.
+fn in_desktop(app: &Path, out: &Path, tests: &[&str], job: Option<&Path>) -> Result<(), String> {
+    if !cfg!(target_os = "linux") {
+        return Err("VectorCraft's window runs on Linux here: its desktop is Xvfb's and AT-SPI's".to_string());
+    }
+    if !["xvfb-run", "dbus-run-session", "dbus-send"].iter().all(|program| on_path(program)) {
+        return Err(format!("VectorCraft's window needs {NEEDS}"));
+    }
+    let root = util::root();
+    if out.exists() {
+        std::fs::remove_dir_all(out).map_err(|e| format!("{}: {e}", util::rel(out)))?;
+    }
+    let runtime = out.join("runtime");
+    private_folder(&runtime)?;
+    let mut line: Vec<OsString> = vec![
+        util::cargo().get_program().to_os_string(),
+        "test".into(),
+        "--locked".into(),
+        "--manifest-path".into(),
+        root.join(PROBE).join("Cargo.toml").into(),
+    ];
+    line.extend(tests.iter().map(OsString::from));
+    // One window at a time: each test finds its own by its process.
+    line.extend(["--".into(), "--test-threads=1".into()]);
+    let mut cmd = Command::new("dbus-run-session");
+    cmd.args(desktop(line))
+        // The desktop's own: settings in memory, sockets and caches in `out`, and X11 alone.
+        .env("GSETTINGS_BACKEND", "memory")
+        .env("XDG_RUNTIME_DIR", &runtime)
+        .env("XDG_CACHE_HOME", out.join("cache"))
+        .env_remove("WAYLAND_DISPLAY")
+        .env_remove("AT_SPI_BUS_ADDRESS")
+        .env("STITCHCRAFT_VECTORCRAFT_APP", app)
+        .env("STITCHCRAFT_WINDOW_OUT", out)
+        // One build directory for the compatibility crates, inside the cached `target/`.
+        .env("CARGO_TARGET_DIR", root.join("target/compat-build"));
+    if let Some(job) = job {
+        cmd.env("STITCHCRAFT_SHOTS", job);
+    }
+    util::run(cmd, "VectorCraft's window")
 }
 
 /// The arguments of `dbus-run-session` that run `tests` in the private desktop.

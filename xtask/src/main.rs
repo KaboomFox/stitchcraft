@@ -114,6 +114,9 @@ enum Command {
         /// Compare them with the committed ones without writing
         #[arg(long)]
         check: bool,
+        /// VectorCraft's pictures instead, made by the pinned release (Linux, Xvfb and AT-SPI)
+        #[arg(long)]
+        vectorcraft: bool,
     },
     /// Write the library crates' public API snapshots
     Api {
@@ -267,7 +270,7 @@ fn run(command: Command) -> Result<(), String> {
             compat::report::run(&results, &discovered, &moved, &date, &run_url, write)
         }
         Command::Compat { command: Compat::Issue { issue } } => compat::report::file(&issue),
-        Command::Shots { check } => shots::run(check),
+        Command::Shots { check, vectorcraft } => shots::run(check, vectorcraft),
         Command::Api { check } => api::run(check),
         Command::Coverage { record } => coverage::run(record),
         Command::Mutants { record, changed, dirs } => mutants::run(record, changed, &dirs),
