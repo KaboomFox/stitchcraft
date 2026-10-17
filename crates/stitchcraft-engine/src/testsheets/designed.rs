@@ -140,12 +140,13 @@ pub(super) fn round(centre: (f64, f64), radius: f64) -> Result<Subpath, UnitErro
 pub(super) fn round_from(centre: (f64, f64), radius: f64, start: Start) -> Result<Subpath, UnitError> {
     // The control points of a quarter circle: 4/3 (√2 − 1) of the radius from its ends.
     let (x, y, r, k) = (centre.0, centre.1, radius, 4.0 / 3.0 * (SQRT_2 - 1.0) * radius);
-    // The quarters clockwise from each point to the next: from the right, the bottom, the left and the top.
+    // The quarters clockwise, each to the next point from the one before: to the bottom, the left, the top and
+    // the right.
     let quarters = [
-        [(x + r, y), (x + r, y + k), (x + k, y + r), (x, y + r)],
-        [(x, y + r), (x - k, y + r), (x - r, y + k), (x - r, y)],
-        [(x - r, y), (x - r, y - k), (x - k, y - r), (x, y - r)],
-        [(x, y - r), (x + k, y - r), (x + r, y - k), (x + r, y)],
+        [(x + r, y + k), (x + k, y + r), (x, y + r)],
+        [(x - k, y + r), (x - r, y + k), (x - r, y)],
+        [(x - r, y - k), (x - k, y - r), (x, y - r)],
+        [(x + k, y - r), (x + r, y - k), (x + r, y)],
     ];
     let first = match start {
         Start::Right => 0,
@@ -153,14 +154,13 @@ pub(super) fn round_from(centre: (f64, f64), radius: f64, start: Start) -> Resul
         Start::Top => 3,
     };
     let mut segments = Vec::with_capacity(quarters.len());
-    let mut from = (x + r, y);
-    for (n, &[at, c1, c2, end]) in quarters.iter().cycle().skip(first).take(quarters.len()).enumerate() {
-        if n == 0 {
-            from = at;
-        }
-        segments.push(Segment::Cubic(point(c1)?, point(c2)?, point(end)?));
+    // The circle closes where it starts: at the end of its last quarter.
+    let mut end = (x, y);
+    for &[c1, c2, to] in quarters.iter().cycle().skip(first).take(quarters.len()) {
+        segments.push(Segment::Cubic(point(c1)?, point(c2)?, point(to)?));
+        end = to;
     }
-    Ok(Subpath { start: point(from)?, segments, closed: true })
+    Ok(Subpath { start: point(end)?, segments, closed: true })
 }
 
 /// A point from literal coordinates.

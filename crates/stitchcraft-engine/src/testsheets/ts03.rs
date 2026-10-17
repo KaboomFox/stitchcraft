@@ -53,16 +53,12 @@ pub(super) fn build() -> Result<StitchPlan, SheetError> {
     let blue = thread(BLUE)?;
     let mut d = Drawing::new("ts03");
     let mut y = 0.0;
-    let mut row = 0;
-    for length in LENGTHS {
-        let length = length.to_string();
-        d.polyline(&format!("running-{length}"), &across(row, y), &blue, &[("running_stitch_length_mm", &length), ("trim_after", "true")])?;
-        (row, y) = (row + 1, y + ROW);
-    }
-    for beans in BEANS {
-        let beans = beans.to_string();
-        d.polyline(&format!("bean-{beans}"), &across(row, y), &blue, &[("bean_stitch_repeats", &beans), ("trim_after", "true")])?;
-        (row, y) = (row + 1, y + ROW);
+    // The long lines, top to bottom: each one's name and the setting that makes it what it is.
+    let running = LENGTHS.iter().map(|length| (format!("running-{length}"), ("running_stitch_length_mm", length.to_string())));
+    let beans = BEANS.iter().map(|beans| (format!("bean-{beans}"), ("bean_stitch_repeats", beans.to_string())));
+    for (row, (name, (key, value))) in running.chain(beans).enumerate() {
+        d.polyline(&name, &across(row, y), &blue, &[(key, value.as_str()), ("trim_after", "true")])?;
+        y += ROW;
     }
     y += RADIUS;
     // Right to left, each from its right-hand point: the jump to the next leaves where the last one ended, on

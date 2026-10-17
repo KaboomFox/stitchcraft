@@ -389,11 +389,15 @@ mod tests {
         }
         assert!(centres.windows(2).all(|w| w[0] < w[1]), "{centres:?}");
         assert!(counts[0] >= counts[1] && counts[1] > counts[2], "{counts:?}");
-        // Hand-placed stitches of exactly their length, 20 of them.
+        // Hand-placed stitches of exactly their length, 20 of them. Each line starts straight below where the
+        // stitching before it ended, the first below the last circle's end, so the jump to it runs square to it.
+        let mut before = sewn("TS-03", &format!("circle-{}", ts03::TOLERANCES[0]));
         for length in ts03::SHORT {
             let points = sewn("TS-03", &format!("short-{length}"));
             assert_eq!(points.len(), 21, "{length}");
             assert!(points.windows(2).all(|p| (p[0].distance(p[1]) - length).abs() < 1e-9), "{length}: {points:?}");
+            assert!((points[0].x() - before[before.len() - 1].x()).abs() < 1e-9, "{length}: {:?} after {:?}", points[0], before.last());
+            before = points;
         }
         assert!(shape("TS-03")[0].matches('T').count() == 15);
     }
