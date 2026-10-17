@@ -62,7 +62,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        track: ${{ fromJSON('["stable","prerelease","release-branch","main"]') }}
+        track: ${{ github.event_name == 'pull_request' && fromJSON('["stable"]') || fromJSON('["stable","prerelease","release-branch","main"]') }}
     runs-on: ubuntu-24.04
     # A branch's vectorcraft-cli is built from source, which takes the longest.
     timeout-minutes: 120
