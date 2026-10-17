@@ -12,6 +12,7 @@
     - [Check a machine file](user/how-to/check-a-file.md)
     - [Convert between formats](user/how-to/convert-formats.md)
     - [Fit a design to the hoop](user/how-to/fit-the-hoop.md)
+    - [Satin columns and presets in VectorCraft](user/how-to/vectorcraft-columns-and-presets.md)
     - [Report a bug](user/how-to/report-a-bug.md)
   - [Stitch types](user/stitches/README.md)
     - [Running stitch](user/stitches/running.md)

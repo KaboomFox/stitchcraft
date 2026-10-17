@@ -135,7 +135,7 @@ another.
 | `SC-W0804` | Warning | Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke's width, join or miter limit that does not read); the usable part is stitched | M3 |
 | `SC-I0805` | Info | Object left out, as the file asks (Ink/Stitch's ignore commands and `ignore_object` setting) | M3 |
 | `SC-E0806` | Error | VectorCraft file could not be read (not a VectorCraft document, or larger than the adapter reads) | M6 |
-| `SC-W0807` | Warning | VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft's own effects, brushes, gradients, patterns) | M6 |
+| `SC-W0807` | Warning | VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft's own effects, brushes, gradients, patterns, a group's own paints), or StitchCraft effects from more than one level | M6 |
 | `SC-W0808` | Warning | VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing) | M6 |
 | `SC-I0809` | Info | VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides) | M6 |
 | `SC-I0810` | Info | VectorCraft live effect leaves the object as it is (it sews no stitch, it is a satin column drawn as one path, whose width the effect is not given, or its preview level needs more work than VectorCraft lets a live effect do) | M6 |

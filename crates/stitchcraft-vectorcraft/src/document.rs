@@ -7,9 +7,23 @@
 //!
 //! **What an object sews** (`REQ-VC-004`). An object with visible StitchCraft effects sews what they say,
 //! one element for each, in their order: a `fill` effect fills its shape, a `stroke` effect stitches
-//! along it, a `satin` effect makes a satin column of it, with the effect's parameters. An object without
-//! them sews as Ink/Stitch sews an SVG shape: the fills VectorCraft draws, then its strokes as running
-//! stitch, each in its paint's colour.
+//! along it, a `satin` effect makes a satin column of it, with the effect's parameters. A fill takes the
+//! colour of the topmost fill VectorCraft paints over the object, and the others that of the topmost
+//! stroke, whose width and join they follow, falling back on the other kind. An opaque paint comes before
+//! one that lets what is under it show ([`topmost`]). An object without them sews as Ink/Stitch sews an
+//! SVG shape: the fills VectorCraft draws, then its strokes as running stitch, each in its paint's colour.
+//!
+//! **A group's effects** (`REQ-VC-006`). VectorCraft runs a group's or a layer's geometry effects on each
+//! path and compound path inside it, however deep, and paints what they return with the path's own paints.
+//! A group's own paints paint the shapes it holds too, over them unless its Contents row is moved up, and
+//! give an effect its thread and stroke when they are on top ([`painting`]). Applying a graphic style to a
+//! group puts its effects and paints there. So the paths inside sew by the StitchCraft effects of the
+//! group, as the previews show them. A path that neither its own paints nor a group's paint is invisible,
+//! and is left out without a word. A clip group's first object is its clipping object. VectorCraft paints a
+//! path, a compound path or text there with its own paints alone, and nothing else. The group's effects run
+//! on a path or a compound path there too. A path those effects reach from more than one level, its own and
+//! a group's, or 2 groups', is drawn in VectorCraft as one effect run on the stitches of another, which a
+//! machine cannot sew. It sews by the nearest, and `SC-W0807` says so.
 //!
 //! **Ids.** A design element is `vc:<label>:<what>`. The label is the object's id, which VectorCraft keeps
 //! when it saves, or `#<n>` when it has none (the n-th object read), with `~2`, `~3`, … when it repeats
@@ -24,9 +38,12 @@
 //! **Work is bounded.** Besides the bytes [`crate::container`] charges, each object, appearance item,
 //! effect and effect parameter costs one unit, and each subpath one unit and one more for each anchor. An
 //! element costs one unit and one more for each segment of its path, which it holds a copy of, so that
-//! many paints or effects on one long path cost what they make.
+//! many paints or effects on one long path cost what they make. An object with StitchCraft effects costs
+//! one more for each group or layer around it that paints.
 
+use std::cell::OnceCell;
 use std::collections::BTreeMap;
+use std::rc::Rc;
 
 use serde_json::Value;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
@@ -76,7 +93,7 @@ pub fn read(bytes: &[u8], budget: &Budget) -> Result<VectorCraft, Diagnostic> {
     reader.header(file.format.as_deref(), file.version.as_ref())?;
     let document = file.document.ok_or_else(|| unreadable("It holds no document."))?;
     for layer in &document.layers {
-        reader.node(layer)?;
+        reader.node(layer, &Around::default())?;
     }
     let design = Design::new(reader.elements, DesignSettings::default())?;
     Ok(VectorCraft { design, warnings: reader.warnings })
@@ -103,6 +120,102 @@ fn ours(effect: &Effect) -> Option<Ours<'_>> {
 
 /// An object's style of stroke: its width and how it turns corners.
 type Style = (Mm, Join);
+
+/// The visible StitchCraft effects of an object, or of the groups and layers around it, in their order,
+/// each with its parameters.
+type Effects<'a> = Vec<(Family, &'a Value)>;
+
+/// What the groups and layers around an object give it.
+#[derive(Default)]
+struct Around<'a> {
+    /// The StitchCraft effects of the nearest that has any, shared by everything inside it.
+    effects: Rc<[(Family, &'a Value)]>,
+    /// How many of them have StitchCraft effects.
+    levels: u32,
+    /// The paints of the groups and layers around that paint, the outermost first: none for a clip group's
+    /// clipping object, which no group paints.
+    painters: Rc<[Rc<Paints<'a>>]>,
+    /// Whether the object is a clip group's clipping object, which VectorCraft paints only when it is a
+    /// path, a compound path or text.
+    clipping: bool,
+}
+
+/// A group's or a layer's own paints, which VectorCraft paints its contents with: the items before the
+/// Contents row of its Appearance panel (`contents_index`) under them, and the others over them, all of
+/// them by default. What is said of them is said of the group.
+struct Paints<'a> {
+    /// The group's label.
+    label: String,
+    /// The paints under its contents.
+    below: Part<'a>,
+    /// The paints over its contents.
+    above: Part<'a>,
+}
+
+/// Paints in the order VectorCraft draws them, the last on top, and the fill and the stroke an effect
+/// takes from them ([`Reader::fill_of`], [`Reader::stroke_of`]).
+struct Part<'a> {
+    /// The topmost fill VectorCraft draws, an opaque one before others, and whether it is opaque.
+    fill: Option<(&'a Item, bool)>,
+    /// The topmost stroke, the same way.
+    stroke: Option<(&'a Item, bool)>,
+    /// The thread of `fill`, found once.
+    fill_thread: OnceCell<Option<Thread>>,
+    /// The thread of `stroke`, with its width and join, found once.
+    stroke_thread: OnceCell<Option<(Thread, Style)>>,
+}
+
+impl<'a> Part<'a> {
+    fn new(items: &'a [Item]) -> Self {
+        Part { fill: topmost(items, "fill"), stroke: topmost(items, "stroke"), fill_thread: OnceCell::new(), stroke_thread: OnceCell::new() }
+    }
+
+    /// Whether it paints anything.
+    fn paints(&self) -> bool {
+        self.fill.is_some() || self.stroke.is_some()
+    }
+}
+
+/// The topmost of `items` of the `kind` given, `fill` or `stroke`, that VectorCraft draws: the topmost
+/// opaque one if there is one, as one of opacity under 1 lets what is under it show. With whether it is
+/// opaque.
+fn topmost<'a>(items: &'a [Item], kind: &str) -> Option<(&'a Item, bool)> {
+    let candidates = || items.iter().rev().filter(move |item| item.kind == kind && drawn(item));
+    let opaque = |item: &&Item| item.opacity.is_none_or(|opacity| opacity >= 1.0);
+    candidates().find(opaque).map(|item| (item, true)).or_else(|| candidates().next().map(|item| (item, false)))
+}
+
+/// The paints the StitchCraft effects on one object take their thread and stroke from, in the order
+/// VectorCraft draws them, the topmost first, each with the label of the object or the group whose they
+/// are ([`painting`]).
+type Painting<'p, 'a> = Vec<(&'p str, &'p Part<'a>)>;
+
+/// The paints over the object `label`, whose own are `own`, the topmost first: the paints of the groups
+/// around it over their contents, the outermost first, then its own, then the groups' paints under their
+/// contents, the innermost first. Each group paints what it holds after the effects of the groups around
+/// it have run, and the object's own paints what its own effects draw too.
+fn painting<'p, 'a>(label: &'p str, own: &'p Part<'a>, around: &'p Around<'a>) -> Painting<'p, 'a> {
+    let above = |p: &'p Rc<Paints<'a>>| (p.label.as_str(), &p.above);
+    let below = |p: &'p Rc<Paints<'a>>| (p.label.as_str(), &p.below);
+    around.painters.iter().map(above).chain(std::iter::once((label, own))).chain(around.painters.iter().rev().map(below)).collect()
+}
+
+/// The first of `painting`'s paints whose fill or stroke, as `of` takes it, is opaque, or else the first
+/// that has one.
+fn first_of<'p, 'a>(painting: &Painting<'p, 'a>, of: impl Fn(&Part<'a>) -> Option<(&'a Item, bool)>) -> Option<(&'p str, &'p Part<'a>)> {
+    let opaque = painting.iter().find(|(_, part)| of(part).is_some_and(|(_, opaque)| opaque));
+    opaque.or_else(|| painting.iter().find(|(_, part)| of(part).is_some())).copied()
+}
+
+/// Whether VectorCraft draws nothing of `node`, a path or a compound path that the StitchCraft effects of
+/// the groups `around` reach: it has none of its own, and neither its own paints nor the groups' paint it.
+fn unseen(node: &Node, around: &Around) -> bool {
+    node.kind.as_ref().is_some_and(|kind| !kind.guide && matches!(kind.name.as_str(), "path" | "compound"))
+        && !around.effects.is_empty()
+        && !node.appearance.effects.iter().any(|effect| effect.visible && matches!(ours(effect), Some(Ours::Family(..))))
+        && !Part::new(&node.appearance.items).paints()
+        && !around.painters.iter().any(|p| p.above.paints() || p.below.paints())
+}
 
 struct Reader {
     meter: Meter,
@@ -136,8 +249,8 @@ impl Reader {
         self.meter.charge(units).map_err(|_| exhausted())
     }
 
-    /// One object and what is inside it.
-    fn node(&mut self, node: &Node) -> Result<(), Diagnostic> {
+    /// One object and what is inside it, inside groups and layers whose StitchCraft effects are `around`.
+    fn node<'a>(&mut self, node: &'a Node, around: &Around<'a>) -> Result<(), Diagnostic> {
         let appearance = &node.appearance;
         let effects = appearance.effects.len() + appearance.items.iter().map(|item| item.effects.len()).sum::<usize>();
         self.charge(1 + (appearance.items.len() + effects) as u64)?;
@@ -145,7 +258,8 @@ impl Reader {
         let base = node.id.map_or_else(|| format!("#{}", self.objects), |id| id.to_string());
         let label = self.labels.claim(base, &mut self.meter).map_err(|_| exhausted())?;
         // VectorCraft draws nothing for these, and nothing is said.
-        if !node.visible || node.opacity == Some(0.0) {
+        let clipped_away = around.clipping && !node.kind.as_ref().is_some_and(|kind| matches!(kind.name.as_str(), "path" | "compound" | "text"));
+        if !node.visible || node.opacity == Some(0.0) || clipped_away || unseen(node, around) {
             return Ok(());
         }
         if node.mask.is_some() {
@@ -165,13 +279,13 @@ impl Reader {
                 let message = format!("{} doesn't print, so it is not stitched.", called(node, "A layer"));
                 self.warn(Code::VcNotPrinted, Some(&label), message, Some("Turn its Print option on in Layer Options to stitch it."));
             }
-            "layer" | "group" => self.container(node, kind, &label)?,
+            "layer" | "group" => self.container(node, kind, &label, around)?,
             "path" if kind.guide => {
                 let message = format!("{} is a guide, which VectorCraft doesn't print, so it is not stitched.", called(node, "A path"));
                 self.warn(Code::VcNotPrinted, Some(&label), message, Some("Release the guide to stitch it."));
             }
-            "path" => self.shape(node, &label, &kind.path.iter().collect::<Vec<_>>(), kind.rule.as_deref())?,
-            "compound" => self.compound(node, kind, &label)?,
+            "path" => self.shape(node, &label, &kind.path.iter().collect::<Vec<_>>(), kind.rule.as_deref(), around)?,
+            "compound" => self.compound(node, kind, &label, around)?,
             "text" => {
                 let message = format!("{} is not stitched.", called(node, "Text"));
                 self.feature(&label, message, Some("Make paths of it with Type › Create Outlines."));
@@ -206,33 +320,74 @@ impl Reader {
     }
 
     /// A layer or a group: its children in order, but a Shaper group's first, the sources it shows the
-    /// shapes of.
-    fn container(&mut self, node: &Node, kind: &Kind, label: &str) -> Result<(), Diagnostic> {
+    /// shapes of. Its StitchCraft effects reach the paths inside it, which `around` adds to.
+    fn container<'a>(&mut self, node: &'a Node, kind: &'a Kind, label: &str, around: &Around<'a>) -> Result<(), Diagnostic> {
         let what = if kind.name == "layer" { "A layer" } else { "A group" };
         if kind.clip {
             let message = format!("{} clips what it holds, and the clipping is not applied: what it holds is stitched whole.", called(node, what));
             self.feature(label, message, Some("Cut the art to shape with Pathfinder, then release the clipping mask."));
         }
-        if node.appearance.items.iter().any(drawn) {
-            let message = format!("{} has fills or strokes of its own, which paint what it holds, and they are not stitched.", called(node, what));
+        let appearance = &node.appearance;
+        let paints = appearance.items.iter().any(drawn).then(|| {
+            let message = format!(
+                "{} has fills or strokes of its own, which VectorCraft paints what it holds with. They are not stitched as shapes \
+                 of their own, and give their thread and stroke to the StitchCraft effects they paint.",
+                called(node, what)
+            );
             self.feature(label, message, Some("Make objects of them with Object › Expand Appearance."));
-        }
-        for effect in node.appearance.effects.iter().filter(|e| e.visible) {
-            let message = match ours(effect) {
-                Some(_) => format!("{} has a StitchCraft effect, which works on paths, and it is not used.", called(node, what)),
-                None => format!("{} has the effect {}, which is not applied to what it holds.", called(node, what), quoted(&effect.id)),
-            };
-            self.feature(label, message, Some("Apply effects to the paths inside, or make paths of what they draw with Object › Expand Appearance."));
-        }
-        let sources = usize::from(node.shaper.is_some());
-        for child in kind.children.iter().skip(sources) {
-            self.node(child)?;
+            let (below, above) = appearance.items.split_at(appearance.contents_index.unwrap_or(0).min(appearance.items.len()));
+            Rc::new(Paints { label: label.to_string(), below: Part::new(below), above: Part::new(above) })
+        });
+        let unused = |id: &str| format!("{} has the effect {id}, which is not applied to what it holds.", called(node, what));
+        let hint = "Apply effects to the paths inside, or make paths of what they draw with Object › Expand Appearance.";
+        let effects = self.effects(node, label, unused, hint);
+        let gives = !effects.is_empty();
+        let inside = (gives || paints.is_some()).then(|| Around {
+            effects: if gives { effects.into() } else { Rc::clone(&around.effects) },
+            levels: around.levels.saturating_add(u32::from(gives)),
+            painters: match paints {
+                Some(paints) => around.painters.iter().cloned().chain([paints]).collect(),
+                None => Rc::clone(&around.painters),
+            },
+            clipping: false,
+        });
+        let inside = inside.as_ref().unwrap_or(around);
+        for (k, child) in kind.children.iter().enumerate() {
+            match (k, kind.clip, node.shaper.is_some()) {
+                // A clip group's first object is its clipping object. VectorCraft runs the effects of the
+                // groups around it on it too, and paints it with its own paints alone.
+                (0, true, _) => {
+                    let clipping = Around { effects: Rc::clone(&inside.effects), levels: inside.levels, painters: Rc::default(), clipping: true };
+                    self.node(child, &clipping)?;
+                }
+                // A Shaper group's first object holds the sources it shows the shapes of.
+                (0, false, true) => {}
+                _ => self.node(child, inside)?,
+            }
         }
         Ok(())
     }
 
+    /// The visible StitchCraft effects of `node`, in their order. A StitchCraft effect that names no stitch
+    /// family is named, and so is each of VectorCraft's own effects: `unused` says what becomes of the one
+    /// whose quoted id it is given, and `hint` how to stitch what it draws.
+    fn effects<'a>(&mut self, node: &'a Node, label: &str, unused: impl Fn(&str) -> String, hint: &str) -> Effects<'a> {
+        let mut effects = Vec::new();
+        for effect in node.appearance.effects.iter().filter(|e| e.visible) {
+            match ours(effect) {
+                Some(Ours::Family(family, params)) => effects.push((family, params)),
+                Some(Ours::Other(name)) => {
+                    let message = format!("The StitchCraft effect {} stitches nothing, and is not used.", quoted(name));
+                    self.feature(label, message, Some("Use StitchCraft's Fill, Stroke or Satin effect."));
+                }
+                None => self.feature(label, unused(&quoted(&effect.id)), Some(hint)),
+            }
+        }
+        effects
+    }
+
     /// A compound path: its paths' subpaths, one shape with the compound's appearance and fill rule.
-    fn compound(&mut self, node: &Node, kind: &Kind, label: &str) -> Result<(), Diagnostic> {
+    fn compound<'a>(&mut self, node: &'a Node, kind: &'a Kind, label: &str, around: &Around<'a>) -> Result<(), Diagnostic> {
         let mut paths = Vec::new();
         for child in &kind.children {
             self.charge(1)?;
@@ -244,11 +399,12 @@ impl Reader {
                 }
             }
         }
-        self.shape(node, label, &paths, kind.rule.as_deref())
+        self.shape(node, label, &paths, kind.rule.as_deref(), around)
     }
 
-    /// A path's or a compound path's elements: by its StitchCraft effects if it has any, by its paints if not.
-    fn shape(&mut self, node: &Node, label: &str, data: &[&PathData], rule: Option<&str>) -> Result<(), Diagnostic> {
+    /// A path's or a compound path's elements: by the StitchCraft effects that reach it if any do, its own
+    /// or else those `around` it, and by its paints if not.
+    fn shape<'a>(&mut self, node: &'a Node, label: &str, data: &[&PathData], rule: Option<&str>, around: &Around<'a>) -> Result<(), Diagnostic> {
         let Some(path) = self.path(node, label, data)? else { return Ok(()) };
         let rule = match rule {
             None | Some("NonZero") => FillRule::NonZero,
@@ -258,19 +414,16 @@ impl Reader {
                 FillRule::NonZero
             }
         };
-        let mut effects = Vec::new();
-        for effect in node.appearance.effects.iter().filter(|e| e.visible) {
-            match ours(effect) {
-                Some(Ours::Family(family, params)) => effects.push((family, params)),
-                Some(Ours::Other(name)) => {
-                    let message = format!("The StitchCraft effect {} stitches nothing, and is not used.", quoted(name));
-                    self.feature(label, message, Some("Use StitchCraft's Fill, Stroke or Satin effect."));
-                }
-                None => {
-                    let message = format!("The effect {} is not applied: the object is stitched as it is drawn without it.", quoted(&effect.id));
-                    self.feature(label, message, Some(EXPAND_EFFECT));
-                }
-            }
+        let unused = |id: &str| format!("The effect {id} is not applied: the object is stitched as it is drawn without it.");
+        let own = self.effects(node, label, unused, EXPAND_EFFECT);
+        let levels = around.levels.saturating_add(u32::from(!own.is_empty()));
+        if levels > 1 {
+            let message = format!(
+                "{} gets StitchCraft effects from more than one level, its own or those of the groups and layers around it, and \
+                 VectorCraft runs each on the stitches of the one before: it is sewn as the nearest say.",
+                called(node, "The object")
+            );
+            self.feature(label, message, Some("Keep StitchCraft's effects on the object or on one group around it."));
         }
         for effect in node.appearance.items.iter().filter(|item| drawn(item)).flat_map(|item| &item.effects).filter(|e| e.visible) {
             let (message, hint) = match ours(effect) {
@@ -282,7 +435,14 @@ impl Reader {
             };
             self.feature(label, message, Some(hint));
         }
-        if effects.is_empty() { self.by_paints(node, label, &path, rule) } else { self.by_effects(node, label, &path, rule, &effects) }
+        let effects = if own.is_empty() { &around.effects[..] } else { own.as_slice() };
+        if effects.is_empty() {
+            return self.by_paints(node, label, &path, rule);
+        }
+        // Each group around that paints is a step more in finding the thread and the stroke.
+        self.charge(around.painters.len() as u64)?;
+        let paints = Part::new(&node.appearance.items);
+        self.by_effects(node, label, &path, rule, effects, &painting(label, &paints, around))
     }
 
     /// The elements of an object without StitchCraft effects: the fills VectorCraft draws, then its strokes.
@@ -316,21 +476,36 @@ impl Reader {
         Ok(())
     }
 
-    /// The elements of an object with StitchCraft effects: one for each, in their order.
-    fn by_effects(&mut self, node: &Node, label: &str, path: &Path, rule: FillRule, effects: &[(Family, &Value)]) -> Result<(), Diagnostic> {
-        let mut counts: BTreeMap<Family, u32> = BTreeMap::new();
-        // Each found once, when the first effect that needs it comes.
-        let (mut threads, mut style) = (BTreeMap::new(), None);
+    /// The elements of an object with StitchCraft effects: one for each, in their order, in the thread and
+    /// with the stroke they take from `painting`. A fill takes its thread from the fills first, the others
+    /// from the strokes, the stroke a stroke or a satin column follows.
+    fn by_effects(
+        &mut self,
+        node: &Node,
+        label: &str,
+        path: &Path,
+        rule: FillRule,
+        effects: &[(Family, &Value)],
+        painting: &Painting,
+    ) -> Result<(), Diagnostic> {
+        let (mut counts, mut black): (BTreeMap<Family, u32>, _) = (BTreeMap::new(), None);
+        // Found when the first effect that needs it comes, each once.
         for (family, params) in effects {
+            let (thread, style) = match family {
+                Family::Fill => (self.fill_of(painting).or_else(|| self.stroke_of(painting).map(|(thread, _)| thread)), None),
+                Family::Stroke | Family::Satin => match self.stroke_of(painting) {
+                    Some((thread, style)) => (Some(thread), Some(style)),
+                    None => (self.fill_of(painting), None),
+                },
+            };
+            // Only the object's own effects can find no paint ([`Reader::shape`]).
+            let thread = thread.unwrap_or_else(|| black.get_or_insert_with(|| self.unpainted(node, label)).clone());
             let mut set = self.params(label, *family, params)?;
-            // A fill takes its thread from the fills first, the others from the strokes.
-            let first = if *family == Family::Fill { "fill" } else { "stroke" };
-            let thread = threads.entry(first).or_insert_with(|| self.effect_thread(node, label, first)).clone();
             let shape = match family {
                 Family::Fill => Shape::Fill { path: path.clone(), rule },
                 Family::Stroke | Family::Satin => {
                     set.set(SATIN_COLUMN, if *family == Family::Satin { "true" } else { "false" });
-                    let (width, join) = *style.get_or_insert_with(|| self.effect_style(node, label));
+                    let (width, join) = style.unwrap_or((Mm::ZERO, join_of(None, None)));
                     Shape::Stroke { path: path.clone(), width, join }
                 }
             };
@@ -386,29 +561,27 @@ impl Reader {
         Ok(set)
     }
 
-    /// The thread of an effect that takes its colour from the `first` kind of paint, `fill` or `stroke`: the
-    /// colour of the first of them VectorCraft draws, or else of the first of the other kind; black, said,
-    /// when it draws neither.
-    fn effect_thread(&mut self, node: &Node, label: &str, first: &str) -> Thread {
-        let then = if first == "fill" { "stroke" } else { "fill" };
-        let items = &node.appearance.items;
-        let paints = items.iter().filter(|item| item.kind == first).chain(items.iter().filter(|item| item.kind == then));
-        for item in paints.filter(|item| drawn(item)) {
-            if let Some(thread) = self.thread(label, item.paint.as_ref()) {
-                return thread;
-            }
-        }
-        let message = format!("{} has no paint to take a thread colour from, and is sewn in black.", called(node, "The object"));
-        self.feature(label, message, Some("Give it a fill or a stroke in the thread's colour."));
-        Thread::new(BLACK)
+    /// The thread of the topmost fill among `painting`'s paints, an opaque one before others.
+    fn fill_of(&mut self, painting: &Painting) -> Option<Thread> {
+        let (label, part) = first_of(painting, |part| part.fill)?;
+        part.fill_thread.get_or_init(|| self.thread(label, part.fill?.0.paint.as_ref())).clone()
     }
 
-    /// The width and join of the stroke the stroke and satin effects follow: the object's first visible
-    /// stroke's, or a width of 0, said when the stroke's width is not a number.
-    fn effect_style(&mut self, node: &Node, label: &str) -> Style {
-        let Some(stroke) = node.appearance.items.iter().find(|item| item.kind == "stroke" && shown(item)) else {
-            return (Mm::ZERO, join_of(None, None));
-        };
+    /// The thread of the topmost stroke among `painting`'s paints, an opaque one before others, with its
+    /// width and join.
+    fn stroke_of(&mut self, painting: &Painting) -> Option<(Thread, Style)> {
+        let (label, part) = first_of(painting, |part| part.stroke)?;
+        part.stroke_thread
+            .get_or_init(|| {
+                let (stroke, _) = part.stroke?;
+                Some((self.thread(label, stroke.paint.as_ref())?, self.stroke_style(label, stroke)))
+            })
+            .clone()
+    }
+
+    /// The width and join of `stroke`, one of the paints of `label`. A width that is not a number is taken as
+    /// 0, and said.
+    fn stroke_style(&mut self, label: &str, stroke: &Item) -> Style {
         let (width, join) = self.style(label, stroke);
         let width = width.unwrap_or_else(|| {
             let message = "Its stroke's width is not a number, and its effects take it as 0.".to_string();
@@ -416,6 +589,13 @@ impl Reader {
             Mm::ZERO
         });
         (width, join)
+    }
+
+    /// A black thread for an object whose own StitchCraft effects no paint paints, and why.
+    fn unpainted(&mut self, node: &Node, label: &str) -> Thread {
+        let message = format!("{} has no paint to take a thread colour from, and is sewn in black.", called(node, "The object"));
+        self.feature(label, message, Some("Give it a fill or a stroke in the thread's colour."));
+        Thread::new(BLACK)
     }
 
     /// The thread of `paint`: `None` for no paint, and for a gradient without stops, which VectorCraft
@@ -509,15 +689,19 @@ fn join_of(join: Option<&str>, limit: Option<f64>) -> Join {
     }
 }
 
-/// Whether an appearance item shows: turned on, and not of opacity 0.
-fn shown(item: &Item) -> bool {
-    item.visible && item.opacity != Some(0.0)
-}
-
-/// Whether VectorCraft draws an appearance item: it shows, it has a paint, and a stroke is wider than 0. A
-/// width that is not a number is said where it is used.
+/// Whether VectorCraft draws an appearance item: it is turned on and not of opacity 0, its paint is neither
+/// none nor a gradient without stops, and a stroke is wider than 0. A width that is not a number is said
+/// where it is used.
 fn drawn(item: &Item) -> bool {
-    shown(item) && item.paint.as_ref().is_some_and(|p| p.kind != "none") && (item.kind != "stroke" || item.width.is_none_or(|w| w > 0.0))
+    let paints = |paint: &Paint| match paint.kind.as_str() {
+        "none" => false,
+        "gradient" => paint.gradient.as_ref().is_some_and(|gradient| !gradient.stops.is_empty()),
+        _ => true,
+    };
+    item.visible
+        && item.opacity != Some(0.0)
+        && item.paint.as_ref().is_some_and(paints)
+        && (item.kind != "stroke" || item.width.is_none_or(|w| w > 0.0))
 }
 
 /// `what` for the first of its kind, `what.n` for the n-th.

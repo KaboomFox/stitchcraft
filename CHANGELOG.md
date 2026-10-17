@@ -5,6 +5,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.4: VectorCraft's own commands are StitchCraft's tools there, checked in its source. Make Compound
+  Path joins a satin column's 2 paths, whichever way it turns them (`REQ-VC-007`), and adds rungs. Expand
+  Appearance bakes a preview, and Graphic Styles keep embroidery settings as presets (`REQ-VC-006`). A
+  how-to guide shows each. The tools filter the plan had is left for later. Making a line into a satin
+  column took 51 to 162 million instructions in VectorCraft's host against about 52 million, and a filter
+  cannot give the objects it draws effects. The ABI v2 RFC proposes both (P4, and the new P8).
+  - `SC-I0810`'s hint for a satin column drawn as one path names Object › Compound Path › Make.
 - M6.3: the VectorCraft plug-ins' previews have levels, and each spends at most what VectorCraft lets a
   live effect spend (`REQ-VC-003`). The dialog's `preview_level` is auto, exact, rows for a fill, or the
   outline. Auto shows a stroke's and a satin column's stitches, and a fill's top rows, one ribbon for
@@ -530,6 +537,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- A VectorCraft group's or layer's StitchCraft effects sew each path inside it that VectorCraft paints,
+  as it draws them (`REQ-VC-006`). They were named with `SC-W0807` and left out.
+  - Thread and stroke come from the topmost paint over the object, which is a group's own unless the
+    group's Contents row is moved up. A path without paint of its own was sewn in black.
+  - A clip group's clipping object, a path or a compound path, takes the group's effects and its own
+    paints alone.
+  - A path that StitchCraft effects reach from more than one level sews as the nearest say, and
+    `SC-W0807` names it: VectorCraft runs each on the stitches of the one before.
+- An effect takes its thread from the topmost fill or stroke VectorCraft draws, an opaque one first, and
+  a stroke or satin effect follows that stroke. It took the first, and a stroke of paint none, which
+  VectorCraft writes for an object without one, gave a satin column drawn as one path its width.
 - cargo-deny accepts RUSTSEC-2026-0370 to 0372, dated 2026-10-16, which say zvariant, zbus_names
   and zvariant_derive are unmaintained since zbus 6 took them in. Only the window probe uses them, through
   zbus 5 in the xa11y it pins, and they made every pull request's gates fail. `deny.toml` gives each its

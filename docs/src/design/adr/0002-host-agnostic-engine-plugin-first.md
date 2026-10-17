@@ -17,6 +17,10 @@ budgets. Changing VectorCraft requires its maintainers' agreement. A machine nee
 3. **Phase 2:** propose generic ABI v2 features upstream ([RFC](../rfc-vectorcraft-abi-v2.md)).
 4. **Phase 3 (optional):** an in-tree VectorCraft crate as one more adapter.
 
+**Amended at M6.4:** phase 1 drops the tools filter. VectorCraft's own commands make a satin column of 2
+paths, add rungs and bake previews, and making a line into a column needs more instructions than ABI v1
+gives a filter ([tools](../vectorcraft-integration.md#tools-vectorcrafts-own-commands)).
+
 ## Consequences
 
 - Useful on the machine before any upstream discussion.

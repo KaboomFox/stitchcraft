@@ -94,6 +94,9 @@ pub(crate) struct Appearance {
     pub items: Vec<Item>,
     #[serde(default)]
     pub effects: Vec<Effect>,
+    /// A group's or a layer's: how many of its items paint below what it holds. Without it, all paint above.
+    #[serde(default)]
+    pub contents_index: Option<usize>,
 }
 
 /// A fill or a stroke of an appearance.
