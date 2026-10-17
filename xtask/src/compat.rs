@@ -186,8 +186,11 @@ pub fn contract(reference: &str, wasm: &Path) -> Result<(), String> {
     let wasm = std::fs::canonicalize(wasm).map_err(|e| format!("{}: {e}", wasm.display()))?;
     let dir = prepare_contract(reference)?;
     let mut cmd = util::cargo();
-    cmd.args(["test", "--manifest-path"])
+    // Optimized, as VectorCraft builds its host for release, so that the tests time it as users run it.
+    // What they measure, such as the plug-in's budget, is printed even when they pass.
+    cmd.args(["test", "--release", "--manifest-path"])
         .arg(dir.join("Cargo.toml"))
+        .args(["--", "--show-output"])
         .env("STITCHCRAFT_PLUGIN_WASM", &wasm)
         // One shared build directory for every ref, inside the cached `target/`.
         .env("CARGO_TARGET_DIR", util::root().join("target/compat-build"));
