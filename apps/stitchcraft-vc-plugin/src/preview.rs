@@ -276,7 +276,8 @@ fn centre_line(family: Family, element: &Element, spend: Spend) -> Option<Diagno
     let Ok(Column::CentreLine { .. }) = recognize(path, &mut reading(spend.0).meter()).ok()?.shape else { return None };
     let message = "This satin column is drawn as one path, so it is as wide as its stroke, which VectorCraft does not give a live effect: \
                    the effect leaves it as it is.";
-    Some(Diagnostic::new(Code::VcEffectUnchanged, message).with_fix(Fix::Hint("To see its stitches in VectorCraft, draw it with 2 rails.".into())))
+    let hint = "To see its stitches in VectorCraft, draw its 2 rails and join them with Object › Compound Path › Make.";
+    Some(Diagnostic::new(Code::VcEffectUnchanged, message).with_fix(Fix::Hint(hint.into())))
 }
 
 /// Whether `diagnostics` say the budget ran out.

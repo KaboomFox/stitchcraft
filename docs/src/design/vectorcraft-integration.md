@@ -80,7 +80,9 @@ One `.wasm` per stitch family keeps each dialog relevant and under 64 parameters
 | `<ns>.stroke` | live effect | running, bean, manual (P1); zigzag, ripple (later) | `stroke_method` choice selects the variant |
 | `<ns>.satin` | live effect | satin (P1); E, S, zigzag (P2) | rails and rungs from the object's compound path |
 | `<ns>.fill` | live effect | tatami (P1); contour, meander, circular (P2) | `fill_method` choice |
-| `<ns>.tools` | object filter | make satin from two paths, add rung, bake preview to paths, generate test sheet | one undo step each |
+
+The tools an object filter was to give are VectorCraft's own commands, or wait for ABI v2
+([tools](#tools-vectorcrafts-own-commands)).
 
 `<ns>` is a reverse-DNS namespace defined in one constant (`PLUGIN_NAMESPACE`) in the VectorCraft adapter,
 which reads the effect records too. The plug-in crate imports it. A live effect's id ends with its stitch
@@ -137,6 +139,41 @@ VectorCraft lets it spend, is its preview level (below).
 Stitching order is paint order (bottom first). Hidden objects are skipped, as VectorCraft draws nothing
 for them, and locked objects are stitched. Thread colours come from the object's fill for a fill, and
 from its stroke for a stroke or a satin column, as in Ink/Stitch, mapped to the profile's palette.
+
+### Tools: VectorCraft's own commands
+
+The plan had one object filter, `<ns>.tools`, to make a satin column from 2 paths, add a rung, bake a
+preview to paths and draw a test sheet. VectorCraft's own commands do the first three, and M6.4 checked
+them in its source, 0.7.0 to 0.12.0:
+
+| Task | In VectorCraft | Why it sews |
+|---|---|---|
+| Satin column of 2 paths | Object › Compound Path › Make (`object.compoundPath.make`) | The compound takes the backmost path's appearance, its StitchCraft effect included. It reverses each path in front that winds the same way as the backmost one, and the column turns its second rail back (`reverse_rails`, automatic), as Ink/Stitch does (`REQ-VC-007`) |
+| Rung | Pen tool line across the rails, then Make Compound Path with the column | The column is the path at the back, and keeps its appearance. Which way the rung runs doesn't change the points it pairs |
+| Baked preview | Object › Expand Appearance (`effect.expandAppearance`) | It runs the live effect and makes objects of what each fill and stroke paints, strokes outlined. Those are the preview's shapes, which sew differently from the effect. Bake a copy to show, and sew the original |
+| Presets | Graphic Styles (`graphicStyle.new`, `graphicStyle.apply`) | Applying a style copies its effects into each object, or into the group it is applied to, whose effects apply to each path inside (`REQ-VC-006`) |
+
+**Convert Line to Satin** (Ink/Stitch's `stroke_to_satin`) waits for ABI v2. It would make a column drawn
+as one path into 2 rails and rungs, as the engine makes them when it sews one. A filter is given the
+stroke's width, which a live effect is not, but not its join. M6.4 measured the conversion inside
+VectorCraft's host, as a live effect with the same limits as a filter:
+
+| Line, 3 mm wide | Instructions |
+|---|---|
+| A zigzag of 10 corners | 17 million |
+| An S curve 30 mm long | 51 million |
+| A circle 10 mm across | 68 million |
+| A circle 30 mm across | 72 million |
+| An S curve 60 mm long | 77 million |
+| A circle 50 mm across | 162 million |
+
+A run gets about 52 million, and almost every curved line would run out. The rails are the line offset as
+GEOS offsets it, and each offset builds the boundary of the whole stroke, once for each rail. A faster
+offset, or the heavy budget of ABI v2's P4, brings the tool back (roadmap, M10).
+
+**A test sheet** waits for ABI v2 too. A filter's output holds geometry, paints, opacity and names, and
+never an effect record. The objects it drew would not sew as a test sheet. `stitch testsheet` makes them,
+and ABI v2's P8 would let a filter return effects.
 
 ### Live-effect previews within v1 budgets
 
@@ -239,8 +276,9 @@ anchor, leaves that end of the segment straight, and a segment without handles i
 
 - **Paths and compound paths** are the art. A compound path's children are one shape, with the compound's
   appearance and fill rule.
-- **Groups and layers** pass their children on. Clipping is left for M8, as in the SVG adapter: a
-  clipping group's or layer's art is stitched whole, with `SC-W0807`.
+- **Groups and layers** pass their children on, and their StitchCraft effects with them (below). Clipping
+  is left for M8, as in the SVG adapter: a clipping group's or layer's art is stitched whole, with
+  `SC-W0807`.
 - **Hidden objects**, and everything in them, are left out without a word, as VectorCraft draws nothing
   for them. So are objects and paints of opacity 0, paints turned off and strokes of width 0.
 - **Template layers, layers that don't print, and guides** are left out with `SC-I0809`. VectorCraft
@@ -277,6 +315,15 @@ is none, and a satin column too narrow to stitch across is sewn as a stroke, wit
 VectorCraft's own effects change what an object draws, and are left out with `SC-W0807` (Object › Expand
 Appearance makes paths of what they draw).
 
+**A group's effects** (`REQ-VC-006`). VectorCraft runs a group's or a layer's geometry effects on each
+path and compound path inside it, however deep, with the group's bounds as their frame, and draws what
+they return in that object's own paint (`evaluate_container` and `reshape_leaves` in `crates/effects`,
+0.7.0 to 0.12.0). StitchCraft's live effects are geometry effects, and applying a graphic style to a
+group puts its effects on the group. So each path inside sews as the group's StitchCraft effects say, in
+its own thread, as the preview shows it. A path that StitchCraft effects reach from more than one level,
+its own and a group's, or 2 groups', is drawn as one effect run on the stitches another drew, which a
+machine cannot sew. The path sews as the nearest effects say, and `SC-W0807` names it.
+
 **Ids.** An element is `vc:<object id>:<what>`: `fill` or `stroke` for a paint, with its rank among the
 object's fills or strokes from the second on (`fill.2`), and the family for an effect. VectorCraft keeps
 an object's id when it saves, so a report and a preview name the same object. A repeated id gets `~2`,
@@ -310,6 +357,9 @@ only embroidery:
    palettes.
 6. **Read-only context for live effects:** the object's paint and named sibling markers.
 7. **SVG foreign-attribute preservation** per node, written back on export.
+8. **Effects and stroke style in filter objects.** A filter sees a stroke's join, cap and miter limit and
+   may return an object's effect records. A tool could then make a line into a satin column with its
+   effect, or draw a test sheet that sews.
 
 ## 6. Phase 3: an in-tree crate (optional)
 

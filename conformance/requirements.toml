@@ -879,6 +879,24 @@ statement = "Nothing a VectorCraft document draws is left out silently: text, im
 milestone = "M6"
 status = "active"
 
+[[req]]
+id = "REQ-VC-006"
+area = "vectorcraft"
+level = "L2"
+statement = "A StitchCraft effect sews wherever VectorCraft draws it: on the object it is applied to, on each object a graphic style that holds it is applied to, and, on a group or a layer, on each path and compound path inside, in that path's own thread. A path that StitchCraft effects reach from more than one level, its own and those of the groups and layers around it, sews as the nearest say, and that is named (SC-W0807)."
+rationale = "Graphic Styles are VectorCraft's presets: applying one copies its effects into each object, or into the group it is applied to, and VectorCraft runs a group's geometry effects on each path inside. Where levels stack, VectorCraft runs one effect on the stitches another drew, which no machine sews."
+milestone = "M6"
+status = "active"
+
+[[req]]
+id = "REQ-VC-007"
+area = "vectorcraft"
+level = "L2"
+statement = "A satin column of 2 paths joined with VectorCraft's Make Compound Path sews as the column they draw, whichever way VectorCraft turns them, and a rung joined to it the same way sews as a rung, drawn either way."
+rationale = "VectorCraft's own command makes a column of 2 paths and adds rungs, so the plug-ins need no tool for it. It reverses each path in front that winds the same way as the backmost one, and the column turns its second rail back (reverse_rails, automatic), as Ink/Stitch does."
+milestone = "M6"
+status = "active"
+
 # ── Command line ───────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

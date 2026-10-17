@@ -712,7 +712,9 @@ computes as it draws them (blends, envelopes, meshes, repeats, placed documents 
 objects), a kind of object StitchCraft does not read, clipping and opacity masks, VectorCraft's own
 effects, a brush's art, a StitchCraft effect it cannot use, or a group's or a layer's own fills and
 strokes. A gradient is sewn in its first colour, and a pattern, or a colour that does not read, in
-black.
+black. An object that StitchCraft effects reach from more than one level, its own and a group's
+around it, or 2 groups', sews as the nearest say: VectorCraft runs each on the stitches the one
+before drew, which no machine sews.
 
 The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
 of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
@@ -752,6 +754,7 @@ drawn as one path, or its preview level needs more work than VectorCraft lets a 
 column drawn as one path is as wide as its stroke, and VectorCraft gives a live effect no stroke.
 When another message says why an object sews no stitch, the effect shows that message instead.
 
-The message says which. A satin column drawn as one path still sews as wide as its stroke; to see
-its stitches in VectorCraft, draw it with 2 rails. For a preview that needs more work, the hint
-names a cheaper level to set the effect's `preview_level` to.
+The message says which. A satin column drawn as one path still sews as wide as its stroke. To see its
+stitches in VectorCraft, draw its 2 rails and join them with Object › Compound Path › Make, which
+keeps the effect of the path behind. For a preview that needs more work, the hint names a cheaper
+level to set the effect's `preview_level` to.
