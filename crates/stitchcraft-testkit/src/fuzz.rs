@@ -108,6 +108,8 @@ pub fn read_vectorcraft(data: &[u8]) {
         }
         Err(refusal) => assert!(matches!(refusal.code, Code::VcUnreadable | Code::BudgetExhausted), "{refusal}"),
     }
+    // The part of the file a bug-report bundle keeps reads as the file does.
+    assert_eq!(stitchcraft_vectorcraft::read(stitchcraft_vectorcraft::read_part(data), &budget), plain, "its part reads otherwise");
     // Compressed, the same bytes say the same, unless the budget runs out unpacking them. Bytes that are
     // compressed already would be compressed twice, which no file is.
     let mut encoder = GzEncoder::new(Vec::new(), Compression::fast());

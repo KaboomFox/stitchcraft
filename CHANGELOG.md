@@ -5,6 +5,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.5: `stitch plan` reads VectorCraft documents, `.vectorcraft`, `.drawcraft` and `.vctemplate`, as it
+  reads SVG files, and `stitch export` is another name for it (`REQ-VC-008`). It writes the machine file,
+  the picture and the report, and says what the reader left out. A bug-report bundle includes the part of
+  the document the reader reads, its JSON without the images after it, and a replay reads it again.
+  - Ink/Stitch's commands are written in an object's or a layer's name (`REQ-VC-009`). `stitch:ignore`
+    leaves it out with everything in it, and the new `SC-I0811` lists it. `stitch:start` and `stitch:end`
+    mark where the fill or the satin column grouped with them starts or ends, and are never stitched.
+    Until the generators start and end at such hints (M8), `SC-W0807` names each marker. It also names a
+    group or a layer named as a marker, and any other name that begins with `stitch:`, and reads them as
+    other names.
+  - The plan case `vectorcraft-patch` takes a VectorCraft document to golden machine files, and the docs'
+    pictures of designs can draw one.
+  - A how-to guide, *Embroider a VectorCraft design*. The install page says how to build the plug-ins and
+    keep them installed in VectorCraft.
 - M6.4: VectorCraft's own commands are StitchCraft's tools there, checked in its source. Make Compound
   Path joins a satin column's 2 paths, whichever way it turns them (`REQ-VC-007`), and adds rungs. Expand
   Appearance bakes a preview, and Graphic Styles keep embroidery settings as presets (`REQ-VC-006`). A
@@ -537,6 +551,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- A plan case names its design with `design`, which was `svg`, as the design can be a VectorCraft
+  document.
+- A replay reads a bug-report bundle of up to 192 MiB, which can hold a design of 64 MiB in hexadecimal
+  (`REQ-CLI-005`). It read 64 MiB, as from any path, and refused a bundle that `stitch` itself had
+  written.
 - A VectorCraft group's or layer's StitchCraft effects sew each path inside it that VectorCraft paints,
   as it draws them (`REQ-VC-006`). They were named with `SC-W0807` and left out.
   - Thread and stroke come from the topmost paint over the object, which is a group's own unless the
@@ -1154,6 +1173,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Added `conformance/golden/plans/patch.pes` and `.dst` (M6.5), which the `vectorcraft-patch` case plans
+  from `conformance/fixtures/vectorcraft/patch.vectorcraft`. The patch sews a fill, a satin column, a
+  running stitch and a group's fill effect in 2,466 stitches and 4 threads. Its placement line is left
+  out by its name, and its start marker isn't stitched.
 - Changed `conformance/golden/testsheets/TS-03.pes`, `TS-04.pes`, `TS-05.pes`, `TS-06.pes` and
   `TS-07.pes`. Each is sewn in a new order, so that no jump thread lies under stitching sewn after it.
   TS-04's half stitch is on first stitches of 1, 1.5 and 2.5 mm (623 stitches, where there were 600), and

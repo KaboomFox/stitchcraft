@@ -10,7 +10,9 @@
 //! What it reads (roadmap step M6.1, `docs/src/design/vectorcraft-integration.md`): formats 1 to 4,
 //! plain or compressed, with or without the data format 4 keeps after its JSON; layers, groups, paths
 //! and compound paths in paint order; visibility; fills and strokes with their colours, and a stroke's
-//! width and join; and StitchCraft's live effects, whose records say how an object sews.
+//! width and join; and StitchCraft's live effects, whose records say how an object sews. From M6.5 it
+//! reads Ink/Stitch's commands in names: `stitch:ignore`, `stitch:start` and `stitch:end` (`REQ-VC-009`).
+//! [`read_part`] is the part of a file it reads, which a bug-report bundle keeps.
 //!
 //! Its invariants:
 //!
@@ -20,7 +22,7 @@
 //!   numbers that aren't numbers and objects far away are left out with a warning (`SC-W0807`,
 //!   `SC-W0808`); only a file that is not a VectorCraft document, or is too large, is refused (`SC-E0806`).
 //! - **Nothing is dropped silently.** What it leaves out or simplifies is a warning or a note
-//!   (`SC-I0809`), unless VectorCraft does not draw it either.
+//!   (`SC-I0809`, and `SC-I0811` for what a name leaves out), unless VectorCraft does not draw it either.
 //! - **Positions are exact**, points times 25.4/72, and the same on every platform.
 //! - **Work is bounded** by [`MAX_BYTES`] of JSON and the budget.
 #![forbid(unsafe_code)]
@@ -34,7 +36,7 @@ mod values;
 mod wire;
 mod writer;
 
-pub use container::MAX_BYTES;
+pub use container::{MAX_BYTES, read_part};
 pub use document::{VectorCraft, read};
 pub use effect::{Effect, RIBBON_MM, effect_error, effect_lines, effect_output, effect_ribbons, read_effect};
 
@@ -50,3 +52,9 @@ pub const PREVIEW_LEVEL: &str = "preview_level";
 /// The newest `.vectorcraft` format version the adapter reads; a newer file is read best-effort
 /// (`SC-W0803`).
 pub const FORMAT: u64 = 4;
+
+/// The file name extensions of VectorCraft's documents: its own, `drawcraft` from before VectorCraft was
+/// renamed, which it still opens (`EXTENSION` and `LEGACY_EXTENSION` in its `crates/format`), and
+/// `vctemplate`, a template, which it saves in the same format (its format table, `crates/engine/src/cmd/
+/// fileio`).
+pub const EXTENSIONS: &[&str] = &["vectorcraft", "drawcraft", "vctemplate"];

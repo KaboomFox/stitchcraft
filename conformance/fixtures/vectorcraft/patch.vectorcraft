@@ -1,0 +1,576 @@
+{
+  "format": "vectorcraft",
+  "version": 4,
+  "generator": "hand-written for StitchCraft",
+  "document": {
+    "version": 1,
+    "title": "Patch",
+    "artboards": [
+      {
+        "id": 20,
+        "name": "Patch",
+        "rect": {
+          "x0": -20.0,
+          "y0": -20.0,
+          "x1": 162.0,
+          "y1": 173.0
+        }
+      }
+    ],
+    "graphic_styles": [
+      {
+        "name": "Gold dots",
+        "id": 1,
+        "appearance": {
+          "items": [
+            {
+              "kind": "fill",
+              "paint": {
+                "type": "solid",
+                "color": {
+                  "model": "rgb",
+                  "r": 0.9,
+                  "g": 0.7,
+                  "b": 0.1
+                }
+              }
+            }
+          ],
+          "effects": [
+            {
+              "id": "plugin.dev.stitchcraft.fill",
+              "params": {
+                "angle": 90
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "layers": [
+      {
+        "id": 1,
+        "name": "Patch",
+        "kind": {
+          "type": "layer",
+          "color": {
+            "Preset": 0
+          },
+          "children": [
+            {
+              "id": 10,
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "none"
+                    }
+                  },
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.0,
+                        "g": 0.0,
+                        "b": 0.0
+                      }
+                    },
+                    "width": 0.5
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            -6,
+                            -6
+                          ]
+                        },
+                        {
+                          "p": [
+                            148,
+                            -6
+                          ]
+                        },
+                        {
+                          "p": [
+                            148,
+                            159
+                          ]
+                        },
+                        {
+                          "p": [
+                            -6,
+                            159
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              },
+              "name": "stitch:ignore placement line"
+            },
+            {
+              "id": 3,
+              "name": "Background and its start",
+              "kind": {
+                "type": "group",
+                "children": [
+                  {
+                    "id": 2,
+                    "appearance": {
+                      "items": [
+                        {
+                          "kind": "fill",
+                          "paint": {
+                            "type": "solid",
+                            "color": {
+                              "model": "rgb",
+                              "r": 0.75,
+                              "g": 0.0,
+                              "b": 0.0
+                            }
+                          }
+                        },
+                        {
+                          "kind": "stroke",
+                          "paint": {
+                            "type": "none"
+                          },
+                          "width": 1.0
+                        }
+                      ],
+                      "effects": [
+                        {
+                          "id": "plugin.dev.stitchcraft.fill",
+                          "params": {
+                            "angle": 45,
+                            "row_spacing_mm": 0.4
+                          }
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  0,
+                                  0
+                                ]
+                              },
+                              {
+                                "p": [
+                                  142,
+                                  0
+                                ]
+                              },
+                              {
+                                "p": [
+                                  142,
+                                  85
+                                ]
+                              },
+                              {
+                                "p": [
+                                  0,
+                                  85
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    },
+                    "name": "Background"
+                  },
+                  {
+                    "id": 4,
+                    "appearance": {
+                      "items": [
+                        {
+                          "kind": "fill",
+                          "paint": {
+                            "type": "solid",
+                            "color": {
+                              "model": "rgb",
+                              "r": 0.0,
+                              "g": 0.0,
+                              "b": 0.0
+                            }
+                          }
+                        },
+                        {
+                          "kind": "stroke",
+                          "paint": {
+                            "type": "none"
+                          },
+                          "width": 1.0
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  4,
+                                  4
+                                ]
+                              },
+                              {
+                                "p": [
+                                  7,
+                                  4
+                                ]
+                              },
+                              {
+                                "p": [
+                                  7,
+                                  7
+                                ]
+                              },
+                              {
+                                "p": [
+                                  4,
+                                  7
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    },
+                    "name": "stitch:start"
+                  }
+                ]
+              }
+            },
+            {
+              "id": 5,
+              "name": "Border",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "none"
+                    }
+                  },
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.0,
+                        "g": 0.2,
+                        "b": 0.7
+                      }
+                    },
+                    "width": 1.0
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.satin",
+                    "params": {}
+                  }
+                ]
+              },
+              "kind": {
+                "type": "compound",
+                "rule": "NonZero",
+                "children": [
+                  {
+                    "id": 51,
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  0,
+                                  92
+                                ]
+                              },
+                              {
+                                "p": [
+                                  142,
+                                  92
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": 52,
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  0,
+                                  103.3
+                                ]
+                              },
+                              {
+                                "p": [
+                                  142,
+                                  103.3
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": 6,
+              "name": "Stem",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "none"
+                    }
+                  },
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.0,
+                        "g": 0.5,
+                        "b": 0.2
+                      }
+                    },
+                    "width": 1.0
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.stroke",
+                    "params": {
+                      "running_stitch_length_mm": 2.5
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            10,
+                            115
+                          ],
+                          "out": [
+                            50,
+                            100
+                          ]
+                        },
+                        {
+                          "p": [
+                            132,
+                            115
+                          ],
+                          "in": [
+                            92,
+                            130
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 7,
+              "name": "Dots",
+              "graphic_style": 1,
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.9,
+                        "g": 0.7,
+                        "b": 0.1
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.fill",
+                    "params": {
+                      "angle": 90
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "group",
+                "children": [
+                  {
+                    "id": 8,
+                    "appearance": {
+                      "items": [
+                        {
+                          "kind": "fill",
+                          "paint": {
+                            "type": "none"
+                          }
+                        },
+                        {
+                          "kind": "stroke",
+                          "paint": {
+                            "type": "none"
+                          },
+                          "width": 1.0
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  20,
+                                  125
+                                ]
+                              },
+                              {
+                                "p": [
+                                  48,
+                                  125
+                                ]
+                              },
+                              {
+                                "p": [
+                                  48,
+                                  153
+                                ]
+                              },
+                              {
+                                "p": [
+                                  20,
+                                  153
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "appearance": {
+                      "items": [
+                        {
+                          "kind": "fill",
+                          "paint": {
+                            "type": "none"
+                          }
+                        },
+                        {
+                          "kind": "stroke",
+                          "paint": {
+                            "type": "none"
+                          },
+                          "width": 1.0
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  94,
+                                  125
+                                ]
+                              },
+                              {
+                                "p": [
+                                  122,
+                                  125
+                                ]
+                              },
+                              {
+                                "p": [
+                                  122,
+                                  153
+                                ]
+                              },
+                              {
+                                "p": [
+                                  94,
+                                  153
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "next_id": 99
+  }
+}

@@ -52,3 +52,8 @@ run = ["stitch plan strokes.svg -o strokes.pes --preview strokes.png --report st
 id = "plan-badge"
 files = ["docs/fixtures/badge.svg"]
 run = ["stitch plan badge.svg -o badge.pes --preview badge.png"]
+
+[[example]]
+id = "export-patch"
+files = ["conformance/fixtures/vectorcraft/patch.vectorcraft"]
+run = ["stitch export patch.vectorcraft -o patch.pes --preview patch.png"]

@@ -1,7 +1,7 @@
 # User guide
 
-StitchCraft writes machine embroidery files from SVG designs. It also reads, draws and converts the
-files of other embroidery software. The guide follows the [Diátaxis](https://diataxis.fr/) structure,
+StitchCraft writes machine embroidery files from SVG files and VectorCraft documents. It also reads,
+draws and converts the files of other embroidery software. The guide follows the [Diátaxis](https://diataxis.fr/) structure,
 with a section for each stitch type.
 
 | Section | Use it to | Pages |

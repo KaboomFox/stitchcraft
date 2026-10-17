@@ -8,6 +8,9 @@
 //!
 //! **Why pieces.** A compressed file is unpacked a piece at a time, up to the marker and never past
 //! [`MAX_BYTES`] of JSON, so that a small file that unpacks to a huge one costs no more than the limit.
+//!
+//! **Why a part.** A bug-report bundle needs what reading the file needs, and no more: [`read_part`]
+//! leaves out the data after a plain file's JSON, its images among them, which reading never looks at.
 
 use std::borrow::Cow;
 use std::io::Read;
@@ -49,6 +52,16 @@ pub(crate) fn json<'a>(bytes: &'a [u8], meter: &mut Meter) -> Result<Cow<'a, [u8
     }
     charge(meter, json.len())?;
     Ok(json)
+}
+
+/// The part of the `.vectorcraft` file `bytes` that [`read`](crate::read) reads, which reads as the file
+/// does: a plain file's JSON, before the marker and the data after it. A compressed file, and one whose JSON does not end
+/// at the marker, are read whole, so their part is the file.
+pub fn read_part(bytes: &[u8]) -> &[u8] {
+    if bytes.starts_with(&GZIP) {
+        return bytes;
+    }
+    end_of_json(bytes).ok().and_then(|end| bytes.get(..end)).unwrap_or(bytes)
 }
 
 /// Unpacks the gzip stream `bytes` up to the end of the marker, whichever piece it ends in, and a little
@@ -183,6 +196,20 @@ mod tests {
         assert!(too_large(read(&[&most[..], b" "].concat())));
         // A NUL byte past that much JSON is past the limit, whatever follows it.
         assert!(too_large(read(&[&most[..], b"  \0"].concat())));
+    }
+
+    #[test]
+    fn the_part_a_bundle_keeps_reads_as_the_file_does() {
+        let plain = [&b"{\"a\": 1}"[..], MARKER, &[7, 0, 8, 255]].concat();
+        assert_eq!(read_part(&plain), b"{\"a\": 1}");
+        // Read whole: a file without the marker, a compressed one, and one with a NUL byte of its own.
+        let damaged = b"{\"a\": \0}".to_vec();
+        for whole in [b"{}".to_vec(), gzip(&plain), damaged] {
+            assert_eq!(read_part(&whole), whole.as_slice());
+        }
+        for bytes in [plain, gzip(b"{}"), b"{\"a\": \0}".to_vec(), [&vec![b' '; MAX_BYTES][..], b" "].concat()] {
+            assert_eq!(read(read_part(&bytes)), read(&bytes));
+        }
     }
 
     #[test]

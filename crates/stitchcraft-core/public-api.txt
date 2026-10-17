@@ -81,6 +81,7 @@ pub stitchcraft_core::diag::Code::VcFeatureIgnored
 pub stitchcraft_core::diag::Code::VcGeometryUnusable
 pub stitchcraft_core::diag::Code::VcNewerFormat
 pub stitchcraft_core::diag::Code::VcNotPrinted
+pub stitchcraft_core::diag::Code::VcObjectIgnored
 pub stitchcraft_core::diag::Code::VcUnreadable
 impl stitchcraft_core::diag::Code
 pub const stitchcraft_core::diag::Code::ALL: &'static [stitchcraft_core::diag::Code]
@@ -273,6 +274,7 @@ pub stitchcraft_core::Code::VcFeatureIgnored
 pub stitchcraft_core::Code::VcGeometryUnusable
 pub stitchcraft_core::Code::VcNewerFormat
 pub stitchcraft_core::Code::VcNotPrinted
+pub stitchcraft_core::Code::VcObjectIgnored
 pub stitchcraft_core::Code::VcUnreadable
 impl stitchcraft_core::diag::Code
 pub const stitchcraft_core::diag::Code::ALL: &'static [stitchcraft_core::diag::Code]

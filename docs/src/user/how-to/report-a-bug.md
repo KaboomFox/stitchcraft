@@ -9,7 +9,8 @@ bundle**. Write one when:
 
 ## Write the bundle
 
-Run `stitch bug-report` with the design, and the profile and format you sew with:
+Run `stitch bug-report` with the design, an SVG file or a VectorCraft document, and the profile and
+format you sew with:
 
 ```sh
 stitch bug-report design.svg --profile brother-pe800-4x4 --says "the zigzag's corners are rounded"
@@ -18,7 +19,8 @@ stitch bug-report design.svg --profile brother-pe800-4x4 --says "the zigzag's co
 It plans the design exactly as `stitch plan` does and writes `design.bug-report.json` next to it (`-o`
 names another file). The bundle holds:
 
-- your design file, whole, and the design name the machine file's label holds;
+- your design file, whole, or a VectorCraft document's JSON without the pictures after it, and the
+  design name the machine file's label holds;
 - the profile, the format (`--format pes|dst`, the profile's own by default) and the version of
   StitchCraft;
 - a digest of the plan's stitches, and the machine file's size and digest;
@@ -35,9 +37,9 @@ got, and attach the bundle. GitHub takes `.json` files up to 25 MB. Zip a larger
 ## When StitchCraft finds the bug itself
 
 StitchCraft checks each plan before writing a machine file. If a check fails (`SC-E0009`) or StitchCraft
-crashes, `stitch plan` writes the bundle for you in place of the machine file. The bundle goes next to
-the file you named, as `design.bug-report.json` for `design.pes`. The command says where it is and ends
-with exit status 4. Attach that bundle to an issue.
+crashes, `stitch plan` (or `stitch export`) writes the bundle for you in place of the machine file. The
+bundle goes next to the file you named, as `design.bug-report.json` for `design.pes`. The command says
+where it is and ends with exit status 4. Attach that bundle to an issue.
 
 ## For maintainers: replay a bundle
 
@@ -61,9 +63,12 @@ StitchCraft gives the same plan, bit for bit, for the same design, profile, form
 platform, so with the version that wrote the bundle, the replay reproduces it. With another version, what
 differs is listed under `then:` and `now:`: that is how to tell whether a bug is fixed. The exit status is
 1 when the bundle does not reproduce. The design is in the bundle's `design.svg` field, ready to save and
-open, or in `design.svg_hex` as hexadecimal when the file is not UTF-8 text, as a Latin-1 SVG is not. A
-bundle also names the commit StitchCraft was built from, when it was built from a git checkout, which
-`stitch --version` shows too: until the first release, every build says the same version.
+open, or in `design.svg_hex` as hexadecimal when the file is not UTF-8 text, as a Latin-1 SVG is not. Of a
+VectorCraft document, the bundle keeps the part StitchCraft reads, in `design.vectorcraft`: its JSON,
+without the images and other data VectorCraft keeps after it. Compressed documents are kept whole, in
+`design.vectorcraft_hex`. A bundle also names the commit StitchCraft was built from, when it was built from
+a git checkout, which `stitch --version` shows too: until the first release, every build says the same
+version.
 
 Anyone can attach a bundle to an issue. The replay writes each character from it that a terminal would act
 on as an escape, such as `\u{1b}` for the one that starts a terminal's control sequences.
