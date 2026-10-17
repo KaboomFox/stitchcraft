@@ -8,24 +8,29 @@
 //!
 //! - A shot's document is drawn by `vectorcraft-cli`, with the plug-in's modules installed and the shot's
 //!   steps, as Level B's scenarios draw theirs (`compat/scenario.rs`). So VectorCraft only ever opens what
-//!   it wrote.
-//! - A `vectorcraft-render` shot is that run's PNG export: the canvas, live effects and all, without the
-//!   window around it.
+//!   it wrote. The run ends with a drawing, which runs the live effects, and each module is asked for its
+//!   last error after it. VectorCraft keeps a module's last error only until its next success, so a shot
+//!   applies each family once.
+//! - A `vectorcraft-render` shot is that drawing, a PNG export: the canvas, live effects and all, without
+//!   the window around it.
 //! - A `vectorcraft-ui` shot opens the document in VectorCraft's window, in a desktop of its own
 //!   (`window.rs`), where the window probe's `tests/shots.rs` presses the shot's menu path through the
 //!   accessibility tree and crops the picture to the menus, or to the dialog of the family's effect. A
-//!   dialog must show a label for each parameter of the module's manifest, which the plug-in crate makes
-//!   from the parameter registry and gives here.
+//!   dialog is taken in a taller window (`window::DIALOG_WINDOW`), since it doesn't scroll, and must show a
+//!   row for each parameter of the module's manifest, which the plug-in crate makes from the parameter
+//!   registry and gives here: a label, and the control VectorCraft gives the parameter's type.
 //!
 //! **Why a tolerance.** Mesa draws VectorCraft's window in software, and a newer Mesa from Ubuntu's updates
 //! may move an anti-aliased edge. A picture stays while no more than [`PER_THOUSAND`] in a thousand of its
 //! pixels differ from the committed one by more than [`TOLERANCE`] in a channel, 0.2 %, so that the pictures
 //! change when VectorCraft does.
 
+use std::collections::BTreeSet;
 use std::path::Path;
 
 use serde_json::{Value, json};
 use stitchcraft_params::Family;
+use stitchcraft_vc_plugin::manifest::Schema;
 
 use super::{GENERATED, Same, Shot, keep};
 use crate::compat::scenario::{self, Run, Step};
@@ -43,6 +48,8 @@ const PER_THOUSAND: u64 = 2;
 const TOLERANCE: u8 = 8;
 /// Where the shots' documents and pictures, and the window's records, are made.
 const OUT: &str = "target/shots-vectorcraft";
+/// The drawing that ends a `vectorcraft-ui` shot's run, in its folder: a render shot's is its picture.
+const CANVAS: &str = "canvas.png";
 
 /// Whether the pictures `a` and `b`, two PNG files, are the same within the tolerance: of one size, with no
 /// more than [`PER_THOUSAND`] in a thousand of their pixels further apart than [`TOLERANCE`] in a channel.
@@ -76,18 +83,29 @@ pub(super) fn committed(root: &Path, shot: &Shot, findings: &mut Findings) {
 }
 
 /// What is wrong with the VectorCraft shot `shot` before VectorCraft runs: modules and families that don't
-/// exist, steps that don't read or export, and fields of another kind.
+/// exist, steps that don't read or export, a family applied twice or without its module, and fields of
+/// another kind.
 fn problems(shot: &Shot) -> Vec<String> {
     let mut found = Vec::new();
     let modules = compat::modules();
     for module in shot.plugins.iter().filter(|module| !modules.contains(&module.as_str())) {
         found.push(format!("there is no module `{module}`"));
     }
+    let mut applied = BTreeSet::new();
     for step in &shot.steps {
         if step.export.is_some() {
             found.push("its steps export nothing: the shot exports what it shows".to_string());
         } else if let Err(e) = step.check() {
             found.push(e);
+        } else if let Some(family) = &step.apply {
+            if !shot.plugins.contains(family) {
+                found.push(format!("it applies `{family}` without installing that module"));
+            }
+            if !applied.insert(family) {
+                found.push(format!(
+                    "it applies `{family}` twice: VectorCraft keeps a module's last error only until its next success, so the second could hide the first's"
+                ));
+            }
         }
     }
     let stitch_fields = shot.sheet.is_some() || shot.fixture.is_some() || !shot.panels.is_empty() || !shot.allow.is_empty() || shot.style.is_some();
@@ -152,9 +170,7 @@ fn make(root: &Path, shots: &[&Shot], check_only: bool, findings: &mut Findings)
         let export = |file: &str| Step { cmd: None, apply: None, params: None, export: Some(file.to_string()) };
         let mut steps = shot.steps.clone();
         steps.push(export(&document));
-        if shot.kind == RENDER {
-            steps.push(export(&picture));
-        }
+        steps.push(export(if shot.kind == RENDER { &picture } else { CANVAS }));
         let run = Run { open: None, plugins: shot.plugins.clone(), steps, scale: shot.scale.map(f64::from) };
         if let Err(e) = scenario::draw(&run, &fetched.root.join("bin/vectorcraft-cli"), &modules, &dir) {
             findings.error(format!("shot `{}`: {e}", shot.id));
@@ -183,24 +199,17 @@ fn make(root: &Path, shots: &[&Shot], check_only: bool, findings: &mut Findings)
 }
 
 /// The window probe's job for the `vectorcraft-ui` shot `shot` (`compat/vc-window/tests/shots.rs`): the
-/// document, the modules' files, the menu path, and for a dialog the family's row and parameters, which
-/// its manifest gives, and where the picture goes.
+/// document, the modules' files, the menu path, and for a dialog the window's size, the family's row, and
+/// its parameters with the control each shows, which its manifest gives; and where the picture goes.
 fn job(shot: &Shot, document: &Path, modules: &Path, picture: &Path) -> Result<Value, String> {
     let plugins: Vec<String> = shot.plugins.iter().map(|module| modules.join(format!("{module}.wasm")).to_string_lossy().into_owned()).collect();
-    let dialog = match shot.dialog.as_deref() {
-        None => Value::Null,
+    let (window, dialog) = match shot.dialog.as_deref() {
+        None => (Value::Null, Value::Null),
         Some(name) => {
             let family = Family::ALL.iter().copied().find(|f| f.id() == name).ok_or(format!("no stitch family `{name}`"))?;
             let manifest = stitchcraft_vc_plugin::manifest::family(family);
-            let params: Vec<Value> = manifest
-                .params
-                .iter()
-                .map(|(key, schema)| {
-                    let kind = serde_json::to_value(schema).ok().and_then(|v| v.get("type").cloned()).unwrap_or(Value::Null);
-                    json!([key, kind])
-                })
-                .collect();
-            json!({ "row": manifest.name, "params": params })
+            let params: Vec<Value> = manifest.params.iter().map(|(key, schema)| json!([key, control(schema)])).collect();
+            (json!(window::DIALOG_WINDOW), json!({ "row": manifest.name, "params": params }))
         }
     };
     Ok(json!({
@@ -208,9 +217,21 @@ fn job(shot: &Shot, document: &Path, modules: &Path, picture: &Path) -> Result<V
         "document": document.to_string_lossy(),
         "plugins": plugins,
         "menu": shot.menu,
+        "window": window,
         "dialog": dialog,
         "picture": picture.to_string_lossy(),
     }))
+}
+
+/// The role in the accessibility tree of the control VectorCraft's dialog gives a parameter of the type
+/// `schema` (its `form::schema_fields`): a text field for a number, a checkbox for a toggle, and a drop-down
+/// list for a choice.
+fn control(schema: &Schema) -> &'static str {
+    match schema {
+        Schema::Number { .. } | Schema::Int { .. } => "text_field",
+        Schema::Bool { .. } => "check_box",
+        Schema::Choice { .. } => "combo_box",
+    }
 }
 
 #[cfg(test)]

@@ -254,11 +254,13 @@ alt = "The patch as it will sew. A red fill with rows at 45 degrees has a blue s
 
 # ── VectorCraft's own pictures (`cargo xtask shots --vectorcraft`, the shots-ui job) ──────────────────
 # Made by the stable release compat/vectorcraft.toml pins. `vectorcraft-cli` installs the `plugins` and
-# draws the document from `steps`, as a Level B scenario's (compat/scenarios/), in points. A
+# draws the document from `steps`, as a Level B scenario's (compat/scenarios/), in points, applying each
+# stitch family once at most: VectorCraft keeps a module's last error only until its next success. A
 # "vectorcraft-render" shot is that document's PNG export, `scale` pixels per point. A "vectorcraft-ui" shot
 # opens it in VectorCraft's window, selects everything, and presses `menu`, the menu bar's title and then
 # rows, through the accessibility tree. The picture shows the menus open, or with `dialog = "<family>"` the
-# dialog of that family's effect, which must show a label for each of the module's parameters.
+# dialog of that family's effect, in a window tall enough for it, which must show a row for each of the
+# module's parameters: its label, and the control of its type.
 
 [[shot]]
 id = "vectorcraft-plugins-menu"
@@ -315,23 +317,29 @@ alt = "The StitchCraft Stroke dialog in VectorCraft: a setting a row, each named
 [[shot]]
 id = "vectorcraft-patch"
 kind = "vectorcraft-render"
-plugins = ["satin", "fill"]
+plugins = ["stroke", "satin", "fill"]
 scale = 3.0
 steps = [
   { cmd = "file.new", params = { width = 144, height = 144 } },
-  { cmd = "shape.ellipse", params = { x = 12, y = 12, width = 120, height = 120 } },
+  # A disc of fill, and a star of running stitch on it.
+  { cmd = "shape.ellipse", params = { x = 14, y = 14, width = 116, height = 116 } },
   { cmd = "paint.setFill", params = { color = "#1f4e9c" } },
   { cmd = "paint.setStroke", params = { none = true } },
   { apply = "fill", params = { angle = 45 } },
-  { cmd = "shape.star", params = { cx = 72, cy = 76, radius1 = 42, radius2 = 18, points = 5 } },
-  { cmd = "paint.setFill", params = { color = "#c8102e" } },
-  { cmd = "paint.setStroke", params = { none = true } },
-  { apply = "fill", params = { angle = 90 } },
+  { cmd = "shape.star", params = { cx = 72, cy = 74, radius1 = 40, radius2 = 17, points = 5 } },
+  { cmd = "paint.setFill", params = { none = true } },
+  { cmd = "paint.setStroke", params = { color = "#ffffff" } },
+  { apply = "stroke" },
+  # A satin border over both: its 2 rails, joined with Make Compound Path while the rest is locked.
+  { cmd = "select.all" },
+  { cmd = "object.lock" },
   { cmd = "shape.ellipse", params = { x = 12, y = 12, width = 120, height = 120 } },
+  { cmd = "shape.ellipse", params = { x = 20, y = 20, width = 104, height = 104 } },
+  { cmd = "select.all" },
+  { cmd = "object.compoundPath.make" },
   { cmd = "paint.setFill", params = { none = true } },
   { cmd = "paint.setStroke", params = { color = "#d9a400" } },
-  { cmd = "stroke.set", params = { weight = 8 } },
   { apply = "satin" },
+  { cmd = "object.unlockAll" },
 ]
-alt = "The patch in VectorCraft's canvas, as its previews show the stitches: a blue disc of rows at 45 degrees, a red star of upright rows on it, and a gold satin border around both."
-
+alt = "The patch in VectorCraft's canvas, as its previews show the stitches: a blue disc of rows at 45 degrees, a white star of running stitch on it, and a gold satin border around both."
