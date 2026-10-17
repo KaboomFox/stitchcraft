@@ -5,7 +5,7 @@
 //! previews). A float written the shortest way that reads back exactly takes up to 17 digits, and
 //! `serde_json` takes hundreds of instructions for each byte of it. A preview needs far less: a
 //! coordinate here is a whole number of thousandths of a point (0.35 µm), written with as few digits as
-//! that takes, so an anchor is about 20 bytes, and each digit is one division.
+//! that takes, so an anchor is 18 to 27 bytes, and each digit is one division.
 //!
 //! **What it writes.** `{"objects":[{"path":{"subpaths":[…]}}]}`, VectorCraft's `PathData`: each subpath
 //! its anchors as `{"p":[x,y]}`, without handles, and `"closed":true` only when it is closed, since

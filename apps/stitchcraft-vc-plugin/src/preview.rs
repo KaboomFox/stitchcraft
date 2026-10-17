@@ -17,10 +17,10 @@
 //!
 //! **Why auto shows a fill's rows.** A stroke's work costs about 880 instructions a unit and a satin
 //! column's 4,730, on every shape measured, so a budget of units bounds their exact previews. A fill's
-//! costs from 1,900 to 5,300 by the part of the work, and sewing a 7 mm square takes 26 million: an exact
-//! preview of a fill fits only when it is small, and no budget of units can tell beforehand. So a fill's
-//! exact preview is the user's to pick, with all that VectorCraft allows, which stops one that needs more
-//! with its own error.
+//! costs from 1,900 to 5,300 by the part of the work, and a 7 mm square's exact preview takes 27 million:
+//! an exact preview of a fill fits only when it is small, and no budget of units can tell beforehand. So a
+//! fill's exact preview is the user's to pick, with all that VectorCraft allows, which stops one that needs
+//! more with its own error.
 //!
 //! **Where the numbers come from.** Spike M0.6 measured reading JSON at 512 instructions a byte, and M6.3
 //! the rest, in VectorCraft's host, on the shapes the contract tests run. Each constant here is the
@@ -48,7 +48,8 @@ const READ_PER_BYTE: u64 = 650;
 /// What a run costs before and besides its work: starting, reading the settings, the manifest's
 /// defaults. At most 900,000 measured.
 const SETUP: u64 = 2_000_000;
-/// What writing one anchor costs: 16 instructions a byte measured, and about 22 bytes an anchor.
+/// What writing one anchor costs: 16 instructions a byte measured, and at most 27 bytes an anchor, in a
+/// fill's ribbons.
 const PER_ANCHOR: u64 = 500;
 /// How far apart the outline's hatch lines lie, in millimetres.
 const HATCH_MM: f64 = 3.0;

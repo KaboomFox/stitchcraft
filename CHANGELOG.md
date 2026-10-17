@@ -11,11 +11,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   each row segment. The outline shows when they cost too much. A level the user picks gets the whole
   budget, and `SC-I0810` names a cheaper one when that is not enough.
   - The plug-in prices the engine's work in instructions, which the contract tests measured in VectorCraft's
-    host. The engine's work limits a preview more than the JSON does. Sewing a 7 mm square fill takes 26
-    million of the 50 million instructions VectorCraft allows, and laying its rows 1.6 million.
+    host. The engine's work limits a preview more than the JSON does. A 7 mm square fill's exact preview
+    takes 27 million of the 50 million instructions VectorCraft allows, and its rows 1.7 million.
   - `stitchcraft_engine::generate::rows` lays a fill's top rows without sewing them, as `generate` lays
     them.
-  - The geometry is written by hand, to a thousandth of a point: about 20 bytes an anchor instead of 40,
+  - The geometry is written by hand, to a thousandth of a point: 18 to 27 bytes an anchor instead of 40,
     and 16 instructions a byte instead of hundreds.
   - The reader leaves `preview_level` out of an element's settings.
 - M6.2: VectorCraft plug-ins for the stitch families. Each is its own WebAssembly module, which a feature
