@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-44dc662e.js";
+            window.path_to_searchindex_js = "../searchindex-f110be3e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -232,10 +232,13 @@ byte, so all three operating systems make the bytes the machine checkpoints sewe
 golden files (<code>REQ-RND-002</code>), the formats’ canonical plans (<code>REQ-FMT-001</code>) and the frozen reference
 values of <code>stitchcraft-core</code>’s tests are compared on all three as well. The oracle case reads the files
 with pyembroidery, which only the Linux gates job installs.</p>
-<p>WebAssembly is built, not run. <code>cargo xtask wasm</code> checks that the library crates and the plug-in build
-for <code>wasm32-unknown-unknown</code>, and the lints above keep the library crates off what that target lacks. A
-run of the cases on a WebAssembly runtime is not planned yet. Until one is, the rules in the table are
-what keep its output the same.</p>
+<p>WebAssembly is checked too, since VectorCraft runs the engine as WebAssembly. <code>cargo xtask wasm</code> checks
+that the library crates and the plug-in build for <code>wasm32-unknown-unknown</code>, and the lints above keep the
+library crates off what that target lacks. The <code>wasm-goldens</code> gate (<code>cargo xtask wasm --goldens</code>) builds
+<code>stitch</code> for <code>wasm32-wasip1</code> and runs it under wasmtime on every test-sheet and plan case, each with the
+command line the case stands for. Each machine file it writes must be its golden file byte for byte. WASI
+gives <code>stitch</code> the files it reads and writes. Both are WebAssembly, and the engine’s maths is its own, so
+its arithmetic is the plug-in’s.</p>
 <h2 id="bug-reports"><a class="header" href="#bug-reports">Bug reports</a></h2>
 <p>Because the same design, profile, format and version give the same plan everywhere, those four are all a
 bug report needs. <code>stitch bug-report</code> writes them into one JSON file, with the design file itself in place

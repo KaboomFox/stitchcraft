@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-44dc662e.js";
+            window.path_to_searchindex_js = "../../searchindex-f110be3e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -181,45 +181,74 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="adr-0005-geometry-stack"><a class="header" href="#adr-0005-geometry-stack">ADR-0005: Geometry stack</a></h1>
-<p><strong>Status:</strong> Proposed — confirmed or revised by spike M0.7 · 2026-10-08</p>
+<!-- The status line, a label and its value, which the ADR index is checked against. -->
+<!-- vale ai-tells.ColonUsage = NO -->
+<p><strong>Status:</strong> Accepted · 2026-10-17, after spike M0.7 · proposed 2026-10-08</p>
+<!-- vale ai-tells.ColonUsage = YES -->
 <h2 id="context"><a class="header" href="#context">Context</a></h2>
 <p>The engine needs curve flattening, polygon booleans and offsets with holes (fill rules, insets for
-underlay and contour fill), spatial queries and graph algorithms — all pure Rust, wasm-compatible,
-permissively licensed and robust on degenerate input.</p>
-<h2 id="decision-proposed"><a class="header" href="#decision-proposed">Decision (proposed)</a></h2>
+underlay and contour fill), spatial queries and graph algorithms. They must be pure Rust and build for
+WebAssembly. Their licences must be permissive, and they must hold up on degenerate input.</p>
+<h2 id="decision"><a class="header" href="#decision">Decision</a></h2>
+<p>The engine does its own geometry, in Rust on <code>f64</code>, and depends on no geometry crate. <code>libm</code>, through
+<code>stitchcraft_core::math</code>, gives it the few transcendental functions it needs, the same on every platform.</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Need</th><th>Choice</th><th>Why</th></tr>
+<tr><th>Need</th><th>Proposed</th><th>Chosen</th><th>Why</th></tr>
 </thead>
 <tbody>
-<tr><td>Curves, affine maps, flattening</td><td><code>kurbo</code> 0.13</td><td>VectorCraft uses it; mature; MIT/Apache</td></tr>
-<tr><td>Booleans, offsets</td><td><code>i_overlay</code> 9</td><td>Pure Rust, integer-snapped robust overlay, fill rules, offsetting; MIT/Apache</td></tr>
-<tr><td>Spatial index</td><td><code>rstar</code> 0.13</td><td>Nearest-neighbour queries for routing; MIT/Apache</td></tr>
-<tr><td>Graphs</td><td><code>petgraph</code> 0.8 + our own Hierholzer walk</td><td>Deterministic tie-breaking under our control; MIT/Apache</td></tr>
-<tr><td>Math</td><td><code>libm</code> 0.2</td><td>Deterministic transcendental functions; MIT</td></tr>
+<tr><td>Flattening curves</td><td><code>kurbo</code> 0.13</td><td>The engine halves each curve (<code>normalize::stroke</code>), since M3.4</td><td><code>kurbo</code>’s <code>flatten</code> calls the platform’s <code>powf</code> and <code>hypot</code>, whose last bits differ from one platform to the next</td></tr>
+<tr><td>A fill’s region</td><td><code>i_overlay</code> 9</td><td>The engine’s region code (<code>normalize::region</code>), since M5.1</td><td>An integer-snapped overlay moves the drawing’s points onto its grid, and its loops cannot charge an element’s work budget. The engine keeps every point the drawing has and decides sides of lines exactly. It charges its work as it goes</td></tr>
+<tr><td>Offsets: satin rails, insets, grown fills</td><td><code>i_overlay</code> 9</td><td>The engine’s offsetter (<code>normalize::offset</code>), since M4 and M5.7</td><td>Ink/Stitch offsets with shapely, whose curves are GEOS’s. The engine builds the same curves, and checks them against shapely’s</td></tr>
+<tr><td>The nearest point or line</td><td><code>rstar</code> 0.13</td><td>Scans of one element’s points at a time, charged to the work budget (<code>normalize::near</code>)</td><td>The hoop’s whole field plans in about 30 ms with them (<code>REQ-FILL-TAT-009</code>), so an index would buy nothing yet</td></tr>
+<tr><td>Routing a fill’s rows</td><td><code>petgraph</code> 0.8 with a walk of our own</td><td>The engine’s own graph (<code>generators::tatami::graph</code>), since M5.4</td><td>Ink/Stitch’s route depends on the order in which its graph library lists a node’s edges, and the engine’s graph lists them in that order</td></tr>
+<tr><td>Transcendental functions</td><td><code>libm</code> 0.2</td><td><code>libm</code> 0.2, through <code>stitchcraft_core::math</code></td><td>The same bits on every platform</td></tr>
 </tbody>
 </table>
 </div>
-<p><strong>Revised in M3.4:</strong> strokes are not flattened with <code>kurbo</code>. Its <code>flatten</code> in 0.13 calls <code>powf</code> and
-<code>hypot</code> from the platform’s maths library, so the engine halves curves itself with arithmetic and square
-roots (<a href="../engine-pipeline.html#1-normalize">engine pipeline › Normalize</a>).</p>
-<p><strong>Revised in M5.1:</strong> a fill’s region is not built with <code>i_overlay</code> but by the engine
-(<a href="../algorithms/fills.html#region">fills › Region</a>). An integer-snapped overlay moves the drawing’s points
-onto its grid, and its loops cannot charge an element’s work budget. The engine keeps every point the
-drawing has and decides sides of lines exactly. It charges its work as it goes.</p>
-<h2 id="spike-m07-acceptance-criteria"><a class="header" href="#spike-m07-acceptance-criteria">Spike M0.7 acceptance criteria</a></h2>
-<ol>
-<li>Booleans and offsets of 10,000 random polygons with holes, plus the degenerate corpus: no panic, no
-hang, valid output (<code>i_overlay</code> validity + our own ring checks).</li>
-<li>Identical output bytes on Linux, macOS, Windows and wasm32.</li>
-<li>Offsetting a 150 mm region with 1,000 vertices inward 300 times (contour fill) in under 200 ms natively.</li>
-<li>Build for <code>wasm32-unknown-unknown</code> adds under 300 KiB to the plug-in.</li>
-</ol>
-<p>If a criterion fails: <code>geo</code>’s boolean/buffer algorithms are the first alternative; a small offsetter of
-our own over <code>i_overlay</code> booleans the second.</p>
+<p>The geometry lives with the code that uses it, in <code>normalize</code> and in the generators, rather than behind one
+<code>geometry</code> module. Each piece follows what Ink/Stitch does in its place, and its docs say what that is.</p>
+<h2 id="spike-m07"><a class="header" href="#spike-m07">Spike M0.7</a></h2>
+<p>The criteria were written for the crates proposed. The spike measured the engine’s own geometry against
+them.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Criterion</th><th>Result</th></tr>
+</thead>
+<tbody>
+<tr><td>1. Booleans and offsets of 10,000 random polygons with holes, and of a degenerate corpus, give valid output without panicking or hanging</td><td><strong>Met.</strong> The property test <code>any_polygon_with_holes_grows_and_shrinks_into_valid_parts</code> grew and shrank 10,000 random polygons with holes, and every part it got was valid. It ran with <code>PROPTEST_CASES=10000</code>, where CI runs 256 each time. The offsets agree with shapely’s for 1,050 random lines, and the grown and shrunk polygons for 330. The region code’s tests take random rings, and rings with copies of themselves a rounding error apart. Every loop charges the work budget, so a plan that runs too long ends with <code>SC-E0004</code></td></tr>
+<tr><td>2. The same output bytes on Linux, macOS, Windows and wasm32</td><td><strong>Met.</strong> The tests run on the 3 systems, and the <code>wasm-goldens</code> gate makes every golden file of the conformance cases with <code>stitch</code> built for WASI and run by wasmtime (<a href="../determinism.html#cross-platform-check">determinism</a>): 16 files, byte for byte</td></tr>
+<tr><td>3. Offsetting a 150 mm region with 1,000 vertices inward 300 times in under 200 ms natively</td><td><strong>Not met</strong>: 218 to 448 ms, against GEOS’s 104 to 149 ms for the same parts and points (below). Contour fill is the first stitch type to need it. The offsetter meets this criterion in M7, before contour fill relies on it</td></tr>
+<tr><td>4. Building for wasm32 adds under 300 KiB to the plug-in</td><td><strong>Met for the geometry</strong>: no geometry crate is linked, so none adds to the plug-in. M6.2 links the engine into it and records the module’s size</td></tr>
+</tbody>
+</table>
+</div>
+<p>Criterion 3, measured on a 2.1 GHz Xeon in an optimized build: a ring 150 mm across, of 1,000 points, round
+or with 7 waves of 2 mm, shrunk 300 times in steps of 0.25 mm, and of 0.4 mm. shapely 2.2.0, with the GEOS
+3.14.1 its wheels bundle, ran on the same machine, and its parts and points came out the same as the engine’s.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Ring</th><th>Step</th><th>Engine</th><th>GEOS</th></tr>
+</thead>
+<tbody>
+<tr><td>Round</td><td>0.25 mm</td><td>218 ms</td><td>104 ms</td></tr>
+<tr><td>Round</td><td>0.4 mm</td><td>135 ms</td><td>61 ms</td></tr>
+<tr><td>7 waves</td><td>0.25 mm</td><td>448 ms</td><td>149 ms</td></tr>
+<tr><td>7 waves</td><td>0.4 mm</td><td>261 ms</td><td>115 ms</td></tr>
+</tbody>
+</table>
+</div>
 <h2 id="consequences"><a class="header" href="#consequences">Consequences</a></h2>
-<p>Dependencies are wrapped behind <code>stitchcraft-engine::geometry</code> so a replacement touches one module.</p>
+<ul>
+<li>No geometry crate is there to vet, update or replace. The conformance suite and the shapely oracles
+(<code>conformance/oracle/</code>) check the engine’s geometry, and a change to it is a change of the engine.</li>
+<li>CI makes the golden files again as WebAssembly. A plan the plug-in makes is one the command line makes.</li>
+<li>The offsetter is 2 to 3 times slower than GEOS on large regions. Until M7, a fill offsets each part at
+most twice, for its inset underlay and its grown rows. Contour fill offsets hundreds of times.</li>
+</ul>
 
                     </main>
 

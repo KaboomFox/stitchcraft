@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-44dc662e.js";
+            window.path_to_searchindex_js = "searchindex-f110be3e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -3346,7 +3346,8 @@ the lints. The command line catches it and ends with exit status 4. For <code>st
 bug-report bundle that reproduces the bug (<a href="#bug-reports">determinism</a>).</li>
 <li><strong>The command line’s own promises.</strong> A command refuses outputs that name the same file as each other,
 or as a file it reads (<code>REQ-CLI-007</code>), and writes each file under a temporary name of its own, created
-new and synced before it is renamed into place (<code>REQ-CLI-006</code>). What it prints of a file it wrote is the
+new and synced before it is renamed into place (<code>REQ-CLI-006</code>). Built for WASI, as
+<code>cargo xtask wasm --goldens</code> runs it, a program has no process id, so there the names count from 0. What it prints of a file it wrote is the
 file read back (<code>REQ-CLI-008</code>). A closed standard output keeps a command’s exit status, any other error
 writing it ends with 3 (<code>REQ-CLI-009</code>), and help and errors are coloured only on a terminal
 (<code>REQ-CLI-010</code>).</li>
@@ -5081,6 +5082,12 @@ the rounding of its own arithmetic. The engine merges points nearer each other t
 half width, and judges pieces that coincide as one. Its curves differ there by a node on a straight
 stretch, or by a short stretch beside the doubled-back part of the line. The test names those 5 lines,
 so that a change to them is seen.</p>
+<p>Shapely’s answers fix what the polygons are. A property test checks that any polygon gives valid ones:
+<code>any_polygon_with_holes_grows_and_shrinks_into_valid_parts</code> grows and shrinks random stars with up to 3
+star-shaped holes by up to 8 mm. Each must finish within the work budget. Every ring must be closed and
+within reach of the polygon’s bounds, with outlines clockwise and holes counter-clockwise (y up). Growing
+must add area, and shrinking take it away. Spike M0.7 ran it on 10,000 polygons (<a href="#adr-0005-geometry-stack">ADR-0005</a>),
+and its speed against GEOS’s is recorded there.</p>
 <p>A closed line, one that ends where it starts, is buffered by GEOS as a ring, with no caps. The engine
 offsets only open lines. A satin column’s centre line with its ends together is cut in half first.</p>
 <p>Building the edge costs work in proportion to the square of the ring’s length: every piece is checked
@@ -6668,10 +6675,13 @@ byte, so all three operating systems make the bytes the machine checkpoints sewe
 golden files (<code>REQ-RND-002</code>), the formats’ canonical plans (<code>REQ-FMT-001</code>) and the frozen reference
 values of <code>stitchcraft-core</code>’s tests are compared on all three as well. The oracle case reads the files
 with pyembroidery, which only the Linux gates job installs.</p>
-<p>WebAssembly is built, not run. <code>cargo xtask wasm</code> checks that the library crates and the plug-in build
-for <code>wasm32-unknown-unknown</code>, and the lints above keep the library crates off what that target lacks. A
-run of the cases on a WebAssembly runtime is not planned yet. Until one is, the rules in the table are
-what keep its output the same.</p>
+<p>WebAssembly is checked too, since VectorCraft runs the engine as WebAssembly. <code>cargo xtask wasm</code> checks
+that the library crates and the plug-in build for <code>wasm32-unknown-unknown</code>, and the lints above keep the
+library crates off what that target lacks. The <code>wasm-goldens</code> gate (<code>cargo xtask wasm --goldens</code>) builds
+<code>stitch</code> for <code>wasm32-wasip1</code> and runs it under wasmtime on every test-sheet and plan case, each with the
+command line the case stands for. Each machine file it writes must be its golden file byte for byte. WASI
+gives <code>stitch</code> the files it reads and writes. Both are WebAssembly, and the engine’s maths is its own, so
+its arithmetic is the plug-in’s.</p>
 <h2 id="bug-reports"><a class="header" href="#bug-reports">Bug reports</a></h2>
 <p>Because the same design, profile, format and version give the same plan everywhere, those four are all a
 bug report needs. <code>stitch bug-report</code> writes them into one JSON file, with the design file itself in place
@@ -6718,7 +6728,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 <tr><td><strong>Determinism</strong></td><td>No <code>HashMap</code>/<code>HashSet</code>, <code>RandomState</code>, platform <code>sin</code>/<code>cos</code>/<code>atan2</code>/<code>powi</code> and their kin, <code>mul_add</code>, <code>SystemTime</code> or <code>Instant</code>; no files, threads, environment or processes in library crates; <code>rand</code> and <code>getrandom</code> only through proptest</td><td><code>clippy.toml</code> <code>disallowed-types</code> / <code>disallowed-methods</code>, <code>deny.toml</code> <code>[bans]</code></td><td><code>cargo xtask ci</code> · CI</td></tr>
 <tr><td><strong>Layering</strong></td><td>Crates depend only on lower layers (<a href="#architecture">architecture</a>); dependencies like <code>clap</code> or <code>tiny-skia</code> only where allowed</td><td><code>xtask/src/layers.rs</code> (append-only table)</td><td><code>cargo xtask layers</code> · CI</td></tr>
 <tr><td><strong>Module size</strong></td><td>Rust files warn above 800 lines, fail above 1,500 (generated files exempt)</td><td><code>xtask/src/filesize.rs</code></td><td><code>cargo xtask filesize</code> · CI</td></tr>
-<tr><td>WebAssembly</td><td>L0–L3 crates and the plug-in build for <code>wasm32-unknown-unknown</code></td><td><code>xtask/src/wasm.rs</code></td><td><code>cargo xtask wasm</code> · CI</td></tr>
+<tr><td>WebAssembly</td><td>L0 to L3 crates and the plug-in build for <code>wasm32-unknown-unknown</code>, and <code>stitch</code>, built for WASI and run by wasmtime, makes every golden file of the conformance cases byte for byte</td><td><code>xtask/src/wasm.rs</code>, <code>xtask/src/conformance/wasm.rs</code></td><td><code>cargo xtask wasm</code> · <code>cargo xtask wasm --goldens</code> · CI</td></tr>
 <tr><td><strong>Movable into VectorCraft</strong></td><td>Every package is <code>stitchcraft-*</code>; crates inherit only workspace keys VectorCraft defines; tooling works from its own folder on StitchCraft’s packages (<a href="#adr-0011-stitchcraft-can-move-into-vectorcrafts-repository">ADR-0011</a>)</td><td><code>xtask/src/layers.rs</code>, <code>xtask/src/util.rs</code>, <code>xtask/src/join.rs</code></td><td><code>move</code> job in <code>compat.yml</code> · daily and on PRs touching manifests or tooling</td></tr>
 <tr><td><strong>No GPL code</strong></td><td>No GPL/AGPL licence text, in any case, nor a module’s short GPL notice, and no pasted Python source anywhere in the repository: every text file, documents and files without an extension included (<a href="#adr-0012-read-inkstitchs-source-never-copy-it">ADR-0012</a>)</td><td><code>xtask/src/cleanroom.rs</code></td><td><code>cargo xtask cleanroom</code> · CI</td></tr>
 <tr><td>Docs</td><td>Generated pages fresh and none left over; links, anchors (as mdBook makes them) and included files valid; mentioned <code>cargo xtask</code> commands exist; <code>REQ-</code> and <code>DEV-</code> ids exist, and a code is registered once its milestone is done; no long sentence on two pages; every repository path named exists</td><td><code>xtask/src/docs.rs</code>, <code>xtask/src/docs_audit.rs</code>, <code>xtask/src/markdown.rs</code></td><td><code>cargo xtask docs --check</code> · CI</td></tr>
@@ -6729,7 +6739,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 <tr><td>Spelling</td><td>Typos in code, docs, commit-facing text</td><td><code>typos.toml</code></td><td>CI</td></tr>
 <tr><td><strong>Prose</strong></td><td>New Markdown lines follow the <a href="#writing-style">writing style</a>: the house rules and ai-tells, a style for phrasing that machine-written text overuses</td><td><code>.vale.ini</code>, <code>.vale/styles/</code>, <code>xtask/src/prose.rs</code> (Vale)</td><td><code>cargo xtask prose</code> · CI</td></tr>
 <tr><td>MSRV</td><td>Builds on the declared <code>rust-version</code></td><td>workspace <code>Cargo.toml</code></td><td>CI</td></tr>
-<tr><td>Cross-platform</td><td>Tests on Linux, macOS and Windows, among them the conformance suite’s data cases, whose machine files must equal the golden files on each (<a href="#cross-platform-check">determinism</a>)</td><td><code>ci.yml</code></td><td>CI</td></tr>
+<tr><td>Cross-platform</td><td>Tests on Linux, macOS and Windows, among them the conformance suite’s data cases, whose machine files must equal the golden files on each, and the same machine files made as WebAssembly (<a href="#cross-platform-check">determinism</a>)</td><td><code>ci.yml</code></td><td>CI</td></tr>
 <tr><td>API docs</td><td>Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links</td><td><code>cargo xtask ci</code> (<code>RUSTDOCFLAGS=-D warnings</code>)</td><td><code>cargo xtask ci</code> · CI</td></tr>
 <tr><td><strong>Public API review</strong></td><td>Changes to a library crate’s public API show in the PR diff, as a change to its <code>public-api.txt</code></td><td><code>xtask/src/api.rs</code> (cargo-public-api, pinned)</td><td><code>cargo xtask api --check</code> · CI</td></tr>
 <tr><td><strong>Coverage ratchet</strong></td><td>No crate’s line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, those only another build of a function or a closure on the line runs included</td><td><code>conformance/coverage.toml</code>, <code>xtask/src/coverage.rs</code> (cargo-llvm-cov)</td><td><code>cargo xtask coverage</code> · CI job</td></tr>
@@ -7251,7 +7261,7 @@ supersedes the old one.</p>
 <tr><td><a href="#adr-0002-host-agnostic-engine-vectorcraft-abi-v1-plug-in-first">0002</a></td><td>Host-agnostic engine; VectorCraft ABI v1 plug-in first</td><td>Accepted</td></tr>
 <tr><td><a href="#adr-0003-one-parameter-registry-generates-everything">0003</a></td><td>One parameter registry generates everything</td><td>Accepted</td></tr>
 <tr><td><a href="#adr-0004-determinism-by-construction">0004</a></td><td>Determinism by construction</td><td>Accepted</td></tr>
-<tr><td><a href="#adr-0005-geometry-stack">0005</a></td><td>Geometry stack</td><td>Proposed (spike M0.7)</td></tr>
+<tr><td><a href="#adr-0005-geometry-stack">0005</a></td><td>Geometry stack</td><td>Accepted (spike M0.7)</td></tr>
 <tr><td><a href="#adr-0006-mdbook-diátaxis-generated-reference-ci-regenerated-images">0006</a></td><td>mdBook, Diátaxis, generated reference, CI-regenerated images</td><td>Accepted</td></tr>
 <tr><td><a href="#adr-0007-pes-v1-first-for-the-brother-200--200-mm-machine">0007</a></td><td>PES v1 first, for the Brother 200 × 200 mm machine</td><td>Accepted (decisions 2 and 3 replaced by 0013)</td></tr>
 <tr><td><a href="#adr-0008-conformance-first-development">0008</a></td><td>Conformance-first development</td><td>Accepted</td></tr>
@@ -7392,52 +7402,81 @@ wasm. CI compares each operating system’s outputs with the golden files instea
 WebAssembly target without running it (<a href="#cross-platform-check">cross-platform check</a>).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="adr-0005-geometry-stack"><a class="header" href="#adr-0005-geometry-stack">ADR-0005: Geometry stack</a></h1>
-<p><strong>Status:</strong> Proposed — confirmed or revised by spike M0.7 · 2026-10-08</p>
+<!-- The status line, a label and its value, which the ADR index is checked against. -->
+<!-- vale ai-tells.ColonUsage = NO -->
+<p><strong>Status:</strong> Accepted · 2026-10-17, after spike M0.7 · proposed 2026-10-08</p>
+<!-- vale ai-tells.ColonUsage = YES -->
 <h2 id="context-4"><a class="header" href="#context-4">Context</a></h2>
 <p>The engine needs curve flattening, polygon booleans and offsets with holes (fill rules, insets for
-underlay and contour fill), spatial queries and graph algorithms — all pure Rust, wasm-compatible,
-permissively licensed and robust on degenerate input.</p>
-<h2 id="decision-proposed"><a class="header" href="#decision-proposed">Decision (proposed)</a></h2>
+underlay and contour fill), spatial queries and graph algorithms. They must be pure Rust and build for
+WebAssembly. Their licences must be permissive, and they must hold up on degenerate input.</p>
+<h2 id="decision-4"><a class="header" href="#decision-4">Decision</a></h2>
+<p>The engine does its own geometry, in Rust on <code>f64</code>, and depends on no geometry crate. <code>libm</code>, through
+<code>stitchcraft_core::math</code>, gives it the few transcendental functions it needs, the same on every platform.</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Need</th><th>Choice</th><th>Why</th></tr>
+<tr><th>Need</th><th>Proposed</th><th>Chosen</th><th>Why</th></tr>
 </thead>
 <tbody>
-<tr><td>Curves, affine maps, flattening</td><td><code>kurbo</code> 0.13</td><td>VectorCraft uses it; mature; MIT/Apache</td></tr>
-<tr><td>Booleans, offsets</td><td><code>i_overlay</code> 9</td><td>Pure Rust, integer-snapped robust overlay, fill rules, offsetting; MIT/Apache</td></tr>
-<tr><td>Spatial index</td><td><code>rstar</code> 0.13</td><td>Nearest-neighbour queries for routing; MIT/Apache</td></tr>
-<tr><td>Graphs</td><td><code>petgraph</code> 0.8 + our own Hierholzer walk</td><td>Deterministic tie-breaking under our control; MIT/Apache</td></tr>
-<tr><td>Math</td><td><code>libm</code> 0.2</td><td>Deterministic transcendental functions; MIT</td></tr>
+<tr><td>Flattening curves</td><td><code>kurbo</code> 0.13</td><td>The engine halves each curve (<code>normalize::stroke</code>), since M3.4</td><td><code>kurbo</code>’s <code>flatten</code> calls the platform’s <code>powf</code> and <code>hypot</code>, whose last bits differ from one platform to the next</td></tr>
+<tr><td>A fill’s region</td><td><code>i_overlay</code> 9</td><td>The engine’s region code (<code>normalize::region</code>), since M5.1</td><td>An integer-snapped overlay moves the drawing’s points onto its grid, and its loops cannot charge an element’s work budget. The engine keeps every point the drawing has and decides sides of lines exactly. It charges its work as it goes</td></tr>
+<tr><td>Offsets: satin rails, insets, grown fills</td><td><code>i_overlay</code> 9</td><td>The engine’s offsetter (<code>normalize::offset</code>), since M4 and M5.7</td><td>Ink/Stitch offsets with shapely, whose curves are GEOS’s. The engine builds the same curves, and checks them against shapely’s</td></tr>
+<tr><td>The nearest point or line</td><td><code>rstar</code> 0.13</td><td>Scans of one element’s points at a time, charged to the work budget (<code>normalize::near</code>)</td><td>The hoop’s whole field plans in about 30 ms with them (<code>REQ-FILL-TAT-009</code>), so an index would buy nothing yet</td></tr>
+<tr><td>Routing a fill’s rows</td><td><code>petgraph</code> 0.8 with a walk of our own</td><td>The engine’s own graph (<code>generators::tatami::graph</code>), since M5.4</td><td>Ink/Stitch’s route depends on the order in which its graph library lists a node’s edges, and the engine’s graph lists them in that order</td></tr>
+<tr><td>Transcendental functions</td><td><code>libm</code> 0.2</td><td><code>libm</code> 0.2, through <code>stitchcraft_core::math</code></td><td>The same bits on every platform</td></tr>
 </tbody>
 </table>
 </div>
-<p><strong>Revised in M3.4:</strong> strokes are not flattened with <code>kurbo</code>. Its <code>flatten</code> in 0.13 calls <code>powf</code> and
-<code>hypot</code> from the platform’s maths library, so the engine halves curves itself with arithmetic and square
-roots (<a href="#1-normalize">engine pipeline › Normalize</a>).</p>
-<p><strong>Revised in M5.1:</strong> a fill’s region is not built with <code>i_overlay</code> but by the engine
-(<a href="#region-1">fills › Region</a>). An integer-snapped overlay moves the drawing’s points
-onto its grid, and its loops cannot charge an element’s work budget. The engine keeps every point the
-drawing has and decides sides of lines exactly. It charges its work as it goes.</p>
-<h2 id="spike-m07-acceptance-criteria"><a class="header" href="#spike-m07-acceptance-criteria">Spike M0.7 acceptance criteria</a></h2>
-<ol>
-<li>Booleans and offsets of 10,000 random polygons with holes, plus the degenerate corpus: no panic, no
-hang, valid output (<code>i_overlay</code> validity + our own ring checks).</li>
-<li>Identical output bytes on Linux, macOS, Windows and wasm32.</li>
-<li>Offsetting a 150 mm region with 1,000 vertices inward 300 times (contour fill) in under 200 ms natively.</li>
-<li>Build for <code>wasm32-unknown-unknown</code> adds under 300 KiB to the plug-in.</li>
-</ol>
-<p>If a criterion fails: <code>geo</code>’s boolean/buffer algorithms are the first alternative; a small offsetter of
-our own over <code>i_overlay</code> booleans the second.</p>
+<p>The geometry lives with the code that uses it, in <code>normalize</code> and in the generators, rather than behind one
+<code>geometry</code> module. Each piece follows what Ink/Stitch does in its place, and its docs say what that is.</p>
+<h2 id="spike-m07"><a class="header" href="#spike-m07">Spike M0.7</a></h2>
+<p>The criteria were written for the crates proposed. The spike measured the engine’s own geometry against
+them.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Criterion</th><th>Result</th></tr>
+</thead>
+<tbody>
+<tr><td>1. Booleans and offsets of 10,000 random polygons with holes, and of a degenerate corpus, give valid output without panicking or hanging</td><td><strong>Met.</strong> The property test <code>any_polygon_with_holes_grows_and_shrinks_into_valid_parts</code> grew and shrank 10,000 random polygons with holes, and every part it got was valid. It ran with <code>PROPTEST_CASES=10000</code>, where CI runs 256 each time. The offsets agree with shapely’s for 1,050 random lines, and the grown and shrunk polygons for 330. The region code’s tests take random rings, and rings with copies of themselves a rounding error apart. Every loop charges the work budget, so a plan that runs too long ends with <code>SC-E0004</code></td></tr>
+<tr><td>2. The same output bytes on Linux, macOS, Windows and wasm32</td><td><strong>Met.</strong> The tests run on the 3 systems, and the <code>wasm-goldens</code> gate makes every golden file of the conformance cases with <code>stitch</code> built for WASI and run by wasmtime (<a href="#cross-platform-check">determinism</a>): 16 files, byte for byte</td></tr>
+<tr><td>3. Offsetting a 150 mm region with 1,000 vertices inward 300 times in under 200 ms natively</td><td><strong>Not met</strong>: 218 to 448 ms, against GEOS’s 104 to 149 ms for the same parts and points (below). Contour fill is the first stitch type to need it. The offsetter meets this criterion in M7, before contour fill relies on it</td></tr>
+<tr><td>4. Building for wasm32 adds under 300 KiB to the plug-in</td><td><strong>Met for the geometry</strong>: no geometry crate is linked, so none adds to the plug-in. M6.2 links the engine into it and records the module’s size</td></tr>
+</tbody>
+</table>
+</div>
+<p>Criterion 3, measured on a 2.1 GHz Xeon in an optimized build: a ring 150 mm across, of 1,000 points, round
+or with 7 waves of 2 mm, shrunk 300 times in steps of 0.25 mm, and of 0.4 mm. shapely 2.2.0, with the GEOS
+3.14.1 its wheels bundle, ran on the same machine, and its parts and points came out the same as the engine’s.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Ring</th><th>Step</th><th>Engine</th><th>GEOS</th></tr>
+</thead>
+<tbody>
+<tr><td>Round</td><td>0.25 mm</td><td>218 ms</td><td>104 ms</td></tr>
+<tr><td>Round</td><td>0.4 mm</td><td>135 ms</td><td>61 ms</td></tr>
+<tr><td>7 waves</td><td>0.25 mm</td><td>448 ms</td><td>149 ms</td></tr>
+<tr><td>7 waves</td><td>0.4 mm</td><td>261 ms</td><td>115 ms</td></tr>
+</tbody>
+</table>
+</div>
 <h2 id="consequences-4"><a class="header" href="#consequences-4">Consequences</a></h2>
-<p>Dependencies are wrapped behind <code>stitchcraft-engine::geometry</code> so a replacement touches one module.</p>
+<ul>
+<li>No geometry crate is there to vet, update or replace. The conformance suite and the shapely oracles
+(<code>conformance/oracle/</code>) check the engine’s geometry, and a change to it is a change of the engine.</li>
+<li>CI makes the golden files again as WebAssembly. A plan the plug-in makes is one the command line makes.</li>
+<li>The offsetter is 2 to 3 times slower than GEOS on large regions. Until M7, a fill offsets each part at
+most twice, for its inset underlay and its grown rows. Contour fill offsets hundreds of times.</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="adr-0006-mdbook-diátaxis-generated-reference-ci-regenerated-images"><a class="header" href="#adr-0006-mdbook-diátaxis-generated-reference-ci-regenerated-images">ADR-0006: mdBook, Diátaxis, generated reference, CI-regenerated images</a></h1>
 <p><strong>Status:</strong> Accepted · 2026-10-08</p>
 <h2 id="context-5"><a class="header" href="#context-5">Context</a></h2>
 <p>The docs must stay correct on every PR, including screenshots. Documentation written once by hand
 drifts from the code it describes, and nobody notices until a reader is misled.</p>
-<h2 id="decision-4"><a class="header" href="#decision-4">Decision</a></h2>
+<h2 id="decision-5"><a class="header" href="#decision-5">Decision</a></h2>
 <ul>
 <li><strong>mdBook</strong> (Rust-native, fast, search and print built in, no Ruby/Node toolchain).</li>
 <li><strong>Diátaxis</strong> structure: tutorials, how-to, reference, explanation; plus design, plan, contributing.</li>
@@ -7468,7 +7507,7 @@ VectorCraft UI screenshots, photos — regenerated and compared in CI, refreshed
 about 150 mm (6 in). Brother machines load PES. Embroiderers report PES pitfalls with other software:
 trims ignored by some Brother models, and an older Brother-family machine that hides PES v1 designs
 larger than about 130 × 180 mm.</p>
-<h2 id="decision-5"><a class="header" href="#decision-5">Decision</a></h2>
+<h2 id="decision-6"><a class="header" href="#decision-6">Decision</a></h2>
 <ol>
 <li>The first writer is <strong>PES v1 + PEC</strong>; DST is second (universal fallback, independent check).</li>
 <li>Built-in profile <strong><code>brother-200x200</code></strong>: hoop 200 × 200 mm (error beyond), comfort 150 × 150 mm
@@ -7489,7 +7528,7 @@ insufficient.</li>
 <p>When behaviour is specified only by its implementation, nobody can say what “correct” means: a fix for
 one input silently breaks another, and a regression looks like any other change. Stitch generators are
 especially prone to this, because their output is thousands of coordinates no reviewer reads.</p>
-<h2 id="decision-6"><a class="header" href="#decision-6">Decision</a></h2>
+<h2 id="decision-7"><a class="header" href="#decision-7">Decision</a></h2>
 <p>Behaviour is specified as numbered requirements (<code>conformance/requirements.toml</code>) and proven by data-
 driven cases (<code>conformance/cases/</code>) across five levels (invariants, formats, generator properties,
 Ink/Stitch differential metrics, physical sew-outs). For each roadmap step, requirements and cases come
@@ -7540,7 +7579,7 @@ whether each one is actually enforced.</p>
 </tbody>
 </table>
 </div>
-<h2 id="decision-7"><a class="header" href="#decision-7">Decision</a></h2>
+<h2 id="decision-8"><a class="header" href="#decision-8">Decision</a></h2>
 <p>Follow VectorCraft’s conventions by default (rows marked Adopt), with the improvements listed. When
 VectorCraft changes a convention we follow, we re-evaluate here. When we improve on one (rows 5, 6, 7,
 19, 20), we offer the improvement upstream where it is generic.</p>
@@ -7557,7 +7596,7 @@ VectorCraft changes a convention we follow, we re-evaluate here. When we improve
 <p>Users need to understand why a design will not sew well, and maintainers need to know which message a
 user saw. A message without a code cannot be looked up, searched for in bug reports or tested on its
 own, and an error path that no test ever renders can ship a broken message.</p>
-<h2 id="decision-8"><a class="header" href="#decision-8">Decision</a></h2>
+<h2 id="decision-9"><a class="header" href="#decision-9">Decision</a></h2>
 <p>Every user-facing problem is a <code>Diagnostic</code> with a stable code (<code>SC-E0201</code>), severity, element, location,
 message and optional fix. A single registry holds codes and long explanations; docs pages and
 <code>stitch explain</code> are generated from it; every code must have a conformance case that triggers it.
@@ -7588,7 +7627,7 @@ not define, so Cargo refused to load them. Once VectorCraft’s manifest exclude
 workspace it would build, lint and test VectorCraft’s crates too, and the layering check would call
 them unknown.</li>
 </ol>
-<h2 id="decision-9"><a class="header" href="#decision-9">Decision</a></h2>
+<h2 id="decision-10"><a class="header" href="#decision-10">Decision</a></h2>
 <p>The repository stays movable <strong>as one folder</strong>, in either of two ways. Both are one command, and CI
 rehearses both against VectorCraft’s latest release and <code>main</code>.</p>
 <p><strong>Nested.</strong> Copy the folder in, with history if wanted
@@ -7664,7 +7703,7 @@ reverse engineering.</p>
 <p>The strict rule has a cost. Ink/Stitch’s documentation is silent on many details that decide whether a
 file behaves the same in both tools (edge cases of parameters, how lists repeat, the font files), and
 guessing them makes interoperability bugs.</p>
-<h2 id="decision-10"><a class="header" href="#decision-10">Decision</a></h2>
+<h2 id="decision-11"><a class="header" href="#decision-11">Decision</a></h2>
 <ol>
 <li>Ink/Stitch’s source, like any GPL/AGPL code, may be read to understand its behaviour. Nothing from
 it is copied, pasted, transliterated or closely paraphrased into StitchCraft, and no GPL code, text or
@@ -7713,7 +7752,7 @@ site gives the same hoop as 3/4 × 2 3/8 in, and Brother’s small frames are so
 <p>The old profile allowed designs the machine cannot sew. Test sheets TS-02 and TS-02B were 140 mm wide,
 and the TS-10 frames 150 and 190 mm. A profile is one machine with one hoop
 (<a href="#machine-profiles-1">data model</a>), so a machine with 3 hoops needs 3.</p>
-<h2 id="decision-11"><a class="header" href="#decision-11">Decision</a></h2>
+<h2 id="decision-12"><a class="header" href="#decision-12">Decision</a></h2>
 <ol>
 <li>Built-in profiles <code>brother-pe800-5x7</code> (130 × 180 mm), <code>brother-pe800-4x4</code> (100 × 100 mm) and
 <code>brother-pe800-small</code> (20 × 60 mm) replace <code>brother-200x200</code>. Everything but the hoop stays as it was.
@@ -7774,7 +7813,7 @@ element’s shape and settings say. Both are on by default (<code>start_at_neare
 geometry differs from Ink/Stitch’s whenever that element ends somewhere its geometry does not say. A satin
 column that ends at its nearest point is one such element. Fills and running stitches sewn there and back
 are others.</p>
-<h2 id="decision-12"><a class="header" href="#decision-12">Decision</a></h2>
+<h2 id="decision-13"><a class="header" href="#decision-13">Decision</a></h2>
 <ol>
 <li>Elements are generated in sewing order. Each is given the last needle point of the elements before it
 that sew any, whatever their thread.</li>
@@ -7826,7 +7865,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M0.4 ✅</td><td>mdBook site, design docs, ADRs, this roadmap, machine-testing protocol</td><td><code>mdbook build</code> and the docs check pass</td></tr>
 <tr><td>M0.5 👤 (partly ✅)</td><td>Create the GitHub repository, push, enable Pages (from the <code>gh-pages</code> branch) and branch protection with required checks <code>ci</code> and <code>docs</code>; replace <code>OWNER</code> in <code>CODEOWNERS</code> and <code>Cargo.toml</code> and add a contact to <code>CODE_OF_CONDUCT.md</code>; create the labels <code>golden-change</code>, <code>docs:refresh-shots</code>, <code>upstream-canary</code>, <code>upstream-prerelease</code>, <code>sewout</code>, <code>sewout:pass</code>, <code>sewout:tune</code>, <code>sewout:bug</code>, <code>good first issue</code></td><td>A test PR cannot merge while a check is red</td></tr>
 <tr><td>M0.6 ✅ 🧪</td><td>VectorCraft “hello” plug-in: an identity live effect built in CI for <code>wasm32-unknown-unknown</code>, a Level A contract test against the pinned stable <code>vectorcraft-plugins</code> (v0.6.0, now v0.7.0), <code>release</code> and <code>main</code>, and the fuel it spends per byte of output</td><td>The contract test is green in <code>compat.yml</code> on every track (2026-10-08), and the budget is recorded in the integration doc: 512 instructions a byte read and 822 written (2026-10-17)</td></tr>
-<tr><td>M0.7 🧪</td><td>Geometry spike (<a href="#adr-0005-geometry-stack">ADR-0005</a> criteria)</td><td>ADR-0005 accepted or revised</td></tr>
+<tr><td>M0.7 ✅ 🧪</td><td>Geometry spike (<a href="#adr-0005-geometry-stack">ADR-0005</a> criteria)</td><td>ADR-0005 accepted with the engine’s own geometry, and the golden files made as WebAssembly in CI (2026-10-17)</td></tr>
 <tr><td>M0.8 🧪</td><td>Headless VectorCraft window in CI (Xvfb + Mesa) taking <code>ui.screenshot</code> twice with identical pixels; one <a href="https://xa11y.dev/">xa11y</a> test that drives the same window through its accessibility tree (AT-SPI on Linux)</td><td>Decision recorded in the docs pipeline page, for both</td></tr>
 <tr><td>M0.9 ✅</td><td>Movable into VectorCraft (<a href="#adr-0011-stitchcraft-can-move-into-vectorcrafts-repository">ADR-0011</a>): packages prefixed, manifests inheriting only what VectorCraft defines, tooling scoped to its folder and packages, <code>cargo xtask compat join [--nested]</code>, and a daily <code>move</code> job</td><td><code>move</code> green against VectorCraft’s latest release and <code>main</code></td></tr>
 <tr><td>M0.10 ✅</td><td>Clean room, tightened: no document describes Ink/Stitch’s code; Ink/Stitch is named only for file compatibility and in the independence notices; <code>cargo xtask cleanroom</code> scans documents too</td><td><code>cleanroom</code> green over the whole repository</td></tr>
@@ -7942,7 +7981,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 </thead>
 <tbody>
 <tr><td>M6.1</td><td><code>stitchcraft-vectorcraft</code>: read <code>.vectorcraft</code> (layers, groups, paths, paints, effect records, transforms); size and depth caps</td><td><code>REQ-VC-001</code>; fuzzed</td></tr>
-<tr><td>M6.2</td><td>Plug-in crate: manifests generated per family, ABI shim (<code>abi.rs</code>, audited <code>unsafe</code>)</td><td><code>REQ-VC-002</code> (manifests valid, ≤ 64 params)</td></tr>
+<tr><td>M6.2</td><td>The plug-in crate, with manifests generated per family and the ABI shim (<code>abi.rs</code>, whose <code>unsafe</code> is audited)</td><td><code>REQ-VC-002</code> (manifests valid, ≤ 64 params), and the module’s size with the engine recorded (<a href="#adr-0005-geometry-stack">ADR-0005</a>)</td></tr>
 <tr><td>M6.3</td><td>Live-effect previews with budget-aware levels</td><td><code>REQ-VC-003</code> per level, within 5 s / fuel</td></tr>
 <tr><td>M6.4</td><td>Tools filter: make satin, add rung, bake preview, test sheet; Graphic Styles as presets verified</td><td>cases per tool</td></tr>
 <tr><td>M6.5</td><td><code>stitch export design.vectorcraft</code>; marker conventions (<code>stitch:start</code>, <code>stitch:end</code>, <code>stitch:ignore</code>)</td><td>end-to-end cases</td></tr>
@@ -7959,6 +7998,9 @@ fill with generated tiles; circular fill. One step per type with its requirement
 for stitches turned more than 45° from the column, and <code>SC-W0209</code> for a column wider than 12 mm. The
 zigzag stroke’s and the meander fill’s settings need a key with a kind or a range of a family’s own, which
 the registry gains first (<a href="#naming-rules">parameter registry</a>, rule 7).</p>
+<p>Before contour fill relies on it, the offsetter meets the third criterion of
+<a href="#adr-0005-geometry-stack">ADR-0005</a>: 300 insets of a region 150 mm across, of 1,000 points, in
+under 200 ms. At M0.7 they took 218 to 448 ms, where GEOS took 104 to 149 ms.</p>
 <h2 id="m8--inkstitch-interoperability"><a class="header" href="#m8--inkstitch-interoperability">M8 — Ink/Stitch interoperability</a></h2>
 <p>SVG adapter v2:</p>
 <ul>
@@ -8128,7 +8170,8 @@ changes follow playbooks, and every behaviour has a requirement and a test.</p>
 <a href="#architecture">architecture</a> map.</li>
 <li>Pick a step from the <a href="#roadmap-small-steps-to-the-final-project">roadmap</a> or an issue labelled <code>good first issue</code>.</li>
 <li>Set up: install Rust (the toolchain in <code>rust-toolchain.toml</code> installs itself), then
-<code>rustup target add wasm32-unknown-unknown</code>.</li>
+<code>rustup target add wasm32-unknown-unknown</code>. The <code>wasm-goldens</code> gate needs <code>wasm32-wasip1</code> too, and
+<a href="https://wasmtime.dev/">wasmtime</a>, and <code>cargo xtask ci</code> skips it without them.</li>
 <li>Before every push: <code>cargo xtask ci</code>.</li>
 </ol>
 <h2 id="playbooks"><a class="header" href="#playbooks">Playbooks</a></h2>

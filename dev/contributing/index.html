@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-44dc662e.js";
+            window.path_to_searchindex_js = "../searchindex-f110be3e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -189,7 +189,8 @@ changes follow playbooks, and every behaviour has a requirement and a test.</p>
 <a href="../design/architecture.html">architecture</a> map.</li>
 <li>Pick a step from the <a href="../plan/roadmap.html">roadmap</a> or an issue labelled <code>good first issue</code>.</li>
 <li>Set up: install Rust (the toolchain in <code>rust-toolchain.toml</code> installs itself), then
-<code>rustup target add wasm32-unknown-unknown</code>.</li>
+<code>rustup target add wasm32-unknown-unknown</code>. The <code>wasm-goldens</code> gate needs <code>wasm32-wasip1</code> too, and
+<a href="https://wasmtime.dev/">wasmtime</a>, and <code>cargo xtask ci</code> skips it without them.</li>
 <li>Before every push: <code>cargo xtask ci</code>.</li>
 </ol>
 <h2 id="playbooks"><a class="header" href="#playbooks">Playbooks</a></h2>

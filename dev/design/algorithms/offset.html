@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-44dc662e.js";
+            window.path_to_searchindex_js = "../../searchindex-f110be3e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -265,6 +265,12 @@ the rounding of its own arithmetic. The engine merges points nearer each other t
 half width, and judges pieces that coincide as one. Its curves differ there by a node on a straight
 stretch, or by a short stretch beside the doubled-back part of the line. The test names those 5 lines,
 so that a change to them is seen.</p>
+<p>Shapely’s answers fix what the polygons are. A property test checks that any polygon gives valid ones:
+<code>any_polygon_with_holes_grows_and_shrinks_into_valid_parts</code> grows and shrinks random stars with up to 3
+star-shaped holes by up to 8 mm. Each must finish within the work budget. Every ring must be closed and
+within reach of the polygon’s bounds, with outlines clockwise and holes counter-clockwise (y up). Growing
+must add area, and shrinking take it away. Spike M0.7 ran it on 10,000 polygons (<a href="../adr/0005-geometry-stack.html">ADR-0005</a>),
+and its speed against GEOS’s is recorded there.</p>
 <p>A closed line, one that ends where it starts, is buffered by GEOS as a ring, with no caps. The engine
 offsets only open lines. A satin column’s centre line with its ends together is cut in half first.</p>
 <p>Building the edge costs work in proportion to the square of the ring’s length: every piece is checked
