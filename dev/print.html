@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-18cd77cc.js";
+            window.path_to_searchindex_js = "searchindex-f44d2f26.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -6955,7 +6955,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 <tr><td><strong>Design pages follow the code</strong></td><td>Every source file of a crate or app is on a page’s <code>implements</code> comment, and a branch that changes those files changes the page too or records a <code>Design-reviewed:</code> line</td><td><code>xtask/src/design_map.rs</code>, <code>.claude/settings.json</code> (names the pages after each edit)</td><td><code>cargo xtask docs --check</code> · CI</td></tr>
 <tr><td>Docs images</td><td>Every image a page shows is one a shot in <code>docs/shots.toml</code> writes, with alt text, and regenerating to the committed file</td><td><code>xtask/src/shots.rs</code></td><td><code>cargo xtask shots --check</code> · CI</td></tr>
 <tr><td>Conformance</td><td>Requirement/case consistency; every fixture has its row in the fixtures index; all cases pass; changed goldens need the <code>golden-change</code> label and a changelog line</td><td><code>xtask/src/conformance/</code>, <code>ci.yml</code>, <code>goldens.yml</code></td><td><code>cargo xtask conformance</code> · CI</td></tr>
-<tr><td>Dependencies</td><td>Licence allow-list (GPL family denied), advisories, duplicates, sources, for the workspace and the fuzz targets’</td><td><code>deny.toml</code></td><td><code>cargo xtask ci</code> · CI (<code>cargo-deny</code>)</td></tr>
+<tr><td>Dependencies</td><td>Licence allow-list (GPL family denied), advisories, duplicates, sources, for the workspace, the fuzz targets’ and the window probe’s. An advisory accepted is listed with its reason</td><td><code>deny.toml</code></td><td><code>cargo xtask ci</code> · CI (<code>cargo-deny</code>)</td></tr>
 <tr><td>Spelling</td><td>Typos in code, docs, commit-facing text</td><td><code>typos.toml</code></td><td>CI</td></tr>
 <tr><td><strong>Prose</strong></td><td>New Markdown lines follow the <a href="#writing-style">writing style</a>: the house rules and ai-tells, a style for phrasing that machine-written text overuses</td><td><code>.vale.ini</code>, <code>.vale/styles/</code>, <code>xtask/src/prose.rs</code> (Vale)</td><td><code>cargo xtask prose</code> · CI</td></tr>
 <tr><td>MSRV</td><td>Builds on the declared <code>rust-version</code></td><td>workspace <code>Cargo.toml</code></td><td>CI</td></tr>
