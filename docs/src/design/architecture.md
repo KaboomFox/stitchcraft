@@ -45,7 +45,7 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 | `stitchcraft-formats` | L2 | readers/writers (PES/PEC, DST, …), quantization, format limits | depend on engine (it encodes *plans*) |
 | `stitchcraft-render` | L2 | CPU preview images of plans (thread look, simple look, overlays) | depend on engine |
 | `stitchcraft-svg` | L3 | SVG → `Design` (geometry, styles, `inkstitch:*` attributes, commands), plan → SVG | contain stitch logic |
-| `stitchcraft-vectorcraft` | L3 | `.vectorcraft` → `Design`, effect records ↔ `ParamSet`, plug-in JSON objects | contain stitch logic |
+| `stitchcraft-vectorcraft` | L3 | `.vectorcraft` → `Design` (commands in names included), effect records ↔ `ParamSet`, plug-in JSON objects | contain stitch logic |
 | `stitchcraft-testkit` | test | fixtures, `proptest` strategies (from the registry), invariant assertions | be a normal dependency |
 | `stitchcraft-cli` | app | the `stitch` command; all filesystem access | contain engine logic |
 | `stitchcraft-vc-plugin` | app | VectorCraft ABI v1 shim + plug-in manifests | contain engine logic; `unsafe` outside `abi.rs` |
@@ -125,7 +125,7 @@ Adapters only translate:
 | Adapter | From | To |
 |---|---|---|
 | `stitchcraft-svg` | SVG document (+ `inkstitch:*` attributes, command symbols) | `Design` |
-| `stitchcraft-vectorcraft` | `.vectorcraft` JSON, plug-in input objects, effect records | `Design` / `Element` |
+| `stitchcraft-vectorcraft` | `.vectorcraft` JSON (+ commands in names), plug-in input objects, effect records | `Design` / `Element` |
 | `stitchcraft-vc-plugin` | ABI v1 call (JSON in linear memory) | `generate` → preview geometry JSON |
 | `stitchcraft-cli` | files and flags | `plan` → formats/render/report |
 

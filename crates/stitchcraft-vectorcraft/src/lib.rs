@@ -50,3 +50,7 @@ pub const PREVIEW_LEVEL: &str = "preview_level";
 /// The newest `.vectorcraft` format version the adapter reads; a newer file is read best-effort
 /// (`SC-W0803`).
 pub const FORMAT: u64 = 4;
+
+/// The file name extensions of VectorCraft's documents: its own, and `drawcraft`, from before VectorCraft
+/// was renamed, which it still opens (`EXTENSION` and `LEGACY_EXTENSION` in its `crates/format`).
+pub const EXTENSIONS: &[&str] = &["vectorcraft", "drawcraft"];

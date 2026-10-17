@@ -47,7 +47,7 @@ docs check, whatever its file name.
 
 | Kind | Made by | Compared by | Notes |
 |---|---|---|---|
-| `stitch` | `stitchcraft-render` ([rendering](rendering.md)) from a test sheet, or from an SVG design the engine plans | **exact bytes** (rendering is deterministic) | Stitch-type illustrations, parameter comparisons, diagnostics examples |
+| `stitch` | `stitchcraft-render` ([rendering](rendering.md)) from a test sheet, or from a design the engine plans, an SVG file or a VectorCraft document | **exact bytes** (rendering is deterministic) | Stitch-type illustrations, parameter comparisons, diagnostics examples |
 | `vectorcraft-render` | `vectorcraft-cli run --in fixture --cmd plugin.install … --cmd effect.apply … --export x.png` | exact bytes, or tight tolerance if VectorCraft's renderer changes | How a preview looks in VectorCraft's canvas, headless |
 | `vectorcraft-ui` | VectorCraft (pinned stable) driven through its accessibility tree and its control channel: open fixture, install plug-ins, select, open the dialog, set fields, `ui.screenshot`, crop | perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 per channel) | Dialogs, menus, the workflow; the pinned release's app in a desktop without a screen ([VectorCraft's window in CI](#vectorcrafts-window-in-ci)) |
 | `photo` | a person, of a real sew-out | presence + metadata record (machine, fabric, commit, checkpoint) | Never regenerated; listed with their sew-out report |
