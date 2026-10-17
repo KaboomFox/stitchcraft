@@ -159,13 +159,14 @@ and on `main`:
 
 | Measured | Value |
 |---|---|
-| Writing the plug-ins' geometry, by hand, to a thousandth of a point | about 16 instructions a byte, and 20 bytes an anchor |
+| Writing the plug-ins' geometry, by hand, to a thousandth of a point | about 16 instructions a byte |
+| One anchor, written by hand | 18 to 20 bytes along a stroke or a satin column, 26 to 27 in a fill's ribbons |
 | A unit of the engine's work for a stroke | about 880 instructions |
 | A unit of the engine's work for a satin column | about 4,730 instructions |
 | A unit of the engine's work for a fill | 1,900 to 5,300 instructions, by the part of the work |
-| Sewing a 7 mm square fill with its defaults | 26 million instructions, 85 % of the work the travel under its rows |
-| Laying the top rows of fills from 3.5 mm to 226 mm square | 1.6 to 11 million instructions |
-| A fill's outline, hatched | 1.7 to 2.5 million instructions |
+| The exact preview of a 7 mm square fill with its defaults | 27 million instructions, 85 % of the engine's work spent on the travel under its rows |
+| The rows preview of square fills from 3.5 mm to 226 mm | 1.6 to 11 million instructions |
+| The outline preview of square fills from 3.5 mm to 903 mm | 1.7 to 5 million instructions |
 
 So the engine's work, and not the JSON, is what limits a preview. The plug-in turns the instructions it
 has left after reading its input into a budget of the engine's work units, and prices what it writes by
@@ -182,9 +183,10 @@ The `preview_level` parameter, `auto` by default, lets the user pick a level (Ve
 name `preview`). A level the user picks gets the whole budget, and when that is not enough, `SC-I0810`
 names a cheaper one. The units of a stroke's work and of a satin column's cost the same on every shape
 measured, so a budget of units bounds their exact previews. A fill's units vary too much for that. A 7 mm
-square already takes half of what VectorCraft allows, and a budget of units that ran out early, in the
-dearer work, took 71 million instructions. So auto shows a fill's rows, and its exact preview is the
-user's to pick, with all that VectorCraft allows, which stops one that needs more with its own error. The
+square's exact preview already takes more than half of what VectorCraft allows, and a budget of units that
+ran out early, in the dearer work, took 71 million instructions. So auto shows a fill's rows, and its exact
+preview is the user's to pick, with all that VectorCraft allows, which stops one that needs more with its
+own error. The
 contract test `req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits` runs each level on
 shapes of growing size on every track the [compatibility gate](compatibility-gate.md) tests, and fails
 when VectorCraft stops a run that must finish. It prints what each run takes, which the budget's numbers
