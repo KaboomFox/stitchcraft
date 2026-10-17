@@ -1,10 +1,10 @@
 $ stitch export round-patch.vectorcraft -o round-patch.pes --preview round-patch.png
 round-patch.vectorcraft
-  file      round-patch.pes (PES v1, 4787 bytes)
-  sha256    15f5ac41653189db91ea923750925ed086716ff6ff374262f1174bfa736beb8a
+  file      round-patch.pes (PES v1, 4751 bytes)
+  sha256    c06c3defb172d4e8e33096eaa48fbc7a898c25dfe4f83cc8b555c192fe792363
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      29.6 × 29.6 mm
-  stitches  1651 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
+  stitches  1633 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
   threads   1. unnamed (#1f4e9c), shown as Brother PEC 2 "Blue"
             2. unnamed (#ffffff), shown as Brother PEC 29 "White"
             3. unnamed (#d9a400), shown as Brother PEC 11 "Deep Gold"
