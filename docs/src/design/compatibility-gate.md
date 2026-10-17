@@ -59,7 +59,7 @@ with a cached target directory for branch tracks. Scenarios are data files in `c
 | `save-reopen` | apply, `app.save`, reopen, `effect.list` | parameters identical (`REQ-PRM-003`) |
 | `export-pes` | VectorCraft saves `.vectorcraft`; `stitch export` reads it | our CLI reads the version's files; PES golden matches |
 | `missing-plugin` | open a document with our effect records without the plug-in installed | document opens; records preserved on save |
-| `graphic-style` | apply an effect, `graphicStyle.new`, `graphicStyle.apply` to another object and to a group, `app.save` | `stitch export` sews the styled object and the group's paths with the effect's parameters (`REQ-VC-006`) |
+| `graphic-style` | apply an effect, `graphicStyle.new`, `graphicStyle.apply` to another object and to a group, `app.save` | `stitch export` sews the styled object and the group's paths with the effect's parameters, in the style's colour (`REQ-VC-006`) |
 | `compound-satin` | 2 paths and a rung, `object.compoundPath.make`, then `effect.apply` satin | `stitch export` sews the column with the rung (`REQ-VC-007`) |
 | `limits` | largest fixture at each preview level | completes inside the live-effect budget |
 
