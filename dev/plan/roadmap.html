@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c07f186f.js";
+            window.path_to_searchindex_js = "../searchindex-18cd77cc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -320,7 +320,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tbody>
 <tr><td>M6.1 ✅</td><td><code>stitchcraft-vectorcraft</code>: read <code>.vectorcraft</code> files of formats 1 to 4, plain or compressed: layers, groups, paths and compound paths, paints as threads, and StitchCraft’s effect records, which say how an object sews. VectorCraft keeps paths in document coordinates, with no transforms to apply. What isn’t stitched is named (<code>SC-W0807</code>, <code>SC-W0808</code>, <code>SC-I0809</code>). Caps: 64 MiB of JSON and the JSON reader’s depth</td><td><code>REQ-VC-001</code>, <code>REQ-VC-004</code>, <code>REQ-VC-005</code>; fuzzed (<code>read_vectorcraft</code>)</td></tr>
 <tr><td>M6.2 ✅</td><td>The plug-in crate, with manifests generated per family and the ABI shim (<code>abi.rs</code>, whose <code>unsafe</code> is audited). One module per family, whose live effect shows the object’s stitches, or says why it shows none (<code>SC-I0810</code>)</td><td><code>REQ-VC-002</code> (manifests valid, ≤ 64 params), and the module’s size with the engine recorded (<a href="../design/adr/0005-geometry-stack.html">ADR-0005</a>)</td></tr>
-<tr><td>M6.3</td><td>Live-effect previews with budget-aware levels</td><td><code>REQ-VC-003</code> per level, within 5 s / fuel</td></tr>
+<tr><td>M6.3 ✅</td><td>Live-effect previews with budget-aware levels: exact, a fill’s rows, and the outline, picked by <code>preview_level</code> or by what the budget affords, the engine’s work priced in instructions measured in VectorCraft’s host</td><td><code>REQ-VC-003</code> per level, within 5 s / fuel</td></tr>
 <tr><td>M6.4</td><td>Tools filter: make satin, add rung, bake preview, test sheet; Graphic Styles as presets verified</td><td>cases per tool</td></tr>
 <tr><td>M6.5</td><td><code>stitch export design.vectorcraft</code>; marker conventions (<code>stitch:start</code>, <code>stitch:end</code>, <code>stitch:ignore</code>)</td><td>end-to-end cases</td></tr>
 <tr><td>M6.6</td><td>Compatibility gate complete: Level A + B, all four tracks, bot PR and issues, generated table</td><td>first scheduled run green</td></tr>
