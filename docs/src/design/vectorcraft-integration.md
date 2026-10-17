@@ -176,7 +176,7 @@ copy of the object's path.
 **Coordinates.** VectorCraft keeps every path in document coordinates. Moving or scaling a group moves
 its paths' anchors, so layers, groups and compound paths have no transform. Coordinates are points, 1/72
 inch, with y down, and the adapter multiplies them by 25.4/72 into millimetres. The document's origin
-stays the origin. Numbers are read exactly, as VectorCraft reads them (serde_json's `float_roundtrip`).
+stays the origin. Coordinates are read exactly, as VectorCraft reads them, from their text in the JSON.
 An anchor's handles are absolute positions. A missing handle, or one within a billionth of a point of its
 anchor, leaves that end of the segment straight, and a segment without handles is a line.
 
@@ -231,7 +231,7 @@ an object's id when it saves, so a report and a preview name the same object. A 
 reads. `SC-W0807` names what isn't stitched. `SC-W0808` names geometry that can't be used, such as a
 number that doesn't read or a point more than 10 m from the origin, and a shape that draws nothing.
 `SC-I0809` lists the layers and guides left out because VectorCraft doesn't print them. The compatibility
-gate saves files with each VectorCraft version it tests and reads them back (Level B, M6.6).
+gate will have each VectorCraft version it tests write files for the adapter to read back (Level B, M6.6).
 
 ### Importing Ink/Stitch SVGs into VectorCraft
 
