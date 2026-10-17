@@ -126,6 +126,9 @@ pub fn stitchcraft_core::element::ElementId::as_str(&self) -> &str
 pub fn stitchcraft_core::element::ElementId::new(impl core::convert::Into<alloc::string::String>) -> core::result::Result<Self, stitchcraft_core::element::ElementIdError>
 impl core::fmt::Display for stitchcraft_core::element::ElementId
 pub fn stitchcraft_core::element::ElementId::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub struct stitchcraft_core::element::Labels
+impl stitchcraft_core::element::Labels
+pub fn stitchcraft_core::element::Labels::claim(&mut self, alloc::string::String, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::string::String, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_core::exact
 pub enum stitchcraft_core::exact::Side
 pub stitchcraft_core::exact::Side::Left
@@ -323,6 +326,9 @@ pub fn stitchcraft_core::element::ElementId::as_str(&self) -> &str
 pub fn stitchcraft_core::element::ElementId::new(impl core::convert::Into<alloc::string::String>) -> core::result::Result<Self, stitchcraft_core::element::ElementIdError>
 impl core::fmt::Display for stitchcraft_core::element::ElementId
 pub fn stitchcraft_core::element::ElementId::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub struct stitchcraft_core::Labels
+impl stitchcraft_core::element::Labels
+pub fn stitchcraft_core::element::Labels::claim(&mut self, alloc::string::String, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::string::String, stitchcraft_core::budget::Exhausted>
 pub struct stitchcraft_core::Meter
 impl stitchcraft_core::budget::Meter
 pub fn stitchcraft_core::budget::Meter::charge(&mut self, u64) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
