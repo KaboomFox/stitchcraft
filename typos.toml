@@ -15,3 +15,5 @@ DSZ = "DSZ"
 Ellageo = "Ellageo"
 # German words in cited paper titles (Hilbert, Hierholzer).
 ein = "ein"
+# The gzip crate, flate2.
+flate = "flate"

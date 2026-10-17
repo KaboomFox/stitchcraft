@@ -59,6 +59,11 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0802`](#sc-w0802) | Warning | SVG feature ignored |
 | [`SC-I0805`](#sc-i0805) | Info | Object left out, as the file asks |
 | [`SC-W0804`](#sc-w0804) | Warning | Element geometry invalid or out of range |
+| [`SC-W0803`](#sc-w0803) | Warning | VectorCraft file from a newer format version; read best-effort |
+| [`SC-E0806`](#sc-e0806) | Error | VectorCraft file could not be read |
+| [`SC-W0807`](#sc-w0807) | Warning | VectorCraft object or feature not stitched |
+| [`SC-W0808`](#sc-w0808) | Warning | VectorCraft geometry unusable |
+| [`SC-I0809`](#sc-i0809) | Info | VectorCraft layer or guide left out, as it does not print |
 
 ## SC-E0004
 
@@ -669,3 +674,63 @@ skipped.
 
 The message names the element. Check its path data, points and transform, or remove stray objects
 far from the design.
+
+## SC-W0803
+
+**Warning** — VectorCraft file from a newer format version; read best-effort
+
+The `.vectorcraft` file comes from a newer VectorCraft: its format version is newer than the newest
+StitchCraft reads. StitchCraft reads it as that version, usually all of a design's paths and paints,
+where older versions of VectorCraft refuse the file.
+
+The message gives the file's format version and the newest StitchCraft reads. Compare the stitches
+with the drawing, or save a copy in that format from the newer VectorCraft: File › Save a Copy, then
+the Version in VectorCraft Options.
+
+## SC-E0806
+
+**Error** — VectorCraft file could not be read
+
+The `.vectorcraft` file could not be read: it is not a VectorCraft document (its JSON does not
+read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
+is damaged, or it unpacks to more JSON than StitchCraft reads. Nothing was stitched.
+
+The message says what is wrong and, for JSON errors, where. Open the file in VectorCraft and save it
+again.
+
+## SC-W0807
+
+**Warning** — VectorCraft object or feature not stitched
+
+Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft
+computes as it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine
+objects), a kind of object StitchCraft does not read, clipping and opacity masks, VectorCraft's own
+effects, a brush's art, a StitchCraft effect it cannot use, or a group's or a layer's own fills and
+strokes. A gradient is sewn in its first colour, and a pattern, or a colour that does not read, in
+black.
+
+The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
+of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
+makes paths of a symbol, and Object › Expand Appearance of what effects and brushes draw.
+
+## SC-W0808
+
+**Warning** — VectorCraft geometry unusable
+
+An object's geometry cannot be used, and the object, or the stroke, is left out: a coordinate or a
+stroke's width is not a number, the object draws nothing, or it lies more than 10 metres from the
+document's origin, beyond what machine files can record. A StitchCraft stroke or satin effect takes
+a width that is not a number as 0.
+
+The message names the object. Check its anchors, or remove stray objects far from the design.
+
+## SC-I0809
+
+**Info** — VectorCraft layer or guide left out, as it does not print
+
+A layer or a guide is left out because VectorCraft does not print it: a template layer, a layer
+whose Print option is off, or a guide. VectorCraft shows them, dimmed or as guides, and keeps them
+out of what it prints and exports; StitchCraft keeps them out of the sew-out.
+
+The message names the layer or the guide. To stitch a layer, turn its Template option off, or its
+Print option on, in VectorCraft's Layer Options.

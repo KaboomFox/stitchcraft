@@ -535,6 +535,51 @@ registry! {
     /// The message names the element. Check its path data, points and transform, or remove stray objects
     /// far from the design.
     SvgGeometryUnusable = "SC-W0804", Warning, "Element geometry invalid or out of range";
+
+    /// The `.vectorcraft` file comes from a newer VectorCraft: its format version is newer than the newest
+    /// StitchCraft reads. StitchCraft reads it as that version, usually all of a design's paths and paints,
+    /// where older versions of VectorCraft refuse the file.
+    ///
+    /// The message gives the file's format version and the newest StitchCraft reads. Compare the stitches
+    /// with the drawing, or save a copy in that format from the newer VectorCraft: File › Save a Copy, then
+    /// the Version in VectorCraft Options.
+    VcNewerFormat = "SC-W0803", Warning, "VectorCraft file from a newer format version; read best-effort";
+
+    /// The `.vectorcraft` file could not be read: it is not a VectorCraft document (its JSON does not
+    /// read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
+    /// is damaged, or it unpacks to more JSON than StitchCraft reads. Nothing was stitched.
+    ///
+    /// The message says what is wrong and, for JSON errors, where. Open the file in VectorCraft and save it
+    /// again.
+    VcUnreadable = "SC-E0806", Error, "VectorCraft file could not be read";
+
+    /// Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft
+    /// computes as it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine
+    /// objects), a kind of object StitchCraft does not read, clipping and opacity masks, VectorCraft's own
+    /// effects, a brush's art, a StitchCraft effect it cannot use, or a group's or a layer's own fills and
+    /// strokes. A gradient is sewn in its first colour, and a pattern, or a colour that does not read, in
+    /// black.
+    ///
+    /// The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
+    /// of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
+    /// makes paths of a symbol, and Object › Expand Appearance of what effects and brushes draw.
+    VcFeatureIgnored = "SC-W0807", Warning, "VectorCraft object or feature not stitched";
+
+    /// An object's geometry cannot be used, and the object, or the stroke, is left out: a coordinate or a
+    /// stroke's width is not a number, the object draws nothing, or it lies more than 10 metres from the
+    /// document's origin, beyond what machine files can record. A StitchCraft stroke or satin effect takes
+    /// a width that is not a number as 0.
+    ///
+    /// The message names the object. Check its anchors, or remove stray objects far from the design.
+    VcGeometryUnusable = "SC-W0808", Warning, "VectorCraft geometry unusable";
+
+    /// A layer or a guide is left out because VectorCraft does not print it: a template layer, a layer
+    /// whose Print option is off, or a guide. VectorCraft shows them, dimmed or as guides, and keeps them
+    /// out of what it prints and exports; StitchCraft keeps them out of the sew-out.
+    ///
+    /// The message names the layer or the guide. To stitch a layer, turn its Template option off, or its
+    /// Print option on, in VectorCraft's Layer Options.
+    VcNotPrinted = "SC-I0809", Info, "VectorCraft layer or guide left out, as it does not print";
 }
 
 impl Code {

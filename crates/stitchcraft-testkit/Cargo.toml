@@ -16,8 +16,11 @@ stitchcraft-core = { workspace = true }
 stitchcraft-params = { workspace = true }
 stitchcraft-plan = { workspace = true }
 stitchcraft-engine = { workspace = true }
-# The fuzz bodies (`fuzz.rs`) drive the readers, the writers, the renderer and the SVG reader.
+# The fuzz bodies (`fuzz.rs`) drive the readers, the writers, the renderer and the SVG and VectorCraft
+# readers; flate2 compresses what the VectorCraft reader is given.
 stitchcraft-formats = { workspace = true }
 stitchcraft-render = { workspace = true }
 stitchcraft-svg = { workspace = true }
+stitchcraft-vectorcraft = { workspace = true }
+flate2 = { workspace = true }
 proptest = { workspace = true }

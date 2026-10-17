@@ -131,6 +131,10 @@ another.
 | `SC-I0703` | Info | Stitches longer than the machine's longest stitch; split | M3 |
 | `SC-E0801` | Error | SVG could not be read (with the parser's position) | M3 |
 | `SC-W0802` | Warning | SVG feature ignored (e.g. raster image, text not converted to paths) | M3 |
-| `SC-W0803` | Warning | `.vectorcraft` file from a newer VectorCraft format version; read best-effort | M6 |
+| `SC-W0803` | Warning | VectorCraft file from a newer format version; read best-effort (a version newer than the newest the adapter reads) | M6 |
 | `SC-W0804` | Warning | Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke's width, join or miter limit that does not read); the usable part is stitched | M3 |
 | `SC-I0805` | Info | Object left out, as the file asks (Ink/Stitch's ignore commands and `ignore_object` setting) | M3 |
+| `SC-E0806` | Error | VectorCraft file could not be read (not a VectorCraft document, or larger than the adapter reads) | M6 |
+| `SC-W0807` | Warning | VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft's own effects, brushes, gradients, patterns) | M6 |
+| `SC-W0808` | Warning | VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing) | M6 |
+| `SC-I0809` | Info | VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides) | M6 |

@@ -73,13 +73,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The machine-file readers start from the golden files; the SVG reader from the SVG fixtures, with
-        # a dictionary of SVG's keywords so that mutations stay near valid SVG.
+        # The machine-file readers start from the golden files; the SVG and VectorCraft readers from their
+        # fixtures, with dictionaries of their keywords so that mutations stay near valid documents.
         include:
           - { target: read_pes, seeds: "conformance/golden/formats/* conformance/golden/testsheets/*", options: "" }
           - { target: read_dst, seeds: "conformance/golden/formats/* conformance/golden/testsheets/*", options: "" }
           - { target: read_write_preview, seeds: "conformance/golden/formats/* conformance/golden/testsheets/*", options: "" }
           - { target: read_svg, seeds: "conformance/fixtures/svg/*", options: "-dict=fuzz/svg.dict" }
+          - { target: read_vectorcraft, seeds: "conformance/fixtures/vectorcraft/*", options: "-dict=fuzz/vectorcraft.dict" }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: rustup toolchain install nightly --profile minimal
