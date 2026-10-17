@@ -843,6 +843,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   the 1 mm lock. The checks `stitch testsheet` prints say which end of a TS-04 line is its start, to count
   TS-03's stitches inside the locks at their ends, and that a clean 0.3 mm line means 0.3 mm or less. The
   question whether TS-02B's jumps were cut is gone: MC-1 answered it.
+- The running stitch's records say how close its stitches keep to a curve (`REQ-RUN-001`, `DEV-RUN-002`,
+  `strokes.md`). The path is flattened within a tenth of `running_stitch_tolerance_mm`, and the stitches
+  keep within the other nine tenths of its points, so they keep within the tolerance of the drawn path.
+  The records said the whole tolerance, as Ink/Stitch measures it at its points, and so predicted 13 and 9
+  stitches for TS-03's 0.1 and 0.2 mm circles, where StitchCraft sews 14 and 10 (review finding RUN2-1).
 - Docs now match the code on the machine testing page's pictures, the architecture page's release profile
   and the report's contents, and in the CLI's README on `stitch convert` and the bug report guide on
   `design.svg_hex` (review finding CLI-18).

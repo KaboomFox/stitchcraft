@@ -40,8 +40,8 @@ checks straight. "The shortest stitch" is the one [Finalize](../engine-pipeline.
    stitch scaled below it joins its shorter neighbour. Where those stitches stray from the path by more
    than the tolerance left after flattening, as on a curve too tight for them, the span is spread again
    in one stitch more, then one more, as long as that takes no more stitches than step 5 would make of
-   it, until they keep to it. A small circle is so sewn in even stitches as long as the tolerance allows,
-   where splitting the stray ones would halve them. With random length, each try draws its lengths again
+   it, until they keep to it. A small circle is so sewn in even stitches as long as the tolerance left after
+   flattening allows, where splitting the stray ones would halve them. With random length, each try draws its lengths again
    from where the span's draws began.
 4. **Measure straight.** Where the path bends back on itself within less than the shortest stitch (a
    cusp, a tight loop, a curl at an end), two points far apart along it can be close in a straight line.
@@ -116,8 +116,9 @@ different phases, which is what the random phase is for (`DEV-RUN-005`).
 
 ### Properties (conformance)
 
-- Stitches are spread evenly between corners, in more of them where they stray beyond the tolerance, as
-  long as that takes no more than splitting. Measured straight, every stitch is at most
+- Stitches are spread evenly between corners, in more of them where they stray from the points of the
+  flattened path by more than the tolerance left after flattening, as long as that takes no more than
+  splitting. Measured straight, every stitch is at most
   `s × (1 + jitter)` + 1 µm for the longest length `s` and at least the shortest stitch, and a part too
   small for that is reported (`REQ-RUN-001`).
 - Deviation from the source path ≤ tolerance, both ways, measured densely (`REQ-RUN-002`).
