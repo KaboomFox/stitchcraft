@@ -23,7 +23,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | **Design pages follow the code** | Every source file of a crate or app is on a page's `implements` comment, and a branch that changes those files changes the page too or records a `Design-reviewed:` line | `xtask/src/design_map.rs`, `.claude/settings.json` (names the pages after each edit) | `cargo xtask docs --check` · CI |
 | Docs images | Every image a page shows is one a shot in `docs/shots.toml` writes, with alt text, and regenerating to the committed file | `xtask/src/shots.rs` | `cargo xtask shots --check` · CI |
 | Conformance | Requirement/case consistency; every fixture has its row in the fixtures index; all cases pass; changed goldens need the `golden-change` label and a changelog line | `xtask/src/conformance/`, `ci.yml`, `goldens.yml` | `cargo xtask conformance` · CI |
-| Dependencies | Licence allow-list (GPL family denied), advisories, duplicates, sources, for the workspace and the fuzz targets' | `deny.toml` | `cargo xtask ci` · CI (`cargo-deny`) |
+| Dependencies | Licence allow-list (GPL family denied), advisories, duplicates, sources, for the workspace, the fuzz targets' and the window probe's. An advisory accepted is listed with its reason | `deny.toml` | `cargo xtask ci` · CI (`cargo-deny`) |
 | Spelling | Typos in code, docs, commit-facing text | `typos.toml` | CI |
 | **Prose** | New Markdown lines follow the [writing style](../contributing/writing-style.md): the house rules and ai-tells, a style for phrasing that machine-written text overuses | `.vale.ini`, `.vale/styles/`, `xtask/src/prose.rs` (Vale) | `cargo xtask prose` · CI |
 | MSRV | Builds on the declared `rust-version` | workspace `Cargo.toml` | CI |
