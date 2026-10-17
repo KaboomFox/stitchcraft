@@ -109,6 +109,11 @@ checked (`conformance/fixtures/geometry/shapely-rows.txt`).
 Which stretches lie inside is decided by counting the edges that cross the row, each over its height
 from its lower end up to but not including its upper end.
 
+The top rows alone, laid over each part grown by `expand_mm` as the fill grows it, are what a preview
+shows of a fill too costly to sew within the preview's budget (`generate::rows`, since M6.3). Laying
+them costs a small part of sewing the fill, since no needle point is placed and no route is searched. A
+28 mm square takes 632 units of the engine's work for its rows, and 54,034 to sew.
+
 ### 2. Needle points along a row
 
 A row's needle points lie on a grid along it, as Ink/Stitch places them
