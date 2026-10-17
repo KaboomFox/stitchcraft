@@ -36,6 +36,9 @@ checks:
    host's limits, and return the expected preview geometry (golden JSON, tolerance 1 µm).
 4. Filters run and return valid objects.
 5. Error paths: invalid parameters are rejected by the host with the expected message.
+6. Budget: the *hello* plug-in's cost for each byte of JSON it reads and writes stays within a quarter
+   above the costs [recorded for previews](vectorcraft-integration.md#live-effect-previews-within-v1-budgets).
+   Each run prints the costs.
 
 `vectorcraft-plugins` depends only on `geom`, `color`, `doc` and `wasmi`, so this builds quickly.
 
