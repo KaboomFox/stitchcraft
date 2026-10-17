@@ -116,6 +116,7 @@ pub fn run(skip: &[String]) -> Result<(), String> {
         ("shots", Box::new(|| outcome(shots::run(true)))),
         ("conformance", Box::new(|| outcome(conformance::run(false, None, None)))),
         ("wasm", optional(wasm::target_installed, "rustup target add wasm32-unknown-unknown", guest, Box::new(|| outcome(wasm::run())))),
+        ("wasm-goldens", optional(wasm::wasi_ready, wasm::WASI_INSTALL, guest, Box::new(|| outcome(wasm::goldens())))),
         ("api", optional(api::available, api::INSTALL, guest, Box::new(|| outcome(api::run(true))))),
         ("deny", deny),
         ("typos", optional(|| util::tool_available("typos", &["--version"]), "cargo install typos-cli", guest, tool_step("typos", &[&[]]))),

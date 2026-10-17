@@ -97,7 +97,12 @@ enum Command {
     /// Rust files warn above 800 lines and fail above 1,500
     Filesize,
     /// Library crates and the plug-in build for wasm32-unknown-unknown
-    Wasm,
+    Wasm {
+        /// Instead, make the golden files with `stitch` built as WebAssembly (WASI, run by wasmtime), byte
+        /// for byte
+        #[arg(long)]
+        goldens: bool,
+    },
     /// VectorCraft compatibility
     Compat {
         #[command(subcommand)]
@@ -201,7 +206,8 @@ fn run(command: Command) -> Result<(), String> {
         Command::Cleanroom => cleanroom::run(),
         Command::UnsafeAudit => unsafe_audit::run(),
         Command::Filesize => filesize::run(),
-        Command::Wasm => wasm::run(),
+        Command::Wasm { goldens: false } => wasm::run(),
+        Command::Wasm { goldens: true } => wasm::goldens(),
         Command::Compat { command: Compat::Discover { json } } => compat::discover(json),
         Command::Compat { command: Compat::Contract { reference, wasm } } => compat::contract(&reference, &wasm),
         Command::Compat { command: Compat::Join { nested, vectorcraft } } => join::run(nested, &vectorcraft),
@@ -264,6 +270,7 @@ mod tests {
             &["mutants", "--changed", "a", "b"],
             &["prose", "--base", "origin/main"],
             &["ci", "--skip", "api,prose"],
+            &["wasm", "--goldens"],
         ] {
             assert!(Cli::try_parse_from(std::iter::once("xtask").chain(args.iter().copied())).is_ok(), "{args:?}");
         }
