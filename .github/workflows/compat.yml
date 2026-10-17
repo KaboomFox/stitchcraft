@@ -7,6 +7,8 @@
 # ways ADR-0011 describes, and runs StitchCraft's gates there; pull requests that touch manifests or
 # tooling rehearse against the pinned stable version.
 # A failing scheduled run opens or updates one issue labelled `upstream-canary`.
+# The window probe runs the pinned stable release's app without a screen: two screenshots alike, and xa11y
+# driving the window through its accessibility tree (spike M0.8, docs/src/design/docs-pipeline.md).
 # Level B (end-to-end with vectorcraft-cli), the bot PR for new versions and the generated support table
 # arrive with roadmap step M6.6.
 name: compat
@@ -151,6 +153,33 @@ jobs:
       - name: Nothing to rehearse on this track
         if: steps.ref.outputs.ref == ''
         run: echo "VectorCraft has no ${{ matrix.track }} build right now." >> "$GITHUB_STEP_SUMMARY"
+
+  window:
+    name: window (pinned stable, headless)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install --profile minimal
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - name: A desktop without a screen (Xvfb, Mesa, D-Bus, AT-SPI)
+        # libxkbcommon-dev links xa11y's keyboard maps; the rest is what VectorCraft's window loads.
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends xvfb xauth dbus at-spi2-core libxkbcommon-dev \
+            libegl1 libegl-mesa0 libgl1-mesa-dri libxkbcommon-x11-0 libxcursor1 libxrandr2 libxi6
+      - name: VectorCraft's window, photographed and driven through its accessibility tree
+        run: cargo xtask compat window
+      - name: Keep the screenshots, the tree and the app's logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: window
+          path: |
+            target/compat/window/*.png
+            target/compat/window/*.txt
+            target/compat/window/*.log
+            target/compat/window/*.jsonl
+          if-no-files-found: ignore
 
   report:
     needs: [discover, contract, move]
