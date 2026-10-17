@@ -184,3 +184,81 @@ fn the_host_refuses_a_value_a_choice_does_not_offer() {
     let refused = plugin.manifest().resolve_params(&json!({"fill_method": "plaid"})).unwrap_err().to_string();
     assert!(refused.contains("fill_method"), "{refused}");
 }
+
+/// The parameters VectorCraft passes `plugin`'s `vc_run` for a record that sets `set`: every other
+/// declared parameter at its default, and the effect's context.
+fn default_params(plugin: &Plugin, set: &Value) -> Vec<u8> {
+    let mut params = plugin.manifest().resolve_params(set).unwrap();
+    params.insert("_context".into(), json!({"mode": "effect", "bounds": [0, 0, 100, 100]}));
+    serde_json::to_vec(&Value::Object(params)).unwrap()
+}
+
+/// The anchors of a live effect's output.
+fn anchors(output: &[u8]) -> usize {
+    let output: Value = serde_json::from_slice(output).unwrap();
+    let subpaths = output["objects"].as_array().into_iter().flatten().filter_map(|object| object["path"]["subpaths"].as_array()).flatten();
+    subpaths.filter_map(|subpath| subpath["anchors"].as_array()).map(Vec::len).sum()
+}
+
+/// Each family's live effect at each preview level, on shapes of growing size, within VectorCraft's
+/// limits (`REQ-VC-003`). Auto, rows and the outline finish on every shape. An exact preview has all that
+/// VectorCraft allows, which a small fill's fits in, and the test notes how far the larger ones get. It
+/// prints what each run takes against what VectorCraft allows it, and what it shows, which the plug-in's
+/// budget (`apps/stitchcraft-vc-plugin/src/preview.rs`) is measured from.
+#[test]
+fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
+    let square = |side: f64| shapes::rectangle(Rect::new(0.0, 0.0, side, side));
+    let rails = |length: f64| lines(&[&[(0.0, 0.0), (length, 0.0)], &[(0.0, 20.0), (length, 20.0)]]);
+    let squares = |sides: &[f64]| sides.iter().map(|side| (format!("square {side} pt"), square(*side))).collect::<Vec<_>>();
+    let fills = squares(&[10.0, 20.0, 40.0, 80.0, 160.0, 320.0, 640.0, 2560.0]);
+    let runs = [
+        Runs { family: "stroke", level: "auto", shapes: squares(&[20.0, 320.0, 5120.0, 25600.0]), finishing: usize::MAX },
+        Runs { family: "stroke", level: "outline", shapes: squares(&[20.0, 25600.0]), finishing: usize::MAX },
+        Runs {
+            family: "satin",
+            level: "auto",
+            shapes: [60.0, 960.0, 15360.0].map(|length| (format!("rails {length} pt"), rails(length))).to_vec(),
+            finishing: usize::MAX,
+        },
+        Runs { family: "satin", level: "outline", shapes: vec![("rails 15360 pt".into(), rails(15360.0))], finishing: usize::MAX },
+        Runs { family: "fill", level: "auto", shapes: fills.clone(), finishing: usize::MAX },
+        Runs { family: "fill", level: "rows", shapes: fills.clone(), finishing: usize::MAX },
+        Runs { family: "fill", level: "outline", shapes: fills.clone(), finishing: usize::MAX },
+        // The 3.5 mm and 7 mm squares.
+        Runs { family: "fill", level: "exact", shapes: fills, finishing: 2 },
+    ];
+    let mut failed = Vec::new();
+    for Runs { family, level, shapes, finishing } in runs {
+        let plugin = Plugin::load(&module(family), Limits::default()).unwrap();
+        let params = default_params(&plugin, &json!({"preview_level": level}));
+        let mut costs = Vec::new();
+        for (k, (name, path)) in shapes.iter().enumerate() {
+            let input = effect_input(path, json!({}));
+            let allowed = Limits::default().fuel_base + Limits::default().fuel_per_byte * input.len() as u64;
+            // Measured only when it finishes: a run VectorCraft stops may run on far longer without a limit.
+            let what = match plugin.run(&input, &params) {
+                Ok(output) => {
+                    let error = serde_json::from_slice::<Value>(&output).ok().and_then(|v| v["error"].as_str().map(str::to_string));
+                    let shown = error.map_or_else(|| format!("{} anchors", anchors(&output)), |error| format!("error {}…", error.chars().take(60).collect::<String>()));
+                    format!("{shown}, {} of {allowed}", fuel(&plugin, &input, &params))
+                }
+                Err(e) if k < finishing => {
+                    failed.push(format!("{family} {level} {name}"));
+                    format!("FAILED ({e})")
+                }
+                Err(e) => format!("stopped ({e})"),
+            };
+            costs.push(format!("{name}: {what}"));
+        }
+        println!("::notice title={family} {level}::{}", costs.join("; "));
+    }
+    assert!(failed.is_empty(), "past VectorCraft's limits: {failed:?}");
+}
+
+/// A family's preview runs at one level: the shapes, and how many of the first must finish.
+struct Runs {
+    family: &'static str,
+    level: &'static str,
+    shapes: Vec<(String, PathData)>,
+    finishing: usize,
+}

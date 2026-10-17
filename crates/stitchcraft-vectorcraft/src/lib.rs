@@ -5,7 +5,7 @@
 //! the translation for VectorCraft: [`read`] turns a `.vectorcraft` file into a design and the warnings
 //! about what it left out or simplified, as `stitchcraft-svg` does for SVG files. For the plug-in, it
 //! translates what VectorCraft's plug-in ABI passes a live effect and what the effect gives back
-//! ([`effect_element`], [`effect_output`], [`effect_error`]; roadmap step M6.2).
+//! ([`read_effect`], [`effect_output`], [`effect_error`]; roadmap steps M6.2 and M6.3).
 //!
 //! What it reads (roadmap step M6.1, `docs/src/design/vectorcraft-integration.md`): formats 1 to 4,
 //! plain or compressed, with or without the data format 4 keeps after its JSON; layers, groups, paths
@@ -32,14 +32,20 @@ mod effect;
 mod geometry;
 mod values;
 mod wire;
+mod writer;
 
 pub use container::MAX_BYTES;
 pub use document::{VectorCraft, read};
-pub use effect::{effect_element, effect_error, effect_output};
+pub use effect::{Effect, RIBBON_MM, effect_error, effect_lines, effect_output, effect_ribbons, read_effect};
 
 /// The namespace of StitchCraft's VectorCraft plug-ins. A live effect's id is `plugin.`, this, a dot and
 /// its stitch family's id (`plugin.dev.stitchcraft.fill`), which is how a document records the effect.
 pub const PLUGIN_NAMESPACE: &str = "dev.stitchcraft";
+
+/// The parameter of StitchCraft's live effects that picks what their previews show. It is the plug-in's,
+/// not the stitches': a record keeps it, the reader leaves it out of an element's settings, and a live
+/// effect is given it beside its element ([`Effect::preview_level`]).
+pub const PREVIEW_LEVEL: &str = "preview_level";
 
 /// The newest `.vectorcraft` format version the adapter reads; a newer file is read best-effort
 /// (`SC-W0803`).

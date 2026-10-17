@@ -857,9 +857,10 @@ status = "active"
 id = "REQ-VC-003"
 area = "vectorcraft"
 level = "L2"
-statement = "Each live-effect preview level completes within VectorCraft's v1 budget (5 s, fuel limit) for the largest fixture of that level."
+statement = "Each live-effect preview level completes within VectorCraft's v1 budget (5 s, fuel limit) for the largest fixture of that level: auto, rows and the outline on every shape the contract tests run, and a fill's exact preview on the small fills it fits. A level that needs more than its share of the budget gives way to a cheaper one, or, when the user picked it, names one."
+rationale = "VectorCraft stops a live effect that runs past its instructions and draws the object as it is, so a preview must spend what it is given and show what fits; the engine's work units, priced in instructions, are how the plug-in tells."
 milestone = "M6"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-VC-004"
