@@ -99,9 +99,9 @@ an invalid manifest never reaches a user.
 4. `stitch export design.vectorcraft --profile brother-pe800-5x7 -o design.pes` writes the machine file and
    a report; `--preview design.png` renders what will sew.
 
-Stitching order is paint order (bottom first). Hidden objects are skipped (and listed in the report);
-locked objects are stitched. Thread colours come from the object's fill (fills, satins) or stroke
-(running stitch), mapped to the profile's palette.
+Stitching order is paint order (bottom first). Hidden objects are skipped, as VectorCraft draws nothing
+for them, and locked objects are stitched. Thread colours come from the object's fill for a fill, and
+from its stroke for a stroke or a satin column, as in Ink/Stitch, mapped to the profile's palette.
 
 ### Live-effect previews within v1 budgets
 
