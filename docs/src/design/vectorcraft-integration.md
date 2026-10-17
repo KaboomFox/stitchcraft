@@ -168,8 +168,9 @@ and on `main`:
 | A fill's outline, hatched | 1.7 to 2.5 million instructions |
 
 So the engine's work, and not the JSON, is what limits a preview. The plug-in turns the instructions it
-has left after reading its input into a budget of the engine's work units and needle points, and shows
-less when the engine runs out, instead of being stopped (`apps/stitchcraft-vc-plugin/src/preview.rs`):
+has left after reading its input into a budget of the engine's work units, and prices what it writes by
+the anchor. It shows less when the engine runs out, or when what it would write costs more than its
+share, instead of being stopped (`apps/stitchcraft-vc-plugin/src/preview.rs`):
 
 | Level | Geometry returned | Auto shows it |
 |---|---|---|

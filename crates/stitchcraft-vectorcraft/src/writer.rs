@@ -101,7 +101,7 @@ fn digits(out: &mut Vec<u8>, n: u64) {
         place *= 10;
     }
     while place > 0 {
-        out.push(b'0' + digit(n / place % 10));
+        out.push(b'0' + digit(n / place));
         place /= 10;
     }
 }
