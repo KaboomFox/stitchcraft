@@ -7,6 +7,8 @@
 //!   plug-in host at that ref and runs `compat/vc-contract`'s tests.
 //! - `join [--nested] <vectorcraft checkout>`: makes this repository, copied into a VectorCraft checkout
 //!   as a folder, part of VectorCraft's build (`join.rs`; ADR-0011).
+//! - `window [--app <file>]`: runs `compat/vc-window`'s tests against VectorCraft's window, the pinned
+//!   stable release's by default, in a private desktop without a screen (`window.rs`; spike M0.8).
 //! - `report`: the generated supported-versions page (roadmap step M6.6).
 
 use std::cmp::Ordering;
@@ -17,7 +19,7 @@ use serde_json::json;
 use crate::util;
 
 const REPOSITORY: &str = "https://github.com/storytold/vectorcraft";
-const PINS: &str = "compat/vectorcraft.toml";
+pub(crate) const PINS: &str = "compat/vectorcraft.toml";
 const CONTRACT: &str = "compat/vc-contract";
 
 /// A SemVer version (`1.2.3` or `1.2.3-rc.1`).
@@ -151,12 +153,12 @@ pub fn discover(as_json: bool) -> Result<(), String> {
 }
 
 /// The pins file.
-fn load_pins() -> Result<toml::Table, String> {
+pub(crate) fn load_pins() -> Result<toml::Table, String> {
     toml::from_str(&util::read(&util::root().join(PINS))?).map_err(|e| format!("{PINS}: {e}"))
 }
 
 /// The tag pinned for `track` (empty when the track pins none).
-fn pinned_tag<'a>(pins: &'a toml::Table, track: &str) -> &'a str {
+pub(crate) fn pinned_tag<'a>(pins: &'a toml::Table, track: &str) -> &'a str {
     pins.get("tracks").and_then(|t| t.get(track)).and_then(|t| t.get("tag")).and_then(toml::Value::as_str).unwrap_or("")
 }
 

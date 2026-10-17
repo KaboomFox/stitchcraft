@@ -329,7 +329,7 @@ milestone signed off.
 | R7 | Scope: the compatibility contract is large | Phases; compatibility contract tracks coverage; post-1.0 items explicit |
 | R8 | Brother trim behaviour varies by model | Profile flag; MC-1 tests both encodings |
 | R9 | VectorCraft breaking changes | Compatibility gate on stable, pre-release, `release` and `main` |
-| R10 | Headless UI screenshots need a GPU | Spike M0.8 (Xvfb + Mesa); fallback: CLI-rendered art + semantic panel tests |
+| R10 | Headless UI screenshots need a GPU | Spike M0.8 found none needed. Mesa draws the window in software under Xvfb, and the screenshots match above the status bar ([docs pipeline](docs-pipeline.md#vectorcrafts-window-in-ci)) |
 
 ## 19. Open questions
 

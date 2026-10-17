@@ -5,6 +5,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M0.8: VectorCraft's window runs in CI without a screen, and xa11y drives it. `cargo xtask compat window`
+  runs the window probe (`compat/vc-window`) against the pinned stable release's app. It fetches the app
+  from the release's Linux archive and checks it against the SHA-256 now in `compat/vectorcraft.toml`.
+  The tests run in a desktop of their own, with Xvfb, where Mesa draws in software, and a D-Bus session
+  whose accessibility bus says a screen reader is on.
+  - Above the status bar, the screenshots match to the pixel: twice in one window, across two starts and
+    across runs. The status bar's frame timings change with every frame, and the docs' `vectorcraft-ui`
+    pictures will leave the bar out (M6.7).
+  - xa11y chooses View › Outline through AT-SPI's press, and View › Preview with clicks where the tree
+    places them. The control channel sees both changes.
+  - The compat workflow's `window` job runs the probe daily, and on pull requests that touch the plug-in,
+    `compat/`, the tooling or a manifest.
 - M0.7: the geometry is the engine's own, and ADR-0005 says so. The spike checked it against the ADR's
   criteria. 10,000 random polygons with holes grow and shrink into valid parts, in a new property test
   (`any_polygon_with_holes_grows_and_shrinks_into_valid_parts`). The golden files come out the same as
