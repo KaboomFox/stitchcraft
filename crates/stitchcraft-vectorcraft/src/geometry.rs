@@ -2,7 +2,7 @@
 //!
 //! **Why here, once.** A document's paths and the geometry a live effect is given are the same JSON,
 //! VectorCraft's `PathData`, so the reader ([`crate::read`]) and the live effect
-//! ([`crate::effect_element`]) read them with the same code.
+//! ([`crate::read_effect`]) read them with the same code.
 //!
 //! **How a path reads.** Coordinates are points with y down, in document coordinates, and are multiplied by
 //! 25.4/72 into millimetres. An anchor's handles are absolute positions. A handle left out, or within
