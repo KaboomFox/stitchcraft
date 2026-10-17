@@ -77,7 +77,7 @@ GPL/AGPL/LGPL.
 | Deterministic transcendental math | `libm` 0.2 | MIT | core |
 | Errors | `thiserror` 2 | MIT/Apache | all libraries |
 | XML / SVG syntax | `roxmltree`, `svgtypes` | MIT/Apache | svg |
-| `.vectorcraft` documents: JSON, its numbers read exactly, unpacked from gzip by a Rust backend | `serde`, `serde_json`, `flate2` 1 | MIT/Apache | vectorcraft |
+| `.vectorcraft` documents: JSON, its coordinates read exactly, unpacked from gzip by a Rust backend | `serde`, `serde_json`, `flate2` 1 | MIT/Apache | vectorcraft |
 | Rasterizing previews | `tiny-skia` 0.11 | BSD-3-Clause | render |
 | JSON reports, and the plug-in's JSON | `serde_json` | MIT/Apache | cli, vc-plugin |
 | Content hashes of bug-report bundles | `sha2` 0.11 | MIT/Apache | cli |

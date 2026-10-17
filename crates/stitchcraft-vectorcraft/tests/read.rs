@@ -433,25 +433,65 @@ fn diag_sc_w0807_text_images_and_live_objects_are_named_with_how_to_stitch_them(
 }
 
 #[test]
+fn diag_sc_w0807_what_stitchcraft_doesn_t_read_in_an_appearance_is_named() {
+    let path = r#"{"subpaths": [{"closed": true, "anchors": [{"p": [0, 0]}, {"p": [36, 0]}, {"p": [36, 36]}]}]}"#;
+    let object = |id: u32, rule: &str, appearance: &str| {
+        format!(r#"{{"id": {id}, "appearance": {appearance}, "kind": {{"type": "path", "rule": "{rule}", "path": {path}}}}}"#)
+    };
+    let red = r#""paint": {"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}}"#;
+    let objects = [
+        r#"{"id": 2, "appearance": {"effects": [{"id": "plugin.dev.stitchcraft.fill"}]}, "kind": {"type": "group", "children": []}}"#.to_string(),
+        object(3, "Spiral", RED),
+        object(4, "NonZero", &format!(r#"{{"items": [{{"kind": "fill", {red}, "effects": [{{"id": "plugin.dev.stitchcraft.stroke"}}]}}]}}"#)),
+        object(5, "NonZero", &format!(r#"{{"items": [{{"kind": "shadow", {red}}}, {{"kind": "fill", {red}}}]}}"#)),
+        object(6, "NonZero", r#"{"items": [{"kind": "fill", "paint": {"type": "gradient", "gradient": {"stops": [{"color": {"model": "hsv"}}]}}}]}"#),
+        object(7, "EvenOdd", &format!(r#"{{"items": [{{"kind": "stroke", "width": 1, "join": "Wobbly", {red}}}]}}"#)),
+        // A satin effect on an object without a stroke has nothing to take its width from.
+        object(8, "NonZero", &format!(r#"{{"items": [{{"kind": "fill", {red}}}], "effects": [{{"id": "plugin.dev.stitchcraft.satin"}}]}}"#)),
+    ];
+    let read = read_ok(&document(4, &objects.join(",")));
+    let messages: Vec<(&str, &str)> = read.warnings.iter().map(|w| (w.element.as_ref().map_or("", |e| e.as_str()), w.message.as_str())).collect();
+    let expected = [
+        ("vc:2", "A group has a StitchCraft effect, which works on paths, and it is not used."),
+        ("vc:3", "The fill rule \"Spiral\" is not one StitchCraft reads, and nonzero is used."),
+        ("vc:4", "A StitchCraft effect on one fill or stroke of the appearance is not used."),
+        ("vc:5", "An appearance item of the kind \"shadow\" is not stitched."),
+        ("vc:6", "A gradient's first colour does not read, and it is sewn in black."),
+        ("vc:7", "The stroke join \"Wobbly\" is not one StitchCraft reads, and a miter is used."),
+    ];
+    assert_eq!(messages, expected);
+    assert!(read.warnings.iter().all(|w| w.code == Code::VcFeatureIgnored));
+    assert!(matches!(element(&read, "vc:3:fill").shape, Shape::Fill { rule: FillRule::NonZero, .. }));
+    assert_eq!(element(&read, "vc:6:fill").thread.color, Rgb::new(0, 0, 0));
+    assert!(matches!(element(&read, "vc:7:stroke").shape, Shape::Stroke { join: Join::Miter { limit: 10.0 }, .. }));
+    let Shape::Stroke { width, .. } = element(&read, "vc:8:satin").shape else { panic!() };
+    assert_eq!((width, element(&read, "vc:8:satin").thread.color), (Mm::ZERO, Rgb::new(255, 0, 0)));
+}
+
+#[test]
 fn diag_sc_w0808_geometry_that_cannot_be_used_is_left_out() {
     let null = r#"{"id": 2, "appearance": {"items": [{"kind": "fill", "paint": {"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}}}]},
         "kind": {"type": "path", "path": {"subpaths": [{"anchors": [{"p": [0, 0]}, {"p": [null, 5]}, {"p": [5, 5]}]}]}}}"#;
     let one_anchor = r#"{"id": 3, "appearance": {"items": [{"kind": "stroke", "width": 1, "paint": {"type": "solid", "color": {"model": "gray", "k": 1}}}]},
         "kind": {"type": "path", "path": {"subpaths": [{"anchors": [{"p": [0, 0]}]}]}}}"#;
+    // Every anchor far away, and only the start of an open path.
     let far = square(4, 1.0e6, 0.0, RED);
+    let far_start = r#"{"id": 6, "appearance": {"items": [{"kind": "stroke", "width": 1, "paint": {"type": "solid", "color": {"model": "gray", "k": 1}}}]},
+        "kind": {"type": "path", "path": {"subpaths": [{"anchors": [{"p": [-1e6, 0]}, {"p": [5, 5]}]}]}}}"#;
     // A width VectorCraft wrote for one that wasn't a number; a negative width, which VectorCraft draws
     // nothing for, as for 0, so nothing is said.
     let bad_width = r#"{"id": 5, "appearance": {"items": [{"kind": "stroke", "width": null, "paint": {"type": "solid", "color": {"model": "gray", "k": 1}}},
         {"kind": "stroke", "width": -1, "paint": {"type": "solid", "color": {"model": "gray", "k": 1}}}]},
         "kind": {"type": "path", "path": {"subpaths": [{"anchors": [{"p": [0, 0]}, {"p": [5, 5]}]}]}}}"#;
-    let read = read_ok(&document(4, &[null, one_anchor, &far, bad_width].join(",")));
+    let read = read_ok(&document(4, &[null, one_anchor, &far, bad_width, far_start].join(",")));
     assert!(read.design.elements().is_empty(), "{:?}", ids(&read));
     let unusable = Code::VcGeometryUnusable;
-    let expected = [(unusable, "vc:2"), (unusable, "vc:3"), (unusable, "vc:4"), (unusable, "vc:5")];
+    let expected = [(unusable, "vc:2"), (unusable, "vc:3"), (unusable, "vc:4"), (unusable, "vc:5"), (unusable, "vc:6")];
     assert_eq!(said(&read).iter().map(|(c, e)| (*c, e.as_str())).collect::<Vec<_>>(), expected);
     assert!(read.warnings[0].message.contains("not a number") && read.warnings[1].message.contains("draws nothing"));
     assert!(read.warnings[2].message.contains("10 m"), "{}", read.warnings[2]);
     assert!(read.warnings[3].message.contains("not a number, and the stroke is left out"), "{}", read.warnings[3]);
+    assert!(read.warnings[4].message.contains("10 m"), "{}", read.warnings[4]);
     // Under a satin effect, a width that doesn't read is taken as 0, and said.
     let satin = r#"{"id": 6, "appearance": {"items": [{"kind": "stroke", "width": null, "paint": {"type": "solid", "color": {"model": "gray", "k": 1}}}],
         "effects": [{"id": "plugin.dev.stitchcraft.satin", "params": {}}]},

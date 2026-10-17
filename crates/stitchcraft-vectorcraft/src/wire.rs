@@ -11,16 +11,19 @@
 //! VectorCraft wrote for a value that wasn't one is `null` in the file, and reads as `None`. Everything
 //! else is as VectorCraft writes it, and a file it would refuse is refused.
 //!
-//! **Why exact.** VectorCraft writes a number as the shortest decimal that reads back to it, and reads
-//! it back exactly. serde_json's default reader can be a unit in the last place off on such decimals, so
-//! the workspace turns on its `float_roundtrip`, as VectorCraft does, and a point is where VectorCraft
-//! draws it.
+//! **Why coordinates are read from their text.** VectorCraft writes a number as the shortest decimal that
+//! reads back to it, and reads it back exactly (it turns on serde_json's `float_roundtrip`). serde_json's
+//! default reader can be a unit in the last place off on such decimals. Its exact reader would make the
+//! plug-in's live effects, which share the workspace's serde_json, read their JSON a third slower than
+//! M0.6's contract test allows. So a coordinate is taken as its JSON text and read by Rust's own exact
+//! parser ([`Coordinate`]), and a point is where VectorCraft draws it.
 //!
 //! Field names are VectorCraft's (`crates/doc` and `crates/geom` of its source), which its format keeps.
 
-use serde::de::{self, IgnoredAny, SeqAccess, Visitor};
+use serde::de::{self, IgnoredAny, SeqAccess, Unexpected, Visitor};
 use serde::{Deserialize, Deserializer};
 use serde_json::Value;
+use serde_json::value::RawValue;
 
 /// A whole file: its format's name and version, and the document.
 #[derive(Deserialize)]
@@ -244,8 +247,8 @@ impl<'de> Visitor<'de> for PointVisitor {
     }
 
     fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<WirePoint, A::Error> {
-        let x: Option<f64> = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(0, &self))?;
-        let y: Option<f64> = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(1, &self))?;
+        let Coordinate(x) = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(0, &self))?;
+        let Coordinate(y) = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(1, &self))?;
         if seq.next_element::<IgnoredAny>()?.is_some() {
             return Err(de::Error::invalid_length(3, &self));
         }
@@ -253,7 +256,7 @@ impl<'de> Visitor<'de> for PointVisitor {
     }
 
     fn visit_map<A: de::MapAccess<'de>>(self, mut map: A) -> Result<WirePoint, A::Error> {
-        let (mut x, mut y): (Option<Option<f64>>, Option<Option<f64>>) = (None, None);
+        let (mut x, mut y): (Option<Coordinate>, Option<Coordinate>) = (None, None);
         while let Some(key) = map.next_key::<std::borrow::Cow<'de, str>>()? {
             match key.as_ref() {
                 "x" => x = Some(map.next_value()?),
@@ -263,9 +266,27 @@ impl<'de> Visitor<'de> for PointVisitor {
                 }
             }
         }
-        let x = x.ok_or_else(|| de::Error::missing_field("x"))?;
-        let y = y.ok_or_else(|| de::Error::missing_field("y"))?;
+        let Coordinate(x) = x.ok_or_else(|| de::Error::missing_field("x"))?;
+        let Coordinate(y) = y.ok_or_else(|| de::Error::missing_field("y"))?;
         Ok(WirePoint(x.zip(y)))
+    }
+}
+
+/// A coordinate, read exactly from its JSON text by Rust's parser: `None` for `null`, which VectorCraft
+/// writes for a number that is not one. A number too large for a float is refused, as serde_json refuses
+/// it in VectorCraft.
+struct Coordinate(Option<f64>);
+
+impl<'de> Deserialize<'de> for Coordinate {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let raw = <&RawValue>::deserialize(deserializer)?;
+        match raw.get() {
+            "null" => Ok(Coordinate(None)),
+            text => match text.parse::<f64>() {
+                Ok(v) if v.is_finite() => Ok(Coordinate(Some(v))),
+                _ => Err(de::Error::invalid_value(Unexpected::Other(text), &"a number or null")),
+            },
+        }
     }
 }
 
@@ -296,9 +317,11 @@ mod tests {
         assert_eq!(read(r#"{"y": 4, "x": 3, "z": 9}"#).unwrap(), WirePoint(Some((3.0, 4.0))));
         assert_eq!(read("[null, 2]").unwrap(), WirePoint(None));
         assert_eq!(read(r#"{"x": 1, "y": null}"#).unwrap(), WirePoint(None));
-        for wrong in ["[1]", "[1, 2, 3]", r#"{"x": 1}"#, r#"{"y": 1}"#, "7", r#""1 2""#] {
+        for wrong in ["[1]", "[1, 2, 3]", r#"{"x": 1}"#, r#"{"y": 1}"#, "7", r#""1 2""#, r#"["1", 2]"#, r#"{"x": 1, "y": true}"#, "[1e400, 0]"] {
             assert!(read(wrong).is_err(), "{wrong}");
         }
+        // Exactly, where serde_json's default reader is a unit in the last place off.
+        assert_eq!(read("[180.17933438838418, -1e-9]").unwrap(), WirePoint(Some((180.179_334_388_384_18, -1e-9))));
         assert!(read("7").unwrap_err().to_string().contains("a point as [x, y]"));
     }
 
