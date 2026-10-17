@@ -67,33 +67,49 @@ fn effect_input(path: &PathData, extra: Value) -> Vec<u8> {
     serde_json::to_vec(&json!({"objects": [object]})).unwrap()
 }
 
-/// What a live effect may spend writing its geometry (docs/src/design/vectorcraft-integration.md, live-effect
-/// previews): the instructions VectorCraft's host counts for each byte of JSON the hello plug-in reads and
-/// writes, measured, and how many it runs a second here. Spike M0.6 recorded them; M6.3 sizes its preview
-/// levels from them.
+/// The instructions VectorCraft's host counted for each byte of JSON the hello plug-in read, and for each
+/// byte it wrote, when spike M0.6 measured them (docs/src/design/vectorcraft-integration.md, live-effect
+/// previews). M6.3 sizes its preview levels from them.
+const READ_PER_BYTE: f64 = 512.0;
+const WRITTEN_PER_BYTE: f64 = 822.0;
+/// How far above them a later host, or a later build of the plug-in, may go before the gate says so.
+const HEADROOM: f64 = 1.25;
+/// The 2 sizes of path measured, in anchors. The costs are the differences between them, so that what every
+/// run costs anyway cancels out.
+const ANCHORS: [u32; 2] = [1_000, 4_000];
+
+/// What a live effect spends on its JSON: the instructions VectorCraft's host counts for each byte the hello
+/// plug-in reads and writes, how many bytes a path's anchor takes, and how many instructions the host runs a
+/// second here. Printed on every run; the costs stay within a quarter of what M0.6 recorded.
 #[test]
 fn hello_reads_and_writes_json_within_the_recorded_budget() {
     let plugin = Plugin::load(&plugin_bytes(), Limits::default()).unwrap();
     let params = serde_json::to_vec(&json!({"_context": {"mode": "effect", "bounds": [0, 0, 100, 100]}})).unwrap();
-    let (small, large) = (polyline(1_000), polyline(4_000));
+    let paths = ANCHORS.map(polyline);
     // Echoed: read and written. Carried beside a path of 2 anchors: read, and dropped.
-    let echoed = [&small, &large].map(|path| effect_input(path, json!({})));
-    let carried = [&small, &large].map(|path| effect_input(&polyline(2), json!({"pad": path})));
+    let echoed = paths.each_ref().map(|path| effect_input(path, json!({})));
+    let carried = paths.each_ref().map(|path| effect_input(&polyline(2), json!({"pad": path})));
     let written = echoed.each_ref().map(|input| plugin.run(input, &params).unwrap().len());
     let [echo_small, echo_large] = echoed.each_ref().map(|input| fuel(&plugin, input, &params));
     let [carry_small, carry_large] = carried.each_ref().map(|input| fuel(&plugin, input, &params));
     let per_byte_read = (carry_large - carry_small) as f64 / (carried[1].len() - carried[0].len()) as f64;
     let read = per_byte_read * (echoed[1].len() - echoed[0].len()) as f64;
     let per_byte_written = ((echo_large - echo_small) as f64 - read) / (written[1] - written[0]) as f64;
+    let per_anchor = (written[1] - written[0]) as f64 / f64::from(ANCHORS[1] - ANCHORS[0]);
     let start = Instant::now();
     plugin.run(&echoed[1], &params).unwrap();
     let per_second = echo_large as f64 / start.elapsed().as_secs_f64();
     println!(
         "::notice title=plug-in budget::reading JSON {per_byte_read:.0} instructions a byte, writing it {per_byte_written:.0} a byte; \
-         a run of {} bytes in and {} out {echo_large} instructions; {:.0} million instructions a second",
+         {per_anchor:.1} bytes an anchor; a run of {} bytes in and {} out {echo_large} instructions; {:.0} million instructions a second",
         echoed[1].len(),
         written[1],
         per_second / 1e6,
     );
     assert!(per_byte_read > 0.0 && per_byte_written > 0.0, "{per_byte_read} {per_byte_written}");
+    assert!(
+        per_byte_read <= READ_PER_BYTE * HEADROOM && per_byte_written <= WRITTEN_PER_BYTE * HEADROOM,
+        "JSON costs {per_byte_read:.0} instructions a byte to read and {per_byte_written:.0} to write, more than a quarter above \
+         the {READ_PER_BYTE} and {WRITTEN_PER_BYTE} recorded: measure the budget again (vectorcraft-integration.md, M6.3's levels)"
+    );
 }

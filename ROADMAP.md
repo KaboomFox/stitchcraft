@@ -36,7 +36,7 @@ open owner action from M0.5 is the code-of-conduct contact.
 
 | Milestone | Scope | Status | Machine checkpoint |
 |---|---|---|---|
-| M0 | Foundations and guardrails | 🟡 M0.1–M0.4, M0.9 and M0.10 done; M0.5 partly (repository, owner, labels, Pages, branch protection; code-of-conduct contact open); M0.6–M0.8 open | — |
+| M0 | Foundations and guardrails | 🟡 M0.1–M0.4, M0.6, M0.9 and M0.10 done; M0.5 partly (repository, owner, labels, Pages, branch protection; code-of-conduct contact open); M0.7 and M0.8 open | — |
 | M1 | Stitch plan, Brother profile, PES/DST writers, test sheets | 🟡 M1.1 to M1.10 done, and M1 closes with MC-1 | MC-1 🟡 kit out for sewing (TS-02 and TS-10 redrawn for the PE800) |
 | M2 | Readers, preview renderer, fuzzing | 🟢 M2.1–M2.8 done | — |
 | M3 | Running stitch family, plan assembly, SVG input | 🟡 M3.1 to M3.10 done (parameter registry, a case for every diagnostic code, SVG input, running stitch, repeats and bean stitch, manual stitch, lock stitches, plan assembly, finalize and `stitch plan`, bug-report bundles). M3 closes with MC-2. | MC-2 🟡 kit ready for sewing (TS-02B, TS-03, TS-04) |
