@@ -537,8 +537,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
-- A VectorCraft group's or layer's StitchCraft effects sew each path inside it, in that path's own
-  thread, as VectorCraft draws them (`REQ-VC-006`). They were named with `SC-W0807` and left out. A path
+- A VectorCraft group's or layer's StitchCraft effects sew each path inside it, as VectorCraft draws
+  them, in that path's own thread, or the group's where it has no paint (`REQ-VC-006`). They were named with `SC-W0807` and left out. A path
   that StitchCraft effects reach from more than one level sews as the nearest say, and `SC-W0807` names
   it: VectorCraft runs each on the stitches of the one before.
 - PES files flag every jump after their first record as a trim, as pystitch, Ink/Stitch's writer, flags

@@ -318,11 +318,13 @@ Appearance makes paths of what they draw).
 **A group's effects** (`REQ-VC-006`). VectorCraft runs a group's or a layer's geometry effects on each
 path and compound path inside it, however deep, with the group's bounds as their frame, and draws what
 they return in that object's own paint (`evaluate_container` and `reshape_leaves` in `crates/effects`,
-0.7.0 to 0.12.0). StitchCraft's live effects are geometry effects, and applying a graphic style to a
-group puts its effects on the group. So each path inside sews as the group's StitchCraft effects say, in
-its own thread, as the preview shows it. A path that StitchCraft effects reach from more than one level,
-its own and a group's, or 2 groups', is drawn as one effect run on the stitches another drew, which a
-machine cannot sew. The path sews as the nearest effects say, and `SC-W0807` names it.
+0.7.0 to 0.12.0). The group's own paints paint them too. StitchCraft's live effects are geometry
+effects, and applying a graphic style to a group puts its effects and paints on the group. So each path
+inside sews as the group's StitchCraft effects say, as the preview shows it, in its own thread, or the
+group's where it has no paint. The clip group's outline, its clipping path, takes none of them. Where
+StitchCraft effects meet from more than one level, a path's own and a group's, or 2 groups', VectorCraft
+draws one effect run on the stitches another drew, which a machine cannot sew. The path sews as the
+nearest effects say, and `SC-W0807` names it.
 
 **Ids.** An element is `vc:<object id>:<what>`: `fill` or `stroke` for a paint, with its rank among the
 object's fills or strokes from the second on (`fill.2`), and the family for an effect. VectorCraft keeps
