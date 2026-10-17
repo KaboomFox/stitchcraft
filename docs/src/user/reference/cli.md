@@ -12,7 +12,7 @@ stitch: the StitchCraft command-line tool
 Usage: stitch <COMMAND>
 
 Commands:
-  plan        Plan a design (SVG) for a machine and write the machine file, with a picture and a report if asked
+  plan        Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked [alias: export]
   testsheet   Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
   inspect     Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
   preview     Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
@@ -32,21 +32,18 @@ Options:
 Exit status: 0 done (warnings allowed) · 1 the design or file has errors (nothing written) · 2 usage
 error · 3 a file could not be read or written · 4 a bug in StitchCraft (a bug-report bundle is written
 where it can be: see `stitch bug-report`).
-
-Coming with the roadmap (docs/src/plan/roadmap.md):
-  stitch export design.vectorcraft -o design.pes            (M6)
 ```
 
 ## stitch plan
 
 ```text
-Plan a design (SVG) for a machine and write the machine file, with a picture and a report if asked
+Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked
 
 Usage: stitch plan [OPTIONS] --output <OUTPUT> <DESIGN>
 
 Arguments:
   <DESIGN>
-          The design (SVG)
+          The design: an SVG file, or a VectorCraft document (.vectorcraft)
 
 Options:
   -o, --output <OUTPUT>
@@ -223,7 +220,7 @@ Usage: stitch bug-report [OPTIONS] [DESIGN]
 
 Arguments:
   [DESIGN]
-          The design (SVG) StitchCraft gets wrong
+          The design StitchCraft gets wrong: an SVG file, or a VectorCraft document (.vectorcraft)
 
 Options:
       --replay <REPLAY>

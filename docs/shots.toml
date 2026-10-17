@@ -8,9 +8,9 @@
 # "photo" (a real sew-out; never regenerated, needs a sew-out report link).
 #
 # A "stitch" shot names a style ("realistic" or "simple"), a scale in pixels per millimetre, and what to
-# draw: a test sheet (`sheet = "TS-01"`), or an SVG design (`fixture = "docs/fixtures/wave.svg"`) that the
-# engine plans for the reference machine as `stitch plan` does. It becomes
-# docs/src/images/generated/<id>.png. A design can have panels, each with a caption and parameters set on
+# draw: a test sheet (`sheet = "TS-01"`), or a design that the engine plans for the reference machine as
+# `stitch plan` does, an SVG file (`fixture = "docs/fixtures/wave.svg"`) or a VectorCraft document. It
+# becomes docs/src/images/generated/<id>.png. A design can have panels, each with a caption and parameters set on
 # every element:
 #   panels = [{ caption = "1.5 mm", params = { running_stitch_length_mm = "1.5" } }, …]
 # and then makes <id>-1.png, <id>-2.png and so on. A page shows them side by side between the lines
@@ -239,3 +239,15 @@ fixture = "docs/fixtures/badge.svg"
 style = "simple"
 scale = 8.0
 alt = "The badge in the simple style: the needle points of the star and the ring, and grey dashes where the frame moves from the star to the ring after the colour change"
+
+# ── How-to guides ───────────────────────────────────────────────────────────────────────────────────
+
+[[shot]]
+id = "patch"
+kind = "stitch"
+fixture = "conformance/fixtures/vectorcraft/patch.vectorcraft"
+style = "realistic"
+scale = 6.0
+# The guide shows what is said: the placement line left out by its name, and the start marker.
+allow = ["SC-I0811", "SC-W0807"]
+alt = "The patch as it will sew. A red fill with rows at 45 degrees has a blue satin band and a green curve of running stitch under it. Under them, 2 gold squares with upright rows have the loose thread of the jump between them. The placement line and the start marker are not sewn."

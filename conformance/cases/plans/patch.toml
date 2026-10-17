@@ -1,0 +1,14 @@
+# The whole way from a VectorCraft document to a machine file: a patch drawn as VectorCraft saves it, with
+# StitchCraft's fill, satin and stroke effects, a graphic style on a group, a placement line left out by its
+# name and a start marker, planned as `stitch plan` plans it (or `stitch export`). The golden files are
+# what that writes.
+id = "vectorcraft-patch"
+requirements = ["REQ-VC-004", "REQ-VC-006", "REQ-VC-007", "REQ-VC-008", "REQ-VC-009"]
+kind = "plan"
+design = "fixtures/vectorcraft/patch.vectorcraft"
+profile = "brother-pe800-5x7"
+
+[expect]
+size_mm = [50.094444, 53.975]
+diagnostics = ["SC-I0811", "SC-W0807", "SC-W0807"]
+golden = ["golden/plans/patch.pes", "golden/plans/patch.dst"]

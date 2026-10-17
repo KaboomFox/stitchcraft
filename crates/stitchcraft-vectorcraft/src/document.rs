@@ -217,6 +217,36 @@ fn unseen(node: &Node, around: &Around) -> bool {
         && !around.painters.iter().any(|p| p.above.paints() || p.below.paints())
 }
 
+/// What a name that begins with `stitch:` asks of StitchCraft (`REQ-VC-009`).
+#[derive(Clone, Copy)]
+enum Marker {
+    /// Leave the object out, with everything in it.
+    Ignore,
+    /// Where the shape grouped with the marker starts.
+    Start,
+    /// Where it ends.
+    End,
+    /// No marker StitchCraft reads.
+    Unknown,
+}
+
+/// The marker `name` is: `stitch:` and a word, alone or followed by a space and a note, in any mix of upper
+/// and lower case. `None` for a name that doesn't begin with `stitch:`.
+fn marker(name: &str) -> Option<Marker> {
+    const PREFIX: &str = "stitch:";
+    let name = name.trim_start();
+    if !name.get(..PREFIX.len())?.eq_ignore_ascii_case(PREFIX) {
+        return None;
+    }
+    let word = name.get(PREFIX.len()..)?.split(char::is_whitespace).next().unwrap_or_default();
+    Some(match word.to_ascii_lowercase().as_str() {
+        "ignore" => Marker::Ignore,
+        "start" => Marker::Start,
+        "end" => Marker::End,
+        _ => Marker::Unknown,
+    })
+}
+
 struct Reader {
     meter: Meter,
     labels: Labels,
@@ -261,6 +291,35 @@ impl Reader {
         let clipped_away = around.clipping && !node.kind.as_ref().is_some_and(|kind| matches!(kind.name.as_str(), "path" | "compound" | "text"));
         if !node.visible || node.opacity == Some(0.0) || clipped_away || unseen(node, around) {
             return Ok(());
+        }
+        // Then the name, which can leave the object out or mark where a shape starts or ends.
+        if let Some(marked) = node.name.as_deref().and_then(marker) {
+            let what = match node.kind.as_ref().map(|kind| kind.name.as_str()) {
+                Some("layer") => "The layer",
+                Some("group") => "The group",
+                _ => "The object",
+            };
+            let shown = called(node, what);
+            match marked {
+                Marker::Ignore => {
+                    let message = format!("{shown} is named stitch:ignore, and is left out with everything in it.");
+                    self.warn(Code::VcObjectIgnored, Some(&label), message, Some("Rename it to stitch it."));
+                    return Ok(());
+                }
+                Marker::Start | Marker::End => {
+                    let (verb, noun) = if matches!(marked, Marker::Start) { ("starts", "start") } else { ("ends", "end") };
+                    let message = format!(
+                        "{shown} marks where the shape grouped with it {verb}, and is not stitched. StitchCraft doesn't yet {noun} a shape \
+                         at a marker: it chooses where."
+                    );
+                    self.feature(&label, message, None);
+                    return Ok(());
+                }
+                Marker::Unknown => {
+                    let message = format!("{shown} begins with stitch:, which names no marker StitchCraft reads, and is stitched as it is drawn.");
+                    self.feature(&label, message, Some("StitchCraft reads stitch:ignore, stitch:start and stitch:end."));
+                }
+            }
         }
         if node.mask.is_some() {
             self.feature(&label, format!("{} has an opacity mask, which is not applied: it is stitched whole.", called(node, "The object")), None);

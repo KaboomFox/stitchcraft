@@ -110,8 +110,9 @@ Their answers are fixtures under `conformance/fixtures/geometry/`, one question 
 engine's unit tests read them with a shared reader (`normalize::fixture`) and answer every question the
 same way. Regenerating a fixture needs shapely, and checking it does not.
 
-The `plan` kind takes an SVG design the whole way to machine files, as `stitch plan` does for a profile.
-It checks the plan, and compares the files written from it with golden files. The `strokes` case:
+The `plan` kind takes a design, an SVG file or a VectorCraft document, the whole way to machine files, as
+`stitch plan` does for a profile. It checks the plan, and compares the files written from it with golden
+files. The `strokes` case:
 
 ```toml
 {{#include ../../../conformance/cases/plans/strokes.toml}}

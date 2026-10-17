@@ -180,10 +180,10 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 
 | Command | Effect | From |
 |---|---|---|
-| Start / end point | Entry/exit hints for the generator (`REQ-GEN-001`) | M8 |
+| Start / end point | Entry/exit hints for the generator (`REQ-GEN-001`). The VectorCraft adapter reads them from markers named `stitch:start` and `stitch:end`, which it names until then | M8 |
 | Target point | Centre for circular fills and ripple targets | M7, M10 |
 | Trim after, stop after | `trim_after` and `stop_after` on the element's last group (see the connection table). The SVG adapter reads Ink/Stitch's trim and stop commands as these settings. | M3.8 (engine), M3 (adapter) |
-| Ignore object / ignore layer | The adapter drops the element and says so in the report (`REQ-ASM-004`) | M3 |
+| Ignore object / ignore layer | The adapter drops the element and says so in the report (`REQ-ASM-004`). The VectorCraft adapter reads them from the name `stitch:ignore` | M3 (SVG), M6 (VectorCraft) |
 | Origin | The design setting `origin` | M3.8 (engine), M8 (adapter) |
 | Stop position | The design setting `stop_position` | M3.8 (engine), M8 (adapter) |
 

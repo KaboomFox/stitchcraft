@@ -7,6 +7,7 @@ pub stitchcraft_vectorcraft::Effect::preview_level: core::option::Option<alloc::
 pub struct stitchcraft_vectorcraft::VectorCraft
 pub stitchcraft_vectorcraft::VectorCraft::design: stitchcraft_engine::design::Design
 pub stitchcraft_vectorcraft::VectorCraft::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub const stitchcraft_vectorcraft::EXTENSIONS: &[&str]
 pub const stitchcraft_vectorcraft::FORMAT: u64
 pub const stitchcraft_vectorcraft::MAX_BYTES: usize
 pub const stitchcraft_vectorcraft::PLUGIN_NAMESPACE: &str

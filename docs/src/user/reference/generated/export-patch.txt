@@ -1,0 +1,17 @@
+$ stitch export patch.vectorcraft -o patch.pes --preview patch.png
+patch.vectorcraft
+  file      patch.pes (PES v1, 6656 bytes)
+  sha256    6236ce2cb1bc9db739830a38a457cff67689195f86e1200e79b846240d943457
+  profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
+  size      50.0 × 54.0 mm
+  stitches  2466 stitches, 5 jumps, 4 trims, 3 colour changes, 0 stops
+  threads   1. unnamed (#bf0000), shown as Brother PEC 5 "Red"
+            2. unnamed (#0033b3), shown as Brother PEC 21 "Ultramarine"
+            3. unnamed (#008033), shown as Brother PEC 56 "Moss Green"
+            4. unnamed (#e6b31a), shown as Brother PEC 11 "Deep Gold"
+  preview   patch.png (432 × 464 pixels)
+info SC-I0811 (vc:10): The object "stitch:ignore placement line" is named stitch:ignore, and is left out with everything in it.
+  hint: Rename it to stitch it.
+warning SC-W0807 (vc:4): The object "stitch:start" marks where the shape grouped with it starts, and is not stitched. StitchCraft doesn't yet start a shape at a marker: it chooses where.
+warning SC-W0807 (vc:7): A group "Dots" has fills or strokes of its own, which VectorCraft paints what it holds with. They are not stitched as shapes of their own, and give their thread and stroke to the StitchCraft effects they paint.
+  hint: Make objects of them with Object › Expand Appearance.

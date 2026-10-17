@@ -6,8 +6,9 @@
 //! compared byte for byte with the committed files, so a pull request that changes how something looks
 //! must also update its pictures. A stale image's new version is written to `target/shots/` (CI keeps it),
 //! and a generated file no shot declares is an error. Generators arrive with the roadmap. `stitch` renders
-//! with `stitchcraft-render` either a test sheet, or an SVG design that the engine plans as `stitch plan`
-//! plans it, once per panel with the panel's parameters set on every element. `vectorcraft-render` and
+//! with `stitchcraft-render` either a test sheet, or a design, an SVG file or a VectorCraft document, that
+//! the engine plans as `stitch plan` plans it, once per panel with the panel's parameters set on every
+//! element. `vectorcraft-render` and
 //! `vectorcraft-ui` come with the VectorCraft pipeline (M6.7, on M0.8's window probe). `photo` shots are
 //! never regenerated; they must exist and link their sew-out report.
 //!
@@ -19,6 +20,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use serde::Deserialize;
+use stitchcraft_cli::commands::plan::Source;
 use stitchcraft_core::Budget;
 use stitchcraft_engine::design::{Design, Element};
 use stitchcraft_engine::testsheets;
@@ -57,8 +59,8 @@ pub struct Shot {
     /// `stitch` shots: the test sheet to draw.
     #[serde(default)]
     pub sheet: Option<String>,
-    /// `stitch` shots: or else an SVG file of the repository, planned by the engine for the reference
-    /// machine.
+    /// `stitch` shots: or else a design of the repository, an SVG file or a VectorCraft document, planned
+    /// by the engine for the reference machine.
     #[serde(default)]
     pub fixture: Option<String>,
     /// `stitch` shots of a design: one image per panel. Without panels, the design is drawn once, as it is.
@@ -194,7 +196,7 @@ pub fn stitch(root: &Path, shot: &Shot) -> Result<Vec<Vec<u8>>, String> {
             vec![sheet.plan().map_err(|e| format!("{id} could not be drawn: {e}"))?]
         }
         (None, Some(fixture)) => designs(root, fixture, shot)?,
-        _ => return Err("a stitch shot names a test sheet (`sheet = \"TS-01\"`) or an SVG design (`fixture = \"…\"`)".to_string()),
+        _ => return Err("a stitch shot names a test sheet (`sheet = \"TS-01\"`) or a design (`fixture = \"…\"`)".to_string()),
     };
     plans
         .iter()
@@ -202,17 +204,17 @@ pub fn stitch(root: &Path, shot: &Shot) -> Result<Vec<Vec<u8>>, String> {
         .collect()
 }
 
-/// The plans of the design in `fixture`: one per panel of `shot`, each with its panel's parameters set on
-/// every element, or the design as it is without panels.
+/// The plans of the design in `fixture`, read as `stitch plan` reads it: one per panel of `shot`, each with
+/// its panel's parameters set on every element, or the design as it is without panels.
 fn designs(root: &Path, fixture: &str, shot: &Shot) -> Result<Vec<StitchPlan>, String> {
-    let svg = stitchcraft_svg::read(&util::read_bytes(&root.join(fixture))?, &Budget::DEFAULT).map_err(|d| format!("{fixture}: {d}"))?;
+    let bytes = util::read_bytes(&root.join(fixture))?;
+    let (read, warnings) = Source::of(Path::new(fixture)).read(&bytes).map_err(|d| format!("{fixture}: {d}"))?;
     let unchanged = [Panel { caption: String::new(), params: BTreeMap::new() }];
     let panels = if shot.panels.is_empty() { &unchanged[..] } else { &shot.panels[..] };
     panels
         .iter()
         .map(|panel| {
-            let elements: Vec<Element> = svg
-                .design
+            let elements: Vec<Element> = read
                 .elements()
                 .iter()
                 .cloned()
@@ -223,10 +225,9 @@ fn designs(root: &Path, fixture: &str, shot: &Shot) -> Result<Vec<StitchPlan>, S
                     element
                 })
                 .collect();
-            let design = Design::new(elements, svg.design.settings).map_err(|d| format!("{fixture}: {d}"))?;
+            let design = Design::new(elements, read.settings).map_err(|d| format!("{fixture}: {d}"))?;
             let outcome = stitchcraft_engine::plan(&design, REFERENCE, &Budget::DEFAULT);
-            let said: Vec<String> = svg
-                .warnings
+            let said: Vec<String> = warnings
                 .iter()
                 .chain(&outcome.diagnostics)
                 .filter(|d| !shot.allow.iter().any(|code| code == d.code.id()))

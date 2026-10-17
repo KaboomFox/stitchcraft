@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
+use stitchcraft_cli::commands::plan::Source;
 use stitchcraft_core::Budget;
 use stitchcraft_engine::testsheets;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, invariants, profiles};
@@ -56,7 +57,7 @@ pub fn run_data_case(root: &Path, case: &DataCase, bless: bool) -> Outcome {
     };
     match &case.spec {
         Spec::Testsheet { sheet, profile, expect } => testsheet(root, sheet, profile, expect, bless, &mut outcome),
-        Spec::Plan { svg, profile, expect } => planned(root, svg, profile, expect, bless, &mut outcome),
+        Spec::Plan { design, profile, expect } => planned(root, design, profile, expect, bless, &mut outcome),
         Spec::Oracle { files } => oracle::run(root, files, &mut outcome),
     }
     outcome
@@ -76,19 +77,21 @@ fn testsheet(root: &Path, sheet_id: &str, profile_id: &str, expect: &SheetExpect
     }
 }
 
-/// A plan case: the SVG design read and planned as `stitch plan` does, then checked like a test sheet.
-fn planned(root: &Path, svg: &str, profile_id: &str, expect: &SheetExpect, bless: bool, outcome: &mut Outcome) {
+/// A plan case: the design, an SVG file or a VectorCraft document, read and planned as `stitch plan` does,
+/// then checked like a test sheet.
+fn planned(root: &Path, file: &str, profile_id: &str, expect: &SheetExpect, bless: bool, outcome: &mut Outcome) {
     let Some(profile) = profiles::find(profile_id) else {
         return outcome.failures.push(format!("unknown profile `{profile_id}`"));
     };
-    let read = std::fs::read(root.join("conformance").join(svg)).map_err(|e| e.to_string());
-    let design = match read.and_then(|bytes| stitchcraft_svg::read(&bytes, &Budget::DEFAULT).map_err(|e| e.to_string())) {
-        Ok(design) => design,
-        Err(e) => return outcome.failures.push(format!("{svg}: {e}")),
+    let source = Source::of(Path::new(file));
+    let bytes = std::fs::read(root.join("conformance").join(file)).map_err(|e| e.to_string());
+    let (design, warnings) = match bytes.and_then(|bytes| source.read(&bytes).map_err(|e| e.to_string())) {
+        Ok(read) => read,
+        Err(e) => return outcome.failures.push(format!("{file}: {e}")),
     };
-    let planned = stitchcraft_engine::plan(&design.design, profile, &Budget::DEFAULT);
-    let codes: Vec<String> = design.warnings.iter().chain(&planned.diagnostics).map(|d| d.code.id().to_string()).collect();
-    let name = Path::new(svg).file_stem().and_then(|s| s.to_str()).unwrap_or("design");
+    let planned = stitchcraft_engine::plan(&design, profile, &Budget::DEFAULT);
+    let codes: Vec<String> = warnings.iter().chain(&planned.diagnostics).map(|d| d.code.id().to_string()).collect();
+    let name = Path::new(file).file_stem().and_then(|s| s.to_str()).unwrap_or("design");
     match planned.plan {
         Some(plan) => checked(root, &plan, profile, &codes, name, expect, bless, outcome),
         None => outcome.failures.push(format!("no plan; diagnostics {codes:?}")),

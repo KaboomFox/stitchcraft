@@ -1,9 +1,10 @@
-//! `stitch bug-report DESIGN.svg`: one file that reproduces what StitchCraft does with a design, to attach
-//! to an issue; and `stitch bug-report --replay BUNDLE`, which plans it again and compares.
+//! `stitch bug-report DESIGN`: one file that reproduces what StitchCraft does with a design, to attach to
+//! an issue; and `stitch bug-report --replay BUNDLE`, which plans it again and compares.
 //!
 //! StitchCraft is deterministic (`docs/src/design/determinism.md`): the same design, profile, format and
-//! version give the same plan, bit for bit, on every platform. So a bundle holds exactly those — the SVG
-//! file itself, the profile's id, the format and the version — and what came of them: a digest of every
+//! version give the same plan, bit for bit, on every platform. So a bundle holds exactly those — the design
+//! file itself, an SVG file or a VectorCraft document under a field named for its kind ([`Source`]), the
+//! profile's id, the format and the version — and what came of them: a digest of every
 //! entry of the plan, the machine file's size and digest, every diagnostic, and a panic's message if there
 //! was one. Replaying plans the design again through the same code as `stitch plan` ([`sew`]) and
 //! compares each of them (`REQ-CLI-001`).
@@ -36,7 +37,7 @@ use sha2::{Digest, Sha256};
 use stitchcraft_core::{Code, Diagnostic};
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, profiles};
 
-use super::plan::{Sewn, design_name, picture, sew};
+use super::plan::{Sewn, Source, design_name, picture, sew};
 use super::{Outcome, Status, counts, distinct, headline, hex, output_format, render_diagnostics, unhex};
 use crate::cli::{BugReportArgs, Command};
 use crate::files;
@@ -54,6 +55,8 @@ const HOLDS_THE_DESIGN: &str = "It holds your design, so share it only where you
 pub struct Run<'a> {
     /// Where the design was read from; its file name goes into the bundle, for people.
     pub design_path: &'a Path,
+    /// What the design file is, which decides how it is read.
+    pub source: Source,
     /// The design name machines show, which the machine file's label holds ([`design_name`]).
     pub name: &'a str,
     /// The design file's bytes.
@@ -111,8 +114,9 @@ struct Bundle {
     result: Record,
 }
 
-/// The design file in a bundle: its text when it is UTF-8 (SVG files are), its bytes in hexadecimal
-/// otherwise.
+/// The design file in a bundle, under the fields of its kind: `svg` or `vectorcraft` for its text when it is
+/// UTF-8, `svg_hex` or `vectorcraft_hex` for its bytes in hexadecimal otherwise, such as a compressed
+/// VectorCraft document's. A bundle written before VectorCraft documents were read holds an SVG file.
 #[derive(Debug, Serialize, Deserialize)]
 struct DesignRecord {
     /// The file's name, for people.
@@ -127,6 +131,10 @@ struct DesignRecord {
     svg: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     svg_hex: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    vectorcraft: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    vectorcraft_hex: Option<String>,
 }
 
 /// What came of planning a design.
@@ -204,7 +212,8 @@ fn after_panic(command: &Command, message: &str) -> Outcome {
         && let (Some(profile), Ok(format), Ok(design)) =
             (profiles::find(&args.profile), output_format(args.format, &args.output), files::read_capped(&args.design))
     {
-        let run = Run { design_path: &args.design, name: design_name(&args.design), design: &design, profile, format, says: None };
+        let source = Source::of(&args.design);
+        let run = Run { design_path: &args.design, source, name: design_name(&args.design), design: &design, profile, format, says: None };
         return beside(&args.output, &run, Err((message, Phase::Plan)), stopped);
     }
     Outcome { stderr: said + &format!("Please report it at {ISSUES}, with the command you ran and the files it read.\n"), ..stopped }
@@ -219,7 +228,7 @@ pub fn panic_message(payload: &(dyn Any + Send)) -> String {
         .unwrap_or_else(|| "a panic without a message".to_string())
 }
 
-/// `stitch bug-report DESIGN.svg`.
+/// `stitch bug-report DESIGN`.
 fn make(args: &BugReportArgs, design_path: &Path) -> Outcome {
     let Some(profile) = profiles::find(&args.profile) else {
         return Outcome::usage(format!("there is no profile `{}`; `stitch profiles` shows them", args.profile));
@@ -235,7 +244,8 @@ fn make(args: &BugReportArgs, design_path: &Path) -> Outcome {
             return Outcome { stdout: String::new(), stderr: format!("stitch: cannot read {}: {e}\n", design_path.display()), status: Status::Io };
         }
     };
-    let run = Run { design_path, name: design_name(design_path), design: &design, profile, format, says: args.says.clone() };
+    let source = Source::of(design_path);
+    let run = Run { design_path, source, name: design_name(design_path), design: &design, profile, format, says: args.says.clone() };
     let bundle = bundle(&run, borrowed(&guarded_sew(&run, Phase::Plan)));
     if let Err(e) = write(&path, &bundle) {
         return Outcome { stdout: String::new(), stderr: format!("stitch: cannot write {}: {e}\n", path.display()), status: Status::Io };
@@ -262,8 +272,8 @@ fn describe(out: &mut String, record: &Record) {
 /// Plans `run`'s design as `stitch plan` does, and draws its picture too when the run being reproduced got
 /// as far as `phase` [`Phase::Picture`], or the message of the panic that stopped it and where it came.
 fn guarded_sew(run: &Run, phase: Phase) -> Result<Sewn, (String, Phase)> {
-    let sewn =
-        catch_unwind(|| sew(run.design, run.profile, run.format, run.name)).map_err(|payload| (panic_message(payload.as_ref()), Phase::Plan))?;
+    let sewn = catch_unwind(|| sew(run.source, run.design, run.profile, run.format, run.name))
+        .map_err(|payload| (panic_message(payload.as_ref()), Phase::Plan))?;
     if let (Phase::Picture, Some(back)) = (phase, &sewn.back) {
         // What the picture comes to is the run's, which the bundle does not record: only whether it panics.
         let _ = catch_unwind(|| picture(back)).map_err(|payload| (panic_message(payload.as_ref()), Phase::Picture))?;
@@ -278,9 +288,13 @@ fn borrowed(sewn: &Result<Sewn, (String, Phase)>) -> Result<&Sewn, (&str, Phase)
 
 /// The bundle of `run` and what came of it.
 fn bundle(run: &Run, sewn: Result<&Sewn, (&str, Phase)>) -> Bundle {
-    let (svg, svg_hex) = match std::str::from_utf8(run.design) {
+    let (text, hexed) = match std::str::from_utf8(run.design) {
         Ok(text) => (Some(text.to_string()), None),
         Err(_) => (None, Some(hex(run.design))),
+    };
+    let ((svg, svg_hex), (vectorcraft, vectorcraft_hex)) = match run.source {
+        Source::Svg => ((text, hexed), (None, None)),
+        Source::VectorCraft => ((None, None), (text, hexed)),
     };
     let file = run.design_path.file_name().map_or_else(String::new, |name| name.to_string_lossy().into_owned());
     Bundle {
@@ -292,7 +306,15 @@ fn bundle(run: &Run, sewn: Result<&Sewn, (&str, Phase)>) -> Bundle {
         command: "plan".to_string(),
         profile: run.profile.id.to_string(),
         format: run.format.extension().to_string(),
-        design: DesignRecord { file, name: Some(run.name.to_string()), sha256: hex(&Sha256::digest(run.design)), svg, svg_hex },
+        design: DesignRecord {
+            file,
+            name: Some(run.name.to_string()),
+            sha256: hex(&Sha256::digest(run.design)),
+            svg,
+            svg_hex,
+            vectorcraft,
+            vectorcraft_hex,
+        },
         result: match sewn {
             // Planning came through before the panic, and planned again it is what the run planned.
             Err((message, phase)) if phase != Phase::Plan => {
@@ -355,10 +377,10 @@ fn replay(path: &Path) -> Outcome {
             return Outcome { stdout: String::new(), stderr: render_diagnostics(&[unreadable]), status: Status::DesignErrors };
         }
     };
-    let Replayable { bundle: then, design, profile, format } = then;
+    let Replayable { bundle: then, source, design, profile, format } = then;
     let design_path = PathBuf::from(&then.design.file);
     let name = then.design.name.clone().unwrap_or_else(|| design_name(&design_path).to_string());
-    let run = Run { design_path: &design_path, name: &name, design: &design, profile, format, says: then.says.clone() };
+    let run = Run { design_path: &design_path, source, name: &name, design: &design, profile, format, says: then.says.clone() };
     let phase = then.result.phase.unwrap_or(Phase::Plan);
     let now = bundle(&run, borrowed(&guarded_sew(&run, phase)));
     let mut out = String::new();
@@ -394,6 +416,7 @@ fn replay(path: &Path) -> Outcome {
 /// A bundle this StitchCraft can replay, with the design, profile and format it names.
 struct Replayable {
     bundle: Bundle,
+    source: Source,
     design: Vec<u8>,
     profile: &'static MachineProfile,
     format: FormatId,
@@ -412,16 +435,29 @@ fn readable(path: &Path, bytes: &[u8]) -> Result<Replayable, String> {
     if bundle.command != "plan" {
         return Err(format!("{shown} records `stitch {}`, which this StitchCraft does not replay.", printable(&bundle.command)));
     }
-    let design = match (&bundle.design.svg, &bundle.design.svg_hex) {
-        (Some(svg), None) => svg.as_bytes().to_vec(),
-        (None, Some(text)) => unhex(text).ok_or_else(|| format!("{shown} holds a design that is not hexadecimal."))?,
-        _ => return Err(format!("{shown} must hold its design once, as `svg` or as `svg_hex`.")),
+    let (source, design) = {
+        let record = &bundle.design;
+        let fields = [
+            (Source::Svg, &record.svg, false),
+            (Source::Svg, &record.svg_hex, true),
+            (Source::VectorCraft, &record.vectorcraft, false),
+            (Source::VectorCraft, &record.vectorcraft_hex, true),
+        ];
+        let mut held = fields.into_iter().filter_map(|(source, field, hexed)| field.as_ref().map(|text| (source, text, hexed)));
+        let (Some((source, text, hexed)), None) = (held.next(), held.next()) else {
+            return Err(format!(
+                "{shown} must hold its design once: as `svg` or `svg_hex` for an SVG file, as `vectorcraft` or `vectorcraft_hex` for a VectorCraft document."
+            ));
+        };
+        let design =
+            if hexed { unhex(text).ok_or_else(|| format!("{shown} holds a design that is not hexadecimal."))? } else { text.as_bytes().to_vec() };
+        (source, design)
     };
     let profile = profiles::find(&bundle.profile)
         .ok_or_else(|| format!("{shown} names the profile `{}`, which this StitchCraft does not have.", printable(&bundle.profile)))?;
     let format = FormatId::from_extension(&bundle.format)
         .ok_or_else(|| format!("{shown} names the format `{}`, which this StitchCraft does not write.", printable(&bundle.format)))?;
-    Ok(Replayable { bundle, design, profile, format })
+    Ok(Replayable { bundle, source, design, profile, format })
 }
 
 /// The StitchCraft a bundle was written by: its version, and the commit it was built from when there was one.

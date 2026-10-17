@@ -123,8 +123,8 @@ as it is and shows the message as the plug-in's last error. That happens when th
 sews no stitch, with the message that says why, and for a satin column drawn as one path, which is as
 wide as its stroke, with `SC-I0810`. A drawing that vanished instead could not be clicked to change the
 setting that emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
-shows, and the command line reports them (M6.5). How much of the stitches it shows, within what
-VectorCraft lets it spend, is its preview level (below).
+shows, and `stitch export` reports them. How much of the stitches it shows, within what VectorCraft lets
+it spend, is its preview level (below).
 
 ### The workflow
 
@@ -133,8 +133,12 @@ VectorCraft lets it spend, is its preview level (below).
    the generated dialog. The parameters are now stored on the object (undoable, saved in the
    `.vectorcraft` file) and the object shows a stitch preview.
 3. Save the document.
-4. `stitch export design.vectorcraft --profile brother-pe800-5x7 -o design.pes` writes the machine file and
-   a report; `--preview design.png` renders what will sew.
+4. `stitch export design.vectorcraft -o design.pes --preview design.png` writes the machine file, for the
+   machine `--profile` names (`brother-pe800-5x7` by default), and a picture of what will sew. It says
+   what the reader left out or changed, with the engine's warnings. `stitch export` is another name for
+   `stitch plan`, which reads a VectorCraft document as it reads an SVG file (`REQ-VC-008`), and
+   `--report` adds the JSON report. A bug-report bundle includes the document, and its replay reads it the
+   same way.
 
 Stitching order is paint order (bottom first). Hidden objects are skipped, as VectorCraft draws nothing
 for them, and locked objects are stitched. Thread colours come from the object's fill for a fill, and
@@ -241,11 +245,20 @@ colour, which they want anyway for export.
 
 ### Commands in v1
 
-- `trim_after` and `stop_after` are ordinary parameters.
-- Start and end points: a small path named `stitch:start` or `stitch:end` grouped with the shape. The
-  adapter reads the marker's centre as the hint and never stitches the marker. (ABI v2 makes these
-  first-class.)
-- Ignore: hide the object, or name it with the prefix `stitch:ignore`.
+Ink/Stitch's commands are symbols linked to an object, and ABI v1 has nothing to link. `trim_after` and
+`stop_after` are ordinary parameters. StitchCraft reads the others from names, an object's or a layer's,
+which VectorCraft's Layers panel sets (`REQ-VC-009`). A name is read when it begins with `stitch:`, in
+any mix of upper and lower case. Its word ends at the first space, so a note can follow it:
+
+| Name | Ink/Stitch's command | What StitchCraft does |
+|---|---|---|
+| `stitch:ignore` | `ignore_object`, `ignore_layer` | Leaves the object or the layer out with everything in it, and lists it with `SC-I0811` |
+| `stitch:start`, `stitch:end` | `starting_point`, `ending_point` | Marks where the fill or the satin column grouped with it starts or ends, and never stitches the marker. Until the generators start and end at hints (`REQ-GEN-001`, M8), they choose where, and `SC-W0807` names the marker |
+| Any other word after `stitch:` | | Stitches the object as it is drawn. `SC-W0807` names it, in case the word is a misspelt marker |
+
+Hiding an object leaves it out too, without a word. The adapter reads a name after it leaves out what
+VectorCraft draws nothing of, so a name on an invisible object says nothing. ABI v2's sixth proposal
+would let a live effect read the markers beside its object, so its preview could start and end at them.
 
 ### Reading `.vectorcraft` files (`stitchcraft-vectorcraft`)
 
@@ -285,6 +298,8 @@ anchor, leaves that end of the segment straight, and a segment without handles i
   `SC-W0807`.
 - **Hidden objects**, and everything in them, are left out without a word, as VectorCraft draws nothing
   for them. So are objects and paints of opacity 0, paints turned off and strokes of width 0.
+- **Objects and layers named `stitch:ignore`**, and everything in them, are left out with `SC-I0811`.
+  Start and end markers are never stitched ([commands](#commands-in-v1)).
 - **Template layers, layers that don't print, and guides** are left out with `SC-I0809`. VectorCraft
   shows them, dimmed or as guides, but prints and exports none of them.
 - **A Shaper group's sources** are left out. The group shows the shapes it makes of them, and keeps them
@@ -353,8 +368,9 @@ an object's id when it saves, so a report and a preview name the same object. A 
 **Reports.** `SC-E0806` refuses a file that isn't a VectorCraft document, or is larger than the adapter
 reads. `SC-W0807` names what isn't stitched. `SC-W0808` names geometry that can't be used, such as a
 number that doesn't read or a point more than 10 m from the origin, and a shape that draws nothing.
-`SC-I0809` lists the layers and guides left out because VectorCraft doesn't print them. The compatibility
-gate will have each VectorCraft version it tests write files for the adapter to read back (Level B, M6.6).
+`SC-I0809` lists the layers and guides left out because VectorCraft doesn't print them, and `SC-I0811` the
+objects and layers left out by their names. The compatibility gate will have each VectorCraft version it
+tests write files for the adapter to read back (Level B, M6.6).
 
 ### Importing Ink/Stitch SVGs into VectorCraft
 
