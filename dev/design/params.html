@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-869c57ce.js";
+            window.path_to_searchindex_js = "../searchindex-c07f186f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -374,7 +374,7 @@ stitch types (M7 and M10) let a declaration give a family its own kind and range
 <tr><td style="text-align: left">The reference pages, the <a href="../user/reference/params.html">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left"><code>docs/src/user/reference/params.schema.json</code>: the parameters as JSON values (numbers, booleans, strings, arrays, <code>null</code> for empty), for editors, presets and JSON hosts</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">The <em>StitchCraft</em> column of the <a href="inkstitch-compat-contract.html">Ink/Stitch compatibility contract</a></td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same, plus the cross-checks above</td><td style="text-align: left">M3.1</td></tr>
-<tr><td style="text-align: left">VectorCraft manifests (embedded in each <code>.wasm</code>)</td><td style="text-align: left"><code>build.rs</code> of the plug-in crate, from the registry</td><td style="text-align: left">plug-in tests validate them against VectorCraft’s manifest rules</td><td style="text-align: left">planned for M6.2</td></tr>
+<tr><td style="text-align: left">VectorCraft manifests, one for each stitch family’s module</td><td style="text-align: left">at runtime from the registry, when VectorCraft asks a module for its manifest (<code>stitchcraft-vc-plugin</code>’s <code>manifest</code>)</td><td style="text-align: left">plug-in tests validate them against VectorCraft’s manifest rules, and the contract tests install them in VectorCraft’s host</td><td style="text-align: left">M6.2</td></tr>
 <tr><td style="text-align: left">SVG attribute read/write</td><td style="text-align: left"><code>stitchcraft-svg</code> iterates the registry</td><td style="text-align: left">round-trip property test <code>REQ-PRM-003</code></td><td style="text-align: left">planned for M8</td></tr>
 <tr><td style="text-align: left">CLI parameter help (<code>stitch params</code>, <code>--param key=value</code>)</td><td style="text-align: left">at runtime from the registry</td><td style="text-align: left"><code>trycmd</code> examples</td><td style="text-align: left">planned, in no step yet</td></tr>
 <tr><td style="text-align: left"><code>proptest</code> strategies</td><td style="text-align: left"><code>stitchcraft-testkit</code> iterates the registry</td><td style="text-align: left">used by every generator property test</td><td style="text-align: left">planned, in no step yet</td></tr>
@@ -386,8 +386,10 @@ stitch types (M7 and M10) let a declaration give a family its own kind and range
 The plug-in crate builds <strong>one plug-in per stitch family</strong> for that (<code>stroke</code>, <code>satin</code>, <code>fill</code>), each
 with only the parameters that apply to it; the shared lock/trim parameters are included in each. A test
 fails if any family’s manifest exceeds 64 parameters or 64 KiB, so adding a parameter that would break
-the limit is caught in the PR, not by a user. When VectorCraft supports richer schemas (ABI v2 RFC),
-groups and conditions are emitted as well.</p>
+the limit is caught in the PR, not by a user. In v1 each parameter has one value of VectorCraft’s kinds.
+A parameter that needs a text, a seed or several values keeps its default in VectorCraft
+(<a href="vectorcraft-integration.html#plug-ins">manifests</a>). When VectorCraft supports richer schemas (ABI v2
+RFC), groups and conditions are emitted as well.</p>
 <h2 id="presets"><a class="header" href="#presets">Presets</a></h2>
 <p>A preset is a named partial <code>ParamSet</code> (<code>"denim"</code>, <code>"knit, light"</code>) stored as a TOML file in a
 <code>presets</code> directory of the parameters crate. The same code as user input validates it, and a generated

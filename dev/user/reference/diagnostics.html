@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-869c57ce.js";
+            window.path_to_searchindex_js = "../../searchindex-c07f186f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -247,6 +247,7 @@
 <tr><td><a href="#sc-w0807"><code>SC-W0807</code></a></td><td>Warning</td><td>VectorCraft object or feature not stitched</td></tr>
 <tr><td><a href="#sc-w0808"><code>SC-W0808</code></a></td><td>Warning</td><td>VectorCraft geometry unusable</td></tr>
 <tr><td><a href="#sc-i0809"><code>SC-I0809</code></a></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print</td></tr>
+<tr><td><a href="#sc-i0810"><code>SC-I0810</code></a></td><td>Info</td><td>VectorCraft live effect leaves the object as it is</td></tr>
 </tbody>
 </table>
 </div>
@@ -662,8 +663,11 @@ the Version in VectorCraft Options.</p>
 <p>The <code>.vectorcraft</code> file could not be read: it is not a VectorCraft document (its JSON does not
 read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
 is damaged, or it unpacks to more JSON than StitchCraft reads. Nothing was stitched.</p>
+<p>A StitchCraft live effect gives this message when what VectorCraft passes it does not read as
+VectorCraft’s plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The effect
+leaves the object as it is.</p>
 <p>The message says what is wrong and, for JSON errors, where. Open the file in VectorCraft and save it
-again.</p>
+again. For a live effect, install the StitchCraft plug-ins made for that version of VectorCraft.</p>
 <h2 id="sc-w0807"><a class="header" href="#sc-w0807">SC-W0807</a></h2>
 <p><strong>Warning</strong> — VectorCraft object or feature not stitched</p>
 <p>Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft
@@ -680,7 +684,8 @@ makes paths of a symbol, and Object › Expand Appearance of what effects and br
 <p>An object’s geometry cannot be used, and the object, or the stroke, is left out: a coordinate or a
 stroke’s width is not a number, the object draws nothing, or it lies more than 10 metres from the
 document’s origin, beyond what machine files can record. A StitchCraft stroke or satin effect takes
-a width that is not a number as 0.</p>
+a width that is not a number as 0. A StitchCraft live effect leaves such an object as it is, with
+this message as the plug-in’s last error.</p>
 <p>The message names the object. Check its anchors, or remove stray objects far from the design.</p>
 <h2 id="sc-i0809"><a class="header" href="#sc-i0809">SC-I0809</a></h2>
 <p><strong>Info</strong> — VectorCraft layer or guide left out, as it does not print</p>
@@ -689,6 +694,15 @@ whose Print option is off, or a guide. VectorCraft shows them, dimmed or as guid
 out of what it prints and exports; StitchCraft keeps them out of the sew-out.</p>
 <p>The message names the layer or the guide. To stitch a layer, turn its Template option off, or its
 Print option on, in VectorCraft’s Layer Options.</p>
+<h2 id="sc-i0810"><a class="header" href="#sc-i0810">SC-I0810</a></h2>
+<p><strong>Info</strong> — VectorCraft live effect leaves the object as it is</p>
+<p>A StitchCraft live effect draws the object it is applied to as its stitches. It leaves the object
+as it is when it cannot show them, and VectorCraft shows this message as the plug-in’s last error:
+the object sews no stitch, or it is a satin column drawn as one path. Such a column is as wide as
+its stroke, and VectorCraft gives a live effect no stroke. When another message says why an object
+sews no stitch, the effect shows that message instead.</p>
+<p>The message says which. A satin column drawn as one path still sews as wide as its stroke; to see
+its stitches in VectorCraft, draw it with 2 rails.</p>
 
                     </main>
 

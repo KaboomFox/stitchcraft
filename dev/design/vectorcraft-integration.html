@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-869c57ce.js";
+            window.path_to_searchindex_js = "../searchindex-c07f186f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -278,6 +278,39 @@ family’s (<code>stitchcraft_params::Family::id</code>).
 Manifests are generated from the <a href="params.html#splitting-for-vectorcraft-abi-v1">parameter registry</a>; a
 test validates each against VectorCraft’s manifest rules (id charset, ≤ 64 parameters, names, ranges) so
 an invalid manifest never reaches a user.</p>
+<p><strong>Modules.</strong> The plug-in crate builds one module for each family, chosen by a Cargo feature named after
+the family: <code>stroke</code>, <code>satin</code> or <code>fill</code>. Without one it builds M0.6’s <em>hello</em> effect. The modules contain
+the same code, which the native tests run whichever it is, and the feature only picks the manifest and
+the effect that <code>vc_manifest</code> and <code>vc_run</code> serve. <code>cargo xtask compat contract</code> builds the four modules,
+notes their sizes and loads them into VectorCraft’s host.</p>
+<p><strong>Manifests.</strong> A family’s manifest is made from the registry when VectorCraft asks for it, so a parameter
+added to the registry shows in the dialog without another change. VectorCraft’s parameters are numbers,
+whole numbers, toggles and choices, and each always has a value. A record stores every declared
+parameter, at its default when the user leaves it. So a parameter is declared when one such value means
+what the parameter means:</p>
+<ul>
+<li>a length, an angle, a percentage or a number as a number in its range, and a count as a whole number;</li>
+<li>a list or a pair whose default is one value as that value, which stands for the whole list or both
+sides, as in Ink/Stitch;</li>
+<li>an optional length that 0 leaves unset as a number from 0.</li>
+</ul>
+<p>Texts, seeds, and settings left empty to take another’s value keep their defaults. In the registry today
+they are the custom locks’ steps, <code>random_seed</code>, a fill underlay’s angles, a satin’s zigzag underlay
+insets and its shortest random split. A choice leaves out the options that a text spells out, which are
+the custom locks. <code>satin_column</code> belongs to the effect, which sets it from its family. The dialog opens
+with the group that declares the family’s method. The groups only the family uses come next, then those
+it shares with the other families. The settings every element shares come last, as in Ink/Stitch’s
+dialogs.</p>
+<p><strong>What a live effect shows.</strong> A family’s effect sews its object with the engine’s <code>generate</code>, on the
+reference machine and with no neighbours, as one object of a design. It returns the stitches as geometry,
+the exact level below. When it can’t show stitches, it gives back why. VectorCraft then draws the object
+as it is and shows the message as the plug-in’s last error. That happens when the object cannot be sewn or
+sews no stitch, with the message that says why, and for a satin column drawn as one path, which is as
+wide as its stroke, with <code>SC-I0810</code>. A drawing that vanished instead could not be clicked to change the
+setting that emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
+shows, and the command line reports them (M6.5). Until M6.3’s levels, an object whose stitches cost more
+to write than a live effect may spend runs out of instructions. VectorCraft then draws it as it is, with
+its own error.</p>
 <h3 id="the-workflow"><a class="header" href="#the-workflow">The workflow</a></h3>
 <ol>
 <li>Draw the art in VectorCraft as usual.</li>
@@ -327,14 +360,14 @@ So the plug-in estimates the output size before generating and picks a preview l
 </tbody>
 </table>
 </div>
-<p>A <code>preview</code> choice parameter lets the user force a level. M6.3 fixes each level’s budget with a
-conformance case, from these numbers and its own writer’s, which can write fewer digits without a
-<code>serde_json</code> value in between. The contract test <code>hello_reads_and_writes_json_within_the_recorded_budget</code>
-measures the costs again on every track the <a href="compatibility-gate.html">compatibility gate</a> tests, and fails
-if either rises by more than a quarter. If a run still fails, VectorCraft draws the object unchanged and
-reports the error through <code>plugin.info</code>’s <code>lastError</code>, and our message says which level to choose. The
-real stitches are always available from the CLI preview, and ABI v2’s overlay channel removes this
-limitation.</p>
+<p>A <code>preview_level</code> choice parameter lets the user force a level (VectorCraft reserves the name <code>preview</code>).
+M6.3 fixes each level’s budget with a conformance case, from these numbers and its own writer’s, which
+can write fewer digits without a <code>serde_json</code> value in between. The contract test
+<code>hello_reads_and_writes_json_within_the_recorded_budget</code> measures the costs again on every track the
+<a href="compatibility-gate.html">compatibility gate</a> tests, and fails if either rises by more than a quarter. If a
+run still fails, VectorCraft draws the object unchanged and reports the error through <code>plugin.info</code>’s
+<code>lastError</code>, and our message says which level to choose. The real stitches are always available from the
+CLI preview, and ABI v2’s overlay channel removes this limitation.</p>
 <p>Paint caveat: a live effect cannot read the object’s paint, so a fill preview shows ribbons painted with
 the object’s own fill; stroke previews use the object’s stroke. Users set the fill/stroke to the thread
 colour, which they want anyway for export.</p>

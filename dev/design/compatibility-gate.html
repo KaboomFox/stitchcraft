@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-869c57ce.js";
+            window.path_to_searchindex_js = "../searchindex-c07f186f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -215,7 +215,9 @@ checks:</p>
 (id, kind, parameter count and types).</li>
 <li><code>vc_abi_version</code> is a version the host supports.</li>
 <li>Live effects run through <code>vectorcraft_plugins::effect::apply</code> on fixture geometry, finish within the
-host’s limits, and return the expected preview geometry (golden JSON, tolerance 1 µm).</li>
+host’s limits, and return the expected preview geometry: paths of stitches for strokes and satin
+columns and closed ribbons for fills, and from M6.3 each preview level’s golden JSON, tolerance 1 µm.
+When an effect can’t show stitches, its last error says why.</li>
 <li>Filters run and return valid objects.</li>
 <li>Error paths: invalid parameters are rejected by the host with the expected message.</li>
 <li>Budget: the <em>hello</em> plug-in’s cost for each byte of JSON it reads and writes stays within a quarter

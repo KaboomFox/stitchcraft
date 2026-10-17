@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-869c57ce.js";
+            window.path_to_searchindex_js = "../searchindex-c07f186f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -284,8 +284,15 @@ pub struct PlanOutcome {
 }</code></pre>
 <p>The machine profile is an input because the shortest stitch a generator may sew is the machine’s, and
 finalizing (M3.9) fits the plan to the machine’s longest stitch and hoop.</p>
-<p>and a per-element entry point used by live previews:</p>
-<pre><code class="language-rust ignore">pub fn stitch_element(element: &amp;Element, context: &amp;ElementContext, budget: &amp;Budget) -&gt; ElementOutcome;</code></pre>
+<p>and a per-element entry point, which <code>plan</code> calls for each element and live previews call for one:</p>
+<pre><code class="language-rust ignore">pub fn generate(element: &amp;Element, settings: &amp;DesignSettings, profile: &amp;MachineProfile,
+                neighbours: &amp;Neighbours, budget: &amp;Budget) -&gt; Generation;   // since M3.8
+
+pub struct Generation {
+    pub generated: Option&lt;Generated&gt;,   // the element's stitch groups; None when it is skipped
+    pub diagnostics: Vec&lt;Diagnostic&gt;,
+}</code></pre>
+<p>A live preview sees one object, so it has no neighbours, and it sews on the reference machine.</p>
 <p>Adapters only translate:</p>
 <div class="table-wrapper">
 <table>
@@ -295,7 +302,7 @@ finalizing (M3.9) fits the plan to the machine’s longest stitch and hoop.</p>
 <tbody>
 <tr><td><code>stitchcraft-svg</code></td><td>SVG document (+ <code>inkstitch:*</code> attributes, command symbols)</td><td><code>Design</code></td></tr>
 <tr><td><code>stitchcraft-vectorcraft</code></td><td><code>.vectorcraft</code> JSON, plug-in input objects, effect records</td><td><code>Design</code> / <code>Element</code></td></tr>
-<tr><td><code>stitchcraft-vc-plugin</code></td><td>ABI v1 call (JSON in linear memory)</td><td><code>stitch_element</code> → preview geometry JSON</td></tr>
+<tr><td><code>stitchcraft-vc-plugin</code></td><td>ABI v1 call (JSON in linear memory)</td><td><code>generate</code> → preview geometry JSON</td></tr>
 <tr><td><code>stitchcraft-cli</code></td><td>files and flags</td><td><code>plan</code> → formats/render/report</td></tr>
 </tbody>
 </table>
