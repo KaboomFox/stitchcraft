@@ -138,4 +138,4 @@ another.
 | `SC-W0807` | Warning | VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft's own effects, brushes, gradients, patterns) | M6 |
 | `SC-W0808` | Warning | VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing) | M6 |
 | `SC-I0809` | Info | VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides) | M6 |
-| `SC-I0810` | Info | VectorCraft live effect leaves the object as it is (it sews no stitch, or it is a satin column drawn as one path, whose width the effect is not given) | M6 |
+| `SC-I0810` | Info | VectorCraft live effect leaves the object as it is (it sews no stitch, it is a satin column drawn as one path, whose width the effect is not given, or its preview level needs more work than VectorCraft lets a live effect do) | M6 |
