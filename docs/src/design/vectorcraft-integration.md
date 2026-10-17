@@ -103,10 +103,24 @@ locked objects are stitched. Thread colours come from the object's fill (fills, 
 
 ### Live-effect previews within v1 budgets
 
-A live effect must finish in 5 s and about 50 M instructions, and the `wasmi` interpreter runs
-roughly 10–100× slower than native code. Generating a large fill is cheap; **serializing tens of
-thousands of stitches as JSON geometry is not.** The plug-in therefore estimates the output size before
-generating and picks a preview level:
+A live effect gets 50 million instructions, plus 4,000 for each byte of its input, and 5 seconds. Spike
+M0.6 measured what JSON costs in VectorCraft's host (`wasmi` 2.0, in VectorCraft 0.12.0 and on `main` at
+`8bc6532`, 2026-10-17). The *hello* plug-in reads its input with `serde_json` and writes the geometry
+back:
+
+| Measured | Value |
+|---|---|
+| Reading JSON | 512 instructions a byte |
+| Writing JSON from a `serde_json` value | 822 instructions a byte |
+| One anchor of a path, as JSON | 40 bytes |
+| Speed on GitHub's Linux runners | about 1.9 billion instructions a second |
+
+The instruction budget runs out long before the clock: 50 million instructions take about 26 ms.
+Reading a path uses an eighth of the 4,000 instructions each of its bytes brings, so writing is what
+limits a preview. Written as *hello* writes it, the 50 million instructions buy about 60 KB of JSON:
+about 1,500 anchors, a stroke of that many stitches, or a few hundred fill stitches drawn as ribbons.
+Generating a large fill is cheap, but **writing tens of thousands of stitches as JSON geometry is not.**
+So the plug-in estimates the output size before generating and picks a preview level:
 
 | Level | Geometry returned | Used when |
 |---|---|---|
@@ -114,11 +128,14 @@ generating and picks a preview level:
 | Rows | One ribbon per fill row segment (direction and density visible) | Large fills |
 | Outline | The original geometry plus a direction hatch | Estimate still too large |
 
-A `preview` choice parameter lets the user force a level. Exact budgets are measured in spike M0.6 and
-fixed in M6.3 with a conformance case per level. If a run still fails, VectorCraft draws the object
-unchanged and reports the error through `plugin.info`'s `lastError`; our message says which level to
-choose. The real stitches are always available from the CLI preview, and ABI v2's overlay channel
-removes this limitation.
+A `preview` choice parameter lets the user force a level. M6.3 fixes each level's budget with a
+conformance case, from these numbers and its own writer's, which can write fewer digits without a
+`serde_json` value in between. The contract test `hello_reads_and_writes_json_within_the_recorded_budget`
+measures the costs again on every track the [compatibility gate](compatibility-gate.md) tests, and fails
+if either rises by more than a quarter. If a run still fails, VectorCraft draws the object unchanged and
+reports the error through `plugin.info`'s `lastError`, and our message says which level to choose. The
+real stitches are always available from the CLI preview, and ABI v2's overlay channel removes this
+limitation.
 
 Paint caveat: a live effect cannot read the object's paint, so a fill preview shows ribbons painted with
 the object's own fill; stroke previews use the object's stroke. Users set the fill/stroke to the thread
