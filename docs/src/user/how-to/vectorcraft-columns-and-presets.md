@@ -13,16 +13,17 @@ sews it. To see its stitches in VectorCraft, draw the column with 2 rails:
 2. Select both and choose **Object › Compound Path › Make** (Cmd+8).
 3. With the compound path selected, choose **Effect › Plug-ins › StitchCraft Satin**.
 
-VectorCraft reverses the front path when both run the same way. The column turns it back
-(`reverse_rails`, automatic), so the direction the rails were drawn in doesn't matter. A compound path
-takes the appearance of the path at the back, so a StitchCraft Satin effect already on that path stays.
+Apply the effect after joining the rails. VectorCraft 0.10.0 and later keep the appearance of the path at
+the back, and earlier versions that of the path in front, which may not be the one with the effect. From
+0.10.0, VectorCraft also reverses the front path when both run the same way. The column turns it back
+(`reverse_rails`, automatic), so the direction the rails were drawn in doesn't matter.
 
 ## Add a rung
 
 Rungs set the angle of the stitches along the column. With the Pen tool, add a line across both rails
-where the stitches should run. Select it with the column, and choose **Object › Compound Path › Make**. A
-line drawn after the column lies in front of it, and the compound path takes the appearance of the column
-behind, its effect included.
+where the stitches should run. Select it with the column, and choose **Object › Compound Path › Make**.
+From VectorCraft 0.10.0 the column, behind the line, keeps its effect. Before 0.10.0 the compound path takes
+the line's appearance: apply StitchCraft Satin to it again.
 
 ## Keep settings as a preset
 
@@ -34,7 +35,8 @@ A graphic style keeps an appearance, StitchCraft's effects included:
 
 Each object gets a copy of the effect, with the style's parameters, and sews with them. A style applied
 to a group or a layer puts its effects on the group, and every path inside it sews with them. Each sews
-in its own colour, or the style's where it has none. Keep StitchCraft's effects at one level, though. A
+in its own colour, or the style's where it has none, and a satin column drawn as one path follows the
+style's stroke where it has none of its own. Keep StitchCraft's effects at one level, though. A
 path that has its own StitchCraft effect inside such a group, or sits inside 2 such groups, is drawn as
 one effect run on the stitches of the other. It sews as the nearest effect says, and the command line
 warns about it (`SC-W0807`). Alt-clicking a style adds its effects to the object's own, and an object

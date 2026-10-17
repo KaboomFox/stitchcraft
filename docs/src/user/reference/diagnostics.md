@@ -755,6 +755,6 @@ column drawn as one path is as wide as its stroke, and VectorCraft gives a live 
 When another message says why an object sews no stitch, the effect shows that message instead.
 
 The message says which. A satin column drawn as one path still sews as wide as its stroke. To see its
-stitches in VectorCraft, draw its 2 rails and join them with Object › Compound Path › Make, which
-keeps the effect of the path behind. For a preview that needs more work, the hint names a cheaper
-level to set the effect's `preview_level` to.
+stitches in VectorCraft, draw its 2 rails, join them with Object › Compound Path › Make and apply the
+effect to that. For a preview that needs more work, the hint names a cheaper level to set the effect's
+`preview_level` to.

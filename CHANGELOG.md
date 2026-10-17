@@ -538,9 +538,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### Changed
 - A VectorCraft group's or layer's StitchCraft effects sew each path inside it, as VectorCraft draws
-  them, in that path's own thread, or the group's where it has no paint (`REQ-VC-006`). They were named with `SC-W0807` and left out. A path
-  that StitchCraft effects reach from more than one level sews as the nearest say, and `SC-W0807` names
-  it: VectorCraft runs each on the stitches of the one before.
+  them, but a clip group's clipping object (`REQ-VC-006`). They were named with `SC-W0807` and left out.
+  Where an object with StitchCraft effects doesn't paint itself, the nearest group or layer around it that
+  paints gives its thread and its stroke. It was sewn in black. A path that StitchCraft
+  effects reach from more than one level sews as the nearest say, and `SC-W0807` names it: VectorCraft
+  runs each on the stitches of the one before.
 - PES files flag every jump after their first record as a trim, as pystitch, Ink/Stitch's writer, flags
   them (`REQ-FMT-010`). A machine treats them as it treats Ink/Stitch's. StitchCraft flagged only the
   jumps after a trim in the plan. Whether a trim-flagged jump is cut is the machine's choice, and the

@@ -144,12 +144,15 @@ from its stroke for a stroke or a satin column, as in Ink/Stitch, mapped to the 
 
 The plan had one object filter, `<ns>.tools`, to make a satin column from 2 paths, add a rung, bake a
 preview to paths and draw a test sheet. VectorCraft's own commands do the first three, and M6.4 checked
-them in its source, 0.7.0 to 0.12.0:
+them in its source, 0.7.0 to 0.12.0. Make Compound Path changed at 0.10.0. Before, the compound path takes
+the appearance of the frontmost path it is made of and turns none round. From 0.10.0, it takes the
+backmost path's, and reverses each path in front that winds the same way as the backmost one. So the
+StitchCraft effect is applied after the paths are joined, which works in every version:
 
 | Task | In VectorCraft | Why it sews |
 |---|---|---|
-| Satin column of 2 paths | Object › Compound Path › Make (`object.compoundPath.make`) | The compound takes the backmost path's appearance, its StitchCraft effect included. It reverses each path in front that winds the same way as the backmost one, and the column turns its second rail back (`reverse_rails`, automatic), as Ink/Stitch does (`REQ-VC-007`) |
-| Rung | Pen tool line across the rails, then Make Compound Path with the column | The column is the path at the back, and keeps its appearance. Which way the rung runs doesn't change the points it pairs |
+| Satin column of 2 paths | Object › Compound Path › Make (`object.compoundPath.make`), then the satin effect | The column turns a second rail that runs the other way back (`reverse_rails`, automatic), as Ink/Stitch does (`REQ-VC-007`) |
+| Rung | Pen tool line across the rails, then Make Compound Path with the column | Which way the rung runs, and where among the paths it lies, doesn't change the points it pairs. Before 0.10.0 the compound takes the rung's appearance, and the effect is applied again |
 | Baked preview | Object › Expand Appearance (`effect.expandAppearance`) | It runs the live effect and makes objects of what each fill and stroke paints, strokes outlined. Those are the preview's shapes, which sew differently from the effect. Bake a copy to show, and sew the original |
 | Presets | Graphic Styles (`graphicStyle.new`, `graphicStyle.apply`) | Applying a style copies its effects into each object, or into the group it is applied to, whose effects apply to each path inside (`REQ-VC-006`) |
 
@@ -320,11 +323,14 @@ path and compound path inside it, however deep, with the group's bounds as their
 they return in that object's own paint (`evaluate_container` and `reshape_leaves` in `crates/effects`,
 0.7.0 to 0.12.0). The group's own paints paint them too. StitchCraft's live effects are geometry
 effects, and applying a graphic style to a group puts its effects and paints on the group. So each path
-inside sews as the group's StitchCraft effects say, as the preview shows it, in its own thread, or the
-group's where it has no paint. The clip group's outline, its clipping path, takes none of them. Where
-StitchCraft effects meet from more than one level, a path's own and a group's, or 2 groups', VectorCraft
-draws one effect run on the stitches another drew, which a machine cannot sew. The path sews as the
-nearest effects say, and `SC-W0807` names it.
+inside sews as the group's StitchCraft effects say, as the preview shows it. An object with StitchCraft
+effects that doesn't paint itself takes its thread, and the stroke a stroke or a satin column follows, from
+the nearest group or layer around it that paints. A clip group's first object is its clipping
+object, of any kind. VectorCraft draws its own paints, over the clipped art, and runs the group's effects
+on its outline too, which only changes the clip, and StitchCraft doesn't clip. So the clipping object
+sews by its own appearance alone. Where StitchCraft effects meet from more than one level, a path's own
+and a group's, or 2 groups', VectorCraft draws one effect run on the stitches another drew, which a
+machine cannot sew. The path sews as the nearest effects say, and `SC-W0807` names it.
 
 **Ids.** An element is `vc:<object id>:<what>`: `fill` or `stroke` for a paint, with its rank among the
 object's fills or strokes from the second on (`fill.2`), and the family for an effect. VectorCraft keeps
