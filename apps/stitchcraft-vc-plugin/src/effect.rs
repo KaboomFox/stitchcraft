@@ -56,6 +56,7 @@ pub fn hello(input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::testing::{self, input, params};
 
     #[test]
     fn hello_returns_the_geometry_unchanged() {
@@ -67,31 +68,17 @@ mod tests {
         assert_eq!(out, json!({"objects": [{"path": path}]}));
     }
 
-    /// VectorCraft's input for one object whose path is `path`, and the parameters as it resolves them
-    /// from `family`'s manifest: every one at its default, then `set`.
+    /// The output of `family`'s effect on `path`, with every parameter at its default but `set`.
     fn run(family: Family, path: &Value, set: &[(&str, Value)]) -> Value {
-        let input = json!({"objects": [{"type": "path", "path": path, "fillRule": "nonzero", "bounds": [0, 0, 100, 100]}]});
-        let mut params = serde_json::to_value(crate::manifest::family(family)).unwrap()["params"]
-            .as_object()
-            .unwrap()
-            .iter()
-            .map(|(key, spec)| (key.clone(), spec["default"].clone()))
-            .collect::<serde_json::Map<_, _>>();
-        params.insert("_context".into(), json!({"mode": "effect", "bounds": [0, 0, 100, 100]}));
-        for (key, value) in set {
-            params.insert((*key).into(), value.clone());
-        }
-        let out = sew(family, &serde_json::to_vec(&input).unwrap(), &serde_json::to_vec(&params).unwrap()).unwrap();
-        serde_json::from_slice(&out).unwrap()
+        serde_json::from_slice(&sew(family, &input(path), &params(family, set)).unwrap()).unwrap()
     }
 
     fn square() -> Value {
-        json!({"subpaths": [{"closed": true, "anchors": [{"p": [0, 0]}, {"p": [100, 0]}, {"p": [100, 100]}, {"p": [0, 100]}]}]})
+        testing::square(100.0)
     }
 
-    /// A satin column's two rails, 20 points (7 mm) apart.
     fn rails() -> Value {
-        json!({"subpaths": [{"anchors": [{"p": [0, 0]}, {"p": [100, 0]}]}, {"anchors": [{"p": [0, 20]}, {"p": [100, 20]}]}]})
+        testing::rails(100.0)
     }
 
     /// The error of a run's output, which VectorCraft shows as the plug-in's last error.
