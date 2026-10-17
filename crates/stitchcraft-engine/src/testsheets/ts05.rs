@@ -4,11 +4,16 @@
 //! Drawn as a design (`designed`), so the engine's satin column sews it, with Ink/Stitch's other defaults:
 //! no underlay and no pull compensation. 3 rows, top to bottom, at zigzag spacings of 0.3, 0.4 and 0.5 mm.
 //! Each row has 10 columns 20 mm tall, 1 to 10 mm wide from left to right. Each column is sewn as drawn,
-//! from its top, not from its nearest point, and trimmed after, so the columns stand apart.
+//! not from its nearest point, and trimmed after, so the columns stand apart.
+//!
+//! The rows are sewn left to right and right to left in turn, and the columns down and up in turn, each from
+//! its corner nearest where the one before ended. The reference machine cuts no jump (MC-1): a column sewn
+//! down after one sewn down would start along the jump thread from the bottom of the one before, and sew it
+//! down under its first stitches.
 
 use stitchcraft_plan::StitchPlan;
 
-use super::designed::{AS_DRAWN, Drawing};
+use super::designed::{AS_DRAWN, Drawing, rails};
 use super::sketch::SheetError;
 use super::{BLUE, thread};
 
@@ -27,14 +32,26 @@ const ROW: f64 = 28.0;
 pub(super) fn build() -> Result<StitchPlan, SheetError> {
     let blue = thread(BLUE)?;
     let mut d = Drawing::new("ts05");
+    // Each column's left edge and width, left to right.
+    let mut columns = Vec::with_capacity(WIDTHS.len());
+    let mut x = 0.0;
+    for width in WIDTHS {
+        columns.push((x, width));
+        x += width + GAP;
+    }
     let mut top = 0.0;
-    for spacing in SPACINGS {
+    let mut down = true;
+    for (row, spacing) in SPACINGS.into_iter().enumerate() {
         let spacing_text = spacing.to_string();
-        let mut x = 0.0;
-        for width in WIDTHS {
-            let rails = [[(x, top), (x, top + TALL)], [(x + width, top), (x + width, top + TALL)]];
+        let rightwards = row.is_multiple_of(2);
+        let mut sewn = columns.clone();
+        if !rightwards {
+            sewn.reverse();
+        }
+        for (x, width) in sewn {
+            let rails = rails((x, x + width), (top, top + TALL), down, rightwards);
             d.satin(&format!("{spacing}-{width}"), rails, &blue, &[&[("zigzag_spacing_mm", spacing_text.as_str())], &AS_DRAWN[..]].concat())?;
-            x += width + GAP;
+            down = !down;
         }
         top += ROW;
     }
