@@ -12,7 +12,9 @@
   the plug-ins' effects and saves, and StitchCraft checks how what it saved sews.
 - `vc-window/` holds the window probe. It runs the stable release's app without a screen and compares its
   screenshots, and xa11y drives the app through its accessibility tree. A separate workspace, run by
-  `cargo xtask compat window` in a desktop of its own (Xvfb, D-Bus and AT-SPI, on Linux).
+  `cargo xtask compat window` in a desktop of its own (Xvfb, D-Bus and AT-SPI, on Linux). Its
+  `tests/shots.rs` takes the docs' pictures of VectorCraft's menus and dialogs, in the same desktop, for
+  `cargo xtask shots --vectorcraft`.
 
 ```sh
 cargo xtask compat discover                          # latest stable, pre-release and branch heads
@@ -21,6 +23,7 @@ cargo xtask compat e2e --ref v0.12.0                 # Level B with that release
 cargo xtask compat e2e --cli ../vectorcraft/target/release/vectorcraft-cli
 cargo xtask compat track stable --ref v0.12.0        # both levels, and the result for the report
 cargo xtask compat window                            # needs xvfb, dbus and at-spi2-core
+cargo xtask shots --vectorcraft                      # the docs' VectorCraft pictures, in that desktop
 ```
 
 Design: [docs/src/design/compatibility-gate.md](../docs/src/design/compatibility-gate.md), and for the

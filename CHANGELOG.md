@@ -5,6 +5,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.7: the docs show VectorCraft itself, made by the stable release `compat/vectorcraft.toml` pins.
+  `cargo xtask shots --vectorcraft` makes the pictures, and the `shots-ui` job checks them on every pull
+  request, within 2 pixels in a thousand.
+  - A `vectorcraft-render` picture is the export of a document `vectorcraft-cli` draws from the shot's
+    steps, the plug-ins' previews included. A `vectorcraft-ui` picture is VectorCraft's window, driven
+    through its accessibility tree to the Effect › Plug-ins menu or to a family's dialog. The dialog must
+    show a row for each parameter of the module's manifest, with the control of the parameter's type.
+  - A tutorial, *A patch in VectorCraft*. A disc of fill, a star of running stitch and a satin border of 2
+    rails are drawn and previewed in VectorCraft, then exported and sewn.
+  - VectorCraft doesn't scroll a plug-in's dialog. Fill's, 1,385 pixels tall, and satin's, 1,803, run off
+    the window at the size it opens, 1440 × 900. The tutorial says how to use them meanwhile, and their
+    pictures are taken in a window 2,000 pixels tall.
+  - The `docs:refresh-shots` label makes VectorCraft's pictures first, and commits those that could be
+    made when another fails.
 - M6.6: the VectorCraft compatibility gate is complete. Every day both levels run on VectorCraft's four
   tracks, the latest release and pre-release and the `release` and `main` branches (`cargo xtask compat
   track`).

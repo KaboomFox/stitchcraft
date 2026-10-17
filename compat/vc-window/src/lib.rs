@@ -1,7 +1,7 @@
 //! The window probe: VectorCraft's released app in a desktop without a screen (spike M0.8).
 //!
-//! **Why.** The docs will show VectorCraft's menus and dialogs with StitchCraft's plug-ins in them, taken
-//! from the app itself on every run (the `vectorcraft-ui` pictures, `docs/src/design/docs-pipeline.md`).
+//! **Why.** The docs show VectorCraft's menus and dialogs with StitchCraft's plug-ins in them, taken from
+//! the app itself on every run (the `vectorcraft-ui` pictures, `docs/src/design/docs-pipeline.md`).
 //! That takes three things CI might not give: a window with no screen to show it on, the same pixels each
 //! time, and a way to reach the controls a person uses. The tests in `tests/window.rs` check the three
 //! against the app as VectorCraft releases it:
