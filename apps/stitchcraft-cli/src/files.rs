@@ -92,9 +92,16 @@ pub fn write_all(files: &[(&Path, &[u8])]) -> Result<(), Unwritten> {
 /// `.<process>-<n>.partial`; its name. Nothing already there is opened: a name in use is passed over.
 fn staged(path: &Path, bytes: &[u8]) -> io::Result<OsString> {
     let mut last = io::Error::new(io::ErrorKind::AlreadyExists, format!("{NAMES} temporary names next to it are in use"));
+    // WASI gives a program no process id, and its `std::process::id` panics, so there the names count from
+    // 0: a name another run is using is passed over all the same. `cargo xtask wasm --goldens` runs `stitch`
+    // as WebAssembly.
+    #[cfg(target_os = "wasi")]
+    let process = 0;
+    #[cfg(not(target_os = "wasi"))]
+    let process = std::process::id();
     for n in 0..NAMES {
         let mut temporary = path.as_os_str().to_owned();
-        temporary.push(format!(".{}-{n}.partial", std::process::id()));
+        temporary.push(format!(".{process}-{n}.partial"));
         let mut file = match OpenOptions::new().write(true).create_new(true).open(&temporary) {
             Ok(file) => file,
             Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {

@@ -54,9 +54,14 @@ pub fn made_as_wasm(stitch: &Path) -> Result<usize, String> {
             let Some(arguments) = arguments(&case.spec, &conformance, &out) else { continue };
             // The repository's root, seen at the same path inside, so that every path means the same.
             let mut run = Command::new("wasmtime");
-            run.arg("run").arg("--dir").arg(format!("{0}::{0}", root.display())).arg(stitch).args(&arguments);
-            if let Err(e) = util::run(run, &format!("stitch, as WebAssembly, for {golden}")) {
-                findings.error(format!("{}: {e}", case.file));
+            run.arg("run").arg("--dir").arg(format!("{0}::{0}", root.display())).arg(stitch).args(&arguments).current_dir(&root);
+            let ran = run.output().map_err(|e| format!("wasmtime: {e}"))?;
+            if !ran.status.success() {
+                // The last lines it wrote say why: a panic's message, or wasmtime's trap.
+                let said = String::from_utf8_lossy(&ran.stderr);
+                let last: Vec<&str> = said.lines().rev().take(4).collect();
+                let why = last.into_iter().rev().collect::<Vec<_>>().join(" / ");
+                findings.error(format!("{}: stitch, as WebAssembly, for {golden}: {} ({why})", case.file, ran.status));
                 continue;
             }
             match (std::fs::read(&out), std::fs::read(conformance.join(golden))) {
@@ -80,18 +85,15 @@ mod tests {
 
     #[test]
     fn each_case_is_made_with_the_command_line_it_stands_for() {
-        let (conformance, out) = (Path::new("/repo/conformance"), Path::new("/repo/target/wasm-goldens/ts-03/TS-03.pes"));
+        let (conformance, out) = (Path::new("repo/conformance"), Path::new("repo/target/wasm-goldens/case/x.pes"));
+        // The paths as the platform joins them, and the words as given.
+        let line = |command: &str, file: OsString, profile: &str| -> Vec<OsString> {
+            vec![command.into(), file, "--profile".into(), profile.into(), "-o".into(), out.into()]
+        };
         let sheet = Spec::Testsheet { sheet: "TS-03".into(), profile: "brother-pe800-5x7".into(), expect: expect() };
-        let words = |args: Vec<OsString>| args.into_iter().map(|a| a.to_string_lossy().into_owned()).collect::<Vec<_>>();
-        assert_eq!(
-            arguments(&sheet, conformance, out).map(words).unwrap(),
-            ["testsheet", "TS-03", "--profile", "brother-pe800-5x7", "-o", "/repo/target/wasm-goldens/ts-03/TS-03.pes"]
-        );
+        assert_eq!(arguments(&sheet, conformance, out).unwrap(), line("testsheet", "TS-03".into(), "brother-pe800-5x7"));
         let plan = Spec::Plan { svg: "fixtures/svg/strokes.svg".into(), profile: "p".into(), expect: expect() };
-        assert_eq!(
-            arguments(&plan, conformance, out).map(words).unwrap(),
-            ["plan", "/repo/conformance/fixtures/svg/strokes.svg", "--profile", "p", "-o", "/repo/target/wasm-goldens/ts-03/TS-03.pes"]
-        );
+        assert_eq!(arguments(&plan, conformance, out).unwrap(), line("plan", conformance.join("fixtures/svg/strokes.svg").into(), "p"));
         assert!(arguments(&Spec::Oracle { files: vec!["golden/x.pes".into()] }, conformance, out).is_none());
     }
 }
