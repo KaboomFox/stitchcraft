@@ -14,8 +14,6 @@ const BADGE: &str = "badge.svg";
 
 /// How long xa11y waits for the app to appear in the accessibility tree, and for a control to show.
 const FIND: Duration = Duration::from_secs(30);
-/// How long a way of choosing a control has to show its effect before the next way is tried.
-const TRY: Duration = Duration::from_secs(5);
 
 /// Runs `check` as `test`, and records why it failed before failing.
 fn checked(test: &str, check: impl FnOnce() -> Result<(), String>) {
@@ -91,38 +89,52 @@ fn xa11y_chooses_a_menu_item_in_the_window() {
         let before = window.inspect()?;
         let was = outline(&before).ok_or(format!("ui.inspect shows no /ui/view/outline: {before}"))?;
         let app = App::by_pid(window.pid(), FIND).map_err(|e| format!("xa11y did not find the app's process in the accessibility tree: {e}"))?;
+        // A screen reader's way: AT-SPI's action on View, then on its row Outline.
+        let view = title(&app, "View")?;
         let lines = keep(&app, "tree")?;
-        // A person opens View and chooses Outline, whose label may carry a check mark's room and a shortcut.
-        let view = app.locator(r#"button[name="View"]"#).wait_attached(FIND).map_err(|e| format!("View: {e}"))?;
-        let item = app.locator(r#"button[name*="Outline"]"#);
-        let opened = choose(&view, || item.wait_attached(TRY).is_ok())?;
-        let menu = keep(&app, "tree-view-menu")?;
-        let chosen = item.element().map_err(|e| format!("View's Outline: {e}"))?;
-        let label = format!("{:?}", chosen.name);
-        let switched = choose(&chosen, || window.shows(TRY, |inspect| outline(inspect) == Some(!was)).unwrap_or(false))?;
+        view.press().map_err(|e| format!("pressing View: {e}"))?;
+        let outlines = row(&app, "Outline")?;
+        let rows = keep(&app, "tree-view-menu")?;
+        outlines.press().map_err(|e| format!("pressing {:?}: {e}", outlines.name))?;
+        window.until("the view to show outlines", |inspect| outline(inspect) == Some(!was))?;
         window.screenshot("xa11y-outline")?;
-        record(
-            test,
-            "notice",
-            "accessibility tree",
-            &format!("{lines} lines, {menu} with View open; View opened by {opened}; its item {label} chosen by {switched}"),
-        )
+        // A person's way: clicks where the tree places View, then its row Preview, which shows the drawing
+        // again.
+        let input = xa11y::input_sim().map_err(|e| format!("xa11y's input: {e}"))?;
+        let view = title(&app, "View")?;
+        input.mouse().click(&view).map_err(|e| format!("clicking View at {:?}: {e}", view.bounds))?;
+        let preview = row(&app, "Preview")?;
+        input.mouse().click(&preview).map_err(|e| format!("clicking {:?} at {:?}: {e}", preview.name, preview.bounds))?;
+        window.until("the view to show the drawing again", |inspect| outline(inspect) == Some(was))?;
+        let place = app.windows().ok().and_then(|windows| windows.first().and_then(|w| w.bounds));
+        let found = format!(
+            "{lines} lines, {rows} with View open. AT-SPI's press chose View, then {:?}; clicks chose View at {:?}, then {:?}, in a window at {place:?}",
+            outlines.name, view.bounds, preview.name
+        );
+        record(test, "notice", "accessibility tree", &found)
     });
 }
 
-/// Chooses `control` as a screen reader does, through AT-SPI's action, and when `done` doesn't see the
-/// effect, as a person does, with a click where the tree places it: which of the two worked.
-fn choose(control: &Element, mut done: impl FnMut() -> bool) -> Result<&'static str, String> {
-    let name = format!("{:?}", control.name);
-    control.press().map_err(|e| format!("pressing {name}: {e}"))?;
-    if done() {
-        return Ok("AT-SPI's press");
+/// The menu bar's title `name`, once the tree shows it.
+fn title(app: &App, name: &str) -> Result<Element, String> {
+    app.locator(&format!(r#"button[name="{name}"]"#)).wait_attached(FIND).map_err(|e| format!("the menu {name}: {e}"))
+}
+
+/// The open menu's row whose label, past the room for a check mark, starts with `label`, once the tree
+/// shows it. Its name ends with its shortcut (`     Outline Ctrl+Y`).
+fn row(app: &App, label: &str) -> Result<Element, String> {
+    let started = Instant::now();
+    loop {
+        let buttons = app.locator("button").elements().map_err(|e| format!("the menu's rows: {e}"))?;
+        let starts = |name: &str| name.trim_start_matches(['✓', ' ']).starts_with(label);
+        if let Some(found) = buttons.into_iter().find(|button| button.name.as_deref().is_some_and(starts)) {
+            return Ok(found);
+        }
+        if started.elapsed() > FIND {
+            return Err(format!("no row {label} showed in the open menu within {FIND:?}"));
+        }
+        std::thread::sleep(Duration::from_millis(100));
     }
-    xa11y::input_sim().and_then(|input| input.mouse().click(control)).map_err(|e| format!("clicking {name}: {e}"))?;
-    if done() {
-        return Ok("a click where the tree places it");
-    }
-    Err(format!("neither AT-SPI's press nor a click where the tree places it chose {name} ({:?})", control.bounds))
 }
 
 /// Keeps the app's tree, as xa11y sees it, in `<name>.txt`: its number of lines.
