@@ -89,6 +89,42 @@ Manifests are generated from the [parameter registry](params.md#splitting-for-ve
 test validates each against VectorCraft's manifest rules (id charset, ≤ 64 parameters, names, ranges) so
 an invalid manifest never reaches a user.
 
+**Modules.** The plug-in crate builds one module for each family, chosen by a Cargo feature named after
+the family: `stroke`, `satin` or `fill`. Without one it builds M0.6's *hello* effect. The modules contain
+the same code, which the native tests run whichever it is, and the feature only picks the manifest and
+the effect that `vc_manifest` and `vc_run` serve. `cargo xtask compat contract` builds the four modules,
+notes their sizes and loads them into VectorCraft's host.
+
+**Manifests.** A family's manifest is made from the registry when VectorCraft asks for it, so a parameter
+added to the registry shows in the dialog without another change. VectorCraft's parameters are numbers,
+whole numbers, toggles and choices, and each always has a value. A record stores every declared
+parameter, at its default when the user leaves it. So a parameter is declared when one such value means
+what the parameter means:
+
+- a length, an angle, a percentage or a number as a number in its range, and a count as a whole number;
+- a list or a pair whose default is one value as that value, which stands for the whole list or both
+  sides, as in Ink/Stitch;
+- an optional length that 0 leaves unset as a number from 0.
+
+Texts, seeds, and settings left empty to take another's value keep their defaults. In the registry today
+they are the custom locks' steps, `random_seed`, a fill underlay's angles, a satin's zigzag underlay
+insets and its shortest random split. A choice leaves out the options that a text spells out, which are
+the custom locks. `satin_column` belongs to the effect, which sets it from its family. The dialog opens
+with the group that declares the family's method. The groups only the family uses come next, then those
+it shares with the other families. The settings every element shares come last, as in Ink/Stitch's
+dialogs.
+
+**What a live effect shows.** A family's effect sews its object with the engine's `generate`, on the
+reference machine and with no neighbours, as one object of a design. It returns the stitches as geometry,
+the exact level below. When it can't show stitches, it gives back why. VectorCraft then draws the object
+as it is and shows the message as the plug-in's last error. That happens when the object cannot be sewn or
+sews no stitch, with the message that says why, and for a satin column drawn as one path, which is as
+wide as its stroke, with `SC-I0810`. A drawing that vanished instead could not be clicked to change the
+setting that emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
+shows, and the command line reports them (M6.5). Until M6.3's levels, an object whose stitches cost more
+to write than a live effect may spend runs out of instructions. VectorCraft then draws it as it is, with
+its own error.
+
 ### The workflow
 
 1. Draw the art in VectorCraft as usual.
@@ -130,14 +166,14 @@ So the plug-in estimates the output size before generating and picks a preview l
 | Rows | One ribbon per fill row segment (direction and density visible) | Large fills |
 | Outline | The original geometry plus a direction hatch | Estimate still too large |
 
-A `preview` choice parameter lets the user force a level. M6.3 fixes each level's budget with a
-conformance case, from these numbers and its own writer's, which can write fewer digits without a
-`serde_json` value in between. The contract test `hello_reads_and_writes_json_within_the_recorded_budget`
-measures the costs again on every track the [compatibility gate](compatibility-gate.md) tests, and fails
-if either rises by more than a quarter. If a run still fails, VectorCraft draws the object unchanged and
-reports the error through `plugin.info`'s `lastError`, and our message says which level to choose. The
-real stitches are always available from the CLI preview, and ABI v2's overlay channel removes this
-limitation.
+A `preview_level` choice parameter lets the user force a level (VectorCraft reserves the name `preview`).
+M6.3 fixes each level's budget with a conformance case, from these numbers and its own writer's, which
+can write fewer digits without a `serde_json` value in between. The contract test
+`hello_reads_and_writes_json_within_the_recorded_budget` measures the costs again on every track the
+[compatibility gate](compatibility-gate.md) tests, and fails if either rises by more than a quarter. If a
+run still fails, VectorCraft draws the object unchanged and reports the error through `plugin.info`'s
+`lastError`, and our message says which level to choose. The real stitches are always available from the
+CLI preview, and ABI v2's overlay channel removes this limitation.
 
 Paint caveat: a live effect cannot read the object's paint, so a fill preview shows ribbons painted with
 the object's own fill; stroke previews use the object's stroke. Users set the fill/stroke to the thread

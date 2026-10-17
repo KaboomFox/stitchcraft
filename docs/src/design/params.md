@@ -209,7 +209,7 @@ entries, and the lock and method identifiers must equal Ink/Stitch's.
 | The reference pages, the [index](../user/reference/params.md) and one page per declaration (`docs/src/user/reference/params/*.md`), with the deviations ledger's entries | `cargo xtask docs` | `cargo xtask docs --check`, which fails on a stale page and on a page left from a declaration since removed (`cargo xtask docs` deletes those) | M3.1 |
 | `docs/src/user/reference/params.schema.json`: the parameters as JSON values (numbers, booleans, strings, arrays, `null` for empty), for editors, presets and JSON hosts | `cargo xtask docs` | same | M3.1 |
 | The *StitchCraft* column of the [Ink/Stitch compatibility contract](inkstitch-compat-contract.md) | `cargo xtask docs` | same, plus the cross-checks above | M3.1 |
-| VectorCraft manifests (embedded in each `.wasm`) | `build.rs` of the plug-in crate, from the registry | plug-in tests validate them against VectorCraft's manifest rules | planned for M6.2 |
+| VectorCraft manifests, one for each stitch family's module | at runtime from the registry, when VectorCraft asks a module for its manifest (`stitchcraft-vc-plugin`'s `manifest`) | plug-in tests validate them against VectorCraft's manifest rules, and the contract tests install them in VectorCraft's host | M6.2 |
 | SVG attribute read/write | `stitchcraft-svg` iterates the registry | round-trip property test `REQ-PRM-003` | planned for M8 |
 | CLI parameter help (`stitch params`, `--param key=value`) | at runtime from the registry | `trycmd` examples | planned, in no step yet |
 | `proptest` strategies | `stitchcraft-testkit` iterates the registry | used by every generator property test | planned, in no step yet |
@@ -220,8 +220,10 @@ VectorCraft v1 allows at most 64 parameters per plug-in and has no groups or con
 The plug-in crate builds **one plug-in per stitch family** for that (`stroke`, `satin`, `fill`), each
 with only the parameters that apply to it; the shared lock/trim parameters are included in each. A test
 fails if any family's manifest exceeds 64 parameters or 64 KiB, so adding a parameter that would break
-the limit is caught in the PR, not by a user. When VectorCraft supports richer schemas (ABI v2 RFC),
-groups and conditions are emitted as well.
+the limit is caught in the PR, not by a user. In v1 each parameter has one value of VectorCraft's kinds.
+A parameter that needs a text, a seed or several values keeps its default in VectorCraft
+([manifests](vectorcraft-integration.md#plug-ins)). When VectorCraft supports richer schemas (ABI v2
+RFC), groups and conditions are emitted as well.
 
 ## Presets
 

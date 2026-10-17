@@ -64,6 +64,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0807`](#sc-w0807) | Warning | VectorCraft object or feature not stitched |
 | [`SC-W0808`](#sc-w0808) | Warning | VectorCraft geometry unusable |
 | [`SC-I0809`](#sc-i0809) | Info | VectorCraft layer or guide left out, as it does not print |
+| [`SC-I0810`](#sc-i0810) | Info | VectorCraft live effect leaves the object as it is |
 
 ## SC-E0004
 
@@ -695,8 +696,12 @@ The `.vectorcraft` file could not be read: it is not a VectorCraft document (its
 read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
 is damaged, or it unpacks to more JSON than StitchCraft reads. Nothing was stitched.
 
+A StitchCraft live effect gives this message when what VectorCraft passes it does not read as
+VectorCraft's plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The effect
+leaves the object as it is.
+
 The message says what is wrong and, for JSON errors, where. Open the file in VectorCraft and save it
-again.
+again. For a live effect, install the StitchCraft plug-ins made for that version of VectorCraft.
 
 ## SC-W0807
 
@@ -720,7 +725,8 @@ makes paths of a symbol, and Object › Expand Appearance of what effects and br
 An object's geometry cannot be used, and the object, or the stroke, is left out: a coordinate or a
 stroke's width is not a number, the object draws nothing, or it lies more than 10 metres from the
 document's origin, beyond what machine files can record. A StitchCraft stroke or satin effect takes
-a width that is not a number as 0.
+a width that is not a number as 0. A StitchCraft live effect leaves such an object as it is, with
+this message as the plug-in's last error.
 
 The message names the object. Check its anchors, or remove stray objects far from the design.
 
@@ -734,3 +740,16 @@ out of what it prints and exports; StitchCraft keeps them out of the sew-out.
 
 The message names the layer or the guide. To stitch a layer, turn its Template option off, or its
 Print option on, in VectorCraft's Layer Options.
+
+## SC-I0810
+
+**Info** — VectorCraft live effect leaves the object as it is
+
+A StitchCraft live effect draws the object it is applied to as its stitches. It leaves the object
+as it is when it cannot show them, and VectorCraft shows this message as the plug-in's last error:
+the object sews no stitch, or it is a satin column drawn as one path. Such a column is as wide as
+its stroke, and VectorCraft gives a live effect no stroke. When another message says why an object
+sews no stitch, the effect shows that message instead.
+
+The message says which. A satin column drawn as one path still sews as wide as its stroke; to see
+its stitches in VectorCraft, draw it with 2 rails.

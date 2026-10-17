@@ -28,20 +28,19 @@
 
 use std::collections::BTreeMap;
 
-use serde_json::{Number, Value};
-use stitchcraft_core::units::MM_PER_POINT;
-use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm, Point};
-use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath, WORKING_LIMIT_MM};
+use serde_json::Value;
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
+use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Join, Path, Shape};
+use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::ParamSet;
 use stitchcraft_params::stitch_type::Family;
 use stitchcraft_plan::{Rgb, Thread};
 
 use crate::container::{self, unreadable};
-use crate::wire::{self, Anchor, Effect, Item, Kind, Node, Paint, PathData, WirePoint};
+use crate::geometry::{self, UNUSABLE_HINT};
+use crate::values::text;
+use crate::wire::{self, Effect, Item, Kind, Node, Paint, PathData};
 use crate::{FORMAT, PLUGIN_NAMESPACE, color};
-
-/// A handle this close to its anchor, in points, is none: VectorCraft's own tolerance.
-const NO_HANDLE: f64 = 1e-9;
 
 /// A stroke's miter limit when the file leaves it out: VectorCraft's, as Illustrator's.
 const MITER_LIMIT: f64 = 10.0;
@@ -330,7 +329,7 @@ impl Reader {
             let shape = match family {
                 Family::Fill => Shape::Fill { path: path.clone(), rule },
                 Family::Stroke | Family::Satin => {
-                    set.set("satin_column", if *family == Family::Satin { "true" } else { "false" });
+                    set.set(SATIN_COLUMN, if *family == Family::Satin { "true" } else { "false" });
                     let (width, join) = *style.get_or_insert_with(|| self.effect_style(node, label));
                     Shape::Stroke { path: path.clone(), width, join }
                 }
@@ -467,44 +466,19 @@ impl Reader {
 
     /// The object's path in millimetres; `None`, said, when it cannot be used.
     fn path(&mut self, node: &Node, label: &str, data: &[&PathData]) -> Result<Option<Path>, Diagnostic> {
-        let mut subpaths = Vec::new();
-        for sub in data.iter().flat_map(|d| &d.subpaths) {
-            self.charge(1 + sub.anchors.len() as u64)?;
-            let Some(anchors) = sub.anchors.iter().map(points).collect::<Option<Vec<_>>>() else {
-                self.unusable(node, label, "A coordinate of its path is not a number");
-                return Ok(None);
-            };
-            let n = anchors.len();
-            // A single anchor draws nothing.
-            let (Some(first), true) = (anchors.first(), n > 1) else { continue };
-            let count = if sub.closed { n } else { n - 1 };
-            let mut segments = Vec::with_capacity(count);
-            for i in 0..count {
-                let (Some(a), Some(b)) = (anchors.get(i), anchors.get((i + 1) % n)) else { continue };
-                let straight = !handle(a.p, a.out) && !handle(b.p, b.h_in);
-                let Some(segment) = segment(a, b, straight) else {
-                    self.unusable(node, label, "It lies more than 10 m from the document's origin");
-                    return Ok(None);
-                };
-                segments.push(segment);
+        match geometry::path(data, &mut self.meter).map_err(|_| exhausted())? {
+            Ok(path) => Ok(Some(path)),
+            Err(why) => {
+                self.unusable(node, label, why.why());
+                Ok(None)
             }
-            let Some(start) = mm(first.p) else {
-                self.unusable(node, label, "It lies more than 10 m from the document's origin");
-                return Ok(None);
-            };
-            subpaths.push(Subpath { start, segments, closed: sub.closed });
         }
-        if subpaths.is_empty() {
-            self.unusable(node, label, "It draws nothing");
-            return Ok(None);
-        }
-        Ok(Some(Path { subpaths }))
     }
 
     /// `SC-W0808` about the object, which is left out because of `why`.
     fn unusable(&mut self, node: &Node, label: &str, why: &str) {
         let message = format!("{why}, and {} is left out.", called(node, "the object"));
-        self.warn(Code::VcGeometryUnusable, Some(label), message, Some("Check its anchors, or remove stray objects far from the design."));
+        self.warn(Code::VcGeometryUnusable, Some(label), message, Some(UNUSABLE_HINT));
     }
 
     /// `SC-W0807` (a feature that is not stitched) about the object `label`.
@@ -522,44 +496,6 @@ impl Reader {
         }
         self.warnings.push(diagnostic);
     }
-}
-
-/// An anchor's three points, in points: `None` when a coordinate is not a number.
-#[derive(Clone, Copy)]
-struct Points {
-    p: (f64, f64),
-    h_in: (f64, f64),
-    out: (f64, f64),
-}
-
-fn points(anchor: &Anchor) -> Option<Points> {
-    let at = |point: &WirePoint| point.0;
-    let p = at(&anchor.p)?;
-    let h_in = anchor.h_in.as_ref().map_or(Some(p), at)?;
-    let out = anchor.h_out.as_ref().map_or(Some(p), at)?;
-    Some(Points { p, h_in, out })
-}
-
-/// Whether `handle` is a handle of the anchor at `p`: farther from it than VectorCraft's tolerance, as
-/// VectorCraft measures it (`Anchor::has_in` in its `crates/geom`), without a square root.
-fn handle(p: (f64, f64), handle: (f64, f64)) -> bool {
-    let (dx, dy) = (handle.0 - p.0, handle.1 - p.1);
-    dx * dx + dy * dy > NO_HANDLE * NO_HANDLE
-}
-
-/// The segment from `a` to `b` in millimetres, a line when `straight`; `None` when it reaches past the
-/// working limit.
-fn segment(a: &Points, b: &Points, straight: bool) -> Option<Segment> {
-    Some(if straight { Segment::Line(mm(b.p)?) } else { Segment::Cubic(mm(a.out)?, mm(b.h_in)?, mm(b.p)?) })
-}
-
-/// A point in points as one in millimetres, within the working limit.
-fn mm((x, y): (f64, f64)) -> Option<Point> {
-    let (x, y) = (x * MM_PER_POINT, y * MM_PER_POINT);
-    if x.abs() > WORKING_LIMIT_MM || y.abs() > WORKING_LIMIT_MM {
-        return None;
-    }
-    Point::new(x, y).ok()
 }
 
 /// A stroke's join as VectorCraft draws it: a miter, with its limit, unless round or bevel.
@@ -588,32 +524,6 @@ fn rank(what: &str, n: u32) -> String {
     if n > 1 { format!("{what}.{n}") } else { what.to_string() }
 }
 
-/// A parameter's value as text, as the parameters read it: a number as a decimal, a whole number without
-/// a point; a toggle as `true` or `false`; a choice as its id; a list as its values with spaces between.
-/// `None` for anything else.
-fn text(value: &Value) -> Option<String> {
-    match value {
-        Value::Bool(on) => Some(on.to_string()),
-        Value::Number(n) => Some(number(n)),
-        Value::String(s) => Some(s.clone()),
-        Value::Array(items) => {
-            let scalar = |item: &Value| if matches!(item, Value::Array(_)) { None } else { text(item) };
-            items.iter().map(scalar).collect::<Option<Vec<_>>>().map(|values| values.join(" "))
-        }
-        Value::Null | Value::Object(_) => None,
-    }
-}
-
-/// A JSON number as the parameters read it: whole numbers without a point, so that a count reads.
-fn number(n: &Number) -> String {
-    match n.as_f64() {
-        // Below 2^53 a float with no fraction is the whole number it shows, and an integer is written so
-        // either way. From 2^53, where floats skip whole numbers, a number is written as the file has it.
-        Some(f) if f.fract() == 0.0 && f.abs() < 9_007_199_254_740_992.0 => format!("{f:.0}"),
-        _ => n.to_string(),
-    }
-}
-
 /// The object's name in quotes after `what` (`Text "Title"`), or `what` alone when it has none.
 fn called(node: &Node, what: &str) -> String {
     match node.name.as_deref() {
@@ -627,33 +537,4 @@ fn quoted(text: &str) -> String {
     let mut chars = text.chars();
     let cut: String = chars.by_ref().take(QUOTED).collect();
     if chars.next().is_some() { format!("\"{cut}…\"") } else { format!("\"{cut}\"") }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn a_point_at_the_working_limit_is_in_reach_and_the_next_one_out_is_not() {
-        let mut x = WORKING_LIMIT_MM / MM_PER_POINT;
-        while x.next_up() * MM_PER_POINT <= WORKING_LIMIT_MM {
-            x = x.next_up();
-        }
-        assert_eq!(x * MM_PER_POINT, WORKING_LIMIT_MM);
-        for (inside, outside) in [((x, 0.0), (x.next_up(), 0.0)), ((0.0, -x), (0.0, -x.next_up()))] {
-            assert!(mm(inside).is_some() && mm(outside).is_none(), "{inside:?} {outside:?}");
-        }
-    }
-
-    #[test]
-    fn a_number_is_written_as_the_parameters_read_it() {
-        let text = |json: &str| number(&serde_json::from_str::<Number>(json).unwrap());
-        assert_eq!(text("3.0"), "3");
-        assert_eq!(text("-2.0"), "-2");
-        assert_eq!(text("0.25"), "0.25");
-        assert_eq!(text("1e-7"), "1e-7");
-        assert_eq!(text("9007199254740992.0"), "9007199254740992.0");
-        assert_eq!(text("-9007199254740993"), "-9007199254740993");
-        assert_eq!(text("18446744073709551615"), "18446744073709551615");
-    }
 }

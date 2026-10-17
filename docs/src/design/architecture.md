@@ -106,11 +106,19 @@ pub struct PlanOutcome {
 The machine profile is an input because the shortest stitch a generator may sew is the machine's, and
 finalizing (M3.9) fits the plan to the machine's longest stitch and hoop.
 
-and a per-element entry point used by live previews:
+and a per-element entry point, which `plan` calls for each element and live previews call for one:
 
 ```rust,ignore
-pub fn stitch_element(element: &Element, context: &ElementContext, budget: &Budget) -> ElementOutcome;
+pub fn generate(element: &Element, settings: &DesignSettings, profile: &MachineProfile,
+                neighbours: &Neighbours, budget: &Budget) -> Generation;   // since M3.8
+
+pub struct Generation {
+    pub generated: Option<Generated>,   // the element's stitch groups; None when it is skipped
+    pub diagnostics: Vec<Diagnostic>,
+}
 ```
+
+A live preview sees one object, so it has no neighbours, and it sews on the reference machine.
 
 Adapters only translate:
 
@@ -118,7 +126,7 @@ Adapters only translate:
 |---|---|---|
 | `stitchcraft-svg` | SVG document (+ `inkstitch:*` attributes, command symbols) | `Design` |
 | `stitchcraft-vectorcraft` | `.vectorcraft` JSON, plug-in input objects, effect records | `Design` / `Element` |
-| `stitchcraft-vc-plugin` | ABI v1 call (JSON in linear memory) | `stitch_element` → preview geometry JSON |
+| `stitchcraft-vc-plugin` | ABI v1 call (JSON in linear memory) | `generate` → preview geometry JSON |
 | `stitchcraft-cli` | files and flags | `plan` → formats/render/report |
 
 A future in-tree VectorCraft crate would be a fifth adapter calling the same two functions.

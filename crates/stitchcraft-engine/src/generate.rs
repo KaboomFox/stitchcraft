@@ -38,7 +38,7 @@ use crate::generators::passes::RepeatParams;
 use crate::generators::pull::PullParams;
 use crate::generators::running::raised;
 use crate::generators::running::{RunningParams, running_stitch};
-use crate::generators::satin::{self, SatinLengths, SatinParams, satin_stitch};
+use crate::generators::satin::{self, SATIN_COLUMN, SatinLengths, SatinParams, satin_stitch};
 use crate::generators::tatami::TatamiParams;
 use crate::generators::tatami::sew::{Pull, Travel, tatami_fill};
 use crate::generators::{Approach, Neighbours, Stitched, method, mm};
@@ -175,7 +175,7 @@ fn stitch_type(element: &Element, settings: &DesignSettings, diagnostics: &mut V
     let (family, specs) = match &element.shape {
         Shape::Fill { .. } => (Family::Fill, FillParams::SPECS),
         Shape::Stroke { path, width, .. } => {
-            let satin = setting::<Toggle>(set, SatinParams::SPECS, "satin_column", diagnostics)?;
+            let satin = setting::<Toggle>(set, SatinParams::SPECS, SATIN_COLUMN, diagnostics)?;
             if satin && too_narrow(path, *width, settings) {
                 let (width, limit) = (mm(width.get()), mm(settings.min_satin_stroke_width.get()));
                 let message = format!(

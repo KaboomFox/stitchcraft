@@ -10,7 +10,7 @@
 use crate::layers::{Class, TABLE};
 use crate::util;
 
-const TARGET: &str = "wasm32-unknown-unknown";
+pub const TARGET: &str = "wasm32-unknown-unknown";
 /// The target `stitch` is built for to make the golden files as WebAssembly (`--goldens`): WASI gives it a
 /// file system, and its arithmetic is the plug-in's.
 const WASI: &str = "wasm32-wasip1";

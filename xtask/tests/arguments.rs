@@ -24,7 +24,7 @@ fn an_argument_a_command_does_not_take_is_refused_with_status_2() {
 
 #[test]
 fn an_option_without_its_value_is_refused_with_status_2() {
-    for args in [&["conformance", "--filter"][..], &["compat", "contract", "--ref", "v0.7.0"], &["prose", "--base"]] {
+    for args in [&["conformance", "--filter"][..], &["compat", "contract", "--ref"], &["prose", "--base"]] {
         let out = xtask(args);
         assert_eq!(out.status.code(), Some(2), "{args:?}: {}", String::from_utf8_lossy(&out.stderr));
     }

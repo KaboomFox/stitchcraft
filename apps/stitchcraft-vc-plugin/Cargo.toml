@@ -15,6 +15,19 @@ crate-type = ["cdylib", "rlib"]
 [lints]
 workspace = true
 
+[features]
+# Which plug-in the module is (`docs/src/design/vectorcraft-integration.md`, `src/lib.rs`): the live effect of
+# one stitch family, or without any, the M0.6 *hello* effect the contract tests measure. Given more than
+# one, the module is the first of fill, satin and stroke.
+stroke = []
+satin = []
+fill = []
+
 [dependencies]
+serde = { workspace = true }
 serde_json = { workspace = true }
+stitchcraft-core = { workspace = true }
+stitchcraft-params = { workspace = true }
+stitchcraft-plan = { workspace = true }
+stitchcraft-engine = { workspace = true }
 stitchcraft-vectorcraft = { workspace = true }
