@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f44d2f26.js";
+            window.path_to_searchindex_js = "../searchindex-f4e6cf6f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-623c1739.js"></script>
+        <script src="../toc-6dce9f90.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -241,6 +241,8 @@ with a cached target directory for branch tracks. Scenarios are data files in <c
 <tr><td><code>save-reopen</code></td><td>apply, <code>app.save</code>, reopen, <code>effect.list</code></td><td>parameters identical (<code>REQ-PRM-003</code>)</td></tr>
 <tr><td><code>export-pes</code></td><td>VectorCraft saves <code>.vectorcraft</code>; <code>stitch export</code> reads it</td><td>our CLI reads the version’s files; PES golden matches</td></tr>
 <tr><td><code>missing-plugin</code></td><td>open a document with our effect records without the plug-in installed</td><td>document opens; records preserved on save</td></tr>
+<tr><td><code>graphic-style</code></td><td>apply an effect, <code>graphicStyle.new</code>, <code>graphicStyle.apply</code> to another object and to a group, <code>app.save</code></td><td><code>stitch export</code> sews the styled object and the group’s paths with the effect’s parameters, in the style’s colour (<code>REQ-VC-006</code>)</td></tr>
+<tr><td><code>compound-satin</code></td><td>2 paths and a rung, <code>object.compoundPath.make</code>, then <code>effect.apply</code> satin</td><td><code>stitch export</code> sews the column with the rung (<code>REQ-VC-007</code>)</td></tr>
 <tr><td><code>limits</code></td><td>largest fixture at each preview level</td><td>completes inside the live-effect budget</td></tr>
 </tbody>
 </table>

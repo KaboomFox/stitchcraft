@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f44d2f26.js";
+            window.path_to_searchindex_js = "../searchindex-f4e6cf6f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-623c1739.js"></script>
+        <script src="../toc-6dce9f90.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -196,7 +196,7 @@
 </div>
 <h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
 <p>ABI v1 is a careful, safe design: sandboxed, import-free, deterministic, portable to the web. This RFC
-proposes seven additive features that let richer plug-ins exist without weakening that sandbox. Each is
+proposes eight additive features that let richer plug-ins exist without weakening that sandbox. Each is
 independent and can land on its own; together they let plug-ins export files, show informative
 previews and present usable parameter dialogs.</p>
 <h2 id="motivation"><a class="header" href="#motivation">Motivation</a></h2>
@@ -212,11 +212,12 @@ previews and present usable parameter dialogs.</p>
 <tr><td>Previews of things that are not the object’s geometry (stitches, toolpaths, cut order)</td><td>live effects can only <em>replace</em> geometry, and must pay JSON serialization for every point</td></tr>
 <tr><td>Heavy but legitimate computation (routing, packing, simulation)</td><td>fixed fuel/time budgets independent of output size</td></tr>
 <tr><td>Plug-ins with document-wide settings (machine profile, plotter pens)</td><td>no document-level storage</td></tr>
+<tr><td>Tools that set up objects for a live effect (a satin column from a line, a test sheet)</td><td>a filter returns geometry and paint without effect records, and is not given a stroke’s join, cap or miter limit</td></tr>
 </tbody>
 </table>
 </div>
 <h2 id="proposals"><a class="header" href="#proposals">Proposals</a></h2>
-<h3 id="p1--exporter-plug-ins"><a class="header" href="#p1--exporter-plug-ins">P1 — Exporter plug-ins</a></h3>
+<h3 id="p1-exporter-plug-ins"><a class="header" href="#p1-exporter-plug-ins">P1: Exporter plug-ins</a></h3>
 <p>A new manifest kind <code>"exporter"</code> with <code>"extensions": ["pes"]</code> and <code>"label": "Brother PES"</code>. On
 <strong>File › Export</strong>, the host calls <code>vc_export(input, len, params, len) → (len &lt;&lt; 32) | ptr</code> with the whole
 document’s exportable objects in paint order (the same object JSON as filters, plus groups, layers,
@@ -224,7 +225,7 @@ visibility and appearance effect records) and receives <code>{"bytes": base64, "
 <code>{"error": "..."}</code>. The host writes the file; the plug-in still has no file-system access.</p>
 <p><em>Host change:</em> make <code>FORMATS</code> (<code>crates/engine/src/cmd/fileio/mod.rs</code>) extensible with plug-in entries
 (write-only), list them in the export dialog and <code>export_extensions()</code>.</p>
-<h3 id="p2--rich-parameter-schemas"><a class="header" href="#p2--rich-parameter-schemas">P2 — Rich parameter schemas</a></h3>
+<h3 id="p2-rich-parameter-schemas"><a class="header" href="#p2-rich-parameter-schemas">P2: Rich parameter schemas</a></h3>
 <p>Optional keys on each parameter, ignored by v1 hosts:</p>
 <pre><code class="language-json">"row_spacing_mm": {
   "type": "number", "min": 0.1, "max": 10, "default": 0.25,
@@ -237,30 +238,40 @@ visibility and appearance effect records) and receives <code>{"bytes": base64, "
 <p>plus types <code>"string"</code> (with <code>maxLength</code>) and <code>"numberList"</code> (with <code>minItems</code>/<code>maxItems</code>), and a manifest
 <code>"maxParams"</code> up to 256 when <code>"groups"</code> are used. <em>Host change:</em> the generated dialog renders labels,
 units, groups as collapsible sections and evaluates <code>visibleWhen</code>.</p>
-<h3 id="p3--display-only-overlays-for-live-effects"><a class="header" href="#p3--display-only-overlays-for-live-effects">P3 — Display-only overlays for live effects</a></h3>
+<h3 id="p3-display-only-overlays-for-live-effects"><a class="header" href="#p3-display-only-overlays-for-live-effects">P3: Display-only overlays for live effects</a></h3>
 <p>A live effect may return <code>"overlay": {"format": "f32-polylines", "data": base64}</code> in addition to (or
 instead of) geometry: a compact binary list of polylines, each with an RGBA colour and a width in
 points. The host draws overlays on the canvas above the object, never exports or hit-tests them, and
 caches them with the effect result. This makes previews cheap (4 bytes per coordinate instead of JSON)
 and keeps the object’s real geometry untouched.</p>
-<h3 id="p4--budget-classes"><a class="header" href="#p4--budget-classes">P4 — Budget classes</a></h3>
+<h3 id="p4-budget-classes"><a class="header" href="#p4-budget-classes">P4: Budget classes</a></h3>
 <p>Manifest <code>"budget": "light" | "heavy"</code>. Light keeps today’s limits. Heavy plug-ins get a larger base
 fuel (for example 1 G instructions) and wall-clock limit, run off the UI thread, and require the user to
 allow them once at install. Fuel per output byte read back (not only per input byte) makes the budget
 track the real cost of generators.</p>
-<h3 id="p5--document-level-plug-in-data"><a class="header" href="#p5--document-level-plug-in-data">P5 — Document-level plug-in data</a></h3>
+<p>In VectorCraft’s own host, a filter making a line 3 mm wide into the 2 rails of a satin column takes
+from 51 million instructions for an S curve 30 mm long to 162 million for a circle 50 mm across. That is
+what Ink/Stitch’s Convert Line to Satin does. A run gets about 52 million today.</p>
+<h3 id="p5-document-level-plug-in-data"><a class="header" href="#p5-document-level-plug-in-data">P5: Document-level plug-in data</a></h3>
 <p><code>Document.plugin_data: Map&lt;plugin id, JSON&gt;</code> (≤ 1 MiB per plug-in), saved in <code>.vectorcraft</code>, passed to
 the plug-in as <code>_context.documentData</code>, writable through a filter’s output <code>"documentData"</code>. Today
 <code>Document.unknown</code> holds similar foreign data for the perspective grid and brushes, so the storage pattern
 already exists.</p>
-<h3 id="p6--read-only-context-for-live-effects"><a class="header" href="#p6--read-only-context-for-live-effects">P6 — Read-only context for live effects</a></h3>
+<h3 id="p6-read-only-context-for-live-effects"><a class="header" href="#p6-read-only-context-for-live-effects">P6: Read-only context for live effects</a></h3>
 <p>Add the object’s <code>fills</code>/<code>strokes</code> and, optionally, siblings in the same group whose names start with a
 declared prefix (<code>"contextPrefixes": ["stitch:"]</code>) to the live-effect input. Embroidery uses this for
 thread colours and start/end markers; other plug-ins for guides and anchors.</p>
-<h3 id="p7--preserve-foreign-svg-attributes"><a class="header" href="#p7--preserve-foreign-svg-attributes">P7 — Preserve foreign SVG attributes</a></h3>
+<h3 id="p7-preserve-foreign-svg-attributes"><a class="header" href="#p7-preserve-foreign-svg-attributes">P7: Preserve foreign SVG attributes</a></h3>
 <p>On SVG import, keep attributes in unknown namespaces per node (<code>Node.foreign: Option&lt;Box&lt;Map&gt;&gt;</code>), and
 write them back on SVG export. This makes VectorCraft a good citizen for files from Inkscape extensions
 and other tools (Ink/Stitch, plotter workflows), independent of any plug-in.</p>
+<h3 id="p8-effects-and-stroke-style-in-filter-objects"><a class="header" href="#p8-effects-and-stroke-style-in-filter-objects">P8: Effects and stroke style in filter objects</a></h3>
+<p>A filter’s input objects include each stroke’s <code>join</code>, <code>cap</code> and <code>miterLimit</code> beside its <code>paint</code> and
+<code>width</code>, and a filter may return <code>"effects": [{id, params, visible}]</code> for an object, which replaces the
+object’s appearance effects as <code>fills</code> and <code>strokes</code> replace its paints. The host checks each record as
+<code>effect.apply</code> does: a known effect id, and parameters its manifest accepts. A tool could then make a line
+into a satin column with its effect, or draw a test sheet whose objects sew as one. A column made from a
+line needs the stroke’s join at its corners.</p>
 <h2 id="security-and-determinism"><a class="header" href="#security-and-determinism">Security and determinism</a></h2>
 <p>None of the proposals adds imports: plug-ins still cannot touch files, the network, clocks or
 randomness. Exporters return bytes to the host; overlays are plain data; heavy budgets are opt-in and
@@ -279,6 +290,7 @@ still bounded. Results remain deterministic functions of their inputs, so cachin
 <tr><td>P5</td><td><code>crates/doc/src/lib.rs</code>, <code>crates/format</code></td><td>format round-trip property test</td></tr>
 <tr><td>P6</td><td><code>crates/plugins/src/objects.rs</code></td><td>ABI tests</td></tr>
 <tr><td>P7</td><td><code>crates/doc/src/node.rs</code>, <code>crates/svg/src/{import,export}.rs</code></td><td>SVG round-trip tests</td></tr>
+<tr><td>P8</td><td><code>crates/plugins/src/objects.rs</code></td><td>ABI tests; an effect record a manifest refuses is refused</td></tr>
 </tbody>
 </table>
 </div>

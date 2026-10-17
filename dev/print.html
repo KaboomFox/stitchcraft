@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-f44d2f26.js";
+            window.path_to_searchindex_js = "searchindex-f4e6cf6f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-623c1739.js"></script>
+        <script src="toc-6dce9f90.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -394,6 +394,8 @@ scripts.</p>
 <li><a href="#check-a-machine-file-before-sewing">Check a machine file before sewing</a> with <code>stitch inspect</code> and <code>stitch preview</code></li>
 <li><a href="#convert-between-machine-formats">Convert between machine formats</a> with <code>stitch convert</code></li>
 <li><a href="#fit-a-design-to-the-hoop">Fit a design to the hoop</a> when it is larger than the hoop or the comfort zone</li>
+<li><a href="#satin-columns-and-presets-in-vectorcraft">Make satin columns and keep presets in VectorCraft</a> with
+VectorCraft’s own commands and Graphic Styles</li>
 <li><a href="#report-a-bug">Report a bug</a> with a bundle that reproduces it (<code>stitch bug-report</code>)</li>
 </ul>
 <p>Planned, each with the milestone that brings its feature:</p>
@@ -561,6 +563,57 @@ zone, use a firmer stabilizer, or scale the design down.
 </code></pre>
 <p>The built-in profiles have no comfort zone yet. A sew-out that shows a hoop’s edges sewing badly would
 give its profile one.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="satin-columns-and-presets-in-vectorcraft"><a class="header" href="#satin-columns-and-presets-in-vectorcraft">Satin columns and presets in VectorCraft</a></h1>
+<p>The StitchCraft plug-ins add their effects to VectorCraft’s Effect › Plug-ins menu, and VectorCraft’s own
+commands do the rest of what a design needs.</p>
+<h2 id="make-a-satin-column-vectorcraft-can-show"><a class="header" href="#make-a-satin-column-vectorcraft-can-show">Make a satin column VectorCraft can show</a></h2>
+<p>A satin column drawn as one path sews as wide as its stroke. VectorCraft gives an effect the path but not
+its stroke, so StitchCraft Satin leaves such a path as it is and says why (<code>SC-I0810</code>). The file still
+sews it. To see its stitches in VectorCraft, draw the column with 2 rails:</p>
+<ol>
+<li>Draw the column’s 2 edges as 2 paths.</li>
+<li>Select both and choose <strong>Object › Compound Path › Make</strong> (Cmd+8).</li>
+<li>With the compound path selected, choose <strong>Effect › Plug-ins › StitchCraft Satin</strong>.</li>
+</ol>
+<p>Apply the effect after joining the rails. VectorCraft 0.10.0 and later keep the appearance of the path at
+the back, and earlier versions that of the path in front, which may not be the one with the effect. From
+0.10.0, VectorCraft may also reverse the front path, and always does for 2 straight rails. The column
+turns it back (<code>reverse_rails</code>, automatic), so the direction the rails were drawn in doesn’t matter.</p>
+<h2 id="add-a-rung"><a class="header" href="#add-a-rung">Add a rung</a></h2>
+<p>Rungs set the angle of the stitches along the column. With the Pen tool, add a line across both rails
+where the stitches should run. Select it with the column, and choose <strong>Object › Compound Path › Make</strong>.
+From VectorCraft 0.10.0 the column, behind the line, keeps its effect. Before 0.10.0 the compound path takes
+the line’s appearance: apply StitchCraft Satin to it again.</p>
+<h2 id="keep-settings-as-a-preset"><a class="header" href="#keep-settings-as-a-preset">Keep settings as a preset</a></h2>
+<p>A graphic style keeps an appearance, StitchCraft’s effects included:</p>
+<ol>
+<li>Select an object whose StitchCraft effect is set as you like it.</li>
+<li>Choose <strong>Window › Graphic Styles › New Graphic Style</strong>.</li>
+<li>Select other objects and click the style in the Graphic Styles panel.</li>
+</ol>
+<p>Each object gets a copy of the effect, with the style’s parameters, and sews with them. A style applied
+to a group or a layer puts its effects on the group, and every path inside it sews with them. The style’s
+fills and strokes go on the group too, and VectorCraft paints them over the group’s contents. Each path
+inside sews in the colour on top, the style’s fill for a fill effect and the style’s stroke for a satin
+column, which follows its width. Where the style has no paint of that kind, or lets the path show through
+it, the path’s own paint of that kind gives the colour, and with none on either, the topmost paint of the
+other kind does. A path without paint under a style without any is invisible and isn’t sewn. To show the
+paths’ own colours over the style’s, drag the Contents row above the style’s fills and strokes in the
+Appearance panel. Keep StitchCraft’s effects at one level, though. A path that has its own StitchCraft
+effect inside such a group, or sits inside 2 such groups, is drawn as one effect run on the stitches of
+the other. It sews as the nearest effect says, and the command line warns about it (<code>SC-W0807</code>).
+Alt-clicking a style adds its effects to the object’s own, and an object with 2 fill effects sews twice.</p>
+<h2 id="turn-a-preview-into-paths"><a class="header" href="#turn-a-preview-into-paths">Turn a preview into paths</a></h2>
+<p><strong>Object › Expand Appearance</strong> turns what an effect shows into ordinary objects, with strokes outlined.
+Those objects are the shapes the preview draws, and they sew differently from the effect. Expand a copy
+for a picture of the stitches, and keep the original to sew.</p>
+<h2 id="not-in-vectorcraft-yet"><a class="header" href="#not-in-vectorcraft-yet">Not in VectorCraft yet</a></h2>
+<ul>
+<li>Making a line into a satin column, as Ink/Stitch’s Convert Line to Satin does, needs more work than
+VectorCraft lets a plug-in do. Draw the 2 rails instead.</li>
+<li>Test sheets come from the command line: <a href="#test-sheets"><code>stitch testsheet</code></a>.</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="report-a-bug"><a class="header" href="#report-a-bug">Report a bug</a></h1>
 <p>When StitchCraft gets a design wrong, a maintainer needs one file to see what you saw: a <strong>bug-report
@@ -1836,7 +1889,9 @@ computes as it draws them (blends, envelopes, meshes, repeats, placed documents 
 objects), a kind of object StitchCraft does not read, clipping and opacity masks, VectorCraft’s own
 effects, a brush’s art, a StitchCraft effect it cannot use, or a group’s or a layer’s own fills and
 strokes. A gradient is sewn in its first colour, and a pattern, or a colour that does not read, in
-black.</p>
+black. An object that StitchCraft effects reach from more than one level, its own and a group’s
+around it, or 2 groups’, sews as the nearest say: VectorCraft runs each on the stitches the one
+before drew, which no machine sews.</p>
 <p>The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
 of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
 makes paths of a symbol, and Object › Expand Appearance of what effects and brushes draw.</p>
@@ -1863,9 +1918,10 @@ shows this message as the plug-in’s last error: the object sews no stitch, it 
 drawn as one path, or its preview level needs more work than VectorCraft lets a live effect do. A
 column drawn as one path is as wide as its stroke, and VectorCraft gives a live effect no stroke.
 When another message says why an object sews no stitch, the effect shows that message instead.</p>
-<p>The message says which. A satin column drawn as one path still sews as wide as its stroke; to see
-its stitches in VectorCraft, draw it with 2 rails. For a preview that needs more work, the hint
-names a cheaper level to set the effect’s <code>preview_level</code> to.</p>
+<p>The message says which. A satin column drawn as one path still sews as wide as its stroke. To see its
+stitches in VectorCraft, draw its 2 rails, join them with Object › Compound Path › Make and apply the
+effect to that. For a preview that needs more work, the hint names a cheaper level to set the effect’s
+<code>preview_level</code> to.</p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the parameter registry (`stitchcraft-engine/src/registry.rs`) and the deviations ledger. Edit the declaration, not this page. -->
 <h1 id="parameters-2"><a class="header" href="#parameters-2">Parameters</a></h1>
 <p>Every setting a design element can carry, by the key a design stores it under. A parameter that Ink/Stitch
@@ -3198,7 +3254,8 @@ Details: <a href="#determinism-1">determinism</a>.</p>
 <ol>
 <li><strong>ABI v1, no upstream change (M6).</strong> Plug-ins <code>dev.stitchcraft.running</code>, <code>.satin</code> and <code>.fill</code> are
 <em>live effects</em>: applying one stores the embroidery parameters on the object and draws a lightweight
-stitch preview. <code>dev.stitchcraft.tools</code> is an <em>object filter</em> (make satin, add rung, bake preview).
+stitch preview. VectorCraft’s own commands make satin columns of 2 paths, add rungs and bake previews,
+and its Graphic Styles keep embroidery settings as presets.
 Machine files come from <code>stitch export design.vectorcraft</code>. (The namespace is one constant, changed
 in one place once the project has a domain.)</li>
 <li><strong>ABI v2, proposed upstream (M9, after 1.0).</strong> Exporter plug-ins, rich parameter schemas (labels, units,
@@ -3870,7 +3927,8 @@ RFC), groups and conditions are emitted as well.</p>
 <p>A preset is a named partial <code>ParamSet</code> (<code>"denim"</code>, <code>"knit, light"</code>) stored as a TOML file in a
 <code>presets</code> directory of the parameters crate. The same code as user input validates it, and a generated
 page documents it. In VectorCraft, users can also save appearance (including embroidery live effects) as
-Graphic Styles.</p>
+Graphic Styles. Applying one copies its effect records into each object, and a design sews them
+(<a href="#tools-vectorcrafts-own-commands">integration</a>, <code>REQ-VC-006</code>).</p>
 <h2 id="versioning-and-migration"><a class="header" href="#versioning-and-migration">Versioning and migration</a></h2>
 <p>The registry has a schema version. A breaking change (renamed key, changed unit) ships a migration
 function <code>vN → vN+1</code> and a conformance case with an old-format input. Unknown keys from newer files are
@@ -4008,7 +4066,7 @@ another.</p>
 <tr><td><code>SC-W0804</code></td><td>Warning</td><td>Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke’s width, join or miter limit that does not read); the usable part is stitched</td><td>M3</td></tr>
 <tr><td><code>SC-I0805</code></td><td>Info</td><td>Object left out, as the file asks (Ink/Stitch’s ignore commands and <code>ignore_object</code> setting)</td><td>M3</td></tr>
 <tr><td><code>SC-E0806</code></td><td>Error</td><td>VectorCraft file could not be read (not a VectorCraft document, or larger than the adapter reads)</td><td>M6</td></tr>
-<tr><td><code>SC-W0807</code></td><td>Warning</td><td>VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft’s own effects, brushes, gradients, patterns)</td><td>M6</td></tr>
+<tr><td><code>SC-W0807</code></td><td>Warning</td><td>VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft’s own effects, brushes, gradients, patterns, a group’s own paints), or StitchCraft effects from more than one level</td><td>M6</td></tr>
 <tr><td><code>SC-W0808</code></td><td>Warning</td><td>VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing)</td><td>M6</td></tr>
 <tr><td><code>SC-I0809</code></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides)</td><td>M6</td></tr>
 <tr><td><code>SC-I0810</code></td><td>Info</td><td>VectorCraft live effect leaves the object as it is (it sews no stitch, it is a satin column drawn as one path, whose width the effect is not given, or its preview level needs more work than VectorCraft lets a live effect do)</td><td>M6</td></tr>
@@ -6111,10 +6169,11 @@ registry a plug-in could add PES to.</li>
 <tr><td><code>&lt;ns&gt;.stroke</code></td><td>live effect</td><td>running, bean, manual (P1); zigzag, ripple (later)</td><td><code>stroke_method</code> choice selects the variant</td></tr>
 <tr><td><code>&lt;ns&gt;.satin</code></td><td>live effect</td><td>satin (P1); E, S, zigzag (P2)</td><td>rails and rungs from the object’s compound path</td></tr>
 <tr><td><code>&lt;ns&gt;.fill</code></td><td>live effect</td><td>tatami (P1); contour, meander, circular (P2)</td><td><code>fill_method</code> choice</td></tr>
-<tr><td><code>&lt;ns&gt;.tools</code></td><td>object filter</td><td>make satin from two paths, add rung, bake preview to paths, generate test sheet</td><td>one undo step each</td></tr>
 </tbody>
 </table>
 </div>
+<p>The tools an object filter was to give are VectorCraft’s own commands, or wait for ABI v2
+(<a href="#tools-vectorcrafts-own-commands">tools</a>).</p>
 <p><code>&lt;ns&gt;</code> is a reverse-DNS namespace defined in one constant (<code>PLUGIN_NAMESPACE</code>) in the VectorCraft adapter,
 which reads the effect records too. The plug-in crate imports it. A live effect’s id ends with its stitch
 family’s (<code>stitchcraft_params::Family::id</code>).
@@ -6166,6 +6225,52 @@ a report; <code>--preview design.png</code> renders what will sew.</li>
 <p>Stitching order is paint order (bottom first). Hidden objects are skipped, as VectorCraft draws nothing
 for them, and locked objects are stitched. Thread colours come from the object’s fill for a fill, and
 from its stroke for a stroke or a satin column, as in Ink/Stitch, mapped to the profile’s palette.</p>
+<h3 id="tools-vectorcrafts-own-commands"><a class="header" href="#tools-vectorcrafts-own-commands">Tools: VectorCraft’s own commands</a></h3>
+<p>The plan had one object filter, <code>&lt;ns&gt;.tools</code>, to make a satin column from 2 paths, add a rung, bake a
+preview to paths and draw a test sheet. VectorCraft’s own commands do the first three, and M6.4 checked
+them in its source, 0.7.0 to 0.12.0. Make Compound Path changed at 0.10.0. Before, the compound path takes
+the appearance of the frontmost path it is made of and turns none round. From 0.10.0, it takes the
+backmost path’s, and reverses each path in front that winds the same way as the backmost one. A
+straight path counts as winding clockwise, so of 2 straight rails the front one is always reversed. So
+the StitchCraft effect is applied after the paths are joined, which works in every version:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Task</th><th>In VectorCraft</th><th>Why it sews</th></tr>
+</thead>
+<tbody>
+<tr><td>Satin column of 2 paths</td><td>Object › Compound Path › Make (<code>object.compoundPath.make</code>), then the satin effect</td><td>The column turns a second rail that runs the other way back (<code>reverse_rails</code>, automatic), as Ink/Stitch does (<code>REQ-VC-007</code>)</td></tr>
+<tr><td>Rung</td><td>Pen tool line across the rails, then Make Compound Path with the column</td><td>Which way the rung runs, and where among the paths it lies, doesn’t change the points it pairs. Before 0.10.0 the compound takes the rung’s appearance, and the effect is applied again</td></tr>
+<tr><td>Baked preview</td><td>Object › Expand Appearance (<code>effect.expandAppearance</code>)</td><td>It runs the live effect and makes objects of what each fill and stroke paints, strokes outlined. Those are the preview’s shapes, which sew differently from the effect. Bake a copy to show, and sew the original</td></tr>
+<tr><td>Presets</td><td>Graphic Styles (<code>graphicStyle.new</code>, <code>graphicStyle.apply</code>)</td><td>Applying a style copies its effects into each object, or into the group it is applied to, whose effects apply to each path inside (<code>REQ-VC-006</code>)</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Convert Line to Satin</strong> (Ink/Stitch’s <code>stroke_to_satin</code>) waits for ABI v2. It would make a column drawn
+as one path into 2 rails and rungs, as the engine makes them when it sews one. A filter is given the
+stroke’s width, which a live effect is not, but not its join. M6.4 measured the conversion inside
+VectorCraft’s host, as a live effect with the same limits as a filter:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Line, 3 mm wide</th><th>Instructions</th></tr>
+</thead>
+<tbody>
+<tr><td>A zigzag of 10 corners</td><td>17 million</td></tr>
+<tr><td>An S curve 30 mm long</td><td>51 million</td></tr>
+<tr><td>A circle 10 mm across</td><td>68 million</td></tr>
+<tr><td>A circle 30 mm across</td><td>72 million</td></tr>
+<tr><td>An S curve 60 mm long</td><td>77 million</td></tr>
+<tr><td>A circle 50 mm across</td><td>162 million</td></tr>
+</tbody>
+</table>
+</div>
+<p>A run gets about 52 million, and almost every curved line would run out. The rails are the line offset as
+GEOS offsets it, and each offset builds the boundary of the whole stroke, once for each rail. A faster
+offset, or the heavy budget of ABI v2’s P4, brings the tool back (roadmap, M10).</p>
+<p><strong>A test sheet</strong> waits for ABI v2 too. A filter’s output holds geometry, paints, opacity and names, and
+never an effect record. The objects it drew would not sew as a test sheet. <code>stitch testsheet</code> makes them,
+and ABI v2’s P8 would let a filter return effects.</p>
 <h3 id="live-effect-previews-within-v1-budgets"><a class="header" href="#live-effect-previews-within-v1-budgets">Live-effect previews within v1 budgets</a></h3>
 <p>A live effect gets 50 million instructions, plus 4,000 for each byte of its input, and 5 seconds. Spike
 M0.6 measured what JSON costs in VectorCraft’s host (<code>wasmi</code> 2.0, in VectorCraft 0.12.0 and on <code>main</code> at
@@ -6273,14 +6378,16 @@ anchor, leaves that end of the segment straight, and a segment without handles i
 <ul>
 <li><strong>Paths and compound paths</strong> are the art. A compound path’s children are one shape, with the compound’s
 appearance and fill rule.</li>
-<li><strong>Groups and layers</strong> pass their children on. Clipping is left for M8, as in the SVG adapter: a
-clipping group’s or layer’s art is stitched whole, with <code>SC-W0807</code>.</li>
+<li><strong>Groups and layers</strong> pass their children on, and their StitchCraft effects with them (below). Clipping
+is left for M8, as in the SVG adapter: a clipping group’s or layer’s art is stitched whole, with
+<code>SC-W0807</code>.</li>
 <li><strong>Hidden objects</strong>, and everything in them, are left out without a word, as VectorCraft draws nothing
 for them. So are objects and paints of opacity 0, paints turned off and strokes of width 0.</li>
 <li><strong>Template layers, layers that don’t print, and guides</strong> are left out with <code>SC-I0809</code>. VectorCraft
 shows them, dimmed or as guides, but prints and exports none of them.</li>
-<li><strong>A Shaper group’s sources</strong>, its first child, are left out: the group shows the shapes it makes of
-them.</li>
+<li><strong>A Shaper group’s sources</strong> are left out. The group shows the shapes it makes of them, and keeps them
+as its first child, transparent. The Layers panel’s Make Clipping Mask (<code>layer.clippingMask.toggle</code>)
+puts a Shaper group’s clipping object before them.</li>
 <li><strong>Text, images and symbols,</strong> and the objects VectorCraft computes as it draws them (blends, envelopes,
 meshes, repeats, placed documents and VectorCraft’s Intertwine objects), are left out with <code>SC-W0807</code>.
 The message names VectorCraft’s command that makes paths of them, such as Type › Create Outlines for
@@ -6294,7 +6401,8 @@ gradient gives its first stop’s colour, with <code>SC-W0807</code> unless ever
 gives black, with <code>SC-W0807</code>. A stroke’s width, in points, and its join, with its miter limit (10 when
 the file omits it, as VectorCraft draws it), shape a satin column drawn as one path. A stroke drawn with
 a brush is stitched along its path, without the brush’s art, with <code>SC-W0807</code>. A group’s or a layer’s own
-fills and strokes, which paint every member, are left out with <code>SC-W0807</code>.</p>
+fills and strokes, which paint every member, are not stitched as shapes of their own. They give
+StitchCraft effects their thread and stroke (below), with <code>SC-W0807</code>.</p>
 <p><strong>Effects.</strong> StitchCraft’s live effects are kept in the object’s appearance as <code>{"id": "plugin.dev.stitchcraft.&lt;family&gt;", "params": {…}, "visible": true}</code>. The family is <code>stroke</code>, <code>satin</code> or
 <code>fill</code> (<code>stitchcraft_params::Family</code>). An object with visible StitchCraft effects is stitched as they
 say, in their order, instead of by its paints. A <code>fill</code> effect fills the object’s shape, a <code>stroke</code>
@@ -6302,12 +6410,34 @@ effect stitches along it and a <code>satin</code> effect makes a satin column of
 what its effects say and nothing else. A fill with an outline takes a <code>fill</code> effect and a <code>stroke</code>
 effect. The record’s parameters are the element’s. A number is written as a decimal, a toggle as <code>true</code>
 or <code>false</code>, a choice as its id and a list as its values with spaces between. What the record leaves out
-takes its default, as in the plug-in’s dialog. The thread is the colour of the first fill VectorCraft
-draws for a fill, and of the first stroke it draws for the others, falling back on the other kind. A
-<code>stroke</code> or <code>satin</code> effect follows the first visible stroke’s width and join, or a width of 0 when there
-is none, and a satin column too narrow to stitch across is sewn as a stroke, with <code>SC-W0212</code>.
-VectorCraft’s own effects change what an object draws, and are left out with <code>SC-W0807</code> (Object › Expand
-Appearance makes paths of what they draw).</p>
+takes its default, as in the plug-in’s dialog. The thread is the colour of the topmost fill VectorCraft
+draws for a fill, and of the topmost stroke for the others, falling back on the other kind. An opaque
+paint comes before one of opacity under 1, which lets what is under it show. A <code>stroke</code> or <code>satin</code> effect
+follows the width and join of that stroke, or a width of 0 when none is drawn. VectorCraft writes a
+stroke of paint none for an object without one, which it doesn’t draw. A satin column too narrow to
+stitch across is sewn as a stroke, with <code>SC-W0212</code>. VectorCraft’s own effects change what an object
+draws, and are left out with <code>SC-W0807</code> (Object › Expand Appearance makes paths of what they draw).</p>
+<p><strong>A group’s effects</strong> (<code>REQ-VC-006</code>). VectorCraft runs a group’s or a layer’s geometry effects on each
+path and compound path inside it, however deep, with the group’s bounds as their frame (<code>reshape_leaves</code>
+in <code>crates/effects</code>, 0.7.0 to 0.12.0), and paints what they return with the path’s own paints. The
+group’s own paints paint the shapes inside it as its effects and those of the groups around reshaped them
+(<code>evaluate_container</code>). They go over its contents. The Contents row of its Appearance panel
+(<code>contents_index</code>) is last in the list by default, and the paints listed under it go under the contents.
+StitchCraft’s live effects are geometry effects, and applying a graphic style to a group puts its effects
+and paints on the group. So each path inside sews as the group’s StitchCraft effects say, as the preview
+shows it. Its thread and stroke come from the paints over it, the topmost first, as for an object’s own
+paints. The groups’ paints over their contents come first, the outermost first, then the object’s own,
+then the groups’ paints under their contents, the innermost first. The same order applies to an object’s
+own effects, which VectorCraft paints with its own paints, under the groups’ paints over the object’s
+shape. A path that neither its own paints nor a group’s paint is invisible, and is left out without a
+word.</p>
+<p>A clip group’s first object is its clipping object. VectorCraft paints a path, a compound path or text
+there with its own paints alone (<code>clip_paint</code> in <code>crates/doc</code>): its fills under the clipped art and its
+strokes over it. A group’s effects run on such a path too. After Make Clipping Mask it has no paint, and
+sews nothing. VectorCraft draws nothing of a group or an image there, which an imported file can have,
+and neither is sewn. Where StitchCraft effects meet from more than one level, a path’s own and a group’s,
+or 2 groups’, VectorCraft draws one effect run on the stitches another drew, which a machine cannot sew.
+The path sews as the nearest effects say, and <code>SC-W0807</code> names it.</p>
 <p><strong>Ids.</strong> An element is <code>vc:&lt;object id&gt;:&lt;what&gt;</code>: <code>fill</code> or <code>stroke</code> for a paint, with its rank among the
 object’s fills or strokes from the second on (<code>fill.2</code>), and the family for an effect. VectorCraft keeps
 an object’s id when it saves, so a report and a preview name the same object. A repeated id gets <code>~2</code>,
@@ -6336,6 +6466,9 @@ proportional fuel.</li>
 palettes.</li>
 <li><strong>Read-only context for live effects:</strong> the object’s paint and named sibling markers.</li>
 <li><strong>SVG foreign-attribute preservation</strong> per node, written back on export.</li>
+<li><strong>Effects and stroke style in filter objects.</strong> A filter sees a stroke’s join, cap and miter limit and
+may return an object’s effect records. A tool could then make a line into a satin column with its
+effect, or draw a test sheet that sews.</li>
 </ol>
 <h2 id="6-phase-3-an-in-tree-crate-optional"><a class="header" href="#6-phase-3-an-in-tree-crate-optional">6. Phase 3: an in-tree crate (optional)</a></h2>
 <p>If ArtCraft wants embroidery natively — or in a fork — a <code>vectorcraft-embroidery</code> crate at VectorCraft’s
@@ -6364,7 +6497,7 @@ See <a href="#adr-0009-adopt-vectorcrafts-conventions-improve-the-ones-that-drif
 </div>
 <h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
 <p>ABI v1 is a careful, safe design: sandboxed, import-free, deterministic, portable to the web. This RFC
-proposes seven additive features that let richer plug-ins exist without weakening that sandbox. Each is
+proposes eight additive features that let richer plug-ins exist without weakening that sandbox. Each is
 independent and can land on its own; together they let plug-ins export files, show informative
 previews and present usable parameter dialogs.</p>
 <h2 id="motivation"><a class="header" href="#motivation">Motivation</a></h2>
@@ -6380,11 +6513,12 @@ previews and present usable parameter dialogs.</p>
 <tr><td>Previews of things that are not the object’s geometry (stitches, toolpaths, cut order)</td><td>live effects can only <em>replace</em> geometry, and must pay JSON serialization for every point</td></tr>
 <tr><td>Heavy but legitimate computation (routing, packing, simulation)</td><td>fixed fuel/time budgets independent of output size</td></tr>
 <tr><td>Plug-ins with document-wide settings (machine profile, plotter pens)</td><td>no document-level storage</td></tr>
+<tr><td>Tools that set up objects for a live effect (a satin column from a line, a test sheet)</td><td>a filter returns geometry and paint without effect records, and is not given a stroke’s join, cap or miter limit</td></tr>
 </tbody>
 </table>
 </div>
 <h2 id="proposals"><a class="header" href="#proposals">Proposals</a></h2>
-<h3 id="p1--exporter-plug-ins"><a class="header" href="#p1--exporter-plug-ins">P1 — Exporter plug-ins</a></h3>
+<h3 id="p1-exporter-plug-ins"><a class="header" href="#p1-exporter-plug-ins">P1: Exporter plug-ins</a></h3>
 <p>A new manifest kind <code>"exporter"</code> with <code>"extensions": ["pes"]</code> and <code>"label": "Brother PES"</code>. On
 <strong>File › Export</strong>, the host calls <code>vc_export(input, len, params, len) → (len &lt;&lt; 32) | ptr</code> with the whole
 document’s exportable objects in paint order (the same object JSON as filters, plus groups, layers,
@@ -6392,7 +6526,7 @@ visibility and appearance effect records) and receives <code>{"bytes": base64, "
 <code>{"error": "..."}</code>. The host writes the file; the plug-in still has no file-system access.</p>
 <p><em>Host change:</em> make <code>FORMATS</code> (<code>crates/engine/src/cmd/fileio/mod.rs</code>) extensible with plug-in entries
 (write-only), list them in the export dialog and <code>export_extensions()</code>.</p>
-<h3 id="p2--rich-parameter-schemas"><a class="header" href="#p2--rich-parameter-schemas">P2 — Rich parameter schemas</a></h3>
+<h3 id="p2-rich-parameter-schemas"><a class="header" href="#p2-rich-parameter-schemas">P2: Rich parameter schemas</a></h3>
 <p>Optional keys on each parameter, ignored by v1 hosts:</p>
 <pre><code class="language-json">"row_spacing_mm": {
   "type": "number", "min": 0.1, "max": 10, "default": 0.25,
@@ -6405,30 +6539,40 @@ visibility and appearance effect records) and receives <code>{"bytes": base64, "
 <p>plus types <code>"string"</code> (with <code>maxLength</code>) and <code>"numberList"</code> (with <code>minItems</code>/<code>maxItems</code>), and a manifest
 <code>"maxParams"</code> up to 256 when <code>"groups"</code> are used. <em>Host change:</em> the generated dialog renders labels,
 units, groups as collapsible sections and evaluates <code>visibleWhen</code>.</p>
-<h3 id="p3--display-only-overlays-for-live-effects"><a class="header" href="#p3--display-only-overlays-for-live-effects">P3 — Display-only overlays for live effects</a></h3>
+<h3 id="p3-display-only-overlays-for-live-effects"><a class="header" href="#p3-display-only-overlays-for-live-effects">P3: Display-only overlays for live effects</a></h3>
 <p>A live effect may return <code>"overlay": {"format": "f32-polylines", "data": base64}</code> in addition to (or
 instead of) geometry: a compact binary list of polylines, each with an RGBA colour and a width in
 points. The host draws overlays on the canvas above the object, never exports or hit-tests them, and
 caches them with the effect result. This makes previews cheap (4 bytes per coordinate instead of JSON)
 and keeps the object’s real geometry untouched.</p>
-<h3 id="p4--budget-classes"><a class="header" href="#p4--budget-classes">P4 — Budget classes</a></h3>
+<h3 id="p4-budget-classes"><a class="header" href="#p4-budget-classes">P4: Budget classes</a></h3>
 <p>Manifest <code>"budget": "light" | "heavy"</code>. Light keeps today’s limits. Heavy plug-ins get a larger base
 fuel (for example 1 G instructions) and wall-clock limit, run off the UI thread, and require the user to
 allow them once at install. Fuel per output byte read back (not only per input byte) makes the budget
 track the real cost of generators.</p>
-<h3 id="p5--document-level-plug-in-data"><a class="header" href="#p5--document-level-plug-in-data">P5 — Document-level plug-in data</a></h3>
+<p>In VectorCraft’s own host, a filter making a line 3 mm wide into the 2 rails of a satin column takes
+from 51 million instructions for an S curve 30 mm long to 162 million for a circle 50 mm across. That is
+what Ink/Stitch’s Convert Line to Satin does. A run gets about 52 million today.</p>
+<h3 id="p5-document-level-plug-in-data"><a class="header" href="#p5-document-level-plug-in-data">P5: Document-level plug-in data</a></h3>
 <p><code>Document.plugin_data: Map&lt;plugin id, JSON&gt;</code> (≤ 1 MiB per plug-in), saved in <code>.vectorcraft</code>, passed to
 the plug-in as <code>_context.documentData</code>, writable through a filter’s output <code>"documentData"</code>. Today
 <code>Document.unknown</code> holds similar foreign data for the perspective grid and brushes, so the storage pattern
 already exists.</p>
-<h3 id="p6--read-only-context-for-live-effects"><a class="header" href="#p6--read-only-context-for-live-effects">P6 — Read-only context for live effects</a></h3>
+<h3 id="p6-read-only-context-for-live-effects"><a class="header" href="#p6-read-only-context-for-live-effects">P6: Read-only context for live effects</a></h3>
 <p>Add the object’s <code>fills</code>/<code>strokes</code> and, optionally, siblings in the same group whose names start with a
 declared prefix (<code>"contextPrefixes": ["stitch:"]</code>) to the live-effect input. Embroidery uses this for
 thread colours and start/end markers; other plug-ins for guides and anchors.</p>
-<h3 id="p7--preserve-foreign-svg-attributes"><a class="header" href="#p7--preserve-foreign-svg-attributes">P7 — Preserve foreign SVG attributes</a></h3>
+<h3 id="p7-preserve-foreign-svg-attributes"><a class="header" href="#p7-preserve-foreign-svg-attributes">P7: Preserve foreign SVG attributes</a></h3>
 <p>On SVG import, keep attributes in unknown namespaces per node (<code>Node.foreign: Option&lt;Box&lt;Map&gt;&gt;</code>), and
 write them back on SVG export. This makes VectorCraft a good citizen for files from Inkscape extensions
 and other tools (Ink/Stitch, plotter workflows), independent of any plug-in.</p>
+<h3 id="p8-effects-and-stroke-style-in-filter-objects"><a class="header" href="#p8-effects-and-stroke-style-in-filter-objects">P8: Effects and stroke style in filter objects</a></h3>
+<p>A filter’s input objects include each stroke’s <code>join</code>, <code>cap</code> and <code>miterLimit</code> beside its <code>paint</code> and
+<code>width</code>, and a filter may return <code>"effects": [{id, params, visible}]</code> for an object, which replaces the
+object’s appearance effects as <code>fills</code> and <code>strokes</code> replace its paints. The host checks each record as
+<code>effect.apply</code> does: a known effect id, and parameters its manifest accepts. A tool could then make a line
+into a satin column with its effect, or draw a test sheet whose objects sew as one. A column made from a
+line needs the stroke’s join at its corners.</p>
 <h2 id="security-and-determinism"><a class="header" href="#security-and-determinism">Security and determinism</a></h2>
 <p>None of the proposals adds imports: plug-ins still cannot touch files, the network, clocks or
 randomness. Exporters return bytes to the host; overlays are plain data; heavy budgets are opt-in and
@@ -6447,6 +6591,7 @@ still bounded. Results remain deterministic functions of their inputs, so cachin
 <tr><td>P5</td><td><code>crates/doc/src/lib.rs</code>, <code>crates/format</code></td><td>format round-trip property test</td></tr>
 <tr><td>P6</td><td><code>crates/plugins/src/objects.rs</code></td><td>ABI tests</td></tr>
 <tr><td>P7</td><td><code>crates/doc/src/node.rs</code>, <code>crates/svg/src/{import,export}.rs</code></td><td>SVG round-trip tests</td></tr>
+<tr><td>P8</td><td><code>crates/plugins/src/objects.rs</code></td><td>ABI tests; an effect record a manifest refuses is refused</td></tr>
 </tbody>
 </table>
 </div>
@@ -6514,6 +6659,8 @@ with a cached target directory for branch tracks. Scenarios are data files in <c
 <tr><td><code>save-reopen</code></td><td>apply, <code>app.save</code>, reopen, <code>effect.list</code></td><td>parameters identical (<code>REQ-PRM-003</code>)</td></tr>
 <tr><td><code>export-pes</code></td><td>VectorCraft saves <code>.vectorcraft</code>; <code>stitch export</code> reads it</td><td>our CLI reads the version’s files; PES golden matches</td></tr>
 <tr><td><code>missing-plugin</code></td><td>open a document with our effect records without the plug-in installed</td><td>document opens; records preserved on save</td></tr>
+<tr><td><code>graphic-style</code></td><td>apply an effect, <code>graphicStyle.new</code>, <code>graphicStyle.apply</code> to another object and to a group, <code>app.save</code></td><td><code>stitch export</code> sews the styled object and the group’s paths with the effect’s parameters, in the style’s colour (<code>REQ-VC-006</code>)</td></tr>
+<tr><td><code>compound-satin</code></td><td>2 paths and a rung, <code>object.compoundPath.make</code>, then <code>effect.apply</code> satin</td><td><code>stitch export</code> sews the column with the rung (<code>REQ-VC-007</code>)</td></tr>
 <tr><td><code>limits</code></td><td>largest fixture at each preview level</td><td>completes inside the live-effect budget</td></tr>
 </tbody>
 </table>
@@ -7586,6 +7733,9 @@ and produce machine files with <code>stitch export file.vectorcraft</code>. No V
 <li><strong>Phase 2:</strong> propose generic ABI v2 features upstream (<a href="#rfc-vectorcraft-plug-in-abi-v2">RFC</a>).</li>
 <li><strong>Phase 3 (optional):</strong> an in-tree VectorCraft crate as one more adapter.</li>
 </ol>
+<p><strong>Amended at M6.4:</strong> phase 1 drops the tools filter. VectorCraft’s own commands make a satin column of 2
+paths, add rungs and bake previews, and making a line into a column needs more instructions than ABI v1
+gives a filter (<a href="#tools-vectorcrafts-own-commands">tools</a>).</p>
 <h2 id="consequences-1"><a class="header" href="#consequences-1">Consequences</a></h2>
 <ul>
 <li>Useful on the machine before any upstream discussion.</li>
@@ -8233,7 +8383,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M6.1 ✅</td><td><code>stitchcraft-vectorcraft</code>: read <code>.vectorcraft</code> files of formats 1 to 4, plain or compressed: layers, groups, paths and compound paths, paints as threads, and StitchCraft’s effect records, which say how an object sews. VectorCraft keeps paths in document coordinates, with no transforms to apply. What isn’t stitched is named (<code>SC-W0807</code>, <code>SC-W0808</code>, <code>SC-I0809</code>). Caps: 64 MiB of JSON and the JSON reader’s depth</td><td><code>REQ-VC-001</code>, <code>REQ-VC-004</code>, <code>REQ-VC-005</code>; fuzzed (<code>read_vectorcraft</code>)</td></tr>
 <tr><td>M6.2 ✅</td><td>The plug-in crate, with manifests generated per family and the ABI shim (<code>abi.rs</code>, whose <code>unsafe</code> is audited). One module per family, whose live effect shows the object’s stitches, or says why it shows none (<code>SC-I0810</code>)</td><td><code>REQ-VC-002</code> (manifests valid, ≤ 64 params), and the module’s size with the engine recorded (<a href="#adr-0005-geometry-stack">ADR-0005</a>)</td></tr>
 <tr><td>M6.3 ✅</td><td>Live-effect previews with budget-aware levels: exact, a fill’s rows, and the outline, picked by <code>preview_level</code> or by what the budget affords, the engine’s work priced in instructions measured in VectorCraft’s host</td><td><code>REQ-VC-003</code> per level, within 5 s / fuel</td></tr>
-<tr><td>M6.4</td><td>Tools filter: make satin, add rung, bake preview, test sheet; Graphic Styles as presets verified</td><td>cases per tool</td></tr>
+<tr><td>M6.4 ✅</td><td>Tools as VectorCraft’s own commands, checked in its source. Make Compound Path joins a satin column’s 2 paths and adds rungs. Expand Appearance bakes a preview, and Graphic Styles are presets. A group’s StitchCraft effects sew the paths inside it, as VectorCraft draws them. The tools filter is left for later: making a line into a satin column took 51 to 162 million instructions in VectorCraft’s host against about 52 million, and a filter cannot give the objects it draws effects</td><td><code>REQ-VC-006</code>, <code>REQ-VC-007</code></td></tr>
 <tr><td>M6.5</td><td><code>stitch export design.vectorcraft</code>; marker conventions (<code>stitch:start</code>, <code>stitch:end</code>, <code>stitch:ignore</code>)</td><td>end-to-end cases</td></tr>
 <tr><td>M6.6</td><td>Compatibility gate complete: Level A + B, all four tracks, bot PR and issues, generated table</td><td>first scheduled run green</td></tr>
 <tr><td>M6.7</td><td>UI screenshots pipeline on M0.8’s window probe (<code>cargo xtask compat window</code>), each picture cropped to its menu or dialog; tutorial “A patch in VectorCraft”; xa11y drives VectorCraft to each screen and checks the plug-in’s controls</td><td><code>shots-ui</code> job green</td></tr>
@@ -8273,7 +8423,9 @@ commit by <code>cargo xtask corpus</code> and never committed, using only fonts 
 CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).</p>
 <h2 id="m10--more-stitch-types-ii"><a class="header" href="#m10--more-stitch-types-ii">M10 — More stitch types II</a></h2>
 <p>Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch, legacy fill; auto-run and auto-satin
-routing tools; per-layer ordering (underlay now, top later).</p>
+routing tools; per-layer ordering (underlay now, top later). VectorCraft’s tools filter with Convert Line to
+Satin, once a column’s centre line converts within ABI v1’s budget, or ABI v2 gives heavy plug-ins more
+(<a href="#tools-vectorcrafts-own-commands">tools</a>).</p>
 <h2 id="m11--formats-ii"><a class="header" href="#m11--formats-ii">M11 — Formats II</a></h2>
 <p>EXP, JEF, VP3, XXX, U01 writers and readers with goldens and oracle checks; thread catalogues
 (Madeira, Isacord, Robison-Anton, …) with sourced tables; PES v6 thread lists if not done in M1.</p>
@@ -8362,7 +8514,7 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td><strong>TS-09</strong> Fill underlay &amp; travel</td><td>A rectangle 50 × 30 mm with a square hole and a round hole, and a bar 6 mm to its right, all one fill, sewn 3 times (66 × 114 mm). The top copy has no underlay. The others have the default underlay, and the bottom one 2 gap-filling rows too. Each copy is trimmed after</td><td>Travel hidden? Does the fill hold at both ends of the jump to the bar? Holes clean? A gap where the rows round a hole meet?</td><td>MC-4</td></tr>
 <tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
 <tr><td><strong>TS-11</strong> New stitch types</td><td>Samples of the milestone’s new types</td><td>Per type, as listed on its expected-result sheet</td><td>MC-6</td></tr>
-<tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean?</td><td>MC-5, MC-7</td></tr>
+<tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour?</td><td>MC-5, MC-7</td></tr>
 </tbody>
 </table>
 </div>

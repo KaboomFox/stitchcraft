@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f44d2f26.js";
+            window.path_to_searchindex_js = "../searchindex-f4e6cf6f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-623c1739.js"></script>
+        <script src="../toc-6dce9f90.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -465,7 +465,8 @@ Details: <a href="determinism.html">determinism</a>.</p>
 <ol>
 <li><strong>ABI v1, no upstream change (M6).</strong> Plug-ins <code>dev.stitchcraft.running</code>, <code>.satin</code> and <code>.fill</code> are
 <em>live effects</em>: applying one stores the embroidery parameters on the object and draws a lightweight
-stitch preview. <code>dev.stitchcraft.tools</code> is an <em>object filter</em> (make satin, add rung, bake preview).
+stitch preview. VectorCraft’s own commands make satin columns of 2 paths, add rungs and bake previews,
+and its Graphic Styles keep embroidery settings as presets.
 Machine files come from <code>stitch export design.vectorcraft</code>. (The namespace is one constant, changed
 in one place once the project has a domain.)</li>
 <li><strong>ABI v2, proposed upstream (M9, after 1.0).</strong> Exporter plug-ins, rich parameter schemas (labels, units,

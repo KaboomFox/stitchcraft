@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-f44d2f26.js";
+            window.path_to_searchindex_js = "../../searchindex-f4e6cf6f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-623c1739.js"></script>
+        <script src="../../toc-6dce9f90.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -675,7 +675,9 @@ computes as it draws them (blends, envelopes, meshes, repeats, placed documents 
 objects), a kind of object StitchCraft does not read, clipping and opacity masks, VectorCraft’s own
 effects, a brush’s art, a StitchCraft effect it cannot use, or a group’s or a layer’s own fills and
 strokes. A gradient is sewn in its first colour, and a pattern, or a colour that does not read, in
-black.</p>
+black. An object that StitchCraft effects reach from more than one level, its own and a group’s
+around it, or 2 groups’, sews as the nearest say: VectorCraft runs each on the stitches the one
+before drew, which no machine sews.</p>
 <p>The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
 of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
 makes paths of a symbol, and Object › Expand Appearance of what effects and brushes draw.</p>
@@ -702,9 +704,10 @@ shows this message as the plug-in’s last error: the object sews no stitch, it 
 drawn as one path, or its preview level needs more work than VectorCraft lets a live effect do. A
 column drawn as one path is as wide as its stroke, and VectorCraft gives a live effect no stroke.
 When another message says why an object sews no stitch, the effect shows that message instead.</p>
-<p>The message says which. A satin column drawn as one path still sews as wide as its stroke; to see
-its stitches in VectorCraft, draw it with 2 rails. For a preview that needs more work, the hint
-names a cheaper level to set the effect’s <code>preview_level</code> to.</p>
+<p>The message says which. A satin column drawn as one path still sews as wide as its stroke. To see its
+stitches in VectorCraft, draw its 2 rails, join them with Object › Compound Path › Make and apply the
+effect to that. For a preview that needs more work, the hint names a cheaper level to set the effect’s
+<code>preview_level</code> to.</p>
 
                     </main>
 

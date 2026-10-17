@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f44d2f26.js";
+            window.path_to_searchindex_js = "../searchindex-f4e6cf6f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-623c1739.js"></script>
+        <script src="../toc-6dce9f90.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -394,7 +394,8 @@ RFC), groups and conditions are emitted as well.</p>
 <p>A preset is a named partial <code>ParamSet</code> (<code>"denim"</code>, <code>"knit, light"</code>) stored as a TOML file in a
 <code>presets</code> directory of the parameters crate. The same code as user input validates it, and a generated
 page documents it. In VectorCraft, users can also save appearance (including embroidery live effects) as
-Graphic Styles.</p>
+Graphic Styles. Applying one copies its effect records into each object, and a design sews them
+(<a href="vectorcraft-integration.html#tools-vectorcrafts-own-commands">integration</a>, <code>REQ-VC-006</code>).</p>
 <h2 id="versioning-and-migration"><a class="header" href="#versioning-and-migration">Versioning and migration</a></h2>
 <p>The registry has a schema version. A breaking change (renamed key, changed unit) ships a migration
 function <code>vN → vN+1</code> and a conformance case with an old-format input. Unknown keys from newer files are
