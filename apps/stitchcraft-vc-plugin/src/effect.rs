@@ -105,7 +105,8 @@ mod tests {
         assert_eq!(
             error(&run(Family::Satin, &square(), &[])),
             "info SC-I0810: This satin column is drawn as one path, so it is as wide as its stroke, which VectorCraft does not give a live \
-             effect: the effect leaves it as it is. To see its stitches in VectorCraft, draw it with 2 rails."
+             effect: the effect leaves it as it is. To see its stitches in VectorCraft, draw its 2 rails and join them with Object › \
+             Compound Path › Make."
         );
     }
 
