@@ -17,6 +17,12 @@ stitchcraft-vc-plugin = 22
 # changes (`cargo xtask mutants --changed`); any other mutant there that no test notices fails it.
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/testsheets/ts06.rs"
+mutant = "replace < with <= in build"
+line = "let from_left = before.is_none_or(|before| before < place);"
+why = "each column is sewn once, so the place of the column before is never this column's place"
+
+[[equivalent]]
 file = "crates/stitchcraft-svg/src/path.rs"
 mutant = "replace < with <= in arc"
 line = "if large_arc && turn < FRAC_PI_2 {"
