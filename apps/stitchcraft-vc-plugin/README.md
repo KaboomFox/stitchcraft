@@ -3,9 +3,10 @@
 StitchCraft's plug-ins for VectorCraft, built as WebAssembly modules for VectorCraft's sandboxed plug-in
 ABI v1 (no imports; JSON in linear memory).
 
-**Status:** M0 contains the *hello* live effect for spike M0.6: it returns the object's geometry unchanged,
-proving the build and the ABI contract against VectorCraft's real host (`compat/vc-contract`). The running,
-satin, fill and tools plug-ins arrive in M6.
+**Status:** M0 contains the *hello* live effect for spike M0.6, which returns the object's geometry
+unchanged. It proves the build and the ABI contract against VectorCraft's real host (`compat/vc-contract`),
+and measures what the JSON it reads and writes costs there (`docs/src/design/vectorcraft-integration.md`).
+The running, satin, fill and tools plug-ins arrive in M6.
 
 ## Build
 
