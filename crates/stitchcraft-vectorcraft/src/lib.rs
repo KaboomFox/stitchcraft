@@ -39,10 +39,31 @@ mod writer;
 pub use container::{MAX_BYTES, read_part};
 pub use document::{VectorCraft, read};
 pub use effect::{Effect, RIBBON_MM, effect_error, effect_lines, effect_output, effect_ribbons, read_effect};
+pub use values::text as param_text;
 
 /// The namespace of StitchCraft's VectorCraft plug-ins. A live effect's id is `plugin.`, this, a dot and
 /// its stitch family's id (`plugin.dev.stitchcraft.fill`), which is how a document records the effect.
 pub const PLUGIN_NAMESPACE: &str = "dev.stitchcraft";
+
+/// What VectorCraft puts before an installed plug-in's id to name its live effect (`effect.list` in its
+/// engine's `cmd/effectcmd.rs`).
+const EFFECT: &str = "plugin.";
+
+/// The id of the plug-in `name`, *hello* or a stitch family's module: `dev.stitchcraft.fill`.
+pub fn plugin_id(name: &str) -> String {
+    format!("{PLUGIN_NAMESPACE}.{name}")
+}
+
+/// The id of the plug-in `name`'s live effect, by which a document records it: `plugin.dev.stitchcraft.fill`.
+pub fn effect_id(name: &str) -> String {
+    format!("{EFFECT}{}", plugin_id(name))
+}
+
+/// The plug-in name in the live effect id `id`, a stitch family's id or another from a newer version; `None`
+/// when the effect isn't StitchCraft's.
+pub fn effect_name(id: &str) -> Option<&str> {
+    id.strip_prefix(EFFECT)?.strip_prefix(PLUGIN_NAMESPACE)?.strip_prefix('.')
+}
 
 /// The parameter of StitchCraft's live effects that picks what their previews show. It is the plug-in's,
 /// not the stitches': a record keeps it, the reader leaves it out of an element's settings, and a live
@@ -58,3 +79,23 @@ pub const FORMAT: u64 = 4;
 /// `vctemplate`, a template, which it saves in the same format (its format table, `crates/engine/src/cmd/
 /// fileio`).
 pub const EXTENSIONS: &[&str] = &["vectorcraft", "drawcraft", "vctemplate"];
+
+#[cfg(test)]
+mod tests {
+    use stitchcraft_params::Family;
+
+    use super::*;
+
+    #[test]
+    fn an_effect_s_id_names_its_plug_in() {
+        assert_eq!(plugin_id("hello"), "dev.stitchcraft.hello");
+        assert_eq!(effect_id("fill"), "plugin.dev.stitchcraft.fill");
+        for family in Family::ALL {
+            assert_eq!(effect_name(&effect_id(family.id())), Some(family.id()));
+        }
+        // Another plug-in's effect, one of VectorCraft's own, and a plug-in's id that isn't an effect's.
+        for other in ["plugin.dev.stitchcraftx.fill", "plugin.dev.stitchcraft", "stylize.dropShadow", "dev.stitchcraft.fill"] {
+            assert_eq!(effect_name(other), None, "{other}");
+        }
+    }
+}

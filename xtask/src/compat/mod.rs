@@ -14,6 +14,8 @@
 //! - `report`: what a scheduled run does about the results: an issue for each failing track, and the
 //!   adoption of a new release that passes, which writes its pins and its row in `compat/supported.toml`
 //!   (`report.rs`). The supported-versions page is generated from that record.
+//! - `issue <json>`: files one of the issues `report` decides with GitHub's `gh`, on the open issue with its
+//!   title when there is one.
 //! - `join [--nested] <vectorcraft checkout>`: makes this repository, copied into a VectorCraft checkout
 //!   as a folder, part of VectorCraft's build (`join.rs`; ADR-0011).
 //! - `window [--app <file>]`: runs `compat/vc-window`'s tests against VectorCraft's window, the pinned
@@ -32,7 +34,6 @@ use stitchcraft_params::Family;
 use crate::{util, wasm};
 use report::{Level, TrackResult};
 
-const REPOSITORY: &str = "https://github.com/storytold/vectorcraft";
 pub(crate) const PINS: &str = "compat/vectorcraft.toml";
 pub(crate) const CONTRACT: &str = "compat/vc-contract";
 
@@ -132,13 +133,14 @@ impl Remote {
 }
 
 pub fn discover(as_json: bool) -> Result<(), String> {
+    let pins = load_pins()?;
+    let repository = repository(&pins)?;
     let output =
-        std::process::Command::new("git").args(["ls-remote", "--tags", "--heads", REPOSITORY]).output().map_err(|e| format!("git ls-remote: {e}"))?;
+        std::process::Command::new("git").args(["ls-remote", "--tags", "--heads", repository]).output().map_err(|e| format!("git ls-remote: {e}"))?;
     if !output.status.success() {
-        return Err(format!("git ls-remote {REPOSITORY} failed: {}", String::from_utf8_lossy(&output.stderr)));
+        return Err(format!("git ls-remote {repository} failed: {}", String::from_utf8_lossy(&output.stderr)));
     }
     let remote = parse_ls_remote(&String::from_utf8_lossy(&output.stdout));
-    let pins = load_pins()?;
     let pinned = |track: &str| pinned_tag(&pins, track);
     let stable = remote.latest(false).map(|(t, _)| t.clone());
     let pre = remote.latest(true).map(|(t, _)| t.clone());
@@ -156,7 +158,7 @@ pub fn discover(as_json: bool) -> Result<(), String> {
     if as_json {
         println!("{report}");
     } else {
-        println!("VectorCraft ({REPOSITORY})");
+        println!("VectorCraft ({repository})");
         println!("  stable          {}", stable.as_deref().unwrap_or("none"));
         println!("  pre-release     {}", pre.as_deref().unwrap_or("none newer than stable"));
         println!("  release branch  {}", remote.release.as_deref().unwrap_or("none"));
@@ -169,6 +171,12 @@ pub fn discover(as_json: bool) -> Result<(), String> {
 /// The pins file.
 pub(crate) fn load_pins() -> Result<toml::Table, String> {
     toml::from_str(&util::read(&util::root().join(PINS))?).map_err(|e| format!("{PINS}: {e}"))
+}
+
+/// VectorCraft's repository, which `pins` names: where discovery looks, releases come from, and changes are
+/// compared.
+pub(crate) fn repository(pins: &toml::Table) -> Result<&str, String> {
+    pins.get("repository").and_then(toml::Value::as_str).ok_or(format!("{PINS}: no `repository`"))
 }
 
 /// The tag pinned for `track` (empty when the track pins none).

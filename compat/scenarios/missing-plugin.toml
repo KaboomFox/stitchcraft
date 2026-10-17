@@ -10,6 +10,7 @@ steps = [
   { cmd = "paint.setFill", params = { color = "#0033b3" } },
   { apply = "fill" },
   { export = "with.vectorcraft" },
+  { export = "with.png" },
 ]
 
 [[run]]
