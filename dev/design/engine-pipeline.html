@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f4e6cf6f.js";
+            window.path_to_searchindex_js = "../searchindex-ffb161fe.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-6dce9f90.js"></script>
+        <script src="../toc-8df736a7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -349,10 +349,10 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 <tr><th>Command</th><th>Effect</th><th>From</th></tr>
 </thead>
 <tbody>
-<tr><td>Start / end point</td><td>Entry/exit hints for the generator (<code>REQ-GEN-001</code>)</td><td>M8</td></tr>
+<tr><td>Start / end point</td><td>Entry/exit hints for the generator (<code>REQ-GEN-001</code>). The VectorCraft adapter reads them from markers named <code>stitch:start</code> and <code>stitch:end</code>, which it names until then</td><td>M8</td></tr>
 <tr><td>Target point</td><td>Centre for circular fills and ripple targets</td><td>M7, M10</td></tr>
 <tr><td>Trim after, stop after</td><td><code>trim_after</code> and <code>stop_after</code> on the element’s last group (see the connection table). The SVG adapter reads Ink/Stitch’s trim and stop commands as these settings.</td><td>M3.8 (engine), M3 (adapter)</td></tr>
-<tr><td>Ignore object / ignore layer</td><td>The adapter drops the element and says so in the report (<code>REQ-ASM-004</code>)</td><td>M3</td></tr>
+<tr><td>Ignore object / ignore layer</td><td>The adapter drops the element and says so in the report (<code>REQ-ASM-004</code>). The VectorCraft adapter reads them from the name <code>stitch:ignore</code></td><td>M3 (SVG), M6 (VectorCraft)</td></tr>
 <tr><td>Origin</td><td>The design setting <code>origin</code></td><td>M3.8 (engine), M8 (adapter)</td></tr>
 <tr><td>Stop position</td><td>The design setting <code>stop_position</code></td><td>M3.8 (engine), M8 (adapter)</td></tr>
 </tbody>

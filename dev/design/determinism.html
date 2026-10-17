@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f4e6cf6f.js";
+            window.path_to_searchindex_js = "../searchindex-ffb161fe.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-6dce9f90.js"></script>
+        <script src="../toc-8df736a7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -241,8 +241,9 @@ gives <code>stitch</code> the files it reads and writes. Both are WebAssembly, a
 its arithmetic is the plug-in’s.</p>
 <h2 id="bug-reports"><a class="header" href="#bug-reports">Bug reports</a></h2>
 <p>Because the same design, profile, format and version give the same plan everywhere, those four are all a
-bug report needs. <code>stitch bug-report</code> writes them into one JSON file, with the design file itself in place
-of a path to it. The file also records what came of them:</p>
+bug report needs. <code>stitch bug-report</code> writes them into one JSON file, with the design itself in place of
+a path to it. That is an SVG file whole, or the part of a VectorCraft document its reader reads, which
+reads as the whole document does. The file also records what came of them:</p>
 <ul>
 <li>a SHA-256 of each entry of the plan, from each coordinate’s bits, its kind, role and element, and each
 block’s thread</li>

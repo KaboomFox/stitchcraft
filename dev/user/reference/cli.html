@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-f4e6cf6f.js";
+            window.path_to_searchindex_js = "../../searchindex-ffb161fe.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-6dce9f90.js"></script>
+        <script src="../../toc-8df736a7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -189,7 +189,7 @@
 Usage: stitch &lt;COMMAND&gt;
 
 Commands:
-  plan        Plan a design (SVG) for a machine and write the machine file, with a picture and a report if asked
+  plan        Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked [alias: export]
   testsheet   Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
   inspect     Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
   preview     Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
@@ -209,18 +209,15 @@ Options:
 Exit status: 0 done (warnings allowed) · 1 the design or file has errors (nothing written) · 2 usage
 error · 3 a file could not be read or written · 4 a bug in StitchCraft (a bug-report bundle is written
 where it can be: see `stitch bug-report`).
-
-Coming with the roadmap (docs/src/plan/roadmap.md):
-  stitch export design.vectorcraft -o design.pes            (M6)
 </code></pre>
 <h2 id="stitch-plan"><a class="header" href="#stitch-plan">stitch plan</a></h2>
-<pre><code class="language-text">Plan a design (SVG) for a machine and write the machine file, with a picture and a report if asked
+<pre><code class="language-text">Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked
 
 Usage: stitch plan [OPTIONS] --output &lt;OUTPUT&gt; &lt;DESIGN&gt;
 
 Arguments:
   &lt;DESIGN&gt;
-          The design (SVG)
+          The design: an SVG file, or a VectorCraft document (.vectorcraft)
 
 Options:
   -o, --output &lt;OUTPUT&gt;
@@ -376,7 +373,7 @@ Usage: stitch bug-report [OPTIONS] [DESIGN]
 
 Arguments:
   [DESIGN]
-          The design (SVG) StitchCraft gets wrong
+          The design StitchCraft gets wrong: an SVG file, or a VectorCraft document (.vectorcraft)
 
 Options:
       --replay &lt;REPLAY&gt;

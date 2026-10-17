@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f4e6cf6f.js";
+            window.path_to_searchindex_js = "../searchindex-ffb161fe.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-6dce9f90.js"></script>
+        <script src="../toc-8df736a7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -236,7 +236,7 @@ docs check, whatever its file name.</p>
 <tr><th>Kind</th><th>Made by</th><th>Compared by</th><th>Notes</th></tr>
 </thead>
 <tbody>
-<tr><td><code>stitch</code></td><td><code>stitchcraft-render</code> (<a href="rendering.html">rendering</a>) from a test sheet, or from an SVG design the engine plans</td><td><strong>exact bytes</strong> (rendering is deterministic)</td><td>Stitch-type illustrations, parameter comparisons, diagnostics examples</td></tr>
+<tr><td><code>stitch</code></td><td><code>stitchcraft-render</code> (<a href="rendering.html">rendering</a>) from a test sheet, or from a design the engine plans, an SVG file or a VectorCraft document</td><td><strong>exact bytes</strong> (rendering is deterministic)</td><td>Stitch-type illustrations, parameter comparisons, diagnostics examples</td></tr>
 <tr><td><code>vectorcraft-render</code></td><td><code>vectorcraft-cli run --in fixture --cmd plugin.install … --cmd effect.apply … --export x.png</code></td><td>exact bytes, or tight tolerance if VectorCraft’s renderer changes</td><td>How a preview looks in VectorCraft’s canvas, headless</td></tr>
 <tr><td><code>vectorcraft-ui</code></td><td>VectorCraft (pinned stable) driven through its accessibility tree and its control channel: open fixture, install plug-ins, select, open the dialog, set fields, <code>ui.screenshot</code>, crop</td><td>perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 per channel)</td><td>Dialogs, menus, the workflow; the pinned release’s app in a desktop without a screen (<a href="#vectorcrafts-window-in-ci">VectorCraft’s window in CI</a>)</td></tr>
 <tr><td><code>photo</code></td><td>a person, of a real sew-out</td><td>presence + metadata record (machine, fabric, commit, checkpoint)</td><td>Never regenerated; listed with their sew-out report</td></tr>

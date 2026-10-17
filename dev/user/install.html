@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f4e6cf6f.js";
+            window.path_to_searchindex_js = "../searchindex-ffb161fe.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-6dce9f90.js"></script>
+        <script src="../toc-8df736a7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -196,6 +196,22 @@ cargo puts <code>stitch</code> in its <code>bin</code> folder, which rustup adds
 </code></pre>
 <p>It prints <code>stitch</code> and its version number.</p>
 <p>To update StitchCraft, run <code>git pull</code> in the <code>stitchcraft</code> folder and the <code>cargo install</code> line again.</p>
+<h2 id="the-vectorcraft-plug-ins"><a class="header" href="#the-vectorcraft-plug-ins">The VectorCraft plug-ins</a></h2>
+<p>The plug-ins say how each object of a <a href="https://github.com/storytold/vectorcraft">VectorCraft</a> drawing
+sews, and show its stitches. There are 3, one for each kind of stitch, built from the same source. In the
+<code>stitchcraft</code> folder:</p>
+<pre><code class="language-sh">rustup target add wasm32-unknown-unknown
+cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown --features fill
+</code></pre>
+<p>The build writes <code>target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm</code>. Copy it into a
+folder for plug-ins as <code>stitchcraft-fill.wasm</code>. Build again with <code>--features stroke</code> and with
+<code>--features satin</code>, and copy the file each time, as <code>stitchcraft-stroke.wasm</code> and
+<code>stitchcraft-satin.wasm</code>.</p>
+<p>In VectorCraft’s desktop app, choose that folder in <strong>Edit › Preferences › Performance &amp; Storage ›
+Additional Plug-ins Folder</strong>. VectorCraft installs the plug-ins in it whenever it starts, and their
+effects are under <strong>Effect › Plug-ins</strong>. In VectorCraft on the web, open each file with <strong>File › Open</strong>
+instead, once each time VectorCraft is opened. <a href="how-to/embroider-a-vectorcraft-design.html">Embroider a VectorCraft
+design</a> shows how to use them.</p>
 <h2 id="next"><a class="header" href="#next">Next</a></h2>
 <p><a href="tutorials/first-sew-out.html">Sew your first test sheet</a>, or <a href="tutorials/svg-to-pes.html">turn an SVG into a PES
 file</a>. The <a href="reference/cli.html">command line</a> reference lists every command.</p>

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f4e6cf6f.js";
+            window.path_to_searchindex_js = "../searchindex-ffb161fe.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-6dce9f90.js"></script>
+        <script src="../toc-8df736a7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -225,7 +225,7 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 <tr><td><code>stitchcraft-formats</code></td><td>L2</td><td>readers/writers (PES/PEC, DST, …), quantization, format limits</td><td>depend on engine (it encodes <em>plans</em>)</td></tr>
 <tr><td><code>stitchcraft-render</code></td><td>L2</td><td>CPU preview images of plans (thread look, simple look, overlays)</td><td>depend on engine</td></tr>
 <tr><td><code>stitchcraft-svg</code></td><td>L3</td><td>SVG → <code>Design</code> (geometry, styles, <code>inkstitch:*</code> attributes, commands), plan → SVG</td><td>contain stitch logic</td></tr>
-<tr><td><code>stitchcraft-vectorcraft</code></td><td>L3</td><td><code>.vectorcraft</code> → <code>Design</code>, effect records ↔ <code>ParamSet</code>, plug-in JSON objects</td><td>contain stitch logic</td></tr>
+<tr><td><code>stitchcraft-vectorcraft</code></td><td>L3</td><td><code>.vectorcraft</code> → <code>Design</code> (commands in names included), effect records ↔ <code>ParamSet</code>, plug-in JSON objects</td><td>contain stitch logic</td></tr>
 <tr><td><code>stitchcraft-testkit</code></td><td>test</td><td>fixtures, <code>proptest</code> strategies (from the registry), invariant assertions</td><td>be a normal dependency</td></tr>
 <tr><td><code>stitchcraft-cli</code></td><td>app</td><td>the <code>stitch</code> command; all filesystem access</td><td>contain engine logic</td></tr>
 <tr><td><code>stitchcraft-vc-plugin</code></td><td>app</td><td>VectorCraft ABI v1 shim + plug-in manifests</td><td>contain engine logic; <code>unsafe</code> outside <code>abi.rs</code></td></tr>
@@ -301,7 +301,7 @@ pub struct Generation {
 </thead>
 <tbody>
 <tr><td><code>stitchcraft-svg</code></td><td>SVG document (+ <code>inkstitch:*</code> attributes, command symbols)</td><td><code>Design</code></td></tr>
-<tr><td><code>stitchcraft-vectorcraft</code></td><td><code>.vectorcraft</code> JSON, plug-in input objects, effect records</td><td><code>Design</code> / <code>Element</code></td></tr>
+<tr><td><code>stitchcraft-vectorcraft</code></td><td><code>.vectorcraft</code> JSON (+ commands in names), plug-in input objects, effect records</td><td><code>Design</code> / <code>Element</code></td></tr>
 <tr><td><code>stitchcraft-vc-plugin</code></td><td>ABI v1 call (JSON in linear memory)</td><td><code>generate</code> → preview geometry JSON</td></tr>
 <tr><td><code>stitchcraft-cli</code></td><td>files and flags</td><td><code>plan</code> → formats/render/report</td></tr>
 </tbody>
