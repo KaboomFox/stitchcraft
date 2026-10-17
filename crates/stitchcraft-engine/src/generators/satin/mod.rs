@@ -48,6 +48,11 @@ use crate::normalize::satin::{Pairing, Recognition, Satin, Shape, recognize};
 pub const SATIN_METHODS: &[ChoiceOption] =
     &[method(StitchType::SatinColumn), method(StitchType::EStitch), method(StitchType::SStitch), method(StitchType::SatinZigzag)];
 
+/// The key of the setting that makes a stroke a satin column. Hosts that choose it themselves set it: the
+/// VectorCraft adapter sets it from which of StitchCraft's effects an object has, and the plug-in leaves
+/// it out of its dialogs.
+pub const SATIN_COLUMN: &str = "satin_column";
+
 /// The stitch types of satin columns, one per method.
 const SATINS: &[StitchType] = &[StitchType::SatinColumn, StitchType::EStitch, StitchType::SStitch, StitchType::SatinZigzag];
 
@@ -424,5 +429,11 @@ mod tests {
         let of = |families: &[Family]| -> Vec<StitchType> { StitchType::ALL.iter().copied().filter(|t| families.contains(&t.family())).collect() };
         assert_eq!(STROKES_AND_SATINS, of(&[Family::Stroke, Family::Satin]));
         assert_eq!(SATINS, of(&[Family::Satin]));
+    }
+
+    #[test]
+    fn the_satin_column_key_is_the_toggle_s() {
+        let toggle = SatinParams::SPECS.iter().find(|spec| spec.key == SATIN_COLUMN);
+        assert!(toggle.is_some_and(|spec| spec.kind == stitchcraft_params::Kind::Toggle && spec.applies_to == STROKES_AND_SATINS));
     }
 }

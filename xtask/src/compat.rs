@@ -3,8 +3,9 @@
 //! - `discover [--json]`: the latest stable release, the latest pre-release (alpha/beta/rc) and the heads
 //!   of VectorCraft's `release` and `main` branches, from `git ls-remote` (no API token needed), compared
 //!   with the pins in `compat/vectorcraft.toml`.
-//! - `contract --ref <tag|sha> --wasm <file>`: Level A — loads our built plug-in into VectorCraft's real
-//!   plug-in host at that ref and runs `compat/vc-contract`'s tests.
+//! - `contract --ref <tag|sha>`: Level A — builds the plug-in's modules for wasm32, *hello* and one for
+//!   each stitch family, prints their sizes, loads them into VectorCraft's real plug-in host at that ref and
+//!   runs `compat/vc-contract`'s tests.
 //! - `join [--nested] <vectorcraft checkout>`: makes this repository, copied into a VectorCraft checkout
 //!   as a folder, part of VectorCraft's build (`join.rs`; ADR-0011).
 //! - `window [--app <file>]`: runs `compat/vc-window`'s tests against VectorCraft's window, the pinned
@@ -12,11 +13,12 @@
 //! - `report`: the generated supported-versions page (roadmap step M6.6).
 
 use std::cmp::Ordering;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use serde_json::json;
+use stitchcraft_params::Family;
 
-use crate::util;
+use crate::{util, wasm};
 
 const REPOSITORY: &str = "https://github.com/storytold/vectorcraft";
 pub(crate) const PINS: &str = "compat/vectorcraft.toml";
@@ -184,8 +186,8 @@ fn prepare_contract(reference: &str) -> Result<PathBuf, String> {
     Ok(dest)
 }
 
-pub fn contract(reference: &str, wasm: &Path) -> Result<(), String> {
-    let wasm = std::fs::canonicalize(wasm).map_err(|e| format!("{}: {e}", wasm.display()))?;
+pub fn contract(reference: &str) -> Result<(), String> {
+    let modules = build_modules()?;
     let dir = prepare_contract(reference)?;
     let mut cmd = util::cargo();
     // Optimized, as VectorCraft builds its host for release, so that the tests time it as users run it.
@@ -193,7 +195,7 @@ pub fn contract(reference: &str, wasm: &Path) -> Result<(), String> {
     cmd.args(["test", "--release", "--manifest-path"])
         .arg(dir.join("Cargo.toml"))
         .args(["--", "--show-output"])
-        .env("STITCHCRAFT_PLUGIN_WASM", &wasm)
+        .env("STITCHCRAFT_PLUGINS", &modules)
         // One shared build directory for every ref, inside the cached `target/`.
         .env("CARGO_TARGET_DIR", util::root().join("target/compat-build"));
     util::run(cmd, &format!("contract tests against VectorCraft {reference}"))?;
@@ -201,9 +203,63 @@ pub fn contract(reference: &str, wasm: &Path) -> Result<(), String> {
     Ok(())
 }
 
+/// The plug-in's modules, by name: *hello*, built without features, and the live effect of each stitch
+/// family, built with the feature its id names (`apps/stitchcraft-vc-plugin/src/lib.rs`).
+fn modules() -> Vec<&'static str> {
+    std::iter::once("hello").chain(Family::ALL.iter().map(|family| family.id())).collect()
+}
+
+/// Builds each of the plug-in's modules for wasm32 into `target/compat/plugins/<name>.wasm`, and prints
+/// their sizes, which a CI run shows as a notice: the folder.
+fn build_modules() -> Result<PathBuf, String> {
+    if !wasm::target_installed() {
+        return Err(format!("the {} target is not installed: rustup target add {}", wasm::TARGET, wasm::TARGET));
+    }
+    let root = util::root();
+    let out = root.join("target/compat/plugins");
+    std::fs::create_dir_all(&out).map_err(|e| format!("{}: {e}", util::rel(&out)))?;
+    let built = root.join("target").join(wasm::TARGET).join("release/stitchcraft_vc_plugin.wasm");
+    let mut sizes = Vec::new();
+    for name in modules() {
+        let mut cmd = util::cargo();
+        cmd.args(["build", "-p", "stitchcraft-vc-plugin", "--release", "--locked", "--target", wasm::TARGET]);
+        if name != "hello" {
+            cmd.args(["--features", name]);
+        }
+        util::run(cmd, &format!("cargo build the {name} plug-in for {}", wasm::TARGET))?;
+        let module = out.join(format!("{name}.wasm"));
+        std::fs::copy(&built, &module).map_err(|e| format!("copy the {name} plug-in to {}: {e}", util::rel(&module)))?;
+        sizes.push((name, std::fs::metadata(&module).map_err(|e| format!("{}: {e}", util::rel(&module)))?.len()));
+    }
+    println!("::notice title=plug-in sizes::{}", sizes_line(&sizes));
+    Ok(out)
+}
+
+/// The modules' sizes in KiB, and what each stitch family's adds to *hello*'s, which holds the ABI shim and
+/// the JSON reader alone.
+fn sizes_line(sizes: &[(&str, u64)]) -> String {
+    let kib = |bytes: u64| bytes.div_ceil(1024);
+    let hello = sizes.iter().find(|(name, _)| *name == "hello").map_or(0, |(_, bytes)| *bytes);
+    let each: Vec<String> = sizes
+        .iter()
+        .map(|(name, bytes)| match name {
+            &"hello" => format!("hello {} KiB", kib(*bytes)),
+            _ => format!("{name} {} KiB ({} KiB more)", kib(*bytes), kib(bytes.saturating_sub(hello))),
+        })
+        .collect();
+    each.join(", ")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_modules_are_hello_and_each_family_s() {
+        assert_eq!(modules(), ["hello", "stroke", "satin", "fill"]);
+        let sizes = [("hello", 1024), ("fill", 5000)];
+        assert_eq!(sizes_line(&sizes), "hello 1 KiB, fill 5 KiB (4 KiB more)");
+    }
 
     #[test]
     fn the_contract_crate_pins_the_stable_tag_of_the_pins_file() {

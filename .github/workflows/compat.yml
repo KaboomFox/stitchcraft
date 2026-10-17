@@ -74,14 +74,10 @@ jobs:
         with:
           report: ${{ needs.discover.outputs.report }}
           track: ${{ matrix.track }}
-      - name: Build the plug-in for wasm32
-        if: steps.ref.outputs.ref != ''
-        run: cargo build -p stitchcraft-vc-plugin --release --locked --target wasm32-unknown-unknown
+      # Builds the plug-in's modules for wasm32, hello and one for each stitch family, and notes their sizes.
       - name: Contract tests against VectorCraft ${{ steps.ref.outputs.ref }}
         if: steps.ref.outputs.ref != ''
-        run: >
-          cargo xtask compat contract --ref "${{ steps.ref.outputs.ref }}"
-          --wasm target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm
+        run: cargo xtask compat contract --ref "${{ steps.ref.outputs.ref }}"
       - name: Nothing to test on this track
         if: steps.ref.outputs.ref == ''
         run: echo "VectorCraft has no ${{ matrix.track }} build right now." >> "$GITHUB_STEP_SUMMARY"

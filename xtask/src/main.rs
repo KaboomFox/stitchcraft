@@ -170,14 +170,11 @@ enum Compat {
         #[arg(long)]
         json: bool,
     },
-    /// Load the built plug-in into VectorCraft's host at a version
+    /// Build the plug-in's modules for wasm32 and load them into VectorCraft's host at a version
     Contract {
         /// The VectorCraft tag or commit
         #[arg(long = "ref", value_name = "TAG|SHA")]
         reference: String,
-        /// The plug-in's module
-        #[arg(long, value_name = "FILE")]
-        wasm: PathBuf,
     },
     /// VectorCraft's window without a screen: screenshots alike, and xa11y driving it (Linux)
     Window {
@@ -216,7 +213,7 @@ fn run(command: Command) -> Result<(), String> {
         Command::Wasm { goldens: false } => wasm::run(),
         Command::Wasm { goldens: true } => wasm::goldens(),
         Command::Compat { command: Compat::Discover { json } } => compat::discover(json),
-        Command::Compat { command: Compat::Contract { reference, wasm } } => compat::contract(&reference, &wasm),
+        Command::Compat { command: Compat::Contract { reference } } => compat::contract(&reference),
         Command::Compat { command: Compat::Window { app } } => window::run(app.as_deref()),
         Command::Compat { command: Compat::Join { nested, vectorcraft } } => join::run(nested, &vectorcraft),
         Command::Compat { command: Compat::Report } => Err("`compat report` arrives with roadmap step M6.6".to_string()),
@@ -273,7 +270,7 @@ mod tests {
             &["conformance", "--check"],
             &["conformance", "--filter", "ts-01", "--bless", "ts-01"],
             &["compat", "discover", "--json"],
-            &["compat", "contract", "--ref", "v0.7.0", "--wasm", "plugin.wasm"],
+            &["compat", "contract", "--ref", "v0.7.0"],
             &["compat", "join", "--nested", ".."],
             &["compat", "window"],
             &["compat", "window", "--app", "vectorcraft/target/release/vectorcraft"],

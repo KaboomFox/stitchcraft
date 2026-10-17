@@ -848,9 +848,10 @@ status = "active"
 id = "REQ-VC-002"
 area = "vectorcraft"
 level = "L2"
-statement = "Every plug-in manifest is accepted by VectorCraft's host: id charset, kind, at most 64 parameters, 64 KiB."
+statement = "Every plug-in manifest is accepted by VectorCraft's host: id charset, kind, at most 64 parameters, 64 KiB. A stitch family's manifest declares the registry's parameters for the family that one value of VectorCraft's kinds can hold, the method's group first and the settings every element shares last, and a record of its defaults sews as an element without settings."
+rationale = "VectorCraft refuses a module whose manifest breaks its rules, and stores every declared parameter, at its default when the user leaves it; a default that read otherwise would change what sews."
 milestone = "M6"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-VC-003"
