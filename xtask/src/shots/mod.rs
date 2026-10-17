@@ -1,16 +1,18 @@
-//! `cargo xtask shots [--check]`: every documentation image is declared, reproducible and current
-//! (`docs/src/design/docs-pipeline.md`).
+//! `cargo xtask shots [--check] [--vectorcraft]`: every documentation image is declared, reproducible and
+//! current (`docs/src/design/docs-pipeline.md`).
 //!
 //! Each `[[shot]]` in `docs/shots.toml` says how its image is made. Without `--check` the images are
 //! regenerated into `docs/src/images/generated/`; with `--check` they are regenerated in memory and
-//! compared byte for byte with the committed files, so a pull request that changes how something looks
-//! must also update its pictures. A stale image's new version is written to `target/shots/` (CI keeps it),
-//! and a generated file no shot declares is an error. Generators arrive with the roadmap. `stitch` renders
-//! with `stitchcraft-render` either a test sheet, or a design, an SVG file or a VectorCraft document, that
-//! the engine plans as `stitch plan` plans it, once per panel with the panel's parameters set on every
-//! element. `vectorcraft-render` and
-//! `vectorcraft-ui` come with the VectorCraft pipeline (M6.7, on M0.8's window probe). `photo` shots are
-//! never regenerated; they must exist and link their sew-out report.
+//! compared with the committed files, so a pull request that changes how something looks must also update
+//! its pictures. A stale image's new version is written to `target/shots/` (CI keeps it), and a generated
+//! file no shot declares is an error. `stitch` renders with `stitchcraft-render` either a test sheet, or a
+//! design, an SVG file or a VectorCraft document, that the engine plans as `stitch plan` plans it, once per
+//! panel with the panel's parameters set on every element, and must come out byte for byte the same.
+//! `photo` shots are never regenerated; they must exist and link their sew-out report.
+//!
+//! `vectorcraft-render` and `vectorcraft-ui` shots are VectorCraft's own pictures, which only
+//! `--vectorcraft` makes, on Linux with the pinned release (`vectorcraft.rs`): the `shots-ui` job's work.
+//! Without it they must only be declared well and committed.
 //!
 //! A shot of a design with panels makes one image per panel, `<id>-1.png` and so on, and pages show them
 //! in a figure that `cargo xtask docs` writes ([`crate::figures`]): side by side, or one under another
@@ -28,7 +30,10 @@ use stitchcraft_plan::StitchPlan;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_render::{Settings, Style};
 
+use crate::compat::scenario::Step;
 use crate::util::{self, Findings};
+
+mod vectorcraft;
 
 const SHOTS: &str = "docs/shots.toml";
 /// Where generated images live; pages link `images/generated/<id>.png`.
@@ -73,7 +78,8 @@ pub struct Shot {
     /// `stitch` shots: `realistic` (the default) or `simple`.
     #[serde(default)]
     pub style: Option<String>,
-    /// `stitch` shots: pixels per millimetre (the renderer's default when absent).
+    /// `stitch` shots: pixels per millimetre (the renderer's default when absent). `vectorcraft-render`
+    /// shots: pixels per point, VectorCraft's `--scale` (1 when absent).
     #[serde(default)]
     pub scale: Option<f32>,
     /// `photo` shots: the sew-out report.
@@ -82,6 +88,21 @@ pub struct Shot {
     /// Shots with panels: how a page lays them out.
     #[serde(default)]
     pub layout: Layout,
+    /// VectorCraft shots: the plug-in's modules installed first, as `compat/scenarios/` names them.
+    #[serde(default)]
+    pub plugins: Vec<String>,
+    /// VectorCraft shots: how `vectorcraft-cli` draws the document, in a Level B scenario's steps, without
+    /// exports.
+    #[serde(default)]
+    pub steps: Vec<Step>,
+    /// `vectorcraft-ui` shots: the menu bar's title and the rows pressed after it. The picture shows the
+    /// menus open.
+    #[serde(default)]
+    pub menu: Vec<String>,
+    /// `vectorcraft-ui` shots: the stitch family whose effect's row is pressed last. The picture shows its
+    /// dialog, whose labels are checked against the module's parameters.
+    #[serde(default)]
+    pub dialog: Option<String>,
 }
 
 /// How a page lays out a shot's panels.
@@ -128,8 +149,8 @@ pub fn load(root: &Path) -> Result<Vec<Shot>, String> {
     Ok(file.shot)
 }
 
-/// `cargo xtask shots`.
-pub fn run(check_only: bool) -> Result<(), String> {
+/// `cargo xtask shots`: the `stitch` and `photo` shots, or with `vectorcraft` VectorCraft's.
+pub fn run(check_only: bool, vectorcraft: bool) -> Result<(), String> {
     let root = util::root();
     let shots = load(&root)?;
     let mut findings = Findings::default();
@@ -140,6 +161,9 @@ pub fn run(check_only: bool) -> Result<(), String> {
         }
         if shot.alt.trim().is_empty() {
             findings.error(format!("{SHOTS}: shot `{}` needs alt text", shot.id));
+        }
+        if vectorcraft {
+            continue;
         }
         match shot.kind.as_str() {
             "photo" => {
@@ -154,16 +178,17 @@ pub fn run(check_only: bool) -> Result<(), String> {
             "stitch" => match stitch(&root, shot) {
                 Ok(images) => {
                     for (name, png) in shot.images().iter().zip(&images) {
-                        keep(&root, name, png, check_only, &mut findings);
+                        keep(&root, name, png, check_only, &mut findings, Same::Bytes);
                     }
                 }
                 Err(e) => findings.error(format!("shot `{}`: {e}", shot.id)),
             },
-            "vectorcraft-render" | "vectorcraft-ui" => {
-                findings.error(format!("shot `{}`: VectorCraft shots arrive with roadmap step M6.7", shot.id));
-            }
+            vectorcraft::RENDER | vectorcraft::UI => vectorcraft::committed(&root, shot, &mut findings),
             other => findings.error(format!("shot `{}`: unknown kind `{other}`", shot.id)),
         }
+    }
+    if vectorcraft {
+        vectorcraft::run(&root, &shots, check_only, &mut findings);
     }
     let images: std::collections::BTreeSet<String> = shots.iter().flat_map(Shot::images).collect();
     for path in util::files(&root.join(GENERATED), &["png"]) {
@@ -241,12 +266,26 @@ fn designs(root: &Path, fixture: &str, shot: &Shot) -> Result<Vec<StitchPlan>, S
         .collect()
 }
 
-/// Writes `png` as shot `id`, or with `check_only` compares it with the committed file.
-fn keep(root: &Path, id: &str, png: &[u8], check_only: bool, findings: &mut Findings) {
+/// How a new picture is the same as the committed one.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Same {
+    /// Byte for byte: our renderer's pictures.
+    Bytes,
+    /// Within VectorCraft's tolerance ([`vectorcraft::close`]): VectorCraft's pictures.
+    Close,
+}
+
+/// Writes `png` as shot `id`, or with `check_only` compares it with the committed file, unless the committed
+/// file is the `same`.
+fn keep(root: &Path, id: &str, png: &[u8], check_only: bool, findings: &mut Findings, same: Same) {
     let path = root.join(GENERATED).join(format!("{id}.png"));
     let file = util::rel(&path);
     let current = std::fs::read(&path).ok();
-    if current.as_deref() == Some(png) {
+    let kept = current.as_deref().is_some_and(|current| match same {
+        Same::Bytes => current == png,
+        Same::Close => vectorcraft::close(current, png),
+    });
+    if kept {
         return;
     }
     if !check_only {
@@ -261,7 +300,8 @@ fn keep(root: &Path, id: &str, png: &[u8], check_only: bool, findings: &mut Find
     let kept = std::fs::create_dir_all(root.join(STALE)).and_then(|()| std::fs::write(&fresh, png)).is_ok();
     let new = if kept { format!(" (the new one is {})", util::rel(&fresh)) } else { String::new() };
     let what = if current.is_some() { "is stale" } else { "is missing" };
-    findings.error(format!("{file} {what}{new}: run `cargo xtask shots`, or add the `docs:refresh-shots` label to the pull request"));
+    let command = if same == Same::Close { "cargo xtask shots --vectorcraft" } else { "cargo xtask shots" };
+    findings.error(format!("{file} {what}{new}: run `{command}`, or add the `docs:refresh-shots` label to the pull request"));
 }
 
 #[cfg(test)]
@@ -289,6 +329,10 @@ mod tests {
             scale: Some(2.0),
             report: String::new(),
             layout: Layout::Columns,
+            plugins: Vec::new(),
+            steps: Vec::new(),
+            menu: Vec::new(),
+            dialog: None,
         }
     }
 

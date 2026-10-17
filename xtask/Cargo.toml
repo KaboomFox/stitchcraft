@@ -25,6 +25,10 @@ stitchcraft-render = { workspace = true }
 stitchcraft-svg = { workspace = true }
 stitchcraft-vectorcraft = { workspace = true }
 stitchcraft-testkit = { workspace = true }
+# The plug-in's manifests, whose parameters VectorCraft's dialogs must show (`cargo xtask shots
+# --vectorcraft`), and the decoder that compares VectorCraft's pictures within a tolerance.
+stitchcraft-vc-plugin = { path = "../apps/stitchcraft-vc-plugin" }
+tiny-skia = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 toml = { workspace = true }
