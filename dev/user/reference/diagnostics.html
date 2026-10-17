@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-4d63fc69.js";
+            window.path_to_searchindex_js = "../../searchindex-869c57ce.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-623c1739.js"></script>
@@ -242,6 +242,11 @@
 <tr><td><a href="#sc-w0802"><code>SC-W0802</code></a></td><td>Warning</td><td>SVG feature ignored</td></tr>
 <tr><td><a href="#sc-i0805"><code>SC-I0805</code></a></td><td>Info</td><td>Object left out, as the file asks</td></tr>
 <tr><td><a href="#sc-w0804"><code>SC-W0804</code></a></td><td>Warning</td><td>Element geometry invalid or out of range</td></tr>
+<tr><td><a href="#sc-w0803"><code>SC-W0803</code></a></td><td>Warning</td><td>VectorCraft file from a newer format version; read best-effort</td></tr>
+<tr><td><a href="#sc-e0806"><code>SC-E0806</code></a></td><td>Error</td><td>VectorCraft file could not be read</td></tr>
+<tr><td><a href="#sc-w0807"><code>SC-W0807</code></a></td><td>Warning</td><td>VectorCraft object or feature not stitched</td></tr>
+<tr><td><a href="#sc-w0808"><code>SC-W0808</code></a></td><td>Warning</td><td>VectorCraft geometry unusable</td></tr>
+<tr><td><a href="#sc-i0809"><code>SC-I0809</code></a></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print</td></tr>
 </tbody>
 </table>
 </div>
@@ -644,6 +649,46 @@ viewBox of the drawing, or an aspect ratio that does not read. A stroke too wide
 skipped.</p>
 <p>The message names the element. Check its path data, points and transform, or remove stray objects
 far from the design.</p>
+<h2 id="sc-w0803"><a class="header" href="#sc-w0803">SC-W0803</a></h2>
+<p><strong>Warning</strong> — VectorCraft file from a newer format version; read best-effort</p>
+<p>The <code>.vectorcraft</code> file comes from a newer VectorCraft: its format version is newer than the newest
+StitchCraft reads. StitchCraft reads it as that version, usually all of a design’s paths and paints,
+where older versions of VectorCraft refuse the file.</p>
+<p>The message gives the file’s format version and the newest StitchCraft reads. Compare the stitches
+with the drawing, or save a copy in that format from the newer VectorCraft: File › Save a Copy, then
+the Version in VectorCraft Options.</p>
+<h2 id="sc-e0806"><a class="header" href="#sc-e0806">SC-E0806</a></h2>
+<p><strong>Error</strong> — VectorCraft file could not be read</p>
+<p>The <code>.vectorcraft</code> file could not be read: it is not a VectorCraft document (its JSON does not
+read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
+is damaged, or it unpacks to more JSON than StitchCraft reads. Nothing was stitched.</p>
+<p>The message says what is wrong and, for JSON errors, where. Open the file in VectorCraft and save it
+again.</p>
+<h2 id="sc-w0807"><a class="header" href="#sc-w0807">SC-W0807</a></h2>
+<p><strong>Warning</strong> — VectorCraft object or feature not stitched</p>
+<p>Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft
+computes as it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine
+objects), a kind of object StitchCraft does not read, clipping and opacity masks, VectorCraft’s own
+effects, a brush’s art, a StitchCraft effect it cannot use, or a group’s or a layer’s own fills and
+strokes. A gradient is sewn in its first colour, and a pattern, or a colour that does not read, in
+black.</p>
+<p>The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
+of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
+makes paths of a symbol, and Object › Expand Appearance of what effects and brushes draw.</p>
+<h2 id="sc-w0808"><a class="header" href="#sc-w0808">SC-W0808</a></h2>
+<p><strong>Warning</strong> — VectorCraft geometry unusable</p>
+<p>An object’s geometry cannot be used, and the object, or the stroke, is left out: a coordinate or a
+stroke’s width is not a number, the object draws nothing, or it lies more than 10 metres from the
+document’s origin, beyond what machine files can record. A StitchCraft stroke or satin effect takes
+a width that is not a number as 0.</p>
+<p>The message names the object. Check its anchors, or remove stray objects far from the design.</p>
+<h2 id="sc-i0809"><a class="header" href="#sc-i0809">SC-I0809</a></h2>
+<p><strong>Info</strong> — VectorCraft layer or guide left out, as it does not print</p>
+<p>A layer or a guide is left out because VectorCraft does not print it: a template layer, a layer
+whose Print option is off, or a guide. VectorCraft shows them, dimmed or as guides, and keeps them
+out of what it prints and exports; StitchCraft keeps them out of the sew-out.</p>
+<p>The message names the layer or the guide. To stitch a layer, turn its Template option off, or its
+Print option on, in VectorCraft’s Layer Options.</p>
 
                     </main>
 

@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4d63fc69.js";
+            window.path_to_searchindex_js = "searchindex-869c57ce.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -1403,6 +1403,11 @@ Arguments:
 <tr><td><a href="#sc-w0802"><code>SC-W0802</code></a></td><td>Warning</td><td>SVG feature ignored</td></tr>
 <tr><td><a href="#sc-i0805"><code>SC-I0805</code></a></td><td>Info</td><td>Object left out, as the file asks</td></tr>
 <tr><td><a href="#sc-w0804"><code>SC-W0804</code></a></td><td>Warning</td><td>Element geometry invalid or out of range</td></tr>
+<tr><td><a href="#sc-w0803"><code>SC-W0803</code></a></td><td>Warning</td><td>VectorCraft file from a newer format version; read best-effort</td></tr>
+<tr><td><a href="#sc-e0806"><code>SC-E0806</code></a></td><td>Error</td><td>VectorCraft file could not be read</td></tr>
+<tr><td><a href="#sc-w0807"><code>SC-W0807</code></a></td><td>Warning</td><td>VectorCraft object or feature not stitched</td></tr>
+<tr><td><a href="#sc-w0808"><code>SC-W0808</code></a></td><td>Warning</td><td>VectorCraft geometry unusable</td></tr>
+<tr><td><a href="#sc-i0809"><code>SC-I0809</code></a></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print</td></tr>
 </tbody>
 </table>
 </div>
@@ -1805,6 +1810,46 @@ viewBox of the drawing, or an aspect ratio that does not read. A stroke too wide
 skipped.</p>
 <p>The message names the element. Check its path data, points and transform, or remove stray objects
 far from the design.</p>
+<h2 id="sc-w0803"><a class="header" href="#sc-w0803">SC-W0803</a></h2>
+<p><strong>Warning</strong> — VectorCraft file from a newer format version; read best-effort</p>
+<p>The <code>.vectorcraft</code> file comes from a newer VectorCraft: its format version is newer than the newest
+StitchCraft reads. StitchCraft reads it as that version, usually all of a design’s paths and paints,
+where older versions of VectorCraft refuse the file.</p>
+<p>The message gives the file’s format version and the newest StitchCraft reads. Compare the stitches
+with the drawing, or save a copy in that format from the newer VectorCraft: File › Save a Copy, then
+the Version in VectorCraft Options.</p>
+<h2 id="sc-e0806"><a class="header" href="#sc-e0806">SC-E0806</a></h2>
+<p><strong>Error</strong> — VectorCraft file could not be read</p>
+<p>The <code>.vectorcraft</code> file could not be read: it is not a VectorCraft document (its JSON does not
+read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
+is damaged, or it unpacks to more JSON than StitchCraft reads. Nothing was stitched.</p>
+<p>The message says what is wrong and, for JSON errors, where. Open the file in VectorCraft and save it
+again.</p>
+<h2 id="sc-w0807"><a class="header" href="#sc-w0807">SC-W0807</a></h2>
+<p><strong>Warning</strong> — VectorCraft object or feature not stitched</p>
+<p>Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft
+computes as it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine
+objects), a kind of object StitchCraft does not read, clipping and opacity masks, VectorCraft’s own
+effects, a brush’s art, a StitchCraft effect it cannot use, or a group’s or a layer’s own fills and
+strokes. A gradient is sewn in its first colour, and a pattern, or a colour that does not read, in
+black.</p>
+<p>The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
+of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
+makes paths of a symbol, and Object › Expand Appearance of what effects and brushes draw.</p>
+<h2 id="sc-w0808"><a class="header" href="#sc-w0808">SC-W0808</a></h2>
+<p><strong>Warning</strong> — VectorCraft geometry unusable</p>
+<p>An object’s geometry cannot be used, and the object, or the stroke, is left out: a coordinate or a
+stroke’s width is not a number, the object draws nothing, or it lies more than 10 metres from the
+document’s origin, beyond what machine files can record. A StitchCraft stroke or satin effect takes
+a width that is not a number as 0.</p>
+<p>The message names the object. Check its anchors, or remove stray objects far from the design.</p>
+<h2 id="sc-i0809"><a class="header" href="#sc-i0809">SC-I0809</a></h2>
+<p><strong>Info</strong> — VectorCraft layer or guide left out, as it does not print</p>
+<p>A layer or a guide is left out because VectorCraft does not print it: a template layer, a layer
+whose Print option is off, or a guide. VectorCraft shows them, dimmed or as guides, and keeps them
+out of what it prints and exports; StitchCraft keeps them out of the sew-out.</p>
+<p>The message names the layer or the guide. To stitch a layer, turn its Template option off, or its
+Print option on, in VectorCraft’s Layer Options.</p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the parameter registry (`stitchcraft-engine/src/registry.rs`) and the deviations ledger. Edit the declaration, not this page. -->
 <h1 id="parameters-2"><a class="header" href="#parameters-2">Parameters</a></h1>
 <p>Every setting a design element can carry, by the key a design stores it under. A parameter that Ink/Stitch
@@ -3288,22 +3333,22 @@ GPL/AGPL/LGPL.</p>
 <tr><th>Need</th><th>Crate</th><th>Licence</th><th>Where</th></tr>
 </thead>
 <tbody>
-<tr><td>Curves, affine (strokes are flattened by the engine, for determinism)</td><td><code>kurbo</code> 0.13</td><td>MIT/Apache</td><td>core, engine, adapters</td></tr>
-<tr><td>Polygon booleans, offsets (a fill’s region and a satin’s offset rails are built by the engine)</td><td><code>i_overlay</code> 9</td><td>MIT/Apache</td><td>engine</td></tr>
-<tr><td>Spatial index</td><td><code>rstar</code> 0.13</td><td>MIT/Apache</td><td>engine</td></tr>
-<tr><td>Graphs</td><td><code>petgraph</code> 0.8</td><td>MIT/Apache</td><td>engine</td></tr>
 <tr><td>Deterministic transcendental math</td><td><code>libm</code> 0.2</td><td>MIT</td><td>core</td></tr>
 <tr><td>Errors</td><td><code>thiserror</code> 2</td><td>MIT/Apache</td><td>all libraries</td></tr>
-<tr><td>Serialization</td><td><code>serde</code>, <code>serde_json</code>, <code>toml</code></td><td>MIT/Apache</td><td>params, adapters, xtask</td></tr>
 <tr><td>XML / SVG syntax</td><td><code>roxmltree</code>, <code>svgtypes</code></td><td>MIT/Apache</td><td>svg</td></tr>
-<tr><td>Rasterizing previews</td><td><code>tiny-skia</code> 0.12</td><td>BSD-3-Clause</td><td>render</td></tr>
+<tr><td><code>.vectorcraft</code> documents: JSON, its coordinates read exactly, unpacked from gzip by a Rust backend</td><td><code>serde</code>, <code>serde_json</code>, <code>flate2</code> 1</td><td>MIT/Apache</td><td>vectorcraft</td></tr>
+<tr><td>Rasterizing previews</td><td><code>tiny-skia</code> 0.11</td><td>BSD-3-Clause</td><td>render</td></tr>
+<tr><td>JSON reports, and the plug-in’s JSON</td><td><code>serde_json</code></td><td>MIT/Apache</td><td>cli, vc-plugin</td></tr>
+<tr><td>Content hashes of bug-report bundles</td><td><code>sha2</code> 0.11</td><td>MIT/Apache</td><td>cli</td></tr>
 <tr><td>CLI parsing</td><td><code>clap</code> 4</td><td>MIT/Apache</td><td>cli, xtask</td></tr>
-<tr><td>Tests</td><td><code>proptest</code>, <code>insta</code>, <code>trycmd</code></td><td>MIT/Apache, Apache</td><td>dev only</td></tr>
+<tr><td>Tooling’s TOML and JSON</td><td><code>toml</code>, <code>toml_edit</code>, <code>serde_json</code></td><td>MIT/Apache</td><td>xtask</td></tr>
+<tr><td>Tests</td><td><code>proptest</code>, <code>insta</code></td><td>MIT/Apache, Apache</td><td>dev only</td></tr>
 </tbody>
 </table>
 </div>
-<p>Versions above are the current ones (checked 2026-10-08 with <code>cargo info</code>); <code>Cargo.lock</code> is the
-truth. The geometry choices are validated by spike M0.7 (<a href="#adr-0005-geometry-stack">ADR-0005</a>).</p>
+<p>The engine’s geometry is its own, with no crate for curves, regions, offsets, nearest points or graphs:
+spike M0.7 accepted that (<a href="#adr-0005-geometry-stack">ADR-0005</a>). Versions above are those
+<code>Cargo.toml</code> asks for (2026-10-17), and <code>Cargo.lock</code> is the truth.</p>
 <h2 id="hosts-ports-and-adapters"><a class="header" href="#hosts-ports-and-adapters">Hosts: ports and adapters</a></h2>
 <p>The engine exposes one entry point and one input type:</p>
 <pre><code class="language-rust ignore">pub fn plan(design: &amp;Design, profile: &amp;MachineProfile, budget: &amp;Budget) -&gt; PlanOutcome;   // since M3.8
@@ -3411,7 +3456,7 @@ host document and every host gets the same stitches for the same design. Since M
 <pre><code class="language-rust ignore">pub struct Design { elements: Vec&lt;Element&gt;, pub settings: DesignSettings }   // checked by Design::new
 
 pub struct Element {
-    pub id: ElementId,               // stable host id: "svg:path123:fill", "vc:42"
+    pub id: ElementId,               // stable host id: "svg:path123:fill", "vc:42:fill"
     pub name: Option&lt;String&gt;,        // the name the user gave it (Inkscape's label)
     pub shape: Shape,
     pub thread: Thread,
@@ -3442,6 +3487,8 @@ their control points, and the generators flatten it with the tolerance their par
 transforms, and <code>stroke-linejoin</code> with <code>stroke-miterlimit</code> (<a href="#stroke-width-and-join">SVG input</a>).
 Only a satin column drawn as one path uses them, as its width and its corners. <code>Shape::stroke(path)</code>
 makes a stroke that says nothing of either: 1 CSS pixel wide, with <code>Join::UNSET</code>.</p>
+<p>Documents repeat ids, so adapters make theirs unique with <code>stitchcraft_core::Labels</code>, which gives a
+label repeated in a document <code>~2</code>, <code>~3</code> and so on, in every adapter alike.</p>
 <p>Invariants, checked by <code>Design::new</code>: element ids are unique, and every point is finite and within
 ±10,000 mm, as far as machine-file coordinates go. No stroke is narrower than 0, a miter limit is a
 finite number of at least 1, and the settings’ lengths are not negative. Adapters drop what they cannot
@@ -3789,7 +3836,7 @@ stitch types (M7 and M10) let a declaration give a family its own kind and range
 </div>
 <h2 id="splitting-for-vectorcraft-abi-v1"><a class="header" href="#splitting-for-vectorcraft-abi-v1">Splitting for VectorCraft ABI v1</a></h2>
 <p>VectorCraft v1 allows at most 64 parameters per plug-in and has no groups or conditional visibility.
-The plug-in crate therefore builds <strong>one plug-in per stitch family</strong> (<code>running</code>, <code>satin</code>, <code>fill</code>), each
+The plug-in crate builds <strong>one plug-in per stitch family</strong> for that (<code>stroke</code>, <code>satin</code>, <code>fill</code>), each
 with only the parameters that apply to it; the shared lock/trim parameters are included in each. A test
 fails if any family’s manifest exceeds 64 parameters or 64 KiB, so adding a parameter that would break
 the limit is caught in the PR, not by a user. When VectorCraft supports richer schemas (ABI v2 RFC),
@@ -3932,9 +3979,13 @@ another.</p>
 <tr><td><code>SC-I0703</code></td><td>Info</td><td>Stitches longer than the machine’s longest stitch; split</td><td>M3</td></tr>
 <tr><td><code>SC-E0801</code></td><td>Error</td><td>SVG could not be read (with the parser’s position)</td><td>M3</td></tr>
 <tr><td><code>SC-W0802</code></td><td>Warning</td><td>SVG feature ignored (e.g. raster image, text not converted to paths)</td><td>M3</td></tr>
-<tr><td><code>SC-W0803</code></td><td>Warning</td><td><code>.vectorcraft</code> file from a newer VectorCraft format version; read best-effort</td><td>M6</td></tr>
+<tr><td><code>SC-W0803</code></td><td>Warning</td><td>VectorCraft file from a newer format version; read best-effort (a version newer than the newest the adapter reads)</td><td>M6</td></tr>
 <tr><td><code>SC-W0804</code></td><td>Warning</td><td>Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke’s width, join or miter limit that does not read); the usable part is stitched</td><td>M3</td></tr>
 <tr><td><code>SC-I0805</code></td><td>Info</td><td>Object left out, as the file asks (Ink/Stitch’s ignore commands and <code>ignore_object</code> setting)</td><td>M3</td></tr>
+<tr><td><code>SC-E0806</code></td><td>Error</td><td>VectorCraft file could not be read (not a VectorCraft document, or larger than the adapter reads)</td><td>M6</td></tr>
+<tr><td><code>SC-W0807</code></td><td>Warning</td><td>VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft’s own effects, brushes, gradients, patterns)</td><td>M6</td></tr>
+<tr><td><code>SC-W0808</code></td><td>Warning</td><td>VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing)</td><td>M6</td></tr>
+<tr><td><code>SC-I0809</code></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides)</td><td>M6</td></tr>
 </tbody>
 </table>
 </div>
@@ -3962,7 +4013,8 @@ child of a switch, and drops the transforms of the switch and of the elements ab
 (<code>DEV-SVG-004</code>).</li>
 <li><strong>Ids.</strong> An element’s id is <code>svg:&lt;label&gt;:fill</code> or <code>svg:&lt;label&gt;:stroke</code>. The label is the SVG
 element’s <code>id</code>, or <code>&lt;tag&gt;@&lt;n&gt;</code> for the n-th element of that kind. A repeated id gets <code>~2</code>, <code>~3</code> and
-so on. The adapter’s own diagnostics name the SVG element as <code>svg:&lt;label&gt;</code>.</li>
+so on (<code>stitchcraft_core::Labels</code>, as in the VectorCraft adapter). The adapter’s own diagnostics name
+the SVG element as <code>svg:&lt;label&gt;</code>.</li>
 <li><strong>Names.</strong> An <code>inkscape:label</code> becomes the element’s name.</li>
 </ul>
 <h2 id="geometry-and-units"><a class="header" href="#geometry-and-units">Geometry and units</a></h2>
@@ -6023,30 +6075,32 @@ registry a plug-in could add PES to.</li>
 <tr><th>Plug-in id</th><th>Kind</th><th>Stitch types</th><th>Notes</th></tr>
 </thead>
 <tbody>
-<tr><td><code>&lt;ns&gt;.running</code></td><td>live effect</td><td>running, bean, manual (P1); zigzag, ripple (later)</td><td><code>stroke_method</code> choice selects the variant</td></tr>
+<tr><td><code>&lt;ns&gt;.stroke</code></td><td>live effect</td><td>running, bean, manual (P1); zigzag, ripple (later)</td><td><code>stroke_method</code> choice selects the variant</td></tr>
 <tr><td><code>&lt;ns&gt;.satin</code></td><td>live effect</td><td>satin (P1); E, S, zigzag (P2)</td><td>rails and rungs from the object’s compound path</td></tr>
 <tr><td><code>&lt;ns&gt;.fill</code></td><td>live effect</td><td>tatami (P1); contour, meander, circular (P2)</td><td><code>fill_method</code> choice</td></tr>
 <tr><td><code>&lt;ns&gt;.tools</code></td><td>object filter</td><td>make satin from two paths, add rung, bake preview to paths, generate test sheet</td><td>one undo step each</td></tr>
 </tbody>
 </table>
 </div>
-<p><code>&lt;ns&gt;</code> is a reverse-DNS namespace defined in one constant (<code>PLUGIN_NAMESPACE</code>) in the plug-in crate.
+<p><code>&lt;ns&gt;</code> is a reverse-DNS namespace defined in one constant (<code>PLUGIN_NAMESPACE</code>) in the VectorCraft adapter,
+which reads the effect records too. The plug-in crate imports it. A live effect’s id ends with its stitch
+family’s (<code>stitchcraft_params::Family::id</code>).
 Manifests are generated from the <a href="#splitting-for-vectorcraft-abi-v1">parameter registry</a>; a
 test validates each against VectorCraft’s manifest rules (id charset, ≤ 64 parameters, names, ranges) so
 an invalid manifest never reaches a user.</p>
 <h3 id="the-workflow"><a class="header" href="#the-workflow">The workflow</a></h3>
 <ol>
 <li>Draw the art in VectorCraft as usual.</li>
-<li>Select an object → <strong>Effect › Plug-ins › StitchCraft Fill</strong> (or Running / Satin) → set parameters in
+<li>Select an object → <strong>Effect › Plug-ins › StitchCraft Fill</strong> (or Stroke / Satin) → set parameters in
 the generated dialog. The parameters are now stored on the object (undoable, saved in the
 <code>.vectorcraft</code> file) and the object shows a stitch preview.</li>
 <li>Save the document.</li>
 <li><code>stitch export design.vectorcraft --profile brother-pe800-5x7 -o design.pes</code> writes the machine file and
 a report; <code>--preview design.png</code> renders what will sew.</li>
 </ol>
-<p>Stitching order is paint order (bottom first). Hidden objects are skipped (and listed in the report);
-locked objects are stitched. Thread colours come from the object’s fill (fills, satins) or stroke
-(running stitch), mapped to the profile’s palette.</p>
+<p>Stitching order is paint order (bottom first). Hidden objects are skipped, as VectorCraft draws nothing
+for them, and locked objects are stitched. Thread colours come from the object’s fill for a fill, and
+from its stroke for a stroke or a satin column, as in Ink/Stitch, mapped to the profile’s palette.</p>
 <h3 id="live-effect-previews-within-v1-budgets"><a class="header" href="#live-effect-previews-within-v1-budgets">Live-effect previews within v1 budgets</a></h3>
 <p>A live effect gets 50 million instructions, plus 4,000 for each byte of its input, and 5 seconds. Spike
 M0.6 measured what JSON costs in VectorCraft’s host (<code>wasmi</code> 2.0, in VectorCraft 0.12.0 and on <code>main</code> at
@@ -6103,14 +6157,76 @@ first-class.)</li>
 <li>Ignore: hide the object, or name it with the prefix <code>stitch:ignore</code>.</li>
 </ul>
 <h3 id="reading-vectorcraft-files-stitchcraft-vectorcraft"><a class="header" href="#reading-vectorcraft-files-stitchcraft-vectorcraft">Reading <code>.vectorcraft</code> files (<code>stitchcraft-vectorcraft</code>)</a></h3>
-<p>The native format is documented JSON. The adapter reads only what it needs — layers, groups, paths,
-compound paths, visibility, paints, appearance effects with our plug-in ids — and treats the file as
-untrusted (size caps, depth caps, no panics). The format version is checked; an unknown newer version is
-read best-effort with <code>SC-W0803</code>. Which VectorCraft versions we read correctly is proven by the
-compatibility gate, which saves files with each VectorCraft version and reads them back.</p>
-<p>Also verified in M6: how transforms are represented on nodes (applied geometry vs. a separate transform),
-so the adapter places stitches exactly where the art is drawn (a scenario in the gate compares the
-VectorCraft render with our preview).</p>
+<p><code>stitchcraft_vectorcraft::read</code> turns a <code>.vectorcraft</code> file into a design, and reports what it left out
+or simplified, as the SVG adapter does for SVG files. It reads the format as VectorCraft documents it
+(<code>crates/format</code> and the types <code>crates/doc</code> saves) and links none of VectorCraft’s crates. VectorCraft
+versions 0.7.0 to 0.12.0 were read for this design.</p>
+<p><strong>The container.</strong> A file is JSON, compressed with gzip when its first two bytes are <code>1F 8B</code>. VectorCraft
+compresses from format 3 on, but the adapter reads any version either way. In format 4, images and other
+large data can follow the JSON, behind the marker <code>\n\0VCBLOBS\0</code>. JSON text never holds a NUL byte. The
+JSON ends at the first one, and nothing after the marker is read. The top level must say <code>"format": "vectorcraft"</code>, or <code>"drawcraft"</code>, VectorCraft’s earlier name, and hold a <code>document</code>. Formats 1 to 4 read
+alike: points as <code>{"x", "y"}</code> or <code>[x, y]</code> in any of them. A newer format is read as far as it goes, with
+<code>SC-W0803</code>, where VectorCraft’s own readers refuse it.</p>
+<p><strong>Limits.</strong> At most 64 MiB of JSON, unpacked, as for an SVG file. A gzip stream is unpacked only up to
+the marker, and no further than the limit. Nesting deeper than the JSON reader allows (128 levels, about
+40 levels of groups) refuses the file. VectorCraft itself keeps 32. The JSON is read into the few things
+the adapter uses, and the rest is skipped as it is read: images, previews and text runs are never kept.
+Every object, appearance item, effect and anchor charges the budget, and so does each element for its
+copy of the object’s path.</p>
+<p><strong>Coordinates.</strong> VectorCraft keeps every path in document coordinates. Moving or scaling a group moves
+its paths’ anchors, so layers, groups and compound paths have no transform. Coordinates are points, 1/72
+inch, with y down, and the adapter multiplies them by 25.4/72 into millimetres. The document’s origin
+stays the origin. Coordinates are read exactly, as VectorCraft reads them, from their text in the JSON.
+An anchor’s handles are absolute positions. A missing handle, or one within a billionth of a point of its
+anchor, leaves that end of the segment straight, and a segment without handles is a line.</p>
+<p><strong>What is stitched.</strong> The layers in order, bottom first, and in each its children in paint order:</p>
+<ul>
+<li><strong>Paths and compound paths</strong> are the art. A compound path’s children are one shape, with the compound’s
+appearance and fill rule.</li>
+<li><strong>Groups and layers</strong> pass their children on. Clipping is left for M8, as in the SVG adapter: a
+clipping group’s or layer’s art is stitched whole, with <code>SC-W0807</code>.</li>
+<li><strong>Hidden objects</strong>, and everything in them, are left out without a word, as VectorCraft draws nothing
+for them. So are objects and paints of opacity 0, paints turned off and strokes of width 0.</li>
+<li><strong>Template layers, layers that don’t print, and guides</strong> are left out with <code>SC-I0809</code>. VectorCraft
+shows them, dimmed or as guides, but prints and exports none of them.</li>
+<li><strong>A Shaper group’s sources</strong>, its first child, are left out: the group shows the shapes it makes of
+them.</li>
+<li><strong>Text, images and symbols,</strong> and the objects VectorCraft computes as it draws them (blends, envelopes,
+meshes, repeats, placed documents and VectorCraft’s Intertwine objects), are left out with <code>SC-W0807</code>.
+The message names VectorCraft’s command that makes paths of them, such as Type › Create Outlines for
+text. So is a kind of object this version doesn’t read.</li>
+</ul>
+<p><strong>Paints and threads.</strong> An object without StitchCraft’s effects is stitched as Ink/Stitch stitches an SVG
+shape. Its visible fills are filled, in the appearance’s order, and its visible strokes then have a
+running stitch each. The thread’s colour is a solid paint’s colour, with CMYK and grey converted by
+VectorCraft’s formula without colour management ((1 − c)(1 − k) and 1 − k) and Lab through sRGB. A
+gradient gives its first stop’s colour, with <code>SC-W0807</code> unless every stop has that colour, and a pattern
+gives black, with <code>SC-W0807</code>. A stroke’s width, in points, and its join, with its miter limit (10 when
+the file omits it, as VectorCraft draws it), shape a satin column drawn as one path. A stroke drawn with
+a brush is stitched along its path, without the brush’s art, with <code>SC-W0807</code>. A group’s or a layer’s own
+fills and strokes, which paint every member, are left out with <code>SC-W0807</code>.</p>
+<p><strong>Effects.</strong> StitchCraft’s live effects are kept in the object’s appearance as <code>{"id": "plugin.dev.stitchcraft.&lt;family&gt;", "params": {…}, "visible": true}</code>. The family is <code>stroke</code>, <code>satin</code> or
+<code>fill</code> (<code>stitchcraft_params::Family</code>). An object with visible StitchCraft effects is stitched as they
+say, in their order, instead of by its paints. A <code>fill</code> effect fills the object’s shape, a <code>stroke</code>
+effect stitches along it and a <code>satin</code> effect makes a satin column of it. With this rule, an object sews
+what its effects say and nothing else. A fill with an outline takes a <code>fill</code> effect and a <code>stroke</code>
+effect. The record’s parameters are the element’s. A number is written as a decimal, a toggle as <code>true</code>
+or <code>false</code>, a choice as its id and a list as its values with spaces between. What the record leaves out
+takes its default, as in the plug-in’s dialog. The thread is the colour of the first fill VectorCraft
+draws for a fill, and of the first stroke it draws for the others, falling back on the other kind. A
+<code>stroke</code> or <code>satin</code> effect follows the first visible stroke’s width and join, or a width of 0 when there
+is none, and a satin column too narrow to stitch across is sewn as a stroke, with <code>SC-W0212</code>.
+VectorCraft’s own effects change what an object draws, and are left out with <code>SC-W0807</code> (Object › Expand
+Appearance makes paths of what they draw).</p>
+<p><strong>Ids.</strong> An element is <code>vc:&lt;object id&gt;:&lt;what&gt;</code>: <code>fill</code> or <code>stroke</code> for a paint, with its rank among the
+object’s fills or strokes from the second on (<code>fill.2</code>), and the family for an effect. VectorCraft keeps
+an object’s id when it saves, so a report and a preview name the same object. A repeated id gets <code>~2</code>,
+<code>~3</code>, … as in the SVG adapter.</p>
+<p><strong>Reports.</strong> <code>SC-E0806</code> refuses a file that isn’t a VectorCraft document, or is larger than the adapter
+reads. <code>SC-W0807</code> names what isn’t stitched. <code>SC-W0808</code> names geometry that can’t be used, such as a
+number that doesn’t read or a point more than 10 m from the origin, and a shape that draws nothing.
+<code>SC-I0809</code> lists the layers and guides left out because VectorCraft doesn’t print them. The compatibility
+gate will have each VectorCraft version it tests write files for the adapter to read back (Level B, M6.6).</p>
 <h3 id="importing-inkstitch-svgs-into-vectorcraft"><a class="header" href="#importing-inkstitch-svgs-into-vectorcraft">Importing Ink/Stitch SVGs into VectorCraft</a></h3>
 <p>Because VectorCraft drops <code>inkstitch:*</code> attributes on SVG import, phase 1 offers
 <code>stitch import-inkstitch design.svg -o design.vectorcraft</code>: our SVG adapter reads the Ink/Stitch file
@@ -6301,7 +6417,7 @@ with a cached target directory for branch tracks. Scenarios are data files in <c
 </thead>
 <tbody>
 <tr><td><code>install-and-list</code></td><td><code>--cmd plugin.install</code>, <code>--cmd plugin.list</code></td><td>our plug-ins listed with the right kinds</td></tr>
-<tr><td><code>apply-running</code> / <code>-satin</code> / <code>-fill</code></td><td>open fixture, <code>effect.apply {"effect": "plugin.&lt;ns&gt;.&lt;x&gt;", "ids": […], "params": {…}}</code>, <code>--export out.png</code></td><td>PNG matches golden within tolerance; no <code>lastError</code></td></tr>
+<tr><td><code>apply-stroke</code> / <code>-satin</code> / <code>-fill</code></td><td>open fixture, <code>effect.apply {"effect": "plugin.&lt;ns&gt;.&lt;x&gt;", "ids": […], "params": {…}}</code>, <code>--export out.png</code></td><td>PNG matches golden within tolerance; no <code>lastError</code></td></tr>
 <tr><td><code>save-reopen</code></td><td>apply, <code>app.save</code>, reopen, <code>effect.list</code></td><td>parameters identical (<code>REQ-PRM-003</code>)</td></tr>
 <tr><td><code>export-pes</code></td><td>VectorCraft saves <code>.vectorcraft</code>; <code>stitch export</code> reads it</td><td>our CLI reads the version’s files; PES golden matches</td></tr>
 <tr><td><code>missing-plugin</code></td><td>open a document with our effect records without the plug-in installed</td><td>document opens; records preserved on save</td></tr>
@@ -6507,11 +6623,11 @@ DST machines cut before long runs of jumps (<code>REQ-FMT-008</code>), and a PES
 (<code>REQ-FMT-010</code>). <code>stitchcraft_testkit::equivalence::format_events</code> gives both, and drops a cut with
 nothing sewn since the last one, which changes nothing on the fabric.</p>
 <h4 id="fuzzing"><a class="header" href="#fuzzing">Fuzzing</a></h4>
-<p><code>fuzz/</code> holds one target per reader (<code>read_pes</code>, <code>read_dst</code>, <code>read_svg</code>) and one for a file’s whole
-journey (<code>read_write_preview</code>: read, write in every format, read the files back, preview). Each target
-is one line; its body is in <code>stitchcraft-testkit::fuzz</code>, so every pull request runs the bodies on the
-seed files, every shortening of them and random or damaged bytes, on stable Rust and all three operating
-systems. The properties:</p>
+<p><code>fuzz/</code> has a target for each reader (<code>read_pes</code>, <code>read_dst</code>, <code>read_svg</code> and <code>read_vectorcraft</code>), and
+one for a file’s whole journey (<code>read_write_preview</code>: read, write in every format, read the files back,
+preview). Each target is one line. Its body is in <code>stitchcraft-testkit::fuzz</code>, where every pull request
+runs it on the seed files, every shortening of them and random or damaged bytes, on stable Rust and all
+three operating systems. The properties:</p>
 <ul>
 <li><strong>machine files</strong> (<code>REQ-FMT-006</code>). No reader panics or gives more than 2,000,000 entries or a position
 beyond ±10 m. Each format writes a plan read from anything or refuses it. PES refuses a design more
@@ -6520,12 +6636,14 @@ way, for DST the way DST machines sew it (<code>REQ-FMT-008</code>). Previews ne
 <li><strong>SVG</strong> (<code>REQ-SVG-002</code>): no panic; the reader refuses only with its own codes (<code>SC-E0801</code>,
 <code>SC-E0004</code>); what it reads is a valid design, with no point beyond ±10 m, and everything it says about
 the file is a warning.</li>
+<li><strong>VectorCraft</strong> (<code>REQ-VC-001</code>), as for SVG, with <code>SC-E0806</code> for a file that isn’t a VectorCraft
+document. The same bytes compressed with gzip read the same, unless unpacking them spends the budget.</li>
 </ul>
 <p>Every night <code>nightly.yml</code> fuzzes each target for 20 minutes with libFuzzer (<code>-timeout=10</code>,
-<code>-rss_limit_mb=2048</code>). The corpus starts from the seeds, the golden machine files or the SVG fixtures
-(with a dictionary of SVG’s keywords, <code>fuzz/svg.dict</code>), and is kept, minimised, in the Actions cache, so
-each night continues where the last stopped. A crash fails the job and keeps the input
-as an artifact. To work on one locally:</p>
+<code>-rss_limit_mb=2048</code>). The corpus starts from the seeds, the golden machine files or the SVG and
+VectorCraft fixtures (with dictionaries of their keywords, <code>fuzz/svg.dict</code> and <code>fuzz/vectorcraft.dict</code>).
+It is kept, minimised, in the Actions cache, and each night continues where the last stopped. A crash
+fails the job and keeps the input as an artifact. To work on one locally:</p>
 <pre><code class="language-sh">cargo +nightly fuzz run read_pes                        # until stopped; corpus in fuzz/corpus/read_pes
 cargo +nightly fuzz run read_pes fuzz/artifacts/read_pes/crash-…   # reproduce a crash
 </code></pre>
@@ -8019,7 +8137,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
 </thead>
 <tbody>
-<tr><td>M6.1</td><td><code>stitchcraft-vectorcraft</code>: read <code>.vectorcraft</code> (layers, groups, paths, paints, effect records, transforms); size and depth caps</td><td><code>REQ-VC-001</code>; fuzzed</td></tr>
+<tr><td>M6.1 ✅</td><td><code>stitchcraft-vectorcraft</code>: read <code>.vectorcraft</code> files of formats 1 to 4, plain or compressed: layers, groups, paths and compound paths, paints as threads, and StitchCraft’s effect records, which say how an object sews. VectorCraft keeps paths in document coordinates, with no transforms to apply. What isn’t stitched is named (<code>SC-W0807</code>, <code>SC-W0808</code>, <code>SC-I0809</code>). Caps: 64 MiB of JSON and the JSON reader’s depth</td><td><code>REQ-VC-001</code>, <code>REQ-VC-004</code>, <code>REQ-VC-005</code>; fuzzed (<code>read_vectorcraft</code>)</td></tr>
 <tr><td>M6.2</td><td>The plug-in crate, with manifests generated per family and the ABI shim (<code>abi.rs</code>, whose <code>unsafe</code> is audited)</td><td><code>REQ-VC-002</code> (manifests valid, ≤ 64 params), and the module’s size with the engine recorded (<a href="#adr-0005-geometry-stack">ADR-0005</a>)</td></tr>
 <tr><td>M6.3</td><td>Live-effect previews with budget-aware levels</td><td><code>REQ-VC-003</code> per level, within 5 s / fuel</td></tr>
 <tr><td>M6.4</td><td>Tools filter: make satin, add rung, bake preview, test sheet; Graphic Styles as presets verified</td><td>cases per tool</td></tr>

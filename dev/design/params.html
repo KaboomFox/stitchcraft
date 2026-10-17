@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-4d63fc69.js";
+            window.path_to_searchindex_js = "../searchindex-869c57ce.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -383,7 +383,7 @@ stitch types (M7 and M10) let a declaration give a family its own kind and range
 </div>
 <h2 id="splitting-for-vectorcraft-abi-v1"><a class="header" href="#splitting-for-vectorcraft-abi-v1">Splitting for VectorCraft ABI v1</a></h2>
 <p>VectorCraft v1 allows at most 64 parameters per plug-in and has no groups or conditional visibility.
-The plug-in crate therefore builds <strong>one plug-in per stitch family</strong> (<code>running</code>, <code>satin</code>, <code>fill</code>), each
+The plug-in crate builds <strong>one plug-in per stitch family</strong> for that (<code>stroke</code>, <code>satin</code>, <code>fill</code>), each
 with only the parameters that apply to it; the shared lock/trim parameters are included in each. A test
 fails if any family’s manifest exceeds 64 parameters or 64 KiB, so adding a parameter that would break
 the limit is caught in the PR, not by a user. When VectorCraft supports richer schemas (ABI v2 RFC),

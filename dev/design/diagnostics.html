@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-4d63fc69.js";
+            window.path_to_searchindex_js = "../searchindex-869c57ce.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -308,9 +308,13 @@ another.</p>
 <tr><td><code>SC-I0703</code></td><td>Info</td><td>Stitches longer than the machine’s longest stitch; split</td><td>M3</td></tr>
 <tr><td><code>SC-E0801</code></td><td>Error</td><td>SVG could not be read (with the parser’s position)</td><td>M3</td></tr>
 <tr><td><code>SC-W0802</code></td><td>Warning</td><td>SVG feature ignored (e.g. raster image, text not converted to paths)</td><td>M3</td></tr>
-<tr><td><code>SC-W0803</code></td><td>Warning</td><td><code>.vectorcraft</code> file from a newer VectorCraft format version; read best-effort</td><td>M6</td></tr>
+<tr><td><code>SC-W0803</code></td><td>Warning</td><td>VectorCraft file from a newer format version; read best-effort (a version newer than the newest the adapter reads)</td><td>M6</td></tr>
 <tr><td><code>SC-W0804</code></td><td>Warning</td><td>Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke’s width, join or miter limit that does not read); the usable part is stitched</td><td>M3</td></tr>
 <tr><td><code>SC-I0805</code></td><td>Info</td><td>Object left out, as the file asks (Ink/Stitch’s ignore commands and <code>ignore_object</code> setting)</td><td>M3</td></tr>
+<tr><td><code>SC-E0806</code></td><td>Error</td><td>VectorCraft file could not be read (not a VectorCraft document, or larger than the adapter reads)</td><td>M6</td></tr>
+<tr><td><code>SC-W0807</code></td><td>Warning</td><td>VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft’s own effects, brushes, gradients, patterns)</td><td>M6</td></tr>
+<tr><td><code>SC-W0808</code></td><td>Warning</td><td>VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing)</td><td>M6</td></tr>
+<tr><td><code>SC-I0809</code></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides)</td><td>M6</td></tr>
 </tbody>
 </table>
 </div>

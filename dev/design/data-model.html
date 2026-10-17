@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-4d63fc69.js";
+            window.path_to_searchindex_js = "../searchindex-869c57ce.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -207,7 +207,7 @@ host document and every host gets the same stitches for the same design. Since M
 <pre><code class="language-rust ignore">pub struct Design { elements: Vec&lt;Element&gt;, pub settings: DesignSettings }   // checked by Design::new
 
 pub struct Element {
-    pub id: ElementId,               // stable host id: "svg:path123:fill", "vc:42"
+    pub id: ElementId,               // stable host id: "svg:path123:fill", "vc:42:fill"
     pub name: Option&lt;String&gt;,        // the name the user gave it (Inkscape's label)
     pub shape: Shape,
     pub thread: Thread,
@@ -238,6 +238,8 @@ their control points, and the generators flatten it with the tolerance their par
 transforms, and <code>stroke-linejoin</code> with <code>stroke-miterlimit</code> (<a href="svg-input.html#stroke-width-and-join">SVG input</a>).
 Only a satin column drawn as one path uses them, as its width and its corners. <code>Shape::stroke(path)</code>
 makes a stroke that says nothing of either: 1 CSS pixel wide, with <code>Join::UNSET</code>.</p>
+<p>Documents repeat ids, so adapters make theirs unique with <code>stitchcraft_core::Labels</code>, which gives a
+label repeated in a document <code>~2</code>, <code>~3</code> and so on, in every adapter alike.</p>
 <p>Invariants, checked by <code>Design::new</code>: element ids are unique, and every point is finite and within
 ±10,000 mm, as far as machine-file coordinates go. No stroke is narrower than 0, a miter limit is a
 finite number of at least 1, and the settings’ lengths are not negative. Adapters drop what they cannot

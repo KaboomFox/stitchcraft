@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-4d63fc69.js";
+            window.path_to_searchindex_js = "../searchindex-869c57ce.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -257,22 +257,22 @@ GPL/AGPL/LGPL.</p>
 <tr><th>Need</th><th>Crate</th><th>Licence</th><th>Where</th></tr>
 </thead>
 <tbody>
-<tr><td>Curves, affine (strokes are flattened by the engine, for determinism)</td><td><code>kurbo</code> 0.13</td><td>MIT/Apache</td><td>core, engine, adapters</td></tr>
-<tr><td>Polygon booleans, offsets (a fill’s region and a satin’s offset rails are built by the engine)</td><td><code>i_overlay</code> 9</td><td>MIT/Apache</td><td>engine</td></tr>
-<tr><td>Spatial index</td><td><code>rstar</code> 0.13</td><td>MIT/Apache</td><td>engine</td></tr>
-<tr><td>Graphs</td><td><code>petgraph</code> 0.8</td><td>MIT/Apache</td><td>engine</td></tr>
 <tr><td>Deterministic transcendental math</td><td><code>libm</code> 0.2</td><td>MIT</td><td>core</td></tr>
 <tr><td>Errors</td><td><code>thiserror</code> 2</td><td>MIT/Apache</td><td>all libraries</td></tr>
-<tr><td>Serialization</td><td><code>serde</code>, <code>serde_json</code>, <code>toml</code></td><td>MIT/Apache</td><td>params, adapters, xtask</td></tr>
 <tr><td>XML / SVG syntax</td><td><code>roxmltree</code>, <code>svgtypes</code></td><td>MIT/Apache</td><td>svg</td></tr>
-<tr><td>Rasterizing previews</td><td><code>tiny-skia</code> 0.12</td><td>BSD-3-Clause</td><td>render</td></tr>
+<tr><td><code>.vectorcraft</code> documents: JSON, its coordinates read exactly, unpacked from gzip by a Rust backend</td><td><code>serde</code>, <code>serde_json</code>, <code>flate2</code> 1</td><td>MIT/Apache</td><td>vectorcraft</td></tr>
+<tr><td>Rasterizing previews</td><td><code>tiny-skia</code> 0.11</td><td>BSD-3-Clause</td><td>render</td></tr>
+<tr><td>JSON reports, and the plug-in’s JSON</td><td><code>serde_json</code></td><td>MIT/Apache</td><td>cli, vc-plugin</td></tr>
+<tr><td>Content hashes of bug-report bundles</td><td><code>sha2</code> 0.11</td><td>MIT/Apache</td><td>cli</td></tr>
 <tr><td>CLI parsing</td><td><code>clap</code> 4</td><td>MIT/Apache</td><td>cli, xtask</td></tr>
-<tr><td>Tests</td><td><code>proptest</code>, <code>insta</code>, <code>trycmd</code></td><td>MIT/Apache, Apache</td><td>dev only</td></tr>
+<tr><td>Tooling’s TOML and JSON</td><td><code>toml</code>, <code>toml_edit</code>, <code>serde_json</code></td><td>MIT/Apache</td><td>xtask</td></tr>
+<tr><td>Tests</td><td><code>proptest</code>, <code>insta</code></td><td>MIT/Apache, Apache</td><td>dev only</td></tr>
 </tbody>
 </table>
 </div>
-<p>Versions above are the current ones (checked 2026-10-08 with <code>cargo info</code>); <code>Cargo.lock</code> is the
-truth. The geometry choices are validated by spike M0.7 (<a href="adr/0005-geometry-stack.html">ADR-0005</a>).</p>
+<p>The engine’s geometry is its own, with no crate for curves, regions, offsets, nearest points or graphs:
+spike M0.7 accepted that (<a href="adr/0005-geometry-stack.html">ADR-0005</a>). Versions above are those
+<code>Cargo.toml</code> asks for (2026-10-17), and <code>Cargo.lock</code> is the truth.</p>
 <h2 id="hosts-ports-and-adapters"><a class="header" href="#hosts-ports-and-adapters">Hosts: ports and adapters</a></h2>
 <p>The engine exposes one entry point and one input type:</p>
 <pre><code class="language-rust ignore">pub fn plan(design: &amp;Design, profile: &amp;MachineProfile, budget: &amp;Budget) -&gt; PlanOutcome;   // since M3.8

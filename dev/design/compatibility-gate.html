@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-4d63fc69.js";
+            window.path_to_searchindex_js = "../searchindex-869c57ce.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -234,7 +234,7 @@ with a cached target directory for branch tracks. Scenarios are data files in <c
 </thead>
 <tbody>
 <tr><td><code>install-and-list</code></td><td><code>--cmd plugin.install</code>, <code>--cmd plugin.list</code></td><td>our plug-ins listed with the right kinds</td></tr>
-<tr><td><code>apply-running</code> / <code>-satin</code> / <code>-fill</code></td><td>open fixture, <code>effect.apply {"effect": "plugin.&lt;ns&gt;.&lt;x&gt;", "ids": […], "params": {…}}</code>, <code>--export out.png</code></td><td>PNG matches golden within tolerance; no <code>lastError</code></td></tr>
+<tr><td><code>apply-stroke</code> / <code>-satin</code> / <code>-fill</code></td><td>open fixture, <code>effect.apply {"effect": "plugin.&lt;ns&gt;.&lt;x&gt;", "ids": […], "params": {…}}</code>, <code>--export out.png</code></td><td>PNG matches golden within tolerance; no <code>lastError</code></td></tr>
 <tr><td><code>save-reopen</code></td><td>apply, <code>app.save</code>, reopen, <code>effect.list</code></td><td>parameters identical (<code>REQ-PRM-003</code>)</td></tr>
 <tr><td><code>export-pes</code></td><td>VectorCraft saves <code>.vectorcraft</code>; <code>stitch export</code> reads it</td><td>our CLI reads the version’s files; PES golden matches</td></tr>
 <tr><td><code>missing-plugin</code></td><td>open a document with our effect records without the plug-in installed</td><td>document opens; records preserved on save</td></tr>
