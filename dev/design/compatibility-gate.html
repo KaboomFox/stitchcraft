@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d0a8567d.js";
+            window.path_to_searchindex_js = "../searchindex-44dc662e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -217,6 +217,9 @@ checks:</p>
 host’s limits, and return the expected preview geometry (golden JSON, tolerance 1 µm).</li>
 <li>Filters run and return valid objects.</li>
 <li>Error paths: invalid parameters are rejected by the host with the expected message.</li>
+<li>Budget: the <em>hello</em> plug-in’s cost for each byte of JSON it reads and writes stays within a quarter
+above the costs <a href="vectorcraft-integration.html#live-effect-previews-within-v1-budgets">recorded for previews</a>.
+Each run prints the costs.</li>
 </ol>
 <p><code>vectorcraft-plugins</code> depends only on <code>geom</code>, <code>color</code>, <code>doc</code> and <code>wasmi</code>, so this builds quickly.</p>
 <h3 id="level-b--end-to-end-slower-tens-of-minutes"><a class="header" href="#level-b--end-to-end-slower-tens-of-minutes">Level B — end to end (slower, tens of minutes)</a></h3>

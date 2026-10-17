@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d0a8567d.js";
+            window.path_to_searchindex_js = "../searchindex-44dc662e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -202,7 +202,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M0.3 ✅</td><td>Workflows: <code>ci.yml</code>, <code>docs.yml</code>, <code>compat.yml</code> (discovery), <code>nightly.yml</code>; templates; Dependabot</td><td>First PR runs green on GitHub</td></tr>
 <tr><td>M0.4 ✅</td><td>mdBook site, design docs, ADRs, this roadmap, machine-testing protocol</td><td><code>mdbook build</code> and the docs check pass</td></tr>
 <tr><td>M0.5 👤 (partly ✅)</td><td>Create the GitHub repository, push, enable Pages (from the <code>gh-pages</code> branch) and branch protection with required checks <code>ci</code> and <code>docs</code>; replace <code>OWNER</code> in <code>CODEOWNERS</code> and <code>Cargo.toml</code> and add a contact to <code>CODE_OF_CONDUCT.md</code>; create the labels <code>golden-change</code>, <code>docs:refresh-shots</code>, <code>upstream-canary</code>, <code>upstream-prerelease</code>, <code>sewout</code>, <code>sewout:pass</code>, <code>sewout:tune</code>, <code>sewout:bug</code>, <code>good first issue</code></td><td>A test PR cannot merge while a check is red</td></tr>
-<tr><td>M0.6 🧪</td><td>VectorCraft “hello” plug-in: identity live effect built in CI for <code>wasm32-unknown-unknown</code>; Level A contract test against the pinned stable <code>vectorcraft-plugins</code> (v0.6.0, now v0.7.0), <code>release</code> and <code>main</code>; measure fuel per output byte</td><td>Contract test green in <code>compat.yml</code> (done: green on every track, 2026-10-08); budget numbers recorded in the integration doc (open)</td></tr>
+<tr><td>M0.6 ✅ 🧪</td><td>VectorCraft “hello” plug-in: an identity live effect built in CI for <code>wasm32-unknown-unknown</code>, a Level A contract test against the pinned stable <code>vectorcraft-plugins</code> (v0.6.0, now v0.7.0), <code>release</code> and <code>main</code>, and the fuel it spends per byte of output</td><td>The contract test is green in <code>compat.yml</code> on every track (2026-10-08), and the budget is recorded in the integration doc: 512 instructions a byte read and 822 written (2026-10-17)</td></tr>
 <tr><td>M0.7 🧪</td><td>Geometry spike (<a href="../design/adr/0005-geometry-stack.html">ADR-0005</a> criteria)</td><td>ADR-0005 accepted or revised</td></tr>
 <tr><td>M0.8 🧪</td><td>Headless VectorCraft window in CI (Xvfb + Mesa) taking <code>ui.screenshot</code> twice with identical pixels; one <a href="https://xa11y.dev/">xa11y</a> test that drives the same window through its accessibility tree (AT-SPI on Linux)</td><td>Decision recorded in the docs pipeline page, for both</td></tr>
 <tr><td>M0.9 ✅</td><td>Movable into VectorCraft (<a href="../design/adr/0011-movable-into-vectorcraft.html">ADR-0011</a>): packages prefixed, manifests inheriting only what VectorCraft defines, tooling scoped to its folder and packages, <code>cargo xtask compat join [--nested]</code>, and a daily <code>move</code> job</td><td><code>move</code> green against VectorCraft’s latest release and <code>main</code></td></tr>

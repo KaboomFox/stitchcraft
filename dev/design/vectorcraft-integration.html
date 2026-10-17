@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d0a8567d.js";
+            window.path_to_searchindex_js = "../searchindex-44dc662e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -290,10 +290,29 @@ a report; <code>--preview design.png</code> renders what will sew.</li>
 locked objects are stitched. Thread colours come from the object’s fill (fills, satins) or stroke
 (running stitch), mapped to the profile’s palette.</p>
 <h3 id="live-effect-previews-within-v1-budgets"><a class="header" href="#live-effect-previews-within-v1-budgets">Live-effect previews within v1 budgets</a></h3>
-<p>A live effect must finish in 5 s and about 50 M instructions, and the <code>wasmi</code> interpreter runs
-roughly 10–100× slower than native code. Generating a large fill is cheap; <strong>serializing tens of
-thousands of stitches as JSON geometry is not.</strong> The plug-in therefore estimates the output size before
-generating and picks a preview level:</p>
+<p>A live effect gets 50 million instructions, plus 4,000 for each byte of its input, and 5 seconds. Spike
+M0.6 measured what JSON costs in VectorCraft’s host (<code>wasmi</code> 2.0, in VectorCraft 0.12.0 and on <code>main</code> at
+<code>8bc6532</code>, 2026-10-17). The <em>hello</em> plug-in reads its input with <code>serde_json</code> and writes the geometry
+back:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Measured</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Reading JSON</td><td>512 instructions a byte</td></tr>
+<tr><td>Writing JSON from a <code>serde_json</code> value</td><td>822 instructions a byte</td></tr>
+<tr><td>One anchor of a path, as JSON</td><td>40 bytes</td></tr>
+<tr><td>Speed on GitHub’s Linux runners</td><td>about 1.9 billion instructions a second</td></tr>
+</tbody>
+</table>
+</div>
+<p>The instruction budget runs out long before the clock: 50 million instructions take about 26 ms.
+Reading a path uses an eighth of the 4,000 instructions each of its bytes brings, so writing is what
+limits a preview. Written as <em>hello</em> writes it, the 50 million instructions buy about 60 KB of JSON:
+about 1,500 anchors, a stroke of that many stitches, or a few hundred fill stitches drawn as ribbons.
+Generating a large fill is cheap, but <strong>writing tens of thousands of stitches as JSON geometry is not.</strong>
+So the plug-in estimates the output size before generating and picks a preview level:</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -306,11 +325,14 @@ generating and picks a preview level:</p>
 </tbody>
 </table>
 </div>
-<p>A <code>preview</code> choice parameter lets the user force a level. Exact budgets are measured in spike M0.6 and
-fixed in M6.3 with a conformance case per level. If a run still fails, VectorCraft draws the object
-unchanged and reports the error through <code>plugin.info</code>’s <code>lastError</code>; our message says which level to
-choose. The real stitches are always available from the CLI preview, and ABI v2’s overlay channel
-removes this limitation.</p>
+<p>A <code>preview</code> choice parameter lets the user force a level. M6.3 fixes each level’s budget with a
+conformance case, from these numbers and its own writer’s, which can write fewer digits without a
+<code>serde_json</code> value in between. The contract test <code>hello_reads_and_writes_json_within_the_recorded_budget</code>
+measures the costs again on every track the <a href="compatibility-gate.html">compatibility gate</a> tests, and fails
+if either rises by more than a quarter. If a run still fails, VectorCraft draws the object unchanged and
+reports the error through <code>plugin.info</code>’s <code>lastError</code>, and our message says which level to choose. The
+real stitches are always available from the CLI preview, and ABI v2’s overlay channel removes this
+limitation.</p>
 <p>Paint caveat: a live effect cannot read the object’s paint, so a fill preview shows ribbons painted with
 the object’s own fill; stroke previews use the object’s stroke. Users set the fill/stroke to the thread
 colour, which they want anyway for export.</p>

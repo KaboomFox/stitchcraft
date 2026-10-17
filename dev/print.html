@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-d0a8567d.js";
+            window.path_to_searchindex_js = "searchindex-44dc662e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-623c1739.js"></script>
@@ -6041,10 +6041,29 @@ a report; <code>--preview design.png</code> renders what will sew.</li>
 locked objects are stitched. Thread colours come from the object’s fill (fills, satins) or stroke
 (running stitch), mapped to the profile’s palette.</p>
 <h3 id="live-effect-previews-within-v1-budgets"><a class="header" href="#live-effect-previews-within-v1-budgets">Live-effect previews within v1 budgets</a></h3>
-<p>A live effect must finish in 5 s and about 50 M instructions, and the <code>wasmi</code> interpreter runs
-roughly 10–100× slower than native code. Generating a large fill is cheap; <strong>serializing tens of
-thousands of stitches as JSON geometry is not.</strong> The plug-in therefore estimates the output size before
-generating and picks a preview level:</p>
+<p>A live effect gets 50 million instructions, plus 4,000 for each byte of its input, and 5 seconds. Spike
+M0.6 measured what JSON costs in VectorCraft’s host (<code>wasmi</code> 2.0, in VectorCraft 0.12.0 and on <code>main</code> at
+<code>8bc6532</code>, 2026-10-17). The <em>hello</em> plug-in reads its input with <code>serde_json</code> and writes the geometry
+back:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Measured</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Reading JSON</td><td>512 instructions a byte</td></tr>
+<tr><td>Writing JSON from a <code>serde_json</code> value</td><td>822 instructions a byte</td></tr>
+<tr><td>One anchor of a path, as JSON</td><td>40 bytes</td></tr>
+<tr><td>Speed on GitHub’s Linux runners</td><td>about 1.9 billion instructions a second</td></tr>
+</tbody>
+</table>
+</div>
+<p>The instruction budget runs out long before the clock: 50 million instructions take about 26 ms.
+Reading a path uses an eighth of the 4,000 instructions each of its bytes brings, so writing is what
+limits a preview. Written as <em>hello</em> writes it, the 50 million instructions buy about 60 KB of JSON:
+about 1,500 anchors, a stroke of that many stitches, or a few hundred fill stitches drawn as ribbons.
+Generating a large fill is cheap, but <strong>writing tens of thousands of stitches as JSON geometry is not.</strong>
+So the plug-in estimates the output size before generating and picks a preview level:</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -6057,11 +6076,14 @@ generating and picks a preview level:</p>
 </tbody>
 </table>
 </div>
-<p>A <code>preview</code> choice parameter lets the user force a level. Exact budgets are measured in spike M0.6 and
-fixed in M6.3 with a conformance case per level. If a run still fails, VectorCraft draws the object
-unchanged and reports the error through <code>plugin.info</code>’s <code>lastError</code>; our message says which level to
-choose. The real stitches are always available from the CLI preview, and ABI v2’s overlay channel
-removes this limitation.</p>
+<p>A <code>preview</code> choice parameter lets the user force a level. M6.3 fixes each level’s budget with a
+conformance case, from these numbers and its own writer’s, which can write fewer digits without a
+<code>serde_json</code> value in between. The contract test <code>hello_reads_and_writes_json_within_the_recorded_budget</code>
+measures the costs again on every track the <a href="#vectorcraft-compatibility-gate">compatibility gate</a> tests, and fails
+if either rises by more than a quarter. If a run still fails, VectorCraft draws the object unchanged and
+reports the error through <code>plugin.info</code>’s <code>lastError</code>, and our message says which level to choose. The
+real stitches are always available from the CLI preview, and ABI v2’s overlay channel removes this
+limitation.</p>
 <p>Paint caveat: a live effect cannot read the object’s paint, so a fill preview shows ribbons painted with
 the object’s own fill; stroke previews use the object’s stroke. Users set the fill/stroke to the thread
 colour, which they want anyway for export.</p>
@@ -6255,6 +6277,9 @@ checks:</p>
 host’s limits, and return the expected preview geometry (golden JSON, tolerance 1 µm).</li>
 <li>Filters run and return valid objects.</li>
 <li>Error paths: invalid parameters are rejected by the host with the expected message.</li>
+<li>Budget: the <em>hello</em> plug-in’s cost for each byte of JSON it reads and writes stays within a quarter
+above the costs <a href="#live-effect-previews-within-v1-budgets">recorded for previews</a>.
+Each run prints the costs.</li>
 </ol>
 <p><code>vectorcraft-plugins</code> depends only on <code>geom</code>, <code>color</code>, <code>doc</code> and <code>wasmi</code>, so this builds quickly.</p>
 <h3 id="level-b--end-to-end-slower-tens-of-minutes"><a class="header" href="#level-b--end-to-end-slower-tens-of-minutes">Level B — end to end (slower, tens of minutes)</a></h3>
@@ -7800,7 +7825,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M0.3 ✅</td><td>Workflows: <code>ci.yml</code>, <code>docs.yml</code>, <code>compat.yml</code> (discovery), <code>nightly.yml</code>; templates; Dependabot</td><td>First PR runs green on GitHub</td></tr>
 <tr><td>M0.4 ✅</td><td>mdBook site, design docs, ADRs, this roadmap, machine-testing protocol</td><td><code>mdbook build</code> and the docs check pass</td></tr>
 <tr><td>M0.5 👤 (partly ✅)</td><td>Create the GitHub repository, push, enable Pages (from the <code>gh-pages</code> branch) and branch protection with required checks <code>ci</code> and <code>docs</code>; replace <code>OWNER</code> in <code>CODEOWNERS</code> and <code>Cargo.toml</code> and add a contact to <code>CODE_OF_CONDUCT.md</code>; create the labels <code>golden-change</code>, <code>docs:refresh-shots</code>, <code>upstream-canary</code>, <code>upstream-prerelease</code>, <code>sewout</code>, <code>sewout:pass</code>, <code>sewout:tune</code>, <code>sewout:bug</code>, <code>good first issue</code></td><td>A test PR cannot merge while a check is red</td></tr>
-<tr><td>M0.6 🧪</td><td>VectorCraft “hello” plug-in: identity live effect built in CI for <code>wasm32-unknown-unknown</code>; Level A contract test against the pinned stable <code>vectorcraft-plugins</code> (v0.6.0, now v0.7.0), <code>release</code> and <code>main</code>; measure fuel per output byte</td><td>Contract test green in <code>compat.yml</code> (done: green on every track, 2026-10-08); budget numbers recorded in the integration doc (open)</td></tr>
+<tr><td>M0.6 ✅ 🧪</td><td>VectorCraft “hello” plug-in: an identity live effect built in CI for <code>wasm32-unknown-unknown</code>, a Level A contract test against the pinned stable <code>vectorcraft-plugins</code> (v0.6.0, now v0.7.0), <code>release</code> and <code>main</code>, and the fuel it spends per byte of output</td><td>The contract test is green in <code>compat.yml</code> on every track (2026-10-08), and the budget is recorded in the integration doc: 512 instructions a byte read and 822 written (2026-10-17)</td></tr>
 <tr><td>M0.7 🧪</td><td>Geometry spike (<a href="#adr-0005-geometry-stack">ADR-0005</a> criteria)</td><td>ADR-0005 accepted or revised</td></tr>
 <tr><td>M0.8 🧪</td><td>Headless VectorCraft window in CI (Xvfb + Mesa) taking <code>ui.screenshot</code> twice with identical pixels; one <a href="https://xa11y.dev/">xa11y</a> test that drives the same window through its accessibility tree (AT-SPI on Linux)</td><td>Decision recorded in the docs pipeline page, for both</td></tr>
 <tr><td>M0.9 ✅</td><td>Movable into VectorCraft (<a href="#adr-0011-stitchcraft-can-move-into-vectorcrafts-repository">ADR-0011</a>): packages prefixed, manifests inheriting only what VectorCraft defines, tooling scoped to its folder and packages, <code>cargo xtask compat join [--nested]</code>, and a daily <code>move</code> job</td><td><code>move</code> green against VectorCraft’s latest release and <code>main</code></td></tr>
