@@ -112,7 +112,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M6.1 ✅ | `stitchcraft-vectorcraft`: read `.vectorcraft` files of formats 1 to 4, plain or compressed: layers, groups, paths and compound paths, paints as threads, and StitchCraft's effect records, which say how an object sews. VectorCraft keeps paths in document coordinates, with no transforms to apply. What isn't stitched is named (`SC-W0807`, `SC-W0808`, `SC-I0809`). Caps: 64 MiB of JSON and the JSON reader's depth | `REQ-VC-001`, `REQ-VC-004`, `REQ-VC-005`; fuzzed (`read_vectorcraft`) |
 | M6.2 ✅ | The plug-in crate, with manifests generated per family and the ABI shim (`abi.rs`, whose `unsafe` is audited). One module per family, whose live effect shows the object's stitches, or says why it shows none (`SC-I0810`) | `REQ-VC-002` (manifests valid, ≤ 64 params), and the module's size with the engine recorded ([ADR-0005](../design/adr/0005-geometry-stack.md)) |
 | M6.3 ✅ | Live-effect previews with budget-aware levels: exact, a fill's rows, and the outline, picked by `preview_level` or by what the budget affords, the engine's work priced in instructions measured in VectorCraft's host | `REQ-VC-003` per level, within 5 s / fuel |
-| M6.4 | Tools filter: make satin, add rung, bake preview, test sheet; Graphic Styles as presets verified | cases per tool |
+| M6.4 ✅ | Tools as VectorCraft's own commands, checked in its source. Make Compound Path joins a satin column's 2 paths and adds rungs. Expand Appearance bakes a preview, and Graphic Styles are presets. A group's StitchCraft effects sew the paths inside it, as VectorCraft draws them. The tools filter is left for later: making a line into a satin column took 51 to 162 million instructions in VectorCraft's host against about 52 million, and a filter cannot give the objects it draws effects | `REQ-VC-006`, `REQ-VC-007` |
 | M6.5 | `stitch export design.vectorcraft`; marker conventions (`stitch:start`, `stitch:end`, `stitch:ignore`) | end-to-end cases |
 | M6.6 | Compatibility gate complete: Level A + B, all four tracks, bot PR and issues, generated table | first scheduled run green |
 | M6.7 | UI screenshots pipeline on M0.8's window probe (`cargo xtask compat window`), each picture cropped to its menu or dialog; tutorial "A patch in VectorCraft"; xa11y drives VectorCraft to each screen and checks the plug-in's controls | `shots-ui` job green |
@@ -156,7 +156,9 @@ CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).
 ## M10 — More stitch types II
 
 Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch, legacy fill; auto-run and auto-satin
-routing tools; per-layer ordering (underlay now, top later).
+routing tools; per-layer ordering (underlay now, top later). VectorCraft's tools filter with Convert Line to
+Satin, once a column's centre line converts within ABI v1's budget, or ABI v2 gives heavy plug-ins more
+([tools](../design/vectorcraft-integration.md#tools-vectorcrafts-own-commands)).
 
 ## M11 — Formats II
 

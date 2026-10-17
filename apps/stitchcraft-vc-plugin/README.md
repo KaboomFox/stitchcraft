@@ -7,9 +7,10 @@ ABI v1 (no imports; JSON in linear memory).
 and *StitchCraft Fill*. Each sews the object it is applied to, with the parameters set in its dialog, and
 shows as much of the stitches as VectorCraft lets a live effect spend on, in place of the object's art
 (M6.3, `src/preview.rs`). A stroke and a satin column show their stitches, and a fill its rows; the
-outline shows when they cost too much, and the dialog's `preview_level` picks a level. M6.4 adds the
-tools. Without a family the module is M0.6's *hello* effect, which returns the object's geometry
-unchanged. The contract tests measure the host's costs with it
+outline shows when they cost too much, and the dialog's `preview_level` picks a level. VectorCraft's own
+commands are the tools, and its Graphic Styles keep the effects' settings as presets (M6.4,
+`docs/src/user/how-to/vectorcraft-columns-and-presets.md`).
+Without a family the module is M0.6's *hello* effect, which returns the object's geometry unchanged. The contract tests measure the host's costs with it
 (`docs/src/design/vectorcraft-integration.md`).
 
 ## Build

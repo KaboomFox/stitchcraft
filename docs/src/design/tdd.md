@@ -268,7 +268,8 @@ Three phases (full design in [VectorCraft integration](vectorcraft-integration.m
 
 1. **ABI v1, no upstream change (M6).** Plug-ins `dev.stitchcraft.running`, `.satin` and `.fill` are
    *live effects*: applying one stores the embroidery parameters on the object and draws a lightweight
-   stitch preview. `dev.stitchcraft.tools` is an *object filter* (make satin, add rung, bake preview).
+   stitch preview. VectorCraft's own commands make satin columns of 2 paths, add rungs and bake previews,
+   and its Graphic Styles keep embroidery settings as presets.
    Machine files come from `stitch export design.vectorcraft`. (The namespace is one constant, changed
    in one place once the project has a domain.)
 2. **ABI v2, proposed upstream (M9, after 1.0).** Exporter plug-ins, rich parameter schemas (labels, units,

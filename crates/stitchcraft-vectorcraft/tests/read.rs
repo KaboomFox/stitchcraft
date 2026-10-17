@@ -1,16 +1,23 @@
-//! Reading `.vectorcraft` files (`REQ-VC-001`, `REQ-VC-004`, `REQ-VC-005`) and the adapter's diagnostics.
+//! Reading `.vectorcraft` files (`REQ-VC-001`, `REQ-VC-004`, `REQ-VC-005`, `REQ-VC-007`) and the adapter's
+//! diagnostics. What groups sew (`REQ-VC-006`) is in `groups.rs`.
 
 // Test code may unwrap, panic and index (clippy.toml allows it in tests, but not in their helpers).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
+mod common;
+
 use std::io::Write;
 
+use common::{RED, document, element, ids, line, read_ok, said, square};
 use flate2::Compression;
 use flate2::write::GzEncoder;
 use stitchcraft_core::units::MM_PER_POINT;
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Mm, Point};
-use stitchcraft_engine::design::{Element, FillRule, Join, Segment, Shape};
+use stitchcraft_engine::design::{DesignSettings, FillRule, Join, Segment, Shape};
+use stitchcraft_engine::generate::generate;
+use stitchcraft_engine::generators::Neighbours;
 use stitchcraft_plan::Rgb;
+use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_vectorcraft::{VectorCraft, read};
 
 const FORMAT_1: &[u8] = include_bytes!("../../../conformance/fixtures/vectorcraft/drawing-format1.vectorcraft");
@@ -29,46 +36,9 @@ fn gzip(bytes: &[u8]) -> Vec<u8> {
     encoder.finish().unwrap()
 }
 
-fn read_ok(bytes: &[u8]) -> VectorCraft {
-    read(bytes, &Budget::DEFAULT).unwrap()
-}
-
 fn refusal(bytes: &[u8]) -> Diagnostic {
     read(bytes, &Budget::DEFAULT).unwrap_err()
 }
-
-fn ids(read: &VectorCraft) -> Vec<&str> {
-    read.design.elements().iter().map(|e| e.id.as_str()).collect()
-}
-
-fn element<'a>(read: &'a VectorCraft, id: &str) -> &'a Element {
-    read.design.elements().iter().find(|e| e.id.as_str() == id).unwrap_or_else(|| panic!("no {id} in {:?}", ids(read)))
-}
-
-/// Each warning as its code and the object it is about.
-fn said(read: &VectorCraft) -> Vec<(Code, String)> {
-    read.warnings.iter().map(|w| (w.code, w.element.as_ref().map_or(String::new(), |e| e.to_string()))).collect()
-}
-
-/// A document of one layer holding `objects`, in format `version`.
-fn document(version: u32, objects: &str) -> Vec<u8> {
-    format!(
-        r#"{{"format": "vectorcraft", "version": {version}, "document": {{"version": 1, "artboards": [], "next_id": 99,
-            "layers": [{{"id": 1, "kind": {{"type": "layer", "color": {{"Preset": 0}}, "children": [{objects}]}}}}]}}}}"#
-    )
-    .into_bytes()
-}
-
-/// A square path of side 36 pt at (`x`, `y`) pt, with `id` and `appearance`.
-fn square(id: u32, x: f64, y: f64, appearance: &str) -> String {
-    let (r, b) = (x + 36.0, y + 36.0);
-    format!(
-        r#"{{"id": {id}, "appearance": {appearance}, "kind": {{"type": "path", "path": {{"subpaths": [{{"closed": true,
-            "anchors": [{{"p": [{x}, {y}]}}, {{"p": [{r}, {y}]}}, {{"p": [{r}, {b}]}}, {{"p": [{x}, {b}]}}]}}]}}}}}}"#
-    )
-}
-
-const RED: &str = r#"{"items": [{"kind": "fill", "paint": {"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}}}]}"#;
 
 fn p(x: f64, y: f64) -> Point {
     Point::new(x * MM, y * MM).unwrap()
@@ -215,7 +185,8 @@ fn req_vc_001_reading_costs_what_the_adapter_documents() {
     let gray = r#""paint": {"type": "solid", "color": {"model": "gray", "k": 1}}"#;
     // An object of 3 paints and 1 effect, an open subpath of 3 anchors and 3 elements of 2 segments: 5, 4
     // and 9 units. Then 1 paint and 1 StitchCraft effect of 2 parameters, a closed subpath of 2 anchors
-    // and 1 element of 2 segments: 3, 3, 2 and 3. The layer is 1, and the JSON 1 and 1 for every 64 bytes.
+    // and 1 element of 2 segments: 3, 3, 2 and 3, and 1 for the group of 1 paint around it, which is 2.
+    // The layer is 1, and the JSON 1 and 1 for every 64 bytes.
     let painted = format!(
         r#"{{"id": 2, "appearance": {{"items": [{{"kind": "fill", {gray}}}, {{"kind": "fill", {gray}}},
             {{"kind": "stroke", "width": 1, {gray}, "effects": [{{"id": "x", "visible": false}}]}}]}},
@@ -225,9 +196,11 @@ fn req_vc_001_reading_costs_what_the_adapter_documents() {
         r#"{{"id": 3, "appearance": {{"items": [{{"kind": "fill", {gray}}}], "effects": [{{"id": "plugin.dev.stitchcraft.fill", "params": {{"a": 1, "b": 2}}}}]}},
             "kind": {{"type": "path", "path": {{"subpaths": [{{"closed": true, "anchors": [{{"p": [0, 0]}}, {{"p": [5, 5]}}]}}]}}}}}}"#
     );
-    let bytes = document(4, &[painted, effect].join(","));
+    let group =
+        format!(r#"{{"id": 4, "appearance": {{"items": [{{"kind": "fill", {gray}}}]}}, "kind": {{"type": "group", "children": [{effect}]}}}}"#);
+    let bytes = document(4, &[painted, group].join(","));
     let reads = |work: u64| read(&bytes, &Budget { max_stitches: 1, max_work: work }).is_ok();
-    let expected = (1 + bytes.len() / 64) as u64 + 1 + (5 + 4 + 9) + (3 + 3 + 2 + 3);
+    let expected = (1 + bytes.len() / 64) as u64 + 1 + (5 + 4 + 9) + (3 + 3 + 2 + 3 + 1) + 2;
     assert!(reads(expected) && !reads(expected - 1), "{expected}");
 }
 
@@ -286,7 +259,7 @@ fn req_vc_004_without_effects_an_object_sews_its_fills_then_its_strokes() {
 }
 
 #[test]
-fn req_vc_004_an_effect_s_thread_is_the_first_paint_vectorcraft_draws() {
+fn req_vc_004_an_effect_s_thread_is_a_paint_vectorcraft_draws() {
     // A gradient without stops and a stroke of width 0 draw nothing, so the thread is the next paint's.
     let blue = r#"{"kind": "fill", "paint": {"type": "solid", "color": {"model": "rgb", "r": 0, "g": 0, "b": 1}}}"#;
     let nothing = r#"{"kind": "fill", "paint": {"type": "gradient", "gradient": {"kind": "Linear", "stops": []}}},
@@ -299,6 +272,48 @@ fn req_vc_004_an_effect_s_thread_is_the_first_paint_vectorcraft_draws() {
     assert!(read.design.elements().iter().all(|e| e.thread.color == Rgb::new(0, 0, 255)), "{:?}", read.design.elements());
     assert!(element(&read, "vc:2:fill").params.iter().next().is_none());
     assert_eq!(said(&read), []);
+}
+
+#[test]
+fn req_vc_004_an_effect_takes_the_topmost_opaque_paint() {
+    // VectorCraft paints an appearance's items in their order, the last on top. One that lets those under
+    // it show, of opacity under 1, gives way to them, and gives the thread only when no other does.
+    let fill = |rgb: &str, opacity: f64| {
+        format!(r#"{{"kind": "fill", "opacity": {opacity}, "paint": {{"type": "solid", "color": {{"model": "rgb", {rgb}}}}}}}"#)
+    };
+    let (red, blue) = (r#""r": 1, "g": 0, "b": 0"#, r#""r": 0, "g": 0, "b": 1"#);
+    let filled = |id: u32, items: &[String]| {
+        let effect = r#"[{"id": "plugin.dev.stitchcraft.fill"}]"#;
+        square(id, f64::from(id) * 50.0, 0.0, &format!(r#"{{"items": [{}], "effects": {effect}}}"#, items.join(",")))
+    };
+    let objects = [filled(2, &[fill(red, 1.0), fill(blue, 1.0)]), filled(3, &[fill(red, 1.0), fill(blue, 0.5)]), filled(4, &[fill(blue, 0.5)])];
+    let read = read_ok(&document(4, &objects.join(",")));
+    let colours: Vec<Rgb> = read.design.elements().iter().map(|e| e.thread.color).collect();
+    assert_eq!(colours, [Rgb::new(0, 0, 255), Rgb::new(255, 0, 0), Rgb::new(0, 0, 255)]);
+    // A satin column follows the topmost stroke: a white line drawn over a wider black one.
+    let gray = |k: f64, width: f64| {
+        format!(r#"{{"kind": "stroke", "width": {width}, "paint": {{"type": "solid", "color": {{"model": "gray", "k": {k}}}}}}}"#)
+    };
+    let satin = format!(r#"{{"items": [{}, {}], "effects": [{{"id": "plugin.dev.stitchcraft.satin"}}]}}"#, gray(1.0, 8.503_937), gray(0.0, 2.0));
+    let read = read_ok(&document(4, &line(5, "", &satin)));
+    let column = element(&read, "vc:5:satin");
+    let Shape::Stroke { width, .. } = column.shape else { panic!("{:?}", column.shape) };
+    assert!((width.get() - 2.0 * MM).abs() < 1e-9, "{width:?}");
+    assert_eq!(column.thread.color, Rgb::new(255, 255, 255));
+}
+
+#[test]
+fn req_vc_004_a_stroke_or_satin_effect_follows_the_first_stroke_vectorcraft_draws() {
+    // VectorCraft writes a stroke of paint none, with a width, for an object without one
+    // (`Appearance::basic`), and draws nothing for it: a satin column is as wide as the stroke it draws.
+    let none = r#"{"kind": "stroke", "width": 2.2, "paint": {"type": "none"}}"#;
+    let blue = r#"{"kind": "stroke", "width": 1, "paint": {"type": "solid", "color": {"model": "rgb", "r": 0, "g": 0, "b": 1}}}"#;
+    let object = line(2, "", &format!(r#"{{"items": [{none}, {blue}], "effects": [{{"id": "plugin.dev.stitchcraft.satin"}}]}}"#));
+    let read = read_ok(&document(4, &object));
+    let satin = element(&read, "vc:2:satin");
+    let Shape::Stroke { width, .. } = satin.shape else { panic!("{:?}", satin.shape) };
+    assert!((width.get() - MM).abs() < 1e-9, "{width:?}");
+    assert_eq!((satin.thread.color, said(&read)), (Rgb::new(0, 0, 255), vec![]));
 }
 
 #[test]
@@ -363,6 +378,50 @@ fn req_vc_005_a_stroke_of_width_0_is_left_out_and_a_brush_is_named() {
     assert_eq!(ids(&read), ["vc:3:stroke"]);
     assert_eq!(said(&read), [(Code::VcFeatureIgnored, "vc:3".to_string())]);
     assert!(read.warnings[0].message.contains("brush \"Charcoal\""), "{}", read.warnings[0]);
+}
+
+/// A compound path as VectorCraft's Make Compound Path writes it, under `appearance`: one member path for
+/// each of `members`, each the straight lines through its points.
+fn compound(id: u32, appearance: &str, members: &[&[(f64, f64)]]) -> String {
+    let members: Vec<String> = members
+        .iter()
+        .zip(1..)
+        .map(|(points, k)| {
+            let anchors: Vec<String> = points.iter().map(|(x, y)| format!(r#"{{"p": [{x}, {y}]}}"#)).collect();
+            format!(r#"{{"id": {}, "kind": {{"type": "path", "path": {{"subpaths": [{{"anchors": [{}]}}]}}}}}}"#, id * 10 + k, anchors.join(","))
+        })
+        .collect();
+    format!(r#"{{"id": {id}, "appearance": {appearance}, "kind": {{"type": "compound", "rule": "NonZero", "children": [{}]}}}}"#, members.join(","))
+}
+
+/// The needle points the engine sews element `id` of `read` with, and what it said.
+fn sewn(read: &VectorCraft, id: &str) -> (Vec<Vec<Point>>, Vec<Diagnostic>) {
+    let generation = generate(element(read, id), &DesignSettings::default(), REFERENCE, &Neighbours::default(), &Budget::DEFAULT);
+    (generation.generated.unwrap().groups, generation.diagnostics)
+}
+
+#[test]
+fn req_vc_007_a_column_made_of_2_paths_sews_whichever_way_vectorcraft_turns_them() {
+    // From VectorCraft 0.10.0, Make Compound Path reverses each path in front that winds the same way as the
+    // backmost one, which a straight path, of signed area 0, counts as clockwise: of 2 straight rails, the
+    // front one is always reversed. The column turns its second rail back (`reverse_rails`), and a rung
+    // pairs the same points whichever way it runs and wherever it lies.
+    let satin = r#"{"items": [{"kind": "stroke", "width": 1, "paint": {"type": "solid", "color": {"model": "gray", "k": 0}}}],
+        "effects": [{"id": "plugin.dev.stitchcraft.satin"}]}"#;
+    let (back, front, turned) = (&[(0.0, 0.0), (100.0, 0.0)][..], &[(0.0, 20.0), (100.0, 20.0)][..], &[(100.0, 20.0), (0.0, 20.0)][..]);
+    let (rung, rung_turned) = (&[(40.0, -5.0), (60.0, 25.0)][..], &[(60.0, 25.0), (40.0, -5.0)][..]);
+    let columns: [&[&[(f64, f64)]]; 6] =
+        [&[back, front], &[back, turned], &[back, front, rung], &[back, turned, rung], &[back, front, rung_turned], &[rung, back, front]];
+    let objects: Vec<String> = columns.iter().zip(2..).map(|(members, id)| compound(id, satin, members)).collect();
+    let read = read_ok(&document(4, &objects.join(",")));
+    let [drawn, rail_turned, with_rung, rung_and_rail_turned, with_rung_turned, rung_behind] =
+        ["vc:2:satin", "vc:3:satin", "vc:4:satin", "vc:5:satin", "vc:6:satin", "vc:7:satin"].map(|id| sewn(&read, id));
+    assert_eq!(rail_turned, drawn);
+    assert_eq!(rung_and_rail_turned, with_rung);
+    assert_eq!(with_rung_turned, with_rung);
+    assert_eq!(rung_behind, with_rung);
+    assert_ne!(with_rung.0, drawn.0, "the rung pairs the rails' points");
+    assert!(drawn.1.is_empty() && with_rung.1.is_empty(), "{:?} {:?}", drawn.1, with_rung.1);
 }
 
 #[test]
@@ -441,7 +500,8 @@ fn diag_sc_w0807_what_stitchcraft_doesn_t_read_in_an_appearance_is_named() {
     };
     let red = r#""paint": {"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}}"#;
     let objects = [
-        r#"{"id": 2, "appearance": {"effects": [{"id": "plugin.dev.stitchcraft.fill"}]}, "kind": {"type": "group", "children": []}}"#.to_string(),
+        r#"{"id": 2, "appearance": {"effects": [{"id": "plugin.dev.stitchcraft.lettering"}]}, "kind": {"type": "group", "children": []}}"#
+            .to_string(),
         object(3, "Spiral", RED),
         object(4, "NonZero", &format!(r#"{{"items": [{{"kind": "fill", {red}, "effects": [{{"id": "plugin.dev.stitchcraft.stroke"}}]}}]}}"#)),
         object(5, "NonZero", &format!(r#"{{"items": [{{"kind": "shadow", {red}}}, {{"kind": "fill", {red}}}]}}"#)),
@@ -453,7 +513,7 @@ fn diag_sc_w0807_what_stitchcraft_doesn_t_read_in_an_appearance_is_named() {
     let read = read_ok(&document(4, &objects.join(",")));
     let messages: Vec<(&str, &str)> = read.warnings.iter().map(|w| (w.element.as_ref().map_or("", |e| e.as_str()), w.message.as_str())).collect();
     let expected = [
-        ("vc:2", "A group has a StitchCraft effect, which works on paths, and it is not used."),
+        ("vc:2", "The StitchCraft effect \"lettering\" stitches nothing, and is not used."),
         ("vc:3", "The fill rule \"Spiral\" is not one StitchCraft reads, and nonzero is used."),
         ("vc:4", "A StitchCraft effect on one fill or stroke of the appearance is not used."),
         ("vc:5", "An appearance item of the kind \"shadow\" is not stitched."),

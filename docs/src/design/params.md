@@ -230,7 +230,8 @@ RFC), groups and conditions are emitted as well.
 A preset is a named partial `ParamSet` (`"denim"`, `"knit, light"`) stored as a TOML file in a
 `presets` directory of the parameters crate. The same code as user input validates it, and a generated
 page documents it. In VectorCraft, users can also save appearance (including embroidery live effects) as
-Graphic Styles.
+Graphic Styles. Applying one copies its effect records into each object, and a design sews them
+([integration](vectorcraft-integration.md#tools-vectorcrafts-own-commands), `REQ-VC-006`).
 
 ## Versioning and migration
 
