@@ -24,6 +24,11 @@ In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Ope
 - `src/abi.rs` is the **only** place in StitchCraft allowed to use `unsafe` (raw pointers across the ABI);
   every block carries a `// SAFETY:` comment, checked by `cargo xtask unsafe-audit`. Everything else is
   safe Rust tested natively.
-- Plug-in ids derive from one constant, `PLUGIN_NAMESPACE`.
+- Plug-in ids derive from one constant, `PLUGIN_NAMESPACE`. The VectorCraft adapter owns it, as it reads
+  the effect records those ids name in documents, and the plug-in re-exports it.
 - Manifests satisfy VectorCraft's rules (validated by tests, `REQ-VC-002`).
 - Contains no engine logic: it adapts VectorCraft's JSON to the engine and back.
+
+## Dependencies
+
+`serde_json` (the ABI's JSON) and `stitchcraft-vectorcraft` (`PLUGIN_NAMESPACE`).
