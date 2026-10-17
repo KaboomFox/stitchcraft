@@ -1,0 +1,517 @@
+{
+  "format": "vectorcraft",
+  "version": 4,
+  "generator": "VectorCraft 0.12.0",
+  "document": {
+    "version": 1,
+    "title": "Effects",
+    "artboards": [
+      {
+        "id": 2,
+        "name": "A",
+        "rect": {
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 700.0,
+          "y1": 100.0
+        }
+      }
+    ],
+    "layers": [
+      {
+        "id": 1,
+        "name": "Effects",
+        "kind": {
+          "type": "layer",
+          "color": {
+            "Preset": 0
+          },
+          "children": [
+            {
+              "id": 50,
+              "name": "Badge",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 1.0,
+                        "g": 0.0,
+                        "b": 0.0
+                      }
+                    }
+                  },
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.0,
+                        "g": 0.0,
+                        "b": 0.0
+                      }
+                    },
+                    "width": 1.0
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.fill",
+                    "params": {
+                      "fill_method": "auto_fill",
+                      "row_spacing_mm": 0.3,
+                      "fill_underlay": true
+                    }
+                  },
+                  {
+                    "id": "plugin.dev.stitchcraft.stroke",
+                    "params": {
+                      "stroke_method": "running_stitch",
+                      "running_stitch_length_mm": 2.5
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            36,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            36,
+                            36
+                          ]
+                        },
+                        {
+                          "p": [
+                            0,
+                            36
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 51,
+              "name": "Column",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.0,
+                        "g": 0.5,
+                        "b": 0.0
+                      }
+                    },
+                    "width": 8.503937,
+                    "join": "Bevel"
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.satin",
+                    "params": {
+                      "satin_column": false,
+                      "zigzag_spacing_mm": 0.4
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            100,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            136,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            136,
+                            36
+                          ]
+                        },
+                        {
+                          "p": [
+                            100,
+                            36
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 52,
+              "name": "Effect off",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.0,
+                        "g": 0.0,
+                        "b": 1.0
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.fill",
+                    "params": {
+                      "row_spacing_mm": 1.0
+                    },
+                    "visible": false
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            200,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            236,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            236,
+                            36
+                          ]
+                        },
+                        {
+                          "p": [
+                            200,
+                            36
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 53,
+              "name": "Hello",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 0.0
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.hello",
+                    "params": {}
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            300,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            336,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            336,
+                            36
+                          ]
+                        },
+                        {
+                          "p": [
+                            300,
+                            36
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 54,
+              "name": "Values",
+              "appearance": {
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.fill",
+                    "params": {
+                      "a_float_count": 3.0,
+                      "a_count": 2,
+                      "a_toggle": false,
+                      "a_choice": "contour_fill",
+                      "a_list": [
+                        1,
+                        2.5
+                      ],
+                      "a_small": 1e-07,
+                      "a_null": null,
+                      "an_object": {
+                        "x": 1
+                      },
+                      "a_nested_list": [
+                        [
+                          1
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            400,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            436,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            436,
+                            36
+                          ]
+                        },
+                        {
+                          "p": [
+                            400,
+                            36
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 55,
+              "name": "Two fills",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.5,
+                        "g": 0.0,
+                        "b": 0.5
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.fill",
+                    "params": {}
+                  },
+                  {
+                    "id": "plugin.dev.stitchcraft.fill",
+                    "params": {
+                      "angle": 45
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            500,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            536,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            536,
+                            36
+                          ]
+                        },
+                        {
+                          "p": [
+                            500,
+                            36
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 56,
+              "name": "Odd params",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.0,
+                        "g": 0.0,
+                        "b": 0.0
+                      }
+                    },
+                    "width": 1.0
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.stroke",
+                    "params": [
+                      1,
+                      2
+                    ]
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            600,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            636,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            636,
+                            36
+                          ]
+                        },
+                        {
+                          "p": [
+                            600,
+                            36
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "next_id": 100
+  }
+}

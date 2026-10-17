@@ -34,7 +34,7 @@ host document and every host gets the same stitches for the same design. Since M
 pub struct Design { elements: Vec<Element>, pub settings: DesignSettings }   // checked by Design::new
 
 pub struct Element {
-    pub id: ElementId,               // stable host id: "svg:path123:fill", "vc:42"
+    pub id: ElementId,               // stable host id: "svg:path123:fill", "vc:42:fill"
     pub name: Option<String>,        // the name the user gave it (Inkscape's label)
     pub shape: Shape,
     pub thread: Thread,
@@ -68,6 +68,9 @@ A stroke's width and join, since M4.8, are as the host draws them: in SVG, `stro
 transforms, and `stroke-linejoin` with `stroke-miterlimit` ([SVG input](svg-input.md#stroke-width-and-join)).
 Only a satin column drawn as one path uses them, as its width and its corners. `Shape::stroke(path)`
 makes a stroke that says nothing of either: 1 CSS pixel wide, with `Join::UNSET`.
+
+Documents repeat ids, so adapters make theirs unique with `stitchcraft_core::Labels`, which gives a
+label repeated in a document `~2`, `~3` and so on, in every adapter alike.
 
 Invariants, checked by `Design::new`: element ids are unique, and every point is finite and within
 ±10,000 mm, as far as machine-file coordinates go. No stroke is narrower than 0, a miter limit is a

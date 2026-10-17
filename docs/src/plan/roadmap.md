@@ -109,7 +109,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 
 | Step | Deliverable | Done when |
 |---|---|---|
-| M6.1 | `stitchcraft-vectorcraft`: read `.vectorcraft` (layers, groups, paths, paints, effect records, transforms); size and depth caps | `REQ-VC-001`; fuzzed |
+| M6.1 ✅ | `stitchcraft-vectorcraft`: read `.vectorcraft` files of formats 1 to 4, plain or compressed: layers, groups, paths and compound paths, paints as threads, and StitchCraft's effect records, which say how an object sews. VectorCraft keeps paths in document coordinates, with no transforms to apply. What isn't stitched is named (`SC-W0807`, `SC-W0808`, `SC-I0809`). Caps: 64 MiB of JSON and the JSON reader's depth | `REQ-VC-001`, `REQ-VC-004`, `REQ-VC-005`; fuzzed (`read_vectorcraft`) |
 | M6.2 | The plug-in crate, with manifests generated per family and the ABI shim (`abi.rs`, whose `unsafe` is audited) | `REQ-VC-002` (manifests valid, ≤ 64 params), and the module's size with the engine recorded ([ADR-0005](../design/adr/0005-geometry-stack.md)) |
 | M6.3 | Live-effect previews with budget-aware levels | `REQ-VC-003` per level, within 5 s / fuel |
 | M6.4 | Tools filter: make satin, add rung, bake preview, test sheet; Graphic Styles as presets verified | cases per tool |

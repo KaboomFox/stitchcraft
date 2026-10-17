@@ -217,7 +217,7 @@ entries, and the lock and method identifiers must equal Ink/Stitch's.
 ## Splitting for VectorCraft ABI v1
 
 VectorCraft v1 allows at most 64 parameters per plug-in and has no groups or conditional visibility.
-The plug-in crate therefore builds **one plug-in per stitch family** (`running`, `satin`, `fill`), each
+The plug-in crate builds **one plug-in per stitch family** for that (`stroke`, `satin`, `fill`), each
 with only the parameters that apply to it; the shared lock/trim parameters are included in each. A test
 fails if any family's manifest exceeds 64 parameters or 64 KiB, so adding a parameter that would break
 the limit is caught in the PR, not by a user. When VectorCraft supports richer schemas (ABI v2 RFC),

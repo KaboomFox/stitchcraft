@@ -6,8 +6,9 @@
 
 use serde_json::{Value, json};
 
-/// Reverse-DNS namespace of every StitchCraft plug-in id. Change it here only.
-pub const PLUGIN_NAMESPACE: &str = "dev.stitchcraft";
+/// Reverse-DNS namespace of every StitchCraft plug-in id. It lives in the VectorCraft adapter, which reads
+/// the effect records it names in documents.
+pub use stitchcraft_vectorcraft::PLUGIN_NAMESPACE;
 
 /// VectorCraft ABI v1 limits on manifests (VectorCraft `crates/plugins/src/manifest.rs`).
 pub mod limits {

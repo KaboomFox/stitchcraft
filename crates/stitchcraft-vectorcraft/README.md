@@ -1,14 +1,35 @@
 # stitchcraft-vectorcraft
 
-Layer **L3**. Adapts VectorCraft data into the engine's `Design`: `.vectorcraft` documents (layers, groups,
-paths, compound paths, paints, visibility, appearance effect records holding our parameters) and the JSON
-objects VectorCraft's plug-in ABI v1 passes to live effects and filters.
+Layer **L3**. Adapts VectorCraft data into the engine's `Design`. `stitchcraft_vectorcraft::read(bytes,
+budget)` reads a `.vectorcraft` document and returns the design and warnings about what was left out or
+simplified, as `stitchcraft-svg` does for SVG. The JSON objects VectorCraft's plug-in ABI v1 passes to
+live effects and filters follow with the plug-in (M6.2).
 
-**Status:** planned for M6.1. Design: `docs/src/design/vectorcraft-integration.md`; supported VectorCraft
-versions are proven by `docs/src/design/compatibility-gate.md`.
+**Status:** M6.1 reads formats 1 to 4, plain or compressed, with or without the data format 4 keeps after
+its JSON (`src/container.rs`). It reads layers, groups, paths and compound paths in paint order, and
+visibility. Fills and strokes give threads in VectorCraft's colours, CMYK, grey and Lab included
+(`src/color.rs`). Strokes keep their width and join. StitchCraft's live effects say how an object sews
+(`REQ-VC-004`, `src/document.rs`). The JSON is read into the few fields the adapter uses (`src/wire.rs`).
+Design: `docs/src/design/vectorcraft-integration.md#reading-vectorcraft-files-stitchcraft-vectorcraft`.
+The VectorCraft versions it reads are proven by `docs/src/design/compatibility-gate.md`.
 
 ## Invariants
 
 - Depends on VectorCraft only through its documented file format and plug-in JSON, never its crates.
-- Treats every file as untrusted: size and depth caps, typed errors, fuzzed.
-- Contains no stitch logic.
+- Contains no stitch logic, only translation.
+- Never fails on content it can skip. Kinds of objects, paints and colours it doesn't read are named
+  and left out (`SC-W0807`), and so is geometry it can't use (`SC-W0808`). Only a file that is not a
+  VectorCraft document, or is too large, is refused (`SC-E0806`). The reader is fuzzed nightly
+  (`fuzz/fuzz_targets/read_vectorcraft.rs`).
+- What it leaves out is said, with `SC-W0807` and `SC-W0808`, or with `SC-I0809` for the layers and
+  guides VectorCraft doesn't print. Only what VectorCraft draws nothing for is left out without a word.
+- Positions are points times 25.4/72, and the same on every platform. So are colours, whose Lab
+  conversion uses `stitchcraft_core::math`, never the platform's maths.
+- Work is bounded: at most 64 MiB of JSON, unpacked, nesting as deep as the JSON reader allows, and the
+  budget charged for every object, appearance item, effect, anchor and element.
+
+## Dependencies
+
+`stitchcraft-core`, `stitchcraft-params`, `stitchcraft-plan`, `stitchcraft-engine`; `serde` and
+`serde_json` (the document's JSON) and `flate2` with its Rust backend (compressed files), which builds
+for `wasm32-unknown-unknown`. `cargo xtask layers` keeps `flate2` here and in the test kit.

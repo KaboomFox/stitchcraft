@@ -12,6 +12,7 @@ stitchcraft-plan = 48
 stitchcraft-render = 26
 stitchcraft-svg = 1
 stitchcraft-vc-plugin = 22
+stitchcraft-vectorcraft = 2
 
 # Mutants that change nothing a test could observe. A pull request may leave these in the lines it
 # changes (`cargo xtask mutants --changed`); any other mutant there that no test notices fails it.
@@ -267,3 +268,15 @@ file = "apps/stitchcraft-cli/src/commands/inspect.rs"
 mutant = "replace < with <= in run"
 line = "let short: Vec<f64> = lengths.iter().copied().filter(|l| *l < min - 1e-9).collect();"
 why = "a stitch read from a file joins needle points a whole number of tenths of a millimetre apart, and its length is never exactly 1e-9 mm less than the profile's shortest"
+
+[[equivalent]]
+file = "crates/stitchcraft-vectorcraft/src/color.rs"
+mutant = "replace > with >= in lab_to_srgb"
+line = "if cube > EPSILON { cube } else { (116.0 * f - 16.0) / KAPPA }"
+why = "CIE chose ε and κ so that the curve's two pieces meet where the cube is ε: there both give ε within a rounding, so the colour's bytes are the same whichever piece a cube of exactly ε takes"
+
+[[equivalent]]
+file = "crates/stitchcraft-vectorcraft/src/color.rs"
+mutant = "replace > with >= in lab_to_srgb"
+line = "let y = if l > KAPPA * EPSILON { fy * fy * fy } else { l / KAPPA };"
+why = "the two pieces meet where L* is κε, 8, where both give ε within a rounding, so the colour's bytes are the same whichever piece an L* of exactly κε takes"
