@@ -17,8 +17,9 @@ of an upcoming release (VectorCraft's release workflow runs on pushes to `releas
 `.github/workflows/release.yml`); pre-release tags catch alphas, betas and release candidates as soon as
 they are published.
 
-`compat/vectorcraft.toml` records the versions currently pinned per track (and the commit SHA for branch
-tracks) so every run is reproducible and every change of pin is a reviewable PR.
+`compat/vectorcraft.toml` records the versions currently pinned per track (with the commit SHA for branch
+tracks, and the SHA-256 of the stable release's Linux archive) so every run is reproducible and every
+change of pin is a reviewable PR.
 
 ## Two levels of test
 
@@ -90,6 +91,16 @@ manifests or tooling: the pinned stable release):
 
 A failure means a change here, or one in VectorCraft, has made the move harder; the scheduled run reports
 it in the same `upstream-canary` issue as the contract tests.
+
+## VectorCraft's window
+
+The `window` job runs the app VectorCraft releases, from the Linux archive of the pinned stable release,
+in a desktop without a screen. `cargo xtask compat window` takes screenshots of the window and drives it
+through its accessibility tree with xa11y, as the docs' `vectorcraft-ui` pictures will be made
+([docs pipeline](docs-pipeline.md#vectorcrafts-window-in-ci)). The archive's SHA-256 is pinned beside the
+stable tag in `compat/vectorcraft.toml`, so the bot PR that moves the pin (M6.6) records the new
+archive's sum too, from the release's `SHA256SUMS.txt`. The same archive holds `vectorcraft-cli`, for
+Level B.
 
 ## The supported-versions table
 
