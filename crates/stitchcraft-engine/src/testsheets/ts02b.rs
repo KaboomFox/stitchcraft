@@ -6,7 +6,8 @@
 //! but the last says `trim_after`, so the engine sews a tie-off, trims, jumps and sews a tie-in. Right half
 //! (blue): no element asks for a trim; the 2 mm gap is within the collapse length (3 mm), so it is sewn
 //! across, and the others get a tie-off, a jump and a tie-in. A green line at the bottom stops halfway
-//! (`stop_after`). Sewn, it answers: does the machine trim where an element asks, and do the ends hold?
+//! (`stop_after`). Sewn, it answers: do the locks hold the dashes, where the machine cuts the thread and
+//! where the thread of a jump, which it does not cut (MC-1), is snipped?
 
 use stitchcraft_plan::{StitchPlan, Thread};
 
