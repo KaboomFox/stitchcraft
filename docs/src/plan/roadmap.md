@@ -23,7 +23,7 @@ Goal: a repository where the rules are enforced before the first line of engine 
 | M0.4 ✅ | mdBook site, design docs, ADRs, this roadmap, machine-testing protocol | `mdbook build` and the docs check pass |
 | M0.5 👤 (partly ✅) | Create the GitHub repository, push, enable Pages (from the `gh-pages` branch) and branch protection with required checks `ci` and `docs`; replace `OWNER` in `CODEOWNERS` and `Cargo.toml` and add a contact to `CODE_OF_CONDUCT.md`; create the labels `golden-change`, `docs:refresh-shots`, `upstream-canary`, `upstream-prerelease`, `sewout`, `sewout:pass`, `sewout:tune`, `sewout:bug`, `good first issue` | A test PR cannot merge while a check is red |
 | M0.6 ✅ 🧪 | VectorCraft "hello" plug-in: an identity live effect built in CI for `wasm32-unknown-unknown`, a Level A contract test against the pinned stable `vectorcraft-plugins` (v0.6.0, now v0.7.0), `release` and `main`, and the fuel it spends per byte of output | The contract test is green in `compat.yml` on every track (2026-10-08), and the budget is recorded in the integration doc: 512 instructions a byte read and 822 written (2026-10-17) |
-| M0.7 🧪 | Geometry spike ([ADR-0005](../design/adr/0005-geometry-stack.md) criteria) | ADR-0005 accepted or revised |
+| M0.7 ✅ 🧪 | Geometry spike ([ADR-0005](../design/adr/0005-geometry-stack.md) criteria) | ADR-0005 accepted with the engine's own geometry, and the golden files made as WebAssembly in CI (2026-10-17) |
 | M0.8 🧪 | Headless VectorCraft window in CI (Xvfb + Mesa) taking `ui.screenshot` twice with identical pixels; one [xa11y](https://xa11y.dev/) test that drives the same window through its accessibility tree (AT-SPI on Linux) | Decision recorded in the docs pipeline page, for both |
 | M0.9 ✅ | Movable into VectorCraft ([ADR-0011](../design/adr/0011-movable-into-vectorcraft.md)): packages prefixed, manifests inheriting only what VectorCraft defines, tooling scoped to its folder and packages, `cargo xtask compat join [--nested]`, and a daily `move` job | `move` green against VectorCraft's latest release and `main` |
 | M0.10 ✅ | Clean room, tightened: no document describes Ink/Stitch's code; Ink/Stitch is named only for file compatibility and in the independence notices; `cargo xtask cleanroom` scans documents too | `cleanroom` green over the whole repository |
@@ -110,7 +110,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | Step | Deliverable | Done when |
 |---|---|---|
 | M6.1 | `stitchcraft-vectorcraft`: read `.vectorcraft` (layers, groups, paths, paints, effect records, transforms); size and depth caps | `REQ-VC-001`; fuzzed |
-| M6.2 | Plug-in crate: manifests generated per family, ABI shim (`abi.rs`, audited `unsafe`) | `REQ-VC-002` (manifests valid, ≤ 64 params) |
+| M6.2 | The plug-in crate, with manifests generated per family and the ABI shim (`abi.rs`, whose `unsafe` is audited) | `REQ-VC-002` (manifests valid, ≤ 64 params), and the module's size with the engine recorded ([ADR-0005](../design/adr/0005-geometry-stack.md)) |
 | M6.3 | Live-effect previews with budget-aware levels | `REQ-VC-003` per level, within 5 s / fuel |
 | M6.4 | Tools filter: make satin, add rung, bake preview, test sheet; Graphic Styles as presets verified | cases per tool |
 | M6.5 | `stitch export design.vectorcraft`; marker conventions (`stitch:start`, `stitch:end`, `stitch:ignore`) | end-to-end cases |
@@ -126,6 +126,10 @@ fill with generated tiles; circular fill. One step per type with its requirement
 for stitches turned more than 45° from the column, and `SC-W0209` for a column wider than 12 mm. The
 zigzag stroke's and the meander fill's settings need a key with a kind or a range of a family's own, which
 the registry gains first ([parameter registry](../design/params.md#naming-rules), rule 7).
+
+Before contour fill relies on it, the offsetter meets the third criterion of
+[ADR-0005](../design/adr/0005-geometry-stack.md): 300 insets of a region 150 mm across, of 1,000 points, in
+under 200 ms. At M0.7 they took 218 to 448 ms, where GEOS took 104 to 149 ms.
 
 ## M8 — Ink/Stitch interoperability
 

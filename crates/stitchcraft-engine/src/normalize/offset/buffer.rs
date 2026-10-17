@@ -327,12 +327,21 @@ mod tests {
         ring.iter().copied().chain(ring.first().copied()).collect()
     }
 
-    /// A polygon with holes: a star 10 to 60 mm across with up to 3 small stars inside it as holes.
+    /// A polygon with holes: a star 10 to 60 mm across with up to 3 small stars inside it as holes. A valid
+    /// one, as a drawing's fill makes: the outline's sides pass at least 2.5 mm from its centre, and each hole
+    /// keeps to its own third of the 1.45 mm round it, so the holes neither cross the outline nor each other.
     fn polygon_with_holes() -> impl Strategy<Value = Polygon> {
-        let hole = ((-1.5..1.5_f64, -1.5..1.5_f64), prop::collection::vec(0.5..2.5_f64, 3..12));
+        let hole = (0.8..1.0_f64, -0.3..0.3_f64, prop::collection::vec(0.2..0.45_f64, 3..12));
         (prop::collection::vec(5.0..30.0_f64, 3..40), prop::collection::vec(hole, 0..4)).prop_map(|(radii, holes)| Polygon {
             outline: star((0.0, 0.0), &radii, true),
-            holes: holes.iter().map(|(centre, radii)| star(*centre, radii, false)).collect(),
+            holes: holes
+                .iter()
+                .enumerate()
+                .map(|(k, (from, turn, radii))| {
+                    let (sin, cos) = stitchcraft_core::math::sin_cos(std::f64::consts::TAU * k as f64 / 3.0 + turn);
+                    star((from * cos, from * sin), radii, false)
+                })
+                .collect(),
         })
     }
 
