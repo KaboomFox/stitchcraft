@@ -57,11 +57,7 @@ pub fn sew(family: Family, input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunEr
     }
     let generation = generate(&element, &DesignSettings::default(), REFERENCE, &Neighbours::default(), &budget);
     let groups = generation.generated.map(|generated| generated.groups).unwrap_or_default();
-    match effect_output(family, &groups) {
-        Ok(Some(stitches)) => Ok(stitches),
-        Ok(None) => Ok(effect_error(&no_stitch(generation.diagnostics))),
-        Err(_) => Err(RunError::Encode),
-    }
+    Ok(effect_output(family, &groups).unwrap_or_else(|| effect_error(&no_stitch(generation.diagnostics))))
 }
 
 /// `SC-I0810` when `element`, of `family`, is a satin column drawn as one path, its centre line: the
@@ -148,9 +144,10 @@ mod tests {
             assert!(out.get("error").is_none(), "{family:?}: {out}");
             let subpaths = out["objects"][0]["path"]["subpaths"].as_array().unwrap();
             assert!(!subpaths.is_empty(), "{family:?}");
-            // A fill's stitches are ribbons, closed; a stroke's and a satin's are paths along them.
+            // A fill's stitches are ribbons, closed; a stroke's and a satin's are paths along them, which
+            // leave `closed` out.
             let closed = family == Family::Fill;
-            assert!(subpaths.iter().all(|s| s["closed"] == closed), "{family:?}");
+            assert!(subpaths.iter().all(|s| s["closed"].as_bool().unwrap_or(false) == closed), "{family:?}");
         }
     }
 

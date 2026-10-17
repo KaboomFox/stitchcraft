@@ -25,9 +25,10 @@ use stitchcraft_params::ParamSet;
 use stitchcraft_params::stitch_type::Family;
 use stitchcraft_plan::{Rgb, Thread};
 
-use crate::geometry::{self, UNUSABLE_HINT, in_points};
+use crate::geometry::{self, UNUSABLE_HINT};
 use crate::values::text;
 use crate::wire::{EffectInput, EffectObject};
+use crate::writer::Geometry;
 
 /// How wide a fill's ribbons are, in millimetres: half a thread, so that rows a quarter of a millimetre
 /// apart still show as rows.
@@ -69,21 +70,21 @@ pub fn effect_element(family: Family, input: &[u8], params: &[u8], budget: &Budg
 }
 
 /// What a live effect of `family` returns for an element sewn with the needle points `groups`, each a
-/// run of stitches: `{"objects": [{"path": …}]}`, in VectorCraft's coordinates. `None` when they draw
-/// nothing: no group has a stitch of any length.
-pub fn effect_output(family: Family, groups: &[Vec<Point>]) -> Result<Option<Vec<u8>>, serde_json::Error> {
-    let subpaths: Vec<Subpath> = match family {
-        Family::Fill => groups.iter().flat_map(|group| group.windows(2)).filter_map(|w| ribbon(w.first()?, w.get(1)?)).collect(),
-        Family::Stroke | Family::Satin => groups
-            .iter()
-            .filter(|group| group.len() > 1)
-            .map(|group| Subpath { anchors: group.iter().map(|p| Anchor { p: in_points(*p) }).collect(), closed: false })
-            .collect(),
-    };
-    if subpaths.is_empty() {
-        return Ok(None);
+/// run of stitches: `{"objects": [{"path": …}]}`, in VectorCraft's coordinates ([`crate::writer`]).
+/// `None` when they draw nothing: no group has a stitch of any length.
+pub fn effect_output(family: Family, groups: &[Vec<Point>]) -> Option<Vec<u8>> {
+    let mut geometry = Geometry::new();
+    for group in groups {
+        match family {
+            Family::Fill => {
+                for corners in group.windows(2).filter_map(|w| ribbon(w.first()?, w.get(1)?)) {
+                    geometry.subpath(&corners, true);
+                }
+            }
+            Family::Stroke | Family::Satin => geometry.subpath(group, false),
+        }
     }
-    serde_json::to_vec(&Output { objects: [Object { path: PathOut { subpaths } }] }).map(Some)
+    geometry.finish()
 }
 
 /// What a live effect returns instead of stitches: VectorCraft shows `diagnostic`, with its hint, as the
@@ -102,42 +103,17 @@ fn refused(what: &str) -> Diagnostic {
     Diagnostic::new(Code::VcUnreadable, format!("What VectorCraft passed the live effect does not read as its plug-in ABI v1 says. {what}"))
 }
 
-/// The stitch from `a` to `b` as a closed ribbon [`RIBBON_MM`] wide; `None` for a stitch of no length.
-fn ribbon(a: &Point, b: &Point) -> Option<Subpath> {
+/// The corners of the stitch from `a` to `b` as a closed ribbon [`RIBBON_MM`] wide; `None` for a stitch
+/// of no length.
+fn ribbon(a: &Point, b: &Point) -> Option<[Point; 4]> {
     let (dx, dy) = (b.x() - a.x(), b.y() - a.y());
     let length = (dx * dx + dy * dy).sqrt();
     if length <= 0.0 {
         return None;
     }
     let (nx, ny) = (-dy / length * RIBBON_MM / 2.0, dx / length * RIBBON_MM / 2.0);
-    let corner = |p: &Point, side: f64| Point::new(p.x() + side * nx, p.y() + side * ny).ok().map(|p| Anchor { p: in_points(p) });
-    Some(Subpath { anchors: vec![corner(a, 1.0)?, corner(b, 1.0)?, corner(b, -1.0)?, corner(a, -1.0)?], closed: true })
-}
-
-#[derive(Serialize)]
-struct Output {
-    objects: [Object; 1],
-}
-
-#[derive(Serialize)]
-struct Object {
-    path: PathOut,
-}
-
-#[derive(Serialize)]
-struct PathOut {
-    subpaths: Vec<Subpath>,
-}
-
-#[derive(Serialize)]
-struct Subpath {
-    anchors: Vec<Anchor>,
-    closed: bool,
-}
-
-#[derive(Serialize)]
-struct Anchor {
-    p: [f64; 2],
+    let corner = |p: &Point, side: f64| Point::new(p.x() + side * nx, p.y() + side * ny).ok();
+    Some([corner(a, 1.0)?, corner(b, 1.0)?, corner(b, -1.0)?, corner(a, -1.0)?])
 }
 
 #[derive(Serialize)]
@@ -148,6 +124,7 @@ struct ErrorOut {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
+    use stitchcraft_core::units::MM_PER_POINT;
 
     use super::*;
 
@@ -210,36 +187,38 @@ mod tests {
 
     #[test]
     fn stitches_come_back_as_paths_and_a_fill_s_as_ribbons() {
+        // Coordinates are written to the nearest thousandth of a point: half of one, in millimetres.
+        const WRITTEN: f64 = 0.0005 * MM_PER_POINT;
         let p = |x: f64, y: f64| Point::new(x, y).unwrap();
         let groups = vec![vec![p(0.0, 0.0), p(25.4 / 72.0 * 10.0, 0.0)], vec![p(1.0, 1.0)]];
-        let out: Value = serde_json::from_slice(&effect_output(Family::Stroke, &groups).unwrap().unwrap()).unwrap();
+        let out: Value = serde_json::from_slice(&effect_output(Family::Stroke, &groups).unwrap()).unwrap();
         let subpaths = &out["objects"][0]["path"]["subpaths"];
         assert_eq!(subpaths.as_array().unwrap().len(), 1, "a group of one needle point draws nothing");
-        assert_eq!(subpaths[0]["closed"], false);
+        assert!(subpaths[0].get("closed").is_none(), "VectorCraft reads a subpath without `closed` as open");
         let end = subpaths[0]["anchors"][1]["p"][0].as_f64().unwrap();
-        assert!((end - 10.0).abs() < 1e-9, "{end}");
-        let out: Value = serde_json::from_slice(&effect_output(Family::Fill, &groups).unwrap().unwrap()).unwrap();
+        assert_eq!(end, 10.0);
+        let out: Value = serde_json::from_slice(&effect_output(Family::Fill, &groups).unwrap()).unwrap();
         let ribbon = &out["objects"][0]["path"]["subpaths"][0];
         assert_eq!((ribbon["closed"].as_bool(), ribbon["anchors"].as_array().unwrap().len()), (Some(true), 4));
         // The ribbon is as wide as RIBBON_MM, across the stitch.
         let y0 = ribbon["anchors"][0]["p"][1].as_f64().unwrap();
         let y3 = ribbon["anchors"][3]["p"][1].as_f64().unwrap();
-        assert!(((y0 - y3).abs() * 25.4 / 72.0 - RIBBON_MM).abs() < 1e-9, "{y0} {y3}");
+        assert!(((y0 - y3).abs() * MM_PER_POINT - RIBBON_MM).abs() <= 2.0 * WRITTEN, "{y0} {y3}");
         // Across a slanted stitch too: from (0, 0) to (3, 4) mm, the ribbon's sides lie 0.1 mm to its left and
         // right, along (-0.8, 0.6).
-        let slanted: Value = serde_json::from_slice(&effect_output(Family::Fill, &[vec![p(0.0, 0.0), p(3.0, 4.0)]]).unwrap().unwrap()).unwrap();
+        let slanted: Value = serde_json::from_slice(&effect_output(Family::Fill, &[vec![p(0.0, 0.0), p(3.0, 4.0)]]).unwrap()).unwrap();
         let corners: Vec<[f64; 2]> = slanted["objects"][0]["path"]["subpaths"][0]["anchors"]
             .as_array()
             .unwrap()
             .iter()
-            .map(|anchor| [anchor["p"][0].as_f64().unwrap() * 25.4 / 72.0, anchor["p"][1].as_f64().unwrap() * 25.4 / 72.0])
+            .map(|anchor| [anchor["p"][0].as_f64().unwrap() * MM_PER_POINT, anchor["p"][1].as_f64().unwrap() * MM_PER_POINT])
             .collect();
         let expected = [[-0.08, 0.06], [2.92, 4.06], [3.08, 3.94], [0.08, -0.06]];
         for (corner, expected) in corners.iter().zip(expected) {
-            assert!((corner[0] - expected[0]).abs() < 1e-9 && (corner[1] - expected[1]).abs() < 1e-9, "{corners:?}");
+            assert!((corner[0] - expected[0]).abs() <= WRITTEN && (corner[1] - expected[1]).abs() <= WRITTEN, "{corners:?}");
         }
         // A stitch of no length has no ribbon, and stitches that draw nothing are no output.
-        assert_eq!(effect_output(Family::Fill, &[vec![p(1.0, 1.0), p(1.0, 1.0)]]).unwrap(), None);
-        assert_eq!(effect_output(Family::Satin, &[vec![p(1.0, 1.0)], vec![]]).unwrap(), None);
+        assert_eq!(effect_output(Family::Fill, &[vec![p(1.0, 1.0), p(1.0, 1.0)]]), None);
+        assert_eq!(effect_output(Family::Satin, &[vec![p(1.0, 1.0)], vec![]]), None);
     }
 }

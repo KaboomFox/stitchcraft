@@ -32,6 +32,7 @@ mod effect;
 mod geometry;
 mod values;
 mod wire;
+mod writer;
 
 pub use container::MAX_BYTES;
 pub use document::{VectorCraft, read};
