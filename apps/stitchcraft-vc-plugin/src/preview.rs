@@ -3,8 +3,9 @@
 //! **The budget.** VectorCraft lets a live effect run 50 million instructions, and 4,000 more for each byte
 //! of its input, and stops it there ([`FUEL_BASE`], [`FUEL_PER_BYTE`]). The engine counts its own work in
 //! units, and the contract tests measure what a unit costs in VectorCraft's host (`compat/vc-contract`).
-//! The effect turns the instructions it has left, after reading its input, into a budget of units and of
-//! needle points for the engine, and shows less when the engine runs out, rather than be stopped.
+//! The effect turns the instructions it has left, after reading its input, into a budget of units for the
+//! engine, and prices what it writes by the anchor. It shows less when the engine runs out, or when what
+//! it would write costs more than its share, rather than be stopped.
 //!
 //! **Levels** (`preview_level`, [`Level`]). *Exact* shows every stitch. *Rows* shows a fill's top rows,
 //! one ribbon for each row segment: where its stitches lie and which way they run, without the stitches,
@@ -124,18 +125,41 @@ pub fn show(family: Family, effect: &Effect, spend: u64) -> Vec<u8> {
 
 /// What [`show`] shows, and at which level.
 fn preview(family: Family, effect: &Effect, spend: u64) -> Shown {
-    let element = &effect.element;
+    let (element, spend) = (&effect.element, Spend(spend));
     if let Some(unseen) = centre_line(family, element, spend) {
         return Shown::Unsewn(unseen);
     }
-    let tenths = |n: u64| spend.saturating_mul(n) / 10;
     match (Level::read(effect.preview_level.as_deref()), family) {
         (Level::Exact, _) => exact(family, element, None),
         (Level::Rows, Family::Fill) => fill_rows(element, spend),
         // A stroke's and a satin column's previews offer no rows.
         (Level::Outline | Level::Rows, _) => outline(family, element, spend),
-        (Level::Auto, Family::Fill) => fill_rows(element, tenths(8)).or(|| outline(family, element, tenths(2))),
-        (Level::Auto, Family::Stroke | Family::Satin) => exact(family, element, Some(tenths(9))).or(|| outline(family, element, tenths(1))),
+        (Level::Auto, Family::Fill) => fill_rows(element, spend.tenths(8)).or(|| outline(family, element, spend.tenths(2))),
+        (Level::Auto, Family::Stroke | Family::Satin) => {
+            exact(family, element, Some(spend.tenths(9))).or(|| outline(family, element, spend.tenths(1)))
+        }
+    }
+}
+
+/// Instructions a preview may spend, shared out among its parts.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct Spend(u64);
+
+impl Spend {
+    /// `n` tenths of it.
+    fn tenths(self, n: u64) -> Spend {
+        Spend(self.0.saturating_mul(n) / 10)
+    }
+
+    /// A budget of the engine's work it buys, at `per_unit` instructions a unit, and of any number of
+    /// needle points.
+    fn work(self, per_unit: u64) -> Budget {
+        Budget { max_work: self.0 / per_unit, max_stitches: u32::MAX }
+    }
+
+    /// Whether it pays for writing `count` things of `anchors` anchors each.
+    fn writes(self, count: usize, anchors: u64) -> bool {
+        u64::try_from(count).unwrap_or(u64::MAX).saturating_mul(anchors.saturating_mul(PER_ANCHOR)) <= self.0
     }
 }
 
@@ -149,45 +173,47 @@ impl Shown {
     }
 }
 
-/// Every stitch of `element`, of `family`: within `spend` instructions, nine tenths for the engine's work
-/// and a tenth for writing the needle points, for a family whose work [`per_unit`] prices; or else within
-/// what VectorCraft allows, which stops a run that needs more.
-fn exact(family: Family, element: &Element, spend: Option<u64>) -> Shown {
-    let budget = match (spend, per_unit(family)) {
-        // A stroke's and a satin column's needle points are an anchor each.
-        (Some(spend), Some(per_unit)) => Budget { max_work: spend / 10 * 9 / per_unit, max_stitches: points(spend / 10 / PER_ANCHOR) },
-        _ => Budget::DEFAULT,
-    };
+/// Every stitch of `element`, of `family`: within `spend`, nine tenths for the engine's work and a tenth
+/// for writing the needle points, for a family whose work [`per_unit`] prices; or else within what
+/// VectorCraft allows, which stops a run that needs more.
+fn exact(family: Family, element: &Element, spend: Option<Spend>) -> Shown {
+    let priced = spend.zip(per_unit(family));
+    let budget = priced.map_or(Budget::DEFAULT, |(spend, per_unit)| spend.tenths(9).work(per_unit));
     let generation = generate(element, &DesignSettings::default(), REFERENCE, &Neighbours::default(), &budget);
     if spent(&generation.diagnostics) {
         return Shown::TooCostly;
     }
     let groups = generation.generated.map(|generated| generated.groups).unwrap_or_default();
+    // A stroke's and a satin column's needle points are an anchor each. Sewing them does not count them.
+    if priced.is_some_and(|(spend, _)| !spend.tenths(1).writes(groups.iter().map(Vec::len).sum(), anchors(family))) {
+        return Shown::TooCostly;
+    }
     effect_output(family, &groups).map_or_else(|| Shown::Unsewn(no_stitch(generation.diagnostics)), |json| Shown::Drawn(Level::Exact, json))
 }
 
-/// The top rows of `element`, a fill, within `spend` instructions, a ribbon for each segment.
-fn fill_rows(element: &Element, spend: u64) -> Shown {
-    let laid = rows(element, &DesignSettings::default(), REFERENCE, &units(spend / 10 * 9, ROWS_PER_UNIT));
+/// The top rows of `element`, a fill, within `spend`, a ribbon for each segment: nine tenths for laying
+/// them, and a tenth for writing them.
+fn fill_rows(element: &Element, spend: Spend) -> Shown {
+    let laid = rows(element, &DesignSettings::default(), REFERENCE, &spend.tenths(9).work(ROWS_PER_UNIT));
     let Some(segments) = laid.segments.filter(|_| !spent(&laid.diagnostics)) else {
         return if spent(&laid.diagnostics) { Shown::TooCostly } else { Shown::Unsewn(no_stitch(laid.diagnostics)) };
     };
-    if writing(segments.len(), RIBBON_ANCHORS) > spend / 10 {
+    if !spend.tenths(1).writes(segments.len(), RIBBON_ANCHORS) {
         return Shown::TooCostly;
     }
     effect_ribbons(segments.iter().map(|segment| (segment.start, segment.end)))
         .map_or_else(|| Shown::Unsewn(no_stitch(laid.diagnostics)), |json| Shown::Drawn(Level::Rows, json))
 }
 
-/// The path of `element`, of `family`, within `spend` instructions: a stroke's and a satin column's as
-/// lines, a fill's as ribbons, hatched every [`HATCH_MM`] in the fill's direction when that fits too. A
-/// quarter of `spend` each for flattening the path, writing it, laying the hatch and writing that.
-fn outline(family: Family, element: &Element, spend: u64) -> Shown {
-    let quarter = spend / 4;
-    let Ok(flat) = flatten(element.shape.path(), SHAPE_TOLERANCE, &mut units(quarter, ROWS_PER_UNIT).meter()) else { return Shown::TooCostly };
+/// The path of `element`, of `family`, within `spend`: a stroke's and a satin column's as lines, a fill's
+/// as ribbons, hatched every [`HATCH_MM`] in the fill's direction when that fits too. Three tenths for
+/// flattening the path, two for writing it, three for laying the hatch and two for writing that.
+fn outline(family: Family, element: &Element, spend: Spend) -> Shown {
+    let Ok(flat) = flatten(element.shape.path(), SHAPE_TOLERANCE, &mut spend.tenths(3).work(ROWS_PER_UNIT).meter()) else {
+        return Shown::TooCostly;
+    };
     let lines = flat.pieces.iter().map(|piece| piece.points.as_slice());
-    let anchors = if family == Family::Fill { RIBBON_ANCHORS } else { 1 };
-    if writing(flat.pieces.iter().map(|piece| piece.points.len()).sum(), anchors) > quarter {
+    if !spend.tenths(2).writes(flat.pieces.iter().map(|piece| piece.points.len()).sum(), anchors(family)) {
         return Shown::TooCostly;
     }
     let drawn = match family {
@@ -197,26 +223,24 @@ fn outline(family: Family, element: &Element, spend: u64) -> Shown {
             let mut hatched = element.clone();
             hatched.params.set(ROW_SPACING, HATCH_MM.to_string());
             hatched.params.set(END_ROW_SPACING, "");
-            let hatch = rows(&hatched, &DesignSettings::default(), REFERENCE, &units(quarter, ROWS_PER_UNIT)).segments.unwrap_or_default();
-            let hatch = if writing(hatch.len(), RIBBON_ANCHORS) > quarter { Vec::new() } else { hatch };
+            let hatch = rows(&hatched, &DesignSettings::default(), REFERENCE, &spend.tenths(3).work(ROWS_PER_UNIT)).segments.unwrap_or_default();
+            let hatch = if spend.tenths(2).writes(hatch.len(), RIBBON_ANCHORS) { hatch } else { Vec::new() };
             effect_ribbons(edges.chain(hatch.iter().map(|segment| (segment.start, segment.end))))
         }
     };
     drawn.map_or(Shown::TooCostly, |json| Shown::Drawn(Level::Outline, json))
 }
 
-/// A budget of the work `spend` instructions buy, at `per_unit` instructions a unit, and of any number of
-/// needle points.
-fn units(spend: u64, per_unit: u64) -> Budget {
-    Budget { max_work: spend / per_unit, max_stitches: u32::MAX }
-}
-
 /// The anchors of a ribbon.
 const RIBBON_ANCHORS: u64 = 4;
 
-/// What writing `count` things of `anchors` anchors each costs.
-fn writing(count: usize, anchors: u64) -> u64 {
-    u64::try_from(count).unwrap_or(u64::MAX).saturating_mul(anchors.saturating_mul(PER_ANCHOR))
+/// The anchors an outline writes for each point of its path: a ribbon's to a fill's edge, and one for a
+/// stroke's or a satin column's line.
+fn anchors(family: Family) -> u64 {
+    match family {
+        Family::Fill => RIBBON_ANCHORS,
+        Family::Stroke | Family::Satin => 1,
+    }
 }
 
 /// The instructions the engine runs for each unit of work it charges, sewing an element of `family`,
@@ -238,25 +262,20 @@ const END_ROW_SPACING: &str = "end_row_spacing_mm";
 /// The instructions for each unit of work laying a fill's rows, reading or flattening a path.
 const ROWS_PER_UNIT: u64 = 3_200;
 
-/// The budget for reading a live effect's object, with `spend` instructions: a tenth of them.
+/// The budget for reading a live effect's object, with `spend` instructions: the work a tenth of them buys.
 pub fn reading(spend: u64) -> Budget {
-    units(spend / 10, ROWS_PER_UNIT)
+    Spend(spend).tenths(1).work(ROWS_PER_UNIT)
 }
 
 /// `SC-I0810` when `element`, of `family`, is a satin column drawn as one path, its centre line: the
 /// column is as wide as its stroke, which VectorCraft does not give a live effect. Telling takes a tenth
 /// of `spend`; a path too long to tell within it is sewn, and the levels' budgets bound that.
-fn centre_line(family: Family, element: &Element, spend: u64) -> Option<Diagnostic> {
+fn centre_line(family: Family, element: &Element, spend: Spend) -> Option<Diagnostic> {
     let (Family::Satin, Shape::Stroke { path, .. }) = (family, &element.shape) else { return None };
-    let Ok(Column::CentreLine { .. }) = recognize(path, &mut reading(spend).meter()).ok()?.shape else { return None };
+    let Ok(Column::CentreLine { .. }) = recognize(path, &mut reading(spend.0).meter()).ok()?.shape else { return None };
     let message = "This satin column is drawn as one path, so it is as wide as its stroke, which VectorCraft does not give a live effect: \
                    the effect leaves it as it is.";
     Some(Diagnostic::new(Code::VcEffectUnchanged, message).with_fix(Fix::Hint("To see its stitches in VectorCraft, draw it with 2 rails.".into())))
-}
-
-/// `n` needle points, at most as many as a budget counts.
-fn points(n: u64) -> u32 {
-    u32::try_from(n).unwrap_or(u32::MAX)
 }
 
 /// Whether `diagnostics` say the budget ran out.
@@ -329,6 +348,9 @@ mod tests {
         assert_eq!(level(&shown(Family::Stroke, &square(320.0), "auto")), Some(Level::Exact));
         assert_eq!(level(&shown(Family::Satin, &rails(960.0), "auto")), Some(Level::Exact));
         assert_eq!(level(&shown(Family::Stroke, &square(25_600.0), "auto")), Some(Level::Outline));
+        // A 2 m satin column, whose 10,000 needle points cost more to write than its tenth of the budget, though
+        // sewing them would fit.
+        assert_eq!(level(&shown(Family::Satin, &rails(6000.0), "auto")), Some(Level::Outline));
     }
 
     #[test]
@@ -367,6 +389,43 @@ mod tests {
         assert_eq!(text(show(Family::Fill, &effect, spendable(input.len(), params.len()))), text(said(Family::Fill, Level::Rows)));
         let auto = read_effect(Family::Fill, &input, &params_with(Family::Fill, "auto"), &Budget::DEFAULT).unwrap();
         assert_eq!(text(show(Family::Fill, &auto, 0)), text(said(Family::Fill, Level::Auto)));
+    }
+
+    #[test]
+    fn spending_is_shared_out_in_tenths_and_priced_in_units_and_anchors() {
+        let spend = Spend(32_000);
+        assert_eq!(spend.tenths(9), Spend(28_800));
+        assert_eq!(Spend(u64::MAX).tenths(9), Spend(u64::MAX / 10));
+        assert_eq!(spend.work(3_200), Budget { max_work: 10, max_stitches: u32::MAX });
+        // 16 anchors are 8,000 instructions to write.
+        assert!(Spend(8_000).writes(4, RIBBON_ANCHORS) && !Spend(7_999).writes(4, RIBBON_ANCHORS));
+        assert!(Spend(8_000).writes(16, 1) && !Spend(7_999).writes(16, 1));
+        assert!(!Spend(u64::MAX - 1).writes(usize::MAX, RIBBON_ANCHORS), "saturating, not wrapping");
+        assert_eq!(reading(320_000), Budget { max_work: 10, max_stitches: u32::MAX });
+        assert_eq!((anchors(Family::Fill), anchors(Family::Stroke), anchors(Family::Satin)), (4, 1, 1));
+    }
+
+    #[test]
+    fn a_level_shows_nothing_whose_work_or_writing_its_share_does_not_pay_for() {
+        let fill = read_effect(Family::Fill, &input(&square(1600.0)), &params_with(Family::Fill, "rows"), &Budget::DEFAULT).unwrap().element;
+        // Its rows take 11,357 units of work, which nine tenths of 40.4 million instructions pay for, and
+        // writing their 2,258 segments 4.5 million, a tenth of 45.2 million.
+        assert_eq!(fill_rows(&fill, Spend(43_000_000)), Shown::TooCostly);
+        assert_eq!(level(&fill_rows(&fill, Spend(46_000_000))), Some(Level::Rows));
+        // An outline that cannot even flatten the path.
+        assert_eq!(level(&outline(Family::Fill, &fill, Spend(0))), None);
+    }
+
+    #[test]
+    fn a_unit_of_work_is_priced_above_what_the_contract_tests_measured() {
+        // 880 instructions measured for a stroke's, 4,730 for a satin column's (`compat/vc-contract`).
+        assert!(per_unit(Family::Stroke).is_some_and(|price| price > 880));
+        assert!(per_unit(Family::Satin).is_some_and(|price| price > 4_730));
+        // From 1,900 to 5,300 for a fill's, by the part of the work: no one price.
+        assert_eq!(per_unit(Family::Fill), None);
+        // Above, but not far above: a price twice what was measured would show half the stitches it could.
+        assert!(per_unit(Family::Stroke).is_some_and(|price| price < 2 * 880));
+        assert!(per_unit(Family::Satin).is_some_and(|price| price < 2 * 4_730));
     }
 
     #[test]
