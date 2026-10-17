@@ -435,26 +435,66 @@ fn req_vc_006_a_group_s_effects_sew_each_path_inside_it() {
     assert_eq!(params(satin), [("satin_column", "true"), ("zigzag_spacing_mm", "0.5")]);
 }
 
+/// A line 50 points long with `id`, `extra` fields in its kind, and `appearance`.
+fn line(id: u32, extra: &str, appearance: &str) -> String {
+    format!(
+        r#"{{"id": {id}, "appearance": {appearance}, "kind": {{"type": "path", {extra} "path": {{"subpaths": [{{"anchors": [{{"p": [0, 0]}}, {{"p": [50, 0]}}]}}]}}}}}}"#
+    )
+}
+
+/// A green stroke of `width` points, as an appearance item.
+fn green(width: f64) -> String {
+    format!(r#"{{"kind": "stroke", "width": {width}, "paint": {{"type": "solid", "color": {{"model": "rgb", "r": 0, "g": 1, "b": 0}}}}}}"#)
+}
+
 #[test]
-fn req_vc_006_a_path_without_paint_takes_its_thread_from_the_group_whose_effect_it_sews() {
-    // A style made from a painted object paints the group it is applied to, and VectorCraft draws the paths
-    // inside, as the effect changes them, in the group's paint. A clipping path is the clip's outline, and
-    // VectorCraft draws no art of it: no effect reaches it.
-    let green = r#"{"kind": "stroke", "width": 1, "paint": {"type": "solid", "color": {"model": "rgb", "r": 0, "g": 1, "b": 0}}}"#;
-    let line = |id: u32, extra: &str| {
-        format!(r#"{{"id": {id}, "kind": {{"type": "path", {extra} "path": {{"subpaths": [{{"anchors": [{{"p": [0, 0]}}, {{"p": [50, 0]}}]}}]}}}}}}"#)
+fn req_vc_006_an_effect_on_an_object_without_paint_takes_the_group_s_thread_and_stroke() {
+    // VectorCraft paints the objects inside a group with the group's own paints too, so an object without
+    // paint shows in them, whichever level its StitchCraft effect comes from. A satin column drawn as one
+    // path is as wide as the stroke it shows in.
+    let group = |id: u32, effects: &str, inside: &str| {
+        format!(
+            r#"{{"id": {id}, "appearance": {{"items": [{}], "effects": [{effects}]}}, "kind": {{"type": "group", "children": [{inside}]}}}}"#,
+            green(8.503937)
+        )
     };
-    let group = format!(
-        r#"{{"id": 2, "appearance": {{"items": [{green}], "effects": [{{"id": "plugin.dev.stitchcraft.stroke"}}]}},
-            "kind": {{"type": "group", "clip": true, "children": [{}, {}]}}}}"#,
-        line(3, r#""clipping": true,"#),
-        line(4, "")
-    );
-    let read = read_ok(&document(4, &group));
-    assert_eq!(ids(&read), ["vc:4:stroke"]);
-    assert_eq!(element(&read, "vc:4:stroke").thread.color, Rgb::new(0, 255, 0));
-    // The group's clipping and its paint, which StitchCraft doesn't sew as an element of its own, are named.
-    assert_eq!(said(&read), [(Code::VcFeatureIgnored, "vc:2".to_string()), (Code::VcFeatureIgnored, "vc:2".to_string())]);
+    // Line 3 sews by group 2's effect, and line 4 by its own, in group 5, which paints but has no effect.
+    let objects = [
+        group(2, r#"{"id": "plugin.dev.stitchcraft.stroke"}"#, &line(3, "", "{}")),
+        group(5, "", &line(4, "", r#"{"effects": [{"id": "plugin.dev.stitchcraft.satin"}]}"#)),
+    ];
+    let read = read_ok(&document(4, &objects.join(",")));
+    assert_eq!(ids(&read), ["vc:3:stroke", "vc:4:satin"]);
+    assert!(read.design.elements().iter().all(|e| e.thread.color == Rgb::new(0, 255, 0)), "{:?}", read.design.elements());
+    let Shape::Stroke { width, .. } = element(&read, "vc:4:satin").shape else { panic!() };
+    assert!((width.get() - 3.0).abs() < 1e-6, "{width:?}");
+    // The groups' paints are named, as no element of their own, and nothing else is said.
+    assert_eq!(said(&read), [(Code::VcFeatureIgnored, "vc:2".to_string()), (Code::VcFeatureIgnored, "vc:5".to_string())]);
+    assert!(read.warnings[0].message.contains("give their colour and stroke"), "{}", read.warnings[0]);
+}
+
+#[test]
+fn req_vc_006_a_clip_group_s_clipping_object_keeps_to_its_own_appearance() {
+    // The first object of a clip group is its clipping object, whatever its kind: VectorCraft draws its own
+    // paints, if it has any, and none of the group's. The group's effects and paints sew the others.
+    let compound = r#"{"id": 3, "kind": {"type": "compound", "children": [
+        {"id": 31, "kind": {"type": "path", "path": {"subpaths": [{"closed": true, "anchors": [{"p": [0, 0]}, {"p": [36, 0]}, {"p": [36, 36]}]}]}}}]}}"#;
+    let clip = |id: u32, clipping: &str, member: u32| {
+        format!(
+            r#"{{"id": {id}, "appearance": {{"items": [{}], "effects": [{{"id": "plugin.dev.stitchcraft.fill"}}]}},
+                "kind": {{"type": "group", "clip": true, "children": [{clipping}, {}]}}}}"#,
+            green(1.0),
+            square(member, 50.0, 0.0, "{}")
+        )
+    };
+    let painted = line(5, r#""clipping": true,"#, RED);
+    let read = read_ok(&document(4, &[clip(2, compound, 10), clip(4, &painted, 11)].join(",")));
+    // Group 2 clips with compound 3, which paints nothing, and group 4 with path 5, which sews by its paint.
+    assert_eq!(ids(&read), ["vc:10:fill", "vc:5:fill", "vc:11:fill"]);
+    assert_eq!(element(&read, "vc:5:fill").thread.color, Rgb::new(255, 0, 0));
+    assert_eq!(params(element(&read, "vc:5:fill")), []);
+    assert!(read.design.elements().iter().filter(|e| e.id.as_str() != "vc:5:fill").all(|e| e.thread.color == Rgb::new(0, 255, 0)));
+    assert!(read.warnings.iter().all(|w| w.element.as_ref().is_some_and(|e| ["vc:2", "vc:4"].contains(&e.as_str()))), "{:?}", read.warnings);
 }
 
 #[test]
@@ -508,26 +548,25 @@ fn sewn(read: &VectorCraft, id: &str) -> (Vec<Vec<Point>>, Vec<Diagnostic>) {
 
 #[test]
 fn req_vc_007_a_column_made_of_2_paths_sews_whichever_way_vectorcraft_turns_them() {
-    // Make Compound Path turns each path in front round when it turns the same way as the backmost, as 2
-    // straight rails drawn the same way do: the satin turns its second rail back (`reverse_rails`).
+    // From VectorCraft 0.10.0, Make Compound Path reverses each path in front that winds the same way as the
+    // backmost one, as 2 straight rails drawn the same way do. The column turns its second rail back
+    // (`reverse_rails`), and a rung pairs the same points whichever way it runs and wherever it lies.
     let satin = r#"{"items": [{"kind": "stroke", "width": 1, "paint": {"type": "solid", "color": {"model": "gray", "k": 0}}}],
         "effects": [{"id": "plugin.dev.stitchcraft.satin"}]}"#;
     let (back, front, turned) = (&[(0.0, 0.0), (100.0, 0.0)][..], &[(0.0, 20.0), (100.0, 20.0)][..], &[(100.0, 20.0), (0.0, 20.0)][..]);
-    // A rung joined to the column, drawn either way.
     let (rung, rung_turned) = (&[(40.0, -5.0), (60.0, 25.0)][..], &[(60.0, 25.0), (40.0, -5.0)][..]);
-    let objects = [
-        compound(2, satin, &[back, front]),
-        compound(3, satin, &[back, turned]),
-        compound(4, satin, &[back, turned, rung]),
-        compound(5, satin, &[back, front, rung_turned]),
-    ];
+    let columns: [&[&[(f64, f64)]]; 6] =
+        [&[back, front], &[back, turned], &[back, front, rung], &[back, turned, rung], &[back, front, rung_turned], &[rung, back, front]];
+    let objects: Vec<String> = columns.iter().zip(2..).map(|(members, id)| compound(id, satin, members)).collect();
     let read = read_ok(&document(4, &objects.join(",")));
-    assert_eq!(ids(&read), ["vc:2:satin", "vc:3:satin", "vc:4:satin", "vc:5:satin"]);
-    let [drawn, made, rung, rung_turned] = ["vc:2:satin", "vc:3:satin", "vc:4:satin", "vc:5:satin"].map(|id| sewn(&read, id));
-    assert_eq!(made, drawn);
-    assert_eq!(rung_turned, rung);
-    assert_ne!(rung.0, drawn.0, "the rung pairs the rails' points");
-    assert!(drawn.1.is_empty() && rung.1.is_empty(), "{:?} {:?}", drawn.1, rung.1);
+    let [drawn, rail_turned, with_rung, rung_and_rail_turned, with_rung_turned, rung_behind] =
+        ["vc:2:satin", "vc:3:satin", "vc:4:satin", "vc:5:satin", "vc:6:satin", "vc:7:satin"].map(|id| sewn(&read, id));
+    assert_eq!(rail_turned, drawn);
+    assert_eq!(rung_and_rail_turned, with_rung);
+    assert_eq!(with_rung_turned, with_rung);
+    assert_eq!(rung_behind, with_rung);
+    assert_ne!(with_rung.0, drawn.0, "the rung pairs the rails' points");
+    assert!(drawn.1.is_empty() && with_rung.1.is_empty(), "{:?} {:?}", drawn.1, with_rung.1);
 }
 
 #[test]

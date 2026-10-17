@@ -105,9 +105,9 @@ mod tests {
         let out = run(Family::Satin, &square(), &[]);
         assert_eq!(
             error(&out),
-            "info SC-I0810: This satin column is drawn as one path, so it is as wide as its stroke, which VectorCraft does not give a live \
-             effect: the effect leaves it as it is. To see its stitches in VectorCraft, draw its 2 rails and join them with Object › \
-             Compound Path › Make."
+            "info SC-I0810: This satin column is drawn as one path, as wide as its stroke, which VectorCraft does not give a live effect: \
+             the effect leaves it as it is. To see its stitches in VectorCraft, draw its 2 rails, join them with Object › Compound Path \
+             › Make and apply the effect to that."
         );
         // VectorCraft keeps the first 300 characters of a plug-in's error (`objects::decode` in its `crates/plugins`).
         assert!(error(&out).chars().count() <= 300);

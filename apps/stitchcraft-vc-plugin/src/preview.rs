@@ -274,9 +274,9 @@ pub fn reading(spend: u64) -> Budget {
 fn centre_line(family: Family, element: &Element, spend: Spend) -> Option<Diagnostic> {
     let (Family::Satin, Shape::Stroke { path, .. }) = (family, &element.shape) else { return None };
     let Ok(Column::CentreLine { .. }) = recognize(path, &mut reading(spend.0).meter()).ok()?.shape else { return None };
-    let message = "This satin column is drawn as one path, so it is as wide as its stroke, which VectorCraft does not give a live effect: \
-                   the effect leaves it as it is.";
-    let hint = "To see its stitches in VectorCraft, draw its 2 rails and join them with Object › Compound Path › Make.";
+    let message = "This satin column is drawn as one path, as wide as its stroke, which VectorCraft does not give a live effect: the \
+                   effect leaves it as it is.";
+    let hint = "To see its stitches in VectorCraft, draw its 2 rails, join them with Object › Compound Path › Make and apply the effect to that.";
     Some(Diagnostic::new(Code::VcEffectUnchanged, message).with_fix(Fix::Hint(hint.into())))
 }
 

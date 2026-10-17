@@ -85,9 +85,6 @@ pub(crate) struct Kind {
     pub printable: bool,
     #[serde(default)]
     pub guide: bool,
-    /// A path that is its clip group's outline, which VectorCraft draws no art of.
-    #[serde(default)]
-    pub clipping: bool,
 }
 
 /// How an object paints: its fills and strokes, in paint order, and its effects.
