@@ -46,13 +46,13 @@ jobs:
       - name: A desktop without a screen, for VectorCraft's pictures
         uses: ./.github/actions/desktop
       - name: Regenerate images and generated pages
-        # VectorCraft's pictures that could be made are committed even when another fails: the failure
-        # fails this job once the rest is committed.
+        # VectorCraft's pictures first: the other shots check that they are there. The pictures that could
+        # be made are committed even when another fails: the failure fails this job once the rest is.
         run: |
-          cargo xtask shots
           status=0
           cargo xtask shots --vectorcraft || status=$?
-          echo "VECTORCRAFT_STATUS=$status" >> "$GITHUB_ENV"
+          cargo xtask shots || status=$?
+          echo "SHOTS_STATUS=$status" >> "$GITHUB_ENV"
           cargo xtask docs
       - name: Commit to the pull request and start its checks
         if: env.SAME_REPO == 'true'
@@ -85,10 +85,10 @@ jobs:
           echo "This pull request comes from a fork, so this workflow cannot push to it. The refreshed files are" >> "$GITHUB_STEP_SUMMARY"
           echo "attached to this run as \`refreshed-docs\`: copy them into your branch, or run" >> "$GITHUB_STEP_SUMMARY"
           echo "\`cargo xtask shots && cargo xtask docs\` and push." >> "$GITHUB_STEP_SUMMARY"
-      - name: Fail when a VectorCraft picture could not be made
-        if: env.VECTORCRAFT_STATUS != '0'
+      - name: Fail when a picture could not be made
+        if: env.SHOTS_STATUS != '0'
         run: |
-          echo "::error::Some of VectorCraft's pictures could not be made: the run's annotations say why."
+          echo "::error::Some pictures could not be made: the run's annotations say why."
           exit 1
       - name: Remove the label, so adding it again refreshes again
         if: always()

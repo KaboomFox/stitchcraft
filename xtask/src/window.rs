@@ -37,9 +37,15 @@ use crate::util;
 const PROBE: &str = "compat/vc-window";
 /// Where the tests record: screenshots, the tree, the app's logs and the findings.
 const OUT: &str = "target/compat/window";
-/// The X screen: room for VectorCraft's window at its default size, 1440 × 900, which it keeps on a
-/// screen that also has room for a taskbar.
-const SCREEN: &str = "-screen 0 1600x1200x24";
+/// The X screen's width and height in pixels: room for VectorCraft's window at its default size, 1440 × 900,
+/// which it keeps on a screen that also has room for a taskbar, and at [`DIALOG_WINDOW`].
+const SCREEN: [u32; 2] = [1600, 2100];
+/// The size of VectorCraft's window for the picture of a plug-in's dialog: its default width, and tall
+/// enough for a dialog of 48 settings, satin's. A plug-in's dialog has a row a setting and doesn't scroll
+/// (VectorCraft's `form::schema_fields`): at the default height, fill's and satin's run off the window's
+/// top and bottom.
+pub(crate) const DIALOG_WINDOW: [u32; 2] = [1440, 2000];
+const _: () = assert!(DIALOG_WINDOW[0] <= SCREEN[0] && DIALOG_WINDOW[1] <= SCREEN[1], "the dialogs' window fits on the screen");
 /// Turns the accessibility bus's screen-reader flag on, then runs the rest of the command line. `sh -c`
 /// takes the command line as its arguments (`"$@"`), so nothing is quoted into the script.
 const SCREEN_READER_ON: &str = "dbus-send --session --print-reply --dest=org.a11y.Bus /org/a11y/bus \
@@ -122,7 +128,8 @@ fn in_desktop(app: &Path, out: &Path, tests: &[&str], job: Option<&Path>) -> Res
 
 /// The arguments of `dbus-run-session` that run `tests` in the private desktop.
 fn desktop(tests: Vec<OsString>) -> Vec<OsString> {
-    let head = ["--", "sh", "-c", SCREEN_READER_ON, "window", "xvfb-run", "--auto-servernum", "--server-args", SCREEN];
+    let screen = format!("-screen 0 {}x{}x24", SCREEN[0], SCREEN[1]);
+    let head = ["--", "sh", "-c", SCREEN_READER_ON, "window", "xvfb-run", "--auto-servernum", "--server-args", screen.as_str()];
     head.into_iter().map(OsString::from).chain(tests).collect()
 }
 
@@ -175,7 +182,19 @@ mod tests {
     #[test]
     fn the_tests_run_in_a_private_desktop_with_the_screen_reader_flag_on() {
         let line = desktop(vec!["cargo".into(), "test".into()]);
-        let expected = ["--", "sh", "-c", SCREEN_READER_ON, "window", "xvfb-run", "--auto-servernum", "--server-args", SCREEN, "cargo", "test"];
+        let expected = [
+            "--",
+            "sh",
+            "-c",
+            SCREEN_READER_ON,
+            "window",
+            "xvfb-run",
+            "--auto-servernum",
+            "--server-args",
+            "-screen 0 1600x2100x24",
+            "cargo",
+            "test",
+        ];
         assert_eq!(line, expected.map(OsString::from));
         assert!(SCREEN_READER_ON.ends_with("&& exec \"$@\"") && SCREEN_READER_ON.contains("ScreenReaderEnabled variant:boolean:true"));
     }

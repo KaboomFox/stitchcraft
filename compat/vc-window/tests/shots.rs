@@ -7,19 +7,22 @@
 //! so `cargo xtask compat window`, which runs every test of the crate, passes it by. For each shot:
 //!
 //! 1. The window opens the document `vectorcraft-cli` drew for the shot. The control channel installs the
-//!    modules and selects everything, which a person does with file dialogs and clicks on the drawing.
+//!    modules and selects everything, which a person does with file dialogs and clicks on the drawing. For
+//!    a dialog it makes the window the size the job gives: a plug-in's dialog doesn't scroll, and fill's
+//!    and satin's are taller than the window at the size it opens.
 //! 2. xa11y presses the menu bar's title and each row of the shot's menu path, as AT-SPI's press does for a
 //!    screen reader, then with a dialog the row of the family's effect, which the module's name begins.
 //! 3. The screenshot is cropped to the title and the rows that opened, with room for the menus' frames, or
-//!    to the dialog's window, and written where the job says.
-//! 4. A dialog must show a label for each parameter of the module's manifest. VectorCraft writes a label
-//!    from the parameter's key, first letter capital and a colon after it (its `form::humanize`).
+//!    to the dialog's window, which must fit in it, and written where the job says.
+//! 4. A dialog must show a row for each parameter of the module's manifest: a label, which VectorCraft
+//!    writes from the parameter's key, first letter capital and a colon after it (its `form::humanize`),
+//!    and then the control the job names for the parameter's type.
 //!
 //! Each shot records what it found, a dialog's tree among it, or why it failed ([`record`]).
 // The harness's own exemption (`src/lib.rs`): it waits on the app and reads and writes files.
 #![allow(clippy::disallowed_methods, clippy::disallowed_types)]
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::time::{Duration, Instant};
 
@@ -70,6 +73,18 @@ fn take(shot: &Value) -> Result<(), String> {
         window.call("engine.execute", json!({"command": "plugin.install", "params": {"path": plugin}}))?;
     }
     window.call("engine.execute", json!({"command": "select.all", "params": {}}))?;
+    let opened_at = size(&window.inspect()?)?;
+    let at = match shot.get("window").filter(|wanted| !wanted.is_null()) {
+        None => opened_at,
+        Some(wanted) => {
+            let wanted = wanted.as_array().and_then(|wh| Some((wh.first()?.as_f64()?, wh.get(1)?.as_f64()?)));
+            let (width, height) = wanted.ok_or("the job's window is not [width, height]")?;
+            window.call("ui.resize", json!({"width": width, "height": height}))?;
+            let what = format!("the window at {width}×{height}");
+            let resized = |inspect: &Value| size(inspect).is_ok_and(|(w, h)| (w - width).abs() < 0.5 && (h - height).abs() < 0.5);
+            size(&window.until(&what, resized)?)?
+        }
+    };
     let app = App::by_pid(window.pid(), FIND).map_err(|e| format!("xa11y did not find the app's process in the accessibility tree: {e}"))?;
     let menu: Vec<&str> = shot.get("menu").and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str).collect();
     let (title, rows) = menu.split_first().ok_or("the shot's menu path is empty")?;
@@ -80,16 +95,38 @@ fn take(shot: &Value) -> Result<(), String> {
         let row = row(&app, label)?;
         row.press().map_err(|e| format!("pressing {:?}: {e}", row.name))?;
     }
-    let (crop, found) = match shot.get("dialog").filter(|dialog| !dialog.is_null()) {
+    let dialog = shot.get("dialog").filter(|dialog| !dialog.is_null());
+    let (crop, mut found) = match dialog {
         Some(dialog) => opened(&app, dialog)?,
         None => menus(&app, &title, &before)?,
     };
     let picture = window.screenshot_still(id)?;
-    let size = (picture.width, picture.height);
+    let pixels = (i64::from(picture.width), i64::from(picture.height));
+    if dialog.is_some() {
+        if crop.0 < 0 || crop.1 < 0 || crop.0 + crop.2 > pixels.0 || crop.1 + crop.3 > pixels.1 {
+            let (x, y, w, h) = crop;
+            return Err(format!("the dialog, {w}×{h} pixels at ({x}, {y}), runs off the {}×{} window{found}", pixels.0, pixels.1));
+        }
+        // The window's size is in points, and the screenshot's in pixels.
+        let scale = pixels.0 as f64 / at.0;
+        let tall = (opened_at.1 * scale).round() as i64;
+        if crop.3 > tall {
+            found = format!(
+                "; {} pixels tall, more than the window's {tall} at the size it opens, {}×{} points, where it runs off its top and bottom{found}",
+                crop.3, opened_at.0, opened_at.1
+            );
+        }
+    }
     let cropped = picture.crop(crop.0, crop.1, crop.2, crop.3);
     cropped.write(Path::new(text("picture")?))?;
-    let said = format!("{}×{} pixels at ({}, {}) of the {}×{} window{found}", cropped.width, cropped.height, crop.0, crop.1, size.0, size.1);
+    let said = format!("{}×{} pixels at ({}, {}) of the {}×{} window{found}", cropped.width, cropped.height, crop.0, crop.1, pixels.0, pixels.1);
     record(id, "notice", id, &said)
+}
+
+/// The window's width and height in points, as `ui.inspect` shows them.
+fn size(inspect: &Value) -> Result<(f64, f64), String> {
+    let number = |at: &str| inspect.pointer(at).and_then(Value::as_f64).ok_or(format!("ui.inspect shows no {at}: {inspect}"));
+    Ok((number("/window/0")?, number("/window/1")?))
 }
 
 /// A rectangle in the screenshot's pixels: `x`, `y`, width and height.
@@ -143,7 +180,7 @@ fn menus(app: &App, title: &Element, before: &BTreeSet<String>) -> Result<(Crop,
 }
 
 /// Presses the row of the effect `dialog` names, and waits for its dialog: the dialog's rectangle, and
-/// what it shows, said after checking its labels against the module's parameters.
+/// what it shows, said after checking its rows against the module's parameters.
 fn opened(app: &App, dialog: &Value) -> Result<(Crop, String), String> {
     let name = dialog.get("row").and_then(Value::as_str).ok_or("the shot's dialog names no row")?;
     let row = row(app, name)?;
@@ -166,35 +203,46 @@ fn opened(app: &App, dialog: &Value) -> Result<(Crop, String), String> {
     };
     let crop = bounds(&window)?;
     let tree = window.dump(Some(DEPTH)).map_err(|e| format!("the dialog's tree: {e}"))?;
-    let labels = descendants(&window, DEPTH)?
+    // A row is a label, the key with a colon, and then the control: the controls by key, lower case.
+    let rows: BTreeMap<String, &'static str> = in_order(&window, DEPTH)?
+        .windows(2)
+        .filter_map(|pair| {
+            let [label, control] = pair else { return None };
+            Some((label.name.as_deref()?.strip_suffix(':')?.to_lowercase(), control.role.to_snake_case()))
+        })
+        .collect();
+    let params: Vec<(&str, &str)> = dialog
+        .get("params")
+        .and_then(Value::as_array)
         .into_iter()
-        .filter_map(|e| e.name.clone())
-        .filter_map(|label| label.strip_suffix(':').map(str::to_lowercase))
-        .collect::<BTreeSet<_>>();
-    let params: Vec<&str> =
-        dialog.get("params").and_then(Value::as_array).into_iter().flatten().filter_map(|p| p.get(0).and_then(Value::as_str)).collect();
-    let missing: Vec<&&str> = params.iter().filter(|key| !labels.contains(&key.to_lowercase())).collect();
+        .flatten()
+        .filter_map(|p| Some((p.get(0)?.as_str()?, p.get(1)?.as_str()?)))
+        .collect();
+    let wrong: Vec<String> = params
+        .iter()
+        .filter_map(|(key, control)| match rows.get(&key.to_lowercase()) {
+            None => Some(format!("no row for {key}")),
+            Some(shown) if shown != control => Some(format!("a {shown} for {key}, not a {control}")),
+            Some(_) => None,
+        })
+        .collect();
     let found = format!(
-        "; {} of its {} parameters labelled. The dialog's tree, {} lines:\n{}",
-        params.len() - missing.len(),
+        "; {} of its {} parameters shown, each with its label and the control of its type. The dialog's tree, {} lines:\n{}",
+        params.len() - wrong.len(),
         params.len(),
         tree.lines().count(),
         tree
     );
-    if missing.is_empty() { Ok((crop, found)) } else { Err(format!("the dialog {name:?} shows no label for {missing:?}{found}")) }
+    if wrong.is_empty() { Ok((crop, found)) } else { Err(format!("the dialog {name:?} shows {wrong:?}{found}")) }
 }
 
-/// The elements under `element`, `depth` levels down.
-fn descendants(element: &Element, depth: usize) -> Result<Vec<Element>, String> {
-    let mut found = Vec::new();
-    let mut level = vec![element.clone()];
-    for _ in 0..depth {
-        let mut next = Vec::new();
-        for e in &level {
-            next.extend(e.children().map_err(|err| format!("the children of {e}: {err}"))?);
+/// `element` and those under it, `depth` levels down, in the tree's order: each before its children.
+fn in_order(element: &Element, depth: usize) -> Result<Vec<Element>, String> {
+    let mut found = vec![element.clone()];
+    if depth > 0 {
+        for child in element.children().map_err(|e| format!("the children of {element}: {e}"))? {
+            found.extend(in_order(&child, depth - 1)?);
         }
-        found.extend(next.iter().cloned());
-        level = next;
     }
     Ok(found)
 }
