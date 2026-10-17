@@ -3,8 +3,9 @@ resolver = "3"
 members = ["crates/*", "apps/*", "xtask"]
 default-members = ["crates/*", "apps/*", "xtask"]
 # The VectorCraft contract tests build against whichever VectorCraft ref is under test, in their own
-# workspace (`cargo xtask compat contract`; docs/src/design/compatibility-gate.md).
-exclude = ["compat/vc-contract"]
+# workspace (`cargo xtask compat contract`; docs/src/design/compatibility-gate.md). The window probe drives
+# VectorCraft's app through xa11y, whose dependencies stay out of ours (`cargo xtask compat window`).
+exclude = ["compat/vc-contract", "compat/vc-window"]
 
 [workspace.package]
 version = "0.0.1"

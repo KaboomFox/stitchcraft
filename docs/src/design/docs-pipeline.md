@@ -49,7 +49,7 @@ docs check, whatever its file name.
 |---|---|---|---|
 | `stitch` | `stitchcraft-render` ([rendering](rendering.md)) from a test sheet, or from an SVG design the engine plans | **exact bytes** (rendering is deterministic) | Stitch-type illustrations, parameter comparisons, diagnostics examples |
 | `vectorcraft-render` | `vectorcraft-cli run --in fixture --cmd plugin.install … --cmd effect.apply … --export x.png` | exact bytes, or tight tolerance if VectorCraft's renderer changes | How a preview looks in VectorCraft's canvas, headless |
-| `vectorcraft-ui` | VectorCraft (pinned stable) driven over its control channel: open fixture, install plug-ins, select, open the dialog, set fields, `ui.screenshot`, crop | perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 per channel) | Dialogs, menus, the workflow; runs under Xvfb with Mesa software rendering in a pinned container |
+| `vectorcraft-ui` | VectorCraft (pinned stable) driven through its accessibility tree and its control channel: open fixture, install plug-ins, select, open the dialog, set fields, `ui.screenshot`, crop | perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 per channel) | Dialogs, menus, the workflow; the pinned release's app in a desktop without a screen ([VectorCraft's window in CI](#vectorcrafts-window-in-ci)) |
 | `photo` | a person, of a real sew-out | presence + metadata record (machine, fabric, commit, checkpoint) | Never regenerated; listed with their sew-out report |
 
 A shot declaration:
@@ -81,6 +81,45 @@ side shrink to share the page's width, and a wide picture's stitches then become
 followed by the panel's caption. The page
 cannot show an image under any other text, and a stale figure fails `--check` like a stale page.
 
+### VectorCraft's window in CI
+
+Spike M0.8 ran VectorCraft's window in CI, as the `vectorcraft-ui` kind needs, and drove it through its
+accessibility tree. Both work, so M6.7 builds that kind's generator this way.
+
+`cargo xtask compat window` runs the window probe, `compat/vc-window`, against the app VectorCraft
+releases: `bin/vectorcraft` from the Linux x86_64 archive of the stable release that
+`compat/vectorcraft.toml` pins, checked against the SHA-256 recorded there. The probe's tests run in a
+desktop of their own, with an X server (Xvfb) and a D-Bus session that nothing else uses:
+
+- Mesa draws the window in software, through OpenGL (`WGPU_BACKEND=gl`), with its OpenGL renderer,
+  llvmpipe. Left to choose, the app would take Mesa's Vulkan renderer wherever that one is installed, and
+  the pixels would depend on the runner.
+- The accessibility bus is told that a screen reader is on, since AccessKit, VectorCraft's accessibility
+  layer, builds the tree only then. The flag stays in the session's memory (`GSETTINGS_BACKEND=memory`).
+  Through GSettings it would reach the person's own settings, and GNOME would start a screen reader at
+  their next login.
+
+The compat workflow's `window` job runs the command daily, and on pull requests that touch the plug-in,
+`compat/`, the tooling or a manifest. It keeps the screenshots, the trees and the app's logs.
+
+**Screenshots: the same pixels, but for the frame timings.** The window opens at 1440 × 900 pixels,
+drawn by llvmpipe, and a screenshot takes about 0.65 s. Above the status bar, screenshots of one window
+match to the pixel. The screenshots of two starts of the app match there too, and so did two runs on
+GitHub's runners. The status bar differs, since it shows the frame timings ("render 4.4 ms · ui 1.4 ms ·
+24 fps"), which change with every frame. VectorCraft's own visual fixtures record where that text is, as
+text that changes. So the generator crops each picture to the menu or dialog it shows. A picture of the
+whole window leaves the status bar out. The tolerance in the table stays: the runner's Mesa comes with
+Ubuntu's updates, and a new one may move an anti-aliased edge.
+
+**xa11y: AT-SPI's press and clicks both work.** xa11y finds the app by its process. AT-SPI's press, as a
+screen reader uses it, opens View and chooses its row Outline. Clicks at the middle of the bounds the tree
+gives View and its row Preview, as a person makes them, bring the drawing back. The control channel sees
+each change. A row's name is its label after the room for a check mark, and its shortcut
+(`     Outline Ctrl+Y`). With no window manager, the window opens at the screen's corner, so the tree's
+bounds are the screenshot's pixels. M6.7 drives VectorCraft to each screen through the tree, as a person
+would. The control channel keeps what a person would not do: opening a fixture, sizing the window and
+reading the state.
+
 ## Command-line examples
 
 Pages show what a command prints by including it from `docs/src/user/reference/generated/`. The commands
@@ -89,11 +128,6 @@ empty directory. A declaration can copy files of the repository into that direct
 that are not shown first. The output is the binary's own, standard output then standard error, with the
 exit status when it is not 0. When a command prints something new, `--check` fails until the output is
 written again. Pages show what the command prints today.
-
-The `vectorcraft-ui` kind depends on running VectorCraft's window in CI; spike **M0.8** proves it
-(Xvfb + Mesa llvmpipe through wgpu's GL backend). Until it lands, UI images are limited to
-`vectorcraft-render` shots, and VectorCraft's own approach — semantic headless frame tests — covers the
-dialogs' contents.
 
 ## What runs on every pull request
 

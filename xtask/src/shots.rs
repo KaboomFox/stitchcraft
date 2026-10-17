@@ -8,8 +8,8 @@
 //! and a generated file no shot declares is an error. Generators arrive with the roadmap. `stitch` renders
 //! with `stitchcraft-render` either a test sheet, or an SVG design that the engine plans as `stitch plan`
 //! plans it, once per panel with the panel's parameters set on every element. `vectorcraft-render` and
-//! `vectorcraft-ui` come with the VectorCraft pipeline (M0.8, M6.7). `photo` shots are never
-//! regenerated; they must exist and link their sew-out report.
+//! `vectorcraft-ui` come with the VectorCraft pipeline (M6.7, on M0.8's window probe). `photo` shots are
+//! never regenerated; they must exist and link their sew-out report.
 //!
 //! A shot of a design with panels makes one image per panel, `<id>-1.png` and so on, and pages show them
 //! in a figure that `cargo xtask docs` writes ([`crate::figures`]): side by side, or one under another
@@ -158,7 +158,7 @@ pub fn run(check_only: bool) -> Result<(), String> {
                 Err(e) => findings.error(format!("shot `{}`: {e}", shot.id)),
             },
             "vectorcraft-render" | "vectorcraft-ui" => {
-                findings.error(format!("shot `{}`: VectorCraft shots arrive with roadmap steps M0.8 and M6.7", shot.id));
+                findings.error(format!("shot `{}`: VectorCraft shots arrive with roadmap step M6.7", shot.id));
             }
             other => findings.error(format!("shot `{}`: unknown kind `{other}`", shot.id)),
         }

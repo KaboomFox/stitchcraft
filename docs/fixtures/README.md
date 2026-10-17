@@ -7,7 +7,7 @@ thing. Test inputs live in `conformance/fixtures/`.
 
 | Fixture | Shows | Used by |
 |---|---|---|
-| `badge.svg` | A red star inside a blue ring | the SVG tutorial: the `badge` shots and the `plan-badge` example |
+| `badge.svg` | A red star inside a blue ring | the SVG tutorial: the `badge` shots and the `plan-badge` example; the window probe (`compat/vc-window`) |
 | `wave.svg` | A smooth wave | running stitch length |
 | `half-disc.svg` | A half disc: a straight side with 2 corners, and a curve | running stitch tolerance |
 | `parallel.svg` | 14 rows 0.6 mm apart, sewn as one path | random stitch length |

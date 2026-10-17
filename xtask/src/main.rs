@@ -39,6 +39,7 @@ mod shots;
 mod unsafe_audit;
 mod util;
 mod wasm;
+mod window;
 
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -178,6 +179,12 @@ enum Compat {
         #[arg(long, value_name = "FILE")]
         wasm: PathBuf,
     },
+    /// VectorCraft's window without a screen: screenshots alike, and xa11y driving it (Linux)
+    Window {
+        /// The app to run, instead of the pinned stable release's `bin/vectorcraft`
+        #[arg(long, value_name = "FILE")]
+        app: Option<PathBuf>,
+    },
     /// Join this folder to a VectorCraft checkout's workspace
     Join {
         /// Keep StitchCraft's own workspace inside VectorCraft's
@@ -210,6 +217,7 @@ fn run(command: Command) -> Result<(), String> {
         Command::Wasm { goldens: true } => wasm::goldens(),
         Command::Compat { command: Compat::Discover { json } } => compat::discover(json),
         Command::Compat { command: Compat::Contract { reference, wasm } } => compat::contract(&reference, &wasm),
+        Command::Compat { command: Compat::Window { app } } => window::run(app.as_deref()),
         Command::Compat { command: Compat::Join { nested, vectorcraft } } => join::run(nested, &vectorcraft),
         Command::Compat { command: Compat::Report } => Err("`compat report` arrives with roadmap step M6.6".to_string()),
         Command::Shots { check } => shots::run(check),
@@ -267,6 +275,8 @@ mod tests {
             &["compat", "discover", "--json"],
             &["compat", "contract", "--ref", "v0.7.0", "--wasm", "plugin.wasm"],
             &["compat", "join", "--nested", ".."],
+            &["compat", "window"],
+            &["compat", "window", "--app", "vectorcraft/target/release/vectorcraft"],
             &["mutants", "--changed", "a", "b"],
             &["prose", "--base", "origin/main"],
             &["ci", "--skip", "api,prose"],

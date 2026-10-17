@@ -1,0 +1,16 @@
+[package]
+name = "stitchcraft-vc-window"
+description = "The window probe: VectorCraft's released app, headless, photographed and driven through its accessibility tree"
+version = "0.0.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+publish = false
+
+# Its own workspace: the app runs as a process of its own, and xa11y's D-Bus and X11 clients stay out of
+# the engine's dependencies (`cargo xtask compat window`; docs/src/design/docs-pipeline.md).
+[workspace]
+
+[dependencies]
+png = "0.18"
+serde_json = "1"
+xa11y = { version = "=0.15.2", default-features = false }
