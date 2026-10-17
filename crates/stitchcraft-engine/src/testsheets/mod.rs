@@ -98,10 +98,10 @@ pub static SHEETS: &[TestSheet] = &[
         id: "TS-02B",
         title: "TS-02 drawn as a design: trims elements ask for",
         checks: &[
-            "The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop).",
-            "Left half (red; every dash but the last asks for a trim after it): for each row (gaps of 2, 5, 15, 30 mm, top to bottom), was the thread between the two dashes cut?",
-            "Right half (blue; no trims): the 2 mm gap is sewn across. For the other rows, and between rows, was the jump thread cut?",
-            "Where the thread was cut, the stitching ends and starts again with a small lock: pull each tail gently. Does the dash hold?",
+            "The machine stops for red → blue and blue → green, and once more in the middle of the green line (the stop), and cuts the thread at each.",
+            "Left half (red; every dash but the last asks for a trim after it): the machine cuts no jump, so its rows (gaps of 2, 5, 15, 30 mm, top to bottom) are joined by threads. Did every dash stay sewn while the machine went on to the next?",
+            "Right half (blue; no trims): the 2 mm gap is sewn across, and threads join the other dashes and the rows. Did every dash stay sewn?",
+            "Each dash starts and ends with a small lock. Snip the threads between the dashes, then pull each tail gently: does the dash hold?",
             "Any loose loops, knots or bird's nests on the back, and where.",
         ],
         profile: REFERENCE,
@@ -111,10 +111,10 @@ pub static SHEETS: &[TestSheet] = &[
         id: "TS-03",
         title: "Running stitch: lengths, bean stitch, curves, the shortest stitch",
         checks: &[
-            "Running stitch lines (top five; 1.5, 2.0, 2.5, 3.0 and 4.0 mm): the stitches of each line are even; ten stitches measure 15, 20, 25, 30 and 40 mm.",
+            "Running stitch lines (top five; 1.5, 2.0, 2.5, 3.0 and 4.0 mm): the stitches of each line are even; ten stitches, counted inside the small lock at each end, measure 15, 20, 25, 30 and 40 mm.",
             "Bean stitch lines (next two; each stitch sewn three and five times): solid and raised, with no gaps.",
             "Circles (6 mm across; tolerance 0.1, 0.2 and 0.5 mm, left to right): round, with fewer and straighter stitches to the right.",
-            "Short stitches placed by hand (bottom five; 0.3, 0.4, 0.5, 0.7 and 1.0 mm): which lines sew cleanly, with no thread breaks, knots or bunching on the back? The shortest clean one is the machine's shortest stitch.",
+            "Short stitches placed by hand (bottom five; 0.3, 0.4, 0.5, 0.7 and 1.0 mm, each with a small back-and-forth lock at both ends): which lines sew cleanly, with no thread breaks, knots or bunching on the back? The shortest clean one is the machine's shortest stitch; if the 0.3 mm line is clean, it is 0.3 mm or less, since StitchCraft sews nothing shorter.",
         ],
         profile: REFERENCE,
         build: ts03::build,
@@ -123,8 +123,9 @@ pub static SHEETS: &[TestSheet] = &[
         id: "TS-04",
         title: "Lock stitches: do they hold, and do they show?",
         checks: &[
-            "Rows, top to bottom: half stitch, arrow, back and forth, bowtie, cross, star, simple, triangle, zigzag. Each line has its lock at both ends and was trimmed after: pull each tail gently. Does the lock hold, or does the line come undone?",
-            "Columns, left to right, are small, medium and large: the half stitch on first stitches of 1.5, 2.5 and 4 mm, back and forth at 0.5, 0.7 and 1.0 mm, the others at 70, 100 and 150 %.",
+            "Rows, top to bottom: half stitch, arrow, back and forth, bowtie, cross, star, simple, triangle, zigzag. Each line has its lock at both ends and was trimmed after, but the machine cuts no jump: snip the threads between the lines, then pull each tail gently. Does the lock hold, or does the line come undone?",
+            "Columns, left to right, are small, medium and large: the half stitch on first stitches of 1, 1.5 and 2.5 mm, back and forth at 0.5, 0.7 and 1.0 mm, the others at 70, 100 and 150 %.",
+            "Rows 1, 3, 5, 7 and 9 are sewn left to right and the others right to left: a line's start is the end it was sewn from.",
             "Which locks show from the front, and how much (1 hidden to 5 obvious)?",
             "Any thread breaks or knots at the locks, and where.",
         ],
@@ -406,20 +407,37 @@ mod tests {
         assert!(first.starts_with(&format!("Rows, top to bottom: {}.", labels.join(", "))), "{first}");
         // A line per shape and size, each trimmed after, so each lock alone holds each end.
         assert_eq!((labels.len(), shape("TS-04")[0].matches('T').count()), (9, 27));
-        // Rows top to bottom in the table's order, columns left to right, each line sewn left to right.
+        // Rows top to bottom in the table's order, columns left to right, the rows sewn left to right and right
+        // to left in turn.
         let mut previous = f64::NEG_INFINITY;
-        for lock in ts04::rows() {
+        for (row, lock) in ts04::rows().enumerate() {
             let lines: Vec<_> = (0..3).map(|column| sewn("TS-04", &format!("{lock}-{column}"))).collect();
-            let starts: Vec<f64> = lines.iter().map(|points| points[0].x()).collect();
-            assert!(starts.windows(2).all(|w| w[1] - w[0] > 30.0), "{lock}: {starts:?}");
-            assert!(lines.iter().all(|points| points.windows(2).all(|w| w[0].x() < w[1].x())), "{lock}");
+            let lefts: Vec<f64> = lines.iter().map(|points| across(points).0).collect();
+            assert!(lefts.windows(2).all(|w| w[1] - w[0] > 30.0), "{lock}: {lefts:?}");
+            let rightwards = ts04::rightwards(row);
+            assert!(lines.iter().all(|points| points.windows(2).all(|w| (w[0].x() < w[1].x()) == rightwards)), "{lock}");
             assert!(lines[0][0].y() > previous, "{lock}");
             previous = lines[0][0].y();
         }
-        // The half stitch's lines have first stitches of 1.5, 2.5 and 4 mm.
-        for (column, (first, _)) in ts04::FIRST_STITCHES.iter().enumerate() {
+        // The half stitch's lines have the first stitches the second check names.
+        for (column, first) in ts04::FIRST_STITCHES.iter().enumerate() {
             let points = sewn("TS-04", &format!("half_stitch-{column}"));
             assert!((points[0].distance(points[1]) - first).abs() < 1e-9, "{column}");
+        }
+        let firsts = listed(&ts04::FIRST_STITCHES.map(|first| first.to_string()));
+        let second = find("TS-04").unwrap().checks[1];
+        assert!(second.contains(&format!("the half stitch on first stitches of {firsts} mm")), "{second}");
+        // The checks say which rows run left to right, so that the reader knows each line's start.
+        let rightwards: Vec<String> = (0..labels.len()).filter(|&row| ts04::rightwards(row)).map(|row| (row + 1).to_string()).collect();
+        let third = find("TS-04").unwrap().checks[2];
+        assert!(third.starts_with(&format!("Rows {} are sewn left to right", listed(&rightwards))), "{third}");
+    }
+
+    /// `items` as a list in words: `1, 2 and 3`.
+    fn listed(items: &[String]) -> String {
+        match items.split_last() {
+            Some((last, rest)) if !rest.is_empty() => format!("{} and {last}", rest.join(", ")),
+            _ => items.join(""),
         }
     }
 
@@ -428,41 +446,67 @@ mod tests {
         points.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(left, right), p| (left.min(p.x()), right.max(p.x())))
     }
 
+    /// The top and bottom edges of `points`.
+    fn down(points: &[stitchcraft_core::Point]) -> (f64, f64) {
+        points.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(top, bottom), p| (top.min(p.y()), bottom.max(p.y())))
+    }
+
     #[test]
     fn ts05_sews_its_rows_and_columns_as_its_checks_name() {
         let mut rows = Vec::new();
-        for spacing in ts05::SPACINGS {
+        for (row, spacing) in ts05::SPACINGS.into_iter().enumerate() {
             let mut lefts = Vec::new();
-            for width in ts05::WIDTHS {
+            for (column, width) in ts05::WIDTHS.into_iter().enumerate() {
                 let points = sewn("TS-05", &format!("{spacing}-{width}"));
                 let (left, right) = across(&points);
                 assert!((right - left - width).abs() < 1e-9, "{spacing}-{width}: as wide as drawn");
-                // Every other needle point is on the left rail, the spacing below the one before, but for the
+                // Every other needle point is on the left rail, the spacing on from the one before, but for the
                 // last, which is at the column's end.
-                let down: Vec<f64> = points.iter().filter(|p| (p.x() - left).abs() < 1e-9).map(|p| p.y()).collect();
-                let gaps: Vec<f64> = down.windows(2).map(|w| w[1] - w[0]).collect();
+                let rail: Vec<f64> = points.iter().filter(|p| (p.x() - left).abs() < 1e-9).map(|p| p.y()).collect();
+                let gaps: Vec<f64> = rail.windows(2).map(|w| (w[1] - w[0]).abs()).collect();
                 assert!(gaps[..gaps.len() - 1].iter().all(|gap| (gap - spacing).abs() < 1e-6), "{spacing}-{width}: {gaps:?}");
+                // The rows run left to right and right to left in turn, and the columns, in the order they are
+                // sewn, down and up in turn.
+                let sewn_at = row * ts05::WIDTHS.len() + if row.is_multiple_of(2) { column } else { ts05::WIDTHS.len() - 1 - column };
+                let downwards = points.first().map(|p| p.y()) < points.last().map(|p| p.y());
+                assert_eq!(downwards, sewn_at.is_multiple_of(2), "{spacing}-{width}");
                 lefts.push(left);
             }
             assert!(lefts.windows(2).all(|w| w[0] < w[1]), "{spacing}: left to right by width");
-            rows.push(sewn("TS-05", &format!("{spacing}-1"))[0].y());
+            rows.push(down(&sewn("TS-05", &format!("{spacing}-1"))).0);
         }
         assert!(rows.windows(2).all(|w| w[0] < w[1]), "top to bottom by spacing: {rows:?}");
     }
 
     #[test]
     fn ts06_sews_its_underlays_before_the_same_top_stitches_left_to_right() {
-        let plain = sewn("TS-06", "none");
-        let plain_left = across(&plain).0;
-        let mut previous = f64::NEG_INFINITY;
-        for (name, _) in ts06::UNDERLAYS {
+        // How each column is sewn, by its place from the left: down or up in turn, in the order they are sewn,
+        // each from the side the needle comes from.
+        let mut ways = [(true, true); ts06::UNDERLAYS.len()];
+        let mut before = None;
+        for (n, &place) in ts06::SEWN.iter().enumerate() {
+            ways[place] = (n.is_multiple_of(2), before.is_none_or(|before| before < place));
+            before = Some(place);
+        }
+        // A column's needle points from the corner it starts at, as if sewn down from the left: sewn up or from
+        // the right, a column is the mirror image of one sewn down from the left.
+        let from_its_start = |name: &str, place: usize| {
             let points = sewn("TS-06", name);
-            let (left, right) = across(&points);
+            let ((left, right), (top, bottom), (sewn_down, from_left)) = (across(&points), down(&points), ways[place]);
+            let x = |p: &stitchcraft_core::Point| if from_left { p.x() - left } else { right - p.x() };
+            let y = |p: &stitchcraft_core::Point| if sewn_down { p.y() - top } else { bottom - p.y() };
+            points.iter().map(|p| (x(p), y(p))).collect::<Vec<_>>()
+        };
+        let plain = from_its_start("none", 0);
+        let mut previous = f64::NEG_INFINITY;
+        for (place, (name, _)) in ts06::UNDERLAYS.into_iter().enumerate() {
+            let (left, right) = across(&sewn("TS-06", name));
             assert!((right - left - ts06::WIDTH).abs() < 1e-9 && left > previous, "{name}: as wide as drawn, right of the last");
             previous = left;
-            // The top stitches come last, as the column without underlay sews them, moved across.
+            // The top stitches come last, as the column without underlay sews them.
+            let points = from_its_start(name, place);
             let top = &points[points.len() - plain.len()..];
-            let same = top.iter().zip(&plain).all(|(a, b)| (a.x() - b.x() - (left - plain_left)).abs() < 1e-9 && (a.y() - b.y()).abs() < 1e-9);
+            let same = top.iter().zip(&plain).all(|(a, b)| (a.0 - b.0).abs() < 1e-9 && (a.1 - b.1).abs() < 1e-9);
             assert!(same && (name == "none") == (points.len() == plain.len()), "{name}");
         }
     }
@@ -473,11 +517,16 @@ mod tests {
         assert_eq!(plan.blocks.iter().map(|b| b.thread.name.as_deref()).collect::<Vec<_>>(), [Some("Red"), Some("Black")]);
         let mut shift: Option<(f64, f64)> = None;
         let mut centres = Vec::new();
-        for (pull, (x, y)) in ts07::CIRCLES {
-            // Each outline starts at its circle's right-hand point, where the drawing starts it, and its needle
-            // points lie on the circle, within the curves' few thousandths of a millimetre.
+        for ((pull, (x, y)), start) in ts07::CIRCLES.into_iter().zip(ts07::STARTS) {
+            // Each outline starts where the drawing starts it, and its needle points lie on the circle, within
+            // the curves' few thousandths of a millimetre.
             let outline = sewn("TS-07", &format!("outline-{pull}"));
-            let centre = stitchcraft_core::Point::new(outline[0].x() - ts07::RADIUS, outline[0].y()).unwrap();
+            let (dx, dy) = match start {
+                designed::Start::Right => (-ts07::RADIUS, 0.0),
+                designed::Start::Left => (ts07::RADIUS, 0.0),
+                designed::Start::Top => (0.0, ts07::RADIUS),
+            };
+            let centre = stitchcraft_core::Point::new(outline[0].x() + dx, outline[0].y() + dy).unwrap();
             assert!(outline.iter().all(|q| (q.distance(centre) - ts07::RADIUS).abs() < 0.05), "{pull}");
             // Each circle where the drawing puts it, all moved alike to centre the sheet.
             let moved = *shift.get_or_insert((centre.x() - x, centre.y() - y));
@@ -525,10 +574,6 @@ mod tests {
             assert!(tops.windows(2).all(|w| w[0].1[column] > w[1].1[column]), "{column}: {tops:?}");
         }
         // The first check names the spacings and the angles in the order they are sewn.
-        let listed = |items: &[String]| {
-            let (last, rest) = items.split_last().unwrap();
-            format!("{} and {last}", rest.join(", "))
-        };
         let spacings = listed(&ts08::SPACINGS.map(String::from));
         let angles = listed(&ts08::ANGLES.map(|a| format!("{a}°")));
         let first = find("TS-08").unwrap().checks[0];
@@ -579,6 +624,68 @@ mod tests {
         assert_eq!(plan.stats().stops, 1);
         let jumps = |b: usize| plan.blocks[b].stitches.iter().filter(|s| s.kind == StitchKind::Jump && s.origin.role == Role::Travel).count();
         assert_eq!((jumps(0), jumps(1)), (8, 8));
+    }
+
+    /// The sheets sewn at MC-1 as they are: drawn stitch by stitch, to test the machine and the file format.
+    const SEWN_AT_MC1: [&str; 5] = ["TS-01", "TS-02", "TS-10A", "TS-10B", "TS-10C"];
+
+    /// How near a needle may come down to a thread on the fabric without catching it (mm): about half a 75/11
+    /// needle, 0.75 mm across, and half a 40 wt thread.
+    const CATCHES: f64 = 0.5;
+
+    /// How far `p` lies from the segment from `a` to `b`, which are apart, and how far before `b` the point of
+    /// the segment nearest it is.
+    fn off(p: stitchcraft_core::Point, a: stitchcraft_core::Point, b: stitchcraft_core::Point) -> (f64, f64) {
+        let (ax, ay, px, py) = (b.x() - a.x(), b.y() - a.y(), p.x() - a.x(), p.y() - a.y());
+        let t = ((px * ax + py * ay) / (ax * ax + ay * ay)).clamp(0.0, 1.0);
+        let (dx, dy) = (px - t * ax, py - t * ay);
+        ((dx * dx + dy * dy).sqrt(), (1.0 - t) * a.distance(b))
+    }
+
+    #[test]
+    fn no_sheet_sews_over_a_jump_thread_the_machine_leaves() {
+        // The reference machine cuts the thread at colour changes and stops, and at no jump, a trim's or not
+        // (MC-1, formats.md). A jump leaves its thread on the fabric, straight from where the needle came up to
+        // where it goes down again, until the operator snips it at the next stop or after sewing. A needle that
+        // comes down within reach of it sews it down, and then more than the lock holds the tail a pull test
+        // pulls. Round the hole where it goes down, the thread is held already, and its tie-in, which ties in
+        // its own thread, may lie along it.
+        let mut sewn_over = Vec::new();
+        for sheet in SHEETS.iter().filter(|sheet| !SEWN_AT_MC1.contains(&sheet.id)) {
+            for block in &sheet.plan().unwrap().blocks {
+                // The threads on the fabric, each from where the needle came up to where it went down again.
+                let mut threads = Vec::new();
+                // Where the needle went down last since the thread was cut, and the jump under way from there.
+                let (mut needle, mut jump) = (None, None);
+                let mut tying_in = false;
+                for s in &block.stitches {
+                    match s.kind {
+                        StitchKind::Stop => (threads, needle, jump) = (Vec::new(), None, None),
+                        StitchKind::Trim => {}
+                        StitchKind::Jump => jump = jump.map(|(from, _)| from).or(needle).map(|from| (from, s.at)),
+                        StitchKind::Normal => {
+                            if let Some(thread) = jump.take().filter(|(from, to)| from != to) {
+                                threads.push(thread);
+                                tying_in = true;
+                            }
+                            tying_in &= s.origin.role == Role::Lock;
+                            for (k, &(a, b)) in threads.iter().enumerate() {
+                                let own_tie_in = tying_in && k + 1 == threads.len();
+                                let (apart, before) = off(s.at, a, b);
+                                if !own_tie_in && apart < CATCHES && before >= CATCHES {
+                                    sewn_over.push(format!(
+                                        "{}: {a:?} to {b:?} under {:?}, {apart:.2} mm, {before:.2} mm before it lands",
+                                        sheet.id, s.at
+                                    ));
+                                }
+                            }
+                            needle = Some(s.at);
+                        }
+                    }
+                }
+            }
+        }
+        assert!(sewn_over.is_empty(), "{} needle-downs on a jump thread:\n{}", sewn_over.len(), sewn_over.join("\n"));
     }
 
     #[test]
