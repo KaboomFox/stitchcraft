@@ -54,10 +54,13 @@ golden files (`REQ-RND-002`), the formats' canonical plans (`REQ-FMT-001`) and t
 values of `stitchcraft-core`'s tests are compared on all three as well. The oracle case reads the files
 with pyembroidery, which only the Linux gates job installs.
 
-WebAssembly is built, not run. `cargo xtask wasm` checks that the library crates and the plug-in build
-for `wasm32-unknown-unknown`, and the lints above keep the library crates off what that target lacks. A
-run of the cases on a WebAssembly runtime is not planned yet. Until one is, the rules in the table are
-what keep its output the same.
+WebAssembly is checked too, since VectorCraft runs the engine as WebAssembly. `cargo xtask wasm` checks
+that the library crates and the plug-in build for `wasm32-unknown-unknown`, and the lints above keep the
+library crates off what that target lacks. The `wasm-goldens` gate (`cargo xtask wasm --goldens`) builds
+`stitch` for `wasm32-wasip1` and runs it under wasmtime on every test-sheet and plan case, each with the
+command line the case stands for. Each machine file it writes must be its golden file byte for byte. WASI
+gives `stitch` the files it reads and writes. Both are WebAssembly, and the engine's maths is its own, so
+its arithmetic is the plug-in's.
 
 ## Bug reports
 

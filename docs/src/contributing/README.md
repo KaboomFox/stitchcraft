@@ -9,7 +9,8 @@ changes follow playbooks, and every behaviour has a requirement and a test.
    [architecture](../design/architecture.md) map.
 2. Pick a step from the [roadmap](../plan/roadmap.md) or an issue labelled `good first issue`.
 3. Set up: install Rust (the toolchain in `rust-toolchain.toml` installs itself), then
-   `rustup target add wasm32-unknown-unknown`.
+   `rustup target add wasm32-unknown-unknown`. The `wasm-goldens` gate needs `wasm32-wasip1` too, and
+   [wasmtime](https://wasmtime.dev/), and `cargo xtask ci` skips it without them.
 4. Before every push: `cargo xtask ci`.
 
 ## Playbooks
