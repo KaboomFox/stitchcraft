@@ -231,8 +231,10 @@ fn the_workflow_files_each_issue_with_xtask_and_reports_no_cancelled_run() {
         assert!(!workflow.contains(call), "`{call}` in the workflow: `cargo xtask compat issue` finds an open issue first");
     }
     // `always()` holds for a cancelled run too, whose tracks wrote no results and would be filed as failing.
-    let report = workflow.split("\n  report:\n").nth(1).unwrap();
-    let condition = report.lines().find(|line| line.trim_start().starts_with("if:")).unwrap();
+    // Lines, not `\n`: a checkout on Windows ends them with `\r\n`.
+    let lines: Vec<&str> = workflow.lines().collect();
+    let report = lines.iter().position(|line| *line == "  report:").unwrap();
+    let condition = lines[report..].iter().find(|line| line.trim_start().starts_with("if:")).unwrap();
     assert!(condition.contains("!cancelled()") && !condition.contains("always()"), "{condition}");
 }
 
