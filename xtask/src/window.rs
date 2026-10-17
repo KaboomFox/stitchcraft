@@ -26,15 +26,13 @@ use std::process::Command;
 
 use serde_json::Value;
 
-use crate::compat;
+use crate::compat::{self, release};
 use crate::util;
 
 /// The probe's crate.
 const PROBE: &str = "compat/vc-window";
 /// Where the tests record: screenshots, the tree, the app's logs and the findings.
 const OUT: &str = "target/compat/window";
-/// The pins file's key for the SHA-256 of the stable release's Linux x86_64 archive.
-const SHA_KEY: &str = "linux-x86_64-sha256";
 /// The X screen: room for VectorCraft's window at its default size, 1440 × 900, which it keeps on a
 /// screen that also has room for a taskbar.
 const SCREEN: &str = "-screen 0 1600x1200x24";
@@ -134,52 +132,11 @@ fn show(out: &Path, annotate: bool) -> Result<Vec<String>, String> {
     Ok(errors)
 }
 
-/// `bin/vectorcraft` of the pinned stable release's Linux x86_64 archive, downloaded if need be and
-/// checked against the pins file's SHA-256 either way.
+/// `bin/vectorcraft` of the pinned stable release's Linux x86_64 archive, fetched if need be and checked
+/// against the pins file's SHA-256 either way.
 fn released() -> Result<PathBuf, String> {
     let pins = compat::load_pins()?;
-    let (name, url) = archive(&pins)?;
-    let sha = pins
-        .get("tracks")
-        .and_then(|t| t.get("stable"))
-        .and_then(|t| t.get(SHA_KEY))
-        .and_then(toml::Value::as_str)
-        .ok_or(format!("{}: the stable track records no `{SHA_KEY}`", compat::PINS))?;
-    let dir = util::root().join("target/compat").join(&name);
-    std::fs::create_dir_all(&dir).map_err(|e| format!("{}: {e}", util::rel(&dir)))?;
-    let file = dir.join(format!("{name}.tar.gz"));
-    if !file.is_file() || sha256(&file)? != sha {
-        let mut curl = Command::new("curl");
-        curl.args(["--fail", "--silent", "--show-error", "--location", "--retry", "3", "--output"]).arg(&file).arg(&url);
-        util::run(curl, &format!("curl {url}"))?;
-    }
-    let got = sha256(&file)?;
-    if got != sha {
-        return Err(format!("{url}: its SHA-256 is {got}, and {} records {sha}", compat::PINS));
-    }
-    let mut tar = Command::new("tar");
-    tar.arg("-xzf").arg(&file).arg("-C").arg(&dir);
-    util::run(tar, &format!("tar -xzf {}", util::rel(&file)))?;
-    Ok(dir.join(&name).join("bin/vectorcraft"))
-}
-
-/// The pinned stable release's Linux x86_64 archive: its name without `.tar.gz`, which is also the folder
-/// it holds, and its address.
-fn archive(pins: &toml::Table) -> Result<(String, String), String> {
-    let repository = pins.get("repository").and_then(toml::Value::as_str).ok_or(format!("{}: no `repository`", compat::PINS))?;
-    let tag = compat::pinned_tag(pins, "stable");
-    let version = tag.strip_prefix('v').filter(|v| !v.is_empty()).ok_or(format!("{}: the stable tag `{tag}` is no `v<version>`", compat::PINS))?;
-    let name = format!("vectorcraft-{version}-linux-x86_64");
-    let url = format!("{repository}/releases/download/{tag}/{name}.tar.gz");
-    Ok((name, url))
-}
-
-/// The SHA-256 of `file`, in hexadecimal, by `sha256sum`.
-fn sha256(file: &Path) -> Result<String, String> {
-    let output = Command::new("sha256sum").arg(file).output().map_err(|e| format!("sha256sum: {e}"))?;
-    let text = String::from_utf8_lossy(&output.stdout);
-    let sum = text.split_whitespace().next().filter(|_| output.status.success());
-    sum.map(str::to_string).ok_or(format!("sha256sum {}: {}", util::rel(file), String::from_utf8_lossy(&output.stderr).trim()))
+    Ok(release::fetch(compat::pinned_tag(&pins, "stable"))?.root.join("bin/vectorcraft"))
 }
 
 /// Whether `program` is a file in a folder of `PATH`.
@@ -190,19 +147,6 @@ fn on_path(program: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn the_pinned_release_is_fetched_from_its_archive_and_checked_by_its_sha() {
-        let pins = compat::load_pins().unwrap();
-        let (name, url) = archive(&pins).unwrap();
-        let tag = compat::pinned_tag(&pins, "stable");
-        assert_eq!(url, format!("https://github.com/storytold/vectorcraft/releases/download/{tag}/{name}.tar.gz"));
-        assert_eq!(name, format!("vectorcraft-{}-linux-x86_64", &tag[1..]));
-        let sha = pins["tracks"]["stable"][SHA_KEY].as_str().unwrap();
-        assert!(sha.len() == 64 && sha.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()), "{sha}");
-        let unversioned: toml::Table = toml::from_str("repository = \"r\"\n[tracks.stable]\ntag = \"latest\"").unwrap();
-        assert!(archive(&unversioned).unwrap_err().contains("no `v<version>`"));
-    }
 
     #[test]
     fn the_tests_run_in_a_private_desktop_with_the_screen_reader_flag_on() {

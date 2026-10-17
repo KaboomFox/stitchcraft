@@ -1,0 +1,22 @@
+# Level B: a document with StitchCraft's effects, opened and saved where the plug-ins aren't installed,
+# keeps their records (docs/plugins.md in VectorCraft: the record is kept for when the plug-in comes back).
+description = "A document saved without the plug-ins installed keeps their effects, and sews as before."
+requirements = ["REQ-VC-001", "REQ-PRM-003"]
+
+[[run]]
+plugins = ["fill"]
+steps = [
+  { cmd = "shape.rectangle", params = { x = 0, y = 0, width = 72, height = 72 } },
+  { cmd = "paint.setFill", params = { color = "#0033b3" } },
+  { apply = "fill" },
+  { export = "with.vectorcraft" },
+]
+
+[[run]]
+open = "with.vectorcraft"
+steps = [{ export = "resaved.vectorcraft" }, { export = "resaved.png" }]
+
+[expect]
+applied = ["with.vectorcraft", "resaved.vectorcraft"]
+same = [["with.vectorcraft", "resaved.vectorcraft"]]
+elements = [{ file = "resaved.vectorcraft", element = "fill", count = 1, thread = "#0033b3" }]

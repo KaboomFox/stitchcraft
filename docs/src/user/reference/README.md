@@ -11,6 +11,6 @@ docs` rewrites them, and CI fails when one is stale.
 | [Test sheets](test-sheets.md) | generated from the test-sheet registry | available |
 | [Diagnostic codes](diagnostics.md) | generated from the diagnostics registry | available |
 | [Glossary](glossary.md) | hand-written | available |
-| [VectorCraft compatibility](compatibility.md) | the compatibility gate's results, generated from M6.6 | planned (M6.6) |
+| [VectorCraft compatibility](compatibility.md) | generated from the compatibility gate's record, `compat/supported.toml` | available |
 | [Parameters](params.md) (one page per stitch type) | generated from the parameter registry | available |
 | [Ink/Stitch compatibility contract](../../design/inkstitch-compat-contract.md) | generated from `conformance/inkstitch-params.toml` and the parameter registry | available |
