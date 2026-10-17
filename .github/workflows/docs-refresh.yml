@@ -77,6 +77,7 @@ jobs:
         with:
           name: refreshed-docs
           path: |
+            docs/fixtures/
             docs/src/images/generated/
             docs/src/user/reference/
       - name: Explain (pull requests from forks)
@@ -84,7 +85,8 @@ jobs:
         run: |
           echo "This pull request comes from a fork, so this workflow cannot push to it. The refreshed files are" >> "$GITHUB_STEP_SUMMARY"
           echo "attached to this run as \`refreshed-docs\`: copy them into your branch, or run" >> "$GITHUB_STEP_SUMMARY"
-          echo "\`cargo xtask shots && cargo xtask docs\` and push." >> "$GITHUB_STEP_SUMMARY"
+          echo "\`cargo xtask shots --vectorcraft && cargo xtask shots && cargo xtask docs\` and push. The first makes" >> "$GITHUB_STEP_SUMMARY"
+          echo "VectorCraft's pictures, on Linux with the packages \`.github/actions/desktop\` installs." >> "$GITHUB_STEP_SUMMARY"
       - name: Fail when a picture could not be made
         if: env.SHOTS_STATUS != '0'
         run: |

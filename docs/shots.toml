@@ -327,8 +327,10 @@ id = "vectorcraft-patch"
 kind = "vectorcraft-render"
 plugins = ["stroke", "satin", "fill"]
 scale = 4.0
+document = "docs/fixtures/round-patch.vectorcraft"
 # The tutorial's patch (docs/src/user/tutorials/vectorcraft-patch.md), step by step, each shape where a
 # click would put it. VectorCraft shows a fill's rows up to about 31 mm across, and its outline beyond.
+# The document is kept for the tutorial's export and the picture of what it sews.
 steps = [
   { cmd = "file.new", params = { width = 108, height = 108 } },
   # 1. The disc, a fill.

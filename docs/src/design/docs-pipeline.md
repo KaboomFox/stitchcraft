@@ -48,7 +48,7 @@ docs check, whatever its file name.
 | Kind | Made by | Compared by | Notes |
 |---|---|---|---|
 | `stitch` | `stitchcraft-render` ([rendering](rendering.md)) from a test sheet, or from a design the engine plans, an SVG file or a VectorCraft document | **exact bytes** (rendering is deterministic) | Stitch-type illustrations, parameter comparisons, diagnostics examples |
-| `vectorcraft-render` | `vectorcraft-cli` of the pinned stable release, with the plug-in's modules installed: the canvas after the shot's `steps`, exported as PNG at `scale` pixels per point | perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 in a channel) | How the previews look in VectorCraft's canvas, without its window |
+| `vectorcraft-render` | `vectorcraft-cli` of the pinned stable release, with the plug-in's modules installed: the canvas after the shot's `steps`, exported as PNG at `scale` pixels per point | perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 in a channel, and ≤ 8 of them in any square of 16 pixels a side) | How the previews look in VectorCraft's canvas, without its window |
 | `vectorcraft-ui` | VectorCraft's window, of the same release, with the document `vectorcraft-cli` drew. The shot's menu path and the family's row are pressed through the accessibility tree, and the screenshot is cropped to the menus or the dialog | the same tolerance | Menus and dialogs, in a desktop without a screen ([VectorCraft's window in CI](#vectorcrafts-window-in-ci)) |
 | `photo` | a person, of a real sew-out | presence + metadata record (machine, fabric, commit, checkpoint) | Never regenerated; listed with their sew-out report |
 
@@ -96,6 +96,12 @@ with one fails. VectorCraft keeps a module's last error only until its next succ
 stitch family once at most, and one that applies a family twice is an error. A render shot's picture is
 that drawing. A UI shot opens the document in VectorCraft's window and needs a `menu`, and with a
 `dialog` the picture shows the dialog of that family's effect.
+
+A render shot can keep its document as a file of the repository, `document`, for the pages that sew it:
+the tutorial's patch is sewn from `docs/fixtures/round-patch.vectorcraft`, which VectorCraft draws from
+the shot's steps. The generator writes the file while the committed one sews otherwise than the drawing,
+and `--check` fails then. Another release may save the same drawing otherwise: the file stays while it
+sews the same.
 
 A page shows a shot between the lines `<!-- shot: running-length -->` and `<!-- /shot -->`. `cargo xtask
 docs` writes the figure there. Without panels the figure is one image. With panels it is a table with a
@@ -146,10 +152,10 @@ bounds are the screenshot's pixels.
 that `cargo xtask shots --vectorcraft` lists in a job file, in the same desktop. The tree is used as a
 person would use the app. AT-SPI's press opens the menu bar's title and each row of the shot's path,
 then the row of the family's effect, and the dialog is the largest element named after the plug-in. The
-control channel opens the document and installs the modules, which a person does with file dialogs. It
-also selects everything and sizes the window, and it reads the app's state. A menus' picture is cropped
-to the title and the rows that opened, with 10 pixels around them for the menus' frames. A dialog's
-picture is cropped to the dialog.
+window opens the document it starts with. The control channel installs the modules, which a person does
+with file dialogs. It also selects everything and sizes the window, and it reads the app's state. A
+menus' picture is cropped to the title and the rows that opened, with 10 pixels around them for the
+menus' frames. A dialog's picture is cropped to the dialog.
 
 A dialog must show a row for each parameter of its module's manifest. The row's label is the one
 VectorCraft writes for the key, and its control must be the one VectorCraft gives the parameter's type.
@@ -202,8 +208,8 @@ behind.
 ### Refreshing images
 
 Changing a stitch algorithm *should* change its pictures. The PR author runs `cargo xtask shots` locally,
-and `cargo xtask shots --vectorcraft` on Linux with Xvfb, D-Bus and AT-SPI (`apt install xvfb dbus
-at-spi2-core`), which downloads the pinned release. Or a maintainer adds the label
+and `cargo xtask shots --vectorcraft` on Linux, with the packages `.github/actions/desktop` installs and
+Rust's `wasm32-unknown-unknown` target, which downloads the pinned release. Or a maintainer adds the label
 **`docs:refresh-shots`**, and `docs-refresh.yml` regenerates every shot, VectorCraft's first, and every
 generated page. For a pull request from a branch of this repository, it pushes a commit to the branch and
 removes the label. For a fork, the run keeps the files as an artifact, and its summary explains how to

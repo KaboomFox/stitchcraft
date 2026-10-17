@@ -22,7 +22,7 @@ cargo xtask compat contract --ref v0.7.0             # builds the modules into t
 cargo xtask compat e2e --ref v0.12.0                 # Level B with that release's vectorcraft-cli
 cargo xtask compat e2e --cli ../vectorcraft/target/release/vectorcraft-cli
 cargo xtask compat track stable --ref v0.12.0        # both levels, and the result for the report
-cargo xtask compat window                            # needs xvfb, dbus and at-spi2-core
+cargo xtask compat window                            # needs the packages .github/actions/desktop installs
 cargo xtask shots --vectorcraft                      # the docs' VectorCraft pictures, in that desktop
 ```
 

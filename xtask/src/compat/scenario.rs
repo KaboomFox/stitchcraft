@@ -497,7 +497,7 @@ fn check(expect: &Expect, out: &Path, ran: &Ran) -> Vec<String> {
 
 /// The PES file `stitch plan` writes from the VectorCraft document `bytes` for the reference machine, or
 /// the errors that stop it.
-fn sewn(bytes: &[u8]) -> Result<Vec<u8>, String> {
+pub(crate) fn sewn(bytes: &[u8]) -> Result<Vec<u8>, String> {
     let sewn = sew(Source::VectorCraft, bytes, REFERENCE, FormatId::PesV1, NAME);
     let errors: Vec<String> = sewn.diagnostics.iter().filter(|d| d.severity() == Severity::Error).map(ToString::to_string).collect();
     match sewn.file {
