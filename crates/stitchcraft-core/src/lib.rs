@@ -25,7 +25,7 @@ pub mod units;
 
 pub use budget::{Budget, Exhausted, Meter};
 pub use diag::{Code, Diagnostic, Edit, Fix, Severity};
-pub use element::{ElementId, ElementIdError};
+pub use element::{ElementId, ElementIdError, Labels};
 pub use rect::Rect;
 pub use rng::SplitMix64;
 pub use units::{Mm, Point, Size, UnitError};

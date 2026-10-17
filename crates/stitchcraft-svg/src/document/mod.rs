@@ -42,7 +42,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 
 use roxmltree::{Document, Node, NodeId, ParsingOptions};
-use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Meter, Mm};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
 use stitchcraft_engine::design::{Design, Element, Shape};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
@@ -176,9 +176,8 @@ struct Reader<'b, 'a, 'input> {
     viewport: (f64, f64),
     elements: Vec<Element>,
     warnings: Vec<Diagnostic>,
-    /// Labels given out, and the next suffix to try for each repeated one.
-    taken: BTreeSet<String>,
-    suffixes: BTreeMap<String, u32>,
+    /// The labels given out.
+    claimed: Labels,
     /// Elements by id, the first of each, for paint servers and Ink/Stitch's commands.
     ids: BTreeMap<&'a str, Node<'a, 'input>>,
     /// Ink/Stitch's commands.
@@ -206,8 +205,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             viewport: (0.0, 0.0),
             elements: Vec::new(),
             warnings: Vec::new(),
-            taken: BTreeSet::new(),
-            suffixes: BTreeMap::new(),
+            claimed: Labels::default(),
             ids: BTreeMap::new(),
             objects: Objects::default(),
             sheet: Sheet::default(),
@@ -729,19 +727,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
     }
 
     fn unique(&mut self, label: String) -> Result<String, Diagnostic> {
-        if self.taken.insert(label.clone()) {
-            return Ok(label);
-        }
-        let mut k = self.suffixes.get(&label).copied().unwrap_or(1);
-        loop {
-            self.charge(1)?;
-            k += 1;
-            let candidate = format!("{label}~{k}");
-            if self.taken.insert(candidate.clone()) {
-                self.suffixes.insert(label, k);
-                return Ok(candidate);
-            }
-        }
+        self.claimed.claim(label, &mut self.meter).map_err(|_| self.exhausted())
     }
 
     fn is_svg(&self, node: Node<'a, 'input>) -> bool {

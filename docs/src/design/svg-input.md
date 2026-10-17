@@ -24,7 +24,8 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   (`DEV-SVG-004`).
 - **Ids.** An element's id is `svg:<label>:fill` or `svg:<label>:stroke`. The label is the SVG
   element's `id`, or `<tag>@<n>` for the n-th element of that kind. A repeated id gets `~2`, `~3` and
-  so on. The adapter's own diagnostics name the SVG element as `svg:<label>`.
+  so on (`stitchcraft_core::Labels`, as in the VectorCraft adapter). The adapter's own diagnostics name
+  the SVG element as `svg:<label>`.
 - **Names.** An `inkscape:label` becomes the element's name.
 
 ## Geometry and units
