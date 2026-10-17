@@ -184,3 +184,44 @@ fn the_host_refuses_a_value_a_choice_does_not_offer() {
     let refused = plugin.manifest().resolve_params(&json!({"fill_method": "plaid"})).unwrap_err().to_string();
     assert!(refused.contains("fill_method"), "{refused}");
 }
+
+/// The parameters VectorCraft passes `plugin`'s `vc_run` for a record that sets none: every declared
+/// parameter at its default, and the effect's context.
+fn default_params(plugin: &Plugin) -> Vec<u8> {
+    let mut params = plugin.manifest().resolve_params(&json!({})).unwrap();
+    params.insert("_context".into(), json!({"mode": "effect", "bounds": [0, 0, 100, 100]}));
+    serde_json::to_vec(&Value::Object(params)).unwrap()
+}
+
+/// The anchors of a live effect's output.
+fn anchors(output: &[u8]) -> usize {
+    let output: Value = serde_json::from_slice(output).unwrap();
+    let subpaths = output["objects"].as_array().into_iter().flatten().filter_map(|object| object["path"]["subpaths"].as_array()).flatten();
+    subpaths.filter_map(|subpath| subpath["anchors"].as_array()).map(Vec::len).sum()
+}
+
+/// What each family's live effect costs in VectorCraft's host on shapes of growing size: the instructions
+/// a run takes, against the anchors and bytes it writes. Printed on every run, for the preview levels.
+#[test]
+fn each_family_s_effect_prints_what_it_costs() {
+    let square = |side: f64| shapes::rectangle(Rect::new(0.0, 0.0, side, side));
+    let rails = |length: f64| lines(&[&[(0.0, 0.0), (length, 0.0)], &[(0.0, 20.0), (length, 20.0)]]);
+    let sizes: [(&str, Vec<(String, PathData)>); 3] = [
+        ("stroke", [20.0, 80.0, 320.0].map(|side| (format!("square {side} pt"), square(side))).to_vec()),
+        ("satin", [60.0, 240.0, 960.0].map(|length| (format!("rails {length} pt"), rails(length))).to_vec()),
+        ("fill", [20.0, 40.0, 80.0].map(|side| (format!("square {side} pt"), square(side))).to_vec()),
+    ];
+    for (family, shapes) in sizes {
+        let plugin = Plugin::load(&module(family), Limits::default()).unwrap();
+        let params = default_params(&plugin);
+        let mut costs = Vec::new();
+        for (name, path) in shapes {
+            let input = effect_input(&path, json!({}));
+            let limits = Limits { fuel_base: 1 << 36, fuel_per_byte: 0, ..Limits::default() };
+            let output = plugin.run_limited(&input, &params, &limits).unwrap();
+            let used = fuel(&plugin, &input, &params);
+            costs.push(format!("{name}: {} anchors, {} bytes, {used} instructions", anchors(&output), output.len()));
+        }
+        println!("::notice title={family} effect costs::{}", costs.join("; "));
+    }
+}
