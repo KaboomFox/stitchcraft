@@ -5,6 +5,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M0.6: what a plug-in's JSON costs in VectorCraft's host is measured. A contract test runs the *hello*
+  plug-in in VectorCraft's own host and finds the instructions it spends for each byte of JSON it reads
+  (512) and writes (822). An anchor of a path is 40 bytes of JSON, and the host runs about 1.9 billion
+  instructions a second on GitHub's Linux runners. A live effect's 50 million instructions run out long
+  before its 5 seconds, and buy about 60 KB of JSON written as *hello* writes it: M6.3 sizes its preview
+  levels from that (`vectorcraft-integration.md`). The test runs on every track of the compatibility
+  gate and fails if either cost rises by more than a quarter. `cargo xtask compat contract` runs the
+  contract tests optimized, and shows what the tests that pass print.
 - MC-4 kit: TS-07, TS-08 and TS-09, the fill test sheets, drawn as designs and sewn by the engine.
   - **TS-07** fills 3 circles 60 mm across at pull compensations of 0, 0.2 and 0.4 mm, then sews a
     running stitch along each edge, for the gap or overlap between fill and outline.
