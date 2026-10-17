@@ -25,8 +25,9 @@ use stitchcraft_params::ParamSet;
 use stitchcraft_params::stitch_type::Family;
 use stitchcraft_plan::{Rgb, Thread};
 
+use crate::PREVIEW_LEVEL;
 use crate::geometry::{self, UNUSABLE_HINT};
-use crate::values::text;
+use crate::values::{sews, text};
 use crate::wire::{EffectInput, EffectObject};
 use crate::writer::Geometry;
 
@@ -34,10 +35,19 @@ use crate::writer::Geometry;
 /// apart still show as rows.
 const RIBBON_MM: f64 = 0.2;
 
-/// The element a live effect of `family` sews from `input` and `params`, as VectorCraft passes them to
-/// `vc_run`, within `budget`. `SC-E0806` when they do not read as the ABI says, `SC-W0808` when the
-/// object's path cannot be used, and `SC-E0004` when reading it needs more work than the budget allows.
-pub fn effect_element(family: Family, input: &[u8], params: &[u8], budget: &Budget) -> Result<Element, Diagnostic> {
+/// What a live effect is given, read: the element its family sews, and what its preview should show.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Effect {
+    /// The object's path as the family's shape, with the effect's settings.
+    pub element: Element,
+    /// The preview level the parameters ask for ([`PREVIEW_LEVEL`]), as its text; `None` without one.
+    pub preview_level: Option<String>,
+}
+
+/// The live effect of `family` that `input` and `params` give, as VectorCraft passes them to `vc_run`,
+/// read within `budget`. `SC-E0806` when they do not read as the ABI says, `SC-W0808` when the object's
+/// path cannot be used, and `SC-E0004` when reading it needs more work than the budget allows.
+pub fn read_effect(family: Family, input: &[u8], params: &[u8], budget: &Budget) -> Result<Effect, Diagnostic> {
     let input: EffectInput = serde_json::from_slice(input).map_err(|e| refused(&format!("Its objects do not read: {e}.")))?;
     let params: Map<String, Value> = serde_json::from_slice(params).map_err(|e| refused(&format!("Its parameters do not read: {e}.")))?;
     let Some(EffectObject { path: Some(data), fill_rule }) = input.objects.into_iter().next() else {
@@ -52,11 +62,12 @@ pub fn effect_element(family: Family, input: &[u8], params: &[u8], budget: &Budg
         Err(_) => return Err(Diagnostic::new(Code::BudgetExhausted, "Reading the live effect's object needed more work than the budget allows.")),
     };
     let mut set = ParamSet::new();
-    for (key, value) in params.iter().filter(|(key, _)| !key.starts_with('_')) {
+    for (key, value) in params.iter().filter(|(key, _)| sews(key)) {
         if let Some(text) = text(value) {
             set.set(key.clone(), text);
         }
     }
+    let preview_level = params.get(PREVIEW_LEVEL).and_then(text);
     let shape = match family {
         Family::Fill => Shape::Fill { path, rule: if fill_rule.as_deref() == Some("evenodd") { FillRule::EvenOdd } else { FillRule::NonZero } },
         Family::Stroke | Family::Satin => {
@@ -66,23 +77,37 @@ pub fn effect_element(family: Family, input: &[u8], params: &[u8], budget: &Budg
     };
     let id = ElementId::new(format!("vc:effect:{}", family.id()))
         .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("A live effect's element has no id: {e}.")))?;
-    Ok(Element { id, name: None, shape, thread: Thread::new(Rgb::new(0, 0, 0)), params: set })
+    Ok(Effect { element: Element { id, name: None, shape, thread: Thread::new(Rgb::new(0, 0, 0)), params: set }, preview_level })
 }
 
 /// What a live effect of `family` returns for an element sewn with the needle points `groups`, each a
-/// run of stitches: `{"objects": [{"path": …}]}`, in VectorCraft's coordinates ([`crate::writer`]).
-/// `None` when they draw nothing: no group has a stitch of any length.
+/// run of stitches, in millimetres: a fill's stitches as ribbons ([`effect_ribbons`]), and a stroke's or a
+/// satin column's as lines ([`effect_lines`]). `None` when they draw nothing: no group has a stitch of
+/// any length.
 pub fn effect_output(family: Family, groups: &[Vec<Point>]) -> Option<Vec<u8>> {
+    match family {
+        Family::Fill => effect_ribbons(groups.iter().flat_map(|group| group.windows(2)).filter_map(|w| Some((*w.first()?, *w.get(1)?)))),
+        Family::Stroke | Family::Satin => effect_lines(groups.iter().map(Vec::as_slice)),
+    }
+}
+
+/// What a live effect returns to draw `segments`, in millimetres, with the object's fill: each one a
+/// closed ribbon [`RIBBON_MM`] wide, since a fill fills a path whole, and a line has no area. `None` when
+/// none has a length.
+pub fn effect_ribbons(segments: impl IntoIterator<Item = (Point, Point)>) -> Option<Vec<u8>> {
     let mut geometry = Geometry::new();
-    for group in groups {
-        match family {
-            Family::Fill => {
-                for corners in group.windows(2).filter_map(|w| ribbon(w.first()?, w.get(1)?)) {
-                    geometry.subpath(&corners, true);
-                }
-            }
-            Family::Stroke | Family::Satin => geometry.subpath(group, false),
-        }
+    for corners in segments.into_iter().filter_map(|(a, b)| ribbon(&a, &b)) {
+        geometry.subpath(&corners, true);
+    }
+    geometry.finish()
+}
+
+/// What a live effect returns to draw `lines`, polylines in millimetres, with the object's stroke: open
+/// paths through their points. `None` when none has 2 points.
+pub fn effect_lines<'a>(lines: impl IntoIterator<Item = &'a [Point]>) -> Option<Vec<u8>> {
+    let mut geometry = Geometry::new();
+    for line in lines {
+        geometry.subpath(line, false);
     }
     geometry.finish()
 }
@@ -138,15 +163,18 @@ mod tests {
 
     #[test]
     fn an_effect_s_object_is_its_family_s_element_with_its_parameters() {
-        let params = br#"{"row_spacing_mm": 0.3, "underpath": false, "fill_method": "tatami_fill", "_context": {"mode": "effect"}}"#;
-        let fill = effect_element(Family::Fill, &input(&square(), "evenodd"), params, &Budget::DEFAULT).unwrap();
-        assert!(matches!(&fill.shape, Shape::Fill { rule: FillRule::EvenOdd, path } if path.subpaths.len() == 1));
-        let read: Vec<(&str, &str)> = fill.params.iter().collect();
+        let params =
+            br#"{"row_spacing_mm": 0.3, "underpath": false, "fill_method": "tatami_fill", "preview_level": "rows", "_context": {"mode": "effect"}}"#;
+        let fill = read_effect(Family::Fill, &input(&square(), "evenodd"), params, &Budget::DEFAULT).unwrap();
+        assert!(matches!(&fill.element.shape, Shape::Fill { rule: FillRule::EvenOdd, path } if path.subpaths.len() == 1));
+        let read: Vec<(&str, &str)> = fill.element.params.iter().collect();
         assert_eq!(read, [("fill_method", "tatami_fill"), ("row_spacing_mm", "0.3"), ("underpath", "false")]);
-        let satin = effect_element(Family::Satin, &input(&square(), "nonzero"), b"{}", &Budget::DEFAULT).unwrap();
-        assert!(matches!(satin.shape, Shape::Stroke { .. }));
-        assert_eq!(satin.params.get(SATIN_COLUMN), Some("true"));
-        let stroke = effect_element(Family::Stroke, &input(&square(), "nonzero"), b"{}", &Budget::DEFAULT).unwrap();
+        // The preview level is the plug-in's, beside the element.
+        assert_eq!(fill.preview_level.as_deref(), Some("rows"));
+        let satin = read_effect(Family::Satin, &input(&square(), "nonzero"), b"{}", &Budget::DEFAULT).unwrap();
+        assert!(matches!(satin.element.shape, Shape::Stroke { .. }));
+        assert_eq!((satin.element.params.get(SATIN_COLUMN), satin.preview_level), (Some("true"), None));
+        let stroke = read_effect(Family::Stroke, &input(&square(), "nonzero"), b"{}", &Budget::DEFAULT).unwrap().element;
         assert_eq!((stroke.params.get(SATIN_COLUMN), stroke.id.as_str()), (Some("false"), "vc:effect:stroke"));
     }
 
@@ -158,7 +186,7 @@ mod tests {
 
     #[test]
     fn diag_sc_e0806_what_a_live_effect_cannot_read_is_its_error() {
-        let refused = |input: &[u8], params: &[u8]| shown(&effect_element(Family::Fill, input, params, &Budget::DEFAULT).unwrap_err());
+        let refused = |input: &[u8], params: &[u8]| shown(&read_effect(Family::Fill, input, params, &Budget::DEFAULT).unwrap_err());
         let start = "error SC-E0806: What VectorCraft passed the live effect does not read as its plug-in ABI v1 says.";
         assert_eq!(
             refused(br#"{"objects": 3}"#, b"{}"),
@@ -170,14 +198,14 @@ mod tests {
         );
         assert_eq!(refused(br#"{"objects": []}"#, b"{}"), format!("{start} It holds no path."));
         let poor = Budget { max_stitches: 1, max_work: 1 };
-        let exhausted = effect_element(Family::Fill, &input(&square(), "nonzero"), b"{}", &poor).unwrap_err();
+        let exhausted = read_effect(Family::Fill, &input(&square(), "nonzero"), b"{}", &poor).unwrap_err();
         assert_eq!(shown(&exhausted), "error SC-E0004: Reading the live effect's object needed more work than the budget allows.");
     }
 
     #[test]
     fn diag_sc_w0808_a_live_effect_leaves_geometry_it_cannot_use_as_it_is() {
         let dot = input(&json!({"subpaths": [{"anchors": [{"p": [0, 0]}]}]}), "nonzero");
-        let unusable = effect_element(Family::Stroke, &dot, b"{}", &Budget::DEFAULT).unwrap_err();
+        let unusable = read_effect(Family::Stroke, &dot, b"{}", &Budget::DEFAULT).unwrap_err();
         assert_eq!(
             shown(&unusable),
             "warning SC-W0808: It draws nothing, so the live effect leaves the object as it is. Check its anchors, or remove stray objects far \

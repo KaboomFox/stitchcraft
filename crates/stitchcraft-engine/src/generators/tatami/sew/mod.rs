@@ -83,7 +83,7 @@ use super::gaps::gap_rows;
 use super::graph::NodeId;
 use super::rings::Rings;
 use super::route::{Route, Step, route};
-use super::rows::rows;
+use super::rows::{Segment, rows};
 use super::stitches::{Stitching, row_points};
 use super::travel::{Network, between};
 use super::underpath::{Underpath, smooth};
@@ -218,6 +218,20 @@ pub fn tatami_fill(
     warnings.extend(shrunk_away(Code::FillExpandShrinksAway, "expand_mm", "its top rows are", tally.expand_gone, parts));
     warnings.extend(shrunk_away(Code::FillUnderlayInsetShrinksAway, "fill_underlay_inset_mm", "its underlay is", tally.inset_gone, parts));
     Ok(Stitched { runs, warnings })
+}
+
+/// The segments of the top rows of the tatami `fill` over `region`, each part grown by its `expand` as
+/// [`tatami_fill`] grows it, in order across each piece's rows: where the top stitches lie, without the
+/// stitches, the underlay or the needle's travel. A preview too costly to sew shows them. Work is charged
+/// to `meter` for every ring point, row and edge a row is cut against.
+pub fn top_rows(region: &Region, fill: &Fill, meter: &mut Meter) -> Result<Vec<Segment>, Exhausted> {
+    let mut segments = Vec::new();
+    for polygon in &region.parts {
+        for piece in &pieces(polygon, fill.expand, &mut Vec::new(), meter)?.0 {
+            segments.extend(rows(piece, &fill.top.stitching.grid, meter)?.into_iter().flat_map(|row| row.segments));
+        }
+    }
+    Ok(segments)
 }
 
 /// What sewing a fill counted, for its diagnostics.

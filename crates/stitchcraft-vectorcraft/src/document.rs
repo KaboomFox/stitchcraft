@@ -38,7 +38,7 @@ use stitchcraft_plan::{Rgb, Thread};
 
 use crate::container::{self, unreadable};
 use crate::geometry::{self, UNUSABLE_HINT};
-use crate::values::text;
+use crate::values::{sews, text};
 use crate::wire::{self, Effect, Item, Kind, Node, Paint, PathData};
 use crate::{FORMAT, PLUGIN_NAMESPACE, color};
 
@@ -352,14 +352,15 @@ impl Reader {
         Ok(())
     }
 
-    /// An effect's parameters as the element's: each value written as the parameters read it.
+    /// An effect's parameters as the element's: each value written as the parameters read it. VectorCraft's
+    /// own keys and the plug-in's preview level are not the element's ([`sews`]).
     fn params(&mut self, label: &str, family: Family, params: &Value) -> Result<ParamSet, Diagnostic> {
         let mut set = ParamSet::new();
         let hint = Some("Set the parameter again in the effect's dialog.");
         match params {
             Value::Null => {}
             Value::Object(map) => {
-                for (key, value) in map {
+                for (key, value) in map.iter().filter(|(key, _)| sews(key)) {
                     self.charge(1)?;
                     match text(value) {
                         Some(text) => {
