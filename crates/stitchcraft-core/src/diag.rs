@@ -586,14 +586,16 @@ registry! {
     /// Print option on, in VectorCraft's Layer Options.
     VcNotPrinted = "SC-I0809", Info, "VectorCraft layer or guide left out, as it does not print";
 
-    /// A StitchCraft live effect draws the object it is applied to as its stitches. It leaves the object
-    /// as it is when it cannot show them, and VectorCraft shows this message as the plug-in's last error:
-    /// the object sews no stitch, or it is a satin column drawn as one path. Such a column is as wide as
-    /// its stroke, and VectorCraft gives a live effect no stroke. When another message says why an object
-    /// sews no stitch, the effect shows that message instead.
+    /// A StitchCraft live effect draws the object it is applied to as its stitches, or as much of them as
+    /// its preview level shows. It leaves the object as it is when it cannot show them, and VectorCraft
+    /// shows this message as the plug-in's last error: the object sews no stitch, it is a satin column
+    /// drawn as one path, or its preview level needs more work than VectorCraft lets a live effect do. A
+    /// column drawn as one path is as wide as its stroke, and VectorCraft gives a live effect no stroke.
+    /// When another message says why an object sews no stitch, the effect shows that message instead.
     ///
     /// The message says which. A satin column drawn as one path still sews as wide as its stroke; to see
-    /// its stitches in VectorCraft, draw it with 2 rails.
+    /// its stitches in VectorCraft, draw it with 2 rails. For a preview that needs more work, the hint
+    /// names a cheaper level to set the effect's `preview_level` to.
     VcEffectUnchanged = "SC-I0810", Info, "VectorCraft live effect leaves the object as it is";
 }
 
