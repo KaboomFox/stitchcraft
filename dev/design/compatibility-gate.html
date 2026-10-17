@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f110be3e.js";
+            window.path_to_searchindex_js = "../searchindex-4d63fc69.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -201,8 +201,9 @@ before VectorCraft ships it — and keep a public, generated table of which Vect
 of an upcoming release (VectorCraft’s release workflow runs on pushes to <code>release</code>,
 <code>.github/workflows/release.yml</code>); pre-release tags catch alphas, betas and release candidates as soon as
 they are published.</p>
-<p><code>compat/vectorcraft.toml</code> records the versions currently pinned per track (and the commit SHA for branch
-tracks) so every run is reproducible and every change of pin is a reviewable PR.</p>
+<p><code>compat/vectorcraft.toml</code> records the versions currently pinned per track (with the commit SHA for branch
+tracks, and the SHA-256 of the stable release’s Linux archive) so every run is reproducible and every
+change of pin is a reviewable PR.</p>
 <h2 id="two-levels-of-test"><a class="header" href="#two-levels-of-test">Two levels of test</a></h2>
 <h3 id="level-a--abi-contract-fast-minutes"><a class="header" href="#level-a--abi-contract-fast-minutes">Level A — ABI contract (fast, minutes)</a></h3>
 <p><code>compat/vc-contract</code> is a small crate <strong>outside the workspace</strong> that depends on VectorCraft’s
@@ -271,6 +272,14 @@ gates, inside VectorCraft’s workspace, with its lockfile and lints.</li>
 </ol>
 <p>A failure means a change here, or one in VectorCraft, has made the move harder; the scheduled run reports
 it in the same <code>upstream-canary</code> issue as the contract tests.</p>
+<h2 id="vectorcrafts-window"><a class="header" href="#vectorcrafts-window">VectorCraft’s window</a></h2>
+<p>The <code>window</code> job runs the app VectorCraft releases, from the Linux archive of the pinned stable release,
+in a desktop without a screen. <code>cargo xtask compat window</code> takes screenshots of the window and drives it
+through its accessibility tree with xa11y, as the docs’ <code>vectorcraft-ui</code> pictures will be made
+(<a href="docs-pipeline.html#vectorcrafts-window-in-ci">docs pipeline</a>). The archive’s SHA-256 is pinned beside the
+stable tag in <code>compat/vectorcraft.toml</code>, so the bot PR that moves the pin (M6.6) records the new
+archive’s sum too, from the release’s <code>SHA256SUMS.txt</code>. The same archive holds <code>vectorcraft-cli</code>, for
+Level B.</p>
 <h2 id="the-supported-versions-table"><a class="header" href="#the-supported-versions-table">The supported-versions table</a></h2>
 <p>Generated, never hand-edited:</p>
 <div class="table-wrapper">

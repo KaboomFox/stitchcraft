@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f110be3e.js";
+            window.path_to_searchindex_js = "../searchindex-4d63fc69.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-623c1739.js"></script>
@@ -204,7 +204,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M0.5 👤 (partly ✅)</td><td>Create the GitHub repository, push, enable Pages (from the <code>gh-pages</code> branch) and branch protection with required checks <code>ci</code> and <code>docs</code>; replace <code>OWNER</code> in <code>CODEOWNERS</code> and <code>Cargo.toml</code> and add a contact to <code>CODE_OF_CONDUCT.md</code>; create the labels <code>golden-change</code>, <code>docs:refresh-shots</code>, <code>upstream-canary</code>, <code>upstream-prerelease</code>, <code>sewout</code>, <code>sewout:pass</code>, <code>sewout:tune</code>, <code>sewout:bug</code>, <code>good first issue</code></td><td>A test PR cannot merge while a check is red</td></tr>
 <tr><td>M0.6 ✅ 🧪</td><td>VectorCraft “hello” plug-in: an identity live effect built in CI for <code>wasm32-unknown-unknown</code>, a Level A contract test against the pinned stable <code>vectorcraft-plugins</code> (v0.6.0, now v0.7.0), <code>release</code> and <code>main</code>, and the fuel it spends per byte of output</td><td>The contract test is green in <code>compat.yml</code> on every track (2026-10-08), and the budget is recorded in the integration doc: 512 instructions a byte read and 822 written (2026-10-17)</td></tr>
 <tr><td>M0.7 ✅ 🧪</td><td>Geometry spike (<a href="../design/adr/0005-geometry-stack.html">ADR-0005</a> criteria)</td><td>ADR-0005 accepted with the engine’s own geometry, and the golden files made as WebAssembly in CI (2026-10-17)</td></tr>
-<tr><td>M0.8 🧪</td><td>Headless VectorCraft window in CI (Xvfb + Mesa) taking <code>ui.screenshot</code> twice with identical pixels; one <a href="https://xa11y.dev/">xa11y</a> test that drives the same window through its accessibility tree (AT-SPI on Linux)</td><td>Decision recorded in the docs pipeline page, for both</td></tr>
+<tr><td>M0.8 ✅ 🧪</td><td>Headless VectorCraft window in CI (Xvfb + Mesa) taking <code>ui.screenshot</code> twice with identical pixels; one <a href="https://xa11y.dev/">xa11y</a> test that drives the same window through its accessibility tree (AT-SPI on Linux)</td><td>Decision recorded in the docs pipeline page, for both (2026-10-17). Screenshots match above the status bar, whose frame timings change. xa11y chooses menu rows by AT-SPI’s press and by clicks at the tree’s places</td></tr>
 <tr><td>M0.9 ✅</td><td>Movable into VectorCraft (<a href="../design/adr/0011-movable-into-vectorcraft.html">ADR-0011</a>): packages prefixed, manifests inheriting only what VectorCraft defines, tooling scoped to its folder and packages, <code>cargo xtask compat join [--nested]</code>, and a daily <code>move</code> job</td><td><code>move</code> green against VectorCraft’s latest release and <code>main</code></td></tr>
 <tr><td>M0.10 ✅</td><td>Clean room, tightened: no document describes Ink/Stitch’s code; Ink/Stitch is named only for file compatibility and in the independence notices; <code>cargo xtask cleanroom</code> scans documents too</td><td><code>cleanroom</code> green over the whole repository</td></tr>
 </tbody>
@@ -324,7 +324,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M6.4</td><td>Tools filter: make satin, add rung, bake preview, test sheet; Graphic Styles as presets verified</td><td>cases per tool</td></tr>
 <tr><td>M6.5</td><td><code>stitch export design.vectorcraft</code>; marker conventions (<code>stitch:start</code>, <code>stitch:end</code>, <code>stitch:ignore</code>)</td><td>end-to-end cases</td></tr>
 <tr><td>M6.6</td><td>Compatibility gate complete: Level A + B, all four tracks, bot PR and issues, generated table</td><td>first scheduled run green</td></tr>
-<tr><td>M6.7</td><td>UI screenshots pipeline (from M0.8), tutorial “A patch in VectorCraft”; if the M0.8 trial held, xa11y drives VectorCraft to each screen and checks the plug-in’s controls</td><td><code>shots-ui</code> job green</td></tr>
+<tr><td>M6.7</td><td>UI screenshots pipeline on M0.8’s window probe (<code>cargo xtask compat window</code>), each picture cropped to its menu or dialog; tutorial “A patch in VectorCraft”; xa11y drives VectorCraft to each screen and checks the plug-in’s controls</td><td><code>shots-ui</code> job green</td></tr>
 <tr><td>MC-5 🧵</td><td><strong>TS-12</strong> (a design authored in VectorCraft) and <strong>TS-10</strong> again through the full workflow</td><td>report filed</td></tr>
 </tbody>
 </table>
