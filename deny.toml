@@ -6,6 +6,15 @@ all-features = true
 [advisories]
 version = 2
 yanked = "deny"
+# Advisories accepted, each with why. Each says a crate is unmaintained, which version 2 denies, and doesn't
+# describe a flaw. Only the window probe uses these crates (compat/vc-window), through the xa11y it pins,
+# and the probe isn't released.
+ignore = [
+    # zbus 6 took these crates in, and xa11y 0.15.2 uses zbus 5. Look again when xa11y moves to zbus 6.
+    { id = "RUSTSEC-2026-0370", reason = "zvariant, unmaintained since zbus 6 took it in; only the window probe's xa11y uses it" },
+    { id = "RUSTSEC-2026-0371", reason = "zbus_names, unmaintained since zbus 6 took it in; only the window probe's xa11y uses it" },
+    { id = "RUSTSEC-2026-0372", reason = "zvariant_derive, unmaintained since zbus 6 took it in; only the window probe's xa11y uses it" },
+]
 
 [licenses]
 version = 2

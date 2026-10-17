@@ -530,6 +530,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- cargo-deny accepts RUSTSEC-2026-0370 to 0372, dated 2026-10-16, which say zvariant, zbus_names
+  and zvariant_derive are unmaintained since zbus 6 took them in. Only the window probe uses them, through
+  zbus 5 in the xa11y it pins, and they made every pull request's gates fail. `deny.toml` gives each its
+  reason.
 - PES files flag every jump after their first record as a trim, as pystitch, Ink/Stitch's writer, flags
   them (`REQ-FMT-010`). A machine treats them as it treats Ink/Stitch's. StitchCraft flagged only the
   jumps after a trim in the plan. Whether a trim-flagged jump is cut is the machine's choice, and the
