@@ -2,14 +2,18 @@
 
 Layer **L3**. Adapts VectorCraft data into the engine's `Design`. `stitchcraft_vectorcraft::read(bytes,
 budget)` reads a `.vectorcraft` document and returns the design and warnings about what was left out or
-simplified, as `stitchcraft-svg` does for SVG. The JSON objects VectorCraft's plug-in ABI v1 passes to
-live effects and filters follow with the plug-in (M6.2).
+simplified, as `stitchcraft-svg` does for SVG. For the plug-in, it reads the object VectorCraft's plug-in
+ABI v1 passes a live effect as the element the effect's family sews (`effect_element`), and writes needle
+points back as the geometry VectorCraft draws (`effect_output`), or why there are none (`effect_error`).
 
 **Status:** M6.1 reads formats 1 to 4, plain or compressed, with or without the data format 4 keeps after
 its JSON (`src/container.rs`). It reads layers, groups, paths and compound paths in paint order, and
 visibility. Fills and strokes give threads in VectorCraft's colours, CMYK, grey and Lab included
 (`src/color.rs`). Strokes keep their width and join. StitchCraft's live effects say how an object sews
 (`REQ-VC-004`, `src/document.rs`). The JSON is read into the few fields the adapter uses (`src/wire.rs`).
+M6.2 adds what a live effect reads and writes (`src/effect.rs`). It reads paths (`src/geometry.rs`) and
+parameter values (`src/values.rs`) with a document's code, and an object sews alike from a file and in
+its preview.
 Design: `docs/src/design/vectorcraft-integration.md#reading-vectorcraft-files-stitchcraft-vectorcraft`.
 The VectorCraft versions it reads are proven by `docs/src/design/compatibility-gate.md`.
 

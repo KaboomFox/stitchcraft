@@ -1,16 +1,27 @@
 //! Level A of the compatibility gate: our plug-ins inside VectorCraft's real plug-in host.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use std::path::Path;
 use std::time::Instant;
 
 use serde_json::{Value, json};
 use vectorcraft_geom::{BezPath, FillRule, PathData, Point, Rect, shapes};
 use vectorcraft_plugins::{ABI_VERSION, Kind, Limits, Plugin, effect, registry};
 
-/// The plug-in under test, built by CI for wasm32-unknown-unknown.
+/// The stitch families, each a module of its own whose live effect sews an object as the family.
+const FAMILIES: [&str; 3] = ["stroke", "satin", "fill"];
+
+/// The module `name`, *hello* or a stitch family's, which `cargo xtask compat contract` built for
+/// wasm32-unknown-unknown into the folder `STITCHCRAFT_PLUGINS` names.
+fn module(name: &str) -> Vec<u8> {
+    let dir = std::env::var("STITCHCRAFT_PLUGINS").expect("set STITCHCRAFT_PLUGINS to the folder of the built modules");
+    let path = Path::new(&dir).join(format!("{name}.wasm"));
+    std::fs::read(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()))
+}
+
+/// The *hello* module.
 fn plugin_bytes() -> Vec<u8> {
-    let path = std::env::var("STITCHCRAFT_PLUGIN_WASM").expect("set STITCHCRAFT_PLUGIN_WASM to the built .wasm");
-    std::fs::read(&path).unwrap_or_else(|e| panic!("read {path}: {e}"))
+    module("hello")
 }
 
 #[test]
@@ -112,4 +123,64 @@ fn hello_reads_and_writes_json_within_the_recorded_budget() {
         "JSON costs {per_byte_read:.0} instructions a byte to read and {per_byte_written:.0} to write, more than a quarter above \
          the {READ_PER_BYTE} and {WRITTEN_PER_BYTE} recorded: measure the budget again (vectorcraft-integration.md, M6.3's levels)"
     );
+}
+
+#[test]
+fn each_family_installs_with_an_accepted_manifest() {
+    for family in FAMILIES {
+        let plugin = registry::install_bytes(&module(family)).unwrap_or_else(|e| panic!("VectorCraft refuses {family}: {e}"));
+        assert_eq!(plugin.id(), format!("dev.stitchcraft.{family}"));
+        assert!(plugin.manifest().kind == Kind::Effect, "{family} is a live effect");
+        assert!(!plugin.manifest().params.is_empty(), "{family} declares its parameters");
+    }
+}
+
+/// A path of straight lines through `points`, open, one subpath for each list.
+fn lines(subpaths: &[&[(f64, f64)]]) -> PathData {
+    let mut path = BezPath::new();
+    for points in subpaths {
+        for (k, (x, y)) in points.iter().enumerate() {
+            if k == 0 { path.move_to(Point::new(*x, *y)) } else { path.line_to(Point::new(*x, *y)) }
+        }
+    }
+    PathData::from_bezpath(&path)
+}
+
+/// Each family's live effect sews in VectorCraft's host, with every parameter at its default: a stroke
+/// and a satin column come back as paths of stitches, a fill as one closed ribbon for each stitch. The
+/// shapes are small, as a preview of all its stitches must be until M6.3's levels.
+#[test]
+fn each_family_sews_an_object_in_vectorcraft() {
+    let bounds = Rect::new(0.0, 0.0, 20.0, 20.0);
+    let square = shapes::rectangle(bounds);
+    let rails = lines(&[&[(0.0, 0.0), (60.0, 0.0)], &[(0.0, 20.0), (60.0, 20.0)]]);
+    for (family, path) in [("stroke", &square), ("satin", &rails), ("fill", &square)] {
+        let plugin = registry::install_bytes(&module(family)).unwrap();
+        let out = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero);
+        let out = out.unwrap_or_else(|| panic!("{family}: {:?}", effect::last_error(plugin.id())));
+        assert!(!out.subpaths.is_empty(), "{family} sews stitches");
+        assert!(out.subpaths.iter().all(|subpath| subpath.closed == (family == "fill")), "{family}");
+    }
+}
+
+/// When an effect cannot show an object's stitches, VectorCraft draws the object as it is and shows why
+/// as the plug-in's last error: a satin column drawn as one path is as wide as its stroke, which the
+/// effect is not given.
+#[test]
+fn what_an_effect_cannot_show_is_its_last_error() {
+    let plugin = registry::install_bytes(&module("satin")).unwrap();
+    let bounds = Rect::new(0.0, 0.0, 20.0, 20.0);
+    let line = lines(&[&[(0.0, 0.0), (60.0, 10.0)]]);
+    assert_eq!(effect::apply(plugin.id(), &json!({}), &line, bounds, FillRule::NonZero), None);
+    // VectorCraft words it as the plug-in's failure: `plug-in failed: info SC-I0810: …`.
+    let error = effect::last_error(plugin.id()).unwrap_or_default();
+    assert!(error.contains("info SC-I0810: This satin column is drawn as one path"), "{error}");
+}
+
+/// VectorCraft refuses a value a choice does not offer before the effect runs.
+#[test]
+fn the_host_refuses_a_value_a_choice_does_not_offer() {
+    let plugin = registry::install_bytes(&module("fill")).unwrap();
+    let refused = plugin.manifest().resolve_params(&json!({"fill_method": "plaid"})).unwrap_err().to_string();
+    assert!(refused.contains("fill_method"), "{refused}");
 }

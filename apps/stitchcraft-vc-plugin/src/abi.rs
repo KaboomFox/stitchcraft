@@ -19,7 +19,7 @@ pub extern "C" fn vc_abi_version() -> u32 {
 /// `(len << 32) | ptr` of the manifest JSON.
 #[unsafe(no_mangle)]
 pub extern "C" fn vc_manifest() -> u64 {
-    match serde_json::to_vec(&crate::manifest::hello()) {
+    match serde_json::to_vec(&crate::MODULE.manifest()) {
         Ok(bytes) => pack(bytes.leak()),
         Err(_) => 0,
     }
@@ -54,7 +54,7 @@ pub unsafe extern "C" fn vc_run(input: *const u8, input_len: u32, params: *const
     let input = unsafe { std::slice::from_raw_parts(input, input_len) };
     // SAFETY: per this function's contract, `params` points to `params_len` initialized bytes from `vc_alloc`.
     let params = unsafe { std::slice::from_raw_parts(params, params_len) };
-    match crate::effect::hello(input, params) {
+    match crate::MODULE.run(input, params) {
         Ok(bytes) => i64::try_from(pack(bytes.leak())).unwrap_or(crate::effect::RunError::Encode.code()),
         Err(e) => e.code(),
     }
@@ -65,4 +65,17 @@ fn pack(bytes: &'static [u8]) -> u64 {
     let len = u64::try_from(bytes.len()).unwrap_or(0);
     let ptr = u64::try_from(bytes.as_ptr() as usize).unwrap_or(0);
     (len << 32) | ptr
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Natively a pointer is wider than 32 bits, so a packed reply cannot be taken apart here; the contract
+    /// tests read the manifest through the shim in VectorCraft's host. Here the reply is not a failure's.
+    #[test]
+    fn the_shim_speaks_abi_v1_and_serves_a_manifest() {
+        assert_eq!(vc_abi_version(), 1);
+        assert!(vc_manifest() > 1);
+    }
 }

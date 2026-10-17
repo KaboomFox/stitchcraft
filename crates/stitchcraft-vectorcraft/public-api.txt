@@ -7,4 +7,7 @@ pub stitchcraft_vectorcraft::VectorCraft::warnings: alloc::vec::Vec<stitchcraft_
 pub const stitchcraft_vectorcraft::FORMAT: u64
 pub const stitchcraft_vectorcraft::MAX_BYTES: usize
 pub const stitchcraft_vectorcraft::PLUGIN_NAMESPACE: &str
+pub fn stitchcraft_vectorcraft::effect_element(stitchcraft_params::stitch_type::Family, &[u8], &[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_engine::design::Element, stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_vectorcraft::effect_error(&stitchcraft_core::diag::Diagnostic) -> alloc::vec::Vec<u8>
+pub fn stitchcraft_vectorcraft::effect_output(stitchcraft_params::stitch_type::Family, &[alloc::vec::Vec<stitchcraft_core::units::Point>]) -> core::result::Result<core::option::Option<alloc::vec::Vec<u8>>, serde_json::error::Error>
 pub fn stitchcraft_vectorcraft::read(&[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_vectorcraft::VectorCraft, stitchcraft_core::diag::Diagnostic>

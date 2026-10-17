@@ -3,8 +3,9 @@
 //! Hosts translate their documents into a [`Design`](stitchcraft_engine::design::Design), so the engine
 //! never sees VectorCraft's (`docs/src/design/architecture.md` › Hosts, ports and adapters). This crate is
 //! the translation for VectorCraft: [`read`] turns a `.vectorcraft` file into a design and the warnings
-//! about what it left out or simplified, as `stitchcraft-svg` does for SVG files. The plug-in objects of
-//! VectorCraft's ABI follow with the plug-in (roadmap step M6.2).
+//! about what it left out or simplified, as `stitchcraft-svg` does for SVG files. For the plug-in, it
+//! translates what VectorCraft's plug-in ABI passes a live effect and what the effect gives back
+//! ([`effect_element`], [`effect_output`], [`effect_error`]; roadmap step M6.2).
 //!
 //! What it reads (roadmap step M6.1, `docs/src/design/vectorcraft-integration.md`): formats 1 to 4,
 //! plain or compressed, with or without the data format 4 keeps after its JSON; layers, groups, paths
@@ -27,10 +28,14 @@
 mod color;
 mod container;
 mod document;
+mod effect;
+mod geometry;
+mod values;
 mod wire;
 
 pub use container::MAX_BYTES;
 pub use document::{VectorCraft, read};
+pub use effect::{effect_element, effect_error, effect_output};
 
 /// The namespace of StitchCraft's VectorCraft plug-ins. A live effect's id is `plugin.`, this, a dot and
 /// its stitch family's id (`plugin.dev.stitchcraft.fill`), which is how a document records the effect.
