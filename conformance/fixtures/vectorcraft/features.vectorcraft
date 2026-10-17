@@ -1,0 +1,1643 @@
+{
+  "format": "vectorcraft",
+  "version": 4,
+  "generator": "VectorCraft 0.12.0",
+  "document": {
+    "version": 1,
+    "title": "Features",
+    "artboards": [
+      {
+        "id": 2,
+        "name": "A",
+        "rect": {
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 600.0,
+          "y1": 700.0
+        }
+      }
+    ],
+    "layers": [
+      {
+        "id": 1,
+        "name": "Features",
+        "kind": {
+          "type": "layer",
+          "color": {
+            "Preset": 0
+          },
+          "children": [
+            {
+              "id": 10,
+              "name": "Title",
+              "kind": {
+                "type": "text",
+                "kind": {
+                  "kind": "point"
+                },
+                "xf": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  10,
+                  20
+                ],
+                "runs": [
+                  {
+                    "text": "Hello",
+                    "style": {
+                      "font": "Sans"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": 11,
+              "kind": {
+                "type": "image",
+                "key": "photo",
+                "width": 8,
+                "height": 8,
+                "xf": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ]
+              }
+            },
+            {
+              "id": 12,
+              "kind": {
+                "type": "symbolinstance",
+                "symbol": "Star",
+                "xf": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  50,
+                  50
+                ]
+              }
+            },
+            {
+              "id": 13,
+              "kind": {
+                "type": "blend",
+                "children": [
+                  {
+                    "id": 131,
+                    "appearance": {
+                      "items": [
+                        {
+                          "kind": "fill",
+                          "paint": {
+                            "type": "solid",
+                            "color": {
+                              "model": "rgb",
+                              "r": 1.0,
+                              "g": 0.0,
+                              "b": 0.0
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  0,
+                                  0
+                                ]
+                              },
+                              {
+                                "p": [
+                                  36,
+                                  0
+                                ]
+                              },
+                              {
+                                "p": [
+                                  36,
+                                  36
+                                ]
+                              },
+                              {
+                                "p": [
+                                  0,
+                                  36
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": 132,
+                    "appearance": {
+                      "items": [
+                        {
+                          "kind": "fill",
+                          "paint": {
+                            "type": "solid",
+                            "color": {
+                              "model": "rgb",
+                              "r": 1.0,
+                              "g": 0.0,
+                              "b": 0.0
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  100,
+                                  0
+                                ]
+                              },
+                              {
+                                "p": [
+                                  136,
+                                  0
+                                ]
+                              },
+                              {
+                                "p": [
+                                  136,
+                                  36
+                                ]
+                              },
+                              {
+                                "p": [
+                                  100,
+                                  36
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ],
+                "spec": {
+                  "spacing": {
+                    "steps": 5
+                  }
+                }
+              }
+            },
+            {
+              "id": 14,
+              "kind": {
+                "type": "envelope",
+                "content": [
+                  {
+                    "id": 141,
+                    "appearance": {
+                      "items": [
+                        {
+                          "kind": "fill",
+                          "paint": {
+                            "type": "solid",
+                            "color": {
+                              "model": "rgb",
+                              "r": 1.0,
+                              "g": 0.0,
+                              "b": 0.0
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  0,
+                                  0
+                                ]
+                              },
+                              {
+                                "p": [
+                                  36,
+                                  0
+                                ]
+                              },
+                              {
+                                "p": [
+                                  36,
+                                  36
+                                ]
+                              },
+                              {
+                                "p": [
+                                  0,
+                                  36
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ],
+                "kind": {
+                  "type": "warp"
+                },
+                "fidelity": 50.0
+              }
+            },
+            {
+              "id": 15,
+              "name": "Shiny",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 1.0,
+                        "g": 0.0,
+                        "b": 0.0
+                      }
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "hologram",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            36,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            36,
+                            36
+                          ]
+                        },
+                        {
+                          "p": [
+                            0,
+                            36
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 16,
+              "name": "Kindless"
+            },
+            {
+              "id": 17,
+              "kind": {
+                "type": "group",
+                "clip": true,
+                "children": [
+                  {
+                    "id": 18,
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  0,
+                                  300
+                                ]
+                              },
+                              {
+                                "p": [
+                                  72,
+                                  300
+                                ]
+                              },
+                              {
+                                "p": [
+                                  72,
+                                  372
+                                ]
+                              },
+                              {
+                                "p": [
+                                  0,
+                                  372
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      },
+                      "clipping": true
+                    }
+                  },
+                  {
+                    "id": 19,
+                    "name": "Clipped",
+                    "appearance": {
+                      "items": [
+                        {
+                          "kind": "fill",
+                          "paint": {
+                            "type": "solid",
+                            "color": {
+                              "model": "rgb",
+                              "r": 1.0,
+                              "g": 0.0,
+                              "b": 0.0
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  20,
+                                  320
+                                ]
+                              },
+                              {
+                                "p": [
+                                  56,
+                                  320
+                                ]
+                              },
+                              {
+                                "p": [
+                                  56,
+                                  356
+                                ]
+                              },
+                              {
+                                "p": [
+                                  20,
+                                  356
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": 20,
+              "name": "Painted group",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 1.0,
+                        "g": 1.0,
+                        "b": 0.0
+                      }
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "group",
+                "children": [
+                  {
+                    "id": 21,
+                    "name": "Member",
+                    "appearance": {
+                      "items": [
+                        {
+                          "kind": "stroke",
+                          "paint": {
+                            "type": "solid",
+                            "color": {
+                              "model": "rgb",
+                              "r": 0.0,
+                              "g": 0.5,
+                              "b": 0.0
+                            }
+                          },
+                          "width": 2.0
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  200,
+                                  300
+                                ]
+                              },
+                              {
+                                "p": [
+                                  236,
+                                  300
+                                ]
+                              },
+                              {
+                                "p": [
+                                  236,
+                                  336
+                                ]
+                              },
+                              {
+                                "p": [
+                                  200,
+                                  336
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": 22,
+              "name": "Shaper",
+              "shaper": {
+                "faces": [],
+                "edges": []
+              },
+              "kind": {
+                "type": "group",
+                "children": [
+                  {
+                    "id": 23,
+                    "name": "Sources",
+                    "appearance": {
+                      "items": [
+                        {
+                          "kind": "fill",
+                          "paint": {
+                            "type": "solid",
+                            "color": {
+                              "model": "rgb",
+                              "r": 1.0,
+                              "g": 0.0,
+                              "b": 0.0
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  300,
+                                  300
+                                ]
+                              },
+                              {
+                                "p": [
+                                  336,
+                                  300
+                                ]
+                              },
+                              {
+                                "p": [
+                                  336,
+                                  336
+                                ]
+                              },
+                              {
+                                "p": [
+                                  300,
+                                  336
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": 24,
+                    "name": "Shaper Fill 1",
+                    "appearance": {
+                      "items": [
+                        {
+                          "kind": "fill",
+                          "paint": {
+                            "type": "solid",
+                            "color": {
+                              "model": "rgb",
+                              "r": 0.0,
+                              "g": 0.0,
+                              "b": 1.0
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  300,
+                                  300
+                                ]
+                              },
+                              {
+                                "p": [
+                                  336,
+                                  300
+                                ]
+                              },
+                              {
+                                "p": [
+                                  336,
+                                  336
+                                ]
+                              },
+                              {
+                                "p": [
+                                  300,
+                                  336
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": 25,
+              "name": "Hidden",
+              "visible": false,
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 1.0,
+                        "g": 0.0,
+                        "b": 0.0
+                      }
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            0,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            36,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            36,
+                            436
+                          ]
+                        },
+                        {
+                          "p": [
+                            0,
+                            436
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 26,
+              "name": "Clear",
+              "opacity": 0.0,
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 1.0,
+                        "g": 0.0,
+                        "b": 0.0
+                      }
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            50,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            86,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            86,
+                            436
+                          ]
+                        },
+                        {
+                          "p": [
+                            50,
+                            436
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 27,
+              "name": "Paints off",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 1.0,
+                        "g": 0.0,
+                        "b": 0.0
+                      }
+                    },
+                    "visible": false
+                  },
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.0,
+                        "g": 1.0,
+                        "b": 0.0
+                      }
+                    },
+                    "opacity": 0.0
+                  },
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "none"
+                    },
+                    "width": 2.0
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            100,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            136,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            136,
+                            436
+                          ]
+                        },
+                        {
+                          "p": [
+                            100,
+                            436
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 28,
+              "name": "Gradient",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "gradient",
+                      "gradient": {
+                        "kind": "Linear",
+                        "stops": [
+                          {
+                            "offset": 0.0,
+                            "color": {
+                              "model": "rgb",
+                              "r": 1.0,
+                              "g": 0.0,
+                              "b": 0.0
+                            }
+                          },
+                          {
+                            "offset": 1.0,
+                            "color": {
+                              "model": "rgb",
+                              "r": 0.0,
+                              "g": 0.0,
+                              "b": 1.0
+                            }
+                          }
+                        ]
+                      },
+                      "angle": 0.0
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            150,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            186,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            186,
+                            436
+                          ]
+                        },
+                        {
+                          "p": [
+                            150,
+                            436
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 29,
+              "name": "Swatch gradient",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "gradient",
+                      "gradient": {
+                        "kind": "Radial",
+                        "stops": [
+                          {
+                            "offset": 0.0,
+                            "color": {
+                              "model": "rgb",
+                              "r": 0.0,
+                              "g": 0.5,
+                              "b": 0.0
+                            }
+                          },
+                          {
+                            "offset": 1.0,
+                            "color": {
+                              "model": "rgb",
+                              "r": 0.0,
+                              "g": 0.5,
+                              "b": 0.0
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            200,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            236,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            236,
+                            436
+                          ]
+                        },
+                        {
+                          "p": [
+                            200,
+                            436
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 30,
+              "name": "Pattern",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "pattern",
+                      "pattern": "Dots"
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            250,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            286,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            286,
+                            436
+                          ]
+                        },
+                        {
+                          "p": [
+                            250,
+                            436
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 31,
+              "name": "Roughened",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 1.0,
+                        "g": 0.0,
+                        "b": 0.0
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "distort.roughen",
+                    "params": {
+                      "size": 5
+                    }
+                  },
+                  {
+                    "id": "stylize.dropShadow",
+                    "params": {},
+                    "visible": false
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            300,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            336,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            336,
+                            436
+                          ]
+                        },
+                        {
+                          "p": [
+                            300,
+                            436
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 32,
+              "name": "Masked",
+              "mask": {
+                "art": {
+                  "id": 321,
+                  "kind": {
+                    "type": "path",
+                    "path": {
+                      "subpaths": [
+                        {
+                          "anchors": [
+                            {
+                              "p": [
+                                350,
+                                400
+                              ]
+                            },
+                            {
+                              "p": [
+                                386,
+                                400
+                              ]
+                            },
+                            {
+                              "p": [
+                                386,
+                                436
+                              ]
+                            },
+                            {
+                              "p": [
+                                350,
+                                436
+                              ]
+                            }
+                          ],
+                          "closed": true
+                        }
+                      ]
+                    }
+                  }
+                },
+                "clip": true,
+                "invert": false
+              },
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 1.0,
+                        "g": 0.0,
+                        "b": 0.0
+                      }
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            350,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            386,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            386,
+                            436
+                          ]
+                        },
+                        {
+                          "p": [
+                            350,
+                            436
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 33,
+              "name": "Draft",
+              "kind": {
+                "type": "layer",
+                "color": {
+                  "Preset": 2
+                },
+                "printable": false,
+                "children": [
+                  {
+                    "id": 331,
+                    "appearance": {
+                      "items": [
+                        {
+                          "kind": "fill",
+                          "paint": {
+                            "type": "solid",
+                            "color": {
+                              "model": "rgb",
+                              "r": 1.0,
+                              "g": 0.0,
+                              "b": 0.0
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  0,
+                                  500
+                                ]
+                              },
+                              {
+                                "p": [
+                                  36,
+                                  500
+                                ]
+                              },
+                              {
+                                "p": [
+                                  36,
+                                  536
+                                ]
+                              },
+                              {
+                                "p": [
+                                  0,
+                                  536
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": 34,
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            0,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            400,
+                            0
+                          ]
+                        },
+                        {
+                          "p": [
+                            400,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            0,
+                            400
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                },
+                "guide": true
+              }
+            },
+            {
+              "id": 35,
+              "name": "Hatched",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "hatch",
+                      "lines": 3
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            400,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            436,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            436,
+                            436
+                          ]
+                        },
+                        {
+                          "p": [
+                            400,
+                            436
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 36,
+              "name": "HSV",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "hsv",
+                        "h": 0.5,
+                        "s": 1.0,
+                        "v": 1.0
+                      }
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            450,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            486,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            486,
+                            436
+                          ]
+                        },
+                        {
+                          "p": [
+                            450,
+                            436
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 37,
+              "name": "Item effect",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "stroke",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.0,
+                        "g": 0.0,
+                        "b": 0.0
+                      }
+                    },
+                    "width": 1.0,
+                    "effects": [
+                      {
+                        "id": "path.offsetPath",
+                        "params": {
+                          "offset": 2
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            500,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            536,
+                            400
+                          ]
+                        },
+                        {
+                          "p": [
+                            536,
+                            436
+                          ]
+                        },
+                        {
+                          "p": [
+                            500,
+                            436
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 38,
+              "name": "Mixed compound",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 1.0,
+                        "g": 0.0,
+                        "b": 0.0
+                      }
+                    }
+                  }
+                ]
+              },
+              "kind": {
+                "type": "compound",
+                "rule": "NonZero",
+                "children": [
+                  {
+                    "id": 381,
+                    "kind": {
+                      "type": "path",
+                      "path": {
+                        "subpaths": [
+                          {
+                            "anchors": [
+                              {
+                                "p": [
+                                  0,
+                                  600
+                                ]
+                              },
+                              {
+                                "p": [
+                                  36,
+                                  600
+                                ]
+                              },
+                              {
+                                "p": [
+                                  36,
+                                  636
+                                ]
+                              },
+                              {
+                                "p": [
+                                  0,
+                                  636
+                                ]
+                              }
+                            ],
+                            "closed": true
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": 382,
+                    "kind": {
+                      "type": "text",
+                      "kind": {
+                        "kind": "point"
+                      },
+                      "xf": [
+                        1,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0
+                      ],
+                      "runs": []
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "next_id": 400,
+    "symbols": [
+      {
+        "name": "Star",
+        "art": {
+          "id": 500,
+          "appearance": {
+            "items": [
+              {
+                "kind": "fill",
+                "paint": {
+                  "type": "solid",
+                  "color": {
+                    "model": "rgb",
+                    "r": 1.0,
+                    "g": 0.0,
+                    "b": 0.0
+                  }
+                }
+              }
+            ]
+          },
+          "kind": {
+            "type": "path",
+            "path": {
+              "subpaths": [
+                {
+                  "anchors": [
+                    {
+                      "p": [
+                        0,
+                        0
+                      ]
+                    },
+                    {
+                      "p": [
+                        36,
+                        0
+                      ]
+                    },
+                    {
+                      "p": [
+                        36,
+                        36
+                      ]
+                    },
+                    {
+                      "p": [
+                        0,
+                        36
+                      ]
+                    }
+                  ],
+                  "closed": true
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "images": {}
+  },
+  "images": {
+    "photo": {
+      "mime": "image/png",
+      "data": "iVBORw0KGgo="
+    }
+  }
+}

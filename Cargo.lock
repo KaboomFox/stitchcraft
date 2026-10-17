@@ -761,6 +761,7 @@ dependencies = [
 name = "stitchcraft-testkit"
 version = "0.0.1"
 dependencies = [
+ "flate2",
  "proptest",
  "stitchcraft-core",
  "stitchcraft-engine",
@@ -769,6 +770,7 @@ dependencies = [
  "stitchcraft-plan",
  "stitchcraft-render",
  "stitchcraft-svg",
+ "stitchcraft-vectorcraft",
 ]
 
 [[package]]
@@ -776,15 +778,20 @@ name = "stitchcraft-vc-plugin"
 version = "0.0.1"
 dependencies = [
  "serde_json",
+ "stitchcraft-vectorcraft",
 ]
 
 [[package]]
 name = "stitchcraft-vectorcraft"
 version = "0.0.1"
 dependencies = [
+ "flate2",
+ "serde",
+ "serde_json",
  "stitchcraft-core",
  "stitchcraft-engine",
  "stitchcraft-params",
+ "stitchcraft-plan",
 ]
 
 [[package]]

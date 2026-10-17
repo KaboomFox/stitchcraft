@@ -840,8 +840,9 @@ id = "REQ-VC-001"
 area = "vectorcraft"
 level = "L2"
 statement = "The .vectorcraft adapter reads layers, groups, paths, compound paths, paints, visibility and our effect records from every VectorCraft version the compatibility gate lists as supported; untrusted input is capped and fuzzed."
+rationale = "Formats 1 to 4, plain or compressed, with or without data after the JSON, hold the same drawing the same way; a file made to cost too much is refused before it does."
 milestone = "M6"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-VC-002"
@@ -858,6 +859,23 @@ level = "L2"
 statement = "Each live-effect preview level completes within VectorCraft's v1 budget (5 s, fuel limit) for the largest fixture of that level."
 milestone = "M6"
 status = "planned"
+
+[[req]]
+id = "REQ-VC-004"
+area = "vectorcraft"
+level = "L2"
+statement = "A VectorCraft object with visible StitchCraft effects is sewn as they say and only so, in their order: a fill effect fills the object's shape, a stroke effect stitches along it and a satin effect makes a satin column of it, each with the record's parameters. An object without them is sewn as an SVG shape is: the fills VectorCraft draws, then its strokes, each in its paint's colour."
+rationale = "The effect is how a VectorCraft user sets an object's embroidery, and the plug-in previews what it sets; the file must sew what the previews show."
+milestone = "M6"
+status = "active"
+
+[[req]]
+id = "REQ-VC-005"
+area = "vectorcraft"
+level = "L2"
+statement = "Nothing a VectorCraft document draws is left out silently: text, images, symbols, live objects, clipping, VectorCraft's own effects, brushes, the paints of groups and layers, gradients and patterns are named (SC-W0807), and so are template layers, layers that don't print and guides (SC-I0809). Only what VectorCraft does not draw, such as a hidden object, is left out without a word."
+milestone = "M6"
+status = "active"
 
 # ── Command line ───────────────────────────────────────────────────────────────────────────────────
 

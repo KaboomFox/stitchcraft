@@ -1,5 +1,5 @@
-//! What must hold for *any* bytes given to a reader (REQ-FMT-006, REQ-SVG-002): the bodies of the fuzz
-//! targets in `fuzz/`.
+//! What must hold for *any* bytes given to a reader (REQ-FMT-006, REQ-SVG-002, REQ-VC-001): the bodies of
+//! the fuzz targets in `fuzz/`.
 //!
 //! They live here rather than in the fuzz crate so that every pull request runs them on stable Rust and
 //! all three operating systems (on the golden files, every shortening of them and random bytes), while
@@ -20,7 +20,13 @@
 //! - **The SVG reader never panics** and refuses only with its own codes: `SC-E0801` for a file that is
 //!   not SVG, `SC-E0004` for a spent budget. What it reads is a valid design (`SC-E0009` would be a bug in
 //!   the reader), and everything it says about the file is a warning.
+//! - **So does the VectorCraft reader**, with `SC-E0806` for a file that is not a VectorCraft document. The
+//!   same bytes compressed read the same.
 
+use std::io::Write;
+
+use flate2::Compression;
+use flate2::write::GzEncoder;
 use stitchcraft_core::{Budget, Code, Severity, units::MACHINE_LIMIT};
 use stitchcraft_formats::decode::MAX_RECORDS;
 use stitchcraft_formats::{decode, dst, encode, pes};
@@ -83,6 +89,36 @@ pub fn read_svg(data: &[u8]) {
             }
         }
         Err(refusal) => assert!(matches!(refusal.code, Code::SvgUnreadable | Code::BudgetExhausted), "{refusal}"),
+    }
+}
+
+/// The VectorCraft reader on `data`, as it is and compressed.
+pub fn read_vectorcraft(data: &[u8]) {
+    let budget = Budget { max_stitches: 100_000, max_work: 2_000_000 };
+    let plain = stitchcraft_vectorcraft::read(data, &budget);
+    match &plain {
+        Ok(read) => {
+            for said in &read.warnings {
+                assert_ne!(said.severity(), Severity::Error, "{said}");
+            }
+            let limit = f64::from(MACHINE_LIMIT) / 10.0;
+            for point in read.design.elements().iter().flat_map(|e| e.shape.path().points()) {
+                assert!(point.x().abs() <= limit && point.y().abs() <= limit, "a point beyond ±10 m: {point:?}");
+            }
+        }
+        Err(refusal) => assert!(matches!(refusal.code, Code::VcUnreadable | Code::BudgetExhausted), "{refusal}"),
+    }
+    // Compressed, the same bytes say the same, unless the budget runs out unpacking them. Bytes that are
+    // compressed already would be compressed twice, which no file is.
+    let mut encoder = GzEncoder::new(Vec::new(), Compression::fast());
+    if !data.starts_with(&[0x1f, 0x8b])
+        && encoder.write_all(data).is_ok()
+        && let Ok(packed) = encoder.finish()
+    {
+        match (stitchcraft_vectorcraft::read(&packed, &budget), plain) {
+            (Err(e), _) if e.code == Code::BudgetExhausted => {}
+            (packed, plain) => assert_eq!(packed, plain, "compressed, the file reads otherwise"),
+        }
     }
 }
 
@@ -175,8 +211,45 @@ mod tests {
         }
     }
 
+    #[allow(clippy::disallowed_methods)]
+    fn vectorcraft_fixtures() -> Vec<Vec<u8>> {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance/fixtures/vectorcraft");
+        let mut paths: Vec<_> = std::fs::read_dir(root).unwrap().map(|e| e.unwrap().path()).collect();
+        paths.sort();
+        let files: Vec<_> = paths.iter().map(|p| std::fs::read(p).unwrap()).collect();
+        assert!(files.len() >= 4, "the VectorCraft fixtures are the seed corpus of `read_vectorcraft`");
+        files
+    }
+
+    /// The VectorCraft seed corpus, and every shortening of it, pass the VectorCraft fuzz body.
+    #[test]
+    fn req_vc_001_the_vectorcraft_seed_corpus_and_its_shortenings_pass_the_fuzz_body() {
+        for bytes in vectorcraft_fixtures() {
+            let step = (bytes.len() / 200).max(1);
+            for len in (0..=bytes.len()).step_by(step) {
+                read_vectorcraft(&bytes[..len]);
+            }
+            read_vectorcraft(&bytes);
+        }
+    }
+
     proptest! {
         #![proptest_config(strategies::config(256))]
+
+        /// The VectorCraft fixtures with random bytes overwritten, so the reader gets deep into real files.
+        #[test]
+        fn req_vc_001_damaged_vectorcraft_files_pass_the_fuzz_body(
+            which in any::<prop::sample::Index>(),
+            edits in proptest::collection::vec((any::<prop::sample::Index>(), any::<u8>()), 1..16),
+        ) {
+            let fixtures = vectorcraft_fixtures();
+            let mut data = which.get(&fixtures).clone();
+            for (at, byte) in edits {
+                let i = at.index(data.len());
+                data[i] = byte;
+            }
+            read_vectorcraft(&data);
+        }
 
         /// The SVG fixtures with random bytes overwritten, so the reader gets deep into real files.
         #[test]

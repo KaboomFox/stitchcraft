@@ -48,3 +48,10 @@ path = "fuzz_targets/read_svg.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "read_vectorcraft"
+path = "fuzz_targets/read_vectorcraft.rs"
+test = false
+doc = false
+bench = false

@@ -152,11 +152,11 @@ nothing sewn since the last one, which changes nothing on the fabric.
 
 #### Fuzzing
 
-`fuzz/` holds one target per reader (`read_pes`, `read_dst`, `read_svg`) and one for a file's whole
-journey (`read_write_preview`: read, write in every format, read the files back, preview). Each target
-is one line; its body is in `stitchcraft-testkit::fuzz`, so every pull request runs the bodies on the
-seed files, every shortening of them and random or damaged bytes, on stable Rust and all three operating
-systems. The properties:
+`fuzz/` has a target for each reader (`read_pes`, `read_dst`, `read_svg` and `read_vectorcraft`), and
+one for a file's whole journey (`read_write_preview`: read, write in every format, read the files back,
+preview). Each target is one line. Its body is in `stitchcraft-testkit::fuzz`, where every pull request
+runs it on the seed files, every shortening of them and random or damaged bytes, on stable Rust and all
+three operating systems. The properties:
 
 - **machine files** (`REQ-FMT-006`). No reader panics or gives more than 2,000,000 entries or a position
   beyond ±10 m. Each format writes a plan read from anything or refuses it. PES refuses a design more
@@ -165,12 +165,14 @@ systems. The properties:
 - **SVG** (`REQ-SVG-002`): no panic; the reader refuses only with its own codes (`SC-E0801`,
   `SC-E0004`); what it reads is a valid design, with no point beyond ±10 m, and everything it says about
   the file is a warning.
+- **VectorCraft** (`REQ-VC-001`), as for SVG, with `SC-E0806` for a file that isn't a VectorCraft
+  document. The same bytes compressed with gzip read the same, unless unpacking them spends the budget.
 
 Every night `nightly.yml` fuzzes each target for 20 minutes with libFuzzer (`-timeout=10`,
-`-rss_limit_mb=2048`). The corpus starts from the seeds, the golden machine files or the SVG fixtures
-(with a dictionary of SVG's keywords, `fuzz/svg.dict`), and is kept, minimised, in the Actions cache, so
-each night continues where the last stopped. A crash fails the job and keeps the input
-as an artifact. To work on one locally:
+`-rss_limit_mb=2048`). The corpus starts from the seeds, the golden machine files or the SVG and
+VectorCraft fixtures (with dictionaries of their keywords, `fuzz/svg.dict` and `fuzz/vectorcraft.dict`).
+It is kept, minimised, in the Actions cache, and each night continues where the last stopped. A crash
+fails the job and keeps the input as an artifact. To work on one locally:
 
 ```sh
 cargo +nightly fuzz run read_pes                        # until stopped; corpus in fuzz/corpus/read_pes

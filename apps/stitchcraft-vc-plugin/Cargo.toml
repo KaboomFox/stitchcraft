@@ -17,3 +17,4 @@ workspace = true
 
 [dependencies]
 serde_json = { workspace = true }
+stitchcraft-vectorcraft = { workspace = true }

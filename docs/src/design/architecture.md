@@ -74,20 +74,20 @@ GPL/AGPL/LGPL.
 
 | Need | Crate | Licence | Where |
 |---|---|---|---|
-| Curves, affine (strokes are flattened by the engine, for determinism) | `kurbo` 0.13 | MIT/Apache | core, engine, adapters |
-| Polygon booleans, offsets (a fill's region and a satin's offset rails are built by the engine) | `i_overlay` 9 | MIT/Apache | engine |
-| Spatial index | `rstar` 0.13 | MIT/Apache | engine |
-| Graphs | `petgraph` 0.8 | MIT/Apache | engine |
 | Deterministic transcendental math | `libm` 0.2 | MIT | core |
 | Errors | `thiserror` 2 | MIT/Apache | all libraries |
-| Serialization | `serde`, `serde_json`, `toml` | MIT/Apache | params, adapters, xtask |
 | XML / SVG syntax | `roxmltree`, `svgtypes` | MIT/Apache | svg |
-| Rasterizing previews | `tiny-skia` 0.12 | BSD-3-Clause | render |
+| `.vectorcraft` documents: JSON, its numbers read exactly, unpacked from gzip by a Rust backend | `serde`, `serde_json`, `flate2` 1 | MIT/Apache | vectorcraft |
+| Rasterizing previews | `tiny-skia` 0.11 | BSD-3-Clause | render |
+| JSON reports, and the plug-in's JSON | `serde_json` | MIT/Apache | cli, vc-plugin |
+| Content hashes of bug-report bundles | `sha2` 0.11 | MIT/Apache | cli |
 | CLI parsing | `clap` 4 | MIT/Apache | cli, xtask |
-| Tests | `proptest`, `insta`, `trycmd` | MIT/Apache, Apache | dev only |
+| Tooling's TOML and JSON | `toml`, `toml_edit`, `serde_json` | MIT/Apache | xtask |
+| Tests | `proptest`, `insta` | MIT/Apache, Apache | dev only |
 
-Versions above are the current ones (checked 2026-10-08 with `cargo info`); `Cargo.lock` is the
-truth. The geometry choices are validated by spike M0.7 ([ADR-0005](adr/0005-geometry-stack.md)).
+The engine's geometry is its own, with no crate for curves, regions, offsets, nearest points or graphs:
+spike M0.7 accepted that ([ADR-0005](adr/0005-geometry-stack.md)). Versions above are those
+`Cargo.toml` asks for (2026-10-17), and `Cargo.lock` is the truth.
 
 ## Hosts: ports and adapters
 
