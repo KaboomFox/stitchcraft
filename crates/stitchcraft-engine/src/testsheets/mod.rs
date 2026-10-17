@@ -680,11 +680,9 @@ mod tests {
                 }
             }
         }
-        assert!(
-            sewn_over.is_empty(),
-            "{} needle-downs on a jump thread (sheet, from, to, needle, (mm off, mm before it lands)):\n{sewn_over:#?}",
-            sewn_over.len()
-        );
+        // The count is taken here, so that every line of the test runs whether it passes or not.
+        let found = sewn_over.len();
+        assert!(found == 0, "{found} needle-downs on a jump thread (sheet, from, to, needle, (mm off, mm before it lands)):\n{sewn_over:#?}");
     }
 
     #[test]
