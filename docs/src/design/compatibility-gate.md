@@ -7,19 +7,21 @@ before VectorCraft ships it — and keep a public, generated table of which Vect
 
 | Track | What we test against | How it is discovered | When | Effect of a failure |
 |---|---|---|---|---|
-| `stable` | Latest published, non-pre-release VectorCraft release | GitHub Releases API (`prerelease: false`) | Daily, and on every PR touching the plug-in or adapters | **Blocks** our release; opens an issue |
-| `prerelease` | Latest published alpha/beta/RC (`-alpha`, `-beta`, `-rc` SemVer tags) | GitHub Releases API (`prerelease: true`) | Daily | Opens an issue labelled `upstream-prerelease`; does not block |
-| `release-branch` | Head of VectorCraft's `release` branch, which their pipeline builds into the next (still private, draft) release | `git ls-remote … refs/heads/release` | Daily | Opens an issue labelled `upstream-canary` |
-| `main` | Head of VectorCraft's `main` | `git ls-remote … refs/heads/main` | Nightly | Opens or updates one rolling issue labelled `upstream-canary` |
+| `stable` | Latest published, non-pre-release VectorCraft release | SemVer tags from `git ls-remote` | Daily, and on every PR touching the plug-in, the adapter or the gate | **Blocks** our release; its issue is labelled `upstream-stable` |
+| `prerelease` | Latest published alpha/beta/RC (`-alpha`, `-beta`, `-rc` SemVer tags) | SemVer tags from `git ls-remote`, when newer than the latest release | Daily | Its issue is labelled `upstream-prerelease`; does not block |
+| `release-branch` | Head of VectorCraft's `release` branch, which their pipeline builds into the next (still private, draft) release | `git ls-remote … refs/heads/release` | Daily | Its issue is labelled `upstream-canary` |
+| `main` | Head of VectorCraft's `main` | `git ls-remote … refs/heads/main` | Daily | Its issue is labelled `upstream-canary` |
+
+Each track has one issue at a time, commented on while the track fails and closed when it passes again.
 
 Draft releases are not visible to the public API, so the `release` branch is the earliest public signal
 of an upcoming release (VectorCraft's release workflow runs on pushes to `release`,
 `.github/workflows/release.yml`); pre-release tags catch alphas, betas and release candidates as soon as
 they are published.
 
-`compat/vectorcraft.toml` records the versions currently pinned per track (with the commit SHA for branch
-tracks, and the SHA-256 of the stable release's Linux archive) so every run is reproducible and every
-change of pin is a reviewable PR.
+`compat/vectorcraft.toml` records the versions currently pinned per track (the branch for branch tracks,
+and the SHA-256 of the stable release's Linux archive), so that pull requests are checked against a fixed
+release and every change of pin is a reviewable PR.
 
 ## Two levels of test
 
@@ -48,39 +50,66 @@ checks:
 
 ### Level B — end to end (slower, tens of minutes)
 
-Uses the real `vectorcraft-cli`: the binary from the release's Linux package for `stable` and
-`prerelease` (the Linux packages ship `vectorcraft-cli`, `packaging/linux/package.sh`), or built from source
-with a cached target directory for branch tracks. Scenarios are data files in `compat/scenarios/*.toml`:
+Uses VectorCraft's own command line, `vectorcraft-cli run`. For `stable` and `prerelease` it is the binary
+in the release's Linux archive (VectorCraft's `packaging/linux/package.sh` puts it there). The archive is
+checked against the SHA-256 the pins file records for the pinned release, or against the one the release's
+`SHA256SUMS.txt` lists for a newer release. For the branch tracks it is built from the branch, with a cached
+target directory. `cargo xtask compat track <track> --ref <tag|sha>` runs both levels and writes the track's
+result for the report, and `cargo xtask compat e2e` runs Level B alone.
+
+The scenarios are data files in `compat/scenarios/*.toml`, each one or more runs of `vectorcraft-cli`. A run
+starts from a new document, or from one an earlier run saved, and draws its shapes with VectorCraft's
+commands. So every file VectorCraft opens is one it wrote, and StitchCraft reads only what the version under
+test saved. Steps work on the selection, which drawing a shape sets: VectorCraft 0.7.0 can't give one
+command another's result. Each module a run installs must have no last error at its end, after a PNG export
+has run the live effects. The checks are StitchCraft's, since VectorCraft's pictures change from version to
+version and what sews must not:
 
 | Scenario | Steps | Checks |
 |---|---|---|
-| `install-and-list` | `--cmd plugin.install`, `--cmd plugin.list` | our plug-ins listed with the right kinds |
-| `apply-stroke` / `-satin` / `-fill` | open fixture, `effect.apply {"effect": "plugin.<ns>.<x>", "ids": […], "params": {…}}`, `--export out.png` | PNG matches golden within tolerance; no `lastError` |
-| `save-reopen` | apply, `app.save`, reopen, `effect.list` | parameters identical (`REQ-PRM-003`) |
-| `export-pes` | VectorCraft saves `.vectorcraft`; `stitch export` reads it | our CLI reads the version's files; PES golden matches |
-| `missing-plugin` | open a document with our effect records without the plug-in installed | document opens; records preserved on save |
-| `graphic-style` | apply an effect, `graphicStyle.new`, `graphicStyle.apply` to another object and to a group, `app.save` | `stitch export` sews the styled object and the group's paths with the effect's parameters, in the style's colour (`REQ-VC-006`) |
-| `compound-satin` | 2 paths and a rung, `object.compoundPath.make`, then `effect.apply` satin | `stitch export` sews the column with the rung (`REQ-VC-007`) |
-| `limits` | largest fixture at each preview level | completes inside the live-effect budget |
+| `install-and-list` | install the 3 modules, then `plugin.list` | each family's live effect is listed (`REQ-VC-002`) |
+| `apply` | a square filled red and a line, given the fill and stroke effects with parameters, then saved | as sent, with a fill in red and a stroke (`REQ-VC-004`, `REQ-PRM-003`) |
+| `compound-satin` | 2 rails and a rung, Make Compound Path, then the satin effect | as sent, and one satin column (`REQ-VC-007`) |
+| `graphic-style` | a group of 2 squares, and a gold square with a fill effect, whose new graphic style is applied to the group | as sent, and 3 fills in gold (`REQ-VC-006`) |
+| `missing-plugin` | a fill saved, then opened and saved again without the plug-ins | both sew alike, as sent: the records are kept (`REQ-PRM-003`) |
+
+*As sent*: the saved file sews as it does with the StitchCraft records of the objects the effects were
+applied to put back as the steps sent them. So VectorCraft stored what the dialog set, on the objects it
+was applied to, in a form StitchCraft reads. A file is sewn as `stitch plan` sews it, for the reference
+machine, and 2 are compared byte for byte. The live-effect budget of each preview level is Level A's
+(`REQ-VC-003`).
 
 ## Automation
 
 ```text
-schedule (daily) ──▶ discover tracks ──▶ for each track: build plug-ins ─▶ Level A ─▶ Level B
-                                                                              │
-              ┌───────────────────────────────────────────────────────────────┘
+schedule (daily) ──▶ discover tracks ──▶ for each track: build plug-ins ─▶ Level A ─▶ Level B ─▶ its result
+                                                                                                  │
+              ┌───────────────────────────────────────────────────────────────────────────────────┘
               ▼
-   results.json ──▶ `cargo xtask compat report` ──▶ docs/src/user/reference/compatibility.md (generated)
+   results ──▶ `cargo xtask compat report` ──▶ an issue per track: opened, commented on, or closed
               │
-              ├─ new stable/pre-release and green ─▶ bot PR "compat: VectorCraft vX.Y.Z" updating pins + table
-              └─ red ─▶ issue with the failing scenario, logs, and the VectorCraft commit range since last green
+              └─ a new stable or pre-release passes ─▶ bot PR "compat: VectorCraft vX.Y.Z":
+                                                       pins, compat/supported.toml and the generated page
 ```
 
-- The bot PR runs the full CI, so a new VectorCraft version is adopted only through a reviewed,
-  green PR.
-- Failures on branch tracks produce one rolling issue per track, updated instead of duplicated.
-- The workflow uses the default `GITHUB_TOKEN` with `contents: write`, `pull-requests: write`,
-  `issues: write` only on the scheduled job.
+- `cargo xtask compat report` decides, and the workflow acts on what it prints with `gh`. The rules are
+  Rust with tests, and the workflow only makes the calls to GitHub.
+- Each track's issue is titled "VectorCraft compatibility: <track> fails". It lists what failed at each
+  level, with links to the run and to VectorCraft's changes since the last release that passed. The issue
+  is closed when the track passes again. A track fails when its job ends without writing a result. The move
+  rehearsal has an issue of its own.
+- A new stable release or pre-release that passes both levels is adopted. The report writes its pins (for
+  a stable release, the archive's SHA-256 the run checked, and the contract crate's tag) and its row in
+  `compat/supported.toml`, and `cargo xtask docs` regenerates the page. The bot pushes the branch
+  `compat/vectorcraft-<tag>` and opens the pull request. It then dispatches ci, docs, goldens and compat
+  on the branch itself, because GitHub runs workflows for a push made with the workflow's own token only
+  when they are dispatched. A new VectorCraft version is adopted only through a reviewed pull request
+  with the full CI green.
+- GitHub Actions can open a pull request only if the repository's settings allow it (Settings › Actions ›
+  General › Workflow permissions). Otherwise the run opens an issue with a link to GitHub's form for
+  opening the pull request.
+- The report job alone writes, and only on schedule: `contents`, `pull-requests`, `issues` and `actions`
+  with the default `GITHUB_TOKEN`.
 
 ## Moving into VectorCraft
 
@@ -94,8 +123,8 @@ manifests or tooling: the pinned stable release):
 3. **Joined:** `cargo xtask compat join ..`, then run `cargo xtask ci` from the folder: StitchCraft's
    gates, inside VectorCraft's workspace, with its lockfile and lints.
 
-A failure means a change here, or one in VectorCraft, has made the move harder; the scheduled run reports
-it in the same `upstream-canary` issue as the contract tests.
+A failure means a change here, or one in VectorCraft, has made the move harder. The scheduled run reports
+it in an issue of its own, labelled `upstream-canary`.
 
 ## VectorCraft's window
 
@@ -103,19 +132,23 @@ The `window` job runs the app VectorCraft releases, from the Linux archive of th
 in a desktop without a screen. `cargo xtask compat window` takes screenshots of the window and drives it
 through its accessibility tree with xa11y, as the docs' `vectorcraft-ui` pictures will be made
 ([docs pipeline](docs-pipeline.md#vectorcrafts-window-in-ci)). The archive's SHA-256 is pinned beside the
-stable tag in `compat/vectorcraft.toml`, so the bot PR that moves the pin (M6.6) records the new
-archive's sum too, from the release's `SHA256SUMS.txt`. The same archive holds `vectorcraft-cli`, for
-Level B.
+stable tag in `compat/vectorcraft.toml`, so the bot PR that moves the pin records the new archive's sum
+too, the one the release's `SHA256SUMS.txt` lists and the run checked. The same archive holds
+`vectorcraft-cli`, for Level B.
 
 ## The supported-versions table
 
-Generated, never hand-edited:
+The user guide's [VectorCraft compatibility](../user/reference/compatibility.md) page is generated by
+`cargo xtask docs` from `compat/supported.toml`, never hand-edited. The record lists the releases that
+passed both levels, with the day each passed. Only the pull request that adopts a release writes to it. A
+branch's result changes daily and is reported in its issue, never in the record. A row of the page looks
+like this:
 
-| VectorCraft | Track | ABI | Contract | End to end | Checked |
-|---|---|---|---|---|---|
-| 0.6.0 | stable | v1 | ✅ | ✅ | 2026-10-09 |
+| VectorCraft | Track | Passed the gate |
+|---|---|---|
+| 0.12.0 | stable | 2026-10-18 |
 
-The plug-in's own docs state the minimum VectorCraft version (the oldest green `stable` row we still test).
+It also names the release the gate pins, which pull requests are checked against.
 
 ## Going upstream
 

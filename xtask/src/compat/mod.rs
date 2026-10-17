@@ -6,23 +6,35 @@
 //! - `contract --ref <tag|sha>`: Level A — builds the plug-in's modules for wasm32, *hello* and one for
 //!   each stitch family, prints their sizes, loads them into VectorCraft's real plug-in host at that ref and
 //!   runs `compat/vc-contract`'s tests.
+//! - `e2e (--ref <tag> | --cli <file>)`: Level B — runs the scenarios of `compat/scenarios/` with a
+//!   release's `vectorcraft-cli`, fetched and checked by its SHA-256 (`release.rs`), or with one built from
+//!   a branch (`scenario.rs`).
+//! - `track <track> --ref <tag|sha> [--cli <file>]`: both levels on one track, and its result in
+//!   `target/compat/results/`, for the report.
+//! - `report`: what a scheduled run does about the results: an issue for each failing track, and the
+//!   adoption of a new release that passes, which writes its pins and its row in `compat/supported.toml`
+//!   (`report.rs`). The supported-versions page is generated from that record.
 //! - `join [--nested] <vectorcraft checkout>`: makes this repository, copied into a VectorCraft checkout
 //!   as a folder, part of VectorCraft's build (`join.rs`; ADR-0011).
 //! - `window [--app <file>]`: runs `compat/vc-window`'s tests against VectorCraft's window, the pinned
 //!   stable release's by default, in a private desktop without a screen (`window.rs`; spike M0.8).
-//! - `report`: the generated supported-versions page (roadmap step M6.6).
+
+pub mod release;
+pub mod report;
+pub mod scenario;
 
 use std::cmp::Ordering;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use serde_json::json;
 use stitchcraft_params::Family;
 
 use crate::{util, wasm};
+use report::{Level, TrackResult};
 
 const REPOSITORY: &str = "https://github.com/storytold/vectorcraft";
 pub(crate) const PINS: &str = "compat/vectorcraft.toml";
-const CONTRACT: &str = "compat/vc-contract";
+pub(crate) const CONTRACT: &str = "compat/vc-contract";
 
 /// A SemVer version (`1.2.3` or `1.2.3-rc.1`).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -187,7 +199,11 @@ fn prepare_contract(reference: &str) -> Result<PathBuf, String> {
 }
 
 pub fn contract(reference: &str) -> Result<(), String> {
-    let modules = build_modules()?;
+    run_contract(&build_modules()?, reference)
+}
+
+/// Level A with the modules in `modules`: the contract crate's tests against VectorCraft at `reference`.
+fn run_contract(modules: &Path, reference: &str) -> Result<(), String> {
     let dir = prepare_contract(reference)?;
     let mut cmd = util::cargo();
     // Optimized, as VectorCraft builds its host for release, so that the tests time it as users run it.
@@ -195,7 +211,7 @@ pub fn contract(reference: &str) -> Result<(), String> {
     cmd.args(["test", "--release", "--manifest-path"])
         .arg(dir.join("Cargo.toml"))
         .args(["--", "--show-output"])
-        .env("STITCHCRAFT_PLUGINS", &modules)
+        .env("STITCHCRAFT_PLUGINS", modules)
         // One shared build directory for every ref, inside the cached `target/`.
         .env("CARGO_TARGET_DIR", util::root().join("target/compat-build"));
     util::run(cmd, &format!("contract tests against VectorCraft {reference}"))?;
@@ -203,9 +219,96 @@ pub fn contract(reference: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// `cargo xtask compat e2e`: Level B with the `vectorcraft-cli` at `cli`, or with the one in the archive of
+/// the release `reference`.
+pub fn e2e(reference: Option<&str>, cli: Option<&Path>) -> Result<(), String> {
+    let modules = build_modules()?;
+    let (cli, _) = vectorcraft_cli(reference, cli)?;
+    let level = run_e2e(&cli, &modules);
+    if level.passed {
+        println!("compat: every scenario passes with {}", cli.display());
+        Ok(())
+    } else {
+        Err(format!("{} scenario checks failed", level.failures.len()))
+    }
+}
+
+/// The `vectorcraft-cli` to run: `cli` when it is given, else the one in the archive of the release
+/// `reference`, with the archive's SHA-256. A branch's has to be built and given.
+fn vectorcraft_cli(reference: Option<&str>, cli: Option<&Path>) -> Result<(PathBuf, Option<String>), String> {
+    match (cli, reference) {
+        (Some(cli), _) => Ok((cli.to_path_buf(), None)),
+        (None, Some(tag)) if Version::parse(tag).is_some() => {
+            let fetched = release::fetch(tag)?;
+            Ok((fetched.root.join("bin/vectorcraft-cli"), Some(fetched.sha256)))
+        }
+        (None, Some(other)) => Err(format!("VectorCraft {other} is no release: build its vectorcraft-cli and name it with --cli")),
+        (None, None) => Err("name a VectorCraft release with --ref, or a vectorcraft-cli with --cli".to_string()),
+    }
+}
+
+/// Level B: each scenario with the `vectorcraft-cli` at `cli` and the modules in `modules`, said as it goes,
+/// and in GitHub Actions as annotations.
+fn run_e2e(cli: &Path, modules: &Path) -> Level {
+    let outcomes = match scenario::run_all(cli, modules, &scenario::out_dir()) {
+        Ok(outcomes) => outcomes,
+        Err(e) => return Level { passed: false, failures: vec![e] },
+    };
+    let annotate = std::env::var_os("GITHUB_ACTIONS").is_some();
+    let mut failures = Vec::new();
+    for (name, failed) in outcomes {
+        if failed.is_empty() {
+            println!("compat: scenario {name} passes");
+        }
+        for failure in failed {
+            let line = format!("{name}: {failure}");
+            if annotate {
+                println!("{}", util::annotation("error", "Level B", &line));
+            } else {
+                eprintln!("compat: scenario {line}");
+            }
+            failures.push(line);
+        }
+    }
+    Level { passed: failures.is_empty(), failures }
+}
+
+/// `cargo xtask compat track`: both levels against VectorCraft `reference` on `track`. Its result is written
+/// to `target/compat/results/` whatever happens, for the report.
+pub fn track(track: &str, reference: &str, cli: Option<&Path>) -> Result<(), String> {
+    if !report::TRACKS.contains(&track) {
+        return Err(format!("there is no track `{track}`: the tracks are {}", report::TRACKS.join(", ")));
+    }
+    let failed = |e: String| Level { passed: false, failures: vec![e] };
+    let modules = build_modules();
+    let contract = match &modules {
+        Ok(dir) => run_contract(dir, reference).map_or_else(failed, |()| Level { passed: true, failures: Vec::new() }),
+        Err(e) => failed(e.clone()),
+    };
+    let mut archive_sha256 = None;
+    let e2e = match (&modules, vectorcraft_cli(Some(reference), cli)) {
+        (Ok(dir), Ok((cli, sha))) => {
+            archive_sha256 = sha;
+            run_e2e(&cli, dir)
+        }
+        (Err(e), _) => failed(e.clone()),
+        (_, Err(e)) => failed(e),
+    };
+    let result = TrackResult { track: track.to_string(), reference: reference.to_string(), contract, e2e, archive_sha256 };
+    let written = report::write_result(&util::root().join(report::RESULTS), &result)?;
+    let said = |level: &Level| if level.passed { "passes" } else { "fails" };
+    println!(
+        "compat: against VectorCraft {reference} ({track}), the contract {} and the scenarios {}; result in {}",
+        said(&result.contract),
+        said(&result.e2e),
+        util::rel(&written)
+    );
+    if result.passed() { Ok(()) } else { Err(format!("the gate fails against VectorCraft {reference}")) }
+}
+
 /// The plug-in's modules, by name: *hello*, built without features, and the live effect of each stitch
 /// family, built with the feature its id names (`apps/stitchcraft-vc-plugin/src/lib.rs`).
-fn modules() -> Vec<&'static str> {
+pub(crate) fn modules() -> Vec<&'static str> {
     std::iter::once("hello").chain(Family::ALL.iter().map(|family| family.id())).collect()
 }
 

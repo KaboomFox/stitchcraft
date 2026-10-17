@@ -1,0 +1,26 @@
+# Level B: a graphic style that holds a fill effect, applied to a group: each path inside sews with the
+# effect in the style's colour (docs/src/user/how-to/vectorcraft-columns-and-presets.md). The group is
+# drawn first, so that Next Object Below reaches it from the styled square. Coordinates are points.
+description = "A graphic style holding a fill effect, applied to a group, sews each path inside in the style's colour."
+requirements = ["REQ-VC-006"]
+
+[[run]]
+plugins = ["fill"]
+steps = [
+  { cmd = "shape.rectangle", params = { x = 0, y = 300, width = 36, height = 36 } },
+  { cmd = "shape.rectangle", params = { x = 72, y = 300, width = 36, height = 36 } },
+  { cmd = "select.all" },
+  { cmd = "object.group" },
+  { cmd = "shape.rectangle", params = { x = 0, y = 400, width = 72, height = 72 } },
+  { cmd = "paint.setFill", params = { color = "#e6b31a" } },
+  { apply = "fill", params = { angle = 90 } },
+  { cmd = "graphicStyle.new", params = { name = "Gold" } },
+  { cmd = "select.nextBelow" },
+  { cmd = "graphicStyle.apply", params = { name = "Gold" } },
+  { export = "after.vectorcraft" },
+  { export = "after.png" },
+]
+
+[expect]
+applied = ["after.vectorcraft"]
+elements = [{ file = "after.vectorcraft", element = "fill", count = 3, thread = "#e6b31a" }]

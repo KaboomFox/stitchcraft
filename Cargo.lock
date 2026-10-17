@@ -815,6 +815,7 @@ dependencies = [
  "stitchcraft-render",
  "stitchcraft-svg",
  "stitchcraft-testkit",
+ "stitchcraft-vectorcraft",
  "toml",
  "toml_edit",
 ]

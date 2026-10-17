@@ -1,0 +1,3 @@
+# The VectorCraft releases that passed both levels of the compatibility gate, newest first
+# (docs/src/design/compatibility-gate.md). Written by `cargo xtask compat report` in the pull request that
+# adopts a release, never by hand. docs/src/user/reference/compatibility.md is generated from it.

@@ -1,0 +1,11 @@
+# Level B: VectorCraft installs each stitch family's module and lists its live effect
+# (docs/src/design/compatibility-gate.md).
+description = "VectorCraft installs each stitch family's module, and lists its live effect."
+requirements = ["REQ-VC-002"]
+
+[[run]]
+plugins = ["stroke", "satin", "fill"]
+steps = [{ cmd = "plugin.list" }]
+
+[expect]
+listed = ["stroke", "satin", "fill"]
