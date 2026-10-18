@@ -108,15 +108,20 @@ fn only_a_new_release_that_passes_is_adopted() {
     assert_eq!(both, Some(("compat: VectorCraft v0.12.0 and v0.13.0-rc.1".to_string(), "upstream-stable".to_string())));
 }
 
-/// A copy of the files an adoption writes, in a folder of its own.
+/// A copy of the files an adoption writes, in a folder of its own: the pins and the contract crate's
+/// manifest as the repository has them, but with VectorCraft 0.7.0 pinned for stable whatever the
+/// repository pins, and a record of no release. Adopting 0.12.0 is then new there, also in the pull
+/// request that adopts it here.
 fn copied(name: &str) -> PathBuf {
     let root = util::root();
     let dir = root.join("target/xtask-tests/report").join(name);
-    for file in [PINS, SUPPORTED, &format!("{CONTRACT}/Cargo.toml")] {
+    let pinned = format!("tag = \"{}\"", pinned_tag(&load_pins().unwrap(), "stable"));
+    for file in [PINS, &format!("{CONTRACT}/Cargo.toml")] {
         let to = dir.join(file);
         std::fs::create_dir_all(to.parent().unwrap()).unwrap();
-        std::fs::copy(root.join(file), &to).unwrap();
+        std::fs::write(&to, util::read(&root.join(file)).unwrap().replace(&pinned, "tag = \"v0.7.0\"")).unwrap();
     }
+    std::fs::write(dir.join(SUPPORTED), RECORD_HEADER).unwrap();
     dir
 }
 
