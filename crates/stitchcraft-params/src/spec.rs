@@ -304,7 +304,7 @@ impl Kind {
             Kind::Percent { min, max } => format!("a percentage from {min} to {max}"),
             Kind::Number { min, max } => format!("a number from {min} to {max}"),
             Kind::Count { min, max } => format!("a whole number from {min} to {max}"),
-            Kind::Toggle => format!("true or false, in any case, or {} for true and {} for false", or(&ON[1..]), or(&OFF[1..])),
+            Kind::Toggle => format!("true or false, in any case, or {} for true and {} for false", listed(&ON[1..], "or"), listed(&OFF[1..], "or")),
             Kind::Choice { options } => {
                 let ids: Vec<&str> = options.iter().map(|o| o.id).collect();
                 format!("one of {}", ids.join(", "))
@@ -337,10 +337,10 @@ impl Kind {
     }
 }
 
-/// `words` joined as a sentence lists alternatives: "a", "a or b", "a, b or c".
-fn or(words: &[&str]) -> String {
+/// `words` joined as a sentence lists them, `conjunction` before the last: "a", "a or b", "a, b or c".
+pub(crate) fn listed(words: &[&str], conjunction: &str) -> String {
     match words.split_last() {
-        Some((last, rest)) if !rest.is_empty() => format!("{} or {last}", rest.join(", ")),
+        Some((last, rest)) if !rest.is_empty() => format!("{} {conjunction} {last}", rest.join(", ")),
         _ => words.concat(),
     }
 }
@@ -401,7 +401,8 @@ mod tests {
 
     #[test]
     fn alternatives_read_as_a_sentence() {
-        assert_eq!([&[][..], &["a"], &["a", "b"], &["a", "b", "c"]].map(or), ["", "a", "a or b", "a, b or c"]);
+        assert_eq!([&[][..], &["a"], &["a", "b"], &["a", "b", "c"]].map(|words| listed(words, "or")), ["", "a", "a or b", "a, b or c"]);
+        assert_eq!(listed(&["a", "b", "c"], "and"), "a, b and c");
     }
 
     #[test]

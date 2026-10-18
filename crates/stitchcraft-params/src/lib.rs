@@ -1,12 +1,14 @@
 //! The StitchCraft parameter registry (layer L0).
 //!
-//! Every embroidery parameter is declared once, beside the generator that uses it, with [`params!`];
-//! everything else that needs to know about parameters — typed structs, validation, reference docs, the
-//! JSON Schema, and later VectorCraft plug-in manifests, CLI help, SVG attributes and property-test
-//! strategies — is generated from that declaration. Design: `docs/src/design/params.md`.
+//! A parameter is declared with [`params!`] beside the generator that uses it, once for each family of
+//! stitch types that reads it. Typed structs, validation, the reference docs, the JSON Schema and
+//! VectorCraft's plug-in manifests are made from that declaration, and later CLI help, SVG attributes and
+//! property-test strategies will be too. Design: `docs/src/design/params.md`.
 //!
 //! - [`StitchType`]: the stitch types, by their Ink/Stitch method ids.
 //! - [`ParamSpec`], [`Kind`], [`ParamGroup`]: what the registry knows about each parameter.
+//! - [`find_for`]: the declaration of a key that a family reads (REQ-PRM-005). [`declarations`] gives
+//!   every one, and [`find`] the first.
 //! - [`ParamSet`]: an element's parameters as its design stores them (text), read into typed views by
 //!   each declaration's `from_set`, or `from_set_as` for an element of one stitch type, with `SC-E0101`,
 //!   `SC-W0102` and `SC-W0105` for what is wrong ([`value`], [`set`]).
@@ -26,7 +28,7 @@ pub mod value;
 
 pub use audit::audit;
 pub use kinds::ParamKind;
-pub use set::{ParamSet, Validated, find, read_param, unknown_keys};
+pub use set::{ParamSet, Validated, declarations, find, find_for, read_param, unknown_keys};
 pub use spec::{ChoiceOption, Condition, Empty, Kind, MAX_LIST, MAX_TEXT, Origin, ParamGroup, ParamSpec, Stability};
 pub use stitch_type::{Family, StitchType};
 pub use stitchcraft_core::Diagnostic;

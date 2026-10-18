@@ -100,7 +100,9 @@ the effect that `vc_manifest` and `vc_run` serve. `cargo xtask compat contract` 
 notes their sizes and loads them into VectorCraft's host.
 
 **Manifests.** A family's manifest is made from the registry when VectorCraft asks for it, so a parameter
-added to the registry shows in the dialog without another change. VectorCraft's parameters are numbers,
+added to the registry shows in the dialog without another change. A key that several families declare,
+each its own way, is in each family's manifest as that family declares it
+([parameter registry](params.md#naming-rules), rule 7). VectorCraft's parameters are numbers,
 whole numbers, toggles and choices, and each always has a value. A record stores every declared
 parameter, at its default when the user leaves it. So a parameter is declared when one such value means
 what the parameter means:
