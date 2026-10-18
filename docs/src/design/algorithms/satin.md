@@ -395,8 +395,11 @@ their ends meet the line. A running stitch of the column's travel length
 **Cuts.** A place on the column is found by its cut, one of the pairs placed at the zigzag spacing with
 no compensation and nothing random. The cut is the pair with the point nearest the place. Where the
 needle enters the line for a place is the line's point nearest that cut. A part of the column is cut in 2
-at its own point nearest the cut. When the cut's 2 points coincide, where the rails meet, a part is not
-cut: it is all first, or all second when its start is within 0.1 CSS pixels of the place.
+at its own point nearest the cut. A side of it that lies along the cut, both its ends within 1e-5 CSS
+pixels of the cut's line, meets the cut as sides along one line do. So a stitch across that pull
+compensation widens past the rails is cut at the cut's first rail point, and one it narrows at its own
+start (`DEV-SAT-010`). When the cut's 2 points coincide, where the rails meet, a part is not cut: it is all
+first, or all second when its start is within 0.1 CSS pixels of the place.
 
 **Starting at the nearest point** (`start_at_nearest_point`). With a needle point before it, the column
 starts at the point of the line nearest that needle point. When that point is farther from the needle

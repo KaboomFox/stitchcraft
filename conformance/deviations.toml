@@ -178,6 +178,13 @@ reason = "A ring's start is the drawing program's choice, which the designer nei
 requirements = ["REQ-SAT-019"]
 
 [[deviation]]
+id = "DEV-SAT-010"
+area = "satin"
+summary = "Where a part of a satin column lies along the end's cut but for rounding, as a stitch across does wherever pull compensation widens or narrows it, StitchCraft cuts it as sides along one line meet, an end within 1e-5 CSS pixels of the other counting as on it: a widened stitch at the cut's first rail point, and a narrowed one at its own start. Ink/Stitch snaps only the cut to that grid, and cuts the part where its geometry library finds their nearest points, which for 2 lines that meet only by rounding depends on the rounding."
+reason = "A stitch widened by pull compensation lies along the cut, so whether and where they cross is decided by the last bits of their coordinates. StitchCraft's cut wandered so before: a column turned by 0.37° with 0.5 mm of pull compensation was cut at its second rail point, and turned by 5.37° two thirds of the way across a stitch. Ink/Stitch's behaviour was read at 6555892 (lib/elements/satin_column/satin_column.py, split_linestring_at_end_point)."
+requirements = ["REQ-SAT-014"]
+
+[[deviation]]
 id = "DEV-FILL-001"
 area = "fill"
 summary = "A fill's region follows its fill rule. Ink/Stitch takes the subpath of the largest area as the outline and every other subpath as a hole, whatever the fill rule, and repairs a shape that is not valid. The repair merges the subpaths' lines, a stretch drawn twice into one, and fills the faces they bound by how deeply they nest, which fills every face beside the outside. Where the nonzero rule fills a part inside that the subpaths wind round twice the same way, such as a ring drawn inside another the same way round, or the overlap of 2 shapes drawn the same way round, StitchCraft fills it (SC-I0306) and Ink/Stitch leaves it empty. Where the fill rule leaves a part beside the outside empty, which subpaths running along each other bound, such as a notch drawn as a hole along the outline or a subpath drawn twice, StitchCraft leaves it empty (SC-I0313) and Ink/Stitch fills it."
