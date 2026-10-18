@@ -4,6 +4,8 @@
 
 The VectorCraft releases the StitchCraft plug-ins work with. Each passed both levels of the [compatibility gate](../../design/compatibility-gate.md): the plug-in contract, in VectorCraft's own plug-in host, and the end-to-end scenarios, in which VectorCraft's command line applies the effects, saves, and StitchCraft sews what it saved. The gate checks VectorCraft's latest release, its latest pre-release, its `release` branch and its `main` every day. A release that passes is added here by the pull request that adopts it.
 
-No release has passed both levels yet.
+| VectorCraft | Track | Passed the gate |
+|---|---|---|
+| 0.12.0 | stable | 2026-10-18 |
 
-The plug-ins speak VectorCraft's plug-in ABI v1. Pull requests are checked against VectorCraft 0.7.0, the release the gate pins in `compat/vectorcraft.toml`.
+The plug-ins speak VectorCraft's plug-in ABI v1. Pull requests are checked against VectorCraft 0.12.0, the release the gate pins in `compat/vectorcraft.toml`.
