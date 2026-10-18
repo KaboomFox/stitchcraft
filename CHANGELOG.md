@@ -673,6 +673,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The compatibility gate starts a program again while Linux says it is busy, for up to a second. Its
+  tests write stand-ins for VectorCraft's command line and for GitHub's, and run them. A process another
+  test forked while a stand-in was written held it open, and Linux wouldn't run it: CI's coverage job on
+  `main` failed with "Text file busy".
 - The window probe starts a dialog's row only at a label, a static text. VectorCraft 0.13.1 names a
   checkbox after its row's label, and the probe took the checkbox for a label as well: it read the next
   row's label as the checkbox's control, and made none of the dialogs' pictures.
