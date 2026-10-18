@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-8bc10e44.js";
+            window.path_to_searchindex_js = "../../searchindex-c72142d5.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-47eff3e5.js"></script>
+        <script src="../../toc-639d0563.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -204,6 +204,8 @@
 <tr><td><a href="#sc-w0205"><code>SC-W0205</code></a></td><td>Warning</td><td>Satin subpath is one point; left out</td></tr>
 <tr><td><a href="#sc-w0206"><code>SC-W0206</code></a></td><td>Warning</td><td>Satin contour underlay too short for its insets; it keeps its length</td></tr>
 <tr><td><a href="#sc-w0207"><code>SC-W0207</code></a></td><td>Warning</td><td>Satin rung crosses a rail more than once; left out</td></tr>
+<tr><td><a href="#sc-w0208"><code>SC-W0208</code></a></td><td>Warning</td><td>Satin stitches lean more than 45° from square to the column; add a rung here</td></tr>
+<tr><td><a href="#sc-w0209"><code>SC-W0209</code></a></td><td>Warning</td><td>Satin stitch longer than 12 mm; it may snag</td></tr>
 <tr><td><a href="#sc-w0210"><code>SC-W0210</code></a></td><td>Warning</td><td>Satin rails without rungs have different numbers of nodes</td></tr>
 <tr><td><a href="#sc-w0211"><code>SC-W0211</code></a></td><td>Warning</td><td>Satin push compensation too long for a rail; that rail keeps its length</td></tr>
 <tr><td><a href="#sc-w0212"><code>SC-W0212</code></a></td><td>Warning</td><td>Satin column drawn as one path too narrow; sewn as a stroke</td></tr>
@@ -284,7 +286,8 @@ StitchCraft never writes an empty machine file, because some machines refuse or 
 <p><strong>Warning</strong> — Stitch type not sewn yet; element skipped</p>
 <p>The element’s stitch type is one this version of StitchCraft does not sew yet, so the element was
 skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
-satin columns from M4, tatami fills from M5 and zigzag strokes from M7. The other stitch types follow
+satin columns from M4, tatami fills from M5, and zigzag strokes and E-stitches from M7. The other
+stitch types follow
 (<code>docs/src/plan/roadmap.md</code>).</p>
 <p>The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
 tool for now.</p>
@@ -354,6 +357,23 @@ underlay off for so short a column.</p>
 goes with which point of the other, and it was left out. The column is sewn without it.</p>
 <p>The message names the subpath, numbered from 1 in the order the path draws it. Redraw the rung as a
 straight line across both rails.</p>
+<h2 id="sc-w0208"><a class="header" href="#sc-w0208">SC-W0208</a></h2>
+<p><strong>Warning</strong> — Satin stitches lean more than 45° from square to the column; add a rung here</p>
+<p>The stitches of a satin column lean more than 45° from square to the column, to a tenth of a degree:
+they go further along it than across it. The column runs halfway between its 2 rails. Without rungs,
+or with too few, a column’s stitches follow its rails’ lengths alone, and where one rail runs on ahead
+of the other they lean. Every satin method says so, at the middle of each stretch of stitches that
+lean. Ink/Stitch does not.</p>
+<p>The message gives how many stitches lean and the most any of them leans. Add a rung across the
+column at the place named, square to it, and the stitches follow it.</p>
+<h2 id="sc-w0209"><a class="header" href="#sc-w0209">SC-W0209</a></h2>
+<p><strong>Warning</strong> — Satin stitch longer than 12 mm; it may snag</p>
+<p>A top stitch of a satin column is longer than 12 mm, as the column sews it. A stitch that long floats
+loose over the fabric, where it snags and sags. Every satin method says so once, at the middle of its
+longest top stitch, and its underlays and travel do not count. Ink/Stitch does not say so.</p>
+<p>The message gives the stitch’s length. Set <code>max_stitch_length_mm</code> to split long stitches, make the
+column narrower, or sew the shape as a fill. Finalize splits a stitch longer than the machine’s
+longest stitch anyway (<code>SC-I0703</code>).</p>
 <h2 id="sc-w0210"><a class="header" href="#sc-w0210">SC-W0210</a></h2>
 <p><strong>Warning</strong> — Satin rails without rungs have different numbers of nodes</p>
 <p>A satin column’s path draws no rungs, so its rails’ nodes pair up instead, as in Ink/Stitch: the

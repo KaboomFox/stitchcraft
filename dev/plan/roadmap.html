@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8bc10e44.js";
+            window.path_to_searchindex_js = "../searchindex-c72142d5.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-47eff3e5.js"></script>
+        <script src="../toc-639d0563.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -340,8 +340,8 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tbody>
 <tr><td>M7.1 ✅</td><td>A family of stitch types can declare a key again with a kind and range of its own (<a href="../design/params.html#naming-rules">parameter registry</a>, rule 7). Ink/Stitch’s <code>zigzag_spacing_mm</code> is a list of lengths for a zigzag stroke and one length for a satin column, and a meander fill reads it as a length that is 0 by default. An element reads the key as its family declares it. The reference pages, the JSON Schema, the plug-ins’ dialogs and the contract check give each family its own</td><td><code>REQ-PRM-005</code></td></tr>
 <tr><td>M7.2 ✅</td><td>Zigzag stroke, sewn as Ink/Stitch sews it. Its angle is a new kind of setting, an angle kept within its range rather than turned by whole turns</td><td><code>REQ-RUN-009</code> to <code>REQ-RUN-012</code>, and the type listed for MC-6</td></tr>
-<tr><td>M7.3</td><td>E-stitch, with the warnings every satin method gives: <code>SC-W0208</code> where stitches turn more than 45° from the column, and <code>SC-W0209</code> for a column wider than 12 mm</td><td>its requirements active and the type listed for MC-6</td></tr>
-<tr><td>M7.4</td><td>S-stitch</td><td>same</td></tr>
+<tr><td>M7.3 ✅</td><td>E-stitch, sewn as Ink/Stitch sews it. Every satin method warns where stitches lean more than 45° from square to their column (<code>SC-W0208</code>) and where a top stitch is longer than 12 mm (<code>SC-W0209</code>)</td><td><code>REQ-SAT-020</code> to <code>REQ-SAT-023</code>, and the type listed for MC-6</td></tr>
+<tr><td>M7.4</td><td>S-stitch</td><td>its requirements active and the type listed for MC-6</td></tr>
 <tr><td>M7.5</td><td>Zigzag satin</td><td>same</td></tr>
 <tr><td>M7.6</td><td>The offsetter meets the third criterion of <a href="../design/adr/0005-geometry-stack.html">ADR-0005</a> before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. At M0.7 they took 218 to 448 ms, against GEOS’s 104 to 149 ms</td><td><code>cargo xtask perf</code> guards the criterion</td></tr>
 <tr><td>M7.7</td><td>Contour fill, with its three strategies and neck splitting</td><td>its requirements active and the type listed for MC-6</td></tr>

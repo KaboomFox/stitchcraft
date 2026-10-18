@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-8bc10e44.js";
+            window.path_to_searchindex_js = "../../searchindex-c72142d5.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-47eff3e5.js"></script>
+        <script src="../../toc-639d0563.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -355,8 +355,8 @@ the turning leaves them, go without a partner.</p>
 rail where it comes nearest it, measured as at the start and end (see <em>Equally near points</em>). That is
 the node itself, or on a curved rail of 2 nodes, where the rung crosses the curve, or the curve’s point
 nearest the rung when the rung does not reach it.</p>
-<p>From M7, which adds the other satin methods, <code>SC-W0208</code> (“add a rung here”) will name the place where
-stitches turn more than 45° from the column’s normal.</p>
+<p>Where the pairing leaves stitches leaning far along the column, <code>SC-W0208</code> names the place to add a rung
+(<a href="#leaning-and-long-stitches">Leaning and long stitches</a>).</p>
 <h2 id="compensation"><a class="header" href="#compensation">Compensation</a></h2>
 <p>Thread under tension pulls the fabric in across a satin column, which then sews narrower than it is
 drawn. The stitches also push the fabric out at the column’s ends, and it sews longer. StitchCraft makes
@@ -445,6 +445,56 @@ Random splits are drawn after the pairs are placed, in the order the stitches ar
 within its shortest stitch of its first, a speck a few tenths of a millimetre across, has no stitch the
 machine sews well. It sews nothing, and <code>SC-W0215</code> says so, as a stroke that small is left out
 (<code>SC-W0401</code>). Ink/Stitch sews it (<code>DEV-SAT-008</code>).</p>
+<h2 id="e-stitch-method-e_stitch"><a class="header" href="#e-stitch-method-e_stitch">E-stitch (method <code>e_stitch</code>)</a></h2>
+<p>An E-stitch edges appliqué with a spine of stitches along the first rail and a spike across the column at
+each pair, like a row of E’s laid end to end: the blanket stitch. Ink/Stitch’s documentation suggests a
+wider zigzag spacing for it than for a satin. StitchCraft sews it as Ink/Stitch sews its “E” stitch, read
+at <code>d59c9ab</code>.</p>
+<ol>
+<li><strong>Pairs.</strong> The pairs are placed, compensated and inset as the top stitches’ are (steps 1 to 3 of
+<a href="#top-stitches-method-satin_column">Top stitches</a>), with their random variation drawn alike. Each pair
+is a spike, and the spikes lie <code>zigzag_spacing_mm</code> apart.</li>
+<li><strong>Spikes.</strong> At each pair the needle goes from the first rail’s point across to the second rail’s, and
+back down the same needle holes. The stitch across is split as a top stitch across is (step 4), as the
+stitch across that a satin column would sew at that pair. Its way back goes through the same splits in
+reverse, where a satin column’s stitch back to the next pair is split anew.</li>
+<li><strong>The spine.</strong> From one spike to the next, the needle goes along the first rail in one stitch, from the
+spike’s inset point to the next spike’s. Where the zigzag spacing is longer than the longest stitch,
+that stitch is split, with no randomness. Its splits are those of a stitch from the spike’s inset point
+to the next pair’s compensated point on the first rail: by the default method the fewest equal parts no
+longer than the longest stitch, and by the simple and staggered methods whole multiples of the longest
+stitch from its start. As in Ink/Stitch, the zigzag spacing as set decides whether the spine is split,
+whatever length its stitches come out.</li>
+<li><strong>Order.</strong> The spikes go from the column’s start to its end, or from its end after an odd centre walk,
+and <code>swap_satin_rails</code> puts the spine on the other rail. The underlays, the start and the end are a
+satin column’s: the top stitches’ run is cut and turned as a satin column’s is
+(<a href="#start-and-end">Start and end</a>).</li>
+</ol>
+<h2 id="leaning-and-long-stitches"><a class="header" href="#leaning-and-long-stitches">Leaning and long stitches</a></h2>
+<p>Every satin method gives 2 warnings about how its stitches lie. Ink/Stitch gives neither.</p>
+<ul>
+<li><strong>Leaning stitches</strong> (<code>SC-W0208</code>). Without rungs, or with too few, the stitches follow the rails’
+lengths alone, and where one rail runs on ahead of the other they lean along the column. The column
+looks for that in the pairs placed at the zigzag spacing with no compensation and nothing random, the
+pairs that cut it (<em>Cuts</em> in <a href="#start-and-end">Start and end</a>). At a pair, the column runs halfway
+between the ways its 2 rails run there, each the line from the point of the pair before on that rail to
+the point of the pair after, taken with length 1. The first and last pair use their own point in place
+of the missing neighbour’s, and a rail whose 2 points coincide gives way to the other. Where one rail
+steps out, a stitch square to the other rail so leans less than 45°. A pair leans too far when its
+stitch goes further along the column than across it, more than 45° from square to a tenth of a degree,
+so that rounding never tips a 45° stitch over. A pair shorter than the element’s shortest stitch does
+not lean, as where the rails meet, and neither does one whose rails both stand still or run opposite
+ways. Each stretch of pairs in a row that lean too far gets one <code>SC-W0208</code>, at the middle of its middle
+pair, with the number of its stitches and the most any of them leans, to a tenth of a degree. A rung
+there, square to the column, sets them straight.</li>
+<li><strong>Long stitches</strong> (<code>SC-W0209</code>). A stitch longer than 12 mm floats loose over the fabric, where it snags
+and sags. The longest of the column’s top stitches, sewn with their splits and insets, gets one
+<code>SC-W0209</code> when it is longer than 12 mm. The warning is at the stitch’s middle and gives its length.
+The stitches are measured as the column sews them: where its end cuts a stitch in 2, each half is a
+stitch. The underlays and the needle’s travel are left out. Setting <code>max_stitch_length_mm</code> splits long
+stitches, and a shape that wide may sew better as a fill. Finalize splits a stitch longer than the
+machine’s longest stitch anyway (<code>SC-I0703</code>).</li>
+</ul>
 <h2 id="underlays"><a class="header" href="#underlays">Underlays</a></h2>
 <p>Underlays are sewn before the top stitches, as Ink/Stitch sews them. The centre walk comes first, then the
 contour and the zigzag, each one the element turns on, and all of them go into one run with the top
@@ -555,7 +605,7 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <tr><th><code>satin_method</code></th><th>Look</th><th>Design notes</th></tr>
 </thead>
 <tbody>
-<tr><td><code>e_stitch</code></td><td>A spine of running stitches along one rail with regular spikes to the other — the “E” or blanket stitch used for appliqué edges</td><td>Spine on the first rail (see <code>swap_satin_rails</code>); spike spacing from <code>zigzag_spacing_mm</code></td></tr>
+<tr><td><code>e_stitch</code></td><td>A spine of running stitches along one rail with regular spikes to the other: the “E” or blanket stitch used for appliqué edges</td><td>Sewn from M7.3 (<a href="#e-stitch-method-e_stitch">E-stitch</a>)</td></tr>
 <tr><td><code>s_stitch</code></td><td>Curvy stitches that read like a textured fill inside the column</td><td>Specified at M7 from public documentation and sew-out comparison</td></tr>
 <tr><td><code>zigzag</code></td><td>An open zigzag between the rails</td><td>Same sampler with wider spacing and no density expectations</td></tr>
 </tbody>
@@ -585,6 +635,10 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <tr><td><code>REQ-SAT-015</code></td><td>A column drawn as one subpath whose stroke is no wider than the design’s narrowest satin stroke sews as a stroke would, with <code>SC-W0212</code>. It offers its first point, as a stroke does</td></tr>
 <tr><td><code>REQ-SAT-018</code></td><td>A column whose needle points all lie within its shortest stitch of its first sews nothing, with <code>SC-W0215</code>, and the rest of the design is planned</td></tr>
 <tr><td><code>REQ-SAT-019</code></td><td>Of 2 rings, the second starts at its node nearest the first’s first node, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (<code>DEV-SAT-009</code>)</td></tr>
+<tr><td><code>REQ-SAT-020</code></td><td>An E-stitch sews each of a satin column’s pairs as a spike: from the first rail’s inset point across to the second’s and back through the same splits. The stitch across splits as a top stitch across does, by default into the fewest equal parts</td></tr>
+<tr><td><code>REQ-SAT-021</code></td><td>Between spikes an E-stitch goes along the first rail in one stitch. Where the zigzag spacing is longer than the longest stitch, that stitch splits with no randomness: into the fewest equal parts by default, at whole multiples of the longest stitch by the simple and staggered methods</td></tr>
+<tr><td><code>REQ-SAT-022</code></td><td>Each stretch of pairs in a row whose stitches lean more than 45° from square to the column, to a tenth of a degree, gets one <code>SC-W0208</code> at the middle of its middle pair, whatever the satin method. The column runs halfway between its 2 rails. Stitches square to a rail, and stitches at 45°, give none</td></tr>
+<tr><td><code>REQ-SAT-023</code></td><td>A satin column whose longest top stitch, as sewn, is longer than 12 mm gets one <code>SC-W0209</code> at that stitch’s middle, whatever the satin method. A longest stitch that splits them, or an end that cuts one in 2, leaves none</td></tr>
 </tbody>
 </table>
 </div>
@@ -592,11 +646,10 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 (<a href="../../plan/machine-testing.html">machine testing</a>).</p>
 <h2 id="diagnostics"><a class="header" href="#diagnostics">Diagnostics</a></h2>
 <p><code>SC-E0201</code>, <code>SC-W0202</code>, <code>SC-W0203</code>, <code>SC-W0205</code>, <code>SC-W0206</code> (a contour underlay too short for its insets
-keeps its length), <code>SC-W0207</code>, <code>SC-W0210</code>, <code>SC-W0211</code>, <code>SC-W0212</code>, <code>SC-W0213</code>, <code>SC-E0214</code>, <code>SC-W0215</code> (a
-column too small to sew) and <code>SC-E0216</code> (a column without a section to sew). The running stitch’s
-<code>SC-W0402</code> names a travel length raised to twice the shortest stitch. M7 adds <code>SC-W0208</code> (stitches turned
-more than 45° from the column) and <code>SC-W0209</code> (a satin wider than 12 mm risks snagging: consider split
-stitches or a fill).</p>
+keeps its length), <code>SC-W0207</code>, <code>SC-W0208</code> (stitches leaning more than 45° from square to the column),
+<code>SC-W0209</code> (a top stitch longer than 12 mm), <code>SC-W0210</code>, <code>SC-W0211</code>, <code>SC-W0212</code>, <code>SC-W0213</code>, <code>SC-E0214</code>,
+<code>SC-W0215</code> (a column too small to sew) and <code>SC-E0216</code> (a column without a section to sew). The running
+stitch’s <code>SC-W0402</code> names a travel length raised to twice the shortest stitch.</p>
 
                     </main>
 
