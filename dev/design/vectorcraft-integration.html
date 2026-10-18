@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-e0c4b449.js";
+            window.path_to_searchindex_js = "../searchindex-f9dc54ad.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-a0bb3cbb.js"></script>
@@ -345,7 +345,7 @@ the StitchCraft effect is applied after the paths are joined, which works in eve
 <tr><th>Task</th><th>In VectorCraft</th><th>Why it sews</th></tr>
 </thead>
 <tbody>
-<tr><td>Satin column of 2 paths</td><td>Object › Compound Path › Make (<code>object.compoundPath.make</code>), then the satin effect</td><td>The column turns a second rail that runs the other way back (<code>reverse_rails</code>, automatic), as Ink/Stitch does (<code>REQ-VC-007</code>)</td></tr>
+<tr><td>Satin column of 2 paths</td><td>Object › Compound Path › Make (<code>object.compoundPath.make</code>), then the satin effect</td><td>The column turns a second rail that runs the other way back (<code>reverse_rails</code>, automatic), as Ink/Stitch does (<code>REQ-VC-007</code>). The reversal also starts a ring at what was its last node, and of 2 rings the second starts at its node nearest the first’s start (<code>REQ-SAT-019</code>)</td></tr>
 <tr><td>Rung</td><td>Pen tool line across the rails, then Make Compound Path with the column</td><td>Which way the rung runs, and where among the paths it lies, doesn’t change the points it pairs. Before 0.10.0 the compound takes the rung’s appearance, and the effect is applied again</td></tr>
 <tr><td>Baked preview</td><td>Object › Expand Appearance (<code>effect.expandAppearance</code>)</td><td>It runs the live effect and makes objects of what each fill and stroke paints, strokes outlined. Those are the preview’s shapes, which sew differently from the effect. Bake a copy to show, and sew the original</td></tr>
 <tr><td>Presets</td><td>Graphic Styles (<code>graphicStyle.new</code>, <code>graphicStyle.apply</code>)</td><td>Applying a style copies its effects into each object, or into the group it is applied to, whose effects apply to each path inside (<code>REQ-VC-006</code>)</td></tr>

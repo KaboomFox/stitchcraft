@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-e0c4b449.js";
+            window.path_to_searchindex_js = "../../searchindex-f9dc54ad.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-a0bb3cbb.js"></script>
@@ -322,6 +322,13 @@ E-stitch spine runs on it.</li>
 together, as in Ink/Stitch. Points at every tenth of each rail’s length, from its start to 90 %, are
 paired twice, with rail B forwards and with it backwards. The pairing whose distances add up to less
 wins. <code>none</code>, <code>first</code>, <code>second</code> and <code>both</code> force it.</li>
+<li>Of 2 rails that are rings, each ending where it starts (closed with <code>Z</code>, or drawn back to its start),
+rail B first starts at its node nearest rail A’s first node, before any reversal (<code>DEV-SAT-009</code>).
+Ink/Stitch takes each ring’s own start, and warns that a closed rail has no definite start.
+VectorCraft’s Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at
+what was its last node. Rings sewn from their own starts then get stitches across the column. A node,
+not the nearest point, keeps rings that start together as drawn, with a rung across their starts where
+one is drawn. A column made from a centre line keeps its rails as made, which start together.</li>
 </ul>
 <h2 id="correspondence"><a class="header" href="#correspondence">Correspondence</a></h2>
 <p>Every rung cuts each rail at the distance along it of the rung’s point on it, after any reversal. Each
@@ -336,7 +343,10 @@ them. The 2nd node of one rail goes with the 2nd node of the other, and on in or
 2 ends. Rails with different numbers of nodes pair as many as the one with fewer has (<code>SC-W0210</code>).
 Ink/Stitch’s own warning for this counts the rails’ points after flattening, not their nodes, and can
 warn where the nodes pair as drawn. Rails of 2 nodes each get one rung, across the points 0.2 CSS pixels
-along the straight line from each rail’s first node to its last, and sew as one section.</p>
+along the straight line from each rail’s first node to its last, and sew as one section. Of 2 rings, the
+second’s nodes start at the node its line starts at, and each ring’s start counts once at each end of
+its nodes. VectorCraft closes a ring with a segment back to its start and <code>Z</code>, which lists its start
+twice at the end of its nodes.</p>
 <p>Each rail’s nodes are turned as <code>reverse_rails</code> turns the rail drawn in that place, first or second,
 before any swap. Swapping the rails then changes only which one sews first, and the same nodes pair
 either way. Where the rails have different numbers of nodes, the longer rail’s last nodes, in the order
@@ -574,6 +584,7 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <tr><td><code>REQ-SAT-014</code></td><td>Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there. The column sews the first halves, then the second halves from the line’s end, and stitches the end last</td></tr>
 <tr><td><code>REQ-SAT-015</code></td><td>A column drawn as one subpath whose stroke is no wider than the design’s narrowest satin stroke sews as a stroke would, with <code>SC-W0212</code>. It offers its first point, as a stroke does</td></tr>
 <tr><td><code>REQ-SAT-018</code></td><td>A column whose needle points all lie within its shortest stitch of its first sews nothing, with <code>SC-W0215</code>, and the rest of the design is planned</td></tr>
+<tr><td><code>REQ-SAT-019</code></td><td>Of 2 rings, the second starts at its node nearest the first’s first node, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (<code>DEV-SAT-009</code>)</td></tr>
 </tbody>
 </table>
 </div>

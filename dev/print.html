@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-e0c4b449.js";
+            window.path_to_searchindex_js = "searchindex-f9dc54ad.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-a0bb3cbb.js"></script>
@@ -762,7 +762,9 @@ sews it. To see its stitches in VectorCraft, draw the column with 2 rails:</p>
 <p>Apply the effect after joining the rails. VectorCraft 0.10.0 and later keep the appearance of the path at
 the back, and earlier versions that of the path in front, which may not be the one with the effect. From
 0.10.0, VectorCraft may also reverse the front path, and always does for 2 straight rails. The column
-turns it back (<code>reverse_rails</code>, automatic), so the direction the rails were drawn in doesn’t matter.</p>
+turns it back (<code>reverse_rails</code>, automatic). A reversed ring also starts somewhere else, so of 2 rings the
+second starts at its node nearest the first’s start. The stitches are the same whatever node the rails
+were drawn from and whichever way they run.</p>
 <h2 id="add-a-rung"><a class="header" href="#add-a-rung">Add a rung</a></h2>
 <p>Rungs set the angle of the stitches along the column. With the Pen tool, add a line across both rails
 where the stitches should run. Select it with the column, and choose <strong>Object › Compound Path › Make</strong>.
@@ -5066,6 +5068,13 @@ E-stitch spine runs on it.</li>
 together, as in Ink/Stitch. Points at every tenth of each rail’s length, from its start to 90 %, are
 paired twice, with rail B forwards and with it backwards. The pairing whose distances add up to less
 wins. <code>none</code>, <code>first</code>, <code>second</code> and <code>both</code> force it.</li>
+<li>Of 2 rails that are rings, each ending where it starts (closed with <code>Z</code>, or drawn back to its start),
+rail B first starts at its node nearest rail A’s first node, before any reversal (<code>DEV-SAT-009</code>).
+Ink/Stitch takes each ring’s own start, and warns that a closed rail has no definite start.
+VectorCraft’s Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at
+what was its last node. Rings sewn from their own starts then get stitches across the column. A node,
+not the nearest point, keeps rings that start together as drawn, with a rung across their starts where
+one is drawn. A column made from a centre line keeps its rails as made, which start together.</li>
 </ul>
 <h2 id="correspondence"><a class="header" href="#correspondence">Correspondence</a></h2>
 <p>Every rung cuts each rail at the distance along it of the rung’s point on it, after any reversal. Each
@@ -5080,7 +5089,10 @@ them. The 2nd node of one rail goes with the 2nd node of the other, and on in or
 2 ends. Rails with different numbers of nodes pair as many as the one with fewer has (<code>SC-W0210</code>).
 Ink/Stitch’s own warning for this counts the rails’ points after flattening, not their nodes, and can
 warn where the nodes pair as drawn. Rails of 2 nodes each get one rung, across the points 0.2 CSS pixels
-along the straight line from each rail’s first node to its last, and sew as one section.</p>
+along the straight line from each rail’s first node to its last, and sew as one section. Of 2 rings, the
+second’s nodes start at the node its line starts at, and each ring’s start counts once at each end of
+its nodes. VectorCraft closes a ring with a segment back to its start and <code>Z</code>, which lists its start
+twice at the end of its nodes.</p>
 <p>Each rail’s nodes are turned as <code>reverse_rails</code> turns the rail drawn in that place, first or second,
 before any swap. Swapping the rails then changes only which one sews first, and the same nodes pair
 either way. Where the rails have different numbers of nodes, the longer rail’s last nodes, in the order
@@ -5318,6 +5330,7 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <tr><td><code>REQ-SAT-014</code></td><td>Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there. The column sews the first halves, then the second halves from the line’s end, and stitches the end last</td></tr>
 <tr><td><code>REQ-SAT-015</code></td><td>A column drawn as one subpath whose stroke is no wider than the design’s narrowest satin stroke sews as a stroke would, with <code>SC-W0212</code>. It offers its first point, as a stroke does</td></tr>
 <tr><td><code>REQ-SAT-018</code></td><td>A column whose needle points all lie within its shortest stitch of its first sews nothing, with <code>SC-W0215</code>, and the rest of the design is planned</td></tr>
+<tr><td><code>REQ-SAT-019</code></td><td>Of 2 rings, the second starts at its node nearest the first’s first node, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (<code>DEV-SAT-009</code>)</td></tr>
 </tbody>
 </table>
 </div>
@@ -6441,7 +6454,7 @@ the StitchCraft effect is applied after the paths are joined, which works in eve
 <tr><th>Task</th><th>In VectorCraft</th><th>Why it sews</th></tr>
 </thead>
 <tbody>
-<tr><td>Satin column of 2 paths</td><td>Object › Compound Path › Make (<code>object.compoundPath.make</code>), then the satin effect</td><td>The column turns a second rail that runs the other way back (<code>reverse_rails</code>, automatic), as Ink/Stitch does (<code>REQ-VC-007</code>)</td></tr>
+<tr><td>Satin column of 2 paths</td><td>Object › Compound Path › Make (<code>object.compoundPath.make</code>), then the satin effect</td><td>The column turns a second rail that runs the other way back (<code>reverse_rails</code>, automatic), as Ink/Stitch does (<code>REQ-VC-007</code>). The reversal also starts a ring at what was its last node, and of 2 rings the second starts at its node nearest the first’s start (<code>REQ-SAT-019</code>)</td></tr>
 <tr><td>Rung</td><td>Pen tool line across the rails, then Make Compound Path with the column</td><td>Which way the rung runs, and where among the paths it lies, doesn’t change the points it pairs. Before 0.10.0 the compound takes the rung’s appearance, and the effect is applied again</td></tr>
 <tr><td>Baked preview</td><td>Object › Expand Appearance (<code>effect.expandAppearance</code>)</td><td>It runs the live effect and makes objects of what each fill and stroke paints, strokes outlined. Those are the preview’s shapes, which sew differently from the effect. Bake a copy to show, and sew the original</td></tr>
 <tr><td>Presets</td><td>Graphic Styles (<code>graphicStyle.new</code>, <code>graphicStyle.apply</code>)</td><td>Applying a style copies its effects into each object, or into the group it is applied to, whose effects apply to each path inside (<code>REQ-VC-006</code>)</td></tr>
@@ -8821,7 +8834,7 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td><strong>TS-09</strong> Fill underlay &amp; travel</td><td>A rectangle 50 × 30 mm with a square hole and a round hole, and a bar 6 mm to its right, all one fill, sewn 3 times (66 × 114 mm). The top copy has no underlay. The others have the default underlay, and the bottom one 2 gap-filling rows too. Each copy is trimmed after</td><td>Travel hidden? Does the fill hold at both ends of the jump to the bar? Holes clean? A gap where the rows round a hole meet?</td><td>MC-4</td></tr>
 <tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
 <tr><td><strong>TS-11</strong> New stitch types</td><td>Samples of the milestone’s new types</td><td>Per type, as listed on its expected-result sheet</td><td>MC-6</td></tr>
-<tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour?</td><td>MC-5, MC-7</td></tr>
+<tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round?</td><td>MC-5, MC-7</td></tr>
 </tbody>
 </table>
 </div>
