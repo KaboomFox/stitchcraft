@@ -15,6 +15,9 @@
 //! where it chooses: VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2 rings round, which
 //! starts it at what was its last node. Ink/Stitch takes each ring's own start, and sews 2 rings that start
 //! apart with stitches across the column, from the start of one to a place part of the way round the other.
+//! Each ring's nodes then have its start once at each end. VectorCraft closes a ring with a segment back to
+//! its start and `Z`, so its start ends its nodes twice, and a ring turned round would pair the second as a
+//! node.
 //!
 //! **Sections.** Every rung cuts each rail at the distance along it of the rung's point on it. Each rail
 //! is cut at its own distances, in order, and its n-th part goes with the other rail's n-th part: a
@@ -116,11 +119,9 @@ fn oriented(satin: &Satin, params: &SatinParams, meter: &mut Meter) -> Result<([
         rails.swap(0, 1);
     }
     // Rings start together, before they are turned: the second where it comes nearest the first's start.
-    if rails.iter().all(|rail| is_loop(rail)) {
-        let [first, second] = &mut rails;
-        if let Some(&to) = first.first() {
-            *second = rolled(second, to, meter)?;
-        }
+    let [first, second] = &mut rails;
+    if let Some(to) = first.first().copied().filter(|_| is_loop(first) && is_loop(second)) {
+        *second = rolled(second, to, meter)?;
     }
     let turned = match params.reverse_rails {
         "first" => [true, false],
@@ -208,11 +209,8 @@ fn rolled(rail: &[Point], to: Point, meter: &mut Meter) -> Result<Vec<Point>, Ex
             nearest = Some((i, point, distance));
         }
     }
-    let (Some((i, start, _)), Some(&first)) = (nearest, rail.first()) else { return Ok(rail.to_vec()) };
+    let Some((i, start, _)) = nearest.filter(|&(_, start, _)| rail.first() != Some(&start)) else { return Ok(rail.to_vec()) };
     let Some((before, after)) = rail.split_at_checked(i + 1) else { return Ok(rail.to_vec()) };
-    if start.distance(first) < SAME_POINT {
-        return Ok(rail.to_vec());
-    }
     // From the new start: the rest of its segment, round to the old start, which ends the ring, on to the
     // segment, and the new start again.
     let mut round = Vec::with_capacity(rail.len() + 2);
@@ -222,25 +220,35 @@ fn rolled(rail: &[Point], to: Point, meter: &mut Meter) -> Result<Vec<Point>, Ex
     Ok(round)
 }
 
-/// `nodes` in the rails' drawn order, as `Pairing::Nodes` has them, with those of the rail sewn second
-/// started at its node nearest the first node of the rail sewn first, when `rails` are both rings, as the
-/// rails themselves start together. `swap` is `swap_satin_rails`.
+/// `nodes` in the rails' drawn order, as `Pairing::Nodes` has them. When `rails` are both rings, each
+/// ring's nodes have its start once at each end ([`ring_nodes`]), and those of the rail sewn second start
+/// at its node nearest the first node of the rail sewn first, as the rails themselves start together.
+/// `swap` is `swap_satin_rails`.
 fn nodes_started_together(nodes: &[Vec<Point>; 2], rails: &[Vec<Point>; 2], swap: bool) -> [Vec<Point>; 2] {
-    let mut nodes = nodes.clone();
-    if rails.iter().all(|rail| is_loop(rail)) {
-        let [drawn_first, drawn_second] = &mut nodes;
-        let (first, second) = if swap { (drawn_second, drawn_first) } else { (drawn_first, drawn_second) };
-        if let Some(&to) = first.first() {
-            *second = rolled_nodes(second, to);
-        }
+    if !rails.iter().all(|rail| is_loop(rail)) {
+        return nodes.clone();
     }
+    let mut nodes = nodes.each_ref().map(|list| ring_nodes(list));
+    let [drawn_first, drawn_second] = &mut nodes;
+    let (first, second) = if swap { (drawn_second, drawn_first) } else { (drawn_first, drawn_second) };
+    *second = rolled_nodes(second, first);
     nodes
 }
 
-/// A ring's `nodes`, which end with its start again, started at the node nearest `to`. Nodes that do not
-/// end where they start are left as they are.
-fn rolled_nodes(nodes: &[Point], to: Point) -> Vec<Point> {
-    let Some((_, ring)) = nodes.split_last().filter(|_| is_loop(nodes)) else { return nodes.to_vec() };
+/// A ring's `nodes` with its start once at each end, as a ring closed with `Z` after a segment back to its
+/// start has it twice at its end. Nodes that do not end where they start are left as they are.
+fn ring_nodes(nodes: &[Point]) -> Vec<Point> {
+    let mut ring = nodes.to_vec();
+    while is_loop(&ring) && ring.split_last().is_some_and(|(_, rest)| is_loop(rest)) {
+        ring.pop();
+    }
+    ring
+}
+
+/// A ring's `nodes`, which end with its start again, started at its node nearest the first of `other`,
+/// the first of those as near. Nodes that do not end where they start are left as they are.
+fn rolled_nodes(nodes: &[Point], other: &[Point]) -> Vec<Point> {
+    let (Some((_, ring)), Some(&to)) = (nodes.split_last().filter(|_| is_loop(nodes)), other.first()) else { return nodes.to_vec() };
     let nearest = ring.iter().enumerate().min_by(|(_, a), (_, b)| a.distance(to).total_cmp(&b.distance(to))).map(|(i, _)| i);
     let Some(k) = nearest else { return nodes.to_vec() };
     let mut round: Vec<Point> = ring.iter().skip(k).chain(ring.iter().take(k)).copied().collect();
@@ -364,18 +372,34 @@ mod tests {
         // Nearest at a node, the end of one segment and the start of the next: no point twice.
         let corner = [p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0)];
         assert_eq!(rolled(&square, p(11.0, 11.0), meter).unwrap(), corner);
-        // Starting there already: as it is.
-        assert_eq!(rolled(&square, p(-1.0, -1.0), meter).unwrap(), square);
-        assert!(is_loop(&square) && !is_loop(&square[..4]) && !is_loop(&[p(0.0, 0.0), p(0.0, 0.0)]));
+        // As near several segments: the first of them.
+        assert_eq!(rolled(&square, p(5.0, 5.0), meter).unwrap(), middle);
+        // Starting there already: as it is, though it comes back a hair from its start.
+        let drawn_back = [&square[..4], &[p(0.0, 1e-7)]].concat();
+        assert_eq!(rolled(&drawn_back, p(-1.0, -1.0), meter).unwrap(), drawn_back);
+        assert!(is_loop(&square) && is_loop(&drawn_back) && !is_loop(&square[..4]) && !is_loop(&[p(0.0, 0.0), p(0.0, 0.0)]));
     }
 
     #[test]
     fn a_ring_s_nodes_start_at_the_node_nearest_another() {
         let nodes = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0)];
         let corner = [p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0)];
-        assert_eq!(rolled_nodes(&nodes, p(11.0, 11.0)), corner);
+        assert_eq!(rolled_nodes(&nodes, &[p(11.0, 11.0)]), corner);
+        // As near 2 nodes: the first of them.
+        assert_eq!(rolled_nodes(&nodes, &[p(5.0, 11.0)]), [&nodes[2..4], &nodes[..3]].concat());
         // Nodes that do not come back to their start are not a ring's, and stay as they are.
-        assert_eq!(rolled_nodes(&nodes[..4], p(11.0, 11.0)), nodes[..4]);
+        assert_eq!(rolled_nodes(&nodes[..4], &[p(11.0, 11.0)]), nodes[..4]);
+    }
+
+    #[test]
+    fn a_ring_s_nodes_have_its_start_once_at_each_end() {
+        let nodes = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0)];
+        assert_eq!(ring_nodes(&nodes), nodes);
+        // Closed after a segment back to the start: the start twice at the end.
+        assert_eq!(ring_nodes(&[&nodes[..], &nodes[..1]].concat()), nodes);
+        // Not a ring: as they are, though the nodes before the last come back to the start.
+        let past = [&nodes[..], &[p(5.0, 5.0)]].concat();
+        assert_eq!(ring_nodes(&past), past);
     }
 
     #[test]
