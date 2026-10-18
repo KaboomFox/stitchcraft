@@ -120,16 +120,21 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 
 ## M7 — More stitch types I
 
-Zigzag stroke; E-stitch; S-stitch; zigzag satin; contour fill (three strategies, neck splitting); meander
-fill with generated tiles; circular fill. One step per type with its requirements, then **MC-6 🧵**
-(TS-11 sampler of the new types). With the satin methods come the warnings they all share: `SC-W0208`
-for stitches turned more than 45° from the column, and `SC-W0209` for a column wider than 12 mm. The
-zigzag stroke's and the meander fill's settings need a key with a kind or a range of a family's own, which
-the registry gains first ([parameter registry](../design/params.md#naming-rules), rule 7).
+One step for each stitch type, with its requirements, cases and docs
+([playbook](../contributing/playbook-new-stitch-type.md)).
 
-Before contour fill relies on it, the offsetter meets the third criterion of
-[ADR-0005](../design/adr/0005-geometry-stack.md): 300 insets of a region 150 mm across, of 1,000 points, in
-under 200 ms. At M0.7 they took 218 to 448 ms, where GEOS took 104 to 149 ms.
+| Step | Deliverable | Done when |
+|---|---|---|
+| M7.1 ✅ | A family of stitch types can declare a key again with a kind and range of its own ([parameter registry](../design/params.md#naming-rules), rule 7). Ink/Stitch's `zigzag_spacing_mm` is a list of lengths for a zigzag stroke and one length for a satin column, and a meander fill reads it as a length that is 0 by default. An element reads the key as its family declares it. The reference pages, the JSON Schema, the plug-ins' dialogs and the contract check give each family its own | `REQ-PRM-005` |
+| M7.2 | Zigzag stroke | its requirements active and the type listed for MC-6 |
+| M7.3 | E-stitch, with the warnings every satin method gives: `SC-W0208` where stitches turn more than 45° from the column, and `SC-W0209` for a column wider than 12 mm | same |
+| M7.4 | S-stitch | same |
+| M7.5 | Zigzag satin | same |
+| M7.6 | The offsetter meets the third criterion of [ADR-0005](../design/adr/0005-geometry-stack.md) before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. At M0.7 they took 218 to 448 ms, against GEOS's 104 to 149 ms | `cargo xtask perf` guards the criterion |
+| M7.7 | Contour fill, with its three strategies and neck splitting | its requirements active and the type listed for MC-6 |
+| M7.8 | Meander fill with generated tiles. A node's meander fill may meet a `zigzag_spacing_mm` only its zigzag stroke can read, which Ink/Stitch sews as the fill's default. The step chooses whether StitchCraft does too ([rule 7](../design/params.md#naming-rules)) | same |
+| M7.9 | Circular fill | same |
+| MC-6 🧵 | **TS-11** (a sampler of the new types); kit: `stitch testsheet` | report filed; the new types' defaults confirmed |
 
 ## M8 — Ink/Stitch interoperability
 

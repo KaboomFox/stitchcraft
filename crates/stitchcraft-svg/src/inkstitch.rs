@@ -318,14 +318,16 @@ pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: 
 #[cfg(test)]
 mod tests {
     use stitchcraft_engine::registry::PARAMETERS;
-    use stitchcraft_params::{Kind, find};
+    use stitchcraft_params::{Kind, declarations, find};
 
     use super::*;
 
     #[test]
     fn the_commands_settings_are_registered_toggles() {
+        // Every declaration: a command turns its setting on whatever the object sews as.
         for key in [TRIM_AFTER, STOP_AFTER] {
-            assert_eq!(find(PARAMETERS, key).map(|spec| spec.kind), Some(Kind::Toggle), "{key}");
+            let kinds: Vec<Kind> = declarations(PARAMETERS, key).map(|spec| spec.kind).collect();
+            assert!(!kinds.is_empty() && kinds.iter().all(|kind| *kind == Kind::Toggle), "{key}: {kinds:?}");
         }
         // Ink/Stitch's own setting for leaving an object out is not a parameter of a stitch.
         assert_eq!(find(PARAMETERS, IGNORE_OBJECT), None);
