@@ -180,13 +180,7 @@ fn make(root: &Path, shots: &[&Shot], check_only: bool, findings: &mut Findings)
         window::ready()?;
     }
     let pins = compat::load_pins()?;
-    let pinned = compat::pinned_tag(&pins, "stable");
-    let fetched = release::fetch(pinned)?;
-    if pinned == UNNAMED_CHECKBOXES && shots.iter().any(|shot| shot.dialog.is_some()) {
-        findings.warn(format!(
-            "VectorCraft {pinned} gives the checkboxes of a plug-in's dialog no role in the accessibility tree, so a toggle's row is taken to show an `unknown` control"
-        ));
-    }
+    let fetched = release::fetch(compat::pinned_tag(&pins, "stable"))?;
     let modules = compat::build_modules()?;
     let out = root.join(OUT);
     if out.exists() {
@@ -209,7 +203,7 @@ fn make(root: &Path, shots: &[&Shot], check_only: bool, findings: &mut Findings)
                 keep_document(root, kept, &util::read_bytes(&dir.join(&document))?, check_only, findings);
             }
         } else {
-            ui.push((*shot, job(shot, pinned, &dir.join(&document), &modules, &dir.join(&picture))?));
+            ui.push((*shot, job(shot, &dir.join(&document), &modules, &dir.join(&picture))?));
         }
     }
     if ui.is_empty() {
@@ -262,16 +256,15 @@ fn kept(root: &Path, ui: &[(&Shot, Value)], check_only: bool, findings: &mut Fin
 
 /// The window probe's job for the `vectorcraft-ui` shot `shot` (`compat/vc-window/tests/shots.rs`): the
 /// document, the modules' files, the menu path, and for a dialog the window's size, the family's row, and
-/// its parameters with the control each shows in the `release` pinned, which its manifest gives; and where
-/// the picture goes.
-fn job(shot: &Shot, release: &str, document: &Path, modules: &Path, picture: &Path) -> Result<Value, String> {
+/// its parameters with the control each shows, which its manifest gives; and where the picture goes.
+fn job(shot: &Shot, document: &Path, modules: &Path, picture: &Path) -> Result<Value, String> {
     let plugins: Vec<String> = shot.plugins.iter().map(|module| modules.join(format!("{module}.wasm")).to_string_lossy().into_owned()).collect();
     let (window, dialog) = match shot.dialog.as_deref() {
         None => (Value::Null, Value::Null),
         Some(name) => {
             let family = Family::ALL.iter().copied().find(|f| f.id() == name).ok_or(format!("no stitch family `{name}`"))?;
             let manifest = stitchcraft_vc_plugin::manifest::family(family);
-            let params: Vec<Value> = manifest.params.iter().map(|(key, schema)| json!([key, control(schema, release)])).collect();
+            let params: Vec<Value> = manifest.params.iter().map(|(key, schema)| json!([key, control(schema)])).collect();
             (json!(window::DIALOG_WINDOW), json!({ "row": manifest.name, "params": params }))
         }
     };
@@ -286,18 +279,12 @@ fn job(shot: &Shot, release: &str, document: &Path, modules: &Path, picture: &Pa
     }))
 }
 
-/// The VectorCraft release whose plug-in dialogs give a toggle's checkbox no role in the accessibility
-/// tree: its `check_row` (`crates/ui-egui/src/widgets.rs`) draws the box without saying what it is, and its
-/// tree shows the control as `unknown`. VectorCraft's `main` gives the checkbox its role again after it.
-const UNNAMED_CHECKBOXES: &str = "v0.12.0";
-
 /// The role in the accessibility tree of the control VectorCraft's dialog gives a parameter of the type
-/// `schema` (its `form::schema_fields`) in `release`: a text field for a number, a checkbox for a toggle
-/// ([`UNNAMED_CHECKBOXES`] aside), and a drop-down list for a choice.
-fn control(schema: &Schema, release: &str) -> &'static str {
+/// `schema` (its `form::schema_fields`): a text field for a number, a checkbox for a toggle, and a drop-down
+/// list for a choice.
+fn control(schema: &Schema) -> &'static str {
     match schema {
         Schema::Number { .. } | Schema::Int { .. } => "text_field",
-        Schema::Bool { .. } if release == UNNAMED_CHECKBOXES => "unknown",
         Schema::Bool { .. } => "check_box",
         Schema::Choice { .. } => "combo_box",
     }
