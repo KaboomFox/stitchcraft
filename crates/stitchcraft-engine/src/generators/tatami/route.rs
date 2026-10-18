@@ -27,7 +27,9 @@
 //! back and forth like a mown lawn. The route comes back to the fill's end, so the fill first travels
 //! from its start to its end and then sews it. Steps of travel in a row are one stretch of travel. As
 //! Ink/Stitch's gap fill counts, the stretch leaves the rows before it where it keeps more than one of its
-//! edges once the loops in it are taken out ([`Travelled`]), even when it ends beside where it left.
+//! edges once the loops in it are taken out ([`Travelled`]), even when it ends beside where it left. An edge
+//! pairing 2 nodes counts as one where a row or a stretch of ring joins them, the edge Ink/Stitch's graph
+//! library doubles there, and as several otherwise.
 //!
 //! The route follows Ink/Stitch's from the same graph. The rings start where the drawing starts them,
 //! which can double other stretches than Ink/Stitch does and so change the route (`DEV-FILL-005`).
@@ -80,7 +82,8 @@ pub(crate) enum Step {
         beside: bool,
         /// Whether the travel leaves the stretch of rows before it, as Ink/Stitch's gap fill counts: more
         /// than one edge of the walk's travel is left once loops back to a node the travel already reached
-        /// are taken out, or the one left stands for a way of several, as a pairing does ([`Travelled`]).
+        /// are taken out, or the one left stands for a way of several, as a pairing of nodes nothing joins
+        /// does ([`Travelled`]).
         /// In the walk's own steps, whether the edge stands for a way of several.
         leaves: bool,
     },
@@ -254,7 +257,8 @@ impl Built {
         for (i, j) in matching(&cost, meter)? {
             let (Some(&a), Some(&b)) = (odd.get(i), odd.get(j)) else { continue };
             if cost.get(i).and_then(|row| row.get(j)).is_some_and(|c| c.is_finite()) {
-                self.graph.add(a, b, Kind::Paired);
+                let joined = self.graph.beside(a, b);
+                self.graph.add(a, b, Kind::Paired { joined });
             }
         }
         Ok(())
@@ -361,7 +365,7 @@ fn walk(graph: &mut Graph, from: NodeId, meter: &mut Meter) -> Result<Vec<Step>,
                     steps.push(match edge.kind {
                         Kind::Row(segment) => Step::Row { segment, from: current, to: before },
                         Kind::Outline | Kind::Extra => Step::Travel { from: current, to: before, beside: false, leaves: false },
-                        Kind::Paired => Step::Travel { from: current, to: before, beside: false, leaves: true },
+                        Kind::Paired { joined } => Step::Travel { from: current, to: before, beside: false, leaves: !joined },
                     });
                 }
             }
@@ -537,7 +541,7 @@ mod tests {
         ];
         let last = |graph: &Graph| collapse(graph, raw.clone(), &mut Budget::DEFAULT.meter()).unwrap().last().copied();
         assert_eq!(last(&graph), Some(Step::Travel { from: b, to: d, beside: false, leaves: true }));
-        graph.add(b, d, Kind::Paired);
+        graph.add(b, d, Kind::Paired { joined: false });
         assert_eq!(last(&graph), Some(Step::Travel { from: b, to: d, beside: false, leaves: true }));
         graph.add(b, d, Kind::Extra);
         assert_eq!(last(&graph), Some(Step::Travel { from: b, to: d, beside: true, leaves: true }));
@@ -566,7 +570,7 @@ mod tests {
         );
         // Out to C, on to E and back to C: the loop goes, and one edge is left, a handover.
         assert_eq!(travel(&[(a, c, false), (c, e, false), (e, c, false)], c), Step::Travel { from: a, to: c, beside: true, leaves: false });
-        // One edge standing for a way of several, as a pairing does, leaves the stretch.
+        // One edge standing for a way of several, as a pairing of nodes nothing joins does, leaves the stretch.
         assert_eq!(travel(&[(a, c, true)], c), Step::Travel { from: a, to: c, beside: true, leaves: true });
     }
 
@@ -669,8 +673,8 @@ mod tests {
         let meter = &mut Budget::DEFAULT.meter();
         let mut built = Built::new(&rings, &segments, meter).unwrap();
         built.pair_odd_nodes(&rings, &segments, meter).unwrap();
-        assert_eq!(kinds(&built.graph, 0, 2), [Kind::Paired]);
-        assert_eq!(kinds(&built.graph, 1, 3), [Kind::Paired]);
+        assert_eq!(kinds(&built.graph, 0, 2), [Kind::Paired { joined: false }]);
+        assert_eq!(kinds(&built.graph, 1, 3), [Kind::Paired { joined: false }]);
         assert_eq!(kinds(&built.graph, 0, 1), [Kind::Row(0)]);
     }
 
@@ -737,14 +741,15 @@ mod tests {
         // A row between 2 points of the frame's outline, A (0, 0.5) and B (10, 0.5), and one between 2
         // points of its hole, C (4, 2) and D (6, 2): nothing joins the hole's nodes to the outline's. The
         // walk from A sews the outline's row and leaves the hole's. A second walk sews it, and the needle
-        // travels there from A, where the first walk ended.
+        // travels there from A, where the first walk ended. The walk starts along the edge that pairs A and B,
+        // which stands for one stretch of the outline between them.
         let segments = [(p(0.0, 0.5), p(10.0, 0.5)), (p(4.0, 2.0), p(6.0, 2.0))];
         let route = routed(&frame(), &segments, None, None);
         let [a, b, c, d] = [0, 1, 2, 3];
         assert_eq!(
             route.steps,
             [
-                Step::Travel { from: a, to: b, beside: true, leaves: true },
+                Step::Travel { from: a, to: b, beside: true, leaves: false },
                 Step::Row { segment: 0, from: b, to: a },
                 Step::Travel { from: a, to: d, beside: false, leaves: true },
                 Step::Row { segment: 1, from: d, to: c },

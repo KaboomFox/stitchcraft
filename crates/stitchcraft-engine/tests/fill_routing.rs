@@ -923,6 +923,79 @@ fn req_fill_tat_007_the_stitches_to_and_from_gap_fill_rows_stay_inside_the_part(
     }
 }
 
+/// Travel along the rings in stitches of 0.5 mm, shorter than a row's, so that [`passes`] tells them apart.
+const SHORT: Travel = Travel { length: 0.5, ..TRAVEL };
+
+/// A row sewn: its y, a whole number of millimetres, and the least and greatest x it reaches.
+type Pass = (f64, f64, f64);
+
+/// The rows `run` sews, in order: each stretch of level stitches at a whole number of millimetres, one of
+/// them longer than [`SHORT`]'s. A row sewn on through a joint is one pass.
+fn passes(run: &[Point]) -> Vec<Pass> {
+    let mut found: Vec<(Pass, bool)> = Vec::new();
+    let mut going = false;
+    for w in run.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        let row = a.y().round();
+        if (a.y() - row).abs() > 1e-9 || (b.y() - row).abs() > 1e-9 || a.x() == b.x() {
+            going = false;
+            continue;
+        }
+        let (least, most, long) = (a.x().min(b.x()), a.x().max(b.x()), a.distance(b) > SHORT.length + 0.1);
+        match found.last_mut() {
+            Some(((at, from, to), any_long)) if going && *at == row => {
+                (*from, *to, *any_long) = (from.min(least), to.max(most), *any_long || long);
+            }
+            _ => found.push(((row, least, most), long)),
+        }
+        going = true;
+    }
+    found.into_iter().filter(|&(_, long)| long).map(|(pass, _)| pass).collect()
+}
+
+/// The rows the top layer of a fill of `parts`, rows 1 mm apart at 0° with `gap_rows`, sews from `needle`.
+fn passes_with(parts: &[&[(f64, f64)]], gap_rows: usize, needle: Option<Point>) -> Vec<Pass> {
+    passes(&layered(&region(parts), &Layer { gap_rows, ..layer(stitching(0.0), SHORT) }, &[], needle, None).concat())
+}
+
+#[test]
+fn req_fill_tat_007_gap_rows_follow_a_last_row_sewn_on_through_a_joint() {
+    // The U from a needle right of it, and a W from below, whose notches' tips touch the row at y = 8. Each
+    // route sews a stretch of rows that ends with the row along the U's notch, or through the W's tips, sewn
+    // on through a joint: 2 segments of one row. Then the route leaves the stretch. The gap rows follow that
+    // row on its far side from the row before it, beside its last segment, where Ink/Stitch repeats the
+    // segment: rows 11 and 12 under the U's notch, and rows 7 and 6 between the W's notches.
+    let double_u: &[(f64, f64)] =
+        &[(0.0, 0.0), (6.0, 0.0), (8.0, 8.0), (10.0, 0.0), (14.0, 0.0), (16.0, 8.0), (18.0, 0.0), (24.0, 0.0), (24.0, 16.0), (0.0, 16.0)];
+    // The parts, the needle, the stretch's last row, and the 2 gap rows after it.
+    type Case<'a> = (&'a [&'a [(f64, f64)]], Point, Pass, [Pass; 2]);
+    let cases: [Case; 2] = [
+        (&YOU, p(30.0, 9.0), (10.0, 0.0, 14.0), [(11.0, 6.0, 14.0), (12.0, 6.0, 14.0)]),
+        (&[double_u], p(10.0, -3.0), (8.0, 8.0, 24.0), [(7.0, 8.25, 15.75), (6.0, 8.5, 15.5)]),
+    ];
+    for (parts, needle, last, extra) in cases {
+        let (plain, gaps) = (passes_with(parts, 0, Some(needle)), passes_with(parts, 2, Some(needle)));
+        let after =
+            |found: &[Pass]| found.iter().position(|&pass| pass == last).map(|at| found[at + 1..].iter().take(2).copied().collect::<Vec<_>>());
+        assert_ne!(after(&plain).as_deref(), Some(&extra[..]), "{plain:?}");
+        assert_eq!(after(&gaps).as_deref(), Some(&extra[..]), "{gaps:?}");
+    }
+}
+
+#[test]
+fn req_fill_tat_007_a_hop_round_a_hole_between_ring_neighbours_does_not_leave_the_stretch() {
+    // A 20 × 10 rectangle, rows 1 mm apart, and a hole 2 mm wide that only row 5 crosses. The hole's 2 nodes
+    // are paired along its side, where Ink/Stitch's graph doubles the one stretch between them. The needle's
+    // hop round the hole, from row 5's right half to its left half, is then one edge of travel, which leaves
+    // no stretch, and no gap rows come between the halves.
+    let parts: [&[(f64, f64)]; 2] = [&[(0.0, 0.0), (20.0, 0.0), (20.0, 10.0), (0.0, 10.0)], &[(9.0, 4.6), (11.0, 4.6), (11.0, 5.4), (9.0, 5.4)]];
+    let halves = [(5.0, 11.0, 20.0), (5.0, 0.0, 9.0)];
+    for gap_rows in [0, 2] {
+        let found = passes_with(&parts, gap_rows, None);
+        assert!(found.windows(2).any(|w| w == halves), "{gap_rows} gap rows: {found:?}");
+    }
+}
+
 #[test]
 fn diag_sc_w0312_a_fill_reads_pull_compensation_below_0_as_0() {
     let sewn = |params: &[(&str, &str)]| planned(vec![fill("bar", &BAR, &RED, params)]);
