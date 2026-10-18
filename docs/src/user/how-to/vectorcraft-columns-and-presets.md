@@ -48,6 +48,11 @@ effect inside such a group, or sits inside 2 such groups, is drawn as one effect
 the other. It sews as the nearest effect says, and the command line warns about it (`SC-W0807`).
 Alt-clicking a style adds its effects to the object's own, and an object with 2 fill effects sews twice.
 
+Give each StitchCraft effect an object of its own. An object with 2 sews each on its shape, but
+VectorCraft draws the second on the stitches of the first, so the preview isn't what is sewn, and the
+command line warns about it (`SC-W0807`). For a fill with an outline, copy the shape, choose **Edit ›
+Paste in Front**, and give the shape behind a fill effect and the copy in front a stroke effect.
+
 ## Turn a preview into paths
 
 **Object › Expand Appearance** turns what an effect shows into ordinary objects, with strokes outlined.

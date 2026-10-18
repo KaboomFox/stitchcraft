@@ -364,7 +364,11 @@ fn diag_sc_w0807_what_is_said_of_a_paint_is_said_once() {
     assert_eq!(ids(&read), ["vc:3:fill", "vc:3:satin", "vc:4:fill", "vc:4:satin"]);
     let colours: Vec<Rgb> = read.design.elements().iter().map(|e| e.thread.color).collect();
     assert_eq!(colours, [rgb(R), rgb(R), Rgb::new(0, 0, 0), Rgb::new(0, 0, 0)]);
+    // Each also has 2 StitchCraft effects, which VectorCraft draws one on the other.
     let w = Code::VcFeatureIgnored;
-    assert_eq!(said(&read), [(w, "vc:2".to_string()), (w, "vc:2".to_string()), (w, "vc:4".to_string())], "{:#?}", read.warnings);
-    assert!(read.warnings[1].message.contains("gradient") && read.warnings[2].message.contains("black"), "{:#?}", read.warnings);
+    let expected = ["vc:2", "vc:2", "vc:2", "vc:4", "vc:4"].map(|label| (w, label.to_string()));
+    assert_eq!(said(&read), expected, "{:#?}", read.warnings);
+    let chained = |k: usize| read.warnings[k].message.contains("has 2 StitchCraft effects");
+    assert!(chained(1) && chained(3), "{:#?}", read.warnings);
+    assert!(read.warnings[2].message.contains("gradient") && read.warnings[4].message.contains("black"), "{:#?}", read.warnings);
 }
