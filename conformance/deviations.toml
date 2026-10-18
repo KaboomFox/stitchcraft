@@ -100,7 +100,7 @@ params = ["max_stitch_length_mm"]
 [[deviation]]
 id = "DEV-RUN-007"
 area = "strokes/zigzag"
-summary = "A zigzag stroke spreads its needle points along the path, flattened within a tenth of a CSS pixel as Ink/Stitch flattens it. Ink/Stitch spreads them along a running stitch it sews along the path first, at half each spacing and within running_stitch_tolerance_mm of it. At the default spacing that running stitch's stitches are 0.2 mm chords of the path's curves, and the needle points differ by hundredths of a millimetre. A part whose length lies close to a rounding boundary of its count of zigs and zags may have one zig and zag more or fewer."
+summary = "A zigzag stroke spreads its needle points along the path, flattened within a tenth of a CSS pixel as Ink/Stitch flattens it. Ink/Stitch spreads them along a running stitch it sews along the path first, at half each spacing and within running_stitch_tolerance_mm of it. At the default spacing that running stitch's stitches are 0.2 mm chords of the path's curves, and the needle points differ by hundredths of a millimetre. A part whose length lies close to a rounding boundary of its count of zigs and zags may have one zig and zag more or fewer. With a list of spacings, that running stitch's stitches are half of each spacing in turn, and a long one is a chord that cuts across a curve by up to the tolerance, which Ink/Stitch's zigzag then follows, inside the path."
 reason = "StitchCraft's running stitch is placed otherwise (DEV-RUN-001 to DEV-RUN-004) and raises lengths below twice the shortest stitch, so it sews no running stitch of 0.2 mm stitches. That running stitch follows the path, and the path is the line it stands for. Ink/Stitch's zigzag stroke was read at d59c9ab (lib/elements/stroke.py, lib/stitches/running_stitch.py)."
 requirements = ["REQ-RUN-009"]
 
@@ -111,6 +111,13 @@ summary = "StitchCraft fits every stitch to the machine: it leaves out needle po
 reason = "The machine profile says what the machine sews well; a stitch outside it hammers one hole, snags, or is refused (docs/src/design/engine-pipeline.md › Finalize)."
 requirements = ["REQ-FIN-001", "REQ-FILL-TAT-004"]
 params = ["min_stitch_length_mm"]
+
+[[deviation]]
+id = "DEV-RUN-008"
+area = "strokes/zigzag"
+summary = "A zigzag stroke closes when one of its subpaths moves, with its ends within 0.05 CSS pixels, and its other subpaths draw nothing: a point, or segments of no length. Ink/Stitch counts every subpath of more than 1 node as a line, one of no length too, and with a second line its zigzag stays open, its last needle point where it falls."
+reason = "A subpath that draws nothing is no part of the drawing (REQ-SVG-001, DEV-SVG-011). It is not stitched (SC-W0401), and does not open the ring the drawing shows. Ink/Stitch's behaviour was read at 6555892 (lib/elements/stroke.py: _is_closed, as_multi_line_string; lib/elements/element.py: flatten, which keeps a repeated node)."
+requirements = ["REQ-RUN-011"]
 
 [[deviation]]
 id = "DEV-SAT-001"
@@ -273,6 +280,14 @@ summary = "A point of a part's outline within 1e-9 mm of a row lies on it, and a
 reason = "Which rows a part has, and where their segments end, should not depend on the last bits of the numbers. StitchCraft's rows did too, before: they added up their spacing's rounding, so a square 10 mm across had 101 rows 0.1 mm apart, the last 4e-14 mm short of its far side, and 51 rows 0.2 mm apart. A notch's top drawn on a row 0.1 mm apart was cut in 1 or 2 segments, not 3, as its corners rounded. Ink/Stitch's behaviour was read at 6555892 (lib/stitches/fill.py, intersect_region_with_grating, and lib/elements/fill_stitch.py, where set_precision puts the shape on its grid)."
 requirements = ["REQ-FILL-TAT-002", "REQ-FILL-TAT-010"]
 params = ["row_spacing_mm"]
+
+[[deviation]]
+id = "DEV-FILL-013"
+area = "fill/tatami"
+summary = "In a part the gratings of lines miss, with underpath on, the needle travels along the part's rings, as with underpath off. Ink/Stitch also travels along the outline there, but it smooths every way it travels with underpath on, as it smooths a way under the rows: the way cuts the outline's corners inside the part, and is kept inside it where it leaves it."
+reason = "A way along the rings lies inside the part already, and this keeps one rule for travel with underpath off and for parts too small for the gratings. Ink/Stitch's travel was read at 6555892 (lib/stitches/tatami_fill.py: build_travel_graph, travel), where the way is smoothed whenever underpath is on."
+requirements = ["REQ-FILL-TAT-005"]
+params = ["underpath"]
 
 [[deviation]]
 id = "DEV-SVG-001"

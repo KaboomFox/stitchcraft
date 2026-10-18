@@ -99,9 +99,10 @@ pub(crate) struct Underpath {
 impl Underpath {
     /// The lines travel may follow across `part`, whose rings are `rings`, between the route's `nodes`, for
     /// the fill's row `segments` at `angle` degrees. `None` when a diagonal grating misses the part, which
-    /// then travels along its rings, as Ink/Stitch's does. One unit of `meter` for each line, each pair of
-    /// lines looked at for a crossing, each edge, each cell and side looked at for its distance, and each row
-    /// looked at for crossing an edge.
+    /// then travels along its rings, as Ink/Stitch's does, though Ink/Stitch smooths that way
+    /// (`DEV-FILL-013`). One unit of `meter` for each line, each pair of lines looked at for a crossing,
+    /// each edge, each cell and side looked at for its distance, and each row looked at for crossing an
+    /// edge.
     pub(crate) fn new(
         part: &Polygon,
         rings: &Rings<'_>,
