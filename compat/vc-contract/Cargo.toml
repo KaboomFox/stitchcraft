@@ -11,6 +11,6 @@ publish = false
 [workspace]
 
 [dependencies]
-vectorcraft-plugins = { git = "https://github.com/storytold/vectorcraft", tag = "v0.12.0" }
-vectorcraft-geom = { git = "https://github.com/storytold/vectorcraft", tag = "v0.12.0" }
+vectorcraft-plugins = { git = "https://github.com/storytold/vectorcraft", tag = "v0.13.1" }
+vectorcraft-geom = { git = "https://github.com/storytold/vectorcraft", tag = "v0.13.1" }
 serde_json = "1"
