@@ -150,7 +150,7 @@ After sewing, check:
 
 ## TS-08 — Fill density and angle
 
-100.0 × 170.0 mm · 16237 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops
+100.0 × 170.0 mm · 16248 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
