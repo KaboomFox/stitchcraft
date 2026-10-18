@@ -97,6 +97,7 @@ needle travels along the fill's outline, where the travel can show along the edg
 - **Default:** `true`
 - **Ink/Stitch:** same key and default; StitchCraft differs:
   - **DEV-FILL-011.** With underpath off, or in a part the gratings of lines miss, the needle travels between 2 points of one ring the shorter way round it, by length, and on a tie the way that does not pass the ring's start. Ink/Stitch's travel along the outline counts nodes instead: its graph has a node every CSS pixel along the outline's sides, and at their corners and the rows' ends, and its edges carry no length, so the way with fewer nodes is taken. That is about the shorter way, but a way past many short sides, as round a curve drawn in short pieces, has more nodes for its length, and the way with fewer nodes can be the longer.
+  - **DEV-FILL-013.** In a part the gratings of lines miss, with underpath on, the needle travels along the part's rings, as with underpath off. Ink/Stitch also travels along the outline there, but it smooths every way it travels with underpath on, as it smooths a way under the rows: the way cuts the outline's corners inside the part, and is kept inside it where it leaves it.
 
 ## Underlay
 

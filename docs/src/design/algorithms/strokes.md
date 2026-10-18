@@ -202,9 +202,11 @@ Each part of the path, one per subpath, is sewn on its own, as a running stitch 
    left, by half the width plus the first. A pull compensation below minus half the width moves its
    points over to the other side. Each point whose direction has no length stays where it is, as on a
    turn straight back.
-4. **Closed paths.** A stroke closes when one of its subpaths moves and the others, if any, are single
-   points, and that subpath's ends lie nearer each other than 0.05 CSS pixels: its last needle point moves
-   onto its first, and the zigzag ends where it started.
+4. **Closed paths.** A stroke closes when one of its subpaths moves and the others, if any, draw nothing:
+   single points, or segments of no length. That subpath's ends must lie nearer each other than 0.05 CSS
+   pixels. Its last needle point then moves onto its first, and the zigzag ends where it started.
+   Ink/Stitch counts a subpath of no length as a second line, and keeps such a zigzag open
+   (`DEV-RUN-008`).
 5. **Repeats and bean stitch.** Repeats sew the zigzag again, every other pass backwards, and each pass
    after the first starts with the needle point after the one the last pass ended at. Bean stitch then
    sews each stitch `2b + 1` times, with its list taken one after another along the stitches of all the
@@ -220,9 +222,11 @@ each spacing and within `running_stitch_tolerance_mm` of the path. StitchCraft s
 path, flattened as Ink/Stitch flattens it for that running stitch (`DEV-RUN-007`). At the default spacing
 those running stitches are 0.2 mm long, chords of the path's curves, so the two lines and the points
 spread along them differ by hundredths of a millimetre. A part whose length lies close to a rounding
-boundary of its count of zigs and zags may have one zig and zag more or fewer. That running stitch is also why Ink/Stitch's other
-spacings of a list change nothing that shows. A part of the path that is one point is not stitched
-(`SC-W0401`), as for a running stitch (`DEV-RUN-004`).
+boundary of its count of zigs and zags may have one zig and zag more or fewer. With several spacings,
+Ink/Stitch's zigzag takes the first, and its running stitch takes half of each, one after another. A long
+one cuts across a curve by up to `running_stitch_tolerance_mm`, and the zigzag follows it there, inside
+the path. StitchCraft sews the first spacing along the path. A part of the path that is one point is not
+stitched (`SC-W0401`), as for a running stitch (`DEV-RUN-004`).
 
 ### Properties (conformance)
 

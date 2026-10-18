@@ -13,7 +13,7 @@ JEF = "JEF"
 DSB = "DSB"
 DSZ = "DSZ"
 Ellageo = "Ellageo"
-# German words in cited paper titles (Hilbert, Hierholzer).
+# German words in a cited paper title (Hilbert).
 ein = "ein"
 # The gzip crate, flate2.
 flate = "flate"

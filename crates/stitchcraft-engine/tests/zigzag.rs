@@ -139,7 +139,8 @@ fn req_run_011_a_closed_stroke_ends_on_its_first_needle_point() {
     assert_eq!(closed.first(), closed.last());
     // Its first point is placed as an open path's: across the line to the next, 1 mm right of east.
     assert!(near(closed[0], (0.0, 1.0)), "{:?}", closed[0]);
-    // A subpath of one point does not count: the stroke still closes, and SC-W0401 names the point.
+    // A subpath of one point does not count: the stroke still closes, and SC-W0401 names the point. Ink/Stitch
+    // counts a subpath of no length as a line, and keeps such a zigzag open (DEV-RUN-008).
     let with_point = sewn(&rings(&[&square, &[(30.0, 30.0)]]), 2.0, &[]);
     assert_eq!(with_point.runs.len(), 1);
     assert_eq!(with_point.runs[0].first(), with_point.runs[0].last());
