@@ -577,10 +577,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
-- The compatibility gate pins VectorCraft 0.12.0, adopted from 0.7.0. Pull requests are checked against
-  it, and it makes the docs' pictures of VectorCraft. Its plug-in dialogs give a toggle's checkbox no role
-  in the accessibility tree, so with 0.12.0 the window probe takes a toggle's row to show an `unknown`
-  control, and the shots run warns that it does.
+- The compatibility gate pins VectorCraft 0.13.1, adopted from 0.7.0 by way of 0.12.0. Pull requests are
+  checked against it, and it makes the docs' pictures of VectorCraft.
 - A plan case names its design with `design`, which was `svg`, as the design can be a VectorCraft
   document.
 - A replay reads a bug-report bundle of up to 192 MiB, which can hold a design of 64 MiB in hexadecimal
@@ -675,6 +673,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The window probe starts a dialog's row only at a label, a static text. VectorCraft 0.13.1 names a
+  checkbox after its row's label, and the probe took the checkbox for a label as well: it read the next
+  row's label as the checkbox's control, and made none of the dialogs' pictures.
 - The compatibility gate's adoption test brings its own pins. It copied the repository's, which pin the
   release it adopts once the adopting pull request does, and it failed in that pull request.
 - A satin column of 2 rings sews straight across, wherever each ring starts and however it is closed
