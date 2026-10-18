@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-140778d6.js";
+            window.path_to_searchindex_js = "../searchindex-e0c4b449.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-8df736a7.js"></script>
+        <script src="../toc-a0bb3cbb.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -237,8 +237,8 @@ docs check, whatever its file name.</p>
 </thead>
 <tbody>
 <tr><td><code>stitch</code></td><td><code>stitchcraft-render</code> (<a href="rendering.html">rendering</a>) from a test sheet, or from a design the engine plans, an SVG file or a VectorCraft document</td><td><strong>exact bytes</strong> (rendering is deterministic)</td><td>Stitch-type illustrations, parameter comparisons, diagnostics examples</td></tr>
-<tr><td><code>vectorcraft-render</code></td><td><code>vectorcraft-cli run --in fixture --cmd plugin.install … --cmd effect.apply … --export x.png</code></td><td>exact bytes, or tight tolerance if VectorCraft’s renderer changes</td><td>How a preview looks in VectorCraft’s canvas, headless</td></tr>
-<tr><td><code>vectorcraft-ui</code></td><td>VectorCraft (pinned stable) driven through its accessibility tree and its control channel: open fixture, install plug-ins, select, open the dialog, set fields, <code>ui.screenshot</code>, crop</td><td>perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 per channel)</td><td>Dialogs, menus, the workflow; the pinned release’s app in a desktop without a screen (<a href="#vectorcrafts-window-in-ci">VectorCraft’s window in CI</a>)</td></tr>
+<tr><td><code>vectorcraft-render</code></td><td><code>vectorcraft-cli</code> of the pinned stable release, with the plug-in’s modules installed: the canvas after the shot’s <code>steps</code>, exported as PNG at <code>scale</code> pixels per point</td><td>perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 in a channel, and ≤ 8 of them in any square of 16 pixels a side)</td><td>How the previews look in VectorCraft’s canvas, without its window</td></tr>
+<tr><td><code>vectorcraft-ui</code></td><td>VectorCraft’s window, of the same release, with the document <code>vectorcraft-cli</code> drew. The shot’s menu path and the family’s row are pressed through the accessibility tree, and the screenshot is cropped to the menus or the dialog</td><td>the same tolerance</td><td>Menus and dialogs, in a desktop without a screen (<a href="#vectorcrafts-window-in-ci">VectorCraft’s window in CI</a>)</td></tr>
 <tr><td><code>photo</code></td><td>a person, of a real sew-out</td><td>presence + metadata record (machine, fabric, commit, checkpoint)</td><td>Never regenerated; listed with their sew-out report</td></tr>
 </tbody>
 </table>
@@ -260,6 +260,31 @@ panels = [
 and so on. A test sheet is drawn as it is, so a shot of one has no panels. The plan may report only the codes the shot lists in <code>allow</code>, and a shot fails on any other:
 a picture never shows a design that the engine changed without the page saying so. The <code>alt</code> text is
 mandatory (accessibility), and the docs check fails on images without it.</p>
+<p>A VectorCraft shot draws its document with VectorCraft’s own commands, as a Level B scenario does
+(<a href="compatibility-gate.html">compatibility gate</a>), in points:</p>
+<pre><code class="language-toml">[[shot]]
+id = "vectorcraft-fill-dialog"
+kind = "vectorcraft-ui"
+plugins = ["stroke", "satin", "fill"]   # the modules VectorCraft installs
+steps = [
+  { cmd = "file.new", params = { width = 144, height = 144 } },
+  { cmd = "shape.ellipse", params = { x = 12, y = 12, width = 120, height = 120 } },
+]
+menu = ["Effect", "Plug-ins"]           # the menu bar's title, then rows
+dialog = "fill"                         # the picture shows that family's dialog
+alt = "The StitchCraft Fill dialog in VectorCraft…"
+</code></pre>
+<p><code>cargo xtask shots --vectorcraft</code> makes these shots. <code>vectorcraft-cli</code> runs the steps and ends the run
+with a drawing, which runs the live effects. Each module is asked for its last error after it, and a shot
+with one fails. VectorCraft keeps a module’s last error only until its next success: a shot applies each
+stitch family once at most, and one that applies a family twice is an error. A render shot’s picture is
+that drawing. A UI shot opens the document in VectorCraft’s window and needs a <code>menu</code>, and with a
+<code>dialog</code> the picture shows the dialog of that family’s effect.</p>
+<p>A render shot can keep its document as a file of the repository, <code>document</code>, for the pages that sew it:
+the tutorial’s patch is sewn from <code>docs/fixtures/round-patch.vectorcraft</code>, which VectorCraft draws from
+the shot’s steps. The generator writes the file while the committed one sews otherwise than the drawing,
+and <code>--check</code> fails then. Another release may save the same drawing otherwise: the file stays while it
+sews the same.</p>
 <p>A page shows a shot between the lines <code>&lt;!-- shot: running-length --&gt;</code> and <code>&lt;!-- /shot --&gt;</code>. <code>cargo xtask docs</code> writes the figure there. Without panels the figure is one image. With panels it is a table with a
 column per panel, its caption on top and its image below it. A shot with <code>layout = "rows"</code> shows its
 panels one under another instead, each caption in bold above an image as wide as the page: pictures side by
@@ -268,7 +293,7 @@ followed by the panel’s caption. The page
 cannot show an image under any other text, and a stale figure fails <code>--check</code> like a stale page.</p>
 <h3 id="vectorcrafts-window-in-ci"><a class="header" href="#vectorcrafts-window-in-ci">VectorCraft’s window in CI</a></h3>
 <p>Spike M0.8 ran VectorCraft’s window in CI, as the <code>vectorcraft-ui</code> kind needs, and drove it through its
-accessibility tree. Both work, so M6.7 builds that kind’s generator this way.</p>
+accessibility tree. Both work, and M6.7 built that kind’s generator this way.</p>
 <p><code>cargo xtask compat window</code> runs the window probe, <code>compat/vc-window</code>, against the app VectorCraft
 releases: <code>bin/vectorcraft</code> from the Linux x86_64 archive of the stable release that
 <code>compat/vectorcraft.toml</code> pins, checked against the SHA-256 recorded there. The probe’s tests run in a
@@ -297,9 +322,21 @@ screen reader uses it, opens View and chooses its row Outline. Clicks at the mid
 gives View and its row Preview, as a person makes them, bring the drawing back. The control channel sees
 each change. A row’s name is its label after the room for a check mark, and its shortcut
 (<code>     Outline Ctrl+Y</code>). With no window manager, the window opens at the screen’s corner, so the tree’s
-bounds are the screenshot’s pixels. M6.7 drives VectorCraft to each screen through the tree, as a person
-would. The control channel keeps what a person would not do: opening a fixture, sizing the window and
-reading the state.</p>
+bounds are the screenshot’s pixels.</p>
+<p><strong>The generator: VectorCraft driven to each screen.</strong> <code>tests/shots.rs</code> of the probe takes the UI shots
+that <code>cargo xtask shots --vectorcraft</code> lists in a job file, in the same desktop. The tree is used as a
+person would use the app. AT-SPI’s press opens the menu bar’s title and each row of the shot’s path,
+then the row of the family’s effect, and the dialog is the largest element named after the plug-in. The
+window opens the document it starts with. The control channel installs the modules, which a person does
+with file dialogs. It also selects everything and sizes the window, and it reads the app’s state. A
+menus’ picture is cropped to the title and the rows that opened, with 10 pixels around them for the
+menus’ frames. A dialog’s picture is cropped to the dialog.</p>
+<p>A dialog must show a row for each parameter of its module’s manifest. The row’s label is the one
+VectorCraft writes for the key, and its control must be the one VectorCraft gives the parameter’s type.
+A number gets a text field and a toggle a checkbox, and a choice gets a drop-down list. A plug-in’s
+dialog doesn’t scroll. With VectorCraft 0.7.0, fill’s is 1,385 pixels tall and satin’s 1,803, and both run off the top
+and bottom of the window at the size it opens, 1440 × 900. A dialog’s picture is taken in a window 2,000
+pixels tall instead, on a screen of 1600 × 2100.</p>
 <h2 id="command-line-examples"><a class="header" href="#command-line-examples">Command-line examples</a></h2>
 <p>Pages show what a command prints by including it from <code>docs/src/user/reference/generated/</code>. The commands
 are declared in <code>docs/examples.toml</code>, and <code>cargo xtask docs</code> runs each one with the <code>stitch</code> binary in an
@@ -308,7 +345,7 @@ that are not shown first. The output is the binary’s own, standard output then
 exit status when it is not 0. When a command prints something new, <code>--check</code> fails until the output is
 written again. Pages show what the command prints today.</p>
 <h2 id="what-runs-on-every-pull-request"><a class="header" href="#what-runs-on-every-pull-request">What runs on every pull request</a></h2>
-<p><code>.github/workflows/docs.yml</code> runs one job, <code>check</code>. Its steps:</p>
+<p><code>.github/workflows/docs.yml</code> runs two jobs. The steps of the first, <code>check</code>:</p>
 <ul>
 <li><code>cargo xtask docs --check</code> fails for a generated page that is stale or left over, and a page missing
 from <code>SUMMARY.md</code>. A broken relative link, <code>#anchor</code> or included file fails it, with ids made as mdBook
@@ -319,26 +356,33 @@ writes, with alt text.</li>
 <li><code>cargo xtask conformance --check</code> fails when requirements and cases disagree, or a fixture has no row
 in the fixtures index.</li>
 <li><code>cargo xtask shots --check</code> fails for a declared image that is missing or has no alt text. It also
-regenerates each image and compares it with the committed file. A <code>stitch</code> shot must come out byte for
-byte the same. The <code>vectorcraft-ui</code> and <code>vectorcraft-render</code> shots get a tolerance, and their generators
-arrive in M6.7 with a job of their own (Xvfb and Mesa).</li>
+regenerates each <code>stitch</code> image and compares it with the committed file, which must come out byte for
+byte the same. It checks VectorCraft’s shots’ declarations without running VectorCraft.</li>
 <li><code>mdbook build docs</code> fails when the book does not build.</li>
 <li><code>cargo test --doc</code> fails when a Rust snippet does not compile. Command-line examples are generated
 pages, which <code>docs --check</code> covers.</li>
 <li><code>typos</code> fails on a misspelling (allow-list in <code>typos.toml</code>).</li>
 </ul>
 <p>External links are checked nightly by lychee, not on pull requests.</p>
+<p>The workflow’s second job, <code>shots-ui</code>, runs <code>cargo xtask shots --vectorcraft --check</code> on Ubuntu, with
+the desktop the window needs (<code>.github/actions/desktop</code>). It makes VectorCraft’s pictures with the pinned
+release and compares each with the committed file within the tolerance.</p>
 <p>When a shot differs, <code>--check</code> writes the new image to <code>target/shots/</code> and the job keeps it as the
-<code>stale-images</code> artifact, next to the committed one in the PR’s diff. An image under
+<code>stale-images</code> artifact, next to the committed one in the PR’s diff. <code>shots-ui</code> keeps VectorCraft’s as
+<code>stale-vectorcraft-images</code>, with the documents, the window’s screenshots and its records. An image under
 <code>docs/src/images/generated/</code> that no shot declares is an error too, so renamed shots leave nothing
 behind.</p>
 <h3 id="refreshing-images"><a class="header" href="#refreshing-images">Refreshing images</a></h3>
 <p>Changing a stitch algorithm <em>should</em> change its pictures. The PR author runs <code>cargo xtask shots</code> locally,
-or a maintainer adds the label <strong><code>docs:refresh-shots</code></strong>: <code>docs-refresh.yml</code> regenerates every shot and
-every generated page, pushes a commit to the PR branch and removes the label (same-repository PRs; for
-forks the run keeps the files as an artifact and its summary explains how to apply them). GitHub starts
-no workflows for a push made with a workflow’s token, so the refresh then dispatches <code>ci</code>, <code>docs</code> and
-<code>goldens</code> for the new commit. The refreshed images go through review like any other change.</p>
+and <code>cargo xtask shots --vectorcraft</code> on Linux, with the packages <code>.github/actions/desktop</code> installs and
+Rust’s <code>wasm32-unknown-unknown</code> target, which downloads the pinned release. Or a maintainer adds the label
+<strong><code>docs:refresh-shots</code></strong>, and <code>docs-refresh.yml</code> regenerates every shot, VectorCraft’s first, and every
+generated page. For a pull request from a branch of this repository, it pushes a commit to the branch and
+removes the label. For a fork, the run keeps the files as an artifact, and its summary explains how to
+apply them. When a picture can’t be made, the others are still committed, and the job fails after them.
+GitHub doesn’t start workflows for a push made with a workflow’s token, and the refresh then dispatches
+<code>ci</code>, <code>docs</code> and <code>goldens</code> for the new commit itself. The refreshed images go through review like any
+other change.</p>
 <p>Pages show a shot with the shot’s own alt text: the test-sheets reference is generated with one picture
 per <code>stitch</code> shot of each sheet, so a new sheet gets its picture by declaring a shot.</p>
 <h2 id="publishing"><a class="header" href="#publishing">Publishing</a></h2>
