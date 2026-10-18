@@ -43,8 +43,8 @@ use crate::design::{FillRule, Path};
 use crate::normalize::stroke;
 
 /// Points this near each other, in millimetres, are one point to the code that sews a region: a row's
-/// stretch this short is no segment, and parts whose least x lie this near are level. It is some 30 times
-/// the grid the region's points lie on (`snap`).
+/// stretch this short is no segment, a point this near a row lies on it, and parts whose least x lie this
+/// near are level. It is some 30 times the grid the region's points lie on (`snap`).
 pub(crate) const SAME: f64 = 1e-9;
 
 /// A part this small or smaller, in square millimetres, is left out: 3 square CSS pixels, a speck about

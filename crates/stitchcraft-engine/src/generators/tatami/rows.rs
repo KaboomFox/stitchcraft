@@ -4,15 +4,25 @@
 //! Rows lie where Ink/Stitch lays them. They run at the fill's angle, counter-clockwise from horizontal
 //! on screen. Measured across them from the design's origin, the first row of a part lies the largest
 //! whole number of spacings from the origin that does not pass the part, so fills side by side at the same
-//! angle and spacing share their rows. With an end row spacing, each step to the next row grows (or
-//! shrinks) with its distance from the first row, from the row spacing to the end spacing over the
-//! part's height. Ink/Stitch carries the change on past that height, where a shrinking spacing can stack
-//! rows without end; here the step stays at the end spacing (`DEV-FILL-003`).
+//! angle and spacing share their rows. The rows follow it a spacing apart up to the part's far side, and
+//! none lies on that. Each lies a whole number of spacings past the first, multiplied out. A spacing that
+//! rounds in binary, added row by row, adds up its rounding: 0.1 mm added 100 times to 5 mm comes to
+//! 4e-14 mm less than 15 mm, which put a row on the far side of a square from 5 to 15 mm. With an end row
+//! spacing, each step to the next row grows (or shrinks) with its distance from the first row, from the
+//! row spacing to the end spacing over the part's height. Ink/Stitch carries the change on past that
+//! height, where a shrinking spacing can stack rows without end; here the step stays at the end spacing
+//! (`DEV-FILL-003`).
 //!
 //! A row's segments are the stretches of it in the part, its outline included, split wherever the row
 //! meets the outline: where it crosses it, where the outline touches it from inside, and at both ends of
 //! a stretch it runs along. That is how GEOS cuts a line with a polygon for Ink/Stitch. A row that only
 //! touches the part at a point has no segment.
+//!
+//! Whether a point of the outline lies on a row is decided within `SAME`, 1e-9 mm, not by the last bits of
+//! the numbers. The region puts its points on a grid ([`crate::normalize::region`]) and a row's place
+//! rounds, so a side drawn on a row lies a hair to one side of it. Taken as it lies, the side would leave
+//! the row crossing the part beside it, or missing it. A point within `SAME` of a row lies on it, and a row
+//! within `SAME` of the far side lies on that. Ink/Stitch's rows depend on its rounding (`DEV-FILL-012`).
 //!
 //! Which stretches are in the part is decided by counting, along the row, the edges that cross it, each
 //! counted over its height from its lower end up to but not including its upper end. Where the outline
@@ -69,8 +79,10 @@ pub fn rows(part: &Polygon, grid: &Grid, meter: &mut Meter) -> Result<Vec<Row>, 
     }
     let first = low - low.rem_euclid(grid.spacing);
     let mut v = first;
+    let mut laid = 0.0;
     let mut ends = 0_usize;
-    while v < high {
+    // A row within SAME of the far side lies on it, and is left out.
+    while v < high - SAME {
         meter.charge(u64::try_from(edges).unwrap_or(u64::MAX).saturating_add(1))?;
         let segments = cut(&rings, v);
         if !segments.is_empty() {
@@ -78,7 +90,12 @@ pub fn rows(part: &Polygon, grid: &Grid, meter: &mut Meter) -> Result<Vec<Row>, 
             meter.room(ends)?;
             found.push(Row { across: v, segments });
         }
-        v += grid.end_spacing.map_or(grid.spacing, |end| grid.spacing + (end - grid.spacing) * ((v - first) / height).min(1.0));
+        laid += 1.0;
+        v = match grid.end_spacing {
+            // Multiplied out, not added up: a spacing that rounds in binary would add up its rounding.
+            None => first + laid * grid.spacing,
+            Some(end) => v + grid.spacing + (end - grid.spacing) * ((v - first) / height).min(1.0),
+        };
     }
     Ok(found)
 }
@@ -132,6 +149,8 @@ fn cut(rings: &[Ring<'_>], v: f64) -> Vec<Segment> {
     for ring in rings {
         for (pair, projected) in ring.points.windows(2).zip(ring.projected.windows(2)) {
             let ((a, b), ((au, av), (bu, bv))) = ((pair[0], pair[1]), (projected[0], projected[1]));
+            // A point within SAME of the row lies on it.
+            let (av, bv) = (on_row(av, v), on_row(bv, v));
             // Counted from its lower end up to, but not including, its upper end.
             let counted = av.min(bv) <= v && v < av.max(bv);
             if av == v && bv == v {
@@ -159,6 +178,12 @@ fn cut(rings: &[Ring<'_>], v: f64) -> Vec<Segment> {
         }
     }
     segments
+}
+
+/// `across`, how far across the rows a point of a ring lies, or the row's place `v` when the point lies
+/// within [`SAME`] of the row, as a point drawn on the row does once both are rounded.
+fn on_row(across: f64, v: f64) -> f64 {
+    if (across - v).abs() <= SAME { v } else { across }
 }
 
 #[cfg(test)]
