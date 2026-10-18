@@ -5,6 +5,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M7.3: the E-stitch is sewn, as Ink/Stitch sews its "E" stitch (`REQ-SAT-020`, `REQ-SAT-021`). Set
+  `satin_column` on and `satin_method` to `e_stitch`. A spine runs along the first rail, with a spike
+  across the column at each pair, an edge for appliqué.
+  - The spikes are the pairs a satin column places, compensates and insets. Each splits as a stitch
+    across does, and comes back down through its own splits. The spine splits, with no randomness, where
+    the zigzag spacing is longer than the longest stitch.
+  - Every satin method now names stitches that lean more than 45° from square to the column, once for
+    each stretch of them, where a rung would set them straight (`SC-W0208`, `REQ-SAT-022`). It also names
+    its longest top stitch when that is longer than 12 mm (`SC-W0209`, `REQ-SAT-023`). Ink/Stitch gives
+    neither warning.
+  - A satin column places the pairs that cut it every time now, for the leaning check, and its budget
+    counts their work.
+  - A user page with pictures, *E-stitch*, and the E-stitch listed for MC-6.
 - M7.2: zigzag strokes are sewn, as Ink/Stitch sews its zig-zag stitch (`REQ-RUN-009` to `REQ-RUN-012`).
   Set `stroke_method` to `zigzag_stitch`. The needle crosses the path from side to side, as wide as the
   stroke. Its points are spread evenly along the path in a whole number of zigs and zags.

@@ -26,8 +26,7 @@ use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use crate::generators::satin::column::Section;
-use crate::generators::satin::compensation::Processor;
-use crate::generators::satin::pairs::{Pair, pairs};
+use crate::generators::satin::pairs::Pair;
 use crate::generators::satin::split::evenly;
 use crate::generators::satin::underlay::{Layer, split_long, walk_line};
 use crate::generators::satin::{SatinLengths, SatinParams};
@@ -48,12 +47,25 @@ const SAME: f64 = 1e-5 * MM_PER_SVG_PX;
 /// A piece of a column's run, in the order it is sewn.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum Piece {
-    /// Needle points of the column itself: an underlay's, the top stitches', or the start.
+    /// Needle points of the column's underlays, or its start.
     Sewn(Vec<Point>),
+    /// Needle points of the column's top stitches, or of a part of them that the end cut off: the stitches
+    /// `SC-W0209` measures.
+    Top(Vec<Point>),
     /// The way along the line, which only routes the needle.
     Way(Vec<Point>),
     /// The end, the column's last stitch.
     End(Point),
+}
+
+impl Piece {
+    /// The needle points of a part of the top stitches, as the column sews them.
+    pub(crate) fn top(&self) -> Option<&[Point]> {
+        match self {
+            Piece::Top(points) => Some(points),
+            _ => None,
+        }
+    }
 }
 
 /// `pieces` sewn one after the other, the needle going straight from each to the next in equal stitches no
@@ -67,7 +79,7 @@ pub(crate) fn join(pieces: Vec<Piece>, travel: f64, min_stitch: f64, meter: &mut
     for piece in pieces {
         let needle = run.last().copied();
         let (points, way) = match piece {
-            Piece::Sewn(points) => (points, false),
+            Piece::Sewn(points) | Piece::Top(points) => (points, false),
             Piece::Way(points) => (spaced(needle, points, min_stitch), true),
             Piece::End(point) => {
                 if let Some(needle) = run.last_mut().filter(|needle| needle.distance(point) < min_stitch) {
@@ -112,18 +124,19 @@ pub(crate) struct Guides {
 
 impl Guides {
     /// The guides of the column cut into `sections`, sewn as `params` and `lengths` say, the line in
-    /// stitches no longer than `travel`: the column's travel, raised to keep to the shortest stitch.
+    /// stitches no longer than `travel`: the column's travel, raised to keep to the shortest stitch. The
+    /// `cuts` are the column's pairs at the zigzag spacing with no compensation and nothing random.
     pub(crate) fn new(
         sections: &[Section],
         params: &SatinParams,
         lengths: SatinLengths,
         travel: f64,
+        cuts: Vec<Pair>,
         meter: &mut Meter,
     ) -> Result<Guides, Exhausted> {
         let min_stitch = lengths.min_stitch.get();
         let position = params.running_stitch_position / 100.0;
         let line = walk_line(sections, position, lengths.tolerance.get(), travel, min_stitch, meter)?;
-        let cuts = pairs(sections, params.zigzag_spacing_mm.get(), &mut Processor::inset([0.0; 2], [0.0; 2]), meter)?;
         Ok(Guides { line, cuts })
     }
 
@@ -167,7 +180,7 @@ impl Guides {
             None => sewn(layers, top, meter)?,
         };
         // The column's first stitch: the pieces start with what it sews, whichever pass comes first.
-        let first = pieces.iter().find_map(|piece| if let Piece::Sewn(points) = piece { points.first().copied() } else { None });
+        let first = pieces.iter().find_map(|piece| if let Piece::Sewn(points) | Piece::Top(points) = piece { points.first().copied() } else { None });
         if let (Some(start), Some(first)) = (start, first) {
             let way = self.way(self.entry(start, meter)?, self.entry(first, meter)?, meter)?;
             pieces.splice(0..0, [Piece::Sewn(vec![start]), Piece::Way(way)]);
@@ -204,17 +217,15 @@ impl Guides {
         }
         let (top_first, mut top_second) = self.halves(top, end, meter)?;
         top_second.reverse();
-        first.push(top_first);
-        second.push(top_second);
-        let to = match second.first().and_then(|part| part.first()) {
+        let to = match second.first().unwrap_or(&top_second).first() {
             Some(&resume) if odd => self.entry(resume, meter)?,
             _ => Along::new(&self.line, meter)?.length(),
         };
         let way = self.way(self.entry(end, meter)?, to, meter)?;
         let mut pieces: Vec<Piece> = first.into_iter().map(Piece::Sewn).collect();
-        pieces.push(Piece::Way(way));
+        pieces.extend([Piece::Top(top_first), Piece::Way(way)]);
         pieces.extend(second.into_iter().map(Piece::Sewn));
-        pieces.push(Piece::End(end));
+        pieces.extend([Piece::Top(top_second), Piece::End(end)]);
         Ok(pieces)
     }
 
@@ -268,7 +279,7 @@ pub(crate) fn sewn(layers: Vec<Layer>, top: Vec<Point>, meter: &mut Meter) -> Re
     for layer in layers {
         pieces.extend(layer.parts(meter)?.into_iter().map(Piece::Sewn));
     }
-    pieces.push(Piece::Sewn(top));
+    pieces.push(Piece::Top(top));
     Ok(pieces)
 }
 

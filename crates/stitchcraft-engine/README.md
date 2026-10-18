@@ -26,7 +26,9 @@ since M5.7 the underlay covers the part shrunk by its inset and the top rows the
 as shapely buffers it (`normalize::offset`), and since M5.8 the top rows are lengthened by the pull
 compensation a satin's stitches share (`generators::pull`), with gap-filling rows where the route leaves a
 stretch of rows (`generators::tatami`). Since M7.2 a zigzag stroke is sewn as Ink/Stitch sews it
-(`generators::zigzag`). Design:
+(`generators::zigzag`), and since M7.3 an E-stitch, a satin column's spikes from a spine along its first
+rail. Every satin method then names stitches that lean far along the column, and top stitches longer than
+12 mm (`generators::satin`). Design:
 `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 
 ## Invariants

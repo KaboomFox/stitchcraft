@@ -92,7 +92,9 @@ fn req_sat_019_rings_drawn_alike_keep_a_rung_across_their_starts() {
         &[&[(10.5, -1.0), (7.5, 5.0)], &[(35.0, 20.0), (41.0, 20.0)], &[(20.0, 35.0), (20.0, 41.0)], &[(-1.0, 20.0), (5.0, 20.0)]];
     path.subpaths.extend(polylines(rungs).subpaths);
     let (points, warnings) = sewn_satin(&path, &[NO_SHORT_STITCHES]);
-    assert!(warnings.is_empty(), "{warnings:?}");
+    // Between the rungs the inner ring is shorter than the outer, more so than their corners make up for,
+    // and its stitches lean far along the column on the top and left sides (SC-W0208).
+    assert!(warnings.len() == 2 && warnings.iter().all(|w| w.starts_with("warning SC-W0208:")), "{warnings:?}");
     assert_eq!(across(&points)[0], [p(10.0, 0.0), p(8.0, 4.0)]);
     let longest = longest_across(&points);
     assert!(longest <= ACROSS_AT_MOST, "a stitch {longest} mm long crosses the ring");
