@@ -10,7 +10,7 @@ for sewing on the reference machine. M2 is under way: StitchCraft reads PES, PEC
 file, `stitch preview` draws exactly what will sew, `stitch convert` moves designs between PES and DST,
 the docs show generated pictures of every test sheet, and the readers are fuzzed for an hour every night.
 Public APIs, line coverage and mutation testing now have recorded baselines that only move one way. M2
-is complete. M3 is under way: the registry's declarations generate the parameters' reference pages and
+is complete. M3 is under way. The registry's declarations generate the parameters' reference pages and
 their JSON Schema, and their status in the Ink/Stitch contract; every diagnostic code has a case;
 StitchCraft reads SVG files into its design model, reporting whatever it leaves out; and the engine
 stitches running stitches: even spacing between corners, patterns of lengths, curves followed within the
