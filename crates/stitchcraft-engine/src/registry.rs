@@ -16,6 +16,7 @@ use crate::generators::pull::PullParams;
 use crate::generators::running::RunningParams;
 use crate::generators::satin::SatinParams;
 use crate::generators::tatami::TatamiParams;
+use crate::generators::zigzag::ZigzagStrokeParams;
 
 /// Every parameter group, in the order the reference pages list them.
 pub const PARAMETERS: &[&ParamGroup] = &[
@@ -23,6 +24,7 @@ pub const PARAMETERS: &[&ParamGroup] = &[
     &StrokeParams::GROUP,
     &RunningParams::GROUP,
     &RepeatParams::GROUP,
+    &ZigzagStrokeParams::GROUP,
     &SatinParams::GROUP,
     &PullParams::GROUP,
     &FillParams::GROUP,

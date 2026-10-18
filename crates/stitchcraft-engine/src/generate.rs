@@ -42,6 +42,7 @@ use crate::generators::satin::{self, SATIN_COLUMN, SatinLengths, SatinParams, sa
 use crate::generators::tatami::TatamiParams;
 use crate::generators::tatami::rows::Segment;
 use crate::generators::tatami::sew::{Fill, Pull, Travel, tatami_fill, top_rows};
+use crate::generators::zigzag::{ZigzagStrokeParams, zigzag_stroke};
 use crate::generators::{Approach, Neighbours, Stitched, method, mm};
 use crate::normalize::region::{self, Region};
 use crate::registry::PARAMETERS;
@@ -99,9 +100,9 @@ params! {
     pub struct StrokeParams for &[StitchType::RunningStitch, StitchType::RippleStitch, StitchType::ZigzagStitch, StitchType::ManualStitch];
 
     "Stroke" {
-        /// The stitch the path is sewn with: a running stitch along it, or a needle point on each of its
-        /// nodes (manual stitch). Ripple and zigzag stitches arrive in later versions; until then an
-        /// element set to one is skipped (`SC-W0011`).
+        /// The stitch the path is sewn with. A running stitch goes along it and a zigzag across it, and manual
+        /// stitch puts a needle point on each of its nodes. Ripple stitch arrives in a later version, and
+        /// until then an element set to it is skipped (`SC-W0011`).
         stroke_method: Choice = "running_stitch", label "Method", choices STROKE_METHODS;
     }
 }
@@ -250,7 +251,7 @@ fn sew(
         Shape::Stroke { path, width, join } if sewing.stitch_type.family() == Family::Satin => {
             satin_column(&sewing, (path, *width, *join), &mut rng, diagnostics, meter)?
         }
-        Shape::Stroke { path, .. } => stroke(&sewing, path, &rng, diagnostics, meter)?,
+        Shape::Stroke { path, width, .. } => stroke(&sewing, path, *width, &rng, diagnostics, meter)?,
     };
     let (Some(common), Some(Shared { min_stitch, .. }), Some(stitched)) = (common, sewing.shared, stitched) else { return Ok(None) };
     diagnostics.extend(stitched.warnings);
@@ -450,10 +451,11 @@ fn satin_column(
 }
 
 /// A stroke's stitches as `sewing` says, varied at random by streams of its `rng`, or `None` when it is
-/// skipped. Its `stroke_method` picks the generator.
+/// skipped: its `path` is `width` wide, which a zigzag stroke is. Its `stroke_method` picks the generator.
 fn stroke(
     sewing: &Sewing,
     path: &Path,
+    width: Mm,
     rng: &SplitMix64,
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
@@ -468,6 +470,10 @@ fn stroke(
         StitchType::ManualStitch => {
             let Some(passes) = passes else { return Ok(None) };
             Ok(Some(manual_stitch(path, max_stitch, &passes, min_stitch, meter)?))
+        }
+        StitchType::ZigzagStitch => {
+            let (Some(zigzag), Some(passes)) = (sewing.read(ZigzagStrokeParams::from_set_as, diagnostics), passes) else { return Ok(None) };
+            Ok(Some(zigzag_stroke(path, width, &zigzag, &passes, min_stitch, meter)?))
         }
         other => {
             let method = other.id();
@@ -489,7 +495,7 @@ fn stroke(
 /// known. Neither does an element whose shape cannot be read, or the settings its offer depends on: those
 /// that choose its stitch type, and a satin column's. They are read as its stitch type reads them.
 pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -> Option<Approach> {
-    let stitch_type = stitch_type(element, settings, &mut Vec::new())?;
+    let stitch_type = stitch_type_of(element, settings)?;
     let (path, width, join) = match &element.shape {
         Shape::Fill { .. } if stitch_type != StitchType::TatamiFill => return None,
         Shape::Fill { path, rule } => {
@@ -508,6 +514,12 @@ pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -
         return Some(Approach::Shape(satin::sewn_rails(&rails, &params, meter).ok()?.into()));
     }
     satin::first_point(&rails, &params, meter).ok()?.map(Approach::Point)
+}
+
+/// The stitch type that sews `element` in a design with `settings`, as [`generate`] picks it. `None` if a
+/// setting that chooses it cannot be read.
+pub fn stitch_type_of(element: &Element, settings: &DesignSettings) -> Option<StitchType> {
+    stitch_type(element, settings, &mut Vec::new())
 }
 
 /// The shortest stitch for an element whose own is `own`: the machine's, or the element's own if it is

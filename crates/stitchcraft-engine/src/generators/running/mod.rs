@@ -51,7 +51,7 @@ use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Mm, Point};
 
 use crate::design::Path;
-use crate::generators::passes::{self, RepeatParams};
+use crate::generators::passes::{self, RepeatParams, Turn};
 use crate::generators::{Stitched, TooSmall, mm, too_small};
 use crate::normalize::along::Along;
 use crate::normalize::stroke::{self, distance_to_segment};
@@ -89,7 +89,7 @@ pub fn running_stitch(
         } else if !at_least(length, min) {
             TooSmall::Short(length)
         } else if let Some(run) = stitch_piece(&along, (&piece.corners, index), &mut lengths, min, tolerance * (1.0 - FLATTEN_SHARE), meter)? {
-            runs.push(passes::sew(&run, passes.repeats, &passes.bean_stitch_repeats, meter)?);
+            runs.push(passes::sew(&run, passes.repeats, &passes.bean_stitch_repeats, Turn::Listed, meter)?);
             continue;
         } else {
             TooSmall::Curled(length)

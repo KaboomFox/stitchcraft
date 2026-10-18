@@ -30,11 +30,11 @@
 
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix};
 use stitchcraft_engine::design::{DesignSettings, Element, Shape};
-use stitchcraft_engine::generate::{generate, rows};
+use stitchcraft_engine::generate::{generate, rows, stitch_type_of};
 use stitchcraft_engine::generators::Neighbours;
 use stitchcraft_engine::normalize::satin::{Shape as Column, recognize};
 use stitchcraft_engine::normalize::stroke::{SHAPE_TOLERANCE, flatten};
-use stitchcraft_params::Family;
+use stitchcraft_params::{Family, StitchType};
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_vectorcraft::{Effect, effect_error, effect_lines, effect_output, effect_ribbons};
 
@@ -127,7 +127,7 @@ pub fn show(family: Family, effect: &Effect, spend: u64) -> Vec<u8> {
 /// What [`show`] shows, and at which level.
 fn preview(family: Family, effect: &Effect, spend: u64) -> Shown {
     let (element, spend) = (&effect.element, Spend(spend));
-    if let Some(unseen) = centre_line(family, element, spend) {
+    if let Some(unseen) = centre_line(family, element, spend).or_else(|| zigzag(family, element)) {
         return Shown::Unsewn(unseen);
     }
     match (Level::read(effect.preview_level.as_deref()), family) {
@@ -278,6 +278,16 @@ fn centre_line(family: Family, element: &Element, spend: Spend) -> Option<Diagno
                    effect leaves it as it is.";
     let hint = "To see its stitches in VectorCraft, draw its 2 rails, join them with Object › Compound Path › Make and apply the effect to that.";
     Some(Diagnostic::new(Code::VcEffectUnchanged, message).with_fix(Fix::Hint(hint.into())))
+}
+
+/// `SC-I0810` when `element`, of `family`, is a zigzag stroke. It is as wide as its stroke, which VectorCraft
+/// does not give a live effect. The object drawn as it is shows its width.
+fn zigzag(family: Family, element: &Element) -> Option<Diagnostic> {
+    let (Family::Stroke, Some(StitchType::ZigzagStitch)) = (family, stitch_type_of(element, &DesignSettings::default())) else { return None };
+    let message = "This zigzag stroke is as wide as its stroke, which VectorCraft does not give a live effect: the effect leaves it as it is.";
+    Some(
+        Diagnostic::new(Code::VcEffectUnchanged, message).with_fix(Fix::Hint("Exported with `stitch export`, it sews as wide as its stroke.".into())),
+    )
 }
 
 /// Whether `diagnostics` say the budget ran out.

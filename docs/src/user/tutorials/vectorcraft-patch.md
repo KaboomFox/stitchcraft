@@ -114,9 +114,10 @@ Thread blue first, white when the machine stops, and gold when it stops again.
 
 ## Dialogs taller than the screen
 
-VectorCraft doesn't scroll a plug-in's dialog, and the fill's and the satin's are taller than most screens.
-Their first rows, or the OK button, can be out of sight. Make VectorCraft's window as tall as the screen
-allows, and click a field you can see. Tab and Shift+Tab move to the others, and Enter applies the dialog.
+VectorCraft doesn't scroll a plug-in's dialog. The fill's and the satin's are taller than most screens, and
+the stroke's is taller than the window VectorCraft opens with. Their first rows, or the OK button, can be
+out of sight. Make VectorCraft's window as tall as the screen allows, and click a field you can see. Tab and
+Shift+Tab move to the others, and Enter applies the dialog.
 
 ## Next
 

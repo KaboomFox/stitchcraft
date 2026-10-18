@@ -109,6 +109,7 @@ version and a registry schema version arrive with the first release, together wi
 | `OptionalLength` | `Option<Mm>` | as `Length`, or empty: the setting then comes from the document or the machine, or there is none. 0 counts as empty, since Ink/Stitch reads 0 as not set, and a length below 0 does too, with `SC-W0102` (`DEV-PRM-003`) | `float`, unit `mm`, no default |
 | `OptionalLengthWithZero` | `Option<Mm>` | as `OptionalLength`, but only empty text is empty, and 0 is a length, as Ink/Stitch reads a satin's shortest stitch to split | `float`, unit `mm`, no default |
 | `Angle` | degrees, `f64` | finite; normalized to (−180, 180] | `float`, unit `deg` |
+| `BoundedAngle` | degrees, `f64` | finite, within range, never turned by whole turns. 270 is above a range that ends at 89, and reads as 89, as Ink/Stitch reads a zigzag stroke's angle | `float`, unit `deg` |
 | `Percent` | `f64` | finite, within range | `float`, unit `%` |
 | `Number` | `f64` | finite, within range, without a unit | `float`, no unit |
 | `Count` | `u32` | whole, within range | `int` |

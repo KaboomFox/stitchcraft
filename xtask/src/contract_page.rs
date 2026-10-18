@@ -373,7 +373,7 @@ fn compatible(kind: Kind, their_type: &str, unit: &str) -> bool {
         Kind::LengthPair { .. } => their_type == "float" && unit == "mm (each side)",
         Kind::PercentPair { .. } => their_type == "float" && unit == "% (each side)",
         Kind::PercentList { .. } => their_type == "float" && unit == "%",
-        Kind::Angle | Kind::AngleList { .. } => their_type == "float" && matches!(unit, "deg" | "degrees" | "°"),
+        Kind::Angle | Kind::BoundedAngle { .. } | Kind::AngleList { .. } => their_type == "float" && matches!(unit, "deg" | "degrees" | "°"),
         Kind::Percent { .. } => their_type == "float" && matches!(unit, "%" | "± %"),
         // Ink/Stitch reads some numbers as floats that its settings window shows as whole numbers, such as a
         // fill's staggers, whose fractions it documents.

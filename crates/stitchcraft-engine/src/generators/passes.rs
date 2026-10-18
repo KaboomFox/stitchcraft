@@ -1,18 +1,20 @@
 //! Passes over a run of stitches: repeats and bean stitch, for a bolder line or a line that comes back.
 //!
 //! Design: `docs/src/design/algorithms/strokes.md` › Repeats and bean stitch. A run is the needle points
-//! of one pass along a piece of a stroke; the generators that sew lines, running stitch and manual stitch,
-//! hand theirs to [`sew`]:
+//! of one pass along a piece of a stroke; the generators that sew lines, running stitch, manual stitch and
+//! zigzag stroke, hand theirs to [`sew`]:
 //!
 //! - **Repeats** sew the run k times, every other pass backwards. Each pass starts where the last one
-//!   ended, so a turnaround is never a stitch in place.
+//!   ended, so a turnaround is never a stitch in place. A running or manual stitch's pass after the first
+//!   starts with the point the last ended at, which Ink/Stitch lists again, and a zigzag's with the point
+//!   after it, which Ink/Stitch lists once ([`Turn`]).
 //! - **Bean stitch** then sews each stitch from A to B 2b + 1 times: A to B, then b times back to A and on
 //!   to B. b is taken in turn from a list, which runs on from pass to pass. Every point of a pass takes a
 //!   step of it, and a point where the needle already is sews nothing: each pass after the first starts
 //!   with the point the last ended at, and manual stitch lists some points again. That is Ink/Stitch's
 //!   counting (it lists the turnaround point again, and the repeated point takes a step), so a file sews
 //!   the same in both tools; with a two-value list it also sews each stretch of the line the same way on
-//!   every pass.
+//!   every pass. A zigzag stroke's passes are joined instead, and a turn takes no step.
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 use stitchcraft_params::{StitchType, params};
@@ -34,19 +36,33 @@ params! {
     }
 }
 
-/// `run` sewn `repeats` times (at least once), each stitch then sewn 2b + 1 times with b taken in turn from
-/// `beans` (none: 0), a step for every point of every pass. A point where the needle already is takes its
-/// step and sews nothing. Every needle point costs one unit of `meter`.
-pub fn sew(run: &[Point], repeats: u32, beans: &[u32], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+/// The point each pass after the first starts with, which decides how bean stitch counts its steps.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Turn {
+    /// With the point the last pass ended at, which takes a step of the bean list and sews nothing:
+    /// running and manual stitch, whose turns Ink/Stitch lists twice.
+    Listed,
+    /// With the point after it, and the turn takes no step: a zigzag stroke, whose passes Ink/Stitch joins
+    /// without listing the turn again.
+    Joined,
+}
+
+/// `run` sewn `repeats` times (at least once), each pass after the first starting as `turn` says, each
+/// stitch then sewn 2b + 1 times with b taken in turn from `beans` (none: 0), a step for every point of
+/// every pass. A point where the needle already is takes its step and sews nothing. Every needle point
+/// costs one unit of `meter`.
+pub fn sew(run: &[Point], repeats: u32, beans: &[u32], turn: Turn, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let Some((&start, rest)) = run.split_first() else { return Ok(Vec::new()) };
     let mut out = vec![start];
     let mut step = 0_usize;
     for pass in 0..repeats.max(1) {
-        // A pass after the first starts with the point the last ended at; the way back is the run reversed.
+        // A pass after the first starts with the point the last ended at, or the one after it; the way back
+        // is the run reversed. The first pass starts after the run's start, which the needle is at.
+        let skip = usize::from(turn == Turn::Joined);
         let points: Vec<Point> = match pass {
             0 => rest.to_vec(),
-            _ if pass % 2 == 1 => run.iter().rev().copied().collect(),
-            _ => run.to_vec(),
+            _ if pass % 2 == 1 => run.iter().rev().skip(skip).copied().collect(),
+            _ => run.iter().skip(skip).copied().collect(),
         };
         for to in points {
             let from = out.last().copied().unwrap_or(start);
@@ -82,7 +98,7 @@ mod tests {
     }
 
     fn sewn(xs_: &[f64], repeats: u32, beans: &[u32]) -> Vec<f64> {
-        xs(&sew(&run(xs_), repeats, beans, &mut Budget::DEFAULT.meter()).unwrap())
+        xs(&sew(&run(xs_), repeats, beans, Turn::Listed, &mut Budget::DEFAULT.meter()).unwrap())
     }
 
     #[test]
@@ -107,8 +123,17 @@ mod tests {
     }
 
     #[test]
+    fn req_run_012_joined_passes_turn_without_listing_the_turn_again() {
+        let joined = |repeats, beans: &[u32]| xs(&sew(&run(&[0.0, 1.0, 2.0]), repeats, beans, Turn::Joined, &mut Budget::DEFAULT.meter()).unwrap());
+        assert_eq!(joined(3, &[]), sewn(&[0.0, 1.0, 2.0], 3, &[]), "the same points without bean stitch");
+        // Steps 0 and 1 there, then 2 and 3 back: the first stitch back takes step 2, the list's third value,
+        // and the second takes the first again.
+        assert_eq!(joined(2, &[1, 0, 0]), [0.0, 1.0, 0.0, 1.0, 2.0, 1.0, 0.0, 1.0, 0.0]);
+    }
+
+    #[test]
     fn the_budget_bounds_the_work() {
         let mut meter = Budget { max_stitches: 1, max_work: 5 }.meter();
-        assert_eq!(sew(&run(&[0.0, 1.0, 2.0]), 3, &[2], &mut meter), Err(Exhausted::Work));
+        assert_eq!(sew(&run(&[0.0, 1.0, 2.0]), 3, &[2], Turn::Listed, &mut meter), Err(Exhausted::Work));
     }
 }
