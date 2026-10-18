@@ -241,8 +241,11 @@ stitched (`SC-W0401`), as for a running stitch (`DEV-RUN-004`).
 
 ### Diagnostics
 
-`SC-W0401` for a part of the path that is one point. Finalizing leaves out a zigzag's stitches that are
-shorter than the shortest stitch, as they are across a zigzag much narrower than it (`SC-I0504`).
+`SC-W0401` for a part of the path that is one point. Finishing leaves out a needle point of each stitch
+shorter than the shortest stitch (`SC-I0504`). At the default spacing, 0.4 mm, and a shortest stitch of
+0.3 mm, that is every stitch of a straight zigzag narrower than 0.224 mm, and the zigzag sews as a line.
+`SC-W0405` names a zigzag with stitches that short, and the width it needs. Ink/Stitch's shortest stitch
+is 0.1 mm by default, and it sews such a zigzag as it is.
 
 ## Ripple stitch (P3, M10)
 
