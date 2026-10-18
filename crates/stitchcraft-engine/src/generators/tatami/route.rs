@@ -201,9 +201,16 @@ impl Built {
     }
 
     /// A node of its own at the point of the rings nearest `p`, splitting the stretch of that ring whose
-    /// chord passes nearest; the node already there if there is one. Only rings with nodes are looked at.
+    /// chord passes nearest; the node already there if there is one. Only rings with nodes are looked at,
+    /// found with a look at each node: one unit of `meter` each, and one for each edge weighed.
     fn insert(&mut self, rings: &Rings<'_>, p: Point, meter: &mut Meter) -> Result<Option<NodeId>, Exhausted> {
-        let reached: Vec<bool> = (0..rings.count()).map(|r| self.nodes.iter().any(|n| n.place.ring == r)).collect();
+        meter.charge(u64::try_from(self.nodes.len()).unwrap_or(u64::MAX))?;
+        let mut reached = vec![false; rings.count()];
+        for node in &self.nodes {
+            if let Some(slot) = reached.get_mut(node.place.ring) {
+                *slot = true;
+            }
+        }
         let Some(place) = rings.locate(p, |r| reached.get(r).copied().unwrap_or(false), meter)? else { return Ok(None) };
         let Some(q) = rings.point(place) else { return Ok(None) };
         if let Some(&id) = self.index.get(&key(q)) {
@@ -633,6 +640,24 @@ mod tests {
         assert_eq!([kinds(&built.graph, a, node), kinds(&built.graph, node, b)], [[Kind::Outline], [Kind::Outline]]);
         // A point whose foot is a node: that node.
         assert_eq!(insert(&mut built, p(-5.0, 1.0)), a);
+    }
+
+    #[test]
+    fn req_fill_tat_013_inserting_a_node_charges_for_each_node_it_looks_at() {
+        // A 10 × 3 rectangle, rows 0.1 mm apart and upright: 101 rows, 202 nodes. A node of its own nearest a
+        // point between 2 rows' ends first finds the rings rows reach, by looking at every node once, and
+        // charges for each, as it does for each stretch of ring it weighs.
+        let part = rectangle();
+        let rings = rings_of(&part);
+        let segments: Vec<(Point, Point)> = (0..=100).map(|k| (p(f64::from(k) / 10.0, 0.0), p(f64::from(k) / 10.0, 3.0))).collect();
+        let mut built = joined(&rings, &segments);
+        let (nodes, edges) = (built.nodes.len(), built.graph.all().len());
+        assert_eq!(nodes, 202);
+        let mut meter = Budget::DEFAULT.meter();
+        let before = meter.work_left();
+        built.insert(&rings, p(5.05, -1.0), &mut meter).unwrap().unwrap();
+        let spent = before - meter.work_left();
+        assert!(spent >= u64::try_from(nodes + edges).unwrap(), "{spent} units for {nodes} nodes and {edges} edges");
     }
 
     #[test]
