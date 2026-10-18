@@ -44,7 +44,7 @@ use crate::normalize::stroke::{self, segments};
 pub const MIN_RAIL: f64 = 0.1 * MM_PER_SVG_PX;
 
 /// Two points closer than this, in millimetres, are one point.
-const SAME_POINT: f64 = 1e-6;
+pub(crate) const SAME_POINT: f64 = 1e-6;
 
 /// How far past either end of a segment, as a fraction of its length, a point still lies on it. Where two
 /// segments end at one node, as the rails of a pointed column do at its tip, rounding can put the
