@@ -19,7 +19,7 @@
 use std::collections::BTreeSet;
 
 use serde::Deserialize;
-use stitchcraft_params::{Family, Kind, Origin, ParamGroup, ParamSpec, StitchType, find};
+use stitchcraft_params::{Family, Kind, Origin, ParamGroup, ParamSpec, StitchType, declarations, find_for};
 use stitchcraft_svg::inkstitch::{COMMANDS, READ_ATTRIBUTES};
 
 use crate::param_pages;
@@ -245,6 +245,9 @@ impl Contract {
         let mut problems = Vec::new();
         for spec in registry.iter().flat_map(|g| g.specs) {
             let key = spec.key;
+            // Whatever its stitch types: an SVG node's fill and stroke read the same settings, so one of
+            // StitchCraft's own would read a value written for Ink/Stitch's meaning. A declaration is
+            // compared with the rows for its stitch types (`REQ-PRM-005`).
             let named = self.param.iter().any(|p| p.name == key);
             match (spec.origin, named) {
                 (Origin::StitchCraft, false) => {}
@@ -269,8 +272,9 @@ impl Contract {
                 }
             }
         }
-        for key in ["lock_start", "lock_end"] {
-            if let Some(Kind::Choice { options }) = find(registry, key).map(|spec| spec.kind) {
+        for spec in ["lock_start", "lock_end"].into_iter().flat_map(|key| declarations(registry, key)) {
+            let key = spec.key;
+            if let Kind::Choice { options } = spec.kind {
                 let ids: Vec<&str> = options.iter().map(|o| o.id).collect();
                 if ids != self.lock_ids {
                     problems.push(format!("`{key}` offers {ids:?}, but the lock identifiers in {DATA} are {:?}", self.lock_ids));
@@ -285,7 +289,7 @@ impl Contract {
                 problems.push(format!("`{}`: StitchType has {ours:?}, but {DATA} lists {theirs:?}", family.method_param()));
             }
             // A registered method parameter offers them in Ink/Stitch's order, which its defaults count on.
-            if let Some(Kind::Choice { options }) = find(registry, family.method_param()).map(|spec| spec.kind) {
+            if let Some(Kind::Choice { options }) = find_for(registry, family.method_param(), family).map(|spec| spec.kind) {
                 let offered: Vec<&str> = options.iter().map(|o| o.id).collect();
                 if offered != listed {
                     problems.push(format!("`{}` offers {offered:?}, but Ink/Stitch's order is {listed:?}", family.method_param()));
@@ -515,6 +519,58 @@ mod tests {
         let contract = Contract::parse(&data).unwrap();
         assert_eq!(contract.check(&[&both(&[(Family::Satin, "0.1")])]), Vec::<String>::new());
         assert_eq!(contract.check(&[&both(&[])]), [unlike("running_stitch_tolerance_mm", "0.2", "0.1")]);
+    }
+
+    #[test]
+    fn req_prm_005_each_family_s_declaration_is_compared_with_its_element_s_row() {
+        // Ink/Stitch's zigzag spacing is a list for a zigzag stroke and a length for satin columns, and a
+        // meander fill reads it as a length that is 0 by default. Each family declares the key once, with
+        // its own kind.
+        let row = |element: &str, kind: &str, unit: &str, default: &str, applies_to: &str| {
+            format!(
+                "[[param]]\nelement = \"{element}\"\nname = \"zigzag_spacing_mm\"\ntype = \"{kind}\"\nunit = \"{unit}\"\n\
+                 default = \"{default}\"\napplies_to = [{applies_to}]\nphase = \"P2\"\nmilestone = \"M7\"\n"
+            )
+        };
+        let rows = row("stroke", "string", "mm", "0.4", "\"zigzag_stitch\"")
+            + &row("satin", "float", "mm/cycle", "0.4", "")
+            + &row("fill", "float", "mm", "0", "\"meander_fill\"");
+        let contract = Contract::parse(&data("0.25").replacen("[[param]]", &format!("{rows}[[param]]"), 1)).unwrap();
+        let declared = |name: &'static str, kind, default, applies_to: &'static [StitchType], origin| {
+            let spec = ParamSpec { key: "zigzag_spacing_mm", kind, default, applies_to, origin, ..ROW_SPACING };
+            let specs: &'static [ParamSpec] = Box::leak(Box::new([spec]));
+            ParamGroup { name, help: " Spacing.\n", applies_to, specs }
+        };
+        let length = Kind::Length { min: 0.0, max: 10.0, empty: Empty::Never };
+        let list = Kind::LengthList { min: 0.01, max: 10.0 };
+        let stroke = declared("ZigzagStrokeParams", list, "0.4", &[StitchType::ZigzagStitch], Origin::InkStitch);
+        let satin = declared("SatinParams", length, "0.4", &[StitchType::SatinColumn], Origin::InkStitch);
+        let fill = |default| declared("MeanderFillParams", length, default, &[StitchType::MeanderFill], Origin::InkStitch);
+        assert_eq!(contract.check(&[&stroke, &satin, &fill("0")]), Vec::<String>::new());
+        assert_eq!(contract.check(&[&stroke, &satin, &fill("0.4")]), [unlike("zigzag_spacing_mm", "0.4", "0")]);
+        // Each row links to its family's declaration.
+        let page = contract.render(&[&stroke, &satin, &fill("0")]);
+        for row in [
+            "| `zigzag_spacing_mm` | string | mm | 0.4 | `zigzag_stitch` | P2 (M7) | [registered](../user/reference/params/zigzag-stroke.md#zigzag_spacing_mm) |",
+            "| `zigzag_spacing_mm` | float | mm/cycle | 0.4 | all | P2 (M7) | [registered](../user/reference/params/satin.md#zigzag_spacing_mm) |",
+            "| `zigzag_spacing_mm` | float | mm | 0 | `meander_fill` | P2 (M7) | [registered](../user/reference/params/meander-fill.md#zigzag_spacing_mm) |",
+        ] {
+            assert!(page.contains(row), "{row}");
+        }
+        // A key of Ink/Stitch's is never StitchCraft's own, even for a family Ink/Stitch does not give it:
+        // a node's fill and stroke read the same settings, and the fill would read a value written for
+        // Ink/Stitch's zigzag stroke.
+        let ours = declared("TatamiFillParams", length, "0.4", &[StitchType::TatamiFill], Origin::StitchCraft);
+        assert_eq!(
+            contract.check(&[&stroke, &satin, &ours]),
+            ["`zigzag_spacing_mm` is an Ink/Stitch parameter (conformance/inkstitch-params.toml): declare it with an Ink/Stitch origin"]
+        );
+        // Declared as Ink/Stitch's for that family, it is a stitch type Ink/Stitch does not give the key.
+        let theirs = declared("TatamiFillParams", length, "0.4", &[StitchType::TatamiFill], Origin::InkStitch);
+        assert_eq!(
+            contract.check(&[&stroke, &satin, &theirs]),
+            ["`zigzag_spacing_mm` applies to `tatami_fill` here, but Ink/Stitch does not give it that stitch type"]
+        );
     }
 
     #[test]

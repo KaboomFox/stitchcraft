@@ -448,7 +448,7 @@ mod tests {
 
     #[test]
     fn the_settings_the_outline_sets_are_the_registry_s() {
-        let kind = |key: &str| PARAMETERS.iter().flat_map(|group| group.specs).find(|spec| spec.key == key).map(|spec| spec.kind);
+        let kind = |key: &str| stitchcraft_params::find_for(PARAMETERS, key, Family::Fill).map(|spec| spec.kind);
         for key in [ROW_SPACING, END_ROW_SPACING] {
             assert!(matches!(kind(key), Some(Kind::Length { .. })), "{key}");
         }

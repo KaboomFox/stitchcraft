@@ -20,7 +20,7 @@ use stitchcraft_core::{Code, Diagnostic};
 
 use crate::kinds::ParamKind;
 use crate::spec::{ParamGroup, ParamSpec};
-use crate::stitch_type::StitchType;
+use crate::stitch_type::{Family, StitchType};
 
 /// One element's parameters as its design stores them: keys and their text.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -119,9 +119,20 @@ pub fn unknown_keys(set: &ParamSet, registry: &[&ParamGroup]) -> Vec<Diagnostic>
         .collect()
 }
 
-/// The spec of `key` in `registry`.
+/// The first declaration of `key` in `registry`. A key declared for several families has one declaration
+/// for each, and [`find_for`] gives a family's. Any other key has only one.
 pub fn find(registry: &[&ParamGroup], key: &str) -> Option<&'static ParamSpec> {
-    registry.iter().flat_map(|group| group.specs.iter()).find(|spec| spec.key == key)
+    declarations(registry, key).next()
+}
+
+/// The declaration of `key` that the stitch types of `family` read, in `registry`.
+pub fn find_for(registry: &[&ParamGroup], key: &str, family: Family) -> Option<&'static ParamSpec> {
+    declarations(registry, key).find(|spec| spec.applies_to.iter().any(|t| t.family() == family))
+}
+
+/// Every declaration of `key` in `registry`, at most one for each family, in the registry's order.
+pub fn declarations<'a>(registry: &'a [&ParamGroup], key: &'a str) -> impl Iterator<Item = &'static ParamSpec> + 'a {
+    registry.iter().flat_map(|group| group.specs.iter()).filter(move |spec| spec.key == key)
 }
 
 #[cfg(test)]

@@ -8,16 +8,17 @@
 //! that happens, so [`audit()`] lists each such problem and the engine's registry test
 //! (`req_prm_001_every_registered_parameter_is_complete`) requires the list to be empty.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
-use crate::set::find;
-use crate::spec::{Kind, ParamGroup, ParamSpec, Stability};
+use crate::set::declarations;
+use crate::spec::{Kind, ParamGroup, ParamSpec, Stability, listed};
 use crate::stitch_type::Family;
 
 /// Every problem in `registry`, one line each, naming the group or the parameter.
 pub fn audit(registry: &[&ParamGroup]) -> Vec<String> {
     let mut problems = Vec::new();
-    let mut keys = BTreeSet::new();
+    // The families each key is declared for so far. A key has at most one declaration for each family.
+    let mut keys: BTreeMap<&str, BTreeSet<Family>> = BTreeMap::new();
     for group in registry {
         let mut group_problem = |ok: bool, problem: &str| {
             if !ok {
@@ -31,9 +32,13 @@ pub fn audit(registry: &[&ParamGroup]) -> Vec<String> {
         let labels: BTreeSet<&str> = group.specs.iter().map(|spec| spec.label).collect();
         group_problem(labels.len() == group.specs.len(), "two parameters share a label");
         for spec in group.specs {
-            if !keys.insert(spec.key) {
-                problems.push(format!("`{}`: declared twice", spec.key));
+            let families: BTreeSet<Family> = spec.applies_to.iter().map(|t| t.family()).collect();
+            let declared = keys.entry(spec.key).or_default();
+            let twice: Vec<&str> = families.intersection(declared).map(|family| family.plural()).collect();
+            if !twice.is_empty() {
+                problems.push(format!("`{}`: declared twice for {}", spec.key, listed(&twice, "and")));
             }
+            declared.extend(families);
             problems.extend(check(spec, group, registry).into_iter().map(|problem| format!("`{}`: {problem}", spec.key)));
         }
     }
@@ -72,9 +77,13 @@ fn check(spec: &ParamSpec, group: &ParamGroup, registry: &[&ParamGroup]) -> Vec<
     );
     if let Some(condition) = spec.visible_when {
         // Shown for some value, and only for values the other parameter takes as they are.
+        // Only this declaration is searched. The next check names a parameter of another declaration.
         let possible = !condition.any_of.is_empty()
-            && find(registry, condition.key)
-                .is_some_and(|other| other.key != spec.key && condition.any_of.iter().all(|value| matches!(other.read(value), Ok((_, None)))));
+            && group
+                .specs
+                .iter()
+                .find(|other| other.key == condition.key)
+                .is_none_or(|other| other.key != spec.key && condition.any_of.iter().all(|value| matches!(other.read(value), Ok((_, None)))));
         require(possible, "it is shown only when another parameter has a value that parameter cannot have");
         // An element reads it by the other parameter's value as it reads that parameter: from the same
         // declaration, always, for every stitch type this one applies to (`ParamSpec::read_by`).
@@ -82,10 +91,15 @@ fn check(spec: &ParamSpec, group: &ParamGroup, registry: &[&ParamGroup]) -> Vec<
             .specs
             .iter()
             .any(|other| other.key == condition.key && other.visible_when.is_none() && spec.applies_to.iter().all(|t| other.applies_to.contains(t)));
-        require(readable, "it is shown by a parameter of another declaration, one shown only sometimes, or one that applies to fewer stitch types");
+        require(
+            readable,
+            "it is shown by a parameter its declaration does not have, one shown only sometimes, or one that applies to fewer stitch types",
+        );
     }
     if let Stability::Deprecated { use_instead: Some(other) } = spec.stability {
-        require(other != spec.key && find(registry, other).is_some(), "it is deprecated in favour of itself or of a parameter that does not exist");
+        // Each element that reads it has the other to read instead.
+        let replaced = spec.applies_to.iter().all(|t| declarations(registry, other).any(|them| them.applies_to.contains(t)));
+        require(other != spec.key && replaced, "it is deprecated in favour of itself or of a parameter not declared for each of its stitch types");
     }
     problems
 }
@@ -193,16 +207,30 @@ mod tests {
                 family_defaults: &[(Family::Fill, "")],
                 ..GOOD
             },
-            // Shown by a parameter shown only sometimes, by one of another declaration, and by one that
-            // applies to fewer stitch types.
+            // Shown by a parameter shown only sometimes, by one of another declaration, by one that applies
+            // to fewer stitch types, and by one that no declaration has.
             ParamSpec { key: "p", label: "P", visible_when: Some(Condition { key: "d", any_of: &["0.25"] }), ..GOOD },
             ParamSpec { key: "q", label: "Q", visible_when: Some(Condition { key: "elsewhere", any_of: &["0.25"] }), ..GOOD },
             ParamSpec { key: "r", label: "R", applies_to: &[StitchType::SatinColumn], ..GOOD },
             ParamSpec { key: "s", label: "S", visible_when: Some(Condition { key: "r", any_of: &["0.25"] }), ..GOOD },
+            ParamSpec { key: "t", label: "T", visible_when: Some(Condition { key: "gone", any_of: &["0.25"] }), ..GOOD },
+            // Deprecated in favour of a parameter that one of its stitch types lacks, and of one that another
+            // family has alone.
+            ParamSpec {
+                key: "u",
+                label: "U",
+                applies_to: &[StitchType::RunningStitch, StitchType::ManualStitch],
+                stability: Stability::Deprecated { use_instead: Some("v") },
+                ..GOOD
+            },
+            ParamSpec { key: "v", label: "V", applies_to: &[StitchType::RunningStitch], ..GOOD },
+            ParamSpec { key: "w", label: "W", stability: Stability::Deprecated { use_instead: Some("r") }, ..GOOD },
         ];
         const ELSEWHERE: &[ParamSpec] = &[ParamSpec { key: "elsewhere", label: "Elsewhere", ..GOOD }];
         let problems = audit(&[&group(BROKEN), &ParamGroup { name: "OtherParams", ..group(ELSEWHERE) }]);
-        let unreadable = "it is shown by a parameter of another declaration, one shown only sometimes, or one that applies to fewer stitch types";
+        let unreadable =
+            "it is shown by a parameter its declaration does not have, one shown only sometimes, or one that applies to fewer stitch types";
+        let unreplaced = "it is deprecated in favour of itself or of a parameter not declared for each of its stitch types";
         assert_eq!(
             problems,
             [
@@ -219,11 +247,11 @@ mod tests {
                 "`d`: it is shown only when another parameter has a value that parameter cannot have",
                 "`e`: it is shown only when another parameter has a value that parameter cannot have",
                 &format!("`e`: {unreadable}"),
-                "`f`: it is deprecated in favour of itself or of a parameter that does not exist",
+                &format!("`f`: {unreplaced}"),
                 "`g`: its range is empty or not finite",
                 "`h`: its range is empty or not finite",
-                "`i`: it is deprecated in favour of itself or of a parameter that does not exist",
-                "`a`: declared twice",
+                &format!("`i`: {unreplaced}"),
+                "`a`: declared twice for strokes, satin columns and fills",
                 "`j`: it is shown only when another parameter has a value that parameter cannot have",
                 "`k`: a family's default is given twice",
                 "`l`: it has a default for a family it does not apply to",
@@ -233,8 +261,39 @@ mod tests {
                 &format!("`p`: {unreadable}"),
                 &format!("`q`: {unreadable}"),
                 &format!("`s`: {unreadable}"),
+                &format!("`t`: {unreadable}"),
+                &format!("`u`: {unreplaced}"),
+                &format!("`w`: {unreplaced}"),
             ]
         );
+    }
+
+    #[test]
+    fn req_prm_005_a_condition_reads_its_own_declaration_of_the_key() {
+        // One length for satin columns, declared first, and a list for zigzag strokes, whose note is shown
+        // for 2 lengths: one length cannot be 2.
+        const SATIN: &[ParamSpec] = &[ParamSpec { key: "spacing_mm", label: "Spacing", applies_to: &[StitchType::SatinColumn], ..GOOD }];
+        const STROKE: &[ParamSpec] = &[
+            ParamSpec {
+                key: "spacing_mm",
+                label: "Spacing",
+                kind: Kind::LengthList { min: 0.1, max: 10.0 },
+                applies_to: &[StitchType::ZigzagStitch],
+                ..GOOD
+            },
+            ParamSpec {
+                key: "note",
+                label: "Note",
+                kind: Kind::Text { max_bytes: 10 },
+                default: "",
+                applies_to: &[StitchType::ZigzagStitch],
+                visible_when: Some(Condition { key: "spacing_mm", any_of: &["0.5 0.6"] }),
+                ..GOOD
+            },
+        ];
+        let satin = ParamGroup { name: "SatinParams", applies_to: SATIN[0].applies_to, ..group(SATIN) };
+        let stroke = ParamGroup { name: "StrokeParams", applies_to: STROKE[0].applies_to, ..group(STROKE) };
+        assert_eq!(audit(&[&satin, &stroke]), Vec::<String>::new());
     }
 
     #[test]
