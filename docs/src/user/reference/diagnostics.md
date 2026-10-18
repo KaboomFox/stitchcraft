@@ -77,10 +77,12 @@ A budget limits how much work StitchCraft may spend on one element, and how many
 design may have, so that no input can make it run for hours or run out of memory — on the
 command line or inside VectorCraft's live preview.
 
-When planning, the element named in the message was skipped and the rest of the design was
-planned: simplify the element (fewer nodes, wider spacing, a smaller area) or split it into
-several elements. When reading a file or drawing a preview, nothing was produced: simplify the
-drawing, or split it into several files.
+When planning, an element that needs more work than its budget was skipped and the rest of the
+design was planned: simplify the element (fewer nodes, wider spacing, a smaller area) or split it
+into several elements. A design that needs more stitches than its limit was not planned, and the
+message names the element where it ran out: widen the spacing of its largest elements, lower their
+repeats or bean stitch, or split the design into several files. When reading a file or drawing a
+preview, nothing was produced: simplify the drawing, or split it into several files.
 
 ## SC-E0005
 

@@ -81,9 +81,14 @@ fn millimetres_read_well() {
 }
 
 #[test]
-fn the_budget_bounds_the_work() {
-    let mut meter = Budget { max_stitches: 1, max_work: 3 }.meter();
+fn the_budget_bounds_the_work_and_the_stitches() {
+    let mut meter = Budget { max_stitches: u32::MAX, max_work: 3 }.meter();
     assert_eq!(fit(100.0, &mut even(&[1.0]), 0.3, None, &mut meter), Err(Exhausted::Work));
+    // A span's stitches must fit in the stitches left, though they spend none.
+    let mut meter = Budget { max_stitches: 100, max_work: u64::MAX }.meter();
+    assert_eq!(fit(100.0, &mut even(&[1.0]), 0.3, None, &mut meter).map(|lengths| lengths.len()), Ok(100));
+    assert_eq!(meter.stitches_left(), 100);
+    assert_eq!(fit(100.0, &mut even(&[1.0]), 0.3, None, &mut Budget { max_stitches: 99, max_work: u64::MAX }.meter()), Err(Exhausted::Stitches));
 }
 
 fn point(x: f64, y: f64) -> Point {

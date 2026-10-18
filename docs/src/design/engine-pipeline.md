@@ -101,7 +101,9 @@ Rules every generator follows:
 - **Budgeted:** every inner loop charges work units. Each element has the budget's work to itself. One
   that runs out (`SC-E0004`) is skipped, and the others still plan. The stitch limit is for the whole
   design. Assembly and finalize share the budget's work once more, and running out there plans nothing.
-  `SC-E0004` then says so for the whole design.
+  `SC-E0004` then says so for the whole design. A generator also spends the design's stitches on the
+  needle points it makes ([budgets](data-model.md#budgets), `REQ-GEN-004`). Each element gets what the
+  elements before it left, and the first that needs more ends planning, with `SC-E0004` naming it.
 - **Roles:** every stitch is tagged by its role. Assembly tags the stitches of groups as top and the lock
   stitches as lock. The jumps between groups are travel. Previews draw the lock stitches apart. A
   generator hands assembly its needle points without roles, so an element's underlay, and the running

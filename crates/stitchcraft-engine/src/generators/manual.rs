@@ -28,12 +28,18 @@ use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point};
 
 use crate::design::{Path, Subpath};
 use crate::generators::passes::{self, RepeatParams, Turn};
-use crate::generators::{Stitched, TooSmall, mm, too_small};
+use crate::generators::{Stitched, TooSmall, mm, settled, too_small};
 
 /// The manual stitch along `path`, bean-stitched as `passes` say (its repeats do not apply), with no
 /// stitch shorter than `min_stitch`, and none longer than `max_stitch` where it is set (the element's
-/// `max_stitch_length_mm`). Every node and every split costs work from `meter`.
+/// `max_stitch_length_mm`). Every node and every split costs work from `meter`, and every needle point a
+/// stitch.
 pub fn manual_stitch(path: &Path, max_stitch: Option<Mm>, passes: &RepeatParams, min_stitch: Mm, meter: &mut Meter) -> Result<Stitched, Exhausted> {
+    settled(meter, |meter| sewn(path, max_stitch, passes, min_stitch, meter))
+}
+
+/// [`manual_stitch`], before its stitches are settled.
+fn sewn(path: &Path, max_stitch: Option<Mm>, passes: &RepeatParams, min_stitch: Mm, meter: &mut Meter) -> Result<Stitched, Exhausted> {
     let min = min_stitch.get();
     let longest = max_stitch.map(Mm::get);
     let mut runs = Vec::with_capacity(path.subpaths.len());
@@ -137,11 +143,12 @@ fn split(run: &[Point], longest: Option<f64>, min: f64, long: &mut Long, meter: 
     for pair in run.windows(2) {
         let [from, to] = pair else { continue };
         let length = from.distance(*to);
-        // The parts it needs, then as many of them as leave none too short. Each part is paid for here,
-        // so the points below need no charge; a count past `u32` is past any budget.
+        // The parts it needs, then as many of them as leave none too short. Each part is paid for here, in
+        // work and in a stitch, so the points below need no charge; a count past `u32` is past any budget.
         let mut needed = 1_u32;
         while !at_least(longest, length / f64::from(needed)) {
             meter.charge(1)?;
+            meter.charge_stitches(1)?;
             needed = needed.checked_add(1).ok_or(Exhausted::Work)?;
         }
         let mut parts = needed;
@@ -270,8 +277,12 @@ mod tests {
     }
 
     #[test]
-    fn the_budget_bounds_the_work() {
-        let mut meter = Budget { max_stitches: 1, max_work: 3 }.meter();
+    fn the_budget_bounds_the_work_and_the_stitches() {
+        let mut meter = Budget { max_stitches: u32::MAX, max_work: 3 }.meter();
         assert_eq!(split(&[p(0.0, 0.0), p(100.0, 0.0)], Some(1.0), 0.3, &mut Long::default(), &mut meter), Err(Exhausted::Work));
+        // A stitch for each part, spent as it is counted.
+        let mut meter = Budget { max_stitches: 3, max_work: u64::MAX }.meter();
+        assert_eq!(split(&[p(0.0, 0.0), p(100.0, 0.0)], Some(1.0), 0.3, &mut Long::default(), &mut meter), Err(Exhausted::Stitches));
+        assert_eq!(meter.work_left(), u64::MAX - 4, "it stops at the fourth part it counts");
     }
 }
