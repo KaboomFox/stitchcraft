@@ -429,10 +429,16 @@ fn req_vc_005_what_vectorcraft_draws_of_a_stroke_and_its_stitches_do_not_follow_
         named("The satin column is centred on its path, where VectorCraft draws the stroke outside it.")
     );
     let profile = r#", "profile": {"points": [[0, 0, 0], [0.5, 1, 1], [1, 0, 0]]}"#;
-    assert_eq!(
-        messages(&line(2, "", &appearance(&[stroke(profile)], &["satin"]))),
-        named("The satin column is as wide as the stroke all along, without its width profile.")
-    );
+    // A profile that narrows one side only changes the stroke's width too.
+    let left = r#", "profile": {"points": [[0, 1, 1], [0.5, 0.5, 1], [1, 1, 1]]}"#;
+    let right = r#", "profile": {"points": [[0, 1, 1], [0.5, 1, 0.5], [1, 1, 1]]}"#;
+    for narrowed in [profile, left, right] {
+        assert_eq!(
+            messages(&line(2, "", &appearance(&[stroke(narrowed)], &["satin"]))),
+            named("The satin column is as wide as the stroke all along, without its width profile."),
+            "{narrowed}"
+        );
+    }
     assert_eq!(
         messages(&line(2, "", &appearance(&[stroke(r#", "cap": "Round""#)], &["satin"]))),
         named("The satin column ends where its path ends, and VectorCraft draws the stroke's round caps past them.")
