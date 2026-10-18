@@ -287,6 +287,8 @@ fn req_prm_002_invalid_values_are_errors_that_say_what_is_accepted() {
 
 #[test]
 fn req_prm_002_out_of_range_values_are_clamped_with_a_warning() {
+    // A list is read whole, but an element may sew only some of its values, as a zigzag sews its first
+    // spacing: the warning says what the list is read as, and a single value's what is used.
     let read = Everything::from_set(&set(&[
         ("a_length_mm", "25"),
         ("a_tilt", "270"),
@@ -308,7 +310,7 @@ fn req_prm_002_out_of_range_values_are_clamped_with_a_warning() {
             "SC-W0102: `a_tilt` is 270, outside -89 to 89°; 89° is used.",
             "SC-W0102: `a_percent` is 250, outside 0 to 200%; 200% is used.",
             "SC-W0102: `a_count` is 0, outside 1 to 20; 1 is used.",
-            "SC-W0102: `some_lengths_mm` is 2.5 0.1, outside 0.3 to 12 mm; 2.5 0.3 mm is used.",
+            "SC-W0102: `some_lengths_mm` is 2.5 0.1, outside 0.3 to 12 mm, and is read as 2.5 0.3 mm.",
         ]
     );
 }

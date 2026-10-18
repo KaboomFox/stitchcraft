@@ -87,6 +87,7 @@ pub stitchcraft_core::diag::Code::VcNewerFormat
 pub stitchcraft_core::diag::Code::VcNotPrinted
 pub stitchcraft_core::diag::Code::VcObjectIgnored
 pub stitchcraft_core::diag::Code::VcUnreadable
+pub stitchcraft_core::diag::Code::ZigzagTooNarrow
 impl stitchcraft_core::diag::Code
 pub const stitchcraft_core::diag::Code::ALL: &'static [stitchcraft_core::diag::Code]
 pub const fn stitchcraft_core::diag::Code::id(self) -> &'static str
@@ -282,6 +283,7 @@ pub stitchcraft_core::Code::VcNewerFormat
 pub stitchcraft_core::Code::VcNotPrinted
 pub stitchcraft_core::Code::VcObjectIgnored
 pub stitchcraft_core::Code::VcUnreadable
+pub stitchcraft_core::Code::ZigzagTooNarrow
 impl stitchcraft_core::diag::Code
 pub const stitchcraft_core::diag::Code::ALL: &'static [stitchcraft_core::diag::Code]
 pub const fn stitchcraft_core::diag::Code::id(self) -> &'static str

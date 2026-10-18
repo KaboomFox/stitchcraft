@@ -14,12 +14,18 @@ use stitchcraft_params::ParamSet;
 use stitchcraft_plan::StitchKind;
 use stitchcraft_testkit::designs::{RED, line, messages, planned, polylines, rings, widened};
 
-/// `path` sewn `width` millimetres wide, with `settings` for its zigzag, repeats and bean stitch.
+/// `path` sewn `width` millimetres wide, with `settings` for its zigzag, repeats and bean stitch, for a
+/// machine whose shortest stitch is 0.01 mm, shorter than any these cases sew.
 fn sewn(path: &Path, width: f64, settings: &[(&str, &str)]) -> Stitched {
+    sewn_for(0.01, path, width, settings)
+}
+
+/// [`sewn`], for a machine whose shortest stitch is `shortest` millimetres.
+fn sewn_for(shortest: f64, path: &Path, width: f64, settings: &[(&str, &str)]) -> Stitched {
     let set: ParamSet = settings.iter().copied().collect();
     let zigzag = ZigzagStrokeParams::from_set(&set).unwrap().params;
     let passes = RepeatParams::from_set(&set).unwrap().params;
-    zigzag_stroke(path, Mm::new(width).unwrap(), &zigzag, &passes, Mm::new(0.3).unwrap(), &mut Budget::DEFAULT.meter()).unwrap()
+    zigzag_stroke(path, Mm::new(width).unwrap(), &zigzag, &passes, Mm::new(shortest).unwrap(), &mut Budget::DEFAULT.meter()).unwrap()
 }
 
 /// The only run of `path` sewn so.
@@ -199,6 +205,38 @@ fn diag_sc_e0009_a_zigzag_stroke_without_a_spacing_is_not_sewn() {
     let stitched = zigzag_stroke(&east(5.0), mm(2.0), &zigzag, &passes, mm(0.3), &mut Budget::DEFAULT.meter()).unwrap();
     assert!(stitched.runs.is_empty());
     assert_eq!(stitched.warnings.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::InternalCheckFailed]);
+}
+
+#[test]
+fn diag_sc_w0405_a_zigzag_too_narrow_for_the_shortest_stitch_says_so() {
+    // 10 mm at the default spacing, 0.4 mm, for a shortest stitch of 0.3 mm. 0.2 mm wide, each stitch across
+    // is √(0.2² + 0.2²) = 0.28 mm long: finishing would leave out every other needle point. Each is 0.3 mm
+    // long at a width of √(0.3² − 0.2²) = 0.224 mm, so the hint asks for 0.23 mm, and 0.23 mm is enough.
+    let said = |width: f64| -> Vec<String> {
+        let stitched = sewn_for(0.3, &east(10.0), width, &[]);
+        stitched.warnings.iter().map(|d| format!("{d} {:?}", d.fix)).collect()
+    };
+    assert_eq!(
+        said(0.2),
+        [
+            "warning SC-W0405: All 50 of the zigzag's stitches are shorter than the shortest stitch (0.3 mm), at 0.28 mm, so finishing leaves out every other needle point, and the zigzag sews as a line. Some(Hint(\"Make the zigzag at least 0.23 mm wide, or space it out.\"))"
+        ]
+    );
+    assert_eq!(said(0.23), Vec::<String>::new());
+    // Planned for the reference machine, the zigzag sews as the warning says: a line along one side, between
+    // the locks at its ends.
+    let zigzag = widened(line("z", (0.0, 0.0), 10.0, &RED, &[("stroke_method", "zigzag_stitch")]), 0.2);
+    let outcome = planned(vec![zigzag]);
+    assert!(messages(&outcome)[0].starts_with("warning SC-W0405: All 50 of the zigzag's stitches"), "{:?}", messages(&outcome));
+    let plan = outcome.plan.unwrap();
+    let between: Vec<f64> = plan
+        .blocks
+        .iter()
+        .flat_map(|b| &b.stitches)
+        .filter(|s| s.kind == StitchKind::Normal && (0.3..9.7).contains(&s.at.x()))
+        .map(|s| s.at.y())
+        .collect();
+    assert!(between.len() > 20 && between.iter().all(|&y| (y - 0.1).abs() < 1e-9), "{between:?}");
 }
 
 #[test]

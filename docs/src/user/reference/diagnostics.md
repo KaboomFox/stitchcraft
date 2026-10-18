@@ -44,6 +44,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
 | [`SC-W0404`](#sc-w0404) | Warning | Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch |
+| [`SC-W0405`](#sc-w0405) | Warning | Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower |
 | [`SC-W0502`](#sc-w0502) | Warning | Lock stitch shorter than 0.2 mm; lengthened |
 | [`SC-W0503`](#sc-w0503) | Warning | Custom lock cannot be sewn as written |
 | [`SC-I0504`](#sc-i0504) | Info | Stitches shorter than the shortest stitch merged |
@@ -499,6 +500,20 @@ setting, however short they are.
 The message gives how many stitches are longer and the longest of them. Set `max_stitch_length_mm`
 to at least twice the shortest stitch: every split then leaves parts long enough.
 
+## SC-W0405
+
+**Warning** — Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower
+
+A zigzag stroke's stitches shorter than the shortest stitch the machine sews well, across a zigzag
+too narrow for its spacing. Finishing leaves out a needle point of each such stitch, as it leaves out
+any point that near the one before it (`SC-I0504`), so the zigzag sews narrower there. Where every
+stitch is that short, every other point goes, and the zigzag sews as a line along one side.
+Ink/Stitch's shortest stitch is 0.1 mm by default, and it sews such a zigzag as it is.
+
+The message gives how many stitches are that short and the shortest. On a straight path, a stitch
+across a zigzag `w` wide at a spacing `s` is √(w² + (s/2)²) long. Make the zigzag wider, the stroke
+or its pull compensation, or space it out, until that is at least the shortest stitch.
+
 ## SC-W0502
 
 **Warning** — Lock stitch shorter than 0.2 mm; lengthened
@@ -538,7 +553,8 @@ between them is whatever is left of the gap. A point that stays, such as a lock 
 point before a jump, trim or stop, leaves out the points before it that it is too near, and a stitch
 into or out of a lock point may be as short as 0.2 mm. Where small elements are sewn over each other,
 a point that stays can go too, when it comes within the shortest stitch of another that stays.
-Nothing visible changes.
+Nothing visible changes, but across a zigzag too narrow for the shortest stitch, which `SC-W0405`
+names.
 
 The message gives how many points were left out and the shortest stitches that applied to them.
 Nothing needs doing. If the count is large, check for elements drawn on top of each other.

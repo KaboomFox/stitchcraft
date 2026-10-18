@@ -219,8 +219,14 @@ impl ParamSpec {
                 Ok((Value::Length(None), Some(Diagnostic::new(Code::ParamClamped, message))))
             }
             Some((value, true)) => {
+                let (key, given, range, read) = (self.key, raw.trim(), self.kind.range(), value.to_raw());
                 let unit = suffix(self.kind.unit());
-                let message = format!("`{}` is {}, outside {}; {}{unit} is used.", self.key, raw.trim(), self.kind.range(), value.to_raw());
+                // An element may sew only some of a list's values, so the message says what it is read as.
+                let message = if self.kind.list() {
+                    format!("`{key}` is {given}, outside {range}, and is read as {read}{unit}.")
+                } else {
+                    format!("`{key}` is {given}, outside {range}; {read}{unit} is used.")
+                };
                 Ok((value, Some(Diagnostic::new(Code::ParamClamped, message))))
             }
             None => {
