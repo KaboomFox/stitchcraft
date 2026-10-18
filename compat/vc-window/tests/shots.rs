@@ -22,12 +22,12 @@
 // The harness's own exemption (`src/lib.rs`): it waits on the app and reads and writes files.
 #![allow(clippy::disallowed_methods, clippy::disallowed_types)]
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::path::Path;
 use std::time::{Duration, Instant};
 
 use serde_json::{Value, json};
-use stitchcraft_vc_window::{SHOTS, Window, record};
+use stitchcraft_vc_window::{SHOTS, Window, dialog_controls, record};
 use xa11y::{App, AppExt, Element};
 
 /// How long xa11y waits for the app in the tree, and for a control to show.
@@ -203,14 +203,9 @@ fn opened(app: &App, dialog: &Value) -> Result<(Crop, String), String> {
     };
     let crop = bounds(&window)?;
     let tree = window.dump(Some(DEPTH)).map_err(|e| format!("the dialog's tree: {e}"))?;
-    // A row is a label, the key with a colon, and then the control: the controls by key, lower case.
-    let rows: BTreeMap<String, &'static str> = in_order(&window, DEPTH)?
-        .windows(2)
-        .filter_map(|pair| {
-            let [label, control] = pair else { return None };
-            Some((label.name.as_deref()?.strip_suffix(':')?.to_lowercase(), control.role.to_snake_case()))
-        })
-        .collect();
+    let nodes: Vec<(&'static str, Option<String>)> =
+        in_order(&window, DEPTH)?.iter().map(|node| (node.role.to_snake_case(), node.name.clone())).collect();
+    let rows = dialog_controls(&nodes);
     let params: Vec<(&str, &str)> = dialog
         .get("params")
         .and_then(Value::as_array)
