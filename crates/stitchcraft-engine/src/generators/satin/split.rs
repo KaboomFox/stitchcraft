@@ -1,11 +1,13 @@
 //! Split stitches, and the order the needle sews a satin column's points in
-//! (`docs/src/design/algorithms/satin.md` › Top stitches, steps 4 and 5).
+//! (`docs/src/design/algorithms/satin.md` › Top stitches, steps 4 and 5, and › E-stitch).
 //!
-//! The needle goes from the first rail to the second and back, pair after pair: each stitch across the
-//! column, from a pair's first point to its second, and each stitch back, from its second point to the
-//! next pair's first. Where the element sets a longest stitch (`max_stitch_length_mm`), a stitch longer
-//! than it is split as `split_method` says, as Ink/Stitch splits it. The ends of a stitch are its pair's
-//! compensated points, and it is sewn between their insets (step 3).
+//! A satin column's needle goes from the first rail to the second and back, pair after pair: each stitch
+//! across the column, from a pair's first point to its second, and each stitch back, from its second point
+//! to the next pair's first. An E-stitch's goes across and back at each pair, a spike, and along the first
+//! rail from one spike to the next, its spine. Where the element sets a longest stitch
+//! (`max_stitch_length_mm`), a stitch longer than it is split as `split_method` says, as Ink/Stitch splits
+//! it. The ends of a stitch are its pair's compensated points, and it is sewn between their insets
+//! (step 3).
 //!
 //! - **Default** splits a stitch into the fewest equal parts no longer than the longest stitch, and the
 //!   stitch back after it into as many as the stitch across before it. `random_split_jitter_percent` moves
@@ -18,6 +20,9 @@
 //!   back from its end, where they lie between its insets.
 //! - **Staggered** does the same from a start that moves along by a `split_staggers`-th of the longest
 //!   stitch from one stitch to the next, and comes back after that many stitches.
+//!
+//! An E-stitch's spike goes back down through the splits of its stitch across. Its spine is split only when
+//! the zigzag spacing is longer than the longest stitch, with no randomness, as Ink/Stitch splits it.
 //!
 //! Random splits draw from the element's generator, after the column's pairs are placed, in the order the
 //! stitches are sewn.
@@ -102,6 +107,41 @@ impl<'r> Splitter<'r> {
             (back, parts) = (Some((*b, *inset_b)), across);
         }
         Ok(run)
+    }
+
+    /// The needle points of the E-stitch whose pairs are `pairs`, their insets `short` and its zigzag
+    /// spacing `spacing`: at each pair a spike, from its first inset point through the splits of the
+    /// stitch across to its second, and back down through the same splits. Between spikes the spine goes
+    /// along the first rail, split only when the spacing is longer than the longest stitch. A unit of
+    /// `meter`'s work per split tried.
+    pub(crate) fn sew_e(&mut self, pairs: &[Pair], short: &[Pair], spacing: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+        let longest_spine = self.length.filter(|&length| spacing > length);
+        let mut run = Vec::with_capacity(pairs.len() * 3);
+        let mut spine: Option<Point> = None;
+        for (row, ([a, b], [inset_a, inset_b])) in (1_u32..).step_by(2).zip(pairs.iter().zip(short)) {
+            let (across, _) = self.split([*a, *b], [*inset_a, *inset_b], None, row, false, meter)?;
+            if let (Some(from), Some(length)) = (spine, longest_spine) {
+                run.extend(self.spine(from, *a, length, meter)?);
+            }
+            run.push(*inset_a);
+            run.extend(&across);
+            run.push(*inset_b);
+            run.extend(across.iter().rev());
+            run.push(*inset_a);
+            spine = Some(*inset_a);
+        }
+        Ok(run)
+    }
+
+    /// The splits of the spine's stitch from `from` to `to` along the first rail, no part longer than
+    /// `length`, as `split_method` splits a stitch with no randomness, as row 0 from its start: by default
+    /// into the fewest equal parts, and otherwise at whole multiples of the longest stitch. Row 0 starts the
+    /// staggered method's splits where the simple method's start, so the 2 split the spine alike.
+    fn spine(&self, from: Point, to: Point, length: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+        match self.method {
+            Method::Default => evenly(from, to, length, meter),
+            Method::Simple | Method::Staggered => staggered([from, to], [from, to], length, 1.0, 0, false, meter),
+        }
     }
 
     /// The splits of the stitch between `ends`, sewn from `inset[0]` to `inset[1]`: stitch `row` of the

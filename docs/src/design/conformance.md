@@ -131,7 +131,8 @@ width. Its fills are closed rings filled by the nonzero rule (`fill`, through `r
 the other way round from its outline. The satin cases sew their columns with `stitchcraft_testkit::satins`, as an element is sewn on the
 reference machine, with the stitch lengths the engine gives it there (`satin_lengths`), and read the needle
 points back in pairs across the column. A column is sewn alone (`sewn_satin`) or between the neighbours a
-case gives it (`sewn_between`).
+case gives it (`sewn_between`), and `satin_diagnostics` keeps its warnings' places for the cases that
+check where a warning points.
 
 ## Levels
 

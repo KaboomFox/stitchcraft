@@ -185,6 +185,32 @@ panels = [
 ]
 
 [[shot]]
+id = "e-stitch-spacing"
+kind = "stitch"
+fixture = "docs/fixtures/e-stitch.svg"
+style = "simple"
+scale = 20.0
+layout = "rows"
+alt = "A curved band 36 mm long and 4 mm wide sewn as an E-stitch, its spine along the lower edge and a spike up to the upper edge at each step"
+panels = [
+  { caption = "1 mm", params = { satin_column = "true", satin_method = "e_stitch", zigzag_spacing_mm = "1" } },
+  { caption = "2 mm", params = { satin_column = "true", satin_method = "e_stitch", zigzag_spacing_mm = "2" } },
+  { caption = "3 mm", params = { satin_column = "true", satin_method = "e_stitch", zigzag_spacing_mm = "3" } },
+]
+
+[[shot]]
+id = "e-stitch-swapped"
+kind = "stitch"
+fixture = "docs/fixtures/e-stitch.svg"
+style = "simple"
+scale = 20.0
+layout = "rows"
+alt = "The same band sewn with its spine along the upper edge and the spikes pointing down to the lower edge"
+panels = [
+  { caption = "Rails swapped", params = { satin_column = "true", satin_method = "e_stitch", zigzag_spacing_mm = "2", swap_satin_rails = "true" } },
+]
+
+[[shot]]
 id = "running-tolerance"
 kind = "stitch"
 fixture = "docs/fixtures/half-disc.svg"

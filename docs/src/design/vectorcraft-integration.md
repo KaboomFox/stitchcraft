@@ -78,7 +78,7 @@ One `.wasm` per stitch family keeps each dialog relevant and under 64 parameters
 | Plug-in id | Kind | Stitch types | Notes |
 |---|---|---|---|
 | `<ns>.stroke` | live effect | running, bean, manual (P1), zigzag (M7.2), ripple (later) | `stroke_method` choice selects the variant |
-| `<ns>.satin` | live effect | satin (P1); E, S, zigzag (P2) | rails and rungs from the object's compound path |
+| `<ns>.satin` | live effect | satin (P1), E (M7.3), S and zigzag (later) | rails and rungs from the object's compound path |
 | `<ns>.fill` | live effect | tatami (P1); contour, meander, circular (P2) | `fill_method` choice |
 
 The tools an object filter was to give are VectorCraft's own commands, or wait for ABI v2

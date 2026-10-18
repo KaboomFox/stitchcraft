@@ -130,10 +130,12 @@ fn diag_sc_w0211_push_compensation_longer_than_a_rail_is_named_and_left_out() {
     assert!(warnings[0].contains("SC-W0211") && warnings[0].contains("0.5 mm at its start and 0.5 mm at its end"), "{warnings:?}");
     let x: Vec<f64> = across(&points).iter().map(|[a, _]| a.x()).collect();
     assert_eq!((x.first().copied(), x.last().copied()), (Some(0.0), Some(1.0)), "the column keeps its length: {x:?}");
-    // One rail too short for it is enough: here the second, 1 mm long beside a first of 10 mm.
+    // One rail too short for it is enough: here the second, 1 mm long beside a first of 10 mm. The stitches
+    // fan out from it, and the 2 outermost lean more than 45° from square to the column (SC-W0208).
     let uneven = polylines(&[&[(0.0, 0.0), (10.0, 0.0)], &[(4.5, 4.0), (5.5, 4.0)]]);
     let (_, warnings) = sewn_satin(&uneven, &[("push_compensation_mm", "0.45")]);
-    assert!(warnings.len() == 1 && warnings[0].contains("SC-W0211"), "{warnings:?}");
+    let codes: Vec<&str> = warnings.iter().map(|w| &w[8..16]).collect();
+    assert_eq!(codes, ["SC-W0211", "SC-W0208", "SC-W0208"], "{warnings:?}");
 }
 
 #[test]

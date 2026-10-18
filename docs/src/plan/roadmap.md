@@ -127,8 +127,8 @@ One step for each stitch type, with its requirements, cases and docs
 |---|---|---|
 | M7.1 ✅ | A family of stitch types can declare a key again with a kind and range of its own ([parameter registry](../design/params.md#naming-rules), rule 7). Ink/Stitch's `zigzag_spacing_mm` is a list of lengths for a zigzag stroke and one length for a satin column, and a meander fill reads it as a length that is 0 by default. An element reads the key as its family declares it. The reference pages, the JSON Schema, the plug-ins' dialogs and the contract check give each family its own | `REQ-PRM-005` |
 | M7.2 ✅ | Zigzag stroke, sewn as Ink/Stitch sews it. Its angle is a new kind of setting, an angle kept within its range rather than turned by whole turns | `REQ-RUN-009` to `REQ-RUN-012`, and the type listed for MC-6 |
-| M7.3 | E-stitch, with the warnings every satin method gives: `SC-W0208` where stitches turn more than 45° from the column, and `SC-W0209` for a column wider than 12 mm | its requirements active and the type listed for MC-6 |
-| M7.4 | S-stitch | same |
+| M7.3 ✅ | E-stitch, sewn as Ink/Stitch sews it. Every satin method warns where stitches lean more than 45° from square to their column (`SC-W0208`) and where a top stitch is longer than 12 mm (`SC-W0209`) | `REQ-SAT-020` to `REQ-SAT-023`, and the type listed for MC-6 |
+| M7.4 | S-stitch | its requirements active and the type listed for MC-6 |
 | M7.5 | Zigzag satin | same |
 | M7.6 | The offsetter meets the third criterion of [ADR-0005](../design/adr/0005-geometry-stack.md) before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. At M0.7 they took 218 to 448 ms, against GEOS's 104 to 149 ms | `cargo xtask perf` guards the criterion |
 | M7.7 | Contour fill, with its three strategies and neck splitting | its requirements active and the type listed for MC-6 |

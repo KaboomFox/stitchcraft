@@ -22,6 +22,10 @@ use stitchcraft_params::ParamSet;
 use stitchcraft_testkit::designs::{RED, along, messages, p, planned as sewn, polylines, shape_of};
 use stitchcraft_testkit::satins::{NO_SHORT_STITCHES, across, gaps, ladder, quarter_ring, satin_lengths, sewn_satin};
 
+/// What `SC-W0208` says of the columns below whose rails' nodes 5 mm and 15 mm along pair up: their stitches
+/// lean far along the column around them.
+const LEANING: &str = "warning SC-W0208: 23 stitches of this satin column lean along it, up to 67.8°, more than 45° from square to the column.";
+
 #[test]
 fn req_sat_002_a_straight_column_is_sewn_rail_to_rail_at_the_spacing() {
     let (points, warnings) = sewn_satin(&ladder(10.0, 4.0, &[]), &[]);
@@ -116,7 +120,8 @@ fn req_sat_002_a_column_without_rungs_pairs_its_rails_nodes() {
     // straighten after it.
     let slanted = polylines(&[&[(0.0, 0.0), (5.0, 0.0), (20.0, 0.0)], &[(0.0, 4.0), (15.0, 4.0), (20.0, 4.0)]]);
     let (points, warnings) = sewn_satin(&slanted, &[NO_SHORT_STITCHES]);
-    assert!(warnings.is_empty(), "{warnings:?}");
+    // Around the nodes they lean far along the column, which SC-W0208 names (REQ-SAT-022).
+    assert_eq!(warnings, [LEANING]);
     let pairs = across(&points);
     let before: Vec<&[Point; 2]> = pairs.iter().filter(|[a, _]| a.x() < 5.0 - 1e-9).collect();
     assert!(before.len() > 2 && before.iter().all(|[a, b]| (b.x() - 3.0 * a.x()).abs() < 1e-9), "{before:?}");
@@ -172,8 +177,9 @@ fn req_sat_002_where_the_rails_converge_a_pair_moves_to_lie_at_the_spacing() {
     assert!(inside.iter().all(|gap| (gap - 0.4).abs() <= 0.02), "within 5 %: {gaps:?}");
     assert!(inside[1..].iter().all(|gap| (gap - 0.4).abs() < 1e-6), "each moved to the spacing: {gaps:?}");
     // The work pins how many places the pairs were tried at: a unit per point measured and per place, and
-    // 2 per side of each rail for where the rung added near the rails' starts comes nearest it.
-    assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 70);
+    // 2 per side of each rail for where the rung added near the rails' starts comes nearest it. The pairs
+    // that cut the column, which SC-W0208 reads, are placed again with nothing compensated: 58 units more.
+    assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 128);
 }
 
 #[test]
@@ -197,8 +203,11 @@ fn diag_sc_w0210_rails_without_rungs_with_different_numbers_of_nodes_are_named()
     let (points, warnings) = sewn_satin(&uneven, &[]);
     assert_eq!(
         warnings,
-        ["warning SC-W0210: This satin column has no rungs, and its rails have 4 and 3 nodes, so they pair up only as far as the rail \
-          with fewer goes."]
+        [
+            "warning SC-W0210: This satin column has no rungs, and its rails have 4 and 3 nodes, so they pair up only as far as the rail \
+          with fewer goes.",
+            LEANING
+        ]
     );
     // The lower rail's node at 5 mm pairs with the upper's at 15 mm, and its node at 10 mm with none.
     let at_cut = across(&points).into_iter().find(|[a, _]| a.x() > 5.0 - 1e-9).unwrap();

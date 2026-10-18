@@ -11,6 +11,7 @@ shows one thing, but for `round-patch.vectorcraft`, which VectorCraft writes. Te
 | `badge.svg` | A red star inside a blue ring | the SVG tutorial: the `badge` shots and the `plan-badge` example; the window probe (`compat/vc-window`) |
 | `wave.svg` | A smooth wave | running stitch length |
 | `zigzag.svg` | The same wave, drawn 3 mm wide | the zigzag stroke's spacing and angle |
+| `e-stitch.svg` | A curved band 4 mm wide between 2 rails | the E-stitch's spacing and swapped rails |
 | `half-disc.svg` | A half disc: a straight side with 2 corners, and a curve | running stitch tolerance |
 | `parallel.svg` | 14 rows 0.6 mm apart, sewn as one path | random stitch length |
 | `nodes.svg` | Straight lines and one curve | manual stitch |
