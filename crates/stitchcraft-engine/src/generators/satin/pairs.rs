@@ -44,6 +44,8 @@ const END: f64 = 0.1;
 
 /// The pairs of needle points along `sections`, `spacing` millimetres apart, each step and each pair as
 /// `processor` makes them, at a unit of `meter`'s work per point measured and per place a pair is tried at.
+/// Their points must fit in `meter`'s stitches left, though none is spent: the column's stitches come of
+/// them, or the lines its underlays and its needle's travel walk.
 pub(crate) fn pairs(sections: &[Section], spacing: f64, processor: &mut Processor, meter: &mut Meter) -> Result<Vec<Pair>, Exhausted> {
     let mut pairs: Vec<Pair> = Vec::new();
     let mut last: Option<Pair> = None;
@@ -79,6 +81,7 @@ pub(crate) fn pairs(sections: &[Section], spacing: f64, processor: &mut Processo
             ahead = step * times;
             tries = 0;
             previous = pair;
+            meter.room(2 * (pairs.len() + 1))?;
             pairs.push(processor.widened(pair));
         }
         last = Some(previous);
@@ -128,6 +131,19 @@ mod tests {
         let pull = PullParams::from_set(&ParamSet::new()).unwrap().params;
         let mut rng = SplitMix64::new(0);
         pairs(sections, spacing, &mut Processor::new(&params, &pull, &mut rng), &mut Budget::DEFAULT.meter()).unwrap()
+    }
+
+    #[test]
+    fn pairs_must_fit_in_the_stitches_left_and_spend_none() {
+        // A column 10 mm long at a spacing of 1 mm: 11 pairs, 22 needle points.
+        let section = [vec![p(0.0, 0.0), p(10.0, 0.0)], vec![p(0.0, 4.0), p(10.0, 4.0)]];
+        let laid = |stitches| {
+            let mut meter = Budget { max_stitches: stitches, max_work: u64::MAX }.meter();
+            let processor = &mut Processor::inset([0.0; 2], [0.0; 2]);
+            pairs(std::slice::from_ref(&section), 1.0, processor, &mut meter).map(|pairs| (pairs.len(), meter.stitches_left()))
+        };
+        assert_eq!(laid(22), Ok((11, 22)));
+        assert_eq!(laid(21), Err(Exhausted::Stitches));
     }
 
     #[test]

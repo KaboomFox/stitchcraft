@@ -8,7 +8,7 @@
 
 use proptest::prelude::*;
 use stitchcraft_core::rng::SplitMix64;
-use stitchcraft_core::{Budget, Code, Point, math};
+use stitchcraft_core::{Budget, Code, Exhausted, Point, math};
 use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::generators::running::RunningParams;
 use stitchcraft_engine::generators::tatami::TatamiParams;
@@ -188,10 +188,15 @@ fn req_fill_tat_003_a_fill_s_stitch_settings_are_ink_stitch_s() {
 fn req_fill_tat_003_needle_points_are_charged_to_the_budget() {
     let how = stitching(0.0);
     let mut meter = Budget::DEFAULT.meter();
-    row_points(p(1.3, 0.0), p(18.7, 0.0), &how, &mut SplitMix64::new(1), &mut meter).unwrap();
+    let points = row_points(p(1.3, 0.0), p(18.7, 0.0), &how, &mut SplitMix64::new(1), &mut meter).unwrap();
     assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 6, "a unit per point");
-    let tight = &mut Budget { max_stitches: 1, max_work: 3 }.meter();
-    assert!(row_points(p(1.3, 0.0), p(18.7, 0.0), &how, &mut SplitMix64::new(1), tight).is_err());
+    let tight = &mut Budget { max_stitches: u32::MAX, max_work: 3 }.meter();
+    assert_eq!(row_points(p(1.3, 0.0), p(18.7, 0.0), &how, &mut SplitMix64::new(1), tight), Err(Exhausted::Work));
+    // And a stitch per needle point (`REQ-GEN-004`).
+    let spent = Budget::DEFAULT.max_stitches - meter.stitches_left();
+    assert_eq!(usize::try_from(spent).unwrap(), points.len());
+    let few = &mut Budget { max_stitches: spent - 1, max_work: u64::MAX }.meter();
+    assert_eq!(row_points(p(1.3, 0.0), p(18.7, 0.0), &how, &mut SplitMix64::new(1), few), Err(Exhausted::Stitches));
 }
 
 proptest! {

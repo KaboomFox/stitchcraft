@@ -248,3 +248,20 @@ steps) so a budget behaves identically on every machine. Each element has the wo
 and so does working out what it offers the element before it to end near. Exhaustion there yields
 `SC-E0004` for the element, and other elements still plan. Assembly and finalize share the budget once
 more, and running out there plans nothing. `SC-E0004` then says so for the whole design.
+
+Work bounds time, not memory: a unit can make a point, and 500 million points are gigabytes. A few
+settings multiply an element's needle points. 10 mm of zigzag at the smallest spacing, sewn 100 times
+with bean stitch 10, is 4.2 million. So the stitch limit bounds what generators hold as well
+(`REQ-GEN-004`):
+
+- A generator spends a stitch for each needle point as it makes it, and for each one a pass after the
+  first or bean stitch sews again.
+- What it lays out before sewing it must fit in the stitches left, though it spends none on it: a
+  satin column's pairs, say, or a fill's row segments.
+- Once done, it settles at the needle points it gives. Some it made were dropped on the way, such as
+  points too close together, and some were copied, such as an E-stitch's way back down its spike.
+
+So a generator never holds much more than the stitches left, and it may stop a little short of the limit
+where it made many more points than it keeps. Each element is given the stitches the elements before it
+left. The first that needs more ends planning there, with `SC-E0004` naming it: the design cannot be sewn
+within its limit, and making the rest would only fill memory.

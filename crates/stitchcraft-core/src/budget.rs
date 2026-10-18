@@ -9,6 +9,13 @@
 //! Work is counted in abstract units (one per inner-loop iteration: a scanline crossing, a graph edge
 //! visit, an offset step), never in time, so a budget behaves identically on every machine and the
 //! result never depends on how fast the computer is (`docs/src/design/determinism.md`).
+//!
+//! Work bounds time, not memory: a unit can make a point, and 500 million points are gigabytes. A few
+//! settings multiply an element's needle points — the smallest spacing, repeats, bean stitch — so the
+//! stitch budget bounds what a generator holds as well. It spends a stitch for each needle point as it
+//! makes it ([`Meter::charge_stitches`]), checks that the points it lays out before sewing them fit in
+//! the stitches left ([`Meter::room`]), and settles at the needle points it gives once it is done
+//! ([`Meter::settle_stitches`]): some it made were dropped on the way, and some were copied.
 
 use crate::diag::{Code, Diagnostic, Fix};
 use crate::element::ElementId;
@@ -91,6 +98,28 @@ impl Meter {
         }
     }
 
+    /// Whether `count` points fit in the stitches left, spending none: for points a generator lays out
+    /// before it sews them, which a stitch's worth of needle points at least comes of.
+    pub fn room(&self, count: usize) -> Result<(), Exhausted> {
+        if u32::try_from(count).is_ok_and(|count| count <= self.stitches_left) { Ok(()) } else { Err(Exhausted::Stitches) }
+    }
+
+    /// Makes the stitches spent since [`stitches_left`](Self::stitches_left) said `left` come to `count`,
+    /// giving back what was spent beyond it or spending the rest: for a generator that spent a stitch for
+    /// each needle point it made, and gives `count`.
+    pub fn settle_stitches(&mut self, left: u32, count: usize) -> Result<(), Exhausted> {
+        match u32::try_from(count).ok().and_then(|count| left.checked_sub(count)) {
+            Some(rest) => {
+                self.stitches_left = rest;
+                Ok(())
+            }
+            None => {
+                self.stitches_left = 0;
+                Err(Exhausted::Stitches)
+            }
+        }
+    }
+
     /// Work units still available.
     pub const fn work_left(&self) -> u64 {
         self.work_left
@@ -125,7 +154,7 @@ impl Exhausted {
                 Code::BudgetExhausted,
                 format!("The design needs more than {} stitches, the limit for one design.", budget.max_stitches),
             )
-            .with_fix(Fix::Hint("Split the design into several files, or use wider spacing on large fills.".to_string())),
+            .with_fix(Fix::Hint("Split the design into several files, or use wider spacing and fewer repeats on its largest elements.".to_string())),
         };
         match element {
             Some(id) => diagnostic.with_element(id),
@@ -161,6 +190,32 @@ mod tests {
     }
 
     #[test]
+    fn room_is_checked_against_the_stitches_left_and_spends_none() {
+        let mut meter = Budget { max_stitches: 10, max_work: 1 }.meter();
+        assert_eq!(meter.charge_stitches(4), Ok(()));
+        assert_eq!((meter.room(6), meter.room(7)), (Ok(()), Err(Exhausted::Stitches)));
+        assert_eq!(meter.room(usize::MAX), Err(Exhausted::Stitches));
+        assert_eq!((meter.stitches_left(), meter.work_left()), (6, 1), "nothing spent");
+    }
+
+    #[test]
+    fn settling_gives_back_or_spends_the_rest() {
+        let mut meter = Budget { max_stitches: 10, max_work: 1 }.meter();
+        let left = meter.stitches_left();
+        assert_eq!(meter.charge_stitches(7), Ok(()));
+        assert_eq!(meter.settle_stitches(left, 4), Ok(()), "3 made and dropped are given back");
+        assert_eq!(meter.stitches_left(), 6);
+        assert_eq!(meter.settle_stitches(left, 9), Ok(()), "5 copied are spent");
+        assert_eq!(meter.stitches_left(), 1);
+        assert_eq!(meter.settle_stitches(left, 10), Ok(()));
+        assert_eq!(meter.stitches_left(), 0);
+        assert_eq!(meter.settle_stitches(left, 11), Err(Exhausted::Stitches));
+        assert_eq!(meter.stitches_left(), 0, "exhausted");
+        assert_eq!(meter.settle_stitches(u32::MAX, usize::MAX), Err(Exhausted::Stitches), "past any count");
+        assert_eq!(meter.work_left(), 1, "work is not settled");
+    }
+
+    #[test]
     fn diag_sc_e0004_running_out_names_the_limit_and_suggests_a_fix() {
         let budget = Budget::DEFAULT;
         let id = ElementId::new("svg:path7").unwrap();
@@ -183,6 +238,9 @@ mod tests {
         );
         let stitches = budget.meter().charge_stitches(budget.max_stitches + 1).unwrap_err().diagnostic(&budget, None);
         assert_eq!(stitches.to_string(), "error SC-E0004: The design needs more than 2000000 stitches, the limit for one design.");
-        assert_eq!(stitches.fix.map(|f| f.describe()).as_deref(), Some("Split the design into several files, or use wider spacing on large fills."));
+        assert_eq!(
+            stitches.fix.map(|f| f.describe()).as_deref(),
+            Some("Split the design into several files, or use wider spacing and fewer repeats on its largest elements.")
+        );
     }
 }

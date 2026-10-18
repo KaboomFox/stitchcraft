@@ -42,7 +42,7 @@ use crate::generators::satin::compensation::Processor;
 use crate::generators::satin::ends::Guides;
 use crate::generators::satin::pairs::Pair;
 use crate::generators::satin::split::Splitter;
-use crate::generators::{Neighbours, Stitched, method, mm};
+use crate::generators::{Neighbours, Stitched, method, mm, settled};
 use crate::normalize::centre_line::{Made, rails_and_rungs};
 use crate::normalize::satin::{Pairing, Recognition, Satin, Shape, recognize};
 
@@ -332,8 +332,22 @@ pub struct SatinLengths {
 /// variation drawn from the element's `rng`: one run of needle points, its underlays first, then its top
 /// stitches a pair across the column at a time, from the rails' starts to their ends, or from their ends
 /// after an odd centre walk. With its `neighbours`, it starts near where the needle was left and ends near
-/// the next element, as its settings say (the `ends` module).
+/// the next element, as its settings say (the `ends` module). Every needle point costs a stitch from
+/// `meter`.
 pub fn satin_stitch(
+    satin: &Satin,
+    params: &SatinParams,
+    pull: &PullParams,
+    lengths: SatinLengths,
+    neighbours: &Neighbours,
+    rng: &mut SplitMix64,
+    meter: &mut Meter,
+) -> Result<Stitched, Exhausted> {
+    settled(meter, |meter| sewn(satin, params, pull, lengths, neighbours, rng, meter))
+}
+
+/// [`satin_stitch`], before its stitches are settled.
+fn sewn(
     satin: &Satin,
     params: &SatinParams,
     pull: &PullParams,

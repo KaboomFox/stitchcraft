@@ -130,15 +130,32 @@ pub struct Generation {
 }
 
 /// `element` generated for a design with `settings`, sewn on the machine `profile` describes, between its
-/// `neighbours`, with the budget's work to itself.
+/// `neighbours`, with the budget's work to itself, and its stitches.
 pub fn generate(element: &Element, settings: &DesignSettings, profile: &MachineProfile, neighbours: &Neighbours, budget: &Budget) -> Generation {
+    generate_with(element, settings, profile, neighbours, budget, &mut budget.meter())
+        .unwrap_or_else(|diagnostics| Generation { generated: None, diagnostics })
+}
+
+/// `element` generated as [`generate`] generates it, with `meter`'s work and stitches, a stitch for each of
+/// its needle points (`REQ-GEN-004`); `Err` with what it says when that is more than `meter` has left:
+/// `budget`'s limit for the design, which ends its planning. `SC-E0004` among them says so, naming it.
+pub(crate) fn generate_with(
+    element: &Element,
+    settings: &DesignSettings,
+    profile: &MachineProfile,
+    neighbours: &Neighbours,
+    budget: &Budget,
+    meter: &mut Meter,
+) -> Result<Generation, Vec<Diagnostic>> {
     let mut diagnostics = unknown_keys(&element.params, PARAMETERS);
-    let sewn = sew(element, settings, profile, neighbours, &mut diagnostics, &mut budget.meter());
+    let sewn = sew(element, settings, profile, neighbours, &mut diagnostics, meter);
+    let over = matches!(sewn, Err(Exhausted::Stitches));
     let generated = within(element, budget, &mut diagnostics, sewn);
     if !generated.as_ref().is_some_and(|g| g.groups.iter().any(|group| !group.is_empty())) {
         diagnostics.extend(left_out(element));
     }
-    Generation { generated, diagnostics: named(element, diagnostics) }
+    let diagnostics = named(element, diagnostics);
+    if over { Err(diagnostics) } else { Ok(Generation { generated, diagnostics }) }
 }
 
 /// What a preview shows of a fill too costly to sew: where its top stitches lie ([`rows`]).

@@ -713,6 +713,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- A small file can no longer make StitchCraft fill memory (`REQ-GEN-004`). Generators charged only the
+  work budget, and the design's stitch limit was checked when the elements were joined, after their
+  needle points were made. 10 mm of zigzag at the smallest spacing, sewn 100 times with bean stitch 10,
+  made 4.2 million points, and a metre of it would make 420 million, gigabytes, before the limit refused
+  them. A generator now spends a stitch for each needle point it makes and settles at the ones it gives.
+  The points it lays out before sewing them must fit in the stitches left. Each element is given what the
+  elements before it left, and planning stops at the first that needs more, with `SC-E0004` naming it.
+  `SC-E0004`'s explanation and hint say what to change.
 - The compatibility gate starts a program again while Linux says it is busy, for up to a second. Its
   tests write stand-ins for VectorCraft's command line and for GitHub's, and run them. A process another
   test forked while a stand-in was written held it open, and Linux wouldn't run it: CI's coverage job on

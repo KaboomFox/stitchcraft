@@ -54,7 +54,8 @@ pub struct Row {
 }
 
 /// The rows across `part` on `grid` that meet it in a segment, in order across. One unit of `meter` for
-/// each row, and one for each edge of the part's rings each row is cut against.
+/// each row, and one for each edge of the part's rings each row is cut against. The segments' ends must fit
+/// in `meter`'s stitches left, though none is spent: each is a needle point of the fill.
 pub fn rows(part: &Polygon, grid: &Grid, meter: &mut Meter) -> Result<Vec<Row>, Exhausted> {
     let (along, across) = axes(grid.angle);
     let rings: Vec<Ring> = std::iter::once(&part.outline).chain(&part.holes).map(|ring| Ring::new(ring, along, across)).collect();
@@ -68,10 +69,13 @@ pub fn rows(part: &Polygon, grid: &Grid, meter: &mut Meter) -> Result<Vec<Row>, 
     }
     let first = low - low.rem_euclid(grid.spacing);
     let mut v = first;
+    let mut ends = 0_usize;
     while v < high {
         meter.charge(u64::try_from(edges).unwrap_or(u64::MAX).saturating_add(1))?;
         let segments = cut(&rings, v);
         if !segments.is_empty() {
+            ends += 2 * segments.len();
+            meter.room(ends)?;
             found.push(Row { across: v, segments });
         }
         v += grid.end_spacing.map_or(grid.spacing, |end| grid.spacing + (end - grid.spacing) * ((v - first) / height).min(1.0));
@@ -180,6 +184,21 @@ mod tests {
 
     fn across(found: &[Row]) -> Vec<f64> {
         found.iter().map(|row| row.across).collect()
+    }
+
+    #[test]
+    fn a_part_s_segment_ends_must_fit_in_the_stitches_left_and_spend_none() {
+        // A 10 mm square with a hole across its middle rows: some rows are cut in 2.
+        let holed = part(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)], &[&[(4.0, 3.5), (6.0, 3.5), (6.0, 6.5), (4.0, 6.5)]]);
+        let grid = Grid { angle: 0.0, spacing: 1.0, end_spacing: None };
+        let ends = 2 * found(&holed, grid).iter().map(|row| row.segments.len()).sum::<usize>();
+        assert!(ends > 2 * 10, "{ends}");
+        let laid = |stitches: usize| {
+            let mut meter = Budget { max_stitches: u32::try_from(stitches).unwrap(), max_work: u64::MAX }.meter();
+            rows(&holed, &grid, &mut meter).map(|rows| (rows.len(), meter.stitches_left()))
+        };
+        assert_eq!(laid(ends), Ok((found(&holed, grid).len(), u32::try_from(ends).unwrap())));
+        assert_eq!(laid(ends - 1), Err(Exhausted::Stitches));
     }
 
     fn found(part: &Polygon, grid: Grid) -> Vec<Row> {
