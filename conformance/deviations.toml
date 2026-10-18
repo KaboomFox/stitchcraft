@@ -164,6 +164,13 @@ reason = "Every stitch of such a column is shorter than the machine sews well, a
 requirements = ["REQ-SAT-018"]
 
 [[deviation]]
+id = "DEV-SAT-009"
+area = "satin"
+summary = "Of a satin column whose 2 rails are rings, each ending where it starts, the second rail starts at its point nearest the first rail's start before the rails are turned, and without rungs its nodes start at its node nearest the first rail's first node. Ink/Stitch takes each ring's own start and warns that a closed rail has no definite start. It sews 2 rings that start apart with stitches across the column, from the start of one to a place part of the way round the other."
+reason = "A ring's start is the drawing program's choice, which the designer neither sees nor sets. VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at what was its last node. The round patch of the VectorCraft tutorial, drawn by VectorCraft 0.12.0, sewed 292 stitches longer than 12 mm. Rings that start together sew as they do in Ink/Stitch. Ink/Stitch's behaviour was read at d59c9ab (lib/elements/satin_column/rails.py, lib/elements/satin_column/satin_column.py, lib/elements/satin_column/validation_models.py)."
+requirements = ["REQ-SAT-019"]
+
+[[deviation]]
 id = "DEV-FILL-001"
 area = "fill"
 summary = "A fill's region follows its fill rule. Ink/Stitch takes the subpath of the largest area as the outline and every other subpath as a hole, whatever the fill rule, and repairs a shape that is not valid. The repair merges the subpaths' lines, a stretch drawn twice into one, and fills the faces they bound by how deeply they nest, which fills every face beside the outside. Where the nonzero rule fills a part inside that the subpaths wind round twice the same way, such as a ring drawn inside another the same way round, or the overlap of 2 shapes drawn the same way round, StitchCraft fills it (SC-I0306) and Ink/Stitch leaves it empty. Where the fill rule leaves a part beside the outside empty, which subpaths running along each other bound, such as a notch drawn as a hole along the outline or a subpath drawn twice, StitchCraft leaves it empty (SC-I0313) and Ink/Stitch fills it."

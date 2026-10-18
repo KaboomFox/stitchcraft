@@ -671,6 +671,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- A satin column of 2 rings sews straight across, wherever each ring starts (`REQ-SAT-019`). The second
+  ring now starts at its point nearest the first's start, and without rungs at its node nearest the
+  first's first node (`DEV-SAT-009`). VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2
+  rings round, which starts it at what was its last node, a quarter of the way round a circle. The border
+  of the VectorCraft tutorial's patch, drawn by VectorCraft 0.12.0, sewed stitches across the column, 292
+  of them longer than 12 mm. Ink/Stitch sews such rings from their own starts, with a warning.
 - Different threads get different Brother colours in PES files (`REQ-THREAD-002`). Each thread took its
   nearest colour on its own, so 2 threads near one Brother colour were written as one. The machine showed
   the same colour for both, and the file read back as one thread with a stop.

@@ -187,7 +187,7 @@ fn piece(subpath: &Subpath, tolerance: f64, meter: &mut Meter) -> Result<Piece, 
 }
 
 /// Appends `p` unless it is where the polyline already is.
-fn push(points: &mut Vec<Point>, p: Point) {
+pub(crate) fn push(points: &mut Vec<Point>, p: Point) {
     if points.last() != Some(&p) {
         points.push(p);
     }
