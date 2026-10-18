@@ -111,7 +111,7 @@ fn a_vectorcraft_shot_is_declared_with_its_kind_s_fields() {
 #[test]
 fn the_window_s_job_names_the_dialog_s_row_and_its_parameters_from_the_manifest() {
     let ui = shot(UI, "plugins = [\"fill\"]\nmenu = [\"Effect\", \"Plug-ins\"]\ndialog = \"fill\"");
-    let entry = job(&ui, Path::new("/out/probe.vectorcraft"), Path::new("/modules"), Path::new("/out/probe.png")).unwrap();
+    let entry = job(&ui, "v0.7.0", Path::new("/out/probe.vectorcraft"), Path::new("/modules"), Path::new("/out/probe.png")).unwrap();
     let manifest = stitchcraft_vc_plugin::manifest::family(Family::Fill);
     assert_eq!(entry["dialog"]["row"], json!(manifest.name));
     let params = entry["dialog"]["params"].as_array().unwrap();
@@ -120,13 +120,17 @@ fn the_window_s_job_names_the_dialog_s_row_and_its_parameters_from_the_manifest(
     for row in [json!(["angle", "text_field"]), json!(["fill_method", "combo_box"]), json!(["fill", "check_box"])] {
         assert!(params.contains(&row), "{row} in {params:?}");
     }
-    assert_eq!(control(&Schema::Int { min: 0, max: 1, default: 0 }), "text_field");
+    assert_eq!(control(&Schema::Int { min: 0, max: 1, default: 0 }, "v0.7.0"), "text_field");
+    // VectorCraft 0.12.0's toggles show no role.
+    let entry = job(&ui, UNNAMED_CHECKBOXES, Path::new("/out/probe.vectorcraft"), Path::new("/modules"), Path::new("/out/probe.png")).unwrap();
+    let params = entry["dialog"]["params"].as_array().unwrap();
+    assert!(params.contains(&json!(["fill", "unknown"])) && params.contains(&json!(["angle", "text_field"])), "{params:?}");
     assert_eq!(entry["window"], json!([1440, 2000]), "a dialog's picture is taken in a taller window");
     assert_eq!(entry["menu"], json!(["Effect", "Plug-ins"]));
     assert_eq!(entry["plugins"], json!([Path::new("/modules").join("fill.wasm").to_string_lossy()]));
     // A menu's picture has no dialog, and the window keeps its size.
     let menu = shot(UI, "plugins = [\"fill\"]\nmenu = [\"Effect\", \"Plug-ins\"]");
-    let entry = job(&menu, Path::new("/d"), Path::new("/m"), Path::new("/p")).unwrap();
+    let entry = job(&menu, "v0.7.0", Path::new("/d"), Path::new("/m"), Path::new("/p")).unwrap();
     assert_eq!((&entry["dialog"], &entry["window"]), (&Value::Null, &Value::Null));
 }
 
