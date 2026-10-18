@@ -177,6 +177,19 @@ fn req_run_012_repeats_turn_without_a_step_and_bean_stitch_counts_each_point() {
 }
 
 #[test]
+fn diag_sc_e0009_a_zigzag_stroke_without_a_spacing_is_not_sewn() {
+    // The registry reads 1 spacing or more, so only a bug in StitchCraft can leave the list empty.
+    let set = ParamSet::new();
+    let mut zigzag = ZigzagStrokeParams::from_set(&set).unwrap().params;
+    zigzag.zigzag_spacing_mm.clear();
+    let passes = RepeatParams::from_set(&set).unwrap().params;
+    let mm = |value| Mm::new(value).unwrap();
+    let stitched = zigzag_stroke(&east(5.0), mm(2.0), &zigzag, &passes, mm(0.3), &mut Budget::DEFAULT.meter()).unwrap();
+    assert!(stitched.runs.is_empty());
+    assert_eq!(stitched.warnings.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::InternalCheckFailed]);
+}
+
+#[test]
 fn diag_sc_w0401_a_part_that_is_one_point_is_not_stitched() {
     let stitched = sewn(&polylines(&[&[(5.0, 5.0)], &[(0.0, 0.0), (1.0, 0.0)]]), 2.0, &[]);
     assert_eq!(stitched.runs.len(), 1);
