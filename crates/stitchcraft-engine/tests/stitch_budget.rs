@@ -13,6 +13,7 @@
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Code, ElementId, Exhausted, Meter, Mm};
 use stitchcraft_engine::design::{Design, DesignSettings, FillRule, Path};
+use stitchcraft_engine::generate::generate;
 use stitchcraft_engine::generators::manual::manual_stitch;
 use stitchcraft_engine::generators::passes::RepeatParams;
 use stitchcraft_engine::generators::pull::PullParams;
@@ -242,4 +243,21 @@ fn req_gen_004_each_element_is_given_what_the_ones_before_it_left() {
     assert_eq!(short.plan, None);
     assert_eq!(messages(&short), ["error SC-E0004: The design needs more than 100 stitches, the limit for one design."]);
     assert_eq!(short.diagnostics[0].element, Some(ElementId::new("c").unwrap()));
+}
+
+#[test]
+fn req_gen_004_an_element_generated_alone_with_too_few_stitches_is_skipped_and_says_so() {
+    // A preview generates one element at a time: a line of 41 needle points with a budget of 40 stitches
+    // sews nothing, and SC-E0004 names it. 41 are enough.
+    let element = line("a", (0.0, 0.0), 100.0, &RED, &[]);
+    let alone =
+        |max_stitches| generate(&element, &DesignSettings::default(), REFERENCE, &Neighbours::default(), &Budget { max_stitches, ..Budget::DEFAULT });
+    let few = alone(40);
+    assert_eq!(few.generated, None);
+    let said: Vec<String> = few.diagnostics.iter().map(ToString::to_string).collect();
+    assert_eq!(said, ["error SC-E0004: The design needs more than 40 stitches, the limit for one design."]);
+    assert_eq!(few.diagnostics[0].element, Some(ElementId::new("a").unwrap()));
+    let enough = alone(41);
+    assert_eq!(enough.generated.map(|generated| generated.groups.iter().map(Vec::len).sum::<usize>()), Some(41));
+    assert!(enough.diagnostics.is_empty(), "{:?}", enough.diagnostics);
 }
