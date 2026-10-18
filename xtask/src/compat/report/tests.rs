@@ -285,6 +285,12 @@ fn an_issue_is_opened_once_commented_on_while_it_fails_and_closed_when_it_passes
         [list, labels, &format!("label create upstream-canary --color B60205 --description {about} --repo o/r"), create]
     );
     assert_eq!(filed("labelled", main(true), "[]", r#"[{"name": "upstream-canary"}]"#), [list, labels, create]);
+    // When no label matches its search, `gh label list` writes an empty output, JSON asked for or not, and
+    // exits with 0: the label is created, as the adopting run's waiting issue needed for `upstream-stable`.
+    assert_eq!(
+        filed("unlabelled", main(true), other, ""),
+        [list, labels, &format!("label create upstream-canary --color B60205 --description {about} --repo o/r"), create]
+    );
     assert_eq!(filed("again", main(true), open, "[]"), [list, "issue comment 7 --body body --repo o/r"]);
     assert_eq!(filed("passes", main(false), open, "[]"), [list, "issue close 7 --comment body --repo o/r"]);
     assert_eq!(filed("passed", main(false), other, "[]"), [list]);

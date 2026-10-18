@@ -680,6 +680,15 @@ rationale = "Every stitch of such a speck is shorter than the machine sews well;
 milestone = "M4"
 status = "active"
 
+[[req]]
+id = "REQ-SAT-019"
+area = "satin"
+level = "L2"
+statement = "Of a satin column whose 2 rails are rings, each ending where it starts, closed with Z or drawn back to its start, the second rail starts at its node nearest the first rail's first node before the rails are turned. Without rungs, its nodes start there too, and each ring's start counts once at each end of its nodes (DEV-SAT-009). The stitches go straight across 2 rings whatever node each was drawn from, whichever way it turns and however it is closed. Rings that start together as drawn keep their starts, and a rung across them."
+rationale = "A drawing program starts a ring where it chooses. VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at what was its last node, a quarter of the way round a circle. Sewn from their own starts, such rings get stitches across the column."
+milestone = "M6"
+status = "active"
+
 # ── Fill region ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
