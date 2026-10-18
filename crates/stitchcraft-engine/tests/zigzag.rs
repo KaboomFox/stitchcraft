@@ -92,6 +92,17 @@ fn req_run_010_each_point_moves_square_to_its_direction_to_its_side() {
     let turned = run(&east(10.0), 2.0, &[("zigzag_angle", "30")]);
     let (sin, cos) = (0.5, 3.0_f64.sqrt() / 2.0);
     assert!(near(turned[0], (-sin, cos)) && near(turned[1], (0.2 + sin, -cos)), "{turned:?}");
+    // Any way round and anywhere: a line 10 mm long from (0, 5) towards (8, 11), 3 mm wide and turned 30°.
+    // Each point goes 1.5 mm across, square to the line and turned clockwise by 30°.
+    let slanted = run(&polylines(&[&[(0.0, 5.0), (8.0, 11.0)]]), 3.0, &[("zigzag_angle", "30")]);
+    let (ux, uy) = (0.8, 0.6);
+    let (sx, sy) = (-uy * cos - ux * sin, -uy * sin + ux * cos);
+    assert_eq!(slanted.len(), 51);
+    let placed = |i: usize, q: (f64, f64)| {
+        let (along, by) = (i as f64 * 0.2, if i.is_multiple_of(2) { 1.5 } else { -1.5 });
+        near(q, (along * ux + by * sx, 5.0 + along * uy + by * sy))
+    };
+    assert!(slanted.iter().enumerate().all(|(i, &q)| placed(i, q)), "{slanted:?}");
     // At a corner a point leans evenly into both sides: its direction is halfway between east and south.
     let half = 0.5_f64.sqrt();
     let bent = run(&corner(), 2.0, &[]);
