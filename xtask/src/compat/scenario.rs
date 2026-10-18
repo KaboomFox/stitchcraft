@@ -429,12 +429,7 @@ fn run_once(run: &Run, number: usize, cli: &Path, plugins: &Path, out: &Path, ra
 fn launch(cli: &Path, args: &[String], stem: &Path) -> Result<Vec<Value>, String> {
     let (out_path, err_path) = (stem.with_extension("out"), stem.with_extension("err"));
     let file = |path: &Path| std::fs::File::create(path).map_err(|e| format!("{}: {e}", util::rel(path)));
-    let mut child = Command::new(cli)
-        .args(args)
-        .stdin(Stdio::null())
-        .stdout(file(&out_path)?)
-        .stderr(file(&err_path)?)
-        .spawn()
+    let mut child = util::spawn(Command::new(cli).args(args).stdin(Stdio::null()).stdout(file(&out_path)?).stderr(file(&err_path)?))
         .map_err(|e| format!("{}: {e}", cli.display()))?;
     let mut looks = 0;
     let status = loop {

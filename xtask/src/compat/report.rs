@@ -386,7 +386,7 @@ fn listed<T: DeserializeOwned>(command: &str, output: &str) -> Result<Vec<T>, St
 /// is done.
 pub fn file_issue(gh: &Path, repo: &str, issue: &Issue) -> Result<(), String> {
     let call = |args: &[&str]| -> Result<String, String> {
-        let output = Command::new(gh).args(args).args(["--repo", repo]).output().map_err(|e| format!("{}: {e}", gh.display()))?;
+        let output = util::output(Command::new(gh).args(args).args(["--repo", repo])).map_err(|e| format!("{}: {e}", gh.display()))?;
         let said = |bytes: &[u8]| String::from_utf8_lossy(bytes).trim().to_string();
         if output.status.success() { Ok(said(&output.stdout)) } else { Err(format!("gh {}: {}", args.join(" "), said(&output.stderr))) }
     };
