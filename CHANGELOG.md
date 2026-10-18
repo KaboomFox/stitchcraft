@@ -577,6 +577,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The compatibility gate pins VectorCraft 0.12.0, adopted from 0.7.0. Pull requests are checked against
+  it, and it makes the docs' pictures of VectorCraft. Its plug-in dialogs give a toggle's checkbox no role
+  in the accessibility tree, so with 0.12.0 the window probe takes a toggle's row to show an `unknown`
+  control, and the shots run warns that it does.
 - A plan case names its design with `design`, which was `svg`, as the design can be a VectorCraft
   document.
 - A replay reads a bug-report bundle of up to 192 MiB, which can hold a design of 64 MiB in hexadecimal
@@ -671,6 +675,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The compatibility gate's adoption test brings its own pins. It copied the repository's, which pin the
+  release it adopts once the adopting pull request does, and it failed in that pull request.
 - Different threads get different Brother colours in PES files (`REQ-THREAD-002`). Each thread took its
   nearest colour on its own, so 2 threads near one Brother colour were written as one. The machine showed
   the same colour for both, and the file read back as one thread with a stop.
