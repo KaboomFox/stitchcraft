@@ -32,7 +32,7 @@ use crate::generators::satin::underlay::{Layer, split_long, walk_line};
 use crate::generators::satin::{SatinLengths, SatinParams};
 use crate::generators::{Approach, Own, passes};
 use crate::normalize::along::Along;
-use crate::normalize::near::{Look, along_to_segment, length, nearest_to_point};
+use crate::normalize::near::{GRID, Look, along_to_segment, length, nearest_to_point};
 
 // Ink/Stitch measures these limits in CSS pixels.
 
@@ -41,8 +41,6 @@ const END_NEAR: f64 = 5.0 * MM_PER_SVG_PX;
 /// Where a cut's 2 points coincide, a part whose start is nearer than this to the place is all second half:
 /// 0.1 CSS pixels.
 const START_NEAR: f64 = 0.1 * MM_PER_SVG_PX;
-/// A cut whose 2 points are nearer than this is a point: Ink/Stitch's precision grid, 1e-5 CSS pixels.
-const SAME: f64 = 1e-5 * MM_PER_SVG_PX;
 
 /// A piece of a column's run, in the order it is sewn.
 #[derive(Clone, Debug, PartialEq)]
@@ -263,7 +261,7 @@ impl Guides {
         let (Some(&start), Some(&last), Some([a, b])) = (part.first(), part.last(), self.cut(place)) else {
             return Ok((part.to_vec(), part.last().map(|&last| vec![last]).unwrap_or_default()));
         };
-        if length(a, b) < SAME {
+        if length(a, b) < GRID {
             return Ok(if length(start, place) < START_NEAR { (vec![start], part.to_vec()) } else { (part.to_vec(), vec![last]) });
         }
         let along = Along::new(part, meter)?;
@@ -385,8 +383,8 @@ mod tests {
         let part = [p(10.0, 3.0), p(12.0, 3.0)];
         assert_eq!(g.halves(&part, p(11.0, 3.0), meter).unwrap(), (vec![p(10.0, 3.0), p(11.0, 3.0)], vec![p(11.0, 3.0), p(12.0, 3.0)]));
         // Exactly 1 grid step long is not shorter than it.
-        let (a, b) = (p(11.0, 0.0), p(11.0, SAME));
-        assert_eq!(length(a, b), SAME);
+        let (a, b) = (p(11.0, 0.0), p(11.0, GRID));
+        assert_eq!(length(a, b), GRID);
         let g = Guides { line: guides().line, cuts: vec![[a, b]] };
         let part = [p(10.0, 0.0), p(12.0, 0.0)];
         assert_eq!(g.halves(&part, a, meter).unwrap(), (vec![p(10.0, 0.0), p(11.0, 0.0)], vec![p(11.0, 0.0), p(12.0, 0.0)]));

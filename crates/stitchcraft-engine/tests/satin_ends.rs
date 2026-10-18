@@ -10,7 +10,7 @@
 #![allow(clippy::unwrap_used, clippy::panic)]
 
 use stitchcraft_core::units::MM_PER_SVG_PX;
-use stitchcraft_core::{Budget, Point};
+use stitchcraft_core::{Budget, Point, math};
 use stitchcraft_engine::PlanOutcome;
 use stitchcraft_engine::design::{DesignSettings, Element, Shape};
 use stitchcraft_engine::generate::approach;
@@ -197,6 +197,39 @@ fn req_sat_014_before_a_fill_the_next_stitch_is_the_first_rail_start_that_lies_i
     // A square that holds only the second rail's start, which the first rail misses: that start.
     let second = end(&[(-2.0, 4.0), (2.0, 4.0), (2.0, 8.0), (-2.0, 8.0)], &[]);
     assert!(second.distance(p(0.0, 6.0)) < 1e-9, "{second:?}");
+}
+
+#[test]
+fn req_sat_014_a_stitch_along_the_cut_is_cut_at_its_point_nearest_the_cut_s_first_rail_point() {
+    // A column 10 mm long and 4 mm wide, its first rail from the origin at an angle and the second 4 mm to
+    // its left, stitches every 2 mm, ends before an element 3 mm past the second rail, 4.8 mm along. The
+    // end's cut is the pair 4 mm along, and the stitch across there lies along it. Widened past the rails by
+    // pull compensation, the stitch holds the cut's first rail point, and is cut there. Narrowed, it is cut
+    // at its start, the point of it nearest that. The travel is longer than the column, so the second half
+    // of the top stitches, turned, ends at the cut, and the end follows.
+    for method in ["satin_column", "e_stitch"] {
+        for (pull, inset) in [("0", 0.0), ("0.5", 0.0), ("-0.5", 0.5)] {
+            for step in 0..90 {
+                let degrees = f64::from(step) + 0.37;
+                let (sin, cos) = math::sin_cos(math::to_radians(degrees));
+                let (u, n) = ((cos, sin), (-sin, cos));
+                let at = |along: f64, across: f64| p(along * u.0 + across * n.0, along * u.1 + across * n.1);
+                let (a, b) = ([(0.0, 0.0), (10.0 * u.0, 10.0 * u.1)], [(4.0 * n.0, 4.0 * n.1), (10.0 * u.0 + 4.0 * n.0, 10.0 * u.1 + 4.0 * n.1)]);
+                let params = [
+                    ("satin_method", method),
+                    ("zigzag_spacing_mm", "2"),
+                    ("pull_compensation_mm", pull),
+                    ("running_stitch_length_mm", "10"),
+                    ("short_stitch_distance_mm", "0"),
+                ];
+                let next = at(4.8, 7.0);
+                let (sewn, _) = sewn_between(&polylines(&[&a, &b]), &params, &Neighbours { needle: None, next: Some(Approach::Point(next)) });
+                let cut = sewn[sewn.len() - 2];
+                let want = at(4.0, inset);
+                assert!(cut.distance(want) < 1e-9, "{method}, pull {pull}, {degrees}°: cut at {cut:?}, not {want:?}");
+            }
+        }
+    }
 }
 
 #[test]
