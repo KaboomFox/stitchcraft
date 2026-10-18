@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2414506f.js";
+            window.path_to_searchindex_js = "../searchindex-d41c3afd.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-a0bb3cbb.js"></script>
@@ -287,7 +287,9 @@ the same code, which the native tests run whichever it is, and the feature only 
 the effect that <code>vc_manifest</code> and <code>vc_run</code> serve. <code>cargo xtask compat contract</code> builds the four modules,
 notes their sizes and loads them into VectorCraft’s host.</p>
 <p><strong>Manifests.</strong> A family’s manifest is made from the registry when VectorCraft asks for it, so a parameter
-added to the registry shows in the dialog without another change. VectorCraft’s parameters are numbers,
+added to the registry shows in the dialog without another change. A key that several families declare,
+each its own way, is in each family’s manifest as that family declares it
+(<a href="params.html#naming-rules">parameter registry</a>, rule 7). VectorCraft’s parameters are numbers,
 whole numbers, toggles and choices, and each always has a value. A record stores every declared
 parameter, at its default when the user leaves it. So a parameter is declared when one such value means
 what the parameter means:</p>

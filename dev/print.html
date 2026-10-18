@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2414506f.js";
+            window.path_to_searchindex_js = "searchindex-d41c3afd.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-a0bb3cbb.js"></script>
@@ -3921,8 +3921,8 @@ more, and running out there plans nothing. <code>SC-E0004</code> then says so fo
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="parameter-registry"><a class="header" href="#parameter-registry">Parameter registry</a></h1>
 <!-- implements: crates/stitchcraft-params/src/**, crates/stitchcraft-engine/src/registry.rs, crates/stitchcraft-engine/src/common.rs -->
-<p>Every embroidery parameter is declared <strong>once</strong>, next to the generator that uses it. Everything
-else that needs to know about parameters is generated from that declaration:</p>
+<p>A parameter is declared <strong>once</strong> for the stitch types that read it, next to the generator that uses it.
+Everything else that needs to know about parameters is generated from that declaration:</p>
 <pre><code class="language-text">                        ┌──▶ typed params struct used by the generator
                         ├──▶ validation (types, ranges, applicability) with coded diagnostics
 params! { … }  ─────────┼──▶ VectorCraft plug-in manifests (schema per plug-in, ≤ 64 params)
@@ -3931,7 +3931,7 @@ params! { … }  ─────────┼──▶ VectorCraft plug-in man
                         ├──▶ reference docs pages + JSON Schema (generated, checked in CI)
                         └──▶ proptest strategies for conformance and fuzzing
 </code></pre>
-<p>Nothing about a parameter is written twice, so its label, help, range and default cannot drift apart
+<p>Nothing about a declaration is written twice, so its label, help, range and default cannot drift apart
 between the code, the docs and the user interfaces. The diagram is the design’s aim. <a href="#generated-outputs">Generated
 outputs</a> says which outputs exist today and which steps add the others.</p>
 <h2 id="declaring-parameters"><a class="header" href="#declaring-parameters">Declaring parameters</a></h2>
@@ -4059,7 +4059,9 @@ back to running stitch: that path must still sew, with nothing said of what it d
 is read from the other parameter’s value on the element, or its default, as the element reads that
 parameter. So the audit requires the other parameter to be of the same declaration and never hidden
 itself. It must also apply to every stitch type the hidden one applies to. A host that checks a whole
-set, such as a settings panel, reads every parameter with <code>from_set</code>.</p>
+set, such as a settings panel, reads every parameter with <code>from_set</code>, declaration by declaration. It
+reads only the declarations of the families it shows: the satin column’s declaration of
+<code>zigzag_spacing_mm</code> cannot read a zigzag stroke’s 2 spacings (rule 7).</p>
 <h3 id="completeness-req-prm-001"><a class="header" href="#completeness-req-prm-001">Completeness (REQ-PRM-001)</a></h3>
 <p>A declaration that compiles can still be wrong: an empty range, a default outside it, a repeated option,
 a condition on a parameter that does not exist or that an element could not read it by. <code>stitchcraft_params::audit</code> lists every such problem, and
@@ -4070,38 +4072,65 @@ Ink/Stitch sews, and one of StitchCraft’s own must not take an Ink/Stitch key.
 entries, and the lock and method identifiers must equal Ink/Stitch’s.</p>
 <h2 id="naming-rules"><a class="header" href="#naming-rules">Naming rules</a></h2>
 <ol>
-<li>If Ink/Stitch has the parameter with the same meaning, <strong>use its attribute name verbatim</strong>
-(<code>row_spacing_mm</code>). This keeps SVG files compatible with no mapping table.</li>
-<li>If our meaning differs, keep the name, mark <code>origin: InkStitchDeviates</code>, and record the difference in
+<li>
+<p>If Ink/Stitch has the parameter with the same meaning, <strong>use its attribute name verbatim</strong>
+(<code>row_spacing_mm</code>). This keeps SVG files compatible with no mapping table.</p>
+</li>
+<li>
+<p>If our meaning differs, keep the name, mark <code>origin: InkStitchDeviates</code>, and record the difference in
 the deviations ledger (<code>conformance/deviations.toml</code>). An entry that changes how other keys of
-Ink/Stitch’s read or sew lists them under <code>params</code>, and each key’s reference entry shows it.</li>
-<li>New parameters follow the same style: <code>snake_case</code>, a unit suffix for lengths (<code>_mm</code>), percentages
-(<code>_percent</code>) and angles where Ink/Stitch does (<code>angle</code> alone for row angles).</li>
-<li>Never reuse a removed key with a new meaning.</li>
-<li><strong>Defaults are part of the contract.</strong> For a parameter of Ink/Stitch origin the registry default is
+Ink/Stitch’s read or sew lists them under <code>params</code>, and each key’s reference entry shows it.</p>
+</li>
+<li>
+<p>New parameters follow the same style: <code>snake_case</code>, a unit suffix for lengths (<code>_mm</code>), percentages
+(<code>_percent</code>) and angles where Ink/Stitch does (<code>angle</code> alone for row angles).</p>
+</li>
+<li>
+<p>Never reuse a removed key with a new meaning.</p>
+</li>
+<li>
+<p><strong>Defaults are part of the contract.</strong> For a parameter of Ink/Stitch origin the registry default is
 the value Ink/Stitch sews for an SVG that omits the attribute, and the file stitches the same way in
 both tools. That value is the default Ink/Stitch’s settings window shows, except for the few
 parameters its code reads with another value. The contract records those as <code>fallback</code>, and
 <code>conformance/inkstitch/check_params.py</code> compares every one of its getters with the contract. Better
 starting values for new objects come from <a href="#presets">presets</a> and machine profiles, never from
-changing a default.</li>
-<li><strong>A key belongs to its stitch types.</strong> Ink/Stitch gives some keys to several elements with their own
+changing a default.</p>
+</li>
+<li>
+<p><strong>A key belongs to its stitch types.</strong> Ink/Stitch gives some keys to several elements with their own
 defaults: <code>max_stitch_length_mm</code> is empty on manual stitch and satin columns and 4 mm on fills. The
 contract is per key and stitch type, so the contract page matches a declaration with the rows for the
 stitch types it applies to, and a declaration for a stitch type Ink/Stitch does not give the key is
-reported. A key is declared once, and a family whose default differs gets its own with <code>defaults</code>, as
-fills do for <code>max_stitch_length_mm</code>. A family with a
+reported. A key is declared once for a family (rule 7), and a family whose default differs gets its own
+with <code>defaults</code>, as fills do for <code>max_stitch_length_mm</code>. A family with a
 default of its own needs a value (<code>ParamSpec::in_family</code>). There an empty value means its default. A
 length of 0 or less is raised to the least the key accepts instead of counting as empty, as Ink/Stitch
 reads a fill’s longest stitch. Elsewhere an optional value left empty is no value. The engine reads an
 element’s settings with its family’s defaults (<code>from_set_as</code>). The contract page compares each row
 with the default of the row’s family. The reference page lists each family’s default and what the
-family accepts, and the JSON Schema gives the defaults under <code>x-stitchcraft.family_defaults</code>.</li>
-<li><strong>The same kind and range for every stitch type.</strong> A family can change only a key’s default. Some of
-Ink/Stitch’s keys need more. Its <code>zigzag_spacing_mm</code> is a list for a zigzag stroke and one number for a
-satin column, and a meander fill reads it as a number that defaults to 0. Its ripple stitch reads a
-<code>staggers</code> of 0 as no stagger, where a tatami fill’s range starts at 0.01. The steps that add those
-stitch types (M7 and M10) let a declaration give a family its own kind and range.</li>
+family accepts, and the JSON Schema gives the defaults under <code>x-stitchcraft.family_defaults</code>.</p>
+</li>
+<li>
+<p><strong>A family’s own kind and range.</strong> Some of Ink/Stitch’s keys differ by more than their default from
+one family to another. Its <code>zigzag_spacing_mm</code> is a list for a zigzag stroke and one number for a satin
+column, and a meander fill reads it as a number that defaults to 0. Its ripple stitch reads a
+<code>staggers</code> of 0 as no stagger, but a tatami fill’s range starts at 0.01. Such a key is declared again
+for the family that reads it its own way, in a declaration for that family’s stitch types
+(<code>REQ-PRM-005</code>). The registry’s audit lets a key have one declaration for each family at most, and an
+element reads the key as its family’s declaration says. <code>find_for</code> finds a family’s declaration, and
+<code>find</code> the first, which is the only one for every other key. The JSON Schema gives such a key any of
+its declarations’ schemas, each with the stitch types it applies to. The index lists the key once for
+each declaration, under its group, and the contract compares each declaration with the rows of
+Ink/Stitch’s for its stitch types. Every declaration of one of Ink/Stitch’s keys has an Ink/Stitch
+origin. The reference pages show a ledger entry that names the key with each declaration.</p>
+<p>An SVG node’s fill and its stroke read the same settings. A key of Ink/Stitch’s is never one of
+StitchCraft’s own, even for a family Ink/Stitch does not give it, because that family would read a
+value written for Ink/Stitch’s meaning. A node’s fill may also read a value that only its stroke’s
+declaration can read, such as a zigzag stroke’s 2 spacings read by a meander fill. Ink/Stitch sews that
+fill with its default, and StitchCraft would refuse it (<code>DEV-PRM-001</code>). The meander fill’s step (M7.8)
+chooses between the two.</p>
+</li>
 </ol>
 <h2 id="generated-outputs"><a class="header" href="#generated-outputs">Generated outputs</a></h2>
 <div class="table-wrapper">
@@ -6406,7 +6435,9 @@ the same code, which the native tests run whichever it is, and the feature only 
 the effect that <code>vc_manifest</code> and <code>vc_run</code> serve. <code>cargo xtask compat contract</code> builds the four modules,
 notes their sizes and loads them into VectorCraft’s host.</p>
 <p><strong>Manifests.</strong> A family’s manifest is made from the registry when VectorCraft asks for it, so a parameter
-added to the registry shows in the dialog without another change. VectorCraft’s parameters are numbers,
+added to the registry shows in the dialog without another change. A key that several families declare,
+each its own way, is in each family’s manifest as that family declares it
+(<a href="#naming-rules">parameter registry</a>, rule 7). VectorCraft’s parameters are numbers,
 whole numbers, toggles and choices, and each always has a value. A record stores every declared
 parameter, at its default when the user leaves it. So a parameter is declared when one such value means
 what the parameter means:</p>
@@ -8722,15 +8753,27 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 </table>
 </div>
 <h2 id="m7--more-stitch-types-i"><a class="header" href="#m7--more-stitch-types-i">M7 — More stitch types I</a></h2>
-<p>Zigzag stroke; E-stitch; S-stitch; zigzag satin; contour fill (three strategies, neck splitting); meander
-fill with generated tiles; circular fill. One step per type with its requirements, then <strong>MC-6 🧵</strong>
-(TS-11 sampler of the new types). With the satin methods come the warnings they all share: <code>SC-W0208</code>
-for stitches turned more than 45° from the column, and <code>SC-W0209</code> for a column wider than 12 mm. The
-zigzag stroke’s and the meander fill’s settings need a key with a kind or a range of a family’s own, which
-the registry gains first (<a href="#naming-rules">parameter registry</a>, rule 7).</p>
-<p>Before contour fill relies on it, the offsetter meets the third criterion of
-<a href="#adr-0005-geometry-stack">ADR-0005</a>: 300 insets of a region 150 mm across, of 1,000 points, in
-under 200 ms. At M0.7 they took 218 to 448 ms, where GEOS took 104 to 149 ms.</p>
+<p>One step for each stitch type, with its requirements, cases and docs
+(<a href="#playbook-add-a-stitch-type">playbook</a>).</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
+</thead>
+<tbody>
+<tr><td>M7.1 ✅</td><td>A family of stitch types can declare a key again with a kind and range of its own (<a href="#naming-rules">parameter registry</a>, rule 7). Ink/Stitch’s <code>zigzag_spacing_mm</code> is a list of lengths for a zigzag stroke and one length for a satin column, and a meander fill reads it as a length that is 0 by default. An element reads the key as its family declares it. The reference pages, the JSON Schema, the plug-ins’ dialogs and the contract check give each family its own</td><td><code>REQ-PRM-005</code></td></tr>
+<tr><td>M7.2</td><td>Zigzag stroke</td><td>its requirements active and the type listed for MC-6</td></tr>
+<tr><td>M7.3</td><td>E-stitch, with the warnings every satin method gives: <code>SC-W0208</code> where stitches turn more than 45° from the column, and <code>SC-W0209</code> for a column wider than 12 mm</td><td>same</td></tr>
+<tr><td>M7.4</td><td>S-stitch</td><td>same</td></tr>
+<tr><td>M7.5</td><td>Zigzag satin</td><td>same</td></tr>
+<tr><td>M7.6</td><td>The offsetter meets the third criterion of <a href="#adr-0005-geometry-stack">ADR-0005</a> before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. At M0.7 they took 218 to 448 ms, against GEOS’s 104 to 149 ms</td><td><code>cargo xtask perf</code> guards the criterion</td></tr>
+<tr><td>M7.7</td><td>Contour fill, with its three strategies and neck splitting</td><td>its requirements active and the type listed for MC-6</td></tr>
+<tr><td>M7.8</td><td>Meander fill with generated tiles. A node’s meander fill may meet a <code>zigzag_spacing_mm</code> only its zigzag stroke can read, which Ink/Stitch sews as the fill’s default. The step chooses whether StitchCraft does too (<a href="#naming-rules">rule 7</a>)</td><td>same</td></tr>
+<tr><td>M7.9</td><td>Circular fill</td><td>same</td></tr>
+<tr><td>MC-6 🧵</td><td><strong>TS-11</strong> (a sampler of the new types); kit: <code>stitch testsheet</code></td><td>report filed; the new types’ defaults confirmed</td></tr>
+</tbody>
+</table>
+</div>
 <h2 id="m8--inkstitch-interoperability"><a class="header" href="#m8--inkstitch-interoperability">M8 — Ink/Stitch interoperability</a></h2>
 <p>SVG adapter v2:</p>
 <ul>

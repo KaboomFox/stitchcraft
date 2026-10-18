@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2414506f.js";
+            window.path_to_searchindex_js = "../searchindex-d41c3afd.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-a0bb3cbb.js"></script>
@@ -330,15 +330,27 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 </table>
 </div>
 <h2 id="m7--more-stitch-types-i"><a class="header" href="#m7--more-stitch-types-i">M7 — More stitch types I</a></h2>
-<p>Zigzag stroke; E-stitch; S-stitch; zigzag satin; contour fill (three strategies, neck splitting); meander
-fill with generated tiles; circular fill. One step per type with its requirements, then <strong>MC-6 🧵</strong>
-(TS-11 sampler of the new types). With the satin methods come the warnings they all share: <code>SC-W0208</code>
-for stitches turned more than 45° from the column, and <code>SC-W0209</code> for a column wider than 12 mm. The
-zigzag stroke’s and the meander fill’s settings need a key with a kind or a range of a family’s own, which
-the registry gains first (<a href="../design/params.html#naming-rules">parameter registry</a>, rule 7).</p>
-<p>Before contour fill relies on it, the offsetter meets the third criterion of
-<a href="../design/adr/0005-geometry-stack.html">ADR-0005</a>: 300 insets of a region 150 mm across, of 1,000 points, in
-under 200 ms. At M0.7 they took 218 to 448 ms, where GEOS took 104 to 149 ms.</p>
+<p>One step for each stitch type, with its requirements, cases and docs
+(<a href="../contributing/playbook-new-stitch-type.html">playbook</a>).</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
+</thead>
+<tbody>
+<tr><td>M7.1 ✅</td><td>A family of stitch types can declare a key again with a kind and range of its own (<a href="../design/params.html#naming-rules">parameter registry</a>, rule 7). Ink/Stitch’s <code>zigzag_spacing_mm</code> is a list of lengths for a zigzag stroke and one length for a satin column, and a meander fill reads it as a length that is 0 by default. An element reads the key as its family declares it. The reference pages, the JSON Schema, the plug-ins’ dialogs and the contract check give each family its own</td><td><code>REQ-PRM-005</code></td></tr>
+<tr><td>M7.2</td><td>Zigzag stroke</td><td>its requirements active and the type listed for MC-6</td></tr>
+<tr><td>M7.3</td><td>E-stitch, with the warnings every satin method gives: <code>SC-W0208</code> where stitches turn more than 45° from the column, and <code>SC-W0209</code> for a column wider than 12 mm</td><td>same</td></tr>
+<tr><td>M7.4</td><td>S-stitch</td><td>same</td></tr>
+<tr><td>M7.5</td><td>Zigzag satin</td><td>same</td></tr>
+<tr><td>M7.6</td><td>The offsetter meets the third criterion of <a href="../design/adr/0005-geometry-stack.html">ADR-0005</a> before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. At M0.7 they took 218 to 448 ms, against GEOS’s 104 to 149 ms</td><td><code>cargo xtask perf</code> guards the criterion</td></tr>
+<tr><td>M7.7</td><td>Contour fill, with its three strategies and neck splitting</td><td>its requirements active and the type listed for MC-6</td></tr>
+<tr><td>M7.8</td><td>Meander fill with generated tiles. A node’s meander fill may meet a <code>zigzag_spacing_mm</code> only its zigzag stroke can read, which Ink/Stitch sews as the fill’s default. The step chooses whether StitchCraft does too (<a href="../design/params.html#naming-rules">rule 7</a>)</td><td>same</td></tr>
+<tr><td>M7.9</td><td>Circular fill</td><td>same</td></tr>
+<tr><td>MC-6 🧵</td><td><strong>TS-11</strong> (a sampler of the new types); kit: <code>stitch testsheet</code></td><td>report filed; the new types’ defaults confirmed</td></tr>
+</tbody>
+</table>
+</div>
 <h2 id="m8--inkstitch-interoperability"><a class="header" href="#m8--inkstitch-interoperability">M8 — Ink/Stitch interoperability</a></h2>
 <p>SVG adapter v2:</p>
 <ul>
