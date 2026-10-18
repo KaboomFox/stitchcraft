@@ -7,7 +7,7 @@
 //! this repository's [`packages`] instead of saying `--workspace`.
 
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Child, Command, Output, Stdio};
 
 use serde_json::Value;
 
@@ -156,6 +156,34 @@ pub fn in_ci() -> bool {
     std::env::var("CI").is_ok_and(|v| !v.is_empty() && v != "false")
 }
 
+/// How often, and how far apart, [`spawn`] tries to start a program that Linux says is busy: for up to a
+/// second.
+const BUSY_TRIES: u32 = 50;
+const BUSY_WAIT: std::time::Duration = std::time::Duration::from_millis(20);
+
+/// Starts `cmd`, and again while Linux says its program is busy (`ETXTBSY`). A program that is open for
+/// writing doesn't start, and a test that writes a stand-in program and runs it races the other tests:
+/// a process one of them forks while the stand-in is written holds it open until that process starts its
+/// own program. CI's tests ran into it ("Text file busy").
+pub fn spawn(cmd: &mut Command) -> std::io::Result<Child> {
+    let mut tries = 1;
+    loop {
+        match cmd.spawn() {
+            Err(e) if e.kind() == std::io::ErrorKind::ExecutableFileBusy && tries < BUSY_TRIES => {
+                tries += 1;
+                std::thread::sleep(BUSY_WAIT);
+            }
+            started => return started,
+        }
+    }
+}
+
+/// Runs `cmd` as [`Command::output`] does, with nothing on its standard input and its output captured,
+/// started by [`spawn`].
+pub fn output(cmd: &mut Command) -> std::io::Result<Output> {
+    spawn(cmd.stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::piped()))?.wait_with_output()
+}
+
 /// Whether `program args…` runs successfully (used to detect optional tools).
 pub fn tool_available(program: &str, args: &[&str]) -> bool {
     Command::new(program).args(args).output().is_ok_and(|o| o.status.success())
@@ -236,6 +264,29 @@ mod tests {
     use serde_json::json;
 
     use super::*;
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn a_program_open_for_writing_starts_once_it_is_closed() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = root().join("target/xtask-tests/busy");
+        std::fs::create_dir_all(&dir).unwrap();
+        let program = dir.join("program");
+        std::fs::write(&program, "#!/bin/sh\nexit 0\n").unwrap();
+        std::fs::set_permissions(&program, std::fs::Permissions::from_mode(0o755)).unwrap();
+        // Open for writing, as a process another thread forked while the program was written holds it until
+        // it starts its own program: Linux won't start it.
+        let open = std::fs::OpenOptions::new().write(true).open(&program).unwrap();
+        assert_eq!(Command::new(&program).spawn().map(|_| ()).unwrap_err().kind(), std::io::ErrorKind::ExecutableFileBusy);
+        let closing = std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(100));
+            drop(open);
+        });
+        let status = spawn(&mut Command::new(&program)).unwrap().wait().unwrap();
+        closing.join().unwrap();
+        assert!(status.success());
+        assert!(output(&mut Command::new(&program)).unwrap().status.success());
+    }
 
     #[test]
     fn packages_are_the_ones_in_this_folder() {
