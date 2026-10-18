@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c72142d5.js";
+            window.path_to_searchindex_js = "searchindex-80cfba69.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-639d0563.js"></script>
@@ -1772,10 +1772,12 @@ Arguments:
 <p>A budget limits how much work StitchCraft may spend on one element, and how many stitches one
 design may have, so that no input can make it run for hours or run out of memory — on the
 command line or inside VectorCraft’s live preview.</p>
-<p>When planning, the element named in the message was skipped and the rest of the design was
-planned: simplify the element (fewer nodes, wider spacing, a smaller area) or split it into
-several elements. When reading a file or drawing a preview, nothing was produced: simplify the
-drawing, or split it into several files.</p>
+<p>When planning, an element that needs more work than its budget was skipped and the rest of the
+design was planned: simplify the element (fewer nodes, wider spacing, a smaller area) or split it
+into several elements. A design that needs more stitches than its limit was not planned, and the
+message names the element where it ran out: widen the spacing of its largest elements, lower their
+repeats or bean stitch, or split the design into several files. When reading a file or drawing a
+preview, nothing was produced: simplify the drawing, or split it into several files.</p>
 <h2 id="sc-e0005"><a class="header" href="#sc-e0005">SC-E0005</a></h2>
 <p><strong>Error</strong> — Preview too large</p>
 <p>Preview images have a size limit, so that drawing one never runs out of memory. At the scale
@@ -4085,6 +4087,22 @@ steps) so a budget behaves identically on every machine. Each element has the wo
 and so does working out what it offers the element before it to end near. Exhaustion there yields
 <code>SC-E0004</code> for the element, and other elements still plan. Assembly and finalize share the budget once
 more, and running out there plans nothing. <code>SC-E0004</code> then says so for the whole design.</p>
+<p>Work bounds time, not memory: a unit can make a point, and 500 million points are gigabytes. A few
+settings multiply an element’s needle points. 10 mm of zigzag at the smallest spacing, sewn 100 times
+with bean stitch 10, is 4.2 million. So the stitch limit bounds what generators hold as well
+(<code>REQ-GEN-004</code>):</p>
+<ul>
+<li>A generator spends a stitch for each needle point as it makes it, and for each one a pass after the
+first or bean stitch sews again.</li>
+<li>What it lays out before sewing it must fit in the stitches left, though it spends none on it: a
+satin column’s pairs, say, or a fill’s row segments.</li>
+<li>Once done, it settles at the needle points it gives. Some it made were dropped on the way, such as
+points too close together, and some were copied, such as an E-stitch’s way back down its spike.</li>
+</ul>
+<p>So a generator never holds much more than the stitches left, and it may stop a little short of the limit
+where it made many more points than it keeps. Each element is given the stitches the elements before it
+left. The first that needs more ends planning there, with <code>SC-E0004</code> naming it: the design cannot be sewn
+within its limit, and making the rest would only fill memory.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="parameter-registry"><a class="header" href="#parameter-registry">Parameter registry</a></h1>
 <!-- implements: crates/stitchcraft-params/src/**, crates/stitchcraft-engine/src/registry.rs, crates/stitchcraft-engine/src/common.rs -->
@@ -4745,7 +4763,9 @@ Ink/Stitch. The PRNG is SplitMix64 from <code>stitchcraft-core</code> (<a href="
 <li><strong>Budgeted:</strong> every inner loop charges work units. Each element has the budget’s work to itself. One
 that runs out (<code>SC-E0004</code>) is skipped, and the others still plan. The stitch limit is for the whole
 design. Assembly and finalize share the budget’s work once more, and running out there plans nothing.
-<code>SC-E0004</code> then says so for the whole design.</li>
+<code>SC-E0004</code> then says so for the whole design. A generator also spends the design’s stitches on the
+needle points it makes (<a href="#budgets">budgets</a>, <code>REQ-GEN-004</code>). Each element gets what the
+elements before it left, and the first that needs more ends planning, with <code>SC-E0004</code> naming it.</li>
 <li><strong>Roles:</strong> every stitch is tagged by its role. Assembly tags the stitches of groups as top and the lock
 stitches as lock. The jumps between groups are travel. Previews draw the lock stitches apart. A
 generator hands assembly its needle points without roles, so an element’s underlay, and the running

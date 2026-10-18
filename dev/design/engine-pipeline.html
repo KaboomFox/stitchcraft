@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c72142d5.js";
+            window.path_to_searchindex_js = "../searchindex-80cfba69.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-639d0563.js"></script>
@@ -271,7 +271,9 @@ Ink/Stitch. The PRNG is SplitMix64 from <code>stitchcraft-core</code> (<a href="
 <li><strong>Budgeted:</strong> every inner loop charges work units. Each element has the budget’s work to itself. One
 that runs out (<code>SC-E0004</code>) is skipped, and the others still plan. The stitch limit is for the whole
 design. Assembly and finalize share the budget’s work once more, and running out there plans nothing.
-<code>SC-E0004</code> then says so for the whole design.</li>
+<code>SC-E0004</code> then says so for the whole design. A generator also spends the design’s stitches on the
+needle points it makes (<a href="data-model.html#budgets">budgets</a>, <code>REQ-GEN-004</code>). Each element gets what the
+elements before it left, and the first that needs more ends planning, with <code>SC-E0004</code> naming it.</li>
 <li><strong>Roles:</strong> every stitch is tagged by its role. Assembly tags the stitches of groups as top and the lock
 stitches as lock. The jumps between groups are travel. Previews draw the lock stitches apart. A
 generator hands assembly its needle points without roles, so an element’s underlay, and the running
