@@ -8,8 +8,9 @@ stroke or the fill of a shape, and each sews in its own thread colour.
 | [Running stitch](running.md) | strokes: outlines, details, lettering at small sizes | now |
 | [Bean stitch](running.md#bean-stitch-and-repeats) | strokes, each stitch sewn 3 times or more | now |
 | [Manual stitch](running.md#manual-stitch) | strokes whose nodes are the needle points | now |
-| Satin column | wide strokes and borders | milestone M4 |
-| Tatami fill | areas, in rows of running stitches | now, with underlay; compensation later in milestone M5 |
+| [Zigzag stroke](zigzag.md) | strokes as wide as their line: light borders, couched looks | now |
+| Satin column | wide strokes and borders | now |
+| Tatami fill | areas, in rows of running stitches | now |
 
 Every element also gets [lock stitches](locks.md) where its stitching starts and ends, and a trim or a
 stop after it when it asks for one. An element of a type that is not sewn yet is left out, and `SC-W0011`

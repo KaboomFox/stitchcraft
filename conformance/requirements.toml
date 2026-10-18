@@ -424,6 +424,42 @@ statement = "No hand-placed stitch is shorter than the shortest stitch: a node c
 milestone = "M3"
 status = "active"
 
+[[req]]
+id = "REQ-RUN-009"
+area = "strokes/zigzag"
+level = "L2"
+statement = "A zigzag stroke sews each part of its path, one per subpath, as n + 1 needle points spread at equal distances along the part, its ends included, before repeats. The part is flattened within a tenth of a CSS pixel, and n is its length divided by half the first zigzag_spacing_mm, rounded half to even, at least 2, and one more if odd."
+rationale = "Ink/Stitch's zig-zag stitch, read at d59c9ab: a file sews the same zigzag in both."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-RUN-010"
+area = "strokes/zigzag"
+level = "L2"
+statement = "Each needle point of a zigzag stroke moves square to its direction, turned by zigzag_angle, positive clockwise as the drawing shows it. The ends' directions are the lines to and from their neighbours. Every other point's direction lies halfway between the line from the point before and the line to the point after, each taken with length 1. Points 0, 2, 4 and on move right of the path's way by half the stroke's width plus the second stroke_pull_compensation_mm, and points 1, 3, 5 and on left by half the width plus the first. A point whose direction has no length stays where it is."
+rationale = "Ink/Stitch's zig-zag stitch, read at d59c9ab: a file sews the same zigzag in both."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-RUN-011"
+area = "strokes/zigzag"
+level = "L2"
+statement = "A zigzag stroke whose only subpath that moves has its ends nearer each other than 0.05 CSS pixels ends on its first needle point. A subpath of one point does not count."
+rationale = "Ink/Stitch's zig-zag stitch, read at d59c9ab: a file sews the same zigzag in both."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-RUN-012"
+area = "strokes/zigzag"
+level = "L2"
+statement = "A zigzag stroke's repeats sew it again, every other pass backwards, and each pass after the first starts with the needle point after the one the last pass ended at. Bean stitch then sews each stitch 2b + 1 times, b taken from its list one step per needle point of the passes, and a turn takes no step."
+rationale = "Ink/Stitch's zig-zag stitch, read at d59c9ab: a file sews the same zigzag in both."
+milestone = "M7"
+status = "active"
+
 # ── Lock stitches and assembly ─────────────────────────────────────────────────────────────────────
 
 [[req]]

@@ -19,6 +19,7 @@ pub mod pull;
 pub mod running;
 pub mod satin;
 pub mod tatami;
+pub mod zigzag;
 
 pub(crate) use next::{Own, covers};
 use stitchcraft_core::{Code, Diagnostic, Point};

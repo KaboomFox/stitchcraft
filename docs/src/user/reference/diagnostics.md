@@ -117,7 +117,7 @@ Add an element with an embroidery stitch type, or fix the errors reported for th
 
 The element's stitch type is one this version of StitchCraft does not sew yet, so the element was
 skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
-satin columns from M4 and tatami fills from M5; the other stitch types follow
+satin columns from M4, tatami fills from M5 and zigzag strokes from M7. The other stitch types follow
 (`docs/src/plan/roadmap.md`).
 
 The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
@@ -753,15 +753,15 @@ Print option on, in VectorCraft's Layer Options.
 
 A StitchCraft live effect draws the object it is applied to as its stitches, or as much of them as
 its preview level shows. It leaves the object as it is when it cannot show them, and VectorCraft
-shows this message as the plug-in's last error: the object sews no stitch, it is a satin column
-drawn as one path, or its preview level needs more work than VectorCraft lets a live effect do. A
-column drawn as one path is as wide as its stroke, and VectorCraft gives a live effect no stroke.
+shows this message as the plug-in's last error. The object sews no stitch, or its preview level needs
+more work than VectorCraft lets a live effect do. Or it is as wide as its stroke, which VectorCraft
+does not give a live effect: a satin column drawn as one path, or a zigzag stroke.
 When another message says why an object sews no stitch, the effect shows that message instead.
 
-The message says which. A satin column drawn as one path still sews as wide as its stroke. To see its
-stitches in VectorCraft, draw its 2 rails, join them with Object › Compound Path › Make and apply the
-effect to that. For a preview that needs more work, the hint names a cheaper level to set the effect's
-`preview_level` to.
+The message says which. A satin column drawn as one path, and a zigzag stroke, still sew as wide as
+their stroke when exported with `stitch export`. To see a satin column's stitches in VectorCraft, draw
+its 2 rails, join them with Object › Compound Path › Make and apply the effect to that. For a preview
+that needs more work, the hint names a cheaper level to set the effect's `preview_level` to.
 
 ## SC-I0811
 

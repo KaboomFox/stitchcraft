@@ -5,6 +5,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M7.2: zigzag strokes are sewn, as Ink/Stitch sews its zig-zag stitch (`REQ-RUN-009` to `REQ-RUN-012`).
+  Set `stroke_method` to `zigzag_stitch`. The needle crosses the path from side to side, as wide as the
+  stroke. Its points are spread evenly along the path in a whole number of zigs and zags.
+  - Its settings are `zigzag_spacing_mm`, a stroke's own declaration of the key, which reads a list and
+    sews the first value, `stroke_pull_compensation_mm` and `zigzag_angle`. Repeats and bean stitch apply,
+    and a closed stroke ends on its first needle point.
+  - A new kind of setting, `BoundedAngle`: an angle kept within its range rather than turned by whole
+    turns, as Ink/Stitch reads the zigzag's angle. 270° reads as 89° with `SC-W0102`.
+  - Ink/Stitch spreads the points along a running stitch at half the spacing, and StitchCraft along the
+    path, which differs by hundredths of a millimetre (`DEV-RUN-007`).
+  - A user page with pictures, *Zigzag stroke*.
+  - The stroke plug-in's dialog lists the 3 settings after those a stroke shares with the other families,
+    so the running stitch's stay first. Its live effect leaves a zigzag stroke as it is drawn, with
+    `SC-I0810`, as VectorCraft does not tell a plug-in a stroke's width. `stitch export` sews it as wide as
+    its stroke.
+  - The stroke method's help no longer says the zigzag is skipped. `SC-W0011`'s case uses a ripple stitch.
 - M7.1: a family of stitch types can declare a key again, with a kind and range of its own (`REQ-PRM-005`).
   Ink/Stitch's `zigzag_spacing_mm` is a list of lengths for a zigzag stroke and one length for a satin
   column, and a meander fill reads it as a length that is 0 by default. The registry's audit allows one

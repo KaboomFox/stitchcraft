@@ -23,6 +23,15 @@ pub enum Kind {
     },
     /// An angle in degrees, normalized to (−180, 180].
     Angle,
+    /// An angle in degrees within `min..=max`, held there as given: not turned by whole turns first, so
+    /// 270 lies above a range that ends at 89 and is read as 89, as Ink/Stitch reads a zigzag stroke's
+    /// angle.
+    BoundedAngle {
+        /// Smallest accepted value, in degrees.
+        min: f64,
+        /// Largest accepted value, in degrees.
+        max: f64,
+    },
     /// A percentage within `min..=max`.
     Percent {
         /// Smallest accepted value.
@@ -283,7 +292,7 @@ impl Kind {
         match self {
             Kind::Length { .. } | Kind::LengthList { .. } | Kind::LengthPair { .. } => "mm",
             Kind::Percent { .. } | Kind::PercentPair { .. } | Kind::PercentList { .. } => "%",
-            Kind::Angle | Kind::AngleList { .. } => "°",
+            Kind::Angle | Kind::BoundedAngle { .. } | Kind::AngleList { .. } => "°",
             _ => "",
         }
     }
@@ -301,6 +310,7 @@ impl Kind {
                 format!("a length from {min} to {max} mm{empty}")
             }
             Kind::Angle => "an angle in degrees".to_string(),
+            Kind::BoundedAngle { min, max } => format!("an angle from {min} to {max} degrees"),
             Kind::Percent { min, max } => format!("a percentage from {min} to {max}"),
             Kind::Number { min, max } => format!("a number from {min} to {max}"),
             Kind::Count { min, max } => format!("a whole number from {min} to {max}"),
@@ -359,11 +369,12 @@ mod tests {
             Kind::PercentPair { min: 0.0, max: 1.0, optional: true },
             Kind::PercentList { min: 0.0, max: 1.0 },
             Kind::Angle,
+            Kind::BoundedAngle { min: -1.0, max: 1.0 },
             Kind::AngleList { optional: true },
             Kind::Count { min: 0, max: 1 },
             Kind::Toggle,
         ];
-        assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "mm", "%", "%", "%", "°", "°", "", ""]);
+        assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "mm", "%", "%", "%", "°", "°", "°", "", ""]);
     }
 
     #[test]
@@ -410,6 +421,11 @@ mod tests {
         let numeric = [Kind::Angle, Kind::Count { min: 0, max: 1 }, Kind::AngleList { optional: true }, Kind::Toggle, Kind::Seed];
         assert_eq!(numeric.map(Kind::numeric), [true, true, true, false, false]);
         assert!(!Kind::Text { max_bytes: 1 }.numeric() && !Kind::Choice { options: &[] }.numeric());
+    }
+
+    #[test]
+    fn a_bounded_angle_says_its_range() {
+        assert_eq!(Kind::BoundedAngle { min: -89.0, max: 89.0 }.describe(), "an angle from -89 to 89 degrees");
     }
 
     #[test]

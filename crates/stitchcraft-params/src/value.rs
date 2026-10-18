@@ -119,6 +119,10 @@ impl Kind {
                 Some((Value::Length(Some(Mm::new(mm).ok()?)), clamped))
             }
             Kind::Angle => Some((Value::Angle(angle(text)?), false)),
+            Kind::BoundedAngle { min, max } => {
+                let (held, clamped) = clamp(degrees(text)?, min, max);
+                Some((Value::Angle(held), clamped))
+            }
             Kind::Percent { min, max } => {
                 let (percent, clamped) = clamp(percent(text)?, min, max);
                 Some((Value::Percent(percent), clamped))
@@ -186,13 +190,10 @@ impl Kind {
 
     /// The accepted range, for clamping messages: `0.1 to 10 mm`.
     fn range(self) -> String {
-        let unit = match self.unit() {
-            "" => String::new(),
-            "%" => "%".to_string(),
-            unit => format!(" {unit}"),
-        };
+        let unit = suffix(self.unit());
         match self {
             Kind::Length { min, max, .. }
+            | Kind::BoundedAngle { min, max }
             | Kind::Percent { min, max }
             | Kind::LengthList { min, max }
             | Kind::LengthPair { min, max, .. }
@@ -218,11 +219,7 @@ impl ParamSpec {
                 Ok((Value::Length(None), Some(Diagnostic::new(Code::ParamClamped, message))))
             }
             Some((value, true)) => {
-                let unit = match self.kind.unit() {
-                    "" => "",
-                    "%" => "%",
-                    _ => " mm",
-                };
+                let unit = suffix(self.kind.unit());
                 let message = format!("`{}` is {}, outside {}; {}{unit} is used.", self.key, raw.trim(), self.kind.range(), value.to_raw());
                 Ok((value, Some(Diagnostic::new(Code::ParamClamped, message))))
             }
@@ -265,7 +262,20 @@ fn number(text: &str) -> Option<f64> {
 
 /// An angle in degrees, from a number with an optional `°` or `deg`, normalized to (−180, 180].
 fn angle(text: &str) -> Option<f64> {
-    number(text.strip_suffix('°').or_else(|| text.strip_suffix("deg")).unwrap_or(text)).map(normalized_angle)
+    degrees(text).map(normalized_angle)
+}
+
+/// A number of degrees, with an optional `°` or `deg`, as given.
+fn degrees(text: &str) -> Option<f64> {
+    number(text.strip_suffix('°').or_else(|| text.strip_suffix("deg")).unwrap_or(text))
+}
+
+/// `unit` as it follows a number in a message: `%` and `°` right after it, others after a space.
+fn suffix(unit: &str) -> String {
+    match unit {
+        "" | "%" | "°" => unit.to_string(),
+        unit => format!(" {unit}"),
+    }
 }
 
 /// `degrees` turned by whole turns into (−180, 180], as an angle parameter holds it: an angle a generator
@@ -398,6 +408,25 @@ mod tests {
         // An angle worked out means what the same angle typed in does: a fill's 135° plus 90°.
         assert_eq!(normalized_angle(135.0 + 90.0), -135.0);
         assert_eq!(normalized_angle(-540.0), 180.0);
+    }
+
+    #[test]
+    fn a_bounded_angle_is_held_in_its_range_as_given() {
+        // As Ink/Stitch holds a zigzag stroke's angle: 270 is above 89, not -90.
+        let tilt = Kind::BoundedAngle { min: -89.0, max: 89.0 };
+        for (raw, degrees, clamped) in [
+            ("0", 0.0, false),
+            ("45°", 45.0, false),
+            ("-60deg", -60.0, false),
+            ("89", 89.0, false),
+            ("90", 89.0, true),
+            ("270", 89.0, true),
+            ("-450", -89.0, true),
+        ] {
+            assert_eq!(tilt.parse(raw), Some((Value::Angle(degrees), clamped)), "{raw}");
+        }
+        assert_eq!(tilt.parse("x"), None);
+        assert_eq!(tilt.parse("45 45"), None);
     }
 
     #[test]

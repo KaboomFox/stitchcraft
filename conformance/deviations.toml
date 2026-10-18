@@ -98,6 +98,13 @@ requirements = ["REQ-RUN-006", "REQ-RUN-008"]
 params = ["max_stitch_length_mm"]
 
 [[deviation]]
+id = "DEV-RUN-007"
+area = "strokes/zigzag"
+summary = "A zigzag stroke spreads its needle points along the path, flattened within a tenth of a CSS pixel as Ink/Stitch flattens it. Ink/Stitch spreads them along a running stitch it sews along the path first, at half each spacing and within running_stitch_tolerance_mm of it. At the default spacing that running stitch's stitches are 0.2 mm chords of the path's curves, and the needle points differ by hundredths of a millimetre. A part whose length lies close to a rounding boundary of its count of zigs and zags may have one zig and zag more or fewer."
+reason = "StitchCraft's running stitch is placed otherwise (DEV-RUN-001 to DEV-RUN-004) and raises lengths below twice the shortest stitch, so it sews no running stitch of 0.2 mm stitches. That running stitch follows the path, and the path is the line it stands for. Ink/Stitch's zigzag stroke was read at d59c9ab (lib/elements/stroke.py, lib/stitches/running_stitch.py)."
+requirements = ["REQ-RUN-009"]
+
+[[deviation]]
 id = "DEV-FIN-001"
 area = "plan/finalize"
 summary = "StitchCraft fits every stitch to the machine: it leaves out needle points less than their element's shortest stitch from the one before, never less than the machine's (0.3 mm on the Brother), keeping the ends of each run of stitches and its lock points unless a stitch to one would fall short, and splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else 0.1 mm, and splits nothing. Along an edge square to them, a tatami fill's rows nearer each other than the shortest stitch hand over in a stitch too short, so the next row's first needle point is left out and a sliver at its start shows: a bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay."

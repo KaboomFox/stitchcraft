@@ -25,7 +25,8 @@ since M5.6 each part sews its underlay first, a layer for each angle (`generator
 since M5.7 the underlay covers the part shrunk by its inset and the top rows the part grown by `expand_mm`,
 as shapely buffers it (`normalize::offset`), and since M5.8 the top rows are lengthened by the pull
 compensation a satin's stitches share (`generators::pull`), with gap-filling rows where the route leaves a
-stretch of rows (`generators::tatami`). Design:
+stretch of rows (`generators::tatami`). Since M7.2 a zigzag stroke is sewn as Ink/Stitch sews it
+(`generators::zigzag`). Design:
 `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 
 ## Invariants

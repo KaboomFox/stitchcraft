@@ -77,7 +77,7 @@ One `.wasm` per stitch family keeps each dialog relevant and under 64 parameters
 
 | Plug-in id | Kind | Stitch types | Notes |
 |---|---|---|---|
-| `<ns>.stroke` | live effect | running, bean, manual (P1); zigzag, ripple (later) | `stroke_method` choice selects the variant |
+| `<ns>.stroke` | live effect | running, bean, manual (P1), zigzag (M7.2), ripple (later) | `stroke_method` choice selects the variant |
 | `<ns>.satin` | live effect | satin (P1); E, S, zigzag (P2) | rails and rungs from the object's compound path |
 | `<ns>.fill` | live effect | tatami (P1); contour, meander, circular (P2) | `fill_method` choice |
 
@@ -116,17 +116,18 @@ Texts, seeds, and settings left empty to take another's value keep their default
 they are the custom locks' steps, `random_seed`, a fill underlay's angles, a satin's zigzag underlay
 insets and its shortest random split. A choice leaves out the options that a text spells out, which are
 the custom locks. `satin_column` belongs to the effect, which sets it from its family. The dialog opens
-with the group that declares the family's method. The groups only the family uses come next, then those
-it shares with the other families. The settings every element shares come last, as in Ink/Stitch's
-dialogs.
+with the group that declares the family's method. The groups only the family uses, for its default
+method, come next, then those it shares with the other families, then those of its other methods, such as
+the zigzag stroke's. The settings every element shares come last, as in Ink/Stitch's dialogs.
 
 **What a live effect shows.** A family's effect sews its object with the engine's `generate`, on the
 reference machine and with no neighbours, as one object of a design. It returns the stitches as geometry,
 the exact level below. When it can't show stitches, it gives back why. VectorCraft then draws the object
 as it is and shows the message as the plug-in's last error. That happens when the object cannot be sewn or
 sews no stitch, with the message that says why, and for a satin column drawn as one path, which is as
-wide as its stroke, with `SC-I0810`. A drawing that vanished instead could not be clicked to change the
-setting that emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
+wide as its stroke, with `SC-I0810`. A zigzag stroke is as wide as its stroke too, and the effect leaves it
+as it is, with `SC-I0810`. A drawing that vanished instead could not be clicked to change the setting that
+emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
 shows, and `stitch export` reports them. How much of the stitches it shows, within what VectorCraft lets
 it spend, is its preview level (below).
 
