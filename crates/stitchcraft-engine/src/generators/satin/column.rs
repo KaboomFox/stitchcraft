@@ -10,14 +10,16 @@
 //! distances add up to less.
 //!
 //! **Rings.** Of 2 rails that each end where they start, closed with `Z` or drawn back to the start, the
-//! second is started at its point nearest the first's start before the rails are turned, and without rungs
-//! its nodes at its node nearest the first's first node (`DEV-SAT-009`). A drawing program starts a ring
-//! where it chooses: VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2 rings round, which
-//! starts it at what was its last node. Ink/Stitch takes each ring's own start, and sews 2 rings that start
-//! apart with stitches across the column, from the start of one to a place part of the way round the other.
-//! Each ring's nodes then have its start once at each end. VectorCraft closes a ring with a segment back to
-//! its start and `Z`, so its start ends its nodes twice, and a ring turned round would pair the second as a
-//! node.
+//! second is started at its node nearest the first's first node before the rails are turned: its line, and
+//! its nodes when they pair up (`DEV-SAT-009`). A drawing program starts a ring where it chooses:
+//! VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at what
+//! was its last node. Ink/Stitch takes each ring's own start, and sews 2 rings that start apart with
+//! stitches across the column, from the start of one to a place part of the way round the other. A node,
+//! not the nearest point, keeps rings that start together as drawn: a rung across their starts stays at
+//! their starts. Each ring's nodes have its start once at each end. VectorCraft closes a ring with a
+//! segment back to its start and `Z`, which lists the start twice at the end of its nodes. Turned round,
+//! such a ring would pair the second as a node. A column made from a centre line keeps its rails as made,
+//! which start together.
 //!
 //! **Sections.** Every rung cuts each rail at the distance along it of the rung's point on it. Each rail
 //! is cut at its own distances, in order, and its n-th part goes with the other rail's n-th part: a
@@ -51,7 +53,6 @@ use crate::generators::satin::compensation::pushed;
 use crate::normalize::along::Along;
 use crate::normalize::near::{Look, along_to_segment};
 use crate::normalize::satin::{Pairing, SAME_POINT, Satin};
-use crate::normalize::stroke::{nearest_on_segment, push, segments};
 
 /// How far along the line between a rail's 2 nodes the rung added across rails of 2 nodes meets it, in
 /// millimetres: 0.2 CSS pixels, Ink/Stitch's.
@@ -86,8 +87,8 @@ pub(crate) fn sections(satin: &Satin, params: &SatinParams, warnings: &mut Vec<D
                 cuts_b.push(rail_b.project(b, meter)?);
             }
         }
-        Pairing::Nodes(nodes) => {
-            let nodes = nodes_started_together(nodes, &satin.rails, params.swap_satin_rails);
+        Pairing::Nodes => {
+            let nodes = nodes_started_together(satin, params.swap_satin_rails, meter)?;
             for rung in added_rungs(&nodes, turned, warnings) {
                 cuts_a.push(along_to_segment(&first, rung, Look::FromSegment, meter)?);
                 cuts_b.push(along_to_segment(&second, rung, Look::FromSegment, meter)?);
@@ -118,10 +119,10 @@ fn oriented(satin: &Satin, params: &SatinParams, meter: &mut Meter) -> Result<([
     if params.swap_satin_rails {
         rails.swap(0, 1);
     }
-    // Rings start together, before they are turned: the second where it comes nearest the first's start.
-    let [first, second] = &mut rails;
-    if let Some(to) = first.first().copied().filter(|_| is_loop(first) && is_loop(second)) {
-        *second = rolled(second, to, meter)?;
+    // Rings start together, before they are turned.
+    if let Some(at) = together(satin, params.swap_satin_rails) {
+        let [_, second] = &mut rails;
+        *second = started_at(second, at, meter)?;
     }
     let turned = match params.reverse_rails {
         "first" => [true, false],
@@ -197,42 +198,36 @@ fn is_loop(line: &[Point]) -> bool {
     line.len() > 2 && matches!((line.first(), line.last()), (Some(first), Some(last)) if first.distance(*last) < SAME_POINT)
 }
 
-/// The ring `rail` started at its point nearest `to`, and taken round from there back to it, or `rail` as it
-/// is when it starts there already. Looking costs `meter` a unit per segment.
-fn rolled(rail: &[Point], to: Point, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
-    let mut nearest: Option<(usize, Point, f64)> = None;
-    for (i, (a, b)) in segments(rail).enumerate() {
-        meter.charge(1)?;
-        let point = nearest_on_segment(to, a, b);
-        let distance = point.distance(to);
-        if nearest.is_none_or(|(_, _, least)| distance < least) {
-            nearest = Some((i, point, distance));
-        }
-    }
-    let Some((i, start, _)) = nearest.filter(|&(_, start, _)| rail.first() != Some(&start)) else { return Ok(rail.to_vec()) };
-    let Some((before, after)) = rail.split_at_checked(i + 1) else { return Ok(rail.to_vec()) };
-    // From the new start: the rest of its segment, round to the old start, which ends the ring, on to the
-    // segment, and the new start again.
-    let mut round = Vec::with_capacity(rail.len() + 2);
-    for &point in std::iter::once(&start).chain(after).chain(before.iter().skip(1)).chain(std::iter::once(&start)) {
-        push(&mut round, point);
-    }
-    Ok(round)
+/// Where the rail `satin` sews second starts, when both its rails are rings: its node nearest the first
+/// node of the rail sewn first, the first of those as near. `None` for other rails, and for rails without
+/// nodes, made from a centre line. `swap` is `swap_satin_rails`.
+fn together(satin: &Satin, swap: bool) -> Option<Point> {
+    let [drawn_first, drawn_second] = &satin.nodes;
+    let (first, second) = if swap { (drawn_second, drawn_first) } else { (drawn_first, drawn_second) };
+    let &to = first.first().filter(|_| satin.rails.iter().all(|rail| is_loop(rail)))?;
+    second.iter().min_by(|a, b| a.distance(to).total_cmp(&b.distance(to))).copied()
 }
 
-/// `nodes` in the rails' drawn order, as `Pairing::Nodes` has them. When `rails` are both rings, each
-/// ring's nodes have its start once at each end ([`ring_nodes`]), and those of the rail sewn second start
-/// at its node nearest the first node of the rail sewn first, as the rails themselves start together.
-/// `swap` is `swap_satin_rails`.
-fn nodes_started_together(nodes: &[Vec<Point>; 2], rails: &[Vec<Point>; 2], swap: bool) -> [Vec<Point>; 2] {
-    if !rails.iter().all(|rail| is_loop(rail)) {
-        return nodes.clone();
-    }
-    let mut nodes = nodes.each_ref().map(|list| ring_nodes(list));
-    let [drawn_first, drawn_second] = &mut nodes;
-    let (first, second) = if swap { (drawn_second, drawn_first) } else { (drawn_first, drawn_second) };
-    *second = rolled_nodes(second, first);
-    nodes
+/// The ring `ring`, whose last point is its first again, started at its point nearest `at`, the first of
+/// those as near, and taken round back to it: as it is when that is its first point. Looking costs `meter`
+/// a unit per point.
+fn started_at(ring: &[Point], at: Point, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    meter.charge(u64::try_from(ring.len()).unwrap_or(u64::MAX))?;
+    let round = ring.split_last().map_or(ring, |(_, round)| round);
+    let nearest = round.iter().enumerate().min_by(|(_, a), (_, b)| a.distance(at).total_cmp(&b.distance(at))).map(|(k, _)| k);
+    let Some((before, after)) = nearest.and_then(|k| round.split_at_checked(k)).filter(|(before, _)| !before.is_empty()) else {
+        return Ok(ring.to_vec());
+    };
+    Ok(after.iter().chain(before).chain(after.first()).copied().collect())
+}
+
+/// The rails' nodes in their drawn order. When both rails are rings, each ring's nodes have its start once
+/// at each end ([`ring_nodes`]), and those of the rail sewn second start where its line does
+/// ([`together`]). `swap` is `swap_satin_rails`; looking costs `meter` a unit per node.
+fn nodes_started_together(satin: &Satin, swap: bool, meter: &mut Meter) -> Result<[Vec<Point>; 2], Exhausted> {
+    let Some(at) = together(satin, swap) else { return Ok(satin.nodes.clone()) };
+    let [first, second] = satin.nodes.each_ref().map(|nodes| ring_nodes(nodes));
+    Ok(if swap { [started_at(&first, at, meter)?, second] } else { [first, started_at(&second, at, meter)?] })
 }
 
 /// A ring's `nodes` with its start once at each end, as a ring closed with `Z` after a segment back to its
@@ -243,19 +238,6 @@ fn ring_nodes(nodes: &[Point]) -> Vec<Point> {
         ring.pop();
     }
     ring
-}
-
-/// A ring's `nodes`, which end with its start again, started at its node nearest the first of `other`,
-/// the first of those as near. Nodes that do not end where they start are left as they are.
-fn rolled_nodes(nodes: &[Point], other: &[Point]) -> Vec<Point> {
-    let (Some((_, ring)), Some(&to)) = (nodes.split_last().filter(|_| is_loop(nodes)), other.first()) else { return nodes.to_vec() };
-    let nearest = ring.iter().enumerate().min_by(|(_, a), (_, b)| a.distance(to).total_cmp(&b.distance(to))).map(|(i, _)| i);
-    let Some(k) = nearest else { return nodes.to_vec() };
-    let mut round: Vec<Point> = ring.iter().skip(k).chain(ring.iter().take(k)).copied().collect();
-    if let Some(&start) = round.first() {
-        round.push(start);
-    }
-    round
 }
 
 /// A rail's `nodes` without its 2 ends.
@@ -354,7 +336,7 @@ mod tests {
         let first = vec![p(0.0, 0.0), p(0.02, 1.0), p(10.0, 1.0), p(10.0, 0.0)];
         let second = vec![p(0.0, -4.0), p(10.0, -4.0)];
         let nodes = [vec![p(0.0, 0.0), p(10.0, 0.0)], second.clone()];
-        let satin = Satin { rails: [first, second], pairing: Pairing::Nodes(nodes) };
+        let satin = Satin { rails: [first, second], nodes, pairing: Pairing::Nodes };
         let params = SatinParams::from_set(&stitchcraft_params::ParamSet::new()).unwrap().params;
         let sewn = sections(&satin, &params, &mut Vec::new(), &mut Budget::DEFAULT.meter()).unwrap();
         let t = (NEAR_START * 0.02 + 0.2) / (0.02 * 0.02 + 1.0);
@@ -363,32 +345,35 @@ mod tests {
     }
 
     #[test]
-    fn a_ring_starts_at_its_point_nearest_another() {
+    fn a_ring_starts_at_its_point_nearest_a_place() {
         let square = vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0)];
         let meter = &mut Budget::DEFAULT.meter();
-        // Nearest in the middle of a segment: the ring starts there, and comes back to it.
-        let middle = [p(5.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0), p(5.0, 0.0)];
-        assert_eq!(rolled(&square, p(5.0, -1.0), meter).unwrap(), middle);
-        // Nearest at a node, the end of one segment and the start of the next: no point twice.
         let corner = [p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0)];
-        assert_eq!(rolled(&square, p(11.0, 11.0), meter).unwrap(), corner);
-        // As near several segments: the first of them.
-        assert_eq!(rolled(&square, p(5.0, 5.0), meter).unwrap(), middle);
+        assert_eq!(started_at(&square, p(11.0, 11.0), meter).unwrap(), corner);
+        // As near 2 points: the first of them.
+        assert_eq!(started_at(&square, p(5.0, 11.0), meter).unwrap(), corner);
         // Starting there already: as it is, though it comes back a hair from its start.
         let drawn_back = [&square[..4], &[p(0.0, 1e-7)]].concat();
-        assert_eq!(rolled(&drawn_back, p(-1.0, -1.0), meter).unwrap(), drawn_back);
+        assert_eq!(started_at(&drawn_back, p(-1.0, -1.0), meter).unwrap(), drawn_back);
         assert!(is_loop(&square) && is_loop(&drawn_back) && !is_loop(&square[..4]) && !is_loop(&[p(0.0, 0.0), p(0.0, 0.0)]));
     }
 
     #[test]
-    fn a_ring_s_nodes_start_at_the_node_nearest_another() {
-        let nodes = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0)];
-        let corner = [p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0)];
-        assert_eq!(rolled_nodes(&nodes, &[p(11.0, 11.0)]), corner);
-        // As near 2 nodes: the first of them.
-        assert_eq!(rolled_nodes(&nodes, &[p(5.0, 11.0)]), [&nodes[2..4], &nodes[..3]].concat());
-        // Nodes that do not come back to their start are not a ring's, and stay as they are.
-        assert_eq!(rolled_nodes(&nodes[..4], &[p(11.0, 11.0)]), nodes[..4]);
+    fn of_2_rings_the_one_sewn_second_starts_at_its_node_nearest_the_other_s_start() {
+        let outer = vec![p(0.0, 0.0), p(40.0, 0.0), p(40.0, 40.0), p(0.0, 40.0), p(0.0, 0.0)];
+        let turned = vec![p(4.0, 36.0), p(36.0, 36.0), p(36.0, 4.0), p(4.0, 4.0), p(4.0, 36.0)];
+        let satin = |rails: [&[Point]; 2], nodes: [&[Point]; 2]| Satin {
+            rails: rails.map(<[Point]>::to_vec),
+            nodes: nodes.map(<[Point]>::to_vec),
+            pairing: Pairing::Nodes,
+        };
+        let rings = satin([&outer, &turned], [&outer, &turned]);
+        assert_eq!(together(&rings, false), Some(p(4.0, 4.0)));
+        // Swapped, the first ring drawn sews second.
+        assert_eq!(together(&rings, true), Some(p(0.0, 40.0)));
+        // Rails made from a centre line, which have no nodes, and a ring beside an open rail keep their starts.
+        assert_eq!(together(&satin([&outer, &turned], [&[], &[]]), false), None);
+        assert_eq!(together(&satin([&outer, &turned[..4]], [&outer, &turned[..4]]), false), None);
     }
 
     #[test]

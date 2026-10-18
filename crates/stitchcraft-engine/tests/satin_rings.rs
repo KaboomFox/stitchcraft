@@ -1,8 +1,8 @@
 //! Satin columns of 2 closed rails, rings (`REQ-SAT-019`, `DEV-SAT-009`), through the engine's satin
-//! stitch. The second ring starts at its point nearest the first ring's start before the rails are turned,
-//! so the stitches go straight across wherever each ring was drawn from and whichever way it turns.
-//! VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at
-//! what was its last corner: a quarter of the way round a circle.
+//! stitch. The second ring starts at its corner nearest the first ring's start before the rails are
+//! turned, so the stitches go straight across whichever corner each ring was drawn from and whichever way
+//! it turns. VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts
+//! it at what was its last corner: a quarter of the way round a circle.
 
 // Test code may unwrap, panic and index (clippy.toml allows it in tests, and this extends it to the
 // helpers here).
@@ -26,6 +26,10 @@ const TURNED: &[(f64, f64)] = &[(4.0, 36.0), (36.0, 36.0), (36.0, 4.0), (4.0, 4.
 /// the other's.
 const ACROSS_A_CORNER: f64 = 4.0 * SQRT_2;
 
+/// The longest a stitch across rings of uneven parts may be, with room to spare: 10 mm. A stitch from one
+/// part of a ring to the other ring's next part is longer.
+const ACROSS_AT_MOST: f64 = 10.0;
+
 /// The longest of the stitches across the column whose needle points are `points`.
 fn longest_across(points: &[Point]) -> f64 {
     across(points).iter().map(|[a, b]| a.distance(*b)).fold(0.0, f64::max)
@@ -39,11 +43,14 @@ fn drawn_back(ring: &[(f64, f64)]) -> Vec<(f64, f64)> {
 #[test]
 fn req_sat_019_a_ring_turned_round_from_another_corner_sews_straight_across() {
     // Without rungs, the rings' corners pair up: each of the outer ring's with the inner one's beside it.
-    let (points, warnings) = sewn_satin(&rings(&[OUTER, TURNED]), &[NO_SHORT_STITCHES]);
-    assert!(warnings.is_empty(), "{warnings:?}");
-    let longest = longest_across(&points);
-    assert!(longest <= ACROSS_A_CORNER + 1e-9, "a stitch {longest} mm long crosses the ring");
-    assert_eq!(points[0], p(0.0, 0.0), "the column starts where its first ring does");
+    // Swapped, the inner ring sews first, and the outer one starts at its corner nearest the inner's start.
+    for (swap, start) in [("false", p(0.0, 0.0)), ("true", p(4.0, 36.0))] {
+        let (points, warnings) = sewn_satin(&rings(&[OUTER, TURNED]), &[NO_SHORT_STITCHES, ("swap_satin_rails", swap)]);
+        assert!(warnings.is_empty(), "{warnings:?}");
+        let longest = longest_across(&points);
+        assert!(longest <= ACROSS_A_CORNER + 1e-9, "a stitch {longest} mm long crosses the ring");
+        assert_eq!(points[0], start, "the column starts where the ring it sews first does");
+    }
 }
 
 #[test]
@@ -71,6 +78,24 @@ fn req_sat_019_rungs_cut_both_rings_from_the_same_place() {
     assert!(warnings.is_empty(), "{warnings:?}");
     let longest = longest_across(&points);
     assert!(longest <= ACROSS_A_CORNER + 1e-9, "a stitch {longest} mm long crosses the ring");
+}
+
+#[test]
+fn req_sat_019_rings_drawn_alike_keep_a_rung_across_their_starts() {
+    // Both rings start on their top sides, the inner one 2 mm behind the point square across from the
+    // outer's start, and a rung joins the 2 starts. Started at that point, the inner ring would start past
+    // the rung, and each of its parts would pair with the outer ring's next.
+    let outer: &[(f64, f64)] = &[(10.0, 0.0), (40.0, 0.0), (40.0, 40.0), (0.0, 40.0), (0.0, 0.0)];
+    let inner: &[(f64, f64)] = &[(8.0, 4.0), (36.0, 4.0), (36.0, 36.0), (4.0, 36.0), (4.0, 4.0)];
+    let mut path = rings(&[outer, inner]);
+    let rungs: &[&[(f64, f64)]] =
+        &[&[(10.5, -1.0), (7.5, 5.0)], &[(35.0, 20.0), (41.0, 20.0)], &[(20.0, 35.0), (20.0, 41.0)], &[(-1.0, 20.0), (5.0, 20.0)]];
+    path.subpaths.extend(polylines(rungs).subpaths);
+    let (points, warnings) = sewn_satin(&path, &[NO_SHORT_STITCHES]);
+    assert!(warnings.is_empty(), "{warnings:?}");
+    assert_eq!(across(&points)[0], [p(10.0, 0.0), p(8.0, 4.0)]);
+    let longest = longest_across(&points);
+    assert!(longest <= ACROSS_AT_MOST, "a stitch {longest} mm long crosses the ring");
 }
 
 #[test]

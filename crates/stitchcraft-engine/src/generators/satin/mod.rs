@@ -300,7 +300,8 @@ fn from_centre_line(
             "Draw the column with 2 rails where its line crosses itself or turns more tightly than the column is wide.".to_string(),
         )));
     }
-    Ok(Some(Satin { rails, pairing: Pairing::Rungs(rungs) }))
+    // Made from a centre line, the rails start together as made, and have no nodes drawn.
+    Ok(Some(Satin { rails, nodes: [Vec::new(), Vec::new()], pairing: Pairing::Rungs(rungs) }))
 }
 
 /// The lengths a satin column's stitches keep to that come from settings other than its own.
