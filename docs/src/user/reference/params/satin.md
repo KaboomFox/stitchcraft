@@ -24,8 +24,9 @@ Off, the path is sewn as a stroke, by its `stroke_method`.
 ### `satin_method`
 
 **Method.** How the column is sewn. A satin column sews stitches straight across it, from one rail to the
-other and back. E, S and zigzag stitches arrive in later versions, and until then an element
-set to one is skipped (`SC-W0011`).
+other and back. An E-stitch sews a spike across the column at each pair and a spine along its
+first rail between them, an edge for appliqué. S and zigzag stitches arrive in later versions,
+and until then an element set to one is skipped (`SC-W0011`).
 
 - **Accepts:** one of `satin_column` (Satin column), `e_stitch` (E-stitch), `s_stitch` (S-stitch), `zigzag` (Zigzag satin)
 - **Default:** `satin_column`

@@ -734,6 +734,42 @@ rationale = "A drawing program starts a ring where it chooses. VectorCraft's Mak
 milestone = "M6"
 status = "active"
 
+[[req]]
+id = "REQ-SAT-020"
+area = "satin/e-stitch"
+level = "L2"
+statement = "An E-stitch sews each pair a satin column places, compensates and insets as a spike: from the first rail's inset point across to the second rail's, and back through the same needle holes. The stitch across splits as a top stitch across does, and by the default method into the fewest equal parts, with no count taken from a stitch before."
+rationale = "Ink/Stitch's E stitch, read at d59c9ab: a file sews the same appliqué edge in both."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-SAT-021"
+area = "satin/e-stitch"
+level = "L2"
+statement = "Between spikes, an E-stitch goes along the first rail in one stitch, from a spike's inset point to the next spike's. Where the zigzag spacing is longer than the longest stitch, that stitch splits with no randomness, as a stitch to the next pair's compensated point would: into the fewest equal parts no longer than the longest stitch by the default method, and at whole multiples of it from its start by the simple and staggered methods."
+rationale = "Ink/Stitch's E stitch, read at d59c9ab, splits its spine so: the spine sews the same in both."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-SAT-022"
+area = "satin"
+level = "L2"
+statement = "Every satin method gives one SC-W0208 for each stretch of pairs in a row whose stitches lean more than 45° from square to the column, to a tenth of a degree, at the middle of the stretch's middle pair. The pairs are those placed at the zigzag spacing with no compensation and nothing random. At each, the column runs halfway between its 2 rails, each running from the pair before's point to the pair after's. Stitches square to a rail where the other steps out, stitches at 45°, pairs shorter than the shortest stitch and pairs whose rails both stand still give none."
+rationale = "Rails drawn without enough rungs pair their points by length alone, and their stitches can lean far along the column. A rung at the place named sets them straight."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-SAT-023"
+area = "satin"
+level = "L2"
+statement = "Every satin method gives one SC-W0209 when its longest top stitch, sewn with its splits and insets, is longer than 12 mm, at the middle of that stitch. The stitches are measured as the column sews them, a stitch its end cuts in 2 as 2 stitches. A longest stitch that splits them leaves none, and the underlays and travel do not count."
+rationale = "A stitch longer than 12 mm floats loose over the fabric, where it snags and sags."
+milestone = "M7"
+status = "active"
+
 # ── Fill region ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

@@ -8,9 +8,11 @@
 //! they are sewn, shortened or lengthened by push compensation and cut into sections at the rungs (the
 //! `column` module), and needle points are placed in pairs across the column along the sections (`pairs`),
 //! each pair widened by pull compensation (`compensation`). Needle points that crowd together on a rail
-//! are inset (`short`), and the pairs are sewn rail to rail, with long stitches split (`split`).
+//! are inset (`short`), and the pairs are sewn rail to rail, with long stitches split (`split`). An
+//! E-stitch sews the same pairs as spikes from its first rail, joined by a spine along it.
 //!
-//! These are the top stitches as Ink/Stitch places them. Before them come the underlays the element turns
+//! These are the top stitches as Ink/Stitch places them. Every method then says where its stitches lean far
+//! along the column, and when one is longer than 12 mm (`lie`), which Ink/Stitch does not. Before them come the underlays the element turns
 //! on, sewn along the same sections (`underlay`): a centre walk, a contour and a zigzag, in that order,
 //! with the needle travelling straight from each to the next, all in one run. The column starts near
 //! where the elements before it left the needle, and ends near where the next element starts (`ends`).
@@ -20,6 +22,7 @@
 mod column;
 mod compensation;
 mod ends;
+mod lie;
 mod pairs;
 mod short;
 mod split;
@@ -82,8 +85,9 @@ params! {
         satin_column: Toggle = "false", label "Satin column", applies STROKES_AND_SATINS;
 
         /// How the column is sewn. A satin column sews stitches straight across it, from one rail to the
-        /// other and back. E, S and zigzag stitches arrive in later versions, and until then an element
-        /// set to one is skipped (`SC-W0011`).
+        /// other and back. An E-stitch sews a spike across the column at each pair and a spine along its
+        /// first rail between them, an edge for appliqué. S and zigzag stitches arrive in later versions,
+        /// and until then an element set to one is skipped (`SC-W0011`).
         satin_method: Choice = "satin_column", label "Method", choices SATIN_METHODS;
 
         /// The distance from one stitch across the column to the next that goes the same way: from one
@@ -354,6 +358,8 @@ pub fn satin_stitch(
     if odd {
         top.reverse();
     }
+    let cuts = pairs::pairs(&sections, params.zigzag_spacing_mm.get(), &mut Processor::inset([0.0; 2], [0.0; 2]), meter)?;
+    warnings.extend(lie::leaning(&cuts, lengths.min_stitch.get()));
     let layers = underlay::underlays(&sections, params, lengths.min_stitch.get(), &mut warnings, meter)?;
     // The needle's travel between the pieces and the line it follows to the start and the end keep to the
     // shortest stitch alike: the length is raised once, with one warning.
@@ -363,7 +369,7 @@ pub fn satin_stitch(
     let pieces = if needle.is_none() && next.is_none() {
         ends::sewn(layers, top, meter)?
     } else {
-        let guides = Guides::new(&sections, params, lengths, travel, meter)?;
+        let guides = Guides::new(&sections, params, lengths, travel, cuts, meter)?;
         let edges: [Vec<Point>; 2] = [placed.iter().map(|[a, _]| *a).collect(), placed.iter().map(|[_, b]| *b).collect()];
         let outline = [edges[0].as_slice(), edges[1].as_slice()];
         let start = match needle {
@@ -379,6 +385,7 @@ pub fn satin_stitch(
         };
         guides.pieces(layers, top, start, end, odd, meter)?
     };
+    warnings.extend(lie::longest(pieces.iter().filter_map(ends::Piece::top)));
     let run = ends::join(pieces, travel, lengths.min_stitch.get(), meter)?;
     if let Some(speck) = too_small(&run, lengths.min_stitch.get()) {
         warnings.push(speck);
@@ -400,9 +407,10 @@ fn too_small(run: &[Point], min: f64) -> Option<Diagnostic> {
 }
 
 /// The top stitches along `sections`, from the rails' starts to their ends: placed, compensated and varied
-/// at random by the element's `rng`, inset where they crowd, and split where they are long. With them,
-/// the pairs as placed and compensated, before any inset: the ends of each pair lie on the column's
-/// compensated outline.
+/// at random by the element's `rng`, inset where they crowd, and sewn as the satin method says, split where
+/// they are long. With them, the pairs as placed and compensated, before any inset: the ends of each pair
+/// lie on the column's compensated outline. S and zigzag satins are not sewn yet, and `generate` skips
+/// them before they get here (`SC-W0011`).
 fn top_stitches(
     sections: &[Section],
     params: &SatinParams,
@@ -415,7 +423,11 @@ fn top_stitches(
     let mut splitter = Splitter::new(params, lengths.max_stitch.map(Mm::get), lengths.min_stitch.get(), rng);
     let insets: Vec<f64> = params.short_stitch_inset.iter().map(|percent| percent / 100.0).collect();
     let short = short::inset(&placed, params.short_stitch_distance_mm.get(), &insets, splitter.inset_limit());
-    let stitches = splitter.sew(&placed, &short, meter)?;
+    let stitches = if params.satin_method == StitchType::EStitch.id() {
+        splitter.sew_e(&placed, &short, params.zigzag_spacing_mm.get(), meter)?
+    } else {
+        splitter.sew(&placed, &short, meter)?
+    };
     Ok((placed, stitches))
 }
 
