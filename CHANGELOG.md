@@ -673,6 +673,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The window probe starts a dialog's row only at a label, a static text. VectorCraft 0.13.1 names a
+  checkbox after its row's label, and the probe took the checkbox for a label as well: it read the next
+  row's label as the checkbox's control, and made none of the dialogs' pictures.
 - The compatibility gate's adoption test brings its own pins. It copied the repository's, which pin the
   release it adopts once the adopting pull request does, and it failed in that pull request.
 - A satin column of 2 rings sews straight across, wherever each ring starts and however it is closed

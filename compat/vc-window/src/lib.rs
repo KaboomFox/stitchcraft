@@ -24,6 +24,7 @@
 // reads files, all of which `clippy.toml` keeps out of the engine's crates for determinism.
 #![allow(clippy::disallowed_methods, clippy::disallowed_types)]
 
+use std::collections::BTreeMap;
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::net::{Ipv4Addr, TcpListener, TcpStream};
@@ -337,6 +338,23 @@ pub fn record(test: &str, level: &str, title: &str, message: &str) -> Result<(),
     writeln!(file, "{line}").map_err(|e| format!("{}: {e}", path.display()))
 }
 
+/// The role of a label in the accessibility tree, in snake case.
+const LABEL: &str = "static_text";
+
+/// The controls a plug-in's dialog shows, by key in lower case, from the nodes of its accessibility tree in
+/// order, each its role (in snake case) and its name: a row is a label, the key with a colon after it, and
+/// then its control (`tests/shots.rs`). Only a [`LABEL`] is a label. VectorCraft 0.13.1 names a checkbox
+/// after its row's label, and the node after the checkbox is the next row's label, not its control.
+pub fn dialog_controls(nodes: &[(&'static str, Option<String>)]) -> BTreeMap<String, &'static str> {
+    nodes
+        .windows(2)
+        .filter_map(|pair| {
+            let [(LABEL, Some(label)), (control, _)] = pair else { return None };
+            Some((label.strip_suffix(':')?.to_lowercase(), *control))
+        })
+        .collect()
+}
+
 /// A loopback port no one listens on, for the app's control channel.
 fn free_port() -> Result<u16, String> {
     let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).map_err(|e| format!("a free port: {e}"))?;
@@ -395,6 +413,24 @@ mod tests {
         assert_ne!(a.fingerprint(), Pixels { width: 1, height: 2, rgba: a.rgba.clone() }.fingerprint());
         // 64-bit FNV-1a of 8 zero bytes, the size of an empty picture.
         assert_eq!(Pixels { width: 0, height: 0, rgba: Vec::new() }.fingerprint(), 0xa8c7_f832_281a_39c5);
+    }
+
+    #[test]
+    fn a_dialog_s_row_is_its_label_and_the_control_after_it() {
+        let node = |role: &'static str, name: Option<&str>| (role, name.map(str::to_string));
+        // From VectorCraft 0.13.1's tree of the stroke dialog: a checkbox is named after its row's label.
+        let nodes = [
+            node("window", Some("StitchCraft Stroke")),
+            node("static_text", Some("Enable_random_stitch_length:")),
+            node("check_box", Some("Enable_random_stitch_length:")),
+            node("static_text", Some("Random_stitch_length_jitter_percent:")),
+            node("text_field", None),
+            node("static_text", Some("Ties:")),
+            node("combo_box", None),
+        ];
+        let controls = dialog_controls(&nodes);
+        let expected = [("enable_random_stitch_length", "check_box"), ("random_stitch_length_jitter_percent", "text_field"), ("ties", "combo_box")];
+        assert_eq!(controls, expected.map(|(key, control)| (key.to_string(), control)).into());
     }
 
     #[test]
