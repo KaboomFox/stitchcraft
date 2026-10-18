@@ -22,7 +22,7 @@ fn recognized(parts: &[&[(f64, f64)]]) -> Recognition {
 /// The rails and rungs `parts` are recognized as, and the warnings, as people read them.
 fn ladder(parts: &[&[(f64, f64)]]) -> (Ladder, Vec<String>) {
     let Recognition { shape, warnings } = recognized(parts);
-    let Ok(Shape::Rails(Satin { rails, pairing: Pairing::Rungs(rungs) })) = shape else { panic!("not rails and rungs: {shape:?}") };
+    let Ok(Shape::Rails(Satin { rails, pairing: Pairing::Rungs(rungs), .. })) = shape else { panic!("not rails and rungs: {shape:?}") };
     (Ladder { rails, rungs }, warnings.iter().map(ToString::to_string).collect())
 }
 
@@ -183,7 +183,7 @@ fn diag_sc_w0205_a_subpath_of_one_point_is_left_out() {
     // A stray node, and a line that does not move, drawn between the rails.
     let Recognition { shape, warnings } = recognized(&[LOWER, &[(7.0, 2.0)], &[(9.0, 2.0), (9.0, 2.0)], UPPER]);
     let rails = [points(LOWER), points(UPPER)];
-    assert_eq!(shape, Ok(Shape::Rails(Satin { pairing: Pairing::Nodes(rails.clone()), rails })), "2 rails, whose nodes pair up");
+    assert_eq!(shape, Ok(Shape::Rails(Satin { nodes: rails.clone(), pairing: Pairing::Nodes, rails })), "2 rails, whose nodes pair up");
     let shown: Vec<String> = warnings.iter().map(ToString::to_string).collect();
     assert_eq!(
         shown,
@@ -355,13 +355,13 @@ proptest! {
         match shape {
             Err(error) => prop_assert_eq!((error.code, usable), (Code::SatinWithoutRails, 0)),
             Ok(Shape::CentreLine { .. }) => prop_assert_eq!(usable, 1),
-            Ok(Shape::Rails(Satin { rails, pairing })) => {
+            Ok(Shape::Rails(Satin { rails, nodes, pairing })) => {
                 prop_assert!(usable >= 2);
                 let lines: Vec<Vec<Point>> = parts.iter().map(|part| points(part)).collect();
                 prop_assert!(rails.iter().all(|rail| lines.contains(rail)), "each rail is a subpath as drawn");
                 let rungs = match pairing {
                     Pairing::Rungs(rungs) => rungs,
-                    Pairing::Nodes(nodes) => {
+                    Pairing::Nodes => {
                         prop_assert_eq!((usable, &nodes), (2, &rails), "the nodes of straight rails are their points");
                         Vec::new()
                     }
