@@ -26,6 +26,9 @@ params! {
         /// An angle.
         an_angle: Angle = "0", label "Angle";
 
+        /// An angle within a range.
+        a_tilt: BoundedAngle = "0", label "Tilt", range (-89.0, 89.0);
+
         /// A percentage.
         a_percent: Percent = "100", label "Percentage", range (0.0, 200.0);
 
@@ -284,8 +287,16 @@ fn req_prm_002_invalid_values_are_errors_that_say_what_is_accepted() {
 
 #[test]
 fn req_prm_002_out_of_range_values_are_clamped_with_a_warning() {
-    let read = Everything::from_set(&set(&[("a_length_mm", "25"), ("a_percent", "250"), ("a_count", "0"), ("some_lengths_mm", "2.5 0.1")])).unwrap();
+    let read = Everything::from_set(&set(&[
+        ("a_length_mm", "25"),
+        ("a_tilt", "270"),
+        ("a_percent", "250"),
+        ("a_count", "0"),
+        ("some_lengths_mm", "2.5 0.1"),
+    ]))
+    .unwrap();
     assert_eq!(read.params.a_length_mm.get(), 10.0);
+    assert_eq!(read.params.a_tilt, 89.0, "held in its range as given, not turned to -90");
     assert_eq!(read.params.a_percent, 200.0);
     assert_eq!(read.params.a_count, 1);
     assert_eq!(read.params.some_lengths_mm.iter().map(|mm| mm.get()).collect::<Vec<_>>(), [2.5, 0.3]);
@@ -294,6 +305,7 @@ fn req_prm_002_out_of_range_values_are_clamped_with_a_warning() {
         messages,
         [
             "SC-W0102: `a_length_mm` is 25, outside 0.1 to 10 mm; 10 mm is used.",
+            "SC-W0102: `a_tilt` is 270, outside -89 to 89°; 89° is used.",
             "SC-W0102: `a_percent` is 250, outside 0 to 200%; 200% is used.",
             "SC-W0102: `a_count` is 0, outside 1 to 20; 1 is used.",
             "SC-W0102: `some_lengths_mm` is 2.5 0.1, outside 0.3 to 12 mm; 2.5 0.3 mm is used.",
@@ -336,7 +348,8 @@ fn declarations_record_what_the_registry_needs() {
     assert_eq!(g.name, "Everything");
     assert_eq!(g.help(), "One parameter of every kind.");
     assert_eq!(g.applies_to, StitchType::ALL);
-    assert_eq!(g.specs.len(), 14);
+    assert_eq!(g.specs.len(), 15);
+    assert_eq!(find(&[&g], "a_tilt").map(|spec| spec.kind), Some(Kind::BoundedAngle { min: -89.0, max: 89.0 }));
     let length = find(&[&g], "a_length_mm").unwrap();
     assert_eq!((length.label, length.help().as_str(), length.group, length.default), ("Length", "A length.", "Numbers", "2.5"));
     assert!(length.family_defaults.is_empty(), "the same default for every family unless it says");

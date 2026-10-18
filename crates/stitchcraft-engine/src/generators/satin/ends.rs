@@ -185,8 +185,8 @@ impl Guides {
                     let (to_cut, from_cut) = self.halves(&way, end, meter)?;
                     let (one, mut two) = if odd { (from_cut, to_cut) } else { (to_cut, from_cut) };
                     two.reverse();
-                    first.push(passes::sew(&one, repeats, &[], meter)?);
-                    second.push(passes::sew(&two, repeats, &[], meter)?);
+                    first.push(passes::sew(&one, repeats, &[], passes::Turn::Listed, meter)?);
+                    second.push(passes::sew(&two, repeats, &[], passes::Turn::Listed, meter)?);
                 }
                 Layer::Contour([side_a, side_b]) => {
                     let (a_first, a_second) = self.halves(&side_a, end, meter)?;

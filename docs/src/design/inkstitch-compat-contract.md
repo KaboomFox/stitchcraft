@@ -57,9 +57,9 @@ registry uses these names as its keys so files move between the tools unchanged
 | `enable_random_stitch_length` | boolean | — | false | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#enable_random_stitch_length) |
 | `random_stitch_length_jitter_percent` | float | ± % | 10 | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#random_stitch_length_jitter_percent) |
 | `max_stitch_length_mm` | float | mm | — | `manual_stitch` | P1 (M3) | [registered](../user/reference/params/common.md#max_stitch_length_mm) |
-| `zigzag_spacing_mm` | string | mm | 0.4 | `zigzag_stitch` | P2 (M7) | planned |
-| `stroke_pull_compensation_mm` | float | mm (each side) | 0 | `zigzag_stitch` | P2 (M7) | planned |
-| `zigzag_angle` | float | ° | 0 | `zigzag_stitch` | P2 (M7) | planned |
+| `zigzag_spacing_mm` | string | mm | 0.4 | `zigzag_stitch` | P2 (M7) | [registered](../user/reference/params/zigzag-stroke.md#zigzag_spacing_mm) |
+| `stroke_pull_compensation_mm` | float | mm (each side) | 0 | `zigzag_stitch` | P2 (M7) | [registered](../user/reference/params/zigzag-stroke.md#stroke_pull_compensation_mm) |
+| `zigzag_angle` | float | ° | 0 | `zigzag_stitch` | P2 (M7) | [registered](../user/reference/params/zigzag-stroke.md#zigzag_angle) |
 | `line_count` | int | — | 10 | `ripple_stitch` | P3 (M10) | planned |
 | `min_line_dist_mm` | float | mm | — | `ripple_stitch` | P3 (M10) | planned |
 | `satin_guide_pattern_position` | combo | — | default | `ripple_stitch` | P3 (M10) | planned |
@@ -263,4 +263,4 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
 
-_145 parameter declarations, 89 registered in StitchCraft._
+_145 parameter declarations, 92 registered in StitchCraft._

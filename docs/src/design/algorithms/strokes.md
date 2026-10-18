@@ -1,6 +1,6 @@
 # Stroke generators
 
-<!-- implements: crates/stitchcraft-engine/src/generators/mod.rs, crates/stitchcraft-engine/src/generators/running/**, crates/stitchcraft-engine/src/generators/manual.rs, crates/stitchcraft-engine/src/generators/passes.rs, crates/stitchcraft-engine/src/normalize/stroke.rs, crates/stitchcraft-engine/src/normalize/along.rs -->
+<!-- implements: crates/stitchcraft-engine/src/generators/mod.rs, crates/stitchcraft-engine/src/generators/running/**, crates/stitchcraft-engine/src/generators/manual.rs, crates/stitchcraft-engine/src/generators/zigzag/**, crates/stitchcraft-engine/src/generators/passes.rs, crates/stitchcraft-engine/src/normalize/stroke.rs, crates/stitchcraft-engine/src/normalize/along.rs -->
 
 Strokes follow a path. Shape: `StrokePath` (an ordered list of polylines, corners marked, from the
 normalizer). Phase P1 (M3) unless noted.
@@ -96,6 +96,7 @@ finalizing merges what is too short.
   the turnaround takes one step of the list; StitchCraft counts that step too, without sewing it, so a
   file sews the same in both. With a two-value list, each stretch of the path then gets the same
   treatment on every pass.
+- A zigzag's turnaround takes no step of the list, as in Ink/Stitch ([zigzag stroke](#zigzag-stroke-p2-m7)).
 - Repeats apply to running, ripple and zigzag strokes; bean stitch to those and to manual stitch (the
   [compatibility contract](../inkstitch-compat-contract.md) lists each parameter's stitch types).
 
@@ -169,10 +170,75 @@ shortest stitch (`REQ-RUN-008`).
 
 ## Zigzag stroke (P2, M7)
 
-A zigzag of width `stroke-width` (or the satin width parameters) centred on the path, with peak-to-peak
-spacing `zigzag_spacing_mm`, optional `zigzag_angle` (slanted zigzag), and
-`stroke_pull_compensation_mm`. Implemented as a satin on a centre line with no underlay (shares the satin
-sampler), which keeps one code path for "two sides and alternation".
+A zigzag along the path, as wide as its stroke. The needle crosses the path from side to side, as
+Ink/Stitch sews its zig-zag stitch (`stroke_method` `zigzag_stitch`, read at `d59c9ab`). It suits a light
+border, a couched look or a stem too thin for a satin column.
+
+**Parameters:** `zigzag_spacing_mm`, the distance along the path from one stitch to the next that crosses
+the same way, a zig and a zag together, 0.4 mm by default; `stroke_pull_compensation_mm`, how much further
+out than half the stroke's width each side's needle points go, one value for both sides or 2; and
+`zigzag_angle`, which turns every stitch away from square to the path, from −89° to 89°. `repeats` and
+`bean_stitch_repeats` apply. The width is the stroke's, read as a satin column drawn as one path reads it.
+
+Strokes, satin columns and fills each read `zigzag_spacing_mm` their own way
+([parameter registry](../params.md#naming-rules), rule 7). A stroke reads a list, as Ink/Stitch does.
+Only its first value counts.
+
+### Placement
+
+Each part of the path, one per subpath, is sewn on its own, as a running stitch is.
+
+1. **Spread.** The part is flattened within a tenth of a CSS pixel, as a satin column's or a fill's
+   subpaths are, and `n + 1` points are spread along it at equal distances, its ends included. `n` is its
+   length divided by half the spacing, rounded half to even, at least 2, and one more if that is odd. So
+   the zigzag has a whole number of zigs and zags, and it starts and ends on the same side.
+2. **Directions.** Point 0's direction is the line to point 1, and the last point's the line from the one
+   before it. Every other point's direction is halfway between the line from the point before it and the
+   line to the point after it, each taken with length 1, so a point at a corner leans evenly into both of
+   its sides. The lines are those between the spread points, not the path's own.
+3. **Across.** Each point moves square to its direction, turned by `zigzag_angle` (positive turns
+   clockwise as the drawing shows it). The points numbered 0, 2, 4 and on move to the right of the way
+   the path goes, by half the width plus the second pull compensation. Points 1, 3, 5 and on move to the
+   left, by half the width plus the first. A pull compensation below minus half the width moves its
+   points over to the other side. Each point whose direction has no length stays where it is, as on a
+   turn straight back.
+4. **Closed paths.** A stroke closes when one of its subpaths moves and the others, if any, are single
+   points, and that subpath's ends lie nearer each other than 0.05 CSS pixels: its last needle point moves
+   onto its first, and the zigzag ends where it started.
+5. **Repeats and bean stitch.** Repeats sew the zigzag again, every other pass backwards, and each pass
+   after the first starts with the needle point after the one the last pass ended at. Bean stitch then
+   sews each stitch `2b + 1` times, with its list taken one after another along the stitches of all the
+   passes, as for a running stitch ([repeats and bean stitch](#repeats-and-bean-stitch)). Ink/Stitch does
+   not list the point a pass turns at twice in a zigzag, as it does in a running stitch, so that point
+   takes no step of the bean list here.
+
+The needle points come from arithmetic, square roots and the cosine and sine of the angle
+(`stitchcraft_core::math`) alone, and every platform places them alike.
+
+**Compared with Ink/Stitch.** Ink/Stitch spreads the points along a running stitch it sews first, at half
+each spacing and within `running_stitch_tolerance_mm` of the path. StitchCraft spreads them along the
+path, flattened as Ink/Stitch flattens it for that running stitch (`DEV-RUN-007`). At the default spacing
+those running stitches are 0.2 mm long, chords of the path's curves, so the two lines and the points
+spread along them differ by hundredths of a millimetre. A part whose length lies close to a rounding
+boundary of its count of zigs and zags may have one zig and zag more or fewer. That running stitch is also why Ink/Stitch's other
+spacings of a list change nothing that shows. A part of the path that is one point is not stitched
+(`SC-W0401`), as for a running stitch (`DEV-RUN-004`).
+
+### Properties (conformance)
+
+- The needle points of each part, before repeats, are `n + 1` with `n` even, as step 1 counts them, and
+  their places along the flattened path are `L / n` apart (`REQ-RUN-009`).
+- Each needle point lies across its direction from its place on the path, turned by `zigzag_angle`:
+  even points at half the width plus the second pull compensation to the right, odd points at half the
+  width plus the first to the left (`REQ-RUN-010`).
+- A closed stroke ends on its first needle point (`REQ-RUN-011`).
+- Repeats and bean stitch sew the zigzag as step 5 says, with no step of the bean list for a turn
+  (`REQ-RUN-012`).
+
+### Diagnostics
+
+`SC-W0401` for a part of the path that is one point. Finalizing leaves out a zigzag's stitches that are
+shorter than the shortest stitch, as they are across a zigzag much narrower than it (`SC-I0504`).
 
 ## Ripple stitch (P3, M10)
 

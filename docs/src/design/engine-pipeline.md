@@ -60,8 +60,8 @@ whatever its `stroke_method` says, as in Ink/Stitch. Its rails and rungs are rec
 recognition finds is reported, and its `satin_method` picks the generator: the satin stitch, sewn from
 M4.2. A satin column also reads the running stitch's length (`running_stitch_length_mm`): the stitches
 that join its underlays are no longer than the first value. For any other stroke the generator is its
-`stroke_method`. `running_stitch` (the default) and
-`manual_stitch` are sewn from M3. A satin column drawn as one path no wider than the design's
+`stroke_method`. `running_stitch` (the default) and `manual_stitch` are sewn from M3, and `zigzag_stitch`
+from M7.2, as wide as the stroke. A satin column drawn as one path no wider than the design's
 `min_satin_stroke_width` is sewn as a stroke, with `SC-W0212`, as in Ink/Stitch (`REQ-SAT-015`). Wider,
 it is sewn between rails made from its line from M4.9 (`REQ-SAT-016`). A fill whose `fill` setting is
 off sews nothing, and nothing is said of it (`REQ-FILL-003`). Another fill's region is built first, so

@@ -227,10 +227,10 @@ fn an_element_sews_with_the_longer_of_the_machine_s_shortest_stitch_and_its_own(
 
 #[test]
 fn diag_sc_w0011_a_stitch_type_not_sewn_yet_is_named() {
-    let ripple = sewn(vec![line("r", (0.0, 0.0), 10.0, &RED, &[("stroke_method", "zigzag_stitch")]), line("ok", (0.0, 5.0), 10.0, &RED, &[])]);
+    let ripple = sewn(vec![line("r", (0.0, 0.0), 10.0, &RED, &[("stroke_method", "ripple_stitch")]), line("ok", (0.0, 5.0), 10.0, &RED, &[])]);
     assert_eq!(
         messages(&ripple),
-        ["warning SC-W0011: This element's stroke method, `zigzag_stitch`, is not sewn by this version of StitchCraft yet, so it is skipped."]
+        ["warning SC-W0011: This element's stroke method, `ripple_stitch`, is not sewn by this version of StitchCraft yet, so it is skipped."]
     );
     let square =
         Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0)), Segment::Line(p(5.0, 5.0))], closed: true }] };

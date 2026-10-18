@@ -157,6 +157,34 @@ panels = [
 ]
 
 [[shot]]
+id = "zigzag-spacing"
+kind = "stitch"
+fixture = "docs/fixtures/zigzag.svg"
+style = "simple"
+scale = 20.0
+layout = "rows"
+alt = "A wave 36 mm long sewn as a zigzag 3 mm wide, its needle points dotted on both sides"
+panels = [
+  { caption = "0.4 mm", params = { stroke_method = "zigzag_stitch" } },
+  { caption = "1 mm", params = { stroke_method = "zigzag_stitch", zigzag_spacing_mm = "1" } },
+  { caption = "2 mm", params = { stroke_method = "zigzag_stitch", zigzag_spacing_mm = "2" } },
+]
+
+[[shot]]
+id = "zigzag-angle"
+kind = "stitch"
+fixture = "docs/fixtures/zigzag.svg"
+style = "simple"
+scale = 20.0
+layout = "rows"
+alt = "A wave 36 mm long sewn as a zigzag 3 mm wide at 1 mm spacing"
+panels = [
+  { caption = "0°", params = { stroke_method = "zigzag_stitch", zigzag_spacing_mm = "1" } },
+  { caption = "45°", params = { stroke_method = "zigzag_stitch", zigzag_spacing_mm = "1", zigzag_angle = "45" } },
+  { caption = "−45°", params = { stroke_method = "zigzag_stitch", zigzag_spacing_mm = "1", zigzag_angle = "-45" } },
+]
+
+[[shot]]
 id = "running-tolerance"
 kind = "stitch"
 fixture = "docs/fixtures/half-disc.svg"

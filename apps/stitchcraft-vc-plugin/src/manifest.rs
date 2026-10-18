@@ -38,7 +38,7 @@ use stitchcraft_core::Mm;
 use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::registry::PARAMETERS;
-use stitchcraft_params::{Empty, Family, Kind, ParamGroup, ParamSpec, Value as Parsed};
+use stitchcraft_params::{Empty, Family, Kind, ParamGroup, ParamSpec, StitchType, Value as Parsed, find_for};
 pub use stitchcraft_vectorcraft::{PREVIEW_LEVEL, plugin_id};
 
 use crate::preview::Level;
@@ -137,7 +137,7 @@ pub fn hello() -> Manifest {
 /// that apply to it.
 pub fn family(family: Family) -> Manifest {
     let (name, description) = match family {
-        Family::Stroke => ("StitchCraft Stroke", "Sews the object along its path: running, bean or manual stitch."),
+        Family::Stroke => ("StitchCraft Stroke", "Sews the object along its path: running, bean, zigzag or manual stitch."),
         Family::Satin => ("StitchCraft Satin", "Sews the object as a satin column, as wide as its stroke or between its two rails."),
         Family::Fill => ("StitchCraft Fill", "Fills the object with rows of stitches, tatami fill."),
     };
@@ -166,8 +166,9 @@ fn params(family: Family) -> Vec<(&'static str, Schema)> {
 /// The parameters of `registry` that `family`'s manifest declares, in the dialog's order. A key that
 /// several families declare is there as `family` declares it (REQ-PRM-005).
 fn params_of(registry: &[&ParamGroup], family: Family) -> Vec<(&'static str, Schema)> {
+    let default = find_for(registry, family.method_param(), family).and_then(|method| StitchType::from_id(family, method.default));
     let mut groups = registry.to_vec();
-    groups.sort_by_key(|group| place(group, family));
+    groups.sort_by_key(|group| place(group, family, default));
     groups
         .iter()
         .flat_map(|group| group.specs.iter().map(|spec| (spec, group.specs)))
@@ -176,17 +177,21 @@ fn params_of(registry: &[&ParamGroup], family: Family) -> Vec<(&'static str, Sch
         .collect()
 }
 
-/// Where `group` comes in `family`'s dialog, from 0: with the family's method, used by the family alone,
-/// shared with other families, or the settings every element shares.
-fn place(group: &ParamGroup, family: Family) -> u8 {
+/// Where `group` comes in `family`'s dialog, from 0. First is the group with the family's method, then
+/// those the family alone uses for its `default` method, those it shares with other families, those of its
+/// other methods, and the settings every element shares last. A default method's settings so come before
+/// the other methods', as in Ink/Stitch's dialogs.
+fn place(group: &ParamGroup, family: Family, default: Option<StitchType>) -> u8 {
     if group.name == CommonParams::GROUP.name {
-        3
+        4
     } else if group.specs.iter().any(|spec| spec.key == family.method_param()) {
         0
-    } else if group.specs.iter().all(|spec| spec.applies_to.iter().all(|t| t.family() == family)) {
+    } else if !group.specs.iter().all(|spec| spec.applies_to.iter().all(|t| t.family() == family)) {
+        2
+    } else if default.is_some_and(|method| group.applies_to.contains(&method)) {
         1
     } else {
-        2
+        3
     }
 }
 
@@ -200,6 +205,7 @@ pub fn schema(spec: &ParamSpec, siblings: &[ParamSpec]) -> Option<Schema> {
         (Kind::Length { min, max, empty: Empty::Never | Empty::Blank }, Parsed::Length(Some(mm))) => number(min, max, mm.get()),
         (Kind::Length { max, empty: Empty::AtMostZero, .. }, Parsed::Length(mm)) => number(0.0, max, mm.map_or(0.0, Mm::get)),
         (Kind::Angle, Parsed::Angle(angle)) => number(-180.0, 180.0, angle),
+        (Kind::BoundedAngle { min, max }, Parsed::Angle(angle)) => number(min, max, angle),
         (Kind::Percent { min, max }, Parsed::Percent(value)) | (Kind::Number { min, max }, Parsed::Number(value)) => number(min, max, value),
         (Kind::Count { min, max }, Parsed::Count(count)) => Some(Schema::Int { min: min.into(), max: max.into(), default: count.into() }),
         (Kind::CountList { min, max }, Parsed::Counts(counts)) => match counts.as_slice() {
@@ -321,7 +327,7 @@ fn valid_spec(spec: &Value) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use stitchcraft_params::{ChoiceOption, Condition, Origin, ParamSet, Stability, StitchType};
+    use stitchcraft_params::{ChoiceOption, Condition, Origin, ParamSet, Stability};
 
     use super::*;
 
@@ -372,6 +378,10 @@ mod tests {
         let stroke = keys(Family::Stroke);
         assert_eq!(stroke[..3], ["stroke_method", "repeats", "bean_stitch_repeats"]);
         assert_eq!(stroke[3], "running_stitch_length_mm");
+        // Another method's settings come after those the family shares, and before those every element
+        // shares, as in Ink/Stitch.
+        assert!(place(&stroke, "random_stitch_length_jitter_percent") < place(&stroke, "zigzag_spacing_mm"));
+        assert!(place(&stroke, "zigzag_angle") < place(&stroke, "ties"));
         let satin = keys(Family::Satin);
         assert_eq!(satin[..2], ["satin_method", "zigzag_spacing_mm"]);
         // Within a group, the registry's order.
@@ -448,6 +458,8 @@ mod tests {
         assert_eq!(schema(&spec(optional, ""), &[]), Some(Schema::Number { min: 0.0, max: 10.0, default: 0.0 }));
         assert_eq!(schema(&spec(Kind::Length { min: 0.0, max: 10.0, empty: Empty::Blank }, ""), &[]), None);
         assert_eq!(schema(&spec(Kind::Angle, "90"), &[]), Some(Schema::Number { min: -180.0, max: 180.0, default: 90.0 }));
+        let tilt = Kind::BoundedAngle { min: -89.0, max: 89.0 };
+        assert_eq!(schema(&spec(tilt, "30"), &[]), Some(Schema::Number { min: -89.0, max: 89.0, default: 30.0 }));
         assert_eq!(schema(&spec(Kind::Percent { min: 0.0, max: 50.0 }, "15"), &[]), Some(Schema::Number { min: 0.0, max: 50.0, default: 15.0 }));
         assert_eq!(schema(&spec(Kind::Number { min: 0.01, max: 9.0 }, "4"), &[]), Some(Schema::Number { min: 0.01, max: 9.0, default: 4.0 }));
         assert_eq!(schema(&spec(Kind::Count { min: 1, max: 9 }, "2"), &[]), Some(Schema::Int { min: 1, max: 9, default: 2 }));

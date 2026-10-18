@@ -58,7 +58,7 @@ impl Layer {
     /// Its parts, each a run of needle points, as they are sewn when nothing cuts the column.
     pub(crate) fn parts(self, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
         Ok(match self {
-            Layer::Walk { way, repeats } => vec![passes::sew(&way, repeats, &[], meter)?],
+            Layer::Walk { way, repeats } => vec![passes::sew(&way, repeats, &[], passes::Turn::Listed, meter)?],
             Layer::Contour(sides) => sides.into(),
             Layer::Zigzag { ways: [there, back], longest } => vec![split_long(there, longest, meter)?, split_long(back, longest, meter)?],
         })
