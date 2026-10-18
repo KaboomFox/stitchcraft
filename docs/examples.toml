@@ -54,6 +54,11 @@ files = ["docs/fixtures/badge.svg"]
 run = ["stitch plan badge.svg -o badge.pes --preview badge.png"]
 
 [[example]]
+id = "export-round-patch"
+files = ["docs/fixtures/round-patch.vectorcraft"]
+run = ["stitch export round-patch.vectorcraft -o round-patch.pes --preview round-patch.png"]
+
+[[example]]
 id = "export-patch"
 files = ["conformance/fixtures/vectorcraft/patch.vectorcraft"]
 run = ["stitch export patch.vectorcraft -o patch.pes --preview patch.png"]

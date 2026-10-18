@@ -1,7 +1,7 @@
 //! The window probe: VectorCraft's released app in a desktop without a screen (spike M0.8).
 //!
-//! **Why.** The docs will show VectorCraft's menus and dialogs with StitchCraft's plug-ins in them, taken
-//! from the app itself on every run (the `vectorcraft-ui` pictures, `docs/src/design/docs-pipeline.md`).
+//! **Why.** The docs show VectorCraft's menus and dialogs with StitchCraft's plug-ins in them, taken from
+//! the app itself on every run (the `vectorcraft-ui` pictures, `docs/src/design/docs-pipeline.md`).
 //! That takes three things CI might not give: a window with no screen to show it on, the same pixels each
 //! time, and a way to reach the controls a person uses. The tests in `tests/window.rs` check the three
 //! against the app as VectorCraft releases it:
@@ -15,6 +15,10 @@
 //! `cargo xtask compat window` runs them in a private desktop (`xtask/src/window.rs`) and names the app
 //! in [`APP`]. Each test records what it measured, or why it failed, with [`record`], and the command
 //! shows the records, as annotations in CI.
+//!
+//! The docs' `vectorcraft-ui` pictures are taken the same way (roadmap step M6.7): `tests/shots.rs` drives
+//! the window to each menu and dialog and crops the screenshot to it ([`Pixels::crop`]), when
+//! `cargo xtask shots --vectorcraft` names a job in [`SHOTS`].
 #![forbid(unsafe_code)]
 // A harness, not a crate of the engine: it starts a process, waits on it and on a socket, and writes and
 // reads files, all of which `clippy.toml` keeps out of the engine's crates for determinism.
@@ -36,6 +40,9 @@ pub const APP: &str = "STITCHCRAFT_VECTORCRAFT_APP";
 pub const OUT: &str = "STITCHCRAFT_WINDOW_OUT";
 /// The file in [`OUT`] that [`record`] adds to: one JSON object a line, `{test, level, title, message}`.
 pub const FINDINGS: &str = "findings.jsonl";
+/// The variable that names the job of `tests/shots.rs`: the `vectorcraft-ui` shots to take, as
+/// `cargo xtask shots --vectorcraft` writes them.
+pub const SHOTS: &str = "STITCHCRAFT_SHOTS";
 
 /// How long the app may take to show its window and open the file. Mesa's software renderer builds its
 /// shaders first.
@@ -168,9 +175,18 @@ impl Window {
 
     /// A screenshot of the window, as the app writes it to `<name>.png`, and its pixels.
     pub fn screenshot(&mut self, name: &str) -> Result<Pixels, String> {
+        self.screenshot_with(name, true)
+    }
+
+    /// A screenshot of the window as it is, without first giving it the focus: a menu stays open.
+    pub fn screenshot_still(&mut self, name: &str) -> Result<Pixels, String> {
+        self.screenshot_with(name, false)
+    }
+
+    fn screenshot_with(&mut self, name: &str, focus: bool) -> Result<Pixels, String> {
         let path = out()?.join(format!("{name}.png"));
         let text = path.to_str().ok_or(format!("{}: not UTF-8", path.display()))?;
-        self.call("ui.screenshot", json!({"path": text}))?;
+        self.call("ui.screenshot", json!({"path": text, "focus": focus}))?;
         Pixels::read(&path)
     }
 
@@ -262,6 +278,32 @@ impl Pixels {
         Pixels { width: self.width, height: to - from, rgba }
     }
 
+    /// The rectangle `x`, `y`, `width` × `height` of the picture, cut to it.
+    pub fn crop(&self, x: i64, y: i64, width: i64, height: i64) -> Pixels {
+        let clamp = |v: i64, max: u32| u32::try_from(v.clamp(0, i64::from(max))).unwrap_or(0);
+        let (left, top) = (clamp(x, self.width), clamp(y, self.height));
+        let (right, bottom) = (clamp(x.saturating_add(width), self.width).max(left), clamp(y.saturating_add(height), self.height).max(top));
+        let stride = self.width as usize * 4;
+        let mut rgba = Vec::with_capacity((right - left) as usize * (bottom - top) as usize * 4);
+        for row in top..bottom {
+            let start = row as usize * stride + left as usize * 4;
+            rgba.extend_from_slice(self.rgba.get(start..start + (right - left) as usize * 4).unwrap_or_default());
+        }
+        Pixels { width: right - left, height: bottom - top, rgba }
+    }
+
+    /// Writes the picture to `path` as an 8-bit RGBA PNG, making its folder.
+    pub fn write(&self, path: &Path) -> Result<(), String> {
+        let what = |e: &dyn std::fmt::Display| format!("{}: {e}", path.display());
+        if let Some(dir) = path.parent() {
+            std::fs::create_dir_all(dir).map_err(|e| what(&e))?;
+        }
+        let mut encoder = png::Encoder::new(File::create(path).map_err(|e| what(&e))?, self.width, self.height);
+        encoder.set_color(png::ColorType::Rgba);
+        encoder.set_depth(png::BitDepth::Eight);
+        encoder.write_header().and_then(|mut w| w.write_image_data(&self.rgba)).map_err(|e| what(&e))
+    }
+
     /// The number of pixels.
     pub fn count(&self) -> u64 {
         u64::from(self.width) * u64::from(self.height)
@@ -326,6 +368,23 @@ mod tests {
         assert_eq!(tall.rows(2, 9), Pixels { width: 1, height: 1, rgba: vec![8, 9, 10, 11] });
         assert_eq!(tall.rows(2, 1).height, 0);
         assert_eq!(tall.rows(5, 9), Pixels { width: 1, height: 0, rgba: Vec::new() });
+    }
+
+    #[test]
+    fn a_crop_is_cut_to_the_picture() {
+        let picture = Pixels { width: 3, height: 2, rgba: (0..24).collect() };
+        assert_eq!(picture.crop(1, 0, 1, 2), Pixels { width: 1, height: 2, rgba: vec![4, 5, 6, 7, 16, 17, 18, 19] });
+        // Beyond an edge, the crop stops at it.
+        assert_eq!(picture.crop(-5, 1, 7, 9), Pixels { width: 2, height: 1, rgba: (12..20).collect() });
+        assert_eq!(picture.crop(5, 5, 2, 2), Pixels { width: 0, height: 0, rgba: Vec::new() });
+    }
+
+    #[test]
+    fn a_written_picture_reads_back() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("target/unit/written.png");
+        let picture = Pixels { width: 2, height: 1, rgba: vec![1, 2, 3, 255, 4, 5, 6, 255] };
+        picture.write(&path).unwrap();
+        assert_eq!(Pixels::read(&path).unwrap(), picture);
     }
 
     #[test]

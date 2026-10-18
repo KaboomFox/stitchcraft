@@ -322,7 +322,7 @@ pub(crate) fn modules() -> Vec<&'static str> {
 
 /// Builds each of the plug-in's modules for wasm32 into `target/compat/plugins/<name>.wasm`, and prints
 /// their sizes, which a CI run shows as a notice: the folder.
-fn build_modules() -> Result<PathBuf, String> {
+pub(crate) fn build_modules() -> Result<PathBuf, String> {
     if !wasm::target_installed() {
         return Err(format!("the {} target is not installed: rustup target add {}", wasm::TARGET, wasm::TARGET));
     }

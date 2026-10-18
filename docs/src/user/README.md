@@ -7,7 +7,7 @@ with a section for each stitch type.
 | Section | Use it to | Pages |
 |---|---|---|
 | [Install](install.md) | Build the `stitch` command | |
-| Tutorials | Learn by doing, start to finish | [Your first sew-out on a Brother](tutorials/first-sew-out.md), [Turn an SVG into a PES file](tutorials/svg-to-pes.md) |
+| Tutorials | Learn by doing, start to finish | [Your first sew-out on a Brother](tutorials/first-sew-out.md), [Turn an SVG into a PES file](tutorials/svg-to-pes.md), [A patch in VectorCraft](tutorials/vectorcraft-patch.md) |
 | [How-to guides](how-to/README.md) | Solve one problem | Check a file, convert it, fit the hoop, report a bug |
 | [Stitch types](stitches/README.md) | See what each stitch does and what its parameters change | Running stitch, lock stitches |
 | [Reference](reference/README.md) | Look up commands, parameters, messages and machines | |

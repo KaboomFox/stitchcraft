@@ -206,11 +206,7 @@ jobs:
       - run: rustup toolchain install --profile minimal
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - name: A desktop without a screen (Xvfb, Mesa, D-Bus, AT-SPI)
-        # libxkbcommon-dev links xa11y's keyboard maps; the rest is what VectorCraft's window loads.
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends xvfb xauth dbus at-spi2-core libxkbcommon-dev \
-            libegl1 libegl-mesa0 libgl1-mesa-dri libxkbcommon-x11-0 libxcursor1 libxrandr2 libxi6
+        uses: ./.github/actions/desktop
       - name: VectorCraft's window, photographed and driven through its accessibility tree
         run: cargo xtask compat window
       - name: Keep the screenshots, the tree and the app's logs
