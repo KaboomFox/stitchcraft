@@ -672,12 +672,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### Fixed
 - A satin column of 2 rings sews straight across, wherever each ring starts and however it is closed
-  (`REQ-SAT-019`). The second ring now starts at its point nearest the first's start, and without rungs at
-  its node nearest the first's first node (`DEV-SAT-009`). VectorCraft's Make Compound Path, from 0.10.0,
-  turns the front of 2 rings round, which starts it at what was its last node, a quarter of the way round
-  a circle. The border of the VectorCraft tutorial's patch, drawn by VectorCraft 0.12.0, sewed stitches
-  across the column, 292 of them longer than 12 mm. Ink/Stitch sews such rings from their own starts, with
-  a warning. A ring's start also counts once at each end of its nodes. VectorCraft closes a ring with a
+  (`REQ-SAT-019`). The second ring now starts at its node nearest the first's first node, and its nodes
+  too where they pair up (`DEV-SAT-009`). VectorCraft's Make Compound Path, from 0.10.0, turns the front
+  of 2 rings round, which starts it at what was its last node, a quarter of the way round a circle. The
+  border of the VectorCraft tutorial's patch, drawn by VectorCraft 0.12.0, sewed stitches across the
+  column, 292 of them longer than 12 mm. Ink/Stitch sews such rings from their own starts, with a
+  warning. A ring's start also counts once at each end of its nodes. VectorCraft closes a ring with a
   segment back to its start and `Z`, which lists the start twice. Turned round, such a ring paired its
   nodes one place apart. Beside a ring closed by `Z` alone, it got `SC-W0210`.
 - The compatibility gate files an issue under a label the repository doesn't have yet. When no label

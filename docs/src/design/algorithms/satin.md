@@ -168,10 +168,12 @@ rails twice: once to sew it, and once for the element before it to end near it.
   paired twice, with rail B forwards and with it backwards. The pairing whose distances add up to less
   wins. `none`, `first`, `second` and `both` force it.
 - Of 2 rails that are rings, each ending where it starts (closed with `Z`, or drawn back to its start),
-  rail B first starts at its point nearest rail A's start, before any reversal (`DEV-SAT-009`). Ink/Stitch
-  takes each ring's own start, and warns that a closed rail has no definite start. VectorCraft's Make
-  Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at what was its last
-  node. Rings sewn from their own starts then get stitches across the column.
+  rail B first starts at its node nearest rail A's first node, before any reversal (`DEV-SAT-009`).
+  Ink/Stitch takes each ring's own start, and warns that a closed rail has no definite start.
+  VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at
+  what was its last node. Rings sewn from their own starts then get stitches across the column. A node,
+  not the nearest point, keeps rings that start together as drawn, with a rung across their starts where
+  one is drawn. A column made from a centre line keeps its rails as made, which start together.
 
 ## Correspondence
 
@@ -189,9 +191,9 @@ them. The 2nd node of one rail goes with the 2nd node of the other, and on in or
 Ink/Stitch's own warning for this counts the rails' points after flattening, not their nodes, and can
 warn where the nodes pair as drawn. Rails of 2 nodes each get one rung, across the points 0.2 CSS pixels
 along the straight line from each rail's first node to its last, and sew as one section. Of 2 rings, the
-second's nodes start at its node nearest the first's first node, as the rings start together, and each
-ring's start counts once at each end of its nodes. VectorCraft closes a ring with a segment back to its
-start and `Z`, which lists its start twice at the end of its nodes.
+second's nodes start at the node its line starts at, and each ring's start counts once at each end of
+its nodes. VectorCraft closes a ring with a segment back to its start and `Z`, which lists its start
+twice at the end of its nodes.
 
 Each rail's nodes are turned as `reverse_rails` turns the rail drawn in that place, first or second,
 before any swap. Swapping the rails then changes only which one sews first, and the same nodes pair
@@ -432,7 +434,7 @@ end command, read from M8, would replace the needle point or the next stitch.
 | `REQ-SAT-014` | Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there. The column sews the first halves, then the second halves from the line's end, and stitches the end last |
 | `REQ-SAT-015` | A column drawn as one subpath whose stroke is no wider than the design's narrowest satin stroke sews as a stroke would, with `SC-W0212`. It offers its first point, as a stroke does |
 | `REQ-SAT-018` | A column whose needle points all lie within its shortest stitch of its first sews nothing, with `SC-W0215`, and the rest of the design is planned |
-| `REQ-SAT-019` | Of 2 rings, the second starts at its point nearest the first's start, and without rungs its nodes at its node nearest the first's first node. The stitches go straight across whatever point each ring was drawn from and however it is closed (`DEV-SAT-009`) |
+| `REQ-SAT-019` | Of 2 rings, the second starts at its node nearest the first's first node, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (`DEV-SAT-009`) |
 
 Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparison to tune defaults
 ([machine testing](../../plan/machine-testing.md)).

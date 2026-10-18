@@ -159,7 +159,7 @@ the StitchCraft effect is applied after the paths are joined, which works in eve
 
 | Task | In VectorCraft | Why it sews |
 |---|---|---|
-| Satin column of 2 paths | Object › Compound Path › Make (`object.compoundPath.make`), then the satin effect | The column turns a second rail that runs the other way back (`reverse_rails`, automatic), as Ink/Stitch does (`REQ-VC-007`). The reversal also starts a ring at what was its last node, and of 2 rings the second starts where it comes nearest the first's start (`REQ-SAT-019`) |
+| Satin column of 2 paths | Object › Compound Path › Make (`object.compoundPath.make`), then the satin effect | The column turns a second rail that runs the other way back (`reverse_rails`, automatic), as Ink/Stitch does (`REQ-VC-007`). The reversal also starts a ring at what was its last node, and of 2 rings the second starts at its node nearest the first's start (`REQ-SAT-019`) |
 | Rung | Pen tool line across the rails, then Make Compound Path with the column | Which way the rung runs, and where among the paths it lies, doesn't change the points it pairs. Before 0.10.0 the compound takes the rung's appearance, and the effect is applied again |
 | Baked preview | Object › Expand Appearance (`effect.expandAppearance`) | It runs the live effect and makes objects of what each fill and stroke paints, strokes outlined. Those are the preview's shapes, which sew differently from the effect. Bake a copy to show, and sew the original |
 | Presets | Graphic Styles (`graphicStyle.new`, `graphicStyle.apply`) | Applying a style copies its effects into each object, or into the group it is applied to, whose effects apply to each path inside (`REQ-VC-006`) |

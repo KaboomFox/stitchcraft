@@ -17,8 +17,8 @@ Apply the effect after joining the rails. VectorCraft 0.10.0 and later keep the 
 the back, and earlier versions that of the path in front, which may not be the one with the effect. From
 0.10.0, VectorCraft may also reverse the front path, and always does for 2 straight rails. The column
 turns it back (`reverse_rails`, automatic). A reversed ring also starts somewhere else, so of 2 rings the
-second starts where it comes nearest the first's start. The stitches are the same whatever point the
-rails were drawn from and whichever way they run.
+second starts at its node nearest the first's start. The stitches are the same whatever node the rails
+were drawn from and whichever way they run.
 
 ## Add a rung
 
