@@ -48,9 +48,10 @@ pub struct Stitching {
 
 /// The needle points of the row segment from `start` to `end`, sewn that way, as `stitching` says, with
 /// random lengths drawn from `rng`. A unit of `meter`'s work per point, and per place the grid has at the
-/// start.
+/// start, and a stitch per point.
 pub fn row_points(start: Point, end: Point, stitching: &Stitching, rng: &mut SplitMix64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     meter.charge(1)?;
+    meter.charge_stitches(1)?;
     let mut points = vec![start];
     let length = start.distance(end);
     if length == 0.0 {
@@ -66,6 +67,7 @@ pub fn row_points(start: Point, end: Point, stitching: &Stitching, rng: &mut Spl
     while by < length {
         meter.charge(1)?;
         if by > 0.0 {
+            meter.charge_stitches(1)?;
             points.push(at(by));
         }
         by += match stitching.jitter {
@@ -75,6 +77,7 @@ pub fn row_points(start: Point, end: Point, stitching: &Stitching, rng: &mut Spl
     }
     if !stitching.skip_last && points.last().is_some_and(|last| last.distance(end) > END_NEAR) {
         meter.charge(1)?;
+        meter.charge_stitches(1)?;
         points.push(end);
     }
     Ok(points)

@@ -89,7 +89,7 @@ use super::travel::{Network, between};
 use super::underpath::{Underpath, smooth};
 use crate::generators::pull::offset;
 use crate::generators::running::along_line;
-use crate::generators::{Approach, Own, Stitched, covers};
+use crate::generators::{Approach, Own, Stitched, covers, settled};
 use crate::normalize::near::{key, nearest_pair, nearest_to_point};
 use crate::normalize::offset::buffer;
 use crate::normalize::region::{Polygon, Region, Unjoined};
@@ -158,8 +158,20 @@ pub struct Fill {
 /// back to where it started, then its top rows, from the needle where the elements before left it to near
 /// the `next` element. Random lengths draw from `rng`. Each part is a run, unless a layer with no row, or a
 /// piece a part is cut into, starts farther from the needle than the jump length. Work is charged to
-/// `meter` for every ring point, row, node, edge, step and stitch.
+/// `meter` for every ring point, row, node, edge, step and stitch, and a stitch for every needle point.
 pub fn tatami_fill(
+    region: &Region,
+    fill: &Fill,
+    needle: Option<Point>,
+    next: Option<&Approach>,
+    rng: &mut SplitMix64,
+    meter: &mut Meter,
+) -> Result<Stitched, Exhausted> {
+    settled(meter, |meter| sewn(region, fill, needle, next, rng, meter))
+}
+
+/// [`tatami_fill`], before its stitches are settled.
+fn sewn(
     region: &Region,
     fill: &Fill,
     needle: Option<Point>,

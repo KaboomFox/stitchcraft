@@ -27,14 +27,13 @@
 
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point};
 
-use crate::generators::mm;
-use crate::generators::passes;
 use crate::generators::running::{along_line, raised};
 use crate::generators::satin::SatinParams;
 use crate::generators::satin::column::Section;
 use crate::generators::satin::compensation::{Processor, pushed};
 use crate::generators::satin::pairs::{Pair, pairs};
 use crate::generators::satin::split::evenly;
+use crate::generators::{made, mm, passes};
 
 /// Whether the centre walk ends at the column's end: it is on, with an odd number of repeats. The rest of
 /// the column is then sewn from its end to its start, as in Ink/Stitch.
@@ -172,11 +171,13 @@ fn too_short([start, end]: [f64; 2]) -> Diagnostic {
 }
 
 /// The zigzag's 2 ways: through one end of each pair, the rails taking turns, and back through the others.
+/// Each pair's 2 needle points cost a stitch each.
 fn zigzag(sections: &[Section], params: &SatinParams, meter: &mut Meter) -> Result<Layer, Exhausted> {
     let inset = params.zigzag_underlay_inset_mm.map_or(params.contour_underlay_inset_mm.map(|mm| mm.get() / 2.0), |pair| pair.map(Mm::get));
     let percent = params.zigzag_underlay_inset_percent.unwrap_or(params.contour_underlay_inset_percent.map(|percent| percent / 2.0));
     let spacing = params.zigzag_underlay_spacing_mm.get() / 2.0;
     let mut placed = pairs(sections, spacing, &mut Processor::inset(inset, percent.map(|percent| percent / 100.0)), meter)?;
+    made(meter, 2 * placed.len())?;
     if ends_at_end(params) {
         placed.reverse();
     }
@@ -199,6 +200,17 @@ mod tests {
 
     fn p(x: f64, y: f64) -> Point {
         Point::new(x, y).unwrap()
+    }
+
+    #[test]
+    fn a_zigzag_underlay_spends_a_stitch_for_each_needle_point() {
+        // A column 10 mm long, its zigzag underlay at the default 3 mm spacing, there and back.
+        let sections = [[vec![p(0.0, 0.0), p(10.0, 0.0)], vec![p(0.0, 4.0), p(10.0, 4.0)]]];
+        let params = SatinParams::from_set(&stitchcraft_params::ParamSet::new()).unwrap().params;
+        let mut meter = Budget::DEFAULT.meter();
+        let Layer::Zigzag { ways: [there, back], .. } = zigzag(&sections, &params, &mut meter).unwrap() else { panic!("not a zigzag") };
+        assert!(there.len() > 2, "{there:?}");
+        assert_eq!(usize::try_from(Budget::DEFAULT.max_stitches - meter.stitches_left()).unwrap(), there.len() + back.len());
     }
 
     #[test]

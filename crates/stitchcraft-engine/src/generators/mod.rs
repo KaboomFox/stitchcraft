@@ -6,6 +6,12 @@
 //! with a coded diagnostic (`docs/src/design/engine-pipeline.md` › Generate). Each generator is a
 //! function, and [`crate::generate`] sends each element to its own.
 //!
+//! The stitch budget bounds what a generator holds (`REQ-GEN-004`): it spends a stitch for each needle
+//! point as it makes it (`made`), checks that the points it lays out before sewing them fit in the
+//! stitches left ([`Meter::room`]), and settles at the needle points it gives (`settled`). So a few
+//! settings that multiply needle points, such as the smallest spacing with repeats and bean stitch, stop
+//! at the design's limit instead of filling memory first.
+//!
 //! Elements are generated in sewing order, and each sees its [`Neighbours`]: where the elements before it
 //! left the needle, and what the next element offers to end near, its [`Approach`]
 //! (`docs/src/design/adr/0014-generators-see-their-neighbours.md`). A satin column and a tatami fill
@@ -22,7 +28,7 @@ pub mod tatami;
 pub mod zigzag;
 
 pub(crate) use next::{Own, covers};
-use stitchcraft_core::{Code, Diagnostic, Point};
+use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Point};
 use stitchcraft_params::{ChoiceOption, StitchType};
 
 use crate::normalize::region::Polygon;
@@ -58,6 +64,22 @@ pub struct Stitched {
     pub runs: Vec<Vec<Point>>,
     /// What was changed or left out. They name no element: the caller adds it.
     pub warnings: Vec<Diagnostic>,
+}
+
+/// Spends a stitch of `meter` for each of `count` needle points a generator makes. A count past `u32` is
+/// past any budget.
+pub(crate) fn made(meter: &mut Meter, count: usize) -> Result<(), Exhausted> {
+    meter.charge_stitches(u32::try_from(count).unwrap_or(u32::MAX))
+}
+
+/// What `generator` sews, the stitches it spent settled at the needle points it gives
+/// ([`Meter::settle_stitches`]): it spent one for each needle point as it made it, and dropped or copied
+/// some of them on the way.
+pub(crate) fn settled(meter: &mut Meter, generator: impl FnOnce(&mut Meter) -> Result<Stitched, Exhausted>) -> Result<Stitched, Exhausted> {
+    let left = meter.stitches_left();
+    let stitched = generator(meter)?;
+    meter.settle_stitches(left, stitched.runs.iter().map(Vec::len).sum())?;
+    Ok(stitched)
 }
 
 /// Why a part of a stroke is not stitched.

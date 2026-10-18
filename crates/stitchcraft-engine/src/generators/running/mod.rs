@@ -52,7 +52,7 @@ use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Mm, Point};
 
 use crate::design::Path;
 use crate::generators::passes::{self, RepeatParams, Turn};
-use crate::generators::{Stitched, TooSmall, mm, too_small};
+use crate::generators::{Stitched, TooSmall, made, mm, settled, too_small};
 use crate::normalize::along::Along;
 use crate::normalize::stroke::{self, distance_to_segment};
 
@@ -63,8 +63,20 @@ const FLATTEN_SHARE: f64 = 0.1;
 /// element's shortest stitch, or the machine's). `rng` is the element's generator
 /// ([`SplitMix64::for_element`], seeded with `random_seed`): random length keys a stream of it for each
 /// span ([`SplitMix64::stream`]), and draws nothing from it directly. Every point of the flattened path
-/// costs work from `meter`.
+/// costs work from `meter`, and every needle point a stitch.
 pub fn running_stitch(
+    path: &Path,
+    params: &RunningParams,
+    passes: &RepeatParams,
+    min_stitch: Mm,
+    rng: &SplitMix64,
+    meter: &mut Meter,
+) -> Result<Stitched, Exhausted> {
+    settled(meter, |meter| sewn(path, params, passes, min_stitch, rng, meter))
+}
+
+/// [`running_stitch`], before its stitches are settled.
+fn sewn(
     path: &Path,
     params: &RunningParams,
     passes: &RepeatParams,
@@ -261,12 +273,15 @@ fn stitch_piece(
     cuts.push(end);
     // Each span's stitches, with the pattern carrying on from span to span (each piece starts it afresh).
     let longest = lengths.longest(min);
+    made(meter, 1)?;
     let mut needles = vec![start];
     lengths.next = 0;
     for (index, span) in cuts.windows(2).enumerate() {
         let [from, to] = span else { continue };
         lengths.start(piece, index);
-        needles.extend(spread(along, (*from, *to), lengths, (min, longest, budget), meter)?.into_iter().skip(1));
+        let spread = spread(along, (*from, *to), lengths, (min, longest, budget), meter)?;
+        made(meter, spread.len().saturating_sub(1))?;
+        needles.extend(spread.into_iter().skip(1));
     }
     let Some(needles) = space(needles, along, min, longest, meter)? else { return Ok(None) };
     let needles = follow(needles, along, budget, min, longest, meter)?;
@@ -401,12 +416,14 @@ impl Lengths {
 
 /// The stitch lengths for a span `length` long: the next lengths from `source`, as many as it takes to
 /// reach `length`, or `count` of them, all scaled by one factor to end exactly there; then each one shorter
-/// than `min` joined to its shorter neighbour. With no pattern, the span is one stitch.
+/// than `min` joined to its shorter neighbour. With no pattern, the span is one stitch. Each length must
+/// fit in `meter`'s stitches left, a needle point for each.
 fn fit(length: f64, source: &mut Lengths, min: f64, count: Option<usize>, meter: &mut Meter) -> Result<Vec<f64>, Exhausted> {
     let mut lengths = Vec::new();
     let mut sum = 0.0;
     while lengths.is_empty() || count.map_or(!at_least(sum, length), |count| lengths.len() < count) {
         meter.charge(1)?;
+        meter.room(lengths.len() + 1)?;
         let stitch = source.draw(lengths.is_empty(), length);
         lengths.push(stitch);
         sum += stitch;
