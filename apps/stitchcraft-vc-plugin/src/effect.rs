@@ -114,6 +114,23 @@ mod tests {
     }
 
     #[test]
+    fn diag_sc_i0810_a_zigzag_stroke_is_left_as_it_is() {
+        let out = run(Family::Stroke, &square(), &[("stroke_method", json!("zigzag_stitch"))]);
+        assert_eq!(
+            error(&out),
+            "info SC-I0810: This zigzag stroke is as wide as its stroke, which VectorCraft does not give a live effect: the effect leaves \
+             it as it is. Exported with `stitch export`, it sews as wide as its stroke."
+        );
+        assert!(error(&out).chars().count() <= 300);
+        // At any preview level.
+        for level in ["exact", "outline"] {
+            let out =
+                run(Family::Stroke, &square(), &[("stroke_method", json!("zigzag_stitch")), (stitchcraft_vectorcraft::PREVIEW_LEVEL, json!(level))]);
+            assert!(error(&out).starts_with("info SC-I0810: This zigzag stroke"), "{level}");
+        }
+    }
+
+    #[test]
     fn diag_sc_i0810_an_object_that_sews_no_stitch_is_left_as_it_is() {
         assert_eq!(
             error(&run(Family::Fill, &square(), &[("fill", json!(false))])),

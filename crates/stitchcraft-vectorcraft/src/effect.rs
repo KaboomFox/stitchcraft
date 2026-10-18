@@ -7,7 +7,8 @@
 //! which is left out. The parameters are read as an effect record's are, and the family says whether a
 //! stroke is a satin column, as it does for a record. The object comes without its paints, so a stroke
 //! effect's element has the stand-in stroke of [`Shape::stroke`]: a running stitch does not use its width,
-//! and a satin column drawn with rails does not need it.
+//! and a satin column drawn with rails does not need it. The plug-in leaves a satin column drawn as one path
+//! and a zigzag stroke as they are, since both are as wide as their stroke (`SC-I0810`).
 //!
 //! **What it gives back.** Geometry only, drawn with the object's own paints. A stroke's or a satin
 //! column's stitches come back as open paths from needle point to needle point, for the object's stroke to

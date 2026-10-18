@@ -87,8 +87,10 @@ already exists.
 ### P6: Read-only context for live effects
 
 Add the object's `fills`/`strokes` and, optionally, siblings in the same group whose names start with a
-declared prefix (`"contextPrefixes": ["stitch:"]`) to the live-effect input. Embroidery uses this for
-thread colours and start/end markers; other plug-ins for guides and anchors.
+declared prefix (`"contextPrefixes": ["stitch:"]`) to the live-effect input. Embroidery reads thread
+colours, start and end markers and a stroke's width from it. A satin column drawn as one path and a zigzag
+stroke are as wide as their stroke, and without its width a v1 effect leaves both as they are
+(`SC-I0810`). Other plug-ins use the context for guides and anchors.
 
 ### P7: Preserve foreign SVG attributes
 

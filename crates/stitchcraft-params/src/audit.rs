@@ -108,6 +108,7 @@ fn check(spec: &ParamSpec, group: &ParamGroup, registry: &[&ParamGroup]) -> Vec<
 fn range_is_usable(kind: Kind) -> bool {
     match kind {
         Kind::Length { min, max, .. }
+        | Kind::BoundedAngle { min, max }
         | Kind::Percent { min, max }
         | Kind::LengthList { min, max }
         | Kind::LengthPair { min, max, .. }

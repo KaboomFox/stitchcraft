@@ -1373,7 +1373,7 @@
     },
     "stroke_method": {
       "default": "running_stitch",
-      "description": "The stitch the path is sewn with: a running stitch along it, or a needle point on each of its nodes (manual stitch). Ripple and zigzag stitches arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
+      "description": "The stitch the path is sewn with. A running stitch goes along it and a zigzag across it, and manual stitch puts a needle point on each of its nodes. Ripple stitch arrives in a later version, and until then an element set to it is skipped (`SC-W0011`).",
       "enum": [
         "running_stitch",
         "ripple_stitch",
@@ -1392,6 +1392,30 @@
         "group": "Stroke",
         "origin": "inkstitch",
         "stability": "stable"
+      }
+    },
+    "stroke_pull_compensation_mm": {
+      "default": [
+        0.0
+      ],
+      "description": "How much further out than half the stroke's width the needle goes on each side, to make up for the thread pulling the fabric in. 2 values set the 2 sides: the left of the way the path goes, then the right. Negative values make the zigzag narrower.",
+      "items": {
+        "maximum": 10.0,
+        "minimum": -10.0,
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Pull compensation",
+      "type": "array",
+      "x-stitchcraft": {
+        "applies_to": [
+          "zigzag_stitch"
+        ],
+        "group": "Zigzag stroke",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
       }
     },
     "swap_satin_rails": {
@@ -1467,25 +1491,70 @@
         "stability": "stable"
       }
     },
-    "zigzag_spacing_mm": {
-      "default": 0.4,
-      "description": "The distance from one stitch across the column to the next that goes the same way: from one rail to the other and back again is one spacing. It is measured across the column at its outside edge, and on a curve the stitches fan out from the inside edge.",
-      "maximum": 10.0,
-      "minimum": 0.01,
-      "title": "Zigzag spacing",
+    "zigzag_angle": {
+      "default": 0.0,
+      "description": "Turns every stitch away from square to the path, in degrees: positive turns clockwise as the drawing shows it. On a curve the turned stitches point like the spokes of a wheel.",
+      "maximum": 89.0,
+      "minimum": -89.0,
+      "title": "Zigzag angle",
       "type": "number",
       "x-stitchcraft": {
         "applies_to": [
-          "satin_column",
-          "e_stitch",
-          "s_stitch",
-          "zigzag"
+          "zigzag_stitch"
         ],
-        "group": "Satin column",
+        "group": "Zigzag stroke",
         "origin": "inkstitch",
         "stability": "stable",
-        "unit": "mm"
+        "unit": "°"
       }
+    },
+    "zigzag_spacing_mm": {
+      "anyOf": [
+        {
+          "default": [
+            0.4
+          ],
+          "description": "How far it is along the path from one stitch to the next that crosses the same way, a zig and a zag together. Ink/Stitch takes several spacings separated by spaces, and sews the first.",
+          "items": {
+            "maximum": 100.0,
+            "minimum": 0.01,
+            "type": "number"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Zigzag spacing",
+          "type": "array",
+          "x-stitchcraft": {
+            "applies_to": [
+              "zigzag_stitch"
+            ],
+            "group": "Zigzag stroke",
+            "origin": "inkstitch",
+            "stability": "stable",
+            "unit": "mm"
+          }
+        },
+        {
+          "default": 0.4,
+          "description": "The distance from one stitch across the column to the next that goes the same way: from one rail to the other and back again is one spacing. It is measured across the column at its outside edge, and on a curve the stitches fan out from the inside edge.",
+          "maximum": 10.0,
+          "minimum": 0.01,
+          "title": "Zigzag spacing",
+          "type": "number",
+          "x-stitchcraft": {
+            "applies_to": [
+              "satin_column",
+              "e_stitch",
+              "s_stitch",
+              "zigzag"
+            ],
+            "group": "Satin column",
+            "origin": "inkstitch",
+            "stability": "stable",
+            "unit": "mm"
+          }
+        }
+      ]
     },
     "zigzag_underlay": {
       "default": false,
@@ -1654,6 +1723,15 @@
         ],
         "name": "RepeatParams",
         "title": "Repeat parameters"
+      },
+      {
+        "keys": [
+          "zigzag_spacing_mm",
+          "stroke_pull_compensation_mm",
+          "zigzag_angle"
+        ],
+        "name": "ZigzagStrokeParams",
+        "title": "Zigzag stroke parameters"
       },
       {
         "keys": [

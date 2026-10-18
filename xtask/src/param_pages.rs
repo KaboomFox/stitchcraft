@@ -293,7 +293,9 @@ fn property(spec: &ParamSpec, specs: &[ParamSpec]) -> Result<Json, String> {
             json!({"type": if empty == Empty::Never { json!("number") } else { json!(["number", "null"]) }, "minimum": min, "maximum": max})
         }
         Kind::Angle => json!({"type": "number"}),
-        Kind::Percent { min, max } | Kind::Number { min, max } => json!({"type": "number", "minimum": min, "maximum": max}),
+        Kind::BoundedAngle { min, max } | Kind::Percent { min, max } | Kind::Number { min, max } => {
+            json!({"type": "number", "minimum": min, "maximum": max})
+        }
         Kind::Count { min, max } => json!({"type": "integer", "minimum": min, "maximum": max}),
         Kind::Toggle => json!({"type": "boolean"}),
         Kind::Choice { options } => json!({"type": "string", "enum": options.iter().map(|o| o.id).collect::<Vec<_>>()}),
@@ -509,6 +511,8 @@ mod tests {
         let keys: std::collections::BTreeSet<&str> = PARAMETERS.iter().flat_map(|g| g.specs.iter().map(|s| s.key)).collect();
         assert_eq!(parsed["properties"].as_object().map(serde_json::Map::len), Some(keys.len()), "a property for each key");
         assert_eq!(parsed["properties"]["lock_start_scale_mm"]["default"], json!(0.7));
+        let tilt = &parsed["properties"]["zigzag_angle"];
+        assert_eq!((&tilt["minimum"], &tilt["maximum"], &tilt["x-stitchcraft"]["unit"]), (&json!(-89.0), &json!(89.0), &json!("°")));
         assert_eq!(parsed["properties"]["min_stitch_length_mm"]["default"], Json::Null);
         let common = &pages.iter().find(|(path, _)| path.ends_with("params/common.md")).unwrap().1;
         assert!(common.contains("### `lock_custom_start`\n\n**Custom start lock.**"));

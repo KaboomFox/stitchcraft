@@ -160,9 +160,9 @@ menus' frames. A dialog's picture is cropped to the dialog.
 A dialog must show a row for each parameter of its module's manifest. The row's label is the one
 VectorCraft writes for the key, and its control must be the one VectorCraft gives the parameter's type.
 A number gets a text field and a toggle a checkbox, and a choice gets a drop-down list. A plug-in's
-dialog doesn't scroll, and fill's and satin's, about 1,400 and 1,800 pixels tall, run off the top and
-bottom of the window at the size it opens, 1440 × 900. A dialog's picture is taken in a window 2,000
-pixels tall instead, on a screen of 1600 × 2100.
+dialog doesn't scroll, and all 3 run off the top and bottom of the window at the size it opens,
+1440 × 900: the stroke's is about 960 pixels tall, the fill's about 1,400 and the satin's about 1,800. A
+dialog's picture is taken in a window 2,000 pixels tall instead, on a screen of 1600 × 2100.
 
 ## Command-line examples
 

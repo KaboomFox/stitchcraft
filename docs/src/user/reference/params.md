@@ -53,6 +53,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Stroke parameters](params/stroke.md) | 1 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Running parameters](params/running.md) | 4 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
+| [Zigzag stroke parameters](params/zigzag-stroke.md) | 3 | Zigzag stitch |
 | [Satin parameters](params/satin.md) | 34 | Satin column, E-stitch, S-stitch, Zigzag satin |
 | [Pull parameters](params/pull.md) | 2 | Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill |
 | [Fill parameters](params/fill.md) | 2 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
@@ -127,11 +128,14 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`start_at_nearest_point`](params/satin.md#start_at_nearest_point) | Start at nearest point | Satin parameters |
 | [`stop_after`](params/common.md#stop_after) | Stop after | Common parameters |
 | [`stroke_method`](params/stroke.md#stroke_method) | Method | Stroke parameters |
+| [`stroke_pull_compensation_mm`](params/zigzag-stroke.md#stroke_pull_compensation_mm) | Pull compensation | Zigzag stroke parameters |
 | [`swap_satin_rails`](params/satin.md#swap_satin_rails) | Swap rails | Satin parameters |
 | [`ties`](params/common.md#ties) | Lock stitches | Common parameters |
 | [`trim_after`](params/common.md#trim_after) | Trim after | Common parameters |
 | [`underlay_underpath`](params/tatami.md#underlay_underpath) | Underlay underpath | Tatami parameters |
 | [`underpath`](params/tatami.md#underpath) | Underpath | Tatami parameters |
+| [`zigzag_angle`](params/zigzag-stroke.md#zigzag_angle) | Zigzag angle | Zigzag stroke parameters |
+| [`zigzag_spacing_mm`](params/zigzag-stroke.md#zigzag_spacing_mm) | Zigzag spacing | Zigzag stroke parameters |
 | [`zigzag_spacing_mm`](params/satin.md#zigzag_spacing_mm) | Zigzag spacing | Satin parameters |
 | [`zigzag_underlay`](params/satin.md#zigzag_underlay) | Zigzag underlay | Satin parameters |
 | [`zigzag_underlay_inset_mm`](params/satin.md#zigzag_underlay_inset_mm) | Zigzag underlay inset | Satin parameters |

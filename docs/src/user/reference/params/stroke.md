@@ -10,9 +10,9 @@ Applies to Running stitch, Ripple stitch, Zigzag stitch, Manual stitch.
 
 ### `stroke_method`
 
-**Method.** The stitch the path is sewn with: a running stitch along it, or a needle point on each of its
-nodes (manual stitch). Ripple and zigzag stitches arrive in later versions; until then an
-element set to one is skipped (`SC-W0011`).
+**Method.** The stitch the path is sewn with. A running stitch goes along it and a zigzag across it, and manual
+stitch puts a needle point on each of its nodes. Ripple stitch arrives in a later version, and
+until then an element set to it is skipped (`SC-W0011`).
 
 - **Accepts:** one of `running_stitch` (Running stitch), `ripple_stitch` (Ripple stitch), `zigzag_stitch` (Zigzag stitch), `manual_stitch` (Manual stitch)
 - **Default:** `running_stitch`

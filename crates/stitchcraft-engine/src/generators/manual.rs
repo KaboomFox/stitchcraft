@@ -27,7 +27,7 @@ use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point};
 
 use crate::design::{Path, Subpath};
-use crate::generators::passes::{self, RepeatParams};
+use crate::generators::passes::{self, RepeatParams, Turn};
 use crate::generators::{Stitched, TooSmall, mm, too_small};
 
 /// The manual stitch along `path`, bean-stitched as `passes` say (its repeats do not apply), with no
@@ -58,7 +58,7 @@ pub fn manual_stitch(path: &Path, max_stitch: Option<Mm>, passes: &RepeatParams,
             warnings.push(warning);
         }
         let run = split(&kept, longest, min, &mut long, meter)?;
-        runs.push(passes::sew(&run, 1, &passes.bean_stitch_repeats, meter)?);
+        runs.push(passes::sew(&run, 1, &passes.bean_stitch_repeats, Turn::Listed, meter)?);
     }
     warnings.extend(longest.and_then(|longest| kept_long(&long, longest, min)));
     Ok(Stitched { runs, warnings })
