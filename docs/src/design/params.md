@@ -2,8 +2,8 @@
 
 <!-- implements: crates/stitchcraft-params/src/**, crates/stitchcraft-engine/src/registry.rs, crates/stitchcraft-engine/src/common.rs -->
 
-Every embroidery parameter is declared **once**, next to the generator that uses it. Everything
-else that needs to know about parameters is generated from that declaration:
+A parameter is declared **once** for the stitch types that read it, next to the generator that uses it.
+Everything else that needs to know about parameters is generated from that declaration:
 
 ```text
                         ┌──▶ typed params struct used by the generator
@@ -15,7 +15,7 @@ params! { … }  ─────────┼──▶ VectorCraft plug-in man
                         └──▶ proptest strategies for conformance and fuzzing
 ```
 
-Nothing about a parameter is written twice, so its label, help, range and default cannot drift apart
+Nothing about a declaration is written twice, so its label, help, range and default cannot drift apart
 between the code, the docs and the user interfaces. The diagram is the design's aim. [Generated
 outputs](#generated-outputs) says which outputs exist today and which steps add the others.
 
@@ -155,7 +155,9 @@ back to running stitch: that path must still sew, with nothing said of what it d
 is read from the other parameter's value on the element, or its default, as the element reads that
 parameter. So the audit requires the other parameter to be of the same declaration and never hidden
 itself. It must also apply to every stitch type the hidden one applies to. A host that checks a whole
-set, such as a settings panel, reads every parameter with `from_set`.
+set, such as a settings panel, reads every parameter with `from_set`, declaration by declaration. It
+reads only the declarations of the families it shows: the satin column's declaration of
+`zigzag_spacing_mm` cannot read a zigzag stroke's 2 spacings (rule 7).
 
 ### Completeness (REQ-PRM-001)
 
@@ -188,19 +190,33 @@ entries, and the lock and method identifiers must equal Ink/Stitch's.
    defaults: `max_stitch_length_mm` is empty on manual stitch and satin columns and 4 mm on fills. The
    contract is per key and stitch type, so the contract page matches a declaration with the rows for the
    stitch types it applies to, and a declaration for a stitch type Ink/Stitch does not give the key is
-   reported. A key is declared once, and a family whose default differs gets its own with `defaults`, as
-   fills do for `max_stitch_length_mm`. A family with a
+   reported. A key is declared once for a family (rule 7), and a family whose default differs gets its own
+   with `defaults`, as fills do for `max_stitch_length_mm`. A family with a
    default of its own needs a value (`ParamSpec::in_family`). There an empty value means its default. A
    length of 0 or less is raised to the least the key accepts instead of counting as empty, as Ink/Stitch
    reads a fill's longest stitch. Elsewhere an optional value left empty is no value. The engine reads an
    element's settings with its family's defaults (`from_set_as`). The contract page compares each row
    with the default of the row's family. The reference page lists each family's default and what the
    family accepts, and the JSON Schema gives the defaults under `x-stitchcraft.family_defaults`.
-7. **The same kind and range for every stitch type.** A family can change only a key's default. Some of
-   Ink/Stitch's keys need more. Its `zigzag_spacing_mm` is a list for a zigzag stroke and one number for a
-   satin column, and a meander fill reads it as a number that defaults to 0. Its ripple stitch reads a
-   `staggers` of 0 as no stagger, where a tatami fill's range starts at 0.01. The steps that add those
-   stitch types (M7 and M10) let a declaration give a family its own kind and range.
+7. **A family's own kind and range.** Some of Ink/Stitch's keys differ by more than their default from
+   one family to another. Its `zigzag_spacing_mm` is a list for a zigzag stroke and one number for a satin
+   column, and a meander fill reads it as a number that defaults to 0. Its ripple stitch reads a
+   `staggers` of 0 as no stagger, but a tatami fill's range starts at 0.01. Such a key is declared again
+   for the family that reads it its own way, in a declaration for that family's stitch types
+   (`REQ-PRM-005`). The registry's audit lets a key have one declaration for each family at most, and an
+   element reads the key as its family's declaration says. `find_for` finds a family's declaration, and
+   `find` the first, which is the only one for every other key. The JSON Schema gives such a key any of
+   its declarations' schemas, each with the stitch types it applies to. The index lists the key once for
+   each declaration, under its group, and the contract compares each declaration with the rows of
+   Ink/Stitch's for its stitch types. Every declaration of one of Ink/Stitch's keys has an Ink/Stitch
+   origin. The reference pages show a ledger entry that names the key with each declaration.
+
+   An SVG node's fill and its stroke read the same settings. A key of Ink/Stitch's is never one of
+   StitchCraft's own, even for a family Ink/Stitch does not give it, because that family would read a
+   value written for Ink/Stitch's meaning. A node's fill may also read a value that only its stroke's
+   declaration can read, such as a zigzag stroke's 2 spacings read by a meander fill. Ink/Stitch sews that
+   fill with its default, and StitchCraft would refuse it (`DEV-PRM-001`). The meander fill's step (M7.8)
+   chooses between the two.
 
 ## Generated outputs
 

@@ -265,6 +265,15 @@ rationale = "Settings that change or vanish after saving lose the user's work."
 milestone = "M3"
 status = "planned"
 
+[[req]]
+id = "REQ-PRM-005"
+area = "params"
+level = "L2"
+statement = "A key may be declared once for each family of stitch types, strokes, satin columns and fills, each declaration with its own kind, range and default. An element reads the key as its family's declaration says. A key declared twice for one family is a fault in the registry. The reference pages, the JSON Schema, the plug-ins' settings and the compatibility contract give each family its own declaration."
+rationale = "Ink/Stitch declares some attributes once for each kind of element, each with its own type: zigzag_spacing_mm is a list of lengths for a zigzag stroke and one length for a satin column, and a meander fill reads it as a length that is 0 by default. A file sews the same in both only if each element reads the attribute as Ink/Stitch's declaration for it does."
+milestone = "M7"
+status = "active"
+
 # ── SVG adapter ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

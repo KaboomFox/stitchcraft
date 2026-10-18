@@ -2,9 +2,10 @@
 //!
 //! VectorCraft reads a JSON manifest from every module (`docs/plugins.md` in VectorCraft) and builds the
 //! plug-in's dialog from its parameters. A family's manifest is made from the parameter registry
-//! (`stitchcraft_engine::registry::PARAMETERS`), so a parameter is declared once and every dialog follows
-//! it. The manifests are checked with VectorCraft's rules, so one VectorCraft would refuse fails these
-//! tests instead of a user's install (`REQ-VC-002`).
+//! (`stitchcraft_engine::registry::PARAMETERS`), and every dialog follows it. A key declared for several
+//! families is in each family's manifest as that family declares it. The manifests are checked with
+//! VectorCraft's rules, so one VectorCraft would refuse fails these tests instead of a user's install
+//! (`REQ-VC-002`).
 //!
 //! **What a manifest can hold.** VectorCraft's parameters are numbers, whole numbers, toggles and choices.
 //! Each always has a value: a record VectorCraft stores holds every declared parameter, at its default
@@ -159,7 +160,13 @@ fn preview_level(family: Family) -> Schema {
 
 /// The parameters `family`'s manifest declares, in the dialog's order.
 fn params(family: Family) -> Vec<(&'static str, Schema)> {
-    let mut groups = PARAMETERS.to_vec();
+    params_of(PARAMETERS, family)
+}
+
+/// The parameters of `registry` that `family`'s manifest declares, in the dialog's order. A key that
+/// several families declare is there as `family` declares it (REQ-PRM-005).
+fn params_of(registry: &[&ParamGroup], family: Family) -> Vec<(&'static str, Schema)> {
+    let mut groups = registry.to_vec();
     groups.sort_by_key(|group| place(group, family));
     groups
         .iter()
@@ -314,7 +321,7 @@ fn valid_spec(spec: &Value) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use stitchcraft_params::{ChoiceOption, Condition, Origin, ParamSet, Stability};
+    use stitchcraft_params::{ChoiceOption, Condition, Origin, ParamSet, Stability, StitchType};
 
     use super::*;
 
@@ -372,12 +379,39 @@ mod tests {
     }
 
     #[test]
+    fn req_prm_005_each_family_s_dialog_has_its_own_declaration_of_a_key() {
+        // A list for zigzag strokes and one length for satin columns, each with its own range and default.
+        const SATIN: &[ParamSpec] = &[ParamSpec {
+            key: "zigzag_spacing_mm",
+            label: "Zigzag spacing",
+            help: " The spacing.\n",
+            kind: Kind::Length { min: 0.01, max: 10.0, empty: Empty::Never },
+            default: "0.4",
+            family_defaults: &[],
+            group: "Spacing",
+            applies_to: &[StitchType::SatinColumn],
+            visible_when: None,
+            stability: Stability::Stable,
+            origin: Origin::InkStitch,
+        }];
+        const STROKE: &[ParamSpec] =
+            &[ParamSpec { kind: Kind::LengthList { min: 0.1, max: 5.0 }, default: "1.5", applies_to: &[StitchType::ZigzagStitch], ..SATIN[0] }];
+        let satin = ParamGroup { name: "SatinSpacingParams", help: " Satin.\n", applies_to: SATIN[0].applies_to, specs: SATIN };
+        let stroke = ParamGroup { name: "StrokeSpacingParams", help: " Stroke.\n", applies_to: STROKE[0].applies_to, specs: STROKE };
+        let registry = [&satin, &stroke];
+        let spacing = |min, max, default| vec![("zigzag_spacing_mm", Schema::Number { min, max, default })];
+        assert_eq!(params_of(&registry, Family::Satin), spacing(0.01, 10.0, 0.4));
+        assert_eq!(params_of(&registry, Family::Stroke), spacing(0.1, 5.0, 1.5));
+        assert_eq!(params_of(&registry, Family::Fill), []);
+    }
+
+    #[test]
     fn req_vc_002_a_record_of_the_defaults_reads_as_no_settings_at_all() {
         // VectorCraft stores every declared parameter, at its default when the user leaves it: each must
         // read as the registry's default, as an element without settings reads it.
         for each in Family::ALL {
             for (key, schema) in family(*each).params.into_iter().filter(|(key, _)| *key != PREVIEW_LEVEL) {
-                let spec = PARAMETERS.iter().flat_map(|g| g.specs).find(|s| s.key == key).unwrap().in_family(*each);
+                let spec = stitchcraft_params::find_for(PARAMETERS, key, *each).unwrap().in_family(*each);
                 // VectorCraft stores a number's default clamped into its range.
                 let stored = match schema {
                     Schema::Number { min, max, default } => default.clamp(min, max).to_string(),

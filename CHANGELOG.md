@@ -5,6 +5,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M7.1: a family of stitch types can declare a key again, with a kind and range of its own (`REQ-PRM-005`).
+  Ink/Stitch's `zigzag_spacing_mm` is a list of lengths for a zigzag stroke and one length for a satin
+  column, and a meander fill reads it as a length that is 0 by default. The registry's audit allows one
+  declaration of a key for each family, and an element reads the key as its family's declaration says.
+  - `find_for` finds the declaration a family reads, and `declarations` finds them all.
+  - The JSON Schema gives a key with several declarations any of their schemas, each with the stitch types
+    it applies to. The index has a row for each declaration, and the compatibility contract compares each
+    declaration with Ink/Stitch's rows for its stitch types. The reference pages show a deviation that
+    names the key with each of its declarations.
+  - The audit reads a condition from its own declaration, and requires a deprecated parameter's
+    replacement for each stitch type it applies to.
 - M6.7: the docs show VectorCraft itself, made by the stable release `compat/vectorcraft.toml` pins.
   `cargo xtask shots --vectorcraft` makes the pictures, and the `shots-ui` job checks them on every pull
   request, within 2 pixels in a thousand.
