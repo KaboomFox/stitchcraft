@@ -44,7 +44,7 @@ use crate::normalize::stroke::{self, segments};
 pub const MIN_RAIL: f64 = 0.1 * MM_PER_SVG_PX;
 
 /// Two points closer than this, in millimetres, are one point.
-const SAME_POINT: f64 = 1e-6;
+pub(crate) const SAME_POINT: f64 = 1e-6;
 
 /// How far past either end of a segment, as a fraction of its length, a point still lies on it. Where two
 /// segments end at one node, as the rails of a pointed column do at its tip, rounding can put the
@@ -56,6 +56,9 @@ const ON_SEGMENT: f64 = 1e-9;
 pub struct Satin {
     /// The two rails as polylines, in the order the path draws them.
     pub rails: [Vec<Point>; 2],
+    /// The rails' nodes as the path draws them: each rail's start, the end of each of its segments and,
+    /// when it is closed, its start again. None for rails made from a centre line.
+    pub nodes: [Vec<Point>; 2],
     /// What says which point of one rail goes with which point of the other.
     pub pairing: Pairing,
 }
@@ -67,9 +70,8 @@ pub enum Pairing {
     /// second rail that each says go together. Where a rung misses a rail, it is the point of the rail
     /// nearest the rung. Empty when every rung drawn was left out.
     Rungs(Vec<[Point; 2]>),
-    /// The path draws no rungs, and the rails' nodes pair up instead, as in Ink/Stitch: each rail's start,
-    /// the end of each of its segments and, when it is closed, its start again.
-    Nodes([Vec<Point>; 2]),
+    /// The path draws no rungs, and the rails' nodes ([`Satin::nodes`]) pair up instead, as in Ink/Stitch.
+    Nodes,
 }
 
 /// What a satin column's path is.
@@ -104,7 +106,7 @@ struct Line {
     /// Its number in the path, from 1.
     number: usize,
     points: Vec<Point>,
-    /// Its nodes, as `Pairing::Nodes` has them.
+    /// Its nodes, as [`Satin::nodes`] has them.
     nodes: Vec<Point>,
     length: f64,
     /// Its bounding box: the least and the greatest x and y.
@@ -132,9 +134,11 @@ pub fn recognize(path: &Path, meter: &mut Meter) -> Result<Recognition, Exhauste
         [] => Err(Diagnostic::new(Code::SatinWithoutRails, "This satin column has no subpath longer than a point, so it has no rails.")
             .with_fix(Fix::Hint("Draw the column as two rails, its edges, with rungs across both.".to_string()))),
         [one] => Ok(Shape::CentreLine { line: one.points.clone(), closed: one.closed }),
-        [a, b] => {
-            Ok(Shape::Rails(Satin { rails: [a.points.clone(), b.points.clone()], pairing: Pairing::Nodes([a.nodes.clone(), b.nodes.clone()]) }))
-        }
+        [a, b] => Ok(Shape::Rails(Satin {
+            rails: [a.points.clone(), b.points.clone()],
+            nodes: [a.nodes.clone(), b.nodes.clone()],
+            pairing: Pairing::Nodes,
+        })),
         _ => Ok(Shape::Rails(rails_and_rungs(&lines, &mut warnings, meter)?)),
     };
     Ok(Recognition { shape, warnings })
@@ -205,7 +209,11 @@ fn rails_and_rungs(lines: &[Line], warnings: &mut Vec<Diagnostic>, meter: &mut M
             }
         }
     }
-    Ok(Satin { rails: [rail_a.points.clone(), rail_b.points.clone()], pairing: Pairing::Rungs(rungs) })
+    Ok(Satin {
+        rails: [rail_a.points.clone(), rail_b.points.clone()],
+        nodes: [rail_a.nodes.clone(), rail_b.nodes.clone()],
+        pairing: Pairing::Rungs(rungs),
+    })
 }
 
 /// `SC-W0203`'s message for the rung `rung`, which misses the rail `rail` (both subpath numbers).
@@ -229,7 +237,7 @@ fn line(lines: &[Line], i: usize) -> &Line {
 /// A subpath with no points, for a position that is not in the list.
 static EMPTY: Line = Line { number: 0, points: Vec::new(), nodes: Vec::new(), length: 0.0, bounds: [0.0; 4], closed: false };
 
-/// The nodes of `subpath`, as `Pairing::Nodes` has them.
+/// The nodes of `subpath`, as [`Satin::nodes`] has them.
 fn nodes(subpath: &Subpath) -> Vec<Point> {
     let ends = subpath.segments.iter().map(|segment| segment.end());
     std::iter::once(subpath.start).chain(ends).chain(subpath.closed.then_some(subpath.start)).collect()
