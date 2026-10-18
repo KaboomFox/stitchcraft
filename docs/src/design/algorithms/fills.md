@@ -173,8 +173,10 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    that may run along rows, and sews those rows a second time. StitchCraft pairs the odd nodes so that the
    needle's way between pairs is shortest in all and joins each pair with an edge. Up to 16 nodes every
    pairing is weighed, and past that each node pairs with the nearest left. No row is sewn twice
-   (`DEV-FILL-006`). A pairing edge stands for a way of several edges, as Ink/Stitch's paths do, so travel
-   along it is never a handover between neighbouring rows, for `skip_last` or for gap-fill rows.
+   (`DEV-FILL-006`). A pairing edge stands for the way between its 2 nodes that Ink/Stitch's paths double:
+   one edge where a row or a stretch of ring joins the 2, and several otherwise. Travel along it is never a
+   handover between neighbouring rows for `skip_last`, and it ends a stretch for gap-fill rows only where it
+   stands for several.
 5. **Walk.** Ink/Stitch walks a copy of the graph, which its graph library makes by adding the edges
    again, node by node in the order the nodes came, each node's edges in its own order. So in the copy a
    node lists first its neighbours that came before it, in the order they came, and then the others,
@@ -341,12 +343,15 @@ travel, of no length where it starts on that row. Ink/Stitch's gap fill ends a s
 goes from one row to the next by more than one edge once the loops between them are taken out, and so does
 this one. An edge that comes back to a node where an earlier one of those edges ended takes out the edges
 since, and itself, but a loop back to the row it left stays. So travel out and back before a handover to the
-row beside ends a stretch, and a pairing edge, which stands for a way of several, does too. Each extra row
-is the next row of the grid, the stretch of its segment beside the extra row before it, or the last row
-for the first, lengthened as the rows are. The extra rows are one strip, stop at the part's edge, and stop
-where the part ends. The hop from each to the next, and the way back, are kept inside the part as travel
-is. Ink/Stitch repeats the last row a spacing further each time, and a repeat can run outside the part
-(`DEV-FILL-010`). Underlay has no gap-fill rows.
+row beside ends a stretch, and so does a pairing edge that stands for a way of several. The extra rows go
+on the way the stretch went, away from the last row sewn before the last one in another row. A last row
+sewn on through a joint is 2 segments of one row, and the way comes from the row before them, as
+Ink/Stitch takes it from the row the needle left for that row. Each extra row is the next row of the
+grid, the stretch of its segment beside the extra row before it, or the last row for the first,
+lengthened as the rows are. The extra rows are one strip, stop at the part's edge, and stop where the part
+ends. The hop from each to the next, and the way back, are kept inside the part as travel is. Ink/Stitch
+repeats the last row a spacing further each time, and a repeat can run outside the part (`DEV-FILL-010`).
+Underlay has no gap-fill rows.
 
 ### 8. No rows
 

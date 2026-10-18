@@ -38,8 +38,13 @@ pub(crate) enum Kind {
     Outline,
     /// The same stretch a second time, on every other stretch of each ring.
     Extra,
-    /// A way between 2 nodes of odd degree, added so that every degree is even.
-    Paired,
+    /// A way between 2 nodes of odd degree, added so that every degree is even. Where a row or a stretch of
+    /// ring joins the 2 (`joined`), it stands for that one edge, which Ink/Stitch's graph library doubles in
+    /// its place; otherwise for a way of several edges.
+    Paired {
+        /// Whether a row or a stretch of ring joins its 2 nodes.
+        joined: bool,
+    },
 }
 
 /// An edge: its ends and what it stands for.
@@ -92,7 +97,7 @@ impl Graph {
         if a >= self.around.len() || b >= self.around.len() {
             return None;
         }
-        if kind != Kind::Paired
+        if !matches!(kind, Kind::Paired { .. })
             && let Some(old) = self.neighbour(a, b).and_then(|n| n.edges.iter().copied().find(|&e| self.edge(e).is_some_and(|e| e.kind == kind)))
         {
             return Some(old);
@@ -143,10 +148,10 @@ impl Graph {
     }
 
     /// Whether a row or a stretch of ring joins `a` and `b`, as it joins the ends of neighbouring rows. An
-    /// edge that pairs 2 nodes of odd degree does not count: it stands for the way of several edges that
-    /// Ink/Stitch's graph doubles in its place, and that graph only doubles the edges it has.
+    /// edge that pairs 2 nodes of odd degree does not count: it stands for the way that Ink/Stitch's graph
+    /// doubles in its place, and that graph only doubles the edges it has.
     pub fn beside(&self, a: NodeId, b: NodeId) -> bool {
-        self.neighbour(a, b).is_some_and(|n| n.edges.iter().any(|&e| self.edge(e).is_some_and(|e| e.kind != Kind::Paired)))
+        self.neighbour(a, b).is_some_and(|n| n.edges.iter().any(|&e| self.edge(e).is_some_and(|e| !matches!(e.kind, Kind::Paired { .. }))))
     }
 
     /// How many edges meet at `node`, an edge to itself counting twice.
@@ -229,8 +234,8 @@ mod tests {
         assert_eq!((g.degree(0), g.degree(1), g.degree(2)), (4, 2, 2));
         assert!(g.beside(2, 0) && g.beside(0, 1) && !g.beside(1, 2));
         // An edge pairing 2 nodes leaves them apart, and beside each other where another edge joins them too.
-        g.add(1, 2, Kind::Paired);
-        g.add(2, 0, Kind::Paired);
+        g.add(1, 2, Kind::Paired { joined: false });
+        g.add(2, 0, Kind::Paired { joined: true });
         assert!(!g.beside(1, 2) && g.beside(2, 0));
     }
 
@@ -258,7 +263,7 @@ mod tests {
         let mut g = nodes(2);
         let first = g.add(0, 1, Kind::Outline);
         assert_eq!(g.add(1, 0, Kind::Outline), first, "the same edge, either way round");
-        let paired = [g.add(0, 1, Kind::Paired), g.add(0, 1, Kind::Paired)];
+        let paired = [g.add(0, 1, Kind::Paired { joined: true }), g.add(0, 1, Kind::Paired { joined: true })];
         assert_ne!(paired[0], paired[1]);
         assert_eq!(g.degree(0), 3);
         assert_eq!(g.add(0, 5, Kind::Outline), None, "no node 5");
@@ -286,7 +291,7 @@ mod tests {
         g.add(2, 1, Kind::Extra);
         g.add(2, 0, Kind::Extra);
         g.add(2, 2, Kind::Outline);
-        let gone = g.add(1, 3, Kind::Paired).unwrap();
+        let gone = g.add(1, 3, Kind::Paired { joined: false }).unwrap();
         g.remove(gone);
         assert_eq!(kinds(&g, 2), [(3, Kind::Row(0)), (0, Kind::Outline), (0, Kind::Extra), (1, Kind::Extra), (2, Kind::Outline)]);
         let mut meter = Budget::DEFAULT.meter();

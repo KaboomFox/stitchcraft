@@ -713,6 +713,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Gap-fill rows follow a stretch of a tatami fill's rows where Ink/Stitch's do (`REQ-FILL-TAT-007`).
+  - Gap-fill rows skipped a stretch whose last row was sewn on through a joint, as a row along the bottom
+    of a notch is. The way the rows went was taken from that row's 2 segments, which point no way, and is
+    taken from the row sewn before them now.
+  - A hop round a small hole, from one half of a row to the other, counted as leaving the stretch, and
+    gap-fill rows were sewn between the halves. The edge that pairs the hole's 2 nodes stood for a way of
+    several edges. Where a row or a stretch of ring joins the 2 nodes, it stands for that one edge now,
+    which Ink/Stitch's graph doubles there.
 - Which rows a tatami fill's part has no longer depends on rounding at its sides (`REQ-FILL-TAT-002`,
   `REQ-FILL-TAT-010`, `DEV-FILL-012`). Rows were laid by adding the spacing row by row, and a spacing
   such as 0.1 mm, which rounds in binary, added up its rounding: 10 mm held 101 rows 0.1 mm apart, the

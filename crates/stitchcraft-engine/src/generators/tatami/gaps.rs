@@ -6,7 +6,8 @@
 //! sewn later, and the fabric between can be pulled apart by then, which shows as a gap along the last
 //! row. Ink/Stitch makes up for it as the route leaves a stretch of more than 3 rows: it sews that many more
 //! rows past the last one, rounded up to an even number so that the needle ends on the same side, and
-//! comes back to where the last row ended.
+//! comes back to where the last row ended. Past the last row is away from the row the stretch sewed before
+//! it, the last in another row: a row sewn on through a joint is 2 segments of one row, and points no way.
 //!
 //! Ink/Stitch repeats the last row, moved a row spacing further each time, so a repeat keeps the last row's
 //! length even where the part narrows, and can run outside it. Here each extra row is a row of the grid
@@ -19,12 +20,12 @@ use std::cmp::Ordering;
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
-/// The rows that fill the gap after row segment `last`, sewn after `before` in the same stretch: up to
-/// `count` rows, from the grid rows past `last`'s row, away from `before`'s. Each is the stretch of that
-/// row's segment that overlaps the row before it most, `last` for the first, cut to the span of that row,
-/// from its start to its end along the rows. `segments` are the part's row segments, and `rows` the grid
-/// row of each, in order across; none past the part's edge or for 2 segments of one row. One unit of
-/// `meter` for each segment looked at.
+/// The rows that fill the gap after row segment `last`, sewn after `before`, the stretch's last segment in
+/// another row: up to `count` rows, from the grid rows past `last`'s row, away from `before`'s. Each is the
+/// stretch of that row's segment that overlaps the row before it most, `last` for the first, cut to the
+/// span of that row, from its start to its end along the rows. `segments` are the part's row segments, and
+/// `rows` the grid row of each, in order across; none past the part's edge or for 2 segments of one row.
+/// One unit of `meter` for each segment looked at.
 pub(super) fn gap_rows(
     segments: &[(Point, Point)],
     rows: &[usize],
