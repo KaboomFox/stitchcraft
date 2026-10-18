@@ -31,6 +31,11 @@ fn longest_across(points: &[Point]) -> f64 {
     across(points).iter().map(|[a, b]| a.distance(*b)).fold(0.0, f64::max)
 }
 
+/// `ring` drawn back to its start: its corners and its first corner again.
+fn drawn_back(ring: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    ring.iter().chain(ring.first()).copied().collect()
+}
+
 #[test]
 fn req_sat_019_a_ring_turned_round_from_another_corner_sews_straight_across() {
     // Without rungs, the rings' corners pair up: each of the outer ring's with the inner one's beside it.
@@ -39,6 +44,19 @@ fn req_sat_019_a_ring_turned_round_from_another_corner_sews_straight_across() {
     let longest = longest_across(&points);
     assert!(longest <= ACROSS_A_CORNER + 1e-9, "a stitch {longest} mm long crosses the ring");
     assert_eq!(points[0], p(0.0, 0.0), "the column starts where its first ring does");
+}
+
+#[test]
+fn req_sat_019_rings_closed_after_a_segment_back_to_their_start_sew_straight_across() {
+    // VectorCraft closes a ring with a segment back to its start, and `Z`: the start is its last node
+    // twice, and turned round, its first twice. Both rings closed so, or only one: the same nodes pair up.
+    let (outer, turned) = (drawn_back(OUTER), drawn_back(TURNED));
+    for pair in [[&outer[..], &turned], [&outer, TURNED], [OUTER, &turned]] {
+        let (points, warnings) = sewn_satin(&rings(&pair), &[NO_SHORT_STITCHES]);
+        assert!(warnings.is_empty(), "{warnings:?}");
+        let longest = longest_across(&points);
+        assert!(longest <= ACROSS_A_CORNER + 1e-9, "a stitch {longest} mm long crosses the ring");
+    }
 }
 
 #[test]
@@ -74,8 +92,7 @@ fn req_sat_019_only_2_rings_start_together() {
     // Drawn back to its start without `Z`, the rail is a ring, and starts at its corner nearest the other
     // ring's start.
     let mut path = rings(&[OUTER]);
-    let back: Vec<(f64, f64)> = TURNED.iter().chain(&TURNED[..1]).copied().collect();
-    path.subpaths.extend(polylines(&[&back]).subpaths);
+    path.subpaths.extend(polylines(&[&drawn_back(TURNED)]).subpaths);
     let (points, _) = sewn_satin(&path, &[NO_SHORT_STITCHES, ("reverse_rails", "none")]);
     assert_eq!(across(&points)[0], [p(0.0, 0.0), p(4.0, 4.0)]);
 }
