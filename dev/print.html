@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-d41c3afd.js";
+            window.path_to_searchindex_js = "searchindex-8bc10e44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-a0bb3cbb.js"></script>
+        <script src="toc-47eff3e5.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -494,9 +494,10 @@ round-patch.vectorcraft
 <p>Load <code>round-patch.pes</code> and sew it as in <a href="#3-load-it-on-the-machine">your first sew-out</a>.
 Thread blue first, white when the machine stops, and gold when it stops again.</p>
 <h2 id="dialogs-taller-than-the-screen"><a class="header" href="#dialogs-taller-than-the-screen">Dialogs taller than the screen</a></h2>
-<p>VectorCraft doesn’t scroll a plug-in’s dialog, and the fill’s and the satin’s are taller than most screens.
-Their first rows, or the OK button, can be out of sight. Make VectorCraft’s window as tall as the screen
-allows, and click a field you can see. Tab and Shift+Tab move to the others, and Enter applies the dialog.</p>
+<p>VectorCraft doesn’t scroll a plug-in’s dialog. The fill’s and the satin’s are taller than most screens, and
+the stroke’s is taller than the window VectorCraft opens with. Their first rows, or the OK button, can be
+out of sight. Make VectorCraft’s window as tall as the screen allows, and click a field you can see. Tab and
+Shift+Tab move to the others, and Enter applies the dialog.</p>
 <h2 id="next-2"><a class="header" href="#next-2">Next</a></h2>
 <p><a href="#embroider-a-vectorcraft-design">Embroider a VectorCraft design</a> shows how to leave objects
 out and mark where a shape starts and ends. It also explains what <code>stitch export</code> says.</p>
@@ -870,8 +871,9 @@ stroke or the fill of a shape, and each sews in its own thread colour.</p>
 <tr><td><a href="#running-stitch">Running stitch</a></td><td>strokes: outlines, details, lettering at small sizes</td><td>now</td></tr>
 <tr><td><a href="#bean-stitch-and-repeats">Bean stitch</a></td><td>strokes, each stitch sewn 3 times or more</td><td>now</td></tr>
 <tr><td><a href="#manual-stitch">Manual stitch</a></td><td>strokes whose nodes are the needle points</td><td>now</td></tr>
-<tr><td>Satin column</td><td>wide strokes and borders</td><td>milestone M4</td></tr>
-<tr><td>Tatami fill</td><td>areas, in rows of running stitches</td><td>now, with underlay; compensation later in milestone M5</td></tr>
+<tr><td><a href="#zigzag-stroke">Zigzag stroke</a></td><td>strokes as wide as their line: light borders, couched looks</td><td>now</td></tr>
+<tr><td>Satin column</td><td>wide strokes and borders</td><td>now</td></tr>
+<tr><td>Tatami fill</td><td>areas, in rows of running stitches</td><td>now</td></tr>
 </tbody>
 </table>
 </div>
@@ -983,6 +985,64 @@ says so.</p>
 stitch</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="zigzag-stroke"><a class="header" href="#zigzag-stroke">Zigzag stroke</a></h1>
+<p>A zigzag stroke crosses a path from side to side and back, as wide as the stroke’s line. Set an element’s
+<code>stroke_method</code> to <code>zigzag_stitch</code> for it. Use it for a light border, a couched look, or a stem too thin
+for a satin column.</p>
+<p>In VectorCraft, set the StitchCraft Stroke effect’s <code>stroke_method</code> to <code>zigzag_stitch</code>, and <code>stitch export</code>
+sews it. VectorCraft’s live effect shows the object as it is drawn, as wide as the zigzag, since VectorCraft
+does not tell a plug-in a stroke’s width. <code>stitch plan</code> reads Ink/Stitch’s settings from SVG files from
+milestone M8 (<a href="user/stitches/README.html#setting-parameters">setting parameters</a>).</p>
+<p>The pictures are drawn as the <a href="#running-stitch">running stitch’s</a> are, from <code>docs/fixtures/zigzag.svg</code>, a wave
+drawn 3 mm wide.</p>
+<h2 id="spacing"><a class="header" href="#spacing">Spacing</a></h2>
+<p><code>zigzag_spacing_mm</code> is how far it is along the path from one stitch to the next that crosses the same
+way, a zig and a zag together, 0.4 mm by default. The needle points are spread evenly along the path, in
+a whole number of zigs and zags, so the zigzag starts and ends on the same side.</p>
+<!-- shot: zigzag-spacing -->
+<p><strong>0.4 mm</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/zigzag-spacing-1.png" alt="A wave 36 mm long sewn as a zigzag 3 mm wide, its needle points dotted on both sides, 0.4 mm"><span class="img-wrapper"><img src="images/generated/zigzag-spacing-1.png" alt="A wave 36 mm long sewn as a zigzag 3 mm wide, its needle points dotted on both sides, 0.4 mm"></span></label></p>
+<p><strong>1 mm</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/zigzag-spacing-2.png" alt="A wave 36 mm long sewn as a zigzag 3 mm wide, its needle points dotted on both sides, 1 mm"><span class="img-wrapper"><img src="images/generated/zigzag-spacing-2.png" alt="A wave 36 mm long sewn as a zigzag 3 mm wide, its needle points dotted on both sides, 1 mm"></span></label></p>
+<p><strong>2 mm</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/zigzag-spacing-3.png" alt="A wave 36 mm long sewn as a zigzag 3 mm wide, its needle points dotted on both sides, 2 mm"><span class="img-wrapper"><img src="images/generated/zigzag-spacing-3.png" alt="A wave 36 mm long sewn as a zigzag 3 mm wide, its needle points dotted on both sides, 2 mm"></span></label></p>
+<!-- /shot -->
+<p>Ink/Stitch takes a list of spacings and sews the first, and so does StitchCraft.</p>
+<h2 id="width-and-pull-compensation"><a class="header" href="#width-and-pull-compensation">Width and pull compensation</a></h2>
+<p>The zigzag is as wide as the stroke’s line. Thread pulls the fabric in along each stitch, and a zigzag
+sews narrower than it is drawn. <code>stroke_pull_compensation_mm</code> takes each side further out by its value.
+One value widens both sides. With 2, the first is for the left of the way the path goes and the second
+for its right. A negative value makes the zigzag narrower.</p>
+<h2 id="angle"><a class="header" href="#angle">Angle</a></h2>
+<p><code>zigzag_angle</code> turns every stitch away from square to the path, from −89° to 89°. A positive angle turns
+the stitches clockwise as the drawing shows them. On a curve the turned stitches point like the spokes
+of a wheel.</p>
+<!-- shot: zigzag-angle -->
+<p><strong>0°</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/zigzag-angle-1.png" alt="A wave 36 mm long sewn as a zigzag 3 mm wide at 1 mm spacing, 0°"><span class="img-wrapper"><img src="images/generated/zigzag-angle-1.png" alt="A wave 36 mm long sewn as a zigzag 3 mm wide at 1 mm spacing, 0°"></span></label></p>
+<p><strong>45°</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/zigzag-angle-2.png" alt="A wave 36 mm long sewn as a zigzag 3 mm wide at 1 mm spacing, 45°"><span class="img-wrapper"><img src="images/generated/zigzag-angle-2.png" alt="A wave 36 mm long sewn as a zigzag 3 mm wide at 1 mm spacing, 45°"></span></label></p>
+<p><strong>−45°</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/zigzag-angle-3.png" alt="A wave 36 mm long sewn as a zigzag 3 mm wide at 1 mm spacing, −45°"><span class="img-wrapper"><img src="images/generated/zigzag-angle-3.png" alt="A wave 36 mm long sewn as a zigzag 3 mm wide at 1 mm spacing, −45°"></span></label></p>
+<!-- /shot -->
+<h2 id="repeats-and-bean-stitch"><a class="header" href="#repeats-and-bean-stitch">Repeats and bean stitch</a></h2>
+<p><code>repeats</code> sews the zigzag more than once, every other time backwards, and <code>bean_stitch_repeats</code> sews each
+stitch more than once, as for a <a href="#bean-stitch-and-repeats">running stitch</a>.</p>
+<h2 id="a-closed-path"><a class="header" href="#a-closed-path">A closed path</a></h2>
+<p>A path that ends where it starts ends its zigzag on its first needle point, and the line closes without a
+gap.</p>
+<h2 id="the-shortest-stitch-1"><a class="header" href="#the-shortest-stitch-1">The shortest stitch</a></h2>
+<p>Across a zigzag much narrower than the shortest stitch the machine sews well, its stitches are too short,
+and StitchCraft leaves their needle points out when it finishes the plan (<code>SC-I0504</code>). A part of the path
+that is one point is left out, and <code>SC-W0401</code> names it.</p>
+<h2 id="parameters-1"><a class="header" href="#parameters-1">Parameters</a></h2>
+<p>The reference lists each parameter with its range and default:</p>
+<ul>
+<li><a href="#zigzag-stroke-parameters">zigzag stroke</a></li>
+<li><a href="#repeat-parameters">repeats and bean stitch</a></li>
+<li><a href="#stroke-parameters">the stroke method</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="lock-stitches-trims-and-stops"><a class="header" href="#lock-stitches-trims-and-stops">Lock stitches, trims and stops</a></h1>
 <p>A lock, or tie, is a few small stitches where stitching starts (the tie-in) or ends (the tie-off). It
 stops the thread from pulling out when the machine cuts it or jumps to the next part. StitchCraft adds
@@ -1048,7 +1108,7 @@ work. When the design has a stop position, the frame moves there before each sto
 test sheet TS-02 checks what the reference machine does. DST has no trim command. StitchCraft writes a trim
 there as 3 short jumps that end where they started, and a DST machine set to cut at 3 jumps in a row
 cuts there. The <a href="#machine-formats">machine formats</a> design says how each format records a trim.</p>
-<h2 id="parameters-1"><a class="header" href="#parameters-1">Parameters</a></h2>
+<h2 id="parameters-2"><a class="header" href="#parameters-2">Parameters</a></h2>
 <p><a href="#common-parameters">Common parameters</a> lists each of these settings with its range and
 default.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -1116,7 +1176,7 @@ it plans for, and warns beyond a profile’s comfort zone where the profile has 
 <tr><td><a href="#diagnostic-codes">Diagnostic codes</a></td><td>generated from the diagnostics registry</td><td>available</td></tr>
 <tr><td><a href="#glossary">Glossary</a></td><td>hand-written</td><td>available</td></tr>
 <tr><td><a href="#vectorcraft-compatibility">VectorCraft compatibility</a></td><td>generated from the compatibility gate’s record, <code>compat/supported.toml</code></td><td>available</td></tr>
-<tr><td><a href="#parameters-2">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
+<tr><td><a href="#parameters-3">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
 <tr><td><a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td>generated from <code>conformance/inkstitch-params.toml</code> and the parameter registry</td><td>available</td></tr>
 </tbody>
 </table>
@@ -1685,7 +1745,7 @@ StitchCraft never writes an empty machine file, because some machines refuse or 
 <p><strong>Warning</strong> — Stitch type not sewn yet; element skipped</p>
 <p>The element’s stitch type is one this version of StitchCraft does not sew yet, so the element was
 skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
-satin columns from M4 and tatami fills from M5; the other stitch types follow
+satin columns from M4, tatami fills from M5 and zigzag strokes from M7. The other stitch types follow
 (<code>docs/src/plan/roadmap.md</code>).</p>
 <p>The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
 tool for now.</p>
@@ -2105,14 +2165,14 @@ Print option on, in VectorCraft’s Layer Options.</p>
 <p><strong>Info</strong> — VectorCraft live effect leaves the object as it is</p>
 <p>A StitchCraft live effect draws the object it is applied to as its stitches, or as much of them as
 its preview level shows. It leaves the object as it is when it cannot show them, and VectorCraft
-shows this message as the plug-in’s last error: the object sews no stitch, it is a satin column
-drawn as one path, or its preview level needs more work than VectorCraft lets a live effect do. A
-column drawn as one path is as wide as its stroke, and VectorCraft gives a live effect no stroke.
+shows this message as the plug-in’s last error. The object sews no stitch, or its preview level needs
+more work than VectorCraft lets a live effect do. Or it is as wide as its stroke, which VectorCraft
+does not give a live effect: a satin column drawn as one path, or a zigzag stroke.
 When another message says why an object sews no stitch, the effect shows that message instead.</p>
-<p>The message says which. A satin column drawn as one path still sews as wide as its stroke. To see its
-stitches in VectorCraft, draw its 2 rails, join them with Object › Compound Path › Make and apply the
-effect to that. For a preview that needs more work, the hint names a cheaper level to set the effect’s
-<code>preview_level</code> to.</p>
+<p>The message says which. A satin column drawn as one path, and a zigzag stroke, still sew as wide as
+their stroke when exported with <code>stitch export</code>. To see a satin column’s stitches in VectorCraft, draw
+its 2 rails, join them with Object › Compound Path › Make and apply the effect to that. For a preview
+that needs more work, the hint names a cheaper level to set the effect’s <code>preview_level</code> to.</p>
 <h2 id="sc-i0811"><a class="header" href="#sc-i0811">SC-I0811</a></h2>
 <p><strong>Info</strong> — VectorCraft object left out, as its name asks</p>
 <p>An object or a layer is left out because its name asks for it: the name is <code>stitch:ignore</code>, alone
@@ -2121,7 +2181,7 @@ lines, templates and notes this way, in the drawing but out of the sew-out, as I
 commands keep them. Everything in a group or a layer so named is left out with it.</p>
 <p>The message names what was left out. To stitch it, rename it in VectorCraft’s Layers panel.</p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the parameter registry (`stitchcraft-engine/src/registry.rs`) and the deviations ledger. Edit the declaration, not this page. -->
-<h1 id="parameters-2"><a class="header" href="#parameters-2">Parameters</a></h1>
+<h1 id="parameters-3"><a class="header" href="#parameters-3">Parameters</a></h1>
 <p>Every setting a design element can carry, by the key a design stores it under. A parameter that Ink/Stitch
 also has keeps Ink/Stitch’s key, meaning and default, so files move between the two tools unchanged
 (<a href="#inkstitch-compatibility-contract">compatibility contract</a>). Where StitchCraft reads or sews one
@@ -2171,6 +2231,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#stroke-parameters">Stroke parameters</a></td><td>1</td><td>Running stitch, Ripple stitch, Zigzag stitch, Manual stitch</td></tr>
 <tr><td><a href="#running-parameters">Running parameters</a></td><td>4</td><td>Running stitch, Ripple stitch</td></tr>
 <tr><td><a href="#repeat-parameters">Repeat parameters</a></td><td>2</td><td>Running stitch, Ripple stitch, Zigzag stitch, Manual stitch</td></tr>
+<tr><td><a href="#zigzag-stroke-parameters">Zigzag stroke parameters</a></td><td>3</td><td>Zigzag stitch</td></tr>
 <tr><td><a href="#satin-parameters">Satin parameters</a></td><td>34</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
 <tr><td><a href="#pull-parameters">Pull parameters</a></td><td>2</td><td>Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</td></tr>
 <tr><td><a href="#fill-parameters">Fill parameters</a></td><td>2</td><td>Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill</td></tr>
@@ -2185,7 +2246,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><th>Key</th><th>Label</th><th>Group</th></tr>
 </thead>
 <tbody>
-<tr><td><a href="#angle"><code>angle</code></a></td><td>Angle</td><td>Tatami parameters</td></tr>
+<tr><td><a href="#angle-1"><code>angle</code></a></td><td>Angle</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#bean_stitch_repeats"><code>bean_stitch_repeats</code></a></td><td>Bean stitch</td><td>Repeat parameters</td></tr>
 <tr><td><a href="#center_walk_underlay"><code>center_walk_underlay</code></a></td><td>Centre walk underlay</td><td>Satin parameters</td></tr>
 <tr><td><a href="#center_walk_underlay_position"><code>center_walk_underlay_position</code></a></td><td>Centre walk position</td><td>Satin parameters</td></tr>
@@ -2250,12 +2311,15 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#start_at_nearest_point"><code>start_at_nearest_point</code></a></td><td>Start at nearest point</td><td>Satin parameters</td></tr>
 <tr><td><a href="#stop_after"><code>stop_after</code></a></td><td>Stop after</td><td>Common parameters</td></tr>
 <tr><td><a href="#stroke_method"><code>stroke_method</code></a></td><td>Method</td><td>Stroke parameters</td></tr>
+<tr><td><a href="#stroke_pull_compensation_mm"><code>stroke_pull_compensation_mm</code></a></td><td>Pull compensation</td><td>Zigzag stroke parameters</td></tr>
 <tr><td><a href="#swap_satin_rails"><code>swap_satin_rails</code></a></td><td>Swap rails</td><td>Satin parameters</td></tr>
 <tr><td><a href="#ties"><code>ties</code></a></td><td>Lock stitches</td><td>Common parameters</td></tr>
 <tr><td><a href="#trim_after"><code>trim_after</code></a></td><td>Trim after</td><td>Common parameters</td></tr>
 <tr><td><a href="#underlay_underpath"><code>underlay_underpath</code></a></td><td>Underlay underpath</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#underpath"><code>underpath</code></a></td><td>Underpath</td><td>Tatami parameters</td></tr>
-<tr><td><a href="#zigzag_spacing_mm"><code>zigzag_spacing_mm</code></a></td><td>Zigzag spacing</td><td>Satin parameters</td></tr>
+<tr><td><a href="#zigzag_angle"><code>zigzag_angle</code></a></td><td>Zigzag angle</td><td>Zigzag stroke parameters</td></tr>
+<tr><td><a href="#zigzag_spacing_mm"><code>zigzag_spacing_mm</code></a></td><td>Zigzag spacing</td><td>Zigzag stroke parameters</td></tr>
+<tr><td><a href="#zigzag_spacing_mm-1"><code>zigzag_spacing_mm</code></a></td><td>Zigzag spacing</td><td>Satin parameters</td></tr>
 <tr><td><a href="#zigzag_underlay"><code>zigzag_underlay</code></a></td><td>Zigzag underlay</td><td>Satin parameters</td></tr>
 <tr><td><a href="#zigzag_underlay_inset_mm"><code>zigzag_underlay_inset_mm</code></a></td><td>Zigzag underlay inset</td><td>Satin parameters</td></tr>
 <tr><td><a href="#zigzag_underlay_inset_percent"><code>zigzag_underlay_inset_percent</code></a></td><td>Zigzag underlay inset (% of width)</td><td>Satin parameters</td></tr>
@@ -2461,9 +2525,9 @@ own.</p>
 <p>Applies to Running stitch, Ripple stitch, Zigzag stitch, Manual stitch.</p>
 <h2 id="stroke"><a class="header" href="#stroke">Stroke</a></h2>
 <h3 id="stroke_method"><a class="header" href="#stroke_method"><code>stroke_method</code></a></h3>
-<p><strong>Method.</strong> The stitch the path is sewn with: a running stitch along it, or a needle point on each of its
-nodes (manual stitch). Ripple and zigzag stitches arrive in later versions; until then an
-element set to one is skipped (<code>SC-W0011</code>).</p>
+<p><strong>Method.</strong> The stitch the path is sewn with. A running stitch goes along it and a zigzag across it, and manual
+stitch puts a needle point on each of its nodes. Ripple stitch arrives in a later version, and
+until then an element set to it is skipped (<code>SC-W0011</code>).</p>
 <ul>
 <li><strong>Accepts:</strong> one of <code>running_stitch</code> (Running stitch), <code>ripple_stitch</code> (Ripple stitch), <code>zigzag_stitch</code> (Zigzag stitch), <code>manual_stitch</code> (Manual stitch)</li>
 <li><strong>Default:</strong> <code>running_stitch</code></li>
@@ -2547,6 +2611,36 @@ the stitches: “1 0” makes every other stitch bold.</p>
 <li><strong>Default:</strong> <code>0</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `ZigzagStrokeParams` in the parameter registry. Edit the declaration, not this page. -->
+<h1 id="zigzag-stroke-parameters"><a class="header" href="#zigzag-stroke-parameters">Zigzag stroke parameters</a></h1>
+<p>Zigzag stroke: stitches across the path from side to side, as wide as the stroke.</p>
+<p>Applies to Zigzag stitch.</p>
+<h2 id="zigzag-stroke-1"><a class="header" href="#zigzag-stroke-1">Zigzag stroke</a></h2>
+<h3 id="zigzag_spacing_mm"><a class="header" href="#zigzag_spacing_mm"><code>zigzag_spacing_mm</code></a></h3>
+<p><strong>Zigzag spacing.</strong> How far it is along the path from one stitch to the next that crosses the same way, a zig and a
+zag together. Ink/Stitch takes several spacings separated by spaces, and sews the first.</p>
+<ul>
+<li><strong>Accepts:</strong> 1 to 16 lengths from 0.01 to 100 mm, separated by spaces</li>
+<li><strong>Default:</strong> <code>0.4</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="stroke_pull_compensation_mm"><a class="header" href="#stroke_pull_compensation_mm"><code>stroke_pull_compensation_mm</code></a></h3>
+<p><strong>Pull compensation.</strong> How much further out than half the stroke’s width the needle goes on each side, to make up for
+the thread pulling the fabric in. 2 values set the 2 sides: the left of the way the path goes,
+then the right. Negative values make the zigzag narrower.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from -10 to 10 mm, or 2 separated by a space</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="zigzag_angle"><a class="header" href="#zigzag_angle"><code>zigzag_angle</code></a></h3>
+<p><strong>Zigzag angle.</strong> Turns every stitch away from square to the path, in degrees: positive turns clockwise as the
+drawing shows it. On a curve the turned stitches point like the spokes of a wheel.</p>
+<ul>
+<li><strong>Accepts:</strong> an angle from -89 to 89 degrees</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `SatinParams` in the parameter registry. Edit the declaration, not this page. -->
 <h1 id="satin-parameters"><a class="header" href="#satin-parameters">Satin parameters</a></h1>
 <p>Satin column: a band of stitches between two rails.</p>
@@ -2573,7 +2667,7 @@ set to one is skipped (<code>SC-W0011</code>).</p>
 <li><strong>Default:</strong> <code>satin_column</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
-<h3 id="zigzag_spacing_mm"><a class="header" href="#zigzag_spacing_mm"><code>zigzag_spacing_mm</code></a></h3>
+<h3 id="zigzag_spacing_mm-1"><a class="header" href="#zigzag_spacing_mm-1"><code>zigzag_spacing_mm</code></a></h3>
 <p><strong>Zigzag spacing.</strong> The distance from one stitch across the column to the next that goes the same way: from one
 rail to the other and back again is one spacing. It is measured across the column at its
 outside edge, and on a curve the stitches fan out from the inside edge.</p>
@@ -2932,7 +3026,7 @@ other methods arrive in later versions; until then an element set to one is skip
 offset so that they never line up. Ink/Stitch’s default fill.</p>
 <p>Applies to Tatami fill.</p>
 <h2 id="rows"><a class="header" href="#rows">Rows</a></h2>
-<h3 id="angle"><a class="header" href="#angle"><code>angle</code></a></h3>
+<h3 id="angle-1"><a class="header" href="#angle-1"><code>angle</code></a></h3>
 <p><strong>Angle.</strong> The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows
 and 90 upright ones.</p>
 <ul>
@@ -3800,7 +3894,7 @@ every ring. Parts of 3 square CSS pixels (0.21 mm²) or less are left out, with 
 <p>A centre line is made into a <code>Satin</code> of its own, its rails offset from the line by the stroke’s width and
 join (<code>stitchcraft_engine::normalize::centre_line</code>, since M4.9). How rails and rungs are recognised from
 a host path, and made from a centre line, is part of the <a href="#satin-generators">satin design</a>.</p>
-<h2 id="parameters-3"><a class="header" href="#parameters-3">Parameters</a></h2>
+<h2 id="parameters-4"><a class="header" href="#parameters-4">Parameters</a></h2>
 <p><code>ParamSet</code> maps registry keys to typed values; generators receive <em>typed views</em>
 (<code>TatamiParams { row_spacing: Mm, angle: Deg, … }</code>) produced by the registry. See
 <a href="#parameter-registry">parameter registry</a>.</p>
@@ -4015,6 +4109,7 @@ version and a registry schema version arrive with the first release, together wi
 <tr><td><code>OptionalLength</code></td><td><code>Option&lt;Mm&gt;</code></td><td>as <code>Length</code>, or empty: the setting then comes from the document or the machine, or there is none. 0 counts as empty, since Ink/Stitch reads 0 as not set, and a length below 0 does too, with <code>SC-W0102</code> (<code>DEV-PRM-003</code>)</td><td><code>float</code>, unit <code>mm</code>, no default</td></tr>
 <tr><td><code>OptionalLengthWithZero</code></td><td><code>Option&lt;Mm&gt;</code></td><td>as <code>OptionalLength</code>, but only empty text is empty, and 0 is a length, as Ink/Stitch reads a satin’s shortest stitch to split</td><td><code>float</code>, unit <code>mm</code>, no default</td></tr>
 <tr><td><code>Angle</code></td><td>degrees, <code>f64</code></td><td>finite; normalized to (−180, 180]</td><td><code>float</code>, unit <code>deg</code></td></tr>
+<tr><td><code>BoundedAngle</code></td><td>degrees, <code>f64</code></td><td>finite, within range, never turned by whole turns. 270 is above a range that ends at 89, and reads as 89, as Ink/Stitch reads a zigzag stroke’s angle</td><td><code>float</code>, unit <code>deg</code></td></tr>
 <tr><td><code>Percent</code></td><td><code>f64</code></td><td>finite, within range</td><td><code>float</code>, unit <code>%</code></td></tr>
 <tr><td><code>Number</code></td><td><code>f64</code></td><td>finite, within range, without a unit</td><td><code>float</code>, no unit</td></tr>
 <tr><td><code>Count</code></td><td><code>u32</code></td><td>whole, within range</td><td><code>int</code></td></tr>
@@ -4139,7 +4234,7 @@ chooses between the two.</p>
 <tr><th style="text-align: left">Output</th><th style="text-align: left">Generated by</th><th style="text-align: left">Checked by</th><th style="text-align: left">Since</th></tr>
 </thead>
 <tbody>
-<tr><td style="text-align: left">The reference pages, the <a href="#parameters-2">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
+<tr><td style="text-align: left">The reference pages, the <a href="#parameters-3">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left"><code>docs/src/user/reference/params.schema.json</code>: the parameters as JSON values (numbers, booleans, strings, arrays, <code>null</code> for empty), for editors, presets and JSON hosts</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">The <em>StitchCraft</em> column of the <a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same, plus the cross-checks above</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">VectorCraft manifests, one for each stitch family’s module</td><td style="text-align: left">at runtime from the registry, when VectorCraft asks a module for its manifest (<code>stitchcraft-vc-plugin</code>’s <code>manifest</code>)</td><td style="text-align: left">plug-in tests validate them against VectorCraft’s manifest rules, and the contract tests install them in VectorCraft’s host</td><td style="text-align: left">M6.2</td></tr>
@@ -4304,7 +4399,7 @@ another.</p>
 <tr><td><code>SC-W0807</code></td><td>Warning</td><td>VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft’s own effects, brushes, gradients, patterns, a group’s own paints), StitchCraft effects from more than one level, a start or end marker, or a <code>stitch:</code> name StitchCraft doesn’t read</td><td>M6</td></tr>
 <tr><td><code>SC-W0808</code></td><td>Warning</td><td>VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing)</td><td>M6</td></tr>
 <tr><td><code>SC-I0809</code></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides)</td><td>M6</td></tr>
-<tr><td><code>SC-I0810</code></td><td>Info</td><td>VectorCraft live effect leaves the object as it is (it sews no stitch, it is a satin column drawn as one path, whose width the effect is not given, or its preview level needs more work than VectorCraft lets a live effect do)</td><td>M6</td></tr>
+<tr><td><code>SC-I0810</code></td><td>Info</td><td>VectorCraft live effect leaves the object as it is (it sews no stitch, its preview level needs more work than VectorCraft lets a live effect do, or it is a satin column drawn as one path or a zigzag stroke, whose width the effect is not given)</td><td>M6</td></tr>
 <tr><td><code>SC-I0811</code></td><td>Info</td><td>VectorCraft object left out, as its name asks (an object or a layer named <code>stitch:ignore</code>)</td><td>M6</td></tr>
 </tbody>
 </table>
@@ -4539,8 +4634,8 @@ whatever its <code>stroke_method</code> says, as in Ink/Stitch. Its rails and ru
 recognition finds is reported, and its <code>satin_method</code> picks the generator: the satin stitch, sewn from
 M4.2. A satin column also reads the running stitch’s length (<code>running_stitch_length_mm</code>): the stitches
 that join its underlays are no longer than the first value. For any other stroke the generator is its
-<code>stroke_method</code>. <code>running_stitch</code> (the default) and
-<code>manual_stitch</code> are sewn from M3. A satin column drawn as one path no wider than the design’s
+<code>stroke_method</code>. <code>running_stitch</code> (the default) and <code>manual_stitch</code> are sewn from M3, and <code>zigzag_stitch</code>
+from M7.2, as wide as the stroke. A satin column drawn as one path no wider than the design’s
 <code>min_satin_stroke_width</code> is sewn as a stroke, with <code>SC-W0212</code>, as in Ink/Stitch (<code>REQ-SAT-015</code>). Wider,
 it is sewn between rails made from its line from M4.9 (<code>REQ-SAT-016</code>). A fill whose <code>fill</code> setting is
 off sews nothing, and nothing is said of it (<code>REQ-FILL-003</code>). Another fill’s region is built first, so
@@ -4803,7 +4898,7 @@ rests on is welcome when it helps the next reader check it again
 (<a href="#adr-0012-read-inkstitchs-source-never-copy-it">ADR-0012</a>).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="stroke-generators"><a class="header" href="#stroke-generators">Stroke generators</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/generators/mod.rs, crates/stitchcraft-engine/src/generators/running/**, crates/stitchcraft-engine/src/generators/manual.rs, crates/stitchcraft-engine/src/generators/passes.rs, crates/stitchcraft-engine/src/normalize/stroke.rs, crates/stitchcraft-engine/src/normalize/along.rs -->
+<!-- implements: crates/stitchcraft-engine/src/generators/mod.rs, crates/stitchcraft-engine/src/generators/running/**, crates/stitchcraft-engine/src/generators/manual.rs, crates/stitchcraft-engine/src/generators/zigzag/**, crates/stitchcraft-engine/src/generators/passes.rs, crates/stitchcraft-engine/src/normalize/stroke.rs, crates/stitchcraft-engine/src/normalize/along.rs -->
 <p>Strokes follow a path. Shape: <code>StrokePath</code> (an ordered list of polylines, corners marked, from the
 normalizer). Phase P1 (M3) unless noted.</p>
 <p>A stroke starts where it is drawn and ends where it is drawn, as in Ink/Stitch. Its generator is given its
@@ -4877,7 +4972,7 @@ and random length draws and places its lengths in other ways (<code>DEV-RUN-005<
 tolerance. Such a line is a polyline already, and each join that turns by more than 30° is a corner. A
 line too small for a stitch of the shortest length is sewn as its 2 ends, as Ink/Stitch sews it, and
 finalizing merges what is too short.</p>
-<h3 id="repeats-and-bean-stitch"><a class="header" href="#repeats-and-bean-stitch">Repeats and bean stitch</a></h3>
+<h3 id="repeats-and-bean-stitch-1"><a class="header" href="#repeats-and-bean-stitch-1">Repeats and bean stitch</a></h3>
 <ul>
 <li><code>repeats = k</code> sews the path k times, alternating direction; odd k ends at the far end, even k returns
 to the start (useful for travel that must come back). Each pass starts where the last one ended, so a
@@ -4889,6 +4984,7 @@ every pass, with the list running on from pass to pass. Ink/Stitch repeats the t
 the turnaround takes one step of the list; StitchCraft counts that step too, without sewing it, so a
 file sews the same in both. With a two-value list, each stretch of the path then gets the same
 treatment on every pass.</li>
+<li>A zigzag’s turnaround takes no step of the list, as in Ink/Stitch (<a href="#zigzag-stroke-p2-m7">zigzag stroke</a>).</li>
 <li>Repeats apply to running, ripple and zigzag strokes; bean stitch to those and to manual stitch (the
 <a href="#inkstitch-compatibility-contract">compatibility contract</a> lists each parameter’s stitch types).</li>
 </ul>
@@ -4951,10 +5047,68 @@ that is one point, or too small for one stitch, is not stitched (<code>SC-W0401<
 a stitch kept longer than <code>max_stitch_length_mm</code> (<code>REQ-RUN-006</code>). Every stitch is at least as long as the
 shortest stitch (<code>REQ-RUN-008</code>).</p>
 <h2 id="zigzag-stroke-p2-m7"><a class="header" href="#zigzag-stroke-p2-m7">Zigzag stroke (P2, M7)</a></h2>
-<p>A zigzag of width <code>stroke-width</code> (or the satin width parameters) centred on the path, with peak-to-peak
-spacing <code>zigzag_spacing_mm</code>, optional <code>zigzag_angle</code> (slanted zigzag), and
-<code>stroke_pull_compensation_mm</code>. Implemented as a satin on a centre line with no underlay (shares the satin
-sampler), which keeps one code path for “two sides and alternation”.</p>
+<p>A zigzag along the path, as wide as its stroke. The needle crosses the path from side to side, as
+Ink/Stitch sews its zig-zag stitch (<code>stroke_method</code> <code>zigzag_stitch</code>, read at <code>d59c9ab</code>). It suits a light
+border, a couched look or a stem too thin for a satin column.</p>
+<p><strong>Parameters:</strong> <code>zigzag_spacing_mm</code>, the distance along the path from one stitch to the next that crosses
+the same way, a zig and a zag together, 0.4 mm by default; <code>stroke_pull_compensation_mm</code>, how much further
+out than half the stroke’s width each side’s needle points go, one value for both sides or 2; and
+<code>zigzag_angle</code>, which turns every stitch away from square to the path, from −89° to 89°. <code>repeats</code> and
+<code>bean_stitch_repeats</code> apply. The width is the stroke’s, read as a satin column drawn as one path reads it.</p>
+<p>Strokes, satin columns and fills each read <code>zigzag_spacing_mm</code> their own way
+(<a href="#naming-rules">parameter registry</a>, rule 7). A stroke reads a list, as Ink/Stitch does.
+Only its first value counts.</p>
+<h3 id="placement-1"><a class="header" href="#placement-1">Placement</a></h3>
+<p>Each part of the path, one per subpath, is sewn on its own, as a running stitch is.</p>
+<ol>
+<li><strong>Spread.</strong> The part is flattened within a tenth of a CSS pixel, as a satin column’s or a fill’s
+subpaths are, and <code>n + 1</code> points are spread along it at equal distances, its ends included. <code>n</code> is its
+length divided by half the spacing, rounded half to even, at least 2, and one more if that is odd. So
+the zigzag has a whole number of zigs and zags, and it starts and ends on the same side.</li>
+<li><strong>Directions.</strong> Point 0’s direction is the line to point 1, and the last point’s the line from the one
+before it. Every other point’s direction is halfway between the line from the point before it and the
+line to the point after it, each taken with length 1, so a point at a corner leans evenly into both of
+its sides. The lines are those between the spread points, not the path’s own.</li>
+<li><strong>Across.</strong> Each point moves square to its direction, turned by <code>zigzag_angle</code> (positive turns
+clockwise as the drawing shows it). The points numbered 0, 2, 4 and on move to the right of the way
+the path goes, by half the width plus the second pull compensation. Points 1, 3, 5 and on move to the
+left, by half the width plus the first. A pull compensation below minus half the width moves its
+points over to the other side. Each point whose direction has no length stays where it is, as on a
+turn straight back.</li>
+<li><strong>Closed paths.</strong> A stroke closes when one of its subpaths moves and the others, if any, are single
+points, and that subpath’s ends lie nearer each other than 0.05 CSS pixels: its last needle point moves
+onto its first, and the zigzag ends where it started.</li>
+<li><strong>Repeats and bean stitch.</strong> Repeats sew the zigzag again, every other pass backwards, and each pass
+after the first starts with the needle point after the one the last pass ended at. Bean stitch then
+sews each stitch <code>2b + 1</code> times, with its list taken one after another along the stitches of all the
+passes, as for a running stitch (<a href="#repeats-and-bean-stitch-1">repeats and bean stitch</a>). Ink/Stitch does
+not list the point a pass turns at twice in a zigzag, as it does in a running stitch, so that point
+takes no step of the bean list here.</li>
+</ol>
+<p>The needle points come from arithmetic, square roots and the cosine and sine of the angle
+(<code>stitchcraft_core::math</code>) alone, and every platform places them alike.</p>
+<p><strong>Compared with Ink/Stitch.</strong> Ink/Stitch spreads the points along a running stitch it sews first, at half
+each spacing and within <code>running_stitch_tolerance_mm</code> of the path. StitchCraft spreads them along the
+path, flattened as Ink/Stitch flattens it for that running stitch (<code>DEV-RUN-007</code>). At the default spacing
+those running stitches are 0.2 mm long, chords of the path’s curves, so the two lines and the points
+spread along them differ by hundredths of a millimetre. A part whose length lies close to a rounding
+boundary of its count of zigs and zags may have one zig and zag more or fewer. That running stitch is also why Ink/Stitch’s other
+spacings of a list change nothing that shows. A part of the path that is one point is not stitched
+(<code>SC-W0401</code>), as for a running stitch (<code>DEV-RUN-004</code>).</p>
+<h3 id="properties-conformance-1"><a class="header" href="#properties-conformance-1">Properties (conformance)</a></h3>
+<ul>
+<li>The needle points of each part, before repeats, are <code>n + 1</code> with <code>n</code> even, as step 1 counts them, and
+their places along the flattened path are <code>L / n</code> apart (<code>REQ-RUN-009</code>).</li>
+<li>Each needle point lies across its direction from its place on the path, turned by <code>zigzag_angle</code>:
+even points at half the width plus the second pull compensation to the right, odd points at half the
+width plus the first to the left (<code>REQ-RUN-010</code>).</li>
+<li>A closed stroke ends on its first needle point (<code>REQ-RUN-011</code>).</li>
+<li>Repeats and bean stitch sew the zigzag as step 5 says, with no step of the bean list for a turn
+(<code>REQ-RUN-012</code>).</li>
+</ul>
+<h3 id="diagnostics-1-1"><a class="header" href="#diagnostics-1-1">Diagnostics</a></h3>
+<p><code>SC-W0401</code> for a part of the path that is one point. Finalizing leaves out a zigzag’s stitches that are
+shorter than the shortest stitch, as they are across a zigzag much narrower than it (<code>SC-I0504</code>).</p>
 <h2 id="ripple-stitch-p3-m10"><a class="header" href="#ripple-stitch-p3-m10">Ripple stitch (P3, M10)</a></h2>
 <p>A series of copies of the stroke, each progressively scaled, offset or interpolated towards a target
 point (or between two rails for “satin-guided ripple”), joined into one continuous running stitch.
@@ -5346,7 +5500,7 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 </tbody>
 </table>
 </div>
-<h2 id="properties-conformance-1"><a class="header" href="#properties-conformance-1">Properties (conformance)</a></h2>
+<h2 id="properties-conformance-2"><a class="header" href="#properties-conformance-2">Properties (conformance)</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -5792,7 +5946,7 @@ is. Ink/Stitch repeats the last row a spacing further each time, and a repeat ca
 the outline’s start, as Ink/Stitch sews it, and <code>SC-W0305</code> says so (since M5.4). A layer of underlay with
 no row is sewn so too, and <code>SC-I0308</code> says so (since M5.6). Where the fill rule leaves every face empty,
 the fill sews nothing, and <code>SC-W0303</code> says so.</p>
-<h3 id="properties-conformance-2"><a class="header" href="#properties-conformance-2">Properties (conformance)</a></h3>
+<h3 id="properties-conformance-3"><a class="header" href="#properties-conformance-3">Properties (conformance)</a></h3>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -5880,7 +6034,7 @@ tie-off). The lock stops the thread from pulling out when it is trimmed or the n
 <p><strong>Parameters:</strong> <code>lock_start</code> and <code>lock_end</code> (the shape), <code>lock_custom_start</code>, <code>lock_custom_end</code>,
 <code>lock_start_scale_mm</code>, <code>lock_end_scale_mm</code>, <code>lock_start_scale_percent</code>, <code>lock_end_scale_percent</code>
 (<a href="#lock-stitches">reference</a>).</p>
-<h2 id="placement-1"><a class="header" href="#placement-1">Placement</a></h2>
+<h2 id="placement-2"><a class="header" href="#placement-2">Placement</a></h2>
 <p>The anchor is the group’s first needle point for a tie-in and its last for a tie-off. A group with no
 needle point other than the anchor has no stitch to lock, and assembly sews it without one.</p>
 <ul>
@@ -5970,7 +6124,7 @@ tie-in’s last stitch into the anchor and a tie-off’s first stitch out of it.
 <li>A step shorter than 0.2 mm is lengthened to it, keeping its direction.</li>
 <li>A drawn lock whose shortest stitch would be shorter is enlarged as a whole until that stitch is 0.2 mm
 long, keeping its shape.</li>
-<li>A lock of steps that a sharp turn would fold onto itself is sewn straight (<a href="#placement-1">placement</a>).</li>
+<li>A lock of steps that a sharp turn would fold onto itself is sewn straight (<a href="#placement-2">placement</a>).</li>
 </ul>
 <p><code>SC-W0502</code> reports each of these, with the size. The half stitch never needs them.</p>
 <h2 id="compared-with-inkstitch"><a class="header" href="#compared-with-inkstitch">Compared with Ink/Stitch</a></h2>
@@ -6413,7 +6567,7 @@ registry a plug-in could add PES to.</li>
 <tr><th>Plug-in id</th><th>Kind</th><th>Stitch types</th><th>Notes</th></tr>
 </thead>
 <tbody>
-<tr><td><code>&lt;ns&gt;.stroke</code></td><td>live effect</td><td>running, bean, manual (P1); zigzag, ripple (later)</td><td><code>stroke_method</code> choice selects the variant</td></tr>
+<tr><td><code>&lt;ns&gt;.stroke</code></td><td>live effect</td><td>running, bean, manual (P1), zigzag (M7.2), ripple (later)</td><td><code>stroke_method</code> choice selects the variant</td></tr>
 <tr><td><code>&lt;ns&gt;.satin</code></td><td>live effect</td><td>satin (P1); E, S, zigzag (P2)</td><td>rails and rungs from the object’s compound path</td></tr>
 <tr><td><code>&lt;ns&gt;.fill</code></td><td>live effect</td><td>tatami (P1); contour, meander, circular (P2)</td><td><code>fill_method</code> choice</td></tr>
 </tbody>
@@ -6451,16 +6605,17 @@ sides, as in Ink/Stitch;</li>
 they are the custom locks’ steps, <code>random_seed</code>, a fill underlay’s angles, a satin’s zigzag underlay
 insets and its shortest random split. A choice leaves out the options that a text spells out, which are
 the custom locks. <code>satin_column</code> belongs to the effect, which sets it from its family. The dialog opens
-with the group that declares the family’s method. The groups only the family uses come next, then those
-it shares with the other families. The settings every element shares come last, as in Ink/Stitch’s
-dialogs.</p>
+with the group that declares the family’s method. The groups only the family uses, for its default
+method, come next, then those it shares with the other families, then those of its other methods, such as
+the zigzag stroke’s. The settings every element shares come last, as in Ink/Stitch’s dialogs.</p>
 <p><strong>What a live effect shows.</strong> A family’s effect sews its object with the engine’s <code>generate</code>, on the
 reference machine and with no neighbours, as one object of a design. It returns the stitches as geometry,
 the exact level below. When it can’t show stitches, it gives back why. VectorCraft then draws the object
 as it is and shows the message as the plug-in’s last error. That happens when the object cannot be sewn or
 sews no stitch, with the message that says why, and for a satin column drawn as one path, which is as
-wide as its stroke, with <code>SC-I0810</code>. A drawing that vanished instead could not be clicked to change the
-setting that emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
+wide as its stroke, with <code>SC-I0810</code>. A zigzag stroke is as wide as its stroke too, and the effect leaves it
+as it is, with <code>SC-I0810</code>. A drawing that vanished instead could not be clicked to change the setting that
+emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
 shows, and <code>stitch export</code> reports them. How much of the stitches it shows, within what VectorCraft lets
 it spend, is its preview level (below).</p>
 <h3 id="the-workflow"><a class="header" href="#the-workflow">The workflow</a></h3>
@@ -6836,8 +6991,10 @@ the plug-in as <code>_context.documentData</code>, writable through a filter’s
 already exists.</p>
 <h3 id="p6-read-only-context-for-live-effects"><a class="header" href="#p6-read-only-context-for-live-effects">P6: Read-only context for live effects</a></h3>
 <p>Add the object’s <code>fills</code>/<code>strokes</code> and, optionally, siblings in the same group whose names start with a
-declared prefix (<code>"contextPrefixes": ["stitch:"]</code>) to the live-effect input. Embroidery uses this for
-thread colours and start/end markers; other plug-ins for guides and anchors.</p>
+declared prefix (<code>"contextPrefixes": ["stitch:"]</code>) to the live-effect input. Embroidery reads thread
+colours, start and end markers and a stroke’s width from it. A satin column drawn as one path and a zigzag
+stroke are as wide as their stroke, and without its width a v1 effect leaves both as they are
+(<code>SC-I0810</code>). Other plug-ins use the context for guides and anchors.</p>
 <h3 id="p7-preserve-foreign-svg-attributes"><a class="header" href="#p7-preserve-foreign-svg-attributes">P7: Preserve foreign SVG attributes</a></h3>
 <p>On SVG import, keep attributes in unknown namespaces per node (<code>Node.foreign: Option&lt;Box&lt;Map&gt;&gt;</code>), and
 write them back on SVG export. This makes VectorCraft a good citizen for files from Inkscape extensions
@@ -7635,9 +7792,9 @@ menus’ frames. A dialog’s picture is cropped to the dialog.</p>
 <p>A dialog must show a row for each parameter of its module’s manifest. The row’s label is the one
 VectorCraft writes for the key, and its control must be the one VectorCraft gives the parameter’s type.
 A number gets a text field and a toggle a checkbox, and a choice gets a drop-down list. A plug-in’s
-dialog doesn’t scroll, and fill’s and satin’s, about 1,400 and 1,800 pixels tall, run off the top and
-bottom of the window at the size it opens, 1440 × 900. A dialog’s picture is taken in a window 2,000
-pixels tall instead, on a screen of 1600 × 2100.</p>
+dialog doesn’t scroll, and all 3 run off the top and bottom of the window at the size it opens,
+1440 × 900: the stroke’s is about 960 pixels tall, the fill’s about 1,400 and the satin’s about 1,800. A
+dialog’s picture is taken in a window 2,000 pixels tall instead, on a screen of 1600 × 2100.</p>
 <h2 id="command-line-examples"><a class="header" href="#command-line-examples">Command-line examples</a></h2>
 <p>Pages show what a command prints by including it from <code>docs/src/user/reference/generated/</code>. The commands
 are declared in <code>docs/examples.toml</code>, and <code>cargo xtask docs</code> runs each one with the <code>stitch</code> binary in an
@@ -7721,7 +7878,7 @@ a parameter declared with an Ink/Stitch origin must be listed here with a compat
 default must be the value Ink/Stitch sews.</li>
 <li><strong>Default</strong> is the value Ink/Stitch’s settings window shows. For a few parameters its code sews another
 value when a file sets none, and the cell gives that value after the default, as in <code>0.1 (0.2 when unset)</code>. <code>—</code> means no default: the value is derived from another parameter or the shape.</li>
-<li><strong>StitchCraft</strong> says whether the <a href="#parameters-2">parameter registry</a> declares the
+<li><strong>StitchCraft</strong> says whether the <a href="#parameters-3">parameter registry</a> declares the
 parameter. <em>planned</em>: not yet; a design that sets it keeps it unchanged and gets <code>SC-W0105</code>.
 <em>registered</em>: StitchCraft reads and checks it under the same key, meaning and default; it changes the
 stitches once its stitch type or feature lands (see <em>Phase</em> and the parameter’s reference entry).
@@ -7769,9 +7926,9 @@ stitches once its stitch type or feature lands (see <em>Phase</em> and the param
 <tr><td><code>enable_random_stitch_length</code></td><td>boolean</td><td>—</td><td>false</td><td><code>running_stitch</code>, <code>ripple_stitch</code></td><td>P1 (M3)</td><td><a href="#enable_random_stitch_length">registered</a></td></tr>
 <tr><td><code>random_stitch_length_jitter_percent</code></td><td>float</td><td>± %</td><td>10</td><td><code>running_stitch</code>, <code>ripple_stitch</code></td><td>P1 (M3)</td><td><a href="#random_stitch_length_jitter_percent">registered</a></td></tr>
 <tr><td><code>max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>manual_stitch</code></td><td>P1 (M3)</td><td><a href="#max_stitch_length_mm">registered</a></td></tr>
-<tr><td><code>zigzag_spacing_mm</code></td><td>string</td><td>mm</td><td>0.4</td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td><td>planned</td></tr>
-<tr><td><code>stroke_pull_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td><td>planned</td></tr>
-<tr><td><code>zigzag_angle</code></td><td>float</td><td>°</td><td>0</td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td><td>planned</td></tr>
+<tr><td><code>zigzag_spacing_mm</code></td><td>string</td><td>mm</td><td>0.4</td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td><td><a href="#zigzag_spacing_mm">registered</a></td></tr>
+<tr><td><code>stroke_pull_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td><td><a href="#stroke_pull_compensation_mm">registered</a></td></tr>
+<tr><td><code>zigzag_angle</code></td><td>float</td><td>°</td><td>0</td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td><td><a href="#zigzag_angle">registered</a></td></tr>
 <tr><td><code>line_count</code></td><td>int</td><td>—</td><td>10</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>min_line_dist_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>satin_guide_pattern_position</code></td><td>combo</td><td>—</td><td>default</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
@@ -7815,7 +7972,7 @@ stitches once its stitch type or feature lands (see <em>Phase</em> and the param
 <tr><td><code>split_staggers</code></td><td>float</td><td>—</td><td>4</td><td><code>staggered</code></td><td>P1 (M4)</td><td><a href="#split_staggers">registered</a></td></tr>
 <tr><td><code>short_stitch_inset</code></td><td>float</td><td>%</td><td>15</td><td>all</td><td>P1 (M4)</td><td><a href="#short_stitch_inset">registered</a></td></tr>
 <tr><td><code>short_stitch_distance_mm</code></td><td>float</td><td>mm</td><td>0.25</td><td>all</td><td>P1 (M4)</td><td><a href="#short_stitch_distance_mm">registered</a></td></tr>
-<tr><td><code>zigzag_spacing_mm</code></td><td>float</td><td>mm/cycle</td><td>0.4</td><td>all</td><td>P1 (M4)</td><td><a href="#zigzag_spacing_mm">registered</a></td></tr>
+<tr><td><code>zigzag_spacing_mm</code></td><td>float</td><td>mm/cycle</td><td>0.4</td><td>all</td><td>P1 (M4)</td><td><a href="#zigzag_spacing_mm-1">registered</a></td></tr>
 <tr><td><code>pull_compensation_percent</code></td><td>float</td><td>% (each side)</td><td>0</td><td>all</td><td>P1 (M4)</td><td><a href="#pull_compensation_percent">registered</a></td></tr>
 <tr><td><code>pull_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td>all</td><td>P1 (M4)</td><td><a href="#pull_compensation_mm">registered</a></td></tr>
 <tr><td><code>push_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td>all</td><td>P1 (M4)</td><td><a href="#push_compensation_mm">registered</a></td></tr>
@@ -7866,7 +8023,7 @@ stitches once its stitch type or feature lands (see <em>Phase</em> and the param
 <tr><td><code>smoothness_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>contour_fill</code>, <code>guided_fill</code>, <code>meander_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
 <tr><td><code>expand_mm</code></td><td>float</td><td>mm</td><td>0</td><td>all</td><td>P1 (M5)</td><td><a href="#expand_mm">registered</a></td></tr>
 <tr><td><code>gap_fill_rows</code></td><td>int</td><td>rows</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="#gap_fill_rows">registered</a></td></tr>
-<tr><td><code>angle</code></td><td>float</td><td>deg</td><td>0</td><td><code>tatami_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#angle">registered</a></td></tr>
+<tr><td><code>angle</code></td><td>float</td><td>deg</td><td>0</td><td><code>tatami_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#angle-1">registered</a></td></tr>
 <tr><td><code>guided_fill_angle</code></td><td>float</td><td>deg</td><td>—</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>tartan_angle</code></td><td>float</td><td>deg</td><td>-45</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>4.0</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#max_stitch_length_mm">registered</a></td></tr>
@@ -8003,7 +8160,7 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewr
 </tbody>
 </table>
 </div>
-<p><em>145 parameter declarations, 89 registered in StitchCraft.</em></p>
+<p><em>145 parameter declarations, 92 registered in StitchCraft.</em></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="architecture-decision-records"><a class="header" href="#architecture-decision-records">Architecture decision records</a></h1>
 <p>Short records of decisions that shape the code, with their context and the alternatives we rejected.
@@ -8762,8 +8919,8 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 </thead>
 <tbody>
 <tr><td>M7.1 ✅</td><td>A family of stitch types can declare a key again with a kind and range of its own (<a href="#naming-rules">parameter registry</a>, rule 7). Ink/Stitch’s <code>zigzag_spacing_mm</code> is a list of lengths for a zigzag stroke and one length for a satin column, and a meander fill reads it as a length that is 0 by default. An element reads the key as its family declares it. The reference pages, the JSON Schema, the plug-ins’ dialogs and the contract check give each family its own</td><td><code>REQ-PRM-005</code></td></tr>
-<tr><td>M7.2</td><td>Zigzag stroke</td><td>its requirements active and the type listed for MC-6</td></tr>
-<tr><td>M7.3</td><td>E-stitch, with the warnings every satin method gives: <code>SC-W0208</code> where stitches turn more than 45° from the column, and <code>SC-W0209</code> for a column wider than 12 mm</td><td>same</td></tr>
+<tr><td>M7.2 ✅</td><td>Zigzag stroke, sewn as Ink/Stitch sews it. Its angle is a new kind of setting, an angle kept within its range rather than turned by whole turns</td><td><code>REQ-RUN-009</code> to <code>REQ-RUN-012</code>, and the type listed for MC-6</td></tr>
+<tr><td>M7.3</td><td>E-stitch, with the warnings every satin method gives: <code>SC-W0208</code> where stitches turn more than 45° from the column, and <code>SC-W0209</code> for a column wider than 12 mm</td><td>its requirements active and the type listed for MC-6</td></tr>
 <tr><td>M7.4</td><td>S-stitch</td><td>same</td></tr>
 <tr><td>M7.5</td><td>Zigzag satin</td><td>same</td></tr>
 <tr><td>M7.6</td><td>The offsetter meets the third criterion of <a href="#adr-0005-geometry-stack">ADR-0005</a> before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. At M0.7 they took 218 to 448 ms, against GEOS’s 104 to 149 ms</td><td><code>cargo xtask perf</code> guards the criterion</td></tr>
@@ -8886,7 +9043,7 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td><strong>TS-08</strong> Fill density &amp; angle</td><td>15 squares 30 mm wide, with the default underlay: rows at spacings of 0.25, 0.3, 0.4, 0.5 and 0.6 mm, top to bottom, and columns at angles of 0°, 45° and 90° (100 × 170 mm). Each square is trimmed after</td><td>Coverage, stiffness, puckering, visible furrows. At 0.25 mm, below the Brother’s shortest stitch of 0.3 mm, a sliver at each row’s start in the 0° and 90° squares, where the rows meet the edges square on (<code>DEV-FIN-001</code>). The 45° square’s rows end 0.35 mm apart along its edges and keep their starts. If the machine sews 0.25 mm stitches cleanly, the report can lower the profile’s shortest stitch</td><td>MC-4</td></tr>
 <tr><td><strong>TS-09</strong> Fill underlay &amp; travel</td><td>A rectangle 50 × 30 mm with a square hole and a round hole, and a bar 6 mm to its right, all one fill, sewn 3 times (66 × 114 mm). The top copy has no underlay. The others have the default underlay, and the bottom one 2 gap-filling rows too. Each copy is trimmed after</td><td>Travel hidden? Does the fill hold at both ends of the jump to the bar? Holes clean? A gap where the rows round a hole meet?</td><td>MC-4</td></tr>
 <tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
-<tr><td><strong>TS-11</strong> New stitch types</td><td>Samples of the milestone’s new types</td><td>Per type, as listed on its expected-result sheet</td><td>MC-6</td></tr>
+<tr><td><strong>TS-11</strong> New stitch types</td><td>Samples of the milestone’s new types. So far zigzag strokes (M7.2), straight and curved, at spacings of 0.4, 1 and 2 mm and widths of 1, 2 and 4 mm, and one at 45°</td><td>Per type, as listed on its expected-result sheet. A zigzag sews narrower than drawn: by how much? Are its sides even round curves? Which is the narrowest that sews cleanly?</td><td>MC-6</td></tr>
 <tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round?</td><td>MC-5, MC-7</td></tr>
 </tbody>
 </table>

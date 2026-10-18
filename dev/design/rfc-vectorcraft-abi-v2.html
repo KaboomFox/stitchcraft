@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d41c3afd.js";
+            window.path_to_searchindex_js = "../searchindex-8bc10e44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-a0bb3cbb.js"></script>
+        <script src="../toc-47eff3e5.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -259,8 +259,10 @@ the plug-in as <code>_context.documentData</code>, writable through a filter’s
 already exists.</p>
 <h3 id="p6-read-only-context-for-live-effects"><a class="header" href="#p6-read-only-context-for-live-effects">P6: Read-only context for live effects</a></h3>
 <p>Add the object’s <code>fills</code>/<code>strokes</code> and, optionally, siblings in the same group whose names start with a
-declared prefix (<code>"contextPrefixes": ["stitch:"]</code>) to the live-effect input. Embroidery uses this for
-thread colours and start/end markers; other plug-ins for guides and anchors.</p>
+declared prefix (<code>"contextPrefixes": ["stitch:"]</code>) to the live-effect input. Embroidery reads thread
+colours, start and end markers and a stroke’s width from it. A satin column drawn as one path and a zigzag
+stroke are as wide as their stroke, and without its width a v1 effect leaves both as they are
+(<code>SC-I0810</code>). Other plug-ins use the context for guides and anchors.</p>
 <h3 id="p7-preserve-foreign-svg-attributes"><a class="header" href="#p7-preserve-foreign-svg-attributes">P7: Preserve foreign SVG attributes</a></h3>
 <p>On SVG import, keep attributes in unknown namespaces per node (<code>Node.foreign: Option&lt;Box&lt;Map&gt;&gt;</code>), and
 write them back on SVG export. This makes VectorCraft a good citizen for files from Inkscape extensions

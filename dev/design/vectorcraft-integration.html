@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d41c3afd.js";
+            window.path_to_searchindex_js = "../searchindex-8bc10e44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-a0bb3cbb.js"></script>
+        <script src="../toc-47eff3e5.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -265,7 +265,7 @@ registry a plug-in could add PES to.</li>
 <tr><th>Plug-in id</th><th>Kind</th><th>Stitch types</th><th>Notes</th></tr>
 </thead>
 <tbody>
-<tr><td><code>&lt;ns&gt;.stroke</code></td><td>live effect</td><td>running, bean, manual (P1); zigzag, ripple (later)</td><td><code>stroke_method</code> choice selects the variant</td></tr>
+<tr><td><code>&lt;ns&gt;.stroke</code></td><td>live effect</td><td>running, bean, manual (P1), zigzag (M7.2), ripple (later)</td><td><code>stroke_method</code> choice selects the variant</td></tr>
 <tr><td><code>&lt;ns&gt;.satin</code></td><td>live effect</td><td>satin (P1); E, S, zigzag (P2)</td><td>rails and rungs from the object’s compound path</td></tr>
 <tr><td><code>&lt;ns&gt;.fill</code></td><td>live effect</td><td>tatami (P1); contour, meander, circular (P2)</td><td><code>fill_method</code> choice</td></tr>
 </tbody>
@@ -303,16 +303,17 @@ sides, as in Ink/Stitch;</li>
 they are the custom locks’ steps, <code>random_seed</code>, a fill underlay’s angles, a satin’s zigzag underlay
 insets and its shortest random split. A choice leaves out the options that a text spells out, which are
 the custom locks. <code>satin_column</code> belongs to the effect, which sets it from its family. The dialog opens
-with the group that declares the family’s method. The groups only the family uses come next, then those
-it shares with the other families. The settings every element shares come last, as in Ink/Stitch’s
-dialogs.</p>
+with the group that declares the family’s method. The groups only the family uses, for its default
+method, come next, then those it shares with the other families, then those of its other methods, such as
+the zigzag stroke’s. The settings every element shares come last, as in Ink/Stitch’s dialogs.</p>
 <p><strong>What a live effect shows.</strong> A family’s effect sews its object with the engine’s <code>generate</code>, on the
 reference machine and with no neighbours, as one object of a design. It returns the stitches as geometry,
 the exact level below. When it can’t show stitches, it gives back why. VectorCraft then draws the object
 as it is and shows the message as the plug-in’s last error. That happens when the object cannot be sewn or
 sews no stitch, with the message that says why, and for a satin column drawn as one path, which is as
-wide as its stroke, with <code>SC-I0810</code>. A drawing that vanished instead could not be clicked to change the
-setting that emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
+wide as its stroke, with <code>SC-I0810</code>. A zigzag stroke is as wide as its stroke too, and the effect leaves it
+as it is, with <code>SC-I0810</code>. A drawing that vanished instead could not be clicked to change the setting that
+emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
 shows, and <code>stitch export</code> reports them. How much of the stitches it shows, within what VectorCraft lets
 it spend, is its preview level (below).</p>
 <h3 id="the-workflow"><a class="header" href="#the-workflow">The workflow</a></h3>

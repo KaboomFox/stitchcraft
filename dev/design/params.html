@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d41c3afd.js";
+            window.path_to_searchindex_js = "../searchindex-8bc10e44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-a0bb3cbb.js"></script>
+        <script src="../toc-47eff3e5.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -276,6 +276,7 @@ version and a registry schema version arrive with the first release, together wi
 <tr><td><code>OptionalLength</code></td><td><code>Option&lt;Mm&gt;</code></td><td>as <code>Length</code>, or empty: the setting then comes from the document or the machine, or there is none. 0 counts as empty, since Ink/Stitch reads 0 as not set, and a length below 0 does too, with <code>SC-W0102</code> (<code>DEV-PRM-003</code>)</td><td><code>float</code>, unit <code>mm</code>, no default</td></tr>
 <tr><td><code>OptionalLengthWithZero</code></td><td><code>Option&lt;Mm&gt;</code></td><td>as <code>OptionalLength</code>, but only empty text is empty, and 0 is a length, as Ink/Stitch reads a satin’s shortest stitch to split</td><td><code>float</code>, unit <code>mm</code>, no default</td></tr>
 <tr><td><code>Angle</code></td><td>degrees, <code>f64</code></td><td>finite; normalized to (−180, 180]</td><td><code>float</code>, unit <code>deg</code></td></tr>
+<tr><td><code>BoundedAngle</code></td><td>degrees, <code>f64</code></td><td>finite, within range, never turned by whole turns. 270 is above a range that ends at 89, and reads as 89, as Ink/Stitch reads a zigzag stroke’s angle</td><td><code>float</code>, unit <code>deg</code></td></tr>
 <tr><td><code>Percent</code></td><td><code>f64</code></td><td>finite, within range</td><td><code>float</code>, unit <code>%</code></td></tr>
 <tr><td><code>Number</code></td><td><code>f64</code></td><td>finite, within range, without a unit</td><td><code>float</code>, no unit</td></tr>
 <tr><td><code>Count</code></td><td><code>u32</code></td><td>whole, within range</td><td><code>int</code></td></tr>

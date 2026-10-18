@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-d41c3afd.js";
+            window.path_to_searchindex_js = "../../searchindex-8bc10e44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-a0bb3cbb.js"></script>
+        <script src="../../toc-47eff3e5.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,7 +181,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="stroke-generators"><a class="header" href="#stroke-generators">Stroke generators</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/generators/mod.rs, crates/stitchcraft-engine/src/generators/running/**, crates/stitchcraft-engine/src/generators/manual.rs, crates/stitchcraft-engine/src/generators/passes.rs, crates/stitchcraft-engine/src/normalize/stroke.rs, crates/stitchcraft-engine/src/normalize/along.rs -->
+<!-- implements: crates/stitchcraft-engine/src/generators/mod.rs, crates/stitchcraft-engine/src/generators/running/**, crates/stitchcraft-engine/src/generators/manual.rs, crates/stitchcraft-engine/src/generators/zigzag/**, crates/stitchcraft-engine/src/generators/passes.rs, crates/stitchcraft-engine/src/normalize/stroke.rs, crates/stitchcraft-engine/src/normalize/along.rs -->
 <p>Strokes follow a path. Shape: <code>StrokePath</code> (an ordered list of polylines, corners marked, from the
 normalizer). Phase P1 (M3) unless noted.</p>
 <p>A stroke starts where it is drawn and ends where it is drawn, as in Ink/Stitch. Its generator is given its
@@ -267,6 +267,7 @@ every pass, with the list running on from pass to pass. Ink/Stitch repeats the t
 the turnaround takes one step of the list; StitchCraft counts that step too, without sewing it, so a
 file sews the same in both. With a two-value list, each stretch of the path then gets the same
 treatment on every pass.</li>
+<li>A zigzag’s turnaround takes no step of the list, as in Ink/Stitch (<a href="#zigzag-stroke-p2-m7">zigzag stroke</a>).</li>
 <li>Repeats apply to running, ripple and zigzag strokes; bean stitch to those and to manual stitch (the
 <a href="../inkstitch-compat-contract.html">compatibility contract</a> lists each parameter’s stitch types).</li>
 </ul>
@@ -329,10 +330,68 @@ that is one point, or too small for one stitch, is not stitched (<code>SC-W0401<
 a stitch kept longer than <code>max_stitch_length_mm</code> (<code>REQ-RUN-006</code>). Every stitch is at least as long as the
 shortest stitch (<code>REQ-RUN-008</code>).</p>
 <h2 id="zigzag-stroke-p2-m7"><a class="header" href="#zigzag-stroke-p2-m7">Zigzag stroke (P2, M7)</a></h2>
-<p>A zigzag of width <code>stroke-width</code> (or the satin width parameters) centred on the path, with peak-to-peak
-spacing <code>zigzag_spacing_mm</code>, optional <code>zigzag_angle</code> (slanted zigzag), and
-<code>stroke_pull_compensation_mm</code>. Implemented as a satin on a centre line with no underlay (shares the satin
-sampler), which keeps one code path for “two sides and alternation”.</p>
+<p>A zigzag along the path, as wide as its stroke. The needle crosses the path from side to side, as
+Ink/Stitch sews its zig-zag stitch (<code>stroke_method</code> <code>zigzag_stitch</code>, read at <code>d59c9ab</code>). It suits a light
+border, a couched look or a stem too thin for a satin column.</p>
+<p><strong>Parameters:</strong> <code>zigzag_spacing_mm</code>, the distance along the path from one stitch to the next that crosses
+the same way, a zig and a zag together, 0.4 mm by default; <code>stroke_pull_compensation_mm</code>, how much further
+out than half the stroke’s width each side’s needle points go, one value for both sides or 2; and
+<code>zigzag_angle</code>, which turns every stitch away from square to the path, from −89° to 89°. <code>repeats</code> and
+<code>bean_stitch_repeats</code> apply. The width is the stroke’s, read as a satin column drawn as one path reads it.</p>
+<p>Strokes, satin columns and fills each read <code>zigzag_spacing_mm</code> their own way
+(<a href="../params.html#naming-rules">parameter registry</a>, rule 7). A stroke reads a list, as Ink/Stitch does.
+Only its first value counts.</p>
+<h3 id="placement-1"><a class="header" href="#placement-1">Placement</a></h3>
+<p>Each part of the path, one per subpath, is sewn on its own, as a running stitch is.</p>
+<ol>
+<li><strong>Spread.</strong> The part is flattened within a tenth of a CSS pixel, as a satin column’s or a fill’s
+subpaths are, and <code>n + 1</code> points are spread along it at equal distances, its ends included. <code>n</code> is its
+length divided by half the spacing, rounded half to even, at least 2, and one more if that is odd. So
+the zigzag has a whole number of zigs and zags, and it starts and ends on the same side.</li>
+<li><strong>Directions.</strong> Point 0’s direction is the line to point 1, and the last point’s the line from the one
+before it. Every other point’s direction is halfway between the line from the point before it and the
+line to the point after it, each taken with length 1, so a point at a corner leans evenly into both of
+its sides. The lines are those between the spread points, not the path’s own.</li>
+<li><strong>Across.</strong> Each point moves square to its direction, turned by <code>zigzag_angle</code> (positive turns
+clockwise as the drawing shows it). The points numbered 0, 2, 4 and on move to the right of the way
+the path goes, by half the width plus the second pull compensation. Points 1, 3, 5 and on move to the
+left, by half the width plus the first. A pull compensation below minus half the width moves its
+points over to the other side. Each point whose direction has no length stays where it is, as on a
+turn straight back.</li>
+<li><strong>Closed paths.</strong> A stroke closes when one of its subpaths moves and the others, if any, are single
+points, and that subpath’s ends lie nearer each other than 0.05 CSS pixels: its last needle point moves
+onto its first, and the zigzag ends where it started.</li>
+<li><strong>Repeats and bean stitch.</strong> Repeats sew the zigzag again, every other pass backwards, and each pass
+after the first starts with the needle point after the one the last pass ended at. Bean stitch then
+sews each stitch <code>2b + 1</code> times, with its list taken one after another along the stitches of all the
+passes, as for a running stitch (<a href="#repeats-and-bean-stitch">repeats and bean stitch</a>). Ink/Stitch does
+not list the point a pass turns at twice in a zigzag, as it does in a running stitch, so that point
+takes no step of the bean list here.</li>
+</ol>
+<p>The needle points come from arithmetic, square roots and the cosine and sine of the angle
+(<code>stitchcraft_core::math</code>) alone, and every platform places them alike.</p>
+<p><strong>Compared with Ink/Stitch.</strong> Ink/Stitch spreads the points along a running stitch it sews first, at half
+each spacing and within <code>running_stitch_tolerance_mm</code> of the path. StitchCraft spreads them along the
+path, flattened as Ink/Stitch flattens it for that running stitch (<code>DEV-RUN-007</code>). At the default spacing
+those running stitches are 0.2 mm long, chords of the path’s curves, so the two lines and the points
+spread along them differ by hundredths of a millimetre. A part whose length lies close to a rounding
+boundary of its count of zigs and zags may have one zig and zag more or fewer. That running stitch is also why Ink/Stitch’s other
+spacings of a list change nothing that shows. A part of the path that is one point is not stitched
+(<code>SC-W0401</code>), as for a running stitch (<code>DEV-RUN-004</code>).</p>
+<h3 id="properties-conformance-1"><a class="header" href="#properties-conformance-1">Properties (conformance)</a></h3>
+<ul>
+<li>The needle points of each part, before repeats, are <code>n + 1</code> with <code>n</code> even, as step 1 counts them, and
+their places along the flattened path are <code>L / n</code> apart (<code>REQ-RUN-009</code>).</li>
+<li>Each needle point lies across its direction from its place on the path, turned by <code>zigzag_angle</code>:
+even points at half the width plus the second pull compensation to the right, odd points at half the
+width plus the first to the left (<code>REQ-RUN-010</code>).</li>
+<li>A closed stroke ends on its first needle point (<code>REQ-RUN-011</code>).</li>
+<li>Repeats and bean stitch sew the zigzag as step 5 says, with no step of the bean list for a turn
+(<code>REQ-RUN-012</code>).</li>
+</ul>
+<h3 id="diagnostics-1"><a class="header" href="#diagnostics-1">Diagnostics</a></h3>
+<p><code>SC-W0401</code> for a part of the path that is one point. Finalizing leaves out a zigzag’s stitches that are
+shorter than the shortest stitch, as they are across a zigzag much narrower than it (<code>SC-I0504</code>).</p>
 <h2 id="ripple-stitch-p3-m10"><a class="header" href="#ripple-stitch-p3-m10">Ripple stitch (P3, M10)</a></h2>
 <p>A series of copies of the stroke, each progressively scaled, offset or interpolated towards a target
 point (or between two rails for “satin-guided ripple”), joined into one continuous running stitch.

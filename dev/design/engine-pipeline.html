@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d41c3afd.js";
+            window.path_to_searchindex_js = "../searchindex-8bc10e44.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-a0bb3cbb.js"></script>
+        <script src="../toc-47eff3e5.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -233,8 +233,8 @@ whatever its <code>stroke_method</code> says, as in Ink/Stitch. Its rails and ru
 recognition finds is reported, and its <code>satin_method</code> picks the generator: the satin stitch, sewn from
 M4.2. A satin column also reads the running stitch’s length (<code>running_stitch_length_mm</code>): the stitches
 that join its underlays are no longer than the first value. For any other stroke the generator is its
-<code>stroke_method</code>. <code>running_stitch</code> (the default) and
-<code>manual_stitch</code> are sewn from M3. A satin column drawn as one path no wider than the design’s
+<code>stroke_method</code>. <code>running_stitch</code> (the default) and <code>manual_stitch</code> are sewn from M3, and <code>zigzag_stitch</code>
+from M7.2, as wide as the stroke. A satin column drawn as one path no wider than the design’s
 <code>min_satin_stroke_width</code> is sewn as a stroke, with <code>SC-W0212</code>, as in Ink/Stitch (<code>REQ-SAT-015</code>). Wider,
 it is sewn between rails made from its line from M4.9 (<code>REQ-SAT-016</code>). A fill whose <code>fill</code> setting is
 off sews nothing, and nothing is said of it (<code>REQ-FILL-003</code>). Another fill’s region is built first, so
