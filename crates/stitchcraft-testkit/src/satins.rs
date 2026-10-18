@@ -3,7 +3,7 @@
 //! they are as the satin design page measures it (`docs/src/design/algorithms/satin.md` › Top stitches).
 
 use stitchcraft_core::rng::SplitMix64;
-use stitchcraft_core::{Budget, Point};
+use stitchcraft_core::{Budget, Diagnostic, Point};
 use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::design::{DesignSettings, Path, Segment, Subpath};
 use stitchcraft_engine::generate::shortest_stitch;
@@ -34,6 +34,13 @@ pub fn sewn_satin(path: &Path, params: &[(&str, &str)]) -> (Vec<Point>, Vec<Stri
 /// The needle points of the satin column `path`, sewn as [`sewn_satin`] sews it, between `neighbours`, and
 /// its warnings.
 pub fn sewn_between(path: &Path, params: &[(&str, &str)], neighbours: &Neighbours) -> (Vec<Point>, Vec<String>) {
+    let (points, warnings) = satin_diagnostics(path, params, neighbours);
+    (points, warnings.iter().map(ToString::to_string).collect())
+}
+
+/// The needle points of the satin column `path`, sewn as [`sewn_satin`] sews it, between `neighbours`, and
+/// its warnings as diagnostics, with their places.
+pub fn satin_diagnostics(path: &Path, params: &[(&str, &str)], neighbours: &Neighbours) -> (Vec<Point>, Vec<Diagnostic>) {
     let mut meter = Budget::DEFAULT.meter();
     let Ok(Shape::Rails(satin)) = recognize(path, &mut meter).unwrap().shape else { panic!("not rails: {path:?}") };
     let set: ParamSet = params.iter().copied().collect();
@@ -43,7 +50,7 @@ pub fn sewn_between(path: &Path, params: &[(&str, &str)], neighbours: &Neighbour
     let pull = PullParams::from_set_as(&set, SATIN).unwrap().params;
     let stitched = satin_stitch(&satin, &params, &pull, satin_lengths(&set), neighbours, &mut rng, &mut meter).unwrap();
     assert_eq!(stitched.runs.len(), 1);
-    (stitched.runs.into_iter().flatten().collect(), stitched.warnings.iter().map(ToString::to_string).collect())
+    (stitched.runs.into_iter().flatten().collect(), stitched.warnings)
 }
 
 /// The stitch lengths of a satin column whose element sets `set`, as the engine gives them on the reference

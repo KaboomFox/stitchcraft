@@ -21,6 +21,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0205`](#sc-w0205) | Warning | Satin subpath is one point; left out |
 | [`SC-W0206`](#sc-w0206) | Warning | Satin contour underlay too short for its insets; it keeps its length |
 | [`SC-W0207`](#sc-w0207) | Warning | Satin rung crosses a rail more than once; left out |
+| [`SC-W0208`](#sc-w0208) | Warning | Satin stitches lean more than 45° from square to the column; add a rung here |
+| [`SC-W0209`](#sc-w0209) | Warning | Satin stitch longer than 12 mm; it may snag |
 | [`SC-W0210`](#sc-w0210) | Warning | Satin rails without rungs have different numbers of nodes |
 | [`SC-W0211`](#sc-w0211) | Warning | Satin push compensation too long for a rail; that rail keeps its length |
 | [`SC-W0212`](#sc-w0212) | Warning | Satin column drawn as one path too narrow; sewn as a stroke |
@@ -117,7 +119,8 @@ Add an element with an embroidery stitch type, or fix the errors reported for th
 
 The element's stitch type is one this version of StitchCraft does not sew yet, so the element was
 skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
-satin columns from M4, tatami fills from M5 and zigzag strokes from M7. The other stitch types follow
+satin columns from M4, tatami fills from M5, and zigzag strokes and E-stitches from M7. The other
+stitch types follow
 (`docs/src/plan/roadmap.md`).
 
 The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
@@ -228,6 +231,31 @@ goes with which point of the other, and it was left out. The column is sewn with
 
 The message names the subpath, numbered from 1 in the order the path draws it. Redraw the rung as a
 straight line across both rails.
+
+## SC-W0208
+
+**Warning** — Satin stitches lean more than 45° from square to the column; add a rung here
+
+The stitches of a satin column lean more than 45° from square to the column, to a tenth of a degree:
+they go further along it than across it. The column runs halfway between its 2 rails. Without rungs,
+or with too few, a column's stitches follow its rails' lengths alone, and where one rail runs on ahead
+of the other they lean. Every satin method says so, at the middle of each stretch of stitches that
+lean. Ink/Stitch does not.
+
+The message gives how many stitches lean and the most any of them leans. Add a rung across the
+column at the place named, square to it, and the stitches follow it.
+
+## SC-W0209
+
+**Warning** — Satin stitch longer than 12 mm; it may snag
+
+A top stitch of a satin column is longer than 12 mm, as the column sews it. A stitch that long floats
+loose over the fabric, where it snags and sags. Every satin method says so once, at the middle of its
+longest top stitch, and its underlays and travel do not count. Ink/Stitch does not say so.
+
+The message gives the stitch's length. Set `max_stitch_length_mm` to split long stitches, make the
+column narrower, or sew the shape as a fill. Finalize splits a stitch longer than the machine's
+longest stitch anyway (`SC-I0703`).
 
 ## SC-W0210
 
