@@ -16,7 +16,9 @@ sews it. To see its stitches in VectorCraft, draw the column with 2 rails:
 Apply the effect after joining the rails. VectorCraft 0.10.0 and later keep the appearance of the path at
 the back, and earlier versions that of the path in front, which may not be the one with the effect. From
 0.10.0, VectorCraft may also reverse the front path, and always does for 2 straight rails. The column
-turns it back (`reverse_rails`, automatic), so the direction the rails were drawn in doesn't matter.
+turns it back (`reverse_rails`, automatic). A reversed ring also starts somewhere else, so of 2 rings the
+second starts at its node nearest the first's start. The stitches are the same whatever node the rails
+were drawn from and whichever way they run.
 
 ## Add a rung
 
