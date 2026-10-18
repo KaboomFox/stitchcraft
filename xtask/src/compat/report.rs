@@ -23,6 +23,7 @@ use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -368,6 +369,17 @@ struct Label {
     name: String,
 }
 
+/// What `gh <command> --json` listed. An empty output is an empty list: when no label matches its search,
+/// `gh label list` writes an empty output, JSON asked for or not, and exits with 0. GitHub's command line
+/// (2.89.0, `pkg/cmd/label/list.go`) returns its no-results error before it writes the JSON, and doesn't
+/// count that error as a failure (`internal/ghcmd/cmd.go`).
+fn listed<T: DeserializeOwned>(command: &str, output: &str) -> Result<Vec<T>, String> {
+    if output.is_empty() {
+        return Ok(Vec::new());
+    }
+    serde_json::from_str(output).map_err(|e| format!("gh {command}: {e}"))
+}
+
 /// Files `issue` in the repository `repo` with GitHub's command line at `gh`. While it fails, its body is
 /// commented on the open issue with its title, or opens one with its label, which is created when the
 /// repository lacks it. Once it passes, the open issue is closed with its body, and without one nothing
@@ -379,15 +391,14 @@ pub fn file_issue(gh: &Path, repo: &str, issue: &Issue) -> Result<(), String> {
         if output.status.success() { Ok(said(&output.stdout)) } else { Err(format!("gh {}: {}", args.join(" "), said(&output.stderr))) }
     };
     let search = format!("\"{}\" in:title", issue.title);
-    let listed = call(&["issue", "list", "--state", "open", "--search", &search, "--limit", "100", "--json", "number,title"])?;
-    let open: Vec<Listed> = serde_json::from_str(&listed).map_err(|e| format!("gh issue list: {e}"))?;
+    let open: Vec<Listed> =
+        listed("issue list", &call(&["issue", "list", "--state", "open", "--search", &search, "--limit", "100", "--json", "number,title"])?)?;
     // GitHub's search matches words, so the titles it finds are compared whole.
     let number = open.iter().find(|found| found.title == issue.title).map(|found| found.number.to_string());
     match (issue.failing, number) {
         (true, Some(number)) => call(&["issue", "comment", &number, "--body", &issue.body]).map(drop),
         (true, None) => {
-            let listed = call(&["label", "list", "--search", &issue.label, "--limit", "100", "--json", "name"])?;
-            let labels: Vec<Label> = serde_json::from_str(&listed).map_err(|e| format!("gh label list: {e}"))?;
+            let labels: Vec<Label> = listed("label list", &call(&["label", "list", "--search", &issue.label, "--limit", "100", "--json", "name"])?)?;
             if !labels.iter().any(|label| label.name == issue.label) {
                 call(&["label", "create", &issue.label, "--color", "B60205", "--description", &issue.about])?;
             }
