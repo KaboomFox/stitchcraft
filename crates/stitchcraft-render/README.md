@@ -23,5 +23,5 @@ the documentation images and the conformance suite. Design: `docs/src/design/ren
 
 ## Dependencies
 
-`stitchcraft-core`, `stitchcraft-plan`, `tiny-skia` (only this crate may use it; `cargo xtask layers`),
-`thiserror`. Tests also use `stitchcraft-formats`, `stitchcraft-engine` and `stitchcraft-testkit`.
+`stitchcraft-core`, `stitchcraft-plan`, `tiny-skia` (only this crate draws with it, and only xtask besides
+reads pictures with it; `cargo xtask layers`), `thiserror`. Tests also use `stitchcraft-formats`, `stitchcraft-engine` and `stitchcraft-testkit`.

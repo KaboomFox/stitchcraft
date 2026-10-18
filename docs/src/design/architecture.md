@@ -78,7 +78,7 @@ GPL/AGPL/LGPL.
 | Errors | `thiserror` 2 | MIT/Apache | all libraries |
 | XML / SVG syntax | `roxmltree`, `svgtypes` | MIT/Apache | svg |
 | `.vectorcraft` documents: JSON, its coordinates read exactly, unpacked from gzip by a Rust backend | `serde`, `serde_json`, `flate2` 1 | MIT/Apache | vectorcraft |
-| Rasterizing previews | `tiny-skia` 0.11 | BSD-3-Clause | render |
+| Rasterizing previews, and reading VectorCraft's pictures to compare them | `tiny-skia` 0.11 | BSD-3-Clause | render, xtask |
 | JSON reports, and the plug-in's JSON | `serde_json` | MIT/Apache | cli, vc-plugin |
 | Content hashes of bug-report bundles | `sha2` 0.11 | MIT/Apache | cli |
 | CLI parsing | `clap` 4 | MIT/Apache | cli, xtask |

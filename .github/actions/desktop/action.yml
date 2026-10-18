@@ -1,0 +1,15 @@
+# A desktop without a screen, where VectorCraft's released app runs and is driven through its
+# accessibility tree (docs/src/design/docs-pipeline.md › VectorCraft's window in CI): Xvfb, Mesa's
+# software renderer, D-Bus and AT-SPI. One list for every job that opens the app: the window probe, the
+# docs' VectorCraft pictures, and their refresh.
+name: Desktop without a screen
+description: Install Xvfb, Mesa, D-Bus and AT-SPI for VectorCraft's window.
+runs:
+  using: composite
+  steps:
+    # libxkbcommon-dev links xa11y's keyboard maps; the rest is what VectorCraft's window loads.
+    - shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install --yes --no-install-recommends xvfb xauth dbus at-spi2-core libxkbcommon-dev \
+          libegl1 libegl-mesa0 libgl1-mesa-dri libxkbcommon-x11-0 libxcursor1 libxrandr2 libxi6

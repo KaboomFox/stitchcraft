@@ -3,9 +3,9 @@
 # or a declaration without alt text, fails `cargo xtask docs --check`; pages that show a shot use
 # its alt text.
 #
-# Kinds: "stitch" (our renderer, exact bytes), "vectorcraft-render" (vectorcraft-cli export),
-# "vectorcraft-ui" (VectorCraft window via its control channel, perceptual tolerance),
-# "photo" (a real sew-out; never regenerated, needs a sew-out report link).
+# Kinds: "stitch" (our renderer, exact bytes), "vectorcraft-render" (vectorcraft-cli export) and
+# "vectorcraft-ui" (VectorCraft's window, driven through its accessibility tree), both compared within a
+# tolerance, and "photo" (a real sew-out; never regenerated, needs a sew-out report link).
 #
 # A "stitch" shot names a style ("realistic" or "simple"), a scale in pixels per millimetre, and what to
 # draw: a test sheet (`sheet = "TS-01"`), or a design that the engine plans for the reference machine as
@@ -240,6 +240,14 @@ style = "simple"
 scale = 8.0
 alt = "The badge in the simple style: the needle points of the star and the ring, and grey dashes where the frame moves from the star to the ring after the colour change"
 
+[[shot]]
+id = "vectorcraft-patch-sewn"
+kind = "stitch"
+fixture = "docs/fixtures/round-patch.vectorcraft"
+style = "realistic"
+scale = 8.0
+alt = "The VectorCraft tutorial's patch as it will sew. The blue fill's rows run at 45 degrees, and a white star of running stitch lies on it, inside a gold satin border."
+
 # ── How-to guides ───────────────────────────────────────────────────────────────────────────────────
 
 [[shot]]
@@ -251,3 +259,106 @@ scale = 6.0
 # The guide shows what is said: the placement line left out by its name, and the start marker.
 allow = ["SC-I0811", "SC-W0807"]
 alt = "The patch as it will sew. A red fill with rows at 45 degrees has a blue satin band and a green curve of running stitch under it. Under them, 2 gold squares with upright rows have the loose thread of the jump between them. The placement line and the start marker are not sewn."
+
+# ── VectorCraft's own pictures (`cargo xtask shots --vectorcraft`, the shots-ui job) ──────────────────
+# Made by the stable release compat/vectorcraft.toml pins. `vectorcraft-cli` installs the `plugins` and
+# draws the document from `steps`, as a Level B scenario's (compat/scenarios/), in points, applying each
+# stitch family once at most: VectorCraft keeps a module's last error only until its next success. A
+# "vectorcraft-render" shot is that document's PNG export, `scale` pixels per point. A "vectorcraft-ui" shot
+# opens it in VectorCraft's window, selects everything, and presses `menu`, the menu bar's title and then
+# rows, through the accessibility tree. The picture shows the menus open, or with `dialog = "<family>"` the
+# dialog of that family's effect, in a window tall enough for it, which must show a row for each of the
+# module's parameters: its label, and the control of its type.
+
+[[shot]]
+id = "vectorcraft-plugins-menu"
+kind = "vectorcraft-ui"
+plugins = ["stroke", "satin", "fill"]
+steps = [
+  { cmd = "file.new", params = { width = 144, height = 144 } },
+  { cmd = "shape.ellipse", params = { x = 12, y = 12, width = 120, height = 120 } },
+  { cmd = "paint.setFill", params = { color = "#1f4e9c" } },
+]
+menu = ["Effect", "Plug-ins"]
+alt = "VectorCraft's Effect menu, open at Plug-ins, which lists StitchCraft Fill, StitchCraft Satin and StitchCraft Stroke."
+
+[[shot]]
+id = "vectorcraft-fill-dialog"
+kind = "vectorcraft-ui"
+plugins = ["stroke", "satin", "fill"]
+steps = [
+  { cmd = "file.new", params = { width = 144, height = 144 } },
+  { cmd = "shape.ellipse", params = { x = 12, y = 12, width = 120, height = 120 } },
+  { cmd = "paint.setFill", params = { color = "#1f4e9c" } },
+]
+menu = ["Effect", "Plug-ins"]
+dialog = "fill"
+alt = "The StitchCraft Fill dialog in VectorCraft, with a row for each setting under its Ink/Stitch name, from Fill and Fill_method at the top to Max_stitch_length_mm and Preview_level at the bottom. Under them are the Preview checkbox, checked, and the Cancel and OK buttons."
+
+[[shot]]
+id = "vectorcraft-satin-dialog"
+kind = "vectorcraft-ui"
+plugins = ["stroke", "satin", "fill"]
+steps = [
+  { cmd = "file.new", params = { width = 144, height = 144 } },
+  { cmd = "shape.ellipse", params = { x = 12, y = 12, width = 120, height = 120 } },
+  { cmd = "paint.setFill", params = { none = true } },
+  { cmd = "paint.setStroke", params = { color = "#d9a400" } },
+  { cmd = "stroke.set", params = { weight = 8 } },
+]
+menu = ["Effect", "Plug-ins"]
+dialog = "satin"
+alt = "The StitchCraft Satin dialog in VectorCraft, with a row for each setting under its Ink/Stitch name, from Satin_method and Zigzag_spacing_mm at the top to Max_stitch_length_mm and Preview_level at the bottom. Under them are the Preview checkbox, checked, and the Cancel and OK buttons."
+
+[[shot]]
+id = "vectorcraft-stroke-dialog"
+kind = "vectorcraft-ui"
+plugins = ["stroke", "satin", "fill"]
+steps = [
+  { cmd = "file.new", params = { width = 144, height = 144 } },
+  { cmd = "shape.line", params = { x1 = 12, y1 = 72, x2 = 132, y2 = 72 } },
+]
+menu = ["Effect", "Plug-ins"]
+dialog = "stroke"
+alt = "The StitchCraft Stroke dialog in VectorCraft, with a row for each setting under its Ink/Stitch name, from Stroke_method and Repeats at the top to Max_stitch_length_mm and Preview_level at the bottom. Under them are the Preview checkbox, checked, and the Cancel and OK buttons."
+
+[[shot]]
+id = "vectorcraft-patch"
+kind = "vectorcraft-render"
+plugins = ["stroke", "satin", "fill"]
+scale = 4.0
+document = "docs/fixtures/round-patch.vectorcraft"
+# The tutorial's patch (docs/src/user/tutorials/vectorcraft-patch.md), step by step, each shape where a
+# click would put it. VectorCraft shows a fill's rows up to about 31 mm across, and its outline beyond.
+# The document is kept for the tutorial's export and the picture of what it sews.
+steps = [
+  { cmd = "file.new", params = { width = 108, height = 108 } },
+  # 1. The disc, a fill.
+  { cmd = "shape.ellipse", params = { x = 14, y = 14, width = 80, height = 80 } },
+  { cmd = "paint.setFill", params = { color = "#1f4e9c" } },
+  { cmd = "paint.setStroke", params = { none = true } },
+  { apply = "fill", params = { angle = 45 } },
+  # 2. The star, a line of running stitch.
+  { cmd = "shape.star", params = { cx = 54, cy = 54, radius1 = 26, radius2 = 11, points = 5 } },
+  { cmd = "paint.setFill", params = { none = true } },
+  { cmd = "paint.setStroke", params = { color = "#ffffff" } },
+  { apply = "stroke" },
+  # 3. The border's 2 rails, drawn while the rest is locked, aligned, joined and given the satin effect.
+  { cmd = "select.all" },
+  { cmd = "object.lock" },
+  { cmd = "shape.ellipse", params = { x = 12, y = 12, width = 84, height = 84 } },
+  { cmd = "shape.ellipse", params = { x = 19, y = 19, width = 70, height = 70 } },
+  { cmd = "select.all" },
+  { cmd = "object.align", params = { horizontal = "center" } },
+  { cmd = "object.align", params = { vertical = "center" } },
+  { cmd = "object.compoundPath.make" },
+  { cmd = "paint.setFill", params = { none = true } },
+  { cmd = "paint.setStroke", params = { color = "#d9a400" } },
+  { apply = "satin" },
+  # 4. Everything centred on the border.
+  { cmd = "object.unlockAll" },
+  { cmd = "select.all" },
+  { cmd = "object.align", params = { horizontal = "center" } },
+  { cmd = "object.align", params = { vertical = "center" } },
+]
+alt = "The patch in VectorCraft's canvas, as the plug-ins' previews show it. Rows at 45 degrees fill the blue disc, and a white star of running stitch lies on it, inside a gold satin border."
