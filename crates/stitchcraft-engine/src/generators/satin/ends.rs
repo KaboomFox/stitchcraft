@@ -180,10 +180,7 @@ impl Guides {
             None => sewn(layers, top, meter)?,
         };
         // The column's first stitch: the pieces start with what it sews, whichever pass comes first.
-        let first = pieces.iter().find_map(|piece| match piece {
-            Piece::Sewn(points) | Piece::Top(points) => points.first().copied(),
-            Piece::Way(_) | Piece::End(_) => None,
-        });
+        let first = pieces.iter().find_map(|piece| if let Piece::Sewn(points) | Piece::Top(points) = piece { points.first().copied() } else { None });
         if let (Some(start), Some(first)) = (start, first) {
             let way = self.way(self.entry(start, meter)?, self.entry(first, meter)?, meter)?;
             pieces.splice(0..0, [Piece::Sewn(vec![start]), Piece::Way(way)]);
