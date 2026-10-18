@@ -358,6 +358,15 @@ rationale = "Ink/Stitch starts and ends elements by their neighbours, so a file 
 milestone = "M4"
 status = "active"
 
+[[req]]
+id = "REQ-GEN-004"
+area = "generators"
+level = "L2"
+statement = "A generator spends a stitch of the design's limit for each needle point as it makes it, and for each one a later pass or bean stitch sews again. What it lays out before sewing it, such as a satin column's pairs or a fill's row segments, must fit in the stitches left. Once done, it has spent exactly a stitch for each needle point it gives. Each element is given the stitches the elements before it left, and the first that needs more ends planning there, with SC-E0004 naming it, before more is made."
+rationale = "Work bounds time, not memory, and a few settings multiply needle points: 10 mm of zigzag at the smallest spacing with 100 repeats and bean stitch 10 is 4.2 million, and a metre of it 420 million, gigabytes. The stitch limit must stop them before they are made, not refuse them after."
+milestone = "M7"
+status = "active"
+
 # ── Running stitch family ──────────────────────────────────────────────────────────────────────────
 
 [[req]]

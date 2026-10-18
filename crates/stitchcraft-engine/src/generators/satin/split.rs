@@ -30,6 +30,7 @@
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
+use crate::generators::made;
 use crate::generators::satin::SatinParams;
 use crate::generators::satin::pairs::Pair;
 
@@ -91,7 +92,7 @@ impl<'r> Splitter<'r> {
 
     /// The needle points of the column whose pairs are `pairs` and their insets `short`: each pair's inset
     /// points, with the splits of the stitch across from the first to the second, and of the stitch back to
-    /// the next pair. A unit of `meter`'s work per split tried.
+    /// the next pair. A unit of `meter`'s work per split tried, and a stitch per needle point.
     pub(crate) fn sew(&mut self, pairs: &[Pair], short: &[Pair], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
         let mut run = Vec::with_capacity(pairs.len() * 2);
         let mut back: Option<(Point, Point)> = None;
@@ -100,6 +101,7 @@ impl<'r> Splitter<'r> {
             if let Some((from, inset_from)) = back {
                 run.extend(self.split([from, *a], [inset_from, *inset_a], parts, row, true, meter)?.0);
             }
+            meter.charge_stitches(2)?;
             run.push(*inset_a);
             let (splits, across) = self.split([*a, *b], [*inset_a, *inset_b], None, row + 1, false, meter)?;
             run.extend(splits);
@@ -113,7 +115,7 @@ impl<'r> Splitter<'r> {
     /// spacing `spacing`: at each pair a spike, from its first inset point through the splits of the
     /// stitch across to its second, and back down through the same splits. Between spikes the spine goes
     /// along the first rail, split only when the spacing is longer than the longest stitch. A unit of
-    /// `meter`'s work per split tried.
+    /// `meter`'s work per split tried, and a stitch per needle point.
     pub(crate) fn sew_e(&mut self, pairs: &[Pair], short: &[Pair], spacing: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
         let longest_spine = self.length.filter(|&length| spacing > length);
         let mut run = Vec::with_capacity(pairs.len() * 3);
@@ -123,6 +125,8 @@ impl<'r> Splitter<'r> {
             if let (Some(from), Some(length)) = (spine, longest_spine) {
                 run.extend(self.spine(from, *a, length, meter)?);
             }
+            // The splits across were spent as they were made; the way back down is the same points again.
+            made(meter, across.len() + 3)?;
             run.push(*inset_a);
             run.extend(&across);
             run.push(*inset_b);
@@ -171,11 +175,12 @@ impl<'r> Splitter<'r> {
     }
 
     /// The points that split the stitch from `a` to `b` into `parts` equal parts, each moved up to the
-    /// jitter's share of a part either way, at random, in order along it.
+    /// jitter's share of a part either way, at random, in order along it. A stitch of `meter` for each.
     fn even(&mut self, a: Point, b: Point, parts: u32, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
         let mut at = Vec::new();
         for k in 1..parts {
             meter.charge(1)?;
+            meter.charge_stitches(1)?;
             at.push((f64::from(k) + (self.rng.next_f64() * 2.0 - 1.0) * self.jitter) / f64::from(parts));
         }
         at.sort_by(f64::total_cmp);
@@ -185,7 +190,8 @@ impl<'r> Splitter<'r> {
     /// The splits of the stitch between `ends` with a random phase, sewn from `inset[0]` to `inset[1]`: the
     /// first a random share of `length` from the inset start, then one every `length`, longer or shorter by
     /// up to the jitter at random, while they lie before the inset end. A split within the shortest stitch
-    /// of an end is left out, unless it is the only one.
+    /// of an end is left out, unless it is the only one. A stitch of `meter` for each split kept: there are
+    /// no more than the stitch's length over the longest stitch.
     fn random_phase(&mut self, ends: [Point; 2], inset: [Point; 2], length: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
         let ([a, b], [from, to]) = (ends, inset);
         let distance = from.distance(to);
@@ -202,6 +208,7 @@ impl<'r> Splitter<'r> {
         if at.len() > 1 && at.last().is_some_and(|last| last.distance(b) <= self.min_stitch) {
             at.pop();
         }
+        made(meter, at.len())?;
         Ok(at)
     }
 }
@@ -209,7 +216,7 @@ impl<'r> Splitter<'r> {
 /// The splits of the stitch between `ends`, sewn from `inset[0]` to `inset[1]` and stitch `row` of the
 /// column, at whole multiples of `length` from a start that moves along by a `staggers`-th of it from one
 /// stitch to the next: from the stitch's start, or from its end when it goes `back`. Only splits strictly
-/// between the insets count, and a stitch no longer than `length` has none.
+/// between the insets count, and a stitch no longer than `length` has none. A stitch of `meter` for each.
 fn staggered(
     ends: [Point; 2],
     inset: [Point; 2],
@@ -230,6 +237,7 @@ fn staggered(
     while progress < before {
         meter.charge(1)?;
         if after < progress {
+            meter.charge_stitches(1)?;
             at.push(a.lerp(b, progress / distance));
         }
         progress += length;
@@ -241,13 +249,15 @@ fn staggered(
 }
 
 /// The points that split the line from `a` to `b` into the fewest equal parts no longer than `longest`, in
-/// order along it: none for a line no longer than that. A unit of `meter`'s work per point. The needle's
-/// travel between a satin column's underlays is split so, and a zigzag underlay's long stitches.
+/// order along it: none for a line no longer than that. A unit of `meter`'s work and a stitch per point.
+/// The needle's travel between a satin column's underlays is split so, and a zigzag underlay's long
+/// stitches.
 pub(crate) fn evenly(a: Point, b: Point, longest: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let parts = fewest_parts(a.distance(b), longest);
     let mut points = Vec::new();
     for k in 1..parts {
         meter.charge(1)?;
+        meter.charge_stitches(1)?;
         points.push(a.lerp(b, f64::from(k) / f64::from(parts)));
     }
     Ok(points)
@@ -309,7 +319,8 @@ mod tests {
         assert_eq!(ys(&evenly(a, b, 2.5, meter).unwrap()), [2.0, 4.0]);
         assert_eq!(ys(&evenly(a, b, 3.0, meter).unwrap()), [3.0], "exactly 2 parts");
         assert!(evenly(a, b, 6.0, meter).unwrap().is_empty() && evenly(a, a, 1.0, meter).unwrap().is_empty());
-        assert_eq!(evenly(a, b, 1e-9, &mut Budget { max_stitches: 1, max_work: 10 }.meter()), Err(Exhausted::Work));
+        assert_eq!(evenly(a, b, 1e-9, &mut Budget { max_stitches: u32::MAX, max_work: 10 }.meter()), Err(Exhausted::Work));
+        assert_eq!(evenly(a, b, 1e-9, &mut Budget { max_stitches: 10, max_work: u64::MAX }.meter()), Err(Exhausted::Stitches), "a stitch per point");
     }
 
     #[test]
@@ -416,6 +427,25 @@ mod tests {
         let one = [p(0.0, 0.0), p(0.0, want[0] + 0.1)];
         let got = splitter(&mut SplitMix64::new(6), 2.0, 0.0, true, 0.2).random_phase(one, one, 2.0, meter).unwrap();
         assert_eq!(ys(&got), rounded(&want[..1]));
+    }
+
+    #[test]
+    fn every_needle_point_of_the_column_costs_a_stitch() {
+        // 3 pairs 4 mm across and 2 mm apart, split at 1.5 mm by each method, sewn as a satin and as an
+        // E-stitch, whose spine is split too: a stitch spent for each needle point of the run.
+        let pairs = [[p(0.0, 0.0), p(0.0, 4.0)], [p(2.0, 0.0), p(2.0, 4.0)], [p(4.0, 0.0), p(4.0, 4.0)]];
+        let methods: [&[(&str, &str)]; 4] = [&[], &[("split_method", "simple")], &[("split_method", "staggered")], &[("random_split_phase", "true")]];
+        for settings in methods {
+            for e in [false, true] {
+                let mut meter = Budget::DEFAULT.meter();
+                let mut rng = SplitMix64::new(0);
+                let mut splitter = Splitter::new(&params(settings), Some(1.5), 0.3, &mut rng);
+                let run = if e { splitter.sew_e(&pairs, &pairs, 2.0, &mut meter) } else { splitter.sew(&pairs, &pairs, &mut meter) }.unwrap();
+                assert!(run.len() > 2 * pairs.len(), "{settings:?} split");
+                let spent = Budget::DEFAULT.max_stitches - meter.stitches_left();
+                assert_eq!(usize::try_from(spent).unwrap(), run.len(), "{settings:?}, E-stitch {e}");
+            }
+        }
     }
 
     #[test]

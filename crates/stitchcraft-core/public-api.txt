@@ -19,6 +19,8 @@ pub struct stitchcraft_core::budget::Meter
 impl stitchcraft_core::budget::Meter
 pub fn stitchcraft_core::budget::Meter::charge(&mut self, u64) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_core::budget::Meter::charge_stitches(&mut self, u32) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_core::budget::Meter::room(&self, usize) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_core::budget::Meter::settle_stitches(&mut self, u32, usize) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
 pub const fn stitchcraft_core::budget::Meter::stitches_left(&self) -> u32
 pub const fn stitchcraft_core::budget::Meter::work_left(&self) -> u64
 pub mod stitchcraft_core::diag
@@ -351,6 +353,8 @@ pub struct stitchcraft_core::Meter
 impl stitchcraft_core::budget::Meter
 pub fn stitchcraft_core::budget::Meter::charge(&mut self, u64) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_core::budget::Meter::charge_stitches(&mut self, u32) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_core::budget::Meter::room(&self, usize) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_core::budget::Meter::settle_stitches(&mut self, u32, usize) -> core::result::Result<(), stitchcraft_core::budget::Exhausted>
 pub const fn stitchcraft_core::budget::Meter::stitches_left(&self) -> u32
 pub const fn stitchcraft_core::budget::Meter::work_left(&self) -> u64
 pub struct stitchcraft_core::Mm(_)

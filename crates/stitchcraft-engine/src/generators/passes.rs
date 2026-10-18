@@ -19,6 +19,8 @@
 use stitchcraft_core::{Exhausted, Meter, Point};
 use stitchcraft_params::{StitchType, params};
 
+use crate::generators::made;
+
 params! {
     /// Repeats and bean stitch: sewing a line more than once, for a bolder line or one that comes back.
     pub struct RepeatParams for &[StitchType::RunningStitch, StitchType::RippleStitch, StitchType::ZigzagStitch, StitchType::ManualStitch];
@@ -50,7 +52,8 @@ pub enum Turn {
 /// `run` sewn `repeats` times (at least once), each pass after the first starting as `turn` says, each
 /// stitch then sewn 2b + 1 times with b taken in turn from `beans` (none: 0), a step for every point of
 /// every pass. A point where the needle already is takes its step and sews nothing. Every needle point
-/// costs one unit of `meter`.
+/// costs one unit of `meter`'s work, and every one sewn again, by a pass after the first or by bean
+/// stitch, a stitch: those of the run were spent as it was made.
 pub fn sew(run: &[Point], repeats: u32, beans: &[u32], turn: Turn, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let Some((&start, rest)) = run.split_first() else { return Ok(Vec::new()) };
     let mut out = vec![start];
@@ -64,6 +67,10 @@ pub fn sew(run: &[Point], repeats: u32, beans: &[u32], turn: Turn, meter: &mut M
             _ if pass % 2 == 1 => run.iter().rev().skip(skip).copied().collect(),
             _ => run.iter().skip(skip).copied().collect(),
         };
+        // A pass after the first sews every point of the run but the one the needle is at.
+        if pass > 0 {
+            made(meter, rest.len())?;
+        }
         for to in points {
             let from = out.last().copied().unwrap_or(start);
             let bean = step.checked_rem(beans.len()).and_then(|i| beans.get(i)).copied().unwrap_or(0);
@@ -75,6 +82,7 @@ pub fn sew(run: &[Point], repeats: u32, beans: &[u32], turn: Turn, meter: &mut M
             out.push(to);
             for _ in 0..bean {
                 meter.charge(2)?;
+                meter.charge_stitches(2)?;
                 out.push(from);
                 out.push(to);
             }
@@ -132,8 +140,20 @@ mod tests {
     }
 
     #[test]
-    fn the_budget_bounds_the_work() {
-        let mut meter = Budget { max_stitches: 1, max_work: 5 }.meter();
+    fn the_budget_bounds_the_work_and_the_stitches() {
+        let mut meter = Budget { max_stitches: u32::MAX, max_work: 5 }.meter();
         assert_eq!(sew(&run(&[0.0, 1.0, 2.0]), 3, &[2], Turn::Listed, &mut meter), Err(Exhausted::Work));
+        // The run's own points were spent as it was made; each later pass and each bean stitch costs a
+        // stitch for every needle point it sews again.
+        let stitches = |max_stitches, repeats, beans: &[u32]| {
+            sew(&run(&[0.0, 1.0, 2.0]), repeats, beans, Turn::Listed, &mut Budget { max_stitches, max_work: u64::MAX }.meter()).map(|out| out.len())
+        };
+        assert_eq!(stitches(0, 1, &[]), Ok(3));
+        assert_eq!((stitches(4, 3, &[]), stitches(3, 3, &[])), (Ok(7), Err(Exhausted::Stitches)), "2 passes after the first, 2 points each");
+        assert_eq!(
+            (stitches(8, 1, &[2]), stitches(7, 1, &[2])),
+            (Ok(11), Err(Exhausted::Stitches)),
+            "bean stitch sews each of 2 stitches 4 times more"
+        );
     }
 }

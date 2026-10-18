@@ -31,7 +31,7 @@ use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Mm, Point, math};
 
 use crate::design::Path;
 use crate::generators::passes::{self, RepeatParams, Turn};
-use crate::generators::{Stitched, TooSmall, too_small};
+use crate::generators::{Stitched, TooSmall, settled, too_small};
 use crate::normalize::along::Along;
 use crate::normalize::stroke::{self, SHAPE_TOLERANCE};
 
@@ -41,8 +41,20 @@ const CLOSED: f64 = 0.05 * MM_PER_SVG_PX;
 
 /// The stitches of `path`, a stroke `width` millimetres wide, in a zigzag as `params` says, each part sewn
 /// its repeats and bean stitch as `passes` says. A part that is one point is not stitched, and `SC-W0401`
-/// names it with the shortest stitch `min_stitch`.
+/// names it with the shortest stitch `min_stitch`. Every needle point costs a stitch from `meter`.
 pub fn zigzag_stroke(
+    path: &Path,
+    width: Mm,
+    params: &ZigzagStrokeParams,
+    passes: &RepeatParams,
+    min_stitch: Mm,
+    meter: &mut Meter,
+) -> Result<Stitched, Exhausted> {
+    settled(meter, |meter| sewn(path, width, params, passes, min_stitch, meter))
+}
+
+/// [`zigzag_stroke`], before its stitches are settled.
+fn sewn(
     path: &Path,
     width: Mm,
     params: &ZigzagStrokeParams,
@@ -106,10 +118,11 @@ impl Sides {
 
 /// The needle points of one part, measured `along`, before repeats: spread at equal distances in a whole
 /// number of zigs and zags, `half` a spacing apart or a little more or less, then moved across. Every point
-/// costs `meter` a unit of work twice.
+/// costs `meter` a unit of work twice, and a stitch, spent before any is placed.
 fn zigzag(along: &Along, half: f64, sides: Sides, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let length = along.length();
     let n = halves(length, half);
+    meter.charge_stitches(n.saturating_add(1))?;
     let mut spread = Vec::new();
     for i in 0..=n {
         meter.charge(1)?;
