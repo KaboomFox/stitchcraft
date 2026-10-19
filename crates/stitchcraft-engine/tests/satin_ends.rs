@@ -267,6 +267,57 @@ fn req_sat_014_a_cut_within_the_shortest_stitch_of_a_needle_point_is_made_at_tha
 }
 
 #[test]
+fn req_sat_004_where_a_column_s_parts_meet_finalize_finds_no_needle_point_to_leave_out() {
+    // A column 10 mm long and 4 mm wide, turned through 24 angles, sewn alone, before a line that starts
+    // 4.8 mm along it and after one that ends beside its start. Its underlays end near where the next part
+    // starts: the zigzag underlay 0.2 mm in from the rail the top stitches start on, its 2 ways where they
+    // cross near the end's cut, and the way along the line beside a centre walk cut near it. The needle
+    // points that only route the needle, and an underlay's last, give way to the next part's first, so
+    // that finalize finds none to leave out, and says nothing.
+    let underlays: [&[(&str, &str)]; 4] = [
+        &[("zigzag_underlay", "true")],
+        &[("center_walk_underlay", "true"), ("contour_underlay", "true"), ("zigzag_underlay", "true")],
+        &[("center_walk_underlay", "true"), ("center_walk_underlay_repeats", "3"), ("contour_underlay", "true"), ("zigzag_underlay", "true")],
+        &[("center_walk_underlay", "true"), ("center_walk_underlay_repeats", "1")],
+    ];
+    for method in ["satin_column", "e_stitch", "s_stitch", "zigzag"] {
+        for set in underlays {
+            for step in 0..24 {
+                let degrees = f64::from(step) * 15.0 + 7.0;
+                let (sin, cos) = math::sin_cos(math::to_radians(degrees));
+                let at = |along: f64, across: f64| (along * cos - across * sin, along * sin + across * cos);
+                let rails = polylines(&[&[at(0.0, 0.0), at(10.0, 0.0)], &[at(0.0, 4.0), at(10.0, 4.0)]]);
+                let params = [&[("satin_column", "true"), ("satin_method", method)], set].concat();
+                let column = || along("column", rails.clone(), &RED, &params);
+                let after = along("after", polylines(&[&[at(4.8, 7.0), at(9.8, 7.0)]]), &RED, &[]);
+                let before = along("before", polylines(&[&[at(-8.0, 2.0), at(-3.0, 2.0)]]), &RED, &[]);
+                for elements in [vec![column()], vec![column(), after], vec![before, column()]] {
+                    let outcome = planned(elements);
+                    assert_eq!(messages(&outcome), Vec::<String>::new(), "{method} {set:?} at {degrees}°");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn req_sat_004_beside_a_top_stitch_s_end_the_next_part_s_first_point_gives_way() {
+    // A column 0.5 mm wide and 10.7 mm long, after an odd centre walk, before a line beside its middle. The
+    // column starts at the centre walk's cut, (5.3, 0.25), and its first pass ends with the top stitches'
+    // first half at the cut, (5.2, 0.5), 0.27 mm from where the walk's second half starts. A top stitch's
+    // point stays, so the walk's first point gives way: the needle goes straight on to the walk's next
+    // point, and finalize finds nothing to leave out.
+    let params = [("satin_column", "true"), ("center_walk_underlay", "true"), ("center_walk_underlay_repeats", "1")];
+    let (sewn, _) = sewn_between(&ladder(10.7, 0.5, &[]), &params, &before((5.1, 3.5)));
+    let at = sewn.iter().position(|q| q.distance(p(5.2, 0.5)) < 1e-9).unwrap();
+    assert!(sewn[at + 1].distance(p(2.65, 0.25)) < 1e-9, "{:?}", &sewn[at - 2..at + 3]);
+    assert!(sewn[0].distance(p(5.3, 0.25)) < 1e-9 && !sewn[1..].iter().any(|q| q.distance(sewn[0]) < 1e-9), "{sewn:?}");
+    let line = along("line", polylines(&[&[(5.1, 3.5), (10.1, 3.5)]]), &RED, &[]);
+    let outcome = planned(vec![along("column", ladder(10.7, 0.5, &[]), &RED, &params), line]);
+    assert_eq!(messages(&outcome), Vec::<String>::new());
+}
+
+#[test]
 fn req_sat_014_an_end_as_near_2_cuts_is_cut_at_the_first() {
     // Pairs every 0.5 mm, and the end at x = 5.25, as near the pair at 5 as the pair at 5.5: the column is
     // cut at 5, and the needle follows the line from there.
