@@ -713,6 +713,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Which rows a tatami fill's part has no longer depends on rounding at its sides (`REQ-FILL-TAT-002`,
+  `REQ-FILL-TAT-010`, `DEV-FILL-012`). Rows were laid by adding the spacing row by row, and a spacing
+  such as 0.1 mm, which rounds in binary, added up its rounding: 10 mm held 101 rows 0.1 mm apart, the
+  last a hair inside the far side, and 51 rows 0.2 mm apart. Each row now lies a whole number of spacings
+  past the first, multiplied out. A side drawn on a row lies a hair off it too, once the region puts its
+  corners on its grid, and the row crossed the part beside the side or missed it: the top of a notch drawn
+  on a row 0.1 mm apart was cut in 1 or 2 segments, not 3. A point of the outline within 1e-9 mm of a row
+  now lies on it, and a row within 1e-9 mm of a part's far side is left out.
 - A satin column ending near the next element is cut at the same place wherever it lies (`REQ-SAT-014`,
   `DEV-SAT-010`). Widened by pull compensation, the stitch across at the end's cut lies along the cut
   but for rounding, and where it was cut came down to the rounding: at either rail, or part of the way
@@ -1288,6 +1296,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-08.pes` (`REQ-FILL-TAT-002`, `REQ-FILL-TAT-010`). In the
+  square at 0° and 0.4 mm, the underlay's rows, 1.2 mm apart and added up, put one 1e-14 mm inside the
+  square's far side, along it. That row is left out now, and the underlay takes another way through its
+  rows. The first top row, 1e-14 mm inside the near side, runs along it now. The square sews 11 stitches
+  more: TS-08 has 16,248, where it had 16,237. In the square at 0° and 0.3 mm a row moves by 3e-13 mm,
+  and a tie-off stitch that lies halfway between 2 tenths of a millimetre rounds the other way. MC-4 sews
+  TS-08, so its kit is built from this version or a later one. Its picture in the docs changes with it.
 - Added `conformance/golden/plans/patch.pes` and `.dst` (M6.5), which the `vectorcraft-patch` case plans
   from `conformance/fixtures/vectorcraft/patch.vectorcraft`. The patch sews a fill, a satin column, a
   running stitch and a group's fill effect in 2,466 stitches and 4 threads. Its placement line is left

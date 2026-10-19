@@ -267,6 +267,14 @@ requirements = ["REQ-FILL-TAT-001"]
 params = ["underpath"]
 
 [[deviation]]
+id = "DEV-FILL-012"
+area = "fill/tatami"
+summary = "A point of a part's outline within 1e-9 mm of a row lies on it, and a row within 1e-9 mm of the part's far side lies on that side and is left out. Each row lies a whole number of row spacings past the part's first row, multiplied out. Ink/Stitch adds the row spacing in CSS pixels from row to row, and cuts each row with the part exactly, once the part is put on a grid of 1e-10 pixels. So a row on a side runs along it, crosses the part a hair beside it or misses it as the numbers round, and a part can have a row a hair inside its far side."
+reason = "Which rows a part has, and where their segments end, should not depend on the last bits of the numbers. StitchCraft's rows did too, before: they added up their spacing's rounding, so a square 10 mm across had 101 rows 0.1 mm apart, the last 4e-14 mm short of its far side, and 51 rows 0.2 mm apart. A notch's top drawn on a row 0.1 mm apart was cut in 1 or 2 segments, not 3, as its corners rounded. Ink/Stitch's behaviour was read at 6555892 (lib/stitches/fill.py, intersect_region_with_grating, and lib/elements/fill_stitch.py, where set_precision puts the shape on its grid)."
+requirements = ["REQ-FILL-TAT-002", "REQ-FILL-TAT-010"]
+params = ["row_spacing_mm"]
+
+[[deviation]]
 id = "DEV-SVG-001"
 area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."

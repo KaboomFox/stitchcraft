@@ -25,7 +25,8 @@ fully, and pull it in more.
 
 - **Accepts:** a length from 0.1 to 100 mm
 - **Default:** `0.25`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-FILL-012.** A point of a part's outline within 1e-9 mm of a row lies on it, and a row within 1e-9 mm of the part's far side lies on that side and is left out. Each row lies a whole number of row spacings past the part's first row, multiplied out. Ink/Stitch adds the row spacing in CSS pixels from row to row, and cuts each row with the part exactly, once the part is put on a grid of 1e-10 pixels. So a row on a side runs along it, crosses the part a hair beside it or misses it as the numbers round, and a part can have a row a hair inside its far side.
 
 ### `end_row_spacing_mm`
 
