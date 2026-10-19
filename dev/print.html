@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-66683f19.js";
+            window.path_to_searchindex_js = "searchindex-e61dbdd7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-639d0563.js"></script>
@@ -5579,8 +5579,11 @@ their ends meet the line. A running stitch of the column’s travel length
 <p><strong>Cuts.</strong> A place on the column is found by its cut, one of the pairs placed at the zigzag spacing with
 no compensation and nothing random. The cut is the pair with the point nearest the place. Where the
 needle enters the line for a place is the line’s point nearest that cut. A part of the column is cut in 2
-at its own point nearest the cut. When the cut’s 2 points coincide, where the rails meet, a part is not
-cut: it is all first, or all second when its start is within 0.1 CSS pixels of the place.</p>
+at its own point nearest the cut. A side of it that lies along the cut, both its ends within 1e-5 CSS
+pixels of the cut’s line, meets the cut as sides along one line do. So a stitch across that pull
+compensation widens past the rails is cut at the cut’s first rail point, and one it narrows at its own
+start (<code>DEV-SAT-010</code>). When the cut’s 2 points coincide, where the rails meet, a part is not cut: it is all
+first, or all second when its start is within 0.1 CSS pixels of the place.</p>
 <p><strong>Starting at the nearest point</strong> (<code>start_at_nearest_point</code>). With a needle point before it, the column
 starts at the point of the line nearest that needle point. When that point is farther from the needle
 than the jump length, and the compensated outline is nearer than the jump length, it starts at the
