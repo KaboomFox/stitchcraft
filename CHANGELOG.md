@@ -713,6 +713,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- A zigzag stroke too narrow for the machine's shortest stitch says so (`SC-W0405`). Its stitches across
+  were shorter than the shortest stitch, and finishing left out every other needle point: a zigzag 0.2 mm
+  wide at the default spacing sewed as a line along one side, with only `SC-I0504`, which says nothing
+  visible changes. The warning gives how many stitches are that short, and the width the zigzag needs.
+- `SC-W0102` says what a list out of range is read as, where it said it is used. A zigzag sews only its
+  first spacing, so for `zigzag_spacing_mm` of `0.4 500` it said 0.4 and 100 mm were used.
 - The design pages describe what Ink/Stitch sews for the steps to come, as the Ink/Stitch sweep of M5
   to M7 read it.
   - The contour fill's spirals run from ring to ring and leave out the branches they don't reach, where

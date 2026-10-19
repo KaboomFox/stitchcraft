@@ -330,6 +330,13 @@ impl Kind {
         }
     }
 
+    /// Whether a value is a list of values, of which an element may sew only some: a zigzag stroke sews its
+    /// first spacing, and a satin column's travel its first length (`DEV-SAT-005`). A pair's values are
+    /// both sewn, one for each side.
+    pub(crate) const fn list(self) -> bool {
+        matches!(self, Kind::LengthList { .. } | Kind::PercentList { .. } | Kind::CountList { .. } | Kind::AngleList { .. })
+    }
+
     /// Whether its values are numbers, which a comma neither separates nor writes.
     pub(crate) const fn numeric(self) -> bool {
         !matches!(self, Kind::Toggle | Kind::Choice { .. } | Kind::Seed | Kind::Text { .. })

@@ -13,7 +13,7 @@
 //!    of the way the path goes by half the width plus the second pull compensation. The odd ones move left
 //!    by half the width plus the first.
 //! 4. A closed stroke, one whose only subpath that moves ends where it starts, ends on its first needle
-//!    point.
+//!    point. A subpath that draws nothing does not count (`DEV-RUN-008`).
 //! 5. **Repeats and bean stitch** ([`passes`]). A turn takes no step of the bean list, as in Ink/Stitch's
 //!    zigzag.
 //!
@@ -26,12 +26,12 @@ mod params;
 mod tests;
 
 pub use params::ZigzagStrokeParams;
-use stitchcraft_core::units::MM_PER_SVG_PX;
-use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Mm, Point, math};
+use stitchcraft_core::units::{MM_PER_SVG_PX, at_least};
+use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point, math};
 
 use crate::design::Path;
 use crate::generators::passes::{self, RepeatParams, Turn};
-use crate::generators::{Stitched, TooSmall, settled, too_small};
+use crate::generators::{Stitched, TooSmall, mm, settled, too_small};
 use crate::normalize::along::Along;
 use crate::normalize::stroke::{self, SHAPE_TOLERANCE};
 
@@ -41,7 +41,8 @@ const CLOSED: f64 = 0.05 * MM_PER_SVG_PX;
 
 /// The stitches of `path`, a stroke `width` millimetres wide, in a zigzag as `params` says, each part sewn
 /// its repeats and bean stitch as `passes` says. A part that is one point is not stitched, and `SC-W0401`
-/// names it with the shortest stitch `min_stitch`. Every needle point costs a stitch from `meter`.
+/// names it with the shortest stitch `min_stitch`. `SC-W0405` names stitches shorter than that, which
+/// finishing thins out. Every needle point costs a stitch from `meter`.
 pub fn zigzag_stroke(
     path: &Path,
     width: Mm,
@@ -72,6 +73,7 @@ fn sewn(
     let sides = Sides::new(width, params);
     let mut runs = Vec::with_capacity(stroke.pieces.len());
     let mut warnings = Vec::new();
+    let mut short = Short::default();
     for piece in &stroke.pieces {
         meter.charge(1)?;
         if piece.points.len() < 2 {
@@ -79,6 +81,7 @@ fn sewn(
             continue;
         }
         let mut points = zigzag(&Along::new(&piece.points, meter)?, spacing.get() / 2.0, sides, meter)?;
+        short.count(&points, min_stitch.get(), meter)?;
         if closed
             && let Some(&first) = points.first()
             && let Some(last) = points.last_mut()
@@ -87,7 +90,63 @@ fn sewn(
         }
         runs.push(passes::sew(&points, passes.repeats, &passes.bean_stitch_repeats, Turn::Joined, meter)?);
     }
+    warnings.extend(short.diagnostic(spacing.get(), min_stitch.get()));
     Ok(Stitched { runs, warnings })
+}
+
+/// A zigzag's stitches before repeats, and those shorter than the shortest stitch, which finishing leaves
+/// a needle point of out (`SC-W0405`).
+#[derive(Debug, Default)]
+struct Short {
+    stitches: usize,
+    short: usize,
+    shortest: Option<f64>,
+}
+
+impl Short {
+    /// Counts the stitches between `points`, and those shorter than `min` among them, measured as finishing
+    /// measures them ([`at_least`]). A unit of `meter` each.
+    fn count(&mut self, points: &[Point], min: f64, meter: &mut Meter) -> Result<(), Exhausted> {
+        for pair in points.windows(2) {
+            meter.charge(1)?;
+            let [a, b] = pair else { continue };
+            let length = a.distance(*b);
+            self.stitches += 1;
+            if !at_least(length, min) {
+                self.short += 1;
+                self.shortest = Some(self.shortest.map_or(length, |shortest| shortest.min(length)));
+            }
+        }
+        Ok(())
+    }
+
+    /// `SC-W0405` for the short stitches, if any, of a zigzag at `spacing` for a shortest stitch `min`, with
+    /// the width a straight zigzag needs: a stitch across it is `√(w² + (spacing/2)²)` long.
+    fn diagnostic(&self, spacing: f64, min: f64) -> Option<Diagnostic> {
+        let shortest = self.shortest?;
+        let (min_text, shortest_text) = (mm(min), mm(shortest));
+        // A part of a zigzag has 2 stitches at least, so all of them are never 1.
+        let message = match (self.short, self.stitches) {
+            (short, all) if short == all => format!(
+                "All {all} of the zigzag's stitches are shorter than the shortest stitch ({min_text} mm), at {shortest_text} mm, so finishing leaves out every other needle point, and the zigzag sews as a line."
+            ),
+            (1, all) => format!(
+                "1 of the zigzag's {all} stitches is shorter than the shortest stitch ({min_text} mm), at {shortest_text} mm, so finishing leaves out a needle point of it, and the zigzag sews narrower there."
+            ),
+            (short, all) => format!(
+                "{short} of the zigzag's {all} stitches are shorter than the shortest stitch ({min_text} mm), the shortest {shortest_text} mm long, so finishing leaves out a needle point of each, and the zigzag sews narrower there."
+            ),
+        };
+        let half = spacing / 2.0;
+        let hint = if min > half {
+            // Rounded up to the hundredth a message shows, so that the width it names is enough.
+            let width = ((min * min - half * half).sqrt() * 100.0).ceil() / 100.0;
+            format!("Make the zigzag at least {} mm wide, or space it out.", mm(width))
+        } else {
+            "Make the zigzag wider, or space it out.".to_string()
+        };
+        Some(Diagnostic::new(Code::ZigzagTooNarrow, message).with_fix(Fix::Hint(hint)))
+    }
 }
 
 /// Whether a stroke whose parts are `pieces` is closed, as Ink/Stitch closes a zigzag: it has one part
