@@ -69,7 +69,8 @@ what it leaves out and how it will be sewn are said (`SC-W0303`, `SC-W0304`, `SC
 whatever comes next, and its `fill_method` picks the generator: the tatami fill, sewn from M5.4, which
 reads the running stitch's length and tolerance for its travel between rows (the first of the lengths,
 as a satin column does), under the rows from M5.5, and sews its underlay before its top rows from
-M5.6. The other stroke, satin and
+M5.6. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay, with
+`SC-W0314`: StitchCraft does not build that method (`REQ-FILL-005`). The other stroke, satin and
 fill methods are skipped with `SC-W0011` until their milestones. An element whose parameters are wrong
 (`SC-E0101`) is skipped too, and the rest of the design still plans.
 

@@ -4,6 +4,7 @@
 
 A fill covers the area its path bounds, its [region](#region), with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).
+Ink/Stitch's legacy fill is not planned, and is sewn as a tatami fill ([below](#legacy-fill-not-planned)).
 
 A fill sews the drawing's shape with Ink/Stitch's stitches. Ink/Stitch's rows, their spacing and stagger,
 the order it sews them in, its travel, underlay and compensation are what make its fills look good
@@ -471,6 +472,21 @@ The region is covered by grid cells (`pattern_size_mm`, `cross_offset_mm`, `cros
 `canvas_grid_origin`); a cell becomes a cross when the region covers at least `fill_coverage` percent of
 it; crosses use `cross_stitch_method` (simple, half, upright, double, Smyrna, flipped variants) and are
 routed row by row. Specified at M10.
+
+## Legacy fill (not planned)
+
+Ink/Stitch's first fill method, which it keeps for its older files: it gives `legacy_fill` to a fill whose
+`auto_fill` is off when it opens one. Its rows lie on a tatami fill's grating, with a tatami fill's needle
+points along them (`staggers`, `skip_last`), and it sews no underlay. It sews each stretch of rows that
+join on its own, back and forth, with no travel stitches between stretches; `flip` starts its rows from
+the other side, and `reverse` sews the whole fill backwards.
+
+StitchCraft does not build it, since the method exists for Ink/Stitch's older files. A fill set to it is
+sewn as a tatami fill with its settings and no underlay, and `SC-W0314` says so (`REQ-FILL-005`). It is a
+tatami fill in every other way too. The element before it ends near its area, and its rows are routed and
+joined by travel stitches as a tatami fill's are (`DEV-FILL-014`). `flip` and `reverse` are not planned,
+and a design that sets them gets `SC-W0105`. The VectorCraft plug-in's fill dialog does not offer the
+method.
 
 ## References
 
