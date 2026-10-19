@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-99e00ab8.js";
+            window.path_to_searchindex_js = "../searchindex-d356077c.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-639d0563.js"></script>
+        <script src="../toc-ed0f9ffd.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -307,7 +307,8 @@ the other way round from its outline. The satin cases sew their columns with <co
 reference machine, with the stitch lengths the engine gives it there (<code>satin_lengths</code>), and read the needle
 points back in pairs across the column. A column is sewn alone (<code>sewn_satin</code>) or between the neighbours a
 case gives it (<code>sewn_between</code>), and <code>satin_diagnostics</code> keeps its warnings’ places for the cases that
-check where a warning points.</p>
+check where a warning points. The cases of a satin method sew a straight column by that method
+(<code>sewn_ladder</code>) and compare its needle points with the ones they expect, but for rounding (<code>near</code>).</p>
 <h2 id="levels"><a class="header" href="#levels">Levels</a></h2>
 <h3 id="l0--plan-invariants-every-pr"><a class="header" href="#l0--plan-invariants-every-pr">L0 — Plan invariants (every PR)</a></h3>
 <p>The <a href="data-model.html#plan-invariants">plan invariants</a> run on <em>every</em> plan the
