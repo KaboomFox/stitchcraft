@@ -45,3 +45,37 @@ fn a_point_that_would_leave_the_numbers_stays_where_it_is() {
     assert_eq!(across(at, (0.0, 1.0), false, sides), at);
     assert_eq!(across(p(1.0, 2.0), (0.0, 0.0), false, sides), p(1.0, 2.0), "no direction");
 }
+
+#[test]
+fn a_zigzag_names_some_stitches_shorter_than_the_shortest_stitch_and_how_to_lengthen_them() {
+    let meter = &mut stitchcraft_core::Budget::DEFAULT.meter();
+    let mut named = |points: &[Point], spacing: f64| {
+        let mut short = Short::default();
+        short.count(points, 0.3, meter).unwrap();
+        short.diagnostic(spacing, 0.3).map(|d| (d.to_string(), d.fix))
+    };
+    // Stitches of 1, 0.2 and 1 mm, at a spacing of 1 mm, whose half is already longer than 0.3 mm: a
+    // straight zigzag of any width sews, so the hint names no width.
+    let (said, fix) = named(&[p(0.0, 0.0), p(1.0, 0.0), p(1.2, 0.0), p(2.2, 0.0)], 1.0).unwrap();
+    assert_eq!(
+        said,
+        "warning SC-W0405: 1 of the zigzag's 3 stitches is shorter than the shortest stitch (0.3 mm), at 0.2 mm, so finishing leaves out a needle point of it, and the zigzag sews narrower there."
+    );
+    assert_eq!(fix, Some(Fix::Hint("Make the zigzag wider, or space it out.".to_string())));
+    // 2 short ones of 3, at the default spacing.
+    let (said, fix) = named(&[p(0.0, 0.0), p(0.25, 0.0), p(0.45, 0.0), p(2.0, 0.0)], 0.4).unwrap();
+    assert_eq!(
+        said,
+        "warning SC-W0405: 2 of the zigzag's 3 stitches are shorter than the shortest stitch (0.3 mm), the shortest 0.2 mm long, so finishing leaves out a needle point of each, and the zigzag sews narrower there."
+    );
+    assert_eq!(fix, Some(Fix::Hint("Make the zigzag at least 0.23 mm wide, or space it out.".to_string())));
+    // None short, none named.
+    assert_eq!(named(&[p(0.0, 0.0), p(1.0, 0.0)], 0.4), None);
+    // A stitch exactly as long as the shortest stitch, or a rounding error shorter, is as long as finishing
+    // keeps, and is not named.
+    assert_eq!(named(&[p(0.0, 0.0), p(0.3, 0.0), p(0.6 - 1e-12, 0.0)], 0.4), None);
+    // Where half the spacing is exactly the shortest stitch, a straight zigzag of any width sews too, and
+    // the hint names no width.
+    let (_, fix) = named(&[p(0.0, 0.0), p(0.2, 0.0), p(1.2, 0.0)], 0.6).unwrap();
+    assert_eq!(fix, Some(Fix::Hint("Make the zigzag wider, or space it out.".to_string())));
+}

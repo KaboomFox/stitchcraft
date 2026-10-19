@@ -131,6 +131,9 @@ is accepted. Keys the registry does not know are kept, so they round-trip, and r
 `SC-W0105`. Parsing lives in one place (`value` module), so every host reads text the same way: an SVG
 attribute, a command-line `key=value`, a VectorCraft effect record.
 
+`SC-W0102` names the value used, or for a list what the list is read as, since an element may sew only
+some of a list's values: a zigzag stroke sews its first spacing.
+
 The ranges are StitchCraft's. Ink/Stitch sets a floor for most of its numbers and few ceilings, so many
 ranges here are narrower, and a value outside one is clamped where Ink/Stitch would sew it
 (`DEV-PRM-002`). A list holds at most 16 values, a pair 2, and no value is longer than 4,096 bytes, which
