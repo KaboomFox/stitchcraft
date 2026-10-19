@@ -231,7 +231,7 @@ Detailed in [engine pipeline](engine-pipeline.md).
 | Lock stitches, travel, ordering | P1 | [engine pipeline](engine-pipeline.md#4-plan-assembly) |
 
 Generators follow Ink/Stitch's stitch placement, worked out from its behaviour and from published
-algorithms such as an Eulerian path through a fill's rows, or Connected Fermat Spirals for spiral fills.
+algorithms such as an Eulerian path through a fill's rows, or offset curves for a contour fill's rings.
 Each generator's page cites them. Where one differs, `conformance/deviations.toml` says how and
 why.
 
