@@ -15,7 +15,11 @@
 //!   stitch along each rail's side. Each side then stops short of the column's start by the first rail's
 //!   inset in millimetres and of its end by the second's, as push compensation shortens a rail: a side too
 //!   short for that keeps its length (`SC-W0206`). The first rail's side goes towards the end, and the
-//!   second's back.
+//!   second's back. Under a zigzag satin, each side first stops where the zigzag's top stitches stop on its
+//!   rail ([`Peaks`]): the first at the zigzag's last point on the first rail, and the second at its first
+//!   and last points on the second, each where the point meets the side, as Ink/Stitch cuts them. A cut
+//!   that would leave less than half a CSS pixel of a side is not made, as for the insets; only a zigzag of
+//!   one stitch has one.
 //! - The **zigzag** places pairs every half `zigzag_underlay_spacing_mm`, inset by its own insets, which are
 //!   half the contour's when left empty. It zigzags to the column's end through one end of each pair, the
 //!   rails taking turns, and back through the other ends. Each way, a rail's points lie the spacing apart.
@@ -34,11 +38,34 @@ use crate::generators::satin::compensation::{Processor, pushed};
 use crate::generators::satin::pairs::{Pair, pairs};
 use crate::generators::satin::split::evenly;
 use crate::generators::{made, mm, passes};
+use crate::normalize::along::Along;
 
 /// Whether the centre walk ends at the column's end: it is on, with an odd number of repeats. The rest of
 /// the column is then sewn from its end to its start, as in Ink/Stitch.
 pub(crate) fn ends_at_end(params: &SatinParams) -> bool {
     params.center_walk_underlay && params.center_walk_underlay_repeats % 2 == 1
+}
+
+/// Where a zigzag satin's top stitches stop on each rail, as inset: its last needle point on the first
+/// rail, and its first and last on the second. Its contour underlay stops there too (`REQ-SAT-028`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct Peaks {
+    /// The last needle point on the first rail.
+    first_last: Point,
+    /// The first needle point on the second rail.
+    second_first: Point,
+    /// The last needle point on the second rail.
+    second_last: Point,
+}
+
+impl Peaks {
+    /// The peaks of the zigzag whose pairs, as inset, are `short`, each from the first rail to the second,
+    /// in the order the column places them; `None` with no pair. Taken in that order whichever way the run
+    /// goes, so an odd centre walk changes nothing (`DEV-SAT-011`).
+    pub(crate) fn of(short: &[Pair]) -> Option<Peaks> {
+        let ([_, second_first], [first_last, second_last]) = (short.first()?, short.last()?);
+        Some(Peaks { first_last: *first_last, second_first: *second_first, second_last: *second_last })
+    }
 }
 
 /// One underlay, as it is before an end point cuts it in 2 (the `ends` module).
@@ -66,11 +93,12 @@ impl Layer {
 
 /// The underlays `params` turn on, for the column cut into `sections`, in the order they are sewn: the
 /// centre walk, the contour and the zigzag. The walks keep to the element's shortest stitch, `min_stitch`,
-/// and what was changed goes to `warnings`.
+/// the contour stops at a zigzag satin's `peaks`, and what was changed goes to `warnings`.
 pub(crate) fn underlays(
     sections: &[Section],
     params: &SatinParams,
     min_stitch: f64,
+    peaks: Option<Peaks>,
     warnings: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<Vec<Layer>, Exhausted> {
@@ -79,7 +107,7 @@ pub(crate) fn underlays(
         layers.push(centre_walk(sections, params, min_stitch, warnings, meter)?);
     }
     if params.contour_underlay {
-        layers.push(Layer::Contour(contour(sections, params, min_stitch, warnings, meter)?));
+        layers.push(Layer::Contour(contour(sections, params, min_stitch, peaks, warnings, meter)?));
     }
     if params.zigzag_underlay {
         layers.push(zigzag(sections, params, meter)?);
@@ -130,11 +158,13 @@ fn centre_walk(
     Ok(Layer::Walk { way, repeats: params.center_walk_underlay_repeats })
 }
 
-/// The contour's 2 sides, in the order they are sewn, each stopping short of the column's ends.
+/// The contour's 2 sides, in the order they are sewn, each stopping at a zigzag satin's `peaks` on its rail,
+/// and short of the column's ends.
 fn contour(
     sections: &[Section],
     params: &SatinParams,
     min_stitch: f64,
+    peaks: Option<Peaks>,
     warnings: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<[Vec<Point>; 2], Exhausted> {
@@ -143,11 +173,14 @@ fn contour(
     let tolerance = params.contour_underlay_stitch_tolerance_mm.get();
     let placed = pairs(sections, tolerance, &mut Processor::inset(inset, share), meter)?;
     let length = raised("contour_underlay_stitch_length_mm", params.contour_underlay_stitch_length_mm, min_stitch, warnings);
-    let mut side = |pick: fn(&Pair) -> Point| -> Result<(Vec<Point>, bool), Exhausted> {
+    let mut side = |pick: fn(&Pair) -> Point, peaks: [Option<Point>; 2]| -> Result<(Vec<Point>, bool), Exhausted> {
         let line: Vec<Point> = placed.iter().map(pick).collect();
-        pushed(&along_line(&line, length, tolerance, min_stitch, meter)?, inset, meter)
+        let run = stopped(along_line(&line, length, tolerance, min_stitch, meter)?, peaks, meter)?;
+        pushed(&run, inset, meter)
     };
-    let ((mut first, kept_first), (mut second, kept_second)) = (side(|[a, _]| *a)?, side(|[_, b]| *b)?);
+    let first_peaks = [None, peaks.map(|p| p.first_last)];
+    let second_peaks = [peaks.map(|p| p.second_first), peaks.map(|p| p.second_last)];
+    let ((mut first, kept_first), (mut second, kept_second)) = (side(|[a, _]| *a, first_peaks)?, side(|[_, b]| *b, second_peaks)?);
     if kept_first || kept_second {
         warnings.push(too_short(inset));
     }
@@ -157,6 +190,23 @@ fn contour(
         second.reverse();
     }
     Ok([first, second])
+}
+
+/// The side `run` cut where the points `[start, end]` meet it, at its points nearest them: first after the
+/// end, then before the start, as Ink/Stitch cuts a zigzag satin's contour. A cut that would leave less
+/// than half a CSS pixel of the side is not made ([`pushed`]).
+fn stopped(run: Vec<Point>, [start, end]: [Option<Point>; 2], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    let mut run = run;
+    if let Some(end) = end {
+        let along = Along::new(&run, meter)?;
+        let by = along.length() - along.project(end, meter)?;
+        run = pushed(&run, [0.0, by], meter)?.0;
+    }
+    if let Some(start) = start {
+        let by = Along::new(&run, meter)?.project(start, meter)?;
+        run = pushed(&run, [by, 0.0], meter)?.0;
+    }
+    Ok(run)
 }
 
 /// `SC-W0206`, for a contour underlay too short to stop `start` millimetres short of the column's start

@@ -123,7 +123,7 @@ Add an element with an embroidery stitch type, or fix the errors reported for th
 
 The element's stitch type is one this version of StitchCraft does not sew yet, so the element was
 skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
-satin columns from M4, tatami fills from M5, and zigzag strokes, E-stitches and S-stitches from M7.
+satin columns from M4, tatami fills from M5, and zigzag strokes and the other satin methods from M7.
 The other stitch types follow (`docs/src/plan/roadmap.md`), but for Ink/Stitch's legacy fill, which
 is sewn as a tatami fill (`SC-W0314`).
 
@@ -326,9 +326,12 @@ Draw the column with 2 rails, or make the stroke narrower.
 A satin column is so small that every needle point of it lies within the shortest stitch of its
 first: a speck of a column, a few tenths of a millimetre across. Any stitch it could sew would be
 shorter than the machine sews well, would hammer one spot of the fabric and could break the thread,
-so it is left out, as a stroke that small is (`SC-W0401`). Ink/Stitch sews such a column.
+so it is left out, as a stroke that small is (`SC-W0401`). Ink/Stitch sews such a column. A zigzag
+satin 0.1 mm long or less is left out too, its underlays with it: its zigzag has one point and no
+stitch across. Ink/Stitch sews its underlays alone.
 
-The message gives the shortest stitch. Draw the column larger, or delete it if it is a stray.
+The message gives the shortest stitch, or says the column is too short for a stitch across. Draw the
+column larger, or delete it if it is a stray.
 
 ## SC-E0216
 

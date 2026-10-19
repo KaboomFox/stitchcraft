@@ -173,8 +173,8 @@ requirements = ["REQ-SAT-016", "REQ-SAT-017"]
 [[deviation]]
 id = "DEV-SAT-008"
 area = "satin"
-summary = "A satin column whose needle points all lie within its element's shortest stitch of its first is not sewn, and SC-W0215 says so. Ink/Stitch sews it: its plan drops only stitches no longer than the element's shortest stitch, else the document's, 0.1 mm unless one is set."
-reason = "Every stitch of such a column is shorter than the machine sews well, and a stroke that small is left out the same way (DEV-RUN-004). Ink/Stitch's behaviour was read at d59c9ab (lib/stitch_plan/color_block.py, lib/elements/satin_column/satin_column.py)."
+summary = "A satin column whose needle points all lie within its element's shortest stitch of its first is not sewn, and SC-W0215 says so. Ink/Stitch sews it: its plan drops only stitches no longer than the element's shortest stitch, else the document's, 0.1 mm unless one is set. A zigzag satin with no stitch across, which places a single pair, is not sewn either, its underlays with it. Ink/Stitch sews its underlays alone, and without them refuses it as not stitchable."
+reason = "Every stitch of such a column is shorter than the machine sews well, and a stroke that small is left out the same way (DEV-RUN-004). An underlay alone holds no top stitch down. Ink/Stitch's behaviour was read at d59c9ab (lib/stitch_plan/color_block.py, lib/elements/satin_column/satin_column.py), and its zigzag satin's at 6555892 (lib/elements/satin_column/stitches.py, _do_zigzag; lib/elements/satin_column/satin_column.py, to_stitch_groups and validation_errors)."
 requirements = ["REQ-SAT-018"]
 
 [[deviation]]
@@ -190,6 +190,14 @@ area = "satin"
 summary = "Where a part of a satin column lies along the end's cut but for rounding, as a stitch across does wherever pull compensation widens or narrows it, StitchCraft cuts it as sides along one line meet, an end within 1e-5 CSS pixels of the other counting as on it: a widened stitch at the cut's first rail point, and a narrowed one at its own start. Ink/Stitch snaps only the cut to that grid, and cuts the part where its geometry library finds their nearest points, which for 2 lines that meet only by rounding depends on the rounding."
 reason = "A stitch widened by pull compensation lies along the cut, so whether and where they cross is decided by the last bits of their coordinates. StitchCraft's cut wandered so before: a column turned by 0.37° with 0.5 mm of pull compensation was cut at its second rail point, and turned by 5.37° two thirds of the way across a stitch. Ink/Stitch's behaviour was read at 6555892 (lib/elements/satin_column/satin_column.py, split_linestring_at_end_point)."
 requirements = ["REQ-SAT-014"]
+
+[[deviation]]
+id = "DEV-SAT-011"
+area = "satin/zigzag"
+summary = "After an odd centre walk, which turns a zigzag satin's run round, StitchCraft stops the contour underlay's sides where it stops them without one: at the zigzag's last point on the first rail, and its first and last on the second, in the order the column places them. Ink/Stitch looks for those points in the order the top stitches are sewn, after it has turned them round, and finds the first points where it means the last. Its first side is not cut, and its second shrinks to a stub: on a column 10 mm long and 4 mm wide at a zigzag spacing of 2 mm, 0.2 mm long."
+reason = "The contour stays under the zigzag whichever way the run goes, as it does without the odd walk (REQ-SAT-028). Ink/Stitch's behaviour was read at 6555892: _do_zigzag turns the stitches round after an odd centre walk (lib/elements/satin_column/stitches.py), to_stitch_groups hands them to the underlays turned (lib/elements/satin_column/satin_column.py), and _do_contour_underlay searches them from their end for the last peaks (lib/elements/satin_column/underlay.py)."
+requirements = ["REQ-SAT-028"]
+params = ["contour_underlay"]
 
 [[deviation]]
 id = "DEV-FILL-001"

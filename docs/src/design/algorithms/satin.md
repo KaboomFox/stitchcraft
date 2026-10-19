@@ -344,6 +344,50 @@ Ink/Stitch sews its "S" stitch, read at `6555892`.
    round, to go from its end. `swap_satin_rails` swaps the rail the column starts on. Its underlays, start
    and end are those of a satin column ([Start and end](#start-and-end)).
 
+## Zigzag satin (method `zigzag`)
+
+A zigzag satin sews a zigzag between the rails. The needle goes from a point on the first rail to a point
+on the second half the zigzag spacing along, then back to the first rail half the spacing on again. Each
+rail's points lie the zigzag spacing apart, and the needle crosses the column twice for each spacing along
+it, as a satin column's needle does. Every stitch slants, where a satin column's stitches across go square
+to the column. StitchCraft sews it as Ink/Stitch sews its zigzag satin, read at `6555892`
+(`lib/elements/satin_column/stitches.py`, `_do_zigzag`).
+
+1. **Pairs.** The pairs are placed and compensated as the top stitches' are (steps 1 and 2 of
+   [Top stitches](#top-stitches-method-satin_column)), at half the zigzag spacing. Their random variation
+   is drawn alike.
+2. **Alternate points.** One point of each pair is sewn. The first pair gives its first rail's point, the
+   next pair its second rail's point, and the pairs after them alternate the same way. Each 2 of those
+   points in a row are a pair of the zigzag, from the first rail to the second. A point left over at the
+   column's end is left out. A column with no second pair, 0.1 mm long or less, has no stitch across. It
+   is left out with its underlays, as a column too small to sew is (`SC-W0215`, `DEV-SAT-008`).
+3. **Short stitches** inset those pairs where their points crowd (step 3). Each point moves along its own
+   slanted stitch.
+4. **Stitches.** The needle goes across each pair, from its first inset point to its second, then back
+   to the next pair's first, as in a satin column. Long stitches split by the column's split method
+   (step 4). By the simple and staggered methods, the stitch back to the zigzag's pair numbered i splits
+   as a satin column's stitch numbered 2i would, measured from its end on the first rail. The stitch
+   across that pair splits as one numbered 2i + 1. By the default method each stitch splits into its own
+   fewest equal parts. A satin column's stitch back takes its count from the stitch across before it, and
+   a zigzag satin's does not, as in Ink/Stitch.
+5. **Order, start and end** follow a satin column's. An odd centre walk turns the run round. The end cuts
+   the top stitches where they come nearest the end's cut ([Start and end](#start-and-end)), which on a
+   zigzag falls on one of its points or part way along a stitch. The outline that the start and the end
+   are found on is Ink/Stitch's. It runs through pairs placed and compensated at the full zigzag
+   spacing, as a satin column's top stitches are, and not through the zigzag's own. An outline through
+   those would end where they do, as much as 0.1 mm from where Ink/Stitch's ends, and turn its corners
+   elsewhere. The outline's random variation is drawn from a copy of the generator as the zigzag's pairs
+   found it, so that the zigzag's own draws stay as they were. With none, the outline is exactly
+   Ink/Stitch's.
+6. **Underlays** are a satin column's, but the contour stops where the zigzag does, as in Ink/Stitch
+   (`lib/elements/satin_column/underlay.py`, `_do_contour_underlay`). The zigzag's points, as inset, mark
+   where it stops on each rail: its last point on the first rail, and its first and last on the second.
+   Each side is cut at its points nearest those on its rail, and then stops short of the column's ends by
+   the insets ([Underlays](#underlays)). A cut that would leave less than half a CSS pixel of a side is
+   not made, as for the insets. Such a cut comes from a zigzag of one stitch. After an odd centre walk
+   the sides stop at the same places. Ink/Stitch looks for the points in the run as sewn, turned round,
+   and so cuts its first side nowhere and its second to a stub (`DEV-SAT-011`).
+
 ## Leaning and long stitches
 
 Every satin method gives 2 warnings about how its stitches lie. Ink/Stitch gives neither.
@@ -394,6 +438,9 @@ travel length. That is the first of the running stitch's lengths (`running_stitc
 twice the shortest stitch where it is shorter, as a running stitch's lengths are (`DEV-RUN-003`), and
 `SC-W0402` says so once for the column.
 
+Under a zigzag satin the contour's sides first stop where the zigzag does
+([Zigzag satin](#zigzag-satin-method-zigzag), step 6).
+
 The walks are running stitches, placed as a stroke's are ([strokes](strokes.md#running-stitch)), and they
 differ from Ink/Stitch's in the same ways (`DEV-RUN-001` to `DEV-RUN-003`). Where the insets cross in a
 narrow column, a pair's ends meet as pull compensation's do, and the contour's sides then run along one
@@ -423,8 +470,14 @@ needle enters the line for a place is the line's point nearest that cut. A part 
 at its own point nearest the cut. A side of it that lies along the cut, both its ends within 1e-5 CSS
 pixels of the cut's line, meets the cut as sides along one line do. So a stitch across that pull
 compensation widens past the rails is cut at the cut's first rail point, and one it narrows at its own
-start (`DEV-SAT-010`). When the cut's 2 points coincide, where the rails meet, a part is not cut: it is all
-first, or all second when its start is within 0.1 CSS pixels of the place.
+start (`DEV-SAT-010`). Where a needle point of the part lies within the element's shortest stitch of that
+point, as finalize measures it, the part is cut at the needle point instead. Each half then ends in a
+stitch the machine sews, where finalize would leave a needle point out with a note (`SC-I0504`). Cuts
+fall beside needle points most on a zigzag satin, whose cuts lie on its own points or within their pull
+compensation, and at a stitch across that lies along the cut, where pull compensation moves the stitch's
+end just past the cut's first rail point. Ink/Stitch cuts where the part comes nearest, and its plan drops
+a stitch no longer than its shortest stitch. When the cut's 2 points coincide, where the rails meet, a
+part is not cut: it is all first, or all second when its start is within 0.1 CSS pixels of the place.
 
 **Starting at the nearest point** (`start_at_nearest_point`). With a needle point before it, the column
 starts at the point of the line nearest that needle point. When that point is farther from the needle
@@ -432,7 +485,8 @@ than the jump length, and the compensated outline is nearer than the jump length
 outline's point nearest the needle instead. The jump length is the element's `min_jump_stitch_length_mm`,
 or the design's collapse length when the element sets none or 0. The compensated outline is the 2
 polylines through the ends of the top stitches' pairs, after pull compensation and random width, before
-short stitches. From its start, the needle enters the line where the start's cut says and follows it to
+short stitches. A zigzag satin's runs through pairs at the full spacing (*Zigzag satin*, step 5). From its
+start, the needle enters the line where the start's cut says and follows it to
 where the first stitch's cut says, and the column goes on from its first stitch as before.
 
 **Ending at the nearest point** (`end_at_nearest_point`). With an element after it, the column ends at
@@ -492,7 +546,7 @@ end command, read from M8, would replace the needle point or the next stitch.
 |---|---|---|
 | `e_stitch` | A spine of running stitches along one rail with regular spikes to the other: the "E" or blanket stitch used for appliqué edges | Sewn from M7.3 ([E-stitch](#e-stitch-method-e_stitch)) |
 | `s_stitch` | Stitches across the column, every other one back the other way, joined by steps along the rails | Sewn from M7.4 ([S-stitch](#s-stitch-method-s_stitch)) |
-| `zigzag` | An open zigzag between the rails | Points every half spacing, alternately on the first rail and the second, sewn in pairs, every stitch split as a satin's is, as in Ink/Stitch. To be sewn from M7.5 |
+| `zigzag` | An open zigzag between the rails | Sewn from M7.5 ([Zigzag satin](#zigzag-satin-method-zigzag)) |
 
 ## Properties (conformance)
 
@@ -511,9 +565,9 @@ end command, read from M8, would replace the needle point or the next stitch.
 | `REQ-SAT-011` | The contour runs along each rail at its insets, towards the end on the first rail's side and back on the second's. It stops short of the column's start and end by the rails' insets in millimetres |
 | `REQ-SAT-012` | The zigzag goes through one end of each pair, the rails taking turns, and back through the others. Its insets are half the contour's when left empty, and its long stitches split into equal parts |
 | `REQ-SAT-013` | Starting at its nearest point, a column begins on the line between its rails nearest the needle, or on its outline when only that is within the jump length, and follows the line to its first stitch |
-| `REQ-SAT-014` | Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there. The column sews the first halves, then the second halves from the line's end, and stitches the end last |
+| `REQ-SAT-014` | Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there, at its own needle point when one lies within the shortest stitch of the cut. The column sews the first halves, then the second halves from the line's end, and stitches the end last |
 | `REQ-SAT-015` | A column drawn as one subpath whose stroke is no wider than the design's narrowest satin stroke sews as a stroke would, with `SC-W0212`. It offers its first point, as a stroke does |
-| `REQ-SAT-018` | A column whose needle points all lie within its shortest stitch of its first sews nothing, with `SC-W0215`, and the rest of the design is planned |
+| `REQ-SAT-018` | A column whose needle points all lie within its shortest stitch of its first sews nothing, with `SC-W0215`, and the rest of the design is planned. A zigzag satin with no stitch across sews nothing either, not even its underlays |
 | `REQ-SAT-019` | Of 2 rings, the second starts at its node nearest the first's first node, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (`DEV-SAT-009`) |
 | `REQ-SAT-020` | An E-stitch sews each of a satin column's pairs as a spike: from the first rail's inset point across to the second's and back through the same splits. The stitch across splits as a top stitch across does, by default into the fewest equal parts |
 | `REQ-SAT-021` | Between spikes an E-stitch goes along the first rail in one stitch. Where the zigzag spacing is longer than the longest stitch, that stitch splits with no randomness: into the fewest equal parts by default, at whole multiples of the longest stitch by the simple and staggered methods |
@@ -521,6 +575,9 @@ end command, read from M8, would replace the needle point or the next stitch.
 | `REQ-SAT-023` | A satin column whose longest top stitch, as sewn, is longer than 12 mm gets one `SC-W0209` at that stitch's middle, whatever the satin method. A longest stitch that splits them, or an end that cuts one in 2, leaves none |
 | `REQ-SAT-024` | An S-stitch sews each of a satin column's pairs once across, the first and every other one from the second rail, the rest from the first. A stitch splits as one from the first rail to the second would. The default method makes the fewest equal parts, and the simple and staggered methods number the stitch as its pair is, from 0 |
 | `REQ-SAT-025` | An S-stitch steps along a rail from each pair's inset point to the next pair's in one stitch, which it never splits |
+| `REQ-SAT-026` | A zigzag satin places a satin column's pairs at half the zigzag spacing and sews one point of each, the rails alternating from the first rail. Each 2 points in a row are a pair across, and a point left over is left out. The pairs are inset along their own stitches and sewn across and back as a satin column's. Its outline runs through pairs at the full spacing |
+| `REQ-SAT-027` | A zigzag satin's stitches split by the column's split method. The simple and staggered methods number the stitch back to pair i 2i and the stitch across it 2i + 1. By default each splits into its own fewest equal parts, the stitch back taking no count from the stitch across before it |
+| `REQ-SAT-028` | Under a zigzag satin, the contour's first side stops at the zigzag's last point on the first rail, and its second side at its first and last points on the second rail, before the insets. An odd centre walk moves none of these places |
 
 Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparison to tune defaults
 ([machine testing](../../plan/machine-testing.md)).

@@ -240,7 +240,7 @@ fn diag_sc_e0201_a_satin_column_with_no_subpath_longer_than_a_point_is_not_sewn(
 }
 
 #[test]
-fn diag_sc_w0011_satin_columns_not_sewn_yet_are_named() {
+fn diag_sc_w0203_a_satin_column_of_every_method_names_what_recognition_finds() {
     let path = polylines(&[
         LOWER,
         UPPER,
@@ -249,26 +249,16 @@ fn diag_sc_w0011_satin_columns_not_sewn_yet_are_named() {
         &[(15.0, -1.0), (15.0, 5.0)],
         &[(16.0, -1.0), (16.0, 5.0)],
     ]);
-    // On, the path is a satin column whatever its stroke method says, and what recognition finds is named.
-    let satin = along("satin", path.clone(), &RED, &[("satin_column", "true"), ("stroke_method", "manual_stitch")]);
-    let outcome = sewn(vec![satin]);
-    assert_eq!(
-        messages(&outcome),
-        ["warning SC-W0203: Subpath 4 of this satin column, a rung, does not reach the rail that is subpath 2, so the point of that \
-          rail nearest the rung is used."]
-    );
-    assert!(shape_of(&outcome).starts_with("J L4 S"), "sewn: {}", shape_of(&outcome));
-    // The zigzag satin is not sewn yet.
-    let zigzag = along("zigzag", path.clone(), &RED, &[("satin_column", "true"), ("satin_method", "zigzag")]);
-    assert_eq!(
-        messages(&sewn(vec![zigzag, line("ok", (0.0, 8.0), 10.0, &RED, &[])])),
-        [
-            "warning SC-W0203: Subpath 4 of this satin column, a rung, does not reach the rail that is subpath 2, so the point of \
-             that rail nearest the rung is used.",
-            "warning SC-W0011: This element's satin method, `zigzag`, is not sewn by this version of StitchCraft yet, so it is \
-             skipped."
-        ]
-    );
+    let rung = "warning SC-W0203: Subpath 4 of this satin column, a rung, does not reach the rail that is subpath 2, so the point of \
+                that rail nearest the rung is used.";
+    // On, the path is a satin column whatever its stroke method says, and what recognition finds is named,
+    // by every satin method, each of which is sewn.
+    for method in ["satin_column", "e_stitch", "s_stitch", "zigzag"] {
+        let satin = along("satin", path.clone(), &RED, &[("satin_column", "true"), ("stroke_method", "manual_stitch"), ("satin_method", method)]);
+        let outcome = sewn(vec![satin]);
+        assert_eq!(messages(&outcome), [rung], "{method}");
+        assert!(shape_of(&outcome).starts_with("J L4 S"), "{method} sewn: {}", shape_of(&outcome));
+    }
     // A path of one subpath is the column's centre line, and is sewn between rails made from it
     // (`REQ-SAT-016`, tests/satin_centre_line.rs).
     let centre = sewn(vec![widened(along("centre", polylines(&[LOWER]), &RED, &[("satin_column", "true")]), 3.0)]);

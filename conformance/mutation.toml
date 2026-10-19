@@ -280,3 +280,9 @@ file = "crates/stitchcraft-vectorcraft/src/color.rs"
 mutant = "replace > with >= in lab_to_srgb"
 line = "let y = if l > KAPPA * EPSILON { fy * fy * fy } else { l / KAPPA };"
 why = "the two pieces meet where L* is κε, 8, where both give ε within a rounding, so the colour's bytes are the same whichever piece an L* of exactly κε takes"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/along.rs"
+mutant = "replace < with <= in Along<'a>::snapped"
+line = "let after = self.at.partition_point(|a| *a < at);"
+why = "where at is exactly a point's distance, that point is one of the 2 points looked at either way, no farther than a rounding from the point at at, so it is the one taken and at stays as it was"
