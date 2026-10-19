@@ -722,6 +722,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The command line's tests leave nothing in the system's temporary folder. Each run of them left 14
+  folders there, about 65 MB, and mutation testing runs them hundreds of times: 5.7 GB had built up
+  where this was found. Each test writes its files in a folder of its own, `stitchcraft_testkit::temp`'s
+  `TempDir`, removed when the test ends.
 - A tatami fill's route charges the work budget for finding the rings that rows end on (`REQ-FILL-TAT-013`).
   It looked at every node for each ring, without charging, at the fill's start and end in each layer: in
   a part of many holes and rows, millions of looks the budget never saw. It looks at each node once now,

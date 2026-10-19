@@ -105,6 +105,8 @@ mod tests {
 
     use sha2::{Digest, Sha256};
 
+    use stitchcraft_testkit::temp::TempDir;
+
     use super::*;
     use crate::cli::Format;
     use crate::commands::hex;
@@ -113,15 +115,10 @@ mod tests {
         TestsheetArgs { sheet: Some(sheet.into()), list: false, profile: None, output: Some(output), format }
     }
 
-    fn temp(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("stitchcraft-cli-test-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        dir.join(name)
-    }
-
     #[test]
     fn writes_a_sheet_and_reports_what_to_check() {
-        let path = temp("TS-01.pes");
+        let dir = TempDir::new("testsheet");
+        let path = dir.join("TS-01.pes");
         let out = run(&args("ts-01", path.clone(), None));
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(out.stderr.is_empty());
@@ -138,11 +135,12 @@ mod tests {
 
     #[test]
     fn a_sheet_is_checked_against_its_own_hoop_unless_told_otherwise() {
-        let out = run(&args("TS-10C", temp("TS-10C.pes"), None));
+        let dir = TempDir::new("testsheet");
+        let out = run(&args("TS-10C", dir.join("TS-10C.pes"), None));
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(out.stdout.contains("  profile   brother-pe800-small (Brother PE800 with its small hoop)\n"), "{}", out.stdout);
         // Too large for the profile named: refused, and nothing written.
-        let mut small = args("TS-10B", temp("TS-10B-small.pes"), None);
+        let mut small = args("TS-10B", dir.join("TS-10B-small.pes"), None);
         small.profile = Some("brother-pe800-small".into());
         let out = run(&small);
         assert_eq!(out.status, Status::DesignErrors);
@@ -152,30 +150,33 @@ mod tests {
             "{}",
             out.stderr
         );
-        assert!(!temp("TS-10B-small.pes").exists());
+        assert!(!dir.join("TS-10B-small.pes").exists());
     }
 
     #[test]
     fn the_format_comes_from_the_flag_or_the_extension() {
-        let out = run(&args("TS-01", temp("ts01-as-dst.bin"), Some(Format::Dst)));
+        let dir = TempDir::new("testsheet");
+        let out = run(&args("TS-01", dir.join("ts01-as-dst.bin"), Some(Format::Dst)));
         assert_eq!(out.status, Status::Done);
-        assert!(std::fs::read(temp("ts01-as-dst.bin")).unwrap().starts_with(b"LA:TS-01"));
-        let out = run(&args("TS-01", temp("ts01.unknown"), None));
+        assert!(std::fs::read(dir.join("ts01-as-dst.bin")).unwrap().starts_with(b"LA:TS-01"));
+        let out = run(&args("TS-01", dir.join("ts01.unknown"), None));
         assert_eq!(out.status, Status::Usage);
         assert!(out.stderr.contains("cannot tell the format"));
     }
 
     #[test]
     fn unknown_names_are_usage_errors() {
-        assert_eq!(run(&args("TS-99", temp("x.pes"), None)).status, Status::Usage);
-        let mut bad_profile = args("TS-01", temp("x.pes"), None);
+        let dir = TempDir::new("testsheet");
+        assert_eq!(run(&args("TS-99", dir.join("x.pes"), None)).status, Status::Usage);
+        let mut bad_profile = args("TS-01", dir.join("x.pes"), None);
         bad_profile.profile = Some("singer".into());
         assert_eq!(run(&bad_profile).status, Status::Usage);
     }
 
     #[test]
     fn stops_are_listed_as_threads_the_machine_asks_for() {
-        let out = run(&args("TS-02", temp("TS-02.pes"), None));
+        let dir = TempDir::new("testsheet");
+        let out = run(&args("TS-02", dir.join("TS-02.pes"), None));
         assert!(out.stdout.contains("4. Emerald Green (#00673e), shown as Brother PEC 54 \"Emerald Green\" — a stop: keep the same thread"));
         assert!(out.stdout.contains("2 colour changes, 1 stop\n"));
     }

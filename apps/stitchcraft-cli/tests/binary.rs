@@ -6,23 +6,23 @@
 // runs `stitch` on files in folders of its own.
 #![allow(clippy::unwrap_used, clippy::disallowed_methods)]
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{Command, Output};
+
+use stitchcraft_testkit::temp::TempDir;
 
 fn stitch(args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_stitch")).args(args).output().unwrap()
 }
 
 /// `stitch` run in `dir` with `args`, and the environment's `NO_COLOR` and `TERM` taken away.
-fn stitch_in(dir: &Path, args: &[&str]) -> Output {
+fn stitch_in(dir: impl AsRef<Path>, args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_stitch")).args(args).current_dir(dir).env_remove("NO_COLOR").env_remove("TERM").output().unwrap()
 }
 
-/// A new empty folder for one test, with the fixture `strokes.svg` in it.
-fn folder(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("stitchcraft-binary-{name}-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
-    std::fs::create_dir_all(&dir).unwrap();
+/// A new folder for one test, with the fixture `strokes.svg` in it, removed when the test is done.
+fn folder(name: &str) -> TempDir {
+    let dir = TempDir::new(&format!("binary-{name}"));
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance/fixtures/svg/strokes.svg");
     std::fs::copy(fixture, dir.join("strokes.svg")).unwrap();
     dir

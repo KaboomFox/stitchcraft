@@ -144,17 +144,18 @@ fn folder(path: &Path) -> &Path {
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_testkit::temp::TempDir;
+
     use super::*;
 
     #[test]
     fn replaces_the_destination_and_leaves_no_partial_file() {
-        let dir = std::env::temp_dir().join(format!("stitchcraft-files-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = TempDir::new("files");
         let path = dir.join("a.pes");
         std::fs::write(&path, b"old").unwrap();
         write_atomically(&path, b"new").unwrap();
         assert_eq!(std::fs::read(&path).unwrap(), b"new");
-        assert_eq!(partial(&dir), Vec::<String>::new());
+        assert_eq!(partial(dir.path()), Vec::<String>::new());
         assert!(write_atomically(&dir.join("missing-dir/a.pes"), b"x").is_err());
     }
 
@@ -174,9 +175,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn req_cli_006_a_link_planted_where_a_temporary_file_goes_is_not_followed() {
-        let dir = std::env::temp_dir().join(format!("stitchcraft-files-link-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = TempDir::new("files-link");
         let (victim, out) = (dir.join("victim.txt"), dir.join("out.pes"));
         std::fs::write(&victim, b"precious notes").unwrap();
         // Links where the temporary file went once, and where it goes first now.
@@ -190,9 +189,8 @@ mod tests {
         // The planted links are left as they were, and no temporary file of the write stays.
         let mut names: Vec<String> = planted.iter().map(|link| link.file_name().unwrap().to_str().unwrap().to_string()).collect();
         names.sort();
-        assert_eq!(partial(&dir), names);
+        assert_eq!(partial(dir.path()), names);
         assert!(planted.iter().all(|link| std::fs::symlink_metadata(link).unwrap().file_type().is_symlink()));
-        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
@@ -206,8 +204,7 @@ mod tests {
     /// REQ-CLI-006: every file is written, or none is.
     #[test]
     fn req_cli_006_files_are_written_all_or_none() {
-        let dir = std::env::temp_dir().join(format!("stitchcraft-files-all-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = TempDir::new("files-all");
         let (a, b) = (dir.join("a.pes"), dir.join("a.png"));
         write_all(&[(&a, b"a"), (&b, b"b")]).unwrap();
         assert_eq!((std::fs::read(&a).unwrap(), std::fs::read(&b).unwrap()), (b"a".to_vec(), b"b".to_vec()));
@@ -215,26 +212,24 @@ mod tests {
         let (c, missing) = (dir.join("c.pes"), dir.join("missing").join("c.png"));
         let failed = write_all(&[(&c, b"c"), (&missing, b"x")]).unwrap_err();
         assert_eq!((&failed.path, &failed.written), (&missing, &Vec::new()));
-        assert!(!c.exists() && partial(&dir).is_empty());
+        assert!(!c.exists() && partial(dir.path()).is_empty());
         // One that cannot be renamed into place, over a folder: the files before it stay, and are named.
         let (d, folder) = (dir.join("d.pes"), dir.join("folder"));
         std::fs::create_dir_all(folder.join("inside")).unwrap();
         let failed = write_all(&[(&d, b"d"), (&folder, b"x"), (&dir.join("e.pes"), b"e")]).unwrap_err();
         assert_eq!((&failed.path, &failed.written), (&folder, &vec![d.clone()]));
-        assert!(d.exists() && !dir.join("e.pes").exists() && partial(&dir).is_empty());
+        assert!(d.exists() && !dir.join("e.pes").exists() && partial(dir.path()).is_empty());
     }
 
     /// REQ-CLI-005: a file of the cap's size is read, and a larger one refused by the size it says it has.
     #[test]
     fn req_cli_005_files_up_to_the_cap_are_read() {
-        let dir = std::env::temp_dir().join(format!("stitchcraft-cap-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = TempDir::new("cap");
         let (at, past) = (dir.join("at.svg"), dir.join("past.svg"));
         std::fs::File::create(&at).unwrap().set_len(MAX_READ).unwrap();
         std::fs::File::create(&past).unwrap().set_len(MAX_READ + 1).unwrap();
         assert_eq!(read_capped(&at).map(|bytes| u64::try_from(bytes.len()).unwrap()).unwrap(), MAX_READ);
         assert_eq!(read_capped(&past).unwrap_err().to_string(), format!("the file is {} bytes; stitch reads at most {MAX_READ}", MAX_READ + 1));
-        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     /// REQ-CLI-005: a pipe or a device says nothing of its size, so the cap counts what is read. A pipe
@@ -243,10 +238,8 @@ mod tests {
     #[test]
     fn req_cli_005_a_pipe_is_read_no_further_than_the_cap() {
         use std::io::Write as _;
-        let dir = std::env::temp_dir().join(format!("stitchcraft-pipe-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = TempDir::new("pipe");
         let pipe = dir.join("design.svg");
-        let _ = std::fs::remove_file(&pipe);
         assert!(std::process::Command::new("mkfifo").arg(&pipe).status().unwrap().success());
         let writer = {
             let pipe = pipe.clone();
@@ -265,7 +258,6 @@ mod tests {
         };
         let read = read_capped(&pipe);
         writer.join().unwrap();
-        std::fs::remove_file(&pipe).unwrap();
         assert_eq!(
             read.map(|bytes| bytes.len()).map_err(|e| e.to_string()),
             Err(format!("the file is more than {MAX_READ} bytes; stitch reads at most {MAX_READ}"))

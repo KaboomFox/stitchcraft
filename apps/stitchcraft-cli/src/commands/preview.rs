@@ -48,17 +48,13 @@ pub fn run(args: &PreviewArgs) -> Outcome {
 mod tests {
     use std::path::PathBuf;
 
+    use stitchcraft_testkit::temp::TempDir;
+
     use super::*;
     use crate::cli::PreviewStyle;
 
     fn golden(name: &str) -> PathBuf {
         PathBuf::from(format!("{}/../../conformance/golden/{name}", env!("CARGO_MANIFEST_DIR")))
-    }
-
-    fn temp(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("stitchcraft-preview-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        dir.join(name)
     }
 
     fn preview(file: PathBuf, output: PathBuf, style: PreviewStyle, scale: f32) -> Outcome {
@@ -67,7 +63,8 @@ mod tests {
 
     #[test]
     fn draws_a_pes_file() {
-        let output = temp("TS-02.png");
+        let dir = TempDir::new("preview");
+        let output = dir.join("TS-02.png");
         let out = preview(golden("testsheets/TS-02.pes"), output.clone(), PreviewStyle::Simple, 4.0);
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         // 120 × 70 mm plus 2 mm margins, at 4 pixels per millimetre.
@@ -79,19 +76,21 @@ mod tests {
 
     #[test]
     fn dst_files_get_placeholder_colours_and_say_so() {
-        let out = preview(golden("testsheets/TS-01.dst"), temp("TS-01.png"), PreviewStyle::Realistic, 2.0);
+        let dir = TempDir::new("preview");
+        let out = preview(golden("testsheets/TS-01.dst"), dir.join("TS-01.png"), PreviewStyle::Realistic, 2.0);
         assert_eq!(out.status, Status::Done);
         assert!(out.stderr.starts_with("warning SC-W0604: DST stores no thread colours"), "{}", out.stderr);
     }
 
     #[test]
     fn bad_scales_files_and_sizes_are_reported() {
-        let out = preview(golden("testsheets/TS-01.pes"), temp("x.png"), PreviewStyle::Simple, 0.0);
+        let dir = TempDir::new("preview");
+        let out = preview(golden("testsheets/TS-01.pes"), dir.join("x.png"), PreviewStyle::Simple, 0.0);
         assert_eq!(out.status, Status::Usage);
         assert!(out.stderr.contains("from 0.1 to 50 pixels per millimetre"), "{}", out.stderr);
-        assert_eq!(preview(temp("missing.pes"), temp("x.png"), PreviewStyle::Simple, 8.0).status, Status::Io);
+        assert_eq!(preview(dir.join("missing.pes"), dir.join("x.png"), PreviewStyle::Simple, 8.0).status, Status::Io);
         // 134 × 184 mm at 50 pixels per millimetre is 9200 pixels tall: too large, and nothing written.
-        let output = temp("TS-10B.png");
+        let output = dir.join("TS-10B.png");
         let out = preview(golden("testsheets/TS-10B.pes"), output.clone(), PreviewStyle::Simple, 50.0);
         assert_eq!(out.status, Status::DesignErrors);
         assert!(out.stderr.starts_with("error SC-E0005: The preview would be 6700 × 9200 pixels"), "{}", out.stderr);

@@ -15,6 +15,8 @@ containment, row spacing, furrows, topology) and invariant assertions.
 - `fuzz`: the bodies of the fuzz targets in `fuzz/`, run here on every PR and with coverage-guided inputs
   every night. Readers never panic and keep to their caps. Anything read is written in every format and
   reads back to the plan its format makes of it. Its previews never panic.
+- `temp`: a folder for the files one test writes. It is removed with its contents when the test ends,
+  passed or failed, and test runs leave the system's temporary folder as they found it.
 
 **Since M5.9:** `metrics` measures conformance cases the same way in every case. Its first metric is
 coverage, the share of a fill's area that the thread of a plan's stitches covers, rasterized at 0.05 mm
