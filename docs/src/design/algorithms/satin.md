@@ -466,8 +466,8 @@ end command, read from M8, would replace the needle point or the next stitch.
 | `satin_method` | Look | Design notes |
 |---|---|---|
 | `e_stitch` | A spine of running stitches along one rail with regular spikes to the other: the "E" or blanket stitch used for appliqué edges | Sewn from M7.3 ([E-stitch](#e-stitch-method-e_stitch)) |
-| `s_stitch` | Curvy stitches that read like a textured fill inside the column | Specified at M7 from public documentation and sew-out comparison |
-| `zigzag` | An open zigzag between the rails | Same sampler with wider spacing and no density expectations |
+| `s_stitch` | Stitches across the column, every other one back the other way, joined by steps along the rails | The pairs a satin column places, each sewn once with its splits, every other one from the second rail. Ink/Stitch does not split the steps along the rails (read at `6555892`). To be sewn from M7.4 |
+| `zigzag` | An open zigzag between the rails | Points every half spacing, alternately on the first rail and the second, sewn in pairs, every stitch split as a satin's is, as in Ink/Stitch. To be sewn from M7.5 |
 
 ## Properties (conformance)
 

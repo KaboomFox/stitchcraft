@@ -131,7 +131,7 @@ One step for each stitch type, with its requirements, cases and docs
 | M7.4 | S-stitch | its requirements active and the type listed for MC-6 |
 | M7.5 | Zigzag satin | same |
 | M7.6 | The offsetter meets the third criterion of [ADR-0005](../design/adr/0005-geometry-stack.md) before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. At M0.7 they took 218 to 448 ms, against GEOS's 104 to 149 ms | `cargo xtask perf` guards the criterion |
-| M7.7 | Contour fill, with its three strategies and neck splitting | its requirements active and the type listed for MC-6 |
+| M7.7 | Contour fill, with its three strategies, as Ink/Stitch sews them | its requirements active and the type listed for MC-6 |
 | M7.8 | Meander fill with generated tiles. A node's meander fill may meet a `zigzag_spacing_mm` only its zigzag stroke can read, which Ink/Stitch sews as the fill's default. The step chooses whether StitchCraft does too ([rule 7](../design/params.md#naming-rules)) | same |
 | M7.9 | Circular fill | same |
 | MC-6 🧵 | **TS-11** (a sampler of the new types); kit: `stitch testsheet` | report filed; the new types' defaults confirmed |

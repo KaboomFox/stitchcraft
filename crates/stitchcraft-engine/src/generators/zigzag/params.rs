@@ -1,8 +1,8 @@
 //! The zigzag stroke's parameters, declared with Ink/Stitch's keys and defaults, which are the
 //! interoperability contract (`conformance/inkstitch-params.toml`). Strokes read `zigzag_spacing_mm` as a
-//! list, as Ink/Stitch does, satin columns as one length, and meander fills as one length that is 0 by
-//! default. So the key has a declaration for each of those families (`REQ-PRM-005`,
-//! `docs/src/design/params.md`, rule 7).
+//! list, as Ink/Stitch does, and satin columns as one length, so the key has a declaration for each of
+//! those families (`REQ-PRM-005`, `docs/src/design/params.md`, rule 7). Meander fills read it as one length
+//! that is 0 by default, and get a declaration of their own with the meander fill (M7.8).
 
 use stitchcraft_params::{StitchType, params};
 

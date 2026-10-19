@@ -713,6 +713,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The design pages describe what Ink/Stitch sews for the steps to come, as the Ink/Stitch sweep of M5
+  to M7 read it.
+  - The contour fill's spirals run from ring to ring and leave out the branches they don't reach, where
+    the page promised spirals split at the shape's necks.
+  - The meander fill's path takes random detours through a tile's graph, where the page walked an Euler
+    circuit through it, and the circular fill sews a double spiral whatever its settings.
+  - The satin page's rows for the S-stitch and the zigzag satin say how their stitches go.
+  - A zigzag stroke's later spacings change Ink/Stitch's zigzag on curves, through the running stitch it
+    follows.
+  - Where the gratings miss a part, StitchCraft's travel keeps to the rings, and Ink/Stitch smooths it
+    (`DEV-FILL-013`). Ink/Stitch also warns of an inset that wears a part away without an underlay.
+  - A zigzag stroke with a second subpath that draws nothing still closes, and Ink/Stitch leaves its
+    zigzag open (`DEV-RUN-008`).
 - Gap-fill rows follow a stretch of a tatami fill's rows where Ink/Stitch's do (`REQ-FILL-TAT-007`).
   - Gap-fill rows skipped a stretch whose last row was sewn on through a joint, as a row along the bottom
     of a notch is. The way the rows went was taken from that row's 2 segments, which point no way, and is
