@@ -626,6 +626,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay, and `SC-W0314` says so
+  (`REQ-FILL-005`, `DEV-FILL-014`). It was skipped as a stitch type not sewn yet (`SC-W0011`). Legacy fill
+  is off the roadmap, since the method exists for Ink/Stitch's older files. Its own settings, `flip` and
+  `reverse`, are not planned, and the VectorCraft plug-in's fill dialog no longer offers it.
 - The compatibility gate pins VectorCraft 0.13.1, adopted from 0.7.0 by way of 0.12.0. Pull requests are
   checked against it, and it makes the docs' pictures of VectorCraft.
 - A plan case names its design with `design`, which was `svg`, as the design can be a VectorCraft

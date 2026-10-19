@@ -835,6 +835,15 @@ rationale = "The work budget stands for the time planning takes, so that a desig
 milestone = "M5"
 status = "active"
 
+[[req]]
+id = "REQ-FILL-005"
+area = "fill"
+level = "L2"
+statement = "A fill whose fill_method is legacy_fill is sewn as a tatami fill with the same settings and fill_underlay off, and SC-W0314 says so. It is a tatami fill in every other way: its settings are read as a tatami fill's, and the element before it ends near its area. The VectorCraft plug-in's fill dialog does not offer the method."
+rationale = "Ink/Stitch keeps legacy fill, its first fill method, for its older files, and gives it to a fill whose auto_fill is off. StitchCraft does not build the method, and skipping such a fill would leave a hole in the design. A tatami fill without underlay lays the same rows, and sews no underlay either."
+milestone = "M7"
+status = "active"
+
 # ── Tatami fill ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

@@ -155,11 +155,13 @@ registry uses these names as its keys so files move between the tools unchanged
   value when a file sets none, and the cell gives that value after the default, as in `0.1 (0.2 when
   unset)`. `—` means no default: the value is derived from another parameter or the shape.
 - **StitchCraft** says whether the [parameter registry](../user/reference/params.md) declares the
-  parameter. *planned*: not yet; a design that sets it keeps it unchanged and gets `SC-W0105`.
+  parameter. *planned*: not yet; a design that sets it keeps it unchanged and gets `SC-W0105`. *not
+  planned*: never, and a design that sets it gets the same.
   *registered*: StitchCraft reads and checks it under the same key, meaning and default; it changes the
   stitches once its stitch type or feature lands (see *Phase* and the parameter's reference entry).
   *deviates*: registered, with a meaning that differs as its reference entry describes.
-- **Phase** is when the parameter's stitch type lands ([roadmap](../plan/roadmap.md)).
+- **Phase** is when the parameter's stitch type lands ([roadmap](../plan/roadmap.md)); `—` when it is not
+  planned.
 ";
 
 impl Contract {
@@ -186,22 +188,23 @@ impl Contract {
                     None => p.default.clone(),
                 };
                 md.push_str(&format!(
-                    "| `{}` | {} | {} | {default} | {applies} | {} ({}) | {} |\n",
+                    "| `{}` | {} | {} | {default} | {applies} | {} | {} |\n",
                     p.name,
                     p.kind,
                     p.unit.replace('|', "\\|"),
-                    p.phase,
-                    p.milestone,
+                    phase(&p.phase, &p.milestone),
                     status(registry, p)
                 ));
             }
         }
         md.push_str(
-            "\n## Method identifiers\n\nThe values the method parameters take (`stroke_method`, `satin_method`, `fill_method`), with phases:\n\n",
+            "\n## Method identifiers\n\nThe values the method parameters take (`stroke_method`, `satin_method`, `fill_method`), with phases. A\n\
+             value of phase `—` is not planned as a method of its own, and the deviations ledger\n\
+             (`conformance/deviations.toml`) says how an element set to it is sewn.\n\n",
         );
         md.push_str("| Parameter | Value | Phase |\n|---|---|---|\n");
         for m in &self.method {
-            md.push_str(&format!("| `{}` | `{}` | {} ({}) |\n", m.param, m.value, m.phase, m.milestone));
+            md.push_str(&format!("| `{}` | `{}` | {} |\n", m.param, m.value, phase(&m.phase, &m.milestone)));
         }
         let locks = self.lock_ids.iter().map(|l| format!("`{l}`")).collect::<Vec<_>>().join(", ");
         md.push_str(&format!(
@@ -228,12 +231,12 @@ impl Contract {
              | Attribute | Kind | Phase | StitchCraft |\n|---|---|---|---|\n",
         );
         for a in &self.attribute {
-            let (phase, ours) = match (READ_ATTRIBUTES.contains(&a.name.as_str()), a.milestone.as_str()) {
-                (true, _) => (format!("{} ({})", a.phase, a.milestone), "read"),
-                (false, "—") => ("—".to_string(), "not planned"),
-                (false, _) => (format!("{} ({})", a.phase, a.milestone), "planned"),
+            let ours = match (READ_ATTRIBUTES.contains(&a.name.as_str()), a.milestone.as_str()) {
+                (true, _) => "read",
+                (false, NOT_PLANNED) => "not planned",
+                (false, _) => "planned",
             };
-            md.push_str(&format!("| `{}` | {} | {phase} | {ours} |\n", a.name, a.kind.replace('_', " ")));
+            md.push_str(&format!("| `{}` | {} | {} | {ours} |\n", a.name, a.kind.replace('_', " "), phase(&a.phase, &a.milestone)));
         }
         let registered = self.param.iter().filter(|p| declaration(registry, p).is_some()).count();
         md.push_str(&format!("\n_{} parameter declarations, {registered} registered in StitchCraft._\n", self.param.len()));
@@ -358,9 +361,19 @@ fn declaration<'r>(registry: &[&'r ParamGroup], row: &Param) -> Option<(&'r Para
     registry.iter().find_map(|group| group.specs.iter().find(|s| s.key == row.name && row.covers(s.applies_to)).map(|spec| (*group, spec)))
 }
 
-/// The StitchCraft column: planned, or a link to the declaration's reference entry.
+/// The milestone of a row StitchCraft does not plan to support.
+const NOT_PLANNED: &str = "—";
+
+/// A row's Phase cell: its phase and milestone, or `—` when it is not planned.
+fn phase(phase: &str, milestone: &str) -> String {
+    if milestone == NOT_PLANNED { NOT_PLANNED.to_string() } else { format!("{phase} ({milestone})") }
+}
+
+/// The StitchCraft column: planned, not planned, or a link to the declaration's reference entry.
 fn status(registry: &[&ParamGroup], row: &Param) -> String {
-    let Some((group, spec)) = declaration(registry, row) else { return "planned".to_string() };
+    let Some((group, spec)) = declaration(registry, row) else {
+        return if row.milestone == NOT_PLANNED { "not planned" } else { "planned" }.to_string();
+    };
     let word = if matches!(spec.origin, Origin::InkStitchDeviates { .. }) { "deviates" } else { "registered" };
     format!("[{word}](../user/reference/{})", param_pages::anchor(group, &row.name))
 }
@@ -760,6 +773,18 @@ mod tests {
         let page = Contract::parse(&more).unwrap().render(&[]);
         assert!(page.contains("| `stroke_first` | element | P1 (M5) | planned |"), "{page}");
         assert!(page.contains("| `sew_stack` | sew stack | — | not planned |"), "{page}");
+    }
+
+    #[test]
+    fn a_parameter_and_a_method_not_planned_say_so() {
+        // The parameter's row comes first, then a row for each method.
+        let data = data("0.25")
+            .replacen("milestone = \"M5\"\n[[method]]", "milestone = \"—\"\n[[method]]", 1)
+            .replace("value = \"legacy_fill\"\nphase = \"P1\"\nmilestone = \"M5\"", "value = \"legacy_fill\"\nphase = \"—\"\nmilestone = \"—\"");
+        let page = Contract::parse(&data).unwrap().render(&[]);
+        assert!(page.contains("| `row_spacing_mm` | float | mm | 0.25 | `tatami_fill` | — | not planned |"), "{page}");
+        assert!(page.contains("| `fill_method` | `legacy_fill` | — |"), "{page}");
+        assert!(page.contains("| `fill_method` | `tatami_fill` | P1 (M5) |"), "{page}");
     }
 
     #[test]

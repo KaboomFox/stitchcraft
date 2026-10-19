@@ -88,7 +88,8 @@ params! {
         /// its stroke settings say. The element before it still ends near it, as Ink/Stitch's does.
         fill: Toggle = "true", label "Sew the fill";
 
-        /// The stitch the area is filled with. A tatami fill sews rows of running stitches across it. The
+        /// The stitch the area is filled with. A tatami fill sews rows of running stitches across it, and a
+        /// fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). The
         /// other methods arrive in later versions; until then an element set to one is skipped
         /// (`SC-W0011`).
         fill_method: Choice = "tatami_fill", label "Fill method", choices FILL_METHODS;
@@ -215,8 +216,9 @@ fn setting<K: ParamKind>(set: &ParamSet, specs: &[ParamSpec], key: &str, diagnos
 /// The stitch type that sews `element` in a design with `settings`, chosen by the settings that choose
 /// it, read first and alone: a fill's `fill_method`, and a stroke's `satin_method` when its
 /// `satin_column` is on, or else its `stroke_method`. A satin column too narrow to stitch across is sewn
-/// as a stroke, as in Ink/Stitch, and `SC-W0212` says so (`REQ-SAT-015`). `None` when one of them cannot be
-/// read, which `diagnostics` says.
+/// as a stroke, as in Ink/Stitch, and `SC-W0212` says so (`REQ-SAT-015`). A fill set to Ink/Stitch's legacy
+/// fill is a tatami fill, which `SC-W0314` says, and sews no underlay ([`legacy`], `REQ-FILL-005`). `None`
+/// when one of them cannot be read, which `diagnostics` says.
 fn stitch_type(element: &Element, settings: &DesignSettings, diagnostics: &mut Vec<Diagnostic>) -> Option<StitchType> {
     let set = &element.params;
     let (family, specs) = match &element.shape {
@@ -238,7 +240,28 @@ fn stitch_type(element: &Element, settings: &DesignSettings, diagnostics: &mut V
             }
         }
     };
-    method_type(family, setting::<Choice>(set, specs, family.method_param(), diagnostics)?, diagnostics)
+    let chosen = method_type(family, setting::<Choice>(set, specs, family.method_param(), diagnostics)?, diagnostics)?;
+    if chosen == StitchType::LegacyFill {
+        let message = "This element's fill method is Ink/Stitch's legacy fill, which StitchCraft does not sew, so it is sewn as a tatami \
+                       fill without underlay.";
+        diagnostics.push(Diagnostic::new(Code::FillLegacyAsTatami, message));
+    }
+    Some(sewn_as(chosen))
+}
+
+/// The stitch type that sews an element set to `asked`: itself, but for Ink/Stitch's legacy fill, which
+/// StitchCraft does not build and sews as a tatami fill without underlay (`REQ-FILL-005`).
+pub const fn sewn_as(asked: StitchType) -> StitchType {
+    match asked {
+        StitchType::LegacyFill => StitchType::TatamiFill,
+        other => other,
+    }
+}
+
+/// Whether `set` asks for Ink/Stitch's legacy fill, which [`stitch_type`] gives a tatami fill, and which
+/// sews no underlay (`REQ-FILL-005`). Read alone, as `stitch_type` reads it, which says what is wrong with it.
+fn legacy(set: &ParamSet) -> bool {
+    setting::<Choice>(set, FillParams::SPECS, Family::Fill.method_param(), &mut Vec::new()) == Some(StitchType::LegacyFill.id())
 }
 
 /// The stitch type of `family` whose id is `method`, which the family's method parameter offers. Each
@@ -395,12 +418,14 @@ fn fill(
 }
 
 /// The tatami fill `sewing` describes, its settings read as its stitch type reads them; `None` when they
-/// cannot be read, or when its fill method is not sewn yet (`SC-W0011`), which `diagnostics` says.
+/// cannot be read, or when its fill method is not sewn yet (`SC-W0011`), which `diagnostics` says. A fill
+/// set to Ink/Stitch's legacy fill sews no underlay, whatever its `fill_underlay` says (`REQ-FILL-005`).
 fn fill_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<Fill> {
     let tatami = sewing.read(TatamiParams::from_set_as, diagnostics);
     let running = sewing.read(RunningParams::from_set_as, diagnostics);
     let pull = sewing.read(PullParams::from_set_as, diagnostics);
-    let (Some(tatami), Some(running), Some(pull), Some(shared)) = (tatami, running, pull, sewing.shared) else { return None };
+    let (Some(mut tatami), Some(running), Some(pull), Some(shared)) = (tatami, running, pull, sewing.shared) else { return None };
+    tatami.fill_underlay &= !legacy(sewing.set);
     if sewing.stitch_type != StitchType::TatamiFill {
         let method = sewing.stitch_type.id();
         diagnostics.push(not_yet(&format!("This element's fill method, `{method}`, is not sewn by this version of StitchCraft yet")));
@@ -503,9 +528,10 @@ fn stroke(
 /// What `element` offers the element before it to end near, read from its shape, its settings and the
 /// design's `settings` alone, with the budget's work to itself (`REQ-GEN-003`): a stroke its first point,
 /// a satin column its rails as they are sewn when it starts at its nearest point and otherwise its first
-/// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A tatami fill
-/// starts at its point nearest the needle and offers its area, its parts, even when it is set not to be
-/// sewn, as Ink/Stitch's next element is the next in the drawing. Where its stitch type is known, an
+/// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A tatami fill, and
+/// a fill set to Ink/Stitch's legacy fill, which is sewn as one (`REQ-FILL-005`), starts at its point
+/// nearest the needle and offers its area, its parts, even when it is set not to be sewn, as Ink/Stitch's
+/// next element is the next in the drawing. Where its stitch type is known, an
 /// element offers what Ink/Stitch's would, even of a method StitchCraft does not sew yet (ADR 0014): a
 /// stroke of any method its first point, as Ink/Stitch's strokes all do, and a satin column of any method
 /// its rails. A fill of a method StitchCraft does not sew offers nothing, since what it would offer is not
@@ -662,6 +688,10 @@ mod tests {
         };
         assert_eq!(chosen(fill(), &[]), (Some(StitchType::TatamiFill), vec![]));
         assert_eq!(chosen(fill(), &[("fill_method", "contour_fill")]), (Some(StitchType::ContourFill), vec![]));
+        // Ink/Stitch's legacy fill is sewn as a tatami fill.
+        assert_eq!(chosen(fill(), &[("fill_method", "legacy_fill")]), (Some(StitchType::TatamiFill), vec![Code::FillLegacyAsTatami]));
+        assert!(legacy(&element(fill(), &[("fill_method", "legacy_fill")]).params) && !legacy(&element(fill(), &[]).params));
+        assert!(StitchType::ALL.iter().all(|t| sewn_as(*t) == *t || *t == StitchType::LegacyFill));
         assert_eq!(chosen(wide(), &[]), (Some(StitchType::RunningStitch), vec![]));
         assert_eq!(chosen(wide(), &[("stroke_method", "manual_stitch")]), (Some(StitchType::ManualStitch), vec![]));
         // `satin_column` on, the satin's method; off, the stroke's, whatever the other says.

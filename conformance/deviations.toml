@@ -290,6 +290,14 @@ requirements = ["REQ-FILL-TAT-005"]
 params = ["underpath"]
 
 [[deviation]]
+id = "DEV-FILL-014"
+area = "fill"
+summary = "A fill whose fill_method is legacy_fill is sewn as a tatami fill without underlay (SC-W0314), its rows routed and joined by travel stitches as a tatami fill's are, from near the needle to near the next element. Ink/Stitch's legacy fill sews each stretch of rows that join on its own, back and forth, with no travel stitches between stretches; its flip starts the rows from the other side, and its reverse sews the whole fill backwards. StitchCraft keeps both settings without reading them (SC-W0105)."
+reason = "StitchCraft does not build legacy fill, since the method exists for Ink/Stitch's older files: Ink/Stitch gives it to a fill whose auto_fill is off (lib/update.py: update_legacy_params, read at 6555892). Its rows and their needle points come from the functions a tatami fill's come from, and it sews no underlay (lib/stitches/fill.py: legacy_fill, intersect_region_with_grating, stitch_row; lib/stitches/tatami_fill.py imports both; lib/elements/fill_stitch.py: to_stitch_groups), so a tatami fill without underlay lays the same rows."
+requirements = ["REQ-FILL-005"]
+params = ["fill_method"]
+
+[[deviation]]
 id = "DEV-SVG-001"
 area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."

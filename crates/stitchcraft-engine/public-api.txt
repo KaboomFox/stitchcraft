@@ -130,6 +130,7 @@ pub const stitchcraft_engine::generate::STROKE_METHODS: &[stitchcraft_params::sp
 pub fn stitchcraft_engine::generate::approach(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &stitchcraft_core::budget::Budget) -> core::option::Option<stitchcraft_engine::generators::Approach>
 pub fn stitchcraft_engine::generate::generate(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile, &stitchcraft_engine::generators::Neighbours, &stitchcraft_core::budget::Budget) -> stitchcraft_engine::generate::Generation
 pub fn stitchcraft_engine::generate::rows(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile, &stitchcraft_core::budget::Budget) -> stitchcraft_engine::generate::Rows
+pub const fn stitchcraft_engine::generate::sewn_as(stitchcraft_params::stitch_type::StitchType) -> stitchcraft_params::stitch_type::StitchType
 pub fn stitchcraft_engine::generate::shortest_stitch(core::option::Option<stitchcraft_core::units::Mm>, &stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile) -> stitchcraft_core::units::Mm
 pub fn stitchcraft_engine::generate::stitch_type_of(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings) -> core::option::Option<stitchcraft_params::stitch_type::StitchType>
 pub mod stitchcraft_engine::generators

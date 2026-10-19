@@ -124,7 +124,8 @@ registry! {
     /// The element's stitch type is one this version of StitchCraft does not sew yet, so the element was
     /// skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
     /// satin columns from M4, tatami fills from M5, and zigzag strokes, E-stitches and S-stitches from M7.
-    /// The other stitch types follow (`docs/src/plan/roadmap.md`).
+    /// The other stitch types follow (`docs/src/plan/roadmap.md`), but for Ink/Stitch's legacy fill, which
+    /// is sewn as a tatami fill (`SC-W0314`).
     ///
     /// The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
     /// tool for now.
@@ -364,6 +365,17 @@ registry! {
     ///
     /// To sew it alike in both, draw the outline round the empty part instead of a subpath along it.
     FillStretchDrawnTwice = "SC-I0313", Info, "Fill drawn twice along its edge; Ink/Stitch fills the part left empty";
+
+    /// Ink/Stitch's legacy fill is its first fill method, which it keeps for its older files: it gives the
+    /// method to a fill whose `auto_fill` is off. StitchCraft does not sew it, and sews such a fill as a
+    /// tatami fill with the same settings and no underlay, as legacy fill sews none. Its rows and their
+    /// needle points are a tatami fill's, as in Ink/Stitch. Ink/Stitch sews a legacy fill's rows in
+    /// stretches that join, each on its own and back and forth; its `flip` starts the rows from the other
+    /// side, and its `reverse` sews the fill backwards. A tatami fill routes its rows and joins them with
+    /// travel stitches, and StitchCraft keeps `flip` and `reverse` without reading them (`SC-W0105`).
+    ///
+    /// To sew the fill alike in both, set its fill method to tatami fill and turn `fill_underlay` off.
+    FillLegacyAsTatami = "SC-W0314", Warning, "Legacy fill sewn as a tatami fill without underlay";
 
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
