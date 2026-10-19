@@ -258,14 +258,14 @@ fn diag_sc_w0011_satin_columns_not_sewn_yet_are_named() {
           rail nearest the rung is used."]
     );
     assert!(shape_of(&outcome).starts_with("J L4 S"), "sewn: {}", shape_of(&outcome));
-    // The other satin methods are not sewn yet.
-    let s_stitch = along("s", path.clone(), &RED, &[("satin_column", "true"), ("satin_method", "s_stitch")]);
+    // The zigzag satin is not sewn yet.
+    let zigzag = along("zigzag", path.clone(), &RED, &[("satin_column", "true"), ("satin_method", "zigzag")]);
     assert_eq!(
-        messages(&sewn(vec![s_stitch, line("ok", (0.0, 8.0), 10.0, &RED, &[])])),
+        messages(&sewn(vec![zigzag, line("ok", (0.0, 8.0), 10.0, &RED, &[])])),
         [
             "warning SC-W0203: Subpath 4 of this satin column, a rung, does not reach the rail that is subpath 2, so the point of \
              that rail nearest the rung is used.",
-            "warning SC-W0011: This element's satin method, `s_stitch`, is not sewn by this version of StitchCraft yet, so it is \
+            "warning SC-W0011: This element's satin method, `zigzag`, is not sewn by this version of StitchCraft yet, so it is \
              skipped."
         ]
     );

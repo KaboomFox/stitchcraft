@@ -206,9 +206,11 @@ fn req_sat_014_a_stitch_along_the_cut_is_cut_at_its_point_nearest_the_cut_s_firs
     // end's cut is the pair 4 mm along, and the stitch across there lies along it. Widened past the rails by
     // pull compensation, the stitch holds the cut's first rail point, and is cut there. Narrowed, it is cut
     // at its start, the point of it nearest that. The travel is longer than the column, so the second half
-    // of the top stitches, turned, ends at the cut, and the end follows.
-    for method in ["satin_column", "e_stitch"] {
-        for (pull, inset) in [("0", 0.0), ("0.5", 0.0), ("-0.5", 0.5)] {
+    // of the top stitches, turned, ends at the cut, and the end follows. An S-stitch sews the stitch there
+    // from the second rail, after a step along it, and is cut where its run first meets the cut: at the
+    // step's end where that is the cut's second rail point, and at the start of the stitch narrowed.
+    for (method, cuts) in [("satin_column", [0.0, 0.0, 0.5]), ("e_stitch", [0.0, 0.0, 0.5]), ("s_stitch", [4.0, 0.0, 3.5])] {
+        for (pull, inset) in ["0", "0.5", "-0.5"].into_iter().zip(cuts) {
             for step in 0..90 {
                 let degrees = f64::from(step) + 0.37;
                 let (sin, cos) = math::sin_cos(math::to_radians(degrees));

@@ -9,7 +9,8 @@
 //! `column` module), and needle points are placed in pairs across the column along the sections (`pairs`),
 //! each pair widened by pull compensation (`compensation`). Needle points that crowd together on a rail
 //! are inset (`short`), and the pairs are sewn rail to rail, with long stitches split (`split`). An
-//! E-stitch sews the same pairs as spikes from its first rail, joined by a spine along it.
+//! E-stitch sews the same pairs as spikes from its first rail, joined by a spine along it, and an S-stitch
+//! sews each once across, every other one from the second rail, joined by steps along the rails.
 //!
 //! These are the top stitches as Ink/Stitch places them. Every method then says where its stitches lean far
 //! along the column, and when one is longer than 12 mm (`lie`), which Ink/Stitch does not. Before them come the underlays the element turns
@@ -86,12 +87,15 @@ params! {
 
         /// How the column is sewn. A satin column sews stitches straight across it, from one rail to the
         /// other and back. An E-stitch sews a spike across the column at each pair and a spine along its
-        /// first rail between them, an edge for appliqué. S and zigzag stitches arrive in later versions,
-        /// and until then an element set to one is skipped (`SC-W0011`).
+        /// first rail between them, an edge for appliqué. An S-stitch sews one stitch across at each pair,
+        /// every other one the other way, with a step along a rail between them: split by a longest
+        /// stitch, they cover the column in rows, as a fill does. The zigzag satin arrives in a later
+        /// version, and until then an element set to it is skipped (`SC-W0011`).
         satin_method: Choice = "satin_column", label "Method", choices SATIN_METHODS;
 
-        /// The distance from one stitch across the column to the next that goes the same way: from one
-        /// rail to the other and back again is one spacing. It is measured across the column at its
+        /// The distance from one pair of needle points across the column to the next. A satin column
+        /// goes across and back in one spacing, an E-stitch sews a spike every spacing, and an S-stitch a
+        /// stitch across, each the other way from the one before. It is measured across the column at its
         /// outside edge, and on a curve the stitches fan out from the inside edge.
         zigzag_spacing_mm: Length = "0.4", label "Zigzag spacing", range (0.01, 10.0);
     }
@@ -423,8 +427,8 @@ fn too_small(run: &[Point], min: f64) -> Option<Diagnostic> {
 /// The top stitches along `sections`, from the rails' starts to their ends: placed, compensated and varied
 /// at random by the element's `rng`, inset where they crowd, and sewn as the satin method says, split where
 /// they are long. With them, the pairs as placed and compensated, before any inset: the ends of each pair
-/// lie on the column's compensated outline. S and zigzag satins are not sewn yet, and `generate` skips
-/// them before they get here (`SC-W0011`).
+/// lie on the column's compensated outline. Zigzag satins are not sewn yet, and `generate` skips them
+/// before they get here (`SC-W0011`).
 fn top_stitches(
     sections: &[Section],
     params: &SatinParams,
@@ -439,6 +443,8 @@ fn top_stitches(
     let short = short::inset(&placed, params.short_stitch_distance_mm.get(), &insets, splitter.inset_limit());
     let stitches = if params.satin_method == StitchType::EStitch.id() {
         splitter.sew_e(&placed, &short, params.zigzag_spacing_mm.get(), meter)?
+    } else if params.satin_method == StitchType::SStitch.id() {
+        splitter.sew_s(&placed, &short, meter)?
     } else {
         splitter.sew(&placed, &short, meter)?
     };

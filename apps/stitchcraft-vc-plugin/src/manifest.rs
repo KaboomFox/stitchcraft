@@ -138,7 +138,9 @@ pub fn hello() -> Manifest {
 pub fn family(family: Family) -> Manifest {
     let (name, description) = match family {
         Family::Stroke => ("StitchCraft Stroke", "Sews the object along its path: running, bean, zigzag or manual stitch."),
-        Family::Satin => ("StitchCraft Satin", "Sews the object as a satin column or an E-stitch, as wide as its stroke or between its two rails."),
+        Family::Satin => {
+            ("StitchCraft Satin", "Sews the object as a satin column, an E-stitch or an S-stitch, as wide as its stroke or between its two rails.")
+        }
         Family::Fill => ("StitchCraft Fill", "Fills the object with rows of stitches, tatami fill."),
     };
     Manifest {

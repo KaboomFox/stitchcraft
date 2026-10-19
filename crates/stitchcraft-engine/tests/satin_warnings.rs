@@ -12,7 +12,7 @@ use stitchcraft_testkit::designs::{p, polylines};
 use stitchcraft_testkit::satins::{NO_SHORT_STITCHES, across, ladder, satin_diagnostics};
 
 /// The satin methods StitchCraft sews.
-const METHODS: [&str; 2] = ["satin_column", "e_stitch"];
+const METHODS: [&str; 3] = ["satin_column", "e_stitch", "s_stitch"];
 
 /// The warnings of the satin column `path` sewn by `method` with `params`, and no short stitches.
 fn warnings(path: &Path, method: &str, params: &[(&str, &str)]) -> Vec<Diagnostic> {
@@ -103,7 +103,7 @@ fn req_sat_022_square_stitches_where_a_rail_steps_out_do_not_lean() {
 fn req_sat_023_a_top_stitch_longer_than_12_mm_snags_and_says_so() {
     // A column 13 mm wide. The satin's slanted stitches back are its longest, a little over 13 mm.
     let wide = ladder(10.0, 13.0, &[]);
-    for (method, length) in [("satin_column", "13.01 mm"), ("e_stitch", "13 mm")] {
+    for (method, length) in [("satin_column", "13.01 mm"), ("e_stitch", "13 mm"), ("s_stitch", "13 mm")] {
         let found = warnings(&wide, method, &[]);
         assert_eq!(codes(&found), [Code::SatinStitchLong], "{method}: {found:?}");
         assert!(found[0].message.contains(length), "{}", found[0].message);

@@ -196,6 +196,7 @@ fn req_gen_004_an_element_spends_a_stitch_for_each_needle_point_it_gives() {
             }),
         ),
         ("e-stitch", Box::new(|m| satin(&ladder(20.0, 4.0, &[]), &set(&[("satin_method", "e_stitch"), ("max_stitch_length_mm", "1.5")]), m))),
+        ("s-stitch", Box::new(|m| satin(&ladder(20.0, 4.0, &[]), &set(&[("satin_method", "s_stitch"), ("max_stitch_length_mm", "1.5")]), m))),
         ("tatami", Box::new(|m| tatami((20.0, 20.0), rows(0.4, 3.0), &[rows(2.0, 3.0)], m))),
     ];
     for (name, generator) in &cases {
