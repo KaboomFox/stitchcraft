@@ -120,7 +120,7 @@ do (`DEV-FILL-012`).
 The top rows alone, laid over each part grown by `expand_mm` as the fill grows it, are what a preview
 shows of a fill too costly to sew within the preview's budget (`generate::rows`, since M6.3). Laying
 them costs a small part of sewing the fill, since no needle point is placed and no route is searched. A
-28 mm square takes 632 units of the engine's work for its rows, and 54,034 to sew.
+28 mm square takes 626 units of the engine's work for its rows, and 62,532 to sew.
 
 ### 2. Needle points along a row
 

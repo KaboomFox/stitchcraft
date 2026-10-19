@@ -713,6 +713,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- A tatami fill's route charges the work budget for finding the rings that rows end on (`REQ-FILL-TAT-013`).
+  It looked at every node for each ring, without charging, at the fill's start and end in each layer: in
+  a part of many holes and rows, millions of looks the budget never saw. It looks at each node once now,
+  and charges for each.
 - A zigzag stroke too narrow for the machine's shortest stitch says so (`SC-W0405`). Its stitches across
   were shorter than the shortest stitch, and finishing left out every other needle point: a zigzag 0.2 mm
   wide at the default spacing sewed as a line along one side, with only `SC-I0504`, which says nothing
