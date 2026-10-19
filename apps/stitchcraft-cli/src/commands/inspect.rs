@@ -77,6 +77,8 @@ pub fn run(args: &InspectArgs) -> Outcome {
 mod tests {
     use std::path::PathBuf;
 
+    use stitchcraft_testkit::temp::TempDir;
+
     use super::*;
 
     fn golden(name: &str) -> PathBuf {
@@ -106,13 +108,11 @@ mod tests {
         // is Orange (12).
         let mut bytes = std::fs::read(golden("formats/one-stitch.pes")).unwrap();
         bytes[22 + 49] = 62;
-        let dir = std::env::temp_dir().join(format!("stitchcraft-inspect-applique-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = TempDir::new("inspect");
         let path = dir.join("applique.pes");
         std::fs::write(&path, bytes).unwrap();
         let out = inspect(path, None);
         assert!(out.stdout.contains("  threads   1. Applique Material (#ffc864), shown as Brother PEC 62 \"Applique Material\"\n"), "{}", out.stdout);
-        std::fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
@@ -138,8 +138,7 @@ mod tests {
 
     #[test]
     fn bad_files_are_reported_not_crashed_on() {
-        let dir = std::env::temp_dir().join(format!("stitchcraft-inspect-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = TempDir::new("inspect");
         let path = dir.join("broken.pes");
         std::fs::write(&path, b"#PES0001\x16\0\0\0").unwrap();
         let out = inspect(path, None);

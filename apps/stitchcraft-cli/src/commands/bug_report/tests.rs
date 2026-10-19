@@ -3,17 +3,13 @@
 
 use serde_json::Value;
 
+use stitchcraft_testkit::temp::TempDir;
+
 use super::*;
 use crate::cli::{Format, PlanArgs};
 
 fn conformance(name: &str) -> PathBuf {
     PathBuf::from(format!("{}/../../conformance/{name}", env!("CARGO_MANIFEST_DIR")))
-}
-
-fn temp(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("stitchcraft-bug-report-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).unwrap();
-    dir.join(name)
 }
 
 /// A change to a bundle's JSON.
@@ -31,18 +27,19 @@ fn replayed(bundle: &Path) -> Outcome {
     run(&BugReportArgs { replay: Some(bundle.to_path_buf()), ..args(None) })
 }
 
-/// `bundle` with `change` made to its JSON, written as `name`.
+/// `bundle` with `change` made to its JSON, written beside it as `name`.
 fn changed(bundle: &Path, name: &str, change: impl FnOnce(&mut Value)) -> PathBuf {
     let mut value = json(bundle);
     change(&mut value);
-    let path = temp(name);
+    let path = bundle.with_file_name(name);
     std::fs::write(&path, serde_json::to_vec(&value).unwrap()).unwrap();
     path
 }
 
 #[test]
 fn req_cli_001_a_bundle_reproduces_its_plan_byte_for_byte() {
-    let (design, bundle) = (conformance("fixtures/svg/strokes.svg"), temp("strokes.bug-report.json"));
+    let dir = TempDir::new("bug-report");
+    let (design, bundle) = (conformance("fixtures/svg/strokes.svg"), dir.join("strokes.bug-report.json"));
     let says = Some("the zigzag looks wrong".to_string());
     let out = run(&BugReportArgs { output: Some(bundle.clone()), says, ..args(Some(design.clone())) });
     assert_eq!(out.status, Status::Done, "{}", out.stderr);
@@ -85,7 +82,8 @@ fn req_cli_001_a_bundle_reproduces_its_plan_byte_for_byte() {
 
 #[test]
 fn req_vc_008_a_bundle_holds_a_vectorcraft_document_and_reproduces_its_plan() {
-    let (design, bundle) = (conformance("fixtures/vectorcraft/patch.vectorcraft"), temp("patch.bug-report.json"));
+    let dir = TempDir::new("bug-report");
+    let (design, bundle) = (conformance("fixtures/vectorcraft/patch.vectorcraft"), dir.join("patch.bug-report.json"));
     let out = run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(design.clone())) });
     assert_eq!(out.status, Status::Done, "{}", out.stderr);
     let written = json(&bundle);
@@ -96,7 +94,7 @@ fn req_vc_008_a_bundle_holds_a_vectorcraft_document_and_reproduces_its_plan() {
     // VectorCraft keeps images and other data after the JSON, behind a marker, and StitchCraft reads none
     // of it: the bundle keeps the JSON alone, as text, and its digest.
     let text = std::fs::read(&design).unwrap();
-    let (blobs, bundle) = (temp("blobs.vectorcraft"), temp("blobs.bug-report.json"));
+    let (blobs, bundle) = (dir.join("blobs.vectorcraft"), dir.join("blobs.bug-report.json"));
     std::fs::write(&blobs, [&text[..], b"\n\0VCBLOBS\0\xff\xfe"].concat()).unwrap();
     assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(blobs)) }).status, Status::Done);
     let kept = &json(&bundle)["design"];
@@ -106,7 +104,7 @@ fn req_vc_008_a_bundle_holds_a_vectorcraft_document_and_reproduces_its_plan() {
     // A compressed document, and one with a NUL byte that is not the marker's, are kept whole, in
     // hexadecimal.
     for (name, bytes) in [("packed.vectorcraft", b"\x1f\x8b\x08 not a stream".to_vec()), ("damaged.vectorcraft", [&text[..], b"\0\xff"].concat())] {
-        let (design, bundle) = (temp(name), temp(&format!("{name}.bug-report.json")));
+        let (design, bundle) = (dir.join(name), dir.join(format!("{name}.bug-report.json")));
         std::fs::write(&design, &bytes).unwrap();
         assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(design)) }).status, Status::Done);
         assert_eq!(json(&bundle)["design"]["vectorcraft_hex"].as_str(), Some(hex(&bytes).as_str()), "{name}");
@@ -119,16 +117,17 @@ fn req_vc_008_a_bundle_holds_a_vectorcraft_document_and_reproduces_its_plan() {
 
 #[test]
 fn req_cli_005_a_replay_reads_a_bundle_larger_than_a_design() {
+    let dir = TempDir::new("bug-report");
     // A bundle can hold a design of the most `stitch` reads, twice as large in hexadecimal, and what was
     // said of it: a replay reads it whole.
-    let (design, bundle) = (conformance("fixtures/svg/strokes.svg"), temp("large.bug-report.json"));
+    let (design, bundle) = (conformance("fixtures/svg/strokes.svg"), dir.join("large.bug-report.json"));
     assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(design)) }).status, Status::Done);
     let mut file = std::fs::OpenOptions::new().append(true).open(&bundle).unwrap();
     std::io::copy(&mut std::io::Read::take(std::io::repeat(b' '), files::MAX_READ), &mut file).unwrap();
     let out = replayed(&bundle);
     assert!(out.status == Status::Done && out.stdout.ends_with("\nreproduced\n"), "{}{}", out.stdout, out.stderr);
     // Past that, a file is refused unread.
-    let huge = temp("huge.bug-report.json");
+    let huge = dir.join("huge.bug-report.json");
     std::fs::File::create(&huge).unwrap().set_len(BUNDLE_MAX + 1).unwrap();
     let out = replayed(&huge);
     assert!(out.status == Status::Io && out.stderr.contains(&format!("stitch reads at most {BUNDLE_MAX}")), "{}", out.stderr);
@@ -136,7 +135,8 @@ fn req_cli_005_a_replay_reads_a_bundle_larger_than_a_design() {
 
 #[test]
 fn req_cli_001_each_difference_is_named_and_any_one_fails_the_replay() {
-    let bundle = temp("each.bug-report.json");
+    let dir = TempDir::new("bug-report");
+    let bundle = dir.join("each.bug-report.json");
     assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(conformance("fixtures/svg/strokes.svg"))) }).status, Status::Done);
     // The underline moved up 1 mm sews the same counts: only the plan's digest tells.
     let shifted = changed(&bundle, "shifted.json", |value| {
@@ -176,13 +176,14 @@ fn req_cli_001_each_difference_is_named_and_any_one_fails_the_replay() {
 
 #[test]
 fn req_cli_001_a_design_stitchcraft_refuses_replays_too() {
+    let dir = TempDir::new("bug-report");
     // Not UTF-8: kept in hexadecimal, and refused the same way when replayed. By default the bundle
     // goes next to the design.
-    let design = temp("latin1.svg");
+    let design = dir.join("latin1.svg");
     std::fs::write(&design, b"<svg>\xe9</svg>").unwrap();
     let out = run(&BugReportArgs { format: Some(Format::Dst), ..args(Some(design)) });
     assert_eq!(out.status, Status::Done, "{}", out.stderr);
-    let bundle = temp("latin1.bug-report.json");
+    let bundle = dir.join("latin1.bug-report.json");
     let written = json(&bundle);
     assert_eq!((written["design"]["svg_hex"].as_str(), written["format"].as_str()), (Some("3c7376673ee93c2f7376673e"), Some("dst")));
     assert!(written["result"]["diagnostics"][0].as_str().unwrap().starts_with("error SC-E0801: "), "{written}");
@@ -192,6 +193,7 @@ fn req_cli_001_a_design_stitchcraft_refuses_replays_too() {
 
 #[test]
 fn req_cli_002_a_bug_found_while_planning_writes_a_bundle() {
+    let dir = TempDir::new("bug-report");
     // A failed plan check: a bundle next to the machine file asked for, and exit status 4.
     let design = strokes();
     let run = pes(Path::new("strokes.svg"), "strokes", &design);
@@ -199,15 +201,15 @@ fn req_cli_002_a_bug_found_while_planning_writes_a_bundle() {
     let sewn = Sewn { diagnostics: vec![check.clone()], plan: None, file: None, back: None };
     assert!(sewn.found_a_bug());
     assert!(!Sewn { diagnostics: vec![Diagnostic::new(Code::StitchesMerged, "Merged.")], plan: None, file: None, back: None }.found_a_bug());
-    let out = beside(&temp("checked.pes"), &run, Ok(&sewn), Outcome::refuse(String::new(), &[check]));
+    let out = beside(&dir.join("checked.pes"), &run, Ok(&sewn), Outcome::refuse(String::new(), &[check]));
     assert_eq!(out.status, Status::Bug);
-    let bundle = temp("checked.bug-report.json");
+    let bundle = dir.join("checked.bug-report.json");
     assert!(out.stderr.contains(&format!("A bug-report bundle was written to {}:\n", bundle.display())), "{}", out.stderr);
     assert_eq!(json(&bundle)["result"]["diagnostics"][0], "error SC-E0009: A stitch of 0.1 mm.");
     // A panic in `stitch plan`: caught, said, and bundled with the design.
     let plan = PlanArgs {
         design: conformance("fixtures/svg/strokes.svg"),
-        output: temp("panicked.pes"),
+        output: dir.join("panicked.pes"),
         profile: profiles::REFERENCE.id.to_string(),
         format: None,
         preview: None,
@@ -216,7 +218,7 @@ fn req_cli_002_a_bug_found_while_planning_writes_a_bundle() {
     let out = guarded(&Command::Plan(plan), || panic!("a test of the panic guard"));
     assert_eq!(out.status, Status::Bug);
     assert!(out.stderr.starts_with("stitch: StitchCraft stopped on a bug in itself: a test of the panic guard\n"), "{}", out.stderr);
-    let bundle = temp("panicked.bug-report.json");
+    let bundle = dir.join("panicked.bug-report.json");
     // A panic while planning leaves nothing planned to record.
     let result = json(&bundle)["result"].take();
     assert_eq!(result["panic"], "a test of the panic guard");
@@ -237,14 +239,15 @@ fn req_cli_002_a_bug_found_while_planning_writes_a_bundle() {
 
 #[test]
 fn req_cli_002_a_panic_after_planning_is_bundled_with_the_plan_and_where_it_came() {
+    let dir = TempDir::new("bug-report");
     // Planned again, the plan is the run's. A panic while drawing the picture is drawn again by the
     // replay, and this design's picture does not panic, so it differs. One while writing is not rerun.
     let design = strokes();
     let run = pes(Path::new("strokes.svg"), "strokes", &design);
     for (phase, name, status) in [(Phase::Picture, "picture", Status::DesignErrors), (Phase::Writing, "writing", Status::Done)] {
         let stopped = Outcome { stdout: String::new(), stderr: String::new(), status: Status::Bug };
-        assert_eq!(beside(&temp(&format!("late-{name}.pes")), &run, Err(("a late panic", phase)), stopped).status, Status::Bug);
-        let bundle = temp(&format!("late-{name}.bug-report.json"));
+        assert_eq!(beside(&dir.join(format!("late-{name}.pes")), &run, Err(("a late panic", phase)), stopped).status, Status::Bug);
+        let bundle = dir.join(format!("late-{name}.bug-report.json"));
         let written = json(&bundle);
         assert_eq!((written["result"]["panic"].as_str(), written["result"]["phase"].as_str()), (Some("a late panic"), Some(name)));
         assert!(written["result"]["plan"]["sha256"].is_string() && written["result"]["file"]["sha256"].is_string(), "{written}");
@@ -252,10 +255,10 @@ fn req_cli_002_a_panic_after_planning_is_bundled_with_the_plan_and_where_it_came
         assert_eq!(out.status, status, "{}", out.stdout);
         assert!(out.stdout.contains("  plan          same: ") && out.stdout.contains("  machine file  same: "), "{}", out.stdout);
     }
-    let picture = replayed(&temp("late-picture.bug-report.json")).stdout;
+    let picture = replayed(&dir.join("late-picture.bug-report.json")).stdout;
     let differs = "  panic         differs\n    then:       a late panic (while drawing the picture)\n    now:        none\n";
     assert!(picture.contains(differs), "{picture}");
-    let writing = replayed(&temp("late-writing.bug-report.json")).stdout;
+    let writing = replayed(&dir.join("late-writing.bug-report.json")).stdout;
     assert!(writing.contains("while writing the files, which a replay does not do") && !writing.contains("not reproduced"), "{writing}");
 }
 
@@ -270,24 +273,24 @@ fn pes<'a>(path: &'a Path, name: &'a str, design: &'a [u8]) -> Run<'a> {
 }
 
 /// A bundle of the fixture `strokes.svg` as `name` from `path`, planned for the reference profile as PES,
-/// written as `bundle`.
-fn bundled(path: &Path, name: &str, bundle: &str) -> PathBuf {
+/// written to `written`.
+fn bundled(path: &Path, name: &str, written: PathBuf) -> PathBuf {
     let design = strokes();
     let run = pes(path, name, &design);
-    let written = temp(bundle);
     write(&written, &super::bundle(&run, borrowed(&guarded_sew(&run, Phase::Plan)))).unwrap();
     written
 }
 
 #[test]
 fn req_cli_001_a_bundle_replays_with_the_design_name_it_recorded() {
+    let dir = TempDir::new("bug-report");
     // Written on Linux, `a\b.svg` names the design `a\b`, and the machine file's label holds it. Windows
     // would read `b` from that file name, so the replay takes the name the bundle recorded.
-    let bundle = bundled(Path::new("a\\b.svg"), "a\\b", "backslash.bug-report.json");
+    let bundle = bundled(Path::new("a\\b.svg"), "a\\b", dir.join("backslash.bug-report.json"));
     assert_eq!(json(&bundle)["design"]["name"], "a\\b");
     assert_eq!(replayed(&bundle).status, Status::Done);
     // A bundle written before names were recorded names the design after its file, as then.
-    let then = bundled(Path::new("strokes.svg"), "strokes", "named.bug-report.json");
+    let then = bundled(Path::new("strokes.svg"), "strokes", dir.join("named.bug-report.json"));
     let unnamed = changed(&then, "unnamed.json", |v| {
         v["design"].as_object_mut().unwrap().remove("name");
     });
@@ -302,9 +305,10 @@ fn req_cli_001_a_bundle_replays_with_the_design_name_it_recorded() {
 #[cfg(unix)]
 #[test]
 fn req_cli_001_a_design_whose_file_name_is_not_utf_8_replays() {
+    let dir = TempDir::new("bug-report");
     use std::os::unix::ffi::OsStrExt as _;
     let path = Path::new(std::ffi::OsStr::from_bytes(b"\xe9t\xe9.svg"));
-    let bundle = bundled(path, design_name(path), "latin1-name.bug-report.json");
+    let bundle = bundled(path, design_name(path), dir.join("latin1-name.bug-report.json"));
     let written = json(&bundle);
     assert_eq!((written["design"]["file"].as_str(), written["design"]["name"].as_str()), (Some("\u{FFFD}t\u{FFFD}.svg"), Some("design")));
     assert_eq!(replayed(&bundle).status, Status::Done);
@@ -312,9 +316,10 @@ fn req_cli_001_a_design_whose_file_name_is_not_utf_8_replays() {
 
 #[test]
 fn req_cli_004_a_replay_prints_what_the_bundle_says_as_text_only() {
+    let dir = TempDir::new("bug-report");
     // A bundle anyone may attach to an issue: a platform that would set the terminal's title and clear
     // its screen, and a diagnostic that would print a line of its own and hide the lines after it.
-    let bundle = temp("terminal.bug-report.json");
+    let bundle = dir.join("terminal.bug-report.json");
     assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(conformance("fixtures/svg/strokes.svg"))) }).status, Status::Done);
     let hostile = changed(&bundle, "hostile.json", |v| {
         v["platform"] = Value::from("linux x86_64\u{1b}]0;title\u{7}\u{1b}[2J");
@@ -333,7 +338,8 @@ fn req_cli_004_a_replay_prints_what_the_bundle_says_as_text_only() {
 
 #[test]
 fn diag_sc_e0012_a_file_that_is_not_a_bundle_is_not_replayed() {
-    let notes = temp("notes.txt");
+    let dir = TempDir::new("bug-report");
+    let notes = dir.join("notes.txt");
     std::fs::write(&notes, b"the zigzag looks wrong").unwrap();
     let out = replayed(&notes);
     assert_eq!(out.status, Status::DesignErrors);
@@ -345,7 +351,7 @@ fn diag_sc_e0012_a_file_that_is_not_a_bundle_is_not_replayed() {
         )
     );
     // Bundles this version cannot replay say why.
-    let bundle = temp("whole.bug-report.json");
+    let bundle = dir.join("whole.bug-report.json");
     assert_eq!(run(&BugReportArgs { output: Some(bundle.clone()), ..args(Some(conformance("fixtures/svg/strokes.svg"))) }).status, Status::Done);
     let cases: [(&str, Change, &str); 5] = [
         ("newer.json", |v| v["stitchcraft_bug_report"] = Value::from(2), "is a bundle of format 2, and this StitchCraft replays format 1."),
