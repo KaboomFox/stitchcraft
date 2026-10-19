@@ -29,7 +29,8 @@ stretch of rows (`generators::tatami`). Since M7.2 a zigzag stroke is sewn as In
 (`generators::zigzag`), and since M7.3 an E-stitch, a satin column's spikes from a spine along its first
 rail. Every satin method then names stitches that lean far along the column, and top stitches longer than
 12 mm (`generators::satin`). Since M7.4 an S-stitch sews each pair once across, every other one back the
-other way. Design:
+other way, and since M7.5 a zigzag satin sews a zigzag between the rails, its pairs at half the spacing.
+Design:
 `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 
 ## Invariants

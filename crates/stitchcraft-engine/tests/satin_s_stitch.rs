@@ -145,8 +145,10 @@ fn req_sat_025_a_step_goes_from_the_inset_point_a_stitch_ends_on_to_the_next_one
 fn req_sat_024_between_neighbours_the_end_cuts_the_stitches_as_a_satin_s() {
     // A needle to the left of the column and an element above its middle: the column starts on the line
     // between its rails nearest the needle, and ends on its outline nearest the element. The end cuts the
-    // top stitches at the pair nearest it, and each pair's points are still sewn once, on one side of the
-    // cut or the other.
+    // top stitches at the pair nearest it, 4 mm along, whose stitch lies along the cut. They are cut at the
+    // cut's point on the first rail, 0.2 mm from the stitch's point there, within the shortest stitch of
+    // it, so at that point: both halves end there, and every other point of the pairs is sewn once, on one
+    // side of the cut or the other.
     let neighbours = Neighbours { needle: Some(p(-3.0, 2.0)), next: Some(Approach::Point(p(5.0, 7.0))) };
     let params = [("satin_method", "s_stitch"), ("zigzag_spacing_mm", "2"), ("pull_compensation_mm", "0.2"), NO_SHORT_STITCHES];
     let (points, warnings) = sewn_between(&ladder(10.0, 4.0, &[]), &params, &neighbours);
@@ -156,7 +158,8 @@ fn req_sat_024_between_neighbours_the_end_cuts_the_stitches_as_a_satin_s() {
     for x in [0.0, 2.0, 4.0, 6.0, 8.0, 10.0] {
         for y in [-0.2, 4.2] {
             let sewn = points.iter().filter(|&&(px, py)| (px - x).abs() < 1e-9 && (py - y).abs() < 1e-9).count();
-            assert_eq!(sewn, 1, "the pair's point at ({x}, {y}): {points:?}");
+            let at_the_cut = if (x, y) == (4.0, -0.2) { 2 } else { 1 };
+            assert_eq!(sewn, at_the_cut, "the pair's point at ({x}, {y}): {points:?}");
         }
     }
 }

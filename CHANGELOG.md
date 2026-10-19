@@ -5,6 +5,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M7.5: the zigzag satin is sewn, as Ink/Stitch sews it (`REQ-SAT-026` to `REQ-SAT-028`). Set
+  `satin_column` on and `satin_method` to `zigzag`. The pairs a satin column places are placed at half the
+  zigzag spacing, and one point of each is sewn, the rails taking turns from the first: every stitch
+  slants half the spacing along the column.
+  - The pairs of the zigzag are inset where their points crowd, each point along its own stitch. Its long
+    stitches split by the column's split method. The simple and staggered methods number the stitch back
+    to pair i 2i and the stitch across it 2i + 1. The default method splits a stitch back into its own
+    fewest parts, where a satin column's takes the count of the stitch across before it.
+  - The contour underlay stops where the zigzag stops on each rail, as in Ink/Stitch. After an odd centre
+    walk it stops at the same places, where Ink/Stitch looks for them in the turned run and cuts its sides
+    elsewhere (`DEV-SAT-011`).
+  - The outline the column starts and ends on is Ink/Stitch's, through pairs at the full spacing.
+  - A zigzag satin 0.1 mm long or less has no stitch across, and is left out with its underlays, with
+    `SC-W0215` (`REQ-SAT-018`). Ink/Stitch sews its underlays alone (`DEV-SAT-008`).
+  - A user page with pictures, *Zigzag satin*, and the zigzag satin listed for MC-6. Every satin method
+    is sewn now, and `SC-W0011` skips none of them.
 - M7.4: the S-stitch is sewn, as Ink/Stitch sews its "S" stitch (`REQ-SAT-024`, `REQ-SAT-025`). Set
   `satin_column` on and `satin_method` to `s_stitch`. Each pair a satin column places is sewn once
   across, the first and every other one from the second rail, with a step along a rail to the next.
@@ -726,6 +742,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- A satin column's end cuts each part at its own needle point when that lies within the shortest stitch of
+  the cut (`REQ-SAT-014`). A part was cut where it crossed the cut, and finishing left out a needle point
+  that near another, with `SC-I0504`, a note about a point the design never drew. A zigzag satin, whose
+  cuts lie on its own points, got the note at every angle by default. The other methods got it in some
+  places, where a centre walk's or a contour's needle points lay that near a cut, and with some pull
+  compensations. The distance is measured as finishing measures it, so a cut exactly the shortest stitch
+  from a point stays where it is.
 - The command line's tests leave nothing in the system's temporary folder. Each run of them left 14
   folders there, about 65 MB, and mutation testing runs them hundreds of times: 5.7 GB had built up
   where this was found. Each test writes its files in a folder of its own, `stitchcraft_testkit::temp`'s

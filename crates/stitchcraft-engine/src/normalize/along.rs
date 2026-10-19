@@ -6,6 +6,7 @@
 //! of point-to-point distances, square roots and arithmetic only, so every platform measures the same
 //! (`docs/src/design/determinism.md`).
 
+use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use crate::normalize::stroke::{nearest_on_segment, segments};
@@ -65,6 +66,21 @@ impl<'a> Along<'a> {
         Ok(best.map_or(0.0, |(_, at)| at))
     }
 
+    /// `at`, or the distance along it to the nearer of its own points on either side of `at` when that point
+    /// lies within `within` of the point at `at`, as [`at_least`] measures it: a cut there makes no stitch
+    /// shorter than `within`, and a point exactly `within` away, to within rounding, is not within it.
+    pub(crate) fn snapped(&self, at: f64, within: f64) -> f64 {
+        let here = self.point(at);
+        let after = self.at.partition_point(|a| *a < at);
+        [after.checked_sub(1), Some(after)]
+            .into_iter()
+            .flatten()
+            .filter_map(|i| Some((self.points.get(i)?.distance(here), *self.at.get(i)?)))
+            .filter(|(distance, _)| !at_least(*distance, within))
+            .min_by(|a, b| a.0.total_cmp(&b.0))
+            .map_or(at, |(_, own)| own)
+    }
+
     /// The part of it from `from` to `to` along it, `from` before `to`: the points there, and its own
     /// points between them.
     pub(crate) fn part(&self, from: f64, to: f64) -> Vec<Point> {
@@ -93,6 +109,11 @@ mod tests {
         assert_eq!((along.point(-1.0), along.point(12.0)), (p(0.0, 0.0), p(3.0, 10.0)), "held to the ends");
         let meter = &mut Budget::DEFAULT.meter();
         assert_eq!(along.project(p(5.0, 7.0), meter).unwrap(), 8.0);
+        // A distance within 1 of a point of its own is that point's, the nearer of the 2 on either side.
+        assert_eq!((along.snapped(5.5, 1.0), along.snapped(4.2, 1.0), along.snapped(8.0, 1.0)), (5.0, 5.0, 8.0));
+        assert_eq!((along.snapped(10.5, 1.0), along.snapped(0.9, 1.0), along.snapped(0.9, 0.5)), (11.0, 0.0, 0.9));
+        // The point 4 along is 1 from (3, 4) but for rounding, and 1 is not within 1.
+        assert_eq!((along.snapped(1.0, 1.0), along.snapped(4.0, 1.0)), (1.0, 4.0));
         assert_eq!(along.project(p(-2.0, -1.0), meter).unwrap(), 0.0);
         assert_eq!(along.part(2.5, 8.0), [p(1.5, 2.0), p(3.0, 4.0), p(3.0, 7.0)]);
         assert_eq!(along.part(5.0, 11.0), [p(3.0, 4.0), p(3.0, 10.0)], "a point at an end is not repeated");

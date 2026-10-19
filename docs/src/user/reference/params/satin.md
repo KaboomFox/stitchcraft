@@ -27,8 +27,8 @@ Off, the path is sewn as a stroke, by its `stroke_method`.
 other and back. An E-stitch sews a spike across the column at each pair and a spine along its
 first rail between them, an edge for appliqué. An S-stitch sews one stitch across at each pair,
 every other one the other way, with a step along a rail between them: split by a longest
-stitch, they cover the column in rows, as a fill does. The zigzag satin arrives in a later
-version, and until then an element set to it is skipped (`SC-W0011`).
+stitch, they cover the column in rows, as a fill does. A zigzag satin sews a zigzag between the
+rails, every stitch slanting half the spacing along.
 
 - **Accepts:** one of `satin_column` (Satin column), `e_stitch` (E-stitch), `s_stitch` (S-stitch), `zigzag` (Zigzag satin)
 - **Default:** `satin_column`
@@ -38,8 +38,10 @@ version, and until then an element set to it is skipped (`SC-W0011`).
 
 **Zigzag spacing.** The distance from one pair of needle points across the column to the next. A satin column
 goes across and back in one spacing, an E-stitch sews a spike every spacing, and an S-stitch a
-stitch across, each the other way from the one before. It is measured across the column at its
-outside edge, and on a curve the stitches fan out from the inside edge.
+stitch across, each the other way from the one before. In a zigzag satin the needle goes across
+and back in one spacing too, its points on the 2 rails half a spacing apart. It is measured
+across the column at its outside edge. On a curve the stitches lie closer together at the inside
+edge.
 
 - **Accepts:** a length from 0.01 to 10 mm
 - **Default:** `0.4`
@@ -273,7 +275,8 @@ It holds the edges still and keeps them crisp.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-SAT-011.** After an odd centre walk, which turns a zigzag satin's run round, StitchCraft stops the contour underlay's sides where it stops them without one: at the zigzag's last point on the first rail, and its first and last on the second, in the order the column places them. Ink/Stitch looks for those points in the order the top stitches are sewn, after it has turned them round, and finds the first points where it means the last. Its first side is not cut, and its second shrinks to a stub: on a column 10 mm long and 4 mm wide at a zigzag spacing of 2 mm, 0.2 mm long.
 
 ### `contour_underlay_stitch_length_mm`
 

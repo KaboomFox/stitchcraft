@@ -484,11 +484,6 @@ fn satin_column(
     // The registry reads a list of 1 length or more.
     let Some(&travel) = running.running_stitch_length_mm.first() else { return Ok(None) };
     let lengths = SatinLengths { min_stitch, max_stitch, travel, tolerance: running.running_stitch_tolerance_mm, jump };
-    if !matches!(sewing.stitch_type, StitchType::SatinColumn | StitchType::EStitch | StitchType::SStitch) {
-        let method = sewing.stitch_type.id();
-        diagnostics.push(not_yet(&format!("This element's satin method, `{method}`, is not sewn by this version of StitchCraft yet")));
-        return Ok(None);
-    }
     Ok(Some(satin_stitch(&rails, &params, &pull, lengths, sewing.neighbours, rng, meter)?))
 }
 
