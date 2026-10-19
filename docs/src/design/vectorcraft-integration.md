@@ -80,6 +80,7 @@ One `.wasm` per stitch family keeps each dialog relevant and under 64 parameters
 | `<ns>.stroke` | live effect | running, bean, manual (P1), zigzag (M7.2), ripple (later) | `stroke_method` choice selects the variant |
 | `<ns>.satin` | live effect | satin (P1), E (M7.3), S (M7.4), zigzag (M7.5) | rails and rungs from the object's compound path |
 | `<ns>.fill` | live effect | tatami (P1); contour, meander, circular (P2) | `fill_method` choice |
+| `<ns>.auto` | live effect | the stitches automatic digitizing chooses by width (M13.7) | on a group, previews each path inside ([image to embroidery](image-to-embroidery.md)) |
 
 The tools an object filter was to give are VectorCraft's own commands, or wait for ABI v2
 ([tools](#tools-vectorcrafts-own-commands)).
@@ -323,7 +324,8 @@ anchor, leaves that end of the segment straight, and a segment without handles i
   text. So is a kind of object this version doesn't read.
 
 **Paints and threads.** An object without StitchCraft's effects is stitched as Ink/Stitch stitches an SVG
-shape. Its visible fills are filled, in the appearance's order, and its visible strokes then have a
+shape. From M13, `--auto` lets StitchCraft choose its stitches instead ([image to
+embroidery](image-to-embroidery.md)). Its visible fills are filled, in the appearance's order, and its visible strokes then have a
 running stitch each. The thread's colour is a solid paint's colour, with CMYK and grey converted by
 VectorCraft's formula without colour management ((1 − c)(1 − k) and 1 − k) and Lab through sRGB. A
 gradient gives its first stop's colour, with `SC-W0807` unless every stop has that colour, and a pattern
