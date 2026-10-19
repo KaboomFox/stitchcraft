@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-e61dbdd7.js";
+            window.path_to_searchindex_js = "searchindex-c30979fa.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-639d0563.js"></script>
@@ -1640,7 +1640,7 @@ Arguments:
 <li>Any puckering round the circles, and where.</li>
 </ul>
 <h2 id="ts-08--fill-density-and-angle"><a class="header" href="#ts-08--fill-density-and-angle">TS-08 — Fill density and angle</a></h2>
-<p>100.0 × 170.0 mm · 16237 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops</p>
+<p>100.0 × 170.0 mm · 16248 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-08.png" alt="TS-08 as it will sew, in blue: fifteen tatami squares in five rows of three, their rows level, slanting and upright from left to right, the top squares dense and the bottom ones open enough to show the underlay and travel beneath them."><span class="img-wrapper"><img src="images/generated/testsheet-ts-08.png" alt="TS-08 as it will sew, in blue: fifteen tatami squares in five rows of three, their rows level, slanting and upright from left to right, the top squares dense and the bottom ones open enough to show the underlay and travel beneath them."></span></label></p>
 <p>Threads: Blue.</p>
@@ -3119,7 +3119,11 @@ fully, and pull it in more.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.1 to 100 mm</li>
 <li><strong>Default:</strong> <code>0.25</code></li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-FILL-012.</strong> A point of a part’s outline within 1e-9 mm of a row lies on it, and a row within 1e-9 mm of the part’s far side lies on that side and is left out. Each row lies a whole number of row spacings past the part’s first row, multiplied out. Ink/Stitch adds the row spacing in CSS pixels from row to row, and cuts each row with the part exactly, once the part is put on a grid of 1e-10 pixels. So a row on a side runs along it, crosses the part a hair beside it or misses it as the numbers round, and a part can have a row a hair inside its far side.</li>
+</ul>
+</li>
 </ul>
 <h3 id="end_row_spacing_mm"><a class="header" href="#end_row_spacing_mm"><code>end_row_spacing_mm</code></a></h3>
 <p><strong>End row spacing.</strong> The spacing of the last rows, for a fill that fades: from the first row the spacing changes
@@ -5867,9 +5871,11 @@ build them in this order.</p>
 since M5.2). They run at <code>angle</code>, counter-clockwise from horizontal on screen: at 0° left to right, at
 90° up the screen. Measured across them from the design’s origin, the first row of a part lies the
 largest whole number of <code>row_spacing_mm</code> from the origin that does not pass the part, and the rows follow
-it <code>row_spacing_mm</code> apart until they pass the part’s far side (<code>REQ-FILL-TAT-002</code>). Fills side by side
-at the same angle and spacing then share their rows. Angles of whole right angles are exact, so rows at
-0° or 90° run exactly along the drawing’s axes.</p>
+it <code>row_spacing_mm</code> apart up to the part’s far side, with none on it (<code>REQ-FILL-TAT-002</code>). Fills side by
+side at the same angle and spacing then share their rows. Angles of whole right angles are exact, so rows
+at 0° or 90° run exactly along the drawing’s axes. The nth row lies n spacings past the first, multiplied
+out, since a spacing such as 0.1 mm rounds in binary, and added up row by row its rounding grew into a
+row on the far side.</p>
 <p>With <code>end_row_spacing_mm</code>, each step to the next row is the row spacing plus the difference to the end
 spacing times the distance from the first row over the part’s height. The spacing then reaches the end
 spacing a part’s height from the first row. Ink/Stitch carries the change on beyond that. Over a part
@@ -5884,6 +5890,11 @@ across 406 random polygons of grid squares and half squares, 98 of them with hol
 checked (<code>conformance/fixtures/geometry/shapely-rows.txt</code>).
 Which stretches lie inside is decided by counting the edges that cross the row, each over its height
 from its lower end up to but not including its upper end.</p>
+<p>A side drawn on a row lies a hair off it by the time it is cut: the region puts its corners on a grid
+2.9e-11 mm wide, and the row’s place rounds. So a point of the outline within 1e-9 mm of a row lies on
+it, and a row within 1e-9 mm of a part’s far side lies on that side, and is left out. A part’s first and
+last rows, and the segments of a row drawn along a side, then don’t depend on the rounding. Ink/Stitch’s
+do (<code>DEV-FILL-012</code>).</p>
 <p>The top rows alone, laid over each part grown by <code>expand_mm</code> as the fill grows it, are what a preview
 shows of a fill too costly to sew within the preview’s budget (<code>generate::rows</code>, since M6.3). Laying
 them costs a small part of sewing the fill, since no needle point is placed and no route is searched. A

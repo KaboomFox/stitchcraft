@@ -35,7 +35,7 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-e61dbdd7.js";
+            window.path_to_searchindex_js = "../../../searchindex-c30979fa.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../toc-639d0563.js"></script>
@@ -200,7 +200,11 @@ fully, and pull it in more.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.1 to 100 mm</li>
 <li><strong>Default:</strong> <code>0.25</code></li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-FILL-012.</strong> A point of a part’s outline within 1e-9 mm of a row lies on it, and a row within 1e-9 mm of the part’s far side lies on that side and is left out. Each row lies a whole number of row spacings past the part’s first row, multiplied out. Ink/Stitch adds the row spacing in CSS pixels from row to row, and cuts each row with the part exactly, once the part is put on a grid of 1e-10 pixels. So a row on a side runs along it, crosses the part a hair beside it or misses it as the numbers round, and a part can have a row a hair inside its far side.</li>
+</ul>
+</li>
 </ul>
 <h3 id="end_row_spacing_mm"><a class="header" href="#end_row_spacing_mm"><code>end_row_spacing_mm</code></a></h3>
 <p><strong>End row spacing.</strong> The spacing of the last rows, for a fill that fades: from the first row the spacing changes
