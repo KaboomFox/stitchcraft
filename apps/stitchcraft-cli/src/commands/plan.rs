@@ -303,6 +303,8 @@ mod tests {
 
     use stitchcraft_core::ElementId;
 
+    use stitchcraft_testkit::temp::TempDir;
+
     use super::*;
     use crate::cli::Format;
 
@@ -314,19 +316,14 @@ mod tests {
         PathBuf::from(format!("{}/../../conformance/fixtures/vectorcraft/{name}", env!("CARGO_MANIFEST_DIR")))
     }
 
-    fn temp(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("stitchcraft-plan-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        dir.join(name)
-    }
-
     fn args(design: PathBuf, output: PathBuf) -> PlanArgs {
         PlanArgs { design, output, profile: profiles::REFERENCE.id.to_string(), format: None, preview: None, report: None }
     }
 
     #[test]
     fn writes_the_machine_file_a_picture_and_a_report() {
-        let (output, preview, report) = (temp("strokes.pes"), temp("strokes.png"), temp("strokes.json"));
+        let dir = TempDir::new("plan");
+        let (output, preview, report) = (dir.join("strokes.pes"), dir.join("strokes.png"), dir.join("strokes.json"));
         let out = run(&PlanArgs { preview: Some(preview.clone()), report: Some(report.clone()), ..args(fixture("strokes.svg"), output.clone()) });
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(std::fs::read(&output).unwrap().starts_with(b"#PES0001"));
@@ -363,7 +360,8 @@ mod tests {
 
     #[test]
     fn req_vc_008_stitch_plan_reads_a_vectorcraft_document() {
-        let (output, preview, report) = (temp("patch.pes"), temp("patch.png"), temp("patch.json"));
+        let dir = TempDir::new("plan");
+        let (output, preview, report) = (dir.join("patch.pes"), dir.join("patch.png"), dir.join("patch.json"));
         let out =
             run(&PlanArgs { preview: Some(preview.clone()), report: Some(report.clone()), ..args(vectorcraft("patch.vectorcraft"), output.clone()) });
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
@@ -378,24 +376,25 @@ mod tests {
         // The background's red, the border's blue, the stem's green and the dots' gold.
         assert!(out.stdout.contains(", 3 colour changes, "), "{}", out.stdout);
         // The same document under VectorCraft's former extension, which names the design the same.
-        let old = temp("patch.drawcraft");
+        let old = dir.join("patch.drawcraft");
         std::fs::copy(vectorcraft("patch.vectorcraft"), &old).unwrap();
-        let again = temp("patch-again.pes");
+        let again = dir.join("patch-again.pes");
         assert_eq!(run(&args(old, again.clone())).status, Status::Done);
         assert_eq!(std::fs::read(&again).unwrap(), std::fs::read(&output).unwrap());
         // A file that isn't a VectorCraft document is refused as one.
-        let not_vectorcraft = temp("not.vectorcraft");
+        let not_vectorcraft = dir.join("not.vectorcraft");
         std::fs::write(&not_vectorcraft, b"<svg/>").unwrap();
-        let refused = run(&args(not_vectorcraft, temp("not.pes")));
+        let refused = run(&args(not_vectorcraft, dir.join("not.pes")));
         assert_eq!(refused.status, Status::DesignErrors);
         assert!(refused.stderr.starts_with("error SC-E0806: "), "{}", refused.stderr);
     }
 
     #[test]
     fn req_cli_008_the_picture_is_of_the_file_as_written() {
+        let dir = TempDir::new("plan");
         // DST machines cut the thread before the 47 mm jump, where the plan leaves a jump thread: the picture
         // draws the cut, as `stitch preview` of the file does, in the design's colours.
-        let (output, preview) = (temp("picture.dst"), temp("picture.png"));
+        let (output, preview) = (dir.join("picture.dst"), dir.join("picture.png"));
         let out = run(&PlanArgs { preview: Some(preview.clone()), ..args(fixture("strokes.svg"), output) });
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         let sewn = sew(Source::Svg, &std::fs::read(fixture("strokes.svg")).unwrap(), profiles::REFERENCE, FormatId::Dst, "picture");
@@ -411,8 +410,9 @@ mod tests {
 
     #[test]
     fn a_design_with_errors_writes_only_its_report() {
-        let (output, report) = (temp("unreadable.pes"), temp("unreadable.json"));
-        let not_svg = temp("not.svg");
+        let dir = TempDir::new("plan");
+        let (output, report) = (dir.join("unreadable.pes"), dir.join("unreadable.json"));
+        let not_svg = dir.join("not.svg");
         std::fs::write(&not_svg, b"stitches, please").unwrap();
         let out = run(&PlanArgs { report: Some(report.clone()), ..args(not_svg, output.clone()) });
         assert_eq!(out.status, Status::DesignErrors);
@@ -422,22 +422,23 @@ mod tests {
         let report: Value = serde_json::from_slice(&std::fs::read(&report).unwrap()).unwrap();
         assert_eq!((report["diagnostics"][0]["code"].as_str(), report.get("file")), (Some("SC-E0801"), None));
         // A design with nothing to sew: a shape neither filled nor stroked.
-        let unpainted = temp("unpainted.svg");
+        let unpainted = dir.join("unpainted.svg");
         std::fs::write(
             &unpainted,
             br#"<svg xmlns="http://www.w3.org/2000/svg" width="20mm" height="20mm" viewBox="0 0 20 20"><rect width="10" height="10" fill="none"/></svg>"#,
         )
         .unwrap();
-        let out = run(&args(unpainted, temp("unpainted.pes")));
+        let out = run(&args(unpainted, dir.join("unpainted.pes")));
         assert_eq!(out.status, Status::DesignErrors);
         assert!(out.stderr.contains("error SC-E0010: The design has nothing to stitch"), "{}", out.stderr);
     }
 
     #[test]
     fn req_cli_003_an_element_left_out_with_an_error_writes_only_the_report() {
+        let dir = TempDir::new("plan");
         // The engine leaves out an element whose planning runs past its work budget, with `SC-E0004`, and plans
         // the rest (`REQ-GEN-002`), as it does for a fill of 2,000 spikes after 12 s.
-        let (output, preview, report) = (temp("left-out.pes"), temp("left-out.png"), temp("left-out.json"));
+        let (output, preview, report) = (dir.join("left-out.pes"), dir.join("left-out.png"), dir.join("left-out.json"));
         let mut sewn = sew(Source::Svg, &std::fs::read(fixture("strokes.svg")).unwrap(), profiles::REFERENCE, FormatId::PesV1, "strokes");
         let fill = ElementId::new("svg:patch:fill").unwrap();
         sewn.diagnostics.push(Budget::DEFAULT.meter().charge(u64::MAX).unwrap_err().diagnostic(&Budget::DEFAULT, Some(fill)));
@@ -454,28 +455,30 @@ mod tests {
 
     #[test]
     fn formats_profiles_and_files_are_checked_first() {
-        let dst = temp("strokes-as-dst.bin");
+        let dir = TempDir::new("plan");
+        let dst = dir.join("strokes-as-dst.bin");
         let out = run(&PlanArgs { format: Some(Format::Dst), ..args(fixture("strokes.svg"), dst.clone()) });
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(std::fs::read(&dst).unwrap().starts_with(b"LA:strokes"));
         // What the format adds is said with the rest: DST machines cut before the 47 mm jump.
         assert!(out.stderr.ends_with("info SC-I0605: The thread will be cut at 1 place the plan does not trim: DST machines cut it before 3 or more jump records in a row, and a jump longer than 24.2 mm takes that many.\n"), "{}", out.stderr);
-        assert_eq!(run(&args(fixture("strokes.svg"), temp("x.unknown"))).status, Status::Usage);
-        assert_eq!(run(&PlanArgs { profile: "singer".to_string(), ..args(fixture("strokes.svg"), temp("x.pes")) }).status, Status::Usage);
-        let missing = run(&args(fixture("missing.svg"), temp("x.pes")));
+        assert_eq!(run(&args(fixture("strokes.svg"), dir.join("x.unknown"))).status, Status::Usage);
+        assert_eq!(run(&PlanArgs { profile: "singer".to_string(), ..args(fixture("strokes.svg"), dir.join("x.pes")) }).status, Status::Usage);
+        let missing = run(&args(fixture("missing.svg"), dir.join("x.pes")));
         assert_eq!(missing.status, Status::Io);
         assert!(missing.stderr.starts_with("stitch: cannot read "));
     }
 
     #[test]
     fn req_cli_006_when_a_file_cannot_be_written_none_is_and_what_was_said_is_printed() {
+        let dir = TempDir::new("plan");
         // A folder that does not exist: the machine file, the picture, the report, and the report of a
         // design that was refused. The other files are not written either, and what was said about the
         // design is printed before the file that could not be written.
-        let nowhere = temp("no-such-folder").join("x");
-        let output = temp("unwritten.pes");
+        let nowhere = dir.join("no-such-folder").join("x");
+        let output = dir.join("unwritten.pes");
         let _ = std::fs::remove_file(&output);
-        let not_svg = temp("not-an-svg.svg");
+        let not_svg = dir.join("not-an-svg.svg");
         std::fs::write(&not_svg, b"stitches, please").unwrap();
         let cases = [
             (args(fixture("strokes.svg"), nowhere.join("strokes.pes")), nowhere.join("strokes.pes"), "SC-I0504"),
