@@ -713,6 +713,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- A VectorCraft document no longer sews differently from what VectorCraft draws without a word
+  (`REQ-VC-005`). `SC-W0807` now names what VectorCraft draws of a stroke and the stitches don't follow:
+  - A stroke's arrowheads aren't stitched, and a dashed stroke is stitched along all of its path.
+  - A stroke painted below a fill is sewn after the fill, over it.
+  - A satin column or a zigzag made of a stroke is centred on its path and as wide as the stroke all
+    along. A 3 mm stroke aligned inside a closed path, say, sewed its column 1.5 mm out from what
+    VectorCraft draws. The stroke's alignment, width profile and caps are named, and so is a zigzag of an
+    object with no stroke, which is 0 mm wide.
+  - 2 StitchCraft effects on one object or group. Each is sewn on the shape as drawn, but VectorCraft
+    draws the second on the stitches of the first. The integration design said to make a fill with an
+    outline that way: it now takes 2 objects, as the how-to on columns and presets says too.
 - A small file can no longer make StitchCraft fill memory (`REQ-GEN-004`). Generators charged only the
   work budget, and the design's stitch limit was checked when the elements were joined, after their
   needle points were made. 10 mm of zigzag at the smallest spacing, sewn 100 times with bean stitch 10,

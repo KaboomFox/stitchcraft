@@ -271,7 +271,9 @@ fn req_vc_004_an_effect_s_thread_is_a_paint_vectorcraft_draws() {
     assert_eq!(ids(&read), ["vc:2:fill", "vc:2:stroke"]);
     assert!(read.design.elements().iter().all(|e| e.thread.color == Rgb::new(0, 0, 255)), "{:?}", read.design.elements());
     assert!(element(&read, "vc:2:fill").params.iter().next().is_none());
-    assert_eq!(said(&read), []);
+    // Nothing is said, but that VectorCraft draws its 2 effects one on the other.
+    assert_eq!(said(&read), [(Code::VcFeatureIgnored, "vc:2".to_string())]);
+    assert!(read.warnings[0].message.contains("has 2 StitchCraft effects"), "{}", read.warnings[0]);
 }
 
 #[test]
@@ -378,6 +380,121 @@ fn req_vc_005_a_stroke_of_width_0_is_left_out_and_a_brush_is_named() {
     assert_eq!(ids(&read), ["vc:3:stroke"]);
     assert_eq!(said(&read), [(Code::VcFeatureIgnored, "vc:3".to_string())]);
     assert!(read.warnings[0].message.contains("brush \"Charcoal\""), "{}", read.warnings[0]);
+}
+
+/// A gray stroke 2 pt wide with the `extra` fields given, as an appearance item.
+fn stroke(extra: &str) -> String {
+    format!(r#"{{"kind": "stroke", "width": 2, "paint": {{"type": "solid", "color": {{"model": "gray", "k": 1}}}} {extra}}}"#)
+}
+
+/// An appearance of `items` and the StitchCraft effects of the `families` given, in order.
+fn appearance(items: &[String], families: &[&str]) -> String {
+    let effects: Vec<String> = families.iter().map(|family| format!(r#"{{"id": "plugin.dev.stitchcraft.{family}", "params": {{}}}}"#)).collect();
+    format!(r#"{{"items": [{}], "effects": [{}]}}"#, items.join(","), effects.join(","))
+}
+
+/// The messages of what reading `object`, alone in a document, says.
+fn messages(object: &str) -> Vec<String> {
+    read_ok(&document(4, object)).warnings.iter().map(ToString::to_string).collect()
+}
+
+#[test]
+fn req_vc_005_what_vectorcraft_draws_of_a_stroke_and_its_stitches_do_not_follow_is_named() {
+    let named = |what: &str| vec![format!("warning SC-W0807: {what}")];
+    let fill = r#"{"kind": "fill", "paint": {"type": "solid", "color": {"model": "gray", "k": 0}}}"#.to_string();
+    // Arrowheads and dashes are not stitched, along a stroke or by a stroke effect. A pattern VectorCraft
+    // draws solid, with a negative length or only 0s, is no dash.
+    let arrows = named("A stroke's arrowheads are not stitched.");
+    let dashes = named("A dashed stroke is stitched along all of its path, gaps included.");
+    assert_eq!(messages(&line(2, "", &appearance(&[stroke(r#", "start_arrow": "Triangle""#)], &[]))), arrows);
+    assert_eq!(messages(&line(2, "", &appearance(&[stroke(r#", "end_arrow": "Arrow""#)], &["stroke"]))), arrows);
+    assert_eq!(messages(&line(2, "", &appearance(&[stroke(r#", "dash": {"pattern": [6, 6]}"#)], &[]))), dashes);
+    assert_eq!(messages(&line(2, "", &appearance(&[stroke(r#", "dash": {"pattern": [6, 6]}"#)], &["satin"]))), dashes);
+    for solid in [r#", "dash": {"pattern": [6, -1]}"#, r#", "dash": {"pattern": [0, 0]}"#, r#", "dash": {"pattern": [6, null]}"#] {
+        assert_eq!(messages(&line(2, "", &appearance(&[stroke(solid)], &[]))), Vec::<String>::new(), "{solid}");
+    }
+    // A stroke painted below a fill is sewn after it, over it.
+    let below = named("Its stroke is painted below its fill, and is sewn after the fill, over it.");
+    assert_eq!(messages(&square(2, 0.0, 0.0, &appearance(&[stroke(""), fill.clone()], &[]))), below);
+    assert_eq!(messages(&square(2, 0.0, 0.0, &appearance(&[fill.clone(), stroke("")], &[]))), Vec::<String>::new());
+    // A satin column or a zigzag is centred on its path, as wide as its stroke all along, and ends where the
+    // path ends. VectorCraft aligns only a closed path's stroke, and caps only an open path's.
+    let zigzag = r#"{"id": "plugin.dev.stitchcraft.stroke", "params": {"stroke_method": "zigzag_stitch"}}"#;
+    let with_zigzag = |items: &[String]| format!(r#"{{"items": [{}], "effects": [{zigzag}]}}"#, items.join(","));
+    let inside = |what: &str| named(&format!("The {what} is centred on its path, where VectorCraft draws the stroke inside it."));
+    assert_eq!(messages(&square(2, 0.0, 0.0, &appearance(&[stroke(r#", "align": "Inside""#)], &["satin"]))), inside("satin column"));
+    assert_eq!(messages(&square(2, 0.0, 0.0, &with_zigzag(&[stroke(r#", "align": "Inside""#)]))), inside("zigzag"));
+    assert_eq!(
+        messages(&square(2, 0.0, 0.0, &appearance(&[stroke(r#", "align": "Outside""#)], &["satin"]))),
+        named("The satin column is centred on its path, where VectorCraft draws the stroke outside it.")
+    );
+    let profile = r#", "profile": {"points": [[0, 0, 0], [0.5, 1, 1], [1, 0, 0]]}"#;
+    // A profile that narrows one side only changes the stroke's width too.
+    let left = r#", "profile": {"points": [[0, 1, 1], [0.5, 0.5, 1], [1, 1, 1]]}"#;
+    let right = r#", "profile": {"points": [[0, 1, 1], [0.5, 1, 0.5], [1, 1, 1]]}"#;
+    for narrowed in [profile, left, right] {
+        assert_eq!(
+            messages(&line(2, "", &appearance(&[stroke(narrowed)], &["satin"]))),
+            named("The satin column is as wide as the stroke all along, without its width profile."),
+            "{narrowed}"
+        );
+    }
+    assert_eq!(
+        messages(&line(2, "", &appearance(&[stroke(r#", "cap": "Round""#)], &["satin"]))),
+        named("The satin column ends where its path ends, and VectorCraft draws the stroke's round caps past them.")
+    );
+    assert_eq!(
+        messages(&line(2, "", &with_zigzag(&[stroke(r#", "cap": "Square""#)]))),
+        named("The zigzag ends where its path ends, and VectorCraft draws the stroke's square caps past them.")
+    );
+    // What makes no difference to them, or to a running stitch along the path, is said of none.
+    let uniform = r#", "profile": {"points": [[0, 1, 1], [1, 1, 1]]}"#;
+    for (object, case) in [
+        (square(2, 0.0, 0.0, &appearance(&[stroke(r#", "align": "Center", "cap": "Butt""#)], &["satin"])), "centred, butt caps"),
+        (line(2, "", &appearance(&[stroke(r#", "align": "Inside""#)], &["satin"])), "an open path, stroked centred"),
+        (square(2, 0.0, 0.0, &appearance(&[stroke(r#", "cap": "Round""#)], &["satin"])), "a closed path, which has no caps"),
+        (line(2, "", &appearance(&[stroke(uniform)], &["satin"])), "a uniform profile"),
+        (square(2, 0.0, 0.0, &appearance(&[stroke(&format!(r#", "align": "Inside", "cap": "Round"{profile}"#))], &["stroke"])), "a running stitch"),
+        (
+            square(2, 0.0, 0.0, &appearance(&[stroke(&format!(r#", "align": "Inside", "cap": "Round"{profile}"#))], &[])),
+            "a stroke, sewn as running stitch",
+        ),
+    ] {
+        assert_eq!(messages(&object), Vec::<String>::new(), "{case}");
+    }
+    // A zigzag of an object with no stroke is 0 mm wide. A satin column says so as it is sewn (SC-W0212).
+    assert_eq!(
+        messages(&square(2, 0.0, 0.0, &with_zigzag(std::slice::from_ref(&fill)))),
+        named("Its zigzag is as wide as its stroke, and it has none, so the zigzag is 0 mm wide.")
+    );
+    assert_eq!(messages(&square(2, 0.0, 0.0, &appearance(std::slice::from_ref(&fill), &["satin"]))), Vec::<String>::new());
+    assert_eq!(messages(&square(2, 0.0, 0.0, &appearance(&[fill], &["stroke"]))), Vec::<String>::new(), "a running stitch has no width");
+}
+
+#[test]
+fn req_vc_005_stitchcraft_effects_that_vectorcraft_draws_one_on_another_are_named() {
+    // A fill and an outline on one object: VectorCraft draws the stroke effect along the fill's preview.
+    let fill = r#"{"kind": "fill", "paint": {"type": "solid", "color": {"model": "gray", "k": 0}}}"#.to_string();
+    let chained = "has 2 StitchCraft effects. Each is sewn on the shape as it is drawn, but VectorCraft draws each on the stitches of the one before, \
+                   so the preview is not what is sewn.";
+    let read = read_ok(&document(4, &square(2, 0.0, 0.0, &appearance(&[fill.clone(), stroke("")], &["fill", "stroke"]))));
+    assert_eq!(ids(&read), ["vc:2:fill", "vc:2:stroke"], "each sewn on the shape as drawn");
+    assert_eq!(read.warnings.iter().map(ToString::to_string).collect::<Vec<_>>(), [format!("warning SC-W0807: The object {chained}")]);
+    assert_eq!(
+        read.warnings[0].fix.as_ref().map(Fix::describe).as_deref(),
+        Some("Give each effect an object of its own: copy the object, paste it with Edit › Paste in Front, and keep one effect on each.")
+    );
+    // A group's, said once of the group however many paths it holds.
+    let group = format!(
+        r#"{{"id": 5, "name": "Badge", "appearance": {}, "kind": {{"type": "group", "children": [{}, {}]}}}}"#,
+        appearance(&[], &["fill", "satin"]),
+        square(6, 0.0, 0.0, &appearance(&[fill.clone(), stroke("")], &[])),
+        square(7, 50.0, 0.0, &appearance(&[fill, stroke("")], &[]))
+    );
+    let read = read_ok(&document(4, &group));
+    assert_eq!(ids(&read), ["vc:6:fill", "vc:6:satin", "vc:7:fill", "vc:7:satin"]);
+    assert_eq!(said(&read), [(Code::VcFeatureIgnored, "vc:5".to_string())]);
+    assert_eq!(read.warnings[0].message, format!("A group \"Badge\" {chained}"));
 }
 
 /// A compound path as VectorCraft's Make Compound Path writes it, under `appearance`: one member path for

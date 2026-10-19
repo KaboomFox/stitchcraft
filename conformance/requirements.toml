@@ -974,7 +974,7 @@ status = "active"
 id = "REQ-VC-005"
 area = "vectorcraft"
 level = "L2"
-statement = "Nothing a VectorCraft document draws is left out silently: text, images, symbols, live objects, clipping, VectorCraft's own effects, brushes, the paints of groups and layers, gradients and patterns are named (SC-W0807), and so are template layers, layers that don't print and guides (SC-I0809). Only what VectorCraft does not draw, such as a hidden object, is left out without a word."
+statement = "Nothing a VectorCraft document draws is left out silently: text, images, symbols, live objects, clipping, VectorCraft's own effects, brushes, the paints of groups and layers, gradients and patterns are named (SC-W0807), and so are template layers, layers that don't print and guides (SC-I0809). So is what VectorCraft draws of a stroke and its stitches don't follow: arrowheads, dashes, a stroke painted below a fill, and the alignment, width profile and caps of a stroke a satin column or a zigzag is made of. So are 2 or more StitchCraft effects on one object or group, each sewn on the shape as drawn where VectorCraft draws each on what the one before drew. Only what VectorCraft does not draw, such as a hidden object, is left out without a word."
 milestone = "M6"
 status = "active"
 

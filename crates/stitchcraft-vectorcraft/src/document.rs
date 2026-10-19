@@ -33,7 +33,12 @@
 //! **Nothing is dropped silently** (`REQ-VC-005`). `SC-W0807` names what is not stitched, `SC-W0808`
 //! geometry that cannot be used and `SC-I0809` the layers and guides VectorCraft does not print. What
 //! VectorCraft does not draw is left out without a word: a hidden object, an object or a paint of opacity
-//! 0, a paint turned off, and a stroke of width 0.
+//! 0, a paint turned off, and a stroke of width 0. What it draws of a stroke and the stitches don't
+//! follow is named as well. A stroke's arrowheads are not stitched, a dashed stroke is stitched along all
+//! of its path, and a stroke painted below a fill is sewn over it. A satin column or a zigzag made of a
+//! stroke is as wide as the stroke and centred on the path, whatever the stroke's alignment, width
+//! profile or caps ([`Reader::followed`]). So are an object's or a group's 2 or more StitchCraft effects,
+//! each sewn on the shape as it is drawn, where VectorCraft draws each on what the one before drew.
 //!
 //! **Names** (`REQ-VC-009`). ABI v1 has no command objects, so a name gives Ink/Stitch's commands, read
 //! once the objects VectorCraft draws nothing of are left out ([`marker`]). `stitch:ignore` leaves an object
@@ -57,14 +62,14 @@ use serde_json::Value;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
 use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Join, Path, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
-use stitchcraft_params::ParamSet;
 use stitchcraft_params::stitch_type::Family;
+use stitchcraft_params::{ParamSet, StitchType};
 use stitchcraft_plan::{Rgb, Thread};
 
 use crate::container::{self, unreadable};
 use crate::geometry::{self, UNUSABLE_HINT};
 use crate::values::{sews, text};
-use crate::wire::{self, Effect, Item, Kind, Node, Paint, PathData};
+use crate::wire::{self, Dash, Effect, Item, Kind, Node, Paint, PathData, Profile};
 use crate::{FORMAT, color, effect_name};
 
 /// A stroke's miter limit when the file leaves it out: VectorCraft's, as Illustrator's.
@@ -81,6 +86,9 @@ const EXPAND: &str = "Make paths of it with Object › Expand.";
 
 /// How what one of VectorCraft's effects draws becomes paths.
 const EXPAND_EFFECT: &str = "Make paths of what the effect draws with Object › Expand Appearance.";
+
+/// How a stroke as VectorCraft draws it becomes shapes.
+const OUTLINE: &str = "Make shapes of the stroke as it is drawn with Object › Path › Outline Stroke, and stitch those.";
 
 /// What a `.vectorcraft` file holds for StitchCraft.
 #[derive(Clone, Debug, PartialEq)]
@@ -413,6 +421,7 @@ impl Reader {
         let unused = |id: &str| format!("{} has the effect {id}, which is not applied to what it holds.", called(node, what));
         let hint = "Apply effects to the paths inside, or make paths of what they draw with Object › Expand Appearance.";
         let effects = self.effects(node, label, unused, hint);
+        self.chained(label, &called(node, what), effects.len());
         let gives = !effects.is_empty();
         let inside = (gives || paints.is_some()).then(|| Around {
             effects: if gives { effects.into() } else { Rc::clone(&around.effects) },
@@ -488,6 +497,7 @@ impl Reader {
         };
         let unused = |id: &str| format!("The effect {id} is not applied: the object is stitched as it is drawn without it.");
         let own = self.effects(node, label, unused, EXPAND_EFFECT);
+        self.chained(label, &called(node, "The object"), own.len());
         let levels = around.levels.saturating_add(u32::from(!own.is_empty()));
         if levels > 1 {
             let message = format!(
@@ -529,8 +539,15 @@ impl Reader {
             let shape = Shape::Fill { path: path.clone(), rule };
             self.element(node, label, &rank("fill", fills), shape, thread, ParamSet::new())?;
         }
+        // VectorCraft paints the items in order, the first lowest, and the fills are sewn first.
+        let items = &node.appearance.items;
+        let lowest_stroke = items.iter().position(|item| item.kind == "stroke" && drawn(item));
+        if lowest_stroke.is_some_and(|stroke| items.iter().skip(stroke).any(|item| item.kind == "fill" && drawn(item))) {
+            let message = "Its stroke is painted below its fill, and is sewn after the fill, over it.".to_string();
+            self.feature(label, message, Some("Move the stroke above the fill in the Appearance panel, where it is sewn."));
+        }
         let mut strokes = 0;
-        for item in node.appearance.items.iter().filter(|item| item.kind == "stroke" && drawn(item)) {
+        for item in items.iter().filter(|item| item.kind == "stroke" && drawn(item)) {
             let Some(thread) = self.thread(label, item.paint.as_ref()) else { continue };
             let (Some(width), join) = self.style(label, item) else {
                 let message = "A stroke's width is not a number, and the stroke is left out.".to_string();
@@ -541,6 +558,7 @@ impl Reader {
                 let message = format!("A stroke drawn with the brush {} is stitched along its path, without the brush's art.", quoted(brush));
                 self.feature(label, message, Some("Make paths of the brush's art with Object › Expand Appearance."));
             }
+            self.stroke_marks(label, item);
             strokes += 1;
             let shape = Shape::Stroke { path: path.clone(), width, join };
             self.element(node, label, &rank("stroke", strokes), shape, thread, ParamSet::new())?;
@@ -573,6 +591,9 @@ impl Reader {
             // Only the object's own effects can find no paint ([`Reader::shape`]).
             let thread = thread.unwrap_or_else(|| black.get_or_insert_with(|| self.unpainted(node, label)).clone());
             let mut set = self.params(label, *family, params)?;
+            if *family != Family::Fill {
+                self.followed(label, *family, &set, path, painting);
+            }
             let shape = match family {
                 Family::Fill => Shape::Fill { path: path.clone(), rule },
                 Family::Stroke | Family::Satin => {
@@ -597,6 +618,82 @@ impl Reader {
             .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The VectorCraft object `vc:{label}` makes no element id: {e}.")))?;
         self.elements.push(Element { id, name: node.name.clone(), shape, thread, params });
         Ok(())
+    }
+
+    /// `SC-W0807` for what VectorCraft draws of `stroke` that no stitch follows: its arrowheads, and its
+    /// dashes, sewn as one line.
+    fn stroke_marks(&mut self, label: &str, stroke: &Item) {
+        if stroke.start_arrow.is_some() || stroke.end_arrow.is_some() {
+            self.feature(label, "A stroke's arrowheads are not stitched.".to_string(), Some(OUTLINE));
+        }
+        if stroke.dash.as_ref().is_some_and(Dash::dashes) {
+            self.feature(label, "A dashed stroke is stitched along all of its path, gaps included.".to_string(), Some(OUTLINE));
+        }
+    }
+
+    /// `SC-W0807` for what VectorCraft draws of the stroke that the `family` effect with the parameters
+    /// `set` follows along `path`, among `painting`'s paints, and the effect does not. A stroke's arrowheads
+    /// and dashes are not stitched. A satin column or a zigzag is as wide as the stroke and centred on the
+    /// path: it does not follow the stroke's alignment inside or outside a closed path, its width profile or
+    /// the caps of an open path. A zigzag of an object with no stroke is 0 mm wide.
+    fn followed(&mut self, label: &str, family: Family, set: &ParamSet, path: &Path, painting: &Painting) {
+        let what = match family {
+            Family::Satin => "satin column",
+            _ if set.get("stroke_method") == Some(StitchType::ZigzagStitch.id()) => "zigzag",
+            _ => "",
+        };
+        let Some((stroke, _)) = first_of(painting, |part| part.stroke).and_then(|(_, part)| part.stroke) else {
+            if what == "zigzag" {
+                let message = "Its zigzag is as wide as its stroke, and it has none, so the zigzag is 0 mm wide.".to_string();
+                self.feature(label, message, Some("Give the object a stroke as wide as the zigzag."));
+            }
+            return;
+        };
+        self.stroke_marks(label, stroke);
+        if what.is_empty() {
+            return;
+        }
+        if path.subpaths.last().is_some_and(|subpath| subpath.closed)
+            && let Some(side) = stroke.align.as_deref().and_then(|align| match align {
+                "Inside" => Some("inside"),
+                "Outside" => Some("outside"),
+                _ => None,
+            })
+        {
+            let message = format!("The {what} is centred on its path, where VectorCraft draws the stroke {side} it.");
+            self.feature(label, message, Some("Align the stroke to its centre in the Stroke panel."));
+        }
+        if stroke.profile.as_ref().is_some_and(Profile::varies) {
+            let message = format!("The {what} is as wide as the stroke all along, without its width profile.");
+            self.feature(label, message, Some("Set the stroke's profile to Uniform in the Stroke panel, or draw the column with 2 rails."));
+        }
+        if path.subpaths.iter().any(|subpath| !subpath.closed)
+            && let Some(cap) = stroke.cap.as_deref().and_then(|cap| match cap {
+                "Round" => Some("round"),
+                "Square" => Some("square"),
+                _ => None,
+            })
+        {
+            let message = format!("The {what} ends where its path ends, and VectorCraft draws the stroke's {cap} caps past them.");
+            self.feature(label, message, Some("Set the stroke's cap to Butt in the Stroke panel."));
+        }
+    }
+
+    /// `SC-W0807` for `who`, whose `count` StitchCraft effects VectorCraft runs each on what the one before
+    /// drew, when it has more than one: each is sewn on the shape as it is drawn, which the preview doesn't
+    /// show.
+    fn chained(&mut self, label: &str, who: &str, count: usize) {
+        if count > 1 {
+            let message = format!(
+                "{who} has {count} StitchCraft effects. Each is sewn on the shape as it is drawn, but VectorCraft draws each on the \
+                 stitches of the one before, so the preview is not what is sewn."
+            );
+            self.feature(
+                label,
+                message,
+                Some("Give each effect an object of its own: copy the object, paste it with Edit › Paste in Front, and keep one effect on each."),
+            );
+        }
     }
 
     /// An effect's parameters as the element's: each value written as the parameters read it. VectorCraft's

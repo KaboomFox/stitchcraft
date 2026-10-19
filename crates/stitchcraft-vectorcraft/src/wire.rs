@@ -121,8 +121,56 @@ pub(crate) struct Item {
     /// The brush a stroke is drawn with, by its name.
     #[serde(default)]
     pub brush: Option<String>,
+    /// How a stroke's open ends are capped: `Butt`, VectorCraft's default, `Round` or `Square`.
+    #[serde(default)]
+    pub cap: Option<String>,
+    /// Where a closed path's stroke lies: `Center`, VectorCraft's default, `Inside` or `Outside`.
+    #[serde(default)]
+    pub align: Option<String>,
+    /// A stroke's dashes.
+    #[serde(default)]
+    pub dash: Option<Dash>,
+    /// The arrowhead at a stroke's start, by its name.
+    #[serde(default)]
+    pub start_arrow: Option<IgnoredAny>,
+    /// The arrowhead at a stroke's end.
+    #[serde(default)]
+    pub end_arrow: Option<IgnoredAny>,
+    /// A stroke's width profile.
+    #[serde(default)]
+    pub profile: Option<Profile>,
     #[serde(default)]
     pub effects: Vec<Effect>,
+}
+
+/// A stroke's dashes: dash, gap, dash, gap and so on.
+#[derive(Deserialize)]
+pub(crate) struct Dash {
+    #[serde(default)]
+    pub pattern: Vec<Option<f64>>,
+}
+
+impl Dash {
+    /// Whether it draws dashes: as in PDF and SVG, and so in VectorCraft, a pattern with a value that is
+    /// negative or not a number, or whose values are all 0, draws the stroke solid.
+    pub(crate) fn dashes(&self) -> bool {
+        self.pattern.iter().all(|v| v.is_some_and(|v| v.is_finite() && v >= 0.0)) && self.pattern.iter().any(|v| v.is_some_and(|v| v > 0.0))
+    }
+}
+
+/// A stroke's width profile: its width along the path, as points of (position, width on the left, width on
+/// the right), the widths as shares of the stroke's.
+#[derive(Deserialize)]
+pub(crate) struct Profile {
+    #[serde(default)]
+    pub points: Vec<(Option<f64>, Option<f64>, Option<f64>)>,
+}
+
+impl Profile {
+    /// Whether it changes the stroke's width somewhere.
+    pub(crate) fn varies(&self) -> bool {
+        self.points.iter().any(|&(_, left, right)| left != Some(1.0) || right != Some(1.0))
+    }
 }
 
 /// What fills or strokes: by its `type`, `none`, `solid`, `gradient` or `pattern`.

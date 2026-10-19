@@ -328,7 +328,21 @@ VectorCraft's formula without colour management ((1 − c)(1 − k) and 1 − k)
 gradient gives its first stop's colour, with `SC-W0807` unless every stop has that colour, and a pattern
 gives black, with `SC-W0807`. A stroke's width, in points, and its join, with its miter limit (10 when
 the file omits it, as VectorCraft draws it), shape a satin column drawn as one path. A stroke drawn with
-a brush is stitched along its path, without the brush's art, with `SC-W0807`. A group's or a layer's own
+a brush is stitched along its path, without the brush's art, with `SC-W0807`.
+
+What VectorCraft draws of a stroke that its stitches don't follow is named with `SC-W0807`, and the
+message says how to stitch it, usually with Object › Path › Outline Stroke:
+
+- A stroke's arrowheads are not stitched, and a dashed stroke is stitched along all of its path. A dash
+  pattern that VectorCraft draws solid, with a length below 0 or that is not a number, or only 0s, is
+  no dash.
+- A stroke painted below a fill is sewn after the fill, over it.
+- A satin column or a zigzag made of a stroke is as wide as the stroke all along and centred on the
+  path. VectorCraft draws a closed path's stroke inside or outside it when it is aligned so, and varies
+  its width along a width profile. It also caps an open path's ends with round or square caps. A running
+  stitch along the path is the same whichever way the stroke is drawn.
+
+A group's or a layer's own
 fills and strokes, which paint every member, are not stitched as shapes of their own. They give
 StitchCraft effects their thread and stroke (below), with `SC-W0807`.
 
@@ -337,15 +351,18 @@ StitchCraft effects their thread and stroke (below), with `SC-W0807`.
 `fill` (`stitchcraft_params::Family`). An object with visible StitchCraft effects is stitched as they
 say, in their order, instead of by its paints. A `fill` effect fills the object's shape, a `stroke`
 effect stitches along it and a `satin` effect makes a satin column of it. With this rule, an object sews
-what its effects say and nothing else. A fill with an outline takes a `fill` effect and a `stroke`
-effect. The record's parameters are the element's. A number is written as a decimal, a toggle as `true`
+what its effects say and nothing else. Each effect is sewn on the shape as it is drawn. VectorCraft
+draws an effect after the first on the stitches of the one before, though, so the preview of an object
+with 2 is not what is sewn, and `SC-W0807` says so, once for an object and once for a group. A fill with
+an outline takes 2 objects: the shape with a `fill` effect, and a copy pasted in front of it (Edit › Paste
+in Front) with a `stroke` effect. The record's parameters are the element's. A number is written as a decimal, a toggle as `true`
 or `false`, a choice as its id and a list as its values with spaces between. What the record leaves out
 takes its default, as in the plug-in's dialog. The thread is the colour of the topmost fill VectorCraft
 draws for a fill, and of the topmost stroke for the others, falling back on the other kind. An opaque
 paint comes before one of opacity under 1, which lets what is under it show. A `stroke` or `satin` effect
 follows the width and join of that stroke, or a width of 0 when none is drawn. VectorCraft writes a
 stroke of paint none for an object without one, which it doesn't draw. A satin column too narrow to
-stitch across is sewn as a stroke, with `SC-W0212`. VectorCraft's own effects change what an object
+stitch across is sewn as a stroke, with `SC-W0212`. `SC-W0807` names a zigzag 0 mm wide. VectorCraft's own effects change what an object
 draws, and are left out with `SC-W0807` (Object › Expand Appearance makes paths of what they draw).
 
 **A group's effects** (`REQ-VC-006`). VectorCraft runs a group's or a layer's geometry effects on each
