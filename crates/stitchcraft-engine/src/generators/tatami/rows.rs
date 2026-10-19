@@ -253,6 +253,15 @@ mod tests {
     }
 
     #[test]
+    fn a_row_exactly_same_before_the_far_side_lies_on_it_and_is_left_out() {
+        // A square from y = -1 up to SAME: the row at 0 lies exactly SAME before the far side, and the top
+        // edge exactly SAME from the row, so the edge lies on the row and the row is left out, as a row on
+        // the far side is.
+        let square = part(&[(0.0, -1.0), (2.0, -1.0), (2.0, SAME), (0.0, SAME)], &[]);
+        assert_eq!(across(&found(&square, level(0.5))), [-1.0, -0.5]);
+    }
+
+    #[test]
     fn a_row_along_the_outline_is_a_segment_and_one_touching_it_at_a_point_is_none() {
         // The square's top edge lies on the first row; its bottom edge on no row, as rows stop short of it.
         let square = part(&[(0.0, 0.0), (2.0, 0.0), (2.0, 1.0), (0.0, 1.0)], &[]);
