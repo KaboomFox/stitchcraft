@@ -18,10 +18,14 @@
 //!
 //! The pieces are joined as the underlays are, in straight stitches no longer than the travel, which the
 //! column raises to twice the shortest stitch, as it does for the line. A point of the line's way within
-//! the shortest stitch of the needle, or of the way's point before it, only routes the needle, and is left
-//! out: finalize would leave it out too, with a note about a point the design never drew. An end within the
-//! shortest stitch of the needle moves the needle's last point there instead of adding a stitch too short
-//! to sew, so the column's last stitch, often a top stitch, is never split.
+//! the shortest stitch of the needle, of the way's point before it or of the next piece's first point,
+//! only routes the needle, and is left out: finalize would leave it out too, with a note about a point the
+//! design never drew. An underlay's last point, or the start, within the shortest stitch of the next
+//! piece's first moves there, as finalize would leave out the next piece's first point instead, a top
+//! stitch's end among them. A top stitch's point stays, and the next piece's points that near it are left
+//! out. An end within the shortest stitch of the needle moves the needle's last point there instead of
+//! adding a stitch too short to sew, so the column's last stitch, often a top stitch, is never split. So
+//! the column hands finalize nothing to thin where its pieces meet.
 
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Exhausted, Meter, Point};
@@ -69,34 +73,60 @@ impl Piece {
 
 /// `pieces` sewn one after the other, the needle going straight from each to the next in equal stitches no
 /// longer than `travel`. A way's point within `min_stitch` of the needle, or of the way's point before it,
-/// is left out, and so is a way's last point when the next piece starts within `min_stitch` of it. The end
-/// takes the place of a needle point within `min_stitch` of it: the stitch to that point goes to the end
-/// instead, one stitch as before. Ink/Stitch adds the end as a stitch of its own, too short to sew here.
+/// is left out, and so is every way point and travel point after the last piece that sews when the next
+/// piece starts within `min_stitch` of it. An underlay's last point, or the start, within `min_stitch` of
+/// the next piece's first moves there: the stitch into it ends at the next piece's first point, which is
+/// then not sewn twice. A top stitch's point never gives way to a piece: the piece's first points within
+/// `min_stitch` of it are left out instead. The end takes the place of a needle point within `min_stitch`
+/// of it: the stitch to that point goes to the end instead, one stitch as before. Ink/Stitch adds the end
+/// as a stitch of its own, too short to sew here.
 pub(crate) fn join(pieces: Vec<Piece>, travel: f64, min_stitch: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let mut run: Vec<Point> = Vec::new();
-    let mut after_way = false;
+    // How many of the needle's last points only route it, and whether the last point that sews is an
+    // underlay's or the start: those give way to a piece that starts too near them.
+    let (mut routing, mut gives_way) = (0_usize, false);
     for piece in pieces {
         let needle = run.last().copied();
-        let (points, way) = match piece {
-            Piece::Sewn(points) | Piece::Top(points) => (points, false),
-            Piece::Way(points) => (spaced(needle, points, min_stitch), true),
+        let (points, way, sewn) = match piece {
+            Piece::Sewn(points) => (points, false, true),
+            Piece::Top(points) => (points, false, false),
+            Piece::Way(points) => (spaced(needle, points, min_stitch), true, false),
             Piece::End(point) => {
                 if let Some(needle) = run.last_mut().filter(|needle| needle.distance(point) < min_stitch) {
                     *needle = point;
                     continue;
                 }
-                (vec![point], false)
+                (vec![point], false, false)
             }
         };
         let Some(&first) = points.first() else { continue };
-        if after_way && run.last().is_some_and(|needle| needle.distance(first) < min_stitch) {
-            run.pop();
+        // How many of the piece's first points the needle already stands for.
+        let mut skip = 0;
+        if !way {
+            while routing > 0 && run.last().is_some_and(|needle| needle.distance(first) < min_stitch) {
+                run.pop();
+                routing -= 1;
+            }
+            if let Some(needle) = run.last_mut().filter(|needle| routing == 0 && needle.distance(first) < min_stitch) {
+                if gives_way {
+                    *needle = first;
+                    skip = 1;
+                } else {
+                    let stays = *needle;
+                    skip = points.iter().take_while(|point| point.distance(stays) < min_stitch).count();
+                }
+            }
         }
-        if let Some(&from) = run.last() {
-            run.extend(evenly(from, first, travel, meter)?);
+        let from = run.len();
+        if let Some(&needle) = run.last().filter(|_| skip == 0) {
+            run.extend(evenly(needle, first, travel, meter)?);
         }
-        run.extend(points);
-        after_way = way;
+        run.extend(points.into_iter().skip(skip));
+        if way {
+            routing += run.len() - from;
+        } else if run.len() > from || gives_way {
+            (routing, gives_way) = (0, sewn);
+        }
     }
     Ok(run)
 }
@@ -365,9 +395,10 @@ mod tests {
         let pieces = vec![Piece::Sewn(vec![p(5.0, 3.0)]), Piece::Way(way), Piece::Sewn(vec![p(0.0, 3.0), p(0.0, 0.0)])];
         // The way's first point is 0.1 mm from the start, and its last 0.1 mm from the first stitch.
         assert_eq!(join(pieces, 10.0, 0.3, meter).unwrap(), [p(5.0, 3.0), p(2.5, 3.0), p(0.0, 3.0), p(0.0, 0.0)]);
-        // A way all within the shortest stitch of the needle is left out whole.
+        // A way all within the shortest stitch of the needle is left out whole, and a start that near the
+        // first stitch gives way to it.
         let pieces = vec![Piece::Sewn(vec![p(0.0, 0.0)]), Piece::Way(vec![p(0.1, 0.0)]), Piece::Sewn(vec![p(0.15, 0.0)])];
-        assert_eq!(join(pieces, 10.0, 0.3, meter).unwrap(), [p(0.0, 0.0), p(0.15, 0.0)], "sewn points stay");
+        assert_eq!(join(pieces, 10.0, 0.3, meter).unwrap(), [p(0.15, 0.0)]);
         // The end takes the place of a needle point near it, so the stitch to that point now ends at the
         // end: one stitch, however much longer than the travel. It is joined in straight stitches otherwise.
         let pieces = vec![Piece::Sewn(vec![p(0.0, 0.0), p(4.0, 0.0)]), Piece::End(p(4.2, 0.0))];
@@ -383,6 +414,48 @@ mod tests {
         assert_eq!(join(pieces, 10.0, 0.25, meter).unwrap(), [p(0.0, 0.0), p(4.0, 0.0), p(4.25, 0.0)]);
         let pieces = vec![Piece::Sewn(vec![p(0.0, 0.0)]), Piece::Way(vec![p(2.0, 0.0)]), Piece::Sewn(vec![p(2.25, 0.0)])];
         assert_eq!(join(pieces, 10.0, 0.25, meter).unwrap(), [p(0.0, 0.0), p(2.0, 0.0), p(2.25, 0.0)]);
+    }
+
+    #[test]
+    fn what_only_routes_the_needle_or_underlays_it_gives_way_to_a_piece_starting_near_it() {
+        let meter = &mut Budget::DEFAULT.meter();
+        // An underlay's last point 0.2 mm from the top stitches' first: the underlay's last stitch goes to
+        // the top's first point instead, and the top's stitches stay as they are, in one stitch each.
+        let pieces = vec![Piece::Sewn(vec![p(0.0, 0.0), p(4.0, 0.2)]), Piece::Top(vec![p(4.0, 0.0), p(4.0, 6.0)])];
+        assert_eq!(join(pieces, 2.5, 0.3, meter).unwrap(), [p(0.0, 0.0), p(4.0, 0.0), p(4.0, 6.0)]);
+        // So does one underlay's last point to the next underlay's first.
+        let pieces = vec![Piece::Sewn(vec![p(0.0, 0.0), p(1.0, 0.0)]), Piece::Sewn(vec![p(1.1, 0.0), p(2.0, 0.0)])];
+        assert_eq!(join(pieces, 2.5, 0.3, meter).unwrap(), [p(0.0, 0.0), p(1.1, 0.0), p(2.0, 0.0)]);
+        // Every point of a way within the shortest stitch of the next piece's first goes, not just its last.
+        let pieces = vec![Piece::Top(vec![p(0.0, 0.0)]), Piece::Way(vec![p(0.8, 0.0), p(1.1, 0.0)]), Piece::Sewn(vec![p(0.95, 0.0)])];
+        assert_eq!(join(pieces, 2.5, 0.3, meter).unwrap(), [p(0.0, 0.0), p(0.95, 0.0)]);
+        // A top stitch's point never gives way: the next piece's points within the shortest stitch of it are
+        // left out, and the needle goes on to the first one farther, in one stitch.
+        let pieces = vec![Piece::Top(vec![p(0.0, 0.0), p(1.0, 0.0)]), Piece::Sewn(vec![p(1.1, 0.0), p(1.2, 0.2), p(4.0, 0.0)])];
+        assert_eq!(join(pieces, 2.5, 0.3, meter).unwrap(), [p(0.0, 0.0), p(1.0, 0.0), p(4.0, 0.0)]);
+        // So it is after a way that the needle leaves there, all of whose points go: the top stitch's point
+        // stays, where the needle would otherwise travel from the point before it.
+        let pieces = vec![Piece::Top(vec![p(0.0, 0.0), p(4.0, 0.0)]), Piece::Way(vec![p(4.25, 0.0)]), Piece::Sewn(vec![p(4.1, 0.0), p(6.0, 0.0)])];
+        assert_eq!(join(pieces, 2.5, 0.25, meter).unwrap(), [p(0.0, 0.0), p(4.0, 0.0), p(6.0, 0.0)]);
+        // A piece left out whole beside a top stitch's point leaves it a top stitch's: the next piece gives
+        // way to it too. A point exactly the shortest stitch from it stays.
+        let pieces = vec![
+            Piece::Top(vec![p(0.0, 0.0), p(1.0, 0.0)]),
+            Piece::Sewn(vec![p(1.125, 0.0)]),
+            Piece::Sewn(vec![p(1.125, 0.125), p(1.25, 0.0), p(4.0, 0.0)]),
+        ];
+        assert_eq!(join(pieces, 2.5, 0.25, meter).unwrap(), [p(0.0, 0.0), p(1.0, 0.0), p(1.25, 0.0), p(4.0, 0.0)]);
+        // Every point of a way that the needle leaves beside the next piece goes, however many points came
+        // before the way.
+        let top = Piece::Top(vec![p(0.0, 0.0), p(1.0, 0.0), p(2.0, 0.0), p(3.0, 0.0)]);
+        let pieces = vec![top, Piece::Way(vec![p(3.5, 0.0), p(3.75, 0.0)]), Piece::Sewn(vec![p(3.625, 0.0), p(6.0, 0.0)])];
+        assert_eq!(join(pieces, 2.5, 0.25, meter).unwrap(), [p(0.0, 0.0), p(1.0, 0.0), p(2.0, 0.0), p(3.0, 0.0), p(3.625, 0.0), p(6.0, 0.0)]);
+        // An underlay's point gives way after a way too: the needle does not travel from the point before it.
+        let pieces = vec![Piece::Sewn(vec![p(0.0, 0.0), p(4.0, 0.0)]), Piece::Way(vec![p(4.25, 0.0)]), Piece::Sewn(vec![p(4.1, 0.0), p(6.0, 0.0)])];
+        assert_eq!(join(pieces, 2.5, 0.25, meter).unwrap(), [p(0.0, 0.0), p(4.1, 0.0), p(6.0, 0.0)]);
+        // And exactly the shortest stitch away is not within it.
+        let pieces = vec![Piece::Sewn(vec![p(0.0, 0.0), p(1.0, 0.0)]), Piece::Top(vec![p(1.25, 0.0)])];
+        assert_eq!(join(pieces, 2.5, 0.25, meter).unwrap(), [p(0.0, 0.0), p(1.0, 0.0), p(1.25, 0.0)]);
     }
 
     #[test]

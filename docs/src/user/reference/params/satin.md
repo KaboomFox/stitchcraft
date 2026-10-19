@@ -236,7 +236,7 @@ each one is at most this long.
 - **Accepts:** a length from 0.1 to 25 mm
 - **Default:** `3`
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-RUN-003.** No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column's travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Ink/Stitch's running stitch has no shortest stitch; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.
+  - **DEV-RUN-003.** No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column's travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column's parts meet nearer than the shortest stitch, the needle's way between them gives way to the next part's first point, and so does an underlay's last point or the column's start, which moves there; beside a top stitch's end, which stays where it is, the next part's points that near it give way instead. Ink/Stitch's running stitch has no shortest stitch, and it joins a satin column's parts as they are; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.
 
 ### `center_walk_underlay_stitch_tolerance_mm`
 
@@ -286,7 +286,7 @@ one is at most this long.
 - **Accepts:** a length from 0.1 to 25 mm
 - **Default:** `3`
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-RUN-003.** No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column's travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Ink/Stitch's running stitch has no shortest stitch; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.
+  - **DEV-RUN-003.** No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column's travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column's parts meet nearer than the shortest stitch, the needle's way between them gives way to the next part's first point, and so does an underlay's last point or the column's start, which moves there; beside a top stitch's end, which stays where it is, the next part's points that near it give way instead. Ink/Stitch's running stitch has no shortest stitch, and it joins a satin column's parts as they are; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.
 
 ### `contour_underlay_stitch_tolerance_mm`
 

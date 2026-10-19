@@ -133,6 +133,18 @@ fn req_sat_004_the_needle_travels_straight_on_in_equal_stitches_no_longer_than_t
 }
 
 #[test]
+fn req_sat_004_an_underlay_s_last_needle_point_near_the_next_part_s_first_gives_way_to_it() {
+    // An S-stitch starts on the second rail, at (0, 6), and the zigzag underlay comes back to (0, 5.8), 0.2
+    // mm from it. The zigzag's last stitch goes on to (0, 6), and the S-stitch from there: finalize finds
+    // no needle point too near the one before it to leave out.
+    let params = [("satin_method", "s_stitch"), ("zigzag_underlay", "true")];
+    let under = underlays(&params, false);
+    assert!(same(&under[under.len() - 2..], &[(3.0, 5.8), (1.5, 0.2)]), "{under:?}");
+    let column = along("column", ladder(10.0, 6.0, &[]), &RED, &[&params[..], &[("satin_column", "true")]].concat());
+    assert_eq!(messages(&planned(vec![column])), Vec::<String>::new());
+}
+
+#[test]
 fn req_sat_004_the_travel_s_length_below_twice_the_shortest_stitch_is_raised() {
     // A running stitch length of 0.2 mm is raised to 0.6 mm for the needle's travel between the underlays
     // and on to the top stitches, as for a fill's travel and the column's own line, and one SC-W0402 says
@@ -160,9 +172,12 @@ fn req_sat_004_an_odd_centre_walk_ends_at_the_column_s_end_and_turns_the_rest_ro
         let contour: Vec<Point> = under.iter().copied().filter(|q| (q.y() - 0.4).abs() < 1e-9 || (q.y() - 5.6).abs() < 1e-9).collect();
         let want = [(9.6, 0.4), (7.5, 0.4), (5.0, 0.4), (2.5, 0.4), (0.4, 0.4), (0.4, 5.6), (2.5, 5.6), (5.0, 5.6), (7.5, 5.6), (9.6, 5.6)];
         assert!(same(&contour, &want), "{repeats}: {contour:?}");
-        // The zigzag starts at the end and comes back to it.
+        // The zigzag starts at the end and comes back to it. Its last needle point, (10, 5.8), is 0.2 mm from
+        // the top stitches' first, (10, 6), and gives way to it: the zigzag's last stitch ends there.
         let zigzag: Vec<Point> = under.iter().copied().filter(|q| (q.y() - 0.2).abs() < 1e-9 || (q.y() - 5.8).abs() < 1e-9).collect();
-        assert_eq!((zigzag.first().map(|q| q.x()), zigzag.last().map(|q| q.x())), (Some(10.0), Some(10.0)), "{repeats}: {zigzag:?}");
+        let ends = [zigzag[0], zigzag[zigzag.len() - 1]];
+        assert!(ends[0].distance(p(10.0, 0.2)) < 1e-9 && ends[1].distance(p(9.0, 0.2)) < 1e-9, "{repeats}: {zigzag:?}");
+        assert_eq!(under.last(), Some(&ends[1]), "{repeats}: then the top stitches");
     }
 }
 
@@ -175,8 +190,11 @@ fn req_sat_010_the_centre_walk_runs_along_the_line_at_its_position_there_and_bac
     assert!(same(&under, &[walk(3.0), travel((0.0, 3.0), (0.0, 0.0), 2)].concat()), "{under:?}");
     for (position, y) in [("25", 1.5), ("0", 0.0), ("100", 6.0)] {
         let under = underlays(&[("center_walk_underlay", "true"), ("center_walk_underlay_position", position)], false);
+        // At 0 % the walk ends on the top stitches' first point, (0, 0): one needle point, the top's.
         let walked: Vec<Point> = under.iter().copied().take(9).collect();
-        assert!(same(&walked, &walk(y)), "{position} %: {under:?}");
+        let want = walk(y);
+        let want = if position == "0" { &want[..8] } else { &want[..] };
+        assert!(same(&walked, want), "{position} %: {under:?}");
     }
 }
 

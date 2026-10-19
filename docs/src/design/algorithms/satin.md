@@ -438,6 +438,19 @@ travel length. That is the first of the running stitch's lengths (`running_stitc
 twice the shortest stitch where it is shorter, as a running stitch's lengths are (`DEV-RUN-003`), and
 `SC-W0402` says so once for the column.
 
+Where a part starts within the shortest stitch of the needle, the needle's last point gives way to the
+part's first. An underlay's last point, or the column's start, moves to it, and the stitch into that
+point ends there. Points that only route the needle are left out ([Start and end](#start-and-end)). A top
+stitch's point gives way to no part. Where the way along the line leaves the needle at one, the next
+part's points within the shortest stitch of it are left out instead, and the needle goes on to the first
+one farther. Otherwise finalize leaves out the part's first point with `SC-I0504`, even where it is a top
+stitch's end. Parts meet that near in many columns. A zigzag underlay comes back 0.2 mm in from the rail
+where an S-stitch starts, and after an odd centre walk it often ends that near where the top stitches
+start. The end's cut can fall where the zigzag underlay's 2 ways cross, and the way along the line can
+end beside where a centre walk is cut. In a column 0.5 mm wide, the centre walk is cut beside the top
+stitches' end. Ink/Stitch joins its parts as they are, and its plan keeps a stitch longer than its own
+shortest stitch, 0.1 mm by default (`DEV-RUN-003`).
+
 Under a zigzag satin the contour's sides first stop where the zigzag does
 ([Zigzag satin](#zigzag-satin-method-zigzag), step 6).
 
@@ -534,7 +547,8 @@ grids, where ties are common (`conformance/fixtures/geometry/shapely-nearest.txt
 point also lies on another side, the 2 can differ in which side they find it on.
 
 Straight stitches join each piece to the next as between underlays, no longer than the travel length. A
-point of the line within the shortest stitch of the needle only routes it, and is left out. An end within
+point of the line within the shortest stitch of the needle, or of the next piece's first point, only
+routes it, and is left out. An end within
 the shortest stitch of the column's last needle point moves that point to the end. The column's last
 stitch, often a top stitch, then goes to the end in one stitch. Ink/Stitch sews the end as a stitch of
 its own, which its stitch plan drops when it is no longer than its shortest stitch. An explicit start or
@@ -555,7 +569,7 @@ end command, read from M8, would replace the needle point or the next stitch.
 | `REQ-SAT-001` | Pull compensation moves both ends of every top stitch outward along it, by `pull_compensation_mm` plus `pull_compensation_percent` of its width (± 0.01 mm). Ends moved past each other meet |
 | `REQ-SAT-002` | Consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails and within 5 % on curves. The last pair is at most a spacing on |
 | `REQ-SAT-003` | With a longest stitch, a longer top stitch is split as `split_method` says. By default it splits into the fewest equal parts, and the stitch back into as many as the stitch across before. Simple and staggered splits fall at whole multiples of the longest stitch, from a start that `staggered` moves along |
-| `REQ-SAT-004` | Underlays come before the top stitches and leave them as they were: the centre walk, then the contour and the zigzag. Straight stitches of one length join them, no longer than the running stitch's length raised to twice the shortest stitch. After an odd centre walk the rest runs from the column's end |
+| `REQ-SAT-004` | Underlays come before the top stitches and leave them as they were: the centre walk, then the contour and the zigzag. Straight stitches of one length join them, no longer than the running stitch's length raised to twice the shortest stitch. A part that starts within the shortest stitch of the needle takes the place of an underlay's last point, and the needle's way gives way to it. Beside a top stitch's point the part's points give way instead. After an odd centre walk the rest runs from the column's end |
 | `REQ-SAT-005` | Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces `SC-E0201` and no stitches, and a rung that misses a rail joins the rail's nearest point (`SC-W0203`), the one shapely gives of points as near. A column with no section to sew produces `SC-E0216` and no stitches |
 | `REQ-SAT-006` | A parameter with a value for each side changes only its own side: a rail's stitch ends, or the column's start or end |
 | `REQ-SAT-007` | Random widths and spacing are reproducible from the element and its seed, and stay within their ranges |

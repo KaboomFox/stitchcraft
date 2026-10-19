@@ -742,6 +742,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Where a satin column's parts meet nearer than the shortest stitch, they leave finishing no needle point
+  to leave out (`REQ-SAT-004`). A zigzag underlay came back 0.2 mm in from the rail where an S-stitch
+  starts, and where the top stitches start after an odd centre walk or when the column ends near the next
+  element. The end's cut could fall where the zigzag underlay's 2 ways cross, and the way along the line
+  could end beside where the centre walk is cut. Finishing left a point out there with `SC-I0504`, often
+  the end of a top stitch. Now an underlay's last point, or the column's start, moves to the next part's
+  first, and the way's points that near it are left out. Beside a top stitch's end the next part's points
+  give way instead, as where a column 0.5 mm wide cuts its centre walk. The top stitches keep their ends.
+  At the default pull compensation an S-stitch over a zigzag underlay got the note every time, and every
+  method often did with an odd centre walk or an end near the next element.
 - A satin column's end cuts each part at its own needle point when that lies within the shortest stitch of
   the cut (`REQ-SAT-014`). A part was cut where it crossed the cut, and finishing left out a needle point
   that near another, with `SC-I0504`, a note about a point the design never drew. A zigzag satin, whose
