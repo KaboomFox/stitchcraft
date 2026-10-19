@@ -3,7 +3,7 @@
 <!-- implements: crates/stitchcraft-engine/src/testsheets/**, apps/stitchcraft-cli/src/commands/testsheet.rs -->
 
 Automated tests prove the files are what we intend. Only a machine proves they sew well. This page is
-the protocol for **machine checkpoints** (MC-1 … MC-7) on the reference machine: a Brother PE800, whose
+the protocol for **machine checkpoints** (MC-1 … MC-9) on the reference machine: a Brother PE800, whose
 5 × 7 in hoop sews at most 130 × 180 mm. Its 4 × 4 in and small hoops have profiles too, and the TS-10
 sheets test them ([ADR 0013](../design/adr/0013-brother-pe800-reference-machine.md)).
 
@@ -63,6 +63,8 @@ Record anything that differs in the report.
 | **TS-10A/B/C** Hoop size | Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop's field, with a centre cross and an "F" in the top-left corner | The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop's field is the right way round | MC-1, MC-5 |
 | **TS-11** New stitch types | Samples of the milestone's new types. So far zigzag strokes (M7.2), straight and curved, at spacings of 0.4, 1 and 2 mm and widths of 1, 2 and 4 mm, and one at 45°. E-stitches (M7.3) 3 and 5 mm wide at spacings of 2 and 3 mm, along a straight edge and round a circle, on appliqué fabric. S-stitches (M7.4) 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, straight and curved, the 10 mm ones split at 3 mm by the default and the staggered methods. Zigzag satins (M7.5) 4 and 8 mm wide at spacings of 0.4 and 1 mm, straight and curved, beside satin columns of the same widths and spacings, and one 8 mm wide at 1 mm over a contour underlay | Per type, as listed on its expected-result sheet. A zigzag sews narrower than drawn, and the report says by how much, whether its sides are even round curves and which is the narrowest width that sews cleanly. The E-stitch's spine should cover the appliqué's raw edge, and its spikes hold it without puckering. The S-stitch should cover its band at 0.4 mm with its steps along the edges even, and the report says whether the default method's splits leave a furrow along the band that the staggered ones do not. The zigzag satin should cover its band at 0.4 mm as its satin column does, and the report says whether it sews narrower than the satin column beside it. Its contour underlay should not show past the zigzag at either end | MC-6 |
 | **TS-12** Real design | A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours | Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style's settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round? | MC-5, MC-7 |
+| **TS-13** Pictures digitized automatically (M13) | Test pictures drawn in code and digitized with `--auto`, each beside the same shapes sewn in paint order. A badge is a broad fill inside a ring. Block letters are 4, 6, 10 and 15 mm tall. A cartoon face has black outlines 1, 2 and 4 mm wide. Lines are 0.3, 0.6 and 0.9 mm wide, and specks lie round a disc | Fabric showing between colours, on both halves. The smallest letters that read. Whether each outline's columns cover the edges of the fills beside them, and whether the triple runs show as wide as their lines. Colour changes, trims and time against the half in paint order | MC-8 |
+| **TS-14** Lettering (M14) | 3 embroidery fonts, a block, a script and a small one, each at the least and the greatest heights it sews at, and a name along an arc | Whether every glyph reads at its least height, satin coverage at its greatest, and whether the locks of small glyphs hold after the trims | MC-9 |
 
 ## Checkpoint calendar
 
@@ -73,7 +75,9 @@ Record anything that differs in the report.
 | MC-3 | M4 | TS-05, TS-06 | Satin spacing, width limits, underlay defaults, pull compensation |
 | MC-4 | M5 | TS-07, TS-08, TS-09 | Fill spacing, pull compensation, gap-filling rows, underlay and travel defaults |
 | MC-5 | M6 | TS-12, TS-10 | Is the VectorCraft workflow complete and correct? |
+| MC-8 | M13.7 | TS-13 | Do pictures digitized automatically sew better than the same shapes in paint order? Are the widest satin column, the overlap and the underlays by width right? |
 | MC-6 | M7 | TS-11 | New stitch types acceptable? |
+| MC-9 | M14 | TS-14 | Do the fonts sew legibly across the heights they claim? |
 | MC-7 | M12 | all | Release regression |
 
 ## Report template
