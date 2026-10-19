@@ -121,7 +121,7 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 ## M7 — More stitch types I
 
 One step for each stitch type, with its requirements, cases and docs
-([playbook](../contributing/playbook-new-stitch-type.md)).
+([playbook](../contributing/playbook-new-stitch-type.md)). M7.6 to M7.9 come after M13.
 
 | Step | Deliverable | Done when |
 |---|---|---|
@@ -135,6 +135,29 @@ One step for each stitch type, with its requirements, cases and docs
 | M7.8 | Meander fill with generated tiles. A node's meander fill may meet a `zigzag_spacing_mm` only its zigzag stroke can read, which Ink/Stitch sews as the fill's default. The step chooses whether StitchCraft does too ([rule 7](../design/params.md#naming-rules)) | same |
 | M7.9 | Circular fill | same |
 | MC-6 🧵 | **TS-11** (a sampler of the new types); kit: `stitch testsheet` | report filed; the new types' defaults confirmed |
+
+<!-- The milestones' headings all name them this way. -->
+<!-- vale ai-tells.EmDashUsage = NO -->
+## M13 — Image to embroidery
+<!-- vale ai-tells.EmDashUsage = YES -->
+
+Goal: a picture traced in VectorCraft sews well from one command, with no settings on its shapes
+([design](../design/image-to-embroidery.md)). M13 comes after M7.5 and before M7.6 (decided on
+2026-10-19). The steps that make every traced shape sew better with the generators StitchCraft has come
+first, and the steps that make new kinds of shape into stitches follow.
+
+| Step | Deliverable | Done when |
+|---|---|---|
+| M13.1 | Automatic elements. `--auto` on `stitch plan` and `stitch export` lets StitchCraft choose the stitches of the shapes that have no settings. A stroke narrower than `min_satin_stroke_width_mm` sews as a running stitch. Up to the widest satin column it sews as a satin column as wide as the stroke, and a wider one is filled. Areas are tatami fills. The rules' settings are registered, and their codes allocated | its requirements active; a traced line sews as wide as VectorCraft draws it |
+| M13.2 | Neighbours. Each shape reaches under the shapes it touches that sew after it, specks merge into the shape around them, and the background is left out, each said by a diagnostic | the coverage of the edges that the test pictures' shapes share, measured and recorded |
+| M13.3 | Sewing order. Paint order where shapes overlap, columns and lines after the fills they border, then the fewest colour changes and the nearest element next. `--sort-colours` orders a design's elements with settings by the same rules | the test pictures sew with fewer colour changes and jumps than in paint order |
+| M13.4 | Centre lines from a constrained Delaunay triangulation. A shape narrower than `min_satin_stroke_width_mm` everywhere sews as a running stitch along its centre line, tripled from 0.5 mm | its requirements active |
+| M13.5 | Columns from shapes. A shape no wider than the widest satin column sews as satin columns between its own outlines, joined where its strips meet and closed round its rings, with an underlay by width | same |
+| M13.6 | Shapes in parts. A shape's broad parts are filled, and its narrow parts sew as columns and lines that overlap the fill | same; TS-13 drawn |
+| M13.7 | VectorCraft. The Auto effect previews each path's stitches. `stitch palette` writes a profile's threads for Image Trace's Document Library palette. Tutorial "From a picture to a machine file", and a Level B case in which VectorCraft traces a picture | `shots-ui` and the compatibility gate green with the new case |
+| MC-8 🧵 | **TS-13** (test pictures digitized automatically, beside the same shapes sewn in paint order); kit: `stitch testsheet` | report filed; the rules' values confirmed or changed |
+| M13.8 | Automatic digitizing by default for VectorCraft documents | the end-to-end cases expect it |
+| M13.9 🧪 | `stitch plan picture.png`: VectorCraft's command line traces the picture, or StitchCraft reads and traces it itself | decision recorded in the design |
 
 ## M8 — Ink/Stitch interoperability
 
@@ -158,6 +181,28 @@ library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin,
 commit by `cargo xtask corpus` and never committed, using only fonts whose licence allows it (OFL, CC0,
 CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).
 
+<!-- The milestones' headings all name them this way. -->
+<!-- vale ai-tells.EmDashUsage = NO -->
+## M14 — Lettering
+<!-- vale ai-tells.EmDashUsage = YES -->
+
+Goal: names, monograms and words sewn in embroidery fonts, set as Ink/Stitch's lettering sets them
+([review](inkstitch-usage.md)). M14 comes after M8, whose SVG adapter reads the files that Ink/Stitch's
+fonts are made of. Fonts come from a repository of their own, as VectorCraft's do. They are StitchCraft's
+own fonts, Ink/Stitch's fonts whose licence allows it (OFL, CC0, CC-BY, CC-BY-SA, each with its licence
+file and an `ASSETS.md` row, never NC, GPL or unclear terms), and the fonts a user has installed for
+Ink/Stitch, read in their own format.
+
+| Step | Deliverable | Done when |
+|---|---|---|
+| M14.1 🧪 | The font repository, the licences it takes, and a reader for a font in Ink/Stitch's format, from Ink/Stitch's public documentation of it | ADR-0001 amended for fonts; one font read, its glyphs sewn |
+| M14.2 | `stitch lettering` sets text in a font. Its glyphs are placed by the font's advances and kerning, with the spacing of letters, words and lines and the alignment the user sets. The scale stays within the heights the font sews at, and a warning names the font's range outside them | its requirements active |
+| M14.3 | Lettering along a path. The colours of a multicolour font sorted, a trim after each letter, word or line as chosen, and lines sewn back and forth | same |
+| M14.4 | Lettering in VectorCraft: a text object sews in the embroidery font its StitchCraft setting names, read from the document's text. The step chooses how the setting is given, as an effect or a name. A preview of the font in VectorCraft waits for ABI v2's context for live effects (P6) | a Level B case |
+| MC-9 🧵 | **TS-14** (3 fonts at the least and the greatest heights they sew at); kit: `stitch testsheet` | report filed |
+| M14.5 | Text in pictures: the traced shapes inside an area marked `stitch:text` are replaced by lettering of the marker's text, as tall as the traced letters ([design](../design/image-to-embroidery.md#text-in-pictures)) | its requirements active |
+| M14.6 🧪 | Text in pictures found and read without a marker | decision recorded in the design |
+
 ## M10 — More stitch types II
 
 Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch; auto-run and auto-satin
@@ -178,11 +223,9 @@ checksums); 24 h fuzz soak; **MC-7 🧵** full regression set on the machine.
 
 ## After 1.0
 
-Lettering with fonts from a separate font repository (VectorCraft keeps fonts out of its tree too): our
-own, Ink/Stitch's fonts whose licence allows it (OFL, CC0, CC-BY, CC-BY-SA, each with its licence file and
-an `ASSETS.md` row, never NC, GPL or unclear terms; ADR-0001 is amended in that step), and fonts a user has
-installed with Ink/Stitch, read in their own format; appliqué workflow, design splitting for small hoops, colour-change reordering, print worksheets, an
-in-tree VectorCraft crate if wanted.
+Appliqué workflow, design splitting for small hoops, print worksheets, and an in-tree VectorCraft crate if
+wanted. `stitch import design.pes -o design.vectorcraft` opens a machine file in VectorCraft, its stitches
+written as manual stitches by the same document writer as M8's `stitch import-inkstitch`.
 
 ## M9 (VectorCraft ABI v2, upstream)
 
