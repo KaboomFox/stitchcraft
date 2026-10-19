@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-e95e70a8.js";
+            window.path_to_searchindex_js = "../../searchindex-b37c0bcc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-ed0f9ffd.js"></script>
@@ -223,6 +223,7 @@
 <tr><td><a href="#sc-w0310"><code>SC-W0310</code></a></td><td>Warning</td><td>Fill’s underlay inset shrinks a part away; underlay over all of it</td></tr>
 <tr><td><a href="#sc-w0312"><code>SC-W0312</code></a></td><td>Warning</td><td>Fill’s pull compensation below 0; read as 0</td></tr>
 <tr><td><a href="#sc-i0313"><code>SC-I0313</code></a></td><td>Info</td><td>Fill drawn twice along its edge; Ink/Stitch fills the part left empty</td></tr>
+<tr><td><a href="#sc-w0314"><code>SC-W0314</code></a></td><td>Warning</td><td>Legacy fill sewn as a tatami fill without underlay</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -290,7 +291,8 @@ StitchCraft never writes an empty machine file, because some machines refuse or 
 <p>The element’s stitch type is one this version of StitchCraft does not sew yet, so the element was
 skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
 satin columns from M4, tatami fills from M5, and zigzag strokes, E-stitches and S-stitches from M7.
-The other stitch types follow (<code>docs/src/plan/roadmap.md</code>).</p>
+The other stitch types follow (<code>docs/src/plan/roadmap.md</code>), but for Ink/Stitch’s legacy fill, which
+is sewn as a tatami fill (<code>SC-W0314</code>).</p>
 <p>The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
 tool for now.</p>
 <h2 id="sc-e0012"><a class="header" href="#sc-e0012">SC-E0012</a></h2>
@@ -501,6 +503,16 @@ another. StitchCraft leaves the part empty, as the drawing shows it. Ink/Stitch 
 by merging each stretch drawn twice into one, which fills the part, and the same file then sews it
 filled in Ink/Stitch.</p>
 <p>To sew it alike in both, draw the outline round the empty part instead of a subpath along it.</p>
+<h2 id="sc-w0314"><a class="header" href="#sc-w0314">SC-W0314</a></h2>
+<p><strong>Warning</strong> — Legacy fill sewn as a tatami fill without underlay</p>
+<p>Ink/Stitch’s legacy fill is its first fill method, which it keeps for its older files: it gives the
+method to a fill whose <code>auto_fill</code> is off. StitchCraft does not sew it, and sews such a fill as a
+tatami fill with the same settings and no underlay, as legacy fill sews none. Its rows and their
+needle points are a tatami fill’s, as in Ink/Stitch. Ink/Stitch sews a legacy fill’s rows in
+stretches that join, each on its own and back and forth; its <code>flip</code> starts the rows from the other
+side, and its <code>reverse</code> sews the fill backwards. A tatami fill routes its rows and joins them with
+travel stitches, and StitchCraft keeps <code>flip</code> and <code>reverse</code> without reading them (<code>SC-W0105</code>).</p>
+<p>To sew the fill alike in both, set its fill method to tatami fill and turn <code>fill_underlay</code> off.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:

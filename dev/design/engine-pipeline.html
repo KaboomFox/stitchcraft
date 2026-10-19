@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-e95e70a8.js";
+            window.path_to_searchindex_js = "../searchindex-b37c0bcc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-ed0f9ffd.js"></script>
@@ -242,7 +242,8 @@ what it leaves out and how it will be sewn are said (<code>SC-W0303</code>, <cod
 whatever comes next, and its <code>fill_method</code> picks the generator: the tatami fill, sewn from M5.4, which
 reads the running stitch’s length and tolerance for its travel between rows (the first of the lengths,
 as a satin column does), under the rows from M5.5, and sews its underlay before its top rows from
-M5.6. The other stroke, satin and
+M5.6. A fill set to Ink/Stitch’s legacy fill is sewn as a tatami fill without underlay, with
+<code>SC-W0314</code>: StitchCraft does not build that method (<code>REQ-FILL-005</code>). The other stroke, satin and
 fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are wrong
 (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s

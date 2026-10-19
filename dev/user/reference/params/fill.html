@@ -35,7 +35,7 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-e95e70a8.js";
+            window.path_to_searchindex_js = "../../../searchindex-b37c0bcc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../toc-ed0f9ffd.js"></script>
@@ -194,13 +194,18 @@ its stroke settings say. The element before it still ends near it, as Ink/Stitch
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h3 id="fill_method"><a class="header" href="#fill_method"><code>fill_method</code></a></h3>
-<p><strong>Fill method.</strong> The stitch the area is filled with. A tatami fill sews rows of running stitches across it. The
+<p><strong>Fill method.</strong> The stitch the area is filled with. A tatami fill sews rows of running stitches across it, and a
+fill set to Ink/Stitch’s legacy fill is sewn as a tatami fill without underlay (<code>SC-W0314</code>). The
 other methods arrive in later versions; until then an element set to one is skipped
 (<code>SC-W0011</code>).</p>
 <ul>
 <li><strong>Accepts:</strong> one of <code>tatami_fill</code> (Tatami fill), <code>circular_fill</code> (Circular fill), <code>contour_fill</code> (Contour fill), <code>cross_stitch</code> (Cross stitch), <code>guided_fill</code> (Guided fill), <code>linear_gradient_fill</code> (Linear gradient fill), <code>meander_fill</code> (Meander fill), <code>tartan_fill</code> (Tartan fill), <code>legacy_fill</code> (Legacy fill)</li>
 <li><strong>Default:</strong> <code>tatami_fill</code></li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-FILL-014.</strong> A fill whose fill_method is legacy_fill is sewn as a tatami fill without underlay (SC-W0314), its rows routed and joined by travel stitches as a tatami fill’s are, from near the needle to near the next element. Ink/Stitch’s legacy fill sews each stretch of rows that join on its own, back and forth, with no travel stitches between stretches; its flip starts the rows from the other side, and its reverse sews the whole fill backwards. StitchCraft keeps both settings without reading them (SC-W0105).</li>
+</ul>
+</li>
 </ul>
 
                     </main>

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-e95e70a8.js";
+            window.path_to_searchindex_js = "../../searchindex-b37c0bcc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-ed0f9ffd.js"></script>
@@ -183,7 +183,8 @@
                         <h1 id="fill-generators"><a class="header" href="#fill-generators">Fill generators</a></h1>
 <!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/pull.rs -->
 <p>A fill covers the area its path bounds, its <a href="#region">region</a>, with rows of stitches. Tatami is P1 (M5);
-contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).</p>
+contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).
+Ink/Stitch’s legacy fill is not planned, and is sewn as a tatami fill (<a href="#legacy-fill-not-planned">below</a>).</p>
 <p>A fill sews the drawing’s shape with Ink/Stitch’s stitches. Ink/Stitch’s rows, their spacing and stagger,
 the order it sews them in, its travel, underlay and compensation are what make its fills look good
 embroidered. StitchCraft keeps them, with their parameters’ names and defaults, and a file sews alike in
@@ -604,6 +605,18 @@ with <code>rows_per_thread</code> and optional herringbone. Specified at M10.</p
 <code>canvas_grid_origin</code>); a cell becomes a cross when the region covers at least <code>fill_coverage</code> percent of
 it; crosses use <code>cross_stitch_method</code> (simple, half, upright, double, Smyrna, flipped variants) and are
 routed row by row. Specified at M10.</p>
+<h2 id="legacy-fill-not-planned"><a class="header" href="#legacy-fill-not-planned">Legacy fill (not planned)</a></h2>
+<p>Ink/Stitch’s first fill method, which it keeps for its older files: it gives <code>legacy_fill</code> to a fill whose
+<code>auto_fill</code> is off when it opens one. Its rows lie on a tatami fill’s grating, with a tatami fill’s needle
+points along them (<code>staggers</code>, <code>skip_last</code>), and it sews no underlay. It sews each stretch of rows that
+join on its own, back and forth, with no travel stitches between stretches; <code>flip</code> starts its rows from
+the other side, and <code>reverse</code> sews the whole fill backwards.</p>
+<p>StitchCraft does not build it, since the method exists for Ink/Stitch’s older files. A fill set to it is
+sewn as a tatami fill with its settings and no underlay, and <code>SC-W0314</code> says so (<code>REQ-FILL-005</code>). It is a
+tatami fill in every other way too. The element before it ends near its area, and its rows are routed and
+joined by travel stitches as a tatami fill’s are (<code>DEV-FILL-014</code>). <code>flip</code> and <code>reverse</code> are not planned,
+and a design that sets them gets <code>SC-W0105</code>. The VectorCraft plug-in’s fill dialog does not offer the
+method.</p>
 <h2 id="references"><a class="header" href="#references">References</a></h2>
 <ul>
 <li>D. Hilbert, “Über die stetige Abbildung einer Linie auf ein Flächenstück,” <em>Mathematische Annalen</em> 38, 1891.</li>
