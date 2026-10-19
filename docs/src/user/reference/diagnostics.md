@@ -122,9 +122,8 @@ Add an element with an embroidery stitch type, or fix the errors reported for th
 
 The element's stitch type is one this version of StitchCraft does not sew yet, so the element was
 skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
-satin columns from M4, tatami fills from M5, and zigzag strokes and E-stitches from M7. The other
-stitch types follow
-(`docs/src/plan/roadmap.md`).
+satin columns from M4, tatami fills from M5, and zigzag strokes, E-stitches and S-stitches from M7.
+The other stitch types follow (`docs/src/plan/roadmap.md`).
 
 The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
 tool for now.

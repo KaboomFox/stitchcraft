@@ -11,6 +11,7 @@ stroke or the fill of a shape, and each sews in its own thread colour.
 | [Zigzag stroke](zigzag.md) | strokes as wide as their line: light borders, couched looks | now |
 | Satin column | wide strokes and borders | now |
 | [E-stitch](e-stitch.md) | satin columns as appliqué edges: a spine along one rail, with spikes to the other | now |
+| [S-stitch](s-stitch.md) | satin columns sewn one way at a time: a stitch across at each step, joined along the edges | now |
 | Tatami fill | areas, in rows of running stitches | now |
 
 Every element also gets [lock stitches](locks.md) where its stitching starts and ends, and a trim or a

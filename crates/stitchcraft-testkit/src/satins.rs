@@ -53,6 +53,27 @@ pub fn satin_diagnostics(path: &Path, params: &[(&str, &str)], neighbours: &Neig
     (stitched.runs.into_iter().flatten().collect(), stitched.warnings)
 }
 
+/// The needle points of a straight column `length` long and `width` wide ([`ladder`], with no rungs), sewn
+/// by the satin method `method` with `params`, as points to compare with [`near`]. A column that warns is
+/// a case's mistake.
+pub fn sewn_ladder<'a>(length: f64, width: f64, method: &'a str, params: &[(&'a str, &'a str)]) -> Vec<(f64, f64)> {
+    let mut params = params.to_vec();
+    params.push(("satin_method", method));
+    let (points, warnings) = sewn_satin(&ladder(length, width, &[]), &params);
+    assert!(warnings.is_empty(), "{warnings:?}");
+    xy(&points)
+}
+
+/// `points` as (x, y), to compare with [`near`].
+pub fn xy(points: &[Point]) -> Vec<(f64, f64)> {
+    points.iter().map(|q| (q.x(), q.y())).collect()
+}
+
+/// Whether `got` are the points `want`, but for rounding.
+pub fn near(got: &[(f64, f64)], want: &[(f64, f64)]) -> bool {
+    got.len() == want.len() && got.iter().zip(want).all(|(g, w)| (g.0 - w.0).abs() < 1e-9 && (g.1 - w.1).abs() < 1e-9)
+}
+
 /// The stitch lengths of a satin column whose element sets `set`, as the engine gives them on the reference
 /// machine in a design with the usual settings: its shortest stitch (the element's, when longer than the
 /// machine's), its longest, the first of the running stitch's lengths and its tolerance, and its jump length.
