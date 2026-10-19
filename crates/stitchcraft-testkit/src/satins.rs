@@ -39,7 +39,8 @@ pub fn sewn_between(path: &Path, params: &[(&str, &str)], neighbours: &Neighbour
 }
 
 /// The needle points of the satin column `path`, sewn as [`sewn_satin`] sews it, between `neighbours`, and
-/// its warnings as diagnostics, with their places.
+/// its warnings as diagnostics, with their places. A column is sewn in one run, or none when it is left
+/// out.
 pub fn satin_diagnostics(path: &Path, params: &[(&str, &str)], neighbours: &Neighbours) -> (Vec<Point>, Vec<Diagnostic>) {
     let mut meter = Budget::DEFAULT.meter();
     let Ok(Shape::Rails(satin)) = recognize(path, &mut meter).unwrap().shape else { panic!("not rails: {path:?}") };
@@ -49,7 +50,7 @@ pub fn satin_diagnostics(path: &Path, params: &[(&str, &str)], neighbours: &Neig
     let params = SatinParams::from_set_as(&set, SATIN).unwrap().params;
     let pull = PullParams::from_set_as(&set, SATIN).unwrap().params;
     let stitched = satin_stitch(&satin, &params, &pull, satin_lengths(&set), neighbours, &mut rng, &mut meter).unwrap();
-    assert_eq!(stitched.runs.len(), 1);
+    assert!(stitched.runs.len() <= 1, "{} runs", stitched.runs.len());
     (stitched.runs.into_iter().flatten().collect(), stitched.warnings)
 }
 

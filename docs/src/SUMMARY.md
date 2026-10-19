@@ -21,6 +21,7 @@
     - [Zigzag stroke](user/stitches/zigzag.md)
     - [E-stitch](user/stitches/e-stitch.md)
     - [S-stitch](user/stitches/s-stitch.md)
+    - [Zigzag satin](user/stitches/zigzag-satin.md)
     - [Lock stitches, trims and stops](user/stitches/locks.md)
   - [Embroidery basics](user/explanation/embroidery-basics.md)
   - [Reference](user/reference/README.md)
