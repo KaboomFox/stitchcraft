@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f6c687fa.js";
+            window.path_to_searchindex_js = "../searchindex-5d491ef3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-639d0563.js"></script>
@@ -299,6 +299,8 @@ kind; the element cannot be stitched) or <code>SC-W0102</code> (clamped into ran
 is accepted. Keys the registry does not know are kept, so they round-trip, and reported once as
 <code>SC-W0105</code>. Parsing lives in one place (<code>value</code> module), so every host reads text the same way: an SVG
 attribute, a command-line <code>key=value</code>, a VectorCraft effect record.</p>
+<p><code>SC-W0102</code> names the value used, or for a list what the list is read as, since an element may sew only
+some of a list’s values: a zigzag stroke sews its first spacing.</p>
 <p>The ranges are StitchCraft’s. Ink/Stitch sets a floor for most of its numbers and few ceilings, so many
 ranges here are narrower, and a value outside one is clamped where Ink/Stitch would sew it
 (<code>DEV-PRM-002</code>). A list holds at most 16 values, a pair 2, and no value is longer than 4,096 bytes, which

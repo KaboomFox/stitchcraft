@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-f6c687fa.js";
+            window.path_to_searchindex_js = "../../searchindex-5d491ef3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-639d0563.js"></script>
@@ -394,8 +394,11 @@ width plus the first to the left (<code>REQ-RUN-010</code>).</li>
 (<code>REQ-RUN-012</code>).</li>
 </ul>
 <h3 id="diagnostics-1"><a class="header" href="#diagnostics-1">Diagnostics</a></h3>
-<p><code>SC-W0401</code> for a part of the path that is one point. Finalizing leaves out a zigzag’s stitches that are
-shorter than the shortest stitch, as they are across a zigzag much narrower than it (<code>SC-I0504</code>).</p>
+<p><code>SC-W0401</code> for a part of the path that is one point. Finishing leaves out a needle point of each stitch
+shorter than the shortest stitch (<code>SC-I0504</code>). At the default spacing, 0.4 mm, and a shortest stitch of
+0.3 mm, that is every stitch of a straight zigzag narrower than 0.224 mm, and the zigzag sews as a line.
+<code>SC-W0405</code> names a zigzag with stitches that short, and the width it needs. Ink/Stitch’s shortest stitch
+is 0.1 mm by default, and it sews such a zigzag as it is.</p>
 <h2 id="ripple-stitch-p3-m10"><a class="header" href="#ripple-stitch-p3-m10">Ripple stitch (P3, M10)</a></h2>
 <p>A series of copies of the stroke, each progressively scaled, offset or interpolated towards a target
 point (or between two rails for “satin-guided ripple”), joined into one continuous running stitch.

@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-f6c687fa.js";
+            window.path_to_searchindex_js = "searchindex-5d491ef3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-639d0563.js"></script>
@@ -1744,6 +1744,7 @@ Arguments:
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
 <tr><td><a href="#sc-w0404"><code>SC-W0404</code></a></td><td>Warning</td><td>Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch</td></tr>
+<tr><td><a href="#sc-w0405"><code>SC-W0405</code></a></td><td>Warning</td><td>Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower</td></tr>
 <tr><td><a href="#sc-w0502"><code>SC-W0502</code></a></td><td>Warning</td><td>Lock stitch shorter than 0.2 mm; lengthened</td></tr>
 <tr><td><a href="#sc-w0503"><code>SC-W0503</code></a></td><td>Warning</td><td>Custom lock cannot be sewn as written</td></tr>
 <tr><td><a href="#sc-i0504"><code>SC-I0504</code></a></td><td>Info</td><td>Stitches shorter than the shortest stitch merged</td></tr>
@@ -2050,6 +2051,16 @@ could break the thread. Ink/Stitch splits such a stitch into the fewest parts no
 setting, however short they are.</p>
 <p>The message gives how many stitches are longer and the longest of them. Set <code>max_stitch_length_mm</code>
 to at least twice the shortest stitch: every split then leaves parts long enough.</p>
+<h2 id="sc-w0405"><a class="header" href="#sc-w0405">SC-W0405</a></h2>
+<p><strong>Warning</strong> — Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower</p>
+<p>A zigzag stroke’s stitches shorter than the shortest stitch the machine sews well, across a zigzag
+too narrow for its spacing. Finishing leaves out a needle point of each such stitch, as it leaves out
+any point that near the one before it (<code>SC-I0504</code>), so the zigzag sews narrower there. Where every
+stitch is that short, every other point goes, and the zigzag sews as a line along one side.
+Ink/Stitch’s shortest stitch is 0.1 mm by default, and it sews such a zigzag as it is.</p>
+<p>The message gives how many stitches are that short and the shortest. On a straight path, a stitch
+across a zigzag <code>w</code> wide at a spacing <code>s</code> is √(w² + (s/2)²) long. Make the zigzag wider, the stroke
+or its pull compensation, or space it out, until that is at least the shortest stitch.</p>
 <h2 id="sc-w0502"><a class="header" href="#sc-w0502">SC-W0502</a></h2>
 <p><strong>Warning</strong> — Lock stitch shorter than 0.2 mm; lengthened</p>
 <p>A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have. The needle
@@ -2079,7 +2090,8 @@ between them is whatever is left of the gap. A point that stays, such as a lock 
 point before a jump, trim or stop, leaves out the points before it that it is too near, and a stitch
 into or out of a lock point may be as short as 0.2 mm. Where small elements are sewn over each other,
 a point that stays can go too, when it comes within the shortest stitch of another that stays.
-Nothing visible changes.</p>
+Nothing visible changes, but across a zigzag too narrow for the shortest stitch, which <code>SC-W0405</code>
+names.</p>
 <p>The message gives how many points were left out and the shortest stitches that applied to them.
 Nothing needs doing. If the count is large, check for elements drawn on top of each other.</p>
 <h2 id="sc-w0505"><a class="header" href="#sc-w0505">SC-W0505</a></h2>
@@ -4232,6 +4244,8 @@ kind; the element cannot be stitched) or <code>SC-W0102</code> (clamped into ran
 is accepted. Keys the registry does not know are kept, so they round-trip, and reported once as
 <code>SC-W0105</code>. Parsing lives in one place (<code>value</code> module), so every host reads text the same way: an SVG
 attribute, a command-line <code>key=value</code>, a VectorCraft effect record.</p>
+<p><code>SC-W0102</code> names the value used, or for a list what the list is read as, since an element may sew only
+some of a list’s values: a zigzag stroke sews its first spacing.</p>
 <p>The ranges are StitchCraft’s. Ink/Stitch sets a floor for most of its numbers and few ceilings, so many
 ranges here are narrower, and a value outside one is clamped where Ink/Stitch would sew it
 (<code>DEV-PRM-002</code>). A list holds at most 16 values, a pair 2, and no value is longer than 4,096 bytes, which
@@ -4477,6 +4491,7 @@ another.</p>
 <tr><td><code>SC-W0402</code></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest</td><td>M3</td></tr>
 <tr><td><code>SC-W0403</code></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td><td>M3</td></tr>
 <tr><td><code>SC-W0404</code></td><td>Warning</td><td>Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch</td><td>M3</td></tr>
+<tr><td><code>SC-W0405</code></td><td>Warning</td><td>Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower</td><td>M7</td></tr>
 <tr><td><code>SC-W0502</code></td><td>Warning</td><td>Lock stitch shorter than 0.2 mm; lengthened</td><td>M3</td></tr>
 <tr><td><code>SC-W0503</code></td><td>Warning</td><td>Custom lock cannot be sewn as written</td><td>M3</td></tr>
 <tr><td><code>SC-I0504</code></td><td>Info</td><td>Stitches shorter than the shortest stitch merged</td><td>M3</td></tr>
@@ -5213,8 +5228,11 @@ width plus the first to the left (<code>REQ-RUN-010</code>).</li>
 (<code>REQ-RUN-012</code>).</li>
 </ul>
 <h3 id="diagnostics-1-1"><a class="header" href="#diagnostics-1-1">Diagnostics</a></h3>
-<p><code>SC-W0401</code> for a part of the path that is one point. Finalizing leaves out a zigzag’s stitches that are
-shorter than the shortest stitch, as they are across a zigzag much narrower than it (<code>SC-I0504</code>).</p>
+<p><code>SC-W0401</code> for a part of the path that is one point. Finishing leaves out a needle point of each stitch
+shorter than the shortest stitch (<code>SC-I0504</code>). At the default spacing, 0.4 mm, and a shortest stitch of
+0.3 mm, that is every stitch of a straight zigzag narrower than 0.224 mm, and the zigzag sews as a line.
+<code>SC-W0405</code> names a zigzag with stitches that short, and the width it needs. Ink/Stitch’s shortest stitch
+is 0.1 mm by default, and it sews such a zigzag as it is.</p>
 <h2 id="ripple-stitch-p3-m10"><a class="header" href="#ripple-stitch-p3-m10">Ripple stitch (P3, M10)</a></h2>
 <p>A series of copies of the stroke, each progressively scaled, offset or interpolated towards a target
 point (or between two rails for “satin-guided ripple”), joined into one continuous running stitch.
