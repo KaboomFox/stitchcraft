@@ -89,9 +89,11 @@ Rows are laid across each part of the region on its own (`stitchcraft_engine::ge
 since M5.2). They run at `angle`, counter-clockwise from horizontal on screen: at 0° left to right, at
 90° up the screen. Measured across them from the design's origin, the first row of a part lies the
 largest whole number of `row_spacing_mm` from the origin that does not pass the part, and the rows follow
-it `row_spacing_mm` apart until they pass the part's far side (`REQ-FILL-TAT-002`). Fills side by side
-at the same angle and spacing then share their rows. Angles of whole right angles are exact, so rows at
-0° or 90° run exactly along the drawing's axes.
+it `row_spacing_mm` apart up to the part's far side, with none on it (`REQ-FILL-TAT-002`). Fills side by
+side at the same angle and spacing then share their rows. Angles of whole right angles are exact, so rows
+at 0° or 90° run exactly along the drawing's axes. The nth row lies n spacings past the first, multiplied
+out, since a spacing such as 0.1 mm rounds in binary, and added up row by row its rounding grew into a
+row on the far side.
 
 With `end_row_spacing_mm`, each step to the next row is the row spacing plus the difference to the end
 spacing times the distance from the first row over the part's height. The spacing then reaches the end
@@ -108,6 +110,12 @@ across 406 random polygons of grid squares and half squares, 98 of them with hol
 checked (`conformance/fixtures/geometry/shapely-rows.txt`).
 Which stretches lie inside is decided by counting the edges that cross the row, each over its height
 from its lower end up to but not including its upper end.
+
+A side drawn on a row lies a hair off it by the time it is cut: the region puts its corners on a grid
+2.9e-11 mm wide, and the row's place rounds. So a point of the outline within 1e-9 mm of a row lies on
+it, and a row within 1e-9 mm of a part's far side lies on that side, and is left out. A part's first and
+last rows, and the segments of a row drawn along a side, then don't depend on the rounding. Ink/Stitch's
+do (`DEV-FILL-012`).
 
 The top rows alone, laid over each part grown by `expand_mm` as the fill grows it, are what a preview
 shows of a fill too costly to sew within the preview's budget (`generate::rows`, since M6.3). Laying

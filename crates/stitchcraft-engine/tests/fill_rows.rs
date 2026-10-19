@@ -64,6 +64,41 @@ fn req_fill_tat_002_rows_are_the_row_spacing_apart_and_a_whole_number_of_spacing
 }
 
 #[test]
+fn req_fill_tat_002_a_part_s_rows_run_from_its_near_side_to_before_its_far_side() {
+    // A square 10 mm wide from `start` on both axes, at 0° and at 90°: its rows are those a whole number of
+    // spacings from the origin that lie on its near side or past it, and before its far side. That holds
+    // however the spacing rounds in binary, and wherever the region puts the corners on its grid, a hair
+    // off the rows on the sides.
+    let cases = [
+        // start, spacing, rows, first row
+        (5.0, 0.1, 100, 5.0),
+        (5.0, 0.2, 50, 5.0),
+        (5.0, 0.25, 40, 5.0),
+        (5.0, 0.3, 33, 5.1),
+        (5.1, 0.1, 100, 5.1),
+        (5.1, 0.2, 50, 5.2),
+        (5.1, 0.3, 34, 5.1),
+        (5.3, 0.3, 33, 5.4),
+    ];
+    for (start, spacing, count, first) in cases {
+        let end = start + 10.0;
+        let square = part(&[(start, start), (end, start), (end, end), (start, end)]);
+        for angle in [0.0, 90.0] {
+            let found = laid(&square, Grid { angle, spacing, end_spacing: None });
+            let at = |row: &Row| row.across;
+            let said = format!("{start} mm, {angle}°, {spacing} mm: {} rows, {:?} to {:?}", found.len(), found.first().map(at), found.last().map(at));
+            assert_eq!(found.len(), count, "{said}");
+            let last = first + f64::from(u32::try_from(count - 1).unwrap()) * spacing;
+            assert!((found[0].across - first).abs() < 1e-9 && (found[count - 1].across - last).abs() < 1e-9, "{said}");
+            // Every row runs across the whole square, a first row on the near side along it.
+            for row in &found {
+                assert!(row.segments.len() == 1 && (row.segments[0].start.distance(row.segments[0].end) - 10.0).abs() < 1e-9, "{said}");
+            }
+        }
+    }
+}
+
+#[test]
 fn req_fill_tat_002_a_row_ends_exactly_on_an_upright_or_level_side() {
     // Where a row crosses a side along y or along x, its end lies on the side exactly, as GEOS cuts it,
     // whatever the angle of the rows: segments ending on one side then compare as equal.
@@ -109,6 +144,24 @@ fn req_fill_tat_010_rows_are_cut_where_they_meet_the_outline() {
     // A triangle whose apex only touches a row: no segment there.
     let triangle = part(&[(3.0, 0.0), (6.0, 6.0), (0.0, 6.0)]);
     assert_eq!(laid(&triangle, Grid { angle: 0.0, spacing: 3.0, end_spacing: None }).iter().map(|row| row.across).collect::<Vec<_>>(), [3.0]);
+}
+
+#[test]
+fn req_fill_tat_010_a_side_drawn_on_a_row_is_cut_as_one_on_it() {
+    // A U whose notch has its top and sides drawn on rows 0.1 mm apart: its top from 10.1 to 10.9 mm up,
+    // and its sides as far in from 6 and 14 mm. The region puts the corners on its grid, and the rows'
+    // places round in binary, a hair apart. At 0° the row along the notch's top is still cut in 3, at the
+    // top's ends, and at 90° each row along a side in 2, at the side's end inside the U.
+    for tenths in 1..10 {
+        let d = f64::from(tenths) / 10.0;
+        let (left, right, top) = (6.0 + d, 14.0 - d, 10.0 + d);
+        let u = part(&[(0.0, 0.0), (left, 0.0), (left, top), (right, top), (right, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)]);
+        let cut_along = |angle, across: f64| {
+            let found = laid(&u, Grid { angle, spacing: 0.1, end_spacing: None });
+            found.iter().find(|row| (row.across - across).abs() < 1e-6).map(|row| row.segments.len())
+        };
+        assert_eq!([cut_along(0.0, top), cut_along(90.0, left), cut_along(90.0, right)], [Some(3), Some(2), Some(2)], "{d} mm");
+    }
 }
 
 #[test]
