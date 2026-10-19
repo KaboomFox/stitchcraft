@@ -779,6 +779,24 @@ rationale = "A stitch longer than 12 mm floats loose over the fabric, where it s
 milestone = "M7"
 status = "active"
 
+[[req]]
+id = "REQ-SAT-024"
+area = "satin/s-stitch"
+level = "L2"
+statement = "An S-stitch sews each pair a satin column places, compensates and insets once, as a stitch across the column: the first pair from the second rail's inset point to the first rail's, the next from the first rail's to the second's, and on in turn. The stitch splits as a stitch from the pair's first rail to its second would, and is sewn the way its pair goes. By the default method it splits into the fewest equal parts, with no count taken from a stitch before. By the simple and staggered methods it is the column's stitch of the same number as its pair, the first numbered 0."
+rationale = "Ink/Stitch's S stitch, read at 6555892: a file sews the same column of S's in both."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-SAT-025"
+area = "satin/s-stitch"
+level = "L2"
+statement = "From one pair to the next, an S-stitch goes along the rail its stitch ended on in one stitch, from that inset point to the next pair's, and never splits it, whatever the zigzag spacing and the longest stitch."
+rationale = "Ink/Stitch's S stitch, read at 6555892, works out splits for that stitch when the zigzag spacing is longer than the longest stitch, and sews none of them (lib/elements/satin_column/stitches.py, _do_s_stitch): the steps sew the same in both."
+milestone = "M7"
+status = "active"
+
 # ── Fill region ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

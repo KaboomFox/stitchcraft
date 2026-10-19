@@ -7,36 +7,16 @@
 // Test code may unwrap, panic and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic)]
 
-use stitchcraft_core::Point;
 use stitchcraft_engine::generators::{Approach, Neighbours};
 use stitchcraft_testkit::designs::p;
-use stitchcraft_testkit::satins::{NO_SHORT_STITCHES, ladder, sewn_between, sewn_satin};
+use stitchcraft_testkit::satins::{NO_SHORT_STITCHES, ladder, near, sewn_between, sewn_ladder, xy};
 
 /// The needle points of a column `length` long and `width` wide, sewn as an E-stitch with `params` and no
 /// short stitches, which gives no warning.
 fn e_stitch(length: f64, width: f64, params: &[(&str, &str)]) -> Vec<(f64, f64)> {
     let mut params = params.to_vec();
     params.push(NO_SHORT_STITCHES);
-    sewn(length, width, &params)
-}
-
-/// The needle points of a column `length` long and `width` wide, sewn as an E-stitch with `params`, which
-/// gives no warning.
-fn sewn(length: f64, width: f64, params: &[(&str, &str)]) -> Vec<(f64, f64)> {
-    let mut params = params.to_vec();
-    params.push(("satin_method", "e_stitch"));
-    let (points, warnings) = sewn_satin(&ladder(length, width, &[]), &params);
-    assert!(warnings.is_empty(), "{warnings:?}");
-    xy(&points)
-}
-
-fn xy(points: &[Point]) -> Vec<(f64, f64)> {
-    points.iter().map(|q| (q.x(), q.y())).collect()
-}
-
-/// Whether `got` are the points `want`, but for rounding.
-fn near(got: &[(f64, f64)], want: &[(f64, f64)]) -> bool {
-    got.len() == want.len() && got.iter().zip(want).all(|(g, w)| (g.0 - w.0).abs() < 1e-9 && (g.1 - w.1).abs() < 1e-9)
+    sewn_ladder(length, width, "e_stitch", &params)
 }
 
 /// A spike at `x` across a column `width` wide, split at `splits` from the spine: up, then back down.
@@ -134,7 +114,7 @@ fn req_sat_021_the_spine_splits_from_a_spike_s_inset_point_to_the_next_pair_s_po
     // Pairs 3 mm apart on a column 4 mm wide with a longest stitch of 2 mm. Their points crowd closer than
     // 5 mm, and every other one is inset 15 % of the width, 0.6 mm. A spine stitch splits as one from the
     // spike's inset point to the next pair's point before its inset: halfway between those.
-    let points = sewn(12.0, 4.0, &[("zigzag_spacing_mm", "3"), ("max_stitch_length_mm", "2"), ("short_stitch_distance_mm", "5")]);
+    let points = sewn_ladder(12.0, 4.0, "e_stitch", &[("zigzag_spacing_mm", "3"), ("max_stitch_length_mm", "2"), ("short_stitch_distance_mm", "5")]);
     let inset = |x: f64, by: f64| vec![(x, by), (x, 2.0), (x, 4.0 - by), (x, 2.0), (x, by)];
     let want = [
         inset(0.0, 0.0),

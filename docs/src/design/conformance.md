@@ -132,7 +132,8 @@ the other way round from its outline. The satin cases sew their columns with `st
 reference machine, with the stitch lengths the engine gives it there (`satin_lengths`), and read the needle
 points back in pairs across the column. A column is sewn alone (`sewn_satin`) or between the neighbours a
 case gives it (`sewn_between`), and `satin_diagnostics` keeps its warnings' places for the cases that
-check where a warning points.
+check where a warning points. The cases of a satin method sew a straight column by that method
+(`sewn_ladder`) and compare its needle points with the ones they expect, but for rounding (`near`).
 
 ## Levels
 

@@ -161,8 +161,8 @@ rails twice: once to sew it, and once for the element before it to end near it.
 ## Orientation
 
 - `swap_satin_rails` makes the second rail the first, before any reversal. The first rail sews first in
-  each pair, and the column starts on it. Asymmetric values (one value per side) name it first, and the
-  E-stitch spine runs on it.
+  each pair, and the column starts on it, but for an S-stitch, whose first pair goes from the second rail.
+  Asymmetric values (one value per side) name it first, and the E-stitch spine runs on it.
 - `reverse_rails = automatic` reverses rail B, the second, when that brings the rails' points closer
   together, as in Ink/Stitch. Points at every tenth of each rail's length, from its start to 90 %, are
   paired twice, with rail B forwards and with it backwards. The pairing whose distances add up to less
@@ -319,6 +319,31 @@ at `d59c9ab`.
    satin column's: the top stitches' run is cut and turned as a satin column's is
    ([Start and end](#start-and-end)).
 
+## S-stitch (method `s_stitch`)
+
+An S-stitch sews one stitch across the column at each pair, every other one back the other way, and goes
+on from each to the next along a rail, so that the needle draws S's laid end to end. Split by a longest
+stitch, its stitches cover the column in rows that follow it, as a fill's rows do. StitchCraft sews it as
+Ink/Stitch sews its "S" stitch, read at `6555892`.
+
+1. **Pairs.** The pairs are placed, compensated and inset as the top stitches' are (steps 1 to 3 of
+   [Top stitches](#top-stitches-method-satin_column)), with their random variation drawn alike.
+2. **Stitches across.** Each pair is sewn once, from one inset point to the other. The first pair, and
+   every other one after it, goes from the second rail to the first, and the others from the first to the
+   second. Each stitch ends on the rail the next one starts from. A stitch splits as a stitch across from
+   the first rail to the second would (step 4). It is sewn the way its pair goes, with its
+   splits in reverse where it starts on the second rail. The default method splits it into the fewest
+   equal parts, with no count taken from the stitch before. The simple and staggered methods number the
+   stitches 0, 1, 2 and on, where a satin column's stitches across take 1, 3, 5. The staggered method
+   moves an S-stitch's splits along at every stitch.
+3. **Steps.** From one pair to the next, the needle goes along the rail its stitch ended on in one stitch,
+   from that inset point to the next pair's. The step is never split, whatever its length. Ink/Stitch
+   works out splits for it where the zigzag spacing is longer than the longest stitch, and sews none of
+   them (`lib/elements/satin_column/stitches.py`, `_do_s_stitch`).
+4. **Order.** The pairs go from the column's start to its end, and an odd centre walk turns the whole run
+   round, to go from its end. `swap_satin_rails` swaps the rail the column starts on. Its underlays, start
+   and end are those of a satin column ([Start and end](#start-and-end)).
+
 ## Leaning and long stitches
 
 Every satin method gives 2 warnings about how its stitches lie. Ink/Stitch gives neither.
@@ -466,7 +491,7 @@ end command, read from M8, would replace the needle point or the next stitch.
 | `satin_method` | Look | Design notes |
 |---|---|---|
 | `e_stitch` | A spine of running stitches along one rail with regular spikes to the other: the "E" or blanket stitch used for appliqué edges | Sewn from M7.3 ([E-stitch](#e-stitch-method-e_stitch)) |
-| `s_stitch` | Stitches across the column, every other one back the other way, joined by steps along the rails | The pairs a satin column places, each sewn once with its splits, every other one from the second rail. Ink/Stitch does not split the steps along the rails (read at `6555892`). To be sewn from M7.4 |
+| `s_stitch` | Stitches across the column, every other one back the other way, joined by steps along the rails | Sewn from M7.4 ([S-stitch](#s-stitch-method-s_stitch)) |
 | `zigzag` | An open zigzag between the rails | Points every half spacing, alternately on the first rail and the second, sewn in pairs, every stitch split as a satin's is, as in Ink/Stitch. To be sewn from M7.5 |
 
 ## Properties (conformance)
@@ -494,6 +519,8 @@ end command, read from M8, would replace the needle point or the next stitch.
 | `REQ-SAT-021` | Between spikes an E-stitch goes along the first rail in one stitch. Where the zigzag spacing is longer than the longest stitch, that stitch splits with no randomness: into the fewest equal parts by default, at whole multiples of the longest stitch by the simple and staggered methods |
 | `REQ-SAT-022` | Each stretch of pairs in a row whose stitches lean more than 45° from square to the column, to a tenth of a degree, gets one `SC-W0208` at the middle of its middle pair, whatever the satin method. The column runs halfway between its 2 rails. Stitches square to a rail, and stitches at 45°, give none |
 | `REQ-SAT-023` | A satin column whose longest top stitch, as sewn, is longer than 12 mm gets one `SC-W0209` at that stitch's middle, whatever the satin method. A longest stitch that splits them, or an end that cuts one in 2, leaves none |
+| `REQ-SAT-024` | An S-stitch sews each of a satin column's pairs once across, the first and every other one from the second rail, the rest from the first. A stitch splits as one from the first rail to the second would. The default method makes the fewest equal parts, and the simple and staggered methods number the stitch as its pair is, from 0 |
+| `REQ-SAT-025` | An S-stitch steps along a rail from each pair's inset point to the next pair's in one stitch, which it never splits |
 
 Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparison to tune defaults
 ([machine testing](../../plan/machine-testing.md)).
