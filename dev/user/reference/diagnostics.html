@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-b37c0bcc.js";
+            window.path_to_searchindex_js = "../../searchindex-f8d5a76e.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-ed0f9ffd.js"></script>
+        <script src="../../toc-db4a94de.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -290,7 +290,7 @@ StitchCraft never writes an empty machine file, because some machines refuse or 
 <p><strong>Warning</strong> — Stitch type not sewn yet; element skipped</p>
 <p>The element’s stitch type is one this version of StitchCraft does not sew yet, so the element was
 skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
-satin columns from M4, tatami fills from M5, and zigzag strokes, E-stitches and S-stitches from M7.
+satin columns from M4, tatami fills from M5, and zigzag strokes and the other satin methods from M7.
 The other stitch types follow (<code>docs/src/plan/roadmap.md</code>), but for Ink/Stitch’s legacy fill, which
 is sewn as a tatami fill (<code>SC-W0314</code>).</p>
 <p>The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
@@ -421,8 +421,11 @@ the line is shorter than a CSS pixel. The column is not sewn.</p>
 <p>A satin column is so small that every needle point of it lies within the shortest stitch of its
 first: a speck of a column, a few tenths of a millimetre across. Any stitch it could sew would be
 shorter than the machine sews well, would hammer one spot of the fabric and could break the thread,
-so it is left out, as a stroke that small is (<code>SC-W0401</code>). Ink/Stitch sews such a column.</p>
-<p>The message gives the shortest stitch. Draw the column larger, or delete it if it is a stray.</p>
+so it is left out, as a stroke that small is (<code>SC-W0401</code>). Ink/Stitch sews such a column. A zigzag
+satin 0.1 mm long or less is left out too, its underlays with it: its zigzag has one point and no
+stitch across. Ink/Stitch sews its underlays alone.</p>
+<p>The message gives the shortest stitch, or says the column is too short for a stitch across. Draw the
+column larger, or delete it if it is a stray.</p>
 <h2 id="sc-e0216"><a class="header" href="#sc-e0216">SC-E0216</a></h2>
 <p><strong>Error</strong> — Satin column has no section to sew</p>
 <p>A satin column’s rungs, or its push compensation, leave each of its sections with no length on one of

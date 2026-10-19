@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-b37c0bcc.js";
+            window.path_to_searchindex_js = "../../../searchindex-f8d5a76e.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-ed0f9ffd.js"></script>
+        <script src="../../../toc-db4a94de.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -202,8 +202,8 @@ Off, the path is sewn as a stroke, by its <code>stroke_method</code>.</p>
 other and back. An E-stitch sews a spike across the column at each pair and a spine along its
 first rail between them, an edge for appliqué. An S-stitch sews one stitch across at each pair,
 every other one the other way, with a step along a rail between them: split by a longest
-stitch, they cover the column in rows, as a fill does. The zigzag satin arrives in a later
-version, and until then an element set to it is skipped (<code>SC-W0011</code>).</p>
+stitch, they cover the column in rows, as a fill does. A zigzag satin sews a zigzag between the
+rails, every stitch slanting half the spacing along.</p>
 <ul>
 <li><strong>Accepts:</strong> one of <code>satin_column</code> (Satin column), <code>e_stitch</code> (E-stitch), <code>s_stitch</code> (S-stitch), <code>zigzag</code> (Zigzag satin)</li>
 <li><strong>Default:</strong> <code>satin_column</code></li>
@@ -212,8 +212,10 @@ version, and until then an element set to it is skipped (<code>SC-W0011</code>).
 <h3 id="zigzag_spacing_mm"><a class="header" href="#zigzag_spacing_mm"><code>zigzag_spacing_mm</code></a></h3>
 <p><strong>Zigzag spacing.</strong> The distance from one pair of needle points across the column to the next. A satin column
 goes across and back in one spacing, an E-stitch sews a spike every spacing, and an S-stitch a
-stitch across, each the other way from the one before. It is measured across the column at its
-outside edge, and on a curve the stitches fan out from the inside edge.</p>
+stitch across, each the other way from the one before. In a zigzag satin the needle goes across
+and back in one spacing too, its points on the 2 rails half a spacing apart. It is measured
+across the column at its outside edge. On a curve the stitches lie closer together at the inside
+edge.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.01 to 10 mm</li>
 <li><strong>Default:</strong> <code>0.4</code></li>
@@ -423,7 +425,11 @@ It holds the edges still and keeps them crisp.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>false</code></li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-SAT-011.</strong> After an odd centre walk, which turns a zigzag satin’s run round, StitchCraft stops the contour underlay’s sides where it stops them without one: at the zigzag’s last point on the first rail, and its first and last on the second, in the order the column places them. Ink/Stitch looks for those points in the order the top stitches are sewn, after it has turned them round, and finds the first points where it means the last. Its first side is not cut, and its second shrinks to a stub: on a column 10 mm long and 4 mm wide at a zigzag spacing of 2 mm, 0.2 mm long.</li>
+</ul>
+</li>
 </ul>
 <h3 id="contour_underlay_stitch_length_mm"><a class="header" href="#contour_underlay_stitch_length_mm"><code>contour_underlay_stitch_length_mm</code></a></h3>
 <p><strong>Contour stitch length.</strong> How long each stitch of the contour is. Between corners its stitches are spread evenly, so each

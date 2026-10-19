@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b37c0bcc.js";
+            window.path_to_searchindex_js = "searchindex-f8d5a76e.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-ed0f9ffd.js"></script>
+        <script src="toc-db4a94de.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -879,6 +879,7 @@ stroke or the fill of a shape, and each sews in its own thread colour.</p>
 <tr><td>Satin column</td><td>wide strokes and borders</td><td>now</td></tr>
 <tr><td><a href="#e-stitch">E-stitch</a></td><td>satin columns as appliqué edges: a spine along one rail, with spikes to the other</td><td>now</td></tr>
 <tr><td><a href="#s-stitch">S-stitch</a></td><td>satin columns sewn one way at a time: a stitch across at each step, joined along the edges</td><td>now</td></tr>
+<tr><td><a href="#zigzag-satin">Zigzag satin</a></td><td>satin columns sewn as a zigzag, every stitch slanting from one edge to the other</td><td>now</td></tr>
 <tr><td>Tatami fill</td><td>areas, in rows of running stitches</td><td>now</td></tr>
 </tbody>
 </table>
@@ -1148,6 +1149,54 @@ included. The reference gives each one’s range and default:</p>
 <li><a href="#common-parameters">the settings every element shares</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="zigzag-satin"><a class="header" href="#zigzag-satin">Zigzag satin</a></h1>
+<p>A zigzag satin is a satin column sewn as a zigzag. Every stitch slants across the band, from a point on one
+edge to a point on the other half the spacing along, and the next slants back. Turn an element’s
+<code>satin_column</code> on and choose <code>zigzag</code> as its <code>satin_method</code>. It is drawn, and set up in VectorCraft, as an
+<a href="#s-stitch">S-stitch</a> is, with <code>zigzag</code> in place of <code>s_stitch</code>. Its first stitch goes from the first rail
+to the second, and <code>swap_satin_rails</code> starts it from the other.</p>
+<p>The pictures use the S-stitch’s band, <code>docs/fixtures/s-stitch.svg</code>.</p>
+<h2 id="spacing-3"><a class="header" href="#spacing-3">Spacing</a></h2>
+<p><code>zigzag_spacing_mm</code> is how far apart the zigzag’s points are along each edge, 0.4 mm by default, as for a
+satin column. The 2 edges take turns, half the spacing apart, and the needle crosses the band as often as
+a satin column’s does. A finer spacing covers the band more closely.</p>
+<!-- shot: zigzag-satin-spacing -->
+<p><strong>1 mm</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/zigzag-satin-spacing-1.png" alt="A curved band 36 mm long and 6 mm wide sewn as a zigzag satin, each stitch slanting from one edge to the other and back, 1 mm"><span class="img-wrapper"><img src="images/generated/zigzag-satin-spacing-1.png" alt="A curved band 36 mm long and 6 mm wide sewn as a zigzag satin, each stitch slanting from one edge to the other and back, 1 mm"></span></label></p>
+<p><strong>0.4 mm</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/zigzag-satin-spacing-2.png" alt="A curved band 36 mm long and 6 mm wide sewn as a zigzag satin, each stitch slanting from one edge to the other and back, 0.4 mm"><span class="img-wrapper"><img src="images/generated/zigzag-satin-spacing-2.png" alt="A curved band 36 mm long and 6 mm wide sewn as a zigzag satin, each stitch slanting from one edge to the other and back, 0.4 mm"></span></label></p>
+<!-- /shot -->
+<h2 id="beside-a-satin-column"><a class="header" href="#beside-a-satin-column">Beside a satin column</a></h2>
+<p>A satin column’s stitches across go square to the band, and each stitch back slants to the next one
+across. Every stitch of a zigzag satin slants, half as far along the band as a satin column’s stitch back.</p>
+<!-- shot: zigzag-satin-beside-satin -->
+<p><strong>Zigzag satin</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/zigzag-satin-beside-satin-1.png" alt="The band at 2 mm spacing, sewn as a zigzag satin and as a satin column, Zigzag satin"><span class="img-wrapper"><img src="images/generated/zigzag-satin-beside-satin-1.png" alt="The band at 2 mm spacing, sewn as a zigzag satin and as a satin column, Zigzag satin"></span></label></p>
+<p><strong>Satin column</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/zigzag-satin-beside-satin-2.png" alt="The band at 2 mm spacing, sewn as a zigzag satin and as a satin column, Satin column"><span class="img-wrapper"><img src="images/generated/zigzag-satin-beside-satin-2.png" alt="The band at 2 mm spacing, sewn as a zigzag satin and as a satin column, Satin column"></span></label></p>
+<!-- /shot -->
+<h2 id="split-stitches-1"><a class="header" href="#split-stitches-1">Split stitches</a></h2>
+<p>With <code>max_stitch_length_mm</code> set, a stitch longer than it is split, as a satin column’s stitches are, and
+<code>split_method</code> says where the splits go. By default each stitch splits into its own fewest equal parts,
+where a satin column’s stitch back splits into as many as the stitch across before it, as in Ink/Stitch.</p>
+<h2 id="underlays"><a class="header" href="#underlays">Underlays</a></h2>
+<p>A zigzag satin sews a satin column’s underlays. Its contour underlay stops where the zigzag’s points stop
+on each edge, so that it stays under the stitches, as Ink/Stitch’s does. After an odd centre walk
+Ink/Stitch’s stops elsewhere, as the <a href="#contour_underlay"><code>contour_underlay</code></a>
+reference says.</p>
+<h2 id="leaning-and-long-stitches-1"><a class="header" href="#leaning-and-long-stitches-1">Leaning and long stitches</a></h2>
+<p>A zigzag satin gives the 2 warnings of every satin method, which the
+<a href="#leaning-and-long-stitches">S-stitch page</a> describes. <code>SC-W0208</code> measures how the rails pair
+up, where a satin column’s stitches across would go. The slant every zigzag stitch has by design, the
+more the wider the spacing and the narrower the band, is left out of it.</p>
+<h2 id="parameters-4"><a class="header" href="#parameters-4">Parameters</a></h2>
+<p>Every satin column setting applies to a zigzag satin too, its underlays, compensation and random variation
+included. The reference gives each one’s range and default:</p>
+<ul>
+<li><a href="#satin-parameters">satin column</a></li>
+<li><a href="#common-parameters">the settings every element shares</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="lock-stitches-trims-and-stops"><a class="header" href="#lock-stitches-trims-and-stops">Lock stitches, trims and stops</a></h1>
 <p>A lock, or tie, is a few small stitches where stitching starts (the tie-in) or ends (the tie-off). It
 stops the thread from pulling out when the machine cuts it or jumps to the next part. StitchCraft adds
@@ -1213,7 +1262,7 @@ work. When the design has a stop position, the frame moves there before each sto
 test sheet TS-02 checks what the reference machine does. DST has no trim command. StitchCraft writes a trim
 there as 3 short jumps that end where they started, and a DST machine set to cut at 3 jumps in a row
 cuts there. The <a href="#machine-formats">machine formats</a> design says how each format records a trim.</p>
-<h2 id="parameters-4"><a class="header" href="#parameters-4">Parameters</a></h2>
+<h2 id="parameters-5"><a class="header" href="#parameters-5">Parameters</a></h2>
 <p><a href="#common-parameters">Common parameters</a> lists each of these settings with its range and
 default.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -1281,7 +1330,7 @@ it plans for, and warns beyond a profile’s comfort zone where the profile has 
 <tr><td><a href="#diagnostic-codes">Diagnostic codes</a></td><td>generated from the diagnostics registry</td><td>available</td></tr>
 <tr><td><a href="#glossary">Glossary</a></td><td>hand-written</td><td>available</td></tr>
 <tr><td><a href="#vectorcraft-compatibility">VectorCraft compatibility</a></td><td>generated from the compatibility gate’s record, <code>compat/supported.toml</code></td><td>available</td></tr>
-<tr><td><a href="#parameters-5">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
+<tr><td><a href="#parameters-6">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
 <tr><td><a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td>generated from <code>conformance/inkstitch-params.toml</code> and the parameter registry</td><td>available</td></tr>
 </tbody>
 </table>
@@ -1856,7 +1905,7 @@ StitchCraft never writes an empty machine file, because some machines refuse or 
 <p><strong>Warning</strong> — Stitch type not sewn yet; element skipped</p>
 <p>The element’s stitch type is one this version of StitchCraft does not sew yet, so the element was
 skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
-satin columns from M4, tatami fills from M5, and zigzag strokes, E-stitches and S-stitches from M7.
+satin columns from M4, tatami fills from M5, and zigzag strokes and the other satin methods from M7.
 The other stitch types follow (<code>docs/src/plan/roadmap.md</code>), but for Ink/Stitch’s legacy fill, which
 is sewn as a tatami fill (<code>SC-W0314</code>).</p>
 <p>The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
@@ -1987,8 +2036,11 @@ the line is shorter than a CSS pixel. The column is not sewn.</p>
 <p>A satin column is so small that every needle point of it lies within the shortest stitch of its
 first: a speck of a column, a few tenths of a millimetre across. Any stitch it could sew would be
 shorter than the machine sews well, would hammer one spot of the fabric and could break the thread,
-so it is left out, as a stroke that small is (<code>SC-W0401</code>). Ink/Stitch sews such a column.</p>
-<p>The message gives the shortest stitch. Draw the column larger, or delete it if it is a stray.</p>
+so it is left out, as a stroke that small is (<code>SC-W0401</code>). Ink/Stitch sews such a column. A zigzag
+satin 0.1 mm long or less is left out too, its underlays with it: its zigzag has one point and no
+stitch across. Ink/Stitch sews its underlays alone.</p>
+<p>The message gives the shortest stitch, or says the column is too short for a stitch across. Draw the
+column larger, or delete it if it is a stray.</p>
 <h2 id="sc-e0216"><a class="header" href="#sc-e0216">SC-E0216</a></h2>
 <p><strong>Error</strong> — Satin column has no section to sew</p>
 <p>A satin column’s rungs, or its push compensation, leave each of its sections with no length on one of
@@ -2331,7 +2383,7 @@ lines, templates and notes this way, in the drawing but out of the sew-out, as I
 commands keep them. Everything in a group or a layer so named is left out with it.</p>
 <p>The message names what was left out. To stitch it, rename it in VectorCraft’s Layers panel.</p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the parameter registry (`stitchcraft-engine/src/registry.rs`) and the deviations ledger. Edit the declaration, not this page. -->
-<h1 id="parameters-5"><a class="header" href="#parameters-5">Parameters</a></h1>
+<h1 id="parameters-6"><a class="header" href="#parameters-6">Parameters</a></h1>
 <p>Every setting a design element can carry, by the key a design stores it under. A parameter that Ink/Stitch
 also has keeps Ink/Stitch’s key, meaning and default, so files move between the two tools unchanged
 (<a href="#inkstitch-compatibility-contract">compatibility contract</a>). Where StitchCraft reads or sews one
@@ -2813,8 +2865,8 @@ Off, the path is sewn as a stroke, by its <code>stroke_method</code>.</p>
 other and back. An E-stitch sews a spike across the column at each pair and a spine along its
 first rail between them, an edge for appliqué. An S-stitch sews one stitch across at each pair,
 every other one the other way, with a step along a rail between them: split by a longest
-stitch, they cover the column in rows, as a fill does. The zigzag satin arrives in a later
-version, and until then an element set to it is skipped (<code>SC-W0011</code>).</p>
+stitch, they cover the column in rows, as a fill does. A zigzag satin sews a zigzag between the
+rails, every stitch slanting half the spacing along.</p>
 <ul>
 <li><strong>Accepts:</strong> one of <code>satin_column</code> (Satin column), <code>e_stitch</code> (E-stitch), <code>s_stitch</code> (S-stitch), <code>zigzag</code> (Zigzag satin)</li>
 <li><strong>Default:</strong> <code>satin_column</code></li>
@@ -2823,8 +2875,10 @@ version, and until then an element set to it is skipped (<code>SC-W0011</code>).
 <h3 id="zigzag_spacing_mm-1"><a class="header" href="#zigzag_spacing_mm-1"><code>zigzag_spacing_mm</code></a></h3>
 <p><strong>Zigzag spacing.</strong> The distance from one pair of needle points across the column to the next. A satin column
 goes across and back in one spacing, an E-stitch sews a spike every spacing, and an S-stitch a
-stitch across, each the other way from the one before. It is measured across the column at its
-outside edge, and on a curve the stitches fan out from the inside edge.</p>
+stitch across, each the other way from the one before. In a zigzag satin the needle goes across
+and back in one spacing too, its points on the 2 rails half a spacing apart. It is measured
+across the column at its outside edge. On a curve the stitches lie closer together at the inside
+edge.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.01 to 10 mm</li>
 <li><strong>Default:</strong> <code>0.4</code></li>
@@ -2929,7 +2983,7 @@ in. 0 moves none.</p>
 <li><strong>Default:</strong> <code>0.25</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
-<h2 id="split-stitches-1"><a class="header" href="#split-stitches-1">Split stitches</a></h2>
+<h2 id="split-stitches-2"><a class="header" href="#split-stitches-2">Split stitches</a></h2>
 <h3 id="split_method"><a class="header" href="#split_method"><code>split_method</code></a></h3>
 <p><strong>Split method.</strong> How stitches longer than the longest stitch (<code>max_stitch_length_mm</code>) are split. Default splits
 each into the fewest equal parts no longer than it. Simple splits at whole multiples of it from
@@ -3034,7 +3088,11 @@ It holds the edges still and keeps them crisp.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>false</code></li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-SAT-011.</strong> After an odd centre walk, which turns a zigzag satin’s run round, StitchCraft stops the contour underlay’s sides where it stops them without one: at the zigzag’s last point on the first rail, and its first and last on the second, in the order the column places them. Ink/Stitch looks for those points in the order the top stitches are sewn, after it has turned them round, and finds the first points where it means the last. Its first side is not cut, and its second shrinks to a stub: on a column 10 mm long and 4 mm wide at a zigzag spacing of 2 mm, 0.2 mm long.</li>
+</ul>
+</li>
 </ul>
 <h3 id="contour_underlay_stitch_length_mm"><a class="header" href="#contour_underlay_stitch_length_mm"><code>contour_underlay_stitch_length_mm</code></a></h3>
 <p><strong>Contour stitch length.</strong> How long each stitch of the contour is. Between corners its stitches are spread evenly, so each
@@ -4058,7 +4116,7 @@ every ring. Parts of 3 square CSS pixels (0.21 mm²) or less are left out, with 
 <p>A centre line is made into a <code>Satin</code> of its own, its rails offset from the line by the stroke’s width and
 join (<code>stitchcraft_engine::normalize::centre_line</code>, since M4.9). How rails and rungs are recognised from
 a host path, and made from a centre line, is part of the <a href="#satin-generators">satin design</a>.</p>
-<h2 id="parameters-6"><a class="header" href="#parameters-6">Parameters</a></h2>
+<h2 id="parameters-7"><a class="header" href="#parameters-7">Parameters</a></h2>
 <p><code>ParamSet</code> maps registry keys to typed values; generators receive <em>typed views</em>
 (<code>TatamiParams { row_spacing: Mm, angle: Deg, … }</code>) produced by the registry. See
 <a href="#parameter-registry">parameter registry</a>.</p>
@@ -4416,7 +4474,7 @@ chooses between the two.</p>
 <tr><th style="text-align: left">Output</th><th style="text-align: left">Generated by</th><th style="text-align: left">Checked by</th><th style="text-align: left">Since</th></tr>
 </thead>
 <tbody>
-<tr><td style="text-align: left">The reference pages, the <a href="#parameters-5">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
+<tr><td style="text-align: left">The reference pages, the <a href="#parameters-6">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left"><code>docs/src/user/reference/params.schema.json</code>: the parameters as JSON values (numbers, booleans, strings, arrays, <code>null</code> for empty), for editors, presets and JSON hosts</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">The <em>StitchCraft</em> column of the <a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same, plus the cross-checks above</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">VectorCraft manifests, one for each stitch family’s module</td><td style="text-align: left">at runtime from the registry, when VectorCraft asks a module for its manifest (<code>stitchcraft-vc-plugin</code>’s <code>manifest</code>)</td><td style="text-align: left">plug-in tests validate them against VectorCraft’s manifest rules, and the contract tests install them in VectorCraft’s host</td><td style="text-align: left">M6.2</td></tr>
@@ -4542,7 +4600,7 @@ another.</p>
 <tr><td><code>SC-W0212</code></td><td>Warning</td><td>Satin column drawn as one path too narrow; sewn as a stroke</td><td>M4</td></tr>
 <tr><td><code>SC-W0213</code></td><td>Warning</td><td>Parts of a satin column drawn as one path left out (still crossing after 20 cuts in half, or turning too tightly for its width)</td><td>M4</td></tr>
 <tr><td><code>SC-E0214</code></td><td>Error</td><td>Satin column drawn as one path could not be made into rails (too short, or too tight for its width)</td><td>M4</td></tr>
-<tr><td><code>SC-W0215</code></td><td>Warning</td><td>Satin column too small for the shortest stitch; left out (all within it of its first needle point; Ink/Stitch sews it)</td><td>M4</td></tr>
+<tr><td><code>SC-W0215</code></td><td>Warning</td><td>Satin column too small for the shortest stitch; left out (all within it of its first needle point, or a zigzag satin with no stitch across, underlays and all; Ink/Stitch sews a speck)</td><td>M4</td></tr>
 <tr><td><code>SC-E0216</code></td><td>Error</td><td>Satin column has no section to sew (its rungs or push compensation take each section’s length off a rail)</td><td>M4</td></tr>
 <tr><td><code>SC-W0303</code></td><td>Warning</td><td>Parts of a fill too small to sew left out (3 square CSS pixels or less, as in Ink/Stitch); a fill of no area sews nothing</td><td>M5</td></tr>
 <tr><td><code>SC-W0304</code></td><td>Warning</td><td>Fill smaller than 1.4 mm² (20 square CSS pixels); a running stitch or a satin column may sew it better</td><td>M5</td></tr>
@@ -4816,7 +4874,7 @@ assembly reads them there: its thread, locks, trim and stop.</p>
 <p>The stitch type picks the generator. A stroke whose <code>satin_column</code> setting is on is a satin column,
 whatever its <code>stroke_method</code> says, as in Ink/Stitch. Its rails and rungs are recognized, what
 recognition finds is reported, and its <code>satin_method</code> picks the generator: the satin stitch, sewn from
-M4.2, the E-stitch, from M7.3, and the S-stitch, from M7.4. A satin column also reads the running stitch’s length (<code>running_stitch_length_mm</code>): the stitches
+M4.2, the E-stitch, from M7.3, the S-stitch, from M7.4, and the zigzag satin, from M7.5. A satin column also reads the running stitch’s length (<code>running_stitch_length_mm</code>): the stitches
 that join its underlays are no longer than the first value. For any other stroke the generator is its
 <code>stroke_method</code>. <code>running_stitch</code> (the default) and <code>manual_stitch</code> are sewn from M3, and <code>zigzag_stitch</code>
 from M7.2, as wide as the stroke. A satin column drawn as one path no wider than the design’s
@@ -5155,7 +5213,7 @@ every platform places the same stitches.</p>
 documented ways, <code>DEV-RUN-001</code> to <code>DEV-RUN-004</code> in the deviations ledger (<code>conformance/deviations.toml</code>),
 and random length draws and places its lengths in other ways (<code>DEV-RUN-005</code>).</p>
 <p><strong>Satin underlays</strong> walk lines made point by point by the satin generator
-(<a href="#underlays">satin</a>), and steps 2 to 5 place their stitches, with each walk’s own length and
+(<a href="#underlays-1">satin</a>), and steps 2 to 5 place their stitches, with each walk’s own length and
 tolerance. Such a line is a polyline already, and each join that turns by more than 30° is a corner. A
 line too small for a stitch of the shortest length is sewn as its 2 ends, as Ink/Stitch sews it, and
 finalizing merges what is too short.</p>
@@ -5489,7 +5547,7 @@ rail where it comes nearest it, measured as at the start and end (see <em>Equall
 the node itself, or on a curved rail of 2 nodes, where the rung crosses the curve, or the curve’s point
 nearest the rung when the rung does not reach it.</p>
 <p>Where the pairing leaves stitches leaning far along the column, <code>SC-W0208</code> names the place to add a rung
-(<a href="#leaning-and-long-stitches-1">Leaning and long stitches</a>).</p>
+(<a href="#leaning-and-long-stitches-2">Leaning and long stitches</a>).</p>
 <h2 id="compensation-1"><a class="header" href="#compensation-1">Compensation</a></h2>
 <p>Thread under tension pulls the fabric in across a satin column, which then sews narrower than it is
 drawn. The stitches also push the fabric out at the column’s ends, and it sews longer. StitchCraft makes
@@ -5627,7 +5685,50 @@ them (<code>lib/elements/satin_column/stitches.py</code>, <code>_do_s_stitch</co
 round, to go from its end. <code>swap_satin_rails</code> swaps the rail the column starts on. Its underlays, start
 and end are those of a satin column (<a href="#start-and-end-1">Start and end</a>).</li>
 </ol>
-<h2 id="leaning-and-long-stitches-1"><a class="header" href="#leaning-and-long-stitches-1">Leaning and long stitches</a></h2>
+<h2 id="zigzag-satin-method-zigzag"><a class="header" href="#zigzag-satin-method-zigzag">Zigzag satin (method <code>zigzag</code>)</a></h2>
+<p>A zigzag satin sews a zigzag between the rails. The needle goes from a point on the first rail to a point
+on the second half the zigzag spacing along, then back to the first rail half the spacing on again. Each
+rail’s points lie the zigzag spacing apart, and the needle crosses the column twice for each spacing along
+it, as a satin column’s needle does. Every stitch slants, where a satin column’s stitches across go square
+to the column. StitchCraft sews it as Ink/Stitch sews its zigzag satin, read at <code>6555892</code>
+(<code>lib/elements/satin_column/stitches.py</code>, <code>_do_zigzag</code>).</p>
+<ol>
+<li><strong>Pairs.</strong> The pairs are placed and compensated as the top stitches’ are (steps 1 and 2 of
+<a href="#top-stitches-method-satin_column">Top stitches</a>), at half the zigzag spacing. Their random variation
+is drawn alike.</li>
+<li><strong>Alternate points.</strong> One point of each pair is sewn. The first pair gives its first rail’s point, the
+next pair its second rail’s point, and the pairs after them alternate the same way. Each 2 of those
+points in a row are a pair of the zigzag, from the first rail to the second. A point left over at the
+column’s end is left out. A column with no second pair, 0.1 mm long or less, has no stitch across. It
+is left out with its underlays, as a column too small to sew is (<code>SC-W0215</code>, <code>DEV-SAT-008</code>).</li>
+<li><strong>Short stitches</strong> inset those pairs where their points crowd (step 3). Each point moves along its own
+slanted stitch.</li>
+<li><strong>Stitches.</strong> The needle goes across each pair, from its first inset point to its second, then back
+to the next pair’s first, as in a satin column. Long stitches split by the column’s split method
+(step 4). By the simple and staggered methods, the stitch back to the zigzag’s pair numbered i splits
+as a satin column’s stitch numbered 2i would, measured from its end on the first rail. The stitch
+across that pair splits as one numbered 2i + 1. By the default method each stitch splits into its own
+fewest equal parts. A satin column’s stitch back takes its count from the stitch across before it, and
+a zigzag satin’s does not, as in Ink/Stitch.</li>
+<li><strong>Order, start and end</strong> follow a satin column’s. An odd centre walk turns the run round. The end cuts
+the top stitches where they come nearest the end’s cut (<a href="#start-and-end-1">Start and end</a>), which on a
+zigzag falls on one of its points or part way along a stitch. The outline that the start and the end
+are found on is Ink/Stitch’s. It runs through pairs placed and compensated at the full zigzag
+spacing, as a satin column’s top stitches are, and not through the zigzag’s own. An outline through
+those would end where they do, as much as 0.1 mm from where Ink/Stitch’s ends, and turn its corners
+elsewhere. The outline’s random variation is drawn from a copy of the generator as the zigzag’s pairs
+found it, so that the zigzag’s own draws stay as they were. With none, the outline is exactly
+Ink/Stitch’s.</li>
+<li><strong>Underlays</strong> are a satin column’s, but the contour stops where the zigzag does, as in Ink/Stitch
+(<code>lib/elements/satin_column/underlay.py</code>, <code>_do_contour_underlay</code>). The zigzag’s points, as inset, mark
+where it stops on each rail: its last point on the first rail, and its first and last on the second.
+Each side is cut at its points nearest those on its rail, and then stops short of the column’s ends by
+the insets (<a href="#underlays-1">Underlays</a>). A cut that would leave less than half a CSS pixel of a side is
+not made, as for the insets. Such a cut comes from a zigzag of one stitch. After an odd centre walk
+the sides stop at the same places. Ink/Stitch looks for the points in the run as sewn, turned round,
+and so cuts its first side nowhere and its second to a stub (<code>DEV-SAT-011</code>).</li>
+</ol>
+<h2 id="leaning-and-long-stitches-2"><a class="header" href="#leaning-and-long-stitches-2">Leaning and long stitches</a></h2>
 <p>Every satin method gives 2 warnings about how its stitches lie. Ink/Stitch gives neither.</p>
 <ul>
 <li><strong>Leaning stitches</strong> (<code>SC-W0208</code>). Without rungs, or with too few, the stitches follow the rails’
@@ -5652,7 +5753,7 @@ stitch. The underlays and the needle’s travel are left out. Setting <code>max_
 stitches, and a shape that wide may sew better as a fill. Finalize splits a stitch longer than the
 machine’s longest stitch anyway (<code>SC-I0703</code>).</li>
 </ul>
-<h2 id="underlays"><a class="header" href="#underlays">Underlays</a></h2>
+<h2 id="underlays-1"><a class="header" href="#underlays-1">Underlays</a></h2>
 <p>Underlays are sewn before the top stitches, as Ink/Stitch sews them. The centre walk comes first, then the
 contour and the zigzag, each one the element turns on, and all of them go into one run with the top
 stitches.</p>
@@ -5678,6 +5779,8 @@ start. Straight stitches join each part to the next, all of one length and no lo
 travel length. That is the first of the running stitch’s lengths (<code>running_stitch_length_mm</code>), raised to
 twice the shortest stitch where it is shorter, as a running stitch’s lengths are (<code>DEV-RUN-003</code>), and
 <code>SC-W0402</code> says so once for the column.</p>
+<p>Under a zigzag satin the contour’s sides first stop where the zigzag does
+(<a href="#zigzag-satin-method-zigzag">Zigzag satin</a>, step 6).</p>
 <p>The walks are running stitches, placed as a stroke’s are (<a href="#running-stitch-2">strokes</a>), and they
 differ from Ink/Stitch’s in the same ways (<code>DEV-RUN-001</code> to <code>DEV-RUN-003</code>). Where the insets cross in a
 narrow column, a pair’s ends meet as pull compensation’s do, and the contour’s sides then run along one
@@ -5696,22 +5799,29 @@ reversal. Tatami fills offer their area, their parts.</p>
 <code>running_stitch_position</code> percent of the way from the first rail to the second (50 is the middle). It is
 built as the centre walk’s is. Pairs are placed every <code>running_stitch_tolerance_mm</code> and moved in until
 their ends meet the line. A running stitch of the column’s travel length
-(<a href="#underlays">Underlays</a>) goes through them within the same tolerance.</p>
+(<a href="#underlays-1">Underlays</a>) goes through them within the same tolerance.</p>
 <p><strong>Cuts.</strong> A place on the column is found by its cut, one of the pairs placed at the zigzag spacing with
 no compensation and nothing random. The cut is the pair with the point nearest the place. Where the
 needle enters the line for a place is the line’s point nearest that cut. A part of the column is cut in 2
 at its own point nearest the cut. A side of it that lies along the cut, both its ends within 1e-5 CSS
 pixels of the cut’s line, meets the cut as sides along one line do. So a stitch across that pull
 compensation widens past the rails is cut at the cut’s first rail point, and one it narrows at its own
-start (<code>DEV-SAT-010</code>). When the cut’s 2 points coincide, where the rails meet, a part is not cut: it is all
-first, or all second when its start is within 0.1 CSS pixels of the place.</p>
+start (<code>DEV-SAT-010</code>). Where a needle point of the part lies within the element’s shortest stitch of that
+point, as finalize measures it, the part is cut at the needle point instead. Each half then ends in a
+stitch the machine sews, where finalize would leave a needle point out with a note (<code>SC-I0504</code>). Cuts
+fall beside needle points most on a zigzag satin, whose cuts lie on its own points or within their pull
+compensation, and at a stitch across that lies along the cut, where pull compensation moves the stitch’s
+end just past the cut’s first rail point. Ink/Stitch cuts where the part comes nearest, and its plan drops
+a stitch no longer than its shortest stitch. When the cut’s 2 points coincide, where the rails meet, a
+part is not cut: it is all first, or all second when its start is within 0.1 CSS pixels of the place.</p>
 <p><strong>Starting at the nearest point</strong> (<code>start_at_nearest_point</code>). With a needle point before it, the column
 starts at the point of the line nearest that needle point. When that point is farther from the needle
 than the jump length, and the compensated outline is nearer than the jump length, it starts at the
 outline’s point nearest the needle instead. The jump length is the element’s <code>min_jump_stitch_length_mm</code>,
 or the design’s collapse length when the element sets none or 0. The compensated outline is the 2
 polylines through the ends of the top stitches’ pairs, after pull compensation and random width, before
-short stitches. From its start, the needle enters the line where the start’s cut says and follows it to
+short stitches. A zigzag satin’s runs through pairs at the full spacing (<em>Zigzag satin</em>, step 5). From its
+start, the needle enters the line where the start’s cut says and follows it to
 where the first stitch’s cut says, and the column goes on from its first stitch as before.</p>
 <p><strong>Ending at the nearest point</strong> (<code>end_at_nearest_point</code>). With an element after it, the column ends at
 the point of its compensated outline nearest the next stitch. The next stitch is the point of the
@@ -5767,7 +5877,7 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <tbody>
 <tr><td><code>e_stitch</code></td><td>A spine of running stitches along one rail with regular spikes to the other: the “E” or blanket stitch used for appliqué edges</td><td>Sewn from M7.3 (<a href="#e-stitch-method-e_stitch">E-stitch</a>)</td></tr>
 <tr><td><code>s_stitch</code></td><td>Stitches across the column, every other one back the other way, joined by steps along the rails</td><td>Sewn from M7.4 (<a href="#s-stitch-method-s_stitch">S-stitch</a>)</td></tr>
-<tr><td><code>zigzag</code></td><td>An open zigzag between the rails</td><td>Points every half spacing, alternately on the first rail and the second, sewn in pairs, every stitch split as a satin’s is, as in Ink/Stitch. To be sewn from M7.5</td></tr>
+<tr><td><code>zigzag</code></td><td>An open zigzag between the rails</td><td>Sewn from M7.5 (<a href="#zigzag-satin-method-zigzag">Zigzag satin</a>)</td></tr>
 </tbody>
 </table>
 </div>
@@ -5791,9 +5901,9 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <tr><td><code>REQ-SAT-011</code></td><td>The contour runs along each rail at its insets, towards the end on the first rail’s side and back on the second’s. It stops short of the column’s start and end by the rails’ insets in millimetres</td></tr>
 <tr><td><code>REQ-SAT-012</code></td><td>The zigzag goes through one end of each pair, the rails taking turns, and back through the others. Its insets are half the contour’s when left empty, and its long stitches split into equal parts</td></tr>
 <tr><td><code>REQ-SAT-013</code></td><td>Starting at its nearest point, a column begins on the line between its rails nearest the needle, or on its outline when only that is within the jump length, and follows the line to its first stitch</td></tr>
-<tr><td><code>REQ-SAT-014</code></td><td>Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there. The column sews the first halves, then the second halves from the line’s end, and stitches the end last</td></tr>
+<tr><td><code>REQ-SAT-014</code></td><td>Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there, at its own needle point when one lies within the shortest stitch of the cut. The column sews the first halves, then the second halves from the line’s end, and stitches the end last</td></tr>
 <tr><td><code>REQ-SAT-015</code></td><td>A column drawn as one subpath whose stroke is no wider than the design’s narrowest satin stroke sews as a stroke would, with <code>SC-W0212</code>. It offers its first point, as a stroke does</td></tr>
-<tr><td><code>REQ-SAT-018</code></td><td>A column whose needle points all lie within its shortest stitch of its first sews nothing, with <code>SC-W0215</code>, and the rest of the design is planned</td></tr>
+<tr><td><code>REQ-SAT-018</code></td><td>A column whose needle points all lie within its shortest stitch of its first sews nothing, with <code>SC-W0215</code>, and the rest of the design is planned. A zigzag satin with no stitch across sews nothing either, not even its underlays</td></tr>
 <tr><td><code>REQ-SAT-019</code></td><td>Of 2 rings, the second starts at its node nearest the first’s first node, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (<code>DEV-SAT-009</code>)</td></tr>
 <tr><td><code>REQ-SAT-020</code></td><td>An E-stitch sews each of a satin column’s pairs as a spike: from the first rail’s inset point across to the second’s and back through the same splits. The stitch across splits as a top stitch across does, by default into the fewest equal parts</td></tr>
 <tr><td><code>REQ-SAT-021</code></td><td>Between spikes an E-stitch goes along the first rail in one stitch. Where the zigzag spacing is longer than the longest stitch, that stitch splits with no randomness: into the fewest equal parts by default, at whole multiples of the longest stitch by the simple and staggered methods</td></tr>
@@ -5801,6 +5911,9 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <tr><td><code>REQ-SAT-023</code></td><td>A satin column whose longest top stitch, as sewn, is longer than 12 mm gets one <code>SC-W0209</code> at that stitch’s middle, whatever the satin method. A longest stitch that splits them, or an end that cuts one in 2, leaves none</td></tr>
 <tr><td><code>REQ-SAT-024</code></td><td>An S-stitch sews each of a satin column’s pairs once across, the first and every other one from the second rail, the rest from the first. A stitch splits as one from the first rail to the second would. The default method makes the fewest equal parts, and the simple and staggered methods number the stitch as its pair is, from 0</td></tr>
 <tr><td><code>REQ-SAT-025</code></td><td>An S-stitch steps along a rail from each pair’s inset point to the next pair’s in one stitch, which it never splits</td></tr>
+<tr><td><code>REQ-SAT-026</code></td><td>A zigzag satin places a satin column’s pairs at half the zigzag spacing and sews one point of each, the rails alternating from the first rail. Each 2 points in a row are a pair across, and a point left over is left out. The pairs are inset along their own stitches and sewn across and back as a satin column’s. Its outline runs through pairs at the full spacing</td></tr>
+<tr><td><code>REQ-SAT-027</code></td><td>A zigzag satin’s stitches split by the column’s split method. The simple and staggered methods number the stitch back to pair i 2i and the stitch across it 2i + 1. By default each splits into its own fewest equal parts, the stitch back taking no count from the stitch across before it</td></tr>
+<tr><td><code>REQ-SAT-028</code></td><td>Under a zigzag satin, the contour’s first side stops at the zigzag’s last point on the first rail, and its second side at its first and last points on the second rail, before the insets. An odd centre walk moves none of these places</td></tr>
 </tbody>
 </table>
 </div>
@@ -6896,7 +7009,7 @@ registry a plug-in could add PES to.</li>
 </thead>
 <tbody>
 <tr><td><code>&lt;ns&gt;.stroke</code></td><td>live effect</td><td>running, bean, manual (P1), zigzag (M7.2), ripple (later)</td><td><code>stroke_method</code> choice selects the variant</td></tr>
-<tr><td><code>&lt;ns&gt;.satin</code></td><td>live effect</td><td>satin (P1), E (M7.3), S (M7.4), zigzag (later)</td><td>rails and rungs from the object’s compound path</td></tr>
+<tr><td><code>&lt;ns&gt;.satin</code></td><td>live effect</td><td>satin (P1), E (M7.3), S (M7.4), zigzag (M7.5)</td><td>rails and rungs from the object’s compound path</td></tr>
 <tr><td><code>&lt;ns&gt;.fill</code></td><td>live effect</td><td>tatami (P1); contour, meander, circular (P2)</td><td><code>fill_method</code> choice</td></tr>
 </tbody>
 </table>
@@ -8230,7 +8343,7 @@ a parameter declared with an Ink/Stitch origin must be listed here with a compat
 default must be the value Ink/Stitch sews.</li>
 <li><strong>Default</strong> is the value Ink/Stitch’s settings window shows. For a few parameters its code sews another
 value when a file sets none, and the cell gives that value after the default, as in <code>0.1 (0.2 when unset)</code>. <code>—</code> means no default: the value is derived from another parameter or the shape.</li>
-<li><strong>StitchCraft</strong> says whether the <a href="#parameters-5">parameter registry</a> declares the
+<li><strong>StitchCraft</strong> says whether the <a href="#parameters-6">parameter registry</a> declares the
 parameter. <em>planned</em>: not yet; a design that sets it keeps it unchanged and gets <code>SC-W0105</code>. <em>not
 planned</em>: never, and a design that sets it gets the same.
 <em>registered</em>: StitchCraft reads and checks it under the same key, meaning and default; it changes the
@@ -9278,7 +9391,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M7.2 ✅</td><td>Zigzag stroke, sewn as Ink/Stitch sews it. Its angle is a new kind of setting, an angle kept within its range rather than turned by whole turns</td><td><code>REQ-RUN-009</code> to <code>REQ-RUN-012</code>, and the type listed for MC-6</td></tr>
 <tr><td>M7.3 ✅</td><td>E-stitch, sewn as Ink/Stitch sews it. Every satin method warns where stitches lean more than 45° from square to their column (<code>SC-W0208</code>) and where a top stitch is longer than 12 mm (<code>SC-W0209</code>)</td><td><code>REQ-SAT-020</code> to <code>REQ-SAT-023</code>, and the type listed for MC-6</td></tr>
 <tr><td>M7.4 ✅</td><td>S-stitch, sewn as Ink/Stitch sews it</td><td><code>REQ-SAT-024</code> and <code>REQ-SAT-025</code>, and the type listed for MC-6</td></tr>
-<tr><td>M7.5</td><td>Zigzag satin</td><td>its requirements active and the type listed for MC-6</td></tr>
+<tr><td>M7.5 ✅</td><td>Zigzag satin, sewn as Ink/Stitch sews it</td><td><code>REQ-SAT-026</code> to <code>REQ-SAT-028</code>, and the type listed for MC-6</td></tr>
 <tr><td>M7.6</td><td>The offsetter meets the third criterion of <a href="#adr-0005-geometry-stack">ADR-0005</a> before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. At M0.7 they took 218 to 448 ms, against GEOS’s 104 to 149 ms</td><td><code>cargo xtask perf</code> guards the criterion</td></tr>
 <tr><td>M7.7</td><td>Contour fill, with its three strategies, as Ink/Stitch sews them</td><td>its requirements active and the type listed for MC-6</td></tr>
 <tr><td>M7.8</td><td>Meander fill with generated tiles. A node’s meander fill may meet a <code>zigzag_spacing_mm</code> only its zigzag stroke can read, which Ink/Stitch sews as the fill’s default. The step chooses whether StitchCraft does too (<a href="#naming-rules">rule 7</a>)</td><td>same</td></tr>
@@ -9399,7 +9512,7 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td><strong>TS-08</strong> Fill density &amp; angle</td><td>15 squares 30 mm wide, with the default underlay: rows at spacings of 0.25, 0.3, 0.4, 0.5 and 0.6 mm, top to bottom, and columns at angles of 0°, 45° and 90° (100 × 170 mm). Each square is trimmed after</td><td>Coverage, stiffness, puckering, visible furrows. At 0.25 mm, below the Brother’s shortest stitch of 0.3 mm, a sliver at each row’s start in the 0° and 90° squares, where the rows meet the edges square on (<code>DEV-FIN-001</code>). The 45° square’s rows end 0.35 mm apart along its edges and keep their starts. If the machine sews 0.25 mm stitches cleanly, the report can lower the profile’s shortest stitch</td><td>MC-4</td></tr>
 <tr><td><strong>TS-09</strong> Fill underlay &amp; travel</td><td>A rectangle 50 × 30 mm with a square hole and a round hole, and a bar 6 mm to its right, all one fill, sewn 3 times (66 × 114 mm). The top copy has no underlay. The others have the default underlay, and the bottom one 2 gap-filling rows too. Each copy is trimmed after</td><td>Travel hidden? Does the fill hold at both ends of the jump to the bar? Holes clean? A gap where the rows round a hole meet?</td><td>MC-4</td></tr>
 <tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
-<tr><td><strong>TS-11</strong> New stitch types</td><td>Samples of the milestone’s new types. So far zigzag strokes (M7.2), straight and curved, at spacings of 0.4, 1 and 2 mm and widths of 1, 2 and 4 mm, and one at 45°. E-stitches (M7.3) 3 and 5 mm wide at spacings of 2 and 3 mm, along a straight edge and round a circle, on appliqué fabric. S-stitches (M7.4) 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, straight and curved, the 10 mm ones split at 3 mm by the default and the staggered methods</td><td>Per type, as listed on its expected-result sheet. A zigzag sews narrower than drawn, and the report says by how much, whether its sides are even round curves and which is the narrowest width that sews cleanly. The E-stitch’s spine should cover the appliqué’s raw edge, and its spikes hold it without puckering. The S-stitch should cover its band at 0.4 mm with its steps along the edges even, and the report says whether the default method’s splits leave a furrow along the band that the staggered ones do not</td><td>MC-6</td></tr>
+<tr><td><strong>TS-11</strong> New stitch types</td><td>Samples of the milestone’s new types. So far zigzag strokes (M7.2), straight and curved, at spacings of 0.4, 1 and 2 mm and widths of 1, 2 and 4 mm, and one at 45°. E-stitches (M7.3) 3 and 5 mm wide at spacings of 2 and 3 mm, along a straight edge and round a circle, on appliqué fabric. S-stitches (M7.4) 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, straight and curved, the 10 mm ones split at 3 mm by the default and the staggered methods. Zigzag satins (M7.5) 4 and 8 mm wide at spacings of 0.4 and 1 mm, straight and curved, beside satin columns of the same widths and spacings, and one 8 mm wide at 1 mm over a contour underlay</td><td>Per type, as listed on its expected-result sheet. A zigzag sews narrower than drawn, and the report says by how much, whether its sides are even round curves and which is the narrowest width that sews cleanly. The E-stitch’s spine should cover the appliqué’s raw edge, and its spikes hold it without puckering. The S-stitch should cover its band at 0.4 mm with its steps along the edges even, and the report says whether the default method’s splits leave a furrow along the band that the staggered ones do not. The zigzag satin should cover its band at 0.4 mm as its satin column does, and the report says whether it sews narrower than the satin column beside it. Its contour underlay should not show past the zigzag at either end</td><td>MC-6</td></tr>
 <tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round?</td><td>MC-5, MC-7</td></tr>
 </tbody>
 </table>
