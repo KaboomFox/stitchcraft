@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f8d5a76e.js";
+            window.path_to_searchindex_js = "../searchindex-dd88a355.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-db4a94de.js"></script>
@@ -380,7 +380,9 @@ needle now is. So is a point where the needle already is, which would sew in pla
 first point always stays. A stitch into or out of a lock point is a lock stitch, whose shortest is 0.2 mm
 (<code>REQ-PLAN-002</code>). <code>SC-I0504</code> says how many points were left out (<code>REQ-FIN-001</code>). The rule is one
 function, which a generator that joins pieces of its own also applies, as a tatami fill does to its
-rows and the travel between them, so that finalize finds nothing of its stitches to thin.</li>
+rows and the travel between them, so that finalize finds nothing of its stitches to thin. A satin
+column joins its parts by rules of its own instead, since the end of a top stitch must not move
+(<a href="algorithms/satin.html#underlays">satin</a>).</li>
 <li><strong>The longest stitch.</strong> A stitch longer than <code>profile.max_stitch</code> is split into the fewest equal parts
 no longer than it (<code>SC-I0703</code>, <code>REQ-FIN-001</code>). Such a stitch comes from a stitch placed by hand, a
 custom lock’s long step, a satin column wider than the machine’s longest stitch, a tatami fill whose

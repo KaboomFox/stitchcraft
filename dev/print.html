@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-f8d5a76e.js";
+            window.path_to_searchindex_js = "searchindex-dd88a355.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-db4a94de.js"></script>
@@ -2751,7 +2751,7 @@ first length.</p>
 <li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Ink/Stitch’s running stitch has no shortest stitch; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.</li>
+<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.</li>
 <li><strong>DEV-SAT-005.</strong> A satin column’s travel, and a tatami fill’s, take the first of the lengths running_stitch_length_mm gives. Ink/Stitch reads a satin’s or a fill’s value as one number, and sews a value of several with 2.5 mm, the default.</li>
 </ul>
 </li>
@@ -3049,7 +3049,7 @@ each one is at most this long.</p>
 <li><strong>Default:</strong> <code>3</code></li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Ink/Stitch’s running stitch has no shortest stitch; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.</li>
+<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.</li>
 </ul>
 </li>
 </ul>
@@ -3102,7 +3102,7 @@ one is at most this long.</p>
 <li><strong>Default:</strong> <code>3</code></li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Ink/Stitch’s running stitch has no shortest stitch; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.</li>
+<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.</li>
 </ul>
 </li>
 </ul>
@@ -5023,7 +5023,9 @@ needle now is. So is a point where the needle already is, which would sew in pla
 first point always stays. A stitch into or out of a lock point is a lock stitch, whose shortest is 0.2 mm
 (<code>REQ-PLAN-002</code>). <code>SC-I0504</code> says how many points were left out (<code>REQ-FIN-001</code>). The rule is one
 function, which a generator that joins pieces of its own also applies, as a tatami fill does to its
-rows and the travel between them, so that finalize finds nothing of its stitches to thin.</li>
+rows and the travel between them, so that finalize finds nothing of its stitches to thin. A satin
+column joins its parts by rules of its own instead, since the end of a top stitch must not move
+(<a href="#underlays-1">satin</a>).</li>
 <li><strong>The longest stitch.</strong> A stitch longer than <code>profile.max_stitch</code> is split into the fewest equal parts
 no longer than it (<code>SC-I0703</code>, <code>REQ-FIN-001</code>). Such a stitch comes from a stitch placed by hand, a
 custom lock’s long step, a satin column wider than the machine’s longest stitch, a tatami fill whose
@@ -5779,6 +5781,18 @@ start. Straight stitches join each part to the next, all of one length and no lo
 travel length. That is the first of the running stitch’s lengths (<code>running_stitch_length_mm</code>), raised to
 twice the shortest stitch where it is shorter, as a running stitch’s lengths are (<code>DEV-RUN-003</code>), and
 <code>SC-W0402</code> says so once for the column.</p>
+<p>Where a part starts within the shortest stitch of the needle, the needle’s last point gives way to the
+part’s first. An underlay’s last point, or the column’s start, moves to it, and the stitch into that
+point ends there. Points that only route the needle are left out (<a href="#start-and-end-1">Start and end</a>). A top
+stitch’s point gives way to no part. Where the way along the line leaves the needle at one, the next
+part’s points within the shortest stitch of it are left out instead, and the needle goes on to the first
+one farther. Otherwise finalize leaves out the part’s first point with <code>SC-I0504</code>, even where it is a top
+stitch’s end. Parts meet that near in many columns. A zigzag underlay comes back 0.2 mm in from the rail
+where an S-stitch starts, and after an odd centre walk it often ends that near where the top stitches
+start. The end’s cut can fall where the zigzag underlay’s 2 ways cross, and the way along the line can
+end beside where a centre walk is cut. In a column 0.5 mm wide, the centre walk is cut beside the top
+stitches’ end. Ink/Stitch joins its parts as they are, and its plan keeps a stitch longer than its own
+shortest stitch, 0.1 mm by default (<code>DEV-RUN-003</code>).</p>
 <p>Under a zigzag satin the contour’s sides first stop where the zigzag does
 (<a href="#zigzag-satin-method-zigzag">Zigzag satin</a>, step 6).</p>
 <p>The walks are running stitches, placed as a stroke’s are (<a href="#running-stitch-2">strokes</a>), and they
@@ -5863,7 +5877,8 @@ grids, where ties are common (<code>conformance/fixtures/geometry/shapely-neares
 <code>conformance/oracle/nearest.py</code>). Shapely computes a crossing point in extended precision, so where that
 point also lies on another side, the 2 can differ in which side they find it on.</p>
 <p>Straight stitches join each piece to the next as between underlays, no longer than the travel length. A
-point of the line within the shortest stitch of the needle only routes it, and is left out. An end within
+point of the line within the shortest stitch of the needle, or of the next piece’s first point, only
+routes it, and is left out. An end within
 the shortest stitch of the column’s last needle point moves that point to the end. The column’s last
 stitch, often a top stitch, then goes to the end in one stitch. Ink/Stitch sews the end as a stitch of
 its own, which its stitch plan drops when it is no longer than its shortest stitch. An explicit start or
@@ -5891,7 +5906,7 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <tr><td><code>REQ-SAT-001</code></td><td>Pull compensation moves both ends of every top stitch outward along it, by <code>pull_compensation_mm</code> plus <code>pull_compensation_percent</code> of its width (± 0.01 mm). Ends moved past each other meet</td></tr>
 <tr><td><code>REQ-SAT-002</code></td><td>Consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails and within 5 % on curves. The last pair is at most a spacing on</td></tr>
 <tr><td><code>REQ-SAT-003</code></td><td>With a longest stitch, a longer top stitch is split as <code>split_method</code> says. By default it splits into the fewest equal parts, and the stitch back into as many as the stitch across before. Simple and staggered splits fall at whole multiples of the longest stitch, from a start that <code>staggered</code> moves along</td></tr>
-<tr><td><code>REQ-SAT-004</code></td><td>Underlays come before the top stitches and leave them as they were: the centre walk, then the contour and the zigzag. Straight stitches of one length join them, no longer than the running stitch’s length raised to twice the shortest stitch. After an odd centre walk the rest runs from the column’s end</td></tr>
+<tr><td><code>REQ-SAT-004</code></td><td>Underlays come before the top stitches and leave them as they were: the centre walk, then the contour and the zigzag. Straight stitches of one length join them, no longer than the running stitch’s length raised to twice the shortest stitch. A part that starts within the shortest stitch of the needle takes the place of an underlay’s last point, and the needle’s way gives way to it. Beside a top stitch’s point the part’s points give way instead. After an odd centre walk the rest runs from the column’s end</td></tr>
 <tr><td><code>REQ-SAT-005</code></td><td>Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces <code>SC-E0201</code> and no stitches, and a rung that misses a rail joins the rail’s nearest point (<code>SC-W0203</code>), the one shapely gives of points as near. A column with no section to sew produces <code>SC-E0216</code> and no stitches</td></tr>
 <tr><td><code>REQ-SAT-006</code></td><td>A parameter with a value for each side changes only its own side: a rail’s stitch ends, or the column’s start or end</td></tr>
 <tr><td><code>REQ-SAT-007</code></td><td>Random widths and spacing are reproducible from the element and its seed, and stay within their ranges</td></tr>
