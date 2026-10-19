@@ -713,6 +713,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- A satin column ending near the next element is cut at the same place wherever it lies (`REQ-SAT-014`,
+  `DEV-SAT-010`). Widened by pull compensation, the stitch across at the end's cut lies along the cut
+  but for rounding, and where it was cut came down to the rounding: at either rail, or part of the way
+  across. On a column turned by 5.37° with 0.5 mm of pull compensation, the cut fell two thirds of the
+  way across. A stitch along the cut is now cut as sides along one line meet: widened, at the cut's
+  first rail point, and narrowed, at its own start.
 - A VectorCraft document no longer sews differently from what VectorCraft draws without a word
   (`REQ-VC-005`). `SC-W0807` now names what VectorCraft draws of a stroke and the stitches don't follow:
   - A stroke's arrowheads aren't stitched, and a dashed stroke is stitched along all of its path.
