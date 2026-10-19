@@ -160,7 +160,7 @@ CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).
 
 ## M10 — More stitch types II
 
-Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch, legacy fill; auto-run and auto-satin
+Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch; auto-run and auto-satin
 routing tools; per-layer ordering (underlay now, top later). VectorCraft's tools filter with Convert Line to
 Satin, once a column's centre line converts within ABI v1's budget, or ABI v2 gives heavy plug-ins more
 ([tools](../design/vectorcraft-integration.md#tools-vectorcrafts-own-commands)).
