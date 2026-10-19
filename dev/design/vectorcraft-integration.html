@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-80cfba69.js";
+            window.path_to_searchindex_js = "../searchindex-66683f19.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-639d0563.js"></script>
@@ -528,22 +528,38 @@ VectorCraft’s formula without colour management ((1 − c)(1 − k) and 1 − 
 gradient gives its first stop’s colour, with <code>SC-W0807</code> unless every stop has that colour, and a pattern
 gives black, with <code>SC-W0807</code>. A stroke’s width, in points, and its join, with its miter limit (10 when
 the file omits it, as VectorCraft draws it), shape a satin column drawn as one path. A stroke drawn with
-a brush is stitched along its path, without the brush’s art, with <code>SC-W0807</code>. A group’s or a layer’s own
+a brush is stitched along its path, without the brush’s art, with <code>SC-W0807</code>.</p>
+<p>What VectorCraft draws of a stroke that its stitches don’t follow is named with <code>SC-W0807</code>, and the
+message says how to stitch it, usually with Object › Path › Outline Stroke:</p>
+<ul>
+<li>A stroke’s arrowheads are not stitched, and a dashed stroke is stitched along all of its path. A dash
+pattern that VectorCraft draws solid, with a length below 0 or that is not a number, or only 0s, is
+no dash.</li>
+<li>A stroke painted below a fill is sewn after the fill, over it.</li>
+<li>A satin column or a zigzag made of a stroke is as wide as the stroke all along and centred on the
+path. VectorCraft draws a closed path’s stroke inside or outside it when it is aligned so, and varies
+its width along a width profile. It also caps an open path’s ends with round or square caps. A running
+stitch along the path is the same whichever way the stroke is drawn.</li>
+</ul>
+<p>A group’s or a layer’s own
 fills and strokes, which paint every member, are not stitched as shapes of their own. They give
 StitchCraft effects their thread and stroke (below), with <code>SC-W0807</code>.</p>
 <p><strong>Effects.</strong> StitchCraft’s live effects are kept in the object’s appearance as <code>{"id": "plugin.dev.stitchcraft.&lt;family&gt;", "params": {…}, "visible": true}</code>. The family is <code>stroke</code>, <code>satin</code> or
 <code>fill</code> (<code>stitchcraft_params::Family</code>). An object with visible StitchCraft effects is stitched as they
 say, in their order, instead of by its paints. A <code>fill</code> effect fills the object’s shape, a <code>stroke</code>
 effect stitches along it and a <code>satin</code> effect makes a satin column of it. With this rule, an object sews
-what its effects say and nothing else. A fill with an outline takes a <code>fill</code> effect and a <code>stroke</code>
-effect. The record’s parameters are the element’s. A number is written as a decimal, a toggle as <code>true</code>
+what its effects say and nothing else. Each effect is sewn on the shape as it is drawn. VectorCraft
+draws an effect after the first on the stitches of the one before, though, so the preview of an object
+with 2 is not what is sewn, and <code>SC-W0807</code> says so, once for an object and once for a group. A fill with
+an outline takes 2 objects: the shape with a <code>fill</code> effect, and a copy pasted in front of it (Edit › Paste
+in Front) with a <code>stroke</code> effect. The record’s parameters are the element’s. A number is written as a decimal, a toggle as <code>true</code>
 or <code>false</code>, a choice as its id and a list as its values with spaces between. What the record leaves out
 takes its default, as in the plug-in’s dialog. The thread is the colour of the topmost fill VectorCraft
 draws for a fill, and of the topmost stroke for the others, falling back on the other kind. An opaque
 paint comes before one of opacity under 1, which lets what is under it show. A <code>stroke</code> or <code>satin</code> effect
 follows the width and join of that stroke, or a width of 0 when none is drawn. VectorCraft writes a
 stroke of paint none for an object without one, which it doesn’t draw. A satin column too narrow to
-stitch across is sewn as a stroke, with <code>SC-W0212</code>. VectorCraft’s own effects change what an object
+stitch across is sewn as a stroke, with <code>SC-W0212</code>. <code>SC-W0807</code> names a zigzag 0 mm wide. VectorCraft’s own effects change what an object
 draws, and are left out with <code>SC-W0807</code> (Object › Expand Appearance makes paths of what they draw).</p>
 <p><strong>A group’s effects</strong> (<code>REQ-VC-006</code>). VectorCraft runs a group’s or a layer’s geometry effects on each
 path and compound path inside it, however deep, with the group’s bounds as their frame (<code>reshape_leaves</code>

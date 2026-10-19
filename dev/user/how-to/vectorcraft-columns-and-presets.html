@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-80cfba69.js";
+            window.path_to_searchindex_js = "../../searchindex-66683f19.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-639d0563.js"></script>
@@ -222,6 +222,10 @@ Appearance panel. Keep StitchCraft’s effects at one level, though. A path that
 effect inside such a group, or sits inside 2 such groups, is drawn as one effect run on the stitches of
 the other. It sews as the nearest effect says, and the command line warns about it (<code>SC-W0807</code>).
 Alt-clicking a style adds its effects to the object’s own, and an object with 2 fill effects sews twice.</p>
+<p>Give each StitchCraft effect an object of its own. An object with 2 sews each on its shape, but
+VectorCraft draws the second on the stitches of the first, so the preview isn’t what is sewn, and the
+command line warns about it (<code>SC-W0807</code>). For a fill with an outline, copy the shape, choose <strong>Edit ›
+Paste in Front</strong>, and give the shape behind a fill effect and the copy in front a stroke effect.</p>
 <h2 id="turn-a-preview-into-paths"><a class="header" href="#turn-a-preview-into-paths">Turn a preview into paths</a></h2>
 <p><strong>Object › Expand Appearance</strong> turns what an effect shows into ordinary objects, with strokes outlined.
 Those objects are the shapes the preview draws, and they sew differently from the effect. Expand a copy
