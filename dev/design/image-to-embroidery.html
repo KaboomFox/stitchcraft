@@ -1,0 +1,430 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Image to embroidery - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-7e8d43ee.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-58ed789b.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/src/design/image-to-embroidery.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="image-to-embroidery"><a class="header" href="#image-to-embroidery">Image to embroidery</a></h1>
+<p>Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
+art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
+the stitches of each shape by its width at the size it sews. Neighbouring shapes overlap where they meet.
+Specks and the background are left out, and the sewing is ordered for few colour changes and short jumps.
+Milestone M13 of the <a href="../plan/roadmap.html">roadmap</a> builds it, after M7.5 and before M7.6. Photographs
+sewn in blended colours need another technique, outside the roadmap.</p>
+<h2 id="the-flow"><a class="header" href="#the-flow">The flow</a></h2>
+<p>A picture becomes a machine file in 2 steps:</p>
+<ol>
+<li>In VectorCraft, place the picture, scale it to the size it will sew, and trace it with Object › Image
+Trace › Make.</li>
+<li>Run <code>stitch export picture.vectorcraft --auto -o picture.pes --preview picture.png</code>.</li>
+</ol>
+<p>An Image Trace object is a group of the traced paths, with the source image hidden beside them
+(<code>imageTrace.make</code> in VectorCraft’s <code>crates/engine</code>, <code>main</code> at <code>0842941</code>). <code>stitch export</code> already reads
+those paths, and Expand is optional. Without <code>--auto</code> it sews each of them as Ink/Stitch sews an SVG
+shape: every area as a tatami fill and every line as a running stitch, in paint order. In a test document
+of a traced square and a strip 2.1 mm wide beside it, both sewed as tatami fills. With <code>--auto</code>, each
+shape sews as this page describes. Once MC-8 confirms the rules on the machine, M13.8 makes automatic
+digitizing the default for VectorCraft documents, and <code>--auto</code> is then needed for SVG files only.</p>
+<p>ABI v2’s exporter plug-ins (<a href="rfc-vectorcraft-abi-v2.html#p1-exporter-plug-ins">P1</a>) would move the second
+step into VectorCraft, as File › Export › PES.</p>
+<p>An SVG file traced elsewhere, such as by Inkscape’s Trace Bitmap, sews the same way with
+<code>stitch plan picture.svg --auto</code>. Without the switch, an SVG file’s shapes sew as Ink/Stitch sews them,
+since the file may be one of Ink/Stitch’s.</p>
+<h2 id="what-vectorcraft-does-and-what-stitchcraft-does"><a class="header" href="#what-vectorcraft-does-and-what-stitchcraft-does">What VectorCraft does and what StitchCraft does</a></h2>
+<p>The 2 programs split the work. VectorCraft’s Image Trace (its <code>crates/trace</code>) already does what a picture
+needs before it is embroidered:</p>
+<ul>
+<li>Its colour modes reduce the picture to a few flat colours. Its Document Library palette traces with a
+swatch library’s colours exactly.</li>
+<li>Its Noise setting leaves out areas smaller than a number of pixels, and Ignore White leaves out white
+areas.</li>
+<li>Its Abutting method traces each colour’s areas as paths that share their edges with their neighbours.</li>
+<li>Create Strokes traces lines up to its Stroke width as stroked centre lines.</li>
+<li>The paths are smooth curves over the steps of the pixels.</li>
+</ul>
+<p>StitchCraft links none of VectorCraft’s crates (<a href="vectorcraft-integration.html">integration</a>), and a tracer of
+its own would repeat VectorCraft’s. StitchCraft does the embroidery. It chooses the stitches of each shape,
+the overlaps between shapes and the order they sew in.</p>
+<p><code>stitch palette</code> (M13.7) writes a machine profile’s thread palette as a GIMP palette file (<code>.gpl</code>).
+VectorCraft loads that file as a swatch library (Window › Swatch Libraries › Other Library…), and Image
+Trace’s Document Library palette then traces the picture in the threads’ colours.</p>
+<h2 id="automatic-elements"><a class="header" href="#automatic-elements">Automatic elements</a></h2>
+<p>An automatic element is a shape whose stitches StitchCraft chooses. The readers make one of:</p>
+<ul>
+<li>each object of a VectorCraft document that has no StitchCraft effect, with <code>--auto</code>;</li>
+<li>each path inside an object or a group that has the StitchCraft Auto effect (M13.7), unless the path has
+a StitchCraft effect of its own;</li>
+<li>each SVG element without <code>inkstitch:</code> settings, with <code>--auto</code>.</li>
+</ul>
+<p>An element with settings sews as they say, whether or not the switch is given. So a picture can be
+digitized automatically and one of its shapes then set by hand. A shape’s fill gives its area and its
+stroke gives its line, each with its thread, width and join, as for any element.</p>
+<h2 id="stitch-types-by-width"><a class="header" href="#stitch-types-by-width">Stitch types by width</a></h2>
+<p>An automatic element is measured at the size it sews, in millimetres. Its width at a place is the
+diameter of the largest circle that fits inside it there. Its parts sew by their width:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Width</th><th>Sewn as</th></tr>
+</thead>
+<tbody>
+<tr><td>Below the design’s <code>min_satin_stroke_width_mm</code>, 1 mm unless the design sets it</td><td>A running stitch along the centre line, a triple run (bean stitch) from 0.5 mm wide</td></tr>
+<tr><td>From that width to the widest satin column, 7 mm</td><td>Satin columns, whose rails are the outline</td></tr>
+<tr><td>Above 7 mm</td><td>A tatami fill</td></tr>
+</tbody>
+</table>
+</div>
+<p>A stroke is a line as wide as it is drawn. Narrower than 1 mm it sews as a running stitch. Up to 7 mm it
+sews as a satin column as wide as its stroke, as a satin column drawn as one path does (<code>REQ-SAT-016</code>).
+Wider than that, the area it paints is filled.</p>
+<p><strong>Shapes in parts.</strong> A shape wider than 7 mm in places and narrower in others is split. Its broad parts are
+what an opening with a disc 7 mm across leaves: the shape shrunk by 3.5 mm and grown back by 3.5 mm, with
+the polygon buffer of M5.7. The rest of the shape is its narrow parts. A narrow part shorter along its
+centre line than twice its width is a corner that the opening rounded, and it goes back to the fill
+beside it.</p>
+<p><strong>Centre lines.</strong> A narrow part’s centre line, its width along it and the rungs across it come from a
+constrained Delaunay triangulation of its outline, with points added along its long edges so that no
+triangle is much longer than the part is wide:</p>
+<ul>
+<li>Each edge of a triangle that lies inside the part is a chord across it, as long as the part is wide
+there.</li>
+<li>A triangle with 2 inside edges is part of a strip, and its inside edges are the strip’s rungs.</li>
+<li>A triangle with 3 inside edges is a junction, where 3 strips meet, and one with 1 is an end.</li>
+</ul>
+<p>A strip between 2 ends or junctions sews as a satin column. Its rails are the 2 sides of the outline
+between them, and some of its chords are its rungs. At a junction, the 2 strips that run on most nearly
+straight sew as one column, and the third ends under it. A ring, such as a letter O, is a closed column
+between its outer and inner outlines. The satin generator sews these columns as it sews columns drawn with
+rails and rungs.</p>
+<p><strong>Settings by width.</strong> A column’s underlay depends on its width. These are starting values, and MC-8
+confirms or changes them:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Column width</th><th>Underlay</th></tr>
+</thead>
+<tbody>
+<tr><td>Below 2 mm</td><td>Centre walk</td></tr>
+<tr><td>2 to 4 mm</td><td>Contour</td></tr>
+<tr><td>Above 4 mm</td><td>Contour and zigzag</td></tr>
+</tbody>
+</table>
+</div>
+<p>Fills keep the tatami fill’s defaults, underlay included.</p>
+<h2 id="neighbours"><a class="header" href="#neighbours">Neighbours</a></h2>
+<ul>
+<li><strong>Overlaps.</strong> Each shape extends 0.4 mm under the shapes sewn after it that it touches. Pull draws
+stitches in from the edges of their shape. With the overlap, the earlier shape’s stitches reach under
+the later shape’s edge, and no fabric shows between them.</li>
+<li><strong>Parts covered by a later fill.</strong> Where a fill sewn later covers part of an earlier shape, the earlier shape is
+cut away under it, 0.4 mm inside its edge, and that area is sewn once. A trace that stacks its colours,
+as Inkscape’s Trace Bitmap does with its Stack option and VectorCraft’s Image Trace with its Overlapping
+method, then sews no more than an abutting one. A column or a line sewn later goes over the earlier
+shape, which is sewn whole under it. Cutting a fill round small letters adds stitches and can leave gaps
+(<a href="https://inkscape.org/forums/embroidery/techniques-for-making-text-on-top-of-a-fill-more-crisp/">Inkscape forum</a>).</li>
+<li><strong>Specks.</strong> A shape or a part of less than 1 mm² is too small to sew. It is merged into the shape around
+it, or into the shape it shares the longest edge with, so that no hole shows where it was. A speck with
+no neighbour is left out. A diagnostic counts the specks and names each element.</li>
+<li><strong>Background.</strong> The lowest shape, when it covers the design’s whole bounds within 0.5 mm on each side, is
+the picture’s background. It is left out with a warning. With a StitchCraft effect, it sews as that effect
+says.</li>
+</ul>
+<h2 id="sewing-order"><a class="header" href="#sewing-order">Sewing order</a></h2>
+<p>Automatic elements sew in an order StitchCraft chooses, by 4 rules:</p>
+<ol>
+<li>Shapes that overlap as drawn keep their paint order, the lower one first. Shapes that share an edge
+and nothing more, as abutting paths do, may sew in either order.</li>
+<li>A column or a line that borders a fill sews after it, and covers its edge.</li>
+<li>Within those rules, the next element has the thread that is sewing, as long as an element of that
+thread is free to sew. So the plan has few colour changes. Colours that the machine profile maps to one
+thread count as one.</li>
+<li>Within a colour, the next element is the one nearest the needle, and each element starts and ends at
+its points nearest its neighbours (<code>REQ-GEN-003</code>).</li>
+</ol>
+<p>The overlaps above follow this order. Elements with settings keep their places in paint order, and
+automatic elements move around them within the rules. M10’s routing tools, which order satin columns and
+running stitches drawn by hand, start from this order.</p>
+<h2 id="settings"><a class="header" href="#settings">Settings</a></h2>
+<p>The rules’ values are StitchCraft’s own parameters, registered as any other
+(<a href="params.html">parameter registry</a>). The settings are the widest satin column, the overlap, the smallest
+area and a switch that leaves the background out. Their defaults are the values on this page, 7 mm, 0.4 mm and 1 mm², and MC-8
+confirms or changes them. The narrowest satin column is the design’s <code>min_satin_stroke_width_mm</code>. The Auto
+effect’s dialog shows the settings, and with <code>--auto</code> they take their defaults.</p>
+<h2 id="previews-in-vectorcraft"><a class="header" href="#previews-in-vectorcraft">Previews in VectorCraft</a></h2>
+<p>The Auto effect is a live effect like the plug-ins of each stitch family
+(<a href="vectorcraft-integration.html#plug-ins">plug-ins</a>). VectorCraft runs a group’s effects on each path inside
+it (<code>REQ-VC-006</code>), so the effect on a traced group previews every path’s stitches, each sewn as its width
+says. A live effect is given its path alone. Its preview shows each shape’s stitches without the
+overlaps, the merged specks or the order, which <code>stitch export</code> adds. A preview that costs more than ABI
+v1’s budget shows less, with <code>SC-I0810</code>, as the other effects’ previews do.</p>
+<p>Tracing again replaces the group with a new one, without the effect. Apply the effect after the last
+trace, or use <code>--auto</code>, which works without it.</p>
+<h2 id="with-abi-v2"><a class="header" href="#with-abi-v2">With ABI v2</a></h2>
+<ul>
+<li><strong>P1, exporter plug-ins.</strong> File › Export › PES plans the document inside VectorCraft, objects without
+effects digitized automatically. The flow is then trace and export, both in VectorCraft.</li>
+<li><strong>P8, effects in filter objects.</strong> A filter could set on each path the effect of the family its width
+chose. The user then adjusts it in that effect’s dialog.</li>
+<li><strong>P4, budget classes.</strong> The Auto effect’s previews of large shapes get the heavy budget.</li>
+</ul>
+<h2 id="text-in-pictures"><a class="header" href="#text-in-pictures">Text in pictures</a></h2>
+<p>Text traced from a picture is shapes, and the width rules sew its letters’ strokes as satin columns and
+running stitches. TS-13 sews block letters from 4 to 15 mm tall to find the smallest that reads well.
+Smaller letters need lettering in an embroidery font, made to sew at small sizes. M14.5 replaces the
+traced letters inside a marked area with lettering of the marker’s text, as tall as they were. Spike M14.6
+looks for a way to find and read the text without a marker.</p>
+<h2 id="pictures-from-the-command-line"><a class="header" href="#pictures-from-the-command-line">Pictures from the command line</a></h2>
+<p><code>stitch plan picture.png --auto</code> would leave VectorCraft out of the flow. Spike M13.9 chooses how it
+traces:</p>
+<ul>
+<li>VectorCraft’s command line, when it is installed, opens the picture and traces it
+(<code>vectorcraft-cli run --in picture.png --cmd imageTrace.make …</code>). This repeats no code.</li>
+<li>StitchCraft reads PNG and JPEG files and traces them itself. This works without VectorCraft.</li>
+</ul>
+<h2 id="testing"><a class="header" href="#testing">Testing</a></h2>
+<ul>
+<li>Each rule gets its requirements and failing cases before its code (<a href="adr/0008-conformance-first.html">ADR-0008</a>).</li>
+<li>The test pictures are drawn in code, as the test sheets are, and no logo or picture of anyone else’s is
+used.</li>
+<li>Each test picture’s automatic plan is compared with its plan in paint order: colour changes, jumps,
+trims, stitches, and how much of each shape and of each shared edge the stitches cover
+(<code>stitchcraft_testkit::metrics</code>).</li>
+<li>Level B of the <a href="compatibility-gate.html">compatibility gate</a> gets a case in which VectorCraft’s command
+line traces a picture and StitchCraft sews the document it saved, on every track.</li>
+<li>TS-13 sews the test pictures at MC-8 (<a href="../plan/machine-testing.html">machine testing</a>).</li>
+</ul>
+<p>Codes 0900 to 0999 are automatic digitizing’s (<a href="diagnostics.html">diagnostics</a>).</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../design/algorithms/locks.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../design/formats.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../design/algorithms/locks.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../design/formats.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

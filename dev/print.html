@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-dd88a355.js";
+            window.path_to_searchindex_js = "searchindex-7e8d43ee.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-db4a94de.js"></script>
+        <script src="toc-58ed789b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -3471,7 +3471,8 @@ our own words and never carry Ink/Stitch’s code (<a href="#adr-0012-read-inkst
 <li><a href="#stitchcraft--technical-design-document">Technical design document</a> — the whole system in 25 minutes.</li>
 <li><a href="#architecture">Architecture</a> — crates, layers, where code goes.</li>
 <li><a href="#data-model">Data model</a>, <a href="#parameter-registry">parameter registry</a>, <a href="#diagnostics">diagnostics</a>.</li>
-<li><a href="#engine-pipeline">Engine pipeline</a> and the <a href="design/algorithms/README.html">stitch generators</a>.</li>
+<li><a href="#engine-pipeline">Engine pipeline</a>, the <a href="design/algorithms/README.html">stitch generators</a> and
+<a href="#image-to-embroidery">image to embroidery</a>.</li>
 <li><a href="#machine-formats">Machine formats</a> and <a href="#rendering-previews">rendering previews</a>.</li>
 <li><a href="#vectorcraft-integration">VectorCraft integration</a>, the <a href="#rfc-vectorcraft-plug-in-abi-v2">ABI v2 RFC</a>
 and the <a href="#vectorcraft-compatibility-gate">compatibility gate</a>.</li>
@@ -3539,8 +3540,8 @@ and every behaviour is pinned by a conformance suite and by sew-outs on a real m
 <h3 id="non-goals-for-10"><a class="header" href="#non-goals-for-10">Non-goals for 1.0</a></h3>
 <ul>
 <li>An Inkscape extension.</li>
-<li>Lettering with a bundled embroidery-font library (post-1.0; see <a href="#roadmap-small-steps-to-the-final-project">roadmap</a>).</li>
-<li>Automatic digitizing of photos or bitmaps.</li>
+<li>Photo stitch: photographs sewn in blended colours. Pictures of flat colour, such as logos, clip art and
+drawings, are digitized automatically from M13 (<a href="#image-to-embroidery">image to embroidery</a>).</li>
 <li>Sending files to machines over USB/Wi-Fi; the output is a file you copy to the machine.</li>
 <li>A standalone GUI. The GUI is VectorCraft; the CLI renders previews to PNG.</li>
 </ul>
@@ -3611,7 +3612,9 @@ identical to Ink/Stitch’s SVG attributes because that is the interoperability 
 <tr><td>Tatami fill (underlay, pull compensation, staggers, gap fill, underpath travel)</td><td>P1</td><td>M5</td></tr>
 <tr><td>VectorCraft plug-in (ABI v1), export from <code>.vectorcraft</code>, compatibility gate</td><td>P1</td><td>M6</td></tr>
 <tr><td>Zigzag/E/S stitches, contour, meander, circular fill</td><td>P2</td><td>M7</td></tr>
+<tr><td>Image to embroidery: stitch types chosen by width, overlaps, sewing order, VectorCraft’s Auto effect</td><td>P2</td><td>M13, between M7.5 and M7.6</td></tr>
 <tr><td>Ink/Stitch SVG import (attributes, commands, clones) and differential testing</td><td>P2</td><td>M8</td></tr>
+<tr><td>Lettering in embroidery fonts, and text in pictures set again as lettering</td><td>P3</td><td>M14</td></tr>
 <tr><td>Guided, gradient, ripple, tartan, cross stitch; auto-run/auto-satin</td><td>P3</td><td>M10</td></tr>
 <tr><td>EXP, JEF, VP3, XXX, U01 formats; thread catalogues</td><td>P3</td><td>M11</td></tr>
 <tr><td>1.0 hardening, translations, release automation</td><td>—</td><td>M12</td></tr>
@@ -4536,6 +4539,7 @@ probably not what you want) or <code>I</code> (info) + four digits grouped by ar
 <tr><td>0600–0699</td><td>Formats and threads</td></tr>
 <tr><td>0700–0799</td><td>Machine profile (hoop, limits)</td></tr>
 <tr><td>0800–0899</td><td>Hosts (SVG, VectorCraft)</td></tr>
+<tr><td>0900 to 0999</td><td>Automatic digitizing (<a href="#image-to-embroidery">image to embroidery</a>)</td></tr>
 </tbody>
 </table>
 </div>
@@ -6618,6 +6622,197 @@ sews the same lock (<code>REQ-LCK-002</code>, property test).</li>
 <p>Plan assembly (M3.8) checks where locks go (<code>ties</code>, <code>REQ-LCK-001</code>). Machine checkpoint MC-2 checks with test
 sheet TS-04 whether the default locks hold when the tail is pulled (<code>REQ-LCK-003</code>).</p>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="image-to-embroidery"><a class="header" href="#image-to-embroidery">Image to embroidery</a></h1>
+<p>Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
+art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
+the stitches of each shape by its width at the size it sews. Neighbouring shapes overlap where they meet.
+Specks and the background are left out, and the sewing is ordered for few colour changes and short jumps.
+Milestone M13 of the <a href="#roadmap-small-steps-to-the-final-project">roadmap</a> builds it, after M7.5 and before M7.6. Photographs
+sewn in blended colours need another technique, outside the roadmap.</p>
+<h2 id="the-flow"><a class="header" href="#the-flow">The flow</a></h2>
+<p>A picture becomes a machine file in 2 steps:</p>
+<ol>
+<li>In VectorCraft, place the picture, scale it to the size it will sew, and trace it with Object › Image
+Trace › Make.</li>
+<li>Run <code>stitch export picture.vectorcraft --auto -o picture.pes --preview picture.png</code>.</li>
+</ol>
+<p>An Image Trace object is a group of the traced paths, with the source image hidden beside them
+(<code>imageTrace.make</code> in VectorCraft’s <code>crates/engine</code>, <code>main</code> at <code>0842941</code>). <code>stitch export</code> already reads
+those paths, and Expand is optional. Without <code>--auto</code> it sews each of them as Ink/Stitch sews an SVG
+shape: every area as a tatami fill and every line as a running stitch, in paint order. In a test document
+of a traced square and a strip 2.1 mm wide beside it, both sewed as tatami fills. With <code>--auto</code>, each
+shape sews as this page describes. Once MC-8 confirms the rules on the machine, M13.8 makes automatic
+digitizing the default for VectorCraft documents, and <code>--auto</code> is then needed for SVG files only.</p>
+<p>ABI v2’s exporter plug-ins (<a href="#p1-exporter-plug-ins">P1</a>) would move the second
+step into VectorCraft, as File › Export › PES.</p>
+<p>An SVG file traced elsewhere, such as by Inkscape’s Trace Bitmap, sews the same way with
+<code>stitch plan picture.svg --auto</code>. Without the switch, an SVG file’s shapes sew as Ink/Stitch sews them,
+since the file may be one of Ink/Stitch’s.</p>
+<h2 id="what-vectorcraft-does-and-what-stitchcraft-does"><a class="header" href="#what-vectorcraft-does-and-what-stitchcraft-does">What VectorCraft does and what StitchCraft does</a></h2>
+<p>The 2 programs split the work. VectorCraft’s Image Trace (its <code>crates/trace</code>) already does what a picture
+needs before it is embroidered:</p>
+<ul>
+<li>Its colour modes reduce the picture to a few flat colours. Its Document Library palette traces with a
+swatch library’s colours exactly.</li>
+<li>Its Noise setting leaves out areas smaller than a number of pixels, and Ignore White leaves out white
+areas.</li>
+<li>Its Abutting method traces each colour’s areas as paths that share their edges with their neighbours.</li>
+<li>Create Strokes traces lines up to its Stroke width as stroked centre lines.</li>
+<li>The paths are smooth curves over the steps of the pixels.</li>
+</ul>
+<p>StitchCraft links none of VectorCraft’s crates (<a href="#vectorcraft-integration">integration</a>), and a tracer of
+its own would repeat VectorCraft’s. StitchCraft does the embroidery. It chooses the stitches of each shape,
+the overlaps between shapes and the order they sew in.</p>
+<p><code>stitch palette</code> (M13.7) writes a machine profile’s thread palette as a GIMP palette file (<code>.gpl</code>).
+VectorCraft loads that file as a swatch library (Window › Swatch Libraries › Other Library…), and Image
+Trace’s Document Library palette then traces the picture in the threads’ colours.</p>
+<h2 id="automatic-elements"><a class="header" href="#automatic-elements">Automatic elements</a></h2>
+<p>An automatic element is a shape whose stitches StitchCraft chooses. The readers make one of:</p>
+<ul>
+<li>each object of a VectorCraft document that has no StitchCraft effect, with <code>--auto</code>;</li>
+<li>each path inside an object or a group that has the StitchCraft Auto effect (M13.7), unless the path has
+a StitchCraft effect of its own;</li>
+<li>each SVG element without <code>inkstitch:</code> settings, with <code>--auto</code>.</li>
+</ul>
+<p>An element with settings sews as they say, whether or not the switch is given. So a picture can be
+digitized automatically and one of its shapes then set by hand. A shape’s fill gives its area and its
+stroke gives its line, each with its thread, width and join, as for any element.</p>
+<h2 id="stitch-types-by-width"><a class="header" href="#stitch-types-by-width">Stitch types by width</a></h2>
+<p>An automatic element is measured at the size it sews, in millimetres. Its width at a place is the
+diameter of the largest circle that fits inside it there. Its parts sew by their width:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Width</th><th>Sewn as</th></tr>
+</thead>
+<tbody>
+<tr><td>Below the design’s <code>min_satin_stroke_width_mm</code>, 1 mm unless the design sets it</td><td>A running stitch along the centre line, a triple run (bean stitch) from 0.5 mm wide</td></tr>
+<tr><td>From that width to the widest satin column, 7 mm</td><td>Satin columns, whose rails are the outline</td></tr>
+<tr><td>Above 7 mm</td><td>A tatami fill</td></tr>
+</tbody>
+</table>
+</div>
+<p>A stroke is a line as wide as it is drawn. Narrower than 1 mm it sews as a running stitch. Up to 7 mm it
+sews as a satin column as wide as its stroke, as a satin column drawn as one path does (<code>REQ-SAT-016</code>).
+Wider than that, the area it paints is filled.</p>
+<p><strong>Shapes in parts.</strong> A shape wider than 7 mm in places and narrower in others is split. Its broad parts are
+what an opening with a disc 7 mm across leaves: the shape shrunk by 3.5 mm and grown back by 3.5 mm, with
+the polygon buffer of M5.7. The rest of the shape is its narrow parts. A narrow part shorter along its
+centre line than twice its width is a corner that the opening rounded, and it goes back to the fill
+beside it.</p>
+<p><strong>Centre lines.</strong> A narrow part’s centre line, its width along it and the rungs across it come from a
+constrained Delaunay triangulation of its outline, with points added along its long edges so that no
+triangle is much longer than the part is wide:</p>
+<ul>
+<li>Each edge of a triangle that lies inside the part is a chord across it, as long as the part is wide
+there.</li>
+<li>A triangle with 2 inside edges is part of a strip, and its inside edges are the strip’s rungs.</li>
+<li>A triangle with 3 inside edges is a junction, where 3 strips meet, and one with 1 is an end.</li>
+</ul>
+<p>A strip between 2 ends or junctions sews as a satin column. Its rails are the 2 sides of the outline
+between them, and some of its chords are its rungs. At a junction, the 2 strips that run on most nearly
+straight sew as one column, and the third ends under it. A ring, such as a letter O, is a closed column
+between its outer and inner outlines. The satin generator sews these columns as it sews columns drawn with
+rails and rungs.</p>
+<p><strong>Settings by width.</strong> A column’s underlay depends on its width. These are starting values, and MC-8
+confirms or changes them:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Column width</th><th>Underlay</th></tr>
+</thead>
+<tbody>
+<tr><td>Below 2 mm</td><td>Centre walk</td></tr>
+<tr><td>2 to 4 mm</td><td>Contour</td></tr>
+<tr><td>Above 4 mm</td><td>Contour and zigzag</td></tr>
+</tbody>
+</table>
+</div>
+<p>Fills keep the tatami fill’s defaults, underlay included.</p>
+<h2 id="neighbours"><a class="header" href="#neighbours">Neighbours</a></h2>
+<ul>
+<li><strong>Overlaps.</strong> Each shape extends 0.4 mm under the shapes sewn after it that it touches. Pull draws
+stitches in from the edges of their shape. With the overlap, the earlier shape’s stitches reach under
+the later shape’s edge, and no fabric shows between them.</li>
+<li><strong>Parts covered by a later fill.</strong> Where a fill sewn later covers part of an earlier shape, the earlier shape is
+cut away under it, 0.4 mm inside its edge, and that area is sewn once. A trace that stacks its colours,
+as Inkscape’s Trace Bitmap does with its Stack option and VectorCraft’s Image Trace with its Overlapping
+method, then sews no more than an abutting one. A column or a line sewn later goes over the earlier
+shape, which is sewn whole under it. Cutting a fill round small letters adds stitches and can leave gaps
+(<a href="https://inkscape.org/forums/embroidery/techniques-for-making-text-on-top-of-a-fill-more-crisp/">Inkscape forum</a>).</li>
+<li><strong>Specks.</strong> A shape or a part of less than 1 mm² is too small to sew. It is merged into the shape around
+it, or into the shape it shares the longest edge with, so that no hole shows where it was. A speck with
+no neighbour is left out. A diagnostic counts the specks and names each element.</li>
+<li><strong>Background.</strong> The lowest shape, when it covers the design’s whole bounds within 0.5 mm on each side, is
+the picture’s background. It is left out with a warning. With a StitchCraft effect, it sews as that effect
+says.</li>
+</ul>
+<h2 id="sewing-order"><a class="header" href="#sewing-order">Sewing order</a></h2>
+<p>Automatic elements sew in an order StitchCraft chooses, by 4 rules:</p>
+<ol>
+<li>Shapes that overlap as drawn keep their paint order, the lower one first. Shapes that share an edge
+and nothing more, as abutting paths do, may sew in either order.</li>
+<li>A column or a line that borders a fill sews after it, and covers its edge.</li>
+<li>Within those rules, the next element has the thread that is sewing, as long as an element of that
+thread is free to sew. So the plan has few colour changes. Colours that the machine profile maps to one
+thread count as one.</li>
+<li>Within a colour, the next element is the one nearest the needle, and each element starts and ends at
+its points nearest its neighbours (<code>REQ-GEN-003</code>).</li>
+</ol>
+<p>The overlaps above follow this order. Elements with settings keep their places in paint order, and
+automatic elements move around them within the rules. M10’s routing tools, which order satin columns and
+running stitches drawn by hand, start from this order.</p>
+<h2 id="settings"><a class="header" href="#settings">Settings</a></h2>
+<p>The rules’ values are StitchCraft’s own parameters, registered as any other
+(<a href="#parameter-registry">parameter registry</a>). The settings are the widest satin column, the overlap, the smallest
+area and a switch that leaves the background out. Their defaults are the values on this page, 7 mm, 0.4 mm and 1 mm², and MC-8
+confirms or changes them. The narrowest satin column is the design’s <code>min_satin_stroke_width_mm</code>. The Auto
+effect’s dialog shows the settings, and with <code>--auto</code> they take their defaults.</p>
+<h2 id="previews-in-vectorcraft"><a class="header" href="#previews-in-vectorcraft">Previews in VectorCraft</a></h2>
+<p>The Auto effect is a live effect like the plug-ins of each stitch family
+(<a href="#plug-ins">plug-ins</a>). VectorCraft runs a group’s effects on each path inside
+it (<code>REQ-VC-006</code>), so the effect on a traced group previews every path’s stitches, each sewn as its width
+says. A live effect is given its path alone. Its preview shows each shape’s stitches without the
+overlaps, the merged specks or the order, which <code>stitch export</code> adds. A preview that costs more than ABI
+v1’s budget shows less, with <code>SC-I0810</code>, as the other effects’ previews do.</p>
+<p>Tracing again replaces the group with a new one, without the effect. Apply the effect after the last
+trace, or use <code>--auto</code>, which works without it.</p>
+<h2 id="with-abi-v2"><a class="header" href="#with-abi-v2">With ABI v2</a></h2>
+<ul>
+<li><strong>P1, exporter plug-ins.</strong> File › Export › PES plans the document inside VectorCraft, objects without
+effects digitized automatically. The flow is then trace and export, both in VectorCraft.</li>
+<li><strong>P8, effects in filter objects.</strong> A filter could set on each path the effect of the family its width
+chose. The user then adjusts it in that effect’s dialog.</li>
+<li><strong>P4, budget classes.</strong> The Auto effect’s previews of large shapes get the heavy budget.</li>
+</ul>
+<h2 id="text-in-pictures"><a class="header" href="#text-in-pictures">Text in pictures</a></h2>
+<p>Text traced from a picture is shapes, and the width rules sew its letters’ strokes as satin columns and
+running stitches. TS-13 sews block letters from 4 to 15 mm tall to find the smallest that reads well.
+Smaller letters need lettering in an embroidery font, made to sew at small sizes. M14.5 replaces the
+traced letters inside a marked area with lettering of the marker’s text, as tall as they were. Spike M14.6
+looks for a way to find and read the text without a marker.</p>
+<h2 id="pictures-from-the-command-line"><a class="header" href="#pictures-from-the-command-line">Pictures from the command line</a></h2>
+<p><code>stitch plan picture.png --auto</code> would leave VectorCraft out of the flow. Spike M13.9 chooses how it
+traces:</p>
+<ul>
+<li>VectorCraft’s command line, when it is installed, opens the picture and traces it
+(<code>vectorcraft-cli run --in picture.png --cmd imageTrace.make …</code>). This repeats no code.</li>
+<li>StitchCraft reads PNG and JPEG files and traces them itself. This works without VectorCraft.</li>
+</ul>
+<h2 id="testing"><a class="header" href="#testing">Testing</a></h2>
+<ul>
+<li>Each rule gets its requirements and failing cases before its code (<a href="#adr-0008-conformance-first-development">ADR-0008</a>).</li>
+<li>The test pictures are drawn in code, as the test sheets are, and no logo or picture of anyone else’s is
+used.</li>
+<li>Each test picture’s automatic plan is compared with its plan in paint order: colour changes, jumps,
+trims, stitches, and how much of each shape and of each shared edge the stitches cover
+(<code>stitchcraft_testkit::metrics</code>).</li>
+<li>Level B of the <a href="#vectorcraft-compatibility-gate">compatibility gate</a> gets a case in which VectorCraft’s command
+line traces a picture and StitchCraft sews the document it saved, on every track.</li>
+<li>TS-13 sews the test pictures at MC-8 (<a href="#machine-testing-protocol">machine testing</a>).</li>
+</ul>
+<p>Codes 0900 to 0999 are automatic digitizing’s (<a href="#diagnostics">diagnostics</a>).</p>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="machine-formats"><a class="header" href="#machine-formats">Machine formats</a></h1>
 <!-- implements: crates/stitchcraft-formats/src/**, apps/stitchcraft-cli/src/commands/convert.rs, apps/stitchcraft-cli/src/commands/inspect.rs -->
 <p><code>stitchcraft-formats</code> encodes a <code>StitchPlan</code> into machine files and decodes machine files into plans.
@@ -7026,6 +7221,7 @@ registry a plug-in could add PES to.</li>
 <tr><td><code>&lt;ns&gt;.stroke</code></td><td>live effect</td><td>running, bean, manual (P1), zigzag (M7.2), ripple (later)</td><td><code>stroke_method</code> choice selects the variant</td></tr>
 <tr><td><code>&lt;ns&gt;.satin</code></td><td>live effect</td><td>satin (P1), E (M7.3), S (M7.4), zigzag (M7.5)</td><td>rails and rungs from the object’s compound path</td></tr>
 <tr><td><code>&lt;ns&gt;.fill</code></td><td>live effect</td><td>tatami (P1); contour, meander, circular (P2)</td><td><code>fill_method</code> choice</td></tr>
+<tr><td><code>&lt;ns&gt;.auto</code></td><td>live effect</td><td>the stitches automatic digitizing chooses by width (M13.7)</td><td>on a group, previews each path inside (<a href="#image-to-embroidery">image to embroidery</a>)</td></tr>
 </tbody>
 </table>
 </div>
@@ -7281,7 +7477,8 @@ The message names VectorCraft’s command that makes paths of them, such as Type
 text. So is a kind of object this version doesn’t read.</li>
 </ul>
 <p><strong>Paints and threads.</strong> An object without StitchCraft’s effects is stitched as Ink/Stitch stitches an SVG
-shape. Its visible fills are filled, in the appearance’s order, and its visible strokes then have a
+shape. From M13, <code>--auto</code> lets StitchCraft choose its stitches instead (<a href="#image-to-embroidery">image to
+embroidery</a>). Its visible fills are filled, in the appearance’s order, and its visible strokes then have a
 running stitch each. The thread’s colour is a solid paint’s colour, with CMYK and grey converted by
 VectorCraft’s formula without colour management ((1 − c)(1 − k) and 1 − k) and Lab through sRGB. A
 gradient gives its first stop’s colour, with <code>SC-W0807</code> unless every stop has that colour, and a pattern
@@ -9395,7 +9592,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 </div>
 <h2 id="m7--more-stitch-types-i"><a class="header" href="#m7--more-stitch-types-i">M7 — More stitch types I</a></h2>
 <p>One step for each stitch type, with its requirements, cases and docs
-(<a href="#playbook-add-a-stitch-type">playbook</a>).</p>
+(<a href="#playbook-add-a-stitch-type">playbook</a>). M7.6 to M7.9 come after M13.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -9412,6 +9609,33 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M7.8</td><td>Meander fill with generated tiles. A node’s meander fill may meet a <code>zigzag_spacing_mm</code> only its zigzag stroke can read, which Ink/Stitch sews as the fill’s default. The step chooses whether StitchCraft does too (<a href="#naming-rules">rule 7</a>)</td><td>same</td></tr>
 <tr><td>M7.9</td><td>Circular fill</td><td>same</td></tr>
 <tr><td>MC-6 🧵</td><td><strong>TS-11</strong> (a sampler of the new types); kit: <code>stitch testsheet</code></td><td>report filed; the new types’ defaults confirmed</td></tr>
+</tbody>
+</table>
+</div>
+<!-- The milestones' headings all name them this way. -->
+<!-- vale ai-tells.EmDashUsage = NO -->
+<h2 id="m13--image-to-embroidery"><a class="header" href="#m13--image-to-embroidery">M13 — Image to embroidery</a></h2>
+<!-- vale ai-tells.EmDashUsage = YES -->
+<p>Goal: a picture traced in VectorCraft sews well from one command, with no settings on its shapes
+(<a href="#image-to-embroidery">design</a>). M13 comes after M7.5 and before M7.6 (decided on
+2026-10-19). The steps that make every traced shape sew better with the generators StitchCraft has come
+first, and the steps that make new kinds of shape into stitches follow.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
+</thead>
+<tbody>
+<tr><td>M13.1</td><td>Automatic elements. <code>--auto</code> on <code>stitch plan</code> and <code>stitch export</code> lets StitchCraft choose the stitches of the shapes that have no settings. A stroke narrower than <code>min_satin_stroke_width_mm</code> sews as a running stitch. Up to the widest satin column it sews as a satin column as wide as the stroke, and a wider one is filled. Areas are tatami fills. The rules’ settings are registered, and their codes allocated</td><td>its requirements active; a traced line sews as wide as VectorCraft draws it</td></tr>
+<tr><td>M13.2</td><td>Neighbours. Each shape reaches under the shapes it touches that sew after it, specks merge into the shape around them, and the background is left out, each said by a diagnostic</td><td>the coverage of the edges that the test pictures’ shapes share, measured and recorded</td></tr>
+<tr><td>M13.3</td><td>Sewing order. Paint order where shapes overlap, columns and lines after the fills they border, then the fewest colour changes and the nearest element next. <code>--sort-colours</code> orders a design’s elements with settings by the same rules</td><td>the test pictures sew with fewer colour changes and jumps than in paint order</td></tr>
+<tr><td>M13.4</td><td>Centre lines from a constrained Delaunay triangulation. A shape narrower than <code>min_satin_stroke_width_mm</code> everywhere sews as a running stitch along its centre line, tripled from 0.5 mm</td><td>its requirements active</td></tr>
+<tr><td>M13.5</td><td>Columns from shapes. A shape no wider than the widest satin column sews as satin columns between its own outlines, joined where its strips meet and closed round its rings, with an underlay by width</td><td>same</td></tr>
+<tr><td>M13.6</td><td>Shapes in parts. A shape’s broad parts are filled, and its narrow parts sew as columns and lines that overlap the fill</td><td>same; TS-13 drawn</td></tr>
+<tr><td>M13.7</td><td>VectorCraft. The Auto effect previews each path’s stitches. <code>stitch palette</code> writes a profile’s threads for Image Trace’s Document Library palette. Tutorial “From a picture to a machine file”, and a Level B case in which VectorCraft traces a picture</td><td><code>shots-ui</code> and the compatibility gate green with the new case</td></tr>
+<tr><td>MC-8 🧵</td><td><strong>TS-13</strong> (test pictures digitized automatically, beside the same shapes sewn in paint order); kit: <code>stitch testsheet</code></td><td>report filed; the rules’ values confirmed or changed</td></tr>
+<tr><td>M13.8</td><td>Automatic digitizing by default for VectorCraft documents</td><td>the end-to-end cases expect it</td></tr>
+<tr><td>M13.9 🧪</td><td><code>stitch plan picture.png</code>: VectorCraft’s command line traces the picture, or StitchCraft reads and traces it itself</td><td>decision recorded in the design</td></tr>
 </tbody>
 </table>
 </div>
@@ -9435,6 +9659,32 @@ stitch, with <code>SC-W0503</code>.</li>
 library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin, downloaded at a pinned
 commit by <code>cargo xtask corpus</code> and never committed, using only fonts whose licence allows it (OFL, CC0,
 CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).</p>
+<!-- The milestones' headings all name them this way. -->
+<!-- vale ai-tells.EmDashUsage = NO -->
+<h2 id="m14--lettering"><a class="header" href="#m14--lettering">M14 — Lettering</a></h2>
+<!-- vale ai-tells.EmDashUsage = YES -->
+<p>Goal: names, monograms and words sewn in embroidery fonts, set as Ink/Stitch’s lettering sets them
+(<a href="#how-people-use-inkstitch">review</a>). M14 comes after M8, whose SVG adapter reads the files that Ink/Stitch’s
+fonts are made of. Fonts come from a repository of their own, as VectorCraft’s do. They are StitchCraft’s
+own fonts, Ink/Stitch’s fonts whose licence allows it (OFL, CC0, CC-BY, CC-BY-SA, each with its licence
+file and an <code>ASSETS.md</code> row, never NC, GPL or unclear terms), and the fonts a user has installed for
+Ink/Stitch, read in their own format.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
+</thead>
+<tbody>
+<tr><td>M14.1 🧪</td><td>The font repository, the licences it takes, and a reader for a font in Ink/Stitch’s format, from Ink/Stitch’s public documentation of it</td><td>ADR-0001 amended for fonts; one font read, its glyphs sewn</td></tr>
+<tr><td>M14.2</td><td><code>stitch lettering</code> sets text in a font. Its glyphs are placed by the font’s advances and kerning, with the spacing of letters, words and lines and the alignment the user sets. The scale stays within the heights the font sews at, and a warning names the font’s range outside them</td><td>its requirements active</td></tr>
+<tr><td>M14.3</td><td>Lettering along a path. The colours of a multicolour font sorted, a trim after each letter, word or line as chosen, and lines sewn back and forth</td><td>same</td></tr>
+<tr><td>M14.4</td><td>Lettering in VectorCraft: a text object sews in the embroidery font its StitchCraft setting names, read from the document’s text. The step chooses how the setting is given, as an effect or a name. A preview of the font in VectorCraft waits for ABI v2’s context for live effects (P6)</td><td>a Level B case</td></tr>
+<tr><td>MC-9 🧵</td><td><strong>TS-14</strong> (3 fonts at the least and the greatest heights they sew at); kit: <code>stitch testsheet</code></td><td>report filed</td></tr>
+<tr><td>M14.5</td><td>Text in pictures: the traced shapes inside an area marked <code>stitch:text</code> are replaced by lettering of the marker’s text, as tall as the traced letters (<a href="#text-in-pictures">design</a>)</td><td>its requirements active</td></tr>
+<tr><td>M14.6 🧪</td><td>Text in pictures found and read without a marker</td><td>decision recorded in the design</td></tr>
+</tbody>
+</table>
+</div>
 <h2 id="m10--more-stitch-types-ii"><a class="header" href="#m10--more-stitch-types-ii">M10 — More stitch types II</a></h2>
 <p>Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch; auto-run and auto-satin
 routing tools; per-layer ordering (underlay now, top later). VectorCraft’s tools filter with Convert Line to
@@ -9448,11 +9698,9 @@ Satin, once a column’s centre line converts within ABI v1’s budget, or ABI v
 translations (UI Fluent catalogues, docs gettext); release automation (<code>release-plz</code>, signed binaries,
 checksums); 24 h fuzz soak; <strong>MC-7 🧵</strong> full regression set on the machine.</p>
 <h2 id="after-10"><a class="header" href="#after-10">After 1.0</a></h2>
-<p>Lettering with fonts from a separate font repository (VectorCraft keeps fonts out of its tree too): our
-own, Ink/Stitch’s fonts whose licence allows it (OFL, CC0, CC-BY, CC-BY-SA, each with its licence file and
-an <code>ASSETS.md</code> row, never NC, GPL or unclear terms; ADR-0001 is amended in that step), and fonts a user has
-installed with Ink/Stitch, read in their own format; appliqué workflow, design splitting for small hoops, colour-change reordering, print worksheets, an
-in-tree VectorCraft crate if wanted.</p>
+<p>Appliqué workflow, design splitting for small hoops, print worksheets, and an in-tree VectorCraft crate if
+wanted. <code>stitch import design.pes -o design.vectorcraft</code> opens a machine file in VectorCraft, its stitches
+written as manual stitches by the same document writer as M8’s <code>stitch import-inkstitch</code>.</p>
 <h2 id="m9-vectorcraft-abi-v2-upstream"><a class="header" href="#m9-vectorcraft-abi-v2-upstream">M9 (VectorCraft ABI v2, upstream)</a></h2>
 <p>M9 comes last, after 1.0 and the work after it. 1.0 has the ABI v1 plug-in from M6, and nothing before M9
 waits on ArtCraft’s answer to the RFC. Its id stays M9, as every step id does.</p>
@@ -9463,7 +9711,7 @@ overlay previews, rich parameter dialogs and a machine profile per document.</p>
 <h1 id="machine-testing-protocol"><a class="header" href="#machine-testing-protocol">Machine testing protocol</a></h1>
 <!-- implements: crates/stitchcraft-engine/src/testsheets/**, apps/stitchcraft-cli/src/commands/testsheet.rs -->
 <p>Automated tests prove the files are what we intend. Only a machine proves they sew well. This page is
-the protocol for <strong>machine checkpoints</strong> (MC-1 … MC-7) on the reference machine: a Brother PE800, whose
+the protocol for <strong>machine checkpoints</strong> (MC-1 … MC-9) on the reference machine: a Brother PE800, whose
 5 × 7 in hoop sews at most 130 × 180 mm. Its 4 × 4 in and small hoops have profiles too, and the TS-10
 sheets test them (<a href="#adr-0013-the-reference-machine-is-a-brother-pe800-with-a-profile-for-each-of-its-hoops">ADR 0013</a>).</p>
 <h2 id="roles"><a class="header" href="#roles">Roles</a></h2>
@@ -9529,6 +9777,8 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
 <tr><td><strong>TS-11</strong> New stitch types</td><td>Samples of the milestone’s new types. So far zigzag strokes (M7.2), straight and curved, at spacings of 0.4, 1 and 2 mm and widths of 1, 2 and 4 mm, and one at 45°. E-stitches (M7.3) 3 and 5 mm wide at spacings of 2 and 3 mm, along a straight edge and round a circle, on appliqué fabric. S-stitches (M7.4) 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, straight and curved, the 10 mm ones split at 3 mm by the default and the staggered methods. Zigzag satins (M7.5) 4 and 8 mm wide at spacings of 0.4 and 1 mm, straight and curved, beside satin columns of the same widths and spacings, and one 8 mm wide at 1 mm over a contour underlay</td><td>Per type, as listed on its expected-result sheet. A zigzag sews narrower than drawn, and the report says by how much, whether its sides are even round curves and which is the narrowest width that sews cleanly. The E-stitch’s spine should cover the appliqué’s raw edge, and its spikes hold it without puckering. The S-stitch should cover its band at 0.4 mm with its steps along the edges even, and the report says whether the default method’s splits leave a furrow along the band that the staggered ones do not. The zigzag satin should cover its band at 0.4 mm as its satin column does, and the report says whether it sews narrower than the satin column beside it. Its contour underlay should not show past the zigzag at either end</td><td>MC-6</td></tr>
 <tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round?</td><td>MC-5, MC-7</td></tr>
+<tr><td><strong>TS-13</strong> Pictures digitized automatically (M13)</td><td>Test pictures drawn in code and digitized with <code>--auto</code>, each beside the same shapes sewn in paint order. A badge is a broad fill inside a ring. Block letters are 4, 6, 10 and 15 mm tall. A cartoon face has black outlines 1, 2 and 4 mm wide. Lines are 0.3, 0.6 and 0.9 mm wide, and specks lie round a disc</td><td>Fabric showing between colours, on both halves. The smallest letters that read. Whether each outline’s columns cover the edges of the fills beside them, and whether the triple runs show as wide as their lines. Colour changes, trims and time against the half in paint order</td><td>MC-8</td></tr>
+<tr><td><strong>TS-14</strong> Lettering (M14)</td><td>3 embroidery fonts, a block, a script and a small one, each at the least and the greatest heights it sews at, and a name along an arc</td><td>Whether every glyph reads at its least height, satin coverage at its greatest, and whether the locks of small glyphs hold after the trims</td><td>MC-9</td></tr>
 </tbody>
 </table>
 </div>
@@ -9544,7 +9794,9 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td>MC-3</td><td>M4</td><td>TS-05, TS-06</td><td>Satin spacing, width limits, underlay defaults, pull compensation</td></tr>
 <tr><td>MC-4</td><td>M5</td><td>TS-07, TS-08, TS-09</td><td>Fill spacing, pull compensation, gap-filling rows, underlay and travel defaults</td></tr>
 <tr><td>MC-5</td><td>M6</td><td>TS-12, TS-10</td><td>Is the VectorCraft workflow complete and correct?</td></tr>
+<tr><td>MC-8</td><td>M13.7</td><td>TS-13</td><td>Do pictures digitized automatically sew better than the same shapes in paint order? Are the widest satin column, the overlap and the underlays by width right?</td></tr>
 <tr><td>MC-6</td><td>M7</td><td>TS-11</td><td>New stitch types acceptable?</td></tr>
+<tr><td>MC-9</td><td>M14</td><td>TS-14</td><td>Do the fonts sew legibly across the heights they claim?</td></tr>
 <tr><td>MC-7</td><td>M12</td><td>all</td><td>Release regression</td></tr>
 </tbody>
 </table>
@@ -9576,6 +9828,73 @@ new value; the docs’ parameter pages show the evidence link.</li>
 <li><strong>Bug:</strong> a failing conformance case reproducing it comes first, then the fix.</li>
 <li><strong>Pass:</strong> the checkpoint row in <code>ROADMAP.md</code> is ticked with the report link.</li>
 </ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="how-people-use-inkstitch"><a class="header" href="#how-people-use-inkstitch">How people use Ink/Stitch</a></h1>
+<p>This review lists what Ink/Stitch’s users make and ask for, with the roadmap step that covers each in
+StitchCraft. The most frequent come first, as far as the sources show. It was made on 2026-10-19 to look
+for major uses the roadmap lacked, after automatic digitizing of pictures turned out to be missing from
+it. It changed the roadmap in 4 places (<a href="#changes-to-the-roadmap">changes</a>).</p>
+<h2 id="sources-1"><a class="header" href="#sources-1">Sources</a></h2>
+<ul>
+<li>Ink/Stitch’s documentation and tutorials, at <a href="https://inkstitch.org/docs/workflow/">inkstitch.org</a>:
+the workflow, the Params dialog, the tools, lettering, thread colours, troubleshooting, and import and
+export.</li>
+<li>Its release notes from v3.0.0 (2023) to <a href="https://inkstitch.org/en/2026-07-31-v3.3.0">v3.3.0</a> (July 2026),
+and its lettering web page, <a href="https://create.inkstitch.org/">Ink/Stitch Create</a>.</li>
+<li>Questions and answers in public, on Ink/Stitch’s GitHub issues and discussions, the Inkscape forum’s
+embroidery section and Reddit’s r/Machine_Embroidery, and the titles of tutorial videos and how-to
+articles.</li>
+</ul>
+<p>No survey of Ink/Stitch’s users has published its results. The <a href="https://inkstitch.org/en/2024-12-29-Survey">survey of December
+2024</a> serves a doctoral thesis, and its answers are not
+public. So the order below is how often a use came up in these sources. It measures what people write
+about, which can differ from what they do most.</p>
+<h2 id="what-people-make"><a class="header" href="#what-people-make">What people make</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Use</th><th>What the sources show</th><th>StitchCraft</th></tr>
+</thead>
+<tbody>
+<tr><td>Shapes drawn by hand, their stitches set one by one</td><td>Ink/Stitch’s <a href="https://inkstitch.org/docs/basic-usage/">basic use</a> and <a href="https://inkstitch.org/docs/workflow/">workflow</a> are to draw, set the stitches, and save a machine file. The <a href="https://inkstitch.org/docs/params/">Params</a> dialog sets each element’s stitches, with a preview</td><td>M6’s effects in VectorCraft. Their dialogs show the parameters’ names alone until ABI v2’s rich parameters (M9)</td></tr>
+<tr><td>Pictures made into embroidery</td><td>The workflow’s way from a picture is Trace Bitmap, Simplify and Cleanup Document, with the stitches then set by hand. Tutorial videos trace <a href="https://www.youtube.com/watch?v=46kfuQWOPW0">a cartoon</a> and <a href="https://www.youtube.com/watch?v=fx0Fn2tqtQ0">text and logos</a>. An article calls the result finicky (<a href="https://www.machineembroiderygeek.com/?p=21980">Machine Embroidery Geek</a>). A traced logo showed yellow behind its black lettering and sewed too many stitches, and Ink/Stitch crashed when its letters were made satin (<a href="https://inkscape.org/forums/embroidery/logo-help/">Inkscape forum</a>). A logo 3 inches wide came out muddled, with its letters filled where satin was needed. Its owner then paid a digitizer 5 dollars (<a href="https://www.reddit.com/r/Machine_Embroidery/comments/1iyrjkx/need_helpadvice/">Reddit</a>)</td><td>M13 (<a href="#image-to-embroidery">design</a>)</td></tr>
+<tr><td>Lettering in embroidery fonts</td><td><a href="https://inkstitch.org/docs/lettering/">Lettering</a> has a menu of its own, with lettering along a path and batch lettering for lists of names. The <a href="https://inkstitch.org/fonts/font-library/">font library</a> lists 93 fonts, each with the heights it sews at, and Ink/Stitch Create sets lettering on the web. The advice for small text is to use Ink/Stitch’s fonts (<a href="https://www.reddit.com/r/Machine_Embroidery/comments/1iyrjkx/need_helpadvice/">Reddit</a>). Text typed in an installed font fails as a fill whose border crosses itself (<a href="https://inkscape.org/forums/questions/path855-error-fill-shape-is-not-valid-this-can-happen-if-the-border-crosses-over-itself/">Inkscape forum</a>)</td><td>M14, before 1.0. Large text in any font, made into paths with Type › Create Outlines in VectorCraft, sews by M13’s rules</td></tr>
+<tr><td>Patches and appliqué</td><td>Searches for tutorials find many patches, from <a href="https://www.youtube.com/watch?v=-UDSsuB44Ao">a beginners’ guide</a> to patch shapes with a merrow-like edge. Ink/Stitch has an <a href="https://inkstitch.org/tutorials/applique/">appliqué tutorial</a> and the E-stitch for appliqué</td><td>Fills, satin borders, the E-stitch and stops sew patches today. An appliqué tool with placement and tack-down lines stays after 1.0</td></tr>
+<tr><td>Fewer colour changes and a good order</td><td>The FAQ’s “Too many color changes” (<a href="https://inkstitch.org/docs/faq/">help</a>), and issues such as <a href="https://github.com/inkstitch/inkstitch/issues/1337">#1337</a>, “Despite two colors I have 6 color changes”, and <a href="https://github.com/inkstitch/inkstitch/issues/378">#378</a>, “reorder by color”. The <a href="https://inkstitch.org/tutorials/routing/">routing tutorial</a> leaves the order to the user. Its tools restack elements and route satin columns and running stitches, and Jump to Stroke turns a jump into a running stitch</td><td>M13.3 orders automatic elements, and with <code>--sort-colours</code> any design. M10 has the routing tools</td></tr>
+<tr><td>The colours of real threads</td><td>Thread palettes installed into Inkscape, and <a href="https://inkstitch.org/docs/thread-color/">Apply Palette</a> for the nearest thread. A <a href="https://www.sandiego.gov/sites/default/files/2025-09/embroidery_inkstitch-guide.pdf">guide from the City of San Diego</a> picks Ink/Stitch’s Brother palette before anything is drawn</td><td>The nearest colour of the PEC palette (M1.6), <code>stitch palette</code> for tracing (M13.7), thread catalogues (M11)</td></tr>
+<tr><td>Bought designs opened, resized or moved to a machine</td><td>Requests to open a PES file to enlarge it (<a href="https://github.com/inkstitch/inkstitch/issues/1716">#1716</a>) or to shrink it (<a href="https://github.com/inkstitch/inkstitch/issues/2022">#2022</a>). Ink/Stitch opens machine files as manual stitches, and its maintainers warn that scaling changes the density</td><td><code>stitch inspect</code>, <code>stitch preview</code> and <code>stitch convert</code> (M2). Opening a machine file in VectorCraft is added after 1.0</td></tr>
+<tr><td>Designs larger than the hoop</td><td>Requests to split a design for a small hoop (<a href="https://github.com/inkstitch/inkstitch/issues/182">#182</a>, <a href="https://github.com/inkstitch/inkstitch/discussions/1341">discussion 1341</a>)</td><td>The hoop check (M1.3). Splitting stays after 1.0</td></tr>
+<tr><td>Checking a design before sewing</td><td>The <a href="https://inkstitch.org/docs/visualize/">simulator</a>, realistic previews and a density map</td><td>VectorCraft’s previews (M6.3) and <code>stitch preview</code></td></tr>
+<tr><td>Worksheets for the machine’s operator</td><td><a href="https://inkstitch.org/docs/print-pdf/">Print PDF</a>, with the colour blocks, thread names and stitch counts</td><td>The report and the picture that <code>stitch plan</code> writes. Worksheets stay after 1.0</td></tr>
+<tr><td>Other stitch types</td><td>Ripple, contour, meander, circular, guided and gradient fills, tartan, cross stitch from pictures (v3.3.0), and tutorials on redwork, cutwork and free-standing lace</td><td>M7.6 to M7.9, and M10</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="what-people-struggle-with"><a class="header" href="#what-people-struggle-with">What people struggle with</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Trouble</th><th>Sources</th><th>StitchCraft</th></tr>
+</thead>
+<tbody>
+<tr><td>Installing and starting Ink/Stitch, above all on macOS</td><td>Issues such as <a href="https://github.com/inkstitch/inkstitch/issues/4553">#4553</a>, “v. 3.3.0 does not run on iMac/Sequoia”, and <a href="https://github.com/inkstitch/inkstitch/issues/600">#600</a>, “Ink/Stitch is greyed out in Inkscape”. A Params dialog and previews that never open (<a href="https://inkscape.org/forums/embroidery/params-and-realistic-preview-wont-work-at-all/">Inkscape forum</a>)</td><td>The plug-ins are WebAssembly modules that VectorCraft loads, with no other program to install. Signed binaries come with 1.0 (M12)</td></tr>
+<tr><td>Settings that are hard to choose</td><td>A reader found the Params settings hard to judge in advance (<a href="https://www.machineembroiderygeek.com/?p=21646">Machine Embroidery Geek</a>). Another found Ink/Stitch “not beginner friendly” (<a href="https://www.reddit.com/r/Machine_Embroidery/comments/1kmf3tx/beginner_software/">Reddit</a>)</td><td>M13 chooses the stitches, and VectorCraft previews them</td></tr>
+<tr><td>Shapes that Ink/Stitch refuses</td><td><code>Fill: Shape is not valid</code> for text and traced shapes whose borders cross (<a href="https://edutechwiki.unige.ch/en/InkStitch_-_tips_and_trouble_shooting">EduTechWiki</a>)</td><td>A fill sews the region a viewer paints, crossings included (M5.1)</td></tr>
+<tr><td>Long waits</td><td>An hour of “Rendering stitch-plan” on a complex drawing (<a href="https://github.com/inkstitch/inkstitch/discussions/1834">discussion 1834</a>)</td><td>Budgets bound every loop over input, and <code>cargo xtask perf</code> guards the time of the hoop’s whole field (NFR-PERF-1)</td></tr>
+<tr><td>Small text that does not come out crisp</td><td>Lettering on a fill, in a logo 2 inches wide, on a PE800 (<a href="https://inkscape.org/forums/embroidery/techniques-for-making-text-on-top-of-a-fill-more-crisp/">Inkscape forum</a>)</td><td>M14’s fonts at the heights they sew at, and M13’s rules for fills under columns</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="changes-to-the-roadmap"><a class="header" href="#changes-to-the-roadmap">Changes to the roadmap</a></h2>
+<ul>
+<li><strong>M13, image to embroidery.</strong> It is new, and comes after M7.5 and before M7.6.</li>
+<li><strong>M14, lettering.</strong> It moves from after 1.0 to after M8, whose SVG adapter reads the files of
+Ink/Stitch’s fonts. Its last steps set the text in a picture again as lettering.</li>
+<li><strong>Colour sorting for any design.</strong> <code>--sort-colours</code> gives a design with settings the order of M13.3. It
+was after 1.0.</li>
+<li><strong>Machine files opened in VectorCraft.</strong> This is planned after 1.0. <code>stitch import design.pes -o design.vectorcraft</code> writes their stitches as manual stitches, with the same document writer as M8’s
+<code>stitch import-inkstitch</code>.</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="contributing"><a class="header" href="#contributing">Contributing</a></h1>
 <p>Welcome. StitchCraft is built to be easy to change safely: the rules are checked by machines, common

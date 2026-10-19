@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-dd88a355.js";
+            window.path_to_searchindex_js = "../searchindex-7e8d43ee.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-db4a94de.js"></script>
+        <script src="../toc-58ed789b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -183,7 +183,7 @@
                         <h1 id="machine-testing-protocol"><a class="header" href="#machine-testing-protocol">Machine testing protocol</a></h1>
 <!-- implements: crates/stitchcraft-engine/src/testsheets/**, apps/stitchcraft-cli/src/commands/testsheet.rs -->
 <p>Automated tests prove the files are what we intend. Only a machine proves they sew well. This page is
-the protocol for <strong>machine checkpoints</strong> (MC-1 … MC-7) on the reference machine: a Brother PE800, whose
+the protocol for <strong>machine checkpoints</strong> (MC-1 … MC-9) on the reference machine: a Brother PE800, whose
 5 × 7 in hoop sews at most 130 × 180 mm. Its 4 × 4 in and small hoops have profiles too, and the TS-10
 sheets test them (<a href="../design/adr/0013-brother-pe800-reference-machine.html">ADR 0013</a>).</p>
 <h2 id="roles"><a class="header" href="#roles">Roles</a></h2>
@@ -249,6 +249,8 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
 <tr><td><strong>TS-11</strong> New stitch types</td><td>Samples of the milestone’s new types. So far zigzag strokes (M7.2), straight and curved, at spacings of 0.4, 1 and 2 mm and widths of 1, 2 and 4 mm, and one at 45°. E-stitches (M7.3) 3 and 5 mm wide at spacings of 2 and 3 mm, along a straight edge and round a circle, on appliqué fabric. S-stitches (M7.4) 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, straight and curved, the 10 mm ones split at 3 mm by the default and the staggered methods. Zigzag satins (M7.5) 4 and 8 mm wide at spacings of 0.4 and 1 mm, straight and curved, beside satin columns of the same widths and spacings, and one 8 mm wide at 1 mm over a contour underlay</td><td>Per type, as listed on its expected-result sheet. A zigzag sews narrower than drawn, and the report says by how much, whether its sides are even round curves and which is the narrowest width that sews cleanly. The E-stitch’s spine should cover the appliqué’s raw edge, and its spikes hold it without puckering. The S-stitch should cover its band at 0.4 mm with its steps along the edges even, and the report says whether the default method’s splits leave a furrow along the band that the staggered ones do not. The zigzag satin should cover its band at 0.4 mm as its satin column does, and the report says whether it sews narrower than the satin column beside it. Its contour underlay should not show past the zigzag at either end</td><td>MC-6</td></tr>
 <tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round?</td><td>MC-5, MC-7</td></tr>
+<tr><td><strong>TS-13</strong> Pictures digitized automatically (M13)</td><td>Test pictures drawn in code and digitized with <code>--auto</code>, each beside the same shapes sewn in paint order. A badge is a broad fill inside a ring. Block letters are 4, 6, 10 and 15 mm tall. A cartoon face has black outlines 1, 2 and 4 mm wide. Lines are 0.3, 0.6 and 0.9 mm wide, and specks lie round a disc</td><td>Fabric showing between colours, on both halves. The smallest letters that read. Whether each outline’s columns cover the edges of the fills beside them, and whether the triple runs show as wide as their lines. Colour changes, trims and time against the half in paint order</td><td>MC-8</td></tr>
+<tr><td><strong>TS-14</strong> Lettering (M14)</td><td>3 embroidery fonts, a block, a script and a small one, each at the least and the greatest heights it sews at, and a name along an arc</td><td>Whether every glyph reads at its least height, satin coverage at its greatest, and whether the locks of small glyphs hold after the trims</td><td>MC-9</td></tr>
 </tbody>
 </table>
 </div>
@@ -264,7 +266,9 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td>MC-3</td><td>M4</td><td>TS-05, TS-06</td><td>Satin spacing, width limits, underlay defaults, pull compensation</td></tr>
 <tr><td>MC-4</td><td>M5</td><td>TS-07, TS-08, TS-09</td><td>Fill spacing, pull compensation, gap-filling rows, underlay and travel defaults</td></tr>
 <tr><td>MC-5</td><td>M6</td><td>TS-12, TS-10</td><td>Is the VectorCraft workflow complete and correct?</td></tr>
+<tr><td>MC-8</td><td>M13.7</td><td>TS-13</td><td>Do pictures digitized automatically sew better than the same shapes in paint order? Are the widest satin column, the overlap and the underlays by width right?</td></tr>
 <tr><td>MC-6</td><td>M7</td><td>TS-11</td><td>New stitch types acceptable?</td></tr>
+<tr><td>MC-9</td><td>M14</td><td>TS-14</td><td>Do the fonts sew legibly across the heights they claim?</td></tr>
 <tr><td>MC-7</td><td>M12</td><td>all</td><td>Release regression</td></tr>
 </tbody>
 </table>
@@ -305,7 +309,7 @@ new value; the docs’ parameter pages show the evidence link.</li>
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../contributing/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../plan/inkstitch-usage.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -319,7 +323,7 @@ new value; the docs’ parameter pages show the evidence link.</li>
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../contributing/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../plan/inkstitch-usage.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
