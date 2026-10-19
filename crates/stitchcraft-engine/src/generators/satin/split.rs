@@ -3,15 +3,17 @@
 //!
 //! A satin column's needle goes from the first rail to the second and back, pair after pair: each stitch
 //! across the column, from a pair's first point to its second, and each stitch back, from its second point
-//! to the next pair's first. An E-stitch's goes across and back at each pair, a spike, and along the first
-//! rail from one spike to the next, its spine. An S-stitch's goes across once at each pair, every other one
-//! from the second rail, and along a rail from one pair to the next. Where the element sets a longest stitch
+//! to the next pair's first. A zigzag satin's goes the same way, its pairs each from a point on the first
+//! rail to the next on the second (`pairs::zigzag`). An E-stitch's goes across and back at each pair, a
+//! spike, and along the first rail from one spike to the next, its spine. An S-stitch's goes across once at
+//! each pair, every other one from the second rail, and along a rail from one pair to the next. Where the element sets a longest stitch
 //! (`max_stitch_length_mm`), a stitch longer than it is split as `split_method` says, as Ink/Stitch splits
 //! it. The ends of a stitch are its pair's compensated points, and it is sewn between their insets
 //! (step 3).
 //!
-//! - **Default** splits a stitch into the fewest equal parts no longer than the longest stitch, and the
-//!   stitch back after it into as many as the stitch across before it. `random_split_jitter_percent` moves
+//! - **Default** splits a stitch into the fewest equal parts no longer than the longest stitch, and a
+//!   satin column's stitch back after it into as many as the stitch across before it. A zigzag satin's
+//!   stitch back splits into its own fewest parts, as Ink/Stitch splits it. `random_split_jitter_percent` moves
 //!   each split up to that share of a part either way, at random. With `random_split_phase`, the splits
 //!   start a random share of the longest stitch from the stitch's inset start instead, and follow at the
 //!   longest stitch, longer or shorter by up to the jitter. Stitches no longer than
@@ -95,8 +97,24 @@ impl<'r> Splitter<'r> {
 
     /// The needle points of the column whose pairs are `pairs` and their insets `short`: each pair's inset
     /// points, with the splits of the stitch across from the first to the second, and of the stitch back to
-    /// the next pair. A unit of `meter`'s work per split tried, and a stitch per needle point.
+    /// the next pair, which the default method splits into as many parts as the stitch across before it. A
+    /// unit of `meter`'s work per split tried, and a stitch per needle point.
     pub(crate) fn sew(&mut self, pairs: &[Pair], short: &[Pair], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+        self.across_and_back(pairs, short, true, meter)
+    }
+
+    /// The needle points of the zigzag satin whose pairs are `pairs` and their insets `short`, sewn as a
+    /// satin column's are, but for the stitch back to each pair, which the default method splits into its
+    /// own fewest parts, as Ink/Stitch splits it. A unit of `meter`'s work per split tried, and a stitch per
+    /// needle point.
+    pub(crate) fn sew_zigzag(&mut self, pairs: &[Pair], short: &[Pair], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+        self.across_and_back(pairs, short, false, meter)
+    }
+
+    /// The needle points of [`Splitter::sew`], each stitch back split into as many parts as the stitch
+    /// across before it when `carried`, and into its own fewest otherwise. The stitch back to pair `i` is the
+    /// column's stitch `2i`, and the one across it `2i + 1`.
+    fn across_and_back(&mut self, pairs: &[Pair], short: &[Pair], carried: bool, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
         let mut run = Vec::with_capacity(pairs.len() * 2);
         let mut back: Option<(Point, Point)> = None;
         let mut parts: Option<u32> = None;
@@ -109,7 +127,7 @@ impl<'r> Splitter<'r> {
             let (splits, across) = self.split([*a, *b], [*inset_a, *inset_b], None, row + 1, false, meter)?;
             run.extend(splits);
             run.push(*inset_b);
-            (back, parts) = (Some((*b, *inset_b)), across);
+            (back, parts) = (Some((*b, *inset_b)), across.filter(|_| carried));
         }
         Ok(run)
     }

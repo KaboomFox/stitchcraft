@@ -235,6 +235,38 @@ fn req_sat_014_a_stitch_along_the_cut_is_cut_at_its_point_nearest_the_cut_s_firs
 }
 
 #[test]
+fn req_sat_014_a_cut_within_the_shortest_stitch_of_a_needle_point_is_made_at_that_point() {
+    // A column 10 mm long and 4 mm wide, turned through every 5°, before a line that starts 4.8 mm along it
+    // and 3 mm past its second rail. Its end cuts each part where it comes nearest the cut, and where that is
+    // within the shortest stitch of a needle point of the part, at that point: finalize finds no needle
+    // point to leave out, and says nothing. Every satin method, at the spacings and pull compensations where
+    // cuts fell within a rounding error or a fraction of a millimetre of a needle point, and with the
+    // underlays whose cuts fell near their own needle points.
+    let underlays = [("center_walk_underlay", "true"), ("contour_underlay", "true")];
+    let settings: [&[(&str, &str)]; 5] = [
+        &[],
+        &[("zigzag_spacing_mm", "2")],
+        &[("zigzag_spacing_mm", "2"), ("pull_compensation_mm", "-0.5")],
+        &[("pull_compensation_mm", "0.5")],
+        &underlays,
+    ];
+    for method in ["satin_column", "e_stitch", "s_stitch", "zigzag"] {
+        for set in settings {
+            for step in 0..72 {
+                let (sin, cos) = math::sin_cos(math::to_radians(f64::from(step) * 5.0));
+                let at = |along: f64, across: f64| (along * cos - across * sin, along * sin + across * cos);
+                let rails = polylines(&[&[at(0.0, 0.0), at(10.0, 0.0)], &[at(0.0, 4.0), at(10.0, 4.0)]]);
+                let mut params = vec![("satin_column", "true"), ("satin_method", method)];
+                params.extend_from_slice(set);
+                let line = polylines(&[&[at(4.8, 7.0), at(9.8, 7.0)]]);
+                let outcome = planned(vec![along("column", rails, &RED, &params), along("line", line, &RED, &[])]);
+                assert_eq!(messages(&outcome), Vec::<String>::new(), "{method} {set:?} at {}°", step * 5);
+            }
+        }
+    }
+}
+
+#[test]
 fn req_sat_014_an_end_as_near_2_cuts_is_cut_at_the_first() {
     // Pairs every 0.5 mm, and the end at x = 5.25, as near the pair at 5 as the pair at 5.5: the column is
     // cut at 5, and the needle follows the line from there.
@@ -251,7 +283,9 @@ fn first_at(sewn: &[Point], landmarks: &[(f64, f64)]) -> Vec<usize> {
 
 #[test]
 fn req_sat_014_every_underlay_is_cut_in_2_at_the_end() {
-    // All 3 underlays, the end above the middle of the second rail, (5.1, 6), and the cut at x = 5.2.
+    // All 3 underlays, the end above the middle of the second rail, (5.1, 6), and the cut at x = 5.2. The
+    // centre walk and the contour have needle points at x = 5, within the shortest stitch of the cut, and
+    // are cut there: no half ends in a stitch 0.2 mm long.
     let all = [("center_walk_underlay", "true"), ("contour_underlay", "true"), ("zigzag_underlay", "true")];
     let (sewn, warnings) = column(&all, &before((5.1, 9.0)));
     assert!(warnings.is_empty(), "{warnings:?}");
@@ -264,9 +298,19 @@ fn req_sat_014_every_underlay_is_cut_in_2_at_the_end() {
     let at = first_at(&sewn, &landmarks);
     assert!(at.windows(2).all(|w| w[0] < w[1]), "{at:?}");
     assert!(sewn[..at[5]].iter().all(|point| point.x() < 5.2 + 1e-9), "the first pass stays before the cut");
-    // The second pass stays past the cut, up to the top stitches' last, (5.2, 0), and the end is stitched last.
+    let walks = [[(0.0, 3.0), (2.5, 3.0), (5.0, 3.0), (2.5, 3.0), (0.0, 3.0)], [(10.0, 3.0), (7.5, 3.0), (5.0, 3.0), (7.5, 3.0), (10.0, 3.0)]];
+    for walk in walks.map(|walk| walk.map(|(x, y)| p(x, y))) {
+        assert!(sewn.windows(walk.len()).any(|window| same(window, &walk)), "the centre walk turns at x = 5: {sewn:?}");
+    }
+    for side in [0.4, 5.6] {
+        let count = |x: f64| sewn.iter().filter(|point| point.distance(p(x, side)) < 1e-9).count();
+        assert_eq!((count(5.0), count(5.2)), (2, 0), "the contour's side at y = {side} is cut at x = 5 in both passes");
+    }
+    // The second pass stays past the cut but for those points, up to the top stitches' last, (5.2, 0), and
+    // the end is stitched last.
+    let past = |point: &Point| point.x() > 5.2 - 1e-9 || (point.x() - 5.0).abs() < 1e-9;
     let (second_pass, to_end) = sewn[at[6]..].split_at(sewn.len() - at[6] - 3);
-    assert!(second_pass.iter().all(|point| point.x() > 5.2 - 1e-9), "{second_pass:?}");
+    assert!(second_pass.iter().all(past), "{second_pass:?}");
     let mut want = travel(p(5.2, 0.0), p(5.1, 6.0), 3);
     want.push(p(5.1, 6.0));
     assert!(same(to_end, &want), "{to_end:?}");
@@ -275,17 +319,18 @@ fn req_sat_014_every_underlay_is_cut_in_2_at_the_end() {
     let (sewn, _) = column(&[("contour_underlay", "true")], &before((5.1, 9.0)));
     assert!(sewn.iter().any(|point| point.distance(p(10.0, 3.0)) < 1e-9), "{sewn:?}");
     // An odd centre walk turns the passes round: the first works from the cut to the column's end and back,
-    // and the second from the cut to the start and back. It starts at the cut, on the line.
+    // and the second from the cut to the start and back. It starts where the centre walk is cut, on the line.
     let odd = [all.as_slice(), &[("center_walk_underlay_repeats", "3")]].concat();
     let (sewn, _) = column(&odd, &before((5.1, 9.0)));
-    assert!(sewn[0].distance(p(5.2, 3.0)) < 1e-9, "{:?}", &sewn[..3]);
+    assert!(sewn[0].distance(p(5.0, 3.0)) < 1e-9, "{:?}", &sewn[..3]);
     let landmarks =
-        [(10.0, 3.0), (9.6, 0.4), (9.6, 5.6), (10.0, 0.2), (10.0, 6.0), (5.0, 3.0), (0.0, 3.0), (0.4, 5.6), (0.4, 0.4), (0.0, 0.2), (0.0, 0.0)];
+        [(10.0, 3.0), (9.6, 0.4), (9.6, 5.6), (10.0, 0.2), (10.0, 6.0), (2.5, 3.0), (0.0, 3.0), (0.4, 5.6), (0.4, 0.4), (0.0, 0.2), (0.0, 0.0)];
     let at = first_at(&sewn, &landmarks);
     assert!(at.windows(2).all(|w| w[0] < w[1]), "{at:?}");
-    assert!(sewn[..at[5]].iter().all(|point| point.x() > 5.2 - 1e-9), "the first pass stays past the cut");
-    // Between the passes the needle goes from the top stitches at the cut to the line there, and no farther.
-    let between = [p(5.2, 6.0), p(5.2, 4.5), p(5.2, 3.0), p(5.0, 3.0)];
+    assert!(sewn[..at[5]].iter().all(past), "the first pass stays past the cut");
+    // Between the passes the needle goes from the top stitches at the cut to the line, where the centre walk
+    // is cut, and no farther.
+    let between = [p(5.2, 6.0), p(5.2, 4.5), p(5.0, 3.0), p(2.5, 3.0)];
     assert!(sewn.windows(between.len()).any(|window| same(window, &between)), "{sewn:?}");
     // The top stitches' last, (5.2, 6), is within the shortest stitch of the end: the end takes its place.
     assert!(same(&sewn[sewn.len() - 2..], &[p(5.2, 0.0), p(5.1, 6.0)]), "{:?}", &sewn[sewn.len() - 4..]);

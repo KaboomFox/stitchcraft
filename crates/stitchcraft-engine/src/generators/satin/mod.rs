@@ -10,7 +10,9 @@
 //! each pair widened by pull compensation (`compensation`). Needle points that crowd together on a rail
 //! are inset (`short`), and the pairs are sewn rail to rail, with long stitches split (`split`). An
 //! E-stitch sews the same pairs as spikes from its first rail, joined by a spine along it, and an S-stitch
-//! sews each once across, every other one from the second rail, joined by steps along the rails.
+//! sews each once across, every other one from the second rail, joined by steps along the rails. A zigzag
+//! satin places its pairs at half the spacing and sews a point of each, the rails taking turns: a zigzag
+//! between the rails, every stitch slanted.
 //!
 //! These are the top stitches as Ink/Stitch places them. Every method then says where its stitches lean far
 //! along the column, and when one is longer than 12 mm (`lie`), which Ink/Stitch does not. Before them come the underlays the element turns
@@ -43,6 +45,7 @@ use crate::generators::satin::compensation::Processor;
 use crate::generators::satin::ends::Guides;
 use crate::generators::satin::pairs::Pair;
 use crate::generators::satin::split::Splitter;
+use crate::generators::satin::underlay::Peaks;
 use crate::generators::{Neighbours, Stitched, method, mm, settled};
 use crate::normalize::centre_line::{Made, rails_and_rungs};
 use crate::normalize::satin::{Pairing, Recognition, Satin, Shape, recognize};
@@ -89,14 +92,16 @@ params! {
         /// other and back. An E-stitch sews a spike across the column at each pair and a spine along its
         /// first rail between them, an edge for appliqué. An S-stitch sews one stitch across at each pair,
         /// every other one the other way, with a step along a rail between them: split by a longest
-        /// stitch, they cover the column in rows, as a fill does. The zigzag satin arrives in a later
-        /// version, and until then an element set to it is skipped (`SC-W0011`).
+        /// stitch, they cover the column in rows, as a fill does. A zigzag satin sews a zigzag between the
+        /// rails, every stitch slanting half the spacing along.
         satin_method: Choice = "satin_column", label "Method", choices SATIN_METHODS;
 
         /// The distance from one pair of needle points across the column to the next. A satin column
         /// goes across and back in one spacing, an E-stitch sews a spike every spacing, and an S-stitch a
-        /// stitch across, each the other way from the one before. It is measured across the column at its
-        /// outside edge, and on a curve the stitches fan out from the inside edge.
+        /// stitch across, each the other way from the one before. In a zigzag satin the needle goes across
+        /// and back in one spacing too, its points on the 2 rails half a spacing apart. It is measured
+        /// across the column at its outside edge. On a curve the stitches lie closer together at the inside
+        /// edge.
         zigzag_spacing_mm: Length = "0.4", label "Zigzag spacing", range (0.01, 10.0);
     }
 
@@ -371,14 +376,17 @@ fn sewn(
         );
         return Ok(Stitched { runs: Vec::new(), warnings });
     }
-    let (placed, mut top) = top_stitches(&sections, params, pull, lengths, rng, meter)?;
+    // The generator as the top stitches find it: a zigzag satin's outline draws from a copy (`outline`).
+    let drawn = rng.clone();
+    let Top { placed, stitches: mut top, peaks } = top_stitches(&sections, params, pull, lengths, rng, meter)?;
+    let across = !top.is_empty();
     let odd = underlay::ends_at_end(params);
     if odd {
         top.reverse();
     }
     let cuts = pairs::pairs(&sections, params.zigzag_spacing_mm.get(), &mut Processor::inset([0.0; 2], [0.0; 2]), meter)?;
     warnings.extend(lie::leaning(&cuts, lengths.min_stitch.get()));
-    let layers = underlay::underlays(&sections, params, lengths.min_stitch.get(), &mut warnings, meter)?;
+    let layers = underlay::underlays(&sections, params, lengths.min_stitch.get(), peaks, &mut warnings, meter)?;
     // The needle's travel between the pieces and the line it follows to the start and the end keep to the
     // shortest stitch alike: the length is raised once, with one warning.
     let travel = raised("running_stitch_length_mm", lengths.travel, lengths.min_stitch.get(), &mut warnings);
@@ -388,7 +396,8 @@ fn sewn(
         ends::sewn(layers, top, meter)?
     } else {
         let guides = Guides::new(&sections, params, lengths, travel, cuts, meter)?;
-        let edges: [Vec<Point>; 2] = [placed.iter().map(|[a, _]| *a).collect(), placed.iter().map(|[_, b]| *b).collect()];
+        let outline = outline(&sections, params, pull, placed, drawn, meter)?;
+        let edges: [Vec<Point>; 2] = [outline.iter().map(|[a, _]| *a).collect(), outline.iter().map(|[_, b]| *b).collect()];
         let outline = [edges[0].as_slice(), edges[1].as_slice()];
         let start = match needle {
             Some(needle) => guides.start(needle, outline, lengths.jump.get(), meter)?,
@@ -405,30 +414,63 @@ fn sewn(
     };
     warnings.extend(lie::longest(pieces.iter().filter_map(ends::Piece::top)));
     let run = ends::join(pieces, travel, lengths.min_stitch.get(), meter)?;
-    if let Some(speck) = too_small(&run, lengths.min_stitch.get()) {
-        warnings.push(speck);
+    if let Some(left_out) = too_small(across, &run, lengths.min_stitch.get()) {
+        warnings.push(left_out);
         return Ok(Stitched { runs: Vec::new(), warnings });
     }
     Ok(Stitched { runs: vec![run], warnings })
 }
 
-/// `SC-W0215` for a column whose needle points `run` all lie within the shortest stitch `min` of its first:
-/// it has no stitch the machine sews well, and is left out. The run is as long as the stitch budget allowed
-/// its making, so this look at it charges nothing more.
-fn too_small(run: &[Point], min: f64) -> Option<Diagnostic> {
-    let first = run.first()?;
-    run.iter().all(|point| !at_least(first.distance(*point), min)).then(|| {
-        let message =
-            format!("Every needle point of this satin column lies within the shortest stitch ({} mm) of its first, so it is not stitched.", mm(min));
-        Diagnostic::new(Code::SatinTooSmall, message).with_fix(Fix::Hint("Draw the column larger, or delete it if it is a stray.".to_string()))
-    })
+/// `SC-W0215` for a column left out: one with no stitch `across`, which only a zigzag satin of a single
+/// pair is, whatever underlays it has to sew under none; or one whose needle points, those of its whole
+/// `run`, all lie within the shortest stitch `min` of its first, which has no stitch the machine sews well.
+/// The run is as long as the stitch budget allowed its making, so this look at it charges nothing more.
+fn too_small(across: bool, run: &[Point], min: f64) -> Option<Diagnostic> {
+    let message = if across {
+        let first = run.first()?;
+        if run.iter().any(|point| at_least(first.distance(*point), min)) {
+            return None;
+        }
+        format!("Every needle point of this satin column lies within the shortest stitch ({} mm) of its first, so it is not stitched.", mm(min))
+    } else {
+        "This satin column is too short for a stitch across it, so it is not stitched.".to_string()
+    };
+    Some(Diagnostic::new(Code::SatinTooSmall, message).with_fix(Fix::Hint("Draw the column larger, or delete it if it is a stray.".to_string())))
+}
+
+/// The pairs a column's outline runs through, which its start and end are found on: its pairs at the
+/// zigzag spacing, as `placed` and compensated. A zigzag satin placed its pairs at half the spacing, and
+/// places them at the spacing again, as Ink/Stitch does for every method, drawing from `drawn`, a copy of
+/// the generator as the top stitches found it, so that their draws stay as they were.
+fn outline(
+    sections: &[Section],
+    params: &SatinParams,
+    pull: &PullParams,
+    placed: Vec<Pair>,
+    mut drawn: SplitMix64,
+    meter: &mut Meter,
+) -> Result<Vec<Pair>, Exhausted> {
+    if params.satin_method != StitchType::SatinZigzag.id() {
+        return Ok(placed);
+    }
+    pairs::pairs(sections, params.zigzag_spacing_mm.get(), &mut Processor::new(params, pull, &mut drawn), meter)
+}
+
+/// A column's top stitches, with what the rest of the column takes from their making.
+struct Top {
+    /// The pairs as placed and compensated, before any inset: the ends of each pair lie on the column's
+    /// compensated outline.
+    placed: Vec<Pair>,
+    /// The needle points, from the rails' starts to their ends.
+    stitches: Vec<Point>,
+    /// Where a zigzag satin's stitches stop on each rail, which its contour underlay stops at.
+    peaks: Option<Peaks>,
 }
 
 /// The top stitches along `sections`, from the rails' starts to their ends: placed, compensated and varied
 /// at random by the element's `rng`, inset where they crowd, and sewn as the satin method says, split where
-/// they are long. With them, the pairs as placed and compensated, before any inset: the ends of each pair
-/// lie on the column's compensated outline. Zigzag satins are not sewn yet, and `generate` skips them
-/// before they get here (`SC-W0011`).
+/// they are long. A zigzag satin places its pairs at half the zigzag spacing and sews a point of each in
+/// turn (`pairs::zigzag`).
 fn top_stitches(
     sections: &[Section],
     params: &SatinParams,
@@ -436,19 +478,29 @@ fn top_stitches(
     lengths: SatinLengths,
     rng: &mut SplitMix64,
     meter: &mut Meter,
-) -> Result<(Vec<Pair>, Vec<Point>), Exhausted> {
-    let placed = pairs::pairs(sections, params.zigzag_spacing_mm.get(), &mut Processor::new(params, pull, rng), meter)?;
+) -> Result<Top, Exhausted> {
+    let (spacing, zigzag) = (params.zigzag_spacing_mm.get(), params.satin_method == StitchType::SatinZigzag.id());
+    let placed = pairs::pairs(sections, if zigzag { spacing / 2.0 } else { spacing }, &mut Processor::new(params, pull, rng), meter)?;
+    let zigzagged;
+    let sewn: &[Pair] = if zigzag {
+        zigzagged = pairs::zigzag(&placed);
+        &zigzagged
+    } else {
+        &placed
+    };
     let mut splitter = Splitter::new(params, lengths.max_stitch.map(Mm::get), lengths.min_stitch.get(), rng);
     let insets: Vec<f64> = params.short_stitch_inset.iter().map(|percent| percent / 100.0).collect();
-    let short = short::inset(&placed, params.short_stitch_distance_mm.get(), &insets, splitter.inset_limit());
+    let short = short::inset(sewn, params.short_stitch_distance_mm.get(), &insets, splitter.inset_limit());
     let stitches = if params.satin_method == StitchType::EStitch.id() {
-        splitter.sew_e(&placed, &short, params.zigzag_spacing_mm.get(), meter)?
+        splitter.sew_e(sewn, &short, spacing, meter)?
     } else if params.satin_method == StitchType::SStitch.id() {
-        splitter.sew_s(&placed, &short, meter)?
+        splitter.sew_s(sewn, &short, meter)?
+    } else if zigzag {
+        splitter.sew_zigzag(sewn, &short, meter)?
     } else {
-        splitter.sew(&placed, &short, meter)?
+        splitter.sew(sewn, &short, meter)?
     };
-    Ok((placed, stitches))
+    Ok(Top { placed, stitches, peaks: zigzag.then(|| Peaks::of(&short)).flatten() })
 }
 
 #[cfg(test)]

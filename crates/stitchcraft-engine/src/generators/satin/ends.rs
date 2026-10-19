@@ -6,7 +6,8 @@
 //!   within `running_stitch_tolerance_mm`, is the needle's way to the start and between the passes.
 //! - **Cuts.** A place is found by its cut: of the pairs at the zigzag spacing, with no compensation and
 //!   nothing random, the one with the point nearest it. The line is entered where it comes nearest the
-//!   cut, and a part is cut in 2 at its own point nearest it.
+//!   cut, and a part is cut in 2 at its own point nearest it, or at its own needle point within the
+//!   shortest stitch of there: finalize would leave out a needle point that near another, with a note.
 //! - **The start** is the line's point nearest the needle, or the compensated outline's when only that is
 //!   within the jump length. The needle follows the line from the start's cut to the first stitch's.
 //! - **The end** is the compensated outline's point nearest the next stitch, found on the rails as
@@ -118,6 +119,8 @@ pub(crate) struct Guides {
     line: Vec<Point>,
     /// The pairs at the zigzag spacing, with no compensation and nothing random.
     cuts: Vec<Pair>,
+    /// The element's shortest stitch: a part is never cut within it of a needle point of its own.
+    min_stitch: f64,
 }
 
 impl Guides {
@@ -135,7 +138,7 @@ impl Guides {
         let min_stitch = lengths.min_stitch.get();
         let position = params.running_stitch_position / 100.0;
         let line = walk_line(sections, position, lengths.tolerance.get(), travel, min_stitch, meter)?;
-        Ok(Guides { line, cuts })
+        Ok(Guides { line, cuts, min_stitch })
     }
 
     /// Where a column starts with the needle at `needle`: the line's point nearest it, or the point of the
@@ -255,8 +258,10 @@ impl Guides {
     }
 
     /// `part` cut in 2 at its point nearest the cut through `place`: the part up to there, and the part from
-    /// there. Where the cut's 2 points coincide, the part is all second half when its start is within 0.1
-    /// CSS pixels of `place`, and all first half otherwise, the other half its start or end.
+    /// there. A point within the shortest stitch of a needle point of the part moves to that needle point,
+    /// so that neither half ends in a stitch too short to sew. Where the cut's 2 points coincide, the part
+    /// is all second half when its start is within 0.1 CSS pixels of `place`, and all first half otherwise,
+    /// the other half its start or end.
     fn halves(&self, part: &[Point], place: Point, meter: &mut Meter) -> Result<(Vec<Point>, Vec<Point>), Exhausted> {
         let (Some(&start), Some(&last), Some([a, b])) = (part.first(), part.last(), self.cut(place)) else {
             return Ok((part.to_vec(), part.last().map(|&last| vec![last]).unwrap_or_default()));
@@ -265,7 +270,7 @@ impl Guides {
             return Ok(if length(start, place) < START_NEAR { (vec![start], part.to_vec()) } else { (part.to_vec(), vec![last]) });
         }
         let along = Along::new(part, meter)?;
-        let at = along_to_segment(part, (a, b), Look::FromPolyline, meter)?;
+        let at = along.snapped(along_to_segment(part, (a, b), Look::FromPolyline, meter)?, self.min_stitch);
         Ok((stretch(&along, 0.0, at), stretch(&along, at, along.length())))
     }
 }
@@ -306,11 +311,11 @@ mod tests {
     }
 
     /// Guides along a straight line from (0, 3) to (10, 3), with cuts across it every 1 mm from (x, 0)
-    /// to (x, 6).
+    /// to (x, 6), for an element whose shortest stitch is 0.25 mm.
     fn guides() -> Guides {
         let line = (0..=4).map(|i| p(2.5 * f64::from(i), 3.0)).collect();
         let cuts = (0..=10).map(|x| [p(f64::from(x), 0.0), p(f64::from(x), 6.0)]).collect();
-        Guides { line, cuts }
+        Guides { line, cuts, min_stitch: 0.25 }
     }
 
     #[test]
@@ -326,6 +331,12 @@ mod tests {
         assert_eq!(g.halves(&part, p(-3.0, 0.0), meter).unwrap(), (vec![p(0.0, 1.0)], part.to_vec()), "cut at its start");
         assert_eq!(g.halves(&[], p(1.0, 0.0), meter).unwrap(), (Vec::new(), Vec::new()));
         assert_eq!(g.halves(&[p(4.0, 1.0)], p(1.0, 0.0), meter).unwrap(), (vec![p(4.0, 1.0)], vec![p(4.0, 1.0)]), "a point is both halves");
+        // A part with a needle point 0.2 mm from where it crosses the cut at 6 is cut at that point: neither
+        // half ends in a stitch shorter than the shortest stitch. 0.25 mm away is not within it.
+        let near = [p(0.0, 1.0), p(5.8, 1.0), p(10.0, 1.0)];
+        assert_eq!(g.halves(&near, p(6.2, 0.5), meter).unwrap(), (near[..2].to_vec(), near[1..].to_vec()));
+        let apart = [p(0.0, 1.0), p(5.75, 1.0), p(10.0, 1.0)];
+        assert_eq!(g.halves(&apart, p(6.2, 0.5), meter).unwrap(), (vec![apart[0], apart[1], p(6.0, 1.0)], vec![p(6.0, 1.0), apart[2]]));
     }
 
     #[test]
@@ -340,7 +351,7 @@ mod tests {
 
     #[test]
     fn with_no_cuts_nothing_is_cut() {
-        let g = Guides { line: vec![p(0.0, 3.0), p(10.0, 3.0)], cuts: Vec::new() };
+        let g = Guides { line: vec![p(0.0, 3.0), p(10.0, 3.0)], cuts: Vec::new(), min_stitch: 0.25 };
         let meter = &mut Budget::DEFAULT.meter();
         assert_eq!(g.entry(p(5.0, 3.0), meter).unwrap(), 0.0);
         let part = [p(0.0, 1.0), p(10.0, 1.0)];
@@ -385,11 +396,11 @@ mod tests {
         // Exactly 1 grid step long is not shorter than it.
         let (a, b) = (p(11.0, 0.0), p(11.0, GRID));
         assert_eq!(length(a, b), GRID);
-        let g = Guides { line: guides().line, cuts: vec![[a, b]] };
+        let g = Guides { cuts: vec![[a, b]], ..guides() };
         let part = [p(10.0, 0.0), p(12.0, 0.0)];
         assert_eq!(g.halves(&part, a, meter).unwrap(), (vec![p(10.0, 0.0), p(11.0, 0.0)], vec![p(11.0, 0.0), p(12.0, 0.0)]));
         // At a point cut, a part starting exactly 0.1 CSS pixels from the place does not start there.
-        let g = Guides { line: guides().line, cuts: vec![[p(0.0, 0.0), p(0.0, 0.0)]] };
+        let g = Guides { cuts: vec![[p(0.0, 0.0), p(0.0, 0.0)]], ..guides() };
         let part = [p(START_NEAR, 0.0), p(5.0, 0.0)];
         assert_eq!(length(part[0], p(0.0, 0.0)), START_NEAR);
         assert_eq!(g.halves(&part, p(0.0, 0.0), meter).unwrap(), (part.to_vec(), vec![p(5.0, 0.0)]));

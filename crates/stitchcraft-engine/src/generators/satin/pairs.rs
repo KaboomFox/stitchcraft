@@ -94,6 +94,14 @@ pub(crate) fn pairs(sections: &[Section], spacing: f64, processor: &mut Processo
     Ok(pairs)
 }
 
+/// A zigzag satin's pairs, made from the pairs it placed at half the zigzag spacing: one point of each in
+/// turn, the first rail's of the first, the second rail's of the next, and on, each 2 in a row a pair from
+/// the first rail to the second. A point left over at the end is left out, as in Ink/Stitch.
+pub(crate) fn zigzag(placed: &[Pair]) -> Vec<Pair> {
+    let (twos, _left_over) = placed.as_chunks::<2>();
+    twos.iter().map(|&[[a, _], [_, b]]| [a, b]).collect()
+}
+
 /// The pair at the end of `section`: its rails' last points.
 fn end_of([first, second]: &Section) -> Pair {
     [first.last().copied().unwrap_or(Point::ORIGIN), second.last().copied().unwrap_or(Point::ORIGIN)]
