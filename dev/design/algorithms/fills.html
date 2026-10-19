@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-4343f807.js";
+            window.path_to_searchindex_js = "../../searchindex-f6c687fa.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-639d0563.js"></script>
@@ -387,7 +387,9 @@ apart. A part smaller than 10,000 square CSS pixels (700 mm²) has less room, an
 far apart. The square lines pass through the crossings of the others, so the 3 make one network. Its
 nodes are the crossings, the lines’ ends on the rings and the route’s nodes, and along each ring an
 edge joins each node to the next. A crossing within 0.005 px of a node already found is that node.
-Where either 45° grating misses the part, the needle runs as with <code>underpath</code> off.</li>
+Where either 45° grating misses the part, the needle runs as with <code>underpath</code> off. Ink/Stitch smooths
+that way as it smooths a way under the rows, step 4, and StitchCraft keeps to the rings
+(<code>DEV-FILL-013</code>).</li>
 <li><strong>Costs.</strong> A piece of line costs its length in CSS pixels over its distance from the part’s rings,
 simplified within 0.5 mm, plus a tenth of a pixel. A stretch of ring costs 3 times the straight line
 between its ends. Travel then keeps to the middle of the part, away from its edges.</li>
@@ -463,7 +465,8 @@ piece’s top rows start nearest the needle too, after the piece before, and end
 element. Ink/Stitch starts every piece’s top rows nearest where the needle was before the first
 (<code>DEV-FILL-008</code>). Ink/Stitch sews each piece’s top rows as a group of its own. With
 <code>force_lock_stitches</code>, so does StitchCraft: assembly ties each off and jumps to the next, however near. Where shrinking wears a part away entirely, the part itself is sewn, as in Ink/Stitch,
-and <code>SC-W0310</code> (inset) or <code>SC-W0309</code> (expand) says so, as Ink/Stitch warns.</p>
+and <code>SC-W0310</code> (inset) or <code>SC-W0309</code> (expand) says so, as Ink/Stitch warns. Ink/Stitch also warns of an
+inset that wears a part away when the fill has no underlay to inset, and StitchCraft does not.</p>
 <h3 id="7-pull-compensation-and-gap-fill-rows"><a class="header" href="#7-pull-compensation-and-gap-fill-rows">7. Pull compensation and gap-fill rows</a></h3>
 <p>The thread pulls a row in at its ends. Each top row’s segment is lengthened at both ends by
 <code>pull_compensation_mm</code> plus <code>pull_compensation_percent</code> of its length (<code>REQ-FILL-TAT-006</code>, since M5.8).
@@ -529,34 +532,62 @@ the fill sews nothing, and <code>SC-W0303</code> says so.</p>
 <p>Machine checkpoint MC-4 sews a density ladder, an angle set and a fill-with-outline registration test
 to tune pull compensation (<a href="../../plan/machine-testing.html">machine testing</a>).</p>
 <h2 id="contour-fill"><a class="header" href="#contour-fill">Contour fill</a></h2>
-<p>Rows that follow the region’s outline inward, like growth rings (P2). Strategies (<code>contour_strategy</code>):</p>
+<p>Rings that follow the region’s outline inward, like growth rings (P2, M7.7), as Ink/Stitch sews its
+contour fill (read at <code>6555892</code>). The outline and the holes are offset inward by <code>row_spacing_mm</code>, again
+and again, with the corners <code>join_style</code> gives them, round, mitred or bevelled, until nothing is left.
+Each ring lies inside the one it was offset from, and the rings form a tree. Where the shape narrows, a
+ring parts into several, and a hole’s ring joins the outline’s where they meet. <code>clockwise</code> sets which way
+the rings run. <code>contour_strategy</code> sews the tree:</p>
 <ul>
-<li><strong>Inner to outer:</strong> inset the boundary repeatedly by <code>row_spacing_mm</code> (polygon offsetting with
-<code>join_style</code> round/mitred/bevelled) until empty, forming a tree of rings (a ring can split into several
-as the shape narrows). Sew each subtree from the innermost ring outward, connecting rings at their
-nearest points.</li>
-<li><strong>Single spiral / double spiral:</strong> connect the rings of each branch into one continuous spiral (single:
-outside to centre; double: in and back out), following the Connected Fermat Spirals construction (Zhao
-et al., SIGGRAPH 2016). Before spiralling, <strong>necks</strong> (where the inset ring tree branches) split the region
-into parts that each spiral cleanly; a part that still cannot be connected falls back to inner-to-outer
-with <code>SC-W0311</code>.</li>
-<li><code>clockwise</code> and <code>avoid_self_crossing</code> control direction and how ring connections are placed;
-<code>smoothness_mm</code> simplifies rings before stitching.</li>
+<li><strong>Inner to outer</strong> (<code>0</code>). The needle goes round the outline from its point nearest the fill’s start.
+At the first point within 1.5 row spacings of a ring inside it, or within 2.05 if no point is that
+near, it goes on to that ring and sews it, and the rings inside it, the same way, back to where it
+entered. It then goes on round the outer ring, a row spacing past where it left. A ring that no point
+of the ring outside it comes within 2.05 row spacings of is not sewn. Each innermost ring is sewn the
+other way round, or with <code>avoid_self_crossing</code> every other level of rings is. <code>smoothness_mm</code> smooths
+the path, which is then kept inside the region.</li>
+<li><strong>Single spiral</strong> (<code>1</code>). One spiral from the outline in to the centre, each turn running from a ring to
+the next one inside it. Where a ring parts into several, the spiral goes on into the one whose centre
+lies nearest its own, and the others are not sewn.</li>
+<li><strong>Double spiral</strong> (<code>2</code>). The same rings, every other one on a spiral in and the rest on a spiral back
+out.</li>
 </ul>
-<p>Properties: rings are spaced by the parameter (± 5 %); consecutive rings never cross; the spiral is one
-continuous path per part.</p>
+<p>The path is sewn as a running stitch of <code>max_stitch_length_mm</code> within <code>running_stitch_tolerance_mm</code>,
+with bean stitch and repeats. Ink/Stitch leaves out the rings it does not reach without a word.
+StitchCraft names them (<code>SC-W0311</code>). Ink/Stitch’s repeats double the stitching each time, so that <code>k</code>
+repeats sew <code>2^(k−1)</code> passes. Whether StitchCraft’s do too is settled with the fill.</p>
+<p>Properties: rings lie the row spacing apart (± 5 %), and neighbouring rings never cross. Each strategy
+sews one unbroken path per part.</p>
 <h2 id="meander-fill"><a class="header" href="#meander-fill">Meander fill</a></h2>
-<p>A space-filling pattern (P2): a tile is repeated over the region, scaled (<code>meander_scale_percent</code>) and
-rotated (<code>meander_angle</code>), clipped to the region (<code>clip</code>), and turned into one continuous path by
-connecting the clipped pieces and walking the result with Hierholzer’s algorithm after making the graph
-Eulerian. Tiles are StitchCraft’s own, <strong>generated in code</strong> (Hilbert, Peano, Truchet-style arcs,
-waves, pebbles…), never copied from other projects; <code>meander_pattern</code> accepts our tile ids and maps
-Ink/Stitch tile names to the closest of ours as a recorded deviation. The path is sewn as running stitch
-(optionally zigzag with <code>zigzag_spacing_mm</code>/<code>zigzag_width_mm</code>, bean stitch, repeats).</p>
+<p>A path that wanders through a pattern (P2, M7.8), as Ink/Stitch sews its meander fill (read at
+<code>6555892</code>). A tile’s lines are repeated over each part of the region, scaled by <code>meander_scale_percent</code>
+and turned by <code>meander_angle</code>. The lines that lie wholly inside the part make a graph of their ends.
+Lines with a free end, one that meets no other line, are taken away, again and again, until none is
+left, and the graph’s pieces are joined where they lie nearest. The
+path starts at the graph’s point nearest the fill’s start and ends at the one nearest the next element,
+or else nearest the point of the outline across from the start. It begins as the shortest way between
+the 2. Then, in an order the random seed sets, each of its steps is replaced by a detour of up to 7 steps
+through points the path has not passed, and each 2 steps in a row by one of up to 10, until no detour is
+found. The path never passes a point twice. It is smoothed by <code>smoothness_mm</code> and sewn as a running
+stitch of <code>running_stitch_length_mm</code>, or, where <code>zigzag_spacing_mm</code> is above 0, as a zigzag
+<code>zigzag_width_mm</code> wide. <code>clip</code> keeps it inside the part. Bean stitch and repeats follow, and the repeats
+double the stitching each time, as the contour fill’s do. Its random numbers are StitchCraft’s own, as for
+a tatami fill’s random lengths (<code>DEV-FILL-004</code>), and the path differs from Ink/Stitch’s for the same
+seed.</p>
+<p>Tiles are StitchCraft’s own, <strong>generated in code</strong> (Hilbert, Peano, Truchet-style arcs, waves, pebbles…),
+never copied from other projects. <code>meander_pattern</code> takes our tile ids, and Ink/Stitch’s tile names map
+to the closest of ours as a recorded deviation.</p>
 <h2 id="circular-fill"><a class="header" href="#circular-fill">Circular fill</a></h2>
-<p>Concentric circles (or one spiral) around the target point (a command; default: the region’s centroid),
-spaced by <code>row_spacing_mm</code> (optionally graded by <code>end_row_spacing_mm</code>), clipped to the region and routed
-like tatami rows (P2).</p>
+<p>A double spiral round a centre (P2, M7.9), as Ink/Stitch sews its circular fill (read at <code>6555892</code>): the
+point of a <code>target_point</code> command, or else the centre of each part’s area. Circles round it lie
+<code>row_spacing_mm</code> apart, or graded towards <code>end_row_spacing_mm</code> with their distance from the centre, out
+to 2 spacings past the part’s farthest point, with one of 0.1 CSS pixel radius at the centre. Alternate
+circles are joined into a spiral in, and the rest into one back out, as the contour fill’s double spiral
+is, and the part cuts the spiral into pieces. One piece is sewn as a running stitch, joined along the outline
+to where the fill starts and ends. Several are routed as tatami rows are, with the travel under them at
+<code>angle</code> and <code>skip_last</code>. A part that lies within a row spacing of its centre is sewn as one circle of that
+radius. Bean stitch leaves the travel out, and the repeats double the stitching, as the contour fill’s
+do.</p>
 <h2 id="guided-fill-p3"><a class="header" href="#guided-fill-p3">Guided fill (P3)</a></h2>
 <p>Rows that follow a guide line instead of a straight angle: the guide is copied (<code>Copy</code>) or offset
 (<code>Parallel Offset</code>, <code>Buffer</code>) across the region at <code>row_spacing_mm</code>, each copy clipped to the region and
@@ -575,10 +606,6 @@ it; crosses use <code>cross_stitch_method</code> (simple, half, upright, double,
 routed row by row. Specified at M10.</p>
 <h2 id="references"><a class="header" href="#references">References</a></h2>
 <ul>
-<li>H. Zhao et al., “Connected Fermat Spirals for Layered Fabrication,” <em>ACM Transactions on Graphics</em>
-35(4), SIGGRAPH 2016.</li>
-<li>C. Hierholzer, “Über die Möglichkeit, einen Linienzug ohne Wiederholung und ohne Unterbrechung zu
-umfahren,” <em>Mathematische Annalen</em> 6, 1873.</li>
 <li>D. Hilbert, “Über die stetige Abbildung einer Linie auf ein Flächenstück,” <em>Mathematische Annalen</em> 38, 1891.</li>
 </ul>
 
