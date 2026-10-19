@@ -69,18 +69,14 @@ mod tests {
 
     use stitchcraft_testkit::equivalence::{dst_events, events};
 
+    use stitchcraft_testkit::temp::TempDir;
+
     use super::*;
     use crate::cli::Format;
 
     /// `path` under `conformance/`.
     fn conformance(path: &str) -> PathBuf {
         PathBuf::from(format!("{}/../../conformance/{path}", env!("CARGO_MANIFEST_DIR")))
-    }
-
-    fn temp(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("stitchcraft-convert-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        dir.join(name)
     }
 
     fn convert(file: PathBuf, output: PathBuf, format: Option<Format>) -> Outcome {
@@ -93,9 +89,10 @@ mod tests {
 
     #[test]
     fn diag_sc_i0605_pes_to_dst_sews_as_dst_machines_do() {
+        let dir = TempDir::new("convert");
         // TS-02 as StitchCraft wrote it before MC-1: its right half has plain jumps, and DST machines cut
         // the thread before the long ones.
-        let (source, output) = (conformance("fixtures/pes/plain-jumps.pes"), temp("TS-02.dst"));
+        let (source, output) = (conformance("fixtures/pes/plain-jumps.pes"), dir.join("TS-02.dst"));
         let out = convert(source.clone(), output.clone(), None);
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(out.stdout.starts_with(&format!("{} · PES (#PES0001) → DST\n", source.display())), "{}", out.stdout);
@@ -111,13 +108,14 @@ mod tests {
 
     #[test]
     fn diag_sc_w0604_converting_dst_says_its_colours_are_placeholders() {
-        let (source, output) = (conformance("golden/testsheets/TS-01.dst"), temp("TS-01-from-dst.bin"));
+        let dir = TempDir::new("convert");
+        let (source, output) = (conformance("golden/testsheets/TS-01.dst"), dir.join("TS-01-from-dst.bin"));
         let out = convert(source.clone(), output.clone(), Some(Format::Pes));
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(out.stderr.starts_with("warning SC-W0604: DST stores no thread colours; every thread is a black placeholder."), "{}", out.stderr);
         assert_eq!(events(&read(&output).plan), events(&read(&source).plan));
         // A file that cannot be written: what was said is printed all the same (REQ-CLI-006).
-        let nowhere = temp("no-such-folder").join("TS-01.pes");
+        let nowhere = dir.join("no-such-folder").join("TS-01.pes");
         let out = convert(source, nowhere.clone(), None);
         assert_eq!(out.status, Status::Io);
         assert!(
@@ -129,11 +127,12 @@ mod tests {
 
     #[test]
     fn unreadable_or_unnamed_inputs_are_reported() {
-        assert_eq!(convert(conformance("golden/testsheets/TS-01.pes"), temp("TS-01.png"), None).status, Status::Usage);
-        assert_eq!(convert(temp("missing.dst"), temp("x.pes"), None).status, Status::Io);
-        let junk = temp("junk.pes");
+        let dir = TempDir::new("convert");
+        assert_eq!(convert(conformance("golden/testsheets/TS-01.pes"), dir.join("TS-01.png"), None).status, Status::Usage);
+        assert_eq!(convert(dir.join("missing.dst"), dir.join("x.pes"), None).status, Status::Io);
+        let junk = dir.join("junk.pes");
         std::fs::write(&junk, b"not embroidery").unwrap();
-        let out = convert(junk, temp("y.dst"), None);
+        let out = convert(junk, dir.join("y.dst"), None);
         assert_eq!(out.status, Status::DesignErrors);
         assert!(out.stderr.starts_with("error SC-E0603: "), "{}", out.stderr);
     }

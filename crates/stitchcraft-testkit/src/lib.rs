@@ -10,6 +10,7 @@
 //! - [`strategies`]: random plans for property tests, with fixed seeds on every PR.
 //! - [`fuzz`]: what must hold for any bytes given to a reader — the bodies of the fuzz targets in `fuzz/`,
 //!   run on every PR here and with coverage-guided inputs every night.
+//! - [`temp`]: folders of a test's own for the files it writes, removed when the test is done.
 //!
 //! Status: grows with roadmap milestones M1–M5. Design: `docs/src/design/conformance.md`.
 #![forbid(unsafe_code)]
@@ -23,3 +24,4 @@ pub mod metrics;
 pub mod plans;
 pub mod satins;
 pub mod strategies;
+pub mod temp;
