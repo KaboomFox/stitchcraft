@@ -117,18 +117,18 @@ fn along((a, b): (Point, Point), (c, d): (Point, Point)) -> bool {
 }
 
 /// Where the side from `a` to `b` meets the segment from `c` to `d` it lies along ([`along`]): as sides along
-/// one line that overlap meet ([`meeting`]), an end within [`GRID`] of the other counting as on it. The
-/// side's point nearest `c` when no end lies on the other.
+/// one line that overlap meet ([`meeting`]), an end within [`GRID`] of the other counting as on it. Lying
+/// along the segment, the side has an end on it wherever just one of the segment's ends lies on the side.
+/// The side's point nearest `c` when no end lies on the other.
 fn overlap((a, b): (Point, Point), (c, d): (Point, Point)) -> Point {
     let (c_on, d_on) = (to_side(c, a, b) < GRID, to_side(d, a, b) < GRID);
-    let (a_on, b_on) = (to_side(a, c, d) < GRID, to_side(b, c, d) < GRID);
     if c_on && d_on {
         c
-    } else if a_on && b_on {
+    } else if to_side(a, c, d) < GRID && to_side(b, c, d) < GRID {
         a
-    } else if c_on && (a_on || b_on) {
+    } else if c_on {
         c
-    } else if d_on && (a_on || b_on) {
+    } else if d_on {
         d
     } else {
         on_side(c, a, b)
@@ -504,6 +504,39 @@ mod tests {
         assert!((along_to_segment(&beside, (p(1.0, 0.0), p(3.0, 0.0)), Look::FromPolyline, meter).unwrap() - 3.0).abs() < 1e-9);
         // A side along the line that stops short of the segment does not meet it.
         assert!((along_to_segment(&[p(4.0, 0.0), p(5.0, 0.0)], (p(1.0, 0.0), p(3.0, 0.0)), Look::FromPolyline, meter).unwrap()).abs() < 1e-9);
+        // A side at a slant of a hair, each end half the grid from the line, crosses the segment at its
+        // middle, but lies along it: it holds the segment, and meets it at the segment's start.
+        let slant = [p(0.0, -0.5 * GRID), p(4.0, 0.5 * GRID)];
+        assert!((along_to_segment(&slant, (p(1.0, 0.0), p(3.0, 0.0)), Look::FromPolyline, meter).unwrap() - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn an_end_exactly_the_grid_from_the_other_is_not_on_it() {
+        let meter = &mut Budget::DEFAULT.meter();
+        let mut at = |side: &[(f64, f64)], (c, d): ((f64, f64), (f64, f64))| {
+            let side: Vec<Point> = side.iter().map(|&(x, y)| p(x, y)).collect();
+            along_to_segment(&side, (p(c.0, c.1), p(d.0, d.1)), Look::FromPolyline, meter).unwrap()
+        };
+        // A side with an end exactly the grid from the segment's line is not along it, and meets the segment
+        // where it crosses it.
+        assert!((at(&[(0.0, -GRID), (4.0, 0.5 * GRID)], ((1.0, 0.0), (3.0, 0.0))) - 8.0 / 3.0).abs() < 1e-9);
+        assert!((at(&[(0.0, -0.5 * GRID), (4.0, GRID)], ((1.0, 0.0), (3.0, 0.0))) - 4.0 / 3.0).abs() < 1e-9);
+        // Along it, an end exactly the grid beyond the other is not on it, and the 2 meet at the segment's end
+        // that lies on the side.
+        assert!((at(&[(GRID, 0.0), (3.0, 0.0)], ((0.0, 0.0), (2.0, 0.0))) - (2.0 - GRID)).abs() < 1e-12);
+        assert!((at(&[(GRID, 0.0), (-1.0, 0.0)], ((-2.0, 0.0), (0.0, 0.0))) - GRID).abs() < 1e-12);
+        assert!((at(&[(-1.0, 0.0), (GRID, 0.0)], ((-2.0, 0.0), (0.0, 0.0))) - 1.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn sides_along_one_line_with_no_end_on_the_other_meet_at_the_side_s_point_nearest_the_segment_s_start() {
+        // `along_to_segment` asks this only of sides whose boxes meet, which leaves an end of one on the
+        // other, but the answer stays defined: the side's point nearest the segment's start. Exactly the grid
+        // apart, an end is not on the other.
+        let segment = (p(-2.0, 0.0), p(0.0, 0.0));
+        assert_eq!(overlap((p(1.0, 0.0), p(2.0, 0.0)), segment), p(1.0, 0.0));
+        assert_eq!(overlap((p(2.0, 0.0), p(1.0, 0.0)), segment), p(1.0, 0.0));
+        assert_eq!(overlap((p(GRID, 0.0), p(1.0, 0.0)), segment), p(GRID, 0.0));
     }
 
     #[test]
