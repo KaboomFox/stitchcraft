@@ -18,11 +18,13 @@ registry uses these names as its keys so files move between the tools unchanged
   value when a file sets none, and the cell gives that value after the default, as in `0.1 (0.2 when
   unset)`. `—` means no default: the value is derived from another parameter or the shape.
 - **StitchCraft** says whether the [parameter registry](../user/reference/params.md) declares the
-  parameter. *planned*: not yet; a design that sets it keeps it unchanged and gets `SC-W0105`.
+  parameter. *planned*: not yet; a design that sets it keeps it unchanged and gets `SC-W0105`. *not
+  planned*: never, and a design that sets it gets the same.
   *registered*: StitchCraft reads and checks it under the same key, meaning and default; it changes the
   stitches once its stitch type or feature lands (see *Phase* and the parameter's reference entry).
   *deviates*: registered, with a meaning that differs as its reference entry describes.
-- **Phase** is when the parameter's stitch type lands ([roadmap](../plan/roadmap.md)).
+- **Phase** is when the parameter's stitch type lands ([roadmap](../plan/roadmap.md)); `—` when it is not
+  planned.
 
 ## All stitch types (ties, locks, trims, stops)
 
@@ -153,8 +155,8 @@ registry uses these names as its keys so files move between the tools unchanged
 | `stitch_position_method` | combo | — | 0 | `guided_fill` | P3 (M10) | planned |
 | `staggers` | int | — | 4 | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#staggers) |
 | `skip_last` | boolean | — | false | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#skip_last) |
-| `flip` | boolean | — | false | `legacy_fill` | P3 (M10) | planned |
-| `reverse` | boolean | — | false | `legacy_fill` | P3 (M10) | planned |
+| `flip` | boolean | — | false | `legacy_fill` | — | not planned |
+| `reverse` | boolean | — | false | `legacy_fill` | — | not planned |
 | `stop_at_ending_point` | boolean | — | false | `linear_gradient_fill`, `tartan_fill` | P3 (M10) | planned |
 | `underpath` | boolean | — | true | `tatami_fill`, `guided_fill`, `circular_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#underpath) |
 | `running_stitch_length_mm` | float | mm | 2.5 | `tatami_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill` | P1 (M5) | [registered](../user/reference/params/running.md#running_stitch_length_mm) |
@@ -196,7 +198,9 @@ registry uses these names as its keys so files move between the tools unchanged
 
 ## Method identifiers
 
-The values the method parameters take (`stroke_method`, `satin_method`, `fill_method`), with phases:
+The values the method parameters take (`stroke_method`, `satin_method`, `fill_method`), with phases. A
+value of phase `—` is not planned as a method of its own, and the deviations ledger
+(`conformance/deviations.toml`) says how an element set to it is sewn.
 
 | Parameter | Value | Phase |
 |---|---|---|
@@ -216,7 +220,7 @@ The values the method parameters take (`stroke_method`, `satin_method`, `fill_me
 | `fill_method` | `linear_gradient_fill` | P3 (M10) |
 | `fill_method` | `meander_fill` | P2 (M7) |
 | `fill_method` | `tartan_fill` | P3 (M10) |
-| `fill_method` | `legacy_fill` | P3 (M10) |
+| `fill_method` | `legacy_fill` | — |
 
 Lock stitch identifiers (`lock_start`, `lock_end`): `half_stitch`, `arrow`, `back_forth`, `bowtie`, `cross`, `star`, `simple`, `triangle`, `zigzag`, `custom`. StitchCraft accepts every identifier; the shapes are its own
 designs with the same intent, a deviation recorded in the deviations ledger (`conformance/deviations.toml`).

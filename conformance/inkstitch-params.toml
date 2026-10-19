@@ -4,7 +4,8 @@
 # `applies_to` lists stitch types, or the values of the setting that shows the parameter (a lock shape,
 # a split method). `default` is the value Ink/Stitch's settings window shows. A row has a `fallback` where
 # Ink/Stitch's code sews another value for a file that sets none, and the registry's default is compared
-# with that. Checked field by field against that commit's declarations and getters with
+# with that. `phase` and `milestone` are StitchCraft's plan for it, both `—` when it has none. Checked
+# field by field against that commit's declarations and getters with
 # `python3 -I conformance/inkstitch/check_params.py PATH/TO/INKSTITCH`; run it again when moving to a
 # newer commit.
 
@@ -1119,8 +1120,8 @@ type = "boolean"
 unit = "—"
 default = "false"
 applies_to = ["legacy_fill"]
-phase = "P3"
-milestone = "M10"
+phase = "—"
+milestone = "—"
 
 [[param]]
 element = "fill"
@@ -1129,8 +1130,8 @@ type = "boolean"
 unit = "—"
 default = "false"
 applies_to = ["legacy_fill"]
-phase = "P3"
-milestone = "M10"
+phase = "—"
+milestone = "—"
 
 [[param]]
 element = "fill"
@@ -1559,11 +1560,12 @@ value = "tartan_fill"
 phase = "P3"
 milestone = "M10"
 
+# Sewn as a tatami fill without underlay instead (DEV-FILL-014).
 [[method]]
 param = "fill_method"
 value = "legacy_fill"
-phase = "P3"
-milestone = "M10"
+phase = "—"
+milestone = "—"
 
 # Ink/Stitch's commands (`lib/commands.py`): a <use> of the symbol `inkstitch_<name>`. `tied_to` is where
 # one applies: the object a connector ties it to, every layer it is in, or the whole document. What

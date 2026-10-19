@@ -19,8 +19,9 @@
 //!
 //! The rest keep their defaults in VectorCraft: texts, seeds, and settings left empty to take another's
 //! value. A choice leaves out the options whose stitches a text spells out, such as the custom locks,
-//! since the dialog cannot hold the text. `satin_column` is set by the effect itself, by which family it
-//! is ([`SATIN_COLUMN`]).
+//! since the dialog cannot hold the text, and the methods StitchCraft sews as another: Ink/Stitch's legacy
+//! fill, sewn as a tatami fill (`REQ-FILL-005`). `satin_column` is set by the effect itself, by which
+//! family it is ([`SATIN_COLUMN`]).
 //!
 //! **Order.** The dialog lists parameters in the manifest's order, which is the registry's within each
 //! group. The group with the family's method comes first, then the groups only the family uses, then
@@ -36,6 +37,7 @@ use serde::ser::{SerializeMap, Serializer};
 use serde_json::Value;
 use stitchcraft_core::Mm;
 use stitchcraft_engine::common::CommonParams;
+use stitchcraft_engine::generate::sewn_as;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Empty, Family, Kind, ParamGroup, ParamSpec, StitchType, Value as Parsed, find_for};
@@ -199,7 +201,8 @@ fn place(group: &ParamGroup, family: Family, default: Option<StitchType>) -> u8 
 
 /// How a manifest declares `spec`, one of the parameters `siblings` declared together, or `None` when no
 /// one value of VectorCraft's kinds means what it means. A choice leaves out each option that a text
-/// among `siblings` is shown for alone: the text spells out that option's stitches.
+/// among `siblings` is shown for alone: the text spells out that option's stitches. A method parameter
+/// leaves out the methods StitchCraft sews as another ([`sewn_as`]).
 pub fn schema(spec: &ParamSpec, siblings: &[ParamSpec]) -> Option<Schema> {
     let number = |min: f64, max: f64, default: f64| Some(Schema::Number { min, max, default });
     let default = spec.kind.parse(spec.default).map(|(value, _)| value)?;
@@ -221,7 +224,9 @@ pub fn schema(spec: &ParamSpec, siblings: &[ParamSpec]) -> Option<Schema> {
                     matches!(other.kind, Kind::Text { .. }) && other.visible_when.is_some_and(|when| when.key == spec.key && when.any_of == [option])
                 })
             };
-            let options: Vec<&'static str> = options.iter().map(|o| o.id).filter(|o| !spelled(o)).collect();
+            let family = Family::ALL.iter().copied().find(|family| family.method_param() == spec.key);
+            let other = |option: &str| family.and_then(|family| StitchType::from_id(family, option)).is_some_and(|t| sewn_as(t) != t);
+            let options: Vec<&'static str> = options.iter().map(|o| o.id).filter(|o| !spelled(o) && !other(o)).collect();
             options.contains(&id).then_some(Schema::Choice { options, default: id })
         }
         (Kind::LengthList { min, max }, Parsed::Lengths(lengths)) => match lengths.as_slice() {
@@ -329,6 +334,7 @@ fn valid_spec(spec: &Value) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
+    use stitchcraft_engine::generate::FILL_METHODS;
     use stitchcraft_params::{ChoiceOption, Condition, Origin, ParamSet, Stability};
 
     use super::*;
@@ -388,6 +394,15 @@ mod tests {
         assert_eq!(satin[..2], ["satin_method", "zigzag_spacing_mm"]);
         // Within a group, the registry's order.
         assert!(place(&satin, "ties") < place(&satin, "trim_after") && place(&satin, "trim_after") < place(&satin, "min_stitch_length_mm"));
+    }
+
+    #[test]
+    fn req_fill_005_the_fill_dialog_offers_every_method_but_legacy_fill() {
+        // StitchCraft sews legacy fill as a tatami fill. The others come in Ink/Stitch's order.
+        let method = family(Family::Fill).params.into_iter().find(|(key, _)| *key == "fill_method").map(|(_, schema)| schema);
+        let options: Vec<&str> = FILL_METHODS.iter().map(|o| o.id).filter(|id| *id != "legacy_fill").collect();
+        assert_eq!(options.len(), FILL_METHODS.len() - 1);
+        assert_eq!(method, Some(Schema::Choice { options, default: "tatami_fill" }));
     }
 
     #[test]

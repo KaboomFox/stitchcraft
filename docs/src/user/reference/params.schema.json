@@ -347,7 +347,7 @@
     },
     "fill_method": {
       "default": "tatami_fill",
-      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it. The other methods arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
+      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it, and a fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
       "enum": [
         "tatami_fill",
         "circular_fill",
