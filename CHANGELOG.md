@@ -642,6 +642,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The roadmap has 2 more milestones, from a review of how people use Ink/Stitch, which is a new plan page
+  (*How people use Ink/Stitch*).
+  - M13, image to embroidery, comes next, after M7.5 and before M7.6. A picture traced in VectorCraft is
+    to sew well with `stitch export --auto`. StitchCraft chooses the stitches of each shape by its width,
+    and the shapes overlap where they meet. Specks and the background are left out, and the sewing is
+    ordered for few colour changes. The new design page *Image to embroidery* says how, and TS-13 and MC-8
+    test it on the machine.
+  - M14, lettering in embroidery fonts, moves from after 1.0 to after M8. Its last steps set the text in a
+    picture again as lettering, and TS-14 and MC-9 test it.
+  - `--sort-colours` gives any design the order of M13.3, and opening machine files in VectorCraft is
+    planned after 1.0.
+  - The technical design's non-goals for 1.0 keep photo stitch alone, and diagnostic codes 0900 to 0999
+    are automatic digitizing's.
 - A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay, and `SC-W0314` says so
   (`REQ-FILL-005`, `DEV-FILL-014`). It was skipped as a stitch type not sewn yet (`SC-W0011`). Legacy fill
   is off the roadmap, since the method exists for Ink/Stitch's older files. Its own settings, `flip` and

@@ -38,8 +38,8 @@ and every behaviour is pinned by a conformance suite and by sew-outs on a real m
 ### Non-goals for 1.0
 
 - An Inkscape extension.
-- Lettering with a bundled embroidery-font library (post-1.0; see [roadmap](../plan/roadmap.md)).
-- Automatic digitizing of photos or bitmaps.
+- Photo stitch: photographs sewn in blended colours. Pictures of flat colour, such as logos, clip art and
+  drawings, are digitized automatically from M13 ([image to embroidery](image-to-embroidery.md)).
 - Sending files to machines over USB/Wi-Fi; the output is a file you copy to the machine.
 - A standalone GUI. The GUI is VectorCraft; the CLI renders previews to PNG.
 
@@ -112,7 +112,9 @@ identical to Ink/Stitch's SVG attributes because that is the interoperability co
 | Tatami fill (underlay, pull compensation, staggers, gap fill, underpath travel) | P1 | M5 |
 | VectorCraft plug-in (ABI v1), export from `.vectorcraft`, compatibility gate | P1 | M6 |
 | Zigzag/E/S stitches, contour, meander, circular fill | P2 | M7 |
+| Image to embroidery: stitch types chosen by width, overlaps, sewing order, VectorCraft's Auto effect | P2 | M13, between M7.5 and M7.6 |
 | Ink/Stitch SVG import (attributes, commands, clones) and differential testing | P2 | M8 |
+| Lettering in embroidery fonts, and text in pictures set again as lettering | P3 | M14 |
 | Guided, gradient, ripple, tartan, cross stitch; auto-run/auto-satin | P3 | M10 |
 | EXP, JEF, VP3, XXX, U01 formats; thread catalogues | P3 | M11 |
 | 1.0 hardening, translations, release automation | — | M12 |

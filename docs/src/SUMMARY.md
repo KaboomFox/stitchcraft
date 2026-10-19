@@ -59,6 +59,7 @@
       - [Offset curves](design/algorithms/offset.md)
     - [Fills](design/algorithms/fills.md)
     - [Lock stitches](design/algorithms/locks.md)
+  - [Image to embroidery](design/image-to-embroidery.md)
   - [Machine formats](design/formats.md)
   - [Rendering previews](design/rendering.md)
   - [VectorCraft integration](design/vectorcraft-integration.md)
@@ -89,6 +90,7 @@
 
 - [Roadmap](plan/roadmap.md)
 - [Machine testing](plan/machine-testing.md)
+- [How people use Ink/Stitch](plan/inkstitch-usage.md)
 
 # Contributing
 

@@ -34,6 +34,7 @@ probably not what you want) or `I` (info) + four digits grouped by area:
 | 0600–0699 | Formats and threads |
 | 0700–0799 | Machine profile (hoop, limits) |
 | 0800–0899 | Hosts (SVG, VectorCraft) |
+| 0900 to 0999 | Automatic digitizing ([image to embroidery](image-to-embroidery.md)) |
 
 Codes are never reused. A retired code keeps its page with "retired in vX".
 
