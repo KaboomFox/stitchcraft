@@ -1,10 +1,11 @@
 //! Split stitches, and the order the needle sews a satin column's points in
-//! (`docs/src/design/algorithms/satin.md` › Top stitches, steps 4 and 5, and › E-stitch).
+//! (`docs/src/design/algorithms/satin.md` › Top stitches, steps 4 and 5, › E-stitch and › S-stitch).
 //!
 //! A satin column's needle goes from the first rail to the second and back, pair after pair: each stitch
 //! across the column, from a pair's first point to its second, and each stitch back, from its second point
 //! to the next pair's first. An E-stitch's goes across and back at each pair, a spike, and along the first
-//! rail from one spike to the next, its spine. Where the element sets a longest stitch
+//! rail from one spike to the next, its spine. An S-stitch's goes across once at each pair, every other one
+//! from the second rail, and along a rail from one pair to the next. Where the element sets a longest stitch
 //! (`max_stitch_length_mm`), a stitch longer than it is split as `split_method` says, as Ink/Stitch splits
 //! it. The ends of a stitch are its pair's compensated points, and it is sewn between their insets
 //! (step 3).
@@ -22,7 +23,9 @@
 //!   stitch from one stitch to the next, and comes back after that many stitches.
 //!
 //! An E-stitch's spike goes back down through the splits of its stitch across. Its spine is split only when
-//! the zigzag spacing is longer than the longest stitch, with no randomness, as Ink/Stitch splits it.
+//! the zigzag spacing is longer than the longest stitch, with no randomness, as Ink/Stitch splits it. An
+//! S-stitch's stitch across splits as a stitch from the first rail to the second, whichever way it is sewn,
+//! and its steps along the rails are never split: Ink/Stitch works out splits for them but sews none.
 //!
 //! Random splits draw from the element's generator, after the column's pairs are placed, in the order the
 //! stitches are sewn.
@@ -133,6 +136,29 @@ impl<'r> Splitter<'r> {
             run.extend(across.iter().rev());
             run.push(*inset_a);
             spine = Some(*inset_a);
+        }
+        Ok(run)
+    }
+
+    /// The needle points of the S-stitch whose pairs are `pairs` and their insets `short`: each pair's
+    /// stitch across, from its first inset point through the splits of the stitch across to its second,
+    /// the pairs numbered from 0 for the simple and staggered methods, and the even ones sewn the other
+    /// way, from the second rail. From one pair the needle goes on to the next along the rail it ended on,
+    /// in one stitch never split, as Ink/Stitch sews it. A unit of `meter`'s work per split tried, and a
+    /// stitch per needle point.
+    pub(crate) fn sew_s(&mut self, pairs: &[Pair], short: &[Pair], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+        let mut run = Vec::with_capacity(pairs.len() * 2);
+        for (row, ([a, b], [inset_a, inset_b])) in (0_u32..).zip(pairs.iter().zip(short)) {
+            let (splits, _) = self.split([*a, *b], [*inset_a, *inset_b], None, row, false, meter)?;
+            meter.charge_stitches(2)?;
+            let mut across = Vec::with_capacity(splits.len() + 2);
+            across.push(*inset_a);
+            across.extend(splits);
+            across.push(*inset_b);
+            if row.is_multiple_of(2) {
+                across.reverse();
+            }
+            run.extend(across);
         }
         Ok(run)
     }
@@ -431,19 +457,25 @@ mod tests {
 
     #[test]
     fn every_needle_point_of_the_column_costs_a_stitch() {
-        // 3 pairs 4 mm across and 2 mm apart, split at 1.5 mm by each method, sewn as a satin and as an
-        // E-stitch, whose spine is split too: a stitch spent for each needle point of the run.
+        // 3 pairs 4 mm across and 2 mm apart, split at 1.5 mm by each method, sewn as a satin, as an
+        // E-stitch, whose spine is split too, and as an S-stitch: a stitch spent for each needle point of the
+        // run.
         let pairs = [[p(0.0, 0.0), p(0.0, 4.0)], [p(2.0, 0.0), p(2.0, 4.0)], [p(4.0, 0.0), p(4.0, 4.0)]];
         let methods: [&[(&str, &str)]; 4] = [&[], &[("split_method", "simple")], &[("split_method", "staggered")], &[("random_split_phase", "true")]];
         for settings in methods {
-            for e in [false, true] {
+            for satin_method in ["satin_column", "e_stitch", "s_stitch"] {
                 let mut meter = Budget::DEFAULT.meter();
                 let mut rng = SplitMix64::new(0);
                 let mut splitter = Splitter::new(&params(settings), Some(1.5), 0.3, &mut rng);
-                let run = if e { splitter.sew_e(&pairs, &pairs, 2.0, &mut meter) } else { splitter.sew(&pairs, &pairs, &mut meter) }.unwrap();
+                let run = match satin_method {
+                    "e_stitch" => splitter.sew_e(&pairs, &pairs, 2.0, &mut meter),
+                    "s_stitch" => splitter.sew_s(&pairs, &pairs, &mut meter),
+                    _ => splitter.sew(&pairs, &pairs, &mut meter),
+                }
+                .unwrap();
                 assert!(run.len() > 2 * pairs.len(), "{settings:?} split");
                 let spent = Budget::DEFAULT.max_stitches - meter.stitches_left();
-                assert_eq!(usize::try_from(spent).unwrap(), run.len(), "{settings:?}, E-stitch {e}");
+                assert_eq!(usize::try_from(spent).unwrap(), run.len(), "{settings:?}, {satin_method}");
             }
         }
     }

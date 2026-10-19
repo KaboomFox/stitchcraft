@@ -20,6 +20,7 @@
     - [Running stitch](user/stitches/running.md)
     - [Zigzag stroke](user/stitches/zigzag.md)
     - [E-stitch](user/stitches/e-stitch.md)
+    - [S-stitch](user/stitches/s-stitch.md)
     - [Lock stitches, trims and stops](user/stitches/locks.md)
   - [Embroidery basics](user/explanation/embroidery-basics.md)
   - [Reference](user/reference/README.md)

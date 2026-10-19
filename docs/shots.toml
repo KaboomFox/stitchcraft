@@ -211,6 +211,32 @@ panels = [
 ]
 
 [[shot]]
+id = "s-stitch-spacing"
+kind = "stitch"
+fixture = "docs/fixtures/s-stitch.svg"
+style = "simple"
+scale = 20.0
+layout = "rows"
+alt = "A curved band 36 mm long and 6 mm wide sewn as an S-stitch, a stitch across it at each step, every other one back the other way, joined along its edges"
+panels = [
+  { caption = "1 mm", params = { satin_column = "true", satin_method = "s_stitch", zigzag_spacing_mm = "1" } },
+  { caption = "0.4 mm", params = { satin_column = "true", satin_method = "s_stitch" } },
+]
+
+[[shot]]
+id = "s-stitch-split"
+kind = "stitch"
+fixture = "docs/fixtures/s-stitch.svg"
+style = "simple"
+scale = 20.0
+layout = "rows"
+alt = "The same band at 0.6 mm spacing, its stitches across split to no more than 2.5 mm"
+panels = [
+  { caption = "Default", params = { satin_column = "true", satin_method = "s_stitch", zigzag_spacing_mm = "0.6", max_stitch_length_mm = "2.5" } },
+  { caption = "Staggered", params = { satin_column = "true", satin_method = "s_stitch", zigzag_spacing_mm = "0.6", max_stitch_length_mm = "2.5", split_method = "staggered" } },
+]
+
+[[shot]]
 id = "running-tolerance"
 kind = "stitch"
 fixture = "docs/fixtures/half-disc.svg"

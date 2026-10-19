@@ -25,8 +25,10 @@ Off, the path is sewn as a stroke, by its `stroke_method`.
 
 **Method.** How the column is sewn. A satin column sews stitches straight across it, from one rail to the
 other and back. An E-stitch sews a spike across the column at each pair and a spine along its
-first rail between them, an edge for appliqué. S and zigzag stitches arrive in later versions,
-and until then an element set to one is skipped (`SC-W0011`).
+first rail between them, an edge for appliqué. An S-stitch sews one stitch across at each pair,
+every other one the other way, with a step along a rail between them: split by a longest
+stitch, they cover the column in rows, as a fill does. The zigzag satin arrives in a later
+version, and until then an element set to it is skipped (`SC-W0011`).
 
 - **Accepts:** one of `satin_column` (Satin column), `e_stitch` (E-stitch), `s_stitch` (S-stitch), `zigzag` (Zigzag satin)
 - **Default:** `satin_column`
@@ -34,8 +36,9 @@ and until then an element set to one is skipped (`SC-W0011`).
 
 ### `zigzag_spacing_mm`
 
-**Zigzag spacing.** The distance from one stitch across the column to the next that goes the same way: from one
-rail to the other and back again is one spacing. It is measured across the column at its
+**Zigzag spacing.** The distance from one pair of needle points across the column to the next. A satin column
+goes across and back in one spacing, an E-stitch sews a spike every spacing, and an S-stitch a
+stitch across, each the other way from the one before. It is measured across the column at its
 outside edge, and on a curve the stitches fan out from the inside edge.
 
 - **Accepts:** a length from 0.01 to 10 mm

@@ -5,6 +5,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M7.4: the S-stitch is sewn, as Ink/Stitch sews its "S" stitch (`REQ-SAT-024`, `REQ-SAT-025`). Set
+  `satin_column` on and `satin_method` to `s_stitch`. Each pair a satin column places is sewn once
+  across, the first and every other one from the second rail, with a step along a rail to the next.
+  - A stitch across splits as one from the first rail to the second would, and the simple and staggered
+    methods number the stitches from 0, so staggered splits move along at every stitch. The steps are
+    never split, as in Ink/Stitch, which works out splits for them and sews none.
+  - `zigzag_spacing_mm`'s reference entry says what a spacing is for each satin method.
+  - A user page with pictures, *S-stitch*, and the S-stitch listed for MC-6. `SC-W0011` no longer skips
+    an S-stitch. The zigzag satin is the one satin method it still skips.
 - M7.3: the E-stitch is sewn, as Ink/Stitch sews its "E" stitch (`REQ-SAT-020`, `REQ-SAT-021`). Set
   `satin_column` on and `satin_method` to `e_stitch`. A spine runs along the first rail, with a spike
   across the column at each pair, an edge for appliqué.
