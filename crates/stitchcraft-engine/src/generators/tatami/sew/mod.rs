@@ -469,38 +469,43 @@ struct Sewing<'a> {
 }
 
 /// The stretch of rows the route is sewing, for gap-fill rows: how many of its rows came after travel, as
-/// Ink/Stitch counts them, whether the needle has travelled since the last row, and the segments of the last
-/// row and the one before it.
+/// Ink/Stitch counts them, whether the needle has travelled since the last row, the last row's segment with
+/// its row of the grid, and the last segment sewn before it in another row. That segment says which way the
+/// stretch goes. Ink/Stitch takes the way from the row before the last stretch of travel, and a row sewn on
+/// through a joint, 2 segments of one row, has none between its segments.
 struct Stretch {
     rows: usize,
     after_travel: bool,
-    last: [Option<usize>; 2],
+    last: Option<(usize, Option<usize>)>,
+    before: Option<usize>,
 }
 
 impl Stretch {
     /// The stretch a route starts with. Its first row counts as reached by travel: Ink/Stitch's route always
     /// starts with travel, from its node nearest the needle, of no length where that is the first row's start.
-    const START: Self = Self { rows: 0, after_travel: true, last: [None, None] };
+    const START: Self = Self { rows: 0, after_travel: true, last: None, before: None };
 
-    /// Row segment `segment` is sewn.
-    fn row(&mut self, segment: usize) {
+    /// Row segment `segment`, of the grid's row `row`, is sewn.
+    fn row(&mut self, segment: usize, row: Option<usize>) {
         self.rows += usize::from(self.after_travel);
         self.after_travel = false;
-        let [last, _] = self.last;
-        self.last = [Some(segment), last];
+        if let Some((last, _)) = self.last.filter(|&(_, last_row)| last_row != row) {
+            self.before = Some(last);
+        }
+        self.last = Some((segment, row));
     }
 
     /// The needle travels, and the travel `leaves` the stretch where Ink/Stitch's gap fill finds more than
-    /// one edge of travel in a row ([`super::route::Step::Travel`]): the last row's segment and the one
-    /// before it, when the stretch had more than 3 rows.
+    /// one edge of travel in a row ([`super::route::Step::Travel`]): the last row's segment and the last one
+    /// before it in another row, when the stretch had more than 3 rows.
     fn travel(&mut self, leaves: bool) -> Option<[usize; 2]> {
         self.after_travel = true;
         if !leaves {
             return None;
         }
         let rows = std::mem::take(&mut self.rows);
-        match self.last {
-            [Some(last), Some(before)] if rows > 3 => Some([last, before]),
+        match (self.last, self.before) {
+            (Some((last, _)), Some(before)) if rows > 3 => Some([last, before]),
             _ => None,
         }
     }
@@ -541,7 +546,7 @@ impl Sewing<'_> {
                     if let Some(lines) = &mut self.lines {
                         lines.sew(segment);
                     }
-                    stretch.row(segment);
+                    stretch.row(segment, self.rows.get(segment).copied());
                 }
                 Step::Travel { from, to, beside, leaves } => {
                     if let (Some(rows), Some(ended)) = (stretch.travel(leaves), row_before(i)) {
@@ -608,9 +613,9 @@ impl Sewing<'_> {
     }
 
     /// Sews onto `run` the rows that fill the gap after the row of segment `last`, which the route sewed
-    /// after `before`'s, from `a` to `b`: back and forth from it, each lengthened as the rows are, with a hop
-    /// from each to the next, and one back to `b`. Where no row lies past it, the part ends there, and
-    /// nothing is sewn.
+    /// after `before`'s, the last in another row, from `a` to `b`: back and forth from it, each lengthened as
+    /// the rows are, with a hop from each to the next, and one back to `b`. Where no row lies past it, the
+    /// part ends there, and nothing is sewn.
     fn fill_gap(
         &self,
         run: &mut Vec<Point>,
