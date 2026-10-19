@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d356077c.js";
+            window.path_to_searchindex_js = "../searchindex-e95e70a8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-ed0f9ffd.js"></script>
@@ -449,6 +449,11 @@ which counts apart. A loop that keeps 40 bytes for each unit of work wants 20 GB
 default budget, more than a CI runner has, and the job ends without a result when the runner runs out of
 memory. So in the mutants jobs each test binary runs with at most 4 GiB of address space, through
 <code>prlimit</code> as Cargo’s runner: such a mutant aborts at the cap, which counts as noticed.</p>
+<p>Mutation testing runs the tests hundreds of times for one pull request. A test that writes files puts
+them in a folder of its own (<code>stitchcraft_testkit::temp::TempDir</code>), which goes with everything in it
+when the test ends, whether it passed or failed. Until October 2026 the command line’s tests left their
+folders in the system’s temporary folder: 14 folders and about 65 MB on each run of the workspace’s
+tests.</p>
 
                     </main>
 
