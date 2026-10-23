@@ -23,8 +23,8 @@ of a traced square and a strip 2.1 mm wide beside it, both sewed as tatami fills
 shape sews as this page describes. Once MC-8 confirms the rules on the machine, M13.8 makes automatic
 digitizing the default for VectorCraft documents, and `--auto` is then needed for SVG files only.
 
-ABI v2's exporter plug-ins ([P1](rfc-vectorcraft-abi-v2.md#p1-exporter-plug-ins)) would move the second
-step into VectorCraft, as File › Export › PES.
+Exporter plug-ins ([P1](rfc-vectorcraft-abi-v2.md#p1-exporter-plug-ins), in VectorCraft from 0.14.0)
+would move the second step into VectorCraft, as File › Export › PES, once plug-in v2 uses them.
 
 An SVG file traced elsewhere, such as by Inkscape's Trace Bitmap, sews the same way with
 `stitch plan picture.svg --auto`. Without the switch, an SVG file's shapes sew as Ink/Stitch sews them,
@@ -159,7 +159,8 @@ effect's dialog shows the settings, and with `--auto` they take their defaults.
 The Auto effect is a live effect like the plug-ins of each stitch family
 ([plug-ins](vectorcraft-integration.md#plug-ins)). VectorCraft runs a group's effects on each path inside
 it (`REQ-VC-006`), so the effect on a traced group previews every path's stitches, each sewn as its width
-says. A live effect is given its path alone. Its preview shows each shape's stitches without the
+says. Each path gets a run of its own, with a live effect's whole budget. A live effect is given its path
+alone. Its preview shows each shape's stitches without the
 overlaps, the merged specks or the order, which `stitch export` adds. A preview that costs more than ABI
 v1's budget shows less, with `SC-I0810`, as the other effects' previews do.
 
@@ -168,11 +169,26 @@ trace, or use `--auto`, which works without it.
 
 ## With ABI v2
 
+Plug-in v2 (M9) uses what VectorCraft has merged of the RFC ([outcome](rfc-vectorcraft-abi-v2.md#outcome)).
+
 - **P1, exporter plug-ins.** File › Export › PES plans the document inside VectorCraft, objects without
   effects digitized automatically. The flow is then trace and export, both in VectorCraft.
-- **P8, effects in filter objects.** A filter could set on each path the effect of the family its width
-  chose. The user then adjusts it in that effect's dialog.
-- **P4, budget classes.** The Auto effect's previews of large shapes get the heavy budget.
+- **Apply Auto, a heavy filter (P4 and P8).** An object filter digitizes the selected traced shapes once
+  and writes the result into the document. Each part becomes an object with its stitch family's effect and
+  the settings the rules chose. A broad part is a path with the fill effect, a narrow part a compound path
+  of its rails and rungs with the satin effect, and a line its centre line with the stroke effect. Their
+  paths include the overlaps, and leave out what later fills cover. Specks are merged into their
+  neighbours, and the background is left out. The filter returns the parts as new objects in sewing order and leaves the traced shapes out of
+  its output, which replaces them in one undo step. Each part then previews with its own effect, the user
+  adjusts it in that effect's dialog, and `stitch export` sews the parts as they are, without `--auto`.
+- **Budgets.** Digitizing a whole picture takes more than a live effect gets. A filter may ask for the
+  heavy budget, 1 G instructions and 300 s a run, and a live effect may not, as it runs whenever the
+  document is drawn. So the Auto effect is the quick preview, within a live effect's budget, and Apply
+  Auto's budget is measured when it is built, as the previews' were (M6.3).
+- **P3, overlays (under review).** The Auto effect could draw its stitches over the traced shapes, whose
+  geometry is then unchanged. Writing them costs less than writing geometry. The engine's work limits a
+  preview more ([previews](vectorcraft-integration.md#live-effect-previews-within-v1-budgets)), so a large
+  shape still shows its rows or an outline.
 
 ## Text in pictures
 

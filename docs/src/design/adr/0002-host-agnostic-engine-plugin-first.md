@@ -21,11 +21,17 @@ budgets. Changing VectorCraft requires its maintainers' agreement. A machine nee
 paths, add rungs and bake previews, and making a line into a column needs more instructions than ABI v1
 gives a filter ([tools](../vectorcraft-integration.md#tools-vectorcrafts-own-commands)).
 
+**Amended in October 2026:** phase 2 came early. VectorCraft merged seven of the RFC's eight
+proposals as additive parts of ABI v1, from 0.14.0 to `main`, and the overlays are under review
+([outcome](../rfc-vectorcraft-abi-v2.md#outcome)). The phase-1 plug-in uses none of them, and plug-in v2
+(M9) comes after 1.0, as planned.
+
 ## Consequences
 
 - Useful on the machine before any upstream discussion.
 - Previews in v1 are budget-limited (coarse levels for large fills); the CLI shows full fidelity.
-- Two-step workflow (design in VectorCraft, export with the CLI) until exporter plug-ins exist.
+- Two-step workflow (design in VectorCraft, export with the CLI) until the plug-in uses exporter plug-ins,
+  which VectorCraft has from 0.14.0.
 - The compatibility gate is required, because we depend on a host we do not control.
 
 ## Alternatives considered

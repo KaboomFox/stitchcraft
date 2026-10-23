@@ -642,6 +642,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The VectorCraft RFC says what became of each proposal (*RFC: VectorCraft plug-in ABI v2*, Outcome).
+  VectorCraft merged seven of the eight, one pull request each, as additive parts of ABI v1.
+  - 0.14.0 has exporter plug-ins, parameters' labels, units, groups, help and conditions, and a live
+    effect's paints.
+  - 0.15.0 gives a filter its objects' effect records and stroke styles, and lets it return effects.
+  - 0.16.0 has document data.
+  - `main` has heavy filters, and keeps other applications' SVG attributes from import to export.
+  - The overlays are under review, and P6's sibling markers are not built.
+  - *VectorCraft integration*, the technical design, the roadmap's M9, ADR 0002, *Parameters* and *Image
+    to embroidery* say so where they spoke of these as still to come. The plug-in uses none of them yet.
+  - *Image to embroidery* plans Apply Auto for plug-in v2. A heavy filter digitizes the selected traced
+    shapes once and replaces them with the parts it sews, each with its stitch family's effect, in sewing
+    order. The Auto effect is the quick preview, as a live effect can't ask for the heavy budget.
 - The roadmap has 2 more milestones, from a review of how people use Ink/Stitch, which is a new plan page
   (*How people use Ink/Stitch*).
   - M13, image to embroidery, comes next, after M7.5 and before M7.6. A picture traced in VectorCraft is
