@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Audience** | ArtCraft / VectorCraft maintainers |
-| **Status** | Draft for discussion (to be opened as a GitHub discussion or issue before M9) |
+| **Status** | Proposed upstream in October 2026, one pull request per proposal. Seven are merged, the overlays are under review, and P6's sibling markers are not built ([outcome](#outcome)) |
 | **Compatibility** | Additive: every v1 plug-in keeps working unchanged |
 | **Author's interest** | StitchCraft (machine embroidery), but every proposal serves other plug-ins too |
 
@@ -13,6 +13,26 @@ ABI v1 is a careful, safe design: sandboxed, import-free, deterministic, portabl
 proposes eight additive features that let richer plug-ins exist without weakening that sandbox. Each is
 independent and can land on its own; together they let plug-ins export files, show informative
 previews and present usable parameter dialogs.
+
+## Outcome
+
+VectorCraft's maintainers took the proposals one pull request at a time, as additive parts of ABI v1.
+A plug-in still returns 1 from `vc_abi_version`, and a host from before a key ignores it. A host from
+before exporters refuses that kind at install. VectorCraft's `docs/plugins.md` is the contract now, and
+the proposals below are as they were written.
+
+| Proposal | Pull request | In VectorCraft | What landed, where it differs from the proposal |
+|---|---|---|---|
+| P1 exporters | [#3171](https://github.com/storytold/vectorcraft/pull/3171) | 0.14.0 | The kind `"exporter"` with `extensions`, run by `vc_run`, without a `vc_export`. It is given the whole document as the native file's JSON, and `_context` is `{"mode": "export", "extension", "name"}`. It returns `{"dataBase64", "warnings"?}`. An export gets 10 G instructions plus 4,000 per input byte, and 300 s, and Background Export's Cancel stops it |
+| P2 parameter schemas | [#3172](https://github.com/storytold/vectorcraft/pull/3172) | 0.14.0 | `label`, `unit`, `group`, `help`, `helpUrl` and `visibleWhen`, and the types `string` and `numberList`. A plug-in declares up to 256 parameters, at most 64 outside groups, without a `maxParams` key |
+| P3 overlays | [#3807](https://github.com/storytold/vectorcraft/pull/3807) | under review | As proposed |
+| P4 budget classes | [#3721](https://github.com/storytold/vectorcraft/pull/3721) | `main`, after 0.16.0 | A filter may ask for the heavy budget with `"budget": "heavy"`, and a live effect or an exporter may not. A heavy run gets 1 G instructions plus 4,000 per input byte, and 300 s. Installing asks the user (`allowHeavy`), and the app runs the filter in the background with Cancel. The output adds no fuel, as the host learns how large it is when the run has ended |
+| P5 document data | [#3720](https://github.com/storytold/vectorcraft/pull/3720) | 0.16.0 | The data is part of the document's foreign data, `unknown.pluginData` by plug-in id, without a `plugin_data` section. A filter reads its own in `_context.documentData` and writes `documentData` (at most 1 MiB, `null` removes it) in the same undo step as its objects. A live effect isn't given it. An exporter reads every plug-in's in the document it is given |
+| P6 context for live effects | [#3173](https://github.com/storytold/vectorcraft/pull/3173) | 0.14.0 | The object's `fills` and `strokes`, read only, and `_context.item`, the fill or stroke the effect sits on. A change of paint runs the effect again. The sibling markers (`contextPrefixes`) are not built |
+| P7 foreign SVG attributes | [#3758](https://github.com/storytold/vectorcraft/pull/3758) | `main`, after 0.16.0 | `ObjectAttributes::foreign`, beside the object's `data-*` attributes, and `attrs.foreign` in the native file. They are kept on the elements whose `data-*` attributes are kept, which leaves type out, at most 64 an object and 64 KiB a value, with SVG's, XLink's, XML's, Inkscape's, Sodipodi's and VectorCraft's own namespaces aside |
+| P8 effects and stroke style | [#3174](https://github.com/storytold/vectorcraft/pull/3174) | 0.15.0 | As proposed. A path a filter hands back unchanged is still a live shape |
+
+The third-party contract test proposed at the end of this page has not been written.
 
 ## Motivation
 

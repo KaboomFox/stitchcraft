@@ -277,7 +277,9 @@ Three phases (full design in [VectorCraft integration](vectorcraft-integration.m
 2. **ABI v2, proposed upstream (M9, after 1.0).** Exporter plug-ins, rich parameter schemas (labels, units,
    groups, conditions), a display-only overlay channel for real stitch previews, budget classes and
    document-level plug-in data. Written as [an RFC](rfc-vectorcraft-abi-v2.md) for the ArtCraft team;
-   every item is generic, not embroidery-specific.
+   every item is generic, not embroidery-specific. VectorCraft took them one pull request at a time as
+   parts of ABI v1: seven are merged and the overlays are under review
+   ([outcome](rfc-vectorcraft-abi-v2.md#outcome)). Plug-in v2, which uses them, is M9.
 3. **In-tree crate, optional.** Because the engine is MIT/Apache and host-agnostic, VectorCraft (or
    a fork) can embed it natively with panels and a simulator.
 
@@ -324,8 +326,8 @@ milestone signed off.
 | ID | Risk | Mitigation |
 |---|---|---|
 | R1 | PES header fields are partly undocumented; the machine could reject a file | PES v1 minimal header; pyembroidery oracle; MC-1 in the first milestone |
-| R2 | ABI v1 budgets too small for full previews | Budget-aware coarse previews; full fidelity in CLI; ABI v2 overlay proposal |
-| R3 | ArtCraft declines ABI v2 | Plug-in still works on v1; optional in-tree integration in a fork |
+| R2 | ABI v1 budgets too small for full previews | Budget-aware coarse previews; full fidelity in CLI; the overlay proposal, under review upstream |
+| R3 | ArtCraft declines ABI v2 | The plug-in works on v1, and an in-tree integration in a fork is optional. Seven of the eight proposals are merged ([outcome](rfc-vectorcraft-abi-v2.md#outcome)) |
 | R4 | Polygon offset/boolean robustness | Spike M0.7; input sanitizing; fuzzing; fallback to diagnostics, never panics |
 | R5 | Copied GPL code slips in | Design docs first, in our own words (ADR-0012); `cargo xtask cleanroom`; review checklist |
 | R6 | Cross-platform float differences | `libm`, no FMA-sensitive formulas in quantization, cross-platform hash CI |
@@ -339,5 +341,6 @@ milestone signed off.
 1. Exact Brother model (affects PES version and trim support) — answered at MC-1 at the latest.
 2. Final project name and plug-in id namespace (working name StitchCraft; plug-in ids derive from one
    constant).
-3. ArtCraft's appetite for ABI v2 and for embroidery in-tree — ask on their Discord before M9.
+3. ArtCraft's appetite for embroidery in-tree. Their appetite for the RFC is answered: they merged seven
+   of its proposals ([outcome](rfc-vectorcraft-abi-v2.md#outcome)).
 4. Where the repository lives on GitHub (needed for the docs site URL and badges).

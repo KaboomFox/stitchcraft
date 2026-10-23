@@ -234,4 +234,10 @@ waits on ArtCraft's answer to the RFC. Its id stays M9, as every step id does.
 
 Open the [RFC](../design/rfc-vectorcraft-abi-v2.md) with ArtCraft; one PR per accepted proposal (with
 tests, following their `AGENTS.md`); then plug-in v2, with export to PES and DST from File › Export,
-overlay previews, rich parameter dialogs and a machine profile per document.
+overlay previews, rich parameter dialogs and a machine profile per document. Plug-in v2 adds Apply Auto, a
+filter that digitizes a traced picture into objects with StitchCraft's effects
+([image to embroidery](../design/image-to-embroidery.md#with-abi-v2)).
+
+The upstream half came early, in October 2026. VectorCraft merged seven of the RFC's eight proposals, one
+pull request each, from 0.14.0 to `main`, and the overlays are under review
+([outcome](../design/rfc-vectorcraft-abi-v2.md#outcome)). Plug-in v2 comes after 1.0, as planned.

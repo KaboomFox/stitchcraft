@@ -46,27 +46,48 @@ below are to that commit; the [compatibility gate](compatibility-gate.md) keeps 
 - **Not in v1:** tool plug-ins, panel plug-ins, host callbacks (progress, cancel), file-format plug-ins,
   live effects that change paint.
 
+### Added upstream since (phase 2)
+
+The [RFC](rfc-vectorcraft-abi-v2.md)'s proposals landed one pull request at a time, as additive parts of
+ABI v1 ([outcome](rfc-vectorcraft-abi-v2.md#outcome)), in these versions.
+
+| In VectorCraft | Added |
+|---|---|
+| 0.14.0 | Exporter plug-ins (P1). Labels, units, groups, help and conditions for parameters, `string` and `numberList` types, and up to 256 parameters (P2). A live effect is given its object's fills and strokes (P6, without the sibling markers) |
+| 0.15.0 | A filter is given its objects' effect records and their strokes' join, cap and miter limit, and may return effect records (P8) |
+| 0.16.0 | A filter keeps data with the document, `documentData` (P5) |
+| `main`, after 0.16.0 | Heavy filters (P4). Attributes in other applications' namespaces kept from SVG import to export (P7) |
+| under review | Overlays for live effects (P3) |
+
+The phase-1 plug-in uses none of them, so it runs on every version the [compatibility
+gate](compatibility-gate.md) tests. The facts below are those of the versions it was designed on, with
+what later versions changed.
+
 ### Other facts that shape the design
 
 - **No generic per-object metadata.** `Node` has `attrs: Option<Box<ObjectAttributes>>` with only
-  centre display, image map, URL and note (`crates/doc/src/node.rs`). The effect record is therefore the
-  right place for embroidery parameters.
+  centre display, image map, URL and note (`crates/doc/src/node.rs`). Later versions add an SVG file's
+  `data-*` attributes and event handlers there, and `main` adds attributes in other applications'
+  namespaces (P7). A plug-in can set none of them. The effect record is therefore the right place for
+  embroidery parameters.
 - **Document-level foreign data** lives in `Document.unknown` (used for the perspective grid and
-  brushes), preserved on round trips (`crates/doc/src/lib.rs`).
+  brushes), preserved on round trips (`crates/doc/src/lib.rs`). From 0.16.0, filters keep their document
+  data there too (`unknown.pluginData`, P5).
 - **SVG import keeps only the attributes it understands.** The importer looks attributes up by name
   (presentation attributes, references, names such as `inkscape:label`) and has no place to keep unknown
   ones (`crates/svg/src/import.rs`), so `inkstitch:*` parameters do not survive opening an Ink/Stitch SVG
-  in VectorCraft today. SVG export can embed the whole native document (`vectorcraft:document`) when
-  editing data is preserved.
+  in VectorCraft up to 0.16.0. On `main` they do (P7): import keeps them on their objects, `.vectorcraft`
+  files save them as `attrs.foreign`, and SVG export writes them back. SVG export can embed the whole
+  native document (`vectorcraft:document`) when editing data is preserved.
 - **Export formats are a static table** (`FORMATS` in `crates/engine/src/cmd/fileio/mod.rs`): there is no
-  registry a plug-in could add PES to.
+  registry a plug-in could add PES to before 0.14.0, whose exporter plug-ins add formats (P1).
 
 ## 3. Phases
 
 | Phase | Needs from VectorCraft | Delivers | Milestone |
 |---|---|---|---|
 | 1. ABI v1 plug-ins | nothing | per-object embroidery settings, previews, tools; machine files via `stitch export file.vectorcraft` | M6 |
-| 2. ABI v2 (upstream RFC) | generic plug-in features | export from File › Export, real stitch previews, rich parameter panels, progress | M9, after 1.0 |
+| 2. ABI v2 (upstream RFC) | generic plug-in features, most of them merged ([outcome](rfc-vectorcraft-abi-v2.md#outcome)) | export from File › Export, real stitch previews, rich parameter panels, progress | M9, after 1.0 |
 | 3. In-tree crate (optional) | ArtCraft's interest, or a fork | native speed, simulator panel, satin tool | post-1.0 |
 
 ## 4. Phase 1 design (ABI v1, no VectorCraft change)
@@ -82,7 +103,7 @@ One `.wasm` per stitch family keeps each dialog relevant and under 64 parameters
 | `<ns>.fill` | live effect | tatami (P1); contour, meander, circular (P2) | `fill_method` choice |
 | `<ns>.auto` | live effect | the stitches automatic digitizing chooses by width (M13.7) | on a group, previews each path inside ([image to embroidery](image-to-embroidery.md)) |
 
-The tools an object filter was to give are VectorCraft's own commands, or wait for ABI v2
+The tools an object filter was to give are VectorCraft's own commands, or wait for plug-in v2 (M9)
 ([tools](#tools-vectorcrafts-own-commands)).
 
 `<ns>` is a reverse-DNS namespace defined in one constant (`PLUGIN_NAMESPACE`) in the VectorCraft adapter,
@@ -169,10 +190,11 @@ the StitchCraft effect is applied after the paths are joined, which works in eve
 | Baked preview | Object › Expand Appearance (`effect.expandAppearance`) | It runs the live effect and makes objects of what each fill and stroke paints, strokes outlined. Those are the preview's shapes, which sew differently from the effect. Bake a copy to show, and sew the original |
 | Presets | Graphic Styles (`graphicStyle.new`, `graphicStyle.apply`) | Applying a style copies its effects into each object, or into the group it is applied to, whose effects apply to each path inside (`REQ-VC-006`) |
 
-**Convert Line to Satin** (Ink/Stitch's `stroke_to_satin`) waits for ABI v2. It would make a column drawn
-as one path into 2 rails and rungs, as the engine makes them when it sews one. A filter is given the
-stroke's width, which a live effect is not, but not its join. M6.4 measured the conversion inside
-VectorCraft's host, as a live effect with the same limits as a filter:
+**Convert Line to Satin** (Ink/Stitch's `stroke_to_satin`) waits for plug-in v2. It would make a column
+drawn as one path into 2 rails and rungs, as the engine makes them when it sews one. Up to 0.13 a filter
+is given the stroke's width and a live effect is given no stroke, and neither is given the join. 0.14.0
+gives a live effect its strokes (P6), and 0.15.0 gives a filter the join (P8). M6.4 measured the
+conversion inside VectorCraft's host, as a live effect with the same limits as a filter:
 
 | Line, 3 mm wide | Instructions |
 |---|---|
@@ -185,11 +207,12 @@ VectorCraft's host, as a live effect with the same limits as a filter:
 
 A run gets about 52 million, and almost every curved line would run out. The rails are the line offset as
 GEOS offsets it, and each offset builds the boundary of the whole stroke, once for each rail. A faster
-offset, or the heavy budget of ABI v2's P4, brings the tool back (roadmap, M10).
+offset, or the heavy budget a filter can ask for on VectorCraft's `main` (P4), brings the tool back
+(roadmap, M10).
 
-**A test sheet** waits for ABI v2 too. A filter's output holds geometry, paints, opacity and names, and
-never an effect record. The objects it drew would not sew as a test sheet. `stitch testsheet` makes them,
-and ABI v2's P8 would let a filter return effects.
+**A test sheet** waits for plug-in v2 too. Up to 0.14.0 a filter's output holds geometry, paints, opacity
+and names, and never an effect record, so the objects it drew would not sew as a test sheet. `stitch
+testsheet` makes them. From 0.15.0 a filter may return effect records (P8).
 
 ### Live-effect previews within v1 budgets
 
@@ -244,12 +267,14 @@ contract test `req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limi
 shapes of growing size on every track the [compatibility gate](compatibility-gate.md) tests, and fails
 when VectorCraft stops a run that must finish. It prints what each run takes, which the budget's numbers
 are measured from. `hello_reads_and_writes_json_within_the_recorded_budget` still measures what JSON
-costs. The real stitches are always available from the CLI preview, and ABI v2's overlay channel removes
-this limitation.
+costs. The real stitches are always available from the CLI preview, and overlays (P3, under review)
+would remove this limitation.
 
-Paint caveat: a live effect cannot read the object's paint, so a fill preview shows ribbons painted with
-the object's own fill; stroke previews use the object's stroke. Users set the fill/stroke to the thread
-colour, which they want anyway for export.
+Paint caveat: up to 0.13, a live effect cannot read the object's paint, so a fill preview shows ribbons
+painted with the object's own fill, and stroke previews use the object's stroke. Users set the
+fill/stroke to the thread colour, which they want anyway for export. From 0.14.0 a live effect is given
+its object's fills and strokes (P6). With them, plug-in v2 can sew a satin column drawn as one path, and
+a zigzag stroke, as wide as their stroke, where the phase-1 effect reports `SC-I0810`.
 
 ### Commands in v1
 
@@ -268,9 +293,9 @@ note can follow it:
 Hiding an object leaves it out too, without a word, and a name on a hidden object says nothing. A live
 effect is given its object's geometry alone (VectorCraft's `docs/plugins.md`, Input), never its name. So
 VectorCraft's preview still shows the stitches of an object these names leave out, a marker included,
-when it has a StitchCraft effect or is in a group that has one. `stitch export` leaves them out. ABI v2's
-sixth proposal would let a live effect read the markers beside its object, so its preview could start and
-end at them.
+when it has a StitchCraft effect or is in a group that has one. `stitch export` leaves them out. The
+RFC's sixth proposal would have let a live effect read the markers beside its object, so its preview could
+start and end at them, and that part of it is not built.
 
 ### Reading `.vectorcraft` files (`stitchcraft-vectorcraft`)
 
@@ -405,14 +430,16 @@ tests write files for the adapter to read back (Level B, M6.6).
 
 ### Importing Ink/Stitch SVGs into VectorCraft
 
-Because VectorCraft drops `inkstitch:*` attributes on SVG import, phase 1 offers
+Because VectorCraft up to 0.16.0 drops `inkstitch:*` attributes on SVG import, phase 1 offers
 `stitch import-inkstitch design.svg -o design.vectorcraft`: our SVG adapter reads the Ink/Stitch file
 and writes a VectorCraft document with the same art and the parameters as live-effect records (M8).
+VectorCraft's `main` keeps them (P7): an Ink/Stitch SVG opened there and saved keeps its parameters in
+each object's `attrs.foreign`, which the `.vectorcraft` adapter doesn't read yet.
 
 ## 5. Phase 2: ABI v2 proposals (summary)
 
-Detailed in [the RFC](rfc-vectorcraft-abi-v2.md). Every item is generic — useful to any plug-in, not
-only embroidery:
+Detailed in [the RFC](rfc-vectorcraft-abi-v2.md), with what landed of each in its
+[outcome](rfc-vectorcraft-abi-v2.md#outcome). Each item is generic, for any plug-in:
 
 1. **Exporter plug-ins** (a new kind) registered in a dynamic format table: File › Export › PES.
 2. **Rich parameter schemas:** labels, help text, units, groups, `visibleWhen` conditions, `string` and

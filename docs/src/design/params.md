@@ -242,8 +242,10 @@ with only the parameters that apply to it; the shared lock/trim parameters are i
 fails if any family's manifest exceeds 64 parameters or 64 KiB, so adding a parameter that would break
 the limit is caught in the PR, not by a user. In v1 each parameter has one value of VectorCraft's kinds.
 A parameter that needs a text, a seed or several values keeps its default in VectorCraft
-([manifests](vectorcraft-integration.md#plug-ins)). When VectorCraft supports richer schemas (ABI v2
-RFC), groups and conditions are emitted as well.
+([manifests](vectorcraft-integration.md#plug-ins)). VectorCraft supports richer schemas from 0.14.0
+(the RFC's P2): labels, units, groups, help and conditions, texts (`string`) and lists of numbers
+(`numberList`), and up to 256 parameters, at most 64 outside groups. Plug-in v2 (M9) emits groups and
+conditions as well, and can declare the parameters that need a text or several values.
 
 ## Presets
 

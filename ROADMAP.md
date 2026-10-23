@@ -52,6 +52,6 @@ open owner action from M0.5 is the code-of-conduct contact.
 | M10 | Guided, gradient, ripple, tartan, cross stitch; routing tools | ⚪ | — |
 | M11 | EXP, JEF, VP3, XXX, U01; thread catalogues | ⚪ | — |
 | M12 | 1.0: performance, docs audit, translations, release automation | ⚪ | MC-7 ⚪ |
-| M9 | VectorCraft ABI v2 (upstream RFC), last: after 1.0 and the work after it | ⚪ | none |
+| M9 | VectorCraft ABI v2 (upstream RFC), last: after 1.0 and the work after it | 🟡 upstream: seven of the RFC's eight proposals merged in VectorCraft, from 0.14.0 to `main`, and the overlays under review ([outcome](docs/src/design/rfc-vectorcraft-abi-v2.md#outcome)). Plug-in v2 is after 1.0 | none |
 
 Legend: ⚪ not started · 🟡 in progress · 🟢 done (with links to the checkpoint report)
