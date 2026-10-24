@@ -23,3 +23,4 @@ pub stitchcraft_svg::Svg::design: stitchcraft_engine::design::Design
 pub stitchcraft_svg::Svg::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub const stitchcraft_svg::MAX_BYTES: usize
 pub fn stitchcraft_svg::read(&[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_svg::Svg, stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_svg::read_with(&[u8], &stitchcraft_core::budget::Budget, stitchcraft_engine::design::Reading) -> core::result::Result<stitchcraft_svg::Svg, stitchcraft_core::diag::Diagnostic>
