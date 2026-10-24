@@ -263,7 +263,6 @@ fn req_cli_002_a_panic_after_planning_is_bundled_with_the_plan_and_where_it_came
     assert!(writing.contains("while writing the files, which a replay does not do") && !writing.contains("not reproduced"), "{writing}");
 }
 
-/// The fixture `strokes.svg`.
 #[test]
 fn req_auto_001_a_bundle_records_auto_and_its_replay_digitizes_the_same() {
     let dir = TempDir::new("bug-report-auto");
@@ -288,6 +287,7 @@ fn req_auto_001_a_bundle_records_auto_and_its_replay_digitizes_the_same() {
     assert_eq!((out.status, out.stdout.lines().last()), (Status::DesignErrors, Some("not reproduced")), "{}", out.stdout);
 }
 
+/// The fixture `strokes.svg`.
 fn strokes() -> Vec<u8> {
     std::fs::read(conformance("fixtures/svg/strokes.svg")).unwrap()
 }

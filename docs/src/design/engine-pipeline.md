@@ -16,11 +16,13 @@ Design ──▶ 0 auto ──▶ 1 normalize ──▶ 2 validate ──▶ 3 g
 Since M13.1, before anything else, each element the host marked automatic, a shape without settings read
 with `--auto`, becomes the ordinary elements its width calls for, with the settings that say so
 (`stitchcraft_engine::auto::digitized`, [image to embroidery](image-to-embroidery.md#stitch-types-by-width)):
-itself for an area or a line that runs, a satin column for each of its subpaths, or the fill of the area it
-paints. Every stage after it sees only ordinary elements, so a digitized shape sews, offers its neighbours
-what it offers and is said of as the same shape set by hand would be. `SC-I0901` counts the shapes
-digitized. A design without automatic elements passes through unchanged and uncopied. Each automatic
-element has the budget's work to itself; one that needs more is left out with `SC-E0004` (`REQ-GEN-002`).
+itself for an area or a line that runs, a satin column for each of its subpaths (or the fill of a subpath
+a column cannot follow, `SC-I0902`), or the fill of the area it paints. Every stage after it sees only
+ordinary elements, so a digitized shape sews, offers its neighbours what it offers and is said of as the
+same shape set by hand would be. `SC-I0901` counts the shapes digitized. A design without automatic
+elements passes through unchanged and uncopied. Each automatic element has the budget's work to itself;
+one that needs more is left out with `SC-E0004` (`REQ-GEN-002`). The stage makes no error of its own
+(`REQ-AUTO-006`): what cannot be sewn as its width says is sewn otherwise or left out with a warning.
 
 ## 1. Normalize
 

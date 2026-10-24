@@ -31,7 +31,7 @@ use stitchcraft_params::kinds::{Choice, Toggle};
 use stitchcraft_params::{ChoiceOption, Family, ParamKind, ParamSet, ParamSpec, StitchType, Validated, params, read_param, unknown_keys};
 use stitchcraft_plan::MachineProfile;
 
-use crate::common::CommonParams;
+use crate::common::{CommonParams, STOP_AFTER, TRIM_AFTER};
 use crate::design::{DesignSettings, Element, Join, Path, Shape};
 use crate::generators::manual::manual_stitch;
 use crate::generators::passes::RepeatParams;
@@ -196,8 +196,8 @@ fn named(element: &Element, diagnostics: Vec<Diagnostic>) -> Vec<Diagnostic> {
 /// place for them. Its settings were read once already; a setting that cannot be read was reported then.
 fn left_out(element: &Element) -> Option<Diagnostic> {
     let set = &element.params;
-    let trim = setting::<Toggle>(set, CommonParams::SPECS, "trim_after", &mut Vec::new())?;
-    let stop = setting::<Toggle>(set, CommonParams::SPECS, "stop_after", &mut Vec::new())?;
+    let trim = setting::<Toggle>(set, CommonParams::SPECS, TRIM_AFTER, &mut Vec::new())?;
+    let stop = setting::<Toggle>(set, CommonParams::SPECS, STOP_AFTER, &mut Vec::new())?;
     let what = match (trim, stop) {
         (true, true) => "the trim and the stop after it are",
         (true, false) => "the trim after it is",

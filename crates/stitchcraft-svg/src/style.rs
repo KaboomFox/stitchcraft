@@ -555,6 +555,18 @@ impl<'a> Style<'a> {
             Some(LineJoin::MiterClip | LineJoin::Arcs) | None => Join::UNSET,
         }
     }
+
+    /// The join at the stroke's corners as SVG draws it, for a line digitized automatically, whose stitches
+    /// follow the drawing (`REQ-AUTO-004`): round and bevel as they say, and otherwise SVG's initial join, a
+    /// miter limited by `stroke-miterlimit`. SVG 2's `miter-clip` and `arcs`, which few viewers draw, are
+    /// miters too.
+    pub fn painted_join(&self) -> Join {
+        match self.line_join {
+            Some(LineJoin::Round) => Join::Round,
+            Some(LineJoin::Bevel) => Join::Bevel,
+            Some(LineJoin::Miter | LineJoin::MiterClip | LineJoin::Arcs) | None => Join::Miter { limit: self.miter_limit },
+        }
+    }
 }
 
 /// Whether an opacity (a number, or a percentage) is zero or less; `None` when it does not parse.

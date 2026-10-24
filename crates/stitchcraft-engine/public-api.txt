@@ -17,8 +17,12 @@ impl stitchcraft_engine::auto::Stitches
 pub const fn stitchcraft_engine::auto::Stitches::across(self) -> bool
 pub fn stitchcraft_engine::auto::Stitches::of(&stitchcraft_engine::design::Shape, &stitchcraft_engine::design::DesignSettings) -> stitchcraft_engine::auto::Stitches
 pub fn stitchcraft_engine::auto::Stitches::of_stroke(stitchcraft_core::units::Mm, &stitchcraft_engine::design::DesignSettings) -> stitchcraft_engine::auto::Stitches
+pub struct stitchcraft_engine::auto::Digitized
+pub stitchcraft_engine::auto::Digitized::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub stitchcraft_engine::auto::Digitized::elements: alloc::vec::Vec<stitchcraft_engine::design::Element>
+pub stitchcraft_engine::auto::Digitized::stitches: core::option::Option<stitchcraft_engine::auto::Stitches>
 pub const stitchcraft_engine::auto::SATIN_MAX_WIDTH: stitchcraft_core::units::Mm
-pub fn stitchcraft_engine::auto::digitize(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_engine::design::Element>, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::auto::digitize(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::auto::Digitized, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::auto::digitized<'d>(&'d stitchcraft_engine::design::Design, &stitchcraft_core::budget::Budget) -> (alloc::borrow::Cow<'d, [stitchcraft_engine::design::Element]>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>)
 pub mod stitchcraft_engine::common
 pub struct stitchcraft_engine::common::CommonParams
@@ -45,6 +49,8 @@ pub fn stitchcraft_engine::common::CommonParams::from_set(&stitchcraft_params::s
 pub fn stitchcraft_engine::common::CommonParams::from_set_as(&stitchcraft_params::set::ParamSet, stitchcraft_params::stitch_type::StitchType) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 impl stitchcraft_engine::common::CommonParams
 pub fn stitchcraft_engine::common::CommonParams::jump_length(&self, stitchcraft_core::units::Mm) -> stitchcraft_core::units::Mm
+pub const stitchcraft_engine::common::STOP_AFTER: &str
+pub const stitchcraft_engine::common::TRIM_AFTER: &str
 pub mod stitchcraft_engine::design
 pub enum stitchcraft_engine::design::Cap
 pub stitchcraft_engine::design::Cap::Butt
@@ -114,6 +120,7 @@ pub stitchcraft_engine::design::Subpath::closed: bool
 pub stitchcraft_engine::design::Subpath::segments: alloc::vec::Vec<stitchcraft_engine::design::Segment>
 pub stitchcraft_engine::design::Subpath::start: stitchcraft_core::units::Point
 pub const stitchcraft_engine::design::WORKING_LIMIT_MM: f64
+pub fn stitchcraft_engine::design::within_working_limit(stitchcraft_core::units::Point) -> bool
 pub mod stitchcraft_engine::finalize
 pub struct stitchcraft_engine::finalize::Finalized
 pub stitchcraft_engine::finalize::Finalized::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>

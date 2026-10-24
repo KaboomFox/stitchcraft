@@ -20,6 +20,12 @@ use stitchcraft_plan::Thread;
 /// coordinates (10 m), beyond which no position can be written.
 pub const WORKING_LIMIT_MM: f64 = MACHINE_LIMIT as f64 / 10.0;
 
+/// Whether `p` lies within [`WORKING_LIMIT_MM`] of the origin along each axis, where every point of a design
+/// lies ([`Design::new`]).
+pub fn within_working_limit(p: Point) -> bool {
+    p.x().abs() <= WORKING_LIMIT_MM && p.y().abs() <= WORKING_LIMIT_MM
+}
+
 /// One piece of a subpath, from where the previous piece ended. Points are the control points and the
 /// end point, in millimetres.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -243,7 +249,7 @@ impl Design {
     /// the settings' lengths are not negative. A failure is a bug in the host adapter that built it, so it
     /// is `SC-E0009`; adapters drop or correct what they cannot represent, with a diagnostic of their own.
     pub fn new(elements: Vec<Element>, settings: DesignSettings) -> Result<Design, Diagnostic> {
-        let far = |p: Point| p.x().abs() > WORKING_LIMIT_MM || p.y().abs() > WORKING_LIMIT_MM;
+        let far = |p: Point| !within_working_limit(p);
         let mut ids = BTreeSet::new();
         for element in &elements {
             if !ids.insert(&element.id) {

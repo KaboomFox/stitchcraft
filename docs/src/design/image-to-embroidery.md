@@ -62,23 +62,36 @@ An automatic element is a shape whose stitches StitchCraft chooses. The readers 
   a StitchCraft effect of its own;
 - each SVG element without `inkstitch:` settings, with `--auto`.
 
-An element with settings sews as they say, whether or not the switch is given. So a picture can be
-digitized automatically and one of its shapes then set by hand. A shape's fill gives its area and its
-stroke gives its line, each with its thread, width, join and cap, as for any element. A trim or a stop that
-an Ink/Stitch command asks for is not a setting of the stitches, and an automatic element keeps it.
+An element with settings is not digitized automatically, whether or not the switch is given: it sews as
+its settings say, as far as its reader reads them. So a picture can be digitized automatically and one of
+its shapes then set by hand. (The SVG reader reads no `inkstitch:` settings but `ignore_object` until M8,
+and says so with `SC-W0802`, so such a shape sews with the defaults until then.) A shape's fill gives its
+area and its stroke gives its line, each with its thread, width, join and cap, as for any element. A trim
+or a stop that an Ink/Stitch command asks for is not a setting of the stitches, and an automatic element
+keeps it; one sewn as several elements keeps it for the last.
 
 The readers mark the element (`Element::automatic`), and they read the switch from `Reading`, which every
 host takes. Before anything is generated, the engine turns each automatic element into ordinary elements
 whose settings say what to sew (`stitchcraft_engine::auto`), so the generators, the assembly and every
-host treat them as shapes set by hand. `SC-I0901` then counts the shapes digitized, by their stitches.
-Of a VectorCraft document, what VectorCraft draws across a line sewn across its width, and its stitches
-don't follow, is named (`SC-W0807`, `REQ-AUTO-005`): its alignment inside or outside a closed path, and its
-width profile. Its caps are followed (below), and not named.
+host treat them as shapes set by hand. `SC-I0901` then counts the shapes digitized, by the stitches they
+sew as. An automatic line's stitches follow the drawing, so what the drawing draws across a line sewn
+across its width, and its stitches don't follow, is named (`REQ-AUTO-005`): of a VectorCraft document, its
+alignment inside or outside a closed path and its width profile (`SC-W0807`); of an SVG file, transforms
+that stretch it more one way than the other, which draw it wider one way, where its stitches are as wide
+as the transforms stretch it on average (`SC-W0802`). Its caps are followed (below), and not named, and
+so are its corners, joined as the drawing joins them: an SVG join that is not set is SVG's miter, limited
+by `stroke-miterlimit`, where Ink/Stitch reads a miter limited at 5.
+
+Digitizing makes no error of its own (`REQ-AUTO-006`). A part that its width's stitches cannot sew is sewn
+otherwise, or left out with a warning, and a shape that paints nothing sews as it would without the
+switch, so one odd shape among hundreds never keeps a design from being written.
 
 ## Stitch types by width
 
-An automatic element is measured at the size it sews, in millimetres. Its width at a place is the
-diameter of the largest circle that fits inside it there. Its parts sew by their width:
+An automatic element is measured at the size it sews, in millimetres, to the micrometre: a width written in
+another unit that converts to a bound give or take a rounding error, such as 7 mm in CSS pixels, is that
+bound (`REQ-AUTO-002`). Its width at a place is the diameter of the largest circle that fits inside it
+there. Its parts sew by their width:
 
 | Width | Sewn as |
 |---|---|
@@ -96,9 +109,24 @@ A stroke is a line as wide as it is drawn (M13.1):
   with `#2`, `#3` and so on. A traced line's ends are round or square, and its caps are part of the line
   drawn, so an open end with a round or square cap reaches half the stroke's width past the path's end,
   straight on, as far as the cap does. A round cap's end is then square, which covers its corners too.
+  A column cannot follow a subpath that turns more tightly than the stroke is wide, such as a small ring
+  traced from a dot, or one shorter than a CSS pixel: its rails would fold over themselves, or vanish.
+  Whether it can is found as the satin column finds it, from the rails it would make, and such a subpath
+  sews as the area it paints, filled, as a wider line is (`SC-I0902`). So does a dot that a round or
+  square cap draws. A dot with a butt cap draws nothing, and is left out (`SC-W0401`).
 - Wider than that, the area it paints is filled (`REQ-AUTO-004`): each segment widened by half the stroke's
   width to each side, its corners joined as the stroke's join joins them (a miter cut square past its
-  limit), its open ends capped with its cap. Those pieces, joined into one area, are the fill's outline.
+  limit), its open ends capped with its cap, within the shapes' tolerance. Those pieces, joined into one
+  area, are the fill's outline, and a part of it too small to sew is named as a fill's is (`SC-W0303`). An
+  area that would reach more than 10 m from the origin is left out (`SC-W0903`): no design lies there.
+
+  The pieces are not handed to the area code one by one, which would cost many times the work of their
+  outline. Each open subpath is one ring, its right side forward, its end cap, its left side back and its
+  start cap, with the outer side going round each join and the inner side in to the path's point and out
+  again; a closed subpath is its 2 sides. Such rings wind round each point as many times as the pieces
+  cover it, so the nonzero rule fills exactly the pieces' union. A line of more than 32 chords is cut into
+  lengths of 32, each a ring made into its area alone, and the areas are joined: a 10 mm line a metre long
+  then fills within the default budget.
 
 Until M13.4 and M13.5, a line no wider than `min_satin_stroke_width_mm` runs once, and its satin column
 has a satin column's defaults. M13.4 triples the runs from 0.5 mm, and M13.5 gives columns their underlay

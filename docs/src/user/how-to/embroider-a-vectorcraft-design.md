@@ -13,8 +13,10 @@ art. The thread is the colour of the object's fill for a fill, and of its stroke
 column.
 
 An object without a StitchCraft effect sews as Ink/Stitch sews a shape of an SVG file. Its fills are
-filled, and its strokes are sewn as running stitch. Objects are sewn in the order they are drawn, the
-bottom one first. [Satin columns and presets in VectorCraft](vectorcraft-columns-and-presets.md) shows
+filled, and its strokes are sewn as running stitch. With `stitch export --auto`, StitchCraft chooses its
+stitches by width instead, as for a picture traced into shapes: a line up to 1 mm wide runs, a line up to
+7 mm wide is a satin column as wide as drawn, its round or square caps included, and a wider line or a
+fill is a tatami fill. Objects are sewn in the order they are drawn, the bottom one first. [Satin columns and presets in VectorCraft](vectorcraft-columns-and-presets.md) shows
 how to draw a column with 2 rails, and how to keep settings in graphic styles.
 
 ## Leave out what isn't to be sewn

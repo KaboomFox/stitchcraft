@@ -1,7 +1,8 @@
 # stitchcraft-engine
 
 Layer **L2**. Turns a `Design` (host-independent elements with shapes, parameters and threads) into a
-checked `StitchPlan`: normalize → validate → generate per element → assemble → finalize → check.
+checked `StitchPlan`: digitize automatic elements → normalize → validate → generate per element →
+assemble → finalize → check.
 
 **Status:** the input model, `design::Design`, since M3.3 (`docs/src/design/data-model.md`); stroke
 normalization (`normalize::stroke`) and the running stitch (`generators::running`) since M3.4, with its
@@ -30,6 +31,9 @@ stretch of rows (`generators::tatami`). Since M7.2 a zigzag stroke is sewn as In
 rail. Every satin method then names stitches that lean far along the column, and top stitches longer than
 12 mm (`generators::satin`). Since M7.4 an S-stitch sews each pair once across, every other one back the
 other way, and since M7.5 a zigzag satin sews a zigzag between the rails, its pairs at half the spacing.
+Since M13.1 a shape without settings, read with `--auto`, is digitized automatically before anything else
+(`auto`): by its width it becomes a running stitch, satin columns made from its centre line, or the
+tatami fill of the area it paints (`auto::area`), and it makes no error of its own.
 Design:
 `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 

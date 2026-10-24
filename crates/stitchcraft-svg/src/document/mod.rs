@@ -15,9 +15,12 @@
 //! **Style.** An element's colours and visibility come from its presentation attributes, the style sheets'
 //! rules that select it ([`crate::sheet`]) and its `style` attribute, in CSS's order ([`crate::style`]).
 //!
-//! **Strokes and settings.** A stroke's width and join come from its style ([`crate::style`]), scaled as
-//! its transforms stretch it ([`Affine::stretch`]); they shape a satin column drawn as one path. Ink/Stitch's
-//! design settings, in the file's first `<metadata>`, become the design's ([`crate::settings`]).
+//! **Strokes and settings.** A stroke's width, join and cap come from its style ([`crate::style`]), the width
+//! scaled as its transforms stretch it ([`Affine::stretch`]); they shape a satin column drawn as one path.
+//! Read with `--auto`, a shape without Ink/Stitch's attributes is automatic, and its stitches follow the
+//! drawing: its corners are joined as SVG draws them, and a transform that stretches a line sewn across
+//! its width more one way than the other is named (`SC-W0802`, `REQ-AUTO-005`). Ink/Stitch's design
+//! settings, in the file's first `<metadata>`, become the design's ([`crate::settings`]).
 //!
 //! **Ink/Stitch's own objects are not the design** ([`crate::inkstitch`]): its command symbols and their
 //! connectors, connector-tool lines and its helper paths are never stitched. Its trim and stop commands
@@ -43,6 +46,7 @@ use std::str::FromStr;
 
 use roxmltree::{Document, Node, NodeId, ParsingOptions};
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
+use stitchcraft_engine::auto::Stitches;
 use stitchcraft_engine::design::{Design, Element, Reading, Shape};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
@@ -539,7 +543,12 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                     self.unusable(&label, format!("The stroke of `{label}` cannot be stitched: it is too wide to measure. It is left out."));
                     continue;
                 };
-                Shape::Stroke { path: path.clone(), width, join: style.join(), cap: style.line_cap }
+                // An automatic line's stitches follow the drawing: its corners are joined as SVG draws them.
+                let join = if automatic { style.painted_join() } else { style.join() };
+                if automatic {
+                    self.stretched(&label, Stitches::of_stroke(width, &self.settings.settings), map);
+                }
+                Shape::Stroke { path: path.clone(), width, join, cap: style.line_cap }
             };
             let id = ElementId::new(format!("svg:{label}:{part}"))
                 .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The SVG reader made an element id that cannot be used: {e}.")))?;
@@ -635,6 +644,21 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             Axis::Y => h,
             Axis::Other => ((w * w + h * h) / 2.0).sqrt(),
         }
+    }
+
+    /// `SC-W0802` for the automatic line `label`, sewn as `stitches`, when they are sewn across its width
+    /// and `map` stretches it more one way than the other: the stitches are as wide all along as the map
+    /// stretches it on average ([`Affine::stretch`]), where it is drawn wider one way (`REQ-AUTO-005`).
+    fn stretched(&mut self, label: &str, stitches: Stitches, map: Affine) {
+        if !stitches.across() || map.stretches_evenly() {
+            return;
+        }
+        let what = if stitches == Stitches::Satin { "satin column" } else { "fill" };
+        let message = format!(
+            "The {what} of `{label}` is as wide as its stroke all along, as wide as its transforms stretch it on average, where they \
+             stretch it more one way than the other and draw it wider one way."
+        );
+        self.note(Some(label), message, Some("Scale the line evenly, or make a shape of its stroke (in Inkscape: Path › Stroke to Path)."));
     }
 
     /// How wide a stroke drawn with `style` under `map` is, in millimetres: its `stroke-width` in the
