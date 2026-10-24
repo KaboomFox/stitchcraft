@@ -16,7 +16,7 @@ fn conformance(name: &str) -> PathBuf {
 type Change = fn(&mut Value);
 
 fn args(design: Option<PathBuf>) -> BugReportArgs {
-    BugReportArgs { design, replay: None, output: None, profile: profiles::REFERENCE.id.to_string(), format: None, says: None }
+    BugReportArgs { design, replay: None, output: None, profile: profiles::REFERENCE.id.to_string(), format: None, says: None, auto: false }
 }
 
 fn json(path: &Path) -> Value {
@@ -214,6 +214,7 @@ fn req_cli_002_a_bug_found_while_planning_writes_a_bundle() {
         format: None,
         preview: None,
         report: None,
+        auto: false,
     };
     let out = guarded(&Command::Plan(plan), || panic!("a test of the panic guard"));
     assert_eq!(out.status, Status::Bug);
@@ -263,13 +264,46 @@ fn req_cli_002_a_panic_after_planning_is_bundled_with_the_plan_and_where_it_came
 }
 
 /// The fixture `strokes.svg`.
+#[test]
+fn req_auto_001_a_bundle_records_auto_and_its_replay_digitizes_the_same() {
+    let dir = TempDir::new("bug-report-auto");
+    let design = dir.join("line.svg");
+    std::fs::write(&design, r#"<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100"><path id="line" d="M 10 50 L 60 50" stroke="red" stroke-width="3" fill="none"/></svg>"#).unwrap();
+    let (with, without) = (dir.join("auto.json"), dir.join("plain.json"));
+    let out = run(&BugReportArgs { output: Some(with.clone()), auto: true, ..args(Some(design.clone())) });
+    assert_eq!(out.status, Status::Done, "{}", out.stderr);
+    assert_eq!(json(&with)["auto"], Value::Bool(true));
+    // A bundle of a run without the switch is written as before, without the field.
+    let out = run(&BugReportArgs { output: Some(without.clone()), ..args(Some(design)) });
+    assert_eq!(out.status, Status::Done, "{}", out.stderr);
+    assert_eq!(json(&without).get("auto"), None);
+    assert_ne!(json(&with)["result"]["plan"], json(&without)["result"]["plan"]);
+    let out = replayed(&with);
+    assert_eq!((out.status, out.stdout.lines().last()), (Status::Done, Some("reproduced")), "{}", out.stdout);
+    // Without its record of the switch, the run the bundle holds is not what a replay plans.
+    let dropped = changed(&with, "dropped.json", |value| {
+        value.as_object_mut().unwrap().remove("auto");
+    });
+    let out = replayed(&dropped);
+    assert_eq!((out.status, out.stdout.lines().last()), (Status::DesignErrors, Some("not reproduced")), "{}", out.stdout);
+}
+
 fn strokes() -> Vec<u8> {
     std::fs::read(conformance("fixtures/svg/strokes.svg")).unwrap()
 }
 
 /// A run of `design` from `path`, named `name`, planned for the reference profile as PES.
 fn pes<'a>(path: &'a Path, name: &'a str, design: &'a [u8]) -> Run<'a> {
-    Run { design_path: path, source: Source::Svg, name, design, profile: profiles::REFERENCE, format: FormatId::PesV1, says: None }
+    Run {
+        design_path: path,
+        source: Source::Svg,
+        reading: Reading::default(),
+        name,
+        design,
+        profile: profiles::REFERENCE,
+        format: FormatId::PesV1,
+        says: None,
+    }
 }
 
 /// A bundle of the fixture `strokes.svg` as `name` from `path`, planned for the reference profile as PES,

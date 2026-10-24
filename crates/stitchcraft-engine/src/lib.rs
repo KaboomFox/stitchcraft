@@ -1,10 +1,11 @@
 //! The StitchCraft engine (layer L2): from a host-independent design to a checked stitch plan.
 //!
-//! Pipeline: normalize → validate → generate (per element) → assemble → finalize → check. Generators are
-//! pure, deterministic and budgeted; the engine never sees a host document or a file.
+//! Pipeline: automatic digitizing → normalize → validate → generate (per element) → assemble → finalize →
+//! check. Generators are pure, deterministic and budgeted; the engine never sees a host document or a file.
 //!
 //! [`plan`] is the entry point every host calls. It holds the engine's input model ([`design`]); the
-//! pipeline stages: [`normalize`], [`generate`], which sends each element to its generator in
+//! pipeline stages: [`auto`], which chooses the stitches of the shapes without settings, [`normalize`],
+//! [`generate`], which sends each element to its generator in
 //! [`generators`], [`assemble`], with the [`locks`] it sews, and [`finalize`], which fits the plan to the
 //! machine and checks it; the machine-checkpoint [`testsheets`], drawn in code; and the parameter
 //! [`registry`] with the settings every stitch type shares ([`common`]). Finalize and the generators that
@@ -13,6 +14,7 @@
 #![forbid(unsafe_code)]
 
 pub mod assemble;
+pub mod auto;
 pub mod common;
 pub mod design;
 pub mod finalize;

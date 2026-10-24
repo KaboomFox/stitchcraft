@@ -288,7 +288,7 @@ fn sew(
     let mut rng = SplitMix64::for_element(element.id.as_str(), common.as_ref().and_then(|common| common.random_seed));
     let stitched = match &element.shape {
         Shape::Fill { .. } => fill(&sewing, &region, &mut rng, diagnostics, meter)?,
-        Shape::Stroke { path, width, join } if sewing.stitch_type.family() == Family::Satin => {
+        Shape::Stroke { path, width, join, .. } if sewing.stitch_type.family() == Family::Satin => {
             satin_column(&sewing, (path, *width, *join), &mut rng, diagnostics, meter)?
         }
         Shape::Stroke { path, width, .. } => stroke(&sewing, path, *width, &rng, diagnostics, meter)?,
@@ -543,7 +543,7 @@ pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -
         Shape::Stroke { path, .. } if stitch_type.family() != Family::Satin => {
             return path.subpaths.first().map(|subpath| Approach::Point(subpath.start));
         }
-        Shape::Stroke { path, width, join } => (path, width, join),
+        Shape::Stroke { path, width, join, .. } => (path, width, join),
     };
     let params = SatinParams::from_set_as(&element.params, stitch_type).ok()?.params;
     let meter = &mut budget.meter();
@@ -593,11 +593,11 @@ mod tests {
     use stitchcraft_plan::{Rgb, Thread};
 
     use super::*;
-    use crate::design::{FillRule, Segment, Subpath};
+    use crate::design::{Cap, FillRule, Segment, Subpath};
 
     fn element(shape: Shape, params: &[(&str, &str)]) -> Element {
         let thread = Thread::new(Rgb::new(0, 0, 0));
-        Element { id: ElementId::new("e").unwrap(), name: None, shape, thread, params: params.iter().copied().collect() }
+        Element { id: ElementId::new("e").unwrap(), name: None, shape, thread, params: params.iter().copied().collect(), automatic: false }
     }
 
     fn p(x: f64, y: f64) -> Point {
@@ -676,7 +676,7 @@ mod tests {
     fn the_settings_that_choose_it_give_an_element_s_stitch_type() {
         let path = Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0))], closed: false }] };
         let fill = || Shape::Fill { path: path.clone(), rule: FillRule::NonZero };
-        let wide = || Shape::Stroke { path: path.clone(), width: Mm::new(3.0).unwrap(), join: Join::UNSET };
+        let wide = || Shape::Stroke { path: path.clone(), width: Mm::new(3.0).unwrap(), join: Join::UNSET, cap: Cap::Butt };
         let chosen = |shape: Shape, params: &[(&str, &str)]| {
             let mut diagnostics = Vec::new();
             (stitch_type(&element(shape, params), &DesignSettings::default(), &mut diagnostics), codes(&diagnostics))

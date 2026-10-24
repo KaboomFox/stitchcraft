@@ -143,3 +143,4 @@ another.
 | `SC-I0809` | Info | VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides) | M6 |
 | `SC-I0810` | Info | VectorCraft live effect leaves the object as it is (it sews no stitch, its preview level needs more work than VectorCraft lets a live effect do, or it is a satin column drawn as one path or a zigzag stroke, whose width the effect is not given) | M6 |
 | `SC-I0811` | Info | VectorCraft object left out, as its name asks (an object or a layer named `stitch:ignore`) | M6 |
+| `SC-I0901` | Info | Shapes digitized automatically (`--auto`), counted by the stitches chosen: running stitches, satin columns and tatami fills | M13 |

@@ -39,6 +39,7 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use stitchcraft_core::{Code, Diagnostic};
+use stitchcraft_engine::design::Reading;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, profiles};
 
 use super::plan::{Sewn, Source, design_name, picture, sew};
@@ -65,6 +66,8 @@ pub struct Run<'a> {
     pub design_path: &'a Path,
     /// What the design file is, which decides how it is read.
     pub source: Source,
+    /// How it is read: with `--auto` or not.
+    pub reading: Reading,
     /// The design name machines show, which the machine file's label holds ([`design_name`]).
     pub name: &'a str,
     /// The design file's bytes.
@@ -116,6 +119,10 @@ struct Bundle {
     profile: String,
     /// The format's file extension: `pes` or `dst`.
     format: String,
+    /// Whether the run digitized the shapes without settings automatically (`--auto`). Bundles of runs
+    /// without it, and those written before it was recorded, have none.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    auto: bool,
     /// The design.
     design: DesignRecord,
     /// What came of it.
@@ -222,7 +229,8 @@ fn after_panic(command: &Command, message: &str) -> Outcome {
             (profiles::find(&args.profile), output_format(args.format, &args.output), files::read_capped(&args.design))
     {
         let source = Source::of(&args.design);
-        let run = Run { design_path: &args.design, source, name: design_name(&args.design), design: &design, profile, format, says: None };
+        let reading = Reading { auto: args.auto };
+        let run = Run { design_path: &args.design, source, reading, name: design_name(&args.design), design: &design, profile, format, says: None };
         return beside(&args.output, &run, Err((message, Phase::Plan)), stopped);
     }
     Outcome { stderr: said + &format!("Please report it at {ISSUES}, with the command you ran and the files it read.\n"), ..stopped }
@@ -254,7 +262,8 @@ fn make(args: &BugReportArgs, design_path: &Path) -> Outcome {
         }
     };
     let source = Source::of(design_path);
-    let run = Run { design_path, source, name: design_name(design_path), design: &design, profile, format, says: args.says.clone() };
+    let reading = Reading { auto: args.auto };
+    let run = Run { design_path, source, reading, name: design_name(design_path), design: &design, profile, format, says: args.says.clone() };
     let bundle = bundle(&run, borrowed(&guarded_sew(&run, Phase::Plan)));
     if let Err(e) = write(&path, &bundle) {
         return Outcome { stdout: String::new(), stderr: format!("stitch: cannot write {}: {e}\n", path.display()), status: Status::Io };
@@ -281,7 +290,7 @@ fn describe(out: &mut String, record: &Record) {
 /// Plans `run`'s design as `stitch plan` does, and draws its picture too when the run being reproduced got
 /// as far as `phase` [`Phase::Picture`], or the message of the panic that stopped it and where it came.
 fn guarded_sew(run: &Run, phase: Phase) -> Result<Sewn, (String, Phase)> {
-    let sewn = catch_unwind(|| sew(run.source, run.design, run.profile, run.format, run.name))
+    let sewn = catch_unwind(|| sew(run.source, run.design, run.reading, run.profile, run.format, run.name))
         .map_err(|payload| (panic_message(payload.as_ref()), Phase::Plan))?;
     if let (Phase::Picture, Some(back)) = (phase, &sewn.back) {
         // What the picture comes to is the run's, which the bundle does not record: only whether it panics.
@@ -316,6 +325,7 @@ fn bundle(run: &Run, sewn: Result<&Sewn, (&str, Phase)>) -> Bundle {
         command: "plan".to_string(),
         profile: run.profile.id.to_string(),
         format: run.format.extension().to_string(),
+        auto: run.reading.auto,
         design: DesignRecord {
             file,
             name: Some(run.name.to_string()),
@@ -390,7 +400,8 @@ fn replay(path: &Path) -> Outcome {
     let Replayable { bundle: then, source, design, profile, format } = then;
     let design_path = PathBuf::from(&then.design.file);
     let name = then.design.name.clone().unwrap_or_else(|| design_name(&design_path).to_string());
-    let run = Run { design_path: &design_path, source, name: &name, design: &design, profile, format, says: then.says.clone() };
+    let reading = Reading { auto: then.auto };
+    let run = Run { design_path: &design_path, source, reading, name: &name, design: &design, profile, format, says: then.says.clone() };
     let phase = then.result.phase.unwrap_or(Phase::Plan);
     let now = bundle(&run, borrowed(&guarded_sew(&run, phase)));
     let mut out = String::new();

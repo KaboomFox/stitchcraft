@@ -5,6 +5,10 @@
 //! same design (`docs/src/design/architecture.md` › Hosts). It generates each element, assembles them,
 //! fits the plan to the machine and checks it: a plan that comes back can be written as it is.
 //!
+//! The shapes without settings that the host marked automatic are digitized first ([`crate::auto`]): each
+//! becomes the elements its width calls for, with the settings that say so, and from there on is sewn as
+//! any element is.
+//!
 //! Elements are generated in sewing order, each with its neighbours (`REQ-GEN-003`,
 //! `docs/src/design/adr/0014-generators-see-their-neighbours.md`): the last needle point of the elements
 //! before it that sew any, and what the next element offers to end near. Each is given the stitches the
@@ -15,6 +19,7 @@ use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_plan::{MachineProfile, StitchPlan};
 
 use crate::assemble::{Assembled, assemble};
+use crate::auto::digitized;
 use crate::design::Design;
 use crate::finalize::{Finalized, finalize};
 use crate::generate::{Generation, approach, generate_with};
@@ -35,9 +40,8 @@ pub struct PlanOutcome {
 /// work to itself, and the stitches the elements before it left; assembling and finalizing have the work
 /// once more, and the design `budget`'s stitches.
 pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome {
-    let mut diagnostics = Vec::new();
+    let (elements, mut diagnostics) = digitized(design, budget);
     let mut generated = Vec::new();
-    let elements = design.elements();
     let mut needle = None;
     let mut left = budget.max_stitches;
     for (i, element) in elements.iter().enumerate() {

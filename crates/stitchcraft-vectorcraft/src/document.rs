@@ -60,7 +60,8 @@ use std::rc::Rc;
 
 use serde_json::Value;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
-use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Join, Path, Shape};
+use stitchcraft_engine::auto::Stitches;
+use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Reading, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::stitch_type::Family;
 use stitchcraft_params::{ParamSet, StitchType};
@@ -102,10 +103,17 @@ pub struct VectorCraft {
 /// The design in the `.vectorcraft` file `bytes`, read within `budget`. Fails with `SC-E0806` when the file
 /// cannot be read, and with `SC-E0004` when reading it needs more work than the budget allows.
 pub fn read(bytes: &[u8], budget: &Budget) -> Result<VectorCraft, Diagnostic> {
+    read_with(bytes, budget, Reading::default())
+}
+
+/// The design in the `.vectorcraft` file `bytes`, read within `budget` as `reading` asks: with `auto`, an
+/// object without StitchCraft effects, its own or a group's or a layer's around it, is an automatic element
+/// (`REQ-AUTO-001`). Fails as [`read`] does.
+pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<VectorCraft, Diagnostic> {
     let mut meter = budget.meter();
     let json = container::json(bytes, &mut meter)?;
     let file: wire::File = serde_json::from_slice(&json).map_err(|e| unreadable(&format!("Its JSON does not read: {e}.")))?;
-    let mut reader = Reader { meter, labels: Labels::default(), objects: 0, elements: Vec::new(), warnings: Vec::new() };
+    let mut reader = Reader { meter, labels: Labels::default(), objects: 0, elements: Vec::new(), warnings: Vec::new(), auto: reading.auto };
     reader.header(file.format.as_deref(), file.version.as_ref())?;
     let document = file.document.ok_or_else(|| unreadable("It holds no document."))?;
     for layer in &document.layers {
@@ -134,8 +142,8 @@ fn ours(effect: &Effect) -> Option<Ours<'_>> {
     Some(Family::ALL.iter().find(|f| f.id() == name).map_or(Ours::Other(name), |f| Ours::Family(*f, &effect.params)))
 }
 
-/// An object's style of stroke: its width and how it turns corners.
-type Style = (Mm, Join);
+/// An object's style of stroke: its width, how it turns corners and how it ends.
+type Style = (Mm, Join, Cap);
 
 /// The visible StitchCraft effects of an object, or of the groups and layers around it, in their order,
 /// each with its parameters.
@@ -274,6 +282,8 @@ struct Reader {
     objects: u64,
     elements: Vec<Element>,
     warnings: Vec<Diagnostic>,
+    /// Whether an object without StitchCraft effects is an automatic element (`--auto`).
+    auto: bool,
 }
 
 impl Reader {
@@ -537,7 +547,7 @@ impl Reader {
             let Some(thread) = self.thread(label, item.paint.as_ref()) else { continue };
             fills += 1;
             let shape = Shape::Fill { path: path.clone(), rule };
-            self.element(node, label, &rank("fill", fills), shape, thread, ParamSet::new())?;
+            self.element(node, label, &rank("fill", fills), shape, thread, ParamSet::new(), self.auto)?;
         }
         // VectorCraft paints the items in order, the first lowest, and the fills are sewn first.
         let items = &node.appearance.items;
@@ -549,7 +559,7 @@ impl Reader {
         let mut strokes = 0;
         for item in items.iter().filter(|item| item.kind == "stroke" && drawn(item)) {
             let Some(thread) = self.thread(label, item.paint.as_ref()) else { continue };
-            let (Some(width), join) = self.style(label, item) else {
+            let (Some(width), join, cap) = self.style(label, item) else {
                 let message = "A stroke's width is not a number, and the stroke is left out.".to_string();
                 self.warn(Code::VcGeometryUnusable, Some(label), message, None);
                 continue;
@@ -559,9 +569,16 @@ impl Reader {
                 self.feature(label, message, Some("Make paths of the brush's art with Object › Expand Appearance."));
             }
             self.stroke_marks(label, item);
+            // An automatic stroke sewn across its width follows its caps, and not what VectorCraft draws
+            // across it (`REQ-AUTO-005`).
+            let stitches = Stitches::of_stroke(width, &DesignSettings::default());
+            if self.auto && stitches.across() {
+                let what = if stitches == Stitches::Satin { "satin column" } else { "fill" };
+                self.across(label, what, item, path, false);
+            }
             strokes += 1;
-            let shape = Shape::Stroke { path: path.clone(), width, join };
-            self.element(node, label, &rank("stroke", strokes), shape, thread, ParamSet::new())?;
+            let shape = Shape::Stroke { path: path.clone(), width, join, cap };
+            self.element(node, label, &rank("stroke", strokes), shape, thread, ParamSet::new(), self.auto)?;
         }
         Ok(())
     }
@@ -598,25 +615,35 @@ impl Reader {
                 Family::Fill => Shape::Fill { path: path.clone(), rule },
                 Family::Stroke | Family::Satin => {
                     set.set(SATIN_COLUMN, if *family == Family::Satin { "true" } else { "false" });
-                    let (width, join) = style.unwrap_or((Mm::ZERO, join_of(None, None)));
-                    Shape::Stroke { path: path.clone(), width, join }
+                    let (width, join, cap) = style.unwrap_or((Mm::ZERO, join_of(None, None), Cap::Butt));
+                    Shape::Stroke { path: path.clone(), width, join, cap }
                 }
             };
             let count = counts.entry(*family).or_default();
             *count = count.saturating_add(1);
             let what = rank(family.id(), *count);
-            self.element(node, label, &what, shape, thread, set)?;
+            self.element(node, label, &what, shape, thread, set, false)?;
         }
         Ok(())
     }
 
-    /// Adds the element `vc:<label>:<what>`, charged for the copy of the path it holds.
-    fn element(&mut self, node: &Node, label: &str, what: &str, shape: Shape, thread: Thread, params: ParamSet) -> Result<(), Diagnostic> {
+    /// Adds the element `vc:<label>:<what>`, charged for the copy of the path it holds, automatic or not.
+    #[allow(clippy::too_many_arguments)]
+    fn element(
+        &mut self,
+        node: &Node,
+        label: &str,
+        what: &str,
+        shape: Shape,
+        thread: Thread,
+        params: ParamSet,
+        automatic: bool,
+    ) -> Result<(), Diagnostic> {
         let segments: usize = shape.path().subpaths.iter().map(|sub| sub.segments.len()).sum();
         self.charge(1 + segments as u64)?;
         let id = ElementId::new(format!("vc:{label}:{what}"))
             .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The VectorCraft object `vc:{label}` makes no element id: {e}.")))?;
-        self.elements.push(Element { id, name: node.name.clone(), shape, thread, params });
+        self.elements.push(Element { id, name: node.name.clone(), shape, thread, params, automatic });
         Ok(())
     }
 
@@ -650,9 +677,16 @@ impl Reader {
             return;
         };
         self.stroke_marks(label, stroke);
-        if what.is_empty() {
-            return;
+        if !what.is_empty() {
+            self.across(label, what, stroke, path, true);
         }
+    }
+
+    /// `SC-W0807` for what VectorCraft draws across `stroke`, of the object `label` with `path`, that the
+    /// `what` sewn across its width does not follow: it is as wide as the stroke and centred on the path, so it
+    /// does not follow the stroke's alignment inside or outside a closed path, nor its width profile. With
+    /// `caps`, it ends where the path ends, and does not follow an open path's caps either.
+    fn across(&mut self, label: &str, what: &str, stroke: &Item, path: &Path, caps: bool) {
         if path.subpaths.last().is_some_and(|subpath| subpath.closed)
             && let Some(side) = stroke.align.as_deref().and_then(|align| match align {
                 "Inside" => Some("inside"),
@@ -665,9 +699,11 @@ impl Reader {
         }
         if stroke.profile.as_ref().is_some_and(Profile::varies) {
             let message = format!("The {what} is as wide as the stroke all along, without its width profile.");
-            self.feature(label, message, Some("Set the stroke's profile to Uniform in the Stroke panel, or draw the column with 2 rails."));
+            let instead = if what == "fill" { "make a shape of it with Object › Path › Outline Stroke" } else { "draw the column with 2 rails" };
+            self.feature(label, message, Some(&format!("Set the stroke's profile to Uniform in the Stroke panel, or {instead}.")));
         }
-        if path.subpaths.iter().any(|subpath| !subpath.closed)
+        if caps
+            && path.subpaths.iter().any(|subpath| !subpath.closed)
             && let Some(cap) = stroke.cap.as_deref().and_then(|cap| match cap {
                 "Round" => Some("round"),
                 "Square" => Some("square"),
@@ -751,13 +787,13 @@ impl Reader {
     /// The width and join of `stroke`, one of the paints of `label`. A width that is not a number is taken as
     /// 0, and said.
     fn stroke_style(&mut self, label: &str, stroke: &Item) -> Style {
-        let (width, join) = self.style(label, stroke);
+        let (width, join, cap) = self.style(label, stroke);
         let width = width.unwrap_or_else(|| {
             let message = "Its stroke's width is not a number, and its effects take it as 0.".to_string();
             self.warn(Code::VcGeometryUnusable, Some(label), message, None);
             Mm::ZERO
         });
-        (width, join)
+        (width, join, cap)
     }
 
     /// A black thread for an object whose own StitchCraft effects no paint paints, and why.
@@ -804,14 +840,14 @@ impl Reader {
         Thread::new(BLACK)
     }
 
-    /// A stroke's width, `None` when it is not a number (VectorCraft writes `null` for one), and its join. A
-    /// width below 0 is 0.
-    fn style(&mut self, label: &str, item: &Item) -> (Option<Mm>, Join) {
+    /// A stroke's width, `None` when it is not a number (VectorCraft writes `null` for one), its join and its
+    /// cap. A width below 0 is 0.
+    fn style(&mut self, label: &str, item: &Item) -> (Option<Mm>, Join, Cap) {
         if let Some(name) = item.join.as_deref().filter(|j| !matches!(*j, "Miter" | "Round" | "Bevel")) {
             self.feature(label, format!("The stroke join {} is not one StitchCraft reads, and a miter is used.", quoted(name)), None);
         }
         let width = item.width.and_then(|w| Mm::from_points(w.max(0.0)).ok());
-        (width, join_of(item.join.as_deref(), item.miter_limit))
+        (width, join_of(item.join.as_deref(), item.miter_limit), cap_of(item.cap.as_deref()))
     }
 
     /// The object's path in millimetres; `None`, said, when it cannot be used.
@@ -855,6 +891,15 @@ fn join_of(join: Option<&str>, limit: Option<f64>) -> Join {
         Some("Bevel") => Join::Bevel,
         // A limit below 1 bevels every corner, as a limit of 1 does.
         _ => Join::Miter { limit: limit.filter(|l| l.is_finite()).unwrap_or(MITER_LIMIT).max(1.0) },
+    }
+}
+
+/// A stroke's cap as VectorCraft draws it: butt unless round or square.
+fn cap_of(cap: Option<&str>) -> Cap {
+    match cap {
+        Some("Round") => Cap::Round,
+        Some("Square") => Cap::Square,
+        _ => Cap::Butt,
     }
 }
 

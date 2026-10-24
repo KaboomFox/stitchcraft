@@ -191,6 +191,7 @@ fn a_fill_s_settings_are_checked_before_fills_are_sewn() {
         shape: Shape::Fill { path: square, rule: FillRule::NonZero },
         thread: RED,
         params,
+        automatic: false,
     };
     let said = messages(&planned(vec![fill, line("ok", (0.0, 40.0), 10.0, &RED, &[])]));
     assert!(said[0].starts_with("warning SC-W0102:") && said[0].contains("row_spacing_mm"), "{said:?}");

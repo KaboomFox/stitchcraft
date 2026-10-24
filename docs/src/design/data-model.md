@@ -39,7 +39,10 @@ pub struct Element {
     pub shape: Shape,
     pub thread: Thread,
     pub params: ParamSet,            // as the host stores them; validated against the registry when planned
+    pub automatic: bool,             // since M13.1: a shape without settings, read with --auto, whose stitches StitchCraft chooses
 }
+
+pub struct Reading { pub auto: bool } // since M13.1: what every host's reader is asked (--auto)
 
 pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file since M4.8, its commands from M8
     pub collapse_len: Mm,            // 3 mm: same-thread moves no longer than this are sewn on, not jumped
@@ -50,11 +53,12 @@ pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file
 }
 
 pub enum Shape {
-    Stroke { path: Path, width: Mm, join: Join },  // an outline: running stitch and the other stroke methods
+    Stroke { path: Path, width: Mm, join: Join, cap: Cap },  // an outline: running stitch and the other stroke methods
     Fill { path: Path, rule: FillRule },           // an area: its boundary, and which parts are inside
 }
 
 pub enum Join { Miter { limit: f64 }, Round, Bevel }   // a stroke's corners; Join::UNSET is a miter limited at 5
+pub enum Cap { Butt, Round, Square }                  // since M13.1: how a stroke ends where an open subpath ends
 
 pub struct Path { pub subpaths: Vec<Subpath> }   // in millimetres, y down
 pub struct Subpath { pub start: Point, pub segments: Vec<Segment>, pub closed: bool }
@@ -67,7 +71,13 @@ their control points, and the generators flatten it with the tolerance their par
 A stroke's width and join, since M4.8, are as the host draws them: in SVG, `stroke-width` scaled by the
 transforms, and `stroke-linejoin` with `stroke-miterlimit` ([SVG input](svg-input.md#stroke-width-and-join)).
 Only a satin column drawn as one path uses them, as its width and its corners. `Shape::stroke(path)`
-makes a stroke that says nothing of either: 1 CSS pixel wide, with `Join::UNSET`.
+makes a stroke that says nothing of either: 1 CSS pixel wide, with `Join::UNSET`. Its cap, since M13.1, is
+SVG's `stroke-linecap` or VectorCraft's cap, `Butt` when nothing sets it. Ink/Stitch sews no cap, and only
+an automatic element's stitches follow it ([image to embroidery](image-to-embroidery.md#stitch-types-by-width)).
+
+An automatic element is a shape without settings that the user asked StitchCraft to digitize: the readers
+mark it when `Reading::auto` is set, and the engine turns it into ordinary elements with the settings its
+width calls for before anything is generated (`stitchcraft_engine::auto`).
 
 Documents repeat ids, so adapters make theirs unique with `stitchcraft_core::Labels`, which gives a
 label repeated in a document `~2`, `~3` and so on, in every adapter alike.

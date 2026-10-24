@@ -37,7 +37,7 @@ mod wire;
 mod writer;
 
 pub use container::{MAX_BYTES, read_part};
-pub use document::{VectorCraft, read};
+pub use document::{VectorCraft, read, read_with};
 pub use effect::{Effect, RIBBON_MM, effect_error, effect_lines, effect_output, effect_ribbons, read_effect};
 pub use values::text as param_text;
 

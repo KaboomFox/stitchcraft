@@ -659,6 +659,16 @@ registry! {
     ///
     /// The message names what was left out. To stitch it, rename it in VectorCraft's Layers panel.
     VcObjectIgnored = "SC-I0811", Info, "VectorCraft object left out, as its name asks";
+
+    /// `--auto` digitized the design's shapes that have no settings: StitchCraft chose each one's
+    /// stitches by its width. An area is a tatami fill. A line no wider than the design's narrowest satin
+    /// stroke (`min_satin_stroke_width_mm`, 1 mm unless the design sets it) is a running stitch, a line up
+    /// to 7 mm wide a satin column as wide as the line, and a wider line a tatami fill of the area it
+    /// paints.
+    ///
+    /// The message counts the shapes by the stitches chosen. To sew a shape another way, give it settings:
+    /// in VectorCraft, apply a StitchCraft effect to it. A shape with settings sews as they say.
+    AutoDigitized = "SC-I0901", Info, "Shapes digitized automatically";
 }
 
 impl Code {

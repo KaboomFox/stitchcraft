@@ -1159,3 +1159,48 @@ statement = "Help and usage errors are coloured only when they go to a terminal,
 rationale = "Colour codes in a pipe, a file or a terminal that cannot show them are noise, and NO_COLOR is how people ask for none."
 milestone = "M3"
 status = "active"
+
+[[req]]
+id = "REQ-AUTO-001"
+area = "auto"
+level = "L2"
+statement = "With `--auto`, `stitch plan` and `stitch export` digitize automatically each shape that has no settings: a VectorCraft object with no StitchCraft effect on it or on a group or layer around it, and an SVG element with no `inkstitch:` attribute. StitchCraft chooses an automatic shape's stitches by its width. A shape with settings sews as they say, and without the switch every shape sews as before. SC-I0901 counts the shapes digitized automatically by the stitches chosen. A bug-report bundle records the switch, and its replay digitizes the same."
+rationale = "A traced picture is many shapes without settings, and the stitches that suit each depend on its width. A shape set by hand keeps what its maker chose."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-002"
+area = "auto"
+level = "L2"
+statement = "An automatic area sews as a tatami fill with the fill's defaults. An automatic stroke no wider than the design's narrowest satin stroke (min_satin_stroke_width_mm, 1 mm unless the design sets it) sews as a running stitch along its path, with the running stitch's defaults."
+rationale = "A satin column no wider than that is too narrow to stitch across (REQ-SAT-015), and a line that narrow is a running stitch."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-003"
+area = "auto"
+level = "L2"
+statement = "An automatic stroke wider than the design's narrowest satin stroke, and no wider than 7 mm, sews as a satin column as wide as the stroke, its path the column's centre line (REQ-SAT-016): one column for each of its subpaths, in order, the second and later named after the stroke with `#2`, `#3` and so on. An open end whose cap is round or square reaches past the path's end by half the stroke's width, as far as the cap does."
+rationale = "A line as wide as a satin column sews best as one, as wide as it is drawn. A line traced from a picture has round or square caps, which are part of the line drawn."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-004"
+area = "auto"
+level = "L2"
+statement = "An automatic stroke wider than 7 mm sews the area it paints as a tatami fill: each of its segments widened by half the stroke's width to each side, its corners joined as the stroke's join joins them, and its open ends capped with the stroke's cap."
+rationale = "Satin stitches longer than 7 mm are loose and snag, so a line wider than that is filled, as an area of the same outline would be."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-005"
+area = "auto"
+level = "L2"
+statement = "What VectorCraft draws of an automatic stroke sewn across its width, as a satin column or a fill, and its stitches don't follow is named (SC-W0807): its alignment inside or outside a closed path, and its width profile. Its caps are followed, and not named."
+rationale = "Nothing a document draws is left out silently (REQ-VC-005), and a traced line's caps are part of it."
+milestone = "M13"
+status = "active"

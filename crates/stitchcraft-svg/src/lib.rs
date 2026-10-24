@@ -36,5 +36,5 @@ mod style;
 mod text;
 mod transform;
 
-pub use document::{Svg, read};
+pub use document::{Svg, read, read_with};
 pub use text::MAX_BYTES;

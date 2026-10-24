@@ -110,6 +110,20 @@ impl Join {
     pub const UNSET: Join = Join::Miter { limit: 5.0 };
 }
 
+/// How a stroke ends where an open subpath ends, as SVG's `stroke-linecap` and VectorCraft's cap say. Ink/Stitch
+/// sews no cap, and neither does StitchCraft, except on a stroke it digitizes automatically
+/// (`docs/src/design/image-to-embroidery.md`), whose stitches cover the line as it is drawn.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Cap {
+    /// Ends square at the path's end: SVG's initial cap.
+    #[default]
+    Butt,
+    /// A half disc past the path's end, half the stroke's width across.
+    Round,
+    /// Ends square half the stroke's width past the path's end.
+    Square,
+}
+
 /// What an element is, geometrically.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Shape {
@@ -121,6 +135,8 @@ pub enum Shape {
         width: Mm,
         /// How the stroke turns its corners.
         join: Join,
+        /// How the stroke ends where an open subpath ends.
+        cap: Cap,
     },
     /// An area to fill, bounded by `path` under `rule`.
     Fill {
@@ -133,9 +149,9 @@ pub enum Shape {
 
 impl Shape {
     /// A stroke along `path` whose style says nothing: 1 SVG user unit wide, SVG's initial width, with the
-    /// join of a stroke that sets none.
+    /// join of a stroke that sets none and SVG's initial cap.
     pub fn stroke(path: Path) -> Shape {
-        Shape::Stroke { path, width: Mm::SVG_PX, join: Join::UNSET }
+        Shape::Stroke { path, width: Mm::SVG_PX, join: Join::UNSET, cap: Cap::Butt }
     }
 
     /// The geometry, whichever kind of shape this is.
@@ -159,6 +175,17 @@ pub struct Element {
     pub thread: Thread,
     /// Its embroidery parameters, as the host stores them.
     pub params: ParamSet,
+    /// Whether StitchCraft chooses its stitches, by its width ([`crate::auto`]): a shape without settings,
+    /// read with `--auto`. Its `params` then choose no stitch type; those that every stitch type shares, such
+    /// as the trim after it that an Ink/Stitch command asks for, still apply.
+    pub automatic: bool,
+}
+
+/// What a host is asked when it reads a document into a design, the same for every host.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Reading {
+    /// Whether each shape without settings is an [automatic](Element::automatic) element (`--auto`).
+    pub auto: bool,
 }
 
 /// Settings for the whole design. Ink/Stitch keeps them in the document. The SVG adapter reads the
@@ -272,6 +299,7 @@ mod tests {
             shape: Shape::stroke(path),
             thread: Thread::new(Rgb::new(0, 0, 0)),
             params: ParamSet::new(),
+            automatic: false,
         }
     }
 
@@ -308,7 +336,7 @@ mod tests {
     fn strokes_are_never_narrower_than_0_nor_limit_their_miters_below_1() {
         let stroke = |width: f64, join: Join| {
             let Shape::Stroke { path, .. } = element("a", line(p(0.0, 0.0), p(1.0, 0.0))).shape else { panic!("a stroke") };
-            Element { shape: Shape::Stroke { path, width: Mm::new(width).unwrap(), join }, ..element("a", Path::default()) }
+            Element { shape: Shape::Stroke { path, width: Mm::new(width).unwrap(), join, cap: Cap::Butt }, ..element("a", Path::default()) }
         };
         for (width, join) in [
             (-0.1, Join::Round),
@@ -328,7 +356,10 @@ mod tests {
         }
         // Unless a host says otherwise, a stroke is 1 SVG user unit wide, with the join Ink/Stitch gives one
         // that sets none.
-        assert_eq!(element("a", Path::default()).shape, Shape::Stroke { path: Path::default(), width: Mm::SVG_PX, join: Join::Miter { limit: 5.0 } });
+        assert_eq!(
+            element("a", Path::default()).shape,
+            Shape::Stroke { path: Path::default(), width: Mm::SVG_PX, join: Join::Miter { limit: 5.0 }, cap: Cap::Butt }
+        );
     }
 
     #[test]

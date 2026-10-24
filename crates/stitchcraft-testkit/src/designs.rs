@@ -4,7 +4,7 @@
 //! on designs of a few straight strokes. The helpers are shared so every case builds them the same way.
 
 use stitchcraft_core::{Budget, ElementId, Mm, Point};
-use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::{PlanOutcome, plan};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::profiles::REFERENCE;
@@ -41,13 +41,25 @@ pub fn along(id: &str, path: Path, thread: &Thread, params: &[(&str, &str)]) -> 
         shape: Shape::stroke(path),
         thread: thread.clone(),
         params: params.iter().copied().collect::<ParamSet>(),
+        automatic: false,
     }
 }
 
 /// `element`, a stroke, drawn `width` millimetres wide: how wide a satin column drawn as one path is.
 pub fn widened(element: Element, width: f64) -> Element {
-    let Shape::Stroke { path, join, .. } = element.shape else { panic!("`{}` is not a stroke", element.id) };
-    Element { shape: Shape::Stroke { path, width: Mm::new(width).unwrap(), join }, ..element }
+    let Shape::Stroke { path, join, cap, .. } = element.shape else { panic!("`{}` is not a stroke", element.id) };
+    Element { shape: Shape::Stroke { path, width: Mm::new(width).unwrap(), join, cap }, ..element }
+}
+
+/// `element`, a stroke, ending with `cap` where its open subpaths end.
+pub fn capped(element: Element, cap: Cap) -> Element {
+    let Shape::Stroke { path, width, join, .. } = element.shape else { panic!("`{}` is not a stroke", element.id) };
+    Element { shape: Shape::Stroke { path, width, join, cap }, ..element }
+}
+
+/// `element` as a shape without settings that StitchCraft digitizes ([`Element::automatic`]).
+pub fn automatic(element: Element) -> Element {
+    Element { automatic: true, ..element }
 }
 
 /// A path of open polylines, one subpath through each list of points. A list of one point is a subpath
@@ -82,6 +94,7 @@ pub fn fill(id: &str, parts: &[&[(f64, f64)]], thread: &Thread, params: &[(&str,
         shape: Shape::Fill { path: rings(parts), rule: FillRule::NonZero },
         thread: thread.clone(),
         params: params.iter().copied().collect::<ParamSet>(),
+        automatic: false,
     }
 }
 
