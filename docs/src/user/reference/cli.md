@@ -68,7 +68,7 @@ Options:
           Also write a report of the plan and what was said about it (JSON), even when nothing else is written
 
       --auto
-          Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings sews as they say
+          Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them
 
   -h, --help
           Print help (see a summary with '-h')
@@ -248,7 +248,7 @@ Options:
           What goes wrong, in your words; it goes into the bundle
 
       --auto
-          Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings sews as they say
+          Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them
 
   -h, --help
           Print help (see a summary with '-h')

@@ -25,7 +25,9 @@ pub const fn stitchcraft_core::budget::Meter::stitches_left(&self) -> u32
 pub const fn stitchcraft_core::budget::Meter::work_left(&self) -> u64
 pub mod stitchcraft_core::diag
 #[non_exhaustive] pub enum stitchcraft_core::diag::Code
+pub stitchcraft_core::diag::Code::AutoAreaTooLarge
 pub stitchcraft_core::diag::Code::AutoDigitized
+pub stitchcraft_core::diag::Code::AutoSatinFilled
 pub stitchcraft_core::diag::Code::BudgetExhausted
 pub stitchcraft_core::diag::Code::BundleUnreadable
 pub stitchcraft_core::diag::Code::CustomLockUnusable
@@ -223,7 +225,9 @@ pub fn stitchcraft_core::units::at_least(f64, f64) -> bool
 pub fn stitchcraft_core::units::to_tenths(f64) -> core::option::Option<i32>
 pub fn stitchcraft_core::units::up_to_tenth(f64) -> f64
 #[non_exhaustive] pub enum stitchcraft_core::Code
+pub stitchcraft_core::Code::AutoAreaTooLarge
 pub stitchcraft_core::Code::AutoDigitized
+pub stitchcraft_core::Code::AutoSatinFilled
 pub stitchcraft_core::Code::BudgetExhausted
 pub stitchcraft_core::Code::BundleUnreadable
 pub stitchcraft_core::Code::CustomLockUnusable

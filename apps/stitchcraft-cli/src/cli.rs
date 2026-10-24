@@ -80,7 +80,7 @@ pub struct PlanArgs {
     #[arg(long)]
     pub report: Option<PathBuf>,
     /// Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by
-    /// its width (docs/src/design/image-to-embroidery.md). A shape with settings sews as they say.
+    /// its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them.
     #[arg(long)]
     pub auto: bool,
 }
@@ -108,7 +108,7 @@ pub struct BugReportArgs {
     #[arg(long)]
     pub says: Option<String>,
     /// Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by
-    /// its width (docs/src/design/image-to-embroidery.md). A shape with settings sews as they say.
+    /// its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them.
     #[arg(long)]
     pub auto: bool,
 }

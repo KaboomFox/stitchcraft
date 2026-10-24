@@ -1,10 +1,11 @@
 //! `stitch bug-report DESIGN`: one file that reproduces what StitchCraft does with a design, to attach to
 //! an issue; and `stitch bug-report --replay BUNDLE`, which plans it again and compares.
 //!
-//! StitchCraft is deterministic (`docs/src/design/determinism.md`): the same design, profile, format and
-//! version give the same plan, bit for bit, on every platform. So a bundle holds exactly those — the design
-//! file itself, an SVG file or a VectorCraft document under a field named for its kind ([`Source`]), the
-//! profile's id, the format and the version — and what came of them: a digest of every entry of the plan,
+//! StitchCraft is deterministic (`docs/src/design/determinism.md`): the same design, profile, format,
+//! version and reading (`--auto`) give the same plan, bit for bit, on every platform. So a bundle holds
+//! exactly those — the design file itself, an SVG file or a VectorCraft document under a field named for
+//! its kind ([`Source`]), the profile's id, the format, the version and whether the run digitized shapes
+//! automatically — and what came of them: a digest of every entry of the plan,
 //! the machine file's size and digest, every diagnostic, and a panic's message if there was one. Replaying
 //! plans the design again through the same code as `stitch plan` ([`sew`]) and compares each of them
 //! (`REQ-CLI-001`).
