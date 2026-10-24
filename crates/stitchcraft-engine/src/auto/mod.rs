@@ -19,7 +19,7 @@
 //!   and so on. A traced line's ends are round or square, and the cap is part of the line drawn: an open
 //!   end with such a cap reaches half the stroke's width past the path's end, as far as the cap does, along
 //!   the direction the path ends in.
-//! - A wider stroke is the tatami fill of the area it paints ([`area`], `REQ-AUTO-004`): satin stitches
+//! - A wider stroke is the tatami fill of the area it paints (`area`, `REQ-AUTO-004`): satin stitches
 //!   longer than that are loose. The fill is given that area's outline, already joined into one region,
 //!   so that it sews and is said of as the fill of a shape so drawn.
 //!
