@@ -70,6 +70,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0809`](#sc-i0809) | Info | VectorCraft layer or guide left out, as it does not print |
 | [`SC-I0810`](#sc-i0810) | Info | VectorCraft live effect leaves the object as it is |
 | [`SC-I0811`](#sc-i0811) | Info | VectorCraft object left out, as its name asks |
+| [`SC-I0901`](#sc-i0901) | Info | Shapes digitized automatically |
 
 ## SC-E0004
 
@@ -837,3 +838,16 @@ lines, templates and notes this way, in the drawing but out of the sew-out, as I
 commands keep them. Everything in a group or a layer so named is left out with it.
 
 The message names what was left out. To stitch it, rename it in VectorCraft's Layers panel.
+
+## SC-I0901
+
+**Info** — Shapes digitized automatically
+
+`--auto` digitized the design's shapes that have no settings: StitchCraft chose each one's
+stitches by its width. An area is a tatami fill. A line no wider than the design's narrowest satin
+stroke (`min_satin_stroke_width_mm`, 1 mm unless the design sets it) is a running stitch, a line up
+to 7 mm wide a satin column as wide as the line, and a wider line a tatami fill of the area it
+paints.
+
+The message counts the shapes by the stitches chosen. To sew a shape another way, give it settings:
+in VectorCraft, apply a StitchCraft effect to it. A shape with settings sews as they say.

@@ -43,7 +43,7 @@ use std::str::FromStr;
 
 use roxmltree::{Document, Node, NodeId, ParsingOptions};
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
-use stitchcraft_engine::design::{Design, Element, Shape};
+use stitchcraft_engine::design::{Design, Element, Reading, Shape};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
 use svgtypes::{Color, Length};
@@ -84,6 +84,12 @@ pub struct Svg {
 /// The design in the SVG file `bytes`, read within `budget`. Fails with `SC-E0801` when the file cannot
 /// be read at all, and with `SC-E0004` when reading it needs more work than the budget allows.
 pub fn read(bytes: &[u8], budget: &Budget) -> Result<Svg, Diagnostic> {
+    read_with(bytes, budget, Reading::default())
+}
+
+/// The design in the SVG file `bytes`, read within `budget` as `reading` asks: with `auto`, a shape with no
+/// `inkstitch:` attribute is an automatic element (`REQ-AUTO-001`). Fails as [`read`] does.
+pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Svg, Diagnostic> {
     let text = text::decode(bytes)?;
     text::check_entities(&text)?;
     // A DTD (`<!DOCTYPE svg PUBLIC …>`, common in older files) is allowed, with the entities
@@ -93,7 +99,7 @@ pub fn read(bytes: &[u8], budget: &Budget) -> Result<Svg, Diagnostic> {
         roxmltree::Error::NodesLimitReached => unreadable(format!("The file has more than {MAX_NODES} XML nodes, more than StitchCraft reads.")),
         e => unreadable(format!("The file is not well-formed XML: {e}.")),
     })?;
-    Reader::new(budget).read(&doc)
+    Reader::new(budget, reading).read(&doc)
 }
 
 /// What an element's children are drawn with.
@@ -194,10 +200,12 @@ struct Reader<'b, 'a, 'input> {
     noted_inkstitch: bool,
     /// Ink/Stitch's design settings.
     settings: settings::Found,
+    /// Whether a shape with no `inkstitch:` attribute is an automatic element (`--auto`).
+    auto: bool,
 }
 
 impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
-    fn new(budget: &'b Budget) -> Self {
+    fn new(budget: &'b Budget, reading: Reading) -> Self {
         Reader {
             budget,
             meter: budget.meter(),
@@ -215,6 +223,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             noted_style_sheet: false,
             noted_inkstitch: false,
             settings: settings::Found::default(),
+            auto: reading.auto,
         }
     }
 
@@ -515,6 +524,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 _ => None,
             };
         }
+        // A shape without Ink/Stitch's settings is digitized automatically when the user asks for it.
+        let automatic = self.auto && !node.attributes().any(|a| a.namespace() == Some(INKSTITCH_NS));
         if style.stroke_first && fill.is_some() && stroke.is_some() {
             let message = format!("`{label}` paints its stroke first (`paint-order`); its fill is sewn first, as Ink/Stitch sews them.");
             self.note(Some(&label), message, None);
@@ -528,11 +539,11 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                     self.unusable(&label, format!("The stroke of `{label}` cannot be stitched: it is too wide to measure. It is left out."));
                     continue;
                 };
-                Shape::Stroke { path: path.clone(), width, join: style.join() }
+                Shape::Stroke { path: path.clone(), width, join: style.join(), cap: style.line_cap }
             };
             let id = ElementId::new(format!("svg:{label}:{part}"))
                 .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The SVG reader made an element id that cannot be used: {e}.")))?;
-            self.elements.push(Element { id, name: name.clone(), shape, thread: Thread::new(colour), params: params.clone() });
+            self.elements.push(Element { id, name: name.clone(), shape, thread: Thread::new(colour), params: params.clone(), automatic });
             self.stitched_targets.insert(place(node));
         }
         Ok(())

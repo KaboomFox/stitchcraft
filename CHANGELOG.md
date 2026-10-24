@@ -5,6 +5,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.1: automatic elements. `stitch plan --auto` and `stitch export --auto` choose the stitches of each
+  shape that has no settings, by its width (`REQ-AUTO-001` to `REQ-AUTO-005`): a VectorCraft object with no
+  StitchCraft effect on it or on a group around it, and an SVG element with no `inkstitch:` attribute. A
+  shape with settings sews as they say, and without the switch nothing changes.
+  - An area is a tatami fill. A line no wider than the design's narrowest satin stroke
+    (`min_satin_stroke_width_mm`, 1 mm unless the design sets it) is a running stitch. A line up to 7 mm
+    wide is a satin column as wide as the line, its path the column's centre line: one column for each of
+    its subpaths, named `#2`, `#3` and so on after the first. A wider line is the tatami fill of the area
+    it paints, its corners joined and its ends capped as the line's join and cap say.
+  - A line traced in VectorCraft sews as wide and as long as VectorCraft draws it: the readers now read a
+    stroke's cap (SVG's `stroke-linecap`, VectorCraft's cap), and an automatic line's round or square caps
+    reach half its width past its ends. Of a VectorCraft line sewn across its width, its alignment and
+    width profile, which the stitches don't follow, are named (`SC-W0807`).
+  - `SC-I0901` counts the shapes digitized automatically, by their stitches.
+  - `stitch bug-report --auto` records the switch in the bundle, and a replay digitizes the same. Bundles
+    without it are written and read as before.
 - M7.5: the zigzag satin is sewn, as Ink/Stitch sews it (`REQ-SAT-026` to `REQ-SAT-028`). Set
   `satin_column` on and `satin_method` to `zigzag`. The pairs a satin column places are placed at half the
   zigzag spacing, and one point of each is sewn, the rails taking turns from the first: every stitch
