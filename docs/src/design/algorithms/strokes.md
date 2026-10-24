@@ -84,6 +84,14 @@ tolerance. Such a line is a polyline already, and each join that turns by more t
 line too small for a stitch of the shortest length is sewn as its 2 ends, as Ink/Stitch sews it, and
 finalizing merges what is too short.
 
+**A wide stroke's area**, which automatic digitizing fills ([image to
+embroidery](../image-to-embroidery.md#stitch-types-by-width)), is made from the path segment by segment,
+flattened within the shapes' tolerance: its joins go where 2 segments meet, and it bends smoothly inside
+a curve. Its ends and corners are square to the chords there, and half the stroke's width turns the angle
+such a chord makes with its curve into a shift of the corner. So a curve that ends the subpath, or meets
+the next segment at a corner, is halved further at that end until the shift is within the tolerance too.
+Where 2 segments meet smoothly nothing more is needed.
+
 ### Repeats and bean stitch
 
 - `repeats = k` sews the path k times, alternating direction; odd k ends at the far end, even k returns

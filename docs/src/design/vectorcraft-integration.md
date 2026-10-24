@@ -324,9 +324,14 @@ anchor, leaves that end of the segment straight, and a segment without handles i
   text. So is a kind of object this version doesn't read.
 
 **Paints and threads.** An object without StitchCraft's effects is stitched as Ink/Stitch stitches an SVG
-shape. From M13, `--auto` lets StitchCraft choose its stitches instead ([image to
-embroidery](image-to-embroidery.md)). Its visible fills are filled, in the appearance's order, and its visible strokes then have a
-running stitch each. The thread's colour is a solid paint's colour, with CMYK and grey converted by
+shape. Its visible fills are filled, in the appearance's order, and its visible strokes then have a running
+stitch each. Since M13.1, read with `--auto` (`stitchcraft_vectorcraft::read_with`), each of those elements
+is automatic instead, and StitchCraft chooses its stitches by its width ([image to
+embroidery](image-to-embroidery.md), `REQ-AUTO-001`): an object with no StitchCraft effect, its own or a
+group's or a layer's around it. A stroke's cap is read with its width and join, and an automatic line's
+stitches follow its round or square caps. What they don't follow of a line sewn across its width, its
+alignment inside or outside a closed path and its width profile, is named with `SC-W0807`
+(`REQ-AUTO-005`). The thread's colour is a solid paint's colour, with CMYK and grey converted by
 VectorCraft's formula without colour management ((1 − c)(1 − k) and 1 − k) and Lab through sRGB. A
 gradient gives its first stop's colour, with `SC-W0807` unless every stop has that colour, and a pattern
 gives black, with `SC-W0807`. A stroke's width, in points, and its join, with its miter limit (10 when

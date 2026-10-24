@@ -11,7 +11,7 @@
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
 use stitchcraft_core::{Budget, Code, Mm, Point, math};
-use stitchcraft_engine::design::{DesignSettings, Element, Join, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::design::{Cap, DesignSettings, Element, Join, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::generate::approach;
 use stitchcraft_engine::generators::Approach;
 use stitchcraft_engine::generators::satin::rails;
@@ -129,7 +129,7 @@ fn req_sat_015_a_narrow_column_offers_its_first_point_as_a_stroke_does() {
     assert_eq!(approach(&narrow, &DesignSettings::default(), &budget), Some(Approach::Point(p(0.0, 0.0))));
     // The join plays no part in how narrow a column is.
     let Shape::Stroke { path, .. } = drawn("round", 0.5, &[]).shape else { panic!("a stroke") };
-    let round = Element { shape: Shape::Stroke { path, width: Mm::new(0.5).unwrap(), join: Join::Round }, ..narrow };
+    let round = Element { shape: Shape::Stroke { path, width: Mm::new(0.5).unwrap(), join: Join::Round, cap: Cap::Butt }, ..narrow };
     assert_eq!(approach(&round, &DesignSettings::default(), &budget), Some(Approach::Point(p(0.0, 0.0))));
 }
 
@@ -206,7 +206,7 @@ fn req_sat_017_with_every_rung_left_out_the_rails_are_one_section() {
     // So nothing is said of rails with different numbers of nodes.
     let element = widened(along("l", l_shape, &RED, &[("satin_column", "true")]), 2.0);
     let Shape::Stroke { path, width, .. } = element.shape.clone() else { panic!("a stroke") };
-    let element = Element { shape: Shape::Stroke { path, width, join: Join::Round }, ..element };
+    let element = Element { shape: Shape::Stroke { path, width, join: Join::Round, cap: Cap::Butt }, ..element };
     assert_eq!(messages(&planned(vec![element])), Vec::<String>::new());
 }
 

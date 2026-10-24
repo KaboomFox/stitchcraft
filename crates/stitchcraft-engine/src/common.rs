@@ -11,6 +11,14 @@ use stitchcraft_params::{Family, Origin, StitchType, params};
 
 use crate::locks::{LOCKS, SIZED_IN_MM, SIZED_IN_PERCENT};
 
+/// The key of the setting that trims the thread after an element. A shape that StitchCraft sews as several
+/// elements keeps it for the last.
+pub const TRIM_AFTER: &str = "trim_after";
+
+/// The key of the setting that stops the machine after an element. A shape that StitchCraft sews as
+/// several elements keeps it for the last.
+pub const STOP_AFTER: &str = "stop_after";
+
 /// The stitch types with a longest stitch: manual stitch and satin columns, whatever their method, split
 /// longer stitches, and a tatami fill sews its rows in stitches that long.
 const LONGEST: &[StitchType] =

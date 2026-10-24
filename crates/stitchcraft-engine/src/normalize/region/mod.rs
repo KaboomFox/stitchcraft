@@ -123,7 +123,7 @@ pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Ex
 }
 
 /// Whether `rule` fills a face whose winding number is `w`.
-fn fills(rule: FillRule, w: i64) -> bool {
+pub(crate) fn fills(rule: FillRule, w: i64) -> bool {
     match rule {
         FillRule::NonZero => w != 0,
         FillRule::EvenOdd => w.rem_euclid(2) == 1,

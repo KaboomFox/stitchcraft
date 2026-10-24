@@ -32,7 +32,7 @@ use std::path::Path;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use stitchcraft_core::{Budget, Code, Diagnostic, Severity};
-use stitchcraft_engine::design::Design;
+use stitchcraft_engine::design::{Design, Reading};
 use stitchcraft_formats::Encoded;
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
@@ -73,11 +73,12 @@ impl Source {
         }
     }
 
-    /// The design in `bytes`, read as this kind of file, with what its reader said; or why it can't be read.
-    pub fn read(self, bytes: &[u8]) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
+    /// The design in `bytes`, read as this kind of file as `reading` asks, with what its reader said; or why
+    /// it can't be read.
+    pub fn read(self, bytes: &[u8], reading: Reading) -> Result<(Design, Vec<Diagnostic>), Diagnostic> {
         match self {
-            Source::Svg => stitchcraft_svg::read(bytes, &Budget::DEFAULT).map(|svg| (svg.design, svg.warnings)),
-            Source::VectorCraft => stitchcraft_vectorcraft::read(bytes, &Budget::DEFAULT).map(|read| (read.design, read.warnings)),
+            Source::Svg => stitchcraft_svg::read_with(bytes, &Budget::DEFAULT, reading).map(|svg| (svg.design, svg.warnings)),
+            Source::VectorCraft => stitchcraft_vectorcraft::read_with(bytes, &Budget::DEFAULT, reading).map(|read| (read.design, read.warnings)),
         }
     }
 }
@@ -103,10 +104,10 @@ impl Sewn {
     }
 }
 
-/// The design file `design`, of the kind `source`, planned for `profile` and written in `format`, with
-/// `name` as the design name machines show, and the file read back.
-pub fn sew(source: Source, design: &[u8], profile: &MachineProfile, format: FormatId, name: &str) -> Sewn {
-    let (design, warnings) = match source.read(design) {
+/// The design file `design`, of the kind `source`, read as `reading` asks, planned for `profile` and written in
+/// `format`, with `name` as the design name machines show, and the file read back.
+pub fn sew(source: Source, design: &[u8], reading: Reading, profile: &MachineProfile, format: FormatId, name: &str) -> Sewn {
+    let (design, warnings) = match source.read(design, reading) {
         Ok(read) => read,
         Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None },
     };
@@ -160,7 +161,8 @@ pub fn run(args: &PlanArgs) -> Outcome {
         }
     };
     let source = Source::of(&args.design);
-    let run = Run { design_path: &args.design, source, name: design_name(&args.design), design: &bytes, profile, format, says: None };
+    let reading = Reading { auto: args.auto };
+    let run = Run { design_path: &args.design, source, reading, name: design_name(&args.design), design: &bytes, profile, format, says: None };
     // A panic is a bug in StitchCraft: with the design's bytes in hand, and where it came, a bundle can
     // reproduce it (`REQ-CLI-002`).
     let phase = Cell::new(Phase::Plan);
@@ -175,7 +177,7 @@ pub fn run(args: &PlanArgs) -> Outcome {
 /// `stitch plan` once the design is read: planned and, unless StitchCraft found a bug in itself, written.
 /// `phase` follows where it is, for a bundle.
 fn planned(args: &PlanArgs, run: &Run, phase: &Cell<Phase>) -> Outcome {
-    let sewn = sew(run.source, run.design, run.profile, run.format, run.name);
+    let sewn = sew(run.source, run.design, run.reading, run.profile, run.format, run.name);
     if sewn.found_a_bug() {
         let refused = refuse(args, run.profile, &sewn.diagnostics);
         return bug_report::beside(&args.output, run, Ok(&sewn), refused);
@@ -317,7 +319,7 @@ mod tests {
     }
 
     fn args(design: PathBuf, output: PathBuf) -> PlanArgs {
-        PlanArgs { design, output, profile: profiles::REFERENCE.id.to_string(), format: None, preview: None, report: None }
+        PlanArgs { design, output, profile: profiles::REFERENCE.id.to_string(), format: None, preview: None, report: None, auto: false }
     }
 
     #[test]
@@ -345,6 +347,24 @@ mod tests {
         assert_eq!(report["diagnostics"][0]["element"], "svg:patch:fill");
         assert_eq!(report["file"]["sha256"], hex(&Sha256::digest(std::fs::read(&output).unwrap())));
         assert_eq!((report["design"].as_str(), report["file"]["path"].as_str()), (fixture("strokes.svg").to_str(), output.to_str()));
+    }
+
+    /// A line 3 mm wide and 50 mm long, without settings: a satin column when digitized automatically.
+    const LINE: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100"><path id="line" d="M 10 50 L 60 50" stroke="red" stroke-width="3" fill="none"/></svg>"#;
+
+    #[test]
+    fn req_auto_001_stitch_plan_auto_digitizes_the_shapes_without_settings() {
+        let dir = TempDir::new("plan-auto");
+        let design = dir.join("line.svg");
+        std::fs::write(&design, LINE).unwrap();
+        let (auto, plain) = (dir.join("auto.pes"), dir.join("plain.pes"));
+        let out = run(&PlanArgs { auto: true, ..args(design.clone(), auto.clone()) });
+        assert_eq!(out.status, Status::Done, "{}", out.stderr);
+        assert_eq!(out.stderr, "info SC-I0901: 1 shape is digitized automatically: it sews as a satin column.\n");
+        // Without the switch, the line runs, as it did before.
+        let out = run(&args(design, plain.clone()));
+        assert_eq!((out.status, out.stderr.as_str()), (Status::Done, ""));
+        assert_ne!(std::fs::read(auto).unwrap(), std::fs::read(plain).unwrap());
     }
 
     #[test]
@@ -397,7 +417,8 @@ mod tests {
         let (output, preview) = (dir.join("picture.dst"), dir.join("picture.png"));
         let out = run(&PlanArgs { preview: Some(preview.clone()), ..args(fixture("strokes.svg"), output) });
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
-        let sewn = sew(Source::Svg, &std::fs::read(fixture("strokes.svg")).unwrap(), profiles::REFERENCE, FormatId::Dst, "picture");
+        let sewn =
+            sew(Source::Svg, &std::fs::read(fixture("strokes.svg")).unwrap(), Reading::default(), profiles::REFERENCE, FormatId::Dst, "picture");
         let drawn = std::fs::read(&preview).unwrap();
         assert_eq!(drawn, picture(sewn.back.as_ref().unwrap()).unwrap().png);
         assert_ne!(drawn, picture(sewn.plan.as_ref().unwrap()).unwrap().png, "the plan's jump thread, where the file cuts");
@@ -439,7 +460,8 @@ mod tests {
         // The engine leaves out an element whose planning runs past its work budget, with `SC-E0004`, and plans
         // the rest (`REQ-GEN-002`), as it does for a fill of 2,000 spikes after 12 s.
         let (output, preview, report) = (dir.join("left-out.pes"), dir.join("left-out.png"), dir.join("left-out.json"));
-        let mut sewn = sew(Source::Svg, &std::fs::read(fixture("strokes.svg")).unwrap(), profiles::REFERENCE, FormatId::PesV1, "strokes");
+        let mut sewn =
+            sew(Source::Svg, &std::fs::read(fixture("strokes.svg")).unwrap(), Reading::default(), profiles::REFERENCE, FormatId::PesV1, "strokes");
         let fill = ElementId::new("svg:patch:fill").unwrap();
         sewn.diagnostics.push(Budget::DEFAULT.meter().charge(u64::MAX).unwrap_err().diagnostic(&Budget::DEFAULT, Some(fill)));
         assert!(sewn.plan.is_some() && sewn.file.is_some());
