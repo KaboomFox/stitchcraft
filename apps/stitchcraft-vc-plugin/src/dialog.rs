@@ -119,7 +119,7 @@ pub fn own(schema: Schema, label: &'static str, help: &str, path: &str) -> Param
 }
 
 /// The unit a parameter of `kind` is in, if any.
-fn unit(kind: Kind) -> Option<&'static str> {
+pub(crate) fn unit(kind: Kind) -> Option<&'static str> {
     Some(kind.unit()).filter(|unit| !unit.is_empty())
 }
 

@@ -13,18 +13,17 @@ use std::fmt::Write as _;
 
 use sha2::{Digest, Sha256};
 use stitchcraft_core::Severity;
+use stitchcraft_plan::PaletteId;
 use stitchcraft_plan::invariants::LOCK_MIN_STITCH;
-use stitchcraft_plan::{PaletteId, profiles};
 
-use super::{Outcome, Status, describe_plan, describe_threads, hex, read_machine_file, reader_warnings, render_diagnostics};
+use super::{Outcome, Status, asked_profile, describe_plan, describe_threads, hex, read_machine_file, reader_warnings, render_diagnostics};
 use crate::cli::InspectArgs;
 
 /// Runs `stitch inspect`.
 pub fn run(args: &InspectArgs) -> Outcome {
-    let profile = match args.profile.as_deref().map(|id| profiles::find(id).ok_or(id)) {
-        Some(Err(id)) => return Outcome::usage(format!("there is no profile `{id}`; `stitch profiles` shows them")),
-        Some(Ok(profile)) => Some(profile),
-        None => None,
+    let profile = match asked_profile(args.profile.as_deref()) {
+        Ok(profile) => profile,
+        Err(outcome) => return outcome,
     };
     let (bytes, decoded) = match read_machine_file(&args.file) {
         Ok(read) => read,

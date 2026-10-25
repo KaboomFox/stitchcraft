@@ -16,7 +16,10 @@ embroidery (StitchCraft)*, which write the file `stitch export` writes from Vect
 Export › Export As (`src/export.rs`, `REQ-VC-011`). From M6.10 the dialogs label each parameter, with its
 unit, help and help page, in the registry's groups as sections, and show it only for the methods it
 applies to (`src/dialog.rs`, `REQ-VC-012`). VectorCraft reads those keys from 0.14, and older releases
-ignore them.
+ignore them. From M6.11 a filter, *StitchCraft Design Settings*, keeps the design settings and the machine
+with the document as VectorCraft 0.16 keeps a filter's data, and the exporters plan for the machine kept
+(`src/settings.rs`, `REQ-VC-013`). An older VectorCraft would drop that data, and there the filter
+declines with `SC-E0813`.
 Without a feature the module is M0.6's *hello* effect, which returns the object's geometry unchanged. The
 contract tests measure the host's costs with it (`docs/src/design/vectorcraft-integration.md`).
 
@@ -28,13 +31,14 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 # target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm, the StitchCraft Fill plug-in
 ```
 
-The feature is the family, `stroke`, `satin` or `fill`, or the machine format, `pes` or `dst`. Without one,
-the build is *hello*. Each build writes the same file, so copy it before building the next.
-`cargo xtask compat contract --ref <tag>` builds all six into `target/compat/plugins/` and loads them into
-VectorCraft's host.
+The feature is the family, `stroke`, `satin` or `fill`, the machine format, `pes` or `dst`, or `settings`
+for the Design Settings filter. Without one, the build is *hello*. Each build writes the same file, so copy
+it before building the next. `cargo xtask compat contract --ref <tag>` builds all seven into
+`target/compat/plugins/` and loads them into VectorCraft's host.
 
 In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Open` the `.wasm`), then
-**Effect › Plug-ins › StitchCraft Fill**, or **File › Export › Export As** with an exporter.
+**Effect › Plug-ins › StitchCraft Fill**, **File › Export › Export As** with an exporter, or
+**Object › Plug-ins › StitchCraft Design Settings**.
 
 ## Invariants
 
@@ -53,7 +57,11 @@ In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Ope
   engine sews it. An exporter calls the reader, the engine and the format writer as `stitch export` does,
   with its budget, and Level B of the compatibility gate checks that the files are the same.
 - A live effect never makes an object vanish. When it can't show stitches, VectorCraft draws the object as
-  it is, with the reason as the plug-in's last error.
+  it is, with the reason as the plug-in's last error. The Design Settings filter returns each object it is
+  given as it is, as VectorCraft deletes one a filter leaves out.
+- The design settings are read and written in one place, `stitchcraft_vectorcraft::settings`, by the
+  names, labels and help of `stitchcraft_engine::design::SETTINGS`, which the SVG adapter reads
+  Ink/Stitch's with.
 - A preview spends at most what VectorCraft allows (`REQ-VC-003`). The plug-in prices the engine's work in
   instructions, with numbers the contract tests measure, and the engine stops before VectorCraft would. A
   fill's exact preview, which the user picks, is the exception, and VectorCraft bounds it.

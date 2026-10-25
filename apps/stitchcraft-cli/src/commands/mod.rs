@@ -18,7 +18,7 @@ use sha2::{Digest, Sha256};
 use stitchcraft_core::{Code, Diagnostic, Fix, Severity};
 use stitchcraft_formats::Decoded;
 use stitchcraft_plan::palette::Palette;
-use stitchcraft_plan::{FormatId, StitchPlan};
+use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 
 use crate::files::{self, Unwritten};
 
@@ -150,6 +150,15 @@ fn resolved(path: &Path) -> Option<PathBuf> {
 /// written, the outcome says so after `said`, what was said about the design.
 pub fn write_files(files: &[(&Path, &[u8])], said: &str) -> Result<(), Outcome> {
     files::write_all(files).map_err(|unwritten| Outcome::unwritten(said, &unwritten))
+}
+
+/// The machine profile `--profile` names, `id`, when it names one; the usage error when StitchCraft has no
+/// profile of that name.
+pub fn asked_profile(id: Option<&str>) -> Result<Option<&'static MachineProfile>, Outcome> {
+    id.map(|id| {
+        stitchcraft_plan::profiles::find(id).ok_or_else(|| Outcome::usage(format!("there is no profile `{id}`; `stitch profiles` shows them")))
+    })
+    .transpose()
 }
 
 /// The format `--format` names, or else the one `output`'s extension names.

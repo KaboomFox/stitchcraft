@@ -14,10 +14,9 @@ use stitchcraft_core::{Diagnostic, Severity};
 use stitchcraft_engine::testsheets::{self, SHEETS, TestSheet};
 use stitchcraft_formats::{Encoded, read_back};
 use stitchcraft_plan::invariants;
-use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 
-use super::{Outcome, Status, describe_file, describe_plan, describe_threads, output_format, render_diagnostics, write_files};
+use super::{Outcome, Status, asked_profile, describe_file, describe_plan, describe_threads, output_format, render_diagnostics, write_files};
 use crate::cli::TestsheetArgs;
 
 /// Runs `stitch testsheet`.
@@ -31,10 +30,9 @@ pub fn run(args: &TestsheetArgs) -> Outcome {
     let Some(sheet) = testsheets::find(id) else {
         return Outcome::usage(format!("there is no test sheet `{id}`; `stitch testsheet --list` shows them"));
     };
-    let profile = match args.profile.as_deref().map(|id| profiles::find(id).ok_or(id)) {
-        None => sheet.profile,
-        Some(Ok(profile)) => profile,
-        Some(Err(id)) => return Outcome::usage(format!("there is no profile `{id}`; `stitch profiles` shows them")),
+    let profile = match asked_profile(args.profile.as_deref()) {
+        Ok(asked) => asked.unwrap_or(sheet.profile),
+        Err(outcome) => return outcome,
     };
     let format = match output_format(args.format, output) {
         Ok(format) => format,

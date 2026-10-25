@@ -1,12 +1,17 @@
 # The public API of stitchcraft-vectorcraft, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
 # Generated: do not edit. A change here is a change other code can see; say why in the pull request.
 pub mod stitchcraft_vectorcraft
+pub mod stitchcraft_vectorcraft::settings
+pub const stitchcraft_vectorcraft::settings::PROFILE: &str
+pub const stitchcraft_vectorcraft::settings::SETTINGS_FILTER: &str
+pub fn stitchcraft_vectorcraft::settings::kept_data(&stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile) -> serde_json::value::Value
 pub struct stitchcraft_vectorcraft::Effect
 pub stitchcraft_vectorcraft::Effect::element: stitchcraft_engine::design::Element
 pub stitchcraft_vectorcraft::Effect::preview_level: core::option::Option<alloc::string::String>
 pub stitchcraft_vectorcraft::Effect::stroked: bool
 pub struct stitchcraft_vectorcraft::VectorCraft
 pub stitchcraft_vectorcraft::VectorCraft::design: stitchcraft_engine::design::Design
+pub stitchcraft_vectorcraft::VectorCraft::machine: core::option::Option<&'static stitchcraft_plan::profile::MachineProfile>
 pub stitchcraft_vectorcraft::VectorCraft::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub const stitchcraft_vectorcraft::EXTENSIONS: &[&str]
 pub const stitchcraft_vectorcraft::FORMAT: u64
@@ -20,6 +25,7 @@ pub fn stitchcraft_vectorcraft::effect_lines<'a>(impl core::iter::traits::collec
 pub fn stitchcraft_vectorcraft::effect_name(&str) -> core::option::Option<&str>
 pub fn stitchcraft_vectorcraft::effect_output(stitchcraft_params::stitch_type::Family, &[alloc::vec::Vec<stitchcraft_core::units::Point>]) -> core::option::Option<alloc::vec::Vec<u8>>
 pub fn stitchcraft_vectorcraft::effect_ribbons(impl core::iter::traits::collect::IntoIterator<Item = (stitchcraft_core::units::Point, stitchcraft_core::units::Point)>) -> core::option::Option<alloc::vec::Vec<u8>>
+pub fn stitchcraft_vectorcraft::machine(&[u8], &stitchcraft_core::budget::Budget) -> core::option::Option<&'static stitchcraft_plan::profile::MachineProfile>
 pub fn stitchcraft_vectorcraft::param_text(&serde_json::value::Value) -> core::option::Option<alloc::string::String>
 pub fn stitchcraft_vectorcraft::plugin_id(&str) -> alloc::string::String
 pub fn stitchcraft_vectorcraft::read(&[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_vectorcraft::VectorCraft, stitchcraft_core::diag::Diagnostic>

@@ -114,10 +114,20 @@ impl stitchcraft_engine::design::Path
 pub fn stitchcraft_engine::design::Path::points(&self) -> impl core::iter::traits::iterator::Iterator<Item = stitchcraft_core::units::Point> + '_
 pub struct stitchcraft_engine::design::Reading
 pub stitchcraft_engine::design::Reading::auto: bool
+pub struct stitchcraft_engine::design::Setting
+pub stitchcraft_engine::design::Setting::help: &'static str
+pub stitchcraft_engine::design::Setting::label: &'static str
+pub stitchcraft_engine::design::Setting::max: f64
+pub stitchcraft_engine::design::Setting::name: &'static str
+impl stitchcraft_engine::design::Setting
+pub fn stitchcraft_engine::design::Setting::get(&self, &stitchcraft_engine::design::DesignSettings) -> stitchcraft_core::units::Mm
+pub fn stitchcraft_engine::design::Setting::named(&str) -> core::option::Option<&'static stitchcraft_engine::design::Setting>
+pub fn stitchcraft_engine::design::Setting::set(&self, &mut stitchcraft_engine::design::DesignSettings, stitchcraft_core::units::Mm)
 pub struct stitchcraft_engine::design::Subpath
 pub stitchcraft_engine::design::Subpath::closed: bool
 pub stitchcraft_engine::design::Subpath::segments: alloc::vec::Vec<stitchcraft_engine::design::Segment>
 pub stitchcraft_engine::design::Subpath::start: stitchcraft_core::units::Point
+pub const stitchcraft_engine::design::SETTINGS: [stitchcraft_engine::design::Setting; 3]
 pub const stitchcraft_engine::design::WORKING_LIMIT_MM: f64
 pub fn stitchcraft_engine::design::within_working_limit(stitchcraft_core::units::Point) -> bool
 pub mod stitchcraft_engine::finalize

@@ -39,7 +39,9 @@ use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 use stitchcraft_render::{Image, Settings, Style};
 
 use super::bug_report::{self, Phase, Run};
-use super::{Outcome, Status, describe_file, describe_plan, describe_threads, distinct, hex, output_format, render_diagnostics, write_files};
+use super::{
+    Outcome, Status, asked_profile, describe_file, describe_plan, describe_threads, distinct, hex, output_format, render_diagnostics, write_files,
+};
 use crate::cli::PlanArgs;
 use crate::files;
 
@@ -68,6 +70,15 @@ impl Source {
         match self {
             Source::Svg => bytes,
             Source::VectorCraft => stitchcraft_vectorcraft::read_part(bytes),
+        }
+    }
+
+    /// The machine the design file `bytes` keeps for itself: a VectorCraft document's, which StitchCraft's
+    /// Design Settings filter keeps with it (`REQ-VC-013`). An SVG file keeps none.
+    pub fn machine(self, bytes: &[u8]) -> Option<&'static MachineProfile> {
+        match self {
+            Source::Svg => None,
+            Source::VectorCraft => stitchcraft_vectorcraft::machine(bytes, &Budget::DEFAULT),
         }
     }
 
@@ -139,10 +150,17 @@ pub fn design_name(path: &Path) -> &str {
     path.file_stem().and_then(|s| s.to_str()).unwrap_or("design")
 }
 
+/// The machine the design file `design`, of the kind `source`, is planned for: the one `--profile` names,
+/// `asked`, or else the one the file keeps, or else the reference machine.
+pub fn machine_for(asked: Option<&'static MachineProfile>, source: Source, design: &[u8]) -> &'static MachineProfile {
+    asked.or_else(|| source.machine(design)).unwrap_or(profiles::REFERENCE)
+}
+
 /// Runs `stitch plan`.
 pub fn run(args: &PlanArgs) -> Outcome {
-    let Some(profile) = profiles::find(&args.profile) else {
-        return Outcome::usage(format!("there is no profile `{}`; `stitch profiles` shows them", args.profile));
+    let asked = match asked_profile(args.profile.as_deref()) {
+        Ok(asked) => asked,
+        Err(outcome) => return outcome,
     };
     let format = match output_format(args.format, &args.output) {
         Ok(format) => format,
@@ -160,6 +178,7 @@ pub fn run(args: &PlanArgs) -> Outcome {
     };
     let source = Source::of(&args.design);
     let reading = Reading { auto: args.auto };
+    let profile = machine_for(asked, source, &bytes);
     let run = Run { design_path: &args.design, source, reading, name: design_name(&args.design), design: &bytes, profile, format, says: None };
     // A panic is a bug in StitchCraft: with the design's bytes in hand, and where it came, a bundle can
     // reproduce it (`REQ-CLI-002`).
@@ -305,6 +324,12 @@ mod tests {
 
     use stitchcraft_testkit::temp::TempDir;
 
+    use stitchcraft_core::Mm;
+    use stitchcraft_engine::design::DesignSettings;
+    use stitchcraft_plan::profiles::{BROTHER_PE800_SMALL, REFERENCE};
+    use stitchcraft_vectorcraft::plugin_id;
+    use stitchcraft_vectorcraft::settings::{SETTINGS_FILTER, kept_data};
+
     use super::*;
     use crate::cli::Format;
 
@@ -317,7 +342,7 @@ mod tests {
     }
 
     fn args(design: PathBuf, output: PathBuf) -> PlanArgs {
-        PlanArgs { design, output, profile: profiles::REFERENCE.id.to_string(), format: None, preview: None, report: None, auto: false }
+        PlanArgs { design, output, profile: None, format: None, preview: None, report: None, auto: false }
     }
 
     #[test]
@@ -363,6 +388,34 @@ mod tests {
         let out = run(&args(design, plain.clone()));
         assert_eq!((out.status, out.stderr.as_str()), (Status::Done, ""));
         assert_ne!(std::fs::read(auto).unwrap(), std::fs::read(plain).unwrap());
+    }
+
+    #[test]
+    fn req_vc_013_a_vectorcraft_document_is_planned_with_the_settings_and_for_the_machine_it_keeps() {
+        let dir = TempDir::new("plan-settings");
+        // The patch, with the small hoop and a shortest jump of 10 mm kept by the Design Settings filter.
+        let patch = std::fs::read(vectorcraft("patch.vectorcraft")).unwrap();
+        let mut file: Value = serde_json::from_slice(stitchcraft_vectorcraft::read_part(&patch)).unwrap();
+        let settings = DesignSettings { collapse_len: Mm::new(10.0).unwrap(), ..DesignSettings::default() };
+        file["document"]["unknown"] = json!({"pluginData": {plugin_id(SETTINGS_FILTER): kept_data(&settings, &BROTHER_PE800_SMALL)}});
+        let kept = dir.join("kept.vectorcraft");
+        std::fs::write(&kept, serde_json::to_vec(&file).unwrap()).unwrap();
+        assert_eq!(machine_for(None, Source::VectorCraft, &std::fs::read(&kept).unwrap()), &BROTHER_PE800_SMALL);
+        // Planned for the small hoop, which the patch doesn't fit, so nothing is written.
+        let small = dir.join("small.pes");
+        let out = run(&args(kept.clone(), small.clone()));
+        assert_eq!(out.status, Status::DesignErrors);
+        assert!(out.stderr.contains("error SC-E0701: ") && !small.exists(), "{}", out.stderr);
+        // `--profile` names another, and the settings still hold: the shortest jump sews the patch otherwise.
+        let on_reference = |design: PathBuf, output: PathBuf| {
+            let out = run(&PlanArgs { profile: Some(REFERENCE.id.to_string()), ..args(design, output.clone()) });
+            assert_eq!(out.status, Status::Done, "{}", out.stderr);
+            assert!(out.stdout.contains(&format!("  profile   {} (", REFERENCE.id)), "{}", out.stdout);
+            std::fs::read(output).unwrap()
+        };
+        assert_ne!(on_reference(kept, dir.join("named.pes")), on_reference(vectorcraft("patch.vectorcraft"), dir.join("plain.pes")));
+        // An SVG file keeps no machine.
+        assert_eq!(machine_for(None, Source::Svg, &std::fs::read(fixture("strokes.svg")).unwrap()), REFERENCE);
     }
 
     #[test]
@@ -483,7 +536,7 @@ mod tests {
         // What the format adds is said with the rest: DST machines cut before the 47 mm jump.
         assert!(out.stderr.ends_with("info SC-I0605: The thread will be cut at 1 place the plan does not trim: DST machines cut it before 3 or more jump records in a row, and a jump longer than 24.2 mm takes that many.\n"), "{}", out.stderr);
         assert_eq!(run(&args(fixture("strokes.svg"), dir.join("x.unknown"))).status, Status::Usage);
-        assert_eq!(run(&PlanArgs { profile: "singer".to_string(), ..args(fixture("strokes.svg"), dir.join("x.pes")) }).status, Status::Usage);
+        assert_eq!(run(&PlanArgs { profile: Some("singer".to_string()), ..args(fixture("strokes.svg"), dir.join("x.pes")) }).status, Status::Usage);
         let missing = run(&args(fixture("missing.svg"), dir.join("x.pes")));
         assert_eq!(missing.status, Status::Io);
         assert!(missing.stderr.starts_with("stitch: cannot read "));

@@ -24,7 +24,7 @@ fn fill_on_2(params: &Value) -> Applied {
 fn every_scenario_checks_only_what_its_runs_export() {
     let scenarios = load(&util::root()).unwrap();
     let names: Vec<&str> = scenarios.iter().map(|(name, _)| name.as_str()).collect();
-    assert_eq!(names, ["apply", "compound-satin", "export", "graphic-style", "install-and-list", "missing-plugin"]);
+    assert_eq!(names, ["apply", "compound-satin", "export", "graphic-style", "install-and-list", "missing-plugin", "settings"]);
     let requirements = requirement_ids().unwrap();
     for (name, scenario) in &scenarios {
         assert_eq!(problems(scenario, &modules(), &requirements), Vec::<String>::new(), "{name}");
@@ -57,7 +57,7 @@ fn a_scenario_that_doesn_t_hold_together_is_refused() {
         "#,
     );
     let found = problems(&bad, &modules(), &requirement_ids().unwrap());
-    let one = "a step has one of `cmd`, `apply` and `export`, and an export no `params`";
+    let one = "a step has one of `cmd`, `apply` and `export`, an export no `params`, and only an export `fails`";
     assert_eq!(
         found,
         [
@@ -81,6 +81,52 @@ fn a_scenario_that_doesn_t_hold_together_is_refused() {
             "there is no requirement REQ-VC-999".to_string(),
         ]
     );
+}
+
+#[test]
+fn an_export_that_fails_is_its_run_s_last_step_and_writes_no_file_to_check() {
+    let bad = scenario(
+        r#"description = "d"
+        [[run]]
+        plugins = ["pes"]
+        steps = [
+          { export = "a.pes", fails = "SC-E0701" },
+          { cmd = "shape.line", fails = "SC-E0701" },
+          { export = "b.pes", fails = "SC-W0812" },
+          { export = "c.pes", fails = "SC-E0701" },
+        ]
+        [[run]]
+        open = "c.pes"
+        steps = [{ export = "d.vectorcraft" }]
+        [expect]
+        differ = [["a.pes", "c.pes"]]
+        "#,
+    );
+    let not_last = "run 1: an export that fails is not its last step, and VectorCraft runs no step after it";
+    assert_eq!(
+        problems(&bad, &modules(), &std::collections::BTreeSet::new()),
+        [
+            not_last,
+            "run 1: a step has one of `cmd`, `apply` and `export`, an export no `params`, and only an export `fails`",
+            not_last,
+            "run 1: `fails = \"SC-W0812\"` names no error StitchCraft says",
+            "run 2: it opens `c.pes`, which no earlier run exports",
+            "it checks `a.pes`, which no run exports",
+            "it checks `c.pes`, which no run exports",
+        ]
+    );
+    // An export that fails is on the command line as any other.
+    let failing = scenario(
+        r#"description = "d"
+        [[run]]
+        plugins = ["pes"]
+        steps = [{ export = "a.vectorcraft" }, { export = "a.pes", fails = "SC-E0701" }]
+        "#,
+    );
+    assert_eq!(problems(&failing, &modules(), &std::collections::BTreeSet::new()), Vec::<String>::new());
+    let args = arguments(&failing.run[0], Path::new("/plugins"), Path::new("/out")).unwrap();
+    let pes = Path::new("/out").join("a.pes").to_string_lossy().into_owned();
+    assert_eq!(args[args.len() - 2..], ["--export".to_string(), pes]);
 }
 
 #[test]
@@ -169,6 +215,55 @@ fn req_vc_011_a_machine_file_exported_is_checked_against_what_stitch_export_writ
     let unsaid = written_as_exported(&patch, "patch.dst", &file, &warnings[1..]).unwrap_err();
     assert!(unsaid.starts_with("the export warned [") && unsaid.contains("`stitch export` says ["), "{unsaid}");
     assert!(written_as_exported(b"{}", "patch.dst", &file, &warnings).unwrap_err().starts_with("StitchCraft doesn't sew it: "));
+}
+
+#[test]
+fn req_vc_013_a_document_is_checked_for_the_settings_it_keeps_and_two_files_for_differing() {
+    // The patch, kept with the small hoop and a shortest stitch of 1.5 mm.
+    let mut file: Value = serde_json::from_slice(&patch()).unwrap();
+    let settings = stitchcraft_engine::design::DesignSettings { min_stitch_len: Some(stitchcraft_core::Mm::new(1.5).unwrap()), ..Default::default() };
+    let small = stitchcraft_plan::profiles::find("brother-pe800-small").unwrap();
+    file["document"]["unknown"] = json!({"pluginData": {"dev.stitchcraft.settings": stitchcraft_vectorcraft::settings::kept_data(&settings, small)}});
+    let kept = serde_json::to_vec(&file).unwrap();
+    let table = |text: &str| toml::from_str::<toml::Table>(text).unwrap();
+    assert_eq!(
+        keeps(
+            &kept,
+            &table(
+                r#"profile = "brother-pe800-small"
+        min_stitch_len_mm = 1.5
+        collapse_len_mm = 3"#
+            )
+        ),
+        Ok(())
+    );
+    assert_eq!(
+        keeps(
+            &patch(),
+            &table(
+                r#"profile = "brother-pe800-small"
+            min_stitch_len_mm = 1.5"#
+            )
+        ),
+        Err("it keeps min_stitch_len_mm 0.0, not 1.5, profile none, not \"brother-pe800-small\"".to_string())
+    );
+    assert!(keeps(&kept, &table("shortest = 1")).unwrap_err().contains("no design setting `shortest`"));
+    // `stitch export`, which the gate checks the exporters against, plans the document for its machine,
+    // which the patch doesn't fit.
+    assert!(stitch_export(&kept, FormatId::PesV1, "patch").unwrap_err().contains("SC-E0701"));
+    // Machine files that differ, and two that are the same.
+    let out = util::root().join("target/xtask-tests/scenario-differ");
+    let _ = std::fs::remove_dir_all(&out);
+    std::fs::create_dir_all(&out).unwrap();
+    for (name, bytes) in [("a.pes", &b"one"[..]), ("b.pes", b"two"), ("c.pes", b"one")] {
+        std::fs::write(out.join(name), bytes).unwrap();
+    }
+    let differ = |pairs: &[[&str; 2]]| {
+        let expect = Expect { differ: pairs.iter().map(|[a, b]| [(*a).to_string(), (*b).to_string()]).collect(), ..Expect::default() };
+        check(&expect, &out, &Ran::default())
+    };
+    assert_eq!(differ(&[["a.pes", "b.pes"]]), Vec::<String>::new());
+    assert_eq!(differ(&[["a.pes", "c.pes"]]), ["a.pes and c.pes are the same 3 bytes"]);
 }
 
 #[test]
@@ -263,7 +358,8 @@ fn toml_parameters_become_json() {
 
 /// A stand-in for `vectorcraft-cli run`: it prints a result for each step as VectorCraft does, applies every
 /// effect to object 2, has each module's last error be what the file `error` beside it says, and exports
-/// the file `doc` beside it names for a `.vectorcraft` file and an empty file for any other.
+/// the file `doc` beside it names for a `.vectorcraft` file and an empty file for any other, but for a file
+/// named `fail` and an extension, whose export fails as VectorCraft says an exporter's error.
 #[cfg(unix)]
 const STUB: &str = r#"#!/bin/sh
 here=$(dirname "$0")
@@ -272,7 +368,11 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --in) echo '{"step":"open","result":{}}'; shift 2 ;;
     --export)
-      case "$2" in *.vectorcraft) cp "$(cat "$here/doc")" "$2" ;; *) : > "$2" ;; esac
+      case "$2" in
+        */fail.*) echo "vectorcraft-cli: step 3: export $2: plug-in failed: error SC-E0701: The design is 50 mm wide." >&2; exit 1 ;;
+        *.vectorcraft) cp "$(cat "$here/doc")" "$2" ;;
+        *) : > "$2" ;;
+      esac
       echo '{"step":"export","result":{"warnings":["said"]}}'; shift 2 ;;
     --cmd)
       case "$2" in
@@ -345,7 +445,20 @@ fn a_scenario_runs_and_its_checks_say_what_fails() {
     assert_eq!(failures, [r#"run 1: after a.png, fill's last error is "the budget ran out""#]);
     let refused = good.replace("{ cmd = \"plugin.list\" }", "{ cmd = \"fail\" }");
     let failures = run_with(&refused, "null", "refused");
-    assert_eq!(failures, ["vectorcraft-cli exit status: 1 after 1 results: vectorcraft-cli: no such command"]);
+    assert_eq!(failures, ["run 1: vectorcraft-cli exit status: 1 after 1 results: vectorcraft-cli: no such command"]);
+    // An export that must fail passes when it fails with its code, and fails the scenario when it fails with
+    // another or writes its file.
+    let failing = r#"description = "d"
+        [[run]]
+        plugins = ["pes"]
+        steps = [{ export = "a.vectorcraft" }, { export = "fail.pes", fails = "SC-E0701" }]
+        "#;
+    assert_eq!(run_with(failing, "null", "failing"), Vec::<String>::new());
+    let otherwise = run_with(&failing.replace("SC-E0701", "SC-E0010"), "null", "otherwise");
+    assert_eq!(otherwise.len(), 1, "{otherwise:?}");
+    assert!(otherwise[0].starts_with("run 1: exporting fail.pes doesn't fail with SC-E0010: vectorcraft-cli exit status: 1"), "{otherwise:?}");
+    let written = run_with(&failing.replace("fail.pes", "a.pes"), "null", "written");
+    assert_eq!(written, ["run 1: exporting a.pes doesn't fail with SC-E0701"]);
     // An exporter installs as one, and a machine file it didn't write, with a warning `stitch export` doesn't
     // say, fails the check.
     let exporting = r#"description = "d"
