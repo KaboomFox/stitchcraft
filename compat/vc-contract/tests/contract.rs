@@ -5,7 +5,9 @@ use std::path::Path;
 use std::time::Instant;
 
 use serde_json::{Value, json};
+use vectorcraft_doc::Appearance;
 use vectorcraft_geom::{BezPath, FillRule, PathData, Point, Rect, shapes};
+use vectorcraft_plugins::effect::Paints;
 use vectorcraft_plugins::{ABI_VERSION, Kind, Limits, Plugin, effect, registry};
 
 /// The stitch families, each a module of its own whose live effect sews an object as the family.
@@ -41,7 +43,7 @@ fn hello_returns_the_geometry_unchanged() {
     let plugin = registry::install_bytes(&plugin_bytes()).unwrap();
     let bounds = Rect::new(10.0, 20.0, 110.0, 70.0);
     let path = shapes::rectangle(bounds);
-    let out = effect::apply(plugin.id(), &json!({}), &path, bounds, FillRule::NonZero);
+    let out = effect::apply(plugin.id(), &json!({}), &path, bounds, FillRule::NonZero, Paints::default());
     assert_eq!(out.as_ref(), Some(&path), "last error: {:?}", effect::last_error(plugin.id()));
 }
 
@@ -69,13 +71,20 @@ fn polyline(n: u32) -> PathData {
     PathData::from_bezpath(&path)
 }
 
-/// The live-effect input VectorCraft hands a plug-in for one path, with `extra` fields beside it.
+/// The live-effect input VectorCraft hands a plug-in for one path of an object without fills or strokes,
+/// with `extra` fields beside it.
 fn effect_input(path: &PathData, extra: Value) -> Vec<u8> {
-    let mut object = json!({"type": "path", "path": path, "fillRule": "nonzero", "bounds": [0, 0, 100, 100]});
+    let mut object = json!({"type": "path", "path": path, "fillRule": "nonzero", "bounds": [0, 0, 100, 100], "fills": [], "strokes": []});
     if let (Some(object), Value::Object(extra)) = (object.as_object_mut(), extra) {
         object.extend(extra);
     }
     serde_json::to_vec(&json!({"objects": [object]})).unwrap()
+}
+
+/// VectorCraft's `_context` beside a live effect's parameters, for an effect on its object (not on one of
+/// the object's fills or strokes), in the box [`effect_input`] gives.
+fn context() -> Value {
+    json!({"mode": "effect", "bounds": [0, 0, 100, 100], "item": "object"})
 }
 
 /// The instructions VectorCraft's host counted for each byte of JSON the hello plug-in read, and for each
@@ -95,7 +104,7 @@ const ANCHORS: [u32; 2] = [1_000, 4_000];
 #[test]
 fn hello_reads_and_writes_json_within_the_recorded_budget() {
     let plugin = Plugin::load(&plugin_bytes(), Limits::default()).unwrap();
-    let params = serde_json::to_vec(&json!({"_context": {"mode": "effect", "bounds": [0, 0, 100, 100]}})).unwrap();
+    let params = serde_json::to_vec(&json!({"_context": context()})).unwrap();
     let paths = ANCHORS.map(polyline);
     // Echoed: read and written. Carried beside a path of 2 anchors: read, and dropped.
     let echoed = paths.each_ref().map(|path| effect_input(path, json!({})));
@@ -156,22 +165,45 @@ fn each_family_sews_an_object_in_vectorcraft() {
     let rails = lines(&[&[(0.0, 0.0), (60.0, 0.0)], &[(0.0, 20.0), (60.0, 20.0)]]);
     for (family, path) in [("stroke", &square), ("satin", &rails), ("fill", &square)] {
         let plugin = registry::install_bytes(&module(family)).unwrap();
-        let out = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero);
+        let out = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints::default());
         let out = out.unwrap_or_else(|| panic!("{family}: {:?}", effect::last_error(plugin.id())));
         assert!(!out.subpaths.is_empty(), "{family} sews stitches");
         assert!(out.subpaths.iter().all(|subpath| subpath.closed == (family == "fill")), "{family}");
     }
 }
 
+/// From VectorCraft 0.14 a live effect is also given, read only, the fills and strokes of its object, and
+/// `_context.item` says whether it sits on the object or on one of them. Each family's effect sews an
+/// object that has a fill and a stroke as it sews one that has none, wherever it sits: the effects don't
+/// read them yet (M6.8), and nothing VectorCraft adds beside the path stops them reading it.
+#[test]
+fn each_family_sews_an_object_that_has_fills_and_strokes() {
+    let bounds = Rect::new(0.0, 0.0, 20.0, 20.0);
+    let square = shapes::rectangle(bounds);
+    let rails = lines(&[&[(0.0, 0.0), (60.0, 0.0)], &[(0.0, 20.0), (60.0, 20.0)]]);
+    // New art's appearance: a white fill under a 1 pt black stroke.
+    let art = Appearance::default_art();
+    for (family, path) in [("stroke", &square), ("satin", &rails), ("fill", &square)] {
+        let plugin = registry::install_bytes(&module(family)).unwrap();
+        let unpainted = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints::default());
+        assert!(unpainted.is_some(), "{family}: {:?}", effect::last_error(plugin.id()));
+        // On the object, on its fill and on its stroke.
+        for item in [None, Some(0), Some(1)] {
+            let painted = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints { appearance: Some(&art), item });
+            assert_eq!(painted, unpainted, "{family} on {item:?}: {:?}", effect::last_error(plugin.id()));
+        }
+    }
+}
+
 /// When an effect cannot show an object's stitches, VectorCraft draws the object as it is and shows why
 /// as the plug-in's last error: a satin column drawn as one path is as wide as its stroke, which the
-/// effect is not given.
+/// effect doesn't read yet (M6.8).
 #[test]
 fn what_an_effect_cannot_show_is_its_last_error() {
     let plugin = registry::install_bytes(&module("satin")).unwrap();
     let bounds = Rect::new(0.0, 0.0, 20.0, 20.0);
     let line = lines(&[&[(0.0, 0.0), (60.0, 10.0)]]);
-    assert_eq!(effect::apply(plugin.id(), &json!({}), &line, bounds, FillRule::NonZero), None);
+    assert_eq!(effect::apply(plugin.id(), &json!({}), &line, bounds, FillRule::NonZero, Paints::default()), None);
     // VectorCraft words it as the plug-in's failure: `plug-in failed: info SC-I0810: …`.
     let error = effect::last_error(plugin.id()).unwrap_or_default();
     assert!(error.contains("info SC-I0810: This satin column is drawn as one path"), "{error}");
@@ -189,7 +221,7 @@ fn the_host_refuses_a_value_a_choice_does_not_offer() {
 /// declared parameter at its default, and the effect's context.
 fn default_params(plugin: &Plugin, set: &Value) -> Vec<u8> {
     let mut params = plugin.manifest().resolve_params(set).unwrap();
-    params.insert("_context".into(), json!({"mode": "effect", "bounds": [0, 0, 100, 100]}));
+    params.insert("_context".into(), context());
     serde_json::to_vec(&Value::Object(params)).unwrap()
 }
 
