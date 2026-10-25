@@ -26,7 +26,8 @@ shape sews as this page describes. Once MC-8 confirms the rules on the machine, 
 digitizing the default for VectorCraft documents, and `--auto` is then needed for SVG files only.
 
 VectorCraft's exporter plug-ins ([P1](rfc-vectorcraft-abi-v2.md#p1-exporter-plug-ins), 0.14) move the second
-step into VectorCraft, as File › Export › Export As › PES, once M6.9 makes StitchCraft's formats exporters.
+step into VectorCraft, as File › Export › Export As › PES, which StitchCraft's formats are exporters for since
+M6.9. Their `auto` option is `--auto`.
 
 An SVG file traced elsewhere, such as by Inkscape's Trace Bitmap, sews the same way with
 `stitch plan picture.svg --auto`. Without the switch, an SVG file's shapes sew as Ink/Stitch sews them,
@@ -226,8 +227,8 @@ trace, or use `--auto`, which works without it.
 ## With VectorCraft's newer plug-in features
 
 - **Exporters** (0.14, [P1](rfc-vectorcraft-abi-v2.md#p1-exporter-plug-ins)). File › Export › Export As › PES
-  plans the document inside VectorCraft, objects without effects digitized automatically (M6.9). The flow
-  is then trace and export, both in VectorCraft.
+  plans the document inside VectorCraft, and its `auto` option digitizes the objects without effects
+  (M6.9). The flow is then trace and export, both in VectorCraft.
 - **Effects in filter objects** (0.15, [P8](rfc-vectorcraft-abi-v2.md#p8-effects-and-stroke-style-in-filter-objects)).
   A filter could set on each path the effect of the family its width chose. The user then adjusts it in
   that effect's dialog.

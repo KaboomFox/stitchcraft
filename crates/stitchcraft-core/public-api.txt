@@ -122,8 +122,10 @@ pub stitchcraft_core::diag::Diagnostic::element: core::option::Option<stitchcraf
 pub stitchcraft_core::diag::Diagnostic::fix: core::option::Option<stitchcraft_core::diag::Fix>
 pub stitchcraft_core::diag::Diagnostic::message: alloc::string::String
 impl stitchcraft_core::diag::Diagnostic
+pub fn stitchcraft_core::diag::Diagnostic::headline(&self) -> alloc::string::String
 pub fn stitchcraft_core::diag::Diagnostic::located(self, stitchcraft_core::units::Point) -> Self
 pub fn stitchcraft_core::diag::Diagnostic::new(stitchcraft_core::diag::Code, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn stitchcraft_core::diag::Diagnostic::one_line(&self) -> alloc::string::String
 pub fn stitchcraft_core::diag::Diagnostic::severity(&self) -> stitchcraft_core::diag::Severity
 pub fn stitchcraft_core::diag::Diagnostic::with_element(self, stitchcraft_core::element::ElementId) -> Self
 pub fn stitchcraft_core::diag::Diagnostic::with_fix(self, stitchcraft_core::diag::Fix) -> Self
@@ -342,8 +344,10 @@ pub stitchcraft_core::Diagnostic::element: core::option::Option<stitchcraft_core
 pub stitchcraft_core::Diagnostic::fix: core::option::Option<stitchcraft_core::diag::Fix>
 pub stitchcraft_core::Diagnostic::message: alloc::string::String
 impl stitchcraft_core::diag::Diagnostic
+pub fn stitchcraft_core::diag::Diagnostic::headline(&self) -> alloc::string::String
 pub fn stitchcraft_core::diag::Diagnostic::located(self, stitchcraft_core::units::Point) -> Self
 pub fn stitchcraft_core::diag::Diagnostic::new(stitchcraft_core::diag::Code, impl core::convert::Into<alloc::string::String>) -> Self
+pub fn stitchcraft_core::diag::Diagnostic::one_line(&self) -> alloc::string::String
 pub fn stitchcraft_core::diag::Diagnostic::severity(&self) -> stitchcraft_core::diag::Severity
 pub fn stitchcraft_core::diag::Diagnostic::with_element(self, stitchcraft_core::element::ElementId) -> Self
 pub fn stitchcraft_core::diag::Diagnostic::with_fix(self, stitchcraft_core::diag::Fix) -> Self

@@ -8,13 +8,17 @@ use serde_json::{Value, json};
 use vectorcraft_doc::Appearance;
 use vectorcraft_geom::{BezPath, FillRule, PathData, Point, Rect, shapes};
 use vectorcraft_plugins::effect::Paints;
-use vectorcraft_plugins::{ABI_VERSION, Kind, Limits, Plugin, effect, registry};
+use vectorcraft_plugins::{ABI_VERSION, Error, Kind, Limits, Plugin, effect, export, registry};
 
 /// The stitch families, each a module of its own whose live effect sews an object as the family.
 const FAMILIES: [&str; 3] = ["stroke", "satin", "fill"];
 
-/// The module `name`, *hello* or a stitch family's, which `cargo xtask compat contract` built for
-/// wasm32-unknown-unknown into the folder `STITCHCRAFT_PLUGINS` names.
+/// The machine formats, each a module of its own whose exporter writes the document in that format, from
+/// VectorCraft 0.14, and how a file of it starts.
+const FORMATS: [(&str, &[u8]); 2] = [("pes", b"#PES0001"), ("dst", b"LA:")];
+
+/// The module `name`, *hello*, a stitch family's or a machine format's, which `cargo xtask compat contract`
+/// built for wasm32-unknown-unknown into the folder `STITCHCRAFT_PLUGINS` names.
 fn module(name: &str) -> Vec<u8> {
     let dir = std::env::var("STITCHCRAFT_PLUGINS").expect("set STITCHCRAFT_PLUGINS to the folder of the built modules");
     let path = Path::new(&dir).join(format!("{name}.wasm"));
@@ -344,4 +348,127 @@ struct Runs {
     given: Value,
     shapes: Vec<(String, PathData)>,
     finishing: usize,
+}
+
+#[test]
+fn each_exporter_installs_as_an_exporter_of_its_format() {
+    for (format, _) in FORMATS {
+        let plugin = registry::install_bytes(&module(format)).unwrap_or_else(|e| panic!("VectorCraft refuses {format}: {e}"));
+        assert_eq!(plugin.id(), format!("dev.stitchcraft.{format}"));
+        let manifest = plugin.manifest();
+        assert!(manifest.kind == Kind::Exporter, "{format} is an exporter");
+        assert_eq!(manifest.extensions, [format]);
+        // `stitch export`'s options, as they are when it isn't given them.
+        let defaults = manifest.defaults();
+        assert_eq!((defaults.get("auto"), defaults.get("profile")), (Some(&json!(false)), Some(&json!("brother-pe800-5x7"))), "{format}");
+    }
+}
+
+/// A document as VectorCraft saves it, without indentation, whose one layer holds `objects`: what an
+/// exporter is given (VectorCraft's `docs/plugins.md`, Exporters).
+fn document(objects: &[Value]) -> Vec<u8> {
+    let layer = json!({"id": 1, "kind": {"type": "layer", "color": {"Preset": 0}, "children": objects}});
+    serde_json::to_vec(&json!({"format": "vectorcraft", "version": 4, "document": {"version": 1, "artboards": [], "next_id": 1000, "layers": [layer]}}))
+        .unwrap()
+}
+
+/// The object `id`: a rectangle `width` × `height` mm from (`x`, `y`) mm, with a red fill and StitchCraft's
+/// fill effect with `params`.
+fn filled(id: u32, (x, y): (f64, f64), (width, height): (f64, f64), params: &Value) -> Value {
+    let pt = |mm: f64| mm * 72.0 / 25.4;
+    let corners = [(x, y), (x + width, y), (x + width, y + height), (x, y + height)].map(|(x, y)| json!({"p": [pt(x), pt(y)]}));
+    let red = json!({"type": "solid", "color": {"model": "rgb", "r": 0.75, "g": 0.0, "b": 0.0}});
+    json!({
+        "id": id,
+        "appearance": {"items": [{"kind": "fill", "paint": red}], "effects": [{"id": "plugin.dev.stitchcraft.fill", "params": params}]},
+        "kind": {"type": "path", "path": {"subpaths": [{"anchors": corners, "closed": true}]}}
+    })
+}
+
+/// `text` decoded from padded base64, as VectorCraft decodes an exporter's file.
+fn base64_decoded(text: &str) -> Vec<u8> {
+    let value = |c: u8| -> u32 {
+        let digits = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        digits.iter().position(|&d| d == c).map_or(0, |v| v as u32)
+    };
+    let mut out = Vec::new();
+    for chunk in text.as_bytes().chunks(4) {
+        let n = chunk.iter().fold(0, |n, &c| n << 6 | value(c));
+        let padding = chunk.iter().filter(|&&c| c == b'=').count();
+        out.extend(n.to_be_bytes().iter().skip(1).take(3 - padding));
+    }
+    out
+}
+
+/// Each exporter writes a file of its format in VectorCraft's host, with the design named as VectorCraft
+/// names the file, and what the export says beside it. It plans for the machine its dialog names, and
+/// when anything said is an error it writes nothing, and VectorCraft says the error (`REQ-VC-011`).
+#[test]
+fn req_vc_011_each_exporter_writes_its_format_and_nothing_when_an_error_is_said() {
+    let square = document(&[filled(2, (0.0, 0.0), (50.0, 50.0), &json!({}))]);
+    for (format, start) in FORMATS {
+        let plugin = registry::install_bytes(&module(format)).unwrap();
+        let target = export::Target { extension: format, name: "Poster" };
+        let out = export::run(&plugin, &square, &json!({}), target).unwrap_or_else(|e| panic!("{format}: {e}"));
+        let file = base64_decoded(&out.data_base64);
+        assert!(file.starts_with(start), "{format}");
+        // The small hoop's field is 20 × 60 mm, too small for the square.
+        let small = export::run(&plugin, &square, &json!({"profile": "brother-pe800-small"}), target).unwrap_err().to_string();
+        assert!(small.starts_with("plug-in failed: error SC-E0701: "), "{format}: {small}");
+        // A profile the dialog doesn't offer is refused before the exporter runs.
+        assert!(matches!(export::run(&plugin, &square, &json!({"profile": "singer"}), target), Err(Error::Params(_))), "{format}");
+        let nothing = export::run(&plugin, &document(&[]), &json!({}), target).unwrap_err().to_string();
+        assert!(nothing.starts_with("plug-in failed: error SC-E0010: "), "{format}: {nothing}");
+    }
+    // A DST file's header holds the design's name, and DST machines cut the thread before a long jump, which
+    // the export says.
+    let dst = registry::install_bytes(&module("dst")).unwrap();
+    let apart = document(&[filled(2, (0.0, 0.0), (20.0, 20.0), &json!({})), filled(3, (0.0, 150.0), (20.0, 20.0), &json!({}))]);
+    let out = export::run(&dst, &apart, &json!({}), export::Target { extension: "dst", name: "Poster" }).unwrap();
+    assert!(base64_decoded(&out.data_base64).starts_with(b"LA:Poster "));
+    assert!(out.warnings.iter().any(|warning| warning.starts_with("info SC-I0605: ")), "{:?}", out.warnings);
+}
+
+/// The parameters VectorCraft passes an exporter's `vc_run` for an export to `target` that sets `set`: every
+/// other parameter at its default, and the file's context, as `export::run` makes them.
+fn export_params(plugin: &Plugin, set: &Value, target: export::Target) -> Vec<u8> {
+    let mut params = plugin.manifest().resolve_params(set).unwrap();
+    params.insert("_context".into(), json!({"mode": "export", "extension": target.extension, "name": target.name}));
+    serde_json::to_vec(&Value::Object(params)).unwrap()
+}
+
+/// The instructions `plugin` takes to export `input` with `params` in VectorCraft's host, to within a
+/// hundredth: the least budget it finishes within, found by halving.
+fn export_fuel(plugin: &Plugin, input: &[u8], params: &[u8]) -> u64 {
+    let within = |fuel_base| plugin.run_limited(input, params, &Limits { fuel_base, fuel_per_byte: 0, ..export::limits(plugin) }).is_ok();
+    let (mut lo, mut hi) = (0_u64, 1 << 36);
+    assert!(within(hi), "the export fails: {:?}", plugin.run_limited(input, params, &export::limits(plugin)).err());
+    while (hi - lo) * 100 > hi {
+        let mid = lo + (hi - lo) / 2;
+        if within(mid) { hi = mid } else { lo = mid }
+    }
+    hi
+}
+
+/// The largest designs the reference machine sews export within what VectorCraft lets an export run
+/// (`REQ-VC-011`): a fill of its 5 × 7 in hoop's whole field, and the field filled with squares, each a fill
+/// of its own. It prints what each takes of what VectorCraft allows, which the integration page records.
+#[test]
+fn req_vc_011_a_fill_of_the_whole_hoop_exports_within_vectorcraft_s_limits() {
+    let field = document(&[filled(2, (0.0, 0.0), (128.0, 178.0), &json!({}))]);
+    // 63 squares 14 mm wide, in 9 rows of 7, 4 mm apart across and 5.5 mm apart down.
+    let squares: Vec<Value> = (0..63_u32).map(|i| filled(10 + i, (f64::from(i % 7) * 18.0, f64::from(i / 7) * 19.5), (14.0, 14.0), &json!({}))).collect();
+    let plugin = Plugin::load(&module("pes"), Limits::default()).unwrap();
+    let target = export::Target { extension: "pes", name: "field" };
+    let mut costs = Vec::new();
+    for (name, input) in [("a fill of 128 × 178 mm", field), ("63 fills of 14 mm squares", document(&squares))] {
+        let allowed = export::FUEL + export::limits(&plugin).fuel_per_byte * input.len() as u64;
+        let start = Instant::now();
+        let out = export::run(&plugin, &input, &json!({}), target);
+        let seconds = start.elapsed().as_secs_f64();
+        let out = out.unwrap_or_else(|e| panic!("{name}: {e}"));
+        let used = export_fuel(&plugin, &input, &export_params(&plugin, &json!({}), target));
+        costs.push(format!("{name}: {used} of {allowed} instructions, {seconds:.1} s, {} bytes of PES", base64_decoded(&out.data_base64).len()));
+    }
+    println!("::notice title=exports::{}", costs.join("; "));
 }

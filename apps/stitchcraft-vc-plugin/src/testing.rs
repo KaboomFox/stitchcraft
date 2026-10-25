@@ -3,6 +3,10 @@
 use serde_json::{Map, Value, json};
 use stitchcraft_params::Family;
 
+/// The conformance fixture `patch.vectorcraft`, a document: a fill, a satin column, a running stitch and a
+/// group's fill effect, with a placement line left out by its name and a start marker.
+pub(crate) const PATCH: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../conformance/fixtures/vectorcraft/patch.vectorcraft"));
+
 /// VectorCraft's input for one object whose path is `path`, as up to 0.13 gives it: without its paints.
 pub(crate) fn input(path: &Value) -> Vec<u8> {
     serde_json::to_vec(&json!({"objects": [{"type": "path", "path": path, "fillRule": "nonzero", "bounds": [0, 0, 100, 100]}]})).unwrap()

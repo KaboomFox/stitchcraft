@@ -113,3 +113,4 @@ pub stitchcraft_formats::Encoded::bytes: alloc::vec::Vec<u8>
 pub stitchcraft_formats::Encoded::notes: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_formats::decode(&[u8]) -> core::result::Result<stitchcraft_formats::decode::Decoded, stitchcraft_formats::error::DecodeError>
 pub fn stitchcraft_formats::encode(&stitchcraft_plan::plan::StitchPlan, stitchcraft_plan::profile::FormatId, &str) -> core::result::Result<stitchcraft_formats::Encoded, stitchcraft_formats::error::EncodeError>
+pub fn stitchcraft_formats::read_back(&[u8], &stitchcraft_plan::plan::StitchPlan) -> core::result::Result<stitchcraft_plan::plan::StitchPlan, stitchcraft_core::diag::Diagnostic>

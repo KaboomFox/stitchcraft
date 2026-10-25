@@ -12,12 +12,12 @@ use std::path::Path;
 
 use stitchcraft_core::{Diagnostic, Severity};
 use stitchcraft_engine::testsheets::{self, SHEETS, TestSheet};
-use stitchcraft_formats::Encoded;
+use stitchcraft_formats::{Encoded, read_back};
 use stitchcraft_plan::invariants;
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 
-use super::{Outcome, Status, describe_file, describe_plan, describe_threads, output_format, read_back, render_diagnostics, write_files};
+use super::{Outcome, Status, describe_file, describe_plan, describe_threads, output_format, render_diagnostics, write_files};
 use crate::cli::TestsheetArgs;
 
 /// Runs `stitch testsheet`.

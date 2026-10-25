@@ -22,16 +22,21 @@
 //! **Why StitchCraft checks.** VectorCraft's pictures change from version to version, and what sews must not,
 //! so the checks are StitchCraft's own:
 //!
-//! - `listed`: `plugin.list` lists each module's live effect.
+//! - `listed`: `plugin.list` lists each module as the kind of plug-in it is: a live effect, or an exporter
+//!   (`super::kind`).
 //! - `applied`: a file sews as it does with the StitchCraft records of the objects that `apply` steps
 //!   reached put back as the steps sent them. So VectorCraft stored what the dialog set, on the objects it
 //!   was applied to, in a form StitchCraft reads (`REQ-PRM-003`).
 //! - `same`: 2 files sew alike, such as a file and the one saved from it without the plug-ins.
 //! - `elements`: a file holds so many elements of one kind in one thread, with the settings given. A
 //!   paint's fill and a fill effect's are both `fill` elements, and the settings tell them apart.
+//! - `exported`: a machine file that StitchCraft's exporter wrote in VectorCraft is the one `stitch export`
+//!   writes of the document saved beside it, and the export's warnings are what `stitch export` says, as
+//!   the exporter words them (`REQ-VC-011`).
 //!
 //! A file is sewn as `stitch plan` sews it, for the reference machine, into a PES file
-//! ([`stitchcraft_cli::commands::plan::sew`]). Comparing two is comparing their bytes.
+//! ([`stitchcraft_cli::commands::plan::sew`]). Comparing two is comparing their bytes. Exporting a machine
+//! file draws nothing: VectorCraft gives the exporter the document's JSON, and no live effect runs.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -41,12 +46,14 @@ use std::time::Duration;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use stitchcraft_cli::commands::plan::{Source, sew};
-use stitchcraft_core::{Budget, Severity};
+use stitchcraft_core::{Budget, Diagnostic, Severity};
+use stitchcraft_engine::design::Reading;
 use stitchcraft_params::Family;
 use stitchcraft_plan::FormatId;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_vectorcraft::{EXTENSIONS, effect_id, effect_name, param_text, plugin_id};
 
+use super::kind;
 use crate::util;
 
 /// Where the scenarios are.
@@ -125,6 +132,9 @@ pub struct Expect {
     /// Elements a file holds.
     #[serde(default)]
     pub elements: Vec<Elements>,
+    /// Pairs of a document and a machine file exported with it, which is what `stitch export` writes of it.
+    #[serde(default)]
+    pub exported: Vec<[String; 2]>,
 }
 
 /// So many elements of one kind, in one thread if it is named, in a file.
@@ -181,9 +191,25 @@ fn family_of(id: &str) -> Option<Family> {
     Family::ALL.iter().copied().find(|family| family.id() == id)
 }
 
-/// Whether exporting `file` draws the document, which runs its live effects: any format but VectorCraft's.
+/// Whether exporting `file` draws the document, which runs its live effects: any format but VectorCraft's
+/// own and the machine formats, which StitchCraft's exporters write from the document's JSON.
 fn draws(file: &str) -> bool {
-    Path::new(file).extension().and_then(|e| e.to_str()).is_none_or(|e| !EXTENSIONS.contains(&e))
+    extension(file).is_none_or(|e| !EXTENSIONS.contains(&e) && FormatId::from_extension(e).is_none())
+}
+
+/// The extension of `file`.
+fn extension(file: &str) -> Option<&str> {
+    Path::new(file).extension().and_then(|e| e.to_str())
+}
+
+/// The machine format StitchCraft writes into `file`, by its extension.
+fn machine_format(file: &str) -> Option<FormatId> {
+    extension(file).and_then(FormatId::from_extension)
+}
+
+/// Whether the module `name` is a live effect, which a drawing runs and which keeps its last error.
+fn live(name: &str) -> bool {
+    kind(name) == "effect"
 }
 
 /// A TOML value as JSON. TOML's dates, which no step needs, become their text.
@@ -241,6 +267,9 @@ pub fn problems(scenario: &Scenario, modules: &[&str], requirements: &std::colle
                     if applied {
                         applied_to.push(file);
                     }
+                    if let Some(format) = machine_format(file).filter(|format| !run.plugins.iter().any(|m| m == format.extension())) {
+                        found.push(format!("run {number}: it exports `{file}` without installing the `{}` module", format.extension()));
+                    }
                     if draws(file) {
                         undrawn.clear();
                     }
@@ -264,10 +293,19 @@ pub fn problems(scenario: &Scenario, modules: &[&str], requirements: &std::colle
             found.push(format!("run {number}: it applies `{}`, and no drawing shows it after", family.id()));
         }
     }
-    let checked = scenario.expect.applied.iter().chain(scenario.expect.same.iter().flatten()).chain(scenario.expect.elements.iter().map(|e| &e.file));
-    for file in checked {
+    let expect = &scenario.expect;
+    let checked = expect.applied.iter().chain(expect.same.iter().flatten()).chain(expect.elements.iter().map(|e| &e.file));
+    for file in checked.chain(expect.exported.iter().flatten()) {
         if !exported.contains(&file.as_str()) {
             found.push(format!("it checks `{file}`, which no run exports"));
+        }
+    }
+    for [document, machine] in &expect.exported {
+        if machine_format(machine).is_none() {
+            found.push(format!("it checks `{machine}` as a machine file, and StitchCraft writes no format with its extension"));
+        }
+        if extension(document).is_none_or(|e| !EXTENSIONS.contains(&e)) {
+            found.push(format!("it checks `{machine}` against `{document}`, which isn't a VectorCraft document"));
         }
     }
     for file in &scenario.expect.applied {
@@ -313,7 +351,7 @@ fn arguments(run: &Run, plugins: &Path, out: &Path) -> Result<Vec<String>, Strin
             Action::Export(file) => {
                 args.extend(["--export".to_string(), path(out, file)]);
                 if draws(file) {
-                    for module in &run.plugins {
+                    for module in run.plugins.iter().filter(|module| live(module)) {
                         args.extend(command("plugin.info", json!({ "id": plugin_id(module) })));
                     }
                 }
@@ -331,10 +369,12 @@ struct Applied {
     record: Value,
 }
 
-/// What the runs left: each exported file's effects applied so far, and what `plugin.list` listed.
+/// What the runs left: each exported file's effects applied so far, what each export warned of, and what
+/// `plugin.list` listed.
 #[derive(Default)]
 struct Ran {
     applied: BTreeMap<String, Vec<Applied>>,
+    warnings: BTreeMap<String, Vec<String>>,
     listed: Vec<Value>,
 }
 
@@ -376,9 +416,9 @@ fn run_once(run: &Run, number: usize, cli: &Path, plugins: &Path, out: &Path, ra
     let mut next = |what: &str| results.next().ok_or(format!("run {number}: vectorcraft-cli gave no result for {what}"));
     for module in &run.plugins {
         let installed = next(&format!("installing {module}"))?;
-        let kind = installed.pointer("/result/kind").and_then(Value::as_str);
-        if kind != Some("effect") {
-            return Err(format!("run {number}: {module} installed as {kind:?}, not as a live effect: {installed}"));
+        let installed_as = installed.pointer("/result/kind").and_then(Value::as_str);
+        if installed_as != Some(kind(module)) {
+            return Err(format!("run {number}: {module} installed as {installed_as:?}, not as {}: {installed}", kind_name(module)));
         }
     }
     for step in &run.steps {
@@ -406,10 +446,12 @@ fn run_once(run: &Run, number: usize, cli: &Path, plugins: &Path, out: &Path, ra
                 applied.push(Applied { ids, record: json!({ "id": effect_id(family.id()), "params": params }) });
             }
             Action::Export(file) => {
-                next(&format!("exporting {file}"))?;
+                let result = next(&format!("exporting {file}"))?;
+                let warnings = result.pointer("/result/warnings").and_then(Value::as_array).into_iter().flatten();
+                ran.warnings.insert(file.to_string(), warnings.map(|w| w.as_str().map_or_else(|| w.to_string(), str::to_string)).collect());
                 ran.applied.insert(file.to_string(), applied.clone());
                 if draws(file) {
-                    for module in &run.plugins {
+                    for module in run.plugins.iter().filter(|module| live(module)) {
                         let info = next(&format!("{module}'s last error after {file}"))?;
                         match info.pointer("/result/lastError") {
                             Some(Value::Null) | None => {}
@@ -461,10 +503,12 @@ fn check(expect: &Expect, out: &Path, ran: &Ran) -> Vec<String> {
     let mut failures = Vec::new();
     for module in &expect.listed {
         let id = plugin_id(module);
-        let listed =
-            ran.listed.iter().any(|p| p.get("id").and_then(Value::as_str) == Some(&id) && p.get("kind").and_then(Value::as_str) == Some("effect"));
+        let listed = ran
+            .listed
+            .iter()
+            .any(|p| p.get("id").and_then(Value::as_str) == Some(&id) && p.get("kind").and_then(Value::as_str) == Some(kind(module)));
         if !listed {
-            failures.push(format!("plugin.list doesn't list {id} as a live effect: {}", Value::Array(ran.listed.clone())));
+            failures.push(format!("plugin.list doesn't list {id} as {}: {}", kind_name(module), Value::Array(ran.listed.clone())));
         }
     }
     let read = |file: &str| util::read_bytes(&out.join(file));
@@ -487,18 +531,59 @@ fn check(expect: &Expect, out: &Path, ran: &Ran) -> Vec<String> {
             failures.push(format!("{}: {e}", expected.file));
         }
     }
+    for [document, machine] in &expect.exported {
+        let warned = ran.warnings.get(machine).map_or(&[][..], Vec::as_slice);
+        if let Err(e) =
+            read(document).and_then(|document| Ok((document, read(machine)?))).and_then(|(d, m)| written_as_exported(&d, machine, &m, warned))
+        {
+            failures.push(format!("{machine}: {e}"));
+        }
+    }
     failures
+}
+
+/// How the plug-in `module` is named in a failure: as a live effect, or as an exporter.
+fn kind_name(module: &str) -> &'static str {
+    if live(module) { "a live effect" } else { "an exporter" }
 }
 
 /// The PES file `stitch plan` writes from the VectorCraft document `bytes` for the reference machine, or
 /// the errors that stop it.
 pub(crate) fn sewn(bytes: &[u8]) -> Result<Vec<u8>, String> {
-    let sewn = sew(Source::VectorCraft, bytes, stitchcraft_engine::design::Reading::default(), REFERENCE, FormatId::PesV1, NAME);
+    stitch_export(bytes, FormatId::PesV1, NAME).map(|(file, _)| file)
+}
+
+/// The file of `format`, named `name`, that `stitch export` writes from the VectorCraft document `bytes`
+/// for the reference machine, and what it says; or the errors that stop it.
+fn stitch_export(bytes: &[u8], format: FormatId, name: &str) -> Result<(Vec<u8>, Vec<Diagnostic>), String> {
+    let sewn = sew(Source::VectorCraft, bytes, Reading::default(), REFERENCE, format, name);
     let errors: Vec<String> = sewn.diagnostics.iter().filter(|d| d.severity() == Severity::Error).map(ToString::to_string).collect();
     match sewn.file {
-        Some(file) if errors.is_empty() => Ok(file),
+        Some(file) if errors.is_empty() => Ok((file, sewn.diagnostics)),
         _ => Err(format!("StitchCraft doesn't sew it: {}", errors.join("; "))),
     }
+}
+
+/// Whether `bytes`, the machine file `machine` that StitchCraft's exporter wrote in VectorCraft, and the
+/// export's `warnings`, are what `stitch export` writes of the `document` saved with it and what it says:
+/// the file of the format its extension names, with its name as the design name, for the reference
+/// machine, as the exporter's dialog has them by default, and what was said, as the exporter words it.
+fn written_as_exported(document: &[u8], machine: &str, bytes: &[u8], warnings: &[String]) -> Result<(), String> {
+    let format = machine_format(machine).ok_or("StitchCraft writes no format with its extension")?;
+    let name = Path::new(machine).file_stem().and_then(|stem| stem.to_str()).unwrap_or_default();
+    let (file, said) = stitch_export(document, format, name)?;
+    let said = stitchcraft_vc_plugin::export::warnings(&said);
+    if file != bytes {
+        return Err(format!(
+            "it isn't the file `stitch export` writes of its document: {} bytes, where `stitch export` writes {}",
+            bytes.len(),
+            file.len()
+        ));
+    }
+    if said != warnings {
+        return Err(format!("the export warned {warnings:?}, and `stitch export` says {said:?}"));
+    }
+    Ok(())
 }
 
 /// Whether the document `bytes` sews as it does with the StitchCraft records of the objects `applied`
