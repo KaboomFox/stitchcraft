@@ -107,6 +107,10 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 
 ## M6 — VectorCraft plug-in (ABI v1) and export from `.vectorcraft`
 
+M6.1 to M6.7 made the plug-ins with ABI v1 as VectorCraft 0.7 to 0.13 had it. M6.8 to M6.12 use the plug-in
+features VectorCraft added from 0.14 ([RFC](../design/rfc-vectorcraft-abi-v2.md#status)), and come before
+M13.7, whose Auto effect uses them.
+
 | Step | Deliverable | Done when |
 |---|---|---|
 | M6.1 ✅ | `stitchcraft-vectorcraft`: read `.vectorcraft` files of formats 1 to 4, plain or compressed: layers, groups, paths and compound paths, paints as threads, and StitchCraft's effect records, which say how an object sews. VectorCraft keeps paths in document coordinates, with no transforms to apply. What isn't stitched is named (`SC-W0807`, `SC-W0808`, `SC-I0809`). Caps: 64 MiB of JSON and the JSON reader's depth | `REQ-VC-001`, `REQ-VC-004`, `REQ-VC-005`; fuzzed (`read_vectorcraft`) |
@@ -117,6 +121,10 @@ Goal: sew a machine file StitchCraft wrote. No SVG yet: test sheets are generate
 | M6.6 ✅ | The compatibility gate, complete. Level A and Level B run on all four tracks. In Level B, VectorCraft's own command line makes documents with the plug-ins' effects, and StitchCraft sews what it saved. An issue per track, a bot PR adopting each new release that passes, and the supported-versions page generated from the record that PR writes | first scheduled run green |
 | M6.7 ✅ | UI screenshots pipeline on M0.8's window probe (`cargo xtask compat window`), each picture cropped to its menu or dialog; tutorial "A patch in VectorCraft"; xa11y drives VectorCraft to each screen and checks the plug-in's controls | `shots-ui` job green |
 | M6.8 | Live effects read their object's stroke, which VectorCraft gives them from 0.14 with its fills. A satin column drawn as one path and a zigzag stroke show their stitches as wide as their stroke, as `stitch export` sews them, and the effect leaves only such an object without a stroke as it is (`SC-I0810`). Before M13.7, whose Auto effect chooses a line's stitches by its width | its requirements active, and a contract case in which each shows its stitches in VectorCraft's host as wide as its stroke |
+| M6.9 | VectorCraft exporters for StitchCraft's machine formats, PES and DST, in File › Export › Export As (VectorCraft 0.14's exporter plug-ins). An exporter plans the document it is given for the machine profile as `stitch export` plans a `.vectorcraft` file. It returns the machine file, with what the plan says as the export's warnings. A parameter digitizes the shapes without settings automatically, as `--auto` does | a Level B case in which VectorCraft's command line exports a document to PES and DST, and the files are `stitch export`'s. The test sheets export within an export's budget |
+| M6.10 | The plug-ins' dialogs as the parameter registry describes the parameters, with VectorCraft 0.14's richer schemas: each one's label, unit, help and help page, the registry's groups as sections, and each shown only for the methods it applies to (`visibleWhen`) | the manifests valid against VectorCraft's rules, and `shots-ui`'s pictures of the dialogs labelled and grouped |
+| M6.11 | A document's design settings kept with it, as data VectorCraft 0.16 keeps with a document for a filter. Ink/Stitch keeps 3 with a file, `collapse_len_mm`, `min_stitch_len_mm` and `min_satin_stroke_width_mm`, which a VectorCraft document can't set yet. The machine profile is kept too, though Ink/Stitch has no such profile and its hoop is the page. A filter sets them, and the exporters and `stitch export` plan with them. A live effect isn't given the document's data, and its previews keep the defaults and the reference machine | a Level B case, in which a document's settings and hoop change the file it exports |
+| M6.12 | The tools filter, which sets up objects with their effects (VectorCraft 0.15). Convert Line to Satin makes a stroke into a satin column's 2 rails with the satin effect, as a heavy filter, which VectorCraft's `main` adds after 0.16: its 51 to 162 million instructions fit a heavy filter's 1 G. `stitch testsheet`'s sheets drawn into the document, each object with its effect | a VectorCraft release with heavy filters pinned, and a Level B case of each |
 | MC-5 🧵 | **TS-12** (a design authored in VectorCraft) and **TS-10** again through the full workflow | report filed |
 
 ## M7 — More stitch types I
@@ -199,7 +207,7 @@ Ink/Stitch, read in their own format.
 | M14.1 🧪 | The font repository, the licences it takes, and a reader for a font in Ink/Stitch's format, from Ink/Stitch's public documentation of it | ADR-0001 amended for fonts; one font read, its glyphs sewn |
 | M14.2 | `stitch lettering` sets text in a font. Its glyphs are placed by the font's advances and kerning, with the spacing of letters, words and lines and the alignment the user sets. The scale stays within the heights the font sews at, and a warning names the font's range outside them | its requirements active |
 | M14.3 | Lettering along a path. The colours of a multicolour font sorted, a trim after each letter, word or line as chosen, and lines sewn back and forth | same |
-| M14.4 | Lettering in VectorCraft: a text object sews in the embroidery font its StitchCraft setting names, read from the document's text. The step chooses how the setting is given, as an effect or a name. A preview of the font in VectorCraft waits for ABI v2's context for live effects (P6) | a Level B case |
+| M14.4 | Lettering in VectorCraft: a text object sews in the embroidery font its StitchCraft setting names, read from the document's text. The step chooses how the setting is given, as an effect or a name. A preview of the font in VectorCraft waits for a live effect to be given more than its object's geometry and paints ([RFC](../design/rfc-vectorcraft-abi-v2.md), P6) | a Level B case |
 | MC-9 🧵 | **TS-14** (3 fonts at the least and the greatest heights they sew at); kit: `stitch testsheet` | report filed |
 | M14.5 | Text in pictures: the traced shapes inside an area marked `stitch:text` are replaced by lettering of the marker's text, as tall as the traced letters ([design](../design/image-to-embroidery.md#text-in-pictures)) | its requirements active |
 | M14.6 🧪 | Text in pictures found and read without a marker | decision recorded in the design |
@@ -207,9 +215,8 @@ Ink/Stitch, read in their own format.
 ## M10 — More stitch types II
 
 Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch; auto-run and auto-satin
-routing tools; per-layer ordering (underlay now, top later). VectorCraft's tools filter with Convert Line to
-Satin, once a column's centre line converts within ABI v1's budget, or ABI v2 gives heavy plug-ins more
-([tools](../design/vectorcraft-integration.md#tools-vectorcrafts-own-commands)).
+routing tools; per-layer ordering (underlay now, top later). VectorCraft's tools filter, with Convert Line to
+Satin, is M6.12.
 
 ## M11 — Formats II
 
@@ -228,11 +235,11 @@ Appliqué workflow, design splitting for small hoops, print worksheets, and an i
 wanted. `stitch import design.pes -o design.vectorcraft` opens a machine file in VectorCraft, its stitches
 written as manual stitches by the same document writer as M8's `stitch import-inkstitch`.
 
-## M9 (VectorCraft ABI v2, upstream)
+## M9 (VectorCraft plug-in features, upstream)
 
-M9 comes last, after 1.0 and the work after it. 1.0 has the ABI v1 plug-in from M6, and nothing before M9
-waits on ArtCraft's answer to the RFC. Its id stays M9, as every step id does.
-
-Open the [RFC](../design/rfc-vectorcraft-abi-v2.md) with ArtCraft; one PR per accepted proposal (with
-tests, following their `AGENTS.md`); then plug-in v2, with export to PES and DST from File › Export,
-overlay previews, rich parameter dialogs and a machine profile per document.
+M9 comes last, after 1.0 and the work after it, and nothing before it waits on ArtCraft. Its id stays M9, as
+every step id does. VectorCraft adopted most of the [RFC](../design/rfc-vectorcraft-abi-v2.md) into ABI v1 in
+0.14.0 to 0.16.0, and on its `main` since, and M6.8 to M6.12 use what it adopted. M9 proposes the rest, one PR
+for each, with tests, following VectorCraft's `AGENTS.md`: overlay previews (P3), heavy live effects (P4) and
+the objects beside a live effect's object (P6). The plug-ins then show every stitch of a large fill, and start
+and end their previews at the markers.
