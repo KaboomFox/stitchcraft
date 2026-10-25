@@ -142,13 +142,22 @@ the zigzag stroke's. The settings every element shares come last, as in Ink/Stit
 reference machine and with no neighbours, as one object of a design. It returns the stitches as geometry,
 the exact level below. When it can't show stitches, it gives back why. VectorCraft then draws the object
 as it is and shows the message as the plug-in's last error. That happens when the object cannot be sewn or
-sews no stitch, with the message that says why, and for a satin column drawn as one path, which is as
-wide as its stroke, with `SC-I0810`. A zigzag stroke is as wide as its stroke too, and the effect leaves it
-as it is, with `SC-I0810`. VectorCraft gives a live effect its object's fills and strokes from 0.14, and
-M6.8 will show both as wide as their stroke. A drawing that vanished instead could not be clicked to change
-the setting that emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
-shows, and `stitch export` reports them. How much of the stitches it shows, within what VectorCraft lets
-it spend, is its preview level (below).
+sews no stitch, with the message that says why. A drawing that vanished instead could not be clicked to
+change the setting that emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the
+effect shows, and `stitch export` reports them. How much of the stitches it shows, within what VectorCraft
+lets it spend, is its preview level (below).
+
+**The stroke an effect follows** (`REQ-VC-010`, M6.8). A satin column drawn as one path and a zigzag stroke
+are as wide as their stroke. From 0.14 VectorCraft gives a live effect its object's fills and strokes, and a
+stroke or a satin effect on the object follows the topmost stroke that has a paint and a width. It reads
+the stroke's width, and from 0.15 its join, cap and miter limit, with the reader's own code
+(`stroke_style` in `crates/stitchcraft-vectorcraft`). `stitch export` follows the topmost stroke VectorCraft
+draws, and the 2 can differ in 2 ways. VectorCraft gives a live effect every stroke of its object without
+its opacity or whether it shows, and gives it none of the paints of the groups around it. Given no stroke,
+before 0.14, for an object without one, or where only a group's stroke paints it, the effect leaves a satin
+column drawn as one path and a zigzag stroke as they are, with `SC-I0810`. An effect on one of the object's
+fills or strokes leaves the object as it is too, with `SC-I0810`: `stitch export` doesn't use such an effect
+(`SC-W0807`).
 
 ### The workflow
 
@@ -233,6 +242,7 @@ and on `main`:
 | One anchor, written by hand | 18 to 20 bytes along a stroke or a satin column, 26 to 27 in a fill's ribbons |
 | A unit of the engine's work for a stroke | about 880 instructions |
 | A unit of the engine's work for a satin column | about 4,730 instructions |
+| A unit of the engine's work making a satin column's rails from its centre line (M6.8, VectorCraft 0.16.0) | about 330 instructions |
 | A unit of the engine's work for a fill | 1,900 to 5,300 instructions, by the part of the work |
 | The exact preview of a 7 mm square fill with its defaults | 27 million instructions, 85 % of the engine's work spent on the travel under its rows |
 | The rows preview of square fills from 3.5 mm to 226 mm | 1.6 to 11 million instructions |
@@ -256,7 +266,11 @@ measured, so a budget of units bounds their exact previews. A fill's units vary 
 square's exact preview already takes more than half of what VectorCraft allows, and a budget of units that
 ran out early, in the dearer work, took 71 million instructions. So auto shows a fill's rows, and its exact
 preview is the user's to pick, with all that VectorCraft allows, which stops one that needs more with its
-own error. The
+own error. A satin column drawn as one path makes its rails from its centre line first, in many units of
+about 330 instructions each, which the satin column's price counts as dear as its stitches. One bend takes
+33,100 units, so auto shows the outline of a centre line that bends. Its exact preview is the user's to
+pick too: 12.6 million instructions for one bend, 25 million for a quarter circle of 17 points and 46
+million for a sine curve of 32 points, of the 51 to 55 million VectorCraft allows them. The
 contract test `req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits` runs each level on
 shapes of growing size on every track the [compatibility gate](compatibility-gate.md) tests, and fails
 when VectorCraft stops a run that must finish. It prints what each run takes, which the budget's numbers
@@ -265,8 +279,9 @@ costs. The real stitches are always available from the CLI preview, and the RFC'
 review upstream) would remove this limitation.
 
 Paint caveat: a live effect changes only geometry. A fill preview's ribbons are painted with the object's
-own fill, and a stroke preview with its stroke. From 0.14 the effect reads the paints but still cannot
-change them. Users set the fill/stroke to the thread colour, which they want anyway for export.
+own fill, and a stroke preview with its stroke. From 0.14 a stroke or a satin effect reads its stroke's
+style, and still cannot change the paints. Users set the fill/stroke to the thread colour, which they want
+anyway for export.
 
 ### Commands in v1
 

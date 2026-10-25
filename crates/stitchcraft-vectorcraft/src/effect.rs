@@ -2,14 +2,22 @@
 //! the element its stitch family sews, and needle points, as geometry VectorCraft draws.
 //!
 //! **What it is given.** One object's geometry, `{"objects": [{"type", "path", "fillRule", "bounds"}]}`,
-//! where the path is the `PathData` a document holds ([`crate::geometry`]). From VectorCraft 0.14 the
-//! object also has its `fills` and `strokes`, which are left out until M6.8 reads the stroke. Beside it
-//! come the effect's parameters as VectorCraft resolved them from the plug-in's manifest, and VectorCraft's
-//! own `_context`, which is left out. The parameters are read as an effect record's are, and the family
-//! says whether a stroke is a satin column, as it does for a record. Without the object's paints, a stroke
-//! effect's element has the stand-in stroke of [`Shape::stroke`]: a running stitch does not use its width,
-//! and a satin column drawn with rails does not need it. The plug-in leaves a satin column drawn as one path
-//! and a zigzag stroke as they are, since both are as wide as their stroke (`SC-I0810`).
+//! where the path is the `PathData` a document holds ([`crate::geometry`]). Beside it come the effect's
+//! parameters as VectorCraft resolved them from the plug-in's manifest, and VectorCraft's own `_context`.
+//! The parameters are read as an effect record's are, and the family says whether a stroke is a satin
+//! column, as it does for a record.
+//!
+//! **The stroke** (`REQ-VC-010`). From VectorCraft 0.14 the object comes with its `fills` and `strokes`,
+//! bottom first, and `_context.item` says where the effect is. A stroke or a satin effect on the object
+//! follows the topmost stroke that has a paint and a width: its width, and from 0.15 its join, cap and
+//! miter limit, read as the reader reads a document's ([`crate::document::stroke_style`]). So it follows
+//! the stroke `stitch export` follows, the topmost VectorCraft draws, as far as a live effect is told:
+//! VectorCraft gives it every stroke of its object, without its opacity or whether it shows, and not the
+//! paints of the groups around it. Without such a stroke, as before 0.14, the element has the stand-in
+//! stroke of [`Shape::stroke`], and [`Effect::stroked`] says so: a running stitch doesn't use its width, and
+//! a satin column drawn with rails doesn't need it, but the plug-in leaves a satin column drawn as one path
+//! and a zigzag stroke as they are (`SC-I0810`). An effect on one of the object's fills or strokes is
+//! refused with `SC-I0810`, since `stitch export` doesn't use such an effect (`SC-W0807`).
 //!
 //! **What it gives back.** Geometry only, drawn with the object's own paints. A stroke's or a satin
 //! column's stitches come back as open paths from needle point to needle point, for the object's stroke to
@@ -20,17 +28,18 @@
 
 use serde::Serialize;
 use serde_json::{Map, Value};
-use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Point};
-use stitchcraft_engine::design::{Element, FillRule, Shape};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Mm, Point};
+use stitchcraft_engine::design::{Cap, Element, FillRule, Join, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::ParamSet;
 use stitchcraft_params::stitch_type::Family;
 use stitchcraft_plan::{Rgb, Thread};
 
 use crate::PREVIEW_LEVEL;
+use crate::document::{ON_THE_OBJECT, stroke_style};
 use crate::geometry::{self, UNUSABLE_HINT};
 use crate::values::{sews, text};
-use crate::wire::{EffectInput, EffectObject};
+use crate::wire::{EffectInput, EffectObject, EffectStroke, Paint};
 use crate::writer::Geometry;
 
 /// How wide a fill's ribbons are, in millimetres: half a thread, so that rows a quarter of a millimetre
@@ -44,15 +53,26 @@ pub struct Effect {
     pub element: Element,
     /// The preview level the parameters ask for ([`PREVIEW_LEVEL`]), as its text; `None` without one.
     pub preview_level: Option<String>,
+    /// Whether the element is a stroke that follows a stroke VectorCraft gave: its width, join and cap. When
+    /// not, a stroke's element has the stand-in stroke of [`Shape::stroke`], whose width means nothing.
+    pub stroked: bool,
 }
 
+/// What a live effect on one of its object's fills or strokes says: `stitch export` doesn't use it.
+const ON_A_PAINT: &str =
+    "This effect is on one of the object's fills or strokes, which `stitch export` doesn't use, so the live effect leaves the object as it is.";
+
 /// The live effect of `family` that `input` and `params` give, as VectorCraft passes them to `vc_run`,
-/// read within `budget`. `SC-E0806` when they do not read as the ABI says, `SC-W0808` when the object's
-/// path cannot be used, and `SC-E0004` when reading it needs more work than the budget allows.
+/// read within `budget`. `SC-E0806` when they do not read as the ABI says, `SC-I0810` when the effect is
+/// on one of its object's fills or strokes, `SC-W0808` when the object's path cannot be used, and
+/// `SC-E0004` when reading it needs more work than the budget allows.
 pub fn read_effect(family: Family, input: &[u8], params: &[u8], budget: &Budget) -> Result<Effect, Diagnostic> {
     let input: EffectInput = serde_json::from_slice(input).map_err(|e| refused(&format!("Its objects do not read: {e}.")))?;
     let params: Map<String, Value> = serde_json::from_slice(params).map_err(|e| refused(&format!("Its parameters do not read: {e}.")))?;
-    let Some(EffectObject { path: Some(data), fill_rule }) = input.objects.into_iter().next() else {
+    if on_a_paint(&params) {
+        return Err(Diagnostic::new(Code::VcEffectUnchanged, ON_A_PAINT).with_fix(Fix::Hint(ON_THE_OBJECT.to_string())));
+    }
+    let Some(EffectObject { path: Some(data), fill_rule, strokes }) = input.objects.into_iter().next() else {
         return Err(refused("It holds no path."));
     };
     let path = match geometry::path(&[&data], &mut budget.meter()) {
@@ -70,16 +90,38 @@ pub fn read_effect(family: Family, input: &[u8], params: &[u8], budget: &Budget)
         }
     }
     let preview_level = params.get(PREVIEW_LEVEL).and_then(text);
-    let shape = match family {
-        Family::Fill => Shape::Fill { path, rule: if fill_rule.as_deref() == Some("evenodd") { FillRule::EvenOdd } else { FillRule::NonZero } },
+    let (shape, stroked) = match family {
+        Family::Fill => {
+            (Shape::Fill { path, rule: if fill_rule.as_deref() == Some("evenodd") { FillRule::EvenOdd } else { FillRule::NonZero } }, false)
+        }
         Family::Stroke | Family::Satin => {
             set.set(SATIN_COLUMN, if family == Family::Satin { "true" } else { "false" });
-            Shape::stroke(path)
+            match followed(&strokes) {
+                Some((width, join, cap)) => (Shape::Stroke { path, width, join, cap }, true),
+                None => (Shape::stroke(path), false),
+            }
         }
     };
     let id = ElementId::new(format!("vc:effect:{}", family.id()))
         .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("A live effect's element has no id: {e}.")))?;
-    Ok(Effect { element: Element { id, name: None, shape, thread: Thread::new(Rgb::new(0, 0, 0)), params: set, automatic: false }, preview_level })
+    let element = Element { id, name: None, shape, thread: Thread::new(Rgb::new(0, 0, 0)), params: set, automatic: false };
+    Ok(Effect { element, preview_level, stroked })
+}
+
+/// Whether `_context.item` among `params` says the effect is on one of its object's fills or strokes
+/// (`{"fill": i}`, `{"stroke": i}`), not on the object (`"object"`, or nothing before VectorCraft 0.14).
+fn on_a_paint(params: &Map<String, Value>) -> bool {
+    let item = params.get("_context").and_then(|context| context.get("item")).and_then(Value::as_object);
+    item.is_some_and(|item| item.contains_key("fill") || item.contains_key("stroke"))
+}
+
+/// The width, join and cap of the stroke a stroke or a satin effect follows among `strokes`, bottom first:
+/// the topmost that has a paint and a width that isn't 0, as the reader takes the topmost stroke VectorCraft
+/// draws. A width that isn't a number is 0, as the reader takes it. `None` when no stroke has both.
+fn followed(strokes: &[EffectStroke]) -> Option<(Mm, Join, Cap)> {
+    let stroke = strokes.iter().rev().find(|stroke| stroke.paint.as_ref().is_some_and(Paint::paints) && stroke.width.is_none_or(|w| w > 0.0))?;
+    let (width, join, cap) = stroke_style(stroke.width, stroke.join.as_deref(), stroke.miter_limit, stroke.cap.as_deref());
+    Some((width.unwrap_or(Mm::ZERO), join, cap))
 }
 
 /// What a live effect of `family` returns for an element sewn with the needle points `groups`, each a
