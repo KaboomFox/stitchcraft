@@ -245,8 +245,8 @@ A parameter that needs a text, a seed or several values keeps its default in Vec
 ([manifests](vectorcraft-integration.md#plug-ins)). VectorCraft 0.14 adopted richer schemas from the
 [RFC](rfc-vectorcraft-abi-v2.md#p2-rich-parameter-schemas): labels, units, help, groups and conditions, texts
 and lists, and 256 parameters, 64 of them outside groups. Releases before it ignore the labels, units, help,
-groups and conditions, and refuse the rest. The manifests carry the registry's labels, units, help and
-groups, and its conditions, which a declaration's `applies_to` and `visible_when` give (M6.10,
+groups and conditions, and refuse the rest. Each manifest gives a parameter the registry's label, unit, help
+and group, and the conditions of its declaration's `applies_to` and `visible_when` (M6.10,
 [dialogs](vectorcraft-integration.md#plug-ins)). A parameter's help page is its entry on the reference page
 of its declaration, which `ParamGroup::slug` names for the docs generator and the plug-in alike.
 VectorCraft shows help as plain text, so `stitchcraft_core::text::plain` takes the marks out of the

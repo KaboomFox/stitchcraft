@@ -108,7 +108,8 @@ gate use the same functions. A live effect's id ends with its stitch family's
 (`stitchcraft_params::Family::id`).
 Manifests are generated from the [parameter registry](params.md#splitting-for-vectorcraft-abi-v1); a
 test validates each against VectorCraft's manifest rules (id charset, ≤ 64 parameters, names, ranges, and
-from 0.14 the keys that say how the dialog shows a parameter) so an invalid manifest never reaches a user.
+from 0.14 the keys that say how the dialog shows a parameter), so a manifest VectorCraft would refuse fails
+the tests before a release.
 
 **Modules.** The plug-in crate builds one module for each family, chosen by a Cargo feature named after
 the family: `stroke`, `satin` or `fill`, and one for each machine format, by its extension: `pes` or `dst`.
