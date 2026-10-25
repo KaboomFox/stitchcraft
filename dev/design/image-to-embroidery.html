@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b1396aaf.js";
+            window.path_to_searchindex_js = "../searchindex-11d1fbc6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-58ed789b.js"></script>
+        <script src="../toc-b31b520c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -202,8 +202,8 @@ shape: every area as a tatami fill and every line as a running stitch, in paint 
 of a traced square and a strip 2.1 mm wide beside it, both sewed as tatami fills. With <code>--auto</code>, each
 shape sews as this page describes. Once MC-8 confirms the rules on the machine, M13.8 makes automatic
 digitizing the default for VectorCraft documents, and <code>--auto</code> is then needed for SVG files only.</p>
-<p>ABI v2’s exporter plug-ins (<a href="rfc-vectorcraft-abi-v2.html#p1-exporter-plug-ins">P1</a>) would move the second
-step into VectorCraft, as File › Export › PES.</p>
+<p>VectorCraft’s exporter plug-ins (<a href="rfc-vectorcraft-abi-v2.html#p1-exporter-plug-ins">P1</a>, 0.14) move the second
+step into VectorCraft, as File › Export › Export As › PES, once M6.9 makes StitchCraft’s formats exporters.</p>
 <p>An SVG file traced elsewhere, such as by Inkscape’s Trace Bitmap, sews the same way with
 <code>stitch plan picture.svg --auto</code>. Without the switch, an SVG file’s shapes sew as Ink/Stitch sews them,
 since the file may be one of Ink/Stitch’s.</p>
@@ -394,13 +394,16 @@ overlaps, the merged specks or the order, which <code>stitch export</code> adds.
 v1’s budget shows less, with <code>SC-I0810</code>, as the other effects’ previews do.</p>
 <p>Tracing again replaces the group with a new one, without the effect. Apply the effect after the last
 trace, or use <code>--auto</code>, which works without it.</p>
-<h2 id="with-abi-v2"><a class="header" href="#with-abi-v2">With ABI v2</a></h2>
+<h2 id="with-vectorcrafts-newer-plug-in-features"><a class="header" href="#with-vectorcrafts-newer-plug-in-features">With VectorCraft’s newer plug-in features</a></h2>
 <ul>
-<li><strong>P1, exporter plug-ins.</strong> File › Export › PES plans the document inside VectorCraft, objects without
-effects digitized automatically. The flow is then trace and export, both in VectorCraft.</li>
-<li><strong>P8, effects in filter objects.</strong> A filter could set on each path the effect of the family its width
-chose. The user then adjusts it in that effect’s dialog.</li>
-<li><strong>P4, budget classes.</strong> The Auto effect’s previews of large shapes get the heavy budget.</li>
+<li><strong>Exporters</strong> (0.14, <a href="rfc-vectorcraft-abi-v2.html#p1-exporter-plug-ins">P1</a>). File › Export › Export As › PES
+plans the document inside VectorCraft, objects without effects digitized automatically (M6.9). The flow
+is then trace and export, both in VectorCraft.</li>
+<li><strong>Effects in filter objects</strong> (0.15, <a href="rfc-vectorcraft-abi-v2.html#p8-effects-and-stroke-style-in-filter-objects">P8</a>).
+A filter could set on each path the effect of the family its width chose. The user then adjusts it in
+that effect’s dialog.</li>
+<li><strong>Budget classes</strong> (<a href="rfc-vectorcraft-abi-v2.html#p4-budget-classes-for-live-effects">P4</a>, still proposed for
+live effects). The Auto effect’s previews of large shapes would get the heavy budget.</li>
 </ul>
 <h2 id="text-in-pictures"><a class="header" href="#text-in-pictures">Text in pictures</a></h2>
 <p>Text traced from a picture is shapes, and the width rules sew its letters’ strokes as satin columns and

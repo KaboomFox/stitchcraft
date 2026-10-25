@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b1396aaf.js";
+            window.path_to_searchindex_js = "../searchindex-11d1fbc6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-58ed789b.js"></script>
+        <script src="../toc-b31b520c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -312,6 +312,9 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 </table>
 </div>
 <h2 id="m6--vectorcraft-plug-in-abi-v1-and-export-from-vectorcraft"><a class="header" href="#m6--vectorcraft-plug-in-abi-v1-and-export-from-vectorcraft">M6 — VectorCraft plug-in (ABI v1) and export from <code>.vectorcraft</code></a></h2>
+<p>M6.1 to M6.7 made the plug-ins with ABI v1 as VectorCraft 0.7 to 0.13 had it. M6.8 to M6.12 use the plug-in
+features VectorCraft added from 0.14 (<a href="../design/rfc-vectorcraft-abi-v2.html#status">RFC</a>), and come before
+M13.7, whose Auto effect uses them.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -326,6 +329,10 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M6.6 ✅</td><td>The compatibility gate, complete. Level A and Level B run on all four tracks. In Level B, VectorCraft’s own command line makes documents with the plug-ins’ effects, and StitchCraft sews what it saved. An issue per track, a bot PR adopting each new release that passes, and the supported-versions page generated from the record that PR writes</td><td>first scheduled run green</td></tr>
 <tr><td>M6.7 ✅</td><td>UI screenshots pipeline on M0.8’s window probe (<code>cargo xtask compat window</code>), each picture cropped to its menu or dialog; tutorial “A patch in VectorCraft”; xa11y drives VectorCraft to each screen and checks the plug-in’s controls</td><td><code>shots-ui</code> job green</td></tr>
 <tr><td>M6.8</td><td>Live effects read their object’s stroke, which VectorCraft gives them from 0.14 with its fills. A satin column drawn as one path and a zigzag stroke show their stitches as wide as their stroke, as <code>stitch export</code> sews them, and the effect leaves only such an object without a stroke as it is (<code>SC-I0810</code>). Before M13.7, whose Auto effect chooses a line’s stitches by its width</td><td>its requirements active, and a contract case in which each shows its stitches in VectorCraft’s host as wide as its stroke</td></tr>
+<tr><td>M6.9</td><td>VectorCraft exporters for StitchCraft’s machine formats, PES and DST, in File › Export › Export As (VectorCraft 0.14’s exporter plug-ins). An exporter plans the document it is given for the machine profile as <code>stitch export</code> plans a <code>.vectorcraft</code> file. It returns the machine file, with what the plan says as the export’s warnings. A parameter digitizes the shapes without settings automatically, as <code>--auto</code> does</td><td>a Level B case in which VectorCraft’s command line exports a document to PES and DST, and the files are <code>stitch export</code>’s. The test sheets export within an export’s budget</td></tr>
+<tr><td>M6.10</td><td>The plug-ins’ dialogs as the parameter registry describes the parameters, with VectorCraft 0.14’s richer schemas: each one’s label, unit, help and help page, the registry’s groups as sections, and each shown only for the methods it applies to (<code>visibleWhen</code>)</td><td>the manifests valid against VectorCraft’s rules, and <code>shots-ui</code>’s pictures of the dialogs labelled and grouped</td></tr>
+<tr><td>M6.11</td><td>A document’s design settings kept with it, as data VectorCraft 0.16 keeps with a document for a filter. Ink/Stitch keeps 3 with a file, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and <code>min_satin_stroke_width_mm</code>, which a VectorCraft document can’t set yet. The machine profile is kept too, though Ink/Stitch has no such profile and its hoop is the page. A filter sets them, and the exporters and <code>stitch export</code> plan with them. A live effect isn’t given the document’s data, and its previews keep the defaults and the reference machine</td><td>a Level B case, in which a document’s settings and hoop change the file it exports</td></tr>
+<tr><td>M6.12</td><td>The tools filter, which sets up objects with their effects (VectorCraft 0.15). Convert Line to Satin makes a stroke into a satin column’s 2 rails with the satin effect, as a heavy filter, which VectorCraft’s <code>main</code> adds after 0.16: its 51 to 162 million instructions fit a heavy filter’s 1 G. <code>stitch testsheet</code>’s sheets drawn into the document, each object with its effect</td><td>a VectorCraft release with heavy filters pinned, and a Level B case of each</td></tr>
 <tr><td>MC-5 🧵</td><td><strong>TS-12</strong> (a design authored in VectorCraft) and <strong>TS-10</strong> again through the full workflow</td><td>report filed</td></tr>
 </tbody>
 </table>
@@ -418,7 +425,7 @@ Ink/Stitch, read in their own format.</p>
 <tr><td>M14.1 🧪</td><td>The font repository, the licences it takes, and a reader for a font in Ink/Stitch’s format, from Ink/Stitch’s public documentation of it</td><td>ADR-0001 amended for fonts; one font read, its glyphs sewn</td></tr>
 <tr><td>M14.2</td><td><code>stitch lettering</code> sets text in a font. Its glyphs are placed by the font’s advances and kerning, with the spacing of letters, words and lines and the alignment the user sets. The scale stays within the heights the font sews at, and a warning names the font’s range outside them</td><td>its requirements active</td></tr>
 <tr><td>M14.3</td><td>Lettering along a path. The colours of a multicolour font sorted, a trim after each letter, word or line as chosen, and lines sewn back and forth</td><td>same</td></tr>
-<tr><td>M14.4</td><td>Lettering in VectorCraft: a text object sews in the embroidery font its StitchCraft setting names, read from the document’s text. The step chooses how the setting is given, as an effect or a name. A preview of the font in VectorCraft waits for ABI v2’s context for live effects (P6)</td><td>a Level B case</td></tr>
+<tr><td>M14.4</td><td>Lettering in VectorCraft: a text object sews in the embroidery font its StitchCraft setting names, read from the document’s text. The step chooses how the setting is given, as an effect or a name. A preview of the font in VectorCraft waits for a live effect to be given more than its object’s geometry and paints (<a href="../design/rfc-vectorcraft-abi-v2.html">RFC</a>, P6)</td><td>a Level B case</td></tr>
 <tr><td>MC-9 🧵</td><td><strong>TS-14</strong> (3 fonts at the least and the greatest heights they sew at); kit: <code>stitch testsheet</code></td><td>report filed</td></tr>
 <tr><td>M14.5</td><td>Text in pictures: the traced shapes inside an area marked <code>stitch:text</code> are replaced by lettering of the marker’s text, as tall as the traced letters (<a href="../design/image-to-embroidery.html#text-in-pictures">design</a>)</td><td>its requirements active</td></tr>
 <tr><td>M14.6 🧪</td><td>Text in pictures found and read without a marker</td><td>decision recorded in the design</td></tr>
@@ -427,9 +434,8 @@ Ink/Stitch, read in their own format.</p>
 </div>
 <h2 id="m10--more-stitch-types-ii"><a class="header" href="#m10--more-stitch-types-ii">M10 — More stitch types II</a></h2>
 <p>Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch; auto-run and auto-satin
-routing tools; per-layer ordering (underlay now, top later). VectorCraft’s tools filter with Convert Line to
-Satin, once a column’s centre line converts within ABI v1’s budget, or ABI v2 gives heavy plug-ins more
-(<a href="../design/vectorcraft-integration.html#tools-vectorcrafts-own-commands">tools</a>).</p>
+routing tools; per-layer ordering (underlay now, top later). VectorCraft’s tools filter, with Convert Line to
+Satin, is M6.12.</p>
 <h2 id="m11--formats-ii"><a class="header" href="#m11--formats-ii">M11 — Formats II</a></h2>
 <p>EXP, JEF, VP3, XXX, U01 writers and readers with goldens and oracle checks; thread catalogues
 (Madeira, Isacord, Robison-Anton, …) with sourced tables; PES v6 thread lists if not done in M1.</p>
@@ -441,12 +447,13 @@ checksums); 24 h fuzz soak; <strong>MC-7 🧵</strong> full regression set on th
 <p>Appliqué workflow, design splitting for small hoops, print worksheets, and an in-tree VectorCraft crate if
 wanted. <code>stitch import design.pes -o design.vectorcraft</code> opens a machine file in VectorCraft, its stitches
 written as manual stitches by the same document writer as M8’s <code>stitch import-inkstitch</code>.</p>
-<h2 id="m9-vectorcraft-abi-v2-upstream"><a class="header" href="#m9-vectorcraft-abi-v2-upstream">M9 (VectorCraft ABI v2, upstream)</a></h2>
-<p>M9 comes last, after 1.0 and the work after it. 1.0 has the ABI v1 plug-in from M6, and nothing before M9
-waits on ArtCraft’s answer to the RFC. Its id stays M9, as every step id does.</p>
-<p>Open the <a href="../design/rfc-vectorcraft-abi-v2.html">RFC</a> with ArtCraft; one PR per accepted proposal (with
-tests, following their <code>AGENTS.md</code>); then plug-in v2, with export to PES and DST from File › Export,
-overlay previews, rich parameter dialogs and a machine profile per document.</p>
+<h2 id="m9-vectorcraft-plug-in-features-upstream"><a class="header" href="#m9-vectorcraft-plug-in-features-upstream">M9 (VectorCraft plug-in features, upstream)</a></h2>
+<p>M9 comes last, after 1.0 and the work after it, and nothing before it waits on ArtCraft. Its id stays M9, as
+every step id does. VectorCraft adopted most of the <a href="../design/rfc-vectorcraft-abi-v2.html">RFC</a> into ABI v1 in
+0.14.0 to 0.16.0, and on its <code>main</code> since, and M6.8 to M6.12 use what it adopted. M9 proposes the rest, one PR
+for each, with tests, following VectorCraft’s <code>AGENTS.md</code>: overlay previews (P3), heavy live effects (P4) and
+the objects beside a live effect’s object (P6). The plug-ins then show every stitch of a large fill, and start
+and end their previews at the markers.</p>
 
                     </main>
 

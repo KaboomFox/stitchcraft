@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b1396aaf.js";
+            window.path_to_searchindex_js = "../searchindex-11d1fbc6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-58ed789b.js"></script>
+        <script src="../toc-b31b520c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -414,14 +414,17 @@ chooses between the two.</p>
 </table>
 </div>
 <h2 id="splitting-for-vectorcraft-abi-v1"><a class="header" href="#splitting-for-vectorcraft-abi-v1">Splitting for VectorCraft ABI v1</a></h2>
-<p>VectorCraft v1 allows at most 64 parameters per plug-in and has no groups or conditional visibility.
+<p>VectorCraft took at most 64 parameters per plug-in, with no groups or conditional visibility, until 0.14.
 The plug-in crate builds <strong>one plug-in per stitch family</strong> for that (<code>stroke</code>, <code>satin</code>, <code>fill</code>), each
 with only the parameters that apply to it; the shared lock/trim parameters are included in each. A test
 fails if any family’s manifest exceeds 64 parameters or 64 KiB, so adding a parameter that would break
-the limit is caught in the PR, not by a user. In v1 each parameter has one value of VectorCraft’s kinds.
+the limit is caught in the PR, not by a user. A parameter has one value, of a kind every release takes.
 A parameter that needs a text, a seed or several values keeps its default in VectorCraft
-(<a href="vectorcraft-integration.html#plug-ins">manifests</a>). When VectorCraft supports richer schemas (ABI v2
-RFC), groups and conditions are emitted as well.</p>
+(<a href="vectorcraft-integration.html#plug-ins">manifests</a>). VectorCraft 0.14 adopted richer schemas from the
+<a href="rfc-vectorcraft-abi-v2.html#p2-rich-parameter-schemas">RFC</a>: labels, units, help, groups and conditions, texts
+and lists, and 256 parameters, 64 of them outside groups. Releases before it ignore the labels, units, help,
+groups and conditions, and refuse the rest. M6.10 emits the registry’s labels, units, help, groups and
+conditions.</p>
 <h2 id="presets"><a class="header" href="#presets">Presets</a></h2>
 <p>A preset is a named partial <code>ParamSet</code> (<code>"denim"</code>, <code>"knit, light"</code>) stored as a TOML file in a
 <code>presets</code> directory of the parameters crate. The same code as user input validates it, and a generated
