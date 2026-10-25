@@ -120,7 +120,7 @@ pub struct Digitized {
 }
 
 /// The elements of `design` as they are generated: each automatic element turned into the elements its
-/// stitches need ([`digitize`]) and named ([`named`]), the others as they are; and what was said of them:
+/// stitches need ([`digitize`]) and named, the others as they are; and what was said of them:
 /// `SC-I0901` for the shapes digitized, what [`digitize`] says of each, and `SC-E0004` for each one left
 /// out because digitizing and naming it needs more work than `budget` allows an element. A design without
 /// automatic elements comes back as it is.
