@@ -229,6 +229,19 @@ fn diag_sc_e0004_lines_that_need_more_work_than_the_budget_stop_the_filter() {
 }
 
 #[test]
+fn diag_sc_e0004_the_work_is_what_a_heavy_filter_s_instructions_leave_after_reading() {
+    let line = object(1, &data(&polyline(&[(0.0, 0.0), (30.0, 0.0)])), &json!([stroke(3.0)]), &json!([]));
+    let input = serde_json::to_vec(&json!({ "objects": [line] })).unwrap();
+    let ran = |params: &Value| -> Value { serde_json::from_slice(&run(&input, &serde_json::to_vec(params).unwrap()).unwrap()).unwrap() };
+    assert!(ran(&json!({"_context": {"documentData": null}})).get("error").is_none());
+    // Data kept with the document, so much that reading it takes every instruction a heavy filter gets.
+    let kept = json!({"_context": {"documentData": {"kept": "x".repeat(4_000_000)}}});
+    assert_eq!(spendable(HEAVY_FUEL, input.len(), serde_json::to_vec(&kept).unwrap().len()), 0);
+    let error = ran(&kept)["error"].as_str().unwrap().to_string();
+    assert!(error.starts_with("error SC-E0004: Making the selected lines into satin columns needs more work"), "{error}");
+}
+
+#[test]
 fn req_vc_014_the_filter_s_manifest_is_a_heavy_filter_vectorcraft_accepts() {
     let manifest = stroke_to_satin();
     assert_eq!(validate(&serde_json::to_vec(&manifest).unwrap()), Ok(()));

@@ -396,8 +396,9 @@ pub fn path_data(path: &Path) -> Result<Box<RawValue>, serde_json::Error> {
                 anchors.push(Anchor { p: at(end), h_in, out: None });
                 from = end;
             }
-            // VectorCraft closes a subpath back to its first anchor, which so stands for its last.
-            if subpath.closed && from == subpath.start && anchors.len() > 1 {
+            // VectorCraft closes a subpath back to its first anchor, which so stands for its last. A subpath
+            // written has a segment, so its last anchor isn't its first.
+            if subpath.closed && from == subpath.start {
                 let h_in = anchors.pop().and_then(|last| last.h_in);
                 if let Some(first) = anchors.first_mut() {
                     first.h_in = h_in;

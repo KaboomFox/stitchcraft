@@ -71,9 +71,9 @@ from Install Plug-in…, not from the Additional Plug-ins Folder.
   instructions, with numbers the contract tests measure, and the engine stops before VectorCraft would. A
   fill's exact preview, which the user picks, is the exception, and VectorCraft bounds it. Stroke to Satin
   prices its work against a heavy filter's budget the same way.
-- The tools' objects sew as what they stand for. A column Stroke to Satin makes sews as its line did, and
-  a test sheet drawn sews as the sheet's design moved, each setting held in its effect's record as the
-  value its dialog row takes.
+- The tools' objects sew as what they stand for. A column made by Stroke to Satin sews as its line did,
+  and Test Sheet's objects sew as the sheet's design does, moved to where they are drawn. Each setting is
+  stored in its effect's record as the value its dialog row takes.
 
 ## Dependencies
 

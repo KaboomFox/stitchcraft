@@ -210,6 +210,20 @@ fn each_kind_is_declared_as_one_value_or_left_out() {
     assert_eq!(schema(&spec(Kind::Choice { options: OPTIONS }, "custom"), &[shape]), None);
 }
 
+#[test]
+fn only_stroke_to_satin_names_its_budget() {
+    // A light budget is the default, left out, so the other manifests read as they did before VectorCraft
+    // 0.17 named budgets.
+    let light = [hello(), settings(), testsheet()]
+        .into_iter()
+        .chain(Family::ALL.iter().map(|each| family(*each)))
+        .chain(FormatId::ALL.iter().map(|format| exporter(*format)));
+    for manifest in light {
+        assert_eq!((manifest.budget, value(&manifest).get("budget")), (BudgetClass::Light, None), "{}", manifest.id);
+    }
+    assert_eq!(value(&stroke_to_satin())["budget"], json!("heavy"));
+}
+
 /// A DST exporter's manifest that asks for a heavy budget.
 fn exporting_with_budget() -> Vec<u8> {
     let mut m = value(&exporter(FormatId::Dst));
