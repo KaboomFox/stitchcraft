@@ -20,10 +20,12 @@
 //! with the needle travelling straight from each to the next, all in one run. The column starts near
 //! where the elements before it left the needle, and ends near where the next element starts (`ends`).
 //! A path of 1 subpath is the column's centre line, and its rails and rungs are made from it as Ink/Stitch
-//! makes them (`normalize::centre_line`), then recognized like any others.
+//! makes them (`normalize::centre_line`), then recognized like any others. [`drawn`] makes such a column
+//! into one drawn with those rails and rungs, which sews as it does: what a host's Stroke to Satin makes.
 
 mod column;
 mod compensation;
+pub mod drawn;
 mod ends;
 mod lie;
 mod pairs;

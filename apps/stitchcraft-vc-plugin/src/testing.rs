@@ -1,4 +1,5 @@
-//! What the native tests give a live effect: VectorCraft's input and parameters, as its host passes them.
+//! What the native tests give a plug-in, VectorCraft's input and parameters as its host passes them, and the
+//! documents VectorCraft keeps of what a filter gives back.
 
 use serde_json::{Map, Value, json};
 use stitchcraft_params::Family;
@@ -47,4 +48,63 @@ pub(crate) fn square(side: f64) -> Value {
 /// A satin column's two rails, `length` points long and 20 points (7 mm) apart.
 pub(crate) fn rails(length: f64) -> Value {
     json!({"subpaths": [{"anchors": [{"p": [0, 0]}, {"p": [length, 0]}]}, {"anchors": [{"p": [0, 20]}, {"p": [length, 20]}]}]})
+}
+
+/// A document as VectorCraft saves it, whose one layer holds `nodes`, bottom first.
+pub(crate) fn document(nodes: &[Value]) -> Vec<u8> {
+    let layer = json!({"id": 1, "kind": {"type": "layer", "children": nodes}});
+    let document = json!({"version": 1, "artboards": [], "next_id": 100_000, "layers": [layer]});
+    serde_json::to_vec(&json!({"format": "vectorcraft", "version": 4, "document": document})).unwrap()
+}
+
+/// The node VectorCraft keeps of `out`, an object a filter gave back whole, as a document saves it with the
+/// id `id`: a path, or a compound path of a path for each subpath, with its fill rule; its fills and its
+/// strokes, as appearance items; its effect records, its opacity and its name. So VectorCraft's
+/// `objects::apply_output` writes a new object, and an object given back with all of these, which the
+/// contract tests check in its host.
+pub(crate) fn kept(out: &Value, id: u64) -> Value {
+    let rule = if out["fillRule"] == "evenodd" { "EvenOdd" } else { "NonZero" };
+    let kind = if out["type"] == "compound" {
+        let members = out["path"]["subpaths"].as_array().unwrap().iter().enumerate();
+        let children: Vec<Value> =
+            members.map(|(k, subpath)| json!({"id": id * 1_000 + k as u64 + 1, "kind": {"type": "path", "path": {"subpaths": [subpath]}}})).collect();
+        json!({"type": "compound", "children": children, "rule": rule})
+    } else {
+        json!({"type": "path", "path": out["path"], "rule": rule})
+    };
+    let fills = out["fills"].as_array().into_iter().flatten().map(|paint| json!({"kind": "fill", "paint": paint}));
+    // A document names a join and a cap as VectorCraft's code does (`Miter`), and a filter as SVG does (`miter`).
+    let named = |name: &Value| {
+        let name = name.as_str().unwrap_or_default();
+        json!(name.get(..1).unwrap_or_default().to_uppercase() + name.get(1..).unwrap_or_default())
+    };
+    let strokes = out["strokes"].as_array().into_iter().flatten().map(|stroke| {
+        let (join, cap) = (named(&stroke["join"]), named(&stroke["cap"]));
+        json!({"kind": "stroke", "paint": stroke["paint"], "width": stroke["width"], "join": join, "cap": cap, "miter_limit": stroke["miterLimit"]})
+    });
+    let items: Vec<Value> = fills.chain(strokes).collect();
+    let effects = out.get("effects").cloned().unwrap_or_else(|| json!([]));
+    let mut node = json!({"id": id, "appearance": {"items": items, "effects": effects}, "kind": kind});
+    for key in ["opacity", "name"] {
+        if let Some(value) = out.get(key) {
+            node[key] = value.clone();
+        }
+    }
+    node
+}
+
+/// The PES file the document `bytes` sews as, as `stitch export` writes it for the reference machine, and the
+/// codes of what reading and planning it said.
+pub(crate) fn sewn(bytes: &[u8]) -> (Vec<u8>, Vec<stitchcraft_core::Code>) {
+    let read = stitchcraft_vectorcraft::read(bytes, &stitchcraft_core::Budget::DEFAULT).unwrap();
+    let (file, said) = planned(&read.design);
+    (file, read.warnings.iter().map(|d| d.code).chain(said).collect())
+}
+
+/// The PES file `design` sews as for the reference machine, and the codes of what planning it said.
+pub(crate) fn planned(design: &stitchcraft_engine::design::Design) -> (Vec<u8>, Vec<stitchcraft_core::Code>) {
+    let outcome = stitchcraft_engine::plan(design, stitchcraft_plan::profiles::REFERENCE, &stitchcraft_core::Budget::DEFAULT);
+    let said = outcome.diagnostics.iter().map(|d| d.code).collect();
+    let plan = outcome.plan.unwrap_or_else(|| panic!("no plan: {:?}", outcome.diagnostics));
+    (stitchcraft_formats::encode(&plan, stitchcraft_plan::FormatId::PesV1, "test").unwrap().bytes, said)
 }

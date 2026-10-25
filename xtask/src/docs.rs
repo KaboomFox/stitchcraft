@@ -475,9 +475,9 @@ mod tests {
     #[test]
     fn the_milestones_done_are_the_roadmap_s() {
         let done = done_milestones(&util::read(&util::root().join(ROADMAP)).unwrap());
-        // M6.11 and M6.12, which use VectorCraft's newer plug-in features, are open.
+        // M6's steps are done, its machine checkpoint to sew, and M0 and M7 have steps open.
         assert!(
-            ["M1", "M2", "M3", "M4", "M5"].iter().all(|m| done.contains(*m)) && !["M0", "M6", "M7"].iter().any(|m| done.contains(*m)),
+            ["M1", "M2", "M3", "M4", "M5", "M6"].iter().all(|m| done.contains(*m)) && !["M0", "M7"].iter().any(|m| done.contains(*m)),
             "{done:?}"
         );
     }

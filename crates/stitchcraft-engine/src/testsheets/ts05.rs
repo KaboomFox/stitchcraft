@@ -11,8 +11,6 @@
 //! down after one sewn down would start along the jump thread from the bottom of the one before, and sew it
 //! down under its first stitches.
 
-use stitchcraft_plan::StitchPlan;
-
 use super::designed::{AS_DRAWN, Drawing, rails};
 use super::sketch::SheetError;
 use super::{BLUE, thread};
@@ -29,7 +27,7 @@ const GAP: f64 = 4.0;
 const ROW: f64 = 28.0;
 
 /// Draws TS-05.
-pub(super) fn build() -> Result<StitchPlan, SheetError> {
+pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let blue = thread(BLUE)?;
     let mut d = Drawing::new("ts05");
     // Each column's left edge and width, left to right.
@@ -55,5 +53,5 @@ pub(super) fn build() -> Result<StitchPlan, SheetError> {
         }
         top += ROW;
     }
-    d.plan()
+    Ok(d)
 }

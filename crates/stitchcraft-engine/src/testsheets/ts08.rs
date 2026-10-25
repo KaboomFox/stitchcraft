@@ -6,8 +6,6 @@
 //! 0.4, 0.5 and 0.6 mm, top to bottom, and columns at angles of 0°, 45° and 90°, left to right. Each square
 //! is trimmed after, so no thread runs across the next.
 
-use stitchcraft_plan::StitchPlan;
-
 use super::designed::{Drawing, polygon};
 use super::sketch::SheetError;
 use super::{BLUE, thread};
@@ -22,7 +20,7 @@ pub const SIDE: f64 = 30.0;
 const GAP: f64 = 5.0;
 
 /// Draws TS-08.
-pub(super) fn build() -> Result<StitchPlan, SheetError> {
+pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let blue = thread(BLUE)?;
     let mut d = Drawing::new("ts08");
     for (row, spacing) in SPACINGS.into_iter().enumerate() {
@@ -32,5 +30,5 @@ pub(super) fn build() -> Result<StitchPlan, SheetError> {
             d.fill(&format!("{spacing}-{angle}"), vec![square], &blue, &[("row_spacing_mm", spacing), ("angle", angle), ("trim_after", "true")])?;
         }
     }
-    d.plan()
+    Ok(d)
 }

@@ -17,15 +17,18 @@ workspace = true
 
 [features]
 # Which plug-in the module is (`docs/src/design/vectorcraft-integration.md`, `src/lib.rs`): the live effect of
-# one stitch family, the exporter of one machine format (VectorCraft 0.14), the Design Settings filter
-# (VectorCraft 0.16), or without any, the M0.6 *hello* effect the contract tests measure. Given more than one,
-# the module is the first of fill, satin, stroke, pes, dst and settings.
+# one stitch family, the exporter of one machine format (VectorCraft 0.14), a filter (Design Settings from
+# VectorCraft 0.16, Stroke to Satin, a heavy filter, from 0.17, and Test Sheet), or without any, the M0.6
+# *hello* effect the contract tests measure. Given more than one, the module is the first of fill, satin,
+# stroke, pes, dst, settings, stroke-to-satin and testsheet.
 stroke = []
 satin = []
 fill = []
 pes = []
 dst = []
 settings = []
+stroke-to-satin = []
+testsheet = []
 
 [dependencies]
 serde = { workspace = true }

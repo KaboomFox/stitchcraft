@@ -958,7 +958,7 @@ fn called(node: &Node, what: &str) -> String {
 }
 
 /// `text` in quotes, cut after [`QUOTED`] characters.
-fn quoted(text: &str) -> String {
+pub(crate) fn quoted(text: &str) -> String {
     let mut chars = text.chars();
     let cut: String = chars.by_ref().take(QUOTED).collect();
     if chars.next().is_some() { format!("\"{cut}…\"") } else { format!("\"{cut}\"") }

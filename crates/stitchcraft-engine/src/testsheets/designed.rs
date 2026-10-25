@@ -83,15 +83,15 @@ impl Drawing {
         Ok(())
     }
 
-    /// The sheet planned for the reference machine, or what the engine said about it.
-    pub fn plan(self) -> Result<StitchPlan, SheetError> {
-        self.plan_saying(&[])
+    /// The sheet as a design with the design settings' defaults, as it is planned; or why it is none.
+    pub fn design(self) -> Result<Design, SheetError> {
+        Design::new(self.elements, DesignSettings::default()).map_err(|d| SheetError::Said(d.to_string()))
     }
 
     /// The sheet planned for the reference machine, which says exactly the diagnostics of `codes`, in their
     /// order; otherwise what the engine said about it.
     pub fn plan_saying(self, codes: &[Code]) -> Result<StitchPlan, SheetError> {
-        let design = Design::new(self.elements, DesignSettings::default()).map_err(|d| SheetError::Said(d.to_string()))?;
+        let design = self.design()?;
         let outcome = crate::plan(&design, REFERENCE, &Budget::DEFAULT);
         let said: Vec<Code> = outcome.diagnostics.iter().map(|d| d.code).collect();
         match outcome.plan {
@@ -187,14 +187,14 @@ mod tests {
         let mut d = Drawing::new("test");
         d.polyline("fine", &[(0.0, 0.0), (10.0, 0.0)], &thread, &[]).unwrap();
         d.polyline("unreadable", &[(0.0, 5.0), (10.0, 5.0)], &thread, &[("running_stitch_length_mm", "long")]).unwrap();
-        let Err(SheetError::Said(said)) = d.plan() else { panic!("drawn despite what the engine said") };
+        let Err(SheetError::Said(said)) = d.plan_saying(&[]) else { panic!("drawn despite what the engine said") };
         assert!(said.starts_with("error SC-E0101: "), "{said}");
-        assert!(Drawing::new("empty").plan().is_err(), "nothing to stitch");
+        assert!(Drawing::new("empty").plan_saying(&[]).is_err(), "nothing to stitch");
         // Two elements with one id: the design itself is refused.
         let mut twice = Drawing::new("twice");
         twice.polyline("a", &[(0.0, 0.0), (10.0, 0.0)], &thread, &[]).unwrap();
         twice.polyline("a", &[(0.0, 5.0), (10.0, 5.0)], &thread, &[]).unwrap();
-        let Err(SheetError::Said(said)) = twice.plan() else { panic!("drawn with one id twice") };
+        let Err(SheetError::Said(said)) = twice.plan_saying(&[]) else { panic!("drawn with one id twice") };
         assert!(said.contains("Two elements of the design have the id `twice:a`."), "{said}");
     }
 
@@ -237,7 +237,7 @@ mod tests {
             d.fill("fill", squares, &thread, &[]).unwrap();
             d
         };
-        let Err(SheetError::Said(said)) = parts().plan() else { panic!("drawn despite the warning") };
+        let Err(SheetError::Said(said)) = parts().plan_saying(&[]) else { panic!("drawn despite the warning") };
         assert!(said.starts_with("warning SC-W0307: "), "{said}");
         assert!(parts().plan_saying(&[Code::FillPartsApart]).is_ok());
         assert!(parts().plan_saying(&[Code::FillPartsApart; 2]).is_err(), "said once, not twice");

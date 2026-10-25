@@ -11,8 +11,6 @@
 //! and no outline crosses a jump thread: the top-right one at its left-hand point, across the gap from where
 //! the top-left one ends, and the bottom one at its top.
 
-use stitchcraft_plan::StitchPlan;
-
 use super::designed::{Drawing, Start, round};
 use super::sketch::SheetError;
 use super::{BLACK, RED, thread};
@@ -25,7 +23,7 @@ pub(super) const STARTS: [Start; 3] = [Start::Right, Start::Left, Start::Top];
 pub const RADIUS: f64 = 30.0;
 
 /// Draws TS-07.
-pub(super) fn build() -> Result<StitchPlan, SheetError> {
+pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let (red, black) = (thread(RED)?, thread(BLACK)?);
     let mut d = Drawing::new("ts07");
     for (pull, centre) in CIRCLES {
@@ -34,5 +32,5 @@ pub(super) fn build() -> Result<StitchPlan, SheetError> {
     for ((pull, centre), start) in CIRCLES.into_iter().zip(STARTS) {
         d.circle(&format!("outline-{pull}"), centre, RADIUS, start, &black, &[("trim_after", "true")])?;
     }
-    d.plan()
+    Ok(d)
 }

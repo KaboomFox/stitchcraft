@@ -354,6 +354,43 @@ impl Design {
     pub fn bounds(&self) -> Option<Rect> {
         Rect::around(self.elements.iter().flat_map(|e| e.shape.path().points()))
     }
+
+    /// The design moved by `by`, `[dx, dy]` in millimetres: every point of its elements, and its origin and
+    /// stop position, as a host draws a design somewhere else (`REQ-VC-015`). `SC-E0009`, as from
+    /// [`Design::new`], when a point would lie more than 10 m from the origin.
+    pub fn moved(&self, [dx, dy]: [f64; 2]) -> Result<Design, Diagnostic> {
+        let point = |p: Point| {
+            Point::new(p.x() + dx, p.y() + dy).map_err(|e| {
+                Diagnostic::new(Code::InternalCheckFailed, format!("The design moved by ({dx}, {dy}) mm has a point that is no number: {e}."))
+            })
+        };
+        let path = |path: &Path| -> Result<Path, Diagnostic> {
+            let subpaths = path.subpaths.iter().map(|subpath| {
+                let segments = subpath.segments.iter().map(|segment| {
+                    Ok(match *segment {
+                        Segment::Line(end) => Segment::Line(point(end)?),
+                        Segment::Quad(control, end) => Segment::Quad(point(control)?, point(end)?),
+                        Segment::Cubic(first, second, end) => Segment::Cubic(point(first)?, point(second)?, point(end)?),
+                    })
+                });
+                Ok(Subpath { start: point(subpath.start)?, segments: segments.collect::<Result<_, Diagnostic>>()?, closed: subpath.closed })
+            });
+            Ok(Path { subpaths: subpaths.collect::<Result<_, Diagnostic>>()? })
+        };
+        let elements = self.elements.iter().map(|element| {
+            let shape = match &element.shape {
+                Shape::Stroke { path: outline, width, join, cap } => Shape::Stroke { path: path(outline)?, width: *width, join: *join, cap: *cap },
+                Shape::Fill { path: boundary, rule } => Shape::Fill { path: path(boundary)?, rule: *rule },
+            };
+            Ok(Element { shape, ..element.clone() })
+        });
+        let settings = DesignSettings {
+            origin: self.settings.origin.map(point).transpose()?,
+            stop_position: self.settings.stop_position.map(point).transpose()?,
+            ..self.settings
+        };
+        Design::new(elements.collect::<Result<_, Diagnostic>>()?, settings)
+    }
 }
 
 #[cfg(test)]
@@ -392,6 +429,27 @@ mod tests {
         let bounds = design.bounds().unwrap();
         assert_eq!((bounds.width(), bounds.height()), (12.0, 10.0));
         assert_eq!(Segment::Quad(p(1.0, 1.0), p(2.0, 0.0)).points().count(), 2);
+    }
+
+    #[test]
+    fn a_design_moved_has_every_point_moved_and_nothing_else_changed() {
+        let curve = Path {
+            subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Cubic(p(0.0, -5.0), p(10.0, 5.0), p(10.0, 0.0))], closed: true }],
+        };
+        let quad = Path { subpaths: vec![Subpath { start: p(1.0, 1.0), segments: vec![Segment::Quad(p(2.0, 3.0), p(4.0, 1.0))], closed: false }] };
+        let fill = Element { shape: Shape::Fill { path: quad, rule: FillRule::EvenOdd }, ..element("q", Path::default()) };
+        let settings = DesignSettings { origin: Some(p(5.0, 5.0)), stop_position: Some(p(-1.0, 0.0)), ..DesignSettings::default() };
+        let design = Design::new(vec![element("c", curve), fill, element("l", line(p(-2.0, 1.0), p(3.0, 1.0)))], settings).unwrap();
+        let moved = design.moved([3.0, -2.0]).unwrap();
+        let points = |design: &Design| design.elements().iter().flat_map(|e| e.shape.path().points()).collect::<Vec<_>>();
+        assert!(points(&moved).iter().zip(points(&design)).all(|(a, b)| (a.x(), a.y()) == (b.x() + 3.0, b.y() - 2.0)));
+        assert_eq!((moved.settings.origin, moved.settings.stop_position), (Some(p(8.0, 3.0)), Some(p(2.0, -2.0))));
+        // Each element as it was but for its points: its id, kind of shape, thread and settings.
+        assert_eq!(moved.moved([-3.0, 2.0]).unwrap(), design);
+        assert!(matches!(&moved.elements()[1].shape, Shape::Fill { rule: FillRule::EvenOdd, .. }));
+        // Moved past the working limit, it is no design.
+        assert_eq!(design.moved([WORKING_LIMIT_MM, 0.0]).unwrap_err().code, Code::InternalCheckFailed);
+        assert_eq!(design.moved([f64::NAN, 0.0]).unwrap_err().code, Code::InternalCheckFailed);
     }
 
     #[test]

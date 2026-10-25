@@ -15,7 +15,7 @@
 
 use serde::Deserialize;
 use serde_json::{Value, json};
-use stitchcraft_core::{Code, Diagnostic, Fix, Mm};
+use stitchcraft_core::{Diagnostic, Mm};
 use stitchcraft_engine::design::{DesignSettings, SETTINGS};
 use stitchcraft_params::{Empty, Kind};
 use stitchcraft_plan::profiles::{self, BUILTIN, REFERENCE};
@@ -23,7 +23,7 @@ use stitchcraft_vectorcraft::effect_error;
 use stitchcraft_vectorcraft::settings::{PROFILE, kept_data};
 
 use crate::dialog::{self, own};
-use crate::effect::RunError;
+use crate::effect::{RunError, too_old};
 use crate::export::{MACHINE_HELP, PROFILE_PAGE};
 use crate::manifest::{Param, Schema};
 
@@ -83,11 +83,8 @@ pub fn run(input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
 
 /// `SC-E0813`: the VectorCraft that ran the filter keeps no data with a document for it.
 fn cannot_keep() -> Diagnostic {
-    Diagnostic::new(
-        Code::VcCannotKeep,
-        "This VectorCraft keeps no data with a document for a filter, as VectorCraft does from 0.16, so the design settings were not kept.",
-    )
-    .with_fix(Fix::Hint("Update VectorCraft to 0.16 or later.".to_string()))
+    let message = "This VectorCraft keeps no data with a document for a filter, as VectorCraft does from 0.16, so the design settings were not kept.";
+    too_old(message, "0.16")
 }
 
 #[cfg(test)]

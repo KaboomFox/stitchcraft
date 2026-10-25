@@ -18,8 +18,6 @@
 //! it: the long lines run left to right and right to left in turn, the circles are sewn right to left from
 //! their right-hand points, and each line of hand-placed stitches starts below where the one before ended.
 
-use stitchcraft_plan::StitchPlan;
-
 use super::designed::{Drawing, Start};
 use super::sketch::SheetError;
 use super::{BLUE, thread};
@@ -50,7 +48,7 @@ fn across(row: usize, y: f64) -> [(f64, f64); 2] {
 }
 
 /// Draws TS-03.
-pub(super) fn build() -> Result<StitchPlan, SheetError> {
+pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let blue = thread(BLUE)?;
     let mut d = Drawing::new("ts03");
     let mut y = 0.0;
@@ -85,5 +83,5 @@ pub(super) fn build() -> Result<StitchPlan, SheetError> {
         d.polyline(&format!("short-{length}"), &points, &blue, &by_hand)?;
         (x, step, y) = (x + step * f64::from(SHORT_STITCHES) * length, -step, y + ROW);
     }
-    d.plan()
+    Ok(d)
 }

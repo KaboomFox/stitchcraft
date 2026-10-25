@@ -108,7 +108,9 @@ fn test_sheets() -> Result<String, String> {
         "Designs drawn in code for the [machine checkpoints](../../plan/machine-testing.md), each for one hoop of the \
          reference machine. Write one with `stitch testsheet <id> -o <id>.pes`. The command checks it against the profile \
          of that hoop, or the one `--profile` names, and prints what to check after sewing it, as listed here. The \
-         pictures are previews: they show what the machine will sew, including jump threads it leaves for you to cut.\n",
+         pictures are previews: they show what the machine will sew, including jump threads it leaves for you to cut. \
+         In VectorCraft, the Test Sheet filter draws a sheet drawn as a design into a document \
+         ([how](../how-to/embroider-a-vectorcraft-design.md#draw-a-test-sheet)).\n",
     );
     let shots = shots::load(&util::root())?;
     for sheet in SHEETS {
@@ -119,6 +121,9 @@ fn test_sheets() -> Result<String, String> {
         }
         let profile = sheet.profile;
         let _ = writeln!(out, "Hoop: the {}, profile [`{}`](profiles.md#{}).\n", profile.name, profile.id, profile.id);
+        if sheet.designed() {
+            out.push_str("Drawn as a design, which VectorCraft's Test Sheet filter draws too.\n\n");
+        }
         for shot in shots.iter().filter(|s| s.kind == "stitch" && s.sheet.as_deref() == Some(sheet.id)) {
             let _ = writeln!(out, "![{}](../../images/generated/{}.png)\n", shot.alt, shot.id);
         }

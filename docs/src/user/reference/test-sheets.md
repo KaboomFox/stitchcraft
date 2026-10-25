@@ -2,7 +2,7 @@
 
 # Test sheets
 
-Designs drawn in code for the [machine checkpoints](../../plan/machine-testing.md), each for one hoop of the reference machine. Write one with `stitch testsheet <id> -o <id>.pes`. The command checks it against the profile of that hoop, or the one `--profile` names, and prints what to check after sewing it, as listed here. The pictures are previews: they show what the machine will sew, including jump threads it leaves for you to cut.
+Designs drawn in code for the [machine checkpoints](../../plan/machine-testing.md), each for one hoop of the reference machine. Write one with `stitch testsheet <id> -o <id>.pes`. The command checks it against the profile of that hoop, or the one `--profile` names, and prints what to check after sewing it, as listed here. The pictures are previews: they show what the machine will sew, including jump threads it leaves for you to cut. In VectorCraft, the Test Sheet filter draws a sheet drawn as a design into a document ([how](../how-to/embroider-a-vectorcraft-design.md#draw-a-test-sheet)).
 
 ## TS-01 — Orientation and scale
 
@@ -46,6 +46,8 @@ After sewing, check:
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
+Drawn as a design, which VectorCraft's Test Sheet filter draws too.
+
 ![TS-02B as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose top row is one line and whose other dashes and rows are joined by loose threads, and a green line underneath.](../../images/generated/testsheet-ts-02b.png)
 
 ![TS-02B in the simple style: a red cross marks the trim after every red dash but the last, grey dashes show moves after a cut, blue dashes show jump threads left in place, and a blue square marks the stop in the middle of the green line.](../../images/generated/testsheet-ts-02b-simple.png)
@@ -66,6 +68,8 @@ After sewing, check:
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
+Drawn as a design, which VectorCraft's Test Sheet filter draws too.
+
 ![TS-03 as it will sew, in blue: five long lines with stitches from 1.5 to 4 mm, two bolder bean-stitch lines, three small circles, the right-hand one visibly many-sided, and five short lines of tiny stitches growing longer towards the bottom.](../../images/generated/testsheet-ts-03.png)
 
 Threads: Blue.
@@ -82,6 +86,8 @@ After sewing, check:
 110.0 × 64.5 mm · 623 stitches, 27 jumps, 27 trims, 0 colour changes, 0 stops
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+Drawn as a design, which VectorCraft's Test Sheet filter draws too.
 
 ![TS-04 as it will sew, in red: nine rows of three lines, each line ending in a small lock at both ends, the locks' shapes differing from row to row and growing from left to right.](../../images/generated/testsheet-ts-04.png)
 
@@ -101,6 +107,8 @@ After sewing, check:
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
+Drawn as a design, which VectorCraft's Test Sheet filter draws too.
+
 ![TS-05 as it will sew, in blue: three rows of ten solid satin columns, each row's columns growing from 1 to 10 mm wide left to right, the top row densest and the bottom row the most open.](../../images/generated/testsheet-ts-05.png)
 
 Threads: Blue.
@@ -118,6 +126,8 @@ After sewing, check:
 62.0 × 30.0 mm · 966 stitches, 5 jumps, 5 trims, 0 colour changes, 0 stops
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+Drawn as a design, which VectorCraft's Test Sheet filter draws too.
 
 ![TS-06 as it will sew, in red: five satin columns 6 mm wide side by side, which look alike from above because their underlays lie beneath the top stitches.](../../images/generated/testsheet-ts-06.png)
 
@@ -137,6 +147,8 @@ After sewing, check:
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
+Drawn as a design, which VectorCraft's Test Sheet filter draws too.
+
 ![TS-07 as it will sew: three red tatami circles, two side by side and one below them, each with a thin black outline along its edge.](../../images/generated/testsheet-ts-07.png)
 
 Threads: Red, Black.
@@ -153,6 +165,8 @@ After sewing, check:
 100.0 × 170.0 mm · 16248 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+Drawn as a design, which VectorCraft's Test Sheet filter draws too.
 
 ![TS-08 as it will sew, in blue: fifteen tatami squares in five rows of three, their rows level, slanting and upright from left to right, the top squares dense and the bottom ones open enough to show the underlay and travel beneath them.](../../images/generated/testsheet-ts-08.png)
 
@@ -171,6 +185,8 @@ After sewing, check:
 66.0 × 114.0 mm · 7780 stitches, 6 jumps, 3 trims, 0 colour changes, 0 stops
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+Drawn as a design, which VectorCraft's Test Sheet filter draws too.
 
 ![TS-09 as it will sew, in green: the same shape three times, top to bottom, a rectangle with a square hole and a round hole and a bar to its right, which a jump thread along the bottom joins to it.](../../images/generated/testsheet-ts-09.png)
 
