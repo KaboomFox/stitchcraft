@@ -107,8 +107,9 @@ live effect's with `effect_id`, and `effect_name` reads one back. The plug-in cr
 gate use the same functions. A live effect's id ends with its stitch family's
 (`stitchcraft_params::Family::id`).
 Manifests are generated from the [parameter registry](params.md#splitting-for-vectorcraft-abi-v1); a
-test validates each against VectorCraft's manifest rules (id charset, ≤ 64 parameters, names, ranges) so
-an invalid manifest never reaches a user.
+test validates each against VectorCraft's manifest rules (id charset, ≤ 64 parameters, names, ranges, and
+from 0.14 the keys that say how the dialog shows a parameter), so a manifest VectorCraft would refuse fails
+the tests before a release.
 
 **Modules.** The plug-in crate builds one module for each family, chosen by a Cargo feature named after
 the family: `stroke`, `satin` or `fill`, and one for each machine format, by its extension: `pes` or `dst`.
@@ -139,6 +140,32 @@ tatami fill (`REQ-FILL-005`). `satin_column` belongs to the effect, which sets i
 with the group that declares the family's method. The groups only the family uses, for its default
 method, come next, then those it shares with the other families, then those of its other methods, such as
 the zigzag stroke's. The settings every element shares come last, as in Ink/Stitch's dialogs.
+
+**How the dialog shows them** (`REQ-VC-012`, M6.10). From 0.14 a parameter can say how the dialog shows
+it, and the plug-in says all of it from the registry (`apps/stitchcraft-vc-plugin/src/dialog.rs`):
+
+- Its row has the registry's label, and the unit of its kind of value: mm, % or °.
+- The registry's groups are the dialog's sections, as they are the headings of the reference pages.
+  VectorCraft draws a section where its group first appears, with every row of the group in it. Each
+  group's rows come together in the manifest, and a release before 0.14 shows them in the same order.
+- Its help is the registry's help as plain text, cut at a sentence within VectorCraft's 1,000 characters.
+  A choice's help ends with what each option means, by its label in the registry: VectorCraft's
+  drop-down list shows the ids that designs store, such as `tatami_fill`. Its help page is its entry in
+  the parameter reference on the docs site, the book of `main` (`dialog::SITE_URL`). The docs check finds
+  the page and the heading each manifest links to.
+- Each row shows only while the method is one the parameter applies to. Where the registry shows a
+  setting only with some values of another, as its `when` says, the dialog does too: the length variation
+  of a random stitch length shows while that is on, and a satin's staggers for staggered splits. Rows that
+  nothing in the dialog would show are left out. VectorCraft gives the plug-in the value of a hidden row as
+  well, so what the dialog shows never changes what sews.
+- The plug-in's own parameters, the preview level and the exporters' 2 options, have a label, help and a
+  page too.
+
+A release before 0.14 ignores these keys, since its `ParamSpec` reads a parameter's type, range and
+default and lets other keys pass (`crates/plugins/src/manifest.rs` at 0.12.0). Its dialog shows the keys
+and every parameter, as it did. The compatibility gate's pictures of the dialogs are taken in the pinned
+release's window, and the window probe checks that each shows the rows the manifest shows at the defaults,
+by label, each with the control of its kind.
 
 **What a live effect shows.** A family's effect sews its object with the engine's `generate`, on the
 reference machine and with no neighbours, as one object of a design. It returns the stitches as geometry,

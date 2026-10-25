@@ -29,8 +29,7 @@ use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
 
 use serde_json::json;
-use stitchcraft_params::Family;
-use stitchcraft_plan::FormatId;
+use stitchcraft_vc_plugin::Module;
 
 use crate::{util, wasm};
 use report::{Level, TrackResult};
@@ -317,16 +316,15 @@ pub fn track(track: &str, reference: &str, cli: Option<&Path>) -> Result<(), Str
 
 /// The plug-in's modules, by name: *hello*, built without features, the live effect of each stitch family
 /// and the exporter of each machine format, each built with the feature its name names: the family's id,
-/// or the format's extension (`apps/stitchcraft-vc-plugin/src/lib.rs`).
+/// or the format's extension ([`Module::name`]).
 pub(crate) fn modules() -> Vec<&'static str> {
-    let families = Family::ALL.iter().map(|family| family.id());
-    std::iter::once("hello").chain(families).chain(FormatId::ALL.iter().map(|format| format.extension())).collect()
+    Module::all().into_iter().map(Module::name).collect()
 }
 
-/// The kind of plug-in VectorCraft installs the module `name` as: `exporter` for a machine format's, which
-/// VectorCraft has from 0.14, and `effect` for the others.
+/// The kind of plug-in VectorCraft installs the module `name` as, which its manifest says: `exporter` for a
+/// machine format's, which VectorCraft has from 0.14, and `effect` for the others.
 pub(crate) fn kind(name: &str) -> &'static str {
-    if FormatId::ALL.iter().any(|format| format.extension() == name) { "exporter" } else { "effect" }
+    Module::all().into_iter().find(|module| module.name() == name).map_or("effect", |module| module.manifest().kind)
 }
 
 /// Builds each of the plug-in's modules for wasm32 into `target/compat/plugins/<name>.wasm`, and prints

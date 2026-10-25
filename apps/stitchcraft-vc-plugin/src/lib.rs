@@ -11,6 +11,8 @@
 //! Layout:
 //! - [`manifest`]: plug-in ids and manifests, made from the parameter registry and checked with
 //!   VectorCraft's rules;
+//! - [`dialog`]: how VectorCraft's dialogs show each parameter, labelled, in sections and only when it
+//!   applies, from the registry;
 //! - [`effect`]: what each live effect does with VectorCraft's JSON: safe Rust, tested natively;
 //! - [`export`]: what each exporter does: the document sewn into a machine file as `stitch export` sews it;
 //! - `abi`: the exported functions VectorCraft calls. It is the single place in StitchCraft allowed to use
@@ -19,6 +21,7 @@
 //!   `cargo xtask unsafe-audit` verifies. The shim compiles on every target so clippy and the compiler check
 //!   it everywhere, but it is only meaningful inside VectorCraft's wasm32 sandbox.
 
+pub mod dialog;
 pub mod effect;
 pub mod export;
 pub mod manifest;
@@ -60,6 +63,24 @@ pub const MODULE: Module = if cfg!(feature = "fill") {
 };
 
 impl Module {
+    /// Every module: *hello*, the live effect of each stitch family and the exporter of each machine
+    /// format.
+    pub fn all() -> Vec<Module> {
+        let families = Family::ALL.iter().map(|family| Module::Family(*family));
+        let exporters = FormatId::ALL.iter().map(|format| Module::Exporter(*format));
+        std::iter::once(Module::Hello).chain(families).chain(exporters).collect()
+    }
+
+    /// The module's name, which is also the feature that builds it ([`MODULE`]): `hello`, the family's id or
+    /// the format's extension.
+    pub fn name(self) -> &'static str {
+        match self {
+            Module::Hello => "hello",
+            Module::Family(family) => family.id(),
+            Module::Exporter(format) => format.extension(),
+        }
+    }
+
     /// The module's manifest.
     pub fn manifest(self) -> manifest::Manifest {
         match self {
@@ -103,6 +124,7 @@ mod tests {
         assert_eq!(read(Module::Hello.run(&input, b"{}")), json!({"objects": [{"path": square}]}));
         let stitches = read(Module::Family(Family::Stroke).run(&input, b"{}"));
         assert!(stitches["objects"][0]["path"]["subpaths"][0]["anchors"].as_array().is_some_and(|anchors| anchors.len() > 4), "{stitches}");
+        assert_eq!(Module::all().into_iter().map(Module::name).collect::<Vec<_>>(), ["hello", "stroke", "satin", "fill", "pes", "dst"]);
         // An exporter is given a whole document, and returns a machine file.
         for format in FormatId::ALL {
             assert_eq!(Module::Exporter(*format).manifest(), manifest::exporter(*format));

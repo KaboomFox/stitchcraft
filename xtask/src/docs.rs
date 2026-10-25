@@ -13,6 +13,8 @@
 //! - the ADR index disagrees with the ADR files;
 //! - an image has no alt text, or is not an image a shot in `docs/shots.toml` declares
 //!   (`docs/src/design/docs-pipeline.md`);
+//! - a help page a VectorCraft dialog links to is not a page of the book, or has no heading its anchor names
+//!   ([`help_pages`], `REQ-VC-012`);
 //! - a long sentence is on two pages, or a path of the repository named in inline code does not exist
 //!   ([`crate::docs_audit`]);
 //! - a page's implements comment matches no file, or the branch changes a page's files but neither the page
@@ -20,6 +22,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
+
+use stitchcraft_vc_plugin::{Module, dialog};
 
 use crate::markdown::{self, Link};
 use crate::util::{self, Findings};
@@ -58,6 +62,7 @@ pub fn run(check_only: bool) -> Result<(), String> {
     allocations(&root, &mut findings)?;
     adr_index(&root, &mut findings)?;
     images(&root, &pages, &mut findings)?;
+    help_pages(&root, &mut findings);
     docs_audit::check(&root, &pages, &mut findings);
     design_map::check(&root, &pages, &mut findings);
     findings.finish("docs", &format!("{} Markdown files checked", pages.len()))
@@ -398,9 +403,52 @@ fn images(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) -> 
     Ok(())
 }
 
+/// Each help page the plug-in's dialogs link to is a page of the book, with the heading its anchor names:
+/// the docs site has `docs/src/<path>.md` at [`dialog::SITE_URL`] and `<path>.html`.
+fn help_pages(root: &Path, findings: &mut Findings) {
+    for module in Module::all() {
+        let manifest = module.manifest();
+        for (key, param) in &manifest.params {
+            let Some(url) = &param.ui.help_url else { continue };
+            if let Err(e) = help_page(root, url) {
+                findings.error(format!("{}'s `{key}`: its help page {url} {e}", manifest.id));
+            }
+        }
+    }
+}
+
+/// Whether the docs site's address `url` is a page of the book under `root`, with the heading its anchor
+/// names: why not, when it isn't.
+fn help_page(root: &Path, url: &str) -> Result<(), String> {
+    let path = url.strip_prefix(dialog::SITE_URL).ok_or(format!("is not on the docs site, {}", dialog::SITE_URL))?;
+    let (page, anchor) = path.split_once('#').map_or((path, None), |(page, anchor)| (page, Some(anchor)));
+    let stem = page.strip_suffix(".html").ok_or("is not a page of the book, whose addresses end in `.html`")?;
+    let file = root.join(DOCS_SRC).join(format!("{stem}.md"));
+    let text = util::read(&file).map_err(|_| format!("is no page: there is no {}", util::rel(&file)))?;
+    match anchor {
+        Some(anchor) if !markdown::heading_ids(&text).contains(anchor) => Err(format!("has no heading for `#{anchor}` in {}", util::rel(&file))),
+        _ => Ok(()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn req_vc_012_each_help_page_a_dialog_links_to_is_a_heading_of_the_book() {
+        let root = util::root();
+        let mut findings = Findings::default();
+        help_pages(&root, &mut findings);
+        assert!(findings.finish("help pages", "").is_ok());
+        let page = |path: &str| help_page(&root, &dialog::page(path));
+        assert_eq!(page("user/reference/params/fill.html#fill_method"), Ok(()));
+        assert_eq!(page("user/reference/profiles.html"), Ok(()));
+        assert!(page("user/reference/params/fill.html#no_such_key").is_err_and(|e| e.contains("has no heading for `#no_such_key`")));
+        assert!(page("user/reference/nothing.html").is_err_and(|e| e.starts_with("is no page")));
+        assert!(page("user/reference/profiles.md").is_err_and(|e| e.contains("`.html`")));
+        assert!(help_page(&root, "https://example.org/a.html").is_err_and(|e| e.starts_with("is not on the docs site")));
+    }
 
     #[test]
     fn finds_requirement_and_deviation_ids_but_not_placeholders() {
@@ -427,7 +475,7 @@ mod tests {
     #[test]
     fn the_milestones_done_are_the_roadmap_s() {
         let done = done_milestones(&util::read(&util::root().join(ROADMAP)).unwrap());
-        // M6.10 to M6.12, which use VectorCraft's newer plug-in features, are open.
+        // M6.11 and M6.12, which use VectorCraft's newer plug-in features, are open.
         assert!(
             ["M1", "M2", "M3", "M4", "M5"].iter().all(|m| done.contains(*m)) && !["M0", "M6", "M7"].iter().any(|m| done.contains(*m)),
             "{done:?}"
