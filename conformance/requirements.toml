@@ -1086,6 +1086,15 @@ rationale = "A VectorCraft user exports the machine file where the design was dr
 milestone = "M6"
 status = "active"
 
+[[req]]
+id = "REQ-VC-012"
+area = "vectorcraft"
+level = "L2"
+statement = "From VectorCraft 0.14, a plug-in's dialog shows each parameter as the parameter registry describes it: its label, the unit of its value, its help when the pointer rests on the label, with what each option of a choice means, and a button that opens its entry in the parameter reference. The registry's groups are the dialog's sections, each group's rows together, in the manifest's order. A parameter of some of a family's methods shows only while the method is one of them, and one the registry shows only while another setting has some values shows only then. A parameter is left out when nothing the dialog offers would show it. The plug-in's own parameters, the preview level and the exporters' options, are labelled and explained too. VectorCraft 0.13 and earlier ignore these keys, and the modules install there as before."
+rationale = "A label says what a setting does where a key such as `zigzag_spacing_mm` only names it, and a dialog of up to 48 rows reads more easily when only the rows that apply show. VectorCraft's dialogs showed each parameter's key until 0.14 adopted labels, units, help, sections and conditions (the RFC's P2). VectorCraft passes a hidden parameter to the plug-in with its value, so what a dialog shows never changes what sews."
+milestone = "M6"
+status = "active"
+
 # ── Command line ───────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

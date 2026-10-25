@@ -157,12 +157,14 @@ with file dialogs. It also selects everything and sizes the window, and it reads
 menus' picture is cropped to the title and the rows that opened, with 10 pixels around them for the
 menus' frames. A dialog's picture is cropped to the dialog.
 
-A dialog must show a row for each parameter of its module's manifest. The row's label is the one
-VectorCraft writes for the key, and its control must be the one VectorCraft gives the parameter's type.
-A number gets a text field and a toggle a checkbox, and a choice gets a drop-down list. A plug-in's
-dialog doesn't scroll, and all 3 run off the top and bottom of the window at the size it opens,
-1440 × 900: the stroke's is about 960 pixels tall, the fill's about 1,400 and the satin's about 1,800. A
-dialog's picture is taken in a window 2,000 pixels tall instead, on a screen of 1600 × 2100.
+A dialog must show a row for each parameter of its module's manifest that shows at the defaults, under
+the label the manifest gives it (`REQ-VC-012`). Its control must be the one VectorCraft gives the
+parameter's type. A number gets a text field and a toggle a checkbox, and a choice gets a drop-down list.
+At the window's size when it opens, 1440 × 900, the fill's and the satin's dialogs are too tall for it:
+the stroke's is about 850 pixels tall, the fill's about 1,500 and the satin's about 2,050. From 0.14
+VectorCraft then scrolls the rows, and the picture would show only some of them. The probe fails on a
+dialog with a scroll bar. A dialog's picture is taken in a window 2,400 pixels tall instead, on a screen
+of 3000 × 2500.
 
 ## Command-line examples
 

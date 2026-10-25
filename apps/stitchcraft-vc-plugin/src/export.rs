@@ -33,12 +33,15 @@
 
 use serde::{Deserialize, Serialize};
 use stitchcraft_core::{Budget, Code, Diagnostic, Severity};
-use stitchcraft_engine::design::Reading;
+use stitchcraft_engine::auto::SATIN_MAX_WIDTH;
+use stitchcraft_engine::design::{DesignSettings, Reading};
 use stitchcraft_formats::{Encoded, read_back};
-use stitchcraft_plan::profiles::{self, REFERENCE};
+use stitchcraft_plan::profiles::{self, BUILTIN, REFERENCE};
 use stitchcraft_plan::{FormatId, MachineProfile};
 
+use crate::dialog::own;
 use crate::effect::RunError;
+use crate::manifest::{Param, Schema};
 
 /// The parameter that digitizes the shapes without settings automatically, as `stitch export --auto`
 /// does.
@@ -48,6 +51,37 @@ pub const AUTO: &str = "auto";
 pub const PROFILE: &str = "profile";
 /// The most warnings VectorCraft shows of an export (`MAX_WARNINGS` in its `crates/plugins/src/export.rs`).
 pub const MAX_WARNINGS: usize = 100;
+
+/// An exporter's dialog: [`AUTO`], then the machine's [`PROFILE`], a choice of the built-in profiles, the
+/// reference machine's first and by default.
+pub(crate) fn options() -> Vec<(&'static str, Param)> {
+    let profiles = BUILTIN.iter().map(|profile| profile.id).collect();
+    vec![
+        (AUTO, own(Schema::Bool { default: false }, "Digitize automatically", &auto_help(), AUTO_PAGE)),
+        (PROFILE, own(Schema::Choice { options: profiles, default: REFERENCE.id }, "Machine", PROFILE_HELP, PROFILE_PAGE)),
+    ]
+}
+
+/// What [`AUTO`] does, for its help, with the widths automatic digitizing goes by.
+fn auto_help() -> String {
+    format!(
+        "Chooses the stitches of each object without a StitchCraft effect by its width, as `stitch export --auto` does: a line up \
+         to {} mm wide runs, a line up to {} mm wide is a satin column as wide as it, and a wider line or an area is a tatami \
+         fill. Objects with a StitchCraft effect sew as their effects say.",
+        DesignSettings::MIN_SATIN_STROKE_WIDTH.get(),
+        SATIN_MAX_WIDTH.get()
+    )
+}
+
+/// The page that says how objects without a StitchCraft effect are digitized.
+const AUTO_PAGE: &str = "user/how-to/embroider-a-vectorcraft-design.html#choose-each-objects-stitches";
+
+/// What [`PROFILE`] does, for its help.
+const PROFILE_HELP: &str = "The machine and hoop the design is planned for, as `stitch export --profile` names them: the design must \
+                            fit its hoop, and its stitches its longest and shortest stitch. `stitch profiles` lists them.";
+
+/// The page of the built-in machine profiles.
+const PROFILE_PAGE: &str = "user/reference/profiles.html";
 
 /// The parameters VectorCraft passes an exporter: its dialog's, by the names of [`AUTO`] and [`PROFILE`],
 /// and the file's.
@@ -281,6 +315,16 @@ mod tests {
         assert_eq!(file(&auto), (base64(&bytes), said));
         assert_eq!(file(&auto).1, ["info SC-I0901: 1 shape is digitized automatically: it sews as a satin column."]);
         assert_ne!(file(&auto).0, file(&plain).0);
+    }
+
+    #[test]
+    fn the_options_help_says_what_they_do_with_the_widths_auto_goes_by() {
+        let options = options();
+        let help = |key: &str| options.iter().find(|(k, _)| *k == key).and_then(|(_, param)| param.ui.help.clone()).unwrap_or_default();
+        let auto = help(AUTO);
+        assert!(auto.contains("a line up to 1 mm wide runs, a line up to 7 mm wide is a satin column"), "{auto}");
+        assert!(help(PROFILE).contains("stitch export --profile"));
+        assert_eq!(options.iter().map(|(key, _)| *key).collect::<Vec<_>>(), [AUTO, PROFILE]);
     }
 
     #[test]
