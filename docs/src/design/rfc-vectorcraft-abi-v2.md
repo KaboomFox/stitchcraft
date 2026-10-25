@@ -3,11 +3,12 @@
 | | |
 |---|---|
 | **Audience** | ArtCraft / VectorCraft maintainers |
-| **Status** | Mostly adopted ([status](#status)): 5 proposals in VectorCraft 0.14.0 to 0.16.0, 2 more on its `main`, and P3 open with the rest of P4 and P6 |
+| **Status** | Mostly adopted ([status](#status)): 5 proposals in VectorCraft 0.14.0 to 0.16.0 and 2 more on its `main`. P3 is in review, and the rest of P4 and P6 is open |
 | **Compatibility** | Additive. Every plug-in written for ABI v1 keeps working, and `vc_abi_version` still returns 1 |
 | **Author's interest** | StitchCraft (machine embroidery), but every proposal serves other plug-ins too |
 
-This page began as the RFC for a plug-in ABI v2. VectorCraft took most of its proposals into ABI v1 instead.
+This page began as the RFC for a plug-in ABI v2. VectorCraft took most of its proposals into ABI v1 instead,
+from pull requests by StitchCraft's author.
 Each came as keys that hosts from before it ignore, or as a kind of plug-in that they refuse to install, and a
 plug-in that uses none of them installs anywhere. VectorCraft's
 [plug-in documentation](https://github.com/storytold/vectorcraft/blob/main/docs/plugins.md) is the contract.
@@ -19,16 +20,16 @@ features in M6.8 to M6.12, and proposes the open ones in M9.
 
 Checked against VectorCraft's `docs/plugins.md` and its history, on `main` at `8bf090b` (2026-10-24):
 
-| Proposal | In VectorCraft | Since |
-|---|---|---|
-| [P1](#p1-exporter-plug-ins), exporter plug-ins | Adopted | 0.14.0 |
-| [P2](#p2-rich-parameter-schemas), rich parameter schemas | Adopted | 0.14.0 |
-| [P3](#p3-display-only-overlays-for-live-effects), overlays for live effects | Open | |
-| [P4](#p4-budget-classes-for-filters), budget classes | Heavy filters adopted, heavy live effects open | `main`, after 0.16.0 |
-| [P5](#p5-document-level-plug-in-data), document-level plug-in data | Adopted for filters and exporters | 0.16.0 |
-| [P6](#p6-the-paints-of-a-live-effects-object), context for live effects | Fills and strokes adopted, neighbours open | 0.14.0, a stroke's style 0.15.0 |
-| [P7](#p7-preserve-foreign-svg-attributes), foreign SVG attributes | Adopted | `main`, after 0.16.0 |
-| [P8](#p8-effects-and-stroke-style-in-filter-objects), effects and stroke style in filters | Adopted | 0.15.0 |
+| Proposal | In VectorCraft | Since | Pull request |
+|---|---|---|---|
+| [P1](#p1-exporter-plug-ins), exporter plug-ins | Adopted | 0.14.0 | [#3171](https://github.com/storytold/vectorcraft/pull/3171) |
+| [P2](#p2-rich-parameter-schemas), rich parameter schemas | Adopted | 0.14.0 | [#3172](https://github.com/storytold/vectorcraft/pull/3172) |
+| [P3](#p3-display-only-overlays-for-live-effects), overlays for live effects | In review | | [#3807](https://github.com/storytold/vectorcraft/pull/3807) |
+| [P4](#p4-budget-classes-for-filters), budget classes | Heavy filters adopted, heavy live effects open | `main`, after 0.16.0 | [#3721](https://github.com/storytold/vectorcraft/pull/3721) |
+| [P5](#p5-document-level-plug-in-data), document-level plug-in data | Adopted for filters and exporters | 0.16.0 | [#3720](https://github.com/storytold/vectorcraft/pull/3720) |
+| [P6](#p6-the-paints-of-a-live-effects-object), context for live effects | Fills and strokes adopted, neighbours open | 0.14.0, a stroke's style 0.15.0 | [#3173](https://github.com/storytold/vectorcraft/pull/3173) |
+| [P7](#p7-preserve-foreign-svg-attributes), foreign SVG attributes | Adopted | `main`, after 0.16.0 | [#3758](https://github.com/storytold/vectorcraft/pull/3758) |
+| [P8](#p8-effects-and-stroke-style-in-filter-objects), effects and stroke style in filters | Adopted | 0.15.0 | [#3174](https://github.com/storytold/vectorcraft/pull/3174) |
 
 The plug-in classes this RFC was for, and what VectorCraft serves of them now:
 
@@ -36,7 +37,7 @@ The plug-in classes this RFC was for, and what VectorCraft serves of them now:
 |---|---|
 | Output generators for embroidery (PES/DST), plotters (HPGL), laser cutters (G-code) and cutting machines | Exporters write their own formats (P1) |
 | Generators with many settings (halftones, hatching, embroidery, pattern fills) | Up to 256 parameters, labelled, in groups, with help and conditions (P2) |
-| Previews of things that are not the object's geometry (stitches, toolpaths, cut order) | Still only by replacing geometry, at JSON's cost for every point (P3, open) |
+| Previews of things that are not the object's geometry (stitches, toolpaths, cut order) | Still only by replacing geometry, at JSON's cost for every point (P3, in review) |
 | Heavy but legitimate computation (routing, packing, simulation) | Heavy filters (P4), and an export's own budget. A live effect still has a light run's budget |
 | Plug-ins with document-wide settings (machine profile, plotter pens) | Data kept with the document (P5) |
 | Tools that set up objects for a live effect (a satin column from a line, a test sheet) | Filters read and return effect records and a stroke's style (P8) |
@@ -111,7 +112,8 @@ instead of it. The overlay is a compact binary list of polylines, each with an R
 points. The host draws overlays on the canvas above the object, never exports or hit-tests them, and caches
 them with the effect result. This makes previews cheap, 8 bytes for each point instead of the 40 or so JSON
 takes, and keeps the object's real geometry untouched. An embroidery preview could then show every stitch
-of a large fill, where it shows a fill's rows or its outline today.
+of a large fill, where it shows a fill's rows or its outline today. [#3807](https://github.com/storytold/vectorcraft/pull/3807) adds overlays, and is in
+review.
 
 ### P4: Budget classes for live effects
 
