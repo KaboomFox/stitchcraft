@@ -71,7 +71,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0810`](#sc-i0810) | Info | VectorCraft live effect leaves the object as it is |
 | [`SC-I0811`](#sc-i0811) | Info | VectorCraft object left out, as its name asks |
 | [`SC-W0812`](#sc-w0812) | Warning | VectorCraft design setting ignored |
-| [`SC-E0813`](#sc-e0813) | Error | VectorCraft too old to keep the design settings |
+| [`SC-E0813`](#sc-e0813) | Error | VectorCraft too old for the filter |
+| [`SC-E0814`](#sc-e0814) | Error | VectorCraft line not made into a satin column |
 | [`SC-I0901`](#sc-i0901) | Info | Shapes digitized automatically |
 | [`SC-I0902`](#sc-i0902) | Info | Line a satin column cannot follow; filled |
 | [`SC-W0903`](#sc-w0903) | Warning | Line too wide to fill; left out |
@@ -770,12 +771,12 @@ The `.vectorcraft` file could not be read: it is not a VectorCraft document (its
 read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
 is damaged, or it unpacks to more JSON than StitchCraft reads. Nothing was stitched.
 
-A StitchCraft live effect gives this message when what VectorCraft passes it does not read as
-VectorCraft's plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The effect
-leaves the object as it is.
+A StitchCraft live effect or filter gives this message when what VectorCraft passes it does not read
+as VectorCraft's plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The
+effect leaves the object as it is, and the filter changes nothing.
 
 The message says what is wrong and, for JSON errors, where. Open the file in VectorCraft and save it
-again. For a live effect, install the StitchCraft plug-ins made for that version of VectorCraft.
+again. For a plug-in, install the StitchCraft plug-ins made for that version of VectorCraft.
 
 ## SC-W0807
 
@@ -869,14 +870,33 @@ StitchCraft Design Settings in VectorCraft, which keeps every setting anew.
 
 ## SC-E0813
 
-**Error** — VectorCraft too old to keep the design settings
+**Error** — VectorCraft too old for the filter
 
-StitchCraft Design Settings keeps a document's design settings and machine as data VectorCraft
-keeps with a document for a filter plug-in, which VectorCraft does from 0.16. The VectorCraft that
-ran the filter is older and would drop them, so the filter declined to run.
+A StitchCraft filter needs what the VectorCraft that ran it doesn't give a filter, so it declined to
+run, and nothing changed. StitchCraft Design Settings keeps a document's design settings and machine
+as data VectorCraft keeps with a document for a filter, from 0.16. Stroke to Satin and Test Sheet
+give the objects they make StitchCraft's effects, as effect records VectorCraft keeps from 0.15.
+Test Sheet tells such a VectorCraft by what it gives every filter from 0.16, since a 0.15 with
+nothing selected looks as 0.14 does.
 
-Update VectorCraft to 0.16 or later. Until then, the export's Machine option and `stitch export
---profile` name the machine, and the design settings keep their defaults.
+The message names the version the filter needs. Update VectorCraft to it or later. Until then, the
+export's Machine option and `stitch export --profile` name the machine, the design settings keep
+their defaults, a satin column is drawn with its 2 rails and joined with Make Compound Path, and
+`stitch testsheet` makes the test sheets.
+
+## SC-E0814
+
+**Error** — VectorCraft line not made into a satin column
+
+StitchCraft's Stroke to Satin filter makes each selected line into a satin column drawn with rails
+and rungs, which sews as the line does with the satin effect. It changed nothing, because nothing was
+selected, or one of the lines can't be made so: its path has no stroke to take the column's width
+from, or can't be used, its rails can't be made or would leave parts of it out, as `SC-E0214` and
+`SC-W0213` say of a satin column drawn as one path, or the column would be read back with other rails
+or rungs, as one whose rails cross each other is.
+
+The message names the object. Select the lines, give the path a stroke as wide as the column, draw
+that column with its 2 rails, or leave the object out of the selection.
 
 ## SC-I0901
 

@@ -97,6 +97,21 @@ planned for `brother-pe800-5x7` with the default settings, and a longer shortest
 machine file and in `stitch export --preview`. A setting that StitchCraft can't read keeps its default,
 and `stitch export` says so (`SC-W0812`).
 
+## Draw a test sheet
+
+The [test sheets](../reference/test-sheets.md) drawn as designs, TS-02B to TS-09, can start from
+VectorCraft 0.16 and later. With the [plug-ins installed](../install.md#the-vectorcraft-plug-ins), choose
+**Object › Plug-ins › StitchCraft Test Sheet**, pick the sheet, and press OK. Rest the pointer on
+**Sheet** for what each one tests. The sheet is drawn in the middle of the artboard, each shape with its
+StitchCraft effect and settings, and shows its stitches. Write it as any design, with **File › Export ›
+Export As**. Selected objects stay as they are, and the sheet goes above them, in their group or layer.
+
+The sheet sews as `stitch testsheet` writes it, moved. A fill's rows lie where the document's origin puts
+them, so they may fall a little elsewhere across a shape, and look the same. The threads keep their
+colours but not their names in the Brother palette, and the machine file is the same. StitchCraft Stroke,
+Satin and Fill must be installed: VectorCraft gives a new object only the effects of installed plug-ins.
+TS-01, TS-02 and TS-10A to TS-10C are drawn stitch by stitch, and come from `stitch testsheet` alone.
+
 ## Read what it says
 
 Each line under the summary names an object by its id in the document, such as `vc:10`, and says what

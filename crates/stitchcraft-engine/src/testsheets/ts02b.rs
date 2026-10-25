@@ -9,7 +9,7 @@
 //! (`stop_after`). Sewn, it answers: do the locks hold the dashes, where the machine cuts the thread and
 //! where the thread of a jump, which it does not cut (MC-1), is snipped?
 
-use stitchcraft_plan::{StitchPlan, Thread};
+use stitchcraft_plan::Thread;
 
 use super::designed::Drawing;
 use super::sketch::SheetError;
@@ -17,7 +17,7 @@ use super::ts02::{HALVES, JUMPS, ROWS};
 use super::{BLUE, EMERALD_GREEN, RED, thread};
 
 /// Draws TS-02B.
-pub(super) fn build() -> Result<StitchPlan, SheetError> {
+pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let mut d = Drawing::new("ts02b");
     // As in TS-02, no trim before the thread change: it would ride on the right half's first jump.
     rows(&mut d, "left", HALVES[0], &thread(RED)?, true)?;
@@ -25,7 +25,7 @@ pub(super) fn build() -> Result<StitchPlan, SheetError> {
     let green = thread(EMERALD_GREEN)?;
     d.polyline("stop-line-1", &[(-15.0, 35.0), (0.0, 35.0)], &green, &[("stop_after", "true")])?;
     d.polyline("stop-line-2", &[(0.5, 35.0), (15.0, 35.0)], &green, &[("trim_after", "true")])?;
-    d.plan()
+    Ok(d)
 }
 
 /// The four rows of the half named `half`, starting at `x`. With `trims`, every dash but the last asks

@@ -311,7 +311,7 @@ pub(crate) struct EffectObject {
 /// A stroke of the object a live effect is given (VectorCraft 0.14): its paint, `null` for none, and its
 /// width in points; from 0.15 its join (`miter`, `round` or `bevel`), its cap (`butt`, `round` or
 /// `square`) and its miter limit. VectorCraft gives every stroke, without its opacity or whether it shows.
-#[derive(Deserialize)]
+#[derive(Default, Deserialize)]
 pub(crate) struct EffectStroke {
     #[serde(default)]
     pub paint: Option<Paint>,
@@ -427,7 +427,7 @@ fn model<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Model, D::Error> 
     })
 }
 
-fn yes() -> bool {
+pub(crate) fn yes() -> bool {
     true
 }
 

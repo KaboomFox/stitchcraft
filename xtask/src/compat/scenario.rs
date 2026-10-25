@@ -36,6 +36,13 @@
 //! - `kept`: a document keeps the design settings and machine the Design Settings filter was run with, as
 //!   the VectorCraft adapter reads them (`REQ-VC-013`).
 //! - `differ`: 2 machine files are not the same, such as one exported before the filter ran and one after.
+//! - `sheets`: a document sews as the test sheet the Test Sheet filter drew into it: the sheet's design,
+//!   moved by the whole millimetres that bring it nearest to where the document has it, as the filter
+//!   moves it to its artboard (`REQ-VC-015`).
+//!
+//! **Why a heavy module is allowed.** VectorCraft 0.17 installs a filter that asks for a heavy budget only
+//! once the user allows it, with `allowHeavy: true`, which a run passes for each heavy module it installs
+//! (Stroke to Satin's, `super::heavy`).
 //!
 //! A file is sewn as `stitch plan` sews it without `--profile`, for the machine it keeps or else the
 //! reference machine, into a PES file ([`stitchcraft_cli::commands::plan::sew`]). Comparing two is comparing
@@ -56,13 +63,15 @@ use std::time::Duration;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use stitchcraft_cli::commands::plan::{Source, machine_for, sew};
-use stitchcraft_core::{Budget, Code, Diagnostic, Severity};
+use stitchcraft_core::{Budget, Code, Diagnostic, Rect, Severity};
 use stitchcraft_engine::design::{Reading, Setting};
 use stitchcraft_params::Family;
 use stitchcraft_plan::FormatId;
+use stitchcraft_plan::profiles::REFERENCE;
+use stitchcraft_vc_plugin::testsheet;
 use stitchcraft_vectorcraft::{EXTENSIONS, effect_id, effect_name, param_text, plugin_id};
 
-use super::kind;
+use super::{heavy, kind};
 use crate::util;
 
 /// Where the scenarios are.
@@ -153,6 +162,19 @@ pub struct Expect {
     /// Pairs of machine files that are not the same.
     #[serde(default)]
     pub differ: Vec<[String; 2]>,
+    /// Documents, each with the test sheet the Test Sheet filter drew into it.
+    #[serde(default)]
+    pub sheets: Vec<Sheet>,
+}
+
+/// A document and the test sheet the Test Sheet filter drew into it.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Sheet {
+    /// The document.
+    pub file: String,
+    /// The sheet's id, as the filter's dialog names it.
+    pub sheet: String,
 }
 
 /// A document and what the Design Settings filter keeps with it: the machine as `profile`, and the design
@@ -342,6 +364,7 @@ pub fn problems(scenario: &Scenario, modules: &[&str], requirements: &std::colle
     let expect = &scenario.expect;
     let checked = expect.applied.iter().chain(expect.same.iter().flatten()).chain(expect.elements.iter().map(|e| &e.file));
     let checked = checked.chain(expect.kept.iter().map(|kept| &kept.file)).chain(expect.differ.iter().flatten());
+    let checked = checked.chain(expect.sheets.iter().map(|sheet| &sheet.file));
     for file in checked.chain(expect.exported.iter().flatten()) {
         if !exported.contains(&file.as_str()) {
             found.push(format!("it checks `{file}`, which no run exports"));
@@ -363,6 +386,11 @@ pub fn problems(scenario: &Scenario, modules: &[&str], requirements: &std::colle
     for module in &scenario.expect.listed {
         if !modules.contains(&module.as_str()) {
             found.push(format!("it expects a module `{module}` listed, and there is none"));
+        }
+    }
+    for sheet in &scenario.expect.sheets {
+        if !testsheet::sheets().any(|drawn| drawn.id == sheet.sheet) {
+            found.push(format!("it checks `{}` for the test sheet {}, which the Test Sheet filter doesn't draw", sheet.file, sheet.sheet));
         }
     }
     for id in &scenario.requirements {
@@ -387,7 +415,11 @@ fn arguments(run: &Run, plugins: &Path, out: &Path) -> Result<Vec<String>, Strin
         args.extend(["--scale".to_string(), scale.to_string()]);
     }
     for module in &run.plugins {
-        args.extend(command("plugin.install", json!({ "path": path(plugins, &format!("{module}.wasm")) })));
+        let mut install = json!({ "path": path(plugins, &format!("{module}.wasm")) });
+        if heavy(module) {
+            install["allowHeavy"] = json!(true);
+        }
+        args.extend(command("plugin.install", install));
     }
     for step in &run.steps {
         match step.action()? {
@@ -610,7 +642,31 @@ fn check(expect: &Expect, out: &Path, ran: &Ran) -> Vec<String> {
             (Err(e), _) | (_, Err(e)) => failures.push(e),
         }
     }
+    for expected in &expect.sheets {
+        if let Err(e) = read(&expected.file).and_then(|bytes| holds_sheet(&bytes, &expected.sheet)) {
+            failures.push(format!("{}: {e}", expected.file));
+        }
+    }
     failures
+}
+
+/// Whether the document `bytes` sews as the test sheet `id` the Test Sheet filter drew into it, or how it
+/// doesn't: as the sheet's design moved by the whole millimetres that bring the middle of its bounds
+/// nearest to the middle of the document's design, as the filter moves it to its artboard
+/// (`testsheet::placed`). Both are sewn into PES files, as `stitch plan` sews them.
+fn holds_sheet(bytes: &[u8], id: &str) -> Result<(), String> {
+    let sheet = testsheet::sheets().find(|sheet| sheet.id == id).ok_or(format!("the Test Sheet filter doesn't draw {id}"))?;
+    let read = stitchcraft_vectorcraft::read(bytes, &Budget::DEFAULT).map_err(|unread| unread.to_string())?;
+    let moved = testsheet::placed(sheet, read.design.bounds().map(Rect::center)).map_err(|bug| bug.to_string())?;
+    let outcome = stitchcraft_engine::plan(&moved, REFERENCE, &Budget::DEFAULT);
+    let plan = outcome.plan.ok_or_else(|| format!("{id}'s design doesn't sew: {:?}", outcome.diagnostics))?;
+    let drawn = stitchcraft_formats::encode(&plan, FormatId::PesV1, NAME).map_err(|e| e.to_string())?.bytes;
+    let sewn = sewn(bytes)?;
+    if sewn == drawn {
+        Ok(())
+    } else {
+        Err(format!("it sews otherwise than {id}'s design moved: {} bytes of PES, where the design's are {}", sewn.len(), drawn.len()))
+    }
 }
 
 /// Whether the document `bytes` keeps `settings`, the machine as `profile` and the design settings by their

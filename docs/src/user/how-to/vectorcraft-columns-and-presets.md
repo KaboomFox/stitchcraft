@@ -29,6 +29,31 @@ where the stitches should run. Select it with the column, and choose **Object �
 From VectorCraft 0.10.0 the column, behind the line, keeps its effect. Before 0.10.0 the compound path takes
 the line's appearance: apply StitchCraft Satin to it again.
 
+## Make a line into a satin column
+
+From VectorCraft 0.17, **Object › Plug-ins › StitchCraft Stroke to Satin** makes each selected line into
+a satin column drawn with its 2 rails and rungs, as Ink/Stitch's Stroke to Satin does. The line is the
+column's centre line, and its stroke gives the column's width: the topmost stroke that paints, as
+StitchCraft Satin follows. The rails and rungs are those StitchCraft makes of a satin column drawn as one
+path when it sews it. So the column sews as the line did with the satin effect, and its rails and rungs
+can then be edited.
+
+1. Give each line a stroke as wide as the column.
+2. Select the lines, and choose **Object › Plug-ins › StitchCraft Stroke to Satin**.
+
+Each line becomes a compound path of its rails and rungs, without a fill, its stroke the line's colour,
+one pixel wide. It has StitchCraft Satin with the line's satin settings, or the defaults, in the place of
+the line's StitchCraft effects, and keeps the line's other effects. A path of several lines makes a
+column of each. A satin column already drawn with rails is left as it is. When a line can't be made into a
+column, nothing changes, and VectorCraft says why (`SC-E0814`), for a path without a stroke, or a line
+whose column would sew less than the line: one too short or tight for its width, or one that crosses
+itself.
+
+Making the rails of a curved line takes more work than a filter usually may do. So Stroke to Satin asks
+for more when it is installed, and VectorCraft asks you first, then runs it in the background with
+**Cancel**. StitchCraft Satin must be installed too. VectorCraft 0.15 and 0.16 run it with the time any
+filter gets, and stop it on most curved lines. Before 0.15 it asks for a newer VectorCraft (`SC-E0813`).
+
 ## Keep settings as a preset
 
 A graphic style keeps an appearance, StitchCraft's effects included:
@@ -61,8 +86,8 @@ Paste in Front**, and give the shape behind a fill effect and the copy in front 
 Those objects are the shapes the preview draws, and they sew differently from the effect. Expand a copy
 for a picture of the stitches, and keep the original to sew.
 
-## Not in VectorCraft yet
+## Draw a test sheet
 
-- Making a line into a satin column, as Ink/Stitch's Convert Line to Satin does, needs more work than
-  VectorCraft lets a plug-in do. Draw the 2 rails instead.
-- Test sheets come from the command line: [`stitch testsheet`](../reference/test-sheets.md).
+[Embroider a VectorCraft design](embroider-a-vectorcraft-design.md#draw-a-test-sheet) shows how to draw a
+test sheet into a document from VectorCraft 0.16, and [`stitch testsheet`](../reference/test-sheets.md)
+writes every sheet.

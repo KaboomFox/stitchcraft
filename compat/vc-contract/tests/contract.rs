@@ -9,7 +9,7 @@ use vectorcraft_doc::{Appearance, Document, Effect, Node, NodeId};
 use vectorcraft_geom::{BezPath, FillRule, PathData, Point, Rect, shapes};
 use vectorcraft_plugins::effect::Paints;
 use vectorcraft_plugins::objects::{self, Output};
-use vectorcraft_plugins::{ABI_VERSION, Error, Kind, Limits, Plugin, effect, export, registry};
+use vectorcraft_plugins::{ABI_VERSION, Budget, Error, HEAVY_FUEL, HEAVY_WALL_TIME_MS, Kind, Limits, ParamSpec, Plugin, effect, export, registry};
 
 /// The stitch families, each a module of its own whose live effect sews an object as the family.
 const FAMILIES: [&str; 3] = ["stroke", "satin", "fill"];
@@ -198,7 +198,10 @@ fn each_family_sews_an_object_that_has_fills_and_strokes() {
         for item in [Some(0), Some(1)] {
             let on_a_paint = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints { appearance: Some(&art), item });
             let error = effect::last_error(plugin.id()).unwrap_or_default();
-            assert!(on_a_paint.is_none() && error.contains("info SC-I0810: This effect is on one of the object's fills or strokes"), "{family} on {item:?}: {error}");
+            assert!(
+                on_a_paint.is_none() && error.contains("info SC-I0810: This effect is on one of the object's fills or strokes"),
+                "{family} on {item:?}: {error}"
+            );
         }
     }
 }
@@ -281,7 +284,8 @@ fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
     // Centre lines: straight, with one bend, and curves flattened to many points.
     let straight = |length: f64| (format!("line {length} pt"), lines(&[&[(0.0, 0.0), (length, 0.0)]]));
     let bent = ("bent line 102 pt".to_string(), lines(&[&[(0.0, 0.0), (60.0, 0.0), (90.0, 30.0)]]));
-    let quarter: Vec<(f64, f64)> = (0..=16).map(|k| f64::from(k) / 16.0 * std::f64::consts::FRAC_PI_2).map(|a| (100.0 * a.cos(), 100.0 * a.sin())).collect();
+    let quarter: Vec<(f64, f64)> =
+        (0..=16).map(|k| f64::from(k) / 16.0 * std::f64::consts::FRAC_PI_2).map(|a| (100.0 * a.cos(), 100.0 * a.sin())).collect();
     let quarter = ("quarter circle of 17 points".to_string(), lines(&[&quarter]));
     let sine: Vec<(f64, f64)> = (0..32).map(|k| (f64::from(k) * 10.0, 30.0 * (f64::from(k) * 0.4).sin())).collect();
     let sine = ("sine curve of 32 points".to_string(), lines(&[&sine]));
@@ -302,7 +306,13 @@ fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
             shapes: [60.0, 960.0, 15360.0].map(|length| (format!("rails {length} pt"), rails(length))).to_vec(),
             finishing: usize::MAX,
         },
-        Runs { family: "satin", set: level("outline"), given: json!({}), shapes: vec![("rails 15360 pt".into(), rails(15360.0))], finishing: usize::MAX },
+        Runs {
+            family: "satin",
+            set: level("outline"),
+            given: json!({}),
+            shapes: vec![("rails 15360 pt".into(), rails(15360.0))],
+            finishing: usize::MAX,
+        },
         Runs { family: "satin", set: level("auto"), given: stroked.clone(), shapes: centre_lines.clone(), finishing: usize::MAX },
         Runs { family: "satin", set: level("outline"), given: stroked.clone(), shapes: centre_lines.clone(), finishing: usize::MAX },
         Runs { family: "satin", set: level("exact"), given: stroked, shapes: centre_lines, finishing: 3 },
@@ -316,7 +326,8 @@ fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
     for Runs { family, set, given, shapes, finishing } in runs {
         let plugin = Plugin::load(&module(family), Limits::default()).unwrap();
         let params = default_params(&plugin, &set);
-        let level = set.as_object().map(|set| set.iter().map(|(key, value)| format!("{key} {value}")).collect::<Vec<_>>().join(", ")).unwrap_or_default();
+        let level =
+            set.as_object().map(|set| set.iter().map(|(key, value)| format!("{key} {value}")).collect::<Vec<_>>().join(", ")).unwrap_or_default();
         let mut costs = Vec::new();
         for (k, (name, path)) in shapes.iter().enumerate() {
             let input = effect_input(path, given.clone());
@@ -325,7 +336,10 @@ fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
             let what = match plugin.run(&input, &params) {
                 Ok(output) => {
                     let error = serde_json::from_slice::<Value>(&output).ok().and_then(|v| v["error"].as_str().map(str::to_string));
-                    let shown = error.map_or_else(|| format!("{} anchors", anchors(&output)), |error| format!("error {}…", error.chars().take(60).collect::<String>()));
+                    let shown = error.map_or_else(
+                        || format!("{} anchors", anchors(&output)),
+                        |error| format!("error {}…", error.chars().take(60).collect::<String>()),
+                    );
                     format!("{shown}, {} of {allowed}", fuel(&plugin, &input, &params))
                 }
                 Err(e) if k < finishing => {
@@ -370,8 +384,10 @@ fn each_exporter_installs_as_an_exporter_of_its_format() {
 /// exporter is given (VectorCraft's `docs/plugins.md`, Exporters).
 fn document(objects: &[Value]) -> Vec<u8> {
     let layer = json!({"id": 1, "kind": {"type": "layer", "color": {"Preset": 0}, "children": objects}});
-    serde_json::to_vec(&json!({"format": "vectorcraft", "version": 4, "document": {"version": 1, "artboards": [], "next_id": 1000, "layers": [layer]}}))
-        .unwrap()
+    serde_json::to_vec(
+        &json!({"format": "vectorcraft", "version": 4, "document": {"version": 1, "artboards": [], "next_id": 1000, "layers": [layer]}}),
+    )
+    .unwrap()
 }
 
 /// The object `id`: a rectangle `width` × `height` mm from (`x`, `y`) mm, with a red fill and StitchCraft's
@@ -442,9 +458,15 @@ fn export_params(plugin: &Plugin, set: &Value, target: export::Target) -> Vec<u8
 /// The instructions `plugin` takes to export `input` with `params` in VectorCraft's host, to within a
 /// hundredth: the least budget it finishes within, found by halving.
 fn export_fuel(plugin: &Plugin, input: &[u8], params: &[u8]) -> u64 {
-    let within = |fuel_base| plugin.run_limited(input, params, &Limits { fuel_base, fuel_per_byte: 0, ..export::limits(plugin) }).is_ok();
+    least_fuel(plugin, input, params, &export::limits(plugin))
+}
+
+/// The instructions `plugin` takes to run on `input` with `params` in VectorCraft's host, with the other
+/// `limits`, to within a hundredth: the least budget it finishes within, found by halving.
+fn least_fuel(plugin: &Plugin, input: &[u8], params: &[u8], limits: &Limits) -> u64 {
+    let within = |fuel_base| plugin.run_limited(input, params, &Limits { fuel_base, fuel_per_byte: 0, ..limits.clone() }).is_ok();
     let (mut lo, mut hi) = (0_u64, 1 << 36);
-    assert!(within(hi), "the export fails: {:?}", plugin.run_limited(input, params, &export::limits(plugin)).err());
+    assert!(within(hi), "the run fails: {:?}", plugin.run_limited(input, params, limits).err());
     while (hi - lo) * 100 > hi {
         let mid = lo + (hi - lo) / 2;
         if within(mid) { hi = mid } else { lo = mid }
@@ -459,7 +481,8 @@ fn export_fuel(plugin: &Plugin, input: &[u8], params: &[u8]) -> u64 {
 fn req_vc_011_a_fill_of_the_whole_hoop_exports_within_vectorcraft_s_limits() {
     let field = document(&[filled(2, (0.0, 0.0), (128.0, 178.0), &json!({}))]);
     // 63 squares 14 mm wide, in 9 rows of 7, 4 mm apart across and 5.5 mm apart down.
-    let squares: Vec<Value> = (0..63_u32).map(|i| filled(10 + i, (f64::from(i % 7) * 18.0, f64::from(i / 7) * 19.5), (14.0, 14.0), &json!({}))).collect();
+    let squares: Vec<Value> =
+        (0..63_u32).map(|i| filled(10 + i, (f64::from(i % 7) * 18.0, f64::from(i / 7) * 19.5), (14.0, 14.0), &json!({}))).collect();
     let plugin = Plugin::load(&module("pes"), Limits::default()).unwrap();
     let target = export::Target { extension: "pes", name: "field" };
     let mut costs = Vec::new();
@@ -510,4 +533,154 @@ fn req_vc_013_the_settings_filter_keeps_the_machine_each_exporter_plans_for() {
         let named = export::run(&exporter, &saved, &json!({"profile": "brother-pe800-5x7"}), target).unwrap_or_else(|e| panic!("{format}: {e}"));
         assert!(base64_decoded(&named.data_base64).starts_with(start), "{format}");
     }
+}
+
+/// Millimetres in points.
+fn pt(mm: f64) -> f64 {
+    mm * 72.0 / 25.4
+}
+
+/// The document `doc` as VectorCraft saves it: what an exporter is given.
+fn saved(doc: &Document) -> Vec<u8> {
+    serde_json::to_vec(&json!({"format": "vectorcraft", "version": 4, "document": doc})).unwrap()
+}
+
+/// The document of a layer holding `objects`, as VectorCraft reads it.
+fn read_document(objects: &[Value]) -> Document {
+    let file: Value = serde_json::from_slice(&document(objects)).unwrap();
+    serde_json::from_value(file["document"].clone()).unwrap()
+}
+
+/// Admits the effect records a filter gives object `node` as `plugin.run` admits them (`admit_effects` in
+/// VectorCraft's engine, which this crate doesn't link): a record it had stays as it was, and a new one of an
+/// installed live effect has its parameters resolved by the effect's manifest.
+fn admit(effects: &[Effect], node: &Node) -> Result<Vec<Effect>, String> {
+    let admitted = |e: &Effect| {
+        if node.appearance.effects.contains(e) {
+            return Ok(e.clone());
+        }
+        let plugin = effect::installed(&e.id).ok_or_else(|| format!("`{}`: no such effect", e.id))?;
+        let params = if e.params.is_null() { json!({}) } else { e.params.clone() };
+        let resolved = plugin.manifest().resolve_params(&params).map_err(|why| format!("`{}`: {why}", e.id))?;
+        Ok(Effect { id: e.id.clone(), params: Value::Object(resolved), visible: e.visible })
+    };
+    effects.iter().map(admitted).collect()
+}
+
+/// Runs the filter `plugin` on the objects `ids` of `doc`, with its dialog's `set`, as `plugin.run` runs it
+/// for a document whose first artboard is a Letter page and which keeps nothing for it, and applies what it
+/// gives back to `doc`, new objects into the layer `layer`: the instructions the run took, and how many
+/// VectorCraft allows it.
+fn filtered(plugin: &Plugin, doc: &mut Document, ids: &[NodeId], set: &Value, layer: NodeId) -> Result<(u64, u64), String> {
+    let inputs = objects::filter_targets(doc, ids);
+    let input = objects::encode_input(doc, &inputs);
+    let mut params = plugin.manifest().resolve_params(set).map_err(|e| e.to_string())?;
+    params.insert("_context".into(), json!({"mode": "filter", "bounds": null, "artboard": [0, 0, 612, 792], "documentData": null}));
+    let params = serde_json::to_vec(&Value::Object(params)).unwrap();
+    let out = plugin.run(&input, &params).map_err(|e| e.to_string())?;
+    let Output { objects: changed, .. } = objects::decode_output(&out).map_err(|e| e.to_string())?;
+    objects::apply_output(doc, &inputs, changed, Some(layer), &admit).map_err(|e| e.to_string())?;
+    let heavy = plugin.manifest().budget == Budget::Heavy;
+    let limits = if heavy { Limits { wall_time_ms: HEAVY_WALL_TIME_MS, ..Limits::default() } } else { Limits::default() };
+    let base = if heavy { HEAVY_FUEL } else { Limits::default().fuel_base };
+    Ok((least_fuel(plugin, &input, &params, &limits), base + Limits::default().fuel_per_byte * input.len() as u64))
+}
+
+/// The lines M6.4 measured making into satin columns, in millimetres (`docs/src/design/vectorcraft-integration.md`):
+/// a zigzag of 10 corners, S curves 30 and 60 mm long, and circles 10, 30 and 50 mm across.
+fn lines_to_convert() -> Vec<(&'static str, PathData)> {
+    let at = |x: f64, y: f64| Point::new(pt(x), pt(y));
+    let mut zigzag = BezPath::new();
+    zigzag.move_to(at(0.0, 0.0));
+    for k in 1..12_u32 {
+        zigzag.line_to(at(f64::from(k) * 5.0, if k % 2 == 0 { 0.0 } else { 4.0 }));
+    }
+    let s = |k: f64| {
+        let mut s = BezPath::new();
+        s.move_to(at(0.0, 0.0));
+        s.curve_to(at(5.0 * k, -8.0 * k), at(10.0 * k, -8.0 * k), at(15.0 * k, 0.0));
+        s.curve_to(at(20.0 * k, 8.0 * k), at(25.0 * k, 8.0 * k), at(30.0 * k, 0.0));
+        PathData::from_bezpath(&s)
+    };
+    let circle = |across: f64| shapes::ellipse(Rect::new(0.0, 0.0, pt(across), pt(across)));
+    vec![
+        ("a zigzag of 10 corners", PathData::from_bezpath(&zigzag)),
+        ("an S curve 30 mm long", s(1.0)),
+        ("a circle 10 mm across", circle(10.0)),
+        ("a circle 30 mm across", circle(30.0)),
+        ("an S curve 60 mm long", s(2.0)),
+        ("a circle 50 mm across", circle(50.0)),
+    ]
+}
+
+/// The object `id`: `path` with a navy stroke 3 mm wide and StitchCraft's satin effect.
+fn satin_line(id: u32, path: &PathData) -> Value {
+    let navy = json!({"type": "solid", "color": {"model": "rgb", "r": 0.0, "g": 0.2, "b": 0.6}});
+    let stroke = json!({"kind": "stroke", "paint": navy, "width": pt(3.0)});
+    json!({"id": id, "appearance": {"items": [stroke], "effects": [{"id": "plugin.dev.stitchcraft.satin", "params": {}}]}, "kind": {"type": "path", "path": path}})
+}
+
+/// StitchCraft Stroke to Satin, from VectorCraft 0.17, is a heavy filter, which VectorCraft's host gives
+/// 1 G instructions, run as `plugin.run` runs it. Each line M6.4 measured becomes a compound path of rails
+/// and rungs with the satin effect, which StitchCraft's PES exporter writes as the line's file: the column
+/// sews as the line did (`REQ-VC-014`). It prints what each takes of what VectorCraft allows, from which the
+/// plug-in prices its work (`apps/stitchcraft-vc-plugin/src/stroke_to_satin.rs`).
+#[test]
+fn req_vc_014_stroke_to_satin_makes_columns_that_export_as_the_lines_did() {
+    let plugin = registry::install_bytes(&module("stroke-to-satin")).unwrap_or_else(|e| panic!("VectorCraft refuses stroke-to-satin: {e}"));
+    assert_eq!(plugin.id(), "dev.stitchcraft.stroke-to-satin");
+    assert!(plugin.manifest().kind == Kind::Filter && plugin.manifest().budget == Budget::Heavy, "a heavy filter");
+    assert_eq!(HEAVY_FUEL, 1_000_000_000, "VectorCraft's heavy budget changed: review the plug-in's HEAVY_FUEL");
+    // VectorCraft admits the satin effect's records only while StitchCraft Satin is installed.
+    registry::install_bytes(&module("satin")).unwrap();
+    let pes = registry::install_bytes(&module("pes")).unwrap();
+    let target = export::Target { extension: "pes", name: "Column" };
+    let mut costs = Vec::new();
+    for (k, (name, path)) in lines_to_convert().into_iter().enumerate() {
+        let id = 2 + k as u32;
+        let mut doc = read_document(&[satin_line(id, &path)]);
+        let line = export::run(&pes, &saved(&doc), &json!({}), target).unwrap_or_else(|e| panic!("{name}: {e}"));
+        let (used, allowed) = filtered(&plugin, &mut doc, &[NodeId(u64::from(id))], &json!({}), NodeId(1)).unwrap_or_else(|e| panic!("{name}: {e}"));
+        let column = doc.node(NodeId(u64::from(id))).unwrap();
+        let effects: Vec<&str> = column.appearance.effects.iter().map(|e| e.id.as_str()).collect();
+        assert_eq!(effects, ["plugin.dev.stitchcraft.satin"], "{name}");
+        let made = export::run(&pes, &saved(&doc), &json!({}), target).unwrap_or_else(|e| panic!("{name}: {e}"));
+        assert!(made.data_base64 == line.data_base64, "{name}: the column exports otherwise than the line");
+        costs.push(format!("{name}: {used} of {allowed}"));
+    }
+    println!("::notice title=stroke to satin::{}", costs.join("; "));
+}
+
+/// StitchCraft Test Sheet draws each sheet its dialog offers into a new document as `plugin.run` runs it,
+/// within a light filter's budget, each object with its StitchCraft effect, and StitchCraft's PES exporter
+/// writes the document within an export's budget (`REQ-VC-015`). It prints what each takes of what
+/// VectorCraft allows.
+#[test]
+fn req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits() {
+    let plugin = registry::install_bytes(&module("testsheet")).unwrap_or_else(|e| panic!("VectorCraft refuses testsheet: {e}"));
+    assert_eq!(plugin.id(), "dev.stitchcraft.testsheet");
+    assert!(plugin.manifest().kind == Kind::Filter && plugin.manifest().budget == Budget::Light, "a light filter");
+    let sheets = match plugin.manifest().params.iter().find(|(key, _)| key == "sheet").map(|(_, param)| &param.spec) {
+        Some(ParamSpec::Choice { options, .. }) => options.clone(),
+        other => panic!("no choice of sheets: {other:?}"),
+    };
+    assert_eq!(sheets, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09"]);
+    // VectorCraft admits StitchCraft's effect records only while their plug-ins are installed.
+    for family in FAMILIES {
+        registry::install_bytes(&module(family)).unwrap();
+    }
+    let pes = Plugin::load(&module("pes"), Limits::default()).unwrap();
+    let mut costs = Vec::new();
+    for sheet in &sheets {
+        let mut doc = read_document(&[]);
+        let (used, allowed) = filtered(&plugin, &mut doc, &[], &json!({ "sheet": sheet }), NodeId(1)).unwrap_or_else(|e| panic!("{sheet}: {e}"));
+        let input = saved(&doc);
+        let target = export::Target { extension: "pes", name: sheet };
+        let out = export::run(&pes, &input, &json!({}), target).unwrap_or_else(|e| panic!("{sheet}: {e}"));
+        assert!(base64_decoded(&out.data_base64).starts_with(b"#PES0001"), "{sheet}");
+        let exported = export_fuel(&pes, &input, &export_params(&pes, &json!({}), target));
+        let export_allowed = export::FUEL + export::limits(&pes).fuel_per_byte * input.len() as u64;
+        costs.push(format!("{sheet}: drawn in {used} of {allowed} instructions, exported in {exported} of {export_allowed}"));
+    }
+    println!("::notice title=test sheets::{}", costs.join("; "));
 }

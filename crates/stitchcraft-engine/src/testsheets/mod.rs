@@ -30,10 +30,14 @@ mod ts08;
 mod ts09;
 mod ts10;
 
+use designed::Drawing;
 pub use sketch::{STITCH_LEN, SheetError};
+use stitchcraft_core::Code;
 use stitchcraft_plan::palette::BROTHER_PEC;
 use stitchcraft_plan::profiles::{BROTHER_PE800_4X4, BROTHER_PE800_SMALL, REFERENCE};
 use stitchcraft_plan::{MachineProfile, StitchPlan, Thread};
+
+use crate::design::Design;
 
 /// Brother PEC indices of the threads the sheets use.
 const RED: u8 = 5;
@@ -58,13 +62,39 @@ pub struct TestSheet {
     pub checks: &'static [&'static str],
     /// The profile of the hoop to sew it in.
     pub profile: &'static MachineProfile,
-    build: fn() -> Result<StitchPlan, SheetError>,
+    drawn: Drawn,
+}
+
+/// How a sheet is drawn.
+#[derive(Clone, Copy, Debug)]
+enum Drawn {
+    /// Stitch by stitch, as a plan (`sketch`).
+    Sketched(fn() -> Result<StitchPlan, SheetError>),
+    /// As a design the engine plans (`designed`), which says exactly the diagnostics of these codes.
+    Designed(fn() -> Result<Drawing, SheetError>, &'static [Code]),
 }
 
 impl TestSheet {
     /// The sheet's stitch plan, centred on the machine origin.
     pub fn plan(&self) -> Result<StitchPlan, SheetError> {
-        (self.build)()
+        match self.drawn {
+            Drawn::Sketched(build) => build(),
+            Drawn::Designed(drawing, said) => drawing()?.plan_saying(said),
+        }
+    }
+
+    /// Whether the sheet is drawn as a design, which [`TestSheet::design`] gives, rather than stitch by stitch.
+    pub const fn designed(&self) -> bool {
+        matches!(self.drawn, Drawn::Designed(..))
+    }
+
+    /// The sheet as the design the engine plans, with the design settings' defaults, as a host draws it into
+    /// a document (`REQ-VC-015`); `None` for a sheet drawn stitch by stitch, which is no design.
+    pub fn design(&self) -> Option<Result<Design, SheetError>> {
+        match self.drawn {
+            Drawn::Sketched(_) => None,
+            Drawn::Designed(drawing, _) => Some(drawing().and_then(Drawing::design)),
+        }
     }
 }
 
@@ -80,7 +110,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Ticks are 10 mm apart; the long ticks mark the ends and the centre.",
         ],
         profile: REFERENCE,
-        build: ts01::build,
+        drawn: Drawn::Sketched(ts01::build),
     },
     TestSheet {
         id: "TS-02",
@@ -92,7 +122,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Any loose loops, knots or bird's nests on the back, and where.",
         ],
         profile: REFERENCE,
-        build: ts02::build,
+        drawn: Drawn::Sketched(ts02::build),
     },
     TestSheet {
         id: "TS-02B",
@@ -105,7 +135,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Any loose loops, knots or bird's nests on the back, and where.",
         ],
         profile: REFERENCE,
-        build: ts02b::build,
+        drawn: Drawn::Designed(ts02b::drawing, &[]),
     },
     TestSheet {
         id: "TS-03",
@@ -117,7 +147,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Short stitches placed by hand (bottom five; 0.3, 0.4, 0.5, 0.7 and 1.0 mm, each with a small back-and-forth lock at both ends): which lines sew cleanly, with no thread breaks, knots or bunching on the back? The shortest clean one is the machine's shortest stitch; if the 0.3 mm line is clean, it is 0.3 mm or less: the sheet has no shorter line.",
         ],
         profile: REFERENCE,
-        build: ts03::build,
+        drawn: Drawn::Designed(ts03::drawing, &[]),
     },
     TestSheet {
         id: "TS-04",
@@ -130,7 +160,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Any thread breaks or knots at the locks, and where.",
         ],
         profile: REFERENCE,
-        build: ts04::build,
+        drawn: Drawn::Designed(ts04::drawing, &[]),
     },
     TestSheet {
         id: "TS-05",
@@ -143,7 +173,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Any puckering round the columns, thread breaks, or loops on the back, and where.",
         ],
         profile: REFERENCE,
-        build: ts05::build,
+        drawn: Drawn::Designed(ts05::drawing, &[]),
     },
     TestSheet {
         id: "TS-06",
@@ -156,7 +186,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Measure each column across, halfway down, and note any puckering round it.",
         ],
         profile: REFERENCE,
-        build: ts06::build,
+        drawn: Drawn::Designed(ts06::drawing, &[]),
     },
     TestSheet {
         id: "TS-07",
@@ -168,7 +198,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Any puckering round the circles, and where.",
         ],
         profile: REFERENCE,
-        build: ts07::build,
+        drawn: Drawn::Designed(ts07::drawing, &[]),
     },
     TestSheet {
         id: "TS-08",
@@ -181,7 +211,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Measure the 0° and the 90° square at 0.4 mm across, both ways. How much less than 30 mm are they?",
         ],
         profile: REFERENCE,
-        build: ts08::build,
+        drawn: Drawn::Designed(ts08::drawing, &[]),
     },
     TestSheet {
         id: "TS-09",
@@ -195,7 +225,7 @@ pub static SHEETS: &[TestSheet] = &[
             "How the 3 copies differ in stiffness, and any puckering.",
         ],
         profile: REFERENCE,
-        build: ts09::build,
+        drawn: Drawn::Designed(ts09::drawing, &[Code::FillPartsApart; 3]),
     },
     TestSheet {
         id: "TS-10A",
@@ -205,7 +235,7 @@ pub static SHEETS: &[TestSheet] = &[
             "The frame measures 100.0 × 100.0 mm (± 0.5 mm), the F at the top left.",
         ],
         profile: &BROTHER_PE800_4X4,
-        build: || ts10::build("ts10a", &BROTHER_PE800_4X4),
+        drawn: Drawn::Sketched(|| ts10::build("ts10a", &BROTHER_PE800_4X4)),
     },
     TestSheet {
         id: "TS-10B",
@@ -215,7 +245,7 @@ pub static SHEETS: &[TestSheet] = &[
             "The frame measures 130.0 × 180.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.",
         ],
         profile: REFERENCE,
-        build: || ts10::build("ts10b", REFERENCE),
+        drawn: Drawn::Sketched(|| ts10::build("ts10b", REFERENCE)),
     },
     TestSheet {
         id: "TS-10C",
@@ -226,7 +256,7 @@ pub static SHEETS: &[TestSheet] = &[
             "The frame measures 20.0 × 60.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.",
         ],
         profile: &BROTHER_PE800_SMALL,
-        build: || ts10::build("ts10c", &BROTHER_PE800_SMALL),
+        drawn: Drawn::Sketched(|| ts10::build("ts10c", &BROTHER_PE800_SMALL)),
     },
 ];
 
@@ -241,6 +271,23 @@ mod tests {
     use stitchcraft_plan::{Role, StitchKind};
 
     use super::*;
+
+    #[test]
+    fn req_vc_015_a_sheet_drawn_as_a_design_has_the_design_it_plans() {
+        let mut designed = Vec::new();
+        for sheet in SHEETS {
+            let Some(design) = sheet.design() else {
+                assert!(!sheet.designed(), "{}", sheet.id);
+                continue;
+            };
+            let planned = crate::plan(&design.unwrap(), sheet.profile, &stitchcraft_core::Budget::DEFAULT).plan;
+            assert_eq!(planned, Some(sheet.plan().unwrap()), "{}", sheet.id);
+            assert!(sheet.designed(), "{}", sheet.id);
+            designed.push(sheet.id);
+        }
+        // The sheets drawn stitch by stitch have no design.
+        assert_eq!(designed, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09"]);
+    }
 
     #[test]
     fn every_sheet_is_a_valid_plan_for_its_profile_and_fits_its_hoop() {

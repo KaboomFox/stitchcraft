@@ -35,6 +35,9 @@ Since M13.1 a shape without settings, read with `--auto`, is digitized automatic
 (`auto`). A line no wider than the design's narrowest satin stroke runs, a line up to 7 mm wide becomes
 satin columns along its centre line, and a wider line becomes the tatami fill of the area it paints
 (`auto::area`). Digitizing doesn't add an error of its own.
+Since M6.12 a column drawn as one path can be drawn with its rails and rungs instead, for a host's Stroke
+to Satin tool (`generators::satin::drawn`). They sew as the column does. A design can be moved
+(`Design::moved`), as a host draws a test sheet (`testsheets`, `TestSheet::design`).
 Design:
 `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 

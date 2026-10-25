@@ -1,0 +1,92 @@
+# Level B: each test sheet drawn as a design, drawn into a new document of its own by StitchCraft's Test
+# Sheet filter, each object with its StitchCraft effect (docs/src/design/compatibility-gate.md). The document
+# sews as the sheet's design moved by whole millimetres to the middle of the artboard, and StitchCraft's PES
+# exporter writes it within an export's budget, as `stitch export` writes it.
+description = "Each test sheet drawn as a design, drawn into a document by the Test Sheet filter, sews as its design moved, and exports as `stitch export` writes it."
+requirements = ["REQ-VC-015"]
+
+[[run]]
+plugins = ["stroke", "satin", "fill", "testsheet", "pes"]
+steps = [
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.testsheet", params = { sheet = "TS-02B" } } },
+  { export = "ts-02b.vectorcraft" },
+  { export = "ts-02b.pes" },
+]
+
+[[run]]
+plugins = ["stroke", "satin", "fill", "testsheet", "pes"]
+steps = [
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.testsheet", params = { sheet = "TS-03" } } },
+  { export = "ts-03.vectorcraft" },
+  { export = "ts-03.pes" },
+]
+
+[[run]]
+plugins = ["stroke", "satin", "fill", "testsheet", "pes"]
+steps = [
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.testsheet", params = { sheet = "TS-04" } } },
+  { export = "ts-04.vectorcraft" },
+  { export = "ts-04.pes" },
+]
+
+[[run]]
+plugins = ["stroke", "satin", "fill", "testsheet", "pes"]
+steps = [
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.testsheet", params = { sheet = "TS-05" } } },
+  { export = "ts-05.vectorcraft" },
+  { export = "ts-05.pes" },
+]
+
+[[run]]
+plugins = ["stroke", "satin", "fill", "testsheet", "pes"]
+steps = [
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.testsheet", params = { sheet = "TS-06" } } },
+  { export = "ts-06.vectorcraft" },
+  { export = "ts-06.pes" },
+]
+
+[[run]]
+plugins = ["stroke", "satin", "fill", "testsheet", "pes"]
+steps = [
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.testsheet", params = { sheet = "TS-07" } } },
+  { export = "ts-07.vectorcraft" },
+  { export = "ts-07.pes" },
+]
+
+[[run]]
+plugins = ["stroke", "satin", "fill", "testsheet", "pes"]
+steps = [
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.testsheet", params = { sheet = "TS-08" } } },
+  { export = "ts-08.vectorcraft" },
+  { export = "ts-08.pes" },
+]
+
+[[run]]
+plugins = ["stroke", "satin", "fill", "testsheet", "pes"]
+steps = [
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.testsheet", params = { sheet = "TS-09" } } },
+  { export = "ts-09.vectorcraft" },
+  { export = "ts-09.pes" },
+]
+
+[expect]
+exported = [
+  ["ts-02b.vectorcraft", "ts-02b.pes"],
+  ["ts-03.vectorcraft", "ts-03.pes"],
+  ["ts-04.vectorcraft", "ts-04.pes"],
+  ["ts-05.vectorcraft", "ts-05.pes"],
+  ["ts-06.vectorcraft", "ts-06.pes"],
+  ["ts-07.vectorcraft", "ts-07.pes"],
+  ["ts-08.vectorcraft", "ts-08.pes"],
+  ["ts-09.vectorcraft", "ts-09.pes"],
+]
+sheets = [
+  { file = "ts-02b.vectorcraft", sheet = "TS-02B" },
+  { file = "ts-03.vectorcraft", sheet = "TS-03" },
+  { file = "ts-04.vectorcraft", sheet = "TS-04" },
+  { file = "ts-05.vectorcraft", sheet = "TS-05" },
+  { file = "ts-06.vectorcraft", sheet = "TS-06" },
+  { file = "ts-07.vectorcraft", sheet = "TS-07" },
+  { file = "ts-08.vectorcraft", sheet = "TS-08" },
+  { file = "ts-09.vectorcraft", sheet = "TS-09" },
+]

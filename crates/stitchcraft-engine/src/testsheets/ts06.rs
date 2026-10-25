@@ -11,8 +11,6 @@
 //! centre walk's first: its underlay starts in the middle of the column's end, along which a jump from beside
 //! it would run. Sewn up or from the right, a column's zigzag is its mirror image.
 
-use stitchcraft_plan::StitchPlan;
-
 use super::designed::{AS_DRAWN, Drawing, rails};
 use super::sketch::SheetError;
 use super::{RED, thread};
@@ -36,7 +34,7 @@ const TALL: f64 = 30.0;
 const GAP: f64 = 8.0;
 
 /// Draws TS-06.
-pub(super) fn build() -> Result<StitchPlan, SheetError> {
+pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let red = thread(RED)?;
     let mut d = Drawing::new("ts06");
     // Each column's left edge, with its name and underlays, left to right.
@@ -54,5 +52,5 @@ pub(super) fn build() -> Result<StitchPlan, SheetError> {
         d.satin(name, rails((x, x + WIDTH), (0.0, TALL), down, from_left), &red, &[underlays, &AS_DRAWN[..]].concat())?;
         (down, before) = (!down, Some(place));
     }
-    d.plan()
+    Ok(d)
 }

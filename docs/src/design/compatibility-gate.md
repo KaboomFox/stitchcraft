@@ -44,13 +44,18 @@ checks:
    the machine their dialog names, and decline with the first error when there is one (`REQ-VC-011`).
    The Design Settings filter, run as `plugin.run` runs a filter, keeps its dialog's values with the
    document and returns its objects as they were. The exporters plan that document for the machine it
-   keeps, unless their dialog names another (`REQ-VC-013`).
+   keeps, unless their dialog names another (`REQ-VC-013`). Stroke to Satin installs as a heavy filter,
+   and makes each of M6.4's lines into a column that the PES exporter writes as it wrote the line
+   (`REQ-VC-014`). Test Sheet draws each sheet into a new document, which the PES exporter writes within
+   an export's budget (`REQ-VC-015`). The effect records they give are admitted as `plugin.run` admits
+   them, by the manifests of the installed live effects.
 5. Error paths: invalid parameters are rejected by the host with the expected message.
 6. Budget: the *hello* plug-in's cost for each byte of JSON it reads and writes stays within a quarter
    above the costs [recorded for previews](vectorcraft-integration.md#live-effect-previews-within-v1-budgets).
    Every preview level finishes on shapes of growing size, within VectorCraft's limits (`REQ-VC-003`), and
    an export of a fill of the reference hoop's whole field finishes within an export's (`REQ-VC-011`).
-   Each run prints the costs.
+   Stroke to Satin finishes within a heavy filter's, and Test Sheet within a light one's. Each run prints
+   the costs.
 
 `vectorcraft-plugins` depends only on `geom`, `color`, `doc` and `wasmi`, so this builds quickly.
 
@@ -74,18 +79,21 @@ scenario draws each object it gives an effect before it gives another the same f
 `cargo xtask compat` refuses an `apply` step no drawing shows. Exporting a PES or a DST file draws
 nothing: an exporter is given the document's JSON. An export that must fail names the code of the error it
 says, with `fails`. VectorCraft stops a run at a step that fails, so that export ends its run, and no check
-names its file. The checks are StitchCraft's, since VectorCraft's pictures change from version to version
-and what sews must not:
+names its file. A run installs a module whose manifest sets a heavy budget, Stroke to Satin's, with
+`allowHeavy`, as the user allows it. The checks are StitchCraft's, since VectorCraft's pictures change from version to
+version and what sews must not:
 
 | Scenario | Steps | Checks |
 |---|---|---|
-| `install-and-list` | install the 6 modules, then `plugin.list` | each family's live effect, each format's exporter and the Design Settings filter is listed (`REQ-VC-002`, `REQ-VC-011`, `REQ-VC-013`) |
+| `install-and-list` | install the 8 modules, then `plugin.list` | each family's live effect, each format's exporter and each filter is listed (`REQ-VC-002`, `REQ-VC-011`, `REQ-VC-013`, `REQ-VC-014`, `REQ-VC-015`) |
 | `apply` | a square filled red and a line, given the fill and stroke effects with parameters, then saved | as sent, with a fill in red and a stroke (`REQ-VC-004`, `REQ-PRM-003`) |
 | `compound-satin` | 2 rails and a rung, Make Compound Path, then the satin effect | as sent, and one satin column (`REQ-VC-007`) |
 | `graphic-style` | a group of 2 squares, and a gold square with a fill effect, drawn, whose new graphic style is then applied to the group | as sent, and 3 fills in gold at the effect's 90° (`REQ-VC-006`) |
 | `missing-plugin` | a fill saved and drawn, then opened and saved again without the plug-ins | both sew alike, as sent: the records are kept (`REQ-PRM-003`) |
 | `export` | a square filled red and a line far below it, given the fill and stroke effects, saved, then exported to PES and DST by StitchCraft's exporters | each file is the one `stitch export` writes of the saved document, and the export's warnings are what it says, the DST's cut on the long jump among them (`REQ-VC-011`) |
 | `settings` | a 1 in square given the fill effect and exported to PES, then the Design Settings filter run with the 4 × 4 in hoop and a shortest stitch of 1.5 mm, and the square saved and exported to PES and DST; then the filter run with the small hoop, and the square saved and exported to PES | each document keeps what the filter was run with, each file is the one `stitch export` writes, the PES file differs from the one before the filter, and the small hoop's export fails with `SC-E0701` (`REQ-VC-013`) |
+| `stroke-to-satin` | an S curve, a V and a circle with strokes 3 mm wide and the satin effect, saved and drawn, then made into columns by Stroke to Satin, saved, drawn and exported to PES | the columns sew as the lines did, 3 satin columns in the strokes' colour, and the file is the one `stitch export` writes (`REQ-VC-014`) |
+| `testsheets` | each sheet drawn as a design, drawn by Test Sheet into a new document, then saved and exported to PES | each document sews as the sheet's design moved by whole millimetres to the middle of its artboard, and each file is the one `stitch export` writes (`REQ-VC-015`) |
 
 *As sent*: the saved file sews as it does with the StitchCraft records of the objects the effects were
 applied to put back as the steps sent them. So VectorCraft stored what the dialog set, on the objects it

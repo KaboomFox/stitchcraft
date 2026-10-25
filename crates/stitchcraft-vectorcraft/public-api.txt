@@ -1,6 +1,47 @@
 # The public API of stitchcraft-vectorcraft, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
 # Generated: do not edit. A change here is a change other code can see; say why in the pull request.
 pub mod stitchcraft_vectorcraft
+pub mod stitchcraft_vectorcraft::filter
+pub struct stitchcraft_vectorcraft::filter::Given
+pub stitchcraft_vectorcraft::filter::Given::artboard_centre: core::option::Option<stitchcraft_core::units::Point>
+pub stitchcraft_vectorcraft::filter::Given::document_data: bool
+pub stitchcraft_vectorcraft::filter::Given::objects: alloc::vec::Vec<stitchcraft_vectorcraft::filter::Object>
+pub struct stitchcraft_vectorcraft::filter::Object
+pub stitchcraft_vectorcraft::filter::Object::id: u64
+pub stitchcraft_vectorcraft::filter::Object::name: core::option::Option<alloc::string::String>
+impl stitchcraft_vectorcraft::filter::Object
+pub fn stitchcraft_vectorcraft::filter::Object::effects(&self) -> core::option::Option<alloc::vec::Vec<stitchcraft_vectorcraft::filter::Record>>
+pub fn stitchcraft_vectorcraft::filter::Object::path(&self, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::result::Result<stitchcraft_engine::design::Path, &'static str>, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_vectorcraft::filter::Object::quoted_name(&self) -> core::option::Option<alloc::string::String>
+pub fn stitchcraft_vectorcraft::filter::Object::stroke(&self) -> core::option::Option<stitchcraft_vectorcraft::filter::Stroke>
+pub struct stitchcraft_vectorcraft::filter::Out
+impl stitchcraft_vectorcraft::filter::Out
+pub fn stitchcraft_vectorcraft::filter::Out::given(&stitchcraft_vectorcraft::filter::Object) -> stitchcraft_vectorcraft::filter::Out
+pub fn stitchcraft_vectorcraft::filter::Out::with_effects(self, alloc::vec::Vec<stitchcraft_vectorcraft::filter::Record>) -> stitchcraft_vectorcraft::filter::Out
+pub fn stitchcraft_vectorcraft::filter::Out::with_fill_rule(self, stitchcraft_engine::design::FillRule) -> stitchcraft_vectorcraft::filter::Out
+pub fn stitchcraft_vectorcraft::filter::Out::with_fills(self, alloc::vec::Vec<alloc::boxed::Box<serde_json::raw::RawValue>>) -> stitchcraft_vectorcraft::filter::Out
+pub fn stitchcraft_vectorcraft::filter::Out::with_name(self, alloc::string::String) -> stitchcraft_vectorcraft::filter::Out
+pub fn stitchcraft_vectorcraft::filter::Out::with_opacity_of(self, &stitchcraft_vectorcraft::filter::Object) -> stitchcraft_vectorcraft::filter::Out
+pub fn stitchcraft_vectorcraft::filter::Out::with_path(self, &stitchcraft_engine::design::Path, bool) -> core::result::Result<stitchcraft_vectorcraft::filter::Out, serde_json::error::Error>
+pub fn stitchcraft_vectorcraft::filter::Out::with_strokes(self, alloc::vec::Vec<alloc::boxed::Box<serde_json::raw::RawValue>>) -> stitchcraft_vectorcraft::filter::Out
+pub struct stitchcraft_vectorcraft::filter::Record
+pub stitchcraft_vectorcraft::filter::Record::id: alloc::string::String
+pub stitchcraft_vectorcraft::filter::Record::visible: bool
+impl stitchcraft_vectorcraft::filter::Record
+pub fn stitchcraft_vectorcraft::filter::Record::family(&self) -> core::option::Option<stitchcraft_params::stitch_type::Family>
+pub fn stitchcraft_vectorcraft::filter::Record::is_stitchcraft(&self) -> bool
+pub fn stitchcraft_vectorcraft::filter::Record::ours(&str, &serde_json::map::Map<alloc::string::String, serde_json::value::Value>) -> core::result::Result<stitchcraft_vectorcraft::filter::Record, serde_json::error::Error>
+pub struct stitchcraft_vectorcraft::filter::Stroke
+pub stitchcraft_vectorcraft::filter::Stroke::cap: stitchcraft_engine::design::Cap
+pub stitchcraft_vectorcraft::filter::Stroke::join: stitchcraft_engine::design::Join
+pub stitchcraft_vectorcraft::filter::Stroke::width: stitchcraft_core::units::Mm
+impl stitchcraft_vectorcraft::filter::Stroke
+pub fn stitchcraft_vectorcraft::filter::Stroke::as_wide_as(&self, stitchcraft_core::units::Mm) -> core::result::Result<alloc::boxed::Box<serde_json::raw::RawValue>, serde_json::error::Error>
+pub fn stitchcraft_vectorcraft::filter::output(&[stitchcraft_vectorcraft::filter::Out]) -> core::result::Result<alloc::vec::Vec<u8>, serde_json::error::Error>
+pub fn stitchcraft_vectorcraft::filter::path_data(&stitchcraft_engine::design::Path) -> core::result::Result<alloc::boxed::Box<serde_json::raw::RawValue>, serde_json::error::Error>
+pub fn stitchcraft_vectorcraft::filter::read(&[u8], &[u8]) -> core::result::Result<stitchcraft_vectorcraft::filter::Given, stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_vectorcraft::filter::solid(stitchcraft_plan::thread::Rgb) -> core::result::Result<alloc::boxed::Box<serde_json::raw::RawValue>, serde_json::error::Error>
+pub fn stitchcraft_vectorcraft::filter::stroke(&serde_json::raw::RawValue, stitchcraft_core::units::Mm, stitchcraft_engine::design::Join, stitchcraft_engine::design::Cap) -> core::result::Result<alloc::boxed::Box<serde_json::raw::RawValue>, serde_json::error::Error>
 pub mod stitchcraft_vectorcraft::settings
 pub const stitchcraft_vectorcraft::settings::PROFILE: &str
 pub const stitchcraft_vectorcraft::settings::SETTINGS_FILTER: &str
