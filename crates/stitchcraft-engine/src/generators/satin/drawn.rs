@@ -130,3 +130,27 @@ pub fn from_line(line: &Subpath, width: Mm, join: Join, meter: &mut Meter) -> Re
 fn alike(a: &[Point], b: &[Point]) -> bool {
     a.len() == b.len() && a.iter().zip(b).all(|(a, b)| a.distance(*b) < SAME_POINT)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn p(x: f64, y: f64) -> Point {
+        Point::new(x, y).unwrap()
+    }
+
+    /// A column read back gives the rails it was made with, and pairs the same points, only when every point
+    /// is where it was made, to within a millionth of a millimetre (the integration tests make columns that
+    /// are read back so, and ones that are read back otherwise).
+    #[test]
+    fn points_are_alike_when_as_many_and_each_within_a_millionth_of_a_millimetre() {
+        let made = [p(0.0, 0.0), p(5.0, 0.0)];
+        assert!(alike(&made, &[p(0.0, 0.0), p(5.0, SAME_POINT / 2.0)]));
+        // Exactly a millionth apart is another point.
+        assert!(!alike(&made, &[p(0.0, 0.0), p(5.0, SAME_POINT)]));
+        assert!(!alike(&made, &[p(0.0, 0.0), p(5.0, 1.0)]));
+        // A point more, or one fewer, is another line, whatever the points they share.
+        assert!(!alike(&made, &[p(0.0, 0.0), p(5.0, 0.0), p(9.0, 0.0)]));
+        assert!(!alike(&made, &[p(0.0, 0.0)]));
+    }
+}

@@ -439,7 +439,7 @@ mod tests {
         let quad = Path { subpaths: vec![Subpath { start: p(1.0, 1.0), segments: vec![Segment::Quad(p(2.0, 3.0), p(4.0, 1.0))], closed: false }] };
         let fill = Element { shape: Shape::Fill { path: quad, rule: FillRule::EvenOdd }, ..element("q", Path::default()) };
         let settings = DesignSettings { origin: Some(p(5.0, 5.0)), stop_position: Some(p(-1.0, 0.0)), ..DesignSettings::default() };
-        let design = Design::new(vec![element("c", curve), fill], settings).unwrap();
+        let design = Design::new(vec![element("c", curve), fill, element("l", line(p(-2.0, 1.0), p(3.0, 1.0)))], settings).unwrap();
         let moved = design.moved([3.0, -2.0]).unwrap();
         let points = |design: &Design| design.elements().iter().flat_map(|e| e.shape.path().points()).collect::<Vec<_>>();
         assert!(points(&moved).iter().zip(points(&design)).all(|(a, b)| (a.x(), a.y()) == (b.x() + 3.0, b.y() - 2.0)));

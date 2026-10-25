@@ -34,8 +34,15 @@ fn drawn(out: &Value) -> Vec<u8> {
 #[test]
 fn req_vc_015_each_sheet_drawn_sews_as_its_design_moved_to_the_artboard() {
     let mut drawn_sheets = Vec::new();
+    let mut kinds = Vec::new();
     for sheet in sheets() {
-        let document = drawn(&ran(sheet.id, &json!([]), &letter()));
+        let out = ran(sheet.id, &json!([]), &letter());
+        // Each element a path, or a compound path when it has more than one subpath.
+        for object in out["objects"].as_array().unwrap() {
+            let subpaths = object["path"]["subpaths"].as_array().unwrap().len();
+            kinds.push((subpaths > 1, object["type"].as_str().unwrap().to_string()));
+        }
+        let document = drawn(&out);
         // As `stitch export` sews the document, and as the engine sews the sheet's design, moved by whole
         // millimetres to the middle of the Letter page: 107.95 mm across and 139.7 mm down.
         let moved = placed(sheet, Point::new(107.95, 139.7).ok()).unwrap();
@@ -50,6 +57,9 @@ fn req_vc_015_each_sheet_drawn_sews_as_its_design_moved_to_the_artboard() {
         drawn_sheets.push(sheet.id);
     }
     assert_eq!(drawn_sheets, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09"]);
+    // The sheets draw both.
+    assert!(kinds.iter().all(|(several, kind)| kind == if *several { "compound" } else { "path" }), "{kinds:?}");
+    assert!(kinds.iter().any(|(several, _)| *several) && kinds.iter().any(|(several, _)| !several), "{kinds:?}");
 }
 
 #[test]
@@ -100,6 +110,13 @@ fn req_vc_015_a_record_holds_each_setting_as_its_dialog_row_takes_it() {
         "its setting `running_stitch_length_mm = long` is no value of its row in its stroke effect's record"
     );
     assert!(refused(&[("running_stitch_length_mm", "1000")]).contains("is no value of its row in"));
+    // A value its row takes that doesn't read back as the setting, as from a row of another kind than the
+    // setting's: the record would sew otherwise.
+    let numbered = [("bean_stitch_repeats", Schema::Number { min: 0.0, max: 10.0, default: 0.0 })];
+    assert_eq!(
+        record_params(Family::Stroke, &set(&[("bean_stitch_repeats", "2.5")]), &numbered),
+        Err("its setting `bean_stitch_repeats = 2.5` doesn't read back from its stroke effect's record".to_string())
+    );
 }
 
 #[test]

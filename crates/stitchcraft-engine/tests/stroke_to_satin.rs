@@ -110,6 +110,13 @@ fn req_vc_014_a_line_that_would_not_sew_alike_is_refused() {
     // Too short, and too tight for its width: no rails.
     assert_eq!(converted(&polylines(&[&[(0.0, 0.0), (0.2, 0.0)]]), 3.0), Err(Unmade::NoRails));
     assert_eq!(converted(&polylines(&[&[(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0)]]), 2.0), Err(Unmade::NoRails));
+    // A point, and a line of no length, are no centre line at all.
+    let point = Path { subpaths: vec![Subpath { start: p(4.0, 4.0), segments: Vec::new(), closed: false }] };
+    assert_eq!(converted(&point, 3.0), Err(Unmade::NoRails));
+    assert_eq!(converted(&polylines(&[&[(4.0, 4.0), (4.0, 4.0)]]), 3.0), Err(Unmade::NoRails));
+    // No width: the rails lie on the line and the rungs have no length, so the column would be read back as
+    // 2 rails whose nodes pair up.
+    assert_eq!(converted(&polylines(&[&[(0.0, 0.0), (10.0, 0.0)]]), 0.0), Err(Unmade::ReadOtherwise));
     // A U that a line crosses: the part in the U is left out.
     let bent = polylines(&[&[(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0), (13.2, -16.6)]]);
     assert_eq!(converted(&bent, 2.0), Err(Unmade::PartsLeftOut(1)));
