@@ -29,7 +29,8 @@ To update StitchCraft, run `git pull` in the `stitchcraft` folder and the `cargo
 ## The VectorCraft plug-ins
 
 The plug-ins say how each object of a [VectorCraft](https://github.com/storytold/vectorcraft) drawing
-sews, and show its stitches. There are 3, one for each kind of stitch, built from the same source. In the
+sews, and show its stitches. There are 3, one for each kind of stitch, and 2 more that write PES and DST
+files from VectorCraft's File › Export, from VectorCraft 0.14. All are built from the same source. In the
 `stitchcraft` folder:
 
 ```sh
@@ -38,13 +39,15 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 ```
 
 The build writes `target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm`. Copy it into a
-folder for plug-ins as `stitchcraft-fill.wasm`. Build again with `--features stroke` and with
-`--features satin`, and copy the file each time, as `stitchcraft-stroke.wasm` and
-`stitchcraft-satin.wasm`.
+folder for plug-ins as `stitchcraft-fill.wasm`. Build again with `--features stroke`, `--features satin`,
+`--features pes` and `--features dst`, and copy the file each time, as `stitchcraft-stroke.wasm`,
+`stitchcraft-satin.wasm`, `stitchcraft-pes.wasm` and `stitchcraft-dst.wasm`. VectorCraft 0.13 and earlier
+refuse the last 2.
 
-In VectorCraft's desktop app, choose that folder in **Edit › Preferences › Performance & Storage ›
-Additional Plug-ins Folder**. VectorCraft installs the plug-ins in it whenever it starts, and their
-effects are under **Effect › Plug-ins**. In VectorCraft on the web, open each file with **File › Open**
+In VectorCraft's desktop app, choose that folder in **Edit › Preferences › Plug-ins & Scratch Disks ›
+Additional Plug-ins Folder**, which is under **Performance & Storage** up to VectorCraft 0.14. VectorCraft
+installs the plug-ins in it whenever it starts. Their effects are under **Effect › Plug-ins**, and their
+formats in **File › Export › Export As**. In VectorCraft on the web, open each file with **File › Open**
 instead, once each time VectorCraft is opened. [Embroider a VectorCraft
 design](how-to/embroider-a-vectorcraft-design.md) shows how to use them.
 

@@ -18,7 +18,7 @@ use sha2::{Digest, Sha256};
 use stitchcraft_core::{Code, Diagnostic, Fix, Severity};
 use stitchcraft_formats::Decoded;
 use stitchcraft_plan::palette::Palette;
-use stitchcraft_plan::{FormatId, StitchKind, StitchPlan};
+use stitchcraft_plan::{FormatId, StitchPlan};
 
 use crate::files::{self, Unwritten};
 
@@ -146,29 +146,6 @@ fn resolved(path: &Path) -> Option<PathBuf> {
     })
 }
 
-/// The plan the machine file `bytes` holds, read as `stitch inspect` reads it, with the threads of `plan`,
-/// the plan it was written from: what the file sews, in the design's colours, which summaries count and
-/// pictures draw (`REQ-CLI-008`). DST stores no colours and PES only a palette's, so each block of the file
-/// takes the thread of the plan's entry it starts at, the plan's threads counted again after each stop. A
-/// file that joins 2 of the plan's blocks into one, as PES joins blocks a palette shows alike, keeps the
-/// first one's thread. A file StitchCraft wrote that it cannot read is a bug in it (`SC-E0009`).
-pub fn read_back(bytes: &[u8], plan: &StitchPlan) -> Result<StitchPlan, Diagnostic> {
-    let mut back = stitchcraft_formats::decode(bytes)
-        .map_err(|e| {
-            Diagnostic::new(Code::InternalCheckFailed, format!("The machine file StitchCraft wrote does not read: {}", e.diagnostic().message))
-        })?
-        .plan;
-    let threads: Vec<_> = plan.color_entries().into_iter().map(|entry| entry.thread.clone()).collect();
-    let mut entry = 0;
-    for block in &mut back.blocks {
-        if let Some(thread) = threads.get(entry) {
-            block.thread = thread.clone();
-        }
-        entry += 1 + block.stitches.iter().filter(|s| s.kind == StitchKind::Stop).count();
-    }
-    Ok(back)
-}
-
 /// Writes each of `files`, a path and its bytes, all or none ([`files::write_all`]). When one cannot be
 /// written, the outcome says so after `said`, what was said about the design.
 pub fn write_files(files: &[(&Path, &[u8])], said: &str) -> Result<(), Outcome> {
@@ -246,19 +223,11 @@ pub fn describe_threads(out: &mut String, plan: &StitchPlan, palette: Option<&Pa
     }
 }
 
-/// A diagnostic's first line: `warning SC-W0307 (svg:patch:fill): …`, the element named when there is one.
-pub fn headline(d: &Diagnostic) -> String {
-    match &d.element {
-        Some(element) => format!("{} {} ({element}): {}", d.severity().label(), d.code, d.message),
-        None => d.to_string(),
-    }
-}
-
-/// Diagnostics as people read them: one line each, then the fix indented.
+/// Diagnostics as people read them: each one's headline ([`Diagnostic::headline`]), then its fix indented.
 pub fn render_diagnostics(diagnostics: &[Diagnostic]) -> String {
     let mut out = String::new();
     for d in diagnostics {
-        out.push_str(&headline(d));
+        out.push_str(&d.headline());
         out.push('\n');
         if let Some(fix) = &d.fix {
             let label = if matches!(fix, Fix::Apply(_)) { "fix" } else { "hint" };
@@ -276,28 +245,6 @@ mod tests {
     use std::path::PathBuf;
 
     use super::*;
-
-    #[test]
-    fn req_cli_008_a_file_read_back_takes_the_plan_s_threads_after_a_stop_too() {
-        // A stop between stitches of one thread, then another thread: PES records the stop as a change to the
-        // same colour, which reads back as a stop, and the block after it takes the thread after the stop.
-        use stitchcraft_core::Point;
-        use stitchcraft_plan::{PlanBuilder, Provenance, Rgb, Role, Thread};
-        let (navy, red) = (Thread::new(Rgb::new(0, 0, 128)), Thread::new(Rgb::new(200, 0, 0)));
-        let mut plan = PlanBuilder::new(navy.clone());
-        let sew = |plan: &mut PlanBuilder, xs: [f64; 2]| xs.map(|x| plan.stitch(Point::new(x, 0.0).unwrap(), Provenance::plan(Role::Top)));
-        sew(&mut plan, [0.0, 1.0]);
-        plan.stop(None);
-        sew(&mut plan, [2.0, 3.0]);
-        plan.change_thread(red.clone());
-        sew(&mut plan, [4.0, 5.0]);
-        let plan = plan.finish();
-        let back = read_back(&stitchcraft_formats::encode(&plan, FormatId::PesV1, "stop").unwrap().bytes, &plan).unwrap();
-        assert_eq!(
-            back.blocks.iter().map(|b| (&b.thread, b.stitches.iter().any(|s| s.kind == StitchKind::Stop))).collect::<Vec<_>>(),
-            [(&navy, true), (&red, false)]
-        );
-    }
 
     #[test]
     fn req_cli_006_a_file_that_cannot_be_written_is_said_after_the_design_and_so_are_those_written() {

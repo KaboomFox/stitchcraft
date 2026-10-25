@@ -177,6 +177,11 @@ paid off before this was even merged: they found a DST design whose split jump p
 which is why only jumps of at most 1 mm make up a trim's spelling.
 PES is held to what its file says (`equivalence::pes_events`): a trim flag on every jump.
 
+**Reading back.** `read_back` reads a file just written, with its plan's threads, as a machine reads it.
+The command line describes and draws what it wrote from it (`REQ-CLI-008`), and the command line and the
+VectorCraft exporters call it before they hand a file out: a file StitchCraft wrote that doesn't read is a
+bug in it (`SC-E0009`), and nothing is written.
+
 **Converting.** `stitch convert` is a read followed by a write, so the converted file makes the machine do
 the same thing as the original: the round-trip guarantee above — except that a DST file cuts the thread
 before long jumps where a PES machine leaves a jump thread, which `SC-I0605` reports. A PES file from

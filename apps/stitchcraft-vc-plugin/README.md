@@ -11,9 +11,11 @@ outline shows when they cost too much, and the dialog's `preview_level` picks a 
 commands are the tools, and its Graphic Styles keep the effects' settings as presets (M6.4,
 `docs/src/user/how-to/vectorcraft-columns-and-presets.md`). From VectorCraft 0.14 a stroke or a satin effect
 follows its object's stroke, so a satin column drawn as one path and a zigzag stroke show their stitches as
-wide as it (M6.8, `REQ-VC-010`).
-Without a family the module is M0.6's *hello* effect, which returns the object's geometry unchanged. The contract tests measure the host's costs with it
-(`docs/src/design/vectorcraft-integration.md`).
+wide as it (M6.8, `REQ-VC-010`). From M6.9, 2 exporters too, *PES embroidery (StitchCraft)* and *DST
+embroidery (StitchCraft)*, which write the file `stitch export` writes from VectorCraft 0.14's File ›
+Export › Export As (`src/export.rs`, `REQ-VC-011`).
+Without a feature the module is M0.6's *hello* effect, which returns the object's geometry unchanged. The
+contract tests measure the host's costs with it (`docs/src/design/vectorcraft-integration.md`).
 
 ## Build
 
@@ -23,12 +25,13 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 # target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm, the StitchCraft Fill plug-in
 ```
 
-The feature is the family: `stroke`, `satin` or `fill`. Without one, the build is *hello*. Each build
-writes the same file, so copy it before building the next. `cargo xtask compat contract --ref <tag>`
-builds all four into `target/compat/plugins/` and loads them into VectorCraft's host.
+The feature is the family, `stroke`, `satin` or `fill`, or the machine format, `pes` or `dst`. Without one,
+the build is *hello*. Each build writes the same file, so copy it before building the next.
+`cargo xtask compat contract --ref <tag>` builds all six into `target/compat/plugins/` and loads them into
+VectorCraft's host.
 
 In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Open` the `.wasm`), then
-**Effect › Plug-ins › StitchCraft Fill**.
+**Effect › Plug-ins › StitchCraft Fill**, or **File › Export › Export As** with an exporter.
 
 ## Invariants
 
@@ -41,7 +44,8 @@ In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Ope
 - Manifests are made from the parameter registry and satisfy VectorCraft's rules (validated by tests,
   `REQ-VC-002`). A record of a manifest's defaults sews as an element without settings.
 - Contains no engine logic: the VectorCraft adapter reads the object and writes the stitches, and the
-  engine sews it.
+  engine sews it. An exporter calls the reader, the engine and the format writer as `stitch export` does,
+  with its budget, and Level B of the compatibility gate checks that the files are the same.
 - A live effect never makes an object vanish. When it can't show stitches, VectorCraft draws the object as
   it is, with the reason as the plug-in's last error.
 - A preview spends at most what VectorCraft allows (`REQ-VC-003`). The plug-in prices the engine's work in
@@ -51,5 +55,6 @@ In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Ope
 ## Dependencies
 
 `serde` and `serde_json` (the ABI's JSON), `stitchcraft-params` and `stitchcraft-engine` (the registry, and
-the sewing), `stitchcraft-plan` (the reference machine), `stitchcraft-core` (diagnostics and the budget),
-and `stitchcraft-vectorcraft` (`plugin_id`, and what a live effect reads and writes).
+the sewing), `stitchcraft-plan` (the machine profiles and formats), `stitchcraft-core` (diagnostics and the
+budget), `stitchcraft-formats` (the exporters' files) and `stitchcraft-vectorcraft` (`plugin_id`, what a
+live effect reads and writes, and the documents an exporter reads).

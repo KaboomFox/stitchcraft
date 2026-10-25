@@ -3,9 +3,9 @@
 //! - `discover [--json]`: the latest stable release, the latest pre-release (alpha/beta/rc) and the heads
 //!   of VectorCraft's `release` and `main` branches, from `git ls-remote` (no API token needed), compared
 //!   with the pins in `compat/vectorcraft.toml`.
-//! - `contract --ref <tag|sha>`: Level A — builds the plug-in's modules for wasm32, *hello* and one for
-//!   each stitch family, prints their sizes, loads them into VectorCraft's real plug-in host at that ref and
-//!   runs `compat/vc-contract`'s tests.
+//! - `contract --ref <tag|sha>`: Level A — builds the plug-in's modules for wasm32, *hello*, one for each
+//!   stitch family and one for each machine format, prints their sizes, loads them into VectorCraft's real
+//!   plug-in host at that ref and runs `compat/vc-contract`'s tests.
 //! - `e2e (--ref <tag> | --cli <file>)`: Level B — runs the scenarios of `compat/scenarios/` with a
 //!   release's `vectorcraft-cli`, fetched and checked by its SHA-256 (`release.rs`), or with one built from
 //!   a branch (`scenario.rs`).
@@ -30,6 +30,7 @@ use std::path::{Path, PathBuf};
 
 use serde_json::json;
 use stitchcraft_params::Family;
+use stitchcraft_plan::FormatId;
 
 use crate::{util, wasm};
 use report::{Level, TrackResult};
@@ -314,10 +315,18 @@ pub fn track(track: &str, reference: &str, cli: Option<&Path>) -> Result<(), Str
     if result.passed() { Ok(()) } else { Err(format!("the gate fails against VectorCraft {reference}")) }
 }
 
-/// The plug-in's modules, by name: *hello*, built without features, and the live effect of each stitch
-/// family, built with the feature its id names (`apps/stitchcraft-vc-plugin/src/lib.rs`).
+/// The plug-in's modules, by name: *hello*, built without features, the live effect of each stitch family
+/// and the exporter of each machine format, each built with the feature its name names: the family's id,
+/// or the format's extension (`apps/stitchcraft-vc-plugin/src/lib.rs`).
 pub(crate) fn modules() -> Vec<&'static str> {
-    std::iter::once("hello").chain(Family::ALL.iter().map(|family| family.id())).collect()
+    let families = Family::ALL.iter().map(|family| family.id());
+    std::iter::once("hello").chain(families).chain(FormatId::ALL.iter().map(|format| format.extension())).collect()
+}
+
+/// The kind of plug-in VectorCraft installs the module `name` as: `exporter` for a machine format's, which
+/// VectorCraft has from 0.14, and `effect` for the others.
+pub(crate) fn kind(name: &str) -> &'static str {
+    if FormatId::ALL.iter().any(|format| format.extension() == name) { "exporter" } else { "effect" }
 }
 
 /// Builds each of the plug-in's modules for wasm32 into `target/compat/plugins/<name>.wasm`, and prints
@@ -366,8 +375,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_modules_are_hello_and_each_family_s() {
-        assert_eq!(modules(), ["hello", "stroke", "satin", "fill"]);
+    fn the_modules_are_hello_each_family_s_and_each_format_s() {
+        assert_eq!(modules(), ["hello", "stroke", "satin", "fill", "pes", "dst"]);
+        let kinds: Vec<&str> = modules().into_iter().map(kind).collect();
+        assert_eq!(kinds, ["effect", "effect", "effect", "effect", "exporter", "exporter"]);
         let sizes = [("hello", 1024), ("fill", 5000)];
         assert_eq!(sizes_line(&sizes), "hello 1 KiB, fill 5 KiB (4 KiB more)");
     }

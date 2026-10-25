@@ -1,0 +1,25 @@
+# Level B: a design exported by StitchCraft's exporters with VectorCraft's command line, as File › Export ›
+# Export As exports it. Each writes the PES or DST file `stitch export` writes of the document saved with
+# it, and warns of what `stitch export` says (docs/src/design/compatibility-gate.md). The line is the
+# square's red, and lies far enough below it that a DST machine cuts the thread on the way, which the DST
+# export says. Coordinates are points.
+description = "A design exported to PES and DST by StitchCraft's exporters is what `stitch export` writes of it, with what it says."
+requirements = ["REQ-VC-011"]
+
+[[run]]
+plugins = ["stroke", "fill", "pes", "dst"]
+steps = [
+  { cmd = "shape.rectangle", params = { x = 0, y = 0, width = 72, height = 72 } },
+  { cmd = "paint.setFill", params = { color = "#c00000" } },
+  { apply = "fill", params = { angle = 45 } },
+  { cmd = "shape.line", params = { x1 = 0, y1 = 200, x2 = 144, y2 = 200 } },
+  { cmd = "paint.setStroke", params = { color = "#c00000" } },
+  { apply = "stroke", params = { running_stitch_length_mm = 2.5 } },
+  { export = "design.vectorcraft" },
+  { export = "design.png" },
+  { export = "design.pes" },
+  { export = "design.dst" },
+]
+
+[expect]
+exported = [["design.vectorcraft", "design.pes"], ["design.vectorcraft", "design.dst"]]
