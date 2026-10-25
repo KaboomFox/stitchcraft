@@ -44,7 +44,7 @@ use stitchcraft_engine::design::Reading;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, profiles};
 
 use super::plan::{Sewn, Source, design_name, picture, sew};
-use super::{Outcome, Status, counts, distinct, headline, hex, output_format, render_diagnostics, unhex};
+use super::{Outcome, Status, counts, distinct, hex, output_format, render_diagnostics, unhex};
 use crate::cli::{BugReportArgs, Command};
 use crate::files;
 
@@ -352,7 +352,7 @@ fn record(sewn: Result<&Sewn, (&str, Phase)>) -> Record {
         Ok(sewn) => Record {
             plan: sewn.plan.as_ref().map(|plan| PlanRecord { sha256: digest(plan), counts: counts(plan) }),
             file: sewn.file.as_ref().map(|bytes| FileRecord { bytes: bytes.len(), sha256: hex(&Sha256::digest(bytes)) }),
-            diagnostics: sewn.diagnostics.iter().map(headline).collect(),
+            diagnostics: sewn.diagnostics.iter().map(Diagnostic::headline).collect(),
             panic: None,
             phase: None,
         },

@@ -1,8 +1,8 @@
 # Embroider a VectorCraft design
 
 Draw the design in VectorCraft, and say how each object sews with the StitchCraft plug-ins, which show
-its stitches as you work. Then `stitch export` writes the machine file from the saved document.
-VectorCraft's own File › Export can't write embroidery files: its plug-ins can't add file formats yet.
+its stitches as you work. Then write the machine file with VectorCraft's **File › Export › Export As**,
+from VectorCraft 0.14, or with `stitch export` from the saved document. Both write the same file.
 
 ## Choose each object's stitches
 
@@ -35,7 +35,21 @@ own or its group's, still shows its stitches there, and `stitch export` leaves i
 
 ## Write the machine file
 
-Save the document, and run `stitch export` on it. This patch has a fill, a satin border, a curve of
+With the [exporters installed](../install.md#the-vectorcraft-plug-ins), choose **File › Export › Export
+As**, and **PES embroidery (StitchCraft)** or **DST embroidery (StitchCraft)** as the format. Once the file
+is picked, a dialog shows 2 options:
+
+- **Profile**, the machine and hoop the design is planned for: `brother-pe800-5x7` unless another is
+  chosen. `stitch profiles` lists them.
+- **Auto**, which chooses the stitches of the objects without a StitchCraft effect by their width, as
+  `stitch export --auto` does.
+
+The design takes the file's name, which machines show. What `stitch export` would say about the design
+shows with the export's warnings, one line for each message. When one of them is an error, nothing is
+written, and VectorCraft says the first. VectorCraft lets an export run for a while, and stops one that
+needs more: `stitch export` writes it.
+
+Or save the document, and run `stitch export` on it. This patch has a fill, a satin border, a curve of
 running stitch and 2 squares in a group that a graphic style's fill effect sews. Its placement line is
 named `stitch:ignore placement line`:
 

@@ -781,6 +781,7 @@ dependencies = [
  "serde_json",
  "stitchcraft-core",
  "stitchcraft-engine",
+ "stitchcraft-formats",
  "stitchcraft-params",
  "stitchcraft-plan",
  "stitchcraft-vectorcraft",

@@ -33,15 +33,13 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use stitchcraft_core::{Budget, Code, Diagnostic, Severity};
 use stitchcraft_engine::design::{Design, Reading};
-use stitchcraft_formats::Encoded;
+use stitchcraft_formats::{Encoded, read_back};
 use stitchcraft_plan::profiles;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 use stitchcraft_render::{Image, Settings, Style};
 
 use super::bug_report::{self, Phase, Run};
-use super::{
-    Outcome, Status, describe_file, describe_plan, describe_threads, distinct, hex, output_format, read_back, render_diagnostics, write_files,
-};
+use super::{Outcome, Status, describe_file, describe_plan, describe_threads, distinct, hex, output_format, render_diagnostics, write_files};
 use crate::cli::PlanArgs;
 use crate::files;
 

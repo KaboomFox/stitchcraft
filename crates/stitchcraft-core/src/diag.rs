@@ -109,7 +109,8 @@ registry! {
     /// StitchCraft checks every stitch plan against its own rules before writing a machine file. One of
     /// those checks failed, which means StitchCraft has a bug: the file was not written, so nothing
     /// wrong reaches your machine. `stitch plan` writes a bug-report bundle instead, next to the file it
-    /// was asked for.
+    /// was asked for. An export in VectorCraft writes nothing, and `stitch bug-report` of the saved
+    /// document writes the bundle.
     ///
     /// Please attach the bundle to an issue; the message names the rule that failed. The bundle holds
     /// your design, so that the bug can be reproduced.
@@ -786,6 +787,24 @@ impl Diagnostic {
     pub fn severity(&self) -> Severity {
         self.code.severity()
     }
+
+    /// The first line people read of it, naming its element when it has one:
+    /// `warning SC-W0307 (svg:patch:fill): …`. The command line prints its fix on the next line.
+    pub fn headline(&self) -> String {
+        match &self.element {
+            Some(element) => format!("{} {} ({element}): {}", self.severity().label(), self.code, self.message),
+            None => self.to_string(),
+        }
+    }
+
+    /// Its headline and then its fix, on one line, for a host that shows each diagnostic as one line of
+    /// text, as VectorCraft shows an export's warnings.
+    pub fn one_line(&self) -> String {
+        match &self.fix {
+            Some(fix) => format!("{} {}", self.headline(), fix.describe()),
+            None => self.headline(),
+        }
+    }
 }
 
 /// `warning SC-W0702: Design is 190.0 × 150.0 mm, …` (one line; hosts render element, place and fix).
@@ -838,6 +857,16 @@ mod tests {
         let d = Diagnostic::new(Code::OutsideComfortZone, "Design is 190.0 × 150.0 mm.").with_fix(Fix::Apply(Edit::RotateDesign90));
         assert_eq!(d.to_string(), "warning SC-W0702: Design is 190.0 × 150.0 mm.");
         assert_eq!(d.severity(), Severity::Warning);
+        assert_eq!(d.one_line(), "warning SC-W0702: Design is 190.0 × 150.0 mm. Rotate the design 90°.");
         assert_eq!(d.fix.map(|f| f.describe()).as_deref(), Some("Rotate the design 90°."));
+    }
+
+    #[test]
+    fn a_headline_names_the_element_and_one_line_adds_the_fix() {
+        let d = Diagnostic::new(Code::FillPartsApart, "The area falls into 2 parts.");
+        assert_eq!((d.headline(), d.one_line()), (d.to_string(), d.to_string()));
+        let d = d.with_element(ElementId::new("svg:patch:fill").unwrap()).with_fix(Fix::Hint("Break it apart.".into()));
+        assert_eq!(d.headline(), "warning SC-W0307 (svg:patch:fill): The area falls into 2 parts.");
+        assert_eq!(d.one_line(), "warning SC-W0307 (svg:patch:fill): The area falls into 2 parts. Break it apart.");
     }
 }

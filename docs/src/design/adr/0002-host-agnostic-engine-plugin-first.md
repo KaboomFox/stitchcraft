@@ -25,7 +25,8 @@ gives a filter ([tools](../vectorcraft-integration.md#tools-vectorcrafts-own-com
 proposed ([status](../rfc-vectorcraft-abi-v2.md#status)). Exporters, rich parameters, data kept with the
 document, heavy filters and a live effect's paints came that way. M6.8 to M6.12 use them, and M6.12 brings
 the tools filter back as a heavy filter. Overlays, heavy live effects and the objects beside a live effect
-are still proposed, in M9.
+are still proposed, in M9. M6.9's exporters end the two-step workflow below for VectorCraft 0.14 and
+later, whose File › Export writes the machine file.
 
 ## Consequences
 

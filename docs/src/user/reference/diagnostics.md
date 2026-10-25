@@ -106,7 +106,8 @@ metres from the hoop centre cannot be previewed at any scale.
 StitchCraft checks every stitch plan against its own rules before writing a machine file. One of
 those checks failed, which means StitchCraft has a bug: the file was not written, so nothing
 wrong reaches your machine. `stitch plan` writes a bug-report bundle instead, next to the file it
-was asked for.
+was asked for. An export in VectorCraft writes nothing, and `stitch bug-report` of the saved
+document writes the bundle.
 
 Please attach the bundle to an issue; the message names the rule that failed. The bundle holds
 your design, so that the bug can be reproduced.

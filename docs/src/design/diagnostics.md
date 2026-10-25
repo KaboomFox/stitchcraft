@@ -48,7 +48,8 @@ whose letter disagrees with its severity, or whose explanation is missing. From 
 
 - `cargo xtask docs` generates the **diagnostics index** (one page per code, like `rustc`'s error index);
 - `stitch explain SC-W0702` prints the explanation in the terminal;
-- the VectorCraft plug-in links each message to its page;
+- in VectorCraft, the plug-in shows each message after its code, for the user to look up in the index or
+  with `stitch explain`;
 - `cargo xtask conformance` fails when a code has no `diag_sc_<code>_<what>` test that produces it from
   real input and checks the text a user reads, or when such a test names a code that is not registered
   ([conformance](conformance.md#cases)); the registry's own tests fail when a code has no explanation.
@@ -62,6 +63,15 @@ typo in its formatting and nobody sees it until a user does.
 - Name the object and point at the place.
 - Offer the fix in embroidery terms: "Use a running stitch for parts this thin, or widen the shape."
 - No blame, no internal names (`LineString`, `GEOS`), no stack traces.
+
+## As text
+
+A diagnostic reads the same wherever StitchCraft prints it. Its `Display` is the severity, the code and
+the message: `warning SC-W0702: Design is 190.0 × 150.0 mm; …`. `Diagnostic::headline` adds the object
+it is about, as in `warning SC-W0307 (svg:patch:fill): The area falls into 2 parts.`, and the command
+line prints that, with the fix on the line below. `Diagnostic::one_line` puts the fix after the
+headline, for a host that shows each diagnostic as one line of text, as VectorCraft shows an export's
+warnings.
 
 ## Fixes
 

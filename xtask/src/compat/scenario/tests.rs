@@ -24,7 +24,7 @@ fn fill_on_2(params: &Value) -> Applied {
 fn every_scenario_checks_only_what_its_runs_export() {
     let scenarios = load(&util::root()).unwrap();
     let names: Vec<&str> = scenarios.iter().map(|(name, _)| name.as_str()).collect();
-    assert_eq!(names, ["apply", "compound-satin", "graphic-style", "install-and-list", "missing-plugin"]);
+    assert_eq!(names, ["apply", "compound-satin", "export", "graphic-style", "install-and-list", "missing-plugin"]);
     let requirements = requirement_ids().unwrap();
     for (name, scenario) in &scenarios {
         assert_eq!(problems(scenario, &modules(), &requirements), Vec::<String>::new(), "{name}");
@@ -46,12 +46,14 @@ fn a_scenario_that_doesn_t_hold_together_is_refused() {
           { apply = "lace" },
           { export = "a.png", params = { scale = 2 } },
           { export = "a.vectorcraft" },
+          { export = "a.dst" },
         ]
         [expect]
         listed = ["satin", "zigzag"]
         applied = ["a.vectorcraft", "b.vectorcraft"]
         same = [["a.vectorcraft", "c.vectorcraft"]]
         elements = [{ file = "d.vectorcraft", element = "fill", count = 1 }]
+        exported = [["a.vectorcraft", "e.pes"], ["a.png", "a.vectorcraft"]]
         "#,
     );
     let found = problems(&bad, &modules(), &requirement_ids().unwrap());
@@ -65,10 +67,16 @@ fn a_scenario_that_doesn_t_hold_together_is_refused() {
             "run 1: it applies `fill` without installing that module".to_string(),
             "run 1: `apply = \"lace\"` names no stitch family".to_string(),
             format!("run 1: {one}"),
+            "run 1: it exports `a.dst` without installing the `dst` module".to_string(),
             "run 1: it applies `fill`, and no drawing shows it after".to_string(),
             "it checks `b.vectorcraft`, which no run exports".to_string(),
             "it checks `c.vectorcraft`, which no run exports".to_string(),
             "it checks `d.vectorcraft`, which no run exports".to_string(),
+            "it checks `e.pes`, which no run exports".to_string(),
+            // The step that would export it is refused, for its `params`.
+            "it checks `a.png`, which no run exports".to_string(),
+            "it checks `a.vectorcraft` as a machine file, and StitchCraft writes no format with its extension".to_string(),
+            "it checks `a.vectorcraft` against `a.png`, which isn't a VectorCraft document".to_string(),
             "it expects a module `zigzag` listed, and there is none".to_string(),
             "there is no requirement REQ-VC-999".to_string(),
         ]
@@ -122,6 +130,45 @@ fn a_run_is_one_command_line_that_asks_each_module_for_its_last_error_after_each
         saved.as_str(),
     ];
     assert_eq!(args, expected);
+}
+
+#[test]
+fn an_exporter_is_installed_and_asked_nothing_after_a_drawing_and_a_machine_file_draws_nothing() {
+    let s = scenario(
+        r#"description = "d"
+        [[run]]
+        plugins = ["fill", "pes"]
+        steps = [{ apply = "fill" }, { export = "a.pes" }, { export = "a.png" }]
+        "#,
+    );
+    let args = arguments(&s.run[0], Path::new("/plugins"), Path::new("/out")).unwrap();
+    let asked: Vec<&String> = args.iter().filter(|arg| arg.contains("\"id\":")).collect();
+    assert_eq!(asked, [r#"{"id":"dev.stitchcraft.fill"}"#]);
+    // A machine file is written from the document's JSON, so the fill is drawn by the PNG alone.
+    assert!(!draws("a.pes") && !draws("a.DST") && !draws("a.vectorcraft") && draws("a.png") && draws("a"));
+    let undrawn = scenario(
+        r#"description = "d"
+        [[run]]
+        plugins = ["fill", "pes"]
+        steps = [{ apply = "fill" }, { export = "a.pes" }]
+        "#,
+    );
+    assert_eq!(problems(&undrawn, &modules(), &std::collections::BTreeSet::new()), ["run 1: it applies `fill`, and no drawing shows it after"]);
+}
+
+#[test]
+fn req_vc_011_a_machine_file_exported_is_checked_against_what_stitch_export_writes() {
+    let patch = patch();
+    let (file, said) = stitch_export(&patch, FormatId::Dst, "patch").unwrap();
+    let warnings = stitchcraft_vc_plugin::export::warnings(&said);
+    assert_eq!(warnings.len(), 3, "{warnings:?}");
+    assert_eq!(written_as_exported(&patch, "patch.dst", &file, &warnings), Ok(()));
+    // Another name, another file: the design name is the file's.
+    let renamed = written_as_exported(&patch, "poster.dst", &file, &warnings).unwrap_err();
+    assert!(renamed.starts_with("it isn't the file `stitch export` writes of its document"), "{renamed}");
+    let unsaid = written_as_exported(&patch, "patch.dst", &file, &warnings[1..]).unwrap_err();
+    assert!(unsaid.starts_with("the export warned [") && unsaid.contains("`stitch export` says ["), "{unsaid}");
+    assert!(written_as_exported(b"{}", "patch.dst", &file, &warnings).unwrap_err().starts_with("StitchCraft doesn't sew it: "));
 }
 
 #[test]
@@ -226,10 +273,12 @@ while [ $# -gt 0 ]; do
     --in) echo '{"step":"open","result":{}}'; shift 2 ;;
     --export)
       case "$2" in *.vectorcraft) cp "$(cat "$here/doc")" "$2" ;; *) : > "$2" ;; esac
-      echo '{"step":"export","result":{}}'; shift 2 ;;
+      echo '{"step":"export","result":{"warnings":["said"]}}'; shift 2 ;;
     --cmd)
       case "$2" in
-        plugin.install) echo '{"step":"cmd","result":{"kind":"effect"}}' ;;
+        plugin.install)
+          case "$4" in *pes.wasm*|*dst.wasm*) kind=exporter ;; *) kind=effect ;; esac
+          echo "{\"step\":\"cmd\",\"result\":{\"kind\":\"$kind\"}}" ;;
         plugin.list) echo '{"step":"cmd","result":{"plugins":[{"id":"dev.stitchcraft.fill","kind":"effect"}]}}' ;;
         plugin.info) echo "{\"step\":\"cmd\",\"result\":{\"lastError\":$(cat "$here/error")}}" ;;
         effect.apply) echo '{"step":"cmd","result":{"ids":[2],"index":0,"item":null}}' ;;
@@ -297,4 +346,16 @@ fn a_scenario_runs_and_its_checks_say_what_fails() {
     let refused = good.replace("{ cmd = \"plugin.list\" }", "{ cmd = \"fail\" }");
     let failures = run_with(&refused, "null", "refused");
     assert_eq!(failures, ["vectorcraft-cli exit status: 1 after 1 results: vectorcraft-cli: no such command"]);
+    // An exporter installs as one, and a machine file it didn't write, with a warning `stitch export` doesn't
+    // say, fails the check.
+    let exporting = r#"description = "d"
+        [[run]]
+        plugins = ["pes"]
+        steps = [{ export = "a.vectorcraft" }, { export = "a.pes" }]
+        [expect]
+        exported = [["a.vectorcraft", "a.pes"]]
+        "#;
+    let failures = run_with(exporting, "null", "exporting");
+    assert_eq!(failures.len(), 1, "{failures:?}");
+    assert!(failures[0].starts_with("a.pes: it isn't the file `stitch export` writes of its document: 0 bytes"), "{failures:?}");
 }
