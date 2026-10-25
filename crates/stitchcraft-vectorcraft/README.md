@@ -21,10 +21,10 @@ group's or a layer's StitchCraft effects sew each path inside it, as VectorCraft
 of the paint it draws over the others, which is how a graphic style applied to a group sews (`REQ-VC-006`).
 From M6.5 Ink/Stitch's commands can be written in an object's or a layer's name. `stitch:ignore` leaves
 it out, and `stitch:start` and `stitch:end` mark where the shape grouped with them starts or ends
-(`REQ-VC-009`). From M13.1 strokes keep their cap too, and `read_with` reads with `--auto`: an object
-with no StitchCraft effect, its own or a group's or a layer's, is then an automatic element
-(`REQ-AUTO-001`), and what VectorCraft draws across such a line sewn across its width and its stitches
-don't follow, its alignment and width profile, is named (`REQ-AUTO-005`).
+(`REQ-VC-009`). From M13.1 strokes keep their cap too. With `--auto`, `read_with` marks an object as an
+automatic element when neither it nor a group or layer around it has a StitchCraft effect
+(`REQ-AUTO-001`). Of such a line sewn across its width, the reader names the alignment and the width
+profile VectorCraft draws, which its stitches don't follow (`REQ-AUTO-005`).
 `EXTENSIONS` lists the documents' file name extensions, a template's among them, by which `stitch plan`
 tells a document from an SVG file. `read_part` is the part of a file the reader reads, which a bug-report
 bundle keeps: a plain file's JSON, without the images and other data after it. `plugin_id`, `effect_id`

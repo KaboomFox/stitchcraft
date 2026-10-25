@@ -18,7 +18,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - A part of a line that a satin column cannot follow, a small traced ring, a hairpin or a line shorter
     than a CSS pixel, is filled instead, and so is a dot a round or square cap draws (`SC-I0902`). A dot
     with a butt cap draws nothing and is left out (`SC-W0401`). A line whose filled area would reach more
-    than 10 m from the origin is left out (`SC-W0903`). So `--auto` makes no error of its own.
+    than 10 m from the origin is left out (`SC-W0903`). So `--auto` doesn't add an error of its own.
   - A trim or a stop after a line sewn as several columns follows the last of them.
   - A line traced in VectorCraft sews as wide and as long as VectorCraft draws it: the readers now read a
     stroke's cap (SVG's `stroke-linecap`, VectorCraft's cap), and an automatic line's round or square caps

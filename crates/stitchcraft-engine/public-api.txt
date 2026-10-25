@@ -15,7 +15,6 @@ pub stitchcraft_engine::auto::Stitches::Running
 pub stitchcraft_engine::auto::Stitches::Satin
 impl stitchcraft_engine::auto::Stitches
 pub const fn stitchcraft_engine::auto::Stitches::across(self) -> bool
-pub fn stitchcraft_engine::auto::Stitches::of(&stitchcraft_engine::design::Shape, &stitchcraft_engine::design::DesignSettings) -> stitchcraft_engine::auto::Stitches
 pub fn stitchcraft_engine::auto::Stitches::of_stroke(stitchcraft_core::units::Mm, &stitchcraft_engine::design::DesignSettings) -> stitchcraft_engine::auto::Stitches
 pub struct stitchcraft_engine::auto::Digitized
 pub stitchcraft_engine::auto::Digitized::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
