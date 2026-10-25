@@ -97,6 +97,7 @@ release takes:
 | `<ns>.fill` | live effect | tatami (P1); contour, meander, circular (P2) | `fill_method` choice |
 | `<ns>.auto` | live effect | the stitches automatic digitizing chooses by width (M13.7) | on a group, previews each path inside ([image to embroidery](image-to-embroidery.md)) |
 | `<ns>.pes`, `<ns>.dst` | exporter (VectorCraft 0.14) | every family | File › Export › Export As writes the same machine file as `stitch export` (M6.9, [below](#exporters-file--export-writes-pes-and-dst)) |
+| `<ns>.settings` | filter (VectorCraft 0.16) | none | keeps the design settings and the machine with the document (M6.11, [below](#design-settings-and-machine-kept-with-the-document)) |
 
 The tools an object filter was to give are VectorCraft's own commands, and the rest come with M6.12's tools
 filter ([tools](#tools-vectorcrafts-own-commands)).
@@ -107,15 +108,16 @@ live effect's with `effect_id`, and `effect_name` reads one back. The plug-in cr
 gate use the same functions. A live effect's id ends with its stitch family's
 (`stitchcraft_params::Family::id`).
 Manifests are generated from the [parameter registry](params.md#splitting-for-vectorcraft-abi-v1); a
-test validates each against VectorCraft's manifest rules (id charset, ≤ 64 parameters, names, ranges) so
-an invalid manifest never reaches a user.
+test validates each against VectorCraft's manifest rules (id charset, ≤ 64 parameters, names, ranges, and
+from 0.14 the keys that say how the dialog shows a parameter), so a manifest VectorCraft would refuse fails
+the tests before a release.
 
 **Modules.** The plug-in crate builds one module for each family, chosen by a Cargo feature named after
-the family: `stroke`, `satin` or `fill`, and one for each machine format, by its extension: `pes` or `dst`.
-Without one it builds M0.6's *hello* effect. The modules contain the same code, which the native tests run
-whichever it is, and the feature only picks the manifest and the run that `vc_manifest` and `vc_run` serve.
-`cargo xtask compat contract` builds the six modules, notes their sizes and loads them into VectorCraft's
-host.
+the family: `stroke`, `satin` or `fill`, one for each machine format, by its extension: `pes` or `dst`, and
+`settings` for the Design Settings filter. Without one it builds M0.6's *hello* effect. The modules contain
+the same code, which the native tests run whichever it is, and the feature only picks the manifest and the
+run that `vc_manifest` and `vc_run` serve. `cargo xtask compat contract` builds the seven modules, notes
+their sizes and loads them into VectorCraft's host.
 
 **Manifests.** A family's manifest is made from the registry when VectorCraft asks for it, so a parameter
 added to the registry shows in the dialog without another change. A key that several families declare,
@@ -139,6 +141,32 @@ tatami fill (`REQ-FILL-005`). `satin_column` belongs to the effect, which sets i
 with the group that declares the family's method. The groups only the family uses, for its default
 method, come next, then those it shares with the other families, then those of its other methods, such as
 the zigzag stroke's. The settings every element shares come last, as in Ink/Stitch's dialogs.
+
+**How the dialog shows them** (`REQ-VC-012`, M6.10). From 0.14 a parameter can say how the dialog shows
+it, and the plug-in says all of it from the registry (`apps/stitchcraft-vc-plugin/src/dialog.rs`):
+
+- Its row has the registry's label, and the unit of its kind of value: mm, % or °.
+- The registry's groups are the dialog's sections, as they are the headings of the reference pages.
+  VectorCraft draws a section where its group first appears, with every row of the group in it. Each
+  group's rows come together in the manifest, and a release before 0.14 shows them in the same order.
+- Its help is the registry's help as plain text, cut at a sentence within VectorCraft's 1,000 characters.
+  A choice's help ends with what each option means, by its label in the registry: VectorCraft's
+  drop-down list shows the ids that designs store, such as `tatami_fill`. Its help page is its entry in
+  the parameter reference on the docs site, the book of `main` (`dialog::SITE_URL`). The docs check finds
+  the page and the heading each manifest links to.
+- Each row shows only while the method is one the parameter applies to. Where the registry shows a
+  setting only with some values of another, as its `when` says, the dialog does too: the length variation
+  of a random stitch length shows while that is on, and a satin's staggers for staggered splits. Rows that
+  nothing in the dialog would show are left out. VectorCraft gives the plug-in the value of a hidden row as
+  well, so what the dialog shows never changes what sews.
+- The plug-in's own parameters, the preview level and the exporters' 2 options, have a label, help and a
+  page too.
+
+A release before 0.14 ignores these keys, since its `ParamSpec` reads a parameter's type, range and
+default and lets other keys pass (`crates/plugins/src/manifest.rs` at 0.12.0). Its dialog shows the keys
+and every parameter, as it did. The compatibility gate's pictures of the dialogs are taken in the pinned
+release's window, and the window probe checks that each shows the rows the manifest shows at the defaults,
+by label, each with the control of its kind.
 
 **What a live effect shows.** A family's effect sews its object with the engine's `generate`, on the
 reference machine and with no neighbours, as one object of a design. It returns the stitches as geometry,
@@ -169,7 +197,9 @@ fills or strokes leaves the object as it is too, with `SC-I0810`: `stitch export
    `.vectorcraft` file) and the object shows a stitch preview.
 3. Save the document.
 4. `stitch export design.vectorcraft -o design.pes --preview design.png` writes the machine file, for the
-   machine `--profile` names (`brother-pe800-5x7` by default), and a picture of what will sew. It says
+   machine `--profile` names, or else the one the document keeps
+   ([below](#design-settings-and-machine-kept-with-the-document)), or else `brother-pe800-5x7`, and a
+   picture of what will sew. It says
    what the reader left out or changed, with the engine's warnings. `stitch export` is another name for
    `stitch plan`, which reads a VectorCraft document (`.vectorcraft`, `.drawcraft`, or a `.vctemplate`
    template) as it reads an SVG file (`REQ-VC-008`), and `--report` adds the JSON report. A bug-report
@@ -196,8 +226,10 @@ There are two, *PES embroidery (StitchCraft)* and *DST embroidery (StitchCraft)*
 own, and a VectorCraft before 0.14 refuses to install them. An exporter writes the file `stitch export`
 writes of the document:
 
-- It reads the document with the same reader, plans it with the engine for the machine its `profile`
-  option names, `brother-pe800-5x7` by default, and writes it with the file's name as the design name.
+- It reads the document with the same reader and plans it with the engine for the machine its `profile`
+  option names, and the design takes the file's name. The option's default, `document`,
+  is the machine the document keeps, or `brother-pe800-5x7` when it keeps none, as `stitch export` plans
+  it without `--profile` ([below](#design-settings-and-machine-kept-with-the-document)).
   Reading the file back, as `stitch export` does, stops it at a writer's bug (`SC-E0009`). The budget is
   `stitch export`'s own too. Its `auto` option digitizes the objects without StitchCraft effects, as
   `--auto` does. Level B of the [compatibility gate](compatibility-gate.md) exports a document with
@@ -226,6 +258,56 @@ plan, which few designs for a home machine's hoop reach, and `stitch export` wri
 sheets are drawn in code, as plans and designs, and M6.12 draws them into a document, where its Level B
 case exports each. A live effect is given no warnings channel, and an exporter no picture:
 `stitch export --preview` still draws what will sew.
+
+### Design settings and machine kept with the document
+
+Ink/Stitch keeps 3 settings for the whole design with an SVG file, `collapse_len_mm`, `min_stitch_len_mm`
+and `min_satin_stroke_width_mm` ([SVG input](svg-input.md#design-settings)), and a VectorCraft document has
+no place of its own for them. VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
+the RFC's [P5](rfc-vectorcraft-abi-v2.md#p5-document-level-plug-in-data). The filter returns it as
+`documentData`, and the native file saves it in `document.unknown.pluginData` under the plug-in's id. An
+exporter reads every plug-in's in the document it is given, and a live effect isn't given it.
+
+M6.11 makes a filter keep them (`REQ-VC-013`): *StitchCraft Design Settings*, in Object › Plug-ins
+(`<ns>.settings`, `apps/stitchcraft-vc-plugin/src/settings.rs`). Its dialog has the machine, a choice of
+the built-in profiles, then each design setting as a length. The settings' names, labels and help come
+from `stitchcraft_engine::design::SETTINGS`, the table the SVG adapter reads Ink/Stitch's settings with.
+The machine is StitchCraft's own, as Ink/Stitch's hoop is the page. On OK the filter keeps all 4, the
+settings under Ink/Stitch's names and the machine's id as `profile`:
+
+```json
+{"profile": "brother-pe800-5x7", "collapse_len_mm": 3, "min_stitch_len_mm": 0, "min_satin_stroke_width_mm": 1}
+```
+
+The filter returns each object it is given by its id alone, as VectorCraft deletes an input object that a
+filter leaves out, and so its run leaves every object as it was.
+
+The VectorCraft adapter reads the data (`stitchcraft_vectorcraft::settings`) as the SVG adapter reads
+Ink/Stitch's. The settings kept become the design's settings, and the machine kept is
+`VectorCraft::machine`, which `stitchcraft_vectorcraft::machine` reads before the rest of the document.
+`SC-W0812` names what doesn't read, which keeps its default:
+
+- a setting that isn't a length of 0 or more, or that this StitchCraft doesn't know;
+- a machine it doesn't have;
+- data that isn't an object, whose settings all keep their defaults.
+
+In a damaged file whose `pluginData` isn't an object, VectorCraft finds nothing kept, and so does the
+adapter. `stitch export` and `stitch bug-report` plan for the machine `--profile` names, or else the one kept, or
+else the reference machine (`stitchcraft_cli::commands::plan::machine_for`). The exporters' `profile`
+option starts at `document`, which follows the same order, and names a built-in profile only when the user
+picks one.
+
+VectorCraft opens a filter's dialog at its manifest's defaults, not at what the filter kept. The filter
+keeps every setting each time it runs, and the user sets all of them again. A live effect isn't given what
+the document keeps, and the previews are planned with the default settings for the reference machine. A
+longer shortest stitch kept with the document shows in the machine file and in `stitch export --preview`,
+and not in the preview.
+
+The contract test `req_vc_013_the_settings_filter_keeps_the_machine_each_exporter_plans_for` has
+VectorCraft's host run the filter as `plugin.run` runs it, then exports the document with what it kept. Level B's `settings`
+scenario does the same with VectorCraft's command line: a shortest stitch of 1.5 mm changes the PES file,
+the exports are `stitch export`'s, and with the small hoop kept the export of a 1 in square fails with
+`SC-E0701`.
 
 ### Tools: VectorCraft's own commands
 

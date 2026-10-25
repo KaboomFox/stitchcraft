@@ -14,9 +14,12 @@
 //!    screen reader, then with a dialog the row of the family's effect, which the module's name begins.
 //! 3. The screenshot is cropped to the title and the rows that opened, with room for the menus' frames, or
 //!    to the dialog's window, which must fit in it, and written where the job says.
-//! 4. A dialog must show a row for each parameter of the module's manifest: a label, which VectorCraft
-//!    writes from the parameter's key, first letter capital and a colon after it (its `form::humanize`),
-//!    and then the control the job names for the parameter's type.
+//! 4. A dialog must show a row for each parameter of the module's manifest that shows at the defaults: its
+//!    label with a colon after it, and then the control the job names for the parameter's type. From 0.14
+//!    VectorCraft scrolls the rows of a dialog taller than its window, and then the picture would show only
+//!    some: a dialog with a scroll bar is an error, the window too short for it. The job
+//!    gives the label the manifest does (`REQ-VC-012`); a VectorCraft before 0.14 writes one from the key
+//!    instead, first letter capital (its `form::humanize`).
 //!
 //! Each shot records what it found, a dialog's tree among it, or why it failed ([`record`]).
 // The harness's own exemption (`src/lib.rs`): it waits on the app and reads and writes files.
@@ -30,6 +33,8 @@ use serde_json::{Value, json};
 use stitchcraft_vc_window::{SHOTS, Window, dialog_controls, record};
 use xa11y::{App, AppExt, Element};
 
+/// The role in the tree, in snake case, of the scroll bar of rows that don't fit.
+const SCROLL_BAR: &str = "scroll_bar";
 /// How long xa11y waits for the app in the tree, and for a control to show.
 const FIND: Duration = Duration::from_secs(30);
 /// How often a wait looks again.
@@ -215,20 +220,28 @@ fn opened(app: &App, dialog: &Value) -> Result<(Crop, String), String> {
         .collect();
     let wrong: Vec<String> = params
         .iter()
-        .filter_map(|(key, control)| match rows.get(&key.to_lowercase()) {
-            None => Some(format!("no row for {key}")),
-            Some(shown) if shown != control => Some(format!("a {shown} for {key}, not a {control}")),
+        .filter_map(|(label, control)| match rows.get(&label.to_lowercase()) {
+            None => Some(format!("no row {label}")),
+            Some(shown) if shown != control => Some(format!("a {shown} for {label}, not a {control}")),
             Some(_) => None,
         })
         .collect();
     let found = format!(
-        "; {} of its {} parameters shown, each with its label and the control of its type. The dialog's tree, {} lines:\n{}",
+        "; {} of the {} rows it shows at the defaults found, each with its label and the control of its type. The dialog's tree, {} lines:\n{}",
         params.len() - wrong.len(),
         params.len(),
         tree.lines().count(),
         tree
     );
-    if wrong.is_empty() { Ok((crop, found)) } else { Err(format!("the dialog {name:?} shows {wrong:?}{found}")) }
+    if !wrong.is_empty() {
+        return Err(format!("the dialog {name:?} shows {wrong:?}{found}"));
+    }
+    // From 0.14 VectorCraft scrolls the rows of a dialog taller than the window, and the picture would show
+    // only those in view: the window must be tall enough for all of them.
+    if nodes.iter().any(|(role, _)| *role == SCROLL_BAR) {
+        return Err(format!("the dialog {name:?} scrolls its rows, as the window is too short for it{found}"));
+    }
+    Ok((crop, found))
 }
 
 /// `element` and those under it, `depth` levels down, in the tree's order: each before its children.

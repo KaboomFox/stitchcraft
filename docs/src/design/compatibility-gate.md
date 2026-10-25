@@ -42,6 +42,9 @@ checks:
 4. Filters run and return valid objects. Exporters run through `vectorcraft_plugins::export::run` on
    documents written for the test, return a file of their format, with the export's warnings, plan for
    the machine their dialog names, and decline with the first error when there is one (`REQ-VC-011`).
+   The Design Settings filter, run as `plugin.run` runs a filter, keeps its dialog's values with the
+   document and returns its objects as they were. The exporters plan that document for the machine it
+   keeps, unless their dialog names another (`REQ-VC-013`).
 5. Error paths: invalid parameters are rejected by the host with the expected message.
 6. Budget: the *hello* plug-in's cost for each byte of JSON it reads and writes stays within a quarter
    above the costs [recorded for previews](vectorcraft-integration.md#live-effect-previews-within-v1-budgets).
@@ -69,22 +72,26 @@ remembers only a module's last failure, which the next success clears. So each m
 asked for its last error after every PNG export, which runs the live effects, and it must have none. A
 scenario draws each object it gives an effect before it gives another the same family's, and
 `cargo xtask compat` refuses an `apply` step no drawing shows. Exporting a PES or a DST file draws
-nothing: an exporter is given the document's JSON. The checks are StitchCraft's, since VectorCraft's
-pictures change from version to version and what sews must not:
+nothing: an exporter is given the document's JSON. An export that must fail names the code of the error it
+says, with `fails`. VectorCraft stops a run at a step that fails, so that export ends its run, and no check
+names its file. The checks are StitchCraft's, since VectorCraft's pictures change from version to version
+and what sews must not:
 
 | Scenario | Steps | Checks |
 |---|---|---|
-| `install-and-list` | install the 5 modules, then `plugin.list` | each family's live effect and each format's exporter is listed (`REQ-VC-002`, `REQ-VC-011`) |
+| `install-and-list` | install the 6 modules, then `plugin.list` | each family's live effect, each format's exporter and the Design Settings filter is listed (`REQ-VC-002`, `REQ-VC-011`, `REQ-VC-013`) |
 | `apply` | a square filled red and a line, given the fill and stroke effects with parameters, then saved | as sent, with a fill in red and a stroke (`REQ-VC-004`, `REQ-PRM-003`) |
 | `compound-satin` | 2 rails and a rung, Make Compound Path, then the satin effect | as sent, and one satin column (`REQ-VC-007`) |
 | `graphic-style` | a group of 2 squares, and a gold square with a fill effect, drawn, whose new graphic style is then applied to the group | as sent, and 3 fills in gold at the effect's 90° (`REQ-VC-006`) |
 | `missing-plugin` | a fill saved and drawn, then opened and saved again without the plug-ins | both sew alike, as sent: the records are kept (`REQ-PRM-003`) |
 | `export` | a square filled red and a line far below it, given the fill and stroke effects, saved, then exported to PES and DST by StitchCraft's exporters | each file is the one `stitch export` writes of the saved document, and the export's warnings are what it says, the DST's cut on the long jump among them (`REQ-VC-011`) |
+| `settings` | a 1 in square given the fill effect and exported to PES, then the Design Settings filter run with the 4 × 4 in hoop and a shortest stitch of 1.5 mm, and the square saved and exported to PES and DST; then the filter run with the small hoop, and the square saved and exported to PES | each document keeps what the filter was run with, each file is the one `stitch export` writes, the PES file differs from the one before the filter, and the small hoop's export fails with `SC-E0701` (`REQ-VC-013`) |
 
 *As sent*: the saved file sews as it does with the StitchCraft records of the objects the effects were
 applied to put back as the steps sent them. So VectorCraft stored what the dialog set, on the objects it
 was applied to, in a form StitchCraft reads. An object `effect.apply` named that the file doesn't hold
-fails the check. A file is sewn as `stitch plan` sews it, for the reference machine, and 2 are compared
+fails the check. A file is sewn as `stitch plan` sews it, for the machine it keeps or else the reference
+machine, and 2 are compared
 byte for byte, as is a machine file exported with the one `stitch export` writes of its document, by the
 format and the name of the file. Elements are counted by kind, thread and settings. A paint's fill is a fill too, and has no
 settings. The live-effect budget of each preview level is Level A's (`REQ-VC-003`).

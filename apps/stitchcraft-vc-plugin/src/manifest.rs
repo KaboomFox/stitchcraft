@@ -32,13 +32,18 @@
 //! **The preview.** Last comes `preview_level` ([`PREVIEW_LEVEL`]), which is the plug-in's and no
 //! stitch's: how much of the stitches the live effect shows ([`crate::preview::Level`]).
 //!
+//! **How the dialog shows them.** Each parameter comes with its label, unit, section, help and help page,
+//! and the values of the parameters before it that show it, which VectorCraft reads from 0.14 and earlier
+//! releases ignore ([`crate::dialog`], `REQ-VC-012`).
+//!
 //! **Exporters.** An exporter's manifest ([`exporter`]) lists its format's extension, and its dialog holds
 //! the 2 options of `stitch export` it takes ([`crate::export`]): `auto`, which digitizes the shapes without
 //! settings, and `profile`, a choice of the built-in machine profiles, the reference machine's first.
 //! VectorCraft refuses an exporter before 0.14, which is when its kind came.
 
-use serde::Serialize;
+use serde::de::{Deserializer, MapAccess, Visitor};
 use serde::ser::{SerializeMap, Serializer};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use stitchcraft_core::Mm;
 use stitchcraft_engine::common::CommonParams;
@@ -47,11 +52,11 @@ use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Empty, Family, Kind, ParamGroup, ParamSpec, StitchType, Value as Parsed, find_for};
 use stitchcraft_plan::FormatId;
-use stitchcraft_plan::profiles::{BUILTIN, REFERENCE};
+use stitchcraft_vectorcraft::settings::SETTINGS_FILTER;
 pub use stitchcraft_vectorcraft::{PREVIEW_LEVEL, plugin_id};
 
-use crate::export::{AUTO, PROFILE};
-use crate::preview::Level;
+use crate::dialog::{self, Ui, registry_ui};
+use crate::{export, preview};
 
 /// VectorCraft ABI v1 limits on manifests (VectorCraft `crates/plugins/src/manifest.rs`).
 pub mod limits {
@@ -95,14 +100,26 @@ pub struct Manifest {
     pub description: &'static str,
     /// The parameters, in the dialog's order.
     #[serde(serialize_with = "in_order")]
-    pub params: Vec<(&'static str, Schema)>,
+    pub params: Vec<(&'static str, Param)>,
     /// An exporter's file extensions, lower case and without the dot, the one its files get first. Only an
     /// exporter lists them.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub extensions: Vec<&'static str>,
 }
 
-/// One parameter as VectorCraft declares it (`ParamSpec` in VectorCraft's `crates/plugins`).
+/// One parameter as VectorCraft declares it: its kind of value, which every release reads, and how
+/// dialogs show it, which releases before 0.14 ignore (`Param` in VectorCraft's `crates/plugins`).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct Param {
+    /// Its kind of value, range and default.
+    #[serde(flatten)]
+    pub schema: Schema,
+    /// How dialogs show it.
+    #[serde(flatten)]
+    pub ui: Ui,
+}
+
+/// A parameter's kind of value, range and default (`ParamSpec` in VectorCraft's `crates/plugins`).
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum Schema {
@@ -138,6 +155,19 @@ pub enum Schema {
     },
 }
 
+impl Schema {
+    /// Its value when the user leaves it, as VectorCraft passes it: a number within its range, as
+    /// VectorCraft clamps a default into it.
+    pub fn default_value(&self) -> Value {
+        match self {
+            Schema::Number { min, max, default } => Value::from(default.clamp(*min, *max)),
+            Schema::Int { min, max, default } => Value::from(*default.clamp(min, max)),
+            Schema::Bool { default } => Value::Bool(*default),
+            Schema::Choice { default, .. } => Value::from(*default),
+        }
+    }
+}
+
 /// The manifest of the M0.6 *hello* live effect: returns the object's geometry unchanged.
 pub fn hello() -> Manifest {
     Manifest {
@@ -170,7 +200,23 @@ pub fn family(family: Family) -> Manifest {
         kind: "effect",
         author: AUTHOR,
         description,
-        params: params(family).into_iter().chain([(PREVIEW_LEVEL, preview_level(family))]).collect(),
+        params: params(family).into_iter().chain([(PREVIEW_LEVEL, preview::param(family))]).collect(),
+        extensions: Vec::new(),
+    }
+}
+
+/// The manifest of the Design Settings filter, which keeps a document's design settings and machine with it
+/// (VectorCraft 0.16, [`crate::settings`]).
+pub fn settings() -> Manifest {
+    Manifest {
+        id: plugin_id(SETTINGS_FILTER),
+        name: "StitchCraft Design Settings",
+        version: env!("CARGO_PKG_VERSION"),
+        kind: "filter",
+        author: AUTHOR,
+        description: "Keeps the design's settings and machine with the document, which File › Export and `stitch export` plan it with: \
+                      the shortest jump and stitch, the narrowest satin stroke, and the machine and hoop. It changes no object.",
+        params: crate::settings::options(),
         extensions: Vec::new(),
     }
 }
@@ -188,7 +234,6 @@ pub fn exporter(format: FormatId) -> Manifest {
             "Writes the document as a Tajima DST file, sewn as its StitchCraft effects say, as `stitch export` writes it.",
         ),
     };
-    let profiles = BUILTIN.iter().map(|profile| profile.id).collect();
     Manifest {
         id: plugin_id(format.extension()),
         name,
@@ -196,34 +241,36 @@ pub fn exporter(format: FormatId) -> Manifest {
         kind: "exporter",
         author: AUTHOR,
         description,
-        params: vec![(AUTO, Schema::Bool { default: false }), (PROFILE, Schema::Choice { options: profiles, default: REFERENCE.id })],
+        params: export::options(),
         extensions: vec![format.extension()],
     }
 }
 
-/// How a family's manifest declares [`PREVIEW_LEVEL`]: a choice of the levels its previews offer, auto by
-/// default.
-fn preview_level(family: Family) -> Schema {
-    Schema::Choice { options: Level::offered(family).iter().map(|level| level.id()).collect(), default: Level::Auto.id() }
-}
-
 /// The parameters `family`'s manifest declares, in the dialog's order.
-fn params(family: Family) -> Vec<(&'static str, Schema)> {
+fn params(family: Family) -> Vec<(&'static str, Param)> {
     params_of(PARAMETERS, family)
 }
 
-/// The parameters of `registry` that `family`'s manifest declares, in the dialog's order. A key that
-/// several families declare is there as `family` declares it (REQ-PRM-005).
-fn params_of(registry: &[&ParamGroup], family: Family) -> Vec<(&'static str, Schema)> {
+/// The parameters of `registry` that `family`'s manifest declares, in the dialog's order, each as the
+/// dialog shows it. A key that several families declare is there as `family` declares it (REQ-PRM-005).
+/// One no method the dialog offers shows is left out.
+fn params_of(registry: &[&ParamGroup], family: Family) -> Vec<(&'static str, Param)> {
     let default = find_for(registry, family.method_param(), family).and_then(|method| StitchType::from_id(family, method.default));
     let mut groups = registry.to_vec();
     groups.sort_by_key(|group| place(group, family, default));
-    groups
-        .iter()
-        .flat_map(|group| group.specs.iter().map(|spec| (spec, group.specs)))
-        .filter(|(spec, _)| spec.key != SATIN_COLUMN && spec.applies_to.iter().any(|t| t.family() == family))
-        .filter_map(|(spec, siblings)| Some((spec.key, schema(&spec.in_family(family), siblings)?)))
-        .collect()
+    let mut params: Vec<(&'static str, Param)> = Vec::new();
+    for group in groups {
+        for spec in group.specs.iter().filter(|spec| spec.key != SATIN_COLUMN && spec.applies_to.iter().any(|t| t.family() == family)) {
+            let spec = spec.in_family(family);
+            let Some(schema) = schema(&spec, group.specs) else { continue };
+            // The method comes first, so the rows of some methods only can say which.
+            let before = params.as_slice();
+            if let Some(ui) = registry_ui(&spec, &schema, group, family, before) {
+                params.push((spec.key, Param { schema, ui }));
+            }
+        }
+    }
+    params
 }
 
 /// Where `group` comes in `family`'s dialog, from 0. First is the group with the family's method, then
@@ -289,7 +336,7 @@ pub fn schema(spec: &ParamSpec, siblings: &[ParamSpec]) -> Option<Schema> {
 }
 
 /// Serializes `params` as a JSON object in their order, which VectorCraft's dialog keeps.
-fn in_order<S: Serializer>(params: &[(&'static str, Schema)], serializer: S) -> Result<S::Ok, S::Error> {
+fn in_order<S: Serializer>(params: &[(&'static str, Param)], serializer: S) -> Result<S::Ok, S::Error> {
     let mut map = serializer.serialize_map(Some(params.len()))?;
     for (key, schema) in params {
         map.serialize_entry(key, schema)?;
@@ -297,13 +344,15 @@ fn in_order<S: Serializer>(params: &[(&'static str, Schema)], serializer: S) -> 
     map.end()
 }
 
-/// Checks `manifest` against VectorCraft's ABI v1 rules; the error names the first broken rule.
-pub fn validate(manifest: &Value) -> Result<(), String> {
-    let text = |key: &str| manifest.get(key).and_then(Value::as_str).ok_or_else(|| format!("`{key}` must be a string"));
-    let bytes = serde_json::to_vec(manifest).map_err(|e| e.to_string())?;
-    if bytes.len() > limits::MAX_MANIFEST_BYTES {
-        return Err(format!("manifest is {} bytes (limit {})", bytes.len(), limits::MAX_MANIFEST_BYTES));
+/// Checks the manifest `json`, as `vc_manifest` serves it, against VectorCraft's rules; the error names
+/// the first broken rule. VectorCraft reads the parameters in the order the text gives them, which a
+/// parameter's `visibleWhen` depends on, so the text is checked, not a value of it.
+pub fn validate(json: &[u8]) -> Result<(), String> {
+    if json.len() > limits::MAX_MANIFEST_BYTES {
+        return Err(format!("manifest is {} bytes (limit {})", json.len(), limits::MAX_MANIFEST_BYTES));
     }
+    let manifest: Value = serde_json::from_slice(json).map_err(|e| format!("the manifest doesn't read: {e}"))?;
+    let text = |key: &str| manifest.get(key).and_then(Value::as_str).ok_or_else(|| format!("`{key}` must be a string"));
     let id = text("id")?;
     let id_ok =
         (1..=limits::MAX_ID_CHARS).contains(&id.chars().count()) && id.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-'));
@@ -325,11 +374,12 @@ pub fn validate(manifest: &Value) -> Result<(), String> {
         return Err("`kind` must be \"filter\", \"effect\" or \"exporter\"".into());
     }
     valid_extensions(kind, manifest.get("extensions"))?;
-    let params = manifest.get("params").and_then(Value::as_object).ok_or("`params` must be an object")?;
+    let Ordered(params) = serde_json::from_slice::<Declared>(json).map_err(|e| format!("`params` must be an object: {e}"))?.params;
     if params.len() > limits::MAX_PARAMS {
         return Err(format!("{} parameters (limit {})", params.len(), limits::MAX_PARAMS));
     }
-    for (key, spec) in params {
+    let declared: Vec<(&String, &Value)> = params.iter().map(|(key, spec)| (key, spec)).collect();
+    for (i, (key, spec)) in declared.iter().enumerate() {
         let ok = !key.is_empty()
             && !key.starts_with('_')
             && key.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
@@ -338,8 +388,42 @@ pub fn validate(manifest: &Value) -> Result<(), String> {
             return Err(format!("parameter name `{key}` is not allowed"));
         }
         valid_spec(spec).map_err(|why| format!("parameter `{key}`: {why}"))?;
+        dialog::validate(spec, declared.get(..i).unwrap_or_default()).map_err(|why| format!("parameter `{key}`: {why}"))?;
     }
     Ok(())
+}
+
+/// A manifest's parameters, in the order its text gives them: none when it has no `params`, as VectorCraft
+/// reads it.
+#[derive(Deserialize)]
+struct Declared {
+    #[serde(default)]
+    params: Ordered,
+}
+
+/// A JSON object's entries in the order of its text, which `serde_json`'s own map doesn't keep.
+#[derive(Default)]
+struct Ordered(Vec<(String, Value)>);
+
+impl<'de> Deserialize<'de> for Ordered {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        /// Reads an object's entries one by one.
+        struct Entries;
+        impl<'de> Visitor<'de> for Entries {
+            type Value = Ordered;
+            fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                f.write_str("a JSON object")
+            }
+            fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> Result<Ordered, A::Error> {
+                let mut entries = Vec::new();
+                while let Some(entry) = map.next_entry()? {
+                    entries.push(entry);
+                }
+                Ok(Ordered(entries))
+            }
+        }
+        deserializer.deserialize_map(Entries)
+    }
 }
 
 /// Checks the file extensions a manifest of `kind` lists, as VectorCraft does from 0.14: an exporter lists 1
@@ -410,16 +494,28 @@ mod tests {
     use serde_json::json;
     use stitchcraft_engine::generate::FILL_METHODS;
     use stitchcraft_params::{ChoiceOption, Condition, Origin, ParamSet, Stability};
+    use stitchcraft_plan::profiles::{BUILTIN, REFERENCE};
 
     use super::*;
+    use crate::export::{AUTO, DOCUMENT, PROFILE};
 
     fn value(manifest: &Manifest) -> Value {
         serde_json::to_value(manifest).unwrap()
     }
 
+    /// `manifest` as `vc_manifest` serves it.
+    fn text(manifest: &Manifest) -> Vec<u8> {
+        serde_json::to_vec(manifest).unwrap()
+    }
+
+    /// The kinds of value of `params`, by key.
+    fn schemas(params: &[(&'static str, Param)]) -> Vec<(&'static str, Schema)> {
+        params.iter().map(|(key, param)| (*key, param.schema.clone())).collect()
+    }
+
     #[test]
     fn hello_manifest_is_valid() {
-        assert_eq!(validate(&value(&hello())), Ok(()));
+        assert_eq!(validate(&text(&hello())), Ok(()));
         assert_eq!(hello().id, "dev.stitchcraft.hello");
     }
 
@@ -427,7 +523,7 @@ mod tests {
     fn req_vc_002_each_family_s_manifest_is_one_vectorcraft_accepts() {
         for each in Family::ALL {
             let manifest = family(*each);
-            assert_eq!(validate(&value(&manifest)), Ok(()), "{each:?}");
+            assert_eq!(validate(&text(&manifest)), Ok(()), "{each:?}");
             assert_eq!(manifest.id, format!("dev.stitchcraft.{}", each.id()));
             assert!(manifest.params.iter().all(|(key, _)| *key != SATIN_COLUMN), "{each:?}");
         }
@@ -438,14 +534,14 @@ mod tests {
         let profiles: Vec<&str> = BUILTIN.iter().map(|profile| profile.id).collect();
         for format in FormatId::ALL {
             let manifest = exporter(*format);
-            assert_eq!(validate(&value(&manifest)), Ok(()), "{format:?}");
+            assert_eq!(validate(&text(&manifest)), Ok(()), "{format:?}");
             assert_eq!(manifest.id, format!("dev.stitchcraft.{}", format.extension()));
             assert_eq!((manifest.kind, manifest.extensions.as_slice()), ("exporter", &[format.extension()][..]));
             // `stitch export`'s options, as they are when it is not given them: no automatic digitizing, and the
-            // reference machine, listed first.
-            let options =
-                vec![(AUTO, Schema::Bool { default: false }), (PROFILE, Schema::Choice { options: profiles.clone(), default: REFERENCE.id })];
-            assert_eq!(manifest.params, options, "{format:?}");
+            // machine the document keeps, else the reference machine, listed first after it.
+            let machines: Vec<&str> = std::iter::once(DOCUMENT).chain(profiles.iter().copied()).collect();
+            let options = vec![(AUTO, Schema::Bool { default: false }), (PROFILE, Schema::Choice { options: machines, default: DOCUMENT })];
+            assert_eq!(schemas(&manifest.params), options, "{format:?}");
             assert_eq!(profiles.first(), Some(&REFERENCE.id));
         }
         // The live effects list no extensions, which a VectorCraft before 0.14 would refuse.
@@ -455,7 +551,7 @@ mod tests {
 
     #[test]
     fn each_family_s_dialog_ends_with_its_preview_levels_auto_first() {
-        let levels = |each: Family| family(each).params.last().cloned();
+        let levels = |each: Family| schemas(&family(each).params).last().cloned();
         let choice = |options: &[&'static str]| Some((PREVIEW_LEVEL, Schema::Choice { options: options.to_vec(), default: "auto" }));
         assert_eq!(levels(Family::Fill), choice(&["auto", "exact", "rows", "outline"]));
         assert_eq!(levels(Family::Stroke), choice(&["auto", "exact", "outline"]));
@@ -493,7 +589,7 @@ mod tests {
     #[test]
     fn req_fill_005_the_fill_dialog_offers_every_method_but_legacy_fill() {
         // StitchCraft sews legacy fill as a tatami fill. The others come in Ink/Stitch's order.
-        let method = family(Family::Fill).params.into_iter().find(|(key, _)| *key == "fill_method").map(|(_, schema)| schema);
+        let method = family(Family::Fill).params.into_iter().find(|(key, _)| *key == "fill_method").map(|(_, param)| param.schema);
         let options: Vec<&str> = FILL_METHODS.iter().map(|o| o.id).filter(|id| *id != "legacy_fill").collect();
         assert_eq!(options.len(), FILL_METHODS.len() - 1);
         assert_eq!(method, Some(Schema::Choice { options, default: "tatami_fill" }));
@@ -521,8 +617,8 @@ mod tests {
         let stroke = ParamGroup { name: "StrokeSpacingParams", help: " Stroke.\n", applies_to: STROKE[0].applies_to, specs: STROKE };
         let registry = [&satin, &stroke];
         let spacing = |min, max, default| vec![("zigzag_spacing_mm", Schema::Number { min, max, default })];
-        assert_eq!(params_of(&registry, Family::Satin), spacing(0.01, 10.0, 0.4));
-        assert_eq!(params_of(&registry, Family::Stroke), spacing(0.1, 5.0, 1.5));
+        assert_eq!(schemas(&params_of(&registry, Family::Satin)), spacing(0.01, 10.0, 0.4));
+        assert_eq!(schemas(&params_of(&registry, Family::Stroke)), spacing(0.1, 5.0, 1.5));
         assert_eq!(params_of(&registry, Family::Fill), []);
     }
 
@@ -531,7 +627,7 @@ mod tests {
         // VectorCraft stores every declared parameter, at its default when the user leaves it: each must
         // read as the registry's default, as an element without settings reads it.
         for each in Family::ALL {
-            for (key, schema) in family(*each).params.into_iter().filter(|(key, _)| *key != PREVIEW_LEVEL) {
+            for (key, schema) in schemas(&family(*each).params).into_iter().filter(|(key, _)| *key != PREVIEW_LEVEL) {
                 let spec = stitchcraft_params::find_for(PARAMETERS, key, *each).unwrap().in_family(*each);
                 // VectorCraft stores a number's default clamped into its range.
                 let stored = match schema {
@@ -611,20 +707,28 @@ mod tests {
         let with = |key: &str, v: Value| {
             let mut m = base.clone();
             m[key] = v;
-            m
+            serde_json::to_vec(&m).unwrap()
         };
         assert!(validate(&with("id", json!("has space"))).is_err());
         assert!(validate(&with("name", json!(""))).is_err());
         assert!(validate(&with("author", json!("x".repeat(limits::MAX_AUTHOR_BYTES + 1)))).is_err());
         let large = validate(&with("description", json!("x".repeat(limits::MAX_MANIFEST_BYTES))));
         assert!(large.is_err_and(|why| why.starts_with("manifest is ")));
+        // White space after the JSON counts too: 64 KiB is the most.
+        let padded = |len: usize| {
+            let mut text = serde_json::to_vec(&base).unwrap();
+            text.resize(len, b' ');
+            validate(&text)
+        };
+        assert_eq!(padded(limits::MAX_MANIFEST_BYTES), Ok(()));
+        assert!(padded(limits::MAX_MANIFEST_BYTES + 1).is_err_and(|why| why.starts_with("manifest is 65537 bytes")));
         assert!(validate(&with("kind", json!("tool"))).is_err());
         // An exporter lists 1 to 8 extensions, each 1 to 16 lower-case letters and digits, and only an exporter
         // lists any.
         let exporting = |extensions: Value| {
             let mut m = value(&exporter(FormatId::Dst));
             m["extensions"] = extensions;
-            m
+            serde_json::to_vec(&m).unwrap()
         };
         let nine = json!(["a", "b", "c", "d", "e", "f", "g", "h", "i"]);
         for bad in [
@@ -645,10 +749,17 @@ mod tests {
         assert!(validate(&with("kind", json!("exporter"))).is_err(), "an exporter without extensions");
         assert!(validate(&with("extensions", json!(["pes"]))).is_err(), "a live effect with extensions");
         assert_eq!(validate(&with("extensions", json!([]))), Ok(()));
+        // A manifest may leave its parameters out, as VectorCraft reads it, but they are an object.
+        let mut bare = base.clone();
+        bare.as_object_mut().unwrap().remove("params");
+        assert_eq!(validate(&serde_json::to_vec(&bare).unwrap()), Ok(()));
+        assert!(validate(&with("params", json!([]))).is_err_and(|why| why.contains("expected a JSON object")));
         assert!(validate(&with("params", json!({"preview": {"type": "bool", "default": false}}))).is_err());
         let too_many: serde_json::Map<String, Value> =
             (0..=limits::MAX_PARAMS).map(|i| (format!("p{i}"), json!({"type": "bool", "default": false}))).collect();
-        assert!(validate(&with("params", Value::Object(too_many))).is_err());
+        assert!(validate(&with("params", Value::Object(too_many.clone()))).is_err());
+        let most: serde_json::Map<String, Value> = too_many.into_iter().take(limits::MAX_PARAMS).collect();
+        assert_eq!(validate(&with("params", Value::Object(most))), Ok(()));
         for bad in [
             json!({"type": "number", "min": 2, "max": 1, "default": 1}),
             json!({"type": "number", "min": 0, "default": 1}),

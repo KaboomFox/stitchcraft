@@ -25,6 +25,10 @@ it out, and `stitch:start` and `stitch:end` mark where the shape grouped with th
 automatic element when neither it nor a group or layer around it has a StitchCraft effect
 (`REQ-AUTO-001`). Of such a line sewn across its width, the reader names the alignment and the width
 profile VectorCraft draws, which its stitches don't follow (`REQ-AUTO-005`).
+From M6.11 a document's design settings and machine, which StitchCraft's Design Settings filter keeps with
+it from VectorCraft 0.16, plan the design: `src/settings.rs` writes that data (`kept_data`) and reads it
+back, the settings into the design and the machine into `VectorCraft::machine`, which `machine` reads
+alone (`REQ-VC-013`).
 `EXTENSIONS` lists the documents' file name extensions, a template's among them, by which `stitch plan`
 tells a document from an SVG file. `read_part` is the part of a file the reader reads, which a bug-report
 bundle keeps: a plain file's JSON, without the images and other data after it. `plugin_id`, `effect_id`
@@ -43,7 +47,8 @@ The VectorCraft versions it reads are proven by `docs/src/design/compatibility-g
   VectorCraft document, or is too large, is refused (`SC-E0806`). The reader is fuzzed nightly
   (`fuzz/fuzz_targets/read_vectorcraft.rs`).
 - What it leaves out is said, with `SC-W0807` and `SC-W0808`, with `SC-I0809` for the layers and guides
-  VectorCraft doesn't print, or with `SC-I0811` for what a name leaves out. Only what VectorCraft draws
+  VectorCraft doesn't print, with `SC-I0811` for what a name leaves out, or with `SC-W0812` for a design
+  setting or a machine kept with the document that it can't read. Only what VectorCraft draws
   nothing for is left out without a word, and a name on it is not read.
 - Positions are points times 25.4/72, and the same on every platform. So are colours, whose Lab
   conversion uses `stitchcraft_core::math`, never the platform's maths.

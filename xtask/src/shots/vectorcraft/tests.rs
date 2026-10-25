@@ -115,13 +115,16 @@ fn the_window_s_job_names_the_dialog_s_row_and_its_parameters_from_the_manifest(
     let manifest = stitchcraft_vc_plugin::manifest::family(Family::Fill);
     assert_eq!(entry["dialog"]["row"], json!(manifest.name));
     let params = entry["dialog"]["params"].as_array().unwrap();
-    assert_eq!(params.len(), manifest.params.len());
+    // The rows it shows at the defaults, by label: the tatami fill's, and not the other methods'.
+    let shown = stitchcraft_vc_plugin::dialog::shown_at_defaults(&manifest.params);
+    assert!(shown.len() < manifest.params.len());
+    assert_eq!(params.len(), shown.len());
     // Each with the control VectorCraft gives its type.
-    for row in [json!(["angle", "text_field"]), json!(["fill_method", "combo_box"]), json!(["fill", "check_box"])] {
+    for row in [json!(["Angle", "text_field"]), json!(["Fill method", "combo_box"]), json!(["Sew the fill", "check_box"])] {
         assert!(params.contains(&row), "{row} in {params:?}");
     }
     assert_eq!(control(&Schema::Int { min: 0, max: 1, default: 0 }), "text_field");
-    assert_eq!(entry["window"], json!([1440, 2000]), "a dialog's picture is taken in a taller window");
+    assert_eq!(entry["window"], json!([1440, 2400]), "a dialog's picture is taken in a taller window");
     assert_eq!(entry["menu"], json!(["Effect", "Plug-ins"]));
     assert_eq!(entry["plugins"], json!([Path::new("/modules").join("fill.wasm").to_string_lossy()]));
     // A menu's picture has no dialog, and the window keeps its size.

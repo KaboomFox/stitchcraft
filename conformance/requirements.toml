@@ -1086,6 +1086,24 @@ rationale = "A VectorCraft user exports the machine file where the design was dr
 milestone = "M6"
 status = "active"
 
+[[req]]
+id = "REQ-VC-012"
+area = "vectorcraft"
+level = "L2"
+statement = "From VectorCraft 0.14, a plug-in's dialog shows each parameter as the parameter registry describes it: its label, the unit of its value, its help when the pointer rests on the label, with what each option of a choice means, and a button that opens its entry in the parameter reference. The registry's groups are the dialog's sections, each group's rows together, in the manifest's order. A parameter of some of a family's methods shows only while the method is one of them, and one the registry shows only while another setting has some values shows only then. A parameter is left out when nothing the dialog offers would show it. The plug-in's own parameters, the preview level and the exporters' options, are labelled and explained too. VectorCraft 0.13 and earlier ignore these keys, and the modules install there as before."
+rationale = "A label says what a setting does where a key such as `zigzag_spacing_mm` only names it, and a dialog of up to 48 rows reads more easily when only the rows that apply show. VectorCraft's dialogs showed each parameter's key until 0.14 adopted labels, units, help, sections and conditions (the RFC's P2). VectorCraft passes a hidden parameter to the plug-in with its value, so what a dialog shows never changes what sews."
+milestone = "M6"
+status = "active"
+
+[[req]]
+id = "REQ-VC-013"
+area = "vectorcraft"
+level = "L2"
+statement = "From VectorCraft 0.16, StitchCraft's Design Settings filter keeps a document's design settings and machine with it, as data VectorCraft keeps with a document for a filter: Ink/Stitch's 3 design settings, `collapse_len_mm`, `min_stitch_len_mm` and `min_satin_stroke_width_mm`, and the machine profile. It changes no object. `stitch export` and the exporters plan the document with its settings, and for its machine unless `--profile` or the export's dialog names another. A setting that does not read keeps its default, and a machine StitchCraft doesn't have leaves the reference machine, each with `SC-W0812`. A VectorCraft before 0.16 doesn't keep a filter's data, and there the filter declines with `SC-E0813`. A live effect is not given them, and its preview keeps the defaults and the reference machine."
+rationale = "Ink/Stitch keeps its design settings in the SVG file, and a VectorCraft document had nowhere to keep them until 0.16 gave each filter data of its own in the document. A design is planned for one machine and hoop, which belongs with it as much as its settings do. So the file VectorCraft exports and the one `stitch export` writes of the saved document are the same, whoever exports it."
+milestone = "M6"
+status = "active"
+
 # ── Command line ───────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

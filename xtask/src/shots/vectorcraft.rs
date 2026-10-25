@@ -17,8 +17,9 @@
 //!   (`window.rs`), where the window probe's `tests/shots.rs` presses the shot's menu path through the
 //!   accessibility tree and crops the picture to the menus, or to the dialog of the family's effect. A
 //!   dialog is taken in a taller window (`window::DIALOG_WINDOW`), since it doesn't scroll, and must show a
-//!   row for each parameter of the module's manifest, which the plug-in crate makes from the parameter
-//!   registry and gives here: a label, and the control VectorCraft gives the parameter's type.
+//!   row for each parameter of the module's manifest that shows at the defaults, which the plug-in crate
+//!   makes from the parameter registry and gives here (`dialog::shown_at_defaults`): the parameter's
+//!   label, and the control VectorCraft gives its type.
 //!
 //! **Why a tolerance.** Mesa draws VectorCraft's window in software, and a newer Mesa from Ubuntu's updates
 //! may move an anti-aliased edge. A picture stays while no more than [`PER_THOUSAND`] in a thousand of its
@@ -32,6 +33,7 @@ use std::path::Path;
 
 use serde_json::{Value, json};
 use stitchcraft_params::Family;
+use stitchcraft_vc_plugin::dialog;
 use stitchcraft_vc_plugin::manifest::Schema;
 
 use super::{GENERATED, Same, Shot, keep};
@@ -190,10 +192,9 @@ fn make(root: &Path, shots: &[&Shot], check_only: bool, findings: &mut Findings)
     for shot in shots {
         let dir = out.join(&shot.id);
         let (document, picture) = (format!("{}.vectorcraft", shot.id), format!("{}.png", shot.id));
-        let export = |file: &str| Step { cmd: None, apply: None, params: None, export: Some(file.to_string()) };
         let mut steps = shot.steps.clone();
-        steps.push(export(&document));
-        steps.push(export(if shot.kind == RENDER { &picture } else { CANVAS }));
+        steps.push(Step::exporting(&document));
+        steps.push(Step::exporting(if shot.kind == RENDER { &picture } else { CANVAS }));
         let run = Run { open: None, plugins: shot.plugins.clone(), steps, scale: shot.scale.map(f64::from) };
         if let Err(e) = scenario::draw(&run, &fetched.root.join("bin/vectorcraft-cli"), &modules, &dir) {
             findings.error(format!("shot `{}`: {e}", shot.id));
@@ -256,7 +257,8 @@ fn kept(root: &Path, ui: &[(&Shot, Value)], check_only: bool, findings: &mut Fin
 
 /// The window probe's job for the `vectorcraft-ui` shot `shot` (`compat/vc-window/tests/shots.rs`): the
 /// document, the modules' files, the menu path, and for a dialog the window's size, the family's row, and
-/// its parameters with the control each shows, which its manifest gives; and where the picture goes.
+/// the label and control of each row it shows at the defaults, which its manifest gives; and where the
+/// picture goes.
 fn job(shot: &Shot, document: &Path, modules: &Path, picture: &Path) -> Result<Value, String> {
     let plugins: Vec<String> = shot.plugins.iter().map(|module| modules.join(format!("{module}.wasm")).to_string_lossy().into_owned()).collect();
     let (window, dialog) = match shot.dialog.as_deref() {
@@ -264,7 +266,13 @@ fn job(shot: &Shot, document: &Path, modules: &Path, picture: &Path) -> Result<V
         Some(name) => {
             let family = Family::ALL.iter().copied().find(|f| f.id() == name).ok_or(format!("no stitch family `{name}`"))?;
             let manifest = stitchcraft_vc_plugin::manifest::family(family);
-            let params: Vec<Value> = manifest.params.iter().map(|(key, schema)| json!([key, control(schema)])).collect();
+            let shown = dialog::shown_at_defaults(&manifest.params);
+            let params: Vec<Value> = manifest
+                .params
+                .iter()
+                .filter(|(key, _)| shown.contains(key))
+                .map(|(key, param)| json!([param.ui.label.unwrap_or(key), control(&param.schema)]))
+                .collect();
             (json!(window::DIALOG_WINDOW), json!({ "row": manifest.name, "params": params }))
         }
     };

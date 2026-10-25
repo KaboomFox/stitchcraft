@@ -399,7 +399,7 @@ steps = [
 ]
 menu = ["Effect", "Plug-ins"]
 dialog = "fill"
-alt = "The StitchCraft Fill dialog in VectorCraft, with a row for each setting under its Ink/Stitch name, from Fill and Fill_method at the top to Max_stitch_length_mm and Preview_level at the bottom. Under them are the Preview checkbox, checked, and the Cancel and OK buttons."
+alt = "The StitchCraft Fill dialog in VectorCraft, its settings in sections, from Fill, with Sew the fill and Fill method, to Longest stitch and Preview. Each row has a label, a field with its unit, and a button that opens the setting's help page. Under them are the Preview checkbox, checked, and the Cancel and OK buttons."
 
 [[shot]]
 id = "vectorcraft-satin-dialog"
@@ -414,7 +414,7 @@ steps = [
 ]
 menu = ["Effect", "Plug-ins"]
 dialog = "satin"
-alt = "The StitchCraft Satin dialog in VectorCraft, with a row for each setting under its Ink/Stitch name, from Satin_method and Zigzag_spacing_mm at the top to Max_stitch_length_mm and Preview_level at the bottom. Under them are the Preview checkbox, checked, and the Cancel and OK buttons."
+alt = "The StitchCraft Satin dialog in VectorCraft, its settings in sections, from Satin column, with Method and Zigzag spacing, through the 3 underlays to Longest stitch and Preview. Each row has a label, a field with its unit, and a button that opens the setting's help page. Under them are the Preview checkbox, checked, and the Cancel and OK buttons."
 
 [[shot]]
 id = "vectorcraft-stroke-dialog"
@@ -426,7 +426,7 @@ steps = [
 ]
 menu = ["Effect", "Plug-ins"]
 dialog = "stroke"
-alt = "The StitchCraft Stroke dialog in VectorCraft, with a row for each setting under its Ink/Stitch name, from Stroke_method and Repeats at the top to Max_stitch_length_mm and Preview_level at the bottom. Under them are the Preview checkbox, checked, and the Cancel and OK buttons."
+alt = "The StitchCraft Stroke dialog in VectorCraft, its settings in sections, from Stroke, with Method, to Shortest stitch and jump and Preview. Each row has a label, a field with its unit, and a button that opens the setting's help page. Under them are the Preview checkbox, checked, and the Cancel and OK buttons."
 
 [[shot]]
 id = "vectorcraft-patch"

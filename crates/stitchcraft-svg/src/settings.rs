@@ -16,24 +16,9 @@ use std::collections::BTreeSet;
 
 use roxmltree::{Node, NodeId};
 use stitchcraft_core::Mm;
-use stitchcraft_engine::design::DesignSettings;
+use stitchcraft_engine::design::{DesignSettings, Setting};
 
 use crate::inkstitch::INKSTITCH_NS;
-
-/// One of Ink/Stitch's design settings: its name, and the field of [`DesignSettings`] it sets.
-pub(crate) struct Setting {
-    /// The name, as Ink/Stitch writes it.
-    pub(crate) name: &'static str,
-    /// Sets the field to a value.
-    set: fn(&mut DesignSettings, Mm),
-}
-
-/// The design settings Ink/Stitch keeps in a file, each with the setting it becomes.
-pub(crate) const SETTINGS: [Setting; 3] = [
-    Setting { name: "collapse_len_mm", set: |settings, value| settings.collapse_len = value },
-    Setting { name: "min_stitch_len_mm", set: |settings, value| settings.min_stitch_len = Some(value) },
-    Setting { name: "min_satin_stroke_width_mm", set: |settings, value| settings.min_satin_stroke_width = value },
-];
 
 /// Ink/Stitch's design settings, as the document reader comes to them.
 #[derive(Debug, Default)]
@@ -61,7 +46,7 @@ impl Found {
         }
         let setting = Setting::named(node.tag_name().name()).filter(|setting| self.read.insert(setting.name))?;
         let text = node.text().unwrap_or_default().trim();
-        (!setting.apply(&mut self.settings, text)).then(|| {
+        (!apply(setting, &mut self.settings, text)).then(|| {
             format!(
                 "Ink/Stitch's design setting `{}`, \"{text}\", is not a number of 0 or more; it is ignored, and the design keeps its default.",
                 setting.name
@@ -70,37 +55,32 @@ impl Found {
     }
 }
 
-impl Setting {
-    /// The setting called `name`, if there is one.
-    pub(crate) fn named(name: &str) -> Option<&'static Setting> {
-        SETTINGS.iter().find(|setting| setting.name == name)
+/// Sets `setting` of `settings` to the value `text` gives; `false`, changing nothing, when `text` is not a
+/// number of 0 or more.
+fn apply(setting: &Setting, settings: &mut DesignSettings, text: &str) -> bool {
+    let value = text.trim().parse::<f64>().ok().filter(|v| *v >= 0.0).and_then(|v| Mm::new(v).ok());
+    if let Some(value) = value {
+        setting.set(settings, value);
     }
-
-    /// Sets this setting of `settings` to the value `text` gives; `false`, changing nothing, when `text` is
-    /// not a number of 0 or more.
-    pub(crate) fn apply(&self, settings: &mut DesignSettings, text: &str) -> bool {
-        let value = text.trim().parse::<f64>().ok().filter(|v| *v >= 0.0).and_then(|v| Mm::new(v).ok());
-        if let Some(value) = value {
-            (self.set)(settings, value);
-        }
-        value.is_some()
-    }
+    value.is_some()
 }
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_engine::design::SETTINGS;
+
     use super::*;
 
     #[test]
     fn each_setting_sets_its_own_field() {
         let mut settings = DesignSettings::default();
         for (name, text) in [("collapse_len_mm", "5"), ("min_stitch_len_mm", "0.3"), ("min_satin_stroke_width_mm", "2")] {
-            assert!(Setting::named(name).is_some_and(|setting| setting.apply(&mut settings, text)), "{name}");
+            assert!(Setting::named(name).is_some_and(|setting| apply(setting, &mut settings, text)), "{name}");
         }
         assert_eq!((settings.collapse_len.get(), settings.min_stitch_len.map(Mm::get), settings.min_satin_stroke_width.get()), (5.0, Some(0.3), 2.0));
         assert!(Setting::named("min_stitch_length_mm").is_none(), "an element's setting is not the design's");
         let unchanged = settings;
-        assert!(!SETTINGS[0].apply(&mut settings, "-0.1"));
+        assert!(!apply(&SETTINGS[0], &mut settings, "-0.1"));
         assert_eq!(settings, unchanged);
     }
 }

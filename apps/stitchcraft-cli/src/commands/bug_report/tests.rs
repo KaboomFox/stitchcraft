@@ -16,7 +16,7 @@ fn conformance(name: &str) -> PathBuf {
 type Change = fn(&mut Value);
 
 fn args(design: Option<PathBuf>) -> BugReportArgs {
-    BugReportArgs { design, replay: None, output: None, profile: profiles::REFERENCE.id.to_string(), format: None, says: None, auto: false }
+    BugReportArgs { design, replay: None, output: None, profile: None, format: None, says: None, auto: false }
 }
 
 fn json(path: &Path) -> Value {
@@ -210,7 +210,7 @@ fn req_cli_002_a_bug_found_while_planning_writes_a_bundle() {
     let plan = PlanArgs {
         design: conformance("fixtures/svg/strokes.svg"),
         output: dir.join("panicked.pes"),
-        profile: profiles::REFERENCE.id.to_string(),
+        profile: None,
         format: None,
         preview: None,
         report: None,

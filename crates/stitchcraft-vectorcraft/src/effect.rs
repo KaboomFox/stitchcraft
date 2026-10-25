@@ -157,7 +157,8 @@ pub fn effect_lines<'a>(lines: impl IntoIterator<Item = &'a [Point]>) -> Option<
 }
 
 /// What a live effect returns instead of stitches: VectorCraft shows `diagnostic`, with its hint, as the
-/// plug-in's last error, and draws the object as it is.
+/// plug-in's last error, and draws the object as it is. A filter declines with the same output, which
+/// VectorCraft shows after `plug-in failed:`, and changes nothing.
 pub fn effect_error(diagnostic: &Diagnostic) -> Vec<u8> {
     let error = match &diagnostic.fix {
         Some(fix) => format!("{diagnostic} {}", fix.describe()),

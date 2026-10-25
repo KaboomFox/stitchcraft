@@ -7,7 +7,7 @@ use std::fmt::Write as _;
 
 use serde_json::{Value as Json, json};
 use stitchcraft_engine::registry::PARAMETERS;
-use stitchcraft_params::{Empty, Kind, MAX_LIST, Origin, ParamGroup, ParamSpec, Stability, StitchType, Value};
+use stitchcraft_params::{ChoiceOption, Empty, Kind, MAX_LIST, Origin, ParamGroup, ParamSpec, Stability, StitchType, Value};
 
 use crate::deviations::{self, Deviation};
 
@@ -76,7 +76,7 @@ fn index_path() -> String {
 }
 
 fn group_path(group: &ParamGroup) -> String {
-    format!("{DIR}/{}.md", slug(group))
+    format!("{DIR}/{}.md", group.slug())
 }
 
 fn schema_path() -> String {
@@ -85,34 +85,7 @@ fn schema_path() -> String {
 
 /// Where `group`'s page describes `key`, relative to the reference directory: `params/common.md#ties`.
 pub fn anchor(group: &ParamGroup, key: &str) -> String {
-    format!("params/{}.md#{key}", slug(group))
-}
-
-/// `CommonParams` → `common`; `TatamiFillParams` → `tatami-fill`.
-fn slug(group: &ParamGroup) -> String {
-    words(group).join("-")
-}
-
-/// `CommonParams` → `Common parameters`; `TatamiFillParams` → `Tatami fill parameters`.
-fn title(group: &ParamGroup) -> String {
-    let mut title = words(group).join(" ");
-    if let Some(first) = title.get(..1) {
-        title = format!("{}{}", first.to_ascii_uppercase(), title.get(1..).unwrap_or(""));
-    }
-    format!("{title} parameters")
-}
-
-/// The words of a declaration's name, lower case, without the `Params` suffix (REQ-PRM-001 requires it).
-fn words(group: &ParamGroup) -> Vec<String> {
-    let stem = group.name.strip_suffix("Params").unwrap_or(group.name);
-    let mut words: Vec<String> = Vec::new();
-    for c in stem.chars() {
-        match words.last_mut() {
-            Some(word) if !c.is_ascii_uppercase() => word.push(c),
-            _ => words.push(c.to_ascii_lowercase().to_string()),
-        }
-    }
-    words
+    format!("params/{}.md#{key}", group.slug())
 }
 
 fn header(source: &str) -> String {
@@ -132,20 +105,20 @@ fn index_of(registry: &[&ParamGroup], ledger: &[Deviation]) -> String {
     }
     out.push_str("\n## Groups\n\n| Group | Parameters | Applies to |\n|---|---|---|\n");
     for group in registry {
-        let _ = writeln!(out, "| [{}](params/{}.md) | {} | {} |", title(group), slug(group), group.specs.len(), applies_to(group.applies_to));
+        let _ = writeln!(out, "| [{}](params/{}.md) | {} | {} |", group.title(), group.slug(), group.specs.len(), applies_to(group.applies_to));
     }
     out.push_str("\n## Every parameter\n\n| Key | Label | Group |\n|---|---|---|\n");
     let mut rows: Vec<(&str, &str, &ParamGroup)> = registry.iter().flat_map(|g| g.specs.iter().map(move |s| (s.key, s.label, *g))).collect();
     rows.sort_by_key(|(key, _, _)| *key);
     for (key, label, group) in rows {
-        let _ = writeln!(out, "| [`{key}`](params/{}.md#{key}) | {label} | {} |", slug(group), title(group));
+        let _ = writeln!(out, "| [`{key}`](params/{}.md#{key}) | {label} | {} |", group.slug(), group.title());
     }
     out
 }
 
 fn page(group: &ParamGroup, ledger: &[Deviation]) -> Result<String, String> {
     let mut out = header(&format!("`{}` in the parameter registry", group.name));
-    let _ = writeln!(out, "# {}\n\n{}\n\nApplies to {}.", title(group), group.help(), applies_to(group.applies_to));
+    let _ = writeln!(out, "# {}\n\n{}\n\nApplies to {}.", group.title(), group.help(), applies_to(group.applies_to));
     let mut section = "";
     for spec in group.specs {
         if spec.group != section {
@@ -200,10 +173,7 @@ fn ink_stitch(spec: &ParamSpec, ledger: &[Deviation]) -> String {
 /// what a family that needs a value accepts instead (`ParamSpec::in_family`).
 fn accepts(spec: &ParamSpec) -> String {
     let describe = |kind: Kind| match kind {
-        Kind::Choice { options } => {
-            let options: Vec<String> = options.iter().map(|o| format!("`{}` ({})", o.id, o.label)).collect();
-            format!("one of {}", options.join(", "))
-        }
+        Kind::Choice { options } => format!("one of {}", ChoiceOption::list(options)),
         other => other.describe(),
     };
     let mut text = describe(spec.kind);
@@ -272,7 +242,7 @@ fn schema_of(registry: &[&ParamGroup]) -> Result<String, String> {
         properties.insert(key.to_string(), schema);
     }
     let groups: Vec<Json> =
-        registry.iter().map(|g| json!({"name": g.name, "title": title(g), "keys": g.specs.iter().map(|s| s.key).collect::<Vec<_>>()})).collect();
+        registry.iter().map(|g| json!({"name": g.name, "title": g.title(), "keys": g.specs.iter().map(|s| s.key).collect::<Vec<_>>()})).collect();
     let schema = json!({
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "title": "StitchCraft parameters",
@@ -411,21 +381,12 @@ fn stability(stability: Stability) -> &'static str {
 mod tests {
     use super::*;
 
-    const GROUP: ParamGroup = ParamGroup { name: "TatamiFillParams", help: "", applies_to: &[], specs: &[] };
-
     #[test]
     fn alternatives_read_as_a_sentence() {
         assert_eq!(either(&["custom"]), "`custom`");
         assert_eq!(either(&["back_forth", "custom"]), "`back_forth` or `custom`");
         assert_eq!(either(&["arrow", "star", "custom"]), "`arrow`, `star` or `custom`");
         assert_eq!(either(&[]), "");
-    }
-
-    #[test]
-    fn names_become_slugs_and_titles() {
-        assert_eq!((slug(&GROUP), title(&GROUP)), ("tatami-fill".to_string(), "Tatami fill parameters".to_string()));
-        let common = ParamGroup { name: "CommonParams", ..GROUP };
-        assert_eq!((slug(&common), title(&common)), ("common".to_string(), "Common parameters".to_string()));
     }
 
     #[test]
