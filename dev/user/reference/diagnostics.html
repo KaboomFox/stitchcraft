@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-e9c264b3.js";
+            window.path_to_searchindex_js = "../../searchindex-71314849.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b31b520c.js"></script>
@@ -253,6 +253,8 @@
 <tr><td><a href="#sc-i0809"><code>SC-I0809</code></a></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print</td></tr>
 <tr><td><a href="#sc-i0810"><code>SC-I0810</code></a></td><td>Info</td><td>VectorCraft live effect leaves the object as it is</td></tr>
 <tr><td><a href="#sc-i0811"><code>SC-I0811</code></a></td><td>Info</td><td>VectorCraft object left out, as its name asks</td></tr>
+<tr><td><a href="#sc-w0812"><code>SC-W0812</code></a></td><td>Warning</td><td>VectorCraft design setting ignored</td></tr>
+<tr><td><a href="#sc-e0813"><code>SC-E0813</code></a></td><td>Error</td><td>VectorCraft too old to keep the design settings</td></tr>
 <tr><td><a href="#sc-i0901"><code>SC-I0901</code></a></td><td>Info</td><td>Shapes digitized automatically</td></tr>
 <tr><td><a href="#sc-i0902"><code>SC-I0902</code></a></td><td>Info</td><td>Line a satin column cannot follow; filled</td></tr>
 <tr><td><a href="#sc-w0903"><code>SC-W0903</code></a></td><td>Warning</td><td>Line too wide to fill; left out</td></tr>
@@ -781,6 +783,21 @@ or followed by white space and a note, in any mix of upper and lower case. Desig
 lines, templates and notes this way, in the drawing but out of the sew-out, as Ink/Stitch’s ignore
 commands keep them. Everything in a group or a layer so named is left out with it.</p>
 <p>The message names what was left out. To stitch it, rename it in VectorCraft’s Layers panel.</p>
+<h2 id="sc-w0812"><a class="header" href="#sc-w0812">SC-W0812</a></h2>
+<p><strong>Warning</strong> — VectorCraft design setting ignored</p>
+<p>A design setting that StitchCraft’s Design Settings filter keeps with a VectorCraft document does not
+read: a length that is not a number of 0 or more, or a machine this StitchCraft doesn’t have, as a
+document from a newer one may name. The setting keeps its default, and the design is planned for
+the machine <code>--profile</code> or the export names, or else for the reference machine, the Brother PE800’s
+5 × 7 in hoop.</p>
+<p>The message names the setting and what it holds. To set it again, choose Object › Plug-ins ›
+StitchCraft Design Settings in VectorCraft, which keeps every setting anew.</p>
+<h2 id="sc-e0813"><a class="header" href="#sc-e0813">SC-E0813</a></h2>
+<p><strong>Error</strong> — VectorCraft too old to keep the design settings</p>
+<p>StitchCraft Design Settings keeps a document’s design settings and machine as data VectorCraft
+keeps with a document for a filter plug-in, which VectorCraft does from 0.16. The VectorCraft that
+ran the filter is older and would drop them, so the filter declined to run.</p>
+<p>Update VectorCraft to 0.16 or later. Until then, the export’s Machine option and <code>stitch export --profile</code> name the machine, and the design settings keep their defaults.</p>
 <h2 id="sc-i0901"><a class="header" href="#sc-i0901">SC-I0901</a></h2>
 <p><strong>Info</strong> — Shapes digitized automatically</p>
 <p><code>--auto</code> digitized the design’s shapes that have no settings: StitchCraft chose each one’s

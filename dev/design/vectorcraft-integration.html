@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-e9c264b3.js";
+            window.path_to_searchindex_js = "../searchindex-71314849.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -203,7 +203,7 @@ release and branch.</p>
 <tr><td>Commands</td><td>Declarative <code>cmd!</code> registry: id, label, menu path, shortcut, params doc, <code>enabled</code>, <code>run</code>; reachable from UI, JSON control channel and MCP</td><td><code>crates/engine/src/cmd/*</code></td></tr>
 <tr><td>Headless CLI</td><td><code>vectorcraft-cli run [--in FILE] [--cmd ID [--params JSON]]... [--export FILE]...</code>, <code>convert</code>, <code>info</code>, <code>commands</code>, <code>mcp</code></td><td><code>apps/vectorcraft-cli/src/main.rs</code></td></tr>
 <tr><td>Control channel</td><td>JSON lines; <code>engine.execute</code>, <code>ui.menu.invoke</code>, <code>ui.dialog.set</code>, <code>ui.click</code>, <code>ui.screenshot {path?}</code> (needs a presented frame), <code>ui.render {path?, scale?}</code> (headless artboard render)</td><td><code>crates/ui-egui/src/control.rs</code></td></tr>
-<tr><td>Releases</td><td>Tags <code>v0.1.0</code> … <code>v0.16.0</code>. Pushing the <code>release</code> branch drafts a GitHub Release, and SemVer pre-releases (<code>-rc.1</code>) are flagged as pre-releases</td><td><code>.github/workflows/release.yml</code></td></tr>
+<tr><td>Releases</td><td>Tags <code>v0.1.0</code> … <code>v0.17.0</code>. Pushing the <code>release</code> branch drafts a GitHub Release, and SemVer pre-releases (<code>-rc.1</code>) are flagged as pre-releases</td><td><code>.github/workflows/release.yml</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -225,8 +225,8 @@ too, up to 256 parameters with at most 64 outside groups, and each parameter’s
 <li><strong>Limits</strong> (<code>crates/plugins/src/runtime.rs</code>): module ≤ 32 MiB; memory ≤ 512 MiB; output ≤ 64 MiB JSON;
 <strong>fuel 50 M instructions + 4,000 per input byte</strong>; wall clock 60 s per filter run and <strong>5 s per
 live-effect run</strong> (<code>crates/plugins/src/effect.rs</code>), with a fresh instance for each call. An export gets
-10 G instructions and 300 s (0.14). On <code>main</code> after 0.16, a filter that declares <code>"budget": "heavy"</code> gets
-1 G and 300 s, once the user allows it at install.</li>
+10 G instructions and 300 s (0.14). From 0.17 a filter that declares <code>"budget": "heavy"</code> gets 1 G and
+300 s, once the user allows it at install, and runs in the background.</li>
 <li><strong>Live-effect input</strong> is the object’s geometry: <code>type</code>, <code>path</code>, <code>fillRule</code>, <code>bounds</code>. From 0.14 it
 holds the object’s <code>fills</code> and <code>strokes</code> too, read only, each stroke with its width, and from 0.15 its
 join, cap and miter limit. <code>_context.item</code> says whether the effect is on the object or on one of its
@@ -251,8 +251,8 @@ document is there too, under <code>pluginData</code>.</li>
 <li><strong>SVG import keeps only the attributes it understands.</strong> The importer looks attributes up by name
 (presentation attributes, references, names such as <code>inkscape:label</code>) and has no place to keep unknown
 ones (<code>crates/svg/src/import.rs</code>), so an Ink/Stitch SVG opened in VectorCraft up to 0.16 loses its
-<code>inkstitch:*</code> parameters. VectorCraft’s <code>main</code> keeps attributes in other applications’ namespaces after
-0.16, from SVG import to SVG export, and reads none of them. SVG export can embed the whole native
+<code>inkstitch:*</code> parameters. From 0.17 VectorCraft keeps attributes in other applications’ namespaces from
+SVG import to SVG export, and reads none of them. SVG export can embed the whole native
 document (<code>vectorcraft:document</code>) when editing data is preserved.</li>
 <li><strong>Export formats are a static table</strong> (<code>FORMATS</code> in <code>crates/engine/src/cmd/fileio/mod.rs</code>). From 0.14 an
 exporter plug-in adds a format to it, <code>plugin.&lt;id&gt;</code>, which is how StitchCraft can add PES.</li>
@@ -285,6 +285,7 @@ release takes:</p>
 <tr><td><code>&lt;ns&gt;.fill</code></td><td>live effect</td><td>tatami (P1); contour, meander, circular (P2)</td><td><code>fill_method</code> choice</td></tr>
 <tr><td><code>&lt;ns&gt;.auto</code></td><td>live effect</td><td>the stitches automatic digitizing chooses by width (M13.7)</td><td>on a group, previews each path inside (<a href="image-to-embroidery.html">image to embroidery</a>)</td></tr>
 <tr><td><code>&lt;ns&gt;.pes</code>, <code>&lt;ns&gt;.dst</code></td><td>exporter (VectorCraft 0.14)</td><td>every family</td><td>File › Export › Export As writes the same machine file as <code>stitch export</code> (M6.9, <a href="#exporters-file--export-writes-pes-and-dst">below</a>)</td></tr>
+<tr><td><code>&lt;ns&gt;.settings</code></td><td>filter (VectorCraft 0.16)</td><td>none</td><td>keeps the design settings and the machine with the document (M6.11, <a href="#design-settings-and-machine-kept-with-the-document">below</a>)</td></tr>
 </tbody>
 </table>
 </div>
@@ -296,14 +297,15 @@ live effect’s with <code>effect_id</code>, and <code>effect_name</code> reads 
 gate use the same functions. A live effect’s id ends with its stitch family’s
 (<code>stitchcraft_params::Family::id</code>).
 Manifests are generated from the <a href="params.html#splitting-for-vectorcraft-abi-v1">parameter registry</a>; a
-test validates each against VectorCraft’s manifest rules (id charset, ≤ 64 parameters, names, ranges) so
-an invalid manifest never reaches a user.</p>
+test validates each against VectorCraft’s manifest rules (id charset, ≤ 64 parameters, names, ranges, and
+from 0.14 the keys that say how the dialog shows a parameter), so a manifest VectorCraft would refuse fails
+the tests before a release.</p>
 <p><strong>Modules.</strong> The plug-in crate builds one module for each family, chosen by a Cargo feature named after
-the family: <code>stroke</code>, <code>satin</code> or <code>fill</code>, and one for each machine format, by its extension: <code>pes</code> or <code>dst</code>.
-Without one it builds M0.6’s <em>hello</em> effect. The modules contain the same code, which the native tests run
-whichever it is, and the feature only picks the manifest and the run that <code>vc_manifest</code> and <code>vc_run</code> serve.
-<code>cargo xtask compat contract</code> builds the six modules, notes their sizes and loads them into VectorCraft’s
-host.</p>
+the family: <code>stroke</code>, <code>satin</code> or <code>fill</code>, one for each machine format, by its extension: <code>pes</code> or <code>dst</code>, and
+<code>settings</code> for the Design Settings filter. Without one it builds M0.6’s <em>hello</em> effect. The modules contain
+the same code, which the native tests run whichever it is, and the feature only picks the manifest and the
+run that <code>vc_manifest</code> and <code>vc_run</code> serve. <code>cargo xtask compat contract</code> builds the seven modules, notes
+their sizes and loads them into VectorCraft’s host.</p>
 <p><strong>Manifests.</strong> A family’s manifest is made from the registry when VectorCraft asks for it, so a parameter
 added to the registry shows in the dialog without another change. A key that several families declare,
 each its own way, is in each family’s manifest as that family declares it
@@ -326,6 +328,31 @@ tatami fill (<code>REQ-FILL-005</code>). <code>satin_column</code> belongs to th
 with the group that declares the family’s method. The groups only the family uses, for its default
 method, come next, then those it shares with the other families, then those of its other methods, such as
 the zigzag stroke’s. The settings every element shares come last, as in Ink/Stitch’s dialogs.</p>
+<p><strong>How the dialog shows them</strong> (<code>REQ-VC-012</code>, M6.10). From 0.14 a parameter can say how the dialog shows
+it, and the plug-in says all of it from the registry (<code>apps/stitchcraft-vc-plugin/src/dialog.rs</code>):</p>
+<ul>
+<li>Its row has the registry’s label, and the unit of its kind of value: mm, % or °.</li>
+<li>The registry’s groups are the dialog’s sections, as they are the headings of the reference pages.
+VectorCraft draws a section where its group first appears, with every row of the group in it. Each
+group’s rows come together in the manifest, and a release before 0.14 shows them in the same order.</li>
+<li>Its help is the registry’s help as plain text, cut at a sentence within VectorCraft’s 1,000 characters.
+A choice’s help ends with what each option means, by its label in the registry: VectorCraft’s
+drop-down list shows the ids that designs store, such as <code>tatami_fill</code>. Its help page is its entry in
+the parameter reference on the docs site, the book of <code>main</code> (<code>dialog::SITE_URL</code>). The docs check finds
+the page and the heading each manifest links to.</li>
+<li>Each row shows only while the method is one the parameter applies to. Where the registry shows a
+setting only with some values of another, as its <code>when</code> says, the dialog does too: the length variation
+of a random stitch length shows while that is on, and a satin’s staggers for staggered splits. Rows that
+nothing in the dialog would show are left out. VectorCraft gives the plug-in the value of a hidden row as
+well, so what the dialog shows never changes what sews.</li>
+<li>The plug-in’s own parameters, the preview level and the exporters’ 2 options, have a label, help and a
+page too.</li>
+</ul>
+<p>A release before 0.14 ignores these keys, since its <code>ParamSpec</code> reads a parameter’s type, range and
+default and lets other keys pass (<code>crates/plugins/src/manifest.rs</code> at 0.12.0). Its dialog shows the keys
+and every parameter, as it did. The compatibility gate’s pictures of the dialogs are taken in the pinned
+release’s window, and the window probe checks that each shows the rows the manifest shows at the defaults,
+by label, each with the control of its kind.</p>
 <p><strong>What a live effect shows.</strong> A family’s effect sews its object with the engine’s <code>generate</code>, on the
 reference machine and with no neighbours, as one object of a design. It returns the stitches as geometry,
 the exact level below. When it can’t show stitches, it gives back why. VectorCraft then draws the object
@@ -353,7 +380,9 @@ the generated dialog. The parameters are now stored on the object (undoable, sav
 <code>.vectorcraft</code> file) and the object shows a stitch preview.</li>
 <li>Save the document.</li>
 <li><code>stitch export design.vectorcraft -o design.pes --preview design.png</code> writes the machine file, for the
-machine <code>--profile</code> names (<code>brother-pe800-5x7</code> by default), and a picture of what will sew. It says
+machine <code>--profile</code> names, or else the one the document keeps
+(<a href="#design-settings-and-machine-kept-with-the-document">below</a>), or else <code>brother-pe800-5x7</code>, and a
+picture of what will sew. It says
 what the reader left out or changed, with the engine’s warnings. <code>stitch export</code> is another name for
 <code>stitch plan</code>, which reads a VectorCraft document (<code>.vectorcraft</code>, <code>.drawcraft</code>, or a <code>.vctemplate</code>
 template) as it reads an SVG file (<code>REQ-VC-008</code>), and <code>--report</code> adds the JSON report. A bug-report
@@ -377,8 +406,10 @@ There are two, <em>PES embroidery (StitchCraft)</em> and <em>DST embroidery (Sti
 own, and a VectorCraft before 0.14 refuses to install them. An exporter writes the file <code>stitch export</code>
 writes of the document:</p>
 <ul>
-<li>It reads the document with the same reader, plans it with the engine for the machine its <code>profile</code>
-option names, <code>brother-pe800-5x7</code> by default, and writes it with the file’s name as the design name.
+<li>It reads the document with the same reader and plans it with the engine for the machine its <code>profile</code>
+option names, and the design takes the file’s name. The option’s default, <code>document</code>,
+is the machine the document keeps, or <code>brother-pe800-5x7</code> when it keeps none, as <code>stitch export</code> plans
+it without <code>--profile</code> (<a href="#design-settings-and-machine-kept-with-the-document">below</a>).
 Reading the file back, as <code>stitch export</code> does, stops it at a writer’s bug (<code>SC-E0009</code>). The budget is
 <code>stitch export</code>’s own too. Its <code>auto</code> option digitizes the objects without StitchCraft effects, as
 <code>--auto</code> does. Level B of the <a href="compatibility-gate.html">compatibility gate</a> exports a document with
@@ -394,7 +425,7 @@ first 300 characters of a decline, after <code>plug-in failed:</code>.</li>
 The engine’s budget is <code>stitch export</code>’s, so a design that needs more is stopped by VectorCraft with its
 own error, <code>plug-in exceeded its instruction budget</code>, and <code>stitch export</code> writes it. The contract test
 <code>req_vc_011_a_fill_of_the_whole_hoop_exports_within_vectorcraft_s_limits</code> measures the largest designs
-the reference machine sews (VectorCraft 0.16.0, 2026-10-25):</p>
+the reference machine sews (VectorCraft 0.16.0 and 0.17.0 alike, 2026-10-25):</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -412,6 +443,47 @@ plan, which few designs for a home machine’s hoop reach, and <code>stitch expo
 sheets are drawn in code, as plans and designs, and M6.12 draws them into a document, where its Level B
 case exports each. A live effect is given no warnings channel, and an exporter no picture:
 <code>stitch export --preview</code> still draws what will sew.</p>
+<h3 id="design-settings-and-machine-kept-with-the-document"><a class="header" href="#design-settings-and-machine-kept-with-the-document">Design settings and machine kept with the document</a></h3>
+<p>Ink/Stitch keeps 3 settings for the whole design with an SVG file, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code>
+and <code>min_satin_stroke_width_mm</code> (<a href="svg-input.html#design-settings">SVG input</a>), and a VectorCraft document has
+no place of its own for them. VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
+the RFC’s <a href="rfc-vectorcraft-abi-v2.html#p5-document-level-plug-in-data">P5</a>. The filter returns it as
+<code>documentData</code>, and the native file saves it in <code>document.unknown.pluginData</code> under the plug-in’s id. An
+exporter reads every plug-in’s in the document it is given, and a live effect isn’t given it.</p>
+<p>M6.11 makes a filter keep them (<code>REQ-VC-013</code>): <em>StitchCraft Design Settings</em>, in Object › Plug-ins
+(<code>&lt;ns&gt;.settings</code>, <code>apps/stitchcraft-vc-plugin/src/settings.rs</code>). Its dialog has the machine, a choice of
+the built-in profiles, then each design setting as a length. The settings’ names, labels and help come
+from <code>stitchcraft_engine::design::SETTINGS</code>, the table the SVG adapter reads Ink/Stitch’s settings with.
+The machine is StitchCraft’s own, as Ink/Stitch’s hoop is the page. On OK the filter keeps all 4, the
+settings under Ink/Stitch’s names and the machine’s id as <code>profile</code>:</p>
+<pre><code class="language-json">{"profile": "brother-pe800-5x7", "collapse_len_mm": 3, "min_stitch_len_mm": 0, "min_satin_stroke_width_mm": 1}
+</code></pre>
+<p>The filter returns each object it is given by its id alone, as VectorCraft deletes an input object that a
+filter leaves out, and so its run leaves every object as it was.</p>
+<p>The VectorCraft adapter reads the data (<code>stitchcraft_vectorcraft::settings</code>) as the SVG adapter reads
+Ink/Stitch’s. The settings kept become the design’s settings, and the machine kept is
+<code>VectorCraft::machine</code>, which <code>stitchcraft_vectorcraft::machine</code> reads before the rest of the document.
+<code>SC-W0812</code> names what doesn’t read, which keeps its default:</p>
+<ul>
+<li>a setting that isn’t a length of 0 or more, or that this StitchCraft doesn’t know;</li>
+<li>a machine it doesn’t have;</li>
+<li>data that isn’t an object, whose settings all keep their defaults.</li>
+</ul>
+<p>In a damaged file whose <code>pluginData</code> isn’t an object, VectorCraft finds nothing kept, and so does the
+adapter. <code>stitch export</code> and <code>stitch bug-report</code> plan for the machine <code>--profile</code> names, or else the one kept, or
+else the reference machine (<code>stitchcraft_cli::commands::plan::machine_for</code>). The exporters’ <code>profile</code>
+option starts at <code>document</code>, which follows the same order, and names a built-in profile only when the user
+picks one.</p>
+<p>VectorCraft opens a filter’s dialog at its manifest’s defaults, not at what the filter kept. The filter
+keeps every setting each time it runs, and the user sets all of them again. A live effect isn’t given what
+the document keeps, and the previews are planned with the default settings for the reference machine. A
+longer shortest stitch kept with the document shows in the machine file and in <code>stitch export --preview</code>,
+and not in the preview.</p>
+<p>The contract test <code>req_vc_013_the_settings_filter_keeps_the_machine_each_exporter_plans_for</code> has
+VectorCraft’s host run the filter as <code>plugin.run</code> runs it, then exports the document with what it kept. Level B’s <code>settings</code>
+scenario does the same with VectorCraft’s command line: a shortest stitch of 1.5 mm changes the PES file,
+the exports are <code>stitch export</code>’s, and with the small hoop kept the export of a 1 in square fails with
+<code>SC-E0701</code>.</p>
 <h3 id="tools-vectorcrafts-own-commands"><a class="header" href="#tools-vectorcrafts-own-commands">Tools: VectorCraft’s own commands</a></h3>
 <p>The plan had one object filter, <code>&lt;ns&gt;.tools</code>, to make a satin column from 2 paths, add a rung, bake a
 preview to paths and draw a test sheet. VectorCraft’s own commands do the first three, and M6.4 checked
@@ -454,7 +526,7 @@ conversion inside VectorCraft’s host, as a live effect with the same limits as
 </div>
 <p>A light run gets about 52 million, and almost every curved line would run out. The rails are the line
 offset as GEOS offsets it, and each offset builds the boundary of the whole stroke, once for each rail. A
-heavy filter gets 1 G, which VectorCraft’s <code>main</code> adds after 0.16, and M6.12 waits for a release with it.</p>
+heavy filter gets 1 G, which VectorCraft 0.17 adds.</p>
 <p><strong>A test sheet</strong> drawn into the document is M6.12’s too. Up to 0.14 a filter’s output held geometry, paints,
 opacity and names, and never an effect record, and the objects it drew would not sew as a test sheet. From
 0.15 a filter may return effect records. Until M6.12, <code>stitch testsheet</code> makes the sheets.</p>
@@ -687,8 +759,8 @@ tests write files for the adapter to read back (Level B, M6.6).</p>
 <p>Because VectorCraft up to 0.16 drops <code>inkstitch:*</code> attributes on SVG import, phase 1 offers
 <code>stitch import-inkstitch design.svg -o design.vectorcraft</code>: our SVG adapter reads the Ink/Stitch file
 and writes a VectorCraft document with the same art and the parameters as live-effect records (M8).
-VectorCraft’s <code>main</code> keeps the attributes from SVG import to SVG export after 0.16, but its live effects
-read none of them.</p>
+From 0.17 VectorCraft keeps the attributes from SVG import to SVG export, but its live effects read none
+of them.</p>
 <h2 id="5-phase-2-plug-in-features-proposed-upstream-summary"><a class="header" href="#5-phase-2-plug-in-features-proposed-upstream-summary">5. Phase 2: plug-in features proposed upstream (summary)</a></h2>
 <p>Detailed in <a href="rfc-vectorcraft-abi-v2.html">the RFC</a>, which began as a proposal for an ABI v2. VectorCraft
 took most of it into ABI v1 instead, each as an addition older hosts ignore or refuse to install. Every
@@ -702,10 +774,10 @@ item is generic, useful to any plug-in and not only embroidery:</p>
 <tr><td>1. Exporter plug-ins, for File › Export › PES</td><td>0.14.0</td><td>M6.9</td></tr>
 <tr><td>2. Rich parameter schemas: labels, units, groups, help, conditions, texts and lists, 256 parameters</td><td>0.14.0</td><td>M6.10</td></tr>
 <tr><td>3. Display-only overlays from live effects, real stitch previews at low cost</td><td>in review</td><td>M9</td></tr>
-<tr><td>4. Budget classes, with the user’s consent</td><td>heavy filters on <code>main</code> after 0.16.0, heavy live effects proposed</td><td>M6.12, M9</td></tr>
+<tr><td>4. Budget classes, with the user’s consent</td><td>heavy filters in 0.17.0, heavy live effects proposed</td><td>M6.12, M9</td></tr>
 <tr><td>5. Document-level plug-in data, for the machine profile and palettes</td><td>0.16.0, for filters and exporters</td><td>M6.11</td></tr>
 <tr><td>6. Read-only context for live effects</td><td>the object’s paints in 0.14.0, the markers beside it proposed</td><td>M6.8, M9</td></tr>
-<tr><td>7. SVG foreign-attribute preservation</td><td><code>main</code> after 0.16.0</td><td>Ink/Stitch files keep their settings through VectorCraft</td></tr>
+<tr><td>7. SVG foreign-attribute preservation</td><td>0.17.0</td><td>Ink/Stitch files keep their settings through VectorCraft</td></tr>
 <tr><td>8. Effects and stroke style in filter objects</td><td>0.15.0</td><td>M6.12</td></tr>
 </tbody>
 </table>

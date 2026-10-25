@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-e9c264b3.js";
+            window.path_to_searchindex_js = "../../searchindex-71314849.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b31b520c.js"></script>
@@ -190,11 +190,17 @@ from VectorCraft 0.14, or with <code>stitch export</code> from the saved documen
 holds Ink/Stitch’s settings for that kind of stitch, and the object shows its stitches in place of its
 art. The thread is the colour of the object’s fill for a fill, and of its stroke for a stroke or a satin
 column.</p>
+<p>From VectorCraft 0.14 each setting has a label and its unit, in the sections of the
+<a href="../reference/params.html">parameter reference</a>. Rest the pointer on a label for its help, or press the
+button after the field for its page in the reference. A setting shows only when it applies: a satin’s
+staggers show for staggered splits. VectorCraft before 0.14 lists every setting, each under its Ink/Stitch
+name.</p>
 <p>An object without a StitchCraft effect sews as Ink/Stitch sews a shape of an SVG file. Its fills are
 filled, and its strokes are sewn as running stitch. With <code>stitch export --auto</code>, StitchCraft chooses its
 stitches by width instead, as for a picture traced into shapes.</p>
 <ul>
-<li>A line up to 1 mm wide runs.</li>
+<li>A line up to 1 mm wide runs, or up to the narrowest satin stroke the document keeps
+(<a href="#keep-the-designs-settings-and-machine-with-it">below</a>).</li>
 <li>A line up to 7 mm wide is a satin column as wide as drawn, its round or square caps included.</li>
 <li>A wider line, or a fill, is a tatami fill.</li>
 </ul>
@@ -212,10 +218,11 @@ own or its group’s, still shows its stitches there, and <code>stitch export</c
 As</strong>, and <strong>PES embroidery (StitchCraft)</strong> or <strong>DST embroidery (StitchCraft)</strong> as the format. Once the file
 is picked, a dialog shows 2 options:</p>
 <ul>
-<li><strong>Profile</strong>, the machine and hoop the design is planned for: <code>brother-pe800-5x7</code> unless another is
-chosen. <code>stitch profiles</code> lists them.</li>
-<li><strong>Auto</strong>, which chooses the stitches of the objects without a StitchCraft effect by their width, as
-<code>stitch export --auto</code> does.</li>
+<li><strong>Digitize automatically</strong>, which chooses the stitches of the objects without a StitchCraft effect by
+their width, as <code>stitch export --auto</code> does.</li>
+<li><strong>Machine</strong>, the machine and hoop the design is planned for: <code>document</code>, the one the document keeps
+(<a href="#keep-the-designs-settings-and-machine-with-it">below</a>), or <code>brother-pe800-5x7</code> when it keeps none,
+unless another is chosen. <code>stitch profiles</code> lists them.</li>
 </ul>
 <p>The design takes the file’s name, which machines show. What <code>stitch export</code> would say about the design
 shows with the export’s warnings, one line for each message. When one of them is an error, nothing is
@@ -245,12 +252,29 @@ warning SC-W0807 (vc:7): A group "Dots" has fills or strokes of its own, which V
 <!-- shot: patch -->
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/patch.png" alt="The patch as it will sew. A red fill with rows at 45 degrees has a blue satin band and a green curve of running stitch under it. Under them, 2 gold squares with upright rows have the loose thread of the jump between them. The placement line and the start marker are not sewn."><span class="img-wrapper"><img src="../../images/generated/patch.png" alt="The patch as it will sew. A red fill with rows at 45 degrees has a blue satin band and a green curve of running stitch under it. Under them, 2 gold squares with upright rows have the loose thread of the jump between them. The placement line and the start marker are not sewn."></span></label></p>
 <!-- /shot -->
-<p><code>stitch export</code> writes the file for the machine <code>--profile</code> names, <code>brother-pe800-5x7</code> by default, and
-<code>--preview</code> adds a picture. It is <a href="../reference/cli.html#stitch-plan"><code>stitch plan</code></a> by another name, which
+<p><code>stitch export</code> writes the file for the machine <code>--profile</code> names, or else the one the document keeps, or
+else <code>brother-pe800-5x7</code>, and <code>--preview</code> adds a picture. It is <a href="../reference/cli.html#stitch-plan"><code>stitch plan</code></a> by another name, which
 reads an SVG file the same way and takes the same options.</p>
 <p>StitchCraft reads documents of up to 64 MiB. Pictures embedded to trace from can make one larger: place
 them with <strong>Link</strong> checked in VectorCraft’s Place dialog, and VectorCraft saves a small preview of each
 in the document instead.</p>
+<h2 id="keep-the-designs-settings-and-machine-with-it"><a class="header" href="#keep-the-designs-settings-and-machine-with-it">Keep the design’s settings and machine with it</a></h2>
+<p>From VectorCraft 0.16, a document can keep the machine it is for, and the 3 settings Ink/Stitch keeps
+with a design for all of its objects. With the <a href="../install.html#the-vectorcraft-plug-ins">plug-ins installed</a>,
+choose <strong>Object › Plug-ins › StitchCraft Design Settings</strong>, set them, and press OK:</p>
+<ul>
+<li><strong>Machine</strong>, the machine and hoop the design is planned for, <code>brother-pe800-5x7</code> by default.</li>
+<li><strong>Shortest jump</strong>, <strong>Shortest stitch</strong> and <strong>Narrowest satin stroke</strong>, in millimetres. Rest the pointer
+on a label for what each does.</li>
+</ul>
+<p>The document saves them. The exporters and <code>stitch export</code> plan the design for the machine it keeps,
+unless the export’s <strong>Machine</strong> option or <code>--profile</code> names another. They use its settings as they use
+an SVG file’s design settings. Whatever is selected, the filter leaves every object as it is.</p>
+<p>VectorCraft opens the dialog at the defaults each time, not at what the document keeps, so set all 4 when
+you run it again. A live effect isn’t given what the document keeps. The stitches shown as you work are
+planned for <code>brother-pe800-5x7</code> with the default settings, and a longer shortest stitch shows only in the
+machine file and in <code>stitch export --preview</code>. A setting that StitchCraft can’t read keeps its default,
+and <code>stitch export</code> says so (<code>SC-W0812</code>).</p>
 <h2 id="read-what-it-says"><a class="header" href="#read-what-it-says">Read what it says</a></h2>
 <p>Each line under the summary names an object by its id in the document, such as <code>vc:10</code>, and says what
 was done with it. In the patch, the placement line is left out, as its name asks (<code>SC-I0811</code>). The start
