@@ -36,11 +36,37 @@ pub(crate) struct File {
     pub document: Option<Document>,
 }
 
-/// The document: its layers, bottom first.
+/// The document: its layers, bottom first, and the data StitchCraft keeps with it.
 #[derive(Deserialize)]
 pub(crate) struct Document {
     #[serde(default)]
     pub layers: Vec<Node>,
+    #[serde(default)]
+    pub unknown: Unknown,
+}
+
+/// What a file holds of what StitchCraft keeps with a document, and nothing else: read for the machine
+/// before the document itself ([`crate::machine`]).
+#[derive(Deserialize)]
+pub(crate) struct Kept {
+    #[serde(default)]
+    pub document: Option<KeptDocument>,
+}
+
+/// A document, for what StitchCraft keeps with it.
+#[derive(Deserialize)]
+pub(crate) struct KeptDocument {
+    #[serde(default)]
+    pub unknown: Unknown,
+}
+
+/// A document's foreign data, which holds what each filter keeps with it, from VectorCraft 0.16.
+#[derive(Default, Deserialize)]
+pub(crate) struct Unknown {
+    /// What filters keep, by plug-in id: any JSON, as VectorCraft opens a damaged file whose value here
+    /// is not an object, and reads nothing kept in it ([`crate::settings`]).
+    #[serde(rename = "pluginData", default)]
+    pub plugin_data: Option<Value>,
 }
 
 /// One object: a layer, a group, a path, a compound path, or a kind the adapter leaves out.

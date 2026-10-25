@@ -27,15 +27,16 @@ With the circle selected, choose **Effect › Plug-ins › StitchCraft Fill**:
 ![VectorCraft's Effect menu, open at Plug-ins, which lists StitchCraft Fill, StitchCraft Satin and StitchCraft Stroke.](../../images/generated/vectorcraft-plugins-menu.png)
 <!-- /shot -->
 
-The dialog holds Ink/Stitch's [settings for a fill](../reference/params/fill.md), each under its
-Ink/Stitch name. Set **Angle** to 45, and choose **OK**. If the dialog runs off your screen, see
+The dialog holds Ink/Stitch's [settings for a fill](../reference/params/fill.md) in sections, each with
+its label and unit. Rest the pointer on a label for its help, and the button after a field opens its page.
+Set **Angle** to 45, and choose **OK**. If the dialog is taller than your screen, see
 [below](#dialogs-taller-than-the-screen).
 
 <details>
 <summary>The whole StitchCraft Fill dialog</summary>
 
 <!-- shot: vectorcraft-fill-dialog -->
-![The StitchCraft Fill dialog in VectorCraft, with a row for each setting under its Ink/Stitch name, from Fill and Fill_method at the top to Max_stitch_length_mm and Preview_level at the bottom. Under them are the Preview checkbox, checked, and the Cancel and OK buttons.](../../images/generated/vectorcraft-fill-dialog.png)
+![The StitchCraft Fill dialog in VectorCraft, its settings in sections, from Fill, with Sew the fill and Fill method, to Longest stitch and Preview. Each row has a label, a field with its unit, and a button that opens the setting's help page. Under them are the Preview checkbox, checked, and the Cancel and OK buttons.](../../images/generated/vectorcraft-fill-dialog.png)
 <!-- /shot -->
 
 </details>
@@ -55,7 +56,7 @@ stitch, 2.5 mm a stitch.
 <summary>The whole StitchCraft Stroke dialog</summary>
 
 <!-- shot: vectorcraft-stroke-dialog -->
-![The StitchCraft Stroke dialog in VectorCraft, with a row for each setting under its Ink/Stitch name, from Stroke_method and Repeats at the top to Max_stitch_length_mm and Preview_level at the bottom. Under them are the Preview checkbox, checked, and the Cancel and OK buttons.](../../images/generated/vectorcraft-stroke-dialog.png)
+![The StitchCraft Stroke dialog in VectorCraft, its settings in sections, from Stroke, with Method, to Shortest stitch and jump and Preview. Each row has a label, a field with its unit, and a button that opens the setting's help page. Under them are the Preview checkbox, checked, and the Cancel and OK buttons.](../../images/generated/vectorcraft-stroke-dialog.png)
 <!-- /shot -->
 
 </details>
@@ -75,7 +76,7 @@ choose **Effect › Plug-ins › StitchCraft Satin**, then **OK**.
 <summary>The whole StitchCraft Satin dialog</summary>
 
 <!-- shot: vectorcraft-satin-dialog -->
-![The StitchCraft Satin dialog in VectorCraft, with a row for each setting under its Ink/Stitch name, from Satin_method and Zigzag_spacing_mm at the top to Max_stitch_length_mm and Preview_level at the bottom. Under them are the Preview checkbox, checked, and the Cancel and OK buttons.](../../images/generated/vectorcraft-satin-dialog.png)
+![The StitchCraft Satin dialog in VectorCraft, its settings in sections, from Satin column, with Method and Zigzag spacing, through the 3 underlays to Longest stitch and Preview. Each row has a label, a field with its unit, and a button that opens the setting's help page. Under them are the Preview checkbox, checked, and the Cancel and OK buttons.](../../images/generated/vectorcraft-satin-dialog.png)
 <!-- /shot -->
 
 </details>
@@ -114,10 +115,14 @@ Thread blue first, white when the machine stops, and gold when it stops again.
 
 ## Dialogs taller than the screen
 
-VectorCraft doesn't scroll a plug-in's dialog. The fill's and the satin's are taller than most screens, and
-the stroke's is taller than the window VectorCraft opens with. Their first rows, or the OK button, can be
-out of sight. Make VectorCraft's window as tall as the screen allows, and click a field you can see. Tab and
-Shift+Tab move to the others, and Enter applies the dialog.
+From VectorCraft 0.14 the rows of a dialog taller than the window scroll, and a section's heading folds
+its rows away. The satin's dialog is taller than most screens.
+
+VectorCraft 0.12 and 0.13 don't scroll a plug-in's dialog, and list every setting under its Ink/Stitch
+name. The fill's and the satin's dialogs are taller than most screens there, and the stroke's is taller
+than the window VectorCraft opens with. Their first rows, or the OK button, can be out of sight. Make
+VectorCraft's window as tall as the screen allows, and click a field you can see. Tab and Shift+Tab move to
+the others, and Enter applies the dialog.
 
 ## Next
 

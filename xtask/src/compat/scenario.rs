@@ -33,10 +33,20 @@
 //! - `exported`: a machine file that StitchCraft's exporter wrote in VectorCraft is the one `stitch export`
 //!   writes of the document saved beside it, and the export's warnings are what `stitch export` says, as
 //!   the exporter words them (`REQ-VC-011`).
+//! - `kept`: a document keeps the design settings and machine the Design Settings filter was run with, as
+//!   the VectorCraft adapter reads them (`REQ-VC-013`).
+//! - `differ`: 2 machine files are not the same, such as one exported before the filter ran and one after.
 //!
-//! A file is sewn as `stitch plan` sews it, for the reference machine, into a PES file
-//! ([`stitchcraft_cli::commands::plan::sew`]). Comparing two is comparing their bytes. Exporting a machine
-//! file draws nothing: VectorCraft gives the exporter the document's JSON, and no live effect runs.
+//! A file is sewn as `stitch plan` sews it without `--profile`, for the machine it keeps or else the
+//! reference machine, into a PES file ([`stitchcraft_cli::commands::plan::sew`]). Comparing two is comparing
+//! their bytes. Exporting a machine file draws nothing: VectorCraft gives the exporter the document's JSON,
+//! and no live effect runs.
+//!
+//! **Why only a run's last step may fail.** An export that must fail names the code of the error it says,
+//! with `fails`, such as `SC-E0701` for a design its machine's hoop can't hold. VectorCraft's `run` stops at
+//! the first step that fails and says why, with its exit status a failure (its
+//! `apps/vectorcraft-cli/src/main.rs`), so that export is its run's last step, and no check or later run
+//! names the file it doesn't write.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -45,12 +55,11 @@ use std::time::Duration;
 
 use serde::Deserialize;
 use serde_json::{Value, json};
-use stitchcraft_cli::commands::plan::{Source, sew};
-use stitchcraft_core::{Budget, Diagnostic, Severity};
-use stitchcraft_engine::design::Reading;
+use stitchcraft_cli::commands::plan::{Source, machine_for, sew};
+use stitchcraft_core::{Budget, Code, Diagnostic, Severity};
+use stitchcraft_engine::design::{Reading, Setting};
 use stitchcraft_params::Family;
 use stitchcraft_plan::FormatId;
-use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_vectorcraft::{EXTENSIONS, effect_id, effect_name, param_text, plugin_id};
 
 use super::kind;
@@ -114,6 +123,9 @@ pub struct Step {
     /// A file to export, by name, in the format its extension names.
     #[serde(default)]
     pub export: Option<String>,
+    /// For an export that must fail, the code of the error it says, such as `SC-E0701`.
+    #[serde(default)]
+    pub fails: Option<String>,
 }
 
 /// What StitchCraft checks once the runs are done.
@@ -135,6 +147,23 @@ pub struct Expect {
     /// Pairs of a document and a machine file exported with it, which is what `stitch export` writes of it.
     #[serde(default)]
     pub exported: Vec<[String; 2]>,
+    /// Documents, each with the design settings and the machine it keeps.
+    #[serde(default)]
+    pub kept: Vec<Kept>,
+    /// Pairs of machine files that are not the same.
+    #[serde(default)]
+    pub differ: Vec<[String; 2]>,
+}
+
+/// A document and what the Design Settings filter keeps with it: the machine as `profile`, and the design
+/// settings it names, by their names, each in millimetres.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Kept {
+    /// The document.
+    pub file: String,
+    /// The settings, as the filter's dialog names them.
+    pub settings: toml::Table,
 }
 
 /// So many elements of one kind, in one thread if it is named, in a file.
@@ -164,24 +193,34 @@ enum Action<'a> {
 }
 
 impl Step {
-    /// Whether the step reads: exactly one of `cmd`, `apply` and `export`, a family that is one, and
-    /// parameters only for the first two.
+    /// The step that exports `file`, in the format its extension names.
+    pub(crate) fn exporting(file: &str) -> Self {
+        Step { cmd: None, apply: None, params: None, export: Some(file.to_string()), fails: None }
+    }
+
+    /// Whether the step reads: exactly one of `cmd`, `apply` and `export`, a family that is one, parameters
+    /// only for the first two, and a code of an error that `fails` only for an export.
     pub(crate) fn check(&self) -> Result<(), String> {
         self.action().map(drop)
     }
 
-    /// What the step does, or why it can't be read: exactly one of `cmd`, `apply` and `export`, and
-    /// parameters only for the first two.
+    /// What the step does, or why it can't be read: exactly one of `cmd`, `apply` and `export`, parameters
+    /// only for the first two, and `fails` only for an export, with the code of an error.
     fn action(&self) -> Result<Action<'_>, String> {
         let params = || self.params.clone().map_or_else(|| json!({}), |table| toml_to_json(toml::Value::Table(table)));
+        if let Some(code) = &self.fails
+            && !Code::ALL.iter().any(|known| known.id() == code && known.severity() == Severity::Error)
+        {
+            return Err(format!("`fails = \"{code}\"` names no error StitchCraft says"));
+        }
         match (&self.cmd, &self.apply, &self.export) {
-            (Some(cmd), None, None) => Ok(Action::Command(cmd, params())),
-            (None, Some(family), None) => {
+            (Some(cmd), None, None) if self.fails.is_none() => Ok(Action::Command(cmd, params())),
+            (None, Some(family), None) if self.fails.is_none() => {
                 let family = family_of(family).ok_or(format!("`apply = \"{family}\"` names no stitch family"))?;
                 Ok(Action::Apply(family, params()))
             }
             (None, None, Some(file)) if self.params.is_none() => Ok(Action::Export(file)),
-            _ => Err("a step has one of `cmd`, `apply` and `export`, and an export no `params`".to_string()),
+            _ => Err("a step has one of `cmd`, `apply` and `export`, an export no `params`, and only an export `fails`".to_string()),
         }
     }
 }
@@ -237,8 +276,9 @@ pub fn load(root: &Path) -> Result<Vec<(String, Scenario)>, String> {
 }
 
 /// What is wrong with `scenario` before it runs: steps that don't read, modules or families that don't
-/// exist, requirements that don't, checks of files no step exports, an effect no drawing shows before its
-/// family is applied again or its run ends, and an `applied` check of a file no effect was applied to.
+/// exist, requirements that don't, checks of files no step exports, an export that fails before its run's
+/// last step, an effect no drawing shows before its family is applied again or its run ends, and an
+/// `applied` check of a file no effect was applied to.
 pub fn problems(scenario: &Scenario, modules: &[&str], requirements: &std::collections::BTreeSet<String>) -> Vec<String> {
     let mut found = Vec::new();
     let mut exported: Vec<&str> = Vec::new();
@@ -260,12 +300,18 @@ pub fn problems(scenario: &Scenario, modules: &[&str], requirements: &std::colle
         }
         // The families applied since the last drawing.
         let mut undrawn: Vec<Family> = Vec::new();
-        for step in &run.steps {
+        let last = run.steps.len().saturating_sub(1);
+        for (j, step) in run.steps.iter().enumerate() {
+            if step.fails.is_some() && step.export.is_some() && j != last {
+                found.push(format!("run {number}: an export that fails is not its last step, and VectorCraft runs no step after it"));
+            }
             match step.action() {
                 Ok(Action::Export(file)) => {
-                    exported.push(file);
-                    if applied {
-                        applied_to.push(file);
+                    if step.fails.is_none() {
+                        exported.push(file);
+                        if applied {
+                            applied_to.push(file);
+                        }
                     }
                     if let Some(format) = machine_format(file).filter(|format| !run.plugins.iter().any(|m| m == format.extension())) {
                         found.push(format!("run {number}: it exports `{file}` without installing the `{}` module", format.extension()));
@@ -295,6 +341,7 @@ pub fn problems(scenario: &Scenario, modules: &[&str], requirements: &std::colle
     }
     let expect = &scenario.expect;
     let checked = expect.applied.iter().chain(expect.same.iter().flatten()).chain(expect.elements.iter().map(|e| &e.file));
+    let checked = checked.chain(expect.kept.iter().map(|kept| &kept.file)).chain(expect.differ.iter().flatten());
     for file in checked.chain(expect.exported.iter().flatten()) {
         if !exported.contains(&file.as_str()) {
             found.push(format!("it checks `{file}`, which no run exports"));
@@ -400,10 +447,22 @@ pub(crate) fn draw(run: &Run, cli: &Path, plugins: &Path, out: &Path) -> Result<
     run_once(run, 1, cli, plugins, out, &mut Ran::default())
 }
 
-/// One run: `vectorcraft-cli` and what its results say. Its exports' effects go to `ran`.
+/// One run: `vectorcraft-cli` and what its results say, and its last step's error when it must fail. Its
+/// exports' effects go to `ran`.
 fn run_once(run: &Run, number: usize, cli: &Path, plugins: &Path, out: &Path, ran: &mut Ran) -> Result<(), String> {
     let args = arguments(run, plugins, out)?;
-    let results = launch(cli, &args, &out.join(format!("run-{number}")))?;
+    let (results, failed) = launch(cli, &args, &out.join(format!("run-{number}")))?;
+    let failing = run.steps.last().and_then(|step| Some((step.export.as_deref()?, step.fails.as_deref()?)));
+    match (failed, failing) {
+        (Some(failure), None) => return Err(format!("run {number}: {failure}")),
+        (None, Some((file, code))) => return Err(format!("run {number}: exporting {file} doesn't fail with {code}")),
+        (Some(failure), Some((file, code))) if !failure.contains(&format!("{file}: ")) || !failure.contains(code) => {
+            return Err(format!("run {number}: exporting {file} doesn't fail with {code}: {failure}"));
+        }
+        _ => {}
+    }
+    // The export that fails gives no result.
+    let steps = run.steps.get(..run.steps.len().saturating_sub(usize::from(failing.is_some()))).unwrap_or_default();
     // One result for the opened file, one for each command and export, in order.
     let mut results = results.into_iter();
     let mut applied: Vec<Applied> = match &run.open {
@@ -421,7 +480,7 @@ fn run_once(run: &Run, number: usize, cli: &Path, plugins: &Path, out: &Path, ra
             return Err(format!("run {number}: {module} installed as {installed_as:?}, not as {}: {installed}", kind_name(module)));
         }
     }
-    for step in &run.steps {
+    for step in steps {
         match step.action()? {
             Action::Command(id, _) => {
                 let result = next(id)?;
@@ -466,9 +525,9 @@ fn run_once(run: &Run, number: usize, cli: &Path, plugins: &Path, out: &Path, ra
 }
 
 /// Runs `cli` with `args`, its output in files named `stem` with `.out` and `.err`, and returns the JSON
-/// results it printed, one a line, or why it failed: its exit status, or its time running out, with the end
-/// of what it wrote to stderr.
-fn launch(cli: &Path, args: &[String], stem: &Path) -> Result<Vec<Value>, String> {
+/// results it printed, one a line, and when its exit status is a failure, that status with the end of what
+/// it wrote to stderr. It fails when `cli` doesn't start or its time runs out.
+fn launch(cli: &Path, args: &[String], stem: &Path) -> Result<(Vec<Value>, Option<String>), String> {
     let (out_path, err_path) = (stem.with_extension("out"), stem.with_extension("err"));
     let file = |path: &Path| std::fs::File::create(path).map_err(|e| format!("{}: {e}", util::rel(path)));
     let mut child = util::spawn(Command::new(cli).args(args).stdin(Stdio::null()).stdout(file(&out_path)?).stderr(file(&err_path)?))
@@ -490,12 +549,12 @@ fn launch(cli: &Path, args: &[String], stem: &Path) -> Result<Vec<Value>, String
     };
     let printed = std::fs::read_to_string(&out_path).unwrap_or_default();
     let results: Vec<Value> = printed.lines().filter(|line| !line.trim().is_empty()).filter_map(|line| serde_json::from_str(line).ok()).collect();
-    if !status.success() {
+    let failed = (!status.success()).then(|| {
         let said = std::fs::read_to_string(&err_path).unwrap_or_default();
         let tail: Vec<&str> = said.lines().rev().take(20).collect::<Vec<_>>().into_iter().rev().collect();
-        return Err(format!("vectorcraft-cli {} after {} results: {}", status, results.len(), tail.join(" | ")));
-    }
-    Ok(results)
+        format!("vectorcraft-cli {} after {} results: {}", status, results.len(), tail.join(" | "))
+    });
+    Ok((results, failed))
 }
 
 /// What fails of `expect`, with the files in `out` and what the runs left.
@@ -539,24 +598,66 @@ fn check(expect: &Expect, out: &Path, ran: &Ran) -> Vec<String> {
             failures.push(format!("{machine}: {e}"));
         }
     }
+    for kept in &expect.kept {
+        if let Err(e) = read(&kept.file).and_then(|bytes| keeps(&bytes, &kept.settings)) {
+            failures.push(format!("{}: {e}", kept.file));
+        }
+    }
+    for [a, b] in &expect.differ {
+        match (read(a), read(b)) {
+            (Ok(x), Ok(y)) if x == y => failures.push(format!("{a} and {b} are the same {} bytes", x.len())),
+            (Ok(_), Ok(_)) => {}
+            (Err(e), _) | (_, Err(e)) => failures.push(e),
+        }
+    }
     failures
 }
 
-/// How the plug-in `module` is named in a failure: as a live effect, or as an exporter.
-fn kind_name(module: &str) -> &'static str {
-    if live(module) { "a live effect" } else { "an exporter" }
+/// Whether the document `bytes` keeps `settings`, the machine as `profile` and the design settings by their
+/// names, as the VectorCraft adapter reads them, or how it doesn't.
+fn keeps(bytes: &[u8], settings: &toml::Table) -> Result<(), String> {
+    let read = stitchcraft_vectorcraft::read(bytes, &Budget::DEFAULT).map_err(|unread| unread.to_string())?;
+    let mut wrong = Vec::new();
+    for (name, value) in settings {
+        let (kept, wanted) = if name == stitchcraft_vectorcraft::settings::PROFILE {
+            (read.machine.map(|machine| json!(machine.id)), toml_to_json(value.clone()))
+        } else {
+            let setting = Setting::named(name).ok_or(format!("there is no design setting `{name}`"))?;
+            (Some(json!(setting.get(&read.design.settings).get())), toml_to_json(value.clone()))
+        };
+        let same = match (&kept, &wanted) {
+            (Some(Value::Number(a)), Value::Number(b)) => a.as_f64() == b.as_f64(),
+            (Some(a), b) => a == b,
+            (None, _) => false,
+        };
+        if !same {
+            wrong.push(format!("{name} {}, not {wanted}", kept.map_or_else(|| "none".to_string(), |kept| kept.to_string())));
+        }
+    }
+    if wrong.is_empty() { Ok(()) } else { Err(format!("it keeps {}", wrong.join(", "))) }
 }
 
-/// The PES file `stitch plan` writes from the VectorCraft document `bytes` for the reference machine, or
-/// the errors that stop it.
+/// How the plug-in `module` is named in a failure: as a live effect, an exporter or a filter.
+fn kind_name(module: &str) -> &'static str {
+    match kind(module) {
+        "effect" => "a live effect",
+        "exporter" => "an exporter",
+        _ => "a filter",
+    }
+}
+
+/// The PES file `stitch plan` writes from the VectorCraft document `bytes`, for the machine it keeps or else
+/// the reference machine, or the errors that stop it.
 pub(crate) fn sewn(bytes: &[u8]) -> Result<Vec<u8>, String> {
     stitch_export(bytes, FormatId::PesV1, NAME).map(|(file, _)| file)
 }
 
 /// The file of `format`, named `name`, that `stitch export` writes from the VectorCraft document `bytes`
-/// for the reference machine, and what it says; or the errors that stop it.
+/// without `--profile`, for the machine it keeps or else the reference machine, and what it says; or the
+/// errors that stop it.
 fn stitch_export(bytes: &[u8], format: FormatId, name: &str) -> Result<(Vec<u8>, Vec<Diagnostic>), String> {
-    let sewn = sew(Source::VectorCraft, bytes, Reading::default(), REFERENCE, format, name);
+    let profile = machine_for(None, Source::VectorCraft, bytes);
+    let sewn = sew(Source::VectorCraft, bytes, Reading::default(), profile, format, name);
     let errors: Vec<String> = sewn.diagnostics.iter().filter(|d| d.severity() == Severity::Error).map(ToString::to_string).collect();
     match sewn.file {
         Some(file) if errors.is_empty() => Ok((file, sewn.diagnostics)),
@@ -566,8 +667,9 @@ fn stitch_export(bytes: &[u8], format: FormatId, name: &str) -> Result<(Vec<u8>,
 
 /// Whether `bytes`, the machine file `machine` that StitchCraft's exporter wrote in VectorCraft, and the
 /// export's `warnings`, are what `stitch export` writes of the `document` saved with it and what it says:
-/// the file of the format its extension names, with its name as the design name, for the reference
-/// machine, as the exporter's dialog has them by default, and what was said, as the exporter words it.
+/// the file of the format its extension names, with its name as the design name, for the machine the
+/// document keeps or else the reference machine, as the exporter's dialog has them by default, and what was
+/// said, as the exporter words it.
 fn written_as_exported(document: &[u8], machine: &str, bytes: &[u8], warnings: &[String]) -> Result<(), String> {
     let format = machine_format(machine).ok_or("StitchCraft writes no format with its extension")?;
     let name = Path::new(machine).file_stem().and_then(|stem| stem.to_str()).unwrap_or_default();

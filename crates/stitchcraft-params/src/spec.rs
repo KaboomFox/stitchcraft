@@ -150,6 +150,15 @@ pub struct ChoiceOption {
     pub label: &'static str,
 }
 
+impl ChoiceOption {
+    /// `options` for people, as the reference pages and VectorCraft's dialogs list them: each id in code,
+    /// and its label in brackets after it.
+    pub fn list<'a>(options: impl IntoIterator<Item = &'a ChoiceOption>) -> String {
+        let listed: Vec<String> = options.into_iter().map(|option| format!("`{}` ({})", option.id, option.label)).collect();
+        listed.join(", ")
+    }
+}
+
 /// When a user interface shows a parameter: only while another parameter has one of the given values. A
 /// lock's size, say, matters only for the lock shapes it sizes, and an element reads it only then
 /// ([`ParamSpec::read_by`]).
@@ -284,6 +293,36 @@ impl ParamGroup {
     pub fn help(&self) -> String {
         stitchcraft_core::text::doc_comment(self.help)
     }
+
+    /// The name of its reference page, the declaration's words joined by hyphens: `CommonParams` →
+    /// `common`, `TatamiFillParams` → `tatami-fill`. The docs generator writes the page, and the
+    /// VectorCraft plug-in's dialogs link each parameter to it.
+    pub fn slug(&self) -> String {
+        self.words().join("-")
+    }
+
+    /// The title of its reference page: `TatamiFillParams` → `Tatami fill parameters`.
+    pub fn title(&self) -> String {
+        let mut title = self.words().join(" ");
+        if let Some(first) = title.get(..1) {
+            title = format!("{}{}", first.to_ascii_uppercase(), title.get(1..).unwrap_or(""));
+        }
+        format!("{title} parameters")
+    }
+
+    /// The words of the declaration's name, lower case, without the `Params` suffix (`REQ-PRM-001`
+    /// requires it).
+    fn words(&self) -> Vec<String> {
+        let stem = self.name.strip_suffix("Params").unwrap_or(self.name);
+        let mut words: Vec<String> = Vec::new();
+        for c in stem.chars() {
+            match words.last_mut() {
+                Some(word) if !c.is_ascii_uppercase() => word.push(c),
+                _ => words.push(c.to_ascii_lowercase().to_string()),
+            }
+        }
+        words
+    }
 }
 
 impl Kind {
@@ -365,6 +404,21 @@ pub(crate) fn listed(words: &[&str], conjunction: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_declaration_s_name_gives_its_page_s_name_and_title() {
+        let tatami = ParamGroup { name: "TatamiFillParams", help: "", applies_to: &[], specs: &[] };
+        assert_eq!((tatami.slug(), tatami.title()), ("tatami-fill".to_string(), "Tatami fill parameters".to_string()));
+        let common = ParamGroup { name: "CommonParams", ..tatami };
+        assert_eq!((common.slug(), common.title()), ("common".to_string(), "Common parameters".to_string()));
+    }
+
+    #[test]
+    fn a_choice_s_options_are_listed_by_id_with_their_labels() {
+        let options = [ChoiceOption { id: "0", label: "At the start and the end" }, ChoiceOption { id: "3", label: "None" }];
+        assert_eq!(ChoiceOption::list(&options), "`0` (At the start and the end), `3` (None)");
+        assert_eq!(ChoiceOption::list(options.iter().skip(1)), "`3` (None)");
+    }
 
     #[test]
     fn units_name_what_values_are_in() {

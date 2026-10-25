@@ -43,8 +43,8 @@ use stitchcraft_core::{Code, Diagnostic};
 use stitchcraft_engine::design::Reading;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, profiles};
 
-use super::plan::{Sewn, Source, design_name, picture, sew};
-use super::{Outcome, Status, counts, distinct, hex, output_format, render_diagnostics, unhex};
+use super::plan::{Sewn, Source, design_name, machine_for, picture, sew};
+use super::{Outcome, Status, asked_profile, counts, distinct, hex, output_format, render_diagnostics, unhex};
 use crate::cli::{BugReportArgs, Command};
 use crate::files;
 
@@ -226,10 +226,11 @@ fn after_panic(command: &Command, message: &str) -> Outcome {
     let said = format!("stitch: StitchCraft stopped on a bug in itself: {message}\n");
     let stopped = Outcome { stdout: String::new(), stderr: said.clone(), status: Status::Bug };
     if let Command::Plan(args) = command
-        && let (Some(profile), Ok(format), Ok(design)) =
-            (profiles::find(&args.profile), output_format(args.format, &args.output), files::read_capped(&args.design))
+        && let (Ok(asked), Ok(format), Ok(design)) =
+            (asked_profile(args.profile.as_deref()), output_format(args.format, &args.output), files::read_capped(&args.design))
     {
         let source = Source::of(&args.design);
+        let profile = machine_for(asked, source, &design);
         let reading = Reading { auto: args.auto };
         let run = Run { design_path: &args.design, source, reading, name: design_name(&args.design), design: &design, profile, format, says: None };
         return beside(&args.output, &run, Err((message, Phase::Plan)), stopped);
@@ -248,10 +249,10 @@ pub fn panic_message(payload: &(dyn Any + Send)) -> String {
 
 /// `stitch bug-report DESIGN`.
 fn make(args: &BugReportArgs, design_path: &Path) -> Outcome {
-    let Some(profile) = profiles::find(&args.profile) else {
-        return Outcome::usage(format!("there is no profile `{}`; `stitch profiles` shows them", args.profile));
+    let asked = match asked_profile(args.profile.as_deref()) {
+        Ok(asked) => asked,
+        Err(outcome) => return outcome,
     };
-    let format = args.format.map_or(profile.format, FormatId::from);
     let path = args.output.clone().unwrap_or_else(|| design_path.with_extension("bug-report.json"));
     if let Err(outcome) = distinct(&[design_path], &[&path]) {
         return outcome;
@@ -264,6 +265,8 @@ fn make(args: &BugReportArgs, design_path: &Path) -> Outcome {
     };
     let source = Source::of(design_path);
     let reading = Reading { auto: args.auto };
+    let profile = machine_for(asked, source, &design);
+    let format = args.format.map_or(profile.format, FormatId::from);
     let run = Run { design_path, source, reading, name: design_name(design_path), design: &design, profile, format, says: args.says.clone() };
     let bundle = bundle(&run, borrowed(&guarded_sew(&run, Phase::Plan)));
     if let Err(e) = write(&path, &bundle) {

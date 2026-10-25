@@ -5,9 +5,10 @@ use std::path::Path;
 use std::time::Instant;
 
 use serde_json::{Value, json};
-use vectorcraft_doc::Appearance;
+use vectorcraft_doc::{Appearance, Document, Effect, Node, NodeId};
 use vectorcraft_geom::{BezPath, FillRule, PathData, Point, Rect, shapes};
 use vectorcraft_plugins::effect::Paints;
+use vectorcraft_plugins::objects::{self, Output};
 use vectorcraft_plugins::{ABI_VERSION, Error, Kind, Limits, Plugin, effect, export, registry};
 
 /// The stitch families, each a module of its own whose live effect sews an object as the family.
@@ -358,9 +359,10 @@ fn each_exporter_installs_as_an_exporter_of_its_format() {
         let manifest = plugin.manifest();
         assert!(manifest.kind == Kind::Exporter, "{format} is an exporter");
         assert_eq!(manifest.extensions, [format]);
-        // `stitch export`'s options, as they are when it isn't given them.
+        // `stitch export`'s options, as they are when it isn't given them: the machine is the one the
+        // document keeps, or else the reference machine (`REQ-VC-013`).
         let defaults = manifest.defaults();
-        assert_eq!((defaults.get("auto"), defaults.get("profile")), (Some(&json!(false)), Some(&json!("brother-pe800-5x7"))), "{format}");
+        assert_eq!((defaults.get("auto"), defaults.get("profile")), (Some(&json!(false)), Some(&json!("document"))), "{format}");
     }
 }
 
@@ -471,4 +473,41 @@ fn req_vc_011_a_fill_of_the_whole_hoop_exports_within_vectorcraft_s_limits() {
         costs.push(format!("{name}: {used} of {allowed} instructions, {seconds:.1} s, {} bytes of PES", base64_decoded(&out.data_base64).len()));
     }
     println!("::notice title=exports::{}", costs.join("; "));
+}
+
+/// The Design Settings filter, from VectorCraft 0.16, run as `plugin.run` runs a filter: it keeps its
+/// dialog's settings and machine with the document and returns its objects as they are, and each exporter
+/// plans the document for the machine kept, unless its dialog names another (`REQ-VC-013`).
+#[test]
+fn req_vc_013_the_settings_filter_keeps_the_machine_each_exporter_plans_for() {
+    let plugin = registry::install_bytes(&module("settings")).unwrap_or_else(|e| panic!("VectorCraft refuses settings: {e}"));
+    assert_eq!(plugin.id(), "dev.stitchcraft.settings");
+    let manifest = plugin.manifest();
+    assert!(manifest.kind == Kind::Filter, "settings is a filter");
+    // A 50 mm square, which the small hoop's field of 20 × 60 mm can't hold, selected.
+    let file: Value = serde_json::from_slice(&document(&[filled(2, (0.0, 0.0), (50.0, 50.0), &json!({}))])).unwrap();
+    let mut doc: Document = serde_json::from_value(file["document"].clone()).unwrap();
+    let before = serde_json::to_value(&doc).unwrap();
+    let inputs = objects::filter_targets(&doc, &[NodeId(2)]);
+    let dialog = manifest.resolve_params(&json!({"profile": "brother-pe800-small", "min_stitch_len_mm": 1.5})).unwrap();
+    let mut params = dialog.clone();
+    params.insert("_context".into(), json!({"mode": "filter", "bounds": null, "artboard": null, "documentData": null}));
+    let out = plugin.run(&objects::encode_input(&doc, &inputs), &serde_json::to_vec(&params).unwrap()).unwrap();
+    let Output { objects: changed, document_data } = objects::decode_output(&out).unwrap();
+    // What it keeps is its dialog's values, and the document is as it was: the host refuses any effect
+    // records the filter would give its objects.
+    assert_eq!(document_data, Some(Some(Value::Object(dialog))));
+    let refuse: &dyn Fn(&[Effect], &Node) -> Result<Vec<Effect>, String> = &|_, _| Err("the filter changes no effect".to_string());
+    assert_eq!(objects::apply_output(&mut doc, &inputs, changed, None, refuse).unwrap(), inputs);
+    assert_eq!(serde_json::to_value(&doc).unwrap(), before);
+    doc.set_plugin_data(plugin.id(), document_data.flatten());
+    let saved = serde_json::to_vec(&json!({"format": "vectorcraft", "version": 4, "document": doc})).unwrap();
+    for (format, start) in FORMATS {
+        let exporter = registry::install_bytes(&module(format)).unwrap();
+        let target = export::Target { extension: format, name: "Poster" };
+        let kept = export::run(&exporter, &saved, &json!({}), target).unwrap_err().to_string();
+        assert!(kept.starts_with("plug-in failed: error SC-E0701: "), "{format}: {kept}");
+        let named = export::run(&exporter, &saved, &json!({"profile": "brother-pe800-5x7"}), target).unwrap_or_else(|e| panic!("{format}: {e}"));
+        assert!(base64_decoded(&named.data_base64).starts_with(start), "{format}");
+    }
 }

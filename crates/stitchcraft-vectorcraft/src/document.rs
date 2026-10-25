@@ -65,13 +65,13 @@ use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule,
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::stitch_type::Family;
 use stitchcraft_params::{ParamSet, StitchType};
-use stitchcraft_plan::{Rgb, Thread};
+use stitchcraft_plan::{MachineProfile, Rgb, Thread};
 
 use crate::container::{self, unreadable};
 use crate::geometry::{self, UNUSABLE_HINT};
 use crate::values::{sews, text};
 use crate::wire::{self, Dash, Effect, Item, Kind, Node, Paint, PathData, Profile};
-use crate::{FORMAT, color, effect_name};
+use crate::{FORMAT, color, effect_name, settings};
 
 /// A stroke's miter limit when the file leaves it out: VectorCraft's, as Illustrator's.
 const MITER_LIMIT: f64 = 10.0;
@@ -98,9 +98,11 @@ const OUTLINE: &str = "Make shapes of the stroke as it is drawn with Object › 
 /// What a `.vectorcraft` file holds for StitchCraft.
 #[derive(Clone, Debug, PartialEq)]
 pub struct VectorCraft {
-    /// Every object that sews, in stitching order.
+    /// Every object that sews, in stitching order, with the settings the document keeps.
     pub design: Design,
-    /// What was left out or simplified, in document order.
+    /// The machine the document keeps, when it keeps one StitchCraft has ([`crate::settings`]).
+    pub machine: Option<&'static MachineProfile>,
+    /// What was left out or simplified, in document order, and then what of the settings didn't read.
     pub warnings: Vec<Diagnostic>,
 }
 
@@ -117,14 +119,30 @@ pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Vect
     let mut meter = budget.meter();
     let json = container::json(bytes, &mut meter)?;
     let file: wire::File = serde_json::from_slice(&json).map_err(|e| unreadable(&format!("Its JSON does not read: {e}.")))?;
-    let mut reader = Reader { meter, labels: Labels::default(), objects: 0, elements: Vec::new(), warnings: Vec::new(), auto: reading.auto };
+    let settings = DesignSettings::default();
+    let mut reader =
+        Reader { meter, labels: Labels::default(), objects: 0, elements: Vec::new(), warnings: Vec::new(), auto: reading.auto, settings };
     reader.header(file.format.as_deref(), file.version.as_ref())?;
     let document = file.document.ok_or_else(|| unreadable("It holds no document."))?;
+    let mut unread = Vec::new();
+    let kept = settings::kept(document.unknown.plugin_data.as_ref(), &mut unread);
+    reader.settings = kept.settings;
     for layer in &document.layers {
         reader.node(layer, &Around::default())?;
     }
-    let design = Design::new(reader.elements, DesignSettings::default())?;
-    Ok(VectorCraft { design, warnings: reader.warnings })
+    let mut warnings = reader.warnings;
+    warnings.extend(unread);
+    let design = Design::new(reader.elements, kept.settings)?;
+    Ok(VectorCraft { design, machine: kept.machine, warnings })
+}
+
+/// The machine the VectorCraft document `bytes` keeps, read within `budget` before the document itself, so
+/// that the design can be planned for it; `None` when it keeps none StitchCraft has, or doesn't read.
+/// [`read`] says what doesn't.
+pub fn machine(bytes: &[u8], budget: &Budget) -> Option<&'static MachineProfile> {
+    let json = container::json(bytes, &mut budget.meter()).ok()?;
+    let file: wire::Kept = serde_json::from_slice(&json).ok()?;
+    settings::kept(file.document?.unknown.plugin_data.as_ref(), &mut Vec::new()).machine
 }
 
 /// `SC-E0004` for a file that needs more work than the budget allows.
@@ -288,6 +306,9 @@ struct Reader {
     warnings: Vec<Diagnostic>,
     /// Whether an object without StitchCraft effects is an automatic element (`--auto`).
     auto: bool,
+    /// The design's settings, which the document keeps ([`settings`]): automatic digitizing chooses a
+    /// stroke's stitches by them.
+    settings: DesignSettings,
 }
 
 impl Reader {
@@ -572,7 +593,7 @@ impl Reader {
             self.stroke_marks(label, item);
             // An automatic stroke sewn across its width follows its caps, and not what VectorCraft draws
             // across it (`REQ-AUTO-005`).
-            let stitches = Stitches::of_stroke(width, &DesignSettings::default());
+            let stitches = Stitches::of_stroke(width, &self.settings);
             if self.auto && stitches.across() {
                 let what = if stitches == Stitches::Satin { "satin column" } else { "fill" };
                 self.across(label, what, item, path, false);

@@ -341,9 +341,9 @@ pub fn record(test: &str, level: &str, title: &str, message: &str) -> Result<(),
 /// The role of a label in the accessibility tree, in snake case.
 const LABEL: &str = "static_text";
 
-/// The controls a plug-in's dialog shows, by key in lower case, from the nodes of its accessibility tree in
-/// order, each its role (in snake case) and its name: a row is a label, the key with a colon after it, and
-/// then its control (`tests/shots.rs`). Only a [`LABEL`] is a label. VectorCraft 0.13.1 names a checkbox
+/// The controls a plug-in's dialog shows, by label in lower case, from the nodes of its accessibility tree in
+/// order, each its role (in snake case) and its name: a row is a label with a colon after it, and then its
+/// control (`tests/shots.rs`). Only a [`LABEL`] is a label. VectorCraft 0.13.1 names a checkbox
 /// after its row's label, and the node after the checkbox is the next row's label, not its control.
 pub fn dialog_controls(nodes: &[(&'static str, Option<String>)]) -> BTreeMap<String, &'static str> {
     nodes

@@ -5,6 +5,38 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.11: a VectorCraft document keeps its design settings and machine (`REQ-VC-013`). From VectorCraft
+  0.16, **Object › Plug-ins › StitchCraft Design Settings** keeps the machine and Ink/Stitch's 3 design
+  settings, the shortest jump, the shortest stitch and the narrowest satin stroke, with the document, as
+  data VectorCraft keeps for a filter. A 7th plug-in module builds it (`--features settings`).
+  - `stitch export` and the exporters plan the document with the settings kept, and for the machine kept,
+    unless `--profile` or the export's dialog names another. The exporters' Machine option is `document`
+    by default, which is that machine, or `brother-pe800-5x7` when the document keeps none.
+  - What doesn't read keeps its default, with `SC-W0812`. A VectorCraft before 0.16 would drop the data,
+    and there the filter declines with `SC-E0813`.
+  - VectorCraft opens the filter's dialog at the defaults each time. It doesn't give a live effect what
+    the document keeps, and the previews keep the defaults and the reference machine.
+  - The engine lists the 3 design settings with their names, labels and help in one table,
+    `stitchcraft_engine::design::SETTINGS`, which the SVG adapter, the VectorCraft adapter and the
+    filter's dialog all read.
+  - Level B's new `settings` scenario keeps a shortest stitch of 1.5 mm and the 4 × 4 in hoop with
+    VectorCraft's command line, which changes the PES file, and checks the exports against `stitch
+    export`'s. With the small hoop kept, the export of its 1 in square fails with `SC-E0701`. An export in
+    a scenario that must fail names its error's code with `fails`, and ends its run.
+- M6.10: VectorCraft's dialogs show the parameters as the parameter registry describes them
+  (`REQ-VC-012`). From VectorCraft 0.14 each row has the registry's label and its unit, and the registry's
+  groups are the dialog's sections, as they are the headings of the reference pages. Resting the pointer
+  on a label shows its help, and the button after the field opens the parameter's entry in the reference
+  on the docs site. A choice's help says what each option means, since the drop-down list shows the ids
+  that designs store. A row shows only for the methods it applies to, and only with the values of another
+  setting the registry shows it with, such as a satin's staggers for staggered splits. VectorCraft
+  gives the plug-in the values of hidden rows as well, and nothing sews otherwise.
+  - The preview level and the exporters' options have their own labels, help and pages. The exporters'
+    `auto` is *Digitize automatically*, and `profile` is *Machine*.
+  - Releases before 0.14 ignore these keys, and show the dialogs as they did.
+  - `cargo xtask docs --check` finds the page and the heading of each help page a manifest links to. The
+    window probe checks each dialog's rows at the defaults by label, and the pictures of the dialogs are
+    new.
 - M6.9: PES and DST exporters for VectorCraft (`REQ-VC-011`). From VectorCraft 0.14, File › Export ›
   Export As lists *PES embroidery (StitchCraft)* and *DST embroidery (StitchCraft)*, 2 more plug-in modules
   (`--features pes` and `--features dst`). An exporter writes the file `stitch export` writes of the
@@ -695,6 +727,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The names of the parameter reference pages, `ParamGroup::slug` and `ParamGroup::title`, moved from the
+  docs generator to `stitchcraft-params`, where the plug-in's dialogs name the same pages. And
+  `stitchcraft_core::text::plain` gives the plain text of Markdown help, for VectorCraft's dialogs.
 - `read_back`, which reads a machine file just written with its plan's threads, moved from the command line
   to `stitchcraft-formats`, and a diagnostic's first line to `Diagnostic::headline` in `stitchcraft-core`.
   The exporters check and word what they write as `stitch export` does.

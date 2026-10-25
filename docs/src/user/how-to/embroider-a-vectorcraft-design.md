@@ -12,11 +12,18 @@ holds Ink/Stitch's settings for that kind of stitch, and the object shows its st
 art. The thread is the colour of the object's fill for a fill, and of its stroke for a stroke or a satin
 column.
 
+From VectorCraft 0.14 each setting has a label and its unit, in the sections of the
+[parameter reference](../reference/params.md). Rest the pointer on a label for its help, or press the
+button after the field for its page in the reference. A setting shows only when it applies: a satin's
+staggers show for staggered splits. VectorCraft before 0.14 lists every setting, each under its Ink/Stitch
+name.
+
 An object without a StitchCraft effect sews as Ink/Stitch sews a shape of an SVG file. Its fills are
 filled, and its strokes are sewn as running stitch. With `stitch export --auto`, StitchCraft chooses its
 stitches by width instead, as for a picture traced into shapes.
 
-- A line up to 1 mm wide runs.
+- A line up to 1 mm wide runs, or up to the narrowest satin stroke the document keeps
+  ([below](#keep-the-designs-settings-and-machine-with-it)).
 - A line up to 7 mm wide is a satin column as wide as drawn, its round or square caps included.
 - A wider line, or a fill, is a tatami fill.
 
@@ -39,10 +46,11 @@ With the [exporters installed](../install.md#the-vectorcraft-plug-ins), choose *
 As**, and **PES embroidery (StitchCraft)** or **DST embroidery (StitchCraft)** as the format. Once the file
 is picked, a dialog shows 2 options:
 
-- **Profile**, the machine and hoop the design is planned for: `brother-pe800-5x7` unless another is
-  chosen. `stitch profiles` lists them.
-- **Auto**, which chooses the stitches of the objects without a StitchCraft effect by their width, as
-  `stitch export --auto` does.
+- **Digitize automatically**, which chooses the stitches of the objects without a StitchCraft effect by
+  their width, as `stitch export --auto` does.
+- **Machine**, the machine and hoop the design is planned for: `document`, the one the document keeps
+  ([below](#keep-the-designs-settings-and-machine-with-it)), or `brother-pe800-5x7` when it keeps none,
+  unless another is chosen. `stitch profiles` lists them.
 
 The design takes the file's name, which machines show. What `stitch export` would say about the design
 shows with the export's warnings, one line for each message. When one of them is an error, nothing is
@@ -61,13 +69,33 @@ named `stitch:ignore placement line`:
 ![The patch as it will sew. A red fill with rows at 45 degrees has a blue satin band and a green curve of running stitch under it. Under them, 2 gold squares with upright rows have the loose thread of the jump between them. The placement line and the start marker are not sewn.](../../images/generated/patch.png)
 <!-- /shot -->
 
-`stitch export` writes the file for the machine `--profile` names, `brother-pe800-5x7` by default, and
-`--preview` adds a picture. It is [`stitch plan`](../reference/cli.md#stitch-plan) by another name, which
+`stitch export` writes the file for the machine `--profile` names, or else the one the document keeps, or
+else `brother-pe800-5x7`, and `--preview` adds a picture. It is [`stitch plan`](../reference/cli.md#stitch-plan) by another name, which
 reads an SVG file the same way and takes the same options.
 
 StitchCraft reads documents of up to 64 MiB. Pictures embedded to trace from can make one larger: place
 them with **Link** checked in VectorCraft's Place dialog, and VectorCraft saves a small preview of each
 in the document instead.
+
+## Keep the design's settings and machine with it
+
+From VectorCraft 0.16, a document can keep the machine it is for, and the 3 settings Ink/Stitch keeps
+with a design for all of its objects. With the [plug-ins installed](../install.md#the-vectorcraft-plug-ins),
+choose **Object › Plug-ins › StitchCraft Design Settings**, set them, and press OK:
+
+- **Machine**, the machine and hoop the design is planned for, `brother-pe800-5x7` by default.
+- **Shortest jump**, **Shortest stitch** and **Narrowest satin stroke**, in millimetres. Rest the pointer
+  on a label for what each does.
+
+The document saves them. The exporters and `stitch export` plan the design for the machine it keeps,
+unless the export's **Machine** option or `--profile` names another. They use its settings as they use
+an SVG file's design settings. Whatever is selected, the filter leaves every object as it is.
+
+VectorCraft opens the dialog at the defaults each time, not at what the document keeps, so set all 4 when
+you run it again. A live effect isn't given what the document keeps. The stitches shown as you work are
+planned for `brother-pe800-5x7` with the default settings, and a longer shortest stitch shows only in the
+machine file and in `stitch export --preview`. A setting that StitchCraft can't read keeps its default,
+and `stitch export` says so (`SC-W0812`).
 
 ## Read what it says
 
