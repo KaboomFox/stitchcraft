@@ -427,7 +427,7 @@ mod tests {
     #[test]
     fn the_milestones_done_are_the_roadmap_s() {
         let done = done_milestones(&util::read(&util::root().join(ROADMAP)).unwrap());
-        // M6.8, live effects that read their object's stroke, is open.
+        // M6.9 to M6.12, which use VectorCraft's newer plug-in features, are open.
         assert!(
             ["M1", "M2", "M3", "M4", "M5"].iter().all(|m| done.contains(*m)) && !["M0", "M6", "M7"].iter().any(|m| done.contains(*m)),
             "{done:?}"

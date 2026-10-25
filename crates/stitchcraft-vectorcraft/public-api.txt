@@ -4,6 +4,7 @@ pub mod stitchcraft_vectorcraft
 pub struct stitchcraft_vectorcraft::Effect
 pub stitchcraft_vectorcraft::Effect::element: stitchcraft_engine::design::Element
 pub stitchcraft_vectorcraft::Effect::preview_level: core::option::Option<alloc::string::String>
+pub stitchcraft_vectorcraft::Effect::stroked: bool
 pub struct stitchcraft_vectorcraft::VectorCraft
 pub stitchcraft_vectorcraft::VectorCraft::design: stitchcraft_engine::design::Design
 pub stitchcraft_vectorcraft::VectorCraft::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>

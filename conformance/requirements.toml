@@ -1068,6 +1068,15 @@ rationale = "ABI v1 gives a plug-in no command objects of its own. The names Vec
 milestone = "M6"
 status = "active"
 
+[[req]]
+id = "REQ-VC-010"
+area = "vectorcraft"
+level = "L2"
+statement = "From VectorCraft 0.14 a live effect reads the stroke it is given. A stroke or a satin effect on its object follows the topmost of the object's strokes that has a paint and a width: its width, and from 0.15 its join, cap and miter limit, as `stitch export` follows the topmost stroke VectorCraft draws. So a satin column drawn as one path and a zigzag stroke show their stitches as wide as their stroke. Given no such stroke, the effect leaves such an object as it is and says why (SC-I0810). An effect on one of the object's fills or strokes, which `stitch export` doesn't use, leaves the object as it is too (SC-I0810)."
+rationale = "The previews show what the file sews (REQ-VC-004). VectorCraft gives a live effect its object's own fills and strokes, without their opacity or whether they show, and not the paints of the groups around it, so an effect can't follow a group's stroke over the object, which `stitch export` follows."
+milestone = "M6"
+status = "active"
+
 # ── Command line ───────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

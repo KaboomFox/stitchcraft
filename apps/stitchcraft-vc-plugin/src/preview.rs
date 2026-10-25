@@ -22,6 +22,12 @@
 //! fill's exact preview is the user's to pick, with all that VectorCraft allows, which stops one that needs
 //! more with its own error.
 //!
+//! **A satin column drawn as one path** (M6.8). It makes its rails from its centre line before it sews,
+//! in many units of about 330 instructions each, which the satin column's price counts as dear as its
+//! stitches, since one budget of units cannot tell them apart. One bend takes 33,100 units, so auto shows
+//! the outline of a centre line that bends, and its exact preview is the user's to pick: 12.6 million
+//! instructions for one bend, 25 million for a quarter circle of 17 points.
+//!
 //! **Where the numbers come from.** Spike M0.6 measured reading JSON at 512 instructions a byte, and M6.3
 //! the rest, in VectorCraft's host, on the shapes the contract tests run. Each constant here is the
 //! largest measured, with a margin. The contract tests fail when a level takes more than VectorCraft
@@ -127,7 +133,10 @@ pub fn show(family: Family, effect: &Effect, spend: u64) -> Vec<u8> {
 /// What [`show`] shows, and at which level.
 fn preview(family: Family, effect: &Effect, spend: u64) -> Shown {
     let (element, spend) = (&effect.element, Spend(spend));
-    if let Some(unseen) = centre_line(family, element, spend).or_else(|| zigzag(family, element)) {
+    // Given no stroke, the element's stroke is a stand-in, and stitches as wide as it would mislead.
+    if !effect.stroked
+        && let Some(unseen) = centre_line(family, element, spend).or_else(|| zigzag(family, element))
+    {
         return Shown::Unsewn(unseen);
     }
     match (Level::read(effect.preview_level.as_deref()), family) {
@@ -268,27 +277,25 @@ pub fn reading(spend: u64) -> Budget {
     Spend(spend).tenths(1).work(ROWS_PER_UNIT)
 }
 
-/// `SC-I0810` when `element`, of `family`, is a satin column drawn as one path, its centre line: the
-/// column is as wide as its stroke, which VectorCraft gives a live effect from 0.14 and the effect doesn't
-/// read yet (M6.8). Telling takes a tenth of `spend`; a path too long to tell within it is sewn, and the
-/// levels' budgets bound that.
+/// `SC-I0810` when `element`, of `family`, is a satin column drawn as one path, its centre line, and
+/// VectorCraft gave the effect no stroke: the column is as wide as its stroke (`REQ-VC-010`). Telling takes
+/// a tenth of `spend`; a path too long to tell within it is sewn, and the levels' budgets bound that.
 fn centre_line(family: Family, element: &Element, spend: Spend) -> Option<Diagnostic> {
     let (Family::Satin, Shape::Stroke { path, .. }) = (family, &element.shape) else { return None };
     let Ok(Column::CentreLine { .. }) = recognize(path, &mut reading(spend.0).meter()).ok()?.shape else { return None };
-    let message = "This satin column is drawn as one path, as wide as its stroke, which the live effect doesn't read yet: the effect \
-                   leaves it as it is.";
-    let hint = "To see its stitches in VectorCraft, draw its 2 rails, join them with Object › Compound Path › Make and apply the effect to that.";
+    let message = "This satin column is drawn as one path, as wide as its stroke, and VectorCraft gives the live effect no stroke for it: \
+                   the effect leaves it as it is.";
+    let hint = "Give the object a stroke as wide as the column, or draw its 2 rails and join them with Object › Compound Path › Make.";
     Some(Diagnostic::new(Code::VcEffectUnchanged, message).with_fix(Fix::Hint(hint.into())))
 }
 
-/// `SC-I0810` when `element`, of `family`, is a zigzag stroke. It is as wide as its stroke, which the effect
-/// doesn't read yet (M6.8). The object drawn as it is shows its width.
+/// `SC-I0810` when `element`, of `family`, is a zigzag stroke and VectorCraft gave the effect no stroke: a
+/// zigzag is as wide as its stroke (`REQ-VC-010`). The object drawn as it is shows its width.
 fn zigzag(family: Family, element: &Element) -> Option<Diagnostic> {
     let (Family::Stroke, Some(StitchType::ZigzagStitch)) = (family, stitch_type_of(element, &DesignSettings::default())) else { return None };
-    let message = "This zigzag stroke is as wide as its stroke, which the live effect doesn't read yet: the effect leaves it as it is.";
-    Some(
-        Diagnostic::new(Code::VcEffectUnchanged, message).with_fix(Fix::Hint("Exported with `stitch export`, it sews as wide as its stroke.".into())),
-    )
+    let message = "This zigzag stroke is as wide as its stroke, and VectorCraft gives the live effect no stroke for it: the effect leaves it \
+                   as it is.";
+    Some(Diagnostic::new(Code::VcEffectUnchanged, message).with_fix(Fix::Hint("Give the object a stroke as wide as the zigzag.".into())))
 }
 
 /// Whether `diagnostics` say the budget ran out.

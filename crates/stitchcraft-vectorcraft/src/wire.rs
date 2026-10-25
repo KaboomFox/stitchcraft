@@ -187,6 +187,17 @@ pub(crate) struct Paint {
     pub gradient: Option<Gradient>,
 }
 
+impl Paint {
+    /// Whether VectorCraft draws anything with it: it is not none, nor a gradient without stops.
+    pub(crate) fn paints(&self) -> bool {
+        match self.kind.as_str() {
+            "none" => false,
+            "gradient" => self.gradient.as_ref().is_some_and(|gradient| !gradient.stops.is_empty()),
+            _ => true,
+        }
+    }
+}
+
 /// A colour in its model: `rgb`, `cmyk` or `gray`, components from 0 to 1, or `lab`.
 #[derive(Clone, Copy, Deserialize, PartialEq)]
 pub(crate) struct Color {
@@ -258,14 +269,34 @@ pub(crate) struct EffectInput {
     pub objects: Vec<EffectObject>,
 }
 
-/// An object a live effect is given: its path, in document coordinates, and its fill rule (`nonzero` or
-/// `evenodd`). Its `type` and `bounds` are not needed.
+/// An object a live effect is given: its path, in document coordinates, its fill rule (`nonzero` or
+/// `evenodd`), and from VectorCraft 0.14 its strokes, bottom first. Its `type`, `bounds` and fills are not
+/// needed.
 #[derive(Deserialize)]
 pub(crate) struct EffectObject {
     #[serde(default)]
     pub path: Option<PathData>,
     #[serde(rename = "fillRule", default)]
     pub fill_rule: Option<String>,
+    #[serde(default)]
+    pub strokes: Vec<EffectStroke>,
+}
+
+/// A stroke of the object a live effect is given (VectorCraft 0.14): its paint, `null` for none, and its
+/// width in points; from 0.15 its join (`miter`, `round` or `bevel`), its cap (`butt`, `round` or
+/// `square`) and its miter limit. VectorCraft gives every stroke, without its opacity or whether it shows.
+#[derive(Deserialize)]
+pub(crate) struct EffectStroke {
+    #[serde(default)]
+    pub paint: Option<Paint>,
+    #[serde(default)]
+    pub width: Option<f64>,
+    #[serde(default)]
+    pub join: Option<String>,
+    #[serde(default)]
+    pub cap: Option<String>,
+    #[serde(rename = "miterLimit", default)]
+    pub miter_limit: Option<f64>,
 }
 
 /// A path: its subpaths.
