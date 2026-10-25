@@ -12,7 +12,8 @@
 4. **Test it:** a conformance case where the parameter changes the result in the documented direction,
    plus a property test if it has a monotonic effect.
 5. **Check limits:** the plug-in test fails if the family's VectorCraft manifest would exceed 64
-   parameters; if it does, discuss moving rarely used parameters to a preset or to ABI v2.
+   parameters, which every VectorCraft release takes. If it does, discuss moving rarely used parameters to a
+   preset, or a group: VectorCraft 0.14 takes 256 parameters, 64 of them outside groups.
 6. **Regenerate docs:** `cargo xtask docs` writes the reference page, the JSON Schema and the
    compatibility contract's StitchCraft column, and checks the declaration against the contract. An
    Ink/Stitch parameter needs a compatible type and the default Ink/Stitch sews, and a deliberate

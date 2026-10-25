@@ -236,14 +236,17 @@ entries, and the lock and method identifiers must equal Ink/Stitch's.
 
 ## Splitting for VectorCraft ABI v1
 
-VectorCraft v1 allows at most 64 parameters per plug-in and has no groups or conditional visibility.
+VectorCraft took at most 64 parameters per plug-in, with no groups or conditional visibility, until 0.14.
 The plug-in crate builds **one plug-in per stitch family** for that (`stroke`, `satin`, `fill`), each
 with only the parameters that apply to it; the shared lock/trim parameters are included in each. A test
 fails if any family's manifest exceeds 64 parameters or 64 KiB, so adding a parameter that would break
-the limit is caught in the PR, not by a user. In v1 each parameter has one value of VectorCraft's kinds.
+the limit is caught in the PR, not by a user. A parameter has one value, of a kind every release takes.
 A parameter that needs a text, a seed or several values keeps its default in VectorCraft
-([manifests](vectorcraft-integration.md#plug-ins)). When VectorCraft supports richer schemas (ABI v2
-RFC), groups and conditions are emitted as well.
+([manifests](vectorcraft-integration.md#plug-ins)). VectorCraft 0.14 adopted richer schemas from the
+[RFC](rfc-vectorcraft-abi-v2.md#p2-rich-parameter-schemas): labels, units, help, groups and conditions, texts
+and lists, and 256 parameters, 64 of them outside groups. Releases before it ignore the labels, units, help,
+groups and conditions, and refuse the rest. M6.10 emits the registry's labels, units, help, groups and
+conditions.
 
 ## Presets
 

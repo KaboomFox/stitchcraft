@@ -1,130 +1,147 @@
-# RFC: VectorCraft plug-in ABI v2
+# RFC: VectorCraft plug-in features
 
 | | |
 |---|---|
 | **Audience** | ArtCraft / VectorCraft maintainers |
-| **Status** | Draft for discussion (to be opened as a GitHub discussion or issue before M9) |
-| **Compatibility** | Additive: every v1 plug-in keeps working unchanged |
+| **Status** | Mostly adopted ([status](#status)): 5 proposals in VectorCraft 0.14.0 to 0.16.0, 2 more on its `main`, and P3 open with the rest of P4 and P6 |
+| **Compatibility** | Additive. Every plug-in written for ABI v1 keeps working, and `vc_abi_version` still returns 1 |
 | **Author's interest** | StitchCraft (machine embroidery), but every proposal serves other plug-ins too |
 
-## Summary
+This page began as the RFC for a plug-in ABI v2. VectorCraft took most of its proposals into ABI v1 instead.
+Each came as keys that hosts from before it ignore, or as a kind of plug-in that they refuse to install, and a
+plug-in that uses none of them installs anywhere. VectorCraft's
+[plug-in documentation](https://github.com/storytold/vectorcraft/blob/main/docs/plugins.md) is the contract.
+This page records what was adopted and when, and what StitchCraft still proposes. Its path keeps the old
+name, which links point at. The [roadmap](../plan/roadmap.md) plans StitchCraft's use of the adopted
+features in M6.8 to M6.12, and proposes the open ones in M9.
 
-ABI v1 is a careful, safe design: sandboxed, import-free, deterministic, portable to the web. This RFC
-proposes eight additive features that let richer plug-ins exist without weakening that sandbox. Each is
-independent and can land on its own; together they let plug-ins export files, show informative
-previews and present usable parameter dialogs.
+## Status
 
-## Motivation
+Checked against VectorCraft's `docs/plugins.md` and its history, on `main` at `8bf090b` (2026-10-24):
 
-Classes of plug-ins that v1 cannot serve well today, all of them common in illustration tools:
+| Proposal | In VectorCraft | Since |
+|---|---|---|
+| [P1](#p1-exporter-plug-ins), exporter plug-ins | Adopted | 0.14.0 |
+| [P2](#p2-rich-parameter-schemas), rich parameter schemas | Adopted | 0.14.0 |
+| [P3](#p3-display-only-overlays-for-live-effects), overlays for live effects | Open | |
+| [P4](#p4-budget-classes-for-filters), budget classes | Heavy filters adopted, heavy live effects open | `main`, after 0.16.0 |
+| [P5](#p5-document-level-plug-in-data), document-level plug-in data | Adopted for filters and exporters | 0.16.0 |
+| [P6](#p6-the-paints-of-a-live-effects-object), context for live effects | Fills and strokes adopted, neighbours open | 0.14.0, a stroke's style 0.15.0 |
+| [P7](#p7-preserve-foreign-svg-attributes), foreign SVG attributes | Adopted | `main`, after 0.16.0 |
+| [P8](#p8-effects-and-stroke-style-in-filter-objects), effects and stroke style in filters | Adopted | 0.15.0 |
 
-| Plug-in class | Blocked by |
+The plug-in classes this RFC was for, and what VectorCraft serves of them now:
+
+| Plug-in class | Now |
 |---|---|
-| Output generators: embroidery (PES/DST), plotters (HPGL), laser cutters (G-code), cutting machines | no file-format plug-ins |
-| Generators with many settings (halftones, hatching, embroidery, pattern fills) | ≤ 64 parameters, no labels, units, groups or conditions |
-| Previews of things that are not the object's geometry (stitches, toolpaths, cut order) | live effects can only *replace* geometry, and must pay JSON serialization for every point |
-| Heavy but legitimate computation (routing, packing, simulation) | fixed fuel/time budgets independent of output size |
-| Plug-ins with document-wide settings (machine profile, plotter pens) | no document-level storage |
-| Tools that set up objects for a live effect (a satin column from a line, a test sheet) | a filter returns geometry and paint without effect records, and is not given a stroke's join, cap or miter limit |
+| Output generators for embroidery (PES/DST), plotters (HPGL), laser cutters (G-code) and cutting machines | Exporters write their own formats (P1) |
+| Generators with many settings (halftones, hatching, embroidery, pattern fills) | Up to 256 parameters, labelled, in groups, with help and conditions (P2) |
+| Previews of things that are not the object's geometry (stitches, toolpaths, cut order) | Still only by replacing geometry, at JSON's cost for every point (P3, open) |
+| Heavy but legitimate computation (routing, packing, simulation) | Heavy filters (P4), and an export's own budget. A live effect still has a light run's budget |
+| Plug-ins with document-wide settings (machine profile, plotter pens) | Data kept with the document (P5) |
+| Tools that set up objects for a live effect (a satin column from a line, a test sheet) | Filters read and return effect records and a stroke's style (P8) |
 
-## Proposals
+## Adopted
+
+How VectorCraft adopted each proposal, where it differs from what was proposed.
 
 ### P1: Exporter plug-ins
 
-A new manifest kind `"exporter"` with `"extensions": ["pes"]` and `"label": "Brother PES"`. On
-**File › Export**, the host calls `vc_export(input, len, params, len) → (len << 32) | ptr` with the whole
-document's exportable objects in paint order (the same object JSON as filters, plus groups, layers,
-visibility and appearance effect records) and receives `{"bytes": base64, "warnings": [...]}` or
-`{"error": "..."}`. The host writes the file; the plug-in still has no file-system access.
-
-*Host change:* make `FORMATS` (`crates/engine/src/cmd/fileio/mod.rs`) extensible with plug-in entries
-(write-only), list them in the export dialog and `export_extensions()`.
+A plug-in of `"kind": "exporter"` lists 1 to 8 `extensions`. File › Export › Export As lists it after the
+built-in formats as `plugin.<id>`, which `document.export` writes too. It is given the whole document as a
+native `.vectorcraft` file's JSON, where the RFC proposed the filters' object JSON. The JSON lists every
+layer, object, appearance and effect record, with the data plug-ins keep with the document. It returns
+`{"dataBase64": …, "warnings": […]}`, and the host writes the file. An export gets 10 G instructions, plus
+4,000 for each input byte, and 300 s, and runs on the export's worker with Background Export on. Its
+`_context` names the file's extension and name, and a plug-in with parameters asks for them once the file
+is picked.
 
 ### P2: Rich parameter schemas
 
-Optional keys on each parameter, ignored by v1 hosts:
+As proposed: `label`, `unit`, `group`, `help`, `helpUrl` (an `https://` page) and `visibleWhen`, the types
+`string` (with `maxLength`, at most 4,096) and `numberList` (with `minItems` and `maxItems`, at most 256).
+A plug-in declares up to 256 parameters, at most 64 of them outside groups, where the RFC proposed a
+manifest key to ask for more. `visibleWhen` names checkboxes and choices declared before the parameter. A
+hidden parameter still goes to the plug-in. A plug-in's parameters scroll in its dialog when they don't fit
+the window.
 
-```json
-"row_spacing_mm": {
-  "type": "number", "min": 0.1, "max": 10, "default": 0.25,
-  "label": "Row spacing", "unit": "mm", "group": "Fill",
-  "help": "Distance between rows of stitches. Smaller is denser.",
-  "helpUrl": "https://…/params/row_spacing_mm",
-  "visibleWhen": {"fill_method": ["tatami_fill", "contour_fill"]}
-}
-```
+### P4: Budget classes for filters
 
-plus types `"string"` (with `maxLength`) and `"numberList"` (with `minItems`/`maxItems`), and a manifest
-`"maxParams"` up to 256 when `"groups"` are used. *Host change:* the generated dialog renders labels,
-units, groups as collapsible sections and evaluates `visibleWhen`.
-
-### P3: Display-only overlays for live effects
-
-A live effect may return `"overlay": {"format": "f32-polylines", "data": base64}` in addition to (or
-instead of) geometry: a compact binary list of polylines, each with an RGBA colour and a width in
-points. The host draws overlays on the canvas above the object, never exports or hit-tests them, and
-caches them with the effect result. This makes previews cheap (4 bytes per coordinate instead of JSON)
-and keeps the object's real geometry untouched.
-
-### P4: Budget classes
-
-Manifest `"budget": "light" | "heavy"`. Light keeps today's limits. Heavy plug-ins get a larger base
-fuel (for example 1 G instructions) and wall-clock limit, run off the UI thread, and require the user to
-allow them once at install. Fuel per output byte read back (not only per input byte) makes the budget
-track the real cost of generators.
-
-In VectorCraft's own host, a filter making a line 3 mm wide into the 2 rails of a satin column takes
-from 51 million instructions for an S curve 30 mm long to 162 million for a circle 50 mm across. That is
-what Ink/Stitch's Convert Line to Satin does. A run gets about 52 million today.
+A filter that declares `"budget": "heavy"` gets 1 G instructions, plus 4,000 for each input byte, and 300 s
+(`HEAVY_FUEL`, `HEAVY_WALL_TIME_MS`). It installs once the user allows it, and runs in the background with
+progress and Cancel. A host from before heavy filters ignores the key, and the filter gets a light run's
+budget there. Only a filter may be heavy, as a live effect runs whenever the document is drawn. A heavy
+filter's budget grows with its input alone: the host learns how much output there is only once the run has
+ended.
 
 ### P5: Document-level plug-in data
 
-`Document.plugin_data: Map<plugin id, JSON>` (≤ 1 MiB per plug-in), saved in `.vectorcraft`, passed to
-the plug-in as `_context.documentData`, writable through a filter's output `"documentData"`. Today
-`Document.unknown` holds similar foreign data for the perspective grid and brushes, so the storage pattern
-already exists.
+A filter is given what it last kept with the document as `_context.documentData`, and keeps new data by
+returning `documentData`, at most 1 MiB of JSON, in the same undo step as its objects. The native file
+keeps it in `document.unknown.pluginData` under the plug-in's id. An exporter reads every plug-in's, in the
+document it is given. A live effect isn't given it: its geometry depends on its object alone.
 
-### P6: Read-only context for live effects
+### P6: The paints of a live effect's object
 
-Add the object's `fills`/`strokes` and, optionally, siblings in the same group whose names start with a
-declared prefix (`"contextPrefixes": ["stitch:"]`) to the live-effect input. Embroidery reads thread
-colours, start and end markers and a stroke's width from it. A satin column drawn as one path and a zigzag
-stroke are as wide as their stroke, and without its width a v1 effect leaves both as they are
-(`SC-I0810`). Other plug-ins use the context for guides and anchors.
+A live effect is given its object's `fills` and `strokes`. Each stroke comes with its `width`, and from
+0.15.0 with its `join`, `cap` and `miterLimit`, as a filter's does (P8). `_context.item` says where the
+effect is: on the object, or in the own effects of one of its fills or strokes. The paints are read only,
+and the effect still changes only the geometry. The objects beside it are not given
+([below](#p6-the-objects-beside-a-live-effects-object)).
 
 ### P7: Preserve foreign SVG attributes
 
-On SVG import, keep attributes in unknown namespaces per node (`Node.foreign: Option<Box<Map>>`), and
-write them back on SVG export. This makes VectorCraft a good citizen for files from Inkscape extensions
-and other tools (Ink/Stitch, plotter workflows), independent of any plug-in.
+As proposed: attributes in other applications' XML namespaces stay on their objects from SVG import to SVG
+export, and copies keep them. Nothing in VectorCraft reads them. An Ink/Stitch SVG opened in VectorCraft
+keeps its `inkstitch:*` parameters when it is saved as SVG again.
 
 ### P8: Effects and stroke style in filter objects
 
-A filter's input objects include each stroke's `join`, `cap` and `miterLimit` beside its `paint` and
-`width`, and a filter may return `"effects": [{id, params, visible}]` for an object, which replaces the
-object's appearance effects as `fills` and `strokes` replace its paints. The host checks each record as
-`effect.apply` does: a known effect id, and parameters its manifest accepts. A tool could then make a line
-into a satin column with its effect, or draw a test sheet whose objects sew as one. A column made from a
-line needs the stroke's join at its corners.
+As proposed: a filter is given each stroke's `join`, `cap` and `miterLimit`, as a live effect is, and each
+object's own effect records. It may return `effects`, which replace the object's own. Each is admitted as
+`effect.apply` admits it: a known effect, or an installed live-effect plug-in with parameters its manifest
+takes. A tool can make a line into a satin column with its effect, or draw a test sheet whose objects sew.
+
+## Open
+
+### P3: Display-only overlays for live effects
+
+A live effect may return `"overlay": {"format": "f32-polylines", "data": base64}`, with its geometry or
+instead of it. The overlay is a compact binary list of polylines, each with an RGBA colour and a width in
+points. The host draws overlays on the canvas above the object, never exports or hit-tests them, and caches
+them with the effect result. This makes previews cheap, 8 bytes for each point instead of the 40 or so JSON
+takes, and keeps the object's real geometry untouched. An embroidery preview could then show every stitch
+of a large fill, where it shows a fill's rows or its outline today.
+
+### P4: Budget classes for live effects
+
+A live effect declares `"budget": "heavy"`, allowed once at install as a heavy filter is. It gets more
+instructions and time and runs off the UI thread, with the object drawn as it is until the result comes.
+Fuel for each byte read back, as well as for each byte given, would make the budget follow what a
+generator writes. An embroidery effect's exact preview of a fill 7 mm across takes 27 million
+instructions, and a larger fill's stops at the light budget's 50 million.
+
+### P6: The objects beside a live effect's object
+
+The live-effect input holds, optionally, the objects in the same group whose names start with a prefix the
+manifest declares (`"contextPrefixes": ["stitch:"]`). Embroidery reads start and end markers from it, so a
+preview starts and ends where `stitch export` does. Other plug-ins use the context for guides and anchors.
 
 ## Security and determinism
 
-None of the proposals adds imports: plug-ins still cannot touch files, the network, clocks or
-randomness. Exporters return bytes to the host; overlays are plain data; heavy budgets are opt-in and
-still bounded. Results remain deterministic functions of their inputs, so caching stays valid.
+The proposals leave the sandbox as it is: plug-ins still cannot touch files, the network, clocks or
+randomness. Exporters return bytes, which the host writes. Overlays are plain data, and heavy budgets are
+opt-in and still bounded. Results are still deterministic functions of their inputs, which a host may
+cache.
 
 ## Implementation sketch and tests
 
 | Proposal | Main files | Tests |
 |---|---|---|
-| P1 | `crates/plugins/src/{manifest,runtime}.rs`, `crates/engine/src/cmd/fileio/mod.rs`, export dialog | ABI tests with a WAT exporter fixture; export command sweep |
-| P2 | `crates/plugins/src/manifest.rs`, plug-in dialog in `crates/ui-egui` | manifest property tests; headless frame test of the dialog |
-| P3 | `crates/plugins/src/effect.rs`, canvas drawing in `crates/ui-egui/src/canvas.rs` | overlay decoding fuzz test; cache key test |
-| P4 | `crates/plugins/src/runtime.rs`, install flow | fuel accounting tests |
-| P5 | `crates/doc/src/lib.rs`, `crates/format` | format round-trip property test |
-| P6 | `crates/plugins/src/objects.rs` | ABI tests |
-| P7 | `crates/doc/src/node.rs`, `crates/svg/src/{import,export}.rs` | SVG round-trip tests |
-| P8 | `crates/plugins/src/objects.rs` | ABI tests; an effect record a manifest refuses is refused |
+| P3 | `crates/plugins/src/effect.rs`, canvas drawing in `crates/ui-egui/src/canvas.rs` | a fuzz test of overlay decoding, a cache key test |
+| P4, live effects | `crates/plugins/src/{effect,runtime}.rs`, the install flow | fuel accounting tests, a drawing that waits for a heavy result |
+| P6, objects beside | `crates/plugins/src/objects.rs` | ABI tests |
 
-We would contribute implementations and tests following VectorCraft's `AGENTS.md`, one proposal per PR,
-and a small third-party contract test so future ABI changes are caught by `cargo xtask ci`.
+We would contribute implementations and tests following VectorCraft's `AGENTS.md`, one proposal per PR.
+StitchCraft's compatibility gate already runs a third-party contract test against every VectorCraft
+release, release branch and `main` ([compatibility gate](compatibility-gate.md)).

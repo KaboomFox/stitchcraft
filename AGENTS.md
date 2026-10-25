@@ -93,7 +93,7 @@ See "Where does my code go?" in `docs/src/design/architecture.md`, and the playb
 The plug-in targets VectorCraft's WebAssembly ABI v1 (`docs/src/design/vectorcraft-integration.md`).
 Do not depend on VectorCraft internals beyond that ABI and its documented `.vectorcraft` format; the
 compatibility gate (`docs/src/design/compatibility-gate.md`) tests every VectorCraft release, pre-release,
-`release` branch and `main`. Proposed VectorCraft changes go through the ABI v2 RFC, following
+`release` branch and `main`. Proposed VectorCraft changes go through the plug-in features RFC, following
 VectorCraft's own `AGENTS.md`.
 
 ## Machine testing

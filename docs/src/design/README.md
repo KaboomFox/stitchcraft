@@ -11,7 +11,7 @@ our own words and never carry Ink/Stitch's code ([ADR-0012](adr/0012-read-dont-c
 4. [Engine pipeline](engine-pipeline.md), the [stitch generators](algorithms/README.md) and
    [image to embroidery](image-to-embroidery.md).
 5. [Machine formats](formats.md) and [rendering previews](rendering.md).
-6. [VectorCraft integration](vectorcraft-integration.md), the [ABI v2 RFC](rfc-vectorcraft-abi-v2.md)
+6. [VectorCraft integration](vectorcraft-integration.md), the [plug-in features RFC](rfc-vectorcraft-abi-v2.md)
    and the [compatibility gate](compatibility-gate.md).
 7. Quality: [conformance](conformance.md), [determinism](determinism.md), [guardrails](guardrails.md),
    [docs pipeline](docs-pipeline.md).

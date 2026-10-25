@@ -110,7 +110,7 @@ identical to Ink/Stitch's SVG attributes because that is the interoperability co
 | Running stitch (repeats, bean, random length), manual stitch, lock stitches, trims, stops, colour changes, SVG input | P1 | M3 |
 | Satin column (rails/rungs, underlays, pull/push compensation, short and split stitches) | P1 | M4 |
 | Tatami fill (underlay, pull compensation, staggers, gap fill, underpath travel) | P1 | M5 |
-| VectorCraft plug-in (ABI v1), export from `.vectorcraft`, compatibility gate | P1 | M6 |
+| VectorCraft plug-in (ABI v1), export from `.vectorcraft`, compatibility gate, and the plug-in features VectorCraft added from 0.14 (exports from File › Export, labelled dialogs, design settings and a machine for each document, and the tools filter) | P1 | M6 |
 | Zigzag/E/S stitches, contour, meander, circular fill | P2 | M7 |
 | Image to embroidery: stitch types chosen by width, overlaps, sewing order, VectorCraft's Auto effect | P2 | M13, between M7.5 and M7.6 |
 | Ink/Stitch SVG import (attributes, commands, clones) and differential testing | P2 | M8 |
@@ -118,7 +118,7 @@ identical to Ink/Stitch's SVG attributes because that is the interoperability co
 | Guided, gradient, ripple, tartan, cross stitch; auto-run/auto-satin | P3 | M10 |
 | EXP, JEF, VP3, XXX, U01 formats; thread catalogues | P3 | M11 |
 | 1.0 hardening, translations, release automation | — | M12 |
-| VectorCraft ABI v2 (upstream RFC), for export from File › Export, overlay previews, rich parameter panels and a machine profile per document | after 1.0 | M9, last |
+| VectorCraft plug-in features still proposed upstream (RFC), for previews drawn as overlays, heavy live effects and the objects beside a live effect | after 1.0 | M9, last |
 
 The full milestone and step list is in [the roadmap](../plan/roadmap.md).
 
@@ -174,7 +174,7 @@ Details, dependency rules and the reasoning are in [architecture](architecture.m
 | ADR | Decision |
 |---|---|
 | [0001](adr/0001-license-and-clean-room.md) | MIT OR Apache-2.0, clean-room from Ink/Stitch; keep its parameter names for interoperability |
-| [0002](adr/0002-host-agnostic-engine-plugin-first.md) | Host-agnostic engine; VectorCraft ABI v1 plug-in first, ABI v2 upstream, in-tree crate optional |
+| [0002](adr/0002-host-agnostic-engine-plugin-first.md) | Host-agnostic engine; VectorCraft ABI v1 plug-in first, new plug-in features upstream, in-tree crate optional |
 | [0003](adr/0003-parameter-registry.md) | One parameter registry generates UI schemas, CLI, docs, SVG mapping and test strategies |
 | [0004](adr/0004-determinism.md) | Determinism by construction: ordered collections, `libm`, seeded RNG, absolute quantization |
 | [0005](adr/0005-geometry-stack.md) | `kurbo` for curves, `i_overlay` for polygon booleans/offsets, `petgraph` + own Eulerian walk, `rstar` |
@@ -274,10 +274,12 @@ Three phases (full design in [VectorCraft integration](vectorcraft-integration.m
    and its Graphic Styles keep embroidery settings as presets.
    Machine files come from `stitch export design.vectorcraft`. (The namespace is one constant, changed
    in one place once the project has a domain.)
-2. **ABI v2, proposed upstream (M9, after 1.0).** Exporter plug-ins, rich parameter schemas (labels, units,
-   groups, conditions), a display-only overlay channel for real stitch previews, budget classes and
-   document-level plug-in data. Written as [an RFC](rfc-vectorcraft-abi-v2.md) for the ArtCraft team;
-   every item is generic, not embroidery-specific.
+2. **Plug-in features, proposed upstream.** [An RFC](rfc-vectorcraft-abi-v2.md) for the ArtCraft team
+   proposed exporter plug-ins, rich parameter schemas (labels, units, groups, conditions), a display-only
+   overlay channel for real stitch previews, budget classes and document-level plug-in data. Every item is
+   generic, not embroidery-specific. VectorCraft took most of them into ABI v1, in 0.14.0 to 0.16.0 and on
+   its `main` since, and M6.8 to M6.12 use them. M9, after 1.0, proposes the rest: overlays, heavy live
+   effects and the objects beside a live effect's object.
 3. **In-tree crate, optional.** Because the engine is MIT/Apache and host-agnostic, VectorCraft (or
    a fork) can embed it natively with panels and a simulator.
 
@@ -324,8 +326,8 @@ milestone signed off.
 | ID | Risk | Mitigation |
 |---|---|---|
 | R1 | PES header fields are partly undocumented; the machine could reject a file | PES v1 minimal header; pyembroidery oracle; MC-1 in the first milestone |
-| R2 | ABI v1 budgets too small for full previews | Budget-aware coarse previews; full fidelity in CLI; ABI v2 overlay proposal |
-| R3 | ArtCraft declines ABI v2 | Plug-in still works on v1; optional in-tree integration in a fork |
+| R2 | ABI v1 budgets too small for full previews | Budget-aware coarse previews, full fidelity in the CLI, and the RFC's overlay proposal |
+| R3 | ArtCraft declines the RFC's open proposals | The plug-in works without them, and an in-tree integration in a fork is optional |
 | R4 | Polygon offset/boolean robustness | Spike M0.7; input sanitizing; fuzzing; fallback to diagnostics, never panics |
 | R5 | Copied GPL code slips in | Design docs first, in our own words (ADR-0012); `cargo xtask cleanroom`; review checklist |
 | R6 | Cross-platform float differences | `libm`, no FMA-sensitive formulas in quantization, cross-platform hash CI |
@@ -339,5 +341,6 @@ milestone signed off.
 1. Exact Brother model (affects PES version and trim support) — answered at MC-1 at the latest.
 2. Final project name and plug-in id namespace (working name StitchCraft; plug-in ids derive from one
    constant).
-3. ArtCraft's appetite for ABI v2 and for embroidery in-tree — ask on their Discord before M9.
+3. ArtCraft's appetite for the RFC's open proposals and for embroidery in-tree. Ask on their Discord before
+   M9. VectorCraft adopted the rest from 0.14.
 4. Where the repository lives on GitHub (needed for the docs site URL and badges).
