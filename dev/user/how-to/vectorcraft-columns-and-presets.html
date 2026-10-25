@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-71314849.js";
+            window.path_to_searchindex_js = "../../searchindex-cd398bf8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b31b520c.js"></script>
@@ -205,6 +205,28 @@ were drawn from and whichever way they run.</p>
 where the stitches should run. Select it with the column, and choose <strong>Object › Compound Path › Make</strong>.
 From VectorCraft 0.10.0 the column, behind the line, keeps its effect. Before 0.10.0 the compound path takes
 the line’s appearance: apply StitchCraft Satin to it again.</p>
+<h2 id="make-a-line-into-a-satin-column"><a class="header" href="#make-a-line-into-a-satin-column">Make a line into a satin column</a></h2>
+<p>From VectorCraft 0.17, <strong>Object › Plug-ins › StitchCraft Stroke to Satin</strong> makes each selected line into
+a satin column drawn with its 2 rails and rungs, as Ink/Stitch’s Stroke to Satin does. The line is the
+column’s centre line, and its stroke gives the column’s width: the topmost stroke that paints, as
+StitchCraft Satin follows. The rails and rungs are those StitchCraft makes of a satin column drawn as one
+path when it sews it. So the column sews as the line did with the satin effect, and its rails and rungs
+can then be edited.</p>
+<ol>
+<li>Give each line a stroke as wide as the column.</li>
+<li>Select the lines, and choose <strong>Object › Plug-ins › StitchCraft Stroke to Satin</strong>.</li>
+</ol>
+<p>Each line becomes a compound path of its rails and rungs, without a fill, its stroke the line’s colour,
+one pixel wide. It has StitchCraft Satin with the line’s satin settings, or the defaults, in the place of
+the line’s StitchCraft effects, and keeps the line’s other effects. A path of several lines makes a
+column of each. A satin column already drawn with rails is left as it is. When a line can’t be made into a
+column, nothing changes, and VectorCraft says why (<code>SC-E0814</code>), for a path without a stroke, or a line
+whose column would sew less than the line: one too short or tight for its width, or one that crosses
+itself.</p>
+<p>Making the rails of a curved line takes more work than a filter usually may do. So Stroke to Satin asks
+for more when it is installed, and VectorCraft asks you first, then runs it in the background with
+<strong>Cancel</strong>. StitchCraft Satin must be installed too. VectorCraft 0.15 and 0.16 run it with the time any
+filter gets, and stop it on most curved lines. Before 0.15 it asks for a newer VectorCraft (<code>SC-E0813</code>).</p>
 <h2 id="keep-settings-as-a-preset"><a class="header" href="#keep-settings-as-a-preset">Keep settings as a preset</a></h2>
 <p>A graphic style keeps an appearance, StitchCraft’s effects included:</p>
 <ol>
@@ -232,12 +254,10 @@ Paste in Front</strong>, and give the shape behind a fill effect and the copy in
 <p><strong>Object › Expand Appearance</strong> turns what an effect shows into ordinary objects, with strokes outlined.
 Those objects are the shapes the preview draws, and they sew differently from the effect. Expand a copy
 for a picture of the stitches, and keep the original to sew.</p>
-<h2 id="not-in-vectorcraft-yet"><a class="header" href="#not-in-vectorcraft-yet">Not in VectorCraft yet</a></h2>
-<ul>
-<li>Making a line into a satin column, as Ink/Stitch’s Convert Line to Satin does, needs more work than
-VectorCraft lets a plug-in do. Draw the 2 rails instead.</li>
-<li>Test sheets come from the command line: <a href="../reference/test-sheets.html"><code>stitch testsheet</code></a>.</li>
-</ul>
+<h2 id="draw-a-test-sheet"><a class="header" href="#draw-a-test-sheet">Draw a test sheet</a></h2>
+<p><a href="embroider-a-vectorcraft-design.html#draw-a-test-sheet">Embroider a VectorCraft design</a> shows how to draw a
+test sheet into a document from VectorCraft 0.16, and <a href="../reference/test-sheets.html"><code>stitch testsheet</code></a>
+writes every sheet.</p>
 
                     </main>
 

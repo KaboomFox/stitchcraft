@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-71314849.js";
+            window.path_to_searchindex_js = "searchindex-cd398bf8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b31b520c.js"></script>
@@ -248,23 +248,27 @@ cargo puts <code>stitch</code> in its <code>bin</code> folder, which rustup adds
 <h2 id="the-vectorcraft-plug-ins"><a class="header" href="#the-vectorcraft-plug-ins">The VectorCraft plug-ins</a></h2>
 <p>The plug-ins say how each object of a <a href="https://github.com/storytold/vectorcraft">VectorCraft</a> drawing
 sews, and show its stitches. There are 3, one for each kind of stitch, and 2 more that write PES and DST
-files from VectorCraft’s File › Export, from VectorCraft 0.14. One more keeps a design’s settings and
-machine with the document, from VectorCraft 0.16. All are built from the same source. In the <code>stitchcraft</code>
-folder:</p>
+files from VectorCraft’s File › Export, from VectorCraft 0.14. 3 filters change the drawing: one keeps a
+design’s settings and machine with the document and one draws a test sheet, from VectorCraft 0.16, and
+one makes lines into satin columns, from VectorCraft 0.17. All are built from the same source. In the
+<code>stitchcraft</code> folder:</p>
 <pre><code class="language-sh">rustup target add wasm32-unknown-unknown
 cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown --features fill
 </code></pre>
 <p>The build writes <code>target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm</code>. Copy it into a
 folder for plug-ins as <code>stitchcraft-fill.wasm</code>. Build again with <code>--features stroke</code>, <code>--features satin</code>,
-<code>--features pes</code>, <code>--features dst</code> and <code>--features settings</code>, and copy the file each time, as
-<code>stitchcraft-stroke.wasm</code>, <code>stitchcraft-satin.wasm</code>, <code>stitchcraft-pes.wasm</code>, <code>stitchcraft-dst.wasm</code> and
-<code>stitchcraft-settings.wasm</code>. VectorCraft 0.13 and earlier refuse the exporters, and the settings need
-VectorCraft 0.16.</p>
+<code>--features pes</code>, <code>--features dst</code>, <code>--features settings</code>, <code>--features testsheet</code> and
+<code>--features stroke-to-satin</code>, and copy the file each time, as <code>stitchcraft-stroke.wasm</code>, <code>stitchcraft-satin.wasm</code>,
+<code>stitchcraft-pes.wasm</code>, <code>stitchcraft-dst.wasm</code>, <code>stitchcraft-settings.wasm</code>, <code>stitchcraft-testsheet.wasm</code>
+and <code>stitchcraft-stroke-to-satin.wasm</code>. VectorCraft 0.13 and earlier refuse the exporters.</p>
 <p>In VectorCraft’s desktop app, choose that folder in <strong>Edit › Preferences › Plug-ins &amp; Scratch Disks ›
 Additional Plug-ins Folder</strong>, which is under <strong>Performance &amp; Storage</strong> up to VectorCraft 0.14. VectorCraft
-installs the plug-ins in it whenever it starts. Their effects are under <strong>Effect › Plug-ins</strong>, their
-formats in <strong>File › Export › Export As</strong>, and the design settings under <strong>Object › Plug-ins</strong>. In VectorCraft on the web, open each file with <strong>File › Open</strong>
-instead, once each time VectorCraft is opened. <a href="#embroider-a-vectorcraft-design">Embroider a VectorCraft
+installs the plug-ins in it whenever it starts, all but Stroke to Satin. It asks for more work than a
+filter usually may do, which VectorCraft lets you allow when you install it on its own: choose <strong>Object ›
+Plug-ins › Install Plug-in…</strong> and pick <code>stitchcraft-stroke-to-satin.wasm</code>. VectorCraft asks you first, and
+once you allow it, keeps it and installs it again when it starts. The effects are under <strong>Effect › Plug-ins</strong>, the formats in <strong>File ›
+Export › Export As</strong>, and the filters under <strong>Object › Plug-ins</strong>. In VectorCraft on the web, open each
+file with <strong>File › Open</strong> instead, once each time VectorCraft is opened. <a href="#embroider-a-vectorcraft-design">Embroider a VectorCraft
 design</a> shows how to use them.</p>
 <h2 id="next"><a class="header" href="#next">Next</a></h2>
 <p><a href="#your-first-sew-out-on-a-brother">Sew your first test sheet</a>, or <a href="#turn-an-svg-into-a-pes-file">turn an SVG into a PES
@@ -783,6 +787,18 @@ you run it again. A live effect isn’t given what the document keeps. The stitc
 planned for <code>brother-pe800-5x7</code> with the default settings, and a longer shortest stitch shows only in the
 machine file and in <code>stitch export --preview</code>. A setting that StitchCraft can’t read keeps its default,
 and <code>stitch export</code> says so (<code>SC-W0812</code>).</p>
+<h2 id="draw-a-test-sheet"><a class="header" href="#draw-a-test-sheet">Draw a test sheet</a></h2>
+<p>The <a href="#test-sheets">test sheets</a> drawn as designs, TS-02B to TS-09, can start from
+VectorCraft 0.16 and later. With the <a href="#the-vectorcraft-plug-ins">plug-ins installed</a>, choose
+<strong>Object › Plug-ins › StitchCraft Test Sheet</strong>, pick the sheet, and press OK. Rest the pointer on
+<strong>Sheet</strong> for what each one tests. The sheet is drawn in the middle of the artboard, each shape with its
+StitchCraft effect and settings, and shows its stitches. Write it as any design, with <strong>File › Export ›
+Export As</strong>. Selected objects stay as they are, and the sheet goes above them, in their group or layer.</p>
+<p>The sheet sews as <code>stitch testsheet</code> writes it, moved. A fill’s rows lie where the document’s origin puts
+them, so they may fall a little elsewhere across a shape, and look the same. The threads keep their
+colours but not their names in the Brother palette, and the machine file is the same. StitchCraft Stroke,
+Satin and Fill must be installed: VectorCraft gives a new object only the effects of installed plug-ins.
+TS-01, TS-02 and TS-10A to TS-10C are drawn stitch by stitch, and come from <code>stitch testsheet</code> alone.</p>
 <h2 id="read-what-it-says"><a class="header" href="#read-what-it-says">Read what it says</a></h2>
 <p>Each line under the summary names an object by its id in the document, such as <code>vc:10</code>, and says what
 was done with it. In the patch, the placement line is left out, as its name asks (<code>SC-I0811</code>). The start
@@ -825,6 +841,28 @@ were drawn from and whichever way they run.</p>
 where the stitches should run. Select it with the column, and choose <strong>Object › Compound Path › Make</strong>.
 From VectorCraft 0.10.0 the column, behind the line, keeps its effect. Before 0.10.0 the compound path takes
 the line’s appearance: apply StitchCraft Satin to it again.</p>
+<h2 id="make-a-line-into-a-satin-column"><a class="header" href="#make-a-line-into-a-satin-column">Make a line into a satin column</a></h2>
+<p>From VectorCraft 0.17, <strong>Object › Plug-ins › StitchCraft Stroke to Satin</strong> makes each selected line into
+a satin column drawn with its 2 rails and rungs, as Ink/Stitch’s Stroke to Satin does. The line is the
+column’s centre line, and its stroke gives the column’s width: the topmost stroke that paints, as
+StitchCraft Satin follows. The rails and rungs are those StitchCraft makes of a satin column drawn as one
+path when it sews it. So the column sews as the line did with the satin effect, and its rails and rungs
+can then be edited.</p>
+<ol>
+<li>Give each line a stroke as wide as the column.</li>
+<li>Select the lines, and choose <strong>Object › Plug-ins › StitchCraft Stroke to Satin</strong>.</li>
+</ol>
+<p>Each line becomes a compound path of its rails and rungs, without a fill, its stroke the line’s colour,
+one pixel wide. It has StitchCraft Satin with the line’s satin settings, or the defaults, in the place of
+the line’s StitchCraft effects, and keeps the line’s other effects. A path of several lines makes a
+column of each. A satin column already drawn with rails is left as it is. When a line can’t be made into a
+column, nothing changes, and VectorCraft says why (<code>SC-E0814</code>), for a path without a stroke, or a line
+whose column would sew less than the line: one too short or tight for its width, or one that crosses
+itself.</p>
+<p>Making the rails of a curved line takes more work than a filter usually may do. So Stroke to Satin asks
+for more when it is installed, and VectorCraft asks you first, then runs it in the background with
+<strong>Cancel</strong>. StitchCraft Satin must be installed too. VectorCraft 0.15 and 0.16 run it with the time any
+filter gets, and stop it on most curved lines. Before 0.15 it asks for a newer VectorCraft (<code>SC-E0813</code>).</p>
 <h2 id="keep-settings-as-a-preset"><a class="header" href="#keep-settings-as-a-preset">Keep settings as a preset</a></h2>
 <p>A graphic style keeps an appearance, StitchCraft’s effects included:</p>
 <ol>
@@ -852,12 +890,10 @@ Paste in Front</strong>, and give the shape behind a fill effect and the copy in
 <p><strong>Object › Expand Appearance</strong> turns what an effect shows into ordinary objects, with strokes outlined.
 Those objects are the shapes the preview draws, and they sew differently from the effect. Expand a copy
 for a picture of the stitches, and keep the original to sew.</p>
-<h2 id="not-in-vectorcraft-yet"><a class="header" href="#not-in-vectorcraft-yet">Not in VectorCraft yet</a></h2>
-<ul>
-<li>Making a line into a satin column, as Ink/Stitch’s Convert Line to Satin does, needs more work than
-VectorCraft lets a plug-in do. Draw the 2 rails instead.</li>
-<li>Test sheets come from the command line: <a href="#test-sheets"><code>stitch testsheet</code></a>.</li>
-</ul>
+<h2 id="draw-a-test-sheet-1"><a class="header" href="#draw-a-test-sheet-1">Draw a test sheet</a></h2>
+<p><a href="#draw-a-test-sheet">Embroider a VectorCraft design</a> shows how to draw a
+test sheet into a document from VectorCraft 0.16, and <a href="#test-sheets"><code>stitch testsheet</code></a>
+writes every sheet.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="report-a-bug"><a class="header" href="#report-a-bug">Report a bug</a></h1>
 <p>When StitchCraft gets a design wrong, a maintainer needs one file to see what you saw: a <strong>bug-report
@@ -1690,7 +1726,7 @@ Arguments:
 </div>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `stitchcraft-engine/src/testsheets/` and the `stitch` shots in `docs/shots.toml`. Edit the source, not this page. -->
 <h1 id="test-sheets"><a class="header" href="#test-sheets">Test sheets</a></h1>
-<p>Designs drawn in code for the <a href="#machine-testing-protocol">machine checkpoints</a>, each for one hoop of the reference machine. Write one with <code>stitch testsheet &lt;id&gt; -o &lt;id&gt;.pes</code>. The command checks it against the profile of that hoop, or the one <code>--profile</code> names, and prints what to check after sewing it, as listed here. The pictures are previews: they show what the machine will sew, including jump threads it leaves for you to cut.</p>
+<p>Designs drawn in code for the <a href="#machine-testing-protocol">machine checkpoints</a>, each for one hoop of the reference machine. Write one with <code>stitch testsheet &lt;id&gt; -o &lt;id&gt;.pes</code>. The command checks it against the profile of that hoop, or the one <code>--profile</code> names, and prints what to check after sewing it, as listed here. The pictures are previews: they show what the machine will sew, including jump threads it leaves for you to cut. In VectorCraft, the Test Sheet filter draws a sheet drawn as a design into a document (<a href="#draw-a-test-sheet">how</a>).</p>
 <h2 id="ts-01--orientation-and-scale"><a class="header" href="#ts-01--orientation-and-scale">TS-01 — Orientation and scale</a></h2>
 <p>120.0 × 120.0 mm · 274 stitches, 7 jumps, 7 trims, 0 colour changes, 0 stops</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
@@ -1719,6 +1755,7 @@ Arguments:
 <h2 id="ts-02b--ts-02-drawn-as-a-design-trims-elements-ask-for"><a class="header" href="#ts-02b--ts-02-drawn-as-a-design-trims-elements-ask-for">TS-02B — TS-02 drawn as a design: trims elements ask for</a></h2>
 <p>120.0 × 70.0 mm · 230 stitches, 17 jumps, 8 trims, 2 colour changes, 1 stop</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-02b.png" alt="TS-02B as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose top row is one line and whose other dashes and rows are joined by loose threads, and a green line underneath."><span class="img-wrapper"><img src="images/generated/testsheet-ts-02b.png" alt="TS-02B as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose top row is one line and whose other dashes and rows are joined by loose threads, and a green line underneath."></span></label></p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-02b-simple.png" alt="TS-02B in the simple style: a red cross marks the trim after every red dash but the last, grey dashes show moves after a cut, blue dashes show jump threads left in place, and a blue square marks the stop in the middle of the green line."><span class="img-wrapper"><img src="images/generated/testsheet-ts-02b-simple.png" alt="TS-02B in the simple style: a red cross marks the trim after every red dash but the last, grey dashes show moves after a cut, blue dashes show jump threads left in place, and a blue square marks the stop in the middle of the green line."></span></label></p>
 <p>Threads: Red, Blue, Emerald Green, Emerald Green (stop).</p>
@@ -1733,6 +1770,7 @@ Arguments:
 <h2 id="ts-03--running-stitch-lengths-bean-stitch-curves-the-shortest-stitch"><a class="header" href="#ts-03--running-stitch-lengths-bean-stitch-curves-the-shortest-stitch">TS-03 — Running stitch: lengths, bean stitch, curves, the shortest stitch</a></h2>
 <p>60.0 × 78.0 mm · 588 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-03.png" alt="TS-03 as it will sew, in blue: five long lines with stitches from 1.5 to 4 mm, two bolder bean-stitch lines, three small circles, the right-hand one visibly many-sided, and five short lines of tiny stitches growing longer towards the bottom."><span class="img-wrapper"><img src="images/generated/testsheet-ts-03.png" alt="TS-03 as it will sew, in blue: five long lines with stitches from 1.5 to 4 mm, two bolder bean-stitch lines, three small circles, the right-hand one visibly many-sided, and five short lines of tiny stitches growing longer towards the bottom."></span></label></p>
 <p>Threads: Blue.</p>
 <p>After sewing, check:</p>
@@ -1745,6 +1783,7 @@ Arguments:
 <h2 id="ts-04--lock-stitches-do-they-hold-and-do-they-show"><a class="header" href="#ts-04--lock-stitches-do-they-hold-and-do-they-show">TS-04 — Lock stitches: do they hold, and do they show?</a></h2>
 <p>110.0 × 64.5 mm · 623 stitches, 27 jumps, 27 trims, 0 colour changes, 0 stops</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-04.png" alt="TS-04 as it will sew, in red: nine rows of three lines, each line ending in a small lock at both ends, the locks’ shapes differing from row to row and growing from left to right."><span class="img-wrapper"><img src="images/generated/testsheet-ts-04.png" alt="TS-04 as it will sew, in red: nine rows of three lines, each line ending in a small lock at both ends, the locks’ shapes differing from row to row and growing from left to right."></span></label></p>
 <p>Threads: Red.</p>
 <p>After sewing, check:</p>
@@ -1758,6 +1797,7 @@ Arguments:
 <h2 id="ts-05--satin-width-ladder-spacing-width-and-pull"><a class="header" href="#ts-05--satin-width-ladder-spacing-width-and-pull">TS-05 — Satin width ladder: spacing, width and pull</a></h2>
 <p>91.0 × 76.0 mm · 3440 stitches, 30 jumps, 30 trims, 0 colour changes, 0 stops</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-05.png" alt="TS-05 as it will sew, in blue: three rows of ten solid satin columns, each row’s columns growing from 1 to 10 mm wide left to right, the top row densest and the bottom row the most open."><span class="img-wrapper"><img src="images/generated/testsheet-ts-05.png" alt="TS-05 as it will sew, in blue: three rows of ten solid satin columns, each row’s columns growing from 1 to 10 mm wide left to right, the top row densest and the bottom row the most open."></span></label></p>
 <p>Threads: Blue.</p>
 <p>After sewing, check:</p>
@@ -1771,6 +1811,7 @@ Arguments:
 <h2 id="ts-06--satin-underlays-side-by-side"><a class="header" href="#ts-06--satin-underlays-side-by-side">TS-06 — Satin underlays side by side</a></h2>
 <p>62.0 × 30.0 mm · 966 stitches, 5 jumps, 5 trims, 0 colour changes, 0 stops</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-06.png" alt="TS-06 as it will sew, in red: five satin columns 6 mm wide side by side, which look alike from above because their underlays lie beneath the top stitches."><span class="img-wrapper"><img src="images/generated/testsheet-ts-06.png" alt="TS-06 as it will sew, in red: five satin columns 6 mm wide side by side, which look alike from above because their underlays lie beneath the top stitches."></span></label></p>
 <p>Threads: Red.</p>
 <p>After sewing, check:</p>
@@ -1784,6 +1825,7 @@ Arguments:
 <h2 id="ts-07--fill-and-outline-registration-at-3-pull-compensations"><a class="header" href="#ts-07--fill-and-outline-registration-at-3-pull-compensations">TS-07 — Fill and outline registration at 3 pull compensations</a></h2>
 <p>126.2 × 126.0 mm · 13527 stitches, 6 jumps, 6 trims, 1 colour change, 0 stops</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-07.png" alt="TS-07 as it will sew: three red tatami circles, two side by side and one below them, each with a thin black outline along its edge."><span class="img-wrapper"><img src="images/generated/testsheet-ts-07.png" alt="TS-07 as it will sew: three red tatami circles, two side by side and one below them, each with a thin black outline along its edge."></span></label></p>
 <p>Threads: Red, Black.</p>
 <p>After sewing, check:</p>
@@ -1796,6 +1838,7 @@ Arguments:
 <h2 id="ts-08--fill-density-and-angle"><a class="header" href="#ts-08--fill-density-and-angle">TS-08 — Fill density and angle</a></h2>
 <p>100.0 × 170.0 mm · 16248 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-08.png" alt="TS-08 as it will sew, in blue: fifteen tatami squares in five rows of three, their rows level, slanting and upright from left to right, the top squares dense and the bottom ones open enough to show the underlay and travel beneath them."><span class="img-wrapper"><img src="images/generated/testsheet-ts-08.png" alt="TS-08 as it will sew, in blue: fifteen tatami squares in five rows of three, their rows level, slanting and upright from left to right, the top squares dense and the bottom ones open enough to show the underlay and travel beneath them."></span></label></p>
 <p>Threads: Blue.</p>
 <p>After sewing, check:</p>
@@ -1809,6 +1852,7 @@ Arguments:
 <h2 id="ts-09--fill-underlay-travel-and-gap-filling-rows-round-holes"><a class="header" href="#ts-09--fill-underlay-travel-and-gap-filling-rows-round-holes">TS-09 — Fill underlay, travel and gap-filling rows round holes</a></h2>
 <p>66.0 × 114.0 mm · 7780 stitches, 6 jumps, 3 trims, 0 colour changes, 0 stops</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-09.png" alt="TS-09 as it will sew, in green: the same shape three times, top to bottom, a rectangle with a square hole and a round hole and a bar to its right, which a jump thread along the bottom joins to it."><span class="img-wrapper"><img src="images/generated/testsheet-ts-09.png" alt="TS-09 as it will sew, in green: the same shape three times, top to bottom, a rectangle with a square hole and a round hole and a bar to its right, which a jump thread along the bottom joins to it."></span></label></p>
 <p>Threads: Emerald Green.</p>
 <p>After sewing, check:</p>
@@ -1925,7 +1969,8 @@ Arguments:
 <tr><td><a href="#sc-i0810"><code>SC-I0810</code></a></td><td>Info</td><td>VectorCraft live effect leaves the object as it is</td></tr>
 <tr><td><a href="#sc-i0811"><code>SC-I0811</code></a></td><td>Info</td><td>VectorCraft object left out, as its name asks</td></tr>
 <tr><td><a href="#sc-w0812"><code>SC-W0812</code></a></td><td>Warning</td><td>VectorCraft design setting ignored</td></tr>
-<tr><td><a href="#sc-e0813"><code>SC-E0813</code></a></td><td>Error</td><td>VectorCraft too old to keep the design settings</td></tr>
+<tr><td><a href="#sc-e0813"><code>SC-E0813</code></a></td><td>Error</td><td>VectorCraft too old for the filter</td></tr>
+<tr><td><a href="#sc-e0814"><code>SC-E0814</code></a></td><td>Error</td><td>VectorCraft line not made into a satin column</td></tr>
 <tr><td><a href="#sc-i0901"><code>SC-I0901</code></a></td><td>Info</td><td>Shapes digitized automatically</td></tr>
 <tr><td><a href="#sc-i0902"><code>SC-I0902</code></a></td><td>Info</td><td>Line a satin column cannot follow; filled</td></tr>
 <tr><td><a href="#sc-w0903"><code>SC-W0903</code></a></td><td>Warning</td><td>Line too wide to fill; left out</td></tr>
@@ -2392,11 +2437,11 @@ the Version in VectorCraft Options.</p>
 <p>The <code>.vectorcraft</code> file could not be read: it is not a VectorCraft document (its JSON does not
 read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
 is damaged, or it unpacks to more JSON than StitchCraft reads. Nothing was stitched.</p>
-<p>A StitchCraft live effect gives this message when what VectorCraft passes it does not read as
-VectorCraft’s plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The effect
-leaves the object as it is.</p>
+<p>A StitchCraft live effect or filter gives this message when what VectorCraft passes it does not read
+as VectorCraft’s plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The
+effect leaves the object as it is, and the filter changes nothing.</p>
 <p>The message says what is wrong and, for JSON errors, where. Open the file in VectorCraft and save it
-again. For a live effect, install the StitchCraft plug-ins made for that version of VectorCraft.</p>
+again. For a plug-in, install the StitchCraft plug-ins made for that version of VectorCraft.</p>
 <h2 id="sc-w0807"><a class="header" href="#sc-w0807">SC-W0807</a></h2>
 <p><strong>Warning</strong> — VectorCraft object or feature not stitched</p>
 <p>Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft
@@ -2464,11 +2509,27 @@ the machine <code>--profile</code> or the export names, or else for the referenc
 <p>The message names the setting and what it holds. To set it again, choose Object › Plug-ins ›
 StitchCraft Design Settings in VectorCraft, which keeps every setting anew.</p>
 <h2 id="sc-e0813"><a class="header" href="#sc-e0813">SC-E0813</a></h2>
-<p><strong>Error</strong> — VectorCraft too old to keep the design settings</p>
-<p>StitchCraft Design Settings keeps a document’s design settings and machine as data VectorCraft
-keeps with a document for a filter plug-in, which VectorCraft does from 0.16. The VectorCraft that
-ran the filter is older and would drop them, so the filter declined to run.</p>
-<p>Update VectorCraft to 0.16 or later. Until then, the export’s Machine option and <code>stitch export --profile</code> name the machine, and the design settings keep their defaults.</p>
+<p><strong>Error</strong> — VectorCraft too old for the filter</p>
+<p>A StitchCraft filter needs what the VectorCraft that ran it doesn’t give a filter, so it declined to
+run, and nothing changed. StitchCraft Design Settings keeps a document’s design settings and machine
+as data VectorCraft keeps with a document for a filter, from 0.16. Stroke to Satin and Test Sheet
+give the objects they make StitchCraft’s effects, as effect records VectorCraft keeps from 0.15.
+Test Sheet tells such a VectorCraft by what it gives every filter from 0.16, since a 0.15 with
+nothing selected looks as 0.14 does.</p>
+<p>The message names the version the filter needs. Update VectorCraft to it or later. Until then, the
+export’s Machine option and <code>stitch export --profile</code> name the machine, the design settings keep
+their defaults, a satin column is drawn with its 2 rails and joined with Make Compound Path, and
+<code>stitch testsheet</code> makes the test sheets.</p>
+<h2 id="sc-e0814"><a class="header" href="#sc-e0814">SC-E0814</a></h2>
+<p><strong>Error</strong> — VectorCraft line not made into a satin column</p>
+<p>StitchCraft’s Stroke to Satin filter makes each selected line into a satin column drawn with rails
+and rungs, which sews as the line does with the satin effect. It changed nothing, because nothing was
+selected, or one of the lines can’t be made so: its path has no stroke to take the column’s width
+from, or can’t be used, its rails can’t be made or would leave parts of it out, as <code>SC-E0214</code> and
+<code>SC-W0213</code> say of a satin column drawn as one path, or the column would be read back with other rails
+or rungs, as one whose rails cross each other is.</p>
+<p>The message names the object. Select the lines, give the path a stroke as wide as the column, draw
+that column with its 2 rails, or leave the object out of the selection.</p>
 <h2 id="sc-i0901"><a class="header" href="#sc-i0901">SC-I0901</a></h2>
 <p><strong>Info</strong> — Shapes digitized automatically</p>
 <p><code>--auto</code> digitized the design’s shapes that have no settings: StitchCraft chose each one’s
@@ -4232,7 +4293,10 @@ label repeated in a document <code>~2</code>, <code>~3</code> and so on, in ever
 <p>Invariants, checked by <code>Design::new</code>: element ids are unique, and every point is finite and within
 ±10,000 mm, as far as machine-file coordinates go. No stroke is narrower than 0, a miter limit is a
 finite number of at least 1, and the settings’ lengths are not negative. Adapters drop what they cannot
-represent with a diagnostic of their own, so a failed check is a bug in the adapter (<code>SC-E0009</code>).</p>
+represent with a diagnostic of their own, so a failed check is a bug in the adapter (<code>SC-E0009</code>).
+<code>Design::moved</code> gives the design moved by an offset, every point of its elements and its origin and stop
+position, checked the same way. VectorCraft’s Test Sheet filter draws a test sheet in the middle of the
+artboard with it (<code>REQ-VC-015</code>).</p>
 <p><strong>Commands</strong> attached to elements come with M8, for Ink/Stitch’s command symbols such as start and end
 points. Trims and stops are the element parameters <code>trim_after</code> and <code>stop_after</code>, and the origin and
 stop position are design settings (M3.8).</p>
@@ -4800,7 +4864,8 @@ another.</p>
 <tr><td><code>SC-I0810</code></td><td>Info</td><td>VectorCraft live effect leaves the object as it is (it sews no stitch, its preview level needs more work than VectorCraft lets a live effect do, it is a satin column drawn as one path or a zigzag stroke and VectorCraft gives the effect no stroke, or the effect is on one of the object’s fills or strokes)</td><td>M6</td></tr>
 <tr><td><code>SC-I0811</code></td><td>Info</td><td>VectorCraft object left out, as its name asks (an object or a layer named <code>stitch:ignore</code>)</td><td>M6</td></tr>
 <tr><td><code>SC-W0812</code></td><td>Warning</td><td>VectorCraft design setting ignored (a length that isn’t a number of 0 or more, or a machine StitchCraft doesn’t have, which the Design Settings filter keeps with the document)</td><td>M6</td></tr>
-<tr><td><code>SC-E0813</code></td><td>Error</td><td>VectorCraft too old to keep the design settings (the Design Settings filter run by a VectorCraft before 0.16, which doesn’t keep a filter’s data)</td><td>M6</td></tr>
+<tr><td><code>SC-E0813</code></td><td>Error</td><td>VectorCraft too old for the filter (the Design Settings filter run by a VectorCraft before 0.16, which doesn’t keep a filter’s data, Stroke to Satin by one before 0.15, which doesn’t keep a filter’s effect records, and Test Sheet by one before 0.16, which doesn’t say it keeps them)</td><td>M6</td></tr>
+<tr><td><code>SC-E0814</code></td><td>Error</td><td>VectorCraft line not made into a satin column (Stroke to Satin refused a selection because it is empty or a path has no stroke, or because a line drawn with its rails and rungs would sew otherwise)</td><td>M6</td></tr>
 <tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
 <tr><td><code>SC-I0902</code></td><td>Info</td><td>Line a satin column cannot follow; filled (a part of an automatic line that turns more tightly than it is wide or is shorter than a CSS pixel, or a dot its cap draws)</td><td>M13</td></tr>
 <tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>
@@ -5707,6 +5772,23 @@ out with the rest.</p>
 <p>Making the rails costs work in proportion to the square of the line’s number of points. A line of 1,000
 points takes up to about 35 million units of the default budget of 500 million. A plan makes a column’s
 rails twice: once to sew it, and once for the element before it to end near it.</p>
+<h3 id="drawn-with-its-rails-and-rungs"><a class="header" href="#drawn-with-its-rails-and-rungs">Drawn with its rails and rungs</a></h3>
+<p>Ink/Stitch’s Stroke to Satin hands the user a column made from a centre line as a path of its rails and
+rungs, and StitchCraft’s does in VectorCraft (<code>REQ-VC-014</code>, <a href="#tools-stroke-to-satin-and-test-sheet">VectorCraft
+integration</a>). <code>generators::satin::drawn</code>
+draws the rails as they are made. Each rung is a straight line that starts and ends past the points it
+pairs, by a hundredth of the distance between them, so that it crosses each rail once. Read back by <a href="#recognizing-rails-and-rungs">the
+rules above</a>, the path gives the same rails, and its rungs pair the points
+the line’s rungs pair, to within a millionth of a millimetre. It sews as the line does.</p>
+<p>A column of 2 rungs or none would be read back otherwise. With 2 rungs, where the lines meet doesn’t tell
+the rails apart, and the 2 longest lines are taken, which on a column shorter than it is wide are its
+rungs. With none, a path of 2 lines is 2 rails whose nodes pair up. So such a column is drawn with one
+more rung, which pairs the rails’ first points: the section it ends has no length, and the column sews as
+before. A line whose rails can’t be made (<code>SC-E0214</code>), or leave parts of it out (<code>SC-W0213</code>), isn’t made into
+a column, since the column would sew less than the line. Rails that cross each other aren’t drawn
+either, since their column reads back with other rails. A line no wider than the design’s narrowest satin stroke sews as a
+stroke (<a href="#single-path-satin">above</a>). Drawn with its rails, it is a satin column as narrow as it is drawn,
+which is what the tool is asked for.</p>
 <h2 id="orientation"><a class="header" href="#orientation">Orientation</a></h2>
 <ul>
 <li><code>swap_satin_rails</code> makes the second rail the first, before any reversal. The first rail sews first in
@@ -7403,8 +7485,8 @@ this renderer is for files, the command line and the docs.</li>
 offers today, how we use it without changing VectorCraft (phase 1), what we propose upstream
 (phase 2), and how an in-tree integration would look (phase 3).</p>
 <p><strong>VectorCraft snapshot reviewed:</strong> <code>main</code> at <code>89ea46c</code> (2026-10-08), version 0.6.0, and its plug-in API
-again at <code>8bf090b</code> (2026-10-24), after 0.16.0. File references below are to the first unless a version is
-named. The <a href="#vectorcraft-compatibility-gate">compatibility gate</a> tests the plug-ins against each VectorCraft
+again at <code>8bf090b</code> (2026-10-24), after 0.16.0, and at <code>v0.17.0</code> (2026-10-25). File references below are to
+the first unless a version is named. The <a href="#vectorcraft-compatibility-gate">compatibility gate</a> tests the plug-ins against each VectorCraft
 release and branch.</p>
 <h2 id="1-vectorcraft-in-brief"><a class="header" href="#1-vectorcraft-in-brief">1. VectorCraft in brief</a></h2>
 <div class="table-wrapper">
@@ -7482,7 +7564,7 @@ exporter plug-in adds a format to it, <code>plugin.&lt;id&gt;</code>, which is h
 </thead>
 <tbody>
 <tr><td>1. ABI v1 plug-ins</td><td>nothing</td><td>per-object embroidery settings, previews, tools; machine files via <code>stitch export file.vectorcraft</code></td><td>M6</td></tr>
-<tr><td>2. Plug-in features (upstream RFC)</td><td>generic plug-in features, most of them in VectorCraft 0.14 to 0.16</td><td>previews as wide as a stroke, export from File › Export, labelled dialogs, design settings and a machine per document, and the tools filter (M6.8 to M6.12). Overlay previews of every stitch, and heavy live effects, after 1.0 (M9)</td><td>M6, M9</td></tr>
+<tr><td>2. Plug-in features (upstream RFC)</td><td>generic plug-in features, most of them in VectorCraft 0.14 to 0.16</td><td>previews as wide as a stroke, export from File › Export, labelled dialogs, design settings and a machine per document, and filters that make satin columns and draw test sheets (M6.8 to M6.12). Overlay previews of every stitch, and heavy live effects, after 1.0 (M9)</td><td>M6, M9</td></tr>
 <tr><td>3. In-tree crate (optional)</td><td>ArtCraft’s interest, or a fork</td><td>native speed, simulator panel, satin tool</td><td>post-1.0</td></tr>
 </tbody>
 </table>
@@ -7503,11 +7585,13 @@ release takes:</p>
 <tr><td><code>&lt;ns&gt;.auto</code></td><td>live effect</td><td>the stitches automatic digitizing chooses by width (M13.7)</td><td>on a group, previews each path inside (<a href="#image-to-embroidery">image to embroidery</a>)</td></tr>
 <tr><td><code>&lt;ns&gt;.pes</code>, <code>&lt;ns&gt;.dst</code></td><td>exporter (VectorCraft 0.14)</td><td>every family</td><td>File › Export › Export As writes the same machine file as <code>stitch export</code> (M6.9, <a href="#exporters-file--export-writes-pes-and-dst">below</a>)</td></tr>
 <tr><td><code>&lt;ns&gt;.settings</code></td><td>filter (VectorCraft 0.16)</td><td>none</td><td>keeps the design settings and the machine with the document (M6.11, <a href="#design-settings-and-machine-kept-with-the-document">below</a>)</td></tr>
+<tr><td><code>&lt;ns&gt;.stroke-to-satin</code></td><td>heavy filter (VectorCraft 0.17)</td><td>satin</td><td>makes each selected line into a satin column drawn with its rails and rungs (M6.12, <a href="#tools-stroke-to-satin-and-test-sheet">below</a>)</td></tr>
+<tr><td><code>&lt;ns&gt;.testsheet</code></td><td>filter (VectorCraft 0.16)</td><td>every family</td><td>draws a test sheet into the document, each object with its effect (M6.12, <a href="#tools-stroke-to-satin-and-test-sheet">below</a>)</td></tr>
 </tbody>
 </table>
 </div>
-<p>The tools an object filter was to give are VectorCraft’s own commands, and the rest come with M6.12’s tools
-filter (<a href="#tools-vectorcrafts-own-commands">tools</a>).</p>
+<p>The tools an object filter was to give are VectorCraft’s own commands (<a href="#tools-vectorcrafts-own-commands">tools</a>)
+and M6.12’s 2 filters (<a href="#tools-stroke-to-satin-and-test-sheet">Stroke to Satin and Test Sheet</a>).</p>
 <p><code>&lt;ns&gt;</code> is a reverse-DNS namespace defined in one constant (<code>PLUGIN_NAMESPACE</code>) in the VectorCraft adapter,
 which reads the effect records too. The adapter makes the ids from it, a plug-in’s with <code>plugin_id</code> and its
 live effect’s with <code>effect_id</code>, and <code>effect_name</code> reads one back. The plug-in crate and the compatibility
@@ -7519,10 +7603,10 @@ from 0.14 the keys that say how the dialog shows a parameter), so a manifest Vec
 the tests before a release.</p>
 <p><strong>Modules.</strong> The plug-in crate builds one module for each family, chosen by a Cargo feature named after
 the family: <code>stroke</code>, <code>satin</code> or <code>fill</code>, one for each machine format, by its extension: <code>pes</code> or <code>dst</code>, and
-<code>settings</code> for the Design Settings filter. Without one it builds M0.6’s <em>hello</em> effect. The modules contain
-the same code, which the native tests run whichever it is, and the feature only picks the manifest and the
-run that <code>vc_manifest</code> and <code>vc_run</code> serve. <code>cargo xtask compat contract</code> builds the seven modules, notes
-their sizes and loads them into VectorCraft’s host.</p>
+one for each filter: <code>settings</code>, <code>stroke-to-satin</code> and <code>testsheet</code>. Without one it builds M0.6’s <em>hello</em>
+effect. The modules contain the same code, which the native tests run whichever it is, and the feature only
+picks the manifest and the run that <code>vc_manifest</code> and <code>vc_run</code> serve. <code>cargo xtask compat contract</code> builds
+the nine modules, notes their sizes and loads them into VectorCraft’s host.</p>
 <p><strong>Manifests.</strong> A family’s manifest is made from the registry when VectorCraft asks for it, so a parameter
 added to the registry shows in the dialog without another change. A key that several families declare,
 each its own way, is in each family’s manifest as that family declares it
@@ -7657,9 +7741,9 @@ the reference machine sews (VectorCraft 0.16.0 and 0.17.0 alike, 2026-10-25):</p
 <p>A fill’s work grows less than its area, and every fill takes some whatever its size: the squares cover half
 the field and take more than twice as much. About 140 fills of that size are as many as an export can
 plan, which few designs for a home machine’s hoop reach, and <code>stitch export</code> writes the others. The test
-sheets are drawn in code, as plans and designs, and M6.12 draws them into a document, where its Level B
-case exports each. A live effect is given no warnings channel, and an exporter no picture:
-<code>stitch export --preview</code> still draws what will sew.</p>
+sheets drawn as designs export within 17 % of what an export may run, once the Test Sheet filter has drawn
+them into a document (<a href="#tools-stroke-to-satin-and-test-sheet">below</a>). A live effect is given no warnings
+channel, and an exporter no picture: <code>stitch export --preview</code> still draws what will sew.</p>
 <h3 id="design-settings-and-machine-kept-with-the-document"><a class="header" href="#design-settings-and-machine-kept-with-the-document">Design settings and machine kept with the document</a></h3>
 <p>Ink/Stitch keeps 3 settings for the whole design with an SVG file, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code>
 and <code>min_satin_stroke_width_mm</code> (<a href="#design-settings">SVG input</a>), and a VectorCraft document has
@@ -7703,7 +7787,8 @@ the exports are <code>stitch export</code>’s, and with the small hoop kept the
 <code>SC-E0701</code>.</p>
 <h3 id="tools-vectorcrafts-own-commands"><a class="header" href="#tools-vectorcrafts-own-commands">Tools: VectorCraft’s own commands</a></h3>
 <p>The plan had one object filter, <code>&lt;ns&gt;.tools</code>, to make a satin column from 2 paths, add a rung, bake a
-preview to paths and draw a test sheet. VectorCraft’s own commands do the first three, and M6.4 checked
+preview to paths, make a line into a satin column and draw a test sheet. VectorCraft’s own commands do the
+first three, and M6.4 checked
 them in its source, 0.7.0 to 0.12.0. Make Compound Path changed at 0.10.0. Before, the compound path takes
 the appearance of the frontmost path it is made of and turns none round. From 0.10.0, it takes the
 backmost path’s, and reverses each path in front that winds the same way as the backmost one. A
@@ -7722,31 +7807,76 @@ the StitchCraft effect is applied after the paths are joined, which works in eve
 </tbody>
 </table>
 </div>
-<p><strong>Convert Line to Satin</strong> (Ink/Stitch’s <code>stroke_to_satin</code>) is M6.12’s. It makes a column drawn as one path
-into 2 rails and rungs, as the engine makes them when it sews one. A filter is given the stroke’s width,
-and from VectorCraft 0.15 its join, and may return the column with its satin effect. M6.4 measured the
-conversion inside VectorCraft’s host, as a live effect with the same limits as a filter:</p>
+<p>The last two needed what ABI v1 gave a filter later, and M6.12 made them filters of their own.</p>
+<h3 id="tools-stroke-to-satin-and-test-sheet"><a class="header" href="#tools-stroke-to-satin-and-test-sheet">Tools: Stroke to Satin and Test Sheet</a></h3>
+<p>M6.12’s 2 filters draw objects with StitchCraft’s effects, which a filter’s output may hold from
+VectorCraft 0.15 (the RFC’s P8). The VectorCraft adapter reads what a filter is given and writes what it
+gives back (<code>stitchcraft_vectorcraft::filter</code>). A paint, an effect record and an opacity given back are
+written as the JSON text VectorCraft gave, since VectorCraft keeps a paint’s swatch, and a record as it
+was, only when they come back unchanged, which it tells by their values. A path is written in points,
+each coordinate the shortest decimal that reads back to it. VectorCraft admits a new effect record as
+<code>effect.apply</code> would apply it: a StitchCraft effect’s only while its plug-in is installed, its parameters
+filled in to their defaults.</p>
+<p><strong>Stroke to Satin</strong> (<code>REQ-VC-014</code>, <code>apps/stitchcraft-vc-plugin/src/stroke_to_satin.rs</code>), Ink/Stitch’s
+Stroke to Satin, once Convert Line to Satin, makes each subpath of each selected path that has a stroke
+into a satin column drawn with its rails and rungs. The line is the column’s centre line, as wide as the
+stroke a satin effect on it would follow, with that stroke’s join. The engine makes the rails and rungs it
+makes of such a column when it sews one (<code>REQ-SAT-016</code>, <code>REQ-SAT-017</code>), and draws them as straight lines,
+each rung longer than the gap between the points it pairs by a hundredth of it at either end, so that it
+crosses the rails (<a href="#drawn-with-its-rails-and-rungs">satin generators</a>). Read back, the column
+pairs the same points, so it sews as the line did. A column of 2 rungs or none gets a rung at its start
+too, since Ink/Stitch’s rule would read the 2 longest lines as its rails (<code>DEV-SAT-007</code>).</p>
+<p>Each column is a compound path without fills. Its stroke is the line’s paint one CSS pixel wide, which
+shows the rails and draws the satin effect’s stitches thin. The first column takes the object’s place,
+and the others go above it with its opacity. The satin effect takes the place of the object’s first
+StitchCraft effect, with the line’s satin settings or the defaults. The object’s other StitchCraft effects
+are left out, and its other effects kept. An object the satin effect already reads as rails is given back
+as it is. The filter refuses with <code>SC-E0814</code>, and the document stays as it was, when the selection is
+empty, a path has no stroke that paints or can’t be used, or a line can’t be made into a column that sews
+as it does. Such a line’s rails can’t be made whole (<code>SC-E0214</code>, <code>SC-W0213</code>), or they cross each other.
+Before 0.15, which drops the records a filter gives, it declines with <code>SC-E0813</code>.</p>
+<p>M6.4 measured making the rails inside VectorCraft’s host at up to 162 million instructions, where a light
+run gets about 52 million. The rails are the line offset as GEOS offsets it, which builds the boundary of
+the whole stroke for each rail. So Stroke to Satin is a heavy filter (P4): VectorCraft 0.17 gives each run 1 G
+instructions and 300 s, once the user allows it at install, and runs it in the background. The contract
+test <code>req_vc_014_stroke_to_satin_makes_columns_that_export_as_the_lines_did</code> converts M6.4’s lines in
+VectorCraft 0.17.0’s host, 3 mm wide, as <code>plugin.run</code> runs a filter, and StitchCraft’s PES exporter
+writes each column’s file as it wrote the line’s (2026-10-25):</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Line, 3 mm wide</th><th>Instructions</th></tr>
+<tr><th>Line, 3 mm wide</th><th>Instructions</th><th>Of those allowed</th></tr>
 </thead>
 <tbody>
-<tr><td>A zigzag of 10 corners</td><td>17 million</td></tr>
-<tr><td>An S curve 30 mm long</td><td>51 million</td></tr>
-<tr><td>A circle 10 mm across</td><td>68 million</td></tr>
-<tr><td>A circle 30 mm across</td><td>72 million</td></tr>
-<tr><td>An S curve 60 mm long</td><td>77 million</td></tr>
-<tr><td>A circle 50 mm across</td><td>162 million</td></tr>
+<tr><td>A zigzag of 10 corners</td><td>18 million</td><td>2 %</td></tr>
+<tr><td>An S curve 30 mm long</td><td>50 million</td><td>5 %</td></tr>
+<tr><td>A circle 10 mm across</td><td>73 million</td><td>7 %</td></tr>
+<tr><td>A circle 30 mm across</td><td>91 million</td><td>9 %</td></tr>
+<tr><td>An S curve 60 mm long</td><td>91 million</td><td>9 %</td></tr>
+<tr><td>A circle 50 mm across</td><td>233 million</td><td>23 %</td></tr>
 </tbody>
 </table>
 </div>
-<p>A light run gets about 52 million, and almost every curved line would run out. The rails are the line
-offset as GEOS offsets it, and each offset builds the boundary of the whole stroke, once for each rail. A
-heavy filter gets 1 G, which VectorCraft 0.17 adds.</p>
-<p><strong>A test sheet</strong> drawn into the document is M6.12’s too. Up to 0.14 a filter’s output held geometry, paints,
-opacity and names, and never an effect record, and the objects it drew would not sew as a test sheet. From
-0.15 a filter may return effect records. Until M6.12, <code>stitch testsheet</code> makes the sheets.</p>
+<p>That is at most 360 instructions for each unit of the engine’s work, which the plug-in prices at 450, and
+the filter stops with <code>SC-E0004</code> before VectorCraft would. A VectorCraft before 0.17 runs it as a light
+filter, which almost every curved line outruns, and stops it with its own error.</p>
+<p><strong>Test Sheet</strong> (<code>REQ-VC-015</code>, <code>apps/stitchcraft-vc-plugin/src/testsheet.rs</code>) draws one of the sheets drawn
+as designs, TS-02B to TS-09, into the document: the sheet’s design moved by whole millimetres so that its
+middle is nearest the middle of the artboard <code>_context</code> names (<code>Design::moved</code>). Each element is an object
+named by its id, with its path and its thread as the paint its family sews with. Its settings are its
+family’s effect record, each the value its dialog row takes, which reads back as the setting it was. The
+objects selected are given back as they are, and the sheet goes above them. The document sews as the
+sheet’s design moved. A fill’s rows lie where the design’s origin puts them, so moved they may fall
+elsewhere across a shape, and the sheet looks the same. The threads lose their names in the Brother
+palette, since VectorCraft unlinks the swatch of a paint a filter gives, and the PES file is the same.
+VectorCraft 0.15 keeps the records, but with an empty selection it looks to a filter as 0.14 does, which
+would drop them. Only the <code>documentData</code> every filter gets from 0.16 tells them apart, so before 0.16 the
+filter declines with <code>SC-E0813</code>. The sheets drawn stitch by stitch are plans, which no object holds.</p>
+<p>The contract test <code>req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits</code>
+draws each sheet into a new document in VectorCraft 0.17.0’s host, and exports it with the PES exporter
+(2026-10-25). Drawing takes 14 to 25 million instructions, at most half of a light filter’s run.
+Exporting takes 23 million to 1.6 billion, at most 17 % of an export’s, the most for the fills of TS-07,
+TS-08 and TS-09.</p>
 <h3 id="live-effect-previews-within-v1-budgets"><a class="header" href="#live-effect-previews-within-v1-budgets">Live-effect previews within v1 budgets</a></h3>
 <p>A live effect gets 50 million instructions, plus 4,000 for each byte of its input, and 5 seconds. Spike
 M0.6 measured what JSON costs in VectorCraft’s host (<code>wasmi</code> 2.0, in VectorCraft 0.12.0 and on <code>main</code> at
@@ -7991,11 +8121,11 @@ item is generic, useful to any plug-in and not only embroidery:</p>
 <tr><td>1. Exporter plug-ins, for File › Export › PES</td><td>0.14.0</td><td>M6.9</td></tr>
 <tr><td>2. Rich parameter schemas: labels, units, groups, help, conditions, texts and lists, 256 parameters</td><td>0.14.0</td><td>M6.10</td></tr>
 <tr><td>3. Display-only overlays from live effects, real stitch previews at low cost</td><td>in review</td><td>M9</td></tr>
-<tr><td>4. Budget classes, with the user’s consent</td><td>heavy filters in 0.17.0, heavy live effects proposed</td><td>M6.12, M9</td></tr>
+<tr><td>4. Budget classes, with the user’s consent</td><td>heavy filters in 0.17.0, heavy live effects proposed</td><td>M6.12 (Stroke to Satin), M9</td></tr>
 <tr><td>5. Document-level plug-in data, for the machine profile and palettes</td><td>0.16.0, for filters and exporters</td><td>M6.11</td></tr>
 <tr><td>6. Read-only context for live effects</td><td>the object’s paints in 0.14.0, the markers beside it proposed</td><td>M6.8, M9</td></tr>
 <tr><td>7. SVG foreign-attribute preservation</td><td>0.17.0</td><td>Ink/Stitch files keep their settings through VectorCraft</td></tr>
-<tr><td>8. Effects and stroke style in filter objects</td><td>0.15.0</td><td>M6.12</td></tr>
+<tr><td>8. Effects and stroke style in filter objects</td><td>0.15.0</td><td>M6.12 (Stroke to Satin, Test Sheet)</td></tr>
 </tbody>
 </table>
 </div>
@@ -8197,13 +8327,18 @@ documents written for the test, return a file of their format, with the export�
 the machine their dialog names, and decline with the first error when there is one (<code>REQ-VC-011</code>).
 The Design Settings filter, run as <code>plugin.run</code> runs a filter, keeps its dialog’s values with the
 document and returns its objects as they were. The exporters plan that document for the machine it
-keeps, unless their dialog names another (<code>REQ-VC-013</code>).</li>
+keeps, unless their dialog names another (<code>REQ-VC-013</code>). Stroke to Satin installs as a heavy filter,
+and makes each of M6.4’s lines into a column that the PES exporter writes as it wrote the line
+(<code>REQ-VC-014</code>). Test Sheet draws each sheet into a new document, which the PES exporter writes within
+an export’s budget (<code>REQ-VC-015</code>). The effect records they give are admitted as <code>plugin.run</code> admits
+them, by the manifests of the installed live effects.</li>
 <li>Error paths: invalid parameters are rejected by the host with the expected message.</li>
 <li>Budget: the <em>hello</em> plug-in’s cost for each byte of JSON it reads and writes stays within a quarter
 above the costs <a href="#live-effect-previews-within-v1-budgets">recorded for previews</a>.
 Every preview level finishes on shapes of growing size, within VectorCraft’s limits (<code>REQ-VC-003</code>), and
 an export of a fill of the reference hoop’s whole field finishes within an export’s (<code>REQ-VC-011</code>).
-Each run prints the costs.</li>
+Stroke to Satin finishes within a heavy filter’s, and Test Sheet within a light one’s. Each run prints
+the costs.</li>
 </ol>
 <p><code>vectorcraft-plugins</code> depends only on <code>geom</code>, <code>color</code>, <code>doc</code> and <code>wasmi</code>, so this builds quickly.</p>
 <h3 id="level-b--end-to-end-slower-tens-of-minutes"><a class="header" href="#level-b--end-to-end-slower-tens-of-minutes">Level B — end to end (slower, tens of minutes)</a></h3>
@@ -8224,21 +8359,24 @@ scenario draws each object it gives an effect before it gives another the same f
 <code>cargo xtask compat</code> refuses an <code>apply</code> step no drawing shows. Exporting a PES or a DST file draws
 nothing: an exporter is given the document’s JSON. An export that must fail names the code of the error it
 says, with <code>fails</code>. VectorCraft stops a run at a step that fails, so that export ends its run, and no check
-names its file. The checks are StitchCraft’s, since VectorCraft’s pictures change from version to version
-and what sews must not:</p>
+names its file. A run installs a module whose manifest sets a heavy budget, Stroke to Satin’s, with
+<code>allowHeavy</code>, as the user allows it. The checks are StitchCraft’s, since VectorCraft’s pictures change from version to
+version and what sews must not:</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>Scenario</th><th>Steps</th><th>Checks</th></tr>
 </thead>
 <tbody>
-<tr><td><code>install-and-list</code></td><td>install the 6 modules, then <code>plugin.list</code></td><td>each family’s live effect, each format’s exporter and the Design Settings filter is listed (<code>REQ-VC-002</code>, <code>REQ-VC-011</code>, <code>REQ-VC-013</code>)</td></tr>
+<tr><td><code>install-and-list</code></td><td>install the 8 modules, then <code>plugin.list</code></td><td>each family’s live effect, each format’s exporter and each filter is listed (<code>REQ-VC-002</code>, <code>REQ-VC-011</code>, <code>REQ-VC-013</code>, <code>REQ-VC-014</code>, <code>REQ-VC-015</code>)</td></tr>
 <tr><td><code>apply</code></td><td>a square filled red and a line, given the fill and stroke effects with parameters, then saved</td><td>as sent, with a fill in red and a stroke (<code>REQ-VC-004</code>, <code>REQ-PRM-003</code>)</td></tr>
 <tr><td><code>compound-satin</code></td><td>2 rails and a rung, Make Compound Path, then the satin effect</td><td>as sent, and one satin column (<code>REQ-VC-007</code>)</td></tr>
 <tr><td><code>graphic-style</code></td><td>a group of 2 squares, and a gold square with a fill effect, drawn, whose new graphic style is then applied to the group</td><td>as sent, and 3 fills in gold at the effect’s 90° (<code>REQ-VC-006</code>)</td></tr>
 <tr><td><code>missing-plugin</code></td><td>a fill saved and drawn, then opened and saved again without the plug-ins</td><td>both sew alike, as sent: the records are kept (<code>REQ-PRM-003</code>)</td></tr>
 <tr><td><code>export</code></td><td>a square filled red and a line far below it, given the fill and stroke effects, saved, then exported to PES and DST by StitchCraft’s exporters</td><td>each file is the one <code>stitch export</code> writes of the saved document, and the export’s warnings are what it says, the DST’s cut on the long jump among them (<code>REQ-VC-011</code>)</td></tr>
 <tr><td><code>settings</code></td><td>a 1 in square given the fill effect and exported to PES, then the Design Settings filter run with the 4 × 4 in hoop and a shortest stitch of 1.5 mm, and the square saved and exported to PES and DST; then the filter run with the small hoop, and the square saved and exported to PES</td><td>each document keeps what the filter was run with, each file is the one <code>stitch export</code> writes, the PES file differs from the one before the filter, and the small hoop’s export fails with <code>SC-E0701</code> (<code>REQ-VC-013</code>)</td></tr>
+<tr><td><code>stroke-to-satin</code></td><td>an S curve, a V and a circle with strokes 3 mm wide and the satin effect, saved and drawn, then made into columns by Stroke to Satin, saved, drawn and exported to PES</td><td>the columns sew as the lines did, 3 satin columns in the strokes’ colour, and the file is the one <code>stitch export</code> writes (<code>REQ-VC-014</code>)</td></tr>
+<tr><td><code>testsheets</code></td><td>each sheet drawn as a design, drawn by Test Sheet into a new document, then saved and exported to PES</td><td>each document sews as the sheet’s design moved by whole millimetres to the middle of its artboard, and each file is the one <code>stitch export</code> writes (<code>REQ-VC-015</code>)</td></tr>
 </tbody>
 </table>
 </div>
@@ -10067,7 +10205,7 @@ M13.7, whose Auto effect uses them.</p>
 <tr><td>M6.9 ✅</td><td>VectorCraft exporters for StitchCraft’s machine formats, PES and DST, in File › Export › Export As (VectorCraft 0.14’s exporter plug-ins). An exporter plans the document it is given for the machine profile as <code>stitch export</code> plans a <code>.vectorcraft</code> file. It returns the machine file, with what the plan says as the export’s warnings, and writes nothing when that holds an error. A parameter digitizes the shapes without settings automatically, as <code>--auto</code> does</td><td><code>REQ-VC-011</code>; the Level B case <code>export</code>, in which VectorCraft’s command line exports a document to PES and DST, and the files and the warnings are <code>stitch export</code>’s. A fill of the reference hoop’s whole field exports within an export’s budget in VectorCraft’s host. The test sheets are M6.12’s, which draws them into a document</td></tr>
 <tr><td>M6.10 ✅</td><td>The plug-ins’ dialogs as the parameter registry describes the parameters, with VectorCraft 0.14’s richer schemas: each one’s label, unit, help and help page, the registry’s groups as sections, and each shown only for the methods it applies to (<code>visibleWhen</code>)</td><td><code>REQ-VC-012</code>; the manifests valid against VectorCraft’s rules, each help page a heading of the book, and <code>shots-ui</code>’s pictures of the dialogs labelled and grouped</td></tr>
 <tr><td>M6.11 ✅</td><td>A document’s design settings kept with it, as data VectorCraft 0.16 keeps with a document for a filter. Ink/Stitch keeps 3 with a file, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and <code>min_satin_stroke_width_mm</code>, which a VectorCraft document couldn’t set. The machine profile is kept too, though Ink/Stitch has no such profile and its hoop is the page. The Design Settings filter sets them, and the exporters and <code>stitch export</code> plan with them, for the machine kept unless <code>--profile</code> or the export’s dialog names another. What doesn’t read keeps its default (<code>SC-W0812</code>), and a VectorCraft before 0.16, which would drop them, is told so (<code>SC-E0813</code>). A live effect isn’t given the document’s data, and its previews keep the defaults and the reference machine</td><td><code>REQ-VC-013</code>; the Level B case <code>settings</code>, in which a shortest stitch kept changes the PES file, the exports are <code>stitch export</code>’s, and a hoop kept that can’t hold the design stops its export</td></tr>
-<tr><td>M6.12</td><td>The tools filter, which sets up objects with their effects (VectorCraft 0.15). Convert Line to Satin makes a stroke into a satin column’s 2 rails with the satin effect, as a heavy filter, which VectorCraft adds in 0.17: its 51 to 162 million instructions fit a heavy filter’s 1 G. <code>stitch testsheet</code>’s sheets drawn into the document, each object with its effect</td><td>a VectorCraft release with heavy filters pinned, and a Level B case of each, in which the test sheets export within an export’s budget</td></tr>
+<tr><td>M6.12 ✅</td><td>The tools as filters, which set up objects with their effects (VectorCraft 0.15). Stroke to Satin, once Convert Line to Satin, makes each selected line into a satin column drawn with its rails and rungs, with the satin effect, which sews as the line did. It is a heavy filter, which VectorCraft adds in 0.17: its 18 to 233 million instructions fit a heavy filter’s 1 G. Test Sheet draws <code>stitch testsheet</code>’s sheets drawn as designs into the document, each object with its effect, from 0.16</td><td><code>REQ-VC-014</code> and <code>REQ-VC-015</code>. VectorCraft 0.17.0 is pinned, and the Level B cases <code>stroke-to-satin</code>, in which the columns sew as the lines did, and <code>testsheets</code>, in which each sheet sews as its design moved and exports within an export’s budget</td></tr>
 <tr><td>MC-5 🧵</td><td><strong>TS-12</strong> (a design authored in VectorCraft) and <strong>TS-10</strong> again through the full workflow</td><td>report filed</td></tr>
 </tbody>
 </table>
@@ -10241,6 +10379,9 @@ cases, or bugs. Every profile change links its report.</li>
 <li>Rate each item 1–5 (5 = indistinguishable from expected) and add a sentence.</li>
 </ul>
 <h2 id="test-sheets-1"><a class="header" href="#test-sheets-1">Test sheets</a></h2>
+<p><code>stitch testsheet</code> writes each sheet. From M6.12, VectorCraft’s Test Sheet filter draws the sheets drawn as
+designs, TS-02B to TS-09, into a document, where they sew as <code>stitch testsheet</code> writes them, moved to the
+middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a sheet through VectorCraft’s workflow.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -10259,7 +10400,7 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td><strong>TS-09</strong> Fill underlay &amp; travel</td><td>A rectangle 50 × 30 mm with a square hole and a round hole, and a bar 6 mm to its right, all one fill, sewn 3 times (66 × 114 mm). The top copy has no underlay. The others have the default underlay, and the bottom one 2 gap-filling rows too. Each copy is trimmed after</td><td>Travel hidden? Does the fill hold at both ends of the jump to the bar? Holes clean? A gap where the rows round a hole meet?</td><td>MC-4</td></tr>
 <tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
 <tr><td><strong>TS-11</strong> New stitch types</td><td>Samples of the milestone’s new types. So far zigzag strokes (M7.2), straight and curved, at spacings of 0.4, 1 and 2 mm and widths of 1, 2 and 4 mm, and one at 45°. E-stitches (M7.3) 3 and 5 mm wide at spacings of 2 and 3 mm, along a straight edge and round a circle, on appliqué fabric. S-stitches (M7.4) 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, straight and curved, the 10 mm ones split at 3 mm by the default and the staggered methods. Zigzag satins (M7.5) 4 and 8 mm wide at spacings of 0.4 and 1 mm, straight and curved, beside satin columns of the same widths and spacings, and one 8 mm wide at 1 mm over a contour underlay</td><td>Per type, as listed on its expected-result sheet. A zigzag sews narrower than drawn, and the report says by how much, whether its sides are even round curves and which is the narrowest width that sews cleanly. The E-stitch’s spine should cover the appliqué’s raw edge, and its spikes hold it without puckering. The S-stitch should cover its band at 0.4 mm with its steps along the edges even, and the report says whether the default method’s splits leave a furrow along the band that the staggered ones do not. The zigzag satin should cover its band at 0.4 mm as its satin column does, and the report says whether it sews narrower than the satin column beside it. Its contour underlay should not show past the zigzag at either end</td><td>MC-6</td></tr>
-<tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours, its PES file written by VectorCraft’s File › Export › Export As (M6.9)</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round?</td><td>MC-5, MC-7</td></tr>
+<tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours, its PES file written by VectorCraft’s File › Export › Export As (M6.9)</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round? A satin column that Stroke to Satin made of a line (M6.12): does it sew as the line did with the satin effect?</td><td>MC-5, MC-7</td></tr>
 <tr><td><strong>TS-13</strong> Pictures digitized automatically (M13)</td><td>Test pictures drawn in code and digitized with <code>--auto</code>, each beside the same shapes sewn in paint order. A badge is a broad fill inside a ring. Block letters are 4, 6, 10 and 15 mm tall. A cartoon face has black outlines 1, 2 and 4 mm wide. Lines are 0.3, 0.6 and 0.9 mm wide, and specks lie round a disc</td><td>Fabric showing between colours, on both halves. The smallest letters that read. Whether each outline’s columns cover the edges of the fills beside them, and whether the triple runs show as wide as their lines. A column’s square end past the end of a line with round caps (M13.1), and how far it shows past the round end. Small traced rings and hairpins, filled because no satin column can follow them (M13.1), and how solid they sew beside their columns’ neighbours. Colour changes, trims and time against the half in paint order</td><td>MC-8</td></tr>
 <tr><td><strong>TS-14</strong> Lettering (M14)</td><td>3 embroidery fonts, a block, a script and a small one, each at the least and the greatest heights it sews at, and a name along an arc</td><td>Whether every glyph reads at its least height, satin coverage at its greatest, and whether the locks of small glyphs hold after the trims</td><td>MC-9</td></tr>
 </tbody>
@@ -10276,7 +10417,7 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td>MC-2</td><td>M3</td><td>TS-03, TS-04, TS-02B</td><td>Minimum stitch length and lock defaults? Do the locks hold where the machine cuts the thread, and where a jump thread is snipped?</td></tr>
 <tr><td>MC-3</td><td>M4</td><td>TS-05, TS-06</td><td>Satin spacing, width limits, underlay defaults, pull compensation</td></tr>
 <tr><td>MC-4</td><td>M5</td><td>TS-07, TS-08, TS-09</td><td>Fill spacing, pull compensation, gap-filling rows, underlay and travel defaults</td></tr>
-<tr><td>MC-5</td><td>M6</td><td>TS-12, TS-10</td><td>Is the VectorCraft workflow complete and correct?</td></tr>
+<tr><td>MC-5</td><td>M6</td><td>TS-12, TS-10</td><td>Is the VectorCraft workflow complete and correct? Does a test sheet drawn by the Test Sheet filter sew as <code>stitch testsheet</code> writes it?</td></tr>
 <tr><td>MC-8</td><td>M13.7</td><td>TS-13</td><td>Do pictures digitized automatically sew better than the same shapes in paint order? Are the widest satin column, the overlap and the underlays by width right?</td></tr>
 <tr><td>MC-6</td><td>M7</td><td>TS-11</td><td>New stitch types acceptable?</td></tr>
 <tr><td>MC-9</td><td>M14</td><td>TS-14</td><td>Do the fonts sew legibly across the heights they claim?</td></tr>

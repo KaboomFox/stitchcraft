@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-71314849.js";
+            window.path_to_searchindex_js = "../searchindex-cd398bf8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -259,7 +259,10 @@ label repeated in a document <code>~2</code>, <code>~3</code> and so on, in ever
 <p>Invariants, checked by <code>Design::new</code>: element ids are unique, and every point is finite and within
 ±10,000 mm, as far as machine-file coordinates go. No stroke is narrower than 0, a miter limit is a
 finite number of at least 1, and the settings’ lengths are not negative. Adapters drop what they cannot
-represent with a diagnostic of their own, so a failed check is a bug in the adapter (<code>SC-E0009</code>).</p>
+represent with a diagnostic of their own, so a failed check is a bug in the adapter (<code>SC-E0009</code>).
+<code>Design::moved</code> gives the design moved by an offset, every point of its elements and its origin and stop
+position, checked the same way. VectorCraft’s Test Sheet filter draws a test sheet in the middle of the
+artboard with it (<code>REQ-VC-015</code>).</p>
 <p><strong>Commands</strong> attached to elements come with M8, for Ink/Stitch’s command symbols such as start and end
 points. Trims and stops are the element parameters <code>trim_after</code> and <code>stop_after</code>, and the origin and
 stop position are design settings (M3.8).</p>

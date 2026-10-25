@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-71314849.js";
+            window.path_to_searchindex_js = "../../searchindex-cd398bf8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b31b520c.js"></script>
@@ -254,7 +254,8 @@
 <tr><td><a href="#sc-i0810"><code>SC-I0810</code></a></td><td>Info</td><td>VectorCraft live effect leaves the object as it is</td></tr>
 <tr><td><a href="#sc-i0811"><code>SC-I0811</code></a></td><td>Info</td><td>VectorCraft object left out, as its name asks</td></tr>
 <tr><td><a href="#sc-w0812"><code>SC-W0812</code></a></td><td>Warning</td><td>VectorCraft design setting ignored</td></tr>
-<tr><td><a href="#sc-e0813"><code>SC-E0813</code></a></td><td>Error</td><td>VectorCraft too old to keep the design settings</td></tr>
+<tr><td><a href="#sc-e0813"><code>SC-E0813</code></a></td><td>Error</td><td>VectorCraft too old for the filter</td></tr>
+<tr><td><a href="#sc-e0814"><code>SC-E0814</code></a></td><td>Error</td><td>VectorCraft line not made into a satin column</td></tr>
 <tr><td><a href="#sc-i0901"><code>SC-I0901</code></a></td><td>Info</td><td>Shapes digitized automatically</td></tr>
 <tr><td><a href="#sc-i0902"><code>SC-I0902</code></a></td><td>Info</td><td>Line a satin column cannot follow; filled</td></tr>
 <tr><td><a href="#sc-w0903"><code>SC-W0903</code></a></td><td>Warning</td><td>Line too wide to fill; left out</td></tr>
@@ -721,11 +722,11 @@ the Version in VectorCraft Options.</p>
 <p>The <code>.vectorcraft</code> file could not be read: it is not a VectorCraft document (its JSON does not
 read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
 is damaged, or it unpacks to more JSON than StitchCraft reads. Nothing was stitched.</p>
-<p>A StitchCraft live effect gives this message when what VectorCraft passes it does not read as
-VectorCraft’s plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The effect
-leaves the object as it is.</p>
+<p>A StitchCraft live effect or filter gives this message when what VectorCraft passes it does not read
+as VectorCraft’s plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The
+effect leaves the object as it is, and the filter changes nothing.</p>
 <p>The message says what is wrong and, for JSON errors, where. Open the file in VectorCraft and save it
-again. For a live effect, install the StitchCraft plug-ins made for that version of VectorCraft.</p>
+again. For a plug-in, install the StitchCraft plug-ins made for that version of VectorCraft.</p>
 <h2 id="sc-w0807"><a class="header" href="#sc-w0807">SC-W0807</a></h2>
 <p><strong>Warning</strong> — VectorCraft object or feature not stitched</p>
 <p>Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft
@@ -793,11 +794,27 @@ the machine <code>--profile</code> or the export names, or else for the referenc
 <p>The message names the setting and what it holds. To set it again, choose Object › Plug-ins ›
 StitchCraft Design Settings in VectorCraft, which keeps every setting anew.</p>
 <h2 id="sc-e0813"><a class="header" href="#sc-e0813">SC-E0813</a></h2>
-<p><strong>Error</strong> — VectorCraft too old to keep the design settings</p>
-<p>StitchCraft Design Settings keeps a document’s design settings and machine as data VectorCraft
-keeps with a document for a filter plug-in, which VectorCraft does from 0.16. The VectorCraft that
-ran the filter is older and would drop them, so the filter declined to run.</p>
-<p>Update VectorCraft to 0.16 or later. Until then, the export’s Machine option and <code>stitch export --profile</code> name the machine, and the design settings keep their defaults.</p>
+<p><strong>Error</strong> — VectorCraft too old for the filter</p>
+<p>A StitchCraft filter needs what the VectorCraft that ran it doesn’t give a filter, so it declined to
+run, and nothing changed. StitchCraft Design Settings keeps a document’s design settings and machine
+as data VectorCraft keeps with a document for a filter, from 0.16. Stroke to Satin and Test Sheet
+give the objects they make StitchCraft’s effects, as effect records VectorCraft keeps from 0.15.
+Test Sheet tells such a VectorCraft by what it gives every filter from 0.16, since a 0.15 with
+nothing selected looks as 0.14 does.</p>
+<p>The message names the version the filter needs. Update VectorCraft to it or later. Until then, the
+export’s Machine option and <code>stitch export --profile</code> name the machine, the design settings keep
+their defaults, a satin column is drawn with its 2 rails and joined with Make Compound Path, and
+<code>stitch testsheet</code> makes the test sheets.</p>
+<h2 id="sc-e0814"><a class="header" href="#sc-e0814">SC-E0814</a></h2>
+<p><strong>Error</strong> — VectorCraft line not made into a satin column</p>
+<p>StitchCraft’s Stroke to Satin filter makes each selected line into a satin column drawn with rails
+and rungs, which sews as the line does with the satin effect. It changed nothing, because nothing was
+selected, or one of the lines can’t be made so: its path has no stroke to take the column’s width
+from, or can’t be used, its rails can’t be made or would leave parts of it out, as <code>SC-E0214</code> and
+<code>SC-W0213</code> say of a satin column drawn as one path, or the column would be read back with other rails
+or rungs, as one whose rails cross each other is.</p>
+<p>The message names the object. Select the lines, give the path a stroke as wide as the column, draw
+that column with its 2 rails, or leave the object out of the selection.</p>
 <h2 id="sc-i0901"><a class="header" href="#sc-i0901">SC-I0901</a></h2>
 <p><strong>Info</strong> — Shapes digitized automatically</p>
 <p><code>--auto</code> digitized the design’s shapes that have no settings: StitchCraft chose each one’s

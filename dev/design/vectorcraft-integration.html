@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-71314849.js";
+            window.path_to_searchindex_js = "../searchindex-cd398bf8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -186,8 +186,8 @@
 offers today, how we use it without changing VectorCraft (phase 1), what we propose upstream
 (phase 2), and how an in-tree integration would look (phase 3).</p>
 <p><strong>VectorCraft snapshot reviewed:</strong> <code>main</code> at <code>89ea46c</code> (2026-10-08), version 0.6.0, and its plug-in API
-again at <code>8bf090b</code> (2026-10-24), after 0.16.0. File references below are to the first unless a version is
-named. The <a href="compatibility-gate.html">compatibility gate</a> tests the plug-ins against each VectorCraft
+again at <code>8bf090b</code> (2026-10-24), after 0.16.0, and at <code>v0.17.0</code> (2026-10-25). File references below are to
+the first unless a version is named. The <a href="compatibility-gate.html">compatibility gate</a> tests the plug-ins against each VectorCraft
 release and branch.</p>
 <h2 id="1-vectorcraft-in-brief"><a class="header" href="#1-vectorcraft-in-brief">1. VectorCraft in brief</a></h2>
 <div class="table-wrapper">
@@ -265,7 +265,7 @@ exporter plug-in adds a format to it, <code>plugin.&lt;id&gt;</code>, which is h
 </thead>
 <tbody>
 <tr><td>1. ABI v1 plug-ins</td><td>nothing</td><td>per-object embroidery settings, previews, tools; machine files via <code>stitch export file.vectorcraft</code></td><td>M6</td></tr>
-<tr><td>2. Plug-in features (upstream RFC)</td><td>generic plug-in features, most of them in VectorCraft 0.14 to 0.16</td><td>previews as wide as a stroke, export from File › Export, labelled dialogs, design settings and a machine per document, and the tools filter (M6.8 to M6.12). Overlay previews of every stitch, and heavy live effects, after 1.0 (M9)</td><td>M6, M9</td></tr>
+<tr><td>2. Plug-in features (upstream RFC)</td><td>generic plug-in features, most of them in VectorCraft 0.14 to 0.16</td><td>previews as wide as a stroke, export from File › Export, labelled dialogs, design settings and a machine per document, and filters that make satin columns and draw test sheets (M6.8 to M6.12). Overlay previews of every stitch, and heavy live effects, after 1.0 (M9)</td><td>M6, M9</td></tr>
 <tr><td>3. In-tree crate (optional)</td><td>ArtCraft’s interest, or a fork</td><td>native speed, simulator panel, satin tool</td><td>post-1.0</td></tr>
 </tbody>
 </table>
@@ -286,11 +286,13 @@ release takes:</p>
 <tr><td><code>&lt;ns&gt;.auto</code></td><td>live effect</td><td>the stitches automatic digitizing chooses by width (M13.7)</td><td>on a group, previews each path inside (<a href="image-to-embroidery.html">image to embroidery</a>)</td></tr>
 <tr><td><code>&lt;ns&gt;.pes</code>, <code>&lt;ns&gt;.dst</code></td><td>exporter (VectorCraft 0.14)</td><td>every family</td><td>File › Export › Export As writes the same machine file as <code>stitch export</code> (M6.9, <a href="#exporters-file--export-writes-pes-and-dst">below</a>)</td></tr>
 <tr><td><code>&lt;ns&gt;.settings</code></td><td>filter (VectorCraft 0.16)</td><td>none</td><td>keeps the design settings and the machine with the document (M6.11, <a href="#design-settings-and-machine-kept-with-the-document">below</a>)</td></tr>
+<tr><td><code>&lt;ns&gt;.stroke-to-satin</code></td><td>heavy filter (VectorCraft 0.17)</td><td>satin</td><td>makes each selected line into a satin column drawn with its rails and rungs (M6.12, <a href="#tools-stroke-to-satin-and-test-sheet">below</a>)</td></tr>
+<tr><td><code>&lt;ns&gt;.testsheet</code></td><td>filter (VectorCraft 0.16)</td><td>every family</td><td>draws a test sheet into the document, each object with its effect (M6.12, <a href="#tools-stroke-to-satin-and-test-sheet">below</a>)</td></tr>
 </tbody>
 </table>
 </div>
-<p>The tools an object filter was to give are VectorCraft’s own commands, and the rest come with M6.12’s tools
-filter (<a href="#tools-vectorcrafts-own-commands">tools</a>).</p>
+<p>The tools an object filter was to give are VectorCraft’s own commands (<a href="#tools-vectorcrafts-own-commands">tools</a>)
+and M6.12’s 2 filters (<a href="#tools-stroke-to-satin-and-test-sheet">Stroke to Satin and Test Sheet</a>).</p>
 <p><code>&lt;ns&gt;</code> is a reverse-DNS namespace defined in one constant (<code>PLUGIN_NAMESPACE</code>) in the VectorCraft adapter,
 which reads the effect records too. The adapter makes the ids from it, a plug-in’s with <code>plugin_id</code> and its
 live effect’s with <code>effect_id</code>, and <code>effect_name</code> reads one back. The plug-in crate and the compatibility
@@ -302,10 +304,10 @@ from 0.14 the keys that say how the dialog shows a parameter), so a manifest Vec
 the tests before a release.</p>
 <p><strong>Modules.</strong> The plug-in crate builds one module for each family, chosen by a Cargo feature named after
 the family: <code>stroke</code>, <code>satin</code> or <code>fill</code>, one for each machine format, by its extension: <code>pes</code> or <code>dst</code>, and
-<code>settings</code> for the Design Settings filter. Without one it builds M0.6’s <em>hello</em> effect. The modules contain
-the same code, which the native tests run whichever it is, and the feature only picks the manifest and the
-run that <code>vc_manifest</code> and <code>vc_run</code> serve. <code>cargo xtask compat contract</code> builds the seven modules, notes
-their sizes and loads them into VectorCraft’s host.</p>
+one for each filter: <code>settings</code>, <code>stroke-to-satin</code> and <code>testsheet</code>. Without one it builds M0.6’s <em>hello</em>
+effect. The modules contain the same code, which the native tests run whichever it is, and the feature only
+picks the manifest and the run that <code>vc_manifest</code> and <code>vc_run</code> serve. <code>cargo xtask compat contract</code> builds
+the nine modules, notes their sizes and loads them into VectorCraft’s host.</p>
 <p><strong>Manifests.</strong> A family’s manifest is made from the registry when VectorCraft asks for it, so a parameter
 added to the registry shows in the dialog without another change. A key that several families declare,
 each its own way, is in each family’s manifest as that family declares it
@@ -440,9 +442,9 @@ the reference machine sews (VectorCraft 0.16.0 and 0.17.0 alike, 2026-10-25):</p
 <p>A fill’s work grows less than its area, and every fill takes some whatever its size: the squares cover half
 the field and take more than twice as much. About 140 fills of that size are as many as an export can
 plan, which few designs for a home machine’s hoop reach, and <code>stitch export</code> writes the others. The test
-sheets are drawn in code, as plans and designs, and M6.12 draws them into a document, where its Level B
-case exports each. A live effect is given no warnings channel, and an exporter no picture:
-<code>stitch export --preview</code> still draws what will sew.</p>
+sheets drawn as designs export within 17 % of what an export may run, once the Test Sheet filter has drawn
+them into a document (<a href="#tools-stroke-to-satin-and-test-sheet">below</a>). A live effect is given no warnings
+channel, and an exporter no picture: <code>stitch export --preview</code> still draws what will sew.</p>
 <h3 id="design-settings-and-machine-kept-with-the-document"><a class="header" href="#design-settings-and-machine-kept-with-the-document">Design settings and machine kept with the document</a></h3>
 <p>Ink/Stitch keeps 3 settings for the whole design with an SVG file, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code>
 and <code>min_satin_stroke_width_mm</code> (<a href="svg-input.html#design-settings">SVG input</a>), and a VectorCraft document has
@@ -486,7 +488,8 @@ the exports are <code>stitch export</code>’s, and with the small hoop kept the
 <code>SC-E0701</code>.</p>
 <h3 id="tools-vectorcrafts-own-commands"><a class="header" href="#tools-vectorcrafts-own-commands">Tools: VectorCraft’s own commands</a></h3>
 <p>The plan had one object filter, <code>&lt;ns&gt;.tools</code>, to make a satin column from 2 paths, add a rung, bake a
-preview to paths and draw a test sheet. VectorCraft’s own commands do the first three, and M6.4 checked
+preview to paths, make a line into a satin column and draw a test sheet. VectorCraft’s own commands do the
+first three, and M6.4 checked
 them in its source, 0.7.0 to 0.12.0. Make Compound Path changed at 0.10.0. Before, the compound path takes
 the appearance of the frontmost path it is made of and turns none round. From 0.10.0, it takes the
 backmost path’s, and reverses each path in front that winds the same way as the backmost one. A
@@ -505,31 +508,76 @@ the StitchCraft effect is applied after the paths are joined, which works in eve
 </tbody>
 </table>
 </div>
-<p><strong>Convert Line to Satin</strong> (Ink/Stitch’s <code>stroke_to_satin</code>) is M6.12’s. It makes a column drawn as one path
-into 2 rails and rungs, as the engine makes them when it sews one. A filter is given the stroke’s width,
-and from VectorCraft 0.15 its join, and may return the column with its satin effect. M6.4 measured the
-conversion inside VectorCraft’s host, as a live effect with the same limits as a filter:</p>
+<p>The last two needed what ABI v1 gave a filter later, and M6.12 made them filters of their own.</p>
+<h3 id="tools-stroke-to-satin-and-test-sheet"><a class="header" href="#tools-stroke-to-satin-and-test-sheet">Tools: Stroke to Satin and Test Sheet</a></h3>
+<p>M6.12’s 2 filters draw objects with StitchCraft’s effects, which a filter’s output may hold from
+VectorCraft 0.15 (the RFC’s P8). The VectorCraft adapter reads what a filter is given and writes what it
+gives back (<code>stitchcraft_vectorcraft::filter</code>). A paint, an effect record and an opacity given back are
+written as the JSON text VectorCraft gave, since VectorCraft keeps a paint’s swatch, and a record as it
+was, only when they come back unchanged, which it tells by their values. A path is written in points,
+each coordinate the shortest decimal that reads back to it. VectorCraft admits a new effect record as
+<code>effect.apply</code> would apply it: a StitchCraft effect’s only while its plug-in is installed, its parameters
+filled in to their defaults.</p>
+<p><strong>Stroke to Satin</strong> (<code>REQ-VC-014</code>, <code>apps/stitchcraft-vc-plugin/src/stroke_to_satin.rs</code>), Ink/Stitch’s
+Stroke to Satin, once Convert Line to Satin, makes each subpath of each selected path that has a stroke
+into a satin column drawn with its rails and rungs. The line is the column’s centre line, as wide as the
+stroke a satin effect on it would follow, with that stroke’s join. The engine makes the rails and rungs it
+makes of such a column when it sews one (<code>REQ-SAT-016</code>, <code>REQ-SAT-017</code>), and draws them as straight lines,
+each rung longer than the gap between the points it pairs by a hundredth of it at either end, so that it
+crosses the rails (<a href="algorithms/satin.html#drawn-with-its-rails-and-rungs">satin generators</a>). Read back, the column
+pairs the same points, so it sews as the line did. A column of 2 rungs or none gets a rung at its start
+too, since Ink/Stitch’s rule would read the 2 longest lines as its rails (<code>DEV-SAT-007</code>).</p>
+<p>Each column is a compound path without fills. Its stroke is the line’s paint one CSS pixel wide, which
+shows the rails and draws the satin effect’s stitches thin. The first column takes the object’s place,
+and the others go above it with its opacity. The satin effect takes the place of the object’s first
+StitchCraft effect, with the line’s satin settings or the defaults. The object’s other StitchCraft effects
+are left out, and its other effects kept. An object the satin effect already reads as rails is given back
+as it is. The filter refuses with <code>SC-E0814</code>, and the document stays as it was, when the selection is
+empty, a path has no stroke that paints or can’t be used, or a line can’t be made into a column that sews
+as it does. Such a line’s rails can’t be made whole (<code>SC-E0214</code>, <code>SC-W0213</code>), or they cross each other.
+Before 0.15, which drops the records a filter gives, it declines with <code>SC-E0813</code>.</p>
+<p>M6.4 measured making the rails inside VectorCraft’s host at up to 162 million instructions, where a light
+run gets about 52 million. The rails are the line offset as GEOS offsets it, which builds the boundary of
+the whole stroke for each rail. So Stroke to Satin is a heavy filter (P4): VectorCraft 0.17 gives each run 1 G
+instructions and 300 s, once the user allows it at install, and runs it in the background. The contract
+test <code>req_vc_014_stroke_to_satin_makes_columns_that_export_as_the_lines_did</code> converts M6.4’s lines in
+VectorCraft 0.17.0’s host, 3 mm wide, as <code>plugin.run</code> runs a filter, and StitchCraft’s PES exporter
+writes each column’s file as it wrote the line’s (2026-10-25):</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Line, 3 mm wide</th><th>Instructions</th></tr>
+<tr><th>Line, 3 mm wide</th><th>Instructions</th><th>Of those allowed</th></tr>
 </thead>
 <tbody>
-<tr><td>A zigzag of 10 corners</td><td>17 million</td></tr>
-<tr><td>An S curve 30 mm long</td><td>51 million</td></tr>
-<tr><td>A circle 10 mm across</td><td>68 million</td></tr>
-<tr><td>A circle 30 mm across</td><td>72 million</td></tr>
-<tr><td>An S curve 60 mm long</td><td>77 million</td></tr>
-<tr><td>A circle 50 mm across</td><td>162 million</td></tr>
+<tr><td>A zigzag of 10 corners</td><td>18 million</td><td>2 %</td></tr>
+<tr><td>An S curve 30 mm long</td><td>50 million</td><td>5 %</td></tr>
+<tr><td>A circle 10 mm across</td><td>73 million</td><td>7 %</td></tr>
+<tr><td>A circle 30 mm across</td><td>91 million</td><td>9 %</td></tr>
+<tr><td>An S curve 60 mm long</td><td>91 million</td><td>9 %</td></tr>
+<tr><td>A circle 50 mm across</td><td>233 million</td><td>23 %</td></tr>
 </tbody>
 </table>
 </div>
-<p>A light run gets about 52 million, and almost every curved line would run out. The rails are the line
-offset as GEOS offsets it, and each offset builds the boundary of the whole stroke, once for each rail. A
-heavy filter gets 1 G, which VectorCraft 0.17 adds.</p>
-<p><strong>A test sheet</strong> drawn into the document is M6.12’s too. Up to 0.14 a filter’s output held geometry, paints,
-opacity and names, and never an effect record, and the objects it drew would not sew as a test sheet. From
-0.15 a filter may return effect records. Until M6.12, <code>stitch testsheet</code> makes the sheets.</p>
+<p>That is at most 360 instructions for each unit of the engine’s work, which the plug-in prices at 450, and
+the filter stops with <code>SC-E0004</code> before VectorCraft would. A VectorCraft before 0.17 runs it as a light
+filter, which almost every curved line outruns, and stops it with its own error.</p>
+<p><strong>Test Sheet</strong> (<code>REQ-VC-015</code>, <code>apps/stitchcraft-vc-plugin/src/testsheet.rs</code>) draws one of the sheets drawn
+as designs, TS-02B to TS-09, into the document: the sheet’s design moved by whole millimetres so that its
+middle is nearest the middle of the artboard <code>_context</code> names (<code>Design::moved</code>). Each element is an object
+named by its id, with its path and its thread as the paint its family sews with. Its settings are its
+family’s effect record, each the value its dialog row takes, which reads back as the setting it was. The
+objects selected are given back as they are, and the sheet goes above them. The document sews as the
+sheet’s design moved. A fill’s rows lie where the design’s origin puts them, so moved they may fall
+elsewhere across a shape, and the sheet looks the same. The threads lose their names in the Brother
+palette, since VectorCraft unlinks the swatch of a paint a filter gives, and the PES file is the same.
+VectorCraft 0.15 keeps the records, but with an empty selection it looks to a filter as 0.14 does, which
+would drop them. Only the <code>documentData</code> every filter gets from 0.16 tells them apart, so before 0.16 the
+filter declines with <code>SC-E0813</code>. The sheets drawn stitch by stitch are plans, which no object holds.</p>
+<p>The contract test <code>req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits</code>
+draws each sheet into a new document in VectorCraft 0.17.0’s host, and exports it with the PES exporter
+(2026-10-25). Drawing takes 14 to 25 million instructions, at most half of a light filter’s run.
+Exporting takes 23 million to 1.6 billion, at most 17 % of an export’s, the most for the fills of TS-07,
+TS-08 and TS-09.</p>
 <h3 id="live-effect-previews-within-v1-budgets"><a class="header" href="#live-effect-previews-within-v1-budgets">Live-effect previews within v1 budgets</a></h3>
 <p>A live effect gets 50 million instructions, plus 4,000 for each byte of its input, and 5 seconds. Spike
 M0.6 measured what JSON costs in VectorCraft’s host (<code>wasmi</code> 2.0, in VectorCraft 0.12.0 and on <code>main</code> at
@@ -774,11 +822,11 @@ item is generic, useful to any plug-in and not only embroidery:</p>
 <tr><td>1. Exporter plug-ins, for File › Export › PES</td><td>0.14.0</td><td>M6.9</td></tr>
 <tr><td>2. Rich parameter schemas: labels, units, groups, help, conditions, texts and lists, 256 parameters</td><td>0.14.0</td><td>M6.10</td></tr>
 <tr><td>3. Display-only overlays from live effects, real stitch previews at low cost</td><td>in review</td><td>M9</td></tr>
-<tr><td>4. Budget classes, with the user’s consent</td><td>heavy filters in 0.17.0, heavy live effects proposed</td><td>M6.12, M9</td></tr>
+<tr><td>4. Budget classes, with the user’s consent</td><td>heavy filters in 0.17.0, heavy live effects proposed</td><td>M6.12 (Stroke to Satin), M9</td></tr>
 <tr><td>5. Document-level plug-in data, for the machine profile and palettes</td><td>0.16.0, for filters and exporters</td><td>M6.11</td></tr>
 <tr><td>6. Read-only context for live effects</td><td>the object’s paints in 0.14.0, the markers beside it proposed</td><td>M6.8, M9</td></tr>
 <tr><td>7. SVG foreign-attribute preservation</td><td>0.17.0</td><td>Ink/Stitch files keep their settings through VectorCraft</td></tr>
-<tr><td>8. Effects and stroke style in filter objects</td><td>0.15.0</td><td>M6.12</td></tr>
+<tr><td>8. Effects and stroke style in filter objects</td><td>0.15.0</td><td>M6.12 (Stroke to Satin, Test Sheet)</td></tr>
 </tbody>
 </table>
 </div>

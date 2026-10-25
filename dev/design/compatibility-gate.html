@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-71314849.js";
+            window.path_to_searchindex_js = "../searchindex-cd398bf8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -224,13 +224,18 @@ documents written for the test, return a file of their format, with the export�
 the machine their dialog names, and decline with the first error when there is one (<code>REQ-VC-011</code>).
 The Design Settings filter, run as <code>plugin.run</code> runs a filter, keeps its dialog’s values with the
 document and returns its objects as they were. The exporters plan that document for the machine it
-keeps, unless their dialog names another (<code>REQ-VC-013</code>).</li>
+keeps, unless their dialog names another (<code>REQ-VC-013</code>). Stroke to Satin installs as a heavy filter,
+and makes each of M6.4’s lines into a column that the PES exporter writes as it wrote the line
+(<code>REQ-VC-014</code>). Test Sheet draws each sheet into a new document, which the PES exporter writes within
+an export’s budget (<code>REQ-VC-015</code>). The effect records they give are admitted as <code>plugin.run</code> admits
+them, by the manifests of the installed live effects.</li>
 <li>Error paths: invalid parameters are rejected by the host with the expected message.</li>
 <li>Budget: the <em>hello</em> plug-in’s cost for each byte of JSON it reads and writes stays within a quarter
 above the costs <a href="vectorcraft-integration.html#live-effect-previews-within-v1-budgets">recorded for previews</a>.
 Every preview level finishes on shapes of growing size, within VectorCraft’s limits (<code>REQ-VC-003</code>), and
 an export of a fill of the reference hoop’s whole field finishes within an export’s (<code>REQ-VC-011</code>).
-Each run prints the costs.</li>
+Stroke to Satin finishes within a heavy filter’s, and Test Sheet within a light one’s. Each run prints
+the costs.</li>
 </ol>
 <p><code>vectorcraft-plugins</code> depends only on <code>geom</code>, <code>color</code>, <code>doc</code> and <code>wasmi</code>, so this builds quickly.</p>
 <h3 id="level-b--end-to-end-slower-tens-of-minutes"><a class="header" href="#level-b--end-to-end-slower-tens-of-minutes">Level B — end to end (slower, tens of minutes)</a></h3>
@@ -251,21 +256,24 @@ scenario draws each object it gives an effect before it gives another the same f
 <code>cargo xtask compat</code> refuses an <code>apply</code> step no drawing shows. Exporting a PES or a DST file draws
 nothing: an exporter is given the document’s JSON. An export that must fail names the code of the error it
 says, with <code>fails</code>. VectorCraft stops a run at a step that fails, so that export ends its run, and no check
-names its file. The checks are StitchCraft’s, since VectorCraft’s pictures change from version to version
-and what sews must not:</p>
+names its file. A run installs a module whose manifest sets a heavy budget, Stroke to Satin’s, with
+<code>allowHeavy</code>, as the user allows it. The checks are StitchCraft’s, since VectorCraft’s pictures change from version to
+version and what sews must not:</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>Scenario</th><th>Steps</th><th>Checks</th></tr>
 </thead>
 <tbody>
-<tr><td><code>install-and-list</code></td><td>install the 6 modules, then <code>plugin.list</code></td><td>each family’s live effect, each format’s exporter and the Design Settings filter is listed (<code>REQ-VC-002</code>, <code>REQ-VC-011</code>, <code>REQ-VC-013</code>)</td></tr>
+<tr><td><code>install-and-list</code></td><td>install the 8 modules, then <code>plugin.list</code></td><td>each family’s live effect, each format’s exporter and each filter is listed (<code>REQ-VC-002</code>, <code>REQ-VC-011</code>, <code>REQ-VC-013</code>, <code>REQ-VC-014</code>, <code>REQ-VC-015</code>)</td></tr>
 <tr><td><code>apply</code></td><td>a square filled red and a line, given the fill and stroke effects with parameters, then saved</td><td>as sent, with a fill in red and a stroke (<code>REQ-VC-004</code>, <code>REQ-PRM-003</code>)</td></tr>
 <tr><td><code>compound-satin</code></td><td>2 rails and a rung, Make Compound Path, then the satin effect</td><td>as sent, and one satin column (<code>REQ-VC-007</code>)</td></tr>
 <tr><td><code>graphic-style</code></td><td>a group of 2 squares, and a gold square with a fill effect, drawn, whose new graphic style is then applied to the group</td><td>as sent, and 3 fills in gold at the effect’s 90° (<code>REQ-VC-006</code>)</td></tr>
 <tr><td><code>missing-plugin</code></td><td>a fill saved and drawn, then opened and saved again without the plug-ins</td><td>both sew alike, as sent: the records are kept (<code>REQ-PRM-003</code>)</td></tr>
 <tr><td><code>export</code></td><td>a square filled red and a line far below it, given the fill and stroke effects, saved, then exported to PES and DST by StitchCraft’s exporters</td><td>each file is the one <code>stitch export</code> writes of the saved document, and the export’s warnings are what it says, the DST’s cut on the long jump among them (<code>REQ-VC-011</code>)</td></tr>
 <tr><td><code>settings</code></td><td>a 1 in square given the fill effect and exported to PES, then the Design Settings filter run with the 4 × 4 in hoop and a shortest stitch of 1.5 mm, and the square saved and exported to PES and DST; then the filter run with the small hoop, and the square saved and exported to PES</td><td>each document keeps what the filter was run with, each file is the one <code>stitch export</code> writes, the PES file differs from the one before the filter, and the small hoop’s export fails with <code>SC-E0701</code> (<code>REQ-VC-013</code>)</td></tr>
+<tr><td><code>stroke-to-satin</code></td><td>an S curve, a V and a circle with strokes 3 mm wide and the satin effect, saved and drawn, then made into columns by Stroke to Satin, saved, drawn and exported to PES</td><td>the columns sew as the lines did, 3 satin columns in the strokes’ colour, and the file is the one <code>stitch export</code> writes (<code>REQ-VC-014</code>)</td></tr>
+<tr><td><code>testsheets</code></td><td>each sheet drawn as a design, drawn by Test Sheet into a new document, then saved and exported to PES</td><td>each document sews as the sheet’s design moved by whole millimetres to the middle of its artboard, and each file is the one <code>stitch export</code> writes (<code>REQ-VC-015</code>)</td></tr>
 </tbody>
 </table>
 </div>
