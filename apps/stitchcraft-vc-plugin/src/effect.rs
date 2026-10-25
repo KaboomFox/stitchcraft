@@ -105,9 +105,9 @@ mod tests {
         let out = run(Family::Satin, &square(), &[]);
         assert_eq!(
             error(&out),
-            "info SC-I0810: This satin column is drawn as one path, as wide as its stroke, which VectorCraft does not give a live effect: \
-             the effect leaves it as it is. To see its stitches in VectorCraft, draw its 2 rails, join them with Object › Compound Path \
-             › Make and apply the effect to that."
+            "info SC-I0810: This satin column is drawn as one path, as wide as its stroke, which the live effect doesn't read yet: the \
+             effect leaves it as it is. To see its stitches in VectorCraft, draw its 2 rails, join them with Object › Compound Path › Make \
+             and apply the effect to that."
         );
         // VectorCraft keeps the first 300 characters of a plug-in's error (`objects::decode` in its `crates/plugins`).
         assert!(error(&out).chars().count() <= 300);
@@ -118,8 +118,8 @@ mod tests {
         let out = run(Family::Stroke, &square(), &[("stroke_method", json!("zigzag_stitch"))]);
         assert_eq!(
             error(&out),
-            "info SC-I0810: This zigzag stroke is as wide as its stroke, which VectorCraft does not give a live effect: the effect leaves \
-             it as it is. Exported with `stitch export`, it sews as wide as its stroke."
+            "info SC-I0810: This zigzag stroke is as wide as its stroke, which the live effect doesn't read yet: the effect leaves it as it \
+             is. Exported with `stitch export`, it sews as wide as its stroke."
         );
         assert!(error(&out).chars().count() <= 300);
         // At any preview level.

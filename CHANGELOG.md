@@ -666,6 +666,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The compatibility gate pins VectorCraft 0.16.0, adopted from 0.13.1. From 0.14, VectorCraft gives a
+  live effect its object's fills and strokes beside the path, read only, and its host's `effect::apply`
+  takes them as a sixth argument. The contract tests didn't compile against it, and every track failed
+  from 0.14.0 on. They pass the object's paints now. A new case checks that each family's effect sews an
+  object with a fill and a stroke as it sews one without, with the effect on the object or on one of its
+  paints.
+  - The plug-ins don't read the paints yet. `SC-I0810` now says that the effect doesn't read the stroke of
+    a satin column drawn as one path or of a zigzag stroke, where it said that VectorCraft doesn't give it.
+  - M6.8, new in the roadmap, makes the live effects read their object's stroke before M13.7.
 - The roadmap has 2 more milestones, from a review of how people use Ink/Stitch, which is a new plan page
   (*How people use Ink/Stitch*).
   - M13, image to embroidery, comes next, after M7.5 and before M7.6. A picture traced in VectorCraft is

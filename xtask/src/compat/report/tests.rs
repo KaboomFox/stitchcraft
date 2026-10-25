@@ -130,6 +130,9 @@ fn adopting_writes_the_pins_the_contract_s_tag_and_the_record() {
     let dir = copied("adopt");
     let pins: toml::Table = toml::from_str(&util::read(&dir.join(PINS)).unwrap()).unwrap();
     let old = pinned_tag(&pins, "stable").to_string();
+    // The VectorCraft crates the contract tests build, each at the stable tag.
+    let crates = util::read(&dir.join(CONTRACT).join("Cargo.toml")).unwrap().matches(&format!("tag = \"{old}\"")).count();
+    assert!(crates >= 2, "the contract tests build VectorCraft's plug-in host and its geometry at the least");
     let found = results(vec![result("stable", "v0.12.0", None), result("prerelease", "v0.13.0-rc.1", None)]);
     let (supported, discovered) = (load_supported(&dir).unwrap(), discovered());
     let inputs = Inputs { discovered: Some(&discovered), results: &found, moved: Some(true), pins: &pins, supported: &supported, run_url: "RUN" };
@@ -141,7 +144,7 @@ fn adopting_writes_the_pins_the_contract_s_tag_and_the_record() {
     // The comments stay.
     assert!(written.contains("# The SHA-256 of the release's Linux x86_64 archive"), "{written}");
     let manifest = util::read(&dir.join(CONTRACT).join("Cargo.toml")).unwrap();
-    assert_eq!(manifest.matches("tag = \"v0.12.0\"").count(), 2, "{manifest}");
+    assert_eq!(manifest.matches("tag = \"v0.12.0\"").count(), crates, "{manifest}");
     assert!(!manifest.contains(&format!("tag = \"{old}\"")), "{manifest}");
     let record = load_supported(&dir).unwrap();
     let rows: Vec<(&str, &str, &str)> = record.version.iter().map(|r| (r.tag.as_str(), r.track.as_str(), r.checked.as_str())).collect();
