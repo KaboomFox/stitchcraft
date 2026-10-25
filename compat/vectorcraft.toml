@@ -4,10 +4,10 @@
 repository = "https://github.com/storytold/vectorcraft"
 
 [tracks.stable]
-tag = "v0.16.0"
+tag = "v0.17.0"
 # The SHA-256 of the release's Linux x86_64 archive, whose app the window probe runs (`cargo xtask compat
 # window`). A new tag needs its own, which the release lists in its `SHA256SUMS.txt`.
-linux-x86_64-sha256 = "651fac17255271ad1dbc8ba1e8287db9f28e529ba9a14dd0383eca93a2cc5aa6"
+linux-x86_64-sha256 = "66c289d0bd354b71e4cd787193ea0481e3a1cd239f2a18068110ea36852fc026"
 
 [tracks.prerelease]
 # None newer than stable (VectorCraft's release workflow supports SemVer pre-releases such as 0.8.0-rc.1).

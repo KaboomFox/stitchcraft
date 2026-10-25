@@ -22,7 +22,7 @@ release and branch.
 | Commands | Declarative `cmd!` registry: id, label, menu path, shortcut, params doc, `enabled`, `run`; reachable from UI, JSON control channel and MCP | `crates/engine/src/cmd/*` |
 | Headless CLI | `vectorcraft-cli run [--in FILE] [--cmd ID [--params JSON]]... [--export FILE]...`, `convert`, `info`, `commands`, `mcp` | `apps/vectorcraft-cli/src/main.rs` |
 | Control channel | JSON lines; `engine.execute`, `ui.menu.invoke`, `ui.dialog.set`, `ui.click`, `ui.screenshot {path?}` (needs a presented frame), `ui.render {path?, scale?}` (headless artboard render) | `crates/ui-egui/src/control.rs` |
-| Releases | Tags `v0.1.0` … `v0.16.0`. Pushing the `release` branch drafts a GitHub Release, and SemVer pre-releases (`-rc.1`) are flagged as pre-releases | `.github/workflows/release.yml` |
+| Releases | Tags `v0.1.0` … `v0.17.0`. Pushing the `release` branch drafts a GitHub Release, and SemVer pre-releases (`-rc.1`) are flagged as pre-releases | `.github/workflows/release.yml` |
 
 ## 2. Extension points that exist today
 
@@ -43,8 +43,8 @@ release and branch.
 - **Limits** (`crates/plugins/src/runtime.rs`): module ≤ 32 MiB; memory ≤ 512 MiB; output ≤ 64 MiB JSON;
   **fuel 50 M instructions + 4,000 per input byte**; wall clock 60 s per filter run and **5 s per
   live-effect run** (`crates/plugins/src/effect.rs`), with a fresh instance for each call. An export gets
-  10 G instructions and 300 s (0.14). On `main` after 0.16, a filter that declares `"budget": "heavy"` gets
-  1 G and 300 s, once the user allows it at install.
+  10 G instructions and 300 s (0.14). From 0.17 a filter that declares `"budget": "heavy"` gets 1 G and
+  300 s, once the user allows it at install, and runs in the background.
 - **Live-effect input** is the object's geometry: `type`, `path`, `fillRule`, `bounds`. From 0.14 it
   holds the object's `fills` and `strokes` too, read only, each stroke with its width, and from 0.15 its
   join, cap and miter limit. `_context.item` says whether the effect is on the object or on one of its
@@ -69,8 +69,8 @@ release and branch.
 - **SVG import keeps only the attributes it understands.** The importer looks attributes up by name
   (presentation attributes, references, names such as `inkscape:label`) and has no place to keep unknown
   ones (`crates/svg/src/import.rs`), so an Ink/Stitch SVG opened in VectorCraft up to 0.16 loses its
-  `inkstitch:*` parameters. VectorCraft's `main` keeps attributes in other applications' namespaces after
-  0.16, from SVG import to SVG export, and reads none of them. SVG export can embed the whole native
+  `inkstitch:*` parameters. From 0.17 VectorCraft keeps attributes in other applications' namespaces from
+  SVG import to SVG export, and reads none of them. SVG export can embed the whole native
   document (`vectorcraft:document`) when editing data is preserved.
 - **Export formats are a static table** (`FORMATS` in `crates/engine/src/cmd/fileio/mod.rs`). From 0.14 an
   exporter plug-in adds a format to it, `plugin.<id>`, which is how StitchCraft can add PES.
@@ -245,7 +245,7 @@ An export may run 10 billion instructions, and 4,000 more for each byte of the d
 The engine's budget is `stitch export`'s, so a design that needs more is stopped by VectorCraft with its
 own error, `plug-in exceeded its instruction budget`, and `stitch export` writes it. The contract test
 `req_vc_011_a_fill_of_the_whole_hoop_exports_within_vectorcraft_s_limits` measures the largest designs
-the reference machine sews (VectorCraft 0.16.0, 2026-10-25):
+the reference machine sews (VectorCraft 0.16.0 and 0.17.0 alike, 2026-10-25):
 
 | Design, each fill with its defaults | Instructions | Of those allowed |
 |---|---|---|
@@ -342,7 +342,7 @@ conversion inside VectorCraft's host, as a live effect with the same limits as a
 
 A light run gets about 52 million, and almost every curved line would run out. The rails are the line
 offset as GEOS offsets it, and each offset builds the boundary of the whole stroke, once for each rail. A
-heavy filter gets 1 G, which VectorCraft's `main` adds after 0.16, and M6.12 waits for a release with it.
+heavy filter gets 1 G, which VectorCraft 0.17 adds.
 
 **A test sheet** drawn into the document is M6.12's too. Up to 0.14 a filter's output held geometry, paints,
 opacity and names, and never an effect record, and the objects it drew would not sew as a test sheet. From
@@ -577,8 +577,8 @@ tests write files for the adapter to read back (Level B, M6.6).
 Because VectorCraft up to 0.16 drops `inkstitch:*` attributes on SVG import, phase 1 offers
 `stitch import-inkstitch design.svg -o design.vectorcraft`: our SVG adapter reads the Ink/Stitch file
 and writes a VectorCraft document with the same art and the parameters as live-effect records (M8).
-VectorCraft's `main` keeps the attributes from SVG import to SVG export after 0.16, but its live effects
-read none of them.
+From 0.17 VectorCraft keeps the attributes from SVG import to SVG export, but its live effects read none
+of them.
 
 ## 5. Phase 2: plug-in features proposed upstream (summary)
 
@@ -591,10 +591,10 @@ item is generic, useful to any plug-in and not only embroidery:
 | 1. Exporter plug-ins, for File › Export › PES | 0.14.0 | M6.9 |
 | 2. Rich parameter schemas: labels, units, groups, help, conditions, texts and lists, 256 parameters | 0.14.0 | M6.10 |
 | 3. Display-only overlays from live effects, real stitch previews at low cost | in review | M9 |
-| 4. Budget classes, with the user's consent | heavy filters on `main` after 0.16.0, heavy live effects proposed | M6.12, M9 |
+| 4. Budget classes, with the user's consent | heavy filters in 0.17.0, heavy live effects proposed | M6.12, M9 |
 | 5. Document-level plug-in data, for the machine profile and palettes | 0.16.0, for filters and exporters | M6.11 |
 | 6. Read-only context for live effects | the object's paints in 0.14.0, the markers beside it proposed | M6.8, M9 |
-| 7. SVG foreign-attribute preservation | `main` after 0.16.0 | Ink/Stitch files keep their settings through VectorCraft |
+| 7. SVG foreign-attribute preservation | 0.17.0 | Ink/Stitch files keep their settings through VectorCraft |
 | 8. Effects and stroke style in filter objects | 0.15.0 | M6.12 |
 
 ## 6. Phase 3: an in-tree crate (optional)

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Audience** | ArtCraft / VectorCraft maintainers |
-| **Status** | Mostly adopted ([status](#status)): 5 proposals in VectorCraft 0.14.0 to 0.16.0 and 2 more on its `main`. P3 is in review, and the rest of P4 and P6 is open |
+| **Status** | Mostly adopted ([status](#status)): 7 proposals in VectorCraft 0.14.0 to 0.17.0. P3 is in review, and the rest of P4 and P6 is open |
 | **Compatibility** | Additive. Every plug-in written for ABI v1 keeps working, and `vc_abi_version` still returns 1 |
 | **Author's interest** | StitchCraft (machine embroidery), but every proposal serves other plug-ins too |
 
@@ -18,17 +18,17 @@ features in M6.8 to M6.12, and proposes the open ones in M9.
 
 ## Status
 
-Checked against VectorCraft's `docs/plugins.md` and its history, on `main` at `8bf090b` (2026-10-24):
+Checked against VectorCraft's `docs/plugins.md` and its history, in the 0.17.0 release (2026-10-25):
 
 | Proposal | In VectorCraft | Since | Pull request |
 |---|---|---|---|
 | [P1](#p1-exporter-plug-ins), exporter plug-ins | Adopted | 0.14.0 | [#3171](https://github.com/storytold/vectorcraft/pull/3171) |
 | [P2](#p2-rich-parameter-schemas), rich parameter schemas | Adopted | 0.14.0 | [#3172](https://github.com/storytold/vectorcraft/pull/3172) |
 | [P3](#p3-display-only-overlays-for-live-effects), overlays for live effects | In review | | [#3807](https://github.com/storytold/vectorcraft/pull/3807) |
-| [P4](#p4-budget-classes-for-filters), budget classes | Heavy filters adopted, heavy live effects open | `main`, after 0.16.0 | [#3721](https://github.com/storytold/vectorcraft/pull/3721) |
+| [P4](#p4-budget-classes-for-filters), budget classes | Heavy filters adopted, heavy live effects open | 0.17.0 | [#3721](https://github.com/storytold/vectorcraft/pull/3721) |
 | [P5](#p5-document-level-plug-in-data), document-level plug-in data | Adopted for filters and exporters | 0.16.0 | [#3720](https://github.com/storytold/vectorcraft/pull/3720) |
 | [P6](#p6-the-paints-of-a-live-effects-object), context for live effects | Fills and strokes adopted, neighbours open | 0.14.0, a stroke's style 0.15.0 | [#3173](https://github.com/storytold/vectorcraft/pull/3173) |
-| [P7](#p7-preserve-foreign-svg-attributes), foreign SVG attributes | Adopted | `main`, after 0.16.0 | [#3758](https://github.com/storytold/vectorcraft/pull/3758) |
+| [P7](#p7-preserve-foreign-svg-attributes), foreign SVG attributes | Adopted | 0.17.0 | [#3758](https://github.com/storytold/vectorcraft/pull/3758) |
 | [P8](#p8-effects-and-stroke-style-in-filter-objects), effects and stroke style in filters | Adopted | 0.15.0 | [#3174](https://github.com/storytold/vectorcraft/pull/3174) |
 
 The plug-in classes this RFC was for, and what VectorCraft serves of them now:
