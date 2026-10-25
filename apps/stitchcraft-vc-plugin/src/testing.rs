@@ -3,9 +3,23 @@
 use serde_json::{Map, Value, json};
 use stitchcraft_params::Family;
 
-/// VectorCraft's input for one object whose path is `path`.
+/// VectorCraft's input for one object whose path is `path`, as up to 0.13 gives it: without its paints.
 pub(crate) fn input(path: &Value) -> Vec<u8> {
     serde_json::to_vec(&json!({"objects": [{"type": "path", "path": path, "fillRule": "nonzero", "bounds": [0, 0, 100, 100]}]})).unwrap()
+}
+
+/// VectorCraft's input for one object whose path is `path`, as 0.15 and later give it: with a black stroke
+/// `width` points wide, mitred and with butt caps, and no fill.
+pub(crate) fn stroked(path: &Value, width: f64) -> Vec<u8> {
+    let stroke = json!({"paint": {"type": "solid", "color": {"model": "rgb", "r": 0, "g": 0, "b": 0}}, "width": width, "join": "miter", "cap": "butt", "miterLimit": 10});
+    let object = json!({"type": "path", "path": path, "fillRule": "nonzero", "bounds": [0, 0, 100, 100], "fills": [], "strokes": [stroke]});
+    serde_json::to_vec(&json!({"objects": [object]})).unwrap()
+}
+
+/// An open line through `points`, in points.
+pub(crate) fn line(points: &[(f64, f64)]) -> Value {
+    let anchors: Vec<Value> = points.iter().map(|(x, y)| json!({"p": [x, y]})).collect();
+    json!({"subpaths": [{"anchors": anchors}]})
 }
 
 /// The parameters VectorCraft resolves from `family`'s manifest for a record that sets `set`: every other

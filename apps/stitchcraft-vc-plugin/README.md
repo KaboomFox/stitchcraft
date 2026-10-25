@@ -9,7 +9,9 @@ shows as much of the stitches as VectorCraft lets a live effect spend on, in pla
 (M6.3, `src/preview.rs`). A stroke and a satin column show their stitches, and a fill its rows; the
 outline shows when they cost too much, and the dialog's `preview_level` picks a level. VectorCraft's own
 commands are the tools, and its Graphic Styles keep the effects' settings as presets (M6.4,
-`docs/src/user/how-to/vectorcraft-columns-and-presets.md`).
+`docs/src/user/how-to/vectorcraft-columns-and-presets.md`). From VectorCraft 0.14 a stroke or a satin effect
+follows its object's stroke, so a satin column drawn as one path and a zigzag stroke show their stitches as
+wide as it (M6.8, `REQ-VC-010`).
 Without a family the module is M0.6's *hello* effect, which returns the object's geometry unchanged. The contract tests measure the host's costs with it
 (`docs/src/design/vectorcraft-integration.md`).
 

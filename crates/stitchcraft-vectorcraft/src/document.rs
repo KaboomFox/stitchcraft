@@ -88,6 +88,10 @@ const EXPAND: &str = "Make paths of it with Object › Expand.";
 /// How what one of VectorCraft's effects draws becomes paths.
 const EXPAND_EFFECT: &str = "Make paths of what the effect draws with Object › Expand Appearance.";
 
+/// Where StitchCraft's effects sew: not on one of an object's fills or strokes, which VectorCraft lets an
+/// effect sit on too.
+pub(crate) const ON_THE_OBJECT: &str = "Apply StitchCraft's effects to the object itself.";
+
 /// How a stroke as VectorCraft draws it becomes shapes.
 const OUTLINE: &str = "Make shapes of the stroke as it is drawn with Object › Path › Outline Stroke, and stitch those.";
 
@@ -519,10 +523,7 @@ impl Reader {
         }
         for effect in node.appearance.items.iter().filter(|item| drawn(item)).flat_map(|item| &item.effects).filter(|e| e.visible) {
             let (message, hint) = match ours(effect) {
-                Some(_) => (
-                    "A StitchCraft effect on one fill or stroke of the appearance is not used.".to_string(),
-                    "Apply StitchCraft's effects to the object itself.",
-                ),
+                Some(_) => ("A StitchCraft effect on one fill or stroke of the appearance is not used.".to_string(), ON_THE_OBJECT),
                 None => (format!("The effect {} on one of its fills or strokes is not applied.", quoted(&effect.id)), EXPAND_EFFECT),
             };
             self.feature(label, message, Some(hint));
@@ -615,7 +616,11 @@ impl Reader {
                 Family::Fill => Shape::Fill { path: path.clone(), rule },
                 Family::Stroke | Family::Satin => {
                     set.set(SATIN_COLUMN, if *family == Family::Satin { "true" } else { "false" });
-                    let (width, join, cap) = style.unwrap_or((Mm::ZERO, join_of(None, None), Cap::Butt));
+                    let (width, join, cap) = style.unwrap_or_else(|| {
+                        // Without a stroke, as a stroke whose width, join and cap are not given.
+                        let (_, join, cap) = stroke_style(None, None, None, None);
+                        (Mm::ZERO, join, cap)
+                    });
                     Shape::Stroke { path: path.clone(), width, join, cap }
                 }
             };
@@ -846,8 +851,7 @@ impl Reader {
         if let Some(name) = item.join.as_deref().filter(|j| !matches!(*j, "Miter" | "Round" | "Bevel")) {
             self.feature(label, format!("The stroke join {} is not one StitchCraft reads, and a miter is used.", quoted(name)), None);
         }
-        let width = item.width.and_then(|w| Mm::from_points(w.max(0.0)).ok());
-        (width, join_of(item.join.as_deref(), item.miter_limit), cap_of(item.cap.as_deref()))
+        stroke_style(item.width, item.join.as_deref(), item.miter_limit, item.cap.as_deref())
     }
 
     /// The object's path in millimetres; `None`, said, when it cannot be used.
@@ -884,37 +888,38 @@ impl Reader {
     }
 }
 
-/// A stroke's join as VectorCraft draws it: a miter, with its limit, unless round or bevel.
-fn join_of(join: Option<&str>, limit: Option<f64>) -> Join {
-    match join {
-        Some("Round") => Join::Round,
-        Some("Bevel") => Join::Bevel,
+/// A stroke's style as VectorCraft draws it, from its width in points, its join, its miter limit and its cap:
+/// the width in millimetres, `None` when it is not a number (VectorCraft writes `null` for one), a width
+/// below 0 being 0; a miter unless the join is round or bevel; and a butt cap unless it is round or square.
+/// A document names joins and caps as VectorCraft's code does (`Round`), and a plug-in's input as SVG does
+/// (`round`), so any case reads.
+pub(crate) fn stroke_style(width: Option<f64>, join: Option<&str>, limit: Option<f64>, cap: Option<&str>) -> (Option<Mm>, Join, Cap) {
+    let named = |given: Option<&str>, name: &str| given.is_some_and(|given| given.eq_ignore_ascii_case(name));
+    let join = if named(join, "round") {
+        Join::Round
+    } else if named(join, "bevel") {
+        Join::Bevel
+    } else {
         // A limit below 1 bevels every corner, as a limit of 1 does.
-        _ => Join::Miter { limit: limit.filter(|l| l.is_finite()).unwrap_or(MITER_LIMIT).max(1.0) },
-    }
-}
-
-/// A stroke's cap as VectorCraft draws it: butt unless round or square.
-fn cap_of(cap: Option<&str>) -> Cap {
-    match cap {
-        Some("Round") => Cap::Round,
-        Some("Square") => Cap::Square,
-        _ => Cap::Butt,
-    }
+        Join::Miter { limit: limit.filter(|l| l.is_finite()).unwrap_or(MITER_LIMIT).max(1.0) }
+    };
+    let cap = if named(cap, "round") {
+        Cap::Round
+    } else if named(cap, "square") {
+        Cap::Square
+    } else {
+        Cap::Butt
+    };
+    (width.and_then(|w| Mm::from_points(w.max(0.0)).ok()), join, cap)
 }
 
 /// Whether VectorCraft draws an appearance item: it is turned on and not of opacity 0, its paint is neither
 /// none nor a gradient without stops, and a stroke is wider than 0. A width that is not a number is said
 /// where it is used.
 fn drawn(item: &Item) -> bool {
-    let paints = |paint: &Paint| match paint.kind.as_str() {
-        "none" => false,
-        "gradient" => paint.gradient.as_ref().is_some_and(|gradient| !gradient.stops.is_empty()),
-        _ => true,
-    };
     item.visible
         && item.opacity != Some(0.0)
-        && item.paint.as_ref().is_some_and(paints)
+        && item.paint.as_ref().is_some_and(Paint::paints)
         && (item.kind != "stroke" || item.width.is_none_or(|w| w > 0.0))
 }
 
