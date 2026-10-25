@@ -5,6 +5,32 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.12: StitchCraft's tools in VectorCraft, as 2 filters under **Object › Plug-ins**.
+  - **StitchCraft Stroke to Satin** makes each selected line into a satin column drawn with its 2 rails and
+    rungs, with the satin effect, as Ink/Stitch's Stroke to Satin does (`REQ-VC-014`). The rails and rungs
+    are those the engine makes of a column drawn as one path when it sews it. The column sews as the line
+    did, as wide as its stroke. Its rails and rungs can then be edited. The column keeps the line's stroke
+    paint, one CSS pixel wide, its satin settings, or the defaults, and its other effects. Each line of a
+    path makes a column of its own, and a column already drawn with rails is left as it is. When a line
+    can't be made into such a column, or a path has no stroke, the run is refused with `SC-E0814`, and the
+    document stays as it was. It is a heavy filter of VectorCraft 0.17, which gives it 1 billion instructions once the user
+    allows it when installing it: M6.4's lines take 18 to 233 million in VectorCraft's host. The engine
+    draws the column (`generators::satin::drawn`), each rung a little past both rails, and one more rung at
+    the start of a column of 2 rungs or none, which Ink/Stitch's rule would read otherwise.
+  - **StitchCraft Test Sheet** draws a test sheet drawn as a design, TS-02B to TS-09, into the document
+    from VectorCraft 0.16, each object with its StitchCraft effect and settings (`REQ-VC-015`). The sheet is
+    moved by whole millimetres to the middle of the artboard (`Design::moved`). It sews as its design moved,
+    and exports within 17 % of an export's budget. `TestSheet::design` gives a sheet's design, and
+    `TestSheet::designed` says whether it has one.
+  - `stitchcraft_vectorcraft::filter` reads what VectorCraft gives a filter and writes what a filter gives
+    back. What it hands back unchanged it writes as the text VectorCraft gave. A paint then keeps its
+    swatch, and a record stays as it was.
+  - The plug-in builds 9 modules, `stroke-to-satin` and `testsheet` the new ones. The tests allow a heavy
+    `budget` in a filter's manifest alone, as VectorCraft 0.17 does.
+  - Both filters run in VectorCraft's host in Level A. Level B's new scenarios `stroke-to-satin` and
+    `testsheets` check that the columns sew as the lines did and that each sheet sews as its design moved.
+    Each heavy module a scenario installs is allowed with `allowHeavy`, and the new `sheets` check names
+    the sheet drawn in a document.
 - M6.11: a VectorCraft document keeps its design settings and machine (`REQ-VC-013`). From VectorCraft
   0.16, **Object › Plug-ins › StitchCraft Design Settings** keeps the machine and Ink/Stitch's 3 design
   settings, the shortest jump, the shortest stitch and the narrowest satin stroke, with the document, as
@@ -727,6 +753,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- `SC-E0813` is now *VectorCraft too old for the filter*. Each StitchCraft filter declines with it in a
+  VectorCraft older than it needs, Design Settings and Test Sheet before 0.16, and Stroke to Satin before
+  0.15. Its message names the version to update to.
 - The compatibility gate pins VectorCraft 0.17.0, adopted from 0.16.0. Every contract case and scenario
   passes against it unchanged, and an export of a fill of the whole hoop costs what it cost in 0.16.0.
   0.17.0 adds heavy filters, which M6.12's Convert Line to Satin needs: a filter that declares

@@ -94,6 +94,9 @@ Invariants, checked by `Design::new`: element ids are unique, and every point is
 ±10,000 mm, as far as machine-file coordinates go. No stroke is narrower than 0, a miter limit is a
 finite number of at least 1, and the settings' lengths are not negative. Adapters drop what they cannot
 represent with a diagnostic of their own, so a failed check is a bug in the adapter (`SC-E0009`).
+`Design::moved` gives the design moved by an offset, every point of its elements and its origin and stop
+position, checked the same way. VectorCraft's Test Sheet filter draws a test sheet in the middle of the
+artboard with it (`REQ-VC-015`).
 
 **Commands** attached to elements come with M8, for Ink/Stitch's command symbols such as start and end
 points. Trims and stops are the element parameters `trim_after` and `stop_after`, and the origin and

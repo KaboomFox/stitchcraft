@@ -97,7 +97,7 @@ pub fn read_effect(family: Family, input: &[u8], params: &[u8], budget: &Budget)
         Family::Stroke | Family::Satin => {
             set.set(SATIN_COLUMN, if family == Family::Satin { "true" } else { "false" });
             match followed(&strokes) {
-                Some((width, join, cap)) => (Shape::Stroke { path, width, join, cap }, true),
+                Some((_, width, join, cap)) => (Shape::Stroke { path, width, join, cap }, true),
                 None => (Shape::stroke(path), false),
             }
         }
@@ -115,13 +115,18 @@ fn on_a_paint(params: &Map<String, Value>) -> bool {
     item.is_some_and(|item| item.contains_key("fill") || item.contains_key("stroke"))
 }
 
-/// The width, join and cap of the stroke a stroke or a satin effect follows among `strokes`, bottom first:
-/// the topmost that has a paint and a width that isn't 0, as the reader takes the topmost stroke VectorCraft
-/// draws. A width that isn't a number is 0, as the reader takes it. `None` when no stroke has both.
-fn followed(strokes: &[EffectStroke]) -> Option<(Mm, Join, Cap)> {
-    let stroke = strokes.iter().rev().find(|stroke| stroke.paint.as_ref().is_some_and(Paint::paints) && stroke.width.is_none_or(|w| w > 0.0))?;
+/// The stroke a stroke or a satin effect follows among `strokes`, bottom first, with its width, join and
+/// cap: the topmost that has a paint and a width that isn't 0, as the reader takes the topmost stroke
+/// VectorCraft draws. A width that isn't a number is 0, as the reader takes it. `None` when no stroke has
+/// both.
+pub(crate) fn followed(strokes: &[EffectStroke]) -> Option<(usize, Mm, Join, Cap)> {
+    let (at, stroke) = strokes
+        .iter()
+        .enumerate()
+        .rev()
+        .find(|(_, stroke)| stroke.paint.as_ref().is_some_and(Paint::paints) && stroke.width.is_none_or(|w| w > 0.0))?;
     let (width, join, cap) = stroke_style(stroke.width, stroke.join.as_deref(), stroke.miter_limit, stroke.cap.as_deref());
-    Some((width.unwrap_or(Mm::ZERO), join, cap))
+    Some((at, width.unwrap_or(Mm::ZERO), join, cap))
 }
 
 /// What a live effect of `family` returns for an element sewn with the needle points `groups`, each a
@@ -170,7 +175,13 @@ pub fn effect_error(diagnostic: &Diagnostic) -> Vec<u8> {
 /// `SC-E0806` for what VectorCraft passed a live effect that does not read as its plug-in ABI says, which
 /// `what` explains.
 fn refused(what: &str) -> Diagnostic {
-    Diagnostic::new(Code::VcUnreadable, format!("What VectorCraft passed the live effect does not read as its plug-in ABI v1 says. {what}"))
+    refused_plugin("live effect", what)
+}
+
+/// `SC-E0806` for what VectorCraft passed a plug-in of `kind`, such as a filter, that does not read as its
+/// plug-in ABI says, which `what` explains.
+pub(crate) fn refused_plugin(kind: &str, what: &str) -> Diagnostic {
+    Diagnostic::new(Code::VcUnreadable, format!("What VectorCraft passed the {kind} does not read as its plug-in ABI v1 says. {what}"))
 }
 
 /// The corners of the stitch from `a` to `b` as a closed ribbon [`RIBBON_MM`] wide; `None` for a stitch

@@ -8,9 +8,6 @@
 //! so (`SC-W0307`). Top to bottom: without underlay, with Ink/Stitch's default underlay, and with it and 2
 //! gap-filling rows. Each copy is trimmed after, so no thread runs across the next.
 
-use stitchcraft_core::Code;
-use stitchcraft_plan::StitchPlan;
-
 use super::designed::{Drawing, polygon, round};
 use super::sketch::SheetError;
 use super::{EMERALD_GREEN, thread};
@@ -32,7 +29,7 @@ pub const WIDE: f64 = 50.0;
 pub const BAR: (f64, f64) = (56.0, 66.0);
 
 /// Draws TS-09.
-pub(super) fn build() -> Result<StitchPlan, SheetError> {
+pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let green = thread(EMERALD_GREEN)?;
     let mut d = Drawing::new("ts09");
     let [(left, top), (right, bottom)] = SQUARE;
@@ -47,5 +44,5 @@ pub(super) fn build() -> Result<StitchPlan, SheetError> {
         ];
         d.fill(name, rings, &green, &[params, &[("trim_after", "true")]].concat())?;
     }
-    d.plan_saying(&[Code::FillPartsApart; 3])
+    Ok(d)
 }

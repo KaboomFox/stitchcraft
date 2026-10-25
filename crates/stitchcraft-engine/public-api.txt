@@ -89,6 +89,7 @@ pub stitchcraft_engine::design::Design::settings: stitchcraft_engine::design::De
 impl stitchcraft_engine::design::Design
 pub fn stitchcraft_engine::design::Design::bounds(&self) -> core::option::Option<stitchcraft_core::rect::Rect>
 pub fn stitchcraft_engine::design::Design::elements(&self) -> &[stitchcraft_engine::design::Element]
+pub fn stitchcraft_engine::design::Design::moved(&self, [f64; 2]) -> core::result::Result<stitchcraft_engine::design::Design, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_engine::design::Design::new(alloc::vec::Vec<stitchcraft_engine::design::Element>, stitchcraft_engine::design::DesignSettings) -> core::result::Result<stitchcraft_engine::design::Design, stitchcraft_core::diag::Diagnostic>
 pub struct stitchcraft_engine::design::DesignSettings
 pub stitchcraft_engine::design::DesignSettings::collapse_len: stitchcraft_core::units::Mm
@@ -208,6 +209,20 @@ pub fn stitchcraft_engine::generators::running::RunningParams::from_set(&stitchc
 pub fn stitchcraft_engine::generators::running::RunningParams::from_set_as(&stitchcraft_params::set::ParamSet, stitchcraft_params::stitch_type::StitchType) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 pub fn stitchcraft_engine::generators::running::running_stitch(&stitchcraft_engine::design::Path, &stitchcraft_engine::generators::running::RunningParams, &stitchcraft_engine::generators::passes::RepeatParams, stitchcraft_core::units::Mm, &stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::satin
+pub mod stitchcraft_engine::generators::satin::drawn
+pub enum stitchcraft_engine::generators::satin::drawn::Unmade
+pub stitchcraft_engine::generators::satin::drawn::Unmade::NoRails
+pub stitchcraft_engine::generators::satin::drawn::Unmade::PartsLeftOut(usize)
+pub stitchcraft_engine::generators::satin::drawn::Unmade::ReadOtherwise
+impl core::fmt::Display for stitchcraft_engine::generators::satin::drawn::Unmade
+pub fn stitchcraft_engine::generators::satin::drawn::Unmade::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
+pub struct stitchcraft_engine::generators::satin::drawn::Column
+pub stitchcraft_engine::generators::satin::drawn::Column::rails: [alloc::vec::Vec<stitchcraft_core::units::Point>; 2]
+pub stitchcraft_engine::generators::satin::drawn::Column::rungs: alloc::vec::Vec<[stitchcraft_core::units::Point; 2]>
+impl stitchcraft_engine::generators::satin::drawn::Column
+pub fn stitchcraft_engine::generators::satin::drawn::Column::path(&self) -> stitchcraft_engine::design::Path
+pub const stitchcraft_engine::generators::satin::drawn::REACH: f64
+pub fn stitchcraft_engine::generators::satin::drawn::from_line(&stitchcraft_engine::design::Subpath, stitchcraft_core::units::Mm, stitchcraft_engine::design::Join, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::result::Result<stitchcraft_engine::generators::satin::drawn::Column, stitchcraft_engine::generators::satin::drawn::Unmade>, stitchcraft_core::budget::Exhausted>
 pub struct stitchcraft_engine::generators::satin::SatinLengths
 pub stitchcraft_engine::generators::satin::SatinLengths::jump: stitchcraft_core::units::Mm
 pub stitchcraft_engine::generators::satin::SatinLengths::max_stitch: core::option::Option<stitchcraft_core::units::Mm>
@@ -420,6 +435,8 @@ pub stitchcraft_engine::testsheets::TestSheet::id: &'static str
 pub stitchcraft_engine::testsheets::TestSheet::profile: &'static stitchcraft_plan::profile::MachineProfile
 pub stitchcraft_engine::testsheets::TestSheet::title: &'static str
 impl stitchcraft_engine::testsheets::TestSheet
+pub fn stitchcraft_engine::testsheets::TestSheet::design(&self) -> core::option::Option<core::result::Result<stitchcraft_engine::design::Design, stitchcraft_engine::testsheets::SheetError>>
+pub const fn stitchcraft_engine::testsheets::TestSheet::designed(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::plan(&self) -> core::result::Result<stitchcraft_plan::plan::StitchPlan, stitchcraft_engine::testsheets::SheetError>
 pub const stitchcraft_engine::testsheets::STITCH_LEN: f64
 pub static stitchcraft_engine::testsheets::SHEETS: &[stitchcraft_engine::testsheets::TestSheet]

@@ -5,10 +5,11 @@
 //! rows or its outline, or the object as it is, with why ([`sew`]).
 
 use serde_json::{Value, json};
+use stitchcraft_core::{Code, Diagnostic, Fix};
 use stitchcraft_params::Family;
 use stitchcraft_vectorcraft::{effect_error, read_effect};
 
-use crate::preview::{show, spendable};
+use crate::preview::{FUEL_BASE, show, spendable};
 
 /// Why a run failed. The ABI shim turns these into the negative return codes VectorCraft expects.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -34,11 +35,17 @@ impl RunError {
 /// stitches, the output says why instead, and VectorCraft shows that as the plug-in's last error and draws
 /// the object as it is.
 pub fn sew(family: Family, input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
-    let spend = spendable(input.len(), params.len());
+    let spend = spendable(FUEL_BASE, input.len(), params.len());
     Ok(match read_effect(family, input, params, &crate::preview::reading(spend)) {
         Ok(effect) => show(family, &effect, spend),
         Err(refusal) => effect_error(&refusal),
     })
+}
+
+/// `SC-E0813`: a filter needs what the VectorCraft that ran it doesn't give a filter, which `message` says,
+/// and VectorCraft `version` or later does. The filter declines with it, and VectorCraft changes nothing.
+pub(crate) fn too_old(message: &str, version: &str) -> Diagnostic {
+    Diagnostic::new(Code::VcTooOld, message).with_fix(Fix::Hint(format!("Update VectorCraft to {version} or later.")))
 }
 
 /// The *hello* live effect: every input object's geometry, unchanged.

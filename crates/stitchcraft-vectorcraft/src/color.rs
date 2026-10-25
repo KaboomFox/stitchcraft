@@ -38,6 +38,12 @@ pub(crate) fn rgb(color: &Color) -> Option<Rgb> {
     Some(Rgb::new(byte(r)?, byte(g)?, byte(b)?))
 }
 
+/// A byte as a component from 0 to 1, as a filter gives VectorCraft a colour ([`crate::filter::solid`]),
+/// which [`byte`] reads as the same byte again.
+pub(crate) fn component(byte: u8) -> f64 {
+    f64::from(byte) / 255.0
+}
+
 /// A component from 0 to 1 as a byte, as VectorCraft rounds it; `None` when it is not a number.
 // A whole number from 0 to 255 after the clamp and the rounding, so the cast is exact.
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
@@ -86,6 +92,13 @@ mod tests {
             *slot = Some(*v);
         }
         c
+    }
+
+    #[test]
+    fn a_byte_written_as_a_component_reads_as_itself() {
+        for b in 0..=u8::MAX {
+            assert_eq!(byte(component(b)), Some(b));
+        }
     }
 
     #[test]

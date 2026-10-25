@@ -154,7 +154,8 @@ another.
 | `SC-I0810` | Info | VectorCraft live effect leaves the object as it is (it sews no stitch, its preview level needs more work than VectorCraft lets a live effect do, it is a satin column drawn as one path or a zigzag stroke and VectorCraft gives the effect no stroke, or the effect is on one of the object's fills or strokes) | M6 |
 | `SC-I0811` | Info | VectorCraft object left out, as its name asks (an object or a layer named `stitch:ignore`) | M6 |
 | `SC-W0812` | Warning | VectorCraft design setting ignored (a length that isn't a number of 0 or more, or a machine StitchCraft doesn't have, which the Design Settings filter keeps with the document) | M6 |
-| `SC-E0813` | Error | VectorCraft too old to keep the design settings (the Design Settings filter run by a VectorCraft before 0.16, which doesn't keep a filter's data) | M6 |
+| `SC-E0813` | Error | VectorCraft too old for the filter (the Design Settings filter run by a VectorCraft before 0.16, which doesn't keep a filter's data, Stroke to Satin by one before 0.15, which doesn't keep a filter's effect records, and Test Sheet by one before 0.16, which doesn't say it keeps them) | M6 |
+| `SC-E0814` | Error | VectorCraft line not made into a satin column (Stroke to Satin refused a selection because it is empty or a path has no stroke, or because a line drawn with its rails and rungs would sew otherwise) | M6 |
 | `SC-I0901` | Info | Shapes digitized automatically (`--auto`), counted by their stitches (running stitches, satin columns or tatami fills) | M13 |
 | `SC-I0902` | Info | Line a satin column cannot follow; filled (a part of an automatic line that turns more tightly than it is wide or is shorter than a CSS pixel, or a dot its cap draws) | M13 |
 | `SC-W0903` | Warning | Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin) | M13 |

@@ -1,0 +1,31 @@
+# Level B: lines with the satin effect, each as wide as its stroke, made into satin columns of rails and rungs
+# by StitchCraft's Stroke to Satin, a heavy filter VectorCraft 0.17 installs once the user allows it
+# (docs/src/design/compatibility-gate.md). The columns sew as the lines did. The S curve and the circle need
+# more work than a light filter's run gets. Coordinates are points: the S curve is 30 mm long, the circle 30 mm
+# across, and the stroke 3 mm wide.
+description = "Lines with the satin effect, made into satin columns of rails and rungs by the Stroke to Satin filter, sew as they did."
+requirements = ["REQ-VC-014"]
+
+[[run]]
+plugins = ["satin", "stroke-to-satin", "pes"]
+steps = [
+  { cmd = "path.create", params = { d = "M 0 0 C 14.17 -22.68 28.35 -22.68 42.52 0 C 56.69 22.68 70.87 22.68 85.04 0" } },
+  { cmd = "path.create", params = { d = "M 0 100 L 42.52 156.69 L 85.04 100" } },
+  { cmd = "shape.ellipse", params = { x = 120, y = 0, width = 85.04, height = 85.04 } },
+  { cmd = "select.all" },
+  { cmd = "paint.setFill", params = { none = true } },
+  { cmd = "paint.setStroke", params = { color = "#1a4e9c" } },
+  { cmd = "stroke.set", params = { weight = 8.5 } },
+  { apply = "satin" },
+  { export = "lines.vectorcraft" },
+  { export = "lines.png" },
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.stroke-to-satin" } },
+  { export = "columns.vectorcraft" },
+  { export = "columns.png" },
+  { export = "columns.pes" },
+]
+
+[expect]
+same = [["lines.vectorcraft", "columns.vectorcraft"]]
+elements = [{ file = "columns.vectorcraft", element = "satin", count = 3, thread = "#1a4e9c" }]
+exported = [["columns.vectorcraft", "columns.pes"]]

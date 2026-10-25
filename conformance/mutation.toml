@@ -11,7 +11,7 @@ stitchcraft-params = 0
 stitchcraft-plan = 48
 stitchcraft-render = 26
 stitchcraft-svg = 1
-stitchcraft-vc-plugin = 22
+stitchcraft-vc-plugin = 23
 stitchcraft-vectorcraft = 2
 
 # Mutants that change nothing a test could observe. A pull request may leave these in the lines it
@@ -310,3 +310,9 @@ file = "crates/stitchcraft-engine/src/normalize/stroke.rs"
 mutant = "replace > with >= in within"
 line = "dot > 0.0 && cross.abs() <= sine * lengths"
 why = "where the dot product is 0 the 2 directions are square to each other, so the cross product is as large as their lengths' product, which no sine below 1 allows, and every bound is below 1: stroke_area asks for one only on a line wider than twice the tolerance"
+
+[[equivalent]]
+file = "apps/stitchcraft-vc-plugin/src/stroke_to_satin.rs"
+mutant = "replace > with >= in columns"
+line = "if satin.is_some() && path.subpaths.len() > 1 && matches!(recognize(&path, meter).map_err(|_| exhausted())?.shape, Ok(Column::Rails(_))) {"
+why = "a path of one subpath is read as a centre line, never as rails, so letting it past the count changes only the work charged"
