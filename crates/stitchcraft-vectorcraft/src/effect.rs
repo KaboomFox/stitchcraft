@@ -2,10 +2,11 @@
 //! the element its stitch family sews, and needle points, as geometry VectorCraft draws.
 //!
 //! **What it is given.** One object's geometry, `{"objects": [{"type", "path", "fillRule", "bounds"}]}`,
-//! where the path is the `PathData` a document holds ([`crate::geometry`]). Beside it come the effect's
-//! parameters as VectorCraft resolved them from the plug-in's manifest, and VectorCraft's own `_context`,
-//! which is left out. The parameters are read as an effect record's are, and the family says whether a
-//! stroke is a satin column, as it does for a record. The object comes without its paints, so a stroke
+//! where the path is the `PathData` a document holds ([`crate::geometry`]). From VectorCraft 0.14 the
+//! object also has its `fills` and `strokes`, which are left out until M6.8 reads the stroke. Beside it
+//! come the effect's parameters as VectorCraft resolved them from the plug-in's manifest, and VectorCraft's
+//! own `_context`, which is left out. The parameters are read as an effect record's are, and the family
+//! says whether a stroke is a satin column, as it does for a record. Without the object's paints, a stroke
 //! effect's element has the stand-in stroke of [`Shape::stroke`]: a running stitch does not use its width,
 //! and a satin column drawn with rails does not need it. The plug-in leaves a satin column drawn as one path
 //! and a zigzag stroke as they are, since both are as wide as their stroke (`SC-I0810`).
