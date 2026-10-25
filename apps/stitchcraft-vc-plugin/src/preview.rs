@@ -50,8 +50,12 @@ use crate::manifest::{Param, Schema};
 /// The instructions VectorCraft lets any live effect run (`Limits::default()` in its `crates/plugins`,
 /// which the contract tests check).
 pub const FUEL_BASE: u64 = 50_000_000;
-/// The instructions VectorCraft adds for each byte of a live effect's input.
+/// The instructions VectorCraft adds for each byte of a live effect's input, and of a filter's.
 pub const FUEL_PER_BYTE: u64 = 4_000;
+/// The instructions VectorCraft lets a heavy filter run besides those for each byte of its input, from 0.17
+/// (`HEAVY_FUEL` in its `crates/plugins`, which the contract tests check): Stroke to Satin's
+/// ([`crate::stroke_to_satin`]).
+pub const HEAVY_FUEL: u64 = 1_000_000_000;
 /// What reading JSON costs, for each byte of the input and the parameters (512 measured).
 const READ_PER_BYTE: u64 = 650;
 /// What a run costs before and besides its work: starting, reading the settings, the manifest's
@@ -119,12 +123,12 @@ const HELP: &str = "How much of the stitches the effect shows. Exact shows every
 /// The page that explains the levels.
 const PAGE: &str = "design/vectorcraft-integration.html#live-effect-previews-within-v1-budgets";
 
-/// The instructions a live effect has for its work, given `input` and `params` bytes to read: what
-/// VectorCraft allows, less reading and setting up.
-pub fn spendable(input: usize, params: usize) -> u64 {
+/// The instructions a plug-in has for its work, given `input` and `params` bytes to read: what VectorCraft
+/// allows, `base` besides [`FUEL_PER_BYTE`] for each byte of the input, less reading and setting up. The
+/// base is [`FUEL_BASE`] for a live effect, and [`HEAVY_FUEL`] for a heavy filter.
+pub fn spendable(base: u64, input: usize, params: usize) -> u64 {
     let bytes = |n: usize| u64::try_from(n).unwrap_or(u64::MAX);
-    FUEL_BASE
-        .saturating_add(FUEL_PER_BYTE.saturating_mul(bytes(input)))
+    base.saturating_add(FUEL_PER_BYTE.saturating_mul(bytes(input)))
         .saturating_sub(READ_PER_BYTE.saturating_mul(bytes(input).saturating_add(bytes(params))))
         .saturating_sub(SETUP)
 }
@@ -297,6 +301,12 @@ pub fn reading(spend: u64) -> Budget {
     Spend(spend).tenths(1).work(ROWS_PER_UNIT)
 }
 
+/// The budget of the engine's work that `tenths` tenths of `spend` instructions buy, at `per_unit`
+/// instructions a unit, and of any number of needle points.
+pub(crate) fn work(spend: u64, tenths: u64, per_unit: u64) -> Budget {
+    Spend(spend).tenths(tenths).work(per_unit)
+}
+
 /// `SC-I0810` when `element`, of `family`, is a satin column drawn as one path, its centre line, and
 /// VectorCraft gave the effect no stroke: the column is as wide as its stroke (`REQ-VC-010`). Telling takes
 /// a tenth of `spend`; a path too long to tell within it is sewn, and the levels' budgets bound that.
@@ -367,7 +377,7 @@ mod tests {
     fn shown(family: Family, path: &Value, level: &str) -> Shown {
         let (input, params) = (input(path), params_with(family, level));
         let effect = read_effect(family, &input, &params, &Budget::DEFAULT).unwrap();
-        preview(family, &effect, spendable(input.len(), params.len()))
+        preview(family, &effect, spendable(FUEL_BASE, input.len(), params.len()))
     }
 
     /// The level `shown` drew at.
@@ -426,7 +436,7 @@ mod tests {
         // As a run says it: rows too costly at the level picked, and auto with nothing to spend.
         let (input, params) = (input(&square(2560.0)), params_with(Family::Fill, "rows"));
         let effect = read_effect(Family::Fill, &input, &params, &Budget::DEFAULT).unwrap();
-        assert_eq!(text(show(Family::Fill, &effect, spendable(input.len(), params.len()))), text(said(Family::Fill, Level::Rows)));
+        assert_eq!(text(show(Family::Fill, &effect, spendable(FUEL_BASE, input.len(), params.len()))), text(said(Family::Fill, Level::Rows)));
         let auto = read_effect(Family::Fill, &input, &params_with(Family::Fill, "auto"), &Budget::DEFAULT).unwrap();
         assert_eq!(text(show(Family::Fill, &auto, 0)), text(said(Family::Fill, Level::Auto)));
     }
@@ -478,10 +488,11 @@ mod tests {
 
     #[test]
     fn what_an_effect_may_spend_is_vectorcraft_s_allowance_less_reading_and_setting_up() {
-        assert_eq!(spendable(1_000, 2_000), FUEL_BASE + FUEL_PER_BYTE * 1_000 - READ_PER_BYTE * 3_000 - SETUP);
-        assert_eq!(spendable(0, usize::MAX), 0);
+        assert_eq!(spendable(FUEL_BASE, 1_000, 2_000), FUEL_BASE + FUEL_PER_BYTE * 1_000 - READ_PER_BYTE * 3_000 - SETUP);
+        assert_eq!(spendable(HEAVY_FUEL, 1_000, 2_000), HEAVY_FUEL + FUEL_PER_BYTE * 1_000 - READ_PER_BYTE * 3_000 - SETUP);
+        assert_eq!(spendable(FUEL_BASE, 0, usize::MAX), 0);
         // Saturating, never overflowing: reading as many bytes as there are costs all there is.
-        assert_eq!(spendable(usize::MAX, 0), 0);
+        assert_eq!(spendable(FUEL_BASE, usize::MAX, 0), 0);
     }
 
     #[test]

@@ -11,8 +11,6 @@
 //! The reference machine cuts no jump (MC-1): a row sewn from the same side as the one before would start
 //! along the jump thread from that row's end, and sew it down under its first lock.
 
-use stitchcraft_plan::StitchPlan;
-
 use super::designed::Drawing;
 use super::sketch::SheetError;
 use super::{RED, thread};
@@ -41,7 +39,7 @@ pub fn rightwards(row: usize) -> bool {
 }
 
 /// Draws TS-04.
-pub(super) fn build() -> Result<StitchPlan, SheetError> {
+pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let red = thread(RED)?;
     let mut d = Drawing::new("ts04");
     let mut y = 0.0;
@@ -65,5 +63,5 @@ pub(super) fn build() -> Result<StitchPlan, SheetError> {
         }
         y += ROW;
     }
-    d.plan()
+    Ok(d)
 }

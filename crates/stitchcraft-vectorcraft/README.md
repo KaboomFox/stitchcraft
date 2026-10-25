@@ -5,7 +5,8 @@ budget)` reads a `.vectorcraft` document and returns the design and warnings abo
 simplified, as `stitchcraft-svg` does for SVG. For the plug-in, it reads the object VectorCraft's plug-in
 ABI v1 passes a live effect as the element the effect's family sews, with its preview level
 (`read_effect`), and writes needle points back as the geometry VectorCraft draws (`effect_output`), or why
-there are none (`effect_error`).
+there are none (`effect_error`). It reads what VectorCraft passes a filter, and writes the objects a filter
+gives back (`filter`).
 
 **Status:** M6.1 reads formats 1 to 4, plain or compressed, with or without the data format 4 keeps after
 its JSON (`src/container.rs`). It reads layers, groups, paths and compound paths in paint order, and
@@ -29,6 +30,10 @@ From M6.11 a document's design settings and machine, which StitchCraft's Design 
 it from VectorCraft 0.16, plan the design: `src/settings.rs` writes that data (`kept_data`) and reads it
 back, the settings into the design and the machine into `VectorCraft::machine`, which `machine` reads
 alone (`REQ-VC-013`).
+From M6.12 `src/filter.rs` reads the selected objects VectorCraft gives a filter, each path as a document's
+and the stroke a satin column would follow, and writes the objects StitchCraft's tools give back: paths in
+points, paints, strokes and effect records (`REQ-VC-014`, `REQ-VC-015`). What it hands back unchanged, a
+paint, a record or an opacity, it writes as the text VectorCraft gave, so VectorCraft keeps it as it was.
 `EXTENSIONS` lists the documents' file name extensions, a template's among them, by which `stitch plan`
 tells a document from an SVG file. `read_part` is the part of a file the reader reads, which a bug-report
 bundle keeps: a plain file's JSON, without the images and other data after it. `plugin_id`, `effect_id`

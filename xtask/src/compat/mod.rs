@@ -30,6 +30,7 @@ use std::path::{Path, PathBuf};
 
 use serde_json::json;
 use stitchcraft_vc_plugin::Module;
+use stitchcraft_vc_plugin::manifest::BudgetClass;
 
 use crate::{util, wasm};
 use report::{Level, TrackResult};
@@ -322,9 +323,15 @@ pub(crate) fn modules() -> Vec<&'static str> {
 }
 
 /// The kind of plug-in VectorCraft installs the module `name` as, which its manifest says: `exporter` for a
-/// machine format's, which VectorCraft has from 0.14, and `effect` for the others.
+/// machine format's, which VectorCraft has from 0.14, `filter` for a filter's, and `effect` for the others.
 pub(crate) fn kind(name: &str) -> &'static str {
     Module::all().into_iter().find(|module| module.name() == name).map_or("effect", |module| module.manifest().kind)
+}
+
+/// Whether the module `name` asks for a heavy budget, which VectorCraft 0.17 installs only once the user
+/// allows it (`allowHeavy`): Stroke to Satin's.
+pub(crate) fn heavy(name: &str) -> bool {
+    Module::all().into_iter().find(|module| module.name() == name).is_some_and(|module| module.manifest().budget == BudgetClass::Heavy)
 }
 
 /// Builds each of the plug-in's modules for wasm32 into `target/compat/plugins/<name>.wasm`, and prints
@@ -374,9 +381,10 @@ mod tests {
 
     #[test]
     fn the_modules_are_hello_each_family_s_and_each_format_s() {
-        assert_eq!(modules(), ["hello", "stroke", "satin", "fill", "pes", "dst", "settings"]);
+        assert_eq!(modules(), ["hello", "stroke", "satin", "fill", "pes", "dst", "settings", "stroke-to-satin", "testsheet"]);
         let kinds: Vec<&str> = modules().into_iter().map(kind).collect();
-        assert_eq!(kinds, ["effect", "effect", "effect", "effect", "exporter", "exporter", "filter"]);
+        assert_eq!(kinds, ["effect", "effect", "effect", "effect", "exporter", "exporter", "filter", "filter", "filter"]);
+        assert_eq!(modules().into_iter().filter(|name| heavy(name)).collect::<Vec<_>>(), ["stroke-to-satin"]);
         let sizes = [("hello", 1024), ("fill", 5000)];
         assert_eq!(sizes_line(&sizes), "hello 1 KiB, fill 5 KiB (4 KiB more)");
     }

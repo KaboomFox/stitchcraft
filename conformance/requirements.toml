@@ -1104,6 +1104,24 @@ rationale = "Ink/Stitch keeps its design settings in the SVG file, and a VectorC
 milestone = "M6"
 status = "active"
 
+[[req]]
+id = "REQ-VC-014"
+area = "vectorcraft"
+level = "L2"
+statement = "From VectorCraft 0.17, StitchCraft's Stroke to Satin filter, a heavy filter, makes each subpath of each selected path that has a stroke into a satin column drawn with rails and rungs: the rails and rungs the engine makes of a satin column drawn as one path, from the subpath as its centre line and the stroke's width and join (REQ-SAT-016, REQ-SAT-017), in a compound path with the stroke's paint and the satin effect. The column sews as the line with the satin effect sews. The satin effect keeps the line's satin settings, and replaces its other StitchCraft effects. An object the satin effect already reads as rails is left as it is. A selection that is empty or has a path without a stroke, a line that makes no rails or leaves parts out, or a column that would be read back otherwise, is refused with SC-E0814, and nothing changes. A VectorCraft before 0.15 keeps no effect record a filter gives, and there the filter declines with SC-E0813. A VectorCraft before 0.17 gives the filter a light run's budget, which most curved lines need more than."
+rationale = "Ink/Stitch's Stroke to Satin, once Convert Line to Satin, turns a line into a column whose rails and rungs can then be edited. Making the rails of a curved line takes up to 162 million instructions in VectorCraft's host, and a light filter run gets about 52 million, so the filter asks for the heavy budget VectorCraft 0.17 gives a filter the user allows."
+milestone = "M6"
+status = "active"
+
+[[req]]
+id = "REQ-VC-015"
+area = "vectorcraft"
+level = "L2"
+statement = "From VectorCraft 0.16, StitchCraft's Test Sheet filter draws one of `stitch testsheet`'s sheets drawn as designs, TS-02B to TS-09, into the document, moved by whole millimetres so that its middle is nearest the middle of the artboard. Each element is an object with its path, its thread as the paint its family sews with, and its settings as the record of its family's StitchCraft effect, each the value its dialog row takes. The document sews as the sheet's design sews, moved as the filter moved it, and exports within an export's budget. The objects selected stay as they are. A VectorCraft before 0.16 doesn't tell the filter that it keeps the effect records a filter gives, and there the filter declines with SC-E0813. The sheets drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, are not designs, and only `stitch testsheet` writes them."
+rationale = "A machine checkpoint can then start from VectorCraft: the sheet's objects show their stitches, the exporters write it, and the dialogs show its settings. The sheets are the same designs the command line plans, so a sew-out from either answers the same questions."
+milestone = "M6"
+status = "active"
+
 # ── Command line ───────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

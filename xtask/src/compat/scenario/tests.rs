@@ -24,7 +24,10 @@ fn fill_on_2(params: &Value) -> Applied {
 fn every_scenario_checks_only_what_its_runs_export() {
     let scenarios = load(&util::root()).unwrap();
     let names: Vec<&str> = scenarios.iter().map(|(name, _)| name.as_str()).collect();
-    assert_eq!(names, ["apply", "compound-satin", "export", "graphic-style", "install-and-list", "missing-plugin", "settings"]);
+    assert_eq!(
+        names,
+        ["apply", "compound-satin", "export", "graphic-style", "install-and-list", "missing-plugin", "settings", "stroke-to-satin", "testsheets"]
+    );
     let requirements = requirement_ids().unwrap();
     for (name, scenario) in &scenarios {
         assert_eq!(problems(scenario, &modules(), &requirements), Vec::<String>::new(), "{name}");
@@ -54,6 +57,7 @@ fn a_scenario_that_doesn_t_hold_together_is_refused() {
         same = [["a.vectorcraft", "c.vectorcraft"]]
         elements = [{ file = "d.vectorcraft", element = "fill", count = 1 }]
         exported = [["a.vectorcraft", "e.pes"], ["a.png", "a.vectorcraft"]]
+        sheets = [{ file = "f.vectorcraft", sheet = "TS-03" }, { file = "a.vectorcraft", sheet = "TS-01" }]
         "#,
     );
     let found = problems(&bad, &modules(), &requirement_ids().unwrap());
@@ -72,12 +76,15 @@ fn a_scenario_that_doesn_t_hold_together_is_refused() {
             "it checks `b.vectorcraft`, which no run exports".to_string(),
             "it checks `c.vectorcraft`, which no run exports".to_string(),
             "it checks `d.vectorcraft`, which no run exports".to_string(),
+            "it checks `f.vectorcraft`, which no run exports".to_string(),
             "it checks `e.pes`, which no run exports".to_string(),
             // The step that would export it is refused, for its `params`.
             "it checks `a.png`, which no run exports".to_string(),
             "it checks `a.vectorcraft` as a machine file, and StitchCraft writes no format with its extension".to_string(),
             "it checks `a.vectorcraft` against `a.png`, which isn't a VectorCraft document".to_string(),
             "it expects a module `zigzag` listed, and there is none".to_string(),
+            // TS-01 is drawn stitch by stitch, which no object holds.
+            "it checks `a.vectorcraft` for the test sheet TS-01, which the Test Sheet filter doesn't draw".to_string(),
             "there is no requirement REQ-VC-999".to_string(),
         ]
     );
@@ -176,6 +183,23 @@ fn a_run_is_one_command_line_that_asks_each_module_for_its_last_error_after_each
         saved.as_str(),
     ];
     assert_eq!(args, expected);
+}
+
+#[test]
+fn req_vc_014_a_heavy_filter_is_installed_as_the_user_allows_it() {
+    let s = scenario(
+        r#"description = "d"
+        [[run]]
+        plugins = ["satin", "stroke-to-satin"]
+        steps = [{ cmd = "plugin.run", params = { id = "dev.stitchcraft.stroke-to-satin" } }]
+        "#,
+    );
+    let args = arguments(&s.run[0], Path::new("/plugins"), Path::new("/out")).unwrap();
+    let at = |file: &str| Path::new("/plugins").join(file).to_string_lossy().into_owned();
+    let installs: Vec<&String> = args.iter().filter(|arg| arg.contains("\"path\":")).collect();
+    let (satin, heavy) =
+        (json!({ "path": at("satin.wasm") }).to_string(), json!({ "allowHeavy": true, "path": at("stroke-to-satin.wasm") }).to_string());
+    assert_eq!(installs, [&satin, &heavy]);
 }
 
 #[test]
@@ -471,4 +495,15 @@ fn a_scenario_runs_and_its_checks_say_what_fails() {
     let failures = run_with(exporting, "null", "exporting");
     assert_eq!(failures.len(), 1, "{failures:?}");
     assert!(failures[0].starts_with("a.pes: it isn't the file `stitch export` writes of its document: 0 bytes"), "{failures:?}");
+    // A document that holds no test sheet, the patch, fails the check of one.
+    let sheet = r#"description = "d"
+        [[run]]
+        steps = [{ export = "a.vectorcraft" }]
+        [expect]
+        sheets = [{ file = "a.vectorcraft", sheet = "TS-03" }]
+        "#;
+    let failures = run_with(sheet, "null", "sheet");
+    assert_eq!(failures.len(), 1, "{failures:?}");
+    assert!(failures[0].starts_with("a.vectorcraft: it sews otherwise than TS-03's design moved: "), "{failures:?}");
+    assert_eq!(holds_sheet(&patch(), "TS-01"), Err("the Test Sheet filter doesn't draw TS-01".to_string()));
 }

@@ -5,7 +5,8 @@
 //! the translation for VectorCraft: [`read`] turns a `.vectorcraft` file into a design and the warnings
 //! about what it left out or simplified, as `stitchcraft-svg` does for SVG files. For the plug-in, it
 //! translates what VectorCraft's plug-in ABI passes a live effect and what the effect gives back
-//! ([`read_effect`], [`effect_output`], [`effect_error`]; roadmap steps M6.2 and M6.3).
+//! ([`read_effect`], [`effect_output`], [`effect_error`]; roadmap steps M6.2 and M6.3), and what it passes a
+//! filter and the objects a filter gives back ([`filter`], M6.12).
 //!
 //! What it reads (roadmap step M6.1, `docs/src/design/vectorcraft-integration.md`): formats 1 to 4,
 //! plain or compressed, with or without the data format 4 keeps after its JSON; layers, groups, paths
@@ -31,6 +32,7 @@ mod color;
 mod container;
 mod document;
 mod effect;
+pub mod filter;
 mod geometry;
 pub mod settings;
 mod values;

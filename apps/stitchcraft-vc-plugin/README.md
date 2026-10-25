@@ -19,7 +19,10 @@ applies to (`src/dialog.rs`, `REQ-VC-012`). VectorCraft reads those keys from 0.
 ignore them. From M6.11 a filter, *StitchCraft Design Settings*, keeps the design settings and the machine
 with the document as VectorCraft 0.16 keeps a filter's data, and the exporters plan for the machine kept
 (`src/settings.rs`, `REQ-VC-013`). An older VectorCraft would drop that data, and there the filter
-declines with `SC-E0813`.
+declines with `SC-E0813`. From M6.12 2 more filters are the tools. *StitchCraft Stroke to Satin* makes
+each selected line into a satin column drawn with its rails and rungs, which sews as the line did, a heavy
+filter of VectorCraft 0.17 (`src/stroke_to_satin.rs`, `REQ-VC-014`). *StitchCraft Test Sheet* draws a test
+sheet into the document from 0.16, each object with its effect (`src/testsheet.rs`, `REQ-VC-015`).
 Without a feature the module is M0.6's *hello* effect, which returns the object's geometry unchanged. The
 contract tests measure the host's costs with it (`docs/src/design/vectorcraft-integration.md`).
 
@@ -31,14 +34,15 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 # target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm, the StitchCraft Fill plug-in
 ```
 
-The feature is the family, `stroke`, `satin` or `fill`, the machine format, `pes` or `dst`, or `settings`
-for the Design Settings filter. Without one, the build is *hello*. Each build writes the same file, so copy
-it before building the next. `cargo xtask compat contract --ref <tag>` builds all seven into
+The feature is the family, `stroke`, `satin` or `fill`, the machine format, `pes` or `dst`, or the filter,
+`settings`, `stroke-to-satin` or `testsheet`. Without one, the build is *hello*. Each build writes the same
+file, so copy it before building the next. `cargo xtask compat contract --ref <tag>` builds all nine into
 `target/compat/plugins/` and loads them into VectorCraft's host.
 
 In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Open` the `.wasm`), then
-**Effect › Plug-ins › StitchCraft Fill**, **File › Export › Export As** with an exporter, or
-**Object › Plug-ins › StitchCraft Design Settings**.
+**Effect › Plug-ins › StitchCraft Fill**, **File › Export › Export As** with an exporter, or a filter under
+**Object › Plug-ins**. VectorCraft installs Stroke to Satin, a heavy filter, only once the user allows it:
+from Install Plug-in…, not from the Additional Plug-ins Folder.
 
 ## Invariants
 
@@ -57,14 +61,19 @@ In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Ope
   engine sews it. An exporter calls the reader, the engine and the format writer as `stitch export` does,
   with its budget, and Level B of the compatibility gate checks that the files are the same.
 - A live effect never makes an object vanish. When it can't show stitches, VectorCraft draws the object as
-  it is, with the reason as the plug-in's last error. The Design Settings filter returns each object it is
-  given as it is, as VectorCraft deletes one a filter leaves out.
+  it is, with the reason as the plug-in's last error. A filter returns each object it is given, since
+  VectorCraft deletes one a filter leaves out. It declines with a coded diagnostic rather than change part
+  of a selection.
 - The design settings are read and written in one place, `stitchcraft_vectorcraft::settings`, by the
   names, labels and help of `stitchcraft_engine::design::SETTINGS`, which the SVG adapter reads
   Ink/Stitch's with.
 - A preview spends at most what VectorCraft allows (`REQ-VC-003`). The plug-in prices the engine's work in
   instructions, with numbers the contract tests measure, and the engine stops before VectorCraft would. A
-  fill's exact preview, which the user picks, is the exception, and VectorCraft bounds it.
+  fill's exact preview, which the user picks, is the exception, and VectorCraft bounds it. Stroke to Satin
+  prices its work against a heavy filter's budget the same way.
+- The tools' objects sew as what they stand for. A column Stroke to Satin makes sews as its line did, and
+  a test sheet drawn sews as the sheet's design moved, each setting held in its effect's record as the
+  value its dialog row takes.
 
 ## Dependencies
 

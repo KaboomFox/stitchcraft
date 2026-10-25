@@ -17,6 +17,7 @@ stitchcraft-params = { workspace = true }
 stitchcraft-plan = { workspace = true }
 stitchcraft-engine = { workspace = true }
 serde = { workspace = true }
-# `raw_value`: coordinates are read from their text, exactly (`src/wire.rs`).
+# `raw_value`: coordinates are read from their text, exactly (`src/wire.rs`), and what a filter hands back
+# unchanged is written back as its text (`src/filter.rs`).
 serde_json = { workspace = true, features = ["raw_value"] }
 flate2 = { workspace = true }
