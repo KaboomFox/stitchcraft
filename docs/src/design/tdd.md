@@ -277,8 +277,8 @@ Three phases (full design in [VectorCraft integration](vectorcraft-integration.m
 2. **Plug-in features, proposed upstream.** [An RFC](rfc-vectorcraft-abi-v2.md) for the ArtCraft team
    proposed exporter plug-ins, rich parameter schemas (labels, units, groups, conditions), a display-only
    overlay channel for real stitch previews, budget classes and document-level plug-in data. Every item is
-   generic, not embroidery-specific. VectorCraft took most of them into ABI v1, in 0.14.0 to 0.16.0 and on
-   its `main` since, and M6.8 to M6.12 use them. M9, after 1.0, proposes the rest: overlays, heavy live
+   generic, not embroidery-specific. VectorCraft took most of them into ABI v1, in 0.14.0 to 0.17.0, and
+   M6.8 to M6.12 use them. M9, after 1.0, proposes the rest: overlays, heavy live
    effects and the objects beside a live effect's object.
 3. **In-tree crate, optional.** Because the engine is MIT/Apache and host-agnostic, VectorCraft (or
    a fork) can embed it natively with panels and a simulator.
