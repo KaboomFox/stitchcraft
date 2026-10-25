@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-7e8d43ee.js";
+            window.path_to_searchindex_js = "../../searchindex-6a42d2d1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-58ed789b.js"></script>
@@ -241,6 +241,9 @@ Options:
       --report &lt;REPORT&gt;
           Also write a report of the plan and what was said about it (JSON), even when nothing else is written
 
+      --auto
+          Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them
+
   -h, --help
           Print help (see a summary with '-h')
 </code></pre>
@@ -396,6 +399,9 @@ Options:
 
       --says &lt;SAYS&gt;
           What goes wrong, in your words; it goes into the bundle
+
+      --auto
+          Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them
 
   -h, --help
           Print help (see a summary with '-h')

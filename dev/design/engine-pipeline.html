@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7e8d43ee.js";
+            window.path_to_searchindex_js = "../searchindex-6a42d2d1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-58ed789b.js"></script>
@@ -184,10 +184,26 @@
 <!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
 <p>From a <code>Design</code> to a checked <code>StitchPlan</code>. Each stage is a module in <code>stitchcraft-engine</code> with its
 own tests; stages communicate only through the types in the <a href="data-model.html">data model</a>.</p>
-<pre><code class="language-text">Design ──▶ 1 normalize ──▶ 2 validate ──▶ 3 generate (per element) ──▶ 4 assemble ──▶ 5 finalize ──▶ 6 check ──▶ StitchPlan
-              │               │                 │                         │              │              │
-              └───────────────┴───── diagnostics accumulate at every stage ┴──────────────┴──────────────┘
+<pre><code class="language-text">Design ──▶ 0 auto ──▶ 1 normalize ──▶ 2 validate ──▶ 3 generate (per element) ──▶ 4 assemble ──▶ 5 finalize ──▶ 6 check ──▶ StitchPlan
+              │            │               │                 │                         │              │              │
+              └────────────┴───────────────┴───── diagnostics accumulate at every stage ┴──────────────┴──────────────┘
 </code></pre>
+<h2 id="0-automatic-digitizing"><a class="header" href="#0-automatic-digitizing">0. Automatic digitizing</a></h2>
+<p>Since M13.1, before anything else, each element the host marked automatic, a shape without settings read
+with <code>--auto</code>, becomes the ordinary elements its width calls for, with the settings that say so
+(<code>stitchcraft_engine::auto::digitized</code>, <a href="image-to-embroidery.html#stitch-types-by-width">image to embroidery</a>).</p>
+<ul>
+<li>An area, or a line that runs, stays itself.</li>
+<li>A line sewn as a satin column becomes a column for each of its subpaths, or the fill of a subpath a
+column cannot follow (<code>SC-I0902</code>).</li>
+<li>A wider line becomes the fill of the area it paints.</li>
+</ul>
+<p>Every stage after it sees only ordinary elements. A digitized shape sews, offers its neighbours what it
+offers and is said of as the same shape set by hand would be. <code>SC-I0901</code> counts the shapes digitized. A
+design without automatic elements passes through unchanged and uncopied. Each automatic element has the
+budget’s work to itself, naming its parts included, and one that needs more is left out with <code>SC-E0004</code>
+(<code>REQ-GEN-002</code>). Digitizing doesn’t add an error of its own (<code>REQ-AUTO-006</code>). What cannot be sewn as its
+width says is sewn otherwise or left out with a warning.</p>
 <h2 id="1-normalize"><a class="header" href="#1-normalize">1. Normalize</a></h2>
 <p>Per element, independent of the others:</p>
 <ul>

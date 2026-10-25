@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7e8d43ee.js";
+            window.path_to_searchindex_js = "../searchindex-6a42d2d1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-58ed789b.js"></script>
@@ -206,6 +206,11 @@ element’s <code>id</code>, or <code>&lt;tag&gt;@&lt;n&gt;</code> for the n-th 
 so on (<code>stitchcraft_core::Labels</code>, as in the VectorCraft adapter). The adapter’s own diagnostics name
 the SVG element as <code>svg:&lt;label&gt;</code>.</li>
 <li><strong>Names.</strong> An <code>inkscape:label</code> becomes the element’s name.</li>
+<li><strong>Automatic elements.</strong> Read with <code>--auto</code> (<code>Reading::auto</code>), a shape with no attribute in Ink/Stitch’s
+namespace is an automatic element, whose stitches StitchCraft chooses by its width
+(<a href="image-to-embroidery.html#automatic-elements">image to embroidery</a>, <code>REQ-AUTO-001</code>). The trim and stop
+of Ink/Stitch’s commands attached to it still apply. A shape with any <code>inkstitch:</code> attribute is not
+automatic: it sews as its settings say once they are read (M8), and with the defaults until then.</li>
 </ul>
 <h2 id="geometry-and-units"><a class="header" href="#geometry-and-units">Geometry and units</a></h2>
 <ul>
@@ -281,19 +286,28 @@ whose <code>fill-opacity</code> is written <code>0</code> (<code>DEV-SVG-003</co
 <h2 id="stroke-width-and-join"><a class="header" href="#stroke-width-and-join">Stroke width and join</a></h2>
 <p>A stroke’s width and join give a satin column drawn as one path its width and its corners
 (<a href="algorithms/satin.html#single-path-satin">single-path satin</a>). Other strokes are sewn along their paths,
-however wide they are drawn. Both are read as Ink/Stitch reads them (<code>REQ-SVG-004</code>).</p>
+however wide they are drawn. Both are read as Ink/Stitch reads them (<code>REQ-SVG-004</code>), except an automatic
+element’s join, read as SVG draws it. Its cap matters only to an automatic element, whose stitches cover
+the line as it is drawn (<code>REQ-AUTO-003</code>).</p>
 <ul>
 <li><strong>Width.</strong> The width is <code>stroke-width</code>, inherited, 1 user unit when nothing sets it. It is a length in
 the shape’s own user units, as in a viewer, and a percentage is of the viewport’s diagonal over √2.
 The transforms down to the shape scale it by the average of how far they stretch the x and y axes.
 That is exact when they scale both axes alike. Under an uneven scale or a skew, a viewer draws the
-stroke wider one way than the other, and the average is the middle way. The transforms scale a stroke
-with <code>vector-effect: non-scaling-stroke</code> too, as Ink/Stitch scales it, though a viewer does not.</li>
+stroke wider one way than the other, and the average is the middle way. An automatic line sewn across
+its width is then as wide as that average all along. <code>SC-W0802</code> names such a line (<code>REQ-AUTO-005</code>).
+The transforms scale a stroke with <code>vector-effect: non-scaling-stroke</code> too, as
+Ink/Stitch scales it, though a viewer does not.</li>
 <li><strong>Join.</strong> <code>round</code> and <code>bevel</code> are read as they are named. A <code>miter</code> join is limited by
 <code>stroke-miterlimit</code>, 4 when nothing sets it, as SVG says. Any other join, or none, is a miter limited
-at 5, as in Ink/Stitch. SVG 2’s <code>miter-clip</code> and <code>arcs</code> count as other joins.</li>
+at 5, as in Ink/Stitch. SVG 2’s <code>miter-clip</code> and <code>arcs</code> count as other joins. An automatic element’s
+corners follow the drawing instead (<code>REQ-AUTO-004</code>). There, a join that is not set is SVG’s initial
+miter, limited by <code>stroke-miterlimit</code>, and so are <code>miter-clip</code> and <code>arcs</code>, which few viewers draw.</li>
+<li><strong>Cap.</strong> <code>stroke-linecap</code>, inherited, <code>butt</code> when nothing sets it: <code>butt</code>, <code>round</code> or <code>square</code>, in any
+case. Ink/Stitch sews no cap, and reads none.</li>
 <li><strong>Values that do not read.</strong> A width, join or limit that does not read is ignored, as a viewer
-ignores it, and <code>SC-W0804</code> names it. A negative width and a limit below 1 do not read. A stroke too
+ignores it, and <code>SC-W0804</code> names it. A cap that does not read is ignored too, without a word: it changes
+nothing for a shape with settings. A negative width and a limit below 1 do not read. A stroke too
 wide to measure, such as <code>1e308in</code>, is left out with <code>SC-W0804</code>. Its fill is still sewn.</li>
 </ul>
 <p>Ink/Stitch reads a width in <code>%</code>, <code>em</code> or <code>ex</code> as 0, and a join written in capitals as no join at all. The

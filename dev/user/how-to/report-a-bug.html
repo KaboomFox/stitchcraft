@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-7e8d43ee.js";
+            window.path_to_searchindex_js = "../../searchindex-6a42d2d1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-58ed789b.js"></script>
@@ -190,7 +190,7 @@ bundle</strong>. Write one when:</p>
 </ul>
 <h2 id="write-the-bundle"><a class="header" href="#write-the-bundle">Write the bundle</a></h2>
 <p>Run <code>stitch bug-report</code> with the design, an SVG file or a VectorCraft document, and the profile and
-format you sew with:</p>
+format you sew with, and <code>--auto</code> if you planned it with <code>--auto</code>:</p>
 <pre><code class="language-sh">stitch bug-report design.svg --profile brother-pe800-4x4 --says "the zigzag's corners are rounded"
 </code></pre>
 <p>It plans the design exactly as <code>stitch plan</code> does and writes <code>design.bug-report.json</code> next to it (<code>-o</code>
@@ -199,7 +199,7 @@ names another file). The bundle holds:</p>
 <li>your design file, whole, or a VectorCraft document’s JSON without the pictures after it, and the
 design name the machine file’s label holds;</li>
 <li>the profile, the format (<code>--format pes|dst</code>, the profile’s own by default) and the version of
-StitchCraft;</li>
+StitchCraft, and whether the shapes without settings were digitized automatically (<code>--auto</code>);</li>
 <li>a digest of the plan’s stitches, and the machine file’s size and digest;</li>
 <li>the messages, or the crash’s message;</li>
 <li>what you wrote with <code>--says</code>.</li>

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-7e8d43ee.js";
+            window.path_to_searchindex_js = "../../searchindex-6a42d2d1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-58ed789b.js"></script>
@@ -255,6 +255,13 @@ and random length draws and places its lengths in other ways (<code>DEV-RUN-005<
 tolerance. Such a line is a polyline already, and each join that turns by more than 30° is a corner. A
 line too small for a stitch of the shortest length is sewn as its 2 ends, as Ink/Stitch sews it, and
 finalizing merges what is too short.</p>
+<p><strong>A wide stroke’s area</strong>, which automatic digitizing fills (<a href="../image-to-embroidery.html#stitch-types-by-width">image to
+embroidery</a>), is made from the path segment by segment,
+flattened within the shapes’ tolerance: its joins go where 2 segments meet, and it bends smoothly inside
+a curve. Its ends and corners are square to the chords there, and half the stroke’s width turns the angle
+such a chord makes with its curve into a shift of the corner. So a curve that ends the subpath, or meets
+the next segment at a corner, is halved further at that end until the shift is within the tolerance too.
+Where 2 segments meet smoothly nothing more is needed.</p>
 <h3 id="repeats-and-bean-stitch"><a class="header" href="#repeats-and-bean-stitch">Repeats and bean stitch</a></h3>
 <ul>
 <li><code>repeats = k</code> sews the path k times, alternating direction; odd k ends at the far end, even k returns

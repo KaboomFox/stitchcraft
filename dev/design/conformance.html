@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7e8d43ee.js";
+            window.path_to_searchindex_js = "../searchindex-6a42d2d1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-58ed789b.js"></script>
@@ -302,7 +302,7 @@ commit and with a SHA-256 this repository pins.</p>
 <p>The engine’s cases build their small designs with <code>stitchcraft_testkit::designs</code>. It also reads a plan’s
 shape at a glance: <code>J L4 S5 L4</code> is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
 stitches. Its strokes are as wide as an SVG stroke whose style says nothing, and <code>widened</code> gives one a
-width. Its fills are closed rings filled by the nonzero rule (<code>fill</code>, through <code>rings</code>), so a hole is drawn
+width, <code>capped</code> a cap, and <code>automatic</code> makes any element one whose stitches StitchCraft chooses. Its fills are closed rings filled by the nonzero rule (<code>fill</code>, through <code>rings</code>), so a hole is drawn
 the other way round from its outline. The satin cases sew their columns with <code>stitchcraft_testkit::satins</code>, as an element is sewn on the
 reference machine, with the stitch lengths the engine gives it there (<code>satin_lengths</code>), and read the needle
 points back in pairs across the column. A column is sewn alone (<code>sewn_satin</code>) or between the neighbours a

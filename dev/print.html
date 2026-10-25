@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-7e8d43ee.js";
+            window.path_to_searchindex_js = "searchindex-6a42d2d1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-58ed789b.js"></script>
@@ -690,8 +690,14 @@ holds Ink/Stitch’s settings for that kind of stitch, and the object shows its 
 art. The thread is the colour of the object’s fill for a fill, and of its stroke for a stroke or a satin
 column.</p>
 <p>An object without a StitchCraft effect sews as Ink/Stitch sews a shape of an SVG file. Its fills are
-filled, and its strokes are sewn as running stitch. Objects are sewn in the order they are drawn, the
-bottom one first. <a href="#satin-columns-and-presets-in-vectorcraft">Satin columns and presets in VectorCraft</a> shows
+filled, and its strokes are sewn as running stitch. With <code>stitch export --auto</code>, StitchCraft chooses its
+stitches by width instead, as for a picture traced into shapes.</p>
+<ul>
+<li>A line up to 1 mm wide runs.</li>
+<li>A line up to 7 mm wide is a satin column as wide as drawn, its round or square caps included.</li>
+<li>A wider line, or a fill, is a tatami fill.</li>
+</ul>
+<p>Objects are sewn in the order they are drawn, the bottom one first. <a href="#satin-columns-and-presets-in-vectorcraft">Satin columns and presets in VectorCraft</a> shows
 how to draw a column with 2 rails, and how to keep settings in graphic styles.</p>
 <h2 id="leave-out-what-isnt-to-be-sewn"><a class="header" href="#leave-out-what-isnt-to-be-sewn">Leave out what isn’t to be sewn</a></h2>
 <p>Name an object or a layer <code>stitch:ignore</code>, by double-clicking its name in the Layers panel, and it is left
@@ -815,7 +821,7 @@ bundle</strong>. Write one when:</p>
 </ul>
 <h2 id="write-the-bundle"><a class="header" href="#write-the-bundle">Write the bundle</a></h2>
 <p>Run <code>stitch bug-report</code> with the design, an SVG file or a VectorCraft document, and the profile and
-format you sew with:</p>
+format you sew with, and <code>--auto</code> if you planned it with <code>--auto</code>:</p>
 <pre><code class="language-sh">stitch bug-report design.svg --profile brother-pe800-4x4 --says "the zigzag's corners are rounded"
 </code></pre>
 <p>It plans the design exactly as <code>stitch plan</code> does and writes <code>design.bug-report.json</code> next to it (<code>-o</code>
@@ -824,7 +830,7 @@ names another file). The bundle holds:</p>
 <li>your design file, whole, or a VectorCraft document’s JSON without the pictures after it, and the
 design name the machine file’s label holds;</li>
 <li>the profile, the format (<code>--format pes|dst</code>, the profile’s own by default) and the version of
-StitchCraft;</li>
+StitchCraft, and whether the shapes without settings were digitized automatically (<code>--auto</code>);</li>
 <li>a digest of the plan’s stitches, and the machine file’s size and digest;</li>
 <li>the messages, or the crash’s message;</li>
 <li>what you wrote with <code>--says</code>.</li>
@@ -1396,6 +1402,9 @@ Options:
       --report &lt;REPORT&gt;
           Also write a report of the plan and what was said about it (JSON), even when nothing else is written
 
+      --auto
+          Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them
+
   -h, --help
           Print help (see a summary with '-h')
 </code></pre>
@@ -1551,6 +1560,9 @@ Options:
 
       --says &lt;SAYS&gt;
           What goes wrong, in your words; it goes into the bundle
+
+      --auto
+          Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them
 
   -h, --help
           Print help (see a summary with '-h')
@@ -1868,6 +1880,9 @@ Arguments:
 <tr><td><a href="#sc-i0809"><code>SC-I0809</code></a></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print</td></tr>
 <tr><td><a href="#sc-i0810"><code>SC-I0810</code></a></td><td>Info</td><td>VectorCraft live effect leaves the object as it is</td></tr>
 <tr><td><a href="#sc-i0811"><code>SC-I0811</code></a></td><td>Info</td><td>VectorCraft object left out, as its name asks</td></tr>
+<tr><td><a href="#sc-i0901"><code>SC-I0901</code></a></td><td>Info</td><td>Shapes digitized automatically</td></tr>
+<tr><td><a href="#sc-i0902"><code>SC-I0902</code></a></td><td>Info</td><td>Line a satin column cannot follow; filled</td></tr>
+<tr><td><a href="#sc-w0903"><code>SC-W0903</code></a></td><td>Warning</td><td>Line too wide to fill; left out</td></tr>
 </tbody>
 </table>
 </div>
@@ -2292,7 +2307,10 @@ save it again as plain SVG.</p>
 simplified: text that is not converted to paths, raster images, clones (<code>&lt;use&gt;</code>), nested <code>&lt;svg&gt;</code>
 elements, style sheet rules with selectors StitchCraft does not read, or a gradient or pattern used
 as a colour. Values that do not read are named too. A colour that does not read is ignored, as a
-viewer ignores it, and one of Ink/Stitch’s design settings keeps its default.</p>
+viewer ignores it, and one of Ink/Stitch’s design settings keeps its default. A line that <code>--auto</code>
+sews across its width, as a satin column or a fill, is as wide as its transforms stretch it on
+average, so a transform that stretches it more one way than the other, and draws it wider one way,
+is named too.</p>
 <p>The message names the element and what was done. Convert text and clones to paths in the editor
 (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.</p>
 <h2 id="sc-i0805"><a class="header" href="#sc-i0805">SC-I0805</a></h2>
@@ -2344,7 +2362,10 @@ around it, or 2 groups’, sews as the nearest say: VectorCraft runs each on the
 before drew, which no machine sews. A start or end marker, an object named <code>stitch:start</code> or
 <code>stitch:end</code>, is never stitched, and StitchCraft does not yet start or end a shape where one says.
 A name that begins with <code>stitch:</code> and names no marker StitchCraft reads is said too, as is a group or
-a layer named as a marker, which only a shape can be: the name is ignored.</p>
+a layer named as a marker, which only a shape can be: the name is ignored. A satin column, a zigzag
+or a fill made of a stroke is as wide as the stroke all along and centred on its path, so a stroke
+aligned inside or outside a closed path is said, as is a width profile, and round or square caps
+where the stitches end at the path’s end.</p>
 <p>The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
 of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
 makes paths of a symbol, and Object › Expand Appearance of what effects and brushes draw.</p>
@@ -2382,6 +2403,32 @@ or followed by white space and a note, in any mix of upper and lower case. Desig
 lines, templates and notes this way, in the drawing but out of the sew-out, as Ink/Stitch’s ignore
 commands keep them. Everything in a group or a layer so named is left out with it.</p>
 <p>The message names what was left out. To stitch it, rename it in VectorCraft’s Layers panel.</p>
+<h2 id="sc-i0901"><a class="header" href="#sc-i0901">SC-I0901</a></h2>
+<p><strong>Info</strong> — Shapes digitized automatically</p>
+<p><code>--auto</code> digitized the design’s shapes that have no settings: StitchCraft chose each one’s
+stitches by its width, measured to the micrometre. An area is a tatami fill. A line no wider than the
+design’s narrowest satin stroke (<code>min_satin_stroke_width_mm</code>, 1 mm unless the design sets it) is a
+running stitch, a line up to 7 mm wide a satin column as wide as the line, and a wider line a
+tatami fill of the area it paints. A line whose every part a satin column cannot follow is filled
+too (<code>SC-I0902</code>), and counted as a fill.</p>
+<p>The message counts the shapes by the stitches they sew as. To sew a shape another way, give it
+settings: in VectorCraft, apply a StitchCraft effect to it. A shape with settings is not digitized
+automatically.</p>
+<h2 id="sc-i0902"><a class="header" href="#sc-i0902">SC-I0902</a></h2>
+<p><strong>Info</strong> — Line a satin column cannot follow; filled</p>
+<p><code>--auto</code> sews a line up to 7 mm wide as a satin column along its path, but a satin column cannot
+follow this part of the line: it turns more tightly than the line is wide, so the column’s edges
+would fold over themselves, or it is shorter than a CSS pixel, or it is a dot that the line’s round
+or square cap draws. The area it paints is filled instead, as a line wider than 7 mm is.</p>
+<p>The message says which. To sew it as a satin column, draw the line with gentler turns or narrower,
+or draw the column with 2 rails and give it settings.</p>
+<h2 id="sc-w0903"><a class="header" href="#sc-w0903">SC-W0903</a></h2>
+<p><strong>Warning</strong> — Line too wide to fill; left out</p>
+<p><code>--auto</code> fills the area a line paints when the line is wider than 7 mm, or when a satin column cannot
+follow it, and the area this line paints would reach more than 10 metres from the design’s origin,
+beyond what machine files can record. It is left out. A stroke that wide is usually a mistake in
+the file.</p>
+<p>The message gives the line’s width. Check the line’s stroke width.</p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the parameter registry (`stitchcraft-engine/src/registry.rs`) and the deviations ledger. Edit the declaration, not this page. -->
 <h1 id="parameters-6"><a class="header" href="#parameters-6">Parameters</a></h1>
 <p>Every setting a design element can carry, by the key a design stores it under. A parameter that Ink/Stitch
@@ -3895,7 +3942,7 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 <tr><td><code>stitchcraft-core</code></td><td>L0</td><td><code>Mm</code>, <code>Point</code>, <code>Vec2</code>, tolerances, deterministic math (<code>libm</code> wrappers), <code>SplitMix64</code> RNG, <code>Budget</code>, <code>Diagnostic</code>/<code>Code</code>/<code>Severity</code></td><td>depend on any workspace crate</td></tr>
 <tr><td><code>stitchcraft-params</code></td><td>L0</td><td><code>params!</code>, <code>ParamSpec</code>, <code>ParamSet</code>, value parsing and validation, the registry audit (the list of declarations is <code>stitchcraft_engine::registry</code>)</td><td>know any stitch algorithm</td></tr>
 <tr><td><code>stitchcraft-plan</code></td><td>L1</td><td><code>Stitch</code>, <code>StitchKind</code>, <code>ColorBlock</code>, <code>StitchPlan</code>, <code>Thread</code>, palettes, <code>MachineProfile</code>, plan invariants</td><td>generate stitches; read/write files</td></tr>
-<tr><td><code>stitchcraft-engine</code></td><td>L2</td><td><code>Design</code>/<code>Element</code>/<code>Shape</code>, normalization, generators, plan assembly, finalizing for the machine</td><td>depend on formats, render or any adapter</td></tr>
+<tr><td><code>stitchcraft-engine</code></td><td>L2</td><td><code>Design</code>/<code>Element</code>/<code>Shape</code>, automatic digitizing, normalization, generators, plan assembly, finalizing for the machine</td><td>depend on formats, render or any adapter</td></tr>
 <tr><td><code>stitchcraft-formats</code></td><td>L2</td><td>readers/writers (PES/PEC, DST, …), quantization, format limits</td><td>depend on engine (it encodes <em>plans</em>)</td></tr>
 <tr><td><code>stitchcraft-render</code></td><td>L2</td><td>CPU preview images of plans (thread look, simple look, overlays)</td><td>depend on engine</td></tr>
 <tr><td><code>stitchcraft-svg</code></td><td>L3</td><td>SVG → <code>Design</code> (geometry, styles, <code>inkstitch:*</code> attributes, commands), plan → SVG</td><td>contain stitch logic</td></tr>
@@ -4066,7 +4113,10 @@ pub struct Element {
     pub shape: Shape,
     pub thread: Thread,
     pub params: ParamSet,            // as the host stores them; validated against the registry when planned
+    pub automatic: bool,             // since M13.1: a shape without settings, read with --auto, whose stitches StitchCraft chooses
 }
+
+pub struct Reading { pub auto: bool } // since M13.1: what every host's reader is asked (--auto)
 
 pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file since M4.8, its commands from M8
     pub collapse_len: Mm,            // 3 mm: same-thread moves no longer than this are sewn on, not jumped
@@ -4077,11 +4127,12 @@ pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file
 }
 
 pub enum Shape {
-    Stroke { path: Path, width: Mm, join: Join },  // an outline: running stitch and the other stroke methods
+    Stroke { path: Path, width: Mm, join: Join, cap: Cap },  // an outline: running stitch and the other stroke methods
     Fill { path: Path, rule: FillRule },           // an area: its boundary, and which parts are inside
 }
 
 pub enum Join { Miter { limit: f64 }, Round, Bevel }   // a stroke's corners; Join::UNSET is a miter limited at 5
+pub enum Cap { Butt, Round, Square }                  // since M13.1: how a stroke ends where an open subpath ends
 
 pub struct Path { pub subpaths: Vec&lt;Subpath&gt; }   // in millimetres, y down
 pub struct Subpath { pub start: Point, pub segments: Vec&lt;Segment&gt;, pub closed: bool }
@@ -4091,7 +4142,13 @@ their control points, and the generators flatten it with the tolerance their par
 <p>A stroke’s width and join, since M4.8, are as the host draws them: in SVG, <code>stroke-width</code> scaled by the
 transforms, and <code>stroke-linejoin</code> with <code>stroke-miterlimit</code> (<a href="#stroke-width-and-join">SVG input</a>).
 Only a satin column drawn as one path uses them, as its width and its corners. <code>Shape::stroke(path)</code>
-makes a stroke that says nothing of either: 1 CSS pixel wide, with <code>Join::UNSET</code>.</p>
+makes a stroke that says nothing of either: 1 CSS pixel wide, with <code>Join::UNSET</code>. Its cap, since M13.1, is
+SVG’s <code>stroke-linecap</code> or VectorCraft’s cap, <code>Butt</code> when nothing sets it. Ink/Stitch sews no cap, and
+neither does an element with settings. An automatic element’s stitches follow it
+(<a href="#stitch-types-by-width">image to embroidery</a>).</p>
+<p>An automatic element is a shape without settings that the user asked StitchCraft to digitize: the readers
+mark it when <code>Reading::auto</code> is set, and the engine turns it into ordinary elements with the settings its
+width calls for before anything is generated (<code>stitchcraft_engine::auto</code>).</p>
 <p>Documents repeat ids, so adapters make theirs unique with <code>stitchcraft_core::Labels</code>, which gives a
 label repeated in a document <code>~2</code>, <code>~3</code> and so on, in every adapter alike.</p>
 <p>Invariants, checked by <code>Design::new</code>: element ids are unique, and every point is finite and within
@@ -4647,6 +4704,9 @@ another.</p>
 <tr><td><code>SC-I0809</code></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides)</td><td>M6</td></tr>
 <tr><td><code>SC-I0810</code></td><td>Info</td><td>VectorCraft live effect leaves the object as it is (it sews no stitch, its preview level needs more work than VectorCraft lets a live effect do, or it is a satin column drawn as one path or a zigzag stroke, whose width the effect is not given)</td><td>M6</td></tr>
 <tr><td><code>SC-I0811</code></td><td>Info</td><td>VectorCraft object left out, as its name asks (an object or a layer named <code>stitch:ignore</code>)</td><td>M6</td></tr>
+<tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
+<tr><td><code>SC-I0902</code></td><td>Info</td><td>Line a satin column cannot follow; filled (a part of an automatic line that turns more tightly than it is wide or is shorter than a CSS pixel, or a dot its cap draws)</td><td>M13</td></tr>
+<tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>
 </tbody>
 </table>
 </div>
@@ -4677,6 +4737,11 @@ element’s <code>id</code>, or <code>&lt;tag&gt;@&lt;n&gt;</code> for the n-th 
 so on (<code>stitchcraft_core::Labels</code>, as in the VectorCraft adapter). The adapter’s own diagnostics name
 the SVG element as <code>svg:&lt;label&gt;</code>.</li>
 <li><strong>Names.</strong> An <code>inkscape:label</code> becomes the element’s name.</li>
+<li><strong>Automatic elements.</strong> Read with <code>--auto</code> (<code>Reading::auto</code>), a shape with no attribute in Ink/Stitch’s
+namespace is an automatic element, whose stitches StitchCraft chooses by its width
+(<a href="#automatic-elements">image to embroidery</a>, <code>REQ-AUTO-001</code>). The trim and stop
+of Ink/Stitch’s commands attached to it still apply. A shape with any <code>inkstitch:</code> attribute is not
+automatic: it sews as its settings say once they are read (M8), and with the defaults until then.</li>
 </ul>
 <h2 id="geometry-and-units"><a class="header" href="#geometry-and-units">Geometry and units</a></h2>
 <ul>
@@ -4752,19 +4817,28 @@ whose <code>fill-opacity</code> is written <code>0</code> (<code>DEV-SVG-003</co
 <h2 id="stroke-width-and-join"><a class="header" href="#stroke-width-and-join">Stroke width and join</a></h2>
 <p>A stroke’s width and join give a satin column drawn as one path its width and its corners
 (<a href="#single-path-satin">single-path satin</a>). Other strokes are sewn along their paths,
-however wide they are drawn. Both are read as Ink/Stitch reads them (<code>REQ-SVG-004</code>).</p>
+however wide they are drawn. Both are read as Ink/Stitch reads them (<code>REQ-SVG-004</code>), except an automatic
+element’s join, read as SVG draws it. Its cap matters only to an automatic element, whose stitches cover
+the line as it is drawn (<code>REQ-AUTO-003</code>).</p>
 <ul>
 <li><strong>Width.</strong> The width is <code>stroke-width</code>, inherited, 1 user unit when nothing sets it. It is a length in
 the shape’s own user units, as in a viewer, and a percentage is of the viewport’s diagonal over √2.
 The transforms down to the shape scale it by the average of how far they stretch the x and y axes.
 That is exact when they scale both axes alike. Under an uneven scale or a skew, a viewer draws the
-stroke wider one way than the other, and the average is the middle way. The transforms scale a stroke
-with <code>vector-effect: non-scaling-stroke</code> too, as Ink/Stitch scales it, though a viewer does not.</li>
+stroke wider one way than the other, and the average is the middle way. An automatic line sewn across
+its width is then as wide as that average all along. <code>SC-W0802</code> names such a line (<code>REQ-AUTO-005</code>).
+The transforms scale a stroke with <code>vector-effect: non-scaling-stroke</code> too, as
+Ink/Stitch scales it, though a viewer does not.</li>
 <li><strong>Join.</strong> <code>round</code> and <code>bevel</code> are read as they are named. A <code>miter</code> join is limited by
 <code>stroke-miterlimit</code>, 4 when nothing sets it, as SVG says. Any other join, or none, is a miter limited
-at 5, as in Ink/Stitch. SVG 2’s <code>miter-clip</code> and <code>arcs</code> count as other joins.</li>
+at 5, as in Ink/Stitch. SVG 2’s <code>miter-clip</code> and <code>arcs</code> count as other joins. An automatic element’s
+corners follow the drawing instead (<code>REQ-AUTO-004</code>). There, a join that is not set is SVG’s initial
+miter, limited by <code>stroke-miterlimit</code>, and so are <code>miter-clip</code> and <code>arcs</code>, which few viewers draw.</li>
+<li><strong>Cap.</strong> <code>stroke-linecap</code>, inherited, <code>butt</code> when nothing sets it: <code>butt</code>, <code>round</code> or <code>square</code>, in any
+case. Ink/Stitch sews no cap, and reads none.</li>
 <li><strong>Values that do not read.</strong> A width, join or limit that does not read is ignored, as a viewer
-ignores it, and <code>SC-W0804</code> names it. A negative width and a limit below 1 do not read. A stroke too
+ignores it, and <code>SC-W0804</code> names it. A cap that does not read is ignored too, without a word: it changes
+nothing for a shape with settings. A negative width and a limit below 1 do not read. A stroke too
 wide to measure, such as <code>1e308in</code>, is left out with <code>SC-W0804</code>. Its fill is still sewn.</li>
 </ul>
 <p>Ink/Stitch reads a width in <code>%</code>, <code>em</code> or <code>ex</code> as 0, and a join written in capitals as no join at all. The
@@ -4831,10 +4905,26 @@ declarations it takes (<a href="#budgets">budgets</a>).</p>
 <!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
 <p>From a <code>Design</code> to a checked <code>StitchPlan</code>. Each stage is a module in <code>stitchcraft-engine</code> with its
 own tests; stages communicate only through the types in the <a href="#data-model">data model</a>.</p>
-<pre><code class="language-text">Design ──▶ 1 normalize ──▶ 2 validate ──▶ 3 generate (per element) ──▶ 4 assemble ──▶ 5 finalize ──▶ 6 check ──▶ StitchPlan
-              │               │                 │                         │              │              │
-              └───────────────┴───── diagnostics accumulate at every stage ┴──────────────┴──────────────┘
+<pre><code class="language-text">Design ──▶ 0 auto ──▶ 1 normalize ──▶ 2 validate ──▶ 3 generate (per element) ──▶ 4 assemble ──▶ 5 finalize ──▶ 6 check ──▶ StitchPlan
+              │            │               │                 │                         │              │              │
+              └────────────┴───────────────┴───── diagnostics accumulate at every stage ┴──────────────┴──────────────┘
 </code></pre>
+<h2 id="0-automatic-digitizing"><a class="header" href="#0-automatic-digitizing">0. Automatic digitizing</a></h2>
+<p>Since M13.1, before anything else, each element the host marked automatic, a shape without settings read
+with <code>--auto</code>, becomes the ordinary elements its width calls for, with the settings that say so
+(<code>stitchcraft_engine::auto::digitized</code>, <a href="#stitch-types-by-width">image to embroidery</a>).</p>
+<ul>
+<li>An area, or a line that runs, stays itself.</li>
+<li>A line sewn as a satin column becomes a column for each of its subpaths, or the fill of a subpath a
+column cannot follow (<code>SC-I0902</code>).</li>
+<li>A wider line becomes the fill of the area it paints.</li>
+</ul>
+<p>Every stage after it sees only ordinary elements. A digitized shape sews, offers its neighbours what it
+offers and is said of as the same shape set by hand would be. <code>SC-I0901</code> counts the shapes digitized. A
+design without automatic elements passes through unchanged and uncopied. Each automatic element has the
+budget’s work to itself, naming its parts included, and one that needs more is left out with <code>SC-E0004</code>
+(<code>REQ-GEN-002</code>). Digitizing doesn’t add an error of its own (<code>REQ-AUTO-006</code>). What cannot be sewn as its
+width says is sewn otherwise or left out with a warning.</p>
 <h2 id="1-normalize"><a class="header" href="#1-normalize">1. Normalize</a></h2>
 <p>Per element, independent of the others:</p>
 <ul>
@@ -5223,6 +5313,13 @@ and random length draws and places its lengths in other ways (<code>DEV-RUN-005<
 tolerance. Such a line is a polyline already, and each join that turns by more than 30° is a corner. A
 line too small for a stitch of the shortest length is sewn as its 2 ends, as Ink/Stitch sews it, and
 finalizing merges what is too short.</p>
+<p><strong>A wide stroke’s area</strong>, which automatic digitizing fills (<a href="#stitch-types-by-width">image to
+embroidery</a>), is made from the path segment by segment,
+flattened within the shapes’ tolerance: its joins go where 2 segments meet, and it bends smoothly inside
+a curve. Its ends and corners are square to the chords there, and half the stroke’s width turns the angle
+such a chord makes with its curve into a shift of the corner. So a curve that ends the subpath, or meets
+the next segment at a corner, is halved further at that end until the shift is within the tolerance too.
+Where 2 segments meet smoothly nothing more is needed.</p>
 <h3 id="repeats-and-bean-stitch-1"><a class="header" href="#repeats-and-bean-stitch-1">Repeats and bean stitch</a></h3>
 <ul>
 <li><code>repeats = k</code> sews the path k times, alternating direction; odd k ends at the far end, even k returns
@@ -6623,6 +6720,7 @@ sews the same lock (<code>REQ-LCK-002</code>, property test).</li>
 sheet TS-04 whether the default locks hold when the tail is pulled (<code>REQ-LCK-003</code>).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="image-to-embroidery"><a class="header" href="#image-to-embroidery">Image to embroidery</a></h1>
+<!-- implements: crates/stitchcraft-engine/src/auto/** -->
 <p>Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
 the stitches of each shape by its width at the size it sews. Neighbouring shapes overlap where they meet.
@@ -6674,27 +6772,83 @@ Trace’s Document Library palette then traces the picture in the threads’ col
 a StitchCraft effect of its own;</li>
 <li>each SVG element without <code>inkstitch:</code> settings, with <code>--auto</code>.</li>
 </ul>
-<p>An element with settings sews as they say, whether or not the switch is given. So a picture can be
-digitized automatically and one of its shapes then set by hand. A shape’s fill gives its area and its
-stroke gives its line, each with its thread, width and join, as for any element.</p>
+<p>An element with settings is not digitized automatically, whether or not the switch is given: it sews as
+its settings say, as far as its reader reads them. So a picture can be digitized automatically and one of
+its shapes then set by hand. (The SVG reader reads no <code>inkstitch:</code> settings but <code>ignore_object</code> until M8,
+and says so with <code>SC-W0802</code>, so such a shape sews with the defaults until then.) A shape’s fill gives its
+area and its stroke gives its line, each with its thread, width, join and cap, as for any element. A trim
+or a stop that an Ink/Stitch command asks for is not a setting of the stitches, and an automatic element
+keeps it. An element sewn as several elements keeps it for the last of them.</p>
+<p>The readers mark the element (<code>Element::automatic</code>), and they read the switch from <code>Reading</code>, which every
+host takes. Before anything is generated, the engine turns each automatic element into ordinary elements
+whose settings say what to sew (<code>stitchcraft_engine::auto</code>). The generators, the assembly and every host
+then treat them as shapes set by hand. <code>SC-I0901</code> counts the shapes digitized, by the stitches they sew
+as. An automatic line sewn across its width follows the drawing, and the reader names what the drawing
+draws across the line that its stitches don’t follow (<code>REQ-AUTO-005</code>). Of a VectorCraft document, that is
+the line’s alignment inside or outside a closed path and its width profile (<code>SC-W0807</code>). Of an SVG file,
+it is transforms that stretch the line more one way than the other (<code>SC-W0802</code>). Under such transforms a
+viewer draws it wider one way, and its stitches are as wide as the transforms stretch it on average. Its caps are
+followed (below), and so are its corners, joined as the drawing joins them. An SVG join that is not set
+is SVG’s miter, limited by <code>stroke-miterlimit</code>, where Ink/Stitch reads a miter limited at 5.</p>
+<p>Digitizing doesn’t add an error of its own (<code>REQ-AUTO-006</code>). A part that its width’s stitches cannot sew
+is sewn otherwise, or left out with a warning, and a shape that paints nothing sews as it would without
+the switch. One odd shape among hundreds never keeps a design from being written.</p>
 <h2 id="stitch-types-by-width"><a class="header" href="#stitch-types-by-width">Stitch types by width</a></h2>
-<p>An automatic element is measured at the size it sews, in millimetres. Its width at a place is the
-diameter of the largest circle that fits inside it there. Its parts sew by their width:</p>
+<p>An automatic element is measured at the size it sews, in millimetres, to the micrometre (<code>REQ-AUTO-002</code>).
+A width written in another unit that converts to a bound give or take a rounding error, such as 7 mm in
+CSS pixels, is that bound. Its width at a place is the diameter of the largest circle that fits inside it
+there. Its parts sew by their width:</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>Width</th><th>Sewn as</th></tr>
 </thead>
 <tbody>
-<tr><td>Below the design’s <code>min_satin_stroke_width_mm</code>, 1 mm unless the design sets it</td><td>A running stitch along the centre line, a triple run (bean stitch) from 0.5 mm wide</td></tr>
-<tr><td>From that width to the widest satin column, 7 mm</td><td>Satin columns, whose rails are the outline</td></tr>
+<tr><td>Up to the design’s <code>min_satin_stroke_width_mm</code>, 1 mm unless the design sets it</td><td>A running stitch along the centre line, a triple run (bean stitch) from 0.5 mm wide</td></tr>
+<tr><td>Wider, up to the widest satin column, 7 mm</td><td>Satin columns, whose rails are the outline</td></tr>
 <tr><td>Above 7 mm</td><td>A tatami fill</td></tr>
 </tbody>
 </table>
 </div>
-<p>A stroke is a line as wide as it is drawn. Narrower than 1 mm it sews as a running stitch. Up to 7 mm it
-sews as a satin column as wide as its stroke, as a satin column drawn as one path does (<code>REQ-SAT-016</code>).
-Wider than that, the area it paints is filled.</p>
+<p>A stroke is a line as wide as it is drawn (M13.1):</p>
+<ul>
+<li>
+<p>No wider than <code>min_satin_stroke_width_mm</code> it sews as a running stitch along its path (<code>REQ-AUTO-002</code>).
+A satin column that narrow is too narrow to stitch across (<code>REQ-SAT-015</code>), so the bound is the same.</p>
+</li>
+<li>
+<p>Up to 7 mm it sews as a satin column as wide as its stroke, with its path as the column’s centre line,
+as a satin column drawn as one path does (<code>REQ-SAT-016</code>, <code>REQ-AUTO-003</code>). A centre line is one subpath,
+so a stroke of several sews a column for each, in order. The second and later columns are named after
+the stroke with <code>#2</code>, <code>#3</code> and so on. A traced line’s ends are round or square, and its caps are part of
+the line drawn. An open end with a round or square cap reaches half the stroke’s width past the path’s
+end, straight on, as far as the cap does. A round cap’s end is then square, which covers its corners too.
+A column cannot follow a subpath that turns more tightly than the stroke is wide, such as a small ring
+traced from a dot. Nor can it follow a subpath shorter than a CSS pixel. Its rails would fold over
+themselves, or vanish. The rails the satin column would make tell whether it can follow a subpath. A
+subpath it cannot follow sews as the area it paints, filled as a wider line is (<code>SC-I0902</code>). So does a
+dot that a round or square cap draws. A dot with a butt cap draws nothing, and is left out (<code>SC-W0401</code>).</p>
+</li>
+<li>
+<p>Wider than that, the area it paints is filled (<code>REQ-AUTO-004</code>). That area is each segment widened by
+half the stroke’s width to each side, with its corners joined as the stroke’s join joins them and its
+open ends capped with its cap. It is the stroke’s area within the shapes’ tolerance. A miter longer
+than its limit is cut square. Those pieces, joined into one area, are the fill’s outline. A part of it too small to sew is
+named as a fill’s is (<code>SC-W0303</code>). An area that would reach more than 10 m from the origin is left out
+(<code>SC-W0903</code>). No design lies there.</p>
+<p>The pieces are not handed to the area code one by one, which would cost many times the work of their
+outline. Each open subpath is one ring instead. It follows the right side forward, the end cap, the left
+side back and the start cap. The outer side goes round each join, and the inner side goes in to the
+path’s point and out again. A closed subpath is 2 rings, one for each side. Such rings wind round each
+point as many times as the pieces cover it. The nonzero rule then fills exactly the pieces’ union. A line
+of more than 32 chords is cut into lengths of 32 chords. Each length is a ring made into its area alone,
+and the areas are then joined. A 10 mm line a metre long fills within the default budget that way.</p>
+</li>
+</ul>
+<p>Until M13.4 and M13.5, a line no wider than <code>min_satin_stroke_width_mm</code> runs once, and its satin column
+has a satin column’s defaults. M13.4 triples the runs from 0.5 mm, and M13.5 gives columns their underlay
+by width, strokes’ columns as well as shapes’. M13.1 sews a shape’s area as a tatami fill whatever its
+width, and the rules below for the narrow parts of shapes follow in M13.4 to M13.6.</p>
 <p><strong>Shapes in parts.</strong> A shape wider than 7 mm in places and narrower in others is split. Its broad parts are
 what an opening with a disc 7 mm across leaves: the shape shrunk by 3.5 mm and grown back by 3.5 mm, with
 the polygon buffer of M5.7. The rest of the shape is its narrow parts. A narrow part shorter along its
@@ -6763,11 +6917,13 @@ its points nearest its neighbours (<code>REQ-GEN-003</code>).</li>
 automatic elements move around them within the rules. M10’s routing tools, which order satin columns and
 running stitches drawn by hand, start from this order.</p>
 <h2 id="settings"><a class="header" href="#settings">Settings</a></h2>
-<p>The rules’ values are StitchCraft’s own parameters, registered as any other
-(<a href="#parameter-registry">parameter registry</a>). The settings are the widest satin column, the overlap, the smallest
-area and a switch that leaves the background out. Their defaults are the values on this page, 7 mm, 0.4 mm and 1 mm², and MC-8
-confirms or changes them. The narrowest satin column is the design’s <code>min_satin_stroke_width_mm</code>. The Auto
-effect’s dialog shows the settings, and with <code>--auto</code> they take their defaults.</p>
+<p>The rules’ values become StitchCraft’s own parameters, registered as any other
+(<a href="#parameter-registry">parameter registry</a>), when the Auto effect’s dialog lets a user set them (M13.7). The settings
+are the widest satin column, the overlap, the smallest area and a switch that leaves the background out.
+Their defaults are the values on this page, 7 mm, 0.4 mm and 1 mm², and MC-8 confirms or changes them.
+Until then nothing can set them, and the rules use those values (<code>stitchcraft_engine::auto::SATIN_MAX_WIDTH</code>
+since M13.1). The narrowest satin column is the design’s <code>min_satin_stroke_width_mm</code>. With <code>--auto</code> the
+settings take their defaults.</p>
 <h2 id="previews-in-vectorcraft"><a class="header" href="#previews-in-vectorcraft">Previews in VectorCraft</a></h2>
 <p>The Auto effect is a live effect like the plug-ins of each stitch family
 (<a href="#plug-ins">plug-ins</a>). VectorCraft runs a group’s effects on each path inside
@@ -7477,9 +7633,14 @@ The message names VectorCraft’s command that makes paths of them, such as Type
 text. So is a kind of object this version doesn’t read.</li>
 </ul>
 <p><strong>Paints and threads.</strong> An object without StitchCraft’s effects is stitched as Ink/Stitch stitches an SVG
-shape. From M13, <code>--auto</code> lets StitchCraft choose its stitches instead (<a href="#image-to-embroidery">image to
-embroidery</a>). Its visible fills are filled, in the appearance’s order, and its visible strokes then have a
-running stitch each. The thread’s colour is a solid paint’s colour, with CMYK and grey converted by
+shape. Its visible fills are filled, in the appearance’s order, and its visible strokes then have a running
+stitch each. Since M13.1, read with <code>--auto</code> (<code>stitchcraft_vectorcraft::read_with</code>), the elements of an
+object are automatic instead when neither it nor a group or layer around it has a StitchCraft effect
+(<a href="#image-to-embroidery">image to embroidery</a>, <code>REQ-AUTO-001</code>). StitchCraft then chooses their stitches by
+their width. A stroke’s cap is read with its width and join, and an automatic line’s stitches follow its
+round or square caps. Of a line sewn across its width, the reader names the alignment inside or outside a
+closed path and the width profile, which its stitches don’t follow (<code>SC-W0807</code>, <code>REQ-AUTO-005</code>). The
+thread’s colour is a solid paint’s colour, with CMYK and grey converted by
 VectorCraft’s formula without colour management ((1 − c)(1 − k) and 1 − k) and Lab through sRGB. A
 gradient gives its first stop’s colour, with <code>SC-W0807</code> unless every stop has that colour, and a pattern
 gives black, with <code>SC-W0807</code>. A stroke’s width, in points, and its join, with its miter limit (10 when
@@ -7987,7 +8148,7 @@ commit and with a SHA-256 this repository pins.</p>
 <p>The engine’s cases build their small designs with <code>stitchcraft_testkit::designs</code>. It also reads a plan’s
 shape at a glance: <code>J L4 S5 L4</code> is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
 stitches. Its strokes are as wide as an SVG stroke whose style says nothing, and <code>widened</code> gives one a
-width. Its fills are closed rings filled by the nonzero rule (<code>fill</code>, through <code>rings</code>), so a hole is drawn
+width, <code>capped</code> a cap, and <code>automatic</code> makes any element one whose stitches StitchCraft chooses. Its fills are closed rings filled by the nonzero rule (<code>fill</code>, through <code>rings</code>), so a hole is drawn
 the other way round from its outline. The satin cases sew their columns with <code>stitchcraft_testkit::satins</code>, as an element is sewn on the
 reference machine, with the stitch lengths the engine gives it there (<code>satin_lengths</code>), and read the needle
 points back in pairs across the column. A column is sewn alone (<code>sewn_satin</code>) or between the neighbours a
@@ -8201,8 +8362,9 @@ gives <code>stitch</code> the files it reads and writes. Both are WebAssembly, a
 its arithmetic is the plug-in’s.</p>
 <h2 id="bug-reports"><a class="header" href="#bug-reports">Bug reports</a></h2>
 <p>Because the same design, profile, format and version give the same plan everywhere, those four are all a
-bug report needs. <code>stitch bug-report</code> writes them into one JSON file, with the design itself in place of
-a path to it. That is an SVG file whole, or the part of a VectorCraft document its reader reads, which
+bug report needs, with whether the design was read with <code>--auto</code>, which decides how its shapes without
+settings sew. <code>stitch bug-report</code> writes them into one JSON file, with the design itself in place of a
+path to it, and the switch only when it was on, so a bundle of a run without it is as it always was. That is an SVG file whole, or the part of a VectorCraft document its reader reads, which
 reads as the whole document does. The file also records what came of them:</p>
 <ul>
 <li>a SHA-256 of each entry of the plan, from each coordinate’s bits, its kind, role and element, and each
@@ -9626,13 +9788,13 @@ first, and the steps that make new kinds of shape into stitches follow.</p>
 <tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
 </thead>
 <tbody>
-<tr><td>M13.1</td><td>Automatic elements. <code>--auto</code> on <code>stitch plan</code> and <code>stitch export</code> lets StitchCraft choose the stitches of the shapes that have no settings. A stroke narrower than <code>min_satin_stroke_width_mm</code> sews as a running stitch. Up to the widest satin column it sews as a satin column as wide as the stroke, and a wider one is filled. Areas are tatami fills. The rules’ settings are registered, and their codes allocated</td><td>its requirements active; a traced line sews as wide as VectorCraft draws it</td></tr>
+<tr><td>M13.1</td><td>Automatic elements. <code>--auto</code> on <code>stitch plan</code> and <code>stitch export</code> lets StitchCraft choose the stitches of the shapes that have no settings. A stroke no wider than <code>min_satin_stroke_width_mm</code> sews as a running stitch. Up to the widest satin column, 7 mm, it sews as a satin column as wide as the stroke, its round or square caps included, and a wider one fills the area it paints, as does a line a satin column cannot follow. Areas are tatami fills. <code>SC-I0901</code> counts the shapes digitized</td><td>its requirements active, a traced line sews as wide as VectorCraft draws it, and <code>--auto</code> doesn’t add an error of its own</td></tr>
 <tr><td>M13.2</td><td>Neighbours. Each shape reaches under the shapes it touches that sew after it, specks merge into the shape around them, and the background is left out, each said by a diagnostic</td><td>the coverage of the edges that the test pictures’ shapes share, measured and recorded</td></tr>
 <tr><td>M13.3</td><td>Sewing order. Paint order where shapes overlap, columns and lines after the fills they border, then the fewest colour changes and the nearest element next. <code>--sort-colours</code> orders a design’s elements with settings by the same rules</td><td>the test pictures sew with fewer colour changes and jumps than in paint order</td></tr>
-<tr><td>M13.4</td><td>Centre lines from a constrained Delaunay triangulation. A shape narrower than <code>min_satin_stroke_width_mm</code> everywhere sews as a running stitch along its centre line, tripled from 0.5 mm</td><td>its requirements active</td></tr>
-<tr><td>M13.5</td><td>Columns from shapes. A shape no wider than the widest satin column sews as satin columns between its own outlines, joined where its strips meet and closed round its rings, with an underlay by width</td><td>same</td></tr>
+<tr><td>M13.4</td><td>Centre lines from a constrained Delaunay triangulation. A shape narrower than <code>min_satin_stroke_width_mm</code> everywhere sews as a running stitch along its centre line, tripled from 0.5 mm, as an automatic stroke that narrow is</td><td>its requirements active</td></tr>
+<tr><td>M13.5</td><td>Columns from shapes. A shape no wider than the widest satin column sews as satin columns between its own outlines, joined where its strips meet and closed round its rings, with an underlay by width, which an automatic stroke’s column gets too</td><td>same</td></tr>
 <tr><td>M13.6</td><td>Shapes in parts. A shape’s broad parts are filled, and its narrow parts sew as columns and lines that overlap the fill</td><td>same; TS-13 drawn</td></tr>
-<tr><td>M13.7</td><td>VectorCraft. The Auto effect previews each path’s stitches. <code>stitch palette</code> writes a profile’s threads for Image Trace’s Document Library palette. Tutorial “From a picture to a machine file”, and a Level B case in which VectorCraft traces a picture</td><td><code>shots-ui</code> and the compatibility gate green with the new case</td></tr>
+<tr><td>M13.7</td><td>VectorCraft. The Auto effect previews each path’s stitches, and its dialog sets the rules’ settings, registered then. <code>stitch palette</code> writes a profile’s threads for Image Trace’s Document Library palette. Tutorial “From a picture to a machine file”, and a Level B case in which VectorCraft traces a picture</td><td><code>shots-ui</code> and the compatibility gate green with the new case</td></tr>
 <tr><td>MC-8 🧵</td><td><strong>TS-13</strong> (test pictures digitized automatically, beside the same shapes sewn in paint order); kit: <code>stitch testsheet</code></td><td>report filed; the rules’ values confirmed or changed</td></tr>
 <tr><td>M13.8</td><td>Automatic digitizing by default for VectorCraft documents</td><td>the end-to-end cases expect it</td></tr>
 <tr><td>M13.9 🧪</td><td><code>stitch plan picture.png</code>: VectorCraft’s command line traces the picture, or StitchCraft reads and traces it itself</td><td>decision recorded in the design</td></tr>
@@ -9777,7 +9939,7 @@ cases, or bugs. Every profile change links its report.</li>
 <tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
 <tr><td><strong>TS-11</strong> New stitch types</td><td>Samples of the milestone’s new types. So far zigzag strokes (M7.2), straight and curved, at spacings of 0.4, 1 and 2 mm and widths of 1, 2 and 4 mm, and one at 45°. E-stitches (M7.3) 3 and 5 mm wide at spacings of 2 and 3 mm, along a straight edge and round a circle, on appliqué fabric. S-stitches (M7.4) 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, straight and curved, the 10 mm ones split at 3 mm by the default and the staggered methods. Zigzag satins (M7.5) 4 and 8 mm wide at spacings of 0.4 and 1 mm, straight and curved, beside satin columns of the same widths and spacings, and one 8 mm wide at 1 mm over a contour underlay</td><td>Per type, as listed on its expected-result sheet. A zigzag sews narrower than drawn, and the report says by how much, whether its sides are even round curves and which is the narrowest width that sews cleanly. The E-stitch’s spine should cover the appliqué’s raw edge, and its spikes hold it without puckering. The S-stitch should cover its band at 0.4 mm with its steps along the edges even, and the report says whether the default method’s splits leave a furrow along the band that the staggered ones do not. The zigzag satin should cover its band at 0.4 mm as its satin column does, and the report says whether it sews narrower than the satin column beside it. Its contour underlay should not show past the zigzag at either end</td><td>MC-6</td></tr>
 <tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round?</td><td>MC-5, MC-7</td></tr>
-<tr><td><strong>TS-13</strong> Pictures digitized automatically (M13)</td><td>Test pictures drawn in code and digitized with <code>--auto</code>, each beside the same shapes sewn in paint order. A badge is a broad fill inside a ring. Block letters are 4, 6, 10 and 15 mm tall. A cartoon face has black outlines 1, 2 and 4 mm wide. Lines are 0.3, 0.6 and 0.9 mm wide, and specks lie round a disc</td><td>Fabric showing between colours, on both halves. The smallest letters that read. Whether each outline’s columns cover the edges of the fills beside them, and whether the triple runs show as wide as their lines. Colour changes, trims and time against the half in paint order</td><td>MC-8</td></tr>
+<tr><td><strong>TS-13</strong> Pictures digitized automatically (M13)</td><td>Test pictures drawn in code and digitized with <code>--auto</code>, each beside the same shapes sewn in paint order. A badge is a broad fill inside a ring. Block letters are 4, 6, 10 and 15 mm tall. A cartoon face has black outlines 1, 2 and 4 mm wide. Lines are 0.3, 0.6 and 0.9 mm wide, and specks lie round a disc</td><td>Fabric showing between colours, on both halves. The smallest letters that read. Whether each outline’s columns cover the edges of the fills beside them, and whether the triple runs show as wide as their lines. A column’s square end past the end of a line with round caps (M13.1), and how far it shows past the round end. Small traced rings and hairpins, filled because no satin column can follow them (M13.1), and how solid they sew beside their columns’ neighbours. Colour changes, trims and time against the half in paint order</td><td>MC-8</td></tr>
 <tr><td><strong>TS-14</strong> Lettering (M14)</td><td>3 embroidery fonts, a block, a script and a small one, each at the least and the greatest heights it sews at, and a name along an arc</td><td>Whether every glyph reads at its least height, satin coverage at its greatest, and whether the locks of small glyphs hold after the trims</td><td>MC-9</td></tr>
 </tbody>
 </table>

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-7e8d43ee.js";
+            window.path_to_searchindex_js = "../../searchindex-6a42d2d1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-58ed789b.js"></script>
@@ -191,8 +191,14 @@ holds Ink/Stitch’s settings for that kind of stitch, and the object shows its 
 art. The thread is the colour of the object’s fill for a fill, and of its stroke for a stroke or a satin
 column.</p>
 <p>An object without a StitchCraft effect sews as Ink/Stitch sews a shape of an SVG file. Its fills are
-filled, and its strokes are sewn as running stitch. Objects are sewn in the order they are drawn, the
-bottom one first. <a href="vectorcraft-columns-and-presets.html">Satin columns and presets in VectorCraft</a> shows
+filled, and its strokes are sewn as running stitch. With <code>stitch export --auto</code>, StitchCraft chooses its
+stitches by width instead, as for a picture traced into shapes.</p>
+<ul>
+<li>A line up to 1 mm wide runs.</li>
+<li>A line up to 7 mm wide is a satin column as wide as drawn, its round or square caps included.</li>
+<li>A wider line, or a fill, is a tatami fill.</li>
+</ul>
+<p>Objects are sewn in the order they are drawn, the bottom one first. <a href="vectorcraft-columns-and-presets.html">Satin columns and presets in VectorCraft</a> shows
 how to draw a column with 2 rails, and how to keep settings in graphic styles.</p>
 <h2 id="leave-out-what-isnt-to-be-sewn"><a class="header" href="#leave-out-what-isnt-to-be-sewn">Leave out what isn’t to be sewn</a></h2>
 <p>Name an object or a layer <code>stitch:ignore</code>, by double-clicking its name in the Layers panel, and it is left

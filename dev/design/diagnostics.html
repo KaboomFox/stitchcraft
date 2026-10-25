@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7e8d43ee.js";
+            window.path_to_searchindex_js = "../searchindex-6a42d2d1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-58ed789b.js"></script>
@@ -320,6 +320,9 @@ another.</p>
 <tr><td><code>SC-I0809</code></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides)</td><td>M6</td></tr>
 <tr><td><code>SC-I0810</code></td><td>Info</td><td>VectorCraft live effect leaves the object as it is (it sews no stitch, its preview level needs more work than VectorCraft lets a live effect do, or it is a satin column drawn as one path or a zigzag stroke, whose width the effect is not given)</td><td>M6</td></tr>
 <tr><td><code>SC-I0811</code></td><td>Info</td><td>VectorCraft object left out, as its name asks (an object or a layer named <code>stitch:ignore</code>)</td><td>M6</td></tr>
+<tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
+<tr><td><code>SC-I0902</code></td><td>Info</td><td>Line a satin column cannot follow; filled (a part of an automatic line that turns more tightly than it is wide or is shorter than a CSS pixel, or a dot its cap draws)</td><td>M13</td></tr>
+<tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>
 </tbody>
 </table>
 </div>
