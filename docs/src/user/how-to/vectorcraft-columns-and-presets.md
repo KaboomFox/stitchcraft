@@ -5,9 +5,11 @@ commands do the rest of what a design needs.
 
 ## Make a satin column VectorCraft can show
 
-A satin column drawn as one path sews as wide as its stroke. VectorCraft gives an effect the path but not
-its stroke, so StitchCraft Satin leaves such a path as it is and says why (`SC-I0810`). The file still
-sews it. To see its stitches in VectorCraft, draw the column with 2 rails:
+A satin column drawn as one path sews as wide as its stroke. From VectorCraft 0.14 StitchCraft Satin shows
+its stitches as wide as the object's stroke. Before 0.14 VectorCraft gives an effect the path but not its
+stroke, and StitchCraft Satin leaves such a path as it is and says why (`SC-I0810`). It does so too for an
+object without a stroke of its own, such as a path a group's stroke paints. The file still sews it. To see
+its stitches in VectorCraft then, draw the column with 2 rails:
 
 1. Draw the column's 2 edges as 2 paths.
 2. Select both and choose **Object › Compound Path › Make** (Cmd+8).

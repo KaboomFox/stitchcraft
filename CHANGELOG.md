@@ -5,6 +5,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.8: live effects read their object's stroke (`REQ-VC-010`). From VectorCraft 0.14 a live effect is
+  given its object's fills and strokes. A stroke or a satin effect on the object follows the topmost stroke
+  that has a paint and a width: its width, and from 0.15 its join, cap and miter limit, read with the code
+  that reads a document's. `stitch export` follows the topmost stroke VectorCraft draws. So a satin column
+  drawn as one path and a zigzag stroke show their stitches as wide as their stroke.
+  - Given no stroke, before 0.14, for an object without one, or where only a group's stroke paints it, the
+    effect leaves such an object as it is, with `SC-I0810`. Its message says that VectorCraft gives no
+    stroke, and how to give one.
+  - An effect on one of an object's fills or strokes leaves the object as it is, with `SC-I0810`, where it
+    showed the stitches of an object that `stitch export` doesn't sew: the reader doesn't use such an
+    effect (`SC-W0807`).
+  - A satin column drawn as one path makes its rails first, in many units of the engine's work, which the
+    preview prices as dear as its stitches. So the auto level shows the outline of a centre line that bends,
+    and the exact level its stitches: one bend takes 12.6 million instructions in VectorCraft's host.
+  - The contract tests show both as wide as their stroke in VectorCraft's host, and run their previews on
+    centre lines straight and curved at each level.
 - M13.1: automatic elements. `stitch plan --auto` and `stitch export --auto` choose the stitches of each
   shape that has no settings, by its width (`REQ-AUTO-001` to `REQ-AUTO-006`): a VectorCraft object with no
   StitchCraft effect on it or on a group around it, and an SVG element with no `inkstitch:` attribute. A

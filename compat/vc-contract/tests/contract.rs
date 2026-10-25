@@ -173,9 +173,10 @@ fn each_family_sews_an_object_in_vectorcraft() {
 }
 
 /// From VectorCraft 0.14 a live effect is also given, read only, the fills and strokes of its object, and
-/// `_context.item` says whether it sits on the object or on one of them. Each family's effect sews an
-/// object that has a fill and a stroke as it sews one that has none, wherever it sits: the effects don't
-/// read them yet (M6.8), and nothing VectorCraft adds beside the path stops them reading it.
+/// `_context.item` says whether it sits on the object or on one of them. On the object, each family's effect
+/// sews an object that has a fill and a stroke as it sews one that has none: a running stitch and a satin
+/// column drawn with rails don't take a stroke's width. On its fill or its stroke, which `stitch export`
+/// doesn't use, the effect leaves the object as it is (`REQ-VC-010`).
 #[test]
 fn each_family_sews_an_object_that_has_fills_and_strokes() {
     let bounds = Rect::new(0.0, 0.0, 20.0, 20.0);
@@ -187,17 +188,39 @@ fn each_family_sews_an_object_that_has_fills_and_strokes() {
         let plugin = registry::install_bytes(&module(family)).unwrap();
         let unpainted = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints::default());
         assert!(unpainted.is_some(), "{family}: {:?}", effect::last_error(plugin.id()));
-        // On the object, on its fill and on its stroke.
-        for item in [None, Some(0), Some(1)] {
-            let painted = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints { appearance: Some(&art), item });
-            assert_eq!(painted, unpainted, "{family} on {item:?}: {:?}", effect::last_error(plugin.id()));
+        let painted = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints { appearance: Some(&art), item: None });
+        assert_eq!(painted, unpainted, "{family}: {:?}", effect::last_error(plugin.id()));
+        for item in [Some(0), Some(1)] {
+            let on_a_paint = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints { appearance: Some(&art), item });
+            let error = effect::last_error(plugin.id()).unwrap_or_default();
+            assert!(on_a_paint.is_none() && error.contains("info SC-I0810: This effect is on one of the object's fills or strokes"), "{family} on {item:?}: {error}");
+        }
+    }
+}
+
+/// A satin column drawn as one path, and a zigzag stroke, show their stitches in VectorCraft's host as wide
+/// as the stroke VectorCraft gives the effect from 0.14 (`REQ-VC-010`).
+#[test]
+fn req_vc_010_a_satin_column_drawn_as_one_path_and_a_zigzag_show_their_stitches_as_wide_as_their_stroke() {
+    let bounds = Rect::new(0.0, 0.0, 100.0, 0.0);
+    let line = lines(&[&[(0.0, 0.0), (100.0, 0.0)]]);
+    for (family, set) in [("satin", json!({})), ("stroke", json!({"stroke_method": "zigzag_stitch"}))] {
+        let plugin = registry::install_bytes(&module(family)).unwrap();
+        for mm in [1.5, 3.0, 5.0] {
+            let mut art = Appearance::default_art();
+            art.stroke_mut().unwrap().width = mm * 72.0 / 25.4;
+            let out = effect::apply(plugin.id(), &set, &line, bounds, FillRule::NonZero, Paints { appearance: Some(&art), item: None });
+            let out = out.unwrap_or_else(|| panic!("{family} {mm} mm: {:?}", effect::last_error(plugin.id())));
+            let ys = || out.subpaths.iter().flat_map(|subpath| &subpath.anchors).map(|anchor| anchor.p.y);
+            let across = (ys().fold(f64::NEG_INFINITY, f64::max) - ys().fold(f64::INFINITY, f64::min)) * 25.4 / 72.0;
+            assert!((across - mm).abs() < 0.01, "{family} {mm} mm: its stitches lie {across} mm apart across the line");
         }
     }
 }
 
 /// When an effect cannot show an object's stitches, VectorCraft draws the object as it is and shows why
-/// as the plug-in's last error: a satin column drawn as one path is as wide as its stroke, which the
-/// effect doesn't read yet (M6.8).
+/// as the plug-in's last error: a satin column drawn as one path is as wide as its stroke, and given no
+/// stroke the effect cannot tell how wide (`REQ-VC-010`).
 #[test]
 fn what_an_effect_cannot_show_is_its_last_error() {
     let plugin = registry::install_bytes(&module("satin")).unwrap();
@@ -232,40 +255,66 @@ fn anchors(output: &[u8]) -> usize {
     subpaths.filter_map(|subpath| subpath["anchors"].as_array()).map(Vec::len).sum()
 }
 
+/// A stroke `mm` millimetres wide as VectorCraft 0.15 gives a live effect one, among its object's paints:
+/// black, mitred, with butt caps.
+fn stroke(mm: f64) -> Value {
+    json!({"paint": {"type": "solid", "color": {"model": "rgb", "r": 0, "g": 0, "b": 0}}, "width": mm * 72.0 / 25.4, "join": "miter", "cap": "butt", "miterLimit": 10})
+}
+
 /// Each family's live effect at each preview level, on shapes of growing size, within VectorCraft's
 /// limits (`REQ-VC-003`). Auto, rows and the outline finish on every shape. An exact preview has all that
 /// VectorCraft allows, which a small fill's fits in, and the test notes how far the larger ones get. It
 /// prints what each run takes against what VectorCraft allows it, and what it shows, which the plug-in's
-/// budget (`apps/stitchcraft-vc-plugin/src/preview.rs`) is measured from.
+/// budget (`apps/stitchcraft-vc-plugin/src/preview.rs`) is measured from. A satin column drawn as one path
+/// and a zigzag stroke are given a stroke 3 mm wide, as VectorCraft gives one from 0.14 (`REQ-VC-010`).
 #[test]
 fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
     let square = |side: f64| shapes::rectangle(Rect::new(0.0, 0.0, side, side));
     let rails = |length: f64| lines(&[&[(0.0, 0.0), (length, 0.0)], &[(0.0, 20.0), (length, 20.0)]]);
     let squares = |sides: &[f64]| sides.iter().map(|side| (format!("square {side} pt"), square(*side))).collect::<Vec<_>>();
     let fills = squares(&[10.0, 20.0, 40.0, 80.0, 160.0, 320.0, 640.0, 2560.0]);
+    // Centre lines: straight, with one bend, and curves flattened to many points.
+    let straight = |length: f64| (format!("line {length} pt"), lines(&[&[(0.0, 0.0), (length, 0.0)]]));
+    let bent = ("bent line 102 pt".to_string(), lines(&[&[(0.0, 0.0), (60.0, 0.0), (90.0, 30.0)]]));
+    let quarter: Vec<(f64, f64)> = (0..=16).map(|k| f64::from(k) / 16.0 * std::f64::consts::FRAC_PI_2).map(|a| (100.0 * a.cos(), 100.0 * a.sin())).collect();
+    let quarter = ("quarter circle of 17 points".to_string(), lines(&[&quarter]));
+    let sine: Vec<(f64, f64)> = (0..32).map(|k| (f64::from(k) * 10.0, 30.0 * (f64::from(k) * 0.4).sin())).collect();
+    let sine = ("sine curve of 32 points".to_string(), lines(&[&sine]));
+    // A satin column's exact preview of the first 3 fits what VectorCraft allows, and the sine curve's nearly fills it.
+    let centre_lines = vec![straight(100.0), bent, quarter, sine, straight(15360.0)];
+    let stroked = json!({"fills": [], "strokes": [stroke(3.0)]});
+    let zigzag = |level: &str| json!({"preview_level": level, "stroke_method": "zigzag_stitch"});
+    let level = |level: &str| json!({"preview_level": level});
     let runs = [
-        Runs { family: "stroke", level: "auto", shapes: squares(&[20.0, 320.0, 5120.0, 25600.0]), finishing: usize::MAX },
-        Runs { family: "stroke", level: "outline", shapes: squares(&[20.0, 25600.0]), finishing: usize::MAX },
+        Runs { family: "stroke", set: level("auto"), given: json!({}), shapes: squares(&[20.0, 320.0, 5120.0, 25600.0]), finishing: usize::MAX },
+        Runs { family: "stroke", set: level("outline"), given: json!({}), shapes: squares(&[20.0, 25600.0]), finishing: usize::MAX },
+        Runs { family: "stroke", set: zigzag("auto"), given: stroked.clone(), shapes: centre_lines.clone(), finishing: usize::MAX },
+        Runs { family: "stroke", set: zigzag("outline"), given: stroked.clone(), shapes: centre_lines.clone(), finishing: usize::MAX },
         Runs {
             family: "satin",
-            level: "auto",
+            set: level("auto"),
+            given: json!({}),
             shapes: [60.0, 960.0, 15360.0].map(|length| (format!("rails {length} pt"), rails(length))).to_vec(),
             finishing: usize::MAX,
         },
-        Runs { family: "satin", level: "outline", shapes: vec![("rails 15360 pt".into(), rails(15360.0))], finishing: usize::MAX },
-        Runs { family: "fill", level: "auto", shapes: fills.clone(), finishing: usize::MAX },
-        Runs { family: "fill", level: "rows", shapes: fills.clone(), finishing: usize::MAX },
-        Runs { family: "fill", level: "outline", shapes: fills.clone(), finishing: usize::MAX },
+        Runs { family: "satin", set: level("outline"), given: json!({}), shapes: vec![("rails 15360 pt".into(), rails(15360.0))], finishing: usize::MAX },
+        Runs { family: "satin", set: level("auto"), given: stroked.clone(), shapes: centre_lines.clone(), finishing: usize::MAX },
+        Runs { family: "satin", set: level("outline"), given: stroked.clone(), shapes: centre_lines.clone(), finishing: usize::MAX },
+        Runs { family: "satin", set: level("exact"), given: stroked, shapes: centre_lines, finishing: 3 },
+        Runs { family: "fill", set: level("auto"), given: json!({}), shapes: fills.clone(), finishing: usize::MAX },
+        Runs { family: "fill", set: level("rows"), given: json!({}), shapes: fills.clone(), finishing: usize::MAX },
+        Runs { family: "fill", set: level("outline"), given: json!({}), shapes: fills.clone(), finishing: usize::MAX },
         // The 3.5 mm and 7 mm squares.
-        Runs { family: "fill", level: "exact", shapes: fills, finishing: 2 },
+        Runs { family: "fill", set: level("exact"), given: json!({}), shapes: fills, finishing: 2 },
     ];
     let mut failed = Vec::new();
-    for Runs { family, level, shapes, finishing } in runs {
+    for Runs { family, set, given, shapes, finishing } in runs {
         let plugin = Plugin::load(&module(family), Limits::default()).unwrap();
-        let params = default_params(&plugin, &json!({"preview_level": level}));
+        let params = default_params(&plugin, &set);
+        let level = set.as_object().map(|set| set.iter().map(|(key, value)| format!("{key} {value}")).collect::<Vec<_>>().join(", ")).unwrap_or_default();
         let mut costs = Vec::new();
         for (k, (name, path)) in shapes.iter().enumerate() {
-            let input = effect_input(path, json!({}));
+            let input = effect_input(path, given.clone());
             let allowed = Limits::default().fuel_base + Limits::default().fuel_per_byte * input.len() as u64;
             // Measured only when it finishes: a run VectorCraft stops may run on far longer without a limit.
             let what = match plugin.run(&input, &params) {
@@ -287,10 +336,12 @@ fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
     assert!(failed.is_empty(), "past VectorCraft's limits: {failed:?}");
 }
 
-/// A family's preview runs at one level: the shapes, and how many of the first must finish.
+/// A family's preview runs with a record's settings, among them its preview level: what VectorCraft gives
+/// beside each shape's path, the shapes, and how many of the first must finish.
 struct Runs {
     family: &'static str,
-    level: &'static str,
+    set: Value,
+    given: Value,
     shapes: Vec<(String, PathData)>,
     finishing: usize,
 }
