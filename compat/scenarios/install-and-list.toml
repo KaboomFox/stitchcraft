@@ -1,11 +1,11 @@
-# Level B: VectorCraft installs each stitch family's module and lists its live effect
-# (docs/src/design/compatibility-gate.md).
-description = "VectorCraft installs each stitch family's module, and lists its live effect."
-requirements = ["REQ-VC-002"]
+# Level B: VectorCraft installs each of StitchCraft's modules and lists it as the plug-in it is: a stitch
+# family's live effect, or a machine format's exporter (docs/src/design/compatibility-gate.md).
+description = "VectorCraft installs each of StitchCraft's modules, and lists each stitch family's live effect and each machine format's exporter."
+requirements = ["REQ-VC-002", "REQ-VC-011"]
 
 [[run]]
-plugins = ["stroke", "satin", "fill"]
+plugins = ["stroke", "satin", "fill", "pes", "dst"]
 steps = [{ cmd = "plugin.list" }]
 
 [expect]
-listed = ["stroke", "satin", "fill"]
+listed = ["stroke", "satin", "fill", "pes", "dst"]

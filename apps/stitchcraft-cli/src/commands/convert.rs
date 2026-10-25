@@ -12,9 +12,9 @@
 
 use std::fmt::Write as _;
 
-use stitchcraft_formats::Encoded;
+use stitchcraft_formats::{Encoded, read_back};
 
-use super::{Outcome, Status, describe_file, describe_plan, describe_threads, distinct, output_format, read_back, read_machine_file};
+use super::{Outcome, Status, describe_file, describe_plan, describe_threads, distinct, output_format, read_machine_file};
 use super::{reader_warnings, render_diagnostics, unknown_colors, write_files};
 use crate::cli::ConvertArgs;
 

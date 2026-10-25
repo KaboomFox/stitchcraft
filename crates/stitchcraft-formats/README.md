@@ -11,7 +11,7 @@ PEC block) for Brother and DST for everything else come first.
 | `quantize` | `quantize` (mm → 0.1 mm, half to even), `Units`, `Delta` |
 | `pes` | PES v1 container; `pes::pec` the PEC block (header, stitch data, every jump trim-flagged); `pes::thumbnail` the 48 × 38 pictures |
 | `dst` | Tajima DST: header, balanced-ternary records, trims as jump sequences |
-| `decode` | `decode` (recognises PES, PEC, DST), `Decoded`, and the `Recorder` every reader builds plans with (limits included) |
+| `decode` | `decode` (recognises PES, PEC, DST), `Decoded`, and the `Recorder` every reader builds plans with (limits included); `read_back`, at the crate's root, reads a file just written with its plan's threads, and finds a writer's bug (`SC-E0009`) before the command line or an exporter writes the file |
 | `pes::read`, `dst::read` | The readers: literal, bounded, typed errors |
 | `label` | Design names as machines show them (16 safe ASCII characters) |
 | `error` | `EncodeError`, each mapped to a registered diagnostic code |

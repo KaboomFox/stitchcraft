@@ -5,6 +5,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.9: PES and DST exporters for VectorCraft (`REQ-VC-011`). From VectorCraft 0.14, File › Export ›
+  Export As lists *PES embroidery (StitchCraft)* and *DST embroidery (StitchCraft)*, 2 more plug-in modules
+  (`--features pes` and `--features dst`). An exporter writes the file `stitch export` writes of the
+  document, with the same reader, engine, format writer and budget. Its `profile` option is the machine,
+  `brother-pe800-5x7` by default, its `auto` option is `--auto`, and the design takes the file's name.
+  - What `stitch export` says comes back as the export's warnings, one line each, naming the object, with
+    the hint after it. VectorCraft shows 100, and of more the last counts the rest. When anything said is
+    an error, the exporter doesn't write the file, and VectorCraft shows the first error.
+  - The compatibility gate builds and installs the exporters. Level B's new `export` scenario exports a
+    document with VectorCraft's command line, and checks the files and the warnings against `stitch
+    export`'s. Level A measures exports in VectorCraft's host: a fill of the 5 × 7 in hoop's whole field
+    takes 1.6 billion of the 10 billion instructions VectorCraft allows, and 63 fills of 14 mm squares 4.3
+    billion.
 - M6.8: live effects read their object's stroke (`REQ-VC-010`). From VectorCraft 0.14 a live effect is
   given its object's fills and strokes. A stroke or a satin effect on the object follows the topmost stroke
   that has a paint and a width: its width, and from 0.15 its join, cap and miter limit, read with the code
@@ -682,6 +695,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- `read_back`, which reads a machine file just written with its plan's threads, moved from the command line
+  to `stitchcraft-formats`, and a diagnostic's first line to `Diagnostic::headline` in `stitchcraft-core`.
+  The exporters check and word what they write as `stitch export` does.
 - The RFC for VectorCraft's plug-ins says what VectorCraft adopted, and the roadmap plans StitchCraft's use
   of it. The RFC proposed an ABI v2. VectorCraft took 5 of its proposals into ABI v1 in 0.14.0 to 0.16.0,
   and 2 more are on its `main`: exporters, rich parameters, data kept with the document, effects and stroke
@@ -816,6 +832,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The install page named VectorCraft's preferences pane for the plug-ins folder as it was up to 0.14,
+  Performance & Storage. From 0.15 it is Plug-ins & Scratch Disks, as VectorCraft's
+  `crates/engine/src/cmd/prefscmds.rs` names it at each tag.
 - Where a satin column's parts meet nearer than the shortest stitch, they leave finishing no needle point
   to leave out (`REQ-SAT-004`). A zigzag underlay came back 0.2 mm in from the rail where an S-stitch
   starts, and where the top stitches start after an odd centre walk or when the column ends near the next

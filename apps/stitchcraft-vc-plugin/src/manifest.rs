@@ -31,6 +31,11 @@
 //!
 //! **The preview.** Last comes `preview_level` ([`PREVIEW_LEVEL`]), which is the plug-in's and no
 //! stitch's: how much of the stitches the live effect shows ([`crate::preview::Level`]).
+//!
+//! **Exporters.** An exporter's manifest ([`exporter`]) lists its format's extension, and its dialog holds
+//! the 2 options of `stitch export` it takes ([`crate::export`]): `auto`, which digitizes the shapes without
+//! settings, and `profile`, a choice of the built-in machine profiles, the reference machine's first.
+//! VectorCraft refuses an exporter before 0.14, which is when its kind came.
 
 use serde::Serialize;
 use serde::ser::{SerializeMap, Serializer};
@@ -41,8 +46,11 @@ use stitchcraft_engine::generate::sewn_as;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Empty, Family, Kind, ParamGroup, ParamSpec, StitchType, Value as Parsed, find_for};
+use stitchcraft_plan::FormatId;
+use stitchcraft_plan::profiles::{BUILTIN, REFERENCE};
 pub use stitchcraft_vectorcraft::{PREVIEW_LEVEL, plugin_id};
 
+use crate::export::{AUTO, PROFILE};
 use crate::preview::Level;
 
 /// VectorCraft ABI v1 limits on manifests (VectorCraft `crates/plugins/src/manifest.rs`).
@@ -61,6 +69,10 @@ pub mod limits {
     pub const MAX_AUTHOR_BYTES: usize = 128;
     /// Most options of a choice, and the longest option, in bytes.
     pub const MAX_OPTIONS: usize = 64;
+    /// Most file extensions an exporter lists (from VectorCraft 0.14).
+    pub const MAX_EXTENSIONS: usize = 8;
+    /// Longest file extension, in characters.
+    pub const MAX_EXTENSION_CHARS: usize = 16;
 }
 
 /// Who the plug-ins are by.
@@ -75,7 +87,7 @@ pub struct Manifest {
     pub name: &'static str,
     /// The plug-in crate's version.
     pub version: &'static str,
-    /// `effect` or `filter`.
+    /// `effect`, `filter` or, from VectorCraft 0.14, `exporter`.
     pub kind: &'static str,
     /// Who the plug-in is by.
     pub author: &'static str,
@@ -84,6 +96,10 @@ pub struct Manifest {
     /// The parameters, in the dialog's order.
     #[serde(serialize_with = "in_order")]
     pub params: Vec<(&'static str, Schema)>,
+    /// An exporter's file extensions, lower case and without the dot, the one its files get first. Only an
+    /// exporter lists them.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub extensions: Vec<&'static str>,
 }
 
 /// One parameter as VectorCraft declares it (`ParamSpec` in VectorCraft's `crates/plugins`).
@@ -132,6 +148,7 @@ pub fn hello() -> Manifest {
         author: AUTHOR,
         description: "Returns the object's geometry unchanged. Proves the StitchCraft plug-in toolchain and VectorCraft's ABI v1 contract (roadmap step M0.6).",
         params: Vec::new(),
+        extensions: Vec::new(),
     }
 }
 
@@ -154,6 +171,33 @@ pub fn family(family: Family) -> Manifest {
         author: AUTHOR,
         description,
         params: params(family).into_iter().chain([(PREVIEW_LEVEL, preview_level(family))]).collect(),
+        extensions: Vec::new(),
+    }
+}
+
+/// The manifest of the exporter that writes the document as a file of `format`, as `stitch export` writes
+/// it: its extension, and the options it takes, `auto` and the machine's `profile`.
+pub fn exporter(format: FormatId) -> Manifest {
+    let (name, description) = match format {
+        FormatId::PesV1 => (
+            "PES embroidery (StitchCraft)",
+            "Writes the document as a Brother PES file, sewn as its StitchCraft effects say, as `stitch export` writes it.",
+        ),
+        FormatId::Dst => (
+            "DST embroidery (StitchCraft)",
+            "Writes the document as a Tajima DST file, sewn as its StitchCraft effects say, as `stitch export` writes it.",
+        ),
+    };
+    let profiles = BUILTIN.iter().map(|profile| profile.id).collect();
+    Manifest {
+        id: plugin_id(format.extension()),
+        name,
+        version: env!("CARGO_PKG_VERSION"),
+        kind: "exporter",
+        author: AUTHOR,
+        description,
+        params: vec![(AUTO, Schema::Bool { default: false }), (PROFILE, Schema::Choice { options: profiles, default: REFERENCE.id })],
+        extensions: vec![format.extension()],
     }
 }
 
@@ -276,9 +320,11 @@ pub fn validate(manifest: &Value) -> Result<(), String> {
             return Err(format!("`{key}` is longer than {max} bytes"));
         }
     }
-    if !matches!(text("kind")?, "filter" | "effect") {
-        return Err("`kind` must be \"filter\" or \"effect\"".into());
+    let kind = text("kind")?;
+    if !matches!(kind, "filter" | "effect" | "exporter") {
+        return Err("`kind` must be \"filter\", \"effect\" or \"exporter\"".into());
     }
+    valid_extensions(kind, manifest.get("extensions"))?;
     let params = manifest.get("params").and_then(Value::as_object).ok_or("`params` must be an object")?;
     if params.len() > limits::MAX_PARAMS {
         return Err(format!("{} parameters (limit {})", params.len(), limits::MAX_PARAMS));
@@ -292,6 +338,33 @@ pub fn validate(manifest: &Value) -> Result<(), String> {
             return Err(format!("parameter name `{key}` is not allowed"));
         }
         valid_spec(spec).map_err(|why| format!("parameter `{key}`: {why}"))?;
+    }
+    Ok(())
+}
+
+/// Checks the file extensions a manifest of `kind` lists, as VectorCraft does from 0.14: an exporter lists 1
+/// to 8 distinct ones, each 1 to 16 lower-case letters and digits, and a filter or an effect lists none.
+fn valid_extensions(kind: &str, extensions: Option<&Value>) -> Result<(), String> {
+    let listed = match extensions {
+        None => Vec::new(),
+        Some(Value::Array(listed)) => listed.iter().map(|e| e.as_str().ok_or("an extension must be a string")).collect::<Result<_, _>>()?,
+        Some(_) => return Err("`extensions` must be a list".into()),
+    };
+    if kind != "exporter" {
+        return if listed.is_empty() { Ok(()) } else { Err("only an exporter lists `extensions`".into()) };
+    }
+    if listed.is_empty() || listed.len() > limits::MAX_EXTENSIONS {
+        return Err(format!("an exporter lists 1 to {} `extensions`", limits::MAX_EXTENSIONS));
+    }
+    for (i, extension) in listed.iter().enumerate() {
+        let well_formed =
+            (1..=limits::MAX_EXTENSION_CHARS).contains(&extension.len()) && extension.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit());
+        if !well_formed {
+            return Err(format!("extension `{extension}` must be 1–16 lower-case letters and digits, without the dot"));
+        }
+        if listed.get(..i).is_some_and(|before| before.contains(extension)) {
+            return Err(format!("extension `{extension}` is listed twice"));
+        }
     }
     Ok(())
 }
@@ -358,6 +431,26 @@ mod tests {
             assert_eq!(manifest.id, format!("dev.stitchcraft.{}", each.id()));
             assert!(manifest.params.iter().all(|(key, _)| *key != SATIN_COLUMN), "{each:?}");
         }
+    }
+
+    #[test]
+    fn req_vc_011_each_exporter_s_manifest_is_one_vectorcraft_accepts() {
+        let profiles: Vec<&str> = BUILTIN.iter().map(|profile| profile.id).collect();
+        for format in FormatId::ALL {
+            let manifest = exporter(*format);
+            assert_eq!(validate(&value(&manifest)), Ok(()), "{format:?}");
+            assert_eq!(manifest.id, format!("dev.stitchcraft.{}", format.extension()));
+            assert_eq!((manifest.kind, manifest.extensions.as_slice()), ("exporter", &[format.extension()][..]));
+            // `stitch export`'s options, as they are when it is not given them: no automatic digitizing, and the
+            // reference machine, listed first.
+            let options =
+                vec![(AUTO, Schema::Bool { default: false }), (PROFILE, Schema::Choice { options: profiles.clone(), default: REFERENCE.id })];
+            assert_eq!(manifest.params, options, "{format:?}");
+            assert_eq!(profiles.first(), Some(&REFERENCE.id));
+        }
+        // The live effects list no extensions, which a VectorCraft before 0.14 would refuse.
+        assert!(Family::ALL.iter().all(|each| value(&family(*each)).get("extensions").is_none()));
+        assert!(value(&hello()).get("extensions").is_none());
     }
 
     #[test]
@@ -526,6 +619,32 @@ mod tests {
         let large = validate(&with("description", json!("x".repeat(limits::MAX_MANIFEST_BYTES))));
         assert!(large.is_err_and(|why| why.starts_with("manifest is ")));
         assert!(validate(&with("kind", json!("tool"))).is_err());
+        // An exporter lists 1 to 8 extensions, each 1 to 16 lower-case letters and digits, and only an exporter
+        // lists any.
+        let exporting = |extensions: Value| {
+            let mut m = value(&exporter(FormatId::Dst));
+            m["extensions"] = extensions;
+            m
+        };
+        let nine = json!(["a", "b", "c", "d", "e", "f", "g", "h", "i"]);
+        for bad in [
+            json!([]),
+            json!(["DST"]),
+            json!([".dst"]),
+            json!([""]),
+            json!(["abcdefghijklmnopq"]),
+            json!(["dst", "dst"]),
+            nine,
+            json!("dst"),
+            json!([1]),
+        ] {
+            assert!(validate(&exporting(bad.clone())).is_err(), "{bad}");
+        }
+        assert_eq!(validate(&exporting(json!(["dst", "dst2", "abcdefghijklmnop"]))), Ok(()));
+        assert_eq!(validate(&exporting(json!(["a", "b", "c", "d", "e", "f", "g", "h"]))), Ok(()), "8, the most");
+        assert!(validate(&with("kind", json!("exporter"))).is_err(), "an exporter without extensions");
+        assert!(validate(&with("extensions", json!(["pes"]))).is_err(), "a live effect with extensions");
+        assert_eq!(validate(&with("extensions", json!([]))), Ok(()));
         assert!(validate(&with("params", json!({"preview": {"type": "bool", "default": false}}))).is_err());
         let too_many: serde_json::Map<String, Value> =
             (0..=limits::MAX_PARAMS).map(|i| (format!("p{i}"), json!({"type": "bool", "default": false}))).collect();
