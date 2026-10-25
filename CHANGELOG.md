@@ -727,6 +727,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The compatibility gate pins VectorCraft 0.17.0, adopted from 0.16.0. Every contract case and scenario
+  passes against it unchanged, and an export of a fill of the whole hoop costs what it cost in 0.16.0.
+  0.17.0 adds heavy filters, which M6.12's Convert Line to Satin needs: a filter that declares
+  `"budget": "heavy"` gets 1 billion instructions and 300 seconds, once the user agrees to install it. It
+  also keeps other applications' SVG attributes from import to export, so an Ink/Stitch file opened in
+  VectorCraft keeps its `inkstitch:*` settings. The RFC's table, the integration page and the roadmap name
+  the release that adopted each.
 - The names of the parameter reference pages, `ParamGroup::slug` and `ParamGroup::title`, moved from the
   docs generator to `stitchcraft-params`, where the plug-in's dialogs name the same pages. And
   `stitchcraft_core::text::plain` gives the plain text of Markdown help, for VectorCraft's dialogs.
