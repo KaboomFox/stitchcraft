@@ -96,7 +96,7 @@ release takes:
 | `<ns>.satin` | live effect | satin (P1), E (M7.3), S (M7.4), zigzag (M7.5) | rails and rungs from the object's compound path |
 | `<ns>.fill` | live effect | tatami (P1); contour, meander, circular (P2) | `fill_method` choice |
 | `<ns>.auto` | live effect | the stitches automatic digitizing chooses by width (M13.7) | on a group, previews each path inside ([image to embroidery](image-to-embroidery.md)) |
-| `<ns>.pes`, `<ns>.dst` | exporter (VectorCraft 0.14) | every family | File › Export › Export As writes the machine file `stitch export` writes (M6.9, [below](#exporters-file--export-writes-pes-and-dst)) |
+| `<ns>.pes`, `<ns>.dst` | exporter (VectorCraft 0.14) | every family | File › Export › Export As writes the same machine file as `stitch export` (M6.9, [below](#exporters-file--export-writes-pes-and-dst)) |
 
 The tools an object filter was to give are VectorCraft's own commands, and the rest come with M6.12's tools
 filter ([tools](#tools-vectorcrafts-own-commands)).
@@ -191,9 +191,10 @@ with the parameters of the dialog it shows when the file is picked, and the file
 exporter returns the file in base64, with warnings for the user, or declines with a message, and then
 nothing is written (VectorCraft's `docs/plugins.md`, Exporters).
 
-M6.9 makes StitchCraft's formats exporters (`REQ-VC-011`, `apps/stitchcraft-vc-plugin/src/export.rs`):
-*PES embroidery (StitchCraft)* and *DST embroidery (StitchCraft)*, one module each, which a VectorCraft
-before 0.14 refuses to install. An exporter writes the file `stitch export` writes of the document:
+M6.9 makes StitchCraft's formats exporters (`REQ-VC-011`, `apps/stitchcraft-vc-plugin/src/export.rs`).
+There are two, *PES embroidery (StitchCraft)* and *DST embroidery (StitchCraft)*, each a module of its
+own, and a VectorCraft before 0.14 refuses to install them. An exporter writes the file `stitch export`
+writes of the document:
 
 - It reads the document with the same reader, plans it with the engine for the machine its `profile`
   option names, `brother-pe800-5x7` by default, and writes it with the file's name as the design name.
