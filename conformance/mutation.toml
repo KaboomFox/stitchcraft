@@ -5,7 +5,7 @@
 [missed]
 stitchcraft-cli = 23
 stitchcraft-core = 4
-stitchcraft-engine = 39
+stitchcraft-engine = 44
 stitchcraft-formats = 46
 stitchcraft-params = 0
 stitchcraft-plan = 48
@@ -286,3 +286,27 @@ file = "crates/stitchcraft-engine/src/normalize/along.rs"
 mutant = "replace < with <= in Along<'a>::snapped"
 line = "let after = self.at.partition_point(|a| *a < at);"
 why = "where at is exactly a point's distance, that point is one of the 2 points looked at either way, no farther than a rounding from the point at at, so it is the one taken and at stays as it was"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/mod.rs"
+mutant = "replace > with >= in along"
+line = "(length > 0.0).then(|| Point::new(at.x() + dx / length * by, at.y() + dy / length * by).ok()).flatten()"
+why = "a direction of no length, let through, divides 0 by 0, which is not a number, and Point::new refuses a coordinate that is not a number, so there is no point either way"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/area.rs"
+mutant = "replace > with >= in Walker<'_>::turn"
+line = "if cross == 0.0 && dot > 0.0 {"
+why = "the 2 directions are each of unit length, so their cross and dot products are never both 0: where the cross product is 0, the dot product is about 1 or -1, and more than 0 and at least 0 agree"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/area.rs"
+mutant = "replace * with / in Walker<'_>::turn"
+line = "let normal = |(dx, dy): Direction| (-dy * outside, dx * outside);"
+why = "outside is 1 or -1, and multiplying by either gives exactly what dividing by it does"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/stroke.rs"
+mutant = "replace > with >= in within"
+line = "dot > 0.0 && cross.abs() <= sine * lengths"
+why = "where the dot product is 0 the 2 directions are square to each other, so the cross product is as large as their lengths' product, which no sine below 1 allows, and every bound is below 1: stroke_area asks for one only on a line wider than twice the tolerance"

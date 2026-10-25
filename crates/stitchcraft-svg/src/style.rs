@@ -18,17 +18,18 @@
 //! sRGB one, as viewers without colour management do.
 //!
 //! The stroke's width and join matter to a satin column drawn as one path, its centre line: they give
-//! the column its width and its corners ([`Style::join`]).
+//! the column its width and its corners ([`Style::join`]). Its cap matters to a stroke StitchCraft digitizes
+//! automatically, whose stitches cover the line as it is drawn, caps included (`REQ-AUTO-003`).
 //!
 //! Read here: `fill`, `stroke`, `color` (for `currentColor`), `fill-rule`, `opacity`, `fill-opacity`,
-//! `stroke-opacity`, `stroke-width`, `stroke-linejoin`, `stroke-miterlimit`, `visibility`, `display`,
+//! `stroke-opacity`, `stroke-width`, `stroke-linejoin`, `stroke-miterlimit`, `stroke-linecap`, `visibility`, `display`,
 //! `paint-order` and the marker properties, each of the three markers on its own.
 
 use std::str::FromStr;
 
 use roxmltree::Node;
 use stitchcraft_core::{Exhausted, Meter};
-use stitchcraft_engine::design::{FillRule, Join};
+use stitchcraft_engine::design::{Cap, FillRule, Join};
 use stitchcraft_plan::Rgb;
 use svgtypes::{Color, Length, LengthUnit, Number, PaintOrder, PaintOrderKind};
 
@@ -98,6 +99,16 @@ impl<'a, 'input> Declared<'a, 'input> {
     /// What the element declares for `stroke-linejoin`: a join SVG names.
     pub fn line_join(&self) -> Declaration<'a, LineJoin> {
         self.value("stroke-linejoin", LineJoin::parse)
+    }
+
+    /// What the element declares for `stroke-linecap`: a cap SVG names, in any case.
+    pub fn line_cap(&self) -> Declaration<'a, Cap> {
+        self.value("stroke-linecap", |v| {
+            [("butt", Cap::Butt), ("round", Cap::Round), ("square", Cap::Square)]
+                .into_iter()
+                .find(|(name, _)| v.eq_ignore_ascii_case(name))
+                .map(|(_, cap)| cap)
+        })
     }
 
     /// What the element declares for `stroke-miterlimit`: a number of 1 or more.
@@ -437,6 +448,8 @@ pub struct Style<'a> {
     pub line_join: Option<LineJoin>,
     /// The `stroke-miterlimit` property.
     pub miter_limit: f64,
+    /// The `stroke-linecap` property.
+    pub line_cap: Cap,
 }
 
 impl Default for Style<'_> {
@@ -456,6 +469,7 @@ impl Default for Style<'_> {
             stroke_width: Length::new_number(1.0),
             line_join: None,
             miter_limit: 4.0,
+            line_cap: Cap::Butt,
         }
     }
 }
@@ -506,6 +520,9 @@ impl<'a> Style<'a> {
         if let Declaration::Set(join) = declared.line_join() {
             style.line_join = Some(join);
         }
+        if let Declaration::Set(cap) = declared.line_cap() {
+            style.line_cap = cap;
+        }
         if let Declaration::Set(limit) = declared.miter_limit() {
             style.miter_limit = limit;
         }
@@ -536,6 +553,18 @@ impl<'a> Style<'a> {
             Some(LineJoin::Round) => Join::Round,
             Some(LineJoin::Bevel) => Join::Bevel,
             Some(LineJoin::MiterClip | LineJoin::Arcs) | None => Join::UNSET,
+        }
+    }
+
+    /// The join at the stroke's corners as SVG draws it, for a line digitized automatically, whose stitches
+    /// follow the drawing (`REQ-AUTO-004`): round and bevel as they say, and otherwise SVG's initial join, a
+    /// miter limited by `stroke-miterlimit`. SVG 2's `miter-clip` and `arcs`, which few viewers draw, are
+    /// miters too.
+    pub fn painted_join(&self) -> Join {
+        match self.line_join {
+            Some(LineJoin::Round) => Join::Round,
+            Some(LineJoin::Bevel) => Join::Bevel,
+            Some(LineJoin::Miter | LineJoin::MiterClip | LineJoin::Arcs) | None => Join::Miter { limit: self.miter_limit },
         }
     }
 }

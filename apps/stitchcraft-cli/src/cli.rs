@@ -79,6 +79,10 @@ pub struct PlanArgs {
     /// written.
     #[arg(long)]
     pub report: Option<PathBuf>,
+    /// Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by
+    /// its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them.
+    #[arg(long)]
+    pub auto: bool,
 }
 
 /// `stitch bug-report`.
@@ -89,7 +93,7 @@ pub struct BugReportArgs {
     pub design: Option<PathBuf>,
     /// Replay this bundle instead: plan its design again, with the profile and format it names, and say
     /// whether everything comes out the same.
-    #[arg(long, conflicts_with_all = ["design", "output", "profile", "format", "says"])]
+    #[arg(long, conflicts_with_all = ["design", "output", "profile", "format", "says", "auto"])]
     pub replay: Option<PathBuf>,
     /// The bundle to write; by default next to the design, as DESIGN.bug-report.json.
     #[arg(long, short)]
@@ -103,6 +107,10 @@ pub struct BugReportArgs {
     /// What goes wrong, in your words; it goes into the bundle.
     #[arg(long)]
     pub says: Option<String>,
+    /// Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by
+    /// its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them.
+    #[arg(long)]
+    pub auto: bool,
 }
 
 /// `stitch testsheet`.

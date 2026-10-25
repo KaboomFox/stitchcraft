@@ -78,6 +78,7 @@ impl Drawing {
             shape,
             thread: thread.clone(),
             params: params.iter().copied().collect::<ParamSet>(),
+            automatic: false,
         });
         Ok(())
     }

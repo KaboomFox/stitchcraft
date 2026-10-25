@@ -30,7 +30,14 @@ fn region(path: &Path, rule: FillRule) -> Built {
 
 /// A fill element `id` covering `path` under `rule`.
 fn fill(id: &str, path: Path, rule: FillRule) -> Element {
-    Element { id: ElementId::new(id).unwrap(), name: None, shape: Shape::Fill { path, rule }, thread: RED, params: ParamSet::default() }
+    Element {
+        id: ElementId::new(id).unwrap(),
+        name: None,
+        shape: Shape::Fill { path, rule },
+        thread: RED,
+        params: ParamSet::default(),
+        automatic: false,
+    }
 }
 
 /// What planning `element` beside a plain stroke says.

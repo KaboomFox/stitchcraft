@@ -9,6 +9,10 @@ use stitchcraft_core::math;
 use stitchcraft_core::units::{MM_PER_INCH, MM_PER_SVG_PX};
 use svgtypes::{Align, AspectRatio, Length, LengthUnit, TransformListParser, TransformListToken, ViewBox};
 
+/// How far apart, as a fraction, a map's stretches of 2 directions may be and still count as alike: far
+/// more than rounding makes of a rotation, far less than any scale a drawing gives on purpose.
+const EVEN: f64 = 1e-9;
+
 /// `x' = a·x + c·y + e`, `y' = b·x + d·y + f`: SVG's `matrix(a b c d e f)`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Affine {
@@ -73,6 +77,16 @@ impl Affine {
     /// the stroke is drawn wider one way than the other, and this is the middle way.
     pub fn stretch(self) -> f64 {
         (math::hypot(self.a, self.b) + math::hypot(self.c, self.d)) / 2.0
+    }
+
+    /// Whether the map stretches every direction alike, give or take rounding: it scales both axes alike
+    /// and turns them as one, perhaps mirrored, without a skew. A stroke it draws is then as wide all along
+    /// as [`stretch`](Affine::stretch) says.
+    pub fn stretches_evenly(self) -> bool {
+        // The images of the 2 axes are as long as each other and square to each other.
+        let (x, y) = (math::hypot(self.a, self.b), math::hypot(self.c, self.d));
+        let square = (self.a * self.c + self.b * self.d).abs();
+        (x - y).abs() <= EVEN * x.max(y) && square <= EVEN * x * y
     }
 
     /// Whether every coefficient is a finite number.
@@ -210,6 +224,21 @@ mod tests {
         // The y axis skewed to (1, 1) is √2 long; the x axis is not stretched.
         assert!((stretch("skewX(45)") - (1.0 + 2.0_f64.sqrt()) / 2.0).abs() < 1e-12);
         assert!((stretch("matrix(3 4 0 1 5 6)") - 3.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn a_map_stretches_evenly_when_it_scales_alike_and_does_not_skew() {
+        let even = |text: &str| parse(text).unwrap().stretches_evenly();
+        for text in ["translate(7 9)", "scale(-2)", "rotate(30) scale(1000)", "rotate(17 4 4) scale(3 -3)", "matrix(1000 0 0 1000.000000000001 0 0)"]
+        {
+            assert!(even(text), "{text}");
+        }
+        // Scaled more one way, skewed, or with axes as long as each other but not square to each other.
+        for text in ["scale(1 3)", "skewX(30)", "matrix(1000 0 0 1000.001 0 0)", "matrix(1000 0 600 800 0 0)", "matrix(1000 0 0.001 1000 0 0)"] {
+            assert!(!even(text), "{text}");
+        }
+        // Rounding, not a skew: axes 1000 long that lean toward each other by half a billionth of a radian.
+        assert!(even("matrix(1000 0 0.0000005 1000 0 0)"));
     }
 
     #[test]

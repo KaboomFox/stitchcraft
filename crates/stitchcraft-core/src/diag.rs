@@ -557,7 +557,10 @@ registry! {
     /// simplified: text that is not converted to paths, raster images, clones (`<use>`), nested `<svg>`
     /// elements, style sheet rules with selectors StitchCraft does not read, or a gradient or pattern used
     /// as a colour. Values that do not read are named too. A colour that does not read is ignored, as a
-    /// viewer ignores it, and one of Ink/Stitch's design settings keeps its default.
+    /// viewer ignores it, and one of Ink/Stitch's design settings keeps its default. A line that `--auto`
+    /// sews across its width, as a satin column or a fill, is as wide as its transforms stretch it on
+    /// average, so a transform that stretches it more one way than the other, and draws it wider one way,
+    /// is named too.
     ///
     /// The message names the element and what was done. Convert text and clones to paths in the editor
     /// (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
@@ -615,7 +618,10 @@ registry! {
     /// before drew, which no machine sews. A start or end marker, an object named `stitch:start` or
     /// `stitch:end`, is never stitched, and StitchCraft does not yet start or end a shape where one says.
     /// A name that begins with `stitch:` and names no marker StitchCraft reads is said too, as is a group or
-    /// a layer named as a marker, which only a shape can be: the name is ignored.
+    /// a layer named as a marker, which only a shape can be: the name is ignored. A satin column, a zigzag
+    /// or a fill made of a stroke is as wide as the stroke all along and centred on its path, so a stroke
+    /// aligned inside or outside a closed path is said, as is a width profile, and round or square caps
+    /// where the stitches end at the path's end.
     ///
     /// The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
     /// of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
@@ -659,6 +665,35 @@ registry! {
     ///
     /// The message names what was left out. To stitch it, rename it in VectorCraft's Layers panel.
     VcObjectIgnored = "SC-I0811", Info, "VectorCraft object left out, as its name asks";
+
+    /// `--auto` digitized the design's shapes that have no settings: StitchCraft chose each one's
+    /// stitches by its width, measured to the micrometre. An area is a tatami fill. A line no wider than the
+    /// design's narrowest satin stroke (`min_satin_stroke_width_mm`, 1 mm unless the design sets it) is a
+    /// running stitch, a line up to 7 mm wide a satin column as wide as the line, and a wider line a
+    /// tatami fill of the area it paints. A line whose every part a satin column cannot follow is filled
+    /// too (`SC-I0902`), and counted as a fill.
+    ///
+    /// The message counts the shapes by the stitches they sew as. To sew a shape another way, give it
+    /// settings: in VectorCraft, apply a StitchCraft effect to it. A shape with settings is not digitized
+    /// automatically.
+    AutoDigitized = "SC-I0901", Info, "Shapes digitized automatically";
+
+    /// `--auto` sews a line up to 7 mm wide as a satin column along its path, but a satin column cannot
+    /// follow this part of the line: it turns more tightly than the line is wide, so the column's edges
+    /// would fold over themselves, or it is shorter than a CSS pixel, or it is a dot that the line's round
+    /// or square cap draws. The area it paints is filled instead, as a line wider than 7 mm is.
+    ///
+    /// The message says which. To sew it as a satin column, draw the line with gentler turns or narrower,
+    /// or draw the column with 2 rails and give it settings.
+    AutoSatinFilled = "SC-I0902", Info, "Line a satin column cannot follow; filled";
+
+    /// `--auto` fills the area a line paints when the line is wider than 7 mm, or when a satin column cannot
+    /// follow it, and the area this line paints would reach more than 10 metres from the design's origin,
+    /// beyond what machine files can record. It is left out. A stroke that wide is usually a mistake in
+    /// the file.
+    ///
+    /// The message gives the line's width. Check the line's stroke width.
+    AutoAreaTooLarge = "SC-W0903", Warning, "Line too wide to fill; left out";
 }
 
 impl Code {

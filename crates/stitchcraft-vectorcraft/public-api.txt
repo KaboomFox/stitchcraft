@@ -24,3 +24,4 @@ pub fn stitchcraft_vectorcraft::plugin_id(&str) -> alloc::string::String
 pub fn stitchcraft_vectorcraft::read(&[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_vectorcraft::VectorCraft, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_vectorcraft::read_effect(stitchcraft_params::stitch_type::Family, &[u8], &[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_vectorcraft::Effect, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_vectorcraft::read_part(&[u8]) -> &[u8]
+pub fn stitchcraft_vectorcraft::read_with(&[u8], &stitchcraft_core::budget::Budget, stitchcraft_engine::design::Reading) -> core::result::Result<stitchcraft_vectorcraft::VectorCraft, stitchcraft_core::diag::Diagnostic>

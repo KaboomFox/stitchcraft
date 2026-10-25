@@ -38,10 +38,8 @@ pub(crate) const INKSCAPE_NS: &str = "http://www.inkscape.org/namespaces/inkscap
 pub(crate) const XLINK_NS: &str = "http://www.w3.org/1999/xlink";
 pub(crate) const INKSTITCH_NS: &str = "http://inkstitch.org/namespace";
 
-/// The setting the `trim` command turns on, as Ink/Stitch names it.
-pub(crate) const TRIM_AFTER: &str = "trim_after";
-/// The setting the `stop` command turns on, as Ink/Stitch names it.
-pub(crate) const STOP_AFTER: &str = "stop_after";
+// The settings the `trim` and `stop` commands turn on.
+pub(crate) use stitchcraft_engine::common::{STOP_AFTER, TRIM_AFTER};
 /// Ink/Stitch's own setting for leaving an object out; not a parameter, so it is read here.
 pub(crate) const IGNORE_OBJECT: &str = "ignore_object";
 /// The `inkstitch:*` attributes, other than parameters, that this reader reads; any other attribute

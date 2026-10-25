@@ -85,10 +85,11 @@ fn planned(root: &Path, file: &str, profile_id: &str, expect: &SheetExpect, bles
     };
     let source = Source::of(Path::new(file));
     let bytes = std::fs::read(root.join("conformance").join(file)).map_err(|e| e.to_string());
-    let (design, warnings) = match bytes.and_then(|bytes| source.read(&bytes).map_err(|e| e.to_string())) {
-        Ok(read) => read,
-        Err(e) => return outcome.failures.push(format!("{file}: {e}")),
-    };
+    let (design, warnings) =
+        match bytes.and_then(|bytes| source.read(&bytes, stitchcraft_engine::design::Reading::default()).map_err(|e| e.to_string())) {
+            Ok(read) => read,
+            Err(e) => return outcome.failures.push(format!("{file}: {e}")),
+        };
     let planned = stitchcraft_engine::plan(&design, profile, &Budget::DEFAULT);
     let codes: Vec<String> = warnings.iter().chain(&planned.diagnostics).map(|d| d.code.id().to_string()).collect();
     let name = Path::new(file).file_stem().and_then(|s| s.to_str()).unwrap_or("design");
