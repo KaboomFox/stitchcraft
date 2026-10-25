@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-0e11e993.js";
+            window.path_to_searchindex_js = "../../searchindex-d66a16ef.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b31b520c.js"></script>
@@ -762,13 +762,17 @@ Print option on, in VectorCraft’s Layer Options.</p>
 <p>A StitchCraft live effect draws the object it is applied to as its stitches, or as much of them as
 its preview level shows. It leaves the object as it is when it cannot show them, and VectorCraft
 shows this message as the plug-in’s last error. The object sews no stitch, or its preview level needs
-more work than VectorCraft lets a live effect do. Or it is as wide as its stroke, which the effect
-doesn’t read yet: a satin column drawn as one path, or a zigzag stroke.
-When another message says why an object sews no stitch, the effect shows that message instead.</p>
-<p>The message says which. A satin column drawn as one path, and a zigzag stroke, still sew as wide as
-their stroke when exported with <code>stitch export</code>. To see a satin column’s stitches in VectorCraft, draw
-its 2 rails, join them with Object › Compound Path › Make and apply the effect to that. For a preview
-that needs more work, the hint names a cheaper level to set the effect’s <code>preview_level</code> to.</p>
+more work than VectorCraft lets a live effect do. Or it is as wide as its stroke, a satin column
+drawn as one path or a zigzag stroke, and VectorCraft gives the effect no stroke: before 0.14, for an
+object without one, or where the stroke is a group’s. Or the effect sits on one of the object’s fills
+or strokes, which <code>stitch export</code> doesn’t use. When another message says why an object sews no
+stitch, the effect shows that message instead.</p>
+<p>The message says which. A satin column drawn as one path, and a zigzag stroke, sew as wide as the
+stroke that paints them when exported with <code>stitch export</code>. To see their stitches in VectorCraft, give
+the object a stroke as wide as they are, or draw a satin column’s 2 rails and join them with Object ›
+Compound Path › Make. Apply StitchCraft’s effects to the object itself, not to one of its fills or
+strokes. For a preview that needs more work, the hint names a cheaper level to set the effect’s
+<code>preview_level</code> to.</p>
 <h2 id="sc-i0811"><a class="header" href="#sc-i0811">SC-I0811</a></h2>
 <p><strong>Info</strong> — VectorCraft object left out, as its name asks</p>
 <p>An object or a layer is left out because its name asks for it: the name is <code>stitch:ignore</code>, alone

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0e11e993.js";
+            window.path_to_searchindex_js = "../searchindex-d66a16ef.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -328,13 +328,21 @@ the zigzag stroke’s. The settings every element shares come last, as in Ink/St
 reference machine and with no neighbours, as one object of a design. It returns the stitches as geometry,
 the exact level below. When it can’t show stitches, it gives back why. VectorCraft then draws the object
 as it is and shows the message as the plug-in’s last error. That happens when the object cannot be sewn or
-sews no stitch, with the message that says why, and for a satin column drawn as one path, which is as
-wide as its stroke, with <code>SC-I0810</code>. A zigzag stroke is as wide as its stroke too, and the effect leaves it
-as it is, with <code>SC-I0810</code>. VectorCraft gives a live effect its object’s fills and strokes from 0.14, and
-M6.8 will show both as wide as their stroke. A drawing that vanished instead could not be clicked to change
-the setting that emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
-shows, and <code>stitch export</code> reports them. How much of the stitches it shows, within what VectorCraft lets
-it spend, is its preview level (below).</p>
+sews no stitch, with the message that says why. A drawing that vanished instead could not be clicked to
+change the setting that emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the
+effect shows, and <code>stitch export</code> reports them. How much of the stitches it shows, within what VectorCraft
+lets it spend, is its preview level (below).</p>
+<p><strong>The stroke an effect follows</strong> (<code>REQ-VC-010</code>, M6.8). A satin column drawn as one path and a zigzag stroke
+are as wide as their stroke. From 0.14 VectorCraft gives a live effect its object’s fills and strokes, and a
+stroke or a satin effect on the object follows the topmost stroke that has a paint and a width. It reads
+the stroke’s width, and from 0.15 its join, cap and miter limit, with the reader’s own code
+(<code>stroke_style</code> in <code>crates/stitchcraft-vectorcraft</code>). <code>stitch export</code> follows the topmost stroke VectorCraft
+draws, and the 2 can differ in 2 ways. VectorCraft gives a live effect every stroke of its object without
+its opacity or whether it shows, and gives it none of the paints of the groups around it. Given no stroke,
+before 0.14, for an object without one, or where only a group’s stroke paints it, the effect leaves a satin
+column drawn as one path and a zigzag stroke as they are, with <code>SC-I0810</code>. An effect on one of the object’s
+fills or strokes leaves the object as it is too, with <code>SC-I0810</code>: <code>stitch export</code> doesn’t use such an effect
+(<code>SC-W0807</code>).</p>
 <h3 id="the-workflow"><a class="header" href="#the-workflow">The workflow</a></h3>
 <ol>
 <li>Draw the art in VectorCraft as usual.</li>
@@ -431,6 +439,7 @@ and on <code>main</code>:</p>
 <tr><td>One anchor, written by hand</td><td>18 to 20 bytes along a stroke or a satin column, 26 to 27 in a fill’s ribbons</td></tr>
 <tr><td>A unit of the engine’s work for a stroke</td><td>about 880 instructions</td></tr>
 <tr><td>A unit of the engine’s work for a satin column</td><td>about 4,730 instructions</td></tr>
+<tr><td>A unit of the engine’s work making a satin column’s rails from its centre line (M6.8, VectorCraft 0.16.0)</td><td>about 330 instructions</td></tr>
 <tr><td>A unit of the engine’s work for a fill</td><td>1,900 to 5,300 instructions, by the part of the work</td></tr>
 <tr><td>The exact preview of a 7 mm square fill with its defaults</td><td>27 million instructions, 85 % of the engine’s work spent on the travel under its rows</td></tr>
 <tr><td>The rows preview of square fills from 3.5 mm to 226 mm</td><td>1.6 to 11 million instructions</td></tr>
@@ -461,7 +470,11 @@ measured, so a budget of units bounds their exact previews. A fill’s units var
 square’s exact preview already takes more than half of what VectorCraft allows, and a budget of units that
 ran out early, in the dearer work, took 71 million instructions. So auto shows a fill’s rows, and its exact
 preview is the user’s to pick, with all that VectorCraft allows, which stops one that needs more with its
-own error. The
+own error. A satin column drawn as one path makes its rails from its centre line first, in many units of
+about 330 instructions each, which the satin column’s price counts as dear as its stitches. One bend takes
+33,100 units, so auto shows the outline of a centre line that bends. Its exact preview is the user’s to
+pick too: 12.6 million instructions for one bend, 25 million for a quarter circle of 17 points and 46
+million for a sine curve of 32 points, of the 51 to 55 million VectorCraft allows them. The
 contract test <code>req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits</code> runs each level on
 shapes of growing size on every track the <a href="compatibility-gate.html">compatibility gate</a> tests, and fails
 when VectorCraft stops a run that must finish. It prints what each run takes, which the budget’s numbers
@@ -469,8 +482,9 @@ are measured from. <code>hello_reads_and_writes_json_within_the_recorded_budget<
 costs. The real stitches are always available from the CLI preview, and the RFC’s overlay channel (P3, in
 review upstream) would remove this limitation.</p>
 <p>Paint caveat: a live effect changes only geometry. A fill preview’s ribbons are painted with the object’s
-own fill, and a stroke preview with its stroke. From 0.14 the effect reads the paints but still cannot
-change them. Users set the fill/stroke to the thread colour, which they want anyway for export.</p>
+own fill, and a stroke preview with its stroke. From 0.14 a stroke or a satin effect reads its stroke’s
+style, and still cannot change the paints. Users set the fill/stroke to the thread colour, which they want
+anyway for export.</p>
 <h3 id="commands-in-v1"><a class="header" href="#commands-in-v1">Commands in v1</a></h3>
 <p>Ink/Stitch’s commands are symbols linked to an object, and ABI v1 has nothing to link. <code>trim_after</code> and
 <code>stop_after</code> are ordinary parameters. StitchCraft reads the others from names, an object’s or a layer’s,

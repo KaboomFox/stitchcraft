@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-0e11e993.js";
+            window.path_to_searchindex_js = "../../searchindex-d66a16ef.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b31b520c.js"></script>
@@ -184,9 +184,11 @@
 <p>The StitchCraft plug-ins add their effects to VectorCraft’s Effect › Plug-ins menu, and VectorCraft’s own
 commands do the rest of what a design needs.</p>
 <h2 id="make-a-satin-column-vectorcraft-can-show"><a class="header" href="#make-a-satin-column-vectorcraft-can-show">Make a satin column VectorCraft can show</a></h2>
-<p>A satin column drawn as one path sews as wide as its stroke. VectorCraft gives an effect the path but not
-its stroke, so StitchCraft Satin leaves such a path as it is and says why (<code>SC-I0810</code>). The file still
-sews it. To see its stitches in VectorCraft, draw the column with 2 rails:</p>
+<p>A satin column drawn as one path sews as wide as its stroke. From VectorCraft 0.14 StitchCraft Satin shows
+its stitches as wide as the object’s stroke. Before 0.14 VectorCraft gives an effect the path but not its
+stroke, and StitchCraft Satin leaves such a path as it is and says why (<code>SC-I0810</code>). It does so too for an
+object without a stroke of its own, such as a path a group’s stroke paints. The file still sews it. To see
+its stitches in VectorCraft then, draw the column with 2 rails:</p>
 <ol>
 <li>Draw the column’s 2 edges as 2 paths.</li>
 <li>Select both and choose <strong>Object › Compound Path › Make</strong> (Cmd+8).</li>
