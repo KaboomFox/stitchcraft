@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-6a42d2d1.js";
+            window.path_to_searchindex_js = "searchindex-b1396aaf.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-58ed789b.js"></script>
@@ -2389,8 +2389,8 @@ Print option on, in VectorCraft’s Layer Options.</p>
 <p>A StitchCraft live effect draws the object it is applied to as its stitches, or as much of them as
 its preview level shows. It leaves the object as it is when it cannot show them, and VectorCraft
 shows this message as the plug-in’s last error. The object sews no stitch, or its preview level needs
-more work than VectorCraft lets a live effect do. Or it is as wide as its stroke, which VectorCraft
-does not give a live effect: a satin column drawn as one path, or a zigzag stroke.
+more work than VectorCraft lets a live effect do. Or it is as wide as its stroke, which the effect
+doesn’t read yet: a satin column drawn as one path, or a zigzag stroke.
 When another message says why an object sews no stitch, the effect shows that message instead.</p>
 <p>The message says which. A satin column drawn as one path, and a zigzag stroke, still sew as wide as
 their stroke when exported with <code>stitch export</code>. To see a satin column’s stitches in VectorCraft, draw
@@ -3503,12 +3503,13 @@ Off, the needle travels along the fill’s outline.</p>
 <tr><th>VectorCraft</th><th>Track</th><th>Passed the gate</th></tr>
 </thead>
 <tbody>
+<tr><td>0.16.0</td><td>stable</td><td>2026-10-25</td></tr>
 <tr><td>0.13.1</td><td>stable</td><td>2026-10-18</td></tr>
 <tr><td>0.12.0</td><td>stable</td><td>2026-10-18</td></tr>
 </tbody>
 </table>
 </div>
-<p>The plug-ins speak VectorCraft’s plug-in ABI v1. Pull requests are checked against VectorCraft 0.13.1, the release the gate pins in <code>compat/vectorcraft.toml</code>.</p>
+<p>The plug-ins speak VectorCraft’s plug-in ABI v1. Pull requests are checked against VectorCraft 0.16.0, the release the gate pins in <code>compat/vectorcraft.toml</code>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="design-documents"><a class="header" href="#design-documents">Design documents</a></h1>
 <p>These pages are the specification StitchCraft is built from. They describe behaviour and algorithms in
@@ -4702,7 +4703,7 @@ another.</p>
 <tr><td><code>SC-W0807</code></td><td>Warning</td><td>VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft’s own effects, brushes, gradients, patterns, a group’s own paints), StitchCraft effects from more than one level, a start or end marker, or a <code>stitch:</code> name StitchCraft doesn’t read</td><td>M6</td></tr>
 <tr><td><code>SC-W0808</code></td><td>Warning</td><td>VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing)</td><td>M6</td></tr>
 <tr><td><code>SC-I0809</code></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides)</td><td>M6</td></tr>
-<tr><td><code>SC-I0810</code></td><td>Info</td><td>VectorCraft live effect leaves the object as it is (it sews no stitch, its preview level needs more work than VectorCraft lets a live effect do, or it is a satin column drawn as one path or a zigzag stroke, whose width the effect is not given)</td><td>M6</td></tr>
+<tr><td><code>SC-I0810</code></td><td>Info</td><td>VectorCraft live effect leaves the object as it is (it sews no stitch, its preview level needs more work than VectorCraft lets a live effect do, or it is a satin column drawn as one path or a zigzag stroke, whose width the effect doesn’t read yet)</td><td>M6</td></tr>
 <tr><td><code>SC-I0811</code></td><td>Info</td><td>VectorCraft object left out, as its name asks (an object or a layer named <code>stitch:ignore</code>)</td><td>M6</td></tr>
 <tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
 <tr><td><code>SC-I0902</code></td><td>Info</td><td>Line a satin column cannot follow; filled (a part of an automatic line that turns more tightly than it is wide or is shorter than a CSS pixel, or a dot its cap draws)</td><td>M13</td></tr>
@@ -7423,8 +7424,9 @@ the exact level below. When it can’t show stitches, it gives back why. VectorC
 as it is and shows the message as the plug-in’s last error. That happens when the object cannot be sewn or
 sews no stitch, with the message that says why, and for a satin column drawn as one path, which is as
 wide as its stroke, with <code>SC-I0810</code>. A zigzag stroke is as wide as its stroke too, and the effect leaves it
-as it is, with <code>SC-I0810</code>. A drawing that vanished instead could not be clicked to change the setting that
-emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
+as it is, with <code>SC-I0810</code>. VectorCraft gives a live effect its object’s fills and strokes from 0.14, and
+M6.8 will show both as wide as their stroke. A drawing that vanished instead could not be clicked to change
+the setting that emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
 shows, and <code>stitch export</code> reports them. How much of the stitches it shows, within what VectorCraft lets
 it spend, is its preview level (below).</p>
 <h3 id="the-workflow"><a class="header" href="#the-workflow">The workflow</a></h3>
@@ -7582,7 +7584,8 @@ note can follow it:</p>
 </table>
 </div>
 <p>Hiding an object leaves it out too, without a word, and a name on a hidden object says nothing. A live
-effect is given its object’s geometry alone (VectorCraft’s <code>docs/plugins.md</code>, Input), never its name. So
+effect is given its object’s geometry, with its fills and strokes from VectorCraft 0.14 (VectorCraft’s
+<code>docs/plugins.md</code>, Input), never its name. So
 VectorCraft’s preview still shows the stitches of an object these names leave out, a marker included,
 when it has a StitchCraft effect or is in a group that has one. <code>stitch export</code> leaves them out. ABI v2’s
 sixth proposal would let a live effect read the markers beside its object, so its preview could start and
@@ -9748,6 +9751,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M6.5 ✅</td><td><code>stitch export design.vectorcraft</code>, another name for <code>stitch plan</code>, which reads a VectorCraft document as it reads an SVG file. The commands are written in names. <code>stitch:ignore</code> leaves an object or a layer out, and <code>stitch:start</code> and <code>stitch:end</code> mark where a shape starts and ends, never stitched and named until M8 applies such hints</td><td><code>REQ-VC-008</code>, <code>REQ-VC-009</code>; the end-to-end case <code>vectorcraft-patch</code></td></tr>
 <tr><td>M6.6 ✅</td><td>The compatibility gate, complete. Level A and Level B run on all four tracks. In Level B, VectorCraft’s own command line makes documents with the plug-ins’ effects, and StitchCraft sews what it saved. An issue per track, a bot PR adopting each new release that passes, and the supported-versions page generated from the record that PR writes</td><td>first scheduled run green</td></tr>
 <tr><td>M6.7 ✅</td><td>UI screenshots pipeline on M0.8’s window probe (<code>cargo xtask compat window</code>), each picture cropped to its menu or dialog; tutorial “A patch in VectorCraft”; xa11y drives VectorCraft to each screen and checks the plug-in’s controls</td><td><code>shots-ui</code> job green</td></tr>
+<tr><td>M6.8</td><td>Live effects read their object’s stroke, which VectorCraft gives them from 0.14 with its fills. A satin column drawn as one path and a zigzag stroke show their stitches as wide as their stroke, as <code>stitch export</code> sews them, and the effect leaves only such an object without a stroke as it is (<code>SC-I0810</code>). Before M13.7, whose Auto effect chooses a line’s stitches by its width</td><td>its requirements active, and a contract case in which each shows its stitches in VectorCraft’s host as wide as its stroke</td></tr>
 <tr><td>MC-5 🧵</td><td><strong>TS-12</strong> (a design authored in VectorCraft) and <strong>TS-10</strong> again through the full workflow</td><td>report filed</td></tr>
 </tbody>
 </table>
@@ -9788,7 +9792,7 @@ first, and the steps that make new kinds of shape into stitches follow.</p>
 <tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
 </thead>
 <tbody>
-<tr><td>M13.1</td><td>Automatic elements. <code>--auto</code> on <code>stitch plan</code> and <code>stitch export</code> lets StitchCraft choose the stitches of the shapes that have no settings. A stroke no wider than <code>min_satin_stroke_width_mm</code> sews as a running stitch. Up to the widest satin column, 7 mm, it sews as a satin column as wide as the stroke, its round or square caps included, and a wider one fills the area it paints, as does a line a satin column cannot follow. Areas are tatami fills. <code>SC-I0901</code> counts the shapes digitized</td><td>its requirements active, a traced line sews as wide as VectorCraft draws it, and <code>--auto</code> doesn’t add an error of its own</td></tr>
+<tr><td>M13.1 ✅</td><td>Automatic elements. <code>--auto</code> on <code>stitch plan</code> and <code>stitch export</code> lets StitchCraft choose the stitches of the shapes that have no settings. A stroke no wider than <code>min_satin_stroke_width_mm</code> sews as a running stitch. Up to the widest satin column, 7 mm, it sews as a satin column as wide as the stroke, its round or square caps included, and a wider one fills the area it paints, as does a line a satin column cannot follow. Areas are tatami fills. <code>SC-I0901</code> counts the shapes digitized</td><td>its requirements active, a traced line sews as wide as VectorCraft draws it, and <code>--auto</code> doesn’t add an error of its own</td></tr>
 <tr><td>M13.2</td><td>Neighbours. Each shape reaches under the shapes it touches that sew after it, specks merge into the shape around them, and the background is left out, each said by a diagnostic</td><td>the coverage of the edges that the test pictures’ shapes share, measured and recorded</td></tr>
 <tr><td>M13.3</td><td>Sewing order. Paint order where shapes overlap, columns and lines after the fills they border, then the fewest colour changes and the nearest element next. <code>--sort-colours</code> orders a design’s elements with settings by the same rules</td><td>the test pictures sew with fewer colour changes and jumps than in paint order</td></tr>
 <tr><td>M13.4</td><td>Centre lines from a constrained Delaunay triangulation. A shape narrower than <code>min_satin_stroke_width_mm</code> everywhere sews as a running stitch along its centre line, tripled from 0.5 mm, as an automatic stroke that narrow is</td><td>its requirements active</td></tr>

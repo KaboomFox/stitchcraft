@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6a42d2d1.js";
+            window.path_to_searchindex_js = "../searchindex-b1396aaf.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-58ed789b.js"></script>
@@ -325,6 +325,7 @@ of code) · 🧵 machine checkpoint · 👤 owner action</p>
 <tr><td>M6.5 ✅</td><td><code>stitch export design.vectorcraft</code>, another name for <code>stitch plan</code>, which reads a VectorCraft document as it reads an SVG file. The commands are written in names. <code>stitch:ignore</code> leaves an object or a layer out, and <code>stitch:start</code> and <code>stitch:end</code> mark where a shape starts and ends, never stitched and named until M8 applies such hints</td><td><code>REQ-VC-008</code>, <code>REQ-VC-009</code>; the end-to-end case <code>vectorcraft-patch</code></td></tr>
 <tr><td>M6.6 ✅</td><td>The compatibility gate, complete. Level A and Level B run on all four tracks. In Level B, VectorCraft’s own command line makes documents with the plug-ins’ effects, and StitchCraft sews what it saved. An issue per track, a bot PR adopting each new release that passes, and the supported-versions page generated from the record that PR writes</td><td>first scheduled run green</td></tr>
 <tr><td>M6.7 ✅</td><td>UI screenshots pipeline on M0.8’s window probe (<code>cargo xtask compat window</code>), each picture cropped to its menu or dialog; tutorial “A patch in VectorCraft”; xa11y drives VectorCraft to each screen and checks the plug-in’s controls</td><td><code>shots-ui</code> job green</td></tr>
+<tr><td>M6.8</td><td>Live effects read their object’s stroke, which VectorCraft gives them from 0.14 with its fills. A satin column drawn as one path and a zigzag stroke show their stitches as wide as their stroke, as <code>stitch export</code> sews them, and the effect leaves only such an object without a stroke as it is (<code>SC-I0810</code>). Before M13.7, whose Auto effect chooses a line’s stitches by its width</td><td>its requirements active, and a contract case in which each shows its stitches in VectorCraft’s host as wide as its stroke</td></tr>
 <tr><td>MC-5 🧵</td><td><strong>TS-12</strong> (a design authored in VectorCraft) and <strong>TS-10</strong> again through the full workflow</td><td>report filed</td></tr>
 </tbody>
 </table>
@@ -365,7 +366,7 @@ first, and the steps that make new kinds of shape into stitches follow.</p>
 <tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
 </thead>
 <tbody>
-<tr><td>M13.1</td><td>Automatic elements. <code>--auto</code> on <code>stitch plan</code> and <code>stitch export</code> lets StitchCraft choose the stitches of the shapes that have no settings. A stroke no wider than <code>min_satin_stroke_width_mm</code> sews as a running stitch. Up to the widest satin column, 7 mm, it sews as a satin column as wide as the stroke, its round or square caps included, and a wider one fills the area it paints, as does a line a satin column cannot follow. Areas are tatami fills. <code>SC-I0901</code> counts the shapes digitized</td><td>its requirements active, a traced line sews as wide as VectorCraft draws it, and <code>--auto</code> doesn’t add an error of its own</td></tr>
+<tr><td>M13.1 ✅</td><td>Automatic elements. <code>--auto</code> on <code>stitch plan</code> and <code>stitch export</code> lets StitchCraft choose the stitches of the shapes that have no settings. A stroke no wider than <code>min_satin_stroke_width_mm</code> sews as a running stitch. Up to the widest satin column, 7 mm, it sews as a satin column as wide as the stroke, its round or square caps included, and a wider one fills the area it paints, as does a line a satin column cannot follow. Areas are tatami fills. <code>SC-I0901</code> counts the shapes digitized</td><td>its requirements active, a traced line sews as wide as VectorCraft draws it, and <code>--auto</code> doesn’t add an error of its own</td></tr>
 <tr><td>M13.2</td><td>Neighbours. Each shape reaches under the shapes it touches that sew after it, specks merge into the shape around them, and the background is left out, each said by a diagnostic</td><td>the coverage of the edges that the test pictures’ shapes share, measured and recorded</td></tr>
 <tr><td>M13.3</td><td>Sewing order. Paint order where shapes overlap, columns and lines after the fills they border, then the fewest colour changes and the nearest element next. <code>--sort-colours</code> orders a design’s elements with settings by the same rules</td><td>the test pictures sew with fewer colour changes and jumps than in paint order</td></tr>
 <tr><td>M13.4</td><td>Centre lines from a constrained Delaunay triangulation. A shape narrower than <code>min_satin_stroke_width_mm</code> everywhere sews as a running stitch along its centre line, tripled from 0.5 mm, as an automatic stroke that narrow is</td><td>its requirements active</td></tr>

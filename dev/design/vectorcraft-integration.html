@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6a42d2d1.js";
+            window.path_to_searchindex_js = "../searchindex-b1396aaf.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-58ed789b.js"></script>
@@ -314,8 +314,9 @@ the exact level below. When it can’t show stitches, it gives back why. VectorC
 as it is and shows the message as the plug-in’s last error. That happens when the object cannot be sewn or
 sews no stitch, with the message that says why, and for a satin column drawn as one path, which is as
 wide as its stroke, with <code>SC-I0810</code>. A zigzag stroke is as wide as its stroke too, and the effect leaves it
-as it is, with <code>SC-I0810</code>. A drawing that vanished instead could not be clicked to change the setting that
-emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
+as it is, with <code>SC-I0810</code>. VectorCraft gives a live effect its object’s fills and strokes from 0.14, and
+M6.8 will show both as wide as their stroke. A drawing that vanished instead could not be clicked to change
+the setting that emptied it. ABI v1 has no way to pass VectorCraft the warnings about stitches the effect
 shows, and <code>stitch export</code> reports them. How much of the stitches it shows, within what VectorCraft lets
 it spend, is its preview level (below).</p>
 <h3 id="the-workflow"><a class="header" href="#the-workflow">The workflow</a></h3>
@@ -473,7 +474,8 @@ note can follow it:</p>
 </table>
 </div>
 <p>Hiding an object leaves it out too, without a word, and a name on a hidden object says nothing. A live
-effect is given its object’s geometry alone (VectorCraft’s <code>docs/plugins.md</code>, Input), never its name. So
+effect is given its object’s geometry, with its fills and strokes from VectorCraft 0.14 (VectorCraft’s
+<code>docs/plugins.md</code>, Input), never its name. So
 VectorCraft’s preview still shows the stitches of an object these names leave out, a marker included,
 when it has a StitchCraft effect or is in a group that has one. <code>stitch export</code> leaves them out. ABI v2’s
 sixth proposal would let a live effect read the markers beside its object, so its preview could start and
