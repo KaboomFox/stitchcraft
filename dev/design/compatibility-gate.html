@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d66a16ef.js";
+            window.path_to_searchindex_js = "../searchindex-e9c264b3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -219,11 +219,14 @@ checks:</p>
 host’s limits, and return the expected preview geometry: paths of stitches for strokes and satin
 columns and closed ribbons for fills. When an effect can’t show stitches, its last error says why.
 Which level a shape shows, and the geometry of each, the plug-in’s native tests check.</li>
-<li>Filters run and return valid objects.</li>
+<li>Filters run and return valid objects. Exporters run through <code>vectorcraft_plugins::export::run</code> on
+documents written for the test, return a file of their format, with the export’s warnings, plan for
+the machine their dialog names, and decline with the first error when there is one (<code>REQ-VC-011</code>).</li>
 <li>Error paths: invalid parameters are rejected by the host with the expected message.</li>
 <li>Budget: the <em>hello</em> plug-in’s cost for each byte of JSON it reads and writes stays within a quarter
 above the costs <a href="vectorcraft-integration.html#live-effect-previews-within-v1-budgets">recorded for previews</a>.
-Every preview level finishes on shapes of growing size, within VectorCraft’s limits (<code>REQ-VC-003</code>).
+Every preview level finishes on shapes of growing size, within VectorCraft’s limits (<code>REQ-VC-003</code>), and
+an export of a fill of the reference hoop’s whole field finishes within an export’s (<code>REQ-VC-011</code>).
 Each run prints the costs.</li>
 </ol>
 <p><code>vectorcraft-plugins</code> depends only on <code>geom</code>, <code>color</code>, <code>doc</code> and <code>wasmi</code>, so this builds quickly.</p>
@@ -242,19 +245,21 @@ one command another’s result. VectorCraft runs a live effect once for an objec
 remembers only a module’s last failure, which the next success clears. So each module a run installs is
 asked for its last error after every PNG export, which runs the live effects, and it must have none. A
 scenario draws each object it gives an effect before it gives another the same family’s, and
-<code>cargo xtask compat</code> refuses an <code>apply</code> step no drawing shows. The checks are StitchCraft’s, since
-VectorCraft’s pictures change from version to version and what sews must not:</p>
+<code>cargo xtask compat</code> refuses an <code>apply</code> step no drawing shows. Exporting a PES or a DST file draws
+nothing: an exporter is given the document’s JSON. The checks are StitchCraft’s, since VectorCraft’s
+pictures change from version to version and what sews must not:</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>Scenario</th><th>Steps</th><th>Checks</th></tr>
 </thead>
 <tbody>
-<tr><td><code>install-and-list</code></td><td>install the 3 modules, then <code>plugin.list</code></td><td>each family’s live effect is listed (<code>REQ-VC-002</code>)</td></tr>
+<tr><td><code>install-and-list</code></td><td>install the 5 modules, then <code>plugin.list</code></td><td>each family’s live effect and each format’s exporter is listed (<code>REQ-VC-002</code>, <code>REQ-VC-011</code>)</td></tr>
 <tr><td><code>apply</code></td><td>a square filled red and a line, given the fill and stroke effects with parameters, then saved</td><td>as sent, with a fill in red and a stroke (<code>REQ-VC-004</code>, <code>REQ-PRM-003</code>)</td></tr>
 <tr><td><code>compound-satin</code></td><td>2 rails and a rung, Make Compound Path, then the satin effect</td><td>as sent, and one satin column (<code>REQ-VC-007</code>)</td></tr>
 <tr><td><code>graphic-style</code></td><td>a group of 2 squares, and a gold square with a fill effect, drawn, whose new graphic style is then applied to the group</td><td>as sent, and 3 fills in gold at the effect’s 90° (<code>REQ-VC-006</code>)</td></tr>
 <tr><td><code>missing-plugin</code></td><td>a fill saved and drawn, then opened and saved again without the plug-ins</td><td>both sew alike, as sent: the records are kept (<code>REQ-PRM-003</code>)</td></tr>
+<tr><td><code>export</code></td><td>a square filled red and a line far below it, given the fill and stroke effects, saved, then exported to PES and DST by StitchCraft’s exporters</td><td>each file is the one <code>stitch export</code> writes of the saved document, and the export’s warnings are what it says, the DST’s cut on the long jump among them (<code>REQ-VC-011</code>)</td></tr>
 </tbody>
 </table>
 </div>
@@ -262,7 +267,8 @@ VectorCraft’s pictures change from version to version and what sews must not:<
 applied to put back as the steps sent them. So VectorCraft stored what the dialog set, on the objects it
 was applied to, in a form StitchCraft reads. An object <code>effect.apply</code> named that the file doesn’t hold
 fails the check. A file is sewn as <code>stitch plan</code> sews it, for the reference machine, and 2 are compared
-byte for byte. Elements are counted by kind, thread and settings. A paint’s fill is a fill too, and has no
+byte for byte, as is a machine file exported with the one <code>stitch export</code> writes of its document, by the
+format and the name of the file. Elements are counted by kind, thread and settings. A paint’s fill is a fill too, and has no
 settings. The live-effect budget of each preview level is Level A’s (<code>REQ-VC-003</code>).</p>
 <h2 id="automation"><a class="header" href="#automation">Automation</a></h2>
 <pre><code class="language-text">schedule (daily) ──▶ discover tracks ──▶ for each track: build plug-ins ─▶ Level A ─▶ Level B ─▶ its result

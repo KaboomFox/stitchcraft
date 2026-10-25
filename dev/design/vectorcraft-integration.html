@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d66a16ef.js";
+            window.path_to_searchindex_js = "../searchindex-e9c264b3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -284,6 +284,7 @@ release takes:</p>
 <tr><td><code>&lt;ns&gt;.satin</code></td><td>live effect</td><td>satin (P1), E (M7.3), S (M7.4), zigzag (M7.5)</td><td>rails and rungs from the object’s compound path</td></tr>
 <tr><td><code>&lt;ns&gt;.fill</code></td><td>live effect</td><td>tatami (P1); contour, meander, circular (P2)</td><td><code>fill_method</code> choice</td></tr>
 <tr><td><code>&lt;ns&gt;.auto</code></td><td>live effect</td><td>the stitches automatic digitizing chooses by width (M13.7)</td><td>on a group, previews each path inside (<a href="image-to-embroidery.html">image to embroidery</a>)</td></tr>
+<tr><td><code>&lt;ns&gt;.pes</code>, <code>&lt;ns&gt;.dst</code></td><td>exporter (VectorCraft 0.14)</td><td>every family</td><td>File › Export › Export As writes the same machine file as <code>stitch export</code> (M6.9, <a href="#exporters-file--export-writes-pes-and-dst">below</a>)</td></tr>
 </tbody>
 </table>
 </div>
@@ -298,10 +299,11 @@ Manifests are generated from the <a href="params.html#splitting-for-vectorcraft-
 test validates each against VectorCraft’s manifest rules (id charset, ≤ 64 parameters, names, ranges) so
 an invalid manifest never reaches a user.</p>
 <p><strong>Modules.</strong> The plug-in crate builds one module for each family, chosen by a Cargo feature named after
-the family: <code>stroke</code>, <code>satin</code> or <code>fill</code>. Without one it builds M0.6’s <em>hello</em> effect. The modules contain
-the same code, which the native tests run whichever it is, and the feature only picks the manifest and
-the effect that <code>vc_manifest</code> and <code>vc_run</code> serve. <code>cargo xtask compat contract</code> builds the four modules,
-notes their sizes and loads them into VectorCraft’s host.</p>
+the family: <code>stroke</code>, <code>satin</code> or <code>fill</code>, and one for each machine format, by its extension: <code>pes</code> or <code>dst</code>.
+Without one it builds M0.6’s <em>hello</em> effect. The modules contain the same code, which the native tests run
+whichever it is, and the feature only picks the manifest and the run that <code>vc_manifest</code> and <code>vc_run</code> serve.
+<code>cargo xtask compat contract</code> builds the six modules, notes their sizes and loads them into VectorCraft’s
+host.</p>
 <p><strong>Manifests.</strong> A family’s manifest is made from the registry when VectorCraft asks for it, so a parameter
 added to the registry shows in the dialog without another change. A key that several families declare,
 each its own way, is in each family’s manifest as that family declares it
@@ -356,11 +358,60 @@ what the reader left out or changed, with the engine’s warnings. <code>stitch 
 <code>stitch plan</code>, which reads a VectorCraft document (<code>.vectorcraft</code>, <code>.drawcraft</code>, or a <code>.vctemplate</code>
 template) as it reads an SVG file (<code>REQ-VC-008</code>), and <code>--report</code> adds the JSON report. A bug-report
 bundle includes the part of the document the reader reads, which is its JSON without the images after
-it. Its replay reads that part the same way.</li>
+it. Its replay reads that part the same way. From VectorCraft 0.14, File › Export › Export As writes
+the same file with StitchCraft’s exporters, without saving first (<a href="#exporters-file--export-writes-pes-and-dst">below</a>).</li>
 </ol>
 <p>Stitching order is paint order (bottom first). Hidden objects are skipped, as VectorCraft draws nothing
 for them, and locked objects are stitched. Thread colours come from the object’s fill for a fill, and
 from its stroke for a stroke or a satin column, as in Ink/Stitch, mapped to the profile’s palette.</p>
+<h3 id="exporters-file--export-writes-pes-and-dst"><a class="header" href="#exporters-file--export-writes-pes-and-dst">Exporters: File › Export writes PES and DST</a></h3>
+<p>VectorCraft 0.14 added exporter plug-ins (the RFC’s <a href="rfc-vectorcraft-abi-v2.html#p1-exporter-plug-ins">P1</a>).
+File › Export › Export As lists each after the built-in formats by its name, and <code>document.export</code> writes
+one for a path with the extension it lists. VectorCraft gives the exporter the document as a native
+<code>.vectorcraft</code> file’s JSON, as <code>document.save</code> writes it but without the data of images of 8 KiB or more,
+with the parameters of the dialog it shows when the file is picked, and the file’s extension and name. The
+exporter returns the file in base64, with warnings for the user, or declines with a message, and then
+nothing is written (VectorCraft’s <code>docs/plugins.md</code>, Exporters).</p>
+<p>M6.9 makes StitchCraft’s formats exporters (<code>REQ-VC-011</code>, <code>apps/stitchcraft-vc-plugin/src/export.rs</code>).
+There are two, <em>PES embroidery (StitchCraft)</em> and <em>DST embroidery (StitchCraft)</em>, each a module of its
+own, and a VectorCraft before 0.14 refuses to install them. An exporter writes the file <code>stitch export</code>
+writes of the document:</p>
+<ul>
+<li>It reads the document with the same reader, plans it with the engine for the machine its <code>profile</code>
+option names, <code>brother-pe800-5x7</code> by default, and writes it with the file’s name as the design name.
+Reading the file back, as <code>stitch export</code> does, stops it at a writer’s bug (<code>SC-E0009</code>). The budget is
+<code>stitch export</code>’s own too. Its <code>auto</code> option digitizes the objects without StitchCraft effects, as
+<code>--auto</code> does. Level B of the <a href="compatibility-gate.html">compatibility gate</a> exports a document with
+VectorCraft’s command line and checks that the files are <code>stitch export</code>’s, byte for byte.</li>
+<li>What <code>stitch export</code> says, the export says as its warnings, one line each, naming the object and with
+the hint after it. VectorCraft shows 100 of at most 500 characters each, so of more the last says how
+many more <code>stitch export</code> lists.</li>
+<li>When anything said is an error, the exporter declines with the first, after how many there are, and
+VectorCraft doesn’t write the file, as <code>stitch export</code> doesn’t (<code>REQ-CLI-003</code>). VectorCraft shows the
+first 300 characters of a decline, after <code>plug-in failed:</code>.</li>
+</ul>
+<p>An export may run 10 billion instructions, and 4,000 more for each byte of the document, and 300 seconds.
+The engine’s budget is <code>stitch export</code>’s, so a design that needs more is stopped by VectorCraft with its
+own error, <code>plug-in exceeded its instruction budget</code>, and <code>stitch export</code> writes it. The contract test
+<code>req_vc_011_a_fill_of_the_whole_hoop_exports_within_vectorcraft_s_limits</code> measures the largest designs
+the reference machine sews (VectorCraft 0.16.0, 2026-10-25):</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Design, each fill with its defaults</th><th>Instructions</th><th>Of those allowed</th></tr>
+</thead>
+<tbody>
+<tr><td>A fill of 128 × 178 mm, the 5 × 7 in hoop’s whole field</td><td>1.6 billion</td><td>16 %</td></tr>
+<tr><td>63 fills of 14 mm squares across the field</td><td>4.3 billion</td><td>43 %</td></tr>
+</tbody>
+</table>
+</div>
+<p>A fill’s work grows less than its area, and every fill takes some whatever its size: the squares cover half
+the field and take more than twice as much. About 140 fills of that size are as many as an export can
+plan, which few designs for a home machine’s hoop reach, and <code>stitch export</code> writes the others. The test
+sheets are drawn in code, as plans and designs, and M6.12 draws them into a document, where its Level B
+case exports each. A live effect is given no warnings channel, and an exporter no picture:
+<code>stitch export --preview</code> still draws what will sew.</p>
 <h3 id="tools-vectorcrafts-own-commands"><a class="header" href="#tools-vectorcrafts-own-commands">Tools: VectorCraft’s own commands</a></h3>
 <p>The plan had one object filter, <code>&lt;ns&gt;.tools</code>, to make a satin column from 2 paths, add a rung, bake a
 preview to paths and draw a test sheet. VectorCraft’s own commands do the first three, and M6.4 checked

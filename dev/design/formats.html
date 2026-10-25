@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d66a16ef.js";
+            window.path_to_searchindex_js = "../searchindex-e9c264b3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -353,6 +353,10 @@ seed) and 10,000 more each night (fresh seed). DST is held to what its machines 
 paid off before this was even merged: they found a DST design whose split jump pieces cancelled exactly,
 which is why only jumps of at most 1 mm make up a trim’s spelling.
 PES is held to what its file says (<code>equivalence::pes_events</code>): a trim flag on every jump.</p>
+<p><strong>Reading back.</strong> <code>read_back</code> reads a file just written, with its plan’s threads, as a machine reads it.
+The command line describes and draws what it wrote from it (<code>REQ-CLI-008</code>). The command line and the
+VectorCraft exporters also call it before they hand a file out. A file StitchCraft wrote that doesn’t read
+back is a bug in it (<code>SC-E0009</code>), and then nothing is written.</p>
 <p><strong>Converting.</strong> <code>stitch convert</code> is a read followed by a write, so the converted file makes the machine do
 the same thing as the original: the round-trip guarantee above — except that a DST file cuts the thread
 before long jumps where a PES machine leaves a jump thread, which <code>SC-I0605</code> reports. A PES file from

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d66a16ef.js";
+            window.path_to_searchindex_js = "../searchindex-e9c264b3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -319,12 +319,13 @@ or exit codes.</li>
 <li>Nothing below the apps prints, exits or panics.</li>
 <li><strong>A bug in StitchCraft</strong> is neither. It shows as a failed plan check (<code>SC-E0009</code>) or as a panic despite
 the lints. The command line catches it and ends with exit status 4. For <code>stitch plan</code> it also writes a
-bug-report bundle that reproduces the bug (<a href="determinism.html#bug-reports">determinism</a>).</li>
+bug-report bundle that reproduces the bug (<a href="determinism.html#bug-reports">determinism</a>). A VectorCraft
+exporter declines with it, so VectorCraft doesn’t write the file.</li>
 <li><strong>The command line’s own promises.</strong> A command refuses outputs that name the same file as each other,
 or as a file it reads (<code>REQ-CLI-007</code>), and writes each file under a temporary name of its own, created
 new and synced before it is renamed into place (<code>REQ-CLI-006</code>). Built for WASI, as
 <code>cargo xtask wasm --goldens</code> runs it, a program has no process id, so there the names count from 0. What it prints of a file it wrote is the
-file read back (<code>REQ-CLI-008</code>). A closed standard output keeps a command’s exit status, any other error
+file read back (<code>REQ-CLI-008</code>, <code>stitchcraft_formats::read_back</code>, which the VectorCraft exporters call too). A closed standard output keeps a command’s exit status, any other error
 writing it ends with 3 (<code>REQ-CLI-009</code>), and help and errors are coloured only on a terminal
 (<code>REQ-CLI-010</code>).</li>
 </ul>

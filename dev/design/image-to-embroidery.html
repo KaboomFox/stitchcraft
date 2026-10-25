@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d66a16ef.js";
+            window.path_to_searchindex_js = "../searchindex-e9c264b3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -203,7 +203,8 @@ of a traced square and a strip 2.1 mm wide beside it, both sewed as tatami fills
 shape sews as this page describes. Once MC-8 confirms the rules on the machine, M13.8 makes automatic
 digitizing the default for VectorCraft documents, and <code>--auto</code> is then needed for SVG files only.</p>
 <p>VectorCraft’s exporter plug-ins (<a href="rfc-vectorcraft-abi-v2.html#p1-exporter-plug-ins">P1</a>, 0.14) move the second
-step into VectorCraft, as File › Export › Export As › PES, once M6.9 makes StitchCraft’s formats exporters.</p>
+step into VectorCraft, as File › Export › Export As › PES, which StitchCraft’s formats are exporters for since
+M6.9. Their <code>auto</code> option is <code>--auto</code>.</p>
 <p>An SVG file traced elsewhere, such as by Inkscape’s Trace Bitmap, sews the same way with
 <code>stitch plan picture.svg --auto</code>. Without the switch, an SVG file’s shapes sew as Ink/Stitch sews them,
 since the file may be one of Ink/Stitch’s.</p>
@@ -397,8 +398,8 @@ trace, or use <code>--auto</code>, which works without it.</p>
 <h2 id="with-vectorcrafts-newer-plug-in-features"><a class="header" href="#with-vectorcrafts-newer-plug-in-features">With VectorCraft’s newer plug-in features</a></h2>
 <ul>
 <li><strong>Exporters</strong> (0.14, <a href="rfc-vectorcraft-abi-v2.html#p1-exporter-plug-ins">P1</a>). File › Export › Export As › PES
-plans the document inside VectorCraft, objects without effects digitized automatically (M6.9). The flow
-is then trace and export, both in VectorCraft.</li>
+plans the document inside VectorCraft, and its <code>auto</code> option digitizes the objects without effects
+(M6.9). The flow is then trace and export, both in VectorCraft.</li>
 <li><strong>Effects in filter objects</strong> (0.15, <a href="rfc-vectorcraft-abi-v2.html#p8-effects-and-stroke-style-in-filter-objects">P8</a>).
 A filter could set on each path the effect of the family its width chose. The user then adjusts it in
 that effect’s dialog.</li>

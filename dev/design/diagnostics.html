@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d66a16ef.js";
+            window.path_to_searchindex_js = "../searchindex-e9c264b3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -226,7 +226,8 @@ whose letter disagrees with its severity, or whose explanation is missing. From 
 <ul>
 <li><code>cargo xtask docs</code> generates the <strong>diagnostics index</strong> (one page per code, like <code>rustc</code>’s error index);</li>
 <li><code>stitch explain SC-W0702</code> prints the explanation in the terminal;</li>
-<li>the VectorCraft plug-in links each message to its page;</li>
+<li>in VectorCraft, the plug-in shows each message after its code, for the user to look up in the index or
+with <code>stitch explain</code>;</li>
 <li><code>cargo xtask conformance</code> fails when a code has no <code>diag_sc_&lt;code&gt;_&lt;what&gt;</code> test that produces it from
 real input and checks the text a user reads, or when such a test names a code that is not registered
 (<a href="conformance.html#cases">conformance</a>); the registry’s own tests fail when a code has no explanation.</li>
@@ -240,6 +241,13 @@ typo in its formatting and nobody sees it until a user does.</p>
 <li>Offer the fix in embroidery terms: “Use a running stitch for parts this thin, or widen the shape.”</li>
 <li>No blame, no internal names (<code>LineString</code>, <code>GEOS</code>), no stack traces.</li>
 </ul>
+<h2 id="as-text"><a class="header" href="#as-text">As text</a></h2>
+<p>A diagnostic reads the same wherever StitchCraft prints it. Its <code>Display</code> is the severity, the code and
+the message: <code>warning SC-W0702: Design is 190.0 × 150.0 mm; …</code>. <code>Diagnostic::headline</code> adds the object
+it is about, as in <code>warning SC-W0307 (svg:patch:fill): The area falls into 2 parts.</code>, and the command
+line prints that, with the fix on the line below. <code>Diagnostic::one_line</code> puts the fix after the
+headline, for a host that shows each diagnostic as one line of text, as VectorCraft shows an export’s
+warnings.</p>
 <h2 id="fixes"><a class="header" href="#fixes">Fixes</a></h2>
 <p><code>Fix::Hint(String)</code> is advice. <code>Fix::Apply(Edit)</code> is a change the host can apply with one click and
 undo (for example “rotate the design 90°” for <code>SC-W0702</code> when the rotated bounds fit, or “drop the

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-d66a16ef.js";
+            window.path_to_searchindex_js = "../../searchindex-e9c264b3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b31b520c.js"></script>
@@ -182,8 +182,8 @@
                     <main>
                         <h1 id="embroider-a-vectorcraft-design"><a class="header" href="#embroider-a-vectorcraft-design">Embroider a VectorCraft design</a></h1>
 <p>Draw the design in VectorCraft, and say how each object sews with the StitchCraft plug-ins, which show
-its stitches as you work. Then <code>stitch export</code> writes the machine file from the saved document.
-VectorCraft’s own File › Export can’t write embroidery files: its plug-ins can’t add file formats yet.</p>
+its stitches as you work. Then write the machine file with VectorCraft’s <strong>File › Export › Export As</strong>,
+from VectorCraft 0.14, or with <code>stitch export</code> from the saved document. Both write the same file.</p>
 <h2 id="choose-each-objects-stitches"><a class="header" href="#choose-each-objects-stitches">Choose each object’s stitches</a></h2>
 <p>With the <a href="../install.html#the-vectorcraft-plug-ins">plug-ins installed</a>, select an object and choose
 <strong>Effect › Plug-ins › StitchCraft Fill</strong>, <strong>StitchCraft Stroke</strong> or <strong>StitchCraft Satin</strong>. The dialog
@@ -208,7 +208,20 @@ read alike. A hidden object is left out too.</p>
 <p>VectorCraft’s preview can’t see names. An object named <code>stitch:ignore</code> that a StitchCraft effect sews, its
 own or its group’s, still shows its stitches there, and <code>stitch export</code> leaves it out.</p>
 <h2 id="write-the-machine-file"><a class="header" href="#write-the-machine-file">Write the machine file</a></h2>
-<p>Save the document, and run <code>stitch export</code> on it. This patch has a fill, a satin border, a curve of
+<p>With the <a href="../install.html#the-vectorcraft-plug-ins">exporters installed</a>, choose <strong>File › Export › Export
+As</strong>, and <strong>PES embroidery (StitchCraft)</strong> or <strong>DST embroidery (StitchCraft)</strong> as the format. Once the file
+is picked, a dialog shows 2 options:</p>
+<ul>
+<li><strong>Profile</strong>, the machine and hoop the design is planned for: <code>brother-pe800-5x7</code> unless another is
+chosen. <code>stitch profiles</code> lists them.</li>
+<li><strong>Auto</strong>, which chooses the stitches of the objects without a StitchCraft effect by their width, as
+<code>stitch export --auto</code> does.</li>
+</ul>
+<p>The design takes the file’s name, which machines show. What <code>stitch export</code> would say about the design
+shows with the export’s warnings, one line for each message. When one of them is an error, nothing is
+written, and VectorCraft says the first. VectorCraft lets an export run for a while, and stops one that
+needs more: <code>stitch export</code> writes it.</p>
+<p>Or save the document, and run <code>stitch export</code> on it. This patch has a fill, a satin border, a curve of
 running stitch and 2 squares in a group that a graphic style’s fill effect sews. Its placement line is
 named <code>stitch:ignore placement line</code>:</p>
 <pre><code class="language-console">$ stitch export patch.vectorcraft -o patch.pes --preview patch.png
