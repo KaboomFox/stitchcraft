@@ -232,6 +232,8 @@ pub stitchcraft_params::spec::Stability::Stable
 pub struct stitchcraft_params::spec::ChoiceOption
 pub stitchcraft_params::spec::ChoiceOption::id: &'static str
 pub stitchcraft_params::spec::ChoiceOption::label: &'static str
+impl stitchcraft_params::spec::ChoiceOption
+pub fn stitchcraft_params::spec::ChoiceOption::list<'a>(impl core::iter::traits::collect::IntoIterator<Item = &'a stitchcraft_params::spec::ChoiceOption>) -> alloc::string::String
 pub struct stitchcraft_params::spec::Condition
 pub stitchcraft_params::spec::Condition::any_of: &'static [&'static str]
 pub stitchcraft_params::spec::Condition::key: &'static str
@@ -244,6 +246,8 @@ pub stitchcraft_params::spec::ParamGroup::name: &'static str
 pub stitchcraft_params::spec::ParamGroup::specs: &'static [stitchcraft_params::spec::ParamSpec]
 impl stitchcraft_params::spec::ParamGroup
 pub fn stitchcraft_params::spec::ParamGroup::help(&self) -> alloc::string::String
+pub fn stitchcraft_params::spec::ParamGroup::slug(&self) -> alloc::string::String
+pub fn stitchcraft_params::spec::ParamGroup::title(&self) -> alloc::string::String
 pub struct stitchcraft_params::spec::ParamSpec
 pub stitchcraft_params::spec::ParamSpec::applies_to: &'static [stitchcraft_params::stitch_type::StitchType]
 pub stitchcraft_params::spec::ParamSpec::default: &'static str
@@ -437,6 +441,8 @@ pub fn stitchcraft_params::value::Value::to_raw(&self) -> alloc::string::String
 pub struct stitchcraft_params::ChoiceOption
 pub stitchcraft_params::ChoiceOption::id: &'static str
 pub stitchcraft_params::ChoiceOption::label: &'static str
+impl stitchcraft_params::spec::ChoiceOption
+pub fn stitchcraft_params::spec::ChoiceOption::list<'a>(impl core::iter::traits::collect::IntoIterator<Item = &'a stitchcraft_params::spec::ChoiceOption>) -> alloc::string::String
 pub struct stitchcraft_params::Condition
 pub stitchcraft_params::Condition::any_of: &'static [&'static str]
 pub stitchcraft_params::Condition::key: &'static str
@@ -449,6 +455,8 @@ pub stitchcraft_params::ParamGroup::name: &'static str
 pub stitchcraft_params::ParamGroup::specs: &'static [stitchcraft_params::spec::ParamSpec]
 impl stitchcraft_params::spec::ParamGroup
 pub fn stitchcraft_params::spec::ParamGroup::help(&self) -> alloc::string::String
+pub fn stitchcraft_params::spec::ParamGroup::slug(&self) -> alloc::string::String
+pub fn stitchcraft_params::spec::ParamGroup::title(&self) -> alloc::string::String
 pub struct stitchcraft_params::ParamSet
 impl stitchcraft_params::set::ParamSet
 pub fn stitchcraft_params::set::ParamSet::get(&self, &str) -> core::option::Option<&str>

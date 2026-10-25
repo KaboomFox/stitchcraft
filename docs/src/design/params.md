@@ -229,7 +229,7 @@ entries, and the lock and method identifiers must equal Ink/Stitch's.
 | The reference pages, the [index](../user/reference/params.md) and one page per declaration (`docs/src/user/reference/params/*.md`), with the deviations ledger's entries | `cargo xtask docs` | `cargo xtask docs --check`, which fails on a stale page and on a page left from a declaration since removed (`cargo xtask docs` deletes those) | M3.1 |
 | `docs/src/user/reference/params.schema.json`: the parameters as JSON values (numbers, booleans, strings, arrays, `null` for empty), for editors, presets and JSON hosts | `cargo xtask docs` | same | M3.1 |
 | The *StitchCraft* column of the [Ink/Stitch compatibility contract](inkstitch-compat-contract.md) | `cargo xtask docs` | same, plus the cross-checks above | M3.1 |
-| VectorCraft manifests, one for each stitch family's module | at runtime from the registry, when VectorCraft asks a module for its manifest (`stitchcraft-vc-plugin`'s `manifest`) | plug-in tests validate them against VectorCraft's manifest rules, and the contract tests install them in VectorCraft's host | M6.2 |
+| VectorCraft manifests, one for each stitch family's module, with each parameter's label, unit, section, help, help page and the values that show it | at runtime from the registry, when VectorCraft asks a module for its manifest (`stitchcraft-vc-plugin`'s `manifest` and `dialog`) | plug-in tests validate them against VectorCraft's manifest rules, `cargo xtask docs --check` finds each help page, the contract tests install them in VectorCraft's host, and the window probe checks the dialogs' rows | M6.2, and the dialogs M6.10 |
 | SVG attribute read/write | `stitchcraft-svg` iterates the registry | round-trip property test `REQ-PRM-003` | planned for M8 |
 | CLI parameter help (`stitch params`, `--param key=value`) | at runtime from the registry | `trycmd` examples | planned, in no step yet |
 | `proptest` strategies | `stitchcraft-testkit` iterates the registry | used by every generator property test | planned, in no step yet |
@@ -245,8 +245,12 @@ A parameter that needs a text, a seed or several values keeps its default in Vec
 ([manifests](vectorcraft-integration.md#plug-ins)). VectorCraft 0.14 adopted richer schemas from the
 [RFC](rfc-vectorcraft-abi-v2.md#p2-rich-parameter-schemas): labels, units, help, groups and conditions, texts
 and lists, and 256 parameters, 64 of them outside groups. Releases before it ignore the labels, units, help,
-groups and conditions, and refuse the rest. M6.10 emits the registry's labels, units, help, groups and
-conditions.
+groups and conditions, and refuse the rest. Each manifest gives a parameter the registry's label, unit, help
+and group, and the conditions of its declaration's `applies_to` and `visible_when` (M6.10,
+[dialogs](vectorcraft-integration.md#plug-ins)). A parameter's help page is its entry on the reference page
+of its declaration, which `ParamGroup::slug` names for the docs generator and the plug-in alike.
+VectorCraft shows help as plain text, so `stitchcraft_core::text::plain` takes the marks out of the
+Markdown.
 
 ## Presets
 

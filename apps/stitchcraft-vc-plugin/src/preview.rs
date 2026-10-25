@@ -44,6 +44,9 @@ use stitchcraft_params::{Family, StitchType};
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_vectorcraft::{Effect, effect_error, effect_lines, effect_output, effect_ribbons};
 
+use crate::dialog::own;
+use crate::manifest::{Param, Schema};
+
 /// The instructions VectorCraft lets any live effect run (`Limits::default()` in its `crates/plugins`,
 /// which the contract tests check).
 pub const FUEL_BASE: u64 = 50_000_000;
@@ -98,6 +101,23 @@ impl Level {
         [Level::Exact, Level::Rows, Level::Outline].into_iter().find(|level| Some(level.id()) == id).unwrap_or(Level::Auto)
     }
 }
+
+/// How a family's manifest declares `preview_level`: a choice of the levels its previews offer, auto by
+/// default, in a section of its own, with its help and the page that explains the levels.
+pub(crate) fn param(family: Family) -> Param {
+    let schema = Schema::Choice { options: Level::offered(family).iter().map(|level| level.id()).collect(), default: Level::Auto.id() };
+    let mut param = own(schema, "Preview", HELP, PAGE);
+    param.ui.group = Some("Preview");
+    param
+}
+
+/// What `preview_level` does, for its help.
+const HELP: &str = "How much of the stitches the effect shows. Exact shows every stitch, rows a fill's top rows, and outline the \
+                    object's path, hatched across a fill, which costs least. Auto shows as much as VectorCraft lets a live effect \
+                    work out. The machine file has every stitch, whichever is chosen.";
+
+/// The page that explains the levels.
+const PAGE: &str = "design/vectorcraft-integration.html#live-effect-previews-within-v1-budgets";
 
 /// The instructions a live effect has for its work, given `input` and `params` bytes to read: what
 /// VectorCraft allows, less reading and setting up.
