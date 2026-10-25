@@ -13,7 +13,10 @@ commands are the tools, and its Graphic Styles keep the effects' settings as pre
 follows its object's stroke, so a satin column drawn as one path and a zigzag stroke show their stitches as
 wide as it (M6.8, `REQ-VC-010`). From M6.9, 2 exporters too, *PES embroidery (StitchCraft)* and *DST
 embroidery (StitchCraft)*, which write the file `stitch export` writes from VectorCraft 0.14's File ›
-Export › Export As (`src/export.rs`, `REQ-VC-011`).
+Export › Export As (`src/export.rs`, `REQ-VC-011`). From M6.10 the dialogs label each parameter, with its
+unit, help and help page, in the registry's groups as sections, and show it only for the methods it
+applies to (`src/dialog.rs`, `REQ-VC-012`). VectorCraft reads those keys from 0.14, and older releases
+ignore them.
 Without a feature the module is M0.6's *hello* effect, which returns the object's geometry unchanged. The
 contract tests measure the host's costs with it (`docs/src/design/vectorcraft-integration.md`).
 
@@ -43,6 +46,9 @@ In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Ope
   documents record, as it reads those records, and the plug-in re-exports it.
 - Manifests are made from the parameter registry and satisfy VectorCraft's rules (validated by tests,
   `REQ-VC-002`). A record of a manifest's defaults sews as an element without settings.
+- What a dialog shows comes from the registry too, and never changes what sews: VectorCraft gives the
+  plug-in the value of a row it hides. Each help page is a page of the book, which
+  `cargo xtask docs --check` finds (`REQ-VC-012`).
 - Contains no engine logic: the VectorCraft adapter reads the object and writes the stitches, and the
   engine sews it. An exporter calls the reader, the engine and the format writer as `stitch export` does,
   with its budget, and Level B of the compatibility gate checks that the files are the same.

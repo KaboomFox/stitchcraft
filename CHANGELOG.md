@@ -5,6 +5,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.10: VectorCraft's dialogs show the parameters as the parameter registry describes them
+  (`REQ-VC-012`). From VectorCraft 0.14 each row has the registry's label and its unit, and the registry's
+  groups are the dialog's sections, as they are the headings of the reference pages. Resting the pointer
+  on a label shows its help, and the button after the field opens the parameter's entry in the reference
+  on the docs site. A choice's help says what each option means, since the drop-down list shows the ids
+  that designs store. A row shows only for the methods it applies to, and only with the values of another
+  setting the registry shows it with, such as a satin's staggers for staggered splits. VectorCraft
+  gives the plug-in the values of hidden rows as well, and nothing sews otherwise.
+  - The preview level and the exporters' options have their own labels, help and pages. The exporters'
+    `auto` is *Digitize automatically*, and `profile` is *Machine*.
+  - Releases before 0.14 ignore these keys, and show the dialogs as they did.
+  - `cargo xtask docs --check` finds the page and the heading of each help page a manifest links to. The
+    window probe checks each dialog's rows at the defaults by label, and the pictures of the dialogs are
+    new.
 - M6.9: PES and DST exporters for VectorCraft (`REQ-VC-011`). From VectorCraft 0.14, File › Export ›
   Export As lists *PES embroidery (StitchCraft)* and *DST embroidery (StitchCraft)*, 2 more plug-in modules
   (`--features pes` and `--features dst`). An exporter writes the file `stitch export` writes of the
@@ -695,6 +709,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The names of the parameter reference pages, `ParamGroup::slug` and `ParamGroup::title`, moved from the
+  docs generator to `stitchcraft-params`, where the plug-in's dialogs name the same pages. And
+  `stitchcraft_core::text::plain` gives the plain text of Markdown help, for VectorCraft's dialogs.
 - `read_back`, which reads a machine file just written with its plan's threads, moved from the command line
   to `stitchcraft-formats`, and a diagnostic's first line to `Diagnostic::headline` in `stitchcraft-core`.
   The exporters check and word what they write as `stitch export` does.

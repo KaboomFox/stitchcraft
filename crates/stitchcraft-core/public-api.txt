@@ -188,6 +188,7 @@ pub fn stitchcraft_core::rng::SplitMix64::stream(&self, u64) -> Self
 pub fn stitchcraft_core::rng::fnv1a64(&[u8]) -> u64
 pub mod stitchcraft_core::text
 pub fn stitchcraft_core::text::doc_comment(&str) -> alloc::string::String
+pub fn stitchcraft_core::text::plain(&str) -> alloc::string::String
 pub mod stitchcraft_core::units
 pub enum stitchcraft_core::units::UnitError
 pub stitchcraft_core::units::UnitError::NotFinite(f64)

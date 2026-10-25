@@ -49,12 +49,13 @@ const DEFAULT_WINDOW: [u32; 2] = [1440, 900];
 /// The X screen's width and height in pixels: room for the window at [`DEFAULT_WINDOW`] and at
 /// [`DIALOG_WINDOW`], with the window at the screen's corner. X starts the pointer at the screen's centre,
 /// where it would light up whatever it is over: this screen is wide enough to keep it right of the window.
-const SCREEN: [u32; 2] = [3000, 2100];
+const SCREEN: [u32; 2] = [3000, 2500];
 /// The size of VectorCraft's window for the picture of a plug-in's dialog: its default width, and tall
-/// enough for a dialog of 48 settings, satin's. A plug-in's dialog has a row a setting and doesn't scroll
-/// (VectorCraft's `form::schema_fields`): at the default height, fill's and satin's run off the window's
-/// top and bottom.
-pub(crate) const DIALOG_WINDOW: [u32; 2] = [1440, 2000];
+/// enough for satin's, the tallest, about 2,050 pixels with its 43 rows in 17 sections at the defaults. At
+/// the default height, fill's and satin's would scroll their rows, as VectorCraft does from 0.14 when a
+/// dialog is taller than its window (its `modal::scrolled_rows`), and a picture would show only some of
+/// them. The probe fails on a dialog that scrolls.
+pub(crate) const DIALOG_WINDOW: [u32; 2] = [1440, 2400];
 const _: () = assert!(DIALOG_WINDOW[0] <= SCREEN[0] && DIALOG_WINDOW[1] <= SCREEN[1], "the dialogs' window fits on the screen");
 const _: () = assert!(SCREEN[0] / 2 >= DIALOG_WINDOW[0] && SCREEN[0] / 2 >= DEFAULT_WINDOW[0], "the pointer starts right of the window");
 /// Turns the accessibility bus's screen-reader flag on, then runs the rest of the command line. `sh -c`
@@ -224,7 +225,7 @@ mod tests {
             "xvfb-run",
             "--auto-servernum",
             "--server-args",
-            "-screen 0 3000x2100x24",
+            "-screen 0 3000x2500x24",
             "cargo",
             "test",
         ];

@@ -12,6 +12,12 @@ holds Ink/Stitch's settings for that kind of stitch, and the object shows its st
 art. The thread is the colour of the object's fill for a fill, and of its stroke for a stroke or a satin
 column.
 
+From VectorCraft 0.14 each setting has a label and its unit, in the sections of the
+[parameter reference](../reference/params.md). Rest the pointer on a label for its help, or press the
+button after the field for its page in the reference. A setting shows only when it applies: a satin's
+staggers show for staggered splits. VectorCraft before 0.14 lists every setting, each under its Ink/Stitch
+name.
+
 An object without a StitchCraft effect sews as Ink/Stitch sews a shape of an SVG file. Its fills are
 filled, and its strokes are sewn as running stitch. With `stitch export --auto`, StitchCraft chooses its
 stitches by width instead, as for a picture traced into shapes.
@@ -39,10 +45,10 @@ With the [exporters installed](../install.md#the-vectorcraft-plug-ins), choose *
 As**, and **PES embroidery (StitchCraft)** or **DST embroidery (StitchCraft)** as the format. Once the file
 is picked, a dialog shows 2 options:
 
-- **Profile**, the machine and hoop the design is planned for: `brother-pe800-5x7` unless another is
+- **Digitize automatically**, which chooses the stitches of the objects without a StitchCraft effect by
+  their width, as `stitch export --auto` does.
+- **Machine**, the machine and hoop the design is planned for: `brother-pe800-5x7` unless another is
   chosen. `stitch profiles` lists them.
-- **Auto**, which chooses the stitches of the objects without a StitchCraft effect by their width, as
-  `stitch export --auto` does.
 
 The design takes the file's name, which machines show. What `stitch export` would say about the design
 shows with the export's warnings, one line for each message. When one of them is an error, nothing is
