@@ -1055,7 +1055,7 @@ id = "REQ-VC-008"
 area = "vectorcraft"
 level = "L2"
 statement = "`stitch plan` reads a VectorCraft document, `.vectorcraft`, `.drawcraft` or `.vctemplate`, and writes from it what it writes from an SVG file: the machine file, the picture and the report, with the reader's warnings among what is said. When it finds a bug in StitchCraft, its bug-report bundle holds the part of the document the reader reads, and a replay reproduces the run. `stitch export` is another name for `stitch plan`."
-rationale = "The live effects show the stitches in the drawing, and until VectorCraft has exporter plug-ins (ABI v2, M9) the command line makes the machine file. One command and one way through the engine for every design keeps a VectorCraft document sewing as its SVG would."
+rationale = "The live effects show the stitches in the drawing, and until StitchCraft's formats are VectorCraft exporters (M6.9) the command line makes the machine file. One command and one way through the engine for every design keeps a VectorCraft document sewing as its SVG would."
 milestone = "M6"
 status = "active"
 

@@ -21,6 +21,12 @@ budgets. Changing VectorCraft requires its maintainers' agreement. A machine nee
 paths, add rungs and bake previews, and making a line into a column needs more instructions than ABI v1
 gives a filter ([tools](../vectorcraft-integration.md#tools-vectorcrafts-own-commands)).
 
+**Amended 2026-10-25:** VectorCraft took most of phase 2 into ABI v1 from 0.14.0 on, where an ABI v2 was
+proposed ([status](../rfc-vectorcraft-abi-v2.md#status)). Exporters, rich parameters, data kept with the
+document, heavy filters and a live effect's paints came that way. M6.8 to M6.12 use them, and M6.12 brings
+the tools filter back as a heavy filter. Overlays, heavy live effects and the objects beside a live effect
+are still proposed, in M9.
+
 ## Consequences
 
 - Useful on the machine before any upstream discussion.
