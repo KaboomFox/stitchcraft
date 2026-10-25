@@ -117,14 +117,14 @@ the line as it is drawn (`REQ-AUTO-003`).
   The transforms down to the shape scale it by the average of how far they stretch the x and y axes.
   That is exact when they scale both axes alike. Under an uneven scale or a skew, a viewer draws the
   stroke wider one way than the other, and the average is the middle way. An automatic line sewn across
-  its width, as a satin column or a fill, is then as wide as that average all along, and `SC-W0802`
-  names it (`REQ-AUTO-005`). The transforms scale a stroke with `vector-effect: non-scaling-stroke` too, as
+  its width is then as wide as that average all along. `SC-W0802` names such a line (`REQ-AUTO-005`).
+  The transforms scale a stroke with `vector-effect: non-scaling-stroke` too, as
   Ink/Stitch scales it, though a viewer does not.
 - **Join.** `round` and `bevel` are read as they are named. A `miter` join is limited by
   `stroke-miterlimit`, 4 when nothing sets it, as SVG says. Any other join, or none, is a miter limited
   at 5, as in Ink/Stitch. SVG 2's `miter-clip` and `arcs` count as other joins. An automatic element's
-  corners follow the drawing instead (`REQ-AUTO-004`): a join that is not set is SVG's initial miter,
-  limited by `stroke-miterlimit`, and so are `miter-clip` and `arcs`, which few viewers draw.
+  corners follow the drawing instead (`REQ-AUTO-004`). There, a join that is not set is SVG's initial
+  miter, limited by `stroke-miterlimit`, and so are `miter-clip` and `arcs`, which few viewers draw.
 - **Cap.** `stroke-linecap`, inherited, `butt` when nothing sets it: `butt`, `round` or `square`, in any
   case. Ink/Stitch sews no cap, and reads none.
 - **Values that do not read.** A width, join or limit that does not read is ignored, as a viewer

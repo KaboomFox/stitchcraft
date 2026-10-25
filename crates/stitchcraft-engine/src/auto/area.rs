@@ -232,15 +232,15 @@ impl Walker<'_> {
             Join::Bevel => {}
             Join::Round => {
                 // From the first side to the second, the short way round, or forward when it turns straight
-                // back.
-                let turn =
-                    if cross == 0.0 { std::f64::consts::PI * -outside } else { math::atan2(n1.0 * n2.1 - n1.1 * n2.0, n1.0 * n2.0 + n1.1 * n2.1) };
+                // back: half a turn clockwise from the left side, the outer one then.
+                let turn = if cross == 0.0 { -std::f64::consts::PI } else { math::atan2(n1.0 * n2.1 - n1.1 * n2.0, n1.0 * n2.0 + n1.1 * n2.1) };
                 self.arc(outer, p, n1, turn)?;
             }
             Join::Miter { limit } => {
-                // The point where the 2 sides meet lies 1 / cos(turn / 2) half widths from the corner.
+                // The point where the 2 sides meet lies 1 / cos(turn / 2) half widths from the corner. A turn
+                // straight back has none: its cosine is 0, and 1 / 0 is past any limit, a design's being finite.
                 let cos_half = math::hypot(n1.0 + n2.0, n1.1 + n2.1) / 2.0;
-                if cos_half > 0.0 && 1.0 / cos_half <= limit {
+                if 1.0 / cos_half <= limit {
                     let reach = h / (cos_half * cos_half) / 2.0;
                     self.push(outer, at(p, (n1.0 + n2.0) * reach, (n1.1 + n2.1) * reach))?;
                 }
@@ -291,9 +291,6 @@ impl Walker<'_> {
     /// most [`SHAPE_TOLERANCE`] from the arc.
     fn arc(&mut self, side: usize, centre: Point, from: Direction, turn: f64) -> Result<(), Exhausted> {
         let h = self.half;
-        if !(h > 0.0 && turn.is_finite()) {
-            return Ok(());
-        }
         let start = math::atan2(from.1, from.0);
         let chords = chords(h, turn);
         for k in 1..chords {
@@ -328,8 +325,9 @@ impl Walker<'_> {
     }
 }
 
-/// How many chords draw an arc of the disc `half` across turning by `turn` radians: from 1 to
-/// [`MAX_CHORDS`], each straying at most [`SHAPE_TOLERANCE`] from the arc.
+/// How many chords draw an arc of radius `half` turning by `turn` radians: from 1 to [`MAX_CHORDS`], as few
+/// as stray at most [`SHAPE_TOLERANCE`] from the arc. Where any chord would, on a radius no larger than the
+/// tolerance, each turns a quarter turn at most.
 // The count is a whole number from 1 to the most, held there before it is cast.
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 fn chords(half: f64, turn: f64) -> u32 {
@@ -378,8 +376,9 @@ mod tests {
     fn an_open_line_is_one_ring_and_a_closed_one_two() {
         let open = stroke_area(&line(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)], false), 2.0, Join::Bevel, Cap::Butt, &mut Budget::DEFAULT.meter());
         // Right side forward, round the end, left side back: the inner side goes in to the corner and out.
-        let ring = vec![p(0.0, -1.0), p(10.0, -1.0), p(11.0, 0.0), p(11.0, 10.0), p(9.0, 10.0), p(9.0, 0.0), p(10.0, 0.0), p(10.0, 1.0)];
-        assert_eq!(open.unwrap(), [closed(ring.into_iter().chain([p(0.0, 1.0)]).collect())]);
+        // The ring ends where it starts.
+        let ring = [(0.0, -1.0), (10.0, -1.0), (11.0, 0.0), (11.0, 10.0), (9.0, 10.0), (9.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0), (0.0, -1.0)];
+        assert_eq!(open.unwrap(), [ring.map(|(x, y)| p(x, y))]);
         let square = stroke_area(
             &line(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)], true),
             2.0,
@@ -452,21 +451,87 @@ mod tests {
 
     #[test]
     fn the_rings_paint_the_union_of_the_pieces() {
-        // Lines that turn tightly, cross themselves and come back, against the pieces they add up to, each
-        // filled on its own: their union. Every join and cap, and widths from a CSS pixel to 30 mm.
+        // Lines that turn tightly, cross themselves, come back and go straight on through a point, against
+        // the pieces they add up to, each filled on its own: their union. Every join and cap, and widths from
+        // a CSS pixel to 30 mm.
         let lines = [
             line(&[(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0)], false),
             line(&[(0.0, 0.0), (20.0, 0.0), (5.0, 10.0), (5.0, -10.0), (12.0, 3.0)], false),
             line(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0), (0.5, 0.2)], true),
             line(&[(0.0, 0.0), (10.0, 0.0), (5.0, 0.0), (5.0, 0.0), (5.0, 8.0)], false),
             line(&[(0.0, 0.0), (30.0, 0.0), (30.0, 0.2), (0.0, 0.3), (15.0, 15.0)], true),
+            line(&[(0.0, 0.0), (5.0, 0.0), (10.0, 0.0), (10.0, 5.0)], false),
         ];
         let joins = [Join::Bevel, Join::Round, Join::Miter { limit: 4.0 }, Join::Miter { limit: 1.2 }];
-        for (path, width) in lines.iter().zip([2.0, 5.0, MM_PER_SVG_PX, 7.0, 30.0]) {
+        for (path, width) in lines.iter().zip([2.0, 5.0, MM_PER_SVG_PX, 7.0, 30.0, 3.0]) {
             for (join, cap) in joins.iter().zip([Cap::Butt, Cap::Round, Cap::Square, Cap::Round]) {
                 assert_union(path, width, *join, cap);
             }
         }
+        // A line that does not move is the dot its cap draws, in the pieces as in the rings.
+        assert_union(&line(&[(3.0, 3.0), (3.0, 3.0)], false), 4.0, Join::Round, Cap::Round);
+    }
+
+    #[test]
+    fn a_line_no_wider_than_twice_the_tolerance_keeps_its_curves_as_flattened() {
+        // A curve that overshoots its end within the tolerance and comes back, so that it ends against its
+        // chord. Half the line's width shifts a corner by the tolerance at most, whatever the angle, so the
+        // chord is not halved further.
+        let h = SHAPE_TOLERANCE;
+        let overshoot = Subpath { start: p(0.0, 0.0), segments: vec![Segment::Cubic(p(0.0, 0.0), p(1.02, 0.0), p(1.0, 0.0))], closed: false };
+        let rings = stroke_area(&Path { subpaths: vec![overshoot] }, 2.0 * h, Join::Bevel, Cap::Butt, &mut Budget::DEFAULT.meter());
+        assert_eq!(rings.unwrap(), [[p(0.0, -h), p(1.0, -h), p(1.0, h), p(0.0, h), p(0.0, -h)]]);
+    }
+
+    #[test]
+    fn a_line_adds_nothing_where_it_goes_straight_on() {
+        // Through (5, 0) going left and through (0, 5) going down: each side is the 3 points beside the line.
+        let ring = |path: &[(f64, f64)]| stroke_area(&line(path, false), 2.0, Join::Round, Cap::Butt, &mut Budget::DEFAULT.meter()).unwrap();
+        let points = |ring: [(f64, f64); 7]| vec![ring.map(|(x, y)| p(x, y)).to_vec()];
+        assert_eq!(
+            ring(&[(10.0, 0.0), (5.0, 0.0), (0.0, 0.0)]),
+            points([(10.0, 1.0), (5.0, 1.0), (0.0, 1.0), (0.0, -1.0), (5.0, -1.0), (10.0, -1.0), (10.0, 1.0)])
+        );
+        assert_eq!(
+            ring(&[(0.0, 10.0), (0.0, 5.0), (0.0, 0.0)]),
+            points([(-1.0, 10.0), (-1.0, 5.0), (-1.0, 0.0), (1.0, 0.0), (1.0, 5.0), (1.0, 10.0), (-1.0, 10.0)])
+        );
+    }
+
+    #[test]
+    fn an_arc_takes_as_few_chords_as_stay_within_the_tolerance() {
+        // A chord of angle a strays h (1 - cos(a / 2)) from an arc of radius h.
+        let (h, half_turn) = (1.0, std::f64::consts::PI);
+        let strays = |n: u32| h * (1.0 - math::cos(half_turn / f64::from(n) / 2.0));
+        let n = chords(h, half_turn);
+        assert!(strays(n) <= SHAPE_TOLERANCE && strays(n - 1) > SHAPE_TOLERANCE, "{n} chords");
+        // On a radius no larger than the tolerance, quarter turns.
+        assert_eq!((chords(SHAPE_TOLERANCE, half_turn), chords(SHAPE_TOLERANCE / 2.0, half_turn)), (2, 2));
+    }
+
+    #[test]
+    fn a_direction_is_between_2_points_apart() {
+        assert_eq!(direction(p(1.0, 1.0), p(4.0, 5.0)), Some((0.6, 0.8)));
+        assert_eq!(direction(p(1.0, 1.0), p(1.0, 1.0)), None);
+    }
+
+    #[test]
+    fn a_side_takes_a_point_once() {
+        let mut meter = Budget::DEFAULT.meter();
+        let mut walker =
+            Walker { half: 1.0, cap: Cap::Butt, sides: [Vec::new(), Vec::new()], start: End::Cut, lengths: Vec::new(), meter: &mut meter };
+        for q in [p(1.0, 1.0), p(1.0, 1.0), p(2.0, 1.0)] {
+            walker.push(RIGHT, q).unwrap();
+        }
+        assert_eq!(walker.sides[RIGHT], [p(1.0, 1.0), p(2.0, 1.0)]);
+    }
+
+    #[test]
+    fn a_length_whose_area_cannot_be_built_stays_as_its_rings() {
+        // Beyond the region code's reach, some 65 m from the origin, a ring's area is not built: the length
+        // keeps its rings, and the fill made of them says why it sews nothing.
+        let far = vec![p(1e6, 0.0), p(1e6 + 10.0, 0.0), p(1e6 + 10.0, 10.0), p(1e6, 0.0)];
+        assert_eq!(joined(vec![far.clone()], &mut Budget::DEFAULT.meter()).unwrap(), [far]);
     }
 
     #[test]
@@ -485,7 +550,7 @@ mod tests {
     }
 
     proptest::proptest! {
-        #![proptest_config(proptest::prelude::ProptestConfig::with_cases(96))]
+        #![proptest_config(stitchcraft_testkit::strategies::config(96))]
 
         #[test]
         fn any_polyline_s_rings_paint_the_union_of_its_pieces(

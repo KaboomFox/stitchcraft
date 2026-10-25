@@ -72,8 +72,9 @@ A stroke's width and join, since M4.8, are as the host draws them: in SVG, `stro
 transforms, and `stroke-linejoin` with `stroke-miterlimit` ([SVG input](svg-input.md#stroke-width-and-join)).
 Only a satin column drawn as one path uses them, as its width and its corners. `Shape::stroke(path)`
 makes a stroke that says nothing of either: 1 CSS pixel wide, with `Join::UNSET`. Its cap, since M13.1, is
-SVG's `stroke-linecap` or VectorCraft's cap, `Butt` when nothing sets it. Ink/Stitch sews no cap, and only
-an automatic element's stitches follow it ([image to embroidery](image-to-embroidery.md#stitch-types-by-width)).
+SVG's `stroke-linecap` or VectorCraft's cap, `Butt` when nothing sets it. Ink/Stitch sews no cap, and
+neither does an element with settings. An automatic element's stitches follow it
+([image to embroidery](image-to-embroidery.md#stitch-types-by-width)).
 
 An automatic element is a shape without settings that the user asked StitchCraft to digitize: the readers
 mark it when `Reading::auto` is set, and the engine turns it into ordinary elements with the settings its

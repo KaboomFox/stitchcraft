@@ -9,8 +9,8 @@
 
 use stitchcraft_core::{Budget, Code, Mm, Point, math};
 use stitchcraft_engine::PlanOutcome;
-use stitchcraft_engine::auto::{SATIN_MAX_WIDTH, Stitches, digitize};
-use stitchcraft_engine::design::{Cap, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::auto::{SATIN_MAX_WIDTH, Stitches, digitize, digitized};
+use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::stroke::SHAPE_TOLERANCE;
 use stitchcraft_params::ParamSet;
@@ -122,6 +122,38 @@ fn req_auto_003_a_column_s_number_steps_aside_for_an_element_that_has_it() {
 }
 
 #[test]
+fn req_auto_003_a_line_whose_columns_need_more_work_to_name_than_is_left_is_left_out() {
+    // Columns `two` and `two#2`, beside elements that have `two#2` and the next 2 names a clash steps aside
+    // to: naming the second column costs 3 units of work, on top of the work of digitizing the line.
+    let two = automatic(widened(along("two", polylines(&[&[(0.0, 0.0), (20.0, 0.0)], &[(0.0, 10.0), (20.0, 10.0)]]), &RED, &[]), 3.0));
+    let mut meter = Budget::DEFAULT.meter();
+    digitize(&two, &DesignSettings::default(), &mut meter).unwrap();
+    let work = Budget::DEFAULT.max_work - meter.work_left();
+    let others = ["two#2", "two#2~2", "two#2~3"].map(|id| drawn(id, &[(0.0, 20.0), (20.0, 20.0)], 0.5));
+    let design = Design::new([vec![two], others.to_vec()].concat(), DesignSettings::default()).unwrap();
+    let with_work = |extra: u64| {
+        let (elements, said) = digitized(&design, &Budget { max_work: work + extra, ..Budget::DEFAULT });
+        (elements.iter().map(|e| e.id.to_string()).collect::<Vec<_>>(), said.iter().map(ToString::to_string).collect::<Vec<_>>())
+    };
+    let ids = |ids: &[&str]| ids.iter().map(ToString::to_string).collect::<Vec<_>>();
+    assert_eq!(
+        with_work(3),
+        (
+            ids(&["two", "two#2~4", "two#2", "two#2~2", "two#2~3"]),
+            ids(&["info SC-I0901: 1 shape is digitized automatically: it sews as a satin column."])
+        )
+    );
+    // A unit less, and the line is left out whole, as a line that needs more work to digitize is.
+    assert_eq!(
+        with_work(2),
+        (
+            ids(&["two#2", "two#2~2", "two#2~3"]),
+            vec![format!("error SC-E0004: Planning this element needed more than the work budget of {} units, so it was skipped.", work + 2)]
+        )
+    );
+}
+
+#[test]
 fn req_auto_003_round_and_square_caps_reach_half_the_width_past_an_open_end() {
     let line = drawn("line", &[(0.0, 0.0), (20.0, 0.0)], 3.0);
     for cap in [Cap::Round, Cap::Square] {
@@ -150,14 +182,14 @@ fn req_auto_003_round_and_square_caps_reach_half_the_width_past_an_open_end() {
     );
     let round = capped(ring, Cap::Round);
     assert_eq!(made(&round), vec![with(round, &[("satin_column", "true")])]);
-    // Where the path starts with a curve, the cap reaches on along the curve's tangent there.
+    // Where the path starts or ends with a curve, the cap reaches on along the curve's tangent there.
     let curve = Path {
         subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Cubic(p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0))], closed: false }],
     };
-    let [column] = made(&capped(widened(along("curve", curve, &RED, &[]), 2.0), Cap::Square)).try_into().unwrap();
+    let [column] = made(&capped(widened(along("curve", curve, &RED, &[]), 3.0), Cap::Square)).try_into().unwrap();
     let Shape::Stroke { path, .. } = &column.shape else { panic!("{:?}", column.shape) };
-    assert_eq!(path.subpaths[0].start, p(-1.0, 0.0));
-    assert_eq!(path.subpaths[0].segments.last(), Some(&Segment::Line(p(10.0, 11.0))));
+    assert_eq!(path.subpaths[0].start, p(-1.5, 0.0));
+    assert_eq!(path.subpaths[0].segments.last(), Some(&Segment::Line(p(10.0, 11.5))));
 }
 
 #[test]
@@ -195,7 +227,7 @@ fn req_auto_004_an_element_that_needs_more_work_than_the_budget_is_left_out() {
     let wiggle: Vec<(f64, f64)> = (0..200).map(|i| (f64::from(i), if i % 2 == 0 { 0.0 } else { 3.0 })).collect();
     let wide = automatic(drawn("wide", &wiggle, 10.0));
     let thin = automatic(drawn("thin", &[(0.0, 30.0), (20.0, 30.0)], 0.5));
-    let design = stitchcraft_engine::design::Design::new(vec![wide, thin], DesignSettings::default()).unwrap();
+    let design = Design::new(vec![wide, thin], DesignSettings::default()).unwrap();
     let outcome = stitchcraft_engine::plan(&design, stitchcraft_plan::profiles::REFERENCE, &Budget { max_work: 2_000, ..Budget::DEFAULT });
     let said = messages(&outcome);
     let spent = |d: &stitchcraft_core::Diagnostic| d.code == Code::BudgetExhausted && d.element.as_ref().map(|e| e.as_str()) == Some("wide");
@@ -226,6 +258,8 @@ fn diag_sc_i0901_counts_the_shapes_digitized_by_their_stitches() {
     assert_eq!(messages(&planned(vec![column])), ["info SC-I0901: 1 shape is digitized automatically: it sews as a satin column."]);
     let two = (0..2).map(|i| automatic(drawn(&format!("c{i}"), &[(0.0, f64::from(i) * 10.0), (20.0, f64::from(i) * 10.0)], 3.0))).collect();
     assert_eq!(messages(&planned(two)), ["info SC-I0901: 2 shapes are digitized automatically: both sew as satin columns."]);
+    let three = (0..3).map(|i| automatic(drawn(&format!("c{i}"), &[(0.0, f64::from(i) * 10.0), (20.0, f64::from(i) * 10.0)], 3.0))).collect();
+    assert_eq!(messages(&planned(three)), ["info SC-I0901: 3 shapes are digitized automatically: all sew as satin columns."]);
     assert_eq!(Code::AutoDigitized.id(), "SC-I0901");
 }
 
@@ -372,14 +406,19 @@ fn req_auto_004_parts_too_small_to_sew_are_named() {
 fn req_auto_004_a_line_whose_area_reaches_past_10_m_is_left_out() {
     let huge = automatic(drawn("huge", &[(0.0, 0.0), (10.0, 0.0)], 140_000.0));
     let thin = automatic(drawn("thin", &[(0.0, 30.0), (20.0, 30.0)], 0.5));
-    let outcome = planned(vec![huge, thin]);
+    // A dot that a line as wide as a satin column draws at the edge, which its round cap paints past it.
+    let edge = Path { subpaths: vec![Subpath { start: p(9_999.0, 0.0), segments: vec![Segment::Line(p(9_999.0, 0.0))], closed: false }] };
+    let edge = automatic(capped(widened(along("edge", edge, &RED, &[]), 3.0), Cap::Round));
+    let outcome = planned(vec![huge, thin, edge]);
+    let far = |width: &str| {
+        format!(
+            "warning SC-W0903: This line is {width} mm wide, and the area it paints would reach more than 10 m from the origin, beyond \
+             what machine files can record, so it is left out."
+        )
+    };
     assert_eq!(
         messages(&outcome),
-        [
-            "info SC-I0901: 1 shape is digitized automatically: it sews as a running stitch.",
-            "warning SC-W0903: This line is 140000 mm wide, and the area it paints would reach more than 10 m from the origin, beyond what \
-             machine files can record, so it is left out."
-        ]
+        ["info SC-I0901: 1 shape is digitized automatically: it sews as a running stitch.".to_string(), far("140000"), far("3")]
     );
     assert!(outcome.plan.is_some_and(|plan| plan.elements.iter().all(|e| e.as_str() == "thin")));
 }
@@ -427,7 +466,7 @@ fn req_auto_004_a_long_wide_line_fills_within_the_budget() {
 }
 
 proptest::proptest! {
-    #![proptest_config(proptest::prelude::ProptestConfig::with_cases(48))]
+    #![proptest_config(stitchcraft_testkit::strategies::config(48))]
 
     #[test]
     fn req_auto_006_digitizing_makes_no_error_of_its_own(

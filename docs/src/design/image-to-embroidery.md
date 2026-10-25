@@ -68,29 +68,29 @@ its shapes then set by hand. (The SVG reader reads no `inkstitch:` settings but 
 and says so with `SC-W0802`, so such a shape sews with the defaults until then.) A shape's fill gives its
 area and its stroke gives its line, each with its thread, width, join and cap, as for any element. A trim
 or a stop that an Ink/Stitch command asks for is not a setting of the stitches, and an automatic element
-keeps it; one sewn as several elements keeps it for the last.
+keeps it. An element sewn as several elements keeps it for the last of them.
 
 The readers mark the element (`Element::automatic`), and they read the switch from `Reading`, which every
 host takes. Before anything is generated, the engine turns each automatic element into ordinary elements
-whose settings say what to sew (`stitchcraft_engine::auto`), so the generators, the assembly and every
-host treat them as shapes set by hand. `SC-I0901` then counts the shapes digitized, by the stitches they
-sew as. An automatic line's stitches follow the drawing, so what the drawing draws across a line sewn
-across its width, and its stitches don't follow, is named (`REQ-AUTO-005`): of a VectorCraft document, its
-alignment inside or outside a closed path and its width profile (`SC-W0807`); of an SVG file, transforms
-that stretch it more one way than the other, which draw it wider one way, where its stitches are as wide
-as the transforms stretch it on average (`SC-W0802`). Its caps are followed (below), and not named, and
-so are its corners, joined as the drawing joins them: an SVG join that is not set is SVG's miter, limited
-by `stroke-miterlimit`, where Ink/Stitch reads a miter limited at 5.
+whose settings say what to sew (`stitchcraft_engine::auto`). The generators, the assembly and every host
+then treat them as shapes set by hand. `SC-I0901` counts the shapes digitized, by the stitches they sew
+as. An automatic line sewn across its width follows the drawing, and the reader names what the drawing
+draws across the line that its stitches don't follow (`REQ-AUTO-005`). Of a VectorCraft document, that is
+the line's alignment inside or outside a closed path and its width profile (`SC-W0807`). Of an SVG file,
+it is transforms that stretch the line more one way than the other (`SC-W0802`). Under such transforms a
+viewer draws it wider one way, and its stitches are as wide as the transforms stretch it on average. Its caps are
+followed (below), and so are its corners, joined as the drawing joins them. An SVG join that is not set
+is SVG's miter, limited by `stroke-miterlimit`, where Ink/Stitch reads a miter limited at 5.
 
-Digitizing makes no error of its own (`REQ-AUTO-006`). A part that its width's stitches cannot sew is sewn
-otherwise, or left out with a warning, and a shape that paints nothing sews as it would without the
-switch, so one odd shape among hundreds never keeps a design from being written.
+Digitizing doesn't add an error of its own (`REQ-AUTO-006`). A part that its width's stitches cannot sew
+is sewn otherwise, or left out with a warning, and a shape that paints nothing sews as it would without
+the switch. One odd shape among hundreds never keeps a design from being written.
 
 ## Stitch types by width
 
-An automatic element is measured at the size it sews, in millimetres, to the micrometre: a width written in
-another unit that converts to a bound give or take a rounding error, such as 7 mm in CSS pixels, is that
-bound (`REQ-AUTO-002`). Its width at a place is the diameter of the largest circle that fits inside it
+An automatic element is measured at the size it sews, in millimetres, to the micrometre (`REQ-AUTO-002`).
+A width written in another unit that converts to a bound give or take a rounding error, such as 7 mm in
+CSS pixels, is that bound. Its width at a place is the diameter of the largest circle that fits inside it
 there. Its parts sew by their width:
 
 | Width | Sewn as |
@@ -103,30 +103,31 @@ A stroke is a line as wide as it is drawn (M13.1):
 
 - No wider than `min_satin_stroke_width_mm` it sews as a running stitch along its path (`REQ-AUTO-002`).
   A satin column that narrow is too narrow to stitch across (`REQ-SAT-015`), so the bound is the same.
-- Up to 7 mm it sews as a satin column as wide as its stroke, its path the column's centre line, as a
-  satin column drawn as one path does (`REQ-SAT-016`, `REQ-AUTO-003`). A centre line is one subpath, so a
-  stroke of several sews a column for each, in order: the second and later are named after the stroke
-  with `#2`, `#3` and so on. A traced line's ends are round or square, and its caps are part of the line
-  drawn, so an open end with a round or square cap reaches half the stroke's width past the path's end,
-  straight on, as far as the cap does. A round cap's end is then square, which covers its corners too.
+- Up to 7 mm it sews as a satin column as wide as its stroke, with its path as the column's centre line,
+  as a satin column drawn as one path does (`REQ-SAT-016`, `REQ-AUTO-003`). A centre line is one subpath,
+  so a stroke of several sews a column for each, in order. The second and later columns are named after
+  the stroke with `#2`, `#3` and so on. A traced line's ends are round or square, and its caps are part of
+  the line drawn. An open end with a round or square cap reaches half the stroke's width past the path's
+  end, straight on, as far as the cap does. A round cap's end is then square, which covers its corners too.
   A column cannot follow a subpath that turns more tightly than the stroke is wide, such as a small ring
-  traced from a dot, or one shorter than a CSS pixel: its rails would fold over themselves, or vanish.
-  Whether it can is found as the satin column finds it, from the rails it would make, and such a subpath
-  sews as the area it paints, filled, as a wider line is (`SC-I0902`). So does a dot that a round or
-  square cap draws. A dot with a butt cap draws nothing, and is left out (`SC-W0401`).
-- Wider than that, the area it paints is filled (`REQ-AUTO-004`): each segment widened by half the stroke's
-  width to each side, its corners joined as the stroke's join joins them (a miter cut square past its
-  limit), its open ends capped with its cap, within the shapes' tolerance. Those pieces, joined into one
-  area, are the fill's outline, and a part of it too small to sew is named as a fill's is (`SC-W0303`). An
-  area that would reach more than 10 m from the origin is left out (`SC-W0903`): no design lies there.
+  traced from a dot. Nor can it follow a subpath shorter than a CSS pixel. Its rails would fold over
+  themselves, or vanish. The rails the satin column would make tell whether it can follow a subpath. A
+  subpath it cannot follow sews as the area it paints, filled as a wider line is (`SC-I0902`). So does a
+  dot that a round or square cap draws. A dot with a butt cap draws nothing, and is left out (`SC-W0401`).
+- Wider than that, the area it paints is filled (`REQ-AUTO-004`). That area is each segment widened by
+  half the stroke's width to each side, with its corners joined as the stroke's join joins them and its
+  open ends capped with its cap. It is the stroke's area within the shapes' tolerance. A miter longer
+  than its limit is cut square. Those pieces, joined into one area, are the fill's outline. A part of it too small to sew is
+  named as a fill's is (`SC-W0303`). An area that would reach more than 10 m from the origin is left out
+  (`SC-W0903`). No design lies there.
 
   The pieces are not handed to the area code one by one, which would cost many times the work of their
-  outline. Each open subpath is one ring, its right side forward, its end cap, its left side back and its
-  start cap, with the outer side going round each join and the inner side in to the path's point and out
-  again; a closed subpath is its 2 sides. Such rings wind round each point as many times as the pieces
-  cover it, so the nonzero rule fills exactly the pieces' union. A line of more than 32 chords is cut into
-  lengths of 32, each a ring made into its area alone, and the areas are joined: a 10 mm line a metre long
-  then fills within the default budget.
+  outline. Each open subpath is one ring instead. It follows the right side forward, the end cap, the left
+  side back and the start cap. The outer side goes round each join, and the inner side goes in to the
+  path's point and out again. A closed subpath is 2 rings, one for each side. Such rings wind round each
+  point as many times as the pieces cover it. The nonzero rule then fills exactly the pieces' union. A line
+  of more than 32 chords is cut into lengths of 32 chords. Each length is a ring made into its area alone,
+  and the areas are then joined. A 10 mm line a metre long fills within the default budget that way.
 
 Until M13.4 and M13.5, a line no wider than `min_satin_stroke_width_mm` runs once, and its satin column
 has a satin column's defaults. M13.4 triples the runs from 0.5 mm, and M13.5 gives columns their underlay

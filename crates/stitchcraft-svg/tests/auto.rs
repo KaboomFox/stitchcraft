@@ -6,7 +6,7 @@
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic)]
 
-use stitchcraft_core::{Budget, Code};
+use stitchcraft_core::{Budget, Code, Mm};
 use stitchcraft_engine::auto::Stitches;
 use stitchcraft_engine::design::{Cap, Element, Join, Reading, Shape};
 use stitchcraft_svg::{Svg, read_with};
@@ -130,7 +130,7 @@ fn req_auto_002_a_width_in_css_pixels_is_measured_to_the_micrometre() {
     let svg = read(shapes, true);
     let widths: Vec<f64> = svg.design.elements().iter().map(|e| if let Shape::Stroke { width, .. } = e.shape { width.get() } else { 0.0 }).collect();
     assert_eq!(widths, [7.0_f64.next_up(), 1.0_f64.next_up()], "a rounding error wider");
-    let stitches: Vec<Stitches> = svg.design.elements().iter().map(|e| Stitches::of(&e.shape, &svg.design.settings)).collect();
+    let stitches: Vec<Stitches> = widths.iter().map(|&width| Stitches::of_stroke(Mm::new(width).unwrap(), &svg.design.settings)).collect();
     assert_eq!(stitches, [Stitches::Satin, Stitches::Running]);
 }
 

@@ -51,7 +51,7 @@ use crate::common::{STOP_AFTER, TRIM_AFTER};
 use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath, within_working_limit};
 use crate::generators::satin::{self, SATIN_COLUMN};
 use crate::generators::{TooSmall, mm, too_small};
-use crate::normalize::region::{self, Polygon};
+use crate::normalize::region::{self, Polygon, Unjoined};
 use crate::normalize::stroke;
 
 /// The widest stroke sewn as a satin column; a wider one is filled. MC-8 confirms or changes it on the
@@ -79,14 +79,6 @@ pub enum Stitches {
 }
 
 impl Stitches {
-    /// The stitches of `shape` in a design with `settings`.
-    pub fn of(shape: &Shape, settings: &DesignSettings) -> Stitches {
-        match shape {
-            Shape::Fill { .. } => Stitches::Fill,
-            Shape::Stroke { width, .. } => Stitches::of_stroke(*width, settings),
-        }
-    }
-
     /// The stitches of a stroke `width` wide in a design with `settings`: a running stitch no wider than
     /// the design's narrowest satin stroke, a satin column no wider than [`SATIN_MAX_WIDTH`], and a fill
     /// wider than both, each width measured to the micrometre.
@@ -128,30 +120,31 @@ pub struct Digitized {
 }
 
 /// The elements of `design` as they are generated: each automatic element turned into the elements its
-/// stitches need ([`digitize`]), the others as they are; and what was said of them: `SC-I0901` for the
-/// shapes digitized, what [`digitize`] says of each, and `SC-E0004` for each one left out because it needs
-/// more work than `budget` allows. A design without automatic elements comes back as it is.
+/// stitches need ([`digitize`]) and named ([`named`]), the others as they are; and what was said of them:
+/// `SC-I0901` for the shapes digitized, what [`digitize`] says of each, and `SC-E0004` for each one left
+/// out because digitizing and naming it needs more work than `budget` allows an element. A design without
+/// automatic elements comes back as it is.
 pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>, Vec<Diagnostic>) {
     let elements = design.elements();
     if !elements.iter().any(|element| element.automatic) {
         return (Cow::Borrowed(elements), Vec::new());
     }
     let mut diagnostics = Vec::new();
-    // The ids given out: the design's, then each part's that a stroke of several subpaths adds.
-    let (mut taken, mut naming) = (Labels::default(), budget.meter());
+    // The ids given out: the design's, then each part's that a stroke of several subpaths adds. A design's
+    // ids are unique (`Design::new`), so each is taken as it is, which costs no work and cannot fail.
+    let mut taken = Labels::default();
+    for element in elements {
+        let _ = taken.claim(element.id.as_str().to_string(), &mut budget.meter());
+    }
     let mut counts = Counts::default();
     let mut out = Vec::with_capacity(elements.len());
-    for element in elements {
-        // A design's ids are unique (`Design::new`), so each is taken as it is, which costs no work and
-        // cannot fail.
-        let _ = taken.claim(element.id.as_str().to_string(), &mut naming);
-    }
     for element in elements {
         if !element.automatic {
             out.push(element.clone());
             continue;
         }
-        let made = match digitize(element, &design.settings, &mut budget.meter()) {
+        let mut meter = budget.meter();
+        let made = match digitize(element, &design.settings, &mut meter).and_then(|made| named(made, element, &mut taken, &mut meter)) {
             Ok(made) => made,
             Err(exhausted) => {
                 diagnostics.push(exhausted.diagnostic(budget, Some(element.id.clone())));
@@ -160,24 +153,30 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
         };
         counts.add(made.stitches);
         diagnostics.extend(made.diagnostics);
-        for part in made.elements {
-            if part.id == element.id {
-                out.push(part);
-                continue;
-            }
-            // A part's own id, unless another element already has it.
-            let id = taken.claim(part.id.as_str().to_string(), &mut naming).ok().and_then(|id| ElementId::new(id).ok());
-            match id {
-                Some(id) => out.push(Element { id, ..part }),
-                None => {
-                    let message = format!("A part of `{}` could not be named: it needed more work than the budget allows.", element.id);
-                    diagnostics.push(Diagnostic::new(Code::BudgetExhausted, message).with_element(element.id.clone()));
-                }
-            }
-        }
+        out.extend(made.elements);
     }
     diagnostics.splice(0..0, counts.said());
     (Cow::Owned(out), diagnostics)
+}
+
+/// `made`, the parts of the automatic `element`, named for the plan with `meter`'s work: each keeps its id,
+/// the element's own for the first, unless another element of the design has it, when [`Labels::claim`]
+/// steps it aside. Naming the parts is part of the work of digitizing the element, so an element whose
+/// parts need more work to name than is left is left out whole, as one that needs more to digitize is.
+fn named(made: Digitized, element: &Element, taken: &mut Labels, meter: &mut Meter) -> Result<Digitized, Exhausted> {
+    let mut parts = Vec::with_capacity(made.elements.len());
+    for part in made.elements {
+        if part.id == element.id {
+            parts.push(part);
+            continue;
+        }
+        let label = taken.claim(part.id.as_str().to_string(), meter)?;
+        // A label a clash steps aside to fits in an id: `numbered` leaves room for a suffix of 11 digits,
+        // and a clash steps only past labels already taken, far fewer than 10^11.
+        let id = ElementId::new(label).ok().ok_or(Exhausted::Work)?;
+        parts.push(Element { id, ..part });
+    }
+    Ok(Digitized { elements: parts, ..made })
 }
 
 /// The ordinary elements that sew the automatic `element` of a design with `settings`, with `meter`'s
@@ -219,7 +218,8 @@ fn columns(element: &Element, path: &Path, style: Style, meter: &mut Meter) -> R
     let mut made = Digitized::default();
     let (mut satin, mut fill) = (false, false);
     for (n, subpath) in path.subpaths.iter().enumerate() {
-        meter.charge(1 + subpath.segments.len() as u64)?;
+        // A unit for the subpath; its segments cost what the code that walks them charges.
+        meter.charge(1)?;
         let id = if n == 0 { Some(element.id.clone()) } else { numbered(&element.id, n + 1) };
         // A numbered id fits by construction ([`numbered`]); one that did not would only leave the part out.
         let Some(id) = id else { continue };
@@ -311,12 +311,17 @@ fn painted(path: &Path, style: Style, meter: &mut Meter) -> Result<Painted, Exha
         return Ok(Painted::TooFar);
     }
     let found = region::area(&rings, |winding| region::fills(FillRule::NonZero, winding), meter)?;
-    Ok(Painted::Area(match found.parts {
+    Ok(Painted::Area(fill_path(found.parts, &rings)))
+}
+
+/// The path a fill is given for the area that `rings` bound: the outline of each of its `parts`. An area
+/// that cannot be joined is a bug in the region code; the fill is then given the rings, meets it there and
+/// says so itself.
+fn fill_path(parts: Result<Vec<Polygon>, Unjoined>, rings: &[Vec<Point>]) -> Path {
+    match parts {
         Ok(parts) => outline(&parts),
-        // An area that cannot be joined is a bug in the region code; the fill then meets it on the rings and
-        // says so itself.
         Err(_) => Path { subpaths: rings.iter().map(Vec::as_slice).filter_map(ring_subpath).collect() },
-    }))
+    }
 }
 
 /// The rings of `parts` as a path: each part's outline, then its holes, wound as [`Polygon`] winds them,
@@ -450,10 +455,30 @@ mod tests {
 
     #[test]
     fn an_id_numbered_for_a_column_fits_with_room_for_a_clash() {
-        let long = ElementId::new("é".repeat(128)).unwrap();
-        let numbered = numbered(&long, 12).unwrap();
-        assert!(numbered.as_str().ends_with("#12") && numbered.as_str().len() + CLAIM_ROOM <= ElementId::MAX_LEN, "{numbered}");
-        assert_eq!(super::numbered(&ElementId::new("a").unwrap(), 2).unwrap().as_str(), "a#2");
+        // As long as an id can be, it is shortened just enough to leave the room, and never within a
+        // character.
+        for (long, kept) in [("a".repeat(256), 241), ("é".repeat(128), 240)] {
+            let numbered = numbered(&ElementId::new(long.as_str()).unwrap(), 12).unwrap();
+            assert_eq!(numbered.as_str(), format!("{}#12", &long[..kept]));
+            assert!(numbered.as_str().len() + CLAIM_ROOM <= ElementId::MAX_LEN);
+        }
+        assert_eq!(numbered(&ElementId::new("a").unwrap(), 2).unwrap().as_str(), "a#2");
+    }
+
+    #[test]
+    fn a_fill_is_given_the_outline_of_its_area_or_else_its_rings() {
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        let triangle = |points: [(f64, f64); 3]| {
+            let [start, rest @ ..] = points.map(|(x, y)| p(x, y));
+            Path { subpaths: vec![Subpath { start, segments: rest.into_iter().map(Segment::Line).collect(), closed: true }] }
+        };
+        // A triangle wound counter-clockwise in y-up axes.
+        let rings = [vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 0.0)]];
+        let found = region::area(&rings, |winding| region::fills(FillRule::NonZero, winding), &mut Budget::DEFAULT.meter()).unwrap();
+        // Joined: the area's outline, wound clockwise as a `Polygon` winds it.
+        assert_eq!(fill_path(found.parts, &rings), triangle([(0.0, 0.0), (10.0, 10.0), (10.0, 0.0)]));
+        // An area that cannot be joined, a bug in the region code: the rings as they are.
+        assert_eq!(fill_path(Err(Unjoined), &rings), triangle([(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]));
     }
 
     #[test]

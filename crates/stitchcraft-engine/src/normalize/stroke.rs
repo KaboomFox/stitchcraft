@@ -465,6 +465,37 @@ mod tests {
     }
 
     #[test]
+    fn segments_that_meet_smoothly_are_not_halved_further() {
+        // A circle of 4 quarters, closed: each meets the next smoothly, the last the first, and it has no
+        // end, so asking for a sine of 0.001 halves nothing further. Open, its first and last ends are
+        // halved further, as for the quarter circle above. The same turned by 45°, so that no direction
+        // lies along an axis.
+        let k = 10.0 * 0.552_284_749_830_793_4;
+        let r = std::f64::consts::FRAC_1_SQRT_2;
+        for turned in [false, true] {
+            let at = |x: f64, y: f64| if turned { p(r * (x - y), r * (x + y)) } else { p(x, y) };
+            let quarters = vec![
+                Segment::Cubic(at(10.0, k), at(k, 10.0), at(0.0, 10.0)),
+                Segment::Cubic(at(-k, 10.0), at(-10.0, k), at(-10.0, 0.0)),
+                Segment::Cubic(at(-10.0, -k), at(-k, -10.0), at(0.0, -10.0)),
+                Segment::Cubic(at(k, -10.0), at(10.0, -k), at(10.0, 0.0)),
+            ];
+            let flat = |closed, ends| {
+                let circle = Subpath { start: at(10.0, 0.0), segments: quarters.clone(), closed };
+                let segments = flat_segments(&circle, SHAPE_TOLERANCE, ends, &mut Budget::DEFAULT.meter()).unwrap();
+                segments.into_iter().map(|segment| segment.points.len()).collect::<Vec<_>>()
+            };
+            assert_eq!(flat(true, Some(0.001)), flat(true, None), "turned: {turned}");
+            let (open, plain) = (flat(false, Some(0.001)), flat(false, None));
+            let further = |i: usize| open[i] - plain[i];
+            assert!(
+                (1..=12).contains(&further(0)) && (1..=12).contains(&further(3)) && open[1..3] == plain[1..3],
+                "turned: {turned}: {open:?} against {plain:?}"
+            );
+        }
+    }
+
+    #[test]
     fn a_polyline_drops_repeated_points_and_has_corners_where_it_turns_sharply() {
         let points = [p(0.0, 0.0), p(5.0, 0.0), p(5.0, 0.0), p(10.0, 1.0), p(10.0, 6.0), p(10.0, 10.0)];
         let piece = polyline(&points);
