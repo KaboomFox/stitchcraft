@@ -27,6 +27,11 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   so on (`stitchcraft_core::Labels`, as in the VectorCraft adapter). The adapter's own diagnostics name
   the SVG element as `svg:<label>`.
 - **Names.** An `inkscape:label` becomes the element's name.
+- **Automatic elements.** Read with `--auto` (`Reading::auto`), a shape with no attribute in Ink/Stitch's
+  namespace is an automatic element, whose stitches StitchCraft chooses by its width
+  ([image to embroidery](image-to-embroidery.md#automatic-elements), `REQ-AUTO-001`). The trim and stop
+  of Ink/Stitch's commands attached to it still apply. A shape with any `inkstitch:` attribute is not
+  automatic: it sews as its settings say once they are read (M8), and with the defaults until then.
 
 ## Geometry and units
 
@@ -103,19 +108,28 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
 
 A stroke's width and join give a satin column drawn as one path its width and its corners
 ([single-path satin](algorithms/satin.md#single-path-satin)). Other strokes are sewn along their paths,
-however wide they are drawn. Both are read as Ink/Stitch reads them (`REQ-SVG-004`).
+however wide they are drawn. Both are read as Ink/Stitch reads them (`REQ-SVG-004`), except an automatic
+element's join, read as SVG draws it. Its cap matters only to an automatic element, whose stitches cover
+the line as it is drawn (`REQ-AUTO-003`).
 
 - **Width.** The width is `stroke-width`, inherited, 1 user unit when nothing sets it. It is a length in
   the shape's own user units, as in a viewer, and a percentage is of the viewport's diagonal over √2.
   The transforms down to the shape scale it by the average of how far they stretch the x and y axes.
   That is exact when they scale both axes alike. Under an uneven scale or a skew, a viewer draws the
-  stroke wider one way than the other, and the average is the middle way. The transforms scale a stroke
-  with `vector-effect: non-scaling-stroke` too, as Ink/Stitch scales it, though a viewer does not.
+  stroke wider one way than the other, and the average is the middle way. An automatic line sewn across
+  its width is then as wide as that average all along. `SC-W0802` names such a line (`REQ-AUTO-005`).
+  The transforms scale a stroke with `vector-effect: non-scaling-stroke` too, as
+  Ink/Stitch scales it, though a viewer does not.
 - **Join.** `round` and `bevel` are read as they are named. A `miter` join is limited by
   `stroke-miterlimit`, 4 when nothing sets it, as SVG says. Any other join, or none, is a miter limited
-  at 5, as in Ink/Stitch. SVG 2's `miter-clip` and `arcs` count as other joins.
+  at 5, as in Ink/Stitch. SVG 2's `miter-clip` and `arcs` count as other joins. An automatic element's
+  corners follow the drawing instead (`REQ-AUTO-004`). There, a join that is not set is SVG's initial
+  miter, limited by `stroke-miterlimit`, and so are `miter-clip` and `arcs`, which few viewers draw.
+- **Cap.** `stroke-linecap`, inherited, `butt` when nothing sets it: `butt`, `round` or `square`, in any
+  case. Ink/Stitch sews no cap, and reads none.
 - **Values that do not read.** A width, join or limit that does not read is ignored, as a viewer
-  ignores it, and `SC-W0804` names it. A negative width and a limit below 1 do not read. A stroke too
+  ignores it, and `SC-W0804` names it. A cap that does not read is ignored too, without a word: it changes
+  nothing for a shape with settings. A negative width and a limit below 1 do not read. A stroke too
   wide to measure, such as `1e308in`, is left out with `SC-W0804`. Its fill is still sewn.
 
 Ink/Stitch reads a width in `%`, `em` or `ex` as 0, and a join written in capitals as no join at all. The

@@ -86,7 +86,7 @@ fn req_vc_001_points_are_millimetres_and_paints_are_threads() {
     assert_eq!(ring.thread.color, Rgb::new(0, 255, 255));
     // Handles at absolute positions; a missing handle leaves its end of the segment on the anchor.
     let wave = element(&drawing, "vc:6:stroke");
-    let Shape::Stroke { path, width, join: Join::Miter { limit } } = &wave.shape else { panic!("{:?}", wave.shape) };
+    let Shape::Stroke { path, width, join: Join::Miter { limit }, .. } = &wave.shape else { panic!("{:?}", wave.shape) };
     assert!((width.get() - 0.5).abs() < 1e-6 && *limit == 4.0);
     let sub = &path.subpaths[0];
     assert!(!sub.closed && close(sub.start, p(72.0, 216.0)) && sub.segments.len() == 2);

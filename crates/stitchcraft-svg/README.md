@@ -10,7 +10,9 @@ size and viewBox (so positions come out in millimetres), fill and stroke colours
 everything that hides an element. A shape's fill is sewn before its stroke, as Ink/Stitch sews them.
 Since M4.8 it reads each stroke's width and join (`REQ-SVG-004`), which give a satin column drawn as one
 path its width and corners, and Ink/Stitch's design settings in the file's metadata (`src/settings.rs`,
-`REQ-SVG-005`).
+`REQ-SVG-005`). Since M13.1 it reads each stroke's cap. With `--auto`, `read_with` marks a shape without
+`inkstitch:` attributes as an automatic element (`REQ-AUTO-001`). Its corners are joined as SVG draws
+them, and a transform that stretches such a line more one way than the other is named (`REQ-AUTO-005`).
 Ink/Stitch's own objects are not stitched (`src/inkstitch.rs`, `REQ-SVG-003`):
 - command symbols and the connectors that tie them to objects;
 - lines drawn with Inkscape's connector tool;

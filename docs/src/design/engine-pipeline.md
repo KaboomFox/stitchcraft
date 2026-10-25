@@ -6,10 +6,28 @@ From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraf
 own tests; stages communicate only through the types in the [data model](data-model.md).
 
 ```text
-Design ──▶ 1 normalize ──▶ 2 validate ──▶ 3 generate (per element) ──▶ 4 assemble ──▶ 5 finalize ──▶ 6 check ──▶ StitchPlan
-              │               │                 │                         │              │              │
-              └───────────────┴───── diagnostics accumulate at every stage ┴──────────────┴──────────────┘
+Design ──▶ 0 auto ──▶ 1 normalize ──▶ 2 validate ──▶ 3 generate (per element) ──▶ 4 assemble ──▶ 5 finalize ──▶ 6 check ──▶ StitchPlan
+              │            │               │                 │                         │              │              │
+              └────────────┴───────────────┴───── diagnostics accumulate at every stage ┴──────────────┴──────────────┘
 ```
+
+## 0. Automatic digitizing
+
+Since M13.1, before anything else, each element the host marked automatic, a shape without settings read
+with `--auto`, becomes the ordinary elements its width calls for, with the settings that say so
+(`stitchcraft_engine::auto::digitized`, [image to embroidery](image-to-embroidery.md#stitch-types-by-width)).
+
+- An area, or a line that runs, stays itself.
+- A line sewn as a satin column becomes a column for each of its subpaths, or the fill of a subpath a
+  column cannot follow (`SC-I0902`).
+- A wider line becomes the fill of the area it paints.
+
+Every stage after it sees only ordinary elements. A digitized shape sews, offers its neighbours what it
+offers and is said of as the same shape set by hand would be. `SC-I0901` counts the shapes digitized. A
+design without automatic elements passes through unchanged and uncopied. Each automatic element has the
+budget's work to itself, naming its parts included, and one that needs more is left out with `SC-E0004`
+(`REQ-GEN-002`). Digitizing doesn't add an error of its own (`REQ-AUTO-006`). What cannot be sewn as its
+width says is sewn otherwise or left out with a warning.
 
 ## 1. Normalize
 

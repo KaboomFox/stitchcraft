@@ -78,7 +78,7 @@ pub fn read_effect(family: Family, input: &[u8], params: &[u8], budget: &Budget)
     };
     let id = ElementId::new(format!("vc:effect:{}", family.id()))
         .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("A live effect's element has no id: {e}.")))?;
-    Ok(Effect { element: Element { id, name: None, shape, thread: Thread::new(Rgb::new(0, 0, 0)), params: set }, preview_level })
+    Ok(Effect { element: Element { id, name: None, shape, thread: Thread::new(Rgb::new(0, 0, 0)), params: set, automatic: false }, preview_level })
 }
 
 /// What a live effect of `family` returns for an element sewn with the needle points `groups`, each a

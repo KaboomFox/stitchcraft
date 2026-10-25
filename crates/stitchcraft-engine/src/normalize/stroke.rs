@@ -16,6 +16,14 @@
 //!
 //! A line a generator builds point by point, such as a satin column's underlay, is a polyline already:
 //! every join between its segments may be a corner, by the same 30°.
+//!
+//! The area a wide stroke paints is made of its segments one by one (`flat_segments`): its joins go
+//! where its segments meet, and its curves bend smoothly between. Its ends and its corners are set square
+//! to the chords that end there, and half the stroke's width turns the small angle a chord makes with its
+//! curve into a shift larger than the tolerance. So a curve is halved further where it ends the subpath or
+//! meets the next segment at a corner, until the chord there lies within the angle the stroke's width
+//! allows. Where 2 segments meet smoothly, their chords turn alike on either side, and the join between
+//! them is within the tolerance already.
 
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Exhausted, Meter, Point};
@@ -50,6 +58,23 @@ pub struct Piece {
     /// The corners, as indices into `points`, in increasing order. The first and last points are never
     /// listed: they always get a stitch.
     pub corners: Vec<usize>,
+}
+
+/// The directions a subpath starts and ends in, each a vector of any length: [`end_directions`].
+pub(crate) type Ends = ((f64, f64), (f64, f64));
+
+/// A segment of a subpath that moves, flattened: the points after its start, and the directions it starts
+/// and ends in.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct FlatSegment {
+    /// Its points after its start, in order, the last its end, none the same as the one before it. A curve
+    /// that comes back to its start within the tolerance has none.
+    pub(crate) points: Vec<Point>,
+    /// The direction it starts in: towards its first control point that is not its start. Not of unit
+    /// length.
+    pub(crate) start_direction: (f64, f64),
+    /// The direction it ends in: from its last control point that is not its end. Not of unit length.
+    pub(crate) end_direction: (f64, f64),
 }
 
 /// `path` as polylines within `tolerance` millimetres of it, with their corners: one piece per subpath.
@@ -155,6 +180,68 @@ fn turns(previous: (f64, f64), next: (f64, f64)) -> bool {
 }
 
 fn piece(subpath: &Subpath, tolerance: f64, meter: &mut Meter) -> Result<Piece, Exhausted> {
+    // The segments that do not move are dropped, so what is left starts where the subpath does.
+    let mut points = vec![subpath.start];
+    let mut corners = Vec::new();
+    let mut previous: Option<(f64, f64)> = None;
+    for segment in flat_segments(subpath, tolerance, None, meter)? {
+        if previous.is_some_and(|end| turns(end, segment.start_direction)) {
+            corners.push(points.len() - 1);
+        }
+        for p in segment.points {
+            push(&mut points, p);
+        }
+        previous = Some(segment.end_direction);
+    }
+    let last = points.len() - 1;
+    corners.retain(|c| *c > 0 && *c < last);
+    corners.dedup();
+    Ok(Piece { points, corners })
+}
+
+/// The segments of `subpath` that move, each flattened within `tolerance`, in order, with the line that
+/// closes a closed subpath. With `ends`, a curve is halved further at each of its ends that ends the
+/// subpath or meets the next segment at a corner, one that turns by an angle whose sine is more than
+/// `ends`, until the chord there leaves the curve at an angle whose sine is at most `ends`. Each segment
+/// and each halving costs one unit of `meter`.
+pub(crate) fn flat_segments(subpath: &Subpath, tolerance: f64, ends: Option<f64>, meter: &mut Meter) -> Result<Vec<FlatSegment>, Exhausted> {
+    let segs = moving(subpath, meter)?;
+    let mut flat = Vec::with_capacity(segs.len());
+    for (i, &seg) in segs.iter().enumerate() {
+        // The segments before and after it: around a closed subpath, the last comes before the first.
+        let before = if i > 0 { segs.get(i - 1) } else { segs.last().filter(|_| subpath.closed) };
+        let after = segs.get(i + 1).or_else(|| segs.first().filter(|_| subpath.closed));
+        // Square at an end of the subpath, or at a corner.
+        let square = |turn: Option<((f64, f64), (f64, f64))>| ends.filter(|&sine| turn.is_none_or(|(from, to)| !within(from, to, sine)));
+        let squares =
+            [square(before.map(|b| (b.end_direction(), seg.start_direction()))), square(after.map(|a| (seg.end_direction(), a.start_direction())))];
+        let (start, mut points) = match seg {
+            Seg::Line(start, end) => (start, vec![end]),
+            Seg::Cubic(a, b, c, d) => {
+                let mut points = vec![a];
+                cubic([a, b, c, d], tolerance, squares, MAX_DEPTH, &mut points, meter)?;
+                (a, points)
+            }
+        };
+        // The start is the end of the segment before, and not the segment's own.
+        if points.first() == Some(&start) {
+            points.remove(0);
+        }
+        flat.push(FlatSegment { points, start_direction: seg.start_direction(), end_direction: seg.end_direction() });
+    }
+    Ok(flat)
+}
+
+/// The directions `subpath` starts and ends in, as its first and last segments that move start and end
+/// ([`FlatSegment`]); `None` when it does not move. Each segment costs one unit of `meter`.
+pub(crate) fn end_directions(subpath: &Subpath, meter: &mut Meter) -> Result<Option<Ends>, Exhausted> {
+    let segs = moving(subpath, meter)?;
+    Ok(segs.first().zip(segs.last()).map(|(first, last)| (first.start_direction(), last.end_direction())))
+}
+
+/// The segments of `subpath` that move, each with its start, and the line that closes a closed subpath.
+/// Each segment costs one unit of `meter`.
+fn moving(subpath: &Subpath, meter: &mut Meter) -> Result<Vec<Seg>, Exhausted> {
     let mut segs = Vec::with_capacity(subpath.segments.len() + 1);
     let mut at = subpath.start;
     for segment in &subpath.segments {
@@ -166,24 +253,7 @@ fn piece(subpath: &Subpath, tolerance: f64, meter: &mut Meter) -> Result<Piece, 
         segs.push(Seg::Line(at, subpath.start));
     }
     segs.retain(|s| !s.is_point());
-    // The dropped segments do not move, so what is left starts where the subpath does.
-    let mut points = vec![subpath.start];
-    let mut corners = Vec::new();
-    let mut previous: Option<Seg> = None;
-    for seg in segs {
-        if previous.is_some_and(|p| turns(p.end_direction(), seg.start_direction())) {
-            corners.push(points.len() - 1);
-        }
-        match seg {
-            Seg::Line(_, end) => push(&mut points, end),
-            Seg::Cubic(a, b, c, d) => cubic([a, b, c, d], tolerance, MAX_DEPTH, &mut points, meter)?,
-        }
-        previous = Some(seg);
-    }
-    let last = points.len() - 1;
-    corners.retain(|c| *c > 0 && *c < last);
-    corners.dedup();
-    Ok(Piece { points, corners })
+    Ok(segs)
 }
 
 /// Appends `p` unless it is where the polyline already is.
@@ -194,12 +264,26 @@ fn push(points: &mut Vec<Point>, p: Point) {
 }
 
 /// Appends the points of a flattened cubic, its start excluded, halving it at most `max_depth` times
-/// (into at most 2^`max_depth` pieces) however tight the tolerance.
-fn cubic(curve: [Point; 4], tolerance: f64, max_depth: u32, points: &mut Vec<Point>, meter: &mut Meter) -> Result<(), Exhausted> {
-    let mut stack = vec![(curve, 0)];
-    while let Some(([a, b, c, d], depth)) = stack.pop() {
+/// (into at most 2^`max_depth` pieces) however tight the tolerance. With `squares`, the piece at its start
+/// and the one at its end are halved until their chords leave the curve at an angle whose sine is at most
+/// the one given for that end.
+fn cubic(
+    curve: [Point; 4],
+    tolerance: f64,
+    [at_start, at_end]: [Option<f64>; 2],
+    max_depth: u32,
+    points: &mut Vec<Point>,
+    meter: &mut Meter,
+) -> Result<(), Exhausted> {
+    // Each piece, with whether it starts the curve and whether it ends it.
+    let mut stack = vec![(curve, 0, true, true)];
+    while let Some(([a, b, c, d], depth, first, last)) = stack.pop() {
         meter.charge(1)?;
-        if depth >= max_depth || (distance_to_segment(b, a, d) <= tolerance && distance_to_segment(c, a, d) <= tolerance) {
+        let flat = distance_to_segment(b, a, d) <= tolerance && distance_to_segment(c, a, d) <= tolerance;
+        let chord = (d.x() - a.x(), d.y() - a.y());
+        let (x, y) = towards(d, &[c, b, a]);
+        let square = |end: bool, bound: Option<f64>, direction: (f64, f64)| !end || bound.is_none_or(|sine| within(direction, chord, sine));
+        if depth >= max_depth || (flat && square(first, at_start, towards(a, &[b, c, d])) && square(last, at_end, (-x, -y))) {
             push(points, d);
             continue;
         }
@@ -207,10 +291,18 @@ fn cubic(curve: [Point; 4], tolerance: f64, max_depth: u32, points: &mut Vec<Poi
         let (ab, bc, cd) = (a.lerp(b, 0.5), b.lerp(c, 0.5), c.lerp(d, 0.5));
         let (abc, bcd) = (ab.lerp(bc, 0.5), bc.lerp(cd, 0.5));
         let middle = abc.lerp(bcd, 0.5);
-        stack.push(([middle, bcd, cd, d], depth + 1));
-        stack.push(([a, ab, abc, middle], depth + 1));
+        stack.push(([middle, bcd, cd, d], depth + 1, false, last));
+        stack.push(([a, ab, abc, middle], depth + 1, first, false));
     }
     Ok(())
+}
+
+/// Whether `other` goes the way of `direction`, at an angle to it whose sine is at most `sine`.
+fn within(direction: (f64, f64), other: (f64, f64), sine: f64) -> bool {
+    let cross = direction.0 * other.1 - direction.1 * other.0;
+    let dot = direction.0 * other.0 + direction.1 * other.1;
+    let lengths = (direction.0 * direction.0 + direction.1 * direction.1).sqrt() * (other.0 * other.0 + other.1 * other.1).sqrt();
+    dot > 0.0 && cross.abs() <= sine * lengths
 }
 
 #[cfg(test)]
@@ -339,8 +431,67 @@ mod tests {
         for tolerance in [0.0, f64::NAN] {
             let mut points = vec![p(0.0, 0.0)];
             let mut meter = Budget { max_stitches: 1, max_work: 1000 }.meter();
-            cubic([p(0.0, 0.0), p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0)], tolerance, 2, &mut points, &mut meter).unwrap();
+            cubic([p(0.0, 0.0), p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0)], tolerance, [None, None], 2, &mut points, &mut meter).unwrap();
             assert_eq!(points.len(), 1 + 4, "{tolerance}");
+        }
+    }
+
+    #[test]
+    fn a_curve_is_halved_at_its_ends_until_its_end_chords_leave_it_square() {
+        // The quarter circle from (10, 0) to (0, 10): it starts upwards and ends leftwards. Flattened within
+        // the shapes' tolerance, its first chord leaves it at some 3°. Asked for a sine of 0.001, its first
+        // and last chords leave it within that, and the points between stay as they were.
+        let k = 10.0 * 0.552_284_749_830_793_4;
+        let arc = Subpath { start: p(10.0, 0.0), segments: vec![Segment::Cubic(p(10.0, k), p(k, 10.0), p(0.0, 10.0))], closed: false };
+        let meter = &mut Budget::DEFAULT.meter();
+        let [plain] = flat_segments(&arc, SHAPE_TOLERANCE, None, meter).unwrap().try_into().unwrap();
+        let [squared] = flat_segments(&arc, SHAPE_TOLERANCE, Some(0.001), meter).unwrap().try_into().unwrap();
+        assert_eq!((squared.start_direction, squared.end_direction), ((0.0, k), (-k, 0.0)));
+        let sine = |from: Point, to: Point, direction: (f64, f64)| {
+            let (x, y) = (to.x() - from.x(), to.y() - from.y());
+            (x * direction.1 - y * direction.0).abs() / (x * x + y * y).sqrt() / (direction.0 * direction.0 + direction.1 * direction.1).sqrt()
+        };
+        assert!(sine(p(10.0, 0.0), plain.points[0], (0.0, 1.0)) > 0.01);
+        assert!(sine(p(10.0, 0.0), squared.points[0], (0.0, 1.0)) <= 0.001);
+        let ending = squared.points.len();
+        assert!(sine(squared.points[ending - 2], squared.points[ending - 1], (-1.0, 0.0)) <= 0.001);
+        assert!(plain.points.iter().all(|q| squared.points.contains(q)), "halving further keeps the points");
+        assert!(squared.points.len() <= plain.points.len() + 2 * 12, "{} points, from {}", squared.points.len(), plain.points.len());
+        // A segment's start is not its own point, and a line is its end.
+        let line = Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0))], closed: true };
+        let flat = flat_segments(&line, SHAPE_TOLERANCE, Some(0.001), meter).unwrap();
+        let ends: Vec<Vec<Point>> = flat.into_iter().map(|segment| segment.points).collect();
+        assert_eq!(ends, [vec![p(5.0, 0.0)], vec![p(0.0, 0.0)]], "the closing line included");
+    }
+
+    #[test]
+    fn segments_that_meet_smoothly_are_not_halved_further() {
+        // A circle of 4 quarters, closed: each meets the next smoothly, the last the first, and it has no
+        // end, so asking for a sine of 0.001 halves nothing further. Open, its first and last ends are
+        // halved further, as for the quarter circle above. The same turned by 45°, so that no direction
+        // lies along an axis.
+        let k = 10.0 * 0.552_284_749_830_793_4;
+        let r = std::f64::consts::FRAC_1_SQRT_2;
+        for turned in [false, true] {
+            let at = |x: f64, y: f64| if turned { p(r * (x - y), r * (x + y)) } else { p(x, y) };
+            let quarters = vec![
+                Segment::Cubic(at(10.0, k), at(k, 10.0), at(0.0, 10.0)),
+                Segment::Cubic(at(-k, 10.0), at(-10.0, k), at(-10.0, 0.0)),
+                Segment::Cubic(at(-10.0, -k), at(-k, -10.0), at(0.0, -10.0)),
+                Segment::Cubic(at(k, -10.0), at(10.0, -k), at(10.0, 0.0)),
+            ];
+            let flat = |closed, ends| {
+                let circle = Subpath { start: at(10.0, 0.0), segments: quarters.clone(), closed };
+                let segments = flat_segments(&circle, SHAPE_TOLERANCE, ends, &mut Budget::DEFAULT.meter()).unwrap();
+                segments.into_iter().map(|segment| segment.points.len()).collect::<Vec<_>>()
+            };
+            assert_eq!(flat(true, Some(0.001)), flat(true, None), "turned: {turned}");
+            let (open, plain) = (flat(false, Some(0.001)), flat(false, None));
+            let further = |i: usize| open[i] - plain[i];
+            assert!(
+                (1..=12).contains(&further(0)) && (1..=12).contains(&further(3)) && open[1..3] == plain[1..3],
+                "turned: {turned}: {open:?} against {plain:?}"
+            );
         }
     }
 
