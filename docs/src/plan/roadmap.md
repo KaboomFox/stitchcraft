@@ -239,7 +239,8 @@ written as manual stitches by the same document writer as M8's `stitch import-in
 
 M9 comes last, after 1.0 and the work after it, and nothing before it waits on ArtCraft. Its id stays M9, as
 every step id does. VectorCraft adopted most of the [RFC](../design/rfc-vectorcraft-abi-v2.md) into ABI v1 in
-0.14.0 to 0.16.0, and on its `main` since, and M6.8 to M6.12 use what it adopted. M9 proposes the rest, one PR
-for each, with tests, following VectorCraft's `AGENTS.md`: overlay previews (P3), heavy live effects (P4) and
-the objects beside a live effect's object (P6). The plug-ins then show every stitch of a large fill, and start
-and end their previews at the markers.
+0.14.0 to 0.16.0, and on its `main` since, and M6.8 to M6.12 use what it adopted. Overlay previews (P3) are in
+review already, as [storytold/vectorcraft#3807](https://github.com/storytold/vectorcraft/pull/3807). M9
+proposes the rest, one PR for each, with tests, following VectorCraft's `AGENTS.md`: heavy live effects (P4)
+and the objects beside a live effect's object (P6). The plug-ins then show every stitch of a large fill, and
+start and end their previews at the markers.

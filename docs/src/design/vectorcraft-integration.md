@@ -261,8 +261,8 @@ contract test `req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limi
 shapes of growing size on every track the [compatibility gate](compatibility-gate.md) tests, and fails
 when VectorCraft stops a run that must finish. It prints what each run takes, which the budget's numbers
 are measured from. `hello_reads_and_writes_json_within_the_recorded_budget` still measures what JSON
-costs. The real stitches are always available from the CLI preview, and the RFC's overlay channel (P3,
-still proposed) would remove this limitation.
+costs. The real stitches are always available from the CLI preview, and the RFC's overlay channel (P3, in
+review upstream) would remove this limitation.
 
 Paint caveat: a live effect changes only geometry. A fill preview's ribbons are painted with the object's
 own fill, and a stroke preview with its stroke. From 0.14 the effect reads the paints but still cannot
@@ -444,7 +444,7 @@ item is generic, useful to any plug-in and not only embroidery:
 |---|---|---|
 | 1. Exporter plug-ins, for File › Export › PES | 0.14.0 | M6.9 |
 | 2. Rich parameter schemas: labels, units, groups, help, conditions, texts and lists, 256 parameters | 0.14.0 | M6.10 |
-| 3. Display-only overlays from live effects, real stitch previews at low cost | proposed | M9 |
+| 3. Display-only overlays from live effects, real stitch previews at low cost | in review | M9 |
 | 4. Budget classes, with the user's consent | heavy filters on `main` after 0.16.0, heavy live effects proposed | M6.12, M9 |
 | 5. Document-level plug-in data, for the machine profile and palettes | 0.16.0, for filters and exporters | M6.11 |
 | 6. Read-only context for live effects | the object's paints in 0.14.0, the markers beside it proposed | M6.8, M9 |

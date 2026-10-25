@@ -670,9 +670,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   of it. The RFC proposed an ABI v2. VectorCraft took 5 of its proposals into ABI v1 in 0.14.0 to 0.16.0,
   and 2 more are on its `main`: exporters, rich parameters, data kept with the document, effects and stroke
   style in filters, a live effect's paints, heavy filters and foreign SVG attributes kept from import to
-  export. `vc_abi_version` still returns 1. A table on the RFC's page says what was adopted and when. The
-  page proposes the rest: previews drawn as overlays, heavy live effects and the objects beside a live
-  effect's object.
+  export. `vc_abi_version` still returns 1. A table on the RFC's page gives each proposal's version and
+  pull request. Overlay previews are in review upstream. The page proposes the rest, heavy live effects and
+  the objects beside a live effect's object.
   - M6.9 to M6.12, new in the roadmap, use them before M13.7: StitchCraft's machine formats as VectorCraft
     exporters, dialogs labelled and grouped by the parameter registry, the design settings and machine
     kept with the document, and a tools filter that makes a line into a satin column. M9 proposes the rest, still last.
