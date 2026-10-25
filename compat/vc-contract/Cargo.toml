@@ -11,6 +11,8 @@ publish = false
 [workspace]
 
 [dependencies]
-vectorcraft-plugins = { git = "https://github.com/storytold/vectorcraft", tag = "v0.13.1" }
-vectorcraft-geom = { git = "https://github.com/storytold/vectorcraft", tag = "v0.13.1" }
+vectorcraft-plugins = { git = "https://github.com/storytold/vectorcraft", tag = "v0.16.0" }
+vectorcraft-geom = { git = "https://github.com/storytold/vectorcraft", tag = "v0.16.0" }
+# The appearance of an object whose fills and strokes a live effect is given (from VectorCraft 0.14).
+vectorcraft-doc = { git = "https://github.com/storytold/vectorcraft", tag = "v0.16.0" }
 serde_json = "1"

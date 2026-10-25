@@ -827,8 +827,8 @@ Print option on, in VectorCraft's Layer Options.
 A StitchCraft live effect draws the object it is applied to as its stitches, or as much of them as
 its preview level shows. It leaves the object as it is when it cannot show them, and VectorCraft
 shows this message as the plug-in's last error. The object sews no stitch, or its preview level needs
-more work than VectorCraft lets a live effect do. Or it is as wide as its stroke, which VectorCraft
-does not give a live effect: a satin column drawn as one path, or a zigzag stroke.
+more work than VectorCraft lets a live effect do. Or it is as wide as its stroke, which the effect
+doesn't read yet: a satin column drawn as one path, or a zigzag stroke.
 When another message says why an object sews no stitch, the effect shows that message instead.
 
 The message says which. A satin column drawn as one path, and a zigzag stroke, still sew as wide as
