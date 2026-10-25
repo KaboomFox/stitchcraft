@@ -374,9 +374,9 @@ mod tests {
 
     #[test]
     fn the_modules_are_hello_each_family_s_and_each_format_s() {
-        assert_eq!(modules(), ["hello", "stroke", "satin", "fill", "pes", "dst"]);
+        assert_eq!(modules(), ["hello", "stroke", "satin", "fill", "pes", "dst", "settings"]);
         let kinds: Vec<&str> = modules().into_iter().map(kind).collect();
-        assert_eq!(kinds, ["effect", "effect", "effect", "effect", "exporter", "exporter"]);
+        assert_eq!(kinds, ["effect", "effect", "effect", "effect", "exporter", "exporter", "filter"]);
         let sizes = [("hello", 1024), ("fill", 5000)];
         assert_eq!(sizes_line(&sizes), "hello 1 KiB, fill 5 KiB (4 KiB more)");
     }

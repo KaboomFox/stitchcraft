@@ -1,12 +1,13 @@
 //! StitchCraft plug-ins for VectorCraft's WebAssembly plug-in ABI v1.
 //!
 //! One `.wasm` module for each stitch family, so that each dialog holds only its family's parameters and
-//! stays within VectorCraft's 64 (`docs/src/design/vectorcraft-integration.md`), and one for each machine
-//! format, an exporter (VectorCraft 0.14). Which plug-in a module is is chosen when it is built, by a
-//! feature: `stroke`, `satin` or `fill` for a family's live effect, `pes` or `dst` for an exporter
-//! ([`MODULE`]). Without one it is the M0.6 *hello* effect, which the contract tests measure the host's
-//! costs with. Everything a module does is ordinary code, built into every module and tested natively,
-//! whichever it is.
+//! stays within VectorCraft's 64 (`docs/src/design/vectorcraft-integration.md`), one for each machine
+//! format, an exporter (VectorCraft 0.14), and one for the Design Settings filter (VectorCraft 0.16).
+//! Which plug-in a module is is chosen when it is built, by a feature: `stroke`, `satin` or `fill` for a
+//! family's live effect, `pes` or `dst` for an exporter, and `settings` for the filter ([`MODULE`]).
+//! Without one it is the M0.6 *hello* effect, which the contract tests measure the host's costs with.
+//! Everything a module does is ordinary code, built into every module and tested natively, whichever it
+//! is.
 //!
 //! Layout:
 //! - [`manifest`]: plug-in ids and manifests, made from the parameter registry and checked with
@@ -15,6 +16,7 @@
 //!   applies, from the registry;
 //! - [`effect`]: what each live effect does with VectorCraft's JSON: safe Rust, tested natively;
 //! - [`export`]: what each exporter does: the document sewn into a machine file as `stitch export` sews it;
+//! - [`settings`]: what the Design Settings filter does: the document's settings and machine kept with it;
 //! - `abi`: the exported functions VectorCraft calls. It is the single place in StitchCraft allowed to use
 //!   `unsafe`, because the ABI passes raw pointers into linear memory. This crate therefore does not carry
 //!   `#![forbid(unsafe_code)]`; the workspace denies `unsafe` and only `abi.rs` opts out, which
@@ -26,6 +28,7 @@ pub mod effect;
 pub mod export;
 pub mod manifest;
 pub mod preview;
+pub mod settings;
 
 #[cfg(test)]
 mod testing;
@@ -34,8 +37,10 @@ mod abi;
 
 use stitchcraft_params::Family;
 use stitchcraft_plan::FormatId;
+use stitchcraft_vectorcraft::settings::SETTINGS_FILTER;
 
-/// What a module is: a stitch family's live effect, a machine format's exporter, or *hello*.
+/// What a module is: a stitch family's live effect, a machine format's exporter, the Design Settings
+/// filter, or *hello*.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Module {
     /// The M0.6 *hello* effect, which returns the object's geometry unchanged.
@@ -44,10 +49,12 @@ pub enum Module {
     Family(Family),
     /// The exporter that writes the document in the format, as `stitch export` writes it.
     Exporter(FormatId),
+    /// The Design Settings filter, which keeps a document's design settings and machine with it.
+    Settings,
 }
 
-/// What this build of the module is, by its features: the first of `fill`, `satin`, `stroke`, `pes` and
-/// `dst`, or *hello* without any.
+/// What this build of the module is, by its features: the first of `fill`, `satin`, `stroke`, `pes`, `dst`
+/// and `settings`, or *hello* without any.
 pub const MODULE: Module = if cfg!(feature = "fill") {
     Module::Family(Family::Fill)
 } else if cfg!(feature = "satin") {
@@ -58,6 +65,8 @@ pub const MODULE: Module = if cfg!(feature = "fill") {
     Module::Exporter(FormatId::PesV1)
 } else if cfg!(feature = "dst") {
     Module::Exporter(FormatId::Dst)
+} else if cfg!(feature = "settings") {
+    Module::Settings
 } else {
     Module::Hello
 };
@@ -68,7 +77,7 @@ impl Module {
     pub fn all() -> Vec<Module> {
         let families = Family::ALL.iter().map(|family| Module::Family(*family));
         let exporters = FormatId::ALL.iter().map(|format| Module::Exporter(*format));
-        std::iter::once(Module::Hello).chain(families).chain(exporters).collect()
+        std::iter::once(Module::Hello).chain(families).chain(exporters).chain([Module::Settings]).collect()
     }
 
     /// The module's name, which is also the feature that builds it ([`MODULE`]): `hello`, the family's id or
@@ -78,6 +87,7 @@ impl Module {
             Module::Hello => "hello",
             Module::Family(family) => family.id(),
             Module::Exporter(format) => format.extension(),
+            Module::Settings => SETTINGS_FILTER,
         }
     }
 
@@ -87,6 +97,7 @@ impl Module {
             Module::Hello => manifest::hello(),
             Module::Family(family) => manifest::family(family),
             Module::Exporter(format) => manifest::exporter(format),
+            Module::Settings => manifest::settings(),
         }
     }
 
@@ -97,6 +108,7 @@ impl Module {
             Module::Hello => effect::hello(input, params),
             Module::Family(family) => effect::sew(family, input, params),
             Module::Exporter(format) => export::export(format, input, params),
+            Module::Settings => settings::run(input, params),
         }
     }
 }
@@ -108,7 +120,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[cfg(not(any(feature = "stroke", feature = "satin", feature = "fill", feature = "pes", feature = "dst")))]
+    #[cfg(not(any(feature = "stroke", feature = "satin", feature = "fill", feature = "pes", feature = "dst", feature = "settings")))]
     fn without_a_feature_the_module_is_hello() {
         assert_eq!(MODULE, Module::Hello);
     }
@@ -124,7 +136,7 @@ mod tests {
         assert_eq!(read(Module::Hello.run(&input, b"{}")), json!({"objects": [{"path": square}]}));
         let stitches = read(Module::Family(Family::Stroke).run(&input, b"{}"));
         assert!(stitches["objects"][0]["path"]["subpaths"][0]["anchors"].as_array().is_some_and(|anchors| anchors.len() > 4), "{stitches}");
-        assert_eq!(Module::all().into_iter().map(Module::name).collect::<Vec<_>>(), ["hello", "stroke", "satin", "fill", "pes", "dst"]);
+        assert_eq!(Module::all().into_iter().map(Module::name).collect::<Vec<_>>(), ["hello", "stroke", "satin", "fill", "pes", "dst", "settings"]);
         // An exporter is given a whole document, and returns a machine file.
         for format in FormatId::ALL {
             assert_eq!(Module::Exporter(*format).manifest(), manifest::exporter(*format));

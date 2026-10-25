@@ -192,10 +192,9 @@ fn make(root: &Path, shots: &[&Shot], check_only: bool, findings: &mut Findings)
     for shot in shots {
         let dir = out.join(&shot.id);
         let (document, picture) = (format!("{}.vectorcraft", shot.id), format!("{}.png", shot.id));
-        let export = |file: &str| Step { cmd: None, apply: None, params: None, export: Some(file.to_string()) };
         let mut steps = shot.steps.clone();
-        steps.push(export(&document));
-        steps.push(export(if shot.kind == RENDER { &picture } else { CANVAS }));
+        steps.push(Step::exporting(&document));
+        steps.push(Step::exporting(if shot.kind == RENDER { &picture } else { CANVAS }));
         let run = Run { open: None, plugins: shot.plugins.clone(), steps, scale: shot.scale.map(f64::from) };
         if let Err(e) = scenario::draw(&run, &fetched.root.join("bin/vectorcraft-cli"), &modules, &dir) {
             findings.error(format!("shot `{}`: {e}", shot.id));

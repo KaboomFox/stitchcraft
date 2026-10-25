@@ -52,6 +52,7 @@ use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Empty, Family, Kind, ParamGroup, ParamSpec, StitchType, Value as Parsed, find_for};
 use stitchcraft_plan::FormatId;
+use stitchcraft_vectorcraft::settings::SETTINGS_FILTER;
 pub use stitchcraft_vectorcraft::{PREVIEW_LEVEL, plugin_id};
 
 use crate::dialog::{self, Ui, registry_ui};
@@ -200,6 +201,22 @@ pub fn family(family: Family) -> Manifest {
         author: AUTHOR,
         description,
         params: params(family).into_iter().chain([(PREVIEW_LEVEL, preview::param(family))]).collect(),
+        extensions: Vec::new(),
+    }
+}
+
+/// The manifest of the Design Settings filter, which keeps a document's design settings and machine with it
+/// (VectorCraft 0.16, [`crate::settings`]).
+pub fn settings() -> Manifest {
+    Manifest {
+        id: plugin_id(SETTINGS_FILTER),
+        name: "StitchCraft Design Settings",
+        version: env!("CARGO_PKG_VERSION"),
+        kind: "filter",
+        author: AUTHOR,
+        description: "Keeps the design's settings and machine with the document, which File › Export and `stitch export` plan it with: \
+                      the shortest jump and stitch, the narrowest satin stroke, and the machine and hoop. It changes no object.",
+        params: crate::settings::options(),
         extensions: Vec::new(),
     }
 }
@@ -480,7 +497,7 @@ mod tests {
     use stitchcraft_plan::profiles::{BUILTIN, REFERENCE};
 
     use super::*;
-    use crate::export::{AUTO, PROFILE};
+    use crate::export::{AUTO, DOCUMENT, PROFILE};
 
     fn value(manifest: &Manifest) -> Value {
         serde_json::to_value(manifest).unwrap()
@@ -521,9 +538,9 @@ mod tests {
             assert_eq!(manifest.id, format!("dev.stitchcraft.{}", format.extension()));
             assert_eq!((manifest.kind, manifest.extensions.as_slice()), ("exporter", &[format.extension()][..]));
             // `stitch export`'s options, as they are when it is not given them: no automatic digitizing, and the
-            // reference machine, listed first.
-            let options =
-                vec![(AUTO, Schema::Bool { default: false }), (PROFILE, Schema::Choice { options: profiles.clone(), default: REFERENCE.id })];
+            // machine the document keeps, else the reference machine, listed first after it.
+            let machines: Vec<&str> = std::iter::once(DOCUMENT).chain(profiles.iter().copied()).collect();
+            let options = vec![(AUTO, Schema::Bool { default: false }), (PROFILE, Schema::Choice { options: machines, default: DOCUMENT })];
             assert_eq!(schemas(&manifest.params), options, "{format:?}");
             assert_eq!(profiles.first(), Some(&REFERENCE.id));
         }

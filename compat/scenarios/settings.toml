@@ -1,0 +1,34 @@
+# Level B: a document's design settings and machine, kept with it by StitchCraft's Design Settings filter
+# (VectorCraft 0.16), plan the files VectorCraft's exporters and `stitch export` write of it
+# (docs/src/design/compatibility-gate.md). The square's rows end in stitches shorter than 1.5 mm, which the
+# shortest stitch kept leaves out, so the PES file exported after the filter ran differs from the one before.
+# The 4 × 4 in hoop holds the 1 in square, and the small hoop, 20 mm wide, doesn't. The filter's dialog opens
+# at its defaults, so the second time it runs, the shortest stitch it keeps is the default again.
+# Coordinates are points.
+description = "A document's design settings and machine, which the Design Settings filter keeps with it, plan what the exporters and `stitch export` write of it, and a hoop too small for the design stops its export."
+requirements = ["REQ-VC-013"]
+
+[[run]]
+plugins = ["fill", "pes", "dst", "settings"]
+steps = [
+  { cmd = "shape.rectangle", params = { x = 0, y = 0, width = 72, height = 72 } },
+  { cmd = "paint.setFill", params = { color = "#c00000" } },
+  { apply = "fill", params = { angle = 30 } },
+  { export = "before.pes" },
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.settings", params = { profile = "brother-pe800-4x4", min_stitch_len_mm = 1.5 } } },
+  { export = "design.vectorcraft" },
+  { export = "design.png" },
+  { export = "design.pes" },
+  { export = "design.dst" },
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.settings", params = { profile = "brother-pe800-small" } } },
+  { export = "small.vectorcraft" },
+  { export = "small.pes", fails = "SC-E0701" },
+]
+
+[expect]
+kept = [
+  { file = "design.vectorcraft", settings = { profile = "brother-pe800-4x4", min_stitch_len_mm = 1.5, collapse_len_mm = 3, min_satin_stroke_width_mm = 1 } },
+  { file = "small.vectorcraft", settings = { profile = "brother-pe800-small", min_stitch_len_mm = 0 } },
+]
+exported = [["design.vectorcraft", "design.pes"], ["design.vectorcraft", "design.dst"]]
+differ = [["before.pes", "design.pes"]]

@@ -4,7 +4,6 @@ use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use stitchcraft_plan::FormatId;
-use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_render::{Settings, Style};
 
 /// stitch — StitchCraft machine embroidery.
@@ -66,9 +65,11 @@ pub struct PlanArgs {
     /// The machine file to write.
     #[arg(long, short)]
     pub output: PathBuf,
-    /// The machine profile (see `stitch profiles`).
-    #[arg(long, short, default_value = REFERENCE.id)]
-    pub profile: String,
+    /// The machine profile (see `stitch profiles`); by default the one a VectorCraft document keeps, which
+    /// StitchCraft's Design Settings filter sets, or else the reference machine, which `stitch profiles`
+    /// lists first.
+    #[arg(long, short)]
+    pub profile: Option<String>,
     /// The file format; by default the output file's extension decides.
     #[arg(long, value_enum)]
     pub format: Option<Format>,
@@ -98,9 +99,11 @@ pub struct BugReportArgs {
     /// The bundle to write; by default next to the design, as DESIGN.bug-report.json.
     #[arg(long, short)]
     pub output: Option<PathBuf>,
-    /// The machine profile (see `stitch profiles`).
-    #[arg(long, short, default_value = REFERENCE.id)]
-    pub profile: String,
+    /// The machine profile (see `stitch profiles`); by default the one a VectorCraft document keeps, which
+    /// StitchCraft's Design Settings filter sets, or else the reference machine, which `stitch profiles`
+    /// lists first.
+    #[arg(long, short)]
+    pub profile: Option<String>,
     /// The file format; by default the profile's.
     #[arg(long, value_enum)]
     pub format: Option<Format>,

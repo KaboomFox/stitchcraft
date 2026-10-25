@@ -50,9 +50,7 @@ Options:
           The machine file to write
 
   -p, --profile <PROFILE>
-          The machine profile (see `stitch profiles`)
-          
-          [default: brother-pe800-5x7]
+          The machine profile (see `stitch profiles`); by default the one a VectorCraft document keeps, which StitchCraft's Design Settings filter sets, or else the reference machine, which `stitch profiles` lists first
 
       --format <FORMAT>
           The file format; by default the output file's extension decides
@@ -233,9 +231,7 @@ Options:
           The bundle to write; by default next to the design, as DESIGN.bug-report.json
 
   -p, --profile <PROFILE>
-          The machine profile (see `stitch profiles`)
-          
-          [default: brother-pe800-5x7]
+          The machine profile (see `stitch profiles`); by default the one a VectorCraft document keeps, which StitchCraft's Design Settings filter sets, or else the reference machine, which `stitch profiles` lists first
 
       --format <FORMAT>
           The file format; by default the profile's

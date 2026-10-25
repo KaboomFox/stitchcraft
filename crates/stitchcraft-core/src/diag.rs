@@ -671,6 +671,24 @@ registry! {
     /// The message names what was left out. To stitch it, rename it in VectorCraft's Layers panel.
     VcObjectIgnored = "SC-I0811", Info, "VectorCraft object left out, as its name asks";
 
+    /// A design setting that StitchCraft's Design Settings filter keeps with a VectorCraft document does not
+    /// read: a length that is not a number of 0 or more, or a machine this StitchCraft doesn't have, as a
+    /// document from a newer one may name. The setting keeps its default, and the design is planned for
+    /// the machine `--profile` or the export names, or else for the reference machine, the Brother PE800's
+    /// 5 × 7 in hoop.
+    ///
+    /// The message names the setting and what it holds. To set it again, choose Object › Plug-ins ›
+    /// StitchCraft Design Settings in VectorCraft, which keeps every setting anew.
+    VcSettingIgnored = "SC-W0812", Warning, "VectorCraft design setting ignored";
+
+    /// StitchCraft Design Settings keeps a document's design settings and machine as data VectorCraft
+    /// keeps with a document for a filter plug-in, which VectorCraft does from 0.16. The VectorCraft that
+    /// ran the filter is older and would drop them, so the filter declined to run.
+    ///
+    /// Update VectorCraft to 0.16 or later. Until then, the export's Machine option and `stitch export
+    /// --profile` name the machine, and the design settings keep their defaults.
+    VcCannotKeep = "SC-E0813", Error, "VectorCraft too old to keep the design settings";
+
     /// `--auto` digitized the design's shapes that have no settings: StitchCraft chose each one's
     /// stitches by its width, measured to the micrometre. An area is a tatami fill. A line no wider than the
     /// design's narrowest satin stroke (`min_satin_stroke_width_mm`, 1 mm unless the design sets it) is a

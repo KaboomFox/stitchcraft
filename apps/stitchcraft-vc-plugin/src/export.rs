@@ -47,18 +47,21 @@ use crate::manifest::{Param, Schema};
 /// does.
 pub const AUTO: &str = "auto";
 /// The parameter that names the machine profile the design is planned for, as `stitch export --profile`
-/// does.
-pub const PROFILE: &str = "profile";
+/// does, and as the Design Settings filter keeps it with the document.
+pub use stitchcraft_vectorcraft::settings::PROFILE;
+/// The option of an exporter's [`PROFILE`] that plans the document for the machine it keeps, which the
+/// Design Settings filter sets, or for the reference machine when it keeps none (`REQ-VC-013`).
+pub const DOCUMENT: &str = "document";
 /// The most warnings VectorCraft shows of an export (`MAX_WARNINGS` in its `crates/plugins/src/export.rs`).
 pub const MAX_WARNINGS: usize = 100;
 
-/// An exporter's dialog: [`AUTO`], then the machine's [`PROFILE`], a choice of the built-in profiles, the
-/// reference machine's first and by default.
+/// An exporter's dialog: [`AUTO`], then the machine's [`PROFILE`]: [`DOCUMENT`], by default, or one of the
+/// built-in profiles.
 pub(crate) fn options() -> Vec<(&'static str, Param)> {
-    let profiles = BUILTIN.iter().map(|profile| profile.id).collect();
+    let machines = std::iter::once(DOCUMENT).chain(BUILTIN.iter().map(|profile| profile.id)).collect();
     vec![
         (AUTO, own(Schema::Bool { default: false }, "Digitize automatically", &auto_help(), AUTO_PAGE)),
-        (PROFILE, own(Schema::Choice { options: profiles, default: REFERENCE.id }, "Machine", PROFILE_HELP, PROFILE_PAGE)),
+        (PROFILE, own(Schema::Choice { options: machines, default: DOCUMENT }, "Machine", &profile_help(), PROFILE_PAGE)),
     ]
 }
 
@@ -76,12 +79,21 @@ fn auto_help() -> String {
 /// The page that says how objects without a StitchCraft effect are digitized.
 const AUTO_PAGE: &str = "user/how-to/embroider-a-vectorcraft-design.html#choose-each-objects-stitches";
 
+/// What a machine profile is, for the help of a dialog that names one.
+pub(crate) const MACHINE_HELP: &str =
+    "The machine and hoop the design is planned for: the design must fit its hoop, and its stitches its longest and shortest stitch.";
+
 /// What [`PROFILE`] does, for its help.
-const PROFILE_HELP: &str = "The machine and hoop the design is planned for, as `stitch export --profile` names them: the design must \
-                            fit its hoop, and its stitches its longest and shortest stitch. `stitch profiles` lists them.";
+fn profile_help() -> String {
+    format!(
+        "{MACHINE_HELP} `{DOCUMENT}` is the machine the document keeps, which Object › Plug-ins › StitchCraft Design Settings sets, or \
+         {} when it keeps none, as `stitch export` plans it without `--profile`. `stitch profiles` lists the others.",
+        REFERENCE.id
+    )
+}
 
 /// The page of the built-in machine profiles.
-const PROFILE_PAGE: &str = "user/reference/profiles.html";
+pub(crate) const PROFILE_PAGE: &str = "user/reference/profiles.html";
 
 /// The parameters VectorCraft passes an exporter: its dialog's, by the names of [`AUTO`] and [`PROFILE`],
 /// and the file's.
@@ -123,11 +135,11 @@ struct Declined {
 /// doesn't offer, are [`RunError::BadInput`].
 pub fn export(format: FormatId, input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
     let params: Params = serde_json::from_slice(params).map_err(|_| RunError::BadInput)?;
-    let profile = match params.profile.as_deref() {
-        None => REFERENCE,
-        Some(id) => profiles::find(id).ok_or(RunError::BadInput)?,
+    let asked = match params.profile.as_deref() {
+        None | Some(DOCUMENT) => None,
+        Some(id) => Some(profiles::find(id).ok_or(RunError::BadInput)?),
     };
-    let out = match sewn(format, input, Reading { auto: params.auto }, profile, &params.context.name) {
+    let out = match sewn(format, input, Reading { auto: params.auto }, asked, &params.context.name) {
         Ok((file, said)) => serde_json::to_vec(&Exported { data_base64: base64(&file), warnings: warnings(&said) }),
         Err(said) => serde_json::to_vec(&Declined { error: decline(&said) }),
     };
@@ -135,16 +147,18 @@ pub fn export(format: FormatId, input: &[u8], params: &[u8]) -> Result<Vec<u8>, 
 }
 
 /// The file of `format`, named `name`, that `stitch export` writes of the document `input`, read as
-/// `reading` asks and planned for `profile`, with everything said; or everything said, which then holds an
-/// error and leaves the file unwritten.
+/// `reading` asks and planned for the machine `asked`, or else the one the document keeps, or else the
+/// reference machine, with everything said; or everything said, which then holds an error and leaves the
+/// file unwritten.
 fn sewn(
     format: FormatId,
     input: &[u8],
     reading: Reading,
-    profile: &MachineProfile,
+    asked: Option<&'static MachineProfile>,
     name: &str,
 ) -> Result<(Vec<u8>, Vec<Diagnostic>), Vec<Diagnostic>> {
     let read = stitchcraft_vectorcraft::read_with(input, &Budget::DEFAULT, reading).map_err(|unread| vec![unread])?;
+    let profile = asked.or(read.machine).unwrap_or(REFERENCE);
     let outcome = stitchcraft_engine::plan(&read.design, profile, &Budget::DEFAULT);
     let mut said = read.warnings;
     said.extend(outcome.diagnostics);
@@ -230,8 +244,10 @@ fn digit(sextet: u8) -> char {
 #[cfg(test)]
 mod tests {
     use serde_json::{Value, json};
-    use stitchcraft_core::Fix;
+    use stitchcraft_core::{Fix, Mm};
+    use stitchcraft_engine::design::DesignSettings;
     use stitchcraft_plan::profiles::BROTHER_PE800_SMALL;
+    use stitchcraft_vectorcraft::settings::SETTINGS_FILTER;
 
     use super::*;
     use crate::testing::PATCH;
@@ -323,7 +339,8 @@ mod tests {
         let help = |key: &str| options.iter().find(|(k, _)| *k == key).and_then(|(_, param)| param.ui.help.clone()).unwrap_or_default();
         let auto = help(AUTO);
         assert!(auto.contains("a line up to 1 mm wide runs, a line up to 7 mm wide is a satin column"), "{auto}");
-        assert!(help(PROFILE).contains("stitch export --profile"));
+        let profile = help(PROFILE);
+        assert!(profile.contains(&format!("{DOCUMENT} is the machine the document keeps")) && profile.contains(REFERENCE.id), "{profile}");
         assert_eq!(options.iter().map(|(key, _)| *key).collect::<Vec<_>>(), [AUTO, PROFILE]);
     }
 
@@ -337,6 +354,25 @@ mod tests {
         assert!(small["error"].as_str().is_some_and(|error| error.starts_with("error SC-E0701: ")), "{small}");
         // A profile the manifest doesn't offer, which VectorCraft refuses before the export runs.
         assert_eq!(export(FormatId::PesV1, PATCH, &params("patch", &json!({ PROFILE: "singer" }))), Err(RunError::BadInput));
+    }
+
+    #[test]
+    fn req_vc_013_the_document_s_machine_is_the_export_s_unless_its_dialog_names_another() {
+        // The patch kept with the small hoop, which it doesn't fit, and with a shortest jump of 10 mm.
+        let mut file: Value = serde_json::from_slice(stitchcraft_vectorcraft::read_part(PATCH)).unwrap();
+        let settings = DesignSettings { collapse_len: Mm::new(10.0).unwrap(), ..DesignSettings::default() };
+        let kept = stitchcraft_vectorcraft::settings::kept_data(&settings, &BROTHER_PE800_SMALL);
+        file["document"]["unknown"] = json!({"pluginData": {stitchcraft_vectorcraft::plugin_id(SETTINGS_FILTER): kept}});
+        let kept = serde_json::to_vec(&file).unwrap();
+        let on = |profile: &Value| exported(FormatId::PesV1, &kept, &params("patch", &json!({ PROFILE: profile })));
+        for asked in [json!(DOCUMENT), Value::Null] {
+            assert!(on(&asked)["error"].as_str().is_some_and(|error| error.starts_with("error SC-E0701: ")), "{asked}");
+        }
+        // Named, the reference machine: as `stitch export --profile` plans the document, with its settings.
+        let (bytes, _) = stitch_export(&kept, Reading::default(), REFERENCE, FormatId::PesV1, "patch");
+        assert_eq!(on(&json!(REFERENCE.id))["dataBase64"], json!(base64(&bytes)));
+        let (plain, _) = stitch_export(PATCH, Reading::default(), REFERENCE, FormatId::PesV1, "patch");
+        assert_ne!(bytes, plain, "the shortest jump the document keeps sews the patch otherwise");
     }
 
     #[test]

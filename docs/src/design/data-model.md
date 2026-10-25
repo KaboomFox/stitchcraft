@@ -44,7 +44,8 @@ pub struct Element {
 
 pub struct Reading { pub auto: bool } // since M13.1: what every host's reader is asked (--auto)
 
-pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file since M4.8, its commands from M8
+pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file since M4.8, its commands from M8,
+                                     // and from a VectorCraft document since M6.11
     pub collapse_len: Mm,            // 3 mm: same-thread moves no longer than this are sewn on, not jumped
     pub min_stitch_len: Option<Mm>,  // the design's shortest stitch, for elements that set none
     pub origin: Option<Point>,       // where the hoop's centre goes; None: the centre of the stitches
@@ -67,6 +68,12 @@ pub enum Segment { Line(Point), Quad(Point, Point), Cubic(Point, Point, Point) }
 
 Elements are in stitching order: the host's paint order, bottom first. Geometry stays exact, curves with
 their control points, and the generators flatten it with the tolerance their parameters give.
+
+A host reads 3 of the settings by Ink/Stitch's names, `collapse_len_mm`, `min_stitch_len_mm` and
+`min_satin_stroke_width_mm`: an SVG file's metadata, and since M6.11 the data a VectorCraft document keeps
+for StitchCraft's Design Settings filter. `SETTINGS` lists them with the label and help that filter's
+dialog shows, and `Setting::get` and `Setting::set` read and write each in millimetres. A shortest stitch
+of 0 is `None`, which leaves it to the machine.
 
 A stroke's width and join, since M4.8, are as the host draws them: in SVG, `stroke-width` scaled by the
 transforms, and `stroke-linejoin` with `stroke-miterlimit` ([SVG input](svg-input.md#stroke-width-and-join)).
@@ -238,7 +245,9 @@ format records) live on `FormatId`, so the invariant checker and the encoders re
 A profile is a machine with one hoop, so a machine with 3 hoops has 3 profiles. `profiles::REFERENCE` is
 the reference machine's, the Brother PE800 with its 5 × 7 in hoop
 ([ADR 0013](adr/0013-brother-pe800-reference-machine.md)). Code that means the machine the checkpoints
-run on imports it rather than naming a hoop: the command line plans for it unless told otherwise. Each
+run on imports it rather than naming a hoop: the command line plans for it unless `--profile` names
+another or a VectorCraft document keeps one
+([integration](vectorcraft-integration.md#design-settings-and-machine-kept-with-the-document)). Each
 test sheet names the profile of the hoop it is sewn in.
 
 `check_fit(bounds)` turns the design's size into `SC-E0701` (larger than the hoop) or `SC-W0702` (larger

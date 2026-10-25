@@ -70,6 +70,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0809`](#sc-i0809) | Info | VectorCraft layer or guide left out, as it does not print |
 | [`SC-I0810`](#sc-i0810) | Info | VectorCraft live effect leaves the object as it is |
 | [`SC-I0811`](#sc-i0811) | Info | VectorCraft object left out, as its name asks |
+| [`SC-W0812`](#sc-w0812) | Warning | VectorCraft design setting ignored |
+| [`SC-E0813`](#sc-e0813) | Error | VectorCraft too old to keep the design settings |
 | [`SC-I0901`](#sc-i0901) | Info | Shapes digitized automatically |
 | [`SC-I0902`](#sc-i0902) | Info | Line a satin column cannot follow; filled |
 | [`SC-W0903`](#sc-w0903) | Warning | Line too wide to fill; left out |
@@ -851,6 +853,30 @@ lines, templates and notes this way, in the drawing but out of the sew-out, as I
 commands keep them. Everything in a group or a layer so named is left out with it.
 
 The message names what was left out. To stitch it, rename it in VectorCraft's Layers panel.
+
+## SC-W0812
+
+**Warning** — VectorCraft design setting ignored
+
+A design setting that StitchCraft's Design Settings filter keeps with a VectorCraft document does not
+read: a length that is not a number of 0 or more, or a machine this StitchCraft doesn't have, as a
+document from a newer one may name. The setting keeps its default, and the design is planned for
+the machine `--profile` or the export names, or else for the reference machine, the Brother PE800's
+5 × 7 in hoop.
+
+The message names the setting and what it holds. To set it again, choose Object › Plug-ins ›
+StitchCraft Design Settings in VectorCraft, which keeps every setting anew.
+
+## SC-E0813
+
+**Error** — VectorCraft too old to keep the design settings
+
+StitchCraft Design Settings keeps a document's design settings and machine as data VectorCraft
+keeps with a document for a filter plug-in, which VectorCraft does from 0.16. The VectorCraft that
+ran the filter is older and would drop them, so the filter declined to run.
+
+Update VectorCraft to 0.16 or later. Until then, the export's Machine option and `stitch export
+--profile` name the machine, and the design settings keep their defaults.
 
 ## SC-I0901
 

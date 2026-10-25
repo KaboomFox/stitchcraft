@@ -235,6 +235,74 @@ impl Default for DesignSettings {
     }
 }
 
+/// One of the lengths a design keeps for itself rather than for one element, which Ink/Stitch keeps in an
+/// SVG file's metadata and StitchCraft's Design Settings filter with a VectorCraft document. The hosts read
+/// them by [`SETTINGS`], and the filter's dialog shows them from it.
+#[derive(Clone, Copy, Debug)]
+pub struct Setting {
+    /// Its name, Ink/Stitch's.
+    pub name: &'static str,
+    /// What a dialog calls it.
+    pub label: &'static str,
+    /// What it does, for people.
+    pub help: &'static str,
+    /// The longest a dialog takes, in millimetres, as for the element setting it stands in for. A host
+    /// reads any length of 0 or more.
+    pub max: f64,
+    /// Its value in a design's settings: 0 for a shortest stitch the design leaves to the machine.
+    get: fn(&DesignSettings) -> Mm,
+    /// Sets it.
+    set: fn(&mut DesignSettings, Mm),
+}
+
+impl Setting {
+    /// The setting called `name`, if there is one.
+    pub fn named(name: &str) -> Option<&'static Setting> {
+        SETTINGS.iter().find(|setting| setting.name == name)
+    }
+
+    /// Its value in `settings`.
+    pub fn get(&self, settings: &DesignSettings) -> Mm {
+        (self.get)(settings)
+    }
+
+    /// Sets it in `settings` to `value`.
+    pub fn set(&self, settings: &mut DesignSettings, value: Mm) {
+        (self.set)(settings, value);
+    }
+}
+
+/// The design settings a host reads, in Ink/Stitch's order.
+pub const SETTINGS: [Setting; 3] = [
+    Setting {
+        name: "collapse_len_mm",
+        label: "Shortest jump",
+        help: "A move between 2 groups of stitches of one thread no longer than this is sewn straight on, without a jump, \
+               for the elements that set no shortest jump of their own.",
+        max: 20.0,
+        get: |settings| settings.collapse_len,
+        set: |settings, value| settings.collapse_len = value,
+    },
+    Setting {
+        name: "min_stitch_len_mm",
+        label: "Shortest stitch",
+        help: "The shortest stitch, for the elements that set none of their own. The machine's is used when it is longer, \
+               and 0 leaves it to the machine.",
+        max: 10.0,
+        get: |settings| settings.min_stitch_len.unwrap_or(Mm::ZERO),
+        set: |settings, value| settings.min_stitch_len = (value.get() > 0.0).then_some(value),
+    },
+    Setting {
+        name: "min_satin_stroke_width_mm",
+        label: "Narrowest satin stroke",
+        help: "A satin column drawn as one path whose stroke is no wider than this is sewn as a running stitch, as too \
+               narrow to stitch across. Automatic digitizing runs a line this narrow too.",
+        max: 10.0,
+        get: |settings| settings.min_satin_stroke_width,
+        set: |settings, value| settings.min_satin_stroke_width = value,
+    },
+];
+
 /// A design: elements in stitching order (the host's paint order, bottom first).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Design {
@@ -290,6 +358,7 @@ impl Design {
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_params::{Family, Kind, find_for};
     use stitchcraft_plan::Rgb;
 
     use super::*;
@@ -393,5 +462,33 @@ mod tests {
             min_satin_stroke_width: Mm::ZERO,
         };
         assert!(Design::new(one(), edge).is_ok());
+    }
+
+    #[test]
+    fn each_design_setting_reads_and_sets_its_own_field() {
+        let mut settings = DesignSettings::default();
+        let values = [2.0, 0.4, 1.5];
+        for (setting, value) in SETTINGS.iter().zip(values) {
+            setting.set(&mut settings, Mm::new(value).unwrap());
+        }
+        assert_eq!((settings.collapse_len.get(), settings.min_stitch_len.map(Mm::get), settings.min_satin_stroke_width.get()), (2.0, Some(0.4), 1.5));
+        assert_eq!(SETTINGS.map(|setting| setting.get(&settings).get()), values);
+        // A shortest stitch left to the machine reads as 0, and 0 leaves it to the machine. An element's setting
+        // is not the design's.
+        let shortest = Setting::named("min_stitch_len_mm").unwrap();
+        assert_eq!(shortest.get(&DesignSettings::default()), Mm::ZERO);
+        shortest.set(&mut settings, Mm::ZERO);
+        assert_eq!(settings.min_stitch_len, None);
+        assert!(Setting::named("min_stitch_length_mm").is_none());
+    }
+
+    #[test]
+    fn a_design_setting_s_dialog_takes_what_the_element_setting_it_stands_in_for_takes() {
+        // An element's shortest jump and shortest stitch default to the design's.
+        for (design, element) in [("collapse_len_mm", "min_jump_stitch_length_mm"), ("min_stitch_len_mm", "min_stitch_length_mm")] {
+            let spec = find_for(crate::registry::PARAMETERS, element, Family::Stroke).unwrap();
+            let Kind::Length { max, .. } = spec.kind else { panic!("{element} is {:?}", spec.kind) };
+            assert_eq!(Setting::named(design).map(|setting| setting.max), Some(max), "{design}");
+        }
     }
 }

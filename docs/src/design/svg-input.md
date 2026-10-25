@@ -162,7 +162,10 @@ Ink/Stitch keeps 3 settings for the whole design in the file's first `<metadata>
 Ink/Stitch's namespace whose text is the value in millimetres, and the first of each name counts. They
 become the design's collapse length, shortest stitch and narrowest satin stroke (`REQ-SVG-005`).
 `SC-W0802` names a value that is not a number of 0 or more, and the design keeps its default. The
-defaults are in the [data model](data-model.md#engine-input-design-stitchcraft-engine).
+defaults are in the [data model](data-model.md#engine-input-design-stitchcraft-engine). The settings'
+names, with the label and help a dialog shows, are listed once in `stitchcraft_engine::design::SETTINGS`,
+which a VectorCraft document's settings are read with too
+([integration](vectorcraft-integration.md#design-settings-and-machine-kept-with-the-document)).
 
 ## Reports
 
