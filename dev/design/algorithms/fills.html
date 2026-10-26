@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-cd398bf8.js";
+            window.path_to_searchindex_js = "../../searchindex-f11339be.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b31b520c.js"></script>
@@ -245,6 +245,14 @@ the edges. Such a point lies in the region exactly when the fill rule fills it, 
 left out. Every ring found is simple and turns the right way, and the edges the rings are cut into meet
 only at their ends. Drawings of shapes that share corners and edges, written with relative path data as
 Inkscape writes them, fill their shapes’ area, in 1 part where the shapes share edges.</p>
+<p>Regions are combined by the same cuts and faces (<code>stitchcraft_engine::normalize::region::ops</code>), as
+automatic digitizing combines the shapes of a picture where they meet
+(<a href="../image-to-embroidery.html#neighbours">Neighbours</a>). A region’s parts never overlap and its outlines turn
+clockwise. Its rings then wind -1 times round each point inside it and 0 times round every other point. Of
+the faces that the rings of 2 regions bound, the union keeps those some ring winds round and the
+intersection those wound -2 times. The difference first reverses the second region’s rings, then keeps the
+faces wound -1 times. A region grows or shrinks by each part’s offset curves, with round corners
+(<code>normalize::offset</code>), and the parts grown are joined, since they may then overlap.</p>
 <h2 id="tatami-fill"><a class="header" href="#tatami-fill">Tatami fill</a></h2>
 <p>Parallel rows of running stitches across the region, with the needle points of neighbouring rows offset
 so they never line up into visible furrows. Most fills in most designs are tatami. Each step below sews

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-cd398bf8.js";
+            window.path_to_searchindex_js = "../searchindex-f11339be.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -334,6 +334,9 @@ another.</p>
 <tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
 <tr><td><code>SC-I0902</code></td><td>Info</td><td>Line a satin column cannot follow; filled (a part of an automatic line that turns more tightly than it is wide or is shorter than a CSS pixel, or a dot its cap draws)</td><td>M13</td></tr>
 <tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>
+<tr><td><code>SC-I0904</code></td><td>Info</td><td>Areas reach under the shapes sewn after them (automatic areas grown 0.4 mm under the shapes sewn after them that they touch, or cut away under areas sewn after them)</td><td>M13</td></tr>
+<tr><td><code>SC-I0905</code></td><td>Info</td><td>Speck merged into a neighbour (an automatic area or a part of one smaller than 1 mm², merged into the area it shares the longest edge with, or left out)</td><td>M13</td></tr>
+<tr><td><code>SC-W0906</code></td><td>Warning</td><td>Background left out (the lowest shape, an automatic area that covers the whole design under the other shapes)</td><td>M13</td></tr>
 </tbody>
 </table>
 </div>
