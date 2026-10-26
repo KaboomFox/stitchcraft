@@ -199,7 +199,7 @@ Metrics are defined once in `stitchcraft-testkit::metrics` so every case measure
 | Metric | Definition |
 |---|---|
 | Coverage | Rasterize the region and the stitch lines (thread width 0.4 mm) at 0.05 mm; covered fraction of region pixels |
-| Edge coverage | Points every 0.05 mm along an edge where 2 shapes meet; covered fraction within 0.2 mm of a top stitch, each stitch pulled in by a given pull where the thread turns |
+| Edge coverage | Points every 0.05 mm along an edge where 2 shapes meet. The fraction within 0.2 mm of a top stitch, with each stitch pulled in where the thread turns |
 | Containment | Maximum distance of any stitch point outside the region (0 if inside) |
 | Row spacing | Median and spread of perpendicular distances between consecutive rows |
 | Stitch length | Min, max and distribution of `Normal` stitch lengths by role |
@@ -213,8 +213,8 @@ stitch widened to 0.4 mm and rounded at its ends. Each stitch is drawn a row of 
 stretch where the row crosses that shape. The work grows with the pixels the thread covers, not with the
 stitches times the pixels.
 
-Edge coverage pulls each top stitch in where the thread turns, as thread pulls a row in at its ends, and
-leaves the needle holes along a straight run where they are. Underlay and locks are left out, as they are
+Edge coverage pulls each top stitch in where the thread turns, as thread pulls a row in at its ends. The
+needle holes along a straight run stay where they are. Underlay and locks are left out, as they are
 meant to be covered (`stitchcraft_testkit::metrics`).
 
 ### L3 — Ink/Stitch differential (nightly)

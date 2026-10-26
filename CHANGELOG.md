@@ -6,21 +6,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### Added
 - M13.2: automatic areas sewn as neighbours. With `--auto`, the shapes of a traced picture are sewn where
-  they meet, in 3 steps (`REQ-AUTO-007` to `REQ-AUTO-009`):
-  - The lowest shape is left out as the picture's background when it is an automatic area, other shapes
-    are drawn on it, and its outlines, holes aside, cover the box around the design to within 0.5 mm of
-    each side (`SC-W0906`).
+  they meet, in 3 steps (`REQ-AUTO-007` to `REQ-AUTO-009`).
+  - The lowest shape is left out as the picture's background (`SC-W0906`) when it is an automatic area with
+    other shapes drawn on it, and its outlines, holes aside, cover the box around the design to within
+    0.5 mm of each side.
   - An automatic area, or a part of one, smaller than 1 mm² is a speck. It is merged into the automatic
     area it shares the longest edge with, its own included, or left out when it shares none (`SC-I0905`).
     A part of a filled line that small is a speck too.
   - Each automatic area reaches 0.4 mm under each area, satin column or filled line sewn after it, from
     where it touches that shape. Where areas sewn after it cover it, it is cut away 0.4 mm inside their
-    edges, and a part they cover whole sews nothing, so a stacked trace sews what an abutting one does
-    (`SC-I0904`). A shape with settings sews as they say, and a column or a line sewn after an area goes
-    over it.
+    edges, and a part they cover whole sews nothing. A stacked trace then sews what an abutting one does
+    (`SC-I0904`). Shapes with settings sew as they say, and a column or a line sewn after an area goes over
+    it.
   - Each area has the work budget to itself and costs the work of the shapes near it. An area whose
-    overlaps need more keeps its region, a speck that needs more is left out, and a background that needs
-    more is sewn; each is said.
+    overlaps need more work keeps its region, and a speck that needs more is left out. When the background
+    needs more, it is sewn. Each is said.
   - Test pictures drawn in code, stripes and a badge traced abutting and stacked, measure the edges where
     shapes meet with the thread pulled in 0.4 mm: the abutting badge's go from 89.1 % covered as drawn to
     98.7 % digitized (`stitchcraft_testkit::pictures`, `metrics::edge_coverage`).
