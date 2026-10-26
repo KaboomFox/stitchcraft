@@ -27,11 +27,13 @@
 //! parts come in the order the drawing reaches them.
 //!
 //! The area some rings bound, cut and joined so, is one function (`area`), which a part grown or shrunk
-//! also takes its area from: the rings are then its offset curves (`normalize::offset`).
+//! also takes its area from: the rings are then its offset curves (`normalize::offset`). Regions combined,
+//! as automatic digitizing combines its neighbouring shapes, take theirs from it too (`ops`).
 
 mod arrange;
 mod assemble;
 pub(crate) mod geom;
+pub(crate) mod ops;
 mod snap;
 
 pub(crate) use assemble::Unjoined;
