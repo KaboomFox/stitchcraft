@@ -28,9 +28,9 @@
 //!   butt cap, is left out (`SC-W0401`).
 //! - A wider stroke is the tatami fill of the area it paints (`area`, `REQ-AUTO-004`): satin stitches
 //!   longer than that are loose. The fill is given that area's outline, already joined into one region,
-//!   so that it sews and is said of as the fill of a shape so drawn: parts of it too small to sew are
-//!   kept in the outline for the fill to name (`SC-W0303`). An area that would reach more than 10 m from the
-//!   origin, where no design lies, is left out (`SC-W0903`).
+//!   so that it sews and is said of as the fill of a shape so drawn. Its parts too small to sew are kept in
+//!   the outline, and are specks then, merged into a neighbour or left out (`SC-I0905`). An area that would
+//!   reach more than 10 m from the origin, where no design lies, is left out (`SC-W0903`).
 //!
 //! A stroke that paints nothing at all, every subpath a dot with a butt cap or none, sews as it would
 //! without the switch, and the running stitch says what it says of it. So a design that plans without
@@ -39,8 +39,17 @@
 //! [`digitized`] also says how many shapes it digitized and what they sew as (`SC-I0901`). Each automatic
 //! element has the budget's work to itself, as each element has for its generator; one that needs more
 //! is left out with `SC-E0004`, and the rest of the design still plans (`REQ-GEN-002`).
+//!
+//! The shapes of a traced picture meet, and [`digitized`] then sews them as neighbours (`auto::neighbours`):
+//! the lowest shape is left out when it is the picture's background (`REQ-AUTO-009`), specks merge into
+//! the areas beside them (`REQ-AUTO-008`), and each automatic area reaches under the shapes sewn after it,
+//! or is cut away under the areas that cover it (`REQ-AUTO-007`).
 
 mod area;
+mod neighbours;
+
+use neighbours::Sewn;
+pub use neighbours::{OVERLAP, SMALLEST_AREA, TOUCHING};
 
 use std::borrow::Cow;
 
@@ -120,10 +129,11 @@ pub struct Digitized {
 }
 
 /// The elements of `design` as they are generated: each automatic element turned into the elements its
-/// stitches need ([`digitize`]) and named, the others as they are; and what was said of them:
-/// `SC-I0901` for the shapes digitized, what [`digitize`] says of each, and `SC-E0004` for each one left
-/// out because digitizing and naming it needs more work than `budget` allows an element. A design without
-/// automatic elements comes back as it is.
+/// stitches need ([`digitize`]) and named, the others as they are, and the automatic areas then sewn as
+/// neighbours (`auto::neighbours`); and what was said of them: `SC-I0901` for the shapes digitized, what
+/// [`digitize`] says of each, `SC-E0004` for each one left out because digitizing and naming it needs
+/// more work than `budget` allows an element, and what is said of the background, the specks and the
+/// overlaps (`SC-W0906`, `SC-I0905`, `SC-I0904`). A design without automatic elements comes back as it is.
 pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>, Vec<Diagnostic>) {
     let elements = design.elements();
     if !elements.iter().any(|element| element.automatic) {
@@ -136,11 +146,17 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
     for element in elements {
         let _ = taken.claim(element.id.as_str().to_string(), &mut budget.meter());
     }
+    // The picture's background is left out before anything is digitized.
+    let background = neighbours::background(design, budget);
+    let lowest = background.as_ref().and_then(|(lowest, _)| *lowest);
     let mut counts = Counts::default();
-    let mut out = Vec::with_capacity(elements.len());
-    for element in elements {
+    let mut sewn = Vec::with_capacity(elements.len());
+    for (index, element) in elements.iter().enumerate() {
+        if lowest == Some(index) {
+            continue;
+        }
         if !element.automatic {
-            out.push(element.clone());
+            sewn.push(Sewn { element: element.clone(), area: false });
             continue;
         }
         let mut meter = budget.meter();
@@ -153,9 +169,12 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
         };
         counts.add(made.stitches);
         diagnostics.extend(made.diagnostics);
-        out.extend(made.elements);
+        sewn.extend(made.elements.into_iter().map(|element| Sewn { area: matches!(element.shape, Shape::Fill { .. }), element }));
     }
     diagnostics.splice(0..0, counts.said());
+    diagnostics.extend(background.map(|(_, said)| said));
+    let (out, said) = neighbours::beside(sewn, &design.settings, budget);
+    diagnostics.extend(said);
     (Cow::Owned(out), diagnostics)
 }
 
@@ -301,7 +320,7 @@ enum Painted {
 }
 
 /// What the stroke along `path` drawn with `style` paints ([`area::stroke_area`]): the outline of every part
-/// of its area, parts too small to sew included, so that the fill names them as it names a shape's.
+/// of its area, parts too small to sew included, so that they are specks as a shape's are.
 fn painted(path: &Path, style: Style, meter: &mut Meter) -> Result<Painted, Exhausted> {
     let rings = area::stroke_area(path, style.width.get(), style.join, style.cap, meter)?;
     if rings.is_empty() {
