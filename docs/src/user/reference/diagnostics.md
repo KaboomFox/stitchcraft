@@ -76,6 +76,9 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0901`](#sc-i0901) | Info | Shapes digitized automatically |
 | [`SC-I0902`](#sc-i0902) | Info | Line a satin column cannot follow; filled |
 | [`SC-W0903`](#sc-w0903) | Warning | Line too wide to fill; left out |
+| [`SC-I0904`](#sc-i0904) | Info | Areas reach under the shapes sewn after them |
+| [`SC-I0905`](#sc-i0905) | Info | Speck merged into a neighbour |
+| [`SC-W0906`](#sc-w0906) | Warning | Background left out |
 
 ## SC-E0004
 
@@ -935,3 +938,46 @@ beyond what machine files can record. It is left out. A stroke that wide is usua
 the file.
 
 The message gives the line's width. Check the line's stroke width.
+
+## SC-I0904
+
+**Info** — Areas reach under the shapes sewn after them
+
+`--auto` makes each automatic area reach 0.4 mm under the shapes sewn after it, from where it touches
+them. The thread pulls stitches in from the edges of their shape, and without the overlap fabric shows
+between shapes that only meet. Where an area sewn after it covers part of it, as in a trace that stacks
+its colours, the covered part is cut away, 0.4 mm inside the covering area's edge, and sewn once. A
+satin column or a line sewn after an area goes over it, and the area is sewn whole under it.
+
+The message counts the areas that reach under others and those cut away. An area that the areas sewn
+after it cover whole sews nothing, and the message names it. It also names an area whose neighbours
+need more work to find than the budget allows it, which neither reaches under them nor is cut away,
+and a satin column whose area needs more, which the areas before it don't reach under. To sew a shape
+as it is drawn, give it settings: in VectorCraft, apply a StitchCraft effect to it.
+
+## SC-I0905
+
+**Info** — Speck merged into a neighbour
+
+`--auto` takes an automatic area smaller than 1 mm², or a part of one that small, for a speck the trace
+left. It is too small to sew, and would sew a knot. It is merged into the automatic area it shares the
+longest edge with, which may be the rest of its own area, and no hole shows where it was. A speck that
+shares no edge with an automatic area is left out.
+
+The message gives the speck's area and says where it went: into a neighbour, back to the rest of its
+area, or nowhere, as when finding its neighbours needs more work than the budget allows it. To sew it
+as it is, give it settings: in VectorCraft, apply a StitchCraft effect to it. A larger Noise in
+VectorCraft's Image Trace leaves such specks out of the trace.
+
+## SC-W0906
+
+**Warning** — Background left out
+
+`--auto` takes the lowest shape of the design for the picture's background when it is an automatic
+area, other shapes are drawn on it, and it covers the whole design, its holes aside, to within 0.5 mm
+of each side. It is left out. A background is usually the fabric's own colour, and sewing it doubles
+the stitches and stiffens the design. A background that needs more work to find than the budget
+allows is sewn, and the message says so.
+
+To sew it, give it settings: in VectorCraft, apply a StitchCraft effect to it. Ignore White in
+VectorCraft's Image Trace leaves a white background out of the trace.

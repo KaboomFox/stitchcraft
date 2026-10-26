@@ -20,7 +20,10 @@ pub struct stitchcraft_engine::auto::Digitized
 pub stitchcraft_engine::auto::Digitized::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub stitchcraft_engine::auto::Digitized::elements: alloc::vec::Vec<stitchcraft_engine::design::Element>
 pub stitchcraft_engine::auto::Digitized::stitches: core::option::Option<stitchcraft_engine::auto::Stitches>
+pub const stitchcraft_engine::auto::OVERLAP: f64
 pub const stitchcraft_engine::auto::SATIN_MAX_WIDTH: stitchcraft_core::units::Mm
+pub const stitchcraft_engine::auto::SMALLEST_AREA: f64
+pub const stitchcraft_engine::auto::TOUCHING: f64
 pub fn stitchcraft_engine::auto::digitize(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::auto::Digitized, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::auto::digitized<'d>(&'d stitchcraft_engine::design::Design, &stitchcraft_core::budget::Budget) -> (alloc::borrow::Cow<'d, [stitchcraft_engine::design::Element]>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>)
 pub mod stitchcraft_engine::common

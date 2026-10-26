@@ -313,13 +313,14 @@ fn req_auto_003_a_trim_or_stop_after_a_line_follows_its_last_part() {
 #[test]
 fn req_auto_003_a_line_a_satin_column_cannot_follow_is_filled() {
     // A ring 2 mm across drawn 3 mm wide, as a traced dot is; a hairpin 1 mm across; and a line shorter than
-    // a CSS pixel. The ring paints the disc 5 mm across.
+    // a CSS pixel, 6 mm wide, so that it paints more than a speck (REQ-AUTO-008). The ring paints the disc
+    // 5 mm across.
     let ring = widened(along("ring", circle(1.0), &RED, &[]), 3.0);
     let [filled] = made(&ring).try_into().unwrap();
     let disc = std::f64::consts::PI * 2.5 * 2.5;
     assert!(area(&filled) <= disc && area(&filled) >= disc - SHAPE_TOLERANCE * 5.0 * std::f64::consts::PI, "{}", area(&filled));
     let hairpin = capped(drawn("hairpin", &[(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0)], 3.0), Cap::Round);
-    let short = drawn("short", &[(0.0, 0.0), (0.2, 0.0)], 3.0);
+    let short = drawn("short", &[(0.0, 0.0), (0.2, 0.0)], 6.0);
     for line in [ring, hairpin, short] {
         let [part] = made(&line).try_into().unwrap();
         assert!(matches!(part.shape, Shape::Fill { rule: FillRule::NonZero, .. }) && part.id == line.id, "{part:?}");
@@ -391,13 +392,14 @@ fn req_auto_003_a_dot_sews_as_its_cap_draws_it() {
 
 #[test]
 fn req_auto_004_parts_too_small_to_sew_are_named() {
-    // 10 mm wide with butt caps: a line 20 mm long, and far from it one 0.01 mm long, which paints 0.1 mm².
+    // 10 mm wide with butt caps: a line 20 mm long, and far from it one 0.01 mm long, which paints 0.1 mm², a
+    // speck that shares no edge with another area (REQ-AUTO-008).
     let line = widened(along("w", polylines(&[&[(0.0, 0.0), (20.0, 0.0)], &[(0.0, 40.0), (0.01, 40.0)]]), &RED, &[]), 10.0);
     assert_eq!(
         messages(&planned(vec![automatic(line)])),
         [
             "info SC-I0901: 1 shape is digitized automatically: it sews as a tatami fill.",
-            "warning SC-W0303: 1 part of this fill covers 0.21 mm² or less, too little for a row of stitches, so it is left out."
+            "info SC-I0905: A part of this area, of 0.1 mm², is too small to sew and shares no edge with an automatic area, so it is left out."
         ]
     );
 }

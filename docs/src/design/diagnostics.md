@@ -159,3 +159,6 @@ another.
 | `SC-I0901` | Info | Shapes digitized automatically (`--auto`), counted by their stitches (running stitches, satin columns or tatami fills) | M13 |
 | `SC-I0902` | Info | Line a satin column cannot follow; filled (a part of an automatic line that turns more tightly than it is wide or is shorter than a CSS pixel, or a dot its cap draws) | M13 |
 | `SC-W0903` | Warning | Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin) | M13 |
+| `SC-I0904` | Info | Areas reach under the shapes sewn after them (automatic areas grown 0.4 mm under the shapes sewn after them that they touch, or cut away under areas sewn after them) | M13 |
+| `SC-I0905` | Info | Speck merged into a neighbour (an automatic area or a part of one smaller than 1 mm², merged into the area it shares the longest edge with, or left out) | M13 |
+| `SC-W0906` | Warning | Background left out (the lowest shape, an automatic area that covers the whole design under the other shapes) | M13 |
