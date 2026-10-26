@@ -34,7 +34,10 @@ other way, and since M7.5 a zigzag satin sews a zigzag between the rails, its pa
 Since M13.1 a shape without settings, read with `--auto`, is digitized automatically before anything else
 (`auto`). A line no wider than the design's narrowest satin stroke runs, a line up to 7 mm wide becomes
 satin columns along its centre line, and a wider line becomes the tatami fill of the area it paints
-(`auto::area`). Digitizing doesn't add an error of its own.
+(`auto::area`). Digitizing doesn't add an error of its own. Since M13.2 the automatic areas are then sewn
+as neighbours (`auto::neighbours`). The picture's background is left out and specks merge into the areas
+beside them. Each area reaches 0.4 mm under the shapes sewn after it from where it touches them, or is cut
+away under the areas that cover it. Regions are combined, grown and shrunk with `normalize::region::ops`.
 Since M6.12 a column drawn as one path can be drawn with its rails and rungs instead, for a host's Stroke
 to Satin tool (`generators::satin::drawn`). They sew as the column does. A design can be moved
 (`Design::moved`), as a host draws a test sheet (`testsheets`, `TestSheet::design`).

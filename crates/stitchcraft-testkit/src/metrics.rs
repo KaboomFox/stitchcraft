@@ -13,20 +13,138 @@
 //! thread on either side and rounded at both ends, and it crosses the row in one stretch: where the row
 //! passes through either end's disc or the band between them. So a stitch costs a step for each row it
 //! crosses and each pixel it covers, never a distance from every pixel.
+//!
+//! **Edge coverage** is how much of an edge where 2 shapes meet the thread covers once it has pulled the
+//! stitches in. Thread pulls a fill's rows in from the edges of their shape, so 2 shapes sewn up to where
+//! they meet show fabric between them (`docs/src/design/image-to-embroidery.md` › Neighbours). The pull
+//! moves the needle holes where the thread turns: each top stitch is shortened by the pull at an end where
+//! the stitch sewn next to it, or before it, doesn't run straight on, within [`STRAIGHT_ON`]. So a row is
+//! pulled in at its ends, and its needle holes between them stay. A stitch that the pull shortens to
+//! nothing is pulled away. The edge is points a [`PIXEL`] apart along it, each covered when it lies within
+//! half of [`THREAD`] of a stitch so shortened. Underlay and locks are left out, as they are meant to be
+//! covered. Without pull it is the share of the edge's points that [`coverage`] would count covered by the
+//! top stitches.
+
+use std::collections::BTreeMap;
 
 use stitchcraft_core::{Point, Rect};
 use stitchcraft_engine::normalize::region::Region;
-use stitchcraft_plan::StitchPlan;
+use stitchcraft_engine::normalize::stroke::distance_to_segment;
+use stitchcraft_plan::{Role, StitchPlan};
 
 /// The width of a thread, in millimetres.
 pub const THREAD: f64 = 0.4;
 /// The side of a pixel, in millimetres.
 pub const PIXEL: f64 = 0.05;
+/// Stitches that turn by less than this, in degrees, run straight on, as a row's stitches do: the pull
+/// doesn't move the needle hole between them.
+pub const STRAIGHT_ON: f64 = 10.0;
 
 /// The share of `region` that the thread of `plan`'s stitches covers: 1 for a region without a pixel.
 pub fn coverage(region: &Region, plan: &StitchPlan) -> f64 {
     let stitches: Vec<[Point; 2]> = plan.sewn_stitches().iter().map(|stitch| [stitch.from, stitch.to]).collect();
     covered_share(region, &stitches, THREAD / 2.0, PIXEL)
+}
+
+/// The share of `edges`, polylines where 2 shapes meet, that the thread of `plan`'s top stitches covers once
+/// pulled in by `pull` millimetres where the thread turns: 1 for edges of no length.
+pub fn edge_coverage(edges: &[Vec<Point>], plan: &StitchPlan, pull: f64) -> f64 {
+    let stitches: Vec<[Point; 2]> =
+        plan.sewn_stitches().iter().filter(|stitch| stitch.role == Role::Top).map(|stitch| [stitch.from, stitch.to]).collect();
+    edge_share(edges, &stitches, pull, THREAD / 2.0, PIXEL)
+}
+
+/// The share of the points `step` apart along `edges` that lie within `reach` of one of `stitches`, in
+/// sewing order, pulled in by `pull` where the thread turns: 1 for edges of no length.
+fn edge_share(edges: &[Vec<Point>], stitches: &[[Point; 2]], pull: f64, reach: f64, step: f64) -> f64 {
+    let pulled = pulled_in(stitches, pull);
+    let near = Cells::of(&pulled, reach);
+    let points = along(edges, step);
+    if points.is_empty() {
+        return 1.0;
+    }
+    let covered =
+        points.iter().filter(|&&q| near.around(q).any(|i| pulled.get(i).is_some_and(|&[a, b]| distance_to_segment(q, a, b) <= reach))).count();
+    covered as f64 / points.len() as f64
+}
+
+/// `stitches`, in sewing order, each shortened by `pull` at an end where the stitch before or after it
+/// doesn't run straight on from it; those shortened to nothing left out.
+fn pulled_in(stitches: &[[Point; 2]], pull: f64) -> Vec<[Point; 2]> {
+    let straight_on = |first: &[Point; 2], next: &[Point; 2]| {
+        let (u, v) = ((first[1].x() - first[0].x(), first[1].y() - first[0].y()), (next[1].x() - next[0].x(), next[1].y() - next[0].y()));
+        let lengths = stitchcraft_core::math::hypot(u.0, u.1) * stitchcraft_core::math::hypot(v.0, v.1);
+        first[1] == next[0] && lengths > 0.0 && (u.0 * v.0 + u.1 * v.1) / lengths >= stitchcraft_core::math::cos(STRAIGHT_ON.to_radians())
+    };
+    let mut pulled = Vec::with_capacity(stitches.len());
+    for (i, stitch) in stitches.iter().enumerate() {
+        let before = i.checked_sub(1).and_then(|j| stitches.get(j)).is_some_and(|before| straight_on(before, stitch));
+        let after = stitches.get(i + 1).is_some_and(|after| straight_on(stitch, after));
+        let [a, b] = *stitch;
+        let (dx, dy) = (b.x() - a.x(), b.y() - a.y());
+        let length = stitchcraft_core::math::hypot(dx, dy);
+        let (from, to) = (if before { 0.0 } else { pull }, if after { 0.0 } else { pull });
+        if length <= from + to {
+            continue;
+        }
+        let at = |t: f64| Point::new(a.x() + dx / length * t, a.y() + dy / length * t).ok();
+        if let (Some(start), Some(end)) = (at(from), at(length - to)) {
+            pulled.push([start, end]);
+        }
+    }
+    pulled
+}
+
+/// Points `step` apart along each of `polylines`, from its start, and its end.
+fn along(polylines: &[Vec<Point>], step: f64) -> Vec<Point> {
+    let mut points = Vec::new();
+    for line in polylines {
+        for pair in line.windows(2) {
+            let [a, b] = [pair[0], pair[1]];
+            let length = stitchcraft_core::math::hypot(b.x() - a.x(), b.y() - a.y());
+            let steps = index((length / step).ceil());
+            for k in 0..steps {
+                let t = k as f64 * step / length;
+                points.extend(Point::new(a.x() + t * (b.x() - a.x()), a.y() + t * (b.y() - a.y())).ok());
+            }
+        }
+        points.extend(line.last().copied());
+    }
+    points
+}
+
+/// Stitches by the square millimetres they come within reach of, so that a point is measured against the
+/// stitches near it only.
+struct Cells {
+    cells: BTreeMap<(i64, i64), Vec<usize>>,
+}
+
+impl Cells {
+    /// `stitches` by the cells their thread, `reach` wide either side, touches.
+    fn of(stitches: &[[Point; 2]], reach: f64) -> Cells {
+        let mut cells: BTreeMap<(i64, i64), Vec<usize>> = BTreeMap::new();
+        for (i, &[a, b]) in stitches.iter().enumerate() {
+            let (x0, x1) = (cell(a.x().min(b.x()) - reach), cell(a.x().max(b.x()) + reach));
+            let (y0, y1) = (cell(a.y().min(b.y()) - reach), cell(a.y().max(b.y()) + reach));
+            for x in x0..=x1 {
+                for y in y0..=y1 {
+                    cells.entry((x, y)).or_default().push(i);
+                }
+            }
+        }
+        Cells { cells }
+    }
+
+    /// The stitches whose thread may reach `q`.
+    fn around(&self, q: Point) -> impl Iterator<Item = usize> + '_ {
+        self.cells.get(&(cell(q.x()), cell(q.y()))).into_iter().flatten().copied()
+    }
+}
+
+/// The square millimetre `value` lies in, along one axis.
+#[allow(clippy::cast_possible_truncation)] // a saturating cast; a design lies within 10 m
+fn cell(value: f64) -> i64 {
+    value.floor() as i64
 }
 
 /// The share of `region`'s pixels, `pixel` wide, whose centres lie within `reach` of one of `stitches`: 1
@@ -263,6 +381,52 @@ mod tests {
         assert_eq!(spans(&[diamond.outline.as_slice()], 5.0), [(0.0, 10.0)]);
         // Through its vertex of greatest y, nothing: no side reaches past it.
         assert_eq!(spans(&[diamond.outline.as_slice()], 10.0), []);
+    }
+
+    #[test]
+    fn an_edge_is_covered_where_the_rows_reach_it_once_pulled_in() {
+        // Rows 0.25 mm apart from either side end at x = 10, the edge between 2 shapes.
+        let rows = |reach_past: f64| -> Vec<[Point; 2]> {
+            (0..=40)
+                .flat_map(|k| {
+                    let y = 0.25 * f64::from(k);
+                    [[p(0.0, y), p(10.0 + reach_past, y)], [p(20.0, y), p(10.0, y)]]
+                })
+                .collect()
+        };
+        let edge = [vec![p(10.0, 0.0), p(10.0, 10.0)]];
+        // Without pull, the thread round the rows' ends covers the edge.
+        assert_eq!(edge_share(&edge, &rows(0.0), 0.0, 0.2, PIXEL), 1.0);
+        // Pulled in by 0.4 mm, both sides' rows leave the edge bare.
+        assert_eq!(edge_share(&edge, &rows(0.0), 0.4, 0.2, PIXEL), 0.0);
+        // Rows that reach 0.4 mm past it cover it again.
+        assert_eq!(edge_share(&edge, &rows(0.4), 0.4, 0.2, PIXEL), 1.0);
+        // A stitch alone no longer than twice the pull is pulled away; an edge of no length is covered.
+        assert_eq!(edge_share(&edge, &[[p(9.7, 5.0), p(10.3, 5.0)]], 0.4, 0.2, PIXEL), 0.0);
+        assert_eq!(edge_share(&[], &rows(0.0), 0.4, 0.2, PIXEL), 1.0);
+        // The edge's points: one each 0.05 mm, and its end.
+        assert_eq!(along(&edge, PIXEL).len(), 201);
+    }
+
+    #[test]
+    fn the_pull_moves_the_needle_holes_where_the_thread_turns_only() {
+        // A row across the edge in 3 stitches, then a stitch back: pulled in at the row's start and where it
+        // turns back, and nowhere between.
+        let row = [[p(0.0, 0.0), p(5.0, 0.0)], [p(5.0, 0.0), p(9.9, 0.0)], [p(9.9, 0.0), p(12.0, 0.0)], [p(12.0, 0.0), p(8.0, 0.25)]];
+        let pulled = pulled_in(&row, 0.4);
+        assert_eq!(&pulled[..3], [[p(0.4, 0.0), p(5.0, 0.0)], [p(5.0, 0.0), p(9.9, 0.0)], [p(9.9, 0.0), p(11.6, 0.0)]]);
+        // The stitch back, 4 mm long, pulled in at both ends.
+        let [from, to] = pulled[3];
+        assert!((from.x() - 11.6).abs() < 0.01 && (to.x() - 8.4).abs() < 0.01, "{from:?} {to:?}");
+        // So the short stitch across the edge at x = 10 stays, and covers it.
+        assert_eq!(edge_share(&[vec![p(10.0, -0.1), p(10.0, 0.1)]], &row, 0.4, 0.2, PIXEL), 1.0);
+        // A turn of less than 10° runs straight on; a turn of more doesn't.
+        let bent = |degrees: f64| {
+            let (sin, cos) = stitchcraft_core::math::sin_cos(degrees.to_radians());
+            [[p(0.0, 0.0), p(1.0, 0.0)], [p(1.0, 0.0), p(1.0 + cos, sin)]]
+        };
+        assert_eq!(pulled_in(&bent(9.0), 0.4)[0], [p(0.4, 0.0), p(1.0, 0.0)]);
+        assert_eq!(pulled_in(&bent(11.0), 0.4)[0], [p(0.4, 0.0), p(0.6, 0.0)]);
     }
 
     #[test]

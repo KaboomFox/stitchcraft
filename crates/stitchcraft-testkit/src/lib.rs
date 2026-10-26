@@ -6,7 +6,8 @@
 //! - [`plans`]: canonical stitch plans behind the format golden files.
 //! - [`equivalence`]: when two plans make a machine do the same thing (round-trip tests).
 //! - [`metrics`]: what conformance cases measure, the same way in every case: how much of a fill's area its
-//!   thread covers.
+//!   thread covers, and how much of an edge where 2 shapes meet.
+//! - [`pictures`]: test pictures for automatic digitizing, drawn in code, and the edges where their shapes meet.
 //! - [`strategies`]: random plans for property tests, with fixed seeds on every PR.
 //! - [`fuzz`]: what must hold for any bytes given to a reader — the bodies of the fuzz targets in `fuzz/`,
 //!   run on every PR here and with coverage-guided inputs every night.
@@ -21,6 +22,7 @@ pub mod designs;
 pub mod equivalence;
 pub mod fuzz;
 pub mod metrics;
+pub mod pictures;
 pub mod plans;
 pub mod satins;
 pub mod strategies;
