@@ -73,11 +73,11 @@ Inkscape writes them, fill their shapes' area, in 1 part where the shapes share 
 Regions are combined by the same cuts and faces (`stitchcraft_engine::normalize::region::ops`), as
 automatic digitizing combines the shapes of a picture where they meet
 ([Neighbours](../image-to-embroidery.md#neighbours)). A region's parts never overlap and its outlines turn
-clockwise, so its rings wind -1 times round each point inside it and 0 times round every other point. With
-the rings of 2 regions, the union keeps the faces some ring winds round, the intersection the faces wound
--2 times, and the difference reverses the second region's rings and keeps the faces wound -1 times. A
-region grows or shrinks by each part's offset curves, with round corners (`normalize::offset`), and the
-parts grown are joined, since they may then overlap.
+clockwise. Its rings then wind -1 times round each point inside it and 0 times round every other point. Of
+the faces that the rings of 2 regions bound, the union keeps those some ring winds round and the
+intersection those wound -2 times. The difference first reverses the second region's rings, then keeps the
+faces wound -1 times. A region grows or shrinks by each part's offset curves, with round corners
+(`normalize::offset`), and the parts grown are joined, since they may then overlap.
 
 ## Tatami fill
 

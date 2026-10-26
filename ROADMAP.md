@@ -31,9 +31,9 @@ part apart. The reference machine is a Brother PE800 (ADR 0013), with a profile 
 and TS-02, TS-02B and TS-10 are redrawn to fit them.
 M7's first 5 steps are done, and every satin method is sewn. M13, image to embroidery, is under way, so that a
 picture traced in VectorCraft sews well without settings on its shapes: with `--auto`, a shape without
-settings sews by its width (M13.1), and the shapes are sewn as neighbours: each area reaches under the shapes
-sewn after it, or is cut away under those that cover it, specks merge into the areas beside them, and the
-background is left out (M13.2). M7.6 to M7.9 follow M13.
+settings sews by its width (M13.1). The shapes are then sewn as neighbours (M13.2): the background is left
+out and specks merge into the areas beside them. Each area reaches under the shapes sewn after it, or is cut
+away under those that cover it. M7.6 to M7.9 follow M13.
 The repository is
 [KaboomFox/stitchcraft](https://github.com/KaboomFox/stitchcraft), with the docs published at
 [kaboomfox.github.io/stitchcraft](https://kaboomfox.github.io/stitchcraft/) and `main` protected; the
