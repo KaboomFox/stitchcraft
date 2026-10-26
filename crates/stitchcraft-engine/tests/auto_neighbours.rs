@@ -189,7 +189,7 @@ fn req_auto_007_an_area_covered_whole_sews_nothing_however_near_the_edge_of_what
     assert_eq!(ids(&out), ["cover", "far"]);
     assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: This area is covered by the areas sewn after it, so it sews nothing."]);
     // A part of an area that lies under the cover whole is left out, and the rest is cut away as usual.
-    let (out, _) = sewn(vec![
+    let (out, diagnostics) = sewn(vec![
         automatic(fill(
             "parts",
             &[&[(0.1, 2.0), (1.1, 2.0), (1.1, 5.0), (0.1, 5.0)], &[(-10.0, 0.0), (-1.0, 0.0), (-1.0, 10.0), (-10.0, 10.0)]],
@@ -200,6 +200,9 @@ fn req_auto_007_an_area_covered_whole_sews_nothing_however_near_the_edge_of_what
         rect("far", (30.0, 0.0), (35.0, 5.0)),
     ]);
     assert!(near(area(named(&out, "parts")), 90.0, 1e-9), "{}", area(named(&out, "parts")));
+    // The band round the part left out, under the cover's edge, touches nothing left of the area: it
+    // reaches under nothing.
+    assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: 1 area is cut away under the areas sewn after it, 0.4 mm inside their edges."]);
 }
 
 #[test]
