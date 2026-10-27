@@ -7,7 +7,8 @@
 //!
 //! The shapes without settings that the host marked automatic are digitized first ([`crate::auto`]): each
 //! becomes the elements its width calls for, with the settings that say so, and from there on is sewn as
-//! any element is.
+//! any element is. The elements are put in the order they sew there too: automatic elements, and every
+//! element of a design that asks for its threads sorted, in an order with few thread changes.
 //!
 //! Elements are generated in sewing order, each with its neighbours (`REQ-GEN-003`,
 //! `docs/src/design/adr/0014-generators-see-their-neighbours.md`): the last needle point of the elements

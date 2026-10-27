@@ -1,37 +1,46 @@
-//! Automatic areas beside the shapes around them (`REQ-AUTO-007` to `REQ-AUTO-009`). Design:
-//! `docs/src/design/image-to-embroidery.md` › Neighbours.
+//! Automatic areas beside the shapes around them (`REQ-AUTO-007` to `REQ-AUTO-009`), and the order the
+//! elements sew in (`REQ-AUTO-010`, `REQ-AUTO-011`). Design: `docs/src/design/image-to-embroidery.md` ›
+//! Neighbours and › Sewing order.
 //!
 //! A traced picture is shapes of flat colour that meet: abutting, as VectorCraft's Abutting method traces
 //! them, each area with a hole where the next is, or stacked, each colour a whole shape over the ones under
-//! it. Sewn as drawn, they sew badly in 3 ways, and digitizing mends each in its own step, in this order:
+//! it. Sewn as drawn, they sew badly in 4 ways, and digitizing mends each in its own step, in this order:
 //!
 //! 1. **The background** ([`background()`]). The lowest shape is often the picture's background, the
 //!    fabric's own colour. It is left out before anything is digitized (`SC-W0906`).
 //! 2. **Specks** ([`specks`]). Noise in the picture leaves areas of a pixel or two. A fill smaller than
 //!    [`SMALLEST_AREA`] sews a knot, and a hole where it was shows fabric. Each speck goes into the
 //!    automatic area it shares the longest edge with, or is left out when it shares none (`SC-I0905`).
-//! 3. **Overlaps** ([`under`]). Thread pulls stitches in from the edges of their shape, so shapes that
+//! 3. **The order** ([`order`]). Paint order changes thread far more often than the picture needs. The
+//!    elements are put in an order of their own: what overlaps keeps its paint order, a line sews after the
+//!    fill it borders, and then each thread sews as long as it can, the nearest element next (`SC-I0907`).
+//!    The order comes after the specks, so that a speck merged into an area doesn't count as an element
+//!    of its own, and before the overlaps, which follow it.
+//! 4. **Overlaps** ([`under`]). Thread pulls stitches in from the edges of their shape, so shapes that
 //!    only meet show fabric between them. Each automatic area reaches [`OVERLAP`] under the shapes sewn
 //!    after it, where it touches them. Where an area sewn after it covers it, as a stacked trace's upper
 //!    colours cover the lower ones, it is cut away instead, [`OVERLAP`] inside that area's edge, so that it
 //!    is sewn once (`SC-I0904`).
 //!
-//! Only automatic areas change: the fills automatic digitizing made, of shapes without settings. A shape
-//! with settings is sewn as they say, and a column or a line sewn after an area goes over it. The regions
-//! are combined with [`crate::normalize::region::ops`]. An area whose region changed is given its new
-//! outline, and one that didn't keeps its path as drawn. A fill that bounds no area is left to its fill,
-//! which says so.
+//! Only automatic areas change shape: the fills automatic digitizing made, of shapes without settings. A
+//! shape with settings is sewn as they say, and a column or a line sewn after an area goes over it. The
+//! regions are combined with [`crate::normalize::region::ops`]. An area whose region changed is given its
+//! new outline, and one that didn't keeps its path as drawn. A fill that bounds no area is left to its fill,
+//! which says so. Only automatic elements move in the order, unless the design asks for every element
+//! ordered (`--sort-colours`).
 //!
 //! **Work.** Each automatic area has the budget's work to itself for its specks and for its overlaps, and
-//! costs the work of the shapes near it, and a unit for each other shape it looks past. What another shape
-//! paints is found once, with the budget's work to itself, as each automatic area's region is built. An
-//! area whose neighbours need more work than its budget allows, or whose regions the region code fails to
-//! join (a bug, `SC-E0009`), keeps the region it has, and that is said. A shape whose paint can't be found
+//! each element for where it meets the shapes drawn after it, and costs the work of the shapes near it, and
+//! a unit for each other shape it looks past. What another shape paints is found once, with the budget's
+//! work to itself, as each automatic area's region is built. An area whose neighbours need more work than
+//! its budget allows, or whose regions the region code fails to join (a bug, `SC-E0009`), keeps the region
+//! it has, and an element its place in paint order, and that is said. A fill whose paint can't be found
 //! within its budget paints nothing for its neighbours, and says so itself, since its generator needs that
-//! work too: all but the area between a satin column's rails, which only the neighbours need, and which is
-//! said when it can't be found.
+//! work too. The area between a satin column's rails and the area a line's stroke paints are only the
+//! neighbours' to find, and are said when they can't be.
 
 mod background;
+mod order;
 mod specks;
 mod under;
 
@@ -40,7 +49,7 @@ pub(super) use background::background;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Meter, Point};
 use stitchcraft_params::{Family, StitchType, Validated};
 
-use super::outline;
+use super::{Style, outline, painted};
 use crate::design::{DesignSettings, Element, FillRule, Path, Shape};
 use crate::generate::stitch_type_of;
 use crate::generators::satin::{self, SatinParams};
@@ -66,6 +75,9 @@ pub const TOUCHING: f64 = 2.0 * stroke::SHAPE_TOLERANCE;
 /// regions only touch.
 const NO_AREA: f64 = 1e-6;
 
+/// What becomes of an element whose paint can't be found, as the order keeps it.
+const KEPT: &str = "it keeps its place in paint order beside the shapes near it";
+
 /// Whether `area` square millimetres is no area ([`NO_AREA`]).
 fn no_area(area: f64) -> bool {
     area <= NO_AREA
@@ -77,19 +89,28 @@ pub(super) struct Sewn {
     pub(super) element: Element,
     /// Whether it is an automatic area: a fill that automatic digitizing made.
     pub(super) area: bool,
+    /// Whether automatic digitizing made it, so that it moves in the order whether or not the design asks
+    /// for every element ordered.
+    pub(super) automatic: bool,
+    /// The place in the design of the shape it is a part of: the parts of a shape sewn as several elements
+    /// keep their order.
+    pub(super) shape: usize,
 }
 
-/// `sewn`, its specks merged into their neighbours and its areas reaching under the shapes sewn after them,
-/// and what is said of them.
-pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget) -> (Vec<Element>, Vec<Diagnostic>) {
+/// `sewn`, its specks merged into their neighbours, put in the order it sews in, every element moving when
+/// `sorted` and only the automatic ones otherwise, and its areas reaching under the shapes sewn after
+/// them; and what is said of them.
+pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget, sorted: bool) -> (Vec<Element>, Vec<Diagnostic>) {
+    let moving: Vec<order::Moving> = sewn.iter().map(|sewn| order::Moving { free: sorted || sewn.automatic, shape: sewn.shape }).collect();
     let mut shapes = Shapes::new(sewn, settings, budget);
     let mut said = specks::merged(&mut shapes, budget);
+    said.extend(order::ordered(&mut shapes, &moving, budget));
     said.extend(under::reached(&mut shapes, budget));
     said.append(&mut shapes.said);
     (shapes.into_elements(), said)
 }
 
-/// What a shape sewn after an automatic area is to it.
+/// What a shape paints, to the order and to an automatic area sewn before it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Kind {
     /// An area: the automatic area is cut away under it where it covers the automatic area, and reaches
@@ -97,6 +118,21 @@ enum Kind {
     Area,
     /// A satin column: the automatic area reaches under it where they meet, and is sewn whole under it.
     Column,
+    /// A line: the area its stroke paints as drawn, which only the order needs. An automatic area is sewn
+    /// whole under it, and reaches under none.
+    Line,
+}
+
+impl Kind {
+    /// The kind of `shape` sewn as `stitch_type`: a fill is an area, a satin column a column, and any other
+    /// stroke a line.
+    fn of(shape: &Shape, stitch_type: StitchType) -> Kind {
+        match shape {
+            Shape::Fill { .. } => Kind::Area,
+            Shape::Stroke { .. } if stitch_type.family() == Family::Satin => Kind::Column,
+            Shape::Stroke { .. } => Kind::Line,
+        }
+    }
 }
 
 /// Why a step could not be taken.
@@ -134,12 +170,11 @@ fn joined(parts: Result<Parts, Exhausted>) -> Result<Vec<Polygon>, Failed> {
     parts?.map_err(|_| Failed::Unjoined)
 }
 
-/// What an element paints, as a shape sewn after an automatic area: its kind and region, or `None` for a
-/// line, and for a shape whose region cannot be built.
+/// What an element paints: its kind and region, or `None` for a shape whose region cannot be built.
 type Painted = Option<(Kind, Vec<Polygon>)>;
 
 /// The elements of a design as automatic digitizing sews them, with the regions their neighbours need.
-struct Shapes<'s> {
+struct Shapes {
     elements: Vec<Element>,
     /// Whether each element is an automatic area.
     area: Vec<bool>,
@@ -156,18 +191,20 @@ struct Shapes<'s> {
     bounds: Vec<Option<Option<Envelope>>>,
     /// What each element paints grown by [`TOUCHING`], once found.
     grown: Vec<Option<Vec<Polygon>>>,
+    /// The stitch type each element is sewn as, `None` when its settings can't be read, which its generator
+    /// says.
+    stitch_types: Vec<Option<StitchType>>,
     /// What is said of the shapes whose paint could not be found, which only the neighbours need.
     said: Vec<Diagnostic>,
-    settings: &'s DesignSettings,
     /// The budget each shape's paint is found with.
     budget: Budget,
 }
 
-impl<'s> Shapes<'s> {
+impl Shapes {
     /// The elements of `sewn`, each automatic area's region built with `budget`'s work to itself. An area
     /// that needs more, whose region the region code fails to join, or that bounds no area, is sewn as it is
     /// drawn, and its fill says what it says of it then.
-    fn new(sewn: Vec<Sewn>, settings: &'s DesignSettings, budget: &Budget) -> Self {
+    fn new(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget) -> Self {
         let count = sewn.len();
         let (elements, area): (Vec<Element>, Vec<bool>) = sewn.into_iter().map(|sewn| (sewn.element, sewn.area)).unzip();
         let regions = elements
@@ -178,6 +215,7 @@ impl<'s> Shapes<'s> {
                 _ => None,
             })
             .collect();
+        let stitch_types = elements.iter().map(|element| stitch_type_of(element, settings)).collect();
         Shapes {
             elements,
             area,
@@ -187,8 +225,8 @@ impl<'s> Shapes<'s> {
             painted: vec![None; count],
             bounds: vec![None; count],
             grown: vec![None; count],
+            stitch_types,
             said: Vec::new(),
-            settings,
             budget: *budget,
         }
     }
@@ -203,9 +241,14 @@ impl<'s> Shapes<'s> {
         self.elements.get(index).map(|element| element.id.clone())
     }
 
+    /// Whether element `index` is left out: an automatic area whose every part went into its neighbours.
+    fn left_out(&self, index: usize) -> bool {
+        self.removed.get(index).copied().unwrap_or(true)
+    }
+
     /// The region of the automatic area `index` as it now is, unless it has none or is left out.
     fn region(&self, index: usize) -> Option<&[Polygon]> {
-        if self.removed.get(index).copied().unwrap_or(true) {
+        if self.left_out(index) {
             return None;
         }
         self.regions.get(index)?.as_deref()
@@ -224,9 +267,9 @@ impl<'s> Shapes<'s> {
         }
     }
 
-    /// What element `index` paints, as a shape sewn after an automatic area, once [`Self::find`] found it:
-    /// an automatic area its region as it now is, another fill its region, a satin column the area between
-    /// its rails. `None` for a line, for a shape left out, and for a shape whose region cannot be built.
+    /// What element `index` paints, once [`Self::find`] found it: an automatic area its region as it now
+    /// is, another fill its region, a satin column the area between its rails, a line the area its stroke
+    /// paints. `None` for a shape left out, and for a shape whose region cannot be built.
     fn paint(&self, index: usize) -> Option<(Kind, &[Polygon])> {
         if self.area.get(index).copied().unwrap_or(false) {
             return self.region(index).map(|parts| (Kind::Area, parts));
@@ -236,22 +279,24 @@ impl<'s> Shapes<'s> {
         Some((*kind, parts.as_slice()))
     }
 
+    /// What kind of shape element `index` is, known without finding what it paints; `None` when its
+    /// settings can't be read.
+    fn kind(&self, index: usize) -> Option<Kind> {
+        let stitch_type = (*self.stitch_types.get(index)?)?;
+        Some(Kind::of(&self.elements.get(index)?.shape, stitch_type))
+    }
+
     /// Finds what element `index` paints, with the budget's work to itself, unless it is an automatic area,
-    /// whose region is known, or was found before.
+    /// whose region is known, or was found before, or its settings can't be read.
     fn find(&mut self, index: usize) {
         if self.area.get(index).copied().unwrap_or(true) || self.painted.get(index).is_some_and(Option::is_some) {
             return;
         }
-        let Some(element) = self.elements.get(index) else { return };
-        let mut meter = self.budget.meter();
-        let painted = match stitch_type_of(element, self.settings).map_or(Ok(None), |kind| paints(element, kind, &mut meter)) {
-            Ok(painted) => painted,
-            Err(failed) => {
-                let consequence = "the areas sewn before it don't reach under it";
-                self.said.push(failed.said(Code::AutoUnder, "what this satin column covers", consequence, self.budget.max_work, element.id.clone()));
-                None
-            }
-        };
+        let (Some(element), Some(&Some(stitch_type))) = (self.elements.get(index), self.stitch_types.get(index)) else { return };
+        let painted = paints(element, stitch_type, &self.budget).unwrap_or_else(|said| {
+            self.said.push(said);
+            None
+        });
         if let Some(slot) = self.painted.get_mut(index) {
             *slot = Some(painted);
         }
@@ -285,6 +330,24 @@ impl<'s> Shapes<'s> {
         Ok(Some(grown))
     }
 
+    /// Puts the elements in `order`, which holds each element's index once.
+    fn reorder(&mut self, order: &[usize]) {
+        fn permuted<T>(items: Vec<T>, order: &[usize]) -> Vec<T> {
+            let mut slots: Vec<Option<T>> = items.into_iter().map(Some).collect();
+            order.iter().filter_map(|&index| slots.get_mut(index).and_then(Option::take)).collect()
+        }
+        use std::mem::take;
+        self.elements = permuted(take(&mut self.elements), order);
+        self.area = permuted(take(&mut self.area), order);
+        self.regions = permuted(take(&mut self.regions), order);
+        self.changed = permuted(take(&mut self.changed), order);
+        self.removed = permuted(take(&mut self.removed), order);
+        self.painted = permuted(take(&mut self.painted), order);
+        self.bounds = permuted(take(&mut self.bounds), order);
+        self.grown = permuted(take(&mut self.grown), order);
+        self.stitch_types = permuted(take(&mut self.stitch_types), order);
+    }
+
     /// The elements as they are sewn: each automatic area whose region changed given its outline, and the
     /// elements left out left out.
     fn into_elements(self) -> Vec<Element> {
@@ -302,21 +365,43 @@ impl<'s> Shapes<'s> {
     }
 }
 
-/// What `element`, sewn as `stitch_type`, paints for the automatic areas sewn before it, with `meter`'s
-/// work: a fill its region, a satin column the area between its rails as they are sewn, swapped and turned
-/// as its settings say, and nothing for any other stitch type. A fill whose region, or a column whose
-/// settings or rails, can't be read or built within the work paints nothing, and says why itself, since its
-/// generator needs them too.
-fn paints(element: &Element, stitch_type: StitchType, meter: &mut Meter) -> Result<Painted, Failed> {
-    match (stitch_type.family(), &element.shape) {
-        (Family::Fill, Shape::Fill { path, rule }) => Ok(parts_of(path, *rule, meter).ok().and_then(Result::ok).map(|parts| (Kind::Area, parts))),
-        (Family::Satin, Shape::Stroke { path, width, join, .. }) => {
+/// What `element`, sewn as `stitch_type`, paints, with `budget`'s work to itself: a fill its region, a satin
+/// column the area between its rails as they are sewn, swapped and turned as its settings say, and a line
+/// the area its stroke paints as drawn ([`Kind::of`]). A fill whose region, or a column whose settings or
+/// rails, can't be read or built within the work paints nothing, and says why itself, since its generator
+/// needs them too; so does a line that paints nothing, or so far from the origin that no design lies there.
+/// The area between a column's rails and the area a line's stroke paints are only the neighbours' to find:
+/// when they can't be, what is said of it. The areas sewn before a column then don't reach under it
+/// (`SC-I0904`), and either keeps its place in paint order beside the shapes near it (`SC-I0907`).
+fn paints(element: &Element, stitch_type: StitchType, budget: &Budget) -> Result<Painted, Diagnostic> {
+    let meter = &mut budget.meter();
+    let said =
+        |failed: Failed, code: Code, finding: &str, consequence: &str| failed.said(code, finding, consequence, budget.max_work, element.id.clone());
+    match (&element.shape, Kind::of(&element.shape, stitch_type)) {
+        (Shape::Fill { path, rule }, _) => Ok(parts_of(path, *rule, meter).ok().and_then(Result::ok).map(|parts| (Kind::Area, parts))),
+        (Shape::Stroke { path, width, join, .. }, Kind::Column) => {
             let Ok(Validated { params, .. }) = SatinParams::from_set_as(&element.params, stitch_type) else { return Ok(None) };
             let Ok(Some(column)) = satin::rails(path, *width, *join, &mut Vec::new(), meter) else { return Ok(None) };
             let Ok(rails) = satin::sewn_rails(&column, &params, meter) else { return Ok(None) };
-            Ok(Some((Kind::Column, joined(between(&rails, meter))?)))
+            let unfound = |failed| {
+                let consequence = format!("the areas sewn before it don't reach under it, and {KEPT}");
+                said(failed, Code::AutoUnder, "what this satin column covers", &consequence)
+            };
+            Ok(Some((Kind::Column, joined(between(&rails, meter)).map_err(unfound)?)))
         }
-        _ => Ok(None),
+        (Shape::Stroke { path, width, join, cap }, _) => {
+            let style = Style { width: *width, join: *join, cap: *cap };
+            stroked(path, style, meter).map_err(|failed| said(failed, Code::AutoOrder, "what this line covers", KEPT))
+        }
+    }
+}
+
+/// What a line along `path` drawn with `style` paints, with `meter`'s work: the area its stroke paints, or
+/// `None` for one that paints nothing, or so far from the origin that no design lies there.
+fn stroked(path: &Path, style: Style, meter: &mut Meter) -> Result<Painted, Failed> {
+    match painted(path, style, meter)? {
+        super::Painted::Area { parts, .. } => Ok(Some((Kind::Line, parts.map_err(|_| Failed::Unjoined)?))),
+        super::Painted::Nothing | super::Painted::TooFar => Ok(None),
     }
 }
 

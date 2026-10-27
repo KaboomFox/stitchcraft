@@ -184,7 +184,7 @@ mends it in 3 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
 2. **Specks** (`REQ-AUTO-008`). An automatic area, or a part of one, smaller than 1 mm² is too small to sew:
    it would sew a knot. It is merged into the automatic area it shares the longest edge with, which may be
    its own. A speck that fills a hole goes into the area around it, and no hole shows where it was. One that
-   rounding left a hair from the rest of its own area rejoins that. On a tie, it goes into the area sewn
+   rounding left a hair from the rest of its own area rejoins that. On a tie, it goes into the area drawn
    first. The edge 2 shapes share is how much of the area's rings lies within twice the shapes' tolerance
    of the speck. A speck that doesn't share an edge with an automatic area is left out, and so is one whose
    neighbours need more work to find than the budget allows it: put back as drawn, it could overlap a speck
@@ -228,31 +228,93 @@ once each is pulled in where the thread turns (edge coverage, `stitchcraft_testk
 | Stripes, 3 abutting | 98.9 % | 100 % | 2,994 | 3,221 |
 | Badge, abutting | 89.1 % | 98.7 % | 3,761 | 3,773 |
 | Badge, stacked | 100 % | 97.2 % | 3,981 | 3,764 |
+| Badges in a row, abutting | 94.2 % | 99.8 % | 4,947 | 4,918 |
+| Badges in a row, stacked | 100 % | 99.9 % | 4,872 | 4,934 |
 
 The abutting badge's shapes, sewn as drawn, leave a tenth of their edges bare. Digitized, they overlap, and
 98.7 % is covered. The stripes' edges are covered as drawn too, but by the running stitches the fills travel
 on along them, under their rows, not by the rows: digitized, the rows themselves overlap. The stacked badge as
 drawn sews its lower colours whole under the upper ones, which covers its edges with 217 more stitches,
-6 %, sewn twice. Digitized, it sews the abutting badge's areas, within 9 stitches. Without pull, every edge
-is covered as drawn and digitized alike, to within a hundredth. `tests/auto_pictures.rs` keeps the numbers
+6 %, sewn twice. Digitized, it sews the abutting badge's areas, within 9 stitches. The row of badges, each
+the badge at three fifths of its size and sewn in the order below, covers its edges as the badge does, and
+stacked it sews within 16 stitches of the abutting row. Without pull, every edge is covered as drawn and
+digitized alike, to within a hundredth. `tests/auto_pictures.rs` keeps the numbers
 from falling back, and MC-8 tells whether 0.4 mm is the pull on the machine.
 
 ## Sewing order
 
-Automatic elements sew in an order StitchCraft chooses, by 4 rules:
+Automatic elements sew in an order StitchCraft chooses (`stitchcraft_engine::auto::neighbours::order`,
+M13.3). The order is chosen after specks are merged, so that a speck merged into an area is no element of
+its own, and before areas reach under their neighbours, which follows it. VectorCraft's Auto Grouping
+draws each shape together with the shapes inside it. Sewn in paint order, a picture traced with it changes
+thread at nearly every shape, and each change is a stop to rethread a home machine. The order comes from 4
+rules.
 
-1. Shapes that overlap as drawn keep their paint order, the lower one first. Shapes that share an edge
-   and nothing more, as abutting paths do, may sew in either order.
-2. A column or a line that borders a fill sews after it, and covers its edge.
-3. Within those rules, the next element has the thread that is sewing, as long as an element of that
-   thread is free to sew. So the plan has few colour changes. Colours that the machine profile maps to one
-   thread count as one.
-4. Within a colour, the next element is the one nearest the needle, and each element starts and ends at
-   its points nearest its neighbours (`REQ-GEN-003`).
+1. **What overlaps keeps its paint order** (`REQ-AUTO-010`). Of 2 shapes whose paint overlaps, the lower
+   sews first, or it would cover the upper one. An area paints its region, a satin column the area between
+   its rails as they are sewn, and a line the area its stroke paints as drawn. Shapes that only meet, as
+   abutting paths do, may sew in either order. Rounding leaves a sliver no wider than twice the shapes'
+   tolerance between edges drawn as one, and shapes overlap only where their overlap is wider. Where 2 lines
+   0.1 mm wide cross, they overlap.
+2. **A line after the fill it borders.** A satin column or a line that touches a fill without overlapping
+   it sews after the fill and covers its edge, and the fill reaches under a column
+   ([Neighbours](#neighbours)). Rule 1 comes first. A line that other elements it overlaps hold before the
+   fill keeps its place.
+3. **Few thread changes.** The next element has the thread that is sewing, as long as an element of that
+   thread is free to sew: every element that must sew before it has. Otherwise the thread changes to that
+   of the first free element in paint order. Threads are the same when their colours are, as plan assembly
+   counts thread changes. A PES file gives different colours different palette entries while they last
+   (`REQ-THREAD-002`), so 2 colours are one thread to the machine only past the palette's 64 entries.
+4. **The nearest next.** Of the free elements of that thread, the next is the one whose box lies nearest
+   the box of the element sewn last. On a tie it is the one whose box's centre lies nearest, and then the
+   one drawn first. Each element then starts and ends at its points nearest its neighbours
+   (`REQ-GEN-003`).
 
-The overlaps above follow this order. Elements with settings keep their places in paint order, and
-automatic elements move around them within the rules. M10's routing tools, which order satin columns and
-running stitches drawn by hand, start from this order.
+Elements with settings keep their order among themselves, and automatic elements move round them within
+the rules. The parts of a shape sewn as several elements, such as a line's satin columns, keep their order
+too, so that a trim after the shape still comes after its last part. `--sort-colours` lets the elements
+with settings move as well (`REQ-AUTO-011`), whether or not `--auto` is given. It is for a design drawn in
+an order that suits drawing it rather than sewing it. The switch is the command line's. VectorCraft's
+exporters order the automatic elements when their `auto` option is on, and sew the elements with settings
+as drawn.
+An element with a stop after it keeps its place: the elements drawn before it sew before it, and those
+drawn after it after it. A user sets a stop for a reason, such as placing appliqué fabric, and it comes
+where it was drawn. `SC-I0907` says when the order isn't paint order, with the thread changes of each.
+M10's routing tools, which order satin columns and running stitches drawn by hand, start from this order.
+
+Shapes are near when their boxes come within twice the shapes' tolerance of each other. An automatic
+area's box is round its region. Any other shape's box is round its path's points, grown for a stroke by
+half its width times √(L² + 1) for a miter limit L. That holds the corners of a miter clipped at its limit,
+as a satin column's rails clip it. Other strokes grow by half their width times √2, which holds a square
+cap's corners. Rule 4 measures with the same boxes. The order finds a shape's paint only when the shape is
+near an element that moves.
+
+**Work** (`REQ-AUTO-012`). Each element has the work budget to itself to find how it lies beside the
+shapes drawn after it. It costs a unit for each of them, and the work of those near it. One that needs
+more keeps its place in paint order as an element with a stop after it does: nothing moves across it. A
+shape whose paint can't be found within the budget keeps its place beside the shapes near it. Choosing the
+order has the budget once more, and costs a unit for each free element looked at each time an element is
+placed. An order that needs more sews the elements not placed by then in paint order, after the others.
+`SC-I0907` says each. `SC-I0904` says it of a satin column instead, whose area the areas sewn before it
+then don't reach under either. A fill's generator needs the work of its region too, and says it of a fill
+(`SC-E0004`).
+
+**Measured.** The test pictures, sewn as drawn and digitized as [Neighbours](#neighbours) sews them.
+
+| Test picture | Thread changes as drawn | Digitized | Jumps as drawn | Digitized |
+|---|---|---|---|---|
+| Stripes, 3 abutting | 2 | 2 | 3 | 3 |
+| Badge, abutting | 2 | 2 | 3 | 3 |
+| Badge, stacked | 2 | 2 | 3 | 3 |
+| Badges in a row, abutting | 8 | 2 | 9 | 7 |
+| Badges in a row, stacked | 8 | 2 | 9 | 7 |
+
+The stripes and the badge on its own have one shape of each colour, which no order sews with fewer
+changes, and digitizing keeps their order. The row of 3 badges, each 30 mm across, is drawn badge by badge,
+as Auto Grouping draws it. It changes thread 8 times as drawn. Digitized, each thread sews its 3 shapes one
+after another, and the row changes thread twice. Its red discs touch, and the needle sews on from one to
+the next without a jump. The row jumps 7 times instead of 9. `tests/auto_pictures.rs` keeps the numbers
+from falling back.
 
 ## Settings
 
