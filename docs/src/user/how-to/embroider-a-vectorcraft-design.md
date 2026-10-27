@@ -23,9 +23,11 @@ filled, and its strokes are sewn as running stitch. With `stitch export --auto`,
 stitches by width instead, as for a picture traced into shapes.
 
 - A line up to 1 mm wide runs, or up to the narrowest satin stroke the document keeps
-  ([below](#keep-the-designs-settings-and-machine-with-it)).
+  ([below](#keep-the-designs-settings-and-machine-with-it)). From 0.5 mm wide it is a triple run, each
+  stitch sewn 3 times.
 - A line up to 7 mm wide is a satin column as wide as drawn, its round or square caps included.
-- A wider line, or a fill, is a tatami fill.
+- A wider line, or a fill, is a tatami fill. A part of a fill no wider than the narrowest satin stroke
+  anywhere runs along its middle, as so narrow a line does.
 
 Objects are sewn in the order they are drawn, the bottom one first. [Satin columns and presets in VectorCraft](vectorcraft-columns-and-presets.md) shows
 how to draw a column with 2 rails, and how to keep settings in graphic styles.

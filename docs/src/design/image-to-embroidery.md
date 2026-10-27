@@ -102,8 +102,9 @@ there. Its parts sew by their width:
 
 A stroke is a line as wide as it is drawn (M13.1):
 
-- No wider than `min_satin_stroke_width_mm` it sews as a running stitch along its path (`REQ-AUTO-002`).
-  A satin column that narrow is too narrow to stitch across (`REQ-SAT-015`), so the bound is the same.
+- No wider than `min_satin_stroke_width_mm` it sews as a running stitch along its path (`REQ-AUTO-002`),
+  tripled from 0.5 mm wide (below). A satin column that narrow is too narrow to stitch across
+  (`REQ-SAT-015`), so the bound is the same.
 - Up to 7 mm it sews as a satin column as wide as its stroke, with its path as the column's centre line,
   as a satin column drawn as one path does (`REQ-SAT-016`, `REQ-AUTO-003`). A centre line is one subpath,
   so a stroke of several sews a column for each, in order. The second and later columns are named after
@@ -130,10 +131,40 @@ A stroke is a line as wide as it is drawn (M13.1):
   of more than 32 chords is cut into lengths of 32 chords. Each length is a ring made into its area alone,
   and the areas are then joined. A 10 mm line a metre long fills within the default budget that way.
 
-Until M13.4 and M13.5, a line no wider than `min_satin_stroke_width_mm` runs once, and its satin column
-has a satin column's defaults. M13.4 triples the runs from 0.5 mm, and M13.5 gives columns their underlay
-by width, strokes' columns as well as shapes'. M13.1 sews a shape's area as a tatami fill whatever its
-width, and the rules below for the narrow parts of shapes follow in M13.4 to M13.6.
+**Triple runs** (M13.4, `REQ-AUTO-015`). A running stitch that automatic digitizing makes is a triple run
+from 0.5 mm wide: each stitch is sewn 3 times, bean stitch 1. A running stitch sewn once is as fine as the
+thread, and a line drawn half a millimetre wide or wider sews bolder tripled. A stroke is as wide as it is
+drawn, and a narrow part (below) as wide as the circles that fit inside it along the middle. Widths are
+compared to the micrometre, and MC-8 confirms or changes the bound.
+
+Until M13.5 a satin column has a satin column's defaults, and M13.5 gives columns their underlay by width,
+strokes' columns as well as shapes'. A shape's area is a tatami fill apart from its narrow parts (M13.4),
+and the rules below for its parts as wide as a satin column follow in M13.5 and M13.6.
+
+**Narrow parts** (M13.4, `REQ-AUTO-013`). A part of a shape that is narrower than
+`min_satin_stroke_width_mm` everywhere sews as a running stitch along its centre line, as a stroke that
+narrow does. No circle that wide fits inside such a part: shrunk by half the width with the polygon buffer
+of M5.7, nothing of it is left. The width is taken half a micrometre wider, so that a part as wide as the
+bound, give or take a rounding error, is narrow, as a stroke is. Before that, a part smaller than 1 mm² is a
+speck ([Neighbours](#neighbours)), and stays in the area. So does a part whose centre line has no length, a
+dot.
+
+- **What sews.** The rest of the shape is a tatami fill, and each narrow part's line sews after it, in the
+  order of the parts. It is named after the shape with `#2`, `#3` and so on, or with the shape's own name
+  when nothing of it is filled. A trim or a stop after the shape follows its last part.
+- **Its width.** A part's width at a point of its centre line is the diameter of the largest circle centred
+  there that fits inside it. Averaged along the line, it says whether the part is a triple run
+  ([centre lines](algorithms/centre-lines.md#width-along-the-line)). A strip as wide all along as a stroke
+  is as wide as the stroke.
+- **To its neighbours** a narrow part's line paints the part. It sews after a fill it borders, and the
+  areas sewn before it reach under it as under a satin column ([Neighbours](#neighbours)).
+- **As drawn.** A shape's narrow parts are found as it is drawn, before its neighbours. A part that only
+  the areas sewn after it leave narrow is cut away round them and filled with the rest of its shape. A
+  stacked trace's dark outline under the colours inside it is often such a part. Whether to find narrow
+  parts after the cut too is decided with M13.6, which splits shapes into parts.
+- `SC-I0901` counts a shape whose every part runs as a running stitch, and any other as a tatami fill.
+  Finding a part's width and centre line is part of the work of digitizing its shape. A part whose width
+  or centre line can't be found, a bug, stays in the fill, and `SC-E0009` names its shape.
 
 **Shapes in parts.** A shape wider than 7 mm in places and narrower in others is split. Its broad parts are
 what an opening with a disc 7 mm across leaves: the shape shrunk by 3.5 mm and grown back by 3.5 mm, with
@@ -150,9 +181,16 @@ triangle is much longer than the part is wide:
 - A triangle with 2 inside edges is part of a strip, and its inside edges are the strip's rungs.
 - A triangle with 3 inside edges is a junction, where 3 strips meet, and one with 1 is an end.
 
-A strip between 2 ends or junctions sews as a satin column. Its rails are the 2 sides of the outline
-between them, and some of its chords are its rungs. At a junction, the 2 strips that run on most nearly
-straight sew as one column, and the third ends under it. A ring, such as a letter O, is a closed column
+The centre line joins the middles of the chords (M13.4, `REQ-AUTO-014`). A round end stops it about half
+its width from the end, on its middle, and a sharp point draws it on to the point. The small bumps of a traced outline, and
+the corner past a sharp turn, would branch it, and are left out. At each junction left, the 2 branches that
+run on most nearly straight are one line and the third ends there, and a ring has a closed line. A part's
+lines sew one after another, the longest first, each from its end nearest where the last one ended. The
+[centre lines](algorithms/centre-lines.md) page has the rules in full.
+
+A strip between 2 ends or junctions sews as a satin column (M13.5). Its rails are the 2 sides of the
+outline between them, and some of its chords are its rungs. A junction joins the 2 columns that run on
+most nearly straight, and the third ends under them. A ring, such as a letter O, is a closed column
 between its outer and inner outlines. The satin generator sews these columns as it sews columns drawn with
 rails and rungs.
 
@@ -193,14 +231,17 @@ mends it in 3 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    too, so a part of it that small is a speck.
 3. **Overlaps** (`REQ-AUTO-007`). Pull draws stitches in from the edges of their shape, so shapes that only
    meet show fabric between them. Each automatic area reaches 0.4 mm under each area, satin
-   column or filled line sewn after it, from where it touches that shape, and no further than that shape.
+   column, filled line or narrow part's line sewn after it, from where it touches that shape, and no
+   further than that shape.
    Shapes touch where their edges meet within twice the shapes' tolerance, so a gap that rounding left
    between edges drawn as one closes too. Along an edge where a shape runs on near the area without
    touching it, the area doesn't reach, and fabric shows between them as drawn. A satin column covers the
    area between its rails as they are sewn, turned to run the same way. Where an area sewn after it covers
    part of it, it is cut away under that area, 0.4 mm inside the area's edge, and that part is sewn once: a
    stacked trace then sews the areas of an abutting one. A part that the areas sewn after it cover whole
-   sews nothing, however near their edge it lies. A column or a line sewn after an area goes over it, and
+   sews nothing, however near their edge it lies. A narrow part's line covers its part, and isn't cut away.
+   It sews nothing when the areas sewn after it cover the part whole, and sews whole when they cover the
+   part in places. A column or a line sewn after an area goes over it, and
    the area is sewn whole under it. Cutting a fill round small letters adds stitches and can leave gaps
    ([Inkscape forum](https://inkscape.org/forums/embroidery/techniques-for-making-text-on-top-of-a-fill-more-crisp/)).
    `SC-I0904` counts the areas that reach under others and those cut away. It also names each area cut away
@@ -251,8 +292,9 @@ thread at nearly every shape, and each change is a stop to rethread a home machi
 rules.
 
 1. **What overlaps keeps its paint order** (`REQ-AUTO-010`). Of 2 shapes whose paint overlaps, the lower
-   sews first, or it would cover the upper one. An area paints its region, a satin column the area between
-   its rails as they are sewn, and a line the area its stroke paints as drawn. Shapes that only meet, as
+   sews first, or it would cover the upper one. An area paints its region, and a satin column the area
+   between its rails as they are sewn. Lines paint the areas their strokes paint as drawn, and a narrow
+   part's line the part. Shapes that only meet, as
    abutting paths do, may sew in either order. Rounding leaves a sliver no wider than twice the shapes'
    tolerance between edges drawn as one, and shapes overlap only where their overlap is wider. Where 2 lines
    0.1 mm wide cross, they overlap.
@@ -282,12 +324,12 @@ drawn after it after it. A user sets a stop for a reason, such as placing appliq
 where it was drawn. `SC-I0907` says when the order isn't paint order, with the thread changes of each.
 M10's routing tools, which order satin columns and running stitches drawn by hand, start from this order.
 
-Shapes are near when their boxes come within twice the shapes' tolerance of each other. An automatic
-area's box is round its region. Any other shape's box is round its path's points, grown for a stroke by
-half its width times √(L² + 1) for a miter limit L. That holds the corners of a miter clipped at its limit,
-as a satin column's rails clip it. Other strokes grow by half their width times √2, which holds a square
-cap's corners. Rule 4 measures with the same boxes. The order finds a shape's paint only when the shape is
-near an element that moves.
+Shapes are near when their boxes come within twice the shapes' tolerance of each other. An automatic area's
+box is round its region, and a narrow part's line's round the part. Any other shape's box is round its
+path's points, grown for a stroke by half its width times √(L² + 1) for a miter limit L. That holds the
+corners of a miter clipped at its limit, as a satin column's rails clip it. Other strokes grow by half their
+width times √2, which holds a square cap's corners. Rule 4 measures with the same boxes. The order finds a
+shape's paint only when the shape is near an element that moves.
 
 **Work** (`REQ-AUTO-012`). Each element has the work budget to itself to find how it lies beside the
 shapes drawn after it. It costs a unit for each of them, and the work of those near it. One that needs
@@ -320,11 +362,12 @@ from falling back.
 
 The rules' values become StitchCraft's own parameters, registered as any other
 ([parameter registry](params.md)), when the Auto effect's dialog lets a user set them (M13.7). The settings
-are the widest satin column, the overlap, the smallest area and a switch that leaves the background out.
-Their defaults are the values on this page, 7 mm, 0.4 mm and 1 mm², and MC-8 confirms or changes them.
-Until then nothing can set them, and the rules use those values (`stitchcraft_engine::auto::SATIN_MAX_WIDTH`
-since M13.1, and `OVERLAP` and `SMALLEST_AREA` since M13.2). The narrowest satin column is the design's `min_satin_stroke_width_mm`. With `--auto` the
-settings take their defaults.
+are the widest satin column, the narrowest triple run, the overlap, the smallest area and a switch that
+leaves the background out. Their defaults are the values on this page, 7 mm, 0.5 mm, 0.4 mm and 1 mm², and
+MC-8 confirms or changes them. Until then nothing can set them, and the rules use those values
+(`stitchcraft_engine::auto::SATIN_MAX_WIDTH` since M13.1, `OVERLAP` and `SMALLEST_AREA` since M13.2, and
+`TRIPLE_RUN_WIDTH` since M13.4). The narrowest satin column is the design's `min_satin_stroke_width_mm`.
+With `--auto` the settings take their defaults.
 
 ## Previews in VectorCraft
 

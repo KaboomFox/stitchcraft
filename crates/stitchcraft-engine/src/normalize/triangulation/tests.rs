@@ -1,5 +1,6 @@
-//! The constrained Delaunay triangulation: every edge of the part is an edge of the triangles, the triangles
-//! cover the part and nothing else, and every edge between 2 of them passes the Delaunay test.
+//! The constrained Delaunay triangulation (`REQ-AUTO-014`): every edge of the part is an edge of the
+//! triangles, the triangles cover the part and nothing else, and every edge between 2 of them passes the
+//! Delaunay test.
 
 use stitchcraft_core::exact::{self, Circle, Side};
 use stitchcraft_core::math::{hypot, sin_cos};

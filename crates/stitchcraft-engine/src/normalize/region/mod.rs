@@ -127,7 +127,6 @@ pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Ex
 /// `p` on the grid a region's points lie on ([`snap::GRID`]), where coordinates' differences are exact
 /// floats. A point beyond the grid's reach, some 65 m from the origin, where no design lies, is left as it
 /// is: the exact predicates still decide its sides, at more cost.
-#[cfg_attr(not(test), expect(dead_code, reason = "the triangulation is its caller, and the centre lines of M13.4's second part the triangulation's"))]
 pub(crate) fn on_grid(p: Point) -> Point {
     snap::Node::of(p).map_or(p, snap::Node::point)
 }

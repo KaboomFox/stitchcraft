@@ -4,12 +4,12 @@
 //! near by.
 
 use stitchcraft_core::math::sin_cos;
-use stitchcraft_core::{Budget, Code, Diagnostic};
+use stitchcraft_core::{Budget, Code, Diagnostic, Mm};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
 
 use super::*;
-use crate::design::{Segment, Subpath};
+use crate::design::{Cap, Join, Segment, Subpath};
 
 fn p(x: f64, y: f64) -> Point {
     Point::new(x, y).unwrap()
@@ -46,7 +46,7 @@ fn filled(id: &str, parts: &[Polygon]) -> Element {
 
 /// An automatic area `id`, the square from `(x0, y0)` to `(x1, y1)`.
 fn area(id: &str, from: (f64, f64), to: (f64, f64)) -> Sewn {
-    Sewn { element: filled(id, &[square(from, to)]), area: true, automatic: true, shape: 0 }
+    Sewn { element: filled(id, &[square(from, to)]), area: true, automatic: true, shape: 0, narrow: None }
 }
 
 /// The least work with which `step` says what it says with the default budget, found by halving: with a
@@ -103,12 +103,44 @@ fn an_area_whose_neighbours_need_more_work_than_its_budget_allows_is_sewn_as_it_
 }
 
 #[test]
+fn a_narrow_line_covered_whole_sews_nothing_unless_finding_that_needs_more_work_than_its_budget_allows() {
+    // The running stitch along a strip 0.6 mm wide, and an area sewn after it. Covering the strip in part,
+    // the area leaves the line whole. Covering it whole, it leaves nothing of it with the budget, and with a
+    // unit less than finding that needs, the line sews whole and is named.
+    let strip = square((2.0, 4.0), (8.0, 4.6));
+    let middle = Subpath { start: p(2.3, 4.3), segments: vec![Segment::Line(p(7.7, 4.3))], closed: false };
+    let shape = Shape::Stroke { path: Path { subpaths: vec![middle] }, width: Mm::new(0.6).unwrap(), join: Join::Round, cap: Cap::Round };
+    let line = Element { shape, ..filled("line", &[]) };
+    let sewn = |to: (f64, f64)| {
+        let line = Sewn { element: line.clone(), area: false, automatic: true, shape: 0, narrow: Some(strip.clone()) };
+        vec![line, area("cover", (0.0, 0.0), to)]
+    };
+    let ids = |elements: &[Element]| elements.iter().map(|element| element.id.to_string()).collect::<Vec<_>>();
+    let (elements, said) = reached(sewn((5.0, 10.0)), &Budget::DEFAULT);
+    assert_eq!(ids(&elements), ["line", "cover"], "{said:?}");
+    let (elements, said) = reached(sewn((10.0, 10.0)), &Budget::DEFAULT);
+    assert_eq!(ids(&elements), ["cover"], "{said:?}");
+    let least = least_work(|budget| reached(sewn((10.0, 10.0)), budget).1);
+    let (elements, said) = reached(sewn((10.0, 10.0)), &Budget { max_work: least - 1, ..Budget::DEFAULT });
+    let [said] = said.as_slice() else { panic!("{said:?}") };
+    assert_eq!((said.code, said.element.as_ref().map(ElementId::as_str)), (Code::AutoUnder, Some("line")));
+    assert_eq!(
+        said.message,
+        format!(
+            "Finding where this area meets the shapes sewn after it needed more than the work budget of {} units, so it is sewn whole.",
+            least - 1
+        )
+    );
+    assert_eq!(ids(&elements), ["line", "cover"]);
+}
+
+#[test]
 fn an_area_costs_a_unit_for_each_shape_sewn_after_it_far_from_it() {
     let sewn = || vec![area("left", (0.0, 0.0), (10.0, 10.0)), area("right", (10.0, 0.0), (20.0, 10.0))];
     // A fill with settings far from them, sewn after them, whose region takes thousands of units to build.
     let with_far = || {
         let mut sewn = sewn();
-        sewn.push(Sewn { element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]), area: false, automatic: false, shape: 0 });
+        sewn.push(Sewn { element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]), area: false, automatic: false, shape: 0, narrow: None });
         sewn
     };
     let (alone, far) = (least_work(|budget| reached(sewn(), budget).1), least_work(|budget| reached(with_far(), budget).1));
@@ -120,7 +152,7 @@ fn a_speck_costs_a_unit_for_each_area_far_from_it() {
     let sewn = || vec![area("big", (0.0, 0.0), (10.0, 10.0)), area("speck", (10.0, 0.0), (10.5, 0.5))];
     let with_far = || {
         let mut sewn = sewn();
-        sewn.push(Sewn { element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]), area: true, automatic: true, shape: 0 });
+        sewn.push(Sewn { element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]), area: true, automatic: true, shape: 0, narrow: None });
         sewn
     };
     let (alone, far) = (least_work(|budget| merged(sewn(), budget).1), least_work(|budget| merged(with_far(), budget).1));
@@ -146,7 +178,7 @@ fn a_column_whose_area_needs_more_work_than_its_budget_allows_is_said_and_reache
     // The square as it is sewn, and what is said of the column, each shape's paint found with `work`.
     let sewn = |work: u64| {
         let settings = DesignSettings::default();
-        let sewn = vec![area("square", (0.0, 0.0), (10.0, 10.0)), Sewn { element: column(), area: false, automatic: false, shape: 0 }];
+        let sewn = vec![area("square", (0.0, 0.0), (10.0, 10.0)), Sewn { element: column(), area: false, automatic: false, shape: 0, narrow: None }];
         let mut shapes = Shapes::new(sewn, &settings, &Budget { max_work: work, ..Budget::DEFAULT });
         let _ = under::reached(&mut shapes, &Budget::DEFAULT);
         let said = std::mem::take(&mut shapes.said);
@@ -192,6 +224,7 @@ fn a_speck_rejoins_the_rest_of_its_area_or_is_left_out_when_it_shares_no_edge() 
         area: true,
         automatic: true,
         shape: 0,
+        narrow: None,
     };
     let (_, said) = merged(vec![parts, area("lone", (30.0, 30.0), (30.5, 30.5))], &Budget::DEFAULT);
     assert_eq!(
