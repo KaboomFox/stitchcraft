@@ -38,6 +38,10 @@ params! {
     }
 }
 
+/// The key of the setting that sews each stitch back and forth, which automatic digitizing sets for a triple
+/// run (`crate::auto`).
+pub const BEAN_STITCH_REPEATS: &str = "bean_stitch_repeats";
+
 /// The point each pass after the first starts with, which decides how bean stitch counts its steps.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Turn {
@@ -94,6 +98,11 @@ pub fn sew(run: &[Point], repeats: u32, beans: &[u32], turn: Turn, meter: &mut M
 #[cfg(test)]
 mod tests {
     use stitchcraft_core::Budget;
+
+    #[test]
+    fn the_bean_stitch_key_is_the_registered_one() {
+        assert!(super::RepeatParams::SPECS.iter().any(|spec| spec.key == super::BEAN_STITCH_REPEATS));
+    }
 
     use super::*;
 

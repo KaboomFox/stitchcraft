@@ -17,7 +17,9 @@ Since M13.1, before anything else, each element the host marked automatic, a sha
 with `--auto`, becomes the ordinary elements its width calls for, with the settings that say so
 (`stitchcraft_engine::auto::digitized`, [image to embroidery](image-to-embroidery.md#stitch-types-by-width)).
 
-- An area, or a line that runs, stays itself.
+- An area is sewn as it is, apart from its narrow parts: each becomes a running stitch along its centre
+  line (M13.4), and the rest of the area the fill of its other parts.
+- A line that runs is sewn as it is, tripled from 0.5 mm wide.
 - A line sewn as a satin column becomes a column for each of its subpaths, or the fill of a subpath a
   column cannot follow (`SC-I0902`).
 - A wider line becomes the fill of the area it paints.

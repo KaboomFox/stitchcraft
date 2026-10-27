@@ -35,13 +35,13 @@ fn element(id: &str, shape: Shape, thread: &Thread) -> Element {
 fn square(id: &str, (x, y): (f64, f64), size: f64, thread: &Thread) -> Sewn {
     let ring = [(x, y), (x, y + size), (x + size, y + size), (x + size, y)];
     let shape = Shape::Fill { path: through(&ring, true), rule: FillRule::NonZero };
-    Sewn { element: element(id, shape, thread), area: true, automatic: true, shape: usize::MAX }
+    Sewn { element: element(id, shape, thread), area: true, automatic: true, shape: usize::MAX, narrow: None }
 }
 
 /// An automatic running line `id` along `points`, `width` wide, sewn with `thread`, a shape of its own.
 fn running(id: &str, points: &[(f64, f64)], width: f64, thread: &Thread) -> Sewn {
     let shape = Shape::Stroke { path: through(points, false), width: Mm::new(width).unwrap(), join: Join::Round, cap: Cap::Butt };
-    Sewn { element: element(id, shape, thread), area: false, automatic: true, shape: usize::MAX }
+    Sewn { element: element(id, shape, thread), area: false, automatic: true, shape: usize::MAX, narrow: None }
 }
 
 /// `sewn` in the order it sews in, each shape's paint found with `painting` and the order with `budget`;
@@ -258,7 +258,8 @@ fn a_columns_box_holds_the_corners_of_its_clipped_miters() {
     let shape = Shape::Stroke { path, width: Mm::new(7.0).unwrap(), join: Join::Miter { limit: 4.0 }, cap: Cap::Butt };
     let column = Element { params: [("satin_column", "true")].into_iter().collect(), ..element("column", shape, &RED) };
     let settings = DesignSettings::default();
-    let mut shapes = Shapes::new(vec![Sewn { element: column.clone(), area: false, automatic: false, shape: 0 }], &settings, &Budget::DEFAULT);
+    let mut shapes =
+        Shapes::new(vec![Sewn { element: column.clone(), area: false, automatic: false, shape: 0, narrow: None }], &settings, &Budget::DEFAULT);
     shapes.find(0);
     let Some((Kind::Column, parts)) = shapes.paint(0) else { panic!("{:?}", shapes.said) };
     let (paint, boxed) = (envelope(parts).unwrap(), drawn(&column).unwrap());

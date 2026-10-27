@@ -23,7 +23,9 @@
 //!    is sewn once (`SC-I0904`).
 //!
 //! Only automatic areas change shape: the fills automatic digitizing made, of shapes without settings. A
-//! shape with settings is sewn as they say, and a column or a line sewn after an area goes over it. The
+//! shape with settings is sewn as they say, and a column or a line sewn after an area goes over it. A
+//! narrow part's line (`auto::narrow`) paints its part, which the areas sewn before it reach under, and is
+//! left out when the areas sewn after it cover the part whole ([`Kind::Narrow`]). The
 //! regions are combined with [`crate::normalize::region::ops`]. An area whose region changed is given its
 //! new outline, and one that didn't keeps its path as drawn. A fill that bounds no area is left to its fill,
 //! which says so. Only automatic elements move in the order, unless the design asks for every element
@@ -79,7 +81,7 @@ const NO_AREA: f64 = 1e-6;
 const KEPT: &str = "it keeps its place in paint order beside the shapes near it";
 
 /// Whether `area` square millimetres is no area ([`NO_AREA`]).
-fn no_area(area: f64) -> bool {
+pub(super) fn no_area(area: f64) -> bool {
     area <= NO_AREA
 }
 
@@ -95,6 +97,8 @@ pub(super) struct Sewn {
     /// The place in the design of the shape it is a part of: the parts of a shape sewn as several elements
     /// keep their order.
     pub(super) shape: usize,
+    /// The narrow part of an automatic area that it sews along the centre line of, which it paints.
+    pub(super) narrow: Option<Polygon>,
 }
 
 /// `sewn`, its specks merged into their neighbours, put in the order it sews in, every element moving when
@@ -121,6 +125,10 @@ enum Kind {
     /// A line: the area its stroke paints as drawn, which only the order needs. An automatic area is sewn
     /// whole under it, and reaches under none.
     Line,
+    /// A running stitch along the centre line of a narrow part of an automatic area: it paints the part, and
+    /// an automatic area reaches under it where they meet, as under a satin column, and is sewn whole under
+    /// it.
+    Narrow,
 }
 
 impl Kind {
@@ -185,7 +193,8 @@ struct Shapes {
     changed: Vec<bool>,
     /// Whether each element is left out.
     removed: Vec<bool>,
-    /// What each element that is no automatic area paints, once found.
+    /// What each element that is no automatic area paints, once found: known from the start for a narrow
+    /// part's line.
     painted: Vec<Option<Painted>>,
     /// The bounds of what each element paints, once found.
     bounds: Vec<Option<Option<Envelope>>>,
@@ -194,6 +203,8 @@ struct Shapes {
     /// The stitch type each element is sewn as, `None` when its settings can't be read, which its generator
     /// says.
     stitch_types: Vec<Option<StitchType>>,
+    /// What kind of shape each element is, `None` when its settings can't be read.
+    kinds: Vec<Option<Kind>>,
     /// What is said of the shapes whose paint could not be found, which only the neighbours need.
     said: Vec<Diagnostic>,
     /// The budget each shape's paint is found with.
@@ -206,7 +217,14 @@ impl Shapes {
     /// drawn, and its fill says what it says of it then.
     fn new(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget) -> Self {
         let count = sewn.len();
-        let (elements, area): (Vec<Element>, Vec<bool>) = sewn.into_iter().map(|sewn| (sewn.element, sewn.area)).unzip();
+        let mut painted = Vec::with_capacity(count);
+        let (elements, area): (Vec<Element>, Vec<bool>) = sewn
+            .into_iter()
+            .map(|sewn| {
+                painted.push(sewn.narrow.map(|part| Some((Kind::Narrow, vec![part]))));
+                (sewn.element, sewn.area)
+            })
+            .unzip();
         let regions = elements
             .iter()
             .zip(&area)
@@ -215,17 +233,27 @@ impl Shapes {
                 _ => None,
             })
             .collect();
-        let stitch_types = elements.iter().map(|element| stitch_type_of(element, settings)).collect();
+        let stitch_types: Vec<Option<StitchType>> = elements.iter().map(|element| stitch_type_of(element, settings)).collect();
+        let kinds = elements
+            .iter()
+            .zip(&stitch_types)
+            .zip(&painted)
+            .map(|((element, stitch_type), painted)| match painted {
+                Some(Some((kind, _))) => Some(*kind),
+                _ => stitch_type.map(|stitch_type| Kind::of(&element.shape, stitch_type)),
+            })
+            .collect();
         Shapes {
             elements,
             area,
             regions,
             changed: vec![false; count],
             removed: vec![false; count],
-            painted: vec![None; count],
+            painted,
             bounds: vec![None; count],
             grown: vec![None; count],
             stitch_types,
+            kinds,
             said: Vec::new(),
             budget: *budget,
         }
@@ -241,7 +269,8 @@ impl Shapes {
         self.elements.get(index).map(|element| element.id.clone())
     }
 
-    /// Whether element `index` is left out: an automatic area whose every part went into its neighbours.
+    /// Whether element `index` is left out: an automatic area whose every part went into its neighbours, or
+    /// a narrow part's line that the areas sewn after it cover whole.
     fn left_out(&self, index: usize) -> bool {
         self.removed.get(index).copied().unwrap_or(true)
     }
@@ -252,6 +281,13 @@ impl Shapes {
             return None;
         }
         self.regions.get(index)?.as_deref()
+    }
+
+    /// Leaves element `index` out.
+    fn leave_out(&mut self, index: usize) {
+        if let Some(removed) = self.removed.get_mut(index) {
+            *removed = true;
+        }
     }
 
     /// Gives the automatic area `index` the region `parts`: none leaves it out, and some bring it back.
@@ -269,12 +305,14 @@ impl Shapes {
 
     /// What element `index` paints, once [`Self::find`] found it: an automatic area its region as it now
     /// is, another fill its region, a satin column the area between its rails, a line the area its stroke
-    /// paints. `None` for a shape left out, and for a shape whose region cannot be built.
+    /// paints, and a narrow part's line the part. `None` for an automatic area left out, and for a shape
+    /// whose region cannot be built. A narrow part's line left out still paints its part, which the areas
+    /// sewn after it cover whole: an area sewn before it that reaches under the part reaches under them.
     fn paint(&self, index: usize) -> Option<(Kind, &[Polygon])> {
         if self.area.get(index).copied().unwrap_or(false) {
             return self.region(index).map(|parts| (Kind::Area, parts));
         }
-        // Only automatic areas are left out, so what another element paints is there to find.
+        // Of the other elements only narrow parts' lines are left out, and what they paint stays known.
         let (kind, parts) = self.painted.get(index)?.as_ref()?.as_ref()?;
         Some((*kind, parts.as_slice()))
     }
@@ -282,8 +320,19 @@ impl Shapes {
     /// What kind of shape element `index` is, known without finding what it paints; `None` when its
     /// settings can't be read.
     fn kind(&self, index: usize) -> Option<Kind> {
-        let stitch_type = (*self.stitch_types.get(index)?)?;
-        Some(Kind::of(&self.elements.get(index)?.shape, stitch_type))
+        *self.kinds.get(index)?
+    }
+
+    /// What element `index` paints when that is known without work: an automatic area's region, and the
+    /// part a narrow part's line sews along.
+    fn known(&self, index: usize) -> Option<&[Polygon]> {
+        if self.area.get(index).copied().unwrap_or(false) {
+            return self.region(index);
+        }
+        match self.kind(index)? {
+            Kind::Narrow => self.paint(index).map(|(_, parts)| parts),
+            Kind::Area | Kind::Column | Kind::Line => None,
+        }
     }
 
     /// Finds what element `index` paints, with the budget's work to itself, unless it is an automatic area,
@@ -346,6 +395,7 @@ impl Shapes {
         self.bounds = permuted(take(&mut self.bounds), order);
         self.grown = permuted(take(&mut self.grown), order);
         self.stitch_types = permuted(take(&mut self.stitch_types), order);
+        self.kinds = permuted(take(&mut self.kinds), order);
     }
 
     /// The elements as they are sewn: each automatic area whose region changed given its outline, and the
@@ -407,7 +457,7 @@ fn stroked(path: &Path, style: Style, meter: &mut Meter) -> Result<Painted, Fail
 
 /// The region that `path` bounds under `rule`, every part kept, however small: the area a fill's region is
 /// built from ([`region::build`]), before the parts too small for a row are left out.
-fn parts_of(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Parts, Exhausted> {
+pub(super) fn parts_of(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Parts, Exhausted> {
     let flat = stroke::flatten(path, stroke::SHAPE_TOLERANCE, meter)?;
     let rings: Vec<Vec<Point>> =
         flat.pieces.into_iter().map(|piece| geom::closed(&piece.points)).filter(|ring| geom::without_repeats(ring).len() >= 4).collect();
