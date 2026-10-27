@@ -5,6 +5,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.4, first part: the constrained Delaunay triangulation that the centre lines of narrow parts run
+  through. `stitchcraft_core::exact::incircle` decides exactly whether a point lies inside the circle
+  through 3 others. The engine cuts a part of a region into the triangles of its constrained Delaunay
+  triangulation, which have every edge of its outline and holes among their edges
+  (`normalize::triangulation`). Stitches stay as they were until the second part sews narrow parts along
+  their centre lines.
+
 - M13.3: the sewing order. With `--auto`, the automatic elements sew in an order of their own, chosen after
   specks are merged and before areas reach under their neighbours (`REQ-AUTO-010`, `SC-I0907`).
   - Shapes whose paint overlaps by more than twice the shapes' tolerance keep their paint order, the lower

@@ -12,7 +12,8 @@ conformance suite checks.
 | [Lock stitches](locks.md) | the tie-in and tie-off at the ends of an element's stitching |
 
 Travel and the joining of elements, and which ends get a lock, are part of
-[plan assembly](../engine-pipeline.md#4-plan-assembly).
+[plan assembly](../engine-pipeline.md#4-plan-assembly). [Centre lines](centre-lines.md) gives the middle of
+a narrow part of a shape, which automatic digitizing sews along.
 
 ## The generator contract
 
