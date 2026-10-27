@@ -12,7 +12,7 @@ safe, and means the docs images regenerated in CI match the ones on a contributo
 |---|---|---|
 | Hash map iteration order | No `HashMap`/`HashSet` in engine, formats, render, params or adapters' output paths; use `BTreeMap`, `BTreeSet`, `IndexMap` or sorted `Vec` | `clippy::disallowed_types` in `clippy.toml` |
 | Platform `libm` (`sin`, `cos`, `atan2`, `exp`, `log`, `powf` and their kin differ by last bits across OSes, and `powi`'s precision varies even between calls) | Call transcendental functions only through `stitchcraft_core::math`, which uses the pure-Rust `libm` crate, and square by multiplying | `clippy::disallowed_methods` on `f64::sin` & co., and on the `f32` ones |
-| Which side of a line a point lies on: a rounded cross product can give the wrong sign for points nearly in line | The [offset curves](algorithms/offset.md) decide it with `stitchcraft_core::exact::side`, which is exact ([below](#exact-orientation)) | unit tests against exact integer arithmetic |
+| Which side of a line a point lies on, or of a circle: rounded, the answer comes out wrong for some points nearly on the line or the circle | `stitchcraft_core::exact::side` gives it exactly for the [offset curves](algorithms/offset.md), and `exact::incircle` for the [centre lines](algorithms/centre-lines.md)' triangulation ([below](#exact-orientation)) | unit tests against exact integer arithmetic |
 | Randomness | Only `stitchcraft_core::rng::SplitMix64`, seeded per element from `random_seed` or a hash of the element id, with the OS's randomness and the time kept out | `clippy::disallowed_types` on `RandomState`, `SystemTime` and `Instant`; `deny.toml` lets `rand` and `getrandom` in only through the property tests' proptest |
 | Floating-point contraction (FMA) | Rust does not contract `a * b + c` implicitly, and we never call `mul_add` | `clippy::disallowed_methods` on `f64::mul_add` and `f32::mul_add`, everywhere |
 | Parallelism | Library crates run on the caller's thread alone. The parallel planning that the [engine pipeline](engine-pipeline.md#7-incremental-and-parallel-planning) plans for the command line joins its results in document order | `clippy::disallowed_methods` on `std::thread::spawn` and its kin |
@@ -32,6 +32,12 @@ sums and products of J. R. Shewchuk's *Adaptive Precision Floating-Point Arithme
 Geometric Predicates* (1997). Where both of its products are 0, as for points level or upright with each
 other, the cross product is exactly 0 without that sum, since far from underflow a product is 0 only where
 a factor is. It uses only `+`, `−` and `×`, and every platform gets the same answer, which is the true one.
+
+`stitchcraft_core::exact::incircle` decides in the same way whether a point lies inside the circle through 3
+others. Its answer is the sign of a 4 × 4 determinant. That is computed in plain floating point when it lies
+farther from zero than Shewchuk's bound on its error, and exactly otherwise. A Delaunay triangulation that
+flips its edges by a rounded test can flip one edge back and forth forever, and one built on the exact test
+stops.
 
 ## The seeded PRNG
 
