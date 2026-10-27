@@ -258,8 +258,8 @@ rules.
    0.1 mm wide cross, they overlap.
 2. **A line after the fill it borders.** A satin column or a line that touches a fill without overlapping
    it sews after the fill and covers its edge, and the fill reaches under a column
-   ([Neighbours](#neighbours)). Rule 1 comes first. A line that other elements it overlaps hold before the
-   fill keeps its place.
+   ([Neighbours](#neighbours)). Rule 1 comes first. A line that rule 1 already sews before the fill, through
+   the shapes it overlaps, keeps its place.
 3. **Few thread changes.** The next element has the thread that is sewing, as long as an element of that
    thread is free to sew: every element that must sew before it has. Otherwise the thread changes to that
    of the first free element in paint order. Threads are the same when their colours are, as plan assembly
