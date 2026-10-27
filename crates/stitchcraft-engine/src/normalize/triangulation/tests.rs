@@ -73,7 +73,9 @@ fn checked(part: &Polygon, longest: f64) -> Triangulation {
 }
 
 #[test]
-fn a_square_is_2_triangles() {
+fn a_triangle_is_1_triangle_and_a_square_2() {
+    let triangle = part(&[(0.0, 0.0), (4.0, 0.0), (0.0, 3.0)], &[]);
+    assert_eq!(checked(&triangle, 100.0).triangles.len(), 1);
     let square = part(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)], &[]);
     let triangulation = checked(&square, 100.0);
     assert_eq!(triangulation.points.len(), 4);
@@ -152,6 +154,17 @@ fn a_part_of_fewer_than_3_points_has_no_triangles() {
 }
 
 #[test]
+fn the_box_round_a_part_holds_it_wherever_it_lies() {
+    // A part below and left of the origin, and a part all at one point on whole millimetres, where rounding
+    // the box's corners outwards adds nothing: the box has room round each on every side.
+    let square = part(&[(-10.0, -10.0), (-5.0, -10.0), (-5.0, -5.0), (-10.0, -5.0)], &[]);
+    assert_eq!(checked(&square, 100.0).triangles.len(), 2);
+    let dot = Polygon { outline: vec![p(1.0, 1.0); 4], holes: Vec::new() };
+    let one_point = Triangulation { points: vec![p(1.0, 1.0)], triangles: Vec::new() };
+    assert_eq!(triangulate(&dot, 1.0, &mut meter()), Ok(Ok(one_point)));
+}
+
+#[test]
 fn the_work_is_charged() {
     let square = part(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)], &[]);
     let mut small = Budget { max_stitches: 10, max_work: 50 }.meter();
@@ -220,6 +233,15 @@ fn an_edge_from_a_corner_of_the_box_is_found() {
             assert!(mesh.edge(a, b, &mut meter()).unwrap().is_some(), "{a} {b}");
         }
     }
+    // 2 points that no triangle has both of share no edge, a corner of the box among them: the point at
+    // (0, 0) cut the box's diagonal from (-2, -2) to (3, 3).
+    for a in 0..mesh.points.len() {
+        for b in (0..mesh.points.len()).filter(|&b| b != a) {
+            if !mesh.tris.iter().any(|tri| tri.v.contains(&a) && tri.v.contains(&b)) {
+                assert_eq!(mesh.edge(a, b, &mut meter()), Ok(None), "{a} {b}");
+            }
+        }
+    }
     for (from, to) in [(ids[0], ids[1]), (ids[1], ids[0])] {
         let mut made = mesh.clone();
         made.constrain(from, to, &mut meter()).unwrap();
@@ -231,9 +253,10 @@ fn an_edge_from_a_corner_of_the_box_is_found() {
 fn a_point_on_the_segment_beside_its_start_cuts_it() {
     // b lies on the segment from a to c, and is a corner of the triangles round a: the walk round a meets b
     // first as the one corner of a triangle or as the other, by where it starts, and the segment is made as 2
-    // edges through b, either way round and mirrored.
-    for (sx, sy) in [(1.0, 1.0), (1.0, -1.0), (-1.0, 1.0), (-1.0, -1.0)] {
-        let points = [(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (1.0, 1.0), (1.0, -1.0)].map(|(x, y)| (x * sx, y * sy));
+    // edges through b, either way round, mirrored, and along either axis.
+    for (sx, sy, upright) in [(1.0, 1.0), (1.0, -1.0), (-1.0, 1.0), (-1.0, -1.0)].into_iter().flat_map(|(x, y)| [(x, y, false), (x, y, true)]) {
+        let along = |(x, y): (f64, f64)| if upright { (y * sy, x * sx) } else { (x * sx, y * sy) };
+        let points = [(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (1.0, 1.0), (1.0, -1.0)].map(along);
         let (mesh, ids) = mesh_of(&points);
         for (from, to) in [(ids[0], ids[2]), (ids[2], ids[0])] {
             let mut made = mesh.clone();

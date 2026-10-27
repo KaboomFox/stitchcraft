@@ -500,6 +500,35 @@ mod tests {
         assert!(rounded > 100, "{rounded}");
     }
 
+    #[test]
+    fn a_far_point_and_3_near_ones_are_decided_exactly() {
+        // A circle 46 m across through the origin, its tangent there at 45°, the far point across it, and 3
+        // points within 32 mm of the origin, where floats are fine enough that the fourth lies as near the
+        // circle as the plain determinant's error. Each cross product of the near points' offsets is the small
+        // difference of 2 large products, whose rounding error times the far point's squared offset is most of
+        // that error. With the far point first, second or third, a different term of the error bound has to
+        // hold it alone.
+        let mut rng = SplitMix64::new(20_261_030);
+        let half = 16_384.0;
+        // The point of the circle round (half, −half) whose x + y is `along`: its x − y is the smaller root of
+        // v² − 4·half·v + along², written so that it doesn't cancel.
+        let on = |along: f64| {
+            let across = along * along / (2.0 * half + (4.0 * half * half - along * along).sqrt());
+            p((along + across) / 2.0, (along - across) / 2.0)
+        };
+        let far = p(2.0 * half, -2.0 * half);
+        let mut wrong_plain = 0;
+        for _ in 0..2_000 {
+            let [b, c, d] = [rng.next_in(15.0, 45.0), rng.next_in(-45.0, -15.0), rng.next_in(-30.0, 30.0)].map(on);
+            let truth = incircle_of_whole_numbers([far, b, c, d]);
+            assert_eq!(incircle(far, b, c, d), truth, "{:?}", [far, b, c, d]);
+            assert_eq!(incircle(b, c, far, d), truth, "{:?}", [far, b, c, d]);
+            assert_eq!(incircle(c, far, b, d), truth, "{:?}", [far, b, c, d]);
+            wrong_plain += usize::from(plain_incircle(far, b, c, d) != truth);
+        }
+        assert!(wrong_plain > 100, "{wrong_plain}");
+    }
+
     /// The in-circle determinant's sign in plain floating point.
     fn plain_incircle(a: Point, b: Point, c: Point, d: Point) -> Circle {
         let o = |q: Point| (q.x() - d.x(), q.y() - d.y());
