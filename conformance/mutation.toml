@@ -4,7 +4,7 @@
 
 [missed]
 stitchcraft-cli = 23
-stitchcraft-core = 4
+stitchcraft-core = 5
 stitchcraft-engine = 45
 stitchcraft-formats = 46
 stitchcraft-params = 0
@@ -106,6 +106,12 @@ file = "crates/stitchcraft-core/src/exact.rs"
 mutant = "replace * with + in side"
 line = "let bound = ERROR_BOUND * (left.abs() + right.abs());"
 why = "the bound only decides when the exact sum is worked out: a bound of at least |left| + |right|, which the plain determinant never exceeds, sends every case to the exact sum, which gives the same signs"
+
+[[equivalent]]
+file = "crates/stitchcraft-core/src/exact.rs"
+mutant = "replace > with == in incircle"
+line = "let sign = if det.abs() > INCIRCLE_BOUND * permanent { det } else { exact_incircle(a, b, c, d) };"
+why = "the exact sum gives every sign the plain determinant gives beyond its error bound, so sending those cases to it changes only the time taken. The plain sign is then taken only where the determinant equals the bound exactly: at 0 the permanent is 0 too, every product 0, and the exact sum finds 0 as well; elsewhere the bound, an upper bound on the rounding error with room to spare, still holds the error"
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/normalize/offset/mod.rs"
