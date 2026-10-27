@@ -447,6 +447,17 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_011_a_design_sorts_its_threads_as_its_reading_asks_and_moved_still_does() {
+        let design = Design::new(vec![element("a", line(p(0.0, 0.0), p(3.0, 1.0)))], DesignSettings::default()).unwrap();
+        assert!(!design.sort_colours, "a design leaves it off");
+        let sorted = design.clone().read_as(Reading { sort_colours: true, ..Reading::default() });
+        // The design as it was, but sorting its threads, and moved it still sorts them.
+        assert_eq!(Design { sort_colours: false, ..sorted.clone() }, design);
+        assert!(sorted.sort_colours && sorted.moved([1.0, 1.0]).unwrap().sort_colours);
+        assert!(!sorted.read_as(Reading::default()).sort_colours);
+    }
+
+    #[test]
     fn a_design_moved_has_every_point_moved_and_nothing_else_changed() {
         let curve = Path {
             subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Cubic(p(0.0, -5.0), p(10.0, 5.0), p(10.0, 0.0))], closed: true }],

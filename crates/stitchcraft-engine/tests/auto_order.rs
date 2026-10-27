@@ -107,6 +107,15 @@ fn req_auto_010_a_line_sews_after_the_fill_it_borders() {
     let (ids, said) = sewn(vec![column, running, square("square", (0.0, 0.0), 10.0, &RED)]);
     assert_eq!(ids, ["square", "running", "column"]);
     assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 1."]);
+    // A line drawn after a square, along its top edge: blue is the thread sewing, after a blue square far
+    // away, but the line waits for the square it borders.
+    let (ids, said) = sewn(vec![
+        square("far", (100.0, 0.0), 10.0, &BLUE),
+        square("square", (0.0, 0.0), 10.0, &RED),
+        line("line", &[(0.0, 10.25), (10.0, 10.25)], 0.5, &BLUE),
+    ]);
+    assert_eq!(ids, ["far", "square", "line"]);
+    assert!(said.is_empty(), "{said:?}");
     // A line drawn first across the square's corner, 3.5 mm from it, has a box that meets the square's, but
     // it borders nothing and keeps its place.
     let (ids, said) = sewn(vec![line("line", &[(20.0, 5.0), (5.0, 20.0)], 0.5, &BLUE), square("square", (0.0, 0.0), 10.0, &RED)]);
