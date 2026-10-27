@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use stitchcraft_engine::design::Reading;
 use stitchcraft_plan::FormatId;
 use stitchcraft_render::{Settings, Style};
 
@@ -80,10 +81,30 @@ pub struct PlanArgs {
     /// written.
     #[arg(long)]
     pub report: Option<PathBuf>,
+    /// How the design is read.
+    #[command(flatten)]
+    pub reading: ReadingArgs,
+}
+
+/// How `stitch plan` and `stitch bug-report` read a design: the switches both take, which make its
+/// [`Reading`].
+#[derive(Debug, Default, Args)]
+pub struct ReadingArgs {
     /// Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by
     /// its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them.
     #[arg(long)]
     pub auto: bool,
+    /// Sew the shapes with settings in the order StitchCraft chooses too, as --auto sews the shapes it
+    /// digitizes: shapes that overlap keep their paint order, and each thread then sews as long as it can,
+    /// the nearest shape next (docs/src/design/image-to-embroidery.md).
+    #[arg(long)]
+    pub sort_colours: bool,
+}
+
+impl From<&ReadingArgs> for Reading {
+    fn from(args: &ReadingArgs) -> Reading {
+        Reading { auto: args.auto, sort_colours: args.sort_colours }
+    }
 }
 
 /// `stitch bug-report`.
@@ -94,7 +115,7 @@ pub struct BugReportArgs {
     pub design: Option<PathBuf>,
     /// Replay this bundle instead: plan its design again, with the profile and format it names, and say
     /// whether everything comes out the same.
-    #[arg(long, conflicts_with_all = ["design", "output", "profile", "format", "says", "auto"])]
+    #[arg(long, conflicts_with_all = ["design", "output", "profile", "format", "says", "auto", "sort_colours"])]
     pub replay: Option<PathBuf>,
     /// The bundle to write; by default next to the design, as DESIGN.bug-report.json.
     #[arg(long, short)]
@@ -110,10 +131,9 @@ pub struct BugReportArgs {
     /// What goes wrong, in your words; it goes into the bundle.
     #[arg(long)]
     pub says: Option<String>,
-    /// Digitize automatically the shapes that have no settings: StitchCraft chooses the stitches of each by
-    /// its width (docs/src/design/image-to-embroidery.md). A shape with settings is left to them.
-    #[arg(long)]
-    pub auto: bool,
+    /// How the design is read.
+    #[command(flatten)]
+    pub reading: ReadingArgs,
 }
 
 /// `stitch testsheet`.

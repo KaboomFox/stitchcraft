@@ -114,7 +114,8 @@ pub fn read(bytes: &[u8], budget: &Budget) -> Result<VectorCraft, Diagnostic> {
 
 /// The design in the `.vectorcraft` file `bytes`, read within `budget` as `reading` asks: with `auto`, an
 /// object without StitchCraft effects, its own or a group's or a layer's around it, is an automatic element
-/// (`REQ-AUTO-001`). Fails as [`read`] does.
+/// (`REQ-AUTO-001`), and with `sort_colours` every element sews in the order automatic digitizing chooses
+/// (`REQ-AUTO-011`). Fails as [`read`] does.
 pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<VectorCraft, Diagnostic> {
     let mut meter = budget.meter();
     let json = container::json(bytes, &mut meter)?;
@@ -132,7 +133,7 @@ pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Vect
     }
     let mut warnings = reader.warnings;
     warnings.extend(unread);
-    let design = Design::new(reader.elements, kept.settings)?;
+    let design = Design::new(reader.elements, kept.settings)?.read_as(reading);
     Ok(VectorCraft { design, machine: kept.machine, warnings })
 }
 

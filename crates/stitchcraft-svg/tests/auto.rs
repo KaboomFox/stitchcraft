@@ -20,7 +20,7 @@ fn document(shapes: &str) -> String {
 
 /// `document` read with `--auto` or without.
 fn read(document: &str, auto: bool) -> Svg {
-    read_with(document.as_bytes(), &Budget::DEFAULT, Reading { auto }).unwrap()
+    read_with(document.as_bytes(), &Budget::DEFAULT, Reading { auto, ..Reading::default() }).unwrap()
 }
 
 /// Each element's id, and whether it is automatic.

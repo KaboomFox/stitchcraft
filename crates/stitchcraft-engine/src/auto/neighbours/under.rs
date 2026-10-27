@@ -90,7 +90,9 @@ fn beside(shapes: &mut Shapes, index: usize, meter: &mut Meter) -> Result<Option
     let (mut covering, mut touching) = (Vec::new(), Vec::new());
     for later in index + 1..shapes.len() {
         meter.charge(1)?;
-        if !shapes.bounds(later).is_some_and(|other| near(&bounds, TOUCHING, &other)) {
+        // A line goes over the area, which is sewn whole under it and reaches under none, so what it paints,
+        // which only the order needs, isn't looked for.
+        if shapes.kind(later) == Some(Kind::Line) || !shapes.bounds(later).is_some_and(|other| near(&bounds, TOUCHING, &other)) {
             continue;
         }
         if let Some((Kind::Area, parts)) = shapes.paint(later) {

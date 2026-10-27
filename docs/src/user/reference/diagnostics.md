@@ -79,6 +79,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0904`](#sc-i0904) | Info | Areas reach under the shapes sewn after them |
 | [`SC-I0905`](#sc-i0905) | Info | Speck merged into a neighbour |
 | [`SC-W0906`](#sc-w0906) | Warning | Background left out |
+| [`SC-I0907`](#sc-i0907) | Info | Elements sewn in an order of their own |
 
 ## SC-E0004
 
@@ -952,8 +953,9 @@ satin column or a line sewn after an area goes over it, and the area is sewn who
 The message counts the areas that reach under others and those cut away. An area that the areas sewn
 after it cover whole sews nothing, and the message names it. It also names an area whose neighbours
 need more work to find than the budget allows it, which neither reaches under them nor is cut away,
-and a satin column whose area needs more, which the areas before it don't reach under. To sew a shape
-as it is drawn, give it settings: in VectorCraft, apply a StitchCraft effect to it.
+and a satin column whose area needs more, which the areas before it don't reach under, and which keeps
+its place in paint order beside the shapes near it. To sew a shape as it is drawn, give it settings: in
+VectorCraft, apply a StitchCraft effect to it.
 
 ## SC-I0905
 
@@ -981,3 +983,21 @@ allows is sewn, and the message says so.
 
 To sew it, give it settings: in VectorCraft, apply a StitchCraft effect to it. Ignore White in
 VectorCraft's Image Trace leaves a white background out of the trace.
+
+## SC-I0907
+
+**Info** — Elements sewn in an order of their own
+
+`--auto` sews the automatic elements in an order of its own, and `--sort-colours` every element.
+Shapes that overlap as drawn keep their paint order, the lower one first, and a satin column or a
+line that borders a fill sews after it, over its edge. Within those rules each thread sews as long
+as an element of it is free to sew, and the next element is the nearest. Elements with settings keep
+their order among themselves unless `--sort-colours` is given, and nothing moves across a stop.
+
+The message says how many thread changes the order has, and how many paint order has. It also names
+an element whose neighbours need more work to find than the budget allows, which keeps its place in
+paint order as an element with a stop after it does, and a line whose paint can't be found, which
+keeps its place beside the shapes near it. SC-I0904 names a satin column whose paint can't be found.
+And it names the elements left in paint order when choosing the order needs more work than the budget
+allows. To keep shapes in their paint order among themselves, give them settings and leave
+`--sort-colours` off: in VectorCraft, apply a StitchCraft effect to each.

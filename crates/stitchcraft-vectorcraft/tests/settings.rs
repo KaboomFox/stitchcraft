@@ -24,7 +24,7 @@ fn keeping(document: &[u8], id: &str, data: &Value) -> Vec<u8> {
 
 /// `document` read, with `--auto` or without.
 fn read(document: &[u8], auto: bool) -> VectorCraft {
-    read_with(document, &Budget::DEFAULT, Reading { auto }).unwrap()
+    read_with(document, &Budget::DEFAULT, Reading { auto, ..Reading::default() }).unwrap()
 }
 
 /// Settings with a shortest jump of 10 mm and a narrowest satin stroke of 4 mm.

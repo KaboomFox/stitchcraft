@@ -1,7 +1,7 @@
 //! The engine's input: a design, independent of the host it came from.
 //!
 //! Hosts (the SVG adapter, the VectorCraft adapter) translate their documents into a [`Design`]: elements
-//! in stitching order, each with its geometry in millimetres (y down), a thread and its parameters. The
+//! in paint order, each with its geometry in millimetres (y down), a thread and its parameters. The
 //! engine never sees a host document, so every host gets the same stitches for the same design
 //! (`docs/src/design/data-model.md`).
 //!
@@ -192,6 +192,9 @@ pub struct Element {
 pub struct Reading {
     /// Whether each shape without settings is an [automatic](Element::automatic) element (`--auto`).
     pub auto: bool,
+    /// Whether the design sews every element in the order automatic digitizing chooses
+    /// ([`Design::sort_colours`], `--sort-colours`), which the reader passes on to it.
+    pub sort_colours: bool,
 }
 
 /// Settings for the whole design. Ink/Stitch keeps them in the document. The SVG adapter reads the
@@ -303,12 +306,18 @@ pub const SETTINGS: [Setting; 3] = [
     },
 ];
 
-/// A design: elements in stitching order (the host's paint order, bottom first).
+/// A design: elements in the host's paint order, bottom first, which is the order they sew in unless
+/// automatic digitizing chooses another (`crate::auto`).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Design {
     elements: Vec<Element>,
     /// Settings for the whole design.
     pub settings: DesignSettings,
+    /// Whether every element sews in the order automatic digitizing chooses for automatic elements, its
+    /// elements with settings too (`--sort-colours`, `REQ-AUTO-011`): what overlaps keeps its paint order,
+    /// and each thread then sews as long as it can. Without it, the elements with settings keep their
+    /// order among themselves. [`Design::new`] leaves it off, and a reader sets it as its [`Reading`] asks.
+    pub sort_colours: bool,
 }
 
 impl Design {
@@ -342,10 +351,16 @@ impl Design {
             let message = "The design's collapse length, shortest stitch or narrowest satin stroke is negative.";
             return Err(Diagnostic::new(Code::InternalCheckFailed, message));
         }
-        Ok(Design { elements, settings })
+        Ok(Design { elements, settings, sort_colours: false })
     }
 
-    /// The elements, in stitching order.
+    /// The design, its elements sewing in the order `reading` asks for: the design as it is, with
+    /// [`Design::sort_colours`] as the reading says.
+    pub fn read_as(self, reading: Reading) -> Design {
+        Design { sort_colours: reading.sort_colours, ..self }
+    }
+
+    /// The elements, in the host's paint order.
     pub fn elements(&self) -> &[Element] {
         &self.elements
     }
@@ -389,7 +404,7 @@ impl Design {
             stop_position: self.settings.stop_position.map(point).transpose()?,
             ..self.settings
         };
-        Design::new(elements.collect::<Result<_, Diagnostic>>()?, settings)
+        Ok(Design { sort_colours: self.sort_colours, ..Design::new(elements.collect::<Result<_, Diagnostic>>()?, settings)? })
     }
 }
 

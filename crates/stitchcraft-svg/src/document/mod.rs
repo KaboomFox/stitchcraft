@@ -92,7 +92,8 @@ pub fn read(bytes: &[u8], budget: &Budget) -> Result<Svg, Diagnostic> {
 }
 
 /// The design in the SVG file `bytes`, read within `budget` as `reading` asks: with `auto`, a shape with no
-/// `inkstitch:` attribute is an automatic element (`REQ-AUTO-001`). Fails as [`read`] does.
+/// `inkstitch:` attribute is an automatic element (`REQ-AUTO-001`), and with `sort_colours` every element
+/// sews in the order automatic digitizing chooses (`REQ-AUTO-011`). Fails as [`read`] does.
 pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Svg, Diagnostic> {
     let text = text::decode(bytes)?;
     text::check_entities(&text)?;
@@ -103,7 +104,8 @@ pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Svg,
         roxmltree::Error::NodesLimitReached => unreadable(format!("The file has more than {MAX_NODES} XML nodes, more than StitchCraft reads.")),
         e => unreadable(format!("The file is not well-formed XML: {e}.")),
     })?;
-    Reader::new(budget, reading).read(&doc)
+    let Svg { design, warnings } = Reader::new(budget, reading).read(&doc)?;
+    Ok(Svg { design: design.read_as(reading), warnings })
 }
 
 /// What an element's children are drawn with.
