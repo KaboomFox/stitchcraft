@@ -9,8 +9,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   through. `stitchcraft_core::exact::incircle` decides exactly whether a point lies inside the circle
   through 3 others. The engine cuts a part of a region into the triangles of its constrained Delaunay
   triangulation, which have every edge of its outline and holes among their edges
-  (`normalize::triangulation`). Stitches stay as they were until the second part sews narrow parts along
-  their centre lines.
+  (`normalize::triangulation`). Points 4 or more on one circle, as a square's corners are, are cut into
+  triangles the same way whatever order they come in. Stitches stay as they were until the second part sews
+  narrow parts along their centre lines.
 
 - M13.3: the sewing order. With `--auto`, the automatic elements sew in an order of their own, chosen after
   specks are merged and before areas reach under their neighbours (`REQ-AUTO-010`, `SC-I0907`).

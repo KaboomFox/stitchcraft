@@ -151,6 +151,9 @@ fn random_stars_with_holes() {
 fn a_part_of_fewer_than_3_points_has_no_triangles() {
     let dot = Polygon { outline: vec![p(1.0, 1.0), p(1.0, 1.0)], holes: Vec::new() };
     assert_eq!(triangulate(&dot, 1.0, &mut meter()), Ok(Ok(Triangulation::default())));
+    // Nor has a line there and back, each way a piece no longer than the longest: its ends are its points.
+    let line = Polygon { outline: vec![p(0.0, 0.0), p(1.0, 0.0), p(0.0, 0.0)], holes: Vec::new() };
+    assert_eq!(triangulate(&line, 1.0, &mut meter()), Ok(Ok(Triangulation::default())));
 }
 
 #[test]
@@ -162,6 +165,92 @@ fn the_box_round_a_part_holds_it_wherever_it_lies() {
     let dot = Polygon { outline: vec![p(1.0, 1.0); 4], holes: Vec::new() };
     let one_point = Triangulation { points: vec![p(1.0, 1.0)], triangles: Vec::new() };
     assert_eq!(triangulate(&dot, 1.0, &mut meter()), Ok(Ok(one_point)));
+}
+
+/// The triangles of `triangulation`, each as its corners' coordinates from its least corner on, in order: the
+/// same for the same triangles, however they are numbered.
+fn cut(points: &[Point], triangles: impl Iterator<Item = [usize; 3]>) -> Vec<[(u64, u64); 3]> {
+    let mut cut: Vec<[(u64, u64); 3]> = triangles
+        .map(|corners| {
+            let at = corners.map(|i| (points[i].x().to_bits(), points[i].y().to_bits()));
+            let least = (0..3).min_by_key(|&k| at[k]).unwrap();
+            [at[least], at[(least + 1) % 3], at[(least + 2) % 3]]
+        })
+        .collect();
+    cut.sort_unstable();
+    cut
+}
+
+#[test]
+fn the_triangles_are_the_same_whatever_point_the_outline_starts_at() {
+    // Parts with 4 or more points on one circle that holds none: a square, a strip cut into pieces as long as
+    // it is wide, regular polygons, a ring and a strip with round ends. The Delaunay test can't choose between
+    // the ways such points can be cut into triangles, and the tie-break chooses one, whatever order the points
+    // go in.
+    let polygon = |x: f64, r: f64, n: usize, turn: f64| -> Vec<(f64, f64)> {
+        (0..n)
+            .map(|i| {
+                let (sin, cos) = sin_cos(std::f64::consts::TAU * (i as f64 + turn) / n as f64);
+                (x + r * cos, r * sin)
+            })
+            .collect()
+    };
+    let mut round = polygon(0.0, 0.4, 24, 0.0)[6..=18].to_vec();
+    round.extend(polygon(9.2, 0.4, 24, 0.0)[18..].iter().chain(&polygon(9.2, 0.4, 24, 0.0)[..=6]));
+    type Ring = Vec<(f64, f64)>;
+    let shapes: [(Ring, Vec<Ring>, f64); 6] = [
+        (vec![(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)], Vec::new(), 100.0),
+        (vec![(0.0, 0.0), (6.0, 0.0), (6.0, 1.0), (0.0, 1.0)], Vec::new(), 1.0),
+        (polygon(0.0, 5.0, 8, 0.0), Vec::new(), 100.0),
+        (polygon(0.0, 5.0, 12, 0.0), Vec::new(), 2.0),
+        (polygon(0.0, 5.0, 16, 0.0), vec![polygon(0.0, 4.0, 16, 0.0)], 100.0),
+        (round, Vec::new(), 0.4),
+    ];
+    for (outline, holes, longest) in shapes {
+        let triangles = |outline: &[(f64, f64)], holes: &[Vec<(f64, f64)>]| {
+            let holes: Vec<&[(f64, f64)]> = holes.iter().map(Vec::as_slice).collect();
+            let found = checked(&part(outline, &holes), longest);
+            cut(&found.points, found.triangles.iter().map(|triangle| triangle.corners))
+        };
+        let first = triangles(&outline, &holes);
+        for start in 1..outline.len() {
+            let turned = |ring: &[(f64, f64)]| [&ring[start % ring.len()..], &ring[..start % ring.len()]].concat();
+            let holes: Vec<Vec<(f64, f64)>> = holes.iter().map(|hole| turned(hole)).collect();
+            assert_eq!(triangles(&turned(&outline), &holes), first, "{outline:?} from {start}");
+        }
+    }
+}
+
+#[test]
+fn points_on_one_circle_are_cut_the_same_whatever_order_they_go_in() {
+    // 5 points with whole coordinates on the circle of radius 5 round the origin, in each of their 120 orders:
+    // one cut of the mesh, the box's triangles with it.
+    let corners = [(5.0, 0.0), (3.0, 4.0), (-4.0, 3.0), (-3.0, -4.0), (4.0, -3.0)];
+    let mut first = None;
+    let mut order: Vec<usize> = (0..5).collect();
+    // Heap's algorithm, every order once.
+    let mut counts = [0; 5];
+    let mut i = 0;
+    loop {
+        let (mesh, _) = mesh_of(&order.iter().map(|&k| corners[k]).collect::<Vec<_>>());
+        let found = cut(&mesh.points, mesh.tris.iter().map(|tri| tri.v));
+        assert_eq!(first.get_or_insert_with(|| found.clone()), &found, "{order:?}");
+        while i < 5 && counts[i] >= i {
+            counts[i] = 0;
+            i += 1;
+        }
+        if i == 5 {
+            break;
+        }
+        order.swap(if i % 2 == 0 { 0 } else { counts[i] }, i);
+        counts[i] += 1;
+        i = 1;
+    }
+    // The tie-break raises the least point's lift the most, as if it lay a little further out: a square is cut
+    // along the diagonal that doesn't meet its least corner by x and then by y.
+    let (square, ids) = mesh_of(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]);
+    assert!(square.edge(ids[1], ids[3], &mut meter()).unwrap().is_some());
+    assert!(square.edge(ids[0], ids[2], &mut meter()).unwrap().is_none());
 }
 
 #[test]
@@ -223,7 +312,8 @@ fn a_point_already_there_is_that_point() {
 fn an_edge_from_a_corner_of_the_box_is_found() {
     // A point a micrometre above the edge from (0, 0) to (1, 0): in the Delaunay triangulation an edge from
     // a corner of the box runs to it across that edge, whose making flips it. The triangles round a corner of
-    // the box don't close round it, and each of its edges is found, so the edge is made either way round.
+    // the box don't close round it, and each of its edges is found from either end, so the edge is made
+    // either way round.
     let mut mesh = Mesh::boxed(p(0.0, 0.0), p(1.0, 1.0)).unwrap();
     let ids: Vec<usize> =
         [(0.0, 0.0), (1.0, 0.0), (0.5, 0.001), (0.5, 1.0)].iter().map(|&(x, y)| mesh.insert(p(x, y), &mut meter()).unwrap()).collect();
@@ -231,6 +321,7 @@ fn an_edge_from_a_corner_of_the_box_is_found() {
         for k in 0..3 {
             let (a, b) = (tri.corner(k + 1), tri.corner(k + 2));
             assert!(mesh.edge(a, b, &mut meter()).unwrap().is_some(), "{a} {b}");
+            assert!(mesh.edge(b, a, &mut meter()).unwrap().is_some(), "{b} {a}");
         }
     }
     // 2 points that no triangle has both of share no edge, a corner of the box among them: the point at
@@ -251,19 +342,56 @@ fn an_edge_from_a_corner_of_the_box_is_found() {
 
 #[test]
 fn a_point_on_the_segment_beside_its_start_cuts_it() {
-    // b lies on the segment from a to c, and is a corner of the triangles round a: the walk round a meets b
-    // first as the one corner of a triangle or as the other, by where it starts, and the segment is made as 2
-    // edges through b, either way round, mirrored, and along either axis.
+    // b lies on the segment from a to c, and is a corner of the triangles round a, as are the points on its
+    // line behind a and beyond c: the walk round a meets b first as the one corner of a triangle or as the
+    // other, by where it starts, and the segment is made as 2 edges through b, and no edge behind its start,
+    // either way round, mirrored, and along either axis.
     for (sx, sy, upright) in [(1.0, 1.0), (1.0, -1.0), (-1.0, 1.0), (-1.0, -1.0)].into_iter().flat_map(|(x, y)| [(x, y, false), (x, y, true)]) {
         let along = |(x, y): (f64, f64)| if upright { (y * sy, x * sx) } else { (x * sx, y * sy) };
-        let points = [(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (1.0, 1.0), (1.0, -1.0)].map(along);
+        let points = [(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (1.0, 1.0), (1.0, -1.0), (-1.0, 0.0), (3.0, 0.0)].map(along);
         let (mesh, ids) = mesh_of(&points);
-        for (from, to) in [(ids[0], ids[2]), (ids[2], ids[0])] {
+        for (from, to, behind) in [(ids[0], ids[2], ids[5]), (ids[2], ids[0], ids[6])] {
             let mut made = mesh.clone();
             made.constrain(from, to, &mut meter()).unwrap();
             for (a, b) in [(from, ids[1]), (ids[1], to)] {
                 let (t, k) = made.edge(a, b, &mut meter()).unwrap().unwrap();
                 assert!(made.tri(t).unwrap().is_fixed(k), "{points:?} {a} {b}");
+            }
+            let (t, k) = made.edge(behind, from, &mut meter()).unwrap().unwrap();
+            assert!(!made.tri(t).unwrap().is_fixed(k), "{points:?} {behind} {from}");
+        }
+    }
+}
+
+#[test]
+fn a_point_added_on_an_edge_keeps_the_edges_of_the_part_round_it() {
+    // Some of the sides of a quadrilateral made edges of the part, each set of them in turn, and a point added
+    // at the middle of its diagonal: the 2 triangles beside the diagonal are cut into 4, and each side made
+    // stays an edge of the part, from both of its triangles, while the other sides and the halves of the
+    // diagonal don't. The corners go in in each of their 8 orders round it, so that each side comes in each
+    // place of its triangle.
+    let corners = [(0.0, 0.0), (4.0, -1.0), (5.0, 3.0), (1.0, 4.0)];
+    for made in 1..16_u32 {
+        for (turn, reversed) in (0..4).flat_map(|turn| [(turn, false), (turn, true)]) {
+            let mut order: Vec<(f64, f64)> = (0..4).map(|k| corners[(k + turn) % 4]).collect();
+            if reversed {
+                order.reverse();
+            }
+            let (mut mesh, ids) = mesh_of(&order);
+            let at = |point: (f64, f64)| ids[order.iter().position(|&q| q == point).unwrap()];
+            let sides: Vec<(usize, usize)> = (0..4).filter(|k| made & (1 << k) != 0).map(|k| (at(corners[k]), at(corners[(k + 1) % 4]))).collect();
+            for &(a, b) in &sides {
+                mesh.constrain(a, b, &mut meter()).unwrap();
+            }
+            let diagonal = if mesh.edge(at(corners[0]), at(corners[2]), &mut meter()).unwrap().is_some() { (0, 2) } else { (1, 3) };
+            let (a, b) = (corners[diagonal.0], corners[diagonal.1]);
+            let middle = mesh.insert(p((a.0 + b.0) / 2.0, (a.1 + b.1) / 2.0), &mut meter()).unwrap();
+            for (i, tri) in mesh.tris.iter().enumerate() {
+                for k in 0..3 {
+                    let (from, to) = (tri.corner(k + 1), tri.corner(k + 2));
+                    let side = sides.iter().any(|&(a, b)| (a, b) == (from, to) || (b, a) == (from, to));
+                    assert_eq!(tri.is_fixed(k), side, "sides {made:#06b}, {order:?}: triangle {i}, {from} to {to}, middle {middle}");
+                }
             }
         }
     }
@@ -296,6 +424,10 @@ fn an_edge_from_a_point_to_itself_is_no_edge() {
     let before = mesh.clone().tris;
     mesh.constrain(ids[1], ids[1], &mut meter()).unwrap();
     assert_eq!(mesh.tris, before);
+    // Nor is one found. Round a corner of the box that both its triangles have, the walk turns both ways, and
+    // comes back through where it started: 3 steps, one more than there are triangles.
+    let boxed = Mesh::boxed(p(0.0, 0.0), p(1.0, 1.0)).unwrap();
+    assert_eq!(boxed.edge(0, 0, &mut meter()), Ok(None));
 }
 
 #[test]
@@ -328,8 +460,9 @@ fn edges_of_the_part_that_cross_are_a_bug() {
 #[test]
 fn a_part_whose_edges_cross_or_dont_close_is_a_bug() {
     // A ring whose hole pokes out through an edge of its outline, and a square with a spike of no width, an
-    // edge there and back: no region has either. The first's edges cross, and the second's spike is inside
-    // on one side and outside on the other, and the triangulation says it lost its shape.
+    // edge there and back, out of it or into it: no region has either. The first's edges cross, and the
+    // second's spike is inside on one side and outside on the other, and the triangulation says it lost its
+    // shape.
     let circle = |x: f64, r: f64, n: usize, turn: f64| -> Vec<(f64, f64)> {
         (0..n)
             .map(|i| {
@@ -340,11 +473,13 @@ fn a_part_whose_edges_cross_or_dont_close_is_a_bug() {
     };
     let poked = part(&circle(0.0, 1.0, 20, 0.5), &[&circle(0.4, 0.6, 40, 0.0)]);
     assert_eq!(triangulate(&poked, 0.4, &mut meter()), Ok(Err(Broken)));
-    let spiked = Polygon {
-        outline: [(0.0, 0.0), (0.0, 10.0), (5.0, 10.0), (5.0, 15.0), (5.0, 10.0), (10.0, 10.0), (10.0, 0.0), (0.0, 0.0)]
-            .map(|(x, y)| p(x, y))
-            .to_vec(),
-        holes: Vec::new(),
-    };
-    assert_eq!(triangulate(&spiked, 100.0, &mut meter()), Ok(Err(Broken)));
+    for tip in [15.0, 5.0] {
+        let spiked = Polygon {
+            outline: [(0.0, 0.0), (0.0, 10.0), (5.0, 10.0), (5.0, tip), (5.0, 10.0), (10.0, 10.0), (10.0, 0.0), (0.0, 0.0)]
+                .map(|(x, y)| p(x, y))
+                .to_vec(),
+            holes: Vec::new(),
+        };
+        assert_eq!(triangulate(&spiked, 100.0, &mut meter()), Ok(Err(Broken)), "{tip}");
+    }
 }
