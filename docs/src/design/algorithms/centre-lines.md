@@ -83,6 +83,10 @@ has 2 chords, a junction, where 3 strips meet, when it has 3, and an end when it
   that lies at least as far away as the junction triangle's longest edge, or to its end if none does. The 2
   whose directions are most nearly opposite run on.
 - **Rings.** A part that is a ring of strips, such as a letter O, has a closed line.
+- **Each piece once.** A line that would run on along a piece of the centre line that another line has
+  sewn ends there instead, so no piece is sewn twice. At the waist of a figure 8, each junction may pair
+  the waist with a different loop. The line round one loop then runs on through the waist and closes, and
+  the line round the other loop ends where it comes back to the waist.
 - **Order.** The lines sew one after another, the longest first. The next one is the line with an end
   nearest where the last one ended, sewn from that end. A closed line starts at its point nearest.
 
