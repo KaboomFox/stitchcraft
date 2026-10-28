@@ -348,14 +348,15 @@ mod tests {
         // A part narrower than a width everywhere covers at most its perimeter times half the width, plus π
         // times that half's square for each hole past the first, and one that covers more is broad without
         // shrinking it. With a narrowest satin stroke of 6 mm, half of it is more than 1 mm: a strip 4 mm wide
-        // covers more than its perimeter over that half, and a plate pierced by 6 × 6 holes 0.6 mm across,
-        // 4.5 mm apart, covers more than its perimeter times the half plus π for each hole past the first,
-        // though no circle 6 mm across fits between its holes. Both are within the bound, and narrow.
+        // covers more than its perimeter over that half, and a plate pierced by 12 × 12 holes 0.6 mm across,
+        // 4.5 mm apart, though no circle 6 mm across fits between its holes, covers more than its perimeter
+        // times the half plus, for each hole past the first, π, the half's square, or π times the half. Both
+        // are within the bound, and narrow.
         let strip = outline(&[(0.0, -10.0), (30.0, -10.0), (30.0, -6.0), (0.0, -6.0)]);
-        let (side, apart) = (27.15, 4.525);
-        let holes = (0..36)
+        let (side, apart) = (54.3, 4.525);
+        let holes = (0..144)
             .map(|k| {
-                let (x, y) = ((f64::from(k % 6) + 0.5) * apart, (f64::from(k / 6) + 0.5) * apart);
+                let (x, y) = ((f64::from(k % 12) + 0.5) * apart, (f64::from(k / 12) + 0.5) * apart);
                 geom::closed(&circle(x, y, 0.3, 8, 0.5))
             })
             .collect();
@@ -364,6 +365,61 @@ mod tests {
         let sorted = sorted(&area, vec![strip.clone(), plate.clone()], Mm::new(6.0).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
         assert!(sorted.filled.is_empty() && sorted.said.is_empty(), "{sorted:?}");
         assert_eq!(sorted.narrow.iter().map(|narrow| &narrow.part).collect::<Vec<_>>(), [&strip, &plate]);
+    }
+
+    #[test]
+    fn a_part_of_1_square_millimetre_is_no_speck() {
+        // A strip 0.5 mm wide and 2 mm long, as large as a speck can't be: narrow, with a line along it.
+        let strip = outline(&[(0.0, 0.0), (2.0, 0.0), (2.0, 0.5), (0.0, 0.5)]);
+        assert_eq!(strip.area(), SMALLEST_AREA);
+        let sorted = sorted(&ElementId::new("area").unwrap(), vec![strip.clone()], Mm::new(1.5).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(sorted.narrow.iter().map(|narrow| &narrow.part).collect::<Vec<_>>(), [&strip]);
+    }
+
+    #[test]
+    fn a_parts_pieces_are_as_long_as_it_is_wide_on_average() {
+        // Twice its area over its perimeter: 24 / 41.2 for a strip 0.6 mm wide and 20 mm long, and the finest
+        // piece for a hairline.
+        let strip = outline(&[(0.0, 0.0), (20.0, 0.0), (20.0, 0.6), (0.0, 0.6)]);
+        assert!((piece(&strip) - 24.0 / 41.2).abs() < 1e-12, "{}", piece(&strip));
+        assert_eq!(piece(&outline(&[(0.0, 0.0), (20.0, 0.0), (20.0, 0.01), (0.0, 0.01)])), FINEST);
+    }
+
+    #[test]
+    fn the_grid_holds_each_edge_cut_into_pieces_no_longer_than_a_cell() {
+        // A star with a hole, its edges slanting every way: the pieces in the cells, each once, lie along the
+        // part's edges, end to end, no longer than a cell, and together as long as the edges.
+        let star: Vec<Point> = (0..14)
+            .map(|i| {
+                let (sin, cos) = sin_cos(std::f64::consts::TAU * f64::from(i) / 14.0);
+                let r = if i % 2 == 0 { 9.0 } else { 4.0 };
+                Point::new(r * cos, r * sin).unwrap()
+            })
+            .collect();
+        let part = Polygon { outline: geom::closed(&star), holes: vec![geom::closed(&circle(0.0, 0.0, 1.0, 9, 0.0))] };
+        for cell in [0.3, 0.7, 2.0] {
+            let edges = Edges::of(&part, cell, &mut Budget::DEFAULT.meter()).unwrap();
+            let key = |q: Point| (q.x().to_bits(), q.y().to_bits());
+            let pieces: BTreeMap<_, (Point, Point)> = edges.cells.values().flatten().map(|&(a, b)| ((key(a), key(b)), (a, b))).collect();
+            let mut length = 0.0;
+            for (a, b) in pieces.values() {
+                assert!(a.distance(*b) <= cell * (1.0 + 1e-12), "{a:?} {b:?} longer than {cell}");
+                let on = |q: Point| part.rings().flat_map(segments).any(|(u, v)| distance_to_segment(q, u, v) < 1e-9);
+                assert!(on(*a) && on(*b), "{a:?} {b:?} off the part's edges");
+                length += a.distance(*b);
+            }
+            assert!((length - perimeter(&part)).abs() < 1e-9, "{length} {}", perimeter(&part));
+        }
+    }
+
+    #[test]
+    fn a_parts_width_is_averaged_along_its_lines() {
+        // A strip 1 mm wide and a line from 0.1 mm off its edge to its middle and along it: 0.2 mm wide at its
+        // start and 1 mm after, each piece weighed by its length, the first 0.4 mm long and the second 1 mm.
+        let strip = outline(&[(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0)]);
+        let line = Line { points: [(5.0, 0.1), (5.0, 0.5), (6.0, 0.5)].map(|(x, y)| Point::new(x, y).unwrap()).to_vec(), closed: false };
+        let found = width(&strip, &[line], &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        assert!((found.get() - (0.4 * 0.6 + 1.0) / 1.4).abs() < 1e-12, "{found:?}");
     }
 
     #[test]
