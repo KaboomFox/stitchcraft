@@ -400,19 +400,26 @@ fn a_point_added_on_an_edge_keeps_the_edges_of_the_part_round_it() {
 #[test]
 fn an_edge_that_crosses_many_is_made_by_flipping_them_in_turn() {
     // Points either side of the segment from (0, 0) to (12, 0), in turn above and below it: the triangles
-    // between them make a strip that the segment crosses, and a flip can leave the edge it makes crossing
-    // the segment too, which is flipped again in its turn.
-    let mut points = vec![(0.0, 0.0), (12.0, 0.0)];
-    points.extend((1..12).map(|i| (f64::from(i), if i % 2 == 0 { 0.6 } else { -0.6 })));
-    let (mut mesh, ids) = mesh_of(&points);
-    mesh.constrain(ids[0], ids[1], &mut meter()).unwrap();
-    let (t, k) = mesh.edge(ids[0], ids[1], &mut meter()).unwrap().unwrap();
-    assert!(mesh.tri(t).unwrap().is_fixed(k));
-    // Every other edge either side of it is the same edge from both sides.
-    for (i, tri) in mesh.tris.iter().enumerate() {
-        for k in 0..3 {
-            if let Some(u) = tri.across(k) {
-                assert!(mesh.tri(u).unwrap().n.contains(&Some(i)), "{i} {u}");
+    // between them make a strip that the segment crosses.
+    let mut strip = vec![(0.0, 0.0), (12.0, 0.0)];
+    strip.extend((1..12).map(|i| (f64::from(i), if i % 2 == 0 { 0.6 } else { -0.6 })));
+    // Points scattered either side of the segment from (0, 0) to (10, 0). A flip makes the edge from
+    // (1, 0.75) to (6.5, -1.75), which crosses the segment too and is flipped again in its turn, and one
+    // makes the edge from (1, 0.75) to (6.5, 0.25), beside the segment though its line crosses it, which is
+    // left alone: once the segment is made, that edge's quadrilateral is not convex, and the flips would wait
+    // for it to be until their bound stopped them.
+    let scattered = [(0.0, 0.0), (10.0, 0.0), (6.5, 0.25), (1.0, 0.75), (2.75, 2.25), (6.5, -1.75), (0.75, -0.5)];
+    for points in [&strip[..], &scattered] {
+        let (mut mesh, ids) = mesh_of(points);
+        mesh.constrain(ids[0], ids[1], &mut meter()).unwrap();
+        let (t, k) = mesh.edge(ids[0], ids[1], &mut meter()).unwrap().unwrap();
+        assert!(mesh.tri(t).unwrap().is_fixed(k));
+        // Every other edge either side of it is the same edge from both sides.
+        for (i, tri) in mesh.tris.iter().enumerate() {
+            for k in 0..3 {
+                if let Some(u) = tri.across(k) {
+                    assert!(mesh.tri(u).unwrap().n.contains(&Some(i)), "{i} {u}");
+                }
             }
         }
     }
