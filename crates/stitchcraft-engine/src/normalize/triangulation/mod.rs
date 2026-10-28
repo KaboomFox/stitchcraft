@@ -21,8 +21,11 @@
 //! 3. **Inside.** The triangles round the box's corners lie outside the part, and crossing an edge of the
 //!    part goes in or out, so the triangles inside it are found by walking out from the box.
 //! 4. **Delaunay again.** The edges between triangles inside the part are flipped until each passes the
-//!    test. Lawson's flips reach the constrained Delaunay triangulation from any triangulation of a
-//!    polygon, so the triangles are the same whatever order the points came in.
+//!    test. Where 4 or more points lie on one circle that holds no other, the test can't choose how to cut
+//!    them into triangles, and a tie-break does, as if each point's squared distance from the origin were
+//!    raised by a vanishing amount of its own (a symbolic perturbation, after Edelsbrunner and Mücke 1990).
+//!    There is then one constrained Delaunay triangulation, which Lawson's flips reach from any
+//!    triangulation of a polygon, so the triangles are the same whatever order the points came in.
 //!
 //! Every question of where a point lies is decided exactly (`stitchcraft_core::exact`): flipping ends, and
 //! a part gives the same triangles on every platform. Every step costs a unit of work. A mesh that loses its

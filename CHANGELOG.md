@@ -10,10 +10,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - A part is that narrow when nothing of it is left once it is shrunk by half the width with the polygon
     buffer. A part smaller than 1 mm² stays a speck. The rest of the shape stays a tatami fill, and each
     narrow part's line sews after it, named `#2`, `#3` and so on.
-  - The centre line comes from a constrained Delaunay triangulation of the part (`REQ-AUTO-014`), built in
-    the engine with exact predicates (`stitchcraft_core::exact::incircle`). It joins the middles of the
-    chords, stops within a round end and runs on to a sharp point. Bumps of the outline and the corners
-    past sharp turns are left out, and at a junction the 2 straightest branches are one line.
+  - The centre line comes from a constrained Delaunay triangulation of the part (`REQ-AUTO-014`), built in the
+    engine with exact predicates (`stitchcraft_core::exact::incircle`). Points 4 or more on one circle, as a
+    square's corners are, are cut into triangles the same way whatever order they come in. It joins the
+    middles of the chords, stops within a round end and runs on to a sharp point. Bumps of the outline and the
+    corners past sharp turns are left out, and at a junction the 2 straightest branches are one line.
   - A narrow part's line paints the part to its neighbours. It sews after a fill it borders, and the areas
     sewn before it reach under it. One that the areas sewn after it cover whole sews nothing.
   - A running stitch that automatic digitizing makes, of a stroke or a narrow part, is a triple run from
