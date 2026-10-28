@@ -146,12 +146,23 @@ fn graph(points: &[((f64, f64), Option<f64>)], links: &[(usize, usize)]) -> Grap
 }
 
 #[test]
-fn req_auto_014_of_2_bumps_at_a_junction_the_shorter_is_left_out() {
-    // A junction with a branch 10 mm long and 2 bumps, 0.3 and 0.5 mm long. The shorter is left out first,
-    // and the junction, left with 2 branches, is a bend: the longer bump is the line's end.
-    let mut bumped = graph(&[((0.0, 0.0), Some(1.0)), ((10.0, 0.0), None), ((0.0, 0.3), None), ((0.0, -0.5), None)], &[(0, 1), (0, 2), (0, 3)]);
-    bumped.prune(&mut meter()).unwrap();
-    assert_eq!(bumped.links[0], [1, 3]);
+fn req_auto_014_a_junctions_bumps_are_left_out_the_shortest_first() {
+    // A junction 1 mm across with a branch 10 mm long and 2 bumps, 0.3 and 0.5 mm long, the one or the other
+    // found first: the shorter is left out, and the junction, left with 2 branches, is a bend, whose longer
+    // bump is the line's end. Of 2 bumps as long as each other, the one found first is left out.
+    let pruned = |bumps: [(f64, f64); 2]| {
+        let mut bumped = graph(&[((0.0, 0.0), Some(1.0)), ((10.0, 0.0), None), (bumps[0], None), (bumps[1], None)], &[(0, 1), (0, 2), (0, 3)]);
+        bumped.prune(&mut meter()).unwrap();
+        bumped.links[0].clone()
+    };
+    assert_eq!(pruned([(0.0, 0.3), (0.0, -0.5)]), [1, 3]);
+    assert_eq!(pruned([(0.0, 0.5), (0.0, -0.3)]), [1, 2]);
+    assert_eq!(pruned([(0.0, 0.4), (0.0, -0.4)]), [1, 3]);
+    // A bump reaches no further than twice the junction's longest edge: at a junction 0.5 mm across, a branch
+    // 1.5 mm long is no bump.
+    let mut long = graph(&[((0.0, 0.0), Some(0.5)), ((10.0, 0.0), None), ((-10.0, 0.0), None), ((0.0, 1.5), None)], &[(0, 1), (0, 2), (0, 3)]);
+    long.prune(&mut meter()).unwrap();
+    assert_eq!(long.links[0], [1, 2, 3]);
 }
 
 #[test]
@@ -164,6 +175,58 @@ fn req_auto_014_a_junctions_branches_are_paired_by_their_directions_alone() {
         &[(0, 1), (0, 2), (0, 3), (3, 4), (3, 5)],
     );
     assert_eq!(crossing.pairs(&mut meter()).unwrap().get(&0), Some(&(1, 3)));
+    // Junctions off the origin with 3 branches in random directions, 1.5 to 5 mm long: the pair is the 2 whose
+    // directions lie the widest angle apart.
+    let mut rng = SplitMix64::new(20_261_028);
+    for _ in 0..500 {
+        let centre = (rng.next_in(-20.0, 20.0), rng.next_in(-20.0, 20.0));
+        let turns: [f64; 3] = std::array::from_fn(|_| rng.next_in(0.0, std::f64::consts::TAU));
+        let ends = turns.map(|turn| {
+            let ((sin, cos), r) = (sin_cos(turn), rng.next_in(1.5, 5.0));
+            ((centre.0 + r * cos, centre.1 + r * sin), None)
+        });
+        let junction = graph(&[(centre, Some(1.0)), ends[0], ends[1], ends[2]], &[(0, 1), (0, 2), (0, 3)]);
+        let apart = |i: usize, j: usize| {
+            let turn = (turns[j] - turns[i]).rem_euclid(std::f64::consts::TAU);
+            turn.min(std::f64::consts::TAU - turn)
+        };
+        let widest = [(1, 2), (1, 3), (2, 3)].into_iter().max_by(|a, b| apart(a.0 - 1, a.1 - 1).total_cmp(&apart(b.0 - 1, b.1 - 1))).unwrap();
+        assert_eq!(junction.pairs(&mut meter()).unwrap().get(&0), Some(&widest), "{turns:?}");
+    }
+    // Branches that all run the same way pair the first 2; of 2 pairs as wide apart, the first found is the
+    // pair; and a branch of no length, which runs no way, pairs only where nothing else does.
+    let same_way = graph(&[((0.0, 0.0), Some(1.0)), ((2.0, 0.0), None), ((3.0, 0.0), None), ((4.0, 0.0), None)], &[(0, 1), (0, 2), (0, 3)]);
+    assert_eq!(same_way.pairs(&mut meter()).unwrap().get(&0), Some(&(1, 2)));
+    let fork = graph(&[((0.0, 0.0), Some(1.0)), ((2.0, 0.0), None), ((-2.0, 2.0), None), ((-2.0, -2.0), None)], &[(0, 1), (0, 2), (0, 3)]);
+    assert_eq!(fork.pairs(&mut meter()).unwrap().get(&0), Some(&(1, 2)));
+    let still = graph(&[((0.0, 0.0), Some(1.0)), ((0.0, 0.0), None), ((5.0, 0.0), None), ((-5.0, 0.1), None)], &[(0, 1), (0, 2), (0, 3)]);
+    assert_eq!(still.pairs(&mut meter()).unwrap().get(&0), Some(&(2, 3)));
+}
+
+#[test]
+fn req_auto_014_a_junctions_third_branch_is_a_line_of_its_own() {
+    // An H: 2 bars, each 10 mm long, with a junction at its middle, and a crossbar between the junctions. Each
+    // junction pairs its bar's halves, so a line runs along each bar, and the crossbar, which no end leads to,
+    // is a third line, from the first junction's third branch: one line, though its middle point comes first.
+    let h = graph(
+        &[
+            ((5.0, 5.0), None),
+            ((0.0, 5.0), Some(1.0)),
+            ((10.0, 5.0), Some(1.0)),
+            ((0.0, 0.0), None),
+            ((0.0, 10.0), None),
+            ((10.0, 0.0), None),
+            ((10.0, 10.0), None),
+        ],
+        &[(1, 3), (1, 4), (1, 0), (2, 5), (2, 6), (2, 0)],
+    );
+    let pairs = h.pairs(&mut meter()).unwrap();
+    let points = |line: &Line| line.points.iter().map(|q| (q.x(), q.y())).collect::<Vec<_>>();
+    let found: Vec<Vec<(f64, f64)>> = h.lines(&pairs, &mut meter()).unwrap().iter().map(points).collect();
+    assert_eq!(
+        found,
+        [vec![(0.0, 0.0), (0.0, 5.0), (0.0, 10.0)], vec![(10.0, 0.0), (10.0, 5.0), (10.0, 10.0)], vec![(0.0, 5.0), (5.0, 5.0), (10.0, 5.0)]]
+    );
 }
 
 #[test]
@@ -195,9 +258,10 @@ fn req_auto_014_ends_are_found_whatever_order_the_triangles_come_in() {
 #[test]
 fn req_auto_014_a_round_end_stops_the_line_within_half_its_width() {
     // Strips 0.8 mm wide and 10 mm long whose ends are half circles, wobbling by up to a micrometre or not,
-    // or half ellipses 0.6 and 1 mm long. Points on a circle can be cut into triangles any way, and many of
-    // those triangles are junctions, of which caps reach 2 sides. The line runs along the middle and stops
-    // where the circles on the chords no longer hold the end, 0.2 to 0.5 mm from it.
+    // or half ellipses 0.6 and 1 mm long. Points on a circle pass the Delaunay test cut into triangles in
+    // many ways, the tie-break choosing one, and many of those triangles are junctions, of which caps reach 2
+    // sides. The line runs along the middle and stops where the circles on the chords no longer hold the end,
+    // 0.2 to 0.5 mm from it.
     let mut rng = SplitMix64::new(20_261_027);
     for (wobble, long) in [(0.0, 0.4), (1e-3, 0.4), (0.0, 0.5), (0.0, 0.3)] {
         for n in [8_u32, 12, 24, 48] {
@@ -259,6 +323,12 @@ fn lines_sew_the_longest_first_then_the_nearest() {
     assert_eq!(sewn[1], line(&[(10.0, 1.0), (10.0, 5.0)], false));
     // From (10, 5), the ring's nearest point is (2, 3): it starts there.
     assert_eq!(sewn[2], line(&[(2.0, 3.0), (0.0, 3.0), (0.0, 1.0), (2.0, 1.0)], true));
+    // On a tie, the line found first: of 2 lines as long as each other, and of 2 ends as near.
+    let (first, second) = (line(&[(0.0, 0.0), (1.0, 0.0)], false), line(&[(5.0, 0.0), (6.0, 0.0)], false));
+    assert_eq!(ordered(vec![first.clone(), second.clone()], &mut meter()).unwrap(), [first, second]);
+    let (beside, ahead) = (line(&[(10.0, 1.0), (10.0, 2.0)], false), line(&[(11.0, 0.0), (12.0, 0.0)], false));
+    let sewn = ordered(vec![long.clone(), beside.clone(), ahead.clone()], &mut meter()).unwrap();
+    assert_eq!(sewn, [long, beside, ahead]);
 }
 
 #[test]
