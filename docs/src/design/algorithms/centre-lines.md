@@ -42,8 +42,12 @@ predicates below then take one product for each term of their sums.
 3. **Inside.** The triangles round the box's corners lie outside the part, and crossing an edge of the part
    goes in or out. The triangles inside it are then found by walking out from the box.
 4. **Delaunay again.** The edges between triangles inside the part are flipped until each passes the test.
-   Flipping reaches the constrained Delaunay triangulation from any triangulation of a polygon. The
-   triangles are then the same in whatever order the points went in.
+   Where 4 or more points lie on one circle with the other points outside it, as a square's corners do, more
+   than one cut of them into triangles passes the test, and a tie-break chooses one. Each point's lift, its
+   squared distance from the origin, counts as raised by a vanishing amount of its own, the least point's by x
+   and then y the most (a symbolic perturbation, after Edelsbrunner and Mücke 1990). No 4 points then lie on
+   one circle, and there is one constrained Delaunay triangulation, which flipping reaches from any
+   triangulation of a polygon. The triangles are then the same in whatever order the points went in.
 
 Each question of where a point lies, on which side of a line or inside which circle, is decided exactly
 (`stitchcraft_core::exact`, after Shewchuk 1997). Flipping then stops and every walk ends, and a part gives
@@ -58,3 +62,5 @@ the mesh would lose its shape, which is a bug that the triangulation reports to 
   Structures 47 (1993), for making a missing edge by flipping the edges it crosses.
 - J. R. Shewchuk, *Adaptive Precision Floating-Point Arithmetic and Fast Robust Geometric Predicates*
   (1997), for the exact predicates.
+- H. Edelsbrunner and E. P. Mücke, *Simulation of Simplicity*, ACM Transactions on Graphics 9 (1990), for
+  breaking ties between points on one circle by perturbing them symbolically.

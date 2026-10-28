@@ -3,7 +3,8 @@
 //!
 //! Each triangle lists its corners counter-clockwise in y-up axes, and edge `k` is the one opposite corner
 //! `k`. Every question about where a point lies is asked of [`exact`], so that a point on an edge is on it,
-//! and 4 points on a circle are on it: flipping stops, and a search for a point ends.
+//! and 4 points on a circle are on it, which a tie-break then settles ([`in_circle`]): flipping stops, a
+//! search for a point ends, and the triangles are the same whatever order the points come in.
 
 use std::collections::VecDeque;
 
@@ -275,8 +276,8 @@ impl Mesh {
     }
 
     /// Whether edge `k` of triangle `t` fails the Delaunay test and may be flipped: the point across it lies
-    /// inside the circle through `t`'s corners, the edge is no edge of the part, and the 2 triangles beside
-    /// it make a convex quadrilateral, as they always do when the point lies inside.
+    /// inside the circle through `t`'s corners ([`in_circle`]), the edge is no edge of the part, and the 2
+    /// triangles beside it make a convex quadrilateral, as they always do when the point lies inside.
     fn not_delaunay(&self, t: usize, k: usize) -> Built<bool> {
         let tri = self.tri(t)?;
         let Some(u) = tri.across(k) else { return Ok(false) };
@@ -286,7 +287,7 @@ impl Mesh {
         let other = self.tri(u)?;
         let d = other.corner(other.edge_to(t).ok_or(Failed::Broken)?);
         let [a, b, c] = [tri.corner(0), tri.corner(1), tri.corner(2)].map(|q| self.point(q));
-        if exact::incircle(a?, b?, c?, self.point(d)?) != Circle::Inside {
+        if !in_circle(a?, b?, c?, self.point(d)?) {
             return Ok(false);
         }
         self.convex(t, k)
@@ -383,7 +384,8 @@ impl Mesh {
         let (from, to) = (self.point(p)?, self.point(q)?);
         // Ahead: a point on the segment's line, on the side of p that q is on.
         let ahead = |r: Point| (r.x() - from.x()) * (to.x() - from.x()) + (r.y() - from.y()) * (to.y() - from.y()) > 0.0;
-        // The triangle round p whose corner the segment leaves through.
+        // The triangle round p whose edge opposite p the segment leaves through, or whose corner after p lies
+        // on it: the walk goes round p, whose triangles close round it, so it comes to each corner as that.
         let start = *self.at.get(p).ok_or(Failed::Broken)?;
         let (mut t, mut walk) = (start, self.walk());
         let (mut k, mut x, mut y) = loop {
@@ -394,7 +396,6 @@ impl Mesh {
             let (px, py) = (self.point(x)?, self.point(y)?);
             match (exact::side(from, to, px), exact::side(from, to, py)) {
                 (Side::On, _) if ahead(px) => return Ok(Leaving::Through(x)),
-                (_, Side::On) if ahead(py) => return Ok(Leaving::Through(y)),
                 (Side::Right, Side::Left) => break (k, x, y),
                 _ => {}
             }
@@ -416,11 +417,11 @@ impl Mesh {
             let pz = self.point(z)?;
             // The segment leaves by the edge between z and the corner on the other side of its line. Listed
             // counter-clockwise from z, `beyond`'s corners are z, y, x, so the edge from z to y lies opposite x,
-            // corner j + 2, and the edge from x to z opposite y, corner j + 1.
+            // corner j + 2, and the edge from x to z opposite y, corner j + 1 ([`Tri::across`] counts round).
             (t, k, x, y) = match exact::side(from, to, pz) {
                 Side::On => return Ok(Leaving::Through(z)),
-                Side::Right => (next, (j + 2) % 3, z, y),
-                Side::Left => (next, (j + 1) % 3, x, z),
+                Side::Right => (next, j + 2, z, y),
+                Side::Left => (next, j + 1, x, z),
             };
         }
     }
@@ -484,21 +485,15 @@ impl Mesh {
 
     /// Flips the edges between triangles inside the part until every one passes the Delaunay test (Lawson's
     /// method): the part's edges are never flipped, so the mesh inside it becomes its constrained Delaunay
-    /// triangulation. A unit of work for each edge tested.
+    /// triangulation. Each edge of a triangle inside is tested: one with a triangle outside across it is an
+    /// edge of the part, which the test passes, and a flip leaves 2 triangles inside. A unit of work for each
+    /// edge tested.
     pub(super) fn settle(&mut self, inside: &[bool], meter: &mut Meter) -> Built<()> {
-        let within = |t: Option<usize>| t.is_some_and(|t| inside.get(t).copied().unwrap_or(false));
-        let mut stack: Vec<(usize, usize)> = Vec::new();
-        for (t, tri) in self.tris.iter().enumerate() {
-            for k in 0..3 {
-                if within(Some(t)) && within(tri.across(k)) && tri.across(k) > Some(t) {
-                    stack.push((t, k));
-                }
-            }
-        }
+        let mut stack: Vec<(usize, usize)> =
+            inside.iter().enumerate().filter(|&(_, &within)| within).flat_map(|(t, _)| [(t, 0), (t, 1), (t, 2)]).collect();
         while let Some((t, k)) = stack.pop() {
             meter.charge(1)?;
-            let tri = self.tri(t)?;
-            if !within(Some(t)) || !within(tri.across(k)) || !self.not_delaunay(t, k)? {
+            if !self.not_delaunay(t, k)? {
                 continue;
             }
             let u = self.flip(t, k)?;
@@ -506,6 +501,26 @@ impl Mesh {
             stack.extend([(t, 0), (t, 2), (u, 0), (u, 1)]);
         }
         Ok(())
+    }
+}
+
+/// Whether `d` lies inside the circle through `a`, `b` and `c`, which turn counter-clockwise, 4 points on one
+/// circle decided by a tie-break: as if each point's lift, its squared distance from the origin, were raised
+/// by a vanishing amount of its own, the least point's by far the most, the points ordered by x and then by y
+/// (a symbolic perturbation, after Edelsbrunner and Mücke's *Simulation of Simplicity*, 1990). The in-circle
+/// determinant then moves by that amount times the least point's cofactor: the turn of the other 3, signed by
+/// the least point's row. With no 4 points on one circle, one triangulation passes the Delaunay test, and one
+/// constrained triangulation of a part, whatever order the points go in and the edges are flipped in.
+fn in_circle(a: Point, b: Point, c: Point, d: Point) -> bool {
+    match exact::incircle(a, b, c, d) {
+        Circle::Inside => true,
+        Circle::Outside => false,
+        Circle::On => {
+            // Each point, the other 3 in order, and the turn of theirs that puts the circle round the point.
+            let rows = [(a, [b, c, d], Side::Left), (b, [a, c, d], Side::Right), (c, [a, b, d], Side::Left), (d, [a, b, c], Side::Right)];
+            let least = rows.iter().min_by(|(p, ..), (q, ..)| p.x().total_cmp(&q.x()).then(p.y().total_cmp(&q.y())));
+            least.is_some_and(|(_, [p, q, r], turn)| exact::side(*p, *q, *r) == *turn)
+        }
     }
 }
 
