@@ -184,9 +184,10 @@ triangle is much longer than the part is wide:
 The centre line joins the middles of the chords (M13.4, `REQ-AUTO-014`). A round end stops it about half
 its width from the end, on its middle, and a sharp point draws it on to the point. The small bumps of a traced outline, and
 the corner past a sharp turn, would branch it, and are left out. At each junction left, the 2 branches that
-run on most nearly straight are one line and the third ends there, and a ring has a closed line. A part's
-lines sew one after another, the longest first, each from its end nearest where the last one ended. The
-[centre lines](algorithms/centre-lines.md) page has the rules in full.
+run on most nearly straight are one line and the third ends there, and a ring has a closed line. No piece
+of the line is sewn twice. A part's lines sew one after another, the longest first, each from its end
+nearest where the last one ended. The [centre lines](algorithms/centre-lines.md) page has the rules in
+full.
 
 A strip between 2 ends or junctions sews as a satin column (M13.5). Its rails are the 2 sides of the
 outline between them, and some of its chords are its rungs. A junction joins the 2 columns that run on

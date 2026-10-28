@@ -230,6 +230,39 @@ fn req_auto_014_a_junctions_third_branch_is_a_line_of_its_own() {
 }
 
 #[test]
+fn req_auto_014_a_figure_8_sews_its_waist_once() {
+    // A figure 8: 2 junctions 2 mm apart at its waist, a loop above them and a loop below. At the left
+    // junction the waist runs on into the lower loop, and at the right one into the upper loop, so each
+    // junction's third branch starts a line. The first runs round the upper loop, on through the waist and
+    // back to where it started: it closes. The second runs round the lower loop and ends where it comes back
+    // to the waist, which the first has sewn.
+    let eight = graph(
+        &[
+            ((-1.0, 0.0), Some(1.0)),
+            ((1.0, 0.0), Some(1.0)),
+            ((-2.0, 2.0), None),
+            ((0.0, 3.0), None),
+            ((3.0, 0.0), None),
+            ((-3.0, 0.0), None),
+            ((0.0, -3.0), None),
+            ((2.0, -2.0), None),
+        ],
+        &[(0, 1), (0, 2), (2, 3), (3, 4), (4, 1), (0, 5), (5, 6), (6, 7), (7, 1)],
+    );
+    let pairs = eight.pairs(&mut meter()).unwrap();
+    assert_eq!(pairs, BTreeMap::from([(0, (1, 5)), (1, (0, 4))]));
+    let found: Vec<(Vec<(f64, f64)>, bool)> =
+        eight.lines(&pairs, &mut meter()).unwrap().iter().map(|line| (line.points.iter().map(|q| (q.x(), q.y())).collect(), line.closed)).collect();
+    assert_eq!(
+        found,
+        [
+            (vec![(-1.0, 0.0), (-2.0, 2.0), (0.0, 3.0), (3.0, 0.0), (1.0, 0.0)], true),
+            (vec![(1.0, 0.0), (2.0, -2.0), (0.0, -3.0), (-3.0, 0.0), (-1.0, 0.0)], false)
+        ]
+    );
+}
+
+#[test]
 fn req_auto_014_a_tip_is_reached() {
     // A blade 0.8 mm wide narrowing to a point 10 mm on: the line runs on to the point.
     let blade = part(&[(0.0, 0.0), (5.0, 0.0), (15.0, 0.4), (5.0, 0.8), (0.0, 0.8)], &[]);

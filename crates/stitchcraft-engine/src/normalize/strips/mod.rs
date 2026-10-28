@@ -366,8 +366,11 @@ impl Graph {
     }
 
     /// The line from `from` through its neighbour `first`, on through each point joined to 2 and each
-    /// junction along the paired branch, to an end, to a junction it reaches by its third branch, or back to
-    /// where it started, when it closes. The edges it takes are added to `walked`.
+    /// junction along the paired branch, to an end, to a junction it reaches by its third branch, back to
+    /// where it started, when it closes, or to where it would go on along an edge another line took. A line
+    /// from a junction's third branch can come back to the junction by one of its paired branches and close
+    /// there, and a later line that comes by the other stops, as at the waist of a figure 8. The edges it
+    /// takes are added to `walked`.
     fn walk(
         &self,
         from: usize,

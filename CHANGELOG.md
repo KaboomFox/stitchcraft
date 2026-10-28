@@ -14,7 +14,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     engine with exact predicates (`stitchcraft_core::exact::incircle`). Points 4 or more on one circle, as a
     square's corners are, are cut into triangles the same way whatever order they come in. It joins the
     middles of the chords, stops within a round end and runs on to a sharp point. Bumps of the outline and the
-    corners past sharp turns are left out, and at a junction the 2 straightest branches are one line.
+    corners past sharp turns are left out, at a junction the 2 straightest branches are one line, and no
+    piece of the line is sewn twice.
   - A narrow part's line paints the part to its neighbours. It sews after a fill it borders, and the areas
     sewn before it reach under it. One that the areas sewn after it cover whole sews nothing.
   - A running stitch that automatic digitizing makes, of a stroke or a narrow part, is a triple run from
