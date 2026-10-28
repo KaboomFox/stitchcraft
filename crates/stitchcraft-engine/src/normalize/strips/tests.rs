@@ -133,6 +133,39 @@ fn req_auto_014_a_sharp_turn_is_one_line() {
     assert!(found[0].length() > 25.0, "{found:?}");
 }
 
+/// A graph of `points`, each a junction's middle when it has a size, joined as `links` says, in turn.
+fn graph(points: &[((f64, f64), Option<f64>)], links: &[(usize, usize)]) -> Graph {
+    let mut graph = Graph { points: Vec::new(), links: Vec::new(), size: Vec::new() };
+    for &((x, y), size) in points {
+        graph.add(p(x, y), size);
+    }
+    for &(a, b) in links {
+        graph.join(a, b);
+    }
+    graph
+}
+
+#[test]
+fn req_auto_014_of_2_bumps_at_a_junction_the_shorter_is_left_out() {
+    // A junction with a branch 10 mm long and 2 bumps, 0.3 and 0.5 mm long. The shorter is left out first,
+    // and the junction, left with 2 branches, is a bend: the longer bump is the line's end.
+    let mut bumped = graph(&[((0.0, 0.0), Some(1.0)), ((10.0, 0.0), None), ((0.0, 0.3), None), ((0.0, -0.5), None)], &[(0, 1), (0, 2), (0, 3)]);
+    bumped.prune(&mut meter()).unwrap();
+    assert_eq!(bumped.links[0], [1, 3]);
+}
+
+#[test]
+fn req_auto_014_a_junctions_branches_are_paired_by_their_directions_alone() {
+    // A junction with branches to (5, 0) and (-4, 1.5), and a third, 0.3 mm long, to a second junction, as
+    // where 2 bars cross. Measured to where it ends, at the second junction, the short branch runs on from
+    // the first more nearly straight than the second does, short as it is, and is the first's pair.
+    let crossing = graph(
+        &[((0.0, 0.0), Some(1.0)), ((5.0, 0.0), None), ((-4.0, 1.5), None), ((-0.3, 0.04), Some(1.0)), ((-0.3, 5.0), None), ((-0.3, -5.0), None)],
+        &[(0, 1), (0, 2), (0, 3), (3, 4), (3, 5)],
+    );
+    assert_eq!(crossing.pairs(&mut meter()).unwrap().get(&0), Some(&(1, 3)));
+}
+
 #[test]
 fn req_auto_014_a_tip_is_reached() {
     // A blade 0.8 mm wide narrowing to a point 10 mm on: the line runs on to the point.

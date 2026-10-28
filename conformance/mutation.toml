@@ -5,7 +5,7 @@
 [missed]
 stitchcraft-cli = 23
 stitchcraft-core = 5
-stitchcraft-engine = 45
+stitchcraft-engine = 47
 stitchcraft-formats = 46
 stitchcraft-params = 0
 stitchcraft-plan = 48
@@ -328,3 +328,15 @@ file = "crates/stitchcraft-engine/src/auto/neighbours/mod.rs"
 mutant = "replace || with && in Shapes<'s>::find"
 line = "if self.area.get(index).copied().unwrap_or(true) || self.painted.get(index).is_some_and(Option::is_some) {"
 why = "find works with a meter of its own, and paint takes an automatic area's region from the regions, never from what find found; a shape's paint is found again only through grown, which only a shape whose paint was found reaches, and is the same: only the time taken changes"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/narrow.rs"
+mutant = "replace > with >= in lines"
+line = "if area > perimeter(part) * half + std::f64::consts::PI * holes * half * half {"
+why = "a part narrower than the width everywhere covers less than the bound, never as much: the bound is what its inner offsets would cover if its outline turned smoothly, and each convex corner, which every polygon has, takes more off them than a smooth turn does. So a part whose area equals the bound exactly holds a wider circle, which shrinking it finds as well, and it stays in the fill either way"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/narrow.rs"
+mutant = "replace + with * in ring_cells"
+line = "let columns = (y - ring + 1..y + ring).flat_map(|j| [(x - ring, j), (x + ring, j)]);"
+why = "the columns then start a row lower, at the ring's 2 bottom corners, which its rows list already: a cell looked at twice holds the same pieces, so the nearest edge found is the same, and only the work charged grows, by the 2 cells and their pieces each ring"
