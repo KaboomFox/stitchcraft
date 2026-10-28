@@ -274,18 +274,24 @@ pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter)
     Ok(made)
 }
 
-/// The elements that sew `element`, an automatic area of a design with `settings`, with `meter`'s work:
-/// itself as it is when no part of it is narrow, or else the fill of its other parts, if any, and a running
-/// stitch along the centre lines of each narrow part, tripled from [`TRIPLE_RUN_WIDTH`] (`narrow`). The first
-/// keeps the area's name and those after it are numbered, and a trim or a stop after the area follows the
-/// last. An area whose region the region code can't join, a bug, is itself as it is, and its fill says so.
+/// The elements that sew `element`, an automatic area of a design with `settings`, with `meter`'s work: its
+/// parts sorted by their width (`narrow`) and [`sewn`]. An area whose region the region code can't join, a
+/// bug, is itself as it is, and its fill says so.
 fn areas(element: &Element, settings: &DesignSettings, meter: &mut Meter) -> Result<Digitized, Exhausted> {
     let as_it_is = itself(element, Some(Stitches::Fill));
     let Shape::Fill { path, rule } = &element.shape else { return Ok(as_it_is) };
     let Ok(parts) = parts_of(path, *rule, meter)? else { return Ok(as_it_is) };
-    let sorted = narrow::sorted(&element.id, parts, settings.min_satin_stroke_width, meter)?;
+    Ok(sewn(element, narrow::sorted(&element.id, parts, settings.min_satin_stroke_width, meter)?))
+}
+
+/// The elements that sew `element`, an automatic area whose parts are `sorted` by their width: itself as it
+/// is when no part of it is narrow, or else the fill of its other parts, if any, and a running stitch along
+/// the centre lines of each narrow part, tripled from [`TRIPLE_RUN_WIDTH`]. The first keeps the area's name
+/// and those after it are numbered, and a trim or a stop after the area follows the last. What was said of
+/// its parts is said either way.
+fn sewn(element: &Element, sorted: narrow::Parts) -> Digitized {
     if sorted.narrow.is_empty() {
-        return Ok(Digitized { diagnostics: sorted.said, ..as_it_is });
+        return Digitized { diagnostics: sorted.said, ..itself(element, Some(Stitches::Fill)) };
     }
     let (rest, after) = split_after(&element.params);
     let mut made = Digitized { diagnostics: sorted.said, ..Digitized::default() };
@@ -307,7 +313,7 @@ fn areas(element: &Element, settings: &DesignSettings, meter: &mut Meter) -> Res
         made.add(part(element, id, shape, params), Some(narrow.part));
     }
     keep_after(&mut made.elements, &after);
-    Ok(made)
+    made
 }
 
 /// The automatic `element` sewn as itself, an ordinary element, counted as `stitches`.
@@ -604,6 +610,29 @@ mod tests {
         assert_eq!(fill_path(found.parts, &rings), triangle([(0.0, 0.0), (10.0, 10.0), (10.0, 0.0)]));
         // An area that cannot be joined, a bug in the region code: the rings as they are.
         assert_eq!(fill_path(Err(Unjoined), &rings), triangle([(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]));
+    }
+
+    #[test]
+    fn what_is_said_of_an_areas_parts_is_said_whether_a_part_is_narrow_or_not() {
+        // SC-E0009 for a part whose centre line could not be found, a bug that no drawn area reaches: the part
+        // stays in the fill, beside a narrow part or not, and what was said of it is said of the area.
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        let rect = |(x0, y0): (f64, f64), (x1, y1): (f64, f64)| Polygon {
+            outline: vec![p(x0, y0), p(x0, y1), p(x1, y1), p(x1, y0), p(x0, y0)],
+            holes: Vec::new(),
+        };
+        let (square, strip) = (rect((0.0, 0.0), (10.0, 10.0)), rect((20.0, 0.0), (30.0, 0.6)));
+        let shape = Shape::Fill { path: outline(&[square.clone(), strip.clone()]), rule: FillRule::NonZero };
+        let thread = stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(0, 0, 0));
+        let area = Element { id: ElementId::new("area").unwrap(), name: None, shape, thread, params: ParamSet::default(), automatic: true };
+        let said = vec![Diagnostic::new(Code::InternalCheckFailed, "A part could not be measured.").with_element(area.id.clone())];
+        let filled = narrow::Parts { filled: vec![square.clone()], narrow: Vec::new(), said: said.clone() };
+        assert_eq!(sewn(&area, filled).diagnostics, said);
+        let line = Line { points: vec![p(20.3, 0.3), p(29.7, 0.3)], closed: false };
+        let thin = narrow::Narrow { part: strip, lines: vec![line], width: Mm::new(0.6).unwrap() };
+        let both = narrow::Parts { filled: vec![square], narrow: vec![thin], said: said.clone() };
+        let made = sewn(&area, both);
+        assert_eq!((made.elements.len(), made.diagnostics), (2, said));
     }
 
     #[test]

@@ -344,6 +344,43 @@ mod tests {
     }
 
     #[test]
+    fn parts_as_large_as_a_wide_satins_bound_allows_are_narrow() {
+        // A part narrower than a width everywhere covers at most its perimeter times half the width, plus π
+        // times that half's square for each hole past the first, and one that covers more is broad without
+        // shrinking it. With a narrowest satin stroke of 6 mm, half of it is more than 1 mm: a strip 4 mm wide
+        // covers more than its perimeter over that half, and a plate pierced by 6 × 6 holes 0.6 mm across,
+        // 4.5 mm apart, covers more than its perimeter times the half plus π for each hole past the first,
+        // though no circle 6 mm across fits between its holes. Both are within the bound, and narrow.
+        let strip = outline(&[(0.0, -10.0), (30.0, -10.0), (30.0, -6.0), (0.0, -6.0)]);
+        let (side, apart) = (27.15, 4.525);
+        let holes = (0..36)
+            .map(|k| {
+                let (x, y) = ((f64::from(k % 6) + 0.5) * apart, (f64::from(k / 6) + 0.5) * apart);
+                geom::closed(&circle(x, y, 0.3, 8, 0.5))
+            })
+            .collect();
+        let plate = Polygon { holes, ..outline(&[(0.0, 0.0), (side, 0.0), (side, side), (0.0, side)]) };
+        let area = ElementId::new("area").unwrap();
+        let sorted = sorted(&area, vec![strip.clone(), plate.clone()], Mm::new(6.0).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        assert!(sorted.filled.is_empty() && sorted.said.is_empty(), "{sorted:?}");
+        assert_eq!(sorted.narrow.iter().map(|narrow| &narrow.part).collect::<Vec<_>>(), [&strip, &plate]);
+    }
+
+    #[test]
+    fn measuring_a_point_looks_at_the_cells_round_it_not_at_every_edge() {
+        // A strip 100 mm long and 0.5 mm wide, its edges cut into some 400 pieces as long as it is wide. A
+        // point on its middle finds its nearest edge in the cells round it, at the cost of some 20 units of
+        // work, where looking at every piece would cost 400.
+        let strip = outline(&[(0.0, 0.0), (100.0, 0.0), (100.0, 0.5), (0.0, 0.5)]);
+        let mut meter = Budget::DEFAULT.meter();
+        let edges = Edges::of(&strip, piece(&strip), &mut meter).unwrap();
+        let before = meter.work_left();
+        assert_eq!(edges.nearest(Point::new(50.0, 0.25).unwrap(), &mut meter), Ok(0.25));
+        let cost = before - meter.work_left();
+        assert!(cost < 40, "{cost}");
+    }
+
+    #[test]
     fn a_part_without_edges_is_nowhere_near() {
         let part = Polygon { outline: Vec::new(), holes: Vec::new() };
         let edges = Edges::of(&part, 1.0, &mut Budget::DEFAULT.meter()).unwrap();

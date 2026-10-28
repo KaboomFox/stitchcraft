@@ -250,6 +250,17 @@ fn an_area_looks_for_no_lines_paint() {
 }
 
 #[test]
+fn a_narrow_parts_line_is_boxed_round_the_part() {
+    // The line along a strip 0.6 mm wide with a spike 1.4 mm high that the line leaves out: the box round the
+    // part holds the spike, which the box round the line and its width doesn't.
+    let corners = [(0.0, 0.0), (0.0, 0.6), (4.9, 0.6), (5.0, 2.0), (5.1, 0.6), (10.0, 0.6), (10.0, 0.0), (0.0, 0.0)];
+    let part = Polygon { outline: corners.iter().map(|&(x, y)| p(x, y)).collect(), holes: Vec::new() };
+    let line = Sewn { narrow: Some(part.clone()), ..running("line", &[(0.3, 0.3), (9.7, 0.3)], 0.6, &BLUE) };
+    let shapes = Shapes::new(vec![line], &DesignSettings::default(), &Budget::DEFAULT);
+    assert_eq!(reach(&shapes, 0), envelope(&[part]));
+}
+
+#[test]
 fn a_columns_box_holds_the_corners_of_its_clipped_miters() {
     // A satin column 7 mm wide with settings, drawn as one path that turns back sharply at (60, 0), its miter
     // limit 4: its rails' miter there is clipped 14 mm from the corner, 4 times half its width, and the
