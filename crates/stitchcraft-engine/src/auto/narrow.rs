@@ -442,6 +442,20 @@ mod tests {
     }
 
     #[test]
+    fn a_narrow_part_wider_than_a_satin_column_somewhere_stays_in_the_fill_whole() {
+        // A part of an area wider than a satin column in places is split, and its tab sews as columns. A narrow
+        // part of a part split is never so wide, since the split's opening takes every disc that wide; one
+        // that were stays in the fill whole, and isn't split again.
+        let tabbed = outline(&[(0.0, 0.0), (20.0, 0.0), (20.0, 8.5), (32.0, 8.5), (32.0, 11.5), (20.0, 11.5), (20.0, 20.0), (0.0, 20.0)]);
+        let (area, narrowest) = (ElementId::new("area").unwrap(), Mm::new(1.0).unwrap());
+        let part = sorted(&area, vec![tabbed.clone()], narrowest, &mut Budget::DEFAULT.meter()).unwrap();
+        assert!(matches!(part.along.as_slice(), [Along::Columns(_)]), "{:?}", part.along);
+        let mut piece = Parts::default();
+        sort(&area, tabbed.clone(), narrowest, Sorting::Piece(&[]), &mut piece, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(piece, Parts { filled: vec![tabbed], ..Parts::default() });
+    }
+
+    #[test]
     fn parts_as_wide_as_a_satin_column_that_make_no_columns_stay_filled() {
         // With a narrowest satin stroke of 1.5 mm, 3 parts no wider than a satin column and not narrow:
         // - a regular octagon 3 mm across its corners, a dot, whose caps meet;
