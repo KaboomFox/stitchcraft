@@ -86,6 +86,11 @@ dbg_macro = "deny"
 print_stdout = "deny"
 print_stderr = "deny"
 exit = "deny"
+# VectorCraft's workspace denies these, and our crates take its lints when they join it (ADR-0011): denied
+# here too, a function that breaks one fails our gate before it fails the rehearsal of the move.
+cognitive_complexity = "deny"
+too_many_arguments = "deny"
+wildcard_imports = "deny"
 # Readability and correctness extras.
 semicolon_if_nothing_returned = "warn"
 uninlined_format_args = "warn"
