@@ -394,3 +394,15 @@ file = "crates/stitchcraft-engine/src/auto/narrow.rs"
 mutant = "replace < with <= in Edges::of"
 line = "while k < pieces {"
 why = "the extra piece runs from the edge's end to its end, since Point::lerp holds its fraction to 1: a point the edge's last piece ends at already, so every distance found is the same, and only the work charged grows"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/strips/columns.rs"
+mutant = "replace + with - in cornered"
+line = "let next = if line.closed { Some((k as isize + step).rem_euclid(count as isize) as usize) } else { k.checked_add_signed(step) };"
+why = "on a closed line each way is then measured round the other way, so the 2 ways swap, and the cosine between them is the same whichever comes first"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/strips/columns.rs"
+mutant = "replace > with >= in cornered"
+line = "(lengths > 0.0).then(|| (a.0 * b.0 + a.1 * b.1) / lengths)"
+why = "a way of no length, past an open line's end, makes the cosine 0 over 0, which is not a number, and a cosine that is not a number is no corner, as no cosine is"
