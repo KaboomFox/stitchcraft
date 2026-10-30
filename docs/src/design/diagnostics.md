@@ -159,7 +159,7 @@ another.
 | `SC-I0901` | Info | Shapes digitized automatically (`--auto`), counted by their stitches (running stitches, satin columns or tatami fills) | M13 |
 | `SC-I0902` | Info | Satin column can't be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don't make a column round one of its lines or whose column would be read back otherwise) | M13 |
 | `SC-W0903` | Warning | Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin) | M13 |
-| `SC-I0904` | Info | Areas reach under the shapes sewn after them (automatic areas grown 0.4 mm under the shapes sewn after them that they touch, or cut away under areas sewn after them) | M13 |
-| `SC-I0905` | Info | Speck merged into a neighbour (an automatic area or a part of one smaller than 1 mm², merged into the area it shares the longest edge with, or left out) | M13 |
-| `SC-W0906` | Warning | Background left out (the lowest shape, an automatic area that covers the whole design under the other shapes) | M13 |
+| `SC-I0904` | Info | Areas reach under the shapes sewn after them (automatic areas grown under the shapes sewn after them that they touch, or cut away under areas sewn after them, by an overlap of 0.4 mm unless an area sets another) | M13 |
+| `SC-I0905` | Info | Speck merged into a neighbour (an automatic area or a part of one smaller than its smallest area, 1 mm² unless it sets another, merged into the area it shares the longest edge with, or left out) | M13 |
+| `SC-W0906` | Warning | Background left out (the lowest shape, an automatic area that covers the whole design under the other shapes, unless it switches `auto_ignore_background` off) | M13 |
 | `SC-I0907` | Info | Elements sewn in an order of their own (automatic elements, and with `--sort-colours` every element, sewn in the order StitchCraft chooses, with the thread changes of each order; an element or an order that needs more work than the budget allows keeps paint order) | M13 |
