@@ -5,7 +5,7 @@
 [missed]
 stitchcraft-cli = 23
 stitchcraft-core = 7
-stitchcraft-engine = 50
+stitchcraft-engine = 56
 stitchcraft-formats = 46
 stitchcraft-params = 0
 stitchcraft-plan = 48
@@ -358,3 +358,39 @@ file = "crates/stitchcraft-engine/src/normalize/triangulation/mesh.rs"
 mutant = "replace + with * in Mesh::uncross"
 line = "let mut walk = Walk::of((crossing.len() + 1).saturating_mul(crossing.len() + 1).saturating_mul(4));"
 why = "the bound only stops a run of flips that goes round in a circle, a bug, and a run that ends takes about a step for each edge it crosses: the tests' 711 runs took at most 2 steps more than their n edges, far within 4n(n + 1), so the change only stops a runaway run sooner"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/narrow.rs"
+mutant = "replace > with >= in lines"
+line = "if area > perimeter(part) * half + std::f64::consts::PI * holes * half * half {"
+why = "a part narrower than the width everywhere covers less than the bound, never as much: the bound is what its inner offsets would cover if its outline turned smoothly, and each convex corner, which every polygon has, takes more off them than a smooth turn does. So a part whose area equals the bound exactly holds a wider circle, which shrinking it finds as well, and it stays in the fill either way"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/narrow.rs"
+mutant = "replace + with * in ring_cells"
+line = "let columns = (y - ring + 1..y + ring).flat_map(|j| [(x - ring, j), (x + ring, j)]);"
+why = "the columns then start a row lower, at the ring's 2 bottom corners, which its rows list already: a cell looked at twice holds the same pieces, so the nearest edge found is the same, and only the work charged grows, by the 2 cells and their pieces each ring"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/narrow.rs"
+mutant = "replace + with - in ring_cells"
+line = "let columns = (y - ring + 1..y + ring).flat_map(|j| [(x - ring, j), (x + ring, j)]);"
+why = "the columns then start 2 rows lower, at the ring's 2 bottom corners, which its rows list already, and at 2 cells beyond the ring. A cell beyond the ring holds no piece nearer than the ring allows, so the nearest edge found, once no farther cell could hold a nearer one, is the same: only the work charged grows"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/narrow.rs"
+mutant = "replace > with == in lines"
+line = "if area > perimeter(part) * half + std::f64::consts::PI * holes * half * half {"
+why = "the quick test then sends a part to the fill only where its area equals the bound exactly, which no part narrow everywhere does, and every other part to the shrinking: a part whose area is beyond the bound holds a wider circle, which shrinking it finds, and it stays in the fill either way. Only the work charged grows"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/narrow.rs"
+mutant = "replace > with >= in width"
+line = "Ok(if length > 0.0 { Mm::new(sum / length).ok() } else { None })"
+why = "lines of no length have a sum of 0 too, and 0 over 0 is not a number, which Mm::new refuses: the width is None either way"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/narrow.rs"
+mutant = "replace < with <= in Edges::of"
+line = "while k < pieces {"
+why = "the extra piece runs from the edge's end to its end, since Point::lerp holds its fraction to 1: a point the edge's last piece ends at already, so every distance found is the same, and only the work charged grows"

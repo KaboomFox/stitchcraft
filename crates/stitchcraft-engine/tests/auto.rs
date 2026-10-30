@@ -63,12 +63,13 @@ fn req_auto_002_an_area_fills_and_a_line_up_to_the_narrowest_satin_runs() {
     let square = fill("square", &[&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]], &RED, &[]);
     assert_eq!(needle_points(&planned(vec![automatic(square.clone())])), needle_points(&planned(vec![square.clone()])));
     assert_eq!(made(&square), vec![square]);
-    // A line no wider than 1 mm, the narrowest satin stroke unless the design sets it, runs: as the same line
-    // without settings does, exactly 1 mm included.
-    for width in [0.5, 1.0] {
+    // A line no wider than 1 mm, the narrowest satin stroke unless the design sets it, runs, exactly 1 mm
+    // included: below 0.5 mm as the same line without settings does, and from there tripled (REQ-AUTO-015).
+    for (width, beans) in [(0.3, None), (0.5, Some("1")), (1.0, Some("1"))] {
         let line = drawn("line", &[(0.0, 0.0), (20.0, 0.0), (20.0, 15.0)], width);
         assert_eq!(stitches(width), Stitches::Running, "{width} mm");
-        assert_eq!(needle_points(&planned(vec![automatic(line.clone())])), needle_points(&planned(vec![line])), "{width} mm");
+        let set = beans.map_or_else(|| line.clone(), |beans| with(line.clone(), &[("bean_stitch_repeats", beans)]));
+        assert_eq!(needle_points(&planned(vec![automatic(line.clone())])), needle_points(&planned(vec![set])), "{width} mm");
     }
     // The design's own narrowest satin stroke moves the bound.
     let settings = DesignSettings { min_satin_stroke_width: Mm::new(2.0).unwrap(), ..DesignSettings::default() };
