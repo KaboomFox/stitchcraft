@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-913f6815.js";
+            window.path_to_searchindex_js = "../../searchindex-fefdf631.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b31b520c.js"></script>
@@ -234,6 +234,10 @@ a whole workspace and VectorCraft’s answers to VectorCraft’s policy.</li>
 <li><strong>Configuration that should follow the code lives in the folder.</strong> Clippy and rustfmt read the
 configuration file nearest each crate, so our determinism rules (<code>clippy.toml</code>) keep applying to our
 crates, and VectorCraft’s to theirs.</li>
+<li><strong>Our lints are at least VectorCraft’s.</strong> Joined, our crates take VectorCraft’s workspace lints but
+keep our <code>clippy.toml</code>, so its thresholds must match VectorCraft’s: from VectorCraft’s <code>main</code> after
+0.18.0, both deny <code>cognitive_complexity</code> above 30, <code>too_many_arguments</code> and <code>wildcard_imports</code>. Our
+workspace denies what VectorCraft’s does. A breach then fails our gate before the rehearsal finds it.</li>
 <li><strong>Generated files never depend on where the folder is</strong>: no absolute paths, no repository-relative
 paths outside it. <code>cargo xtask docs --check</code> and <code>shots --check</code> run in the rehearsal.</li>
 </ul>

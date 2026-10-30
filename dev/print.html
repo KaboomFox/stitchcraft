@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-913f6815.js";
+            window.path_to_searchindex_js = "searchindex-fefdf631.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b31b520c.js"></script>
@@ -7628,7 +7628,8 @@ live-effect run</strong> (<code>crates/plugins/src/effect.rs</code>), with a fre
 300 s, once the user allows it at install, and runs in the background. From 0.18 a run pays nothing for
 compiling the functions it calls, which wasmi does at each one’s first call. Before, a first run paid,
 and could stop with most of its budget left when the 20 M-instruction slice it was in ran out while a
-function compiled.</li>
+function compiled. From M13.2 on, the gate’s Level B found 0.17.0’s command line stopping the PES
+exporter so on the test sheet TS-04, an export that takes 34 M instructions in 0.18.0’s host.</li>
 <li><strong>Live-effect input</strong> is the object’s geometry: <code>type</code>, <code>path</code>, <code>fillRule</code>, <code>bounds</code>. From 0.14 it
 holds the object’s <code>fills</code> and <code>strokes</code> too, read only, each stroke with its width, and from 0.15 its
 join, cap and miter limit. <code>_context.item</code> says whether the effect is on the object or on one of its
@@ -7829,7 +7830,7 @@ first 300 characters of a decline, after <code>plug-in failed:</code>.</li>
 The engine’s budget is <code>stitch export</code>’s, so a design that needs more is stopped by VectorCraft with its
 own error, <code>plug-in exceeded its instruction budget</code>, and <code>stitch export</code> writes it. The contract test
 <code>req_vc_011_a_fill_of_the_whole_hoop_exports_within_vectorcraft_s_limits</code> measures the largest designs
-the reference machine sews (VectorCraft 0.16.0 and 0.17.0 alike, 2026-10-25):</p>
+the reference machine sews (VectorCraft 0.16.0 to 0.18.0 alike, 2026-10-29):</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -7943,8 +7944,8 @@ run gets about 52 million. The rails are the line offset as GEOS offsets it, whi
 the whole stroke for each rail. So Stroke to Satin is a heavy filter (P4): VectorCraft 0.17 gives each run 1 G
 instructions and 300 s, once the user allows it at install, and runs it in the background. The contract
 test <code>req_vc_014_stroke_to_satin_makes_columns_that_export_as_the_lines_did</code> converts M6.4’s lines in
-VectorCraft 0.17.0’s host, 3 mm wide, as <code>plugin.run</code> runs a filter, and StitchCraft’s PES exporter
-writes each column’s file as it wrote the line’s (2026-10-25):</p>
+VectorCraft 0.17.0’s and 0.18.0’s hosts alike, 3 mm wide, as <code>plugin.run</code> runs a filter, and StitchCraft’s
+PES exporter writes each column’s file as it wrote the line’s (2026-10-29):</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -7976,8 +7977,8 @@ VectorCraft 0.15 keeps the records, but with an empty selection it looks to a fi
 would drop them. Only the <code>documentData</code> every filter gets from 0.16 tells them apart, so before 0.16 the
 filter declines with <code>SC-E0813</code>. The sheets drawn stitch by stitch are plans, which no object holds.</p>
 <p>The contract test <code>req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits</code>
-draws each sheet into a new document in VectorCraft 0.17.0’s host, and exports it with the PES exporter
-(2026-10-25). Drawing takes 14 to 25 million instructions, at most half of a light filter’s run.
+draws each sheet into a new document in VectorCraft 0.17.0’s and 0.18.0’s hosts alike, and exports it with
+the PES exporter (2026-10-29). Drawing takes 14 to 25 million instructions, at most half of a light filter’s run.
 Exporting takes 23 million to 1.6 billion, at most 17 % of an export’s, the most for the fills of TS-07,
 TS-08 and TS-09.</p>
 <h3 id="live-effect-previews-within-v1-budgets"><a class="header" href="#live-effect-previews-within-v1-budgets">Live-effect previews within v1 budgets</a></h3>
@@ -9979,6 +9980,10 @@ a whole workspace and VectorCraft’s answers to VectorCraft’s policy.</li>
 <li><strong>Configuration that should follow the code lives in the folder.</strong> Clippy and rustfmt read the
 configuration file nearest each crate, so our determinism rules (<code>clippy.toml</code>) keep applying to our
 crates, and VectorCraft’s to theirs.</li>
+<li><strong>Our lints are at least VectorCraft’s.</strong> Joined, our crates take VectorCraft’s workspace lints but
+keep our <code>clippy.toml</code>, so its thresholds must match VectorCraft’s: from VectorCraft’s <code>main</code> after
+0.18.0, both deny <code>cognitive_complexity</code> above 30, <code>too_many_arguments</code> and <code>wildcard_imports</code>. Our
+workspace denies what VectorCraft’s does. A breach then fails our gate before the rehearsal finds it.</li>
 <li><strong>Generated files never depend on where the folder is</strong>: no absolute paths, no repository-relative
 paths outside it. <code>cargo xtask docs --check</code> and <code>shots --check</code> run in the rehearsal.</li>
 </ul>
