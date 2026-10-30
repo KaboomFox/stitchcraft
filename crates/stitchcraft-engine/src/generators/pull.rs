@@ -42,6 +42,10 @@ params! {
 /// ten-thousandth of a CSS pixel, as in Ink/Stitch.
 pub(crate) const SAME_POINT: f64 = 0.0001 * MM_PER_SVG_PX;
 
+/// The key of the setting that makes each end of every stitch reach past the shape's edge, which automatic
+/// digitizing sets on its satin columns: once pulled in, they sew as wide as drawn.
+pub const PULL_COMPENSATION: &str = "pull_compensation_mm";
+
 /// `[a, b]` with its ends moved apart along it: `a` by `mm_a` millimetres plus `share_a` of the pair's
 /// width, and `b` likewise, toward each other where negative. Ends that would cross meet instead, where
 /// their moves divide the width. A pair of one point stays as it is.
@@ -69,6 +73,12 @@ mod tests {
 
     fn p(x: f64, y: f64) -> Point {
         Point::new(x, y).unwrap()
+    }
+
+    #[test]
+    fn the_pull_compensation_key_is_the_pair_of_lengths() {
+        let spec = PullParams::SPECS.iter().find(|spec| spec.key == PULL_COMPENSATION);
+        assert!(spec.is_some_and(|spec| matches!(spec.kind, stitchcraft_params::Kind::LengthPair { .. })));
     }
 
     fn near(a: Point, b: Point) -> bool {

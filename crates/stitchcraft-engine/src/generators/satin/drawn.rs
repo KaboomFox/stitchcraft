@@ -101,16 +101,39 @@ pub fn from_line(line: &Subpath, width: Mm, join: Join, meter: &mut Meter) -> Re
     if left_out > 0 {
         return Ok(Err(Unmade::PartsLeftOut(left_out)));
     }
+    from_rails(rails, rungs, meter)
+}
+
+/// The column drawn with `rails`, both from the column's start, and a rung across each pair of points
+/// `rungs` gives, on the first rail and then the second, in order; or [`Unmade::ReadOtherwise`] when it
+/// would be read back with other rails or rungs. Checking it charges `meter`.
+///
+/// Ink/Stitch's rule tells the rails from the rungs by where they meet: with 1 rung, the rails are the 2
+/// that meet one other; with 2 or more, those that meet more than 2. Rails that meet each other, as a pointed
+/// column's do at its tip, meet one more. So a rung that pairs the rails' first points is added where the
+/// count would leave the rails unknown: to none or 2 rungs between rails apart, and to none or 1 between
+/// rails that meet, and one that pairs their last points when that is still too few.
+pub fn from_rails(rails: [Vec<Point>; 2], rungs: Vec<[Point; 2]>, meter: &mut Meter) -> Result<Result<Column, Unmade>, Exhausted> {
     let reaching = |[a, b]: [Point; 2]| {
         let past = |from: Point, to: Point| Point::new(to.x() + REACH * (to.x() - from.x()), to.y() + REACH * (to.y() - from.y())).ok();
         Some([past(b, a)?, past(a, b)?])
     };
-    // With 2 rungs or none, a rung at the start, which pairs the rails' first points, tells the rails apart.
-    let start = rails.each_ref().map(|rail| rail.first().copied());
-    let pairs: Vec<[Point; 2]> = match (rungs.len(), start) {
-        (0 | 2, [Some(a), Some(b)]) => std::iter::once([a, b]).chain(rungs).collect(),
-        _ => rungs,
-    };
+    let apart = |a: Option<&Point>, b: Option<&Point>| a.zip(b).filter(|(a, b)| a.distance(**b) >= SAME_POINT).map(|(a, b)| [*a, *b]);
+    let [first, second] = &rails;
+    let (start, end) = (apart(first.first(), second.first()), apart(first.last(), second.last()));
+    let meet = start.is_none() || end.is_none();
+    let known = |count: usize| if meet { count >= 2 } else { count == 1 || count >= 3 };
+    let mut pairs = rungs;
+    if !known(pairs.len())
+        && let Some(start) = start
+    {
+        pairs.insert(0, start);
+    }
+    if !known(pairs.len())
+        && let Some(end) = end
+    {
+        pairs.push(end);
+    }
     let Some(drawn) = pairs.iter().copied().map(reaching).collect::<Option<Vec<_>>>() else { return Ok(Err(Unmade::ReadOtherwise)) };
     let column = Column { rails, rungs: drawn };
     // Read back, the column must give its rails and pair the points the line's rungs pair.
@@ -133,6 +156,8 @@ fn alike(a: &[Point], b: &[Point]) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_core::Budget;
+
     use super::*;
 
     fn p(x: f64, y: f64) -> Point {
@@ -152,5 +177,25 @@ mod tests {
         // A point more, or one fewer, is another line, whatever the points they share.
         assert!(!alike(&made, &[p(0.0, 0.0), p(5.0, 0.0), p(9.0, 0.0)]));
         assert!(!alike(&made, &[p(0.0, 0.0)]));
+    }
+
+    /// Ink/Stitch's rule tells rails that meet from rungs only by 2 rungs or more, and rails apart only by 1, or
+    /// 3 or more: a column drawn with rails and rungs gets a rung pairing its rails' first points, or their
+    /// last, where the count would leave its rails unknown, and read back it gives its rails and rungs.
+    #[test]
+    fn a_rung_is_added_at_an_end_where_the_count_would_leave_the_rails_unknown() {
+        let drawn = |rails: [Vec<Point>; 2], rungs: Vec<[Point; 2]>| from_rails(rails, rungs, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        // Pointed at its start, its rails meeting there, with 1 rung: one more pairs their last points, drawn
+        // past them.
+        let pointed = [vec![p(0.0, 0.0), p(10.0, -1.5)], vec![p(0.0, 0.0), p(10.0, 1.5)]];
+        let column = drawn(pointed.clone(), vec![[p(5.0, -0.75), p(5.0, 0.75)]]);
+        assert_eq!(column.rails, pointed);
+        let [_, [a, b]] = column.rungs.as_slice() else { panic!("{:?}", column.rungs) };
+        assert!(a.x() == 10.0 && b.x() == 10.0 && a.y() < -1.5 && b.y() > 1.5, "{:?}", column.rungs);
+        // Apart at both ends, with 2 rungs: one more pairs their first points.
+        let apart = [vec![p(0.0, -1.5), p(10.0, -1.5)], vec![p(0.0, 1.5), p(10.0, 1.5)]];
+        let column = drawn(apart, vec![[p(3.0, -1.5), p(3.0, 1.5)], [p(6.0, -1.5), p(6.0, 1.5)]]);
+        let [first, ..] = column.rungs.as_slice() else { panic!("{:?}", column.rungs) };
+        assert!(column.rungs.len() == 3 && first.iter().all(|q| q.x() == 0.0), "{:?}", column.rungs);
     }
 }

@@ -74,7 +74,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0813`](#sc-e0813) | Error | VectorCraft too old for the filter |
 | [`SC-E0814`](#sc-e0814) | Error | VectorCraft line not made into a satin column |
 | [`SC-I0901`](#sc-i0901) | Info | Shapes digitized automatically |
-| [`SC-I0902`](#sc-i0902) | Info | Line a satin column cannot follow; filled |
+| [`SC-I0902`](#sc-i0902) | Info | No satin column can be made; filled |
 | [`SC-W0903`](#sc-w0903) | Warning | Line too wide to fill; left out |
 | [`SC-I0904`](#sc-i0904) | Info | Areas reach under the shapes sewn after them |
 | [`SC-I0905`](#sc-i0905) | Info | Speck merged into a neighbour |
@@ -907,13 +907,15 @@ that column with its 2 rails, or leave the object out of the selection.
 **Info** — Shapes digitized automatically
 
 `--auto` digitized the design's shapes that have no settings: StitchCraft chose each one's
-stitches by its width, measured to the micrometre. An area is a tatami fill, and a part of it
-narrower than the design's narrowest satin stroke (`min_satin_stroke_width_mm`, 1 mm unless the
-design sets it) everywhere is a running stitch along its centre line. A line no wider than that is a
-running stitch, a line up to 7 mm wide a satin column as wide as the line, and a wider line a
-tatami fill of the area it paints. A running stitch is tripled from 0.5 mm wide. A line whose every
-part a satin column cannot follow is filled too (`SC-I0902`), and counted as a fill. An area whose
-every part runs is counted as a running stitch, and any other as a fill.
+stitches by its width, measured to the micrometre. An area is a tatami fill; a part of it narrower
+than the design's narrowest satin stroke (`min_satin_stroke_width_mm`, 1 mm unless the design sets
+it) everywhere is a running stitch along its centre line, and a part that holds no circle 7 mm across
+sews satin columns along its centre lines. A line no wider than that narrowest stroke is a running
+stitch, a line up to 7 mm wide a satin column as wide as the line, and a wider line a tatami fill of
+the area it paints. A running stitch is tripled from 0.5 mm wide. A line whose every part a satin
+column cannot follow is filled too (`SC-I0902`), and counted as a fill. An area whose every part runs
+is counted as a running stitch, one none of which is filled and one of whose parts sews a satin
+column as satin columns, and any other as a fill.
 
 The message counts the shapes by the stitches they sew as. To sew a shape another way, give it
 settings: in VectorCraft, apply a StitchCraft effect to it. A shape with settings is not digitized
@@ -921,15 +923,19 @@ automatically.
 
 ## SC-I0902
 
-**Info** — Line a satin column cannot follow; filled
+**Info** — No satin column can be made; filled
 
-`--auto` sews a line up to 7 mm wide as a satin column along its path, but a satin column cannot
-follow this part of the line: it turns more tightly than the line is wide, so the column's edges
-would fold over themselves, or it is shorter than a CSS pixel, or it is a dot that the line's round
-or square cap draws. The area it paints is filled instead, as a line wider than 7 mm is.
+`--auto` sews a line up to 7 mm wide as a satin column along its path, and a part of an area that
+holds no circle 7 mm across as satin columns along its centre lines, but no satin column can be made
+of this one. A column cannot follow a part of a line that turns more tightly than the line is wide,
+so the column's edges would fold over themselves, or that is shorter than a CSS pixel, or that is a
+dot the line's round or square cap draws: the area it paints is filled instead, as a line wider than
+7 mm is. A part of an area makes no columns where the triangles round one of its centre lines don't
+make a column with 2 sides, or where one of its columns, drawn with its rails and rungs, would be read
+back otherwise: it stays in the area's fill.
 
-The message says which. To sew it as a satin column, draw the line with gentler turns or narrower,
-or draw the column with 2 rails and give it settings.
+The message says which. To sew it as satin columns, draw the line with gentler turns or narrower, or
+the part with smoother edges, or draw the columns with 2 rails each and give them settings.
 
 ## SC-W0903
 

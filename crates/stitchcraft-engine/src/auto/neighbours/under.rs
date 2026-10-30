@@ -21,9 +21,9 @@
 //!   comes near it without touching it only within the overlap of where it touches another, and a piece of
 //!   that reach that doesn't touch what is left of `a` is left out, so that `a` gains no part of its own.
 //!
-//! A narrow part's line (`auto::narrow`) is reached under as a satin column is. It isn't cut away: one that
-//! the areas sewn after it cover whole sews nothing, as such an area doesn't, and one they cover in part
-//! sews whole.
+//! A part's line or column (`auto::narrow`, `auto::columns`) is reached under as a satin column is. It isn't
+//! cut away: one that the areas sewn after it cover whole sews nothing, as such an area doesn't, and one they
+//! cover in part sews whole.
 //!
 //! Only the shapes whose bounds come within [`TOUCHING`] of `a`'s are looked at, each for a unit of work, so
 //! an area costs the work of its neighbours, not of the whole design. The areas are named in the order they
@@ -45,7 +45,7 @@ pub(super) fn reached(shapes: &mut Shapes, budget: &Budget) -> Vec<Diagnostic> {
     let (mut reaching, mut cut) = (0_usize, 0_usize);
     let mut said = Vec::new();
     for index in (0..shapes.len()).rev() {
-        if shapes.kind(index) == Some(Kind::Narrow) {
+        if shapes.kind(index) == Some(Kind::Part) {
             said.extend(hidden(shapes, index, budget));
             continue;
         }
@@ -84,7 +84,7 @@ fn covered(id: ElementId) -> Diagnostic {
     Diagnostic::new(Code::AutoUnder, "This area is covered by the areas sewn after it, so it sews nothing.").with_element(id).with_fix(fix)
 }
 
-/// Leaves out the narrow part's line `index` of `shapes` when the areas sewn after it cover the part whole,
+/// Leaves out the part's line or column `index` of `shapes` when the areas sewn after it cover the part whole,
 /// with the budget's work, and says so; one that needs more work than that is sewn whole, and that is said.
 fn hidden(shapes: &mut Shapes, index: usize, budget: &Budget) -> Option<Diagnostic> {
     let id = shapes.id(index)?;
@@ -98,7 +98,7 @@ fn hidden(shapes: &mut Shapes, index: usize, budget: &Budget) -> Option<Diagnost
     }
 }
 
-/// Whether the areas sewn after the narrow part's line `index` of `shapes` cover the part whole, with
+/// Whether the areas sewn after the part's line or column `index` of `shapes` cover the part whole, with
 /// `meter`'s work.
 fn covered_whole(shapes: &mut Shapes, index: usize, meter: &mut Meter) -> Result<bool, Failed> {
     let Some(part) = shapes.paint(index).map(|(_, parts)| parts.to_vec()) else { return Ok(false) };
@@ -108,7 +108,7 @@ fn covered_whole(shapes: &mut Shapes, index: usize, meter: &mut Meter) -> Result
 }
 
 /// The areas sewn after element `index` of `shapes` that come within [`TOUCHING`] of `bounds`, and when
-/// `grown`, every area, column and narrow part's line that does, grown to meet it, with `meter`'s work: a
+/// `grown`, every area, column and part's line or column that does, grown to meet it, with `meter`'s work: a
 /// unit for each shape looked at, and the work of growing those near.
 fn later(shapes: &mut Shapes, index: usize, bounds: &Envelope, grown: bool, meter: &mut Meter) -> Result<(Vec<Polygon>, Vec<Polygon>), Failed> {
     let (mut covering, mut touching) = (Vec::new(), Vec::new());
@@ -150,7 +150,7 @@ struct Found {
 fn beside(shapes: &mut Shapes, index: usize, meter: &mut Meter) -> Result<Option<Found>, Failed> {
     let area = shapes.region(index).map(<[Polygon]>::to_vec).unwrap_or_default();
     let Some(bounds) = envelope(&area) else { return Ok(Some(Found { parts: area, reaching: false, cut: false })) };
-    // The areas sewn after it that come near it, and every area, column and narrow part's line that does,
+    // The areas sewn after it that come near it, and every area, column and part's line or column that does,
     // grown to meet it.
     let (covering, touching) = later(shapes, index, &bounds, true, meter)?;
     // Every shape that comes near it is in `touching`, and the areas among them in `covering` too.

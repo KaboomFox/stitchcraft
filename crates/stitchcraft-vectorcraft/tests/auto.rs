@@ -11,6 +11,7 @@ mod common;
 use common::{document, element, line, square};
 use stitchcraft_core::units::MM_PER_POINT;
 use stitchcraft_core::{Budget, Point};
+use stitchcraft_engine::auto::OVERLAP;
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Reading, Shape};
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_vectorcraft::{VectorCraft, read_with};
@@ -120,7 +121,8 @@ fn req_auto_005_what_an_automatic_stroke_sewn_across_does_not_follow_is_named() 
 #[test]
 fn req_auto_003_a_line_traced_in_vectorcraft_sews_as_wide_and_as_long_as_drawn() {
     // As Image Trace's Create Strokes draws a line: a stroked centre line with round caps, in the group of
-    // the trace. It is 50 points long and 2.5 mm wide.
+    // the trace. It is 50 points long and 2.5 mm wide, and sews as wide once the thread pulls it in: its
+    // stitches reach the overlap past each edge (REQ-AUTO-018).
     let traced = group(9, &appearance(&[], &[]), &[line(2, "", &appearance(&[stroke(2.5, r#", "cap": "Round""#)], &[]))]);
     let read = read(&document(4, &traced), true);
     let origin = Point::new(0.0, 0.0).unwrap();
@@ -131,7 +133,7 @@ fn req_auto_003_a_line_traced_in_vectorcraft_sews_as_wide_and_as_long_as_drawn()
     let (left, right) = extent(points.iter().map(|q| q.x()).collect());
     let (top, bottom) = extent(points.iter().map(|q| q.y()).collect());
     let length = 50.0 * MM_PER_POINT;
-    assert!((top + 1.25).abs() < 0.05 && (bottom - 1.25).abs() < 0.05, "as wide as drawn: {top} to {bottom}");
+    assert!((top + 1.25 + OVERLAP).abs() < 0.05 && (bottom - 1.25 - OVERLAP).abs() < 0.05, "as wide as drawn: {top} to {bottom}");
     assert!((left + 1.25).abs() < 0.05 && (right - length - 1.25).abs() < 0.05, "caps included: {left} to {right}");
     assert_eq!(read.warnings.len(), 0, "{:?}", read.warnings);
     let said: Vec<String> = outcome.diagnostics.iter().map(ToString::to_string).collect();
