@@ -5,6 +5,28 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.5: columns from shapes. With `--auto`, a part of a shape that isn't narrow, and is nowhere wider than
+  the widest satin column, 7 mm, sews as satin columns between its own outlines (`REQ-AUTO-016`).
+  - Its centre lines are found as a narrow part's are, but a branch is a bump only when it ends at a tip and
+    at its junction too, as the second sharp corner of a wide square end does: each arm of a t's crossbar is
+    a column of its own, where the stem's column would cover the crossbar with stitches from one end of it
+    to the other. A line is cut where it turns by more than 60°, and a line that comes back to a junction it
+    ran through is cut into the line up to the junction and a ring.
+  - Each line sews one column over the triangles round it, its rails the part's outline on either side, a
+    ring's its outer and inner outline. A column that ends where another runs on ends under it: it sews
+    first and is 0.4 mm longer at that end. Otherwise it ends at its farthest point along its line's way,
+    flat along the end's edge within 20° of square, or at a point.
+  - Its rungs lie square to the mean of its rails' ways (`REQ-AUTO-017`). Drawn with its rails and rungs,
+    as Stroke to Satin draws a column (`generators::satin::drawn::from_rails`), it must read back the same:
+    a part one of whose columns doesn't stays in the fill, with `SC-I0902`.
+  - A column that ends under another sews first, then the longest, then each the one nearest where the last
+    ended. A column no wider than the design's narrowest satin stroke runs along its line as a triple run.
+    The columns paint their part to its neighbours, and `SC-I0901` counts an area as satin columns when none
+    of it is filled and one of its parts sews a satin column.
+  - An automatic satin column, a stroke's as well as a shape's, has the underlay of its width
+    (`REQ-AUTO-018`). Below 2 mm wide its underlay is a centre walk, and up to 4 mm a contour. A wider column
+    has a contour and a zigzag. Its pull compensation is 0.4 mm, and it ends at its rails' ends.
+
 - M13.4: centre lines. With `--auto`, a part of a shape that is narrower than the design's narrowest satin
   stroke everywhere sews as a running stitch along its centre line (`REQ-AUTO-013`).
   - A part is that narrow when nothing of it is left once it is shrunk by half the width with the polygon
@@ -807,6 +829,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- An automatic satin column digitized from a stroke (M13.1) has the underlay of its width, a pull
+  compensation of 0.4 mm and ends at its rails' ends (`REQ-AUTO-018`). It had a satin column's defaults
+  before, without underlay or pull compensation. It ended at the points nearest the shapes before and after
+  it, and a straight run across it joined it to them.
+- `SC-I0902` is said of a part of an area that can't be sewn as satin columns as well as of a line. Its title
+  is `Satin column can't be made; filled`.
 - Mutation testing on a pull request runs in 8 parts instead of 4. The lines M13.5 changes hold about 590
   mutants, and 2 of 4 parts ran past the jobs' limit of an hour and a half.
 - A speck that shares as long an edge with 2 areas goes into the one drawn first. It went into the one sewn

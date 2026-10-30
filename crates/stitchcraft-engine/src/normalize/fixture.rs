@@ -1,10 +1,26 @@
-//! Reading the geometry fixtures shapely's answers are recorded in (`conformance/fixtures/geometry/`), for
-//! the tests of the modules that must answer as shapely does.
+//! Test helpers for the normalize modules: reading the geometry fixtures shapely's answers are recorded in
+//! (`conformance/fixtures/geometry/`), for the modules that must answer as shapely does, and parts drawn by
+//! their corners, for the modules that take a region's parts.
 
 // Test code may unwrap (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used)]
 
 use stitchcraft_core::Point;
+
+use crate::normalize::region::{Polygon, geom};
+
+/// A part with the outline `outline` and the holes `holes`, each a ring of corners, wound as a region winds
+/// them: the outline clockwise in y-up axes, and the holes the other way.
+pub(crate) fn part(outline: &[(f64, f64)], holes: &[&[(f64, f64)]]) -> Polygon {
+    let ring = |points: &[(f64, f64)], clockwise: bool| {
+        let mut ring: Vec<Point> = points.iter().map(|&(x, y)| Point::new(x, y).unwrap()).collect();
+        if (geom::signed_area(&geom::closed(&ring)) < 0.0) != clockwise {
+            ring.reverse();
+        }
+        geom::closed(&ring)
+    };
+    Polygon { outline: ring(outline, true), holes: holes.iter().map(|hole| ring(hole, false)).collect() }
+}
 
 /// The words of one case, read in order: numbers, counts, points and polylines (a count of points and
 /// their coordinates).

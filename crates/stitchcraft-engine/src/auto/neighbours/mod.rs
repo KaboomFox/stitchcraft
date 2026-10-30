@@ -24,12 +24,12 @@
 //!
 //! Only automatic areas change shape: the fills automatic digitizing made, of shapes without settings. A
 //! shape with settings is sewn as they say, and a column or a line sewn after an area goes over it. A
-//! narrow part's line (`auto::narrow`) paints its part, which the areas sewn before it reach under, and is
-//! left out when the areas sewn after it cover the part whole ([`Kind::Narrow`]). The
-//! regions are combined with [`crate::normalize::region::ops`]. An area whose region changed is given its
-//! new outline, and one that didn't keeps its path as drawn. A fill that bounds no area is left to its fill,
-//! which says so. Only automatic elements move in the order, unless the design asks for every element
-//! ordered (`--sort-colours`).
+//! narrow part's line or a column of a part no wider than a satin column (`auto::narrow`, `auto::columns`)
+//! paints its part, which the areas sewn before it reach under, and is left out when the areas sewn after it
+//! cover the part whole ([`Kind::Part`]). The regions are combined with [`crate::normalize::region::ops`].
+//! An area whose region changed is given its new outline, and one that didn't keeps its path as drawn. A
+//! fill that bounds no area is left to its fill, which says so. Only automatic elements move in the order,
+//! unless the design asks for every element ordered (`--sort-colours`).
 //!
 //! **Work.** Each automatic area has the budget's work to itself for its specks and for its overlaps, and
 //! each element for where it meets the shapes drawn after it, and costs the work of the shapes near it, and
@@ -97,8 +97,9 @@ pub(super) struct Sewn {
     /// The place in the design of the shape it is a part of: the parts of a shape sewn as several elements
     /// keep their order.
     pub(super) shape: usize,
-    /// The narrow part of an automatic area that it sews along the centre line of, which it paints.
-    pub(super) narrow: Option<Polygon>,
+    /// The part of an automatic area that it sews along the middle of, as a narrow part's line or a column,
+    /// which it paints.
+    pub(super) part: Option<Polygon>,
 }
 
 /// `sewn`, its specks merged into their neighbours, put in the order it sews in, every element moving when
@@ -125,10 +126,10 @@ enum Kind {
     /// A line: the area its stroke paints as drawn, which only the order needs. An automatic area is sewn
     /// whole under it, and reaches under none.
     Line,
-    /// A running stitch along the centre line of a narrow part of an automatic area: it paints the part, and
-    /// an automatic area reaches under it where they meet, as under a satin column, and is sewn whole under
-    /// it.
-    Narrow,
+    /// A running stitch or a satin column along the middle of a part of an automatic area, a narrow part's
+    /// line or a column: it paints the part, and an automatic area reaches under it where they meet, as under
+    /// a satin column, and is sewn whole under it.
+    Part,
 }
 
 impl Kind {
@@ -193,8 +194,8 @@ struct Shapes {
     changed: Vec<bool>,
     /// Whether each element is left out.
     removed: Vec<bool>,
-    /// What each element that is no automatic area paints, once found: known from the start for a narrow
-    /// part's line.
+    /// What each element that is no automatic area paints, once found: known from the start for a part's
+    /// line or column.
     painted: Vec<Option<Painted>>,
     /// The bounds of what each element paints, once found.
     bounds: Vec<Option<Option<Envelope>>>,
@@ -221,7 +222,7 @@ impl Shapes {
         let (elements, area): (Vec<Element>, Vec<bool>) = sewn
             .into_iter()
             .map(|sewn| {
-                painted.push(sewn.narrow.map(|part| Some((Kind::Narrow, vec![part]))));
+                painted.push(sewn.part.map(|part| Some((Kind::Part, vec![part]))));
                 (sewn.element, sewn.area)
             })
             .unzip();
@@ -270,7 +271,7 @@ impl Shapes {
     }
 
     /// Whether element `index` is left out: an automatic area whose every part went into its neighbours, or
-    /// a narrow part's line that the areas sewn after it cover whole.
+    /// a part's line or column that the areas sewn after it cover whole.
     fn left_out(&self, index: usize) -> bool {
         self.removed.get(index).copied().unwrap_or(true)
     }
@@ -305,14 +306,14 @@ impl Shapes {
 
     /// What element `index` paints, once [`Self::find`] found it: an automatic area its region as it now
     /// is, another fill its region, a satin column the area between its rails, a line the area its stroke
-    /// paints, and a narrow part's line the part. `None` for an automatic area left out, and for a shape
-    /// whose region cannot be built. A narrow part's line left out still paints its part, which the areas
+    /// paints, and a part's line or column the part. `None` for an automatic area left out, and for a
+    /// shape whose region cannot be built. A part's line or column left out still paints its part, which the areas
     /// sewn after it cover whole: an area sewn before it that reaches under the part reaches under them.
     fn paint(&self, index: usize) -> Option<(Kind, &[Polygon])> {
         if self.area.get(index).copied().unwrap_or(false) {
             return self.region(index).map(|parts| (Kind::Area, parts));
         }
-        // Of the other elements only narrow parts' lines are left out, and what they paint stays known.
+        // Of the other elements only parts' lines and columns are left out, and what they paint stays known.
         let (kind, parts) = self.painted.get(index)?.as_ref()?.as_ref()?;
         Some((*kind, parts.as_slice()))
     }
@@ -324,13 +325,13 @@ impl Shapes {
     }
 
     /// What element `index` paints when that is known without work: an automatic area's region, and the
-    /// part a narrow part's line sews along.
+    /// part a part's line or column sews along.
     fn known(&self, index: usize) -> Option<&[Polygon]> {
         if self.area.get(index).copied().unwrap_or(false) {
             return self.region(index);
         }
         match self.kind(index)? {
-            Kind::Narrow => self.paint(index).map(|(_, parts)| parts),
+            Kind::Part => self.paint(index).map(|(_, parts)| parts),
             Kind::Area | Kind::Column | Kind::Line => None,
         }
     }
