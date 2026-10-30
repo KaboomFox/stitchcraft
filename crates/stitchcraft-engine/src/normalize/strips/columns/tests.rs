@@ -92,9 +92,10 @@ fn req_auto_016_a_round_end_ends_where_it_reaches_farthest() {
 
 #[test]
 fn req_auto_016_a_square_end_ends_along_its_edge() {
-    // A band whose end is an edge 10° from square to it ends along that edge, its rails at its 2 ends; one
-    // 30° from square ends at its farthest corner, where its rails meet.
-    for (slant, square) in [(10.0, true), (30.0, false)] {
+    // A band whose end is an edge 10° or 15° from square to it ends along that edge, its rails at its 2 ends;
+    // one 25° or 30° from square ends at its farthest corner, where its rails meet. (The way the edge is
+    // measured against tilts a little towards the slant, so the band's own 20° isn't the bound.)
+    for (slant, square) in [(10.0, true), (15.0, true), (25.0, false), (30.0, false)] {
         let rise = 3.0 * math::tan(math::to_radians(slant));
         let band = part(&[(0.0, 0.0), (20.0, 0.0), (20.0 + rise, 3.0), (0.0, 3.0)], &[]);
         let [column] = found(&band).try_into().unwrap();
@@ -110,6 +111,16 @@ fn req_auto_016_a_square_end_ends_along_its_edge() {
             );
         } else {
             assert!(far.iter().all(|&q| same(q, p(20.0 + rise, 3.0))), "{slant}°: {far:?}");
+        }
+    }
+    // A band turned 30°, its column's way slanting, ends along its square ends: its rails run from corner to
+    // corner.
+    let (sin, cos) = sin_cos(math::to_radians(30.0));
+    let corners = [(0.0, 0.0), (20.0, 0.0), (20.0, 3.0), (0.0, 3.0)].map(|(x, y)| (x * cos - y * sin, x * sin + y * cos));
+    let [column] = found(&part(&corners, &[])).try_into().unwrap();
+    for rail in &column.rails {
+        for end in [rail.first().unwrap(), rail.last().unwrap()] {
+            assert!(corners.iter().any(|&(x, y)| same(*end, p(x, y))), "{end:?} {:?}", column.rails);
         }
     }
     // Half a ring 3 mm wide ends square, along its ends' edges, each cut in 2 pieces by the points along it:
@@ -128,10 +139,11 @@ fn req_auto_016_a_square_end_ends_along_its_edge() {
 
 #[test]
 fn req_auto_016_an_end_along_an_edge_takes_the_whole_straight_edge() {
-    // The outline of a column 10 mm long and 3 mm wide, its end at x = 10 cut in 2 pieces, and the line going
-    // along x. However the end's arc runs, and wherever on the edge the end reaches farthest, it ends along
-    // the whole edge: from an end of it, on round the ring past the arc, and from the point between its
-    // pieces, both ways; but not along an edge longer than an end may be.
+    // The outline of a column 10 mm long and 3 mm wide, its end at x = 10 cut in 2 pieces, the line going
+    // along x, and the end's triangles beginning at a chord across it, 3 mm long. However the end's arc runs,
+    // and wherever on the edge the end reaches farthest, it ends along the whole edge: from an end of it, on
+    // round the ring past the arc, and from the point between its pieces, both ways; but not along an edge
+    // longer than twice the chord.
     let ring_points = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 1.5), p(10.0, 3.0), p(0.0, 3.0)];
     let triangulation = crate::normalize::triangulation::Triangulation { points: ring_points.to_vec(), triangles: Vec::new() };
     let graph = super::super::Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() };
@@ -140,13 +152,14 @@ fn req_auto_016_an_end_along_an_edge_takes_the_whole_straight_edge() {
     let ring = [0, 1, 2, 3, 4];
     let place = Place { skeleton: &skeleton, owner: &[], line: 0, outline: &outline, ring: &ring };
     for arc in [&[0, 1, 2][..], &[2, 3, 4], &[1, 2, 3]] {
-        assert_eq!(place.farthest(arc, (1.0, 0.0), 6.0), Some((1, 3)), "{arc:?}");
+        assert_eq!(place.farthest(arc, (1.0, 0.0), 3.0), Some((1, 3)), "{arc:?}");
     }
     // Tilted 30° from the edge's normal, the end reaches farthest at a corner.
     let (sin, cos) = sin_cos(math::to_radians(30.0));
-    assert_eq!(place.farthest(&[1, 2, 3], (cos, sin), 6.0), Some((3, 3)));
-    // An edge longer than the longest an end may be runs along the column: the end is at its farthest point.
-    assert_eq!(place.farthest(&[1, 2, 3], (1.0, 0.0), 2.9), Some((1, 1)));
+    assert_eq!(place.farthest(&[1, 2, 3], (cos, sin), 3.0), Some((3, 3)));
+    // Beyond a chord of 1.45 mm, the 3 mm edge is too long, and runs along the column: the end is at its
+    // farthest point.
+    assert_eq!(place.farthest(&[1, 2, 3], (1.0, 0.0), 1.45), Some((1, 1)));
 }
 
 #[test]
@@ -200,6 +213,16 @@ fn req_auto_016_the_stem_of_a_t_ends_under_its_bar() {
         side.windows(2).any(|w| same(w[0], p(11.5, 3.0)) && same(w[1], p(8.5, 3.0)) || same(w[0], p(8.5, 3.0)) && same(w[1], p(11.5, 3.0))),
         "{side:?}"
     );
+    // The bar's line is the line as walked, end to end. The stem's stops at the chord its column ends at, under
+    // the bar, short of the junction's middle that its walked line runs on to.
+    assert_eq!(bar.line, bar.walked);
+    let mut short = stem.walked.points.clone();
+    if under_end == 0 {
+        short.remove(0);
+    } else {
+        short.pop();
+    }
+    assert_eq!(stem.line.points, short);
     // Turned round, the stem runs from its other end, its rails, rungs and lines the other way, and ends under
     // the bar at its other end. Turned round again, it is itself.
     let turned = stem.reversed();
@@ -523,6 +546,21 @@ fn rails_that_run_opposite_ways_give_no_rungs() {
     assert!(rungs(&skeleton, &owner, 0, &[one, turned], &mut meter).unwrap().is_empty());
 }
 
+#[test]
+fn a_rung_meets_the_edge_at_a_right_angle_to_the_way_or_at_its_nearer_end() {
+    // From (5, 3), its rail running along x, to an edge along x below it: the rung runs straight down. It meets
+    // the edge from (4, 0) to (8, 0) a quarter of the way along, at (5, 0), 1 mm along it. The edge from (0, 0)
+    // to (2, 0) it misses: it meets the edge's line at (5, 0), so it ends at the edge's nearer end, 2 mm along
+    // it, 3 mm short.
+    let (corner, rail) = (p(5.0, 3.0), (p(4.0, 3.0), p(6.0, 3.0)));
+    assert_eq!(meet(corner, rail, (p(4.0, 0.0), p(8.0, 0.0))), Some((p(5.0, 0.0), 1.0, 0.0)));
+    assert_eq!(meet(corner, rail, (p(0.0, 0.0), p(2.0, 0.0))), Some((p(2.0, 0.0), 2.0, 3.0)));
+    // An edge that runs back the other way, a rail of no length at the corner, or an edge of none: no rung.
+    assert_eq!(meet(corner, rail, (p(2.0, 0.0), p(0.0, 0.0))), None);
+    assert_eq!(meet(corner, (corner, corner), (p(0.0, 0.0), p(2.0, 0.0))), None);
+    assert_eq!(meet(corner, rail, (p(2.0, 0.0), p(2.0, 0.0))), None);
+}
+
 /// A skeleton of no triangles whose graph has the points `points`, each with its junction's size if it is a
 /// junction's middle, for the tests of what becomes of its lines.
 fn drawn(points: &[((f64, f64), Option<f64>)]) -> Skeleton {
@@ -581,4 +619,167 @@ fn req_auto_016_of_2_corners_near_each_other_only_the_sharper_cuts_the_line() {
     // As far apart as twice the larger junction is across, 2 corners each cut it.
     let apart = [((-5.0, 10.0), None), ((-1.0, 0.0), Some(1.0)), ((1.0, 0.0), Some(1.0)), ((5.0, 10.0), None)];
     assert_eq!(cut(&apart, false), [open(&[0, 1]), open(&[1, 2]), open(&[2, 3])]);
+}
+
+#[test]
+fn req_auto_016_a_line_that_turns_by_60_degrees_stays_one_line() {
+    // A line through a junction 1 mm across, its ways from there (2, 0) and (-1, y), 120° apart: y is a double
+    // as near √3 as makes the cosine between them come to exactly -0.5. The line turns by 60°, as sharply as
+    // a column sews, and stays one line. A little more sharply, it is cut there.
+    let turned = |x: f64| [((2.0, 0.0), None), ((0.0, 0.0), Some(1.0)), ((x, 1.732_050_807_568_877_4), None)];
+    assert_eq!(cut(&turned(-1.0), false), [open(&[0, 1, 2])]);
+    assert_eq!(cut(&turned(-0.99), false), [open(&[0, 1]), open(&[1, 2])]);
+}
+
+#[test]
+fn a_crossbar_that_ends_under_2_columns_stops_short_of_both_junctions() {
+    // An H whose crossbar, 3 mm wide, ends under both bars: its line stops at the chords its column ends at,
+    // short of both junctions' middles that its walked line reaches.
+    let h = part(
+        &[
+            (0.0, 0.0),
+            (3.0, 0.0),
+            (3.0, 8.5),
+            (10.0, 8.5),
+            (10.0, 0.0),
+            (13.0, 0.0),
+            (13.0, 20.0),
+            (10.0, 20.0),
+            (10.0, 11.5),
+            (3.0, 11.5),
+            (3.0, 20.0),
+            (0.0, 20.0),
+        ],
+        &[],
+    );
+    let columns = found(&h);
+    let crossbar = columns.iter().find(|column| column.under.iter().flatten().count() == 2).unwrap();
+    let walked = &crossbar.walked.points;
+    assert_eq!(crossbar.line.points, walked[1..walked.len() - 1]);
+}
+
+#[test]
+fn the_end_of_a_line_at_a_chord_lies_beyond_it() {
+    // A line that ends at a chord between triangles 5 and 6, its last piece in 6, a junction's middle where it
+    // bends before it: its own end lies in 5, beyond the chord, and runs the way of its last piece. With 5
+    // another line's, it ends under that line, at the chord. With only the chord and the bend, it has no chord
+    // past the bend to end at, and ends at that chord.
+    let mut graph = Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() };
+    let chord = graph.add(p(10.0, 0.0), None, Node::Chord { triangles: (5, 6), corners: (0, 1) });
+    let bend = graph.add(p(8.0, 0.0), Some(1.0), Node::Junction(6));
+    let before = graph.add(p(5.0, 1.0), None, Node::Chord { triangles: (6, 7), corners: (1, 2) });
+    graph.join(chord, bend, 6);
+    graph.join(bend, before, 6);
+    let skeleton = Skeleton { triangulation: Triangulation { points: Vec::new(), triangles: Vec::new() }, graph, walked: Vec::new() };
+    let mine = [0; 8];
+    let Some((End::Own { corners, beyond, way }, false)) = end(&skeleton, &mine, 0, &[chord, bend]) else { panic!("no own end") };
+    assert_eq!((corners, beyond, way), ((0, 1), 5, (2.0, 0.0)));
+    let theirs = [0, 0, 0, 0, 0, 1, 0, 0];
+    let Some((End::Cut { corners, under }, false)) = end(&skeleton, &theirs, 0, &[chord, bend]) else { panic!("no cut") };
+    assert_eq!((corners, under), ((0, 1), 1));
+}
+
+#[test]
+fn the_end_of_a_line_takes_in_the_bends_on_its_way_up_to_the_lines_middle() {
+    // A line along x from one junction's middle, in triangle 0, to another's, in 5, through chords and bends in
+    // turn, as along a ribbon toothed on both sides: chord k between triangles k and k + 1 and bend k in
+    // triangle k. Its end takes in the bends from its first junction on up to the line's middle, and lies
+    // beyond the chord there, the third. Where a third line branches off the second bend, the end stops
+    // before it, beyond the second chord.
+    let walked = |branch: bool| {
+        let mut graph = Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() };
+        let nodes: Vec<usize> = (0..11_usize)
+            .map(|k| {
+                let node = if k % 2 == 1 { Node::Chord { triangles: (k / 2, k / 2 + 1), corners: (k, k + 1) } } else { Node::Junction(k / 2) };
+                graph.add(p(k as f64, 0.0), Some(1.0), node)
+            })
+            .collect();
+        for pair in nodes.windows(2) {
+            graph.join(pair[0], pair[1], 0);
+        }
+        if branch {
+            let off = graph.add(p(4.0, 1.0), None, Node::Chord { triangles: (2, 6), corners: (20, 21) });
+            graph.join(nodes[4], off, 2);
+        }
+        (Skeleton { triangulation: Triangulation { points: Vec::new(), triangles: Vec::new() }, graph, walked: Vec::new() }, nodes)
+    };
+    let mine = [0; 7];
+    let (skeleton, nodes) = walked(false);
+    let Some((End::Own { corners, beyond, .. }, false)) = end(&skeleton, &mine, 0, &nodes) else { panic!("no end") };
+    assert_eq!((corners, beyond), ((5, 6), 2));
+    let (skeleton, nodes) = walked(true);
+    let Some((End::Own { corners, beyond, way }, false)) = end(&skeleton, &mine, 0, &nodes) else { panic!("no end") };
+    assert_eq!((corners, beyond, way), ((3, 4), 1, (-1.0, 0.0)));
+}
+
+#[test]
+fn the_points_of_a_line_that_comes_back_to_a_junction_split_into_a_line_and_a_ring() {
+    let walked = |nodes: &[usize]| Walked { nodes: nodes.to_vec(), closed: false };
+    let ring = |nodes: &[usize]| Walked { nodes: nodes.to_vec(), closed: true };
+    // Back to point 2 after it: the line up to it, and the ring from it round back to it.
+    assert_eq!(unlooped(&[walked(&[0, 1, 2, 3, 4, 5, 2])]), [walked(&[0, 1, 2]), ring(&[2, 3, 4, 5])]);
+    // The shortest that is cut: a line of 2 points up to it, and a ring of 3.
+    assert_eq!(unlooped(&[walked(&[0, 1, 2, 3, 1])]), [walked(&[0, 1]), ring(&[1, 2, 3])]);
+    // A ring of 2 points would be no ring, a line that comes back to where it started has no line up to its
+    // ring, and a ring is one already: each stays as it is.
+    for line in [walked(&[0, 1, 2, 1]), walked(&[0, 1, 2, 3, 0]), ring(&[0, 1, 2])] {
+        assert_eq!(unlooped(std::slice::from_ref(&line)), [line]);
+    }
+}
+
+#[test]
+fn a_ring_rail_started_at_a_point_runs_round_back_to_it() {
+    // A square rail 10 mm a side, from (0, 0) round back to it. Started at (10, 5), 15 mm along it, it runs
+    // from that point round back to it. Started at a corner, the corner is its ends, and nowhere between.
+    // Started past its length, it starts on its last side.
+    let square = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0)];
+    let started = |at: f64, point: Point| from(&square, at, point).unwrap();
+    assert_eq!(started(15.0, p(10.0, 5.0)), [p(10.0, 5.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0), p(10.0, 0.0), p(10.0, 5.0)]);
+    assert_eq!(started(20.0, p(10.0, 10.0)), [p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0)]);
+    assert_eq!(started(45.0, p(0.0, 5.0)), [p(0.0, 5.0), p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 5.0)]);
+}
+
+/// What `test` finds on a ring through `points` in order, each the point of its own place.
+fn on_ring<R>(points: &[(f64, f64)], test: impl FnOnce(&Place) -> R) -> R {
+    let skeleton = Skeleton {
+        triangulation: Triangulation { points: points.iter().map(|&(x, y)| p(x, y)).collect(), triangles: Vec::new() },
+        graph: Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() },
+        walked: Vec::new(),
+    };
+    let outline = Outline { rings: Vec::new(), triangle: BTreeMap::new() };
+    let ring: Vec<usize> = (0..points.len()).collect();
+    test(&Place { skeleton: &skeleton, owner: &[], line: 0, outline: &outline, ring: &ring })
+}
+
+#[test]
+fn a_point_is_in_line_within_a_millionth_of_a_millimetre() {
+    // Through (0, 0) and (10, 0): (20, 0.0000005) lies on the line, (20, 0.000002) off it. Through 2 places at
+    // one point there is no line.
+    on_ring(&[(0.0, 0.0), (10.0, 0.0), (20.0, 0.000_000_5), (20.0, 0.000_002)], |place| {
+        assert!(place.in_line(0, 1, 2) && !place.in_line(0, 1, 3) && !place.in_line(0, 0, 2));
+    });
+}
+
+#[test]
+fn an_end_lies_along_the_squarest_short_edge_at_its_farthest_point() {
+    // A band 10 mm long whose end, past (10, 0), is an edge `slant`° from square to the band, the line going
+    // `way` there and the end's triangles beginning at a chord 5 mm long: the end is the edge, places 1 to 2,
+    // when the edge is within 20° of square, and the far corner, place 2, otherwise, however long the way is
+    // measured.
+    let slanted = |slant: f64, way: (f64, f64)| {
+        let rise = 3.0 * math::tan(math::to_radians(slant));
+        on_ring(&[(0.0, 0.0), (10.0, 0.0), (10.0 + rise, 3.0), (0.0, 3.0)], |place| place.farthest(&[1, 2], way, 5.0))
+    };
+    assert_eq!(slanted(15.0, (2.0, 0.0)), Some((1, 2)));
+    assert_eq!(slanted(25.0, (0.5, 0.0)), Some((2, 2)));
+    // An edge longer than twice the chord runs along the column: the end is the first of its points as far
+    // along the way. The 3 mm edge is just longer than twice a chord of 1.45 mm.
+    assert_eq!(on_ring(&[(0.0, 0.0), (10.0, 0.0), (10.0, 3.0), (0.0, 3.0)], |place| place.farthest(&[1, 2], (1.0, 0.0), 1.45)), Some((1, 1)));
+    // The same band turned 30°, its way slanting: its square end is its end.
+    let (sin, cos) = sin_cos(math::to_radians(30.0));
+    let turned = [(0.0, 0.0), (10.0, 0.0), (10.0, 3.0), (0.0, 3.0)].map(|(x, y)| (x * cos - y * sin, x * sin + y * cos));
+    assert_eq!(on_ring(&turned, |place| place.farthest(&[1, 2], (2.0 * cos, 2.0 * sin), 5.0)), Some((1, 2)));
+    // A chevron whose 2 edges from its farthest point lie 15° and 10° from square: the end is the squarer.
+    let chevron = [(0.0, 0.0), (10.0, 0.0), (10.8, 3.0), (10.27, 6.0), (0.0, 6.0)];
+    assert_eq!(on_ring(&chevron, |place| place.farthest(&[1, 2, 3], (1.0, 0.0), 5.0)), Some((2, 3)));
 }

@@ -129,8 +129,8 @@ lines are found as above, but for these steps:
 - **Ends.** A line that ends at a junction another line owns, or at a chord with another line's triangle
   beyond it, ends at that chord. Its column ends under the other column, which sews after it. Otherwise
   the column's own end lies beyond the last chord the line crosses, with any bend the line runs through on
-  the way there. Such a bend is a junction whose third side is a cap or a bump, as beside the blunt corner
-  of a slanted end. The end is the column's farthest point along the line's way at that chord, measured from the line's
+  the way there, as far as the line's middle. Such a bend is a junction whose third side is a cap or a
+  bump, as beside the blunt corner of a slanted end. The end is the column's farthest point along the line's way at that chord, measured from the line's
   point before it. The last piece of a line runs to a tip or to a junction's middle, off the column's way.
   A way measured on it would end a slanted or round end at a corner. An edge of the outline there that lies
   within 20° of square to that way, and is no longer than twice the chord the end begins at, is the end.

@@ -27,8 +27,8 @@
 //! 4. **Its ends.** A line that ends at a junction another line runs on through, or where another line has
 //!    sewn the line on, ends at the chord there, which cuts its column across: it ends under that column.
 //!    Otherwise the column's own end lies beyond the last chord the line crosses, and takes in a bend the
-//!    line runs through on the way there, a junction whose third side is a cap or a bump, as beside the
-//!    blunt corner of a slanted end. The end is where the column reaches farthest along the line's way at
+//!    line runs through on the way there, as far as the line's middle: a junction whose third side is a cap
+//!    or a bump, as beside the blunt corner of a slanted end. The end is where the column reaches farthest along the line's way at
 //!    that chord, from the line's point before it: the last piece of a line, to a tip or to a junction's
 //!    middle, runs off the column's way. Where an edge of the outline there lies across that way, within
 //!    20° of square to it, and is no longer than twice that chord, the column ends along all of it, as far
@@ -57,7 +57,7 @@ use stitchcraft_core::{Exhausted, Meter, Point, math};
 
 use super::{Bumps, Line, Node, Skeleton, Walked, edge, skeleton};
 use crate::generators::satin::drawn::REACH;
-use crate::normalize::region::Polygon;
+use crate::normalize::region::{Polygon, geom};
 use crate::normalize::satin::SAME_POINT;
 use crate::normalize::triangulation::Broken;
 
@@ -401,11 +401,13 @@ enum End {
     Own { corners: (usize, usize), beyond: usize, way: (f64, f64) },
 }
 
-/// How `line`'s column ends at one end of its walked line, whose points `inward` lists from that end towards
-/// its middle, and whether the end is a junction's middle the column doesn't cover; `None` when the points
-/// aren't where a line ends.
+/// How `line`'s column ends at one end of its walked line, whose points `inward` lists from that end to the
+/// other, and whether the end is a junction's middle the column doesn't cover; `None` when the points aren't
+/// where a line ends.
 fn end(skeleton: &Skeleton, owner: &[usize], line: usize, inward: &[usize]) -> Option<(End, bool)> {
     let graph = &skeleton.graph;
+    // The end takes in nothing past the line's middle: the other end's points lie beyond it.
+    let inward = inward.get(..inward.len() / 2 + 1)?;
     let (&at, &next) = (inward.first()?, inward.get(1)?);
     let chord = |node: usize| if let Some(Node::Chord { corners, .. }) = graph.nodes.get(node) { Some(*corners) } else { None };
     // The place in `inward` of the chord the column's own end lies beyond, and the triangle beyond it.
@@ -457,12 +459,9 @@ fn strip(
     meter: &mut Meter,
 ) -> Result<Option<Column>, Exhausted> {
     let [ring] = outline.rings.as_slice() else { return Ok(None) };
-    // Each end's points, from that end to the line's middle.
-    let half = walked.nodes.len() / 2 + 1;
-    let from_start: Vec<usize> = walked.nodes.iter().take(half).copied().collect();
-    let from_finish: Vec<usize> = walked.nodes.iter().rev().take(half).copied().collect();
-    let Some((start, cut_start)) = end(skeleton, owner, line, &from_start) else { return Ok(None) };
-    let Some((finish, cut_finish)) = end(skeleton, owner, line, &from_finish) else { return Ok(None) };
+    let back: Vec<usize> = walked.nodes.iter().rev().copied().collect();
+    let Some((start, cut_start)) = end(skeleton, owner, line, &walked.nodes) else { return Ok(None) };
+    let Some((finish, cut_finish)) = end(skeleton, owner, line, &back) else { return Ok(None) };
     let points = &skeleton.triangulation.points;
     let place = Place { skeleton, owner, line, outline, ring };
     let (Some(a), Some(b)) = (place.range(&start, meter)?, place.range(&finish, meter)?) else { return Ok(None) };
@@ -530,11 +529,9 @@ impl Place<'_> {
                 meter.charge(u64::try_from(steps).unwrap_or(u64::MAX))?;
                 let arc: Vec<usize> = (0..=steps).map(|k| (from + k) % n).collect();
                 let true = arc.iter().take(steps).all(|&place| in_region(place)) else { return Ok(None) };
-                // An edge longer than twice the chord the end begins at runs along the column, as a side does
-                // where its line turns into a tip at its end: no end.
                 let points = &self.skeleton.triangulation.points;
-                let longest = points.get(a).zip(points.get(b)).map_or(0.0, |(p, q)| 2.0 * p.distance(*q));
-                Ok(self.farthest(&arc, way, longest))
+                let chord = points.get(a).zip(points.get(b)).map_or(0.0, |(p, q)| p.distance(*q));
+                Ok(self.farthest(&arc, way, chord))
             }
         }
     }
@@ -558,12 +555,14 @@ impl Place<'_> {
         Ok(region)
     }
 
-    /// Where on the ring the end along `arc`, places in the ring, lies, its line going `way`: the straight
-    /// edge across the line, within [`SQUARE`] of square to it and no longer than `longest`, where the end
-    /// reaches farthest along the line, or that farthest point. The edge runs on round the ring past the arc
-    /// as far as it is straight: the triangles of an end can stop at a chord from a point between an edge's
-    /// pieces, which leaves the edge's other piece beside them.
-    fn farthest(&self, arc: &[usize], way: (f64, f64), longest: f64) -> Option<(usize, usize)> {
+    /// Where on the ring the end along `arc`, places in the ring, lies, its line going `way` and its triangles
+    /// beginning at a chord `chord` long: the straight edge across the line, within [`SQUARE`] of square to it
+    /// and no longer than twice the chord, where the end reaches farthest along the line, or that farthest
+    /// point. A longer edge runs along the column, as a side does where its line turns into a tip at its end.
+    /// The edge runs on round the ring past the arc as far as it is straight: the triangles of an end can stop
+    /// at a chord from a point between an edge's pieces, which leaves the edge's other piece beside them.
+    fn farthest(&self, arc: &[usize], way: (f64, f64), chord: f64) -> Option<(usize, usize)> {
+        let longest = 2.0 * chord;
         let points = &self.skeleton.triangulation.points;
         let point = |place: usize| self.ring.get(place).and_then(|&p| points.get(p)).copied();
         let along = |p: Point| p.x() * way.0 + p.y() * way.1;
@@ -577,12 +576,13 @@ impl Place<'_> {
         }
         let (k, _) = far?;
         // How far from square to the way the edge between 2 places lies, as a sine, when within [`SQUARE`] and
-        // no longer than `longest`.
+        // no longer than `longest`. An edge of no length, or a way of none, gives 0 over 0, which is not a number
+        // and so not within.
         let square = |(from, to): (usize, usize)| {
             let (p, q) = (point(from)?, point(to)?);
             let span = p.distance(q);
             let across = ((q.x() - p.x()) * way.0 + (q.y() - p.y()) * way.1).abs() / (span * length);
-            (from != to && span > 0.0 && span <= longest && length > 0.0 && across <= SQUARE).then_some(across)
+            (span <= longest && across <= SQUARE).then_some(across)
         };
         let (back, on) = (self.straight(k, false), self.straight(k, true));
         // Where the end reaches as far at the points of a straight edge, the farthest can lie between its
@@ -623,7 +623,7 @@ impl Place<'_> {
         let (Some(a), Some(b), Some(c)) = (point(a), point(b), point(c)) else { return false };
         let (dx, dy) = (b.x() - a.x(), b.y() - a.y());
         let length = math::hypot(dx, dy);
-        length > 0.0 && ((c.x() - a.x()) * dy - (c.y() - a.y()) * dx).abs() / length <= STRAIGHT
+        length > 0.0 && ((c.x() - a.x()) * dy - (c.y() - a.y()) * dx).abs() <= STRAIGHT * length
     }
 }
 
@@ -650,12 +650,12 @@ fn rails(ring: &[usize], (a0, a1): (usize, usize), (b0, b1): (usize, usize)) -> 
 /// and its inner ring the same way round; `None` when it isn't a ring.
 fn ring(skeleton: &Skeleton, owner: &[usize], line: usize, outline: &Outline, found: Line, meter: &mut Meter) -> Result<Option<Column>, Exhausted> {
     let points = &skeleton.triangulation.points;
-    let area = |ring: &[usize]| {
-        let at = |i: usize| ring.get(i % ring.len()).and_then(|&p| points.get(p)).copied().unwrap_or(Point::ORIGIN);
-        (0..ring.len()).map(|i| at(i).x() * at(i + 1).y() - at(i + 1).x() * at(i).y()).sum::<f64>()
+    // The outer ring winds counter-clockwise round the column, its area positive, and the inner one clockwise.
+    let winds = |ring: &[usize]| {
+        geom::signed_area(&geom::closed(&ring.iter().filter_map(|&p| points.get(p).copied()).collect::<Vec<_>>())).is_sign_positive()
     };
     let [one, other] = outline.rings.as_slice() else { return Ok(None) };
-    let (outer, inner) = match (area(one) > 0.0, area(other) > 0.0) {
+    let (outer, inner) = match (winds(one), winds(other)) {
         (true, false) => (one, other),
         (false, true) => (other, one),
         _ => return Ok(None),
@@ -770,37 +770,42 @@ fn rungs(skeleton: &Skeleton, owner: &[usize], line: usize, rails: &[Vec<usize>;
         let false = places.iter().any(|(rail, ..)| *rail == r) else { continue };
         let (Some(rail), Some(c)) = (rails.get(r), point(apex)) else { continue };
         let (Some(p), Some(q)) = (rail.get(segment).and_then(|&i| point(i)), rail.get(segment + 1).and_then(|&i| point(i))) else { continue };
-        let (ex, ey) = (q.x() - p.x(), q.y() - p.y());
-        // The column's way: the corner's rail's way at the corner, from the point before it to the one after,
-        // and the edge's, each of length 1, added.
-        let unit = |(x, y): (f64, f64)| {
-            let length = math::hypot(x, y);
-            if length > 0.0 { (x / length, y / length) } else { (0.0, 0.0) }
-        };
+        // The corner's rail runs from the point before it to the one after.
         let Some(side) = rails.get(other) else { continue };
         let before = index.checked_sub(1).and_then(|i| side.get(i)).and_then(|&i| point(i)).unwrap_or(c);
         let after = side.get(index + 1).and_then(|&i| point(i)).unwrap_or(c);
-        let (along, across) = (unit((after.x() - before.x(), after.y() - before.y())), unit((ex, ey)));
-        let (dx, dy) = (along.0 + across.0, along.1 + across.1);
-        // Where the line from the corner at a right angle to the column's way, along (-dy, dx), meets the
-        // edge's line: p + u (q - p). An edge of a rail runs along the column: it lies square to the way, and
-        // gives no rung, only where it has no length or the rails run opposite ways.
-        let denominator = ex * dx + ey * dy;
-        let span = math::hypot(ex, ey);
-        if denominator.abs() <= 1e-12 * span * math::hypot(dx, dy) || span <= 0.0 {
-            continue;
-        }
-        let u = ((c.x() - p.x()) * dx + (c.y() - p.y()) * dy) / denominator;
-        let held = u.clamp(0.0, 1.0);
-        let foot = p.lerp(q, held);
-        let off = (u - held).abs() * span;
-        let (points, at) = if r == 0 { ([foot, c], [start + held * span, apex_at]) } else { ([c, foot], [apex_at, start + held * span]) };
+        let Some((foot, along, off)) = meet(c, (before, after), (p, q)) else { continue };
+        let (points, at) = if r == 0 { ([foot, c], [start + along, apex_at]) } else { ([c, foot], [apex_at, start + along]) };
         let rung = Rung { points, at, off };
         if best.get(&apex).is_none_or(|kept| off < kept.off) {
             best.insert(apex, rung);
         }
     }
     Ok(best.into_values().collect())
+}
+
+/// Where a rung from the corner `c` meets the edge from `p` to `q` on the other rail, at a right angle to the
+/// column's way there, the corner's rail running from `before` to `after` round it: the point where it meets
+/// the edge, or else the edge's nearer end; how far that point lies along the edge; and how far it lies from
+/// where the rung meets the edge's line, 0 for a rung at a right angle. `None` where the column has no way:
+/// where the rails run opposite ways, or the corner's rail or the edge has no length there.
+fn meet(c: Point, (before, after): (Point, Point), (p, q): (Point, Point)) -> Option<(Point, f64, f64)> {
+    let unit = |a: Point, b: Point| {
+        let length = a.distance(b);
+        (length > 0.0).then(|| ((b.x() - a.x()) / length, (b.y() - a.y()) / length))
+    };
+    // The column's way: the 2 rails' ways, each of length 1, added. They cancel where the rails run opposite
+    // ways; otherwise the edge never lies square to the way, and so a rung meets its line.
+    let (along, across) = (unit(before, after)?, unit(p, q)?);
+    let (dx, dy) = (along.0 + across.0, along.1 + across.1);
+    if math::hypot(dx, dy) <= 1e-12 {
+        return None;
+    }
+    // The line from the corner at a right angle to the way, along (-dy, dx), meets the edge's line at
+    // p + u (q - p).
+    let u = ((c.x() - p.x()) * dx + (c.y() - p.y()) * dy) / ((q.x() - p.x()) * dx + (q.y() - p.y()) * dy);
+    let (held, span) = (u.clamp(0.0, 1.0), p.distance(q));
+    Some((p.lerp(q, held), held * span, (u - held).abs() * span))
 }
 
 /// `rungs` in order along rails `lengths` long, without those at a rail's ends, and of those whose points lie
