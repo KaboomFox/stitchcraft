@@ -26,11 +26,10 @@
 //! shape with settings is sewn as they say, and a column or a line sewn after an area goes over it. A
 //! narrow part's line or a column of a part no wider than a satin column (`auto::narrow`, `auto::columns`)
 //! paints its part, which the areas sewn before it reach under, and is left out when the areas sewn after it
-//! cover the part whole ([`Kind::Part`]). The
-//! regions are combined with [`crate::normalize::region::ops`]. An area whose region changed is given its
-//! new outline, and one that didn't keeps its path as drawn. A fill that bounds no area is left to its fill,
-//! which says so. Only automatic elements move in the order, unless the design asks for every element
-//! ordered (`--sort-colours`).
+//! cover the part whole ([`Kind::Part`]). The regions are combined with [`crate::normalize::region::ops`].
+//! An area whose region changed is given its new outline, and one that didn't keeps its path as drawn. A
+//! fill that bounds no area is left to its fill, which says so. Only automatic elements move in the order,
+//! unless the design asks for every element ordered (`--sort-colours`).
 //!
 //! **Work.** Each automatic area has the budget's work to itself for its specks and for its overlaps, and
 //! each element for where it meets the shapes drawn after it, and costs the work of the shapes near it, and
