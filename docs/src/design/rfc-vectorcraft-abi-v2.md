@@ -18,7 +18,7 @@ features in M6.8 to M6.12, and proposes the open ones in M9.
 
 ## Status
 
-Checked against VectorCraft's `docs/plugins.md` and its history, in the 0.17.0 release (2026-10-25):
+Checked against VectorCraft's `docs/plugins.md` and its history, in the 0.18.0 release (2026-10-28):
 
 | Proposal | In VectorCraft | Since | Pull request |
 |---|---|---|---|
