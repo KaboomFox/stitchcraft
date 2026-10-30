@@ -2,11 +2,12 @@
 //! every edge of its outline and holes among their edges, and whose circles hold no corner they can see.
 //!
 //! Design: `docs/src/design/algorithms/centre-lines.md` › The triangulation. A narrow part's centre line runs
-//! through the middles of the edges its triangles share (M13.4's second part), and those edges cross the part
-//! only where the triangles are about as long as the part is wide. So points are first added along the part's
-//! edges, as many as it takes for no piece to be longer than a length the caller gives, the pieces of an edge
-//! as long as each other. Every point is put on the grid the region's points lie on ([`region::on_grid`]), so
-//! that the differences of coordinates are exact floats and the exact predicates stay cheap. Then:
+//! through the middles of the edges its triangles share ([`super::strips`], `REQ-AUTO-014`), and those edges
+//! cross the part only where the triangles are about as long as the part is wide. So points are first added
+//! along the part's edges, as many as it takes for no piece to be longer than a length the caller gives, the
+//! pieces of an edge as long as each other. Every point is put on the grid the region's points lie on
+//! ([`region::on_grid`]), so that the differences of coordinates are exact floats and the exact predicates
+//! stay cheap. Then:
 //!
 //! 1. **Points.** A box round the part, cut into 2 triangles, takes the points one at a time, ring by ring.
 //!    A point inside a triangle splits it in 3, a point on an edge splits the 2 triangles beside it in 4,

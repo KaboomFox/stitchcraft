@@ -119,11 +119,11 @@ impl Facts {
 }
 
 /// The box round element `index` of `shapes`, found without work: round an automatic area's region as it now
-/// is, its specks merged, and round any other shape's path ([`drawn`]), whose paint is found only for the
-/// shapes near an element that moves.
+/// is, its specks merged, round the part a narrow part's line sews along, and round any other shape's path
+/// ([`drawn`]), whose paint is found only for the shapes near an element that moves.
 fn reach(shapes: &Shapes, index: usize) -> Option<Envelope> {
     let path = shapes.elements.get(index).and_then(drawn);
-    if shapes.area.get(index).copied().unwrap_or(false) { shapes.region(index).and_then(envelope).or(path) } else { path }
+    shapes.known(index).and_then(envelope).or(path)
 }
 
 /// The box round the points of `element`'s path, which hold its curves, grown for a stroke by half its
@@ -316,8 +316,8 @@ fn lie(shapes: &mut Shapes, first: usize, second: usize, meter: &mut Meter) -> R
         return Ok(Some(Beside::After(second)));
     }
     let (fill, line) = match (a, b) {
-        (Kind::Area, Kind::Column | Kind::Line) => (first, second),
-        (Kind::Column | Kind::Line, Kind::Area) => (second, first),
+        (Kind::Area, Kind::Column | Kind::Line | Kind::Narrow) => (first, second),
+        (Kind::Column | Kind::Line | Kind::Narrow, Kind::Area) => (second, first),
         _ => return Ok(None),
     };
     Ok(touch(shapes, fill, line, meter)?.then_some(Beside::Border(fill, line)))

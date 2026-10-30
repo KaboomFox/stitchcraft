@@ -5,13 +5,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
-- M13.4, first part: the constrained Delaunay triangulation that the centre lines of narrow parts run
-  through. `stitchcraft_core::exact::incircle` decides exactly whether a point lies inside the circle
-  through 3 others. The engine cuts a part of a region into the triangles of its constrained Delaunay
-  triangulation, which have every edge of its outline and holes among their edges
-  (`normalize::triangulation`). Points 4 or more on one circle, as a square's corners are, are cut into
-  triangles the same way whatever order they come in. Stitches stay as they were until the second part sews
-  narrow parts along their centre lines.
+- M13.4: centre lines. With `--auto`, a part of a shape that is narrower than the design's narrowest satin
+  stroke everywhere sews as a running stitch along its centre line (`REQ-AUTO-013`).
+  - A part is that narrow when nothing of it is left once it is shrunk by half the width with the polygon
+    buffer. A part smaller than 1 mm² stays a speck. The rest of the shape stays a tatami fill, and each
+    narrow part's line sews after it, named `#2`, `#3` and so on.
+  - The centre line comes from a constrained Delaunay triangulation of the part (`REQ-AUTO-014`), built in the
+    engine with exact predicates (`stitchcraft_core::exact::incircle`). Points 4 or more on one circle, as a
+    square's corners are, are cut into triangles the same way whatever order they come in. It joins the
+    middles of the chords, stops within a round end and runs on to a sharp point. Bumps of the outline and the
+    corners past sharp turns are left out, at a junction the 2 straightest branches are one line, and no
+    piece of the line is sewn twice.
+  - A narrow part's line paints the part to its neighbours. It sews after a fill it borders, and the areas
+    sewn before it reach under it. One that the areas sewn after it cover whole sews nothing.
+  - A running stitch that automatic digitizing makes, of a stroke or a narrow part, is a triple run from
+    0.5 mm wide (`REQ-AUTO-015`). A stroke 0.5 to 1 mm wide ran once before.
 
 - M13.3: the sewing order. With `--auto`, the automatic elements sew in an order of their own, chosen after
   specks are merged and before areas reach under their neighbours (`REQ-AUTO-010`, `SC-I0907`).
