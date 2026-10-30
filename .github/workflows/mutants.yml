@@ -2,9 +2,10 @@
 # code in small ways and runs the changed crate's tests on each change (.cargo/mutants.toml); a change no
 # test notices is a behaviour nobody checks.
 #
-# Every pull request that touches Rust runs only the mutants in the lines it changes, in four parts dealt
+# Every pull request that touches Rust runs only the mutants in the lines it changes, in eight parts dealt
 # round-robin so that a large change fits the jobs' time: each one must be noticed by a test or be a listed
-# equivalent (conformance/mutation.toml). Every week, and
+# equivalent (conformance/mutation.toml). M13.5 changes lines that hold about 590 mutants, and 2 of 4 parts
+# ran past the jobs' 90 minutes. Every week, and
 # on demand, every mutant runs, in four parts dealt round-robin so that each gets a fair share of each
 # crate; `cargo xtask mutants` then adds them up per crate and fails when a crate has more missed mutants
 # than conformance/mutation.toml records, when a part's unmutated tree failed its tests, and when a
@@ -44,14 +45,14 @@ env:
 
 jobs:
   changed:
-    name: mutants in the changed lines, part ${{ matrix.part }} of 4
+    name: mutants in the changed lines, part ${{ matrix.part }} of 8
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        part: [1, 2, 3, 4]
+        part: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -70,7 +71,7 @@ jobs:
           BASE: ${{ github.base_ref }}
         run: |
           git diff "origin/$BASE...HEAD" > pr.diff
-          cargo mutants --workspace --in-diff pr.diff --shard $(( ${{ matrix.part }} - 1 ))/4 --sharding round-robin --jobs 2 --output "part-${{ matrix.part }}" || status=$?
+          cargo mutants --workspace --in-diff pr.diff --shard $(( ${{ matrix.part }} - 1 ))/8 --sharding round-robin --jobs 2 --output "part-${{ matrix.part }}" || status=$?
           echo "cargo mutants exited with ${status:-0}"
           case "${status:-0}" in 0|2|3) ;; *) exit "$status" ;; esac
           mkdir -p "part-${{ matrix.part }}/mutants.out" && touch "part-${{ matrix.part }}/mutants.out/caught.txt"
