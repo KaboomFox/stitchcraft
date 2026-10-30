@@ -32,7 +32,7 @@ const TAB: [(f64, f64); 7] = [(21.0, 8.5), (32.0, 8.5), (32.0, 11.5), (20.0, 11.
 
 /// `part` split, with the default budget.
 fn split_of(part: &Polygon) -> Split {
-    split(part, &mut Budget::DEFAULT.meter()).unwrap().unwrap()
+    split(part, &AutoParams::defaults(), &mut Budget::DEFAULT.meter()).unwrap().unwrap()
 }
 
 /// The narrow parts of `split`.

@@ -11,7 +11,7 @@ mod common;
 use common::{document, element, line, square};
 use stitchcraft_core::units::MM_PER_POINT;
 use stitchcraft_core::{Budget, Point};
-use stitchcraft_engine::auto::OVERLAP;
+use stitchcraft_engine::auto;
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Reading, Shape};
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_vectorcraft::{VectorCraft, read_with};
@@ -133,7 +133,8 @@ fn req_auto_003_a_line_traced_in_vectorcraft_sews_as_wide_and_as_long_as_drawn()
     let (left, right) = extent(points.iter().map(|q| q.x()).collect());
     let (top, bottom) = extent(points.iter().map(|q| q.y()).collect());
     let length = 50.0 * MM_PER_POINT;
-    assert!((top + 1.25 + OVERLAP).abs() < 0.05 && (bottom - 1.25 - OVERLAP).abs() < 0.05, "as wide as drawn: {top} to {bottom}");
+    let overlap = auto::rules(&stitchcraft_params::ParamSet::new()).unwrap().auto_overlap_mm.get();
+    assert!((top + 1.25 + overlap).abs() < 0.05 && (bottom - 1.25 - overlap).abs() < 0.05, "as wide as drawn: {top} to {bottom}");
     assert!((left + 1.25).abs() < 0.05 && (right - length - 1.25).abs() < 0.05, "caps included: {left} to {right}");
     assert_eq!(read.warnings.len(), 0, "{:?}", read.warnings);
     let said: Vec<String> = outcome.diagnostics.iter().map(ToString::to_string).collect();

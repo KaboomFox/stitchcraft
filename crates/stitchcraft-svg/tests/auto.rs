@@ -130,7 +130,8 @@ fn req_auto_002_a_width_in_css_pixels_is_measured_to_the_micrometre() {
     let svg = read(shapes, true);
     let widths: Vec<f64> = svg.design.elements().iter().map(|e| if let Shape::Stroke { width, .. } = e.shape { width.get() } else { 0.0 }).collect();
     assert_eq!(widths, [7.0_f64.next_up(), 1.0_f64.next_up()], "a rounding error wider");
-    let stitches: Vec<Stitches> = widths.iter().map(|&width| Stitches::of_stroke(Mm::new(width).unwrap(), &svg.design.settings)).collect();
+    let rules = stitchcraft_testkit::designs::rules();
+    let stitches: Vec<Stitches> = widths.iter().map(|&width| Stitches::of_stroke(Mm::new(width).unwrap(), &svg.design.settings, &rules)).collect();
     assert_eq!(stitches, [Stitches::Satin, Stitches::Running]);
 }
 

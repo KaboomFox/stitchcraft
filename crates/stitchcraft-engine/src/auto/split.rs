@@ -9,10 +9,11 @@
 //! - **Its broad parts** are what an opening with a disc as wide as the widest satin column leaves of it:
 //!   the part shrunk by the disc's radius and grown back by as much with the polygon buffer
 //!   (`ops::buffered`), and kept within the part, whose outline the buffer's arcs follow only to within
-//!   their steps. The radius is half of [`SATIN_MAX_WIDTH`] taken half a micrometre wider, as the bound is
-//!   ([`narrow::half`]), so that a part as wide as a satin column has none.
-//! - **Its narrow parts** are the rest of it, in pieces. A speck stays in the fill. So does a piece that
-//!   reaches less than a speck beyond the disc's radius from the broad parts: the opening rounds each convex
+//!   their steps. The radius is half of the area's widest satin column taken half a micrometre wider, as
+//!   the bound is ([`narrow::half`]), so that a part as wide as a satin column has none.
+//! - **Its narrow parts** are the rest of it, in pieces. A speck, a piece smaller than the area's smallest
+//!   area, stays in the fill. So does a piece that reaches less than a speck beyond the disc's radius from
+//!   the broad parts: the opening rounds each convex
 //!   corner of a broad part and leaves the corner as such a piece, as it does a stub too short for a
 //!   column. How far a piece reaches is measured against the shrunk part grown by twice the radius, which
 //!   is the broad parts grown by it. A square corner's piece runs 6 mm along its centre line, less than half a
@@ -31,8 +32,8 @@
 
 use stitchcraft_core::{Exhausted, Meter, Point, math};
 
+use super::AutoParams;
 use super::narrow::{self, Edges};
-use super::{SATIN_MAX_WIDTH, SMALLEST_AREA};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::{self, Hit};
 use crate::normalize::region::ops::{self, area_of};
@@ -63,11 +64,11 @@ pub(super) struct Piece {
     pub(super) cuts: Vec<[Point; 2]>,
 }
 
-/// `part` split into its broad and its narrow parts, with `meter`'s work; `None` when a region's edges
-/// can't be joined into rings, a bug.
-pub(super) fn split(part: &Polygon, meter: &mut Meter) -> Result<Option<Split>, Exhausted> {
+/// `part` split into its broad and its narrow parts by its area's settings of the rules, `rules`, with
+/// `meter`'s work; `None` when a region's edges can't be joined into rings, a bug.
+pub(super) fn split(part: &Polygon, rules: &AutoParams, meter: &mut Meter) -> Result<Option<Split>, Exhausted> {
     let whole = std::slice::from_ref(part);
-    let radius = narrow::half(SATIN_MAX_WIDTH);
+    let (radius, smallest) = (narrow::half(rules.auto_max_satin_width_mm), rules.auto_min_area_mm2);
     let Ok(shrunk) = ops::buffered(whole, -radius, meter)? else { return Ok(None) };
     let Ok(opened) = ops::buffered(&shrunk, radius, meter)? else { return Ok(None) };
     let Ok(broad) = ops::intersection(&opened, whole, meter)? else { return Ok(None) };
@@ -77,11 +78,11 @@ pub(super) fn split(part: &Polygon, meter: &mut Meter) -> Result<Option<Split>, 
     let mut pieces = Vec::new();
     for piece in rest {
         meter.charge(1)?;
-        if piece.area() < SMALLEST_AREA {
+        if piece.area() < smallest {
             continue;
         }
         let Ok(beyond) = ops::difference(std::slice::from_ref(&piece), &reach, meter)? else { return Ok(None) };
-        if area_of(&beyond) < SMALLEST_AREA {
+        if area_of(&beyond) < smallest {
             continue;
         }
         pieces.push(cut(piece, part, &edges, meter)?);

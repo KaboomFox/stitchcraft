@@ -53,7 +53,10 @@ a part wider than a satin column in places is split (`auto::split`). An opening 
 satin column leaves its broad parts, which are filled. Its narrow parts, cut square where they meet them,
 sew over the fill as lines and columns. The test pictures that the TS-13 sheets sew, digitized beside
 the same shapes in paint order, are drawn here too (`testsheets::pictures`), so that the cases measure
-what the machine sews.
+what the machine sews. Since M13.7 the rules' values, 7 mm, 0.5 mm, 0.4 mm and 1 mm² above, and whether
+the background is left out, are each shape's own settings, the defaults when it sets none
+(`auto::AutoParams`, registered last in `registry::PARAMETERS`). Automatic elements read them before they
+sew as any stitch type.
 Since M6.12 a column drawn as one path can be drawn with its rails and rungs instead, for a host's Stroke
 to Satin tool (`generators::satin::drawn`). They sew as the column does. A design can be moved
 (`Design::moved`), as a host draws a test sheet (`testsheets`, `TestSheet::design`).

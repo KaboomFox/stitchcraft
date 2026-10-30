@@ -410,7 +410,7 @@ why = "a way of no length, past an open line's end, makes the cosine 0 over 0, w
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/split.rs"
 mutant = "replace < with <= in split"
-line = "if piece.area() < SMALLEST_AREA {"
+line = "if piece.area() < smallest {"
 why = "a narrow piece touches the broad parts, so some of it lies within the reach and what lies beyond is smaller than the piece: a piece of exactly the smallest area stays in the fill by the next test either way, which costs only its work"
 
 [[equivalent]]
