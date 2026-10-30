@@ -415,6 +415,16 @@ mod tests {
     }
 
     #[test]
+    fn the_string_meets_the_balloon_where_the_balloon_is_as_wide_as_the_string() {
+        // The balloon's outline runs round from 0.7 mm left of its bottom to 0.7 mm right of it, where the
+        // string's sides, 1.4 mm apart, begin.
+        let picture = balloon((50.0, 40.0)).unwrap();
+        let ring = corners(&subpaths(&picture.elements[0])[0]);
+        let (first, last) = (ring[0], ring[90]);
+        assert!((first.0 - 49.3).abs() < 1e-9 && (last.0 - 50.7).abs() < 1e-9 && (first.1 - last.1).abs() < 1e-9, "{first:?} {last:?}");
+    }
+
+    #[test]
     fn the_seventh_speck_lies_2_mm_past_the_discs_rim() {
         // The disc is 12 mm round its centre, and the seventh speck, 0.8 mm square, 14 mm from it, at 210°.
         let picture = specks((50.0, 40.0)).unwrap();

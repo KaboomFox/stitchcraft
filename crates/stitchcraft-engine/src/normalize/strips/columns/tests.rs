@@ -829,4 +829,9 @@ fn req_auto_019_an_end_along_a_cut_lies_along_all_of_it() {
     // A cut elsewhere changes nothing.
     let elsewhere = [[p(0.0, 0.0), p(0.0, 3.0)]];
     assert_eq!(cut_ring(&band, &elsewhere, |place| place.farthest(&[1, 2, 3], (1.0, 0.0), 1.45)), Some((1, 1)));
+    // An edge lies along a cut when both its ends do, and not when only one does.
+    cut_ring(&band, &cut, |place| {
+        assert!(place.cut(p(10.0, 0.0), p(10.0, 2.0)));
+        assert!(!place.cut(p(10.0, 0.0), p(12.0, 3.0)) && !place.cut(p(8.0, 0.0), p(10.0, 3.0)));
+    });
 }

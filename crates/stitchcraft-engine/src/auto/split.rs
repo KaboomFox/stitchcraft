@@ -32,7 +32,7 @@
 use stitchcraft_core::{Exhausted, Meter, Point, math};
 
 use super::narrow::{self, Edges};
-use super::{SATIN_MAX_WIDTH, SMALLEST_AREA};
+use super::{SATIN_MAX_WIDTH, speck};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::{self, Hit};
 use crate::normalize::region::ops::{self, area_of};
@@ -77,11 +77,11 @@ pub(super) fn split(part: &Polygon, meter: &mut Meter) -> Result<Option<Split>, 
     let mut pieces = Vec::new();
     for piece in rest {
         meter.charge(1)?;
-        if piece.area() < SMALLEST_AREA {
+        if speck(piece.area()) {
             continue;
         }
         let Ok(beyond) = ops::difference(std::slice::from_ref(&piece), &reach, meter)? else { return Ok(None) };
-        if area_of(&beyond) < SMALLEST_AREA {
+        if speck(area_of(&beyond)) {
             continue;
         }
         pieces.push(cut(piece, part, &edges, meter)?);
