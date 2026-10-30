@@ -361,9 +361,9 @@ why = "the bound only stops a run of flips that goes round in a circle, a bug, a
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/narrow.rs"
-mutant = "replace > with >= in lines"
-line = "if area > perimeter(part) * half + std::f64::consts::PI * holes * half * half {"
-why = "a part narrower than the width everywhere covers less than the bound, never as much: the bound is what its inner offsets would cover if its outline turned smoothly, and each convex corner, which every polygon has, takes more off them than a smooth turn does. So a part whose area equals the bound exactly holds a wider circle, which shrinking it finds as well, and it stays in the fill either way"
+mutant = "replace > with >= in within"
+line = "if part.area() > perimeter(part) * half + std::f64::consts::PI * holes * half * half {"
+why = "a part narrower than the width everywhere covers less than the bound, never as much: the bound is what its inner offsets would cover if its outline turned smoothly, and each convex corner, which every polygon has, takes more off them than a smooth turn does. So a part whose area equals the bound exactly holds a wider circle, which shrinking it finds as well, so it isn't narrower than the width either way"
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/narrow.rs"
@@ -379,9 +379,9 @@ why = "the columns then start 2 rows lower, at the ring's 2 bottom corners, whic
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/narrow.rs"
-mutant = "replace > with == in lines"
-line = "if area > perimeter(part) * half + std::f64::consts::PI * holes * half * half {"
-why = "the quick test then sends a part to the fill only where its area equals the bound exactly, which no part narrow everywhere does, and every other part to the shrinking: a part whose area is beyond the bound holds a wider circle, which shrinking it finds, and it stays in the fill either way. Only the work charged grows"
+mutant = "replace > with == in within"
+line = "if part.area() > perimeter(part) * half + std::f64::consts::PI * holes * half * half {"
+why = "the quick test then answers only where a part's area equals the bound exactly, which no part narrow everywhere does, and sends every other part to the shrinking: a part whose area is beyond the bound holds a wider circle, which shrinking it finds, so it isn't narrower than the width either way. Only the work charged grows"
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/narrow.rs"

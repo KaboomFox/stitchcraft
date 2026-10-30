@@ -142,13 +142,11 @@ impl Column {
     }
 
     /// A ring started at the rung nearest `near` at which it can start, with `meter`'s work; an open column
-    /// as it is.
+    /// as it is. A ring that started once starts again: which rungs it can start at doesn't depend on `near`.
     pub(crate) fn restarted(&self, near: Point, meter: &mut Meter) -> Result<Column, Exhausted> {
         let Some(ring) = &self.ring else { return Ok(self.clone()) };
-        Ok(match started(ring, near, meter)? {
-            Some(Started { rails, rungs }) => Column { rails, rungs, ..self.clone() },
-            None => self.clone(),
-        })
+        let Some(Started { rails, rungs }) = started(ring, near, meter)? else { return Ok(self.clone()) };
+        Ok(Column { rails, rungs, ..self.clone() })
     }
 }
 
@@ -178,11 +176,8 @@ fn built(skeleton: &Skeleton, meter: &mut Meter) -> Result<Option<Vec<Column>>, 
     let owning: BTreeSet<usize> = owner.iter().copied().collect();
     let mut columns = Vec::new();
     let mut numbered = BTreeMap::new();
-    for (line, walked) in lines.iter().enumerate() {
-        // A line that crosses no triangle of its own, only a junction another runs on through, covers nothing.
-        if !owning.contains(&line) {
-            continue;
-        }
+    // A line that crosses no triangle of its own, only a junction another runs on through, covers nothing.
+    for (line, walked) in lines.iter().enumerate().filter(|(line, _)| owning.contains(line)) {
         let Some(column) = column(skeleton, &owner, line, walked, meter)? else { return Ok(None) };
         numbered.insert(line, columns.len());
         columns.push(column);
@@ -206,19 +201,16 @@ fn cornered(skeleton: &Skeleton, walked: &[Walked]) -> Vec<Walked> {
         let turn = |i: usize| -> Option<f64> {
             let size = nodes.get(i).and_then(|&node| graph.size.get(node).copied().flatten())?;
             let at = nodes.get(i).map_or(Point::ORIGIN, |&node| graph.point(node));
-            // The way from the middle to the first point at least `size` away, stepping by `step`.
+            // The way from the middle to the first point at least `size` away, stepping by `step`. An open line
+            // has no way past its ends, and so no turn at them.
             let way = |step: isize| {
                 let mut k = i;
                 let mut far = at;
                 for _ in 1..count {
-                    let next = if line.closed {
-                        Some((k as isize + step).rem_euclid(count as isize) as usize)
-                    } else {
-                        k.checked_add_signed(step).filter(|&j| j < count)
-                    };
-                    let Some(next) = next else { break };
+                    let next = if line.closed { Some((k as isize + step).rem_euclid(count as isize) as usize) } else { k.checked_add_signed(step) };
+                    let Some((next, &node)) = next.and_then(|j| Some((j, nodes.get(j)?))) else { break };
                     k = next;
-                    far = nodes.get(k).map_or(far, |&node| graph.point(node));
+                    far = graph.point(node);
                     if far.distance(at) >= size {
                         break;
                     }
@@ -232,7 +224,7 @@ fn cornered(skeleton: &Skeleton, walked: &[Walked]) -> Vec<Walked> {
         // The corners, and of 2 corners that lie within twice the larger junction's size of each other, as
         // where a V ends flat, only the sharper: a column between them would be no longer than a junction.
         let mut corners: Vec<(usize, f64)> = Vec::new();
-        for i in (0..count).filter(|&i| line.closed || (i > 0 && i + 1 < count)) {
+        for i in 0..count {
             let Some(cosine) = turn(i).filter(|&cosine| cosine > CORNER) else { continue };
             let size = |k: usize| nodes.get(k).and_then(|&node| graph.size.get(node).copied().flatten()).unwrap_or(0.0);
             let at = |k: usize| nodes.get(k).map_or(Point::ORIGIN, |&node| graph.point(node));
@@ -370,6 +362,8 @@ fn outline(skeleton: &Skeleton, owner: &[usize], line: usize, meter: &mut Meter)
         if !seen.insert(start) {
             continue;
         }
+        // The edges of a set of triangles make closed rings, and no 2 of them start at a point (checked above),
+        // so the walk comes back to `start`. The checks below keep it finite were that ever not so.
         let mut ring = vec![start];
         let mut at = start;
         loop {
@@ -378,9 +372,7 @@ fn outline(skeleton: &Skeleton, owner: &[usize], line: usize, meter: &mut Meter)
             if to == start {
                 break;
             }
-            if !seen.insert(to) {
-                return Ok(None);
-            }
+            let true = seen.insert(to) else { return Ok(None) };
             ring.push(to);
             at = to;
         }
@@ -415,10 +407,7 @@ enum End {
 fn end(skeleton: &Skeleton, owner: &[usize], line: usize, inward: &[usize]) -> Option<(End, bool)> {
     let graph = &skeleton.graph;
     let (&at, &next) = (inward.first()?, inward.get(1)?);
-    let chord = |node: usize| match graph.nodes.get(node) {
-        Some(Node::Chord { corners, .. }) => Some(*corners),
-        _ => None,
-    };
+    let chord = |node: usize| if let Some(Node::Chord { corners, .. }) = graph.nodes.get(node) { Some(*corners) } else { None };
     // The place in `inward` of the chord the column's own end lies beyond, and the triangle beyond it.
     let (mut place, mut beyond) = match *graph.nodes.get(at)? {
         Node::Junction(junction) if owner.get(junction) != Some(&line) => {
@@ -429,9 +418,7 @@ fn end(skeleton: &Skeleton, owner: &[usize], line: usize, inward: &[usize]) -> O
             let body = *graph.inside.get(&edge(next, at))?;
             let beyond = if body == t { u } else { t };
             let under = *owner.get(beyond)?;
-            if under != line {
-                return Some((End::Cut { corners, under }, false));
-            }
+            let true = under == line else { return Some((End::Cut { corners, under }, false)) };
             (0, beyond)
         }
     };
@@ -474,10 +461,8 @@ fn strip(
     let half = walked.nodes.len() / 2 + 1;
     let from_start: Vec<usize> = walked.nodes.iter().take(half).copied().collect();
     let from_finish: Vec<usize> = walked.nodes.iter().rev().take(half).copied().collect();
-    let (Some((start, cut_start)), Some((finish, cut_finish))) = (end(skeleton, owner, line, &from_start), end(skeleton, owner, line, &from_finish))
-    else {
-        return Ok(None);
-    };
+    let Some((start, cut_start)) = end(skeleton, owner, line, &from_start) else { return Ok(None) };
+    let Some((finish, cut_finish)) = end(skeleton, owner, line, &from_finish) else { return Ok(None) };
     let points = &skeleton.triangulation.points;
     let place = Place { skeleton, owner, line, outline, ring };
     let (Some(a), Some(b)) = (place.range(&start, meter)?, place.range(&finish, meter)?) else { return Ok(None) };
@@ -524,15 +509,10 @@ impl Place<'_> {
         let place = |point: usize| self.ring.iter().position(|&p| p == point);
         meter.charge(u64::try_from(n).unwrap_or(u64::MAX))?;
         match *end {
+            // The chord is an edge of the ring, from the corner before to the one after.
             End::Cut { corners: (a, b), .. } => {
                 let (Some(i), Some(j)) = (place(a), place(b)) else { return Ok(None) };
-                Ok(if (i + 1) % n == j {
-                    Some((i, j))
-                } else if (j + 1) % n == i {
-                    Some((j, i))
-                } else {
-                    None
-                })
+                Ok([(i, j), (j, i)].into_iter().find(|&(from, to)| (from + 1) % n == to))
             }
             End::Own { corners: (a, b), beyond, way } => {
                 let region = self.beyond(beyond, (a, b), meter)?;
@@ -543,29 +523,17 @@ impl Place<'_> {
                     let (Some(&p), Some(&q)) = (self.ring.get(from), self.ring.get((from + 1) % n)) else { return false };
                     edge(p, q) != edge(a, b) && self.outline.triangle.get(&(p, q)).is_some_and(|t| region.contains(t))
                 };
-                // The arc round the end runs from one corner of the chord to the other, along the region's edges.
-                let (from, to) = if in_region(i) {
-                    (i, j)
-                } else if in_region(j) {
-                    (j, i)
-                } else {
-                    return Ok(None);
-                };
-                let mut arc = vec![from];
-                while arc.last() != Some(&to) {
-                    meter.charge(1)?;
-                    let Some(&here) = arc.last() else { return Ok(None) };
-                    if !in_region(here) || arc.len() > n {
-                        return Ok(None);
-                    }
-                    arc.push((here + 1) % n);
-                }
+                // The arc round the end runs from one corner of the chord to the other, along the region's edges:
+                // the region is bounded by the chord and that arc.
+                let Some((from, to)) = [(i, j), (j, i)].into_iter().find(|&(from, _)| in_region(from)) else { return Ok(None) };
+                let steps = (to + n - from) % n;
+                meter.charge(u64::try_from(steps).unwrap_or(u64::MAX))?;
+                let arc: Vec<usize> = (0..=steps).map(|k| (from + k) % n).collect();
+                let true = arc.iter().take(steps).all(|&place| in_region(place)) else { return Ok(None) };
                 // An edge longer than twice the chord the end begins at runs along the column, as a side does
                 // where its line turns into a tip at its end: no end.
-                let longest = match (self.skeleton.triangulation.points.get(a), self.skeleton.triangulation.points.get(b)) {
-                    (Some(p), Some(q)) => 2.0 * p.distance(*q),
-                    _ => 0.0,
-                };
+                let points = &self.skeleton.triangulation.points;
+                let longest = points.get(a).zip(points.get(b)).map_or(0.0, |(p, q)| 2.0 * p.distance(*q));
                 Ok(self.farthest(&arc, way, longest))
             }
         }
@@ -669,11 +637,13 @@ fn rails(ring: &[usize], (a0, a1): (usize, usize), (b0, b1): (usize, usize)) -> 
     if !(a1 < b0 && b0 <= b1) {
         return None;
     }
+    // Each rail has 2 points or more: the first runs from `a1` on to `b0`, past it, and the second from `b1`,
+    // before the ring's last place, on round to `a0`.
     let at = |o: usize| ring.get((a0 + o) % n).copied();
     let first: Vec<usize> = (a1..=b0).filter_map(at).collect();
     let mut second: Vec<usize> = (b1..=n).filter_map(at).collect();
     second.reverse();
-    (first.len() >= 2 && second.len() >= 2).then_some([first, second])
+    Some([first, second])
 }
 
 /// The column of the closed `line`, through the points of `found`, with the outline `outline`: its outer
@@ -796,9 +766,8 @@ fn rungs(skeleton: &Skeleton, owner: &[usize], line: usize, rails: &[Vec<usize>;
         let apex = triangle.corners[k];
         let places = on.get(&apex).map_or(&[][..], Vec::as_slice);
         let Some(&(other, index, apex_at)) = places.iter().find(|(rail, ..)| *rail != r) else { continue };
-        if places.iter().any(|(rail, ..)| *rail == r) {
-            continue;
-        }
+        // A corner on both rails, where they meet at a point, gives no rung.
+        let false = places.iter().any(|(rail, ..)| *rail == r) else { continue };
         let (Some(rail), Some(c)) = (rails.get(r), point(apex)) else { continue };
         let (Some(p), Some(q)) = (rail.get(segment).and_then(|&i| point(i)), rail.get(segment + 1).and_then(|&i| point(i))) else { continue };
         let (ex, ey) = (q.x() - p.x(), q.y() - p.y());
@@ -814,7 +783,8 @@ fn rungs(skeleton: &Skeleton, owner: &[usize], line: usize, rails: &[Vec<usize>;
         let (along, across) = (unit((after.x() - before.x(), after.y() - before.y())), unit((ex, ey)));
         let (dx, dy) = (along.0 + across.0, along.1 + across.1);
         // Where the line from the corner at a right angle to the column's way, along (-dy, dx), meets the
-        // edge's line: p + u (q - p).
+        // edge's line: p + u (q - p). An edge of a rail runs along the column: it lies square to the way, and
+        // gives no rung, only where it has no length or the rails run opposite ways.
         let denominator = ex * dx + ey * dy;
         let span = math::hypot(ex, ey);
         if denominator.abs() <= 1e-12 * span * math::hypot(dx, dy) || span <= 0.0 {

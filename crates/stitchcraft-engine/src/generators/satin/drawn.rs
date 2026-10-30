@@ -197,5 +197,9 @@ mod tests {
         let column = drawn(apart, vec![[p(3.0, -1.5), p(3.0, 1.5)], [p(6.0, -1.5), p(6.0, 1.5)]]);
         let [first, ..] = column.rungs.as_slice() else { panic!("{:?}", column.rungs) };
         assert!(column.rungs.len() == 3 && first.iter().all(|q| q.x() == 0.0), "{:?}", column.rungs);
+        // Rails that lie on each other, a column of no width, meet all along and get no rung: drawn, they
+        // aren't read back as rails at all.
+        let flat = [vec![p(0.0, 0.0), p(10.0, 0.0)], vec![p(0.0, 0.0), p(10.0, 0.0)]];
+        assert_eq!(from_rails(flat, Vec::new(), &mut Budget::DEFAULT.meter()).unwrap(), Err(Unmade::ReadOtherwise));
     }
 }

@@ -7,7 +7,7 @@ use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Exhausted, Meter};
 
 use super::*;
-use crate::normalize::region::geom;
+use crate::normalize::fixture::part;
 
 fn p(x: f64, y: f64) -> Point {
     Point::new(x, y).unwrap()
@@ -15,18 +15,6 @@ fn p(x: f64, y: f64) -> Point {
 
 fn meter() -> Meter {
     Budget::DEFAULT.meter()
-}
-
-/// A part with the outline `outline` and the holes `holes`, wound as a region winds them.
-fn part(outline: &[(f64, f64)], holes: &[&[(f64, f64)]]) -> Polygon {
-    let ring = |points: &[(f64, f64)], clockwise: bool| {
-        let mut ring: Vec<Point> = points.iter().map(|&(x, y)| p(x, y)).collect();
-        if (geom::signed_area(&geom::closed(&ring)) < 0.0) != clockwise {
-            ring.reverse();
-        }
-        geom::closed(&ring)
-    };
-    Polygon { outline: ring(outline, true), holes: holes.iter().map(|hole| ring(hole, false)).collect() }
 }
 
 /// The centre lines of `part` with pieces no longer than `longest`.
