@@ -63,6 +63,7 @@ mod area;
 mod columns;
 mod narrow;
 mod neighbours;
+mod split;
 
 pub use neighbours::{OVERLAP, SMALLEST_AREA, TOUCHING};
 use neighbours::{Sewn, no_area, parts_of};
