@@ -152,6 +152,17 @@ fn req_auto_020_an_area_s_specks_are_its_parts_smaller_than_its_own_smallest_are
         ["A part of this area, of 1.44 mm², is too small to sew and shares no edge with an automatic area, so it is left out."]
     );
     assert_eq!(across(&out[0]), (0.0, 10.0));
+    // A part exactly as large as the smallest area sews: only a smaller one is a speck. A square 2 mm a side,
+    // wider than a satin column of at most 1 mm, is filled with the rest of its area, and its 4 mm² are
+    // exact, in binary too.
+    let exact =
+        fill("exact", &[&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)], &[(30.0, 0.0), (32.0, 0.0), (32.0, 2.0), (30.0, 2.0)]], &RED, &[]);
+    let (out, said) = sewn(vec![with(exact.clone(), &[(MAX_SATIN_WIDTH, "1"), (MIN_AREA, "4")])]);
+    assert!(messages(&said, Code::AutoSpeck).is_empty(), "{said:?}");
+    assert_eq!(across(&out[0]), (0.0, 32.0));
+    let (out, said) = sewn(vec![with(exact, &[(MAX_SATIN_WIDTH, "1"), (MIN_AREA, "4.01")])]);
+    assert_eq!(messages(&said, Code::AutoSpeck).len(), 1, "{said:?}");
+    assert_eq!(across(&out[0]), (0.0, 10.0));
 }
 
 #[test]
