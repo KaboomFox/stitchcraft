@@ -224,3 +224,34 @@ fn req_auto_019_a_point_of_a_piece_no_farther_than_on_from_the_outline_lies_on_i
     assert!(top.distance(p(1.0, 3.0)) < 1e-6 && bottom == p(1.0, 0.0), "{cuts:?}");
     assert!(outline.contains(&p(6.0, ON)), "{outline:?}");
 }
+
+#[test]
+fn req_auto_019_a_run_right_after_the_rings_first_point_is_found() {
+    // Points 0 and 2 lie on the outline and point 1 off it: the run is the one point between them.
+    let ring = [p(0.0, 0.0), p(1.0, 1.0), p(2.0, 0.0)];
+    assert_eq!(run(&[false, true, false], &ring, &[]), Some((0, 2)));
+    // After a point that stays, it isn't cut, and with no other point on the outline there is none.
+    assert_eq!(run(&[false, true, false], &ring, &[p(0.0, 0.0)]), None);
+    assert_eq!(run(&[false, true, true], &ring, &[]), None);
+}
+
+#[test]
+fn req_auto_019_an_edge_at_the_level_is_no_crossing_of_it() {
+    // Along x: the first edge lies at the level 1, from end to end, and the second crosses it at (1, 0).
+    let edges = [(p(1.0, 0.0), p(1.0, 5.0)), (p(0.0, 0.0), p(2.0, 0.0))];
+    assert_eq!(crossing(1.0, &|q: Point| q.x(), edges.into_iter()), Some((1, p(1.0, 0.0))));
+}
+
+#[test]
+fn req_auto_019_a_chord_along_the_outline_from_a_corner_of_the_part_crosses_nothing() {
+    // A part whose bottom side runs from its corner (0, 0) to (20, 0), and a ring that the chord from that
+    // corner to (10, 0) closes, along the side: the side shares the chord's end, and runs along it without
+    // crossing it.
+    let part = part(&[(0.0, 0.0), (20.0, 0.0), (20.0, 10.0), (0.0, 10.0)], &[]);
+    let mut meter = Budget::DEFAULT.meter();
+    let along = [p(10.0, 0.0), p(10.0, 3.0), p(0.0, 3.0), p(0.0, 0.0)];
+    assert!(crosses_nothing(&along, &part, &mut meter).unwrap());
+    // A ring's edge across the chord crosses it.
+    let across = [p(10.0, 0.0), p(10.0, 3.0), p(5.0, -2.0), p(0.0, 3.0), p(0.0, 0.0)];
+    assert!(!crosses_nothing(&across, &part, &mut meter).unwrap());
+}
