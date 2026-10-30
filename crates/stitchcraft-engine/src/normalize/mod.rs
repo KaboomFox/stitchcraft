@@ -4,7 +4,9 @@
 //! Generators want simpler, checked shapes: a stroke as polylines with its corners marked, a fill as
 //! polygons with holes (`region`, M5.1), a satin as rails and rungs (M4.1). Normalizing works on one element at a
 //! time, needing nothing of its neighbours (`docs/src/design/engine-pipeline.md` › Normalize). Where the
-//! shapes of neighbours meet is measured here too (`near`), for where elements start and end.
+//! shapes of neighbours meet is measured here too (`near`), for where elements start and end. A narrow
+//! part of a region is cut into triangles (`triangulation`), whose shared edges cross it, and the lines
+//! through their middles are its centre lines (`strips`, M13.4).
 
 pub(crate) mod along;
 pub(crate) mod centre_line;
@@ -14,4 +16,6 @@ pub(crate) mod near;
 pub(crate) mod offset;
 pub mod region;
 pub mod satin;
+pub(crate) mod strips;
 pub mod stroke;
+pub(crate) mod triangulation;

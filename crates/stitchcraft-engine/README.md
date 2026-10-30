@@ -42,7 +42,10 @@ Since M13.3 the elements sew in an order of their own (`auto::neighbours::order`
 specks and the overlaps. Shapes that overlap keep their paint order, and a line sews after the fill it
 borders. Each thread then sews as long as it can, the nearest element next. Elements with settings keep
 their order unless `--sort-colours` is given (`Design::sort_colours`), and an element with a stop after
-it keeps its place.
+it keeps its place. Since M13.4 a part of an automatic area narrower than the narrowest satin stroke
+everywhere runs along its centre line (`auto::narrow`), which a constrained Delaunay triangulation of the
+part (`normalize::triangulation`) gives through the middles of its chords (`normalize::strips`). A running
+stitch that automatic digitizing makes is tripled from 0.5 mm wide.
 Since M6.12 a column drawn as one path can be drawn with its rails and rungs instead, for a host's Stroke
 to Satin tool (`generators::satin::drawn`). They sew as the column does. A design can be moved
 (`Design::moved`), as a host draws a test sheet (`testsheets`, `TestSheet::design`).

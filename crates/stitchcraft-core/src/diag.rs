@@ -706,11 +706,13 @@ registry! {
     VcNotConverted = "SC-E0814", Error, "VectorCraft line not made into a satin column";
 
     /// `--auto` digitized the design's shapes that have no settings: StitchCraft chose each one's
-    /// stitches by its width, measured to the micrometre. An area is a tatami fill. A line no wider than the
-    /// design's narrowest satin stroke (`min_satin_stroke_width_mm`, 1 mm unless the design sets it) is a
+    /// stitches by its width, measured to the micrometre. An area is a tatami fill, and a part of it
+    /// narrower than the design's narrowest satin stroke (`min_satin_stroke_width_mm`, 1 mm unless the
+    /// design sets it) everywhere is a running stitch along its centre line. A line no wider than that is a
     /// running stitch, a line up to 7 mm wide a satin column as wide as the line, and a wider line a
-    /// tatami fill of the area it paints. A line whose every part a satin column cannot follow is filled
-    /// too (`SC-I0902`), and counted as a fill.
+    /// tatami fill of the area it paints. A running stitch is tripled from 0.5 mm wide. A line whose every
+    /// part a satin column cannot follow is filled too (`SC-I0902`), and counted as a fill. An area whose
+    /// every part runs is counted as a running stitch, and any other as a fill.
     ///
     /// The message counts the shapes by the stitches they sew as. To sew a shape another way, give it
     /// settings: in VectorCraft, apply a StitchCraft effect to it. A shape with settings is not digitized
@@ -738,14 +740,16 @@ registry! {
     /// them. The thread pulls stitches in from the edges of their shape, and without the overlap fabric shows
     /// between shapes that only meet. Where an area sewn after it covers part of it, as in a trace that stacks
     /// its colours, the covered part is cut away, 0.4 mm inside the covering area's edge, and sewn once. A
-    /// satin column or a line sewn after an area goes over it, and the area is sewn whole under it.
+    /// satin column or a line sewn after an area goes over it, and the area is sewn whole under it. The
+    /// running stitch along a narrow part of an area covers that part: the areas sewn before it reach
+    /// under it, and when the areas sewn after it cover the part whole it sews nothing.
     ///
     /// The message counts the areas that reach under others and those cut away. An area that the areas sewn
-    /// after it cover whole sews nothing, and the message names it. It also names an area whose neighbours
-    /// need more work to find than the budget allows it, which neither reaches under them nor is cut away,
-    /// and a satin column whose area needs more, which the areas before it don't reach under, and which keeps
-    /// its place in paint order beside the shapes near it. To sew a shape as it is drawn, give it settings: in
-    /// VectorCraft, apply a StitchCraft effect to it.
+    /// after it cover whole sews nothing, and the message names it, as it does a narrow part's line. It also
+    /// names an area whose neighbours need more work to find than the budget allows it, which neither reaches
+    /// under them nor is cut away, and a satin column whose area needs more, which the areas before it don't
+    /// reach under, and which keeps its place in paint order beside the shapes near it. To sew a shape as it
+    /// is drawn, give it settings: in VectorCraft, apply a StitchCraft effect to it.
     AutoUnder = "SC-I0904", Info, "Areas reach under the shapes sewn after them";
 
     /// `--auto` takes an automatic area smaller than 1 mm², or a part of one that small, for a speck the trace

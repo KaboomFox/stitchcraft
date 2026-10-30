@@ -35,13 +35,13 @@ fn element(id: &str, shape: Shape, thread: &Thread) -> Element {
 fn square(id: &str, (x, y): (f64, f64), size: f64, thread: &Thread) -> Sewn {
     let ring = [(x, y), (x, y + size), (x + size, y + size), (x + size, y)];
     let shape = Shape::Fill { path: through(&ring, true), rule: FillRule::NonZero };
-    Sewn { element: element(id, shape, thread), area: true, automatic: true, shape: usize::MAX }
+    Sewn { element: element(id, shape, thread), area: true, automatic: true, shape: usize::MAX, narrow: None }
 }
 
 /// An automatic running line `id` along `points`, `width` wide, sewn with `thread`, a shape of its own.
 fn running(id: &str, points: &[(f64, f64)], width: f64, thread: &Thread) -> Sewn {
     let shape = Shape::Stroke { path: through(points, false), width: Mm::new(width).unwrap(), join: Join::Round, cap: Cap::Butt };
-    Sewn { element: element(id, shape, thread), area: false, automatic: true, shape: usize::MAX }
+    Sewn { element: element(id, shape, thread), area: false, automatic: true, shape: usize::MAX, narrow: None }
 }
 
 /// `sewn` in the order it sews in, each shape's paint found with `painting` and the order with `budget`;
@@ -250,6 +250,17 @@ fn an_area_looks_for_no_lines_paint() {
 }
 
 #[test]
+fn a_narrow_parts_line_is_boxed_round_the_part() {
+    // The line along a strip 0.6 mm wide with a spike 1.4 mm high that the line leaves out: the box round the
+    // part holds the spike, which the box round the line and its width doesn't.
+    let corners = [(0.0, 0.0), (0.0, 0.6), (4.9, 0.6), (5.0, 2.0), (5.1, 0.6), (10.0, 0.6), (10.0, 0.0), (0.0, 0.0)];
+    let part = Polygon { outline: corners.iter().map(|&(x, y)| p(x, y)).collect(), holes: Vec::new() };
+    let line = Sewn { narrow: Some(part.clone()), ..running("line", &[(0.3, 0.3), (9.7, 0.3)], 0.6, &BLUE) };
+    let shapes = Shapes::new(vec![line], &DesignSettings::default(), &Budget::DEFAULT);
+    assert_eq!(reach(&shapes, 0), envelope(&[part]));
+}
+
+#[test]
 fn a_columns_box_holds_the_corners_of_its_clipped_miters() {
     // A satin column 7 mm wide with settings, drawn as one path that turns back sharply at (60, 0), its miter
     // limit 4: its rails' miter there is clipped 14 mm from the corner, 4 times half its width, and the
@@ -258,7 +269,8 @@ fn a_columns_box_holds_the_corners_of_its_clipped_miters() {
     let shape = Shape::Stroke { path, width: Mm::new(7.0).unwrap(), join: Join::Miter { limit: 4.0 }, cap: Cap::Butt };
     let column = Element { params: [("satin_column", "true")].into_iter().collect(), ..element("column", shape, &RED) };
     let settings = DesignSettings::default();
-    let mut shapes = Shapes::new(vec![Sewn { element: column.clone(), area: false, automatic: false, shape: 0 }], &settings, &Budget::DEFAULT);
+    let mut shapes =
+        Shapes::new(vec![Sewn { element: column.clone(), area: false, automatic: false, shape: 0, narrow: None }], &settings, &Budget::DEFAULT);
     shapes.find(0);
     let Some((Kind::Column, parts)) = shapes.paint(0) else { panic!("{:?}", shapes.said) };
     let (paint, boxed) = (envelope(parts).unwrap(), drawn(&column).unwrap());

@@ -124,6 +124,13 @@ pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Ex
     Ok(built(area(&rings, |w| fills(rule, w), meter)?, rule))
 }
 
+/// `p` on the grid a region's points lie on ([`snap::GRID`]), where coordinates' differences are exact
+/// floats. A point beyond the grid's reach, some 65 m from the origin, where no design lies, is left as it
+/// is: the exact predicates still decide its sides, at more cost.
+pub(crate) fn on_grid(p: Point) -> Point {
+    snap::Node::of(p).map_or(p, snap::Node::point)
+}
+
 /// Whether `rule` fills a face whose winding number is `w`.
 pub(crate) fn fills(rule: FillRule, w: i64) -> bool {
     match rule {
