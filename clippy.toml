@@ -7,6 +7,10 @@ allow-indexing-slicing-in-tests = true
 allow-print-in-tests = true
 allow-dbg-in-tests = true
 
+# VectorCraft's threshold for `cognitive_complexity`, which both workspaces deny. Inside VectorCraft's
+# workspace our crates still read this file, the one nearest them (ADR-0011), so it must say the same.
+cognitive-complexity-threshold = 30
+
 # Determinism by construction (docs/src/design/determinism.md). Binaries that legitimately need one of
 # these (timing a benchmark, say) allow the lint at the use site with a comment.
 disallowed-types = [

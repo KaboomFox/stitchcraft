@@ -782,6 +782,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   also keeps other applications' SVG attributes from import to export, so an Ink/Stitch file opened in
   VectorCraft keeps its `inkstitch:*` settings. The RFC's table, the integration page and the roadmap name
   the release that adopted each.
+- The workspace denies `cognitive_complexity` above 30, `too_many_arguments` and `wildcard_imports`, as
+  VectorCraft's does on its `main` after 0.18.0. Joined to VectorCraft's workspace, StitchCraft's crates
+  take its lints but still read StitchCraft's `clippy.toml`, which now sets VectorCraft's threshold of 30
+  (ADR-0011). The one function over it, the test of what VectorCraft rejects in a plug-in's manifest, is 4
+  tests now.
 - The names of the parameter reference pages, `ParamGroup::slug` and `ParamGroup::title`, moved from the
   docs generator to `stitchcraft-params`, where the plug-in's dialogs name the same pages. And
   `stitchcraft_core::text::plain` gives the plain text of Markdown help, for VectorCraft's dialogs.
