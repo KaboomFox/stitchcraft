@@ -80,9 +80,9 @@ scenario draws each object it gives an effect before it gives another the same f
 nothing: an exporter is given the document's JSON. An export that must fail names the code of the error it
 says, with `fails`. VectorCraft stops a run at a step that fails, so that export ends its run, and no check
 names its file. A run installs a module whose manifest sets a heavy budget, Stroke to Satin's, with
-`allowHeavy`, as the user allows it. A step's parameter written `{ stitchcraft = "…" }` is given data that
-StitchCraft makes, the threads `stitch palette` writes or a test picture drawn flat as a PNG, so that what
-VectorCraft traces is StitchCraft's own. The checks are StitchCraft's, since VectorCraft's pictures change from version to
+`allowHeavy`, as the user allows it. A step's parameter written `{ stitchcraft = "…" }` is replaced by what
+StitchCraft makes of the name, the threads `stitch palette` writes or a test picture drawn flat as a PNG, so
+that what VectorCraft traces is StitchCraft's own. The checks are StitchCraft's, since VectorCraft's pictures change from version to
 version and what sews must not:
 
 | Scenario | Steps | Checks |

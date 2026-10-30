@@ -13,8 +13,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - The compatibility gate's Level B has a `trace` case. With the reference machine's threads loaded,
     VectorCraft traces a badge drawn flat in 3 of them by the Abutting method, and saves its paths. Read
     with `--auto`, every shape is automatic, the white round the badge is left out as the background, and
-    the badge sews its 3 threads. A scenario's step can be given data StitchCraft makes,
-    written `{ stitchcraft = "…" }`.
+    the badge sews its 3 threads. A parameter of a scenario's step written `{ stitchcraft = "…" }` is
+    replaced by what StitchCraft makes of the name.
   - The tutorial *From a picture to a machine file* traces a picture in VectorCraft and digitizes it with
     `--auto`. A doc picture can read its design as `--auto` does (`auto = true` in `docs/shots.toml`).
 
