@@ -1,6 +1,6 @@
 # Image to embroidery
 
-<!-- implements: crates/stitchcraft-engine/src/auto/** -->
+<!-- implements: crates/stitchcraft-engine/src/auto/**, apps/stitchcraft-cli/src/commands/palette.rs -->
 
 Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
@@ -476,8 +476,9 @@ traces:
   trims, stitches, and how much of each shape and of each shared edge the stitches cover
   (`stitchcraft_testkit::metrics`). The cases measure the pictures where `stitchcraft_testkit::pictures`
   places them.
-- Level B of the [compatibility gate](compatibility-gate.md) gets a case in which VectorCraft's command
-  line traces a picture and StitchCraft sews the document it saved, on every track.
+- Level B of the [compatibility gate](compatibility-gate.md) has a case, `trace`, in which VectorCraft's
+  command line traces a picture drawn in the threads `stitch palette` writes, and StitchCraft sews the
+  document it saved, on every track.
 - TS-13 sews the test pictures at MC-8 ([machine testing](../plan/machine-testing.md)), each twice. A
   sheet's top half is digitized automatically, and its bottom half is sewn as drawn, in paint order. The
   bottom half sews first and stops, so that nothing digitized moves into it, and each half's thread

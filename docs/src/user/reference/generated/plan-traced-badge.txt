@@ -1,0 +1,15 @@
+$ stitch plan traced-badge.svg --auto -o traced-badge.pes --preview traced-badge.png
+traced-badge.svg
+  file      traced-badge.pes (PES v1, 9025 bytes)
+  sha256    cedb094606974cca18e43dda6d4f98c169d95ccda39c6a5f19a4eb07ab73d305
+  profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
+  size      50.0 × 50.0 mm
+  stitches  3770 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
+  threads   1. unnamed (#ed171f), shown as Brother PEC 5 "Red"
+            2. unnamed (#0a55a3), shown as Brother PEC 2 "Blue"
+            3. unnamed (#e8a900), shown as Brother PEC 11 "Deep Gold"
+  preview   traced-badge.png (432 × 432 pixels)
+info SC-I0901: 3 shapes are digitized automatically: all sew as tatami fills.
+warning SC-W0906 (svg:white:fill): This area covers the whole design under the other shapes, so it is left out as the picture's background.
+  hint: To sew it, give it settings: in VectorCraft, apply a StitchCraft effect to it.
+info SC-I0904: 2 areas reach 0.4 mm under the shapes sewn after them that they touch.

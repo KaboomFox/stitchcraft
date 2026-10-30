@@ -54,6 +54,15 @@ files = ["docs/fixtures/badge.svg"]
 run = ["stitch plan badge.svg -o badge.pes --preview badge.png"]
 
 [[example]]
+id = "palette"
+run = ["stitch palette -o threads.gpl"]
+
+[[example]]
+id = "plan-traced-badge"
+files = ["docs/fixtures/traced-badge.svg"]
+run = ["stitch plan traced-badge.svg --auto -o traced-badge.pes --preview traced-badge.png"]
+
+[[example]]
 id = "export-round-patch"
 files = ["docs/fixtures/round-patch.vectorcraft"]
 run = ["stitch export round-patch.vectorcraft -o round-patch.pes --preview round-patch.png"]

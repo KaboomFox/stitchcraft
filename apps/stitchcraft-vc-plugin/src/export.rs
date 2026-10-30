@@ -215,8 +215,9 @@ fn decline(said: &[Diagnostic]) -> String {
     }
 }
 
-/// `bytes` in base64, padded (RFC 4648, section 4), as VectorCraft decodes an exporter's file.
-fn base64(bytes: &[u8]) -> String {
+/// `bytes` in base64, padded (RFC 4648, section 4), as VectorCraft decodes an exporter's file, and the bytes
+/// of a file a command is given.
+pub fn base64(bytes: &[u8]) -> String {
     let mut out = String::with_capacity(bytes.len().div_ceil(3).saturating_mul(4));
     for chunk in bytes.chunks(3) {
         let [a, b, c] = [0, 1, 2].map(|i| chunk.get(i).copied().unwrap_or(0));

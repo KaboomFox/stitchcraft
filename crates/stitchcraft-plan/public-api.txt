@@ -57,6 +57,8 @@ pub fn stitchcraft_plan::palette::Palette::assign<'t>(&self, impl core::iter::tr
 pub fn stitchcraft_plan::palette::Palette::entry(&self, u8) -> core::option::Option<&'static stitchcraft_plan::palette::PaletteEntry>
 pub fn stitchcraft_plan::palette::Palette::entry_of(&self, &stitchcraft_plan::thread::Thread) -> core::option::Option<&'static stitchcraft_plan::palette::PaletteEntry>
 pub fn stitchcraft_plan::palette::Palette::nearest(&self, stitchcraft_plan::thread::Rgb) -> core::option::Option<&'static stitchcraft_plan::palette::PaletteEntry>
+impl stitchcraft_plan::palette::Palette
+pub fn stitchcraft_plan::palette::Palette::gpl(&self, &str) -> alloc::string::String
 pub struct stitchcraft_plan::palette::PaletteEntry
 pub stitchcraft_plan::palette::PaletteEntry::color: stitchcraft_plan::thread::Rgb
 pub stitchcraft_plan::palette::PaletteEntry::index: u8
