@@ -170,3 +170,57 @@ fn req_auto_019_an_arm_drawn_the_other_way_round_is_cut_square_across_too() {
     assert!(mouth.len() >= 2 && mouth.iter().all(|q| (q.y() - y0).abs() < 1e-9), "{mouth:?}");
     assert!((area_of(&split.fill) + arm.area() - l.area()).abs() < 1e-6);
 }
+
+/// What [`square`] closes the ring `points` with, kept from the point after a run round to the one before it.
+fn squared(points: &[(f64, f64)]) -> Option<Vec<Point>> {
+    let kept: Vec<Point> = points.iter().map(|&(x, y)| p(x, y)).collect();
+    square(&kept, kept.len() - 1)
+}
+
+#[test]
+fn req_auto_019_a_cut_is_square_across_only_from_an_end_more_than_a_hair_farther_along() {
+    // A tab that runs right, the arc's end on its bottom side `bottom` along it, and the one on its top side
+    // `top`. The way runs along the tab, and how far along it each end lies is measured in millimetres: within
+    // ON, the ends lie as far along, and no chord is square across.
+    let right = |bottom: f64, top: f64| squared(&[(bottom, 8.5), (32.0, 8.5), (32.0, 11.5), (top, 11.5)]);
+    for (bottom, top) in [(21.0 + 0.8 * ON, 21.0), (21.0 + ON, 21.0), (21.0, 21.0 + 0.8 * ON), (21.0, 21.0 + ON)] {
+        assert_eq!(right(bottom, top), None, "{bottom} {top}");
+    }
+    // Farther along by more, from the end farther along square across: from the bottom end, across to the top
+    // side, and from the top end, across to the bottom side.
+    let [.., foot] = right(21.0 + 1.2 * ON, 21.0).unwrap()[..] else { panic!() };
+    assert!((foot.x() - 21.0 - 1.2 * ON).abs() < 1e-12 && foot.y() == 11.5, "{foot:?}");
+    let [foot, ..] = right(21.0, 21.0 + 1.2 * ON).unwrap()[..] else { panic!() };
+    assert!((foot.x() - 21.0 - 1.2 * ON).abs() < 1e-12 && foot.y() == 8.5, "{foot:?}");
+    // The same of a tab that runs up.
+    let up = |left: f64, right: f64| squared(&[(8.5, left), (8.5, 32.0), (11.5, 32.0), (11.5, right)]);
+    assert_eq!(up(21.0 + 0.8 * ON, 21.0), None);
+    assert!(up(21.0 + 1.2 * ON, 21.0).is_some());
+}
+
+#[test]
+fn req_auto_019_a_cut_square_across_reaches_the_other_side_no_farther_than_twice_the_arcs_chord() {
+    // The arc's ends half a millimetre apart, the bottom one 0.4 mm farther along. The top side runs on along
+    // the tab, and the cut square across meets it at its second edge, which a ring keeps from there on.
+    let near = squared(&[(0.4, 0.0), (5.0, 0.0), (5.0, 0.3), (0.2, 0.3), (0.0, 0.3)]).unwrap();
+    assert_eq!(near.len(), 4, "{near:?}");
+    assert_eq!(near[..3], [p(0.4, 0.0), p(5.0, 0.0), p(5.0, 0.3)]);
+    assert!((near[3].x() - 0.4).abs() < 1e-12 && near[3].y() == 0.3, "{near:?}");
+    // A top side that turns away first, up 1.2 mm, comes back over the bottom end's way only 1.5 mm from it,
+    // farther than twice the arc's chord: no chord is square across.
+    assert_eq!(squared(&[(0.4, 0.0), (5.0, 0.0), (5.0, 1.5), (0.3, 1.5), (0.3, 0.3), (0.0, 0.3)]), None);
+}
+
+#[test]
+fn req_auto_019_a_point_of_a_piece_no_farther_than_on_from_the_outline_lies_on_it() {
+    // The tab's test moved so that its bottom side lies along y = 0, where how far a point lies from it is
+    // its y to the last bit. A point of the piece ON above that side lies on the outline: the arc is the only
+    // run cut, square across the tab from its end on the bottom side, give or take the hair the point tilts
+    // the bottom side's way by, and the point stays in the ring.
+    let tabbed = part(&[(-20.0, -8.5), (0.0, -8.5), (0.0, 0.0), (12.0, 0.0), (12.0, 3.0), (0.0, 3.0), (0.0, 11.5), (-20.0, 11.5)], &[]);
+    let ring = [(1.0, 0.0), (6.0, ON), (12.0, 0.0), (12.0, 3.0), (0.0, 3.0), (-0.6, 2.1), (-0.4, 0.7), (0.4, 0.2)];
+    let (outline, cuts) = cut_of(&ring, &tabbed);
+    let [[top, bottom]] = cuts[..] else { panic!("{cuts:?}") };
+    assert!(top.distance(p(1.0, 3.0)) < 1e-6 && bottom == p(1.0, 0.0), "{cuts:?}");
+    assert!(outline.contains(&p(6.0, ON)), "{outline:?}");
+}
