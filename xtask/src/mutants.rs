@@ -6,7 +6,7 @@
 //! checks. Mutation testing runs at two scales:
 //!
 //! - **Every pull request** runs only the mutants in the lines it changes (`cargo mutants --in-diff`), in
-//!   4 parts dealt round-robin, so that a large change still fits the jobs' time. `--changed DIR…` adds
+//!   8 parts dealt round-robin, so that a large change still fits the jobs' time. `--changed DIR…` adds
 //!   the parts up and fails for any mutant no test notices, unless it is a listed *equivalent*: a mutant
 //!   that changes nothing a test could observe, recorded in `conformance/mutation.toml` with the source
 //!   line it changes and why. New code answers for itself.
