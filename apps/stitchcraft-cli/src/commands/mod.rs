@@ -5,6 +5,7 @@ pub mod bug_report;
 pub mod convert;
 pub mod explain;
 pub mod inspect;
+pub mod palette;
 pub mod plan;
 pub mod preview;
 pub mod profiles;

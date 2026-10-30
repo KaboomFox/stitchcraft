@@ -165,6 +165,19 @@ pub struct Expect {
     /// Documents, each with the test sheet the Test Sheet filter drew into it.
     #[serde(default)]
     pub sheets: Vec<Sheet>,
+    /// Documents of traced pictures, each with the threads it sews digitized automatically.
+    #[serde(default)]
+    pub traced: Vec<Traced>,
+}
+
+/// A document of a traced picture and the threads it sews digitized automatically ([`trace::traced`]).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Traced {
+    /// The document.
+    pub file: String,
+    /// The threads, `#rrggbb`, in any order.
+    pub threads: Vec<String>,
 }
 
 /// A document and the test sheet the Test Sheet filter drew into it.
@@ -229,17 +242,18 @@ impl Step {
     /// What the step does, or why it can't be read: exactly one of `cmd`, `apply` and `export`, parameters
     /// only for the first two, and `fails` only for an export, with the code of an error.
     fn action(&self) -> Result<Action<'_>, String> {
-        let params = || self.params.clone().map_or_else(|| json!({}), |table| toml_to_json(toml::Value::Table(table)));
+        // A parameter written `{ stitchcraft = "…" }` is given the data StitchCraft makes of the name.
+        let params = || trace::generated(self.params.clone().map_or_else(|| json!({}), |table| toml_to_json(toml::Value::Table(table))));
         if let Some(code) = &self.fails
             && !Code::ALL.iter().any(|known| known.id() == code && known.severity() == Severity::Error)
         {
             return Err(format!("`fails = \"{code}\"` names no error StitchCraft says"));
         }
         match (&self.cmd, &self.apply, &self.export) {
-            (Some(cmd), None, None) if self.fails.is_none() => Ok(Action::Command(cmd, params())),
+            (Some(cmd), None, None) if self.fails.is_none() => Ok(Action::Command(cmd, params()?)),
             (None, Some(family), None) if self.fails.is_none() => {
                 let family = family_of(family).ok_or(format!("`apply = \"{family}\"` names no stitch family"))?;
-                Ok(Action::Apply(family, params()))
+                Ok(Action::Apply(family, params()?))
             }
             (None, None, Some(file)) if self.params.is_none() => Ok(Action::Export(file)),
             _ => Err("a step has one of `cmd`, `apply` and `export`, an export no `params`, and only an export `fails`".to_string()),
@@ -364,7 +378,7 @@ pub fn problems(scenario: &Scenario, modules: &[&str], requirements: &std::colle
     let expect = &scenario.expect;
     let checked = expect.applied.iter().chain(expect.same.iter().flatten()).chain(expect.elements.iter().map(|e| &e.file));
     let checked = checked.chain(expect.kept.iter().map(|kept| &kept.file)).chain(expect.differ.iter().flatten());
-    let checked = checked.chain(expect.sheets.iter().map(|sheet| &sheet.file));
+    let checked = checked.chain(expect.sheets.iter().map(|sheet| &sheet.file)).chain(expect.traced.iter().map(|traced| &traced.file));
     for file in checked.chain(expect.exported.iter().flatten()) {
         if !exported.contains(&file.as_str()) {
             found.push(format!("it checks `{file}`, which no run exports"));
@@ -647,6 +661,11 @@ fn check(expect: &Expect, out: &Path, ran: &Ran) -> Vec<String> {
             failures.push(format!("{}: {e}", expected.file));
         }
     }
+    for expected in &expect.traced {
+        if let Err(e) = read(&expected.file).and_then(|bytes| trace::traced(&bytes, &expected.threads)) {
+            failures.push(format!("{}: {e}", expected.file));
+        }
+    }
     failures
 }
 
@@ -872,6 +891,8 @@ pub fn run_all(cli: &Path, plugins: &Path, out: &Path) -> Result<Vec<(String, Ve
 pub fn out_dir() -> PathBuf {
     util::root().join("target/compat/e2e")
 }
+
+mod trace;
 
 #[cfg(test)]
 mod tests;

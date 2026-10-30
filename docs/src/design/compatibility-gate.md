@@ -80,7 +80,9 @@ scenario draws each object it gives an effect before it gives another the same f
 nothing: an exporter is given the document's JSON. An export that must fail names the code of the error it
 says, with `fails`. VectorCraft stops a run at a step that fails, so that export ends its run, and no check
 names its file. A run installs a module whose manifest sets a heavy budget, Stroke to Satin's, with
-`allowHeavy`, as the user allows it. The checks are StitchCraft's, since VectorCraft's pictures change from version to
+`allowHeavy`, as the user allows it. A step's parameter written `{ stitchcraft = "…" }` is given data that
+StitchCraft makes, the threads `stitch palette` writes or a test picture drawn flat as a PNG, so that what
+VectorCraft traces is StitchCraft's own. The checks are StitchCraft's, since VectorCraft's pictures change from version to
 version and what sews must not:
 
 | Scenario | Steps | Checks |
@@ -94,6 +96,7 @@ version and what sews must not:
 | `settings` | a 1 in square given the fill effect and exported to PES, then the Design Settings filter run with the 4 × 4 in hoop and a shortest stitch of 1.5 mm, and the square saved and exported to PES and DST; then the filter run with the small hoop, and the square saved and exported to PES | each document keeps what the filter was run with, each file is the one `stitch export` writes, the PES file differs from the one before the filter, and the small hoop's export fails with `SC-E0701` (`REQ-VC-013`) |
 | `stroke-to-satin` | an S curve, a V and a circle with strokes 3 mm wide and the satin effect, saved and drawn, then made into columns by Stroke to Satin, saved, drawn and exported to PES | the columns sew as the lines did, 3 satin columns in the strokes' colour, and the file is the one `stitch export` writes (`REQ-VC-014`) |
 | `testsheets` | each sheet drawn as a design, drawn by Test Sheet into a new document, then saved and exported to PES | each document sews as the sheet's design moved by whole millimetres to the middle of its artboard, and each file is the one `stitch export` writes (`REQ-VC-015`) |
+| `trace` | the reference machine's threads, as `stitch palette` writes them, loaded as a swatch library, a badge drawn flat in 3 of them on white placed, traced in colour with the library's colours by the Abutting method, its paths kept, and saved | read with `--auto`, every shape is automatic, the white round the badge is left out as the background, and the badge sews its 3 threads, each a thread of the palette (`REQ-CLI-011`, `REQ-AUTO-001`, `REQ-AUTO-009`) |
 
 *As sent*: the saved file sews as it does with the StitchCraft records of the objects the effects were
 applied to put back as the steps sent them. So VectorCraft stored what the dialog set, on the objects it

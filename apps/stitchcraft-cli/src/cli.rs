@@ -46,6 +46,9 @@ pub enum Command {
     Convert(ConvertArgs),
     /// List the built-in machine profiles.
     Profiles,
+    /// Write a machine's threads as a GIMP palette (.gpl), which VectorCraft loads as a swatch library, so
+    /// that Image Trace traces a picture in them.
+    Palette(PaletteArgs),
     /// Explain a diagnostic code, such as SC-W0702.
     Explain {
         /// The code.
@@ -155,6 +158,18 @@ pub struct TestsheetArgs {
     /// The file format; by default the output file's extension decides.
     #[arg(long, value_enum)]
     pub format: Option<Format>,
+}
+
+/// `stitch palette`.
+#[derive(Debug, Args)]
+pub struct PaletteArgs {
+    /// The machine profile whose threads to write (see `stitch profiles`); by default the reference
+    /// machine's.
+    #[arg(long, short)]
+    pub profile: Option<String>,
+    /// The file to write; by default the palette goes to standard output.
+    #[arg(long, short)]
+    pub output: Option<PathBuf>,
 }
 
 /// `stitch inspect`.
