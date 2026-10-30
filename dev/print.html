@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-f11339be.js";
+            window.path_to_searchindex_js = "searchindex-913f6815.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b31b520c.js"></script>
@@ -3664,6 +3664,7 @@ Off, the needle travels along the fill’s outline.</p>
 <tr><th>VectorCraft</th><th>Track</th><th>Passed the gate</th></tr>
 </thead>
 <tbody>
+<tr><td>0.18.0</td><td>stable</td><td>2026-10-29</td></tr>
 <tr><td>0.17.0</td><td>stable</td><td>2026-10-25</td></tr>
 <tr><td>0.16.0</td><td>stable</td><td>2026-10-25</td></tr>
 <tr><td>0.13.1</td><td>stable</td><td>2026-10-18</td></tr>
@@ -3671,7 +3672,7 @@ Off, the needle travels along the fill’s outline.</p>
 </tbody>
 </table>
 </div>
-<p>The plug-ins speak VectorCraft’s plug-in ABI v1. Pull requests are checked against VectorCraft 0.17.0, the release the gate pins in <code>compat/vectorcraft.toml</code>.</p>
+<p>The plug-ins speak VectorCraft’s plug-in ABI v1. Pull requests are checked against VectorCraft 0.18.0, the release the gate pins in <code>compat/vectorcraft.toml</code>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="design-documents"><a class="header" href="#design-documents">Design documents</a></h1>
 <p>These pages are the specification StitchCraft is built from. They describe behaviour and algorithms in
@@ -7584,9 +7585,9 @@ this renderer is for files, the command line and the docs.</li>
 offers today, how we use it without changing VectorCraft (phase 1), what we propose upstream
 (phase 2), and how an in-tree integration would look (phase 3).</p>
 <p><strong>VectorCraft snapshot reviewed:</strong> <code>main</code> at <code>89ea46c</code> (2026-10-08), version 0.6.0, and its plug-in API
-again at <code>8bf090b</code> (2026-10-24), after 0.16.0, and at <code>v0.17.0</code> (2026-10-25). File references below are to
-the first unless a version is named. The <a href="#vectorcraft-compatibility-gate">compatibility gate</a> tests the plug-ins against each VectorCraft
-release and branch.</p>
+again at <code>8bf090b</code> (2026-10-24), after 0.16.0, at <code>v0.17.0</code> (2026-10-25) and at <code>v0.18.0</code> (2026-10-28).
+File references below are to the first unless a version is named. The
+<a href="#vectorcraft-compatibility-gate">compatibility gate</a> tests the plug-ins against each VectorCraft release and branch.</p>
 <h2 id="1-vectorcraft-in-brief"><a class="header" href="#1-vectorcraft-in-brief">1. VectorCraft in brief</a></h2>
 <div class="table-wrapper">
 <table>
@@ -7601,7 +7602,7 @@ release and branch.</p>
 <tr><td>Commands</td><td>Declarative <code>cmd!</code> registry: id, label, menu path, shortcut, params doc, <code>enabled</code>, <code>run</code>; reachable from UI, JSON control channel and MCP</td><td><code>crates/engine/src/cmd/*</code></td></tr>
 <tr><td>Headless CLI</td><td><code>vectorcraft-cli run [--in FILE] [--cmd ID [--params JSON]]... [--export FILE]...</code>, <code>convert</code>, <code>info</code>, <code>commands</code>, <code>mcp</code></td><td><code>apps/vectorcraft-cli/src/main.rs</code></td></tr>
 <tr><td>Control channel</td><td>JSON lines; <code>engine.execute</code>, <code>ui.menu.invoke</code>, <code>ui.dialog.set</code>, <code>ui.click</code>, <code>ui.screenshot {path?}</code> (needs a presented frame), <code>ui.render {path?, scale?}</code> (headless artboard render)</td><td><code>crates/ui-egui/src/control.rs</code></td></tr>
-<tr><td>Releases</td><td>Tags <code>v0.1.0</code> … <code>v0.17.0</code>. Pushing the <code>release</code> branch drafts a GitHub Release, and SemVer pre-releases (<code>-rc.1</code>) are flagged as pre-releases</td><td><code>.github/workflows/release.yml</code></td></tr>
+<tr><td>Releases</td><td>Tags <code>v0.1.0</code> … <code>v0.18.0</code>. Pushing the <code>release</code> branch drafts a GitHub Release, and SemVer pre-releases (<code>-rc.1</code>) are flagged as pre-releases</td><td><code>.github/workflows/release.yml</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -7624,7 +7625,10 @@ too, up to 256 parameters with at most 64 outside groups, and each parameter’s
 <strong>fuel 50 M instructions + 4,000 per input byte</strong>; wall clock 60 s per filter run and <strong>5 s per
 live-effect run</strong> (<code>crates/plugins/src/effect.rs</code>), with a fresh instance for each call. An export gets
 10 G instructions and 300 s (0.14). From 0.17 a filter that declares <code>"budget": "heavy"</code> gets 1 G and
-300 s, once the user allows it at install, and runs in the background.</li>
+300 s, once the user allows it at install, and runs in the background. From 0.18 a run pays nothing for
+compiling the functions it calls, which wasmi does at each one’s first call. Before, a first run paid,
+and could stop with most of its budget left when the 20 M-instruction slice it was in ran out while a
+function compiled.</li>
 <li><strong>Live-effect input</strong> is the object’s geometry: <code>type</code>, <code>path</code>, <code>fillRule</code>, <code>bounds</code>. From 0.14 it
 holds the object’s <code>fills</code> and <code>strokes</code> too, read only, each stroke with its width, and from 0.15 its
 join, cap and miter limit. <code>_context.item</code> says whether the effect is on the object or on one of its
@@ -8262,7 +8266,7 @@ This page records what was adopted and when, and what StitchCraft still proposes
 name, which links point at. The <a href="#roadmap-small-steps-to-the-final-project">roadmap</a> plans StitchCraft’s use of the adopted
 features in M6.8 to M6.12, and proposes the open ones in M9.</p>
 <h2 id="status"><a class="header" href="#status">Status</a></h2>
-<p>Checked against VectorCraft’s <code>docs/plugins.md</code> and its history, in the 0.17.0 release (2026-10-25):</p>
+<p>Checked against VectorCraft’s <code>docs/plugins.md</code> and its history, in the 0.18.0 release (2026-10-28):</p>
 <div class="table-wrapper">
 <table>
 <thead>

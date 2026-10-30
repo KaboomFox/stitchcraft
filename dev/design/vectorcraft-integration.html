@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f11339be.js";
+            window.path_to_searchindex_js = "../searchindex-913f6815.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -186,9 +186,9 @@
 offers today, how we use it without changing VectorCraft (phase 1), what we propose upstream
 (phase 2), and how an in-tree integration would look (phase 3).</p>
 <p><strong>VectorCraft snapshot reviewed:</strong> <code>main</code> at <code>89ea46c</code> (2026-10-08), version 0.6.0, and its plug-in API
-again at <code>8bf090b</code> (2026-10-24), after 0.16.0, and at <code>v0.17.0</code> (2026-10-25). File references below are to
-the first unless a version is named. The <a href="compatibility-gate.html">compatibility gate</a> tests the plug-ins against each VectorCraft
-release and branch.</p>
+again at <code>8bf090b</code> (2026-10-24), after 0.16.0, at <code>v0.17.0</code> (2026-10-25) and at <code>v0.18.0</code> (2026-10-28).
+File references below are to the first unless a version is named. The
+<a href="compatibility-gate.html">compatibility gate</a> tests the plug-ins against each VectorCraft release and branch.</p>
 <h2 id="1-vectorcraft-in-brief"><a class="header" href="#1-vectorcraft-in-brief">1. VectorCraft in brief</a></h2>
 <div class="table-wrapper">
 <table>
@@ -203,7 +203,7 @@ release and branch.</p>
 <tr><td>Commands</td><td>Declarative <code>cmd!</code> registry: id, label, menu path, shortcut, params doc, <code>enabled</code>, <code>run</code>; reachable from UI, JSON control channel and MCP</td><td><code>crates/engine/src/cmd/*</code></td></tr>
 <tr><td>Headless CLI</td><td><code>vectorcraft-cli run [--in FILE] [--cmd ID [--params JSON]]... [--export FILE]...</code>, <code>convert</code>, <code>info</code>, <code>commands</code>, <code>mcp</code></td><td><code>apps/vectorcraft-cli/src/main.rs</code></td></tr>
 <tr><td>Control channel</td><td>JSON lines; <code>engine.execute</code>, <code>ui.menu.invoke</code>, <code>ui.dialog.set</code>, <code>ui.click</code>, <code>ui.screenshot {path?}</code> (needs a presented frame), <code>ui.render {path?, scale?}</code> (headless artboard render)</td><td><code>crates/ui-egui/src/control.rs</code></td></tr>
-<tr><td>Releases</td><td>Tags <code>v0.1.0</code> … <code>v0.17.0</code>. Pushing the <code>release</code> branch drafts a GitHub Release, and SemVer pre-releases (<code>-rc.1</code>) are flagged as pre-releases</td><td><code>.github/workflows/release.yml</code></td></tr>
+<tr><td>Releases</td><td>Tags <code>v0.1.0</code> … <code>v0.18.0</code>. Pushing the <code>release</code> branch drafts a GitHub Release, and SemVer pre-releases (<code>-rc.1</code>) are flagged as pre-releases</td><td><code>.github/workflows/release.yml</code></td></tr>
 </tbody>
 </table>
 </div>
@@ -226,7 +226,10 @@ too, up to 256 parameters with at most 64 outside groups, and each parameter’s
 <strong>fuel 50 M instructions + 4,000 per input byte</strong>; wall clock 60 s per filter run and <strong>5 s per
 live-effect run</strong> (<code>crates/plugins/src/effect.rs</code>), with a fresh instance for each call. An export gets
 10 G instructions and 300 s (0.14). From 0.17 a filter that declares <code>"budget": "heavy"</code> gets 1 G and
-300 s, once the user allows it at install, and runs in the background.</li>
+300 s, once the user allows it at install, and runs in the background. From 0.18 a run pays nothing for
+compiling the functions it calls, which wasmi does at each one’s first call. Before, a first run paid,
+and could stop with most of its budget left when the 20 M-instruction slice it was in ran out while a
+function compiled.</li>
 <li><strong>Live-effect input</strong> is the object’s geometry: <code>type</code>, <code>path</code>, <code>fillRule</code>, <code>bounds</code>. From 0.14 it
 holds the object’s <code>fills</code> and <code>strokes</code> too, read only, each stroke with its width, and from 0.15 its
 join, cap and miter limit. <code>_context.item</code> says whether the effect is on the object or on one of its
