@@ -64,6 +64,12 @@ use crate::normalize::region::ops::{self, Parts};
 use crate::normalize::region::{self, Polygon};
 use crate::normalize::stroke;
 
+/// Whether an automatic area, or a part or a piece of one, `area` square millimetres large is a speck:
+/// smaller than `smallest`, the area's smallest area (`auto_min_area_mm2`). One exactly that large is sewn.
+pub(super) fn speck(area: f64, smallest: f64) -> bool {
+    area < smallest
+}
+
 /// How far apart 2 shapes may be and still touch, in millimetres: twice the tolerance their curves are
 /// flattened to, so that a gap rounding left between edges drawn as one is closed.
 pub const TOUCHING: f64 = 2.0 * stroke::SHAPE_TOLERANCE;

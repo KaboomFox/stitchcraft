@@ -22,7 +22,7 @@
 
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Meter, Point};
 
-use super::{Failed, Shapes, TOUCHING, envelope, joined, near};
+use super::{Failed, Shapes, TOUCHING, envelope, joined, near, speck};
 use crate::generators::mm;
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::Envelope;
@@ -37,7 +37,7 @@ pub(super) fn merged(shapes: &mut Shapes, budget: &Budget) -> Vec<Diagnostic> {
         // An automatic area has its region and its settings of the rules alike.
         let (Some(parts), Some(rules)) = (shapes.region(index), shapes.rules(index)) else { continue };
         let smallest = rules.auto_min_area_mm2;
-        let (small, kept): (Vec<Polygon>, Vec<Polygon>) = parts.iter().cloned().partition(|part| part.area() < smallest);
+        let (small, kept): (Vec<Polygon>, Vec<Polygon>) = parts.iter().cloned().partition(|part| speck(part.area(), smallest));
         if small.is_empty() {
             continue;
         }
