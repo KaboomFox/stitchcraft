@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-fefdf631.js";
+            window.path_to_searchindex_js = "../searchindex-ebcb0220.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -210,7 +210,9 @@ the SVG element as <code>svg:&lt;label&gt;</code>.</li>
 namespace is an automatic element, whose stitches StitchCraft chooses by its width
 (<a href="image-to-embroidery.html#automatic-elements">image to embroidery</a>, <code>REQ-AUTO-001</code>). The trim and stop
 of Ink/Stitch’s commands attached to it still apply. A shape with any <code>inkstitch:</code> attribute is not
-automatic: it sews as its settings say once they are read (M8), and with the defaults until then.</li>
+automatic: it sews as its settings say once they are read (M8), and with the defaults until then.
+Read with <code>--sort-colours</code> (<code>Reading::sort_colours</code>), the design’s shapes with settings sew in the order
+StitchCraft chooses too (<a href="image-to-embroidery.html#sewing-order">image to embroidery</a>, <code>REQ-AUTO-011</code>).</li>
 </ul>
 <h2 id="geometry-and-units"><a class="header" href="#geometry-and-units">Geometry and units</a></h2>
 <ul>

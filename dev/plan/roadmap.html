@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-fefdf631.js";
+            window.path_to_searchindex_js = "../searchindex-ebcb0220.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -375,7 +375,7 @@ first, and the steps that make new kinds of shape into stitches follow.</p>
 <tbody>
 <tr><td>M13.1 ✅</td><td>Automatic elements. <code>--auto</code> on <code>stitch plan</code> and <code>stitch export</code> lets StitchCraft choose the stitches of the shapes that have no settings. A stroke no wider than <code>min_satin_stroke_width_mm</code> sews as a running stitch. Up to the widest satin column, 7 mm, it sews as a satin column as wide as the stroke, its round or square caps included, and a wider one fills the area it paints, as does a line a satin column cannot follow. Areas are tatami fills. <code>SC-I0901</code> counts the shapes digitized</td><td>its requirements active, a traced line sews as wide as VectorCraft draws it, and <code>--auto</code> doesn’t add an error of its own</td></tr>
 <tr><td>M13.2 ✅</td><td>Neighbours. Each shape reaches under the shapes it touches that sew after it, specks merge into the shape around them, and the background is left out, each said by a diagnostic</td><td>the coverage of the edges that the test pictures’ shapes share, measured and recorded</td></tr>
-<tr><td>M13.3</td><td>Sewing order. Paint order where shapes overlap, columns and lines after the fills they border, then the fewest colour changes and the nearest element next. <code>--sort-colours</code> orders a design’s elements with settings by the same rules</td><td>the test pictures sew with fewer colour changes and jumps than in paint order</td></tr>
+<tr><td>M13.3 ✅</td><td>Sewing order. Paint order where shapes overlap, columns and lines after the fills they border, then the fewest colour changes and the nearest element next. <code>--sort-colours</code> orders a design’s elements with settings by the same rules</td><td>the test pictures sew with fewer colour changes and jumps than in paint order</td></tr>
 <tr><td>M13.4</td><td>Centre lines from a constrained Delaunay triangulation. A shape narrower than <code>min_satin_stroke_width_mm</code> everywhere sews as a running stitch along its centre line, tripled from 0.5 mm, as an automatic stroke that narrow is</td><td>its requirements active</td></tr>
 <tr><td>M13.5</td><td>Columns from shapes. A shape no wider than the widest satin column sews as satin columns between its own outlines, joined where its strips meet and closed round its rings, with an underlay by width, which an automatic stroke’s column gets too</td><td>same</td></tr>
 <tr><td>M13.6</td><td>Shapes in parts. A shape’s broad parts are filled, and its narrow parts sew as columns and lines that overlap the fill</td><td>same; TS-13 drawn</td></tr>

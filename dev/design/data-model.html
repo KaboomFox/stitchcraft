@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-fefdf631.js";
+            window.path_to_searchindex_js = "../searchindex-ebcb0220.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -204,7 +204,11 @@ asymmetric “F” with a ruler) proves orientation and scale on the machine.</l
 <h2 id="engine-input-design-stitchcraft-engine"><a class="header" href="#engine-input-design-stitchcraft-engine">Engine input: <code>Design</code> (<code>stitchcraft-engine</code>)</a></h2>
 <p>Hosts translate their documents into a <code>Design</code> (<code>stitchcraft_engine::design</code>), so the engine never sees a
 host document and every host gets the same stitches for the same design. Since M3.3:</p>
-<pre><code class="language-rust ignore">pub struct Design { elements: Vec&lt;Element&gt;, pub settings: DesignSettings }   // checked by Design::new
+<pre><code class="language-rust ignore">pub struct Design {                  // checked by Design::new
+    elements: Vec&lt;Element&gt;,
+    pub settings: DesignSettings,
+    pub sort_colours: bool,          // since M13.3: the elements with settings sew in the order StitchCraft chooses too
+}
 
 pub struct Element {
     pub id: ElementId,               // stable host id: "svg:path123:fill", "vc:42:fill"
@@ -215,7 +219,10 @@ pub struct Element {
     pub automatic: bool,             // since M13.1: a shape without settings, read with --auto, whose stitches StitchCraft chooses
 }
 
-pub struct Reading { pub auto: bool } // since M13.1: what every host's reader is asked (--auto)
+pub struct Reading {                 // since M13.1: what every host's reader is asked
+    pub auto: bool,                  // --auto
+    pub sort_colours: bool,          // since M13.3: --sort-colours, which the reader passes on (Design::read_as)
+}
 
 pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file since M4.8, its commands from M8,
                                      // and from a VectorCraft document since M6.11
@@ -237,8 +244,10 @@ pub enum Cap { Butt, Round, Square }                  // since M13.1: how a stro
 pub struct Path { pub subpaths: Vec&lt;Subpath&gt; }   // in millimetres, y down
 pub struct Subpath { pub start: Point, pub segments: Vec&lt;Segment&gt;, pub closed: bool }
 pub enum Segment { Line(Point), Quad(Point, Point), Cubic(Point, Point, Point) }</code></pre>
-<p>Elements are in stitching order: the host’s paint order, bottom first. Geometry stays exact, curves with
-their control points, and the generators flatten it with the tolerance their parameters give.</p>
+<p>Elements are in the host’s paint order, bottom first. They sew in that order unless the design has
+automatic elements or <code>sort_colours</code> is set: since M13.3 automatic digitizing then chooses the order
+(<a href="image-to-embroidery.html#sewing-order">image to embroidery</a>). Curves keep their control points, and the
+generators flatten them with the tolerance their parameters give.</p>
 <p>A host reads 3 of the settings by Ink/Stitch’s names, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and
 <code>min_satin_stroke_width_mm</code>: an SVG file’s metadata, and since M6.11 the data a VectorCraft document keeps
 for StitchCraft’s Design Settings filter. <code>SETTINGS</code> lists them with the label and help that filter’s

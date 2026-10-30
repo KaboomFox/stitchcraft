@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-fefdf631.js";
+            window.path_to_searchindex_js = "../searchindex-ebcb0220.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b31b520c.js"></script>
@@ -418,7 +418,9 @@ is the machine the document keeps, or <code>brother-pe800-5x7</code> when it kee
 it without <code>--profile</code> (<a href="#design-settings-and-machine-kept-with-the-document">below</a>).
 Reading the file back, as <code>stitch export</code> does, stops it at a writer’s bug (<code>SC-E0009</code>). The budget is
 <code>stitch export</code>’s own too. Its <code>auto</code> option digitizes the objects without StitchCraft effects, as
-<code>--auto</code> does. Level B of the <a href="compatibility-gate.html">compatibility gate</a> exports a document with
+<code>--auto</code> does, and sews them in the order StitchCraft chooses. The exporters have no switch like
+<code>--sort-colours</code>, and the objects with effects keep their order among themselves
+(<a href="image-to-embroidery.html#sewing-order">image to embroidery</a>). Level B of the <a href="compatibility-gate.html">compatibility gate</a> exports a document with
 VectorCraft’s command line and checks that the files are <code>stitch export</code>’s, byte for byte.</li>
 <li>What <code>stitch export</code> says, the export says as its warnings, one line each, naming the object and with
 the hint after it. VectorCraft shows 100 of at most 500 characters each, so of more the last says how
@@ -735,7 +737,8 @@ shape. Its visible fills are filled, in the appearance’s order, and its visibl
 stitch each. Since M13.1, read with <code>--auto</code> (<code>stitchcraft_vectorcraft::read_with</code>), the elements of an
 object are automatic instead when neither it nor a group or layer around it has a StitchCraft effect
 (<a href="image-to-embroidery.html">image to embroidery</a>, <code>REQ-AUTO-001</code>). StitchCraft then chooses their stitches by
-their width. A stroke’s cap is read with its width and join, and an automatic line’s stitches follow its
+their width. Read with <code>--sort-colours</code>, the objects with effects sew in the order StitchCraft chooses too
+(<code>REQ-AUTO-011</code>). A stroke’s cap is read with its width and join, and an automatic line’s stitches follow its
 round or square caps. Of a line sewn across its width, the reader names the alignment inside or outside a
 closed path and the width profile, which its stitches don’t follow (<code>SC-W0807</code>, <code>REQ-AUTO-005</code>). The
 thread’s colour is a solid paint’s colour, with CMYK and grey converted by

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-fefdf631.js";
+            window.path_to_searchindex_js = "../../searchindex-ebcb0220.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b31b520c.js"></script>
@@ -262,6 +262,7 @@
 <tr><td><a href="#sc-i0904"><code>SC-I0904</code></a></td><td>Info</td><td>Areas reach under the shapes sewn after them</td></tr>
 <tr><td><a href="#sc-i0905"><code>SC-I0905</code></a></td><td>Info</td><td>Speck merged into a neighbour</td></tr>
 <tr><td><a href="#sc-w0906"><code>SC-W0906</code></a></td><td>Warning</td><td>Background left out</td></tr>
+<tr><td><a href="#sc-i0907"><code>SC-I0907</code></a></td><td>Info</td><td>Elements sewn in an order of their own</td></tr>
 </tbody>
 </table>
 </div>
@@ -854,8 +855,9 @@ satin column or a line sewn after an area goes over it, and the area is sewn who
 <p>The message counts the areas that reach under others and those cut away. An area that the areas sewn
 after it cover whole sews nothing, and the message names it. It also names an area whose neighbours
 need more work to find than the budget allows it, which neither reaches under them nor is cut away,
-and a satin column whose area needs more, which the areas before it don’t reach under. To sew a shape
-as it is drawn, give it settings: in VectorCraft, apply a StitchCraft effect to it.</p>
+and a satin column whose area needs more, which the areas before it don’t reach under, and which keeps
+its place in paint order beside the shapes near it. To sew a shape as it is drawn, give it settings: in
+VectorCraft, apply a StitchCraft effect to it.</p>
 <h2 id="sc-i0905"><a class="header" href="#sc-i0905">SC-I0905</a></h2>
 <p><strong>Info</strong> — Speck merged into a neighbour</p>
 <p><code>--auto</code> takes an automatic area smaller than 1 mm², or a part of one that small, for a speck the trace
@@ -875,6 +877,20 @@ the stitches and stiffens the design. A background that needs more work to find 
 allows is sewn, and the message says so.</p>
 <p>To sew it, give it settings: in VectorCraft, apply a StitchCraft effect to it. Ignore White in
 VectorCraft’s Image Trace leaves a white background out of the trace.</p>
+<h2 id="sc-i0907"><a class="header" href="#sc-i0907">SC-I0907</a></h2>
+<p><strong>Info</strong> — Elements sewn in an order of their own</p>
+<p><code>--auto</code> sews the automatic elements in an order of its own, and <code>--sort-colours</code> every element.
+Shapes that overlap as drawn keep their paint order, the lower one first, and a satin column or a
+line that borders a fill sews after it, over its edge. Within those rules each thread sews as long
+as an element of it is free to sew, and the next element is the nearest. Elements with settings keep
+their order among themselves unless <code>--sort-colours</code> is given, and nothing moves across a stop.</p>
+<p>The message says how many thread changes the order has, and how many paint order has. It also names
+an element whose neighbours need more work to find than the budget allows, which keeps its place in
+paint order as an element with a stop after it does, and a line whose paint can’t be found, which
+keeps its place beside the shapes near it. SC-I0904 names a satin column whose paint can’t be found.
+And it names the elements left in paint order when choosing the order needs more work than the budget
+allows. To keep shapes in their paint order among themselves, give them settings and leave
+<code>--sort-colours</code> off: in VectorCraft, apply a StitchCraft effect to each.</p>
 
                     </main>
 
