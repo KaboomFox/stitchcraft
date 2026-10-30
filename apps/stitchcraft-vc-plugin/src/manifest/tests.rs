@@ -224,42 +224,36 @@ fn only_stroke_to_satin_names_its_budget() {
     assert_eq!(value(&stroke_to_satin())["budget"], json!("heavy"));
 }
 
-/// A DST exporter's manifest that asks for a heavy budget.
-fn exporting_with_budget() -> Vec<u8> {
-    let mut m = value(&exporter(FormatId::Dst));
-    m["budget"] = json!("heavy");
+/// `manifest` with `key` set to `v`, as the bytes VectorCraft reads.
+fn with(manifest: &Manifest, key: &str, v: Value) -> Vec<u8> {
+    let mut m = value(manifest);
+    m[key] = v;
     serde_json::to_vec(&m).unwrap()
 }
 
 #[test]
 fn validation_catches_what_vectorcraft_rejects() {
-    let base = value(&hello());
-    let with = |key: &str, v: Value| {
-        let mut m = base.clone();
-        m[key] = v;
-        serde_json::to_vec(&m).unwrap()
-    };
-    assert!(validate(&with("id", json!("has space"))).is_err());
-    assert!(validate(&with("name", json!(""))).is_err());
-    assert!(validate(&with("author", json!("x".repeat(limits::MAX_AUTHOR_BYTES + 1)))).is_err());
-    let large = validate(&with("description", json!("x".repeat(limits::MAX_MANIFEST_BYTES))));
+    assert!(validate(&with(&hello(), "id", json!("has space"))).is_err());
+    assert!(validate(&with(&hello(), "name", json!(""))).is_err());
+    assert!(validate(&with(&hello(), "author", json!("x".repeat(limits::MAX_AUTHOR_BYTES + 1)))).is_err());
+    let large = validate(&with(&hello(), "description", json!("x".repeat(limits::MAX_MANIFEST_BYTES))));
     assert!(large.is_err_and(|why| why.starts_with("manifest is ")));
     // White space after the JSON counts too: 64 KiB is the most.
     let padded = |len: usize| {
-        let mut text = serde_json::to_vec(&base).unwrap();
+        let mut text = serde_json::to_vec(&value(&hello())).unwrap();
         text.resize(len, b' ');
         validate(&text)
     };
     assert_eq!(padded(limits::MAX_MANIFEST_BYTES), Ok(()));
     assert!(padded(limits::MAX_MANIFEST_BYTES + 1).is_err_and(|why| why.starts_with("manifest is 65537 bytes")));
-    assert!(validate(&with("kind", json!("tool"))).is_err());
+    assert!(validate(&with(&hello(), "kind", json!("tool"))).is_err());
+}
+
+#[test]
+fn only_an_exporter_lists_extensions_from_1_to_8() {
     // An exporter lists 1 to 8 extensions, each 1 to 16 lower-case letters and digits, and only an exporter
     // lists any.
-    let exporting = |extensions: Value| {
-        let mut m = value(&exporter(FormatId::Dst));
-        m["extensions"] = extensions;
-        serde_json::to_vec(&m).unwrap()
-    };
+    let exporting = |extensions: Value| with(&exporter(FormatId::Dst), "extensions", extensions);
     let nine = json!(["a", "b", "c", "d", "e", "f", "g", "h", "i"]);
     for bad in
         [json!([]), json!(["DST"]), json!([".dst"]), json!([""]), json!(["abcdefghijklmnopq"]), json!(["dst", "dst"]), nine, json!("dst"), json!([1])]
@@ -268,34 +262,41 @@ fn validation_catches_what_vectorcraft_rejects() {
     }
     assert_eq!(validate(&exporting(json!(["dst", "dst2", "abcdefghijklmnop"]))), Ok(()));
     assert_eq!(validate(&exporting(json!(["a", "b", "c", "d", "e", "f", "g", "h"]))), Ok(()), "8, the most");
-    assert!(validate(&with("kind", json!("exporter"))).is_err(), "an exporter without extensions");
+    assert!(validate(&with(&hello(), "kind", json!("exporter"))).is_err(), "an exporter without extensions");
+    assert!(validate(&with(&hello(), "extensions", json!(["pes"]))).is_err(), "a live effect with extensions");
+    assert_eq!(validate(&with(&hello(), "extensions", json!([]))), Ok(()));
+}
+
+#[test]
+fn only_a_filter_may_ask_for_a_heavy_budget() {
     // From 0.17 a filter may ask for a heavy budget, and nothing else may.
-    let filter = |budget: Value| {
-        let mut m = value(&settings());
-        m["budget"] = budget;
-        serde_json::to_vec(&m).unwrap()
-    };
+    let filter = |budget: Value| with(&settings(), "budget", budget);
     assert_eq!(validate(&filter(json!("heavy"))), Ok(()));
     assert_eq!(validate(&filter(json!("light"))), Ok(()));
     for bad in [json!("medium"), json!(null), json!(true)] {
         assert!(validate(&filter(bad.clone())).is_err(), "{bad}");
     }
-    assert!(validate(&with("budget", json!("heavy"))).is_err_and(|why| why.contains("only a filter")), "a heavy live effect");
-    assert!(validate(&exporting_with_budget()).is_err_and(|why| why.contains("only a filter")), "a heavy exporter");
-    assert_eq!(validate(&with("budget", json!("light"))), Ok(()));
-    assert!(validate(&with("extensions", json!(["pes"]))).is_err(), "a live effect with extensions");
-    assert_eq!(validate(&with("extensions", json!([]))), Ok(()));
+    let heavy_effect = with(&hello(), "budget", json!("heavy"));
+    assert!(validate(&heavy_effect).is_err_and(|why| why.contains("only a filter")), "a heavy live effect");
+    let heavy_exporter = with(&exporter(FormatId::Dst), "budget", json!("heavy"));
+    assert!(validate(&heavy_exporter).is_err_and(|why| why.contains("only a filter")), "a heavy exporter");
+    assert_eq!(validate(&with(&hello(), "budget", json!("light"))), Ok(()));
+}
+
+#[test]
+fn parameters_are_an_object_of_valid_ones_up_to_the_most() {
     // A manifest may leave its parameters out, as VectorCraft reads it, but they are an object.
-    let mut bare = base.clone();
+    let mut bare = value(&hello());
     bare.as_object_mut().unwrap().remove("params");
     assert_eq!(validate(&serde_json::to_vec(&bare).unwrap()), Ok(()));
-    assert!(validate(&with("params", json!([]))).is_err_and(|why| why.contains("expected a JSON object")));
-    assert!(validate(&with("params", json!({"preview": {"type": "bool", "default": false}}))).is_err());
+    let params = |v: Value| with(&hello(), "params", v);
+    assert!(validate(&params(json!([]))).is_err_and(|why| why.contains("expected a JSON object")));
+    assert!(validate(&params(json!({"preview": {"type": "bool", "default": false}}))).is_err());
     let too_many: serde_json::Map<String, Value> =
         (0..=limits::MAX_PARAMS).map(|i| (format!("p{i}"), json!({"type": "bool", "default": false}))).collect();
-    assert!(validate(&with("params", Value::Object(too_many.clone()))).is_err());
+    assert!(validate(&params(Value::Object(too_many.clone()))).is_err());
     let most: serde_json::Map<String, Value> = too_many.into_iter().take(limits::MAX_PARAMS).collect();
-    assert_eq!(validate(&with("params", Value::Object(most))), Ok(()));
+    assert_eq!(validate(&params(Value::Object(most))), Ok(()));
     for bad in [
         json!({"type": "number", "min": 2, "max": 1, "default": 1}),
         json!({"type": "number", "min": 0, "default": 1}),
@@ -309,7 +310,7 @@ fn validation_catches_what_vectorcraft_rejects() {
         json!({"type": "choice", "options": (0..=limits::MAX_OPTIONS).map(|i| format!("o{i}")).collect::<Vec<_>>()}),
         json!({"type": "text"}),
     ] {
-        assert!(validate(&with("params", json!({"p": bad.clone()}))).is_err(), "{bad}");
+        assert!(validate(&params(json!({"p": bad.clone()}))).is_err(), "{bad}");
     }
     for good in [
         json!({"type": "number", "min": 0, "max": 1, "default": 1}),
@@ -320,6 +321,6 @@ fn validation_catches_what_vectorcraft_rejects() {
         json!({"type": "bool"}),
         json!({"type": "choice", "options": ["a", "b"], "default": "b"}),
     ] {
-        assert_eq!(validate(&with("params", json!({"p": good.clone()}))), Ok(()), "{good}");
+        assert_eq!(validate(&params(json!({"p": good.clone()}))), Ok(()), "{good}");
     }
 }
