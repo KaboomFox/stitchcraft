@@ -45,10 +45,12 @@ wildcards = "deny"
 allow-wildcard-paths = true
 # No randomness from the OS in what ships (docs/src/design/determinism.md). A random number generator
 # comes only with proptest, for the property tests, and the OS's entropy only through it, its temporary
-# files and the job server of the C build that compiles libFuzzer for the fuzz targets.
+# files and the job server of the C build that compiles libFuzzer for the fuzz targets. proptest's rand
+# takes that entropy from getrandom itself since rand 0.10, and through rand_core before: the fuzz targets'
+# proptest still uses rand 0.9.
 deny = [
     { crate = "rand", wrappers = ["proptest"] },
-    { crate = "getrandom", wrappers = ["rand_core", "tempfile", "jobserver"] },
+    { crate = "getrandom", wrappers = ["rand", "rand_core", "tempfile", "jobserver"] },
 ]
 
 [sources]
