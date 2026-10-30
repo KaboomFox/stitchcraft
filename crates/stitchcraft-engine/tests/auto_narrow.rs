@@ -80,8 +80,8 @@ fn req_auto_013_a_narrow_area_runs_along_its_centre_line() {
     let ends = [along[0], *along.last().unwrap()];
     assert!(ends.iter().any(|q| q.x() < 0.7) && ends.iter().any(|q| q.y() > 9.3), "{ends:?}");
     // The line paints the part, to its neighbours.
-    assert_eq!(out.narrow.len(), 1);
-    assert!((out.narrow[0].as_ref().unwrap().area() - (20.0 * 0.6 + 9.4 * 0.6)).abs() < 1e-6);
+    assert_eq!(out.parts.len(), 1);
+    assert!((out.parts[0].as_ref().unwrap().area() - (20.0 * 0.6 + 9.4 * 0.6)).abs() < 1e-6);
     // Planned, it sews and says so.
     let outcome = planned(vec![automatic(l)]);
     assert!(outcome.plan.is_some());
@@ -95,15 +95,14 @@ fn req_auto_013_a_narrow_area_runs_along_its_centre_line() {
 #[test]
 fn req_auto_013_the_bound_is_the_designs_narrowest_satin_stroke_to_the_micrometre() {
     let strip = |width: f64| shape("strip", &[rectangle((0.0, 0.0), (20.0, width))], &[]);
-    // 1 mm wide, the narrowest satin stroke unless the design sets it, runs; 2 micrometres wider fills.
+    // 1 mm wide, the narrowest satin stroke unless the design sets it, runs; 2 micrometres wider is a satin
+    // column (REQ-AUTO-016).
     assert_eq!(made(&strip(1.0)).stitches, Some(Stitches::Running));
-    let wider = strip(1.002);
-    assert_eq!(made(&wider).elements, vec![wider.clone()]);
-    assert_eq!(made(&wider).stitches, Some(Stitches::Fill));
+    assert_eq!(made(&strip(1.002)).stitches, Some(Stitches::Satin));
     // The design's own narrowest satin stroke moves the bound.
     let settings = DesignSettings { min_satin_stroke_width: Mm::new(2.0).unwrap(), ..DesignSettings::default() };
     assert_eq!(made_with(&strip(1.5), &settings).stitches, Some(Stitches::Running));
-    assert_eq!(made_with(&strip(2.5), &settings).stitches, Some(Stitches::Fill));
+    assert_eq!(made_with(&strip(2.5), &settings).stitches, Some(Stitches::Satin));
     // A ring narrow everywhere runs round, its hole kept empty: a closed line.
     let ring = shape("ring", &[rectangle((0.0, 0.0), (10.0, 10.0)), rectangle((0.5, 9.5), (9.5, 0.5))], &[]);
     let out = made(&ring);
@@ -127,7 +126,7 @@ fn req_auto_013_broad_parts_and_specks_stay_filled_and_the_narrow_ones_run_after
     // The fill keeps the square and the speck, which the neighbours merge or leave out.
     assert!((area(&out.elements[0]) - 100.75).abs() < 1e-6, "{}", area(&out.elements[0]));
     assert!(matches!(out.elements[1].shape, Shape::Stroke { .. }));
-    assert_eq!(out.narrow.iter().map(Option::is_some).collect::<Vec<_>>(), [false, true]);
+    assert_eq!(out.parts.iter().map(Option::is_some).collect::<Vec<_>>(), [false, true]);
     // The trim follows the last part.
     assert_eq!(setting(&out.elements[0], "trim_after"), None);
     assert_eq!(setting(&out.elements[1], "trim_after"), Some("true"));

@@ -9,7 +9,7 @@
 
 use stitchcraft_core::{Budget, Code, Mm, Point, math};
 use stitchcraft_engine::PlanOutcome;
-use stitchcraft_engine::auto::{SATIN_MAX_WIDTH, Stitches, digitize, digitized};
+use stitchcraft_engine::auto::{OVERLAP, SATIN_MAX_WIDTH, Stitches, digitize, digitized, underlay};
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::stroke::SHAPE_TOLERANCE;
@@ -33,6 +33,23 @@ fn with(element: Element, params: &[(&str, &str)]) -> Element {
         set.set(*key, *value);
     }
     Element { params: set, ..element }
+}
+
+/// The settings automatic digitizing gives a satin column `width` millimetres wide (`REQ-AUTO-018`): the
+/// satin column on, the underlay of its width, pull compensation of the overlap, and no end near the next
+/// element.
+fn satin(width: f64) -> Vec<(&'static str, String)> {
+    let mut params =
+        vec![("satin_column", "true".to_string()), ("pull_compensation_mm", OVERLAP.to_string()), ("end_at_nearest_point", "false".to_string())];
+    params.extend(underlay(Mm::new(width).unwrap()).iter().map(|&key| (key, "true".to_string())));
+    params
+}
+
+/// `element` with the settings automatic digitizing gives a satin column `width` millimetres wide.
+fn as_satin(element: Element, width: f64) -> Element {
+    let params = satin(width);
+    let pairs: Vec<(&str, &str)> = params.iter().map(|(key, value)| (*key, value.as_str())).collect();
+    with(element, &pairs)
 }
 
 /// The ordinary elements the automatic `element` sews as, in a design with the default settings.
@@ -87,13 +104,14 @@ fn req_auto_003_a_line_up_to_7_mm_is_a_satin_column_as_wide_as_it_is_drawn() {
     assert!(Stitches::Satin.across() && Stitches::FilledStroke.across() && !Stitches::Running.across() && !Stitches::Fill.across());
     // A line 3 mm wide sews as the satin column drawn as that line, keeping its other settings.
     let line = with(drawn("line", &[(0.0, 0.0), (20.0, 0.0), (20.0, 15.0)], 3.0), &[("trim_after", "true")]);
-    let column = with(line.clone(), &[("satin_column", "true")]);
+    let column = as_satin(line.clone(), 3.0);
     assert_eq!(made(&line), vec![column.clone()]);
     let sewn = needle_points(&planned(vec![automatic(line)]));
     assert_eq!(sewn, needle_points(&planned(vec![column])));
-    // As wide as drawn: its stitches cross the line from one edge to the other, 1.5 mm each side of it.
+    // As wide as drawn once the thread pulls it in: its stitches cross the line from one edge to the other
+    // and reach the overlap past each, 1.9 mm each side of it (REQ-AUTO-018).
     let off_the_first_leg = sewn.iter().filter(|q| q.x() < 15.0).map(|q| q.y().abs()).fold(0.0, f64::max);
-    assert!((off_the_first_leg - 1.5).abs() < 0.05, "{off_the_first_leg}");
+    assert!((off_the_first_leg - 1.5 - OVERLAP).abs() < 0.05, "{off_the_first_leg}");
 }
 
 #[test]
@@ -103,8 +121,8 @@ fn req_auto_003_a_line_of_several_subpaths_is_a_column_for_each() {
     let ids: Vec<&str> = columns.iter().map(|c| c.id.as_str()).collect();
     assert_eq!(ids, ["two", "two#2"]);
     let apart = [
-        with(widened(along("two", polylines(&[&[(0.0, 0.0), (20.0, 0.0)]]), &RED, &[]), 3.0), &[("satin_column", "true")]),
-        with(widened(along("two#2", polylines(&[&[(0.0, 10.0), (20.0, 10.0)]]), &RED, &[]), 3.0), &[("satin_column", "true")]),
+        as_satin(widened(along("two", polylines(&[&[(0.0, 0.0), (20.0, 0.0)]]), &RED, &[]), 3.0), 3.0),
+        as_satin(widened(along("two#2", polylines(&[&[(0.0, 10.0), (20.0, 10.0)]]), &RED, &[]), 3.0), 3.0),
     ];
     assert_eq!(columns, apart);
     assert_eq!(needle_points(&planned(vec![automatic(two)])), needle_points(&planned(apart.to_vec())));
@@ -174,7 +192,7 @@ fn req_auto_003_round_and_square_caps_reach_half_the_width_past_an_open_end() {
         assert!((least + 1.5).abs() < 0.05 && (most - 21.5).abs() < 0.05, "{cap:?}: {least} to {most}");
     }
     // A butt cap ends at the path's end, and a closed line has no end.
-    assert_eq!(made(&line), vec![with(line.clone(), &[("satin_column", "true")])]);
+    assert_eq!(made(&line), vec![as_satin(line.clone(), 3.0)]);
     let ring = widened(
         along(
             "ring",
@@ -185,7 +203,7 @@ fn req_auto_003_round_and_square_caps_reach_half_the_width_past_an_open_end() {
         3.0,
     );
     let round = capped(ring, Cap::Round);
-    assert_eq!(made(&round), vec![with(round, &[("satin_column", "true")])]);
+    assert_eq!(made(&round), vec![as_satin(round, 3.0)]);
     // Where the path starts or ends with a curve, the cap reaches on along the curve's tangent there.
     let curve = Path {
         subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Cubic(p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0))], closed: false }],

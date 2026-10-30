@@ -1,5 +1,7 @@
-//! The narrow parts of an automatic area: each sewn as a running stitch along its centre line, tripled from
-//! 0.5 mm wide (`REQ-AUTO-013` to `REQ-AUTO-015`).
+//! The parts of an automatic area sorted by their width ([`sorted`]): the narrow ones, each sewn as a running
+//! stitch along its centre line, tripled from 0.5 mm wide (`REQ-AUTO-013` to `REQ-AUTO-015`), those no wider
+//! than a satin column, sewn as columns (`auto::columns`, `REQ-AUTO-016`), and the rest, which stay the
+//! area's fill.
 //!
 //! Design: `docs/src/design/image-to-embroidery.md` › Stitch types by width, and
 //! `docs/src/design/algorithms/centre-lines.md` › Width along the line. A line traced from a picture is an
@@ -8,12 +10,14 @@
 //! stitch along its middle, as a stroke that narrow does:
 //!
 //! - **Narrow.** A part is narrower than a width everywhere when, shrunk by half that width, it leaves no
-//!   area: no circle that wide fits inside it. It is shrunk with the polygon buffer that sews a fill's
-//!   inset underlay (`ops::buffered`), by half of the width taken half a micrometre wider, so that a part as
-//!   wide as the width, give or take a rounding error, is narrow, as a stroke is when its width is compared
-//!   to the micrometre. A part whose area is more than its perimeter times that half, plus π times its
-//!   square for each hole past the first, holds a wider circle somewhere: no part that narrow covers more.
-//!   It isn't shrunk, which would only confirm it at the cost of its whole outline.
+//!   area: no circle that wide fits inside it ([`within`]). It is shrunk with the polygon buffer that sews a
+//!   fill's inset underlay (`ops::buffered`), by half of the width taken half a micrometre wider, so that a
+//!   part as wide as the width, give or take a rounding error, is narrow, as a stroke is when its width is
+//!   compared to the micrometre. A part whose area is more than its perimeter times that half, plus π times
+//!   its square for each hole past the first, holds a wider circle somewhere: no part that narrow covers
+//!   more. It isn't shrunk, which would only confirm it at the cost of its whole outline. The narrow parts
+//!   are those narrower than the design's narrowest satin stroke everywhere, and a part that isn't is sewn as
+//!   columns when it is no wider than the widest satin column everywhere.
 //! - **Not a speck.** A part smaller than [`SMALLEST_AREA`] is a speck, which stays in the area to be merged
 //!   into a neighbour (`REQ-AUTO-008`).
 //! - **A line.** Its centre lines ([`strips`]) come from its triangulation, its edges cut into pieces no
@@ -30,7 +34,8 @@ use std::collections::BTreeMap;
 
 use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Meter, Mm, Point};
 
-use super::{SMALLEST_AREA, no_area};
+use super::columns::{self, Columns, Made};
+use super::{SATIN_MAX_WIDTH, SMALLEST_AREA, no_area};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::ops::{self, area_of};
 use crate::normalize::strips::{self, Line};
@@ -56,24 +61,49 @@ pub(super) struct Narrow {
 pub(super) struct Parts {
     /// The parts that stay the area's fill: its broad parts, its specks and its dots.
     pub(super) filled: Vec<Polygon>,
-    /// Its narrow parts, in the order of its parts.
-    pub(super) narrow: Vec<Narrow>,
-    /// `SC-E0009` for each part whose width or centre line could not be found, a bug; the part stays in the
-    /// fill.
+    /// Its parts sewn along their middles, narrow ones and those sewn as columns, in the order of its parts.
+    pub(super) along: Vec<Along>,
+    /// `SC-E0009` for each part whose width or centre line could not be found, a bug, and `SC-I0902` for each
+    /// part no wider than a satin column along which no columns could be drawn; the part stays in the fill.
     pub(super) said: Vec<Diagnostic>,
 }
 
+/// A part sewn along its middle.
+#[derive(Clone, Debug, PartialEq)]
+pub(super) enum Along {
+    /// A narrow part, a running stitch along its centre lines.
+    Narrow(Narrow),
+    /// A part no wider than a satin column, sewn as columns.
+    Columns(Columns),
+}
+
 /// `parts`, the automatic area `id`'s, sorted by their width: those narrower than `narrowest` everywhere,
-/// with their centre lines, unless they are specks or dots, and the rest. Finding a part's width and centre
-/// line is part of the work of digitizing the area, and costs `meter`'s.
+/// with their centre lines, unless they are specks or dots, those no wider than [`SATIN_MAX_WIDTH`]
+/// everywhere, with their columns, and the rest. Finding a part's width, centre line and columns is part of
+/// the work of digitizing the area, and costs `meter`'s.
 pub(super) fn sorted(id: &ElementId, parts: Vec<Polygon>, narrowest: Mm, meter: &mut Meter) -> Result<Parts, Exhausted> {
     let mut sorted = Parts::default();
     for part in parts {
         meter.charge(1)?;
         match lines(&part, narrowest, meter)? {
-            Found::Lines(lines) => match width(&part, &lines, meter)? {
-                Some(width) => sorted.narrow.push(Narrow { part, lines, width }),
-                None => sorted.filled.push(part),
+            Found::Lines(lines) => {
+                let edges = Edges::of(&part, piece(&part), meter)?;
+                match width(&edges, &lines, meter)? {
+                    Some(width) => sorted.along.push(Along::Narrow(Narrow { part, lines, width })),
+                    None => sorted.filled.push(part),
+                }
+            }
+            Found::Columns => match columns::columns(&part, narrowest, meter)? {
+                Made::Columns(sewn) => sorted.along.push(Along::Columns(Columns { part, sewn })),
+                Made::Dot => sorted.filled.push(part),
+                Made::Unmade => {
+                    sorted.said.push(columns::unmade(id));
+                    sorted.filled.push(part);
+                }
+                Made::Broken => {
+                    sorted.said.push(broken(id, LOST_COLUMNS));
+                    sorted.filled.push(part);
+                }
             },
             Found::Filled => sorted.filled.push(part),
             Found::Broken(failed) => {
@@ -89,27 +119,31 @@ pub(super) fn sorted(id: &ElementId, parts: Vec<Polygon>, narrowest: Mm, meter: 
 enum Found {
     /// It is narrow, and sews along these centre lines, unless they have no length.
     Lines(Vec<Line>),
+    /// It is no wider than a satin column, and sews as columns, unless none can be drawn.
+    Columns,
     /// It stays in the fill: it is broad somewhere, or a speck.
     Filled,
     /// What could not be found of it, and why, a bug.
     Broken(&'static str),
 }
 
-/// The centre lines of `part` when it is narrower than `narrowest` everywhere and no speck, with `meter`'s
-/// work.
+/// What becomes of `part`, an area's whose narrowest satin stroke is `narrowest`, with `meter`'s work: its
+/// centre lines when it is narrower than that everywhere and no speck, or columns when it is no wider than
+/// [`SATIN_MAX_WIDTH`] everywhere.
 fn lines(part: &Polygon, narrowest: Mm, meter: &mut Meter) -> Result<Found, Exhausted> {
-    let area = part.area();
-    if area < SMALLEST_AREA {
+    if part.area() < SMALLEST_AREA {
         return Ok(Found::Filled);
     }
-    let half = (narrowest.get() + 0.0005) / 2.0;
-    let holes = part.holes.len().saturating_sub(1) as f64;
-    if area > perimeter(part) * half + std::f64::consts::PI * holes * half * half {
-        return Ok(Found::Filled);
-    }
-    let Ok(shrunk) = ops::buffered(std::slice::from_ref(part), -half, meter)? else { return Ok(Found::Broken(UNJOINED)) };
-    if !no_area(area_of(&shrunk)) {
-        return Ok(Found::Filled);
+    match within(part, narrowest, meter)? {
+        None => return Ok(Found::Broken(UNJOINED)),
+        Some(true) => {}
+        Some(false) => {
+            return Ok(match within(part, SATIN_MAX_WIDTH, meter)? {
+                None => Found::Broken(UNJOINED),
+                Some(true) => Found::Columns,
+                Some(false) => Found::Filled,
+            });
+        }
     }
     match strips::centre_lines(part, piece(part), meter)? {
         Ok(lines) => Ok(Found::Lines(lines)),
@@ -117,10 +151,23 @@ fn lines(part: &Polygon, narrowest: Mm, meter: &mut Meter) -> Result<Found, Exha
     }
 }
 
+/// Whether `part` is narrower than `width` everywhere, measured to the micrometre: shrunk by half of the
+/// width taken half a micrometre wider, it leaves no area. `None` when the shrunk part can't be joined, a
+/// bug.
+fn within(part: &Polygon, width: Mm, meter: &mut Meter) -> Result<Option<bool>, Exhausted> {
+    let half = (width.get() + 0.0005) / 2.0;
+    let holes = part.holes.len().saturating_sub(1) as f64;
+    if part.area() > perimeter(part) * half + std::f64::consts::PI * holes * half * half {
+        return Ok(Some(false));
+    }
+    let Ok(shrunk) = ops::buffered(std::slice::from_ref(part), -half, meter)? else { return Ok(None) };
+    Ok(Some(no_area(area_of(&shrunk))))
+}
+
 /// How long the pieces of `part`'s edges are, for its triangulation and for the grid its width is measured
 /// with: as long as the part is wide on average, twice its area over its perimeter, or [`FINEST`] if that is
 /// longer.
-fn piece(part: &Polygon) -> f64 {
+pub(super) fn piece(part: &Polygon) -> f64 {
     (2.0 * part.area() / perimeter(part)).max(FINEST)
 }
 
@@ -129,12 +176,11 @@ fn perimeter(part: &Polygon) -> f64 {
     part.rings().flat_map(segments).map(|(a, b)| a.distance(b)).sum()
 }
 
-/// The width of `part` along `lines`, its centre lines: the diameter of the largest circle that fits inside it
-/// centred on each of their points, twice the point's distance from the nearest edge of its outline and
-/// holes, averaged along the lines. `None` for lines of no length, a dot's. A unit of `meter`'s work for each
-/// point and edge.
-fn width(part: &Polygon, lines: &[Line], meter: &mut Meter) -> Result<Option<Mm>, Exhausted> {
-    let edges = Edges::of(part, piece(part), meter)?;
+/// The width of a part along `lines`, its centre lines, whose edges `edges` holds: the diameter of the largest
+/// circle that fits inside it centred on each of their points, twice the point's distance from the nearest
+/// edge of its outline and holes, averaged along the lines. `None` for lines of no length, a dot's. A unit of
+/// `meter`'s work for each point and edge.
+pub(super) fn width(edges: &Edges, lines: &[Line], meter: &mut Meter) -> Result<Option<Mm>, Exhausted> {
     let (mut sum, mut length) = (0.0, 0.0);
     for line in lines {
         let mut across = Vec::with_capacity(line.points.len());
@@ -154,7 +200,7 @@ fn width(part: &Polygon, lines: &[Line], meter: &mut Meter) -> Result<Option<Mm>
 
 /// The edges of a part in the cells of a square grid, each cut into pieces no longer than a cell, so that
 /// the edge nearest a point is found among the cells round it.
-struct Edges {
+pub(super) struct Edges {
     /// A cell's side, in millimetres.
     cell: f64,
     /// The pieces of edges that reach into each cell, by the cell's column and row.
@@ -166,7 +212,7 @@ struct Edges {
 impl Edges {
     /// The edges of `part`'s outline and holes in cells `cell` millimetres wide, with `meter`'s work: a unit
     /// for each piece and each cell it reaches.
-    fn of(part: &Polygon, cell: f64, meter: &mut Meter) -> Result<Edges, Exhausted> {
+    pub(super) fn of(part: &Polygon, cell: f64, meter: &mut Meter) -> Result<Edges, Exhausted> {
         let mut edges = Edges { cell, cells: BTreeMap::new(), span: [i64::MAX, i64::MAX, i64::MIN, i64::MIN] };
         for (a, b) in part.rings().flat_map(segments) {
             let pieces = (a.distance(b) / cell).ceil().max(1.0);
@@ -244,6 +290,9 @@ const UNJOINED: &str = "Finding how wide a part of this area is, the edges of a 
 /// What is said of a narrow part whose triangulation lost its shape.
 const LOST: &str = "Finding the centre line of a narrow part of this area, its triangulation lost its shape";
 
+/// What is said of a part no wider than a satin column whose triangulation lost its shape.
+const LOST_COLUMNS: &str = "Finding the satin columns of a part of this area, its triangulation lost its shape";
+
 /// `SC-E0009` for a part of the automatic area `id` that `failed` says what failed of, a bug: the part stays
 /// in the area's fill.
 fn broken(id: &ElementId, failed: &str) -> Diagnostic {
@@ -301,6 +350,12 @@ mod tests {
             .collect()
     }
 
+    /// The part of a narrow part, sewn along its centre lines.
+    fn narrow_part(along: &Along) -> &Polygon {
+        let Along::Narrow(narrow) = along else { panic!("{along:?} isn't narrow") };
+        &narrow.part
+    }
+
     /// A part with the outline `points`, wound clockwise in y-up axes as a region winds it.
     fn outline(points: &[(f64, f64)]) -> Polygon {
         let mut ring: Vec<Point> = points.iter().map(|&(x, y)| Point::new(x, y).unwrap()).collect();
@@ -313,14 +368,15 @@ mod tests {
     #[test]
     fn each_kind_of_part_is_sorted_by_its_width() {
         // An area's parts, with a narrowest satin stroke of 1.5 mm:
-        // - a square 10 mm across, broad by its area alone;
+        // - a square 10 mm across, broader than a satin column by its area alone;
         // - a speck;
-        // - a strip 0.6 mm wide with an end 2 mm square, which its area doesn't show broad and shrinking does;
+        // - a strip 0.6 mm wide with an end 2 mm square: not narrow, which its area doesn't show and shrinking
+        //   does, and no wider than a satin column, so sewn as columns;
         // - a strip 0.6 mm wide, narrow;
         // - a regular octagon 1.5 mm across its corners, a dot, whose caps meet;
         // - and a ring whose hole pokes out through an edge of its outline, 0.012 mm, which no region has. Its
         //   triangulation loses its shape, as a bug would make it.
-        // Each but the strip stays in the fill, and SC-E0009 names the area of the last.
+        // Each but the strips stays in the fill, and SC-E0009 names the area of the last.
         let square = outline(&[(0.0, 10.0), (10.0, 10.0), (10.0, 20.0), (0.0, 20.0)]);
         let speck = outline(&[(30.0, 0.0), (30.5, 0.0), (30.5, 0.5), (30.0, 0.5)]);
         let ended = outline(&[(0.0, 0.0), (18.0, 0.0), (18.0, -0.7), (20.0, -0.7), (20.0, 1.3), (18.0, 1.3), (18.0, 0.6), (0.0, 0.6)]);
@@ -334,8 +390,9 @@ mod tests {
         let area = ElementId::new("area").unwrap();
         let parts = vec![square.clone(), speck.clone(), ended.clone(), strip.clone(), dot.clone(), ring.clone()];
         let sorted = sorted(&area, parts, Mm::new(1.5).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
-        assert_eq!(sorted.filled, [square, speck, ended, dot, ring]);
-        let [Narrow { part, lines, width }] = sorted.narrow.as_slice() else { panic!("{:?}", sorted.narrow) };
+        assert_eq!(sorted.filled, [square, speck, dot, ring]);
+        let [Along::Columns(columns), Along::Narrow(Narrow { part, lines, width })] = sorted.along.as_slice() else { panic!("{:?}", sorted.along) };
+        assert_eq!(columns.part, ended);
         assert_eq!((part, lines.len()), (&strip, 1));
         assert!((width.get() - 0.6).abs() < 1e-9, "{width:?}");
         let [said] = sorted.said.as_slice() else { panic!("{:?}", sorted.said) };
@@ -364,7 +421,7 @@ mod tests {
         let area = ElementId::new("area").unwrap();
         let sorted = sorted(&area, vec![strip.clone(), plate.clone()], Mm::new(6.0).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
         assert!(sorted.filled.is_empty() && sorted.said.is_empty(), "{sorted:?}");
-        assert_eq!(sorted.narrow.iter().map(|narrow| &narrow.part).collect::<Vec<_>>(), [&strip, &plate]);
+        assert_eq!(sorted.along.iter().map(narrow_part).collect::<Vec<_>>(), [&strip, &plate]);
     }
 
     #[test]
@@ -373,7 +430,7 @@ mod tests {
         let strip = outline(&[(0.0, 0.0), (2.0, 0.0), (2.0, 0.5), (0.0, 0.5)]);
         assert_eq!(strip.area(), SMALLEST_AREA);
         let sorted = sorted(&ElementId::new("area").unwrap(), vec![strip.clone()], Mm::new(1.5).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
-        assert_eq!(sorted.narrow.iter().map(|narrow| &narrow.part).collect::<Vec<_>>(), [&strip]);
+        assert_eq!(sorted.along.iter().map(narrow_part).collect::<Vec<_>>(), [&strip]);
     }
 
     #[test]
@@ -418,7 +475,8 @@ mod tests {
         // start and 1 mm after, each piece weighed by its length, the first 0.4 mm long and the second 1 mm.
         let strip = outline(&[(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0)]);
         let line = Line { points: [(5.0, 0.1), (5.0, 0.5), (6.0, 0.5)].map(|(x, y)| Point::new(x, y).unwrap()).to_vec(), closed: false };
-        let found = width(&strip, &[line], &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        let edges = Edges::of(&strip, piece(&strip), &mut Budget::DEFAULT.meter()).unwrap();
+        let found = width(&edges, &[line], &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         assert!((found.get() - (0.4 * 0.6 + 1.0) / 1.4).abs() < 1e-12, "{found:?}");
     }
 
