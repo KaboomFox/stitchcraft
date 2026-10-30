@@ -807,6 +807,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- Mutation testing on a pull request runs in 8 parts instead of 4. The lines M13.5 changes hold about 590
+  mutants, and 2 of 4 parts ran past the jobs' limit of an hour and a half.
 - A speck that shares as long an edge with 2 areas goes into the one drawn first. It went into the one sewn
   first, which was the same until the sewing order (`REQ-AUTO-008`).
 - `stitch plan`, `stitch export` and `stitch bug-report` take `--auto` and `--sort-colours` from one
