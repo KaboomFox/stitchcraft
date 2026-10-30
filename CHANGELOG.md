@@ -1573,6 +1573,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/render/sampler-simple.png`, `sampler-realistic.png` and `TS-01-realistic.png`
+  (`REQ-RND-002`), and the 55 pictures in the docs that the renderer draws. tiny-skia 0.12 encodes PNG files
+  with version 0.18 of the png crate, which writes them 4 to 6 times smaller. Every pixel is as it was: each
+  file decodes to the pixels of the one it replaces. The golden previews are compared byte for byte, so
+  they are written again with the new encoder.
 - Changed `conformance/golden/testsheets/TS-08.pes` (`REQ-FILL-TAT-002`, `REQ-FILL-TAT-010`). In the
   square at 0° and 0.4 mm, the underlay's rows, 1.2 mm apart and added up, put one 1e-14 mm inside the
   square's far side, along it. That row is left out now, and the underlay takes another way through its
