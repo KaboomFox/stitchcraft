@@ -775,6 +775,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - `SC-E0813` is now *VectorCraft too old for the filter*. Each StitchCraft filter declines with it in a
   VectorCraft older than it needs, Design Settings and Test Sheet before 0.16, and Stroke to Satin before
   0.15. Its message names the version to update to.
+- The compatibility gate pins VectorCraft 0.18.0, adopted from 0.17.0. Every contract case and scenario
+  passes against it unchanged, and the exports, the test sheets and Stroke to Satin cost what they cost in
+  0.17.0. The plug-in ABI is still v1. From 0.18.0 a run pays nothing for compiling the functions it calls.
+  In 0.17.0 a first run paid, and could stop with most of its budget left. From M13.2 on, the gate found
+  0.17.0's command line stopping the PES exporter so on the test sheet TS-04, which 0.18.0 exports in 34
+  million of its 10 billion instructions. VectorCraft's pictures of the plug-ins menu and the effects'
+  dialogs are drawn by 0.18.0, which draws a text field's value near the top of its box. The RFC's status
+  and the integration page name 0.18.0.
 - The compatibility gate pins VectorCraft 0.17.0, adopted from 0.16.0. Every contract case and scenario
   passes against it unchanged, and an export of a fill of the whole hoop costs what it cost in 0.16.0.
   0.17.0 adds heavy filters, which M6.12's Convert Line to Satin needs: a filter that declares
