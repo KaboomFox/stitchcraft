@@ -178,6 +178,8 @@ fn req_auto_016_a_ring_is_a_closed_column_started_at_a_rung() {
     let turn = |rail: &[Point]| geom::signed_area(rail).signum();
     assert_eq!(turn(out), turn(hole));
     assert!(hole.iter().all(|q| q.distance(out[0]) >= hole[0].distance(out[0]) - 1e-12), "{:?}", (out[0], hole[0]));
+    // The rails' starts pair up without a rung.
+    assert!(column.rungs.iter().all(|&[a, b]| !(same(a, out[0]) && same(b, hole[0]))), "{:?}", column.rungs);
     for &[a, b] in &column.rungs {
         let radial = math::to_degrees(math::atan2(a.y(), a.x()) - math::atan2(b.y(), b.x())).abs();
         assert!(radial < 8.0, "{a:?} {b:?}");
@@ -427,6 +429,34 @@ fn req_auto_017_rungs_lie_square_to_the_column_along_a_curve_and_a_taper() {
 }
 
 #[test]
+fn req_auto_017_a_corner_across_from_several_edges_keeps_the_rung_at_a_right_angle() {
+    // A band 3 mm wide whose top has a point every half millimetre, and whose bottom has points only where its
+    // edge is cut: a corner on the bottom has triangles to several edges of the top, and keeps the rung that
+    // meets one of them at a right angle. Every rung crosses the band square.
+    let mut outline = vec![(0.0, 0.0), (20.0, 0.0)];
+    outline.extend((0..=40).rev().map(|k| (f64::from(k) * 0.5, 3.0)));
+    let [column] = found(&part(&outline, &[])).try_into().unwrap();
+    assert!(column.rungs.len() > 10 && column.rungs.iter().all(|&rung| (heading(rung) - 90.0).abs() < 1e-6), "{:?}", column.rungs);
+}
+
+#[test]
+fn req_auto_017_the_rung_from_the_inside_corner_of_a_bend_turns_with_it() {
+    // A band 3 mm wide that turns left by 40°, round outside and sharp inside, as a line with round joins is
+    // drawn. The inside's way at its corner runs from the point before the corner to the one after, along the
+    // bend's middle, and the rung from the corner leans between square to the band before the bend, at 90°,
+    // and square to it after, at 130°.
+    let turn = math::to_radians(40.0);
+    let (sin, cos) = sin_cos(turn);
+    let inside = (-1.5 * math::tan(turn / 2.0), 1.5);
+    let mut outline = vec![(-10.0, -1.5), (0.0, -1.5)];
+    outline.extend(arc(0.0, 0.0, 1.5, 8, -std::f64::consts::FRAC_PI_2, turn).into_iter().skip(1));
+    outline.extend([(10.0 * cos + 1.5 * sin, 10.0 * sin - 1.5 * cos), (10.0 * cos - 1.5 * sin, 10.0 * sin + 1.5 * cos), inside, (-10.0, 1.5)]);
+    let [column] = found(&part(&outline, &[])).try_into().unwrap();
+    let rung = column.rungs.iter().find(|rung| rung.iter().any(|&q| same(q, p(inside.0, inside.1)))).unwrap();
+    assert!((95.0..125.0).contains(&heading(*rung)), "{rung:?}");
+}
+
+#[test]
 fn req_auto_017_of_rungs_too_near_each_other_the_one_nearer_square_is_kept() {
     // 4 rungs across rails 10 mm long, each 3 mm long: drawn 1 % past the rails, rungs closer than 0.06 mm on
     // a rail would cross. Of the first 2, 0.05 mm apart, the one nearer a right angle stays; the third shares
@@ -435,18 +465,17 @@ fn req_auto_017_of_rungs_too_near_each_other_the_one_nearer_square_is_kept() {
     let kept = ordered(
         vec![rung(2.0, 2.0, 0.3), rung(2.05, 2.05, 0.1), rung(5.0, 6.0, 0.2), rung(6.0, 6.0, 0.0), rung(0.0, 0.0, 0.0), rung(10.0, 10.0, 0.0)],
         [10.0, 10.0],
-        None,
     );
     assert_eq!(kept, [rung(2.05, 2.05, 0.1), rung(6.0, 6.0, 0.0)]);
     // As near, the first stays.
-    assert_eq!(ordered(vec![rung(2.0, 2.0, 0.0), rung(2.05, 2.05, 0.0)], [10.0, 10.0], None), [rung(2.0, 2.0, 0.0)]);
+    assert_eq!(ordered(vec![rung(2.0, 2.0, 0.0), rung(2.05, 2.05, 0.0)], [10.0, 10.0]), [rung(2.0, 2.0, 0.0)]);
     // A better rung takes the last one's place only where it lies far enough past the one before: the third
     // lies 0.03 mm past the first on the second rail, and the second stays.
     let crowded = [rung(1.0, 1.0, 0.0), rung(1.1, 1.1, 0.5), rung(1.12, 1.03, 0.1)];
-    assert_eq!(ordered(crowded.to_vec(), [10.0, 10.0], None), crowded[..2]);
+    assert_eq!(ordered(crowded.to_vec(), [10.0, 10.0]), crowded[..2]);
     // Where it does, it does.
     assert_eq!(
-        ordered(vec![rung(1.0, 1.0, 0.0), rung(1.1, 1.1, 0.5), rung(1.15, 1.15, 0.1)], [10.0, 10.0], None),
+        ordered(vec![rung(1.0, 1.0, 0.0), rung(1.1, 1.1, 0.5), rung(1.15, 1.15, 0.1)], [10.0, 10.0]),
         [rung(1.0, 1.0, 0.0), rung(1.15, 1.15, 0.1)]
     );
 }

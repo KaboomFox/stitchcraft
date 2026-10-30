@@ -468,7 +468,7 @@ fn strip(
     let Some(rails) = rails(ring, a, b) else { return Ok(None) };
     let candidates = rungs(skeleton, owner, line, &rails, meter)?;
     let lengths = rails.each_ref().map(|rail| length(points, rail));
-    let rungs = ordered(candidates, lengths, None);
+    let rungs = ordered(candidates, lengths);
     let under = |end: &End| match end {
         End::Cut { under, .. } => Some(*under),
         End::Own { .. } => None,
@@ -703,7 +703,7 @@ fn started(ring: &Ring, near: Point, meter: &mut Meter) -> Result<Option<Started
                 Rung { at, ..*rung }
             })
             .collect();
-        let rungs = ordered(shifted, ring.lengths, Some(start.points));
+        let rungs = ordered(shifted, ring.lengths);
         return Ok(Some(Started { rails: [outer, inner], rungs: rungs.iter().map(|rung| rung.points).collect() }));
     }
     Ok(None)
@@ -810,12 +810,9 @@ fn meet(c: Point, (before, after): (Point, Point), (p, q): (Point, Point)) -> Op
 
 /// `rungs` in order along rails `lengths` long, without those at a rail's ends, and of those whose points lie
 /// too near each other on a rail ([`apart`]), or would cross, the one nearer a right angle, the first of as
-/// near. A ring started at the rung `start` leaves that one out: its rails start there.
-fn ordered(mut rungs: Vec<Rung>, lengths: [f64; 2], start: Option<[Point; 2]>) -> Vec<Rung> {
-    rungs.retain(|rung| {
-        let at_start = start.is_some_and(|points| points.iter().zip(&rung.points).all(|(a, b)| a.distance(*b) < SAME_POINT));
-        !at_start && (0..2).all(|r| rung.at[r] >= SAME_POINT && rung.at[r] <= lengths[r] - SAME_POINT)
-    });
+/// near. The rung a ring starts at lies at its rails' ends, and goes with them: its rails start there.
+fn ordered(mut rungs: Vec<Rung>, lengths: [f64; 2]) -> Vec<Rung> {
+    rungs.retain(|rung| (0..2).all(|r| rung.at[r] >= SAME_POINT && rung.at[r] <= lengths[r] - SAME_POINT));
     rungs.sort_by(|a, b| a.at[0].total_cmp(&b.at[0]).then(a.at[1].total_cmp(&b.at[1])));
     let mut kept: Vec<Rung> = Vec::with_capacity(rungs.len());
     for rung in rungs {
