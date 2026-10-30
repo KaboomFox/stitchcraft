@@ -36,7 +36,7 @@ thiserror = "2"
 # rendering (stitchcraft-render only, and xtask, which reads pictures with it; `cargo xtask layers` restricts
 # tiny-skia). No SIMD: the portable scalar pipeline gives the same pixels on every CPU
 # (docs/src/design/determinism.md).
-tiny-skia = { version = "0.11", default-features = false, features = ["std", "png-format"] }
+tiny-skia = { version = "0.12", default-features = false, features = ["std", "png-format"] }
 
 # SVG input (stitchcraft-svg only; `cargo xtask layers` restricts both): an XML tree and SVG's
 # micro-syntaxes (path data, transforms, lengths, colours). Pure Rust, and the versions VectorCraft's
