@@ -68,7 +68,7 @@ mod neighbours;
 mod split;
 
 pub use neighbours::{OVERLAP, SMALLEST_AREA, TOUCHING};
-use neighbours::{Sewn, no_area, parts_of};
+use neighbours::{Sewn, no_area, parts_of, speck};
 
 use std::borrow::Cow;
 

@@ -18,8 +18,8 @@
 //!   more. It isn't shrunk, which would only confirm it at the cost of its whole outline. The narrow parts
 //!   are those narrower than the design's narrowest satin stroke everywhere, and a part that isn't is sewn as
 //!   columns when it is no wider than the widest satin column everywhere.
-//! - **Not a speck.** A part smaller than [`SMALLEST_AREA`] is a speck, which stays in the area to be merged
-//!   into a neighbour (`REQ-AUTO-008`).
+//! - **Not a speck.** A part smaller than the smallest area sewn is a speck ([`speck`]), which stays in the
+//!   area to be merged into a neighbour (`REQ-AUTO-008`).
 //! - **A line.** Its centre lines ([`strips`]) come from its triangulation, its edges cut into pieces no
 //!   longer than it is wide on average, twice its area over its perimeter, or [`FINEST`] if that is longer.
 //!   A part whose centre lines have no length, a dot, stays in the area.
@@ -36,7 +36,7 @@ use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Meter, Mm, Point}
 
 use super::columns::{self, Columns, Made};
 use super::split;
-use super::{SATIN_MAX_WIDTH, SMALLEST_AREA, no_area};
+use super::{SATIN_MAX_WIDTH, no_area, speck};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::ops::{self, area_of};
 use crate::normalize::strips::{self, Line};
@@ -168,7 +168,7 @@ enum Found {
 /// centre lines when it is narrower than that everywhere and no speck, or columns when it is no wider than
 /// [`SATIN_MAX_WIDTH`] everywhere.
 fn lines(part: &Polygon, narrowest: Mm, meter: &mut Meter) -> Result<Found, Exhausted> {
-    if part.area() < SMALLEST_AREA {
+    if speck(part.area()) {
         return Ok(Found::Filled);
     }
     let Some(narrow) = within(part, narrowest, meter)? else { return Ok(Found::Broken(UNJOINED)) };
@@ -348,6 +348,7 @@ mod tests {
     use stitchcraft_core::rng::SplitMix64;
 
     use super::*;
+    use crate::auto::SMALLEST_AREA;
     use crate::normalize::region::geom;
 
     #[test]
