@@ -65,9 +65,11 @@ its arithmetic is the plug-in's.
 ## Bug reports
 
 Because the same design, profile, format and version give the same plan everywhere, those four are all a
-bug report needs, with whether the design was read with `--auto`, which decides how its shapes without
-settings sew. `stitch bug-report` writes them into one JSON file, with the design itself in place of a
-path to it, and the switch only when it was on, so a bundle of a run without it is as it always was. That is an SVG file whole, or the part of a VectorCraft document its reader reads, which
+bug report needs, with the switches the design was read with. `--auto` decides how its shapes without
+settings sew, and `--sort-colours` whether its shapes with settings sew in the order StitchCraft chooses.
+`stitch bug-report` writes them into one JSON file, with the design itself in place of a path to it, and
+each switch only when it was on. A bundle of a run without them is as it always was. The design is an SVG
+file whole, or the part of a VectorCraft document its reader reads, which
 reads as the whole document does. The file also records what came of them:
 
 - a SHA-256 of each entry of the plan, from each coordinate's bits, its kind, role and element, and each

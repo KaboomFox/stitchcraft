@@ -238,7 +238,9 @@ writes of the document:
   it without `--profile` ([below](#design-settings-and-machine-kept-with-the-document)).
   Reading the file back, as `stitch export` does, stops it at a writer's bug (`SC-E0009`). The budget is
   `stitch export`'s own too. Its `auto` option digitizes the objects without StitchCraft effects, as
-  `--auto` does. Level B of the [compatibility gate](compatibility-gate.md) exports a document with
+  `--auto` does, and sews them in the order StitchCraft chooses. The exporters have no switch like
+  `--sort-colours`, and the objects with effects keep their order among themselves
+  ([image to embroidery](image-to-embroidery.md#sewing-order)). Level B of the [compatibility gate](compatibility-gate.md) exports a document with
   VectorCraft's command line and checks that the files are `stitch export`'s, byte for byte.
 - What `stitch export` says, the export says as its warnings, one line each, naming the object and with
   the hint after it. VectorCraft shows 100 of at most 500 characters each, so of more the last says how
@@ -550,7 +552,8 @@ shape. Its visible fills are filled, in the appearance's order, and its visible 
 stitch each. Since M13.1, read with `--auto` (`stitchcraft_vectorcraft::read_with`), the elements of an
 object are automatic instead when neither it nor a group or layer around it has a StitchCraft effect
 ([image to embroidery](image-to-embroidery.md), `REQ-AUTO-001`). StitchCraft then chooses their stitches by
-their width. A stroke's cap is read with its width and join, and an automatic line's stitches follow its
+their width. Read with `--sort-colours`, the objects with effects sew in the order StitchCraft chooses too
+(`REQ-AUTO-011`). A stroke's cap is read with its width and join, and an automatic line's stitches follow its
 round or square caps. Of a line sewn across its width, the reader names the alignment inside or outside a
 closed path and the width profile, which its stitches don't follow (`SC-W0807`, `REQ-AUTO-005`). The
 thread's colour is a solid paint's colour, with CMYK and grey converted by

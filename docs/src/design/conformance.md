@@ -134,6 +134,9 @@ points back in pairs across the column. A column is sewn alone (`sewn_satin`) or
 case gives it (`sewn_between`), and `satin_diagnostics` keeps its warnings' places for the cases that
 check where a warning points. The cases of a satin method sew a straight column by that method
 (`sewn_ladder`) and compare its needle points with the ones they expect, but for rounding (`near`).
+The cases of automatic digitizing sew the test pictures, which `stitchcraft_testkit::pictures` draws in
+code, each with the edges where its shapes meet. There are 3 stripes side by side, and a badge and a row
+of badges, each traced abutting or stacked ([image to embroidery](image-to-embroidery.md#testing)).
 
 ## Levels
 

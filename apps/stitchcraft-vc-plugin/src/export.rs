@@ -139,7 +139,7 @@ pub fn export(format: FormatId, input: &[u8], params: &[u8]) -> Result<Vec<u8>, 
         None | Some(DOCUMENT) => None,
         Some(id) => Some(profiles::find(id).ok_or(RunError::BadInput)?),
     };
-    let out = match sewn(format, input, Reading { auto: params.auto }, asked, &params.context.name) {
+    let out = match sewn(format, input, Reading { auto: params.auto, ..Reading::default() }, asked, &params.context.name) {
         Ok((file, said)) => serde_json::to_vec(&Exported { data_base64: base64(&file), warnings: warnings(&said) }),
         Err(said) => serde_json::to_vec(&Declined { error: decline(&said) }),
     };
@@ -324,10 +324,10 @@ mod tests {
         let set = |auto: bool| params("line", &json!({ AUTO: auto }));
         let (plain, auto) = (exported(FormatId::PesV1, &input, &set(false)), exported(FormatId::PesV1, &input, &set(true)));
         assert_eq!(file(&plain), {
-            let (bytes, said) = stitch_export(&input, Reading { auto: false }, REFERENCE, FormatId::PesV1, "line");
+            let (bytes, said) = stitch_export(&input, Reading::default(), REFERENCE, FormatId::PesV1, "line");
             (base64(&bytes), said)
         });
-        let (bytes, said) = stitch_export(&input, Reading { auto: true }, REFERENCE, FormatId::PesV1, "line");
+        let (bytes, said) = stitch_export(&input, Reading { auto: true, ..Reading::default() }, REFERENCE, FormatId::PesV1, "line");
         assert_eq!(file(&auto), (base64(&bytes), said));
         assert_eq!(file(&auto).1, ["info SC-I0901: 1 shape is digitized automatically: it sews as a satin column."]);
         assert_ne!(file(&auto).0, file(&plain).0);

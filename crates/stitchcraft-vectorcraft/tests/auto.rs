@@ -17,7 +17,7 @@ use stitchcraft_vectorcraft::{VectorCraft, read_with};
 
 /// `document` read with `--auto` or without.
 fn read(document: &[u8], auto: bool) -> VectorCraft {
-    read_with(document, &Budget::DEFAULT, Reading { auto }).unwrap()
+    read_with(document, &Budget::DEFAULT, Reading { auto, ..Reading::default() }).unwrap()
 }
 
 /// A black stroke `mm` millimetres wide, with `extra` fields.

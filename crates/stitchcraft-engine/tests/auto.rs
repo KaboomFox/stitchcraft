@@ -131,9 +131,12 @@ fn req_auto_003_a_line_whose_columns_need_more_work_to_name_than_is_left_is_left
     let work = Budget::DEFAULT.max_work - meter.work_left();
     let others = ["two#2", "two#2~2", "two#2~3"].map(|id| drawn(id, &[(0.0, 20.0), (20.0, 20.0)], 0.5));
     let design = Design::new([vec![two], others.to_vec()].concat(), DesignSettings::default()).unwrap();
+    // What digitizing says. With so little work, the order can't find what the columns cover either, and
+    // says so with codes of its own (REQ-AUTO-012).
     let with_work = |extra: u64| {
         let (elements, said) = digitized(&design, &Budget { max_work: work + extra, ..Budget::DEFAULT });
-        (elements.iter().map(|e| e.id.to_string()).collect::<Vec<_>>(), said.iter().map(ToString::to_string).collect::<Vec<_>>())
+        let digitizing = said.iter().filter(|d| ![Code::AutoUnder, Code::AutoOrder].contains(&d.code)).map(ToString::to_string);
+        (elements.iter().map(|e| e.id.to_string()).collect::<Vec<_>>(), digitizing.collect::<Vec<_>>())
     };
     let ids = |ids: &[&str]| ids.iter().map(ToString::to_string).collect::<Vec<_>>();
     assert_eq!(

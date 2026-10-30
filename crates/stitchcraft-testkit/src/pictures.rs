@@ -42,7 +42,7 @@ pub struct Picture {
 
 /// Every test picture.
 pub fn all() -> Vec<Picture> {
-    vec![stripes(), badge(Trace::Abutting), badge(Trace::Stacked)]
+    vec![stripes(), badge(Trace::Abutting), badge(Trace::Stacked), badges(Trace::Abutting), badges(Trace::Stacked)]
 }
 
 /// 3 stripes side by side, 15 mm wide and 40 mm tall, red, blue and gold: 2 straight edges, upright, which
@@ -60,7 +60,38 @@ pub fn stripes() -> Picture {
 /// square, traced as `trace` says. Its edges are the square's sides, level and upright, and the gold disc's
 /// circle, at every angle to the rows.
 pub fn badge(trace: Trace) -> Picture {
-    let (outer, square, inner) = (circle((25.0, 25.0), 25.0, 96), rectangle((15.0, 15.0), (35.0, 35.0)), circle((25.0, 25.0), 5.0, 48));
+    let (elements, edges) = badge_at("", (25.0, 25.0), 1.0, trace);
+    let name = match trace {
+        Trace::Abutting => "badge, abutting",
+        Trace::Stacked => "badge, stacked",
+    };
+    Picture { name, elements, edges }
+}
+
+/// 3 badges in a row round the origin, each 30 mm across, the badge of [`badge`] at three fifths of its size,
+/// their red discs touching, traced as `trace` says with VectorCraft's Auto Grouping, which draws each shape
+/// with the shapes inside it: badge by badge, so that the threads go red, blue, gold 3 times over in paint
+/// order.
+pub fn badges(trace: Trace) -> Picture {
+    let (mut elements, mut edges) = (Vec::new(), Vec::new());
+    for (n, x) in [(1, -30.0), (2, 0.0), (3, 30.0)] {
+        let (shapes, meet) = badge_at(&format!("-{n}"), (x, 0.0), 0.6, trace);
+        elements.extend(shapes);
+        edges.extend(meet);
+    }
+    let name = match trace {
+        Trace::Abutting => "badges, abutting",
+        Trace::Stacked => "badges, stacked",
+    };
+    Picture { name, elements, edges }
+}
+
+/// A badge round `(cx, cy)`, `scale` times 50 mm across, traced as `trace` says, its shapes named `red`,
+/// `blue` and `gold` followed by `suffix`; and the edges where they meet.
+fn badge_at(suffix: &str, (cx, cy): (f64, f64), scale: f64, trace: Trace) -> (Vec<Element>, Vec<Vec<Point>>) {
+    let (half, dot) = (10.0 * scale, 5.0 * scale);
+    let (outer, square, inner) =
+        (circle((cx, cy), 25.0 * scale, 96), rectangle((cx - half, cy - half), (cx + half, cy + half)), circle((cx, cy), dot, 48));
     // Abutting, each lower area has a hole where the next one lies, drawn the other way round so that the
     // nonzero rule leaves it empty.
     let hole = |ring: &[(f64, f64)]| ring.iter().rev().copied().collect::<Vec<_>>();
@@ -69,20 +100,13 @@ pub fn badge(trace: Trace) -> Picture {
         Trace::Stacked => [vec![&outer], vec![&square]],
         Trace::Abutting => [vec![&outer, &square_hole], vec![&square, &inner_hole]],
     };
-    let name = match trace {
-        Trace::Abutting => "badge, abutting",
-        Trace::Stacked => "badge, stacked",
-    };
     let ring = |points: &[(f64, f64)]| points.iter().chain(points.first()).map(|&(x, y)| p(x, y)).collect::<Vec<Point>>();
-    Picture {
-        name,
-        elements: vec![
-            automatic(fill("red", &red, &RED, &[])),
-            automatic(fill("blue", &blue, &BLUE, &[])),
-            automatic(fill("gold", &[&inner], &GOLD, &[])),
-        ],
-        edges: vec![ring(&square), ring(&inner)],
-    }
+    let elements = vec![
+        automatic(fill(&format!("red{suffix}"), &red, &RED, &[])),
+        automatic(fill(&format!("blue{suffix}"), &blue, &BLUE, &[])),
+        automatic(fill(&format!("gold{suffix}"), &[&inner], &GOLD, &[])),
+    ];
+    (elements, vec![ring(&square), ring(&inner)])
 }
 
 /// The rectangle from `(x0, y0)` to `(x1, y1)`, its corners in order.
