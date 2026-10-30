@@ -59,6 +59,10 @@ These rules keep it that way:
 - **Configuration that should follow the code lives in the folder.** Clippy and rustfmt read the
   configuration file nearest each crate, so our determinism rules (`clippy.toml`) keep applying to our
   crates, and VectorCraft's to theirs.
+- **Our lints are at least VectorCraft's.** Joined, our crates take VectorCraft's workspace lints but
+  keep our `clippy.toml`, so its thresholds must match VectorCraft's: from VectorCraft's `main` after
+  0.18.0, both deny `cognitive_complexity` above 30, `too_many_arguments` and `wildcard_imports`. Our
+  workspace denies what VectorCraft's does. A breach then fails our gate before the rehearsal finds it.
 - **Generated files never depend on where the folder is**: no absolute paths, no repository-relative
   paths outside it. `cargo xtask docs --check` and `shots --check` run in the rehearsal.
 
