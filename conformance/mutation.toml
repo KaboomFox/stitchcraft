@@ -408,16 +408,16 @@ line = "(lengths > 0.0).then(|| (a.0 * b.0 + a.1 * b.1) / lengths)"
 why = "a way of no length, past an open line's end, makes the cosine 0 over 0, which is not a number, and a cosine that is not a number is no corner, as no cosine is"
 
 [[equivalent]]
-file = "crates/stitchcraft-engine/src/auto/split.rs"
-mutant = "replace < with <= in split"
-line = "if piece.area() < smallest {"
-why = "a narrow piece touches the broad parts, so some of it lies within the reach and what lies beyond is smaller than the piece: a piece of exactly the smallest area stays in the fill by the next test either way, which costs only its work"
+file = "crates/stitchcraft-engine/src/testsheets/pictures.rs"
+mutant = "replace * with / in end"
+line = "let (out, on) = ((cos, -sin), (-sin * way, -cos * way));"
+why = "the C's 2 ends give `way` as 1 or -1, and multiplying by either gives exactly what dividing by it does"
 
 [[equivalent]]
-file = "crates/stitchcraft-engine/src/auto/split.rs"
-mutant = "replace < with == in split"
-line = "if piece.area() < smallest {"
-why = "the test only spares a speck the work of the next: what lies beyond the reach is part of the piece, so a piece smaller than the smallest area, which the mutant lets past, has no more than that beyond and stays in the fill by the next test, and a piece of exactly the smallest area, which the mutant stops, touches the broad parts and has less beyond, so the next test stops it too"
+file = "crates/stitchcraft-engine/src/testsheets/pictures.rs"
+mutant = "replace > with >= in end"
+line = "let (s, c) = sin_cos(if way > 0.0 { PI * f64::from(k) / f64::from(steps) } else { PI - PI * f64::from(k) / f64::from(steps) });"
+why = "the C's 2 ends give `way` as 1 or -1, never 0, so it is more than 0 just when it is at least 0"
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/testsheets/pictures.rs"

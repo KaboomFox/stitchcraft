@@ -73,7 +73,7 @@ mod params;
 mod split;
 
 pub use neighbours::TOUCHING;
-use neighbours::{Sewn, no_area, parts_of};
+use neighbours::{Sewn, no_area, parts_of, speck};
 pub use params::{AutoParams, IGNORE_BACKGROUND, MAX_SATIN_WIDTH, MIN_AREA, MIN_TRIPLE_RUN_WIDTH, OVERLAP};
 
 use std::borrow::Cow;

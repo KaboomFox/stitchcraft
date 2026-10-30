@@ -32,8 +32,8 @@
 
 use stitchcraft_core::{Exhausted, Meter, Point, math};
 
-use super::AutoParams;
 use super::narrow::{self, Edges};
+use super::{AutoParams, speck};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::{self, Hit};
 use crate::normalize::region::ops::{self, area_of};
@@ -78,11 +78,11 @@ pub(super) fn split(part: &Polygon, rules: &AutoParams, meter: &mut Meter) -> Re
     let mut pieces = Vec::new();
     for piece in rest {
         meter.charge(1)?;
-        if piece.area() < smallest {
+        if speck(piece.area(), smallest) {
             continue;
         }
         let Ok(beyond) = ops::difference(std::slice::from_ref(&piece), &reach, meter)? else { return Ok(None) };
-        if area_of(&beyond) < smallest {
+        if speck(area_of(&beyond), smallest) {
             continue;
         }
         pieces.push(cut(piece, part, &edges, meter)?);

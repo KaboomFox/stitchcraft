@@ -339,3 +339,10 @@ fn bounds_are_near_within_the_distance_given() {
     assert!(envelope(&[]).is_none());
     assert_eq!(envelope(&[square((1.0, 2.0), (3.0, 4.0))]), Some(Envelope::of(&[p(1.0, 2.0), p(3.0, 4.0)])));
 }
+
+#[test]
+fn a_speck_is_smaller_than_the_smallest_area() {
+    // One exactly as large is sewn, and one the least bit smaller is a speck.
+    let smallest = AutoParams::defaults().auto_min_area_mm2;
+    assert!(!speck(smallest, smallest) && speck(smallest.next_down(), smallest) && !speck(smallest.next_up(), smallest));
+}
