@@ -4,7 +4,7 @@
 //! A trace leaves specks where the picture's pixels were noisy. A fill smaller than [`SMALLEST_AREA`] sews
 //! a knot, and leaving it out shows fabric where it was. So each speck is merged into the automatic area it
 //! shares the longest edge with: the area around it when it fills a hole, which then closes, or the rest of
-//! its own area, when rounding left the two a hair apart. On a tie, it goes into the area sewn first. A
+//! its own area, when rounding left the two a hair apart. On a tie, it goes into the area drawn first. A
 //! speck that shares no edge with an automatic area has nothing to go into, and is left out.
 //!
 //! The edge a speck shares with an area is how much of the area's rings lies within [`TOUCHING`] of the

@@ -1,7 +1,8 @@
-//! The test pictures sewn automatically (`REQ-AUTO-007`): how much of the edges where their shapes meet the
-//! thread covers once pulled in, sewn as drawn and digitized, and what a stacked trace sews. The numbers
-//! measured are recorded in `docs/src/design/image-to-embroidery.md` › Neighbours, and these cases keep
-//! them from falling back.
+//! The test pictures sewn automatically (`REQ-AUTO-007`, `REQ-AUTO-010`): how much of the edges where their
+//! shapes meet the thread covers once pulled in, sewn as drawn and digitized, what a stacked trace sews, and
+//! how often the thread changes and the needle jumps. The numbers measured are recorded in
+//! `docs/src/design/image-to-embroidery.md` › Neighbours and › Sewing order, and these cases keep them from
+//! falling back.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
@@ -40,6 +41,27 @@ fn req_auto_007_digitized_the_edges_the_test_pictures_shapes_share_stay_covered_
     let [drawn, digitized] = plans(&badge);
     let (before, after) = (covered(&badge, &drawn), covered(&badge, &digitized));
     assert!(before < 0.92 && after > before + 0.05, "{before} as drawn, {after} digitized");
+}
+
+#[test]
+fn req_auto_010_the_test_pictures_sew_with_fewer_thread_changes_and_jumps_than_in_paint_order() {
+    // No test picture sews with more thread changes or jumps digitized than as drawn.
+    for picture in pictures::all() {
+        let [drawn, digitized] = plans(&picture);
+        let (before, after) = (drawn.stats(), digitized.stats());
+        assert!(
+            after.color_changes <= before.color_changes && after.jumps <= before.jumps,
+            "{}: {before:?} as drawn, {after:?} digitized",
+            picture.name
+        );
+    }
+    // Drawn badge by badge, the row of badges goes red, blue, gold 3 times over: digitized, each thread
+    // sews once, and the red discs, which touch, without a jump between them.
+    for trace in [Trace::Abutting, Trace::Stacked] {
+        let [drawn, digitized] = plans(&pictures::badges(trace));
+        let (before, after) = (drawn.stats(), digitized.stats());
+        assert_eq!([before.color_changes, after.color_changes, before.jumps, after.jumps], [8, 2, 9, 7], "{trace:?}");
+    }
 }
 
 #[test]

@@ -207,6 +207,13 @@ fn left_out(element: &Element) -> Option<Diagnostic> {
     Some(Diagnostic::new(Code::TrimOrStopLeftOut, format!("This element sews no stitch, so {what} left out.")))
 }
 
+/// Whether `element` sets a stop after it, read alone, whatever stitch type uses it: the sewing order moves
+/// nothing across one (`crate::auto`). A stop that can't be read stops nothing, and that is said when the
+/// element's settings are read for sewing.
+pub(crate) fn stops_after(element: &Element) -> bool {
+    setting::<Toggle>(&element.params, CommonParams::SPECS, STOP_AFTER, &mut Vec::new()).unwrap_or(false)
+}
+
 /// The value of the parameter `key` of the declaration whose parameters are `specs`, read alone from `set`,
 /// whatever stitch type uses it; what is wrong with it goes to `diagnostics`.
 fn setting<K: ParamKind>(set: &ParamSet, specs: &[ParamSpec], key: &str, diagnostics: &mut Vec<Diagnostic>) -> Option<K::Value> {

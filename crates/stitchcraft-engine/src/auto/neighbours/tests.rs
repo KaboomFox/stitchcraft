@@ -46,7 +46,7 @@ fn filled(id: &str, parts: &[Polygon]) -> Element {
 
 /// An automatic area `id`, the square from `(x0, y0)` to `(x1, y1)`.
 fn area(id: &str, from: (f64, f64), to: (f64, f64)) -> Sewn {
-    Sewn { element: filled(id, &[square(from, to)]), area: true }
+    Sewn { element: filled(id, &[square(from, to)]), area: true, automatic: true, shape: 0 }
 }
 
 /// The least work with which `step` says what it says with the default budget, found by halving: with a
@@ -108,7 +108,7 @@ fn an_area_costs_a_unit_for_each_shape_sewn_after_it_far_from_it() {
     // A fill with settings far from them, sewn after them, whose region takes thousands of units to build.
     let with_far = || {
         let mut sewn = sewn();
-        sewn.push(Sewn { element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]), area: false });
+        sewn.push(Sewn { element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]), area: false, automatic: false, shape: 0 });
         sewn
     };
     let (alone, far) = (least_work(|budget| reached(sewn(), budget).1), least_work(|budget| reached(with_far(), budget).1));
@@ -120,7 +120,7 @@ fn a_speck_costs_a_unit_for_each_area_far_from_it() {
     let sewn = || vec![area("big", (0.0, 0.0), (10.0, 10.0)), area("speck", (10.0, 0.0), (10.5, 0.5))];
     let with_far = || {
         let mut sewn = sewn();
-        sewn.push(Sewn { element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]), area: true });
+        sewn.push(Sewn { element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]), area: true, automatic: true, shape: 0 });
         sewn
     };
     let (alone, far) = (least_work(|budget| merged(sewn(), budget).1), least_work(|budget| merged(with_far(), budget).1));
@@ -146,7 +146,7 @@ fn a_column_whose_area_needs_more_work_than_its_budget_allows_is_said_and_reache
     // The square as it is sewn, and what is said of the column, each shape's paint found with `work`.
     let sewn = |work: u64| {
         let settings = DesignSettings::default();
-        let sewn = vec![area("square", (0.0, 0.0), (10.0, 10.0)), Sewn { element: column(), area: false }];
+        let sewn = vec![area("square", (0.0, 0.0), (10.0, 10.0)), Sewn { element: column(), area: false, automatic: false, shape: 0 }];
         let mut shapes = Shapes::new(sewn, &settings, &Budget { max_work: work, ..Budget::DEFAULT });
         let _ = under::reached(&mut shapes, &Budget::DEFAULT);
         let said = std::mem::take(&mut shapes.said);
@@ -168,7 +168,8 @@ fn a_column_whose_area_needs_more_work_than_its_budget_allows_is_said_and_reache
     assert_eq!(
         said.message,
         format!(
-            "Finding what this satin column covers needed more than the work budget of {low} units, so the areas sewn before it don't reach under it."
+            "Finding what this satin column covers needed more than the work budget of {low} units, so the areas sewn before it don't reach under \
+             it, and it keeps its place in paint order beside the shapes near it."
         )
     );
 }
@@ -186,7 +187,12 @@ fn a_speck_whose_neighbours_need_more_work_than_its_budget_allows_is_left_out_an
 #[test]
 fn a_speck_rejoins_the_rest_of_its_area_or_is_left_out_when_it_shares_no_edge() {
     // A part 0.02 mm from the rest of its area, and a speck far from every area.
-    let parts = Sewn { element: filled("parts", &[square((0.0, 0.0), (10.0, 10.0)), square((10.02, 0.0), (10.52, 1.0))]), area: true };
+    let parts = Sewn {
+        element: filled("parts", &[square((0.0, 0.0), (10.0, 10.0)), square((10.02, 0.0), (10.52, 1.0))]),
+        area: true,
+        automatic: true,
+        shape: 0,
+    };
     let (_, said) = merged(vec![parts, area("lone", (30.0, 30.0), (30.5, 30.5))], &Budget::DEFAULT);
     assert_eq!(
         said.iter().map(|d| d.message.as_str()).collect::<Vec<_>>(),
@@ -198,7 +204,7 @@ fn a_speck_rejoins_the_rest_of_its_area_or_is_left_out_when_it_shares_no_edge() 
 }
 
 #[test]
-fn a_speck_that_shares_as_long_an_edge_with_2_areas_goes_into_the_one_sewn_first() {
+fn a_speck_that_shares_as_long_an_edge_with_2_areas_goes_into_the_one_drawn_first() {
     // `a` and `b` are drawn alike, one on the other, and the speck lies beside both.
     let sewn = vec![area("a", (0.0, 0.0), (10.0, 10.0)), area("b", (0.0, 0.0), (10.0, 10.0)), area("speck", (10.0, 0.0), (10.5, 0.5))];
     let (_, said) = merged(sewn, &Budget::DEFAULT);

@@ -5,6 +5,25 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.3: the sewing order. With `--auto`, the automatic elements sew in an order of their own, chosen after
+  specks are merged and before areas reach under their neighbours (`REQ-AUTO-010`, `SC-I0907`).
+  - Shapes whose paint overlaps by more than twice the shapes' tolerance keep their paint order, the lower
+    first. Shapes that only meet, as abutting paths do, may sew in either order.
+  - A satin column or a line that touches a fill without overlapping it sews after the fill, over its edge,
+    unless shapes that overlap hold it before.
+  - Within those rules each thread sews as long as an element of it is free to sew, and the next element is
+    the one whose box lies nearest the last one's.
+  - Elements with settings keep their order among themselves, the parts of a shape sewn as several
+    elements keep theirs, and nothing moves across an element with a stop after it.
+  - `--sort-colours` on `stitch plan` and `stitch export` orders the elements with settings too, with or
+    without `--auto` (`REQ-AUTO-011`). A bug-report bundle records it, and its replay orders the same.
+  - Each element has the work budget to itself to find how it lies beside the shapes drawn after it, and
+    choosing the order has it once more. What needs more keeps paint order, and that is said
+    (`REQ-AUTO-012`).
+  - A row of 3 badges is drawn badge by badge, as VectorCraft's Auto Grouping draws it
+    (`stitchcraft_testkit::pictures::badges`). Digitized, it changes thread twice instead of 8 times, and
+    jumps 7 times instead of 9.
+
 - M13.2: automatic areas sewn as neighbours. With `--auto`, the shapes of a traced picture are sewn where
   they meet, in 3 steps (`REQ-AUTO-007` to `REQ-AUTO-009`).
   - The lowest shape is left out as the picture's background (`SC-W0906`) when it is an automatic area with
@@ -772,6 +791,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- A speck that shares as long an edge with 2 areas goes into the one drawn first. It went into the one sewn
+  first, which was the same until the sewing order (`REQ-AUTO-008`).
+- `stitch plan`, `stitch export` and `stitch bug-report` take `--auto` and `--sort-colours` from one
+  shared set of switches, and their help reads alike.
 - `SC-E0813` is now *VectorCraft too old for the filter*. Each StitchCraft filter declines with it in a
   VectorCraft older than it needs, Design Settings and Test Sheet before 0.16, and Stroke to Satin before
   0.15. Its message names the version to update to.

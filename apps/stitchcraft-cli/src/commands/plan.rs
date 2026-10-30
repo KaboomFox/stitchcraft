@@ -177,7 +177,7 @@ pub fn run(args: &PlanArgs) -> Outcome {
         }
     };
     let source = Source::of(&args.design);
-    let reading = Reading { auto: args.auto };
+    let reading = Reading::from(&args.reading);
     let profile = machine_for(asked, source, &bytes);
     let run = Run { design_path: &args.design, source, reading, name: design_name(&args.design), design: &bytes, profile, format, says: None };
     // A panic is a bug in StitchCraft: with the design's bytes in hand, and where it came, a bundle can
@@ -331,7 +331,7 @@ mod tests {
     use stitchcraft_vectorcraft::settings::{SETTINGS_FILTER, kept_data};
 
     use super::*;
-    use crate::cli::Format;
+    use crate::cli::{Format, ReadingArgs};
 
     fn fixture(name: &str) -> PathBuf {
         PathBuf::from(format!("{}/../../conformance/fixtures/svg/{name}", env!("CARGO_MANIFEST_DIR")))
@@ -342,7 +342,7 @@ mod tests {
     }
 
     fn args(design: PathBuf, output: PathBuf) -> PlanArgs {
-        PlanArgs { design, output, profile: None, format: None, preview: None, report: None, auto: false }
+        PlanArgs { design, output, profile: None, format: None, preview: None, report: None, reading: ReadingArgs::default() }
     }
 
     #[test]
@@ -381,13 +381,37 @@ mod tests {
         let design = dir.join("line.svg");
         std::fs::write(&design, LINE).unwrap();
         let (auto, plain) = (dir.join("auto.pes"), dir.join("plain.pes"));
-        let out = run(&PlanArgs { auto: true, ..args(design.clone(), auto.clone()) });
+        let out = run(&PlanArgs { reading: ReadingArgs { auto: true, ..ReadingArgs::default() }, ..args(design.clone(), auto.clone()) });
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert_eq!(out.stderr, "info SC-I0901: 1 shape is digitized automatically: it sews as a satin column.\n");
         // Without the switch, the line runs, as it did before.
         let out = run(&args(design, plain.clone()));
         assert_eq!((out.status, out.stderr.as_str()), (Status::Done, ""));
         assert_ne!(std::fs::read(auto).unwrap(), std::fs::read(plain).unwrap());
+    }
+
+    /// Red, blue and red squares 10 mm apart, without settings: tatami fills, as Ink/Stitch sews them.
+    const SQUARES: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100"><rect id="r1" x="0" y="0" width="10" height="10" fill="red"/><rect id="b" x="20" y="0" width="10" height="10" fill="blue"/><rect id="r2" x="40" y="0" width="10" height="10" fill="red"/></svg>"#;
+
+    #[test]
+    fn req_auto_011_stitch_plan_sort_colours_sews_the_shapes_with_settings_by_thread() {
+        let dir = TempDir::new("plan-sorted");
+        let design = dir.join("squares.svg");
+        std::fs::write(&design, SQUARES).unwrap();
+        let (sorted, drawn) = (dir.join("sorted.json"), dir.join("drawn.json"));
+        let sorting = ReadingArgs { sort_colours: true, ..ReadingArgs::default() };
+        let out = run(&PlanArgs { report: Some(sorted.clone()), reading: sorting, ..args(design.clone(), dir.join("sorted.pes")) });
+        assert_eq!(out.status, Status::Done, "{}", out.stderr);
+        assert!(
+            out.stderr.contains("info SC-I0907: The elements are sewn in an order of their own, with 1 thread change where paint order has 2.\n"),
+            "{}",
+            out.stderr
+        );
+        // Without the switch, the squares sew as drawn.
+        let out = run(&PlanArgs { report: Some(drawn.clone()), ..args(design, dir.join("drawn.pes")) });
+        assert_eq!(out.status, Status::Done, "{}", out.stderr);
+        let changes = |report: &Path| serde_json::from_slice::<Value>(&std::fs::read(report).unwrap()).unwrap()["color_changes"].as_u64();
+        assert_eq!((changes(&sorted), changes(&drawn)), (Some(1), Some(2)));
     }
 
     #[test]

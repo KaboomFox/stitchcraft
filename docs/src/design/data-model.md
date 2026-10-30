@@ -31,7 +31,11 @@ Hosts translate their documents into a `Design` (`stitchcraft_engine::design`), 
 host document and every host gets the same stitches for the same design. Since M3.3:
 
 ```rust,ignore
-pub struct Design { elements: Vec<Element>, pub settings: DesignSettings }   // checked by Design::new
+pub struct Design {                  // checked by Design::new
+    elements: Vec<Element>,
+    pub settings: DesignSettings,
+    pub sort_colours: bool,          // since M13.3: the elements with settings sew in the order StitchCraft chooses too
+}
 
 pub struct Element {
     pub id: ElementId,               // stable host id: "svg:path123:fill", "vc:42:fill"
@@ -42,7 +46,10 @@ pub struct Element {
     pub automatic: bool,             // since M13.1: a shape without settings, read with --auto, whose stitches StitchCraft chooses
 }
 
-pub struct Reading { pub auto: bool } // since M13.1: what every host's reader is asked (--auto)
+pub struct Reading {                 // since M13.1: what every host's reader is asked
+    pub auto: bool,                  // --auto
+    pub sort_colours: bool,          // since M13.3: --sort-colours, which the reader passes on (Design::read_as)
+}
 
 pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file since M4.8, its commands from M8,
                                      // and from a VectorCraft document since M6.11
@@ -66,8 +73,10 @@ pub struct Subpath { pub start: Point, pub segments: Vec<Segment>, pub closed: b
 pub enum Segment { Line(Point), Quad(Point, Point), Cubic(Point, Point, Point) }
 ```
 
-Elements are in stitching order: the host's paint order, bottom first. Geometry stays exact, curves with
-their control points, and the generators flatten it with the tolerance their parameters give.
+Elements are in the host's paint order, bottom first. They sew in that order unless the design has
+automatic elements or `sort_colours` is set: since M13.3 automatic digitizing then chooses the order
+([image to embroidery](image-to-embroidery.md#sewing-order)). Curves keep their control points, and the
+generators flatten them with the tolerance their parameters give.
 
 A host reads 3 of the settings by Ink/Stitch's names, `collapse_len_mm`, `min_stitch_len_mm` and
 `min_satin_stroke_width_mm`: an SVG file's metadata, and since M6.11 the data a VectorCraft document keeps

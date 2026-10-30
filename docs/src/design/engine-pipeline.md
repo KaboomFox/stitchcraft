@@ -29,6 +29,12 @@ budget's work to itself, naming its parts included, and one that needs more is l
 (`REQ-GEN-002`). Digitizing doesn't add an error of its own (`REQ-AUTO-006`). What cannot be sewn as its
 width says is sewn otherwise or left out with a warning.
 
+The digitized elements are then sewn as neighbours, in an order of their own. What overlaps keeps its
+paint order, and a line sews after the fill it borders. Then each thread sews as long as it can, the
+nearest element next ([image to embroidery](image-to-embroidery.md#sewing-order), `SC-I0907`). Elements
+with settings keep their order among themselves, unless `--sort-colours` is given. The switch brings a
+design without automatic elements through this stage too.
+
 ## 1. Normalize
 
 Per element, independent of the others:
@@ -132,13 +138,15 @@ Generators are listed in [algorithms](algorithms/README.md).
 
 ## 4. Plan assembly
 
-Groups are joined into colour blocks in document order (host paint order, bottom first), by
-`stitchcraft_engine::assemble`.
+Groups are joined into colour blocks in the order the elements sew (host paint order, bottom first, or the
+order stage 0 chose), by `stitchcraft_engine::assemble`.
 
 ### Ordering
 
-- Document order is kept: embroidery stacking follows the art's stacking. Reordering for fewer colour
-  changes is an explicit, separate tool (P3) because it changes what covers what.
+- Assembly keeps the order the elements come in, so that embroidery stacking follows the art's stacking.
+  That is paint order, unless stage 0 put the automatic elements, or with `--sort-colours` every element,
+  in an order chosen for few thread changes, in which a shape still sews after every shape it is drawn
+  over, where they overlap by more than rounding leaves.
 - A thread change starts a new colour block (`REQ-ASM-001`). Threads are compared by colour, as
   Ink/Stitch compares them: two names for one colour are one thread, and the block keeps the first.
 

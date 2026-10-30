@@ -42,8 +42,11 @@
 //!
 //! The shapes of a traced picture meet, and [`digitized`] then sews them as neighbours (`auto::neighbours`):
 //! the lowest shape is left out when it is the picture's background (`REQ-AUTO-009`), specks merge into
-//! the areas beside them (`REQ-AUTO-008`), and each automatic area reaches under the shapes sewn after it,
-//! or is cut away under the areas that cover it (`REQ-AUTO-007`).
+//! the areas beside them (`REQ-AUTO-008`), the elements sew in an order of their own, with few thread
+//! changes (`REQ-AUTO-010`), and each automatic area reaches under the shapes sewn after it, or is cut away
+//! under the areas that cover it (`REQ-AUTO-007`). A design that asks for its threads sorted
+//! (`--sort-colours`, [`Design::sort_colours`]) has every element ordered so, its elements with settings
+//! too, with automatic elements or without (`REQ-AUTO-011`).
 
 mod area;
 mod neighbours;
@@ -128,15 +131,16 @@ pub struct Digitized {
     pub stitches: Option<Stitches>,
 }
 
-/// The elements of `design` as they are generated: each automatic element turned into the elements its
-/// stitches need ([`digitize`]) and named, the others as they are, and the automatic areas then sewn as
-/// neighbours (`auto::neighbours`); and what was said of them: `SC-I0901` for the shapes digitized, what
-/// [`digitize`] says of each, `SC-E0004` for each one left out because digitizing and naming it needs
-/// more work than `budget` allows an element, and what is said of the background, the specks and the
-/// overlaps (`SC-W0906`, `SC-I0905`, `SC-I0904`). A design without automatic elements comes back as it is.
+/// The elements of `design` as they are generated, in the order they sew: each automatic element turned
+/// into the elements its stitches need ([`digitize`]) and named, the others as they are, and the elements
+/// then sewn as neighbours (`auto::neighbours`); and what was said of them: `SC-I0901` for the shapes
+/// digitized, what [`digitize`] says of each, `SC-E0004` for each one left out because digitizing and naming
+/// it needs more work than `budget` allows an element, and what is said of the background, the specks, the
+/// order and the overlaps (`SC-W0906`, `SC-I0905`, `SC-I0907`, `SC-I0904`). A design without automatic
+/// elements that doesn't ask for its threads sorted comes back as it is.
 pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>, Vec<Diagnostic>) {
     let elements = design.elements();
-    if !elements.iter().any(|element| element.automatic) {
+    if !design.sort_colours && !elements.iter().any(|element| element.automatic) {
         return (Cow::Borrowed(elements), Vec::new());
     }
     let mut diagnostics = Vec::new();
@@ -156,7 +160,7 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
             continue;
         }
         if !element.automatic {
-            sewn.push(Sewn { element: element.clone(), area: false });
+            sewn.push(Sewn { element: element.clone(), area: false, automatic: false, shape: index });
             continue;
         }
         let mut meter = budget.meter();
@@ -169,11 +173,12 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
         };
         counts.add(made.stitches);
         diagnostics.extend(made.diagnostics);
-        sewn.extend(made.elements.into_iter().map(|element| Sewn { area: matches!(element.shape, Shape::Fill { .. }), element }));
+        let part = |element: Element| Sewn { area: matches!(element.shape, Shape::Fill { .. }), element, automatic: true, shape: index };
+        sewn.extend(made.elements.into_iter().map(part));
     }
     diagnostics.splice(0..0, counts.said());
     diagnostics.extend(background.map(|(_, said)| said));
-    let (out, said) = neighbours::beside(sewn, &design.settings, budget);
+    let (out, said) = neighbours::beside(sewn, &design.settings, budget, design.sort_colours);
     diagnostics.extend(said);
     (Cow::Owned(out), diagnostics)
 }
@@ -256,9 +261,9 @@ fn columns(element: &Element, path: &Path, style: Style, meter: &mut Meter) -> R
         }
         let alone = Path { subpaths: vec![subpath.clone()] };
         match painted(&alone, style, meter)? {
-            Painted::Area(area) => {
+            Painted::Area { rings, parts } => {
                 made.diagnostics.push(cannot_follow(&id, directions.is_none()));
-                made.elements.push(part(element, id, Shape::Fill { path: area, rule: FillRule::NonZero }, rest.clone()));
+                made.elements.push(part(element, id, Shape::Fill { path: fill_path(parts, &rings), rule: FillRule::NonZero }, rest.clone()));
                 fill = true;
             }
             Painted::Nothing => made.diagnostics.push(too_small(TooSmall::Point, 0.0).with_element(element.id.clone())),
@@ -299,8 +304,9 @@ fn along(at: Point, (dx, dy): (f64, f64), by: f64) -> Option<Point> {
 fn filled(element: &Element, path: &Path, style: Style, meter: &mut Meter) -> Result<Digitized, Exhausted> {
     let mut made = Digitized::default();
     match painted(path, style, meter)? {
-        Painted::Area(area) => {
-            made.elements.push(part(element, element.id.clone(), Shape::Fill { path: area, rule: FillRule::NonZero }, element.params.clone()));
+        Painted::Area { rings, parts } => {
+            let shape = Shape::Fill { path: fill_path(parts, &rings), rule: FillRule::NonZero };
+            made.elements.push(part(element, element.id.clone(), shape, element.params.clone()));
             made.stitches = Some(Stitches::FilledStroke);
         }
         Painted::Nothing => made.diagnostics.push(too_small(TooSmall::Point, 0.0).with_element(element.id.clone())),
@@ -311,16 +317,18 @@ fn filled(element: &Element, path: &Path, style: Style, meter: &mut Meter) -> Re
 
 /// What a stroke paints.
 enum Painted {
-    /// An area: its outline, its parts joined, filled by the nonzero rule.
-    Area(Path),
+    /// An area: the rings round the pieces of the stroke, and every part of the area they bound by the
+    /// nonzero rule, unless the region code could not join them (a bug).
+    Area { rings: Vec<Vec<Point>>, parts: Result<Vec<Polygon>, Unjoined> },
     /// Nothing: every subpath is a dot with a butt cap, or only a move.
     Nothing,
     /// An area that would reach more than 10 m from the origin, where no design lies.
     TooFar,
 }
 
-/// What the stroke along `path` drawn with `style` paints ([`area::stroke_area`]): the outline of every part
-/// of its area, parts too small to sew included, so that they are specks as a shape's are.
+/// What the stroke along `path` drawn with `style` paints ([`area::stroke_area`]): every part of its area,
+/// parts too small to sew included, so that they are specks as a shape's are. A wide line is filled with it,
+/// and the sewing order finds a line's neighbours by it (`auto::neighbours`).
 fn painted(path: &Path, style: Style, meter: &mut Meter) -> Result<Painted, Exhausted> {
     let rings = area::stroke_area(path, style.width.get(), style.join, style.cap, meter)?;
     if rings.is_empty() {
@@ -329,8 +337,8 @@ fn painted(path: &Path, style: Style, meter: &mut Meter) -> Result<Painted, Exha
     if !rings.iter().flatten().all(|&p| within_working_limit(p)) {
         return Ok(Painted::TooFar);
     }
-    let found = region::area(&rings, |winding| region::fills(FillRule::NonZero, winding), meter)?;
-    Ok(Painted::Area(fill_path(found.parts, &rings)))
+    let parts = region::area(&rings, |winding| region::fills(FillRule::NonZero, winding), meter)?.parts;
+    Ok(Painted::Area { rings, parts })
 }
 
 /// The path a fill is given for the area that `rings` bound: the outline of each of its `parts`. An area

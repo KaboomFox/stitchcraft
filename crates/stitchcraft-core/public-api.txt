@@ -28,6 +28,7 @@ pub mod stitchcraft_core::diag
 pub stitchcraft_core::diag::Code::AutoAreaTooLarge
 pub stitchcraft_core::diag::Code::AutoBackground
 pub stitchcraft_core::diag::Code::AutoDigitized
+pub stitchcraft_core::diag::Code::AutoOrder
 pub stitchcraft_core::diag::Code::AutoSatinFilled
 pub stitchcraft_core::diag::Code::AutoSpeck
 pub stitchcraft_core::diag::Code::AutoUnder
@@ -237,6 +238,7 @@ pub fn stitchcraft_core::units::up_to_tenth(f64) -> f64
 pub stitchcraft_core::Code::AutoAreaTooLarge
 pub stitchcraft_core::Code::AutoBackground
 pub stitchcraft_core::Code::AutoDigitized
+pub stitchcraft_core::Code::AutoOrder
 pub stitchcraft_core::Code::AutoSatinFilled
 pub stitchcraft_core::Code::AutoSpeck
 pub stitchcraft_core::Code::AutoUnder

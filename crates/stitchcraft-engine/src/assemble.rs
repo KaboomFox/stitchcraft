@@ -1,5 +1,5 @@
-//! Pipeline stage 4 (plan assembly): the elements' stitch groups joined, in document order, into one stitch
-//! plan, with the lock stitches, jumps, trims, stops and thread changes between them.
+//! Pipeline stage 4 (plan assembly): the elements' stitch groups joined, in the order the elements sew, into
+//! one stitch plan, with the lock stitches, jumps, trims, stops and thread changes between them.
 //!
 //! Design: `docs/src/design/engine-pipeline.md` › Plan assembly. The needle sews straight on from one
 //! group to the next only when nothing separates them: the same thread, a move no longer than the
@@ -35,7 +35,7 @@ pub struct Assembled {
     pub shortest: Vec<Mm>,
 }
 
-/// The plan for the generated `elements`, in document order, in a design with `settings`; `None` when no
+/// The plan for the generated `elements`, in the order they sew, in a design with `settings`; `None` when no
 /// element has a stitch. Every needle point costs a unit of work and a stitch from `meter`.
 pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, meter: &mut Meter) -> Result<Option<Assembled>, Exhausted> {
     let parts: Vec<&(&Element, Generated)> = elements.iter().filter(|(_, generated)| generated.groups.iter().any(|g| !g.is_empty())).collect();

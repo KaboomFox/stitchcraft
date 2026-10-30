@@ -38,6 +38,11 @@ satin columns along its centre line, and a wider line becomes the tatami fill of
 as neighbours (`auto::neighbours`). The picture's background is left out and specks merge into the areas
 beside them. Each area reaches 0.4 mm under the shapes sewn after it from where it touches them, or is cut
 away under the areas that cover it. Regions are combined, grown and shrunk with `normalize::region::ops`.
+Since M13.3 the elements sew in an order of their own (`auto::neighbours::order`), chosen between the
+specks and the overlaps. Shapes that overlap keep their paint order, and a line sews after the fill it
+borders. Each thread then sews as long as it can, the nearest element next. Elements with settings keep
+their order unless `--sort-colours` is given (`Design::sort_colours`), and an element with a stop after
+it keeps its place.
 Since M6.12 a column drawn as one path can be drawn with its rails and rungs instead, for a host's Stroke
 to Satin tool (`generators::satin::drawn`). They sew as the column does. A design can be moved
 (`Design::moved`), as a host draws a test sheet (`testsheets`, `TestSheet::design`).

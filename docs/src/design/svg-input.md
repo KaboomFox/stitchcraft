@@ -32,6 +32,8 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   ([image to embroidery](image-to-embroidery.md#automatic-elements), `REQ-AUTO-001`). The trim and stop
   of Ink/Stitch's commands attached to it still apply. A shape with any `inkstitch:` attribute is not
   automatic: it sews as its settings say once they are read (M8), and with the defaults until then.
+  Read with `--sort-colours` (`Reading::sort_colours`), the design's shapes with settings sew in the order
+  StitchCraft chooses too ([image to embroidery](image-to-embroidery.md#sewing-order), `REQ-AUTO-011`).
 
 ## Geometry and units
 

@@ -89,11 +89,13 @@ pub fn stitchcraft_engine::design::Shape::path(&self) -> &stitchcraft_engine::de
 pub fn stitchcraft_engine::design::Shape::stroke(stitchcraft_engine::design::Path) -> stitchcraft_engine::design::Shape
 pub struct stitchcraft_engine::design::Design
 pub stitchcraft_engine::design::Design::settings: stitchcraft_engine::design::DesignSettings
+pub stitchcraft_engine::design::Design::sort_colours: bool
 impl stitchcraft_engine::design::Design
 pub fn stitchcraft_engine::design::Design::bounds(&self) -> core::option::Option<stitchcraft_core::rect::Rect>
 pub fn stitchcraft_engine::design::Design::elements(&self) -> &[stitchcraft_engine::design::Element]
 pub fn stitchcraft_engine::design::Design::moved(&self, [f64; 2]) -> core::result::Result<stitchcraft_engine::design::Design, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_engine::design::Design::new(alloc::vec::Vec<stitchcraft_engine::design::Element>, stitchcraft_engine::design::DesignSettings) -> core::result::Result<stitchcraft_engine::design::Design, stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_engine::design::Design::read_as(self, stitchcraft_engine::design::Reading) -> stitchcraft_engine::design::Design
 pub struct stitchcraft_engine::design::DesignSettings
 pub stitchcraft_engine::design::DesignSettings::collapse_len: stitchcraft_core::units::Mm
 pub stitchcraft_engine::design::DesignSettings::min_satin_stroke_width: stitchcraft_core::units::Mm
@@ -118,6 +120,7 @@ impl stitchcraft_engine::design::Path
 pub fn stitchcraft_engine::design::Path::points(&self) -> impl core::iter::traits::iterator::Iterator<Item = stitchcraft_core::units::Point> + '_
 pub struct stitchcraft_engine::design::Reading
 pub stitchcraft_engine::design::Reading::auto: bool
+pub stitchcraft_engine::design::Reading::sort_colours: bool
 pub struct stitchcraft_engine::design::Setting
 pub stitchcraft_engine::design::Setting::help: &'static str
 pub stitchcraft_engine::design::Setting::label: &'static str
