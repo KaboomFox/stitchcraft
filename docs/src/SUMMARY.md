@@ -59,6 +59,7 @@
       - [Offset curves](design/algorithms/offset.md)
     - [Fills](design/algorithms/fills.md)
     - [Lock stitches](design/algorithms/locks.md)
+    - [Centre lines](design/algorithms/centre-lines.md)
   - [Image to embroidery](design/image-to-embroidery.md)
   - [Machine formats](design/formats.md)
   - [Rendering previews](design/rendering.md)

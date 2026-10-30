@@ -155,10 +155,15 @@ pub struct stitchcraft_core::element::Labels
 impl stitchcraft_core::element::Labels
 pub fn stitchcraft_core::element::Labels::claim(&mut self, alloc::string::String, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::string::String, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_core::exact
+pub enum stitchcraft_core::exact::Circle
+pub stitchcraft_core::exact::Circle::Inside
+pub stitchcraft_core::exact::Circle::On
+pub stitchcraft_core::exact::Circle::Outside
 pub enum stitchcraft_core::exact::Side
 pub stitchcraft_core::exact::Side::Left
 pub stitchcraft_core::exact::Side::On
 pub stitchcraft_core::exact::Side::Right
+pub fn stitchcraft_core::exact::incircle(stitchcraft_core::units::Point, stitchcraft_core::units::Point, stitchcraft_core::units::Point, stitchcraft_core::units::Point) -> stitchcraft_core::exact::Circle
 pub fn stitchcraft_core::exact::side(stitchcraft_core::units::Point, stitchcraft_core::units::Point, stitchcraft_core::units::Point) -> stitchcraft_core::exact::Side
 pub mod stitchcraft_core::math
 pub fn stitchcraft_core::math::acos(f64) -> f64

@@ -12,10 +12,15 @@
 //! so that a width written in another unit, which converts to a bound give or take a rounding error, is
 //! that bound:
 //!
-//! - An area is a tatami fill, with the fill's defaults (`REQ-AUTO-002`).
-//! - A stroke no wider than the design's narrowest satin stroke, `min_satin_stroke_width_mm`, is a running
-//!   stitch along its path (`REQ-AUTO-002`): a satin column that narrow is too narrow to stitch across
-//!   (`REQ-SAT-015`).
+//! - An area is a tatami fill, with the fill's defaults (`REQ-AUTO-002`), apart from its narrow parts. A
+//!   part narrower than the design's narrowest satin stroke, `min_satin_stroke_width_mm`, everywhere is a
+//!   running stitch along its centre line (`narrow`, `REQ-AUTO-013`), sewn after the rest of the area and
+//!   named after it with `#2`, `#3` and so on, or the area's own name when nothing of it is filled.
+//! - A stroke no wider than the design's narrowest satin stroke is a running stitch along its path
+//!   (`REQ-AUTO-002`): a satin column that narrow is too narrow to stitch across (`REQ-SAT-015`).
+//! - A running stitch is a triple run, bean stitch 1, from [`TRIPLE_RUN_WIDTH`] wide (`REQ-AUTO-015`): a
+//!   stroke as wide as it is drawn, a narrow part as wide as the circles that fit inside it along its
+//!   centre line.
 //! - A stroke up to [`SATIN_MAX_WIDTH`] wide is a satin column as wide as the stroke, its path the
 //!   column's centre line (`REQ-AUTO-003`, `REQ-SAT-016`). A centre line is one subpath, so a stroke of
 //!   several sews a column for each, in order, the second and later named after the stroke with `#2`, `#3`
@@ -46,13 +51,15 @@
 //! changes (`REQ-AUTO-010`), and each automatic area reaches under the shapes sewn after it, or is cut away
 //! under the areas that cover it (`REQ-AUTO-007`). A design that asks for its threads sorted
 //! (`--sort-colours`, [`Design::sort_colours`]) has every element ordered so, its elements with settings
-//! too, with automatic elements or without (`REQ-AUTO-011`).
+//! too, with automatic elements or without (`REQ-AUTO-011`). A narrow part's line paints the part to its
+//! neighbours, and the areas sewn before it reach under it.
 
 mod area;
+mod narrow;
 mod neighbours;
 
-use neighbours::Sewn;
 pub use neighbours::{OVERLAP, SMALLEST_AREA, TOUCHING};
+use neighbours::{Sewn, no_area, parts_of};
 
 use std::borrow::Cow;
 
@@ -61,14 +68,20 @@ use stitchcraft_params::ParamSet;
 
 use crate::common::{STOP_AFTER, TRIM_AFTER};
 use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath, within_working_limit};
+use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::generators::satin::{self, SATIN_COLUMN};
 use crate::generators::{TooSmall, mm, too_small};
 use crate::normalize::region::{self, Polygon, Unjoined};
+use crate::normalize::strips::Line;
 use crate::normalize::stroke;
 
 /// The widest stroke sewn as a satin column; a wider one is filled. MC-8 confirms or changes it on the
 /// machine (`docs/src/plan/machine-testing.md`).
 pub const SATIN_MAX_WIDTH: Mm = Mm::from_tenths(70);
+
+/// The width from which a running stitch that automatic digitizing makes is a triple run, each stitch sewn 3
+/// times (bean stitch 1): a running stitch sewn once is as fine as the thread. MC-8 confirms or changes it.
+pub const TRIPLE_RUN_WIDTH: Mm = Mm::from_tenths(5);
 
 /// Room left in an id made for a column of a stroke of several subpaths, for the `~2` a clash adds
 /// ([`Labels::claim`]).
@@ -114,8 +127,18 @@ impl Stitches {
 
 /// Whether `width` is no wider than `bound`, both measured to the micrometre.
 fn at_most(width: Mm, bound: Mm) -> bool {
-    let micrometres = |length: Mm| (length.get() * 1000.0).round();
-    micrometres(width) <= micrometres(bound)
+    micrometres(width.get()) <= micrometres(bound.get())
+}
+
+/// `length` millimetres in whole micrometres.
+fn micrometres(length: f64) -> f64 {
+    (length * 1000.0).round()
+}
+
+/// Whether a running stitch `width` millimetres wide is a triple run: from [`TRIPLE_RUN_WIDTH`], to the
+/// micrometre.
+fn tripled(width: f64) -> bool {
+    micrometres(width) >= micrometres(TRIPLE_RUN_WIDTH.get())
 }
 
 /// What [`digitize`] makes of an automatic element.
@@ -123,12 +146,25 @@ fn at_most(width: Mm, bound: Mm) -> bool {
 pub struct Digitized {
     /// The ordinary elements that sew it, in order; none when it is left out.
     pub elements: Vec<Element>,
+    /// For each of the elements, in order, the narrow part of an area that it sews along the centre line
+    /// of, which it paints to its neighbours; `None` for any other element.
+    pub narrow: Vec<Option<Polygon>>,
     /// What is said of it: `SC-I0902` for each part filled because a satin column cannot follow it,
-    /// `SC-W0401` for each part that draws nothing, and `SC-W0903` for an area that reaches too far.
+    /// `SC-W0401` for each part that draws nothing, `SC-W0903` for an area that reaches too far, and
+    /// `SC-E0009` for a part of an area whose width or centre line could not be found, a bug.
     pub diagnostics: Vec<Diagnostic>,
-    /// The stitches it sews as, as `SC-I0901` counts them: a stroke whose every part is filled is a fill.
-    /// `None` when it sews nothing, or as it would without the switch because it paints nothing.
+    /// The stitches it sews as, as `SC-I0901` counts them: a stroke whose every part is filled is a fill,
+    /// and an area whose every part runs is a running stitch. `None` when it sews nothing, or as it would
+    /// without the switch because it paints nothing.
     pub stitches: Option<Stitches>,
+}
+
+impl Digitized {
+    /// Adds `element`, which sews along the centre line of the narrow part `narrow` when it has one.
+    fn add(&mut self, element: Element, narrow: Option<Polygon>) {
+        self.elements.push(element);
+        self.narrow.push(narrow);
+    }
 }
 
 /// The elements of `design` as they are generated, in the order they sew: each automatic element turned
@@ -160,7 +196,7 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
             continue;
         }
         if !element.automatic {
-            sewn.push(Sewn { element: element.clone(), area: false, automatic: false, shape: index });
+            sewn.push(Sewn { element: element.clone(), area: false, automatic: false, shape: index, narrow: None });
             continue;
         }
         let mut meter = budget.meter();
@@ -173,8 +209,14 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
         };
         counts.add(made.stitches);
         diagnostics.extend(made.diagnostics);
-        let part = |element: Element| Sewn { area: matches!(element.shape, Shape::Fill { .. }), element, automatic: true, shape: index };
-        sewn.extend(made.elements.into_iter().map(part));
+        let part = |(element, narrow): (Element, Option<Polygon>)| Sewn {
+            area: matches!(element.shape, Shape::Fill { .. }),
+            element,
+            automatic: true,
+            shape: index,
+            narrow,
+        };
+        sewn.extend(made.elements.into_iter().zip(made.narrow).map(part));
     }
     diagnostics.splice(0..0, counts.said());
     diagnostics.extend(background.map(|(_, said)| said));
@@ -204,15 +246,24 @@ fn named(made: Digitized, element: &Element, taken: &mut Labels, meter: &mut Met
 }
 
 /// The ordinary elements that sew the automatic `element` of a design with `settings`, with `meter`'s
-/// work, and what is said of them: itself as it is when it is an area or runs, a satin column for each of
-/// its subpaths, or the fill of a part a column cannot follow, when it is a satin column, and the area it
+/// work, and what is said of them: an area's fill and a running stitch for each of its narrow parts, a
+/// stroke that runs as it is, tripled from [`TRIPLE_RUN_WIDTH`], a satin column for each of a stroke's
+/// subpaths, or the fill of a part a column cannot follow, when it is a satin column, and the area it
 /// paints when it is filled. A stroke that paints nothing is itself as it is.
 pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter) -> Result<Digitized, Exhausted> {
-    let as_it_is = |stitches| Digitized { elements: vec![Element { automatic: false, ..element.clone() }], diagnostics: Vec::new(), stitches };
-    let Shape::Stroke { path, width, join, cap } = &element.shape else { return Ok(as_it_is(Some(Stitches::Fill))) };
+    let as_it_is = |stitches| itself(element, stitches);
+    let Shape::Stroke { path, width, join, cap } = &element.shape else { return areas(element, settings, meter) };
     let style = Style { width: *width, join: *join, cap: *cap };
     let made = match Stitches::of_stroke(*width, settings) {
-        Stitches::Fill | Stitches::Running => return Ok(as_it_is(Some(Stitches::Running))),
+        Stitches::Fill | Stitches::Running => {
+            let mut made = as_it_is(Some(Stitches::Running));
+            if tripled(width.get()) {
+                for element in &mut made.elements {
+                    element.params.set(BEAN_STITCH_REPEATS, "1");
+                }
+            }
+            return Ok(made);
+        }
         Stitches::Satin => columns(element, path, style, meter)?,
         Stitches::FilledStroke => filled(element, path, style, meter)?,
     };
@@ -221,6 +272,59 @@ pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter)
         return Ok(as_it_is(None));
     }
     Ok(made)
+}
+
+/// The elements that sew `element`, an automatic area of a design with `settings`, with `meter`'s work: its
+/// parts sorted by their width (`narrow`) and [`sewn`]. An area whose region the region code can't join, a
+/// bug, is itself as it is, and its fill says so.
+fn areas(element: &Element, settings: &DesignSettings, meter: &mut Meter) -> Result<Digitized, Exhausted> {
+    let as_it_is = itself(element, Some(Stitches::Fill));
+    let Shape::Fill { path, rule } = &element.shape else { return Ok(as_it_is) };
+    let Ok(parts) = parts_of(path, *rule, meter)? else { return Ok(as_it_is) };
+    Ok(sewn(element, narrow::sorted(&element.id, parts, settings.min_satin_stroke_width, meter)?))
+}
+
+/// The elements that sew `element`, an automatic area whose parts are `sorted` by their width: itself as it
+/// is when no part of it is narrow, or else the fill of its other parts, if any, and a running stitch along
+/// the centre lines of each narrow part, tripled from [`TRIPLE_RUN_WIDTH`]. The first keeps the area's name
+/// and those after it are numbered, and a trim or a stop after the area follows the last. What was said of
+/// its parts is said either way.
+fn sewn(element: &Element, sorted: narrow::Parts) -> Digitized {
+    if sorted.narrow.is_empty() {
+        return Digitized { diagnostics: sorted.said, ..itself(element, Some(Stitches::Fill)) };
+    }
+    let (rest, after) = split_after(&element.params);
+    let mut made = Digitized { diagnostics: sorted.said, ..Digitized::default() };
+    made.stitches = Some(if sorted.filled.is_empty() { Stitches::Running } else { Stitches::Fill });
+    if !sorted.filled.is_empty() {
+        let shape = Shape::Fill { path: outline(&sorted.filled), rule: FillRule::NonZero };
+        made.add(part(element, element.id.clone(), shape, rest.clone()), None);
+    }
+    for narrow in sorted.narrow {
+        let id = if made.elements.is_empty() { Some(element.id.clone()) } else { numbered(&element.id, made.elements.len() + 1) };
+        // A numbered id fits by construction ([`numbered`]); one that did not would only leave the part out.
+        let Some(id) = id else { continue };
+        let mut params = rest.clone();
+        if tripled(narrow.width.get()) {
+            params.set(BEAN_STITCH_REPEATS, "1");
+        }
+        let path = Path { subpaths: narrow.lines.iter().filter_map(subpath).collect() };
+        let shape = Shape::Stroke { path, width: narrow.width, join: Join::Round, cap: Cap::Round };
+        made.add(part(element, id, shape, params), Some(narrow.part));
+    }
+    keep_after(&mut made.elements, &after);
+    made
+}
+
+/// The automatic `element` sewn as itself, an ordinary element, counted as `stitches`.
+fn itself(element: &Element, stitches: Option<Stitches>) -> Digitized {
+    Digitized { elements: vec![Element { automatic: false, ..element.clone() }], narrow: vec![None], diagnostics: Vec::new(), stitches }
+}
+
+/// The centre line `line` as a subpath.
+fn subpath(line: &Line) -> Option<Subpath> {
+    let (&start, rest) = line.points.split_first()?;
+    Some(Subpath { start, segments: rest.iter().map(|&p| Segment::Line(p)).collect(), closed: line.closed })
 }
 
 /// How a stroke is drawn across its path.
@@ -254,7 +358,7 @@ fn columns(element: &Element, path: &Path, style: Style, meter: &mut Meter) -> R
             // The column's rails as the satin column makes them; what it would say of them it says itself.
             if satin::rails(&line, style.width, style.join, &mut Vec::new(), meter)?.is_some() {
                 let shape = Shape::Stroke { path: line, width: style.width, join: style.join, cap: style.cap };
-                made.elements.push(part(element, id, shape, column.clone()));
+                made.add(part(element, id, shape, column.clone()), None);
                 satin = true;
                 continue;
             }
@@ -263,7 +367,7 @@ fn columns(element: &Element, path: &Path, style: Style, meter: &mut Meter) -> R
         match painted(&alone, style, meter)? {
             Painted::Area { rings, parts } => {
                 made.diagnostics.push(cannot_follow(&id, directions.is_none()));
-                made.elements.push(part(element, id, Shape::Fill { path: fill_path(parts, &rings), rule: FillRule::NonZero }, rest.clone()));
+                made.add(part(element, id, Shape::Fill { path: fill_path(parts, &rings), rule: FillRule::NonZero }, rest.clone()), None);
                 fill = true;
             }
             Painted::Nothing => made.diagnostics.push(too_small(TooSmall::Point, 0.0).with_element(element.id.clone())),
@@ -306,7 +410,7 @@ fn filled(element: &Element, path: &Path, style: Style, meter: &mut Meter) -> Re
     match painted(path, style, meter)? {
         Painted::Area { rings, parts } => {
             let shape = Shape::Fill { path: fill_path(parts, &rings), rule: FillRule::NonZero };
-            made.elements.push(part(element, element.id.clone(), shape, element.params.clone()));
+            made.add(part(element, element.id.clone(), shape, element.params.clone()), None);
             made.stitches = Some(Stitches::FilledStroke);
         }
         Painted::Nothing => made.diagnostics.push(too_small(TooSmall::Point, 0.0).with_element(element.id.clone())),
@@ -506,6 +610,29 @@ mod tests {
         assert_eq!(fill_path(found.parts, &rings), triangle([(0.0, 0.0), (10.0, 10.0), (10.0, 0.0)]));
         // An area that cannot be joined, a bug in the region code: the rings as they are.
         assert_eq!(fill_path(Err(Unjoined), &rings), triangle([(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)]));
+    }
+
+    #[test]
+    fn what_is_said_of_an_areas_parts_is_said_whether_a_part_is_narrow_or_not() {
+        // SC-E0009 for a part whose centre line could not be found, a bug that no drawn area reaches: the part
+        // stays in the fill, beside a narrow part or not, and what was said of it is said of the area.
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        let rect = |(x0, y0): (f64, f64), (x1, y1): (f64, f64)| Polygon {
+            outline: vec![p(x0, y0), p(x0, y1), p(x1, y1), p(x1, y0), p(x0, y0)],
+            holes: Vec::new(),
+        };
+        let (square, strip) = (rect((0.0, 0.0), (10.0, 10.0)), rect((20.0, 0.0), (30.0, 0.6)));
+        let shape = Shape::Fill { path: outline(&[square.clone(), strip.clone()]), rule: FillRule::NonZero };
+        let thread = stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(0, 0, 0));
+        let area = Element { id: ElementId::new("area").unwrap(), name: None, shape, thread, params: ParamSet::default(), automatic: true };
+        let said = vec![Diagnostic::new(Code::InternalCheckFailed, "A part could not be measured.").with_element(area.id.clone())];
+        let filled = narrow::Parts { filled: vec![square.clone()], narrow: Vec::new(), said: said.clone() };
+        assert_eq!(sewn(&area, filled).diagnostics, said);
+        let line = Line { points: vec![p(20.3, 0.3), p(29.7, 0.3)], closed: false };
+        let thin = narrow::Narrow { part: strip, lines: vec![line], width: Mm::new(0.6).unwrap() };
+        let both = narrow::Parts { filled: vec![square], narrow: vec![thin], said: said.clone() };
+        let made = sewn(&area, both);
+        assert_eq!((made.elements.len(), made.diagnostics), (2, said));
     }
 
     #[test]

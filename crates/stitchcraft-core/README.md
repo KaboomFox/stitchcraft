@@ -7,7 +7,7 @@ Layer **L0**. The foundations every other crate builds on.
 | `units` | `Mm` (a finite length in millimetres), `Size` and `Point` (finite, y down); host-unit conversions |
 | `rect` | `Rect`, the bounds of a design or a part of it (never empty, never non-finite) |
 | `math` | Transcendental functions through the pure-Rust `libm` crate, so results are identical on every platform |
-| `exact` | `side` tells which side of a line a point lies on. Shewchuk's adaptive arithmetic makes the answer exact, and geometry built on it never turns a corner the wrong way |
+| `exact` | `side` tells which side of a line a point lies on, and `incircle` whether a point lies inside the circle through 3 others. Shewchuk's adaptive arithmetic makes the answers exact. Geometry built on them never turns a corner the wrong way, and a Delaunay triangulation built on them stops flipping its edges |
 | `rng` | `SplitMix64`, the only random number generator StitchCraft uses; seeded per element from its `random_seed`, or from its id, with streams keyed for the parts of an element |
 | `budget` | `Budget` and `Meter`: deterministic work limits; exhaustion becomes diagnostic `SC-E0004` |
 | `diag` | `Diagnostic`, `Severity`, `Fix`, and the **registry**: every `Code` with its title and explanation |
@@ -21,8 +21,9 @@ explanation users read (`stitch explain`, the diagnostics index), and tests reje
 - Every `Mm` and `Point` holds finite values; construction from untrusted numbers is checked.
 - `math` and `rng` produce bit-identical results on Linux, macOS, Windows and wasm32; tests freeze
   reference values so a dependency change that alters them fails CI.
-- `exact::side` gives the true side for finite points far from overflow and underflow, as its
-  error-free products need, the same on every platform (tested against integer arithmetic).
+- `exact::side` and `exact::incircle` give the true answer for finite points far from overflow and
+  underflow, as their error-free products need, the same on every platform (tested against integer
+  arithmetic).
 - Diagnostic codes are unique, never reused, and their letter matches their severity (tested).
 - A `Meter` never wraps around. Once it runs out, every further charge of 1 or more fails.
 - No dependency on any other StitchCraft crate.
