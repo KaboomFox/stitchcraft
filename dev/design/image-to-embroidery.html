@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-bdfd0414.js";
+            window.path_to_searchindex_js = "../searchindex-0374935e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-888564d0.js"></script>
@@ -313,9 +313,9 @@ from 0.5 mm wide: each stitch is sewn 3 times, bean stitch 1. A running stitch s
 thread, and a line drawn half a millimetre wide or wider sews bolder tripled. A stroke is as wide as it is
 drawn, and a narrow part (below) as wide as the circles that fit inside it along the middle. Widths are
 compared to the micrometre, and MC-8 confirms or changes the bound.</p>
-<p>Until M13.5 a satin column has a satin column’s defaults, and M13.5 gives columns their underlay by width,
-strokes’ columns as well as shapes’. A shape’s area is a tatami fill apart from its narrow parts (M13.4),
-and the rules below for its parts as wide as a satin column follow in M13.5 and M13.6.</p>
+<p>Every automatic satin column, a stroke’s as well as a shape’s, has the settings of its width (M13.5,
+<a href="#settings-by-width">below</a>). A shape’s area is a tatami fill apart from its narrow parts (M13.4) and its
+parts as wide as a satin column (M13.5). M13.6 splits a shape that is wider than a satin column in places.</p>
 <p><strong>Narrow parts</strong> (M13.4, <code>REQ-AUTO-013</code>). A part of a shape that is narrower than
 <code>min_satin_stroke_width_mm</code> everywhere sews as a running stitch along its centre line, as a stroke that
 narrow does. No circle that wide fits inside such a part: shrunk by half the width with the polygon buffer
@@ -341,6 +341,36 @@ parts after the cut too is decided with M13.6, which splits shapes into parts.</
 Finding a part’s width and centre line is part of the work of digitizing its shape. A part whose width
 or centre line can’t be found, a bug, stays in the fill, and <code>SC-E0009</code> names its shape.</li>
 </ul>
+<p><strong>Parts as wide as a satin column</strong> (M13.5, <code>REQ-AUTO-016</code> to <code>REQ-AUTO-018</code>). Filled, a part as wide as a
+satin column sews rows no longer than it is wide wherever they cross it. A digitizer sews it as satin
+columns along its strips and round its rings. A part that isn’t narrow, and is nowhere wider than 7 mm, is
+as wide as a satin column. Shrunk by 3.5 mm, taken half a micrometre wider, nothing of it is left. Such a
+part sews a satin column along each of its centre lines, between its own outlines
+(<a href="algorithms/centre-lines.html#columns">centre lines</a>):</p>
+<ul>
+<li><strong>Its columns.</strong> Each line sews one column over the triangles round it. A line is cut where it turns by
+more than 60°, so that the column before a corner covers it and the one after ends under it, as an arm
+of a T ends under its bar. A branch of the line is a column of its own however short, as each arm of a
+t’s crossbar is. A branch to the second sharp corner of an end is a bump instead, sewn with the column
+beside it. A column’s rails are the part’s outline on either side, and its rungs lie square to it.</li>
+<li><strong>Their ends.</strong> A column that ends where another runs on ends under it: it sews first, and is 0.4 mm
+longer at that end, by its push compensation, so that no fabric shows where they meet. Otherwise a column
+ends at its farthest point along its line, flat along the end’s edge when that lies within 20° of square
+to the column, and at a point otherwise.</li>
+<li><strong>Their order.</strong> A column that ends under another sews before it. Then the longest sews first, and each
+next column is the one with an end nearest where the last one ended, sewn from that end. A ring starts
+at its rung nearest. Where the columns that end under each other go round, as a pinwheel’s bars do, the
+first in that order sews first, and the last ends on top of it.</li>
+<li><strong>Their width.</strong> A column is as wide as the circles that fit inside the part along its line, as a narrow
+part is. One no wider than the design’s narrowest satin stroke runs along its line as a triple run.</li>
+<li><strong>What sews.</strong> The columns sew after the rest of the shape’s area, named as a narrow part’s lines are,
+and paint the part to its neighbours. <code>SC-I0901</code> counts a shape as satin columns when none of it is
+filled and one of its parts sews a satin column.</li>
+<li><strong>Drawn.</strong> Each column is drawn with its rails and rungs, as the Stroke to Satin filter draws one, and
+read back it must give them. A part whose triangles don’t make a column round one of its lines, or one
+of whose columns is read otherwise, stays in the fill, and <code>SC-I0902</code> says so. A dot, whose line has no
+length, stays in the fill too.</li>
+</ul>
 <p><strong>Shapes in parts.</strong> A shape wider than 7 mm in places and narrower in others is split. Its broad parts are
 what an opening with a disc 7 mm across leaves: the shape shrunk by 3.5 mm and grown back by 3.5 mm, with
 the polygon buffer of M5.7. The rest of the shape is its narrow parts. A narrow part shorter along its
@@ -362,13 +392,14 @@ run on most nearly straight are one line and the third ends there, and a ring ha
 of the line is sewn twice. A part’s lines sew one after another, the longest first, each from its end
 nearest where the last one ended. The <a href="algorithms/centre-lines.html">centre lines</a> page has the rules in
 full.</p>
-<p>A strip between 2 ends or junctions sews as a satin column (M13.5). Its rails are the 2 sides of the
-outline between them, and some of its chords are its rungs. A junction joins the 2 columns that run on
-most nearly straight, and the third ends under them. A ring, such as a letter O, is a closed column
-between its outer and inner outlines. The satin generator sews these columns as it sews columns drawn with
-rails and rungs.</p>
-<p><strong>Settings by width.</strong> A column’s underlay depends on its width. These are starting values, and MC-8
-confirms or changes them:</p>
+<p>A part as wide as a satin column sews a column along each of its lines (M13.5, above). Its rails are the
+part’s outline on either side, and its rungs come from the triangles across it. A junction joins the 2
+lines that run on most nearly straight, and the column of the third ends under theirs. A ring, such as a
+letter O, is a closed column between its outer and inner outlines. The satin generator sews these columns
+as it sews columns drawn with rails and rungs.</p>
+<h3 id="settings-by-width"><a class="header" href="#settings-by-width">Settings by width</a></h3>
+<p>Every automatic satin column, a stroke’s or a part’s, has the underlay of its width (<code>REQ-AUTO-018</code>),
+compared to the micrometre. These are starting values, and MC-8 confirms or changes them:</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -381,7 +412,12 @@ confirms or changes them:</p>
 </tbody>
 </table>
 </div>
-<p>Fills keep the tatami fill’s defaults, underlay included.</p>
+<p>A stroke’s column is as wide as the stroke, and a part’s as its width along its line. Each has a pull
+compensation of 0.4 mm, the overlap an area reaches under the shapes sewn after it: the thread pulls a
+column in from its rails as it pulls an area in from its edges, and stitches that reach that far past
+the rails meet the shapes beside them with no fabric between. A column ends at its rails’ ends rather
+than at the point nearest the next shape, which would join its ends to the next shape with a straight run
+across it. Fills keep the tatami fill’s defaults, underlay included.</p>
 <h2 id="neighbours"><a class="header" href="#neighbours">Neighbours</a></h2>
 <p>The shapes of a traced picture meet. VectorCraft’s Abutting method traces each area with a hole where the
 next one lies, and its Overlapping method, like Inkscape’s Trace Bitmap with its Stack option, traces each
@@ -424,8 +460,9 @@ the area is sewn whole under it. Cutting a fill round small letters adds stitche
 whole, which sews nothing. The areas are named in the order they are sewn.</li>
 </ol>
 <p>Only automatic areas change. A shape with settings is sewn as they say, and a satin column or a line
-digitized from a stroke keeps its stitches: whether a column should reach under the fills beside it is
-M13.5’s, which makes columns from shapes. A fill that bounds no area is left to its fill, which says so.
+digitized from a stroke or a part keeps its stitches: a column is sewn past its rails by its pull
+compensation, 0.4 mm, as an area is grown under the shapes sewn after it (<a href="#settings-by-width">Settings by
+width</a>). A fill that bounds no area is left to its fill, which says so.
 The areas are taken from the last sewn to the first, so that each meets the shapes after it as they are
 sewn. Each area has the work budget to itself for its specks and for its overlaps, and costs the work of the
 shapes near it and a unit for each other shape it looks past, not the work of the whole design: what a

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-bdfd0414.js";
+            window.path_to_searchindex_js = "../../searchindex-0374935e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-888564d0.js"></script>
@@ -325,8 +325,12 @@ the line’s rungs pair, to within a millionth of a millimetre. It sews as the l
 the rails apart, and the 2 longest lines are taken, which on a column shorter than it is wide are its
 rungs. With none, a path of 2 lines is 2 rails whose nodes pair up. So such a column is drawn with one
 more rung, which pairs the rails’ first points: the section it ends has no length, and the column sews as
-before. A line whose rails can’t be made (<code>SC-E0214</code>), or leave parts of it out (<code>SC-W0213</code>), isn’t made into
-a column, since the column would sew less than the line. Rails that cross each other aren’t drawn
+before. Rails that meet each other, as a pointed column’s do at its tip, meet one more line, and only 2
+rungs or more tell them from the rungs: such a column with fewer is drawn with a rung pairing the rails’
+other ends. Automatic digitizing draws the columns it finds in a part as wide as a satin column the same
+way, from their rails and rungs (<code>drawn::from_rails</code>, <code>REQ-AUTO-017</code>), and reads each back. A line whose
+rails can’t be made (<code>SC-E0214</code>), or leave parts of it out (<code>SC-W0213</code>), isn’t made into a column, since the
+column would sew less than the line. Rails that cross each other aren’t drawn
 either, since their column reads back with other rails. A line no wider than the design’s narrowest satin stroke sews as a
 stroke (<a href="#single-path-satin">above</a>). Drawn with its rails, it is a satin column as narrow as it is drawn,
 which is what the tool is asked for.</p>
