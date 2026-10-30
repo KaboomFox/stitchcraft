@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ebcb0220.js";
+            window.path_to_searchindex_js = "../searchindex-c1a6bc0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-b31b520c.js"></script>
+        <script src="../toc-888564d0.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -193,7 +193,9 @@ own tests; stages communicate only through the types in the <a href="data-model.
 with <code>--auto</code>, becomes the ordinary elements its width calls for, with the settings that say so
 (<code>stitchcraft_engine::auto::digitized</code>, <a href="image-to-embroidery.html#stitch-types-by-width">image to embroidery</a>).</p>
 <ul>
-<li>An area, or a line that runs, stays itself.</li>
+<li>An area is sewn as it is, apart from its narrow parts: each becomes a running stitch along its centre
+line (M13.4), and the rest of the area the fill of its other parts.</li>
+<li>A line that runs is sewn as it is, tripled from 0.5 mm wide.</li>
 <li>A line sewn as a satin column becomes a column for each of its subpaths, or the fill of a subpath a
 column cannot follow (<code>SC-I0902</code>).</li>
 <li>A wider line becomes the fill of the area it paints.</li>

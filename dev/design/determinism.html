@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ebcb0220.js";
+            window.path_to_searchindex_js = "../searchindex-c1a6bc0f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-b31b520c.js"></script>
+        <script src="../toc-888564d0.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -194,7 +194,7 @@ safe, and means the docs images regenerated in CI match the ones on a contributo
 <tbody>
 <tr><td>Hash map iteration order</td><td>No <code>HashMap</code>/<code>HashSet</code> in engine, formats, render, params or adapters’ output paths; use <code>BTreeMap</code>, <code>BTreeSet</code>, <code>IndexMap</code> or sorted <code>Vec</code></td><td><code>clippy::disallowed_types</code> in <code>clippy.toml</code></td></tr>
 <tr><td>Platform <code>libm</code> (<code>sin</code>, <code>cos</code>, <code>atan2</code>, <code>exp</code>, <code>log</code>, <code>powf</code> and their kin differ by last bits across OSes, and <code>powi</code>’s precision varies even between calls)</td><td>Call transcendental functions only through <code>stitchcraft_core::math</code>, which uses the pure-Rust <code>libm</code> crate, and square by multiplying</td><td><code>clippy::disallowed_methods</code> on <code>f64::sin</code> &amp; co., and on the <code>f32</code> ones</td></tr>
-<tr><td>Which side of a line a point lies on: a rounded cross product can give the wrong sign for points nearly in line</td><td>The <a href="algorithms/offset.html">offset curves</a> decide it with <code>stitchcraft_core::exact::side</code>, which is exact (<a href="#exact-orientation">below</a>)</td><td>unit tests against exact integer arithmetic</td></tr>
+<tr><td>Which side of a line a point lies on, or of a circle: rounded, the answer comes out wrong for some points nearly on the line or the circle</td><td><code>stitchcraft_core::exact::side</code> gives it exactly for the <a href="algorithms/offset.html">offset curves</a>, and <code>exact::incircle</code> for the <a href="algorithms/centre-lines.html">centre lines</a>’ triangulation (<a href="#exact-orientation">below</a>)</td><td>unit tests against exact integer arithmetic</td></tr>
 <tr><td>Randomness</td><td>Only <code>stitchcraft_core::rng::SplitMix64</code>, seeded per element from <code>random_seed</code> or a hash of the element id, with the OS’s randomness and the time kept out</td><td><code>clippy::disallowed_types</code> on <code>RandomState</code>, <code>SystemTime</code> and <code>Instant</code>; <code>deny.toml</code> lets <code>rand</code> and <code>getrandom</code> in only through the property tests’ proptest</td></tr>
 <tr><td>Floating-point contraction (FMA)</td><td>Rust does not contract <code>a * b + c</code> implicitly, and we never call <code>mul_add</code></td><td><code>clippy::disallowed_methods</code> on <code>f64::mul_add</code> and <code>f32::mul_add</code>, everywhere</td></tr>
 <tr><td>Parallelism</td><td>Library crates run on the caller’s thread alone. The parallel planning that the <a href="engine-pipeline.html#7-incremental-and-parallel-planning">engine pipeline</a> plans for the command line joins its results in document order</td><td><code>clippy::disallowed_methods</code> on <code>std::thread::spawn</code> and its kin</td></tr>
@@ -215,6 +215,11 @@ sums and products of J. R. Shewchuk’s <em>Adaptive Precision Floating-Point Ar
 Geometric Predicates</em> (1997). Where both of its products are 0, as for points level or upright with each
 other, the cross product is exactly 0 without that sum, since far from underflow a product is 0 only where
 a factor is. It uses only <code>+</code>, <code>−</code> and <code>×</code>, and every platform gets the same answer, which is the true one.</p>
+<p><code>stitchcraft_core::exact::incircle</code> decides in the same way whether a point lies inside the circle through 3
+others. Its answer is the sign of a 4 × 4 determinant. That is computed in plain floating point when it lies
+farther from zero than Shewchuk’s bound on its error, and exactly otherwise. A Delaunay triangulation that
+flips its edges by a rounded test can flip one edge back and forth forever, and one built on the exact test
+stops.</p>
 <h2 id="the-seeded-prng"><a class="header" href="#the-seeded-prng">The seeded PRNG</a></h2>
 <p><code>SplitMix64</code> (Steele, Lea &amp; Flood, 2014) is tiny, fast, statistically adequate for jitter, and fully
 specified by its 64-bit state update — so its output can be written into a conformance case and will
