@@ -139,7 +139,7 @@ compared to the micrometre, and MC-8 confirms or changes the bound.
 
 Every automatic satin column, a stroke's as well as a shape's, has the settings of its width (M13.5,
 [below](#settings-by-width)). A shape's area is a tatami fill apart from its narrow parts (M13.4) and its
-parts as wide as a satin column (M13.5); M13.6 splits a shape that is wider than a satin column in places.
+parts as wide as a satin column (M13.5). M13.6 splits a shape that is wider than a satin column in places.
 
 **Narrow parts** (M13.4, `REQ-AUTO-013`). A part of a shape that is narrower than
 `min_satin_stroke_width_mm` everywhere sews as a running stitch along its centre line, as a stroke that
@@ -167,31 +167,34 @@ dot.
   or centre line can't be found, a bug, stays in the fill, and `SC-E0009` names its shape.
 
 **Parts as wide as a satin column** (M13.5, `REQ-AUTO-016` to `REQ-AUTO-018`). Filled, a part as wide as a
-satin column sews rows no longer than it is wide wherever they cross it; a digitizer sews it as satin
-columns along its strips and round its rings. A part that isn't narrow and holds no circle 7 mm across,
-shrunk by 3.5 mm taken half a micrometre wider, sews a satin column along each of its centre lines,
-between its own outlines ([centre lines](algorithms/centre-lines.md#columns)):
+satin column sews rows no longer than it is wide wherever they cross it. A digitizer sews it as satin
+columns along its strips and round its rings. A part that isn't narrow, and is nowhere wider than 7 mm, is
+as wide as a satin column. Shrunk by 3.5 mm, taken half a micrometre wider, nothing of it is left. Such a
+part sews a satin column along each of its centre lines, between its own outlines
+([centre lines](algorithms/centre-lines.md#columns)):
 
 - **Its columns.** Each line sews one column over the triangles round it. A line is cut where it turns by
   more than 60°, so that the column before a corner covers it and the one after ends under it, as an arm
   of a T ends under its bar. A branch of the line is a column of its own however short, as each arm of a
-  t's crossbar is, unless it is the second sharp corner of an end. A column's rails are the part's outline
-  on either side, and its rungs lie square to it.
+  t's crossbar is. A branch to the second sharp corner of an end is a bump instead, sewn with the column
+  beside it. A column's rails are the part's outline on either side, and its rungs lie square to it.
 - **Their ends.** A column that ends where another runs on ends under it: it sews first, and is 0.4 mm
   longer at that end, by its push compensation, so that no fabric shows where they meet. Otherwise a column
-  ends where it reaches farthest along its line, flat along the end's edge when that lies within 20° of
-  square to the column, and at a point otherwise.
-- **Their order.** A column that ends under another sews before it, then the longest first, and each next
-  the one with an end nearest where the last one ended, sewn from that end; a ring from its rung nearest.
+  ends at its farthest point along its line, flat along the end's edge when that lies within 20° of square
+  to the column, and at a point otherwise.
+- **Their order.** A column that ends under another sews before it. Then the longest sews first, and each
+  next column is the one with an end nearest where the last one ended, sewn from that end. A ring starts
+  at its rung nearest. Where the columns that end under each other go round, as a pinwheel's bars do, the
+  first in that order sews first, and the last ends on top of it.
 - **Their width.** A column is as wide as the circles that fit inside the part along its line, as a narrow
   part is. One no wider than the design's narrowest satin stroke runs along its line as a triple run.
 - **What sews.** The columns sew after the rest of the shape's area, named as a narrow part's lines are,
   and paint the part to its neighbours. `SC-I0901` counts a shape as satin columns when none of it is
   filled and one of its parts sews a satin column.
 - **Drawn.** Each column is drawn with its rails and rungs, as the Stroke to Satin filter draws one, and
-  read back it must give them. A part whose triangles make no column round a line, or one of whose columns
-  is read otherwise, stays in the fill, and `SC-I0902` says so; a dot, whose line has no length, stays in
-  the fill too.
+  read back it must give them. A part whose triangles don't make a column round one of its lines, or one
+  of whose columns is read otherwise, stays in the fill, and `SC-I0902` says so. A dot, whose line has no
+  length, stays in the fill too.
 
 **Shapes in parts.** A shape wider than 7 mm in places and narrower in others is split. Its broad parts are
 what an opening with a disc 7 mm across leaves: the shape shrunk by 3.5 mm and grown back by 3.5 mm, with
@@ -283,8 +286,8 @@ mends it in 3 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    whole, which sews nothing. The areas are named in the order they are sewn.
 
 Only automatic areas change. A shape with settings is sewn as they say, and a satin column or a line
-digitized from a stroke or a part keeps its stitches: a column reaches past its rails by its pull
-compensation, 0.4 mm, as an area reaches under the shapes sewn after it ([Settings by
+digitized from a stroke or a part keeps its stitches: a column is sewn past its rails by its pull
+compensation, 0.4 mm, as an area is grown under the shapes sewn after it ([Settings by
 width](#settings-by-width)). A fill that bounds no area is left to its fill, which says so.
 The areas are taken from the last sewn to the first, so that each meets the shapes after it as they are
 sewn. Each area has the work budget to itself for its specks and for its overlaps, and costs the work of the

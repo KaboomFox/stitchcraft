@@ -708,8 +708,8 @@ registry! {
     /// `--auto` digitized the design's shapes that have no settings: StitchCraft chose each one's
     /// stitches by its width, measured to the micrometre. An area is a tatami fill; a part of it narrower
     /// than the design's narrowest satin stroke (`min_satin_stroke_width_mm`, 1 mm unless the design sets
-    /// it) everywhere is a running stitch along its centre line, and a part that holds no circle 7 mm across
-    /// sews satin columns along its centre lines. A line no wider than that narrowest stroke is a running
+    /// it) everywhere is a running stitch along its centre line, and a part nowhere wider than 7 mm sews
+    /// satin columns along its centre lines. A line no wider than that narrowest stroke is a running
     /// stitch, a line up to 7 mm wide a satin column as wide as the line, and a wider line a tatami fill of
     /// the area it paints. A running stitch is tripled from 0.5 mm wide. A line whose every part a satin
     /// column cannot follow is filled too (`SC-I0902`), and counted as a fill. An area whose every part runs
@@ -721,18 +721,18 @@ registry! {
     /// automatically.
     AutoDigitized = "SC-I0901", Info, "Shapes digitized automatically";
 
-    /// `--auto` sews a line up to 7 mm wide as a satin column along its path, and a part of an area that
-    /// holds no circle 7 mm across as satin columns along its centre lines, but no satin column can be made
-    /// of this one. A column cannot follow a part of a line that turns more tightly than the line is wide,
-    /// so the column's edges would fold over themselves, or that is shorter than a CSS pixel, or that is a
-    /// dot the line's round or square cap draws: the area it paints is filled instead, as a line wider than
-    /// 7 mm is. A part of an area makes no columns where the triangles round one of its centre lines don't
-    /// make a column with 2 sides, or where one of its columns, drawn with its rails and rungs, would be read
-    /// back otherwise: it stays in the area's fill.
+    /// `--auto` sews a line up to 7 mm wide as a satin column along its path, and a part of an area nowhere
+    /// wider than 7 mm as satin columns along its centre lines, but it can't make a satin column of this
+    /// one. A column cannot follow a part of a line that turns more tightly than the line is wide, so the
+    /// column's edges would fold over themselves, or that is shorter than a CSS pixel, or that is a dot the
+    /// line's round or square cap draws. The area it paints is filled instead, as a line wider than 7 mm is.
+    /// A part of an area doesn't make columns where the triangles round one of its centre lines don't make a
+    /// column with 2 sides, or where one of its columns, drawn with its rails and rungs, would be read back
+    /// otherwise. It stays in the area's fill.
     ///
     /// The message says which. To sew it as satin columns, draw the line with gentler turns or narrower, or
     /// the part with smoother edges, or draw the columns with 2 rails each and give them settings.
-    AutoSatinFilled = "SC-I0902", Info, "No satin column can be made; filled";
+    AutoSatinFilled = "SC-I0902", Info, "Satin column can't be made; filled";
 
     /// `--auto` fills the area a line paints when the line is wider than 7 mm, or when a satin column cannot
     /// follow it, and the area this line paints would reach more than 10 metres from the design's origin,

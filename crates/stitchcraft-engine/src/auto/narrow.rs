@@ -134,16 +134,10 @@ fn lines(part: &Polygon, narrowest: Mm, meter: &mut Meter) -> Result<Found, Exha
     if part.area() < SMALLEST_AREA {
         return Ok(Found::Filled);
     }
-    match within(part, narrowest, meter)? {
-        None => return Ok(Found::Broken(UNJOINED)),
-        Some(true) => {}
-        Some(false) => {
-            return Ok(match within(part, SATIN_MAX_WIDTH, meter)? {
-                None => Found::Broken(UNJOINED),
-                Some(true) => Found::Columns,
-                Some(false) => Found::Filled,
-            });
-        }
+    let Some(narrow) = within(part, narrowest, meter)? else { return Ok(Found::Broken(UNJOINED)) };
+    if !narrow {
+        let Some(column) = within(part, SATIN_MAX_WIDTH, meter)? else { return Ok(Found::Broken(UNJOINED)) };
+        return Ok(if column { Found::Columns } else { Found::Filled });
     }
     match strips::centre_lines(part, piece(part), meter)? {
         Ok(lines) => Ok(Found::Lines(lines)),
@@ -398,6 +392,33 @@ mod tests {
         let [said] = sorted.said.as_slice() else { panic!("{:?}", sorted.said) };
         assert_eq!((said.code, said.element.as_ref()), (Code::InternalCheckFailed, Some(&area)));
         assert_eq!(said.message, format!("{LOST}, so the part is filled. This is a bug in StitchCraft."));
+    }
+
+    #[test]
+    fn parts_as_wide_as_a_satin_column_that_make_no_columns_stay_filled() {
+        // With a narrowest satin stroke of 1.5 mm, 3 parts no wider than a satin column and not narrow:
+        // - a regular octagon 3 mm across its corners, a dot, whose caps meet;
+        // - a ring whose round hole touches its outline at a point, 4 mm wide on the far side, whose column would
+        //   touch itself there;
+        // - and a ring whose hole pokes out through an edge of its outline, 0.05 mm, which no region has. Its
+        //   triangulation loses its shape, as a bug would make it.
+        // Each stays in the fill. SC-I0902 says so of the second and SC-E0009 of the third, naming the area.
+        let clockwise = |mut corners: Vec<Point>| {
+            corners.reverse();
+            geom::closed(&corners)
+        };
+        let dot = Polygon { outline: clockwise(circle(0.0, 0.0, 1.5, 8, 0.5)), holes: Vec::new() };
+        let pinched = Polygon { outline: clockwise(circle(20.0, 0.0, 4.0, 32, 0.0)), holes: vec![geom::closed(&circle(22.0, 0.0, 2.0, 16, 0.0))] };
+        let broken = Polygon { outline: clockwise(circle(50.0, 0.0, 4.0, 20, 0.5)), holes: vec![geom::closed(&circle(51.6, 0.0, 2.4, 40, 0.0))] };
+        let area = ElementId::new("area").unwrap();
+        let parts = vec![dot.clone(), pinched.clone(), broken.clone()];
+        let sorted = sorted(&area, parts, Mm::new(1.5).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        assert!(sorted.along.is_empty(), "{:?}", sorted.along);
+        assert_eq!(sorted.filled, [dot, pinched, broken]);
+        let [unmade, lost] = sorted.said.as_slice() else { panic!("{:?}", sorted.said) };
+        assert_eq!(*unmade, columns::unmade(&area));
+        assert_eq!((lost.code, lost.element.as_ref()), (Code::InternalCheckFailed, Some(&area)));
+        assert_eq!(lost.message, format!("{LOST_COLUMNS}, so the part is filled. This is a bug in StitchCraft."));
     }
 
     #[test]

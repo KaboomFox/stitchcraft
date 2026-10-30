@@ -5,24 +5,15 @@
 use stitchcraft_core::Budget;
 use stitchcraft_core::math::{self, sin_cos};
 
+use super::super::Graph;
 use super::*;
+use crate::normalize::fixture::part;
 use crate::normalize::region::geom;
 use crate::normalize::stroke::segments;
+use crate::normalize::triangulation::Triangulation;
 
 fn p(x: f64, y: f64) -> Point {
     Point::new(x, y).unwrap()
-}
-
-/// A part with the outline `outline` and the holes `holes`, wound as a region winds them.
-fn part(outline: &[(f64, f64)], holes: &[&[(f64, f64)]]) -> Polygon {
-    let ring = |points: &[(f64, f64)], clockwise: bool| {
-        let mut ring: Vec<Point> = points.iter().map(|&(x, y)| p(x, y)).collect();
-        if (geom::signed_area(&geom::closed(&ring)) < 0.0) != clockwise {
-            ring.reverse();
-        }
-        geom::closed(&ring)
-    };
-    Polygon { outline: ring(outline, true), holes: holes.iter().map(|hole| ring(hole, false)).collect() }
 }
 
 /// `n` steps of a circle of radius `r` about (`x`, `y`), from `from` radians round `turn` radians, both ends
@@ -36,11 +27,21 @@ fn arc(x: f64, y: f64, r: f64, n: usize, from: f64, turn: f64) -> Vec<(f64, f64)
         .collect()
 }
 
-/// The columns of `part`, its edges cut into pieces as long as it is wide on average, as automatic digitizing
-/// cuts them.
-fn found(part: &Polygon) -> Vec<Column> {
+/// How long the pieces of `part`'s edges are cut, as automatic digitizing cuts them: as long as it is wide on
+/// average.
+fn piece(part: &Polygon) -> f64 {
     let perimeter: f64 = part.rings().flat_map(segments).map(|(a, b)| a.distance(b)).sum();
-    columns(part, 2.0 * part.area() / perimeter, &mut Budget::DEFAULT.meter()).unwrap().unwrap().unwrap()
+    2.0 * part.area() / perimeter
+}
+
+/// The columns of `part`, `None` when its triangles make none, or the triangulation's failure.
+fn made(part: &Polygon) -> Result<Option<Vec<Column>>, Broken> {
+    columns(part, piece(part), &mut Budget::DEFAULT.meter()).unwrap()
+}
+
+/// The columns of `part`.
+fn found(part: &Polygon) -> Vec<Column> {
+    made(part).unwrap().unwrap()
 }
 
 /// Whether `a` and `b` are the same point, to within the region's grid.
@@ -168,9 +169,12 @@ fn req_auto_016_a_ring_is_a_closed_column_started_at_a_rung() {
         let radial = math::to_degrees(math::atan2(a.y(), a.x()) - math::atan2(b.y(), b.x())).abs();
         assert!(radial < 8.0, "{a:?} {b:?}");
     }
-    // Started near another point, it starts at the rung nearest it, as a ring still.
+    // Started near another point, it starts at the rung nearest it, as a ring still, its rungs from there.
     let near = column.restarted(p(-10.0, 0.0), &mut Budget::DEFAULT.meter()).unwrap();
     assert!(near.rails[0][0].distance(p(-10.0, 0.0)) < 2.0 && near.closed, "{:?}", near.rails[0][0]);
+    assert!(near.rungs.len() == column.rungs.len() && near.rungs[0][0].distance(near.rails[0][0]) < 4.0, "{:?}", near.rungs);
+    // Turned round, a ring is itself.
+    assert_eq!(column.reversed(), column);
 }
 
 #[test]
@@ -196,6 +200,15 @@ fn req_auto_016_the_stem_of_a_t_ends_under_its_bar() {
         side.windows(2).any(|w| same(w[0], p(11.5, 3.0)) && same(w[1], p(8.5, 3.0)) || same(w[0], p(8.5, 3.0)) && same(w[1], p(11.5, 3.0))),
         "{side:?}"
     );
+    // Turned round, the stem runs from its other end, its rails, rungs and lines the other way, and ends under
+    // the bar at its other end. Turned round again, it is itself.
+    let turned = stem.reversed();
+    let back = |points: &[Point]| points.iter().rev().copied().collect::<Vec<_>>();
+    assert_eq!(turned.rails, [back(&stem.rails[0]), back(&stem.rails[1])]);
+    assert_eq!(turned.rungs, stem.rungs.iter().rev().copied().collect::<Vec<_>>());
+    assert_eq!((turned.line.points.clone(), turned.walked.points.clone()), (back(&stem.line.points), back(&stem.walked.points)));
+    assert_eq!((turned.under, turned.closed), ([stem.under[1], stem.under[0]], false));
+    assert_eq!(turned.reversed(), *stem);
 }
 
 #[test]
@@ -413,4 +426,159 @@ fn req_auto_017_of_rungs_too_near_each_other_the_one_nearer_square_is_kept() {
         ordered(vec![rung(1.0, 1.0, 0.0), rung(1.1, 1.1, 0.5), rung(1.15, 1.15, 0.1)], [10.0, 10.0], None),
         [rung(1.0, 1.0, 0.0), rung(1.15, 1.15, 0.1)]
     );
+}
+
+#[test]
+fn a_part_whose_column_would_touch_itself_at_a_point_makes_none() {
+    // A ring whose round hole touches its outline at a point, 4 mm wide on the far side: its line runs round
+    // from one side of that point to the other, and its column would touch itself there. It makes no column.
+    let outline = arc(0.0, 0.0, 4.0, 32, 0.0, std::f64::consts::TAU);
+    let hole = arc(2.0, 0.0, 2.0, 16, 0.0, std::f64::consts::TAU);
+    assert_eq!(made(&part(&outline[..32], &[&hole[..16]])), Ok(None));
+}
+
+#[test]
+fn a_triangulation_that_loses_its_shape_is_said_to() {
+    // A ring whose hole pokes out through an edge of its outline, 0.05 mm, which no region has: its
+    // triangulation loses its shape, as a bug would make it.
+    let outline = arc(50.0, 0.0, 4.0, 20, std::f64::consts::PI / 20.0, std::f64::consts::TAU);
+    let hole = arc(51.6, 0.0, 2.4, 40, 0.0, std::f64::consts::TAU);
+    assert!(matches!(made(&part(&outline[..20], &[&hole[..40]])), Err(Broken)));
+}
+
+#[test]
+fn a_rings_column_is_the_same_whichever_of_its_outlines_comes_first() {
+    // The ring's outlines found the other way about, its hole's first, make the same column. 2 outlines that
+    // go the same way round, which no ring's column has, make none.
+    let outer = arc(0.0, 0.0, 10.0, 24, 0.0, std::f64::consts::TAU);
+    let inner = arc(0.0, 0.0, 7.0, 24, 0.0, std::f64::consts::TAU);
+    let shape = part(&outer[..24], &[&inner[..24]]);
+    let mut meter = Budget::DEFAULT.meter();
+    let skeleton = skeleton(&shape, piece(&shape), Bumps::Tips, &mut meter).unwrap().unwrap();
+    let lines = unlooped(&cornered(&skeleton, &skeleton.walked));
+    let [walked] = lines.as_slice() else { panic!("{} lines", lines.len()) };
+    let owner = owners(&skeleton, &lines, &mut meter).unwrap().unwrap();
+    let found = outline(&skeleton, &owner, 0, &mut meter).unwrap().unwrap();
+    let made_with = |rings: Vec<Vec<usize>>| {
+        let outline = Outline { rings, triangle: found.triangle.clone() };
+        ring(&skeleton, &owner, 0, &outline, skeleton.line(walked), &mut Budget::DEFAULT.meter()).unwrap()
+    };
+    let [one, other] = [found.rings[0].clone(), found.rings[1].clone()];
+    let column = made_with(vec![one.clone(), other.clone()]);
+    assert!(column.as_ref().is_some_and(|column| column.closed));
+    assert_eq!(made_with(vec![other, one.clone()]), column);
+    assert_eq!(made_with(vec![one.clone(), one]), None);
+}
+
+#[test]
+fn a_ring_starts_at_the_nearest_rung_where_its_hole_is_nearest() {
+    // A square ring 10 mm across round a square hole 4 mm across, and 2 rungs: one slanting from (6, 10) to
+    // (3, 7), nearest where the last column ended, and one straight across from (5, 0) to (5, 3). The hole's
+    // corner (7, 7) lies nearer (6, 10) than (3, 7) does, so a satin column would start the hole there and not
+    // at the slanting rung: the ring starts at the straight one, and the slanting one is its rung.
+    let closed = |corners: &[(f64, f64)]| geom::closed(&corners.iter().map(|&(x, y)| p(x, y)).collect::<Vec<_>>());
+    let rails = [closed(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]), closed(&[(3.0, 3.0), (7.0, 3.0), (7.0, 7.0), (3.0, 7.0)])];
+    let slanting = Rung { points: [p(6.0, 10.0), p(3.0, 7.0)], at: [24.0, 12.0], off: 0.0 };
+    let straight = Rung { points: [p(5.0, 0.0), p(5.0, 3.0)], at: [5.0, 2.0], off: 0.0 };
+    let ring = Ring { rails, lengths: [40.0, 16.0], rungs: vec![slanting, straight] };
+    let start = |ring: &Ring| started(ring, p(6.0, 10.0), &mut Budget::DEFAULT.meter()).unwrap();
+    let Some(Started { rails, rungs }) = start(&ring) else { panic!("no start") };
+    assert_eq!((rails[0][0], rails[1][0]), (p(5.0, 0.0), p(5.0, 3.0)));
+    assert_eq!(rungs, [slanting.points]);
+    // With the slanting rung alone, it starts nowhere.
+    assert!(start(&Ring { rungs: vec![slanting], ..ring }).is_none());
+    // And a rail of one point has no length to start round.
+    assert_eq!(from(&[p(1.0, 1.0)], 0.0, p(1.0, 1.0)), None);
+}
+
+#[test]
+fn the_rails_run_from_the_start_to_the_end_on_either_side() {
+    // A ring of 8 places. Ends from place 0 to 1 and from 4 to 5: one rail runs from 1 to 4, the other from 0
+    // back round to 5, both from the start. Ends at a point each, at places 6 and 2: both rails run from 6,
+    // one each way round the ring, to 2.
+    let ring: Vec<usize> = (10..18).collect();
+    assert_eq!(rails(&ring, (0, 1), (4, 5)), Some([vec![11, 12, 13, 14], vec![10, 17, 16, 15]]));
+    assert_eq!(rails(&ring, (6, 6), (2, 2)), Some([vec![16, 17, 10, 11, 12], vec![16, 15, 14, 13, 12]]));
+    // Ends that overlap, ends that meet, which would leave a rail of one point, and an end the wrong way round
+    // make none.
+    assert_eq!(rails(&ring, (0, 3), (2, 4)), None);
+    assert_eq!(rails(&ring, (0, 2), (2, 3)), None);
+    assert_eq!(rails(&ring, (0, 1), (5, 4)), None);
+}
+
+#[test]
+fn rails_that_run_opposite_ways_give_no_rungs() {
+    // A band's rails as found give its rungs. With one turned round, each corner's rail runs the other way from
+    // the edge across from it: the column has no way there, and no rung is drawn.
+    let band = part(&[(0.0, 0.0), (20.0, 0.0), (20.0, 3.0), (0.0, 3.0)], &[]);
+    let mut meter = Budget::DEFAULT.meter();
+    let skeleton = skeleton(&band, piece(&band), Bumps::Tips, &mut meter).unwrap().unwrap();
+    let lines = unlooped(&cornered(&skeleton, &skeleton.walked));
+    let owner = owners(&skeleton, &lines, &mut meter).unwrap().unwrap();
+    let [column] = found(&band).try_into().unwrap();
+    let place = |q: &Point| skeleton.triangulation.points.iter().position(|&p| same(p, *q)).unwrap();
+    let [one, other] = column.rails.map(|rail| rail.iter().map(place).collect::<Vec<_>>());
+    assert!(!rungs(&skeleton, &owner, 0, &[one.clone(), other.clone()], &mut meter).unwrap().is_empty());
+    let turned: Vec<usize> = other.into_iter().rev().collect();
+    assert!(rungs(&skeleton, &owner, 0, &[one, turned], &mut meter).unwrap().is_empty());
+}
+
+/// A skeleton of no triangles whose graph has the points `points`, each with its junction's size if it is a
+/// junction's middle, for the tests of what becomes of its lines.
+fn drawn(points: &[((f64, f64), Option<f64>)]) -> Skeleton {
+    let mut graph = Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() };
+    for (i, &((x, y), size)) in points.iter().enumerate() {
+        graph.add(p(x, y), size, Node::Junction(i));
+    }
+    Skeleton { triangulation: Triangulation { points: Vec::new(), triangles: Vec::new() }, graph, walked: Vec::new() }
+}
+
+/// The lines that a line through all of `points` in order, `closed` or not, is cut into at its corners.
+fn cut(points: &[((f64, f64), Option<f64>)], closed: bool) -> Vec<Walked> {
+    cornered(&drawn(points), &[Walked { nodes: (0..points.len()).collect(), closed }])
+}
+
+/// An open line through the points `nodes`.
+fn open(nodes: &[usize]) -> Walked {
+    Walked { nodes: nodes.to_vec(), closed: false }
+}
+
+#[test]
+fn req_auto_016_a_ring_is_cut_at_its_corners_when_it_has_2_or_more() {
+    // A closed line round a square, with junctions 1 mm across at its corners, turns by 90° at each: it is cut
+    // into 4 lines, each from a corner to the next. Round a lens, whose 2 tips turn it by 118°, it is cut into
+    // 2. Round a drop, with one corner, it stays a ring: cut there, it would still go round its hole.
+    let corner = Some(1.0);
+    let square = [
+        ((0.0, 0.0), corner),
+        ((5.0, 0.0), None),
+        ((10.0, 0.0), corner),
+        ((10.0, 5.0), None),
+        ((10.0, 10.0), corner),
+        ((5.0, 10.0), None),
+        ((0.0, 10.0), corner),
+        ((0.0, 5.0), None),
+    ];
+    assert_eq!(cut(&square, true), [open(&[0, 1, 2]), open(&[2, 3, 4]), open(&[4, 5, 6]), open(&[6, 7, 0])]);
+    // Walked from the middle of a side, it is cut at the same corners, from the first it comes to.
+    let mut turned = square;
+    turned.rotate_left(7);
+    assert_eq!(cut(&turned, true), [open(&[1, 2, 3]), open(&[3, 4, 5]), open(&[5, 6, 7]), open(&[7, 0, 1])]);
+    let lens = [((0.0, 0.0), corner), ((5.0, 3.0), None), ((10.0, 0.0), corner), ((5.0, -3.0), None)];
+    assert_eq!(cut(&lens, true), [open(&[0, 1, 2]), open(&[2, 3, 0])]);
+    let drop = [((0.0, 0.0), corner), ((5.0, 3.0), None), ((9.0, 2.0), None), ((10.0, 0.0), None), ((9.0, -2.0), None), ((5.0, -3.0), None)];
+    assert_eq!(cut(&drop, true), [Walked { nodes: (0..6).collect(), closed: true }]);
+}
+
+#[test]
+fn req_auto_016_of_2_corners_near_each_other_only_the_sharper_cuts_the_line() {
+    // A flat-ended V's 2 corners, junctions 2 mm across 1 mm apart, mirror images of each other and so exactly
+    // as sharp: the line is cut at the first only. The second sharper, it is cut there.
+    let v = [((-5.0, 10.0), None), ((-0.5, 0.0), Some(2.0)), ((0.5, 0.0), Some(2.0)), ((5.0, 10.0), None)];
+    assert_eq!(cut(&v, false), [open(&[0, 1]), open(&[1, 2, 3])]);
+    let sharper = [((-5.0, 10.0), None), ((-0.5, 0.0), Some(2.0)), ((0.5, 0.0), Some(2.0)), ((3.0, 10.0), None)];
+    assert_eq!(cut(&sharper, false), [open(&[0, 1, 2]), open(&[2, 3])]);
+    // As far apart as twice the larger junction is across, 2 corners each cut it.
+    let apart = [((-5.0, 10.0), None), ((-1.0, 0.0), Some(1.0)), ((1.0, 0.0), Some(1.0)), ((5.0, 10.0), None)];
+    assert_eq!(cut(&apart, false), [open(&[0, 1]), open(&[1, 2]), open(&[2, 3])]);
 }

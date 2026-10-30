@@ -1,5 +1,5 @@
 //! Parts of automatic areas as wide as a satin column (`REQ-AUTO-016` to `REQ-AUTO-018`): a part that isn't
-//! narrow and holds no circle 7 mm across sews as satin columns along its centre lines, between its own
+//! narrow, and is nowhere wider than 7 mm, sews as satin columns along its centre lines, between its own
 //! outlines, each drawn with its rails and rungs and with the settings of its width; a column that ends under
 //! another sews first, longer at that end; and the areas sewn before the columns reach under them.
 
@@ -7,9 +7,10 @@
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
 use stitchcraft_core::math::{self, sin_cos};
-use stitchcraft_core::{Budget, Point};
+use stitchcraft_core::{Budget, Mm, Point};
 use stitchcraft_engine::auto::{CONTOUR_FROM, Digitized, OVERLAP, Stitches, ZIGZAG_ABOVE, digitize};
 use stitchcraft_engine::design::{DesignSettings, Element, Shape};
+use stitchcraft_engine::generators::passes::BEAN_STITCH_REPEATS;
 use stitchcraft_engine::generators::pull::PULL_COMPENSATION;
 use stitchcraft_engine::generators::satin::{
     CENTER_WALK_UNDERLAY, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN, ZIGZAG_UNDERLAY,
@@ -90,8 +91,8 @@ fn req_auto_016_a_band_sews_as_one_satin_column_between_its_sides() {
 
 #[test]
 fn req_auto_016_the_bound_is_the_widest_satin_column_to_the_micrometre() {
-    // 7 mm wide, the widest satin column, holds no circle 7 mm across taken half a micrometre wider: satin
-    // columns. 10 micrometres wider is filled.
+    // 7 mm wide, the widest satin column: shrunk by 3.5 mm taken half a micrometre wider, nothing of it is
+    // left, so it sews satin columns. 10 micrometres wider is filled.
     let band = |width: f64| shape("band", &rectangle((0.0, 0.0), (30.0, width)));
     assert_eq!(made(&band(7.0)).stitches, Some(Stitches::Satin));
     assert_eq!(made(&band(7.01)).stitches, Some(Stitches::Fill));
@@ -116,6 +117,37 @@ fn req_auto_016_a_column_that_ends_under_another_sews_first_and_reaches_under_it
     let ends: Vec<Point> = stem_rails.iter().flat_map(|rail| [rail[0], *rail.last().unwrap()]).filter(|q| q.y() < 3.0 + 1e-9).collect();
     assert_eq!(ends.len(), 2, "{stem_rails:?}");
     assert!(ends.iter().any(|q| q.x() == 8.5) && ends.iter().any(|q| q.x() == 11.5), "{ends:?}");
+}
+
+#[test]
+fn req_auto_016_a_v_sews_as_2_columns_one_ending_under_the_other() {
+    // A V whose arms, 3 mm wide, meet in a flat end: its line turns by more than 60° there, and the arms sew
+    // as 2 satin columns, the one that ends under the other first, 0.4 mm longer at that end.
+    let v = shape("v", &[(0.0, 15.0), (3.0, 15.0), (6.0, 3.0), (9.0, 15.0), (12.0, 15.0), (7.5, 0.0), (4.5, 0.0)]);
+    let out = made(&v);
+    assert_eq!(out.stitches, Some(Stitches::Satin));
+    let [first, second] = out.elements.as_slice() else { panic!("{:?}", out.elements) };
+    let under = format!("{}", -OVERLAP);
+    let push = setting(first, PUSH_COMPENSATION).unwrap();
+    assert!(push == format!("{under} 0") || push == format!("0 {under}"), "{push}");
+    assert_eq!((setting(first, SATIN_COLUMN), setting(second, SATIN_COLUMN)), (Some("true"), Some("true")));
+    assert_eq!(setting(second, PUSH_COMPENSATION), None);
+}
+
+#[test]
+fn req_auto_016_a_column_too_narrow_for_satin_runs_along_its_line() {
+    // A T whose bar is 4 mm wide and whose stem is 1.5 mm wide, in a design whose narrowest satin stroke is
+    // 2 mm: the stem's column runs along its line as a triple run, as a stroke that narrow would, and the
+    // bar's sews as a satin column.
+    let t = shape("t", &[(0.0, 0.0), (20.0, 0.0), (20.0, 4.0), (10.75, 4.0), (10.75, 16.0), (9.25, 16.0), (9.25, 4.0), (0.0, 4.0)]);
+    let settings = DesignSettings { min_satin_stroke_width: Mm::new(2.0).unwrap(), ..DesignSettings::default() };
+    let out = digitize(&automatic(t), &settings, &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(out.stitches, Some(Stitches::Satin));
+    let [stem, bar] = out.elements.as_slice() else { panic!("{:?}", out.elements) };
+    let Shape::Stroke { width, .. } = stem.shape else { panic!("{:?}", stem.shape) };
+    assert!((width.get() - 1.5).abs() < 0.1, "{width:?}");
+    assert_eq!((setting(stem, SATIN_COLUMN), setting(stem, BEAN_STITCH_REPEATS)), (None, Some("1")));
+    assert_eq!(setting(bar, SATIN_COLUMN), Some("true"));
 }
 
 #[test]

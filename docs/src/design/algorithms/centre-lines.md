@@ -104,16 +104,16 @@ so from its middle. Each point then costs a few units of work.
 ## Columns
 
 A part no wider than a satin column sews a satin column along each of its lines, over the triangles round
-the line and between the part's own outlines (`REQ-AUTO-016`, `REQ-AUTO-017`; `strips::columns`). Its lines
-are found as above, but for these steps:
+the line and between the part's own outlines (`REQ-AUTO-016` and `REQ-AUTO-017`, in `strips::columns`). Its
+lines are found as above, but for these steps:
 
 - **Bumps.** A column beside a branch would cover it with stitches out along the branch: a stem that took
   the arms of a t's crossbar for bumps would sew the crossbar with stitches from one end of it to the
-  other. So a branch is a bump only when it ends at a tip and at its junction too, its junction's other 2
-  branches running on most nearly straight, as the second sharp corner of a wide square end does beside
-  the one the line runs on to. A branch that ends in a cap is an arm with an end of its own, and one to a
-  tip that another runs on into, as the leg of an A runs on below its crossbar into its foot's sharp
-  corner, is that line's end.
+  other. So a branch is a bump only when it ends at a tip and at its junction too. It ends at its junction
+  when the junction's other 2 branches run on most nearly straight, as beside the second sharp corner of a
+  wide square end. A branch that ends in a cap is an arm with an end of its own. A branch to a tip that
+  another branch runs on into is that line's end: the leg of an A runs on below its crossbar into its
+  foot's sharp corner.
 - **Corners.** A line that turns by more than 60° at a junction's middle, each way measured as a branch's
   is, is cut there: a column that turned so would sew a fan of stitches into the inside of the corner. Of
   2 such corners within twice the larger junction triangle's longest edge of each other, as where a V ends
@@ -121,37 +121,37 @@ are found as above, but for these steps:
   go round its hole.
 - **Lassos.** A line that comes back to a junction it ran through, as the line of a b runs down its stem,
   round its bowl and back, is cut there into the line up to the junction and a ring.
-- **Triangles.** A triangle goes to the line with the most pieces in it, the first of as many: a junction
-  that a line runs on through goes to it. The caps and bumps that no line crosses go to the line of the
-  triangle beside them, nearest first. The edges of a line's triangles that no other of them shares are its
-  column's outline, one ring round an open line's and 2 round a closed one's; any other outline makes no
-  column.
+- **Triangles.** A triangle goes to the line with the most pieces in it, the first such line on a tie, so
+  a junction that a line runs on through goes to that line. The caps and bumps that no line crosses go to
+  the line of the triangle beside them, nearest first. The edges of a line's triangles that no other of
+  them shares are its column's outline, one ring round an open line's and 2 round a closed one's. A line
+  with any other outline doesn't make a column.
 - **Ends.** A line that ends at a junction another line owns, or at a chord with another line's triangle
-  beyond it, ends at that chord: its column ends under the other column, which sews after it. Otherwise
+  beyond it, ends at that chord. Its column ends under the other column, which sews after it. Otherwise
   the column's own end lies beyond the last chord the line crosses, with any bend the line runs through on
-  the way there, a junction whose third side is a cap or a bump, as beside the blunt corner of a slanted
-  end. The end is where the column reaches farthest along the line's way at that chord, measured from the
-  line's point before it: the last piece of a line, to a tip or to a junction's middle, runs off the
-  column's way, and a way measured on it would end a slanted or round end at a corner. An edge of the
-  outline there that lies within 20° of square to that way, and is no longer than twice the chord the end
-  begins at, is the end, and the column ends flat along all of it, as far as it runs straight: a cap can
-  stop at a chord from a point between an edge's pieces, which would leave the other piece on a rail, and
+  the way there. Such a bend is a junction whose third side is a cap or a bump, as beside the blunt corner
+  of a slanted end. The end is the column's farthest point along the line's way at that chord, measured from the line's
+  point before it. The last piece of a line runs to a tip or to a junction's middle, off the column's way.
+  A way measured on it would end a slanted or round end at a corner. An edge of the outline there that lies
+  within 20° of square to that way, and is no longer than twice the chord the end begins at, is the end.
+  The column ends flat along all of it, as far as it runs straight. A cap can stop at a chord from a point
+  between an edge's pieces. A column that ended at that point would leave the other piece on a rail, with
   its stitches leaning towards it. A longer edge runs along the column, as its side does where its line
-  turns into a tip. Otherwise the column ends at that point, its rails meeting. A column that is no more than its end, as a
-  stub beyond a junction is, has the chord its end begins at on its outline, and its end goes round the
-  other way.
+  turns into a tip. Otherwise the column ends at that point, its rails meeting. A column can be only its
+  end, as a stub beyond a junction is. The chord its end begins at is then on its outline, and its end goes
+  round the other way.
 - **Rails.** The rails are the outline on either side between the ends, both from the line's start. A
   ring's are its outer and inner outline, the same way round, started at a rung whose point on the inner
   one is the inner one's point nearest its point on the outer, so that a satin column starts them together
   (`DEV-SAT-009`).
 - **Rungs.** A triangle with one edge on a rail and its third corner on the other gives a rung from that
-  corner, at a right angle to the column's way there, to where it meets the edge, or to the edge's nearer
-  end. The column's way is the mean of its 2 rails' ways, the corner's rail's at the corner and the other's
-  along the edge: along the middle of a band or round a ring, and between the sides where a column tapers
-  or ends at a corner. A corner keeps its rung nearest that right angle, and of rungs whose points lie
-  closer on a rail than twice the reach a rung is drawn with past the rails, as they crowd into the inside
-  of a tight curve, the one nearer a right angle. A rung at a rail's end is left out: the rails' ends pair
-  up.
+  corner, at a right angle to the column's way there. The rung ends where it meets the edge, or at the
+  edge's nearer end if it misses it. The column's way is the mean of its 2 rails' ways, the corner's rail's
+  at the corner and the other's along the edge. It runs along the middle of a band or round a ring, and
+  between the sides where a column tapers or ends at a corner. A corner keeps its rung nearest that right
+  angle. Where rungs crowd into the inside of a tight curve, their points closer on a rail than twice how
+  far a rung is drawn past each rail, the one nearer a right angle is kept. A rung at a rail's end is left
+  out: the rails' ends pair up.
 - **Drawn.** The column is drawn with its rails and a line across them for each rung, as the Stroke to
   Satin filter draws one (`REQ-VC-014`), and read back as any satin column is, it must give the same rails
   and pair the same points. A part one of whose columns doesn't stays in the area's fill, with `SC-I0902`.

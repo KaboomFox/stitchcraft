@@ -93,8 +93,9 @@ pub(super) fn columns(part: &Polygon, narrowest: Mm, meter: &mut Meter) -> Resul
 /// `columns` in the order they are sewn, each with its place among them, turned to start where it is sewn
 /// from, with `meter`'s work: a column that ends under another before it, then the longest first, and each
 /// next the one with an end nearest where the last one ended, sewn from that end, or a ring from its rung
-/// nearest. Where the columns that end under each other go round, the one that comes first in that order
-/// ends on top. On a tie, the column found first.
+/// nearest. Where the columns that end under each other go round, as a pinwheel's bars do, none can sew
+/// after every column it ends under: the one that comes first in that order sews first, and the last of them
+/// ends on top of it. On a tie, the column found first.
 fn ordered(columns: &[Column], meter: &mut Meter) -> Result<Vec<(usize, Column)>, Exhausted> {
     let count = columns.len();
     // How many columns end under each, which must sew before it.
@@ -109,7 +110,8 @@ fn ordered(columns: &[Column], meter: &mut Meter) -> Result<Vec<(usize, Column)>
     let mut done = vec![false; count];
     let mut out: Vec<(usize, Column)> = Vec::with_capacity(count);
     let mut here: Option<Point> = None;
-    while out.len() < count {
+    // Each step sews one column.
+    for _ in 0..count {
         meter.charge(u64::try_from(count).unwrap_or(u64::MAX))?;
         let free = |c: usize| !done.get(c).copied().unwrap_or(true);
         let mut ready: Vec<usize> = (0..count).filter(|&c| free(c) && waiting.get(c) == Some(&0)).collect();
@@ -158,10 +160,7 @@ fn nearest_end(column: &Column, here: Point) -> f64 {
 /// Whether the open `column`'s centre line ends nearer `here` than it starts.
 fn end_nearer(column: &Column, here: Point) -> bool {
     let points = &column.line.points;
-    match (points.first(), points.last()) {
-        (Some(start), Some(end)) => end.distance(here) < start.distance(here),
-        _ => false,
-    }
+    points.first().zip(points.last()).is_some_and(|(start, end)| end.distance(here) < start.distance(here))
 }
 
 /// `SC-I0902` for a part of the automatic area `id` no wider than a satin column, whose satin columns can't be
@@ -179,19 +178,39 @@ pub(super) fn unmade(id: &ElementId) -> Diagnostic {
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_core::math::{self, sin_cos};
     use stitchcraft_core::{Budget, Code, ElementId};
 
     use super::*;
-    use crate::normalize::region::geom;
+    use crate::normalize::fixture::part;
 
-    /// A band `width` millimetres wide and 20 mm long, its outline wound as a region winds it.
+    /// A band `width` millimetres wide and 20 mm long.
     fn band(width: f64) -> Polygon {
-        let mut ring: Vec<Point> =
-            [(0.0, 0.0), (20.0, 0.0), (20.0, width), (0.0, width)].iter().filter_map(|&(x, y)| Point::new(x, y).ok()).collect();
-        if geom::signed_area(&geom::closed(&ring)) > 0.0 {
-            ring.reverse();
-        }
-        Polygon { outline: geom::closed(&ring), holes: Vec::new() }
+        part(&[(0.0, 0.0), (20.0, 0.0), (20.0, width), (0.0, width)], &[])
+    }
+
+    /// `n` steps of a circle of radius `r` about the origin, from `from` radians round `turn` radians, both
+    /// ends included.
+    fn arc(r: f64, n: usize, from: f64, turn: f64) -> Vec<(f64, f64)> {
+        (0..=n)
+            .map(|i| {
+                let (sin, cos) = sin_cos(from + turn * i as f64 / n as f64);
+                (r * cos, r * sin)
+            })
+            .collect()
+    }
+
+    /// The columns of `part` as found, and in the order they are sewn, each with its place among those found.
+    fn sewn(part: &Polygon) -> (Vec<Column>, Vec<(usize, Column)>) {
+        let mut meter = Budget::DEFAULT.meter();
+        let found = strips::columns(part, piece(part), &mut meter).unwrap().unwrap().unwrap();
+        let order = ordered(&found, &mut meter).unwrap();
+        (found, order)
+    }
+
+    /// Where `column`'s centre line starts and ends.
+    fn ends(column: &Column) -> (Point, Point) {
+        (column.line.points[0], *column.line.points.last().unwrap())
     }
 
     #[test]
@@ -205,6 +224,148 @@ mod tests {
         let Made::Columns(sewn) = made(2.0) else { panic!("no columns") };
         let [Sewn::Running { width, line }] = sewn.as_slice() else { panic!("{sewn:?}") };
         assert!((width.get() - 1.5).abs() < 1e-6 && line.points.iter().all(|q| (q.y() - 0.75).abs() < 1e-9), "{width:?} {line:?}");
+    }
+
+    #[test]
+    fn req_auto_016_each_column_sews_from_its_end_nearest_where_the_last_ended() {
+        // An H, its bars and its crossbar 3 mm wide. The crossbar ends under both bars and sews first, then the
+        // bar with an end nearest where it ended, from that end, and the other bar from its end nearest where
+        // that one ended. The crossbar lies low and high, so that a bar is turned round in one H and not in
+        // the other.
+        let (mut turned, mut kept) = (0, 0);
+        for (low, high) in [(4.0, 7.0), (13.0, 16.0)] {
+            let h = part(
+                &[
+                    (0.0, 0.0),
+                    (3.0, 0.0),
+                    (3.0, low),
+                    (10.0, low),
+                    (10.0, 0.0),
+                    (13.0, 0.0),
+                    (13.0, 20.0),
+                    (10.0, 20.0),
+                    (10.0, high),
+                    (3.0, high),
+                    (3.0, 20.0),
+                    (0.0, 20.0),
+                ],
+                &[],
+            );
+            let (found, order) = sewn(&h);
+            let [(crossbar, first), (_, second), (_, third)] = order.as_slice() else { panic!("{order:?}") };
+            assert_eq!(found[*crossbar].under.iter().flatten().count(), 2, "{found:?}");
+            let here = ends(first).1;
+            assert!(nearest_end(second, here) < nearest_end(third, here), "{order:?}");
+            for (column, here) in [(second, here), (third, ends(second).1)] {
+                let (start, end) = ends(column);
+                assert!(start.distance(here) < end.distance(here), "{column:?} from {here:?}");
+            }
+            for (place, column) in &order {
+                if *column == found[*place] { kept += 1 } else { turned += 1 }
+            }
+        }
+        assert!(turned > 0 && kept > 0, "{turned} turned, {kept} kept");
+    }
+
+    #[test]
+    fn a_column_is_as_far_as_its_nearer_end_and_a_ring_as_its_nearest_point() {
+        let [column] = sewn(&band(3.0)).0.try_into().unwrap();
+        let (start, end) = ends(&column);
+        let (by_start, by_end) = (Point::new(start.x(), start.y() + 4.0).unwrap(), Point::new(end.x(), end.y() - 2.0).unwrap());
+        assert!((nearest_end(&column, by_start) - 4.0).abs() < 1e-9 && (nearest_end(&column, by_end) - 2.0).abs() < 1e-9);
+        assert!(end_nearer(&column, by_end) && !end_nearer(&column, by_start));
+        // As near both ends, it keeps its way.
+        let point = |x: f64, y: f64| Point::new(x, y).unwrap();
+        let mut level = column;
+        level.line = Line { points: vec![point(0.0, 0.0), point(10.0, 0.0)], closed: false };
+        assert!(!end_nearer(&level, point(5.0, 3.0)) && end_nearer(&level, point(5.001, 3.0)));
+        // A ring 3 mm wide round a hole 10 mm across, its line about 6.5 mm from the centre.
+        let ring = part(&arc(8.0, 24, 0.0, std::f64::consts::TAU)[..24], &[&arc(5.0, 24, 0.0, std::f64::consts::TAU)[..24]]);
+        let [ring] = sewn(&ring).0.try_into().unwrap();
+        let far = nearest_end(&ring, Point::new(20.0, 0.0).unwrap());
+        assert!((far - 13.5).abs() < 0.2, "{far}");
+    }
+
+    #[test]
+    fn columns_that_end_under_each_other_round_a_ring_all_sew() {
+        // A pinwheel: a square ring of bars 3 mm wide round a hole 9 mm across, each bar running on 3 mm past
+        // the corner where the bar before it ends against its side. Each bar's column ends under the next
+        // one's, round the ring, so none can sew after all those it ends under: the longest sews first, the
+        // first found of as long, and then each column the last one ends under.
+        let pinwheel = part(
+            &[
+                (-3.0, 0.0),
+                (12.0, 0.0),
+                (12.0, -3.0),
+                (15.0, -3.0),
+                (15.0, 12.0),
+                (18.0, 12.0),
+                (18.0, 15.0),
+                (3.0, 15.0),
+                (3.0, 18.0),
+                (0.0, 18.0),
+                (0.0, 3.0),
+                (-3.0, 3.0),
+            ],
+            &[&[(3.0, 3.0), (12.0, 3.0), (12.0, 12.0), (3.0, 12.0)]],
+        );
+        let (found, order) = sewn(&pinwheel);
+        assert_eq!(found.len(), 4);
+        assert!(found.iter().all(|column| column.under.iter().flatten().count() == 1), "{found:?}");
+        let places: Vec<usize> = order.iter().map(|(place, _)| *place).collect();
+        assert_eq!(places[0], 0, "{places:?}");
+        for pair in places.windows(2) {
+            assert!(found[pair[0]].under.contains(&Some(pair[1])), "{places:?}");
+        }
+    }
+
+    #[test]
+    fn the_longest_column_that_can_sew_first_sews_first() {
+        // A plus of bars 3 mm wide: the column through its middle waits for the 3 that end under it, and of
+        // those the longest sews first, the first found of as long.
+        let plus = part(
+            &[
+                (8.5, 0.0),
+                (11.5, 0.0),
+                (11.5, 13.5),
+                (25.0, 13.5),
+                (25.0, 16.5),
+                (11.5, 16.5),
+                (11.5, 30.0),
+                (8.5, 30.0),
+                (8.5, 16.5),
+                (0.0, 16.5),
+                (0.0, 13.5),
+                (8.5, 13.5),
+            ],
+            &[],
+        );
+        let (found, order) = sewn(&plus);
+        let free: Vec<usize> = (0..found.len()).filter(|&c| found.iter().all(|column| !column.under.contains(&Some(c)))).collect();
+        assert!(free.len() > 1, "{found:?}");
+        let length = |c: usize| found[c].walked.length();
+        let longest = free.iter().copied().fold(free[0], |best, c| if length(c) > length(best) { c } else { best });
+        assert_eq!(order[0].0, longest, "{order:?}");
+    }
+
+    #[test]
+    fn a_ring_sewn_after_another_column_starts_at_its_rung_nearest_where_that_ended() {
+        // A ring 3 mm wide round a hole 10 mm across, with a stem 3 mm wide above it, 10 mm long, and one below
+        // it, 6 mm long, each ending under the ring. The stems sew first, the longer first, and then the ring,
+        // from its rung nearest where the second stem ended.
+        let side = math::acos(1.5 / 8.0);
+        let mut outline = arc(8.0, 16, side, -2.0 * side);
+        outline.extend([(1.5, -14.0), (-1.5, -14.0)]);
+        outline.extend(arc(8.0, 16, side - std::f64::consts::PI, -2.0 * side));
+        outline.extend([(-1.5, 18.0), (1.5, 18.0)]);
+        let ringed = part(&outline, &[&arc(5.0, 24, 0.0, std::f64::consts::TAU)[..24]]);
+        let (found, order) = sewn(&ringed);
+        let [(_, _), (_, last), (place, ring)] = order.as_slice() else { panic!("{order:?}") };
+        assert!(ring.closed && !last.closed, "{order:?}");
+        let here = ends(last).1;
+        let starts = found[*place].rungs.iter().map(|rung| rung[0]).chain([found[*place].rails[0][0]]);
+        let nearest = starts.map(|q| q.distance(here)).fold(f64::INFINITY, f64::min);
+        assert!(ring.rails[0][0].distance(here) <= nearest + 1e-9, "{:?} from {here:?}", ring.rails[0][0]);
     }
 
     #[test]
