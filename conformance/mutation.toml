@@ -414,6 +414,12 @@ line = "if piece.area() < smallest {"
 why = "a narrow piece touches the broad parts, so some of it lies within the reach and what lies beyond is smaller than the piece: a piece of exactly the smallest area stays in the fill by the next test either way, which costs only its work"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/split.rs"
+mutant = "replace < with == in split"
+line = "if piece.area() < smallest {"
+why = "the test only spares a speck the work of the next: what lies beyond the reach is part of the piece, so a piece smaller than the smallest area, which the mutant lets past, has no more than that beyond and stays in the fill by the next test, and a piece of exactly the smallest area, which the mutant stops, touches the broad parts and has less beyond, so the next test stops it too"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/testsheets/pictures.rs"
 mutant = "replace - with + in balloon"
 line = "let (top, length, steps) = (around(FRAC_PI_2 - meet).1, 26.0, 24_u32);"
