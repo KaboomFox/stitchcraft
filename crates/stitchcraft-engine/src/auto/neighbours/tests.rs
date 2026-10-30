@@ -135,6 +135,17 @@ fn a_narrow_line_covered_whole_sews_nothing_unless_finding_that_needs_more_work_
 }
 
 #[test]
+fn an_area_covered_whole_by_an_area_sewn_after_it_sews_nothing_and_is_said_to() {
+    // As the cases of `tests/auto_neighbours.rs` find it digitized: here beside its neighbours alone.
+    let (elements, said) = reached(vec![area("hidden", (2.0, 2.0), (5.0, 5.0)), area("cover", (0.0, 0.0), (10.0, 10.0))], &Budget::DEFAULT);
+    let [said] = said.as_slice() else { panic!("{said:?}") };
+    assert_eq!((said.code, said.element.as_ref().map(ElementId::as_str)), (Code::AutoUnder, Some("hidden")));
+    assert_eq!(said.message, "This area is covered by the areas sewn after it, so it sews nothing.");
+    let ids: Vec<&str> = elements.iter().map(|element| element.id.as_str()).collect();
+    assert_eq!(ids, ["cover"]);
+}
+
+#[test]
 fn an_area_costs_a_unit_for_each_shape_sewn_after_it_far_from_it() {
     let sewn = || vec![area("left", (0.0, 0.0), (10.0, 10.0)), area("right", (10.0, 0.0), (20.0, 10.0))];
     // A fill with settings far from them, sewn after them, whose region takes thousands of units to build.

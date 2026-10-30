@@ -105,7 +105,11 @@ enum Sorting<'c> {
 /// than a satin column somewhere split ([`split`]) when `sorting` says it is a part of the area.
 fn sort(id: &ElementId, part: Polygon, narrowest: Mm, sorting: Sorting, sorted: &mut Parts, meter: &mut Meter) -> Result<(), Exhausted> {
     meter.charge(1)?;
-    match lines(&part, narrowest, meter)? {
+    let found = match lines(&part, narrowest, meter)? {
+        Found::Broad if matches!(sorting, Sorting::Part) => broad(&part, meter)?,
+        found => found,
+    };
+    match found {
         Found::Lines(lines) => {
             let edges = Edges::of(&part, piece(&part), meter)?;
             match width(&edges, &lines, meter)? {
@@ -116,34 +120,32 @@ fn sort(id: &ElementId, part: Polygon, narrowest: Mm, sorting: Sorting, sorted: 
         Found::Columns => match columns::columns(&part, narrowest, if let Sorting::Piece(cuts) = sorting { cuts } else { &[] }, meter)? {
             Made::Columns(sewn) => sorted.along.push(Along::Columns(Columns { part, sewn })),
             Made::Dot => sorted.filled.push(part),
-            Made::Unmade => {
-                sorted.said.push(columns::unmade(id));
-                sorted.filled.push(part);
-            }
-            Made::Broken => {
-                sorted.said.push(broken(id, LOST_COLUMNS));
-                sorted.filled.push(part);
-            }
+            Made::Unmade => kept(sorted, part, columns::unmade(id)),
+            Made::Broken => kept(sorted, part, broken(id, LOST_COLUMNS)),
         },
-        Found::Broad if matches!(sorting, Sorting::Part) => match split::split(&part, meter)? {
-            Some(split) => {
-                sorted.filled.extend(split.fill);
-                for piece in split.narrow {
-                    sort(id, piece.part, narrowest, Sorting::Piece(&piece.cuts), sorted, meter)?;
-                }
+        Found::Split(split) => {
+            sorted.filled.extend(split.fill);
+            for piece in split.narrow {
+                sort(id, piece.part, narrowest, Sorting::Piece(&piece.cuts), sorted, meter)?;
             }
-            None => {
-                sorted.said.push(broken(id, UNSPLIT));
-                sorted.filled.push(part);
-            }
-        },
-        Found::Broad | Found::Filled => sorted.filled.push(part),
-        Found::Broken(failed) => {
-            sorted.said.push(broken(id, failed));
-            sorted.filled.push(part);
         }
+        Found::Broad | Found::Filled => sorted.filled.push(part),
+        Found::Broken(failed) => kept(sorted, part, broken(id, failed)),
     }
     Ok(())
+}
+
+/// `part` kept in `sorted`'s fill, and `said` said of the area: a part whose stitches couldn't be found.
+fn kept(sorted: &mut Parts, part: Polygon, said: Diagnostic) {
+    sorted.said.push(said);
+    sorted.filled.push(part);
+}
+
+/// `part`, wider than a satin column somewhere, split into its broad and narrow parts ([`split`]), with
+/// `meter`'s work; [`Found::Broken`] when a region's edges can't be joined into rings, a bug.
+fn broad(part: &Polygon, meter: &mut Meter) -> Result<Found, Exhausted> {
+    let Some(split) = split::split(part, meter)? else { return Ok(Found::Broken(UNSPLIT)) };
+    Ok(Found::Split(split))
 }
 
 /// What becomes of a part.
@@ -152,8 +154,10 @@ enum Found {
     Lines(Vec<Line>),
     /// It is no wider than a satin column, and sews as columns, unless none can be drawn.
     Columns,
-    /// It is wider than a satin column somewhere, and its narrow parts sew over the fill of its broad ones.
+    /// It is wider than a satin column somewhere: a narrow part of a part split, which stays in the fill.
     Broad,
+    /// It is wider than a satin column somewhere, split into its broad parts and its narrow ones.
+    Split(split::Split),
     /// It stays in the fill: it is a speck.
     Filled,
     /// What could not be found of it, and why, a bug.

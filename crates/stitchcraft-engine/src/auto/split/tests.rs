@@ -9,6 +9,27 @@ use super::*;
 use crate::normalize::fixture::part;
 use crate::normalize::region::ops::{area_of, union};
 
+/// The point (`x`, `y`).
+fn p(x: f64, y: f64) -> Point {
+    Point::new(x, y).unwrap()
+}
+
+/// `piece`, a narrow part of `part` whose ring runs through `points` in order, cut where it meets the broad
+/// parts: its ring and its cuts.
+fn cut_of(points: &[(f64, f64)], part: &Polygon) -> (Vec<Point>, Vec<[Point; 2]>) {
+    let mut meter = Budget::DEFAULT.meter();
+    let edges = Edges::of(part, narrow::piece(part), &mut meter).unwrap();
+    let ring: Vec<Point> = points.iter().map(|&(x, y)| p(x, y)).collect();
+    let piece = Polygon { outline: geom::closed(&ring), holes: Vec::new() };
+    let Piece { part: piece, cuts } = cut(piece, part, &edges, &mut meter).unwrap();
+    (piece.outline, cuts)
+}
+
+/// The tab of [`square_with_tab`] 12 mm long, its ring from 1 mm along its bottom side round to the square's
+/// side at its top, and back through 3 points of the opening's arc, inside the square: an arc whose ends lie
+/// 1 mm apart along the tab.
+const TAB: [(f64, f64); 7] = [(21.0, 8.5), (32.0, 8.5), (32.0, 11.5), (20.0, 11.5), (19.4, 10.6), (19.6, 9.2), (20.4, 8.7)];
+
 /// `part` split, with the default budget.
 fn split_of(part: &Polygon) -> Split {
     split(part, &mut Budget::DEFAULT.meter()).unwrap().unwrap()
@@ -26,9 +47,14 @@ fn bounds(piece: &Polygon) -> [f64; 4] {
     })
 }
 
+/// The outline of a square 20 mm a side with a tab 3 mm wide and `length` long on its right side, halfway up.
+fn tab_outline(length: f64) -> [(f64, f64); 8] {
+    [(0.0, 0.0), (20.0, 0.0), (20.0, 8.5), (20.0 + length, 8.5), (20.0 + length, 11.5), (20.0, 11.5), (20.0, 20.0), (0.0, 20.0)]
+}
+
 /// A square 20 mm a side with a tab 3 mm wide and `length` long on its right side, halfway up.
 fn square_with_tab(length: f64) -> Polygon {
-    part(&[(0.0, 0.0), (20.0, 0.0), (20.0, 8.5), (20.0 + length, 8.5), (20.0 + length, 11.5), (20.0, 11.5), (20.0, 20.0), (0.0, 20.0)], &[])
+    part(&tab_outline(length), &[])
 }
 
 #[test]
@@ -97,4 +123,50 @@ fn req_auto_019_a_bar_between_2_broad_parts_is_cut_square_at_both_ends() {
     }
     assert!(x0 > 7.8 && x0 < 8.0 && x1 > 22.0 && x1 < 22.2, "{bar:?}");
     assert_eq!(split.fill.len(), 2, "{:?}", split.fill);
+}
+
+#[test]
+fn req_auto_019_a_cut_square_across_that_would_cross_the_outline_gives_way_to_the_chord_between_the_arcs_ends() {
+    // The arc's end along the tab's bottom side lies 1 mm farther along the tab than the one at the square's
+    // side, and the cut square across from it, at x = 21, would cross a hole in the part. The cut joins the
+    // arc's ends instead.
+    let hole = [(20.9, 9.9), (21.1, 9.9), (21.1, 10.1), (20.9, 10.1)];
+    let with_hole = part(&tab_outline(12.0), &[&hole]);
+    let (ring, cuts) = cut_of(&TAB, &with_hole);
+    assert_eq!(ring, geom::closed(&TAB[..4].iter().map(|&(x, y)| p(x, y)).collect::<Vec<_>>()));
+    assert_eq!(cuts, [[p(20.0, 11.5), p(21.0, 8.5)]]);
+    // Without the hole, the cut is square across from the arc's end farther along: the chord at x = 21.
+    let (ring, cuts) = cut_of(&TAB, &square_with_tab(12.0));
+    assert_eq!(cuts, [[p(21.0, 11.5), p(21.0, 8.5)]]);
+    assert!(ring.iter().all(|q| q.x() >= 21.0), "{ring:?}");
+    // With a second hole on the chord between the arc's ends too, no cut is left: the arc stays.
+    let between = [(20.45, 9.95), (20.55, 9.95), (20.55, 10.05), (20.45, 10.05)];
+    let with_holes = part(&tab_outline(12.0), &[&hole, &between]);
+    let (ring, cuts) = cut_of(&TAB, &with_holes);
+    assert_eq!(ring, geom::closed(&TAB.iter().map(|&(x, y)| p(x, y)).collect::<Vec<_>>()));
+    assert!(cuts.is_empty(), "{cuts:?}");
+}
+
+#[test]
+fn req_auto_019_a_piece_with_no_more_than_the_arcs_ends_on_the_outline_is_not_cut() {
+    // Only the tab's end corners lie on the part's outline, and the rest of its ring is an arc: no ring is left
+    // to close with a chord, and the piece stays as it is.
+    let ring = [(32.0, 8.5), (32.0, 11.5), (30.0, 11.0), (25.0, 10.0), (30.0, 9.0)];
+    let (outline, cuts) = cut_of(&ring, &square_with_tab(12.0));
+    assert_eq!(outline, geom::closed(&ring.iter().map(|&(x, y)| p(x, y)).collect::<Vec<_>>()));
+    assert!(cuts.is_empty(), "{cuts:?}");
+}
+
+#[test]
+fn req_auto_019_an_arm_drawn_the_other_way_round_is_cut_square_across_too() {
+    // The L of the arm's test mirrored, its arm up its right side: the cut runs from the arm's inner corner
+    // at the other end of the opening's arc.
+    let l = part(&[(0.0, 0.0), (20.0, 0.0), (20.0, 40.0), (15.0, 40.0), (15.0, 20.0), (0.0, 20.0)], &[]);
+    let split = split_of(&l);
+    let [arm]: [Polygon; 1] = pieces(&split).try_into().unwrap();
+    let [x0, y0, x1, y1] = bounds(&arm);
+    assert!(x0 == 15.0 && x1 == 20.0 && (y0 - 20.0).abs() < 0.01 && y1 == 40.0, "{arm:?}");
+    let mouth: Vec<Point> = arm.outline.iter().copied().filter(|q| q.y() < 20.5).collect();
+    assert!(mouth.len() >= 2 && mouth.iter().all(|q| (q.y() - y0).abs() < 1e-9), "{mouth:?}");
+    assert!((area_of(&split.fill) + arm.area() - l.area()).abs() < 1e-6);
 }

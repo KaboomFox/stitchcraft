@@ -136,56 +136,53 @@ fn run(off: &[bool], ring: &[Point], stays: &[Point]) -> Option<(usize, usize)> 
 }
 
 /// `ring` with the run of points between its places `before` and `after` replaced by a chord across the
-/// narrow part, square to it, with `meter`'s work. The part runs on from the run along the outline on either
-/// side, and its way there is the mean of its 2 sides' ways, each from the run's end to the first point of
-/// its side at least half the run's own chord away. The chord runs square to that way from the end of the
-/// run that lies farther along it to the other side, no farther than twice the run's chord from that end,
-/// and what lies between the chord and the run goes to the fill. Where the ends lie as far along the way,
-/// within [`ON`], the chord joins them, and takes in the lens between it and the run. A chord that would
-/// cross the new ring, or `part`'s outline, gives way to the one that joins the ends; `None` when neither is
-/// left.
+/// narrow part, with `meter`'s work: the chord [`square`] to the way the part runs on, and else, or where it
+/// would cross the new ring or `part`'s outline, the chord that joins the run's ends, which takes in the lens
+/// between it and the run. `None` when neither is left, or when the ring keeps no more than the run's ends.
 fn chord(ring: &[Point], before: usize, after: usize, part: &Polygon, meter: &mut Meter) -> Result<Option<Vec<Point>>, Exhausted> {
     // The ring from the point after the run round to the one before it: a ring whose last edge, back to its
     // first point, is the chord that joins the run's ends.
     let n = ring.len();
     let steps = (before + n - after) % n;
     let kept: Vec<Point> = (0..=steps).filter_map(|k| ring.get((after + k) % n).copied()).collect();
-    let (Some(&a), Some(&b)) = (kept.last(), kept.first()) else { return Ok(None) };
     if kept.len() < 3 {
         return Ok(None);
     }
-    let across = a.distance(b);
-    let mut choices = Vec::new();
-    if let (Some(on_a), Some(on_b)) = (way(a, kept.iter().rev().copied(), across / 2.0), way(b, kept.iter().copied(), across / 2.0)) {
-        let along = math::hypot(on_a.0 + on_b.0, on_a.1 + on_b.1);
-        let depth = |q: Point| (q.x() * (on_a.0 + on_b.0) + q.y() * (on_a.1 + on_b.1)) / along;
-        let within = |from: Point, q: Point| q.distance(from) <= 2.0 * across;
-        if depth(a) > depth(b) + ON {
-            // From the run's start square across to the side that runs on from its end.
-            let edges = kept.windows(2).map(|w| (w[0], w[1])).take_while(|&(from, _)| within(a, from));
-            if let Some((i, foot)) = crossing(depth(a), &depth, edges) {
-                let mut cut = vec![foot];
-                cut.extend(kept.iter().skip(i + 1).copied().filter(|&q| q != foot));
-                choices.push(cut);
-            }
-        } else if depth(b) > depth(a) + ON {
-            // From the run's end square across to the side that runs back from its start.
-            let edges = kept.windows(2).rev().map(|w| (w[1], w[0])).take_while(|&(from, _)| within(b, from));
-            if let Some((i, foot)) = crossing(depth(b), &depth, edges) {
-                let mut cut: Vec<Point> = kept.iter().take(steps - i).copied().filter(|&q| q != foot).collect();
-                cut.push(foot);
-                choices.push(cut);
-            }
-        }
-    }
-    choices.push(kept);
-    for cut in choices {
+    for cut in square(&kept, steps).into_iter().chain(std::iter::once(kept)) {
         meter.charge(1)?;
         if crosses_nothing(&cut, part, meter)? {
             return Ok(Some(cut));
         }
     }
     Ok(None)
+}
+
+/// `kept`, the ring after a run up to the point before it, `steps` points round from its first, closed by a
+/// chord square to the way the part runs on from the run: the mean of its 2 sides' ways, each from the run's
+/// end to the first point of its side at least half the run's own chord away. The chord runs from the end of
+/// the run that lies farther along that way to the other side, no farther than twice the run's chord from
+/// that end, and what lies between the chord and the run goes to the fill. `None` when the ends lie as far
+/// along the way, within [`ON`], or the other side reaches as far within that distance nowhere.
+fn square(kept: &[Point], steps: usize) -> Option<Vec<Point>> {
+    let (&a, &b) = (kept.last()?, kept.first()?);
+    let across = a.distance(b);
+    let (on_a, on_b) = (way(a, kept.iter().rev().copied(), across / 2.0)?, way(b, kept.iter().copied(), across / 2.0)?);
+    let along = math::hypot(on_a.0 + on_b.0, on_a.1 + on_b.1);
+    let depth = |q: Point| (q.x() * (on_a.0 + on_b.0) + q.y() * (on_a.1 + on_b.1)) / along;
+    let within = |from: Point, q: Point| q.distance(from) <= 2.0 * across;
+    if depth(a) > depth(b) + ON {
+        // From the run's start square across to the side that runs on from its end.
+        let edges = kept.windows(2).map(|w| (w[0], w[1])).take_while(|&(from, _)| within(a, from));
+        let (i, foot) = crossing(depth(a), &depth, edges)?;
+        Some(std::iter::once(foot).chain(kept.iter().skip(i + 1).copied().filter(|&q| q != foot)).collect())
+    } else if depth(b) > depth(a) + ON {
+        // From the run's end square across to the side that runs back from its start.
+        let edges = kept.windows(2).rev().map(|w| (w[1], w[0])).take_while(|&(from, _)| within(b, from));
+        let (i, foot) = crossing(depth(b), &depth, edges)?;
+        Some(kept.iter().take(steps - i).copied().filter(|&q| q != foot).chain(std::iter::once(foot)).collect())
+    } else {
+        None
+    }
 }
 
 /// The way a side of the outline runs from `from`, through the points of `side` in order: to the first at
