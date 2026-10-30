@@ -47,7 +47,8 @@ File references below are to the first unless a version is named. The
   300 s, once the user allows it at install, and runs in the background. From 0.18 a run pays nothing for
   compiling the functions it calls, which wasmi does at each one's first call. Before, a first run paid,
   and could stop with most of its budget left when the 20 M-instruction slice it was in ran out while a
-  function compiled.
+  function compiled. From M13.2 on, the gate's Level B found 0.17.0's command line stopping the PES
+  exporter so on the test sheet TS-04, an export that takes 34 M instructions in 0.18.0's host.
 - **Live-effect input** is the object's geometry: `type`, `path`, `fillRule`, `bounds`. From 0.14 it
   holds the object's `fills` and `strokes` too, read only, each stroke with its width, and from 0.15 its
   join, cap and miter limit. `_context.item` says whether the effect is on the object or on one of its
@@ -250,7 +251,7 @@ An export may run 10 billion instructions, and 4,000 more for each byte of the d
 The engine's budget is `stitch export`'s, so a design that needs more is stopped by VectorCraft with its
 own error, `plug-in exceeded its instruction budget`, and `stitch export` writes it. The contract test
 `req_vc_011_a_fill_of_the_whole_hoop_exports_within_vectorcraft_s_limits` measures the largest designs
-the reference machine sews (VectorCraft 0.16.0 and 0.17.0 alike, 2026-10-25):
+the reference machine sews (VectorCraft 0.16.0 to 0.18.0 alike, 2026-10-29):
 
 | Design, each fill with its defaults | Instructions | Of those allowed |
 |---|---|---|
@@ -370,8 +371,8 @@ run gets about 52 million. The rails are the line offset as GEOS offsets it, whi
 the whole stroke for each rail. So Stroke to Satin is a heavy filter (P4): VectorCraft 0.17 gives each run 1 G
 instructions and 300 s, once the user allows it at install, and runs it in the background. The contract
 test `req_vc_014_stroke_to_satin_makes_columns_that_export_as_the_lines_did` converts M6.4's lines in
-VectorCraft 0.17.0's host, 3 mm wide, as `plugin.run` runs a filter, and StitchCraft's PES exporter
-writes each column's file as it wrote the line's (2026-10-25):
+VectorCraft 0.17.0's and 0.18.0's hosts alike, 3 mm wide, as `plugin.run` runs a filter, and StitchCraft's
+PES exporter writes each column's file as it wrote the line's (2026-10-29):
 
 | Line, 3 mm wide | Instructions | Of those allowed |
 |---|---|---|
@@ -400,8 +401,8 @@ would drop them. Only the `documentData` every filter gets from 0.16 tells them 
 filter declines with `SC-E0813`. The sheets drawn stitch by stitch are plans, which no object holds.
 
 The contract test `req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits`
-draws each sheet into a new document in VectorCraft 0.17.0's host, and exports it with the PES exporter
-(2026-10-25). Drawing takes 14 to 25 million instructions, at most half of a light filter's run.
+draws each sheet into a new document in VectorCraft 0.17.0's and 0.18.0's hosts alike, and exports it with
+the PES exporter (2026-10-29). Drawing takes 14 to 25 million instructions, at most half of a light filter's run.
 Exporting takes 23 million to 1.6 billion, at most 17 % of an export's, the most for the fills of TS-07,
 TS-08 and TS-09.
 
