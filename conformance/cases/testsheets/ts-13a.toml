@@ -1,0 +1,15 @@
+# Test pictures of neighbours and sewing order, digitized automatically above and sewn in paint order below:
+# a badge traced abutting and one stacked, specks round a disc, a row of badges drawn badge by badge, and a
+# shape that runs on beside another. The sheet draws only as the engine says what it digitized, merged, left
+# out and reordered; the diagnostics here are the hoop's, of which there are none. The invariants
+# (REQ-PLAN-…) run on the sheet's plan; the golden file is the bytes MC-8 sews.
+id = "ts-13a"
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PLAN-007", "REQ-PRF-002", "REQ-FMT-001"]
+kind = "testsheet"
+sheet = "TS-13A"
+profile = "brother-pe800-5x7"
+
+[expect]
+size_mm = [125.991816, 168.0]
+diagnostics = []
+golden = ["golden/testsheets/TS-13A.pes"]

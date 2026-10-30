@@ -400,7 +400,9 @@ elsewhere across a shape, and the sheet looks the same. The threads lose their n
 palette, since VectorCraft unlinks the swatch of a paint a filter gives, and the PES file is the same.
 VectorCraft 0.15 keeps the records, but with an empty selection it looks to a filter as 0.14 does, which
 would drop them. Only the `documentData` every filter gets from 0.16 tells them apart, so before 0.16 the
-filter declines with `SC-E0813`. The sheets drawn stitch by stitch are plans, which no object holds.
+filter declines with `SC-E0813`. The sheets drawn stitch by stitch are plans, which no object holds. The
+TS-13 sheets are designs whose shapes StitchCraft digitizes automatically (`TestSheet::digitized`), which
+no object can say before the Auto effect (M13.7), so the filter doesn't offer them either.
 
 The contract test `req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits`
 draws each sheet into a new document in VectorCraft 0.17.0's and 0.18.0's hosts alike, and exports it with

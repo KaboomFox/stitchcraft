@@ -4,7 +4,8 @@
 //!
 //! **Which sheets.** Those drawn as designs, TS-02B to TS-09, whose elements are shapes with settings
 //! ([`TestSheet::design`]). The others are drawn stitch by stitch, as plans, which no object holds, and only
-//! `stitch testsheet` writes them.
+//! `stitch testsheet` writes them. So do the TS-13 sheets: their shapes are digitized automatically
+//! ([`TestSheet::digitized`]), which no object can say before VectorCraft's Auto effect (M13.7).
 //!
 //! **What it draws.** The sheet's design moved by whole millimetres, so that the middle of its bounds is as
 //! near the middle of the artboard VectorCraft names as that allows: the artboard under the selection, or
@@ -49,9 +50,9 @@ pub const SHEET: &str = "sheet";
 /// The page that says how to draw a test sheet in VectorCraft, which the sheet's help links to.
 const PAGE: &str = "user/how-to/embroider-a-vectorcraft-design.html#draw-a-test-sheet";
 
-/// The sheets drawn as designs, which the filter draws, in protocol order.
+/// The sheets drawn as designs of shapes with settings, which the filter draws, in protocol order.
 pub fn sheets() -> impl Iterator<Item = &'static TestSheet> {
-    SHEETS.iter().filter(|sheet| sheet.designed())
+    SHEETS.iter().filter(|sheet| sheet.designed() && !sheet.digitized())
 }
 
 /// The filter's dialog: a choice of the sheets, by their ids, the first by default, with what each tests.
