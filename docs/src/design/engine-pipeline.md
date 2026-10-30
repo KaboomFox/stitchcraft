@@ -18,7 +18,8 @@ with `--auto`, becomes the ordinary elements its width calls for, with the setti
 (`stitchcraft_engine::auto::digitized`, [image to embroidery](image-to-embroidery.md#stitch-types-by-width)).
 
 - An area is sewn as it is, apart from its narrow parts: each becomes a running stitch along its centre
-  line (M13.4), and the rest of the area the fill of its other parts.
+  line (M13.4), or, no wider than a satin column, satin columns along its centre lines (M13.5), and the
+  rest of the area the fill of its other parts.
 - A line that runs is sewn as it is, tripled from 0.5 mm wide.
 - A line sewn as a satin column becomes a column for each of its subpaths, or the fill of a subpath a
   column cannot follow (`SC-I0902`).

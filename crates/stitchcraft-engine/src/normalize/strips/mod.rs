@@ -30,6 +30,15 @@
 //!
 //! A part that is a ring of strips, such as a letter O, has a closed line. A part whose ends' caps meet,
 //! a dot, has none. Every step costs a unit of work.
+//!
+//! The lines and the triangles they cross are a part's [`Skeleton`], which also keeps where each point of a
+//! line lies, on a chord, in a junction or at a tip, and which triangle each piece of a line crosses. A
+//! part no wider than a satin column sews a column along each of its lines ([`columns`]), between its own
+//! outlines, its lines found with only the branches to a tip left out as bumps ([`Bumps`]).
+
+mod columns;
+
+pub(crate) use columns::{Column, columns};
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -42,6 +51,21 @@ use super::triangulation::{self, Broken, Triangle, Triangulation};
 /// still be a bump of the outline, or the corner of a sharp turn, which a line along the middle cuts. The
 /// corner of a turn of 36° lies within it (`req_auto_014_a_sharp_turn_is_one_line`).
 pub(crate) const BUMP: f64 = 2.0;
+
+/// Which branches from a junction to an end no longer than [`BUMP`] times the junction triangle's longest
+/// edge are bumps, left out of the lines.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Bumps {
+    /// Every one: a narrow part's lines.
+    All,
+    /// Only one that ends at a tip, a corner the line runs on to, and ends at its junction too, the 2 other
+    /// branches there running on most nearly straight, as the corners of a slanted or a wide square end do
+    /// beside the one the line runs on to. One that ends in a cap is an arm with an end of its own, as each
+    /// arm of the crossbar of a t is, which a column beside it would cover with stitches out along the arm;
+    /// and one to a tip that another runs on into is that line's end, as each leg of an A runs on into a
+    /// corner of its flat top. A part's columns' lines ([`columns`]).
+    Tips,
+}
 
 /// A centre line.
 #[derive(Clone, Debug, PartialEq)]
@@ -63,22 +87,71 @@ impl Line {
 /// The centre lines of `part`, cut into triangles with no edge of the part longer than `longest`, in the
 /// order they are sewn, with `meter`'s work; none for a dot. A triangulation that loses its shape is a bug.
 pub(crate) fn centre_lines(part: &Polygon, longest: f64, meter: &mut Meter) -> Result<Result<Vec<Line>, Broken>, Exhausted> {
-    let triangulation = match triangulation::triangulate(part, longest, meter)? {
-        Ok(triangulation) => triangulation,
-        Err(broken) => return Ok(Err(broken)),
-    };
-    Ok(Ok(through(&triangulation, meter)?))
+    match skeleton(part, longest, Bumps::All, meter)? {
+        Ok(skeleton) => Ok(Ok(skeleton.sewn(meter)?)),
+        Err(broken) => Ok(Err(broken)),
+    }
 }
 
-/// The centre lines through the triangles of `triangulation`, in the order they are sewn, with `meter`'s
-/// work.
-fn through(triangulation: &Triangulation, meter: &mut Meter) -> Result<Vec<Line>, Exhausted> {
-    let roles = roles(triangulation, meter)?;
-    let mut graph = Graph::of(triangulation, &roles, meter)?;
-    graph.prune(meter)?;
-    let pairs = graph.pairs(meter)?;
-    let lines = graph.lines(&pairs, meter)?;
-    ordered(lines, meter)
+/// The skeleton of `part`, cut into triangles with no edge of the part longer than `longest`, its `bumps`
+/// left out, with `meter`'s work. A triangulation that loses its shape is a bug.
+fn skeleton(part: &Polygon, longest: f64, bumps: Bumps, meter: &mut Meter) -> Result<Result<Skeleton, Broken>, Exhausted> {
+    match triangulation::triangulate(part, longest, meter)? {
+        Ok(triangulation) => Ok(Ok(Skeleton::of(triangulation, bumps, meter)?)),
+        Err(broken) => Ok(Err(broken)),
+    }
+}
+
+/// A part's triangles and the centre lines through them, as they were walked.
+pub(crate) struct Skeleton {
+    /// The part cut into triangles.
+    triangulation: Triangulation,
+    /// The points of the lines and how they join, the bumps left out.
+    graph: Graph,
+    /// The lines, as the points of [`Self::graph`] they pass through, in the order they were walked.
+    walked: Vec<Walked>,
+}
+
+impl Skeleton {
+    /// The centre lines through the triangles of `triangulation`, its `bumps` left out, with `meter`'s work.
+    fn of(triangulation: Triangulation, bumps: Bumps, meter: &mut Meter) -> Result<Skeleton, Exhausted> {
+        let roles = roles(&triangulation, meter)?;
+        let mut graph = Graph::of(&triangulation, &roles, meter)?;
+        graph.prune(bumps, meter)?;
+        let pairs = graph.pairs(meter)?;
+        let walked = graph.lines(&pairs, meter)?;
+        Ok(Skeleton { triangulation, graph, walked })
+    }
+
+    /// The centre lines, in the order they are sewn, with `meter`'s work.
+    fn sewn(&self, meter: &mut Meter) -> Result<Vec<Line>, Exhausted> {
+        ordered(self.walked.iter().map(|walked| self.line(walked)).collect(), meter)
+    }
+
+    /// The centre line `walked` as points.
+    fn line(&self, walked: &Walked) -> Line {
+        Line { points: walked.nodes.iter().map(|&node| self.graph.point(node)).collect(), closed: walked.closed }
+    }
+}
+
+/// A centre line as it was walked: the points of the graph it passes through.
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct Walked {
+    /// The points, in the order walked.
+    nodes: Vec<usize>,
+    /// Whether it closes, its last point joined to its first.
+    closed: bool,
+}
+
+/// Where a point of a centre line lies.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Node {
+    /// The middle of the chord between 2 triangles: the triangles, the lesser first, and the chord's corners.
+    Chord { triangles: (usize, usize), corners: (usize, usize) },
+    /// The middle of a junction triangle.
+    Junction(usize),
+    /// An end's corner that is a tip, in the end's triangle.
+    Tip { triangle: usize },
 }
 
 /// What a triangle is to the centre line.
@@ -160,10 +233,14 @@ fn roles(triangulation: &Triangulation, meter: &mut Meter) -> Result<Vec<Role>, 
 struct Graph {
     /// Each point.
     points: Vec<Point>,
+    /// Where each point lies.
+    nodes: Vec<Node>,
     /// The points each point is joined to.
     links: Vec<Vec<usize>>,
     /// For a junction's middle, its triangle's longest edge.
     size: Vec<Option<f64>>,
+    /// The triangle each piece of the line between 2 points crosses, by the 2 points ([`edge`]).
+    inside: BTreeMap<(usize, usize), usize>,
 }
 
 impl Graph {
@@ -171,7 +248,7 @@ impl Graph {
     /// crosses: the middle of each chord of such a triangle, of each junction triangle, and each tip.
     fn of(triangulation: &Triangulation, roles: &[Role], meter: &mut Meter) -> Result<Graph, Exhausted> {
         let Triangulation { points, triangles } = triangulation;
-        let mut graph = Graph { points: Vec::new(), links: Vec::new(), size: Vec::new() };
+        let mut graph = Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() };
         // The point at the middle of each chord, by the 2 triangles it lies between.
         let mut at_chord: BTreeMap<(usize, usize), usize> = BTreeMap::new();
         let corner = |i: usize| points.get(i).copied();
@@ -190,9 +267,9 @@ impl Graph {
                 let node = match at_chord.get(&key) {
                     Some(&node) => node,
                     None => {
-                        let (a, b) = triangle.edge(k);
-                        let (Some(a), Some(b)) = (corner(a), corner(b)) else { continue };
-                        let node = graph.add(a.lerp(b, 0.5), None);
+                        let (i, j) = triangle.edge(k);
+                        let (Some(a), Some(b)) = (corner(i), corner(j)) else { continue };
+                        let node = graph.add(a.lerp(b, 0.5), None, Node::Chord { triangles: key, corners: (i, j) });
                         at_chord.insert(key, node);
                         node
                     }
@@ -203,20 +280,20 @@ impl Graph {
                 let [a, b, c] = triangle.corners.map(|i| corner(i).unwrap_or(Point::ORIGIN));
                 let centre = Point::new((a.x() + b.x() + c.x()) / 3.0, (a.y() + b.y() + c.y()) / 3.0).unwrap_or(a);
                 let size = a.distance(b).max(b.distance(c)).max(c.distance(a));
-                let node = graph.add(centre, Some(size));
+                let node = graph.add(centre, Some(size), Node::Junction(t));
                 for &end in &ends {
-                    graph.join(node, end);
+                    graph.join(node, end, t);
                 }
                 continue;
             }
             match (ends.as_slice(), role) {
                 ([only], Role::Tip(tip)) => {
-                    if let Some(tip) = corner(*tip) {
-                        let node = graph.add(tip, None);
-                        graph.join(*only, node);
+                    if let Some(at) = corner(*tip) {
+                        let node = graph.add(at, None, Node::Tip { triangle: t });
+                        graph.join(*only, node, t);
                     }
                 }
-                ([a, b], _) => graph.join(*a, *b),
+                ([a, b], _) => graph.join(*a, *b, t),
                 // A lone triangle is a dot, and an end that isn't a tip lies in its cap.
                 _ => {}
             }
@@ -224,19 +301,21 @@ impl Graph {
         Ok(graph)
     }
 
-    /// Adds point `p`, a junction's middle when it has a `size`, and gives its index.
-    fn add(&mut self, p: Point, size: Option<f64>) -> usize {
+    /// Adds point `p`, lying where `node` says, a junction's middle when it has a `size`, and gives its index.
+    fn add(&mut self, p: Point, size: Option<f64>, node: Node) -> usize {
         self.points.push(p);
+        self.nodes.push(node);
         self.links.push(Vec::new());
         self.size.push(size);
         self.points.len() - 1
     }
 
-    /// Joins points `a` and `b`.
-    fn join(&mut self, a: usize, b: usize) {
+    /// Joins points `a` and `b` across triangle `triangle`.
+    fn join(&mut self, a: usize, b: usize, triangle: usize) {
         for (from, to) in [(a, b), (b, a)] {
             self.links.get_mut(from).into_iter().for_each(|links| links.push(to));
         }
+        self.inside.insert(edge(a, b), triangle);
     }
 
     /// Parts points `a` and `b`.
@@ -280,10 +359,10 @@ impl Graph {
         (0..self.points.len()).filter(|&p| self.size.get(p).copied().flatten().is_some() && self.degree(p) == 3).collect()
     }
 
-    /// Leaves out the bumps: at each junction, the shortest branch to an end no longer than [`BUMP`] times
-    /// the junction's longest edge, until no junction has one.
-    fn prune(&mut self, meter: &mut Meter) -> Result<(), Exhausted> {
+    /// Leaves out the `bumps`: at each junction, the shortest, until no junction has one.
+    fn prune(&mut self, bumps: Bumps, meter: &mut Meter) -> Result<(), Exhausted> {
         loop {
+            let pairs = if bumps == Bumps::Tips { self.pairs(meter)? } else { BTreeMap::new() };
             let mut shortest: Option<(f64, usize, usize, Vec<usize>)> = None;
             for junction in self.junctions() {
                 let size = self.size.get(junction).copied().flatten().unwrap_or(0.0);
@@ -291,7 +370,11 @@ impl Graph {
                     let path = self.branch(junction, first, meter)?;
                     let end = path.last().copied().unwrap_or(first);
                     let length = self.along(junction, &path);
-                    if self.degree(end) == 1 && length <= BUMP * size && shortest.as_ref().is_none_or(|(best, ..)| length < *best) {
+                    let ends_there = pairs.get(&junction).is_none_or(|&(a, b)| first != a && first != b);
+                    let bump = self.degree(end) == 1
+                        && length <= BUMP * size
+                        && (bumps == Bumps::All || matches!(self.nodes.get(end), Some(Node::Tip { .. })) && ends_there);
+                    if bump && shortest.as_ref().is_none_or(|(best, ..)| length < *best) {
                         shortest = Some((length, junction, first, path));
                     }
                 }
@@ -341,7 +424,7 @@ impl Graph {
 
     /// The lines: from each end, then from each junction along its third branch, then round each ring left,
     /// each line going on through a junction along the branch paired with the one it came by.
-    fn lines(&self, pairs: &BTreeMap<usize, (usize, usize)>, meter: &mut Meter) -> Result<Vec<Line>, Exhausted> {
+    fn lines(&self, pairs: &BTreeMap<usize, (usize, usize)>, meter: &mut Meter) -> Result<Vec<Walked>, Exhausted> {
         let mut walked: BTreeSet<(usize, usize)> = BTreeSet::new();
         let mut lines = Vec::new();
         let ends = (0..self.points.len()).filter(|&p| self.degree(p) == 1).map(|p| (p, self.links.get(p).and_then(|l| l.first().copied())));
@@ -361,7 +444,7 @@ impl Graph {
                 }
             }
         }
-        lines.retain(|line| line.points.len() >= 2);
+        lines.retain(|line| line.nodes.len() >= 2);
         Ok(lines)
     }
 
@@ -378,16 +461,16 @@ impl Graph {
         pairs: &BTreeMap<usize, (usize, usize)>,
         walked: &mut BTreeSet<(usize, usize)>,
         meter: &mut Meter,
-    ) -> Result<Line, Exhausted> {
-        let mut path = vec![from];
+    ) -> Result<Walked, Exhausted> {
+        let mut nodes = vec![from];
         let (mut prev, mut at) = (from, first);
         loop {
             meter.charge(1)?;
             walked.insert(edge(prev, at));
             if at == from {
-                return Ok(Line { points: path.iter().map(|&p| self.point(p)).collect(), closed: true });
+                return Ok(Walked { nodes, closed: true });
             }
-            path.push(at);
+            nodes.push(at);
             let next = match (self.degree(at), pairs.get(&at)) {
                 (2, _) => self.links.get(at).and_then(|l| l.iter().copied().find(|&p| p != prev)),
                 (3, Some(&(a, b))) if prev == a => Some(b),
@@ -396,7 +479,7 @@ impl Graph {
             };
             match next {
                 Some(next) if !walked.contains(&edge(at, next)) => (prev, at) = (at, next),
-                _ => return Ok(Line { points: path.iter().map(|&p| self.point(p)).collect(), closed: false }),
+                _ => return Ok(Walked { nodes, closed: false }),
             }
         }
     }

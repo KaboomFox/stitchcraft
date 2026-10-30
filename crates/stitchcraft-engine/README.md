@@ -45,7 +45,10 @@ their order unless `--sort-colours` is given (`Design::sort_colours`), and an el
 it keeps its place. Since M13.4 a part of an automatic area narrower than the narrowest satin stroke
 everywhere runs along its centre line (`auto::narrow`), which a constrained Delaunay triangulation of the
 part (`normalize::triangulation`) gives through the middles of its chords (`normalize::strips`). A running
-stitch that automatic digitizing makes is tripled from 0.5 mm wide.
+stitch that automatic digitizing makes is tripled from 0.5 mm wide. Since M13.5 a part no wider than a satin
+column sews as satin columns along its centre lines, between its own outlines (`auto::columns`,
+`normalize::strips::columns`), drawn with rails and rungs (`generators::satin::drawn::from_rails`), and
+every automatic satin column has the underlay of its width and a pull compensation of 0.4 mm.
 Since M6.12 a column drawn as one path can be drawn with its rails and rungs instead, for a host's Stroke
 to Satin tool (`generators::satin::drawn`). They sew as the column does. A design can be moved
 (`Design::moved`), as a host draws a test sheet (`testsheets`, `TestSheet::design`).

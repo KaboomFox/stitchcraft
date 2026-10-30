@@ -182,17 +182,18 @@ fn req_auto_007_an_area_covered_whole_by_an_area_sewn_after_it_sews_nothing() {
 
 #[test]
 fn req_auto_007_an_area_covered_whole_sews_nothing_however_near_the_edge_of_what_covers_it() {
-    // 3.6 mm² under the cover's left edge: cut 0.4 mm inside that edge, it would leave a sliver 0.3 mm wide
-    // that the cover sews over. It is 1.2 mm wide, wider than a narrow part, which runs (REQ-AUTO-013).
+    // 60 mm² under the cover's left edge: cut 0.4 mm inside that edge, it would leave a sliver 0.3 mm wide
+    // that the cover sews over. It is 7.5 mm wide, wider than a satin column, which a part as narrow as that
+    // sews as (REQ-AUTO-016).
     let (out, diagnostics) =
-        sewn(vec![rect("hidden", (0.1, 2.0), (1.3, 5.0)), rect("cover", (0.0, 0.0), (20.0, 20.0)), rect("far", (30.0, 0.0), (35.0, 5.0))]);
+        sewn(vec![rect("hidden", (0.1, 2.0), (7.6, 10.0)), rect("cover", (0.0, 0.0), (20.0, 20.0)), rect("far", (30.0, 0.0), (35.0, 5.0))]);
     assert_eq!(ids(&out), ["cover", "far"]);
     assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: This area is covered by the areas sewn after it, so it sews nothing."]);
     // A part of an area that lies under the cover whole is left out, and the rest is cut away as usual.
     let (out, diagnostics) = sewn(vec![
         automatic(fill(
             "parts",
-            &[&[(0.1, 2.0), (1.3, 2.0), (1.3, 5.0), (0.1, 5.0)], &[(-10.0, 0.0), (-1.0, 0.0), (-1.0, 10.0), (-10.0, 10.0)]],
+            &[&[(0.1, 2.0), (7.6, 2.0), (7.6, 10.0), (0.1, 10.0)], &[(-10.0, 0.0), (-1.0, 0.0), (-1.0, 10.0), (-10.0, 10.0)]],
             &RED,
             &[],
         )),
@@ -414,14 +415,15 @@ fn req_auto_009_a_background_that_needs_more_work_to_find_than_the_budget_allows
 
 #[test]
 fn diag_sc_i0904_areas_reach_under_the_shapes_sewn_after_them_or_are_cut_away() {
-    // 2 areas reach under the next, and the lowest of 3 stacked areas is cut away under the 2 above it.
+    // 2 areas reach under the next, and the lowest of 3 stacked areas is cut away under the 2 above it, each
+    // wider than a satin column, which a part as narrow as that sews as (REQ-AUTO-016).
     let (_, diagnostics) = sewn(vec![
         rect("a", (0.0, 0.0), (10.0, 10.0)),
         rect("b", (10.0, 0.0), (20.0, 10.0)),
         rect("c", (20.0, 0.0), (30.0, 10.0)),
         rect("under", (0.0, 20.0), (30.0, 40.0)),
-        rect("over1", (5.0, 25.0), (12.0, 35.0)),
-        rect("over2", (18.0, 25.0), (25.0, 35.0)),
+        rect("over1", (4.0, 25.0), (12.0, 35.0)),
+        rect("over2", (18.0, 25.0), (26.0, 35.0)),
     ]);
     let [summary] = said(&diagnostics, Code::AutoUnder).try_into().unwrap();
     assert_eq!(

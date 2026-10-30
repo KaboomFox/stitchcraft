@@ -108,7 +108,8 @@ Geometry that Ink/Stitch leaves to shapely is checked against shapely's own answ
 
 Their answers are fixtures under `conformance/fixtures/geometry/`, one question to a line of text, and the
 engine's unit tests read them with a shared reader (`normalize::fixture`) and answer every question the
-same way. Regenerating a fixture needs shapely, and checking it does not.
+same way. Regenerating a fixture needs shapely, and checking it does not. The same module draws, from
+their corners, the parts that the unit tests of centre lines and columns take.
 
 The `plan` kind takes a design, an SVG file or a VectorCraft document, the whole way to machine files, as
 `stitch plan` does for a profile. It checks the plan, and compares the files written from it with golden

@@ -7,7 +7,7 @@ use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Exhausted, Meter};
 
 use super::*;
-use crate::normalize::region::geom;
+use crate::normalize::fixture::part;
 
 fn p(x: f64, y: f64) -> Point {
     Point::new(x, y).unwrap()
@@ -15,18 +15,6 @@ fn p(x: f64, y: f64) -> Point {
 
 fn meter() -> Meter {
     Budget::DEFAULT.meter()
-}
-
-/// A part with the outline `outline` and the holes `holes`, wound as a region winds them.
-fn part(outline: &[(f64, f64)], holes: &[&[(f64, f64)]]) -> Polygon {
-    let ring = |points: &[(f64, f64)], clockwise: bool| {
-        let mut ring: Vec<Point> = points.iter().map(|&(x, y)| p(x, y)).collect();
-        if (geom::signed_area(&geom::closed(&ring)) < 0.0) != clockwise {
-            ring.reverse();
-        }
-        geom::closed(&ring)
-    };
-    Polygon { outline: ring(outline, true), holes: holes.iter().map(|hole| ring(hole, false)).collect() }
 }
 
 /// The centre lines of `part` with pieces no longer than `longest`.
@@ -133,16 +121,27 @@ fn req_auto_014_a_sharp_turn_is_one_line() {
     assert!(found[0].length() > 25.0, "{found:?}");
 }
 
-/// A graph of `points`, each a junction's middle when it has a size, joined as `links` says, in turn.
+/// A graph of `points`, each a junction's middle when it has a size, joined as `links` says, in turn. Where
+/// each point lies, and the triangle each link crosses, are made up: only the points and links count here.
 fn graph(points: &[((f64, f64), Option<f64>)], links: &[(usize, usize)]) -> Graph {
-    let mut graph = Graph { points: Vec::new(), links: Vec::new(), size: Vec::new() };
-    for &((x, y), size) in points {
-        graph.add(p(x, y), size);
+    let mut graph = Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() };
+    for (i, &((x, y), size)) in points.iter().enumerate() {
+        graph.add(p(x, y), size, Node::Junction(i));
     }
     for &(a, b) in links {
-        graph.join(a, b);
+        graph.join(a, b, 0);
     }
     graph
+}
+
+/// The points of `walked`, a line of `graph`, and whether it closes.
+fn walked_points(graph: &Graph, walked: &Walked) -> (Vec<(f64, f64)>, bool) {
+    (walked.nodes.iter().map(|&node| graph.point(node)).map(|q| (q.x(), q.y())).collect(), walked.closed)
+}
+
+/// The centre lines through the triangles of `triangulation`, in the order they are sewn.
+fn through(triangulation: &Triangulation) -> Vec<Line> {
+    Skeleton::of(triangulation.clone(), Bumps::All, &mut meter()).unwrap().sewn(&mut meter()).unwrap()
 }
 
 #[test]
@@ -152,7 +151,7 @@ fn req_auto_014_a_junctions_bumps_are_left_out_the_shortest_first() {
     // bump is the line's end. Of 2 bumps as long as each other, the one found first is left out.
     let pruned = |bumps: [(f64, f64); 2]| {
         let mut bumped = graph(&[((0.0, 0.0), Some(1.0)), ((10.0, 0.0), None), (bumps[0], None), (bumps[1], None)], &[(0, 1), (0, 2), (0, 3)]);
-        bumped.prune(&mut meter()).unwrap();
+        bumped.prune(Bumps::All, &mut meter()).unwrap();
         bumped.links[0].clone()
     };
     assert_eq!(pruned([(0.0, 0.3), (0.0, -0.5)]), [1, 3]);
@@ -161,7 +160,7 @@ fn req_auto_014_a_junctions_bumps_are_left_out_the_shortest_first() {
     // A bump reaches no further than twice the junction's longest edge: at a junction 0.5 mm across, a branch
     // 1.5 mm long is no bump.
     let mut long = graph(&[((0.0, 0.0), Some(0.5)), ((10.0, 0.0), None), ((-10.0, 0.0), None), ((0.0, 1.5), None)], &[(0, 1), (0, 2), (0, 3)]);
-    long.prune(&mut meter()).unwrap();
+    long.prune(Bumps::All, &mut meter()).unwrap();
     assert_eq!(long.links[0], [1, 2, 3]);
 }
 
@@ -221,8 +220,7 @@ fn req_auto_014_a_junctions_third_branch_is_a_line_of_its_own() {
         &[(1, 3), (1, 4), (1, 0), (2, 5), (2, 6), (2, 0)],
     );
     let pairs = h.pairs(&mut meter()).unwrap();
-    let points = |line: &Line| line.points.iter().map(|q| (q.x(), q.y())).collect::<Vec<_>>();
-    let found: Vec<Vec<(f64, f64)>> = h.lines(&pairs, &mut meter()).unwrap().iter().map(points).collect();
+    let found: Vec<Vec<(f64, f64)>> = h.lines(&pairs, &mut meter()).unwrap().iter().map(|walked| walked_points(&h, walked).0).collect();
     assert_eq!(
         found,
         [vec![(0.0, 0.0), (0.0, 5.0), (0.0, 10.0)], vec![(10.0, 0.0), (10.0, 5.0), (10.0, 10.0)], vec![(0.0, 5.0), (5.0, 5.0), (10.0, 5.0)]]
@@ -251,8 +249,7 @@ fn req_auto_014_a_figure_8_sews_its_waist_once() {
     );
     let pairs = eight.pairs(&mut meter()).unwrap();
     assert_eq!(pairs, BTreeMap::from([(0, (1, 5)), (1, (0, 4))]));
-    let found: Vec<(Vec<(f64, f64)>, bool)> =
-        eight.lines(&pairs, &mut meter()).unwrap().iter().map(|line| (line.points.iter().map(|q| (q.x(), q.y())).collect(), line.closed)).collect();
+    let found: Vec<(Vec<(f64, f64)>, bool)> = eight.lines(&pairs, &mut meter()).unwrap().iter().map(|walked| walked_points(&eight, walked)).collect();
     assert_eq!(
         found,
         [
@@ -284,7 +281,7 @@ fn req_auto_014_ends_are_found_whatever_order_the_triangles_come_in() {
     let line = Line { points: vec![p(0.5, 0.0), p(0.5, 3.0)], closed: false };
     for triangles in [vec![round(1), tip(0)], vec![tip(1), round(0)]] {
         let triangulation = Triangulation { points: points.clone(), triangles };
-        assert_eq!(through(&triangulation, &mut meter()).unwrap(), vec![line.clone()], "{triangulation:?}");
+        assert_eq!(through(&triangulation), vec![line.clone()], "{triangulation:?}");
     }
 }
 

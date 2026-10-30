@@ -172,8 +172,12 @@ A column of 2 rungs or none would be read back otherwise. With 2 rungs, where th
 the rails apart, and the 2 longest lines are taken, which on a column shorter than it is wide are its
 rungs. With none, a path of 2 lines is 2 rails whose nodes pair up. So such a column is drawn with one
 more rung, which pairs the rails' first points: the section it ends has no length, and the column sews as
-before. A line whose rails can't be made (`SC-E0214`), or leave parts of it out (`SC-W0213`), isn't made into
-a column, since the column would sew less than the line. Rails that cross each other aren't drawn
+before. Rails that meet each other, as a pointed column's do at its tip, meet one more line, and only 2
+rungs or more tell them from the rungs: such a column with fewer is drawn with a rung pairing the rails'
+other ends. Automatic digitizing draws the columns it finds in a part as wide as a satin column the same
+way, from their rails and rungs (`drawn::from_rails`, `REQ-AUTO-017`), and reads each back. A line whose
+rails can't be made (`SC-E0214`), or leave parts of it out (`SC-W0213`), isn't made into a column, since the
+column would sew less than the line. Rails that cross each other aren't drawn
 either, since their column reads back with other rails. A line no wider than the design's narrowest satin stroke sews as a
 stroke ([above](#single-path-satin)). Drawn with its rails, it is a satin column as narrow as it is drawn,
 which is what the tool is asked for.

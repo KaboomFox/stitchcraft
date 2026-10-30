@@ -62,6 +62,22 @@ pub const SATIN_METHODS: &[ChoiceOption] =
 /// it out of its dialogs.
 pub const SATIN_COLUMN: &str = "satin_column";
 
+/// The keys of the settings that turn on a satin column's centre walk, contour and zigzag underlays, which
+/// automatic digitizing sets by a column's width.
+pub const CENTER_WALK_UNDERLAY: &str = "center_walk_underlay";
+/// See [`CENTER_WALK_UNDERLAY`].
+pub const CONTOUR_UNDERLAY: &str = "contour_underlay";
+/// See [`CENTER_WALK_UNDERLAY`].
+pub const ZIGZAG_UNDERLAY: &str = "zigzag_underlay";
+
+/// The key of the setting that shortens or lengthens a satin column at its start and its end, with which
+/// automatic digitizing makes a column that ends under another reach under it.
+pub const PUSH_COMPENSATION: &str = "push_compensation_mm";
+
+/// The key of the setting that ends a satin column near where the next element starts, which automatic
+/// digitizing turns off: its order starts the next element near the column's end already.
+pub const END_AT_NEAREST_POINT: &str = "end_at_nearest_point";
+
 /// The stitch types of satin columns, one per method.
 const SATINS: &[StitchType] = &[StitchType::SatinColumn, StitchType::EStitch, StitchType::SStitch, StitchType::SatinZigzag];
 
@@ -522,5 +538,17 @@ mod tests {
     fn the_satin_column_key_is_the_toggle_s() {
         let toggle = SatinParams::SPECS.iter().find(|spec| spec.key == SATIN_COLUMN);
         assert!(toggle.is_some_and(|spec| spec.kind == stitchcraft_params::Kind::Toggle && spec.applies_to == STROKES_AND_SATINS));
+    }
+
+    #[test]
+    fn the_underlay_keys_are_toggles_and_push_compensation_a_pair_of_lengths() {
+        for key in [CENTER_WALK_UNDERLAY, CONTOUR_UNDERLAY, ZIGZAG_UNDERLAY] {
+            let spec = SatinParams::SPECS.iter().find(|spec| spec.key == key);
+            assert!(spec.is_some_and(|spec| spec.kind == stitchcraft_params::Kind::Toggle), "{key}");
+        }
+        let push = SatinParams::SPECS.iter().find(|spec| spec.key == PUSH_COMPENSATION);
+        assert!(push.is_some_and(|spec| matches!(spec.kind, stitchcraft_params::Kind::LengthPair { .. })));
+        let end = SatinParams::SPECS.iter().find(|spec| spec.key == END_AT_NEAREST_POINT);
+        assert!(end.is_some_and(|spec| spec.kind == stitchcraft_params::Kind::Toggle));
     }
 }
