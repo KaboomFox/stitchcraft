@@ -397,3 +397,51 @@ fn closed(ring: &[(f64, f64)]) -> Result<Vec<Point>, SheetError> {
 fn polyline(points: &[(f64, f64)]) -> Result<Vec<Point>, SheetError> {
     Ok(points.iter().map(|&(x, y)| Point::new(x, y)).collect::<Result<_, _>>()?)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The corners of the ring `subpath` draws, in order.
+    fn corners(subpath: &Subpath) -> Vec<(f64, f64)> {
+        std::iter::once(subpath.start).chain(subpath.segments.iter().map(|segment| segment.end())).map(|q| (q.x(), q.y())).collect()
+    }
+
+    /// The subpaths of `element`'s path.
+    fn subpaths(element: &Element) -> &[Subpath] {
+        match &element.shape {
+            Shape::Fill { path, .. } | Shape::Stroke { path, .. } => &path.subpaths,
+        }
+    }
+
+    #[test]
+    fn the_seventh_speck_lies_2_mm_past_the_discs_rim() {
+        // The disc is 12 mm round its centre, and the seventh speck, 0.8 mm square, 14 mm from it, at 210°.
+        let picture = specks((50.0, 40.0)).unwrap();
+        let rings = subpaths(&picture.elements[1]);
+        assert_eq!(rings.len(), 7);
+        let seventh = corners(&rings[6]);
+        let (x, y) = seventh.iter().fold((0.0, 0.0), |(x, y), (qx, qy)| (x + qx / 4.0, y + qy / 4.0));
+        assert!((math::hypot(x - 50.0, y - 40.0) - 14.0).abs() < 1e-9 && x < 50.0 && y < 40.0, "({x}, {y})");
+    }
+
+    #[test]
+    fn the_smile_is_an_arc_10_mm_round_a_point_1_mm_below_the_faces_centre() {
+        let picture = face((50.0, 40.0)).unwrap();
+        let smile = picture.elements.iter().find(|element| element.id.as_str() == "smile").unwrap();
+        let points = corners(&subpaths(smile)[0]);
+        assert!(points.iter().all(|&(x, y)| (math::hypot(x - 50.0, y - 41.0) - 10.0).abs() < 1e-9), "{points:?}");
+    }
+
+    #[test]
+    fn a_star_is_drawn_clockwise_on_the_page_from_its_top_point() {
+        // The y axis points down, as on the page: the star's first point is straight up from its centre, and
+        // its ring then turns clockwise, as the balloon's does.
+        let picture = star((50.0, 40.0), 16.0).unwrap();
+        let points = corners(&subpaths(&picture.elements[0])[0]);
+        let (x, y) = points[0];
+        assert!((x - 50.0).abs() < 1e-9 && (y - 24.0).abs() < 1e-9, "({x}, {y})");
+        let turned: f64 = points.iter().zip(points.iter().cycle().skip(1)).map(|(a, b)| a.0 * b.1 - b.0 * a.1).sum();
+        assert!(turned > 0.0, "{turned}");
+    }
+}
