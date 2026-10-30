@@ -8,7 +8,7 @@
 //! for each shape drawn on it. The box is the one around the defining points of every shape's path
 //! ([`Design::bounds`]), the background's own included, so that a lowest shape that covers less of the
 //! design, a disc in a square say, is a part of the picture and is sewn. A background with settings is
-//! sewn as they say.
+//! sewn as they say, and so is one whose `auto_ignore_background` is off (`REQ-AUTO-020`).
 //!
 //! The background is found before anything is digitized, with the budget's work to itself. One whose
 //! region its fill can't build within that work, or at all, is sewn, and its fill says why. One whose
@@ -18,6 +18,7 @@
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Meter, Point, Rect};
 
 use super::{Failed, joined, no_area, parts_of};
+use crate::auto::AutoParams;
 use crate::design::{Design, FillRule, Path, Shape};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::ops;
@@ -26,13 +27,14 @@ use crate::normalize::region::ops;
 /// what tracing leaves between the picture's edge and the background's.
 pub(super) const BACKGROUND_MARGIN: f64 = 0.5;
 
-/// The picture's background in `design`: `SC-W0906` with the index of the lowest shape, which is the
-/// background and is left out, or without an index when finding out failed, so that it is sewn; `None`
-/// when the lowest shape is not the background.
-pub(in crate::auto) fn background(design: &Design, budget: &Budget) -> Option<(Option<usize>, Diagnostic)> {
+/// The picture's background in `design`, whose lowest shape's settings of the rules are `rules`, none for a
+/// shape with settings: `SC-W0906` with the index of the lowest shape, which is the background and is left
+/// out, or without an index when finding out failed, so that it is sewn; `None` when the lowest shape is not
+/// the background, or sews it.
+pub(in crate::auto) fn background(design: &Design, rules: Option<&AutoParams>, budget: &Budget) -> Option<(Option<usize>, Diagnostic)> {
     let [lowest, _, ..] = design.elements() else { return None };
     let Shape::Fill { path, rule } = &lowest.shape else { return None };
-    if !lowest.automatic {
+    if !rules.is_some_and(|rules| rules.auto_ignore_background) {
         return None;
     }
     let bounds = design.bounds()?;

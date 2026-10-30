@@ -708,10 +708,12 @@ registry! {
     /// `--auto` digitized the design's shapes that have no settings: StitchCraft chose each one's
     /// stitches by its width, measured to the micrometre. An area is a tatami fill; a part of it narrower
     /// than the design's narrowest satin stroke (`min_satin_stroke_width_mm`, 1 mm unless the design sets
-    /// it) everywhere is a running stitch along its centre line, and a part nowhere wider than 7 mm sews
-    /// satin columns along its centre lines. A line no wider than that narrowest stroke is a running
-    /// stitch, a line up to 7 mm wide a satin column as wide as the line, and a wider line a tatami fill of
-    /// the area it paints. A running stitch is tripled from 0.5 mm wide. A line whose every part a satin
+    /// it) everywhere is a running stitch along its centre line, and a part nowhere wider than the widest
+    /// satin column sews satin columns along its centre lines. A line no wider than that narrowest stroke is
+    /// a running stitch, a line up to the widest satin column a satin column as wide as the line, and a
+    /// wider line a tatami fill of the area it paints. A running stitch is tripled from the narrowest triple
+    /// run. The widest satin column is 7 mm and the narrowest triple run 0.5 mm, unless the shape sets
+    /// others (`auto_max_satin_width_mm`, `auto_min_triple_run_width_mm`). A line whose every part a satin
     /// column cannot follow is filled too (`SC-I0902`), and counted as a fill. An area whose every part runs
     /// is counted as a running stitch, one none of which is filled and one of whose parts sews a satin
     /// column as satin columns, and any other as a fill.
@@ -721,34 +723,36 @@ registry! {
     /// automatically.
     AutoDigitized = "SC-I0901", Info, "Shapes digitized automatically";
 
-    /// `--auto` sews a line up to 7 mm wide as a satin column along its path, and a part of an area nowhere
-    /// wider than 7 mm as satin columns along its centre lines, but it can't make a satin column of this
-    /// one. A column cannot follow a part of a line that turns more tightly than the line is wide, so the
+    /// `--auto` sews a line up to the widest satin column as a satin column along its path, and a part of an
+    /// area nowhere wider than that as satin columns along its centre lines, but it can't make a satin column
+    /// of this one. The widest satin column is 7 mm unless the shape sets another (`auto_max_satin_width_mm`).
+    /// A column cannot follow a part of a line that turns more tightly than the line is wide, so the
     /// column's edges would fold over themselves, or that is shorter than a CSS pixel, or that is a dot the
-    /// line's round or square cap draws. The area it paints is filled instead, as a line wider than 7 mm is.
-    /// A part of an area doesn't make columns where the triangles round one of its centre lines don't make a
-    /// column with 2 sides, or where one of its columns, drawn with its rails and rungs, would be read back
+    /// line's round or square cap draws. The area it paints is filled instead, as a wider line is. A part of
+    /// an area doesn't make columns where the triangles round one of its centre lines don't make a column
+    /// with 2 sides, or where one of its columns, drawn with its rails and rungs, would be read back
     /// otherwise. It stays in the area's fill.
     ///
     /// The message says which. To sew it as satin columns, draw the line with gentler turns or narrower, or
     /// the part with smoother edges, or draw the columns with 2 rails each and give them settings.
     AutoSatinFilled = "SC-I0902", Info, "Satin column can't be made; filled";
 
-    /// `--auto` fills the area a line paints when the line is wider than 7 mm, or when a satin column cannot
-    /// follow it, and the area this line paints would reach more than 10 metres from the design's origin,
-    /// beyond what machine files can record. It is left out. A stroke that wide is usually a mistake in
-    /// the file.
+    /// `--auto` fills the area a line paints when the line is wider than the widest satin column, 7 mm unless
+    /// it sets another (`auto_max_satin_width_mm`), or when a satin column cannot follow it, and the area this
+    /// line paints would reach more than 10 metres from the design's origin, beyond what machine files can
+    /// record. It is left out. A stroke that wide is usually a mistake in the file.
     ///
     /// The message gives the line's width. Check the line's stroke width.
     AutoAreaTooLarge = "SC-W0903", Warning, "Line too wide to fill; left out";
 
-    /// `--auto` makes each automatic area reach 0.4 mm under the shapes sewn after it, from where it touches
-    /// them. The thread pulls stitches in from the edges of their shape, and without the overlap fabric shows
-    /// between shapes that only meet. Where an area sewn after it covers part of it, as in a trace that stacks
-    /// its colours, the covered part is cut away, 0.4 mm inside the covering area's edge, and sewn once. A
-    /// satin column or a line sewn after an area goes over it, and the area is sewn whole under it. The
-    /// running stitch along a narrow part of an area covers that part: the areas sewn before it reach
-    /// under it, and when the areas sewn after it cover the part whole it sews nothing.
+    /// `--auto` makes each automatic area reach its overlap, 0.4 mm unless it sets another
+    /// (`auto_overlap_mm`), under the shapes sewn after it, from where it touches them. The thread pulls
+    /// stitches in from the edges of their shape, and without the overlap fabric shows between shapes that
+    /// only meet. Where an area sewn after it covers part of it, as in a trace that stacks its colours, the
+    /// covered part is cut away, its overlap inside the covering area's edge, and sewn once. A satin column
+    /// or a line sewn after an area goes over it, and the area is sewn whole under it. The running stitch
+    /// along a narrow part of an area covers that part: the areas sewn before it reach under it, and when
+    /// the areas sewn after it cover the part whole it sews nothing.
     ///
     /// The message counts the areas that reach under others and those cut away. An area that the areas sewn
     /// after it cover whole sews nothing, and the message names it, as it does a narrow part's line. It also
@@ -758,10 +762,11 @@ registry! {
     /// is drawn, give it settings: in VectorCraft, apply a StitchCraft effect to it.
     AutoUnder = "SC-I0904", Info, "Areas reach under the shapes sewn after them";
 
-    /// `--auto` takes an automatic area smaller than 1 mm², or a part of one that small, for a speck the trace
-    /// left. It is too small to sew, and would sew a knot. It is merged into the automatic area it shares the
-    /// longest edge with, which may be the rest of its own area, and no hole shows where it was. A speck that
-    /// shares no edge with an automatic area is left out.
+    /// `--auto` takes an automatic area smaller than its smallest area, 1 mm² unless it sets another
+    /// (`auto_min_area_mm2`), or a part of one that small, for a speck the trace left. It is too small to
+    /// sew, and would sew a knot. It is merged into the automatic area it shares the longest edge with,
+    /// which may be the rest of its own area, and no hole shows where it was. A speck that shares no edge
+    /// with an automatic area is left out.
     ///
     /// The message gives the speck's area and says where it went: into a neighbour, back to the rest of its
     /// area, or nowhere, as when finding its neighbours needs more work than the budget allows it. To sew it
@@ -771,9 +776,9 @@ registry! {
 
     /// `--auto` takes the lowest shape of the design for the picture's background when it is an automatic
     /// area, other shapes are drawn on it, and it covers the whole design, its holes aside, to within 0.5 mm
-    /// of each side. It is left out. A background is usually the fabric's own colour, and sewing it doubles
-    /// the stitches and stiffens the design. A background that needs more work to find than the budget
-    /// allows is sewn, and the message says so.
+    /// of each side. It is left out, unless it switches `auto_ignore_background` off. A background is usually
+    /// the fabric's own colour, and sewing it doubles the stitches and stiffens the design. A background
+    /// that needs more work to find than the budget allows is sewn, and the message says so.
     ///
     /// To sew it, give it settings: in VectorCraft, apply a StitchCraft effect to it. Ignore White in
     /// VectorCraft's Image Trace leaves a white background out of the trace.

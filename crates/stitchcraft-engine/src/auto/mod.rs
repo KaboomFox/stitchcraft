@@ -10,12 +10,16 @@
 //!
 //! The stitches follow the shape's width at the size it sews ([`Stitches`]), measured to the micrometre,
 //! so that a width written in another unit, which converts to a bound give or take a rounding error, is
-//! that bound:
+//! that bound. Each rule goes by the settings of the element it digitizes, StitchCraft's own parameters
+//! ([`AutoParams`], `REQ-AUTO-020`): its widest satin column, its narrowest triple run, its overlap, its
+//! smallest area and whether it leaves the background out. An element that sets none takes the defaults,
+//! which the requirements give as their numbers, and one with a setting that doesn't read sews nothing
+//! (`SC-E0101`).
 //!
 //! - An area is a tatami fill, with the fill's defaults (`REQ-AUTO-002`), apart from its parts sewn along
 //!   their middles. A part narrower than the design's narrowest satin stroke, `min_satin_stroke_width_mm`,
 //!   everywhere is a running stitch along its centre line (`narrow`, `REQ-AUTO-013`), and a part no wider
-//!   than [`SATIN_MAX_WIDTH`] everywhere is satin columns between its own outlines (`columns`,
+//!   than the widest satin column everywhere is satin columns between its own outlines (`columns`,
 //!   `REQ-AUTO-016`). A part wider than that in places is split (`split`, `REQ-AUTO-019`): its broad parts
 //!   are filled, and its narrow parts, cut square where they meet them, are sorted by their width as a part
 //!   is. They sew after the rest of the area, named after it with `#2`, `#3` and so on, or the first with
@@ -25,10 +29,10 @@
 //!   and a zigzag wider.
 //! - A stroke no wider than the design's narrowest satin stroke is a running stitch along its path
 //!   (`REQ-AUTO-002`): a satin column that narrow is too narrow to stitch across (`REQ-SAT-015`).
-//! - A running stitch is a triple run, bean stitch 1, from [`TRIPLE_RUN_WIDTH`] wide (`REQ-AUTO-015`): a
+//! - A running stitch is a triple run, bean stitch 1, from the narrowest triple run (`REQ-AUTO-015`): a
 //!   stroke as wide as it is drawn, a narrow part as wide as the circles that fit inside it along its
 //!   centre line.
-//! - A stroke up to [`SATIN_MAX_WIDTH`] wide is a satin column as wide as the stroke, its path the
+//! - A stroke up to the widest satin column is a satin column as wide as the stroke, its path the
 //!   column's centre line (`REQ-AUTO-003`, `REQ-SAT-016`). A centre line is one subpath, so a stroke of
 //!   several sews a column for each, in order, the second and later named after the stroke with `#2`, `#3`
 //!   and so on. A traced line's ends are round or square, and the cap is part of the line drawn: an open
@@ -65,15 +69,17 @@ mod area;
 mod columns;
 mod narrow;
 mod neighbours;
+mod params;
 mod split;
 
-pub use neighbours::{OVERLAP, SMALLEST_AREA, TOUCHING};
+pub use neighbours::TOUCHING;
 use neighbours::{Sewn, no_area, parts_of};
+pub use params::{AutoParams, IGNORE_BACKGROUND, MAX_SATIN_WIDTH, MIN_AREA, MIN_TRIPLE_RUN_WIDTH, OVERLAP};
 
 use std::borrow::Cow;
 
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Labels, Meter, Mm, Point};
-use stitchcraft_params::ParamSet;
+use stitchcraft_params::{ParamSet, Validated};
 
 use crate::common::{STOP_AFTER, TRIM_AFTER};
 use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath, within_working_limit};
@@ -86,14 +92,6 @@ use crate::generators::{TooSmall, mm, too_small};
 use crate::normalize::region::{self, Polygon, Unjoined};
 use crate::normalize::strips::Line;
 use crate::normalize::stroke;
-
-/// The widest stroke sewn as a satin column; a wider one is filled. MC-8 confirms or changes it on the
-/// machine (`docs/src/plan/machine-testing.md`).
-pub const SATIN_MAX_WIDTH: Mm = Mm::from_tenths(70);
-
-/// The width from which a running stitch that automatic digitizing makes is a triple run, each stitch sewn 3
-/// times (bean stitch 1): a running stitch sewn once is as fine as the thread. MC-8 confirms or changes it.
-pub const TRIPLE_RUN_WIDTH: Mm = Mm::from_tenths(5);
 
 /// The narrowest automatic satin column with a contour underlay: a narrower one has a centre walk. MC-8
 /// confirms or changes it.
@@ -124,13 +122,13 @@ pub enum Stitches {
 }
 
 impl Stitches {
-    /// The stitches of a stroke `width` wide in a design with `settings`: a running stitch no wider than
-    /// the design's narrowest satin stroke, a satin column no wider than [`SATIN_MAX_WIDTH`], and a fill
-    /// wider than both, each width measured to the micrometre.
-    pub fn of_stroke(width: Mm, settings: &DesignSettings) -> Stitches {
+    /// The stitches of a stroke `width` wide in a design with `settings`, whose settings of the rules are
+    /// `rules`: a running stitch no wider than the design's narrowest satin stroke, a satin column no wider
+    /// than the widest satin column, and a fill wider than both, each width measured to the micrometre.
+    pub fn of_stroke(width: Mm, settings: &DesignSettings, rules: &AutoParams) -> Stitches {
         if at_most(width, settings.min_satin_stroke_width) {
             Stitches::Running
-        } else if at_most(width, SATIN_MAX_WIDTH) {
+        } else if at_most(width, rules.auto_max_satin_width_mm) {
             Stitches::Satin
         } else {
             Stitches::FilledStroke
@@ -155,10 +153,29 @@ fn micrometres(length: f64) -> f64 {
     (length * 1000.0).round()
 }
 
-/// Whether a running stitch `width` millimetres wide is a triple run: from [`TRIPLE_RUN_WIDTH`], to the
-/// micrometre.
-fn tripled(width: f64) -> bool {
-    micrometres(width) >= micrometres(TRIPLE_RUN_WIDTH.get())
+/// Whether a running stitch `width` millimetres wide is a triple run by `rules`: from the narrowest triple
+/// run, to the micrometre.
+fn tripled(width: f64, rules: &AutoParams) -> bool {
+    micrometres(width) >= micrometres(rules.auto_min_triple_run_width_mm.get())
+}
+
+/// The settings of the rules that `params`, an automatic element's, give it ([`AutoParams`]), each its
+/// default when they set none; `None` when one doesn't read, which [`digitize`] says, and the element sews
+/// nothing. A host reads them to tell how a line it reads sews ([`Stitches::of_stroke`]).
+pub fn rules(params: &ParamSet) -> Option<AutoParams> {
+    AutoParams::from_set(params).ok().map(|read| read.params)
+}
+
+/// The settings of the rules that the automatic `element` sets, as [`rules`] reads them, with `SC-W0102` in
+/// `said` for each value read as the nearest it takes; `None`, with `SC-E0101` in `said`, when one doesn't
+/// read, and the element sews nothing (`REQ-AUTO-020`).
+fn read(element: &Element, said: &mut Vec<Diagnostic>) -> Option<AutoParams> {
+    let (rules, diagnostics) = match AutoParams::from_set(&element.params) {
+        Ok(Validated { params, warnings }) => (Some(params), warnings),
+        Err(problems) => (None, problems),
+    };
+    said.extend(diagnostics.into_iter().map(|d| d.with_element(element.id.clone())));
+    rules
 }
 
 /// The underlays an automatic satin column `width` wide turns on (`REQ-AUTO-018`), each width compared to
@@ -175,17 +192,18 @@ pub fn underlay(width: Mm) -> &'static [&'static str] {
     }
 }
 
-/// The settings of an automatic satin column `width` wide: `params`, the column's, with `satin_column` on, the
-/// underlay of its width, pull compensation of [`OVERLAP`] and `end_at_nearest_point` off. The thread pulls a
+/// The settings of an automatic satin column `width` wide whose shape's settings of the rules are `rules`:
+/// `params`, the column's, with `satin_column` on, the underlay of its width, pull compensation of the
+/// overlap and `end_at_nearest_point` off. The thread pulls a
 /// column in from its rails as it pulls an area in from its edges, by the overlap an area reaches under its
 /// neighbours with, and a column whose stitches reach that far past its rails sews as wide as drawn: it meets
 /// the shapes beside it, columns too, with no fabric between. The order starts the next element near the
 /// column's end already, and a column cut where the next element comes nearest would join its pieces with
 /// straight stitches that leave a column that bends, as the arm of a Y bends into its stem.
-fn satin_params(params: &ParamSet, width: Mm) -> ParamSet {
+fn satin_params(params: &ParamSet, width: Mm, rules: &AutoParams) -> ParamSet {
     let mut column = params.clone();
     column.set(SATIN_COLUMN, "true");
-    column.set(PULL_COMPENSATION, OVERLAP.to_string().as_str());
+    column.set(PULL_COMPENSATION, rules.auto_overlap_mm.get().to_string().as_str());
     column.set(END_AT_NEAREST_POINT, "false");
     for key in underlay(width) {
         column.set(*key, "true");
@@ -223,37 +241,44 @@ impl Digitized {
 /// The elements of `design` as they are generated, in the order they sew: each automatic element turned
 /// into the elements its stitches need ([`digitize`]) and named, the others as they are, and the elements
 /// then sewn as neighbours (`auto::neighbours`); and what was said of them: `SC-I0901` for the shapes
-/// digitized, what [`digitize`] says of each, `SC-E0004` for each one left out because digitizing and naming
-/// it needs more work than `budget` allows an element, and what is said of the background, the specks, the
-/// order and the overlaps (`SC-W0906`, `SC-I0905`, `SC-I0907`, `SC-I0904`). A design without automatic
-/// elements that doesn't ask for its threads sorted comes back as it is.
+/// digitized, what [`digitize`] says of each, its settings of the rules first, `SC-E0004` for each one left
+/// out because digitizing and naming it needs more work than `budget` allows an element, and what is said of
+/// the background, the specks, the order and the overlaps (`SC-W0906`, `SC-I0905`, `SC-I0907`,
+/// `SC-I0904`). A design without automatic elements that doesn't ask for its threads sorted comes back as
+/// it is.
 pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>, Vec<Diagnostic>) {
     let elements = design.elements();
     if !design.sort_colours && !elements.iter().any(|element| element.automatic) {
         return (Cow::Borrowed(elements), Vec::new());
     }
     let mut diagnostics = Vec::new();
+    // Each automatic element's settings of the rules, read once: none for an element with settings, or with a
+    // setting that doesn't read, which sews nothing.
+    let rules: Vec<Option<AutoParams>> =
+        elements.iter().map(|element| if element.automatic { read(element, &mut diagnostics) } else { None }).collect();
     // The ids given out: the design's, then each part's that a stroke of several subpaths adds. A design's
     // ids are unique (`Design::new`), so each is taken as it is, which costs no work and cannot fail.
     let mut taken = Labels::default();
     for element in elements {
         let _ = taken.claim(element.id.as_str().to_string(), &mut budget.meter());
     }
-    // The picture's background is left out before anything is digitized.
-    let background = neighbours::background(design, budget);
+    // The picture's background is left out before anything is digitized, unless the lowest shape sews it.
+    let background = neighbours::background(design, rules.first().and_then(Option::as_ref), budget);
     let lowest = background.as_ref().and_then(|(lowest, _)| *lowest);
     let mut counts = Counts::default();
     let mut sewn = Vec::with_capacity(elements.len());
-    for (index, element) in elements.iter().enumerate() {
+    for (index, (element, rules)) in elements.iter().zip(&rules).enumerate() {
         if lowest == Some(index) {
             continue;
         }
         if !element.automatic {
-            sewn.push(Sewn { element: element.clone(), area: false, automatic: false, shape: index, part: None });
+            sewn.push(Sewn { element: element.clone(), area: None, automatic: false, shape: index, part: None });
             continue;
         }
+        // An automatic element with a setting that doesn't read sews nothing, as `SC-E0101` said.
+        let Some(rules) = rules else { continue };
         let mut meter = budget.meter();
-        let made = match digitize(element, &design.settings, &mut meter).and_then(|made| named(made, element, &mut taken, &mut meter)) {
+        let made = match made_by(element, &design.settings, rules, &mut meter).and_then(|made| named(made, element, &mut taken, &mut meter)) {
             Ok(made) => made,
             Err(exhausted) => {
                 diagnostics.push(exhausted.diagnostic(budget, Some(element.id.clone())));
@@ -263,7 +288,7 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
         counts.add(made.stitches);
         diagnostics.extend(made.diagnostics);
         let part = |(element, part): (Element, Option<Polygon>)| Sewn {
-            area: matches!(element.shape, Shape::Fill { .. }),
+            area: matches!(element.shape, Shape::Fill { .. }).then(|| rules.clone()),
             element,
             automatic: true,
             shape: index,
@@ -298,27 +323,38 @@ fn named(made: Digitized, element: &Element, taken: &mut Labels, meter: &mut Met
     Ok(Digitized { elements: parts, ..made })
 }
 
-/// The ordinary elements that sew the automatic `element` of a design with `settings`, with `meter`'s
-/// work, and what is said of them: an area's fill, a running stitch for each of its narrow parts and the
-/// columns of each of its parts no wider than a satin column, a stroke that runs as it is, tripled from
-/// [`TRIPLE_RUN_WIDTH`], a satin column for each of a stroke's subpaths, or the fill of a part a column
-/// cannot follow, when it is a satin column, and the area it paints when it is filled. A stroke that paints
-/// nothing is itself as it is.
+/// The ordinary elements that sew the automatic `element` of a design with `settings`, by the element's own
+/// settings of the rules, with `meter`'s work, and what is said of them: an area's fill, a running stitch for
+/// each of its narrow parts and the columns of each of its parts no wider than a satin column, a stroke that
+/// runs as it is, tripled from the narrowest triple run, a satin column for each of a stroke's subpaths, or
+/// the fill of a part a column cannot follow, when it is a satin column, and the area it paints when it is
+/// filled. A stroke that paints nothing is itself as it is. What is said of its settings comes first, and
+/// one that doesn't read leaves it sewing nothing (`SC-E0101`).
 pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter) -> Result<Digitized, Exhausted> {
+    let mut said = Vec::new();
+    let Some(rules) = read(element, &mut said) else { return Ok(Digitized { diagnostics: said, ..Digitized::default() }) };
+    let mut made = made_by(element, settings, &rules, meter)?;
+    made.diagnostics.splice(0..0, said);
+    Ok(made)
+}
+
+/// The ordinary elements that sew the automatic `element` of a design with `settings` by `rules`, its
+/// settings of the rules, as [`digitize`] makes them.
+fn made_by(element: &Element, settings: &DesignSettings, rules: &AutoParams, meter: &mut Meter) -> Result<Digitized, Exhausted> {
     let as_it_is = |stitches| itself(element, stitches);
-    let Shape::Stroke { path, width, join, cap } = &element.shape else { return areas(element, settings, meter) };
+    let Shape::Stroke { path, width, join, cap } = &element.shape else { return areas(element, settings, rules, meter) };
     let style = Style { width: *width, join: *join, cap: *cap };
-    let made = match Stitches::of_stroke(*width, settings) {
+    let made = match Stitches::of_stroke(*width, settings, rules) {
         Stitches::Fill | Stitches::Running => {
             let mut made = as_it_is(Some(Stitches::Running));
-            if tripled(width.get()) {
+            if tripled(width.get(), rules) {
                 for element in &mut made.elements {
                     element.params.set(BEAN_STITCH_REPEATS, "1");
                 }
             }
             return Ok(made);
         }
-        Stitches::Satin => columns(element, path, style, meter)?,
+        Stitches::Satin => columns(element, path, style, rules, meter)?,
         Stitches::FilledStroke => filled(element, path, style, meter)?,
     };
     // A stroke that paints nothing sews as it would without the switch, and says what it would say then.
@@ -328,23 +364,23 @@ pub fn digitize(element: &Element, settings: &DesignSettings, meter: &mut Meter)
     Ok(made)
 }
 
-/// The elements that sew `element`, an automatic area of a design with `settings`, with `meter`'s work: its
-/// parts sorted by their width (`narrow`) and [`sewn`]. An area whose region the region code can't join, a
-/// bug, is itself as it is, and its fill says so.
-fn areas(element: &Element, settings: &DesignSettings, meter: &mut Meter) -> Result<Digitized, Exhausted> {
+/// The elements that sew `element`, an automatic area of a design with `settings`, by `rules`, with
+/// `meter`'s work: its parts sorted by their width (`narrow`) and [`sewn`]. An area whose region the region
+/// code can't join, a bug, is itself as it is, and its fill says so.
+fn areas(element: &Element, settings: &DesignSettings, rules: &AutoParams, meter: &mut Meter) -> Result<Digitized, Exhausted> {
     let as_it_is = itself(element, Some(Stitches::Fill));
     let Shape::Fill { path, rule } = &element.shape else { return Ok(as_it_is) };
     let Ok(parts) = parts_of(path, *rule, meter)? else { return Ok(as_it_is) };
-    Ok(sewn(element, narrow::sorted(&element.id, parts, settings.min_satin_stroke_width, meter)?))
+    Ok(sewn(element, narrow::sorted(&element.id, parts, settings.min_satin_stroke_width, rules, meter)?, rules))
 }
 
-/// The elements that sew `element`, an automatic area whose parts are `sorted` by their width: itself as it
-/// is when no part of it is sewn along its middle, or else the fill of its other parts, if any, then for each
-/// narrow part a running stitch along its centre lines, and for each part no wider than a satin column its
-/// columns, a running stitch along each too narrow for satin, each running stitch tripled from
-/// [`TRIPLE_RUN_WIDTH`]. The first keeps the area's name and those after it are numbered, and a trim or a stop
-/// after the area follows the last. What was said of its parts is said either way.
-fn sewn(element: &Element, sorted: narrow::Parts) -> Digitized {
+/// The elements that sew `element`, an automatic area whose parts are `sorted` by their width, by `rules`:
+/// itself as it is when no part of it is sewn along its middle, or else the fill of its other parts, if any,
+/// then for each narrow part a running stitch along its centre lines, and for each part no wider than a satin
+/// column its columns, a running stitch along each too narrow for satin, each running stitch tripled from the
+/// narrowest triple run. The first keeps the area's name and those after it are numbered, and a trim or a
+/// stop after the area follows the last. What was said of its parts is said either way.
+fn sewn(element: &Element, sorted: narrow::Parts, rules: &AutoParams) -> Digitized {
     if sorted.along.is_empty() {
         return Digitized { diagnostics: sorted.said, ..itself(element, Some(Stitches::Fill)) };
     }
@@ -359,19 +395,19 @@ fn sewn(element: &Element, sorted: narrow::Parts) -> Digitized {
         let (pieces, painted) = match along {
             narrow::Along::Narrow(narrow) => {
                 let path = Path { subpaths: narrow.lines.iter().filter_map(subpath).collect() };
-                (vec![running(&rest, path, narrow.width)], narrow.part)
+                (vec![running(&rest, path, narrow.width, rules)], narrow.part)
             }
             narrow::Along::Columns(found) => {
                 let pieces = found.sewn.into_iter().map(|sewn| match sewn {
                     columns::Sewn::Satin { path, width, push } => {
                         satin = true;
-                        let mut params = satin_params(&rest, width);
+                        let mut params = satin_params(&rest, width, rules);
                         if push != [0.0, 0.0] {
                             params.set(PUSH_COMPENSATION, format!("{} {}", push[0], push[1]).as_str());
                         }
                         (Shape::Stroke { path, width, join: Join::Round, cap: Cap::Round }, params)
                     }
-                    columns::Sewn::Running { line, width } => running(&rest, Path { subpaths: subpath(&line).into_iter().collect() }, width),
+                    columns::Sewn::Running { line, width } => running(&rest, Path { subpaths: subpath(&line).into_iter().collect() }, width, rules),
                 });
                 (pieces.collect(), found.part)
             }
@@ -392,11 +428,11 @@ fn sewn(element: &Element, sorted: narrow::Parts) -> Digitized {
     made
 }
 
-/// A running stitch along `path` with the settings `params`, as wide as `width`: tripled from
-/// [`TRIPLE_RUN_WIDTH`].
-fn running(params: &ParamSet, path: Path, width: Mm) -> (Shape, ParamSet) {
+/// A running stitch along `path` with the settings `params`, as wide as `width`: tripled from the narrowest
+/// triple run of `rules`.
+fn running(params: &ParamSet, path: Path, width: Mm, rules: &AutoParams) -> (Shape, ParamSet) {
     let mut params = params.clone();
-    if tripled(width.get()) {
+    if tripled(width.get(), rules) {
         params.set(BEAN_STITCH_REPEATS, "1");
     }
     (Shape::Stroke { path, width, join: Join::Round, cap: Cap::Round }, params)
@@ -421,14 +457,14 @@ struct Style {
     cap: Cap,
 }
 
-/// The satin columns of `element`, a stroke along `path` drawn with `style`: one for each subpath, whose
-/// open ends reach as far as their caps do, each with the settings of `element`, `satin_column` on and the
-/// underlay of the stroke's width. A
-/// subpath a column cannot follow is the fill of the area it paints, with `SC-I0902`, and one that draws
-/// nothing is left out, with `SC-W0401`.
-fn columns(element: &Element, path: &Path, style: Style, meter: &mut Meter) -> Result<Digitized, Exhausted> {
+/// The satin columns of `element`, a stroke along `path` drawn with `style`, by `rules`: one for each
+/// subpath, whose open ends reach as far as their caps do, each with the settings of `element`,
+/// `satin_column` on, the underlay of the stroke's width and the pull compensation of its overlap. A subpath
+/// a column cannot follow is the fill of the area it paints, with `SC-I0902`, and one that draws nothing is
+/// left out, with `SC-W0401`.
+fn columns(element: &Element, path: &Path, style: Style, rules: &AutoParams, meter: &mut Meter) -> Result<Digitized, Exhausted> {
     let (rest, after) = split_after(&element.params);
-    let column = satin_params(&rest, style.width);
+    let column = satin_params(&rest, style.width, rules);
     let mut made = Digitized::default();
     let (mut satin, mut fill) = (false, false);
     for (n, subpath) in path.subpaths.iter().enumerate() {
@@ -713,16 +749,33 @@ mod tests {
         let area = Element { id: ElementId::new("area").unwrap(), name: None, shape, thread, params: ParamSet::default(), automatic: true };
         let said = vec![Diagnostic::new(Code::InternalCheckFailed, "A part could not be measured.").with_element(area.id.clone())];
         let filled = narrow::Parts { filled: vec![square.clone()], along: Vec::new(), said: said.clone() };
-        assert_eq!(sewn(&area, filled).diagnostics, said);
+        assert_eq!(sewn(&area, filled, &AutoParams::defaults()).diagnostics, said);
         let line = Line { points: vec![p(20.3, 0.3), p(29.7, 0.3)], closed: false };
         let thin = narrow::Narrow { part: strip, lines: vec![line], width: Mm::new(0.6).unwrap() };
         let both = narrow::Parts { filled: vec![square], along: vec![narrow::Along::Narrow(thin)], said: said.clone() };
-        let made = sewn(&area, both);
+        let made = sewn(&area, both, &AutoParams::defaults());
         assert_eq!((made.elements.len(), made.diagnostics), (2, said));
     }
 
     #[test]
-    fn the_explanation_names_the_widest_satin_column() {
-        assert!(Code::AutoDigitized.explanation().contains(&format!("{} mm", SATIN_MAX_WIDTH.get())));
+    fn the_explanations_give_the_rules_defaults_and_name_their_settings() {
+        // Each explanation that gives a rule's value gives the registry's default, in its unit, and names the
+        // setting that changes it.
+        let explained = [
+            (Code::AutoDigitized, &[MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH][..]),
+            (Code::AutoSatinFilled, &[MAX_SATIN_WIDTH]),
+            (Code::AutoAreaTooLarge, &[MAX_SATIN_WIDTH]),
+            (Code::AutoUnder, &[OVERLAP]),
+            (Code::AutoSpeck, &[MIN_AREA]),
+            (Code::AutoBackground, &[IGNORE_BACKGROUND]),
+        ];
+        for (code, keys) in explained {
+            let text = code.explanation();
+            for spec in keys.iter().map(|key| AutoParams::SPECS.iter().find(|spec| spec.key == *key).unwrap()) {
+                assert!(text.contains(&format!("`{}`", spec.key)), "{code:?}: {}", spec.key);
+                let unit = spec.kind.unit();
+                assert!(unit.is_empty() || text.contains(&format!("{} {unit}", spec.default)), "{code:?}: {} {unit}", spec.default);
+            }
+        }
     }
 }

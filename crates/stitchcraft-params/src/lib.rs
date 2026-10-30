@@ -6,7 +6,8 @@
 //! property-test strategies will be too. Design: `docs/src/design/params.md`.
 //!
 //! - [`StitchType`]: the stitch types, by their Ink/Stitch method ids.
-//! - [`ParamSpec`], [`Kind`], [`ParamGroup`]: what the registry knows about each parameter.
+//! - [`ParamSpec`], [`Kind`], [`ParamGroup`]: what the registry knows about each parameter. A declaration
+//!   for [`AUTOMATIC`] declares the settings of automatic digitizing, which no stitch type reads.
 //! - [`find_for`]: the declaration of a key that a family reads (REQ-PRM-005). [`declarations`] gives
 //!   every one, and [`find`] the first.
 //! - [`ParamSet`]: an element's parameters as its design stores them (text), read into typed views by
@@ -29,7 +30,7 @@ pub mod value;
 pub use audit::audit;
 pub use kinds::ParamKind;
 pub use set::{ParamSet, Validated, declarations, find, find_for, read_param, unknown_keys};
-pub use spec::{ChoiceOption, Condition, Empty, Kind, MAX_LIST, MAX_TEXT, Origin, ParamGroup, ParamSpec, Stability};
+pub use spec::{AUTOMATIC, ChoiceOption, Condition, Empty, Kind, MAX_LIST, MAX_TEXT, Origin, ParamGroup, ParamSpec, Stability};
 pub use stitch_type::{Family, StitchType};
 pub use stitchcraft_core::Diagnostic;
 pub use value::{Value, normalized_angle, toggle};

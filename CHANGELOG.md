@@ -18,6 +18,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - The tutorial *From a picture to a machine file* traces a picture in VectorCraft and digitizes it with
     `--auto`. A doc picture can read its design as `--auto` does (`auto = true` in `docs/shots.toml`).
 
+- M13.7, its second part: the rules' settings. Each rule of automatic digitizing goes by the settings of the
+  shape it digitizes, StitchCraft's own parameters, registered as any other (`REQ-AUTO-020`). A shape that
+  sets none takes the defaults, the values the rules had. With `--auto` every shape still sews as before.
+  The reference page *Auto parameters* documents the settings:
+  - `auto_max_satin_width_mm`, the widest satin column, 7 mm
+  - `auto_min_triple_run_width_mm`, the narrowest triple run, 0.5 mm
+  - `auto_overlap_mm`, the overlap, 0.4 mm
+  - `auto_min_area_mm2`, the smallest area, 1 mm²
+  - `auto_ignore_background`, on, which leaves the background out
+
+  Automatic elements read them, and the ordinary elements they become don't. Their declaration is for
+  `stitchcraft_params::AUTOMATIC`, which no stitch family's dialog shows, and the audit requires each to be
+  StitchCraft's own. The smallest area, in square millimetres, is a kind of parameter of its own. Each area
+  reaches its own overlap under the shapes sewn after it, and `SC-I0904` gives the overlaps from the least to
+  the most when they differ. The diagnostics' explanations name the settings.
+
 - M13.6: shapes in parts. With `--auto`, a part of a shape that is wider than a satin column in places and
   narrower in others sews in parts (`REQ-AUTO-019`). Its broad parts are a tatami fill, and its narrow
   parts sew over the fill as lines and columns, each sorted by its width as a part is.

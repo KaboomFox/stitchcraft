@@ -60,7 +60,7 @@ use std::rc::Rc;
 
 use serde_json::Value;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
-use stitchcraft_engine::auto::Stitches;
+use stitchcraft_engine::auto::{self, Stitches};
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Reading, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::stitch_type::Family;
@@ -593,15 +593,16 @@ impl Reader {
             }
             self.stroke_marks(label, item);
             // An automatic stroke sewn across its width follows its caps, and not what VectorCraft draws
-            // across it (`REQ-AUTO-005`).
-            let stitches = Stitches::of_stroke(width, &self.settings);
-            if self.auto && stitches.across() {
+            // across it (`REQ-AUTO-005`). An object without effects sets none of the rules' settings.
+            let params = ParamSet::new();
+            let stitches = auto::rules(&params).map(|rules| Stitches::of_stroke(width, &self.settings, &rules));
+            if let Some(stitches) = stitches.filter(|stitches| self.auto && stitches.across()) {
                 let what = if stitches == Stitches::Satin { "satin column" } else { "fill" };
                 self.across(label, what, item, path, false);
             }
             strokes += 1;
             let shape = Shape::Stroke { path: path.clone(), width, join, cap };
-            self.element(node, label, &rank("stroke", strokes), shape, thread, ParamSet::new(), self.auto)?;
+            self.element(node, label, &rank("stroke", strokes), shape, thread, params, self.auto)?;
         }
         Ok(())
     }

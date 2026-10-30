@@ -46,7 +46,7 @@ use std::str::FromStr;
 
 use roxmltree::{Document, Node, NodeId, ParsingOptions};
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
-use stitchcraft_engine::auto::Stitches;
+use stitchcraft_engine::auto::{self, Stitches};
 use stitchcraft_engine::design::{Design, Element, Reading, Shape};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
@@ -545,10 +545,12 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                     self.unusable(&label, format!("The stroke of `{label}` cannot be stitched: it is too wide to measure. It is left out."));
                     continue;
                 };
-                // An automatic line's stitches follow the drawing: its corners are joined as SVG draws them.
+                // An automatic line's stitches follow the drawing: its corners are joined as SVG draws them. Its
+                // stitches go by its settings of the rules; with one that doesn't read it sews nothing, which
+                // digitizing says.
                 let join = if automatic { style.painted_join() } else { style.join() };
-                if automatic {
-                    self.stretched(&label, Stitches::of_stroke(width, &self.settings.settings), map);
+                if automatic && let Some(rules) = auto::rules(&params) {
+                    self.stretched(&label, Stitches::of_stroke(width, &self.settings.settings, &rules), map);
                 }
                 Shape::Stroke { path: path.clone(), width, join, cap: style.line_cap }
             };

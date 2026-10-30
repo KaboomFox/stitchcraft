@@ -7,10 +7,9 @@
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
-use stitchcraft_engine::auto::OVERLAP;
 use stitchcraft_engine::design::Element;
 use stitchcraft_plan::StitchPlan;
-use stitchcraft_testkit::designs::{messages, planned};
+use stitchcraft_testkit::designs::{messages, planned, rules};
 use stitchcraft_testkit::metrics::edge_coverage;
 use stitchcraft_testkit::pictures::{self, Picture, Trace};
 
@@ -26,7 +25,7 @@ fn plans(picture: &Picture) -> [StitchPlan; 2] {
 /// How much of `picture`'s edges `plan` covers with the thread pulled in by the overlap: the pull the
 /// overlap is there to make up for.
 fn covered(picture: &Picture, plan: &StitchPlan) -> f64 {
-    edge_coverage(&picture.edges, plan, OVERLAP)
+    edge_coverage(&picture.edges, plan, rules().auto_overlap_mm.get())
 }
 
 #[test]
