@@ -35,6 +35,7 @@ use std::collections::BTreeMap;
 use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Meter, Mm, Point};
 
 use super::columns::{self, Columns, Made};
+use super::split;
 use super::{SATIN_MAX_WIDTH, SMALLEST_AREA, no_area};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::ops::{self, area_of};
@@ -84,35 +85,65 @@ pub(super) enum Along {
 pub(super) fn sorted(id: &ElementId, parts: Vec<Polygon>, narrowest: Mm, meter: &mut Meter) -> Result<Parts, Exhausted> {
     let mut sorted = Parts::default();
     for part in parts {
-        meter.charge(1)?;
-        match lines(&part, narrowest, meter)? {
-            Found::Lines(lines) => {
-                let edges = Edges::of(&part, piece(&part), meter)?;
-                match width(&edges, &lines, meter)? {
-                    Some(width) => sorted.along.push(Along::Narrow(Narrow { part, lines, width })),
-                    None => sorted.filled.push(part),
-                }
-            }
-            Found::Columns => match columns::columns(&part, narrowest, meter)? {
-                Made::Columns(sewn) => sorted.along.push(Along::Columns(Columns { part, sewn })),
-                Made::Dot => sorted.filled.push(part),
-                Made::Unmade => {
-                    sorted.said.push(columns::unmade(id));
-                    sorted.filled.push(part);
-                }
-                Made::Broken => {
-                    sorted.said.push(broken(id, LOST_COLUMNS));
-                    sorted.filled.push(part);
-                }
-            },
-            Found::Filled => sorted.filled.push(part),
-            Found::Broken(failed) => {
-                sorted.said.push(broken(id, failed));
-                sorted.filled.push(part);
-            }
-        }
+        sort(id, part, narrowest, Sorting::Part, &mut sorted, meter)?;
     }
     Ok(sorted)
+}
+
+/// What is sorted.
+#[derive(Clone, Copy)]
+enum Sorting<'c> {
+    /// A part of the area, which splits into its broad and narrow parts when it is wider than a satin column
+    /// somewhere.
+    Part,
+    /// A narrow part of a part split, cut along these chords where it meets the broad parts, which stays in
+    /// the fill when it is wider than a satin column somewhere.
+    Piece(&'c [[Point; 2]]),
+}
+
+/// `part`, the automatic area `id`'s, sorted into `sorted` by its width, with `meter`'s work: a part wider
+/// than a satin column somewhere split ([`split`]) when `sorting` says it is a part of the area.
+fn sort(id: &ElementId, part: Polygon, narrowest: Mm, sorting: Sorting, sorted: &mut Parts, meter: &mut Meter) -> Result<(), Exhausted> {
+    meter.charge(1)?;
+    match lines(&part, narrowest, meter)? {
+        Found::Lines(lines) => {
+            let edges = Edges::of(&part, piece(&part), meter)?;
+            match width(&edges, &lines, meter)? {
+                Some(width) => sorted.along.push(Along::Narrow(Narrow { part, lines, width })),
+                None => sorted.filled.push(part),
+            }
+        }
+        Found::Columns => match columns::columns(&part, narrowest, if let Sorting::Piece(cuts) = sorting { cuts } else { &[] }, meter)? {
+            Made::Columns(sewn) => sorted.along.push(Along::Columns(Columns { part, sewn })),
+            Made::Dot => sorted.filled.push(part),
+            Made::Unmade => {
+                sorted.said.push(columns::unmade(id));
+                sorted.filled.push(part);
+            }
+            Made::Broken => {
+                sorted.said.push(broken(id, LOST_COLUMNS));
+                sorted.filled.push(part);
+            }
+        },
+        Found::Broad if matches!(sorting, Sorting::Part) => match split::split(&part, meter)? {
+            Some(split) => {
+                sorted.filled.extend(split.fill);
+                for piece in split.narrow {
+                    sort(id, piece.part, narrowest, Sorting::Piece(&piece.cuts), sorted, meter)?;
+                }
+            }
+            None => {
+                sorted.said.push(broken(id, UNSPLIT));
+                sorted.filled.push(part);
+            }
+        },
+        Found::Broad | Found::Filled => sorted.filled.push(part),
+        Found::Broken(failed) => {
+            sorted.said.push(broken(id, failed));
+            sorted.filled.push(part);
+        }
+    }
+    Ok(())
 }
 
 /// What becomes of a part.
@@ -121,7 +152,9 @@ enum Found {
     Lines(Vec<Line>),
     /// It is no wider than a satin column, and sews as columns, unless none can be drawn.
     Columns,
-    /// It stays in the fill: it is broad somewhere, or a speck.
+    /// It is wider than a satin column somewhere, and its narrow parts sew over the fill of its broad ones.
+    Broad,
+    /// It stays in the fill: it is a speck.
     Filled,
     /// What could not be found of it, and why, a bug.
     Broken(&'static str),
@@ -137,7 +170,7 @@ fn lines(part: &Polygon, narrowest: Mm, meter: &mut Meter) -> Result<Found, Exha
     let Some(narrow) = within(part, narrowest, meter)? else { return Ok(Found::Broken(UNJOINED)) };
     if !narrow {
         let Some(column) = within(part, SATIN_MAX_WIDTH, meter)? else { return Ok(Found::Broken(UNJOINED)) };
-        return Ok(if column { Found::Columns } else { Found::Filled });
+        return Ok(if column { Found::Columns } else { Found::Broad });
     }
     match strips::centre_lines(part, piece(part), meter)? {
         Ok(lines) => Ok(Found::Lines(lines)),
@@ -149,13 +182,19 @@ fn lines(part: &Polygon, narrowest: Mm, meter: &mut Meter) -> Result<Found, Exha
 /// width taken half a micrometre wider, it leaves no area. `None` when the shrunk part can't be joined, a
 /// bug.
 fn within(part: &Polygon, width: Mm, meter: &mut Meter) -> Result<Option<bool>, Exhausted> {
-    let half = (width.get() + 0.0005) / 2.0;
+    let half = half(width);
     let holes = part.holes.len().saturating_sub(1) as f64;
     if part.area() > perimeter(part) * half + std::f64::consts::PI * holes * half * half {
         return Ok(Some(false));
     }
     let Ok(shrunk) = ops::buffered(std::slice::from_ref(part), -half, meter)? else { return Ok(None) };
     Ok(Some(no_area(area_of(&shrunk))))
+}
+
+/// Half of `width` taken half a micrometre wider, in millimetres: how far a part is shrunk to tell whether it
+/// is narrower than `width` everywhere, so that a part as wide as `width`, give or take a rounding error, is.
+pub(super) fn half(width: Mm) -> f64 {
+    (width.get() + 0.0005) / 2.0
 }
 
 /// How long the pieces of `part`'s edges are, for its triangulation and for the grid its width is measured
@@ -240,7 +279,7 @@ impl Edges {
     /// The distance from `p` to the nearest edge, with `meter`'s work: a unit for each cell and each piece
     /// looked at. The cells are looked at in rings round `p`'s, and once the nearest piece found lies no
     /// farther than the cells beyond the ring could be, they aren't.
-    fn nearest(&self, p: Point, meter: &mut Meter) -> Result<f64, Exhausted> {
+    pub(super) fn nearest(&self, p: Point, meter: &mut Meter) -> Result<f64, Exhausted> {
         if self.cells.is_empty() {
             return Ok(f64::INFINITY);
         }
@@ -280,6 +319,10 @@ fn ring_cells(x: i64, y: i64, ring: i64) -> Vec<(i64, i64)> {
 
 /// What is said of a part whose shrinking, to tell whether it is narrow, couldn't be joined.
 const UNJOINED: &str = "Finding how wide a part of this area is, the edges of a region could not be joined into rings";
+
+/// What is said of a part wider than a satin column somewhere whose broad and narrow parts couldn't be
+/// found.
+const UNSPLIT: &str = "Splitting a part of this area into its broad and narrow parts, the edges of a region could not be joined into rings";
 
 /// What is said of a narrow part whose triangulation lost its shape.
 const LOST: &str = "Finding the centre line of a narrow part of this area, its triangulation lost its shape";
