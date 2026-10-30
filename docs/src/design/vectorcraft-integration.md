@@ -7,9 +7,9 @@ offers today, how we use it without changing VectorCraft (phase 1), what we prop
 (phase 2), and how an in-tree integration would look (phase 3).
 
 **VectorCraft snapshot reviewed:** `main` at `89ea46c` (2026-10-08), version 0.6.0, and its plug-in API
-again at `8bf090b` (2026-10-24), after 0.16.0, and at `v0.17.0` (2026-10-25). File references below are to
-the first unless a version is named. The [compatibility gate](compatibility-gate.md) tests the plug-ins against each VectorCraft
-release and branch.
+again at `8bf090b` (2026-10-24), after 0.16.0, at `v0.17.0` (2026-10-25) and at `v0.18.0` (2026-10-28).
+File references below are to the first unless a version is named. The
+[compatibility gate](compatibility-gate.md) tests the plug-ins against each VectorCraft release and branch.
 
 ## 1. VectorCraft in brief
 
@@ -22,7 +22,7 @@ release and branch.
 | Commands | Declarative `cmd!` registry: id, label, menu path, shortcut, params doc, `enabled`, `run`; reachable from UI, JSON control channel and MCP | `crates/engine/src/cmd/*` |
 | Headless CLI | `vectorcraft-cli run [--in FILE] [--cmd ID [--params JSON]]... [--export FILE]...`, `convert`, `info`, `commands`, `mcp` | `apps/vectorcraft-cli/src/main.rs` |
 | Control channel | JSON lines; `engine.execute`, `ui.menu.invoke`, `ui.dialog.set`, `ui.click`, `ui.screenshot {path?}` (needs a presented frame), `ui.render {path?, scale?}` (headless artboard render) | `crates/ui-egui/src/control.rs` |
-| Releases | Tags `v0.1.0` … `v0.17.0`. Pushing the `release` branch drafts a GitHub Release, and SemVer pre-releases (`-rc.1`) are flagged as pre-releases | `.github/workflows/release.yml` |
+| Releases | Tags `v0.1.0` … `v0.18.0`. Pushing the `release` branch drafts a GitHub Release, and SemVer pre-releases (`-rc.1`) are flagged as pre-releases | `.github/workflows/release.yml` |
 
 ## 2. Extension points that exist today
 
@@ -44,7 +44,10 @@ release and branch.
   **fuel 50 M instructions + 4,000 per input byte**; wall clock 60 s per filter run and **5 s per
   live-effect run** (`crates/plugins/src/effect.rs`), with a fresh instance for each call. An export gets
   10 G instructions and 300 s (0.14). From 0.17 a filter that declares `"budget": "heavy"` gets 1 G and
-  300 s, once the user allows it at install, and runs in the background.
+  300 s, once the user allows it at install, and runs in the background. From 0.18 a run pays nothing for
+  compiling the functions it calls, which wasmi does at each one's first call. Before, a first run paid,
+  and could stop with most of its budget left when the 20 M-instruction slice it was in ran out while a
+  function compiled.
 - **Live-effect input** is the object's geometry: `type`, `path`, `fillRule`, `bounds`. From 0.14 it
   holds the object's `fills` and `strokes` too, read only, each stroke with its width, and from 0.15 its
   join, cap and miter limit. `_context.item` says whether the effect is on the object or on one of its
