@@ -406,3 +406,15 @@ file = "crates/stitchcraft-engine/src/normalize/strips/columns.rs"
 mutant = "replace > with >= in cornered"
 line = "(lengths > 0.0).then(|| (a.0 * b.0 + a.1 * b.1) / lengths)"
 why = "a way of no length, past an open line's end, makes the cosine 0 over 0, which is not a number, and a cosine that is not a number is no corner, as no cosine is"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/split.rs"
+mutant = "replace < with <= in split"
+line = "if piece.area() < SMALLEST_AREA {"
+why = "a narrow piece touches the broad parts, so some of it lies within the reach and what lies beyond is smaller than the piece: a piece of exactly the smallest area stays in the fill by the next test either way, which costs only its work"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/testsheets/pictures.rs"
+mutant = "replace - with + in balloon"
+line = "let (top, length, steps) = (around(FRAC_PI_2 - meet).1, 26.0, 24_u32);"
+why = "the sine is as high either side of a quarter turn, so the string's top is as high, give or take a rounding far below the 0.1 mm a machine file records"
