@@ -48,7 +48,12 @@ part (`normalize::triangulation`) gives through the middles of its chords (`norm
 stitch that automatic digitizing makes is tripled from 0.5 mm wide. Since M13.5 a part no wider than a satin
 column sews as satin columns along its centre lines, between its own outlines (`auto::columns`,
 `normalize::strips::columns`), drawn with rails and rungs (`generators::satin::drawn::from_rails`), and
-every automatic satin column has the underlay of its width and a pull compensation of 0.4 mm.
+every automatic satin column has the underlay of its width and a pull compensation of 0.4 mm. Since M13.6
+a part wider than a satin column in places is split (`auto::split`). An opening with a disc as wide as a
+satin column leaves its broad parts, which are filled. Its narrow parts, cut square where they meet them,
+sew over the fill as lines and columns. The test pictures that the TS-13 sheets sew, digitized beside
+the same shapes in paint order, are drawn here too (`testsheets::pictures`), so that the cases measure
+what the machine sews.
 Since M6.12 a column drawn as one path can be drawn with its rails and rungs instead, for a host's Stroke
 to Satin tool (`generators::satin::drawn`). They sew as the column does. A design can be moved
 (`Design::moved`), as a host draws a test sheet (`testsheets`, `TestSheet::design`).

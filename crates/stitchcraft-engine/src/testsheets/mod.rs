@@ -17,6 +17,7 @@
 //! expected-result sheet lists.
 
 mod designed;
+pub mod pictures;
 mod sketch;
 mod ts01;
 mod ts02;
@@ -29,6 +30,7 @@ mod ts07;
 mod ts08;
 mod ts09;
 mod ts10;
+mod ts13;
 
 use designed::Drawing;
 pub use sketch::{STITCH_LEN, SheetError};
@@ -42,7 +44,10 @@ use crate::design::Design;
 /// Brother PEC indices of the threads the sheets use.
 const RED: u8 = 5;
 const BLUE: u8 = 2;
+const DEEP_GOLD: u8 = 11;
 const BLACK: u8 = 20;
+const WHITE: u8 = 29;
+const FLESH_PINK: u8 = 42;
 const EMERALD_GREEN: u8 = 54;
 
 /// The thread with Brother PEC index `index`, named as the machine names it.
@@ -86,6 +91,14 @@ impl TestSheet {
     /// Whether the sheet is drawn as a design, which [`TestSheet::design`] gives, rather than stitch by stitch.
     pub const fn designed(&self) -> bool {
         matches!(self.drawn, Drawn::Designed(..))
+    }
+
+    /// Whether the sheet's design has shapes that StitchCraft digitizes automatically ([`Element::automatic`]),
+    /// as the TS-13 sheets' do. A host draws such a sheet into a document only where an object can say so.
+    ///
+    /// [`Element::automatic`]: crate::design::Element::automatic
+    pub fn digitized(&self) -> bool {
+        self.design().and_then(Result::ok).is_some_and(|design| design.elements().iter().any(|element| element.automatic))
     }
 
     /// The sheet as the design the engine plans, with the design settings' defaults, as a host draws it into
@@ -258,6 +271,55 @@ pub static SHEETS: &[TestSheet] = &[
         profile: &BROTHER_PE800_SMALL,
         drawn: Drawn::Sketched(|| ts10::build("ts10c", &BROTHER_PE800_SMALL)),
     },
+    TestSheet {
+        id: "TS-13A",
+        title: "Pictures digitized automatically: neighbours and sewing order",
+        checks: &[
+            "The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Top row, left to right: a badge traced abutting and one traced stacked, each 40 mm across, and a blue disc with 7 red specks round it. Bottom row: 3 badges drawn badge by badge, and a gold square with a blue bar beside it.",
+            "The bottom half changes thread 16 times and jumps 25 times, the top half 4 and 16 times. How long does each half take?",
+            "Does fabric show between colours, on either half? On the top half, each area reaches 0.4 mm under the next: does that cover the gap, or show as a ridge?",
+            "On the top half, the stacked badge's lower colours are cut away under the upper ones. Does it sew as flat as the abutting badge beside it? On the bottom half, it sews its lower colours whole, under the upper ones.",
+            "On the bottom half, each speck round the disc sews a red knot. On the top half, the 6 specks that touch the disc are blue, part of it, and the one apart is left out. Does the disc's edge show where they were?",
+            "The blue bar meets the gold square along the top half of its side, and runs on 0.5 mm from it below. On the top half, the square reaches under the bar only where they meet. Does the fabric that shows below read as a gap drawn there?",
+            "Does any shape cover one drawn over it? The order must never let that happen.",
+            ts13::JUMP_THREADS,
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::Designed(ts13::neighbours, &ts13::NEIGHBOURS_SAY),
+    },
+    TestSheet {
+        id: "TS-13B",
+        title: "Pictures digitized automatically: letters and lines traced as areas",
+        checks: &[
+            "The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left: the word MATCH in block letters 15, 10, 6 and 4 mm tall, top to bottom, each letter traced as an area. Right: 3 windows, top to bottom, whose black lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide. One line runs down each window, and a branch runs across to its right side from it.",
+            "The bottom half changes thread 12 times and jumps 19 times, the top half 4 and 42 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?",
+            "Which is the smallest word that reads, on each half?",
+            "On the top half, the letters from 6 mm tall sew as satin columns between their own edges, and the 4 mm ones as triple runs along their middles. Do the columns' stitches lie square to their strokes, round the C's bend and the A's hole?",
+            "Where a column ends under another, 0.4 mm longer, as the T's stem does under its bar, does fabric show there, or a ridge? Does a crossbar sewn as a column of its own, as the H's is, read as one stroke with its stems? The M's and the A's feet should end flat along the baseline, and the C's ends round.",
+            "Do the underlays hold the columns up? With 0.4 mm of pull compensation, do they sew as wide as drawn? Measure the 15 mm T's stem, drawn 2.7 mm wide.",
+            "Where the M's strokes meet at sharp angles, its stitches lean along the columns (SC-W0208). Do they show?",
+            "On the top half, each window's lines sew along their middles after the areas beside them, which reach 0.4 mm under them: a single run at 0.3 mm, and a triple run at 0.6 and 0.9 mm. Does each line reach as far as it is drawn? Do the triple runs look as wide as their lines, and the single run not too thin? Does fabric show along a line, or a gap or a knot where the branch ends at the line it meets?",
+            ts13::JUMP_THREADS,
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::Designed(ts13::letters, &ts13::LETTERS_SAY),
+    },
+    TestSheet {
+        id: "TS-13C",
+        title: "Pictures digitized automatically: lines, and shapes in parts",
+        checks: &[
+            "The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: a face drawn with black lines, a star, and a balloon on its string.",
+            "The bottom half changes thread 4 times and jumps 14 times, the top half 4 and 11 times. How long does each half take?",
+            "The face's outline is 4 mm wide, its eyes' 2 mm and its brows' 1 mm. On the top half, the outlines sew as satin columns and the brows as triple runs. Do the columns cover the edges of the pink and white areas beside them? Do the triple runs look as wide as the brows are drawn?",
+            "The smile is 2 mm wide with round caps, and on the top half its column ends square, 1 mm past each end of its line, where the round cap ends. How far does its corner show past the round end?",
+            "The pupils are small rings, and the 3 hairs hairpins, which turn more tightly than they are wide: the top half fills them. How solid do they sew beside the columns round them?",
+            "On the top half, the star's points and the balloon's string sew as satin columns over the fill of the star's middle and of the balloon, cut square where they meet it. Does each column's flat end cover the fill's edge, or does fabric or a ridge show there? Do each point's stitches lie square to it from its tip to its cut?",
+            "Does each line sewn after the area it borders cover the area's edge? Does any shape cover one drawn over it?",
+            ts13::JUMP_THREADS,
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::Designed(ts13::lines_and_parts, &ts13::LINES_AND_PARTS_SAY),
+    },
 ];
 
 /// The sheet with id `id` (any case).
@@ -286,7 +348,10 @@ mod tests {
             designed.push(sheet.id);
         }
         // The sheets drawn stitch by stitch have no design.
-        assert_eq!(designed, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09"]);
+        assert_eq!(designed, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-13A", "TS-13B", "TS-13C"]);
+        // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
+        let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
+        assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C"]);
     }
 
     #[test]
@@ -677,6 +742,9 @@ mod tests {
 
     /// The sheets sewn at MC-1 as they are: drawn stitch by stitch, to test the machine and the file format.
     const SEWN_AT_MC1: [&str; 5] = ["TS-01", "TS-02", "TS-10A", "TS-10B", "TS-10C"];
+    /// The sheets that sew pictures as the engine plans any design, jump threads and all: which jump threads
+    /// their shapes sew down is one of their checks.
+    const SEWN_AS_PLANNED: [&str; 3] = ["TS-13A", "TS-13B", "TS-13C"];
 
     /// How near a needle may come down to a thread on the fabric without catching it (mm): about half a 75/11
     /// needle, 0.75 mm across, and half a 40 wt thread.
@@ -710,7 +778,7 @@ mod tests {
         // the lock holds the tail a pull test pulls. Round the hole where it goes down, the thread is held
         // already, and its tie-in, which ties in its own thread, may lie along it.
         let mut sewn_over = Vec::new();
-        for sheet in SHEETS.iter().filter(|sheet| !SEWN_AT_MC1.contains(&sheet.id)) {
+        for sheet in SHEETS.iter().filter(|sheet| !SEWN_AT_MC1.contains(&sheet.id) && !SEWN_AS_PLANNED.contains(&sheet.id)) {
             for block in &sheet.plan().unwrap().blocks {
                 // The threads on the fabric, each from where the needle came up to where it went down again.
                 let mut threads = Vec::new();

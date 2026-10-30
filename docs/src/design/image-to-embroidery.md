@@ -470,13 +470,20 @@ traces:
 ## Testing
 
 - Each rule gets its requirements and failing cases before its code ([ADR-0008](adr/0008-conformance-first.md)).
-- The test pictures are drawn in code, as the test sheets are, and no logo or picture of anyone else's is
-  used.
+- The test pictures are drawn in code, as the test sheets are (`stitchcraft_engine::testsheets::pictures`),
+  and no logo or picture of anyone else's is used.
 - Each test picture's automatic plan is compared with its plan in paint order: colour changes, jumps,
   trims, stitches, and how much of each shape and of each shared edge the stitches cover
-  (`stitchcraft_testkit::metrics`).
+  (`stitchcraft_testkit::metrics`). The cases measure the pictures where `stitchcraft_testkit::pictures`
+  places them.
 - Level B of the [compatibility gate](compatibility-gate.md) gets a case in which VectorCraft's command
   line traces a picture and StitchCraft sews the document it saved, on every track.
-- TS-13 sews the test pictures at MC-8 ([machine testing](../plan/machine-testing.md)).
+- TS-13 sews the test pictures at MC-8 ([machine testing](../plan/machine-testing.md)), each twice. A
+  sheet's top half is digitized automatically, and its bottom half is sewn as drawn, in paint order. The
+  bottom half sews first and stops, so that nothing digitized moves into it, and each half's thread
+  changes, jumps and time can be read. TS-13A sews the pictures of neighbours and sewing order, TS-13B
+  block letters and lines traced as areas, and TS-13C a face drawn with lines and shapes in parts
+  ([test sheets](../user/reference/test-sheets.md)). The PE800 cuts no jump, and the sew-out reports where a
+  shape sews down the thread of a jump before it.
 
 Codes 0900 to 0999 are automatic digitizing's ([diagnostics](diagnostics.md)).
