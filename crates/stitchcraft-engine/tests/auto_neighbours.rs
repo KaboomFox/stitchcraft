@@ -482,7 +482,7 @@ fn diag_sc_w0906_the_background_is_left_out() {
         (
             "warning SC-W0906: This area covers the whole design under the other shapes, so it is left out as the picture's background.".to_string(),
             Some("background".to_string()),
-            Some("To sew it, give it settings: in VectorCraft, apply a StitchCraft effect to it.".to_string())
+            Some("To sew it, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.".to_string())
         )
     );
     assert_eq!(Code::AutoBackground.id(), "SC-W0906");

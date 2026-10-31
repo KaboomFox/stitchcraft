@@ -71,6 +71,10 @@ pub struct Shot {
     /// `stitch` shots of a design: one image per panel. Without panels, the design is drawn once, as it is.
     #[serde(default)]
     pub panels: Vec<Panel>,
+    /// `stitch` shots of a design: whether it is read as `--auto` reads it, its shapes without settings
+    /// digitized automatically.
+    #[serde(default)]
+    pub auto: bool,
     /// `stitch` shots of a design: the diagnostic codes the plan may report. Any other is an error, so a
     /// picture never shows a design the engine changed without saying so on the page.
     #[serde(default)]
@@ -248,8 +252,8 @@ pub fn stitch(root: &Path, shot: &Shot) -> Result<Vec<Vec<u8>>, String> {
 /// its panel's parameters set on every element, or the design as it is without panels.
 fn designs(root: &Path, fixture: &str, shot: &Shot) -> Result<Vec<StitchPlan>, String> {
     let bytes = util::read_bytes(&root.join(fixture))?;
-    let (read, warnings) =
-        Source::of(Path::new(fixture)).read(&bytes, stitchcraft_engine::design::Reading::default()).map_err(|d| format!("{fixture}: {d}"))?;
+    let reading = stitchcraft_engine::design::Reading { auto: shot.auto, ..Default::default() };
+    let (read, warnings) = Source::of(Path::new(fixture)).read(&bytes, reading).map_err(|d| format!("{fixture}: {d}"))?;
     let unchanged = [Panel { caption: String::new(), params: BTreeMap::new() }];
     let panels = if shot.panels.is_empty() { &unchanged[..] } else { &shot.panels[..] };
     panels
@@ -340,6 +344,7 @@ mod tests {
             sheet: sheet.map(str::to_string),
             fixture: fixture.map(str::to_string),
             panels,
+            auto: false,
             allow: Vec::new(),
             style: Some("simple".to_string()),
             scale: Some(2.0),

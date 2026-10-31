@@ -17,8 +17,9 @@
 //!   its square for each hole past the first, holds a wider circle somewhere: no part that narrow covers
 //!   more. It isn't shrunk, which would only confirm it at the cost of its whole outline. The narrow parts
 //!   are those narrower than the design's narrowest satin stroke everywhere, and a part that isn't is sewn as
-//!   columns when it is no wider than the widest satin column everywhere.
-//! - **Not a speck.** A part smaller than the smallest area sewn is a speck ([`speck`]), which stays in the
+//!   columns when it is no wider than the area's widest satin column everywhere. The area's widest satin
+//!   column and smallest area are its own settings (`AutoParams`, `REQ-AUTO-020`).
+//! - **Not a speck.** A part smaller than the area's smallest area is a speck ([`speck`]), which stays in the
 //!   area to be merged into a neighbour (`REQ-AUTO-008`).
 //! - **A line.** Its centre lines ([`strips`]) come from its triangulation, its edges cut into pieces no
 //!   longer than it is wide on average, twice its area over its perimeter, or [`FINEST`] if that is longer.
@@ -36,7 +37,7 @@ use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Meter, Mm, Point}
 
 use super::columns::{self, Columns, Made};
 use super::split;
-use super::{SATIN_MAX_WIDTH, no_area, speck};
+use super::{AutoParams, no_area, speck};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::ops::{self, area_of};
 use crate::normalize::strips::{self, Line};
@@ -78,14 +79,14 @@ pub(super) enum Along {
     Columns(Columns),
 }
 
-/// `parts`, the automatic area `id`'s, sorted by their width: those narrower than `narrowest` everywhere,
-/// with their centre lines, unless they are specks or dots, those no wider than [`SATIN_MAX_WIDTH`]
-/// everywhere, with their columns, and the rest. Finding a part's width, centre line and columns is part of
-/// the work of digitizing the area, and costs `meter`'s.
-pub(super) fn sorted(id: &ElementId, parts: Vec<Polygon>, narrowest: Mm, meter: &mut Meter) -> Result<Parts, Exhausted> {
+/// `parts`, the automatic area `id`'s, sorted by their width by its settings of the rules, `rules`: those
+/// narrower than `narrowest` everywhere, with their centre lines, unless they are specks or dots, those no
+/// wider than the widest satin column everywhere, with their columns, and the rest. Finding a part's width,
+/// centre line and columns is part of the work of digitizing the area, and costs `meter`'s.
+pub(super) fn sorted(id: &ElementId, parts: Vec<Polygon>, narrowest: Mm, rules: &AutoParams, meter: &mut Meter) -> Result<Parts, Exhausted> {
     let mut sorted = Parts::default();
     for part in parts {
-        sort(id, part, narrowest, Sorting::Part, &mut sorted, meter)?;
+        sort(id, part, narrowest, rules, Sorting::Part, &mut sorted, meter)?;
     }
     Ok(sorted)
 }
@@ -101,12 +102,20 @@ enum Sorting<'c> {
     Piece(&'c [[Point; 2]]),
 }
 
-/// `part`, the automatic area `id`'s, sorted into `sorted` by its width, with `meter`'s work: a part wider
-/// than a satin column somewhere split ([`split`]) when `sorting` says it is a part of the area.
-fn sort(id: &ElementId, part: Polygon, narrowest: Mm, sorting: Sorting, sorted: &mut Parts, meter: &mut Meter) -> Result<(), Exhausted> {
+/// `part`, the automatic area `id`'s, sorted into `sorted` by its width by `rules`, with `meter`'s work: a
+/// part wider than a satin column somewhere split ([`split`]) when `sorting` says it is a part of the area.
+fn sort(
+    id: &ElementId,
+    part: Polygon,
+    narrowest: Mm,
+    rules: &AutoParams,
+    sorting: Sorting,
+    sorted: &mut Parts,
+    meter: &mut Meter,
+) -> Result<(), Exhausted> {
     meter.charge(1)?;
-    let found = match lines(&part, narrowest, meter)? {
-        Found::Broad if matches!(sorting, Sorting::Part) => broad(&part, meter)?,
+    let found = match lines(&part, narrowest, rules, meter)? {
+        Found::Broad if matches!(sorting, Sorting::Part) => broad(&part, rules, meter)?,
         found => found,
     };
     match found {
@@ -117,16 +126,16 @@ fn sort(id: &ElementId, part: Polygon, narrowest: Mm, sorting: Sorting, sorted: 
                 None => sorted.filled.push(part),
             }
         }
-        Found::Columns => match columns::columns(&part, narrowest, if let Sorting::Piece(cuts) = sorting { cuts } else { &[] }, meter)? {
+        Found::Columns => match columns::columns(&part, narrowest, rules, if let Sorting::Piece(cuts) = sorting { cuts } else { &[] }, meter)? {
             Made::Columns(sewn) => sorted.along.push(Along::Columns(Columns { part, sewn })),
             Made::Dot => sorted.filled.push(part),
-            Made::Unmade => kept(sorted, part, columns::unmade(id)),
+            Made::Unmade => kept(sorted, part, columns::unmade(id, rules)),
             Made::Broken => kept(sorted, part, broken(id, LOST_COLUMNS)),
         },
         Found::Split(split) => {
             sorted.filled.extend(split.fill);
             for piece in split.narrow {
-                sort(id, piece.part, narrowest, Sorting::Piece(&piece.cuts), sorted, meter)?;
+                sort(id, piece.part, narrowest, rules, Sorting::Piece(&piece.cuts), sorted, meter)?;
             }
         }
         Found::Broad | Found::Filled => sorted.filled.push(part),
@@ -141,10 +150,10 @@ fn kept(sorted: &mut Parts, part: Polygon, said: Diagnostic) {
     sorted.filled.push(part);
 }
 
-/// `part`, wider than a satin column somewhere, split into its broad and narrow parts ([`split`]), with
-/// `meter`'s work; [`Found::Broken`] when a region's edges can't be joined into rings, a bug.
-fn broad(part: &Polygon, meter: &mut Meter) -> Result<Found, Exhausted> {
-    let Some(split) = split::split(part, meter)? else { return Ok(Found::Broken(UNSPLIT)) };
+/// `part`, wider than a satin column somewhere, split into its broad and narrow parts by `rules` ([`split`]),
+/// with `meter`'s work; [`Found::Broken`] when a region's edges can't be joined into rings, a bug.
+fn broad(part: &Polygon, rules: &AutoParams, meter: &mut Meter) -> Result<Found, Exhausted> {
+    let Some(split) = split::split(part, rules, meter)? else { return Ok(Found::Broken(UNSPLIT)) };
     Ok(Found::Split(split))
 }
 
@@ -164,16 +173,16 @@ enum Found {
     Broken(&'static str),
 }
 
-/// What becomes of `part`, an area's whose narrowest satin stroke is `narrowest`, with `meter`'s work: its
-/// centre lines when it is narrower than that everywhere and no speck, or columns when it is no wider than
-/// [`SATIN_MAX_WIDTH`] everywhere.
-fn lines(part: &Polygon, narrowest: Mm, meter: &mut Meter) -> Result<Found, Exhausted> {
-    if speck(part.area()) {
+/// What becomes of `part`, an area's whose narrowest satin stroke is `narrowest` and whose settings of the
+/// rules are `rules`, with `meter`'s work: its centre lines when it is narrower than that everywhere and no
+/// speck, or columns when it is no wider than the widest satin column everywhere.
+fn lines(part: &Polygon, narrowest: Mm, rules: &AutoParams, meter: &mut Meter) -> Result<Found, Exhausted> {
+    if speck(part.area(), rules.auto_min_area_mm2) {
         return Ok(Found::Filled);
     }
     let Some(narrow) = within(part, narrowest, meter)? else { return Ok(Found::Broken(UNJOINED)) };
     if !narrow {
-        let Some(column) = within(part, SATIN_MAX_WIDTH, meter)? else { return Ok(Found::Broken(UNJOINED)) };
+        let Some(column) = within(part, rules.auto_max_satin_width_mm, meter)? else { return Ok(Found::Broken(UNJOINED)) };
         return Ok(if column { Found::Columns } else { Found::Broad });
     }
     match strips::centre_lines(part, piece(part), meter)? {
@@ -348,7 +357,6 @@ mod tests {
     use stitchcraft_core::rng::SplitMix64;
 
     use super::*;
-    use crate::auto::SMALLEST_AREA;
     use crate::normalize::region::geom;
 
     #[test]
@@ -431,7 +439,7 @@ mod tests {
         let ring = Polygon { outline: geom::closed(&corners), holes: vec![geom::closed(&circle(50.4, 0.0, 0.6, 40, 0.0))] };
         let area = ElementId::new("area").unwrap();
         let parts = vec![square.clone(), speck.clone(), ended.clone(), strip.clone(), dot.clone(), ring.clone()];
-        let sorted = sorted(&area, parts, Mm::new(1.5).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        let sorted = sorted(&area, parts, Mm::new(1.5).unwrap(), &AutoParams::defaults(), &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(sorted.filled, [square, speck, dot, ring]);
         let [Along::Columns(columns), Along::Narrow(Narrow { part, lines, width })] = sorted.along.as_slice() else { panic!("{:?}", sorted.along) };
         assert_eq!(columns.part, ended);
@@ -448,11 +456,11 @@ mod tests {
         // part of a part split is never so wide, since the split's opening takes every disc that wide; one
         // that were stays in the fill whole, and isn't split again.
         let tabbed = outline(&[(0.0, 0.0), (20.0, 0.0), (20.0, 8.5), (32.0, 8.5), (32.0, 11.5), (20.0, 11.5), (20.0, 20.0), (0.0, 20.0)]);
-        let (area, narrowest) = (ElementId::new("area").unwrap(), Mm::new(1.0).unwrap());
-        let part = sorted(&area, vec![tabbed.clone()], narrowest, &mut Budget::DEFAULT.meter()).unwrap();
+        let (area, narrowest, rules) = (ElementId::new("area").unwrap(), Mm::new(1.0).unwrap(), AutoParams::defaults());
+        let part = sorted(&area, vec![tabbed.clone()], narrowest, &rules, &mut Budget::DEFAULT.meter()).unwrap();
         assert!(matches!(part.along.as_slice(), [Along::Columns(_)]), "{:?}", part.along);
         let mut piece = Parts::default();
-        sort(&area, tabbed.clone(), narrowest, Sorting::Piece(&[]), &mut piece, &mut Budget::DEFAULT.meter()).unwrap();
+        sort(&area, tabbed.clone(), narrowest, &rules, Sorting::Piece(&[]), &mut piece, &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(piece, Parts { filled: vec![tabbed], ..Parts::default() });
     }
 
@@ -474,11 +482,11 @@ mod tests {
         let broken = Polygon { outline: clockwise(circle(50.0, 0.0, 4.0, 20, 0.5)), holes: vec![geom::closed(&circle(51.6, 0.0, 2.4, 40, 0.0))] };
         let area = ElementId::new("area").unwrap();
         let parts = vec![dot.clone(), pinched.clone(), broken.clone()];
-        let sorted = sorted(&area, parts, Mm::new(1.5).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        let sorted = sorted(&area, parts, Mm::new(1.5).unwrap(), &AutoParams::defaults(), &mut Budget::DEFAULT.meter()).unwrap();
         assert!(sorted.along.is_empty(), "{:?}", sorted.along);
         assert_eq!(sorted.filled, [dot, pinched, broken]);
         let [unmade, lost] = sorted.said.as_slice() else { panic!("{:?}", sorted.said) };
-        assert_eq!(*unmade, columns::unmade(&area));
+        assert_eq!(*unmade, columns::unmade(&area, &AutoParams::defaults()));
         assert_eq!((lost.code, lost.element.as_ref()), (Code::InternalCheckFailed, Some(&area)));
         assert_eq!(lost.message, format!("{LOST_COLUMNS}, so the part is filled. This is a bug in StitchCraft."));
     }
@@ -502,7 +510,8 @@ mod tests {
             .collect();
         let plate = Polygon { holes, ..outline(&[(0.0, 0.0), (side, 0.0), (side, side), (0.0, side)]) };
         let area = ElementId::new("area").unwrap();
-        let sorted = sorted(&area, vec![strip.clone(), plate.clone()], Mm::new(6.0).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        let sorted =
+            sorted(&area, vec![strip.clone(), plate.clone()], Mm::new(6.0).unwrap(), &AutoParams::defaults(), &mut Budget::DEFAULT.meter()).unwrap();
         assert!(sorted.filled.is_empty() && sorted.said.is_empty(), "{sorted:?}");
         assert_eq!(sorted.along.iter().map(narrow_part).collect::<Vec<_>>(), [&strip, &plate]);
     }
@@ -511,8 +520,9 @@ mod tests {
     fn a_part_of_1_square_millimetre_is_no_speck() {
         // A strip 0.5 mm wide and 2 mm long, as large as a speck can't be: narrow, with a line along it.
         let strip = outline(&[(0.0, 0.0), (2.0, 0.0), (2.0, 0.5), (0.0, 0.5)]);
-        assert_eq!(strip.area(), SMALLEST_AREA);
-        let sorted = sorted(&ElementId::new("area").unwrap(), vec![strip.clone()], Mm::new(1.5).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(strip.area(), AutoParams::defaults().auto_min_area_mm2);
+        let (area, rules) = (ElementId::new("area").unwrap(), AutoParams::defaults());
+        let sorted = sorted(&area, vec![strip.clone()], Mm::new(1.5).unwrap(), &rules, &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(sorted.along.iter().map(narrow_part).collect::<Vec<_>>(), [&strip]);
     }
 

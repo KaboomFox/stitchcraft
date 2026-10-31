@@ -2,14 +2,15 @@
 //!
 //! A family's live effect reads the object it is given with the VectorCraft adapter, as an element of its
 //! family with its record's parameters, and shows it as [`crate::preview`] decides: its stitches, a fill's
-//! rows or its outline, or the object as it is, with why ([`sew`]).
+//! rows or its outline, or the object as it is, with why ([`sew`]). The Auto effect reads it as the
+//! automatic elements it is, and shows the stitches automatic digitizing chooses for them ([`auto`]).
 
 use serde_json::{Value, json};
 use stitchcraft_core::{Code, Diagnostic, Fix};
 use stitchcraft_params::Family;
-use stitchcraft_vectorcraft::{effect_error, read_effect};
+use stitchcraft_vectorcraft::{effect_error, read_auto_effect, read_effect};
 
-use crate::preview::{FUEL_BASE, show, spendable};
+use crate::preview::{FUEL_BASE, reading, show, show_auto, spendable};
 
 /// Why a run failed. The ABI shim turns these into the negative return codes VectorCraft expects.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -36,8 +37,20 @@ impl RunError {
 /// the object as it is.
 pub fn sew(family: Family, input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
     let spend = spendable(FUEL_BASE, input.len(), params.len());
-    Ok(match read_effect(family, input, params, &crate::preview::reading(spend)) {
+    Ok(match read_effect(family, input, params, &reading(spend)) {
         Ok(effect) => show(family, &effect, spend),
+        Err(refusal) => effect_error(&refusal),
+    })
+}
+
+/// StitchCraft's Auto live effect (`REQ-VC-016`): the object VectorCraft gives it, read as the automatic
+/// elements `stitch export` reads it as, with the record's settings of the rules, and shown as automatic
+/// digitizing sews them, within what VectorCraft lets the effect spend. When it shows no stitches, the
+/// output says why, as a family's does.
+pub fn auto(input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
+    let spend = spendable(FUEL_BASE, input.len(), params.len());
+    Ok(match read_auto_effect(input, params, &reading(spend)) {
+        Ok(effect) => show_auto(&effect, spend),
         Err(refusal) => effect_error(&refusal),
     })
 }
@@ -219,6 +232,22 @@ mod tests {
         assert!(error(&run(Family::Fill, &square(), &[("fill_method", json!("contour_fill"))])).starts_with("warning SC-W0011: "));
         assert!(error(&run(Family::Fill, &square(), &[("fill_method", json!("plaid"))])).starts_with("error SC-E0101: "));
         assert!(error(&run(Family::Stroke, &json!({"subpaths": []}), &[])).starts_with("warning SC-W0808: It draws nothing"));
+    }
+
+    #[test]
+    fn req_vc_016_the_auto_effect_previews_its_object_or_says_why_it_cannot() {
+        let run =
+            |input: &[u8], set: &[(&str, Value)]| -> Value { serde_json::from_slice(&auto(input, &testing::auto_params(set)).unwrap()).unwrap() };
+        // As VectorCraft gives an object up to 0.13, without its paints, which say what automatic digitizing sews.
+        assert!(error(&run(&input(&square()), &[])).starts_with("info SC-I0810: Automatic digitizing sews an object by its fill and its stroke"));
+        // A filled square is filled, and its rows are ribbons.
+        let rows = run(&testing::painted(&square(), true, None), &[]);
+        assert!(rows["objects"][0]["path"]["subpaths"].as_array().is_some_and(|ribbons| ribbons.iter().all(|r| r["closed"] == true)), "{rows}");
+        // A setting VectorCraft passes is the shape's: a narrower widest satin column fills a line 5 mm wide.
+        let line = testing::painted(&testing::line(&[(0.0, 0.0), (100.0, 0.0)]), false, Some(points(5.0)));
+        assert!(across(&run(&line, &[])) > 5.0, "a satin column, as wide as the line and its pull compensation");
+        let filled = run(&line, &[(stitchcraft_engine::auto::MAX_SATIN_WIDTH, json!(4))]);
+        assert!(across(&filled) < 5.0, "a fill's top rows, inside the line: {}", across(&filled));
     }
 
     #[test]

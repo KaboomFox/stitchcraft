@@ -1,12 +1,12 @@
 # Level B: VectorCraft installs each of StitchCraft's modules and lists it as the plug-in it is: a stitch
-# family's live effect, a machine format's exporter, or a filter: Design Settings, Stroke to Satin, which asks
-# for a heavy budget the run allows, and Test Sheet (docs/src/design/compatibility-gate.md).
-description = "VectorCraft installs each of StitchCraft's modules, and lists each stitch family's live effect, each machine format's exporter and each filter."
-requirements = ["REQ-VC-002", "REQ-VC-011", "REQ-VC-013", "REQ-VC-014", "REQ-VC-015"]
+# family's live effect, the Auto effect, a machine format's exporter, or a filter: Design Settings, Stroke to
+# Satin, which asks for a heavy budget the run allows, and Test Sheet (docs/src/design/compatibility-gate.md).
+description = "VectorCraft installs each of StitchCraft's modules, and lists each stitch family's live effect, the Auto effect, each machine format's exporter and each filter."
+requirements = ["REQ-VC-002", "REQ-VC-011", "REQ-VC-013", "REQ-VC-014", "REQ-VC-015", "REQ-VC-016"]
 
 [[run]]
-plugins = ["stroke", "satin", "fill", "pes", "dst", "settings", "stroke-to-satin", "testsheet"]
+plugins = ["stroke", "satin", "fill", "auto", "pes", "dst", "settings", "stroke-to-satin", "testsheet"]
 steps = [{ cmd = "plugin.list" }]
 
 [expect]
-listed = ["stroke", "satin", "fill", "pes", "dst", "settings", "stroke-to-satin", "testsheet"]
+listed = ["stroke", "satin", "fill", "auto", "pes", "dst", "settings", "stroke-to-satin", "testsheet"]

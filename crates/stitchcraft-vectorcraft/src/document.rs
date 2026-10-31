@@ -25,6 +25,14 @@
 //! a group's, or 2 groups', is drawn in VectorCraft as one effect run on the stitches of another, which a
 //! machine cannot sew. It sews by the nearest, and `SC-W0807` says so.
 //!
+//! **The Auto effect** (`REQ-VC-016`). StitchCraft's Auto effect asks StitchCraft to choose the stitches:
+//! an object it reaches sews by its paints, as an object without effects does, and each of its fills and
+//! strokes is an automatic element (`REQ-AUTO-001`), with or without `--auto`, the effect's parameters its
+//! settings of the rules (`REQ-AUTO-020`). It reaches as far as a stitch effect does: the object it is on,
+//! or the paths inside the group or the layer, unless they are nearer to other StitchCraft effects. A
+//! stitch effect says how an object sews, so an Auto effect beside one isn't used, and `SC-W0807` says
+//! so.
+//!
 //! **Ids.** A design element is `vc:<label>:<what>`. The label is the object's id, which VectorCraft keeps
 //! when it saves, or `#<n>` when it has none (the n-th object read), with `~2`, `~3`, … when it repeats
 //! ([`Labels`]). `<what>` is `fill` or `stroke` for a paint, `fill.2` and so on from an object's second,
@@ -60,7 +68,7 @@ use std::rc::Rc;
 
 use serde_json::Value;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
-use stitchcraft_engine::auto::Stitches;
+use stitchcraft_engine::auto::{self, Stitches};
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Reading, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::stitch_type::Family;
@@ -71,7 +79,7 @@ use crate::container::{self, unreadable};
 use crate::geometry::{self, UNUSABLE_HINT};
 use crate::values::{sews, text};
 use crate::wire::{self, Dash, Effect, Item, Kind, Node, Paint, PathData, Profile};
-use crate::{FORMAT, color, effect_name, settings};
+use crate::{AUTO, FORMAT, color, effect_name, settings};
 
 /// A stroke's miter limit when the file leaves it out: VectorCraft's, as Illustrator's.
 const MITER_LIMIT: f64 = 10.0;
@@ -114,8 +122,8 @@ pub fn read(bytes: &[u8], budget: &Budget) -> Result<VectorCraft, Diagnostic> {
 
 /// The design in the `.vectorcraft` file `bytes`, read within `budget` as `reading` asks: with `auto`, an
 /// object without StitchCraft effects, its own or a group's or a layer's around it, is an automatic element
-/// (`REQ-AUTO-001`), and with `sort_colours` every element sews in the order automatic digitizing chooses
-/// (`REQ-AUTO-011`). Fails as [`read`] does.
+/// (`REQ-AUTO-001`), as one the Auto effect reaches is without it (`REQ-VC-016`), and with `sort_colours`
+/// every element sews in the order automatic digitizing chooses (`REQ-AUTO-011`). Fails as [`read`] does.
 pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<VectorCraft, Diagnostic> {
     let mut meter = budget.meter();
     let json = container::json(bytes, &mut meter)?;
@@ -155,15 +163,29 @@ pub(crate) fn exhausted() -> Diagnostic {
 enum Ours<'a> {
     /// One of the stitch families, with the effect's parameters.
     Family(Family, &'a Value),
-    /// A StitchCraft effect that names no stitch family, such as a newer version's.
+    /// The Auto effect ([`AUTO`]), with its parameters: the settings of automatic digitizing's rules.
+    Auto(&'a Value),
+    /// A StitchCraft effect that names neither, such as a newer version's.
     Other(&'a str),
 }
 
 /// The StitchCraft effect `effect` is, if it is one.
 fn ours(effect: &Effect) -> Option<Ours<'_>> {
     let name = effect_name(&effect.id)?;
+    if name == AUTO {
+        return Some(Ours::Auto(&effect.params));
+    }
     Some(Family::ALL.iter().find(|f| f.id() == name).map_or(Ours::Other(name), |f| Ours::Family(*f, &effect.params)))
 }
+
+/// What an Auto effect beside a stitch effect on `who`, an object, a group or a layer, says: the stitch
+/// effect says how it sews (`REQ-VC-016`).
+fn beside_auto(who: &str) -> String {
+    format!("{who} has StitchCraft's Auto effect beside a stitch effect, which says how it sews: the Auto effect is not used.")
+}
+
+/// How an Auto effect beside a stitch effect is used.
+const BESIDE_AUTO: &str = "Remove the Auto effect, or the stitch effects to let StitchCraft choose the stitches.";
 
 /// An object's style of stroke: its width, how it turns corners and how it ends.
 type Style = (Mm, Join, Cap);
@@ -175,8 +197,12 @@ type Effects<'a> = Vec<(Family, &'a Value)>;
 /// What the groups and layers around an object give it.
 #[derive(Default)]
 struct Around<'a> {
-    /// The StitchCraft effects of the nearest that has any, shared by everything inside it.
+    /// The StitchCraft stitch effects of the nearest that has any, shared by everything inside it.
     effects: Rc<[(Family, &'a Value)]>,
+    /// The parameters of the Auto effect of the nearest that has a StitchCraft effect, if it has one:
+    /// without stitch effects there, which say how what is inside it sews, everything inside it is
+    /// automatic, with these settings (`REQ-VC-016`).
+    auto: Option<&'a Value>,
     /// How many of them have StitchCraft effects.
     levels: u32,
     /// The paints of the groups and layers around that paint, the outermost first: none for a clip group's
@@ -438,28 +464,31 @@ impl Reader {
     /// A layer or a group: its children in order, but a Shaper group's first, the sources it shows the
     /// shapes of. Its StitchCraft effects reach the paths inside it, which `around` adds to.
     fn container<'a>(&mut self, node: &'a Node, kind: &'a Kind, label: &str, around: &Around<'a>) -> Result<(), Diagnostic> {
-        let what = if kind.name == "layer" { "A layer" } else { "A group" };
+        let who = called(node, if kind.name == "layer" { "A layer" } else { "A group" });
         if kind.clip {
-            let message = format!("{} clips what it holds, and the clipping is not applied: what it holds is stitched whole.", called(node, what));
+            let message = format!("{who} clips what it holds, and the clipping is not applied: what it holds is stitched whole.");
             self.feature(label, message, Some("Cut the art to shape with Pathfinder, then release the clipping mask."));
         }
         let appearance = &node.appearance;
         let paints = appearance.items.iter().any(drawn).then(|| {
             let message = format!(
-                "{} has fills or strokes of its own, which VectorCraft paints what it holds with. They are not stitched as shapes \
-                 of their own, and give their thread and stroke to the StitchCraft effects they paint.",
-                called(node, what)
+                "{who} has fills or strokes of its own, which VectorCraft paints what it holds with. They are not stitched as shapes \
+                 of their own, and give their thread and stroke to the StitchCraft effects they paint."
             );
             self.feature(label, message, Some("Make objects of them with Object › Expand Appearance."));
             let (below, above) = appearance.items.split_at(appearance.contents_index.unwrap_or(0).min(appearance.items.len()));
             Rc::new(Paints { label: label.to_string(), below: Part::new(below), above: Part::new(above) })
         });
-        let unused = |id: &str| format!("{} has the effect {id}, which is not applied to what it holds.", called(node, what));
+        let unused = |id: &str| format!("{who} has the effect {id}, which is not applied to what it holds.");
         let hint = "Apply effects to the paths inside, or make paths of what they draw with Object › Expand Appearance.";
-        let effects = self.effects(node, label, unused, hint);
-        self.chained(label, &called(node, what), effects.len());
-        let gives = !effects.is_empty();
+        let (effects, auto) = self.effects(node, label, unused, hint);
+        self.chained(label, &who, effects.len());
+        if auto.is_some() && !effects.is_empty() {
+            self.feature(label, beside_auto(&who), Some(BESIDE_AUTO));
+        }
+        let gives = !effects.is_empty() || auto.is_some();
         let inside = (gives || paints.is_some()).then(|| Around {
+            auto: if gives { auto } else { around.auto },
             effects: if gives { effects.into() } else { Rc::clone(&around.effects) },
             levels: around.levels.saturating_add(u32::from(gives)),
             painters: match paints {
@@ -474,7 +503,13 @@ impl Reader {
                 // A clip group's first object is its clipping object. VectorCraft runs the effects of the
                 // groups around it on it too, and paints it with its own paints alone.
                 (0, true, _) => {
-                    let clipping = Around { effects: Rc::clone(&inside.effects), levels: inside.levels, painters: Rc::default(), clipping: true };
+                    let clipping = Around {
+                        effects: Rc::clone(&inside.effects),
+                        auto: inside.auto,
+                        levels: inside.levels,
+                        painters: Rc::default(),
+                        clipping: true,
+                    };
                     self.node(child, &clipping)?;
                 }
                 // A Shaper group's first object holds the sources it shows the shapes of.
@@ -485,22 +520,25 @@ impl Reader {
         Ok(())
     }
 
-    /// The visible StitchCraft effects of `node`, in their order. A StitchCraft effect that names no stitch
-    /// family is named, and so is each of VectorCraft's own effects: `unused` says what becomes of the one
-    /// whose quoted id it is given, and `hint` how to stitch what it draws.
-    fn effects<'a>(&mut self, node: &'a Node, label: &str, unused: impl Fn(&str) -> String, hint: &str) -> Effects<'a> {
-        let mut effects = Vec::new();
+    /// The visible StitchCraft stitch effects of `node`, in their order, and the parameters of its first
+    /// visible Auto effect. A StitchCraft effect that is neither is named, and so is each of VectorCraft's
+    /// own effects: `unused` says what becomes of the one whose quoted id it is given, and `hint` how to
+    /// stitch what it draws. An Auto effect after the first is named too, unused.
+    fn effects<'a>(&mut self, node: &'a Node, label: &str, unused: impl Fn(&str) -> String, hint: &str) -> (Effects<'a>, Option<&'a Value>) {
+        let (mut effects, mut auto) = (Vec::new(), None);
         for effect in node.appearance.effects.iter().filter(|e| e.visible) {
             match ours(effect) {
                 Some(Ours::Family(family, params)) => effects.push((family, params)),
+                Some(Ours::Auto(params)) if auto.is_none() => auto = Some(params),
+                Some(Ours::Auto(_)) => self.feature(label, "A second StitchCraft Auto effect is not used: the first is.".to_string(), None),
                 Some(Ours::Other(name)) => {
                     let message = format!("The StitchCraft effect {} stitches nothing, and is not used.", quoted(name));
-                    self.feature(label, message, Some("Use StitchCraft's Fill, Stroke or Satin effect."));
+                    self.feature(label, message, Some("Use StitchCraft's Fill, Stroke, Satin or Auto effect."));
                 }
                 None => self.feature(label, unused(&quoted(&effect.id)), Some(hint)),
             }
         }
-        effects
+        (effects, auto)
     }
 
     /// A compound path: its paths' subpaths, one shape with the compound's appearance and fill rule.
@@ -532,9 +570,14 @@ impl Reader {
             }
         };
         let unused = |id: &str| format!("The effect {id} is not applied: the object is stitched as it is drawn without it.");
-        let own = self.effects(node, label, unused, EXPAND_EFFECT);
-        self.chained(label, &called(node, "The object"), own.len());
-        let levels = around.levels.saturating_add(u32::from(!own.is_empty()));
+        let (own, own_auto) = self.effects(node, label, unused, EXPAND_EFFECT);
+        let who = called(node, "The object");
+        self.chained(label, &who, own.len());
+        if own_auto.is_some() && !own.is_empty() {
+            self.feature(label, beside_auto(&who), Some(BESIDE_AUTO));
+        }
+        let gives = !own.is_empty() || own_auto.is_some();
+        let levels = around.levels.saturating_add(u32::from(gives));
         if levels > 1 {
             let message = format!(
                 "{} gets StitchCraft effects from more than one level, its own or those of the groups and layers around it, and \
@@ -550,9 +593,10 @@ impl Reader {
             };
             self.feature(label, message, Some(hint));
         }
-        let effects = if own.is_empty() { &around.effects[..] } else { own.as_slice() };
+        // The nearest StitchCraft effects say how it sews: its own, or else those of the groups around it.
+        let (effects, auto) = if gives { (own.as_slice(), own_auto) } else { (&around.effects[..], around.auto) };
         if effects.is_empty() {
-            return self.by_paints(node, label, &path, rule);
+            return self.by_paints(node, label, &path, rule, auto);
         }
         // Each group around that paints is a step more in finding the thread and the stroke.
         self.charge(around.painters.len() as u64)?;
@@ -560,8 +604,15 @@ impl Reader {
         self.by_effects(node, label, &path, rule, effects, &painting(label, &paints, around))
     }
 
-    /// The elements of an object without StitchCraft effects: the fills VectorCraft draws, then its strokes.
-    fn by_paints(&mut self, node: &Node, label: &str, path: &Path, rule: FillRule) -> Result<(), Diagnostic> {
+    /// The elements of an object without StitchCraft stitch effects: the fills VectorCraft draws, then its
+    /// strokes. Each is automatic with `--auto`, and when an Auto effect reaches the object, its own or a
+    /// group's, whose parameters `auto` are then its settings of the rules (`REQ-VC-016`).
+    fn by_paints(&mut self, node: &Node, label: &str, path: &Path, rule: FillRule, auto: Option<&Value>) -> Result<(), Diagnostic> {
+        let automatic = self.auto || auto.is_some();
+        let params = match auto {
+            Some(params) => self.params(label, AUTO, params)?,
+            None => ParamSet::new(),
+        };
         for item in node.appearance.items.iter().filter(|item| !matches!(item.kind.as_str(), "fill" | "stroke")) {
             self.feature(label, format!("An appearance item of the kind {} is not stitched.", quoted(&item.kind)), None);
         }
@@ -570,7 +621,7 @@ impl Reader {
             let Some(thread) = self.thread(label, item.paint.as_ref()) else { continue };
             fills += 1;
             let shape = Shape::Fill { path: path.clone(), rule };
-            self.element(node, label, &rank("fill", fills), shape, thread, ParamSet::new(), self.auto)?;
+            self.element(node, label, &rank("fill", fills), shape, thread, params.clone(), automatic)?;
         }
         // VectorCraft paints the items in order, the first lowest, and the fills are sewn first.
         let items = &node.appearance.items;
@@ -593,15 +644,15 @@ impl Reader {
             }
             self.stroke_marks(label, item);
             // An automatic stroke sewn across its width follows its caps, and not what VectorCraft draws
-            // across it (`REQ-AUTO-005`).
-            let stitches = Stitches::of_stroke(width, &self.settings);
-            if self.auto && stitches.across() {
+            // across it (`REQ-AUTO-005`), by its settings of the rules.
+            let stitches = auto::rules(&params).map(|rules| Stitches::of_stroke(width, &self.settings, &rules));
+            if let Some(stitches) = stitches.filter(|stitches| automatic && stitches.across()) {
                 let what = if stitches == Stitches::Satin { "satin column" } else { "fill" };
                 self.across(label, what, item, path, false);
             }
             strokes += 1;
             let shape = Shape::Stroke { path: path.clone(), width, join, cap };
-            self.element(node, label, &rank("stroke", strokes), shape, thread, ParamSet::new(), self.auto)?;
+            self.element(node, label, &rank("stroke", strokes), shape, thread, params.clone(), automatic)?;
         }
         Ok(())
     }
@@ -630,7 +681,7 @@ impl Reader {
             };
             // Only the object's own effects can find no paint ([`Reader::shape`]).
             let thread = thread.unwrap_or_else(|| black.get_or_insert_with(|| self.unpainted(node, label)).clone());
-            let mut set = self.params(label, *family, params)?;
+            let mut set = self.params(label, family.id(), params)?;
             if *family != Family::Fill {
                 self.followed(label, *family, &set, path, painting);
             }
@@ -759,9 +810,10 @@ impl Reader {
         }
     }
 
-    /// An effect's parameters as the element's: each value written as the parameters read it. VectorCraft's
-    /// own keys and the plug-in's preview level are not the element's ([`sews`]).
-    fn params(&mut self, label: &str, family: Family, params: &Value) -> Result<ParamSet, Diagnostic> {
+    /// The parameters of the StitchCraft effect `name`, a stitch family's id or [`AUTO`], as the element's:
+    /// each value written as the parameters read it. VectorCraft's own keys and the plug-in's preview level
+    /// are not the element's ([`sews`]).
+    fn params(&mut self, label: &str, name: &str, params: &Value) -> Result<ParamSet, Diagnostic> {
         let mut set = ParamSet::new();
         let hint = Some("Set the parameter again in the effect's dialog.");
         match params {
@@ -775,9 +827,8 @@ impl Reader {
                         }
                         None => {
                             let message = format!(
-                                "The parameter {} of its StitchCraft {} effect is not a number, a toggle, a choice or a list of them, and keeps its default.",
-                                quoted(key),
-                                family.id()
+                                "The parameter {} of its StitchCraft {name} effect is not a number, a toggle, a choice or a list of them, and keeps its default.",
+                                quoted(key)
                             );
                             self.feature(label, message, hint);
                         }
@@ -785,8 +836,7 @@ impl Reader {
                 }
             }
             _ => {
-                let message =
-                    format!("The parameters of its StitchCraft {} effect are not names and values, and all keep their defaults.", family.id());
+                let message = format!("The parameters of its StitchCraft {name} effect are not names and values, and all keep their defaults.");
                 self.feature(label, message, hint);
             }
         }

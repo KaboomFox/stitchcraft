@@ -56,7 +56,7 @@ fn req_vc_015_each_sheet_drawn_sews_as_its_design_moved_to_the_artboard() {
         assert_eq!(ids, families, "{}", sheet.id);
         drawn_sheets.push(sheet.id);
     }
-    assert_eq!(drawn_sheets, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09"]);
+    assert_eq!(drawn_sheets, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-13A", "TS-13B", "TS-13C"]);
     // The sheets draw both.
     assert!(kinds.iter().all(|(several, kind)| kind == if *several { "compound" } else { "path" }), "{kinds:?}");
     assert!(kinds.iter().any(|(several, _)| *several) && kinds.iter().any(|(several, _)| !several), "{kinds:?}");
@@ -87,10 +87,10 @@ fn req_vc_015_the_objects_selected_stay_as_they_are_and_the_sheet_goes_above_the
 
 #[test]
 fn req_vc_015_a_record_holds_each_setting_as_its_dialog_row_takes_it() {
-    let schemas = |family: Family| declared().into_iter().find(|(each, _)| *each == family).unwrap().1;
+    let schemas = |family: Family| declared().into_iter().find(|(each, _)| *each == Module::Family(family)).unwrap().1;
     let set = |pairs: &[(&str, &str)]| pairs.iter().copied().collect::<ParamSet>();
     let held = record_params(
-        Family::Stroke,
+        Module::Family(Family::Stroke),
         &set(&[("running_stitch_length_mm", "2.5"), ("bean_stitch_repeats", "2"), ("trim_after", "true"), ("lock_start", "back_forth")]),
         &schemas(Family::Stroke),
     )
@@ -100,10 +100,10 @@ fn req_vc_015_a_record_holds_each_setting_as_its_dialog_row_takes_it() {
         json!({"bean_stitch_repeats": 2, "lock_start": "back_forth", "running_stitch_length_mm": 2.5, "trim_after": true})
     );
     // A satin column's `satin_column` is its effect's to set.
-    assert_eq!(record_params(Family::Satin, &set(&[("satin_column", "true")]), &schemas(Family::Satin)), Ok(Map::new()));
+    assert_eq!(record_params(Module::Family(Family::Satin), &set(&[("satin_column", "true")]), &schemas(Family::Satin)), Ok(Map::new()));
     // A setting the effect doesn't declare, a value of another kind, and one out of its row's range: each
     // VectorCraft would drop, refuse or change.
-    let refused = |pairs: &[(&str, &str)]| record_params(Family::Stroke, &set(pairs), &schemas(Family::Stroke)).unwrap_err();
+    let refused = |pairs: &[(&str, &str)]| record_params(Module::Family(Family::Stroke), &set(pairs), &schemas(Family::Stroke)).unwrap_err();
     assert_eq!(refused(&[("row_spacing_mm", "0.3")]), "its setting `row_spacing_mm = 0.3` is no setting of its stroke effect's record");
     assert_eq!(
         refused(&[("running_stitch_length_mm", "long")]),
@@ -114,8 +114,16 @@ fn req_vc_015_a_record_holds_each_setting_as_its_dialog_row_takes_it() {
     // setting's: the record would sew otherwise.
     let numbered = [("bean_stitch_repeats", Schema::Number { min: 0.0, max: 10.0, default: 0.0 })];
     assert_eq!(
-        record_params(Family::Stroke, &set(&[("bean_stitch_repeats", "2.5")]), &numbered),
+        record_params(Module::Family(Family::Stroke), &set(&[("bean_stitch_repeats", "2.5")]), &numbered),
         Err("its setting `bean_stitch_repeats = 2.5` doesn't read back from its stroke effect's record".to_string())
+    );
+    // An automatic shape's settings of the rules are the Auto effect's, which declares no stitch's.
+    let auto = declared().into_iter().find(|(each, _)| *each == Module::Auto).unwrap().1;
+    let rules = record_params(Module::Auto, &set(&[("auto_min_area_mm2", "2.5"), ("auto_ignore_background", "false")]), &auto).unwrap();
+    assert_eq!(Value::Object(rules), json!({"auto_ignore_background": false, "auto_min_area_mm2": 2.5}));
+    assert_eq!(
+        record_params(Module::Auto, &set(&[("row_spacing_mm", "0.3")]), &auto),
+        Err("its setting `row_spacing_mm = 0.3` is no setting of its auto effect's record".to_string())
     );
 }
 
@@ -146,7 +154,7 @@ fn req_vc_015_the_filter_s_manifest_offers_the_sheets_drawn_as_designs() {
     assert_eq!(validate(&serde_json::to_vec(&manifest).unwrap()), Ok(()));
     assert_eq!((manifest.id.as_str(), manifest.kind, manifest.budget), ("dev.stitchcraft.testsheet", "filter", BudgetClass::Light));
     let [(SHEET, sheet)] = manifest.params.as_slice() else { panic!("{:?}", manifest.params) };
-    let ids = vec!["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09"];
+    let ids = vec!["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-13A", "TS-13B", "TS-13C"];
     assert_eq!(sheet.schema, Schema::Choice { options: ids, default: "TS-02B" });
     // Its help names what each sheet tests, from the sheets themselves.
     let help = sheet.ui.help.as_deref().unwrap();
