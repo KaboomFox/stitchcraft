@@ -1,6 +1,8 @@
 # Pinned so lints and formatting are identical for everyone and in CI. Bump in its own PR.
 # CI adds the wasm32-unknown-unknown target explicitly (`rustup target add`).
+# Not 1.97.0: its release build wrote past the end of a vector planning a satin column drawn as one closed
+# path, which CI's release tests catch (crates/stitchcraft-engine/tests/release.rs).
 [toolchain]
-channel = "1.97.0"
+channel = "1.99.0"
 components = ["rustfmt", "clippy"]
 profile = "minimal"

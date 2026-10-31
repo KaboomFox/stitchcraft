@@ -9,7 +9,7 @@ use crate::shots::load;
 fn picture(width: u32, changed: usize) -> Vec<u8> {
     let mut pixmap = tiny_skia::Pixmap::new(width, 10).unwrap();
     pixmap.fill(tiny_skia::Color::from_rgba8(100, 100, 100, 255));
-    for pixel in pixmap.data_mut().chunks_exact_mut(4).take(changed) {
+    for pixel in pixmap.data_mut().as_chunks_mut::<4>().0.iter_mut().take(changed) {
         pixel[0] = 109;
     }
     pixmap.encode_png().unwrap()
@@ -20,7 +20,7 @@ fn picture_with(width: u32, height: u32, block: (u32, u32, u32, u32)) -> Vec<u8>
     let mut pixmap = tiny_skia::Pixmap::new(width, height).unwrap();
     pixmap.fill(tiny_skia::Color::from_rgba8(100, 100, 100, 255));
     let (bx, by, bw, bh) = block;
-    for (i, pixel) in pixmap.data_mut().chunks_exact_mut(4).enumerate() {
+    for (i, pixel) in pixmap.data_mut().as_chunks_mut::<4>().0.iter_mut().enumerate() {
         let i = u32::try_from(i).unwrap();
         let (x, y) = (i % width, i / width);
         if (bx..bx + bw).contains(&x) && (by..by + bh).contains(&y) {
@@ -37,7 +37,7 @@ fn a_change_in_one_place_is_never_close() {
     assert!(!close(&committed, &picture_with(400, 1400, (200, 700, 30, 20))));
     // A few pixels apart in each of several places stay close, as an anti-aliased edge moved.
     let mut scattered = tiny_skia::Pixmap::decode_png(&committed).unwrap();
-    for (i, pixel) in scattered.data_mut().chunks_exact_mut(4).enumerate().filter(|(i, _)| i % 997 == 0) {
+    for (i, pixel) in scattered.data_mut().as_chunks_mut::<4>().0.iter_mut().enumerate().filter(|(i, _)| i % 997 == 0) {
         pixel[0] = 109 + u8::try_from(i % 2).unwrap();
     }
     assert!(close(&committed, &scattered.encode_png().unwrap()));
