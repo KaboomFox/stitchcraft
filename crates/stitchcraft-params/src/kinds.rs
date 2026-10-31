@@ -48,6 +48,8 @@ kinds! {
     Percent => f64, |v| if let Value::Percent(percent) = v { Some(percent) } else { None };
     /// A number without a unit.
     Number => f64, |v| if let Value::Number(n) = v { Some(n) } else { None };
+    /// An area in square millimetres.
+    Area => f64, |v| if let Value::Area(area) = v { Some(area) } else { None };
     /// A whole number.
     Count => u32, |v| if let Value::Count(n) = v { Some(n) } else { None };
     /// On or off.
