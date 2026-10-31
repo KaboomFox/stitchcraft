@@ -240,7 +240,7 @@ fn spans(rings: &[&[Point]], y: f64) -> Vec<(f64, f64)> {
         })
         .collect();
     crossings.sort_by(f64::total_cmp);
-    crossings.chunks_exact(2).map(|pair| (pair[0], pair[1])).collect()
+    crossings.as_chunks::<2>().0.iter().map(|&[a, b]| (a, b)).collect()
 }
 
 /// The stretch of the line at height `y` that lies within `reach` of the stitch from `a` to `b`, from its
