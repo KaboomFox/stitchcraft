@@ -5,6 +5,25 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.7, its third part: StitchCraft's Auto effect in VectorCraft (`REQ-VC-016`).
+  - **Effect › Plug-ins › StitchCraft Auto** makes the object it is applied to, or each path inside the
+    group or the layer, automatic, with or without `--auto`. Its parameters are the shapes' settings of the
+    rules, and its dialog shows them as the registry declares them, with `preview_level`. The nearest
+    StitchCraft effects say how a path sews. A path with a stitch effect of its own sews as that effect
+    says, and an Auto effect beside one isn't used (`SC-W0807`).
+  - Its live effect reads the object as `stitch export` reads it, an area when a fill paints it and a line
+    along its topmost stroke, digitizes it and shows the stitches of each element it becomes: a fill's top
+    rows, and a column's and a running stitch's every stitch. Measured in VectorCraft 0.18.0's host, a
+    unit of digitizing's work takes from about 1,450 instructions to 2,260. A small square shows its
+    stitches, and a larger one, an L, a ring and most traced letters, which digitizing alone takes most of
+    a live effect's budget for, show their outlines. Without the object's paints, before VectorCraft 0.14, it leaves the object as it is
+    (`SC-I0810`).
+  - The Test Sheet filter draws the TS-13 sheets too, their top halves' shapes with the Auto effect, so that
+    MC-8 can start from VectorCraft. The `testsheets` and `install-and-list` cases install the Auto module, and
+    the `trace` case applies the effect to the traced group and sews the document without `--auto`.
+  - The picture tutorial applies the Auto effect, with a picture of its dialog. The automatic codes' hints
+    name the Fill, Stroke and Satin effects, since the Auto effect is a StitchCraft effect too.
+
 - M13.7, VectorCraft, its first part: from a picture to a machine file.
   - `stitch palette` writes a machine's threads as a GIMP palette (`REQ-CLI-011`), the reference machine's
     unless `--profile` names another. VectorCraft loads it as a swatch library, and Image Trace's Document

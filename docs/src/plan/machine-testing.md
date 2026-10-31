@@ -79,7 +79,7 @@ middle of the artboard (`REQ-VC-015`). A checkpoint can so sew a sheet through V
 | MC-3 | M4 | TS-05, TS-06 | Satin spacing, width limits, underlay defaults, pull compensation |
 | MC-4 | M5 | TS-07, TS-08, TS-09 | Fill spacing, pull compensation, gap-filling rows, underlay and travel defaults |
 | MC-5 | M6 | TS-12, TS-10 | Is the VectorCraft workflow complete and correct? Does a test sheet drawn by the Test Sheet filter sew as `stitch testsheet` writes it? |
-| MC-8 | M13.7 | TS-13 | Do pictures digitized automatically sew better than the same shapes in paint order? Are the widest satin column, the narrowest triple run, the overlap, the underlays by width and the columns' pull compensation right? |
+| MC-8 | M13.7 | TS-13, from `stitch testsheet` or drawn in VectorCraft by the Test Sheet filter with the Auto effect | Do pictures digitized automatically sew better than the same shapes in paint order? Are the widest satin column, the narrowest triple run, the overlap, the underlays by width and the columns' pull compensation right? |
 | MC-6 | M7 | TS-11 | New stitch types acceptable? |
 | MC-9 | M14 | TS-14 | Do the fonts sew legibly across the heights they claim? |
 | MC-7 | M12 | all | Release regression |

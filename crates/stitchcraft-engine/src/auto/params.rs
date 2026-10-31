@@ -6,8 +6,8 @@
 //! Settings). MC-8 confirms the values on the machine or changes them, and a picture can need others, so
 //! each is a parameter of the shape it digitizes, read when the shape is digitized ([`AutoParams`]). A
 //! shape that sets none takes the defaults, as every shape does with `--auto`, and the requirements give
-//! the defaults as their numbers. No host sets them before VectorCraft's Auto effect (M13.7), which sets
-//! them for the paths inside the object or group it is applied to.
+//! the defaults as their numbers. VectorCraft's Auto effect (M13.7) sets them from its dialog, for the
+//! object it is on and the paths inside the group or the layer it is on.
 //!
 //! They apply to no stitch type ([`AUTOMATIC`]): an automatic element reads them before it is sewn as any,
 //! and the elements it becomes don't, so no stitch family's dialog shows them. The registry's audit keeps

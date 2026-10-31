@@ -27,7 +27,9 @@ digitizing the default for VectorCraft documents, and `--auto` is then needed fo
 
 VectorCraft's exporter plug-ins ([P1](rfc-vectorcraft-abi-v2.md#p1-exporter-plug-ins), 0.14) move the second
 step into VectorCraft, as File › Export › Export As › PES, which StitchCraft's formats are exporters for since
-M6.9. Their `auto` option is `--auto`.
+M6.9. Their `auto` option is `--auto`. Since M13.7, StitchCraft's Auto effect on the traced group says it in
+the document itself, with the rules' settings in its dialog, and previews each path's stitches: the
+document then sews digitized automatically from either step, without the switch.
 
 An SVG file traced elsewhere, such as by Inkscape's Trace Bitmap, sews the same way with
 `stitch plan picture.svg --auto`. Without the switch, an SVG file's shapes sew as Ink/Stitch sews them,
@@ -59,8 +61,11 @@ Trace's Document Library palette then traces the picture in the threads' colours
 An automatic element is a shape whose stitches StitchCraft chooses. The readers make one of:
 
 - each object of a VectorCraft document that has no StitchCraft effect, with `--auto`;
-- each path inside an object or a group that has the StitchCraft Auto effect (M13.7), unless the path has
-  a StitchCraft effect of its own;
+- each path with the StitchCraft Auto effect, on the path itself or on a group or a layer around it, with
+  or without `--auto` (M13.7, `REQ-VC-016`). A path nearer to a StitchCraft stitch effect, its own or a
+  group's, sews as that says. The effect's parameters are the shape's settings of the rules
+  ([below](#settings)). A stitch effect says how an object sews, so an Auto effect beside one isn't used,
+  and `SC-W0807` says so;
 - each SVG element without `inkstitch:` settings, with `--auto`.
 
 An element with settings is not digitized automatically, whether or not the switch is given: it sews as
@@ -440,17 +445,28 @@ is no setting.
 An automatic element reads the settings before it is sewn as any stitch type, and the ordinary elements it
 becomes don't ([parameter registry](params.md#settings-of-automatic-digitizing)). They are in no stitch
 family's dialog, and a shape that sets them is still automatic. VectorCraft's Auto effect (M13.7) sets them
-for the paths inside the object or group it is applied to, and with `--auto` every shape takes the
-defaults.
+from its dialog for the paths it is on and those inside the group it is on, and with `--auto` every other
+shape takes the defaults.
 
 ## Previews in VectorCraft
 
 The Auto effect is a live effect like the plug-ins of each stitch family
 ([plug-ins](vectorcraft-integration.md#plug-ins)). VectorCraft runs a group's effects on each path inside
 it (`REQ-VC-006`), so the effect on a traced group previews every path's stitches, each sewn as its width
-says. A live effect is given its path alone. Its preview shows each shape's stitches without the
-overlaps, the merged specks or the order, which `stitch export` adds. A preview that costs more than ABI
-v1's budget shows less, with `SC-I0810`, as the other effects' previews do.
+says. A live effect is given its path and its paints alone. Like `stitch export`, it reads the path as an
+area when a fill paints it, and as a line along its topmost stroke. Its preview shows each shape's
+stitches without the overlaps, the merged specks or the order, which `stitch export` adds. VectorCraft
+draws what a live effect returns with every paint of its object. The stitches come back as ribbons that
+the fill fills when a fill paints the object, and as lines that its stroke draws otherwise.
+
+Digitizing is most of a preview's work, from about 1,450 instructions a unit to 2,260 in VectorCraft
+0.18.0's host, and a live effect has 50 million ([live-effect previews](vectorcraft-integration.md#live-effect-previews-within-v1-budgets)).
+A square's takes 12,900 units, an L's 21,000 and a ring's 31,800. The auto level digitizes within eight
+tenths of the budget, then shows each element made as auto shows its family's: a fill's top rows, and a
+satin column's and a running stitch's every stitch. When that costs too much it shows the outline, as a
+larger square, an L, a ring and most traced letters do. Exact shows every stitch, and outline the path,
+hatched across a fill. A preview that costs more than the level allows shows less, with `SC-I0810`, as the
+other effects' previews do. The command line's preview always shows every stitch.
 
 Tracing again replaces the group with a new one, without the effect. Apply the effect after the last
 trace, or use `--auto`, which works without it.

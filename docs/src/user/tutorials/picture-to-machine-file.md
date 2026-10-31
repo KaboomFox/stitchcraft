@@ -32,8 +32,9 @@ In VectorCraft:
 4. Keep the traced shapes, without the picture, with **Object › Image Trace › Expand**.
 5. Save the document, here as `traced-badge.vectorcraft`.
 
-Each traced shape is filled in one of your threads. Leave the shapes without StitchCraft effects: StitchCraft
-chooses the stitches of a shape without one.
+Each traced shape is filled in one of your threads. Leave the shapes without StitchCraft's Fill, Stroke and
+Satin effects: StitchCraft chooses the stitches of a shape without one, with `--auto` or with StitchCraft's
+Auto effect ([below](#in-vectorcraft-the-auto-effect)).
 
 ## 3. Digitize it
 
@@ -53,8 +54,23 @@ same way.
 ![The traced badge digitized automatically. A red disc with a blue square on it and a gold disc in the middle sew as tatami fills, with no white round them.](../../images/generated/traced-badge.png)
 <!-- /shot -->
 
-In VectorCraft, **File › Export › Export As** writes the machine file too: choose PES or DST and switch on
-**Digitize automatically** ([how](../how-to/embroider-a-vectorcraft-design.md)).
+### In VectorCraft, the Auto effect
+
+With the traced group selected, choose **Effect › Plug-ins › StitchCraft Auto**. Its dialog has the
+settings of the rules, with the numbers above as their defaults. A smaller **Widest satin column** fills more of the
+picture, and a larger **Smallest area** leaves out more specks ([reference](../reference/params/auto.md)).
+
+<!-- shot: vectorcraft-auto-dialog -->
+![The StitchCraft Auto dialog in VectorCraft. The settings of automatic digitizing's rules are in 2 sections, Stitches by width and Neighbours, from Widest satin column to Leave out the background, and Preview comes last. Each row has a label, a field with its unit or a checkbox, and a button that opens the setting's help page. Under them are the Preview checkbox, checked, and the Cancel and OK buttons.](../../images/generated/vectorcraft-auto-dialog.png)
+<!-- /shot -->
+
+Each traced shape then shows the stitches StitchCraft chooses for it, as far as VectorCraft lets a live
+effect work them out: a fill's top rows, and a column's or a line's stitches. A shape that needs more,
+such as a letter or a ring, shows its outline instead, and the machine file has every stitch whichever
+shows. The document now says it is digitized automatically, so **File › Export › Export As** writes the
+machine file without **Digitize automatically**, as does `stitch export` without `--auto`
+([how](../how-to/embroider-a-vectorcraft-design.md)). Trace again and the group is new, without the
+effect: apply it after the last trace.
 
 ## 4. Sew it
 

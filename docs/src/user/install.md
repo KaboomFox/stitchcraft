@@ -42,10 +42,11 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 
 The build writes `target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm`. Copy it into a
 folder for plug-ins as `stitchcraft-fill.wasm`. Build again with `--features stroke`, `--features satin`,
-`--features pes`, `--features dst`, `--features settings`, `--features testsheet` and
+`--features auto`, `--features pes`, `--features dst`, `--features settings`, `--features testsheet` and
 `--features stroke-to-satin`, and copy the file each time, as `stitchcraft-stroke.wasm`, `stitchcraft-satin.wasm`,
-`stitchcraft-pes.wasm`, `stitchcraft-dst.wasm`, `stitchcraft-settings.wasm`, `stitchcraft-testsheet.wasm`
-and `stitchcraft-stroke-to-satin.wasm`. VectorCraft 0.13 and earlier refuse the exporters.
+`stitchcraft-auto.wasm`, `stitchcraft-pes.wasm`, `stitchcraft-dst.wasm`, `stitchcraft-settings.wasm`,
+`stitchcraft-testsheet.wasm` and `stitchcraft-stroke-to-satin.wasm`. VectorCraft 0.13 and earlier refuse the
+exporters.
 
 In VectorCraft's desktop app, choose that folder in **Edit › Preferences › Plug-ins & Scratch Disks ›
 Additional Plug-ins Folder**, which is under **Performance & Storage** up to VectorCraft 0.14. VectorCraft

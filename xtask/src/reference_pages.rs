@@ -123,13 +123,13 @@ fn test_sheets() -> Result<String, String> {
         }
         let profile = sheet.profile;
         let _ = writeln!(out, "Hoop: the {}, profile [`{}`](profiles.md#{}).\n", profile.name, profile.id, profile.id);
-        if filtered.contains(&sheet.id) {
-            out.push_str("Drawn as a design, which VectorCraft's Test Sheet filter draws too.\n\n");
-        } else if sheet.digitized() {
-            out.push_str(
+        match (filtered.contains(&sheet.id), sheet.digitized()) {
+            (true, false) => out.push_str("Drawn as a design, which VectorCraft's Test Sheet filter draws too.\n\n"),
+            (true, true) => out.push_str(
                 "Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` does a shape without \
-                 settings. Only `stitch testsheet` writes it.\n\n",
-            );
+                 settings. VectorCraft's Test Sheet filter draws it too, those shapes with the Auto effect.\n\n",
+            ),
+            (false, _) => {}
         }
         for shot in shots.iter().filter(|s| s.kind == "stitch" && s.sheet.as_deref() == Some(sheet.id)) {
             let _ = writeln!(out, "![{}](../../images/generated/{}.png)\n", shot.alt, shot.id);

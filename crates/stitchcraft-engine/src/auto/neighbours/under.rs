@@ -84,7 +84,8 @@ pub(super) fn reached(shapes: &mut Shapes, budget: &Budget) -> Vec<Diagnostic> {
 
 /// `SC-I0904` for the shape `id`, covered whole by the areas sewn after it, which sews nothing.
 fn covered(id: ElementId) -> Diagnostic {
-    let fix = Fix::Hint("To sew it as it is drawn, give it settings: in VectorCraft, apply a StitchCraft effect to it.".to_string());
+    let fix =
+        Fix::Hint("To sew it as it is drawn, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.".to_string());
     Diagnostic::new(Code::AutoUnder, "This area is covered by the areas sewn after it, so it sews nothing.").with_element(id).with_fix(fix)
 }
 

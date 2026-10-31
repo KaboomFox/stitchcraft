@@ -41,7 +41,7 @@ pub(in crate::auto) fn background(design: &Design, rules: Option<&AutoParams>, b
     match covers(path, *rule, bounds, &mut budget.meter()) {
         Ok(true) => {
             let message = "This area covers the whole design under the other shapes, so it is left out as the picture's background.";
-            let fix = Fix::Hint("To sew it, give it settings: in VectorCraft, apply a StitchCraft effect to it.".to_string());
+            let fix = Fix::Hint("To sew it, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.".to_string());
             Some((Some(0), Diagnostic::new(Code::AutoBackground, message).with_element(lowest.id.clone()).with_fix(fix)))
         }
         Ok(false) => None,

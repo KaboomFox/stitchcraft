@@ -11,5 +11,5 @@ traced-badge.svg
   preview   traced-badge.png (432 × 432 pixels)
 info SC-I0901: 3 shapes are digitized automatically: all sew as tatami fills.
 warning SC-W0906 (svg:white:fill): This area covers the whole design under the other shapes, so it is left out as the picture's background.
-  hint: To sew it, give it settings: in VectorCraft, apply a StitchCraft effect to it.
+  hint: To sew it, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.
 info SC-I0904: 2 areas reach 0.4 mm under the shapes sewn after them that they touch.

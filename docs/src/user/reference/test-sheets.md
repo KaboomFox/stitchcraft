@@ -253,7 +253,7 @@ After sewing, check:
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
-Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` does a shape without settings. Only `stitch testsheet` writes it.
+Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` does a shape without settings. VectorCraft's Test Sheet filter draws it too, those shapes with the Auto effect.
 
 ![TS-13A as it will sew: the same pictures twice, digitized at the top and in paint order at the bottom. Each half has 2 red badges with a blue square and a gold disc on them, a blue disc with specks round it, a row of 3 smaller badges, and a gold square beside a blue bar. At the top the specks are blue bumps on the disc's edge, and at the bottom red knots.](../../images/generated/testsheet-ts-13a.png)
 
@@ -276,7 +276,7 @@ After sewing, check:
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
-Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` does a shape without settings. Only `stitch testsheet` writes it.
+Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` does a shape without settings. VectorCraft's Test Sheet filter draws it too, those shapes with the Auto effect.
 
 ![TS-13B as it will sew: the word MATCH in black block letters of 4 sizes, and 3 windows of red, blue and gold areas between black lines, twice. At the top, digitized, the letters are satin columns and the smallest thin runs, and the lines thin runs. At the bottom, in paint order, every letter and line is filled.](../../images/generated/testsheet-ts-13b.png)
 
@@ -300,7 +300,7 @@ After sewing, check:
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
-Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` does a shape without settings. Only `stitch testsheet` writes it.
+Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` does a shape without settings. VectorCraft's Test Sheet filter draws it too, those shapes with the Auto effect.
 
 ![TS-13C as it will sew: a pink face drawn with black lines, a gold star and a red balloon on its string, twice. At the top, digitized, the face's outlines are wide satin columns, and the star's points and the string are columns over their fill. At the bottom, in paint order, the lines are thin running stitches.](../../images/generated/testsheet-ts-13c.png)
 

@@ -2,7 +2,9 @@
 //!
 //! Design: `docs/src/design/image-to-embroidery.md`. A host marks a shape *automatic* when it has no settings
 //! and the user asked for automatic digitizing (`--auto`): a VectorCraft object with no StitchCraft effect,
-//! an SVG element with no `inkstitch:` attribute (`REQ-AUTO-001`). Before anything is generated,
+//! an SVG element with no `inkstitch:` attribute (`REQ-AUTO-001`). In VectorCraft, StitchCraft's Auto effect
+//! asks for it too, for the objects it reaches, its parameters their settings of the rules (`REQ-VC-016`).
+//! Before anything is generated,
 //! [`digitized`] turns each automatic element into ordinary elements whose settings say what to sew, so
 //! every stage after it, and every host, treats them as it treats a shape set by hand. It keeps the
 //! element's other settings, such as the trim after it that an Ink/Stitch command asks for; a shape sewn
