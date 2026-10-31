@@ -72,6 +72,23 @@ machine file without **Digitize automatically**, as does `stitch export` without
 ([how](../how-to/embroider-a-vectorcraft-design.md)). Trace again and the group is new, without the
 effect: apply it after the last trace.
 
+### From the command line
+
+With VectorCraft's command line installed ([install](../install.md#vectorcrafts-command-line)), `stitch`
+takes the steps above itself:
+
+```sh
+stitch plan badge.png -o badge.pes --traced badge.vectorcraft
+```
+
+It traces the picture in your machine's threads with VectorCraft's command line, as you do in steps 1 and
+2. Then it digitizes the shapes as `--auto` does. It fits the picture into your hoop unless `--size` gives the
+length of its longer side in millimetres, background included. Image Trace keeps at most `--colours` colours,
+6 unless you say otherwise. Count the background's colour too: the badge has 3 colours on white, so 4 keeps
+any colour between them out. `--traced` keeps the document VectorCraft traced, which you can open in
+VectorCraft to correct the trace and then digitize as above. When `stitch` can't start VectorCraft's command
+line, it says so with `SC-E0815`, and you trace the picture in VectorCraft instead.
+
 ## 4. Sew it
 
 Load `traced-badge.pes` and sew it as in [your first sew-out](first-sew-out.md#3-load-it-on-the-machine).

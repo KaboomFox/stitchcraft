@@ -5,6 +5,25 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.10: `stitch plan picture.png` and `stitch export picture.png` trace a PNG or JPEG file with
+  VectorCraft's command line and sew it digitized automatically (`REQ-CLI-012`, `REQ-CLI-013`).
+  - `stitch` runs `vectorcraft-cli run` with 4 steps on standard input. The first loads the threads
+    `stitch palette` writes for the machine as a swatch library. The next 2 place the picture and trace it
+    in colour with the library's colours by the Abutting method, and Expand keeps the paths. The document
+    VectorCraft saves is read with `--auto` and named after the picture, for the machine `--profile` names.
+  - The picture is fitted into the machine's hoop, or into a square `--size` millimetres across. Image Trace
+    keeps at most `--colours` colours, 6 unless it says otherwise, the background's included. `--traced` also
+    writes the document VectorCraft traced, to correct in VectorCraft, and a bug-report bundle keeps it.
+  - VectorCraft's command line is the one `--vectorcraft-cli` names, or `vectorcraft-cli` on the PATH, run
+    without the user's VectorCraft preferences. One that can't be started is `SC-E0815`, and one that fails
+    or doesn't save the document is `SC-E0816`, which ends with what it said. Then nothing is written but the
+    report. The tracing options with another design are a usage error, and `stitch bug-report` refuses a
+    picture.
+  - The compatibility gate's Level B can run `stitch plan` itself. Its new `picture` case traces the badge
+    through `stitch` with the `vectorcraft-cli` under test, on every track. `stitch plan`'s own tests run it
+    with the test program in place of VectorCraft's command line, which saves a document VectorCraft 0.18.0
+    traced.
+  - The plug-in's exporters, `stitch` and the gate share one base64 encoder, the VectorCraft adapter's.
 - M13.9, a spike: `stitch plan picture.png` will trace the picture with VectorCraft's command line, and
   ADR-0015 records why. `vectorcraft-cli run` runs the steps the compatibility gate's `trace` case runs on
   every track: the machine's threads as a swatch library, the picture placed and traced in their colours,

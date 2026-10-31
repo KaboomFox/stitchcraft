@@ -167,7 +167,7 @@ first, and the steps that make new kinds of shape into stitches follow.
 | MC-8 🧵 | **TS-13** (test pictures digitized automatically, beside the same shapes sewn in paint order); kit: `stitch testsheet` | report filed; the rules' values confirmed or changed |
 | M13.8 | Automatic digitizing by default for VectorCraft documents | the end-to-end cases expect it |
 | M13.9 ✅ 🧪 | `stitch plan picture.png`: VectorCraft's command line traces the picture, or StitchCraft reads and traces it itself | Decision recorded in the design, [ADR-0015](../design/adr/0015-pictures-traced-by-vectorcraft.md): VectorCraft's command line traces it, with the `trace` case's steps (2026-10-31) |
-| M13.10 | `stitch plan picture.png` and `stitch export picture.png` trace a PNG or JPEG file with VectorCraft's command line, in the machine's threads, and sew it digitized automatically. A coded error when VectorCraft isn't installed | a Level B case plans a picture through `stitch` on every track |
+| M13.10 ✅ | `stitch plan picture.png` and `stitch export picture.png` trace a PNG or JPEG file with VectorCraft's command line, in the machine's threads, and sew it digitized automatically. A coded error when VectorCraft isn't installed | a Level B case plans a picture through `stitch` on every track |
 
 ## M8 — Ink/Stitch interoperability
 

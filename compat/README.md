@@ -9,7 +9,8 @@
   plug-in host (`vectorcraft-plugins`) at the ref under test, *hello* and a module for each stitch family.
   It is a separate workspace, which `cargo xtask compat contract` builds after the modules.
 - `scenarios/` has the Level B scenarios. VectorCraft's own command line, `vectorcraft-cli`, draws, applies
-  the plug-ins' effects and saves, and StitchCraft checks how what it saved sews.
+  the plug-ins' effects and saves, and StitchCraft checks how what it saved sews. In a run of `stitch`,
+  `stitch plan` traces a picture with that `vectorcraft-cli`.
 - `vc-window/` holds the window probe. It runs the stable release's app without a screen and compares its
   screenshots, and xa11y drives the app through its accessibility tree. A separate workspace, run by
   `cargo xtask compat window` in a desktop of its own (Xvfb, D-Bus and AT-SPI, on Linux). Its

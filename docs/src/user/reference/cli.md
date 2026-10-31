@@ -12,7 +12,7 @@ stitch: the StitchCraft command-line tool
 Usage: stitch <COMMAND>
 
 Commands:
-  plan        Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked [alias: export]
+  plan        Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked. A picture, a PNG or JPEG file, is traced with VectorCraft's command line first [alias: export]
   testsheet   Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
   inspect     Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
   preview     Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
@@ -38,13 +38,13 @@ where it can be: see `stitch bug-report`).
 ## stitch plan
 
 ```text
-Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked
+Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked. A picture, a PNG or JPEG file, is traced with VectorCraft's command line first
 
 Usage: stitch plan [OPTIONS] --output <OUTPUT> <DESIGN>
 
 Arguments:
   <DESIGN>
-          The design: an SVG file, or a VectorCraft document (.vectorcraft)
+          The design: an SVG file, a VectorCraft document (.vectorcraft), or a picture (.png, .jpg or .jpeg), which VectorCraft's command line traces in the machine's threads and StitchCraft digitizes automatically
 
 Options:
   -o, --output <OUTPUT>
@@ -71,6 +71,18 @@ Options:
 
       --sort-colours
           Sew the shapes with settings in the order StitchCraft chooses too, as --auto sews the shapes it digitizes: shapes that overlap keep their paint order, and each thread then sews as long as it can, the nearest shape next (docs/src/design/image-to-embroidery.md)
+
+      --vectorcraft-cli <PROGRAM>
+          VectorCraft's command line, which traces a picture; by default `vectorcraft-cli` on the PATH
+
+      --size <MM>
+          How large a picture is sewn: its longer side, in millimetres, its background included; by default as large as the machine's hoop holds
+
+      --colours <N>
+          How many colours a picture has, its background included: Image Trace traces it in at most that many of the machine's threads, 2 to 256; by default 6
+
+      --traced <FILE>
+          Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in VectorCraft
 
   -h, --help
           Print help (see a summary with '-h')

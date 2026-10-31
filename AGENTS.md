@@ -91,7 +91,8 @@ See "Where does my code go?" in `docs/src/design/architecture.md`, and the playb
 ## VectorCraft
 
 The plug-in targets VectorCraft's WebAssembly ABI v1 (`docs/src/design/vectorcraft-integration.md`).
-Do not depend on VectorCraft internals beyond that ABI and its documented `.vectorcraft` format; the
+Do not depend on VectorCraft internals beyond that ABI, its documented `.vectorcraft` format, and the
+documented commands of its command line that `stitch plan` traces a picture with (ADR-0015); the
 compatibility gate (`docs/src/design/compatibility-gate.md`) tests every VectorCraft release, pre-release,
 `release` branch and `main`. Proposed VectorCraft changes go through the plug-in features RFC, following
 VectorCraft's own `AGENTS.md`.

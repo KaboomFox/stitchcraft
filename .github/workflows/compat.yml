@@ -6,7 +6,8 @@
 # compat/scenarios with VectorCraft's own command line, from the release's Linux archive, or built from the
 # branch. The report job then opens, updates or closes one issue per track, and adopts a new release that
 # passes both levels with a pull request, which pins it and adds it to the generated supported-versions page.
-# Pull requests that touch the plug-in or the gate test the pinned stable version.
+# Pull requests that touch the plug-in, the gate or the command line, whose `stitch plan` traces a picture
+# with VectorCraft's command line in Level B, test the pinned stable version.
 # The move rehearsal puts this repository into VectorCraft's latest release and `main` as a folder, both
 # ways ADR-0011 describes, and runs StitchCraft's gates there; pull requests that touch manifests or
 # tooling rehearse against the pinned stable version.
@@ -21,6 +22,7 @@ on:
   pull_request:
     paths:
       - "apps/stitchcraft-vc-plugin/**"
+      - "apps/stitchcraft-cli/**"
       - "crates/stitchcraft-vectorcraft/**"
       - "compat/**"
       - "xtask/**"
