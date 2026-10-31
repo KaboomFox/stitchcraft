@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b364f985.js";
+            window.path_to_searchindex_js = "searchindex-7456ff2a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3ce5e89b.js"></script>
+        <script src="toc-b793f3ad.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -7906,13 +7906,17 @@ Smaller letters need lettering in an embroidery font, made to sew at small sizes
 traced letters inside a marked area with lettering of the marker’s text, as tall as they were. Spike M14.6
 looks for a way to find and read the text without a marker.</p>
 <h2 id="pictures-from-the-command-line"><a class="header" href="#pictures-from-the-command-line">Pictures from the command line</a></h2>
-<p><code>stitch plan picture.png --auto</code> would leave VectorCraft out of the flow. Spike M13.9 chooses how it
-traces:</p>
-<ul>
-<li>VectorCraft’s command line, when it is installed, opens the picture and traces it
-(<code>vectorcraft-cli run --in picture.png --cmd imageTrace.make …</code>). This repeats no code.</li>
-<li>StitchCraft reads PNG and JPEG files and traces them itself. This works without VectorCraft.</li>
-</ul>
+<p><code>stitch plan picture.png</code> traces the picture with VectorCraft’s command line, as spike M13.9 decided
+(<a href="#adr-0015-pictures-are-traced-by-vectorcrafts-command-line">ADR-0015</a>). VectorCraft publishes <code>vectorcraft-cli</code> with each
+release. Its <code>run</code> command runs the steps of the compatibility gate’s <code>trace</code> case without a window. The
+machine’s threads, as <code>stitch palette</code> writes them, become a swatch library, and the picture is placed and
+traced in their colours by the Abutting method. Expand keeps the paths, and the document is saved. <code>stitch</code>
+then reads the saved document with <code>--auto</code>. Without VectorCraft installed, it fails with a coded error
+that says how to install it, or to trace the picture in VectorCraft.</p>
+<p>StitchCraft traces nothing itself. A tracer of its own would repeat VectorCraft’s, which a harness
+measures. It would also trace a picture otherwise than VectorCraft does, and the command line would then
+sew it unlike the tutorial’s flow. M13.10 builds the command, and settles the picture’s size and how many
+threads the trace may use.</p>
 <h2 id="testing"><a class="header" href="#testing">Testing</a></h2>
 <ul>
 <li>Each rule gets its requirements and failing cases before its code (<a href="#adr-0008-conformance-first-development">ADR-0008</a>).</li>
@@ -10334,6 +10338,7 @@ supersedes the old one.</p>
 <tr><td><a href="#adr-0012-read-inkstitchs-source-never-copy-it">0012</a></td><td>Read Ink/Stitch’s source, never copy it</td><td>Accepted</td></tr>
 <tr><td><a href="#adr-0013-the-reference-machine-is-a-brother-pe800-with-a-profile-for-each-of-its-hoops">0013</a></td><td>The reference machine is a Brother PE800, with a profile for each of its hoops</td><td>Accepted</td></tr>
 <tr><td><a href="#adr-0014-generators-see-their-neighbours-the-needle-before-the-next-element-after">0014</a></td><td>Generators see their neighbours: the needle before, the next element after</td><td>Accepted</td></tr>
+<tr><td><a href="#adr-0015-pictures-are-traced-by-vectorcrafts-command-line">0015</a></td><td>Pictures are traced by VectorCraft’s command line</td><td>Accepted (spike M13.9)</td></tr>
 </tbody>
 </table>
 </div>
@@ -10918,6 +10923,81 @@ Ink/Stitch wherever an element does not end where its shape suggests. Rejected: 
 start depends on the one before still waits for it. The second pass is sequential anyway. Rejected.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="adr-0015-pictures-are-traced-by-vectorcrafts-command-line"><a class="header" href="#adr-0015-pictures-are-traced-by-vectorcrafts-command-line">ADR-0015: Pictures are traced by VectorCraft’s command line</a></h1>
+<!-- The status line, a label and its value, which the ADR index is checked against. -->
+<!-- vale ai-tells.ColonUsage = NO -->
+<p><strong>Status:</strong> Accepted · 2026-10-31, after spike M13.9</p>
+<!-- vale ai-tells.ColonUsage = YES -->
+<h2 id="context-14"><a class="header" href="#context-14">Context</a></h2>
+<p>M13 sews a picture traced in VectorCraft from one command (<a href="#image-to-embroidery">image to embroidery</a>).
+The user places the picture in VectorCraft and traces it with Image Trace, in the machine’s threads that
+<code>stitch palette</code> writes. Then <code>stitch plan --auto</code> sews the saved document, or the Auto effect previews it.
+<code>stitch plan picture.png</code> would leave VectorCraft out of the flow, and spike M13.9 chooses how a picture
+given to the command line becomes shapes. There were 3 ways:</p>
+<ol>
+<li><strong>VectorCraft’s command line traces it.</strong> <code>vectorcraft-cli run</code> runs VectorCraft’s commands without a
+window, from standard input too (<code>--commands -</code>), and saves the document. <code>file.place</code> places a
+picture from its data, fitted to a rectangle, <code>imageTrace.make</code> and <code>imageTrace.expand</code> trace it, and
+<code>swatch.library.load</code> loads a palette. VectorCraft’s <code>docs/mcp.md</code> describes them, and
+<code>vectorcraft-cli commands</code> lists each command’s parameters. VectorCraft publishes <code>vectorcraft-cli</code>
+with each release, for macOS, Windows and Linux (its <code>docs/releasing.md</code>).</li>
+<li><strong>StitchCraft reads PNG and JPEG files and traces them itself.</strong></li>
+<li><strong>StitchCraft links VectorCraft’s tracer as a library.</strong></li>
+</ol>
+<p>What was checked, on 2026-10-31:</p>
+<ul>
+<li>The compatibility gate’s Level B case <code>trace</code> runs the steps of way 1 on every track. It loads the
+reference machine’s threads as a swatch library and places a badge. Image Trace traces the badge in
+colour with the library’s colours by the Abutting method, and the paths are expanded and saved.
+StitchCraft sews the saved document, digitized automatically, in the badge’s 3 threads
+(<a href="#vectorcraft-compatibility-gate">compatibility gate</a>). It passes on VectorCraft 0.18.0.</li>
+<li>VectorCraft’s tracer, <code>crates/trace</code> in its repository, is 14,400 lines of Rust, 8,600 of them outside
+its tests. A harness measures its results on images whose right answer is known, and its report
+(<code>docs/image-trace-quality.md</code>) runs to 1,300 lines. It covers palettes made by median cut and k-means,
+and contours whose edges fall between pixels, fitted with curves.</li>
+<li>StitchCraft depends on VectorCraft only through the plug-in ABI and the documented <code>.vectorcraft</code> format
+(<code>AGENTS.md</code>).</li>
+</ul>
+<h2 id="decision-14"><a class="header" href="#decision-14">Decision</a></h2>
+<ol>
+<li><code>stitch plan</code> and <code>stitch export</code>, given a picture, trace it with VectorCraft’s command line. They run
+<code>vectorcraft-cli run</code> with the <code>trace</code> case’s steps. The machine profile’s threads, as <code>stitch palette</code>
+writes them, become a swatch library. The picture is placed and traced in colour with the library’s
+colours by the Abutting method, then expanded and saved. Then they read the saved document with
+<code>--auto</code>.</li>
+<li>They look for <code>vectorcraft-cli</code> where the user names it, and else on the <code>PATH</code>. Without it the command
+fails with a coded error, which says how to install VectorCraft or to trace the picture in VectorCraft.</li>
+<li>StitchCraft doesn’t trace pictures itself, and doesn’t link VectorCraft’s tracer.</li>
+<li>M13.10 builds it, with a Level B case in which <code>stitch</code> plans a picture through VectorCraft’s command
+line on every track. It settles the picture’s size and how many threads the trace may use.</li>
+</ol>
+<h2 id="consequences-14"><a class="header" href="#consequences-14">Consequences</a></h2>
+<ul>
+<li>StitchCraft’s crates don’t read PNG or JPEG files, and don’t trace. The WebAssembly build and the
+layering stay as they are.</li>
+<li>A picture given to <code>stitch</code> sews as the same picture traced in VectorCraft does, in the tutorial’s flow.
+A fix to VectorCraft’s tracer helps both, and the user can open the saved document in VectorCraft to
+correct the trace.</li>
+<li><code>stitch plan picture.png</code> needs VectorCraft installed. Without it, the user traces the picture in
+VectorCraft, as the tutorial does, or doesn’t trace it from the command line at all.</li>
+<li>Only the <code>stitch</code> app runs VectorCraft’s command line, as library crates don’t start processes
+(<a href="#guardrails">guardrails</a>).</li>
+<li>The commands and their parameters are VectorCraft’s. The <code>trace</code> case fails on the track whose VectorCraft
+changes them, before a release does.</li>
+<li>Revisit this if StitchCraft must trace without VectorCraft, as a web build without it would. Revisit it
+too if VectorCraft’s command line stops offering these commands.</li>
+</ul>
+<h2 id="alternatives-rejected"><a class="header" href="#alternatives-rejected">Alternatives rejected</a></h2>
+<ul>
+<li><strong>StitchCraft traces the picture itself.</strong> It would repeat VectorCraft’s tracer and the harness that
+measures it, or trace worse. A picture would then sew one way from the command line and another from the
+tutorial’s flow, and 2 tracers would need keeping in step. It also adds PNG and JPEG decoders to
+StitchCraft’s crates.</li>
+<li><strong>VectorCraft’s tracer as a library.</strong> StitchCraft would depend on VectorCraft’s internal crates. <code>AGENTS.md</code>
+rules that out: StitchCraft depends on the ABI and the format alone. Each VectorCraft change to the crate
+would be a change StitchCraft has to follow, without the gate’s commands in between.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="roadmap-small-steps-to-the-final-project"><a class="header" href="#roadmap-small-steps-to-the-final-project">Roadmap: small steps to the final project</a></h1>
 <p>Each <strong>step</strong> is one pull request: small, reviewable, with its tests, conformance cases and docs. Each
 <strong>milestone</strong> ends with green gates and, where it produces something sewable, a <strong>machine checkpoint</strong>
@@ -11120,7 +11200,8 @@ first, and the steps that make new kinds of shape into stitches follow.</p>
 <tr><td>M13.7 ✅</td><td>VectorCraft. The Auto effect previews each path’s stitches, and its dialog sets the rules’ settings, registered then. <code>stitch palette</code> writes a profile’s threads for Image Trace’s Document Library palette. Tutorial “From a picture to a machine file”, and a Level B case in which VectorCraft traces a picture</td><td><code>shots-ui</code> and the compatibility gate green with the new case</td></tr>
 <tr><td>MC-8 🧵</td><td><strong>TS-13</strong> (test pictures digitized automatically, beside the same shapes sewn in paint order); kit: <code>stitch testsheet</code></td><td>report filed; the rules’ values confirmed or changed</td></tr>
 <tr><td>M13.8</td><td>Automatic digitizing by default for VectorCraft documents</td><td>the end-to-end cases expect it</td></tr>
-<tr><td>M13.9 🧪</td><td><code>stitch plan picture.png</code>: VectorCraft’s command line traces the picture, or StitchCraft reads and traces it itself</td><td>decision recorded in the design</td></tr>
+<tr><td>M13.9 ✅ 🧪</td><td><code>stitch plan picture.png</code>: VectorCraft’s command line traces the picture, or StitchCraft reads and traces it itself</td><td>Decision recorded in the design, <a href="#adr-0015-pictures-are-traced-by-vectorcrafts-command-line">ADR-0015</a>: VectorCraft’s command line traces it, with the <code>trace</code> case’s steps (2026-10-31)</td></tr>
+<tr><td>M13.10</td><td><code>stitch plan picture.png</code> and <code>stitch export picture.png</code> trace a PNG or JPEG file with VectorCraft’s command line, in the machine’s threads, and sew it digitized automatically. A coded error when VectorCraft isn’t installed</td><td>a Level B case plans a picture through <code>stitch</code> on every track</td></tr>
 </tbody>
 </table>
 </div>
