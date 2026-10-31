@@ -5,6 +5,30 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.6: shapes in parts. With `--auto`, a part of a shape that is wider than a satin column in places and
+  narrower in others sews in parts (`REQ-AUTO-019`). Its broad parts are a tatami fill, and its narrow
+  parts sew over the fill as lines and columns, each sorted by its width as a part is.
+  - Its broad parts are what an opening with a disc as wide as the widest satin column, 7 mm, leaves of it,
+    kept within the part (`auto::split`). The rest, in pieces, is its narrow parts. A speck stays in the
+    fill, and so does a piece that reaches less than a speck beyond the disc's radius from the broad
+    parts: a corner the opening rounded, or a stub too short for a column.
+  - Each narrow part is cut where it meets the broad parts, at a chord across it square to the way its sides
+    run on from there, and what lies past the chord goes to the fill. A column ends flat along such a cut,
+    however long it is. A star's points end flat across their cuts, not in a fan.
+  - The fill, the part without its narrow parts, sews first and reaches 0.4 mm under the lines and columns
+    sewn over it.
+  - TS-13A to TS-13C, for MC-8 (`stitch testsheet`), sew the test pictures. Each is digitized automatically
+    in the top half of its sheet and sewn as drawn, in paint order, in the bottom half, which sews first and
+    stops.
+    TS-13A sews badges traced abutting and stacked, specks round a disc, a row of badges drawn badge by
+    badge and a bar beside a square. TS-13B sews block letters 15 to 4 mm tall and lines traced as areas
+    0.3 to 0.9 mm wide, and TS-13C a face drawn with lines 1 to 4 mm wide, a star and a balloon on its
+    string. Each sheet's checks count its halves' thread changes and jumps, and ask which jump threads its
+    shapes sew down, since the PE800 cuts none. The test pictures are drawn by
+    `stitchcraft_engine::testsheets::pictures` now, which the sheets sew, and `stitchcraft_testkit::pictures`
+    places them where the cases measure them. VectorCraft's Test Sheet filter doesn't draw the TS-13 sheets,
+    whose shapes no object can mark automatic before the Auto effect (M13.7).
+
 - M13.5: columns from shapes. With `--auto`, a part of a shape that isn't narrow, and is nowhere wider than
   the widest satin column, 7 mm, sews as satin columns between its own outlines (`REQ-AUTO-016`).
   - Its centre lines are found as a narrow part's are, but a branch is a bump only when it ends at a tip and
@@ -1642,6 +1666,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Added `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes` and `TS-13C.pes` (M13.6), the TS-13 sheets
+  that MC-8 sews: 24,286, 14,397 and 10,311 stitches.
 - Changed `conformance/golden/render/sampler-simple.png`, `sampler-realistic.png` and `TS-01-realistic.png`
   (`REQ-RND-002`), and the 55 pictures in the docs that the renderer draws. tiny-skia 0.12 encodes PNG files
   with version 0.18 of the png crate, which writes them 4 to 6 times smaller. Every pixel is as it was: each

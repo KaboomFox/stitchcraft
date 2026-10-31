@@ -36,7 +36,7 @@ fn piece(part: &Polygon) -> f64 {
 
 /// The columns of `part`, `None` when its triangles make none, or the triangulation's failure.
 fn made(part: &Polygon) -> Result<Option<Vec<Column>>, Broken> {
-    columns(part, piece(part), &mut Budget::DEFAULT.meter()).unwrap()
+    columns(part, piece(part), &[], &mut Budget::DEFAULT.meter()).unwrap()
 }
 
 /// The columns of `part`.
@@ -150,7 +150,7 @@ fn req_auto_016_an_end_along_an_edge_takes_the_whole_straight_edge() {
     let skeleton = Skeleton { triangulation, graph, walked: Vec::new() };
     let outline = Outline { rings: Vec::new(), triangle: BTreeMap::new() };
     let ring = [0, 1, 2, 3, 4];
-    let place = Place { skeleton: &skeleton, owner: &[], line: 0, outline: &outline, ring: &ring };
+    let place = Place { skeleton: &skeleton, owner: &[], line: 0, outline: &outline, ring: &ring, cuts: &[] };
     for arc in [&[0, 1, 2][..], &[2, 3, 4], &[1, 2, 3]] {
         assert_eq!(place.farthest(arc, (1.0, 0.0), 3.0), Some((1, 3)), "{arc:?}");
     }
@@ -404,7 +404,7 @@ fn req_auto_016_a_dot_has_no_column() {
     // A square 1 mm across in 2 triangles: the circle on its diagonal holds every corner, so the caps of its
     // ends meet, and it has no line.
     let dot = part(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)], &[]);
-    assert_eq!(columns(&dot, 10.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap(), Some(Vec::new()));
+    assert_eq!(columns(&dot, 10.0, &[], &mut Budget::DEFAULT.meter()).unwrap().unwrap(), Some(Vec::new()));
 }
 
 #[test]
@@ -770,6 +770,11 @@ fn a_ring_rail_started_at_a_point_runs_round_back_to_it() {
 
 /// What `test` finds on a ring through `points` in order, each the point of its own place.
 fn on_ring<R>(points: &[(f64, f64)], test: impl FnOnce(&Place) -> R) -> R {
+    cut_ring(points, &[], test)
+}
+
+/// What `test` finds on a ring through `points` in order, each the point of its own place, cut along `cuts`.
+fn cut_ring<R>(points: &[(f64, f64)], cuts: &[[Point; 2]], test: impl FnOnce(&Place) -> R) -> R {
     let skeleton = Skeleton {
         triangulation: Triangulation { points: points.iter().map(|&(x, y)| p(x, y)).collect(), triangles: Vec::new() },
         graph: Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() },
@@ -777,7 +782,7 @@ fn on_ring<R>(points: &[(f64, f64)], test: impl FnOnce(&Place) -> R) -> R {
     };
     let outline = Outline { rings: Vec::new(), triangle: BTreeMap::new() };
     let ring: Vec<usize> = (0..points.len()).collect();
-    test(&Place { skeleton: &skeleton, owner: &[], line: 0, outline: &outline, ring: &ring })
+    test(&Place { skeleton: &skeleton, owner: &[], line: 0, outline: &outline, ring: &ring, cuts })
 }
 
 #[test]
@@ -811,4 +816,22 @@ fn an_end_lies_along_the_squarest_short_edge_at_its_farthest_point() {
     // A chevron whose 2 edges from its farthest point lie 15° and 10° from square: the end is the squarer.
     let chevron = [(0.0, 0.0), (10.0, 0.0), (10.8, 3.0), (10.27, 6.0), (0.0, 6.0)];
     assert_eq!(on_ring(&chevron, |place| place.farthest(&[1, 2, 3], (1.0, 0.0), 5.0)), Some((2, 3)));
+}
+
+#[test]
+fn req_auto_019_an_end_along_a_cut_lies_along_all_of_it() {
+    // A band 3 mm wide whose end, past (10, 0), is an edge across it, beyond a chord of 1.45 mm: too long for an
+    // end, it runs along the column, but cut there from a broad part, in 2 pieces, it is the end, all of it.
+    let band = [(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (10.0, 3.0), (0.0, 3.0)];
+    assert_eq!(on_ring(&band, |place| place.farthest(&[1, 2, 3], (1.0, 0.0), 1.45)), Some((1, 1)));
+    let cut = [[p(10.0, 0.0), p(10.0, 3.0)]];
+    assert_eq!(cut_ring(&band, &cut, |place| place.farthest(&[1, 2, 3], (1.0, 0.0), 1.45)), Some((1, 3)));
+    // A cut elsewhere changes nothing.
+    let elsewhere = [[p(0.0, 0.0), p(0.0, 3.0)]];
+    assert_eq!(cut_ring(&band, &elsewhere, |place| place.farthest(&[1, 2, 3], (1.0, 0.0), 1.45)), Some((1, 1)));
+    // An edge lies along a cut when both its ends do, and not when only one does.
+    cut_ring(&band, &cut, |place| {
+        assert!(place.cut(p(10.0, 0.0), p(10.0, 2.0)));
+        assert!(!place.cut(p(10.0, 0.0), p(12.0, 3.0)) && !place.cut(p(8.0, 0.0), p(10.0, 3.0)));
+    });
 }

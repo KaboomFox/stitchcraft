@@ -406,3 +406,21 @@ file = "crates/stitchcraft-engine/src/normalize/strips/columns.rs"
 mutant = "replace > with >= in cornered"
 line = "(lengths > 0.0).then(|| (a.0 * b.0 + a.1 * b.1) / lengths)"
 why = "a way of no length, past an open line's end, makes the cosine 0 over 0, which is not a number, and a cosine that is not a number is no corner, as no cosine is"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/testsheets/pictures.rs"
+mutant = "replace * with / in end"
+line = "let (out, on) = ((cos, -sin), (-sin * way, -cos * way));"
+why = "the C's 2 ends give `way` as 1 or -1, and multiplying by either gives exactly what dividing by it does"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/testsheets/pictures.rs"
+mutant = "replace > with >= in end"
+line = "let (s, c) = sin_cos(if way > 0.0 { PI * f64::from(k) / f64::from(steps) } else { PI - PI * f64::from(k) / f64::from(steps) });"
+why = "the C's 2 ends give `way` as 1 or -1, never 0, so it is more than 0 just when it is at least 0"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/testsheets/pictures.rs"
+mutant = "replace - with + in balloon"
+line = "let (top, length, steps) = (around(FRAC_PI_2 - meet).1, 26.0, 24_u32);"
+why = "the sine is as high either side of a quarter turn, so the string's top is as high, give or take a rounding far below the 0.1 mm a machine file records"

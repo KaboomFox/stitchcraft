@@ -2,7 +2,7 @@
 
 # Test sheets
 
-Designs drawn in code for the [machine checkpoints](../../plan/machine-testing.md), each for one hoop of the reference machine. Write one with `stitch testsheet <id> -o <id>.pes`. The command checks it against the profile of that hoop, or the one `--profile` names, and prints what to check after sewing it, as listed here. The pictures are previews: they show what the machine will sew, including jump threads it leaves for you to cut. In VectorCraft, the Test Sheet filter draws a sheet drawn as a design into a document ([how](../how-to/embroider-a-vectorcraft-design.md#draw-a-test-sheet)).
+Designs drawn in code for the [machine checkpoints](../../plan/machine-testing.md), each for one hoop of the reference machine. Write one with `stitch testsheet <id> -o <id>.pes`. The command checks it against the profile of that hoop, or the one `--profile` names, and prints what to check after sewing it, as listed here. The pictures are previews: they show what the machine will sew, including jump threads it leaves for you to cut. In VectorCraft, the Test Sheet filter draws the sheets that say so into a document ([how](../how-to/embroider-a-vectorcraft-design.md#draw-a-test-sheet)).
 
 ## TS-01 — Orientation and scale
 
@@ -246,3 +246,73 @@ After sewing, check:
 - With the small hoop on the machine: does the machine take the file and sew it, without asking for a larger hoop?
 - If it asks for a larger hoop, turn the design a quarter turn on the machine's screen. Does it take it then?
 - The frame measures 20.0 × 60.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.
+
+## TS-13A — Pictures digitized automatically: neighbours and sewing order
+
+126.0 × 168.0 mm · 24286 stitches, 41 jumps, 0 trims, 20 colour changes, 1 stop
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` does a shape without settings. Only `stitch testsheet` writes it.
+
+![TS-13A as it will sew: the same pictures twice, digitized at the top and in paint order at the bottom. Each half has 2 red badges with a blue square and a gold disc on them, a blue disc with specks round it, a row of 3 smaller badges, and a gold square beside a blue bar. At the top the specks are blue bumps on the disc's edge, and at the bottom red knots.](../../images/generated/testsheet-ts-13a.png)
+
+Threads: Red, Blue, Deep Gold, Red, Blue, Deep Gold, Blue, Red, Blue, Deep Gold, Red, Blue, Deep Gold, Red, Blue, Deep Gold, Blue, Blue (stop), Red, Deep Gold, Blue, Deep Gold.
+
+After sewing, check:
+
+- The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Top row, left to right: a badge traced abutting and one traced stacked, each 40 mm across, and a blue disc with 7 red specks round it. Bottom row: 3 badges drawn badge by badge, and a gold square with a blue bar beside it.
+- The bottom half changes thread 16 times and jumps 25 times, the top half 4 and 16 times. How long does each half take?
+- Does fabric show between colours, on either half? On the top half, each area reaches 0.4 mm under the next: does that cover the gap, or show as a ridge?
+- On the top half, the stacked badge's lower colours are cut away under the upper ones. Does it sew as flat as the abutting badge beside it? On the bottom half, it sews its lower colours whole, under the upper ones.
+- On the bottom half, each speck round the disc sews a red knot. On the top half, the 6 specks that touch the disc are blue, part of it, and the one apart is left out. Does the disc's edge show where they were?
+- The blue bar meets the gold square along the top half of its side, and runs on 0.5 mm from it below. On the top half, the square reaches under the bar only where they meet. Does the fabric that shows below read as a gap drawn there?
+- Does any shape cover one drawn over it? The order must never let that happen.
+- The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?
+
+## TS-13B — Pictures digitized automatically: letters and lines traced as areas
+
+110.5 × 148.4 mm · 14397 stitches, 61 jumps, 0 trims, 16 colour changes, 1 stop
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` does a shape without settings. Only `stitch testsheet` writes it.
+
+![TS-13B as it will sew: the word MATCH in black block letters of 4 sizes, and 3 windows of red, blue and gold areas between black lines, twice. At the top, digitized, the letters are satin columns and the smallest thin runs, and the lines thin runs. At the bottom, in paint order, every letter and line is filled.](../../images/generated/testsheet-ts-13b.png)
+
+Threads: Black, Red, Blue, Deep Gold, Black, Red, Blue, Deep Gold, Black, Red, Blue, Deep Gold, Black, Black (stop), Red, Blue, Deep Gold, Black.
+
+After sewing, check:
+
+- The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left: the word MATCH in block letters 15, 10, 6 and 4 mm tall, top to bottom, each letter traced as an area. Right: 3 windows, top to bottom, whose black lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide. One line runs down each window, and a branch runs across to its right side from it.
+- The bottom half changes thread 12 times and jumps 19 times, the top half 4 and 42 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?
+- Which is the smallest word that reads, on each half?
+- On the top half, the letters from 6 mm tall sew as satin columns between their own edges, and the 4 mm ones as triple runs along their middles. Do the columns' stitches lie square to their strokes, round the C's bend and the A's hole?
+- Where a column ends under another, 0.4 mm longer, as the T's stem does under its bar, does fabric show there, or a ridge? Does a crossbar sewn as a column of its own, as the H's is, read as one stroke with its stems? The M's and the A's feet should end flat along the baseline, and the C's ends round.
+- Do the underlays hold the columns up? With 0.4 mm of pull compensation, do they sew as wide as drawn? Measure the 15 mm T's stem, drawn 2.7 mm wide.
+- Where the M's strokes meet at sharp angles, its stitches lean along the columns (SC-W0208). Do they show?
+- On the top half, each window's lines sew along their middles after the areas beside them, which reach 0.4 mm under them: a single run at 0.3 mm, and a triple run at 0.6 and 0.9 mm. Does each line reach as far as it is drawn? Do the triple runs look as wide as their lines, and the single run not too thin? Does fabric show along a line, or a gap or a knot where the branch ends at the line it meets?
+- The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?
+
+## TS-13C — Pictures digitized automatically: lines, and shapes in parts
+
+111.4 × 107.7 mm · 10311 stitches, 25 jumps, 0 trims, 8 colour changes, 1 stop
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` does a shape without settings. Only `stitch testsheet` writes it.
+
+![TS-13C as it will sew: a pink face drawn with black lines, a gold star and a red balloon on its string, twice. At the top, digitized, the face's outlines are wide satin columns, and the star's points and the string are columns over their fill. At the bottom, in paint order, the lines are thin running stitches.](../../images/generated/testsheet-ts-13c.png)
+
+Threads: Flesh Pink, White, Black, Deep Gold, Red, Red (stop), Flesh Pink, White, Black, Deep Gold.
+
+After sewing, check:
+
+- The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: a face drawn with black lines, a star, and a balloon on its string.
+- The bottom half changes thread 4 times and jumps 14 times, the top half 4 and 11 times. How long does each half take?
+- The face's outline is 4 mm wide, its eyes' 2 mm and its brows' 1 mm. On the top half, the outlines sew as satin columns and the brows as triple runs. Do the columns cover the edges of the pink and white areas beside them? Do the triple runs look as wide as the brows are drawn?
+- The smile is 2 mm wide with round caps, and on the top half its column ends square, 1 mm past each end of its line, where the round cap ends. How far does its corner show past the round end?
+- The pupils are small rings, and the 3 hairs hairpins, which turn more tightly than they are wide: the top half fills them. How solid do they sew beside the columns round them?
+- On the top half, the star's points and the balloon's string sew as satin columns over the fill of the star's middle and of the balloon, cut square where they meet it. Does each column's flat end cover the fill's edge, or does fabric or a ridge show there? Do each point's stitches lie square to it from its tip to its cut?
+- Does each line sewn after the area it borders cover the area's edge? Does any shape cover one drawn over it?
+- The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?

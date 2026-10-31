@@ -16,8 +16,10 @@
 //!   their middles. A part narrower than the design's narrowest satin stroke, `min_satin_stroke_width_mm`,
 //!   everywhere is a running stitch along its centre line (`narrow`, `REQ-AUTO-013`), and a part no wider
 //!   than [`SATIN_MAX_WIDTH`] everywhere is satin columns between its own outlines (`columns`,
-//!   `REQ-AUTO-016`). They sew after the rest of the area, named after it with `#2`, `#3` and so on, or the
-//!   first with the area's own name when nothing of it is filled.
+//!   `REQ-AUTO-016`). A part wider than that in places is split (`split`, `REQ-AUTO-019`): its broad parts
+//!   are filled, and its narrow parts, cut square where they meet them, are sorted by their width as a part
+//!   is. They sew after the rest of the area, named after it with `#2`, `#3` and so on, or the first with
+//!   the area's own name when nothing of it is filled.
 //! - Every automatic satin column, a stroke's or a part's, has the underlay of its width ([`underlay`],
 //!   `REQ-AUTO-018`): a centre walk below [`CONTOUR_FROM`], a contour up to [`ZIGZAG_ABOVE`], and a contour
 //!   and a zigzag wider.
@@ -63,9 +65,10 @@ mod area;
 mod columns;
 mod narrow;
 mod neighbours;
+mod split;
 
 pub use neighbours::{OVERLAP, SMALLEST_AREA, TOUCHING};
-use neighbours::{Sewn, no_area, parts_of};
+use neighbours::{Sewn, no_area, parts_of, speck};
 
 use std::borrow::Cow;
 
