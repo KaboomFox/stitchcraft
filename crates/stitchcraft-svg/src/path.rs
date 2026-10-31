@@ -301,7 +301,7 @@ pub fn polyline(points: &str, closed: bool) -> Outline {
     if error.is_none() && numbers.len() % 2 == 1 {
         error = Some("an odd number of coordinates".to_string());
     }
-    let points: Vec<V> = numbers.chunks_exact(2).filter_map(|pair| if let [x, y] = pair { Some((*x, *y)) } else { None }).collect();
+    let points: Vec<V> = numbers.as_chunks::<2>().0.iter().map(|&[x, y]| (x, y)).collect();
     let subs = match points.split_first() {
         Some((&start, rest)) if !rest.is_empty() => vec![Sub { start, segs: rest.iter().map(|&p| Seg::Line(p)).collect(), closed }],
         _ => Vec::new(),
