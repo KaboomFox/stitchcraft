@@ -70,7 +70,7 @@ pub(super) fn close(a: &[u8], b: &[u8]) -> bool {
     let across = width.div_ceil(TILE);
     let mut in_tile = vec![0_u32; across * (a.height() as usize).div_ceil(TILE)];
     let mut apart: u64 = 0;
-    let pixels = a.data().chunks_exact(4).zip(b.data().chunks_exact(4));
+    let pixels = a.data().as_chunks::<4>().0.iter().zip(b.data().as_chunks::<4>().0.iter());
     for (i, _) in pixels.enumerate().filter(|(_, (p, q))| p.iter().zip(q.iter()).any(|(x, y)| x.abs_diff(*y) > TOLERANCE)) {
         apart += 1;
         if let Some(count) = in_tile.get_mut(i / width / TILE * across + i % width / TILE) {

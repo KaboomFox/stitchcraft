@@ -266,8 +266,8 @@ impl Pixels {
     /// differ in size.
     pub fn differing(&self, other: &Pixels, tolerance: u8) -> Option<usize> {
         let same_size = (self.width, self.height) == (other.width, other.height) && self.rgba.len() == other.rgba.len();
-        let differs = |(a, b): &(&[u8], &[u8])| a.iter().zip(b.iter()).any(|(x, y)| x.abs_diff(*y) > tolerance);
-        same_size.then(|| self.rgba.chunks_exact(4).zip(other.rgba.chunks_exact(4)).filter(differs).count())
+        let differs = |(a, b): &(&[u8; 4], &[u8; 4])| a.iter().zip(b.iter()).any(|(x, y)| x.abs_diff(*y) > tolerance);
+        same_size.then(|| self.rgba.as_chunks::<4>().0.iter().zip(other.rgba.as_chunks::<4>().0.iter()).filter(differs).count())
     }
 
     /// Rows `from` to `to`, the last excluded, cut to the picture.

@@ -32,6 +32,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 | **Public API review** | Changes to a library crate's public API show in the PR diff, as a change to its `public-api.txt` | `xtask/src/api.rs` (cargo-public-api, pinned) | `cargo xtask api --check` · CI |
 | **Coverage ratchet** | No crate's line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, those only another build of a function or a closure on the line runs included | `conformance/coverage.toml`, `xtask/src/coverage.rs` (cargo-llvm-cov) | `cargo xtask coverage` · CI job |
 | **Performance budget** | Planning the reference hoop's whole field (`REQ-FILL-TAT-009`) takes at most 2 % more instructions than recorded. Records only go down. A count below half the record fails too: the counted function was lost. Its time is reported against NFR-PERF-1's 50 ms, with a warning above it | `conformance/perf.toml`, `xtask/src/perf.rs` (valgrind's callgrind), the engine's `field` example | `cargo xtask perf` · CI job |
+| **Release build** | The build `stitch` and the plug-ins are published as plans as the tests' debug build does: the engine's release tests pass in it too. A release build is compiled more aggressively, and Rust 1.97.0 got one wrong there | `crates/stitchcraft-engine/tests/release.rs`, `rust-toolchain.toml` | `perf` CI job |
 | **Mutation testing** | Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down. A weekly part whose unmutated tree failed its tests, or a recorded crate with no mutant tried, fails | `.cargo/mutants.toml`, `conformance/mutation.toml`, `xtask/src/mutants.rs` | `mutants.yml` · changed lines every PR, in 8 parts · everything weekly |
 | **Fuzzing** | Readers never panic, respect their caps and terminate; anything read round-trips and previews | `fuzz/`, `stitchcraft-testkit::fuzz` ([conformance](conformance.md#fuzzing)) | bodies every PR · an hour nightly |
 
@@ -56,7 +57,16 @@ they count against. Run them from the kind of test that runs most of the functio
 
 `cargo xtask coverage` runs the job locally. It needs cargo-llvm-cov and rustup's `llvm-tools`. Without
 the latter, `LLVM_COV` and `LLVM_PROFDATA` can name another LLVM's llvm-cov and llvm-profdata that read
-the toolchain's profiles: LLVM 20's read those of Rust 1.97.
+the toolchain's profiles. Rust 1.99 writes raw profile format 11, which its own LLVM 23 reads and LLVM
+20's does not.
+
+The tests run in a debug build, and `stitch` and the plug-ins are published as a release build, which is
+compiled more aggressively, with one code unit per crate and link-time optimization across crates. A
+compiler can get that wrong where the debug build is right. Rust 1.97.0 did: its release build wrote past
+the end of a vector while planning a satin column drawn as one closed path, and crashed or sewed stitches
+from elsewhere. So the `perf` job, which builds the release profile anyway, also runs the engine's release
+tests (`crates/stitchcraft-engine/tests/release.rs`) in it: shapes a release build once planned wrong,
+whose plan they check.
 
 ## Design rules (reviewed, partly linted)
 
