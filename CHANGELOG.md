@@ -5,6 +5,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.9, a spike: `stitch plan picture.png` will trace the picture with VectorCraft's command line, and
+  ADR-0015 records why. `vectorcraft-cli run` runs the steps the compatibility gate's `trace` case runs on
+  every track: the machine's threads as a swatch library, the picture placed and traced in their colours,
+  Expand, and save. StitchCraft traces nothing itself: VectorCraft's tracer is 8,600 lines measured by a
+  harness of their own, and a second tracer would sew a picture otherwise than the tutorial's flow does.
+  M13.10, added to the roadmap, builds the command.
 - M13.7, its third part: StitchCraft's Auto effect in VectorCraft (`REQ-VC-016`).
   - **Effect › Plug-ins › StitchCraft Auto** makes the object it is applied to, or each path inside the
     group or the layer, automatic, with or without `--auto`. Its parameters are the shapes' settings of the

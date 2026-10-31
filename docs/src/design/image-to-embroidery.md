@@ -492,12 +492,18 @@ looks for a way to find and read the text without a marker.
 
 ## Pictures from the command line
 
-`stitch plan picture.png --auto` would leave VectorCraft out of the flow. Spike M13.9 chooses how it
-traces:
+`stitch plan picture.png` traces the picture with VectorCraft's command line, as spike M13.9 decided
+([ADR-0015](adr/0015-pictures-traced-by-vectorcraft.md)). VectorCraft publishes `vectorcraft-cli` with each
+release. Its `run` command runs the steps of the compatibility gate's `trace` case without a window. The
+machine's threads, as `stitch palette` writes them, become a swatch library, and the picture is placed and
+traced in their colours by the Abutting method. Expand keeps the paths, and the document is saved. `stitch`
+then reads the saved document with `--auto`. Without VectorCraft installed, it fails with a coded error
+that says how to install it, or to trace the picture in VectorCraft.
 
-- VectorCraft's command line, when it is installed, opens the picture and traces it
-  (`vectorcraft-cli run --in picture.png --cmd imageTrace.make …`). This repeats no code.
-- StitchCraft reads PNG and JPEG files and traces them itself. This works without VectorCraft.
+StitchCraft traces nothing itself. A tracer of its own would repeat VectorCraft's, which a harness
+measures. It would also trace a picture otherwise than VectorCraft does, and the command line would then
+sew it unlike the tutorial's flow. M13.10 builds the command, and settles the picture's size and how many
+threads the trace may use.
 
 ## Testing
 
