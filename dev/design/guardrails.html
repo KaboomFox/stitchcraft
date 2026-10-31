@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0374935e.js";
+            window.path_to_searchindex_js = "../searchindex-c8e1b59f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-888564d0.js"></script>
@@ -215,6 +215,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 <tr><td><strong>Public API review</strong></td><td>Changes to a library crate’s public API show in the PR diff, as a change to its <code>public-api.txt</code></td><td><code>xtask/src/api.rs</code> (cargo-public-api, pinned)</td><td><code>cargo xtask api --check</code> · CI</td></tr>
 <tr><td><strong>Coverage ratchet</strong></td><td>No crate’s line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, those only another build of a function or a closure on the line runs included</td><td><code>conformance/coverage.toml</code>, <code>xtask/src/coverage.rs</code> (cargo-llvm-cov)</td><td><code>cargo xtask coverage</code> · CI job</td></tr>
 <tr><td><strong>Performance budget</strong></td><td>Planning the reference hoop’s whole field (<code>REQ-FILL-TAT-009</code>) takes at most 2 % more instructions than recorded. Records only go down. A count below half the record fails too: the counted function was lost. Its time is reported against NFR-PERF-1’s 50 ms, with a warning above it</td><td><code>conformance/perf.toml</code>, <code>xtask/src/perf.rs</code> (valgrind’s callgrind), the engine’s <code>field</code> example</td><td><code>cargo xtask perf</code> · CI job</td></tr>
+<tr><td><strong>Release build</strong></td><td>The build <code>stitch</code> and the plug-ins are published as plans as the tests’ debug build does: the engine’s release tests pass in it too. A release build is compiled more aggressively, and Rust 1.97.0 got one wrong there</td><td><code>crates/stitchcraft-engine/tests/release.rs</code>, <code>rust-toolchain.toml</code></td><td><code>perf</code> CI job</td></tr>
 <tr><td><strong>Mutation testing</strong></td><td>Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down. A weekly part whose unmutated tree failed its tests, or a recorded crate with no mutant tried, fails</td><td><code>.cargo/mutants.toml</code>, <code>conformance/mutation.toml</code>, <code>xtask/src/mutants.rs</code></td><td><code>mutants.yml</code> · changed lines every PR, in 8 parts · everything weekly</td></tr>
 <tr><td><strong>Fuzzing</strong></td><td>Readers never panic, respect their caps and terminate; anything read round-trips and previews</td><td><code>fuzz/</code>, <code>stitchcraft-testkit::fuzz</code> (<a href="conformance.html#fuzzing">conformance</a>)</td><td>bodies every PR · an hour nightly</td></tr>
 </tbody>
@@ -238,7 +239,15 @@ closure argument whose error the tests never bring. The coverage job names these
 they count against. Run them from the kind of test that runs most of the function.</p>
 <p><code>cargo xtask coverage</code> runs the job locally. It needs cargo-llvm-cov and rustup’s <code>llvm-tools</code>. Without
 the latter, <code>LLVM_COV</code> and <code>LLVM_PROFDATA</code> can name another LLVM’s llvm-cov and llvm-profdata that read
-the toolchain’s profiles: LLVM 20’s read those of Rust 1.97.</p>
+the toolchain’s profiles. Rust 1.99 writes raw profile format 11, which its own LLVM 23 reads and LLVM
+20’s does not.</p>
+<p>The tests run in a debug build, and <code>stitch</code> and the plug-ins are published as a release build, which is
+compiled more aggressively, with one code unit per crate and link-time optimization across crates. A
+compiler can get that wrong where the debug build is right. Rust 1.97.0 did: its release build wrote past
+the end of a vector while planning a satin column drawn as one closed path, and crashed or sewed stitches
+from elsewhere. So the <code>perf</code> job, which builds the release profile anyway, also runs the engine’s release
+tests (<code>crates/stitchcraft-engine/tests/release.rs</code>) in it: shapes a release build once planned wrong,
+whose plan they check.</p>
 <h2 id="design-rules-reviewed-partly-linted"><a class="header" href="#design-rules-reviewed-partly-linted">Design rules (reviewed, partly linted)</a></h2>
 <ol>
 <li><strong>Everything user-visible is data first.</strong> A stitch type, parameter, diagnostic, profile or format is
