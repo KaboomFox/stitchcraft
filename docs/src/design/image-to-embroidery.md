@@ -418,14 +418,30 @@ from falling back.
 
 ## Settings
 
-The rules' values become StitchCraft's own parameters, registered as any other
-([parameter registry](params.md)), when the Auto effect's dialog lets a user set them (M13.7). The settings
-are the widest satin column, the narrowest triple run, the overlap, the smallest area and a switch that
-leaves the background out. Their defaults are the values on this page, 7 mm, 0.5 mm, 0.4 mm and 1 mm², and
-MC-8 confirms or changes them. Until then nothing can set them, and the rules use those values
-(`stitchcraft_engine::auto::SATIN_MAX_WIDTH` since M13.1, `OVERLAP` and `SMALLEST_AREA` since M13.2, and
-`TRIPLE_RUN_WIDTH` since M13.4). The narrowest satin column is the design's `min_satin_stroke_width_mm`.
-With `--auto` the settings take their defaults.
+The rules' values are StitchCraft's own parameters, registered as any other
+([parameter registry](params.md), [reference](../user/reference/params/auto.md)), since M13.7
+(`REQ-AUTO-020`). Each rule goes by the settings of the shape it digitizes (`stitchcraft_engine::auto::AutoParams`):
+
+| Setting | Key | Default | Rules |
+|---|---|---|---|
+| Widest satin column | `auto_max_satin_width_mm` | 7 mm | a line's stitches, a part's columns, the split of a part into broad and narrow parts |
+| Narrowest triple run | `auto_min_triple_run_width_mm` | 0.5 mm | a running stitch tripled |
+| Overlap | `auto_overlap_mm` | 0.4 mm | an area reaching under its neighbours and cut away under them, a satin column's pull compensation |
+| Smallest area | `auto_min_area_mm2` | 1 mm² | specks, and the narrow parts too small to cut from a broad part |
+| Leave out the background | `auto_ignore_background` | on | the background, read of the lowest shape |
+
+The defaults are the values on this page, and MC-8 confirms or changes them. A shape that sets none of the
+settings takes the defaults, and an automatic shape with a setting that doesn't read sews nothing
+(`SC-E0101`). Each area reaches its own overlap under the shapes sewn after it, and its specks are its own
+parts smaller than its smallest area, wherever they go. The narrowest satin column is the design's
+`min_satin_stroke_width_mm`, one value for the whole design, and the underlay of a column's width (above)
+is no setting.
+
+An automatic element reads the settings before it is sewn as any stitch type, and the ordinary elements it
+becomes don't ([parameter registry](params.md#settings-of-automatic-digitizing)). They are in no stitch
+family's dialog, and a shape that sets them is still automatic. VectorCraft's Auto effect (M13.7) sets them
+for the paths inside the object or group it is applied to, and with `--auto` every shape takes the
+defaults.
 
 ## Previews in VectorCraft
 

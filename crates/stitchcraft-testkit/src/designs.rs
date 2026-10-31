@@ -4,6 +4,7 @@
 //! on designs of a few straight strokes. The helpers are shared so every case builds them the same way.
 
 use stitchcraft_core::{Budget, ElementId, Mm, Point};
+use stitchcraft_engine::auto::{self, AutoParams};
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::{PlanOutcome, plan};
 use stitchcraft_params::ParamSet;
@@ -60,6 +61,12 @@ pub fn capped(element: Element, cap: Cap) -> Element {
 /// `element` as a shape without settings that StitchCraft digitizes ([`Element::automatic`]).
 pub fn automatic(element: Element) -> Element {
     Element { automatic: true, ..element }
+}
+
+/// The settings of the rules that automatic digitizing goes by for a shape that sets none, each its
+/// default (`REQ-AUTO-020`).
+pub fn rules() -> AutoParams {
+    auto::rules(&ParamSet::new()).unwrap()
 }
 
 /// A path of open polylines, one subpath through each list of points. A list of one point is a subpath

@@ -41,6 +41,7 @@
       - [Pull compensation](user/reference/params/pull.md)
       - [Fill](user/reference/params/fill.md)
       - [Tatami fill](user/reference/params/tatami.md)
+      - [Automatic digitizing](user/reference/params/auto.md)
     - [Glossary](user/reference/glossary.md)
     - [VectorCraft compatibility](user/reference/compatibility.md)
 

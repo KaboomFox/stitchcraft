@@ -112,6 +112,7 @@ version and a registry schema version arrive with the first release, together wi
 | `BoundedAngle` | degrees, `f64` | finite, within range, never turned by whole turns. 270 is above a range that ends at 89, and reads as 89, as Ink/Stitch reads a zigzag stroke's angle | `float`, unit `deg` |
 | `Percent` | `f64` | finite, within range | `float`, unit `%` |
 | `Number` | `f64` | finite, within range, without a unit | `float`, no unit |
+| `Area` | square millimetres, `f64` | finite, within range, written as a number | none (Ink/Stitch has no area setting) |
 | `Count` | `u32` | whole, within range | `int` |
 | `Toggle` | `bool` | `true` or `false` in any case, also Ink/Stitch's `yes`, `y`, `t` and `1` for true and their opposites and `off` for false. `on` is `SC-E0101`, where Ink/Stitch reads it as false (`DEV-PRM-001`) | `boolean`, `toggle` |
 | `Choice` | `&'static str` (the id) | one of the declared ids; unknown ids are a diagnostic, not a default | `combo`, `dropdown` |
@@ -162,6 +163,18 @@ itself. It must also apply to every stitch type the hidden one applies to. A hos
 set, such as a settings panel, reads every parameter with `from_set`, declaration by declaration. It
 reads only the declarations of the families it shows: the satin column's declaration of
 `zigzag_spacing_mm` cannot read a zigzag stroke's 2 spacings (rule 7).
+
+### Settings of automatic digitizing
+
+Automatic digitizing's rules have settings of their own, the widest satin column and the others
+([image to embroidery](image-to-embroidery.md#settings), `REQ-AUTO-020`). An automatic element reads them
+before it is sewn as any stitch type, and the ordinary elements it becomes don't. So their declaration
+applies to no stitch type: `pub struct AutoParams for AUTOMATIC;`, `stitchcraft_params::AUTOMATIC` being
+the empty list, which `ParamGroup::automatic` tells. No family's declaration of a key is theirs
+(`find_for`), so no stitch family's dialog shows them, and every host knows their keys (`find`). The audit
+requires each to be StitchCraft's own, since Ink/Stitch digitizes nothing automatically, to apply to no
+stitch type of its own, and to have a key no other declaration has. The reference pages say they apply to automatic
+elements, and the JSON Schema marks each with `x-stitchcraft.automatic`.
 
 ### Completeness (REQ-PRM-001)
 

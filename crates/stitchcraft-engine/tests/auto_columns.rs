@@ -8,7 +8,7 @@
 
 use stitchcraft_core::math::{self, sin_cos};
 use stitchcraft_core::{Budget, Mm, Point};
-use stitchcraft_engine::auto::{CONTOUR_FROM, Digitized, OVERLAP, Stitches, ZIGZAG_ABOVE, digitize};
+use stitchcraft_engine::auto::{CONTOUR_FROM, Digitized, Stitches, ZIGZAG_ABOVE, digitize};
 use stitchcraft_engine::design::{DesignSettings, Element, Shape};
 use stitchcraft_engine::generators::passes::BEAN_STITCH_REPEATS;
 use stitchcraft_engine::generators::pull::PULL_COMPENSATION;
@@ -18,7 +18,7 @@ use stitchcraft_engine::generators::satin::{
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::satin::{Pairing, Shape as Read, recognize};
 use stitchcraft_plan::{Role, StitchKind};
-use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, messages, planned, polylines, widened};
+use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, messages, planned, polylines, rules, widened};
 
 /// What the automatic `element` sews as, in a design with the default settings.
 fn made(element: &Element) -> Digitized {
@@ -109,7 +109,7 @@ fn req_auto_016_a_column_that_ends_under_another_sews_first_and_reaches_under_it
     let (stem, bar) = (&out.elements[0], &out.elements[1]);
     let (stem_rails, _) = read(stem);
     assert!(stem_rails.iter().flatten().all(|q| q.y() >= 3.0 - 1e-9), "{stem_rails:?}");
-    let under = format!("{}", -OVERLAP);
+    let under = format!("{}", -rules().auto_overlap_mm.get());
     let push = setting(stem, PUSH_COMPENSATION).unwrap();
     assert!(push == format!("{under} 0") || push == format!("0 {under}"), "{push}");
     assert_eq!(setting(bar, PUSH_COMPENSATION), None);
@@ -127,7 +127,7 @@ fn req_auto_016_a_v_sews_as_2_columns_one_ending_under_the_other() {
     let out = made(&v);
     assert_eq!(out.stitches, Some(Stitches::Satin));
     let [first, second] = out.elements.as_slice() else { panic!("{:?}", out.elements) };
-    let under = format!("{}", -OVERLAP);
+    let under = format!("{}", -rules().auto_overlap_mm.get());
     let push = setting(first, PUSH_COMPENSATION).unwrap();
     assert!(push == format!("{under} 0") || push == format!("0 {under}"), "{push}");
     assert_eq!((setting(first, SATIN_COLUMN), setting(second, SATIN_COLUMN)), (Some("true"), Some("true")));
@@ -226,7 +226,7 @@ fn req_auto_018_a_column_has_the_underlay_and_settings_of_its_width() {
             assert_eq!(underlays(column), expected, "{width} mm: {}", column.id);
             // Pull compensation of the overlap an area reaches under its neighbours with, and no end near the
             // next shape.
-            assert_eq!(setting(column, PULL_COMPENSATION), Some(OVERLAP.to_string().as_str()));
+            assert_eq!(setting(column, PULL_COMPENSATION), Some(rules().auto_overlap_mm.get().to_string().as_str()));
             assert_eq!(setting(column, END_AT_NEAREST_POINT), Some("false"));
         }
     }

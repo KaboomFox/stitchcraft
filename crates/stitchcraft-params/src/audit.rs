@@ -3,7 +3,10 @@
 //! A declaration that compiles can still be incomplete or contradictory: an empty range, a default
 //! outside it, an option listed twice, a visibility condition naming a parameter that does not exist, or
 //! one an element could not read it by: of another declaration, shown only sometimes itself, or not read
-//! by every stitch type the condition's own parameter applies to.
+//! by every stitch type the condition's own parameter applies to. A declaration that applies to no stitch
+//! type declares the settings of automatic digitizing ([`AUTOMATIC`](crate::AUTOMATIC)): each of its
+//! parameters applies to none either, is StitchCraft's own, since Ink/Stitch digitizes nothing
+//! automatically, and has its key to itself, since no stitch type reads it.
 //! The generated reference pages, the JSON Schema and every host's settings panel trust that none of
 //! that happens, so [`audit()`] lists each such problem and the engine's registry test
 //! (`req_prm_001_every_registered_parameter_is_complete`) requires the list to be empty.
@@ -11,7 +14,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::set::declarations;
-use crate::spec::{Kind, ParamGroup, ParamSpec, Stability, listed};
+use crate::spec::{Kind, Origin, ParamGroup, ParamSpec, Stability, listed};
 use crate::stitch_type::Family;
 
 /// Every problem in `registry`, one line each, naming the group or the parameter.
@@ -28,7 +31,6 @@ pub fn audit(registry: &[&ParamGroup]) -> Vec<String> {
         group_problem(group.name.len() > "Params".len() && group.name.ends_with("Params"), "the struct name must end in `Params`");
         group_problem(!group.help().is_empty(), "no help text (the struct's doc comment)");
         group_problem(!group.specs.is_empty(), "no parameters");
-        group_problem(!group.applies_to.is_empty(), "applies to no stitch type");
         let labels: BTreeSet<&str> = group.specs.iter().map(|spec| spec.label).collect();
         group_problem(labels.len() == group.specs.len(), "two parameters share a label");
         for spec in group.specs {
@@ -57,7 +59,13 @@ fn check(spec: &ParamSpec, group: &ParamGroup, registry: &[&ParamGroup]) -> Vec<
     require(!spec.label.trim().is_empty(), "no label");
     require(!spec.help().is_empty(), "no help text (the field's doc comment)");
     require(!spec.group.trim().is_empty(), "no group");
-    require(!spec.applies_to.is_empty(), "applies to no stitch type");
+    if group.automatic() {
+        require(spec.applies_to.is_empty(), "a setting of automatic digitizing that applies to a stitch type");
+        require(spec.origin == Origin::StitchCraft, "a setting of automatic digitizing that isn't StitchCraft's own");
+        require(declarations(registry, spec.key).count() == 1, "a setting of automatic digitizing whose key is declared again");
+    } else {
+        require(!spec.applies_to.is_empty(), "applies to no stitch type");
+    }
     require(range_is_usable(spec.kind), "its range is empty or not finite");
     if let Kind::Choice { options } = spec.kind {
         let ids: BTreeSet<&str> = options.iter().map(|o| o.id).collect();
@@ -114,7 +122,8 @@ fn range_is_usable(kind: Kind) -> bool {
         | Kind::LengthPair { min, max, .. }
         | Kind::PercentPair { min, max, .. }
         | Kind::PercentList { min, max }
-        | Kind::Number { min, max } => min.is_finite() && max.is_finite() && min < max,
+        | Kind::Number { min, max }
+        | Kind::Area { min, max } => min.is_finite() && max.is_finite() && min < max,
         Kind::Count { min, max } | Kind::CountList { min, max } => min < max,
         Kind::Text { max_bytes } => max_bytes > 0,
         Kind::Angle | Kind::AngleList { .. } | Kind::Toggle | Kind::Choice { .. } | Kind::Seed => true,
@@ -124,7 +133,7 @@ fn range_is_usable(kind: Kind) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::spec::{ChoiceOption, Condition, Empty, Origin};
+    use crate::spec::{AUTOMATIC, ChoiceOption, Condition, Empty};
     use crate::stitch_type::StitchType;
 
     const GOOD: ParamSpec = ParamSpec {
@@ -300,15 +309,36 @@ mod tests {
     #[test]
     fn groups_need_a_name_help_parameters_and_distinct_labels() {
         const TWINS: &[ParamSpec] = &[GOOD, ParamSpec { key: "other_mm", ..GOOD }];
-        let nameless = ParamGroup { name: "Params", help: "", applies_to: &[], specs: &[] };
+        let nameless = ParamGroup { name: "Params", help: "", applies_to: StitchType::ALL, specs: &[] };
         assert_eq!(
             audit(&[&nameless, &group(TWINS)]),
             [
                 "Params: the struct name must end in `Params`",
                 "Params: no help text (the struct's doc comment)",
                 "Params: no parameters",
-                "Params: applies to no stitch type",
                 "TestParams: two parameters share a label",
+            ]
+        );
+    }
+
+    #[test]
+    fn a_setting_of_automatic_digitizing_is_stitchcraft_s_own_applies_to_no_stitch_type_and_has_its_key_to_itself() {
+        const FILL: &[ParamSpec] = &[GOOD];
+        const OWN: ParamSpec = ParamSpec { key: "auto_overlap_mm", label: "Overlap", applies_to: AUTOMATIC, origin: Origin::StitchCraft, ..GOOD };
+        const AUTO: &[ParamSpec] = &[
+            OWN,
+            ParamSpec { key: "inkstitch", label: "Ink/Stitch's", origin: Origin::InkStitch, ..OWN },
+            ParamSpec { key: "satin", label: "A satin column's", applies_to: &[StitchType::SatinColumn], ..OWN },
+            ParamSpec { key: "row_spacing_mm", label: "Row spacing", ..OWN },
+        ];
+        let automatic = ParamGroup { name: "AutoParams", applies_to: AUTOMATIC, ..group(AUTO) };
+        assert_eq!(audit(&[&group(FILL), &ParamGroup { specs: &AUTO[..1], ..automatic }]), Vec::<String>::new());
+        assert_eq!(
+            audit(&[&group(FILL), &automatic]),
+            [
+                "`inkstitch`: a setting of automatic digitizing that isn't StitchCraft's own",
+                "`satin`: a setting of automatic digitizing that applies to a stitch type",
+                "`row_spacing_mm`: a setting of automatic digitizing whose key is declared again",
             ]
         );
     }

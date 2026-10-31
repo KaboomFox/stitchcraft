@@ -1393,3 +1393,12 @@ statement = "A part of an automatic area, as it is drawn, that isn't narrow (REQ
 rationale = "A shape traced from a picture is often broad in places and narrow in others, as a balloon on its string is. Filled whole, its narrow parts sew rows no longer than they are wide. Sewn as lines and columns over the fill, they sew as a digitizer would, and the fill beneath leaves no fabric showing where they meet. An opening finds the broad parts without the shape's centre lines, and rounds their convex corners, which the fill keeps."
 milestone = "M13"
 status = "active"
+
+[[req]]
+id = "REQ-AUTO-020"
+area = "auto"
+level = "L2"
+statement = "Each rule of automatic digitizing goes by the settings of the automatic element it digitizes, StitchCraft's own parameters, which no stitch type reads: `auto_max_satin_width_mm`, the widest satin column, 7 mm (REQ-AUTO-003, REQ-AUTO-004, REQ-AUTO-016, REQ-AUTO-019); `auto_min_triple_run_width_mm`, the narrowest triple run, 0.5 mm (REQ-AUTO-015); `auto_overlap_mm`, the overlap, 0.4 mm (REQ-AUTO-007, REQ-AUTO-016, REQ-AUTO-018); `auto_min_area_mm2`, the smallest area, 1 mm² (REQ-AUTO-004, REQ-AUTO-008, REQ-AUTO-013, REQ-AUTO-019); and `auto_ignore_background`, on, without which the lowest shape is sewn though it is the picture's background (REQ-AUTO-009). The values those requirements give are the defaults, which a shape that sets none takes, as every shape does with `--auto`. An area reaches its own overlap under the shapes sewn after it, and is cut away its own overlap inside an area that covers it. A part of it smaller than its own smallest area is a speck, and a satin column has the overlap of the shape it sews. SC-I0904 gives the overlaps the areas reach under their neighbours with and are cut away by, from the least to the most. A value out of range is read as the nearest it takes, with SC-W0102, and an automatic element with a value that doesn't read sews nothing, with SC-E0101."
+rationale = "MC-8 confirms the rules' values on the machine or changes them, and a picture can need others: a noisy trace leaves larger specks, and a stretchy fabric pulls shapes further apart. As parameters, the values are documented and checked as every other is, and the Auto effect's dialog sets them in VectorCraft (M13.7)."
+milestone = "M13"
+status = "active"
