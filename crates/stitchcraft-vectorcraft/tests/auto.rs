@@ -11,7 +11,7 @@ mod common;
 use common::{document, element, line, square};
 use stitchcraft_core::units::MM_PER_POINT;
 use stitchcraft_core::{Budget, Point};
-use stitchcraft_engine::auto::OVERLAP;
+use stitchcraft_engine::auto;
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Reading, Shape};
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_vectorcraft::{VectorCraft, read_with};
@@ -27,9 +27,17 @@ fn stroke(mm: f64, extra: &str) -> String {
     format!(r#"{{"kind": "stroke", "width": {width}, "paint": {{"type": "solid", "color": {{"model": "gray", "k": 1}}}} {extra}}}"#)
 }
 
-/// An appearance of `items` and the StitchCraft effects of the `families` given, in order.
+/// An appearance of `items` and the StitchCraft effects of the `families` given, in order, each with no
+/// parameters.
 fn appearance(items: &[String], families: &[&str]) -> String {
-    let effects: Vec<String> = families.iter().map(|family| format!(r#"{{"id": "plugin.dev.stitchcraft.{family}", "params": {{}}}}"#)).collect();
+    effected(items, &families.iter().map(|family| (*family, "{}")).collect::<Vec<_>>())
+}
+
+/// An appearance of `items` and the StitchCraft effects `effects`, each its plug-in's name and its parameters
+/// as JSON, in order.
+fn effected(items: &[String], effects: &[(&str, &str)]) -> String {
+    let effects: Vec<String> =
+        effects.iter().map(|(name, params)| format!(r#"{{"id": "plugin.dev.stitchcraft.{name}", "params": {params}}}"#)).collect();
     format!(r#"{{"items": [{}], "effects": [{}]}}"#, items.join(","), effects.join(","))
 }
 
@@ -133,9 +141,98 @@ fn req_auto_003_a_line_traced_in_vectorcraft_sews_as_wide_and_as_long_as_drawn()
     let (left, right) = extent(points.iter().map(|q| q.x()).collect());
     let (top, bottom) = extent(points.iter().map(|q| q.y()).collect());
     let length = 50.0 * MM_PER_POINT;
-    assert!((top + 1.25 + OVERLAP).abs() < 0.05 && (bottom - 1.25 - OVERLAP).abs() < 0.05, "as wide as drawn: {top} to {bottom}");
+    let overlap = auto::rules(&stitchcraft_params::ParamSet::new()).unwrap().auto_overlap_mm.get();
+    assert!((top + 1.25 + overlap).abs() < 0.05 && (bottom - 1.25 - overlap).abs() < 0.05, "as wide as drawn: {top} to {bottom}");
     assert!((left + 1.25).abs() < 0.05 && (right - length - 1.25).abs() < 0.05, "caps included: {left} to {right}");
     assert_eq!(read.warnings.len(), 0, "{:?}", read.warnings);
     let said: Vec<String> = outcome.diagnostics.iter().map(ToString::to_string).collect();
     assert_eq!(said, ["info SC-I0901: 1 shape is digitized automatically: it sews as a satin column."]);
+}
+
+#[test]
+fn req_vc_016_the_auto_effect_makes_what_it_reaches_automatic_with_its_settings() {
+    // The Auto effect on a line, with a narrower widest satin column and the preview's level, which is the
+    // plug-in's and no setting; and on a group, whose square is automatic with the group's settings, and
+    // whose line with a satin effect of its own sews as that says.
+    let settings = r#"{"auto_max_satin_width_mm": 4, "preview_level": "outline"}"#;
+    let objects = [
+        line(2, "", &effected(&[stroke(3.0, "")], &[("auto", settings)])),
+        group(
+            5,
+            &effected(&[], &[("auto", r#"{"auto_overlap_mm": 0.6}"#)]),
+            &[square(6, 120.0, 0.0, &appearance(&[red()], &[])), line(7, "", &appearance(&[stroke(3.0, "")], &["satin"]))],
+        ),
+    ]
+    .join(",");
+    for auto in [false, true] {
+        let read = read(&document(4, &objects), auto);
+        let automatic: Vec<(&str, bool)> = read.design.elements().iter().map(|e| (e.id.as_str(), e.automatic)).collect();
+        assert_eq!(automatic, [("vc:2:stroke", true), ("vc:6:fill", true), ("vc:7:satin", false)], "--auto {auto}");
+        assert_eq!(common::params(element(&read, "vc:2:stroke")), [("auto_max_satin_width_mm", "4")]);
+        assert_eq!(common::params(element(&read, "vc:6:fill")), [("auto_overlap_mm", "0.6")]);
+    }
+    // A line 5 mm wide sews as a satin column, and with the effect's widest satin column of 4 mm it fills.
+    let wide = |effects: &[(&str, &str)]| {
+        let read = read(&document(4, &line(2, "", &effected(&[stroke(5.0, "")], effects))), true);
+        let (elements, _) = auto::digitized(&read.design, &Budget::DEFAULT);
+        elements.iter().map(|e| matches!(e.shape, Shape::Fill { .. })).collect::<Vec<_>>()
+    };
+    assert_eq!((wide(&[]), wide(&[("auto", settings)])), (vec![false], vec![true]));
+}
+
+#[test]
+fn req_vc_016_an_auto_effect_beside_a_stitch_effect_is_not_used() {
+    // The object's fill effect says how it sews, and SC-W0807 says the Auto effect isn't used.
+    let beside = read(&document(4, &square(3, 0.0, 0.0, &effected(&[red()], &[("auto", "{}"), ("fill", "{}")]))), false);
+    assert_eq!(beside.design.elements().iter().map(|e| (e.id.as_str(), e.automatic)).collect::<Vec<_>>(), [("vc:3:fill", false)]);
+    let unused: Vec<&str> = beside.warnings.iter().filter(|w| w.message.contains("Auto")).map(|w| w.message.as_str()).collect();
+    assert_eq!(unused, ["The object has StitchCraft's Auto effect beside a stitch effect, which says how it sews: the Auto effect is not used."]);
+    // On a group too, whose paths sew by its stitch effect; and a second Auto effect, of which the first is
+    // used.
+    let fill = group(5, &effected(&[], &[("fill", "{}"), ("auto", "{}")]), &[square(6, 0.0, 0.0, &appearance(&[red()], &[]))]);
+    let twice = square(7, 60.0, 0.0, &effected(&[red()], &[("auto", r#"{"auto_overlap_mm": 0.6}"#), ("auto", r#"{"auto_overlap_mm": 1}"#)]));
+    let read = read(&document(4, &[fill, twice].join(",")), false);
+    let automatic: Vec<(&str, bool)> = read.design.elements().iter().map(|e| (e.id.as_str(), e.automatic)).collect();
+    assert_eq!(automatic, [("vc:6:fill", false), ("vc:7:fill", true)]);
+    assert_eq!(common::params(element(&read, "vc:7:fill")), [("auto_overlap_mm", "0.6")]);
+    let said: Vec<(&str, String)> =
+        read.warnings.iter().map(|w| (w.message.as_str(), w.element.as_ref().map_or(String::new(), ToString::to_string))).collect();
+    assert_eq!(
+        said,
+        [
+            ("A group has StitchCraft's Auto effect beside a stitch effect, which says how it sews: the Auto effect is not used.", "vc:5".into()),
+            ("A second StitchCraft Auto effect is not used: the first is.", "vc:7".into()),
+        ]
+    );
+}
+
+#[test]
+fn req_vc_016_the_nearest_stitchcraft_effects_say_how_a_path_sews() {
+    // A group's fill effect reaches a square without effects, and a square with an Auto effect of its own is
+    // automatic. A group's Auto effect reaches a square through a group without effects, but not a line
+    // inside a group with a satin effect, which is nearer.
+    let objects = [
+        group(
+            5,
+            &appearance(&[], &["fill"]),
+            &[square(6, 0.0, 0.0, &appearance(&[red()], &[])), square(7, 60.0, 0.0, &appearance(&[red()], &["auto"]))],
+        ),
+        group(
+            8,
+            &appearance(&[], &["auto"]),
+            &[
+                group(9, &appearance(&[], &["satin"]), &[line(10, "", &appearance(&[stroke(3.0, "")], &[]))]),
+                group(11, &appearance(&[], &[]), &[square(12, 120.0, 0.0, &appearance(&[red()], &[]))]),
+            ],
+        ),
+    ]
+    .join(",");
+    let read = read(&document(4, &objects), false);
+    let automatic: Vec<(&str, bool)> = read.design.elements().iter().map(|e| (e.id.as_str(), e.automatic)).collect();
+    assert_eq!(automatic, [("vc:6:fill", false), ("vc:7:fill", true), ("vc:10:satin", false), ("vc:12:fill", true)]);
+    // VectorCraft runs the nearer effects on what the farther ones draw, and each is said: nothing else is.
+    let levels: Vec<String> =
+        read.warnings.iter().filter(|w| w.message.contains("more than one level")).map(|w| w.element.as_ref().unwrap().to_string()).collect();
+    assert_eq!(levels, ["vc:7", "vc:10"]);
+    assert_eq!(read.warnings.len(), 2, "{:?}", read.warnings);
 }

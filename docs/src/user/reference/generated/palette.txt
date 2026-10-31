@@ -1,0 +1,2 @@
+$ stitch palette -o threads.gpl
+61 threads of the Brother PE800 with its 5 × 7 in hoop (Brother PEC) written to threads.gpl

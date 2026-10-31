@@ -52,6 +52,8 @@ pub enum Value {
     Percent(f64),
     /// A number without a unit.
     Number(f64),
+    /// An area in square millimetres.
+    Area(f64),
     /// A whole number.
     Count(u32),
     /// On or off.
@@ -83,7 +85,7 @@ impl Value {
         match self {
             Value::Length(Some(mm)) => mm.get().to_string(),
             Value::Length(None) | Value::Seed(None) | Value::LengthPair(None) | Value::PercentPair(None) | Value::Angles(None) => String::new(),
-            Value::Angle(v) | Value::Percent(v) | Value::Number(v) => v.to_string(),
+            Value::Angle(v) | Value::Percent(v) | Value::Number(v) | Value::Area(v) => v.to_string(),
             Value::Count(n) => n.to_string(),
             Value::Toggle(on) => on.to_string(),
             Value::Choice(id) => (*id).to_string(),
@@ -130,6 +132,10 @@ impl Kind {
             Kind::Number { min, max } => {
                 let (n, clamped) = clamp(number(text)?, min, max);
                 Some((Value::Number(n), clamped))
+            }
+            Kind::Area { min, max } => {
+                let (area, clamped) = clamp(number(text)?, min, max);
+                Some((Value::Area(area), clamped))
             }
             Kind::Count { min, max } => {
                 let (count, clamped) = count(text, min, max)?;
@@ -199,7 +205,8 @@ impl Kind {
             | Kind::LengthPair { min, max, .. }
             | Kind::PercentPair { min, max, .. }
             | Kind::PercentList { min, max }
-            | Kind::Number { min, max } => format!("{min} to {max}{unit}"),
+            | Kind::Number { min, max }
+            | Kind::Area { min, max } => format!("{min} to {max}{unit}"),
             Kind::Count { min, max } | Kind::CountList { min, max } => format!("{min} to {max}"),
             _ => String::new(),
         }
@@ -461,6 +468,20 @@ mod tests {
             assert_eq!(staggers.parse(bad), None, "{bad}");
         }
         assert_eq!(Value::Number(2.5).to_raw(), "2.5");
+    }
+
+    #[test]
+    fn areas_are_numbers_of_square_millimetres_in_range() {
+        let smallest = Kind::Area { min: 0.0, max: 10.0 };
+        assert_eq!(smallest.parse(" 1.5 "), Some((Value::Area(1.5), false)));
+        assert_eq!(smallest.parse("12"), Some((Value::Area(10.0), true)));
+        assert_eq!(smallest.parse("-1"), Some((Value::Area(0.0), true)));
+        for bad in ["", "one", "1 mm2", "1,5"] {
+            assert_eq!(smallest.parse(bad), None, "{bad}");
+        }
+        assert_eq!(Value::Area(0.25).to_raw(), "0.25");
+        // What a clamping message says it accepts.
+        assert_eq!(smallest.range(), "0 to 10 mm²");
     }
 
     #[test]

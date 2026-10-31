@@ -46,6 +46,13 @@ pub enum Kind {
         /// Largest accepted value.
         max: f64,
     },
+    /// An area in square millimetres within `min..=max`, written as a number.
+    Area {
+        /// Smallest accepted value, in square millimetres.
+        min: f64,
+        /// Largest accepted value, in square millimetres.
+        max: f64,
+    },
     /// A whole number within `min..=max`.
     Count {
         /// Smallest accepted value.
@@ -211,6 +218,13 @@ pub enum Origin {
     StitchCraft,
 }
 
+/// What the settings of automatic digitizing apply to: no stitch type. An automatic element, a shape whose
+/// stitches StitchCraft chooses by its width, reads them before it is sewn as any stitch type
+/// (`stitchcraft_engine::auto`), and an element of a stitch type never does, so no stitch family's
+/// settings show them. They are StitchCraft's own: Ink/Stitch digitizes nothing automatically. A
+/// declaration of them applies to this ([`ParamGroup::automatic`]).
+pub const AUTOMATIC: &[StitchType] = &[];
+
 /// Everything the registry knows about one parameter.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ParamSpec {
@@ -232,7 +246,7 @@ pub struct ParamSpec {
     pub family_defaults: &'static [(Family, &'static str)],
     /// The section of a user interface or a reference page it belongs to.
     pub group: &'static str,
-    /// The stitch types it applies to.
+    /// The stitch types it applies to: none for a setting of automatic digitizing ([`AUTOMATIC`]).
     pub applies_to: &'static [StitchType],
     /// When it is shown, if not always.
     pub visible_when: Option<Condition>,
@@ -282,7 +296,8 @@ pub struct ParamGroup {
     pub name: &'static str,
     /// What the group is for, as its doc comment's lines; [`ParamGroup::help`] gives the Markdown.
     pub help: &'static str,
-    /// The stitch types its parameters apply to unless a parameter says otherwise.
+    /// The stitch types its parameters apply to unless a parameter says otherwise: none for the settings of
+    /// automatic digitizing ([`AUTOMATIC`]).
     pub applies_to: &'static [StitchType],
     /// Its parameters, in declaration order.
     pub specs: &'static [ParamSpec],
@@ -292,6 +307,13 @@ impl ParamGroup {
     /// What the group is for, as Markdown.
     pub fn help(&self) -> String {
         stitchcraft_core::text::doc_comment(self.help)
+    }
+
+    /// Whether its parameters are settings of automatic digitizing, which an automatic element reads and
+    /// no stitch type does: it applies to [`AUTOMATIC`]. The audit holds each of its parameters to the
+    /// same, and to StitchCraft's own origin.
+    pub fn automatic(&self) -> bool {
+        self.applies_to == AUTOMATIC
     }
 
     /// The name of its reference page, the declaration's words joined by hyphens: `CommonParams` →
@@ -326,10 +348,11 @@ impl ParamGroup {
 }
 
 impl Kind {
-    /// The unit values are in, for docs and user interfaces: `mm`, `%`, `°`, or `""`.
+    /// The unit values are in, for docs and user interfaces: `mm`, `mm²`, `%`, `°`, or `""`.
     pub const fn unit(self) -> &'static str {
         match self {
             Kind::Length { .. } | Kind::LengthList { .. } | Kind::LengthPair { .. } => "mm",
+            Kind::Area { .. } => "mm²",
             Kind::Percent { .. } | Kind::PercentPair { .. } | Kind::PercentList { .. } => "%",
             Kind::Angle | Kind::BoundedAngle { .. } | Kind::AngleList { .. } => "°",
             _ => "",
@@ -352,6 +375,7 @@ impl Kind {
             Kind::BoundedAngle { min, max } => format!("an angle from {min} to {max} degrees"),
             Kind::Percent { min, max } => format!("a percentage from {min} to {max}"),
             Kind::Number { min, max } => format!("a number from {min} to {max}"),
+            Kind::Area { min, max } => format!("an area from {min} to {max} mm²"),
             Kind::Count { min, max } => format!("a whole number from {min} to {max}"),
             Kind::Toggle => format!("true or false, in any case, or {} for true and {} for false", listed(&ON[1..], "or"), listed(&OFF[1..], "or")),
             Kind::Choice { options } => {
@@ -434,8 +458,17 @@ mod tests {
             Kind::AngleList { optional: true },
             Kind::Count { min: 0, max: 1 },
             Kind::Toggle,
+            Kind::Area { min: 0.0, max: 1.0 },
         ];
-        assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "mm", "%", "%", "%", "°", "°", "°", "", ""]);
+        assert_eq!(kinds.map(Kind::unit), ["mm", "mm", "mm", "%", "%", "%", "°", "°", "°", "", "", "mm²"]);
+        assert_eq!(Kind::Area { min: 0.0, max: 10.0 }.describe(), "an area from 0 to 10 mm²");
+    }
+
+    #[test]
+    fn a_declaration_that_applies_to_no_stitch_type_is_automatic_digitizing_s() {
+        let automatic = ParamGroup { name: "AutoParams", help: "", applies_to: AUTOMATIC, specs: &[] };
+        let satin = ParamGroup { applies_to: &[StitchType::SatinColumn], ..automatic };
+        assert_eq!((automatic.automatic(), satin.automatic()), (true, false));
     }
 
     #[test]

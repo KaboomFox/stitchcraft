@@ -4,17 +4,18 @@
 //! Design: `docs/src/design/image-to-embroidery.md` › Stitch types by width, and
 //! `docs/src/design/algorithms/centre-lines.md` › Columns. Filled, a part as wide as a satin column sews rows
 //! no longer than it is wide wherever they cross it; a satin column sews it with stitches across, the way a
-//! digitizer would. So a part no wider than [`SATIN_MAX_WIDTH`] everywhere, and not narrow (`auto::narrow`),
-//! sews a column along each of its centre lines (`normalize::strips::columns`):
+//! digitizer would. So a part no wider than its area's widest satin column everywhere, and not narrow
+//! (`auto::narrow`), sews a column along each of its centre lines (`normalize::strips::columns`):
 //!
 //! - **Width.** Each column is as wide as the circles that fit inside the part centred on its line, on
 //!   average, as a narrow part is. One no wider than the design's narrowest satin stroke is too narrow to
-//!   stitch across, and runs along its line as a running stitch instead, tripled from 0.5 mm wide.
+//!   stitch across, and runs along its line as a running stitch instead, tripled from the narrowest triple
+//!   run.
 //! - **Order.** A column that ends under another sews first, then the longest, and each next the one with
 //!   an end nearest where the last one ended, sewn from that end; a ring from its rung nearest.
 //! - **Settings.** Each column's underlay is its width's ([`super::underlay`]). One that ends under another
-//!   is [`OVERLAP`] longer at that end, by its push compensation, and so reaches under it, as an area reaches
-//!   under the shapes sewn after it.
+//!   is its area's overlap longer at that end, by its push compensation, and so reaches under it, as an area
+//!   reaches under the shapes sewn after it.
 //! - **Drawn.** Each column is drawn with its rails and rungs, and read back as a satin column is read, it
 //!   must give them ([`drawn::from_rails`]). A part whose triangles make no column round each line, or one of
 //!   whose columns can't be drawn so, stays in the area's fill, and `SC-I0902` says so.
@@ -23,10 +24,10 @@
 
 use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Mm, Point};
 
-use super::OVERLAP;
 use super::narrow::{Edges, piece, width};
-use super::{SATIN_MAX_WIDTH, at_most};
+use super::{AutoParams, at_most};
 use crate::design::Path;
+use crate::generators::mm;
 use crate::generators::satin::drawn;
 use crate::normalize::region::Polygon;
 use crate::normalize::strips::{self, Column, Line};
@@ -62,9 +63,9 @@ pub(super) enum Made {
     Broken,
 }
 
-/// The columns of `part`, an area's whose narrowest satin stroke is `narrowest`, cut from a broad part along
-/// `cuts` (`auto::split`), with `meter`'s work.
-pub(super) fn columns(part: &Polygon, narrowest: Mm, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<Made, Exhausted> {
+/// The columns of `part`, an area's whose narrowest satin stroke is `narrowest` and whose settings of the
+/// rules are `rules`, cut from a broad part along `cuts` (`auto::split`), with `meter`'s work.
+pub(super) fn columns(part: &Polygon, narrowest: Mm, rules: &AutoParams, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<Made, Exhausted> {
     let found = match strips::columns(part, piece(part), cuts, meter)? {
         Err(_) => return Ok(Made::Broken),
         Ok(None) => return Ok(Made::Unmade),
@@ -85,7 +86,7 @@ pub(super) fn columns(part: &Polygon, narrowest: Mm, cuts: &[[Point; 2]], meter:
             continue;
         }
         let Ok(drawn) = drawn::from_rails(column.rails, column.rungs, meter)? else { return Ok(Made::Unmade) };
-        let push = column.under.map(|under| if under.is_some() { -OVERLAP } else { 0.0 });
+        let push = column.under.map(|under| if under.is_some() { -rules.auto_overlap_mm.get() } else { 0.0 });
         sewn.push(Sewn::Satin { path: drawn.path(), width, push });
     }
     Ok(Made::Columns(sewn))
@@ -164,13 +165,13 @@ fn end_nearer(column: &Column, here: Point) -> bool {
     points.first().zip(points.last()).is_some_and(|(start, end)| end.distance(here) < start.distance(here))
 }
 
-/// `SC-I0902` for a part of the automatic area `id` no wider than a satin column, whose satin columns can't be
-/// drawn: it stays in the area's fill.
-pub(super) fn unmade(id: &ElementId) -> Diagnostic {
+/// `SC-I0902` for a part of the automatic area `id` no wider than its widest satin column by `rules`, whose
+/// satin columns can't be drawn: it stays in the area's fill.
+pub(super) fn unmade(id: &ElementId, rules: &AutoParams) -> Diagnostic {
     let message = format!(
         "A part of this area is no wider than a satin column, {} mm, but no satin columns can be drawn along it between its edges, so it is \
          filled.",
-        SATIN_MAX_WIDTH.get()
+        mm(rules.auto_max_satin_width_mm.get())
     );
     Diagnostic::new(Code::AutoSatinFilled, message).with_element(id.clone()).with_fix(Fix::Hint(
         "To sew it as satin columns, draw it with smoother edges, or draw the columns with 2 rails and give them settings.".to_string(),
@@ -218,7 +219,8 @@ mod tests {
     fn req_auto_016_a_column_no_wider_than_the_narrowest_satin_stroke_runs() {
         // A band 1.5 mm wide is one column: a satin column where the narrowest satin stroke is 1 mm, and a
         // running stitch along its line, as wide as the band, where it is 2 mm.
-        let made = |narrowest: f64| columns(&band(1.5), Mm::new(narrowest).unwrap(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+        let made =
+            |narrowest: f64| columns(&band(1.5), Mm::new(narrowest).unwrap(), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
         let Made::Columns(sewn) = made(1.0) else { panic!("no columns") };
         let [Sewn::Satin { width, push, .. }] = sewn.as_slice() else { panic!("{sewn:?}") };
         assert!((width.get() - 1.5).abs() < 1e-6 && *push == [0.0, 0.0], "{width:?} {push:?}");
@@ -372,7 +374,7 @@ mod tests {
     #[test]
     fn a_part_no_satin_column_can_be_drawn_along_is_said_to_stay_filled() {
         let id = ElementId::new("letters").unwrap();
-        let said = unmade(&id);
+        let said = unmade(&id, &AutoParams::defaults());
         assert_eq!((said.code, said.element.as_ref()), (Code::AutoSatinFilled, Some(&id)));
         assert_eq!(
             said.to_string(),

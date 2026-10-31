@@ -228,8 +228,10 @@ matched. A format that names threads by entries gives a design's threads theirs 
 (`Palette::assign`, REQ-THREAD-002). Different threads get different entries while they last, the nearest
 pairs first, and a thread read from such a file gets its own ([formats](formats.md), PES). Each table names
 its source in its module docs and in a row of `NOTICE`. The PEC palette is the one
-MIT-licensed pyembroidery publishes, with entries 62 and 63 from its fork pystitch. Thread
-catalogues (brand and number) arrive with M11.
+MIT-licensed pyembroidery publishes, with entries 62 and 63 from its fork pystitch. A palette's threads,
+the entries matching may choose, are also written as a GIMP palette (`Palette::gpl`, `stitch palette`,
+REQ-CLI-011), which VectorCraft loads as a swatch library for Image Trace to trace a picture in
+([image to embroidery](image-to-embroidery.md)). Thread catalogues (brand and number) arrive with M11.
 
 ## Machine profiles
 

@@ -25,7 +25,12 @@ it out, and `stitch:start` and `stitch:end` mark where the shape grouped with th
 (`REQ-VC-009`). From M13.1 strokes keep their cap too. With `--auto`, `read_with` marks an object as an
 automatic element when neither it nor a group or layer around it has a StitchCraft effect
 (`REQ-AUTO-001`). Of such a line sewn across its width, the reader names the alignment and the width
-profile VectorCraft draws, which its stitches don't follow (`REQ-AUTO-005`).
+profile VectorCraft draws, which its stitches don't follow (`REQ-AUTO-005`). From M13.7 StitchCraft's Auto
+effect (`AUTO`) makes an object automatic without the switch, when it is on the object or on a group or a
+layer around it, its parameters the object's settings of the rules. `read_auto_effect` reads the object
+its live effect is given as those automatic elements, an area for its fill and a line along its topmost
+stroke (`REQ-VC-016`). `effect_drawn` writes stitches as
+ribbons for a fill or lines for a stroke, whichever paints the object.
 From M6.11 a document's design settings and machine, which StitchCraft's Design Settings filter keeps with
 it from VectorCraft 0.16, plan the design: `src/settings.rs` writes that data (`kept_data`) and reads it
 back, the settings into the design and the machine into `VectorCraft::machine`, which `machine` reads

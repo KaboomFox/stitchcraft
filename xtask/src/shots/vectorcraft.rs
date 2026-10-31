@@ -32,9 +32,8 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 use serde_json::{Value, json};
-use stitchcraft_params::Family;
-use stitchcraft_vc_plugin::dialog;
 use stitchcraft_vc_plugin::manifest::Schema;
+use stitchcraft_vc_plugin::{Module, dialog};
 
 use super::{GENERATED, Same, Shot, keep};
 use crate::compat::scenario::{self, Run, Step};
@@ -145,7 +144,7 @@ fn problems(shot: &Shot) -> Vec<String> {
             found.push("`scale` is a vectorcraft-render shot's: the window's pictures are its pixels".to_string());
         }
         match shot.dialog.as_deref() {
-            Some(name) if Family::ALL.iter().all(|f| f.id() != name) => found.push(format!("`dialog = \"{name}\"` names no stitch family")),
+            Some(name) if live_effect(name).is_none() => found.push(format!("`dialog = \"{name}\"` names no live effect")),
             Some(name) if !shot.plugins.iter().any(|m| m == name) => found.push(format!("its dialog is `{name}`'s, which it doesn't install")),
             _ => {}
         }
@@ -264,8 +263,7 @@ fn job(shot: &Shot, document: &Path, modules: &Path, picture: &Path) -> Result<V
     let (window, dialog) = match shot.dialog.as_deref() {
         None => (Value::Null, Value::Null),
         Some(name) => {
-            let family = Family::ALL.iter().copied().find(|f| f.id() == name).ok_or(format!("no stitch family `{name}`"))?;
-            let manifest = stitchcraft_vc_plugin::manifest::family(family);
+            let manifest = live_effect(name).ok_or(format!("no live effect `{name}`"))?.manifest();
             let shown = dialog::shown_at_defaults(&manifest.params);
             let params: Vec<Value> = manifest
                 .params
@@ -285,6 +283,12 @@ fn job(shot: &Shot, document: &Path, modules: &Path, picture: &Path) -> Result<V
         "dialog": dialog,
         "picture": picture.to_string_lossy(),
     }))
+}
+
+/// The module of the live effect `name` names, whose dialog a shot can show: a stitch family's, or the Auto
+/// effect's.
+fn live_effect(name: &str) -> Option<Module> {
+    Module::all().into_iter().find(|module| module.name() == name && matches!(module, Module::Family(_) | Module::Auto))
 }
 
 /// The role in the accessibility tree of the control VectorCraft's dialog gives a parameter of the type

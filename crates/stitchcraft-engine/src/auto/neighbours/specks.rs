@@ -1,8 +1,9 @@
 //! Specks: automatic areas, or parts of them, too small to sew (`REQ-AUTO-008`), each said with
 //! `SC-I0905`.
 //!
-//! A trace leaves specks where the picture's pixels were noisy. A fill smaller than [`SMALLEST_AREA`] sews
-//! a knot, and leaving it out shows fabric where it was. So each speck is merged into the automatic area it
+//! A trace leaves specks where the picture's pixels were noisy. A fill smaller than the smallest area sews a
+//! knot, and leaving it out shows fabric where it was. An area's specks are its parts smaller than its own
+//! smallest area (`auto_min_area_mm2`, `REQ-AUTO-020`). So each speck is merged into the automatic area it
 //! shares the longest edge with: the area around it when it fills a hole, which then closes, or the rest of
 //! its own area, when rounding left the two a hair apart. On a tie, it goes into the area drawn first. A
 //! speck that shares no edge with an automatic area has nothing to go into, and is left out.
@@ -21,7 +22,7 @@
 
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Meter, Point};
 
-use super::{Failed, SMALLEST_AREA, Shapes, TOUCHING, envelope, joined, near, speck};
+use super::{Failed, Shapes, TOUCHING, envelope, joined, near, speck};
 use crate::generators::mm;
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::Envelope;
@@ -33,14 +34,16 @@ pub(super) fn merged(shapes: &mut Shapes, budget: &Budget) -> Vec<Diagnostic> {
     // Every area split into the parts it keeps and its specks.
     let mut specks = Vec::new();
     for index in 0..shapes.len() {
-        let Some(parts) = shapes.region(index) else { continue };
-        let (small, kept): (Vec<Polygon>, Vec<Polygon>) = parts.iter().cloned().partition(|part| speck(part.area()));
+        // An automatic area has its region and its settings of the rules alike.
+        let (Some(parts), Some(rules)) = (shapes.region(index), shapes.rules(index)) else { continue };
+        let smallest = rules.auto_min_area_mm2;
+        let (small, kept): (Vec<Polygon>, Vec<Polygon>) = parts.iter().cloned().partition(|part| speck(part.area(), smallest));
         if small.is_empty() {
             continue;
         }
         let whole = kept.is_empty() && small.len() == 1;
         shapes.set_region(index, kept);
-        specks.extend(small.into_iter().map(|speck| Speck { index, speck, whole }));
+        specks.extend(small.into_iter().map(|speck| Speck { index, speck, whole, smallest }));
     }
     let mut said = Vec::with_capacity(specks.len());
     for speck in specks {
@@ -67,18 +70,21 @@ pub(super) fn merged(shapes: &mut Shapes, budget: &Budget) -> Vec<Diagnostic> {
     said
 }
 
-/// A speck: a part of the automatic area `index` too small to sew, its only part when `whole`.
+/// A speck: a part of the automatic area `index` smaller than its `smallest` area, its only part when
+/// `whole`.
 struct Speck {
     index: usize,
     speck: Polygon,
     whole: bool,
+    smallest: f64,
 }
 
 impl Speck {
     /// The speck as its message names it, by its area to a hundredth of a square millimetre, which rounding
-    /// leaves under [`SMALLEST_AREA`].
+    /// leaves under its area's smallest area, and at no less than 0.
     fn this(&self) -> String {
-        let hundredths = (self.speck.area() * 100.0).round().min((SMALLEST_AREA * 100.0).round() - 1.0);
+        let below = ((self.smallest * 100.0).round() - 1.0).max(0.0);
+        let hundredths = (self.speck.area() * 100.0).round().min(below);
         let area = mm(hundredths / 100.0);
         if self.whole { format!("This area of {area} mm²") } else { format!("A part of this area, of {area} mm²,") }
     }
@@ -92,7 +98,7 @@ fn into(shapes: &mut Shapes, speck: &Speck, meter: &mut Meter) -> Result<Option<
     let mut best: Option<(usize, f64)> = None;
     for index in 0..shapes.len() {
         meter.charge(1)?;
-        if !shapes.area.get(index).copied().unwrap_or(false) || !shapes.bounds(index).is_some_and(|area| near(&area, 0.0, &bounds)) {
+        if !shapes.is_area(index) || !shapes.bounds(index).is_some_and(|area| near(&area, 0.0, &bounds)) {
             continue;
         }
         let Some(parts) = shapes.region(index) else { continue };

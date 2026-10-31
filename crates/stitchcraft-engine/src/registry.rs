@@ -4,11 +4,14 @@
 //! else. Hosts look parameters up here (to check a design, to report keys StitchCraft does not know with
 //! `SC-W0105`, to build a settings panel), and `cargo xtask docs` generates the parameter reference
 //! pages, their JSON Schema and the Ink/Stitch compatibility contract's StitchCraft column from it.
-//! It is a plain `const` list, so its order is fixed and nothing runs before `main` (ADR-0003).
+//! It is a plain `const` list, so its order is fixed and nothing runs before `main` (ADR-0003). The
+//! settings of automatic digitizing are listed last: no stitch type reads them, so no stitch family's
+//! settings show them (`stitchcraft_params::AUTOMATIC`).
 //! Registering a declaration is one line here (`docs/src/contributing/playbook-new-param.md`).
 
 use stitchcraft_params::ParamGroup;
 
+use crate::auto::AutoParams;
 use crate::common::CommonParams;
 use crate::generate::{FillParams, StrokeParams};
 use crate::generators::passes::RepeatParams;
@@ -29,6 +32,7 @@ pub const PARAMETERS: &[&ParamGroup] = &[
     &PullParams::GROUP,
     &FillParams::GROUP,
     &TatamiParams::GROUP,
+    &AutoParams::GROUP,
 ];
 
 #[cfg(test)]

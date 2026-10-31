@@ -397,6 +397,8 @@ fn compatible(kind: Kind, their_type: &str, unit: &str) -> bool {
         Kind::Choice { .. } => matches!(their_type, "combo" | "dropdown"),
         Kind::Seed => their_type == "random_seed",
         Kind::Text { .. } => matches!(their_type, "string" | "str"),
+        // Ink/Stitch has no area setting: StitchCraft's smallest area is its own.
+        Kind::Area { .. } => false,
     }
 }
 
