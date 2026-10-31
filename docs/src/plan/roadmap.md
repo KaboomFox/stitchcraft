@@ -166,7 +166,8 @@ first, and the steps that make new kinds of shape into stitches follow.
 | M13.7 ✅ | VectorCraft. The Auto effect previews each path's stitches, and its dialog sets the rules' settings, registered then. `stitch palette` writes a profile's threads for Image Trace's Document Library palette. Tutorial "From a picture to a machine file", and a Level B case in which VectorCraft traces a picture | `shots-ui` and the compatibility gate green with the new case |
 | MC-8 🧵 | **TS-13** (test pictures digitized automatically, beside the same shapes sewn in paint order); kit: `stitch testsheet` | report filed; the rules' values confirmed or changed |
 | M13.8 | Automatic digitizing by default for VectorCraft documents | the end-to-end cases expect it |
-| M13.9 🧪 | `stitch plan picture.png`: VectorCraft's command line traces the picture, or StitchCraft reads and traces it itself | decision recorded in the design |
+| M13.9 ✅ 🧪 | `stitch plan picture.png`: VectorCraft's command line traces the picture, or StitchCraft reads and traces it itself | Decision recorded in the design, [ADR-0015](../design/adr/0015-pictures-traced-by-vectorcraft.md): VectorCraft's command line traces it, with the `trace` case's steps (2026-10-31) |
+| M13.10 | `stitch plan picture.png` and `stitch export picture.png` trace a PNG or JPEG file with VectorCraft's command line, in the machine's threads, and sew it digitized automatically. A coded error when VectorCraft isn't installed | a Level B case plans a picture through `stitch` on every track |
 
 ## M8 — Ink/Stitch interoperability
 

@@ -88,6 +88,7 @@
     - [0012 Read, never copy](design/adr/0012-read-dont-copy.md)
     - [0013 Brother PE800](design/adr/0013-brother-pe800-reference-machine.md)
     - [0014 Generators see their neighbours](design/adr/0014-generators-see-their-neighbours.md)
+    - [0015 Pictures traced by VectorCraft](design/adr/0015-pictures-traced-by-vectorcraft.md)
 
 # Plan
 

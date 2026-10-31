@@ -20,6 +20,7 @@ supersedes the old one.
 | [0012](0012-read-dont-copy.md) | Read Ink/Stitch's source, never copy it | Accepted |
 | [0013](0013-brother-pe800-reference-machine.md) | The reference machine is a Brother PE800, with a profile for each of its hoops | Accepted |
 | [0014](0014-generators-see-their-neighbours.md) | Generators see their neighbours: the needle before, the next element after | Accepted |
+| [0015](0015-pictures-traced-by-vectorcraft.md) | Pictures are traced by VectorCraft's command line | Accepted (spike M13.9) |
 
 `cargo xtask docs --check` fails if an ADR file is missing from this table or its status here differs
 from the file's status line.
