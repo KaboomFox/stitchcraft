@@ -19,8 +19,9 @@ staggers show for staggered splits. VectorCraft before 0.14 lists every setting,
 name.
 
 An object without a StitchCraft effect sews as Ink/Stitch sews a shape of an SVG file. Its fills are
-filled, and its strokes are sewn as running stitch. With `stitch export --auto`, StitchCraft chooses its
-stitches by width instead, as for a picture traced into shapes.
+filled, and its strokes are sewn as running stitch. To let StitchCraft choose its stitches by width
+instead, as for a picture traced into shapes, apply **Effect › Plug-ins › StitchCraft Auto** to it, or to
+the group or the layer it is in, or write the file with `stitch export --auto`.
 
 - A line up to 1 mm wide runs, or up to the narrowest satin stroke the document keeps
   ([below](#keep-the-designs-settings-and-machine-with-it)). From 0.5 mm wide it is a triple run, each
@@ -30,7 +31,15 @@ stitches by width instead, as for a picture traced into shapes.
   anywhere runs along its middle, as so narrow a line does, and a part no wider than 7 mm anywhere sews as
   satin columns along its middle, between its own edges, as the strokes of traced letters do.
 
-Objects are sewn in the order they are drawn, the bottom one first. [Satin columns and presets in VectorCraft](vectorcraft-columns-and-presets.md) shows
+The Auto effect's dialog has the settings of these rules, with the numbers above as their defaults
+([reference](../reference/params/auto.md)). A path with the effect on it or on its group shows the
+stitches StitchCraft chooses for it on its own, as far as VectorCraft lets a live effect work them out.
+Most traced letters and shapes with holes show their outlines instead. A path with a StitchCraft
+stitch effect of its own sews as that effect says, and an Auto effect beside one on the same object isn't
+used. The machine file has every stitch, whichever shows.
+
+Objects are sewn in the order they are drawn, the bottom one first. StitchCraft orders those it digitizes
+automatically for few thread changes. [Satin columns and presets in VectorCraft](vectorcraft-columns-and-presets.md) shows
 how to draw a column with 2 rails, and how to keep settings in graphic styles.
 
 ## Leave out what isn't to be sewn
@@ -50,7 +59,8 @@ As**, and **PES embroidery (StitchCraft)** or **DST embroidery (StitchCraft)** a
 is picked, a dialog shows 2 options:
 
 - **Digitize automatically**, which chooses the stitches of the objects without a StitchCraft effect by
-  their width, as `stitch export --auto` does.
+  their width, as `stitch export --auto` does. The objects the Auto effect reaches are digitized
+  automatically either way.
 - **Machine**, the machine and hoop the design is planned for: `document`, the one the document keeps
   ([below](#keep-the-designs-settings-and-machine-with-it)), or `brother-pe800-5x7` when it keeps none,
   unless another is chosen. `stitch profiles` lists them.
@@ -102,8 +112,8 @@ and `stitch export` says so (`SC-W0812`).
 
 ## Draw a test sheet
 
-The [test sheets](../reference/test-sheets.md) drawn as designs, TS-02B to TS-09, can start from
-VectorCraft 0.16 and later. With the [plug-ins installed](../install.md#the-vectorcraft-plug-ins), choose
+The [test sheets](../reference/test-sheets.md) drawn as designs, TS-02B to TS-09 and TS-13A to TS-13C,
+can start from VectorCraft 0.16 and later. With the [plug-ins installed](../install.md#the-vectorcraft-plug-ins), choose
 **Object › Plug-ins › StitchCraft Test Sheet**, pick the sheet, and press OK. Rest the pointer on
 **Sheet** for what each one tests. The sheet is drawn in the middle of the artboard, each shape with its
 StitchCraft effect and settings, and shows its stitches. Write it as any design, with **File › Export ›
@@ -113,8 +123,8 @@ The sheet sews as `stitch testsheet` writes it, moved. A fill's rows lie where t
 them, so they may fall a little elsewhere across a shape, and look the same. The threads keep their
 colours but not their names in the Brother palette, and the machine file is the same. StitchCraft Stroke,
 Satin and Fill must be installed: VectorCraft gives a new object only the effects of installed plug-ins.
-TS-01, TS-02 and TS-10A to TS-10C are drawn stitch by stitch, and come from `stitch testsheet` alone. So
-do TS-13A to TS-13C, whose shapes StitchCraft digitizes automatically, which an object can't say yet.
+The TS-13 sheets need StitchCraft Auto too, which their top halves' shapes have. TS-01, TS-02 and TS-10A to
+TS-10C are drawn stitch by stitch, and come from `stitch testsheet` alone.
 
 ## Read what it says
 

@@ -16,8 +16,21 @@ pub(crate) fn input(path: &Value) -> Vec<u8> {
 /// VectorCraft's input for one object whose path is `path`, as 0.15 and later give it: with a black stroke
 /// `width` points wide, mitred and with butt caps, and no fill.
 pub(crate) fn stroked(path: &Value, width: f64) -> Vec<u8> {
-    let stroke = json!({"paint": {"type": "solid", "color": {"model": "rgb", "r": 0, "g": 0, "b": 0}}, "width": width, "join": "miter", "cap": "butt", "miterLimit": 10});
-    let object = json!({"type": "path", "path": path, "fillRule": "nonzero", "bounds": [0, 0, 100, 100], "fills": [], "strokes": [stroke]});
+    painted(path, false, Some(width))
+}
+
+/// VectorCraft's input for one object whose path is `path`, as 0.15 and later give it: with a red fill when
+/// `filled`, and a black stroke `stroke` points wide, mitred and with butt caps, when it is given.
+pub(crate) fn painted(path: &Value, filled: bool, stroke: Option<f64>) -> Vec<u8> {
+    let fills: Vec<Value> = filled.then(|| json!({"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}})).into_iter().collect();
+    let strokes: Vec<Value> = stroke
+        .map(|width| {
+            let black = json!({"type": "solid", "color": {"model": "rgb", "r": 0, "g": 0, "b": 0}});
+            json!({"paint": black, "width": width, "join": "miter", "cap": "butt", "miterLimit": 10})
+        })
+        .into_iter()
+        .collect();
+    let object = json!({"type": "path", "path": path, "fillRule": "nonzero", "bounds": [0, 0, 100, 100], "fills": fills, "strokes": strokes});
     serde_json::to_vec(&json!({"objects": [object]})).unwrap()
 }
 
@@ -30,7 +43,18 @@ pub(crate) fn line(points: &[(f64, f64)]) -> Value {
 /// The parameters VectorCraft resolves from `family`'s manifest for a record that sets `set`: every other
 /// parameter at its default, and the effect's context.
 pub(crate) fn params(family: Family, set: &[(&str, Value)]) -> Vec<u8> {
-    let manifest = serde_json::to_value(crate::manifest::family(family)).unwrap();
+    resolved(&crate::manifest::family(family), set)
+}
+
+/// The parameters VectorCraft resolves from the Auto effect's manifest for a record that sets `set`, as
+/// [`params`] does from a family's.
+pub(crate) fn auto_params(set: &[(&str, Value)]) -> Vec<u8> {
+    resolved(&crate::manifest::auto(), set)
+}
+
+/// The parameters VectorCraft resolves from `manifest` for a record that sets `set`, as [`params`] does.
+fn resolved(manifest: &crate::manifest::Manifest, set: &[(&str, Value)]) -> Vec<u8> {
+    let manifest = serde_json::to_value(manifest).unwrap();
     let mut params: Map<String, Value> =
         manifest["params"].as_object().unwrap().iter().map(|(key, spec)| (key.clone(), spec["default"].clone())).collect();
     params.insert("_context".into(), json!({"mode": "effect", "bounds": [0, 0, 100, 100]}));

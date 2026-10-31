@@ -1,5 +1,6 @@
 //! What a live effect is given and gives back (VectorCraft's plug-in ABI v1): the object it is given, as
-//! the element its stitch family sews, and needle points, as geometry VectorCraft draws.
+//! the element its stitch family sews or, for the Auto effect, the automatic elements it is, and needle
+//! points, as geometry VectorCraft draws.
 //!
 //! **What it is given.** One object's geometry, `{"objects": [{"type", "path", "fillRule", "bounds"}]}`,
 //! where the path is the `PathData` a document holds ([`crate::geometry`]). Beside it come the effect's
@@ -19,6 +20,12 @@
 //! and a zigzag stroke as they are (`SC-I0810`). An effect on one of the object's fills or strokes is
 //! refused with `SC-I0810`, since `stitch export` doesn't use such an effect (`SC-W0807`).
 //!
+//! **The Auto effect** (`REQ-VC-016`). Its object is automatic, as `stitch export` reads an object the
+//! effect reaches: an area when a fill paints it, and a line along the stroke a stroke effect follows,
+//! each with the effect's parameters as its settings of the rules ([`read_auto_effect`]). VectorCraft
+//! draws what the effect returns with every paint of the object, so one area and one line show what its
+//! paints sew. Without the paints, as before 0.14, it sews nothing, and the effect says so (`SC-I0810`).
+//!
 //! **What it gives back.** Geometry only, drawn with the object's own paints. A stroke's or a satin
 //! column's stitches come back as open paths from needle point to needle point, for the object's stroke to
 //! draw. A fill's come back as one thin closed ribbon for each stitch, for its fill to fill, since a path
@@ -29,7 +36,7 @@
 use serde::Serialize;
 use serde_json::{Map, Value};
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Mm, Point};
-use stitchcraft_engine::design::{Cap, Element, FillRule, Join, Shape};
+use stitchcraft_engine::design::{Cap, Element, FillRule, Join, Path, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::ParamSet;
 use stitchcraft_params::stitch_type::Family;
@@ -62,17 +69,81 @@ pub struct Effect {
 const ON_A_PAINT: &str =
     "This effect is on one of the object's fills or strokes, which `stitch export` doesn't use, so the live effect leaves the object as it is.";
 
+/// What StitchCraft's Auto live effect is given, read (`REQ-VC-016`): the automatic elements its object is,
+/// and what its preview should show.
+#[derive(Clone, Debug, PartialEq)]
+pub struct AutoEffect {
+    /// The object's area, when a fill paints it, then its line, along the stroke a stroke effect follows:
+    /// the topmost with a paint and a width. Each is automatic, with the effect's settings of the rules.
+    pub elements: Vec<Element>,
+    /// The preview level the parameters ask for ([`PREVIEW_LEVEL`]), as its text; `None` without one.
+    pub preview_level: Option<String>,
+}
+
 /// The live effect of `family` that `input` and `params` give, as VectorCraft passes them to `vc_run`,
 /// read within `budget`. `SC-E0806` when they do not read as the ABI says, `SC-I0810` when the effect is
 /// on one of its object's fills or strokes, `SC-W0808` when the object's path cannot be used, and
 /// `SC-E0004` when reading it needs more work than the budget allows.
 pub fn read_effect(family: Family, input: &[u8], params: &[u8], budget: &Budget) -> Result<Effect, Diagnostic> {
+    let Given { path, rule, strokes, mut params, preview_level, .. } = given(input, params, budget)?;
+    let (shape, stroked) = match family {
+        Family::Fill => (Shape::Fill { path, rule }, false),
+        Family::Stroke | Family::Satin => {
+            params.set(SATIN_COLUMN, if family == Family::Satin { "true" } else { "false" });
+            match followed(&strokes) {
+                Some((_, width, join, cap)) => (Shape::Stroke { path, width, join, cap }, true),
+                None => (Shape::stroke(path), false),
+            }
+        }
+    };
+    Ok(Effect { element: element(family.id(), shape, params, false)?, preview_level, stroked })
+}
+
+/// StitchCraft's Auto live effect that `input` and `params` give, read within `budget` as [`read_effect`]
+/// reads a family's, which says why it cannot. `SC-I0810` too when neither a fill nor a stroke paints the
+/// object, and automatic digitizing sews nothing of it.
+pub fn read_auto_effect(input: &[u8], params: &[u8], budget: &Budget) -> Result<AutoEffect, Diagnostic> {
+    let Given { path, rule, fills, strokes, params, preview_level } = given(input, params, budget)?;
+    let mut elements = Vec::new();
+    if fills.iter().flatten().any(Paint::paints) {
+        elements.push(element(FILL, Shape::Fill { path: path.clone(), rule }, params.clone(), true)?);
+    }
+    if let Some((_, width, join, cap)) = followed(&strokes) {
+        elements.push(element(STROKE, Shape::Stroke { path, width, join, cap }, params, true)?);
+    }
+    if elements.is_empty() {
+        let message = "Automatic digitizing sews an object by its fill and its stroke, and VectorCraft gives the live effect neither, so it \
+                       leaves the object as it is.";
+        let hint = "Give it a fill or a stroke in the thread's colour. VectorCraft gives them to a live effect from 0.14.";
+        return Err(Diagnostic::new(Code::VcEffectUnchanged, message).with_fix(Fix::Hint(hint.into())));
+    }
+    Ok(AutoEffect { elements, preview_level })
+}
+
+/// What a live effect's element of an area and of a line are named after.
+const FILL: &str = "fill";
+const STROKE: &str = "stroke";
+
+/// What VectorCraft gives a live effect, read: its object's path, fill rule and paints, the parameters the
+/// object's element takes, and the preview level they ask for.
+struct Given {
+    path: Path,
+    rule: FillRule,
+    fills: Vec<Option<Paint>>,
+    strokes: Vec<EffectStroke>,
+    params: ParamSet,
+    preview_level: Option<String>,
+}
+
+/// What `input` and `params` give a live effect, as VectorCraft passes them to `vc_run`, read within
+/// `budget`, or why the effect leaves its object as it is, as [`read_effect`] says.
+fn given(input: &[u8], params: &[u8], budget: &Budget) -> Result<Given, Diagnostic> {
     let input: EffectInput = serde_json::from_slice(input).map_err(|e| refused(&format!("Its objects do not read: {e}.")))?;
     let params: Map<String, Value> = serde_json::from_slice(params).map_err(|e| refused(&format!("Its parameters do not read: {e}.")))?;
     if on_a_paint(&params) {
         return Err(Diagnostic::new(Code::VcEffectUnchanged, ON_A_PAINT).with_fix(Fix::Hint(ON_THE_OBJECT.to_string())));
     }
-    let Some(EffectObject { path: Some(data), fill_rule, strokes }) = input.objects.into_iter().next() else {
+    let Some(EffectObject { path: Some(data), fill_rule, fills, strokes }) = input.objects.into_iter().next() else {
         return Err(refused("It holds no path."));
     };
     let path = match geometry::path(&[&data], &mut budget.meter()) {
@@ -89,23 +160,15 @@ pub fn read_effect(family: Family, input: &[u8], params: &[u8], budget: &Budget)
             set.set(key.clone(), text);
         }
     }
-    let preview_level = params.get(PREVIEW_LEVEL).and_then(text);
-    let (shape, stroked) = match family {
-        Family::Fill => {
-            (Shape::Fill { path, rule: if fill_rule.as_deref() == Some("evenodd") { FillRule::EvenOdd } else { FillRule::NonZero } }, false)
-        }
-        Family::Stroke | Family::Satin => {
-            set.set(SATIN_COLUMN, if family == Family::Satin { "true" } else { "false" });
-            match followed(&strokes) {
-                Some((_, width, join, cap)) => (Shape::Stroke { path, width, join, cap }, true),
-                None => (Shape::stroke(path), false),
-            }
-        }
-    };
-    let id = ElementId::new(format!("vc:effect:{}", family.id()))
+    let rule = if fill_rule.as_deref() == Some("evenodd") { FillRule::EvenOdd } else { FillRule::NonZero };
+    Ok(Given { path, rule, fills, strokes, params: set, preview_level: params.get(PREVIEW_LEVEL).and_then(text) })
+}
+
+/// A live effect's element `vc:effect:<what>`, of `shape` with `params`, automatic or not.
+fn element(what: &str, shape: Shape, params: ParamSet, automatic: bool) -> Result<Element, Diagnostic> {
+    let id = ElementId::new(format!("vc:effect:{what}"))
         .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("A live effect's element has no id: {e}.")))?;
-    let element = Element { id, name: None, shape, thread: Thread::new(Rgb::new(0, 0, 0)), params: set, automatic: false };
-    Ok(Effect { element, preview_level, stroked })
+    Ok(Element { id, name: None, shape, thread: Thread::new(Rgb::new(0, 0, 0)), params, automatic })
 }
 
 /// Whether `_context.item` among `params` says the effect is on one of its object's fills or strokes
@@ -130,13 +193,20 @@ pub(crate) fn followed(strokes: &[EffectStroke]) -> Option<(usize, Mm, Join, Cap
 }
 
 /// What a live effect of `family` returns for an element sewn with the needle points `groups`, each a
-/// run of stitches, in millimetres: a fill's stitches as ribbons ([`effect_ribbons`]), and a stroke's or a
-/// satin column's as lines ([`effect_lines`]). `None` when they draw nothing: no group has a stitch of
-/// any length.
+/// run of stitches, in millimetres: a fill's stitches as ribbons, and a stroke's or a satin column's as
+/// lines ([`effect_drawn`]). `None` when they draw nothing: no group has a stitch of any length.
 pub fn effect_output(family: Family, groups: &[Vec<Point>]) -> Option<Vec<u8>> {
-    match family {
-        Family::Fill => effect_ribbons(groups.iter().flat_map(|group| group.windows(2)).filter_map(|w| Some((*w.first()?, *w.get(1)?)))),
-        Family::Stroke | Family::Satin => effect_lines(groups.iter().map(Vec::as_slice)),
+    effect_drawn(groups, family == Family::Fill)
+}
+
+/// What a live effect returns to draw `runs`, each a run of points in millimetres: with `ribbons`, a ribbon
+/// along each of their segments for its object's fill to fill ([`effect_ribbons`]), and otherwise lines
+/// through them for its stroke ([`effect_lines`]). `None` when they draw nothing.
+pub fn effect_drawn(runs: &[Vec<Point>], ribbons: bool) -> Option<Vec<u8>> {
+    if ribbons {
+        effect_ribbons(runs.iter().flat_map(|run| run.windows(2)).filter_map(|w| Some((*w.first()?, *w.get(1)?))))
+    } else {
+        effect_lines(runs.iter().map(Vec::as_slice))
     }
 }
 
@@ -232,6 +302,53 @@ mod tests {
         assert_eq!((satin.element.params.get(SATIN_COLUMN), satin.preview_level), (Some("true"), None));
         let stroke = read_effect(Family::Stroke, &input(&square(), "nonzero"), b"{}", &Budget::DEFAULT).unwrap().element;
         assert_eq!((stroke.params.get(SATIN_COLUMN), stroke.id.as_str()), (Some("false"), "vc:effect:stroke"));
+    }
+
+    #[test]
+    fn req_vc_016_the_auto_effect_s_object_is_its_area_and_its_line_automatic_with_its_settings() {
+        let painted = |fills: Value, strokes: Value| {
+            let object = json!({"type": "path", "path": square(), "fillRule": "evenodd", "fills": fills, "strokes": strokes});
+            serde_json::to_vec(&json!({ "objects": [object] })).unwrap()
+        };
+        let red = json!({"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}});
+        let stroke = json!({"paint": red, "width": 6, "join": "round", "cap": "round"});
+        let params = br#"{"auto_overlap_mm": 0.6, "preview_level": "outline", "_context": {"mode": "effect", "item": "object"}}"#;
+        let both = read_auto_effect(&painted(json!([null, red]), json!([stroke])), params, &Budget::DEFAULT).unwrap();
+        let read: Vec<(&str, bool, bool)> =
+            both.elements.iter().map(|e| (e.id.as_str(), e.automatic, matches!(e.shape, Shape::Fill { rule: FillRule::EvenOdd, .. }))).collect();
+        assert_eq!(read, [("vc:effect:fill", true, true), ("vc:effect:stroke", true, false)]);
+        for element in &both.elements {
+            assert_eq!(element.params.iter().collect::<Vec<_>>(), [("auto_overlap_mm", "0.6")]);
+        }
+        assert_eq!(both.preview_level.as_deref(), Some("outline"));
+        // The line is as wide as its stroke, 6 pt, with its join and cap.
+        let Shape::Stroke { width, join, cap, .. } = &both.elements[1].shape else { panic!("{:?}", both.elements[1]) };
+        assert!((width.get() - 6.0 * MM_PER_POINT).abs() < 1e-9 && *join == Join::Round && *cap == Cap::Round, "{width:?} {join:?} {cap:?}");
+        // A fill alone is an area, and a stroke alone a line: a fill of no paint is none.
+        let ids = |fills: Value, strokes: Value| -> Vec<String> {
+            let effect = read_auto_effect(&painted(fills, strokes), b"{}", &Budget::DEFAULT).unwrap();
+            effect.elements.iter().map(|e| e.id.to_string()).collect()
+        };
+        assert_eq!(ids(json!([red]), json!([])), ["vc:effect:fill"]);
+        assert_eq!(ids(json!([null, {"type": "none"}]), json!([stroke])), ["vc:effect:stroke"]);
+    }
+
+    #[test]
+    fn diag_sc_i0810_the_auto_effect_on_an_object_without_paints_leaves_it_as_it_is() {
+        // As VectorCraft gives a live effect its object before 0.14: without fills or strokes.
+        let unpainted = shown(&read_auto_effect(&input(&square(), "nonzero"), b"{}", &Budget::DEFAULT).unwrap_err());
+        assert_eq!(
+            unpainted,
+            "info SC-I0810: Automatic digitizing sews an object by its fill and its stroke, and VectorCraft gives the live effect neither, so it \
+             leaves the object as it is. Give it a fill or a stroke in the thread's colour. VectorCraft gives them to a live effect from 0.14."
+        );
+        // VectorCraft keeps the first 300 characters of a plug-in's error.
+        assert!(unpainted.chars().count() <= 300);
+        // And as a family's effect, on one of its object's paints.
+        let on_a_paint = br#"{"_context": {"item": {"fill": 0}}}"#;
+        assert!(
+            shown(&read_auto_effect(&input(&square(), "nonzero"), on_a_paint, &Budget::DEFAULT).unwrap_err()).contains("is on one of the object's")
+        );
     }
 
     /// The error a live effect gives back for `diagnostic`, as VectorCraft shows it.

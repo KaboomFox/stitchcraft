@@ -32,6 +32,10 @@
 //! **The preview.** Last comes `preview_level` ([`PREVIEW_LEVEL`]), which is the plug-in's and no
 //! stitch's: how much of the stitches the live effect shows ([`crate::preview::Level`]).
 //!
+//! **The Auto effect** (`REQ-VC-016`). Its manifest declares the settings of automatic digitizing's rules,
+//! the registry's automatic groups, which no stitch type has, in their order, and then `preview_level`
+//! ([`auto`]). Their rows show always: the dialog has no method.
+//!
 //! **How the dialog shows them.** Each parameter comes with its label, unit, section, help and help page,
 //! and the values of the parameters before it that show it, which VectorCraft reads from 0.14 and earlier
 //! releases ignore ([`crate::dialog`], `REQ-VC-012`).
@@ -57,6 +61,7 @@ use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Empty, Family, Kind, ParamGroup, ParamSpec, StitchType, Value as Parsed, find_for};
 use stitchcraft_plan::FormatId;
+use stitchcraft_vectorcraft::AUTO;
 use stitchcraft_vectorcraft::settings::SETTINGS_FILTER;
 pub use stitchcraft_vectorcraft::{PREVIEW_LEVEL, plugin_id};
 
@@ -237,6 +242,39 @@ pub fn family(family: Family) -> Manifest {
     }
 }
 
+/// The manifest of StitchCraft's Auto effect (`REQ-VC-016`), which chooses the stitches of the object, or
+/// of each path inside the group, by their width, with the settings of automatic digitizing's rules.
+pub fn auto() -> Manifest {
+    Manifest {
+        id: plugin_id(AUTO),
+        name: "StitchCraft Auto",
+        version: env!("CARGO_PKG_VERSION"),
+        kind: "effect",
+        author: AUTHOR,
+        description: "Chooses the stitches of the object by its width, as `stitch export --auto` does, with the settings of its rules: \
+                      a fill is filled, or sewn as satin columns and running stitches where it is narrow, and a stroke is a running \
+                      stitch, a satin column or a fill. On a group, it digitizes each path inside, and previews each on its own.",
+        params: automatic(PARAMETERS).into_iter().chain([(PREVIEW_LEVEL, preview::auto_param())]).collect(),
+        extensions: Vec::new(),
+        budget: BudgetClass::Light,
+    }
+}
+
+/// The parameters of `registry` that the Auto effect's manifest declares: the settings of automatic
+/// digitizing, in the registry's order, each as the dialog shows it.
+fn automatic(registry: &[&ParamGroup]) -> Vec<(&'static str, Param)> {
+    let mut params: Vec<(&'static str, Param)> = Vec::new();
+    for group in registry.iter().filter(|group| group.automatic()) {
+        for spec in group.specs {
+            let Some(schema) = schema(spec, group.specs) else { continue };
+            if let Some(ui) = registry_ui(spec, &schema, group, None, &params) {
+                params.push((spec.key, Param { schema, ui }));
+            }
+        }
+    }
+    params
+}
+
 /// The manifest of the Design Settings filter, which keeps a document's design settings and machine with it
 /// (VectorCraft 0.16, [`crate::settings`]).
 pub fn settings() -> Manifest {
@@ -333,7 +371,7 @@ fn params_of(registry: &[&ParamGroup], family: Family) -> Vec<(&'static str, Par
             let Some(schema) = schema(&spec, group.specs) else { continue };
             // The method comes first, so the rows of some methods only can say which.
             let before = params.as_slice();
-            if let Some(ui) = registry_ui(&spec, &schema, group, family, before) {
+            if let Some(ui) = registry_ui(&spec, &schema, group, Some(family), before) {
                 params.push((spec.key, Param { schema, ui }));
             }
         }
@@ -371,7 +409,9 @@ pub fn schema(spec: &ParamSpec, siblings: &[ParamSpec]) -> Option<Schema> {
         (Kind::Length { max, empty: Empty::AtMostZero, .. }, Parsed::Length(mm)) => number(0.0, max, mm.map_or(0.0, Mm::get)),
         (Kind::Angle, Parsed::Angle(angle)) => number(-180.0, 180.0, angle),
         (Kind::BoundedAngle { min, max }, Parsed::Angle(angle)) => number(min, max, angle),
-        (Kind::Percent { min, max }, Parsed::Percent(value)) | (Kind::Number { min, max }, Parsed::Number(value)) => number(min, max, value),
+        (Kind::Percent { min, max }, Parsed::Percent(value))
+        | (Kind::Number { min, max }, Parsed::Number(value))
+        | (Kind::Area { min, max }, Parsed::Area(value)) => number(min, max, value),
         (Kind::Count { min, max }, Parsed::Count(count)) => Some(Schema::Int { min: min.into(), max: max.into(), default: count.into() }),
         (Kind::CountList { min, max }, Parsed::Counts(counts)) => match counts.as_slice() {
             [count] => Some(Schema::Int { min: min.into(), max: max.into(), default: (*count).into() }),

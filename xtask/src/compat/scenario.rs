@@ -178,6 +178,10 @@ pub struct Traced {
     pub file: String,
     /// The threads, `#rrggbb`, in any order.
     pub threads: Vec<String>,
+    /// Whether StitchCraft's Auto effect makes its shapes automatic, so that it sews digitized
+    /// automatically without `--auto` (`REQ-VC-016`).
+    #[serde(default)]
+    pub effect: bool,
 }
 
 /// A document and the test sheet the Test Sheet filter drew into it.
@@ -662,7 +666,7 @@ fn check(expect: &Expect, out: &Path, ran: &Ran) -> Vec<String> {
         }
     }
     for expected in &expect.traced {
-        if let Err(e) = read(&expected.file).and_then(|bytes| trace::traced(&bytes, &expected.threads)) {
+        if let Err(e) = read(&expected.file).and_then(|bytes| trace::traced(&bytes, &expected.threads, expected.effect)) {
             failures.push(format!("{}: {e}", expected.file));
         }
     }

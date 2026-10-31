@@ -1122,6 +1122,15 @@ rationale = "A machine checkpoint can then start from VectorCraft: the sheet's o
 milestone = "M6"
 status = "active"
 
+[[req]]
+id = "REQ-VC-016"
+area = "vectorcraft"
+level = "L2"
+statement = "StitchCraft's Auto effect (`plugin.dev.stitchcraft.auto`) makes an object, and each path inside a group or a layer it is applied to, an automatic element, whether or not `--auto` is given, with the effect's parameters as its settings of the rules (REQ-AUTO-020). A path with a StitchCraft stitch effect of its own sews as that effect says, and an Auto effect beside one on the same object is not used, which SC-W0807 says. The nearest group's or layer's Auto effect reaches a path, as a stitch effect does. Its dialog shows the rules' settings, each with the registry's label, unit, help and help page, and `preview_level`. Its live effect previews the object's stitches as automatic digitizing chooses them, its fill as an area and its topmost stroke as a line, without what neighbours change (REQ-AUTO-007 to REQ-AUTO-010). Auto shows them as far as ABI v1's budget allows, and the outline when they cost more, and a level that costs more than the budget leaves the object as it is, with SC-I0810. The Test Sheet filter draws the TS-13 sheets too, each shape with the Auto effect."
+rationale = "A picture traced in VectorCraft is a group of paths without settings. With the effect on the group, the user sees each path's stitches and sets the rules' values in a dialog, and the document then sews digitized automatically from VectorCraft's own export, without the command line's switch."
+milestone = "M13"
+status = "active"
+
 # ── Command line ───────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -1227,7 +1236,7 @@ status = "active"
 id = "REQ-AUTO-001"
 area = "auto"
 level = "L2"
-statement = "With `--auto`, `stitch plan` and `stitch export` digitize automatically each shape that has no settings: a VectorCraft object with no StitchCraft effect on it or on a group or layer around it, and an SVG element with no `inkstitch:` attribute. StitchCraft chooses an automatic shape's stitches by its width. A shape with settings is not digitized automatically, and without the switch every shape sews as before. SC-I0901 counts the shapes digitized automatically by the stitches they sew as. A bug-report bundle records the switch, and its replay digitizes the same."
+statement = "With `--auto`, `stitch plan` and `stitch export` digitize automatically each shape that has no settings: a VectorCraft object with no StitchCraft effect on it or on a group or layer around it, and an SVG element with no `inkstitch:` attribute. StitchCraft chooses an automatic shape's stitches by its width. A shape with settings is not digitized automatically, and without the switch every shape sews as before, but those StitchCraft's Auto effect reaches in VectorCraft (REQ-VC-016). SC-I0901 counts the shapes digitized automatically by the stitches they sew as. A bug-report bundle records the switch, and its replay digitizes the same."
 rationale = "A traced picture is many shapes without settings, and the stitches that suit each depend on its width. A shape set by hand keeps what its maker chose."
 milestone = "M13"
 status = "active"

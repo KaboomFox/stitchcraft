@@ -296,14 +296,16 @@ pub(crate) struct EffectInput {
 }
 
 /// An object a live effect is given: its path, in document coordinates, its fill rule (`nonzero` or
-/// `evenodd`), and from VectorCraft 0.14 its strokes, bottom first. Its `type`, `bounds` and fills are not
-/// needed.
+/// `evenodd`), and from VectorCraft 0.14 its fills' paints, `null` for none, and its strokes, bottom first.
+/// Its `type` and `bounds` are not needed.
 #[derive(Deserialize)]
 pub(crate) struct EffectObject {
     #[serde(default)]
     pub path: Option<PathData>,
     #[serde(rename = "fillRule", default)]
     pub fill_rule: Option<String>,
+    #[serde(default)]
+    pub fills: Vec<Option<Paint>>,
     #[serde(default)]
     pub strokes: Vec<EffectStroke>,
 }

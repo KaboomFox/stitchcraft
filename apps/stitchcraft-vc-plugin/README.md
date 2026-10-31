@@ -22,7 +22,11 @@ with the document as VectorCraft 0.16 keeps a filter's data, and the exporters p
 declines with `SC-E0813`. From M6.12 2 more filters are the tools. *StitchCraft Stroke to Satin* makes
 each selected line into a satin column drawn with its rails and rungs, which sews as the line did, a heavy
 filter of VectorCraft 0.17 (`src/stroke_to_satin.rs`, `REQ-VC-014`). *StitchCraft Test Sheet* draws a test
-sheet into the document from 0.16, each object with its effect (`src/testsheet.rs`, `REQ-VC-015`).
+sheet into the document from 0.16, each object with its effect (`src/testsheet.rs`, `REQ-VC-015`). From
+M13.7 a fourth live effect, *StitchCraft Auto*, makes the object, or each path inside the group, a shape
+whose stitches StitchCraft chooses by its width, with the settings of automatic digitizing's rules in its
+dialog, and previews the stitches it chooses for each path on its own (`REQ-VC-016`). The Test Sheet
+filter draws the TS-13 sheets with it.
 Without a feature the module is M0.6's *hello* effect, which returns the object's geometry unchanged. The
 contract tests measure the host's costs with it (`docs/src/design/vectorcraft-integration.md`).
 
@@ -34,10 +38,10 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 # target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm, the StitchCraft Fill plug-in
 ```
 
-The feature is the family, `stroke`, `satin` or `fill`, the machine format, `pes` or `dst`, or the filter,
-`settings`, `stroke-to-satin` or `testsheet`. Without one, the build is *hello*. Each build writes the same
-file, so copy it before building the next. `cargo xtask compat contract --ref <tag>` builds all nine into
-`target/compat/plugins/` and loads them into VectorCraft's host.
+The feature is the family, `stroke`, `satin` or `fill`, `auto` for the Auto effect, the machine format, `pes`
+or `dst`, or the filter, `settings`, `stroke-to-satin` or `testsheet`. Without one, the build is *hello*. Each
+build writes the same file, so copy it before building the next. `cargo xtask compat contract --ref <tag>`
+builds all ten into `target/compat/plugins/` and loads them into VectorCraft's host.
 
 In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Open` the `.wasm`), then
 **Effect › Plug-ins › StitchCraft Fill**, **File › Export › Export As** with an exporter, or a filter under

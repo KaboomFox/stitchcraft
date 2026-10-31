@@ -4,17 +4,27 @@
 # in colour with that library's colours, as they are, by the Abutting method, and its paths kept. Read with
 # `--auto`, the document sews digitized automatically: the white round the badge, traced lowest, is left
 # out as the picture's background, and the badge sews its 3 threads (xtask/src/compat/scenario/trace.rs).
-description = "A picture traced by Image Trace in the threads `stitch palette` writes sews in them, digitized automatically, its background left out."
-requirements = ["REQ-CLI-011", "REQ-AUTO-001", "REQ-AUTO-009"]
+# With StitchCraft's Auto effect applied to the traced group, which Expand leaves selected, it sews so
+# without `--auto`, and drawing it shows each path's stitches without an error.
+description = "A picture traced by Image Trace in the threads `stitch palette` writes sews in them, digitized automatically, its background left out, with `--auto` or with the Auto effect on the traced group."
+requirements = ["REQ-CLI-011", "REQ-AUTO-001", "REQ-AUTO-009", "REQ-VC-016"]
 
 [[run]]
+plugins = ["auto"]
 steps = [
   { cmd = "swatch.library.load", params = { name = "threads.gpl", data = { stitchcraft = "palette" } } },
   { cmd = "file.place", params = { name = "badge.png", dataBase64 = { stitchcraft = "badge.png" } } },
   { cmd = "imageTrace.make", params = { params = { mode = "color", palette = "documentLibrary", library = "loaded/threads.gpl", colors = 4, method = "abutting" } } },
   { cmd = "imageTrace.expand" },
   { export = "traced.vectorcraft" },
+  { cmd = "effect.apply", params = { effect = "plugin.dev.stitchcraft.auto" } },
+  { export = "digitized.vectorcraft" },
+  # Drawing it runs the Auto effect on each path, which must leave no last error.
+  { export = "digitized.png" },
 ]
 
 [expect]
-traced = [{ file = "traced.vectorcraft", threads = ["#ed171f", "#0a55a3", "#e8a900"] }]
+traced = [
+  { file = "traced.vectorcraft", threads = ["#ed171f", "#0a55a3", "#e8a900"] },
+  { file = "digitized.vectorcraft", threads = ["#ed171f", "#0a55a3", "#e8a900"], effect = true },
+]

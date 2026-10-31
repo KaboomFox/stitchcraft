@@ -5,14 +5,16 @@
 //! the translation for VectorCraft: [`read`] turns a `.vectorcraft` file into a design and the warnings
 //! about what it left out or simplified, as `stitchcraft-svg` does for SVG files. For the plug-in, it
 //! translates what VectorCraft's plug-in ABI passes a live effect and what the effect gives back
-//! ([`read_effect`], [`effect_output`], [`effect_error`]; roadmap steps M6.2 and M6.3), and what it passes a
-//! filter and the objects a filter gives back ([`filter`], M6.12).
+//! ([`read_effect`], [`effect_output`], [`effect_error`]; roadmap steps M6.2 and M6.3), the Auto effect's
+//! too ([`read_auto_effect`], M13.7), and what it passes a filter and the objects a filter gives back
+//! ([`filter`], M6.12).
 //!
 //! What it reads (roadmap step M6.1, `docs/src/design/vectorcraft-integration.md`): formats 1 to 4,
 //! plain or compressed, with or without the data format 4 keeps after its JSON; layers, groups, paths
 //! and compound paths in paint order; visibility; fills and strokes with their colours, and a stroke's
-//! width and join; and StitchCraft's live effects, whose records say how an object sews. From M6.5 it
-//! reads Ink/Stitch's commands in names: `stitch:ignore`, `stitch:start` and `stitch:end` (`REQ-VC-009`).
+//! width and join; and StitchCraft's live effects, whose records say how an object sews, or, the Auto
+//! effect's (M13.7), that StitchCraft chooses its stitches. From M6.5 it reads Ink/Stitch's commands in
+//! names: `stitch:ignore`, `stitch:start` and `stitch:end` (`REQ-VC-009`).
 //! [`read_part`] is the part of a file it reads, which a bug-report bundle keeps.
 //!
 //! Its invariants:
@@ -41,12 +43,20 @@ mod writer;
 
 pub use container::{MAX_BYTES, read_part};
 pub use document::{VectorCraft, machine, read, read_with};
-pub use effect::{Effect, RIBBON_MM, effect_error, effect_lines, effect_output, effect_ribbons, read_effect};
+pub use effect::{
+    AutoEffect, Effect, RIBBON_MM, effect_drawn, effect_error, effect_lines, effect_output, effect_ribbons, read_auto_effect, read_effect,
+};
 pub use values::text as param_text;
 
 /// The namespace of StitchCraft's VectorCraft plug-ins. A live effect's id is `plugin.`, this, a dot and
-/// its stitch family's id (`plugin.dev.stitchcraft.fill`), which is how a document records the effect.
+/// its stitch family's id (`plugin.dev.stitchcraft.fill`), or [`AUTO`], which is how a document records the
+/// effect.
 pub const PLUGIN_NAMESPACE: &str = "dev.stitchcraft";
+
+/// The name of StitchCraft's Auto effect (`plugin.dev.stitchcraft.auto`), which makes the object it is
+/// applied to, and each path inside the group or the layer, an automatic element, its parameters the
+/// settings of the rules (`REQ-VC-016`).
+pub const AUTO: &str = "auto";
 
 /// What VectorCraft puts before an installed plug-in's id to name its live effect (`effect.list` in its
 /// engine's `cmd/effectcmd.rs`).
@@ -62,8 +72,8 @@ pub fn effect_id(name: &str) -> String {
     format!("{EFFECT}{}", plugin_id(name))
 }
 
-/// The plug-in name in the live effect id `id`, a stitch family's id or another from a newer version; `None`
-/// when the effect isn't StitchCraft's.
+/// The plug-in name in the live effect id `id`: a stitch family's id, [`AUTO`], or another from a newer
+/// version; `None` when the effect isn't StitchCraft's.
 pub fn effect_name(id: &str) -> Option<&str> {
     id.strip_prefix(EFFECT)?.strip_prefix(PLUGIN_NAMESPACE)?.strip_prefix('.')
 }
@@ -93,8 +103,8 @@ mod tests {
     fn an_effect_s_id_names_its_plug_in() {
         assert_eq!(plugin_id("hello"), "dev.stitchcraft.hello");
         assert_eq!(effect_id("fill"), "plugin.dev.stitchcraft.fill");
-        for family in Family::ALL {
-            assert_eq!(effect_name(&effect_id(family.id())), Some(family.id()));
+        for name in Family::ALL.iter().map(|family| family.id()).chain([AUTO]) {
+            assert_eq!(effect_name(&effect_id(name)), Some(name));
         }
         // Another plug-in's effect, one of VectorCraft's own, and a plug-in's id that isn't an effect's.
         for other in ["plugin.dev.stitchcraftx.fill", "plugin.dev.stitchcraft", "stylize.dropShadow", "dev.stitchcraft.fill"] {

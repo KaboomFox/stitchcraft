@@ -2,19 +2,20 @@
 //! into the document (`REQ-VC-015`). A machine checkpoint can then start from VectorCraft: the sheet's
 //! objects show their stitches, the exporters write it, and the dialogs show its settings.
 //!
-//! **Which sheets.** Those drawn as designs, TS-02B to TS-09, whose elements are shapes with settings
-//! ([`TestSheet::design`]). The others are drawn stitch by stitch, as plans, which no object holds, and only
-//! `stitch testsheet` writes them. So do the TS-13 sheets: their shapes are digitized automatically
-//! ([`TestSheet::digitized`]), which no object can say before VectorCraft's Auto effect (M13.7).
+//! **Which sheets.** Those drawn as designs, TS-02B to TS-09 and TS-13A to TS-13C, whose elements are
+//! shapes ([`TestSheet::design`]). The others are drawn stitch by stitch, as plans, which no object holds,
+//! and only `stitch testsheet` writes them.
 //!
 //! **What it draws.** The sheet's design moved by whole millimetres, so that the middle of its bounds is as
 //! near the middle of the artboard VectorCraft names as that allows: the artboard under the selection, or
 //! else the first ([`placed`]). Each element is an object, named by its id, in sewing order, bottom first.
 //! It has the element's path, a compound path for more than one subpath, its thread as the paint its family
 //! sews with, a fill's fill or a stroke's and a satin column's stroke, and its settings as the record of
-//! its family's StitchCraft effect. Each setting is the value its dialog row takes, and reads back as the
-//! setting it was (`record_params`); one a record can't hold is a bug in the sheet, which the tests catch.
-//! The objects selected are given back as they are, and the sheet goes just above them.
+//! its family's StitchCraft effect. A shape the sheet digitizes automatically, as the TS-13 sheets' top
+//! halves are ([`TestSheet::digitized`]), has the Auto effect's record instead (`REQ-VC-016`). Each setting
+//! is the value its dialog row takes, and reads back as the setting it was (`record_params`); one a record
+//! can't hold is a bug in the sheet, which the tests catch. The objects selected are given back as they
+//! are, and the sheet goes just above them.
 //!
 //! **How it sews.** As the sheet's design, moved. A fill's rows lie where the design's origin puts them, so
 //! across a shape moved they may fall a little elsewhere than `stitch testsheet` sews them, and look the
@@ -22,10 +23,10 @@
 //! Brother palette the sheets sew with; a machine file keeps the colour alone.
 //!
 //! **What it needs.** VectorCraft admits an effect record a filter gives only for an installed plug-in, so
-//! StitchCraft Stroke, Satin and Fill must be installed. It keeps such records from 0.15. A 0.15 with
-//! nothing selected looks to a filter as a 0.14 does, which would drop them, and only the `documentData`
-//! VectorCraft gives every filter from 0.16 tells them apart. So before 0.16 the filter declines with
-//! `SC-E0813`.
+//! StitchCraft Stroke, Satin and Fill must be installed, and StitchCraft Auto for the TS-13 sheets. It keeps
+//! such records from 0.15. A 0.15 with nothing selected looks to a filter as a 0.14 does, which would drop
+//! them, and only the `documentData` VectorCraft gives every filter from 0.16 tells them apart. So before 0.16
+//! the filter declines with `SC-E0813`.
 
 use serde_json::{Map, Value};
 use stitchcraft_core::{Code, Diagnostic, Point};
@@ -34,13 +35,14 @@ use stitchcraft_engine::generate::stitch_type_of;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_engine::testsheets::{SHEETS, TestSheet};
-use stitchcraft_params::{Family, ParamSet, StitchType, find_for};
+use stitchcraft_params::{Family, ParamSet, ParamSpec, StitchType, find_for};
 use stitchcraft_vectorcraft::filter::{self, Given, Out, Record, solid, stroke};
 use stitchcraft_vectorcraft::{effect_error, param_text};
 
+use crate::Module;
 use crate::dialog::own;
 use crate::effect::{RunError, too_old};
-use crate::manifest::{self, Param, Schema};
+use crate::manifest::{Param, Schema};
 
 /// The filter's name: its module's, and its plug-in id's last part.
 pub const TESTSHEET: &str = "testsheet";
@@ -50,9 +52,9 @@ pub const SHEET: &str = "sheet";
 /// The page that says how to draw a test sheet in VectorCraft, which the sheet's help links to.
 const PAGE: &str = "user/how-to/embroider-a-vectorcraft-design.html#draw-a-test-sheet";
 
-/// The sheets drawn as designs of shapes with settings, which the filter draws, in protocol order.
+/// The sheets drawn as designs, which the filter draws, in protocol order.
 pub fn sheets() -> impl Iterator<Item = &'static TestSheet> {
-    SHEETS.iter().filter(|sheet| sheet.designed() && !sheet.digitized())
+    SHEETS.iter().filter(|sheet| sheet.designed())
 }
 
 /// The filter's dialog: a choice of the sheets, by their ids, the first by default, with what each tests.
@@ -108,21 +110,27 @@ pub fn placed(sheet: &TestSheet, centre: Option<Point>) -> Result<Design, Diagno
     design.moved([(centre.x() - middle.x()).round(), (centre.y() - middle.y()).round()])
 }
 
-/// The settings each stitch family's effect declares, by their keys, as its manifest declares them.
-fn declared() -> Vec<(Family, Vec<(&'static str, Schema)>)> {
-    let schemas = |family: Family| manifest::family(family).params.into_iter().map(|(key, param)| (key, param.schema)).collect();
-    Family::ALL.iter().map(|family| (*family, schemas(*family))).collect()
+/// The settings each StitchCraft effect declares, a stitch family's or the Auto effect's, by their keys, as
+/// its manifest declares them.
+fn declared() -> Vec<(Module, Vec<(&'static str, Schema)>)> {
+    let effects = Family::ALL.iter().map(|family| Module::Family(*family)).chain([Module::Auto]);
+    effects.map(|effect| (effect, effect.manifest().params.into_iter().map(|(key, param)| (key, param.schema)).collect())).collect()
 }
 
 /// `element` of `sheet`'s `design` as an object: its path, its thread as the paint its family sews with, and
-/// its settings as its family's effect record, by the settings `declared`.
-fn object(sheet: &TestSheet, element: &Element, design: &Design, declared: &[(Family, Vec<(&'static str, Schema)>)]) -> Result<Out, Diagnostic> {
+/// its settings as its family's effect record, or the Auto effect's for an automatic element, by the
+/// settings `declared`.
+fn object(sheet: &TestSheet, element: &Element, design: &Design, declared: &[(Module, Vec<(&'static str, Schema)>)]) -> Result<Out, Diagnostic> {
     let bug =
         |why: String| Diagnostic::new(Code::InternalCheckFailed, format!("The test sheet {}'s {} can't be drawn: {why}.", sheet.id, element.id));
     let written = |e: serde_json::Error| bug(format!("it can't be written: {e}"));
-    let family = stitch_type_of(element, &design.settings).map(StitchType::family).ok_or_else(|| bug("it names no stitch".into()))?;
-    let schemas = declared.iter().find(|(each, _)| *each == family).map_or(&[][..], |(_, schemas)| schemas.as_slice());
-    let record = Record::ours(family.id(), &record_params(family, &element.params, schemas).map_err(bug)?).map_err(written)?;
+    let effect = if element.automatic {
+        Module::Auto
+    } else {
+        Module::Family(stitch_type_of(element, &design.settings).map(StitchType::family).ok_or_else(|| bug("it names no stitch".into()))?)
+    };
+    let schemas = declared.iter().find(|(each, _)| *each == effect).map_or(&[][..], |(_, schemas)| schemas.as_slice());
+    let record = Record::ours(effect.name(), &record_params(effect, &element.params, schemas).map_err(bug)?).map_err(written)?;
     let path = element.shape.path();
     let out = Out::default().with_name(element.id.to_string()).with_path(path, path.subpaths.len() > 1).map_err(written)?;
     let paint = solid(element.thread.color).map_err(written)?;
@@ -133,24 +141,34 @@ fn object(sheet: &TestSheet, element: &Element, design: &Design, declared: &[(Fa
     .with_effects(vec![record]))
 }
 
-/// The parameters of `family`'s effect record that sew as `params`, an element's: each as the value of its
-/// row in the dialog, by the settings the effect's manifest declares, `schemas`; or which one a record
-/// can't hold. VectorCraft drops a setting the manifest doesn't declare, refuses a value of another kind and
-/// clamps a number into its row's range, so each must be one the row takes, and read back as the setting
-/// it was. The family's `satin_column` is left out: the effect sets it ([`SATIN_COLUMN`]).
-pub(crate) fn record_params(family: Family, params: &ParamSet, schemas: &[(&'static str, Schema)]) -> Result<Map<String, Value>, String> {
+/// The parameters of the record of `effect`, a stitch family's effect or the Auto effect, that sew as
+/// `params`, an element's: each as the value of its row in the dialog, by the settings the effect's manifest
+/// declares, `schemas`; or which one a record can't hold. VectorCraft drops a setting the manifest doesn't
+/// declare, refuses a value of another kind and clamps a number into its row's range, so each must be one
+/// the row takes, and read back as the setting it was. A family's `satin_column` is left out: the effect
+/// sets it ([`SATIN_COLUMN`]).
+pub(crate) fn record_params(effect: Module, params: &ParamSet, schemas: &[(&'static str, Schema)]) -> Result<Map<String, Value>, String> {
     let mut record = Map::new();
     for (key, text) in params.iter().filter(|(key, _)| *key != SATIN_COLUMN) {
-        let held = |why: &str| format!("its setting `{key} = {text}` {why} its {} effect's record", family.id());
+        let held = |why: &str| format!("its setting `{key} = {text}` {why} its {} effect's record", effect.name());
         let schema = schemas.iter().find(|(declared, _)| *declared == key).map(|(_, schema)| schema).ok_or_else(|| held("is no setting of"))?;
         let value = value(schema, text).ok_or_else(|| held("is no value of its row in"))?;
-        let read = |text: &str| find_for(PARAMETERS, key, family).and_then(|spec| spec.in_family(family).kind.parse(text)).map(|(value, _)| value);
+        let read = |text: &str| spec_of(effect, key).and_then(|spec| spec.kind.parse(text)).map(|(value, _)| value);
         if param_text(&value).is_none_or(|back| read(&back).is_none() || read(&back) != read(text)) {
             return Err(held("doesn't read back from"));
         }
         record.insert(key.to_string(), value);
     }
     Ok(record)
+}
+
+/// The registry's declaration of the setting `key` of `effect`'s record: its stitch family's, or one of the
+/// settings of automatic digitizing for the Auto effect's.
+fn spec_of(effect: Module, key: &str) -> Option<ParamSpec> {
+    match effect {
+        Module::Family(family) => find_for(PARAMETERS, key, family).map(|spec| spec.in_family(family)),
+        _ => PARAMETERS.iter().filter(|group| group.automatic()).flat_map(|group| group.specs).find(|spec| spec.key == key).copied(),
+    }
 }
 
 /// `text` as the value of a dialog row of `schema`, within its range: `None` for one the row doesn't take.
