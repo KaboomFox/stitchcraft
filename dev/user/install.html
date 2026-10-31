@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c8e1b59f.js";
+            window.path_to_searchindex_js = "../searchindex-b364f985.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-888564d0.js"></script>
+        <script src="../toc-3ce5e89b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -208,10 +208,11 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 </code></pre>
 <p>The build writes <code>target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm</code>. Copy it into a
 folder for plug-ins as <code>stitchcraft-fill.wasm</code>. Build again with <code>--features stroke</code>, <code>--features satin</code>,
-<code>--features pes</code>, <code>--features dst</code>, <code>--features settings</code>, <code>--features testsheet</code> and
+<code>--features auto</code>, <code>--features pes</code>, <code>--features dst</code>, <code>--features settings</code>, <code>--features testsheet</code> and
 <code>--features stroke-to-satin</code>, and copy the file each time, as <code>stitchcraft-stroke.wasm</code>, <code>stitchcraft-satin.wasm</code>,
-<code>stitchcraft-pes.wasm</code>, <code>stitchcraft-dst.wasm</code>, <code>stitchcraft-settings.wasm</code>, <code>stitchcraft-testsheet.wasm</code>
-and <code>stitchcraft-stroke-to-satin.wasm</code>. VectorCraft 0.13 and earlier refuse the exporters.</p>
+<code>stitchcraft-auto.wasm</code>, <code>stitchcraft-pes.wasm</code>, <code>stitchcraft-dst.wasm</code>, <code>stitchcraft-settings.wasm</code>,
+<code>stitchcraft-testsheet.wasm</code> and <code>stitchcraft-stroke-to-satin.wasm</code>. VectorCraft 0.13 and earlier refuse the
+exporters.</p>
 <p>In VectorCraft’s desktop app, choose that folder in <strong>Edit › Preferences › Plug-ins &amp; Scratch Disks ›
 Additional Plug-ins Folder</strong>, which is under <strong>Performance &amp; Storage</strong> up to VectorCraft 0.14. VectorCraft
 installs the plug-ins in it whenever it starts, all but Stroke to Satin. It asks for more work than a

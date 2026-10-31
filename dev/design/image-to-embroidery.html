@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c8e1b59f.js";
+            window.path_to_searchindex_js = "../searchindex-b364f985.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-888564d0.js"></script>
+        <script src="../toc-3ce5e89b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,7 +181,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="image-to-embroidery"><a class="header" href="#image-to-embroidery">Image to embroidery</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/auto/** -->
+<!-- implements: crates/stitchcraft-engine/src/auto/**, apps/stitchcraft-cli/src/commands/palette.rs -->
 <p>Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
 the stitches of each shape by its width at the size it sews. Neighbouring shapes overlap where they meet.
@@ -204,7 +204,9 @@ shape sews as this page describes. Once MC-8 confirms the rules on the machine, 
 digitizing the default for VectorCraft documents, and <code>--auto</code> is then needed for SVG files only.</p>
 <p>VectorCraft’s exporter plug-ins (<a href="rfc-vectorcraft-abi-v2.html#p1-exporter-plug-ins">P1</a>, 0.14) move the second
 step into VectorCraft, as File › Export › Export As › PES, which StitchCraft’s formats are exporters for since
-M6.9. Their <code>auto</code> option is <code>--auto</code>.</p>
+M6.9. Their <code>auto</code> option is <code>--auto</code>. Since M13.7, StitchCraft’s Auto effect on the traced group says it in
+the document itself, with the rules’ settings in its dialog, and previews each path’s stitches: the
+document then sews digitized automatically from either step, without the switch.</p>
 <p>An SVG file traced elsewhere, such as by Inkscape’s Trace Bitmap, sews the same way with
 <code>stitch plan picture.svg --auto</code>. Without the switch, an SVG file’s shapes sew as Ink/Stitch sews them,
 since the file may be one of Ink/Stitch’s.</p>
@@ -230,8 +232,11 @@ Trace’s Document Library palette then traces the picture in the threads’ col
 <p>An automatic element is a shape whose stitches StitchCraft chooses. The readers make one of:</p>
 <ul>
 <li>each object of a VectorCraft document that has no StitchCraft effect, with <code>--auto</code>;</li>
-<li>each path inside an object or a group that has the StitchCraft Auto effect (M13.7), unless the path has
-a StitchCraft effect of its own;</li>
+<li>each path with the StitchCraft Auto effect, on the path itself or on a group or a layer around it, with
+or without <code>--auto</code> (M13.7, <code>REQ-VC-016</code>). A path nearer to a StitchCraft stitch effect, its own or a
+group’s, sews as that says. The effect’s parameters are the shape’s settings of the rules
+(<a href="#settings">below</a>). A stitch effect says how an object sews, so an Auto effect beside one isn’t used,
+and <code>SC-W0807</code> says so;</li>
 <li>each SVG element without <code>inkstitch:</code> settings, with <code>--auto</code>.</li>
 </ul>
 <p>An element with settings is not digitized automatically, whether or not the switch is given: it sews as
@@ -595,21 +600,51 @@ after another, and the row changes thread twice. Its red discs touch, and the ne
 the next without a jump. The row jumps 7 times instead of 9. <code>tests/auto_pictures.rs</code> keeps the numbers
 from falling back.</p>
 <h2 id="settings"><a class="header" href="#settings">Settings</a></h2>
-<p>The rules’ values become StitchCraft’s own parameters, registered as any other
-(<a href="params.html">parameter registry</a>), when the Auto effect’s dialog lets a user set them (M13.7). The settings
-are the widest satin column, the narrowest triple run, the overlap, the smallest area and a switch that
-leaves the background out. Their defaults are the values on this page, 7 mm, 0.5 mm, 0.4 mm and 1 mm², and
-MC-8 confirms or changes them. Until then nothing can set them, and the rules use those values
-(<code>stitchcraft_engine::auto::SATIN_MAX_WIDTH</code> since M13.1, <code>OVERLAP</code> and <code>SMALLEST_AREA</code> since M13.2, and
-<code>TRIPLE_RUN_WIDTH</code> since M13.4). The narrowest satin column is the design’s <code>min_satin_stroke_width_mm</code>.
-With <code>--auto</code> the settings take their defaults.</p>
+<p>The rules’ values are StitchCraft’s own parameters, registered as any other
+(<a href="params.html">parameter registry</a>, <a href="../user/reference/params/auto.html">reference</a>), since M13.7
+(<code>REQ-AUTO-020</code>). Each rule goes by the settings of the shape it digitizes (<code>stitchcraft_engine::auto::AutoParams</code>):</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Setting</th><th>Key</th><th>Default</th><th>Rules</th></tr>
+</thead>
+<tbody>
+<tr><td>Widest satin column</td><td><code>auto_max_satin_width_mm</code></td><td>7 mm</td><td>a line’s stitches, a part’s columns, the split of a part into broad and narrow parts</td></tr>
+<tr><td>Narrowest triple run</td><td><code>auto_min_triple_run_width_mm</code></td><td>0.5 mm</td><td>a running stitch tripled</td></tr>
+<tr><td>Overlap</td><td><code>auto_overlap_mm</code></td><td>0.4 mm</td><td>an area reaching under its neighbours and cut away under them, a satin column’s pull compensation</td></tr>
+<tr><td>Smallest area</td><td><code>auto_min_area_mm2</code></td><td>1 mm²</td><td>specks, and the narrow parts too small to cut from a broad part</td></tr>
+<tr><td>Leave out the background</td><td><code>auto_ignore_background</code></td><td>on</td><td>the background, read of the lowest shape</td></tr>
+</tbody>
+</table>
+</div>
+<p>The defaults are the values on this page, and MC-8 confirms or changes them. A shape that sets none of the
+settings takes the defaults, and an automatic shape with a setting that doesn’t read sews nothing
+(<code>SC-E0101</code>). Each area reaches its own overlap under the shapes sewn after it, and its specks are its own
+parts smaller than its smallest area, wherever they go. The narrowest satin column is the design’s
+<code>min_satin_stroke_width_mm</code>, one value for the whole design, and the underlay of a column’s width (above)
+is no setting.</p>
+<p>An automatic element reads the settings before it is sewn as any stitch type, and the ordinary elements it
+becomes don’t (<a href="params.html#settings-of-automatic-digitizing">parameter registry</a>). They are in no stitch
+family’s dialog, and a shape that sets them is still automatic. VectorCraft’s Auto effect (M13.7) sets them
+from its dialog for the paths it is on and those inside the group it is on, and with <code>--auto</code> every other
+shape takes the defaults.</p>
 <h2 id="previews-in-vectorcraft"><a class="header" href="#previews-in-vectorcraft">Previews in VectorCraft</a></h2>
 <p>The Auto effect is a live effect like the plug-ins of each stitch family
 (<a href="vectorcraft-integration.html#plug-ins">plug-ins</a>). VectorCraft runs a group’s effects on each path inside
 it (<code>REQ-VC-006</code>), so the effect on a traced group previews every path’s stitches, each sewn as its width
-says. A live effect is given its path alone. Its preview shows each shape’s stitches without the
-overlaps, the merged specks or the order, which <code>stitch export</code> adds. A preview that costs more than ABI
-v1’s budget shows less, with <code>SC-I0810</code>, as the other effects’ previews do.</p>
+says. A live effect is given its path and its paints alone. Like <code>stitch export</code>, it reads the path as an
+area when a fill paints it, and as a line along its topmost stroke. Its preview shows each shape’s
+stitches without the overlaps, the merged specks or the order, which <code>stitch export</code> adds. VectorCraft
+draws what a live effect returns with every paint of its object. The stitches come back as ribbons that
+the fill fills when a fill paints the object, and as lines that its stroke draws otherwise.</p>
+<p>Digitizing is most of a preview’s work, from about 1,450 instructions a unit to 2,260 in VectorCraft
+0.18.0’s host, and a live effect has 50 million (<a href="vectorcraft-integration.html#live-effect-previews-within-v1-budgets">live-effect previews</a>).
+A square’s takes 12,900 units, an L’s 21,000 and a ring’s 31,800. The auto level digitizes within eight
+tenths of the budget, then shows each element made as auto shows its family’s: a fill’s top rows, and a
+satin column’s and a running stitch’s every stitch. When that costs too much it shows the outline, as a
+larger square, an L, a ring and most traced letters do. Exact shows every stitch, and outline the path,
+hatched across a fill. A preview that costs more than the level allows shows less, with <code>SC-I0810</code>, as the
+other effects’ previews do. The command line’s preview always shows every stitch.</p>
 <p>Tracing again replaces the group with a new one, without the effect. Apply the effect after the last
 trace, or use <code>--auto</code>, which works without it.</p>
 <h2 id="with-vectorcrafts-newer-plug-in-features"><a class="header" href="#with-vectorcrafts-newer-plug-in-features">With VectorCraft’s newer plug-in features</a></h2>
@@ -646,8 +681,9 @@ and no logo or picture of anyone else’s is used.</li>
 trims, stitches, and how much of each shape and of each shared edge the stitches cover
 (<code>stitchcraft_testkit::metrics</code>). The cases measure the pictures where <code>stitchcraft_testkit::pictures</code>
 places them.</li>
-<li>Level B of the <a href="compatibility-gate.html">compatibility gate</a> gets a case in which VectorCraft’s command
-line traces a picture and StitchCraft sews the document it saved, on every track.</li>
+<li>Level B of the <a href="compatibility-gate.html">compatibility gate</a> has a case, <code>trace</code>, in which VectorCraft’s
+command line traces a picture drawn in the threads <code>stitch palette</code> writes, and StitchCraft sews the
+document it saved, on every track.</li>
 <li>TS-13 sews the test pictures at MC-8 (<a href="../plan/machine-testing.html">machine testing</a>), each twice. A
 sheet’s top half is digitized automatically, and its bottom half is sewn as drawn, in paint order. The
 bottom half sews first and stops, so that nothing digitized moves into it, and each half’s thread

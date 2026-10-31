@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c8e1b59f.js";
+            window.path_to_searchindex_js = "../searchindex-b364f985.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-888564d0.js"></script>
+        <script src="../toc-3ce5e89b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -279,6 +279,7 @@ version and a registry schema version arrive with the first release, together wi
 <tr><td><code>BoundedAngle</code></td><td>degrees, <code>f64</code></td><td>finite, within range, never turned by whole turns. 270 is above a range that ends at 89, and reads as 89, as Ink/Stitch reads a zigzag stroke’s angle</td><td><code>float</code>, unit <code>deg</code></td></tr>
 <tr><td><code>Percent</code></td><td><code>f64</code></td><td>finite, within range</td><td><code>float</code>, unit <code>%</code></td></tr>
 <tr><td><code>Number</code></td><td><code>f64</code></td><td>finite, within range, without a unit</td><td><code>float</code>, no unit</td></tr>
+<tr><td><code>Area</code></td><td>square millimetres, <code>f64</code></td><td>finite, within range, written as a number</td><td>none (Ink/Stitch has no area setting)</td></tr>
 <tr><td><code>Count</code></td><td><code>u32</code></td><td>whole, within range</td><td><code>int</code></td></tr>
 <tr><td><code>Toggle</code></td><td><code>bool</code></td><td><code>true</code> or <code>false</code> in any case, also Ink/Stitch’s <code>yes</code>, <code>y</code>, <code>t</code> and <code>1</code> for true and their opposites and <code>off</code> for false. <code>on</code> is <code>SC-E0101</code>, where Ink/Stitch reads it as false (<code>DEV-PRM-001</code>)</td><td><code>boolean</code>, <code>toggle</code></td></tr>
 <tr><td><code>Choice</code></td><td><code>&amp;'static str</code> (the id)</td><td>one of the declared ids; unknown ids are a diagnostic, not a default</td><td><code>combo</code>, <code>dropdown</code></td></tr>
@@ -326,6 +327,16 @@ itself. It must also apply to every stitch type the hidden one applies to. A hos
 set, such as a settings panel, reads every parameter with <code>from_set</code>, declaration by declaration. It
 reads only the declarations of the families it shows: the satin column’s declaration of
 <code>zigzag_spacing_mm</code> cannot read a zigzag stroke’s 2 spacings (rule 7).</p>
+<h3 id="settings-of-automatic-digitizing"><a class="header" href="#settings-of-automatic-digitizing">Settings of automatic digitizing</a></h3>
+<p>Automatic digitizing’s rules have settings of their own, the widest satin column and the others
+(<a href="image-to-embroidery.html#settings">image to embroidery</a>, <code>REQ-AUTO-020</code>). An automatic element reads them
+before it is sewn as any stitch type, and the ordinary elements it becomes don’t. So their declaration
+applies to no stitch type: <code>pub struct AutoParams for AUTOMATIC;</code>, <code>stitchcraft_params::AUTOMATIC</code> being
+the empty list, which <code>ParamGroup::automatic</code> tells. No family’s declaration of a key is theirs
+(<code>find_for</code>), so no stitch family’s dialog shows them, and every host knows their keys (<code>find</code>). The audit
+requires each to be StitchCraft’s own, since Ink/Stitch digitizes nothing automatically, to apply to no
+stitch type of its own, and to have a key no other declaration has. The reference pages say they apply to automatic
+elements, and the JSON Schema marks each with <code>x-stitchcraft.automatic</code>.</p>
 <h3 id="completeness-req-prm-001"><a class="header" href="#completeness-req-prm-001">Completeness (REQ-PRM-001)</a></h3>
 <p>A declaration that compiles can still be wrong: an empty range, a default outside it, a repeated option,
 a condition on a parameter that does not exist or that an element could not read it by. <code>stitchcraft_params::audit</code> lists every such problem, and

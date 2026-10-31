@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-c8e1b59f.js";
+            window.path_to_searchindex_js = "../../searchindex-b364f985.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-888564d0.js"></script>
+        <script src="../../toc-3ce5e89b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -195,6 +195,7 @@ Commands:
   preview     Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
   convert     Write a machine file (PES, PEC or DST) in another format
   profiles    List the built-in machine profiles
+  palette     Write a machine's threads as a GIMP palette (.gpl), which VectorCraft loads as a swatch library, so that Image Trace traces a picture in them
   explain     Explain a diagnostic code, such as SC-W0702
   bug-report  Write a bug-report bundle that reproduces what StitchCraft does with a design, or replay one
   help        Print this message or the help of the given subcommand(s)
@@ -352,6 +353,21 @@ Options:
 Usage: stitch profiles
 
 Options:
+  -h, --help
+          Print help
+</code></pre>
+<h2 id="stitch-palette"><a class="header" href="#stitch-palette">stitch palette</a></h2>
+<pre><code class="language-text">Write a machine's threads as a GIMP palette (.gpl), which VectorCraft loads as a swatch library, so that Image Trace traces a picture in them
+
+Usage: stitch palette [OPTIONS]
+
+Options:
+  -p, --profile &lt;PROFILE&gt;
+          The machine profile whose threads to write (see `stitch profiles`); by default the reference machine's
+
+  -o, --output &lt;OUTPUT&gt;
+          The file to write; by default the palette goes to standard output
+
   -h, --help
           Print help
 </code></pre>

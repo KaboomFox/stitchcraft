@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c8e1b59f.js";
+            window.path_to_searchindex_js = "../searchindex-b364f985.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-888564d0.js"></script>
+        <script src="../toc-3ce5e89b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -568,7 +568,7 @@ PES exporter writes each column’s file as it wrote the line’s (2026-10-29):<
 the filter stops with <code>SC-E0004</code> before VectorCraft would. A VectorCraft before 0.17 runs it as a light
 filter, which almost every curved line outruns, and stops it with its own error.</p>
 <p><strong>Test Sheet</strong> (<code>REQ-VC-015</code>, <code>apps/stitchcraft-vc-plugin/src/testsheet.rs</code>) draws one of the sheets drawn
-as designs, TS-02B to TS-09, into the document: the sheet’s design moved by whole millimetres so that its
+as designs, TS-02B to TS-09 and TS-13A to TS-13C, into the document: the sheet’s design moved by whole millimetres so that its
 middle is nearest the middle of the artboard <code>_context</code> names (<code>Design::moved</code>). Each element is an object
 named by its id, with its path and its thread as the paint its family sews with. Its settings are its
 family’s effect record, each the value its dialog row takes, which reads back as the setting it was. The
@@ -579,8 +579,9 @@ palette, since VectorCraft unlinks the swatch of a paint a filter gives, and the
 VectorCraft 0.15 keeps the records, but with an empty selection it looks to a filter as 0.14 does, which
 would drop them. Only the <code>documentData</code> every filter gets from 0.16 tells them apart, so before 0.16 the
 filter declines with <code>SC-E0813</code>. The sheets drawn stitch by stitch are plans, which no object holds. The
-TS-13 sheets are designs whose shapes StitchCraft digitizes automatically (<code>TestSheet::digitized</code>), which
-no object can say before the Auto effect (M13.7), so the filter doesn’t offer them either.</p>
+TS-13 sheets are designs whose shapes StitchCraft digitizes automatically (<code>TestSheet::digitized</code>): each
+such shape has the Auto effect’s record (M13.7, <code>REQ-VC-016</code>), and StitchCraft Auto must be installed for
+VectorCraft to keep it.</p>
 <p>The contract test <code>req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits</code>
 draws each sheet into a new document in VectorCraft 0.17.0’s and 0.18.0’s hosts alike, and exports it with
 the PES exporter (2026-10-29). Drawing takes 14 to 25 million instructions, at most half of a light filter’s run.
@@ -660,6 +661,37 @@ when VectorCraft stops a run that must finish. It prints what each run takes, wh
 are measured from. <code>hello_reads_and_writes_json_within_the_recorded_budget</code> still measures what JSON
 costs. The real stitches are always available from the CLI preview, and the RFC’s overlay channel (P3, in
 review upstream) would remove this limitation.</p>
+<p><strong>The Auto effect’s previews</strong> (M13.7, <code>REQ-VC-016</code>). The Auto effect reads its object as automatic
+elements, an area when a fill paints it and a line along its topmost stroke. It digitizes them, then shows
+each element they become as auto shows its family’s: a fill’s top rows, and a satin column’s and a running
+stitch’s every stitch. VectorCraft draws what it returns with all of the object’s paints. The stitches
+come back as ribbons for the fill when a fill paints the object, and as lines for the stroke otherwise.
+Digitizing is most of the work. Measured in VectorCraft 0.18.0’s host with the contract crate’s runs
+(2026-10-31), a unit of it takes about 1,450 instructions for a filled square or an L. Finding the centre
+lines of a line traced as an area takes up to 2,260, as for TS-13B’s thinnest window line. The plug-in
+prices a unit at 2,700:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Shape, filled</th><th>Units of digitizing</th><th>Auto shows</th><th>Instructions, auto</th><th>Instructions, outline</th></tr>
+</thead>
+<tbody>
+<tr><td>A square 14 mm a side</td><td>12,900</td><td>its rows</td><td>20 million</td><td>1.1 million</td></tr>
+<tr><td>A square 56 mm a side</td><td>12,800</td><td>its outline</td><td>22 million</td><td>1.2 million</td></tr>
+<tr><td>An L 40 mm tall, its arm 5 mm wide</td><td>21,000</td><td>its outline</td><td>22 million</td><td>1.3 million</td></tr>
+<tr><td>A ring 30 mm across, 4 mm wide</td><td>31,800</td><td>its outline</td><td>33 million</td><td>7.2 million</td></tr>
+<tr><td>A line traced as an area 0.3 mm wide, with a branch</td><td>23,100</td><td>its outline</td><td>31 million</td><td>1.3 million</td></tr>
+</tbody>
+</table>
+</div>
+<p>Auto digitizes within eight tenths of the budget and keeps the rest for the outline it falls back on. A
+small simple shape shows its stitches. A larger one, an L, a ring and most traced letters show their
+outlines: digitizing them leaves too little for their stitches, or needs more than there is. Exact digitizes and sews within
+all that VectorCraft allows, which a filled shape’s fill outruns. The command line’s preview shows every
+stitch, and the RFC’s budget classes (<a href="rfc-vectorcraft-abi-v2.html#p4-budget-classes-for-live-effects">P4</a>)
+would give these previews room. <code>req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits</code> runs
+the Auto effect’s levels on these shapes and on lines too, and fails if VectorCraft stops one that must
+finish.</p>
 <p>Paint caveat: a live effect changes only geometry. A fill preview’s ribbons are painted with the object’s
 own fill, and a stroke preview with its stroke. From 0.14 a stroke or a satin effect reads its stroke’s
 style, and still cannot change the paints. Users set the fill/stroke to the thread colour, which they want
@@ -739,7 +771,10 @@ shape. Its visible fills are filled, in the appearance’s order, and its visibl
 stitch each. Since M13.1, read with <code>--auto</code> (<code>stitchcraft_vectorcraft::read_with</code>), the elements of an
 object are automatic instead when neither it nor a group or layer around it has a StitchCraft effect
 (<a href="image-to-embroidery.html">image to embroidery</a>, <code>REQ-AUTO-001</code>). StitchCraft then chooses their stitches by
-their width. Read with <code>--sort-colours</code>, the objects with effects sew in the order StitchCraft chooses too
+their width. Since M13.7 StitchCraft’s Auto effect makes them automatic without the switch (<code>REQ-VC-016</code>).
+It is read where a stitch effect is read, on the object or on a group or a layer around it, the nearest
+first, and its parameters are the object’s settings of the rules. A stitch effect says how an object sews,
+so an Auto effect beside one on the same object or group isn’t used, and <code>SC-W0807</code> says so. Read with <code>--sort-colours</code>, the objects with effects sew in the order StitchCraft chooses too
 (<code>REQ-AUTO-011</code>). A stroke’s cap is read with its width and join, and an automatic line’s stitches follow its
 round or square caps. Of a line sewn across its width, the reader names the alignment inside or outside a
 closed path and the width profile, which its stitches don’t follow (<code>SC-W0807</code>, <code>REQ-AUTO-005</code>). The

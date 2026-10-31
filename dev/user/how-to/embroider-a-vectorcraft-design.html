@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-c8e1b59f.js";
+            window.path_to_searchindex_js = "../../searchindex-b364f985.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-888564d0.js"></script>
+        <script src="../../toc-3ce5e89b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -196,8 +196,9 @@ button after the field for its page in the reference. A setting shows only when 
 staggers show for staggered splits. VectorCraft before 0.14 lists every setting, each under its Ink/Stitch
 name.</p>
 <p>An object without a StitchCraft effect sews as Ink/Stitch sews a shape of an SVG file. Its fills are
-filled, and its strokes are sewn as running stitch. With <code>stitch export --auto</code>, StitchCraft chooses its
-stitches by width instead, as for a picture traced into shapes.</p>
+filled, and its strokes are sewn as running stitch. To let StitchCraft choose its stitches by width
+instead, as for a picture traced into shapes, apply <strong>Effect › Plug-ins › StitchCraft Auto</strong> to it, or to
+the group or the layer it is in, or write the file with <code>stitch export --auto</code>.</p>
 <ul>
 <li>A line up to 1 mm wide runs, or up to the narrowest satin stroke the document keeps
 (<a href="#keep-the-designs-settings-and-machine-with-it">below</a>). From 0.5 mm wide it is a triple run, each
@@ -207,7 +208,14 @@ stitch sewn 3 times.</li>
 anywhere runs along its middle, as so narrow a line does, and a part no wider than 7 mm anywhere sews as
 satin columns along its middle, between its own edges, as the strokes of traced letters do.</li>
 </ul>
-<p>Objects are sewn in the order they are drawn, the bottom one first. <a href="vectorcraft-columns-and-presets.html">Satin columns and presets in VectorCraft</a> shows
+<p>The Auto effect’s dialog has the settings of these rules, with the numbers above as their defaults
+(<a href="../reference/params/auto.html">reference</a>). A path with the effect on it or on its group shows the
+stitches StitchCraft chooses for it on its own, as far as VectorCraft lets a live effect work them out.
+Most traced letters and shapes with holes show their outlines instead. A path with a StitchCraft
+stitch effect of its own sews as that effect says, and an Auto effect beside one on the same object isn’t
+used. The machine file has every stitch, whichever shows.</p>
+<p>Objects are sewn in the order they are drawn, the bottom one first. StitchCraft orders those it digitizes
+automatically for few thread changes. <a href="vectorcraft-columns-and-presets.html">Satin columns and presets in VectorCraft</a> shows
 how to draw a column with 2 rails, and how to keep settings in graphic styles.</p>
 <h2 id="leave-out-what-isnt-to-be-sewn"><a class="header" href="#leave-out-what-isnt-to-be-sewn">Leave out what isn’t to be sewn</a></h2>
 <p>Name an object or a layer <code>stitch:ignore</code>, by double-clicking its name in the Layers panel, and it is left
@@ -222,7 +230,8 @@ As</strong>, and <strong>PES embroidery (StitchCraft)</strong> or <strong>DST em
 is picked, a dialog shows 2 options:</p>
 <ul>
 <li><strong>Digitize automatically</strong>, which chooses the stitches of the objects without a StitchCraft effect by
-their width, as <code>stitch export --auto</code> does.</li>
+their width, as <code>stitch export --auto</code> does. The objects the Auto effect reaches are digitized
+automatically either way.</li>
 <li><strong>Machine</strong>, the machine and hoop the design is planned for: <code>document</code>, the one the document keeps
 (<a href="#keep-the-designs-settings-and-machine-with-it">below</a>), or <code>brother-pe800-5x7</code> when it keeps none,
 unless another is chosen. <code>stitch profiles</code> lists them.</li>
@@ -279,8 +288,8 @@ planned for <code>brother-pe800-5x7</code> with the default settings, and a long
 machine file and in <code>stitch export --preview</code>. A setting that StitchCraft can’t read keeps its default,
 and <code>stitch export</code> says so (<code>SC-W0812</code>).</p>
 <h2 id="draw-a-test-sheet"><a class="header" href="#draw-a-test-sheet">Draw a test sheet</a></h2>
-<p>The <a href="../reference/test-sheets.html">test sheets</a> drawn as designs, TS-02B to TS-09, can start from
-VectorCraft 0.16 and later. With the <a href="../install.html#the-vectorcraft-plug-ins">plug-ins installed</a>, choose
+<p>The <a href="../reference/test-sheets.html">test sheets</a> drawn as designs, TS-02B to TS-09 and TS-13A to TS-13C,
+can start from VectorCraft 0.16 and later. With the <a href="../install.html#the-vectorcraft-plug-ins">plug-ins installed</a>, choose
 <strong>Object › Plug-ins › StitchCraft Test Sheet</strong>, pick the sheet, and press OK. Rest the pointer on
 <strong>Sheet</strong> for what each one tests. The sheet is drawn in the middle of the artboard, each shape with its
 StitchCraft effect and settings, and shows its stitches. Write it as any design, with <strong>File › Export ›
@@ -289,8 +298,8 @@ Export As</strong>. Selected objects stay as they are, and the sheet goes above 
 them, so they may fall a little elsewhere across a shape, and look the same. The threads keep their
 colours but not their names in the Brother palette, and the machine file is the same. StitchCraft Stroke,
 Satin and Fill must be installed: VectorCraft gives a new object only the effects of installed plug-ins.
-TS-01, TS-02 and TS-10A to TS-10C are drawn stitch by stitch, and come from <code>stitch testsheet</code> alone. So
-do TS-13A to TS-13C, whose shapes StitchCraft digitizes automatically, which an object can’t say yet.</p>
+The TS-13 sheets need StitchCraft Auto too, which their top halves’ shapes have. TS-01, TS-02 and TS-10A to
+TS-10C are drawn stitch by stitch, and come from <code>stitch testsheet</code> alone.</p>
 <h2 id="read-what-it-says"><a class="header" href="#read-what-it-says">Read what it says</a></h2>
 <p>Each line under the summary names an object by its id in the document, such as <code>vc:10</code>, and says what
 was done with it. In the patch, the placement line is left out, as its name asks (<code>SC-I0811</code>). The start

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c8e1b59f.js";
+            window.path_to_searchindex_js = "../searchindex-b364f985.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-888564d0.js"></script>
+        <script src="../toc-3ce5e89b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -257,7 +257,9 @@ scenario draws each object it gives an effect before it gives another the same f
 nothing: an exporter is given the document’s JSON. An export that must fail names the code of the error it
 says, with <code>fails</code>. VectorCraft stops a run at a step that fails, so that export ends its run, and no check
 names its file. A run installs a module whose manifest sets a heavy budget, Stroke to Satin’s, with
-<code>allowHeavy</code>, as the user allows it. The checks are StitchCraft’s, since VectorCraft’s pictures change from version to
+<code>allowHeavy</code>, as the user allows it. A step’s parameter written <code>{ stitchcraft = "…" }</code> is replaced by what
+StitchCraft makes of the name, the threads <code>stitch palette</code> writes or a test picture drawn flat as a PNG, so
+that what VectorCraft traces is StitchCraft’s own. The checks are StitchCraft’s, since VectorCraft’s pictures change from version to
 version and what sews must not:</p>
 <div class="table-wrapper">
 <table>
@@ -265,7 +267,7 @@ version and what sews must not:</p>
 <tr><th>Scenario</th><th>Steps</th><th>Checks</th></tr>
 </thead>
 <tbody>
-<tr><td><code>install-and-list</code></td><td>install the 8 modules, then <code>plugin.list</code></td><td>each family’s live effect, each format’s exporter and each filter is listed (<code>REQ-VC-002</code>, <code>REQ-VC-011</code>, <code>REQ-VC-013</code>, <code>REQ-VC-014</code>, <code>REQ-VC-015</code>)</td></tr>
+<tr><td><code>install-and-list</code></td><td>install the 9 modules, then <code>plugin.list</code></td><td>each family’s live effect, the Auto effect, each format’s exporter and each filter is listed (<code>REQ-VC-002</code>, <code>REQ-VC-011</code>, <code>REQ-VC-013</code>, <code>REQ-VC-014</code>, <code>REQ-VC-015</code>, <code>REQ-VC-016</code>)</td></tr>
 <tr><td><code>apply</code></td><td>a square filled red and a line, given the fill and stroke effects with parameters, then saved</td><td>as sent, with a fill in red and a stroke (<code>REQ-VC-004</code>, <code>REQ-PRM-003</code>)</td></tr>
 <tr><td><code>compound-satin</code></td><td>2 rails and a rung, Make Compound Path, then the satin effect</td><td>as sent, and one satin column (<code>REQ-VC-007</code>)</td></tr>
 <tr><td><code>graphic-style</code></td><td>a group of 2 squares, and a gold square with a fill effect, drawn, whose new graphic style is then applied to the group</td><td>as sent, and 3 fills in gold at the effect’s 90° (<code>REQ-VC-006</code>)</td></tr>
@@ -273,7 +275,8 @@ version and what sews must not:</p>
 <tr><td><code>export</code></td><td>a square filled red and a line far below it, given the fill and stroke effects, saved, then exported to PES and DST by StitchCraft’s exporters</td><td>each file is the one <code>stitch export</code> writes of the saved document, and the export’s warnings are what it says, the DST’s cut on the long jump among them (<code>REQ-VC-011</code>)</td></tr>
 <tr><td><code>settings</code></td><td>a 1 in square given the fill effect and exported to PES, then the Design Settings filter run with the 4 × 4 in hoop and a shortest stitch of 1.5 mm, and the square saved and exported to PES and DST; then the filter run with the small hoop, and the square saved and exported to PES</td><td>each document keeps what the filter was run with, each file is the one <code>stitch export</code> writes, the PES file differs from the one before the filter, and the small hoop’s export fails with <code>SC-E0701</code> (<code>REQ-VC-013</code>)</td></tr>
 <tr><td><code>stroke-to-satin</code></td><td>an S curve, a V and a circle with strokes 3 mm wide and the satin effect, saved and drawn, then made into columns by Stroke to Satin, saved, drawn and exported to PES</td><td>the columns sew as the lines did, 3 satin columns in the strokes’ colour, and the file is the one <code>stitch export</code> writes (<code>REQ-VC-014</code>)</td></tr>
-<tr><td><code>testsheets</code></td><td>each sheet drawn as a design, drawn by Test Sheet into a new document, then saved and exported to PES</td><td>each document sews as the sheet’s design moved by whole millimetres to the middle of its artboard, and each file is the one <code>stitch export</code> writes (<code>REQ-VC-015</code>)</td></tr>
+<tr><td><code>testsheets</code></td><td>each sheet drawn as a design, drawn by Test Sheet into a new document, then saved and exported to PES; the TS-13 sheets with StitchCraft Auto installed</td><td>each document sews as the sheet’s design moved by whole millimetres to the middle of its artboard, and each file is the one <code>stitch export</code> writes. The Auto effect digitizes the TS-13 sheets’ shapes automatically (<code>REQ-VC-015</code>, <code>REQ-VC-016</code>)</td></tr>
+<tr><td><code>trace</code></td><td>the reference machine’s threads, as <code>stitch palette</code> writes them, loaded as a swatch library, a badge drawn flat in 3 of them on white placed, traced in colour with the library’s colours by the Abutting method, its paths kept, and saved; then StitchCraft’s Auto effect applied to the traced group, saved, and drawn</td><td>read with <code>--auto</code>, every shape is automatic, the white round the badge is left out as the background, and the badge sews its 3 threads, each a thread of the palette; with the Auto effect, so without <code>--auto</code>, and drawing it doesn’t leave a last error (<code>REQ-CLI-011</code>, <code>REQ-AUTO-001</code>, <code>REQ-AUTO-009</code>, <code>REQ-VC-016</code>)</td></tr>
 </tbody>
 </table>
 </div>

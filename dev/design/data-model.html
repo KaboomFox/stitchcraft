@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c8e1b59f.js";
+            window.path_to_searchindex_js = "../searchindex-b364f985.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-888564d0.js"></script>
+        <script src="../toc-3ce5e89b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -373,8 +373,10 @@ matched. A format that names threads by entries gives a design’s threads their
 (<code>Palette::assign</code>, REQ-THREAD-002). Different threads get different entries while they last, the nearest
 pairs first, and a thread read from such a file gets its own (<a href="formats.html">formats</a>, PES). Each table names
 its source in its module docs and in a row of <code>NOTICE</code>. The PEC palette is the one
-MIT-licensed pyembroidery publishes, with entries 62 and 63 from its fork pystitch. Thread
-catalogues (brand and number) arrive with M11.</p>
+MIT-licensed pyembroidery publishes, with entries 62 and 63 from its fork pystitch. A palette’s threads,
+the entries matching may choose, are also written as a GIMP palette (<code>Palette::gpl</code>, <code>stitch palette</code>,
+REQ-CLI-011), which VectorCraft loads as a swatch library for Image Trace to trace a picture in
+(<a href="image-to-embroidery.html">image to embroidery</a>). Thread catalogues (brand and number) arrive with M11.</p>
 <h2 id="machine-profiles"><a class="header" href="#machine-profiles">Machine profiles</a></h2>
 <pre><code class="language-rust ignore">pub struct MachineProfile {
     pub id: &amp;'static str,            // "brother-pe800-5x7"
