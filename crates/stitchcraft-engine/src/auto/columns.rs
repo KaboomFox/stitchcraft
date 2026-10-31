@@ -62,9 +62,10 @@ pub(super) enum Made {
     Broken,
 }
 
-/// The columns of `part`, an area's whose narrowest satin stroke is `narrowest`, with `meter`'s work.
-pub(super) fn columns(part: &Polygon, narrowest: Mm, meter: &mut Meter) -> Result<Made, Exhausted> {
-    let found = match strips::columns(part, piece(part), meter)? {
+/// The columns of `part`, an area's whose narrowest satin stroke is `narrowest`, cut from a broad part along
+/// `cuts` (`auto::split`), with `meter`'s work.
+pub(super) fn columns(part: &Polygon, narrowest: Mm, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<Made, Exhausted> {
+    let found = match strips::columns(part, piece(part), cuts, meter)? {
         Err(_) => return Ok(Made::Broken),
         Ok(None) => return Ok(Made::Unmade),
         Ok(Some(found)) if found.is_empty() => return Ok(Made::Dot),
@@ -203,7 +204,7 @@ mod tests {
     /// The columns of `part` as found, and in the order they are sewn, each with its place among those found.
     fn sewn(part: &Polygon) -> (Vec<Column>, Vec<(usize, Column)>) {
         let mut meter = Budget::DEFAULT.meter();
-        let found = strips::columns(part, piece(part), &mut meter).unwrap().unwrap().unwrap();
+        let found = strips::columns(part, piece(part), &[], &mut meter).unwrap().unwrap().unwrap();
         let order = ordered(&found, &mut meter).unwrap();
         (found, order)
     }
@@ -217,7 +218,7 @@ mod tests {
     fn req_auto_016_a_column_no_wider_than_the_narrowest_satin_stroke_runs() {
         // A band 1.5 mm wide is one column: a satin column where the narrowest satin stroke is 1 mm, and a
         // running stitch along its line, as wide as the band, where it is 2 mm.
-        let made = |narrowest: f64| columns(&band(1.5), Mm::new(narrowest).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        let made = |narrowest: f64| columns(&band(1.5), Mm::new(narrowest).unwrap(), &[], &mut Budget::DEFAULT.meter()).unwrap();
         let Made::Columns(sewn) = made(1.0) else { panic!("no columns") };
         let [Sewn::Satin { width, push, .. }] = sewn.as_slice() else { panic!("{sewn:?}") };
         assert!((width.get() - 1.5).abs() < 1e-6 && *push == [0.0, 0.0], "{width:?} {push:?}");

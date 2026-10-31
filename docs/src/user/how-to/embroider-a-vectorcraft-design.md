@@ -113,7 +113,8 @@ The sheet sews as `stitch testsheet` writes it, moved. A fill's rows lie where t
 them, so they may fall a little elsewhere across a shape, and look the same. The threads keep their
 colours but not their names in the Brother palette, and the machine file is the same. StitchCraft Stroke,
 Satin and Fill must be installed: VectorCraft gives a new object only the effects of installed plug-ins.
-TS-01, TS-02 and TS-10A to TS-10C are drawn stitch by stitch, and come from `stitch testsheet` alone.
+TS-01, TS-02 and TS-10A to TS-10C are drawn stitch by stitch, and come from `stitch testsheet` alone. So
+do TS-13A to TS-13C, whose shapes StitchCraft digitizes automatically, which an object can't say yet.
 
 ## Read what it says
 

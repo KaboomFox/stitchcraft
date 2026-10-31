@@ -138,8 +138,8 @@ drawn, and a narrow part (below) as wide as the circles that fit inside it along
 compared to the micrometre, and MC-8 confirms or changes the bound.
 
 Every automatic satin column, a stroke's as well as a shape's, has the settings of its width (M13.5,
-[below](#settings-by-width)). A shape's area is a tatami fill apart from its narrow parts (M13.4) and its
-parts as wide as a satin column (M13.5). M13.6 splits a shape that is wider than a satin column in places.
+[below](#settings-by-width)). A shape's area is a tatami fill apart from its narrow parts (M13.4), its
+parts as wide as a satin column (M13.5) and the narrow parts of its broad ones (M13.6).
 
 **Narrow parts** (M13.4, `REQ-AUTO-013`). A part of a shape that is narrower than
 `min_satin_stroke_width_mm` everywhere sews as a running stitch along its centre line, as a stroke that
@@ -160,8 +160,10 @@ dot.
   areas sewn before it reach under it as under a satin column ([Neighbours](#neighbours)).
 - **As drawn.** A shape's narrow parts are found as it is drawn, before its neighbours. A part that only
   the areas sewn after it leave narrow is cut away round them and filled with the rest of its shape. A
-  stacked trace's dark outline under the colours inside it is often such a part. Whether to find narrow
-  parts after the cut too is decided with M13.6, which splits shapes into parts.
+  stacked trace's dark outline under the colours inside it is often such a part. M13.6 keeps finding
+  parts as drawn. An abutting trace draws such an outline as the ring it shows, which sews as lines and
+  columns. Finding parts again after the cut would digitize each shape a second time, after its
+  neighbours.
 - `SC-I0901` counts a shape whose every part runs as a running stitch, and any other as a tatami fill.
   Finding a part's width and centre line is part of the work of digitizing its shape. A part whose width
   or centre line can't be found, a bug, stays in the fill, and `SC-E0009` names its shape.
@@ -196,11 +198,28 @@ part sews a satin column along each of its centre lines, between its own outline
   of whose columns is read otherwise, stays in the fill, and `SC-I0902` says so. A dot, whose line has no
   length, stays in the fill too.
 
-**Shapes in parts.** A shape wider than 7 mm in places and narrower in others is split. Its broad parts are
-what an opening with a disc 7 mm across leaves: the shape shrunk by 3.5 mm and grown back by 3.5 mm, with
-the polygon buffer of M5.7. The rest of the shape is its narrow parts. A narrow part shorter along its
-centre line than twice its width is a corner that the opening rounded, and it goes back to the fill
-beside it.
+**Shapes in parts** (M13.6, `REQ-AUTO-019`). A shape wider than 7 mm in places and narrower in others sews
+in parts. Its broad parts are a tatami fill, and its narrow parts sew over the fill as lines and columns,
+as a digitizer sews a balloon's string over the balloon:
+
+- **Its broad parts** are what an opening with a disc 7 mm across leaves: the shape shrunk by 3.5 mm and
+  grown back by 3.5 mm, with the polygon buffer of M5.7, each taken half a micrometre wider, as the bound
+  is. An opening finds them without the shape's centre lines.
+- **Its narrow parts** are the rest of the shape, cut where they meet the broad parts. The opening rounds
+  each convex corner of a broad part, and leaves the corner as a narrow part. A narrow part that reaches
+  less than 1 mm² beyond 3.5 mm from the broad parts is such a corner, or a stub too short for a column,
+  and stays in the fill, as a speck does. Length along its centre line tells no corner. The piece a
+  square corner leaves has a horn along each side of the corner, and its centre line runs 6 mm along
+  them, less than half a millimetre wide.
+- **The cut.** Where a narrow part meets a broad one, the opening leaves an arc, and a column would end
+  there in a point at one of its corners. Each narrow part is cut square there instead, at a chord across
+  it square to the way its sides run on, from the end of the arc that lies farther along that way. What
+  lies past the chord goes to the fill. A column ends flat along the cut, however long it is, so that a
+  star's points end along the star's middle.
+- **What sews.** Each narrow part sews as a part of its own. One narrower than
+  `min_satin_stroke_width_mm` everywhere runs along its centre line, and one no wider than 7 mm sews as
+  satin columns. Any other stays in the fill. The fill is the shape without its narrow parts. It sews
+  first, and reaches 0.4 mm under the lines and columns sewn over it ([Neighbours](#neighbours)).
 
 **Centre lines.** A narrow part's centre line, its width along it and the rungs across it come from a
 constrained Delaunay triangulation of its outline, with points added along its long edges so that no
@@ -451,13 +470,20 @@ traces:
 ## Testing
 
 - Each rule gets its requirements and failing cases before its code ([ADR-0008](adr/0008-conformance-first.md)).
-- The test pictures are drawn in code, as the test sheets are, and no logo or picture of anyone else's is
-  used.
+- The test pictures are drawn in code, as the test sheets are (`stitchcraft_engine::testsheets::pictures`),
+  and no logo or picture of anyone else's is used.
 - Each test picture's automatic plan is compared with its plan in paint order: colour changes, jumps,
   trims, stitches, and how much of each shape and of each shared edge the stitches cover
-  (`stitchcraft_testkit::metrics`).
+  (`stitchcraft_testkit::metrics`). The cases measure the pictures where `stitchcraft_testkit::pictures`
+  places them.
 - Level B of the [compatibility gate](compatibility-gate.md) gets a case in which VectorCraft's command
   line traces a picture and StitchCraft sews the document it saved, on every track.
-- TS-13 sews the test pictures at MC-8 ([machine testing](../plan/machine-testing.md)).
+- TS-13 sews the test pictures at MC-8 ([machine testing](../plan/machine-testing.md)), each twice. A
+  sheet's top half is digitized automatically, and its bottom half is sewn as drawn, in paint order. The
+  bottom half sews first and stops, so that nothing digitized moves into it, and each half's thread
+  changes, jumps and time can be read. TS-13A sews the pictures of neighbours and sewing order, TS-13B
+  block letters and lines traced as areas, and TS-13C a face drawn with lines and shapes in parts
+  ([test sheets](../user/reference/test-sheets.md)). The PE800 cuts no jump, and the sew-out reports where a
+  shape sews down the thread of a jump before it.
 
 Codes 0900 to 0999 are automatic digitizing's ([diagnostics](diagnostics.md)).

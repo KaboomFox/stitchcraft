@@ -21,7 +21,7 @@
 
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Meter, Point};
 
-use super::{Failed, SMALLEST_AREA, Shapes, TOUCHING, envelope, joined, near};
+use super::{Failed, SMALLEST_AREA, Shapes, TOUCHING, envelope, joined, near, speck};
 use crate::generators::mm;
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::Envelope;
@@ -34,7 +34,7 @@ pub(super) fn merged(shapes: &mut Shapes, budget: &Budget) -> Vec<Diagnostic> {
     let mut specks = Vec::new();
     for index in 0..shapes.len() {
         let Some(parts) = shapes.region(index) else { continue };
-        let (small, kept): (Vec<Polygon>, Vec<Polygon>) = parts.iter().cloned().partition(|part| part.area() < SMALLEST_AREA);
+        let (small, kept): (Vec<Polygon>, Vec<Polygon>) = parts.iter().cloned().partition(|part| speck(part.area()));
         if small.is_empty() {
             continue;
         }

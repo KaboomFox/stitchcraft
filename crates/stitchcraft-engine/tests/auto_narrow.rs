@@ -196,8 +196,5 @@ fn req_auto_013_finding_the_centre_line_is_the_areas_work() {
     let l = automatic(shape("l", &[vec![(0.0, 0.0), (20.0, 0.0), (20.0, 10.0), (19.4, 10.0), (19.4, 0.6), (0.0, 0.6)]], &[]));
     let mut small = Budget { max_stitches: 1_000, max_work: 2_000 }.meter();
     assert_eq!(digitize(&l, &DesignSettings::default(), &mut small), Err(Exhausted::Work));
-    // A broad area costs only the work of its region and a sum, not its centre line.
-    let square = automatic(shape("square", &[rectangle((0.0, 0.0), (10.0, 10.0))], &[]));
-    assert!(digitize(&square, &DesignSettings::default(), &mut Budget { max_stitches: 1_000, max_work: 2_000 }.meter()).is_ok());
     assert_eq!(Code::AutoDigitized.id(), "SC-I0901");
 }

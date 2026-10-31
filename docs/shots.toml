@@ -140,6 +140,30 @@ style = "realistic"
 scale = 8.0
 alt = "TS-10C as it will sew: a blue frame 20 mm wide and 60 mm high, the small hoop's field, with a small F at the top left and a small cross in the middle."
 
+[[shot]]
+id = "testsheet-ts-13a"
+kind = "stitch"
+sheet = "TS-13A"
+style = "realistic"
+scale = 3.0
+alt = "TS-13A as it will sew: the same pictures twice, digitized at the top and in paint order at the bottom. Each half has 2 red badges with a blue square and a gold disc on them, a blue disc with specks round it, a row of 3 smaller badges, and a gold square beside a blue bar. At the top the specks are blue bumps on the disc's edge, and at the bottom red knots."
+
+[[shot]]
+id = "testsheet-ts-13b"
+kind = "stitch"
+sheet = "TS-13B"
+style = "realistic"
+scale = 3.0
+alt = "TS-13B as it will sew: the word MATCH in black block letters of 4 sizes, and 3 windows of red, blue and gold areas between black lines, twice. At the top, digitized, the letters are satin columns and the smallest thin runs, and the lines thin runs. At the bottom, in paint order, every letter and line is filled."
+
+[[shot]]
+id = "testsheet-ts-13c"
+kind = "stitch"
+sheet = "TS-13C"
+style = "realistic"
+scale = 3.0
+alt = "TS-13C as it will sew: a pink face drawn with black lines, a gold star and a red balloon on its string, twice. At the top, digitized, the face's outlines are wide satin columns, and the star's points and the string are columns over their fill. At the bottom, in paint order, the lines are thin running stitches."
+
 # ── Stitch types (designs from docs/fixtures/, planned by the engine; one image per panel) ──────────
 
 [[shot]]

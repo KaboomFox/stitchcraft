@@ -109,10 +109,12 @@ fn test_sheets() -> Result<String, String> {
          reference machine. Write one with `stitch testsheet <id> -o <id>.pes`. The command checks it against the profile \
          of that hoop, or the one `--profile` names, and prints what to check after sewing it, as listed here. The \
          pictures are previews: they show what the machine will sew, including jump threads it leaves for you to cut. \
-         In VectorCraft, the Test Sheet filter draws a sheet drawn as a design into a document \
+         In VectorCraft, the Test Sheet filter draws the sheets that say so into a document \
          ([how](../how-to/embroider-a-vectorcraft-design.md#draw-a-test-sheet)).\n",
     );
     let shots = shots::load(&util::root())?;
+    // The sheets the filter draws, as the plug-in offers them.
+    let filtered: Vec<&str> = stitchcraft_vc_plugin::testsheet::sheets().map(|sheet| sheet.id).collect();
     for sheet in SHEETS {
         let plan = sheet.plan().map_err(|e| format!("{}: {e}", sheet.id))?;
         let _ = writeln!(out, "\n## {} — {}\n", sheet.id, sheet.title);
@@ -121,8 +123,13 @@ fn test_sheets() -> Result<String, String> {
         }
         let profile = sheet.profile;
         let _ = writeln!(out, "Hoop: the {}, profile [`{}`](profiles.md#{}).\n", profile.name, profile.id, profile.id);
-        if sheet.designed() {
+        if filtered.contains(&sheet.id) {
             out.push_str("Drawn as a design, which VectorCraft's Test Sheet filter draws too.\n\n");
+        } else if sheet.digitized() {
+            out.push_str(
+                "Drawn as a design whose shapes StitchCraft digitizes automatically, as `--auto` does a shape without \
+                 settings. Only `stitch testsheet` writes it.\n\n",
+            );
         }
         for shot in shots.iter().filter(|s| s.kind == "stitch" && s.sheet.as_deref() == Some(sheet.id)) {
             let _ = writeln!(out, "![{}](../../images/generated/{}.png)\n", shot.alt, shot.id);

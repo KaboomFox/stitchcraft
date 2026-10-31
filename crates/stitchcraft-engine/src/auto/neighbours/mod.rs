@@ -69,6 +69,12 @@ pub const OVERLAP: f64 = 0.4;
 /// is a speck. MC-8 confirms or changes it.
 pub const SMALLEST_AREA: f64 = 1.0;
 
+/// Whether an automatic area, or a part or a piece of one, `area` square millimetres large is a speck:
+/// smaller than [`SMALLEST_AREA`]. One exactly that large is sewn.
+pub(super) fn speck(area: f64) -> bool {
+    area < SMALLEST_AREA
+}
+
 /// How far apart 2 shapes may be and still touch, in millimetres: twice the tolerance their curves are
 /// flattened to, so that a gap rounding left between edges drawn as one is closed.
 pub const TOUCHING: f64 = 2.0 * stroke::SHAPE_TOLERANCE;

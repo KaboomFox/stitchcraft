@@ -15,7 +15,9 @@ use stitchcraft_params::ParamSet;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{StitchPlan, Thread};
 
+use super::pictures::Picture;
 use super::sketch::SheetError;
+use crate::common::STOP_AFTER;
 use crate::design::{Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath};
 
 /// The settings that sew a sheet's satin column as drawn, from its start to its end whatever is around it,
@@ -67,6 +69,25 @@ impl Drawing {
         self.add(name, Shape::Fill { path: Path { subpaths: rings }, rule: FillRule::EvenOdd }, thread, params)
     }
 
+    /// The shapes of `picture`, each named after the picture with `half` before it
+    /// (`ts13a:auto:badge-abutting:red`): automatic, as the picture draws them, when `automatic`, and
+    /// otherwise shapes without settings, which sew as drawn, in paint order.
+    pub fn picture(&mut self, half: &str, picture: Picture, automatic: bool) -> Result<(), SheetError> {
+        for element in picture.elements {
+            let id = ElementId::new(format!("{}:{half}:{}:{}", self.sheet, picture.name, element.id))?;
+            self.elements.push(Element { id, automatic, ..element });
+        }
+        Ok(())
+    }
+
+    /// A stop after the last element drawn so far: what is drawn before it sews before it, and what is drawn
+    /// after it sews after it, whatever order automatic digitizing chooses (`REQ-AUTO-010`).
+    pub fn stop(&mut self) {
+        if let Some(last) = self.elements.last_mut() {
+            last.params.set(STOP_AFTER, "true");
+        }
+    }
+
     fn stroke(&mut self, name: &str, subpaths: Vec<Subpath>, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
         self.add(name, Shape::stroke(Path { subpaths }), thread, params)
     }
@@ -116,6 +137,12 @@ pub(super) fn rails((left, right): (f64, f64), (top, bottom): (f64, f64), down: 
 pub(super) fn polygon(points: &[(f64, f64)]) -> Result<Subpath, UnitError> {
     let Some((&first, rest)) = points.split_first() else { return Ok(Subpath { start: Point::ORIGIN, segments: Vec::new(), closed: true }) };
     Ok(Subpath { closed: true, ..line(first, rest)? })
+}
+
+/// The open polyline through `points`.
+pub(super) fn open(points: &[(f64, f64)]) -> Result<Subpath, UnitError> {
+    let Some((&first, rest)) = points.split_first() else { return Ok(Subpath { start: Point::ORIGIN, segments: Vec::new(), closed: false }) };
+    line(first, rest)
 }
 
 /// Where a circle starts and ends: a point where one of its axes crosses it. A circle runs clockwise as seen

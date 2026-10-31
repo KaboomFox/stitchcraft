@@ -149,23 +149,24 @@ fn req_auto_007_an_area_reaches_under_a_shape_only_where_they_touch() {
 fn req_auto_007_an_area_covered_by_an_area_sewn_after_it_is_cut_away_0_4_mm_inside_its_edge() {
     // A shape away from the others, so that the lowest is no background (REQ-AUTO-009).
     let far = || rect("far", (40.0, 0.0), (45.0, 5.0));
-    let over = || rect("over", (10.0, 5.0), (20.0, 15.0));
+    let over = || rect("over", (10.0, 10.0), (20.0, 20.0));
     // Traced with its colours stacked, the lower area runs on under the upper one.
-    let (stacked, stacked_said) = sewn(vec![rect("under", (0.0, 0.0), (30.0, 20.0)), over(), far()]);
-    // Traced with its colours abutting, the lower area has a hole where the upper one is.
-    let (abutting, abutting_said) = sewn(vec![holed("under", (0.0, 0.0), (30.0, 20.0), (10.0, 5.0), (20.0, 15.0)), over(), far()]);
-    // Either way, the lower area is sewn up to 0.4 mm inside the upper one's edge: 600 mm² less a 9.2 mm
+    let (stacked, stacked_said) = sewn(vec![rect("under", (0.0, 0.0), (30.0, 30.0)), over(), far()]);
+    // Traced with its colours abutting, the lower area has a hole where the upper one is, 10 mm from its
+    // edges, wider than a satin column: so it has no narrow parts (REQ-AUTO-019).
+    let (abutting, abutting_said) = sewn(vec![holed("under", (0.0, 0.0), (30.0, 30.0), (10.0, 10.0), (20.0, 20.0)), over(), far()]);
+    // Either way, the lower area is sewn up to 0.4 mm inside the upper one's edge: 900 mm² less a 9.2 mm
     // square.
     for out in [&stacked, &abutting] {
-        assert!(near(area(named(out, "under")), 600.0 - 9.2 * 9.2, 0.05), "{}", area(named(out, "under")));
+        assert!(near(area(named(out, "under")), 900.0 - 9.2 * 9.2, 0.05), "{}", area(named(out, "under")));
         assert_eq!(named(out, "over").shape, over().shape);
     }
     assert_eq!(said(&stacked_said, Code::AutoUnder), ["info SC-I0904: 1 area is cut away under the areas sewn after it, 0.4 mm inside their edges."]);
     assert_eq!(said(&abutting_said, Code::AutoUnder), ["info SC-I0904: 1 area reaches 0.4 mm under the shapes sewn after it that it touches."]);
     // So the stacked trace sews the stitches of the abutting one.
     let stitches = |elements: Vec<Element>| planned(elements).plan.unwrap().stitches().count();
-    let stacked_stitches = stitches(vec![rect("under", (0.0, 0.0), (30.0, 20.0)), over(), far()]);
-    let abutting_stitches = stitches(vec![holed("under", (0.0, 0.0), (30.0, 20.0), (10.0, 5.0), (20.0, 15.0)), over(), far()]);
+    let stacked_stitches = stitches(vec![rect("under", (0.0, 0.0), (30.0, 30.0)), over(), far()]);
+    let abutting_stitches = stitches(vec![holed("under", (0.0, 0.0), (30.0, 30.0), (10.0, 10.0), (20.0, 20.0)), over(), far()]);
     let apart = stacked_stitches.abs_diff(abutting_stitches) as f64 / abutting_stitches as f64;
     assert!(apart < 0.02, "stacked {stacked_stitches}, abutting {abutting_stitches}");
 }
@@ -392,9 +393,15 @@ fn req_auto_009_a_background_that_needs_more_work_to_find_than_the_budget_allows
         Design::new(vec![rect("background", (0.0, 0.0), (30.0, 20.0)), rect("logo", (5.0, 5.0), (15.0, 15.0))], DesignSettings::default()).unwrap();
     let with = |work: u64| {
         let (out, diagnostics) = digitized(&design, &Budget { max_work: work, ..Budget::DEFAULT });
-        (ids(&out).iter().map(ToString::to_string).collect::<Vec<_>>(), said(&diagnostics, Code::AutoBackground))
+        let digitized = ids(&out).iter().map(ToString::to_string).collect::<Vec<_>>();
+        let exhausted: Vec<String> = diagnostics
+            .iter()
+            .filter(|d| d.code == Code::BudgetExhausted)
+            .filter_map(|d| d.element.as_ref().map(|id| id.as_str().to_string()))
+            .collect();
+        (digitized, exhausted, said(&diagnostics, Code::AutoBackground))
     };
-    let found = |work: u64| with(work).1.iter().any(|m| m.contains("left out as the picture's background"));
+    let found = |work: u64| with(work).2.iter().any(|m| m.contains("left out as the picture's background"));
     // The least work that finds the background.
     let (mut low, mut high) = (0, 1 << 24);
     assert!(found(high));
@@ -402,9 +409,11 @@ fn req_auto_009_a_background_that_needs_more_work_to_find_than_the_budget_allows
         let middle = (low + high) / 2;
         if found(middle) { high = middle } else { low = middle }
     }
-    // With a unit less, it is sewn, and said to be.
-    let (ids, said) = with(low);
-    assert!(ids.contains(&"background".to_string()), "{ids:?}");
+    // With a unit less, it is sewn, and said to be. So little work is too little to digitize it as well,
+    // its opening included (REQ-AUTO-019), which is said of it too: the element isn't dropped as a background.
+    let (ids, exhausted, said) = with(low);
+    let named = |list: &[String]| list.iter().any(|id| id == "background");
+    assert!(named(&ids) || named(&exhausted), "{ids:?} {exhausted:?}");
     assert_eq!(
         said,
         [format!(

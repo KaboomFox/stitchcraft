@@ -28,14 +28,15 @@
 //!    sewn the line on, ends at the chord there, which cuts its column across: it ends under that column.
 //!    Otherwise the column's own end lies beyond the last chord the line crosses, and takes in a bend the
 //!    line runs through on the way there, as far as the line's middle: a junction whose third side is a cap
-//!    or a bump, as beside the blunt corner of a slanted end. The end is where the column reaches farthest along the line's way at
-//!    that chord, from the line's point before it: the last piece of a line, to a tip or to a junction's
-//!    middle, runs off the column's way. Where an edge of the outline there lies across that way, within
-//!    20° of square to it, and is no longer than twice that chord, the column ends along all of it, as far
-//!    as it runs straight, past where the end's triangles stop; otherwise at that point. A longer edge runs
-//!    along the column, as its side does where its line turns into a tip. A column that is no more than its
-//!    end, as a stub beyond a junction is, has that chord on its outline, and its end goes round the other
-//!    way.
+//!    or a bump, as beside the blunt corner of a slanted end. The end is where the column reaches farthest
+//!    along the line's way at that chord, from the line's point before it: the last piece of a line, to a
+//!    tip or to a junction's middle, runs off the column's way. Where an edge of the outline there lies
+//!    across that way, within 20° of square to it, and is no longer than twice that chord, the column ends
+//!    along all of it, as far as it runs straight, past where the end's triangles stop; otherwise at that
+//!    point. A longer edge runs along the column, as its side does where its line turns into a tip, but one
+//!    along a cut, where a narrow part was cut from a broad one (`auto::split`), is the end however long it
+//!    is. A column that is no more than its end, as a stub beyond a junction is, has that chord on its
+//!    outline, and its end goes round the other way.
 //! 5. **Its rails** are the outline on either side between its ends, both from the line's start. A ring's
 //!    are its 2 rings, both the same way round, started at a rung whose second point is the inner ring's
 //!    point nearest its first, so that a satin column starts them together (`DEV-SAT-009`).
@@ -59,6 +60,7 @@ use super::{Bumps, Line, Node, Skeleton, Walked, edge, skeleton};
 use crate::generators::satin::drawn::REACH;
 use crate::normalize::region::{Polygon, geom};
 use crate::normalize::satin::SAME_POINT;
+use crate::normalize::stroke::distance_to_segment;
 use crate::normalize::triangulation::Broken;
 
 /// The sharpest turn a line takes at a junction's middle and still sews as one column: the cosine of the angle
@@ -158,16 +160,23 @@ struct Started {
 
 /// The columns of `part`, one along each of its centre lines, its edges cut into pieces no longer than
 /// `longest`, with `meter`'s work: none for a dot, and `None` when the triangles round a line make no column.
-/// A triangulation that loses its shape is a bug.
-pub(crate) fn columns(part: &Polygon, longest: f64, meter: &mut Meter) -> Result<Result<Option<Vec<Column>>, Broken>, Exhausted> {
+/// The edges of its outline along `cuts` are where it was cut from a broad part, and an end along one lies
+/// along all of it. A triangulation that loses its shape is a bug.
+pub(crate) fn columns(
+    part: &Polygon,
+    longest: f64,
+    cuts: &[[Point; 2]],
+    meter: &mut Meter,
+) -> Result<Result<Option<Vec<Column>>, Broken>, Exhausted> {
     match skeleton(part, longest, Bumps::Tips, meter)? {
-        Ok(skeleton) => Ok(Ok(built(&skeleton, meter)?)),
+        Ok(skeleton) => Ok(Ok(built(&skeleton, cuts, meter)?)),
         Err(broken) => Ok(Err(broken)),
     }
 }
 
-/// The columns of `skeleton`'s lines, with `meter`'s work; `None` when the triangles round one make no column.
-fn built(skeleton: &Skeleton, meter: &mut Meter) -> Result<Option<Vec<Column>>, Exhausted> {
+/// The columns of `skeleton`'s lines, its outline cut along `cuts`, with `meter`'s work; `None` when the
+/// triangles round one make no column.
+fn built(skeleton: &Skeleton, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<Option<Vec<Column>>, Exhausted> {
     let lines = unlooped(&cornered(skeleton, &skeleton.walked));
     if lines.is_empty() {
         return Ok(Some(Vec::new()));
@@ -178,7 +187,7 @@ fn built(skeleton: &Skeleton, meter: &mut Meter) -> Result<Option<Vec<Column>>, 
     let mut numbered = BTreeMap::new();
     // A line that crosses no triangle of its own, only a junction another runs on through, covers nothing.
     for (line, walked) in lines.iter().enumerate().filter(|(line, _)| owning.contains(line)) {
-        let Some(column) = column(skeleton, &owner, line, walked, meter)? else { return Ok(None) };
+        let Some(column) = column(skeleton, &owner, line, walked, cuts, meter)? else { return Ok(None) };
         numbered.insert(line, columns.len());
         columns.push(column);
     }
@@ -381,15 +390,21 @@ fn outline(skeleton: &Skeleton, owner: &[usize], line: usize, meter: &mut Meter)
     Ok(Some(Outline { rings, triangle }))
 }
 
-/// The column of `line`, walked as `walked`, whose triangles `owner` says, with `meter`'s work; `None` when
-/// its triangles make no column.
-fn column(skeleton: &Skeleton, owner: &[usize], line: usize, walked: &Walked, meter: &mut Meter) -> Result<Option<Column>, Exhausted> {
+/// The column of `line`, walked as `walked`, whose triangles `owner` says, its outline cut along `cuts`, with
+/// `meter`'s work; `None` when its triangles make no column.
+fn column(
+    skeleton: &Skeleton,
+    owner: &[usize],
+    line: usize,
+    walked: &Walked,
+    cuts: &[[Point; 2]],
+    meter: &mut Meter,
+) -> Result<Option<Column>, Exhausted> {
     let Some(outline) = outline(skeleton, owner, line, meter)? else { return Ok(None) };
-    let found = skeleton.line(walked);
     if walked.closed {
-        return ring(skeleton, owner, line, &outline, found, meter);
+        return ring(skeleton, owner, line, &outline, skeleton.line(walked), meter);
     }
-    strip(skeleton, owner, line, &outline, walked, found, meter)
+    strip(skeleton, owner, line, &outline, walked, cuts, meter)
 }
 
 /// How a column ends.
@@ -447,23 +462,24 @@ fn end(skeleton: &Skeleton, owner: &[usize], line: usize, inward: &[usize]) -> O
     Some((End::Own { corners, beyond, way: (b.x() - a.x(), b.y() - a.y()) }, false))
 }
 
-/// The column of the open `line`, walked as `walked` through the points of `found`, with the outline
-/// `outline`; `None` when it makes no column.
+/// The column of the open `line`, walked as `walked`, with the outline `outline`, cut along `cuts`; `None` when
+/// it makes no column.
 fn strip(
     skeleton: &Skeleton,
     owner: &[usize],
     line: usize,
     outline: &Outline,
     walked: &Walked,
-    found: Line,
+    cuts: &[[Point; 2]],
     meter: &mut Meter,
 ) -> Result<Option<Column>, Exhausted> {
     let [ring] = outline.rings.as_slice() else { return Ok(None) };
+    let found = skeleton.line(walked);
     let back: Vec<usize> = walked.nodes.iter().rev().copied().collect();
     let Some((start, cut_start)) = end(skeleton, owner, line, &walked.nodes) else { return Ok(None) };
     let Some((finish, cut_finish)) = end(skeleton, owner, line, &back) else { return Ok(None) };
     let points = &skeleton.triangulation.points;
-    let place = Place { skeleton, owner, line, outline, ring };
+    let place = Place { skeleton, owner, line, outline, ring, cuts };
     let (Some(a), Some(b)) = (place.range(&start, meter)?, place.range(&finish, meter)?) else { return Ok(None) };
     let Some(rails) = rails(ring, a, b) else { return Ok(None) };
     let candidates = rungs(skeleton, owner, line, &rails, meter)?;
@@ -498,6 +514,8 @@ struct Place<'a> {
     line: usize,
     outline: &'a Outline,
     ring: &'a [usize],
+    /// Where the part was cut from a broad part (`auto::split`).
+    cuts: &'a [[Point; 2]],
 }
 
 impl Place<'_> {
@@ -582,7 +600,7 @@ impl Place<'_> {
             let (p, q) = (point(from)?, point(to)?);
             let span = p.distance(q);
             let across = ((q.x() - p.x()) * way.0 + (q.y() - p.y()) * way.1).abs() / (span * length);
-            (span <= longest && across <= SQUARE).then_some(across)
+            ((span <= longest || self.cut(p, q)) && across <= SQUARE).then_some(across)
         };
         let (back, on) = (self.straight(k, false), self.straight(k, true));
         // Where the end reaches as far at the points of a straight edge, the farthest can lie between its
@@ -597,6 +615,12 @@ impl Place<'_> {
             },
         );
         Some(best.map_or((k, k), |(span, _)| span))
+    }
+
+    /// Whether the edge from `p` to `q` lies along a cut, to within [`STRAIGHT`]: an end along a cut lies along
+    /// all of it, however long, where a column ends at the fill of the broad part it was cut from.
+    fn cut(&self, p: Point, q: Point) -> bool {
+        self.cuts.iter().any(|&[a, b]| distance_to_segment(p, a, b) <= STRAIGHT && distance_to_segment(q, a, b) <= STRAIGHT)
     }
 
     /// The last place of the ring from place `from`, forward round it or back, before its points stop lying on

@@ -441,6 +441,23 @@ pub fn stitchcraft_engine::normalize::stroke::nearest_on_segment(stitchcraft_cor
 pub mod stitchcraft_engine::registry
 pub const stitchcraft_engine::registry::PARAMETERS: &[&stitchcraft_params::spec::ParamGroup]
 pub mod stitchcraft_engine::testsheets
+pub mod stitchcraft_engine::testsheets::pictures
+pub enum stitchcraft_engine::testsheets::pictures::Trace
+pub stitchcraft_engine::testsheets::pictures::Trace::Abutting
+pub stitchcraft_engine::testsheets::pictures::Trace::Stacked
+pub struct stitchcraft_engine::testsheets::pictures::Picture
+pub stitchcraft_engine::testsheets::pictures::Picture::edges: alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>
+pub stitchcraft_engine::testsheets::pictures::Picture::elements: alloc::vec::Vec<stitchcraft_engine::design::Element>
+pub stitchcraft_engine::testsheets::pictures::Picture::name: alloc::string::String
+pub fn stitchcraft_engine::testsheets::pictures::badge((f64, f64), f64, stitchcraft_engine::testsheets::pictures::Trace) -> core::result::Result<stitchcraft_engine::testsheets::pictures::Picture, stitchcraft_engine::testsheets::SheetError>
+pub fn stitchcraft_engine::testsheets::pictures::badges((f64, f64), f64, stitchcraft_engine::testsheets::pictures::Trace) -> core::result::Result<stitchcraft_engine::testsheets::pictures::Picture, stitchcraft_engine::testsheets::SheetError>
+pub fn stitchcraft_engine::testsheets::pictures::balloon((f64, f64)) -> core::result::Result<stitchcraft_engine::testsheets::pictures::Picture, stitchcraft_engine::testsheets::SheetError>
+pub fn stitchcraft_engine::testsheets::pictures::face((f64, f64)) -> core::result::Result<stitchcraft_engine::testsheets::pictures::Picture, stitchcraft_engine::testsheets::SheetError>
+pub fn stitchcraft_engine::testsheets::pictures::parted((f64, f64)) -> core::result::Result<stitchcraft_engine::testsheets::pictures::Picture, stitchcraft_engine::testsheets::SheetError>
+pub fn stitchcraft_engine::testsheets::pictures::specks((f64, f64)) -> core::result::Result<stitchcraft_engine::testsheets::pictures::Picture, stitchcraft_engine::testsheets::SheetError>
+pub fn stitchcraft_engine::testsheets::pictures::star((f64, f64), f64) -> core::result::Result<stitchcraft_engine::testsheets::pictures::Picture, stitchcraft_engine::testsheets::SheetError>
+pub fn stitchcraft_engine::testsheets::pictures::window((f64, f64), f64) -> core::result::Result<stitchcraft_engine::testsheets::pictures::Picture, stitchcraft_engine::testsheets::SheetError>
+pub fn stitchcraft_engine::testsheets::pictures::word((f64, f64), f64) -> core::result::Result<stitchcraft_engine::testsheets::pictures::Picture, stitchcraft_engine::testsheets::SheetError>
 pub enum stitchcraft_engine::testsheets::SheetError
 pub stitchcraft_engine::testsheets::SheetError::Budget(stitchcraft_core::budget::Exhausted)
 pub stitchcraft_engine::testsheets::SheetError::ElementId(stitchcraft_core::element::ElementIdError)
@@ -456,6 +473,7 @@ pub stitchcraft_engine::testsheets::TestSheet::title: &'static str
 impl stitchcraft_engine::testsheets::TestSheet
 pub fn stitchcraft_engine::testsheets::TestSheet::design(&self) -> core::option::Option<core::result::Result<stitchcraft_engine::design::Design, stitchcraft_engine::testsheets::SheetError>>
 pub const fn stitchcraft_engine::testsheets::TestSheet::designed(&self) -> bool
+pub fn stitchcraft_engine::testsheets::TestSheet::digitized(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::plan(&self) -> core::result::Result<stitchcraft_plan::plan::StitchPlan, stitchcraft_engine::testsheets::SheetError>
 pub const stitchcraft_engine::testsheets::STITCH_LEN: f64
 pub static stitchcraft_engine::testsheets::SHEETS: &[stitchcraft_engine::testsheets::TestSheet]

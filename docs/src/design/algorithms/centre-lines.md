@@ -137,7 +137,10 @@ lines are found as above, but for these steps:
   The column ends flat along all of it, as far as it runs straight. A cap can stop at a chord from a point
   between an edge's pieces. A column that ended at that point would leave the other piece on a rail, with
   its stitches leaning towards it. A longer edge runs along the column, as its side does where its line
-  turns into a tip. Otherwise the column ends at that point, its rails meeting. A column can be only its
+  turns into a tip. An edge along a cut, where a narrow part was cut from a broad one
+  ([image to embroidery](../image-to-embroidery.md)), is the end however long it is: across a tapering
+  point, the cut is wider than twice the chord the end begins at. Otherwise the column ends at that point,
+  its rails meeting. A column can be only its
   end, as a stub beyond a junction is. The chord its end begins at is then on its outline, and its end goes
   round the other way.
 - **Rails.** The rails are the outline on either side between the ends, both from the line's start. A
