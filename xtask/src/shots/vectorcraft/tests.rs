@@ -1,5 +1,7 @@
 //! VectorCraft's shots before VectorCraft runs: the tolerance, the declarations, and the window's job.
 
+use stitchcraft_params::Family;
+
 use super::*;
 use crate::shots::load;
 
@@ -103,7 +105,7 @@ fn a_vectorcraft_shot_is_declared_with_its_kind_s_fields() {
             "its dialog is `satin`'s, which it doesn't install",
         ]
     );
-    assert_eq!(problems(&shot(UI, "menu = [\"Effect\"]\ndialog = \"lace\"")), ["`dialog = \"lace\"` names no stitch family"]);
+    assert_eq!(problems(&shot(UI, "menu = [\"Effect\"]\ndialog = \"lace\"")), ["`dialog = \"lace\"` names no live effect"]);
     assert_eq!(problems(&shot(UI, "menu = [\"Effect\"]\ndocument = \"a.vectorcraft\"")), ["`document` is a vectorcraft-render shot's"]);
     assert_eq!(problems(&shot(RENDER, "document = \"a.svg\"")), ["its document `a.svg` is not a `.vectorcraft` file"]);
 }

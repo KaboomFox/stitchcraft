@@ -33,9 +33,10 @@
 
 use serde::{Deserialize, Serialize};
 use stitchcraft_core::{Budget, Code, Diagnostic, Severity};
-use stitchcraft_engine::auto::SATIN_MAX_WIDTH;
+use stitchcraft_engine::auto::{AutoParams, MAX_SATIN_WIDTH};
 use stitchcraft_engine::design::{DesignSettings, Reading};
 use stitchcraft_formats::{Encoded, read_back};
+use stitchcraft_params::find;
 use stitchcraft_plan::profiles::{self, BUILTIN, REFERENCE};
 use stitchcraft_plan::{FormatId, MachineProfile};
 
@@ -65,14 +66,15 @@ pub(crate) fn options() -> Vec<(&'static str, Param)> {
     ]
 }
 
-/// What [`AUTO`] does, for its help, with the widths automatic digitizing goes by.
+/// What [`AUTO`] does, for its help, with the widths automatic digitizing goes by: the narrowest satin stroke,
+/// and the default of the widest satin column, which an object without effects takes.
 fn auto_help() -> String {
+    let widest = find(&[&AutoParams::GROUP], MAX_SATIN_WIDTH).map_or("", |spec| spec.default);
     format!(
         "Chooses the stitches of each object without a StitchCraft effect by its width, as `stitch export --auto` does: a line up \
-         to {} mm wide runs, a line up to {} mm wide is a satin column as wide as it, and a wider line or an area is a tatami \
-         fill. Objects with a StitchCraft effect sew as their effects say.",
+         to {} mm wide runs, a line up to {widest} mm wide is a satin column as wide as it, and a wider line or an area is a \
+         tatami fill. Objects with a StitchCraft effect sew as their effects say.",
         DesignSettings::MIN_SATIN_STROKE_WIDTH.get(),
-        SATIN_MAX_WIDTH.get()
     )
 }
 
@@ -215,8 +217,9 @@ fn decline(said: &[Diagnostic]) -> String {
     }
 }
 
-/// `bytes` in base64, padded (RFC 4648, section 4), as VectorCraft decodes an exporter's file.
-fn base64(bytes: &[u8]) -> String {
+/// `bytes` in base64, padded (RFC 4648, section 4), as VectorCraft decodes an exporter's file, and the bytes
+/// of a file a command is given.
+pub fn base64(bytes: &[u8]) -> String {
     let mut out = String::with_capacity(bytes.len().div_ceil(3).saturating_mul(4));
     for chunk in bytes.chunks(3) {
         let [a, b, c] = [0, 1, 2].map(|i| chunk.get(i).copied().unwrap_or(0));

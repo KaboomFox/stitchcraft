@@ -56,7 +56,38 @@ fn req_vc_011_each_exporter_s_manifest_is_one_vectorcraft_accepts() {
     }
     // The live effects list no extensions, which a VectorCraft before 0.14 would refuse.
     assert!(Family::ALL.iter().all(|each| value(&family(*each)).get("extensions").is_none()));
-    assert!(value(&hello()).get("extensions").is_none());
+    assert!(value(&hello()).get("extensions").is_none() && value(&auto()).get("extensions").is_none());
+}
+
+#[test]
+fn req_vc_016_the_auto_effect_s_dialog_holds_the_rules_settings_and_its_preview_levels() {
+    use stitchcraft_engine::auto::{IGNORE_BACKGROUND, MAX_SATIN_WIDTH, MIN_AREA, MIN_TRIPLE_RUN_WIDTH, OVERLAP};
+
+    let manifest = auto();
+    assert_eq!(validate(&text(&manifest)), Ok(()));
+    assert_eq!((manifest.id.as_str(), manifest.kind), ("dev.stitchcraft.auto", "effect"));
+    let keys: Vec<&str> = manifest.params.iter().map(|(key, _)| *key).collect();
+    assert_eq!(keys, [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, OVERLAP, MIN_AREA, IGNORE_BACKGROUND, PREVIEW_LEVEL]);
+    // Each setting's row has the registry's label, unit, section, help and page, and always shows: the
+    // dialog has no method.
+    for (key, param) in manifest.params.iter().filter(|(key, _)| *key != PREVIEW_LEVEL) {
+        let spec = stitchcraft_params::find(PARAMETERS, key).unwrap();
+        assert_eq!((param.ui.label, param.ui.group, param.ui.unit), (Some(spec.label), Some(spec.group), dialog::unit(spec.kind)), "{key}");
+        assert_eq!(param.ui.help, dialog::help(&spec.help()), "{key}");
+        assert_eq!(param.ui.help_url, Some(dialog::page(&format!("user/reference/params/auto.html#{key}"))), "{key}");
+        assert!(param.ui.visible_when.is_empty(), "{key}");
+    }
+    // The smallest area is a number of square millimetres in its range, the preview a choice of 3 levels.
+    let area = schemas(&manifest.params).into_iter().find(|(key, _)| *key == MIN_AREA);
+    assert_eq!(area, Some((MIN_AREA, Schema::Number { min: 0.0, max: 10.0, default: 1.0 })));
+    let preview = schemas(&manifest.params).pop();
+    assert_eq!(preview, Some((PREVIEW_LEVEL, Schema::Choice { options: vec!["auto", "exact", "outline"], default: "auto" })));
+    // A record of the defaults reads as no settings at all.
+    let mut set = ParamSet::new();
+    for (key, param) in manifest.params.iter().filter(|(key, _)| *key != PREVIEW_LEVEL) {
+        set.set(*key, stitchcraft_vectorcraft::param_text(&param.schema.default_value()).unwrap().as_str());
+    }
+    assert_eq!(stitchcraft_engine::auto::rules(&set), stitchcraft_engine::auto::rules(&ParamSet::new()));
 }
 
 #[test]

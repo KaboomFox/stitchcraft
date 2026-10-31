@@ -5,6 +5,54 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.7, its third part: StitchCraft's Auto effect in VectorCraft (`REQ-VC-016`).
+  - **Effect › Plug-ins › StitchCraft Auto** makes the object it is applied to, or each path inside the
+    group or the layer, automatic, with or without `--auto`. Its parameters are the shapes' settings of the
+    rules, and its dialog shows them as the registry declares them, with `preview_level`. The nearest
+    StitchCraft effects say how a path sews. A path with a stitch effect of its own sews as that effect
+    says, and an Auto effect beside one isn't used (`SC-W0807`).
+  - Its live effect reads the object as `stitch export` reads it, an area when a fill paints it and a line
+    along its topmost stroke, digitizes it and shows the stitches of each element it becomes: a fill's top
+    rows, and a column's and a running stitch's every stitch. Measured in VectorCraft 0.18.0's host, a
+    unit of digitizing's work takes from about 1,450 instructions to 2,260. A small square shows its
+    stitches, and a larger one, an L, a ring and most traced letters, which digitizing alone takes most of
+    a live effect's budget for, show their outlines. Without the object's paints, before VectorCraft 0.14, it leaves the object as it is
+    (`SC-I0810`).
+  - The Test Sheet filter draws the TS-13 sheets too, their top halves' shapes with the Auto effect, so that
+    MC-8 can start from VectorCraft. The `testsheets` and `install-and-list` cases install the Auto module, and
+    the `trace` case applies the effect to the traced group and sews the document without `--auto`.
+  - The picture tutorial applies the Auto effect, with a picture of its dialog. The automatic codes' hints
+    name the Fill, Stroke and Satin effects, since the Auto effect is a StitchCraft effect too.
+
+- M13.7, VectorCraft, its first part: from a picture to a machine file.
+  - `stitch palette` writes a machine's threads as a GIMP palette (`REQ-CLI-011`), the reference machine's
+    unless `--profile` names another. VectorCraft loads it as a swatch library, and Image Trace's Document
+    Library palette traces a picture in the threads' own colours, which the machine file names as those
+    threads.
+  - The compatibility gate's Level B has a `trace` case. With the reference machine's threads loaded,
+    VectorCraft traces a badge drawn flat in 3 of them by the Abutting method, and saves its paths. Read
+    with `--auto`, every shape is automatic, the white round the badge is left out as the background, and
+    the badge sews its 3 threads. A parameter of a scenario's step written `{ stitchcraft = "…" }` is
+    replaced by what StitchCraft makes of the name.
+  - The tutorial *From a picture to a machine file* traces a picture in VectorCraft and digitizes it with
+    `--auto`. A doc picture can read its design as `--auto` does (`auto = true` in `docs/shots.toml`).
+
+- M13.7, its second part: the rules' settings. Each rule of automatic digitizing goes by the settings of the
+  shape it digitizes, StitchCraft's own parameters, registered as any other (`REQ-AUTO-020`). A shape that
+  sets none takes the defaults, the values the rules had. With `--auto` every shape still sews as before.
+  The reference page *Auto parameters* documents the settings:
+  - `auto_max_satin_width_mm`, the widest satin column, 7 mm
+  - `auto_min_triple_run_width_mm`, the narrowest triple run, 0.5 mm
+  - `auto_overlap_mm`, the overlap, 0.4 mm
+  - `auto_min_area_mm2`, the smallest area, 1 mm²
+  - `auto_ignore_background`, on, which leaves the background out
+
+  Automatic elements read them, and the ordinary elements they become don't. Their declaration is for
+  `stitchcraft_params::AUTOMATIC`, which no stitch family's dialog shows, and the audit requires each to be
+  StitchCraft's own. The smallest area, in square millimetres, is a kind of parameter of its own. Each area
+  reaches its own overlap under the shapes sewn after it, and `SC-I0904` gives the overlaps from the least to
+  the most when they differ. The diagnostics' explanations name the settings.
+
 - M13.6: shapes in parts. With `--auto`, a part of a shape that is wider than a satin column in places and
   narrower in others sews in parts (`REQ-AUTO-019`). Its broad parts are a tatami fill, and its narrow
   parts sew over the fill as lines and columns, each sorted by its width as a part is.

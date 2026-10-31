@@ -32,7 +32,7 @@ const TAB: [(f64, f64); 7] = [(21.0, 8.5), (32.0, 8.5), (32.0, 11.5), (20.0, 11.
 
 /// `part` split, with the default budget.
 fn split_of(part: &Polygon) -> Split {
-    split(part, &mut Budget::DEFAULT.meter()).unwrap().unwrap()
+    split(part, &AutoParams::defaults(), &mut Budget::DEFAULT.meter()).unwrap().unwrap()
 }
 
 /// The narrow parts of `split`.
@@ -223,6 +223,31 @@ fn req_auto_019_a_point_of_a_piece_no_farther_than_on_from_the_outline_lies_on_i
     let [[top, bottom]] = cuts[..] else { panic!("{cuts:?}") };
     assert!(top.distance(p(1.0, 3.0)) < 1e-6 && bottom == p(1.0, 0.0), "{cuts:?}");
     assert!(outline.contains(&p(6.0, ON)), "{outline:?}");
+}
+
+#[test]
+fn req_auto_020_a_narrow_part_reaching_exactly_the_smallest_area_past_the_broad_parts_is_cut_from_the_fill() {
+    // The tab of a square with a tab 6 mm long, which reaches beyond twice the opening's radius by an area
+    // found as `split` finds it: with that area as the smallest, the tab is a narrow part, since only a
+    // smaller area is a speck; with anything larger, it stays in the fill.
+    let whole = square_with_tab(6.0);
+    let mut meter = Budget::DEFAULT.meter();
+    let defaults = AutoParams::defaults();
+    let radius = narrow::half(defaults.auto_max_satin_width_mm);
+    let buffered = |parts: &[Polygon], by: f64, meter: &mut Meter| ops::buffered(parts, by, meter).unwrap().unwrap();
+    let shrunk = buffered(std::slice::from_ref(&whole), -radius, &mut meter);
+    let broad = ops::intersection(&buffered(&shrunk, radius, &mut meter), std::slice::from_ref(&whole), &mut meter).unwrap().unwrap();
+    let rest = ops::difference(std::slice::from_ref(&whole), &broad, &mut meter).unwrap().unwrap();
+    let tab = rest.iter().max_by(|a, b| a.area().total_cmp(&b.area())).unwrap();
+    let reach = buffered(&shrunk, 2.0 * radius, &mut meter);
+    let beyond = area_of(&ops::difference(std::slice::from_ref(tab), &reach, &mut meter).unwrap().unwrap());
+    assert!(beyond > 1.0 && beyond < tab.area(), "{beyond} of {}", tab.area());
+    let split_with = |smallest: f64| {
+        let rules = AutoParams { auto_min_area_mm2: smallest, ..defaults.clone() };
+        split(&whole, &rules, &mut Budget::DEFAULT.meter()).unwrap().unwrap()
+    };
+    assert_eq!(split_with(beyond).narrow.len(), 1);
+    assert!(split_with(beyond.next_up()).narrow.is_empty());
 }
 
 #[test]

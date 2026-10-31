@@ -1122,6 +1122,15 @@ rationale = "A machine checkpoint can then start from VectorCraft: the sheet's o
 milestone = "M6"
 status = "active"
 
+[[req]]
+id = "REQ-VC-016"
+area = "vectorcraft"
+level = "L2"
+statement = "StitchCraft's Auto effect (`plugin.dev.stitchcraft.auto`) makes an object, and each path inside a group or a layer it is applied to, an automatic element, whether or not `--auto` is given, with the effect's parameters as its settings of the rules (REQ-AUTO-020). A path with a StitchCraft stitch effect of its own sews as that effect says, and an Auto effect beside one on the same object is not used, which SC-W0807 says. The nearest group's or layer's Auto effect reaches a path, as a stitch effect does. Its dialog shows the rules' settings, each with the registry's label, unit, help and help page, and `preview_level`. Its live effect previews the object's stitches as automatic digitizing chooses them, its fill as an area and its topmost stroke as a line, without what neighbours change (REQ-AUTO-007 to REQ-AUTO-010). Auto shows them as far as ABI v1's budget allows, and the outline when they cost more, and a level that costs more than the budget leaves the object as it is, with SC-I0810. The Test Sheet filter draws the TS-13 sheets too, each shape with the Auto effect."
+rationale = "A picture traced in VectorCraft is a group of paths without settings. With the effect on the group, the user sees each path's stitches and sets the rules' values in a dialog, and the document then sews digitized automatically from VectorCraft's own export, without the command line's switch."
+milestone = "M13"
+status = "active"
+
 # ── Command line ───────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -1215,10 +1224,19 @@ milestone = "M3"
 status = "active"
 
 [[req]]
+id = "REQ-CLI-011"
+area = "cli"
+level = "L1"
+statement = "`stitch palette` writes the threads of a machine profile, the reference machine's unless `--profile` names another, as a GIMP palette (`.gpl`), to the file `-o` names or else to standard output. It is named after the profile's thread palette, says in a comment whose threads they are, and gives each entry that colour matching may choose, in the palette's order, as its colour in 8-bit RGB and its name as the machine shows it, each on one line. Each colour, matched to the palette, is its own entry."
+rationale = "VectorCraft loads a GIMP palette as a swatch library, and Image Trace's Document Library palette traces a picture in its colours. A picture traced in the threads' own colours is written as those threads, which the machine shows by name."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-001"
 area = "auto"
 level = "L2"
-statement = "With `--auto`, `stitch plan` and `stitch export` digitize automatically each shape that has no settings: a VectorCraft object with no StitchCraft effect on it or on a group or layer around it, and an SVG element with no `inkstitch:` attribute. StitchCraft chooses an automatic shape's stitches by its width. A shape with settings is not digitized automatically, and without the switch every shape sews as before. SC-I0901 counts the shapes digitized automatically by the stitches they sew as. A bug-report bundle records the switch, and its replay digitizes the same."
+statement = "With `--auto`, `stitch plan` and `stitch export` digitize automatically each shape that has no settings: a VectorCraft object with no StitchCraft effect on it or on a group or layer around it, and an SVG element with no `inkstitch:` attribute. StitchCraft chooses an automatic shape's stitches by its width. A shape with settings is not digitized automatically, and without the switch every shape sews as before, but those StitchCraft's Auto effect reaches in VectorCraft (REQ-VC-016). SC-I0901 counts the shapes digitized automatically by the stitches they sew as. A bug-report bundle records the switch, and its replay digitizes the same."
 rationale = "A traced picture is many shapes without settings, and the stitches that suit each depend on its width. A shape set by hand keeps what its maker chose."
 milestone = "M13"
 status = "active"
@@ -1382,5 +1400,14 @@ area = "auto"
 level = "L2"
 statement = "A part of an automatic area, as it is drawn, that isn't narrow (REQ-AUTO-013) and is wider than 7 mm somewhere sews in parts: its broad parts as a tatami fill, and its narrow parts as lines and columns over the fill. Its broad parts are what an opening with a disc 7 mm across leaves of it: the part shrunk with the polygon buffer by half of 7 mm taken half a micrometre wider, grown back by as much, and kept within the part. The rest of the part, cut where it meets the broad parts, is its narrow parts. A narrow part smaller than 1 mm² is a speck, and one that reaches less than 1 mm² beyond that half of 7 mm from the broad parts is a corner that the opening rounded, or a stub too short for a column: both stay in the fill. Each other narrow part is cut where it meets the broad parts, at a chord across it square to the way its sides run on from there, from the end of where they meet that lies farther along that way, and what lies past the chord goes to the fill. A column ends flat along such a chord, however long it is. Each then sews as a part of its own, as a running stitch along its centre line when it is narrow (REQ-AUTO-013) and as satin columns when it is no wider than 7 mm (REQ-AUTO-016), and otherwise stays in the fill. The fill is the part without its narrow parts, and sews first. Their lines and columns sew after it, in the order of the parts, and the fill reaches under them (REQ-AUTO-007). Splitting a part is part of the work of digitizing its area, and a part whose broad parts can't be found (a bug, SC-E0009, naming the area) stays in the fill."
 rationale = "A shape traced from a picture is often broad in places and narrow in others, as a balloon on its string is. Filled whole, its narrow parts sew rows no longer than they are wide. Sewn as lines and columns over the fill, they sew as a digitizer would, and the fill beneath leaves no fabric showing where they meet. An opening finds the broad parts without the shape's centre lines, and rounds their convex corners, which the fill keeps."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-020"
+area = "auto"
+level = "L2"
+statement = "Each rule of automatic digitizing goes by the settings of the automatic element it digitizes, StitchCraft's own parameters, which no stitch type reads: `auto_max_satin_width_mm`, the widest satin column, 7 mm (REQ-AUTO-003, REQ-AUTO-004, REQ-AUTO-016, REQ-AUTO-019); `auto_min_triple_run_width_mm`, the narrowest triple run, 0.5 mm (REQ-AUTO-015); `auto_overlap_mm`, the overlap, 0.4 mm (REQ-AUTO-007, REQ-AUTO-016, REQ-AUTO-018); `auto_min_area_mm2`, the smallest area, 1 mm² (REQ-AUTO-004, REQ-AUTO-008, REQ-AUTO-013, REQ-AUTO-019); and `auto_ignore_background`, on, without which the lowest shape is sewn though it is the picture's background (REQ-AUTO-009). The values those requirements give are the defaults, which a shape that sets none takes, as every shape does with `--auto`. An area reaches its own overlap under the shapes sewn after it, and is cut away its own overlap inside an area that covers it. A part of it smaller than its own smallest area is a speck, and a satin column has the overlap of the shape it sews. SC-I0904 gives the overlaps the areas reach under their neighbours with and are cut away by, from the least to the most. A value out of range is read as the nearest it takes, with SC-W0102, and an automatic element with a value that doesn't read sews nothing, with SC-E0101."
+rationale = "MC-8 confirms the rules' values on the machine or changes them, and a picture can need others: a noisy trace leaves larger specks, and a stretchy fabric pulls shapes further apart. As parameters, the values are documented and checked as every other is, and the Auto effect's dialog sets them in VectorCraft (M13.7)."
 milestone = "M13"
 status = "active"

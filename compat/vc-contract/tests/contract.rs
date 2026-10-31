@@ -14,6 +14,10 @@ use vectorcraft_plugins::{ABI_VERSION, Budget, Error, HEAVY_FUEL, HEAVY_WALL_TIM
 /// The stitch families, each a module of its own whose live effect sews an object as the family.
 const FAMILIES: [&str; 3] = ["stroke", "satin", "fill"];
 
+/// The Auto effect's module, whose live effect previews the stitches automatic digitizing chooses for an
+/// object (REQ-VC-016).
+const AUTO: &str = "auto";
+
 /// The machine formats, each a module of its own whose exporter writes the document in that format, from
 /// VectorCraft 0.14, and how a file of it starts.
 const FORMATS: [(&str, &[u8]); 2] = [("pes", b"#PES0001"), ("dst", b"LA:")];
@@ -141,7 +145,8 @@ fn hello_reads_and_writes_json_within_the_recorded_budget() {
 
 #[test]
 fn each_family_installs_with_an_accepted_manifest() {
-    for family in FAMILIES {
+    // And the Auto effect, whose parameters are the settings of automatic digitizing's rules (REQ-VC-016).
+    for family in FAMILIES.into_iter().chain([AUTO]) {
         let plugin = registry::install_bytes(&module(family)).unwrap_or_else(|e| panic!("VectorCraft refuses {family}: {e}"));
         assert_eq!(plugin.id(), format!("dev.stitchcraft.{family}"));
         assert!(plugin.manifest().kind == Kind::Effect, "{family} is a live effect");
@@ -274,7 +279,9 @@ fn stroke(mm: f64) -> Value {
 /// VectorCraft allows, which a small fill's fits in, and the test notes how far the larger ones get. It
 /// prints what each run takes against what VectorCraft allows it, and what it shows, which the plug-in's
 /// budget (`apps/stitchcraft-vc-plugin/src/preview.rs`) is measured from. A satin column drawn as one path
-/// and a zigzag stroke are given a stroke 3 mm wide, as VectorCraft gives one from 0.14 (`REQ-VC-010`).
+/// and a zigzag stroke are given a stroke 3 mm wide, as VectorCraft gives one from 0.14 (`REQ-VC-010`). The
+/// Auto effect's previews run on filled shapes, an L and a ring among them, and on lines 3 and 0.5 mm wide
+/// (`REQ-VC-016`): its auto level digitizes them within a price of its work that these runs check.
 #[test]
 fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
     let square = |side: f64| shapes::rectangle(Rect::new(0.0, 0.0, side, side));
@@ -294,6 +301,31 @@ fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
     let stroked = json!({"fills": [], "strokes": [stroke(3.0)]});
     let zigzag = |level: &str| json!({"preview_level": level, "stroke_method": "zigzag_stitch"});
     let level = |level: &str| json!({"preview_level": level});
+    // The Auto effect: filled squares, an L with an arm 5 mm wide and a ring 4 mm wide, as letters are traced,
+    // a line traced as an area, and lines a satin column and a running stitch.
+    let red = json!({"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}});
+    let filled = json!({"fills": [red], "strokes": []});
+    let polygon = |points: &[(f64, f64)]| {
+        let mut path = BezPath::new();
+        for (k, (x, y)) in points.iter().enumerate() {
+            if k == 0 { path.move_to(Point::new(pt(*x), pt(*y))) } else { path.line_to(Point::new(pt(*x), pt(*y))) }
+        }
+        path.close_path();
+        PathData::from_bezpath(&path)
+    };
+    let mut areas = squares(&[40.0, 160.0, 640.0, 2560.0]);
+    areas.push(("L 40 mm tall".to_string(), polygon(&[(0.0, 0.0), (20.0, 0.0), (20.0, 20.0), (5.0, 20.0), (5.0, 40.0), (0.0, 40.0)])));
+    // TS-13B's thinnest window line: traced as an area 0.3 mm wide, 20 mm down with a branch 18 mm across. It
+    // is narrow everywhere, and finding its centre lines costs digitizing the most instructions a unit.
+    let (w, down, across) = (0.15, 12.0, 10.0);
+    let window = [(down - w, 0.0), (down + w, 0.0), (down + w, across - w), (30.0, across - w), (30.0, across + w), (down + w, across + w)];
+    areas.push(("window's line 0.3 mm wide".to_string(), polygon(&[&window[..], &[(down + w, 20.0), (down - w, 20.0)]].concat())));
+    let mut ring = shapes::ellipse(Rect::new(0.0, 0.0, pt(30.0), pt(30.0)));
+    ring.subpaths.extend(shapes::ellipse(Rect::new(pt(4.0), pt(4.0), pt(26.0), pt(26.0))).subpaths);
+    let ring = vec![("ring 30 mm across".to_string(), ring)];
+    let evenodd = json!({"fills": [red], "strokes": [], "fillRule": "evenodd"});
+    let widths = |mm: f64| json!({"fills": [], "strokes": [stroke(mm)]});
+    let auto_lines = vec![straight(100.0), straight(1000.0)];
     let runs = [
         Runs { family: "stroke", set: level("auto"), given: json!({}), shapes: squares(&[20.0, 320.0, 5120.0, 25600.0]), finishing: usize::MAX },
         Runs { family: "stroke", set: level("outline"), given: json!({}), shapes: squares(&[20.0, 25600.0]), finishing: usize::MAX },
@@ -321,6 +353,15 @@ fn req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits() {
         Runs { family: "fill", set: level("outline"), given: json!({}), shapes: fills.clone(), finishing: usize::MAX },
         // The 3.5 mm and 7 mm squares.
         Runs { family: "fill", set: level("exact"), given: json!({}), shapes: fills, finishing: 2 },
+        Runs { family: AUTO, set: level("auto"), given: filled.clone(), shapes: areas.clone(), finishing: usize::MAX },
+        Runs { family: AUTO, set: level("outline"), given: filled.clone(), shapes: areas.clone(), finishing: usize::MAX },
+        Runs { family: AUTO, set: level("auto"), given: evenodd.clone(), shapes: ring.clone(), finishing: usize::MAX },
+        Runs { family: AUTO, set: level("outline"), given: evenodd, shapes: ring, finishing: usize::MAX },
+        Runs { family: AUTO, set: level("auto"), given: widths(3.0), shapes: auto_lines.clone(), finishing: usize::MAX },
+        Runs { family: AUTO, set: level("auto"), given: widths(0.5), shapes: auto_lines.clone(), finishing: usize::MAX },
+        // An exact preview digitizes with all that VectorCraft allows: the line's satin column fits.
+        Runs { family: AUTO, set: level("exact"), given: widths(3.0), shapes: auto_lines, finishing: 1 },
+        Runs { family: AUTO, set: level("exact"), given: filled, shapes: areas, finishing: 0 },
     ];
     let mut failed = Vec::new();
     for Runs { family, set, given, shapes, finishing } in runs {
@@ -664,9 +705,10 @@ fn req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcr
         Some(ParamSpec::Choice { options, .. }) => options.clone(),
         other => panic!("no choice of sheets: {other:?}"),
     };
-    assert_eq!(sheets, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09"]);
-    // VectorCraft admits StitchCraft's effect records only while their plug-ins are installed.
-    for family in FAMILIES {
+    assert_eq!(sheets, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-13A", "TS-13B", "TS-13C"]);
+    // VectorCraft admits StitchCraft's effect records only while their plug-ins are installed: the families',
+    // and the Auto effect's, which the TS-13 sheets' shapes digitized automatically have.
+    for family in FAMILIES.into_iter().chain([AUTO]) {
         registry::install_bytes(&module(family)).unwrap();
     }
     let pes = Plugin::load(&module("pes"), Limits::default()).unwrap();

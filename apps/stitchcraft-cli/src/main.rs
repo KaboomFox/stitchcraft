@@ -29,6 +29,7 @@ fn run(cli: &Cli) -> Outcome {
         Command::Preview(args) => commands::preview::run(args),
         Command::Convert(args) => commands::convert::run(args),
         Command::Profiles => commands::profiles::run(),
+        Command::Palette(args) => commands::palette::run(args),
         Command::Explain { code } => commands::explain::run(code),
         Command::BugReport(args) => commands::bug_report::run(args),
     }

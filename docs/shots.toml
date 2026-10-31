@@ -16,7 +16,8 @@
 # and then makes <id>-1.png, <id>-2.png and so on. A page shows them side by side between the lines
 # `<!-- shot: <id> -->` and `<!-- /shot -->`, which `cargo xtask docs` fills in. `layout = "rows"` shows
 # them one under another instead, each as wide as the page, for pictures too wide to share it. The plan of
-# a design may report only the diagnostic codes its shot lists in `allow = ["SC-W0402"]`.
+# a design may report only the diagnostic codes its shot lists in `allow = ["SC-W0402"]`. `auto = true` reads
+# the design as `--auto` does, its shapes without settings digitized automatically.
 
 # ── Test sheets (shown on the test-sheets reference page, in this order) ────────────────────────────
 
@@ -363,6 +364,16 @@ scale = 8.0
 alt = "A red star inside a blue ring, as the badge will sew"
 
 [[shot]]
+id = "traced-badge"
+kind = "stitch"
+fixture = "docs/fixtures/traced-badge.svg"
+auto = true
+style = "realistic"
+scale = 6.0
+allow = ["SC-I0901", "SC-W0906", "SC-I0907", "SC-I0904"]
+alt = "The traced badge digitized automatically. A red disc with a blue square on it and a gold disc in the middle sew as tatami fills, with no white round them."
+
+[[shot]]
 id = "badge-simple"
 kind = "stitch"
 fixture = "docs/fixtures/badge.svg"
@@ -396,9 +407,9 @@ alt = "The patch as it will sew. A red fill with rows at 45 degrees has a blue s
 # stitch family once at most: VectorCraft keeps a module's last error only until its next success. A
 # "vectorcraft-render" shot is that document's PNG export, `scale` pixels per point. A "vectorcraft-ui" shot
 # opens it in VectorCraft's window, selects everything, and presses `menu`, the menu bar's title and then
-# rows, through the accessibility tree. The picture shows the menus open, or with `dialog = "<family>"` the
-# dialog of that family's effect, in a window tall enough for it, which must show a row for each of the
-# module's parameters: its label, and the control of its type.
+# rows, through the accessibility tree. The picture shows the menus open, or with `dialog = "<module>"` the
+# dialog of that live effect, a stitch family's or `auto`, the Auto effect's, in a window tall enough for
+# it, which must show a row for each of the module's parameters: its label, and the control of its type.
 
 [[shot]]
 id = "vectorcraft-plugins-menu"
@@ -439,6 +450,19 @@ steps = [
 menu = ["Effect", "Plug-ins"]
 dialog = "satin"
 alt = "The StitchCraft Satin dialog in VectorCraft, its settings in sections, from Satin column, with Method and Zigzag spacing, through the 3 underlays to Longest stitch and Preview. Each row has a label, a field with its unit, and a button that opens the setting's help page. Under them are the Preview checkbox, checked, and the Cancel and OK buttons."
+
+[[shot]]
+id = "vectorcraft-auto-dialog"
+kind = "vectorcraft-ui"
+plugins = ["stroke", "satin", "fill", "auto"]
+steps = [
+  { cmd = "file.new", params = { width = 144, height = 144 } },
+  { cmd = "shape.ellipse", params = { x = 12, y = 12, width = 120, height = 120 } },
+  { cmd = "paint.setFill", params = { color = "#1f4e9c" } },
+]
+menu = ["Effect", "Plug-ins"]
+dialog = "auto"
+alt = "The StitchCraft Auto dialog in VectorCraft. The settings of automatic digitizing's rules are in 2 sections, Stitches by width and Neighbours, from Widest satin column to Leave out the background, and Preview comes last. Each row has a label, a field with its unit or a checkbox, and a button that opens the setting's help page. Under them are the Preview checkbox, checked, and the Cancel and OK buttons."
 
 [[shot]]
 id = "vectorcraft-stroke-dialog"
