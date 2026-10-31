@@ -5,6 +5,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.7, VectorCraft, its first part: from a picture to a machine file.
+  - `stitch palette` writes a machine's threads as a GIMP palette (`REQ-CLI-011`), the reference machine's
+    unless `--profile` names another. VectorCraft loads it as a swatch library, and Image Trace's Document
+    Library palette traces a picture in the threads' own colours, which the machine file names as those
+    threads.
+  - The compatibility gate's Level B has a `trace` case. With the reference machine's threads loaded,
+    VectorCraft traces a badge drawn flat in 3 of them by the Abutting method, and saves its paths. Read
+    with `--auto`, every shape is automatic, the white round the badge is left out as the background, and
+    the badge sews its 3 threads. A parameter of a scenario's step written `{ stitchcraft = "…" }` is
+    replaced by what StitchCraft makes of the name.
+  - The tutorial *From a picture to a machine file* traces a picture in VectorCraft and digitizes it with
+    `--auto`. A doc picture can read its design as `--auto` does (`auto = true` in `docs/shots.toml`).
+
 - M13.6: shapes in parts. With `--auto`, a part of a shape that is wider than a satin column in places and
   narrower in others sews in parts (`REQ-AUTO-019`). Its broad parts are a tatami fill, and its narrow
   parts sew over the fill as lines and columns, each sorted by its width as a part is.

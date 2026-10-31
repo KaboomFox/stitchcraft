@@ -10,8 +10,12 @@
 //! threads of a design are given entries together ([`Palette::assign`]): different threads different
 //! entries while they last, the nearest pairs first. A thread read from such a file already is an entry
 //! ([`Palette::entry_of`]), and is written back as it, machine-special entries included.
+//!
+//! A palette's threads are also written as a GIMP palette ([`Palette::gpl`]), for VectorCraft's Image Trace
+//! to trace a picture in them.
 
 pub mod color;
+mod gpl;
 
 mod brother_pec;
 

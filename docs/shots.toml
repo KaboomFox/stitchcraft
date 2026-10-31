@@ -16,7 +16,8 @@
 # and then makes <id>-1.png, <id>-2.png and so on. A page shows them side by side between the lines
 # `<!-- shot: <id> -->` and `<!-- /shot -->`, which `cargo xtask docs` fills in. `layout = "rows"` shows
 # them one under another instead, each as wide as the page, for pictures too wide to share it. The plan of
-# a design may report only the diagnostic codes its shot lists in `allow = ["SC-W0402"]`.
+# a design may report only the diagnostic codes its shot lists in `allow = ["SC-W0402"]`. `auto = true` reads
+# the design as `--auto` does, its shapes without settings digitized automatically.
 
 # ── Test sheets (shown on the test-sheets reference page, in this order) ────────────────────────────
 
@@ -361,6 +362,16 @@ fixture = "docs/fixtures/badge.svg"
 style = "realistic"
 scale = 8.0
 alt = "A red star inside a blue ring, as the badge will sew"
+
+[[shot]]
+id = "traced-badge"
+kind = "stitch"
+fixture = "docs/fixtures/traced-badge.svg"
+auto = true
+style = "realistic"
+scale = 6.0
+allow = ["SC-I0901", "SC-W0906", "SC-I0907", "SC-I0904"]
+alt = "The traced badge digitized automatically. A red disc with a blue square on it and a gold disc in the middle sew as tatami fills, with no white round them."
 
 [[shot]]
 id = "badge-simple"
