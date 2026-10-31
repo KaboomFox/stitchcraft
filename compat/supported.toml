@@ -3,6 +3,11 @@
 # adopts a release, never by hand. docs/src/user/reference/compatibility.md is generated from it.
 
 [[version]]
+tag = "v0.19.0"
+track = "stable"
+checked = "2026-10-31"
+
+[[version]]
 tag = "v0.18.0"
 track = "stable"
 checked = "2026-10-29"
