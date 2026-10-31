@@ -4,6 +4,12 @@
 //! A scenario, a file in `compat/scenarios/`, is one or more runs of `vectorcraft-cli run`. A run installs
 //! the plug-ins it names and runs its steps. Then StitchCraft checks the files the runs exported.
 //!
+//! **Runs of `stitch`.** A run can instead be `stitch plan` with the arguments `stitch` names, which traces a
+//! picture with the `vectorcraft-cli` under test (`REQ-CLI-012`): the command line's own steps, through the
+//! code users run, on every track. It runs in this process, its files in the scenario's folder, and must end
+//! well. The files it writes count as exported. A run's `files` are files StitchCraft makes, such as the
+//! picture `badge.png`, written into the scenario's folder first ([`trace::made`]).
+//!
 //! **Why a drawing after each effect.** VectorCraft runs a live effect once for an object and its
 //! parameters, keeps the result, and remembers only the module's last failure, which the next success
 //! clears (its `crates/plugins/src/effect.rs`). So after each export that draws the document, a PNG,
@@ -58,11 +64,15 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+
+use clap::Parser as _;
 use std::time::Duration;
 
 use serde::Deserialize;
 use serde_json::{Value, json};
-use stitchcraft_cli::commands::plan::{Source, machine_for, sew};
+use stitchcraft_cli::cli::{Cli, Command as Stitch, PlanArgs};
+use stitchcraft_cli::commands::Status;
+use stitchcraft_cli::commands::plan::{self, Source, machine_for, sew};
 use stitchcraft_core::{Budget, Code, Diagnostic, Rect, Severity};
 use stitchcraft_engine::design::{Reading, Setting};
 use stitchcraft_params::Family;
@@ -99,8 +109,8 @@ pub struct Scenario {
     pub expect: Expect,
 }
 
-/// One run of `vectorcraft-cli run`.
-#[derive(Debug, Deserialize)]
+/// One run of `vectorcraft-cli run`, or of `stitch plan`.
+#[derive(Debug, Default, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Run {
     /// A file an earlier run exported, to open; without one, the run starts a new document.
@@ -110,10 +120,18 @@ pub struct Run {
     #[serde(default)]
     pub plugins: Vec<String>,
     /// The steps.
+    #[serde(default)]
     pub steps: Vec<Step>,
     /// The pixels per point of the run's pictures (`--scale`); VectorCraft's own, 1, without one.
     #[serde(default)]
     pub scale: Option<f64>,
+    /// `stitch`'s arguments, for a run of `stitch plan` instead, which traces a picture with the
+    /// `vectorcraft-cli` under test. Its files are in the scenario's folder.
+    #[serde(default)]
+    pub stitch: Vec<String>,
+    /// Files StitchCraft makes, written into the scenario's folder before the run ([`trace::made`]).
+    #[serde(default)]
+    pub files: Vec<String>,
 }
 
 /// A step: a VectorCraft command, a stitch family's live effect applied, or an export.
@@ -325,59 +343,19 @@ pub fn problems(scenario: &Scenario, modules: &[&str], requirements: &std::colle
     // The files exported after an `apply` step, in their run or before the file their run opened.
     let mut applied_to: Vec<&str> = Vec::new();
     for (i, run) in scenario.run.iter().enumerate() {
-        let number = i + 1;
-        let mut applied = false;
-        if let Some(open) = &run.open {
-            if !exported.contains(&open.as_str()) {
-                found.push(format!("run {number}: it opens `{open}`, which no earlier run exports"));
-            }
-            applied = applied_to.contains(&open.as_str());
-        }
-        for module in &run.plugins {
-            if !modules.contains(&module.as_str()) {
-                found.push(format!("run {number}: there is no module `{module}`"));
+        let mut said = Vec::new();
+        for file in &run.files {
+            match trace::made(file) {
+                Ok(_) => exported.push(file),
+                Err(e) => said.push(e),
             }
         }
-        // The families applied since the last drawing.
-        let mut undrawn: Vec<Family> = Vec::new();
-        let last = run.steps.len().saturating_sub(1);
-        for (j, step) in run.steps.iter().enumerate() {
-            if step.fails.is_some() && step.export.is_some() && j != last {
-                found.push(format!("run {number}: an export that fails is not its last step, and VectorCraft runs no step after it"));
-            }
-            match step.action() {
-                Ok(Action::Export(file)) => {
-                    if step.fails.is_none() {
-                        exported.push(file);
-                        if applied {
-                            applied_to.push(file);
-                        }
-                    }
-                    if let Some(format) = machine_format(file).filter(|format| !run.plugins.iter().any(|m| m == format.extension())) {
-                        found.push(format!("run {number}: it exports `{file}` without installing the `{}` module", format.extension()));
-                    }
-                    if draws(file) {
-                        undrawn.clear();
-                    }
-                }
-                Ok(Action::Apply(family, _)) => {
-                    if !run.plugins.iter().any(|m| m == family.id()) {
-                        found.push(format!("run {number}: it applies `{}` without installing that module", family.id()));
-                    }
-                    if undrawn.contains(&family) {
-                        found.push(format!("run {number}: it applies `{}` again before a drawing shows the first", family.id()));
-                    } else {
-                        undrawn.push(family);
-                    }
-                    applied = true;
-                }
-                Ok(Action::Command(..)) => {}
-                Err(e) => found.push(format!("run {number}: {e}")),
-            }
+        if run.stitch.is_empty() {
+            said.extend(vectorcraft_problems(run, modules, &mut exported, &mut applied_to));
+        } else {
+            said.extend(stitch_problems(run, &mut exported));
         }
-        for family in undrawn {
-            found.push(format!("run {number}: it applies `{}`, and no drawing shows it after", family.id()));
-        }
+        found.extend(said.into_iter().map(|problem| format!("run {}: {problem}", i + 1)));
     }
     let expect = &scenario.expect;
     let checked = expect.applied.iter().chain(expect.same.iter().flatten()).chain(expect.elements.iter().map(|e| &e.file));
@@ -417,6 +395,123 @@ pub fn problems(scenario: &Scenario, modules: &[&str], requirements: &std::colle
         }
     }
     found
+}
+
+/// What is wrong with `run`, a run of VectorCraft's command line, before it runs: a file it opens that no
+/// earlier run exports, a module that doesn't exist, steps that don't read, an export that fails before its
+/// last step, and an effect no drawing shows before its family is applied again or the run ends. The files it
+/// exports go to `exported`, and those exported after an `apply` step, or after opening a file one was
+/// applied to, to `applied_to` too.
+fn vectorcraft_problems<'a>(run: &'a Run, modules: &[&str], exported: &mut Vec<&'a str>, applied_to: &mut Vec<&'a str>) -> Vec<String> {
+    let mut found = Vec::new();
+    let mut applied = false;
+    if let Some(open) = &run.open {
+        if !exported.contains(&open.as_str()) {
+            found.push(format!("it opens `{open}`, which no earlier run exports"));
+        }
+        applied = applied_to.contains(&open.as_str());
+    }
+    for module in &run.plugins {
+        if !modules.contains(&module.as_str()) {
+            found.push(format!("there is no module `{module}`"));
+        }
+    }
+    // The families applied since the last drawing.
+    let mut undrawn: Vec<Family> = Vec::new();
+    let last = run.steps.len().saturating_sub(1);
+    for (j, step) in run.steps.iter().enumerate() {
+        if step.fails.is_some() && step.export.is_some() && j != last {
+            found.push("an export that fails is not its last step, and VectorCraft runs no step after it".to_string());
+        }
+        match step.action() {
+            Ok(Action::Export(file)) => {
+                if step.fails.is_none() {
+                    exported.push(file);
+                    if applied {
+                        applied_to.push(file);
+                    }
+                }
+                if let Some(format) = machine_format(file).filter(|format| !run.plugins.iter().any(|m| m == format.extension())) {
+                    found.push(format!("it exports `{file}` without installing the `{}` module", format.extension()));
+                }
+                if draws(file) {
+                    undrawn.clear();
+                }
+            }
+            Ok(Action::Apply(family, _)) => {
+                if !run.plugins.iter().any(|m| m == family.id()) {
+                    found.push(format!("it applies `{}` without installing that module", family.id()));
+                }
+                if undrawn.contains(&family) {
+                    found.push(format!("it applies `{}` again before a drawing shows the first", family.id()));
+                } else {
+                    undrawn.push(family);
+                }
+                applied = true;
+            }
+            Ok(Action::Command(..)) => {}
+            Err(e) => found.push(e),
+        }
+    }
+    for family in undrawn {
+        found.push(format!("it applies `{}`, and no drawing shows it after", family.id()));
+    }
+    found
+}
+
+/// What is wrong with `run`, a run of `stitch`, before it runs: arguments that aren't `stitch plan`'s, one
+/// of VectorCraft's run's fields beside them, a `--vectorcraft-cli` of its own, or a design no file made
+/// before it is. The files it writes go to `exported`.
+fn stitch_problems<'a>(run: &'a Run, exported: &mut Vec<&'a str>) -> Vec<String> {
+    let args = match plan_args(&run.stitch) {
+        Ok(args) => args,
+        Err(e) => return vec![e],
+    };
+    let mut found = Vec::new();
+    if run.open.is_some() || !run.plugins.is_empty() || !run.steps.is_empty() || run.scale.is_some() {
+        found.push("a run of `stitch` has no `open`, `plugins`, `steps` or `scale`".to_string());
+    }
+    if args.tracing.vectorcraft_cli.is_some() {
+        found.push("a run of `stitch` traces with the `vectorcraft-cli` under test, and names none".to_string());
+    }
+    let design = run.stitch.iter().find(|word| Path::new(word) == args.design);
+    match design {
+        Some(design) if exported.contains(&design.as_str()) => {}
+        _ => found.push(format!("`stitch` reads `{}`, which no file before it is", args.design.display())),
+    }
+    let writes: Vec<&Path> = [Some(&args.output), args.preview.as_ref(), args.report.as_ref(), args.tracing.traced.as_ref()]
+        .into_iter()
+        .flatten()
+        .map(PathBuf::as_path)
+        .collect();
+    exported.extend(run.stitch.iter().filter(|word| writes.contains(&Path::new(word.as_str()))).map(String::as_str));
+    found
+}
+
+/// `stitch plan`'s arguments in `words`, `stitch`'s arguments, or why they aren't.
+fn plan_args(words: &[String]) -> Result<PlanArgs, String> {
+    let shown = words.join(" ");
+    let parsed = Cli::try_parse_from(std::iter::once("stitch").chain(words.iter().map(String::as_str)));
+    match parsed.map_err(|e| format!("`stitch {shown}`: {}", e.render()))?.command {
+        Stitch::Plan(args) => Ok(args),
+        _ => Err(format!("`stitch {shown}` isn't `stitch plan`")),
+    }
+}
+
+/// A run of `stitch plan` with `run`'s arguments, its files in `out`, which traces with the `vectorcraft-cli`
+/// at `cli`; how it ended when it didn't end well.
+fn stitch_once(run: &Run, number: usize, cli: &Path, out: &Path) -> Result<(), String> {
+    let mut args = plan_args(&run.stitch).map_err(|e| format!("run {number}: {e}"))?;
+    let inside = |path: &mut PathBuf| *path = out.join(&*path);
+    inside(&mut args.design);
+    inside(&mut args.output);
+    args.preview.iter_mut().chain(args.report.iter_mut()).chain(args.tracing.traced.iter_mut()).for_each(inside);
+    args.tracing.vectorcraft_cli = Some(cli.to_path_buf());
+    let outcome = plan::run(&args);
+    match outcome.status {
+        Status::Done => Ok(()),
+        status => Err(format!("run {number}: `stitch {}` ended with {status:?}: {}", run.stitch.join(" "), outcome.stderr.trim_end())),
+    }
 }
 
 /// The arguments of `vectorcraft-cli` for `run`: open the file it names in `out`, install the modules it
@@ -483,7 +578,15 @@ pub fn run(scenario: &Scenario, cli: &Path, plugins: &Path, out: &Path) -> Vec<S
     }
     let mut ran = Ran::default();
     for (i, run) in scenario.run.iter().enumerate() {
-        if let Err(failure) = run_once(run, i + 1, cli, plugins, out, &mut ran) {
+        let number = i + 1;
+        let made = run.files.iter().try_for_each(|file| {
+            let bytes = trace::made(file).map_err(|e| format!("run {number}: {e}"))?;
+            std::fs::write(out.join(file), bytes).map_err(|e| format!("run {number}: {file}: {e}"))
+        });
+        let ran_once = made.and_then(|()| {
+            if run.stitch.is_empty() { run_once(run, number, cli, plugins, out, &mut ran) } else { stitch_once(run, number, cli, out) }
+        });
+        if let Err(failure) = ran_once {
             return vec![failure];
         }
     }

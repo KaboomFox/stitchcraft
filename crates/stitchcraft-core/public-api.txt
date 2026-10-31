@@ -88,6 +88,7 @@ pub stitchcraft_core::diag::Code::TooLargeForFormat
 pub stitchcraft_core::diag::Code::TooManyColorChanges
 pub stitchcraft_core::diag::Code::TrimOrStopLeftOut
 pub stitchcraft_core::diag::Code::UnreadableFile
+pub stitchcraft_core::diag::Code::VcCliNotStarted
 pub stitchcraft_core::diag::Code::VcEffectUnchanged
 pub stitchcraft_core::diag::Code::VcFeatureIgnored
 pub stitchcraft_core::diag::Code::VcGeometryUnusable
@@ -97,6 +98,7 @@ pub stitchcraft_core::diag::Code::VcNotPrinted
 pub stitchcraft_core::diag::Code::VcObjectIgnored
 pub stitchcraft_core::diag::Code::VcSettingIgnored
 pub stitchcraft_core::diag::Code::VcTooOld
+pub stitchcraft_core::diag::Code::VcTraceFailed
 pub stitchcraft_core::diag::Code::VcUnreadable
 pub stitchcraft_core::diag::Code::ZigzagTooNarrow
 impl stitchcraft_core::diag::Code
@@ -303,6 +305,7 @@ pub stitchcraft_core::Code::TooLargeForFormat
 pub stitchcraft_core::Code::TooManyColorChanges
 pub stitchcraft_core::Code::TrimOrStopLeftOut
 pub stitchcraft_core::Code::UnreadableFile
+pub stitchcraft_core::Code::VcCliNotStarted
 pub stitchcraft_core::Code::VcEffectUnchanged
 pub stitchcraft_core::Code::VcFeatureIgnored
 pub stitchcraft_core::Code::VcGeometryUnusable
@@ -312,6 +315,7 @@ pub stitchcraft_core::Code::VcNotPrinted
 pub stitchcraft_core::Code::VcObjectIgnored
 pub stitchcraft_core::Code::VcSettingIgnored
 pub stitchcraft_core::Code::VcTooOld
+pub stitchcraft_core::Code::VcTraceFailed
 pub stitchcraft_core::Code::VcUnreadable
 pub stitchcraft_core::Code::ZigzagTooNarrow
 impl stitchcraft_core::diag::Code

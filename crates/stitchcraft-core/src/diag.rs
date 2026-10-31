@@ -706,6 +706,27 @@ registry! {
     /// that column with its 2 rails, or leave the object out of the selection.
     VcNotConverted = "SC-E0814", Error, "VectorCraft line not made into a satin column";
 
+    /// `stitch plan` and `stitch export` trace a picture, a PNG or JPEG file, with VectorCraft's command
+    /// line, `vectorcraft-cli`, which VectorCraft publishes with each release. It could not be started: it
+    /// isn't on the `PATH`, or the program `--vectorcraft-cli` names isn't there or can't be run. Nothing was
+    /// written but the report.
+    ///
+    /// The message names the program and why it didn't start. Install VectorCraft's command line from
+    /// VectorCraft's releases, and put it on the `PATH` or name it with `--vectorcraft-cli`. Or trace the
+    /// picture with Image Trace in VectorCraft, as the tutorial "From a picture to a machine file" does, and
+    /// plan the document you save.
+    VcCliNotStarted = "SC-E0815", Error, "VectorCraft's command line could not be started";
+
+    /// VectorCraft's command line ran to trace a picture for `stitch plan` or `stitch export`, and it failed
+    /// or saved no document. Nothing was written but the report.
+    ///
+    /// The message ends with what VectorCraft said. It fails on a file it can't read as a picture, such as a
+    /// file named `.png` that holds something else. It fails too when it is a version without the commands
+    /// StitchCraft traces with: the user guide lists the versions the compatibility gate passed. Check that
+    /// VectorCraft places the picture, or trace it with Image Trace in VectorCraft and plan the document you
+    /// save.
+    VcTraceFailed = "SC-E0816", Error, "VectorCraft could not trace the picture";
+
     /// `--auto`, or StitchCraft's Auto effect in VectorCraft, digitized the design's shapes that have no
     /// settings: StitchCraft chose each one's stitches by its width, measured to the micrometre. An area is a
     /// tatami fill; a part of it narrower than the design's narrowest satin stroke

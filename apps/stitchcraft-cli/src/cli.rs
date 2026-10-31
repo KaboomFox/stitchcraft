@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use stitchcraft_core::Mm;
 use stitchcraft_engine::design::Reading;
 use stitchcraft_plan::FormatId;
 use stitchcraft_render::{Settings, Style};
@@ -33,7 +34,8 @@ where it can be: see `stitch bug-report`).";
 #[derive(Debug, Subcommand)]
 pub enum Command {
     /// Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file,
-    /// with a picture and a report if asked.
+    /// with a picture and a report if asked. A picture, a PNG or JPEG file, is traced with VectorCraft's
+    /// command line first.
     #[command(visible_alias = "export")]
     Plan(PlanArgs),
     /// Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md).
@@ -64,7 +66,9 @@ pub enum Command {
 /// `stitch plan`.
 #[derive(Debug, Args)]
 pub struct PlanArgs {
-    /// The design: an SVG file, or a VectorCraft document (.vectorcraft).
+    /// The design: an SVG file, a VectorCraft document (.vectorcraft), or a picture (.png, .jpg or .jpeg),
+    /// which VectorCraft's command line traces in the machine's threads and StitchCraft digitizes
+    /// automatically.
     pub design: PathBuf,
     /// The machine file to write.
     #[arg(long, short)]
@@ -87,6 +91,44 @@ pub struct PlanArgs {
     /// How the design is read.
     #[command(flatten)]
     pub reading: ReadingArgs,
+    /// How a picture is traced.
+    #[command(flatten)]
+    pub tracing: TracingArgs,
+}
+
+/// How `stitch plan` traces a picture with VectorCraft's command line (ADR-0015): options for a picture
+/// only, which another design refuses.
+#[derive(Debug, Default, Args)]
+pub struct TracingArgs {
+    /// VectorCraft's command line, which traces a picture; by default `vectorcraft-cli` on the PATH.
+    #[arg(long, value_name = "PROGRAM")]
+    pub vectorcraft_cli: Option<PathBuf>,
+    /// How large a picture is sewn: its longer side, in millimetres, its background included; by default
+    /// as large as the machine's hoop holds.
+    #[arg(long, value_name = "MM", value_parser = positive_mm)]
+    pub size: Option<Mm>,
+    /// How many colours a picture has, its background included: Image Trace traces it in at most that many
+    /// of the machine's threads, 2 to 256; by default 6.
+    #[arg(long, value_name = "N", value_parser = clap::value_parser!(u32).range(2..=256))]
+    pub colours: Option<u32>,
+    /// Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in
+    /// VectorCraft.
+    #[arg(long, value_name = "FILE")]
+    pub traced: Option<PathBuf>,
+}
+
+impl TracingArgs {
+    /// Whether any option is given, which only a picture takes.
+    pub fn given(&self) -> bool {
+        let TracingArgs { vectorcraft_cli, size, colours, traced } = self;
+        vectorcraft_cli.is_some() || size.is_some() || colours.is_some() || traced.is_some()
+    }
+}
+
+/// A length of more than 0 millimetres, as `--size` takes it.
+fn positive_mm(text: &str) -> Result<Mm, String> {
+    let mm = text.trim().parse::<f64>().ok().and_then(|value| Mm::new(value).ok()).filter(|mm| mm.get() > 0.0);
+    mm.ok_or_else(|| format!("`{text}` isn't a positive number of millimetres"))
 }
 
 /// How `stitch plan` and `stitch bug-report` read a design: the switches both take, which make its

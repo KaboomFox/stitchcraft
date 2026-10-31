@@ -47,7 +47,7 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 | `stitchcraft-svg` | L3 | SVG → `Design` (geometry, styles, `inkstitch:*` attributes, commands), plan → SVG | contain stitch logic |
 | `stitchcraft-vectorcraft` | L3 | `.vectorcraft` → `Design` (commands in names included), effect records ↔ `ParamSet`, plug-in JSON objects | contain stitch logic |
 | `stitchcraft-testkit` | test | fixtures, `proptest` strategies (from the registry), invariant assertions | be a normal dependency |
-| `stitchcraft-cli` | app | the `stitch` command; all filesystem access | contain engine logic |
+| `stitchcraft-cli` | app | the `stitch` command; all filesystem access, and the one program StitchCraft starts, VectorCraft's command line, which traces a picture ([ADR-0015](adr/0015-pictures-traced-by-vectorcraft.md)) | contain engine logic |
 | `stitchcraft-vc-plugin` | app | VectorCraft ABI v1 shim + plug-in manifests | contain engine logic; `unsafe` outside `abi.rs` |
 | `stitchcraft-xtask` | tools | gates (`ci`, `layers`, `docs`, `cleanroom`, …), generators, compatibility runs; works from its own folder, on StitchCraft's packages only ([ADR-0011](adr/0011-movable-into-vectorcraft.md)) | ship to users |
 
@@ -127,7 +127,7 @@ Adapters only translate:
 | `stitchcraft-svg` | SVG document (+ `inkstitch:*` attributes, command symbols) | `Design` |
 | `stitchcraft-vectorcraft` | `.vectorcraft` JSON (+ commands in names), plug-in input objects, effect records | `Design` / `Element` |
 | `stitchcraft-vc-plugin` | ABI v1 call (JSON in linear memory) | `generate` → preview geometry JSON |
-| `stitchcraft-cli` | files and flags | `plan` → formats/render/report |
+| `stitchcraft-cli` | files and flags, a picture traced by VectorCraft's command line | `plan` → formats/render/report |
 
 A future in-tree VectorCraft crate would be a fifth adapter calling the same two functions.
 

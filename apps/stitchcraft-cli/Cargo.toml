@@ -16,6 +16,12 @@ path = "src/lib.rs"
 name = "stitch"
 path = "src/main.rs"
 
+# Stands in for VectorCraft's command line in its own tests, so it starts as that program does, without the
+# standard test harness (`tests/picture.rs`).
+[[test]]
+name = "picture"
+harness = false
+
 [lints]
 workspace = true
 

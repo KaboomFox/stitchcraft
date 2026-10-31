@@ -156,6 +156,8 @@ another.
 | `SC-W0812` | Warning | VectorCraft design setting ignored (a length that isn't a number of 0 or more, or a machine StitchCraft doesn't have, which the Design Settings filter keeps with the document) | M6 |
 | `SC-E0813` | Error | VectorCraft too old for the filter (the Design Settings filter run by a VectorCraft before 0.16, which doesn't keep a filter's data, Stroke to Satin by one before 0.15, which doesn't keep a filter's effect records, and Test Sheet by one before 0.16, which doesn't say it keeps them) | M6 |
 | `SC-E0814` | Error | VectorCraft line not made into a satin column (Stroke to Satin refused a selection because it is empty or a path has no stroke, or because a line drawn with its rails and rungs would sew otherwise) | M6 |
+| `SC-E0815` | Error | VectorCraft's command line could not be started (`stitch plan` traces a picture with it: neither on the PATH nor where `--vectorcraft-cli` says) | M13 |
+| `SC-E0816` | Error | VectorCraft could not trace the picture (its command line failed or didn't save the document) | M13 |
 | `SC-I0901` | Info | Shapes digitized automatically (`--auto`, or VectorCraft's Auto effect), counted by their stitches (running stitches, satin columns or tatami fills) | M13 |
 | `SC-I0902` | Info | Satin column can't be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don't make a column round one of its lines or whose column would be read back otherwise) | M13 |
 | `SC-W0903` | Warning | Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin) | M13 |

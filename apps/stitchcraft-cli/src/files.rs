@@ -14,6 +14,11 @@
 //! Reads stop past a cap, whatever the file says of its size: a pipe or a device says nothing, and
 //! `/dev/zero` never ends (REQ-CLI-005). The cap is [`MAX_READ`] bytes, and more for a bug-report bundle,
 //! which can hold a design that large twice over, in hexadecimal.
+//!
+//! A file another program writes for `stitch` to read, such as the document VectorCraft's command line traces
+//! a picture into, goes into a folder of the program's own, a [`Scratch`] folder. It is created new next to
+//! the file `stitch` was asked to write, under a temporary name as those files are, and removed with what it
+//! holds once read.
 
 use std::ffi::OsString;
 use std::fs::{File, OpenOptions};
@@ -94,10 +99,9 @@ pub fn write_all(files: &[(&Path, &[u8])]) -> Result<(), Unwritten> {
     Ok(())
 }
 
-/// `bytes` written, and synced, to a new temporary file next to `path`, named `path` followed by
-/// `.<process>-<n>.partial`; its name. Nothing already there is opened: a name in use is passed over.
-fn staged(path: &Path, bytes: &[u8]) -> io::Result<OsString> {
-    let mut last = io::Error::new(io::ErrorKind::AlreadyExists, format!("{NAMES} temporary names next to it are in use"));
+/// The temporary names next to `path`, in the order a run tries them: `path` followed by
+/// `.<process>-<n>.partial`, for each n below [`NAMES`].
+fn temporary_names(path: &Path) -> impl Iterator<Item = OsString> + '_ {
     // WASI gives a program no process id, and its `std::process::id` panics, so there the names count from
     // 0: a name another run is using is passed over all the same. `cargo xtask wasm --goldens` runs `stitch`
     // as WebAssembly.
@@ -105,9 +109,23 @@ fn staged(path: &Path, bytes: &[u8]) -> io::Result<OsString> {
     let process = 0;
     #[cfg(not(target_os = "wasi"))]
     let process = std::process::id();
-    for n in 0..NAMES {
+    (0..NAMES).map(move |n| {
         let mut temporary = path.as_os_str().to_owned();
         temporary.push(format!(".{process}-{n}.partial"));
+        temporary
+    })
+}
+
+/// The error when every temporary name next to a file is in use.
+fn names_in_use() -> io::Error {
+    io::Error::new(io::ErrorKind::AlreadyExists, format!("{NAMES} temporary names next to it are in use"))
+}
+
+/// `bytes` written, and synced, to a new temporary file next to `path` ([`temporary_names`]); its name.
+/// Nothing already there is opened: a name in use is passed over.
+fn staged(path: &Path, bytes: &[u8]) -> io::Result<OsString> {
+    let mut last = names_in_use();
+    for temporary in temporary_names(path) {
         let mut file = match OpenOptions::new().write(true).create_new(true).open(&temporary) {
             Ok(file) => file,
             Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {
@@ -126,6 +144,41 @@ fn staged(path: &Path, bytes: &[u8]) -> io::Result<OsString> {
         };
     }
     Err(last)
+}
+
+/// A folder of the program's own, where another program writes a file for `stitch` to read. It is removed,
+/// with what it holds, when it is dropped.
+#[derive(Debug)]
+pub struct Scratch {
+    folder: PathBuf,
+}
+
+impl Scratch {
+    /// A new folder next to `path`, under the first of its temporary names that is free, as a file is
+    /// written under one: created new, so that nothing already there is used.
+    pub fn beside(path: &Path) -> io::Result<Scratch> {
+        let mut last = names_in_use();
+        for temporary in temporary_names(path) {
+            match std::fs::create_dir(&temporary) {
+                Ok(()) => return Ok(Scratch { folder: PathBuf::from(temporary) }),
+                Err(e) if e.kind() == io::ErrorKind::AlreadyExists => last = e,
+                Err(e) => return Err(e),
+            }
+        }
+        Err(last)
+    }
+
+    /// Where the folder is.
+    pub fn path(&self) -> &Path {
+        &self.folder
+    }
+}
+
+impl Drop for Scratch {
+    fn drop(&mut self) {
+        // A folder left behind is untidy, not wrong: its name says it is a temporary one.
+        let _ = std::fs::remove_dir_all(&self.folder);
+    }
 }
 
 /// Syncs the folder `path` is in ([`folder`]), so that the rename into place is on the disk too. Only some
@@ -191,6 +244,23 @@ mod tests {
         names.sort();
         assert_eq!(partial(dir.path()), names);
         assert!(planted.iter().all(|link| std::fs::symlink_metadata(link).unwrap().file_type().is_symlink()));
+    }
+
+    #[test]
+    fn a_scratch_folder_is_new_beside_the_file_and_goes_with_what_it_holds() {
+        let dir = TempDir::new("files-scratch");
+        let out = dir.join("out.pes");
+        // The first name is taken, by a file: the folder takes the next.
+        std::fs::write(dir.join(format!("out.pes.{}-0.partial", std::process::id())), b"left").unwrap();
+        let scratch = Scratch::beside(&out).unwrap();
+        assert_eq!(scratch.path(), dir.join(format!("out.pes.{}-1.partial", std::process::id())));
+        std::fs::write(scratch.path().join("traced.vectorcraft"), b"{}").unwrap();
+        let folder = scratch.path().to_path_buf();
+        drop(scratch);
+        assert!(!folder.exists());
+        assert_eq!(partial(dir.path()), [format!("out.pes.{}-0.partial", std::process::id())]);
+        // A folder that doesn't exist can't hold one.
+        assert_eq!(Scratch::beside(&dir.join("missing/out.pes")).unwrap_err().kind(), io::ErrorKind::NotFound);
     }
 
     #[test]

@@ -225,7 +225,9 @@ one for a path with the extension it lists. VectorCraft gives the exporter the d
 `.vectorcraft` file's JSON, as `document.save` writes it but without the data of images of 8 KiB or more,
 with the parameters of the dialog it shows when the file is picked, and the file's extension and name. The
 exporter returns the file in base64, with warnings for the user, or declines with a message, and then
-nothing is written (VectorCraft's `docs/plugins.md`, Exporters).
+nothing is written (VectorCraft's `docs/plugins.md`, Exporters). The VectorCraft adapter's encoder
+(`stitchcraft_vectorcraft::base64`) writes it, as it writes the picture `stitch plan` gives VectorCraft's
+command line to trace ([image to embroidery](image-to-embroidery.md#pictures-from-the-command-line)).
 
 M6.9 makes StitchCraft's formats exporters (`REQ-VC-011`, `apps/stitchcraft-vc-plugin/src/export.rs`).
 There are two, *PES embroidery (StitchCraft)* and *DST embroidery (StitchCraft)*, each a module of its

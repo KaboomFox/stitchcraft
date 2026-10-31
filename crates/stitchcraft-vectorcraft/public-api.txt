@@ -64,6 +64,7 @@ pub const stitchcraft_vectorcraft::MAX_BYTES: usize
 pub const stitchcraft_vectorcraft::PLUGIN_NAMESPACE: &str
 pub const stitchcraft_vectorcraft::PREVIEW_LEVEL: &str
 pub const stitchcraft_vectorcraft::RIBBON_MM: f64
+pub fn stitchcraft_vectorcraft::base64(&[u8]) -> alloc::string::String
 pub fn stitchcraft_vectorcraft::effect_drawn(&[alloc::vec::Vec<stitchcraft_core::units::Point>], bool) -> core::option::Option<alloc::vec::Vec<u8>>
 pub fn stitchcraft_vectorcraft::effect_error(&stitchcraft_core::diag::Diagnostic) -> alloc::vec::Vec<u8>
 pub fn stitchcraft_vectorcraft::effect_id(&str) -> alloc::string::String

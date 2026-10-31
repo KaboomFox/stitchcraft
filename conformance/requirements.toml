@@ -1233,6 +1233,24 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-CLI-012"
+area = "cli"
+level = "L1"
+statement = "`stitch plan` and `stitch export` trace a picture, a PNG or JPEG file by its extension in any case (`.png`, `.jpg`, `.jpeg`), with VectorCraft's command line (ADR-0015), and sew the document it saves as a VectorCraft document with `--auto`: planned for the machine `--profile` names or else the reference machine, with the picture's file name as the design name. They run `vectorcraft-cli run --commands - --export FILE` with `VECTORCRAFT_NO_PREFS` set, and give it 4 steps on standard input: `swatch.library.load` with the machine's threads as `stitch palette` writes them; `file.place` with the picture's bytes, fitted with its aspect kept inside a square `--size` millimetres across, or else inside the machine's hoop; `imageTrace.make` in colour with the library's colours as they are, at most `--colours` of them, 6 unless it says otherwise, by the Abutting method; and `imageTrace.expand`. VectorCraft saves the document in a folder of the command's own beside the machine file, which is removed afterwards. `--traced` writes the document, with the machine file and the other files asked for, all or none. A bug-report bundle of a picture holds the document traced, to read with `--auto`."
+rationale = "A picture given to `stitch` then sews as the same picture traced in VectorCraft does, in the threads the machine names, without a window. Fitted into the hoop, any picture sews without a size given, and `--traced` keeps the trace, to correct in VectorCraft. A bundle replays without VectorCraft."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-CLI-013"
+area = "cli"
+level = "L1"
+statement = "VectorCraft's command line is the program `--vectorcraft-cli` names, or else `vectorcraft-cli` on the PATH. When it can't be started, SC-E0815 names it and says why. When it fails, SC-E0816 ends with what it said on standard error, its control characters escaped, and when it saves no document, SC-E0816 says so. Then nothing is written but the report, and `stitch` ends with exit status 1. `--vectorcraft-cli`, `--size`, `--colours` and `--traced` with a design that isn't a picture are a usage error, and so are a `--size` that isn't a positive number of millimetres and a `--colours` outside 2 to 256. `stitch bug-report` refuses a picture with a usage error that says to bundle the document `--traced` writes."
+rationale = "Without VectorCraft nothing can be traced, and the user needs to know which program was looked for and what to do instead. An option that changes nothing would be a silent fallback, and a colour count VectorCraft would clamp is one too."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-001"
 area = "auto"
 level = "L2"
