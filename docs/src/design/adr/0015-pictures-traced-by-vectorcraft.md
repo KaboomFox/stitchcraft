@@ -15,7 +15,7 @@ given to the command line becomes shapes. There were 3 ways:
 
 1. **VectorCraft's command line traces it.** `vectorcraft-cli run` runs VectorCraft's commands without a
    window, from standard input too (`--commands -`), and saves the document. `file.place` places a
-   picture from its data at a given size, `imageTrace.make` and `imageTrace.expand` trace it, and
+   picture from its data, fitted to a rectangle, `imageTrace.make` and `imageTrace.expand` trace it, and
    `swatch.library.load` loads a palette. VectorCraft's `docs/mcp.md` describes them, and
    `vectorcraft-cli commands` lists each command's parameters. VectorCraft publishes `vectorcraft-cli`
    with each release, for macOS, Windows and Linux (its `docs/releasing.md`).
@@ -24,25 +24,25 @@ given to the command line becomes shapes. There were 3 ways:
 
 What was checked, on 2026-10-31:
 
-- The compatibility gate's Level B case `trace` runs the steps of way 1 on every track: the reference
-  machine's threads loaded as a swatch library, a badge placed, traced in colour with the library's colours
-  by the Abutting method, expanded and saved. StitchCraft sews the saved document, digitized automatically,
-  in the badge's 3 threads ([compatibility gate](../compatibility-gate.md)). It passes on VectorCraft
-  0.18.0.
+- The compatibility gate's Level B case `trace` runs the steps of way 1 on every track. It loads the
+  reference machine's threads as a swatch library and places a badge. Image Trace traces the badge in
+  colour with the library's colours by the Abutting method, and the paths are expanded and saved.
+  StitchCraft sews the saved document, digitized automatically, in the badge's 3 threads
+  ([compatibility gate](../compatibility-gate.md)). It passes on VectorCraft 0.18.0.
 - VectorCraft's tracer, `crates/trace` in its repository, is 14,400 lines of Rust, 8,600 of them outside
   its tests. A harness measures its results on images whose right answer is known, and its report
-  (`docs/image-trace-quality.md`) runs to 1,300 lines: palettes by median cut and k-means, contours with
-  edges placed between pixels, curve fitting, noise, centre lines.
+  (`docs/image-trace-quality.md`) runs to 1,300 lines. It covers palettes made by median cut and k-means,
+  and contours whose edges fall between pixels, fitted with curves.
 - StitchCraft depends on VectorCraft only through the plug-in ABI and the documented `.vectorcraft` format
   (`AGENTS.md`).
 
 ## Decision
 
 1. `stitch plan` and `stitch export`, given a picture, trace it with VectorCraft's command line. They run
-   `vectorcraft-cli run` with the `trace` case's steps: the machine profile's threads as a swatch library,
-   as `stitch palette` writes them, the picture placed, Image Trace in colour with the library's colours by
-   the Abutting method, Expand, and save. Then they read the saved document as any other, its shapes
-   automatic, as `--auto` makes them.
+   `vectorcraft-cli run` with the `trace` case's steps. The machine profile's threads, as `stitch palette`
+   writes them, become a swatch library. The picture is placed and traced in colour with the library's
+   colours by the Abutting method, then expanded and saved. Then they read the saved document with
+   `--auto`.
 2. They look for `vectorcraft-cli` where the user names it, and else on the `PATH`. Without it the command
    fails with a coded error, which says how to install VectorCraft or to trace the picture in VectorCraft.
 3. StitchCraft doesn't trace pictures itself, and doesn't link VectorCraft's tracer.
@@ -51,19 +51,19 @@ What was checked, on 2026-10-31:
 
 ## Consequences
 
-- StitchCraft's crates read no PNG or JPEG and trace nothing. The WebAssembly build and the layering stay as
-  they are.
+- StitchCraft's crates don't read PNG or JPEG files, and don't trace. The WebAssembly build and the
+  layering stay as they are.
 - A picture given to `stitch` sews as the same picture traced in VectorCraft does, in the tutorial's flow.
   A fix to VectorCraft's tracer helps both, and the user can open the saved document in VectorCraft to
   correct the trace.
 - `stitch plan picture.png` needs VectorCraft installed. Without it, the user traces the picture in
   VectorCraft, as the tutorial does, or doesn't trace it from the command line at all.
-- The command line runs another program, which only the `stitch` app does: library crates still run no
-  processes ([guardrails](../guardrails.md)).
+- Only the `stitch` app runs VectorCraft's command line, as library crates don't start processes
+  ([guardrails](../guardrails.md)).
 - The commands and their parameters are VectorCraft's. The `trace` case fails on the track whose VectorCraft
   changes them, before a release does.
-- Revisit this if StitchCraft must trace without VectorCraft, as a web build without it would, or if
-  VectorCraft's command line stops offering these commands.
+- Revisit this if StitchCraft must trace without VectorCraft, as a web build without it would. Revisit it
+  too if VectorCraft's command line stops offering these commands.
 
 ## Alternatives rejected
 
@@ -71,6 +71,6 @@ What was checked, on 2026-10-31:
   measures it, or trace worse. A picture would then sew one way from the command line and another from the
   tutorial's flow, and 2 tracers would need keeping in step. It also adds PNG and JPEG decoders to
   StitchCraft's crates.
-- **VectorCraft's tracer as a library.** StitchCraft would depend on VectorCraft's internal crates, beyond the
-  ABI and the format, which `AGENTS.md` rules out. Each VectorCraft change to the crate would be a change
-  StitchCraft has to follow, without the gate's commands in between.
+- **VectorCraft's tracer as a library.** StitchCraft would depend on VectorCraft's internal crates. `AGENTS.md`
+  rules that out: StitchCraft depends on the ABI and the format alone. Each VectorCraft change to the crate
+  would be a change StitchCraft has to follow, without the gate's commands in between.
