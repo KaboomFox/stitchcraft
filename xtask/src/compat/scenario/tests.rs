@@ -26,7 +26,18 @@ fn every_scenario_checks_only_what_its_runs_export() {
     let names: Vec<&str> = scenarios.iter().map(|(name, _)| name.as_str()).collect();
     assert_eq!(
         names,
-        ["apply", "compound-satin", "export", "graphic-style", "install-and-list", "missing-plugin", "settings", "stroke-to-satin", "testsheets"]
+        [
+            "apply",
+            "compound-satin",
+            "export",
+            "graphic-style",
+            "install-and-list",
+            "missing-plugin",
+            "settings",
+            "stroke-to-satin",
+            "testsheets",
+            "trace"
+        ]
     );
     let requirements = requirement_ids().unwrap();
     for (name, scenario) in &scenarios {

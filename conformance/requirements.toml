@@ -1215,6 +1215,15 @@ milestone = "M3"
 status = "active"
 
 [[req]]
+id = "REQ-CLI-011"
+area = "cli"
+level = "L1"
+statement = "`stitch palette` writes the threads of a machine profile, the reference machine's unless `--profile` names another, as a GIMP palette (`.gpl`), to the file `-o` names or else to standard output. It is named after the profile's thread palette, says in a comment whose threads they are, and gives each entry that colour matching may choose, in the palette's order, as its colour in 8-bit RGB and its name as the machine shows it, each on one line. Each colour, matched to the palette, is its own entry."
+rationale = "VectorCraft loads a GIMP palette as a swatch library, and Image Trace's Document Library palette traces a picture in its colours. A picture traced in the threads' own colours is written as those threads, which the machine shows by name."
+milestone = "M13"
+status = "active"
+
+[[req]]
 id = "REQ-AUTO-001"
 area = "auto"
 level = "L2"

@@ -9,6 +9,7 @@
   - [Your first sew-out on a Brother](user/tutorials/first-sew-out.md)
   - [Turn an SVG into a PES file](user/tutorials/svg-to-pes.md)
   - [A patch in VectorCraft](user/tutorials/vectorcraft-patch.md)
+  - [From a picture to a machine file](user/tutorials/picture-to-machine-file.md)
   - [How-to guides](user/how-to/README.md)
     - [Check a machine file](user/how-to/check-a-file.md)
     - [Convert between formats](user/how-to/convert-formats.md)
