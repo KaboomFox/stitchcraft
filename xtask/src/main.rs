@@ -91,6 +91,10 @@ enum Command {
         /// Rewrite the golden files of one data case
         #[arg(long, value_name = "CASE")]
         bless: Option<String>,
+        /// Run the Ink/Stitch differential instead: sew each `inkstitch` case with a pinned Ink/Stitch and with
+        /// StitchCraft, and compare the machine files by measures (conformance/inkstitch/README.md)
+        #[arg(long)]
+        differential: bool,
     },
     /// No GPL licence text or pasted Python source anywhere in the repository
     Cleanroom,
@@ -255,7 +259,7 @@ fn run(command: Command) -> Result<(), String> {
         Command::Docs { pages: Some(Docs::For { hook, paths }), .. } => design_map::run_for(hook, &paths),
         Command::Docs { check, pages: None } => docs::run(check),
         Command::Prose { base } => prose::run(&base),
-        Command::Conformance { check, filter, bless } => conformance::run(check, filter.as_deref(), bless.as_deref()),
+        Command::Conformance { check, filter, bless, differential } => conformance::run(check, filter.as_deref(), bless.as_deref(), differential),
         Command::Cleanroom => cleanroom::run(),
         Command::UnsafeAudit => unsafe_audit::run(),
         Command::Filesize => filesize::run(),

@@ -1,0 +1,8 @@
+# Pure red is not one of Brother's colours, and each program names the thread by the entry it finds nearest.
+id = "inkstitch-fill-rect"
+requirements = ["REQ-SVG-008"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/fill-rect.svg"
+
+[excused]
+threads = "DEV-THREAD-001"

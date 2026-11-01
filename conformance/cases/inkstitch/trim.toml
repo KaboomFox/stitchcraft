@@ -1,0 +1,4 @@
+id = "inkstitch-trim"
+requirements = ["REQ-SVG-008"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/trim.svg"

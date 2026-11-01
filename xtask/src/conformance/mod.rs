@@ -14,8 +14,13 @@
 //! - `--filter <text>` runs only the cases whose id, test name or requirements contain the text.
 //! - `--bless <case>` rewrites the golden files of one data case instead of comparing them. A changed
 //!   golden file is a changed machine file: bless only on purpose, in a PR that says why.
+//! - `--differential` runs the Ink/Stitch differential instead (L3, [`differential`]): only the `inkstitch`
+//!   cases, which need a pinned Ink/Stitch, set up as `conformance/inkstitch/README.md` says, and judge
+//!   only the requirements of level L3. It writes `target/conformance/differential.md`, and fails when a case
+//!   fails or doesn't run. The other runs leave those cases and requirements to it.
 
 mod cases;
+mod differential;
 mod oracle;
 mod report;
 mod runner;
@@ -35,8 +40,8 @@ const INKSTITCH: &str = "conformance/inkstitch-params.toml";
 /// The fixtures, and their index, `README.md`.
 const FIXTURES: &str = "conformance/fixtures";
 
-/// `cargo xtask conformance …`.
-pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>) -> Result<(), String> {
+/// `cargo xtask conformance …`, the Ink/Stitch differential with `differential`.
+pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differential: bool) -> Result<(), String> {
     let filter = filter.map(str::to_ascii_lowercase);
     let root = util::root();
     let mut findings = Findings::default();
@@ -78,6 +83,7 @@ pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>) -> Resul
     if facts.get("param").and_then(toml::Value::as_array).is_none_or(Vec::is_empty) {
         findings.error(format!("{INKSTITCH}: no [[param]] entries"));
     }
+    check_differential(&root, &data, &mut findings)?;
     for fixture in unindexed(&root)? {
         findings.error(format!("{FIXTURES}/{fixture} has no row in {FIXTURES}/README.md, which gives each fixture's origin and licence"));
     }
@@ -97,6 +103,9 @@ pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>) -> Resul
         let Some(case) = data.iter().find(|c| c.id == id) else {
             return Err(format!("there is no data case `{id}`"));
         };
+        if is_differential(case) {
+            return Err(format!("`{id}` is an Ink/Stitch differential case, which has no golden files"));
+        }
         let outcome = runner::run_data_case(&root, case, true);
         if outcome.failed() {
             return Err(format!("{id}: {}", outcome.failures.join("; ")));
@@ -108,18 +117,39 @@ pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>) -> Resul
     let selected = |id: &str, requirements: &[String]| {
         filter.as_deref().is_none_or(|f| id.to_ascii_lowercase().contains(f) || requirements.iter().any(|r| r.to_ascii_lowercase().contains(f)))
     };
-    let data: Vec<_> = data.into_iter().filter(|c| selected(&c.id, &c.requirements)).collect();
+    // The Ink/Stitch differential's cases and requirements are its own, and the other runs leave them to it.
+    let (l3, requirements): (Vec<_>, Vec<_>) = requirements.into_iter().partition(|r| r.level == "L3");
+    let data: Vec<_> = data.into_iter().filter(|c| selected(&c.id, &c.requirements) && is_differential(c) == differential).collect();
+    if differential {
+        let outcomes: Vec<runner::Outcome> = data.iter().map(|c| runner::run_data_case(&root, c, false)).collect();
+        let markdown = differential::report(&outcomes, &commit(), &differential::pinned(&root)?);
+        let dir = root.join("target/conformance");
+        std::fs::create_dir_all(&dir)
+            .and_then(|()| std::fs::write(dir.join("differential.md"), &markdown))
+            .map_err(|e| format!("{}: {e}", dir.display()))?;
+        summarize(&markdown, &mut findings);
+        for o in &outcomes {
+            if o.failed() {
+                findings.error(format!("{} ({}): {}", o.case, o.file, o.failures.join("; ")));
+            }
+            if let Some(why) = &o.skipped {
+                findings.error(format!("{} did not run: {why}", o.case));
+            }
+        }
+        for (r, verdict) in report::verdicts(&l3, &outcomes).into_iter().filter(|_| filter.is_none()) {
+            if r.status == "active" && verdict != report::Verdict::Pass {
+                findings.error(format!("{} is active but has no passing case", r.id));
+            }
+        }
+        let failed = outcomes.iter().filter(|o| !o.passed()).count();
+        let summary = format!("{} cases run against Ink/Stitch, {failed} failed; report in target/conformance/differential.md", outcomes.len());
+        return findings.finish("conformance --differential", &summary);
+    }
     let rust: Vec<_> = rust.into_iter().filter(|c| selected(&c.name, std::slice::from_ref(&c.covers))).collect();
     let mut outcomes: Vec<runner::Outcome> = data.iter().map(|c| runner::run_data_case(&root, c, false)).collect();
     outcomes.extend(runner::run_rust_cases(&root, &rust)?);
     let markdown = report::write(&root.join("target/conformance"), &requirements, &outcomes, &commit())?;
-    if let Some(path) = std::env::var_os("GITHUB_STEP_SUMMARY") {
-        use std::io::Write as _;
-        let appended = std::fs::OpenOptions::new().append(true).create(true).open(path).and_then(|mut f| f.write_all(markdown.as_bytes()));
-        if let Err(e) = appended {
-            findings.warn(format!("could not write the job summary: {e}"));
-        }
-    }
+    summarize(&markdown, &mut findings);
     for o in outcomes.iter().filter(|o| o.failed()) {
         findings.error(format!("{} ({}): {}", o.case, o.file, o.failures.join("; ")));
     }
@@ -182,6 +212,44 @@ fn unindexed(root: &Path) -> Result<Vec<String>, String> {
     Ok(files.filter(|file| file != "README.md" && !named.contains(file.as_str())).collect())
 }
 
+/// Whether `case` is one of the Ink/Stitch differential's.
+fn is_differential(case: &cases::DataCase) -> bool {
+    matches!(case.spec, cases::Spec::Inkstitch { .. })
+}
+
+/// What is wrong with the Ink/Stitch differential's cases: a design that isn't there, and a measure excused
+/// that isn't one, or by an entry the deviations ledger doesn't have.
+fn check_differential(root: &Path, data: &[cases::DataCase], findings: &mut Findings) -> Result<(), String> {
+    let ledger: BTreeSet<String> = crate::deviations::parse(&util::read(&root.join(crate::deviations::LEDGER))?)?.into_iter().map(|d| d.id).collect();
+    for case in data {
+        let cases::Spec::Inkstitch { design, excused } = &case.spec else { continue };
+        if !root.join("conformance").join(design).is_file() {
+            findings.error(format!("{}: the design `{design}` is not in conformance/", case.file));
+        }
+        for (measure, deviation) in excused {
+            if differential::Measure::named(measure).is_none() {
+                let names: Vec<&str> = differential::Measure::ALL.iter().map(|m| m.name()).collect();
+                findings.error(format!("{}: `{measure}` is not a measure ({})", case.file, names.join(", ")));
+            }
+            if !ledger.contains(deviation) {
+                findings.error(format!("{}: {deviation}, which excuses {measure}, is not in {}", case.file, crate::deviations::LEDGER));
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Appends `markdown` to the GitHub job summary, when there is one.
+fn summarize(markdown: &str, findings: &mut Findings) {
+    if let Some(path) = std::env::var_os("GITHUB_STEP_SUMMARY") {
+        use std::io::Write as _;
+        let appended = std::fs::OpenOptions::new().append(true).create(true).open(path).and_then(|mut f| f.write_all(markdown.as_bytes()));
+        if let Err(e) = appended {
+            findings.warn(format!("could not write the job summary: {e}"));
+        }
+    }
+}
+
 /// `REQ-` + one or more upper-case segments + a three-digit number.
 fn well_formed(id: &str) -> bool {
     let Some(rest) = id.strip_prefix("REQ-") else { return false };
@@ -229,7 +297,7 @@ mod tests {
         assert!(findings.errors.is_empty() && data.len() > 10, "{:?}", findings.errors);
         let failed: Vec<String> = data
             .iter()
-            .filter(|case| !matches!(case.spec, cases::Spec::Oracle { .. }))
+            .filter(|case| !matches!(case.spec, cases::Spec::Oracle { .. }) && !is_differential(case))
             .map(|case| runner::run_data_case(&root, case, false))
             .filter(|outcome| !outcome.passed())
             .map(|outcome| format!("{} ({}): {}", outcome.case, outcome.file, outcome.failures.join("; ")))

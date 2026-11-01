@@ -190,7 +190,9 @@ SVG adapter v2:
 - custom locks drawn as SVG paths, which the adapter reads for the engine. Until then they sew the half
   stitch, with `SC-W0503`.
 - `stitch import-inkstitch file.svg -o file.vectorcraft`
-- L3 differential conformance against a pinned Ink/Stitch with the deviations ledger
+- L3 differential conformance against a pinned Ink/Stitch with the deviations ledger. Its runner and its
+  nightly job came first (`cargo xtask conformance --differential`, `REQ-SVG-008`), with designs the SVG
+  reader sews in full; each setting the adapter learns to read brings its designs into the corpus
 
 Ink/Stitch's font
 library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin, downloaded at a pinned

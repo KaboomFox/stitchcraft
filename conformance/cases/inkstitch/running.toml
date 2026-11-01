@@ -1,0 +1,4 @@
+id = "inkstitch-running"
+requirements = ["REQ-SVG-008"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/running.svg"

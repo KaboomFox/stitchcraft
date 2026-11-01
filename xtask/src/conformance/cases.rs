@@ -10,6 +10,7 @@
 //!   is the link, so there is nothing to keep in sync; they are found by scanning the source (fast enough
 //!   for `--check`) and run with `cargo test`.
 
+use std::collections::BTreeMap;
 use std::path::Path;
 
 use serde::Deserialize;
@@ -68,6 +69,8 @@ struct CaseFile {
     expect: Option<SheetExpect>,
     #[serde(default)]
     files: Option<Vec<String>>,
+    #[serde(default)]
+    excused: Option<BTreeMap<String, String>>,
 }
 
 /// What a test-sheet or plan case expects.
@@ -104,6 +107,10 @@ pub enum Spec {
     /// Read machine files with an independent reader (pinned pyembroidery) and with ours, and compare what
     /// the machine would do. `files` are relative to `conformance/`.
     Oracle { files: Vec<String> },
+    /// Sew an SVG file (relative to `conformance/`) with a pinned Ink/Stitch and with StitchCraft, and compare
+    /// the machine files by measures (L3, the Ink/Stitch differential). `excused` names the measures a
+    /// deviation explains, each with the deviation's id.
+    Inkstitch { design: String, excused: BTreeMap<String, String> },
 }
 
 /// The data cases; problems with a file are recorded in `findings` and the file is skipped.
@@ -119,10 +126,12 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
                 continue;
             }
         };
+        let excused = case.excused;
         let spec = match (case.kind.as_str(), case.sheet, case.design, case.profile, case.expect, case.files) {
-            ("testsheet", Some(sheet), None, Some(profile), Some(expect), None) => Spec::Testsheet { sheet, profile, expect },
-            ("plan", None, Some(design), Some(profile), Some(expect), None) => Spec::Plan { design, profile, expect },
-            ("oracle", None, None, None, None, Some(files)) if !files.is_empty() => Spec::Oracle { files },
+            ("testsheet", Some(sheet), None, Some(profile), Some(expect), None) if excused.is_none() => Spec::Testsheet { sheet, profile, expect },
+            ("plan", None, Some(design), Some(profile), Some(expect), None) if excused.is_none() => Spec::Plan { design, profile, expect },
+            ("oracle", None, None, None, None, Some(files)) if !files.is_empty() && excused.is_none() => Spec::Oracle { files },
+            ("inkstitch", None, Some(design), None, None, None) => Spec::Inkstitch { design, excused: excused.unwrap_or_default() },
             ("testsheet", ..) => {
                 findings.error(format!("{file}: a testsheet case needs `sheet`, `profile` and `[expect]`, and nothing else"));
                 continue;
@@ -135,8 +144,12 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
                 findings.error(format!("{file}: an oracle case needs a non-empty `files` list and nothing else"));
                 continue;
             }
+            ("inkstitch", ..) => {
+                findings.error(format!("{file}: an inkstitch case needs `design`, and may have `[excused]`, and nothing else"));
+                continue;
+            }
             (other, ..) => {
-                findings.error(format!("{file}: unknown case kind `{other}` (known: testsheet, plan, oracle)"));
+                findings.error(format!("{file}: unknown case kind `{other}` (known: testsheet, plan, oracle, inkstitch)"));
                 continue;
             }
         };
