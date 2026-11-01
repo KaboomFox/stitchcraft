@@ -128,11 +128,21 @@ fn the_window_s_job_names_the_dialog_s_row_and_its_parameters_from_the_manifest(
     assert_eq!(control(&Schema::Int { min: 0, max: 1, default: 0 }), "text_field");
     assert_eq!(entry["window"], json!([1440, 2400]), "a dialog's picture is taken in a taller window");
     assert_eq!(entry["menu"], json!(["Effect", "Plug-ins"]));
-    assert_eq!(entry["plugins"], json!([Path::new("/modules").join("fill.wasm").to_string_lossy()]));
+    assert_eq!(entry["plugins"], json!([{ "path": Path::new("/modules").join("fill.wasm").to_string_lossy() }]));
     // A menu's picture has no dialog, and the window keeps its size.
     let menu = shot(UI, "plugins = [\"fill\"]\nmenu = [\"Effect\", \"Plug-ins\"]");
     let entry = job(&menu, Path::new("/d"), Path::new("/m"), Path::new("/p")).unwrap();
     assert_eq!((&entry["dialog"], &entry["window"]), (&Value::Null, &Value::Null));
+}
+
+#[test]
+fn the_window_s_job_installs_a_heavy_module_as_a_person_allows_it() {
+    // VectorCraft refuses to install Stroke to Satin, which asks for a heavy budget, without `allowHeavy`,
+    // and the window took no picture of its menu.
+    let menu = shot(UI, "plugins = [\"satin\", \"stroke-to-satin\"]\nmenu = [\"Object\", \"Plug-ins\"]");
+    let entry = job(&menu, Path::new("/d"), Path::new("/m"), Path::new("/p")).unwrap();
+    let at = |module: &str| Path::new("/m").join(format!("{module}.wasm")).to_string_lossy().into_owned();
+    assert_eq!(entry["plugins"], json!([{ "path": at("satin") }, { "path": at("stroke-to-satin"), "allowHeavy": true }]));
 }
 
 #[test]

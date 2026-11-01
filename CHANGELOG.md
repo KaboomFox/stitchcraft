@@ -11,7 +11,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   fill's shows its angle, staggers and underlay, and how Ink/Stitch's legacy fill sews. The automatic
   digitizing page shows shapes sewn as drawn beside the same shapes digitized, in 3 pairs of pictures. The
   how-to for satin columns in VectorCraft shows a column of 2 rails and the Stroke to Satin menu. New
-  fixtures: `docs/fixtures/fill.svg`, `widths.svg` and `parts.svg`.
+  fixtures: `docs/fixtures/fill.svg`, `widths.svg` and `parts.svg`. A VectorCraft picture installs a
+  module that asks for a heavy budget with `allowHeavy`, as a scenario does (`compat::install`): without
+  it, VectorCraft refused Stroke to Satin's, and its menu had no picture.
 - The Ink/Stitch differential compares centre lines (`REQ-AUTO-022`, the `centre-lines` cases,
   `xtask/src/conformance/centre_lines.rs`). Each shape that automatic digitizing sews wholly as running
   stitches is compared with the lines Ink/Stitch's Fill to Stroke draws for it, with its threshold at the
