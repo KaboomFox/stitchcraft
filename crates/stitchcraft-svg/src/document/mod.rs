@@ -25,11 +25,15 @@
 //! **Ink/Stitch's own objects are not the design** ([`crate::inkstitch`]): its command symbols and their
 //! connectors, connector-tool lines and its helper paths are never stitched. Its trim and stop commands
 //! become the shape's `trim_after` and `stop_after`, and what its ignore commands and setting leave out is
-//! listed (`SC-I0805`).
+//! listed (`SC-I0805`). A file an older Ink/Stitch saved is read as Ink/Stitch updates it
+//! ([`crate::version`], `SC-I0818`): the defaults that have changed since are given to the shapes that
+//! relied on them, as parameters, as the trim and stop commands are.
 //!
 //! **Nothing is dropped silently.** `SC-W0802` reports SVG features that StitchCraft does not stitch:
 //! text, images, clones, nested `<svg>`, style sheet rules it does not read, clipping, masks, filters,
-//! markers, gradients, patterns and Ink/Stitch's settings. `SC-W0804` reports geometry that cannot be used,
+//! markers, gradients, patterns, Ink/Stitch's settings, and a file Ink/Stitch would update or warn about
+//! that is read as it is: one with its settings and no file version, or from a newer Ink/Stitch.
+//! `SC-W0804` reports geometry that cannot be used,
 //! and `SC-E0801` a file that cannot be read at all, or whose size cannot be read. What a viewer would not
 //! show either is left out without a word: `display: none`, hidden or fully transparent elements, and the
 //! insides of `<defs>`.
@@ -37,7 +41,8 @@
 //! **Limits keep any file cheap.** A file may be at most [`MAX_BYTES`] long with a million XML nodes, and
 //! its entities may expand it to no more than that ([`crate::text`] says which files are text it reads).
 //! Work is charged to the budget: two units per XML node (one to find its id, style sheets and Ink/Stitch's
-//! commands, one to read it), one per path segment, one per 8 bytes of a transform, point list or style
+//! commands, one to read it), one per node searched for Ink/Stitch's file version and per step up from an
+//! element of the version's name ([`crate::inkstitch::find`]), one per path segment, one per 8 bytes of a transform, point list or style
 //! sheet, and for each element, one per class, per style sheet rule tested against it and per declaration
 //! it takes ([`crate::sheet`]), and one per 8 bytes of its `style` attribute each time it is read: a
 //! gradient's stops are read again for each shape the gradient paints.
@@ -48,6 +53,7 @@ use std::str::FromStr;
 use roxmltree::{Document, Node, NodeId, ParsingOptions};
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
 use stitchcraft_engine::auto::{self, Stitches};
+use stitchcraft_engine::common::MAX_STITCH_LENGTH;
 use stitchcraft_engine::design::{Design, Element, Reading, Shape};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
@@ -63,6 +69,7 @@ use crate::sheet::{self, Sheet};
 use crate::style::{self, Declared, Paint, Style, painted, without_icc};
 use crate::text::{self, unreadable};
 use crate::transform::{self, Affine, user_units};
+use crate::version::{self, Updated, Version};
 
 mod root;
 
@@ -204,6 +211,9 @@ struct Reader<'b, 'a, 'input> {
     noted_inkstitch: bool,
     /// Ink/Stitch's design settings.
     settings: settings::Found,
+    /// The Ink/Stitch file version the file is read as, and what its update changed.
+    version: Version,
+    updated: Updated,
     /// Whether a shape with no `inkstitch:` attribute is an automatic element (`--auto`).
     auto: bool,
 }
@@ -227,6 +237,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             noted_style_sheet: false,
             noted_inkstitch: false,
             settings: settings::Found::default(),
+            version: Version::Current,
+            updated: Updated::default(),
             auto: reading.auto,
         }
     }
@@ -243,6 +255,11 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         self.ns = ns;
         let found = inkstitch::find(root, ns, &mut self.meter).map_err(|_| self.exhausted())?;
         (self.ids, self.objects) = (found.ids, found.objects);
+        // What tells the file's version comes first: it says how the rest is read.
+        self.version = Version::of(found.version, found.content);
+        if let Some((message, hint)) = self.version.warning() {
+            self.note(None, message, Some(hint));
+        }
         for style in found.sheets.into_iter().filter(|style| sheet::is_css(*style)) {
             for text in style.children().filter_map(|child| child.is_text().then(|| child.text()).flatten()) {
                 self.charge_text(text)?;
@@ -294,6 +311,9 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             }
         }
         self.command_notes();
+        if let Some(message) = self.version.note(self.updated) {
+            self.warnings.insert(0, self.diagnostic(Code::SvgInkStitchUpdated, None, message, None));
+        }
         let design = Design::new(self.elements, self.settings.settings)?;
         Ok(Svg { design, warnings: self.warnings })
     }
@@ -340,8 +360,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
     /// `<style>` element, and Ink/Stitch settings. Ink/Stitch's design settings are read here too, from the
     /// first `<metadata>` element's children ([`crate::settings`]).
     fn notice(&mut self, node: Node<'a, 'input>) {
-        if let Some(message) = self.settings.visit(node, self.is_svg(node)) {
-            self.note(None, message, None);
+        if let Some((message, hint)) = self.settings.visit(node, self.is_svg(node)) {
+            self.note(None, message, hint);
         }
         if !self.noted_style_sheet && self.is_svg(node) && node.tag_name().name() == "style" {
             self.noted_style_sheet = true;
@@ -349,7 +369,9 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 self.note(None, message, Some(sheet::UNREAD_HINT));
             }
         }
-        if !self.noted_inkstitch && node.attributes().any(|a| a.namespace() == Some(INKSTITCH_NS) && !READ_ATTRIBUTES.contains(&a.name())) {
+        // The `embroider_` settings of Ink/Stitch's early versions count too, unread whatever their names.
+        let unread = |a: &roxmltree::Attribute<'_, '_>| inkstitch::is_setting(a) && !(a.namespace().is_some() && READ_ATTRIBUTES.contains(&a.name()));
+        if !self.noted_inkstitch && node.attributes().any(|a| unread(&a)) {
             self.noted_inkstitch = true;
             self.note(
                 None,
@@ -422,7 +444,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             Kind::Shape(geometry) => {
                 if style.shown() {
                     effects(self, &label);
-                    self.shape(node, geometry, label, n, map, &style)?;
+                    let label = self.claim(label, tag, n)?;
+                    self.shape(node, geometry, &label, map, &style, &declared)?;
                 }
                 Ok(Context::Hidden)
             }
@@ -497,30 +520,37 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         node.children().find(|c| self.is_svg(*c) && !c.has_attribute("requiredExtensions"))
     }
 
-    /// The design elements of a shape that is shown: one per paint it paints with.
-    fn shape(&mut self, node: Node<'a, 'input>, geometry: Geometry, label: String, n: u32, map: Affine, style: &Style<'a>) -> Result<(), Diagnostic> {
-        let label = self.claim(label, node.tag_name().name(), n)?;
+    /// The design elements of a shape that is shown, `label` its own: one per paint it paints with.
+    fn shape(
+        &mut self,
+        node: Node<'a, 'input>,
+        geometry: Geometry,
+        label: &str,
+        map: Affine,
+        style: &Style<'a>,
+        declared: &Declared<'a, 'input>,
+    ) -> Result<(), Diagnostic> {
         // A line has no inside to fill.
-        let fill = if geometry == Geometry::Line || style.fill_clear { None } else { self.colour(&label, "fill", style.fill, style.color)? };
-        let stroke = if style.stroke_clear { None } else { self.colour(&label, "stroke", style.stroke, style.color)? };
+        let fill = if geometry == Geometry::Line || style.fill_clear { None } else { self.colour(label, "fill", style.fill, style.color)? };
+        let stroke = if style.stroke_clear { None } else { self.colour(label, "stroke", style.stroke, style.color)? };
         if fill.is_none() && stroke.is_none() {
             return Ok(());
         }
         if style.has_markers() && matches!(geometry, Geometry::Path | Geometry::Line | Geometry::Polyline | Geometry::Polygon) {
-            self.note(Some(&label), format!("`{label}` has markers (arrowheads and the like), which are not stitched."), None);
+            self.note(Some(label), format!("`{label}` has markers (arrowheads and the like), which are not stitched."), None);
         }
-        let Some(subs) = self.outline(node, geometry, &label)? else { return Ok(()) };
+        let Some(subs) = self.outline(node, geometry, label)? else { return Ok(()) };
         let path = match path::to_mm(&subs, map) {
             Ok(path) => path,
             Err(reason) => {
-                self.unusable(&label, format!("`{label}` cannot be stitched: {reason}. It is left out."));
+                self.unusable(label, format!("`{label}` cannot be stitched: {reason}. It is left out."));
                 return Ok(());
             }
         };
         let mut points = path.points();
         let first = points.next();
         if points.all(|p| Some(p) == first) {
-            self.unusable(&label, format!("`{label}` draws nothing: all of its points are in the same place. It is left out."));
+            self.unusable(label, format!("`{label}` draws nothing: all of its points are in the same place. It is left out."));
             return Ok(());
         }
         let name = node.attribute((INKSCAPE_NS, "label")).map(str::trim).filter(|s| !s.is_empty()).map(str::to_string);
@@ -534,11 +564,21 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 _ => None,
             };
         }
-        // A shape without Ink/Stitch's settings is digitized automatically when the user asks for it.
-        let automatic = self.auto && !node.attributes().any(|a| a.namespace() == Some(INKSTITCH_NS));
+        // A shape without Ink/Stitch's settings is digitized automatically when the user asks for it, and
+        // sews by the rules; any other is updated as Ink/Stitch updates a file of its version.
+        let automatic = self.auto && !node.attributes().any(|a| inkstitch::is_setting(&a));
+        if !automatic {
+            let styled_stroke = declared.in_style("stroke").last().is_some_and(|stroke| !stroke.trim().eq_ignore_ascii_case("none"));
+            let shape = version::Shape {
+                fill: fill.is_some(),
+                longest: node.attribute((INKSTITCH_NS, MAX_STITCH_LENGTH)),
+                styled_polyline: geometry == Geometry::Polyline && styled_stroke,
+            };
+            self.version.update(&shape, &mut params, &mut self.updated);
+        }
         if style.stroke_first && fill.is_some() && stroke.is_some() {
             let message = format!("`{label}` paints its stroke first (`paint-order`); its fill is sewn first, as Ink/Stitch sews them.");
-            self.note(Some(&label), message, None);
+            self.note(Some(label), message, None);
         }
         for (part, colour) in [("fill", fill), ("stroke", stroke)] {
             let Some(colour) = colour else { continue };
@@ -546,7 +586,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 Shape::Fill { path: path.clone(), rule: style.fill_rule }
             } else {
                 let Some(width) = self.stroke_width(style, map) else {
-                    self.unusable(&label, format!("The stroke of `{label}` cannot be stitched: it is too wide to measure. It is left out."));
+                    self.unusable(label, format!("The stroke of `{label}` cannot be stitched: it is too wide to measure. It is left out."));
                     continue;
                 };
                 // An automatic line's stitches follow the drawing: its corners are joined as SVG draws them. Its
@@ -554,7 +594,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 // digitizing says.
                 let join = if automatic { style.painted_join() } else { style.join() };
                 if automatic && let Some(rules) = auto::rules(&params) {
-                    self.stretched(&label, Stitches::of_stroke(width, &self.settings.settings, &rules), map);
+                    self.stretched(label, Stitches::of_stroke(width, &self.settings.settings, &rules), map);
                 }
                 Shape::Stroke { path: path.clone(), width, join, cap: style.line_cap }
             };

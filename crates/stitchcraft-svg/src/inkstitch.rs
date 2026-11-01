@@ -25,14 +25,21 @@
 //! the settings would. `starting_point` and `ending_point` place where Ink/Stitch starts and ends a fill
 //! or a satin column; they, `origin` and `stop_position` are not applied yet (`SC-W0802`). `target_point`
 //! aims circular fills and ripples, which StitchCraft does not sew yet, and the rest feed Ink/Stitch's own
-//! tools, so they change nothing StitchCraft sews.
+//! tools, so they change nothing StitchCraft sews. Before its file version 3, Ink/Stitch named 7 commands
+//! otherwise ([`RENAMED`]); they are read as the commands they became.
+//!
+//! **Ink/Stitch's own content** is what tells its updater that a file is one of its own
+//! ([`crate::version`]): an element or an attribute in its namespace, or an `embroider_` attribute, the
+//! settings as Ink/Stitch's early versions wrote them (`is_setting`). This pass finds it, and the file's version, as it finds the
+//! commands.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use roxmltree::{ExpandedName, Node};
+use roxmltree::{Attribute, ExpandedName, Node};
 use stitchcraft_core::{Exhausted, Meter};
 
 use crate::style::Declared;
+use crate::version;
 
 pub(crate) const INKSCAPE_NS: &str = "http://www.inkscape.org/namespaces/inkscape";
 pub(crate) const XLINK_NS: &str = "http://www.w3.org/1999/xlink";
@@ -110,10 +117,36 @@ pub const COMMANDS: [Command; 12] = [
     Command { name: "stop_position", does: Does::NotYet },
 ];
 
-/// The command a symbol with this id stands for: `inkstitch_` and the name, perhaps with a copy's `-n`.
+/// Ink/Stitch's command names from before its file version 3, each with the command it became. Its
+/// updater renames them in the files it updates, where they then work as those commands (`lib/update.py`,
+/// read at `d59c9ab`); StitchCraft reads them so in any file (`DEV-SVG-014`). The compatibility contract
+/// lists the same.
+pub const RENAMED: [(&str, &str); 7] = [
+    ("fill_start", "starting_point"),
+    ("fill_end", "ending_point"),
+    ("satin_start", "autoroute_start"),
+    ("satin_end", "autoroute_end"),
+    ("run_start", "autoroute_start"),
+    ("run_end", "autoroute_end"),
+    ("ripple_target", "target_point"),
+];
+
+/// The command a symbol with this id stands for: `inkstitch_` and the name, perhaps with a copy's `-n`. An
+/// old name stands for the command it became.
 fn command(symbol_id: &str) -> Option<Command> {
     let name = symbol_id.strip_prefix("inkstitch_")?.split('-').next()?;
+    let name = RENAMED.iter().find(|(old, _)| *old == name).map_or(name, |(_, new)| new);
     COMMANDS.into_iter().find(|c| c.name == name)
+}
+
+/// Whether `attribute` holds one of Ink/Stitch's settings: it is in Ink/Stitch's namespace, or it is one
+/// of the `embroider_` attributes Ink/Stitch's early versions wrote its settings as, which its updater turns
+/// into its own (`lib/update.py`).
+pub(crate) fn is_setting(attribute: &Attribute<'_, '_>) -> bool {
+    match attribute.namespace() {
+        Some(ns) => ns == INKSTITCH_NS,
+        None => attribute.name().starts_with("embroider_"),
+    }
 }
 
 /// Ink/Stitch's own helpers, which a start marker in the `style` attribute marks (`lib/marker.py`).
@@ -186,7 +219,7 @@ pub(crate) fn place(node: Node<'_, '_>) -> Place {
     node.id().get()
 }
 
-/// The ids in a document, its style sheets and its Ink/Stitch commands.
+/// The ids in a document, its style sheets, its Ink/Stitch commands and what tells Ink/Stitch's version.
 pub(crate) struct Found<'a, 'input> {
     /// The first element with each id, as `getElementById` finds it.
     pub ids: BTreeMap<&'a str, Node<'a, 'input>>,
@@ -194,6 +227,12 @@ pub(crate) struct Found<'a, 'input> {
     pub sheets: Vec<Node<'a, 'input>>,
     /// The commands.
     pub objects: Objects,
+    /// Whether the document has Ink/Stitch's own content: an element or an attribute in its namespace,
+    /// or an `embroider_` attribute.
+    pub content: bool,
+    /// The first text in an element named for Ink/Stitch's file version, as its updater finds it: the
+    /// first in document order inside any of them.
+    pub version: Option<&'a str>,
 }
 
 /// Every Ink/Stitch command in a document, by where it applies.
@@ -253,15 +292,22 @@ impl Objects {
     }
 }
 
-/// The ids, style sheets and Ink/Stitch commands of the document under `root`, whose SVG elements are in
-/// namespace `ns`. One unit of work per node, and one per step from a layer command up to its layers.
+/// The ids, style sheets, Ink/Stitch commands and Ink/Stitch content and version of the document under
+/// `root`, whose SVG elements are in namespace `ns`. One unit of work per node, one per step from a layer
+/// command up to its layers, and one per node searched for the version's text or per step up from an
+/// element of the version's name.
 pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: &mut Meter) -> Result<Found<'a, 'input>, Exhausted> {
     let mut ids = BTreeMap::new();
     let (mut connectors, mut uses, mut sheets) = (Vec::new(), Vec::new(), Vec::new());
+    let (mut content, mut version, mut searched) = (false, None, Vec::new());
     for node in root.descendants() {
         meter.charge(1)?;
         if !node.is_element() {
             continue;
+        }
+        content = content || node.tag_name().namespace() == Some(INKSTITCH_NS) || node.attributes().any(|a| is_setting(&a));
+        if version.is_none() && node.tag_name().name() == version::ELEMENT {
+            version = version_text(node, &mut searched, meter)?;
         }
         if let Some(id) = node.attribute("id") {
             ids.entry(id).or_insert(node);
@@ -310,13 +356,37 @@ pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: 
             objects.commands.entry(place(target)).or_default().push(command);
         }
     }
-    Ok(Found { ids, sheets, objects })
+    Ok(Found { ids, sheets, objects, content, version })
+}
+
+/// The first text inside `element`, an element of the version's name, unless it is inside one of those
+/// `searched` already, which had none. Each element searched is added to them.
+fn version_text<'a, 'input>(
+    element: Node<'a, 'input>,
+    searched: &mut Vec<Node<'a, 'input>>,
+    meter: &mut Meter,
+) -> Result<Option<&'a str>, Exhausted> {
+    for ancestor in element.ancestors().skip(1) {
+        meter.charge(1)?;
+        if searched.contains(&ancestor) {
+            return Ok(None);
+        }
+    }
+    searched.push(element);
+    for node in element.descendants() {
+        meter.charge(1)?;
+        if node.is_text() {
+            return Ok(node.text());
+        }
+    }
+    Ok(None)
 }
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_core::Budget;
     use stitchcraft_engine::registry::PARAMETERS;
-    use stitchcraft_params::{Kind, declarations, find};
+    use stitchcraft_params::{Kind, declarations, find as find_param};
 
     use super::*;
 
@@ -328,7 +398,7 @@ mod tests {
             assert!(!kinds.is_empty() && kinds.iter().all(|kind| *kind == Kind::Toggle), "{key}: {kinds:?}");
         }
         // Ink/Stitch's own setting for leaving an object out is not a parameter of a stitch.
-        assert_eq!(find(PARAMETERS, IGNORE_OBJECT), None);
+        assert_eq!(find_param(PARAMETERS, IGNORE_OBJECT), None);
     }
 
     #[test]
@@ -347,8 +417,48 @@ mod tests {
         assert_eq!(command("inkstitch_trim"), Some(Command { name: "trim", does: Does::Trim }));
         assert_eq!(command("inkstitch_stop_position-12").map(|c| c.does), Some(Does::NotYet));
         assert_eq!(command("inkstitch_stop-3").map(|c| c.does), Some(Does::Stop));
-        for other in ["inkstitch_", "inkstitch_sparkle", "trim", "Inkstitch_trim", "inkstitch_TRIM"] {
+        for other in ["inkstitch_", "inkstitch_sparkle", "trim", "Inkstitch_trim", "inkstitch_TRIM", "fill_start", "inkstitch_FILL_START"] {
             assert_eq!(command(other), None, "{other}");
+        }
+        // An old name is the command it became, and each becomes one of today's.
+        assert_eq!(command("inkstitch_fill_start-2").map(|c| c.name), Some("starting_point"));
+        for (old, new) in RENAMED {
+            assert_eq!(command(&format!("inkstitch_{old}")).map(|c| c.name), Some(new), "{old}");
+            assert!(command(&format!("inkstitch_{new}")).is_some() && command(&format!("inkstitch_{old}_{new}")).is_none());
+        }
+    }
+
+    #[test]
+    fn ink_stitch_s_settings_are_its_namespace_s_attributes_and_its_first_version_s() {
+        let doc = roxmltree::Document::parse(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:i="http://inkstitch.org/namespace" xmlns:o="http://example.org/o"
+                 i:fill_method="tatami_fill" embroider_satin_column="yes" o:embroider_x="1" xembroider_y="1" fill="red"/>"#,
+        )
+        .unwrap();
+        let settings: Vec<&str> = doc.root_element().attributes().filter(is_setting).map(|a| a.name()).collect();
+        assert_eq!(settings, ["fill_method", "embroider_satin_column"]);
+    }
+
+    #[test]
+    fn the_version_is_the_first_text_inside_an_element_of_its_name() {
+        let found = |xml: &str| {
+            let doc = roxmltree::Document::parse(xml).unwrap();
+            let found = find(doc.root_element(), doc.root_element().tag_name().namespace(), &mut Budget::DEFAULT.meter()).unwrap();
+            (found.version.map(str::to_string), found.content)
+        };
+        assert_eq!(found("<svg><inkstitch_svg_version>3</inkstitch_svg_version></svg>"), (Some("3".to_string()), false));
+        // Nested ones without text are searched once, and an empty one leaves the search to the next.
+        let nested = "<svg><inkstitch_svg_version><inkstitch_svg_version><b/></inkstitch_svg_version></inkstitch_svg_version>\
+                      <i:inkstitch_svg_version xmlns:i='http://inkstitch.org/namespace'>2</i:inkstitch_svg_version></svg>";
+        assert_eq!(found(nested), (Some("2".to_string()), true));
+        // 6 nodes; for the outer element 2 steps up, to the document, and its 3 elements searched; for the
+        // inner one 1 step up, to the outer one, which was searched; for the last 2 steps up and its 2 nodes
+        // searched.
+        let doc = roxmltree::Document::parse(nested).unwrap();
+        let work = 6 + (2 + 3) + 1 + (2 + 2);
+        for (max_work, done) in [(work, true), (work - 1, false)] {
+            let mut meter = Budget { max_stitches: 1, max_work }.meter();
+            assert_eq!(find(doc.root_element(), None, &mut meter).is_ok(), done, "{max_work}");
         }
     }
 

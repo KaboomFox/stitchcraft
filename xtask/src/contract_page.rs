@@ -6,7 +6,8 @@
 //! the registry declares with an Ink/Stitch origin must exist in the data file with a compatible kind and
 //! the default Ink/Stitch sews, because defaults are part of the contract (`docs/src/design/params.md` ›
 //! Naming rules); one with StitchCraft's own origin must not; the lock and method identifiers must match.
-//! The SVG adapter's commands must be Ink/Stitch's, and the attributes it reads must be listed.
+//! The SVG adapter's commands must be Ink/Stitch's, and the attributes it reads must be listed; the file
+//! versions' changes and renamed commands are checked by [`crate::contract_versions`].
 //!
 //! The default Ink/Stitch sews for a file that sets none is a row's `fallback` where it has one, and its
 //! `default` otherwise. The default is what Ink/Stitch's settings window shows, and its code reads a few
@@ -22,6 +23,7 @@ use serde::Deserialize;
 use stitchcraft_params::{Family, Kind, Origin, ParamGroup, ParamSpec, StitchType, declarations, find_for};
 use stitchcraft_svg::inkstitch::{COMMANDS, READ_ATTRIBUTES};
 
+use crate::contract_versions::{self, Renamed, Update};
 use crate::param_pages;
 
 /// Where the page is written, relative to the repository root.
@@ -41,6 +43,10 @@ pub struct Contract {
     command: Vec<CommandRow>,
     #[serde(default)]
     attribute: Vec<Attribute>,
+    #[serde(default)]
+    renamed_command: Vec<Renamed>,
+    #[serde(default)]
+    update: Vec<Update>,
 }
 
 /// One of Ink/Stitch's commands, and where it applies: `object`, `layer` or `document`.
@@ -225,6 +231,7 @@ impl Contract {
             };
             md.push_str(&format!("| `{}` | {applies} | {does} |\n", c.name));
         }
+        md.push_str(&contract_versions::render_renamed(&self.renamed_command));
         md.push_str(
             "\n## Other attributes\n\nThe `inkstitch:*` attributes that declare no parameter: settings of an element, of Ink/Stitch's\n\
              patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrites in older files.\n\n\
@@ -238,6 +245,7 @@ impl Contract {
             };
             md.push_str(&format!("| `{}` | {} | {} | {ours} |\n", a.name, a.kind.replace('_', " "), phase(&a.phase, &a.milestone)));
         }
+        md.push_str(&contract_versions::render_updates(&self.update));
         let registered = self.param.iter().filter(|p| declaration(registry, p).is_some()).count();
         md.push_str(&format!("\n_{} parameter declarations, {registered} registered in StitchCraft._\n", self.param.len()));
         md
@@ -309,6 +317,7 @@ impl Contract {
                 problems.push(format!("the SVG adapter reads `{name}`, which {DATA} does not list as an attribute"));
             }
         }
+        problems.extend(contract_versions::check(&self.renamed_command, &self.update));
         problems
     }
 }
@@ -424,6 +433,12 @@ mod tests {
         }
         for a in READ_ATTRIBUTES {
             data.push_str(&format!("[[attribute]]\nname = \"{a}\"\nkind = \"element\"\nphase = \"P1\"\nmilestone = \"M3\"\n"));
+        }
+        for (old, new) in stitchcraft_svg::inkstitch::RENAMED {
+            data.push_str(&format!("[[renamed_command]]\nold = \"{old}\"\nnew = \"{new}\"\n"));
+        }
+        for (id, _) in stitchcraft_svg::version::APPLIED {
+            data.push_str(&format!("[[update]]\nversion = 4\nid = \"{id}\"\nchange = \"x\"\nmilestone = \"M3\"\n"));
         }
         data
     }

@@ -1619,6 +1619,37 @@ tied_to = "document"
 name = "stop_position"
 tied_to = "document"
 
+# The commands' names before Ink/Stitch's file version 3, each with the command it became, which its
+# updater renames them to (`lib/update.py`: update_legacy_commands).
+
+[[renamed_command]]
+old = "fill_start"
+new = "starting_point"
+
+[[renamed_command]]
+old = "fill_end"
+new = "ending_point"
+
+[[renamed_command]]
+old = "satin_start"
+new = "autoroute_start"
+
+[[renamed_command]]
+old = "satin_end"
+new = "autoroute_end"
+
+[[renamed_command]]
+old = "run_start"
+new = "autoroute_start"
+
+[[renamed_command]]
+old = "run_end"
+new = "autoroute_end"
+
+[[renamed_command]]
+old = "ripple_target"
+new = "target_point"
+
 # The other `inkstitch:*` attributes Ink/Stitch reads (`lib/svg/tags.py`), which declare no parameter:
 # settings of an element, of patterns, of the stitch plan or of the sew stack, and legacy names that
 # Ink/Stitch's updater rewrites in older files. `—` for the phase: not planned.
@@ -1705,4 +1736,129 @@ milestone = "M8"
 name = "grid_size"
 kind = "legacy"
 phase = "P2"
+milestone = "M8"
+
+# What Ink/Stitch's updater changes in a file of an older version (`lib/update.py`), in StitchCraft's words,
+# by the version each change brings: a file of version 2 gets those of versions 3 and 4. `id` names the
+# change for the SVG adapter (`stitchcraft_svg::version::APPLIED`); `milestone` is when StitchCraft applies
+# it, `—` for never: version 1's apply only to a file without a version, which StitchCraft reads as it is.
+
+[[update]]
+version = 1
+id = "embroider-attributes"
+change = "each `embroider_<name>` attribute, as Ink/Stitch's early versions wrote their settings, becomes `inkstitch:<name>` if `<name>` is a setting Ink/Stitch knows. The others are removed"
+milestone = "—"
+
+[[update]]
+version = 1
+id = "ties"
+change = "`ties` written `True` becomes 0, and `False` becomes 3"
+milestone = "—"
+
+[[update]]
+version = 1
+id = "fill-method-numbers"
+change = "a `fill_method` written as 0 to 3 becomes `auto_fill`, `contour_fill`, `guided_fill` or `legacy_fill`, in that order"
+milestone = "—"
+
+[[update]]
+version = 1
+id = "underlay-angle-commas"
+change = "commas in `fill_underlay_angle` become spaces"
+milestone = "—"
+
+[[update]]
+version = 1
+id = "e-stitch"
+change = "`e_stitch` on becomes `satin_method` `e_stitch`"
+milestone = "—"
+
+[[update]]
+version = 1
+id = "reverse-rails"
+change = "a satin column (`satin_column` on, or `stroke_method` 1) gets `reverse_rails` `none`"
+milestone = "—"
+
+[[update]]
+version = 1
+id = "fill-underlay-off"
+change = "an element with an `embroider_` attribute and without `fill_underlay` gets it off"
+milestone = "—"
+
+[[update]]
+version = 1
+id = "running-stitch-length"
+change = "an element without `running_stitch_length_mm` that is not a satin column gets 1.5"
+milestone = "—"
+
+[[update]]
+version = 1
+id = "stroke-manual-stitch"
+change = "a stroke with `manual_stitch` on gets `stroke_method` `manual_stitch`, unless it has `inkscape:connection-start`"
+milestone = "—"
+
+[[update]]
+version = 1
+id = "stroke-method-numbers"
+change = "a stroke's `stroke_method` written as 0 or 1 becomes `running_stitch` or `ripple_stitch`, unless it has `inkscape:connection-start`"
+milestone = "—"
+
+[[update]]
+version = 1
+id = "stroke-zigzag"
+change = "a stroke with neither a method nor `satin_column`, whose `style` doesn't set `stroke-dasharray`, gets `zigzag_stitch`, unless it has `inkscape:connection-start`"
+milestone = "—"
+
+[[update]]
+version = 1
+id = "grid-size"
+change = "a stroke's `grid_size`, in pixels, becomes `grid_size_mm`, unless it has `inkscape:connection-start`"
+milestone = "—"
+
+[[update]]
+version = 2
+id = "polyline-manual-stitch"
+change = "a `<polyline>` whose `style` attribute sets a stroke other than `none` gets `stroke_method` `manual_stitch`"
+milestone = "M3"
+
+[[update]]
+version = 3
+id = "zigzag-pull-compensation"
+change = "a zigzag stroke's `pull_compensation_mm`, unless 0, is halved into `stroke_pull_compensation_mm`, which applies to each side"
+milestone = "M8"
+
+[[update]]
+version = 3
+id = "satin-nearest-points"
+change = "a satin column gets `start_at_nearest_point` and `end_at_nearest_point` off"
+milestone = "M8"
+
+[[update]]
+version = 3
+id = "command-names"
+change = "the commands' old names become today's (the table under Commands)"
+milestone = "M3"
+
+[[update]]
+version = 3
+id = "start-end-positions"
+change = "a `starting_point` or `ending_point` command is placed anew at its connector's end on its object"
+milestone = "M8"
+
+[[update]]
+version = 4
+id = "longest-fill-stitch"
+change = "an element whose fill is not `none` (a fill not set is black), and whose `max_stitch_length_mm` is missing, empty, not a number or 0, gets 3"
+milestone = "M3"
+
+[[update]]
+version = 4
+id = "auto-fill-off"
+change = "a fill with `auto_fill` off gets `fill_method` `legacy_fill`, and `auto_fill` is removed"
+milestone = "M8"
+
+[[update]]
+version = 4
+id = "auto-fill-renamed"
+change = "`fill_method` `auto_fill` becomes `tatami_fill`"
 milestone = "M8"

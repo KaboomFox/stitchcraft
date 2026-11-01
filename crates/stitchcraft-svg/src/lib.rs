@@ -12,8 +12,9 @@
 //! Ink/Stitch's own objects it knows enough not to stitch them: command symbols and their connectors,
 //! connector-tool lines and helper paths are left out; trim and stop commands, and the ignore commands and
 //! setting, are applied. It reads style sheets as editors write them, with element, class and id
-//! selectors (`REQ-SVG-006`). The other `inkstitch:*` settings, commands, clones and clip paths follow in
-//! milestone M8.
+//! selectors (`REQ-SVG-006`), and a file an older Ink/Stitch saved as Ink/Stitch updates it ([`version`],
+//! `REQ-SVG-007`). The other `inkstitch:*` settings, commands, clones and clip paths follow in milestone
+//! M8.
 //!
 //! Its invariants:
 //!
@@ -35,6 +36,7 @@ mod sheet;
 mod style;
 mod text;
 mod transform;
+pub mod version;
 
 pub use document::{Svg, read, read_with};
 pub use text::MAX_BYTES;
