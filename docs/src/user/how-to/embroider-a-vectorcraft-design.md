@@ -92,7 +92,7 @@ in the document instead.
 
 ## Keep the design's settings and machine with it
 
-From VectorCraft 0.16, a document can keep the machine it is for, and the 3 settings Ink/Stitch keeps
+From VectorCraft 0.16, a document can keep the machine it is for, and the 3 lengths Ink/Stitch keeps
 with a design for all of its objects. With the [plug-ins installed](../install.md#the-vectorcraft-plug-ins),
 choose **Object › Plug-ins › StitchCraft Design Settings**, set them, and press OK:
 

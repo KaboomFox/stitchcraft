@@ -69,6 +69,7 @@ pub fn stitchcraft_engine::common::CommonParams::from_set(&stitchcraft_params::s
 pub fn stitchcraft_engine::common::CommonParams::from_set_as(&stitchcraft_params::set::ParamSet, stitchcraft_params::stitch_type::StitchType) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 impl stitchcraft_engine::common::CommonParams
 pub fn stitchcraft_engine::common::CommonParams::jump_length(&self, stitchcraft_core::units::Mm) -> stitchcraft_core::units::Mm
+pub const stitchcraft_engine::common::MAX_STITCH_LENGTH: &str
 pub const stitchcraft_engine::common::STOP_AFTER: &str
 pub const stitchcraft_engine::common::TRIM_AFTER: &str
 pub mod stitchcraft_engine::design

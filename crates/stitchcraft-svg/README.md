@@ -18,8 +18,14 @@ Ink/Stitch's own objects are not stitched (`src/inkstitch.rs`, `REQ-SVG-003`):
 - lines drawn with Inkscape's connector tool;
 - guide, anchor-line and pattern helper paths.
 
-Its trim and stop commands set `trim_after` and `stop_after`. Its ignore commands and `ignore_object`
-setting leave objects and layers out and list them (`SC-I0805`, `REQ-ASM-004`).
+Its trim and stop commands set `trim_after` and `stop_after`, under today's names or those from before
+its file version 3. Its ignore commands and `ignore_object` setting leave objects and layers out and list
+them (`SC-I0805`, `REQ-ASM-004`).
+
+A file an older Ink/Stitch saved is read as Ink/Stitch updates it (`src/version.rs`, `REQ-SVG-007`).
+Before file version 4, for one, a fill's stitches were 3 mm long, and a shape of such a file gets that
+length as a parameter. `SC-I0818` counts them. A file with Ink/Stitch's content and no version, which
+Ink/Stitch asks its user about, and one from a newer Ink/Stitch are read as they are, with `SC-W0802`.
 
 Style sheets set properties as in a viewer (`src/sheet.rs`, `REQ-SVG-006`). Their rules with element,
 class and id selectors, the ones Illustrator and CorelDRAW write, are read, in the order of CSS's cascade.
@@ -42,8 +48,9 @@ Design: `docs/src/design/data-model.md` (the `Design`), `docs/src/design/archite
 - Work is bounded. A file is at most 64 MiB with its entities expanded (`src/text.rs`) and a million XML
   nodes, and its style sheets have at most a million selectors, declarations and at-rules. Reading
   charges the budget two units per XML node, one in the pass that indexes the file and one in the pass
-  that reads it. Style sheets cost a unit per 8 bytes, and each element a unit per class, per rule tested
-  against it and per declaration it takes.
+  that reads it, and the search for Ink/Stitch's file version a unit per node it looks at and per step up
+  from an element of its name. Style sheets cost a unit per 8 bytes, and each element a unit per class,
+  per rule tested against it and per declaration it takes.
 - Parameters will round-trip unchanged (`REQ-PRM-003`, M8).
 
 ## Dependencies
