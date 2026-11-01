@@ -137,7 +137,9 @@ them costs a small part of sewing the fill, since no needle point is placed and 
 A row's needle points lie on a grid along it, as Ink/Stitch places them
 (`stitchcraft_engine::generators::tatami::stitches`, since M5.3). The grid's points are the longest
 stitch apart, `max_stitch_length_mm`. A fill always has one: 4 mm when it is not set or left empty, and
-0.1 mm, with `SC-W0102`, when it is 0 or less, as in Ink/Stitch. Measured along the rows from
+0.1 mm, with `SC-W0102`, when it is 0 or less, as in Ink/Stitch. One shorter than twice the shortest
+stitch is raised to that, with `SC-W0402`, as a running stitch's length is, and so is the underlay's: rows
+stitched shorter would sew stitches the plan merges. Ink/Stitch stitches them as set. Measured along the rows from
 the design's origin, they lie at whole numbers of stitches plus the row's offset (`REQ-FILL-TAT-003`). A
 row's number is how far across the rows it lies from the origin, over `row_spacing_mm`, rounded to the
 nearest whole number, halves to the even one. Its offset is the fractional part of that number over
@@ -182,7 +184,8 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    beside it, and some nodes then meet an odd number of edges. Ink/Stitch adds paths between such nodes
    that may run along rows, and sews those rows a second time. StitchCraft pairs the odd nodes so that the
    needle's way between pairs is shortest in all and joins each pair with an edge. Up to 16 nodes every
-   pairing is weighed, and past that each node pairs with the nearest left. No row is sewn twice
+   pairing is weighed, and past that each node pairs with the nearest left, its ways to the others found
+   only as it pairs: memory then grows with the nodes, not with their pairs. No row is sewn twice
    (`DEV-FILL-006`). A pairing edge stands for the way between its 2 nodes that Ink/Stitch's paths double:
    one edge where a row or a stretch of ring joins the 2, and several otherwise. Travel along it is never a
    handover between neighbouring rows for `skip_last`, and it ends a stretch for gap-fill rows only where it
@@ -491,8 +494,9 @@ join on its own, back and forth, with no travel stitches between stretches; `fli
 the other side, and `reverse` sews the whole fill backwards.
 
 StitchCraft does not build it, since the method exists for Ink/Stitch's older files. A fill set to it is
-sewn as a tatami fill with its settings and no underlay, and `SC-W0314` says so (`REQ-FILL-005`). It is a
-tatami fill in every other way too. The element before it ends near its area, and its rows are routed and
+sewn as a tatami fill with its settings and no underlay, and `SC-W0314` says so (`REQ-FILL-005`). Nor does
+it take pull compensation, random stitch lengths or gap-filling rows, which Ink/Stitch's legacy fill has no
+use for, but its area grows by `expand_mm` as in Ink/Stitch. It is a tatami fill in every other way too. The element before it ends near its area, and its rows are routed and
 joined by travel stitches as a tatami fill's are (`DEV-FILL-014`). `flip` and `reverse` are not planned,
 and a design that sets them gets `SC-W0105`. The VectorCraft plug-in's fill dialog does not offer the
 method.

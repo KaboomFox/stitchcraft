@@ -97,14 +97,16 @@ whatever comes next, and its `fill_method` picks the generator: the tatami fill,
 reads the running stitch's length and tolerance for its travel between rows (the first of the lengths,
 as a satin column does), under the rows from M5.5, and sews its underlay before its top rows from
 M5.6. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay, with
-`SC-W0314`: StitchCraft does not build that method (`REQ-FILL-005`). The other stroke, satin and
+`SC-W0314`: StitchCraft does not build that method (`REQ-FILL-005`). Nor does it take pull compensation,
+random stitch lengths or gap-filling rows, which Ink/Stitch's legacy fill has no use for. The other stroke, satin and
 fill methods are skipped with `SC-W0011` until their milestones. An element whose parameters are wrong
 (`SC-E0101`) is skipped too, and the rest of the design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
 `min_stitch`) and the element's `min_stitch_length_mm`, or the design's shortest stitch when the element
 sets none. A satin column is given its longest stitch as well, the element's `max_stitch_length_mm`,
-which its split stitches keep to.
+which its split stitches keep to. A length shorter than twice the shortest stitch, a running stitch's
+or a fill's longest, is raised to it with `SC-W0402`: shorter, the plan would merge its stitches.
 
 A preview that cannot afford a fill's stitches shows its top rows (`stitchcraft_engine::generate::rows`,
 from M6.3). The fill's settings are read as for sewing it, and what they say is said the same, but only
