@@ -140,6 +140,26 @@ fn diag_sc_e0813_before_0_16_the_test_sheet_is_not_drawn() {
 }
 
 #[test]
+fn diag_sc_e0817_a_sheet_that_would_reach_past_10_m_is_not_drawn() {
+    // The middle of an artboard 9.99 m right of or below the origin: parts of the sheet would lie past 10 m
+    // there, farther than StitchCraft stitches. At 9.63 m it is drawn.
+    let artboard = |x0: f64, y0: f64| json!({"mode": "filter", "bounds": null, "artboard": [x0, y0, x0 + 612.0, y0 + 792.0], "documentData": null});
+    let below = ran("TS-03", &json!([]), &artboard(0.0, 27_900.0));
+    let out = ran("TS-03", &json!([]), &artboard(28_000.0, 0.0));
+    assert_eq!(below, out);
+    assert_eq!(
+        out["error"],
+        "error SC-E0817: The test sheet TS-03 wasn't drawn: in the middle of the artboard, parts of it would lie more than 10 m from \
+         the document's origin, farther than StitchCraft stitches. Select an object on an artboard nearer the origin, or move the \
+         artboard nearer it, and draw the sheet again."
+    );
+    assert_eq!(out.as_object().map(|out| out.len()), Some(1), "only the error: {out}");
+    for near in [artboard(27_000.0, 0.0), artboard(0.0, 26_900.0)] {
+        assert!(ran("TS-03", &json!([]), &near)["objects"].as_array().is_some_and(|objects| !objects.is_empty()));
+    }
+}
+
+#[test]
 fn a_sheet_the_dialog_does_not_offer_is_bad_input() {
     let input = serde_json::to_vec(&json!({"objects": []})).unwrap();
     for sheet in ["TS-01", "TS-10A", "TS-99", ""] {
