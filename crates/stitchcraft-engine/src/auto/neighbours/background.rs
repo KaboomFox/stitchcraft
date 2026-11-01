@@ -158,7 +158,8 @@ fn filled(mut left: Vec<Polygon>, drawn: &[Element], meter: &mut Meter) -> Resul
         let Shape::Fill { path, rule } = &element.shape else { continue };
         let points: Vec<Point> = path.points().collect();
         meter.charge(points.len() as u64)?;
-        if points.is_empty() || !near(&around, TOUCHING, &Envelope::of(&points)) {
+        // A path of no points bounds nothing, and builds no region that could fill a part.
+        if !near(&around, TOUCHING, &Envelope::of(&points)) {
             continue;
         }
         let Ok(area) = parts_of(path, *rule, meter)? else { continue };
