@@ -15,7 +15,7 @@
 //! optional: the move rehearsal checks that the code moves, while StitchCraft's own CI runs every tool.
 
 use crate::util;
-use crate::{api, cleanroom, conformance, docs, filesize, layers, prose, shots, unsafe_audit, wasm};
+use crate::{api, book, cleanroom, conformance, docs, filesize, layers, prose, shots, unsafe_audit, wasm};
 
 /// How one step ended.
 enum Outcome {
@@ -123,10 +123,7 @@ pub fn run(skip: &[String]) -> Result<(), String> {
         ("deny", deny),
         ("typos", optional(|| util::tool_available("typos", &["--version"]), "cargo install typos-cli", guest, tool_step("typos", &[&[]]))),
         ("prose", optional(prose::available, prose::INSTALL, guest, Box::new(|| outcome(prose::run(prose::DEFAULT_BASE))))),
-        (
-            "book",
-            optional(|| util::tool_available("mdbook", &["--version"]), "cargo install mdbook", guest, tool_step("mdbook", &[&["build", "docs"]])),
-        ),
+        ("book", optional(|| util::tool_available("mdbook", &["--version"]), "cargo install mdbook", guest, Box::new(|| outcome(book::run(false))))),
     ];
     unknown_gate(skip, &steps.iter().map(|(name, _)| *name).collect::<Vec<_>>())?;
     let mut summary = Vec::new();

@@ -1,5 +1,7 @@
 # Zigzag satin
 
+<!-- stitch-types: zigzag -->
+
 A zigzag satin is a satin column sewn as a zigzag. Every stitch slants across the band, from a point on one
 edge to a point on the other half the spacing along, and the next slants back. Turn an element's
 `satin_column` on and choose `zigzag` as its `satin_method`. It is drawn, and set up in VectorCraft, as an
