@@ -59,8 +59,14 @@
 //! **Work is bounded.** Besides the bytes [`crate::container`] charges, each object, appearance item,
 //! effect and effect parameter costs one unit, and each subpath one unit and one more for each anchor. An
 //! element costs one unit and one more for each segment of its path, which it holds a copy of, so that
-//! many paints or effects on one long path cost what they make. An object with StitchCraft effects costs
-//! one more for each group or layer around it that paints.
+//! many paints or effects on one long path cost what they make, and one more for every 64 bytes of the
+//! name and settings it holds a copy of. An object with StitchCraft effects costs one more for each group
+//! or layer around it that paints.
+//!
+//! **Copies are bounded.** An object's name goes into each element made of it, and a group's or a
+//! layer's StitchCraft settings into each element of the paths in it. Those copies may come to as many
+//! bytes as the JSON read ([`MAX_BYTES`]), and a file that asks for more is refused with `SC-E0806`:
+//! a megabyte of name on an object of a hundred fills would otherwise hold a hundred megabytes.
 
 use std::cell::OnceCell;
 use std::collections::BTreeMap;
@@ -75,10 +81,10 @@ use stitchcraft_params::stitch_type::Family;
 use stitchcraft_params::{ParamSet, StitchType};
 use stitchcraft_plan::{MachineProfile, Rgb, Thread};
 
-use crate::container::{self, unreadable};
+use crate::container::{self, BYTES_PER_UNIT, MAX_BYTES, unreadable};
 use crate::geometry::{self, UNUSABLE_HINT};
 use crate::values::{sews, text};
-use crate::wire::{self, Dash, Effect, Item, Kind, Node, Paint, PathData, Profile};
+use crate::wire::{self, Dash, Effect, Item, Kind, Node, Paint, PathData, Profile, Stop, shows};
 use crate::{AUTO, FORMAT, color, effect_name, settings};
 
 /// A stroke's miter limit when the file leaves it out: VectorCraft's, as Illustrator's.
@@ -130,7 +136,7 @@ pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Vect
     let file: wire::File = serde_json::from_slice(&json).map_err(|e| unreadable(&format!("Its JSON does not read: {e}.")))?;
     let settings = DesignSettings::default();
     let mut reader =
-        Reader { meter, labels: Labels::default(), objects: 0, elements: Vec::new(), warnings: Vec::new(), auto: reading.auto, settings };
+        Reader { meter, labels: Labels::default(), objects: 0, elements: Vec::new(), warnings: Vec::new(), auto: reading.auto, settings, copied: 0 };
     reader.header(file.format.as_deref(), file.version.as_ref())?;
     let document = file.document.ok_or_else(|| unreadable("It holds no document."))?;
     let mut unread = Vec::new();
@@ -336,6 +342,8 @@ struct Reader {
     /// The design's settings, which the document keeps ([`settings`]): automatic digitizing chooses a
     /// stroke's stitches by them.
     settings: DesignSettings,
+    /// The bytes of the names and settings copied into the elements so far, at most [`MAX_BYTES`].
+    copied: usize,
 }
 
 impl Reader {
@@ -371,7 +379,7 @@ impl Reader {
         let label = self.labels.claim(base, &mut self.meter).map_err(|_| exhausted())?;
         // VectorCraft draws nothing for these, and nothing is said.
         let clipped_away = around.clipping && !node.kind.as_ref().is_some_and(|kind| matches!(kind.name.as_str(), "path" | "compound" | "text"));
-        if !node.visible || node.opacity == Some(0.0) || clipped_away || unseen(node, around) {
+        if !node.visible || !shows(node.opacity) || clipped_away || unseen(node, around) {
             return Ok(());
         }
         // Then the name, which can leave the object out or mark where a shape starts or ends. A group or a
@@ -705,7 +713,9 @@ impl Reader {
         Ok(())
     }
 
-    /// Adds the element `vc:<label>:<what>`, charged for the copy of the path it holds, automatic or not.
+    /// Adds the element `vc:<label>:<what>`, charged for the copies of the path, the name and the settings
+    /// it holds, automatic or not. `SC-E0806` once the names and settings copied come to more than
+    /// [`MAX_BYTES`] ([the module](self)).
     #[allow(clippy::too_many_arguments)]
     fn element(
         &mut self,
@@ -718,7 +728,17 @@ impl Reader {
         automatic: bool,
     ) -> Result<(), Diagnostic> {
         let segments: usize = shape.path().subpaths.iter().map(|sub| sub.segments.len()).sum();
-        self.charge(1 + segments as u64)?;
+        let copied = node.name.as_ref().map_or(0, String::len) + params.iter().map(|(key, value)| key.len() + value.len()).sum::<usize>();
+        self.charge(1 + segments as u64 + (copied / BYTES_PER_UNIT) as u64)?;
+        self.copied = self.copied.saturating_add(copied);
+        if self.copied > MAX_BYTES {
+            let what = format!(
+                "Its objects' names and StitchCraft settings, copied into each fill and stroke they apply to, come to more than the {} MiB \
+                 StitchCraft reads.",
+                MAX_BYTES >> 20
+            );
+            return Err(unreadable(&what));
+        }
         let id = ElementId::new(format!("vc:{label}:{what}"))
             .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The VectorCraft object `vc:{label}` makes no element id: {e}.")))?;
         self.elements.push(Element { id, name: node.name.clone(), shape, thread, params, automatic });
@@ -880,8 +900,8 @@ impl Reader {
         Thread::new(BLACK)
     }
 
-    /// The thread of `paint`: `None` for no paint, and for a gradient without stops, which VectorCraft
-    /// draws nothing for.
+    /// The thread of `paint`: `None` for no paint, and for a gradient without a stop VectorCraft shows,
+    /// which it draws nothing for. A gradient gives the colour of the first stop it shows.
     fn thread(&mut self, label: &str, paint: Option<&Paint>) -> Option<Thread> {
         let paint = paint?;
         match paint.kind.as_str() {
@@ -891,17 +911,19 @@ impl Reader {
                 None => self.black(label, "Its colour does not read, and it is sewn in black."),
             }),
             "gradient" => {
-                let stops: Vec<Option<Rgb>> = paint.gradient.iter().flat_map(|g| &g.stops).map(|s| s.color.as_ref().and_then(color::rgb)).collect();
-                match stops.first()? {
+                // A stop VectorCraft doesn't show has no colour that is sewn.
+                let colour = |stop: &Stop| stop.color.as_ref().filter(|_| stop.shown()).and_then(color::rgb);
+                let stops: Vec<&Stop> = paint.gradient.iter().flat_map(|g| &g.stops).collect();
+                match colour(stops.iter().find(|stop| stop.shown())?) {
                     Some(first) => {
-                        if stops.iter().any(|stop| stop.as_ref() != Some(first)) {
+                        if stops.iter().any(|stop| colour(stop) != Some(first)) {
                             self.feature(
                                 label,
                                 "A gradient is sewn in its first colour.".to_string(),
                                 Some("Fill it with one colour, or split it into shapes of one colour each."),
                             );
                         }
-                        Some(Thread::new(*first))
+                        Some(Thread::new(first))
                     }
                     None => Some(self.black(label, "A gradient's first colour does not read, and it is sewn in black.")),
                 }
@@ -990,7 +1012,7 @@ pub(crate) fn stroke_style(width: Option<f64>, join: Option<&str>, limit: Option
 /// where it is used.
 fn drawn(item: &Item) -> bool {
     item.visible
-        && item.opacity != Some(0.0)
+        && shows(item.opacity)
         && item.paint.as_ref().is_some_and(Paint::paints)
         && (item.kind != "stroke" || item.width.is_none_or(|w| w > 0.0))
 }

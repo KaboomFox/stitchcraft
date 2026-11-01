@@ -29,8 +29,8 @@
 //! the filter declines with `SC-E0813`.
 
 use serde_json::{Map, Value};
-use stitchcraft_core::{Code, Diagnostic, Point};
-use stitchcraft_engine::design::{Design, Element, Shape};
+use stitchcraft_core::{Code, Diagnostic, Fix, Point};
+use stitchcraft_engine::design::{Design, Element, Shape, within_working_limit};
 use stitchcraft_engine::generate::stitch_type_of;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::registry::PARAMETERS;
@@ -100,14 +100,26 @@ fn objects(sheet: &TestSheet, given: &Given) -> Result<Vec<Out>, Diagnostic> {
 }
 
 /// `sheet`'s design moved by whole millimetres, so that the middle of its bounds is as near to `centre` as
-/// that allows; where `stitch testsheet` draws it without a centre. `SC-E0009` for a sheet the filter
-/// doesn't draw, or that can't be drawn, which is a bug.
+/// that allows; where `stitch testsheet` draws it without a centre. `SC-E0817` when parts of it would lie
+/// more than 10 m from the origin there, farther than a design's points lie ([`within_working_limit`]), and
+/// `SC-E0009` for a sheet the filter doesn't draw, or that can't be drawn, which is a bug.
 pub fn placed(sheet: &TestSheet, centre: Option<Point>) -> Result<Design, Diagnostic> {
     let bug = |why: String| Diagnostic::new(Code::InternalCheckFailed, format!("The test sheet {} can't be drawn: {why}.", sheet.id));
     let design = sheet.design().ok_or_else(|| bug("it is drawn stitch by stitch".into()))?.map_err(|e| bug(e.to_string()))?;
     let (Some(centre), Some(bounds)) = (centre, design.bounds()) else { return Ok(design) };
     let middle = bounds.center();
-    design.moved([(centre.x() - middle.x()).round(), (centre.y() - middle.y()).round()])
+    let [dx, dy] = [(centre.x() - middle.x()).round(), (centre.y() - middle.y()).round()];
+    let reached = [bounds.min(), bounds.max()].into_iter().all(|corner| Point::new(corner.x() + dx, corner.y() + dy).is_ok_and(within_working_limit));
+    if !reached {
+        let message = format!(
+            "The test sheet {} wasn't drawn: in the middle of the artboard, parts of it would lie more than 10 m from the document's \
+             origin, farther than StitchCraft stitches.",
+            sheet.id
+        );
+        let fix = Fix::Hint("Select an object on an artboard nearer the origin, or move the artboard nearer it, and draw the sheet again.".into());
+        return Err(Diagnostic::new(Code::VcSheetNotDrawn, message).with_fix(fix));
+    }
+    design.moved([dx, dy])
 }
 
 /// The settings each StitchCraft effect declares, a stitch family's or the Auto effect's, by their keys, as

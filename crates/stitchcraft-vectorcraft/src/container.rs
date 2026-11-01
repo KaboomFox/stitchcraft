@@ -30,8 +30,8 @@ const MARKER: &[u8] = b"\n\0VCBLOBS\0";
 /// How many bytes are unpacked at a time.
 const PIECE: usize = 64 << 10;
 
-/// Bytes read or unpacked for each unit of work.
-const BYTES_PER_UNIT: usize = 64;
+/// Bytes read, unpacked or copied for each unit of work.
+pub(crate) const BYTES_PER_UNIT: usize = 64;
 
 /// The JSON of the `.vectorcraft` file `bytes`, charged to `meter`: `SC-E0806` when the file is larger than
 /// the adapter reads, its compressed stream is damaged or its data after the JSON is not behind the
@@ -79,8 +79,9 @@ fn unpack(bytes: &[u8], meter: &mut Meter) -> Result<Vec<u8>, Diagnostic> {
         let start = unpacked.len();
         unpacked.extend_from_slice(read);
         nul = nul.or_else(|| read.iter().position(|&b| b == 0).map(|i| start + i));
+        // The marker starts a byte before the NUL; a NUL first has no marker, and reads as damage.
         match nul {
-            Some(at) if unpacked.len() >= at - 1 + MARKER.len() => return Ok(unpacked),
+            Some(at) if unpacked.len() >= at + MARKER.len() - 1 => return Ok(unpacked),
             None if unpacked.len() > MAX_BYTES => return Err(too_large()),
             _ => {}
         }
@@ -166,10 +167,13 @@ mod tests {
 
     #[test]
     fn diag_sc_e0806_a_nul_byte_outside_the_marker_is_damage() {
-        for bytes in [b"{\"a\": \0}".to_vec(), b"\0{}".to_vec(), [&b"{}"[..], b"\n\0VCBLOB\0"].concat()] {
-            let refusal = read(&bytes).unwrap_err();
-            assert_eq!(refusal.code, Code::VcUnreadable, "{refusal}");
-            assert!(refusal.message.contains("NUL byte"), "{refusal}");
+        // Plain and compressed, a NUL byte first among them, with no byte before it to start a marker.
+        for plain in [b"{\"a\": \0}".to_vec(), b"\0{}".to_vec(), b"\0".to_vec(), [&b"{}"[..], b"\n\0VCBLOB\0"].concat()] {
+            for bytes in [gzip(&plain), plain] {
+                let refusal = read(&bytes).unwrap_err();
+                assert_eq!(refusal.code, Code::VcUnreadable, "{refusal}");
+                assert!(refusal.message.contains("NUL byte"), "{refusal}");
+            }
         }
     }
 
