@@ -184,6 +184,16 @@ fn req_svg_001_what_a_viewer_hides_is_left_out_quietly() {
           <g opacity="0"><rect id="transparent" width="1" height="1" visibility="visible"/></g>
           <rect id="clear-fill" width="1" height="1" fill-opacity="0" stroke="red"/>
           <rect id="no-paint" width="1" height="1" fill="none"/>
+          <defs>
+            <linearGradient id="clear"><stop offset="0" stop-color="red" stop-opacity="0"/><stop offset="1" stop-color="blue" stop-opacity="0%"/></linearGradient>
+            <linearGradient id="clear-swatch"><stop stop-color="transparent"/></linearGradient>
+            <linearGradient id="clear-current" color="transparent"><stop stop-color="currentColor"/></linearGradient>
+          </defs>
+          <rect id="clear-gradient" width="1" height="1" fill="url(#clear)"/>
+          <rect id="clear-swatch-fill" width="1" height="1" fill="url(#clear-swatch)"/>
+          <rect id="clear-current-fill" width="1" height="1" fill="url(#clear-current)"/>
+          <rect id="clear-colour" width="1" height="1" fill="currentColor" color="transparent"/>
+          <g color="rgba(0, 0, 255, 0)"><rect id="clear-inherited" width="1" height="1" stroke="currentColor" fill="none"/></g>
           <switch>
             <text requiredExtensions="http://example.org/extension">not chosen</text>
             <rect id="chosen" width="1" height="1"/>
@@ -227,6 +237,7 @@ fn req_svg_001_paint_servers_become_colours() {
             <linearGradient id="odd-stop"><stop offset="0" stop-color="not-a-colour"/></linearGradient>
             <linearGradient id="first"><stop offset="0" stop-color="#ff0000"/></linearGradient>
             <linearGradient id="first"><stop offset="0" stop-color="#0000ff"/></linearGradient>
+            <linearGradient id="fading"><stop offset="0" stop-color="#0000ff" stop-opacity="0"/><stop offset="1" stop-color="#ff0000"/></linearGradient>
           </defs>
           <rect id="a" width="1" height="1" fill="url(#via)"/>
           <rect id="b" width="1" height="1" fill="url(#to-pattern) blue"/>
@@ -238,14 +249,16 @@ fn req_svg_001_paint_servers_become_colours() {
           <rect id="h" width="1" height="1" fill="url(#dots)"/>
           <rect id="i" width="1" height="1" fill="none" stroke="url(#stops)"/>
           <rect id="j" width="1" height="1" fill="url(#first)"/>
+          <rect id="k" width="1" height="1" fill="url(#fading)"/>
         </svg>"##);
     // A gradient's first colour (currentColor there is the gradient's own `color`); a gradient without
     // stops, an `href` to something else or a loop paints nothing, as in a viewer; so does a reference
     // to nothing, unless it has a fallback; the first element with an id is the one used. A gradient of
-    // one colour is that colour without a note, unless the colour does not read and black is used.
-    assert_eq!(ids(&svg), ["svg:a:fill", "svg:e:fill", "svg:f:fill", "svg:i:stroke", "svg:j:fill"]);
+    // one colour is that colour without a note, unless the colour does not read and black is used. A
+    // gradient that fades in from a stop a viewer doesn't show is stitched in the first colour it shows.
+    assert_eq!(ids(&svg), ["svg:a:fill", "svg:e:fill", "svg:f:fill", "svg:i:stroke", "svg:j:fill", "svg:k:fill"]);
     let colours: Vec<_> = svg.design.elements().iter().map(|e| e.thread.color.to_string()).collect();
-    assert_eq!(colours, ["#00ff00", "#000000", "#008000", "#00ff00", "#ff0000"]);
+    assert_eq!(colours, ["#00ff00", "#000000", "#008000", "#00ff00", "#ff0000", "#ff0000"]);
     assert_eq!(
         warnings(&svg),
         [
@@ -253,6 +266,28 @@ fn req_svg_001_paint_servers_become_colours() {
             "warning SC-W0802: The fill of `e` is a gradient; it is stitched in the gradient's first colour, #000000.",
             "warning SC-W0802: The fill of `h` is a `<pattern>`, which is not stitched; the fill is left out.",
             "warning SC-W0802: The stroke of `i` is a gradient; it is stitched in the gradient's first colour, #00ff00.",
+            "warning SC-W0802: The fill of `k` is a gradient; it is stitched in the gradient's first colour, #ff0000.",
+        ]
+    );
+}
+
+#[test]
+fn req_svg_001_a_transform_that_flattens_a_shape_leaves_it_out() {
+    // A viewer shows nothing of a shape or a group whose transform flattens it to a line or a point (CSS
+    // Transforms 1, transform function lists); a shape mirrored or turned is shown (DEV-SVG-012).
+    let svg = svg(r#"<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100">
+          <rect id="squashed" width="10" height="10" fill="red" stroke="black" transform="scale(0 1)"/>
+          <g id="slanted" transform="matrix(1 1 1 1 0 0)"><path id="diagonal" d="M 0 0 L 10 0 L 10 10" stroke="black" fill="none"/></g>
+          <g transform="rotate(30)"><rect id="dot" width="10" height="10" fill="red" transform="scale(0)"/></g>
+          <rect id="mirrored" x="-20" width="10" height="10" fill="red" transform="scale(-1 1) rotate(90 -15 5)"/>
+        </svg>"#);
+    assert_eq!(ids(&svg), ["svg:mirrored:fill"]);
+    assert_eq!(
+        warnings(&svg),
+        [
+            "warning SC-W0804: The transform of `squashed` flattens it to a line or a point, which a viewer doesn't show, so it is left out.",
+            "warning SC-W0804: The transform of `slanted` flattens it to a line or a point, which a viewer doesn't show, so it is left out with everything inside it.",
+            "warning SC-W0804: The transform of `dot` flattens it to a line or a point, which a viewer doesn't show, so it is left out.",
         ]
     );
 }
@@ -464,4 +499,12 @@ fn reading_is_bounded_by_the_budget() {
         r##"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><symbol id="inkstitch_ignore_layer"/><g><use xlink:href="#inkstitch_ignore_layer"/></g></svg>"##,
         4 + 3 + 3,
     );
+    // A `style` attribute costs a unit per 8 bytes each time it is read, and a gradient's stop is read
+    // again for each shape the gradient paints: 8,000 bytes more in its style cost 10 shapes 10,000 units.
+    let painted = |comment: &str| {
+        let gradient = format!(r#"<linearGradient id="g"><stop style="stop-color:red;/*{comment}*/"/></linearGradient>"#);
+        format!(r#"<svg xmlns="http://www.w3.org/2000/svg">{gradient}{}</svg>"#, r#"<rect width="1" height="1" fill="url(#g)"/>"#.repeat(10))
+    };
+    exact(&painted(""), 65);
+    exact(&painted(&"x".repeat(8_000)), 65 + 10 * 1_000);
 }

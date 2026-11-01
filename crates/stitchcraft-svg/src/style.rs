@@ -33,6 +33,8 @@ use stitchcraft_engine::design::{Cap, FillRule, Join};
 use stitchcraft_plan::Rgb;
 use svgtypes::{Color, Length, LengthUnit, Number, PaintOrder, PaintOrderKind};
 
+use crate::BYTES_PER_UNIT;
+
 /// A `name: value` declaration as written, in a `style` attribute or a style sheet's rule.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Written<'a> {
@@ -57,10 +59,13 @@ pub struct Declared<'a, 'input> {
 impl<'a, 'input> Declared<'a, 'input> {
     /// What `node` declares, with the declarations of the style sheet's rules that select it, `rules`, in
     /// the order they apply: the most specific last, and of rules as specific, the later last. One unit of
-    /// `meter` per declaration, the `style` attribute's and the rules'.
+    /// `meter` per declaration, the `style` attribute's and the rules', and one per [`BYTES_PER_UNIT`]
+    /// bytes of the `style` attribute, which is read whole each time.
     pub fn of(node: Node<'a, 'input>, rules: &[&[Written<'a>]], meter: &mut Meter) -> Result<Self, Exhausted> {
-        let inline = node.attribute("style").map(declarations).unwrap_or_default();
-        let count = inline.len() + rules.iter().map(|rule| rule.len()).sum::<usize>();
+        let style = node.attribute("style");
+        let inline = style.map(declarations).unwrap_or_default();
+        let read = style.map_or(0, str::len) / BYTES_PER_UNIT;
+        let count = inline.len() + rules.iter().map(|rule| rule.len()).sum::<usize>() + read;
         meter.charge(u64::try_from(count).unwrap_or(u64::MAX))?;
         let mut cascade = Vec::with_capacity(count);
         for important in [true, false] {
@@ -353,12 +358,13 @@ pub enum Plain {
 }
 
 impl Plain {
-    /// The colour it paints with on an element whose `color` is `current`, if it paints.
-    pub const fn colour(self, current: Rgb) -> Option<Rgb> {
+    /// The colour it paints with on an element whose `color` is `current`, if it paints: `currentColor`
+    /// paints nothing where `color` is fully transparent.
+    pub const fn colour(self, current: Option<Rgb>) -> Option<Rgb> {
         match self {
             Plain::None => None,
             Plain::Color(color) => Some(color),
-            Plain::CurrentColor => Some(current),
+            Plain::CurrentColor => current,
         }
     }
 }
@@ -409,7 +415,13 @@ pub fn without_icc(value: &str) -> &str {
 
 /// A parsed colour as a paint: a fully transparent one paints nothing.
 fn colour(color: Color) -> Plain {
-    if color.alpha == 0 { Plain::None } else { Plain::Color(rgb(color)) }
+    painted(color).map_or(Plain::None, Plain::Color)
+}
+
+/// The thread colour a parsed colour paints with: `None` when it is fully transparent, as `transparent` is,
+/// and paints nothing.
+pub fn painted(color: Color) -> Option<Rgb> {
+    (color.alpha != 0).then(|| rgb(color))
 }
 
 /// The colour without its alpha: thread has no transparency.
@@ -426,8 +438,9 @@ pub struct Style<'a> {
     pub stroke: Paint<'a>,
     /// The `fill-rule` property.
     pub fill_rule: FillRule,
-    /// The `color` property, which `currentColor` means.
-    pub color: Rgb,
+    /// The `color` property, which `currentColor` means: `None` when it is fully transparent, and
+    /// `currentColor` then paints nothing.
+    pub color: Option<Rgb>,
     /// `fill-opacity` is zero: the fill is invisible.
     pub fill_clear: bool,
     /// `stroke-opacity` is zero: the stroke is invisible.
@@ -459,7 +472,7 @@ impl Default for Style<'_> {
             fill: Paint::Plain(Plain::Color(Rgb::new(0, 0, 0))),
             stroke: Paint::Plain(Plain::None),
             fill_rule: FillRule::NonZero,
-            color: Rgb::new(0, 0, 0),
+            color: Some(Rgb::new(0, 0, 0)),
             fill_clear: false,
             stroke_clear: false,
             visible: true,
@@ -490,7 +503,7 @@ impl<'a> Style<'a> {
             style.stroke = paint;
         }
         if let Declaration::Set(color) = declared.value("color", |v| Color::from_str(without_icc(v)).ok()) {
-            style.color = rgb(color);
+            style.color = painted(color);
         }
         match get("fill-rule") {
             Some(v) if v.eq_ignore_ascii_case("evenodd") => style.fill_rule = FillRule::EvenOdd,
@@ -570,7 +583,7 @@ impl<'a> Style<'a> {
 }
 
 /// Whether an opacity (a number, or a percentage) is zero or less; `None` when it does not parse.
-fn zero(value: &str) -> Option<bool> {
+pub fn zero(value: &str) -> Option<bool> {
     let length = Length::from_str(value).ok()?;
     matches!(length.unit, LengthUnit::None | LengthUnit::Percent).then_some(length.number <= 0.0)
 }
@@ -679,10 +692,12 @@ mod tests {
         let one = declared(node, &[&first]);
         assert_eq!(one.get("fill"), Some("blue"));
         assert_eq!(one.get("stroke"), Some("lime"));
-        // A unit for each declaration: 3 in the style attribute, 3 and 2 in the rules.
-        let mut meter = stitchcraft_core::Budget { max_stitches: 1, max_work: 8 }.meter();
+        // A unit for each declaration, 3 in the style attribute, 3 and 2 in the rules, and one for each 8
+        // bytes of the style attribute's 44: 5.
+        assert_eq!(node.attribute("style").map(str::len), Some(44));
+        let mut meter = stitchcraft_core::Budget { max_stitches: 1, max_work: 13 }.meter();
         assert!(Declared::of(node, &[&first, &second], &mut meter).is_ok() && meter.work_left() == 0);
-        let mut short = stitchcraft_core::Budget { max_stitches: 1, max_work: 7 }.meter();
+        let mut short = stitchcraft_core::Budget { max_stitches: 1, max_work: 12 }.meter();
         assert!(Declared::of(node, &[&first, &second], &mut short).is_err());
     }
 
@@ -693,7 +708,7 @@ mod tests {
         with_style(svg, "a", |a| {
             let a = a.unwrap();
             assert_eq!((a.fill, a.stroke), (BLUE, Paint::Plain(Plain::CurrentColor)));
-            assert_eq!((a.fill_rule, a.color, a.visible), (FillRule::EvenOdd, Rgb::new(255, 0, 0), false));
+            assert_eq!((a.fill_rule, a.color, a.visible), (FillRule::EvenOdd, Some(Rgb::new(255, 0, 0)), false));
         });
         with_style(
             r#"<svg fill-rule="evenodd" visibility="visible"><g fill-rule="bogus" visibility="bogus"><path id="p" fill-rule="nonzero"/><path id="q"/></g></svg>"#,
@@ -711,8 +726,9 @@ mod tests {
             assert!(b.visible, "visibility can be undone by a child");
             assert_eq!((b.fill, b.stroke), (BLUE, Paint::Plain(Plain::CurrentColor)), "`inherit` and invalid values keep the inherited paint");
         });
-        assert_eq!(Plain::CurrentColor.colour(Rgb::new(1, 2, 3)), Some(Rgb::new(1, 2, 3)));
-        assert_eq!(Plain::None.colour(Rgb::new(1, 2, 3)), None);
+        assert_eq!(Plain::CurrentColor.colour(Some(Rgb::new(1, 2, 3))), Some(Rgb::new(1, 2, 3)));
+        assert_eq!(Plain::CurrentColor.colour(None), None, "a transparent `color` paints nothing");
+        assert_eq!(Plain::None.colour(Some(Rgb::new(1, 2, 3))), None);
     }
 
     #[test]
