@@ -12,7 +12,7 @@ first stitch goes from the second rail to the first, and `swap_satin_rails` star
 In VectorCraft, make the 2 rails one path with Object › Compound Path › Make, give it the StitchCraft
 Satin effect, and set the effect's `satin_method` to `s_stitch`: VectorCraft draws the stitches, and
 `stitch export` sews them. StitchCraft reads the same settings from an SVG file's Ink/Stitch attributes
-from milestone M8 ([setting parameters](README.md#setting-parameters)).
+from milestone M8 ([setting parameters](./#setting-parameters)).
 
 The pictures are drawn from `docs/fixtures/s-stitch.svg`, a curved band 6 mm wide.
 
