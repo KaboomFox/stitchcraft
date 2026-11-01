@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-bc2345b2.js";
+            window.path_to_searchindex_js = "../searchindex-96039274.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -728,25 +728,63 @@ measures. It would also trace a picture otherwise than VectorCraft does, and the
 sew it unlike the tutorial’s flow.</p>
 <h2 id="testing"><a class="header" href="#testing">Testing</a></h2>
 <ul>
-<li>Each rule gets its requirements and failing cases before its code (<a href="adr/0008-conformance-first.html">ADR-0008</a>).</li>
-<li>The test pictures are drawn in code, as the test sheets are (<code>stitchcraft_engine::testsheets::pictures</code>),
-and no logo or picture of anyone else’s is used.</li>
-<li>Each test picture’s automatic plan is compared with its plan in paint order: colour changes, jumps,
+<li>
+<p>Each rule gets its requirements and failing cases before its code (<a href="adr/0008-conformance-first.html">ADR-0008</a>).</p>
+</li>
+<li>
+<p>The test pictures are drawn in code, as the test sheets are (<code>stitchcraft_engine::testsheets::pictures</code>),
+and no logo or picture of anyone else’s is used.</p>
+</li>
+<li>
+<p>Each test picture’s automatic plan is compared with its plan in paint order: colour changes, jumps,
 trims, stitches, and how much of each shape and of each shared edge the stitches cover
 (<code>stitchcraft_testkit::metrics</code>). The cases measure the pictures where <code>stitchcraft_testkit::pictures</code>
-places them.</li>
-<li>Level B of the <a href="compatibility-gate.html">compatibility gate</a> has a case, <code>trace</code>, in which VectorCraft’s
+places them.</p>
+</li>
+<li>
+<p>Level B of the <a href="compatibility-gate.html">compatibility gate</a> has a case, <code>trace</code>, in which VectorCraft’s
 command line traces a picture drawn in the threads <code>stitch palette</code> writes, and StitchCraft sews the
-document it saved, on every track. In its case <code>picture</code>, <code>stitch plan</code> traces the picture itself.</li>
-<li><code>stitch plan</code>’s own tests run it with a stand-in for VectorCraft’s command line, the test program itself,
-which saves a document VectorCraft 0.18.0 traced (<code>apps/stitchcraft-cli/tests/picture.rs</code>).</li>
-<li>TS-13 sews the test pictures at MC-8 (<a href="../plan/machine-testing.html">machine testing</a>), each twice. A
+document it saved, on every track. In its case <code>picture</code>, <code>stitch plan</code> traces the picture itself.</p>
+</li>
+<li>
+<p><code>stitch plan</code>’s own tests run it with a stand-in for VectorCraft’s command line, the test program itself,
+which saves a document VectorCraft 0.18.0 traced (<code>apps/stitchcraft-cli/tests/picture.rs</code>).</p>
+</li>
+<li>
+<p>TS-13 sews the test pictures at MC-8 (<a href="../plan/machine-testing.html">machine testing</a>), each twice. A
 sheet’s top half is digitized automatically, and its bottom half is sewn as drawn, in paint order. The
 bottom half sews first and stops, so that nothing digitized moves into it, and each half’s thread
 changes, jumps and time can be read. TS-13A sews the pictures of neighbours and sewing order, TS-13B
 block letters and lines traced as areas, and TS-13C a face drawn with lines and shapes in parts
 (<a href="../user/reference/test-sheets.html">test sheets</a>). The PE800 cuts no jump, and the sew-out reports where a
-shape sews down the thread of a jump before it.</li>
+shape sews down the thread of a jump before it.</p>
+</li>
+<li>
+<p><code>tests/auto_sheets.rs</code> answers the TS-13 checks that the sheets’ own stitches can, moved to where each sheet
+draws its shapes (<code>stitchcraft_testkit::pictures::sheet</code>). Where the bar runs on beside the square, each
+ends its rows at its own edge. The specks sew as the disc, and no shape sews over one drawn over it. A line
+traced as an area runs to within its width of its ends, and its branch from the line it meets. The smile’s
+column ends where its round caps end, the columns’ rungs lie within 10° of square to their strokes, and the
+face’s columns cover the edges of the areas under them. The sew-out shows what only the machine can: whether
+fabric or a ridge shows once the thread pulls in, and how small a word still reads.</p>
+</li>
+<li>
+<p>The same cases count the jump threads each half leaves on the PE800, snipped at each thread change and
+stop, and how many a later stitch of their colour sews down (<code>stitchcraft_testkit::stitches</code>). Digitized,
+the letters sew as columns with a jump between each 2:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Sheet</th><th style="text-align: right">As drawn: jump threads</th><th style="text-align: right">sewn down</th><th style="text-align: right">Digitized: jump threads</th><th style="text-align: right">sewn down</th></tr>
+</thead>
+<tbody>
+<tr><td>TS-13A</td><td style="text-align: right">8</td><td style="text-align: right">0</td><td style="text-align: right">11</td><td style="text-align: right">3</td></tr>
+<tr><td>TS-13B</td><td style="text-align: right">6</td><td style="text-align: right">0</td><td style="text-align: right">37</td><td style="text-align: right">16</td></tr>
+<tr><td>TS-13C</td><td style="text-align: right">9</td><td style="text-align: right">4</td><td style="text-align: right">6</td><td style="text-align: right">1</td></tr>
+</tbody>
+</table>
+</div>
+</li>
 </ul>
 <p>Codes 0900 to 0999 are automatic digitizing’s (<a href="diagnostics.html">diagnostics</a>).</p>
 
