@@ -1115,6 +1115,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - `SC-W0405` counts a closed zigzag's stitches as they are sewn, after its last needle point moves onto its
   first. Round a 10 mm square 0.3 mm wide it said 6 stitches were short, at 0.27 mm, where 7 are, at
   0.16 mm, and of a teardrop whose only short stitch is the closing one it said nothing.
+- Moved into VectorCraft's repository (ADR-0011), StitchCraft's `docs/src/plan/` would have been left out
+  of git: VectorCraft's `.gitignore` leaves out every folder named `plan`. StitchCraft's `.gitignore` keeps
+  it in, and the compatibility gate's move job fails on any file of ours VectorCraft's git would leave out.
 - Docs and ledger: the zigzag page said VectorCraft's live effect can't show a zigzag as wide as its
   stroke, which it does from VectorCraft 0.14. `DEV-PRM-003` now says that Ink/Stitch reads a manual
   stitch's longest stitch below 0 as not set, as StitchCraft does. Only a satin column's deviates.
