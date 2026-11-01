@@ -26,8 +26,8 @@ requirements = ["REQ-PRM-002"]
 [[deviation]]
 id = "DEV-PRM-003"
 area = "params"
-summary = "An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches."
-reason = "A length below 0 is no length, and the warning says it was read as none (REQ-PRM-002). Ink/Stitch's getters were read at d59c9ab (lib/elements/element.py, lib/stitch_plan/stitch_plan.py)."
+summary = "An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column's deviates so. Ink/Stitch reads a manual stitch's as not set at 0 or below too, and doesn't warn."
+reason = "A length below 0 is no length, and the warning says it was read as none (REQ-PRM-002). Ink/Stitch's getters were read at d59c9ab (lib/elements/element.py, lib/stitch_plan/stitch_plan.py; a stroke's and a satin column's longest stitch in lib/elements/stroke.py and lib/elements/satin_column/satin_column.py)."
 requirements = ["REQ-PRM-002"]
 params = ["min_stitch_length_mm", "min_jump_stitch_length_mm", "max_stitch_length_mm", "end_row_spacing_mm", "fill_underlay_row_spacing_mm", "fill_underlay_max_stitch_length_mm", "zigzag_underlay_max_stitch_length_mm"]
 
@@ -107,7 +107,7 @@ requirements = ["REQ-RUN-009"]
 [[deviation]]
 id = "DEV-FIN-001"
 area = "plan/finalize"
-summary = "StitchCraft fits every stitch to the machine: it leaves out needle points less than their element's shortest stitch from the one before, never less than the machine's (0.3 mm on the Brother), keeping the ends of each run of stitches and its lock points unless a stitch to one would fall short, and splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else 0.1 mm, and splits nothing. Along an edge square to them, a tatami fill's rows nearer each other than the shortest stitch hand over in a stitch too short, so the next row's first needle point is left out and a sliver at its start shows: a bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay."
+summary = "StitchCraft fits every stitch to the machine. It leaves out a needle point nearer the one before than its element's shortest stitch, and never nearer than the machine's (0.3 mm on the Brother). It keeps the ends of each run of stitches and its lock points, unless a stitch to one would be too short, and it splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else the document's min_stitch_len_mm, 0.1 mm unless the file sets it, and splits nothing. Along an edge square to them, a tatami fill's rows nearer each other than the shortest stitch hand over in a stitch too short. The next row's first needle point is then left out, and a sliver at its start is bare. A bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay."
 reason = "The machine profile says what the machine sews well; a stitch outside it hammers one hole, snags, or is refused (docs/src/design/engine-pipeline.md › Finalize)."
 requirements = ["REQ-FIN-001", "REQ-FILL-TAT-004"]
 params = ["min_stitch_length_mm"]
