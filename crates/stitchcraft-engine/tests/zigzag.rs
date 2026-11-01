@@ -240,6 +240,27 @@ fn diag_sc_w0405_a_zigzag_too_narrow_for_the_shortest_stitch_says_so() {
 }
 
 #[test]
+fn diag_sc_w0405_a_closed_zigzag_counts_the_stitch_it_closes_with() {
+    // A closed zigzag's last needle point moves onto its first (REQ-RUN-011), and the stitch it then ends
+    // with is the one sewn. Round a 10 mm square 0.3 mm wide, for a shortest stitch of 0.3 mm, 6 stitches
+    // at its 3 inner corners are short, and the closing stitch, 0.36 mm before the move, is 0.16 mm after.
+    let square = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)];
+    let said = |path: &Path| -> Vec<String> { sewn_for(0.3, path, 0.3, &[]).warnings.iter().map(ToString::to_string).collect() };
+    let closed = said(&rings(&[&square]));
+    assert_eq!(closed.len(), 1);
+    assert!(
+        closed[0].starts_with("warning SC-W0405: 7 of the zigzag's 200 stitches are shorter than the shortest stitch (0.3 mm), the shortest 0.16 mm"),
+        "{closed:?}"
+    );
+    // A teardrop sews no short stitch but the closing one, at its tip.
+    let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+    let curve = Segment::Cubic(p(20.0, -15.0), p(20.0, 15.0), p(0.0, 0.0));
+    let teardrop = Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![curve], closed: true }] };
+    let tip = said(&teardrop);
+    assert!(tip.len() == 1 && tip[0].starts_with("warning SC-W0405: 1 of the zigzag's "), "{tip:?}");
+}
+
+#[test]
 fn diag_sc_w0401_a_part_that_is_one_point_is_not_stitched() {
     let stitched = sewn(&polylines(&[&[(5.0, 5.0)], &[(0.0, 0.0), (1.0, 0.0)]]), 2.0, &[]);
     assert_eq!(stitched.runs.len(), 1);
