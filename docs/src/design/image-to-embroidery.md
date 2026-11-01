@@ -161,7 +161,8 @@ dot.
   order of the parts. It is named after the shape with `#2`, `#3` and so on, or with the shape's own name
   when nothing of it is filled. A trim or a stop after the shape follows its last part.
 - **Its width.** A part's width at a point of its centre line is the diameter of the largest circle centred
-  there that fits inside it. Averaged along the line, it says whether the part is a triple run
+  there that fits inside it. Averaged along the line, leaving out the piece that runs on into a tip's
+  corner, it says whether the part is a triple run
   ([centre lines](algorithms/centre-lines.md#width-along-the-line)). A strip as wide all along as a stroke
   is as wide as the stroke.
 - **To its neighbours** a narrow part's line paints the part. It sews after a fill it borders, and the
@@ -197,7 +198,8 @@ part sews a satin column along each of its centre lines, between its own outline
   at its rung nearest. Where the columns that end under each other go round, as a pinwheel's bars do, the
   first in that order sews first, and the last ends on top of it.
 - **Their width.** A column is as wide as the circles that fit inside the part along its line, as a narrow
-  part is. One no wider than the design's narrowest satin stroke runs along its line as a triple run.
+  part is, without the piece of its line into a tip's corner. One no wider than the design's narrowest
+  satin stroke runs along its line as a triple run.
 - **What sews.** The columns sew after the rest of the shape's area, named as a narrow part's lines are,
   and paint the part to its neighbours. `SC-I0901` counts a shape as satin columns when none of it is
   filled and one of its parts sews a satin column.
@@ -599,7 +601,7 @@ sew it unlike the tutorial's flow.
   | Sheet | As drawn: jump threads | sewn down | Digitized: jump threads | sewn down |
   |---|---:|---:|---:|---:|
   | TS-13A | 8 | 0 | 11 | 3 |
-  | TS-13B | 6 | 0 | 37 | 16 |
+  | TS-13B | 6 | 0 | 37 | 15 |
   | TS-13C | 9 | 4 | 6 | 1 |
 
 - Ink/Stitch sews the TS-13 sheets too, every night ([conformance](conformance.md#l3--inkstitch-differential-nightly),

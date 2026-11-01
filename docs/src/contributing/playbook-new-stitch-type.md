@@ -22,5 +22,7 @@ gates catch anything you miss.
    `cargo xtask shots`. The page claims the type under its title with `<!-- stitch-types: <id> -->`.
    Once the engine sews the type, `cargo xtask docs --check` fails until one page claims it and shows
    at least two pictures.
-8. **Gate.** `cargo xtask ci`, then open the PR with the roadmap step id.
+8. **Gate.** `cargo xtask ci`, then open the PR with the roadmap step id. A test sheet drawn as a design is
+   checked mirrored, turned and drawn again too (`tests/transformed.rs`). The type's sheet must sew the same
+   whichever way it is drawn.
 9. **Sew-out.** If the type is new to the machine, list it for the next machine checkpoint (TS-11).

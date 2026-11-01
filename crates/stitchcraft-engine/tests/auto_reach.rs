@@ -19,7 +19,8 @@ use stitchcraft_engine::normalize::region::Polygon;
 use stitchcraft_engine::normalize::satin::{Shape as Read, recognize};
 use stitchcraft_engine::normalize::stroke::distance_to_segment;
 use stitchcraft_engine::testsheets::find;
-use stitchcraft_testkit::designs::{RED, automatic, fill, p};
+use stitchcraft_testkit::designs::{RED, automatic, fill, letter, p};
+use stitchcraft_testkit::strategies::letters;
 
 /// How far a point of a narrow part's outline may lie from the part's line, in widths of the part. Across
 /// the part it lies half a width away, and an end of the line stops no more than a width short of the
@@ -129,51 +130,6 @@ fn unreached_by(element: &Element, settings: &DesignSettings) -> Vec<(Point, f64
     unreached(&digitize(&automatic(element.clone()), settings, &mut Budget::DEFAULT.meter()).unwrap())
 }
 
-/// The outline of the letter `letter`, T, H or E, `height` mm tall and 0.6 of that wide, drawn in strokes
-/// `width` mm wide from the origin.
-fn letter(letter: char, height: f64, width: f64) -> Vec<(f64, f64)> {
-    let (h, w, wide) = (height, width, 0.6 * height);
-    let (above, below) = (h / 2.0 - w / 2.0, h / 2.0 + w / 2.0);
-    match letter {
-        'T' => {
-            let (left, right) = (wide / 2.0 - w / 2.0, wide / 2.0 + w / 2.0);
-            vec![(0.0, 0.0), (wide, 0.0), (wide, w), (right, w), (right, h), (left, h), (left, w), (0.0, w)]
-        }
-        'H' => vec![
-            (0.0, 0.0),
-            (w, 0.0),
-            (w, above),
-            (wide - w, above),
-            (wide - w, 0.0),
-            (wide, 0.0),
-            (wide, h),
-            (wide - w, h),
-            (wide - w, below),
-            (w, below),
-            (w, h),
-            (0.0, h),
-        ],
-        'E' => {
-            let middle = 0.8 * wide;
-            vec![
-                (0.0, 0.0),
-                (wide, 0.0),
-                (wide, w),
-                (w, w),
-                (w, above),
-                (middle, above),
-                (middle, below),
-                (w, below),
-                (w, h - w),
-                (wide, h - w),
-                (wide, h),
-                (0.0, h),
-            ]
-        }
-        other => panic!("no letter {other}"),
-    }
-}
-
 #[test]
 fn req_auto_014_a_t_reaches_the_ends_of_both_arms_of_its_bar() {
     // The Ts that lost an arm: TS-13B's, 4 mm tall, its bar 3.2 mm long, in lines 0.72 mm wide, and Ts 3, 4.8
@@ -201,24 +157,11 @@ fn req_auto_014_ts13_every_part_sewn_along_its_middle_is_reached() {
     }
 }
 
-/// A letter, its height and its strokes' width in millimetres, drawn in tenths: narrow lines up to 0.9 mm,
-/// and columns from 1.1 mm, no wider than a fifth of the letter's height, so that it reads as its letter.
-fn sizes() -> impl Strategy<Value = (char, f64, f64)> {
-    (prop::sample::select(vec!['T', 'H', 'E']), 30u32..=200)
-        .prop_flat_map(|(letter, height)| {
-            let widest = (height / 5).min(70);
-            let widths = prop_oneof![3u32..=9, 11u32..=widest.max(11)];
-            (Just(letter), Just(height), widths)
-        })
-        .prop_filter("a letter's strokes no wider than a fifth of its height", |(_, height, width)| width * 5 <= *height)
-        .prop_map(|(letter, height, width)| (letter, f64::from(height) / 10.0, f64::from(width) / 10.0))
-}
-
 proptest! {
     #![proptest_config(stitchcraft_testkit::strategies::config(256))]
 
     #[test]
-    fn req_auto_014_req_auto_016_random_letters_are_reached_everywhere((name, height, width) in sizes()) {
+    fn req_auto_014_req_auto_016_random_letters_are_reached_everywhere((name, height, width) in letters()) {
         let shape = letter(name, height, width);
         let element = fill("letter", &[&shape], &RED, &[]);
         let far = unreached_by(&element, &DesignSettings::default());
