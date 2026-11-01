@@ -1107,6 +1107,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Automatic digitizing sews each element once, and moves none across an element kept in its place
+  (`REQ-AUTO-012`). Where finding an element's neighbours needed more work than the budget, an element after
+  it that one before it freed sewed before it, and could sew twice. The review of 2026-10-31 found it.
+- A trim or a stop after an automatic area that the areas sewn after it cover whole is left out with
+  `SC-W0505`, as after any element that sews nothing. It was lost without a word. `SC-I0901` counts only the
+  shapes that sew, where it counted such an area too.
 - The readers leave out more paints a viewer doesn't show (`DEV-SVG-003`). They sewed an SVG gradient
   whose stops are all fully transparent or of `stop-opacity` 0, `currentColor` where `color` is
   transparent, and a VectorCraft gradient whose stops are all of opacity 0, in black or in the first stop's

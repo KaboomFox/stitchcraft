@@ -597,7 +597,8 @@ Nothing needs doing. If the count is large, check for elements drawn on top of e
 
 The element is set to trim or stop after it (`trim_after`, `stop_after`, or Ink/Stitch's trim and
 stop commands), but it sews no stitch, so there is no place for the trim or the stop: it is left
-out, as Ink/Stitch leaves it out. Another message says why the element sews nothing.
+out, as Ink/Stitch leaves it out. Another message says why the element sews nothing, such as an
+automatic area that the areas sewn after it cover whole (`SC-I0904`).
 
 Make the element sew, or set the trim or stop on the element before it.
 
@@ -963,7 +964,8 @@ narrowest triple run 0.5 mm, unless the shape sets others (`auto_max_satin_width
 none of which is filled and one of whose parts sews a satin column as satin columns, and any other as a
 fill.
 
-The message counts the shapes by the stitches they sew as. To sew a shape another way, give it
+The message counts the shapes that sew by the stitches they sew as: an area that the areas sewn after
+it cover whole sews nothing (`SC-I0904`), and isn't counted. To sew a shape another way, give it
 settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it. A shape with settings
 is not digitized automatically.
 
