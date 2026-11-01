@@ -166,18 +166,18 @@ fn req_vc_001_reading_is_bounded_by_the_budget() {
     assert_eq!(read(FORMAT_4, &small).unwrap_err().code, Code::BudgetExhausted);
     let enough = Budget { max_stitches: 1, max_work: 2_000 };
     assert!(read(FORMAT_4, &enough).is_ok());
-    // Each element costs its path again, so that many paints on a long path cost what they make: 200 fills
-    // of 2,000 anchors are 400,000 segments, from 50 kB.
+    // Each element costs its path again, so that many paints on a long path cost what they make: 8 fills
+    // of 2,000 anchors are 16,000 segments, from 34 kB.
     let anchors: Vec<String> = (0..2_000).map(|i| format!(r#"{{"p": [{i}, {}]}}"#, i % 7)).collect();
     let fill = r#"{"kind": "fill", "paint": {"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}}}"#;
     let long = format!(
         r#"{{"id": 2, "appearance": {{"items": [{}]}}, "kind": {{"type": "path", "path": {{"subpaths": [{{"closed": true, "anchors": [{}]}}]}}}}}}"#,
-        vec![fill; 200].join(","),
+        [fill; 8].join(","),
         anchors.join(",")
     );
     let bytes = document(4, &long);
-    assert_eq!(read(&bytes, &Budget { max_stitches: 1, max_work: 100_000 }).unwrap_err().code, Code::BudgetExhausted);
-    assert_eq!(read(&bytes, &Budget { max_stitches: 1, max_work: 500_000 }).unwrap().design.elements().len(), 200);
+    assert_eq!(read(&bytes, &Budget { max_stitches: 1, max_work: 16_000 }).unwrap_err().code, Code::BudgetExhausted);
+    assert_eq!(read(&bytes, &Budget { max_stitches: 1, max_work: 20_000 }).unwrap().design.elements().len(), 8);
 }
 
 #[test]
@@ -211,6 +211,37 @@ fn diag_sc_e0806_names_and_settings_copied_past_the_json_read_are_refused() {
     // Each copy costs a unit for every 64 bytes, so that a budget bounds the time copying takes too.
     let small = Budget { max_stitches: 1, max_work: 64 * (1 << 20) / 64 };
     assert_eq!(read(&document(4, &named(64)), &small).unwrap_err().code, Code::BudgetExhausted);
+}
+
+#[test]
+fn diag_sc_e0806_paths_copied_past_32_bytes_for_each_byte_read_are_refused() {
+    // Each fill and stroke holds a copy of its object's path. Copied, the paths may come to 32 bytes for
+    // each byte of JSON read, and no more: 200 fills of a path of 2,000 anchors, 50 kB, would hold 22 MB.
+    let anchors: Vec<String> = (0..2_000).map(|i| format!(r#"{{"p": [{i}, {}]}}"#, i % 7)).collect();
+    let fill = r#"{"kind": "fill", "paint": {"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}}}"#;
+    // A document of an object of `fills` fills on that path, its JSON `pad` bytes longer.
+    let file = |fills: usize, pad: usize| {
+        let object = format!(
+            r#"{{"id": 2, "appearance": {{"items": [{}]}}, "kind": {{"type": "path", "path": {{"subpaths": [{{"closed": true, "anchors": [{}]}}]}}}}}}{}"#,
+            vec![fill; fills].join(","),
+            anchors.join(","),
+            " ".repeat(pad)
+        );
+        document(4, &object)
+    };
+    let held = |read: &VectorCraft| -> usize {
+        let segments = |shape: &Shape| shape.path().subpaths.iter().map(|subpath| subpath.segments.len()).sum::<usize>();
+        read.design.elements().iter().map(|e| segments(&e.shape)).sum::<usize>() * size_of::<Segment>()
+    };
+    let message = "error SC-E0806: The file could not be read as a VectorCraft document. Its objects' paths, copied into each fill \
+                   and stroke made of them, come to more than 32 bytes for each byte of its JSON.";
+    assert_eq!(refusal(&file(200, 0)).to_string(), message);
+    // 10 fills hold exactly 32 bytes for each byte of a file padded to the length that gives, and read; a
+    // byte less, and they are refused.
+    let ten = 10 * held(&read_ok(&file(1, 0)));
+    let pad = ten / 32 - file(10, 0).len();
+    assert_eq!((file(10, pad).len() * 32, held(&read_ok(&file(10, pad)))), (ten, ten));
+    assert_eq!(refusal(&file(10, pad - 1)).to_string(), message);
 }
 
 #[test]

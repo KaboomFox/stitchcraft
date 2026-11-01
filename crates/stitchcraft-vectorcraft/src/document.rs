@@ -66,7 +66,13 @@
 //! **Copies are bounded.** An object's name goes into each element made of it, and a group's or a
 //! layer's StitchCraft settings into each element of the paths in it. Those copies may come to as many
 //! bytes as the JSON read ([`MAX_BYTES`]), and a file that asks for more is refused with `SC-E0806`:
-//! a megabyte of name on an object of a hundred fills would otherwise hold a hundred megabytes.
+//! a megabyte of name on an object of a hundred fills would otherwise hold a hundred megabytes. Each
+//! element holds a copy of its object's path too, which the budget counts as work but which a long path
+//! under many paints makes far larger than the file: 4 MB drawing 2,500 fills on a path of 200,000 anchors
+//! would hold 28 GB before 500 million units ran out. So the paths copied may come to [`HELD_PER_BYTE`]
+//! bytes for each byte of JSON read, checked before each copy, and no more (`SC-E0806`). A segment held
+//! takes 56 bytes, drawn in at least about 12, so that an object's fill and stroke hold fewer than 10 bytes
+//! for each, and an object of 6 paints on its most compact path still reads.
 
 use std::cell::OnceCell;
 use std::collections::BTreeMap;
@@ -75,13 +81,17 @@ use std::rc::Rc;
 use serde_json::Value;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
 use stitchcraft_engine::auto::{self, Stitches};
-use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Reading, Shape};
+use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Reading, Segment, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::stitch_type::Family;
 use stitchcraft_params::{ParamSet, StitchType};
 use stitchcraft_plan::{MachineProfile, Rgb, Thread};
 
 use crate::container::{self, BYTES_PER_UNIT, MAX_BYTES, unreadable};
+
+/// The bytes the elements' copies of their objects' paths may take, in all, for each byte of JSON read
+/// ([the module](self)).
+pub const HELD_PER_BYTE: usize = 32;
 use crate::geometry::{self, UNUSABLE_HINT};
 use crate::values::{sews, text};
 use crate::wire::{self, Dash, Effect, Item, Kind, Node, Paint, PathData, Profile, Stop, shows};
@@ -135,8 +145,9 @@ pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Vect
     let json = container::json(bytes, &mut meter)?;
     let file: wire::File = serde_json::from_slice(&json).map_err(|e| unreadable(&format!("Its JSON does not read: {e}.")))?;
     let settings = DesignSettings::default();
+    let (labels, read) = (Labels::default(), json.len());
     let mut reader =
-        Reader { meter, labels: Labels::default(), objects: 0, elements: Vec::new(), warnings: Vec::new(), auto: reading.auto, settings, copied: 0 };
+        Reader { meter, labels, objects: 0, elements: Vec::new(), warnings: Vec::new(), auto: reading.auto, settings, copied: 0, read, held: 0 };
     reader.header(file.format.as_deref(), file.version.as_ref())?;
     let document = file.document.ok_or_else(|| unreadable("It holds no document."))?;
     let mut unread = Vec::new();
@@ -344,6 +355,10 @@ struct Reader {
     settings: DesignSettings,
     /// The bytes of the names and settings copied into the elements so far, at most [`MAX_BYTES`].
     copied: usize,
+    /// The bytes of JSON read.
+    read: usize,
+    /// The bytes of the paths copied into the elements so far, at most [`HELD_PER_BYTE`] for each byte read.
+    held: usize,
 }
 
 impl Reader {
@@ -628,7 +643,7 @@ impl Reader {
         for item in node.appearance.items.iter().filter(|item| item.kind == "fill" && drawn(item)) {
             let Some(thread) = self.thread(label, item.paint.as_ref()) else { continue };
             fills += 1;
-            let shape = Shape::Fill { path: path.clone(), rule };
+            let shape = Shape::Fill { path: self.copy(path)?, rule };
             self.element(node, label, &rank("fill", fills), shape, thread, params.clone(), automatic)?;
         }
         // VectorCraft paints the items in order, the first lowest, and the fills are sewn first.
@@ -659,7 +674,7 @@ impl Reader {
                 self.across(label, what, item, path, false);
             }
             strokes += 1;
-            let shape = Shape::Stroke { path: path.clone(), width, join, cap };
+            let shape = Shape::Stroke { path: self.copy(path)?, width, join, cap };
             self.element(node, label, &rank("stroke", strokes), shape, thread, params.clone(), automatic)?;
         }
         Ok(())
@@ -694,7 +709,7 @@ impl Reader {
                 self.followed(label, *family, &set, path, painting);
             }
             let shape = match family {
-                Family::Fill => Shape::Fill { path: path.clone(), rule },
+                Family::Fill => Shape::Fill { path: self.copy(path)?, rule },
                 Family::Stroke | Family::Satin => {
                     set.set(SATIN_COLUMN, if *family == Family::Satin { "true" } else { "false" });
                     let (width, join, cap) = style.unwrap_or_else(|| {
@@ -702,7 +717,7 @@ impl Reader {
                         let (_, join, cap) = stroke_style(None, None, None, None);
                         (Mm::ZERO, join, cap)
                     });
-                    Shape::Stroke { path: path.clone(), width, join, cap }
+                    Shape::Stroke { path: self.copy(path)?, width, join, cap }
                 }
             };
             let count = counts.entry(*family).or_default();
@@ -713,9 +728,25 @@ impl Reader {
         Ok(())
     }
 
-    /// Adds the element `vc:<label>:<what>`, charged for the copies of the path, the name and the settings
-    /// it holds, automatic or not. `SC-E0806` once the names and settings copied come to more than
-    /// [`MAX_BYTES`] ([the module](self)).
+    /// A copy of `path` for an element, charged a unit for each segment, or `SC-E0806` when the paths
+    /// copied would come to more than [`HELD_PER_BYTE`] bytes for each byte read ([the module](self)).
+    fn copy(&mut self, path: &Path) -> Result<Path, Diagnostic> {
+        let segments: usize = path.subpaths.iter().map(|sub| sub.segments.len()).sum();
+        self.charge(segments as u64)?;
+        self.held = self.held.saturating_add(segments.saturating_mul(size_of::<Segment>()));
+        if self.held > self.read.saturating_mul(HELD_PER_BYTE) {
+            let what = format!(
+                "Its objects' paths, copied into each fill and stroke made of them, come to more than {HELD_PER_BYTE} bytes for each byte of \
+                 its JSON."
+            );
+            return Err(unreadable(&what));
+        }
+        Ok(path.clone())
+    }
+
+    /// Adds the element `vc:<label>:<what>`, charged for the copies of the name and the settings it holds,
+    /// its path's copy charged already ([`Reader::copy`]), automatic or not. `SC-E0806` once the names and
+    /// settings copied come to more than [`MAX_BYTES`] ([the module](self)).
     #[allow(clippy::too_many_arguments)]
     fn element(
         &mut self,
@@ -727,9 +758,8 @@ impl Reader {
         params: ParamSet,
         automatic: bool,
     ) -> Result<(), Diagnostic> {
-        let segments: usize = shape.path().subpaths.iter().map(|sub| sub.segments.len()).sum();
         let copied = node.name.as_ref().map_or(0, String::len) + params.iter().map(|(key, value)| key.len() + value.len()).sum::<usize>();
-        self.charge(1 + segments as u64 + (copied / BYTES_PER_UNIT) as u64)?;
+        self.charge(1 + (copied / BYTES_PER_UNIT) as u64)?;
         self.copied = self.copied.saturating_add(copied);
         if self.copied > MAX_BYTES {
             let what = format!(
