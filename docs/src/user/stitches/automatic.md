@@ -47,7 +47,7 @@ pictures are drawn from `docs/fixtures/widths.svg`, a line 0.6 mm wide, a letter
 
 A shape can be broad in one place and narrow in another, such as a letter with thin serifs or a balloon
 on a string. Its broad parts are filled, and its narrow parts sew as columns and lines that reach into
-the fill. The pictures are drawn from `docs/fixtures/parts.svg`: a lollipop on a stick 2.4 mm wide, and a
+the fill. The pictures are drawn from `docs/fixtures/parts.svg`, a lollipop on a stick 2.4 mm wide and a
 balloon on a string 0.8 mm wide, each one area.
 
 **As drawn**
