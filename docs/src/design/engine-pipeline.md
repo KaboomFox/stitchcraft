@@ -139,7 +139,7 @@ Rules every generator follows:
   generator hands assembly its needle points without roles, so an element's underlay, and the running
   stitches between its rows, are tagged top as well, until generators tag their own.
 
-Generators are listed in [algorithms](algorithms/README.md).
+Generators are listed in [algorithms](algorithms/).
 
 ## 4. Plan assembly
 

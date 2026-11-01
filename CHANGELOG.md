@@ -1137,6 +1137,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The docs site's links to a section's first page work (14 of them, such as the user guide's links to its
+  stitch types, how-tos and reference). mdBook publishes a folder's `README.md` as its `index.html` but left
+  each link pointing at `README.html`. The pages link to the folder now, and `cargo xtask docs --check`
+  fails a page of the book that links to a `README.md`, checking a folder's anchors against its
+  `README.md`.
 - A narrow part's centre line sews a short arm (`REQ-AUTO-014`). A branch from a junction to a round or a
   square end counted as a bump of the outline when it was no longer than twice the junction's longest edge,
   as each arm of the bar of a T 4 mm tall is. One arm was left out, and the T sewed as a Γ, TS-13B's among

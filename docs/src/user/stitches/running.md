@@ -6,7 +6,7 @@ lettering at small sizes.
 
 The pictures on this page are drawn by StitchCraft's own engine and renderer, from the designs in
 `docs/fixtures/`. Each dot is a needle point, and orange rings mark the lock stitches at each end. Each
-parameter is set per element, and [setting parameters](README.md#setting-parameters) says what
+parameter is set per element, and [setting parameters](./#setting-parameters) says what
 `stitch plan` reads today.
 
 ## Stitch length
