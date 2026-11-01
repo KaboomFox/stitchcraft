@@ -81,13 +81,14 @@ fn sewn(
             continue;
         }
         let mut points = zigzag(&Along::new(&piece.points, meter)?, spacing.get() / 2.0, sides, meter)?;
-        short.count(&points, min_stitch.get(), meter)?;
         if closed
             && let Some(&first) = points.first()
             && let Some(last) = points.last_mut()
         {
             *last = first;
         }
+        // Counted as sewn: a closed zigzag ends with the stitch onto its first needle point.
+        short.count(&points, min_stitch.get(), meter)?;
         runs.push(passes::sew(&points, passes.repeats, &passes.bean_stitch_repeats, Turn::Joined, meter)?);
     }
     warnings.extend(short.diagnostic(spacing.get(), min_stitch.get()));

@@ -14,7 +14,7 @@ use std::fmt::Write as _;
 
 use stitchcraft_formats::{Encoded, read_back};
 
-use super::{Outcome, Status, describe_file, describe_plan, describe_threads, distinct, output_format, read_machine_file};
+use super::{Entries, Outcome, Status, describe_file, describe_plan, describe_threads, distinct, output_format, read_machine_file};
 use super::{reader_warnings, render_diagnostics, unknown_colors, write_files};
 use crate::cli::ConvertArgs;
 
@@ -56,7 +56,7 @@ pub fn run(args: &ConvertArgs) -> Outcome {
     let _ = writeln!(out, "{} · {} → {}", args.file.display(), decoded.format, format.name());
     describe_file(&mut out, &args.output, format, &bytes);
     describe_plan(&mut out, &back, None);
-    describe_threads(&mut out, &decoded.plan, format.palette().map(|id| id.palette()));
+    describe_threads(&mut out, &decoded.plan, format.palette().map(|id| Entries::Written(id.palette())));
     if let Err(unwritten) = write_files(&[(&args.output, &bytes)], &said) {
         return unwritten;
     }

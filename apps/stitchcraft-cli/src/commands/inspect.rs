@@ -13,10 +13,9 @@ use std::fmt::Write as _;
 
 use sha2::{Digest, Sha256};
 use stitchcraft_core::Severity;
-use stitchcraft_plan::PaletteId;
 use stitchcraft_plan::invariants::LOCK_MIN_STITCH;
 
-use super::{Outcome, Status, asked_profile, describe_plan, describe_threads, hex, read_machine_file, reader_warnings, render_diagnostics};
+use super::{Entries, Outcome, Status, asked_profile, describe_plan, describe_threads, hex, read_machine_file, reader_warnings, render_diagnostics};
 use crate::cli::InspectArgs;
 
 /// Runs `stitch inspect`.
@@ -50,7 +49,7 @@ pub fn run(args: &InspectArgs) -> Outcome {
     } else if in_place > 0 {
         let _ = writeln!(out, "  lengths   {in_place} stitches in place");
     }
-    describe_threads(&mut out, plan, decoded.palette.map(PaletteId::palette));
+    describe_threads(&mut out, plan, decoded.palette.map(|id| Entries::Held(id.palette())));
     if decoded.palette.is_none() {
         let _ = writeln!(out, "            ({} stores no colours: each block is a pause for the next thread)", decoded.format);
     }
@@ -112,6 +111,14 @@ mod tests {
         std::fs::write(&path, bytes).unwrap();
         let out = inspect(path, None);
         assert!(out.stdout.contains("  threads   1. Applique Material (#ffc864), shown as Brother PEC 62 \"Applique Material\"\n"), "{}", out.stdout);
+        // An index outside the palette is named as itself, not as the entry nearest the grey it is shown in.
+        let mut bytes = std::fs::read(golden("formats/one-stitch.pes")).unwrap();
+        bytes[22 + 49] = 70;
+        let path = dir.join("unknown.pes");
+        std::fs::write(&path, bytes).unwrap();
+        let out = inspect(path, None);
+        assert!(out.stdout.contains("  threads   1. PEC thread 70 (#808080), not one of Brother PEC's colours\n"), "{}", out.stdout);
+        assert_eq!(out.stderr, "warning: Thread index 70 is not a Brother PEC colour; it is shown as grey.\n");
     }
 
     #[test]

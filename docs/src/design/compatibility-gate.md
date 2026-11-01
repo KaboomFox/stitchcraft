@@ -154,7 +154,9 @@ StitchCraft must stay movable into VectorCraft's own repository ([ADR-0011](adr/
 The `move` job rehearses it against the latest stable release and `main` (pull requests that touch
 manifests or tooling: the pinned stable release):
 
-1. Check out VectorCraft and put this repository into it as the folder `stitchcraft/`.
+1. Check out VectorCraft and put this repository into it as the folder `stitchcraft/`, and check that
+   VectorCraft's git would keep every file of ours: its `.gitignore` leaves out every folder named `plan`,
+   and ours keeps `docs/src/plan/` in.
 2. **Nested:** `cargo xtask compat join --nested ..`, then build a throwaway VectorCraft crate that depends
    on `stitchcraft-engine` by path.
 3. **Joined:** `cargo xtask compat join ..`, then run `cargo xtask ci` from the folder: StitchCraft's

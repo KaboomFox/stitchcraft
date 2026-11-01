@@ -161,6 +161,20 @@ jobs:
         run: |
           mkdir vectorcraft/stitchcraft
           git archive HEAD | tar -x -C vectorcraft/stitchcraft
+      - name: VectorCraft's git keeps every file of StitchCraft's
+        if: steps.ref.outputs.ref != ''
+        run: |
+          # check-ignore lists the paths a .gitignore leaves out; it exits 1 when there are none.
+          set +e
+          ignored=$(git ls-files | sed 's|^|stitchcraft/|' | git -C vectorcraft check-ignore --stdin)
+          status=$?
+          set -e
+          if [ "$status" -gt 1 ]; then echo "::error::git check-ignore failed with status $status"; exit 1; fi
+          if [ -n "$ignored" ]; then
+            echo "::error::VectorCraft's .gitignore would leave out these files of StitchCraft's; keep them in our .gitignore:"
+            echo "$ignored"
+            exit 1
+          fi
       - name: Install StitchCraft's pinned toolchain
         if: steps.ref.outputs.ref != ''
         working-directory: vectorcraft/stitchcraft

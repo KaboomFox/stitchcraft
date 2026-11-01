@@ -1117,6 +1117,24 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   compensation adds off as a section of its own: the column of an L 3 mm wide, -1 mm at its start, paired
   its stitches otherwise. A column digitized automatically that reaches under another at one end takes
   the rung at its other end too.
+- `stitch plan` refuses another output named as the bug-report bundle it leaves next to its output on a
+  bug (`REQ-CLI-007`). With `--report x.bug-report.json` and `-o x.pes`, the bundle replaced the report.
+- `stitch inspect` names a thread index outside the palette as itself, "not one of Brother PEC's
+  colours" (`REQ-THREAD-002`). It said the thread was shown as the entry nearest the grey it is drawn in,
+  which the file doesn't hold.
+- `SC-W0405` counts a closed zigzag's stitches as they are sewn, after its last needle point moves onto its
+  first. Round a 10 mm square 0.3 mm wide it said 6 stitches were short, at 0.27 mm, where 7 are, at
+  0.16 mm, and of a teardrop whose only short stitch is the closing one it said nothing.
+- Moved into VectorCraft's repository (ADR-0011), StitchCraft's `docs/src/plan/` would have been left out
+  of git: VectorCraft's `.gitignore` leaves out every folder named `plan`. StitchCraft's `.gitignore` keeps
+  it in, and the compatibility gate's move job fails on any file of ours VectorCraft's git would leave out.
+- Docs and ledger: the zigzag page said VectorCraft's live effect can't show a zigzag as wide as its
+  stroke, which it does from VectorCraft 0.14. `DEV-PRM-003` now says that Ink/Stitch reads a manual
+  stitch's longest stitch below 0 as not set, as StitchCraft does. Only a satin column's deviates.
+  `DEV-FIN-001` gives Ink/Stitch's fallback for the shortest stitch, the document's `min_stitch_len_mm`.
+  The longest stitch's help no longer says an empty one sews every stitch whole, since finishing splits a
+  stitch longer than the machine sews, and the locks page says which needle point Ink/Stitch's half
+  stitch aims at.
 - A file an older Ink/Stitch saved is read as Ink/Stitch updates it (`REQ-SVG-007`). Before its file
   version 4, a fill's stitches were 3 mm long unless it set another length; Ink/Stitch writes that into such
   a file's shapes when it opens it, and StitchCraft sewed them 4 mm long. A shape with a fill and no longest
