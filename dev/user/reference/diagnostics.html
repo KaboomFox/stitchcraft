@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-322dfafa.js";
+            window.path_to_searchindex_js = "../../searchindex-5f074bab.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b793f3ad.js"></script>
@@ -609,7 +609,8 @@ Nothing needs doing. If the count is large, check for elements drawn on top of e
 <p><strong>Warning</strong> — Trim or stop after an element that sews nothing; left out</p>
 <p>The element is set to trim or stop after it (<code>trim_after</code>, <code>stop_after</code>, or Ink/Stitch’s trim and
 stop commands), but it sews no stitch, so there is no place for the trim or the stop: it is left
-out, as Ink/Stitch leaves it out. Another message says why the element sews nothing.</p>
+out, as Ink/Stitch leaves it out. Another message says why the element sews nothing, such as an
+automatic area that the areas sewn after it cover whole (<code>SC-I0904</code>).</p>
 <p>Make the element sew, or set the trim or stop on the element before it.</p>
 <h2 id="sc-e0601"><a class="header" href="#sc-e0601">SC-E0601</a></h2>
 <p><strong>Error</strong> — Too many colour changes for the file format</p>
@@ -865,7 +866,8 @@ narrowest triple run 0.5 mm, unless the shape sets others (<code>auto_max_satin_
 (<code>SC-I0902</code>), and counted as a fill. An area whose every part runs is counted as a running stitch, one
 none of which is filled and one of whose parts sews a satin column as satin columns, and any other as a
 fill.</p>
-<p>The message counts the shapes by the stitches they sew as. To sew a shape another way, give it
+<p>The message counts the shapes that sew by the stitches they sew as: an area that the areas sewn after
+it cover whole sews nothing (<code>SC-I0904</code>), and isn’t counted. To sew a shape another way, give it
 settings: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to it. A shape with settings
 is not digitized automatically.</p>
 <h2 id="sc-i0902"><a class="header" href="#sc-i0902">SC-I0902</a></h2>

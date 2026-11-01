@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-322dfafa.js";
+            window.path_to_searchindex_js = "searchindex-5f074bab.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -2537,7 +2537,8 @@ Nothing needs doing. If the count is large, check for elements drawn on top of e
 <p><strong>Warning</strong> — Trim or stop after an element that sews nothing; left out</p>
 <p>The element is set to trim or stop after it (<code>trim_after</code>, <code>stop_after</code>, or Ink/Stitch’s trim and
 stop commands), but it sews no stitch, so there is no place for the trim or the stop: it is left
-out, as Ink/Stitch leaves it out. Another message says why the element sews nothing.</p>
+out, as Ink/Stitch leaves it out. Another message says why the element sews nothing, such as an
+automatic area that the areas sewn after it cover whole (<code>SC-I0904</code>).</p>
 <p>Make the element sew, or set the trim or stop on the element before it.</p>
 <h2 id="sc-e0601"><a class="header" href="#sc-e0601">SC-E0601</a></h2>
 <p><strong>Error</strong> — Too many colour changes for the file format</p>
@@ -2793,7 +2794,8 @@ narrowest triple run 0.5 mm, unless the shape sets others (<code>auto_max_satin_
 (<code>SC-I0902</code>), and counted as a fill. An area whose every part runs is counted as a running stitch, one
 none of which is filled and one of whose parts sews a satin column as satin columns, and any other as a
 fill.</p>
-<p>The message counts the shapes by the stitches they sew as. To sew a shape another way, give it
+<p>The message counts the shapes that sew by the stitches they sew as: an area that the areas sewn after
+it cover whole sews nothing (<code>SC-I0904</code>), and isn’t counted. To sew a shape another way, give it
 settings: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to it. A shape with settings
 is not digitized automatically.</p>
 <h2 id="sc-i0902"><a class="header" href="#sc-i0902">SC-I0902</a></h2>
@@ -5651,7 +5653,8 @@ distance from where the needle is to the next group’s first needle point:</p>
 </table>
 </div>
 <p>An element that sews nothing, because it is skipped or too small for a stitch, has no place for its trim
-or stop. Both are left out, as Ink/Stitch leaves them out, and <code>SC-W0505</code> says so.</p>
+or stop. Both are left out, as Ink/Stitch leaves them out, and <code>SC-W0505</code> says so. So does automatic
+digitizing of an area it leaves out, which the areas sewn after it cover whole.</p>
 <p>A jump lands where sewing resumes, on the tie-in’s first point or on the group’s first point when it has
 no tie-in, and the needle goes down there before the first stitch. The jump’s own thread is the
 machine’s business. The plan trims where an element’s <code>trim_after</code> is set, as Ink/Stitch’s does. A PES
@@ -7824,7 +7827,9 @@ touching it, the area doesn’t reach, and fabric shows between them as drawn. A
 area between its rails as they are sewn, turned to run the same way. Where an area sewn after it covers
 part of it, it is cut away under that area, 0.4 mm inside the area’s edge, and that part is sewn once: a
 stacked trace then sews the areas of an abutting one. A part that the areas sewn after it cover whole
-sews nothing, however near their edge it lies. A narrow part’s line covers its part, and isn’t cut away.
+sews nothing, however near their edge it lies. So does an area they cover whole. A trim or a stop after
+such an area has no place, as after any element that sews nothing (<code>SC-W0505</code>). <code>SC-I0901</code> counts only
+the shapes that sew. A narrow part’s line covers its part, and isn’t cut away.
 It sews nothing when the areas sewn after it cover the part whole, and sews whole when they cover the
 part in places. A column or a line sewn after an area goes over it, and
 the area is sewn whole under it. Cutting a fill round small letters adds stitches and can leave gaps
@@ -7919,7 +7924,8 @@ width times √2, which holds a square cap’s corners. Rule 4 measures with the
 shape’s paint only when the shape is near an element that moves.</p>
 <p><strong>Work</strong> (<code>REQ-AUTO-012</code>). Each element has the work budget to itself to find how it lies beside the
 shapes drawn after it. It costs a unit for each of them, and the work of those near it. One that needs
-more keeps its place in paint order as an element with a stop after it does: nothing moves across it. A
+more keeps its place in paint order as an element with a stop after it does: nothing moves across it.
+An element after it that one before it frees still waits its turn after it, and each element sews once. A
 shape whose paint can’t be found within the budget keeps its place beside the shapes near it. Choosing the
 order has the budget once more, and costs a unit for each free element looked at each time an element is
 placed. An order that needs more sews the elements not placed by then in paint order, after the others.
