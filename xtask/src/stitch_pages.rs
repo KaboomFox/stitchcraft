@@ -37,9 +37,9 @@ const MARKER: &str = "<!-- stitch-types:";
 /// The fewest pictures a stitch type's page shows.
 pub const PICTURES: usize = 2;
 
-/// The stitch types sewn without a page with pictures yet, each with the roadmap step that writes it.
-/// Ink/Stitch's legacy fill is sewn as a tatami fill, so the tatami fill's page is its page too.
-const UNSHOWN: &[(StitchType, &str)] = &[(StitchType::SatinColumn, "M13.11"), (StitchType::TatamiFill, "M13.11"), (StitchType::LegacyFill, "M13.11")];
+/// The stitch types sewn without a page with pictures yet, each with the roadmap step that writes it: none
+/// since M13.11. A stitch type that starts to sew gets its page in the same change, or a row here.
+const UNSHOWN: &[(StitchType, &str)] = &[];
 
 /// One shape of each family, in millimetres: a hairline, a band 4 mm wide, which sews as a satin column
 /// drawn as one path once it is set to be one, and a square.
@@ -52,6 +52,11 @@ const SHAPES: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="40mm" he
 /// Checks that each stitch type the engine sews has its page, with pictures, among `pages` (every Markdown
 /// file, as `cargo xtask docs --check` reads them).
 pub fn check(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) -> Result<(), String> {
+    checked(root, pages, UNSHOWN, findings)
+}
+
+/// [`check`], with `unshown` the stitch types still without a page, each with the roadmap step that writes it.
+fn checked(root: &Path, pages: &[(PathBuf, String)], unshown: &[(StitchType, &str)], findings: &mut Findings) -> Result<(), String> {
     let folder = root.join(FOLDER);
     let sewn = sewn()?;
     let shots = shots::load(root)?;
@@ -77,8 +82,8 @@ pub fn check(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) 
     }
     for t in &sewn {
         let pages = claimed.get(t).map_or(&[][..], Vec::as_slice);
-        let unshown = UNSHOWN.iter().find(|(u, _)| u == t).map(|(_, step)| step);
-        match (pages, unshown) {
+        let waiting = unshown.iter().find(|(u, _)| u == t).map(|(_, step)| step);
+        match (pages, waiting) {
             ([], None) => {
                 findings.error(format!("{} (`{}`) is sewn, and no page in {FOLDER} claims it with `{MARKER} {} -->`", t.name(), t.id(), t.id()));
             }
@@ -90,7 +95,7 @@ pub fn check(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) 
             (pages, _) => findings.error(format!("{} (`{}`) is claimed by more than one page: {}", t.name(), t.id(), pages.join(", "))),
         }
     }
-    for (t, _) in UNSHOWN.iter().filter(|(t, _)| !sewn.contains(t)) {
+    for (t, _) in unshown.iter().filter(|(t, _)| !sewn.contains(t)) {
         findings.error(format!("`UNSHOWN` in xtask/src/stitch_pages.rs lists {}, which is not sewn", t.name()));
     }
     Ok(())
@@ -154,12 +159,13 @@ mod tests {
         assert_eq!(declared(text), [(3, "running_stitch"), (3, "manual_stitch")]);
     }
 
-    /// The findings of [`check`] over the pages `pages`, written in the stitch types' folder.
-    fn findings(pages: &[(&str, &str)]) -> Findings {
+    /// The findings of [`checked`] over the pages `pages`, written in the stitch types' folder, with the
+    /// stitch types `unshown` still without a page.
+    fn findings(pages: &[(&str, &str)], unshown: &[(StitchType, &str)]) -> Findings {
         let root = util::root();
         let pages: Vec<(PathBuf, String)> = pages.iter().map(|(name, text)| (root.join(FOLDER).join(name), (*text).to_string())).collect();
         let mut findings = Findings::default();
-        check(&root, &pages, &mut findings).unwrap();
+        checked(&root, &pages, unshown, &mut findings).unwrap();
         findings
     }
 
@@ -171,14 +177,17 @@ mod tests {
 
     #[test]
     fn each_stitch_type_sewn_needs_one_page_with_two_pictures() {
-        let found = findings(&[
-            ("running.md", &page("running_stitch, manual_stitch", &["running-length", "manual"])),
-            ("zigzag.md", &page("zigzag_stitch", &["testsheet-ts-01"])),
-            ("e-stitch.md", &page("e_stitch, contour_fill, no_such_type", &["e-stitch-spacing", "e-stitch-swapped"])),
-            ("s-stitch.md", &page("s_stitch", &["s-stitch-spacing", "s-stitch-split"])),
-            ("s-stitch-again.md", &page("s_stitch", &["s-stitch-spacing", "s-stitch-split"])),
-            ("tatami.md", &page("tatami_fill", &["testsheet-ts-01", "testsheet-ts-02"])),
-        ]);
+        let found = findings(
+            &[
+                ("running.md", &page("running_stitch, manual_stitch", &["running-length", "manual"])),
+                ("zigzag.md", &page("zigzag_stitch", &["testsheet-ts-01"])),
+                ("e-stitch.md", &page("e_stitch, contour_fill, no_such_type", &["e-stitch-spacing", "e-stitch-swapped"])),
+                ("s-stitch.md", &page("s_stitch", &["s-stitch-spacing", "s-stitch-split"])),
+                ("s-stitch-again.md", &page("s_stitch", &["s-stitch-spacing", "s-stitch-split"])),
+                ("tatami.md", &page("tatami_fill", &["testsheet-ts-01", "testsheet-ts-02"])),
+            ],
+            &[(StitchType::SatinColumn, "M13.11"), (StitchType::TatamiFill, "M13.11"), (StitchType::LegacyFill, "M13.11")],
+        );
         let folder = FOLDER;
         let pictures = found.errors.iter().find(|e| e.contains("zigzag.md")).unwrap();
         assert_eq!(*pictures, format!("{folder}/zigzag.md: a stitch type's page shows at least 2 pictures, and this one shows 1"));
@@ -199,5 +208,16 @@ mod tests {
                 "Legacy fill (`legacy_fill`) has no page with pictures yet: roadmap step M13.11"
             ]
         );
+    }
+
+    #[test]
+    fn every_stitch_type_sewn_has_its_page_since_m13_11() {
+        // Nothing waits for a page any more: a type sewn without one is an error, not a warning.
+        assert!(UNSHOWN.is_empty());
+        let found = findings(&[("running.md", &page("running_stitch, manual_stitch", &["running-length", "manual"]))], UNSHOWN);
+        let unclaimed =
+            "Satin column (`satin_column`) is sewn, and no page in docs/src/user/stitches claims it with `<!-- stitch-types: satin_column -->`";
+        assert!(found.errors.iter().any(|e| e == unclaimed), "{:#?}", found.errors);
+        assert!(found.warnings.is_empty(), "{:#?}", found.warnings);
     }
 }
