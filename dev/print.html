@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-264061e4.js";
+            window.path_to_searchindex_js = "searchindex-77f79c70.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -982,7 +982,9 @@ the line’s StitchCraft effects, and keeps the line’s other effects. A path o
 column of each. A satin column already drawn with rails is left as it is. When a line can’t be made into a
 column, nothing changes, and VectorCraft says why (<code>SC-E0814</code>), for a path without a stroke, or a line
 whose column would sew less than the line: one too short or tight for its width, or one that crosses
-itself.</p>
+itself. A line whose satin effect lengthens both its ends, with a push compensation below 0 at each, can
+be refused too, when its column needs a rung across one end to tell its rails from its rungs: that rung
+would sew the end’s extra length apart. Set the push compensation to 0 or more at one end first.</p>
 <p>Making the rails of a curved line takes more work than a filter usually may do. So Stroke to Satin asks
 for more when it is installed, and VectorCraft asks you first, then runs it in the background with
 <strong>Cancel</strong>. StitchCraft Satin must be installed too. VectorCraft 0.15 and 0.16 run it with the time any
@@ -2769,9 +2771,11 @@ and rungs, which sews as the line does with the satin effect. It changed nothing
 selected, or one of the lines can’t be made so: its path has no stroke to take the column’s width
 from, or can’t be used, its rails can’t be made or would leave parts of it out, as <code>SC-E0214</code> and
 <code>SC-W0213</code> say of a satin column drawn as one path, or the column would be read back with other rails
-or rungs, as one whose rails cross each other is.</p>
+or rungs, as one whose rails cross each other is, or would need a rung across an end that its satin
+effect’s push compensation lengthens, which would sew what that adds apart.</p>
 <p>The message names the object. Select the lines, give the path a stroke as wide as the column, draw
-that column with its 2 rails, or leave the object out of the selection.</p>
+that column with its 2 rails, set the satin effect’s push compensation to 0 or more at one end, or
+leave the object out of the selection.</p>
 <h2 id="sc-e0815"><a class="header" href="#sc-e0815">SC-E0815</a></h2>
 <p><strong>Error</strong> — VectorCraft’s command line could not be started</p>
 <p><code>stitch plan</code> and <code>stitch export</code> trace a picture, a PNG or JPEG file, with VectorCraft’s command
@@ -6194,8 +6198,9 @@ a third rung step 3 finds them.</li>
 in step 3.</li>
 <li>Every other subpath is a rung. A rung joins the point where it crosses the first rail to the point
 where it crosses the second. Where it misses a rail, the point of that rail nearest the rung is used,
-with <code>SC-W0203</code>. Of points as near as each other, it is the one shapely’s nearest points of the rung
-and the rail give (see <em>Equally near points</em>). A rung that crosses a rail more than once does not say
+with <code>SC-W0203</code>, measured against the rail as push compensation leaves it (<a href="#compensation-1">Compensation</a>).
+Of points as near as each other, it is the one shapely’s nearest points of the rung and the rail give
+(see <em>Equally near points</em>). A rung that crosses a rail more than once does not say
 which crossing it means. It is left out, with <code>SC-W0207</code>, and the satin is sewn without it.</li>
 </ol>
 <p>Recognition runs before any stitch is computed. The generator only ever gets rails, and odd geometry is
@@ -6298,8 +6303,14 @@ rungs. With none, a path of 2 lines is 2 rails whose nodes pair up. So such a co
 more rung, which pairs the rails’ first points: the section it ends has no length, and the column sews as
 before. Rails that meet each other, as a pointed column’s do at its tip, meet one more line, and only 2
 rungs or more tell them from the rungs: such a column with fewer is drawn with a rung pairing the rails’
-other ends. Automatic digitizing draws the columns it finds in a part as wide as a satin column the same
-way, from their rails and rungs (<code>drawn::from_rails</code>, <code>REQ-AUTO-017</code>), and reads each back. A line whose
+other ends. Push compensation lengthens the rails before they are cut. Across an end it lengthens, the
+rung would make the part added there a section of its own, whose points pair otherwise. So where it
+lengthens the column’s start, the rung pairs the rails’ last points, and an end it lengthens takes the
+rung only when no other can. Stroke to Satin refuses a line whose column would need one there
+(<code>SC-E0814</code>). Automatic digitizing draws the columns it finds in a part as wide as a satin column the same
+way, from their rails and rungs (<code>drawn::from_rails</code>, <code>REQ-AUTO-017</code>), and reads each back. One that
+reaches under other columns at both ends then sews the overlap at the end that takes the rung as a section
+of its own. A line whose
 rails can’t be made (<code>SC-E0214</code>), or leave parts of it out (<code>SC-W0213</code>), isn’t made into a column, since the
 column would sew less than the line. Rails that cross each other aren’t drawn
 either, since their column reads back with other rails. A line no wider than the design’s narrowest satin stroke sews as a
@@ -6359,9 +6370,12 @@ up for both as Ink/Stitch does.</p>
 <li><strong>Push compensation</strong> (<code>push_compensation_mm</code>) acts on the rails after any reversal, before they are
 cut into sections. It takes its length off each rail at the column’s start and end, or adds it where
 negative, straight on from the rail’s first or last segment. 2 values set the start, then the end.
-The points where a drawn rung cuts come from the rails as drawn, so a rung in a part taken off cuts the
-rail at its end and leaves its section out. A rung added across the nodes is measured against the
-compensated rails. A rail the shortening would leave shorter than half a CSS pixel keeps its length
+The points where a drawn rung crosses the rails come from the rails as drawn, so a rung in a part taken
+off cuts the rail at its end and leaves its section out. A rung that misses a rail, and a rung added
+across the nodes, are measured against the compensated rails, as Ink/Stitch measures every rung. Near
+an end that push compensation lengthens, a rung that misses the rail can come nearest the part it adds.
+It then cuts the rail on that part. Ink/Stitch at d59c9ab, run as a black box, sews such a column as it
+sews one drawn with longer rails and a rung across them there. A rail the shortening would leave shorter than half a CSS pixel keeps its length
 (<code>SC-W0211</code>), and a lengthening at its other end still applies.</li>
 <li><strong>Pull compensation</strong> acts on each pair as it is placed. Both ends move outward along the line through
 the pair, each by <code>pull_compensation_mm</code> plus <code>pull_compensation_percent</code> of the pair’s width, and 2
@@ -6711,10 +6725,10 @@ end command, read from M8, would replace the needle point or the next stitch.</p
 <tr><td><code>REQ-SAT-002</code></td><td>Consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails. A pair more than 5 % off moves at most twice, which brings a smooth curve’s pairs within 5 %. Round a sharp corner a pair can end further off. The last pair is at most a spacing on</td></tr>
 <tr><td><code>REQ-SAT-003</code></td><td>With a longest stitch, a longer top stitch is split as <code>split_method</code> says. By default it splits into the fewest equal parts, and the stitch back into as many as the stitch across before. Simple and staggered splits fall at whole multiples of the longest stitch, from a start that <code>staggered</code> moves along</td></tr>
 <tr><td><code>REQ-SAT-004</code></td><td>Underlays come before the top stitches and leave them as they were: the centre walk, then the contour and the zigzag. Straight stitches of one length join them, no longer than the running stitch’s length raised to twice the shortest stitch. A part that starts within the shortest stitch of the needle takes the place of an underlay’s last point, and the needle’s way gives way to it. Beside a top stitch’s point the part’s points give way instead. After an odd centre walk the rest runs from the column’s end</td></tr>
-<tr><td><code>REQ-SAT-005</code></td><td>Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces <code>SC-E0201</code> and no stitches, and a rung that misses a rail joins the rail’s nearest point (<code>SC-W0203</code>), the one shapely gives of points as near. A column with no section to sew produces <code>SC-E0216</code> and no stitches</td></tr>
+<tr><td><code>REQ-SAT-005</code></td><td>Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces <code>SC-E0201</code> and no stitches, and a rung that misses a rail joins the rail’s nearest point (<code>SC-W0203</code>), the one shapely gives of points as near, once push compensation has moved the rail’s ends. A column with no section to sew produces <code>SC-E0216</code> and no stitches</td></tr>
 <tr><td><code>REQ-SAT-006</code></td><td>A parameter with a value for each side changes only its own side: a rail’s stitch ends, or the column’s start or end</td></tr>
 <tr><td><code>REQ-SAT-007</code></td><td>Random widths and spacing are reproducible from the element and its seed, and stay within their ranges</td></tr>
-<tr><td><code>REQ-SAT-008</code></td><td>Push compensation shortens the rails at the column’s start and end before they are cut, or lengthens them where negative. A rail it would leave shorter than half a CSS pixel keeps its length (<code>SC-W0211</code>)</td></tr>
+<tr><td><code>REQ-SAT-008</code></td><td>Push compensation shortens the rails at the column’s start and end before they are cut, or lengthens them where negative. A rung that misses a rail cuts it where the rail so compensated comes nearest the rung. A rail it would leave shorter than half a CSS pixel keeps its length (<code>SC-W0211</code>)</td></tr>
 <tr><td><code>REQ-SAT-009</code></td><td>On each rail, a top stitch end closer than <code>short_stitch_distance_mm</code> to the last end left in place moves in along its stitch by the next <code>short_stitch_inset</code> percentage. Ends far enough from it stay</td></tr>
 <tr><td><code>REQ-SAT-010</code></td><td>The centre walk follows the line at its position between the rails within its tolerance, in stitches no longer than its length, there and back its repeats</td></tr>
 <tr><td><code>REQ-SAT-011</code></td><td>The contour runs along each rail at its insets, towards the end on the first rail’s side and back on the second’s. It stops short of the column’s start and end by the rails’ insets in millimetres</td></tr>
@@ -7795,7 +7809,9 @@ filled and one of its parts sews a satin column.</li>
 <li><strong>Drawn.</strong> Each column is drawn with its rails and rungs, as the Stroke to Satin filter draws one, and
 read back it must give them. A part whose triangles don’t make a column round one of its lines, or one
 of whose columns is read otherwise, stays in the fill, and <code>SC-I0902</code> says so. A dot, whose line has no
-length, stays in the fill too.</li>
+length, stays in the fill too. A rung added to tell a column’s rails from its rungs goes across an end
+that doesn’t reach under another column where one can take it (<a href="#drawn-with-its-rails-and-rungs">satin
+columns</a>).</li>
 </ul>
 <p><strong>Shapes in parts</strong> (M13.6, <code>REQ-AUTO-019</code>). A shape wider than 7 mm in places and narrower in others sews
 in parts. Its broad parts are a tatami fill, and its narrow parts sew over the fill as lines and columns,
@@ -8863,8 +8879,11 @@ stroke a satin effect on it would follow, with that stroke’s join. The engine 
 makes of such a column when it sews one (<code>REQ-SAT-016</code>, <code>REQ-SAT-017</code>), and draws them as straight lines,
 each rung longer than the gap between the points it pairs by a hundredth of it at either end, so that it
 crosses the rails (<a href="#drawn-with-its-rails-and-rungs">satin generators</a>). Read back, the column
-pairs the same points, so it sews as the line did. A column of 2 rungs or none gets a rung at its start
-too, since Ink/Stitch’s rule would read the 2 longest lines as its rails (<code>DEV-SAT-007</code>).</p>
+pairs the same points, so it sews as the line did. A column of 2 rungs or none gets a rung at an end
+too, since Ink/Stitch’s rule would read the 2 longest lines as its rails (<code>DEV-SAT-007</code>). The rung goes
+across the column’s start, or across its end where the satin effect’s push compensation lengthens the
+start. Push compensation lengthens the rails before they are cut, so a rung across a lengthened end would
+make the part added there a section of its own.</p>
 <p>Each column is a compound path without fills. Its stroke is the line’s paint one CSS pixel wide, which
 shows the rails and draws the satin effect’s stitches thin. The first column takes the object’s place,
 and the others go above it with its opacity. The satin effect takes the place of the object’s first
@@ -8872,7 +8891,9 @@ StitchCraft effect, with the line’s satin settings or the defaults. The object
 are left out, and its other effects kept. An object the satin effect already reads as rails is given back
 as it is. The filter refuses with <code>SC-E0814</code>, and the document stays as it was, when the selection is
 empty, a path has no stroke that paints or can’t be used, or a line can’t be made into a column that sews
-as it does. Such a line’s rails can’t be made whole (<code>SC-E0214</code>, <code>SC-W0213</code>), or they cross each other.
+as it does. Such a line’s rails can’t be made whole (<code>SC-E0214</code>, <code>SC-W0213</code>), or they cross each other,
+or the satin effect’s push compensation lengthens both of the line’s ends when its column needs a rung at
+one.
 Before 0.15, which drops the records a filter gives, it declines with <code>SC-E0813</code>.</p>
 <p>M6.4 measured making the rails inside VectorCraft’s host at up to 162 million instructions, where a light
 run gets about 52 million. The rails are the line offset as GEOS offsets it, which builds the boundary of

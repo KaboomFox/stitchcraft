@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-264061e4.js";
+            window.path_to_searchindex_js = "../../searchindex-77f79c70.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b793f3ad.js"></script>
@@ -839,9 +839,11 @@ and rungs, which sews as the line does with the satin effect. It changed nothing
 selected, or one of the lines can’t be made so: its path has no stroke to take the column’s width
 from, or can’t be used, its rails can’t be made or would leave parts of it out, as <code>SC-E0214</code> and
 <code>SC-W0213</code> say of a satin column drawn as one path, or the column would be read back with other rails
-or rungs, as one whose rails cross each other is.</p>
+or rungs, as one whose rails cross each other is, or would need a rung across an end that its satin
+effect’s push compensation lengthens, which would sew what that adds apart.</p>
 <p>The message names the object. Select the lines, give the path a stroke as wide as the column, draw
-that column with its 2 rails, or leave the object out of the selection.</p>
+that column with its 2 rails, set the satin effect’s push compensation to 0 or more at one end, or
+leave the object out of the selection.</p>
 <h2 id="sc-e0815"><a class="header" href="#sc-e0815">SC-E0815</a></h2>
 <p><strong>Error</strong> — VectorCraft’s command line could not be started</p>
 <p><code>stitch plan</code> and <code>stitch export</code> trace a picture, a PNG or JPEG file, with VectorCraft’s command
