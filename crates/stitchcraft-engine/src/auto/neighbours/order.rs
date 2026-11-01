@@ -263,8 +263,11 @@ impl Order<'_> {
 
     /// Puts the elements of `run` after those `sewing` holds, with `meter`'s work: of the elements free to
     /// sew, those of the thread sewing, or else those of the first one's thread, and of those the one
-    /// nearest the last sewn.
+    /// nearest the last sewn. An element of a later run that one placed here frees waits for its own run, so
+    /// that none moves across what ends this one, a stop or an element kept in its place, and none is
+    /// placed twice.
     fn run(&mut self, run: &[usize], sewing: &mut Sewing, meter: &mut Meter) -> Result<(), Exhausted> {
+        let members: BTreeSet<usize> = run.iter().copied().collect();
         let mut free: BTreeSet<usize> = run.iter().copied().filter(|&index| self.graph.waiting(index) == 0).collect();
         while let Some(&first) = free.first() {
             let colour = |index: usize| self.facts.get(index).map(|facts| facts.colour);
@@ -283,7 +286,7 @@ impl Order<'_> {
             }
             let Some(next) = self.nearest(&same, sewing.last) else { break };
             free.remove(&next);
-            free.extend(self.graph.release(next));
+            free.extend(self.graph.release(next).into_iter().filter(|index| members.contains(index)));
             sewing.order.push(next);
             sewing.last = Some(next);
         }

@@ -173,12 +173,22 @@ fn req_auto_007_an_area_covered_by_an_area_sewn_after_it_is_cut_away_0_4_mm_insi
 
 #[test]
 fn req_auto_007_an_area_covered_whole_by_an_area_sewn_after_it_sews_nothing() {
-    let (out, diagnostics) =
-        sewn(vec![rect("hidden", (5.0, 5.0), (8.0, 8.0)), rect("cover", (0.0, 0.0), (20.0, 20.0)), rect("far", (30.0, 0.0), (35.0, 5.0))]);
+    // It stops the machine after it, which it can't where it sews nothing: the stop is left out, as after
+    // any element that sews nothing, and of the shapes digitized the 2 that sew are counted, `far` narrow
+    // enough for a satin column.
+    let hidden = automatic(fill("hidden", &[&[(5.0, 5.0), (8.0, 5.0), (8.0, 8.0), (5.0, 8.0)]], &RED, &[("stop_after", "true")]));
+    let (out, diagnostics) = sewn(vec![hidden, rect("cover", (0.0, 0.0), (20.0, 20.0)), rect("far", (30.0, 0.0), (35.0, 5.0))]);
     assert_eq!(ids(&out), ["cover", "far"]);
     let hidden = diagnostics.iter().find(|d| d.code == Code::AutoUnder).unwrap();
     assert_eq!(hidden.to_string(), "info SC-I0904: This area is covered by the areas sewn after it, so it sews nothing.");
     assert_eq!(hidden.element.as_ref().map(|id| id.as_str()), Some("hidden"));
+    let stop = diagnostics.iter().find(|d| d.code == Code::TrimOrStopLeftOut).unwrap();
+    assert_eq!(stop.to_string(), "warning SC-W0505: This element sews no stitch, so the stop after it is left out.");
+    assert_eq!(stop.element.as_ref().map(|id| id.as_str()), Some("hidden"));
+    assert_eq!(
+        said(&diagnostics, Code::AutoDigitized),
+        ["info SC-I0901: 2 shapes are digitized automatically: 1 sews as a satin column and 1 as a tatami fill."]
+    );
 }
 
 #[test]
