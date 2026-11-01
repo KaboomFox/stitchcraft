@@ -92,8 +92,12 @@ fn subpaths(parts: &[&[(f64, f64)]], closed: bool) -> Path {
     Path { subpaths }
 }
 
-/// The outline of the letter `letter`, T, H or E, `height` mm tall and 0.6 of that wide, drawn in strokes
-/// `width` mm wide from the origin: a shape for automatic digitizing's property tests.
+/// The letters [`letter`] draws.
+pub const LETTERS: [char; 3] = ['T', 'H', 'E'];
+
+/// The outline of the letter `letter`, one of [`LETTERS`], `height` mm tall and 0.6 of that wide, drawn in
+/// strokes `width` mm wide from the origin: a shape for automatic digitizing's property tests, and for the
+/// Ink/Stitch differential's centre lines.
 pub fn letter(letter: char, height: f64, width: f64) -> Vec<(f64, f64)> {
     let (h, w, wide) = (height, width, 0.6 * height);
     let (above, below) = (h / 2.0 - w / 2.0, h / 2.0 + w / 2.0);

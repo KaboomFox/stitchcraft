@@ -1,6 +1,8 @@
 //! Conformance level L3, the Ink/Stitch differential (`docs/src/design/conformance.md` › L3): a pinned
 //! Ink/Stitch, run as a black box (ADR-0001, decision 6), and StitchCraft each sew the design of an
 //! `inkstitch` data case, and the machine files they write are compared by measures, not stitch by stitch.
+//! The `centre-lines` cases compare a step before the stitches, the lines of narrow shapes
+//! ([`super::centre_lines`]), and run Ink/Stitch as these do ([`Inkstitch`]).
 //!
 //! **Running Ink/Stitch.** `STITCHCRAFT_INKSTITCH` names a checkout of Ink/Stitch at the commit
 //! [`PIN`] gives, and `STITCHCRAFT_INKSTITCH_PYTHON` an interpreter with `conformance/inkstitch/
@@ -147,13 +149,34 @@ pub fn compare(ours: &Measured, theirs: &Measured) -> Vec<Compared> {
     ]
 }
 
-/// Where Ink/Stitch is set up: its checkout and the interpreter that runs it; `None` when it isn't.
-struct Inkstitch {
+/// Where Ink/Stitch is set up: its checkout and the interpreter that runs it.
+pub(super) struct Inkstitch {
     checkout: PathBuf,
     python: String,
 }
 
 impl Inkstitch {
+    /// Ink/Stitch as `STITCHCRAFT_INKSTITCH` sets it up, at the commit [`PIN`] gives; or `None`, with why it
+    /// can't run in `outcome`: skipped when it isn't set up, failed when it is at another commit.
+    pub(super) fn ready(root: &Path, outcome: &mut Outcome) -> Option<Inkstitch> {
+        let Some(inkstitch) = Inkstitch::from_env() else {
+            outcome.skipped = Some("Ink/Stitch is not set up: set STITCHCRAFT_INKSTITCH (conformance/inkstitch/README.md)".to_string());
+            return None;
+        };
+        match (pinned(root), inkstitch.commit()) {
+            (Ok(pin), Some(commit)) if pin == commit => Some(inkstitch),
+            (Ok(pin), commit) => {
+                let at = commit.as_deref().unwrap_or("no git commit");
+                outcome.failures.push(format!("STITCHCRAFT_INKSTITCH is at {at}, and the cases are measured against {pin} ({PIN})"));
+                None
+            }
+            (Err(e), _) => {
+                outcome.failures.push(e);
+                None
+            }
+        }
+    }
+
     fn from_env() -> Option<Inkstitch> {
         let checkout = PathBuf::from(std::env::var_os("STITCHCRAFT_INKSTITCH")?);
         let python = std::env::var("STITCHCRAFT_INKSTITCH_PYTHON").unwrap_or_else(|_| "python3".to_string());
@@ -168,9 +191,15 @@ impl Inkstitch {
 
     /// The PES file Ink/Stitch writes for the SVG file `design`.
     fn pes(&self, root: &Path, design: &Path) -> Result<Vec<u8>, String> {
+        self.output(root, &["--extension=output", "--format=pes"], design, "PES file")
+    }
+
+    /// What Ink/Stitch's command line writes to its standard output, `what`, run with `arguments` on the SVG
+    /// file `design`: an extension's result.
+    pub(super) fn output(&self, root: &Path, arguments: &[&str], design: &Path, what: &str) -> Result<Vec<u8>, String> {
         let output = Command::new(&self.python)
             .arg("inkstitch.py")
-            .args(["--extension=output", "--format=pes"])
+            .args(arguments)
             .arg(design)
             .current_dir(&self.checkout)
             .env("PYTHONPATH", root.join(STUBS))
@@ -181,7 +210,7 @@ impl Inkstitch {
         if !output.status.success() || output.stdout.is_empty() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             let tail: Vec<&str> = stderr.lines().rev().take(8).collect();
-            return Err(format!("Ink/Stitch wrote no PES file ({}): {}", output.status, tail.into_iter().rev().collect::<Vec<_>>().join(" / ")));
+            return Err(format!("Ink/Stitch wrote no {what} ({}): {}", output.status, tail.into_iter().rev().collect::<Vec<_>>().join(" / ")));
         }
         Ok(output.stdout)
     }
@@ -198,18 +227,7 @@ pub fn pinned(root: &Path) -> Result<String, String> {
 /// report's table. A deviation excusing a measure that agrees fails the case too, so that the ledger's
 /// reasons stay true.
 pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, outcome: &mut Outcome) {
-    let Some(inkstitch) = Inkstitch::from_env() else {
-        outcome.skipped = Some("Ink/Stitch is not set up: set STITCHCRAFT_INKSTITCH (conformance/inkstitch/README.md)".to_string());
-        return;
-    };
-    match (pinned(root), inkstitch.commit()) {
-        (Ok(pin), Some(commit)) if pin == commit => {}
-        (Ok(pin), commit) => {
-            let at = commit.as_deref().unwrap_or("no git commit");
-            return outcome.failures.push(format!("STITCHCRAFT_INKSTITCH is at {at}, and the cases are measured against {pin} ({PIN})"));
-        }
-        (Err(e), _) => return outcome.failures.push(e),
-    }
+    let Some(inkstitch) = Inkstitch::ready(root, outcome) else { return };
     let (theirs, ours) = match subject {
         Subject::File(design) => {
             let path = root.join("conformance").join(design);
@@ -219,6 +237,8 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
             Ok((path, plan)) => (inkstitch.pes(root, &path), encoded(&plan, id)),
             Err(e) => return outcome.failures.push(e),
         },
+        // `load_cases` draws letters for centre-lines cases alone.
+        Subject::Letters(_) => return outcome.failures.push("an inkstitch case sews a design or a test sheet, not letters".to_string()),
     };
     let measured = |bytes: &[u8], who: &str| -> Result<(StitchPlan, Measured), String> {
         let plan = stitchcraft_formats::decode(bytes).map_err(|e| format!("{who}'s PES file doesn't read: {e}"))?.plan;

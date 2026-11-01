@@ -1,0 +1,10 @@
+id = "inkstitch-centre-lines-letters"
+requirements = ["REQ-AUTO-022"]
+kind = "centre-lines"
+
+# The letters of automatic digitizing's property tests (`stitchcraft_testkit::designs::letter`), in lines
+# narrow enough to sew as running stitches. A T that sews a Γ, as TS-13B's small T did, shows as a missing branch.
+[letters]
+names = "THE"
+heights_mm = [3, 4, 5, 6, 8, 10]
+widths_mm = [0.3, 0.5, 0.7, 0.9]

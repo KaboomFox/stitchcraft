@@ -115,8 +115,9 @@ fn escaped(text: &str) -> String {
     text.replace('&', "&amp;").replace('"', "&quot;").replace('<', "&lt;").replace('>', "&gt;")
 }
 
-/// `path` as SVG path data, in millimetres.
-fn data(path: &Path) -> String {
+/// `path` as SVG path data, in millimetres: also the outlines the Ink/Stitch differential draws its centre
+/// lines over.
+pub fn data(path: &Path) -> String {
     let mut out = Vec::new();
     for subpath in &path.subpaths {
         let at = |q: stitchcraft_core::Point| format!("{},{}", q.x(), q.y());
