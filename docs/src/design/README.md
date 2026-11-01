@@ -8,7 +8,7 @@ our own words and never carry Ink/Stitch's code ([ADR-0012](adr/0012-read-dont-c
 1. [Technical design document](tdd.md) — the whole system in 25 minutes.
 2. [Architecture](architecture.md) — crates, layers, where code goes.
 3. [Data model](data-model.md), [parameter registry](params.md), [diagnostics](diagnostics.md).
-4. [Engine pipeline](engine-pipeline.md), the [stitch generators](algorithms/README.md) and
+4. [Engine pipeline](engine-pipeline.md), the [stitch generators](algorithms/) and
    [image to embroidery](image-to-embroidery.md).
 5. [Machine formats](formats.md) and [rendering previews](rendering.md).
 6. [VectorCraft integration](vectorcraft-integration.md), the [plug-in features RFC](rfc-vectorcraft-abi-v2.md)
@@ -17,7 +17,7 @@ our own words and never carry Ink/Stitch's code ([ADR-0012](adr/0012-read-dont-c
    [docs pipeline](docs-pipeline.md).
 8. File compatibility: [SVG input](svg-input.md) and the
    [Ink/Stitch compatibility contract](inkstitch-compat-contract.md).
-9. Decisions: [ADRs](adr/README.md).
+9. Decisions: [ADRs](adr/).
 
 ## Keeping these pages true
 
