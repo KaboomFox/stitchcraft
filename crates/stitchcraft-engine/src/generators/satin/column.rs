@@ -34,6 +34,8 @@
 //! than the line between its points, half at each end, and cuts each rail where it comes nearest it,
 //! measured as Ink/Stitch's geometry library measures it (`normalize::near`): at a node it is the node,
 //! and on a curved rail of 2 nodes it is where the rung crosses the curve, or its point nearest the rung.
+//! A rung that meets the compensated rails at more than 2 points doesn't say which points pair, and is left
+//! out, as Ink/Stitch leaves it out: one across a node whose other rail turns back across it, say.
 //! The nodes are turned before the rails are swapped: `reverse_rails` turns the nodes of the rail drawn
 //! in the place it names, first or second, and swapping the rails changes only which one sews first, as
 //! in Ink/Stitch. Where the rails have different numbers of nodes, the longer rail's last nodes, in the
@@ -52,7 +54,7 @@ use crate::generators::satin::SatinParams;
 use crate::generators::satin::compensation::pushed;
 use crate::normalize::along::Along;
 use crate::normalize::near::{Look, along_to_segment};
-use crate::normalize::satin::{Pairing, SAME_POINT, Satin};
+use crate::normalize::satin::{Pairing, SAME_POINT, Satin, add_once, shared};
 
 /// How far along the line between a rail's 2 nodes the rung added across rails of 2 nodes meets it, in
 /// millimetres: 0.2 CSS pixels, Ink/Stitch's.
@@ -90,6 +92,9 @@ pub(crate) fn sections(satin: &Satin, params: &SatinParams, warnings: &mut Vec<D
         Pairing::Nodes => {
             let nodes = nodes_started_together(satin, params.swap_satin_rails, meter)?;
             for rung in added_rungs(&nodes, turned, warnings) {
+                if meets_more_than_twice(rung, [&first, &second], meter)? {
+                    continue;
+                }
                 cuts_a.push(along_to_segment(&first, rung, Look::FromSegment, meter)?);
                 cuts_b.push(along_to_segment(&second, rung, Look::FromSegment, meter)?);
             }
@@ -97,6 +102,21 @@ pub(crate) fn sections(satin: &Satin, params: &SatinParams, warnings: &mut Vec<D
     }
     let (parts_a, parts_b) = (parts(&rail_a, &mut cuts_a), parts(&rail_b, &mut cuts_b));
     Ok(parts_a.into_iter().zip(parts_b).filter_map(|(a, b)| Some([a?, b?])).collect())
+}
+
+/// Whether the rung added between `rung`'s 2 points meets the `rails` at more than 2 points, which doesn't
+/// say which points pair: Ink/Stitch leaves such a rung out, measured against the compensated rails
+/// (`flattened_sections`), as it leaves out such a drawn rung. A point where segments meet end to end counts
+/// once. A unit of `meter`'s work for each segment of the rails.
+fn meets_more_than_twice((a, b): (Point, Point), rails: [&[Point]; 2], meter: &mut Meter) -> Result<bool, Exhausted> {
+    let mut found = Vec::new();
+    for rail in rails {
+        for (p, q) in rail.iter().zip(rail.iter().skip(1)) {
+            meter.charge(1)?;
+            shared(a, b, *p, *q).into_iter().for_each(|point| add_once(&mut found, point));
+        }
+    }
+    Ok(found.len() > 2)
 }
 
 /// Where the column's first stitch is as its rails are drawn: the start of its first rail, after the swap
