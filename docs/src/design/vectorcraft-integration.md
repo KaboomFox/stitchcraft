@@ -235,7 +235,8 @@ own, and a VectorCraft before 0.14 refuses to install them. An exporter writes t
 writes of the document:
 
 - It reads the document with the same reader and plans it with the engine for the machine its `profile`
-  option names, and the design takes the file's name. The option's default, `document`,
+  option names, written in its own format, whose colour changes the plan keeps to (`REQ-PLAN-006`). The
+  design takes the file's name. The option's default, `document`,
   is the machine the document keeps, or `brother-pe800-5x7` when it keeps none, as `stitch export` plans
   it without `--profile` ([below](#design-settings-and-machine-kept-with-the-document)).
   Reading the file back, as `stitch export` does, stops it at a writer's bug (`SC-E0009`). The budget is

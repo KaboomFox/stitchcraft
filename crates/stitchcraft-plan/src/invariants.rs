@@ -176,6 +176,7 @@ mod tests {
     use super::*;
     use crate::builder::PlanBuilder;
     use crate::plan::{ElementRef, Provenance, Role, Stitch};
+    use crate::profile::FormatId;
     use crate::profiles::BROTHER_PE800_5X7 as PROFILE;
     use crate::thread::{Rgb, Thread};
 
@@ -348,7 +349,12 @@ mod tests {
         }
         assert_eq!(requirements(&b.clone().finish()), Vec::<&str>::new(), "255 changes fit PES");
         b.stop(None);
-        assert_eq!(requirements(&b.finish()), vec![req::COLOR_CHANGES]);
+        let plan = b.finish();
+        assert_eq!(requirements(&plan), vec![req::COLOR_CHANGES]);
+        // Written as DST, which records 999, the PES machine's plan keeps them.
+        let dst = PROFILE.writing(FormatId::Dst);
+        assert_eq!(check(&plan, &dst), Vec::new());
+        assert_eq!(dst, MachineProfile { format: FormatId::Dst, ..PROFILE.clone() }, "only the format changes");
     }
 
     #[test]

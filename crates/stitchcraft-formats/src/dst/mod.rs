@@ -28,6 +28,7 @@
 mod read;
 
 pub use read::decode;
+pub(crate) use read::decode_up_to;
 use stitchcraft_core::{Code, Diagnostic};
 use stitchcraft_plan::{FormatId, StitchPlan};
 
