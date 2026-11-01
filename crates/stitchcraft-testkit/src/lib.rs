@@ -8,7 +8,10 @@
 //! - [`metrics`]: what conformance cases measure, the same way in every case: how much of a fill's area its
 //!   thread covers, and how much of an edge where 2 shapes meet.
 //! - [`pictures`]: the test pictures of automatic digitizing, which the TS-13 sheets sew, where the cases
-//!   measure them, and the edges where their shapes meet.
+//!   measure them, and the edges where their shapes meet; and the TS-13 sheets with their stitches where
+//!   they are drawn.
+//! - [`stitches`]: what a plan sews, read back from its stitches: each element's needle points, a satin
+//!   column's rungs, and the jump threads a machine that cuts no jump leaves.
 //! - [`strategies`]: random plans for property tests, with fixed seeds on every PR.
 //! - [`fuzz`]: what must hold for any bytes given to a reader — the bodies of the fuzz targets in `fuzz/`,
 //!   run on every PR here and with coverage-guided inputs every night.
@@ -26,5 +29,6 @@ pub mod metrics;
 pub mod pictures;
 pub mod plans;
 pub mod satins;
+pub mod stitches;
 pub mod strategies;
 pub mod temp;
