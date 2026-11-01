@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-e82d4c80.js";
+            window.path_to_searchindex_js = "../../searchindex-4a0f3cd7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b793f3ad.js"></script>
@@ -217,7 +217,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <ul>
 <li><strong>DEV-PRM-001.</strong> A value StitchCraft cannot read refuses its element (SC-E0101), and the rest of the design is sewn. Ink/Stitch sews such a value as the parameter’s default, or a toggle as off, without a word: it sews 3,5 for running_stitch_length_mm as 2.5 mm stitches, and a toggle of on as off. A toggle reads yes, y, true, t and 1 as on here, as Ink/Stitch does, and only their opposites and off as off. StitchCraft reads a tab, or several spaces, between a list’s values as one space, where Ink/Stitch sews a list with a tab between values as its default, and a fill’s underlay angles with 2 spaces between them too. It also reads a unit right after a number, mm, in or pt after a length, a degree sign or deg after an angle and a percent sign after a percentage, where Ink/Stitch sews the default.</li>
 <li><strong>DEV-PRM-002.</strong> Every number a parameter takes keeps to a range of StitchCraft’s, given in the parameter’s reference entry. A value outside it is clamped into it, with SC-W0102. Ink/Stitch sets a floor for most of its numbers and few ceilings, so many of these ranges are narrower than its own: repeats has no ceiling there and stops at 100 here.</li>
-<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.</li>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
 <li><strong>DEV-PRM-004.</strong> A list takes at most 16 values and a pair 2, and no value may be longer than 4,096 bytes: more refuses the element (SC-E0101), whose message quotes the start of a long value. Ink/Stitch reads a list of any length, takes the first 2 values of a longer pair, and reads text of any length.</li>
 </ul>
 <h2 id="groups"><a class="header" href="#groups">Groups</a></h2>

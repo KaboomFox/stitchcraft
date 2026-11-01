@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-e82d4c80.js";
+            window.path_to_searchindex_js = "searchindex-4a0f3cd7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -1211,9 +1211,10 @@ stitch</li>
 <code>stroke_method</code> to <code>zigzag_stitch</code> for it. Use it for a light border, a couched look, or a stem too thin
 for a satin column.</p>
 <p>In VectorCraft, set the StitchCraft Stroke effect’s <code>stroke_method</code> to <code>zigzag_stitch</code>, and <code>stitch export</code>
-sews it. VectorCraft’s live effect shows the object as it is drawn, as wide as the zigzag, since VectorCraft
-does not tell a plug-in a stroke’s width. <code>stitch plan</code> reads Ink/Stitch’s settings from SVG files from
-milestone M8 (<a href="user/stitches/README.html#setting-parameters">setting parameters</a>).</p>
+sews it. From VectorCraft 0.14, the live effect shows the zigzag’s stitches as wide as the object’s stroke.
+An object without a stroke it leaves as it is drawn (<code>SC-I0810</code>): give it a stroke as wide as the zigzag.
+<code>stitch plan</code> reads Ink/Stitch’s settings from SVG files from milestone M8
+(<a href="user/stitches/README.html#setting-parameters">setting parameters</a>).</p>
 <p>The pictures are drawn as the <a href="#running-stitch">running stitch’s</a> are, from <code>docs/fixtures/zigzag.svg</code>, a wave
 drawn 3 mm wide.</p>
 <h2 id="spacing"><a class="header" href="#spacing">Spacing</a></h2>
@@ -2925,7 +2926,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <ul>
 <li><strong>DEV-PRM-001.</strong> A value StitchCraft cannot read refuses its element (SC-E0101), and the rest of the design is sewn. Ink/Stitch sews such a value as the parameter’s default, or a toggle as off, without a word: it sews 3,5 for running_stitch_length_mm as 2.5 mm stitches, and a toggle of on as off. A toggle reads yes, y, true, t and 1 as on here, as Ink/Stitch does, and only their opposites and off as off. StitchCraft reads a tab, or several spaces, between a list’s values as one space, where Ink/Stitch sews a list with a tab between values as its default, and a fill’s underlay angles with 2 spaces between them too. It also reads a unit right after a number, mm, in or pt after a length, a degree sign or deg after an angle and a percent sign after a percentage, where Ink/Stitch sews the default.</li>
 <li><strong>DEV-PRM-002.</strong> Every number a parameter takes keeps to a range of StitchCraft’s, given in the parameter’s reference entry. A value outside it is clamped into it, with SC-W0102. Ink/Stitch sets a floor for most of its numbers and few ceilings, so many of these ranges are narrower than its own: repeats has no ceiling there and stops at 100 here.</li>
-<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.</li>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
 <li><strong>DEV-PRM-004.</strong> A list takes at most 16 values and a pair 2, and no value may be longer than 4,096 bytes: more refuses the element (SC-E0101), whose message quotes the start of a long value. Ink/Stitch reads a list of any length, takes the first 2 values of a longer pair, and reads text of any length.</li>
 </ul>
 <h2 id="groups"><a class="header" href="#groups">Groups</a></h2>
@@ -3182,8 +3183,8 @@ hammer one hole. Empty: the larger of the document’s setting and the machine�
 <li><strong>Default:</strong> empty</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.</li>
-<li><strong>DEV-FIN-001.</strong> StitchCraft fits every stitch to the machine: it leaves out needle points less than their element’s shortest stitch from the one before, never less than the machine’s (0.3 mm on the Brother), keeping the ends of each run of stitches and its lock points unless a stitch to one would fall short, and splits stitches longer than the machine’s longest. Ink/Stitch drops stitches no longer than the element’s own shortest stitch, else 0.1 mm, and splits nothing. Along an edge square to them, a tatami fill’s rows nearer each other than the shortest stitch hand over in a stitch too short, so the next row’s first needle point is left out and a sliver at its start shows: a bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay.</li>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
+<li><strong>DEV-FIN-001.</strong> StitchCraft fits every stitch to the machine. It leaves out a needle point nearer the one before than its element’s shortest stitch, and never nearer than the machine’s (0.3 mm on the Brother). It keeps the ends of each run of stitches and its lock points, unless a stitch to one would be too short, and it splits stitches longer than the machine’s longest. Ink/Stitch drops stitches no longer than the element’s own shortest stitch, else the document’s min_stitch_len_mm, 0.1 mm unless the file sets it, and splits nothing. Along an edge square to them, a tatami fill’s rows nearer each other than the shortest stitch hand over in a stitch too short. The next row’s first needle point is then left out, and a sliver at its start is bare. A bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay.</li>
 </ul>
 </li>
 </ul>
@@ -3195,22 +3196,22 @@ jump. Empty: the document’s setting.</p>
 <li><strong>Default:</strong> empty</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.</li>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
 </ul>
 </li>
 </ul>
 <h2 id="longest-stitch"><a class="header" href="#longest-stitch">Longest stitch</a></h2>
 <h3 id="max_stitch_length_mm"><a class="header" href="#max_stitch_length_mm"><code>max_stitch_length_mm</code></a></h3>
 <p><strong>Longest stitch.</strong> Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
-its split method says. Empty, every stitch is sewn whole. A tatami fill sews its rows in
-stitches this long.</p>
+its split method says. Empty, a stitch is split only where it is longer than the machine sews. A
+tatami fill sews its rows in stitches this long.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty); for fills, a length from 0.1 to 25 mm, empty being the default</li>
 <li><strong>Default:</strong> empty, and <code>4</code> for fills</li>
 <li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.</li>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
 <li><strong>DEV-RUN-006.</strong> No hand-placed stitch is shorter than the shortest stitch. A node closer than that to the needle point before it is left out (SC-W0403), and a stitch longer than max_stitch_length_mm is split into no more parts than keep each at the shortest stitch or longer (SC-W0404). Ink/Stitch splits such a stitch into the fewest equal parts no longer than max_stitch_length_mm, however short they are, and its plan later leaves out stitches of at most 0.1 mm (its default), without a word.</li>
 </ul>
 </li>
@@ -3682,7 +3683,7 @@ half the contour’s. 2 values set the first rail’s side, then the second’s.
 <li><strong>Default:</strong> empty</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.</li>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
 </ul>
 </li>
 </ul>
@@ -3785,7 +3786,7 @@ row is the row spacing from the next.</p>
 <li><strong>Ink/Stitch:</strong> same key; StitchCraft differs:
 <ul>
 <li><strong>DEV-FILL-003.</strong> With end_row_spacing_mm, the step from row to row changes from the row spacing to the end spacing over the part’s height, measured from the first row, and stays at the end spacing beyond it. Ink/Stitch carries the change on past the height, which reaches the rows within a row spacing of the part’s far side when the first row lies before the part. With an end spacing smaller than the row spacing, over a part a few rows tall, the steps then shrink towards 0 and the rows pile up short of the far side without end.</li>
-<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.</li>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
 </ul>
 </li>
 </ul>
@@ -3876,7 +3877,7 @@ the top rows, at the fill’s angle plus 90°.</p>
 <li><strong>Default:</strong> empty</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.</li>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
 </ul>
 </li>
 </ul>
@@ -3888,7 +3889,7 @@ the top rows, at the fill’s angle plus 90°.</p>
 <li><strong>Default:</strong> empty</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.</li>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
 </ul>
 </li>
 </ul>
@@ -6134,8 +6135,10 @@ width plus the first to the left (<code>REQ-RUN-010</code>).</li>
 <p><code>SC-W0401</code> for a part of the path that is one point. Finishing leaves out a needle point of each stitch
 shorter than the shortest stitch (<code>SC-I0504</code>). At the default spacing, 0.4 mm, and a shortest stitch of
 0.3 mm, that is every stitch of a straight zigzag narrower than 0.224 mm, and the zigzag sews as a line.
-<code>SC-W0405</code> names a zigzag with stitches that short, and the width it needs. Ink/Stitch’s shortest stitch
-is 0.1 mm by default, and it sews such a zigzag as it is.</p>
+<code>SC-W0405</code> names a zigzag with stitches that short, and the width it needs. It counts the stitches that
+are sewn. A closed zigzag’s last needle point moves onto its first before they are counted. That stitch
+can be the only short one, as at a teardrop’s tip. Ink/Stitch’s shortest stitch is 0.1 mm by default, and
+it sews such a zigzag as it is.</p>
 <h2 id="ripple-stitch-p3-m10"><a class="header" href="#ripple-stitch-p3-m10">Ripple stitch (P3, M10)</a></h2>
 <p>A series of copies of the stroke, each progressively scaled, offset or interpolated towards a target
 point (or between two rails for “satin-guided ripple”), joined into one continuous running stitch.
@@ -7398,8 +7401,9 @@ long, keeping its shape.</li>
 <p>Read at <code>d59c9ab</code> (<a href="#adr-0012-read-inkstitchs-source-never-copy-it">ADR-0012</a>). The ids, how a custom lock’s text is read,
 and which size parameter applies to which lock are the same. The shapes differ (<code>DEV-LCK-001</code>):</p>
 <ul>
-<li>Ink/Stitch’s half stitch goes towards the first needle point at least 0.5 mm away, in a straight line to
-it, out and back by halves of that distance capped at 1.5 mm. StitchCraft’s goes forth and back over
+<li>Ink/Stitch’s half stitch goes towards the first of the next 15 needle points more than 0.5 mm away, in a
+straight line to it, out and back by halves of that distance capped at 1.5 mm. With none, it goes 0.5
+CSS pixels to the right. StitchCraft’s goes forth and back over
 half the first stitch, which then covers it.</li>
 <li>Ink/Stitch’s back-and-forth lock goes two steps out and two back. StitchCraft’s goes forth and back over
 one step, twice, like its half stitch.</li>

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-e82d4c80.js";
+            window.path_to_searchindex_js = "../../searchindex-4a0f3cd7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b793f3ad.js"></script>
@@ -287,8 +287,9 @@ long, keeping its shape.</li>
 <p>Read at <code>d59c9ab</code> (<a href="../adr/0012-read-dont-copy.html">ADR-0012</a>). The ids, how a custom lock’s text is read,
 and which size parameter applies to which lock are the same. The shapes differ (<code>DEV-LCK-001</code>):</p>
 <ul>
-<li>Ink/Stitch’s half stitch goes towards the first needle point at least 0.5 mm away, in a straight line to
-it, out and back by halves of that distance capped at 1.5 mm. StitchCraft’s goes forth and back over
+<li>Ink/Stitch’s half stitch goes towards the first of the next 15 needle points more than 0.5 mm away, in a
+straight line to it, out and back by halves of that distance capped at 1.5 mm. With none, it goes 0.5
+CSS pixels to the right. StitchCraft’s goes forth and back over
 half the first stitch, which then covers it.</li>
 <li>Ink/Stitch’s back-and-forth lock goes two steps out and two back. StitchCraft’s goes forth and back over
 one step, twice, like its half stitch.</li>

@@ -35,7 +35,7 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-e82d4c80.js";
+            window.path_to_searchindex_js = "../../../searchindex-4a0f3cd7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../toc-b793f3ad.js"></script>
@@ -507,7 +507,7 @@ half the contour’s. 2 values set the first rail’s side, then the second’s.
 <li><strong>Default:</strong> empty</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.</li>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
 </ul>
 </li>
 </ul>
