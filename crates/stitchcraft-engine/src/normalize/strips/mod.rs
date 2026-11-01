@@ -19,9 +19,10 @@
 //! 2. **Lines.** The middles of the chords outside the caps, the middle of each junction triangle, and each
 //!    tip are joined: across each strip triangle from chord to chord, and from a junction's middle to its
 //!    chords outside the caps.
-//! 3. **Bumps.** A branch from a junction to an end that is no longer than [`BUMP`] times the junction's
-//!    longest edge is a bump of the outline, or the corner of a sharp turn, and is left out, the shortest
-//!    first, until no junction has one. A junction left with 2 branches is a bend.
+//! 3. **Bumps.** A branch from a junction to a tip that is no longer than [`BUMP`] times the junction's
+//!    longest edge, or to any other end no longer than [`CAP_BUMP`] times that edge, is a bump of the
+//!    outline, or the corner of a sharp turn, and is left out, the shortest first, until no junction has
+//!    one. A junction left with 2 branches is a bend.
 //! 4. **Junctions.** At each junction the 2 branches that run on most nearly straight are one line, and the
 //!    third ends there. Each branch's direction is measured from the junction's middle to the first of its
 //!    points at least the junction's longest edge away, or to its end.
@@ -47,10 +48,18 @@ use stitchcraft_core::{Exhausted, Meter, Point, math};
 use super::region::Polygon;
 use super::triangulation::{self, Broken, Triangle, Triangulation};
 
-/// How many times its junction triangle's longest edge a branch from a junction to an end may be long and
-/// still be a bump of the outline, or the corner of a sharp turn, which a line along the middle cuts. The
-/// corner of a turn of 36° lies within it (`req_auto_014_a_sharp_turn_is_one_line`).
+/// How many times its junction triangle's longest edge a branch from a junction to a tip may be long and
+/// still be a sharp bump of the outline, or the corner of a sharp turn, which a line along the middle cuts.
+/// The corner of a turn of 36° lies within it (`req_auto_014_a_sharp_turn_is_one_line`).
 pub(crate) const BUMP: f64 = 2.0;
+
+/// How many times its junction triangle's longest edge a branch from a junction to an end that is no tip, a
+/// round or a square one, may be long and still be a bump of the outline. Such a bump reaches no further
+/// from the junction than the junction reaches across. A branch that reaches further is an arm, as each arm
+/// of the bar of a T 4 mm tall is, its line found with Ink/Stitch's Fill to Stroke too
+/// (`req_auto_014_a_small_t_keeps_both_arms_of_its_bar`). [`BUMP`] would take it for a bump, and the T would
+/// lose one arm and sew as a Γ.
+pub(crate) const CAP_BUMP: f64 = 1.0;
 
 /// Which branches from a junction to an end no longer than [`BUMP`] times the junction triangle's longest
 /// edge are bumps, left out of the lines.
@@ -371,9 +380,9 @@ impl Graph {
                     let end = path.last().copied().unwrap_or(first);
                     let length = self.along(junction, &path);
                     let ends_there = pairs.get(&junction).is_none_or(|&(a, b)| first != a && first != b);
-                    let bump = self.degree(end) == 1
-                        && length <= BUMP * size
-                        && (bumps == Bumps::All || matches!(self.nodes.get(end), Some(Node::Tip { .. })) && ends_there);
+                    let tip = matches!(self.nodes.get(end), Some(Node::Tip { .. }));
+                    let reach = if tip { BUMP } else { CAP_BUMP };
+                    let bump = self.degree(end) == 1 && length <= reach * size && (bumps == Bumps::All || tip && ends_there);
                     if bump && shortest.as_ref().is_none_or(|(best, ..)| length < *best) {
                         shortest = Some((length, junction, first, path));
                     }
