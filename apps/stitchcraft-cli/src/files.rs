@@ -99,9 +99,10 @@ pub fn write_all(files: &[(&Path, &[u8])]) -> Result<(), Unwritten> {
     Ok(())
 }
 
-/// The temporary names next to `path`, in the order a run tries them: `path` followed by
-/// `.<process>-<n>.partial`, for each n below [`NAMES`].
-fn temporary_names(path: &Path) -> impl Iterator<Item = OsString> + '_ {
+/// The first of the temporary names next to `path` that `create` makes new, and what it made. The names
+/// are `path` followed by `.<process>-<n>.partial`, for each n below [`NAMES`], and a name in use is passed
+/// over: nothing already there is opened or used. Any other error ends the search.
+fn first_free<T>(path: &Path, create: impl Fn(&Path) -> io::Result<T>) -> io::Result<(PathBuf, T)> {
     // WASI gives a program no process id, and its `std::process::id` panics, so there the names count from
     // 0: a name another run is using is passed over all the same. `cargo xtask wasm --goldens` runs `stitch`
     // as WebAssembly.
@@ -109,41 +110,31 @@ fn temporary_names(path: &Path) -> impl Iterator<Item = OsString> + '_ {
     let process = 0;
     #[cfg(not(target_os = "wasi"))]
     let process = std::process::id();
-    (0..NAMES).map(move |n| {
+    let mut last = io::Error::new(io::ErrorKind::AlreadyExists, format!("{NAMES} temporary names next to it are in use"));
+    for n in 0..NAMES {
         let mut temporary = path.as_os_str().to_owned();
         temporary.push(format!(".{process}-{n}.partial"));
-        temporary
-    })
-}
-
-/// The error when every temporary name next to a file is in use.
-fn names_in_use() -> io::Error {
-    io::Error::new(io::ErrorKind::AlreadyExists, format!("{NAMES} temporary names next to it are in use"))
-}
-
-/// `bytes` written, and synced, to a new temporary file next to `path` ([`temporary_names`]); its name.
-/// Nothing already there is opened: a name in use is passed over.
-fn staged(path: &Path, bytes: &[u8]) -> io::Result<OsString> {
-    let mut last = names_in_use();
-    for temporary in temporary_names(path) {
-        let mut file = match OpenOptions::new().write(true).create_new(true).open(&temporary) {
-            Ok(file) => file,
-            Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {
-                last = e;
-                continue;
-            }
+        let temporary = PathBuf::from(temporary);
+        match create(&temporary) {
+            Ok(made) => return Ok((temporary, made)),
+            Err(e) if e.kind() == io::ErrorKind::AlreadyExists => last = e,
             Err(e) => return Err(e),
-        };
-        return match file.write_all(bytes).and_then(|()| file.sync_all()) {
-            Ok(()) => Ok(temporary),
-            Err(e) => {
-                drop(file);
-                let _ = std::fs::remove_file(&temporary);
-                Err(e)
-            }
-        };
+        }
     }
     Err(last)
+}
+
+/// `bytes` written, and synced, to a new temporary file next to `path` ([`first_free`]); its name.
+fn staged(path: &Path, bytes: &[u8]) -> io::Result<OsString> {
+    let (temporary, mut file) = first_free(path, |name| OpenOptions::new().write(true).create_new(true).open(name))?;
+    match file.write_all(bytes).and_then(|()| file.sync_all()) {
+        Ok(()) => Ok(temporary.into_os_string()),
+        Err(e) => {
+            drop(file);
+            let _ = std::fs::remove_file(&temporary);
+            Err(e)
+        }
+    }
 }
 
 /// A folder of the program's own, where another program writes a file for `stitch` to read. It is removed,
@@ -157,15 +148,7 @@ impl Scratch {
     /// A new folder next to `path`, under the first of its temporary names that is free, as a file is
     /// written under one: created new, so that nothing already there is used.
     pub fn beside(path: &Path) -> io::Result<Scratch> {
-        let mut last = names_in_use();
-        for temporary in temporary_names(path) {
-            match std::fs::create_dir(&temporary) {
-                Ok(()) => return Ok(Scratch { folder: PathBuf::from(temporary) }),
-                Err(e) if e.kind() == io::ErrorKind::AlreadyExists => last = e,
-                Err(e) => return Err(e),
-            }
-        }
-        Err(last)
+        first_free(path, |name| std::fs::create_dir(name)).map(|(folder, ())| Scratch { folder })
     }
 
     /// Where the folder is.

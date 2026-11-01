@@ -49,8 +49,7 @@ use super::{
 };
 use crate::cli::PlanArgs;
 use crate::files::{self, Scratch, Unwritten};
-
-pub mod trace;
+use crate::trace;
 
 /// What a design file is, which decides how it is read: a VectorCraft document by its extension, in any
 /// case ([`stitchcraft_vectorcraft::EXTENSIONS`]), and an SVG file otherwise.
