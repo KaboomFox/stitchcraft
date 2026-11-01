@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a5aefe5b.js";
+            window.path_to_searchindex_js = "../searchindex-e82d4c80.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -456,6 +456,24 @@ StitchCraft’s SVG adapter does with it (<code>stitchcraft_svg::inkstitch</code
 </tbody>
 </table>
 </div>
+<p>Before its file version 3, Ink/Stitch named 7 commands otherwise. Its updater renames them in the files it updates, and
+StitchCraft reads them as the commands they became in any file (<code>DEV-SVG-014</code>).</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Old name</th><th>Command</th></tr>
+</thead>
+<tbody>
+<tr><td><code>fill_start</code></td><td><code>starting_point</code></td></tr>
+<tr><td><code>fill_end</code></td><td><code>ending_point</code></td></tr>
+<tr><td><code>satin_start</code></td><td><code>autoroute_start</code></td></tr>
+<tr><td><code>satin_end</code></td><td><code>autoroute_end</code></td></tr>
+<tr><td><code>run_start</code></td><td><code>autoroute_start</code></td></tr>
+<tr><td><code>run_end</code></td><td><code>autoroute_end</code></td></tr>
+<tr><td><code>ripple_target</code></td><td><code>target_point</code></td></tr>
+</tbody>
+</table>
+</div>
 <h2 id="other-attributes"><a class="header" href="#other-attributes">Other attributes</a></h2>
 <p>The <code>inkstitch:*</code> attributes that declare no parameter: settings of an element, of Ink/Stitch’s
 patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewrites in older files.</p>
@@ -479,6 +497,43 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewr
 <tr><td><code>e_stitch</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
 <tr><td><code>manual_stitch</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
 <tr><td><code>grid_size</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="file-versions"><a class="header" href="#file-versions">File versions</a></h2>
+<p>Ink/Stitch numbers the files it works on (<code>inkstitch_svg_version</code> in the metadata, 4 at the commit above).
+When it opens a file of an older version that has content of its own (an element or an attribute in its namespace, or
+an <code>embroider_</code> attribute), it changes the file so that it sews as it did, version by version: a file of version 2
+gets the changes of versions 3 and 4. A file with its content and no version gets them all if its user says it is an
+old design. StitchCraft applies the changes that alter what it sews today as parameters of the shapes
+(<code>REQ-SVG-007</code>). A file without a version it reads as it is: version 1’s changes don’t apply. Each row is a
+change Ink/Stitch’s updater makes (<code>lib/update.py</code>), in StitchCraft’s words.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Version</th><th>Change</th><th>StitchCraft</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>each <code>embroider_&lt;name&gt;</code> attribute, as Ink/Stitch’s early versions wrote their settings, becomes <code>inkstitch:&lt;name&gt;</code> if <code>&lt;name&gt;</code> is a setting Ink/Stitch knows. The others are removed</td><td>not planned</td></tr>
+<tr><td>1</td><td><code>ties</code> written <code>True</code> becomes 0, and <code>False</code> becomes 3</td><td>not planned</td></tr>
+<tr><td>1</td><td>a <code>fill_method</code> written as 0 to 3 becomes <code>auto_fill</code>, <code>contour_fill</code>, <code>guided_fill</code> or <code>legacy_fill</code>, in that order</td><td>not planned</td></tr>
+<tr><td>1</td><td>commas in <code>fill_underlay_angle</code> become spaces</td><td>not planned</td></tr>
+<tr><td>1</td><td><code>e_stitch</code> on becomes <code>satin_method</code> <code>e_stitch</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>a satin column (<code>satin_column</code> on, or <code>stroke_method</code> 1) gets <code>reverse_rails</code> <code>none</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>an element with an <code>embroider_</code> attribute and without <code>fill_underlay</code> gets it off</td><td>not planned</td></tr>
+<tr><td>1</td><td>an element without <code>running_stitch_length_mm</code> that is not a satin column gets 1.5</td><td>not planned</td></tr>
+<tr><td>1</td><td>a stroke with <code>manual_stitch</code> on gets <code>stroke_method</code> <code>manual_stitch</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>a stroke’s <code>stroke_method</code> written as 0 or 1 becomes <code>running_stitch</code> or <code>ripple_stitch</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>a stroke with neither a method nor <code>satin_column</code>, whose <code>style</code> doesn’t set <code>stroke-dasharray</code>, gets <code>zigzag_stitch</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>a stroke’s <code>grid_size</code>, in pixels, becomes <code>grid_size_mm</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
+<tr><td>2</td><td>a <code>&lt;polyline&gt;</code> whose <code>style</code> attribute sets a stroke other than <code>none</code> gets <code>stroke_method</code> <code>manual_stitch</code></td><td>applied, unless digitized automatically</td></tr>
+<tr><td>3</td><td>a zigzag stroke’s <code>pull_compensation_mm</code>, unless 0, is halved into <code>stroke_pull_compensation_mm</code>, which applies to each side</td><td>planned (M8)</td></tr>
+<tr><td>3</td><td>a satin column gets <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off</td><td>planned (M8)</td></tr>
+<tr><td>3</td><td>the commands’ old names become today’s (the table under Commands)</td><td>applied, in any file (<code>DEV-SVG-014</code>)</td></tr>
+<tr><td>3</td><td>a <code>starting_point</code> or <code>ending_point</code> command is placed anew at its connector’s end on its object</td><td>planned (M8)</td></tr>
+<tr><td>4</td><td>an element whose fill is not <code>none</code> (a fill not set is black), and whose <code>max_stitch_length_mm</code> is missing, empty, not a number or 0, gets 3</td><td>applied to the shapes whose fill is sewn, unless digitized automatically</td></tr>
+<tr><td>4</td><td>a fill with <code>auto_fill</code> off gets <code>fill_method</code> <code>legacy_fill</code>, and <code>auto_fill</code> is removed</td><td>planned (M8)</td></tr>
+<tr><td>4</td><td><code>fill_method</code> <code>auto_fill</code> becomes <code>tatami_fill</code></td><td>planned (M8)</td></tr>
 </tbody>
 </table>
 </div>

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a5aefe5b.js";
+            window.path_to_searchindex_js = "../searchindex-e82d4c80.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -318,7 +318,7 @@ another.</p>
 <tr><td><code>SC-W0702</code></td><td>Warning</td><td>Design is larger than the comfort zone (the profile’s most accurate area)</td><td>M1</td></tr>
 <tr><td><code>SC-I0703</code></td><td>Info</td><td>Stitches longer than the machine’s longest stitch; split</td><td>M3</td></tr>
 <tr><td><code>SC-E0801</code></td><td>Error</td><td>SVG could not be read (with the parser’s position)</td><td>M3</td></tr>
-<tr><td><code>SC-W0802</code></td><td>Warning</td><td>SVG feature ignored (e.g. raster image, text not converted to paths)</td><td>M3</td></tr>
+<tr><td><code>SC-W0802</code></td><td>Warning</td><td>SVG feature ignored (e.g. raster image, text not converted to paths, an Ink/Stitch file Ink/Stitch would update or warn about, read as it is)</td><td>M3</td></tr>
 <tr><td><code>SC-W0803</code></td><td>Warning</td><td>VectorCraft file from a newer format version; read best-effort (a version newer than the newest the adapter reads)</td><td>M6</td></tr>
 <tr><td><code>SC-W0804</code></td><td>Warning</td><td>Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke’s width, join or miter limit that does not read); the usable part is stitched</td><td>M3</td></tr>
 <tr><td><code>SC-I0805</code></td><td>Info</td><td>Object left out, as the file asks (Ink/Stitch’s ignore commands and <code>ignore_object</code> setting)</td><td>M3</td></tr>
@@ -334,6 +334,7 @@ another.</p>
 <tr><td><code>SC-E0815</code></td><td>Error</td><td>VectorCraft’s command line could not be started (<code>stitch plan</code> traces a picture with it: neither on the PATH nor where <code>--vectorcraft-cli</code> says)</td><td>M13</td></tr>
 <tr><td><code>SC-E0816</code></td><td>Error</td><td>VectorCraft could not trace the picture (its command line failed or didn’t save the document)</td><td>M13</td></tr>
 <tr><td><code>SC-E0817</code></td><td>Error</td><td>VectorCraft test sheet not drawn (in the middle of the artboard, parts of the sheet would lie more than 10 m from the document’s origin)</td><td>M6</td></tr>
+<tr><td><code>SC-I0818</code></td><td>Info</td><td>Ink/Stitch file from an older version, read as Ink/Stitch updates it (the shapes given a default that has changed since, such as a fill’s 3 mm stitches before its file version 4, counted)</td><td>M3</td></tr>
 <tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>, or VectorCraft’s Auto effect), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
 <tr><td><code>SC-I0902</code></td><td>Info</td><td>Satin column can’t be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don’t make a column round one of its lines or whose column would be read back otherwise)</td><td>M13</td></tr>
 <tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>

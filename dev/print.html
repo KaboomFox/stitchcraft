@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a5aefe5b.js";
+            window.path_to_searchindex_js = "searchindex-e82d4c80.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -894,7 +894,7 @@ reads an SVG file the same way and takes the same options.</p>
 them with <strong>Link</strong> checked in VectorCraft’s Place dialog, and VectorCraft saves a small preview of each
 in the document instead.</p>
 <h2 id="keep-the-designs-settings-and-machine-with-it"><a class="header" href="#keep-the-designs-settings-and-machine-with-it">Keep the design’s settings and machine with it</a></h2>
-<p>From VectorCraft 0.16, a document can keep the machine it is for, and the 3 settings Ink/Stitch keeps
+<p>From VectorCraft 0.16, a document can keep the machine it is for, and the 3 lengths Ink/Stitch keeps
 with a design for all of its objects. With the <a href="#the-vectorcraft-plug-ins">plug-ins installed</a>,
 choose <strong>Object › Plug-ins › StitchCraft Design Settings</strong>, set them, and press OK:</p>
 <ul>
@@ -2173,6 +2173,7 @@ Arguments:
 <tr><td><a href="#sc-e0801"><code>SC-E0801</code></a></td><td>Error</td><td>SVG could not be read</td></tr>
 <tr><td><a href="#sc-w0802"><code>SC-W0802</code></a></td><td>Warning</td><td>SVG feature ignored</td></tr>
 <tr><td><a href="#sc-i0805"><code>SC-I0805</code></a></td><td>Info</td><td>Object left out, as the file asks</td></tr>
+<tr><td><a href="#sc-i0818"><code>SC-I0818</code></a></td><td>Info</td><td>Ink/Stitch file from an older version, read as Ink/Stitch updates it</td></tr>
 <tr><td><a href="#sc-w0804"><code>SC-W0804</code></a></td><td>Warning</td><td>Element geometry invalid or out of range</td></tr>
 <tr><td><a href="#sc-w0803"><code>SC-W0803</code></a></td><td>Warning</td><td>VectorCraft file from a newer format version; read best-effort</td></tr>
 <tr><td><a href="#sc-e0806"><code>SC-E0806</code></a></td><td>Error</td><td>VectorCraft file could not be read</td></tr>
@@ -2626,7 +2627,10 @@ as a colour. Values that do not read are named too. A colour that does not read 
 viewer ignores it, and one of Ink/Stitch’s design settings keeps its default. A line that <code>--auto</code>
 sews across its width, as a satin column or a fill, is as wide as its transforms stretch it on
 average, so a transform that stretches it more one way than the other, and draws it wider one way,
-is named too.</p>
+is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the settings of its
+elements, its design setting <code>rotate_on_export</code>, which turns the design as it is written, and the
+updates Ink/Stitch would make to a file with its settings and no file version, or from a newer
+Ink/Stitch, which is read as it is.</p>
 <p>The message names the element and what was done. Convert text and clones to paths in the editor
 (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.</p>
 <h2 id="sc-i0805"><a class="header" href="#sc-i0805">SC-I0805</a></h2>
@@ -2637,6 +2641,17 @@ templates, placement lines and notes this way, in the drawing but out of the sew
 Ink/Stitch leaves them out too.</p>
 <p>The message names what was left out and why. To stitch it, delete the command’s symbol, or turn the
 setting off in Ink/Stitch’s parameters.</p>
+<h2 id="sc-i0818"><a class="header" href="#sc-i0818">SC-I0818</a></h2>
+<p><strong>Info</strong> — Ink/Stitch file from an older version, read as Ink/Stitch updates it</p>
+<p>The SVG file was saved by an older Ink/Stitch, and is read as Ink/Stitch updates such a file when it
+opens it, so that it sews as it did: a default that has changed since is written into the shapes
+that relied on it. Ink/Stitch numbers the files it saves. Before its file version 4, a fill’s
+stitches were 3 mm long unless it set another length, where they are 4 mm now; before version 2, a
+polyline whose style set a stroke was sewn as a manual stitch, with a needle point at each of its
+points. A shape digitized automatically (<code>--auto</code>) sews by StitchCraft’s rules instead.</p>
+<p>The message gives the file’s version, and how many shapes were updated and how. Nothing needs doing:
+the design sews as Ink/Stitch sews it. To sew a shape otherwise, set its longest stitch
+(<code>max_stitch_length_mm</code>) or its stitch type in Ink/Stitch.</p>
 <h2 id="sc-w0804"><a class="header" href="#sc-w0804">SC-W0804</a></h2>
 <p><strong>Warning</strong> — Element geometry invalid or out of range</p>
 <p>An element’s geometry cannot be used: its path data or its list of points has an error (the path is
@@ -5269,7 +5284,7 @@ another.</p>
 <tr><td><code>SC-W0702</code></td><td>Warning</td><td>Design is larger than the comfort zone (the profile’s most accurate area)</td><td>M1</td></tr>
 <tr><td><code>SC-I0703</code></td><td>Info</td><td>Stitches longer than the machine’s longest stitch; split</td><td>M3</td></tr>
 <tr><td><code>SC-E0801</code></td><td>Error</td><td>SVG could not be read (with the parser’s position)</td><td>M3</td></tr>
-<tr><td><code>SC-W0802</code></td><td>Warning</td><td>SVG feature ignored (e.g. raster image, text not converted to paths)</td><td>M3</td></tr>
+<tr><td><code>SC-W0802</code></td><td>Warning</td><td>SVG feature ignored (e.g. raster image, text not converted to paths, an Ink/Stitch file Ink/Stitch would update or warn about, read as it is)</td><td>M3</td></tr>
 <tr><td><code>SC-W0803</code></td><td>Warning</td><td>VectorCraft file from a newer format version; read best-effort (a version newer than the newest the adapter reads)</td><td>M6</td></tr>
 <tr><td><code>SC-W0804</code></td><td>Warning</td><td>Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke’s width, join or miter limit that does not read); the usable part is stitched</td><td>M3</td></tr>
 <tr><td><code>SC-I0805</code></td><td>Info</td><td>Object left out, as the file asks (Ink/Stitch’s ignore commands and <code>ignore_object</code> setting)</td><td>M3</td></tr>
@@ -5285,6 +5300,7 @@ another.</p>
 <tr><td><code>SC-E0815</code></td><td>Error</td><td>VectorCraft’s command line could not be started (<code>stitch plan</code> traces a picture with it: neither on the PATH nor where <code>--vectorcraft-cli</code> says)</td><td>M13</td></tr>
 <tr><td><code>SC-E0816</code></td><td>Error</td><td>VectorCraft could not trace the picture (its command line failed or didn’t save the document)</td><td>M13</td></tr>
 <tr><td><code>SC-E0817</code></td><td>Error</td><td>VectorCraft test sheet not drawn (in the middle of the artboard, parts of the sheet would lie more than 10 m from the document’s origin)</td><td>M6</td></tr>
+<tr><td><code>SC-I0818</code></td><td>Info</td><td>Ink/Stitch file from an older version, read as Ink/Stitch updates it (the shapes given a default that has changed since, such as a fill’s 3 mm stitches before its file version 4, counted)</td><td>M3</td></tr>
 <tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>, or VectorCraft’s Auto effect), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
 <tr><td><code>SC-I0902</code></td><td>Info</td><td>Satin column can’t be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don’t make a column round one of its lines or whose column would be read back otherwise)</td><td>M13</td></tr>
 <tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>
@@ -5329,8 +5345,9 @@ the SVG element as <code>svg:&lt;label&gt;</code>.</li>
 <li><strong>Automatic elements.</strong> Read with <code>--auto</code> (<code>Reading::auto</code>), a shape with no attribute in Ink/Stitch’s
 namespace is an automatic element, whose stitches StitchCraft chooses by its width
 (<a href="#automatic-elements">image to embroidery</a>, <code>REQ-AUTO-001</code>). The trim and stop
-of Ink/Stitch’s commands attached to it still apply. A shape with any <code>inkstitch:</code> attribute is not
-automatic: it sews as its settings say once they are read (M8), and with the defaults until then.
+of Ink/Stitch’s commands attached to it still apply. A shape with any <code>inkstitch:</code> attribute, or an
+<code>embroider_</code> attribute as Ink/Stitch’s early versions wrote its settings, is not automatic: it sews as
+its settings say once they are read (M8), and with the defaults until then.
 Read with <code>--sort-colours</code> (<code>Reading::sort_colours</code>), the design’s shapes with settings sew in the order
 StitchCraft chooses too (<a href="#sewing-order">image to embroidery</a>, <code>REQ-AUTO-011</code>).</li>
 </ul>
@@ -5341,6 +5358,11 @@ user unit is a CSS pixel, 1/96 inch, unless they say otherwise. A root with only
 height takes the other from its viewBox’s shape, as SVG 2 sizes an image, and a percentage counts as
 missing. Ink/Stitch takes both sides from the viewBox, in pixels, when either is missing
 (<code>DEV-SVG-009</code>).</li>
+<li>The page’s top left corner is the design’s origin, which a tatami fill lays its rows from
+(<code>REQ-FILL-TAT-002</code>). Ink/Stitch maps a viewBox that does not start at 0 by scaling it first and then
+moving it by its start in pixels. Its rows and their needle points lie a fraction of a row spacing
+elsewhere then (<code>DEV-SVG-015</code>). Inkscape writes viewBoxes that start at 0, and with those they lie
+alike.</li>
 <li>A viewer ignores a root <code>width</code>, <code>height</code> or <code>viewBox</code> that is empty, and a <code>preserveAspectRatio</code> that
 does not read. The adapter ignores them too, and <code>SC-W0804</code> names each. A <code>width</code>, <code>height</code> or
 <code>viewBox</code> that does not read could put the design at any size, and the file is refused (<code>SC-E0801</code>).
@@ -5405,7 +5427,11 @@ element or above it. A <code>fill-opacity</code> or <code>stroke-opacity</code> 
 that is <code>transparent</code> or has an alpha of 0, <code>currentColor</code> where <code>color</code> is such a colour, and a
 gradient whose stops a viewer doesn’t show. Ink/Stitch leaves out only what <code>display</code> hides and a fill
 whose <code>fill-opacity</code> is written <code>0</code> (<code>DEV-SVG-003</code>). The insides of <code>&lt;defs&gt;</code>, <code>&lt;symbol&gt;</code>, <code>&lt;marker&gt;</code>,
-<code>&lt;pattern&gt;</code>, <code>&lt;clipPath&gt;</code> and <code>&lt;mask&gt;</code> are never drawn.</li>
+<code>&lt;pattern&gt;</code>, <code>&lt;clipPath&gt;</code> and <code>&lt;mask&gt;</code> are never drawn, and <code>context-fill</code> and <code>context-stroke</code> paint
+nothing, as they paint only a marker’s or a clone’s content. Ink/Stitch sews them black.</li>
+<li>Ink/Stitch sews a fill’s linear gradient in its first stop, and a swatch in its colour, like the
+adapter, but every other gradient and every pattern in black, whatever colour is written after it
+(<code>DEV-SVG-013</code>).</li>
 </ul>
 <h2 id="stroke-width-and-join"><a class="header" href="#stroke-width-and-join">Stroke width and join</a></h2>
 <p>A stroke’s width and join give a satin column drawn as one path its width and its corners
@@ -5447,7 +5473,10 @@ reads too, and <code>SC-I0805</code> lists each object left out. The
 <code>starting_point</code> and <code>ending_point</code> commands, which place where Ink/Stitch starts and ends a fill or a
 satin column, are not applied yet (<code>REQ-GEN-001</code>), and <code>SC-W0802</code> names each one on an object a viewer
 shows. The <a href="#commands-1">command table</a> gives what the adapter does with
-each of the 12 commands.</li>
+each of the 12 commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
+<code>fill_start</code> for <code>starting_point</code>: the adapter reads those as the commands they became in any file,
+where Ink/Stitch renames them only in the files it updates and sews the old symbol elsewhere
+(<code>DEV-SVG-014</code>).</li>
 <li><strong>Connectors</strong> tie a command to its object.</li>
 <li><strong>Helper paths</strong> have one of Ink/Stitch’s start markers. They steer the stitches of other objects.</li>
 </ul>
@@ -5455,20 +5484,48 @@ each of the 12 commands.</li>
 not apply yet. The module docs of <code>crates/stitchcraft-svg/src/inkstitch.rs</code> describe how the adapter
 finds these objects, with the Ink/Stitch files they were read from.</p>
 <h2 id="design-settings"><a class="header" href="#design-settings">Design settings</a></h2>
-<p>Ink/Stitch keeps 3 settings for the whole design in the file’s first <code>&lt;metadata&gt;</code> element:
-<code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and <code>min_satin_stroke_width_mm</code>. Each is an element of
-Ink/Stitch’s namespace whose text is the value in millimetres, and the first of each name counts. They
-become the design’s collapse length, shortest stitch and narrowest satin stroke (<code>REQ-SVG-005</code>).
+<p>Ink/Stitch keeps 4 settings for the whole design in the file’s first <code>&lt;metadata&gt;</code> element. Each is an
+element of Ink/Stitch’s namespace whose text is the value, and the first of each name counts. The lengths
+in millimetres, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and <code>min_satin_stroke_width_mm</code>, become the
+design’s collapse length, shortest stitch and narrowest satin stroke (<code>REQ-SVG-005</code>).
 <code>SC-W0802</code> names a value that is not a number of 0 or more, and the design keeps its default. The
 defaults are in the <a href="#engine-input-design-stitchcraft-engine">data model</a>. The settings’
 names, with the label and help a dialog shows, are listed once in <code>stitchcraft_engine::design::SETTINGS</code>,
 which a VectorCraft document’s settings are read with too
 (<a href="#design-settings-and-machine-kept-with-the-document">integration</a>).</p>
+<p>The fourth, <code>rotate_on_export</code>, turns the design by 90° either way as Ink/Stitch writes it into a machine
+file, for machines that don’t turn a design to fit their hoop. It is not applied yet (M8): <code>SC-W0802</code>
+names a value other than 0, and the design is written as drawn. Ink/Stitch also keeps <code>thread-palette</code>
+there, which names the threads in its own lists and print-outs and doesn’t change what the adapter sews,
+and the file’s version (below). <code>SC-W0802</code> names any other element of Ink/Stitch’s there.</p>
+<h2 id="files-of-older-inkstitch-versions"><a class="header" href="#files-of-older-inkstitch-versions">Files of older Ink/Stitch versions</a></h2>
+<p>Ink/Stitch numbers the files it works on, <code>inkstitch_svg_version</code> in the metadata, 4 at the commit the
+contract checks. When it opens a file of an older version that has content of its own, an element or an
+attribute in its namespace or an <code>embroider_</code> attribute, it updates the file so that it sews as it did:
+the defaults that have changed since are written into the shapes that relied on them
+(<code>crates/stitchcraft-svg/src/version.rs</code> says how it was found). The adapter reads such a file as
+Ink/Stitch updates it (<code>REQ-SVG-007</code>), with the changed defaults as parameters of the shapes, and
+<code>SC-I0818</code> says how many shapes changed:</p>
+<ul>
+<li>in a file of version 1 to 3, a shape whose fill is sewn, without a longest stitch of its own, sews
+3 mm stitches, the default before version 4, where today’s default is 4 mm;</li>
+<li>in a file of version 1, a polyline whose <code>style</code> attribute sets a stroke is a manual stitch.</li>
+</ul>
+<p>A shape digitized automatically sews by the rules instead. Ink/Stitch asks its user whether a file with
+its content and no version is an old design, which it then updates, or objects pasted into a new file.
+The adapter can’t ask. It reads such a file as it is and says so with <code>SC-W0802</code>, as it says that a file
+of a version above 4 is read as version 4. The other changes the update makes are to settings the adapter
+does not read yet; the <a href="#file-versions">compatibility contract</a> lists them
+all, with the milestone that applies them.</p>
 <h2 id="reports"><a class="header" href="#reports">Reports</a></h2>
 <ul>
 <li><code>SC-W0802</code> reports a feature that is not stitched. Text, images, clones, nested <code>&lt;svg&gt;</code> elements and
 the style sheet rules that are not read are such features. So are clipping, masks, filters, markers
-and the Ink/Stitch settings that are not read yet. Clipping is planned for M8.</li>
+and the Ink/Stitch settings that are not read yet. Clipping is planned for M8. It reports a file
+Ink/Stitch would update, or warn about, that is read as it is: one with Ink/Stitch’s content and no
+file version, or of a newer version.</li>
+<li><code>SC-I0818</code> says how many shapes of a file an older Ink/Stitch saved are read as its update changes
+them.</li>
 <li><code>SC-W0804</code> reports geometry that cannot be used:
 <ul>
 <li>path data or a list of points with an error, stitched up to the error</li>
@@ -8718,9 +8775,10 @@ sheets drawn as designs export within 17 % of what an export may run, once the T
 them into a document (<a href="#tools-stroke-to-satin-and-test-sheet">below</a>). A live effect is given no warnings
 channel, and an exporter no picture: <code>stitch export --preview</code> still draws what will sew.</p>
 <h3 id="design-settings-and-machine-kept-with-the-document"><a class="header" href="#design-settings-and-machine-kept-with-the-document">Design settings and machine kept with the document</a></h3>
-<p>Ink/Stitch keeps 3 settings for the whole design with an SVG file, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code>
+<p>Ink/Stitch keeps 3 lengths for the whole design with an SVG file, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code>
 and <code>min_satin_stroke_width_mm</code> (<a href="#design-settings">SVG input</a>), and a VectorCraft document has
-no place of its own for them. VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
+no place of its own for them. Its fourth such setting, <code>rotate_on_export</code>, which turns the design as it is
+written, is not kept yet (M8). VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
 the RFC’s <a href="#p5-document-level-plug-in-data">P5</a>. The filter returns it as
 <code>documentData</code>, and the native file saves it in <code>document.unknown.pluginData</code> under the plug-in’s id. An
 exporter reads every plug-in’s in the document it is given, and a live effect isn’t given it.</p>
@@ -10487,6 +10545,24 @@ StitchCraft’s SVG adapter does with it (<code>stitchcraft_svg::inkstitch</code
 </tbody>
 </table>
 </div>
+<p>Before its file version 3, Ink/Stitch named 7 commands otherwise. Its updater renames them in the files it updates, and
+StitchCraft reads them as the commands they became in any file (<code>DEV-SVG-014</code>).</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Old name</th><th>Command</th></tr>
+</thead>
+<tbody>
+<tr><td><code>fill_start</code></td><td><code>starting_point</code></td></tr>
+<tr><td><code>fill_end</code></td><td><code>ending_point</code></td></tr>
+<tr><td><code>satin_start</code></td><td><code>autoroute_start</code></td></tr>
+<tr><td><code>satin_end</code></td><td><code>autoroute_end</code></td></tr>
+<tr><td><code>run_start</code></td><td><code>autoroute_start</code></td></tr>
+<tr><td><code>run_end</code></td><td><code>autoroute_end</code></td></tr>
+<tr><td><code>ripple_target</code></td><td><code>target_point</code></td></tr>
+</tbody>
+</table>
+</div>
 <h2 id="other-attributes"><a class="header" href="#other-attributes">Other attributes</a></h2>
 <p>The <code>inkstitch:*</code> attributes that declare no parameter: settings of an element, of Ink/Stitch’s
 patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewrites in older files.</p>
@@ -10510,6 +10586,43 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewr
 <tr><td><code>e_stitch</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
 <tr><td><code>manual_stitch</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
 <tr><td><code>grid_size</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="file-versions"><a class="header" href="#file-versions">File versions</a></h2>
+<p>Ink/Stitch numbers the files it works on (<code>inkstitch_svg_version</code> in the metadata, 4 at the commit above).
+When it opens a file of an older version that has content of its own (an element or an attribute in its namespace, or
+an <code>embroider_</code> attribute), it changes the file so that it sews as it did, version by version: a file of version 2
+gets the changes of versions 3 and 4. A file with its content and no version gets them all if its user says it is an
+old design. StitchCraft applies the changes that alter what it sews today as parameters of the shapes
+(<code>REQ-SVG-007</code>). A file without a version it reads as it is: version 1’s changes don’t apply. Each row is a
+change Ink/Stitch’s updater makes (<code>lib/update.py</code>), in StitchCraft’s words.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Version</th><th>Change</th><th>StitchCraft</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>each <code>embroider_&lt;name&gt;</code> attribute, as Ink/Stitch’s early versions wrote their settings, becomes <code>inkstitch:&lt;name&gt;</code> if <code>&lt;name&gt;</code> is a setting Ink/Stitch knows. The others are removed</td><td>not planned</td></tr>
+<tr><td>1</td><td><code>ties</code> written <code>True</code> becomes 0, and <code>False</code> becomes 3</td><td>not planned</td></tr>
+<tr><td>1</td><td>a <code>fill_method</code> written as 0 to 3 becomes <code>auto_fill</code>, <code>contour_fill</code>, <code>guided_fill</code> or <code>legacy_fill</code>, in that order</td><td>not planned</td></tr>
+<tr><td>1</td><td>commas in <code>fill_underlay_angle</code> become spaces</td><td>not planned</td></tr>
+<tr><td>1</td><td><code>e_stitch</code> on becomes <code>satin_method</code> <code>e_stitch</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>a satin column (<code>satin_column</code> on, or <code>stroke_method</code> 1) gets <code>reverse_rails</code> <code>none</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>an element with an <code>embroider_</code> attribute and without <code>fill_underlay</code> gets it off</td><td>not planned</td></tr>
+<tr><td>1</td><td>an element without <code>running_stitch_length_mm</code> that is not a satin column gets 1.5</td><td>not planned</td></tr>
+<tr><td>1</td><td>a stroke with <code>manual_stitch</code> on gets <code>stroke_method</code> <code>manual_stitch</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>a stroke’s <code>stroke_method</code> written as 0 or 1 becomes <code>running_stitch</code> or <code>ripple_stitch</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>a stroke with neither a method nor <code>satin_column</code>, whose <code>style</code> doesn’t set <code>stroke-dasharray</code>, gets <code>zigzag_stitch</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
+<tr><td>1</td><td>a stroke’s <code>grid_size</code>, in pixels, becomes <code>grid_size_mm</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
+<tr><td>2</td><td>a <code>&lt;polyline&gt;</code> whose <code>style</code> attribute sets a stroke other than <code>none</code> gets <code>stroke_method</code> <code>manual_stitch</code></td><td>applied, unless digitized automatically</td></tr>
+<tr><td>3</td><td>a zigzag stroke’s <code>pull_compensation_mm</code>, unless 0, is halved into <code>stroke_pull_compensation_mm</code>, which applies to each side</td><td>planned (M8)</td></tr>
+<tr><td>3</td><td>a satin column gets <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off</td><td>planned (M8)</td></tr>
+<tr><td>3</td><td>the commands’ old names become today’s (the table under Commands)</td><td>applied, in any file (<code>DEV-SVG-014</code>)</td></tr>
+<tr><td>3</td><td>a <code>starting_point</code> or <code>ending_point</code> command is placed anew at its connector’s end on its object</td><td>planned (M8)</td></tr>
+<tr><td>4</td><td>an element whose fill is not <code>none</code> (a fill not set is black), and whose <code>max_stitch_length_mm</code> is missing, empty, not a number or 0, gets 3</td><td>applied to the shapes whose fill is sewn, unless digitized automatically</td></tr>
+<tr><td>4</td><td>a fill with <code>auto_fill</code> off gets <code>fill_method</code> <code>legacy_fill</code>, and <code>auto_fill</code> is removed</td><td>planned (M8)</td></tr>
+<tr><td>4</td><td><code>fill_method</code> <code>auto_fill</code> becomes <code>tatami_fill</code></td><td>planned (M8)</td></tr>
 </tbody>
 </table>
 </div>
@@ -11350,7 +11463,7 @@ M13.7, whose Auto effect uses them.</p>
 <tr><td>M6.8 ✅</td><td>Live effects read their object’s stroke, which VectorCraft gives them from 0.14 with its fills. A stroke or a satin effect follows the topmost stroke that paints, as <code>stitch export</code> does: its width, and from 0.15 its join, cap and miter limit. A satin column drawn as one path and a zigzag stroke show their stitches as wide as their stroke. Without a stroke the effect leaves such an object as it is (<code>SC-I0810</code>). It does so too when it is applied to one of the object’s fills or strokes, which <code>stitch export</code> doesn’t use. Making the rails of a centre line that bends costs many units of the engine’s work. The auto level shows its outline then, and the exact level its stitches. Before M13.7, whose Auto effect chooses a line’s stitches by its width</td><td><code>REQ-VC-010</code></td></tr>
 <tr><td>M6.9 ✅</td><td>VectorCraft exporters for StitchCraft’s machine formats, PES and DST, in File › Export › Export As (VectorCraft 0.14’s exporter plug-ins). An exporter plans the document it is given for the machine profile as <code>stitch export</code> plans a <code>.vectorcraft</code> file. It returns the machine file, with what the plan says as the export’s warnings, and writes nothing when that holds an error. A parameter digitizes the shapes without settings automatically, as <code>--auto</code> does</td><td><code>REQ-VC-011</code>; the Level B case <code>export</code>, in which VectorCraft’s command line exports a document to PES and DST, and the files and the warnings are <code>stitch export</code>’s. A fill of the reference hoop’s whole field exports within an export’s budget in VectorCraft’s host. The test sheets are M6.12’s, which draws them into a document</td></tr>
 <tr><td>M6.10 ✅</td><td>The plug-ins’ dialogs as the parameter registry describes the parameters, with VectorCraft 0.14’s richer schemas: each one’s label, unit, help and help page, the registry’s groups as sections, and each shown only for the methods it applies to (<code>visibleWhen</code>)</td><td><code>REQ-VC-012</code>; the manifests valid against VectorCraft’s rules, each help page a heading of the book, and <code>shots-ui</code>’s pictures of the dialogs labelled and grouped</td></tr>
-<tr><td>M6.11 ✅</td><td>A document’s design settings kept with it, as data VectorCraft 0.16 keeps with a document for a filter. Ink/Stitch keeps 3 with a file, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and <code>min_satin_stroke_width_mm</code>, which a VectorCraft document couldn’t set. The machine profile is kept too, though Ink/Stitch has no such profile and its hoop is the page. The Design Settings filter sets them, and the exporters and <code>stitch export</code> plan with them, for the machine kept unless <code>--profile</code> or the export’s dialog names another. What doesn’t read keeps its default (<code>SC-W0812</code>), and a VectorCraft before 0.16, which would drop them, is told so (<code>SC-E0813</code>). A live effect isn’t given the document’s data, and its previews keep the defaults and the reference machine</td><td><code>REQ-VC-013</code>; the Level B case <code>settings</code>, in which a shortest stitch kept changes the PES file, the exports are <code>stitch export</code>’s, and a hoop kept that can’t hold the design stops its export</td></tr>
+<tr><td>M6.11 ✅</td><td>A document’s design settings kept with it, as data VectorCraft 0.16 keeps with a document for a filter. Ink/Stitch keeps 3 lengths with a file, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and <code>min_satin_stroke_width_mm</code>, which a VectorCraft document couldn’t set; its fourth such setting, <code>rotate_on_export</code>, is M8’s. The machine profile is kept too, though Ink/Stitch has no such profile and its hoop is the page. The Design Settings filter sets them, and the exporters and <code>stitch export</code> plan with them, for the machine kept unless <code>--profile</code> or the export’s dialog names another. What doesn’t read keeps its default (<code>SC-W0812</code>), and a VectorCraft before 0.16, which would drop them, is told so (<code>SC-E0813</code>). A live effect isn’t given the document’s data, and its previews keep the defaults and the reference machine</td><td><code>REQ-VC-013</code>; the Level B case <code>settings</code>, in which a shortest stitch kept changes the PES file, the exports are <code>stitch export</code>’s, and a hoop kept that can’t hold the design stops its export</td></tr>
 <tr><td>M6.12 ✅</td><td>The tools as filters, which set up objects with their effects (VectorCraft 0.15). Stroke to Satin, once Convert Line to Satin, makes each selected line into a satin column drawn with its rails and rungs, with the satin effect, which sews as the line did. It is a heavy filter, which VectorCraft adds in 0.17: its 18 to 233 million instructions fit a heavy filter’s 1 G. Test Sheet draws <code>stitch testsheet</code>’s sheets drawn as designs into the document, each object with its effect, from 0.16</td><td><code>REQ-VC-014</code> and <code>REQ-VC-015</code>. VectorCraft 0.17.0 is pinned, and the Level B cases <code>stroke-to-satin</code>, in which the columns sew as the lines did, and <code>testsheets</code>, in which each sheet sews as its design moved and exports within an export’s budget</td></tr>
 <tr><td>MC-5 🧵</td><td><strong>TS-12</strong> (a design authored in VectorCraft) and <strong>TS-10</strong> again through the full workflow</td><td>report filed</td></tr>
 </tbody>
@@ -11409,7 +11522,13 @@ first, and the steps that make new kinds of shape into stitches follow.</p>
 <h2 id="m8--inkstitch-interoperability"><a class="header" href="#m8--inkstitch-interoperability">M8 — Ink/Stitch interoperability</a></h2>
 <p>SVG adapter v2:</p>
 <ul>
-<li>every <code>inkstitch:*</code> attribute in the <a href="#inkstitch-compatibility-contract">compatibility contract</a></li>
+<li>every <code>inkstitch:*</code> attribute in the <a href="#inkstitch-compatibility-contract">compatibility contract</a>,
+with the changes Ink/Stitch’s updater makes to them in a file of an older version
+(<a href="#file-versions">file versions</a>). The adapter already applies
+those that change what it sews without reading the attributes (<code>REQ-SVG-007</code>).</li>
+<li>the design setting <code>rotate_on_export</code>, which turns the design as it is written into a machine file,
+applied after centring and before the hoop is checked, and kept with a VectorCraft document. Until then
+<code>SC-W0802</code> names it.</li>
 <li>the command symbols not read yet, such as start and end points (<code>REQ-GEN-001</code>). The origin and stop
 position commands go into the design settings. Since M3 the adapter applies trim, stop and the ignore
 commands, and it never stitches commands, connectors or helper paths (<code>REQ-SVG-003</code>).</li>

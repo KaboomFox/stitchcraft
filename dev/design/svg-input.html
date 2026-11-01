@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a5aefe5b.js";
+            window.path_to_searchindex_js = "../searchindex-e82d4c80.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -213,8 +213,9 @@ the SVG element as <code>svg:&lt;label&gt;</code>.</li>
 <li><strong>Automatic elements.</strong> Read with <code>--auto</code> (<code>Reading::auto</code>), a shape with no attribute in Ink/Stitch’s
 namespace is an automatic element, whose stitches StitchCraft chooses by its width
 (<a href="image-to-embroidery.html#automatic-elements">image to embroidery</a>, <code>REQ-AUTO-001</code>). The trim and stop
-of Ink/Stitch’s commands attached to it still apply. A shape with any <code>inkstitch:</code> attribute is not
-automatic: it sews as its settings say once they are read (M8), and with the defaults until then.
+of Ink/Stitch’s commands attached to it still apply. A shape with any <code>inkstitch:</code> attribute, or an
+<code>embroider_</code> attribute as Ink/Stitch’s early versions wrote its settings, is not automatic: it sews as
+its settings say once they are read (M8), and with the defaults until then.
 Read with <code>--sort-colours</code> (<code>Reading::sort_colours</code>), the design’s shapes with settings sew in the order
 StitchCraft chooses too (<a href="image-to-embroidery.html#sewing-order">image to embroidery</a>, <code>REQ-AUTO-011</code>).</li>
 </ul>
@@ -225,6 +226,11 @@ user unit is a CSS pixel, 1/96 inch, unless they say otherwise. A root with only
 height takes the other from its viewBox’s shape, as SVG 2 sizes an image, and a percentage counts as
 missing. Ink/Stitch takes both sides from the viewBox, in pixels, when either is missing
 (<code>DEV-SVG-009</code>).</li>
+<li>The page’s top left corner is the design’s origin, which a tatami fill lays its rows from
+(<code>REQ-FILL-TAT-002</code>). Ink/Stitch maps a viewBox that does not start at 0 by scaling it first and then
+moving it by its start in pixels. Its rows and their needle points lie a fraction of a row spacing
+elsewhere then (<code>DEV-SVG-015</code>). Inkscape writes viewBoxes that start at 0, and with those they lie
+alike.</li>
 <li>A viewer ignores a root <code>width</code>, <code>height</code> or <code>viewBox</code> that is empty, and a <code>preserveAspectRatio</code> that
 does not read. The adapter ignores them too, and <code>SC-W0804</code> names each. A <code>width</code>, <code>height</code> or
 <code>viewBox</code> that does not read could put the design at any size, and the file is refused (<code>SC-E0801</code>).
@@ -289,7 +295,11 @@ element or above it. A <code>fill-opacity</code> or <code>stroke-opacity</code> 
 that is <code>transparent</code> or has an alpha of 0, <code>currentColor</code> where <code>color</code> is such a colour, and a
 gradient whose stops a viewer doesn’t show. Ink/Stitch leaves out only what <code>display</code> hides and a fill
 whose <code>fill-opacity</code> is written <code>0</code> (<code>DEV-SVG-003</code>). The insides of <code>&lt;defs&gt;</code>, <code>&lt;symbol&gt;</code>, <code>&lt;marker&gt;</code>,
-<code>&lt;pattern&gt;</code>, <code>&lt;clipPath&gt;</code> and <code>&lt;mask&gt;</code> are never drawn.</li>
+<code>&lt;pattern&gt;</code>, <code>&lt;clipPath&gt;</code> and <code>&lt;mask&gt;</code> are never drawn, and <code>context-fill</code> and <code>context-stroke</code> paint
+nothing, as they paint only a marker’s or a clone’s content. Ink/Stitch sews them black.</li>
+<li>Ink/Stitch sews a fill’s linear gradient in its first stop, and a swatch in its colour, like the
+adapter, but every other gradient and every pattern in black, whatever colour is written after it
+(<code>DEV-SVG-013</code>).</li>
 </ul>
 <h2 id="stroke-width-and-join"><a class="header" href="#stroke-width-and-join">Stroke width and join</a></h2>
 <p>A stroke’s width and join give a satin column drawn as one path its width and its corners
@@ -331,7 +341,10 @@ reads too, and <code>SC-I0805</code> lists each object left out. The
 <code>starting_point</code> and <code>ending_point</code> commands, which place where Ink/Stitch starts and ends a fill or a
 satin column, are not applied yet (<code>REQ-GEN-001</code>), and <code>SC-W0802</code> names each one on an object a viewer
 shows. The <a href="inkstitch-compat-contract.html#commands">command table</a> gives what the adapter does with
-each of the 12 commands.</li>
+each of the 12 commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
+<code>fill_start</code> for <code>starting_point</code>: the adapter reads those as the commands they became in any file,
+where Ink/Stitch renames them only in the files it updates and sews the old symbol elsewhere
+(<code>DEV-SVG-014</code>).</li>
 <li><strong>Connectors</strong> tie a command to its object.</li>
 <li><strong>Helper paths</strong> have one of Ink/Stitch’s start markers. They steer the stitches of other objects.</li>
 </ul>
@@ -339,20 +352,48 @@ each of the 12 commands.</li>
 not apply yet. The module docs of <code>crates/stitchcraft-svg/src/inkstitch.rs</code> describe how the adapter
 finds these objects, with the Ink/Stitch files they were read from.</p>
 <h2 id="design-settings"><a class="header" href="#design-settings">Design settings</a></h2>
-<p>Ink/Stitch keeps 3 settings for the whole design in the file’s first <code>&lt;metadata&gt;</code> element:
-<code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and <code>min_satin_stroke_width_mm</code>. Each is an element of
-Ink/Stitch’s namespace whose text is the value in millimetres, and the first of each name counts. They
-become the design’s collapse length, shortest stitch and narrowest satin stroke (<code>REQ-SVG-005</code>).
+<p>Ink/Stitch keeps 4 settings for the whole design in the file’s first <code>&lt;metadata&gt;</code> element. Each is an
+element of Ink/Stitch’s namespace whose text is the value, and the first of each name counts. The lengths
+in millimetres, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and <code>min_satin_stroke_width_mm</code>, become the
+design’s collapse length, shortest stitch and narrowest satin stroke (<code>REQ-SVG-005</code>).
 <code>SC-W0802</code> names a value that is not a number of 0 or more, and the design keeps its default. The
 defaults are in the <a href="data-model.html#engine-input-design-stitchcraft-engine">data model</a>. The settings’
 names, with the label and help a dialog shows, are listed once in <code>stitchcraft_engine::design::SETTINGS</code>,
 which a VectorCraft document’s settings are read with too
 (<a href="vectorcraft-integration.html#design-settings-and-machine-kept-with-the-document">integration</a>).</p>
+<p>The fourth, <code>rotate_on_export</code>, turns the design by 90° either way as Ink/Stitch writes it into a machine
+file, for machines that don’t turn a design to fit their hoop. It is not applied yet (M8): <code>SC-W0802</code>
+names a value other than 0, and the design is written as drawn. Ink/Stitch also keeps <code>thread-palette</code>
+there, which names the threads in its own lists and print-outs and doesn’t change what the adapter sews,
+and the file’s version (below). <code>SC-W0802</code> names any other element of Ink/Stitch’s there.</p>
+<h2 id="files-of-older-inkstitch-versions"><a class="header" href="#files-of-older-inkstitch-versions">Files of older Ink/Stitch versions</a></h2>
+<p>Ink/Stitch numbers the files it works on, <code>inkstitch_svg_version</code> in the metadata, 4 at the commit the
+contract checks. When it opens a file of an older version that has content of its own, an element or an
+attribute in its namespace or an <code>embroider_</code> attribute, it updates the file so that it sews as it did:
+the defaults that have changed since are written into the shapes that relied on them
+(<code>crates/stitchcraft-svg/src/version.rs</code> says how it was found). The adapter reads such a file as
+Ink/Stitch updates it (<code>REQ-SVG-007</code>), with the changed defaults as parameters of the shapes, and
+<code>SC-I0818</code> says how many shapes changed:</p>
+<ul>
+<li>in a file of version 1 to 3, a shape whose fill is sewn, without a longest stitch of its own, sews
+3 mm stitches, the default before version 4, where today’s default is 4 mm;</li>
+<li>in a file of version 1, a polyline whose <code>style</code> attribute sets a stroke is a manual stitch.</li>
+</ul>
+<p>A shape digitized automatically sews by the rules instead. Ink/Stitch asks its user whether a file with
+its content and no version is an old design, which it then updates, or objects pasted into a new file.
+The adapter can’t ask. It reads such a file as it is and says so with <code>SC-W0802</code>, as it says that a file
+of a version above 4 is read as version 4. The other changes the update makes are to settings the adapter
+does not read yet; the <a href="inkstitch-compat-contract.html#file-versions">compatibility contract</a> lists them
+all, with the milestone that applies them.</p>
 <h2 id="reports"><a class="header" href="#reports">Reports</a></h2>
 <ul>
 <li><code>SC-W0802</code> reports a feature that is not stitched. Text, images, clones, nested <code>&lt;svg&gt;</code> elements and
 the style sheet rules that are not read are such features. So are clipping, masks, filters, markers
-and the Ink/Stitch settings that are not read yet. Clipping is planned for M8.</li>
+and the Ink/Stitch settings that are not read yet. Clipping is planned for M8. It reports a file
+Ink/Stitch would update, or warn about, that is read as it is: one with Ink/Stitch’s content and no
+file version, or of a newer version.</li>
+<li><code>SC-I0818</code> says how many shapes of a file an older Ink/Stitch saved are read as its update changes
+them.</li>
 <li><code>SC-W0804</code> reports geometry that cannot be used:
 <ul>
 <li>path data or a list of points with an error, stitched up to the error</li>

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-a5aefe5b.js";
+            window.path_to_searchindex_js = "../../searchindex-e82d4c80.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b793f3ad.js"></script>
@@ -245,6 +245,7 @@
 <tr><td><a href="#sc-e0801"><code>SC-E0801</code></a></td><td>Error</td><td>SVG could not be read</td></tr>
 <tr><td><a href="#sc-w0802"><code>SC-W0802</code></a></td><td>Warning</td><td>SVG feature ignored</td></tr>
 <tr><td><a href="#sc-i0805"><code>SC-I0805</code></a></td><td>Info</td><td>Object left out, as the file asks</td></tr>
+<tr><td><a href="#sc-i0818"><code>SC-I0818</code></a></td><td>Info</td><td>Ink/Stitch file from an older version, read as Ink/Stitch updates it</td></tr>
 <tr><td><a href="#sc-w0804"><code>SC-W0804</code></a></td><td>Warning</td><td>Element geometry invalid or out of range</td></tr>
 <tr><td><a href="#sc-w0803"><code>SC-W0803</code></a></td><td>Warning</td><td>VectorCraft file from a newer format version; read best-effort</td></tr>
 <tr><td><a href="#sc-e0806"><code>SC-E0806</code></a></td><td>Error</td><td>VectorCraft file could not be read</td></tr>
@@ -698,7 +699,10 @@ as a colour. Values that do not read are named too. A colour that does not read 
 viewer ignores it, and one of Ink/Stitch’s design settings keeps its default. A line that <code>--auto</code>
 sews across its width, as a satin column or a fill, is as wide as its transforms stretch it on
 average, so a transform that stretches it more one way than the other, and draws it wider one way,
-is named too.</p>
+is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the settings of its
+elements, its design setting <code>rotate_on_export</code>, which turns the design as it is written, and the
+updates Ink/Stitch would make to a file with its settings and no file version, or from a newer
+Ink/Stitch, which is read as it is.</p>
 <p>The message names the element and what was done. Convert text and clones to paths in the editor
 (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.</p>
 <h2 id="sc-i0805"><a class="header" href="#sc-i0805">SC-I0805</a></h2>
@@ -709,6 +713,17 @@ templates, placement lines and notes this way, in the drawing but out of the sew
 Ink/Stitch leaves them out too.</p>
 <p>The message names what was left out and why. To stitch it, delete the command’s symbol, or turn the
 setting off in Ink/Stitch’s parameters.</p>
+<h2 id="sc-i0818"><a class="header" href="#sc-i0818">SC-I0818</a></h2>
+<p><strong>Info</strong> — Ink/Stitch file from an older version, read as Ink/Stitch updates it</p>
+<p>The SVG file was saved by an older Ink/Stitch, and is read as Ink/Stitch updates such a file when it
+opens it, so that it sews as it did: a default that has changed since is written into the shapes
+that relied on it. Ink/Stitch numbers the files it saves. Before its file version 4, a fill’s
+stitches were 3 mm long unless it set another length, where they are 4 mm now; before version 2, a
+polyline whose style set a stroke was sewn as a manual stitch, with a needle point at each of its
+points. A shape digitized automatically (<code>--auto</code>) sews by StitchCraft’s rules instead.</p>
+<p>The message gives the file’s version, and how many shapes were updated and how. Nothing needs doing:
+the design sews as Ink/Stitch sews it. To sew a shape otherwise, set its longest stitch
+(<code>max_stitch_length_mm</code>) or its stitch type in Ink/Stitch.</p>
 <h2 id="sc-w0804"><a class="header" href="#sc-w0804">SC-W0804</a></h2>
 <p><strong>Warning</strong> — Element geometry invalid or out of range</p>
 <p>An element’s geometry cannot be used: its path data or its list of points has an error (the path is

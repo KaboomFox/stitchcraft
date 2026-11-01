@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a5aefe5b.js";
+            window.path_to_searchindex_js = "../searchindex-e82d4c80.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -455,9 +455,10 @@ sheets drawn as designs export within 17 % of what an export may run, once the T
 them into a document (<a href="#tools-stroke-to-satin-and-test-sheet">below</a>). A live effect is given no warnings
 channel, and an exporter no picture: <code>stitch export --preview</code> still draws what will sew.</p>
 <h3 id="design-settings-and-machine-kept-with-the-document"><a class="header" href="#design-settings-and-machine-kept-with-the-document">Design settings and machine kept with the document</a></h3>
-<p>Ink/Stitch keeps 3 settings for the whole design with an SVG file, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code>
+<p>Ink/Stitch keeps 3 lengths for the whole design with an SVG file, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code>
 and <code>min_satin_stroke_width_mm</code> (<a href="svg-input.html#design-settings">SVG input</a>), and a VectorCraft document has
-no place of its own for them. VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
+no place of its own for them. Its fourth such setting, <code>rotate_on_export</code>, which turns the design as it is
+written, is not kept yet (M8). VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
 the RFC’s <a href="rfc-vectorcraft-abi-v2.html#p5-document-level-plug-in-data">P5</a>. The filter returns it as
 <code>documentData</code>, and the native file saves it in <code>document.unknown.pluginData</code> under the plug-in’s id. An
 exporter reads every plug-in’s in the document it is given, and a live effect isn’t given it.</p>
