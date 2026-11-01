@@ -17,7 +17,8 @@ use stitchcraft_core::{Budget, Point};
 use stitchcraft_engine::testsheets;
 use stitchcraft_formats::{decode, encode};
 use stitchcraft_plan::palette::BROTHER_PEC;
-use stitchcraft_plan::{FormatId, PlanBuilder, Provenance, Rgb, Role, StitchPlan, Thread};
+use stitchcraft_plan::profiles::REFERENCE;
+use stitchcraft_plan::{FormatId, PlanBuilder, Provenance, Rgb, Role, StitchPlan, Thread, TrimSupport};
 use stitchcraft_render::{Scene, Settings, Style, preview};
 use stitchcraft_testkit::equivalence::as_pes;
 use stitchcraft_testkit::strategies;
@@ -72,8 +73,9 @@ fn on_grid(plan: &StitchPlan) -> StitchPlan {
     plan
 }
 
+/// The scene of `plan` on a machine that obeys the trim command, which shows every trim a file asks for.
 fn scene(plan: &StitchPlan) -> Scene {
-    Scene::of(plan, &mut Budget::DEFAULT.meter()).unwrap()
+    Scene::of(plan, TrimSupport::Command, &mut Budget::DEFAULT.meter()).unwrap()
 }
 
 /// `plan` written as a PES file and read back.
@@ -102,8 +104,8 @@ fn req_rnd_001_previews_show_the_holes_a_machine_file_makes() {
     assert_ne!(meant, on_grid(&meant), "the sampler must be off the grid for this test to mean anything");
     for style in Style::ALL {
         let settings = Settings::new(*style, 10.0).unwrap();
-        let shown = preview(&meant, settings, &mut Budget::DEFAULT.meter()).unwrap();
-        let sewn = preview(&on_grid(&meant), settings, &mut Budget::DEFAULT.meter()).unwrap();
+        let shown = preview(&meant, TrimSupport::Command, settings, &mut Budget::DEFAULT.meter()).unwrap();
+        let sewn = preview(&on_grid(&meant), TrimSupport::Command, settings, &mut Budget::DEFAULT.meter()).unwrap();
         assert!(shown == sewn, "{}: the preview of the plan differs from the preview of what sews", style.name());
     }
 }
@@ -116,6 +118,25 @@ fn req_rnd_001_test_sheets_look_the_same_read_back_from_their_pes_files() {
     }
     let plan = sampler(0.04);
     assert_eq!(scene(&through_pes(&plan)), as_pes_says(&plan), "sampler");
+}
+
+#[test]
+fn req_rnd_001_on_the_reference_machine_a_sheet_s_file_shows_the_jump_threads_its_plan_does() {
+    // PES flags every jump as a trim, and the reference PE800 cuts none (MC-1): its preview of a sheet's
+    // file draws the jump threads the plan's does, and no trim. Colours aside, which PES writes as the
+    // Brother palette's.
+    let holes = |plan: &StitchPlan| -> Vec<_> {
+        let scene = Scene::of(plan, REFERENCE.trims, &mut Budget::DEFAULT.meter()).unwrap();
+        assert!(scene.marks.iter().all(|mark| matches!(mark, stitchcraft_render::Mark::Stop(_))));
+        scene.holes.iter().map(|hole| (hole.at, hole.arrival)).collect()
+    };
+    for sheet in testsheets::SHEETS {
+        let plan = sheet.plan().unwrap();
+        assert_eq!(holes(&through_pes(&plan)), holes(&plan), "{}", sheet.id);
+    }
+    // TS-13A's jump threads, which its checks ask about, are there.
+    let ts13a = testsheets::find("TS-13A").unwrap().plan().unwrap();
+    assert!(holes(&through_pes(&ts13a)).iter().filter(|(_, arrival)| *arrival == stitchcraft_render::Arrival::Loose).count() > 10);
 }
 
 proptest! {
@@ -147,7 +168,7 @@ fn req_rnd_002_previews_match_their_golden_files() {
     let cases =
         [("sampler", sampler(0.0), Style::Simple, 10.0), ("sampler", sampler(0.0), Style::Realistic, 10.0), ("TS-01", ts01, Style::Realistic, 4.0)];
     for (name, plan, style, scale) in cases {
-        let image = preview(&plan, Settings::new(style, scale).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
+        let image = preview(&plan, TrimSupport::Command, Settings::new(style, scale).unwrap(), &mut Budget::DEFAULT.meter()).unwrap();
         let path = golden_dir().join(format!("{name}-{}.png", style.name()));
         if bless {
             std::fs::create_dir_all(golden_dir()).unwrap();

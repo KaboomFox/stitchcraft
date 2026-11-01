@@ -8,7 +8,7 @@ use std::path::Path;
 
 use clap::CommandFactory;
 use stitchcraft_cli::cli::Cli;
-use stitchcraft_cli::commands::counts;
+use stitchcraft_cli::commands::{counts, trims_unmade};
 use stitchcraft_core::{Code, Severity};
 use stitchcraft_engine::testsheets::SHEETS;
 use stitchcraft_plan::profiles::BUILTIN;
@@ -118,10 +118,14 @@ fn test_sheets() -> Result<String, String> {
     for sheet in SHEETS {
         let plan = sheet.plan().map_err(|e| format!("{}: {e}", sheet.id))?;
         let _ = writeln!(out, "\n## {} — {}\n", sheet.id, sheet.title);
-        if let Some(b) = plan.bounds() {
-            let _ = writeln!(out, "{:.1} × {:.1} mm · {}\n", b.width(), b.height(), counts(&plan));
-        }
+        // The size and counts `stitch testsheet` prints: the file's, read back as the machine reads it.
         let profile = sheet.profile;
+        let file = stitchcraft_formats::encode(&plan, profile.format, sheet.id).map_err(|e| format!("{}: {e}", sheet.id))?;
+        let back = stitchcraft_formats::read_back(&file.bytes, &plan).map_err(|e| format!("{}: {e}", sheet.id))?;
+        if let Some(b) = back.bounds() {
+            let note = trims_unmade(&back, profile).map(|note| format!(" · trims: {note}")).unwrap_or_default();
+            let _ = writeln!(out, "{:.1} × {:.1} mm · {}{note}\n", b.width(), b.height(), counts(&back));
+        }
         let _ = writeln!(out, "Hoop: the {}, profile [`{}`](profiles.md#{}).\n", profile.name, profile.id, profile.id);
         match (filtered.contains(&sheet.id), sheet.digitized()) {
             (true, false) => out.push_str("Drawn as a design, which VectorCraft's Test Sheet filter draws too.\n\n"),

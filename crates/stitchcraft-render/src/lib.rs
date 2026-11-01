@@ -6,8 +6,9 @@
 //! steps, each tested on its own:
 //!
 //! 1. [`Scene::of`] walks the plan once and lists what the fabric will show — needle holes, how the
-//!    thread got to each (sewn, carried loose, or cut), trims and stops — in machine units
-//!    ([`scene`]). Tests compare scenes, which says *what* differs, instead of pixels.
+//!    thread got to each (sewn, carried loose, or cut), trims and stops — in machine units, on the machine
+//!    the picture is for, which decides what cuts the thread ([`scene`]). Tests compare scenes, which
+//!    says *what* differs, instead of pixels.
 //! 2. [`Scene::render`] draws a scene in one of two [`Style`]s and encodes it as PNG ([`raster`]),
 //!    byte-identical on every platform (REQ-RND-002), so documentation images are compared byte for
 //!    byte (`cargo xtask shots --check`).
@@ -24,9 +25,10 @@ pub use error::RenderError;
 pub use raster::{Image, MAX_SIDE, Settings, Style};
 pub use scene::{Arrival, GridPoint, Hole, Mark, Scene};
 use stitchcraft_core::Meter;
-use stitchcraft_plan::StitchPlan;
+use stitchcraft_plan::{StitchPlan, TrimSupport};
 
-/// The preview of `plan`: [`Scene::of`], then [`Scene::render`].
-pub fn preview(plan: &StitchPlan, settings: Settings, meter: &mut Meter) -> Result<Image, RenderError> {
-    Scene::of(plan, meter)?.render(settings, meter)
+/// The preview of `plan` on a machine that cuts as `trims` says (its profile's): [`Scene::of`], then
+/// [`Scene::render`].
+pub fn preview(plan: &StitchPlan, trims: TrimSupport, settings: Settings, meter: &mut Meter) -> Result<Image, RenderError> {
+    Scene::of(plan, trims, meter)?.render(settings, meter)
 }
